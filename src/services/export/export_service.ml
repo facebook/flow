@@ -62,7 +62,7 @@ let add_imports_of_module ~source ~module_name exports index =
 let add_imports_of_exports ~file_key ~info ~exports index =
   let source = Export_index.File_key file_key in
   let module_name =
-    match info.Module_heaps.module_name with
+    match info.Parsing_heaps.module_name with
     | Some name -> Modulename.String name
     | None -> Modulename.Filename (Files.chop_flow_ext file_key)
   in
@@ -96,8 +96,8 @@ let index ~workers ~reader parsed : (Export_index.t * Export_index.t) Lwt.t =
            instead, diff the old and new exports and make minimal changes. *)
         let to_remove =
           (* get old exports so we can remove outdated entries *)
-          match Module_heaps.Mutator_reader.get_old_info ~reader ~audit file_key with
-          | Some info when info.Module_heaps.checked ->
+          match Parsing_heaps.Mutator_reader.get_old_info ~reader ~audit file_key with
+          | Some info when info.Parsing_heaps.checked ->
             (match Parsing_heaps.Mutator_reader.get_old_exports ~reader file_key with
             | Some exports -> add_imports_of_exports ~file_key ~info ~exports to_remove
             | None -> to_remove)
@@ -106,8 +106,8 @@ let index ~workers ~reader parsed : (Export_index.t * Export_index.t) Lwt.t =
             to_remove
         in
         let to_add =
-          match Module_heaps.Mutator_reader.get_info ~reader ~audit file_key with
-          | Some info when info.Module_heaps.checked ->
+          match Parsing_heaps.Mutator_reader.get_info ~reader ~audit file_key with
+          | Some info when info.Parsing_heaps.checked ->
             (match Parsing_heaps.Mutator_reader.get_exports ~reader file_key with
             | Some exports -> add_imports_of_exports ~file_key ~info ~exports to_add
             | None -> to_add)

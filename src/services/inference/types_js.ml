@@ -64,7 +64,7 @@ let collate_parse_results parse_results =
   assert (FilenameSet.is_empty changed);
   let local_errors =
     List.fold_left2
-      (fun errors (file, _) error ->
+      (fun errors file error ->
         let errset =
           match error with
           | Parsing_service_js.Parse_error err ->
@@ -79,7 +79,7 @@ let collate_parse_results parse_results =
       failed
       errors
   in
-  let unparsed = List.rev_append failed unparsed in
+  let unparsed = FilenameSet.union (FilenameSet.of_list failed) unparsed in
   (parsed, unparsed, unchanged, not_found, local_errors, package_json)
 
 let parse ~options ~profiling ~workers ~reader parse_next =
@@ -119,81 +119,61 @@ let flow_error_of_module_error file err =
     |> Flow_error.error_of_msg ~trace_reasons:[] ~source_file:file
 
 (* commit providers for old and new modules, collect errors. *)
-let (commit_modules, commit_modules_from_saved_state) =
-  let commit_modules_generic
-      ~introduce_files
-      ~transaction
-      ~reader
-      ~all_providers_mutator
-      ~options
-      ~is_init
-      ~profiling
-      ~workers
-      ~parsed
-      ~parsed_set
-      ~unparsed
-      ~unparsed_set
-      ~old_modules
-      ~deleted
-      ~local_errors
-      ~new_or_changed =
-    (* conservatively approximate set of modules whose providers will change *)
-    (* register providers for modules, warn on dupes etc. *)
-    Memory_utils.with_memory_timer_lwt ~options "CommitModules" profiling (fun () ->
-        let all_files_set = FilenameSet.union (FilenameSet.union parsed_set unparsed_set) deleted in
-        let mutator = Module_heaps.Introduce_files_mutator.create transaction all_files_set in
-        let%lwt new_modules =
-          introduce_files ~mutator ~all_providers_mutator ~workers ~options ~parsed ~unparsed
-        in
-        let dirty_modules = List.rev_append old_modules new_modules in
-        let%lwt (providers, changed_modules, errmap) =
-          Module_js.commit_modules
-            ~transaction
-            ~workers
-            ~options
-            ~reader
-            ~is_init
-            new_or_changed
-            dirty_modules
-        in
+let commit_modules
+    ~transaction
+    ~reader
+    ~all_providers_mutator
+    ~options
+    ~is_init
+    ~profiling
+    ~workers
+    ~old_modules
+    ~local_errors
+    ~new_or_changed =
+  (* conservatively approximate set of modules whose providers will change *)
+  (* register providers for modules, warn on dupes etc. *)
+  Memory_utils.with_memory_timer_lwt ~options "CommitModules" profiling (fun () ->
+      let%lwt new_modules =
+        Module_js.calc_new_modules ~reader workers ~all_providers_mutator new_or_changed
+      in
+      let dirty_modules = List.rev_append old_modules new_modules in
+      let%lwt (providers, changed_modules, errmap) =
+        Module_js.commit_modules
+          ~transaction
+          ~workers
+          ~options
+          ~reader
+          ~is_init
+          new_or_changed
+          dirty_modules
+      in
 
-        (* Providers might be new but not changed. This typically happens when old
-           providers are deleted, and previously duplicate providers become new
-           providers. In such cases, we must clear the old duplicate provider errors
-           for the new providers.
+      (* Providers might be new but not changed. This typically happens when old
+         providers are deleted, and previously duplicate providers become new
+         providers. In such cases, we must clear the old duplicate provider errors
+         for the new providers.
 
-           (Note that this is unncessary when the providers are changed, because in
-           that case they are rechecked and *all* their errors are cleared. But we
-           don't care about optimizing that case for now.) *)
-        let errors = List.fold_left filter_duplicate_provider local_errors providers in
-        Lwt.return
-          ( changed_modules,
-            FilenameMap.fold
-              (fun file errors acc ->
-                let errset =
-                  List.fold_left
-                    (fun acc err ->
-                      let error = flow_error_of_module_error file err in
-                      Flow_error.ErrorSet.add error acc)
-                    Flow_error.ErrorSet.empty
-                    errors
-                in
-                update_errset acc file errset)
-              errmap
-              errors
-          )
-    )
-  in
-  let commit_modules ~transaction ~reader =
-    commit_modules_generic ~introduce_files:(Module_js.introduce_files ~reader) ~transaction ~reader
-  in
-  let commit_modules_from_saved_state ~transaction ~reader =
-    commit_modules_generic
-      ~introduce_files:Module_js.introduce_files_from_saved_state
-      ~transaction
-      ~reader
-  in
-  (commit_modules, commit_modules_from_saved_state)
+         (Note that this is unncessary when the providers are changed, because in
+         that case they are rechecked and *all* their errors are cleared. But we
+         don't care about optimizing that case for now.) *)
+      let errors = List.fold_left filter_duplicate_provider local_errors providers in
+      Lwt.return
+        ( changed_modules,
+          FilenameMap.fold
+            (fun file errors acc ->
+              let errset =
+                List.fold_left
+                  (fun acc err ->
+                    let error = flow_error_of_module_error file err in
+                    Flow_error.ErrorSet.add error acc)
+                  Flow_error.ErrorSet.empty
+                  errors
+              in
+              update_errset acc file errset)
+            errmap
+            errors
+        )
+  )
 
 module DirectDependentFilesCache : sig
   val clear : unit -> unit
@@ -853,7 +833,7 @@ let init_libs ~options ~profiling ~local_errors ~warnings ~suppressions ~reader 
   )
 
 let is_file_tracked_and_checked ~reader filename =
-  Module_heaps.Reader_dispatcher.is_tracked_file ~reader filename
+  Parsing_heaps.Reader_dispatcher.is_tracked_file ~reader filename
   (* otherwise, f is probably a directory *)
   && Module_js.checked_file ~reader ~audit:Expensive.warn filename
 
@@ -1137,14 +1117,9 @@ end = struct
      *
      * Parsing also gives us new local_errors, including parse errors, docblock
      * errors, etc. *)
-    let%lwt (parsed_set, unparsed, unchanged_parse, deleted, new_local_errors, _) =
+    let%lwt (parsed_set, unparsed_set, unchanged_parse, deleted, new_local_errors, _) =
       let modified = CheckedSet.all updates in
       reparse ~options ~profiling ~transaction ~reader ~workers ~modified
-    in
-
-    let parsed = FilenameSet.elements parsed_set in
-    let unparsed_set =
-      List.fold_left (fun set (fn, _) -> FilenameSet.add fn set) FilenameSet.empty unparsed
     in
 
     (* parsed + unparsed = new or changed files *)
@@ -1390,12 +1365,7 @@ end = struct
         ~profiling
         ~workers
         ~old_modules
-        ~parsed
-        ~parsed_set
-        ~unparsed
-        ~unparsed_set
         ~new_or_changed
-        ~deleted
         ~local_errors
         ~is_init:false
     in
@@ -2109,53 +2079,65 @@ let init_from_saved_state ~profiling ~workers ~saved_state ~updates options =
     (* Restore PackageHeap and the ReversePackageHeap *)
     FilenameMap.iter (fun fn -> Module_js.add_package (File_key.to_string fn)) package_heaps;
 
+    let restore_parsed ~load_sighashes acc (fn, parsed_file_data) =
+      let { Saved_state.info; normalized_file_data; sig_hash } = parsed_file_data in
+      let { Saved_state.hash; exports; resolved_requires } =
+        Saved_state.denormalize_file_data ~root normalized_file_data
+      in
+
+      (* Restore the FileHashHeap *)
+      Parsing_heaps.From_saved_state.add_file_hash fn hash;
+
+      (* Restore the ExportsHeap *)
+      Parsing_heaps.From_saved_state.add_exports fn exports;
+
+      (* Restore the InfoHeap *)
+      Parsing_heaps.From_saved_state.add_info fn info;
+
+      (* Restore the ResolvedRequiresHeap *)
+      Module_heaps.From_saved_state.add_resolved_requires fn resolved_requires;
+
+      if load_sighashes then
+        (* Restore the SigHashHeap *)
+        Base.Option.iter ~f:(Context_heaps.From_saved_state.add_sig_hash fn) sig_hash;
+
+      FilenameSet.add fn acc
+    in
+
+    let restore_unparsed acc (fn, unparsed_file_data) =
+      let { Saved_state.unparsed_info; unparsed_hash } = unparsed_file_data in
+
+      (* Restore the FileHashHeap *)
+      Parsing_heaps.From_saved_state.add_file_hash fn unparsed_hash;
+
+      (* Restore the InfoHeap *)
+      Parsing_heaps.From_saved_state.add_info fn unparsed_info;
+
+      FilenameSet.add fn acc
+    in
+
     Hh_logger.info "Restoring heaps";
-    let%lwt () =
+    let%lwt (parsed_set, unparsed_set, all_files) =
       Memory_utils.with_memory_timer_lwt ~options "RestoreHeaps" profiling (fun () ->
           let load_sighashes = Options.saved_state_load_sighashes options in
-          let%lwt () =
+          let%lwt parsed_set =
             MultiWorkerLwt.call
               workers
-              ~job:
-                (List.fold_left (fun () (fn, parsed_file_data) ->
-                     let { Saved_state.hash; exports; resolved_requires } =
-                       Saved_state.denormalize_file_data
-                         ~root
-                         parsed_file_data.Saved_state.normalized_file_data
-                     in
-
-                     (* Restore the FileHashHeap *)
-                     Parsing_heaps.From_saved_state.add_file_hash fn hash;
-
-                     (* Restore the ExportsHeap *)
-                     Parsing_heaps.From_saved_state.add_exports fn exports;
-
-                     (* Restore the ResolvedRequiresHeap *)
-                     Module_heaps.From_saved_state.add_resolved_requires fn resolved_requires;
-
-                     if load_sighashes then
-                       (* Restore the SigHashHeap *)
-                       Base.Option.iter
-                         ~f:(Context_heaps.From_saved_state.add_sig_hash fn)
-                         parsed_file_data.Saved_state.sig_hash
-                 )
-                )
-              ~merge:(fun () () -> ())
-              ~neutral:()
+              ~job:(List.fold_left (restore_parsed ~load_sighashes))
+              ~merge:FilenameSet.union
+              ~neutral:FilenameSet.empty
               ~next:(MultiWorkerLwt.next workers parsed_heaps)
           in
-          MultiWorkerLwt.call
-            workers
-            ~job:
-              (List.fold_left (fun () (fn, unparsed_file_data) ->
-                   (* Restore the FileHashHeap *)
-                   let hash = unparsed_file_data.Saved_state.unparsed_hash in
-                   Parsing_heaps.From_saved_state.add_file_hash fn hash
-               )
-              )
-            ~merge:(fun () () -> ())
-            ~neutral:()
-            ~next:(MultiWorkerLwt.next workers unparsed_heaps)
+          let%lwt unparsed_set =
+            MultiWorkerLwt.call
+              workers
+              ~job:(List.fold_left restore_unparsed)
+              ~merge:FilenameSet.union
+              ~neutral:FilenameSet.empty
+              ~next:(MultiWorkerLwt.next workers unparsed_heaps)
+          in
+          let all_files = FilenameSet.union parsed_set unparsed_set in
+          Lwt.return (parsed_set, unparsed_set, all_files)
       )
     in
     Hh_logger.info "Loading libraries";
@@ -2180,34 +2162,10 @@ let init_from_saved_state ~profiling ~workers ~saved_state ~updates options =
     Hh_logger.info "Resolving dependencies";
     MonitorRPC.status_update ServerStatus.Resolving_dependencies_progress;
 
-    let%lwt (parsed_set, unparsed_set, all_files, parsed, unparsed) =
-      Memory_utils.with_memory_timer_lwt ~options "PrepareCommitModules" profiling (fun () ->
-          let (parsed, parsed_set) =
-            List.fold_left
-              (fun (parsed, parsed_set) (fn, data) ->
-                let parsed = (fn, data.Saved_state.info) :: parsed in
-                let parsed_set = FilenameSet.add fn parsed_set in
-                (parsed, parsed_set))
-              ([], FilenameSet.empty)
-              parsed_heaps
-          in
-          let (unparsed, unparsed_set) =
-            List.fold_left
-              (fun (unparsed, unparsed_set) (fn, data) ->
-                let unparsed = (fn, data.Saved_state.unparsed_info) :: unparsed in
-                let unparsed_set = FilenameSet.add fn unparsed_set in
-                (unparsed, unparsed_set))
-              ([], FilenameSet.empty)
-              unparsed_heaps
-          in
-          let all_files = FilenameSet.union parsed_set unparsed_set in
-          Lwt.return (parsed_set, unparsed_set, all_files, parsed, unparsed)
-      )
-    in
     let all_providers_mutator = Module_hashtables.All_providers_mutator.create transaction in
     (* This will restore InfoHeap, NameHeap, & all_providers hashtable *)
     let%lwt _ =
-      commit_modules_from_saved_state
+      commit_modules
         ~transaction
         ~reader
         ~all_providers_mutator
@@ -2215,12 +2173,7 @@ let init_from_saved_state ~profiling ~workers ~saved_state ~updates options =
         ~is_init:true
         ~profiling
         ~workers
-        ~parsed
-        ~parsed_set
-        ~unparsed
-        ~unparsed_set
         ~old_modules:[]
-        ~deleted:FilenameSet.empty
         ~local_errors
         ~new_or_changed:all_files
     in
@@ -2332,7 +2285,7 @@ let init_from_scratch ~profiling ~workers options =
   Hh_logger.info "Parsing";
   MonitorRPC.status_update ServerStatus.(Parsing_progress { finished = 0; total = None });
   let%lwt ( parsed_set,
-            unparsed,
+            unparsed_set,
             unchanged,
             _not_found,
             local_errors,
@@ -2343,9 +2296,6 @@ let init_from_scratch ~profiling ~workers options =
   assert (FilenameSet.is_empty unchanged);
 
   let parsed = FilenameSet.elements parsed_set in
-  let unparsed_set =
-    List.fold_left (fun set (fn, _) -> FilenameSet.add fn set) FilenameSet.empty unparsed
-  in
   let new_or_changed = FilenameSet.union parsed_set unparsed_set in
 
   (* Parsing won't raise warnings *)
@@ -2381,12 +2331,7 @@ let init_from_scratch ~profiling ~workers options =
       ~profiling
       ~workers
       ~old_modules:[]
-      ~parsed
-      ~parsed_set
-      ~unparsed
-      ~unparsed_set
       ~new_or_changed
-      ~deleted:FilenameSet.empty
       ~local_errors
       ~is_init:true
   in

@@ -221,11 +221,11 @@ let sig_hash ~root =
   in
 
   let file_dependency ~reader component_rec component_map provider =
-    let open Module_heaps in
-    match Reader_dispatcher.get_file ~reader ~audit:Expensive.ok provider with
+    match Module_heaps.Reader_dispatcher.get_file ~reader ~audit:Expensive.ok provider with
     | None -> Unchecked
     | Some (File_key.ResourceFile f) -> resource_dep f
     | Some dep ->
+      let open Parsing_heaps in
       let info = Reader_dispatcher.get_info_unsafe ~reader ~audit:Expensive.ok dep in
       if info.checked && info.parsed then
         match FilenameMap.find_opt dep component_map with
@@ -367,8 +367,8 @@ let merge_component ~worker_mutator ~options ~reader ((leader_f, _) as component
    * unchecked.
    *
    * It also follows when the head is checked, the tail must be checked too! *)
-  let info = Module_heaps.Mutator_reader.get_info_unsafe ~reader ~audit:Expensive.ok leader_f in
-  if not info.Module_heaps.checked then
+  let info = Parsing_heaps.Mutator_reader.get_info_unsafe ~reader ~audit:Expensive.ok leader_f in
+  if not info.Parsing_heaps.checked then
     let diff = false in
     (diff, Ok None)
   else
@@ -425,8 +425,8 @@ let mk_check_file options ~reader () =
   in
   fun file ->
     let start_time = Unix.gettimeofday () in
-    let info = Module_heaps.Mutator_reader.get_info_unsafe ~reader ~audit:Expensive.ok file in
-    if info.Module_heaps.checked then
+    let info = Parsing_heaps.Mutator_reader.get_info_unsafe ~reader ~audit:Expensive.ok file in
+    if info.Parsing_heaps.checked then
       let (comments, ast) = get_ast_unsafe file in
       let type_sig = get_type_sig_unsafe file in
       let (file_sig, tolerable_errors) = get_tolerable_file_sig_unsafe file in

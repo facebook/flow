@@ -66,25 +66,6 @@ module ResolvedRequiresHeap =
       let value = SharedMem.Serialized_resolved_requires
     end)
 
-(********************************** Info Heap *********************************)
-
-type info = {
-  module_name: string option;
-  checked: bool;  (** in flow? *)
-  parsed: bool;  (** if false, it's a tracking record only *)
-}
-
-(** Maps filenames to info about a module, including the module's name.
-    note: currently we may have many files for one module name. this is an issue. *)
-module InfoHeap =
-  SharedMem.WithCache
-    (File_key)
-    (struct
-      type t = info
-
-      let description = "Info"
-    end)
-
 (*********************************** Mutators *********************************)
 
 let currently_oldified_nameheap_modulenames : Modulename.Set.t ref = ref Modulename.Set.empty
@@ -206,45 +187,6 @@ end = struct
     | Some old_resolve_requires -> old_resolve_requires.hash <> resolved_requires.hash
 end
 
-let currently_oldified_infoheap_files : Utils_js.FilenameSet.t ref = ref Utils_js.FilenameSet.empty
-
-module Introduce_files_mutator : sig
-  type t
-
-  val create : Transaction.t -> Utils_js.FilenameSet.t -> t
-
-  val add_info : t -> File_key.t -> info -> unit
-end = struct
-  type t = unit
-
-  let commit () =
-    WorkerCancel.with_no_cancellations (fun () ->
-        Hh_logger.debug "Committing InfoHeap";
-        InfoHeap.remove_old_batch !currently_oldified_infoheap_files;
-        currently_oldified_infoheap_files := Utils_js.FilenameSet.empty
-    );
-    Lwt.return_unit
-
-  let rollback () =
-    WorkerCancel.with_no_cancellations (fun () ->
-        Hh_logger.debug "Rolling back InfoHeap";
-        InfoHeap.revive_batch !currently_oldified_infoheap_files;
-        currently_oldified_infoheap_files := Utils_js.FilenameSet.empty
-    );
-    Lwt.return_unit
-
-  let create transaction oldified_files =
-    WorkerCancel.with_no_cancellations (fun () ->
-        currently_oldified_infoheap_files := oldified_files;
-        InfoHeap.oldify_batch oldified_files;
-        Transaction.add ~singleton:"Introduce_files" ~commit ~rollback transaction
-    )
-
-  (* Ideally we'd assert that file is in oldified_files, but passing through the oldified_files set
-   * to the worker process which calls add_info is kind of expensive *)
-  let add_info () file info = InfoHeap.add file info
-end
-
 (*********************************** Readers **********************************)
 
 module type READER = sig
@@ -257,20 +199,9 @@ module type READER = sig
   val module_exists : reader:reader -> Modulename.t -> bool
 
   val get_resolved_requires_unsafe : reader:reader -> (File_key.t -> resolved_requires) Expensive.t
-
-  (** given a filename, returns module info *)
-  val get_info_unsafe : reader:reader -> (File_key.t -> info) Expensive.t
-
-  val get_info : reader:reader -> (File_key.t -> info option) Expensive.t
-
-  val is_tracked_file : reader:reader -> File_key.t -> bool
 end
 
-module Mutator_reader : sig
-  include READER with type reader = Mutator_state_reader.t
-
-  val get_old_info : reader:reader -> (File_key.t -> info option) Expensive.t
-end = struct
+module Mutator_reader : READER with type reader = Mutator_state_reader.t = struct
   type reader = Mutator_state_reader.t
 
   let get_file ~reader:_ = Expensive.wrap NameHeap.get
@@ -289,17 +220,6 @@ end = struct
         | None ->
           failwith (Printf.sprintf "resolved requires not found for file %s" (File_key.to_string f))
     )
-
-  let get_info ~reader:_ = Expensive.wrap InfoHeap.get
-
-  let get_old_info ~reader:_ = Expensive.wrap InfoHeap.get_old
-
-  let get_info_unsafe ~reader ~audit f =
-    match get_info ~reader ~audit f with
-    | Some info -> info
-    | None -> failwith (Printf.sprintf "module info not found for file %s" (File_key.to_string f))
-
-  let is_tracked_file ~reader:_ = InfoHeap.mem
 end
 
 module Reader : READER with type reader = State_reader.t = struct
@@ -309,8 +229,6 @@ module Reader : READER with type reader = State_reader.t = struct
 
   let should_use_old_resolved_requires f =
     Utils_js.FilenameSet.mem f !currently_oldified_resolved_requires
-
-  let should_use_old_infoheap f = Utils_js.FilenameSet.mem f !currently_oldified_infoheap_files
 
   let get_file ~reader:_ ~audit key =
     if should_use_old_nameheap key then
@@ -342,23 +260,6 @@ module Reader : READER with type reader = State_reader.t = struct
         | None ->
           failwith (Printf.sprintf "resolved requires not found for file %s" (File_key.to_string f))
     )
-
-  let get_info ~reader:_ ~audit f =
-    if should_use_old_infoheap f then
-      Expensive.wrap InfoHeap.get_old ~audit f
-    else
-      Expensive.wrap InfoHeap.get ~audit f
-
-  let get_info_unsafe ~reader ~audit f =
-    match get_info ~reader ~audit f with
-    | Some info -> info
-    | None -> failwith (Printf.sprintf "module info not found for file %s" (File_key.to_string f))
-
-  let is_tracked_file ~reader:_ f =
-    if should_use_old_infoheap f then
-      InfoHeap.mem_old f
-    else
-      InfoHeap.mem f
 end
 
 module Reader_dispatcher : READER with type reader = Abstract_state_reader.t = struct
@@ -385,21 +286,6 @@ module Reader_dispatcher : READER with type reader = Abstract_state_reader.t = s
     match reader with
     | Mutator_state_reader reader -> Mutator_reader.get_resolved_requires_unsafe ~reader
     | State_reader reader -> Reader.get_resolved_requires_unsafe ~reader
-
-  let get_info ~reader =
-    match reader with
-    | Mutator_state_reader reader -> Mutator_reader.get_info ~reader
-    | State_reader reader -> Reader.get_info ~reader
-
-  let get_info_unsafe ~reader =
-    match reader with
-    | Mutator_state_reader reader -> Mutator_reader.get_info_unsafe ~reader
-    | State_reader reader -> Reader.get_info_unsafe ~reader
-
-  let is_tracked_file ~reader =
-    match reader with
-    | Mutator_state_reader reader -> Mutator_reader.is_tracked_file ~reader
-    | State_reader reader -> Reader.is_tracked_file ~reader
 end
 
 (******************** APIs for saving/loading saved state *********************)

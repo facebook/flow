@@ -822,8 +822,8 @@ let get_imports ~options ~reader module_names =
        * are not kept track of. To avoid confusing results we notify the
        * client that these modules have not been processed.
        *)
-      let { Module_heaps.checked; _ } =
-        Module_heaps.Reader.get_info_unsafe ~reader ~audit:Expensive.warn file
+      let { Parsing_heaps.checked; _ } =
+        Parsing_heaps.Reader.get_info_unsafe ~reader ~audit:Expensive.warn file
       in
       if checked then
         let { Module_heaps.resolved_modules; _ } =

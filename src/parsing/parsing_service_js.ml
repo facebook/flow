@@ -51,11 +51,11 @@ type results = {
   (* successfully parsed files *)
   parsed: FilenameSet.t;
   (* list of skipped files *)
-  unparsed: (File_key.t * Docblock.t) list;
+  unparsed: FilenameSet.t;
   (* list of files skipped due to an out of date hash *)
   changed: FilenameSet.t;
   (* list of failed files *)
-  failed: (File_key.t * Docblock.t) list * parse_failure list;
+  failed: File_key.t list * parse_failure list;
   (* set of unchanged files *)
   unchanged: FilenameSet.t;
   (* set of files that were not found on disk *)
@@ -67,7 +67,7 @@ type results = {
 let empty_result =
   {
     parsed = FilenameSet.empty;
-    unparsed = [];
+    unparsed = FilenameSet.empty;
     changed = FilenameSet.empty;
     failed = ([], []);
     unchanged = FilenameSet.empty;
@@ -552,6 +552,7 @@ let reducer
     ~skip_unchanged
     ~max_header_tokens
     ~noflow
+    exported_module
     acc
     file : results =
   let filename_string = File_key.to_string file in
@@ -582,6 +583,7 @@ let reducer
           else
             info
         in
+        let module_name = exported_module file info in
         begin
           match do_parse ~parse_options ~info content file with
           | Parse_ok { ast; file_sig; exports; locs; type_sig; tolerable_errors; parse_errors = _ }
@@ -589,24 +591,37 @@ let reducer
             (* if parse_options.fail == true, then parse errors will hit Parse_fail below. otherwise,
                ignore any parse errors we get here. *)
             let file_sig = (file_sig, tolerable_errors) in
-            worker_mutator.Parsing_heaps.add_file file ~exports info ast file_sig locs type_sig;
+            worker_mutator.Parsing_heaps.add_parsed
+              file
+              ~exports
+              module_name
+              info
+              ast
+              file_sig
+              locs
+              type_sig;
             { acc with parsed = FilenameSet.add file acc.parsed }
           | Parse_fail error ->
-            let failed = ((file, info) :: fst acc.failed, error :: snd acc.failed) in
+            worker_mutator.Parsing_heaps.add_unparsed file module_name;
+            let failed = (file :: fst acc.failed, error :: snd acc.failed) in
             { acc with failed }
           | Parse_skip (Skip_package_json (_parse_errors, error)) ->
             (* if parse_options.fail == true, then parse errors will hit Parse_fail below. otherwise,
                ignore any parse errors we get here. *)
-            let unparsed = (file, info) :: acc.unparsed in
+            worker_mutator.Parsing_heaps.add_unparsed file module_name;
+            let unparsed = FilenameSet.add file acc.unparsed in
             let package_json = (file :: fst acc.package_json, error :: snd acc.package_json) in
             { acc with unparsed; package_json }
           | Parse_skip Skip_non_flow_file
           | Parse_skip Skip_resource_file ->
-            { acc with unparsed = (file, info) :: acc.unparsed }
+            worker_mutator.Parsing_heaps.add_unparsed file module_name;
+            { acc with unparsed = FilenameSet.add file acc.unparsed }
         end
       | (docblock_errors, info) ->
+        let module_name = exported_module file info in
+        worker_mutator.Parsing_heaps.add_unparsed file module_name;
         let error = Docblock_errors docblock_errors in
-        let failed = ((file, info) :: fst acc.failed, error :: snd acc.failed) in
+        let failed = (file :: fst acc.failed, error :: snd acc.failed) in
         { acc with failed }
     )
 
@@ -614,7 +629,7 @@ let reducer
 let merge a b =
   {
     parsed = FilenameSet.union a.parsed b.parsed;
-    unparsed = List.rev_append a.unparsed b.unparsed;
+    unparsed = FilenameSet.union a.unparsed b.unparsed;
     changed = FilenameSet.union a.changed b.changed;
     failed =
       (let (a1, a2) = a.failed in
@@ -676,6 +691,7 @@ let parse
     ~profile
     ~max_header_tokens
     ~noflow
+    exported_module
     workers
     next : results Lwt.t =
   let t = Unix.gettimeofday () in
@@ -688,6 +704,7 @@ let parse
       ~skip_unchanged
       ~max_header_tokens
       ~noflow
+      exported_module
   in
   let%lwt results =
     MultiWorkerLwt.call workers ~job:(List.fold_left reducer) ~neutral:empty_result ~merge ~next
@@ -695,7 +712,7 @@ let parse
   if profile then
     let t2 = Unix.gettimeofday () in
     let num_parsed = FilenameSet.cardinal results.parsed in
-    let num_unparsed = List.length results.unparsed in
+    let num_unparsed = FilenameSet.cardinal results.unparsed in
     let num_changed = FilenameSet.cardinal results.changed in
     let num_failed = List.length (fst results.failed) in
     let num_unchanged = FilenameSet.cardinal results.unchanged in
@@ -724,6 +741,7 @@ let reparse
     ~profile
     ~max_header_tokens
     ~noflow
+    exported_module
     ~with_progress
     ~workers
     ~modified:files =
@@ -740,6 +758,7 @@ let reparse
       ~profile
       ~max_header_tokens
       ~noflow
+      exported_module
       workers
       next
   in
@@ -792,6 +811,8 @@ let parse_with_defaults ?types_mode ?use_strict ~reader options workers next =
   let parse_options =
     make_parse_options_internal ~fail:true ~use_strict ~types_mode ~docblock:None options
   in
+  let exported_module = Module_js.exported_module ~options in
+  (* This isn't a recheck, so there shouldn't be any unchanged *)
   let worker_mutator = Parsing_heaps.Parse_mutator.create () in
   parse
     ~worker_mutator
@@ -802,6 +823,7 @@ let parse_with_defaults ?types_mode ?use_strict ~reader options workers next =
     ~profile
     ~max_header_tokens
     ~noflow
+    exported_module
     workers
     next
 
@@ -810,8 +832,8 @@ let reparse_with_defaults
   let (types_mode, use_strict, profile, max_header_tokens, noflow) =
     get_defaults ~types_mode ~use_strict options
   in
-  (* We're rechecking, so let's skip files which haven't changed *)
   let parse_options = make_parse_options_internal ~types_mode ~use_strict ~docblock:None options in
+  let exported_module = Module_js.exported_module ~options in
   reparse
     ~transaction
     ~reader
@@ -819,6 +841,7 @@ let reparse_with_defaults
     ~profile
     ~max_header_tokens
     ~noflow
+    exported_module
     ~with_progress
     ~workers
     ~modified
@@ -854,6 +877,7 @@ let ensure_parsed ~reader options workers files =
   in
   let next = MultiWorkerLwt.next ~progress_fn workers (FilenameSet.elements files_missing_asts) in
   let parse_options = make_parse_options_internal ~types_mode ~use_strict ~docblock:None options in
+  let exported_module = Module_js.exported_module ~options in
   let%lwt {
         parsed = _;
         unparsed = _;
@@ -872,6 +896,7 @@ let ensure_parsed ~reader options workers files =
       ~profile
       ~max_header_tokens
       ~noflow
+      exported_module
       workers
       next
   in

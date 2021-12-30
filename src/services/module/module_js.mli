@@ -44,14 +44,11 @@ val checked_file : reader:Abstract_state_reader.t -> (File_key.t -> bool) Expens
 (* add module records for given files;
    returns the set of modules added
 *)
-val introduce_files :
-  mutator:Module_heaps.Introduce_files_mutator.t ->
-  reader:Mutator_state_reader.t ->
+val calc_new_modules :
+  MultiWorkerLwt.worker list option ->
   all_providers_mutator:Module_hashtables.All_providers_mutator.t ->
-  workers:MultiWorkerLwt.worker list option ->
-  options:Options.t ->
-  parsed:File_key.t list ->
-  unparsed:(File_key.t * Docblock.t) list ->
+  reader:Mutator_state_reader.t ->
+  FilenameSet.t ->
   (Modulename.t * File_key.t option) list Lwt.t
 
 (* remove module records being tracked for given files;
@@ -123,13 +120,3 @@ val package_incompatible :
 (***************************************************)
 
 val clear_filename_cache : unit -> unit
-
-(* APIs mainly intended for saving and loading saved state *)
-val introduce_files_from_saved_state :
-  mutator:Module_heaps.Introduce_files_mutator.t ->
-  all_providers_mutator:Module_hashtables.All_providers_mutator.t ->
-  workers:MultiWorkerLwt.worker list option ->
-  options:Options.t ->
-  parsed:(File_key.t * Module_heaps.info) list ->
-  unparsed:(File_key.t * Module_heaps.info) list ->
-  (Modulename.t * File_key.t option) list Lwt.t

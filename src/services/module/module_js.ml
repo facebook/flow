@@ -643,8 +643,8 @@ let choose_provider ~options m files errmap =
 (******************)
 
 let checked_file ~reader ~audit f =
-  let info = f |> Module_heaps.Reader_dispatcher.get_info_unsafe ~reader ~audit in
-  info.Module_heaps.checked
+  let info = f |> Parsing_heaps.Reader_dispatcher.get_info_unsafe ~reader ~audit in
+  info.Parsing_heaps.checked
 
 (** Resolve references to required modules in a file, and record the results.
 
@@ -830,42 +830,16 @@ let commit_modules ~transaction ~workers ~options ~reader ~is_init new_or_change
   Lwt.return (providers, changed_modules, errmap)
 
 let get_files ~reader ~audit file info =
-  let get_file = Module_heaps.Reader_dispatcher.get_file ~reader ~audit in
+  let get_file = Module_heaps.Mutator_reader.get_file ~reader ~audit in
   let eponymous_module_provider =
     let m = eponymous_module file in
     (m, get_file m)
   in
-  match info.Module_heaps.module_name with
+  match info.Parsing_heaps.module_name with
   | None -> [eponymous_module_provider]
   | Some name ->
     let m = Modulename.String name in
     [(m, get_file m); eponymous_module_provider]
-
-let get_files_unsafe ~reader ~audit file info =
-  let get_file = Module_heaps.Mutator_reader.get_file_unsafe ~reader ~audit in
-  let eponymous_module_provider =
-    let m = eponymous_module file in
-    (m, get_file m)
-  in
-  match info.Module_heaps.module_name with
-  | None -> [eponymous_module_provider]
-  | Some name ->
-    let m = Modulename.String name in
-    [(m, get_file m); eponymous_module_provider]
-
-let calc_modules_helper ~reader workers files =
-  MultiWorkerLwt.call
-    workers
-    ~job:
-      (List.fold_left (fun acc file ->
-           match Module_heaps.Mutator_reader.get_info ~reader ~audit:Expensive.ok file with
-           | Some info -> (file, get_files_unsafe ~reader ~audit:Expensive.ok file info) :: acc
-           | None -> acc
-       )
-      )
-    ~neutral:[]
-    ~merge:List.rev_append
-    ~next:(MultiWorkerLwt.next workers (FilenameSet.elements files))
 
 (* Calculate the set of modules whose current providers are changed or deleted files.
 
@@ -883,180 +857,66 @@ let calc_modules_helper ~reader workers files =
    TODO: Does a .flow file also provide its eponymous module? Or does it provide
    the eponymous module of the file it shadows?
 *)
-let calc_old_modules =
-  let calc_from_module_assocs ~all_providers_mutator ~options old_file_module_assoc =
-    (* files may or may not be registered as module providers.
-       when they are, we need to clear their registrations *)
-    let old_modules =
-      List.fold_left
-        (fun old_modules (file, module_provider_assoc) ->
-          List.fold_left
-            (fun old_modules (module_name, provider) ->
-              Module_hashtables.All_providers_mutator.remove_provider
-                all_providers_mutator
-                file
-                module_name;
-              if provider = file then
-                (module_name, Some provider) :: old_modules
-              else
-                old_modules)
-            old_modules
-            module_provider_assoc)
-        []
-        old_file_module_assoc
+let calc_old_modules workers ~all_providers_mutator ~options ~reader new_or_changed_or_deleted =
+  let%lwt file_module_assoc =
+    let f acc file =
+      match Parsing_heaps.Mutator_reader.get_old_info ~reader ~audit:Expensive.ok file with
+      | Some info -> (file, get_files ~reader ~audit:Expensive.ok file info) :: acc
+      | None -> acc
     in
-    let debug = Options.is_debug_mode options in
-    if debug then
-      prerr_endlinef "*** old modules (changed and deleted files) %d ***" (List.length old_modules);
-
-    (* return *)
-    old_modules
+    MultiWorkerLwt.call
+      workers
+      ~job:(List.fold_left f)
+      ~neutral:[]
+      ~merge:List.rev_append
+      ~next:(MultiWorkerLwt.next workers (FilenameSet.elements new_or_changed_or_deleted))
   in
-  fun workers ~all_providers_mutator ~options ~reader new_or_changed_or_deleted ->
-    let%lwt old_file_module_assoc = calc_modules_helper ~reader workers new_or_changed_or_deleted in
-    Lwt.return (calc_from_module_assocs ~all_providers_mutator ~options old_file_module_assoc)
+  (* files may or may not be registered as module providers.
+     when they are, we need to clear their registrations *)
+  let old_modules =
+    List.fold_left
+      (fun acc (file, module_provider_assoc) ->
+        List.fold_left
+          (fun acc (module_name, provider) ->
+            Module_hashtables.All_providers_mutator.remove_provider
+              all_providers_mutator
+              file
+              module_name;
+            match provider with
+            | Some f when f = file -> (module_name, provider) :: acc
+            | _ -> acc)
+          acc
+          module_provider_assoc)
+      []
+      file_module_assoc
+  in
+  if Options.is_debug_mode options then
+    prerr_endlinef "*** old modules (changed and deleted files) %d ***" (List.length old_modules);
+  Lwt.return old_modules
 
-module IntroduceFiles : sig
-  val introduce_files :
-    mutator:Module_heaps.Introduce_files_mutator.t ->
-    reader:Mutator_state_reader.t ->
-    all_providers_mutator:Module_hashtables.All_providers_mutator.t ->
-    workers:MultiWorkerLwt.worker list option ->
-    options:Options.t ->
-    parsed:File_key.t list ->
-    unparsed:(File_key.t * Docblock.t) list ->
-    (Modulename.t * File_key.t option) list Lwt.t
-
-  val introduce_files_from_saved_state :
-    mutator:Module_heaps.Introduce_files_mutator.t ->
-    all_providers_mutator:Module_hashtables.All_providers_mutator.t ->
-    workers:MultiWorkerLwt.worker list option ->
-    options:Options.t ->
-    parsed:(File_key.t * Module_heaps.info) list ->
-    unparsed:(File_key.t * Module_heaps.info) list ->
-    (Modulename.t * File_key.t option) list Lwt.t
-end = struct
-  (* Before and after inference, we add per-file module info to the shared heap
-     from worker processes. Note that we wait to choose providers until inference
-     is complete. *)
-  let add_parsed_info ~options =
-    let exported_module = exported_module ~options in
-    let force_check = Options.all options in
-    fun ~mutator ~reader file ->
-      let docblock = Parsing_heaps.Reader_dispatcher.get_docblock_unsafe ~reader file in
-      let module_name = exported_module file docblock in
-      let checked = force_check || Docblock.is_flow docblock in
-      let info = { Module_heaps.module_name; checked; parsed = true } in
-      Module_heaps.Introduce_files_mutator.add_info mutator file info;
-      (file, info)
-
-  (* We need to track files that have failed to parse. This begins with
-     adding tracking records for unparsed files to InfoHeap. They never
-     become providers - the process of committing modules happens after
-     parsed files are finished with local inference. But since we guess
-     the module names of unparsed files, we're able to tell whether an
-     unparsed file has been required/imported.
-  *)
-  let add_unparsed_info ~options =
-    let exported_module = exported_module ~options in
-    let force_check = Options.all options in
-    fun ~mutator ~reader:_ (file, docblock) ->
-      let module_name = exported_module file docblock in
-      let checked = force_check || File_key.is_lib_file file || Docblock.is_flow docblock in
-      let info = { Module_heaps.module_name; checked; parsed = false } in
-      Module_heaps.Introduce_files_mutator.add_info mutator file info;
-      (file, info)
-
-  let calc_new_modules ~all_providers_mutator ~options file_module_assoc =
-    (* all modules provided by newly parsed / unparsed files must be repicked *)
-    let new_modules =
-      List.fold_left
-        (fun new_modules (file, module_opt_provider_assoc) ->
-          List.fold_left
-            (fun new_modules (module_, opt_provider) ->
-              Module_hashtables.All_providers_mutator.add_provider
-                all_providers_mutator
-                file
-                module_;
-              (module_, opt_provider) :: new_modules)
-            new_modules
-            module_opt_provider_assoc)
-        []
-        file_module_assoc
+let calc_new_modules workers ~all_providers_mutator ~reader new_or_changed =
+  let%lwt file_module_assoc =
+    let f acc file =
+      let info = Parsing_heaps.Mutator_reader.get_info_unsafe ~reader ~audit:Expensive.ok file in
+      (file, get_files ~reader ~audit:Expensive.ok file info) :: acc
     in
-    let debug = Options.is_debug_mode options in
-    if debug then
-      prerr_endlinef "*** new modules (new and changed files) %d ***" (List.length new_modules);
-
-    new_modules
-
-  let introduce_files_generic
-      ~add_parsed_info
-      ~add_unparsed_info
-      ~mutator
-      ~reader
-      ~all_providers_mutator
-      ~workers
-      ~options
-      ~parsed
-      ~unparsed =
-    (* add tracking modules for unparsed files *)
-    let%lwt unparsed_file_module_assoc =
-      MultiWorkerLwt.call
-        workers
-        ~job:(fun acc files ->
-          let add_unparsed_info = add_unparsed_info ~options in
-          List.fold_left
-            (fun acc unparsed ->
-              let (file, info) = add_unparsed_info ~mutator ~reader unparsed in
-              let providers = get_files ~reader ~audit:Expensive.ok file info in
-              (file, providers) :: acc)
-            acc
-            files)
-        ~neutral:[]
-        ~merge:List.rev_append
-        ~next:(MultiWorkerLwt.next workers unparsed)
-    in
-    (* create info for parsed files *)
-    let%lwt parsed_file_module_assoc =
-      MultiWorkerLwt.call
-        workers
-        ~job:(fun acc files ->
-          let add_parsed_info = add_parsed_info ~options in
-          List.fold_left
-            (fun acc parsed ->
-              let (file, info) = add_parsed_info ~mutator ~reader parsed in
-              let providers = get_files ~reader ~audit:Expensive.ok file info in
-              (file, providers) :: acc)
-            acc
-            files)
-        ~neutral:[]
-        ~merge:List.rev_append
-        ~next:(MultiWorkerLwt.next workers parsed)
-    in
-    let new_file_module_assoc =
-      List.rev_append parsed_file_module_assoc unparsed_file_module_assoc
-    in
-    Lwt.return (calc_new_modules ~all_providers_mutator ~options new_file_module_assoc)
-
-  let introduce_files ~mutator ~reader =
-    let reader = Abstract_state_reader.Mutator_state_reader reader in
-    introduce_files_generic ~add_parsed_info ~add_unparsed_info ~mutator ~reader
-
-  let introduce_files_from_saved_state =
-    let add_info_from_saved_state ~options:_ ~mutator ~reader:_ (file, info) =
-      Module_heaps.Introduce_files_mutator.add_info mutator file info;
-      (file, info)
-    in
-    fun ~mutator ->
-      let reader = Abstract_state_reader.State_reader (State_reader.create ()) in
-      introduce_files_generic
-        ~add_parsed_info:add_info_from_saved_state
-        ~add_unparsed_info:add_info_from_saved_state
-        ~mutator
-        ~reader
-end
-
-let introduce_files = IntroduceFiles.introduce_files
-
-let introduce_files_from_saved_state = IntroduceFiles.introduce_files_from_saved_state
+    MultiWorkerLwt.call
+      workers
+      ~job:(List.fold_left f)
+      ~neutral:[]
+      ~merge:List.rev_append
+      ~next:(MultiWorkerLwt.next workers (FilenameSet.elements new_or_changed))
+  in
+  let new_modules =
+    List.fold_left
+      (fun acc (file, module_provider_assoc) ->
+        List.fold_left
+          (fun acc (module_, provider) ->
+            Module_hashtables.All_providers_mutator.add_provider all_providers_mutator file module_;
+            (module_, provider) :: acc)
+          acc
+          module_provider_assoc)
+      []
+      file_module_assoc
+  in
+  Lwt.return new_modules

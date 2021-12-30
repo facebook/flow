@@ -53,11 +53,11 @@ type results = {
   (* successfully parsed files *)
   parsed: FilenameSet.t;
   (* list of skipped files *)
-  unparsed: (File_key.t * Docblock.t) list;
+  unparsed: FilenameSet.t;
   (* list of files skipped due to an out of date hash *)
   changed: FilenameSet.t;
   (* list of failed files *)
-  failed: (File_key.t * Docblock.t) list * parse_failure list;
+  failed: File_key.t list * parse_failure list;
   (* set of unchanged files *)
   unchanged: FilenameSet.t;
   (* set of files that were not found on disk *)

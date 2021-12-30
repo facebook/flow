@@ -17,7 +17,7 @@ type normalized_file_data = denormalized_file_data
 
 (* For each parsed file, this is what we will save *)
 type parsed_file_data = {
-  info: Module_heaps.info;
+  info: Parsing_heaps.info;
   normalized_file_data: normalized_file_data;
   (* Right now there is no guarantee that this is Some, for two reasons:
    * - We allow saved state to be saved from a lazy server, meaning that it's possible that *no*
@@ -36,7 +36,7 @@ type parsed_file_data = {
 
 (* We also need to store the info for unparsed files *)
 type unparsed_file_data = {
-  unparsed_info: Module_heaps.info;
+  unparsed_info: Parsing_heaps.info;
   unparsed_hash: Xx.hash;
 }
 
@@ -217,7 +217,7 @@ end = struct
   let collect_normalized_data_for_parsed_file ~normalizer ~reader fn parsed_heaps =
     let file_data =
       {
-        info = Module_heaps.Reader.get_info_unsafe ~reader ~audit:Expensive.ok fn;
+        info = Parsing_heaps.Reader.get_info_unsafe ~reader ~audit:Expensive.ok fn;
         normalized_file_data =
           {
             resolved_requires =
@@ -242,7 +242,7 @@ end = struct
   let collect_normalized_data_for_unparsed_file ~normalizer ~reader fn unparsed_heaps =
     let relative_file_data =
       {
-        unparsed_info = Module_heaps.Reader.get_info_unsafe ~reader ~audit:Expensive.ok fn;
+        unparsed_info = Parsing_heaps.Reader.get_info_unsafe ~reader ~audit:Expensive.ok fn;
         unparsed_hash = Parsing_heaps.Reader.get_file_hash_unsafe ~reader fn;
       }
     in

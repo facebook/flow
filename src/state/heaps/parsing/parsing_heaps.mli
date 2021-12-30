@@ -11,6 +11,12 @@ type type_sig = Type_sig_collections.Locs.index Packed_type_sig.Module.t
 
 type checked_file_addr = SharedMem.NewAPI.checked_file SharedMem.addr
 
+type info = {
+  module_name: string option;
+  checked: bool;  (** in flow? *)
+  parsed: bool;  (** if false, it's a tracking record only *)
+}
+
 module type READER = sig
   type reader
 
@@ -49,6 +55,13 @@ module type READER = sig
   val get_file_hash_unsafe : reader:reader -> File_key.t -> Xx.hash
 
   val loc_of_aloc : reader:reader -> ALoc.t -> Loc.t
+
+  (** given a filename, returns module info *)
+  val get_info_unsafe : reader:reader -> (File_key.t -> info) Expensive.t
+
+  val get_info : reader:reader -> (File_key.t -> info option) Expensive.t
+
+  val is_tracked_file : reader:reader -> File_key.t -> bool
 end
 
 module Mutator_reader : sig
@@ -57,6 +70,8 @@ module Mutator_reader : sig
   val get_old_file_hash : reader:Mutator_state_reader.t -> File_key.t -> Xx.hash option
 
   val get_old_exports : reader:Mutator_state_reader.t -> File_key.t -> Exports.t option
+
+  val get_old_info : reader:reader -> (File_key.t -> info option) Expensive.t
 end
 
 module Reader : READER with type reader = State_reader.t
@@ -65,15 +80,17 @@ module Reader_dispatcher : READER with type reader = Abstract_state_reader.t
 
 (* For use by a worker process *)
 type worker_mutator = {
-  add_file:
+  add_parsed:
     File_key.t ->
     exports:Exports.t ->
+    string option ->
     Docblock.t ->
     (Loc.t, Loc.t) Flow_ast.Program.t ->
     File_sig.With_Loc.tolerable_t ->
     locs_tbl ->
     type_sig ->
     unit;
+  add_unparsed: File_key.t -> string option -> unit;
   add_hash: File_key.t -> Xx.hash -> unit;
 }
 
@@ -93,4 +110,6 @@ module From_saved_state : sig
   val add_file_hash : File_key.t -> Xx.hash -> unit
 
   val add_exports : File_key.t -> Exports.t -> unit
+
+  val add_info : File_key.t -> info -> unit
 end

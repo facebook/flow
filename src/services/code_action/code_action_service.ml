@@ -216,9 +216,9 @@ let from_of_source ~options ~reader ~src_dir source =
   | Export_index.Global -> None
   | Export_index.Builtin from -> Some from
   | Export_index.File_key from ->
-    (match Module_heaps.Reader.get_info ~reader ~audit:Expensive.ok from with
+    (match Parsing_heaps.Reader.get_info ~reader ~audit:Expensive.ok from with
     | None -> None
-    | Some { Module_heaps.module_name; _ } ->
+    | Some { Parsing_heaps.module_name; _ } ->
       let node_resolver_dirnames = Options.file_options options |> Files.node_resolver_dirnames in
       path_of_modulename ~node_resolver_dirnames ~reader src_dir from module_name)
 

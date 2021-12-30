@@ -9,6 +9,23 @@ open Utils_js
 open Parsing_heaps_exceptions
 module Heap = SharedMem.NewAPI
 
+type info = {
+  module_name: string option;
+  checked: bool;  (** in flow? *)
+  parsed: bool;  (** if false, it's a tracking record only *)
+}
+
+(** Maps filenames to info about a module, including the module's name.
+    note: currently we may have many files for one module name. this is an issue. *)
+module InfoHeap =
+  SharedMem.WithCache
+    (File_key)
+    (struct
+      type t = info
+
+      let description = "Info"
+    end)
+
 module CheckedFileHeap =
   SharedMem.NoCacheAddr
     (File_key)
@@ -157,11 +174,17 @@ end)
 
 (* Groups operations on the multiple heaps that need to stay in sync *)
 module ParsingHeaps = struct
-  let add file ~exports info ast file_sig locs type_sig =
+  let add_parsed file ~exports module_name docblock ast file_sig locs type_sig =
+    let info = { module_name; checked = true; parsed = true } in
     WorkerCancel.with_no_cancellations (fun () ->
         ExportsHeap.add file exports;
-        CheckedFileHeap.add file (write_checked_file ast info locs type_sig file_sig)
+        InfoHeap.add file info;
+        CheckedFileHeap.add file (write_checked_file ast docblock locs type_sig file_sig)
     )
+
+  let add_unparsed file module_name =
+    let info = { module_name; checked = false; parsed = false } in
+    WorkerCancel.with_no_cancellations (fun () -> InfoHeap.add file info)
 
   let oldify_batch files =
     WorkerCancel.with_no_cancellations (fun () ->
@@ -169,14 +192,16 @@ module ParsingHeaps = struct
         FilenameSet.iter ASTCache.remove files;
         FilenameSet.iter ALocTableCache.remove files;
         ExportsHeap.oldify_batch files;
-        FileHashHeap.oldify_batch files
+        FileHashHeap.oldify_batch files;
+        InfoHeap.oldify_batch files
     )
 
   let remove_old_batch files =
     WorkerCancel.with_no_cancellations (fun () ->
         CheckedFileHeap.remove_old_batch files;
         ExportsHeap.remove_old_batch files;
-        FileHashHeap.remove_old_batch files
+        FileHashHeap.remove_old_batch files;
+        InfoHeap.remove_old_batch files
     )
 
   let revive_batch files =
@@ -185,7 +210,8 @@ module ParsingHeaps = struct
         FilenameSet.iter ASTCache.remove files;
         FilenameSet.iter ALocTableCache.remove files;
         ExportsHeap.revive_batch files;
-        FileHashHeap.revive_batch files
+        FileHashHeap.revive_batch files;
+        InfoHeap.revive_batch files
     )
 end
 
@@ -227,6 +253,12 @@ module type READER = sig
   val get_file_hash_unsafe : reader:reader -> File_key.t -> Xx.hash
 
   val loc_of_aloc : reader:reader -> ALoc.t -> Loc.t
+
+  val get_info_unsafe : reader:reader -> (File_key.t -> info) Expensive.t
+
+  val get_info : reader:reader -> (File_key.t -> info option) Expensive.t
+
+  val is_tracked_file : reader:reader -> File_key.t -> bool
 end
 
 let loc_of_aloc ~get_aloc_table_unsafe ~reader aloc =
@@ -249,6 +281,8 @@ module Mutator_reader : sig
   val get_old_file_hash : reader:Mutator_state_reader.t -> File_key.t -> Xx.hash option
 
   val get_old_exports : reader:Mutator_state_reader.t -> File_key.t -> Exports.t option
+
+  val get_old_info : reader:reader -> (File_key.t -> info option) Expensive.t
 end = struct
   type reader = Mutator_state_reader.t
 
@@ -341,19 +375,32 @@ end = struct
     | None -> raise (Hash_not_found (File_key.to_string file))
 
   let loc_of_aloc = loc_of_aloc ~get_aloc_table_unsafe
+
+  let get_info ~reader:_ = Expensive.wrap InfoHeap.get
+
+  let get_old_info ~reader:_ = Expensive.wrap InfoHeap.get_old
+
+  let get_info_unsafe ~reader ~audit f =
+    match get_info ~reader ~audit f with
+    | Some info -> info
+    | None -> failwith (Printf.sprintf "module info not found for file %s" (File_key.to_string f))
+
+  let is_tracked_file ~reader:_ = InfoHeap.mem
 end
 
 (* For use by a worker process *)
 type worker_mutator = {
-  add_file:
+  add_parsed:
     File_key.t ->
     exports:Exports.t ->
+    string option ->
     Docblock.t ->
     (Loc.t, Loc.t) Flow_ast.Program.t ->
     File_sig.With_Loc.tolerable_t ->
     locs_tbl ->
     type_sig ->
     unit;
+  add_unparsed: File_key.t -> string option -> unit;
   add_hash: File_key.t -> Xx.hash -> unit;
 }
 
@@ -362,7 +409,12 @@ type worker_mutator = {
 module Parse_mutator : sig
   val create : unit -> worker_mutator
 end = struct
-  let create () = { add_file = ParsingHeaps.add; add_hash = FileHashHeap.add }
+  let create () =
+    {
+      add_parsed = ParsingHeaps.add_parsed;
+      add_unparsed = ParsingHeaps.add_unparsed;
+      add_hash = FileHashHeap.add;
+    }
 end
 
 (* Reparsing is more complicated than parsing, since we need to worry about transactions
@@ -402,7 +454,11 @@ end = struct
 
   (* Ideally we'd assert that file was oldified and not revived, but it's too expensive to pass the
    * set of oldified files to the worker *)
-  let add_file = ParsingHeaps.add
+  let add_parsed = ParsingHeaps.add_parsed
+
+  (* Ideally we'd assert that file was oldified and not revived, but it's too expensive to pass the
+   * set of oldified files to the worker *)
+  let add_unparsed = ParsingHeaps.add_unparsed
 
   (* Ideally we'd assert that file was oldified and not revived, but it's too expensive to pass the
    * set of oldified files to the worker *)
@@ -413,7 +469,7 @@ end = struct
         currently_oldified_files := files;
         ParsingHeaps.oldify_batch files;
         Transaction.add ~singleton:"Reparse" ~commit ~rollback transaction;
-        ((), { add_file; add_hash })
+        ((), { add_parsed; add_unparsed; add_hash })
     )
 
   let revive_files () files =
@@ -553,6 +609,23 @@ module Reader : READER with type reader = State_reader.t = struct
     | None -> raise (Hash_not_found (File_key.to_string file))
 
   let loc_of_aloc = loc_of_aloc ~get_aloc_table_unsafe
+
+  let get_info ~reader:_ ~audit f =
+    if should_use_oldified f then
+      Expensive.wrap InfoHeap.get_old ~audit f
+    else
+      Expensive.wrap InfoHeap.get ~audit f
+
+  let get_info_unsafe ~reader ~audit f =
+    match get_info ~reader ~audit f with
+    | Some info -> info
+    | None -> failwith (Printf.sprintf "module info not found for file %s" (File_key.to_string f))
+
+  let is_tracked_file ~reader:_ f =
+    if should_use_oldified f then
+      InfoHeap.mem_old f
+    else
+      InfoHeap.mem f
 end
 
 (* Reader_dispatcher is used by code which may or may not be running inside an init/recheck *)
@@ -647,14 +720,33 @@ module Reader_dispatcher : READER with type reader = Abstract_state_reader.t = s
     | State_reader reader -> Reader.get_file_hash_unsafe ~reader
 
   let loc_of_aloc = loc_of_aloc ~get_aloc_table_unsafe
+
+  let get_info ~reader =
+    match reader with
+    | Mutator_state_reader reader -> Mutator_reader.get_info ~reader
+    | State_reader reader -> Reader.get_info ~reader
+
+  let get_info_unsafe ~reader =
+    match reader with
+    | Mutator_state_reader reader -> Mutator_reader.get_info_unsafe ~reader
+    | State_reader reader -> Reader.get_info_unsafe ~reader
+
+  let is_tracked_file ~reader =
+    match reader with
+    | Mutator_state_reader reader -> Mutator_reader.is_tracked_file ~reader
+    | State_reader reader -> Reader.is_tracked_file ~reader
 end
 
 module From_saved_state : sig
   val add_file_hash : File_key.t -> Xx.hash -> unit
 
   val add_exports : File_key.t -> Exports.t -> unit
+
+  val add_info : File_key.t -> info -> unit
 end = struct
   let add_file_hash = FileHashHeap.add
 
   let add_exports = ExportsHeap.add
+
+  let add_info = InfoHeap.add
 end

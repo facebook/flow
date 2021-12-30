@@ -342,7 +342,7 @@ let mk_check_file ~options ~reader ~cache () =
 
   let get_file = Module_heaps.Reader_dispatcher.get_file ~reader ~audit in
   let get_type_sig_unsafe = Parsing_heaps.Reader_dispatcher.get_checked_file_addr_unsafe ~reader in
-  let get_info_unsafe = Module_heaps.Reader_dispatcher.get_info_unsafe ~reader ~audit in
+  let get_info_unsafe = Parsing_heaps.Reader_dispatcher.get_info_unsafe ~reader ~audit in
   let get_aloc_table_unsafe = Parsing_heaps.Reader_dispatcher.get_aloc_table_unsafe ~reader in
   let find_leader = Context_heaps.Reader_dispatcher.find_leader ~reader in
   let get_resolved_requires_unsafe =
@@ -370,7 +370,7 @@ let mk_check_file ~options ~reader ~cache () =
     | None -> unknown_module_t cx mref provider
     | Some (File_key.ResourceFile f) -> Merge.merge_resource_module_t cx f
     | Some dep_file ->
-      let { Module_heaps.checked; parsed; _ } = get_info_unsafe dep_file in
+      let { Parsing_heaps.checked; parsed; _ } = get_info_unsafe dep_file in
       if checked && parsed then
         sig_module_t cx dep_file
       else
