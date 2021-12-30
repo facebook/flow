@@ -18,12 +18,9 @@ module Files = Files
 module Parsing = Parsing_service_js
 module Infer = Type_inference_js
 
-let is_ok { Parsing.parse_ok; _ } = not (FilenameSet.is_empty parse_ok)
+let is_ok { Parsing.parsed; _ } = not (FilenameSet.is_empty parsed)
 
-let is_fail { Parsing.parse_fails; _ } = not (Base.List.is_empty parse_fails)
-
-let is_skip { Parsing.parse_skips; parse_not_found; _ } =
-  (not (Base.List.is_empty parse_skips)) || not (FilenameSet.is_empty parse_not_found)
+let is_fail { Parsing.failed; _ } = fst failed <> []
 
 type lib_result =
   | Lib_ok of {
@@ -54,12 +51,10 @@ let parse_lib_file ~reader options file =
         in
         Lib_ok { ast; file_sig; tolerable_errors }
       else if is_fail results then
-        let (_, _, parse_fail) = List.hd results.Parsing.parse_fails in
-        Lib_fail parse_fail
-      else if is_skip results then
-        Lib_skip
+        let error = List.hd (snd results.Parsing.failed) in
+        Lib_fail error
       else
-        failwith "Internal error: no parse results found"
+        Lib_skip
       )
   with
   | _ -> failwith (spf "Can't read library definitions file %s, exiting." file)

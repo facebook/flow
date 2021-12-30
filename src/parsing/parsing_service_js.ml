@@ -49,30 +49,30 @@ and package_json_error = Loc.t * string
 (* results of parse job, returned by parse and reparse *)
 type results = {
   (* successfully parsed files *)
-  parse_ok: FilenameSet.t;
-  (* list of intentionally skipped files *)
-  parse_skips: (File_key.t * Docblock.t) list;
+  parsed: FilenameSet.t;
+  (* list of skipped files *)
+  unparsed: (File_key.t * Docblock.t) list;
   (* list of files skipped due to an out of date hash *)
-  parse_hash_mismatch_skips: FilenameSet.t;
+  changed: FilenameSet.t;
   (* list of failed files *)
-  parse_fails: (File_key.t * Docblock.t * parse_failure) list;
+  failed: (File_key.t * Docblock.t) list * parse_failure list;
   (* set of unchanged files *)
-  parse_unchanged: FilenameSet.t;
+  unchanged: FilenameSet.t;
   (* set of files that were not found on disk *)
-  parse_not_found: FilenameSet.t;
+  not_found: FilenameSet.t;
   (* package.json files parsed *)
-  parse_package_json: File_key.t list * package_json_error list;
+  package_json: File_key.t list * package_json_error option list;
 }
 
 let empty_result =
   {
-    parse_ok = FilenameSet.empty;
-    parse_skips = [];
-    parse_hash_mismatch_skips = FilenameSet.empty;
-    parse_fails = [];
-    parse_unchanged = FilenameSet.empty;
-    parse_not_found = FilenameSet.empty;
-    parse_package_json = ([], []);
+    parsed = FilenameSet.empty;
+    unparsed = [];
+    changed = FilenameSet.empty;
+    failed = ([], []);
+    unchanged = FilenameSet.empty;
+    not_found = FilenameSet.empty;
+    package_json = ([], []);
   }
 
 (**************************** internal *********************************)
@@ -526,6 +526,16 @@ let hash_content content =
   Xx.update state content;
   Xx.digest state
 
+let content_hash_matches_file_hash ~reader file content_hash =
+  match Parsing_heaps.Mutator_reader.get_file_hash ~reader file with
+  | None -> false
+  | Some hash -> hash = content_hash
+
+let content_hash_matches_old_file_hash ~reader file content_hash =
+  match Parsing_heaps.Mutator_reader.get_old_file_hash ~reader file with
+  | None -> false
+  | Some hash -> hash = content_hash
+
 let does_content_match_file_hash ~reader file content =
   let content_hash = hash_content content in
   match Parsing_heaps.Reader.get_file_hash ~reader file with
@@ -538,113 +548,85 @@ let reducer
     ~worker_mutator
     ~reader
     ~parse_options
-    ~skip_hash_mismatch
+    ~skip_changed
+    ~skip_unchanged
     ~max_header_tokens
     ~noflow
-    ~parse_unchanged
-    parse_results
+    acc
     file : results =
-  (* It turns out that sometimes files appear and disappear very quickly. Just
-   * because someone told us that this file exists and needs to be parsed, it
-   * doesn't mean it actually still exists. If anything goes wrong reading this
-   * file, let's skip it. We don't need to notify our caller, since they'll
-   * probably get the delete event anyway *)
-  let content =
-    let filename_string = File_key.to_string file in
-    try Some (cat filename_string) with
-    | _ -> None
-  in
-  match content with
-  | Some content ->
+  let filename_string = File_key.to_string file in
+  match cat filename_string with
+  | exception _ ->
+    (* It turns out that sometimes files appear and disappear very quickly. Just
+     * because someone told us that this file exists and needs to be parsed, it
+     * doesn't mean it actually still exists. If anything goes wrong reading this
+     * file, let's skip it. We don't need to notify our caller, since they'll
+     * probably get the delete event anyway *)
+    { acc with not_found = FilenameSet.add file acc.not_found }
+  | content ->
     let new_hash = hash_content content in
-    (* If skip_hash_mismatch is true, then we're currently ensuring some files are parsed. That
+    (* If skip_changed is true, then we're currently ensuring some files are parsed. That
      * means we don't currently have the file's AST but we might have the file's hash in the
      * non-oldified heap. What we want to avoid is parsing files which differ from the hash *)
-    if
-      skip_hash_mismatch && Some new_hash <> Parsing_heaps.Mutator_reader.get_file_hash ~reader file
-    then
-      let parse_hash_mismatch_skips =
-        FilenameSet.add file parse_results.parse_hash_mismatch_skips
-      in
-      { parse_results with parse_hash_mismatch_skips }
-    else
-      let unchanged =
-        match Parsing_heaps.Mutator_reader.get_old_file_hash ~reader file with
-        | Some old_hash when old_hash = new_hash ->
-          (* If this optimization is turned off then still parse the file, even though it's
-           * unchanged *)
-          not parse_unchanged
-        | _ ->
-          (* The file has changed. Let's record the new hash *)
-          worker_mutator.Parsing_heaps.add_hash file new_hash;
-          false
-      in
-      if unchanged then
-        let parse_unchanged = FilenameSet.add file parse_results.parse_unchanged in
-        { parse_results with parse_unchanged }
-      else (
-        match parse_docblock ~max_tokens:max_header_tokens file content with
-        | ([], info) ->
-          let info =
-            if noflow file then
-              { info with Docblock.flow = Some Docblock.OptOut }
-            else
-              info
-          in
-          begin
-            match do_parse ~parse_options ~info content file with
-            | Parse_ok
-                { ast; file_sig; exports; locs; type_sig; tolerable_errors; parse_errors = _ } ->
-              (* if parse_options.fail == true, then parse errors will hit Parse_fail below. otherwise,
-                 ignore any parse errors we get here. *)
-              let file_sig = (file_sig, tolerable_errors) in
-              worker_mutator.Parsing_heaps.add_file file ~exports info ast file_sig locs type_sig;
-              let parse_ok = FilenameSet.add file parse_results.parse_ok in
-              { parse_results with parse_ok }
-            | Parse_fail converted ->
-              let fail = (file, info, converted) in
-              let parse_fails = fail :: parse_results.parse_fails in
-              { parse_results with parse_fails }
-            | Parse_skip (Skip_package_json (_parse_errors, package_json_error)) ->
-              (* if parse_options.fail == true, then parse errors will hit Parse_fail below. otherwise,
-                 ignore any parse errors we get here. *)
-              let parse_skips = (file, info) :: parse_results.parse_skips in
-              let (package_json, package_json_errors) = parse_results.parse_package_json in
-              let package_json_errors =
-                match package_json_error with
-                | Some e -> e :: package_json_errors
-                | None -> package_json_errors
-              in
-              let parse_package_json = (file :: package_json, package_json_errors) in
-              { parse_results with parse_skips; parse_package_json }
-            | Parse_skip Skip_non_flow_file
-            | Parse_skip Skip_resource_file ->
-              let parse_skips = (file, info) :: parse_results.parse_skips in
-              { parse_results with parse_skips }
-          end
-        | (docblock_errors, info) ->
-          let fail = (file, info, Docblock_errors docblock_errors) in
-          let parse_fails = fail :: parse_results.parse_fails in
-          { parse_results with parse_fails }
-      )
-  | None ->
-    let parse_not_found = FilenameSet.add file parse_results.parse_not_found in
-    { parse_results with parse_not_found }
+    if skip_changed && not (content_hash_matches_file_hash ~reader file new_hash) then
+      { acc with changed = FilenameSet.add file acc.changed }
+    else if skip_unchanged && content_hash_matches_old_file_hash ~reader file new_hash then
+      { acc with unchanged = FilenameSet.add file acc.unchanged }
+    else (
+      worker_mutator.Parsing_heaps.add_hash file new_hash;
+      match parse_docblock ~max_tokens:max_header_tokens file content with
+      | ([], info) ->
+        let info =
+          if noflow file then
+            { info with Docblock.flow = Some Docblock.OptOut }
+          else
+            info
+        in
+        begin
+          match do_parse ~parse_options ~info content file with
+          | Parse_ok { ast; file_sig; exports; locs; type_sig; tolerable_errors; parse_errors = _ }
+            ->
+            (* if parse_options.fail == true, then parse errors will hit Parse_fail below. otherwise,
+               ignore any parse errors we get here. *)
+            let file_sig = (file_sig, tolerable_errors) in
+            worker_mutator.Parsing_heaps.add_file file ~exports info ast file_sig locs type_sig;
+            { acc with parsed = FilenameSet.add file acc.parsed }
+          | Parse_fail error ->
+            let failed = ((file, info) :: fst acc.failed, error :: snd acc.failed) in
+            { acc with failed }
+          | Parse_skip (Skip_package_json (_parse_errors, error)) ->
+            (* if parse_options.fail == true, then parse errors will hit Parse_fail below. otherwise,
+               ignore any parse errors we get here. *)
+            let unparsed = (file, info) :: acc.unparsed in
+            let package_json = (file :: fst acc.package_json, error :: snd acc.package_json) in
+            { acc with unparsed; package_json }
+          | Parse_skip Skip_non_flow_file
+          | Parse_skip Skip_resource_file ->
+            { acc with unparsed = (file, info) :: acc.unparsed }
+        end
+      | (docblock_errors, info) ->
+        let error = Docblock_errors docblock_errors in
+        let failed = ((file, info) :: fst acc.failed, error :: snd acc.failed) in
+        { acc with failed }
+    )
 
 (* merge is just memberwise union/concat of results *)
-let merge r1 r2 =
+let merge a b =
   {
-    parse_ok = FilenameSet.union r1.parse_ok r2.parse_ok;
-    parse_skips = r1.parse_skips @ r2.parse_skips;
-    parse_hash_mismatch_skips =
-      FilenameSet.union r1.parse_hash_mismatch_skips r2.parse_hash_mismatch_skips;
-    parse_fails = r1.parse_fails @ r2.parse_fails;
-    parse_unchanged = FilenameSet.union r1.parse_unchanged r2.parse_unchanged;
-    parse_not_found = FilenameSet.union r1.parse_not_found r2.parse_not_found;
-    parse_package_json =
-      (let (s1, e1) = r1.parse_package_json in
-       let (s2, e2) = r2.parse_package_json in
-       (List.rev_append s1 s2, List.rev_append e1 e2)
+    parsed = FilenameSet.union a.parsed b.parsed;
+    unparsed = List.rev_append a.unparsed b.unparsed;
+    changed = FilenameSet.union a.changed b.changed;
+    failed =
+      (let (a1, a2) = a.failed in
+       let (b1, b2) = b.failed in
+       (List.rev_append a1 b1, List.rev_append a2 b2)
+      );
+    unchanged = FilenameSet.union a.unchanged b.unchanged;
+    not_found = FilenameSet.union a.not_found b.not_found;
+    package_json =
+      (let (a1, a2) = a.package_json in
+       let (b1, b2) = b.package_json in
+       (List.rev_append a1 b1, List.rev_append a2 b2)
       );
   }
 
@@ -689,11 +671,11 @@ let parse
     ~worker_mutator
     ~reader
     ~parse_options
-    ~skip_hash_mismatch
+    ~skip_changed
+    ~skip_unchanged
     ~profile
     ~max_header_tokens
     ~noflow
-    ~parse_unchanged
     workers
     next : results Lwt.t =
   let t = Unix.gettimeofday () in
@@ -702,31 +684,34 @@ let parse
       ~worker_mutator
       ~reader
       ~parse_options
-      ~skip_hash_mismatch
+      ~skip_changed
+      ~skip_unchanged
       ~max_header_tokens
       ~noflow
-      ~parse_unchanged
   in
   let%lwt results =
     MultiWorkerLwt.call workers ~job:(List.fold_left reducer) ~neutral:empty_result ~merge ~next
   in
   if profile then
     let t2 = Unix.gettimeofday () in
-    let ok_count = FilenameSet.cardinal results.parse_ok in
-    let skip_count = List.length results.parse_skips in
-    let not_found_count = FilenameSet.cardinal results.parse_not_found in
-    let mismatch_count = FilenameSet.cardinal results.parse_hash_mismatch_skips in
-    let fail_count = List.length results.parse_fails in
-    let unchanged_count = FilenameSet.cardinal results.parse_unchanged in
+    let num_parsed = FilenameSet.cardinal results.parsed in
+    let num_unparsed = List.length results.unparsed in
+    let num_changed = FilenameSet.cardinal results.changed in
+    let num_failed = List.length (fst results.failed) in
+    let num_unchanged = FilenameSet.cardinal results.unchanged in
+    let num_not_found = FilenameSet.cardinal results.not_found in
+    let total =
+      num_parsed + num_unparsed + num_changed + num_failed + num_unchanged + num_not_found
+    in
     Hh_logger.info
       "parsed %d files (%d ok, %d skipped, %d not found, %d bad hashes, %d failed, %d unchanged) in %f"
-      (ok_count + skip_count + mismatch_count + fail_count)
-      ok_count
-      skip_count
-      not_found_count
-      mismatch_count
-      fail_count
-      unchanged_count
+      total
+      num_parsed
+      num_unparsed
+      num_not_found
+      num_changed
+      num_failed
+      num_unchanged
       (t2 -. t)
   else
     ();
@@ -739,7 +724,6 @@ let reparse
     ~profile
     ~max_header_tokens
     ~noflow
-    ~parse_unchanged
     ~with_progress
     ~workers
     ~modified:files =
@@ -751,27 +735,17 @@ let reparse
       ~worker_mutator
       ~reader
       ~parse_options
-      ~skip_hash_mismatch:false
+      ~skip_changed:false
+      ~skip_unchanged:true
       ~profile
       ~max_header_tokens
       ~noflow
-      ~parse_unchanged
       workers
       next
   in
-  let modified = results.parse_ok in
-  let modified =
-    List.fold_left (fun acc (fail, _, _) -> FilenameSet.add fail acc) modified results.parse_fails
-  in
-  let modified =
-    List.fold_left (fun acc (skip, _) -> FilenameSet.add skip acc) modified results.parse_skips
-  in
-  let modified = FilenameSet.union modified results.parse_hash_mismatch_skips in
-  let not_found = FilenameSet.union modified results.parse_not_found in
-  let unchanged = FilenameSet.diff (FilenameSet.diff files modified) not_found in
   (* restore old parsing info for unchanged files *)
-  Parsing_heaps.Reparse_mutator.revive_files master_mutator unchanged;
-  Lwt.return (modified, results)
+  Parsing_heaps.Reparse_mutator.revive_files master_mutator results.unchanged;
+  Lwt.return results
 
 let make_parse_options_internal
     ?(fail = true) ?(types_mode = TypesAllowed) ?use_strict ~docblock options =
@@ -818,18 +792,16 @@ let parse_with_defaults ?types_mode ?use_strict ~reader options workers next =
   let parse_options =
     make_parse_options_internal ~fail:true ~use_strict ~types_mode ~docblock:None options
   in
-  let parse_unchanged = true in
-  (* This isn't a recheck, so there shouldn't be any unchanged *)
   let worker_mutator = Parsing_heaps.Parse_mutator.create () in
   parse
     ~worker_mutator
     ~reader
     ~parse_options
-    ~skip_hash_mismatch:false
+    ~skip_changed:false
+    ~skip_unchanged:false
     ~profile
     ~max_header_tokens
     ~noflow
-    ~parse_unchanged
     workers
     next
 
@@ -838,7 +810,6 @@ let reparse_with_defaults
   let (types_mode, use_strict, profile, max_header_tokens, noflow) =
     get_defaults ~types_mode ~use_strict options
   in
-  let parse_unchanged = false in
   (* We're rechecking, so let's skip files which haven't changed *)
   let parse_options = make_parse_options_internal ~types_mode ~use_strict ~docblock:None options in
   reparse
@@ -848,7 +819,6 @@ let reparse_with_defaults
     ~profile
     ~max_header_tokens
     ~noflow
-    ~parse_unchanged
     ~with_progress
     ~workers
     ~modified
@@ -860,8 +830,6 @@ let ensure_parsed ~reader options workers files =
   let (types_mode, use_strict, profile, max_header_tokens, noflow) =
     get_defaults ~types_mode:None ~use_strict:None options
   in
-  (* We want to parse unchanged files, since this is our first time parsing them *)
-  let parse_unchanged = true in
   (* We're not replacing any info, so there's nothing to roll back. That means we can just use the
    * simple Parse_mutator rather than the rollback-able Reparse_mutator *)
   let worker_mutator = Parsing_heaps.Parse_mutator.create () in
@@ -887,24 +855,24 @@ let ensure_parsed ~reader options workers files =
   let next = MultiWorkerLwt.next ~progress_fn workers (FilenameSet.elements files_missing_asts) in
   let parse_options = make_parse_options_internal ~types_mode ~use_strict ~docblock:None options in
   let%lwt {
-        parse_ok = _;
-        parse_skips = _;
-        parse_hash_mismatch_skips;
-        parse_fails = _;
-        parse_unchanged = _;
-        parse_not_found;
-        parse_package_json = _;
+        parsed = _;
+        unparsed = _;
+        changed;
+        failed = _;
+        unchanged = _;
+        not_found;
+        package_json = _;
       } =
     parse
       ~worker_mutator
       ~reader
       ~parse_options
-      ~skip_hash_mismatch:true
+      ~skip_changed:true
+      ~skip_unchanged:false
       ~profile
       ~max_header_tokens
       ~noflow
-      ~parse_unchanged
       workers
       next
   in
-  Lwt.return (FilenameSet.union parse_not_found parse_hash_mismatch_skips)
+  Lwt.return (FilenameSet.union changed not_found)

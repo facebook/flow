@@ -51,19 +51,19 @@ and package_json_error = Loc.t * string
 (* results of parse job, returned by parse and reparse *)
 type results = {
   (* successfully parsed files *)
-  parse_ok: FilenameSet.t;
+  parsed: FilenameSet.t;
   (* list of skipped files *)
-  parse_skips: (File_key.t * Docblock.t) list;
+  unparsed: (File_key.t * Docblock.t) list;
   (* list of files skipped due to an out of date hash *)
-  parse_hash_mismatch_skips: FilenameSet.t;
+  changed: FilenameSet.t;
   (* list of failed files *)
-  parse_fails: (File_key.t * Docblock.t * parse_failure) list;
+  failed: (File_key.t * Docblock.t) list * parse_failure list;
   (* set of unchanged files *)
-  parse_unchanged: FilenameSet.t;
+  unchanged: FilenameSet.t;
   (* set of files that were not found on disk *)
-  parse_not_found: FilenameSet.t;
+  not_found: FilenameSet.t;
   (* package.json files parsed *)
-  parse_package_json: File_key.t list * package_json_error list;
+  package_json: File_key.t list * package_json_error option list;
 }
 
 type parse_options = {
@@ -115,7 +115,7 @@ val reparse_with_defaults :
   workers:MultiWorkerLwt.worker list option ->
   modified:FilenameSet.t ->
   Options.t ->
-  (FilenameSet.t * results) Lwt.t
+  results Lwt.t
 
 val ensure_parsed :
   reader:Mutator_state_reader.t ->

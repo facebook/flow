@@ -50,23 +50,23 @@ let filter_duplicate_provider map file =
 
 let collate_parse_results parse_results =
   let {
-    Parsing_service_js.parse_ok;
-    parse_skips;
-    parse_hash_mismatch_skips;
-    parse_fails;
-    parse_unchanged;
-    parse_not_found;
-    parse_package_json;
+    Parsing_service_js.parsed;
+    unparsed;
+    changed;
+    failed = (failed, errors);
+    unchanged;
+    not_found;
+    package_json;
   } =
     parse_results
   in
   (* No one who is calling collate_parse_results is skipping files with hash mismatches *)
-  assert (FilenameSet.is_empty parse_hash_mismatch_skips);
+  assert (FilenameSet.is_empty changed);
   let local_errors =
-    List.fold_left
-      (fun errors (file, _, fail) ->
+    List.fold_left2
+      (fun errors (file, _) error ->
         let errset =
-          match fail with
+          match error with
           | Parsing_service_js.Parse_error err ->
             Inference_utils.set_of_parse_error ~source_file:file err
           | Parsing_service_js.Docblock_errors errs ->
@@ -76,15 +76,11 @@ let collate_parse_results parse_results =
         in
         update_errset errors file errset)
       FilenameMap.empty
-      parse_fails
+      failed
+      errors
   in
-  let unparsed =
-    List.fold_left
-      (fun unparsed (file, info, _) -> (file, info) :: unparsed)
-      parse_skips
-      parse_fails
-  in
-  (parse_ok, unparsed, parse_unchanged, parse_not_found, local_errors, parse_package_json)
+  let unparsed = List.rev_append failed unparsed in
+  (parsed, unparsed, unchanged, not_found, local_errors, package_json)
 
 let parse ~options ~profiling ~workers ~reader parse_next =
   Memory_utils.with_memory_timer_lwt ~options "Parsing" profiling (fun () ->
@@ -94,7 +90,7 @@ let parse ~options ~profiling ~workers ~reader parse_next =
 
 let reparse ~options ~profiling ~transaction ~reader ~workers ~modified =
   Memory_utils.with_memory_timer_lwt ~options "Parsing" profiling (fun () ->
-      let%lwt (new_or_changed, results) =
+      let%lwt results =
         Parsing_service_js.reparse_with_defaults
           ~transaction
           ~reader
@@ -103,10 +99,7 @@ let reparse ~options ~profiling ~transaction ~reader ~workers ~modified =
           ~modified
           options
       in
-      let (parse_ok, unparsed, unchanged, deleted, local_errors, _) =
-        collate_parse_results results
-      in
-      Lwt.return (new_or_changed, deleted, parse_ok, unparsed, unchanged, local_errors)
+      Lwt.return (collate_parse_results results)
   )
 
 let flow_error_of_module_error file err =
@@ -1129,34 +1122,42 @@ end = struct
      * or at a more important level *)
     let files_to_force = CheckedSet.diff files_to_force env.ServerEnv.checked_files in
 
-    (* We don't need to delete things from the parsing heaps - they will be automatically oldified.
-     * Oldifying something removes it from the heap (but keeps it around in case we need it back) *)
     Hh_logger.info "Parsing";
 
-    (* reparse modified files, updating modified to new_or_changed to reflect
-     * removal of unchanged files
+    (* Reparse updates. Parsing splits the updates into the following
+     * disjoint collections:
      *
-     * new_or_changed - Set of files which are not unchanged. This includes freshparsed, fails & skips
-     * freshparsed - Set of files which parsed successfully
-     * unparsed - Set of files which were skipped (e.g. no @flow) or which we failed to parse
-     * unchanged_parse - Set of files who's file hash didn't changes
-     * new_local_errors - Parse errors, docblock errors, etc
-     *)
-    let%lwt (new_or_changed, deleted, freshparsed_set, unparsed, unchanged_parse, new_local_errors)
-        =
+     * parsed: files which should be typechecked and were successfully parsed
+     * unparsed: files which either should not be parsed (resource files) or
+     *   checked (not @flow), or which failed to parse
+     * unchanged: files which have not actually changed since we last parsed
+     *   them, and therefore do not need to be rechecked
+     * deleted: files which could not be found on disk, for which we may have
+     *   data that needs to be invalidated
+     *
+     * Parsing also gives us new local_errors, including parse errors, docblock
+     * errors, etc. *)
+    let%lwt (parsed_set, unparsed, unchanged_parse, deleted, new_local_errors, _) =
       let modified = CheckedSet.all updates in
       reparse ~options ~profiling ~transaction ~reader ~workers ~modified
     in
-    (* turn [freshparsed_set] into a CheckedSet with the same priorities as they came in from [updates] *)
-    let freshparsed =
-      CheckedSet.filter ~f:(fun file _ -> FilenameSet.mem file freshparsed_set) updates
-    in
+
+    let parsed = FilenameSet.elements parsed_set in
     let unparsed_set =
       List.fold_left (fun set (fn, _) -> FilenameSet.add fn set) FilenameSet.empty unparsed
     in
+
+    (* parsed + unparsed = new or changed files *)
+    let new_or_changed = FilenameSet.union parsed_set unparsed_set in
+    let new_or_changed_or_deleted = FilenameSet.union new_or_changed deleted in
+
+    (* turn [parsed_set] into a CheckedSet with the same priorities as they came in from [updates] *)
+    let freshparsed =
+      CheckedSet.filter ~f:(fun file _ -> FilenameSet.mem file parsed_set) updates
+    in
     (* clear errors for new, changed and deleted files *)
     let { ServerEnv.local_errors; merge_errors; warnings; suppressions } =
-      errors |> clear_errors new_or_changed |> clear_errors deleted
+      clear_errors new_or_changed_or_deleted errors
     in
     (* record reparse errors *)
     let local_errors =
@@ -1178,9 +1179,9 @@ end = struct
       in
       merge_error_maps new_local_errors local_errors
     in
+
     (* get old (unchanged, undeleted) files that were parsed successfully *)
     let old_parsed = env.ServerEnv.files in
-    let new_or_changed_or_deleted = FilenameSet.union new_or_changed deleted in
     let unchanged = FilenameSet.diff old_parsed new_or_changed_or_deleted in
 
     let deleted_count = FilenameSet.cardinal deleted in
@@ -1378,7 +1379,6 @@ end = struct
       CheckedSet.filter files_to_force ~f:(fun fn _ -> FilenameSet.mem fn unchanged)
     in
     MonitorRPC.status_update ServerStatus.Resolving_dependencies_progress;
-    let freshparsed_list = FilenameSet.elements freshparsed_set in
     let%lwt (changed_modules, local_errors) =
       (* TODO remove after lookup overhaul *)
       Module_js.clear_filename_cache ();
@@ -1390,8 +1390,8 @@ end = struct
         ~profiling
         ~workers
         ~old_modules
-        ~parsed:freshparsed_list
-        ~parsed_set:freshparsed_set
+        ~parsed
+        ~parsed_set
         ~unparsed
         ~unparsed_set
         ~new_or_changed
@@ -1419,18 +1419,18 @@ end = struct
     Hh_logger.info "Re-resolving parsed and directly dependent files";
     let%lwt () = ensure_parsed ~options ~profiling ~workers ~reader direct_dependent_files in
     let%lwt (resolve_errors, resolved_requires_changed) =
-      let parsed_set = FilenameSet.union freshparsed_set direct_dependent_files in
+      let parsed_set = FilenameSet.union parsed_set direct_dependent_files in
       let parsed = FilenameSet.elements parsed_set in
       resolve_requires ~transaction ~reader ~options ~profiling ~workers ~parsed ~parsed_set
     in
     let local_errors = FilenameMap.union resolve_errors local_errors in
 
     Hh_logger.info "Recalculating dependency graph";
-    let parsed = FilenameSet.union freshparsed_set unchanged in
+    let parsed = FilenameSet.union parsed_set unchanged in
     let%lwt dependency_info =
       Memory_utils.with_memory_timer_lwt ~options "CalcDepsTypecheck" profiling (fun () ->
           let files_to_update_dependency_info =
-            FilenameSet.union freshparsed_set direct_dependent_files
+            FilenameSet.union parsed_set direct_dependent_files
           in
           let%lwt partial_dependency_graph =
             Dep_service.calc_partial_dependency_graph
@@ -2342,15 +2342,23 @@ let init_from_scratch ~profiling ~workers options =
   in
   assert (FilenameSet.is_empty unchanged);
 
+  let parsed = FilenameSet.elements parsed_set in
+  let unparsed_set =
+    List.fold_left (fun set (fn, _) -> FilenameSet.add fn set) FilenameSet.empty unparsed
+  in
+  let new_or_changed = FilenameSet.union parsed_set unparsed_set in
+
   (* Parsing won't raise warnings *)
   let warnings = FilenameMap.empty in
   let package_errors =
-    List.fold_left
-      (fun errors parse_err ->
-        let filename = Base.Option.value_exn (Loc.source (fst parse_err)) in
-        let errset = Inference_utils.set_of_package_json_error ~source_file:filename parse_err in
-        update_errset errors filename errset)
+    List.fold_left2
+      (fun acc source_file -> function
+        | None -> acc
+        | Some err ->
+          Inference_utils.set_of_package_json_error ~source_file err
+          |> update_errset acc source_file)
       FilenameMap.empty
+      package_json_files
       package_json_errors
   in
   let local_errors = merge_error_maps package_errors local_errors in
@@ -2363,15 +2371,7 @@ let init_from_scratch ~profiling ~workers options =
 
   Hh_logger.info "Resolving dependencies";
   MonitorRPC.status_update ServerStatus.Resolving_dependencies_progress;
-  let unparsed_set =
-    Base.List.fold
-      ~f:(fun unparsed_set (filename, _docblock) -> FilenameSet.add filename unparsed_set)
-      ~init:FilenameSet.empty
-      unparsed
-  in
-  let all_files = FilenameSet.union parsed_set unparsed_set in
   let all_providers_mutator = Module_hashtables.All_providers_mutator.create transaction in
-  let parsed = FilenameSet.elements parsed_set in
   let%lwt (_changed_modules, local_errors) =
     commit_modules
       ~transaction
@@ -2385,7 +2385,7 @@ let init_from_scratch ~profiling ~workers options =
       ~parsed_set
       ~unparsed
       ~unparsed_set
-      ~new_or_changed:all_files
+      ~new_or_changed
       ~deleted:FilenameSet.empty
       ~local_errors
       ~is_init:true
