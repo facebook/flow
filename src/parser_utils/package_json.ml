@@ -12,10 +12,6 @@ type t = {
   main: string option;
 }
 
-type 'a t_or_error = (t, 'a * string) result
-
-let ( >>= ) = Base.Result.( >>= )
-
 let empty = { name = None; main = None }
 
 let create ~name ~main = { name; main }
@@ -23,32 +19,6 @@ let create ~name ~main = { name; main }
 let name package = package.name
 
 let main package = package.main
-
-let statement_of_program = function
-  | (_, { Ast.Program.statements = [statement]; _ }) -> Ok statement
-  | (loc, _) -> Error (loc, "Expected a single statement.")
-
-let object_of_statement statement =
-  let open Ast in
-  match statement with
-  | ( _,
-      Statement.Expression
-        {
-          Statement.Expression.expression =
-            ( _,
-              Expression.Assignment
-                { Expression.Assignment.operator = None; left = _; right = obj; comments = _ }
-            );
-          directive = _;
-          comments = _;
-        }
-    ) ->
-    Ok obj
-  | (loc, _) -> Error (loc, "Expected an assignment")
-
-let properties_of_object = function
-  | (_, Ast.Expression.Object { Ast.Expression.Object.properties; comments = _ }) -> Ok properties
-  | (loc, _) -> Error (loc, "Expected an object literal")
 
 (* Given a list of JSON properties, extract the string properties and turn it into a string SMap.t
  *)
@@ -82,9 +52,8 @@ let rec find_main_property prop_map = function
       ret
   | [] -> None
 
-let parse ~node_main_fields ast : 'a t_or_error =
-  statement_of_program ast >>= object_of_statement >>= properties_of_object >>= fun properties ->
+let parse ~node_main_fields { Ast.Expression.Object.properties; comments = _ } =
   let prop_map = List.fold_left extract_property SMap.empty properties in
   let name = SMap.find_opt "name" prop_map in
   let main = find_main_property prop_map node_main_fields in
-  Ok { name; main }
+  { name; main }

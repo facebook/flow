@@ -1489,8 +1489,6 @@ let dump_error_message =
     | ERecursionLimit (reason1, reason2) ->
       spf "ERecursionLimit (%s, %s)" (dump_reason cx reason1) (dump_reason cx reason2)
     | EModuleOutsideRoot (loc, name) -> spf "EModuleOutsideRoot (%s, %S)" (string_of_aloc loc) name
-    | EMalformedPackageJson (loc, error) ->
-      spf "EMalformedPackageJson (%s, %S)" (string_of_aloc loc) error
     | EUnsafeGetSet loc -> spf "EUnsafeGetSet (%s)" (string_of_aloc loc)
     | EUninitializedInstanceProperty (loc, err) ->
       spf

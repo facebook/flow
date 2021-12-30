@@ -28,7 +28,7 @@ type result =
 and parse_skip_reason =
   | Skip_resource_file
   | Skip_non_flow_file
-  | Skip_package_json of (parse_error list * package_json_error option)
+  | Skip_package_json of (Package_json.t, parse_error) Result.t
 
 and parse_error = Loc.t * Parse_error.t
 
@@ -46,8 +46,6 @@ and docblock_error_kind =
   | MultipleJSXAttributes
   | InvalidJSXAttribute of string option
 
-and package_json_error = Loc.t * string
-
 (* results of parse job, returned by parse and reparse *)
 type results = {
   (* successfully parsed files *)
@@ -63,7 +61,7 @@ type results = {
   (* set of files that were not found on disk *)
   not_found: FilenameSet.t;
   (* package.json files parsed *)
-  package_json: File_key.t list * package_json_error option list;
+  package_json: File_key.t list * parse_error option list;
 }
 
 type parse_options = {
@@ -131,8 +129,8 @@ val parse_docblock :
   string ->
   docblock_error list * Docblock.t
 
-val parse_json_file :
-  fail:bool -> string -> File_key.t -> (Loc.t, Loc.t) Flow_ast.Program.t * parse_error list
+val parse_package_json_file :
+  node_main_fields:string list -> string -> File_key.t -> (Package_json.t, parse_error) Result.t
 
 val parse_source_file :
   fail:bool ->

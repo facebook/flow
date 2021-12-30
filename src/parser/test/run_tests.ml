@@ -568,7 +568,7 @@ end = struct
               let (expected, json_errors) = Parser_flow.json_file ~fail:false tree None in
               (Some expected, json_errors)
             with
-            | Parse_error.Error errs -> (None, errs)
+            | Parse_error.Error (e, es) -> (None, e :: es)
           in
           (match parse_result with
           | (_, (loc, err) :: _) ->

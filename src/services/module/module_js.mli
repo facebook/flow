@@ -111,11 +111,7 @@ type package_incompatible_return =
   | Incompatible of package_incompatible_reason
 
 val package_incompatible :
-  options:Options.t ->
-  reader:State_reader.t ->
-  string ->
-  (Loc.t, Loc.t) Flow_ast.Program.t ->
-  package_incompatible_return
+  reader:State_reader.t -> string -> (Package_json.t, _) result -> package_incompatible_return
 
 (***************************************************)
 

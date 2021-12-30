@@ -233,7 +233,7 @@ let main
             JSON_Object (errors_prop :: tokens_prop :: params)
           | _ -> assert false
       with
-      | Parse_error.Error l -> JSON_Object [("errors", Translate.errors l)]
+      | Parse_error.Error (e, es) -> JSON_Object [("errors", Translate.errors (e :: es))]
     in
     print_json_endline ~pretty results
   )

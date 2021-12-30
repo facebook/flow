@@ -169,9 +169,9 @@ type t =
   | ThisParamBannedInConstructor
 [@@deriving ord]
 
-exception Error of (Loc.t * t) list
+exception Error of (Loc.t * t) * (Loc.t * t) list
 
-let error loc e = raise (Error [(loc, e)])
+let error loc e = raise (Error ((loc, e), []))
 
 module PP = struct
   let error = function

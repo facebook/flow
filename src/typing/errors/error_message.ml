@@ -207,7 +207,6 @@ and 'loc t' =
   | EBindingError of binding_error * 'loc * name * ALoc.t
   | ERecursionLimit of ('loc virtual_reason * 'loc virtual_reason)
   | EModuleOutsideRoot of 'loc * string
-  | EMalformedPackageJson of 'loc * string
   | EUninitializedInstanceProperty of 'loc * Lints.property_assignment_kind
   | EEnumsNotEnabled of 'loc
   | EUnsafeGetSet of 'loc
@@ -817,7 +816,6 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
   | EBindingError (b, loc, s, scope) -> EBindingError (b, f loc, s, scope)
   | ERecursionLimit (r1, r2) -> ERecursionLimit (map_reason r1, map_reason r2)
   | EModuleOutsideRoot (loc, s) -> EModuleOutsideRoot (f loc, s)
-  | EMalformedPackageJson (loc, s) -> EMalformedPackageJson (f loc, s)
   | EUnsafeGetSet loc -> EUnsafeGetSet (f loc)
   | EUninitializedInstanceProperty (loc, e) -> EUninitializedInstanceProperty (f loc, e)
   | EEnumsNotEnabled loc -> EEnumsNotEnabled (f loc)
@@ -1164,7 +1162,6 @@ let util_use_op_of_msg nope util = function
   | EBindingError (_, _, _, _)
   | ERecursionLimit (_, _)
   | EModuleOutsideRoot (_, _)
-  | EMalformedPackageJson (_, _)
   | EUnsafeGetSet _
   | EUninitializedInstanceProperty _
   | EEnumsNotEnabled _
@@ -1366,7 +1363,6 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | EUnsafeGetSet loc
   | EUninitializedInstanceProperty (loc, _)
   | EModuleOutsideRoot (loc, _)
-  | EMalformedPackageJson (loc, _)
   | EUseArrayLiteral loc
   | EUnsupportedSyntax (loc, _)
   | EInternal (loc, _)
@@ -2451,7 +2447,6 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
       ]
     in
     Normal { features }
-  | EMalformedPackageJson (_, error) -> Normal { features = [text error] }
   | EUnsafeGetSet _ ->
     let features =
       [
@@ -3917,7 +3912,6 @@ let error_code_of_message err : error_code option =
   | EInvalidTypeArgs (_, _) -> Some InvalidTypeArg
   | EInvalidTypeof _ -> Some IllegalTypeof
   | ELintSetting _ -> Some LintSetting
-  | EMalformedPackageJson (_, _) -> Some MalformedPackage
   | EMissingAnnotation _ -> Some MissingAnnot
   | EMissingLocalAnnotation r ->
     begin

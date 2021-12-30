@@ -26,7 +26,7 @@ type result =
 and parse_skip_reason =
   | Skip_resource_file
   | Skip_non_flow_file
-  | Skip_package_json of (parse_error list * package_json_error option)
+  | Skip_package_json of (Package_json.t, parse_error) Result.t
 
 and parse_error = Loc.t * Parse_error.t
 
@@ -44,8 +44,6 @@ and docblock_error_kind =
   | MultipleJSXAttributes
   | InvalidJSXAttribute of string option
 
-and package_json_error = Loc.t * string
-
 (* results of parse job, returned by parse and reparse *)
 type results = {
   (* successfully parsed files *)
@@ -61,7 +59,7 @@ type results = {
   (* set of files that were not found on disk *)
   not_found: FilenameSet.t;
   (* package.json files parsed *)
-  package_json: File_key.t list * package_json_error option list;
+  package_json: File_key.t list * parse_error option list;
 }
 
 let empty_result =
@@ -129,7 +127,7 @@ let parse_source_file ~fail ~types ~use_strict content file =
   if fail then assert (parse_errors = []);
   (ast, parse_errors)
 
-let parse_json_file ~fail content file =
+let parse_package_json_file ~node_main_fields content file =
   let parse_options =
     Some
       Parser_env.
@@ -147,46 +145,9 @@ let parse_json_file ~fail content file =
       
   in
 
-  (* parse the file as JSON, then munge the AST to convert from an object
-     into a `module.exports = {...}` statement *)
-  let (expr, parse_errors) = Parser_flow.json_file ~fail ~parse_options content (Some file) in
-  if fail then assert (parse_errors = []);
-  let open Ast in
-  let loc_none = Loc.none in
-  let module_exports =
-    ( loc_none,
-      let open Expression in
-      Member
-        {
-          Member._object =
-            (loc_none, Identifier (Flow_ast_utils.ident_of_source (loc_none, "module")));
-          property = Member.PropertyIdentifier (Flow_ast_utils.ident_of_source (loc_none, "exports"));
-          comments = None;
-        }
-    )
-  in
-  let loc = fst expr in
-  let statement =
-    ( loc,
-      Statement.Expression
-        {
-          Statement.Expression.expression =
-            ( loc,
-              Expression.Assignment
-                {
-                  Expression.Assignment.operator = None;
-                  left = (loc_none, Pattern.Expression module_exports);
-                  right = expr;
-                  comments = None;
-                }
-            );
-          directive = None;
-          comments = None;
-        }
-    )
-  in
-  let all_comments = ([] : Loc.t Comment.t list) in
-  ((loc, { Program.statements = [statement]; comments = None; all_comments }), parse_errors)
+  match Parser_flow.package_json_file ~parse_options content (Some file) with
+  | exception Parse_error.Error (err, _) -> Error err
+  | ((_loc, obj), _parse_errors) -> Ok (Package_json.parse ~node_main_fields obj)
 
 (* Avoid lexing unbounded in perverse cases *)
 let docblock_max_tokens = 10
@@ -274,10 +235,9 @@ let extract_docblock =
               in
               (errors, { info with jsx = Some (expr, jsx_expr) })
             with
-            | Parse_error.Error [] -> ((expr_loc, InvalidJSXAttribute None) :: errors, info)
-            | Parse_error.Error ((_, e) :: _) ->
-              let first_error = Some (Parse_error.PP.error e) in
-              ((expr_loc, InvalidJSXAttribute first_error) :: errors, info)
+            | Parse_error.Error ((_, e), _) ->
+              let e = Some (Parse_error.PP.error e) in
+              ((expr_loc, InvalidJSXAttribute e) :: errors, info)
         in
         parse_attributes acc xs
       | (_, "@typeAssert") :: xs -> parse_attributes (errors, { info with typeAssert = true }) xs
@@ -426,18 +386,8 @@ let do_parse ~parse_options ~info content file =
     match file with
     | File_key.JsonFile str ->
       if Filename.basename str = "package.json" then
-        let (ast, parse_errors) = parse_json_file ~fail content file in
-        let package = Package_json.parse ~node_main_fields ast in
-        let package_error_opt =
-          match package with
-          | Ok pkg ->
-            Package_heaps.Package_heap_mutator.add_package_json (File_key.to_string file) pkg;
-            None
-          | Error (loc, str) ->
-            Package_heaps.Package_heap_mutator.add_error (File_key.to_string file);
-            Some (loc, str)
-        in
-        Parse_skip (Skip_package_json (parse_errors, package_error_opt))
+        let result = parse_package_json_file ~node_main_fields content file in
+        Parse_skip (Skip_package_json result)
       else
         Parse_skip Skip_resource_file
     | File_key.ResourceFile _ -> Parse_skip Skip_resource_file
@@ -513,7 +463,7 @@ let do_parse ~parse_options ~info content file =
           in
           Parse_ok { ast; file_sig; locs; type_sig; tolerable_errors; parse_errors; exports })
   with
-  | Parse_error.Error (first_parse_error :: _) -> Parse_fail (Parse_error first_parse_error)
+  | Parse_error.Error (e, _) -> Parse_fail (Parse_error e)
   | e ->
     let e = Exception.wrap e in
     let s = Exception.get_ctor_string e in
@@ -605,9 +555,17 @@ let reducer
             worker_mutator.Parsing_heaps.add_unparsed file module_name;
             let failed = (file :: fst acc.failed, error :: snd acc.failed) in
             { acc with failed }
-          | Parse_skip (Skip_package_json (_parse_errors, error)) ->
-            (* if parse_options.fail == true, then parse errors will hit Parse_fail below. otherwise,
-               ignore any parse errors we get here. *)
+          | Parse_skip (Skip_package_json result) ->
+            let error =
+              let file_str = File_key.to_string file in
+              match result with
+              | Ok pkg ->
+                Package_heaps.Package_heap_mutator.add_package_json file_str pkg;
+                None
+              | Error err ->
+                Package_heaps.Package_heap_mutator.add_error file_str;
+                Some err
+            in
             worker_mutator.Parsing_heaps.add_unparsed file module_name;
             let unparsed = FilenameSet.add file acc.unparsed in
             let package_json = (file :: fst acc.package_json, error :: snd acc.package_json) in

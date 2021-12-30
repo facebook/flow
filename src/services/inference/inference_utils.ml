@@ -35,13 +35,6 @@ let error_of_parse_error ~source_file (loc, err) =
 let set_of_parse_error ~source_file =
   error_of_parse_error ~source_file %> Flow_error.ErrorSet.singleton
 
-let error_of_package_json_error ~source_file (loc, err) =
-  Error_message.EMalformedPackageJson (ALoc.of_loc loc, err)
-  |> Flow_error.error_of_msg ~trace_reasons:[] ~source_file
-
-let set_of_package_json_error ~source_file =
-  error_of_package_json_error ~source_file %> Flow_error.ErrorSet.singleton
-
 let error_of_file_sig_error ~source_file err =
   File_sig.With_Loc.(
     let flow_err =

@@ -1863,7 +1863,7 @@ References:
 
 Error ---------------------------------------------------------------------------- invalid_package_file/package.json:1:1
 
-Unexpected end of input, expected a valid JSON value
+Unexpected end of input, expected the token `{`
 
    1|
       

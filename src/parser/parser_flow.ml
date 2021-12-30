@@ -379,8 +379,9 @@ end
 let do_parse env parser fail =
   let ast = parser env in
   let error_list = filter_duplicate_errors (errors env) in
-  if fail && error_list <> [] then raise (Parse_error.Error error_list);
-  (ast, error_list)
+  match error_list with
+  | e :: es when fail -> raise (Parse_error.Error (e, es))
+  | _ -> (ast, error_list)
 
 (* Makes the input parser expect EOF at the end. Use this to error on trailing
  * junk when parsing non-Program nodes. *)
@@ -403,34 +404,45 @@ let program ?(fail = true) ?(token_sink = None) ?(parse_options = None) content 
 let program_file ?(fail = true) ?(token_sink = None) ?(parse_options = None) content filename =
   parse_program fail ~token_sink ~parse_options filename content
 
+let package_json_file =
+  let parser env =
+    let (loc, obj, { if_expr; _ }) = Parse.object_initializer env in
+    List.iter (error_at env) if_expr;
+    (loc, obj)
+  in
+  fun ?(fail = true) ?(token_sink = None) ?(parse_options = None) content filename ->
+    let env = init_env ~token_sink ~parse_options filename content in
+    do_parse env parser fail
+
 (* even if fail=false, still raises an error on a totally invalid token, since
    there's no legitimate fallback. *)
-let json_file ?(fail = true) ?(token_sink = None) ?(parse_options = None) content filename =
-  let env = init_env ~token_sink ~parse_options filename content in
-  match Peek.token env with
-  | T_LBRACKET
-  | T_LCURLY
-  | T_STRING _
-  | T_NUMBER _
-  | T_TRUE
-  | T_FALSE
-  | T_NULL ->
-    do_parse env Parse.expression fail
-  | T_MINUS ->
-    (match Peek.ith_token ~i:1 env with
-    | T_NUMBER _ -> do_parse env Parse.expression fail
+let json_file =
+  let null_fallback _env =
+    Ast.Expression.Literal { Ast.Literal.value = Ast.Literal.Null; raw = "null"; comments = None }
+  in
+  let parser env =
+    match Peek.token env with
+    | T_LBRACKET
+    | T_LCURLY
+    | T_STRING _
+    | T_NUMBER _
+    | T_TRUE
+    | T_FALSE
+    | T_NULL ->
+      Parse.expression env
+    | T_MINUS ->
+      (match Peek.ith_token ~i:1 env with
+      | T_NUMBER _ -> Parse.expression env
+      | _ ->
+        error_unexpected ~expected:"a number" env;
+        with_loc null_fallback env)
     | _ ->
-      error_unexpected ~expected:"a number" env;
-      raise (Parse_error.Error (errors env)))
-  | _ ->
-    let errs =
-      match errors env with
-      | [] ->
-        error_unexpected ~expected:"a valid JSON value" env;
-        errors env
-      | errs -> errs
-    in
-    raise (Parse_error.Error errs)
+      error_unexpected ~expected:"a valid JSON value" env;
+      with_loc null_fallback env
+  in
+  fun ?(fail = true) ?(token_sink = None) ?(parse_options = None) content filename ->
+    let env = init_env ~token_sink ~parse_options filename content in
+    do_parse env parser fail
 
 let jsx_pragma_expression =
   let left_hand_side env =

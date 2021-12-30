@@ -2305,8 +2305,7 @@ let init_from_scratch ~profiling ~workers options =
       (fun acc source_file -> function
         | None -> acc
         | Some err ->
-          Inference_utils.set_of_package_json_error ~source_file err
-          |> update_errset acc source_file)
+          Inference_utils.set_of_parse_error ~source_file err |> update_errset acc source_file)
       FilenameMap.empty
       package_json_files
       package_json_errors
