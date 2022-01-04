@@ -1422,6 +1422,22 @@ end = struct
       let to_remove = FilenameSet.union parsed deleted in
       FilenameSet.diff env.ServerEnv.unparsed to_remove |> FilenameSet.union unparsed_set
     in
+    (* during check, we will try to skip checking dependents whose dependencies haven't changed.
+       if the inputs are the same, the output should be too. however, there are a few cases that
+       require a dependent to be checked, but which aren't reflected in the updated dependency
+       graph:
+       1) resolved requires changed: e.g. foo.js used to depend on a/bar.js but now depends on
+          b/bar.js. even if b/bar.js didn't change, we still need to recheck foo.js
+       2) a file is deleted: if foo.js used to depend on bar.js, and bar.js was deleted, then
+          bar.js doesn't even appear in foo.js's dependencies to consider whether it changed.
+          TODO: shouldn't this be captured by resolved_requires_changed because foo's
+          require('bar') now resolves to nothing instead of bar.js?
+       3) a file changed from @flow to non-@flow: if foo.js depends on bar.js and bar.js removes
+          @flow, then we won't merge bar.js anymore, so it won't be in sig_new_or_changed,
+          so we won't think we need to check foo.js.
+          TODO: we should be able to track the specific files this applies to and avoid
+          skipping all direct dependents, but the win here is probably small... how often
+          do files become skipped? *)
     let cannot_skip_direct_dependents =
       resolved_requires_changed || deleted_count > 0 || not (FilenameSet.is_empty unparsed_set)
     in
