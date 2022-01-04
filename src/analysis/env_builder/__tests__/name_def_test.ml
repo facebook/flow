@@ -6,8 +6,9 @@
  *)
 
 open Test_utils
-open Name_def.With_ALoc
+open Name_def
 open Utils_js
+open Loc_collections
 module Ast = Flow_ast
 
 module Name_resolver = Name_resolver.Make_Test_With_Cx (struct
@@ -23,10 +24,10 @@ end)
 let string_of_root = function
   | Contextual _ -> "contextual"
   | Catch -> "catch"
-  | Annotation (loc, _) -> spf "annot %s" (L.debug_to_string loc)
-  | Value (loc, _) -> spf "val %s" (L.debug_to_string loc)
-  | For (In, (loc, _)) -> spf "for in %s" (L.debug_to_string loc)
-  | For (Of, (loc, _)) -> spf "for of %s" (L.debug_to_string loc)
+  | Annotation (loc, _) -> spf "annot %s" (ALoc.debug_to_string loc)
+  | Value (loc, _) -> spf "val %s" (ALoc.debug_to_string loc)
+  | For (In, (loc, _)) -> spf "for in %s" (ALoc.debug_to_string loc)
+  | For (Of, (loc, _)) -> spf "for of %s" (ALoc.debug_to_string loc)
 
 let string_of_selector = function
   | Elem n -> spf "[%d]" n
@@ -57,8 +58,8 @@ let string_of_import =
 
 let string_of_source = function
   | Binding (_, b) -> string_of_binding b
-  | Update (loc, _) -> spf "crement %s" (L.debug_to_string loc)
-  | OpAssign (loc, _, _) -> spf "opassign %s" (L.debug_to_string loc)
+  | Update (loc, _) -> spf "crement %s" (ALoc.debug_to_string loc)
+  | OpAssign (loc, _, _) -> spf "opassign %s" (ALoc.debug_to_string loc)
   | Function { function_ = { Ast.Function.id; _ }; _ } ->
     spf
       "fun %s"
@@ -69,42 +70,43 @@ let string_of_source = function
       )
   | DeclaredClass { Ast.Statement.DeclareClass.id = (_, { Ast.Identifier.name; _ }); _ } ->
     spf "declared class %s" name
-  | Class { class_ = { Ast.Class.id; _ }; _ } ->
+  | Class { class_ = { Ast.Class.id; _ }; fully_annotated } ->
     spf
-      "class %s"
+      "class (annotated=%b) %s"
+      fully_annotated
       (Base.Option.value_map
          ~f:(fun (_, { Ast.Identifier.name; _ }) -> name)
          ~default:"<anonymous>"
          id
       )
   | TypeAlias { Ast.Statement.TypeAlias.right = (loc, _); _ } ->
-    spf "alias %s" (L.debug_to_string loc)
+    spf "alias %s" (ALoc.debug_to_string loc)
   | OpaqueType { Ast.Statement.OpaqueType.id = (loc, _); _ } ->
-    spf "opaque %s" (L.debug_to_string loc)
-  | TypeParam (loc, _) -> spf "tparam %s" (L.debug_to_string loc)
-  | Enum (loc, _) -> spf "enum %s" (L.debug_to_string loc)
+    spf "opaque %s" (ALoc.debug_to_string loc)
+  | TypeParam (loc, _) -> spf "tparam %s" (ALoc.debug_to_string loc)
+  | Enum (loc, _) -> spf "enum %s" (ALoc.debug_to_string loc)
   | Interface _ -> "interface"
   | Import { import_kind; source; import } ->
     spf "import %s%s from %s" (string_of_import_kind import_kind) (string_of_import import) source
 
 let print_values values =
-  let kvlist = L.LMap.bindings values in
+  let kvlist = ALocMap.bindings values in
   let strlist =
     Base.List.map
-      ~f:(fun (def_loc, init) ->
-        Printf.sprintf "%s => %s" (L.debug_to_string def_loc) (string_of_source init))
+      ~f:(fun (def_loc, (init, _)) ->
+        Printf.sprintf "%s => %s" (ALoc.debug_to_string def_loc) (string_of_source init))
       kvlist
   in
   Printf.printf "[\n  %s\n]" (String.concat ";\n  " strlist)
 
 let print_order lst =
-  let open Name_def_ordering.With_ALoc in
+  let open Name_def_ordering in
   let msg_of_elt elt =
     match elt with
     | Normal l
     | Resolvable l ->
-      L.debug_to_string l
-    | Illegal l -> Printf.sprintf "illegal self-cycle (%s)" (L.debug_to_string l)
+      ALoc.debug_to_string l
+    | Illegal { loc; _ } -> Printf.sprintf "illegal self-cycle (%s)" (ALoc.debug_to_string loc)
   in
   let msg =
     Base.List.map
@@ -113,7 +115,7 @@ let print_order lst =
         | IllegalSCC keys ->
           Printf.sprintf
             "illegal scc: ((%s))"
-            (Nel.map msg_of_elt keys |> Nel.to_list |> String.concat "); (")
+            (Nel.map (fun (elt, _, _) -> msg_of_elt elt) keys |> Nel.to_list |> String.concat "); (")
         | ResolvableSCC keys ->
           Printf.sprintf
             "legal scc: ((%s))"
@@ -124,15 +126,14 @@ let print_order lst =
   print_string msg
 
 let print_init_test contents =
-  let inits = Name_def.With_ALoc.find_defs (parse_with_alocs contents) in
+  let inits = Name_def.find_defs (parse_with_alocs contents) in
   print_values inits
 
 let print_order_test contents =
-  let module Name_def = Name_def_ordering.With_ALoc.Name_def in
   let ast = parse_with_alocs contents in
   let (_, env) = Name_resolver.program_with_scope () ast in
   let inits = Name_def.find_defs ast in
-  let order = Name_def_ordering.With_ALoc.build_ordering env inits in
+  let order = Name_def_ordering.build_ordering env inits in
   print_order order
 
 (* TODO: ocamlformat mangles the ppx syntax. *)
@@ -441,11 +442,11 @@ var z: T = 100;
 
 let%expect_test "typeof2" =
   print_order_test {|
-var x: T = 42;
+var x = (42: T);
 type T = typeof x;
   |};
   [%expect {|
-    legal scc: (((2, 4) to (2, 5)); ((3, 5) to (3, 6))) |}]
+    illegal scc: (((2, 4) to (2, 5)); ((3, 5) to (3, 6))) |}]
 
 let%expect_test "func_exp" =
   print_order_test {|
@@ -467,7 +468,7 @@ x = 10;
   |};
   [%expect {|
     [
-      (3, 6) to (3, 7) => class C;
+      (3, 6) to (3, 7) => class (annotated=false) C;
       (4, 10) to (4, 11) => val (4, 14) to (4, 16);
       (6, 0) to (6, 1) => val (6, 4) to (6, 6)
     ] |}]
@@ -481,7 +482,7 @@ let foo = class C<Y: typeof x> { };
     [
       (2, 4) to (2, 5) => val (2, 8) to (2, 10);
       (3, 4) to (3, 7) => val (3, 10) to (3, 34);
-      (3, 16) to (3, 17) => class C;
+      (3, 16) to (3, 17) => class (annotated=true) C;
       (3, 18) to (3, 19) => tparam (3, 18) to (3, 29)
     ] |}]
 
@@ -617,12 +618,12 @@ if (f(x)) {
 
 let%expect_test "declare_class" =
   print_order_test {|
-var f: C = 42;
-type S = typeof f;
 declare class C mixins S { }
+var f = new C();
+type S = typeof f;
   |};
   [%expect {|
-    legal scc: (((2, 4) to (2, 5)); ((3, 5) to (3, 6)); ((4, 14) to (4, 15))) |}]
+    illegal scc: (((2, 14) to (2, 15)); ((3, 4) to (3, 5)); ((4, 5) to (4, 6))) |}]
 
 let%expect_test "declare_class2" =
   print_order_test {|
@@ -853,3 +854,22 @@ import * as R from 'foo';
     (8, 12) to (8, 13) =>
     (5, 4) to (5, 5) =>
     (2, 9) to (2, 14) |}]
+
+let%expect_test "this" =
+  print_order_test {|
+class C {
+  f() { return this.g() }
+  g() { return 42; }
+}
+  |};
+  [%expect {|
+    illegal self-cycle ((2, 6) to (2, 7)) |}]
+
+let%expect_test "class_question" =
+  print_order_test {|
+class C {
+  f(x: C): boolean { }
+}
+  |};
+  [%expect {|
+    legal scc: (((2, 6) to (2, 7)); ((3, 4) to (3, 5))) |}]

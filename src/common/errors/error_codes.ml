@@ -151,6 +151,8 @@ type error_code =
   | UntypedTypeImport
   | ValueAsType
   | InvalidDeclaration
+  | DefinitionCycle
+  | RecursiveDefinition
 
 let code_of_lint : Lints.lint_kind -> error_code = function
   | Lints.UntypedTypeImport -> UntypedTypeImport
@@ -325,3 +327,5 @@ let string_of_code : error_code -> string = function
   | UntypedTypeImport -> "untyped-type-import"
   | ValueAsType -> "value-as-type"
   | InvalidDeclaration -> "invalid-declaration"
+  | DefinitionCycle -> "definition-cycle"
+  | RecursiveDefinition -> "recursive-definition"

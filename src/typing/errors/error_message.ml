@@ -434,6 +434,11 @@ and 'loc t' =
   | EInvalidGraphQL of 'loc * Graphql.error
   | EAnnotationInference of 'loc * 'loc virtual_reason * 'loc virtual_reason
   | EAnnotationInferenceRecursive of 'loc * 'loc virtual_reason
+  | EDefinitionCycle of ('loc virtual_reason * 'loc Nel.t) Nel.t
+  | ERecursiveDefinition of {
+      reason: 'loc virtual_reason;
+      recursion: 'loc Nel.t;
+    }
 
 and 'loc null_write = {
   null_loc: 'loc;
@@ -1013,6 +1018,10 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
   | EInvalidGraphQL (loc, err) -> EInvalidGraphQL (f loc, err)
   | EAnnotationInference (loc, r1, r2) -> EAnnotationInference (f loc, map_reason r1, map_reason r2)
   | EAnnotationInferenceRecursive (loc, r) -> EAnnotationInferenceRecursive (f loc, map_reason r)
+  | EDefinitionCycle elts ->
+    EDefinitionCycle (Nel.map (fun (reason, recur) -> (map_reason reason, Nel.map f recur)) elts)
+  | ERecursiveDefinition { reason; recursion } ->
+    ERecursiveDefinition { reason = map_reason reason; recursion = Nel.map f recursion }
 
 let desc_of_reason r = Reason.desc_of_reason ~unwrap:(is_scalar_reason r) r
 
@@ -1237,6 +1246,8 @@ let util_use_op_of_msg nope util = function
   | EObjectThisReference _
   | EInvalidDeclaration _
   | EInvalidGraphQL _
+  | EDefinitionCycle _
+  | ERecursiveDefinition _
   | EAnnotationInference _
   | EAnnotationInferenceRecursive _ ->
     nope
@@ -1299,6 +1310,8 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | EEnumInvalidMemberAccess { reason; _ }
   | EEnumInvalidObjectUtil { reason; _ }
   | EEnumNotIterable { reason; _ }
+  | ERecursiveDefinition { reason; _ }
+  | EDefinitionCycle ((reason, _), _)
   | EInvalidDeclaration { declaration = reason; _ } ->
     Some (poly_loc_of_reason reason)
   | EExponentialSpread
@@ -3731,6 +3744,49 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
       ]
     in
     Normal { features }
+  | ERecursiveDefinition { reason; recursion = (hd, tl) } ->
+    let tl_recur =
+      Base.List.map ~f:(fun loc -> [text ", "; ref (mk_reason (RCustom "") loc)]) tl |> List.flatten
+    in
+    let features =
+      [
+        text "Cannot compute a type for ";
+        desc reason;
+        text " because its definition includes references to ";
+        ref (mk_reason (RCustom "itself") hd);
+      ]
+      @ tl_recur
+      @ [text ". Please add a type annotation to this definition"]
+    in
+    Normal { features }
+  | EDefinitionCycle dependencies ->
+    let deps =
+      Nel.map
+        (fun (reason, (hd, tl)) ->
+          let tl_dep =
+            Base.List.map ~f:(fun loc -> [text ", "; ref (mk_reason (RCustom "") loc)]) tl
+            |> List.flatten
+          in
+          [
+            text " - ";
+            ref reason;
+            text " depends on ";
+            ref (mk_reason (RCustom "other definition") hd);
+            text "\n";
+          ]
+          @ tl_dep
+          @ [])
+        dependencies
+      |> Nel.to_list
+      |> List.flatten
+    in
+    let features =
+      text
+        "The following definitions recursively depend on each other, and Flow cannot compute their types:\n"
+      :: deps
+      @ [text "Please add type annotations to these definitions"]
+    in
+    Normal { features }
 
 let is_lint_error = function
   | EUntypedTypeImport _
@@ -3996,6 +4052,8 @@ let error_code_of_message err : error_code option =
   | EInvalidGraphQL _ -> Some InvalidGraphQL
   | EAnnotationInference _ -> Some InvalidExportedAnnotation
   | EAnnotationInferenceRecursive _ -> Some InvalidExportedAnnotationRecursive
+  | EDefinitionCycle _ -> Some DefinitionCycle
+  | ERecursiveDefinition _ -> Some RecursiveDefinition
   (* lints should match their lint name *)
   | EUntypedTypeImport _
   | EUntypedImport _
