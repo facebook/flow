@@ -12,7 +12,7 @@ open Loc_collections
 
 type for_kind =
   | In
-  | Of
+  | Of of { await: bool }
 
 type root =
   | Annotation of (ALoc.t, ALoc.t) Ast.Type.annotation
@@ -346,7 +346,7 @@ class def_finder =
 
     method! for_of_statement loc (stuff : ('loc, 'loc) Ast.Statement.ForOf.t) =
       let open Ast.Statement.ForOf in
-      let { left; right; body = _; await = _; comments = _ } = stuff in
+      let { left; right; body = _; await; comments = _ } = stuff in
       begin
         match left with
         | LeftDeclaration
@@ -360,11 +360,12 @@ class def_finder =
           let source =
             match Destructure.type_of_pattern id with
             | Some annot -> Annotation annot
-            | None -> For (Of, right)
+            | None -> For (Of { await }, right)
           in
           Destructure.pattern ~f:this#add_binding (Root source) id
         | LeftDeclaration _ -> failwith "Invalid AST structure"
-        | LeftPattern pat -> Destructure.pattern ~f:this#add_binding (Root (For (Of, right))) pat
+        | LeftPattern pat ->
+          Destructure.pattern ~f:this#add_binding (Root (For (Of { await }, right))) pat
       end;
       super#for_of_statement loc stuff
 

@@ -15,6 +15,7 @@ open Loc_collections
 
 type t = {
   types: Type.annotated_or_inferred ALocMap.t;
+  resolved: ALocSet.t;
   var_info: Env_api.env_info;
 }
 
@@ -32,4 +33,6 @@ let initialize ({ types; _ } as info) loc t =
 let find_write { types; _ } loc =
   ALocMap.find_opt loc types |> Base.Option.map ~f:TypeUtil.type_t_of_annotated_or_inferred
 
-let empty = { types = ALocMap.empty; var_info = Env_api.empty }
+let empty = { types = ALocMap.empty; var_info = Env_api.empty; resolved = ALocSet.empty }
+
+let with_info var_info = { empty with var_info }

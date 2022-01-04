@@ -16,6 +16,8 @@ module type S = sig
 
   module Toplevels : module type of Toplevels.DependencyToplevels (Env) (Abnormal)
 
+  module Anno : Type_annotation_sig.S with module Env := Env
+
   val expression :
     ?cond:Type.cond_context ->
     Context.t ->
@@ -27,4 +29,6 @@ module type S = sig
     Context.t -> (ALoc.t, ALoc.t) Ast.Statement.t -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t
 
   val toplevel_decls : Context.t -> (ALoc.t, ALoc.t) Ast.Statement.t list -> unit
+
+  val for_of_elemt : Context.t -> Type.t -> Reason.reason -> bool -> Type.t
 end

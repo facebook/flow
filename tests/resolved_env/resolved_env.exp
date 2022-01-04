@@ -1,0 +1,186 @@
+Error -------------------------------------------------------------------------------------------------- bindings.js:4:2
+
+Cannot cast `x` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+
+   bindings.js:4:2
+   4| (x: string); // num </: string
+       ^
+
+References:
+   bindings.js:3:9
+   3| var x = 42;
+              ^^ [1]
+   bindings.js:4:5
+   4| (x: string); // num </: string
+          ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- bindings.js:6:17
+
+Cannot assign `"a"` to `y` because string [1] is incompatible with number [2]. [incompatible-type]
+
+   bindings.js:6:17
+   6| var y: number = "a"; // error
+                      ^^^ [1]
+
+References:
+   bindings.js:6:8
+   6| var y: number = "a"; // error
+             ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- bindings.js:7:2
+
+Cannot cast `y` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+
+   bindings.js:7:2
+   7| (y: string); // err
+       ^
+
+References:
+   bindings.js:6:8
+   6| var y: number = "a"; // error
+             ^^^^^^ [1]
+   bindings.js:7:5
+   7| (y: string); // err
+          ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- bindings.js:10:2
+
+Cannot cast `a` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+
+   bindings.js:10:2
+   10| (a: string); // num </: string
+        ^
+
+References:
+   bindings.js:9:22
+    9| var [a, ...rest1] = [1,2,3];
+                            ^ [1]
+   bindings.js:10:5
+   10| (a: string); // num </: string
+           ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- bindings.js:11:2
+
+Cannot cast `rest1[0]` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+
+   bindings.js:11:2
+   11| (rest1[0]: string); // num </: string
+        ^^^^^^^^
+
+References:
+   bindings.js:9:24
+    9| var [a, ...rest1] = [1,2,3];
+                              ^ [1]
+   bindings.js:11:12
+   11| (rest1[0]: string); // num </: string
+                  ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- bindings.js:14:2
+
+Cannot cast `w` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+
+   bindings.js:14:2
+   14| (w: string); // err
+        ^
+
+References:
+   bindings.js:13:26
+   13| var {w, ...rest2} = { w: 42, p: 100 };
+                                ^^ [1]
+   bindings.js:14:5
+   14| (w: string); // err
+           ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- bindings.js:16:2
+
+Cannot cast `rest2.p` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+
+   bindings.js:16:2
+   16| (rest2.p: string); //err
+        ^^^^^^^
+
+References:
+   bindings.js:13:33
+   13| var {w, ...rest2} = { w: 42, p: 100 };
+                                       ^^^ [1]
+   bindings.js:16:11
+   16| (rest2.p: string); //err
+                 ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- bindings.js:25:6
+
+Cannot cast `of_` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+
+   bindings.js:25:6
+   25|     (of_: string); //err
+            ^^^
+
+References:
+   bindings.js:24:18
+   24| for (var of_ of [1,2,3]) {
+                        ^ [1]
+   bindings.js:25:11
+   25|     (of_: string); //err
+                 ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- bindings.js:25:6
+
+Cannot cast `of_` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+
+   bindings.js:25:6
+   25|     (of_: string); //err
+            ^^^
+
+References:
+   bindings.js:24:20
+   24| for (var of_ of [1,2,3]) {
+                          ^ [1]
+   bindings.js:25:11
+   25|     (of_: string); //err
+                 ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- bindings.js:25:6
+
+Cannot cast `of_` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+
+   bindings.js:25:6
+   25|     (of_: string); //err
+            ^^^
+
+References:
+   bindings.js:24:22
+   24| for (var of_ of [1,2,3]) {
+                            ^ [1]
+   bindings.js:25:11
+   25|     (of_: string); //err
+                 ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- bindings.js:30:6
+
+Cannot cast `in_` to number because string [1] is incompatible with number [2]. [incompatible-cast]
+
+   bindings.js:30:6
+   30|     (in_: number); //err
+            ^^^
+
+References:
+   bindings.js:29:10
+   29| for (var in_ in { a: 42 }) {
+                ^^^ [1]
+   bindings.js:30:11
+   30|     (in_: number); //err
+                 ^^^^^^ [2]
+
+
+
+Found 11 errors

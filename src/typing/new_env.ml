@@ -10,7 +10,13 @@ open Type
 open Reason
 open Loc_collections
 
-module New_env : Env_sig.S = struct
+module type S = sig
+  include Env_sig.S
+
+  val resolve_env_entry : Context.t -> Type.t -> ALoc.t -> unit
+end
+
+module New_env : S = struct
   (* The new env handles all the logic for regular variables internally, but
      internal variables still need to be handled by name, which makes them
      incompatible with the new environment as it stands. Eventually we'll need
@@ -360,22 +366,32 @@ module New_env : Env_sig.S = struct
     | Some w -> Flow_js.unify cx ~use_op:unknown_use e w
 
   let set_env_entry cx ~use_op t loc =
-    Debug_js.Verbose.print_if_verbose cx [spf "writing to location %s" (ALoc.debug_to_string loc)];
-    let ({ Loc_env.var_info; _ } as env) = Context.environment cx in
-    begin
-      match Loc_env.find_write env loc with
-      | None ->
-        (* If we don't see a spot for this write, it's because it's never read from. *)
-        ()
-      | Some w -> Flow_js.unify cx ~use_op t w
-    end;
+    let ({ Loc_env.var_info; resolved; _ } as env) = Context.environment cx in
+    if not (ALocSet.mem loc resolved) then begin
+      Debug_js.Verbose.print_if_verbose cx [spf "writing to location %s" (ALoc.debug_to_string loc)];
+      begin
+        match Loc_env.find_write env loc with
+        | None ->
+          (* If we don't see a spot for this write, it's because it's never read from. *)
+          ()
+        | Some w -> Flow_js.unify cx ~use_op t w
+      end;
 
-    if not (is_provider var_info loc) then
-      let general = provider_type_for_def_loc env loc in
-      if is_def_loc_annotated var_info loc then
-        Flow_js.flow cx (t, UseT (use_op, general))
-      else
-        Context.add_constrained_write cx (t, UseT (use_op, general))
+      if not @@ is_provider var_info loc then
+        let general = provider_type_for_def_loc env loc in
+        if is_def_loc_annotated var_info loc then
+          Flow_js.flow cx (t, UseT (use_op, general))
+        else
+          Context.add_constrained_write cx (t, UseT (use_op, general))
+    end else
+      Debug_js.Verbose.print_if_verbose
+        cx
+        [spf "Location %s already fully resolved" (ALoc.debug_to_string loc)]
+
+  let resolve_env_entry cx t loc =
+    set_env_entry cx ~use_op:unknown_use t loc;
+    let ({ Loc_env.resolved; _ } as env) = Context.environment cx in
+    Context.set_environment cx { env with Loc_env.resolved = ALocSet.add loc resolved }
 
   let subtype_entry cx ~use_op t loc =
     let env = Context.environment cx in

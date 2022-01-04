@@ -1901,25 +1901,7 @@ struct
           predicates_of_condition ~cond:OtherTest cx right
         in
         let (_ : Changeset.t) = Env.refine_with_preds cx right_loc preds xtypes in
-        let elem_t = Tvar.mk cx reason in
-        (* Second and third args here are never relevant to the loop, but they should be as
-           general as possible to allow iterating over arbitrary generators *)
-        let targs =
-          [
-            elem_t;
-            MixedT.why reason |> with_trust bogus_trust;
-            EmptyT.why reason |> with_trust bogus_trust;
-          ]
-        in
-        let (async, iterable_reason) =
-          if await then
-            (true, mk_reason (RCustom "async iteration expected on AsyncIterable") loc)
-          else
-            (false, mk_reason (RCustom "iteration expected on Iterable") loc)
-        in
-        Flow.flow
-          cx
-          (t, AssertIterableT { use_op = unknown_use; reason = iterable_reason; async; targs });
+        let elem_t = for_of_elemt cx t reason await in
 
         (* null/undefined are NOT allowed *)
         (Flow.reposition cx (loc_of_t t) elem_t, right_ast)
@@ -2526,6 +2508,29 @@ struct
             comments;
           }
       )
+
+  and for_of_elemt cx right_t reason await =
+    let elem_t = Tvar.mk cx reason in
+    let loc = aloc_of_reason reason in
+    (* Second and third args here are never relevant to the loop, but they should be as
+       general as possible to allow iterating over arbitrary generators *)
+    let targs =
+      [
+        elem_t;
+        MixedT.why reason |> with_trust bogus_trust;
+        EmptyT.why reason |> with_trust bogus_trust;
+      ]
+    in
+    let (async, iterable_reason) =
+      if await then
+        (true, mk_reason (RCustom "async iteration expected on AsyncIterable") loc)
+      else
+        (false, mk_reason (RCustom "iteration expected on Iterable") loc)
+    in
+    Flow.flow
+      cx
+      (right_t, AssertIterableT { use_op = unknown_use; reason = iterable_reason; async; targs });
+    elem_t
 
   and export_specifiers cx loc source export_kind =
     let open Ast.Statement in

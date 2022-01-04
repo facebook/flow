@@ -406,6 +406,7 @@ module Make_Inference (Env : Env_sig.S) = struct
   module Statement = Statement_
   module Abnormal = Statement.Abnormal
   module ImpExp = Statement.Import_export
+  module Env_resolution = Env_resolution.Make (Env) (Statement)
 
   (* Some versions of Ocaml raise a warning 60 (unused module) without the following *)
   module _ = Destructuring_
@@ -437,13 +438,16 @@ module Make (Env : Env_sig.S) : S = struct
         | _ -> failwith "Flow bug: Statement.toplevels threw with non-stmts payload")
       ()
 
-  let initialize_env cx aloc_ast =
+  let initialize_env ~lib ?(exclude_syms = NameUtils.Set.empty) cx aloc_ast module_scope =
     let (_abrupt_completion, info) = NameResolver.program_with_scope cx aloc_ast in
-    let env = { Loc_env.types = Loc_sig.ALocS.LMap.empty; var_info = info } in
+    let env = Loc_env.with_info info in
     let name_def_graph = Name_def.find_defs aloc_ast in
     let components = Name_def_ordering.build_ordering info name_def_graph in
     if Context.cycle_errors cx then Base.List.iter ~f:(Cycles.handle_component cx) components;
-    Context.set_environment cx env
+    Context.set_environment cx env;
+    Env.init_env ~exclude_syms cx module_scope;
+    if (not lib) && Context.resolved_env cx then
+      Base.List.iter ~f:(Env_resolution.resolve_component cx name_def_graph) components
 
   (* build module graph *)
   (* Lint suppressions are handled iff lint_severities is Some. *)
@@ -461,8 +465,6 @@ module Make (Env : Env_sig.S) : S = struct
     in
 
     let module_ref = Context.module_ref cx in
-
-    initialize_env cx aloc_ast;
 
     let reason_exports_module =
       let desc = Reason.RModule module_ref in
@@ -494,7 +496,7 @@ module Make (Env : Env_sig.S) : S = struct
         scope
       )
     in
-    Env.init_env cx module_scope;
+    initialize_env ~lib:false cx aloc_ast module_scope;
 
     let file_loc = Loc.{ none with source = Some filename } |> ALoc.of_loc in
     let reason = Reason.mk_reason Reason.RExports file_loc in
@@ -539,9 +541,7 @@ module Make (Env : Env_sig.S) : S = struct
     in
     let module_scope = Scope.fresh ~var_scope_kind:Scope.Global () in
 
-    initialize_env cx aloc_ast;
-
-    Env.init_env ~exclude_syms cx module_scope;
+    initialize_env ~lib:true ~exclude_syms cx aloc_ast module_scope;
 
     ignore (infer_core cx aloc_statements : (ALoc.t, ALoc.t * Type.t) Ast.Statement.t list);
     scan_for_suppressions cx lint_severities all_comments;

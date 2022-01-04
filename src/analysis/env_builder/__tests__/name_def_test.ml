@@ -27,7 +27,7 @@ let string_of_root = function
   | Annotation (loc, _) -> spf "annot %s" (ALoc.debug_to_string loc)
   | Value (loc, _) -> spf "val %s" (ALoc.debug_to_string loc)
   | For (In, (loc, _)) -> spf "for in %s" (ALoc.debug_to_string loc)
-  | For (Of, (loc, _)) -> spf "for of %s" (ALoc.debug_to_string loc)
+  | For (Of _, (loc, _)) -> spf "for of %s" (ALoc.debug_to_string loc)
 
 let string_of_selector = function
   | Elem n -> spf "[%d]" n
