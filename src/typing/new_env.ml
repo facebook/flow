@@ -417,8 +417,16 @@ module New_env : S = struct
 
   let subtype_entry cx ~use_op t loc =
     let env = Context.environment cx in
-    let w = Base.Option.value_exn (Loc_env.find_write env loc) in
-    Flow_js.flow cx (t, UseT (use_op, w))
+    match Loc_env.find_write env loc with
+    | None ->
+      (* If we don't see a spot for this write it is because the annotated
+       * binding being looked up here is one that caused a redeclaration
+       * error *)
+      assert (
+        ALocMap.find_opt loc env.Loc_env.var_info.Env_api.env_entries
+        = Some Env_api.NonAssigningWrite
+      )
+    | Some w -> Flow_js.flow cx (t, UseT (use_op, w))
 
   (* init_entry is called on variable declarations (not assignments), and `t`
      is the RHS type. If the variable is annotated, we just need to check t against

@@ -26,6 +26,6 @@ if ((42: any)) {
   var w;
 }
 
-(w: number);
+(w: number); // Error, w is never initialized or assigned so cast to number is incorrect
 
 
