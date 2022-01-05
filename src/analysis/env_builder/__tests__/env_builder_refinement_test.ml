@@ -5015,3 +5015,13 @@ function bar(response) {
           (uninitialized),
           (7, 6) to (7, 13): (`payload`)
         }] |}]
+
+let%expect_test "exports_global" =
+  print_ssa_test {|
+exports.foo = 1;
+|};
+    [%expect {|
+      [
+        (2, 0) to (2, 7) => {
+          Global exports
+        }] |}]
