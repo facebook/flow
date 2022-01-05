@@ -532,8 +532,32 @@ module Make
                 binding_kind = Scope.Entry.ClassNameBinding;
               }
           )
+      | (Bindings.Function, None) ->
+        let def_reason = mk_reason (RIdentifier (OrdinaryName name)) def_loc in
+        Some
+          Error_message.(
+            EAssignConstLikeBinding
+              {
+                loc = assignment_loc;
+                definition = def_reason;
+                binding_kind = Scope.Entry.FunctionBinding;
+              }
+          )
+      | (Bindings.DeclaredFunction, None) ->
+        let def_reason = mk_reason (RIdentifier (OrdinaryName name)) def_loc in
+        Some
+          Error_message.(
+            EAssignConstLikeBinding
+              {
+                loc = assignment_loc;
+                definition = def_reason;
+                (* The error message is unaffected by the predicate flag *)
+                binding_kind = Scope.Entry.(DeclaredFunctionBinding { predicate = false });
+              }
+          )
       | (Bindings.Const, Some _)
       | (Bindings.Class, Some _)
+      | (Bindings.Function, Some _)
         when not (Val.is_undeclared v) ->
         Some
           Error_message.(
@@ -973,7 +997,8 @@ module Make
                 | Bindings.Let
                 | Bindings.Const
                 | Bindings.Enum
-                | Bindings.Parameter ->
+                | Bindings.Parameter
+                | Bindings.Function ->
                   Val.undeclared name loc
                 | _ -> Val.uninitialized loc
               in
@@ -2148,6 +2173,7 @@ module Make
           List.partition
             (function
               | (_, FunctionDeclaration _) -> true
+              | (_, DeclareFunction _) -> true
               | _ -> false)
             stmts
         in
