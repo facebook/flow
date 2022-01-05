@@ -2934,6 +2934,39 @@ module Make
           this#merge_self_refinement_scope negated_refinements
         | _ -> ignore @@ this#unary_expression loc unary
 
+      method member_expression_refinement loc expr =
+        (* Add a PropExists refinement to the object and a
+         * Truthy heap refinement to the access *)
+        (match RefinementKey.of_expression (loc, expr) with
+        | None -> ()
+        | Some refinement_key_access ->
+          this#add_refinement refinement_key_access (L.LSet.singleton loc, TruthyR loc));
+        let open Flow_ast.Expression in
+        let open Flow_ast.Expression.Member in
+        match expr with
+        | OptionalMember OptionalMember.{ member = { Member._object; property; _ }; _ }
+        | Member Member.{ _object; property; _ } ->
+          ignore @@ this#expression _object;
+          let propname =
+            match property with
+            | PropertyIdentifier (_, { Flow_ast.Identifier.name; _ })
+            | PropertyExpression (_, Literal { Flow_ast.Literal.value = Ast.Literal.String name; _ })
+            | PropertyExpression
+                (_, Literal { Flow_ast.Literal.value = Ast.Literal.Number _; raw = name; _ }) ->
+              Some name
+            | _ -> None
+          in
+          (match (RefinementKey.of_expression _object, propname) with
+          | (_, None)
+          | (None, _) ->
+            ()
+          | (Some refinement_key_obj, Some propname) ->
+            this#add_refinement
+              refinement_key_obj
+              (L.LSet.singleton loc, PropExistsR { propname; loc }))
+        | _ ->
+          failwith "member_expression_refinement can only be called on OptionalMember or Member"
+
       method expression_refinement ((loc, expr) as expression) =
         let open Flow_ast.Expression in
         match expr with
@@ -2955,7 +2988,9 @@ module Make
         | Unary unary ->
           this#unary_refinement loc unary;
           expression
-        | Member _
+        | Member _ ->
+          this#member_expression_refinement loc expr;
+          expression
         | OptionalMember _ ->
           (* TODO: this refinement is technically incorrect when negated until we also track that the
            * property access is truthy, but that is a heap refinement. *)

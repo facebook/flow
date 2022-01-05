@@ -78,6 +78,10 @@ module type S = sig
           func: (L.t, L.t) Ast.Expression.t;
           index: int;
         }
+      | PropExistsR of {
+          propname: string;
+          loc: L.t;
+        }
     [@@deriving show { with_path = false }]
 
     type refinement = L.LSet.t * refinement_kind
@@ -205,6 +209,10 @@ module Make
       | LatentR of {
           func: (L.t, L.t) Ast.Expression.t;
           index: int;
+        }
+      | PropExistsR of {
+          propname: string;
+          loc: L.t;
         }
     [@@deriving show { with_path = false }]
 
@@ -365,6 +373,7 @@ module Make
         lit
     | SentinelR (prop, _) -> Printf.sprintf "SentinelR %s" prop
     | LatentR { func = _; index } -> Printf.sprintf "LatentR (index = %i)" index
+    | PropExistsR { propname; loc = _ } -> Printf.sprintf "PropExistsR (%s)" propname
 end
 
 module With_Loc =

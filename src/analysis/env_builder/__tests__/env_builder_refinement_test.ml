@@ -1083,7 +1083,7 @@ x.foo && x|};
           (1, 4) to (1, 5): (`x`)
         };
         (2, 9) to (2, 10) => {
-          {refinement = SentinelR foo; writes = (1, 4) to (1, 5): (`x`)}
+          {refinement = PropExistsR (foo); writes = (1, 4) to (1, 5): (`x`)}
         }] |}]
 
 let%expect_test "optional_chain_standalone" =
@@ -4831,3 +4831,27 @@ x = 3;
         (2, 15) to (2, 16) => {
           (4, 0) to (4, 1): (`x`)
         }] |}]
+
+let%expect_test "prop_exists" =
+  print_ssa_test {|
+const x = {foo: 3};
+
+if (x.foo) {
+  x;
+  x.foo;
+}
+|};
+    [%expect {|
+[
+  (4, 4) to (4, 5) => {
+    (2, 6) to (2, 7): (`x`)
+  };
+  (5, 2) to (5, 3) => {
+    {refinement = PropExistsR (foo); writes = (2, 6) to (2, 7): (`x`)}
+  };
+  (6, 2) to (6, 3) => {
+    {refinement = PropExistsR (foo); writes = (2, 6) to (2, 7): (`x`)}
+  };
+  (6, 2) to (6, 7) => {
+    {refinement = Truthy; writes = projection at (4, 4) to (4, 9)}
+  }] |}]

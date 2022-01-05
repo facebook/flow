@@ -197,6 +197,8 @@ module New_env : S = struct
         let reason = mk_reason (RCustom "Function call") func_loc in
         let t = read_entry ~for_type:false cx func_loc reason in
         LatentP (t, index)
+      | PropExistsR { propname; loc } ->
+        PropExistsP (propname, mk_reason (RProperty (Some (OrdinaryName propname))) loc)
     )
 
   and refine cx reason loc refi t =

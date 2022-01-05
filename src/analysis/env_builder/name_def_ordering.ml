@@ -112,7 +112,8 @@ end = struct
           | SymbolR _
           | SingletonBoolR _
           | SingletonStrR _
-          | SingletonNumR _ ->
+          | SingletonNumR _
+          | PropExistsR _ ->
             ()
         in
         Base.List.iter ~f:writes_of_refinement refinements;
