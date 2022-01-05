@@ -7969,7 +7969,7 @@ struct
            Class_sig.t containing this field, as that is when the initializer expression
            gets checked.
       *)
-      let mk_field cx tparams_map reason annot ~field_annot init =
+      let mk_field cx tparams_map reason annot ~field_hint init =
         let (annot_or_inferred, annot_ast) = Anno.mk_type_annotation cx tparams_map reason annot in
         let annot_t = type_t_of_annotated_or_inferred annot_or_inferred in
         let (field, get_init) =
@@ -7979,7 +7979,7 @@ struct
             (Annot annot_t, Fn.const Ast.Class.Property.Uninitialized)
           | Ast.Class.Property.Initialized expr ->
             let value_ref : (ALoc.t, ALoc.t * Type.t) Ast.Expression.t option ref = ref None in
-            let return_t = mk_inference_target_with_annots annot_or_inferred field_annot in
+            let return_t = mk_inference_target_with_annots annot_or_inferred field_hint in
             ( Infer
                 ( Func_stmt_sig.field_initializer tparams_map reason expr return_t,
                   (fun (_, _, value_opt) -> value_ref := Some (Base.Option.value_exn value_opt))
@@ -7991,7 +7991,7 @@ struct
         in
         (field, annot_t, annot_ast, get_init)
       in
-      let mk_method ~method_annot = mk_func_sig ~hint:method_annot ~needs_this_param:false in
+      let mk_method ~method_hint = mk_func_sig ~hint:method_hint ~needs_this_param:false in
       let mk_extends ~class_hint cx tparams_map = function
         | None -> (Implicit { null = false }, None)
         | Some (loc, { Ast.Class.Extends.expr; targs; comments }) ->
@@ -8123,7 +8123,7 @@ struct
                 in
                 let (method_sig, reconstruct_func) =
                   mk_method
-                    ~method_annot:(hint_decompose_opt_todo class_hint)
+                    ~method_hint:(hint_decompose_opt_todo class_hint)
                     cx
                     tparams_map_with_this
                     reason
@@ -8263,8 +8263,8 @@ struct
                 let polarity = Anno.polarity variance in
                 let (field, annot_t, annot_ast, get_value) =
                   (* We could never find a private field in an annotation-- that's the point! So
-                   * we make field_annot None here *)
-                  mk_field ~field_annot:None cx tparams_map_with_this reason annot value
+                   * we make field_hint None here *)
+                  mk_field ~field_hint:None cx tparams_map_with_this reason annot value
                 in
                 let get_element () =
                   Body.PrivateField
@@ -8298,7 +8298,7 @@ struct
                 let polarity = Anno.polarity variance in
                 let (field, annot_t, annot, get_value) =
                   mk_field
-                    ~field_annot:(hint_decompose_opt_todo class_hint)
+                    ~field_hint:(hint_decompose_opt_todo class_hint)
                     cx
                     tparams_map_with_this
                     reason
