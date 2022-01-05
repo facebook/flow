@@ -217,6 +217,7 @@ module Make
     let is_undeclared t =
       match t.write_state with
       | Undeclared _ -> true
+      | UninitializedClass _ -> true
       | _ -> false
 
     let new_id () =
@@ -523,7 +524,20 @@ module Make
           Error_message.(
             EBindingError (EConstParamReassigned, assignment_loc, OrdinaryName name, def_loc)
           )
-      | (Bindings.Const, Some _) when not (Val.is_undeclared v) ->
+      | (Bindings.Class, None) ->
+        let def_reason = mk_reason (RClass (RIdentifier (OrdinaryName name))) def_loc in
+        Some
+          Error_message.(
+            EAssignConstLikeBinding
+              {
+                loc = assignment_loc;
+                definition = def_reason;
+                binding_kind = Scope.Entry.ClassNameBinding;
+              }
+          )
+      | (Bindings.Const, Some _)
+      | (Bindings.Class, Some _)
+        when not (Val.is_undeclared v) ->
         Some
           Error_message.(
             EBindingError (ENameAlreadyBound, assignment_loc, OrdinaryName name, def_loc)

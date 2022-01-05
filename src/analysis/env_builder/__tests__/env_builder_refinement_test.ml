@@ -4464,8 +4464,7 @@ class C {
         (3, 9) to (3, 14): (`havoc`)
       };
       (8, 0) to (8, 1) => {
-        (uninitialized class) (10, 6) to (10, 7): (`C`),
-        (10, 6) to (10, 7): (`C`)
+        (uninitialized class) (10, 6) to (10, 7): (`C`)
       }] |}]
 
 let%expect_test "deps_recur_broken_init" =
