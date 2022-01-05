@@ -228,10 +228,13 @@ module Env : Env_sig.S = struct
       if Context.env_option_enabled cx Options.ConstrainWrites then
         let ({ Loc_env.var_info; _ } as env) = Context.environment cx in
         ALocMap.fold
-          (fun loc reason env ->
-            let t = Inferred (Tvar.mk cx reason) in
-            (* Treat everything as inferred for now for the purposes of annotated vs inferred *)
-            Loc_env.initialize env loc t)
+          (fun loc env_entry env ->
+            match env_entry with
+            | Env_api.AssigningWrite reason ->
+              let t = Inferred (Tvar.mk cx reason) in
+              (* Treat everything as inferred for now for the purposes of annotated vs inferred *)
+              Loc_env.initialize env loc t
+            | Env_api.NonAssigningWrite -> env)
           var_info.Env_api.env_entries
           env
         |> Context.set_environment cx

@@ -467,7 +467,7 @@ module Make
     values: Val.t L.LMap.t;
     (* We also maintain a list of all write locations, for use in populating the env with
        types. *)
-    write_entries: ALoc.t virtual_reason Loc_sig.ALocS.LMap.t;
+    write_entries: Env_api.env_entry Loc_sig.ALocS.LMap.t;
     curr_id: int;
     (* Maps refinement ids to refinements. This mapping contains _all_ the refinements reachable at
      * any point in the code. The latest_refinement maps keep track of which entries to read. *)
@@ -614,7 +614,7 @@ module Make
 
       method values : Env_api.values = L.LMap.map Val.simplify env_state.values
 
-      method write_entries : ALoc.t virtual_reason L.LMap.t = env_state.write_entries
+      method write_entries : Env_api.env_entry L.LMap.t = env_state.write_entries
 
       method private new_id () =
         let new_id = env_state.curr_id in
@@ -925,7 +925,9 @@ module Make
             match kind with
             | Bindings.Type ->
               let reason = mk_reason (RType (OrdinaryName name)) loc in
-              let write_entries = L.LMap.add loc reason env_state.write_entries in
+              let write_entries =
+                L.LMap.add loc (Env_api.AssigningWrite reason) env_state.write_entries
+              in
               env_state <- { env_state with write_entries };
               {
                 val_ref = ref (Val.one reason);
@@ -938,7 +940,7 @@ module Make
               let (havoc, providers) = this#providers_of_def_loc loc in
               let write_entries =
                 Base.List.fold
-                  ~f:(fun acc r -> L.LMap.add (poly_loc_of_reason r) r acc)
+                  ~f:(fun acc r -> L.LMap.add (poly_loc_of_reason r) (Env_api.AssigningWrite r) acc)
                   ~init:env_state.write_entries
                   providers
               in
@@ -968,7 +970,7 @@ module Make
               let (havoc, providers) = this#providers_of_def_loc loc in
               let write_entries =
                 Base.List.fold
-                  ~f:(fun acc r -> L.LMap.add (poly_loc_of_reason r) r acc)
+                  ~f:(fun acc r -> L.LMap.add (poly_loc_of_reason r) (Env_api.AssigningWrite r) acc)
                   ~init:env_state.write_entries
                   providers
               in
@@ -1092,11 +1094,16 @@ module Make
         | None when Val.is_undeclared !val_ref -> ()
         | _ ->
           (match error_for_assignment_kind cx x loc def_loc stored_binding_kind kind !val_ref with
-          | Some err -> this#add_output err
+          | Some err ->
+            this#add_output err;
+            let write_entries = L.LMap.add loc Env_api.NonAssigningWrite env_state.write_entries in
+            env_state <- { env_state with write_entries }
           | _ ->
             val_ref := Val.one reason;
             this#havoc_heap_refinements heap_refinements;
-            let write_entries = L.LMap.add loc reason env_state.write_entries in
+            let write_entries =
+              L.LMap.add loc (Env_api.AssigningWrite reason) env_state.write_entries
+            in
             env_state <- { env_state with write_entries }));
         super#identifier ident
 
@@ -1174,7 +1181,9 @@ module Make
             lookup
             (fun _ -> write_val)
             ~create_val_for_heap:(Some (fun () -> write_val));
-          let write_entries = L.LMap.add lhs_loc reason env_state.write_entries in
+          let write_entries =
+            L.LMap.add lhs_loc (Env_api.AssigningWrite reason) env_state.write_entries
+          in
           env_state <- { env_state with write_entries }
         | _ -> ()
 
@@ -2292,7 +2301,9 @@ module Make
             (Some
                (fun () ->
                  let reason = mk_reason (RefinementKey.reason_desc refinement_key) loc in
-                 let write_entries = L.LMap.add loc reason env_state.write_entries in
+                 let write_entries =
+                   L.LMap.add loc (Env_api.AssigningWrite reason) env_state.write_entries
+                 in
                  env_state <- { env_state with write_entries };
                  Val.projection loc)
             )

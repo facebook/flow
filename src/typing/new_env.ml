@@ -377,12 +377,23 @@ module New_env : S = struct
         | Some w -> Flow_js.unify cx ~use_op t w
       end;
 
-      if not @@ Env_api.Provider_api.is_provider var_info.Env_api.providers loc then
-        let general = provider_type_for_def_loc env loc in
-        if is_def_loc_annotated var_info loc then
-          Flow_js.flow cx (t, UseT (use_op, general))
-        else
-          Context.add_constrained_write cx (t, UseT (use_op, general))
+      (* We only perform a subtyping check if this is an assigning write. We call
+       * writes to immutable bindings non-assigning writes. For example:
+       * const x: number = 3;
+       * x = 'string';
+       *
+       * Since the x = 'string' doesn't actually assign a value to x, we should
+       * not perform a subtyping check and a second error saying string is incompatible
+       * with number. We should only emit an error saying that a const cannot be reassigned. *)
+      match ALocMap.find_opt loc var_info.Env_api.env_entries with
+      | Some Env_api.NonAssigningWrite -> ()
+      | _ ->
+        if not (is_provider cx loc) then
+          let general = provider_type_for_def_loc env loc in
+          if is_def_loc_annotated var_info loc then
+            Flow_js.flow cx (t, UseT (use_op, general))
+          else
+            Context.add_constrained_write cx (t, UseT (use_op, general))
     end else
       Debug_js.Verbose.print_if_verbose
         cx
@@ -552,10 +563,13 @@ module New_env : S = struct
     Old_env.init_env ?exclude_syms cx scope;
     let ({ Loc_env.var_info; _ } as env) = Context.environment cx in
     ALocMap.fold
-      (fun loc reason env ->
-        let t = Inferred (Tvar.mk cx reason) in
-        (* Treat everything as inferred for now for the purposes of annotated vs inferred *)
-        Loc_env.initialize env loc t)
+      (fun loc env_entry env ->
+        match env_entry with
+        | Env_api.AssigningWrite reason ->
+          let t = Inferred (Tvar.mk cx reason) in
+          (* Treat everything as inferred for now for the purposes of annotated vs inferred *)
+          Loc_env.initialize env loc t
+        | Env_api.NonAssigningWrite -> env)
       var_info.Env_api.env_entries
       env
     |> Context.set_environment cx

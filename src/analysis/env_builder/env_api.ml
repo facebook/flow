@@ -87,11 +87,21 @@ module type S = sig
 
   type refinement = Refi.refinement
 
+  type env_entry =
+    (* Not every assignment actually produces a write. For example, when a
+     * const is reassigned it does not actually update the contents of the const
+     * and crashes instead. In these types of writes where nothing can actually
+     * be written, we don't want to produce extra error messages related to the type
+     * incompatibility of the write that is never performed. When the new_env finds a
+     * NonAssigningWrite it will not subtype the given type against the providers. *)
+    | AssigningWrite of L.t virtual_reason
+    | NonAssigningWrite
+
   type env_info = {
     scopes: Scope_api.info;
     ssa_values: Ssa_api.values;
     env_values: values;
-    env_entries: L.t virtual_reason L.LMap.t;
+    env_entries: env_entry L.LMap.t;
     providers: Provider_api.info;
     refinement_of_id: int -> Refi.refinement;
   }
@@ -205,11 +215,21 @@ module Make
 
   type values = write_locs L.LMap.t
 
+  type env_entry =
+    (* Not every assignment actually produces a write. For example, when a
+     * const is reassigned it does not actually update the contents of the const
+     * and crashes instead. In these types of writes where nothing can actually
+     * be written, we don't want to produce extra error messages related to the type
+     * incompatibility of the write that is never performed. When the new_env finds a
+     * NonAssigningWrite it will not subtype the given type against the providers. *)
+    | AssigningWrite of L.t virtual_reason
+    | NonAssigningWrite
+
   type env_info = {
     scopes: Scope_api.info;
     ssa_values: Ssa_api.values;
     env_values: values;
-    env_entries: L.t virtual_reason L.LMap.t;
+    env_entries: env_entry L.LMap.t;
     providers: Provider_api.info;
     refinement_of_id: int -> refinement;
   }
