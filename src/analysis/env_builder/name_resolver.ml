@@ -151,7 +151,7 @@ module Make
 
     val uninitialized : ALoc.t -> t
 
-    val uninitialized_class : L.t virtual_reason -> L.t -> t
+    val undeclared_class : L.t virtual_reason -> string -> t
 
     val merge : t -> t -> t
 
@@ -191,9 +191,9 @@ module Make
     type write_state =
       | Uninitialized of ALoc.t
       | Undeclared of string * ALoc.t
-      | UninitializedClass of {
-          read: ALoc.t;
+      | UndeclaredClass of {
           def: ALoc.t virtual_reason;
+          name: string;
         }
       | Projection of ALoc.t
       | Global of string
@@ -217,7 +217,7 @@ module Make
     let is_undeclared t =
       match t.write_state with
       | Undeclared _ -> true
-      | UninitializedClass _ -> true
+      | UndeclaredClass _ -> true
       | _ -> false
 
     let new_id () =
@@ -235,7 +235,7 @@ module Make
 
     let uninitialized r = mk_with_write_state (Uninitialized r)
 
-    let uninitialized_class def read = mk_with_write_state (UninitializedClass { def; read })
+    let undeclared_class def name = mk_with_write_state (UndeclaredClass { def; name })
 
     let projection loc = mk_with_write_state @@ Projection loc
 
@@ -280,7 +280,7 @@ module Make
       match t with
       | Uninitialized _
       | Undeclared _
-      | UninitializedClass _
+      | UndeclaredClass _
       | Projection _
       | Global _
       | Loc _
@@ -312,7 +312,7 @@ module Make
       match t with
       | Uninitialized _
       | Undeclared _
-      | UninitializedClass _
+      | UndeclaredClass _
       | Projection _
       | Global _
       | Loc _ ->
@@ -340,11 +340,8 @@ module Make
           | Uninitialized l when WriteSet.cardinal vals <= 1 ->
             Env_api.Uninitialized (mk_reason RUninitialized l)
           | Undeclared (name, loc) -> Env_api.Undeclared (name, loc)
-          | UninitializedClass { def; read } when WriteSet.cardinal vals <= 1 ->
-            Env_api.UninitializedClass { def; read = mk_reason RUninitialized read }
+          | UndeclaredClass { def; name } -> Env_api.UndeclaredClass { def; name }
           | Uninitialized l -> Env_api.Uninitialized (mk_reason RPossiblyUninitialized l)
-          | UninitializedClass { def; read } ->
-            Env_api.UninitializedClass { def; read = mk_reason RPossiblyUninitialized read }
           | Projection loc -> Env_api.Projection loc
           | Loc r -> Env_api.Write r
           | Refinement { refinement_id; val_t } ->
@@ -360,7 +357,7 @@ module Make
         match v with
         | Undeclared _ -> []
         | Uninitialized _ -> [v]
-        | UninitializedClass _ -> [v]
+        | UndeclaredClass _ -> [v]
         | PHI states -> Base.List.concat_map ~f:state_is_uninitialized states
         | Refinement { refinement_id; val_t = { write_state; _ } } ->
           let states = state_is_uninitialized write_state in
@@ -961,7 +958,7 @@ module Make
               let reason = mk_reason (RIdentifier (OrdinaryName name)) loc in
               env_state <- { env_state with write_entries };
               {
-                val_ref = ref (Val.uninitialized_class reason loc);
+                val_ref = ref (Val.undeclared_class reason name);
                 havoc;
                 def_loc = Some loc;
                 heap_refinements = ref HeapRefinementMap.empty;
@@ -1132,7 +1129,7 @@ module Make
        * this read
        *
        * Note that we don't emit EBinding errors for referenced-before-declaration errors here.
-       * That is because we may read an UninitializedClass from a type position and the
+       * That is because we may read an UndeclaredClass from a type position and the
        * name_resolver doesn't keep track of whether we are in a type context or not.
        *
        * Instead of augmenting the name_resolver with those capabilities, we emit these errors

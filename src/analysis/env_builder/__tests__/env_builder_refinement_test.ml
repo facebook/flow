@@ -35,10 +35,10 @@ let print_values refinement_of_id =
     match write_loc with
     | Uninitialized _ -> "(uninitialized)"
     | Undeclared _ -> "(undeclared)"
-    | UninitializedClass { def; _ } ->
+    | UndeclaredClass { def; _ } ->
       let loc = Reason.poly_loc_of_reason def in
       Utils_js.spf
-        "(uninitialized class) %s: (%s)"
+        "(undeclared class) %s: (%s)"
         (L.debug_to_string loc)
         Reason.(desc_of_reason def |> string_of_desc)
     | Projection l -> Utils_js.spf "projection at %s" (L.debug_to_string l)
@@ -4382,10 +4382,10 @@ class C {
   [%expect {|
     [
       (2, 1) to (2, 2) => {
-        (uninitialized class) (7, 6) to (7, 7): (`C`)
+        (undeclared class) (7, 6) to (7, 7): (`C`)
       };
       (4, 15) to (4, 16) => {
-        (uninitialized class) (7, 6) to (7, 7): (`C`)
+        (undeclared class) (7, 6) to (7, 7): (`C`)
       };
       (5, 0) to (5, 1) => {
         (4, 12) to (4, 13): (`c`)
@@ -4403,7 +4403,7 @@ class D extends C {
   [%expect {|
     [
       (3, 7) to (3, 8) => {
-        (uninitialized class) (5, 6) to (5, 7): (`D`)
+        (undeclared class) (5, 6) to (5, 7): (`D`)
       };
       (5, 16) to (5, 17) => {
         (2, 6) to (2, 7): (`C`)
@@ -4420,7 +4420,7 @@ C;
   [%expect {|
     [
       (2, 0) to (2, 1) => {
-        (uninitialized class) (3, 6) to (3, 7): (`C`)
+        (undeclared class) (3, 6) to (3, 7): (`C`)
       };
       (4, 5) to (4, 6) => {
         (3, 6) to (3, 7): (`C`)
@@ -4464,7 +4464,7 @@ class C {
         (3, 9) to (3, 14): (`havoc`)
       };
       (8, 0) to (8, 1) => {
-        (uninitialized class) (10, 6) to (10, 7): (`C`)
+        (undeclared class) (10, 6) to (10, 7): (`C`)
       }] |}]
 
 let%expect_test "deps_recur_broken_init" =
@@ -4496,7 +4496,7 @@ class D extends C {
   [%expect {|
     [
       (3, 7) to (3, 8) => {
-        (uninitialized class) (5, 6) to (5, 7): (`D`)
+        (undeclared class) (5, 6) to (5, 7): (`D`)
       };
       (5, 16) to (5, 17) => {
         (2, 6) to (2, 7): (`C`)
@@ -4758,7 +4758,7 @@ class _class {}
           (12, 11) to (12, 16): (`_func`)
         };
         (6, 2) to (6, 8) => {
-          (uninitialized class) (13, 6) to (13, 12): (`_class`)
+          (undeclared class) (13, 6) to (13, 12): (`_class`)
         };
         (7, 2) to (7, 3) => {
           (undeclared)

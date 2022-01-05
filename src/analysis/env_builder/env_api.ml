@@ -25,9 +25,9 @@ module type S = sig
     | Write of L.t Reason.virtual_reason
     | Uninitialized of L.t Reason.virtual_reason
     | Undeclared of string * L.t
-    | UninitializedClass of {
-        read: L.t Reason.virtual_reason;
+    | UndeclaredClass of {
         def: L.t Reason.virtual_reason;
+        name: string;
       }
     | Refinement of {
         refinement_id: int;
@@ -155,9 +155,9 @@ module Make
     | Write of L.t Reason.virtual_reason
     | Uninitialized of L.t Reason.virtual_reason
     | Undeclared of string * L.t
-    | UninitializedClass of {
-        read: L.t Reason.virtual_reason;
+    | UndeclaredClass of {
         def: L.t Reason.virtual_reason;
+        name: string;
       }
     | Refinement of {
         refinement_id: int;
@@ -255,8 +255,8 @@ module Make
     match write_loc with
     | Refinement { refinement_id = _; writes } ->
       writes |> List.map (writes_of_write_loc ~for_type) |> List.flatten
-    | UninitializedClass { def; _ } when for_type -> [Reason.poly_loc_of_reason def]
-    | UninitializedClass _ -> []
+    | UndeclaredClass { def; _ } when for_type -> [Reason.poly_loc_of_reason def]
+    | UndeclaredClass _ -> []
     | Write r -> [Reason.poly_loc_of_reason r]
     | Uninitialized _ -> []
     | Undeclared _ -> []
@@ -295,7 +295,7 @@ module Make
       match write_loc with
       | Uninitialized _ -> "(uninitialized)"
       | Undeclared _ -> "(undeclared)"
-      | UninitializedClass { def; _ } ->
+      | UndeclaredClass { def; _ } ->
         let loc = Reason.poly_loc_of_reason def in
         Utils_js.spf
           "(uninitialized class) %s: (%s)"

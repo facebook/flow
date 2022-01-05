@@ -381,7 +381,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- undef_class.js:3:17
 
-Cannot assign `C` to `x` because uninitialized variable [1] is incompatible with number [2]. [incompatible-type]
+Cannot use variable `C` [1] because the declaration either comes later or was skipped. [reference-before-declaration]
 
    undef_class.js:3:17
    3| var x: number = C; // should be a TDZ error, but for now just undefined
@@ -391,9 +391,6 @@ References:
    undef_class.js:6:7
    6| class C {}
             ^ [1]
-   undef_class.js:3:8
-   3| var x: number = C; // should be a TDZ error, but for now just undefined
-             ^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------- undef_class.js:4:2

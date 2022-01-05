@@ -223,9 +223,15 @@ module New_env : S = struct
                 EBindingError (EReferencedBeforeDeclaration, loc, OrdinaryName name, def_loc)
               );
             Type.(AnyT.make (AnyError None) reason)
-          | Env_api.UninitializedClass { read; _ } when not for_type ->
-            Type.(VoidT.make read |> with_trust Trust.bogus_trust)
-          | Env_api.UninitializedClass { def; _ } ->
+          | Env_api.UndeclaredClass { name; def } when not for_type ->
+            let def_loc = aloc_of_reason def in
+            Flow_js.add_output
+              cx
+              Error_message.(
+                EBindingError (EReferencedBeforeDeclaration, loc, OrdinaryName name, def_loc)
+              );
+            Type.(AnyT.make (AnyError None) reason)
+          | Env_api.UndeclaredClass { def; _ } ->
             Debug_js.Verbose.print_if_verbose
               cx
               [
@@ -315,7 +321,7 @@ module New_env : S = struct
       Base.List.exists
         ~f:(function
           | Env_api.With_ALoc.Uninitialized _ -> true
-          | Env_api.With_ALoc.UninitializedClass _ -> true
+          | Env_api.With_ALoc.UndeclaredClass _ -> true
           | Env_api.With_ALoc.Write _ -> true
           | Env_api.With_ALoc.Unreachable _ -> true
           | Env_api.With_ALoc.Undeclared _ -> true
