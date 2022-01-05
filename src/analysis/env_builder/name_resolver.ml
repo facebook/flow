@@ -555,6 +555,11 @@ module Make
                 binding_kind = Scope.Entry.(DeclaredFunctionBinding { predicate = false });
               }
           )
+      | (Bindings.Var, Some Flow_ast.Statement.VariableDeclaration.(Let | Const)) ->
+        Some
+          Error_message.(
+            EBindingError (ENameAlreadyBound, assignment_loc, OrdinaryName name, def_loc)
+          )
       | (Bindings.Const, Some _)
       | (Bindings.Class, Some _)
       | (Bindings.Function, Some _)
@@ -1115,6 +1120,12 @@ module Make
           | _ -> ()
 
       method! binding_type_identifier ident = super#identifier ident
+
+      method! function_identifier ident =
+        (* The parent flow_ast_mapper treats functions as Vars, but in Flow
+         * (not JS, Flow) they behave more like hoisted lets. For the purpose of
+         * reassignment errors, we should consider them to be lets *)
+        this#pattern_identifier ~kind:Flow_ast.Statement.VariableDeclaration.Let ident
 
       method! pattern_identifier ?kind ident =
         ignore kind;
