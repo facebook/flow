@@ -219,6 +219,8 @@ module NewAPI : sig
    * of the imports/requires of a file. *)
   type file_sig
 
+  type exports
+
   (* Phantom type tag for checked file objects. A checked file contains
    * references to the filename, any local definitions, exports, etc. *)
   type checked_file
@@ -273,6 +275,10 @@ module NewAPI : sig
 
   val read_opt_exn : ('a addr -> 'b) -> 'a opt addr -> 'b
 
+  val is_none : 'a opt addr -> bool
+
+  val is_some : 'a opt addr -> bool
+
   (* ast *)
 
   val prepare_write_ast : string -> size * (chunk -> ast addr)
@@ -284,6 +290,12 @@ module NewAPI : sig
   val prepare_write_file_sig : string -> size * (chunk -> file_sig addr)
 
   val read_file_sig : file_sig addr -> string
+
+  (* exports *)
+
+  val prepare_write_exports : string -> size * (chunk -> exports addr)
+
+  val read_exports : exports addr -> string
 
   (* docblock *)
 
@@ -315,7 +327,7 @@ module NewAPI : sig
 
   val checked_file_size : size
 
-  val write_checked_file : chunk -> checked_file addr
+  val write_checked_file : chunk -> exports addr -> checked_file addr
 
   val set_file_ast : checked_file addr -> ast addr -> unit
 
@@ -336,4 +348,6 @@ module NewAPI : sig
   val get_file_type_sig : checked_file addr -> type_sig opt addr
 
   val get_file_sig : checked_file addr -> file_sig opt addr
+
+  val get_file_exports : checked_file addr -> exports addr
 end

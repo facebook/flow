@@ -882,6 +882,8 @@ module NewAPI = struct
 
   type file_sig
 
+  type exports
+
   type checked_file
 
   type size = int
@@ -974,14 +976,15 @@ module NewAPI = struct
     | Serialized_resolved_requires_tag
     | Serialized_ast_tag
     | Serialized_file_sig_tag
+    | Serialized_exports_tag
     (* tags defined above this point are serialized+compressed *)
-    | String_tag (* 4 *)
+    | String_tag (* 5 *)
     | Int64_tag
     | Docblock_tag
     | ALoc_table_tag
     | Type_sig_tag
     (* tags defined below this point are scanned for pointers *)
-    | Addr_tbl_tag (* 9 *)
+    | Addr_tbl_tag (* 10 *)
     | Checked_file_tag
 
   (* avoid unused constructor warning *)
@@ -993,7 +996,7 @@ module NewAPI = struct
   let tag_val : tag -> int = Obj.magic
 
   (* double-check integer value is consistent with hh_shared.c *)
-  let () = assert (tag_val Addr_tbl_tag = 9)
+  let () = assert (tag_val Addr_tbl_tag = 10)
 
   let header_size = 1
 
@@ -1179,6 +1182,10 @@ module NewAPI = struct
     else
       f addr
 
+  let is_none addr = addr == null_addr
+
+  let is_some addr = addr != null_addr
+
   (** Compressed OCaml values
 
       We store OCaml values as serialized+compressed blobs in the heap. The
@@ -1289,17 +1296,24 @@ module NewAPI = struct
 
   let read_file_sig addr = read_compressed Serialized_file_sig_tag addr
 
+  (** Exports *)
+
+  let prepare_write_exports exports = prepare_write_compressed Serialized_exports_tag exports
+
+  let read_exports addr = read_compressed Serialized_exports_tag addr
+
   (** Checked files *)
 
-  let checked_file_size = 5 * addr_size
+  let checked_file_size = 6 * addr_size
 
-  let write_checked_file chunk =
+  let write_checked_file chunk exports =
     let checked_file = write_header chunk Checked_file_tag checked_file_size in
     unsafe_write_addr chunk null_addr;
     unsafe_write_addr chunk null_addr;
     unsafe_write_addr chunk null_addr;
     unsafe_write_addr chunk null_addr;
     unsafe_write_addr chunk null_addr;
+    unsafe_write_addr chunk exports;
     checked_file
 
   let ast_addr file = addr_offset file 1
@@ -1311,6 +1325,8 @@ module NewAPI = struct
   let type_sig_addr file = addr_offset file 4
 
   let file_sig_addr file = addr_offset file 5
+
+  let exports_addr file = addr_offset file 6
 
   let set_file_generic offset file addr = unsafe_write_addr_at (get_heap ()) (offset file) addr
 
@@ -1335,4 +1351,6 @@ module NewAPI = struct
   let get_file_type_sig = get_file_generic type_sig_addr
 
   let get_file_sig = get_file_generic file_sig_addr
+
+  let get_file_exports = get_file_generic exports_addr
 end
