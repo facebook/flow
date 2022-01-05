@@ -118,9 +118,7 @@ let sig_hash ~root =
       ES { filename; type_exports; exports; ns }
     in
     fun ~reader dep_key ->
-      let file_addr =
-        Parsing_heaps.Reader_dispatcher.get_checked_file_addr_unsafe ~reader dep_key
-      in
+      let file_addr = Parsing_heaps.Mutator_reader.get_checked_file_addr_unsafe ~reader dep_key in
       let buf = Heap.read_opt_exn Heap.type_sig_buf (Heap.get_file_type_sig file_addr) in
       Bin.read_module_kind (cjs_module dep_key) (es_module dep_key) buf (Bin.module_kind buf)
   in
@@ -221,12 +219,12 @@ let sig_hash ~root =
   in
 
   let file_dependency ~reader component_rec component_map m =
-    match Module_heaps.Reader_dispatcher.get_provider ~reader ~audit:Expensive.ok m with
+    match Module_heaps.Mutator_reader.get_provider ~reader ~audit:Expensive.ok m with
     | None -> Unchecked
     | Some (File_key.ResourceFile f) -> resource_dep f
     | Some dep ->
       let open Parsing_heaps in
-      let info = Reader_dispatcher.get_info_unsafe ~reader ~audit:Expensive.ok dep in
+      let info = Mutator_reader.get_info_unsafe ~reader ~audit:Expensive.ok dep in
       if info.checked && info.parsed then
         match FilenameMap.find_opt dep component_map with
         | Some i -> Cyclic (lazy (Lazy.force component_rec).(i))
@@ -237,13 +235,13 @@ let sig_hash ~root =
 
   (* Create a Type_sig_hash.file record for a file in the merged component. *)
   let component_file ~reader component_rec component_map file_key =
-    let file_addr = Parsing_heaps.Reader_dispatcher.get_checked_file_addr_unsafe ~reader file_key in
+    let file_addr = Parsing_heaps.Mutator_reader.get_checked_file_addr_unsafe ~reader file_key in
 
     let buf = Heap.read_opt_exn Heap.type_sig_buf (Heap.get_file_type_sig file_addr) in
 
     let dependencies =
       let { Module_heaps.resolved_modules; _ } =
-        Module_heaps.Reader_dispatcher.get_resolved_requires_unsafe
+        Module_heaps.Mutator_reader.get_resolved_requires_unsafe
           ~reader
           ~audit:Expensive.ok
           file_key
@@ -373,7 +371,6 @@ let merge_component ~worker_mutator ~options ~reader ((leader_f, _) as component
     (diff, Ok None)
   else
     let hash =
-      let reader = Abstract_state_reader.Mutator_state_reader reader in
       let root = Options.root options in
       sig_hash ~root ~reader component
     in

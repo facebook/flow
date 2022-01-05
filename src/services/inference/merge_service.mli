@@ -42,7 +42,7 @@ type 'a merge_job =
   File_key.t Nel.t ->
   bool * 'a unit_result
 
-val sig_hash : root:Path.t -> reader:Abstract_state_reader.t -> File_key.t Nel.t -> Xx.hash
+val sig_hash : root:Path.t -> reader:Mutator_state_reader.t -> File_key.t Nel.t -> Xx.hash
 
 val check_contents_cache : Check_cache.t
 
