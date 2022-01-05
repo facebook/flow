@@ -57,6 +57,10 @@ module type C = sig
   val jsx : t -> Options.jsx_mode
 
   val react_runtime : t -> Options.react_runtime
+
+  val enable_const_params : t -> bool
+
+  val env_mode : t -> Options.env_mode
 end
 
 module type F = sig
@@ -498,6 +502,40 @@ module Make
     jsx_base_name: string option;
   }
 
+  let error_for_assignment_kind
+      cx name assignment_loc def_loc_opt stored_binding_kind pattern_binding_kind v =
+    match def_loc_opt with
+    (* Identifiers with no binding can never reintroduce "cannot reassign binding" errors *)
+    | None -> None
+    | Some def_loc ->
+      (* Pattern kind is None or Some (Var | Const | Let). It is set to None when we hit a regular
+       * assignment, like x = 4, but set to Some x when we are in a declaration, like let x = 3, or
+       * class A {}. We use the pattern_binding_kind to decide if we should emit an error saying
+       * "you cannot re-declare X" vs. "you cannot reassign const X" *)
+      (match (stored_binding_kind, pattern_binding_kind) with
+      | (Bindings.Const, None) ->
+        Some
+          Error_message.(
+            EBindingError (EConstReassigned, assignment_loc, OrdinaryName name, def_loc)
+          )
+      | (Bindings.Parameter, None) when Context.enable_const_params cx ->
+        Some
+          Error_message.(
+            EBindingError (EConstParamReassigned, assignment_loc, OrdinaryName name, def_loc)
+          )
+      | (Bindings.Const, Some _) when not (Val.is_undeclared v) ->
+        Some
+          Error_message.(
+            EBindingError (ENameAlreadyBound, assignment_loc, OrdinaryName name, def_loc)
+          )
+      | (Bindings.Parameter, Some _) when Context.enable_const_params cx && not (Val.is_undeclared v)
+        ->
+        Some
+          Error_message.(
+            EBindingError (ENameAlreadyBound, assignment_loc, OrdinaryName name, def_loc)
+          )
+      | _ -> None)
+
   let initialize_globals unbound_names =
     SSet.fold
       (fun name acc ->
@@ -921,7 +959,8 @@ module Make
                  * do not, so we don't set them to be undeclared *)
                 | Bindings.Let
                 | Bindings.Const
-                | Bindings.Enum ->
+                | Bindings.Enum
+                | Bindings.Parameter ->
                   let reason = mk_reason (RIdentifier (OrdinaryName name)) loc in
                   Val.undeclared reason
                 | _ -> Val.uninitialized loc
@@ -1044,16 +1083,21 @@ module Make
         ignore kind;
         let (loc, { Flow_ast.Identifier.name = x; comments = _ }) = ident in
         let reason = Reason.(mk_reason (RIdentifier (OrdinaryName x))) loc in
-        let { val_ref; heap_refinements; _ } = SMap.find x env_state.env in
+        let { val_ref; heap_refinements; kind = stored_binding_kind; def_loc; havoc = _ } =
+          SMap.find x env_state.env
+        in
         (match kind with
         (* Assignments to undeclared bindings that aren't part of declarations do not
          * initialize those bindings. TODO: Emit a use before declaration error *)
         | None when Val.is_undeclared !val_ref -> ()
         | _ ->
-          val_ref := Val.one reason;
-          this#havoc_heap_refinements heap_refinements;
-          let write_entries = L.LMap.add loc reason env_state.write_entries in
-          env_state <- { env_state with write_entries });
+          (match error_for_assignment_kind cx x loc def_loc stored_binding_kind kind !val_ref with
+          | Some err -> this#add_output err
+          | _ ->
+            val_ref := Val.one reason;
+            this#havoc_heap_refinements heap_refinements;
+            let write_entries = L.LMap.add loc reason env_state.write_entries in
+            env_state <- { env_state with write_entries }));
         super#identifier ident
 
       (* This method is called during every read of an identifier. We need to ensure that
@@ -1420,7 +1464,7 @@ module Make
         List.iter
           (fun lookup ->
             let { RefinementKey.base; projections } = lookup in
-            let { val_ref; havoc; heap_refinements; def_loc = _; kind = _ } =
+            let { val_ref; havoc; heap_refinements; def_loc = _; kind } =
               SMap.find base env_state.env
             in
             (* If a var is changed then all the heap refinements on that var should
@@ -1429,7 +1473,7 @@ module Make
             match projections with
             | [] ->
               this#havoc_heap_refinements heap_refinements;
-              val_ref := havoc
+              if kind <> Bindings.Const then val_ref := havoc
             | _ -> heap_refinements := HeapRefinementMap.remove projections !heap_refinements)
           changed_vars
 
@@ -2957,6 +3001,11 @@ module Make
       method! jsx_fragment loc expr =
         this#jsx_function_call loc;
         super#jsx_fragment loc expr
+
+      method add_output err =
+        match Context.env_mode cx with
+        | Options.SSAEnv _ -> FlowAPIUtils.add_output cx err
+        | _ -> ()
     end
 
   (* The EnvBuilder does not traverse dead code, but statement.ml does. Dead code

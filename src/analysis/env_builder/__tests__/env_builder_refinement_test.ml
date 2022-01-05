@@ -21,6 +21,10 @@ module TestCx = struct
   let jsx _cx = !jsx_mode
 
   let react_runtime _cx = !react_runtime
+
+  let env_mode _cx = Options.SSAEnv { resolved = true }
+
+  let enable_const_params _cx = true
 end
 
 module Name_resolver = Name_resolver.Make_Test_With_Cx (TestCx)

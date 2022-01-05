@@ -19,6 +19,10 @@ module Name_resolver = Name_resolver.Make_Test_With_Cx (struct
   let jsx _cx = Options.Jsx_react
 
   let react_runtime _cx = Options.ReactRuntimeClassic
+
+  let env_mode _cx = Options.SSAEnv { resolved = true }
+
+  let enable_const_params _cx = false
 end)
 
 let string_of_root = function
