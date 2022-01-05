@@ -109,7 +109,7 @@ end
 module From_saved_state : sig
   val add_file_hash : File_key.t -> Xx.hash -> unit
 
-  val add_exports : File_key.t -> Exports.t -> unit
+  val add_parsed : File_key.t -> string option -> Exports.t -> unit
 
-  val add_info : File_key.t -> info -> unit
+  val add_unparsed : File_key.t -> string option -> unit
 end

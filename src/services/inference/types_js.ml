@@ -2096,7 +2096,7 @@ let init_from_saved_state ~profiling ~workers ~saved_state ~updates options =
     FilenameMap.iter (fun fn -> Module_js.add_package (File_key.to_string fn)) package_heaps;
 
     let restore_parsed ~load_sighashes acc (fn, parsed_file_data) =
-      let { Saved_state.info; normalized_file_data; sig_hash } = parsed_file_data in
+      let { Saved_state.module_name; normalized_file_data; sig_hash } = parsed_file_data in
       let { Saved_state.hash; exports; resolved_requires } =
         Saved_state.denormalize_file_data ~root normalized_file_data
       in
@@ -2104,11 +2104,8 @@ let init_from_saved_state ~profiling ~workers ~saved_state ~updates options =
       (* Restore the FileHashHeap *)
       Parsing_heaps.From_saved_state.add_file_hash fn hash;
 
-      (* Restore the ExportsHeap *)
-      Parsing_heaps.From_saved_state.add_exports fn exports;
-
-      (* Restore the InfoHeap *)
-      Parsing_heaps.From_saved_state.add_info fn info;
+      (* Restore the FileHeap *)
+      Parsing_heaps.From_saved_state.add_parsed fn module_name exports;
 
       (* Restore the ResolvedRequiresHeap *)
       Module_heaps.From_saved_state.add_resolved_requires fn resolved_requires;
@@ -2121,13 +2118,13 @@ let init_from_saved_state ~profiling ~workers ~saved_state ~updates options =
     in
 
     let restore_unparsed acc (fn, unparsed_file_data) =
-      let { Saved_state.unparsed_info; unparsed_hash } = unparsed_file_data in
+      let { Saved_state.unparsed_module_name; unparsed_hash } = unparsed_file_data in
 
       (* Restore the FileHashHeap *)
       Parsing_heaps.From_saved_state.add_file_hash fn unparsed_hash;
 
-      (* Restore the InfoHeap *)
-      Parsing_heaps.From_saved_state.add_info fn unparsed_info;
+      (* Restore the FileHeap *)
+      Parsing_heaps.From_saved_state.add_unparsed fn unparsed_module_name;
 
       FilenameSet.add fn acc
     in

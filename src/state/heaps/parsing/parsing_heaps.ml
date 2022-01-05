@@ -15,22 +15,11 @@ type info = {
   parsed: bool;  (** if false, it's a tracking record only *)
 }
 
-(** Maps filenames to info about a module, including the module's name.
-    note: currently we may have many files for one module name. this is an issue. *)
-module InfoHeap =
-  SharedMem.WithCache
-    (File_key)
-    (struct
-      type t = info
-
-      let description = "Info"
-    end)
-
-module CheckedFileHeap =
+module FileHeap =
   SharedMem.NoCacheAddr
     (File_key)
     (struct
-      type t = Heap.checked_file
+      type t = Heap.dyn_file
     end)
 
 type locs_tbl = Loc.t Type_sig_collections.Locs.t
@@ -71,7 +60,7 @@ let decompactify_loc file ast = (loc_decompactifier (Some file))#program ast
  * state, a checked file entry will already exist without parse data and this
  * function will update the existing entry in place. Otherwise, we will create a
  * new entry and add it to the shared hash table. *)
-let add_checked_file file_key ast docblock locs type_sig file_sig exports =
+let add_checked_file file_key module_name docblock ast locs type_sig file_sig exports =
   let open Type_sig_collections in
   let serialize x = Marshal.to_string x [] in
   let ast = serialize (compactify_loc ast) in
@@ -91,15 +80,27 @@ let add_checked_file file_key ast docblock locs type_sig file_sig exports =
     + file_sig_size
   in
   let (size, write_file_maybe) =
-    match CheckedFileHeap.get file_key with
-    | Some addr -> (size, (fun _ -> addr))
+    match FileHeap.get file_key with
+    | Some addr ->
+      (* If there is an existing file heap entry, it must be a checked file. How
+       * do we know this? We should only hit this case via `ensure_parsed` and
+       * we only call `ensure_parsed` on checked files. *)
+      let addr = assert_checked_file addr in
+      (size, Fun.const addr)
     | None ->
       let exports = serialize exports in
       let (exports_size, write_exports) = prepare_write_exports exports in
-      let size = size + (2 * header_size) + exports_size + checked_file_size in
+      let size =
+        size
+        + (2 * header_size)
+        + checked_file_size
+        + opt_size (with_header_size string_size) module_name
+        + exports_size
+      in
       let write chunk =
+        let module_name = write_opt write_string chunk module_name in
         let exports = write_exports chunk in
-        write_checked_file chunk exports
+        write_checked_file chunk module_name exports
       in
       (size, write)
   in
@@ -119,7 +120,26 @@ let add_checked_file file_key ast docblock locs type_sig file_sig exports =
         file
     )
   in
-  CheckedFileHeap.add file_key file_addr
+  FileHeap.add file_key (dyn_checked_file file_addr)
+
+let add_unparsed_file file_key module_name =
+  let open Heap in
+  let size =
+    header_size + unparsed_file_size + opt_size (with_header_size string_size) module_name
+  in
+  let addr =
+    alloc size (fun chunk ->
+        let module_name = write_opt write_string chunk module_name in
+        write_unparsed_file chunk module_name
+    )
+  in
+  FileHeap.add file_key (dyn_unparsed_file addr)
+
+let read_info file_addr =
+  let open Heap in
+  let module_name = get_file_module_name file_addr |> read_opt read_string in
+  let checked = is_checked_file file_addr in
+  { module_name; checked; parsed = checked }
 
 let read_ast file_key file_addr =
   let open Heap in
@@ -179,15 +199,12 @@ end)
 (* Groups operations on the multiple heaps that need to stay in sync *)
 module ParsingHeaps = struct
   let add_parsed file ~exports module_name docblock ast file_sig locs type_sig =
-    let info = { module_name; checked = true; parsed = true } in
     WorkerCancel.with_no_cancellations (fun () ->
-        InfoHeap.add file info;
-        add_checked_file file ast docblock locs type_sig file_sig exports
+        add_checked_file file module_name docblock ast locs type_sig file_sig exports
     )
 
   let add_unparsed file module_name =
-    let info = { module_name; checked = false; parsed = false } in
-    WorkerCancel.with_no_cancellations (fun () -> InfoHeap.add file info)
+    WorkerCancel.with_no_cancellations (fun () -> add_unparsed_file file module_name)
 
   let add_hash file hash =
     let open Heap in
@@ -196,27 +213,24 @@ module ParsingHeaps = struct
 
   let oldify_batch files =
     WorkerCancel.with_no_cancellations (fun () ->
-        CheckedFileHeap.oldify_batch files;
+        FileHeap.oldify_batch files;
         FilenameSet.iter ASTCache.remove files;
         FilenameSet.iter ALocTableCache.remove files;
-        FileHashHeap.oldify_batch files;
-        InfoHeap.oldify_batch files
+        FileHashHeap.oldify_batch files
     )
 
   let remove_old_batch files =
     WorkerCancel.with_no_cancellations (fun () ->
-        CheckedFileHeap.remove_old_batch files;
-        FileHashHeap.remove_old_batch files;
-        InfoHeap.remove_old_batch files
+        FileHeap.remove_old_batch files;
+        FileHashHeap.remove_old_batch files
     )
 
   let revive_batch files =
     WorkerCancel.with_no_cancellations (fun () ->
-        CheckedFileHeap.revive_batch files;
+        FileHeap.revive_batch files;
         FilenameSet.iter ASTCache.remove files;
         FilenameSet.iter ALocTableCache.remove files;
-        FileHashHeap.revive_batch files;
-        InfoHeap.revive_batch files
+        FileHashHeap.revive_batch files
     )
 end
 
@@ -293,7 +307,17 @@ end = struct
 
   let ( let* ) = Option.bind
 
-  let get_checked_file_addr ~reader:_ = CheckedFileHeap.get
+  let get_file_addr ~reader:_ = FileHeap.get
+
+  let get_old_file_addr ~reader:_ = FileHeap.get_old
+
+  let get_checked_file_addr ~reader file =
+    let* addr = get_file_addr ~reader file in
+    Heap.coerce_checked_file addr
+
+  let get_old_checked_file_addr ~reader file =
+    let* addr = get_old_file_addr ~reader file in
+    Heap.coerce_checked_file addr
 
   let has_ast ~reader file =
     match get_checked_file_addr ~reader file with
@@ -312,8 +336,8 @@ end = struct
     let* addr = get_checked_file_addr ~reader file in
     Some (read_exports addr)
 
-  let get_old_exports ~reader:_ file =
-    let* addr = CheckedFileHeap.get_old file in
+  let get_old_exports ~reader file =
+    let* addr = get_old_checked_file_addr ~reader file in
     Some (read_exports addr)
 
   let get_tolerable_file_sig ~reader file =
@@ -392,16 +416,20 @@ end = struct
 
   let loc_of_aloc = loc_of_aloc ~get_aloc_table_unsafe
 
-  let get_info ~reader:_ = Expensive.wrap InfoHeap.get
+  let get_info ~reader =
+    let f file = Option.map read_info (get_file_addr ~reader file) in
+    Expensive.wrap f
 
-  let get_old_info ~reader:_ = Expensive.wrap InfoHeap.get_old
+  let get_old_info ~reader =
+    let f file = Option.map read_info (get_old_file_addr ~reader file) in
+    Expensive.wrap f
 
   let get_info_unsafe ~reader ~audit f =
     match get_info ~reader ~audit f with
     | Some info -> info
     | None -> failwith (Printf.sprintf "module info not found for file %s" (File_key.to_string f))
 
-  let is_tracked_file ~reader:_ = InfoHeap.mem
+  let is_tracked_file ~reader:_ = FileHeap.mem
 end
 
 (* For use by a worker process *)
@@ -506,39 +534,43 @@ module Reader : READER with type reader = State_reader.t = struct
 
   let should_use_oldified key = FilenameSet.mem key !currently_oldified_files
 
-  let get_checked_file_addr ~reader:_ key =
+  let get_file_addr ~reader:_ key =
     if should_use_oldified key then
-      CheckedFileHeap.get_old key
+      FileHeap.get_old key
     else
-      CheckedFileHeap.get key
+      FileHeap.get key
+
+  let get_checked_file_addr ~reader key =
+    let* addr = get_file_addr ~reader key in
+    Heap.coerce_checked_file addr
 
   let has_ast ~reader key =
     match get_checked_file_addr ~reader key with
     | None -> false
     | Some addr -> Heap.get_file_ast addr |> Heap.is_some
 
-  let get_ast ~reader:_ key =
+  let get_ast ~reader key =
     if should_use_oldified key then
-      let* addr = CheckedFileHeap.get_old key in
+      let* addr = get_checked_file_addr ~reader key in
       read_ast key addr
     else
       match ASTCache.get key with
       | Some _ as cached -> cached
       | None ->
-        let* addr = CheckedFileHeap.get key in
+        let* addr = get_checked_file_addr ~reader key in
         let* ast = read_ast key addr in
         ASTCache.add key ast;
         Some ast
 
-  let get_aloc_table ~reader:_ key =
+  let get_aloc_table ~reader key =
     if should_use_oldified key then
-      let* addr = CheckedFileHeap.get_old key in
+      let* addr = get_checked_file_addr ~reader key in
       read_aloc_table key addr
     else
       match ALocTableCache.get key with
       | Some _ as cached -> cached
       | None ->
-        let* addr = CheckedFileHeap.get key in
+        let* addr = get_checked_file_addr ~reader key in
         let* aloc_table = read_aloc_table key addr in
         ALocTableCache.add key aloc_table;
         Some aloc_table
@@ -617,11 +649,9 @@ module Reader : READER with type reader = State_reader.t = struct
 
   let loc_of_aloc = loc_of_aloc ~get_aloc_table_unsafe
 
-  let get_info ~reader:_ ~audit f =
-    if should_use_oldified f then
-      Expensive.wrap InfoHeap.get_old ~audit f
-    else
-      Expensive.wrap InfoHeap.get ~audit f
+  let get_info ~reader =
+    let f file = Option.map read_info (get_file_addr ~reader file) in
+    Expensive.wrap f
 
   let get_info_unsafe ~reader ~audit f =
     match get_info ~reader ~audit f with
@@ -630,9 +660,9 @@ module Reader : READER with type reader = State_reader.t = struct
 
   let is_tracked_file ~reader:_ f =
     if should_use_oldified f then
-      InfoHeap.mem_old f
+      FileHeap.mem_old f
     else
-      InfoHeap.mem f
+      FileHeap.mem f
 end
 
 (* Reader_dispatcher is used by code which may or may not be running inside an init/recheck *)
@@ -747,24 +777,30 @@ end
 module From_saved_state : sig
   val add_file_hash : File_key.t -> Xx.hash -> unit
 
-  val add_info : File_key.t -> info -> unit
+  val add_parsed : File_key.t -> string option -> Exports.t -> unit
 
-  val add_exports : File_key.t -> Exports.t -> unit
+  val add_unparsed : File_key.t -> string option -> unit
 end = struct
   let add_file_hash = ParsingHeaps.add_hash
 
-  let add_info = InfoHeap.add
-
-  let add_exports file_key exports =
+  let add_parsed file_key module_name exports =
     let exports = Marshal.to_string exports [] in
     let (exports_size, write_exports) = Heap.prepare_write_exports exports in
     let open Heap in
-    let size = (2 * header_size) + exports_size + checked_file_size in
-    let file_addr =
+    let size =
+      (2 * header_size)
+      + checked_file_size
+      + opt_size (with_header_size string_size) module_name
+      + exports_size
+    in
+    let addr =
       alloc size (fun chunk ->
+          let module_name = write_opt write_string chunk module_name in
           let exports = write_exports chunk in
-          write_checked_file chunk exports
+          write_checked_file chunk module_name exports
       )
     in
-    CheckedFileHeap.add file_key file_addr
+    FileHeap.add file_key (dyn_checked_file addr)
+
+  let add_unparsed = ParsingHeaps.add_unparsed
 end

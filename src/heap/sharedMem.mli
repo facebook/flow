@@ -225,6 +225,10 @@ module NewAPI : sig
    * references to the filename, any local definitions, exports, etc. *)
   type checked_file
 
+  type unparsed_file
+
+  type dyn_file
+
   (* Before writing to the heap, we first calculate the required size (in words)
    * for all the heap objects we would like to write. We will pass this size
    * into the `alloc` function below, to get a chunk which we use to perform
@@ -239,6 +243,8 @@ module NewAPI : sig
   (* headers *)
 
   val header_size : size
+
+  val with_header_size : ('a -> size) -> 'a -> size
 
   (* strings *)
 
@@ -268,6 +274,8 @@ module NewAPI : sig
   val read_addr_tbl : ('k addr -> 'a) -> 'k addr_tbl addr -> 'a array
 
   (* opt *)
+
+  val opt_size : ('a -> size) -> 'a option -> size
 
   val write_opt : (chunk -> 'a -> 'k addr) -> chunk -> 'a option -> 'k opt addr
 
@@ -327,7 +335,23 @@ module NewAPI : sig
 
   val checked_file_size : size
 
-  val write_checked_file : chunk -> exports addr -> checked_file addr
+  val unparsed_file_size : size
+
+  val write_checked_file : chunk -> heap_string opt addr -> exports addr -> checked_file addr
+
+  val write_unparsed_file : chunk -> heap_string opt addr -> unparsed_file addr
+
+  val dyn_checked_file : checked_file addr -> dyn_file addr
+
+  val dyn_unparsed_file : unparsed_file addr -> dyn_file addr
+
+  val is_checked_file : dyn_file addr -> bool
+
+  val assert_checked_file : dyn_file addr -> checked_file addr
+
+  val coerce_checked_file : dyn_file addr -> checked_file addr option
+
+  val set_file_module_name : dyn_file addr -> heap_string opt addr -> unit
 
   val set_file_ast : checked_file addr -> ast addr -> unit
 
@@ -338,6 +362,8 @@ module NewAPI : sig
   val set_file_type_sig : checked_file addr -> type_sig addr -> unit
 
   val set_file_sig : checked_file addr -> file_sig addr -> unit
+
+  val get_file_module_name : dyn_file addr -> heap_string opt addr
 
   val get_file_ast : checked_file addr -> ast opt addr
 

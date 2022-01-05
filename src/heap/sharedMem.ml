@@ -886,6 +886,10 @@ module NewAPI = struct
 
   type checked_file
 
+  type unparsed_file
+
+  type dyn_file
+
   type size = int
 
   let bsize_wsize bsize = bsize * Sys.word_size / 8
@@ -986,6 +990,7 @@ module NewAPI = struct
     (* tags defined below this point are scanned for pointers *)
     | Addr_tbl_tag (* 10 *)
     | Checked_file_tag
+    | Unparsed_file_tag
 
   (* avoid unused constructor warning *)
   let () = ignore Serialized_tag
@@ -999,6 +1004,8 @@ module NewAPI = struct
   let () = assert (tag_val Addr_tbl_tag = 10)
 
   let header_size = 1
+
+  let with_header_size f x = header_size + f x
 
   (* Write a header at a specified address in the heap. This write is not
    * bounds checked; caller must ensure the given destination has already been
@@ -1166,6 +1173,10 @@ module NewAPI = struct
 
   (** Optionals *)
 
+  let opt_size f = function
+    | None -> 0
+    | Some x -> f x
+
   let write_opt f chunk = function
     | None -> null_addr
     | Some x -> f chunk x
@@ -1304,10 +1315,13 @@ module NewAPI = struct
 
   (** Checked files *)
 
-  let checked_file_size = 6 * addr_size
+  let checked_file_size = 7 * addr_size
 
-  let write_checked_file chunk exports =
+  let unparsed_file_size = 1 * addr_size
+
+  let write_checked_file chunk module_name exports =
     let checked_file = write_header chunk Checked_file_tag checked_file_size in
+    unsafe_write_addr chunk module_name;
     unsafe_write_addr chunk null_addr;
     unsafe_write_addr chunk null_addr;
     unsafe_write_addr chunk null_addr;
@@ -1316,19 +1330,47 @@ module NewAPI = struct
     unsafe_write_addr chunk exports;
     checked_file
 
-  let ast_addr file = addr_offset file 1
+  let write_unparsed_file chunk module_name =
+    let addr = write_header chunk Unparsed_file_tag unparsed_file_size in
+    unsafe_write_addr chunk module_name;
+    addr
 
-  let docblock_addr file = addr_offset file 2
+  let dyn_checked_file = Obj.magic
 
-  let aloc_table_addr file = addr_offset file 3
+  let dyn_unparsed_file = Obj.magic
 
-  let type_sig_addr file = addr_offset file 4
+  let assert_checked_file addr =
+    let hd = read_header (get_heap ()) addr in
+    assert_tag hd Checked_file_tag;
+    addr
 
-  let file_sig_addr file = addr_offset file 5
+  let is_checked_file addr =
+    let hd = read_header (get_heap ()) addr in
+    obj_tag hd = tag_val Checked_file_tag
 
-  let exports_addr file = addr_offset file 6
+  let coerce_checked_file addr =
+    if is_checked_file addr then
+      Some addr
+    else
+      None
+
+  let module_name_addr file = addr_offset file 1
+
+  let ast_addr file = addr_offset file 2
+
+  let docblock_addr file = addr_offset file 3
+
+  let aloc_table_addr file = addr_offset file 4
+
+  let type_sig_addr file = addr_offset file 5
+
+  let file_sig_addr file = addr_offset file 6
+
+  let exports_addr file = addr_offset file 7
 
   let set_file_generic offset file addr = unsafe_write_addr_at (get_heap ()) (offset file) addr
+
+  let set_file_module_name = set_file_generic module_name_addr
 
   let set_file_ast = set_file_generic ast_addr
 
@@ -1341,6 +1383,8 @@ module NewAPI = struct
   let set_file_sig = set_file_generic file_sig_addr
 
   let get_file_generic offset file = read_addr (get_heap ()) (offset file)
+
+  let get_file_module_name = get_file_generic module_name_addr
 
   let get_file_ast = get_file_generic ast_addr
 

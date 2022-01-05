@@ -17,7 +17,7 @@ type normalized_file_data = denormalized_file_data
 
 (* For each parsed file, this is what we will save *)
 type parsed_file_data = {
-  info: Parsing_heaps.info;
+  module_name: string option;
   normalized_file_data: normalized_file_data;
   (* Right now there is no guarantee that this is Some, for two reasons:
    * - We allow saved state to be saved from a lazy server, meaning that it's possible that *no*
@@ -36,7 +36,7 @@ type parsed_file_data = {
 
 (* We also need to store the info for unparsed files *)
 type unparsed_file_data = {
-  unparsed_info: Parsing_heaps.info;
+  unparsed_module_name: string option;
   unparsed_hash: Xx.hash;
 }
 
@@ -209,15 +209,16 @@ end = struct
     let resolved_requires = normalize_resolved_requires ~normalizer resolved_requires in
     { resolved_requires; exports; hash }
 
-  let normalize_parsed_data ~normalizer { info; normalized_file_data; sig_hash } =
+  let normalize_parsed_data ~normalizer { module_name; normalized_file_data; sig_hash } =
     let normalized_file_data = normalize_file_data ~normalizer normalized_file_data in
-    { info; normalized_file_data; sig_hash }
+    { module_name; normalized_file_data; sig_hash }
 
   (* Collect all the data for a single parsed file *)
   let collect_normalized_data_for_parsed_file ~normalizer ~reader fn parsed_heaps =
+    let info = Parsing_heaps.Reader.get_info_unsafe ~reader ~audit:Expensive.ok fn in
     let file_data =
       {
-        info = Parsing_heaps.Reader.get_info_unsafe ~reader ~audit:Expensive.ok fn;
+        module_name = info.Parsing_heaps.module_name;
         normalized_file_data =
           {
             resolved_requires =
@@ -240,9 +241,10 @@ end = struct
 
   (* Collect all the data for a single unparsed file *)
   let collect_normalized_data_for_unparsed_file ~normalizer ~reader fn unparsed_heaps =
+    let info = Parsing_heaps.Reader.get_info_unsafe ~reader ~audit:Expensive.ok fn in
     let relative_file_data =
       {
-        unparsed_info = Parsing_heaps.Reader.get_info_unsafe ~reader ~audit:Expensive.ok fn;
+        unparsed_module_name = info.Parsing_heaps.module_name;
         unparsed_hash = Parsing_heaps.Reader.get_file_hash_unsafe ~reader fn;
       }
     in
