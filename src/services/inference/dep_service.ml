@@ -175,7 +175,7 @@ let file_dependencies ~audit ~reader file =
     let module Heap = SharedMem.NewAPI in
     let module Bin = Type_sig_bin in
     let file_addr = Parsing_heaps.Mutator_reader.get_checked_file_addr_unsafe reader file in
-    let buf = Heap.type_sig_buf (Heap.file_type_sig file_addr) in
+    let buf = Heap.read_opt_exn Heap.type_sig_buf (Heap.get_file_type_sig file_addr) in
     Bin.fold_tbl Bin.read_str SSet.add buf (Bin.module_refs buf) SSet.empty
   in
   let { Module_heaps.resolved_modules; _ } =

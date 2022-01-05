@@ -271,6 +271,8 @@ module NewAPI : sig
 
   val read_opt : ('a addr -> 'b) -> 'a opt addr -> 'b option
 
+  val read_opt_exn : ('a addr -> 'b) -> 'a opt addr -> 'b
+
   (* ast *)
 
   val prepare_write_ast : string -> size * (chunk -> ast addr)
@@ -313,22 +315,25 @@ module NewAPI : sig
 
   val checked_file_size : size
 
-  val write_checked_file :
-    chunk ->
-    ast addr ->
-    docblock addr ->
-    aloc_table addr ->
-    type_sig addr ->
-    file_sig addr ->
-    checked_file addr
+  val write_checked_file : chunk -> checked_file addr
 
-  val file_ast : checked_file addr -> ast addr
+  val set_file_ast : checked_file addr -> ast addr -> unit
 
-  val file_docblock : checked_file addr -> docblock addr
+  val set_file_docblock : checked_file addr -> docblock addr -> unit
 
-  val file_aloc_table : checked_file addr -> aloc_table addr
+  val set_file_aloc_table : checked_file addr -> aloc_table addr -> unit
 
-  val file_type_sig : checked_file addr -> type_sig addr
+  val set_file_type_sig : checked_file addr -> type_sig addr -> unit
 
-  val file_sig : checked_file addr -> file_sig addr
+  val set_file_sig : checked_file addr -> file_sig addr -> unit
+
+  val get_file_ast : checked_file addr -> ast opt addr
+
+  val get_file_docblock : checked_file addr -> docblock opt addr
+
+  val get_file_aloc_table : checked_file addr -> aloc_table opt addr
+
+  val get_file_type_sig : checked_file addr -> type_sig opt addr
+
+  val get_file_sig : checked_file addr -> file_sig opt addr
 end

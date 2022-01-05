@@ -403,9 +403,12 @@ let mk_check_file ~options ~reader ~cache () =
 
     let file_addr = get_type_sig_unsafe file_key in
 
-    let buf = Heap.type_sig_buf (Heap.file_type_sig file_addr) in
+    let buf = Heap.read_opt_exn Heap.type_sig_buf (Heap.get_file_type_sig file_addr) in
 
-    let docblock = Heap.file_docblock file_addr |> Heap.read_docblock |> deserialize in
+    let docblock =
+      Heap.get_file_docblock file_addr
+      |> Heap.read_opt_exn (fun addr -> Heap.read_docblock addr |> deserialize)
+    in
 
     let cx = create_dep_cx file_key docblock ccx in
 

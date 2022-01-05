@@ -88,37 +88,45 @@ let write_checked_file ast docblock locs type_sig file_sig =
     + file_sig_size
   in
   alloc size (fun chunk ->
+      let file = write_checked_file chunk in
       let ast = write_ast chunk in
       let docblock = write_docblock chunk docblock in
       let aloc_table = write_aloc_table chunk aloc_table in
       let type_sig = write_type_sig chunk sig_bsize write_sig in
       let file_sig = write_file_sig chunk in
-      write_checked_file chunk ast docblock aloc_table type_sig file_sig
+      set_file_ast file ast;
+      set_file_docblock file docblock;
+      set_file_aloc_table file aloc_table;
+      set_file_type_sig file type_sig;
+      set_file_sig file file_sig;
+      file
   )
 
 let read_ast file_key file_addr =
   let open Heap in
   let deserialize x = Marshal.from_string x 0 in
-  file_ast file_addr |> read_ast |> deserialize |> decompactify_loc file_key
+  get_file_ast file_addr
+  |> read_opt (fun addr -> read_ast addr |> deserialize |> decompactify_loc file_key)
 
 let read_docblock file_addr =
   let open Heap in
   let deserialize x = Marshal.from_string x 0 in
-  file_docblock file_addr |> read_docblock |> deserialize
+  get_file_docblock file_addr |> read_opt (fun addr -> read_docblock addr |> deserialize)
 
 let read_aloc_table file_key file_addr =
   let open Heap in
   let init = ALoc.ALocRepresentationDoNotUse.init_table file_key in
-  file_aloc_table file_addr |> read_aloc_table |> Packed_locs.unpack (Some file_key) init
+  get_file_aloc_table file_addr
+  |> read_opt (fun addr -> read_aloc_table addr |> Packed_locs.unpack (Some file_key) init)
 
 let read_type_sig file_addr =
   let open Heap in
-  read_type_sig (file_type_sig file_addr) Type_sig_bin.read
+  get_file_type_sig file_addr |> read_opt (fun addr -> read_type_sig addr Type_sig_bin.read)
 
 let read_file_sig file_addr =
   let open Heap in
   let deserialize x = Marshal.from_string x 0 in
-  file_sig file_addr |> read_file_sig |> deserialize
+  get_file_sig file_addr |> read_opt (fun addr -> read_file_sig addr |> deserialize)
 
 (* Contains the hash for every file we even consider parsing *)
 module FileHashHeap =
@@ -272,38 +280,33 @@ module Mutator_reader : sig
 end = struct
   type reader = Mutator_state_reader.t
 
+  let ( let* ) = Option.bind
+
   let has_ast ~reader:_ = CheckedFileHeap.mem
 
   let get_checked_file_addr ~reader:_ = CheckedFileHeap.get
 
   let get_ast ~reader file =
-    match get_checked_file_addr ~reader file with
-    | None -> None
-    | Some addr -> Some (read_ast file addr)
+    let* addr = get_checked_file_addr ~reader file in
+    read_ast file addr
 
   let get_docblock ~reader file =
-    match get_checked_file_addr ~reader file with
-    | Some addr -> Some (read_docblock addr)
-    | None -> None
+    let* addr = get_checked_file_addr ~reader file in
+    read_docblock addr
 
   let get_exports ~reader:_ = ExportsHeap.get
 
   let get_old_exports ~reader:_ = ExportsHeap.get_old
 
   let get_tolerable_file_sig ~reader file =
-    match get_checked_file_addr ~reader file with
-    | Some addr -> Some (read_file_sig addr)
-    | None -> None
+    let* addr = get_checked_file_addr ~reader file in
+    read_file_sig addr
 
-  let get_file_sig ~reader file =
-    match get_tolerable_file_sig ~reader file with
-    | Some (file_sig, _tolerable_errors) -> Some file_sig
-    | None -> None
+  let get_file_sig ~reader file = Option.map fst (get_tolerable_file_sig ~reader file)
 
   let get_type_sig ~reader file =
-    match get_checked_file_addr ~reader file with
-    | Some addr -> Some (read_type_sig addr)
-    | None -> None
+    let* addr = get_checked_file_addr ~reader file in
+    read_type_sig addr
 
   let get_file_hash ~reader:_ file =
     match FileHashHeap.get file with
@@ -324,9 +327,12 @@ end = struct
     match ALocTableCache.get file with
     | Some aloc_table -> aloc_table
     | None ->
-      (match get_checked_file_addr ~reader file with
-      | Some addr ->
-        let aloc_table = read_aloc_table file addr in
+      let aloc_table_opt =
+        let* addr = get_checked_file_addr ~reader file in
+        read_aloc_table file addr
+      in
+      (match aloc_table_opt with
+      | Some aloc_table ->
         ALocTableCache.add file aloc_table;
         aloc_table
       | None -> raise (ALoc_table_not_found (File_key.to_string file)))
@@ -478,6 +484,8 @@ end
 module Reader : READER with type reader = State_reader.t = struct
   type reader = State_reader.t
 
+  let ( let* ) = Option.bind
+
   let should_use_oldified key = FilenameSet.mem key !currently_oldified_files
 
   let has_ast ~reader:_ key =
@@ -488,35 +496,29 @@ module Reader : READER with type reader = State_reader.t = struct
 
   let get_ast ~reader:_ key =
     if should_use_oldified key then
-      match CheckedFileHeap.get_old key with
-      | None -> None
-      | Some addr -> Some (read_ast key addr)
+      let* addr = CheckedFileHeap.get_old key in
+      read_ast key addr
     else
       match ASTCache.get key with
       | Some _ as cached -> cached
       | None ->
-        (match CheckedFileHeap.get key with
-        | None -> None
-        | Some addr ->
-          let ast = read_ast key addr in
-          ASTCache.add key ast;
-          Some ast)
+        let* addr = CheckedFileHeap.get key in
+        let* ast = read_ast key addr in
+        ASTCache.add key ast;
+        Some ast
 
   let get_aloc_table ~reader:_ key =
     if should_use_oldified key then
-      match CheckedFileHeap.get_old key with
-      | Some addr -> Some (read_aloc_table key addr)
-      | None -> None
+      let* addr = CheckedFileHeap.get_old key in
+      read_aloc_table key addr
     else
       match ALocTableCache.get key with
       | Some _ as cached -> cached
       | None ->
-        (match CheckedFileHeap.get key with
-        | Some addr ->
-          let aloc_table = read_aloc_table key addr in
-          ALocTableCache.add key aloc_table;
-          Some aloc_table
-        | None -> None)
+        let* addr = CheckedFileHeap.get key in
+        let* aloc_table = read_aloc_table key addr in
+        ALocTableCache.add key aloc_table;
+        Some aloc_table
 
   let get_checked_file_addr ~reader:_ key =
     if should_use_oldified key then
@@ -525,9 +527,8 @@ module Reader : READER with type reader = State_reader.t = struct
       CheckedFileHeap.get key
 
   let get_docblock ~reader key =
-    match get_checked_file_addr ~reader key with
-    | Some addr -> Some (read_docblock addr)
-    | None -> None
+    let* addr = get_checked_file_addr ~reader key in
+    read_docblock addr
 
   let get_exports ~reader:_ key =
     if should_use_oldified key then
@@ -536,18 +537,14 @@ module Reader : READER with type reader = State_reader.t = struct
       ExportsHeap.get key
 
   let get_tolerable_file_sig ~reader key =
-    match get_checked_file_addr ~reader key with
-    | Some addr -> Some (read_file_sig addr)
-    | None -> None
+    let* addr = get_checked_file_addr ~reader key in
+    read_file_sig addr
 
-  let get_file_sig ~reader key =
-    match get_tolerable_file_sig ~reader key with
-    | Some (file_sig, _tolerable_errors) -> Some file_sig
-    | None -> None
+  let get_file_sig ~reader key = Option.map fst (get_tolerable_file_sig ~reader key)
 
   let get_type_sig ~reader key =
-    let addr_opt = get_checked_file_addr ~reader key in
-    Base.Option.map ~f:read_type_sig addr_opt
+    let* addr = get_checked_file_addr ~reader key in
+    read_type_sig addr
 
   let get_file_hash ~reader:_ key =
     let addr_opt =

@@ -1173,6 +1173,12 @@ module NewAPI = struct
     else
       Some (f addr)
 
+  let read_opt_exn f addr =
+    if addr = null_addr then
+      invalid_arg "addr is null"
+    else
+      f addr
+
   (** Compressed OCaml values
 
       We store OCaml values as serialized+compressed blobs in the heap. The
@@ -1287,13 +1293,13 @@ module NewAPI = struct
 
   let checked_file_size = 5 * addr_size
 
-  let write_checked_file chunk ast docblock aloc_table type_sig file_sig =
+  let write_checked_file chunk =
     let checked_file = write_header chunk Checked_file_tag checked_file_size in
-    unsafe_write_addr chunk ast;
-    unsafe_write_addr chunk docblock;
-    unsafe_write_addr chunk aloc_table;
-    unsafe_write_addr chunk type_sig;
-    unsafe_write_addr chunk file_sig;
+    unsafe_write_addr chunk null_addr;
+    unsafe_write_addr chunk null_addr;
+    unsafe_write_addr chunk null_addr;
+    unsafe_write_addr chunk null_addr;
+    unsafe_write_addr chunk null_addr;
     checked_file
 
   let ast_addr file = addr_offset file 1
@@ -1306,13 +1312,27 @@ module NewAPI = struct
 
   let file_sig_addr file = addr_offset file 5
 
-  let file_ast file = read_addr (get_heap ()) (ast_addr file)
+  let set_file_generic offset file addr = unsafe_write_addr_at (get_heap ()) (offset file) addr
 
-  let file_docblock file = read_addr (get_heap ()) (docblock_addr file)
+  let set_file_ast = set_file_generic ast_addr
 
-  let file_aloc_table file = read_addr (get_heap ()) (aloc_table_addr file)
+  let set_file_docblock = set_file_generic docblock_addr
 
-  let file_type_sig file = read_addr (get_heap ()) (type_sig_addr file)
+  let set_file_aloc_table = set_file_generic aloc_table_addr
 
-  let file_sig file = read_addr (get_heap ()) (file_sig_addr file)
+  let set_file_type_sig = set_file_generic type_sig_addr
+
+  let set_file_sig = set_file_generic file_sig_addr
+
+  let get_file_generic offset file = read_addr (get_heap ()) (offset file)
+
+  let get_file_ast = get_file_generic ast_addr
+
+  let get_file_docblock = get_file_generic docblock_addr
+
+  let get_file_aloc_table = get_file_generic aloc_table_addr
+
+  let get_file_type_sig = get_file_generic type_sig_addr
+
+  let get_file_sig = get_file_generic file_sig_addr
 end
