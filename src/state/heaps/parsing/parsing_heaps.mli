@@ -83,6 +83,7 @@ type worker_mutator = {
   add_parsed:
     File_key.t ->
     exports:Exports.t ->
+    Xx.hash ->
     string option ->
     Docblock.t ->
     (Loc.t, Loc.t) Flow_ast.Program.t ->
@@ -90,8 +91,7 @@ type worker_mutator = {
     locs_tbl ->
     type_sig ->
     unit;
-  add_unparsed: File_key.t -> string option -> unit;
-  add_hash: File_key.t -> Xx.hash -> unit;
+  add_unparsed: File_key.t -> Xx.hash -> string option -> unit;
 }
 
 module Parse_mutator : sig
@@ -107,9 +107,7 @@ module Reparse_mutator : sig
 end
 
 module From_saved_state : sig
-  val add_file_hash : File_key.t -> Xx.hash -> unit
+  val add_parsed : File_key.t -> Xx.hash -> string option -> Exports.t -> unit
 
-  val add_parsed : File_key.t -> string option -> Exports.t -> unit
-
-  val add_unparsed : File_key.t -> string option -> unit
+  val add_unparsed : File_key.t -> Xx.hash -> string option -> unit
 end

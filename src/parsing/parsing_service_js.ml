@@ -515,16 +515,15 @@ let reducer
      * probably get the delete event anyway *)
     { acc with not_found = FilenameSet.add file acc.not_found }
   | content ->
-    let new_hash = hash_content content in
+    let hash = hash_content content in
     (* If skip_changed is true, then we're currently ensuring some files are parsed. That
      * means we don't currently have the file's AST but we might have the file's hash in the
      * non-oldified heap. What we want to avoid is parsing files which differ from the hash *)
-    if skip_changed && not (content_hash_matches_file_hash ~reader file new_hash) then
+    if skip_changed && not (content_hash_matches_file_hash ~reader file hash) then
       { acc with changed = FilenameSet.add file acc.changed }
-    else if skip_unchanged && content_hash_matches_old_file_hash ~reader file new_hash then
+    else if skip_unchanged && content_hash_matches_old_file_hash ~reader file hash then
       { acc with unchanged = FilenameSet.add file acc.unchanged }
     else (
-      worker_mutator.Parsing_heaps.add_hash file new_hash;
       match parse_docblock ~max_tokens:max_header_tokens file content with
       | ([], info) ->
         let info =
@@ -544,6 +543,7 @@ let reducer
             worker_mutator.Parsing_heaps.add_parsed
               file
               ~exports
+              hash
               module_name
               info
               ast
@@ -552,7 +552,7 @@ let reducer
               type_sig;
             { acc with parsed = FilenameSet.add file acc.parsed }
           | Parse_fail error ->
-            worker_mutator.Parsing_heaps.add_unparsed file module_name;
+            worker_mutator.Parsing_heaps.add_unparsed file hash module_name;
             let failed = (file :: fst acc.failed, error :: snd acc.failed) in
             { acc with failed }
           | Parse_skip (Skip_package_json result) ->
@@ -566,18 +566,18 @@ let reducer
                 Package_heaps.Package_heap_mutator.add_error file_str;
                 Some err
             in
-            worker_mutator.Parsing_heaps.add_unparsed file module_name;
+            worker_mutator.Parsing_heaps.add_unparsed file hash module_name;
             let unparsed = FilenameSet.add file acc.unparsed in
             let package_json = (file :: fst acc.package_json, error :: snd acc.package_json) in
             { acc with unparsed; package_json }
           | Parse_skip Skip_non_flow_file
           | Parse_skip Skip_resource_file ->
-            worker_mutator.Parsing_heaps.add_unparsed file module_name;
+            worker_mutator.Parsing_heaps.add_unparsed file hash module_name;
             { acc with unparsed = FilenameSet.add file acc.unparsed }
         end
       | (docblock_errors, info) ->
         let module_name = exported_module file info in
-        worker_mutator.Parsing_heaps.add_unparsed file module_name;
+        worker_mutator.Parsing_heaps.add_unparsed file hash module_name;
         let error = Docblock_errors docblock_errors in
         let failed = (file :: fst acc.failed, error :: snd acc.failed) in
         { acc with failed }

@@ -1315,12 +1315,13 @@ module NewAPI = struct
 
   (** Checked files *)
 
-  let checked_file_size = 7 * addr_size
+  let checked_file_size = 8 * addr_size
 
-  let unparsed_file_size = 1 * addr_size
+  let unparsed_file_size = 2 * addr_size
 
-  let write_checked_file chunk module_name exports =
+  let write_checked_file chunk hash module_name exports =
     let checked_file = write_header chunk Checked_file_tag checked_file_size in
+    unsafe_write_addr chunk hash;
     unsafe_write_addr chunk module_name;
     unsafe_write_addr chunk null_addr;
     unsafe_write_addr chunk null_addr;
@@ -1330,8 +1331,9 @@ module NewAPI = struct
     unsafe_write_addr chunk exports;
     checked_file
 
-  let write_unparsed_file chunk module_name =
+  let write_unparsed_file chunk hash module_name =
     let addr = write_header chunk Unparsed_file_tag unparsed_file_size in
+    unsafe_write_addr chunk hash;
     unsafe_write_addr chunk module_name;
     addr
 
@@ -1354,19 +1356,21 @@ module NewAPI = struct
     else
       None
 
-  let module_name_addr file = addr_offset file 1
+  let file_hash_addr file = addr_offset file 1
 
-  let ast_addr file = addr_offset file 2
+  let module_name_addr file = addr_offset file 2
 
-  let docblock_addr file = addr_offset file 3
+  let ast_addr file = addr_offset file 3
 
-  let aloc_table_addr file = addr_offset file 4
+  let docblock_addr file = addr_offset file 4
 
-  let type_sig_addr file = addr_offset file 5
+  let aloc_table_addr file = addr_offset file 5
 
-  let file_sig_addr file = addr_offset file 6
+  let type_sig_addr file = addr_offset file 6
 
-  let exports_addr file = addr_offset file 7
+  let file_sig_addr file = addr_offset file 7
+
+  let exports_addr file = addr_offset file 8
 
   let set_file_generic offset file addr = unsafe_write_addr_at (get_heap ()) (offset file) addr
 
@@ -1383,6 +1387,8 @@ module NewAPI = struct
   let set_file_sig = set_file_generic file_sig_addr
 
   let get_file_generic offset file = read_addr (get_heap ()) (offset file)
+
+  let get_file_hash = get_file_generic file_hash_addr
 
   let get_file_module_name = get_file_generic module_name_addr
 

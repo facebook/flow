@@ -337,9 +337,10 @@ module NewAPI : sig
 
   val unparsed_file_size : size
 
-  val write_checked_file : chunk -> heap_string opt addr -> exports addr -> checked_file addr
+  val write_checked_file :
+    chunk -> heap_int64 addr -> heap_string opt addr -> exports addr -> checked_file addr
 
-  val write_unparsed_file : chunk -> heap_string opt addr -> unparsed_file addr
+  val write_unparsed_file : chunk -> heap_int64 addr -> heap_string opt addr -> unparsed_file addr
 
   val dyn_checked_file : checked_file addr -> dyn_file addr
 
@@ -362,6 +363,8 @@ module NewAPI : sig
   val set_file_type_sig : checked_file addr -> type_sig addr -> unit
 
   val set_file_sig : checked_file addr -> file_sig addr -> unit
+
+  val get_file_hash : dyn_file addr -> heap_int64 addr
 
   val get_file_module_name : dyn_file addr -> heap_string opt addr
 

@@ -2101,11 +2101,8 @@ let init_from_saved_state ~profiling ~workers ~saved_state ~updates options =
         Saved_state.denormalize_file_data ~root normalized_file_data
       in
 
-      (* Restore the FileHashHeap *)
-      Parsing_heaps.From_saved_state.add_file_hash fn hash;
-
       (* Restore the FileHeap *)
-      Parsing_heaps.From_saved_state.add_parsed fn module_name exports;
+      Parsing_heaps.From_saved_state.add_parsed fn hash module_name exports;
 
       (* Restore the ResolvedRequiresHeap *)
       Module_heaps.From_saved_state.add_resolved_requires fn resolved_requires;
@@ -2120,11 +2117,8 @@ let init_from_saved_state ~profiling ~workers ~saved_state ~updates options =
     let restore_unparsed acc (fn, unparsed_file_data) =
       let { Saved_state.unparsed_module_name; unparsed_hash } = unparsed_file_data in
 
-      (* Restore the FileHashHeap *)
-      Parsing_heaps.From_saved_state.add_file_hash fn unparsed_hash;
-
       (* Restore the FileHeap *)
-      Parsing_heaps.From_saved_state.add_unparsed fn unparsed_module_name;
+      Parsing_heaps.From_saved_state.add_unparsed fn unparsed_hash unparsed_module_name;
 
       FilenameSet.add fn acc
     in

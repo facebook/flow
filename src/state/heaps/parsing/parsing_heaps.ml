@@ -60,7 +60,7 @@ let decompactify_loc file ast = (loc_decompactifier (Some file))#program ast
  * state, a checked file entry will already exist without parse data and this
  * function will update the existing entry in place. Otherwise, we will create a
  * new entry and add it to the shared hash table. *)
-let add_checked_file file_key module_name docblock ast locs type_sig file_sig exports =
+let add_checked_file file_key hash module_name docblock ast locs type_sig file_sig exports =
   let open Type_sig_collections in
   let serialize x = Marshal.to_string x [] in
   let ast = serialize (compactify_loc ast) in
@@ -92,15 +92,17 @@ let add_checked_file file_key module_name docblock ast locs type_sig file_sig ex
       let (exports_size, write_exports) = prepare_write_exports exports in
       let size =
         size
-        + (2 * header_size)
+        + (3 * header_size)
         + checked_file_size
+        + int64_size
         + opt_size (with_header_size string_size) module_name
         + exports_size
       in
       let write chunk =
+        let hash = write_int64 chunk hash in
         let module_name = write_opt write_string chunk module_name in
         let exports = write_exports chunk in
-        write_checked_file chunk module_name exports
+        write_checked_file chunk hash module_name exports
       in
       (size, write)
   in
@@ -122,18 +124,26 @@ let add_checked_file file_key module_name docblock ast locs type_sig file_sig ex
   in
   FileHeap.add file_key (dyn_checked_file file_addr)
 
-let add_unparsed_file file_key module_name =
+let add_unparsed_file file_key hash module_name =
   let open Heap in
   let size =
-    header_size + unparsed_file_size + opt_size (with_header_size string_size) module_name
+    (2 * header_size)
+    + unparsed_file_size
+    + int64_size
+    + opt_size (with_header_size string_size) module_name
   in
   let addr =
     alloc size (fun chunk ->
+        let hash = write_int64 chunk hash in
         let module_name = write_opt write_string chunk module_name in
-        write_unparsed_file chunk module_name
+        write_unparsed_file chunk hash module_name
     )
   in
   FileHeap.add file_key (dyn_unparsed_file addr)
+
+let read_file_hash file_addr =
+  let open Heap in
+  get_file_hash file_addr |> read_int64
 
 let read_info file_addr =
   let open Heap in
@@ -172,14 +182,6 @@ let read_exports file_addr : Exports.t =
   let deserialize x = Marshal.from_string x 0 in
   get_file_exports file_addr |> read_exports |> deserialize
 
-(* Contains the hash for every file we even consider parsing *)
-module FileHashHeap =
-  SharedMem.NoCacheAddr
-    (File_key)
-    (struct
-      type t = Heap.heap_int64
-    end)
-
 module ASTCache = SharedMem.LocalCache (struct
   type key = File_key.t
 
@@ -198,39 +200,29 @@ end)
 
 (* Groups operations on the multiple heaps that need to stay in sync *)
 module ParsingHeaps = struct
-  let add_parsed file ~exports module_name docblock ast file_sig locs type_sig =
+  let add_parsed file ~exports hash module_name docblock ast file_sig locs type_sig =
     WorkerCancel.with_no_cancellations (fun () ->
-        add_checked_file file module_name docblock ast locs type_sig file_sig exports
+        add_checked_file file hash module_name docblock ast locs type_sig file_sig exports
     )
 
-  let add_unparsed file module_name =
-    WorkerCancel.with_no_cancellations (fun () -> add_unparsed_file file module_name)
-
-  let add_hash file hash =
-    let open Heap in
-    let addr = alloc (header_size + int64_size) (fun chunk -> write_int64 chunk hash) in
-    FileHashHeap.add file addr
+  let add_unparsed file hash module_name =
+    WorkerCancel.with_no_cancellations (fun () -> add_unparsed_file file hash module_name)
 
   let oldify_batch files =
     WorkerCancel.with_no_cancellations (fun () ->
         FileHeap.oldify_batch files;
         FilenameSet.iter ASTCache.remove files;
-        FilenameSet.iter ALocTableCache.remove files;
-        FileHashHeap.oldify_batch files
+        FilenameSet.iter ALocTableCache.remove files
     )
 
   let remove_old_batch files =
-    WorkerCancel.with_no_cancellations (fun () ->
-        FileHeap.remove_old_batch files;
-        FileHashHeap.remove_old_batch files
-    )
+    WorkerCancel.with_no_cancellations (fun () -> FileHeap.remove_old_batch files)
 
   let revive_batch files =
     WorkerCancel.with_no_cancellations (fun () ->
         FileHeap.revive_batch files;
         FilenameSet.iter ASTCache.remove files;
-        FilenameSet.iter ALocTableCache.remove files;
-        FileHashHeap.revive_batch files
+        FilenameSet.iter ALocTableCache.remove files
     )
 end
 
@@ -350,14 +342,14 @@ end = struct
     let* addr = get_checked_file_addr ~reader file in
     read_type_sig addr
 
-  let get_file_hash ~reader:_ file =
-    match FileHashHeap.get file with
-    | Some addr -> Some (Heap.read_int64 addr)
+  let get_file_hash ~reader file =
+    match get_file_addr ~reader file with
+    | Some addr -> Some (read_file_hash addr)
     | None -> None
 
-  let get_old_file_hash ~reader:_ file =
-    match FileHashHeap.get_old file with
-    | Some addr -> Some (Heap.read_int64 addr)
+  let get_old_file_hash ~reader file =
+    match get_old_file_addr ~reader file with
+    | Some addr -> Some (read_file_hash addr)
     | None -> None
 
   let get_ast_unsafe ~reader file =
@@ -437,6 +429,7 @@ type worker_mutator = {
   add_parsed:
     File_key.t ->
     exports:Exports.t ->
+    Xx.hash ->
     string option ->
     Docblock.t ->
     (Loc.t, Loc.t) Flow_ast.Program.t ->
@@ -444,8 +437,7 @@ type worker_mutator = {
     locs_tbl ->
     type_sig ->
     unit;
-  add_unparsed: File_key.t -> string option -> unit;
-  add_hash: File_key.t -> Xx.hash -> unit;
+  add_unparsed: File_key.t -> Xx.hash -> string option -> unit;
 }
 
 (* Parsing is pretty easy - there is no before state and no chance of rollbacks, so we don't
@@ -453,12 +445,7 @@ type worker_mutator = {
 module Parse_mutator : sig
   val create : unit -> worker_mutator
 end = struct
-  let create () =
-    {
-      add_parsed = ParsingHeaps.add_parsed;
-      add_unparsed = ParsingHeaps.add_unparsed;
-      add_hash = ParsingHeaps.add_hash;
-    }
+  let create () = { add_parsed = ParsingHeaps.add_parsed; add_unparsed = ParsingHeaps.add_unparsed }
 end
 
 (* Reparsing is more complicated than parsing, since we need to worry about transactions
@@ -504,16 +491,12 @@ end = struct
    * set of oldified files to the worker *)
   let add_unparsed = ParsingHeaps.add_unparsed
 
-  (* Ideally we'd assert that file was oldified and not revived, but it's too expensive to pass the
-   * set of oldified files to the worker *)
-  let add_hash = ParsingHeaps.add_hash
-
   let create transaction files =
     WorkerCancel.with_no_cancellations (fun () ->
         currently_oldified_files := files;
         ParsingHeaps.oldify_batch files;
         Transaction.add ~singleton:"Reparse" ~commit ~rollback transaction;
-        ((), { add_parsed; add_unparsed; add_hash })
+        ((), { add_parsed; add_unparsed })
     )
 
   let revive_files () files =
@@ -593,14 +576,10 @@ module Reader : READER with type reader = State_reader.t = struct
     let* addr = get_checked_file_addr ~reader key in
     read_type_sig addr
 
-  let get_file_hash ~reader:_ key =
-    let addr_opt =
-      if should_use_oldified key then
-        FileHashHeap.get_old key
-      else
-        FileHashHeap.get key
-    in
-    Base.Option.map ~f:Heap.read_int64 addr_opt
+  let get_file_hash ~reader key =
+    match get_file_addr ~reader key with
+    | Some addr -> Some (read_file_hash addr)
+    | None -> None
 
   let get_ast_unsafe ~reader file =
     match get_ast ~reader file with
@@ -775,29 +754,27 @@ module Reader_dispatcher : READER with type reader = Abstract_state_reader.t = s
 end
 
 module From_saved_state : sig
-  val add_file_hash : File_key.t -> Xx.hash -> unit
+  val add_parsed : File_key.t -> Xx.hash -> string option -> Exports.t -> unit
 
-  val add_parsed : File_key.t -> string option -> Exports.t -> unit
-
-  val add_unparsed : File_key.t -> string option -> unit
+  val add_unparsed : File_key.t -> Xx.hash -> string option -> unit
 end = struct
-  let add_file_hash = ParsingHeaps.add_hash
-
-  let add_parsed file_key module_name exports =
+  let add_parsed file_key hash module_name exports =
     let exports = Marshal.to_string exports [] in
     let (exports_size, write_exports) = Heap.prepare_write_exports exports in
     let open Heap in
     let size =
-      (2 * header_size)
+      (3 * header_size)
       + checked_file_size
+      + int64_size
       + opt_size (with_header_size string_size) module_name
       + exports_size
     in
     let addr =
       alloc size (fun chunk ->
+          let hash = write_int64 chunk hash in
           let module_name = write_opt write_string chunk module_name in
           let exports = write_exports chunk in
-          write_checked_file chunk module_name exports
+          write_checked_file chunk hash module_name exports
       )
     in
     FileHeap.add file_key (dyn_checked_file addr)
