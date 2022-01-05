@@ -30,6 +30,8 @@ type file_addr = Heap.dyn_file SharedMem.addr
 
 type checked_file_addr = Heap.checked_file SharedMem.addr
 
+type unparsed_file_addr = Heap.unparsed_file SharedMem.addr
+
 (* There's some redundancy in the visitors here, but an attempt to avoid repeated code led,
  * inexplicably, to a shared heap size regression under types-first: D15481813 *)
 let loc_compactifier =
@@ -145,15 +147,28 @@ let add_unparsed_file file_key hash module_name =
 
 let is_checked_file = Heap.is_checked_file
 
+let coerce_checked_file = Heap.coerce_checked_file
+
 let read_file_hash file_addr =
   let open Heap in
   get_file_hash file_addr |> read_int64
 
-let read_info file_addr =
+let read_checked_file_hash file_addr = Heap.dyn_checked_file file_addr |> read_file_hash
+
+let read_unparsed_file_hash file_addr = Heap.dyn_unparsed_file file_addr |> read_file_hash
+
+let read_module_name file_addr =
   let open Heap in
-  let module_name = get_file_module_name file_addr |> read_opt read_string in
+  get_file_module_name file_addr |> read_opt read_string
+
+let read_info file_addr =
+  let module_name = read_module_name file_addr in
   let checked = is_checked_file file_addr in
   { module_name; checked; parsed = checked }
+
+let read_checked_module_name file_addr = Heap.dyn_checked_file file_addr |> read_module_name
+
+let read_unparsed_module_name file_addr = Heap.dyn_unparsed_file file_addr |> read_module_name
 
 let read_ast file_key file_addr =
   let open Heap in
@@ -161,10 +176,20 @@ let read_ast file_key file_addr =
   get_file_ast file_addr
   |> read_opt (fun addr -> read_ast addr |> deserialize |> decompactify_loc file_key)
 
+let read_ast_unsafe file_key file_addr =
+  match read_ast file_key file_addr with
+  | Some ast -> ast
+  | None -> raise (Ast_not_found (File_key.to_string file_key))
+
 let read_docblock file_addr =
   let open Heap in
   let deserialize x = Marshal.from_string x 0 in
   get_file_docblock file_addr |> read_opt (fun addr -> read_docblock addr |> deserialize)
+
+let read_docblock_unsafe file_key file_addr =
+  match read_docblock file_addr with
+  | Some docblock -> docblock
+  | None -> raise (Docblock_not_found (File_key.to_string file_key))
 
 let read_aloc_table file_key file_addr =
   let open Heap in
@@ -172,14 +197,33 @@ let read_aloc_table file_key file_addr =
   get_file_aloc_table file_addr
   |> read_opt (fun addr -> read_aloc_table addr |> Packed_locs.unpack (Some file_key) init)
 
+let read_aloc_table_unsafe file_key file_addr =
+  match read_aloc_table file_key file_addr with
+  | Some aloc_table -> aloc_table
+  | None -> raise (ALoc_table_not_found (File_key.to_string file_key))
+
 let read_type_sig file_addr =
   let open Heap in
   get_file_type_sig file_addr |> read_opt (fun addr -> read_type_sig addr Type_sig_bin.read)
 
-let read_file_sig file_addr =
+let read_type_sig_unsafe file_key file_addr =
+  match read_type_sig file_addr with
+  | Some type_sig -> type_sig
+  | None -> raise (Type_sig_not_found (File_key.to_string file_key))
+
+let read_tolerable_file_sig file_addr =
   let open Heap in
   let deserialize x = Marshal.from_string x 0 in
   get_file_sig file_addr |> read_opt (fun addr -> read_file_sig addr |> deserialize)
+
+let read_file_sig file_addr = Option.map fst (read_tolerable_file_sig file_addr)
+
+let read_tolerable_file_sig_unsafe file_key file_addr =
+  match read_tolerable_file_sig file_addr with
+  | Some file_sig -> file_sig
+  | None -> raise (Requires_not_found (File_key.to_string file_key))
+
+let read_file_sig_unsafe file_key file_addr = fst (read_tolerable_file_sig_unsafe file_key file_addr)
 
 let read_exports file_addr : Exports.t =
   let open Heap in
@@ -233,9 +277,15 @@ end
 module type READER = sig
   type reader
 
+  val get_file_addr : reader:reader -> File_key.t -> file_addr option
+
+  val get_checked_file_addr : reader:reader -> File_key.t -> checked_file_addr option
+
   val has_ast : reader:reader -> File_key.t -> bool
 
   val get_ast : reader:reader -> File_key.t -> (Loc.t, Loc.t) Flow_ast.Program.t option
+
+  val get_aloc_table : reader:reader -> File_key.t -> ALoc.table option
 
   val get_docblock : reader:reader -> File_key.t -> Docblock.t option
 
@@ -249,6 +299,12 @@ module type READER = sig
 
   val get_file_hash : reader:reader -> File_key.t -> Xx.hash option
 
+  val get_file_addr_unsafe : reader:reader -> File_key.t -> file_addr
+
+  val get_checked_file_addr_unsafe : reader:reader -> File_key.t -> checked_file_addr
+
+  val get_unparsed_file_addr_unsafe : reader:reader -> File_key.t -> unparsed_file_addr
+
   val get_ast_unsafe : reader:reader -> File_key.t -> (Loc.t, Loc.t) Flow_ast.Program.t
 
   val get_aloc_table_unsafe : reader:reader -> File_key.t -> ALoc.table
@@ -260,10 +316,6 @@ module type READER = sig
   val get_tolerable_file_sig_unsafe : reader:reader -> File_key.t -> File_sig.With_Loc.tolerable_t
 
   val get_file_sig_unsafe : reader:reader -> File_key.t -> File_sig.With_Loc.t
-
-  val get_file_addr_unsafe : reader:reader -> File_key.t -> file_addr
-
-  val get_checked_file_addr_unsafe : reader:reader -> File_key.t -> checked_file_addr
 
   val get_type_sig_unsafe : reader:reader -> File_key.t -> type_sig
 
@@ -290,15 +342,7 @@ let loc_of_aloc ~get_aloc_table_unsafe ~reader aloc =
   ALoc.to_loc table aloc
 
 (* Init/recheck will use Mutator_reader to read the shared memory *)
-module Mutator_reader : sig
-  include READER with type reader = Mutator_state_reader.t
-
-  val get_old_file_hash : reader:Mutator_state_reader.t -> File_key.t -> Xx.hash option
-
-  val get_old_exports : reader:Mutator_state_reader.t -> File_key.t -> Exports.t option
-
-  val get_old_info : reader:reader -> (File_key.t -> info option) Expensive.t
-end = struct
+module Mutator_reader = struct
   type reader = Mutator_state_reader.t
 
   let ( let* ) = Option.bind
@@ -309,11 +353,11 @@ end = struct
 
   let get_checked_file_addr ~reader file =
     let* addr = get_file_addr ~reader file in
-    Heap.coerce_checked_file addr
+    coerce_checked_file addr
 
   let get_old_checked_file_addr ~reader file =
     let* addr = get_old_file_addr ~reader file in
-    Heap.coerce_checked_file addr
+    coerce_checked_file addr
 
   let has_ast ~reader file =
     match get_checked_file_addr ~reader file with
@@ -323,6 +367,15 @@ end = struct
   let get_ast ~reader file =
     let* addr = get_checked_file_addr ~reader file in
     read_ast file addr
+
+  let get_aloc_table ~reader file =
+    match ALocTableCache.get file with
+    | Some _ as cached -> cached
+    | None ->
+      let* addr = get_checked_file_addr ~reader file in
+      let* aloc_table = read_aloc_table file addr in
+      ALocTableCache.add file aloc_table;
+      Some aloc_table
 
   let get_docblock ~reader file =
     let* addr = get_checked_file_addr ~reader file in
@@ -338,82 +391,73 @@ end = struct
 
   let get_tolerable_file_sig ~reader file =
     let* addr = get_checked_file_addr ~reader file in
-    read_file_sig addr
+    read_tolerable_file_sig addr
 
-  let get_file_sig ~reader file = Option.map fst (get_tolerable_file_sig ~reader file)
+  let get_file_sig ~reader file =
+    let* addr = get_checked_file_addr ~reader file in
+    read_file_sig addr
 
   let get_type_sig ~reader file =
     let* addr = get_checked_file_addr ~reader file in
     read_type_sig addr
 
   let get_file_hash ~reader file =
-    match get_file_addr ~reader file with
-    | Some addr -> Some (read_file_hash addr)
-    | None -> None
+    let* addr = get_file_addr ~reader file in
+    Some (read_file_hash addr)
 
   let get_old_file_hash ~reader file =
-    match get_old_file_addr ~reader file with
-    | Some addr -> Some (read_file_hash addr)
-    | None -> None
+    let* addr = get_old_file_addr ~reader file in
+    Some (read_file_hash addr)
+
+  let get_file_addr_unsafe ~reader file =
+    match get_file_addr ~reader file with
+    | Some addr -> addr
+    | None -> raise (File_not_found (File_key.to_string file))
+
+  let get_checked_file_addr_unsafe ~reader file =
+    let addr = get_file_addr_unsafe ~reader file in
+    Heap.assert_checked_file addr
+
+  let get_unparsed_file_addr_unsafe ~reader file =
+    let addr = get_file_addr_unsafe ~reader file in
+    Heap.assert_unparsed_file addr
 
   let get_ast_unsafe ~reader file =
-    match get_ast ~reader file with
-    | Some ast -> ast
-    | None -> raise (Ast_not_found (File_key.to_string file))
+    let addr = get_checked_file_addr_unsafe ~reader file in
+    read_ast_unsafe file addr
 
   let get_aloc_table_unsafe ~reader file =
     match ALocTableCache.get file with
     | Some aloc_table -> aloc_table
     | None ->
-      let aloc_table_opt =
-        let* addr = get_checked_file_addr ~reader file in
-        read_aloc_table file addr
-      in
-      (match aloc_table_opt with
-      | Some aloc_table ->
-        ALocTableCache.add file aloc_table;
-        aloc_table
-      | None -> raise (ALoc_table_not_found (File_key.to_string file)))
+      let addr = get_checked_file_addr_unsafe ~reader file in
+      let aloc_table = read_aloc_table_unsafe file addr in
+      ALocTableCache.add file aloc_table;
+      aloc_table
 
   let get_docblock_unsafe ~reader file =
-    match get_docblock ~reader file with
-    | Some docblock -> docblock
-    | None -> raise (Docblock_not_found (File_key.to_string file))
+    let addr = get_checked_file_addr_unsafe ~reader file in
+    read_docblock_unsafe file addr
 
   let get_exports_unsafe ~reader file =
-    match get_exports ~reader file with
-    | Some exports -> exports
-    | None -> raise (Exports_not_found (File_key.to_string file))
+    let addr = get_checked_file_addr_unsafe ~reader file in
+    read_exports addr
 
   let get_tolerable_file_sig_unsafe ~reader file =
-    match get_tolerable_file_sig ~reader file with
-    | Some file_sig -> file_sig
-    | None -> raise (Requires_not_found (File_key.to_string file))
+    let addr = get_checked_file_addr_unsafe ~reader file in
+    read_tolerable_file_sig_unsafe file addr
 
   let get_file_sig_unsafe ~reader file =
-    match get_file_sig ~reader file with
-    | Some file_sig -> file_sig
-    | None -> raise (Requires_not_found (File_key.to_string file))
-
-  let get_file_addr_unsafe ~reader file =
-    match get_file_addr ~reader file with
-    | Some addr -> addr
-    | None -> raise (Type_sig_not_found (File_key.to_string file))
-
-  let get_checked_file_addr_unsafe ~reader file =
-    match get_checked_file_addr ~reader file with
-    | Some addr -> addr
-    | None -> raise (Type_sig_not_found (File_key.to_string file))
+    let addr = get_checked_file_addr_unsafe ~reader file in
+    read_file_sig_unsafe file addr
 
   let get_type_sig_unsafe ~reader file =
-    match get_type_sig ~reader file with
-    | Some type_sig -> type_sig
-    | None -> raise (Type_sig_not_found (File_key.to_string file))
+    let addr = get_checked_file_addr_unsafe ~reader file in
+    read_type_sig_unsafe file addr
 
   let get_file_hash_unsafe ~reader file =
-    match get_file_hash ~reader file with
-    | Some hash -> hash
-    | None -> raise (Hash_not_found (File_key.to_string file))
+    let addr = get_file_addr_unsafe ~reader file in
+    read_file_hash addr
 
   let loc_of_aloc = loc_of_aloc ~get_aloc_table_unsafe
 
@@ -532,7 +576,7 @@ module Reader : READER with type reader = State_reader.t = struct
 
   let get_checked_file_addr ~reader key =
     let* addr = get_file_addr ~reader key in
-    Heap.coerce_checked_file addr
+    coerce_checked_file addr
 
   let has_ast ~reader key =
     match get_checked_file_addr ~reader key with
@@ -552,17 +596,17 @@ module Reader : READER with type reader = State_reader.t = struct
         ASTCache.add key ast;
         Some ast
 
-  let get_aloc_table ~reader key =
-    if should_use_oldified key then
-      let* addr = get_checked_file_addr ~reader key in
-      read_aloc_table key addr
+  let get_aloc_table ~reader file =
+    if should_use_oldified file then
+      let* addr = get_checked_file_addr ~reader file in
+      read_aloc_table file addr
     else
-      match ALocTableCache.get key with
+      match ALocTableCache.get file with
       | Some _ as cached -> cached
       | None ->
-        let* addr = get_checked_file_addr ~reader key in
-        let* aloc_table = read_aloc_table key addr in
-        ALocTableCache.add key aloc_table;
+        let* addr = get_checked_file_addr ~reader file in
+        let* aloc_table = read_aloc_table file addr in
+        ALocTableCache.add file aloc_table;
         Some aloc_table
 
   let get_docblock ~reader key =
@@ -575,9 +619,11 @@ module Reader : READER with type reader = State_reader.t = struct
 
   let get_tolerable_file_sig ~reader key =
     let* addr = get_checked_file_addr ~reader key in
-    read_file_sig addr
+    read_tolerable_file_sig addr
 
-  let get_file_sig ~reader key = Option.map fst (get_tolerable_file_sig ~reader key)
+  let get_file_sig ~reader key =
+    let* addr = get_checked_file_addr ~reader key in
+    read_file_sig addr
 
   let get_type_sig ~reader key =
     let* addr = get_checked_file_addr ~reader key in
@@ -588,55 +634,59 @@ module Reader : READER with type reader = State_reader.t = struct
     | Some addr -> Some (read_file_hash addr)
     | None -> None
 
-  let get_ast_unsafe ~reader file =
-    match get_ast ~reader file with
-    | Some ast -> ast
-    | None -> raise (Ast_not_found (File_key.to_string file))
-
-  let get_aloc_table_unsafe ~reader file =
-    match get_aloc_table ~reader file with
-    | Some table -> table
-    | None -> raise (ALoc_table_not_found (File_key.to_string file))
-
-  let get_docblock_unsafe ~reader file =
-    match get_docblock ~reader file with
-    | Some docblock -> docblock
-    | None -> raise (Docblock_not_found (File_key.to_string file))
-
-  let get_exports_unsafe ~reader file =
-    match get_exports ~reader file with
-    | Some exports -> exports
-    | None -> raise (Exports_not_found (File_key.to_string file))
-
-  let get_tolerable_file_sig_unsafe ~reader file =
-    match get_tolerable_file_sig ~reader file with
-    | Some file_sig -> file_sig
-    | None -> raise (Requires_not_found (File_key.to_string file))
-
-  let get_file_sig_unsafe ~reader file =
-    match get_file_sig ~reader file with
-    | Some file_sig -> file_sig
-    | None -> raise (Requires_not_found (File_key.to_string file))
-
   let get_file_addr_unsafe ~reader file =
     match get_file_addr ~reader file with
     | Some addr -> addr
-    | None -> raise (Type_sig_not_found (File_key.to_string file))
+    | None -> raise (File_not_found (File_key.to_string file))
 
   let get_checked_file_addr_unsafe ~reader file =
-    match get_checked_file_addr ~reader file with
-    | Some addr -> addr
-    | None -> raise (Type_sig_not_found (File_key.to_string file))
+    let addr = get_file_addr_unsafe ~reader file in
+    Heap.assert_checked_file addr
+
+  let get_unparsed_file_addr_unsafe ~reader file =
+    let addr = get_file_addr_unsafe ~reader file in
+    Heap.assert_unparsed_file addr
+
+  let get_ast_unsafe ~reader file =
+    let addr = get_checked_file_addr_unsafe ~reader file in
+    read_ast_unsafe file addr
+
+  let get_aloc_table_unsafe ~reader file =
+    if should_use_oldified file then
+      let addr = get_checked_file_addr_unsafe ~reader file in
+      read_aloc_table_unsafe file addr
+    else
+      match ALocTableCache.get file with
+      | Some aloc_table -> aloc_table
+      | None ->
+        let addr = get_checked_file_addr_unsafe ~reader file in
+        let aloc_table = read_aloc_table_unsafe file addr in
+        ALocTableCache.add file aloc_table;
+        aloc_table
+
+  let get_docblock_unsafe ~reader file =
+    let addr = get_checked_file_addr_unsafe ~reader file in
+    read_docblock_unsafe file addr
+
+  let get_exports_unsafe ~reader file =
+    let addr = get_checked_file_addr_unsafe ~reader file in
+    read_exports addr
+
+  let get_tolerable_file_sig_unsafe ~reader file =
+    let addr = get_checked_file_addr_unsafe ~reader file in
+    read_tolerable_file_sig_unsafe file addr
+
+  let get_file_sig_unsafe ~reader file =
+    let addr = get_checked_file_addr_unsafe ~reader file in
+    read_file_sig_unsafe file addr
 
   let get_type_sig_unsafe ~reader file =
-    match get_type_sig ~reader file with
-    | Some type_sig -> type_sig
-    | None -> raise (Type_sig_not_found (File_key.to_string file))
+    let addr = get_checked_file_addr_unsafe ~reader file in
+    read_docblock_unsafe file addr
 
   let get_file_hash_unsafe ~reader file =
-    match get_file_hash ~reader file with
-    | Some file_hash -> file_hash
-    | None -> raise (Hash_not_found (File_key.to_string file))
+    let addr = get_file_addr_unsafe ~reader file in
+    read_file_hash addr
 
   let loc_of_aloc = loc_of_aloc ~get_aloc_table_unsafe
 
@@ -656,6 +706,16 @@ module Reader_dispatcher : READER with type reader = Abstract_state_reader.t = s
 
   open Abstract_state_reader
 
+  let get_file_addr ~reader =
+    match reader with
+    | Mutator_state_reader reader -> Mutator_reader.get_file_addr ~reader
+    | State_reader reader -> Reader.get_file_addr ~reader
+
+  let get_checked_file_addr ~reader =
+    match reader with
+    | Mutator_state_reader reader -> Mutator_reader.get_checked_file_addr ~reader
+    | State_reader reader -> Reader.get_checked_file_addr ~reader
+
   let has_ast ~reader =
     match reader with
     | Mutator_state_reader reader -> Mutator_reader.has_ast ~reader
@@ -665,6 +725,11 @@ module Reader_dispatcher : READER with type reader = Abstract_state_reader.t = s
     match reader with
     | Mutator_state_reader reader -> Mutator_reader.get_ast ~reader
     | State_reader reader -> Reader.get_ast ~reader
+
+  let get_aloc_table ~reader =
+    match reader with
+    | Mutator_state_reader reader -> Mutator_reader.get_aloc_table ~reader
+    | State_reader reader -> Reader.get_aloc_table ~reader
 
   let get_docblock ~reader =
     match reader with
@@ -696,6 +761,21 @@ module Reader_dispatcher : READER with type reader = Abstract_state_reader.t = s
     | Mutator_state_reader reader -> Mutator_reader.get_file_hash ~reader
     | State_reader reader -> Reader.get_file_hash ~reader
 
+  let get_file_addr_unsafe ~reader =
+    match reader with
+    | Mutator_state_reader reader -> Mutator_reader.get_file_addr_unsafe ~reader
+    | State_reader reader -> Reader.get_file_addr_unsafe ~reader
+
+  let get_checked_file_addr_unsafe ~reader =
+    match reader with
+    | Mutator_state_reader reader -> Mutator_reader.get_checked_file_addr_unsafe ~reader
+    | State_reader reader -> Reader.get_checked_file_addr_unsafe ~reader
+
+  let get_unparsed_file_addr_unsafe ~reader =
+    match reader with
+    | Mutator_state_reader reader -> Mutator_reader.get_unparsed_file_addr_unsafe ~reader
+    | State_reader reader -> Reader.get_unparsed_file_addr_unsafe ~reader
+
   let get_ast_unsafe ~reader =
     match reader with
     | Mutator_state_reader reader -> Mutator_reader.get_ast_unsafe ~reader
@@ -725,16 +805,6 @@ module Reader_dispatcher : READER with type reader = Abstract_state_reader.t = s
     match reader with
     | Mutator_state_reader reader -> Mutator_reader.get_file_sig_unsafe ~reader
     | State_reader reader -> Reader.get_file_sig_unsafe ~reader
-
-  let get_file_addr_unsafe ~reader =
-    match reader with
-    | Mutator_state_reader reader -> Mutator_reader.get_file_addr_unsafe ~reader
-    | State_reader reader -> Reader.get_file_addr_unsafe ~reader
-
-  let get_checked_file_addr_unsafe ~reader =
-    match reader with
-    | Mutator_state_reader reader -> Mutator_reader.get_checked_file_addr_unsafe ~reader
-    | State_reader reader -> Reader.get_checked_file_addr_unsafe ~reader
 
   let get_type_sig_unsafe ~reader =
     match reader with

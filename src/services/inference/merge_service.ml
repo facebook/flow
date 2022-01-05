@@ -508,8 +508,9 @@ let check_contents_context ~reader options file ast docblock file_sig =
    * fresh parse. *)
   let aloc_table =
     lazy
-      (try Parsing_heaps.Reader.get_aloc_table_unsafe ~reader file with
-      | Parsing_heaps_exceptions.ALoc_table_not_found _ -> ALoc.empty_table file)
+      (match Parsing_heaps.Reader.get_aloc_table ~reader file with
+      | Some aloc_table -> aloc_table
+      | None -> ALoc.empty_table file)
   in
   let reader = Abstract_state_reader.State_reader reader in
   let required =

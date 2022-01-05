@@ -19,14 +19,49 @@ type info = {
   parsed: bool;  (** if false, it's a tracking record only *)
 }
 
+type unparsed_file_addr = SharedMem.NewAPI.unparsed_file SharedMem.addr
+
 val is_checked_file : file_addr -> bool
+
+val coerce_checked_file : file_addr -> checked_file_addr option
+
+val read_checked_file_hash : checked_file_addr -> Xx.hash
+
+val read_unparsed_file_hash : unparsed_file_addr -> Xx.hash
+
+val read_module_name : file_addr -> string option
+
+val read_checked_module_name : checked_file_addr -> string option
+
+val read_unparsed_module_name : unparsed_file_addr -> string option
+
+val read_ast_unsafe : File_key.t -> checked_file_addr -> (Loc.t, Loc.t) Flow_ast.Program.t
+
+val read_docblock_unsafe : File_key.t -> checked_file_addr -> Docblock.t
+
+val read_aloc_table_unsafe : File_key.t -> checked_file_addr -> ALoc.table
+
+val read_type_sig_unsafe : File_key.t -> checked_file_addr -> type_sig
+
+val read_tolerable_file_sig_unsafe :
+  File_key.t -> checked_file_addr -> File_sig.With_Loc.tolerable_t
+
+val read_file_sig_unsafe : File_key.t -> checked_file_addr -> File_sig.With_Loc.t
+
+val read_exports : checked_file_addr -> Exports.t
 
 module type READER = sig
   type reader
 
+  val get_file_addr : reader:reader -> File_key.t -> file_addr option
+
+  val get_checked_file_addr : reader:reader -> File_key.t -> checked_file_addr option
+
   val has_ast : reader:reader -> File_key.t -> bool
 
   val get_ast : reader:reader -> File_key.t -> (Loc.t, Loc.t) Flow_ast.Program.t option
+
+  val get_aloc_table : reader:reader -> File_key.t -> ALoc.table option
 
   val get_docblock : reader:reader -> File_key.t -> Docblock.t option
 
@@ -40,6 +75,12 @@ module type READER = sig
 
   val get_file_hash : reader:reader -> File_key.t -> Xx.hash option
 
+  val get_file_addr_unsafe : reader:reader -> File_key.t -> file_addr
+
+  val get_checked_file_addr_unsafe : reader:reader -> File_key.t -> checked_file_addr
+
+  val get_unparsed_file_addr_unsafe : reader:reader -> File_key.t -> unparsed_file_addr
+
   val get_ast_unsafe : reader:reader -> File_key.t -> (Loc.t, Loc.t) Flow_ast.Program.t
 
   val get_aloc_table_unsafe : reader:reader -> File_key.t -> ALoc.table
@@ -51,10 +92,6 @@ module type READER = sig
   val get_tolerable_file_sig_unsafe : reader:reader -> File_key.t -> File_sig.With_Loc.tolerable_t
 
   val get_file_sig_unsafe : reader:reader -> File_key.t -> File_sig.With_Loc.t
-
-  val get_file_addr_unsafe : reader:reader -> File_key.t -> file_addr
-
-  val get_checked_file_addr_unsafe : reader:reader -> File_key.t -> checked_file_addr
 
   val get_type_sig_unsafe : reader:reader -> File_key.t -> type_sig
 
@@ -70,6 +107,11 @@ end
 
 module Mutator_reader : sig
   include READER with type reader = Mutator_state_reader.t
+
+  val get_old_file_addr : reader:Mutator_state_reader.t -> File_key.t -> file_addr option
+
+  val get_old_checked_file_addr :
+    reader:Mutator_state_reader.t -> File_key.t -> checked_file_addr option
 
   val get_old_file_hash : reader:Mutator_state_reader.t -> File_key.t -> Xx.hash option
 

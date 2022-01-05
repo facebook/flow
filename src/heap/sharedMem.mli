@@ -352,6 +352,8 @@ module NewAPI : sig
 
   val coerce_checked_file : dyn_file addr -> checked_file addr option
 
+  val assert_unparsed_file : dyn_file addr -> unparsed_file addr
+
   val set_file_module_name : dyn_file addr -> heap_string opt addr -> unit
 
   val set_file_ast : checked_file addr -> ast addr -> unit

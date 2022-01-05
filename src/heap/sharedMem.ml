@@ -1356,6 +1356,11 @@ module NewAPI = struct
     else
       None
 
+  let assert_unparsed_file addr =
+    let hd = read_header (get_heap ()) addr in
+    assert_tag hd Unparsed_file_tag;
+    addr
+
   let file_hash_addr file = addr_offset file 1
 
   let module_name_addr file = addr_offset file 2
