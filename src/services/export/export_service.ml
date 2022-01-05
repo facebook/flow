@@ -59,10 +59,11 @@ let add_imports_of_module ~source ~module_name exports index =
     ~init:index
     names
 
-let add_imports_of_exports ~file_key ~info ~exports index =
+let add_imports_of_checked_file file_key addr index =
   let source = Export_index.File_key file_key in
+  let exports = Parsing_heaps.read_exports addr in
   let module_name =
-    match info.Parsing_heaps.module_name with
+    match Parsing_heaps.read_checked_module_name addr with
     | Some name -> Modulename.String name
     | None -> Modulename.Filename (Files.chop_flow_ext file_key)
   in
@@ -86,7 +87,7 @@ let index ~workers ~reader parsed : (Export_index.t * Export_index.t) Lwt.t =
   let total_count = FilenameSet.cardinal parsed in
   let parsed = FilenameSet.elements parsed in
   let job =
-    let f ~audit ~reader (to_add, to_remove) = function
+    let f ~reader (to_add, to_remove) = function
       | File_key.ResourceFile _f ->
         (* TODO: where does filename need to be searchable? *)
         (to_add, to_remove)
@@ -96,22 +97,16 @@ let index ~workers ~reader parsed : (Export_index.t * Export_index.t) Lwt.t =
            instead, diff the old and new exports and make minimal changes. *)
         let to_remove =
           (* get old exports so we can remove outdated entries *)
-          match Parsing_heaps.Mutator_reader.get_old_info ~reader ~audit file_key with
-          | Some info when info.Parsing_heaps.checked ->
-            (match Parsing_heaps.Mutator_reader.get_old_exports ~reader file_key with
-            | Some exports -> add_imports_of_exports ~file_key ~info ~exports to_remove
-            | None -> to_remove)
-          | _ ->
+          match Parsing_heaps.Mutator_reader.get_old_checked_file_addr ~reader file_key with
+          | Some addr -> add_imports_of_checked_file file_key addr to_remove
+          | None ->
             (* if it wasn't checked before, there were no entries added *)
             to_remove
         in
         let to_add =
-          match Parsing_heaps.Mutator_reader.get_info ~reader ~audit file_key with
-          | Some info when info.Parsing_heaps.checked ->
-            (match Parsing_heaps.Mutator_reader.get_exports ~reader file_key with
-            | Some exports -> add_imports_of_exports ~file_key ~info ~exports to_add
-            | None -> to_add)
-          | _ ->
+          match Parsing_heaps.Mutator_reader.get_checked_file_addr ~reader file_key with
+          | Some addr -> add_imports_of_checked_file file_key addr to_add
+          | None ->
             (* TODO: handle unchecked module names, maybe still parse? *)
             to_add
         in
@@ -119,8 +114,7 @@ let index ~workers ~reader parsed : (Export_index.t * Export_index.t) Lwt.t =
     in
     fun ~reader files ->
       let init = (Export_index.empty, Export_index.empty) in
-      let audit = Expensive.ok in
-      let (to_add, to_remove) = Base.List.fold_left ~f:(f ~audit ~reader) ~init files in
+      let (to_add, to_remove) = Base.List.fold_left ~f:(f ~reader) ~init files in
       let count = Base.List.length files in
       (to_add, to_remove, count)
   in

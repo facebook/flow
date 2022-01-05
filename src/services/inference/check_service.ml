@@ -341,9 +341,7 @@ let mk_check_file ~options ~reader ~cache () =
   let audit = Expensive.ok in
 
   let get_provider = Module_heaps.Reader_dispatcher.get_provider ~reader ~audit in
-  let get_type_sig_unsafe = Parsing_heaps.Reader_dispatcher.get_checked_file_addr_unsafe ~reader in
-  let get_info_unsafe = Parsing_heaps.Reader_dispatcher.get_info_unsafe ~reader ~audit in
-  let get_aloc_table_unsafe = Parsing_heaps.Reader_dispatcher.get_aloc_table_unsafe ~reader in
+  let get_file_addr_unsafe = Parsing_heaps.Reader_dispatcher.get_file_addr_unsafe ~reader in
   let find_leader = Context_heaps.Reader_dispatcher.find_leader ~reader in
   let get_resolved_requires_unsafe =
     Module_heaps.Reader_dispatcher.get_resolved_requires_unsafe ~reader ~audit
@@ -353,15 +351,6 @@ let mk_check_file ~options ~reader ~cache () =
 
   let base_metadata = Context.metadata_of_options options in
 
-  (* Create a merging context for a dependency of a checked file. These contexts
-   * are used when converting signatures to types. *)
-  let create_dep_cx file_key docblock ccx =
-    let metadata = Context.docblock_overrides docblock base_metadata in
-    let module_ref = Reason.OrdinaryName (Files.module_ref file_key) in
-    let aloc_table = lazy (get_aloc_table_unsafe file_key) in
-    Context.make ccx metadata file_key aloc_table module_ref Context.Merging
-  in
-
   (* Create a type representing the exports of a dependency. For checked
    * dependencies, we will create a "sig tvar" with a lazy thunk that evaluates
    * to a ModuleT type. *)
@@ -370,15 +359,12 @@ let mk_check_file ~options ~reader ~cache () =
     | None -> unknown_module_t cx mref m
     | Some (File_key.ResourceFile f) -> Merge.merge_resource_module_t cx f
     | Some dep_file ->
-      let { Parsing_heaps.checked; parsed; _ } = get_info_unsafe dep_file in
-      if checked && parsed then
-        sig_module_t cx dep_file
-      else
-        unchecked_module_t cx mref
-  and sig_module_t cx file_key _loc =
-    let file =
-      Check_cache.find_or_create cache ~find_leader ~master_cx ~create_file:dep_file file_key
-    in
+      (match Heap.coerce_checked_file (get_file_addr_unsafe dep_file) with
+      | Some dep_addr -> sig_module_t cx dep_file dep_addr
+      | None -> unchecked_module_t cx mref)
+  and sig_module_t cx file_key file_addr _loc =
+    let create_file = dep_file file_key file_addr in
+    let file = Check_cache.find_or_create cache ~find_leader ~master_cx ~create_file file_key in
     let t = file.Type_sig_merge.exports () in
     copy_into cx file.Type_sig_merge.cx t;
     t
@@ -386,8 +372,10 @@ let mk_check_file ~options ~reader ~cache () =
    * convert signatures into types. This function reads the signature for a file
    * from shared memory and creates thunks (either lazy tvars or lazy types)
    * that resolve to types. *)
-  and dep_file file_key ccx =
+  and dep_file file_key file_addr ccx =
     let source = Some file_key in
+
+    let aloc_table = lazy (Parsing_heaps.read_aloc_table_unsafe file_key file_addr) in
 
     let aloc (loc : Locs.index) = ALoc.ALocRepresentationDoNotUse.make_keyed source (loc :> int) in
 
@@ -395,22 +383,18 @@ let mk_check_file ~options ~reader ~cache () =
       if Options.abstract_locations options then
         aloc
       else
-        let aloc_table = lazy (get_aloc_table_unsafe file_key) in
-        (fun loc -> aloc loc |> ALoc.to_loc aloc_table |> ALoc.of_loc)
+        fun loc ->
+      aloc loc |> ALoc.to_loc aloc_table |> ALoc.of_loc
     in
-
-    let deserialize x = Marshal.from_string x 0 in
-
-    let file_addr = get_type_sig_unsafe file_key in
 
     let buf = Heap.read_opt_exn Heap.type_sig_buf (Heap.get_file_type_sig file_addr) in
 
-    let docblock =
-      Heap.get_file_docblock file_addr
-      |> Heap.read_opt_exn (fun addr -> Heap.read_docblock addr |> deserialize)
+    let cx =
+      let docblock = Parsing_heaps.read_docblock_unsafe file_key file_addr in
+      let metadata = Context.docblock_overrides docblock base_metadata in
+      let module_ref = Reason.OrdinaryName (Files.module_ref file_key) in
+      Context.make ccx metadata file_key aloc_table module_ref Context.Merging
     in
-
-    let cx = create_dep_cx file_key docblock ccx in
 
     let dependencies =
       let { Module_heaps.resolved_modules; _ } = get_resolved_requires_unsafe file_key in

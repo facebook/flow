@@ -824,13 +824,13 @@ let commit_modules ~transaction ~workers ~options ~reader ~is_init new_or_change
   if debug then prerr_endlinef "*** done committing modules ***";
   Lwt.return (providers, changed_modules, errmap)
 
-let get_module_providers ~reader ~audit file info =
+let get_module_providers ~reader ~audit file_key file_addr =
   let get_provider = Module_heaps.Mutator_reader.get_provider ~reader ~audit in
   let eponymous_module_provider =
-    let m = eponymous_module file in
+    let m = eponymous_module file_key in
     (m, get_provider m)
   in
-  match info.Parsing_heaps.module_name with
+  match Parsing_heaps.read_module_name file_addr with
   | None -> [eponymous_module_provider]
   | Some name ->
     let m = Modulename.String name in
@@ -855,8 +855,8 @@ let get_module_providers ~reader ~audit file info =
 let calc_old_modules workers ~all_providers_mutator ~options ~reader new_or_changed_or_deleted =
   let%lwt file_module_assoc =
     let f acc file =
-      match Parsing_heaps.Mutator_reader.get_old_info ~reader ~audit:Expensive.ok file with
-      | Some info -> (file, get_module_providers ~reader ~audit:Expensive.ok file info) :: acc
+      match Parsing_heaps.Mutator_reader.get_old_file_addr ~reader file with
+      | Some addr -> (file, get_module_providers ~reader ~audit:Expensive.ok file addr) :: acc
       | None -> acc
     in
     MultiWorkerLwt.call
@@ -892,8 +892,8 @@ let calc_old_modules workers ~all_providers_mutator ~options ~reader new_or_chan
 let calc_new_modules workers ~all_providers_mutator ~reader new_or_changed =
   let%lwt file_module_assoc =
     let f acc file =
-      let info = Parsing_heaps.Mutator_reader.get_info_unsafe ~reader ~audit:Expensive.ok file in
-      (file, get_module_providers ~reader ~audit:Expensive.ok file info) :: acc
+      let addr = Parsing_heaps.Mutator_reader.get_file_addr_unsafe ~reader file in
+      (file, get_module_providers ~reader ~audit:Expensive.ok file addr) :: acc
     in
     MultiWorkerLwt.call
       workers

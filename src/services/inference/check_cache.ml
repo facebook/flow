@@ -93,7 +93,7 @@ let find_or_create cache ~find_leader ~master_cx ~create_file file_key =
   | Some { file; _ } -> file
   | None ->
     let cached_ccx = find_or_create_ccx cache ~find_leader ~master_cx file_key in
-    let file = create_file file_key cached_ccx.ccx in
+    let file = create_file cached_ccx.ccx in
     if cache.size = cache.capacity then drop_least_recently_used cache;
     Cache.enqueue_front_exn cache.files file_key { file; cached_ccx };
     cache.size <- succ cache.size;

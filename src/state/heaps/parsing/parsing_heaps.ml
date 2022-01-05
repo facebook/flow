@@ -9,12 +9,6 @@ open Utils_js
 open Parsing_heaps_exceptions
 module Heap = SharedMem.NewAPI
 
-type info = {
-  module_name: string option;
-  checked: bool;  (** in flow? *)
-  parsed: bool;  (** if false, it's a tracking record only *)
-}
-
 module FileHeap =
   SharedMem.NoCacheAddr
     (File_key)
@@ -160,11 +154,6 @@ let read_unparsed_file_hash file_addr = Heap.dyn_unparsed_file file_addr |> read
 let read_module_name file_addr =
   let open Heap in
   get_file_module_name file_addr |> read_opt read_string
-
-let read_info file_addr =
-  let module_name = read_module_name file_addr in
-  let checked = is_checked_file file_addr in
-  { module_name; checked; parsed = checked }
 
 let read_checked_module_name file_addr = Heap.dyn_checked_file file_addr |> read_module_name
 
@@ -322,10 +311,6 @@ module type READER = sig
   val get_file_hash_unsafe : reader:reader -> File_key.t -> Xx.hash
 
   val loc_of_aloc : reader:reader -> ALoc.t -> Loc.t
-
-  val get_info_unsafe : reader:reader -> (File_key.t -> info) Expensive.t
-
-  val get_info : reader:reader -> (File_key.t -> info option) Expensive.t
 end
 
 let loc_of_aloc ~get_aloc_table_unsafe ~reader aloc =
@@ -460,19 +445,6 @@ module Mutator_reader = struct
     read_file_hash addr
 
   let loc_of_aloc = loc_of_aloc ~get_aloc_table_unsafe
-
-  let get_info ~reader =
-    let f file = Option.map read_info (get_file_addr ~reader file) in
-    Expensive.wrap f
-
-  let get_old_info ~reader =
-    let f file = Option.map read_info (get_old_file_addr ~reader file) in
-    Expensive.wrap f
-
-  let get_info_unsafe ~reader ~audit f =
-    match get_info ~reader ~audit f with
-    | Some info -> info
-    | None -> failwith (Printf.sprintf "module info not found for file %s" (File_key.to_string f))
 end
 
 (* For use by a worker process *)
@@ -689,15 +661,6 @@ module Reader : READER with type reader = State_reader.t = struct
     read_file_hash addr
 
   let loc_of_aloc = loc_of_aloc ~get_aloc_table_unsafe
-
-  let get_info ~reader =
-    let f file = Option.map read_info (get_file_addr ~reader file) in
-    Expensive.wrap f
-
-  let get_info_unsafe ~reader ~audit f =
-    match get_info ~reader ~audit f with
-    | Some info -> info
-    | None -> failwith (Printf.sprintf "module info not found for file %s" (File_key.to_string f))
 end
 
 (* Reader_dispatcher is used by code which may or may not be running inside an init/recheck *)
@@ -817,16 +780,6 @@ module Reader_dispatcher : READER with type reader = Abstract_state_reader.t = s
     | State_reader reader -> Reader.get_file_hash_unsafe ~reader
 
   let loc_of_aloc = loc_of_aloc ~get_aloc_table_unsafe
-
-  let get_info ~reader =
-    match reader with
-    | Mutator_state_reader reader -> Mutator_reader.get_info ~reader
-    | State_reader reader -> Reader.get_info ~reader
-
-  let get_info_unsafe ~reader =
-    match reader with
-    | Mutator_state_reader reader -> Mutator_reader.get_info_unsafe ~reader
-    | State_reader reader -> Reader.get_info_unsafe ~reader
 end
 
 module From_saved_state : sig

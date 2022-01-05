@@ -13,7 +13,7 @@ val find_or_create :
   t ->
   find_leader:(File_key.t -> File_key.t) ->
   master_cx:Context.master_context ->
-  create_file:(File_key.t -> Context.component_t -> Type_sig_merge.file) ->
+  create_file:(Context.component_t -> Type_sig_merge.file) ->
   File_key.t ->
   Type_sig_merge.file
 

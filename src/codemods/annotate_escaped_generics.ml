@@ -108,9 +108,10 @@ let gen_import_statements file (symbols : Ty_symbol.symbol SymbolMap.t) =
     in
     Hh_logger.debug "remote source %s" (File_key.to_string file);
 
-    let { Parsing_heaps.module_name; _ } =
+    let module_name =
       let reader = State_reader.create () in
-      Parsing_heaps.Reader.get_info_unsafe ~reader ~audit:Expensive.warn remote_source
+      Parsing_heaps.Reader.get_file_addr_unsafe ~reader remote_source
+      |> Parsing_heaps.read_module_name
     in
     (* Relativize module name *)
     let module_name =

@@ -13,12 +13,6 @@ type file_addr = SharedMem.NewAPI.dyn_file SharedMem.addr
 
 type checked_file_addr = SharedMem.NewAPI.checked_file SharedMem.addr
 
-type info = {
-  module_name: string option;
-  checked: bool;  (** in flow? *)
-  parsed: bool;  (** if false, it's a tracking record only *)
-}
-
 type unparsed_file_addr = SharedMem.NewAPI.unparsed_file SharedMem.addr
 
 val is_checked_file : file_addr -> bool
@@ -98,11 +92,6 @@ module type READER = sig
   val get_file_hash_unsafe : reader:reader -> File_key.t -> Xx.hash
 
   val loc_of_aloc : reader:reader -> ALoc.t -> Loc.t
-
-  (** given a filename, returns module info *)
-  val get_info_unsafe : reader:reader -> (File_key.t -> info) Expensive.t
-
-  val get_info : reader:reader -> (File_key.t -> info option) Expensive.t
 end
 
 module Mutator_reader : sig
@@ -116,8 +105,6 @@ module Mutator_reader : sig
   val get_old_file_hash : reader:Mutator_state_reader.t -> File_key.t -> Xx.hash option
 
   val get_old_exports : reader:Mutator_state_reader.t -> File_key.t -> Exports.t option
-
-  val get_old_info : reader:reader -> (File_key.t -> info option) Expensive.t
 end
 
 module Reader : READER with type reader = State_reader.t
