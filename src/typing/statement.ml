@@ -5137,7 +5137,7 @@ struct
           (t, None, res, None, None))
     in
     let (_, _, ((loc, t), _), _, _) = result in
-    Env.record_projection_if_needed cx loc t;
+    Env.record_expression_type_if_needed cx loc t;
     result
 
   and arg_list cx (args_loc, { Ast.Expression.ArgList.arguments; comments }) =
@@ -6866,6 +6866,7 @@ struct
           | (_, None) ->
             None
           | (true, Some name) ->
+            Env.record_expression_type_if_needed cx (aloc_of_reason (reason_of_t val_t)) val_t;
             let pred = LeftP (SentinelProp prop_name, val_t) in
             Some (name, obj_t, pred, sense)
         in

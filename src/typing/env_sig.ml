@@ -236,7 +236,7 @@ module type S = sig
 
   val get_refinement : Context.t -> Key.t -> ALoc.t -> Type.t option
 
-  val record_projection_if_needed : Context.t -> ALoc.t -> Type.t -> unit
+  val record_expression_type_if_needed : Context.t -> ALoc.t -> Type.t -> unit
 
   val discriminant_after_negated_cases :
     Context.t ->

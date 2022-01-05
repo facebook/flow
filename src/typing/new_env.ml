@@ -111,7 +111,7 @@ module New_env : S = struct
   (* Helpers **************)
   (************************)
 
-  let record_projection_if_needed cx loc t =
+  let record_expression_type_if_needed cx loc t =
     let env = Context.environment cx in
     match Loc_env.find_write env loc with
     | None -> ()
@@ -191,7 +191,9 @@ module New_env : S = struct
       | SingletonStrR { loc; sense; lit } -> SingletonStrP (loc, sense, lit)
       | SingletonNumR { loc; sense; lit } -> SingletonNumP (loc, sense, lit)
       | SentinelR (prop, loc) ->
-        PropExistsP (prop, mk_reason (RProperty (Some (OrdinaryName prop))) loc)
+        let env = Context.environment cx in
+        let other_t = Base.Option.value_exn (Loc_env.find_write env loc) in
+        LeftP (SentinelProp prop, other_t)
       | LatentR { func = (func_loc, _); index } ->
         (* Latent refinements store the loc of the callee, which is a read in the env *)
         let reason = mk_reason (RCustom "Function call") func_loc in

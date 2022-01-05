@@ -2414,6 +2414,12 @@ module Make
         in
         this#merge_self_refinement_scope new_latest_refinements
 
+      (* Refines an expr if that expr has a refinement key, othewise does nothing *)
+      method add_refinement_to_expr expr refinement =
+        match RefinementKey.of_expression expr with
+        | None -> ()
+        | Some refinement_key -> this#add_refinement refinement_key refinement
+
       method logical_refinement expr =
         let { Flow_ast.Expression.Logical.operator; left = (loc, _) as left; right; comments = _ } =
           expr
@@ -2450,8 +2456,15 @@ module Make
                But if we're evaluating the RHS, the LHS doesn't have to be truthy, it just has to be
                non-maybe. As a result, we do this weird dance of refinements so that when we traverse the
                RHS we have done the null-test but the overall result of this expression includes both the
-               truthy and non-maybe qualities. *)
-            ignore (this#null_test ~strict:false ~sense:false loc left);
+               truthy and non-maybe qualities.
+
+               We can't use null_test here because null_test requires some actual null for the
+               sentinel refinement it can create. We can add some complexity here to introduce a
+               synthetic null Val.t and get sentinel refinements against null here, but that seems
+               like an unlikely way for nullish coalescing to be used. Instead, we simply add a
+               NotR MaybeR refinement to the left *)
+            ignore (this#expression left);
+            this#add_refinement_to_expr left (L.LSet.singleton loc, NotR MaybeR);
             let nullish = this#peek_new_refinements () in
             let env1 = this#env_without_latest_refinements in
             this#negate_new_refinements ();
@@ -2463,10 +2476,7 @@ module Make
             this#pop_refinement_scope ();
             this#pop_refinement_scope ();
             this#push_refinement_scope LookupMap.empty;
-            (match RefinementKey.of_expression left with
-            | None -> ()
-            | Some refinement_key ->
-              this#add_refinement refinement_key (L.LSet.singleton loc, TruthyR loc));
+            this#add_refinement_to_expr left (L.LSet.singleton loc, TruthyR loc);
             let truthy_refinements = this#peek_new_refinements () in
             this#pop_refinement_scope ();
             this#push_refinement_scope LookupMap.empty;
@@ -2493,9 +2503,11 @@ module Make
           this#merge_self_env env1;
           this#merge_refinement_scopes merge lhs_latest_refinements rhs_latest_refinements
 
-      method null_test ~strict ~sense loc expr =
+      method null_test ~strict ~sense loc expr other =
         ignore @@ this#expression expr;
-        let optional_chain_refinement = this#maybe_sentinel_and_chain_refinement ~sense loc expr in
+        let optional_chain_refinement =
+          this#maybe_sentinel_and_chain_refinement ~sense loc expr other
+        in
         match RefinementKey.of_expression expr with
         | None -> ()
         | Some refinement_key ->
@@ -2526,9 +2538,11 @@ module Make
               this#add_refinement refinement_key (L.LSet.singleton loc, NotR MaybeR)
           | None -> ())
 
-      method void_test ~sense ~strict ~check_for_bound_undefined loc expr =
+      method void_test ~sense ~strict ~check_for_bound_undefined loc expr other =
         ignore @@ this#expression expr;
-        let optional_chain_refinement = this#maybe_sentinel_and_chain_refinement ~sense loc expr in
+        let optional_chain_refinement =
+          this#maybe_sentinel_and_chain_refinement ~sense loc expr other
+        in
         let is_global_undefined () =
           match SMap.find_opt "undefined" env_state.env with
           | None -> false
@@ -2564,14 +2578,13 @@ module Make
                 this#add_refinement refinement_key (L.LSet.singleton loc, NotR MaybeR)
           )
 
-      method default_optional_chain_refinement_handler ~sense loc expr =
-        match this#maybe_sentinel_and_chain_refinement ~sense loc expr with
+      method default_optional_chain_refinement_handler ~sense loc expr other =
+        match this#maybe_sentinel_and_chain_refinement ~sense loc expr other with
         | None -> ()
         | Some name -> this#add_refinement name (L.LSet.singleton loc, NotR MaybeR)
 
       method typeof_test loc arg typename sense =
         ignore @@ this#expression arg;
-        this#default_optional_chain_refinement_handler ~sense loc arg;
         let refinement =
           match typename with
           | "boolean" -> Some (BoolR loc)
@@ -2594,9 +2607,9 @@ module Make
           this#add_refinement refinement_key (L.LSet.singleton loc, refinement)
         | _ -> ()
 
-      method literal_test ~strict ~sense loc expr refinement =
+      method literal_test ~strict ~sense loc expr refinement other =
         ignore @@ this#expression expr;
-        this#default_optional_chain_refinement_handler ~sense loc expr;
+        this#default_optional_chain_refinement_handler ~sense loc expr other;
         match RefinementKey.of_expression expr with
         | Some refinement_key when strict ->
           let refinement =
@@ -2608,7 +2621,7 @@ module Make
           this#add_refinement refinement_key (L.LSet.singleton loc, refinement)
         | _ -> ()
 
-      method maybe_sentinel_and_chain_refinement ~sense loc expr =
+      method maybe_sentinel_and_chain_refinement ~sense loc expr (other_loc, _) =
         let open Flow_ast in
         let expr' =
           match expr with
@@ -2631,7 +2644,12 @@ module Make
           let (_ : ('a, 'b) Ast.Expression.t) = this#expression _object in
           (match RefinementKey.of_expression _object with
           | Some refinement_key ->
-            let refinement = SentinelR (prop_name, ploc) in
+            let refinement = SentinelR (prop_name, other_loc) in
+            let reason = mk_reason (RProperty (Some (OrdinaryName prop_name))) ploc in
+            let write_entries =
+              L.LMap.add other_loc (Env_api.AssigningWrite reason) env_state.write_entries
+            in
+            env_state <- { env_state with write_entries };
             let refinement =
               if sense then
                 refinement
@@ -2709,51 +2727,66 @@ module Make
           ) ->
           this#typeof_test loc argument s sense
         (* bool equality *)
-        | ((lit_loc, Expression.Literal { Literal.value = Literal.Boolean lit; _ }), expr)
-        | (expr, (lit_loc, Expression.Literal { Literal.value = Literal.Boolean lit; _ })) ->
-          this#literal_test ~strict ~sense loc expr (SingletonBoolR { loc = lit_loc; sense; lit })
+        | (((lit_loc, Expression.Literal { Literal.value = Literal.Boolean lit; _ }) as other), expr)
+        | (expr, ((lit_loc, Expression.Literal { Literal.value = Literal.Boolean lit; _ }) as other))
+          ->
+          this#literal_test
+            ~strict
+            ~sense
+            loc
+            expr
+            (SingletonBoolR { loc = lit_loc; sense; lit })
+            other
         (* string equality *)
-        | ((lit_loc, Expression.Literal { Literal.value = Literal.String lit; _ }), expr)
-        | (expr, (lit_loc, Expression.Literal { Literal.value = Literal.String lit; _ }))
+        | (((lit_loc, Expression.Literal { Literal.value = Literal.String lit; _ }) as other), expr)
+        | (expr, ((lit_loc, Expression.Literal { Literal.value = Literal.String lit; _ }) as other))
         | ( expr,
-            ( lit_loc,
-              Expression.TemplateLiteral
-                {
-                  Expression.TemplateLiteral.quasis =
-                    [
-                      ( _,
-                        {
-                          Expression.TemplateLiteral.Element.value =
-                            { Expression.TemplateLiteral.Element.cooked = lit; _ };
-                          _;
-                        }
-                      );
-                    ];
-                  _;
-                }
+            ( ( lit_loc,
+                Expression.TemplateLiteral
+                  {
+                    Expression.TemplateLiteral.quasis =
+                      [
+                        ( _,
+                          {
+                            Expression.TemplateLiteral.Element.value =
+                              { Expression.TemplateLiteral.Element.cooked = lit; _ };
+                            _;
+                          }
+                        );
+                      ];
+                    _;
+                  }
+              ) as other
             )
           )
-        | ( ( lit_loc,
-              Expression.TemplateLiteral
-                {
-                  Expression.TemplateLiteral.quasis =
-                    [
-                      ( _,
-                        {
-                          Expression.TemplateLiteral.Element.value =
-                            { Expression.TemplateLiteral.Element.cooked = lit; _ };
-                          _;
-                        }
-                      );
-                    ];
-                  _;
-                }
+        | ( ( ( lit_loc,
+                Expression.TemplateLiteral
+                  {
+                    Expression.TemplateLiteral.quasis =
+                      [
+                        ( _,
+                          {
+                            Expression.TemplateLiteral.Element.value =
+                              { Expression.TemplateLiteral.Element.cooked = lit; _ };
+                            _;
+                          }
+                        );
+                      ];
+                    _;
+                  }
+              ) as other
             ),
             expr
           ) ->
-          this#literal_test ~strict ~sense loc expr (SingletonStrR { loc = lit_loc; sense; lit })
+          this#literal_test
+            ~strict
+            ~sense
+            loc
+            expr
+            (SingletonStrR { loc = lit_loc; sense; lit })
+            other
         (* number equality *)
-        | ((lit_loc, number_literal), expr) when is_number_literal number_literal ->
+        | (((lit_loc, number_literal) as other), expr) when is_number_literal number_literal ->
           let raw = extract_number_literal number_literal in
           this#literal_test
             ~strict
@@ -2761,7 +2794,8 @@ module Make
             loc
             expr
             (SingletonNumR { loc = lit_loc; sense; lit = raw })
-        | (expr, (lit_loc, number_literal)) when is_number_literal number_literal ->
+            other
+        | (expr, ((lit_loc, number_literal) as other)) when is_number_literal number_literal ->
           let raw = extract_number_literal number_literal in
           this#literal_test
             ~strict
@@ -2769,10 +2803,11 @@ module Make
             loc
             expr
             (SingletonNumR { loc = lit_loc; sense; lit = raw })
+            other
         (* expr op null *)
-        | ((_, Expression.Literal { Literal.value = Literal.Null; _ }), expr)
-        | (expr, (_, Expression.Literal { Literal.value = Literal.Null; _ })) ->
-          this#null_test ~sense ~strict loc expr
+        | (((_, Expression.Literal { Literal.value = Literal.Null; _ }) as other), expr)
+        | (expr, ((_, Expression.Literal { Literal.value = Literal.Null; _ }) as other)) ->
+          this#null_test ~sense ~strict loc expr other
         (* expr op undefined *)
         | ( ( ( _,
                 Expression.Identifier (_, { Flow_ast.Identifier.name = "undefined"; comments = _ })
@@ -2787,11 +2822,15 @@ module Make
             )
           ) ->
           ignore @@ this#expression undefined;
-          this#void_test ~sense ~strict ~check_for_bound_undefined:true loc expr
+          this#void_test ~sense ~strict ~check_for_bound_undefined:true loc expr undefined
         (* expr op void(...) *)
-        | ((_, Expression.Unary { Expression.Unary.operator = Expression.Unary.Void; _ }), expr)
-        | (expr, (_, Expression.Unary { Expression.Unary.operator = Expression.Unary.Void; _ })) ->
-          this#void_test ~sense ~strict ~check_for_bound_undefined:false loc expr
+        | ( ((_, Expression.Unary { Expression.Unary.operator = Expression.Unary.Void; _ }) as other),
+            expr
+          )
+        | ( expr,
+            ((_, Expression.Unary { Expression.Unary.operator = Expression.Unary.Void; _ }) as other)
+          ) ->
+          this#void_test ~sense ~strict ~check_for_bound_undefined:false loc expr other
         (* Member expressions compared against non-literals that include
          * an optional chain cannot refine like we do in literal cases. The
          * non-literal value we are comparing against may be null or undefined,
@@ -2802,12 +2841,12 @@ module Make
          * NOTE: Switch statements do not introduce sentinel refinements *)
         | (((_, Expression.Member _) as expr), other) ->
           ignore @@ this#expression expr;
-          ignore @@ this#maybe_sentinel_and_chain_refinement ~sense loc expr;
+          ignore @@ this#maybe_sentinel_and_chain_refinement ~sense loc expr other;
           ignore @@ this#expression other
         | (other, ((_, Expression.Member _) as expr)) when not (cond_context = SwitchTest) ->
           ignore @@ this#expression other;
           ignore @@ this#expression expr;
-          ignore @@ this#maybe_sentinel_and_chain_refinement ~sense loc expr
+          ignore @@ this#maybe_sentinel_and_chain_refinement ~sense loc expr other
         | _ ->
           ignore @@ this#expression left;
           ignore @@ this#expression right
@@ -2943,6 +2982,11 @@ module Make
           this#add_refinement refinement_key_access (L.LSet.singleton loc, TruthyR loc));
         let open Flow_ast.Expression in
         let open Flow_ast.Expression.Member in
+        let optional =
+          match expr with
+          | OptionalMember _ -> true
+          | _ -> false
+        in
         match expr with
         | OptionalMember OptionalMember.{ member = { Member._object; property; _ }; _ }
         | Member Member.{ _object; property; _ } ->
@@ -2961,6 +3005,8 @@ module Make
           | (None, _) ->
             ()
           | (Some refinement_key_obj, Some propname) ->
+            if optional then
+              this#add_refinement refinement_key_obj (L.LSet.singleton loc, NotR MaybeR);
             this#add_refinement
               refinement_key_obj
               (L.LSet.singleton loc, PropExistsR { propname; loc }))
@@ -2988,13 +3034,9 @@ module Make
         | Unary unary ->
           this#unary_refinement loc unary;
           expression
-        | Member _ ->
-          this#member_expression_refinement loc expr;
-          expression
+        | Member _
         | OptionalMember _ ->
-          (* TODO: this refinement is technically incorrect when negated until we also track that the
-           * property access is truthy, but that is a heap refinement. *)
-          this#default_optional_chain_refinement_handler ~sense:true loc (loc, expr);
+          this#member_expression_refinement loc expr;
           expression
         | Array _
         | ArrowFunction _
@@ -3032,7 +3074,8 @@ module Make
         | Flow_ast.Expression.Logical.And ->
           ignore (this#expression_refinement left)
         | Flow_ast.Expression.Logical.NullishCoalesce ->
-          ignore (this#null_test ~strict:false ~sense:false loc left));
+          ignore (this#expression left);
+          this#add_refinement_to_expr left (L.LSet.singleton loc, NotR MaybeR));
         let env1 = this#env_without_latest_refinements in
         let env1_with_refinements = this#env in
         (match operator with

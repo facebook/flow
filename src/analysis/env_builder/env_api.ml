@@ -73,6 +73,7 @@ module type S = sig
           sense: bool;
           lit: float * string;
         }
+      (* The location here is the location of expr in x.foo === expr *)
       | SentinelR of string * L.t
       | LatentR of {
           func: (L.t, L.t) Ast.Expression.t;

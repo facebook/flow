@@ -1098,7 +1098,7 @@ x?.foo && x|};
           (1, 4) to (1, 5): (`x`)
         };
         (2, 10) to (2, 11) => {
-          {refinement = And (SentinelR foo, Not (Maybe)); writes = (1, 4) to (1, 5): (`x`)}
+          {refinement = And (Not (Maybe), PropExistsR (foo)); writes = (1, 4) to (1, 5): (`x`)}
         }] |}]
 
 let%expect_test "conditional_expression" =
