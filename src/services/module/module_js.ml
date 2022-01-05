@@ -828,17 +828,17 @@ let commit_modules ~transaction ~workers ~options ~reader ~is_init new_or_change
   if debug then prerr_endlinef "*** done committing modules ***";
   Lwt.return (providers, changed_modules, errmap)
 
-let get_files ~reader ~audit file info =
-  let get_file = Module_heaps.Mutator_reader.get_file ~reader ~audit in
+let get_module_providers ~reader ~audit file info =
+  let get_provider = Module_heaps.Mutator_reader.get_provider ~reader ~audit in
   let eponymous_module_provider =
     let m = eponymous_module file in
-    (m, get_file m)
+    (m, get_provider m)
   in
   match info.Parsing_heaps.module_name with
   | None -> [eponymous_module_provider]
   | Some name ->
     let m = Modulename.String name in
-    [(m, get_file m); eponymous_module_provider]
+    [(m, get_provider m); eponymous_module_provider]
 
 (* Calculate the set of modules whose current providers are changed or deleted files.
 
@@ -860,7 +860,7 @@ let calc_old_modules workers ~all_providers_mutator ~options ~reader new_or_chan
   let%lwt file_module_assoc =
     let f acc file =
       match Parsing_heaps.Mutator_reader.get_old_info ~reader ~audit:Expensive.ok file with
-      | Some info -> (file, get_files ~reader ~audit:Expensive.ok file info) :: acc
+      | Some info -> (file, get_module_providers ~reader ~audit:Expensive.ok file info) :: acc
       | None -> acc
     in
     MultiWorkerLwt.call
@@ -897,7 +897,7 @@ let calc_new_modules workers ~all_providers_mutator ~reader new_or_changed =
   let%lwt file_module_assoc =
     let f acc file =
       let info = Parsing_heaps.Mutator_reader.get_info_unsafe ~reader ~audit:Expensive.ok file in
-      (file, get_files ~reader ~audit:Expensive.ok file info) :: acc
+      (file, get_module_providers ~reader ~audit:Expensive.ok file info) :: acc
     in
     MultiWorkerLwt.call
       workers

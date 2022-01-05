@@ -155,7 +155,7 @@ let calc_direct_dependents workers ~candidates ~root_files ~root_modules =
 
 let checked_module ~reader ~audit m =
   m
-  |> Module_heaps.Mutator_reader.get_file_unsafe ~reader ~audit
+  |> Module_heaps.Mutator_reader.get_provider_unsafe ~reader ~audit
   |> Module_js.checked_file ~reader:(Abstract_state_reader.Mutator_state_reader reader) ~audit
 
 (* A file is considered to implement a required module r only if the file is
@@ -164,7 +164,7 @@ let checked_module ~reader ~audit m =
    to a dependency ordering among files for merging. *)
 let implementation_file ~reader ~audit r =
   if Module_heaps.Mutator_reader.module_exists ~reader r && checked_module ~reader ~audit r then
-    Some (Module_heaps.Mutator_reader.get_file_unsafe ~reader ~audit r)
+    Some (Module_heaps.Mutator_reader.get_provider_unsafe ~reader ~audit r)
   else
     None
 

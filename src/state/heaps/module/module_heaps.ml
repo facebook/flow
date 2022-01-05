@@ -192,9 +192,9 @@ end
 module type READER = sig
   type reader
 
-  val get_file : reader:reader -> (Modulename.t -> File_key.t option) Expensive.t
+  val get_provider : reader:reader -> (Modulename.t -> File_key.t option) Expensive.t
 
-  val get_file_unsafe : reader:reader -> (Modulename.t -> File_key.t) Expensive.t
+  val get_provider_unsafe : reader:reader -> (Modulename.t -> File_key.t) Expensive.t
 
   val module_exists : reader:reader -> Modulename.t -> bool
 
@@ -204,12 +204,12 @@ end
 module Mutator_reader : READER with type reader = Mutator_state_reader.t = struct
   type reader = Mutator_state_reader.t
 
-  let get_file ~reader:_ = Expensive.wrap NameHeap.get
+  let get_provider ~reader:_ = Expensive.wrap NameHeap.get
 
   let module_exists ~reader:_ = NameHeap.mem
 
-  let get_file_unsafe ~reader ~audit m =
-    match get_file ~reader ~audit m with
+  let get_provider_unsafe ~reader ~audit m =
+    match get_provider ~reader ~audit m with
     | Some file -> file
     | None -> failwith (Printf.sprintf "file name not found for module %s" (Modulename.to_string m))
 
@@ -230,7 +230,7 @@ module Reader : READER with type reader = State_reader.t = struct
   let should_use_old_resolved_requires f =
     Utils_js.FilenameSet.mem f !currently_oldified_resolved_requires
 
-  let get_file ~reader:_ ~audit key =
+  let get_provider ~reader:_ ~audit key =
     if should_use_old_nameheap key then
       Expensive.wrap NameHeap.get_old ~audit key
     else
@@ -242,8 +242,8 @@ module Reader : READER with type reader = State_reader.t = struct
     else
       NameHeap.mem key
 
-  let get_file_unsafe ~reader ~audit m =
-    match get_file ~reader ~audit m with
+  let get_provider_unsafe ~reader ~audit m =
+    match get_provider ~reader ~audit m with
     | Some file -> file
     | None -> failwith (Printf.sprintf "file name not found for module %s" (Modulename.to_string m))
 
@@ -267,20 +267,20 @@ module Reader_dispatcher : READER with type reader = Abstract_state_reader.t = s
 
   open Abstract_state_reader
 
-  let get_file ~reader =
+  let get_provider ~reader =
     match reader with
-    | Mutator_state_reader reader -> Mutator_reader.get_file ~reader
-    | State_reader reader -> Reader.get_file ~reader
+    | Mutator_state_reader reader -> Mutator_reader.get_provider ~reader
+    | State_reader reader -> Reader.get_provider ~reader
 
   let module_exists ~reader =
     match reader with
     | Mutator_state_reader reader -> Mutator_reader.module_exists ~reader
     | State_reader reader -> Reader.module_exists ~reader
 
-  let get_file_unsafe ~reader =
+  let get_provider_unsafe ~reader =
     match reader with
-    | Mutator_state_reader reader -> Mutator_reader.get_file_unsafe ~reader
-    | State_reader reader -> Reader.get_file_unsafe ~reader
+    | Mutator_state_reader reader -> Mutator_reader.get_provider_unsafe ~reader
+    | State_reader reader -> Reader.get_provider_unsafe ~reader
 
   let get_resolved_requires_unsafe ~reader =
     match reader with

@@ -133,14 +133,14 @@ let copy_into dst_cx src_cx t =
   let (_ : Context.t) = copier#type_ src_cx Polarity.Positive dst_cx t in
   ()
 
-let unknown_module_t cx mref provider =
-  let react_server_module_err = provider = Modulename.String Type.react_server_module_ref in
+let unknown_module_t cx mref m =
+  let react_server_module_err = m = Modulename.String Type.react_server_module_ref in
   let desc = Reason.RCustom mref in
   let m_name =
-    match provider with
+    match m with
     | Modulename.String ("react" | "React") when Context.in_react_server_component_file cx ->
       Type.react_server_module_ref
-    | _ -> Modulename.to_string provider
+    | _ -> Modulename.to_string m
   in
   let m_name = Reason.internal_module_name m_name in
   fun loc ->
@@ -340,7 +340,7 @@ let mk_check_file ~options ~reader ~cache () =
   let module Heap = SharedMem.NewAPI in
   let audit = Expensive.ok in
 
-  let get_file = Module_heaps.Reader_dispatcher.get_file ~reader ~audit in
+  let get_provider = Module_heaps.Reader_dispatcher.get_provider ~reader ~audit in
   let get_type_sig_unsafe = Parsing_heaps.Reader_dispatcher.get_checked_file_addr_unsafe ~reader in
   let get_info_unsafe = Parsing_heaps.Reader_dispatcher.get_info_unsafe ~reader ~audit in
   let get_aloc_table_unsafe = Parsing_heaps.Reader_dispatcher.get_aloc_table_unsafe ~reader in
@@ -365,9 +365,9 @@ let mk_check_file ~options ~reader ~cache () =
   (* Create a type representing the exports of a dependency. For checked
    * dependencies, we will create a "sig tvar" with a lazy thunk that evaluates
    * to a ModuleT type. *)
-  let rec dep_module_t cx mref provider =
-    match get_file provider with
-    | None -> unknown_module_t cx mref provider
+  let rec dep_module_t cx mref m =
+    match get_provider m with
+    | None -> unknown_module_t cx mref m
     | Some (File_key.ResourceFile f) -> Merge.merge_resource_module_t cx f
     | Some dep_file ->
       let { Parsing_heaps.checked; parsed; _ } = get_info_unsafe dep_file in
@@ -416,8 +416,8 @@ let mk_check_file ~options ~reader ~cache () =
       let { Module_heaps.resolved_modules; _ } = get_resolved_requires_unsafe file_key in
       let f buf pos =
         let mref = Bin.read_str buf pos in
-        let provider = SMap.find mref resolved_modules in
-        (mref, dep_module_t cx mref provider)
+        let m = SMap.find mref resolved_modules in
+        (mref, dep_module_t cx mref m)
       in
       let pos = Bin.module_refs buf in
       Bin.read_tbl_generic f buf pos Module_refs.init
@@ -568,8 +568,8 @@ let mk_check_file ~options ~reader ~cache () =
     Lazy.force file_rec
   in
 
-  let connect_require cx (mref, locs, provider) =
-    let module_t = dep_module_t cx mref provider in
+  let connect_require cx (mref, locs, m) =
+    let module_t = dep_module_t cx mref m in
     let connect loc =
       let module_t = module_t loc in
       let (_, require_id) = Context.find_require cx loc in

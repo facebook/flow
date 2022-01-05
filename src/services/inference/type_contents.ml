@@ -217,7 +217,7 @@ let resolved_requires_of_contents ~options ~reader ~env file file_sig =
   in
   Modulename.Set.fold
     (fun m acc ->
-      match Module_heaps.Reader_dispatcher.get_file ~reader m ~audit with
+      match Module_heaps.Reader_dispatcher.get_provider ~reader m ~audit with
       | Some f ->
         if is_checked f then
           FilenameSet.add f acc

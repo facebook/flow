@@ -220,8 +220,8 @@ let sig_hash ~root =
     Bin.read_module_kind cjs_module es_module buf (Bin.module_kind buf)
   in
 
-  let file_dependency ~reader component_rec component_map provider =
-    match Module_heaps.Reader_dispatcher.get_file ~reader ~audit:Expensive.ok provider with
+  let file_dependency ~reader component_rec component_map m =
+    match Module_heaps.Reader_dispatcher.get_provider ~reader ~audit:Expensive.ok m with
     | None -> Unchecked
     | Some (File_key.ResourceFile f) -> resource_dep f
     | Some dep ->
@@ -250,8 +250,8 @@ let sig_hash ~root =
       in
       let f buf pos =
         let mref = Bin.read_str buf pos in
-        let provider = SMap.find mref resolved_modules in
-        file_dependency ~reader component_rec component_map provider
+        let m = SMap.find mref resolved_modules in
+        file_dependency ~reader component_rec component_map m
       in
       let pos = Bin.module_refs buf in
       Bin.read_tbl_generic f buf pos Module_refs.init
@@ -438,8 +438,8 @@ let mk_check_file options ~reader () =
           Module_heaps.Mutator_reader.get_resolved_requires_unsafe ~reader ~audit:Expensive.ok file
         in
         let f mref locs acc =
-          let provider = SMap.find mref resolved_modules in
-          (mref, locs, provider) :: acc
+          let m = SMap.find mref resolved_modules in
+          (mref, locs, m) :: acc
         in
         SMap.fold f require_loc_map []
       in
@@ -519,10 +519,8 @@ let check_contents_context ~reader options file ast docblock file_sig =
     let require_loc_map = File_sig.With_ALoc.(require_loc_map file_sig.module_sig) in
     let node_modules_containers = !Files.node_modules_containers in
     let f mref ((loc, _) as locs) acc =
-      let provider =
-        Module_js.imported_module ~options ~reader ~node_modules_containers file loc mref
-      in
-      (mref, locs, provider) :: acc
+      let m = Module_js.imported_module ~options ~reader ~node_modules_containers file loc mref in
+      (mref, locs, m) :: acc
     in
     SMap.fold f require_loc_map []
   in

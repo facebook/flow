@@ -764,7 +764,7 @@ let find_module ~options ~reader (moduleref, filename) =
       (ALoc.of_loc loc)
       moduleref
   in
-  Module_heaps.Reader.get_file ~reader ~audit:Expensive.warn module_name
+  Module_heaps.Reader.get_provider ~reader ~audit:Expensive.warn module_name
 
 let get_def ~options ~reader ~env ~profiling ~type_parse_artifacts_cache (file_input, line, col) =
   match of_file_input ~options ~env file_input with
@@ -815,7 +815,7 @@ let module_name_of_string ~options module_name_str =
 let get_imports ~options ~reader module_names =
   let add_to_results (map, non_flow) module_name_str =
     let module_name = module_name_of_string ~options module_name_str in
-    match Module_heaps.Reader.get_file ~reader ~audit:Expensive.warn module_name with
+    match Module_heaps.Reader.get_provider ~reader ~audit:Expensive.warn module_name with
     | Some file ->
       (* We do not process all modules which are stored in our module
        * database. In case we do not process a module its requirements
