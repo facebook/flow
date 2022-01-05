@@ -103,6 +103,37 @@ References:
                         [3]
 
 
+Error ------------------------------------------------------------------------------------------ multi-call-error.js:9:9
+
+Cannot declare this [1] because the name is already bound. [name-already-bound]
+
+   multi-call-error.js:9:9
+               v-----
+    9|         super(
+   10|             super(0)
+   11|         );
+               ^
+
+References:
+   multi-call-error.js:7:7
+    7| class B extends A {
+             ^ [1]
+
+
+Error ---------------------------------------------------------------------------------------- multi-call-error.js:10:13
+
+Cannot declare super [1] because the name is already bound. [name-already-bound]
+
+   multi-call-error.js:10:13
+   10|             super(0)
+                   ^^^^^^^^
+
+References:
+   multi-call-error.js:7:17
+    7| class B extends A {
+                       ^ [1]
+
+
 Error --------------------------------------------------------------------------------------------------- super.js:10:11
 
 Cannot call `super` with `x` bound to `x` because string [1] is incompatible with number [2]. [incompatible-call]
@@ -180,4 +211,4 @@ References:
 
 
 
-Found 12 errors
+Found 14 errors

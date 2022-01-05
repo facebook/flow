@@ -4150,14 +4150,18 @@ struct
           )
       | Call { Call.callee = (super_loc, Super super) as callee; targs; arguments; comments } ->
         let (targts, targs) = convert_call_targs_opt cx targs in
-        let (argts, arguments_ast) = arg_list cx arguments in
         let reason = mk_reason (RFunctionCall RSuper) loc in
+        define_internal cx reason "super";
+        let super_t = super_ cx super_loc in
+        let (argts, arguments_ast) =
+          (* TODO use hint in arg_list *)
+          let _hint = hint_decompose_opt_todo (Some super_t) in
+          arg_list cx arguments
+        in
         (* switch back env entries for this and super from undefined *)
         define_internal cx reason "this";
-        define_internal cx reason "super";
 
         let meth_generic_this = this_ cx loc { This.comments = None } in
-        let super_t = super_ cx super_loc in
         let super_reason = reason_of_t super_t in
         let lhs_t =
           Tvar.mk_no_wrap_where cx reason (fun t ->
