@@ -171,7 +171,7 @@ module Make
 
     val projection : ALoc.t -> t
 
-    val undeclared : ALoc.t virtual_reason -> t
+    val undeclared : string -> ALoc.t -> t
 
     (* unwraps a RefinementWrite into just the underlying write *)
     val unrefine : int -> t -> t
@@ -190,7 +190,7 @@ module Make
 
     type write_state =
       | Uninitialized of ALoc.t
-      | Undeclared of ALoc.t virtual_reason
+      | Undeclared of string * ALoc.t
       | UninitializedClass of {
           read: ALoc.t;
           def: ALoc.t virtual_reason;
@@ -241,7 +241,7 @@ module Make
 
     let refinement refinement_id val_t = mk_with_write_state @@ Refinement { refinement_id; val_t }
 
-    let undeclared r = mk_with_write_state @@ Undeclared r
+    let undeclared name def_loc = mk_with_write_state @@ Undeclared (name, def_loc)
 
     let rec unrefine_deeply_write_state id write_state =
       match write_state with
@@ -339,7 +339,7 @@ module Make
         ~f:(function
           | Uninitialized l when WriteSet.cardinal vals <= 1 ->
             Env_api.Uninitialized (mk_reason RUninitialized l)
-          | Undeclared r -> Env_api.Undeclared r
+          | Undeclared (name, loc) -> Env_api.Undeclared (name, loc)
           | UninitializedClass { def; read } when WriteSet.cardinal vals <= 1 ->
             Env_api.UninitializedClass { def; read = mk_reason RUninitialized read }
           | Uninitialized l -> Env_api.Uninitialized (mk_reason RPossiblyUninitialized l)
@@ -525,7 +525,7 @@ module Make
             EBindingError (EConstParamReassigned, assignment_loc, OrdinaryName name, def_loc)
           )
       | (Bindings.Class, None) ->
-        let def_reason = mk_reason (RClass (RIdentifier (OrdinaryName name))) def_loc in
+        let def_reason = mk_reason (RIdentifier (OrdinaryName name)) def_loc in
         Some
           Error_message.(
             EAssignConstLikeBinding
@@ -977,8 +977,7 @@ module Make
                 | Bindings.Const
                 | Bindings.Enum
                 | Bindings.Parameter ->
-                  let reason = mk_reason (RIdentifier (OrdinaryName name)) loc in
-                  Val.undeclared reason
+                  Val.undeclared name loc
                 | _ -> Val.uninitialized loc
               in
               let (havoc, providers) = this#providers_of_def_loc loc in
@@ -1104,8 +1103,15 @@ module Make
         in
         (match kind with
         (* Assignments to undeclared bindings that aren't part of declarations do not
-         * initialize those bindings. TODO: Emit a use before declaration error *)
-        | None when Val.is_undeclared !val_ref -> ()
+         * initialize those bindings. *)
+        | None when Val.is_undeclared !val_ref ->
+          (match def_loc with
+          | None -> failwith "Cannot have an undeclared binding without a def loc"
+          | Some def_loc ->
+            this#add_output
+              Error_message.(
+                EBindingError (EReferencedBeforeDeclaration, loc, OrdinaryName x, def_loc)
+              ))
         | _ ->
           (match error_for_assignment_kind cx x loc def_loc stored_binding_kind kind !val_ref with
           | Some err ->
@@ -1123,7 +1129,15 @@ module Make
 
       (* This method is called during every read of an identifier. We need to ensure that
        * if the identifier is refined that we record the refiner as the write that reaches
-       * this read *)
+       * this read
+       *
+       * Note that we don't emit EBinding errors for referenced-before-declaration errors here.
+       * That is because we may read an UninitializedClass from a type position and the
+       * name_resolver doesn't keep track of whether we are in a type context or not.
+       *
+       * Instead of augmenting the name_resolver with those capabilities, we emit these errors
+       * in the new_env, which does know if it's querying a value or a type.
+       * *)
       method any_identifier loc name =
         let { val_ref; havoc; _ } = SMap.find name env_state.env in
         let v =

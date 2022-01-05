@@ -24,7 +24,7 @@ module type S = sig
   type write_loc =
     | Write of L.t Reason.virtual_reason
     | Uninitialized of L.t Reason.virtual_reason
-    | Undeclared of L.t Reason.virtual_reason
+    | Undeclared of string * L.t
     | UninitializedClass of {
         read: L.t Reason.virtual_reason;
         def: L.t Reason.virtual_reason;
@@ -154,7 +154,7 @@ module Make
   type write_loc =
     | Write of L.t Reason.virtual_reason
     | Uninitialized of L.t Reason.virtual_reason
-    | Undeclared of L.t Reason.virtual_reason
+    | Undeclared of string * L.t
     | UninitializedClass of {
         read: L.t Reason.virtual_reason;
         def: L.t Reason.virtual_reason;

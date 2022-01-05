@@ -216,8 +216,13 @@ module New_env : S = struct
       Base.List.map
         ~f:(function
           | Env_api.Uninitialized reason -> Type.(VoidT.make reason |> with_trust Trust.bogus_trust)
-          (* An error is emitted in the name_resolver when Undeclared bindings are read or written *)
-          | Env_api.Undeclared reason -> Type.(AnyT.make (AnyError None) reason)
+          | Env_api.Undeclared (name, def_loc) ->
+            Flow_js.add_output
+              cx
+              Error_message.(
+                EBindingError (EReferencedBeforeDeclaration, loc, OrdinaryName name, def_loc)
+              );
+            Type.(AnyT.make (AnyError None) reason)
           | Env_api.UninitializedClass { read; _ } when not for_type ->
             Type.(VoidT.make read |> with_trust Trust.bogus_trust)
           | Env_api.UninitializedClass { def; _ } ->
