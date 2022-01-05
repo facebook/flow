@@ -1998,26 +1998,27 @@ module Make
         this#expecting_abrupt_completions (fun () ->
             let open Ast.Statement.Try in
             let { block = (loc, block); handler; finalizer; comments = _ } = stmt in
+            let try_entry_env = this#env in
             let try_completion_state =
               this#run_to_completion (fun () -> ignore @@ this#block loc block)
             in
-            let env1 = this#env in
-            let (catch_completion_state_opt, env2) =
+            let try_exit_env = this#env in
+            this#merge_env try_entry_env try_exit_env;
+            let catch_entry_env = this#env in
+            let catch_completion_state_opt =
               match handler with
               | Some (loc, clause) ->
-                (* NOTE: Havoc-ing the state when entering the handler is probably
-                   overkill. We can be more precise but still correct by collecting all
-                   possible writes in the try-block and merging them with the state when
-                   entering the try-block. *)
-                this#havoc_current_env ~all:false;
-                let catch_completion_state =
-                  this#run_to_completion (fun () -> ignore @@ this#catch_clause loc clause)
-                in
-                ([catch_completion_state], this#env)
-              | None -> ([], this#empty_env)
+                this#run_to_completion (fun () -> ignore @@ this#catch_clause loc clause)
+              | None ->
+                (* No catch is like having a catch that always re-throws the error from the
+                 * try block.*)
+                Some AbruptCompletion.Throw
             in
-            this#merge_env env1 env2;
-            let try_catch_completion_states = (try_completion_state, catch_completion_state_opt) in
+            let catch_exit_env = this#env in
+            this#merge_env try_exit_env catch_exit_env;
+            let try_catch_completion_states =
+              (try_completion_state, [catch_completion_state_opt])
+            in
             let completion_state =
               this#run_to_completion (fun () ->
                   this#merge_completion_states try_catch_completion_states
@@ -2027,14 +2028,12 @@ module Make
             begin
               match finalizer with
               | Some (_loc, block) ->
-                (* NOTE: Havoc-ing the state when entering the finalizer is probably
-                   overkill. We can be more precise but still correct by collecting
-                   all possible writes in the handler and merging them with the state
-                   when entering the handler (which in turn should already account for
-                   any contributions by the try-block). *)
-                this#havoc_current_env ~all:false;
+                this#merge_env catch_entry_env catch_exit_env;
                 ignore @@ this#block loc block
-              | None -> ()
+              | None ->
+                (match catch_completion_state_opt with
+                | None -> this#merge_env try_exit_env catch_exit_env
+                | Some _ -> this#reset_env try_exit_env)
             end;
             this#from_completion completion_state
         );

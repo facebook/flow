@@ -1240,7 +1240,7 @@ try {
           Global invariant
         };
         (5, 2) to (5, 3) => {
-          (3, 24) to (3, 25): (`x`),
+          (1, 4) to (1, 5): (`x`),
           {refinement = Not (Maybe); writes = (1, 4) to (1, 5): (`x`)}
         }] |}]
 
@@ -2827,8 +2827,7 @@ try {
           Global invariant
         };
         (8, 2) to (8, 3) => {
-          (1, 4) to (1, 5): (`x`),
-          (5, 21) to (5, 22): (`x`)
+          (1, 4) to (1, 5): (`x`)
         }] |}]
 
 let%expect_test "switch_empty" =
@@ -4907,3 +4906,112 @@ if (x.foo) {
   (6, 2) to (6, 7) => {
     {refinement = Truthy; writes = projection at (4, 4) to (4, 9)}
   }] |}]
+
+let%expect_test "try_catch_env_merging" =
+  print_ssa_test {|
+function maz2() {
+  let x: number[] = [];
+  try {
+    throw new Error(`just capturing a stack trace`);
+  } catch (e) {
+    var a: string = x[0];
+  }
+  var c: string = x[0]; // reachable
+}
+|};
+    [%expect {|
+      [
+        (5, 14) to (5, 19) => {
+          Global Error
+        };
+        (7, 20) to (7, 21) => {
+          (3, 6) to (3, 7): (`x`)
+        };
+        (9, 18) to (9, 19) => {
+          (3, 6) to (3, 7): (`x`)
+        }] |}]
+
+let%expect_test "try_catch_catch_throws" =
+  print_ssa_test {|
+function bar(response) {
+    var payload;
+    try {
+        payload = JSON.parse(response);
+    } catch (e) {
+        throw new Error('...');
+    }
+    // here via [try] only.
+    if (payload.error) {    // ok
+        // ...
+    }
+}
+|};
+    [%expect {|
+      [
+        (5, 18) to (5, 22) => {
+          Global JSON
+        };
+        (5, 29) to (5, 37) => {
+          (2, 13) to (2, 21): (`response`)
+        };
+        (7, 18) to (7, 23) => {
+          Global Error
+        };
+        (10, 8) to (10, 15) => {
+          (5, 8) to (5, 15): (`payload`)
+        }] |}]
+
+let%expect_test "try_catch_throw_in_both_then_finally" =
+  print_ssa_test {|
+function bar(response) {
+    var payload;
+    try {
+      throw new Error();
+    } catch (e) {
+      throw new Error();
+    } finally {
+      payload = 3;
+    }
+    // This line is dead
+    payload;
+}
+|};
+    [%expect {|
+      [
+        (5, 16) to (5, 21) => {
+          Global Error
+        };
+        (7, 16) to (7, 21) => {
+          Global Error
+        };
+        (12, 4) to (12, 11) => {
+          unreachable
+        }] |}]
+
+let%expect_test "try_catch_throw_in_both_then_finally" =
+  print_ssa_test {|
+function bar(response) {
+    var payload;
+    try {
+      throw new Error();
+    } catch (e) {
+      payload = 4;
+    } finally {
+      payload;
+    }
+    payload;
+}
+|};
+    [%expect {|
+      [
+        (5, 16) to (5, 21) => {
+          Global Error
+        };
+        (9, 6) to (9, 13) => {
+          (uninitialized),
+          (7, 6) to (7, 13): (`payload`)
+        };
+        (11, 4) to (11, 11) => {
+          (uninitialized),
+          (7, 6) to (7, 13): (`payload`)
+        }] |}]
