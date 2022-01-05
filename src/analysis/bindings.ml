@@ -18,6 +18,7 @@ type kind =
   | Parameter
   | CatchParameter
   | Import
+  | DeclaredFunction
 [@@deriving show]
 
 type 'loc entry = ('loc, 'loc) Ast.Identifier.t * kind
@@ -60,12 +61,14 @@ let to_map t =
   SMap.map (fun (kind, locs) -> (kind, Nel.rev locs)) map
 
 let allow_forward_ref = function
+  | DeclaredFunction
   | Var
   | Function ->
     true
   | _ -> false
 
 let allow_redeclaration = function
+  | DeclaredFunction
   | Var
   | Parameter
   | Function ->

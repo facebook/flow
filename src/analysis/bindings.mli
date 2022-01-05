@@ -18,6 +18,7 @@ type kind =
   | Parameter
   | CatchParameter
   | Import
+  | DeclaredFunction
 [@@deriving show]
 
 type 'loc t

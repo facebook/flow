@@ -41,6 +41,9 @@ class ['loc] lexical_hoister ~flowmin_compatibility ~enable_enums =
     method private add_function_binding entry =
       this#update_acc Bindings.(add (entry, Bindings.Function))
 
+    method private add_declared_function_binding entry =
+      this#update_acc Bindings.(add (entry, Bindings.DeclaredFunction))
+
     (* Ignore all statements except variable declarations, class declarations, and
        import declarations. The ignored statements cannot contain lexical
        bindings in the current scope. *)
@@ -156,14 +159,15 @@ class ['loc] lexical_hoister ~flowmin_compatibility ~enable_enums =
       super#declare_class loc decl
 
     method! declare_function loc (decl : ('loc, 'loc) Ast.Statement.DeclareFunction.t) =
+      (* The first binding found wins, so we make sure add a declared function binding when
+       * we come across it before attempting to transform it into a regular function *)
       let open Ast.Statement.DeclareFunction in
+      this#add_declared_function_binding decl.id;
       match Declare_function_utils.declare_function_to_function_declaration_simple loc decl with
       | Some stmt ->
         let _ = this#statement (loc, stmt) in
         decl
-      | None ->
-        this#add_function_binding decl.id;
-        super#declare_function loc decl
+      | None -> super#declare_function loc decl
 
     method! enum_declaration _loc (enum : ('loc, 'loc) Ast.Statement.EnumDeclaration.t) =
       let open Ast.Statement.EnumDeclaration in
