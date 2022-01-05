@@ -4648,7 +4648,7 @@ switch (y.x) { // Does not report a Projection
           (2, 4) to (2, 5): (`y`)
         };
         (7, 7) to (7, 8) => {
-          (2, 4) to (2, 5): (`y`)
+          {refinement = And (Not (SentinelR x), Not (SentinelR x)); writes = (2, 4) to (2, 5): (`y`)}
         }] |}]
 
 let%expect_test "no_refinement_write_on_indexed" =
@@ -4830,6 +4830,58 @@ x = 3;
       [
         (2, 15) to (2, 16) => {
           (4, 0) to (4, 1): (`x`)
+        }] |}]
+
+let%expect_test "default_switch_refinement" =
+  print_ssa_test {|
+type Enum = 'ONE' | 'TWO';
+type Selection = { x: 'ONE' } | { x: 'TWO' } | { x: 'NONE' }
+
+type Rule = {
+  x: Enum,
+  y: Selection,
+}
+
+function foo(r: Rule) {
+  const x = r.x;
+  const y = r.y;
+  if (y.x === x) {
+    switch (y.x) {
+      case 'ONE': break;
+      case 'TWO': break;
+      default: (y.x: empty);
+    }
+  }
+}
+|};
+    [%expect {|
+      [
+        (6, 5) to (6, 9) => {
+          (2, 5) to (2, 9): (`Enum`)
+        };
+        (7, 5) to (7, 14) => {
+          (3, 5) to (3, 14): (`Selection`)
+        };
+        (10, 16) to (10, 20) => {
+          (5, 5) to (5, 9): (`Rule`)
+        };
+        (11, 12) to (11, 13) => {
+          (10, 13) to (10, 14): (`r`)
+        };
+        (12, 12) to (12, 13) => {
+          (10, 13) to (10, 14): (`r`)
+        };
+        (13, 6) to (13, 7) => {
+          (12, 8) to (12, 9): (`y`)
+        };
+        (13, 14) to (13, 15) => {
+          (11, 8) to (11, 9): (`x`)
+        };
+        (14, 12) to (14, 13) => {
+          {refinement = SentinelR x; writes = (12, 8) to (12, 9): (`y`)}
+        };
+        (17, 16) to (17, 17) => {
+          {refinement = And (Not (SentinelR x), Not (SentinelR x)); writes = {refinement = SentinelR x; writes = (12, 8) to (12, 9): (`y`)}}
         }] |}]
 
 let%expect_test "prop_exists" =

@@ -1868,9 +1868,8 @@ module Make
               this#reset_env env
             else
               let negated_total_refinements = List.map this#negate_refinements total_refinements in
-              let refinement_key = RefinementKey.of_expression discriminant in
               let conjuncted_negated_total_refinements =
-                this#conjunct_all_refinements_for_key refinement_key negated_total_refinements
+                this#conjunct_all_refinements negated_total_refinements
               in
               this#push_refinement_scope conjuncted_negated_total_refinements;
               (* Statement.ml uses this to determine if the switch was exhaustive, so
@@ -1923,9 +1922,7 @@ module Make
              * refinement generated here *)
             let negated_total_refinements = List.map this#negate_refinements total_refinements in
             let conjuncted_negated_total_refinements =
-              this#conjunct_all_refinements_for_key
-                (RefinementKey.of_expression discriminant)
-                negated_total_refinements
+              this#conjunct_all_refinements negated_total_refinements
             in
             this#push_refinement_scope conjuncted_negated_total_refinements;
             (true, total_refinements)
@@ -2258,45 +2255,15 @@ module Make
             { latest_refinement with refinement_id = new_id })
           refinements
 
-      method private conjunct_all_refinements_for_key refinement_key refinement_scopes =
-        match refinement_key with
-        | None -> LookupMap.empty
-        | Some { RefinementKey.loc = _; lookup } ->
-          let (total_refinement_opt, _) =
-            List.fold_left
-              (fun (total_refinement, mismatched_ids) refinement_scope ->
-                (* ids can be mismatched if the case expression contains an assignment. This should
-                 * be exceedingly rare, but we have to account for it nonetheless. *)
-                if mismatched_ids then
-                  (None, true)
-                else
-                  match (total_refinement, LookupMap.find_opt lookup refinement_scope) with
-                  | (None, Some refinement)
-                  | (Some refinement, None) ->
-                    (Some refinement, mismatched_ids)
-                  | (None, None) -> (None, mismatched_ids)
-                  | (Some ref1, Some ref2) ->
-                    if ref1.ssa_id = ref2.ssa_id then (
-                      let new_refinement = AND (ref1.refinement_id, ref2.refinement_id) in
-                      let new_refinement_id = this#new_id () in
-                      env_state <-
-                        {
-                          env_state with
-                          refinement_heap =
-                            IMap.add new_refinement_id new_refinement env_state.refinement_heap;
-                        };
-                      let new_latest_refinement =
-                        { ssa_id = ref1.ssa_id; refinement_id = new_refinement_id }
-                      in
-                      (Some new_latest_refinement, mismatched_ids)
-                    ) else
-                      (None, false))
-              (None, false)
-              refinement_scopes
-          in
-          (match total_refinement_opt with
-          | None -> LookupMap.empty
-          | Some refinement -> LookupMap.singleton lookup refinement)
+      method private conjunct_all_refinements refinement_scopes =
+        match refinement_scopes with
+        | [] -> LookupMap.empty
+        | [x] -> x
+        | _ ->
+          List.fold_left
+            (this#merge_two_refinement_scopes ~merge:merge_and)
+            LookupMap.empty
+            refinement_scopes
 
       method private negate_new_refinements () =
         let head = List.hd env_state.latest_refinements in
@@ -2389,28 +2356,31 @@ module Make
             (L.LSet.singleton loc, TruthyR id_loc)
         | _ -> ()
 
+      method private merge_two_refinement_scopes ~merge refinements1 refinements2 =
+        LookupMap.merge
+          (fun _ ref1 ref2 ->
+            match (ref1, ref2) with
+            | (None, None) -> None
+            | (Some ref, None) -> Some ref
+            | (None, Some ref) -> Some ref
+            | (Some ref1, Some ref2) ->
+              let new_ref = merge ref1.refinement_id ref2.refinement_id in
+              let new_id = this#new_id () in
+              env_state <-
+                {
+                  env_state with
+                  refinement_heap = IMap.add new_id new_ref env_state.refinement_heap;
+                };
+              Some { ref1 with refinement_id = new_id })
+          refinements1
+          refinements2
+
       method private merge_refinement_scopes
           ~merge
           (lhs_latest_refinements : latest_refinement LookupMap.t)
           (rhs_latest_refinements : latest_refinement LookupMap.t) =
         let new_latest_refinements =
-          LookupMap.merge
-            (fun _ ref1 ref2 ->
-              match (ref1, ref2) with
-              | (None, None) -> None
-              | (Some ref, None) -> Some ref
-              | (None, Some ref) -> Some ref
-              | (Some ref1, Some ref2) ->
-                let new_ref = merge ref1.refinement_id ref2.refinement_id in
-                let new_id = this#new_id () in
-                env_state <-
-                  {
-                    env_state with
-                    refinement_heap = IMap.add new_id new_ref env_state.refinement_heap;
-                  };
-                Some { ref1 with refinement_id = new_id })
-            lhs_latest_refinements
-            rhs_latest_refinements
+          this#merge_two_refinement_scopes ~merge lhs_latest_refinements rhs_latest_refinements
         in
         this#merge_self_refinement_scope new_latest_refinements
 
