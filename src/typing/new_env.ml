@@ -219,7 +219,9 @@ module New_env : S = struct
     let rec type_of_state states refi =
       Base.List.map
         ~f:(function
-          | Env_api.Uninitialized reason -> Type.(VoidT.make reason |> with_trust Trust.bogus_trust)
+          | Env_api.Undefined reason
+          | Env_api.Uninitialized reason ->
+            Type.(VoidT.make reason |> with_trust Trust.bogus_trust)
           | Env_api.Undeclared (name, def_loc) ->
             Flow_js.add_output
               cx
@@ -324,6 +326,7 @@ module New_env : S = struct
     let rec local_def_exists states =
       Base.List.exists
         ~f:(function
+          | Env_api.With_ALoc.Undefined _ -> true
           | Env_api.With_ALoc.Uninitialized _ -> true
           | Env_api.With_ALoc.UndeclaredClass _ -> true
           | Env_api.With_ALoc.Write _ -> true

@@ -55,6 +55,7 @@ let print_values refinement_of_id =
       Printf.sprintf "{refinement = %s; writes = %s}" refinement_str writes_str
     | Global name -> "Global " ^ name
     | Unreachable _ -> "unreachable"
+    | Undefined _ -> "undefined"
   in
   fun values ->
     let kvlist = L.LMap.bindings values in

@@ -988,6 +988,16 @@ end = struct
           | Some _ -> ()
         end;
         super#identifier ident
+
+      method! unary_expression loc expr =
+        let { Ast.Expression.Unary.argument; operator; _ } = expr in
+        match (argument, operator) with
+        | ( (_, Ast.Expression.Identifier (loc, { Ast.Identifier.name; _ })),
+            Ast.Expression.Unary.Delete
+          ) ->
+          this#add_provider name loc;
+          expr
+        | _ -> super#unary_expression loc expr
     end
 
   let find_provider_statements env { Ast.Program.statements; _ } =

@@ -6147,7 +6147,7 @@ struct
         ~reconstruct_ast
         ~mode:Type.Delete
         mem
-    | Identifier (_, { Ast.Identifier.name; _ }) ->
+    | Identifier (loc, { Ast.Identifier.name; _ }) ->
       let use_op = Op (DeleteVar { var = mk_expression_reason target }) in
       Env.set_var cx ~use_op name void loc;
       expression cx ~hint:None target

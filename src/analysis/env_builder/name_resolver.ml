@@ -151,6 +151,8 @@ module Make
 
     val uninitialized : ALoc.t -> t
 
+    val undefined : L.t virtual_reason -> t
+
     val undeclared_class : L.t virtual_reason -> string -> t
 
     val merge : t -> t -> t
@@ -203,6 +205,7 @@ module Make
           refinement_id: int;
           val_t: t;
         }
+      | Undefined of ALoc.t virtual_reason
 
     and t = {
       id: int;
@@ -234,6 +237,8 @@ module Make
     let empty () = mk_with_write_state @@ PHI []
 
     let uninitialized r = mk_with_write_state (Uninitialized r)
+
+    let undefined r = mk_with_write_state (Undefined r)
 
     let undeclared_class def name = mk_with_write_state (UndeclaredClass { def; name })
 
@@ -279,6 +284,7 @@ module Make
     let rec normalize (t : write_state) : WriteSet.t =
       match t with
       | Uninitialized _
+      | Undefined _
       | Undeclared _
       | UndeclaredClass _
       | Projection _
@@ -311,6 +317,7 @@ module Make
     let rec normalize_through_refinements (t : write_state) : WriteSet.t =
       match t with
       | Uninitialized _
+      | Undefined _
       | Undeclared _
       | UndeclaredClass _
       | Projection _
@@ -339,6 +346,7 @@ module Make
         ~f:(function
           | Uninitialized l when WriteSet.cardinal vals <= 1 ->
             Env_api.Uninitialized (mk_reason RUninitialized l)
+          | Undefined r -> Env_api.Undefined r
           | Undeclared (name, loc) -> Env_api.Undeclared (name, loc)
           | UndeclaredClass { def; name } -> Env_api.UndeclaredClass { def; name }
           | Uninitialized l -> Env_api.Uninitialized (mk_reason RPossiblyUninitialized l)
@@ -356,6 +364,7 @@ module Make
       let rec state_is_uninitialized v =
         match v with
         | Undeclared _ -> []
+        | Undefined _ -> []
         | Uninitialized _ -> [v]
         | UndeclaredClass _ -> [v]
         | PHI states -> Base.List.concat_map ~f:state_is_uninitialized states
@@ -1223,10 +1232,13 @@ module Make
         ignore @@ this#pattern_expression lhs;
         ignore @@ this#expression rhs;
         match lhs with
-        | (loc, Flow_ast.Expression.Member member) -> this#assign_member ~update_entry member loc
+        | (loc, Flow_ast.Expression.Member member) ->
+          let reason = mk_reason RSomeProperty loc in
+          let assigned_val = Val.one reason in
+          this#assign_member ~update_entry member loc assigned_val reason
         | _ -> ()
 
-      method assign_member ~update_entry lhs_member lhs_loc =
+      method assign_member ~update_entry lhs_member lhs_loc assigned_val val_reason =
         this#post_assignment_heap_refinement_havoc lhs_member;
         (* We pass allow_optional:false, but optional chains can't be in the LHS anyway. *)
         let lookup = RefinementKey.lookup_of_member lhs_member ~allow_optional:false in
@@ -1236,14 +1248,12 @@ module Make
             Some lookup
           )
           when update_entry ->
-          let reason = Reason.(mk_reason RSomeProperty lhs_loc) in
-          let write_val = Val.one reason in
           this#map_val_with_lookup
             lookup
-            (fun _ -> write_val)
-            ~create_val_for_heap:(Some (fun () -> write_val));
+            (fun _ -> assigned_val)
+            ~create_val_for_heap:(Some (fun () -> assigned_val));
           let write_entries =
-            L.LMap.add lhs_loc (Env_api.AssigningWrite reason) env_state.write_entries
+            L.LMap.add lhs_loc (Env_api.AssigningWrite val_reason) env_state.write_entries
           in
           env_state <- { env_state with write_entries }
         | _ -> ()
@@ -1363,7 +1373,9 @@ module Make
             (* given `o.x++`, read o.x then write o.x *)
             ignore @@ this#expression argument;
             ignore @@ this#pattern_expression argument;
-            this#assign_member ~update_entry:true member loc
+            let val_reason = mk_reason RSomeProperty loc in
+            let assigned_val = Val.one val_reason in
+            this#assign_member ~update_entry:true member loc assigned_val val_reason
           | _ -> (* given 'o()++`, read o *) ignore @@ this#expression argument
         end;
         expr
@@ -2118,17 +2130,43 @@ module Make
         this#havoc_current_env ~all:false;
         expr
 
-      method! unary_expression _loc (expr : (ALoc.t, ALoc.t) Ast.Expression.Unary.t) =
+      method private delete loc argument =
+        let undefined_reason = mk_reason RVoid loc in
+        let undefined = Val.undefined undefined_reason in
+        let update_write_entries ~assigning =
+          let write =
+            if assigning then
+              Env_api.AssigningWrite undefined_reason
+            else
+              Env_api.NonAssigningWrite
+          in
+          let write_entries = L.LMap.add (fst argument) write env_state.write_entries in
+          env_state <- { env_state with write_entries }
+        in
+        match argument with
+        | (_, Flow_ast.Expression.Identifier (_, { Flow_ast.Identifier.name; _ })) ->
+          let { kind; def_loc; val_ref; _ } = SMap.find name env_state.env in
+          (match error_for_assignment_kind cx name loc def_loc kind None !val_ref with
+          | None ->
+            val_ref := undefined;
+            update_write_entries ~assigning:true
+          | Some err ->
+            update_write_entries ~assigning:false;
+            this#add_output err)
+        | (_, Flow_ast.Expression.Member member) ->
+          this#assign_member ~update_entry:true member loc undefined undefined_reason
+        | _ -> ()
+
+      method! unary_expression loc (expr : (ALoc.t, ALoc.t) Ast.Expression.Unary.t) =
         Ast.Expression.Unary.(
           let { argument; operator; comments = _ } = expr in
           ignore @@ this#expression argument;
-          begin
-            match operator with
-            | Await -> this#havoc_current_env ~all:false
-            | _ -> ()
-          end;
-          expr
-        )
+          match operator with
+          | Await -> this#havoc_current_env ~all:false
+          | Delete -> this#delete loc argument
+          | _ -> ()
+        );
+        expr
 
       method! yield loc (expr : ('loc, 'loc) Ast.Expression.Yield.t) =
         ignore @@ super#yield loc expr;

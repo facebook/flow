@@ -36,6 +36,7 @@ module type S = sig
     | Global of string
     | Projection of L.t
     | Unreachable of L.t
+    | Undefined of L.t Reason.virtual_reason
 
   and write_locs = write_loc list
 
@@ -171,6 +172,7 @@ module Make
     | Global of string
     | Projection of L.t
     | Unreachable of L.t
+    | Undefined of L.t Reason.virtual_reason
 
   and write_locs = write_loc list
 
@@ -272,6 +274,7 @@ module Make
     | Global _ -> []
     | Projection _ -> []
     | Unreachable _ -> []
+    | Undefined r -> [Reason.poly_loc_of_reason r]
 
   let rec refinements_of_write_loc ({ refinement_of_id; _ } as env) write_loc =
     match write_loc with
@@ -312,6 +315,7 @@ module Make
           Reason.(desc_of_reason def |> string_of_desc)
       | Projection l -> Printf.sprintf "projection at %s" (L.debug_to_string l)
       | Unreachable _ -> "unreachable"
+      | Undefined _ -> "undefined"
       | Write reason ->
         let loc = Reason.poly_loc_of_reason reason in
         Utils_js.spf
