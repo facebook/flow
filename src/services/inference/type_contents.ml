@@ -196,7 +196,7 @@ let printable_errors_of_file_artifacts_result ~options ~env filename result =
 
 (** Resolves dependencies of [file_sig] specifically for checking contents, rather than
     for persisting in the heap. Notably, does not error if a required module is not found. *)
-let resolved_requires_of_contents ~options ~reader ~env file file_sig =
+let resolved_requires_of_contents ~options ~reader file file_sig =
   let audit = Expensive.warn in
   let node_modules_containers = !Files.node_modules_containers in
   let resolved_requires =
@@ -213,10 +213,9 @@ let resolved_requires_of_contents ~options ~reader ~env file file_sig =
       Modulename.Set.empty
   in
   let is_checked f =
-    FilenameSet.mem f env.ServerEnv.files
-    &&
-    let addr = Parsing_heaps.Reader.get_file_addr_unsafe ~reader f in
-    Parsing_heaps.is_checked_file addr
+    match Parsing_heaps.Reader.get_file_addr ~reader f with
+    | Some addr -> Parsing_heaps.is_checked_file addr
+    | None -> false
   in
   Modulename.Set.fold
     (fun m acc ->
@@ -233,7 +232,7 @@ let resolved_requires_of_contents ~options ~reader ~env file file_sig =
 (** When checking contents, ensure that dependencies are checked. Might have more
     general utility. *)
 let ensure_checked_dependencies ~options ~reader ~env file file_sig =
-  let resolved_requires = resolved_requires_of_contents ~options ~reader ~env file file_sig in
+  let resolved_requires = resolved_requires_of_contents ~options ~reader file file_sig in
   let unchecked_dependencies =
     FilenameSet.filter
       (fun f -> not (CheckedSet.mem f env.ServerEnv.checked_files))
