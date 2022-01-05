@@ -572,7 +572,7 @@ module New_env : S = struct
     | InternalName _
     | InternalModuleName _ ->
       Old_env.unify_declared_fun_type cx name loc t
-    | OrdinaryName _ -> (* TODO *) ()
+    | OrdinaryName _ -> set_env_entry cx ~use_op:unknown_use t loc
 
   (************************)
   (* Variable Declaration *)
