@@ -268,8 +268,6 @@ module type READER = sig
   val get_info_unsafe : reader:reader -> (File_key.t -> info) Expensive.t
 
   val get_info : reader:reader -> (File_key.t -> info option) Expensive.t
-
-  val is_tracked_file : reader:reader -> File_key.t -> bool
 end
 
 let loc_of_aloc ~get_aloc_table_unsafe ~reader aloc =
@@ -420,8 +418,6 @@ end = struct
     match get_info ~reader ~audit f with
     | Some info -> info
     | None -> failwith (Printf.sprintf "module info not found for file %s" (File_key.to_string f))
-
-  let is_tracked_file ~reader:_ = FileHeap.mem
 end
 
 (* For use by a worker process *)
@@ -636,12 +632,6 @@ module Reader : READER with type reader = State_reader.t = struct
     match get_info ~reader ~audit f with
     | Some info -> info
     | None -> failwith (Printf.sprintf "module info not found for file %s" (File_key.to_string f))
-
-  let is_tracked_file ~reader:_ f =
-    if should_use_oldified f then
-      FileHeap.mem_old f
-    else
-      FileHeap.mem f
 end
 
 (* Reader_dispatcher is used by code which may or may not be running inside an init/recheck *)
@@ -746,11 +736,6 @@ module Reader_dispatcher : READER with type reader = Abstract_state_reader.t = s
     match reader with
     | Mutator_state_reader reader -> Mutator_reader.get_info_unsafe ~reader
     | State_reader reader -> Reader.get_info_unsafe ~reader
-
-  let is_tracked_file ~reader =
-    match reader with
-    | Mutator_state_reader reader -> Mutator_reader.is_tracked_file ~reader
-    | State_reader reader -> Reader.is_tracked_file ~reader
 end
 
 module From_saved_state : sig

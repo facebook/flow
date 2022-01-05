@@ -60,8 +60,6 @@ module type READER = sig
   val get_info_unsafe : reader:reader -> (File_key.t -> info) Expensive.t
 
   val get_info : reader:reader -> (File_key.t -> info option) Expensive.t
-
-  val is_tracked_file : reader:reader -> File_key.t -> bool
 end
 
 module Mutator_reader : sig

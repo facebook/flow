@@ -832,11 +832,6 @@ let init_libs ~options ~profiling ~local_errors ~warnings ~suppressions ~reader 
         )
   )
 
-let is_file_tracked_and_checked ~reader filename =
-  Parsing_heaps.Reader_dispatcher.is_tracked_file ~reader filename
-  (* otherwise, f is probably a directory *)
-  && Module_js.checked_file ~reader ~audit:Expensive.warn filename
-
 (** Given a set of focused files and a dependency graph, calculates the recursive dependents and
     returns a CheckedSet containing both the focused and dependent files. *)
 let focused_files_to_infer ~implementation_dependency_graph ~sig_dependency_graph focused =
@@ -885,7 +880,7 @@ let unfocused_files_to_infer ~options ~input_focused ~input_dependencies =
 
    In either case, we can consider the result to be "closed" in terms of expected invariants.
 *)
-let files_to_infer ~options ~profiling ~reader ~dependency_info ~focus_targets ~parsed =
+let files_to_infer ~options ~profiling ~dependency_info ~focus_targets ~parsed =
   Memory_utils.with_memory_timer_lwt ~options "FilesToInfer" profiling (fun () ->
       match focus_targets with
       | None ->
@@ -901,13 +896,10 @@ let files_to_infer ~options ~profiling ~reader ~dependency_info ~focus_targets ~
           Dependency_info.implementation_dependency_graph dependency_info
         in
         let sig_dependency_graph = Dependency_info.sig_dependency_graph dependency_info in
-        let is_file_checked =
-          is_file_tracked_and_checked ~reader:(Abstract_state_reader.Mutator_state_reader reader)
-        in
-        (* only focus files that parsed successfully *)
+        (* Only focus files that parsed successfully. Parsed files are also
+         * necessarily checked because we only parse checked files, so this also
+         * serves to filter the input to checked files. *)
         let input_focused = FilenameSet.inter input_focused parsed in
-        (* Filter unchecked files out of the input *)
-        let input_focused = FilenameSet.filter is_file_checked input_focused in
         let to_infer =
           focused_files_to_infer
             ~implementation_dependency_graph
@@ -2455,9 +2447,7 @@ let init ~profiling ~workers options =
 let full_check ~profiling ~options ~workers ?focus_targets env =
   let { ServerEnv.files = parsed; dependency_info; errors; _ } = env in
   with_transaction (fun transaction reader ->
-      let%lwt input =
-        files_to_infer ~options ~reader ~focus_targets ~profiling ~parsed ~dependency_info
-      in
+      let%lwt input = files_to_infer ~options ~focus_targets ~profiling ~parsed ~dependency_info in
       let sig_dependent_files = FilenameSet.empty in
       let all_dependent_files = FilenameSet.empty in
       let implementation_dependency_graph =
