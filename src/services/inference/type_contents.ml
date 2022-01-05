@@ -198,7 +198,6 @@ let printable_errors_of_file_artifacts_result ~options ~env filename result =
     for persisting in the heap. Notably, does not error if a required module is not found. *)
 let resolved_requires_of_contents ~options ~reader ~env file file_sig =
   let audit = Expensive.warn in
-  let reader = Abstract_state_reader.State_reader reader in
   let node_modules_containers = !Files.node_modules_containers in
   let resolved_requires =
     let require_loc_map = File_sig.With_Loc.(require_loc_map file_sig.module_sig) in
@@ -206,6 +205,7 @@ let resolved_requires_of_contents ~options ~reader ~env file file_sig =
       (fun r locs resolved_rs ->
         let loc = Nel.hd locs |> ALoc.of_loc in
         let resolved_r =
+          let reader = Abstract_state_reader.State_reader reader in
           Module_js.imported_module ~options ~reader ~node_modules_containers file loc r
         in
         Modulename.Set.add resolved_r resolved_rs)
@@ -213,11 +213,14 @@ let resolved_requires_of_contents ~options ~reader ~env file file_sig =
       Modulename.Set.empty
   in
   let is_checked f =
-    FilenameSet.mem f env.ServerEnv.files && Module_js.checked_file ~reader f ~audit
+    FilenameSet.mem f env.ServerEnv.files
+    &&
+    let addr = Parsing_heaps.Reader.get_file_addr_unsafe ~reader f in
+    Parsing_heaps.is_checked_file addr
   in
   Modulename.Set.fold
     (fun m acc ->
-      match Module_heaps.Reader_dispatcher.get_provider ~reader m ~audit with
+      match Module_heaps.Reader.get_provider ~reader m ~audit with
       | Some f ->
         if is_checked f then
           FilenameSet.add f acc

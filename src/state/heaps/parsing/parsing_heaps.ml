@@ -26,6 +26,8 @@ type locs_tbl = Loc.t Type_sig_collections.Locs.t
 
 type type_sig = Type_sig_collections.Locs.index Packed_type_sig.Module.t
 
+type file_addr = Heap.dyn_file SharedMem.addr
+
 type checked_file_addr = Heap.checked_file SharedMem.addr
 
 (* There's some redundancy in the visitors here, but an attempt to avoid repeated code led,
@@ -140,6 +142,8 @@ let add_unparsed_file file_key hash module_name =
     )
   in
   FileHeap.add file_key (dyn_unparsed_file addr)
+
+let is_checked_file = Heap.is_checked_file
 
 let read_file_hash file_addr =
   let open Heap in
@@ -256,6 +260,8 @@ module type READER = sig
   val get_tolerable_file_sig_unsafe : reader:reader -> File_key.t -> File_sig.With_Loc.tolerable_t
 
   val get_file_sig_unsafe : reader:reader -> File_key.t -> File_sig.With_Loc.t
+
+  val get_file_addr_unsafe : reader:reader -> File_key.t -> file_addr
 
   val get_checked_file_addr_unsafe : reader:reader -> File_key.t -> checked_file_addr
 
@@ -388,6 +394,11 @@ end = struct
     match get_file_sig ~reader file with
     | Some file_sig -> file_sig
     | None -> raise (Requires_not_found (File_key.to_string file))
+
+  let get_file_addr_unsafe ~reader file =
+    match get_file_addr ~reader file with
+    | Some addr -> addr
+    | None -> raise (Type_sig_not_found (File_key.to_string file))
 
   let get_checked_file_addr_unsafe ~reader file =
     match get_checked_file_addr ~reader file with
@@ -607,6 +618,11 @@ module Reader : READER with type reader = State_reader.t = struct
     | Some file_sig -> file_sig
     | None -> raise (Requires_not_found (File_key.to_string file))
 
+  let get_file_addr_unsafe ~reader file =
+    match get_file_addr ~reader file with
+    | Some addr -> addr
+    | None -> raise (Type_sig_not_found (File_key.to_string file))
+
   let get_checked_file_addr_unsafe ~reader file =
     match get_checked_file_addr ~reader file with
     | Some addr -> addr
@@ -709,6 +725,11 @@ module Reader_dispatcher : READER with type reader = Abstract_state_reader.t = s
     match reader with
     | Mutator_state_reader reader -> Mutator_reader.get_file_sig_unsafe ~reader
     | State_reader reader -> Reader.get_file_sig_unsafe ~reader
+
+  let get_file_addr_unsafe ~reader =
+    match reader with
+    | Mutator_state_reader reader -> Mutator_reader.get_file_addr_unsafe ~reader
+    | State_reader reader -> Reader.get_file_addr_unsafe ~reader
 
   let get_checked_file_addr_unsafe ~reader =
     match reader with

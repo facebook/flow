@@ -39,8 +39,6 @@ val imported_module :
   string ->
   Modulename.t
 
-val checked_file : reader:Abstract_state_reader.t -> (File_key.t -> bool) Expensive.t
-
 (* add module records for given files;
    returns the set of modules added
 *)

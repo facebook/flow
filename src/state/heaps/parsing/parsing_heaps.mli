@@ -9,6 +9,8 @@ type locs_tbl = Loc.t Type_sig_collections.Locs.t
 
 type type_sig = Type_sig_collections.Locs.index Packed_type_sig.Module.t
 
+type file_addr = SharedMem.NewAPI.dyn_file SharedMem.addr
+
 type checked_file_addr = SharedMem.NewAPI.checked_file SharedMem.addr
 
 type info = {
@@ -16,6 +18,8 @@ type info = {
   checked: bool;  (** in flow? *)
   parsed: bool;  (** if false, it's a tracking record only *)
 }
+
+val is_checked_file : file_addr -> bool
 
 module type READER = sig
   type reader
@@ -47,6 +51,8 @@ module type READER = sig
   val get_tolerable_file_sig_unsafe : reader:reader -> File_key.t -> File_sig.With_Loc.tolerable_t
 
   val get_file_sig_unsafe : reader:reader -> File_key.t -> File_sig.With_Loc.t
+
+  val get_file_addr_unsafe : reader:reader -> File_key.t -> file_addr
 
   val get_checked_file_addr_unsafe : reader:reader -> File_key.t -> checked_file_addr
 

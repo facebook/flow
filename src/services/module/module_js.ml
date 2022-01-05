@@ -641,10 +641,6 @@ let choose_provider ~options m files errmap =
 (***** public *****)
 (******************)
 
-let checked_file ~reader ~audit f =
-  let info = f |> Parsing_heaps.Reader_dispatcher.get_info_unsafe ~reader ~audit in
-  info.Parsing_heaps.checked
-
 (** Resolve references to required modules in a file, and record the results.
 
     TODO [perf]: measure size and possibly optimize *)

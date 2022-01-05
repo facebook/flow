@@ -153,20 +153,15 @@ let calc_direct_dependents workers ~candidates ~root_files ~root_modules =
    shared memory, it is useful to parallelize this process (leading to big
    savings in init and recheck times). *)
 
-let checked_module ~reader ~audit m =
-  m
-  |> Module_heaps.Mutator_reader.get_provider_unsafe ~reader ~audit
-  |> Module_js.checked_file ~reader:(Abstract_state_reader.Mutator_state_reader reader) ~audit
-
 (* A file is considered to implement a required module r only if the file is
    registered to provide r and the file is checked. Such a file must be merged
    before any file that requires module r, so this notion naturally gives rise
    to a dependency ordering among files for merging. *)
-let implementation_file ~reader ~audit r =
-  if Module_heaps.Mutator_reader.module_exists ~reader r && checked_module ~reader ~audit r then
-    Some (Module_heaps.Mutator_reader.get_provider_unsafe ~reader ~audit r)
-  else
-    None
+let implementation_file ~reader ~audit m =
+  match Module_heaps.Mutator_reader.get_provider ~reader ~audit m with
+  | Some f when Parsing_heaps.(is_checked_file (Mutator_reader.get_file_addr_unsafe ~reader f)) ->
+    Some f
+  | _ -> None
 
 let file_dependencies ~audit ~reader file =
   let file_sig = Parsing_heaps.Mutator_reader.get_file_sig_unsafe reader file in
