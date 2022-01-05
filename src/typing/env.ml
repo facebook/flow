@@ -515,6 +515,10 @@ module Env : Env_sig.S = struct
 
   let already_bound_error = binding_error Error_message.ENameAlreadyBound
 
+  let is_provider cx id_loc =
+    let { Loc_env.var_info = { Env_api.providers; _ }; _ } = Context.environment cx in
+    Env_api.Provider_api.is_provider providers id_loc
+
   let install_provider cx t name loc =
     match name with
     | OrdinaryName _name when Context.env_option_enabled cx Options.ConstrainWrites ->

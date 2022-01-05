@@ -97,6 +97,8 @@ module New_env : S = struct
 
   let in_toplevel_scope = Old_env.in_toplevel_scope
 
+  let is_provider = Old_env.is_provider
+
   let install_provider = Old_env.install_provider
 
   type t = Old_env.t
@@ -123,8 +125,6 @@ module New_env : S = struct
     | Some x -> x
 
   let find_refi { Env_api.refinement_of_id; _ } = refinement_of_id
-
-  let is_provider { Env_api.providers; _ } = Env_api.Provider_api.is_provider providers
 
   let find_providers { Env_api.providers; _ } loc =
     Env_api.Provider_api.providers_of_def providers loc
@@ -377,7 +377,7 @@ module New_env : S = struct
         | Some w -> Flow_js.unify cx ~use_op t w
       end;
 
-      if not @@ is_provider var_info loc then
+      if not @@ Env_api.Provider_api.is_provider var_info.Env_api.providers loc then
         let general = provider_type_for_def_loc env loc in
         if is_def_loc_annotated var_info loc then
           Flow_js.flow cx (t, UseT (use_op, general))

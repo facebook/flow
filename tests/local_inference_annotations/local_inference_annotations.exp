@@ -14,14 +14,6 @@ Missing an annotation on `x`. [missing-local-annot]
                         ^
 
 
-Error --------------------------------------------------------------------------------------- included/assignment.js:6:6
-
-Missing an annotation on `x`. [missing-local-annot]
-
-   6| y = (x) => 3; // Missing annot
-           ^
-
-
 Error -------------------------------------------------------------------------------------- included/assignment.js:13:6
 
 Missing an annotation on `x`. [missing-local-annot]
@@ -182,6 +174,38 @@ Missing an annotation on `x`. [missing-local-annot]
 
    11|   const c = (x) => 3; // Neither does this one
                     ^
+
+
+Error ----------------------------------------------------------------------------- included/destructuring_init.js:28:14
+
+Missing an annotation on `x`. [missing-local-annot]
+
+   28| [null_1] = [(x) => 1]; // error needs annotation because `null_1` pattern is a provider
+                    ^
+
+
+Error ------------------------------------------------------------------------------ included/destructuring_init.js:39:6
+
+Missing an annotation on `x`. [missing-local-annot]
+
+   39|     (x) => 1, // TODO should not need annotation
+            ^
+
+
+Error ----------------------------------------------------------------------------- included/destructuring_init.js:41:10
+
+Missing an annotation on `x`. [missing-local-annot]
+
+   41|         (x) => 1, // TODO should not need annotation
+                ^
+
+
+Error ----------------------------------------------------------------------------- included/destructuring_init.js:42:10
+
+Missing an annotation on `x`. [missing-local-annot]
+
+   42|         (x) => 1, // error needs annotation because null_2 pattern is a provider
+                ^
 
 
 Error ---------------------------------------------------------------------------------------- included/do_while.js:8:16
@@ -535,4 +559,4 @@ Missing an annotation on `y`. [missing-local-annot]
 
 
 
-Found 64 errors
+Found 67 errors

@@ -3,7 +3,7 @@ let x: number => number = (x) => 3;
 x = (x) => 3; // No missing annot
 
 let y = (x: number) => 3;
-y = (x) => 3; // Missing annot
+y = (x) => 3; // No missing annot
 
 let [a, b]: [number => number, number => number] = [(x) => x, (y) => y]
 a = (x) => x; // No missing annot

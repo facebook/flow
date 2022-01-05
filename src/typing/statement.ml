@@ -5944,31 +5944,30 @@ struct
 
   (* traverse simple assignment expressions (`lhs = rhs`) *)
   and simple_assignment cx _loc lhs rhs =
-    (* Use annotations from variable declarations if the lhs contains only
-     * annotated variables. Consider this example:
+    (* Use annotations from variable declarations if the lhs contains only non-providers.
+     * Consider this example:
      *
      * var a: t1, var b: t2;
      * [a, [b]] = [e1, [e2, e3]]. In this example, we would push down t1 and t2
      * to e1 and e2 (which will require work to make happen). e3 does not escape the rhs,
-     * so we do not require an annotation. If either a or b were not annotated, then
-     * we would require annotations on all of e1, e2, and e3. To relax that constraint, we'd
-     * need to be able to figure out how to match the lhs to specific expressions on the rhs
-     * before we visit the rhs to ask for annotations.
+     * so we do not require an annotation. If either a or b were providers, then
+     * we would require annotations on all of e1, e2, and e3.
+     *
+     * TODO: To relax that constraint, we need to be able to figure out how to
+     * match the lhs to specific expressions on the rhs before we visit the rhs
+     * to ask for annotations.
      *)
-    let all_have_annots =
-      (not Env.new_env)
-      && Flow_ast_utils.fold_bindings_of_pattern
-           (fun all_have_annots (loc, { Ast.Identifier.name; comments = _ }) ->
-             let has_annot = Env.get_var_annotation cx (OrdinaryName name) loc <> None in
-             all_have_annots && has_annot)
-           true
-           lhs
+    let is_provider =
+      Flow_ast_utils.fold_bindings_of_pattern
+        (fun acc (loc, _) -> acc || Env.is_provider cx loc)
+        false
+        lhs
     in
     let hint =
-      if all_have_annots then
-        hint_of_loc_todo (fst lhs)
-      else
+      if is_provider then
         None
+      else
+        hint_of_loc_todo (fst lhs)
     in
     let (((_, t), _) as typed_rhs) = expression cx ~hint rhs in
     (* update env, add constraints arising from LHS structure,
