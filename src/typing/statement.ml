@@ -2084,7 +2084,7 @@ struct
       Env.declare_implicit_let kind cx name name_loc;
       let general = Tvar.mk_where cx reason (Env.unify_declared_type cx name name_loc) in
       (* ClassDeclarations are statements, so we will never have an annotation to push down here *)
-      let (class_t, c_ast) = mk_class cx ~class_hint:None class_loc ~name_loc ~general reason c in
+      let (class_t, c_ast) = mk_class cx class_loc ~name_loc ~general reason c in
       let use_op =
         Op
           (AssignVar
@@ -2341,7 +2341,7 @@ struct
             | ClassDeclaration ({ Ast.Class.id = None; _ } as c) ->
               let reason = DescFormat.instance_reason (internal_name "*default*") loc in
               let general = Tvar.mk cx reason in
-              let (t, c) = mk_class cx ~class_hint:None loc ~name_loc:loc ~general reason c in
+              let (t, c) = mk_class cx loc ~name_loc:loc ~general reason c in
               Flow_js.flow_t cx (t, general);
               (loc, general, (loc, ClassDeclaration c))
             | FunctionDeclaration { Ast.Function.id = Some id; _ }
@@ -3618,16 +3618,12 @@ struct
           add_entry (OrdinaryName name) entry scope
         );
         Env.push_var_scope scope;
-        let (class_t, c) =
-          mk_class ~class_hint:hint cx class_loc ~name_loc ~general:tvar reason c
-        in
+        let (class_t, c) = mk_class cx class_loc ~name_loc ~general:tvar reason c in
         Env.pop_var_scope ();
         Flow.flow_t cx (class_t, tvar);
         ((class_loc, class_t), Class c)
       | None ->
-        let (class_t, c) =
-          mk_class ~class_hint:hint cx class_loc ~name_loc ~general:tvar reason c
-        in
+        let (class_t, c) = mk_class cx class_loc ~name_loc ~general:tvar reason c in
         Flow.flow_t cx (class_t, tvar);
         ((class_loc, class_t), Class c))
     | Yield { Yield.argument; delegate = false; comments } ->
@@ -7912,11 +7908,11 @@ struct
         arg_asts
       )
 
-  and mk_class cx class_loc ~class_hint ~name_loc ~general reason c =
+  and mk_class cx class_loc ~name_loc ~general reason c =
     let def_reason = repos_reason class_loc reason in
     let this_in_class = Class_stmt_sig.This.in_class c in
     let self = Tvar.mk cx reason in
-    let (class_sig, class_ast_f) = mk_class_sig ~class_hint cx name_loc reason self c in
+    let (class_sig, class_ast_f) = mk_class_sig cx name_loc reason self c in
     let instance_this_type = Class_stmt_sig.this_or_mixed_of_t ~static:false class_sig in
     let static_this_type = Class_stmt_sig.this_or_mixed_of_t ~static:true class_sig in
     class_sig
@@ -7969,7 +7965,7 @@ struct
            Class_sig.t containing this field, as that is when the initializer expression
            gets checked.
       *)
-      let mk_field cx tparams_map reason annot ~field_hint init =
+      let mk_field cx tparams_map reason annot init =
         let (annot_or_inferred, annot_ast) = Anno.mk_type_annotation cx tparams_map reason annot in
         let annot_t = type_t_of_annotated_or_inferred annot_or_inferred in
         let (field, get_init) =
@@ -7979,9 +7975,8 @@ struct
             (Annot annot_t, Fn.const Ast.Class.Property.Uninitialized)
           | Ast.Class.Property.Initialized expr ->
             let value_ref : (ALoc.t, ALoc.t * Type.t) Ast.Expression.t option ref = ref None in
-            let return_t = mk_inference_target_with_annots annot_or_inferred field_hint in
             ( Infer
-                ( Func_stmt_sig.field_initializer tparams_map reason expr return_t,
+                ( Func_stmt_sig.field_initializer tparams_map reason expr annot_or_inferred,
                   (fun (_, _, value_opt) -> value_ref := Some (Base.Option.value_exn value_opt))
                 ),
               fun () ->
@@ -7991,28 +7986,26 @@ struct
         in
         (field, annot_t, annot_ast, get_init)
       in
-      let mk_method ~method_hint = mk_func_sig ~hint:method_hint ~needs_this_param:false in
-      let mk_extends ~class_hint cx tparams_map = function
+      let mk_method = mk_func_sig ~hint:None ~needs_this_param:false in
+      let mk_extends cx tparams_map = function
         | None -> (Implicit { null = false }, None)
         | Some (loc, { Ast.Class.Extends.expr; targs; comments }) ->
-          let (((_, c), _) as expr) = expression cx ~hint:class_hint expr in
+          let (((_, c), _) as expr) = expression cx ~hint:None expr in
           let (t, targs) = Anno.mk_super cx tparams_map loc c targs in
           (Explicit t, Some (loc, { Ast.Class.Extends.expr; targs; comments }))
       in
-      fun ~class_hint
-          cx
-          name_loc
-          reason
-          self
-          {
-            Ast.Class.id;
-            body = (body_loc, { Ast.Class.Body.body = elements; comments = body_comments });
-            tparams;
-            extends;
-            implements;
-            class_decorators;
-            comments;
-          } ->
+      fun cx name_loc reason self cls ->
+        let {
+          Ast.Class.id;
+          body = (body_loc, { Ast.Class.Body.body = elements; comments = body_comments });
+          tparams;
+          extends;
+          implements;
+          class_decorators;
+          comments;
+        } =
+          cls
+        in
         let class_decorators_ast =
           Base.List.map ~f:Tast_utils.error_mapper#class_decorator class_decorators
         in
@@ -8021,7 +8014,7 @@ struct
         let tparams_map_with_this = SMap.add "this" this_t tparams_map in
         let (class_sig, extends_ast, implements_ast) =
           let id = Context.make_aloc_id cx name_loc in
-          let (extends, extends_ast) = mk_extends ~class_hint cx tparams_map_with_this extends in
+          let (extends, extends_ast) = mk_extends cx tparams_map_with_this extends in
           let (implements, implements_ast) =
             match implements with
             | None -> ([], None)
@@ -8122,12 +8115,7 @@ struct
                   Ast.Function.(func_reason ~async:func.async ~generator:func.generator method_loc)
                 in
                 let (method_sig, reconstruct_func) =
-                  mk_method
-                    ~method_hint:(hint_decompose_opt_todo class_hint)
-                    cx
-                    tparams_map_with_this
-                    reason
-                    func
+                  mk_method cx tparams_map_with_this reason func
                 in
                 (* The body of a class method doesn't get checked until Class_sig.toplevels
                    is called on the class sig (in this case c). The order of how the methods
@@ -8262,9 +8250,7 @@ struct
                 let reason = mk_reason (RProperty (Some (OrdinaryName name))) loc in
                 let polarity = Anno.polarity variance in
                 let (field, annot_t, annot_ast, get_value) =
-                  (* We could never find a private field in an annotation-- that's the point! So
-                   * we make field_hint None here *)
-                  mk_field ~field_hint:None cx tparams_map_with_this reason annot value
+                  mk_field cx tparams_map_with_this reason annot value
                 in
                 let get_element () =
                   Body.PrivateField
@@ -8297,13 +8283,7 @@ struct
                 let reason = mk_reason (RProperty (Some (OrdinaryName name))) loc in
                 let polarity = Anno.polarity variance in
                 let (field, annot_t, annot, get_value) =
-                  mk_field
-                    ~field_hint:(hint_decompose_opt_todo class_hint)
-                    cx
-                    tparams_map_with_this
-                    reason
-                    annot
-                    value
+                  mk_field cx tparams_map_with_this reason annot value
                 in
                 let get_element () =
                   Body.Property

@@ -116,12 +116,28 @@ Missing an annotation on `x`. [missing-local-annot]
                      ^
 
 
+Error -------------------------------------------------------------------------------- included/class_expression.js:3:10
+
+Missing an annotation on `param`. [missing-local-annot]
+
+   3|   method(param): any { // error on param, annotation is not pushed down
+               ^^^^^
+
+
 Error --------------------------------------------------------------------------------- included/class_expression.js:4:6
 
 Missing an annotation on `x`. [missing-local-annot]
 
    4|     (x) => 3; // error
            ^
+
+
+Error -------------------------------------------------------------------------------- included/class_expression.js:8:16
+
+Missing an annotation on `x`. [missing-local-annot]
+
+   8|   property1 = (x) => 3; // error
+                     ^
 
 
 Error ------------------------------------------------------------------------------ included/destructuring_init.js:4:14
@@ -559,4 +575,4 @@ Missing an annotation on `y`. [missing-local-annot]
 
 
 
-Found 67 errors
+Found 69 errors

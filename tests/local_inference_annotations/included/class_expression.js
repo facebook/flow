@@ -1,11 +1,11 @@
 //@flow
 const x: any = class A {
-  method(param): any { // no error on param, push down from annotation
+  method(param): any { // error on param, annotation is not pushed down
     (x) => 3; // error
     return (x) => 3; // ok
   }
 
-  property1 = (x) => 3; // no error
+  property1 = (x) => 3; // error
   property2: any = (x) => 3; //ok
 
   methodBody(annotatedParam: any) { // ok
