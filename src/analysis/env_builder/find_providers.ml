@@ -555,6 +555,10 @@ end = struct
           loc
           expr
 
+      (* Declared modules provide their own var scope *)
+      method! declare_module loc m =
+        this#enter_scope Var (fun _ _ -> super#declare_module loc m) loc m
+
       (* For the purposes of this analysis, we don't need to consider `if` statements without alternatives,
          and similarly elsewhere we don't worry about merging the initial environment of e.g. loops with the
          final environment from their bodies. It's ok if we're basing typechecking on statements that might not

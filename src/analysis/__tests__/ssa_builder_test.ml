@@ -562,4 +562,17 @@ let tests =
                         mk_write (5, 18) (5, 19) "x";
                       ]
                );
+         "declare_module"
+         >:: mk_ssa_builder_test
+               "var x = 3;
+         declare module 'foo' {
+           declare var x: number;
+           declare var y: typeof x;
+         }
+         x;"
+               LocMap.(
+                 empty
+                 |> add (mk_loc (4, 33) (4, 34)) [mk_write (3, 23) (3, 24) "x"]
+                 |> add (mk_loc (6, 9) (6, 10)) [mk_write (1, 4) (1, 5) "x"]
+               );
        ]

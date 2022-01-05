@@ -422,6 +422,18 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
             run this#function_body_any body)
           ()
 
+      method! declare_module _loc m =
+        let open Ast.Statement.DeclareModule in
+        let { id = _; body; kind = _; comments = _ } = m in
+        let (loc, body) = body in
+        let bindings =
+          let hoist = new hoister ~flowmin_compatibility ~enable_enums ~with_types in
+          run (hoist#block loc) body;
+          hoist#acc
+        in
+        this#with_bindings loc bindings (fun () -> run (this#block loc) body) ();
+        m
+
       method private scoped_type_params ?(hoist_op = (fun f -> f ())) ~in_tparam_scope tparams =
         let open Ast.Type.TypeParams in
         let open Ast.Type.TypeParam in
