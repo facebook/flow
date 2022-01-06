@@ -10,6 +10,8 @@ module type READER = sig
 
   val find_leader : reader:reader -> File_key.t -> File_key.t
 
+  val find_leader_opt : reader:reader -> File_key.t -> File_key.t option
+
   val sig_hash_opt : reader:reader -> File_key.t -> Xx.hash option
 
   val find_master : reader:reader -> Context.master_context

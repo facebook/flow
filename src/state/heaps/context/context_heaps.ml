@@ -161,6 +161,8 @@ module type READER = sig
 
   val find_leader : reader:reader -> File_key.t -> File_key.t
 
+  val find_leader_opt : reader:reader -> File_key.t -> File_key.t option
+
   val sig_hash_opt : reader:reader -> File_key.t -> Xx.hash option
 
   val find_master : reader:reader -> Context.master_context
@@ -187,8 +189,10 @@ module Mutator_reader : sig
 end = struct
   type reader = Mutator_state_reader.t
 
-  let find_leader ~reader:_ file =
-    match LeaderHeap.get file with
+  let find_leader_opt ~reader:_ file = LeaderHeap.get file
+
+  let find_leader ~reader file =
+    match find_leader_opt ~reader file with
     | Some leader -> leader
     | None -> raise (Key_not_found ("LeaderHeap", File_key.to_string file))
 
@@ -212,14 +216,14 @@ module Reader : READER with type reader = State_reader.t = struct
 
   let should_use_oldified file = FilenameSet.mem file !currently_oldified_files
 
-  let find_leader ~reader:_ file =
-    let leader =
-      if should_use_oldified file then
-        LeaderHeap.get_old file
-      else
-        LeaderHeap.get file
-    in
-    match leader with
+  let find_leader_opt ~reader:_ file =
+    if should_use_oldified file then
+      LeaderHeap.get_old file
+    else
+      LeaderHeap.get file
+
+  let find_leader ~reader file =
+    match find_leader_opt ~reader file with
     | Some leader -> leader
     | None -> raise (Key_not_found ("LeaderHeap", File_key.to_string file))
 
@@ -236,6 +240,11 @@ module Reader_dispatcher : READER with type reader = Abstract_state_reader.t = s
   type reader = Abstract_state_reader.t
 
   open Abstract_state_reader
+
+  let find_leader_opt ~reader =
+    match reader with
+    | Mutator_state_reader reader -> Mutator_reader.find_leader_opt ~reader
+    | State_reader reader -> Reader.find_leader_opt ~reader
 
   let find_leader ~reader =
     match reader with
