@@ -1,3 +1,9 @@
+### 0.169.0
+
+This release is light on changes due to the holidays. Happy New Year!
+
+* Improve performance
+
 ### 0.168.0
 
 Notable bug fixes:
