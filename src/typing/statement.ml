@@ -2916,7 +2916,7 @@ struct
                   }
               ) ->
             let reason = mk_reason RPrototype (fst v) in
-            let (((_, vt), _) as v) = expression cx ~hint:(hint_decompose_opt_todo hint) v in
+            let (((_, vt), _) as v) = expression cx ~hint:None v in
             let t =
               Tvar.mk_where cx reason (fun t -> Flow.flow cx (vt, ObjTestProtoT (reason, t)))
             in

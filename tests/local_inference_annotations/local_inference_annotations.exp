@@ -422,12 +422,28 @@ Missing an annotation on `x`. [missing-local-annot]
                      ^
 
 
+Error ----------------------------------------------------------------------------------------- included/object.js:16:15
+
+Missing an annotation on `x`. [missing-local-annot]
+
+   16|   __proto__: (x) => {
+                     ^
+
+
 Error ----------------------------------------------------------------------------------------- included/object.js:17:16
 
 Missing an annotation on `x`. [missing-local-annot]
 
    17|     const c = (x) => 3; // Missing annot
                       ^
+
+
+Error ----------------------------------------------------------------------------------------- included/object.js:18:13
+
+Missing an annotation on `x`. [missing-local-annot]
+
+   18|     return (x) => 3;
+                   ^
 
 
 Error ----------------------------------------------------------------------------------------- included/object.js:21:16
@@ -575,4 +591,4 @@ Missing an annotation on `y`. [missing-local-annot]
 
 
 
-Found 69 errors
+Found 71 errors
