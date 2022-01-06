@@ -8,7 +8,6 @@
 val find_local_refs :
   reader:State_reader.t ->
   options:Options.t ->
-  env:ServerEnv.env ->
   profiling:Profiling_js.running ->
   File_key.t ->
   FindRefsUtils.ast_info ->

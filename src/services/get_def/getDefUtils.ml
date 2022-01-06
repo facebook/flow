@@ -355,17 +355,15 @@ let add_literal_properties literal_key_info def_info =
     else
       Ok (Some (Nel.cons (Object loc) defs, name1))
 
-let get_def_info ~reader ~options env profiling file_key ast_info loc :
-    (def_info option, string) result =
+let get_def_info ~reader ~options profiling file_key ast_info loc : (def_info option, string) result
+    =
   let props_access_info = ref (Ok None) in
   let (ast, file_sig, info) = ast_info in
   let literal_key_info : (Loc.t * Loc.t * string) option = ObjectKeyAtLoc.get ast loc in
   let cx =
     set_def_loc_hook ~reader props_access_info literal_key_info loc;
     Profiling_js.with_timer profiling ~timer:"MergeContents" ~f:(fun () ->
-        let () =
-          Type_contents.ensure_checked_dependencies ~options ~reader ~env file_key file_sig
-        in
+        let () = Type_contents.ensure_checked_dependencies ~options ~reader file_key file_sig in
         let (cx, _) =
           Merge_service.check_contents_context ~reader options file_key ast info file_sig
         in

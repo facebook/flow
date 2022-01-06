@@ -196,7 +196,7 @@ let printable_errors_of_file_artifacts_result ~options ~env filename result =
 
 (** Resolves dependencies of [file_sig] specifically for checking contents, rather than
     for persisting in the heap. Notably, does not error if a required module is not found. *)
-let resolved_requires_of_contents ~options ~reader file file_sig =
+let unchecked_dependencies ~options ~reader file file_sig =
   let audit = Expensive.warn in
   let node_modules_containers = !Files.node_modules_containers in
   let resolved_requires =
@@ -212,40 +212,37 @@ let resolved_requires_of_contents ~options ~reader file file_sig =
       require_loc_map
       Modulename.Set.empty
   in
-  let is_checked f =
+  let should_be_checked f =
     match Parsing_heaps.Reader.get_file_addr ~reader f with
     | Some addr -> Parsing_heaps.is_checked_file addr
     | None -> false
   in
+  let has_been_checked f = Base.Option.is_some (Context_heaps.Reader.find_leader_opt ~reader f) in
   Modulename.Set.fold
     (fun m acc ->
       match Module_heaps.Reader.get_provider ~reader m ~audit with
       | Some f ->
-        if is_checked f then
+        if should_be_checked f && not (has_been_checked f) then
           FilenameSet.add f acc
         else
           acc
-      | None -> acc) (* complain elsewhere about required module not found *)
+      | None ->
+        (* complain elsewhere about required module not found *)
+        acc)
     resolved_requires
     FilenameSet.empty
 
-(** When checking contents, ensure that dependencies are checked. Might have more
-    general utility. *)
-let ensure_checked_dependencies ~options ~reader ~env file file_sig =
-  let resolved_requires = resolved_requires_of_contents ~options ~reader file file_sig in
-  let unchecked_dependencies =
-    FilenameSet.filter
-      (fun f -> not (CheckedSet.mem f env.ServerEnv.checked_files))
-      resolved_requires
-  in
+(** Ensures that dependencies are checked; schedules them to be checked and cancels the
+    Lwt thread to abort the command if not.
 
-  (* Often, all dependencies have already been checked, so input contains no unchecked files.
-   * In that case, let's short-circuit typecheck, since a no-op typecheck still takes time on
-   * large repos *)
-  if FilenameSet.is_empty unchecked_dependencies then
+    This is necessary because [merge_contents] needs all of the dep type sigs to be
+    available, but since it doesn't use workers it can't go parse everything itself. *)
+let ensure_checked_dependencies ~options ~reader file file_sig =
+  let unchecked_deps = unchecked_dependencies ~options ~reader file file_sig in
+  if FilenameSet.is_empty unchecked_deps then
     ()
   else
-    let n = FilenameSet.cardinal unchecked_dependencies in
+    let n = FilenameSet.cardinal unchecked_deps in
     Hh_logger.info "Canceling command due to %d unchecked dependencies" n;
     let _ =
       FilenameSet.fold
@@ -260,27 +257,27 @@ let ensure_checked_dependencies ~options ~reader ~env file file_sig =
           else
             ();
           i + 1)
-        unchecked_dependencies
+        unchecked_deps
         1
     in
     let reason = LspProt.Unchecked_dependencies { filename = File_key.to_string file } in
-    ServerMonitorListenerState.push_dependencies_to_prioritize ~reason unchecked_dependencies;
+    ServerMonitorListenerState.push_dependencies_to_prioritize ~reason unchecked_deps;
     raise Lwt.Canceled
 
 (** TODO: handle case when file+contents don't agree with file system state **)
-let merge_contents ~options ~env ~profiling ~reader filename info ast file_sig =
+let merge_contents ~options ~profiling ~reader filename info ast file_sig =
   with_timer ~options "MergeContents" profiling (fun () ->
-      let () = ensure_checked_dependencies ~options ~reader ~env filename file_sig in
+      let () = ensure_checked_dependencies ~options ~reader filename file_sig in
       Merge_service.check_contents_context ~reader options filename ast info file_sig
   )
 
-let type_parse_artifacts ~options ~env ~profiling filename intermediate_result =
+let type_parse_artifacts ~options ~profiling filename intermediate_result =
   match intermediate_result with
   | (Some (Parse_artifacts { docblock; ast; file_sig; _ } as parse_artifacts), _errs) ->
     (* We assume that callers have already inspected the parse errors, so we discard them here. *)
     let reader = State_reader.create () in
     let (cx, typed_ast) =
-      merge_contents ~options ~env ~profiling ~reader filename docblock ast file_sig
+      merge_contents ~options ~profiling ~reader filename docblock ast file_sig
     in
     Ok (parse_artifacts, Typecheck_artifacts { cx; typed_ast })
   | (None, errs) -> Error errs

@@ -27,7 +27,7 @@ let parse_contents ~options ~profiling content file_key =
     else
       Error "Parse unexpectedly failed"
 
-let find_local_refs ~reader ~options ~env ~profiling ~file_key ~content ~line ~col =
+let find_local_refs ~reader ~options ~profiling ~file_key ~content ~line ~col =
   let open Base.Result.Let_syntax in
   let loc = Loc.cursor (Some file_key) line col in
   let%bind ast_info = parse_contents ~options ~profiling content file_key in
@@ -40,8 +40,7 @@ let find_local_refs ~reader ~options ~env ~profiling ~file_key ~content ~line ~c
   let%bind refs =
     match var_refs with
     | Some _ -> Ok var_refs
-    | None ->
-      PropertyFindRefs.find_local_refs ~reader ~options ~env ~profiling file_key ast_info loc
+    | None -> PropertyFindRefs.find_local_refs ~reader ~options ~profiling file_key ast_info loc
   in
   let refs = Base.Option.map ~f:(fun (name, refs) -> (name, sort_and_dedup refs)) refs in
   Ok refs

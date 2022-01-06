@@ -762,7 +762,7 @@ let autofix_imports ~options ~env ~reader ~cx ~ast ~uri =
   in
   edits
 
-let autofix_exports ~options ~env ~profiling ~file_key ~file_content =
+let autofix_exports ~options ~profiling ~file_key ~file_content =
   let open Autofix_exports in
   let file_artifacts =
     let ((_, parse_errs) as intermediate_result) =
@@ -771,7 +771,7 @@ let autofix_exports ~options ~env ~profiling ~file_key ~file_content =
     if not (Flow_error.ErrorSet.is_empty parse_errs) then
       Error parse_errs
     else
-      Type_contents.type_parse_artifacts ~options ~env ~profiling file_key intermediate_result
+      Type_contents.type_parse_artifacts ~options ~profiling file_key intermediate_result
   in
   match file_artifacts with
   | Ok
@@ -807,7 +807,7 @@ let insert_type
     if not (Flow_error.ErrorSet.is_empty parse_errs) then
       Error parse_errs
     else
-      Type_contents.type_parse_artifacts ~options ~env ~profiling file_key intermediate_result
+      Type_contents.type_parse_artifacts ~options ~profiling file_key intermediate_result
   in
   match file_artifacts with
   | Ok (Parse_artifacts { ast; file_sig; _ }, Typecheck_artifacts { cx = full_cx; typed_ast }) ->

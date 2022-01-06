@@ -15,16 +15,10 @@ val parse_contents :
   Types_js_types.parse_artifacts option * Flow_error.ErrorSet.t
 
 val ensure_checked_dependencies :
-  options:Options.t ->
-  reader:State_reader.t ->
-  env:ServerEnv.env ->
-  File_key.t ->
-  File_sig.With_Loc.t ->
-  unit
+  options:Options.t -> reader:State_reader.t -> File_key.t -> File_sig.With_Loc.t -> unit
 
 val type_parse_artifacts :
   options:Options.t ->
-  env:ServerEnv.env ->
   profiling:Profiling_js.running ->
   (* fake file-/module name *)
   File_key.t ->
