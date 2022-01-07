@@ -1,6 +1,7 @@
 ---
 title: Babel
 slug: /tools/babel
+layout: guide
 ---
 
 Flow and [Babel](http://babeljs.io/) are designed to work great together. It
