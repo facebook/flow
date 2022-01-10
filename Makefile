@@ -18,14 +18,14 @@ INTERNAL_FLAGS=
 ifeq ($(OS), Windows_NT)
   UNAME_S=Windows
   UNAME_M=
-  SWITCH=ocaml-variants.4.12.0+mingw64c
+  SWITCH=ocaml-variants.4.12.1+mingw64c
   CC:=x86_64-w64-mingw32-gcc
   CXX:=x86_64-w64-mingw32-g++
   AR:=x86_64-w64-mingw32-gcc-ar
 else
   UNAME_S=$(shell uname -s)
   UNAME_M=$(shell uname -m)
-  SWITCH=ocaml-base-compiler.4.10.2
+  SWITCH=ocaml-base-compiler.4.12.1
 endif
 
 # Default to `ocamlbuild -j 0` (unlimited parallelism), but you can limit it
