@@ -10,7 +10,7 @@
 
 var fs = require('fs');
 var path = require('path');
-var colors = require('colors');
+var chalk = require('chalk');
 var parseArgs = require('minimist');
 
 var argv = parseArgs(process.argv.slice(2), {
@@ -185,7 +185,7 @@ function get_hardcoded_tests() {
 }
 
 function test_section(runTest, section_name, section) {
-  console.log('===%s==='.bold, section_name);
+  console.log(chalk.bold('===%s==='), section_name);
   var esprima_opts = {};
   var results = {
     num_successes: 0,
@@ -195,7 +195,7 @@ function test_section(runTest, section_name, section) {
   for (var i = 0; i < section.tests.length; i++) {
     var test = section.tests[i];
     var name = escape_content(test.content);
-    process.stdout.write('RUNNING'.yellow + ' ' + name + '\r');
+    process.stdout.write(chalk.yellow('RUNNING') + ' ' + name + '\r');
 
     var options = {};
     for (var key in section.options) {
@@ -211,10 +211,10 @@ function test_section(runTest, section_name, section) {
 
     var result = runTest(test, options, cli_options);
     if (result.passed) {
-      console.log('%s: "%s"', 'PASSED'.green, name);
+      console.log('%s: "%s"', chalk.green('PASSED'), name);
       results.num_successes++;
     } else {
-      console.log('%s: "%s"', 'FAILED'.redBG.white, name);
+      console.log('%s: "%s"', chalk.redBG.white('FAILED'), name);
       results.num_failures++;
 
       results.failures[test.content] = result;
@@ -225,9 +225,11 @@ function test_section(runTest, section_name, section) {
 
 function report_percentage_passed(results) {
   var passed = results.num_failures === 0;
-  var result_fraction = passed ? '%s/%s'.green : '%s/%s'.redBG.white;
+  var result_fraction = passed
+    ? chalk.green('%s/%s')
+    : chalk.redBG.white('%s/%s');
   console.log(
-    '%s test suite: '.bold + result_fraction + ' tests passed',
+    chalk.bold('%s test suite: ') + result_fraction + ' tests passed',
     results.suite,
     results.num_successes,
     results.num_successes + results.num_failures,
@@ -239,15 +241,21 @@ function report_results(results) {
   var passed = report_percentage_passed(results);
 
   if (!passed) {
-    console.log('*** %d TESTS FAILED! ***'.redBG.white, results.num_failures);
+    console.log(
+      chalk.redBG.white('*** %d TESTS FAILED! ***'),
+      results.num_failures,
+    );
 
     for (var section_name in results.failures) {
       if (results.failures.hasOwnProperty(section_name)) {
-        console.log('===%s Failures==='.bold, section_name);
+        console.log(chalk.bold('===%s Failures==='), section_name);
         for (var test in results.failures[section_name]) {
           if (results.failures[section_name].hasOwnProperty(test)) {
             var result = results.failures[section_name][test];
-            console.log('Test failure: "%s"'.redBG.white, escape_content(test));
+            console.log(
+              chalk.redBG.white('Test failure: "%s"'),
+              escape_content(test),
+            );
             console.log(result.output);
           }
         }
@@ -259,7 +267,7 @@ function report_results(results) {
 
 function run_test_suite(test) {
   console.log(
-    '\n\n*****RUNNING %s TEST SUITE*****'.bold,
+    chalk.bold('\n\n*****RUNNING %s TEST SUITE*****'),
     test.suite.toUpperCase(),
   );
   var exit_code = 0;
