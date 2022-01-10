@@ -8,7 +8,7 @@
  * @format
  */
 
-const colors = require('colors/safe');
+const chalk = require('chalk');
 const {format} = require('util');
 
 const {noErrors} = require('../flowResult');
@@ -51,18 +51,18 @@ async function runTestSuite(
   let totalTests = 0;
 
   function printStatus(status: 'RUN' | 'PASS' | 'FAIL' | 'ERROR'): void {
-    let statusText = colors.grey.bold('[ ] RUN') + ':  ';
+    let statusText = chalk.grey.bold('[ ] RUN') + ':  ';
     if (status === 'PASS') {
-      statusText = colors.green.bold('[\u2713] PASS') + ': '; // checkmark unicode
+      statusText = chalk.green.bold('[\u2713] PASS') + ': '; // checkmark unicode
     } else if (status === 'FAIL') {
-      statusText = colors.red.bold('[\u2717] FAIL') + ': '; // x unicode
+      statusText = chalk.red.bold('[\u2717] FAIL') + ': '; // x unicode
     } else if (status === 'ERROR') {
-      statusText = colors.bgRed(colors.white.bold('[!] ERROR')) + ':';
+      statusText = chalk.bgRed(chalk.white.bold('[!] ERROR')) + ':';
     }
     reportStatus(
       statusText,
       format(
-        colors.grey('(%d/%d tests. %d steps passed. %d steps failed)'),
+        chalk.grey('(%d/%d tests. %d steps passed. %d steps failed)'),
         testsRun,
         totalTests,
         stepsPassed,

@@ -8,7 +8,7 @@
  * @format
  */
 
-const colors = require('colors/safe');
+const chalk = require('chalk');
 
 const {format} = require('util');
 
@@ -16,7 +16,7 @@ const commandFinder = require('./command/finder');
 
 function cleanUp() {
   process.stdout.write('\x1B[?25h'); // Show terminal cursor
-  process.stdout.write(colors.rainbow('Cleaning up...\n'));
+  process.stdout.write(chalk.yellow('Cleaning up...\n'));
   process.exit(1);
 }
 

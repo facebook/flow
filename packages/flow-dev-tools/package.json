@@ -5,9 +5,9 @@
   "version": "0.1.0",
   "dependencies": {
     "blessed": "^0.1.81",
-    "colors": "^1.1.2",
+    "chalk": "^4.1.2",
     "diff": "^3.5.0",
-    "flow-parser": "~0.21.0",
+    "flow-parser": "*",
     "flow-remove-types": "*",
     "glob": "^7.0.3",
     "jest": "^27",
