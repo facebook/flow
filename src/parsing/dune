@@ -10,6 +10,7 @@
     flow_state_readers
     xx
     flow_package
+    flow_service_inference_module
   )
   (preprocess (pps lwt_ppx))
 )
