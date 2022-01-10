@@ -82,6 +82,7 @@ queries_in_file autocomplete "intersection.js" --pretty
 queries_in_file autocomplete "rank.js" --lsp
 queries_in_file autocomplete "rank_union.js" --lsp
 queries_in_file autocomplete "rank_intersection.js" --lsp
+queries_in_file autocomplete "shadow-prop.js" --pretty
 queries_in_file autocomplete "suggest_optional_chaining_1.js" --lsp
 queries_in_file autocomplete "suggest_optional_chaining_2.js" --lsp
 queries_in_file autocomplete "suggest_optional_chaining_3.js" --lsp
