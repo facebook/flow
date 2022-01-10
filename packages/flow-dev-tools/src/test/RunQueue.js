@@ -8,7 +8,7 @@
  * @format
  */
 
-const colors = require('colors/safe');
+const chalk = require('chalk');
 const {format} = require('util');
 const tty = require('tty');
 
@@ -72,7 +72,7 @@ class RunQueue {
 
     this.todo.forEach(suiteName => {
       this.statuses[suiteName] = {
-        status: colors.grey.bold('[ ] RUN') + ': ',
+        status: chalk.grey.bold('[ ] RUN') + ': ',
         details: '',
       };
     });
@@ -250,7 +250,7 @@ class RunQueue {
     const padding = paddingLength > 0 ? Array(paddingLength + 1).join(' ') : '';
     process.stdout.write(
       format(
-        '%s ' + colors.blue('%s') + '%s %s\n',
+        '%s ' + chalk.blue('%s') + '%s %s\n',
         status,
         suiteName,
         padding,

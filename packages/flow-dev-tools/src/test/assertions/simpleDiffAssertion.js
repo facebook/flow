@@ -10,7 +10,7 @@
 
 const {format} = require('util');
 
-const colors = require('colors/safe');
+const chalk = require('chalk');
 const {diffLines, diffWords} = require('diff');
 
 import type {
@@ -102,8 +102,8 @@ function getDiff(
       // Gotta make these line num with the +/- lines
       messages.push('  ' + expectedLine);
     } else {
-      actualLine != '' && messages.push(colors.green('+ ') + actualLine);
-      expectedLine != '' && messages.push(colors.red('- ') + expectedLine);
+      actualLine != '' && messages.push(chalk.green('+ ') + actualLine);
+      expectedLine != '' && messages.push(chalk.red('- ') + expectedLine);
       isSame = false;
     }
     actualLine = expectedLine = '';
@@ -114,12 +114,12 @@ function getDiff(
       saveLine();
     } else {
       if (part.added) {
-        expectedLine += colors.red(part.value);
+        expectedLine += chalk.red(part.value);
       } else if (part.removed) {
-        actualLine += colors.green(part.value);
+        actualLine += chalk.green(part.value);
       } else {
-        expectedLine += colors.grey(part.value);
-        actualLine += colors.grey(part.value);
+        expectedLine += chalk.grey(part.value);
+        actualLine += chalk.grey(part.value);
       }
     }
   }
@@ -143,7 +143,7 @@ function simpleDiffAssertion(
         ? []
         : [
             format(
-              colors.white('%s line %d col %d'),
+              chalk.white('%s line %d col %d'),
               assertLoc.filename,
               assertLoc.line,
               assertLoc.column,
@@ -152,12 +152,12 @@ function simpleDiffAssertion(
     const reasonMessage =
       reason == null
         ? []
-        : [format(colors.grey('Reason: ') + colors.red('%s'), reason)];
+        : [format(chalk.grey('Reason: ') + chalk.red('%s'), reason)];
     const keyMessage = [
       format(
-        colors.green('Actual %s (+)') +
-          colors.grey(" didn't match ") +
-          colors.red('expected %s (-)'),
+        chalk.green('Actual %s (+)') +
+          chalk.grey(" didn't match ") +
+          chalk.red('expected %s (-)'),
         diffSubject,
         diffSubject,
       ),

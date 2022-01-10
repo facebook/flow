@@ -8,7 +8,7 @@
  * @format
  */
 
-const colors = require('colors/safe');
+const chalk = require('chalk');
 const {isAbsolute, join} = require('path');
 const {format} = require('util');
 
@@ -128,13 +128,13 @@ async function runner(args: Args): Promise<void> {
     suiteName = 0;
 
   function printStatus(status: 'RECORDING' | 'RECORDED' | 'FAIL'): void {
-    let statusText = colors.bold('[ ] RECORDING:       ');
+    let statusText = chalk.bold('[ ] RECORDING:       ');
     let newline = '';
     if (status === 'RECORDED') {
-      statusText = colors.green.bold('[✓] RECORDED:        ');
+      statusText = chalk.green.bold('[✓] RECORDED:        ');
       newline = '\n';
     } else if (status === 'FAIL') {
-      statusText = colors.red.bold('[✗] FAILED TO RECORD:');
+      statusText = chalk.red.bold('[✗] FAILED TO RECORD:');
       newline = '\n';
     }
     if (process.stdout.isTTY) {

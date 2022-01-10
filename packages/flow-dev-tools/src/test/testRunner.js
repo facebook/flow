@@ -8,7 +8,7 @@
  * @format
  */
 
-const colors = require('colors/safe');
+const chalk = require('chalk');
 
 const {format} = require('util');
 const {basename, dirname, resolve, join} = require('path');
@@ -126,8 +126,8 @@ function startWatchAndRun(suites, args) {
       } catch (e) {
         process.stderr.write(
           format(
-            colors.red.bold('Failed to load test suite `%s`\n%s\n'),
-            colors.blue(suiteName),
+            chalk.red.bold('Failed to load test suite `%s`\n%s\n'),
+            chalk.blue(suiteName),
             e.stack,
           ),
         );
@@ -267,11 +267,11 @@ async function runOnce(suites: {[suiteName: string]: Suite}, args) {
       }
       await write(
         process.stdout,
-        colors.bgRed(colors.white.bold('ERRORED')) +
-          colors.grey(': suite ') +
-          colors.blue('%s') +
+        chalk.bgRed(chalk.white.bold('ERRORED')) +
+          chalk.grey(': suite ') +
+          chalk.blue('%s') +
           '\n' +
-          colors.red('%s') +
+          chalk.red('%s') +
           '\n',
         suiteName,
         suiteResult.message,
@@ -290,12 +290,12 @@ async function runOnce(suites: {[suiteName: string]: Suite}, args) {
             exitCode = 1;
             await write(
               process.stdout,
-              colors.red.bold('FAILED') +
-                colors.grey(': suite ') +
-                colors.blue('%s') +
-                colors.grey(', test ') +
-                colors.blue('%s') +
-                colors.grey(' (%d of %d), step %d of %d') +
+              chalk.red.bold('FAILED') +
+                chalk.grey(': suite ') +
+                chalk.blue('%s') +
+                chalk.grey(', test ') +
+                chalk.blue('%s') +
+                chalk.grey(' (%d of %d), step %d of %d') +
                 '\n',
               suiteName,
               testResult.name || 'unnamed test',
@@ -336,7 +336,7 @@ async function runOnce(suites: {[suiteName: string]: Suite}, args) {
           }
           await write(
             process.stdout,
-            colors.grey.bold('%s %s') + '\n' + colors.grey('%s') + '\n',
+            chalk.grey.bold('%s %s') + '\n' + chalk.grey('%s') + '\n',
             logCommand,
             logFile,
             logContents,

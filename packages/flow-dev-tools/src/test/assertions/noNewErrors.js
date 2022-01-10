@@ -10,7 +10,7 @@
 
 const {format} = require('util');
 
-const colors = require('colors/safe');
+const chalk = require('chalk');
 
 const {difference, prettyPrint} = require('../../flowResult');
 
@@ -30,23 +30,23 @@ function noNewErrors(assertLoc: ?AssertionLocation): ErrorAssertion {
           ? []
           : [
               format(
-                colors.white('%s line %d col %d'),
+                chalk.white('%s line %d col %d'),
                 assertLoc.filename,
                 assertLoc.line,
                 assertLoc.column,
               ),
             ];
       const keyMessage = [
-        colors.green('Actual new errors (+)') +
-          colors.grey(" didn't match expected no new errors"),
+        chalk.green('Actual new errors (+)') +
+          chalk.grey(" didn't match expected no new errors"),
       ];
       const errorMessages = prettyPrint(brandNew)
         .split('\n')
-        .map(line => colors.green('+ ' + line));
+        .map(line => chalk.green('+ ' + line));
       const reasonMessage =
         reason == null
           ? []
-          : [format(colors.grey('Reason: ') + colors.red('%s'), reason)];
+          : [format(chalk.grey('Reason: ') + chalk.red('%s'), reason)];
       const messages = [].concat(
         locMessage,
         reasonMessage,

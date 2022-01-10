@@ -693,11 +693,6 @@ assert-plus@^1.0.0:
   resolved "https://registry.yarnpkg.com/assert-plus/-/assert-plus-1.0.0.tgz#f12e0f3c5d77b0b1cdd9146942e4e96c1e4dd525"
   integrity sha1-8S4PPF13sLHN2RRpQuTpbB5N1SU=
 
-ast-types@0.8.14:
-  version "0.8.14"
-  resolved "https://registry.yarnpkg.com/ast-types/-/ast-types-0.8.14.tgz#65bf58559a23488e076981627b5eb987aba67cda"
-  integrity sha1-Zb9YVZojSI4HaYFie165h6umfNo=
-
 ast-types@^0.14.1:
   version "0.14.1"
   resolved "https://registry.yarnpkg.com/ast-types/-/ast-types-0.14.1.tgz#0b415043770d7a2cbe4b2770271cbd7d2c9f61b9"
@@ -876,7 +871,7 @@ chalk@^2.0.0:
     escape-string-regexp "^1.0.5"
     supports-color "^5.3.0"
 
-chalk@^4.0.0:
+chalk@^4.0.0, chalk@^4.1.2:
   version "4.1.2"
   resolved "https://registry.yarnpkg.com/chalk/-/chalk-4.1.2.tgz#aac4e2b7734a740867aeb16bf02aad556a1e7a01"
   integrity sha512-oKnbhFyRIXpUuez8iBMmyEa4nbj4IOQyuhc/wy9kY7/WVPcwIO9VA668Pu8RkO7+0G76SLROeyw9CpQ061i4mA==
@@ -942,7 +937,7 @@ color-name@~1.1.4:
   resolved "https://registry.yarnpkg.com/color-name/-/color-name-1.1.4.tgz#c2a09a87acbde69543de6f63fa3995c826c536a2"
   integrity sha512-dOy+3AuW3a2wNbZHIuMZpTcgjGuLU/uBL/ubcZF9OXbDo8ff4O8yVp5Bf0efS8uEoYo5q4Fx7dY9OgQGXgAsQA==
 
-colors@>=0.6.2, colors@^1.1.2:
+colors@>=0.6.2:
   version "1.3.3"
   resolved "https://registry.yarnpkg.com/colors/-/colors-1.3.3.tgz#39e005d546afe01e01f9c4ca8fa50f686a01205d"
   integrity sha512-mmGt/1pZqYRjMxB1axhTo16/snVZ5krrKkcmMeVKxzECMMXoCgnvTPp10QgHfcbQZw8Dq2jMNG6je4JlWU0gWg==
@@ -1236,15 +1231,6 @@ find-up@^4.0.0, find-up@^4.1.0:
   dependencies:
     locate-path "^5.0.0"
     path-exists "^4.0.0"
-
-flow-parser@~0.21.0:
-  version "0.21.0"
-  resolved "https://registry.yarnpkg.com/flow-parser/-/flow-parser-0.21.0.tgz#80b575c7e67c2c6e483ed3aade98a190e2ef7ae9"
-  integrity sha1-gLV1x+Z8LG5IPtOq3pihkOLveuk=
-  dependencies:
-    ast-types "0.8.14"
-    colors ">=0.6.2"
-    minimist ">=0.2.0"
 
 form-data@^3.0.0:
   version "3.0.1"
@@ -2091,7 +2077,7 @@ minimatch@^3.0.4:
   dependencies:
     brace-expansion "^1.1.7"
 
-minimist@>=0.2.0, minimist@>=1.2.3, minimist@^1.1.1, minimist@^1.2.0, minimist@^1.2.5, minimist@~1.2.3:
+minimist@>=1.2.3, minimist@^1.1.1, minimist@^1.2.0, minimist@^1.2.5, minimist@~1.2.3:
   version "1.2.5"
   resolved "https://registry.yarnpkg.com/minimist/-/minimist-1.2.5.tgz#67d66014b66a6a8aaa0c083c5fd58df4e4e97602"
   integrity sha512-FM9nNUYrRBAELZQT3xeZQ7fmMOBg6nWNmJKTcgsJeaLstP/UODVpGsr5OhXhhXg6f+qtJ8uiZ+PUxkDWcgIXLw==
