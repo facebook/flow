@@ -1996,12 +1996,6 @@ struct
                | PredicateT (NotP (RightP (SentinelProp _, _)), _) ->
                  false
                | _ -> true ->
-          ( if Context.is_verbose cx then
-            match u with
-            | UseT (_, UnionT _) -> prerr_endline "UnionT ~> UnionT slow case"
-            | UseT (_, IntersectionT _) -> prerr_endline "UnionT ~> IntersectionT slow case"
-            | _ -> ()
-          );
           flow_all_in_union cx trace rep u
         | (_, FilterOptionalT (use_op, u)) -> rec_flow_t cx trace ~use_op (l, u)
         | (_, FilterMaybeT (use_op, u)) -> rec_flow_t cx trace ~use_op (l, u)
