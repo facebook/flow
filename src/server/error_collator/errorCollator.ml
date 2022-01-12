@@ -26,7 +26,6 @@ let regenerate ~reader =
   let loc_of_aloc = Parsing_heaps.Reader.loc_of_aloc ~reader in
   let add_suppression_warnings checked unused warnings =
     (* For each unused suppression, create an warning *)
-    let deps = CheckedSet.dependencies checked in
     let all_locs = Error_suppressions.all_unused_locs unused in
     let warnings =
       Loc_collections.LocSet.fold
@@ -38,12 +37,12 @@ let regenerate ~reader =
           in
           (* In lazy mode, dependencies are modules which we typecheck not because we care about
            * them, but because something important (a focused file or a focused file's dependent)
-           * needs these dependencies. Therefore, we might not typecheck a dependencies' dependents.
+           * needs these dependencies. Therefore, we might not typecheck a dependency's dependents.
            *
            * This means there might be an unused suppression comment warning in a dependency which
            * only shows up in lazy mode. To avoid this, we'll just avoid raising this kind of
-           * warning in any dependency.*)
-          if not (FilenameSet.mem source_file deps) then
+           * warning in any dependency. *)
+          if not (CheckedSet.mem_dependency source_file checked) then
             let err =
               let msg = Error_message.EUnusedSuppression loc in
               Flow_error.error_of_msg ~trace_reasons:[] ~source_file msg
