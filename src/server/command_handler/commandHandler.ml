@@ -675,12 +675,9 @@ let batch_coverage ~options ~env ~trust ~batch =
     Error
       "Batch coverage cannot be run in lazy mode.\n\nRestart the Flow server with '--no-lazy' to enable this command."
   else
-    let is_checked key = CheckedSet.mem key env.checked_files in
     let filter key = Base.List.exists ~f:(fun elt -> Files.is_prefix elt key) batch in
     let coverage_map =
-      FilenameMap.filter
-        (fun key _ -> is_checked key && File_key.to_string key |> filter)
-        env.coverage
+      FilenameMap.filter (fun key _ -> File_key.to_string key |> filter) env.coverage
     in
     let response =
       FilenameMap.fold (fun key coverage -> List.cons (key, coverage)) coverage_map []

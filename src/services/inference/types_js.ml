@@ -1122,10 +1122,16 @@ end = struct
     let freshparsed =
       CheckedSet.filter ~f:(fun file _ -> FilenameSet.mem file parsed_set) updates
     in
+
     (* clear errors for new, changed and deleted files *)
     let { ServerEnv.local_errors; merge_errors; warnings; suppressions } =
       clear_errors new_or_changed_or_deleted errors
     in
+    (* clear stale coverage info *)
+    let coverage =
+      FilenameSet.fold FilenameMap.remove new_or_changed_or_deleted env.ServerEnv.coverage
+    in
+
     (* record reparse errors *)
     let local_errors =
       let () =
@@ -1447,7 +1453,7 @@ end = struct
     in
     Hh_logger.info "Done updating index";
 
-    let env = { env with ServerEnv.files = parsed; unparsed; dependency_info; exports } in
+    let env = { env with ServerEnv.files = parsed; unparsed; dependency_info; exports; coverage } in
     let errors = { ServerEnv.local_errors; merge_errors; warnings; suppressions } in
     let intermediate_values =
       ( deleted,

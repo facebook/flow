@@ -62,6 +62,12 @@ coverage() {
   assert_ok rm a.js
   assert_ok "$FLOW" force-recheck a.js
   assert_ok "$FLOW" batch-coverage --strip-root --wait-for-recheck true .
+  echo "-----------------------------"
+  echo "parsed -> unparsed file"
+  echo "-----------------------------"
+  assert_ok cp non_flow.js b.js
+  assert_ok "$FLOW" force-recheck b.js
+  assert_ok "$FLOW" batch-coverage --strip-root --wait-for-recheck true .
 }
 
 coverage > coverage.log
