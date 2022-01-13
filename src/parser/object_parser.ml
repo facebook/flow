@@ -734,6 +734,13 @@ module Object
       | _ ->
         Ast.Class.(Body.Property (loc, { Property.key; value; annot; static; variance; comments }))
     in
+    let is_asi env =
+      match Peek.token env with
+      | T_LESS_THAN -> false
+      | T_LPAREN -> false
+      | _ when Peek.is_implicit_semicolon env -> true
+      | _ -> false
+    in
     let rec init env start_loc decorators key ~async ~generator ~static ~declare variance leading =
       match Peek.token env with
       | T_COLON
@@ -747,7 +754,7 @@ module Object
         error_unexpected env;
         Eat.token env;
         init env start_loc decorators key ~async ~generator ~static ~declare variance leading
-      | _ when Peek.is_implicit_semicolon env ->
+      | _ when is_asi env ->
         (* an uninitialized, unannotated property *)
         property env start_loc key static declare variance leading
       | _ ->
