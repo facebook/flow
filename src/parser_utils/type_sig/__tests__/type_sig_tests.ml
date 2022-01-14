@@ -172,7 +172,6 @@ let parse_options =
     {
       default_parse_options with
       enums = true;
-      esproposal_class_instance_fields = true;
       esproposal_class_static_fields = true;
       esproposal_export_star_as = true;
     }

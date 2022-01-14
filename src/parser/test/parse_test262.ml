@@ -293,7 +293,6 @@ let run_test (name, frontmatter, content) =
   let parse_options =
     {
       Parser_env.enums = true;
-      esproposal_class_instance_fields = true;
       esproposal_class_static_fields = true;
       esproposal_decorators = false;
       esproposal_export_star_as = false;

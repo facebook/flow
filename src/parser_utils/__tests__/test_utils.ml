@@ -11,7 +11,6 @@ let parse contents =
       {
         Parser_env.default_parse_options with
         Parser_env.enums = true;
-        Parser_env.esproposal_class_instance_fields = true;
         Parser_env.esproposal_class_static_fields = true;
         Parser_env.esproposal_export_star_as = true;
         Parser_env.esproposal_nullish_coalescing = true;

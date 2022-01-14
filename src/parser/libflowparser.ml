@@ -53,8 +53,6 @@ let convert_options opts =
       (fun (opts, tokens) (k, v) ->
         match k with
         | "enums" -> ({ opts with enums = v }, tokens)
-        | "esproposal_class_instance_fields" ->
-          ({ opts with esproposal_class_instance_fields = v }, tokens)
         | "esproposal_class_static_fields" ->
           ({ opts with esproposal_class_static_fields = v }, tokens)
         | "esproposal_decorators" -> ({ opts with esproposal_decorators = v }, tokens)

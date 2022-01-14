@@ -706,10 +706,7 @@ module Object
             let value =
               match (declare, Peek.token env) with
               | (None, T_ASSIGN) ->
-                if
-                  (static && options.esproposal_class_static_fields)
-                  || ((not static) && options.esproposal_class_instance_fields)
-                then (
+                if (static && options.esproposal_class_static_fields) || not static then (
                   Expect.token env T_ASSIGN;
                   Ast.Class.Property.Initialized
                     (Parse.expression (env |> with_allow_super Super_prop))

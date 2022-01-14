@@ -10,12 +10,7 @@ open Refactor_extract_utils
 open Loc_collections
 
 let parse contents =
-  let (ast, _) =
-    Parser_flow.program
-      ~parse_options:
-        (Some Parser_env.{ default_parse_options with esproposal_class_instance_fields = true })
-      contents
-  in
+  let (ast, _) = Parser_flow.program contents in
   ast
 
 let pretty_print layout =

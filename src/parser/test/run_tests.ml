@@ -124,9 +124,6 @@ end = struct
           match k with
           | "enums" ->
             get_bool k v >>= fun v -> return (test_opts, { opts with Parser_env.enums = v })
-          | "esproposal_class_instance_fields" ->
-            get_bool k v >>= fun v ->
-            return (test_opts, { opts with Parser_env.esproposal_class_instance_fields = v })
           | "esproposal_class_static_fields" ->
             get_bool k v >>= fun v ->
             return (test_opts, { opts with Parser_env.esproposal_class_static_fields = v })
