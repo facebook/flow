@@ -294,3 +294,5 @@ var at4: string = numberValue9; // Error: number ~> string
 // == Vanilla `import` cannot import a type-only export == //
 /////////////////////////////////////////////////////////////
 import {typeAlias} from "./ExportType"; // Error: Cannot vanilla-import a type alias!
+
+import {I} from "./ExportInterface"; // Error: import-type-as-value

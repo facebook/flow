@@ -1157,6 +1157,14 @@ Cannot import the type `typeAlias` as a value. Use `import type` instead. [impor
                 ^^^^^^^^^
 
 
+Error ---------------------------------------------------------------------------------------------- es6modules.js:298:9
+
+Cannot import the type `I` as a value. Use `import type` instead. [import-type-as-value]
+
+   298| import {I} from "./ExportInterface"; // Error: import-type-as-value
+                ^
+
+
 Error ---------------------------------------------------------------------------------- test_imports_are_frozen.js:9:10
 
 Cannot assign `123` to `DefaultA.numberValue1` because property `numberValue1` is not writable. [cannot-write]
@@ -1234,4 +1242,4 @@ Cannot assign `123` to `CommonJS_Frozen_Star.numberValue1` because property `num
 
 
 
-Found 83 errors
+Found 84 errors

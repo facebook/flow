@@ -1,6 +1,6 @@
 // @flow
 
-import { PromiseLike as RemotePromiseLike } from './export';
+import type { PromiseLike as RemotePromiseLike } from './export';
 
 // Same definition as in export.js
 export interface PromiseLike<T> {

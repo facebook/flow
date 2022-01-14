@@ -881,11 +881,20 @@ struct
         | ((ModuleT _ | DefT (_, _, ObjT _)), CheckUntypedImportT _) -> ()
         | (AnyT (lreason, _), CheckUntypedImportT (reason, import_kind)) ->
           Flow_js_utils.check_untyped_import cx import_kind lreason reason
-        | ( (DefT (_, _, PolyT { t_out = DefT (_, _, TypeT _); _ }) | DefT (_, _, TypeT _)),
-            AssertImportIsValueT (reason, name)
-          ) ->
-          add_output cx ~trace (Error_message.EImportTypeAsValue (reason, name))
-        | (_, AssertImportIsValueT (_, _)) -> ()
+        | (_, AssertImportIsValueT (reason, name)) ->
+          let test = function
+            | TypeT _
+            | ClassT (DefT (_, _, InstanceT (_, _, _, { inst_kind = InterfaceKind _; _ }))) ->
+              add_output cx ~trace (Error_message.EImportTypeAsValue (reason, name))
+            | _ -> ()
+          in
+          (* Imported polymorphic types will always have a concrete def_t, so
+           * unwrapping here without concretizing is safe. *)
+          (match l with
+          | DefT (_, _, PolyT { t_out = DefT (_, _, def_t); _ })
+          | DefT (_, _, def_t) ->
+            test def_t
+          | _ -> ())
         (*
          * Handling for the idx() custom function.
          *
