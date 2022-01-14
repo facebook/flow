@@ -153,7 +153,6 @@ let main
                 enums = true;
                 esproposal_decorators = true;
                 esproposal_export_star_as = true;
-                esproposal_nullish_coalescing = true;
                 types = true;
                 use_strict;
               }

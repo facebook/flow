@@ -1073,7 +1073,6 @@ let parse_and_cache (state : server_state) (uri : Lsp.DocumentUri.t) :
           enums = true;
           esproposal_decorators = true;
           esproposal_export_star_as = true;
-          esproposal_nullish_coalescing = true;
           types = true;
           use_strict;
         }

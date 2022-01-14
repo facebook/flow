@@ -406,10 +406,6 @@ module Expression
     and coalesce ~allowed env left lloc =
       match Peek.token env with
       | T_PLING_PLING ->
-        let options = parse_options env in
-        if not options.esproposal_nullish_coalescing then
-          error env Parse_error.NullishCoalescingDisabled;
-
         if not allowed then error env (Parse_error.NullishCoalescingUnexpectedLogical "??");
 
         Expect.token env T_PLING_PLING;

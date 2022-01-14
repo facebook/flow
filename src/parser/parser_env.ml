@@ -127,7 +127,6 @@ type parse_options = {
   enums: bool;  (** enable parsing of Flow enums *)
   esproposal_decorators: bool;  (** enable parsing of decorators *)
   esproposal_export_star_as: bool;  (** enable parsing of `export * as` syntax *)
-  esproposal_nullish_coalescing: bool;  (** enable parsing of nullish coalescing (`??`) *)
   types: bool;  (** enable parsing of Flow types *)
   use_strict: bool;  (** treat the file as strict, without needing a "use strict" directive *)
 }
@@ -137,7 +136,6 @@ let default_parse_options =
     enums = false;
     esproposal_decorators = false;
     esproposal_export_star_as = false;
-    esproposal_nullish_coalescing = false;
     types = true;
     use_strict = false;
   }

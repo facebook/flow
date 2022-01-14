@@ -69,8 +69,6 @@ let parse_options jsopts =
     esproposal_decorators = bool_opt defaults.esproposal_decorators jsopts "esproposal_decorators";
     esproposal_export_star_as =
       bool_opt defaults.esproposal_export_star_as jsopts "esproposal_export_star_as";
-    esproposal_nullish_coalescing =
-      bool_opt defaults.esproposal_nullish_coalescing jsopts "esproposal_nullish_coalescing";
     types = bool_opt defaults.types jsopts "types";
     use_strict = bool_opt defaults.use_strict jsopts "use_strict";
   }

@@ -113,7 +113,6 @@ let parse_source_file ~fail ~types ~use_strict content file =
           enums = true;
           esproposal_decorators = true;
           esproposal_export_star_as = true;
-          esproposal_nullish_coalescing = true;
           types;
           use_strict;
         }
@@ -132,7 +131,6 @@ let parse_package_json_file ~node_main_fields content file =
           enums = false;
           esproposal_decorators = false;
           esproposal_export_star_as = false;
-          esproposal_nullish_coalescing = false;
           types = true;
           use_strict = false;
         }

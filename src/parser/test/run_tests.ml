@@ -130,9 +130,6 @@ end = struct
           | "esproposal_export_star_as" ->
             get_bool k v >>= fun v ->
             return (test_opts, { opts with Parser_env.esproposal_export_star_as = v })
-          | "esproposal_nullish_coalescing" ->
-            get_bool k v >>= fun v ->
-            return (test_opts, { opts with Parser_env.esproposal_nullish_coalescing = v })
           | "types" ->
             get_bool k v >>= fun v -> return (test_opts, { opts with Parser_env.types = v })
           | "use_strict" ->

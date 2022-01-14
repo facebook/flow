@@ -156,7 +156,6 @@ type t =
   | TrailingCommaAfterRestElement
   | OptionalChainNew
   | OptionalChainTemplate
-  | NullishCoalescingDisabled
   | NullishCoalescingUnexpectedLogical of string
   | WhitespaceInPrivateName
   | ThisParamAnnotationRequired
@@ -435,8 +434,6 @@ module PP = struct
     | TrailingCommaAfterRestElement -> "A trailing comma is not permitted after the rest element"
     | OptionalChainNew -> "An optional chain may not be used in a `new` expression."
     | OptionalChainTemplate -> "Template literals may not be used in an optional chain."
-    | NullishCoalescingDisabled ->
-      "The nullish coalescing plugin must be enabled in order to use the nullish coalescing operator (`??`). Nullish coalescing is an active early-stage feature proposal which may change and is not enabled by default. To enable support in the parser, use the `esproposal_nullish_coalescing` option."
     | NullishCoalescingUnexpectedLogical operator ->
       Printf.sprintf
         "Unexpected token `%s`. Parentheses are required to combine `??` with `&&` or `||` expressions."

@@ -7,13 +7,8 @@
 
 let parse contents =
   let parse_options =
-    Some
-      {
-        Parser_env.default_parse_options with
-        Parser_env.enums = true;
-        Parser_env.esproposal_export_star_as = true;
-        Parser_env.esproposal_nullish_coalescing = true;
-      }
+    let open Parser_env in
+    Some { default_parse_options with enums = true; esproposal_export_star_as = true }
   in
   let (ast, _errors) = Parser_flow.program ~parse_options contents in
   ast

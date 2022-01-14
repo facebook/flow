@@ -295,7 +295,6 @@ let run_test (name, frontmatter, content) =
       Parser_env.enums = true;
       esproposal_decorators = false;
       esproposal_export_star_as = false;
-      esproposal_nullish_coalescing = true;
       types = false;
       use_strict;
     }
