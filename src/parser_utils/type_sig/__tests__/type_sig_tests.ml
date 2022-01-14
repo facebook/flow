@@ -168,13 +168,7 @@ let make_test_formatter () =
 
 let parse_options =
   let open Parser_env in
-  Some
-    {
-      default_parse_options with
-      enums = true;
-      esproposal_class_static_fields = true;
-      esproposal_export_star_as = true;
-    }
+  Some { default_parse_options with enums = true; esproposal_export_star_as = true }
 
 let sig_options
     ?(type_asserts = true)

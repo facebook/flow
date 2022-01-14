@@ -37,7 +37,6 @@ let parse_content file content =
            * ignore/warn/enable them is handled during inference so that a clean error
            * can be surfaced (rather than a more cryptic parse error).
            *)
-          esproposal_class_static_fields = true;
           esproposal_decorators = true;
           esproposal_export_star_as = true;
           esproposal_optional_chaining = true;

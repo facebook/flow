@@ -66,8 +66,6 @@ let parse_options jsopts =
   let defaults = Parser_env.default_parse_options in
   {
     enums = bool_opt defaults.enums jsopts "enums";
-    esproposal_class_static_fields =
-      bool_opt defaults.esproposal_class_static_fields jsopts "esproposal_class_static_fields";
     esproposal_decorators = bool_opt defaults.esproposal_decorators jsopts "esproposal_decorators";
     esproposal_export_star_as =
       bool_opt defaults.esproposal_export_star_as jsopts "esproposal_export_star_as";

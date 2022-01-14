@@ -125,7 +125,6 @@ type token_sink_result = {
 
 type parse_options = {
   enums: bool;  (** enable parsing of Flow enums *)
-  esproposal_class_static_fields: bool;  (** enable parsing of class static fields *)
   esproposal_decorators: bool;  (** enable parsing of decorators *)
   esproposal_export_star_as: bool;  (** enable parsing of `export * as` syntax *)
   esproposal_nullish_coalescing: bool;  (** enable parsing of nullish coalescing (`??`) *)
@@ -137,7 +136,6 @@ type parse_options = {
 let default_parse_options =
   {
     enums = false;
-    esproposal_class_static_fields = false;
     esproposal_decorators = false;
     esproposal_export_star_as = false;
     esproposal_optional_chaining = false;

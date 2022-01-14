@@ -111,7 +111,6 @@ let parse_source_file ~fail ~types ~use_strict content file =
            * can be surfaced (rather than a more cryptic parse error).
            *)
           enums = true;
-          esproposal_class_static_fields = true;
           esproposal_decorators = true;
           esproposal_export_star_as = true;
           esproposal_optional_chaining = true;
@@ -132,7 +131,6 @@ let parse_package_json_file ~node_main_fields content file =
       Parser_env.
         {
           enums = false;
-          esproposal_class_static_fields = false;
           esproposal_decorators = false;
           esproposal_export_star_as = false;
           esproposal_optional_chaining = false;

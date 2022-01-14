@@ -151,7 +151,6 @@ let main
             Parser_env.
               {
                 enums = true;
-                esproposal_class_static_fields = true;
                 esproposal_decorators = true;
                 esproposal_export_star_as = true;
                 esproposal_optional_chaining = true;

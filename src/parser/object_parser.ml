@@ -702,16 +702,12 @@ module Object
           ~start_loc
           (fun env ->
             let annot = Type.annotation_opt env in
-            let options = parse_options env in
             let value =
               match (declare, Peek.token env) with
               | (None, T_ASSIGN) ->
-                if (static && options.esproposal_class_static_fields) || not static then (
-                  Expect.token env T_ASSIGN;
-                  Ast.Class.Property.Initialized
-                    (Parse.expression (env |> with_allow_super Super_prop))
-                ) else
-                  Ast.Class.Property.Uninitialized
+                Eat.token env;
+                Ast.Class.Property.Initialized
+                  (Parse.expression (env |> with_allow_super Super_prop))
               | (Some _, T_ASSIGN) ->
                 error env Parse_error.DeclareClassFieldInitializer;
                 Eat.token env;
