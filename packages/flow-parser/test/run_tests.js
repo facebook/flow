@@ -214,7 +214,7 @@ function test_section(runTest, section_name, section) {
       console.log('%s: "%s"', chalk.green('PASSED'), name);
       results.num_successes++;
     } else {
-      console.log('%s: "%s"', chalk.redBG.white('FAILED'), name);
+      console.log('%s: "%s"', chalk.bgRed.white('FAILED'), name);
       results.num_failures++;
 
       results.failures[test.content] = result;
@@ -227,7 +227,7 @@ function report_percentage_passed(results) {
   var passed = results.num_failures === 0;
   var result_fraction = passed
     ? chalk.green('%s/%s')
-    : chalk.redBG.white('%s/%s');
+    : chalk.bgRed.white('%s/%s');
   console.log(
     chalk.bold('%s test suite: ') + result_fraction + ' tests passed',
     results.suite,
@@ -242,7 +242,7 @@ function report_results(results) {
 
   if (!passed) {
     console.log(
-      chalk.redBG.white('*** %d TESTS FAILED! ***'),
+      chalk.bgRed.white('*** %d TESTS FAILED! ***'),
       results.num_failures,
     );
 
@@ -253,7 +253,7 @@ function report_results(results) {
           if (results.failures[section_name].hasOwnProperty(test)) {
             var result = results.failures[section_name][test];
             console.log(
-              chalk.redBG.white('Test failure: "%s"'),
+              chalk.bgRed.white('Test failure: "%s"'),
               escape_content(test),
             );
             console.log(result.output);
