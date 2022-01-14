@@ -39,7 +39,6 @@ let parse_content file content =
            *)
           esproposal_decorators = true;
           esproposal_export_star_as = true;
-          esproposal_optional_chaining = true;
           esproposal_nullish_coalescing = true;
           types = true;
           use_strict = false;

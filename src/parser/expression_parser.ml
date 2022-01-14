@@ -1015,12 +1015,8 @@ module Expression
       call_cover ~allow_optional_chain ~in_optional_chain env start_loc (Cover_expr (loc, member))
     in
     fun ?(allow_optional_chain = true) ?(in_optional_chain = false) env start_loc left ->
-      let options = parse_options env in
       match Peek.token env with
       | T_PLING_PERIOD ->
-        if not options.esproposal_optional_chaining then
-          error env Parse_error.OptionalChainingDisabled;
-
         if not allow_optional_chain then error env Parse_error.OptionalChainNew;
 
         Expect.token env T_PLING_PERIOD;

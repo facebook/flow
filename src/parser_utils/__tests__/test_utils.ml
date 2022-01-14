@@ -13,7 +13,6 @@ let parse contents =
         Parser_env.enums = true;
         Parser_env.esproposal_export_star_as = true;
         Parser_env.esproposal_nullish_coalescing = true;
-        Parser_env.esproposal_optional_chaining = true;
       }
   in
   let (ast, _errors) = Parser_flow.program ~parse_options contents in

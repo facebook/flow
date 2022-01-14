@@ -55,7 +55,6 @@ let convert_options opts =
         | "enums" -> ({ opts with enums = v }, tokens)
         | "esproposal_decorators" -> ({ opts with esproposal_decorators = v }, tokens)
         | "esproposal_export_star_as" -> ({ opts with esproposal_export_star_as = v }, tokens)
-        | "esproposal_optional_chaining" -> ({ opts with esproposal_optional_chaining = v }, tokens)
         | "esproposal_nullish_coalescing" ->
           ({ opts with esproposal_nullish_coalescing = v }, tokens)
         | "types" -> ({ opts with types = v }, tokens)
