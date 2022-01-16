@@ -26,34 +26,6 @@ type checked_file_addr = Heap.checked_file SharedMem.addr
 
 type unparsed_file_addr = Heap.unparsed_file SharedMem.addr
 
-(* There's some redundancy in the visitors here, but an attempt to avoid repeated code led,
- * inexplicably, to a shared heap size regression under types-first: D15481813 *)
-let loc_compactifier =
-  object (this)
-    inherit [Loc.t, Loc.t, RelativeLoc.t, RelativeLoc.t] Flow_polymorphic_ast_mapper.mapper
-
-    method private compactify_loc loc = RelativeLoc.of_loc loc
-
-    method on_loc_annot = this#compactify_loc
-
-    method on_type_annot = this#compactify_loc
-  end
-
-let compactify_loc ast = loc_compactifier#program ast
-
-let loc_decompactifier source =
-  object (this)
-    inherit [RelativeLoc.t, RelativeLoc.t, Loc.t, Loc.t] Flow_polymorphic_ast_mapper.mapper
-
-    method private decompactify_loc loc = RelativeLoc.to_loc loc source
-
-    method on_loc_annot = this#decompactify_loc
-
-    method on_type_annot = this#decompactify_loc
-  end
-
-let decompactify_loc file ast = (loc_decompactifier (Some file))#program ast
-
 (* Write parsed data for checked file to shared memory. If we loaded from saved
  * state, a checked file entry will already exist without parse data and this
  * function will update the existing entry in place. Otherwise, we will create a
@@ -61,7 +33,7 @@ let decompactify_loc file ast = (loc_decompactifier (Some file))#program ast
 let add_checked_file file_key hash module_name docblock ast locs type_sig file_sig exports =
   let open Type_sig_collections in
   let serialize x = Marshal.to_string x [] in
-  let ast = serialize (compactify_loc ast) in
+  let ast = Flow_ast_marshal.serialize_ast ast in
   let docblock = serialize docblock in
   let file_sig = serialize file_sig in
   let aloc_table = Packed_locs.pack (Locs.length locs) (fun f -> Locs.iter f locs) in
@@ -161,9 +133,8 @@ let read_unparsed_module_name file_addr = Heap.dyn_unparsed_file file_addr |> re
 
 let read_ast file_key file_addr =
   let open Heap in
-  let deserialize x = Marshal.from_string x 0 in
   get_file_ast file_addr
-  |> read_opt (fun addr -> read_ast addr |> deserialize |> decompactify_loc file_key)
+  |> read_opt (fun addr -> Flow_ast_marshal.deserialize_ast (read_ast addr) file_key)
 
 let read_ast_unsafe file_key file_addr =
   match read_ast file_key file_addr with
