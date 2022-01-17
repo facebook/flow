@@ -18,3 +18,12 @@ let compress_bound input_size =
 external compress_default : string -> bytes -> int = "caml_lz4_compress_default" [@@noalloc]
 
 external decompress_safe : buf -> bytes -> int = "caml_lz4_decompress_safe" [@@noalloc]
+
+(* see lz4hc.h  LZ4HC_CLEVEL_MAX *)
+let compression_level_max = 12
+
+(* A valid [level] is between 1 and [max_compression_level], the recommended default setting is 9
+ *)
+let compression_level_default = 9
+
+external compress_hc : string -> bytes -> level:int -> int = "caml_lz4_compress_hc" [@@noalloc]

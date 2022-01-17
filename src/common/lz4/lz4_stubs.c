@@ -6,6 +6,7 @@
  */
 
 #include <lz4.h>
+#include <lz4hc.h>
 #define CAML_NAME_SPACE
 #include <caml/bigarray.h>
 #include <caml/mlvalues.h>
@@ -25,4 +26,13 @@ CAMLprim value caml_lz4_decompress_safe(value src, value dst) {
   int decompressed_size = LZ4_decompress_safe(
       ba->data, (char*)Bytes_val(dst), src_size, dst_capacity);
   return Val_long(decompressed_size);
+}
+
+CAMLprim value caml_lz4_compress_hc(value src, value dst, value level) {
+  int src_size = caml_string_length(src);
+  int dst_capacity = caml_string_length(dst);
+  int compression_level = Int_val(level);
+  int compressed_size = LZ4_compress_HC(
+      String_val(src), (char*)Bytes_val(dst), src_size, dst_capacity,compression_level);
+  return Val_long(compressed_size);
 }
