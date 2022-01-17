@@ -849,10 +849,12 @@ struct
   let () =
     invalidate_callback_list :=
       begin
-        fun () ->
-        Cache.clear ()
+        begin
+          fun () ->
+          Cache.clear ()
+        end
+        :: !invalidate_callback_list
       end
-      :: !invalidate_callback_list
 
   let remove_old_batch = Direct.remove_old_batch
 end
@@ -1210,12 +1212,16 @@ module NewAPI = struct
       exactly word sized, we add another word to hold this final byte.
    *)
 
-  let prepare_write_compressed tag serialized =
+  let prepare_write_compressed ?level tag serialized =
     let serialized_bsize = String.length serialized in
     let compress_bound = Lz4.compress_bound serialized_bsize in
     if compress_bound = 0 then invalid_arg "value larger than max input size";
     let compressed = Bytes.create compress_bound in
-    let compressed_bsize = Lz4.compress_default serialized compressed in
+    let compressed_bsize =
+      match level with
+      | None -> Lz4.compress_default serialized compressed
+      | Some level -> Lz4.compress_hc serialized compressed ~level
+    in
     let compressed_wsize = (compressed_bsize + 8) / 8 in
     let decompress_capacity = (serialized_bsize + 7) / 8 in
     let write chunk =
@@ -1244,7 +1250,8 @@ module NewAPI = struct
 
   (** ASTs *)
 
-  let prepare_write_ast ast = prepare_write_compressed Serialized_ast_tag ast
+  let prepare_write_ast ast =
+    prepare_write_compressed Serialized_ast_tag ast ~level:Lz4.compression_level_max
 
   let read_ast addr = read_compressed Serialized_ast_tag addr
 
