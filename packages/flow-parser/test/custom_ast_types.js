@@ -59,9 +59,7 @@ function custom_ast_types(fork) {
     )
     .field('exportKind', or('type', 'value'));
 
-  def('ExportAllDeclaration')
-    .field('exported', undefined) // Remove field from upstream, we don't support it yet (ES2020)
-    .field('exportKind', or('type', 'value'));
+  def('ExportAllDeclaration').field('exportKind', or('type', 'value'));
 
   // See https://github.com/benjamn/ast-types/issues/180
   def('ExportNamespaceSpecifier')

@@ -310,13 +310,14 @@ with type t = Impl.t = struct
         ) ->
         begin
           match specifiers with
-          | Some (ExportNamedDeclaration.ExportBatchSpecifier (_, None)) ->
+          | Some (ExportNamedDeclaration.ExportBatchSpecifier (_, exported)) ->
             node
               ?comments
               "ExportAllDeclaration"
               loc
               [
                 ("source", option string_literal source);
+                ("exported", option identifier exported);
                 ("exportKind", string (string_of_export_kind export_kind));
               ]
           | _ ->
