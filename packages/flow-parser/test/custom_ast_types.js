@@ -22,19 +22,6 @@ function custom_ast_types(fork) {
   /////////
   def('ObjectTypeIndexer').field('id', or(def('Identifier'), null));
 
-  def('IndexedAccessType')
-    .bases('FlowType')
-    .build('objectType', 'indexType')
-    .field('objectType', def('FlowType'))
-    .field('indexType', def('FlowType'));
-
-  def('OptionalIndexedAccessType')
-    .bases('FlowType')
-    .build('objectType', 'indexType', 'optional')
-    .field('objectType', def('FlowType'))
-    .field('indexType', def('FlowType'))
-    .field('optional', Boolean);
-
   def('TypeofTypeAnnotation')
     .bases('FlowType')
     .build('argument')

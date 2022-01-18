@@ -22,7 +22,7 @@
   },
   "dependencies": {},
   "devDependencies": {
-    "ast-types": "^0.14.1",
+    "ast-types": "^0.15.2",
     "chalk": "^4.1.2",
     "esprima-fb": "15001.1001.0-dev-harmony-fb",
     "minimist": ">=1.2.3"
