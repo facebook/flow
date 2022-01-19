@@ -7,11 +7,6 @@
 
 open Utils_js
 
-type mode =
-  | ModuleMode_Checked
-  | ModuleMode_Weak
-  | ModuleMode_Unchecked
-
 type error =
   | ModuleDuplicateProviderError of {
       module_name: string;
