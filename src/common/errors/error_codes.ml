@@ -24,6 +24,7 @@ type error_code =
   | DefaultImportAccess
   | DeprecatedType
   | DeprecatedUtility
+  | DuplicateClassMember
   | DuplicateEnumInit
   | DuplicateFlowDecl
   | DuplicateJsxDecl
@@ -200,6 +201,7 @@ let string_of_code : error_code -> string = function
   | DefaultImportAccess -> "default-import-access"
   | DeprecatedType -> "deprecated-type"
   | DeprecatedUtility -> "deprecated-utility"
+  | DuplicateClassMember -> "duplicate-class-member"
   | DuplicateEnumInit -> "duplicate-enum-init"
   | DuplicateFlowDecl -> "duplicate-flow-decl"
   | DuplicateJsxDecl -> "duplicate-jsx-decl"

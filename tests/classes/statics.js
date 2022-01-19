@@ -14,12 +14,14 @@ declare var o: {p:number};
 
 class Dup1 {
   static x: string;
+  // $FlowExpectedError[duplicate-class-member]
   static x() {}
 }
 (Dup1.x: empty); // function ~> empty
 
 class Dup2 {
   static x() {}
+  // $FlowExpectedError[duplicate-class-member]
   static x: string;
 }
 (Dup2.x: empty); // string ~> empty

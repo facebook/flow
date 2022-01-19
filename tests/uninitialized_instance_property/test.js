@@ -776,6 +776,7 @@ class E88 {
 
 class E89 {
   p = () => "property function";
+  // $FlowExpectedError[duplicate-class-member]
   p() {
     return "method";
   }
@@ -790,6 +791,7 @@ class E90 {
   p() {
     return "method";
   }
+  // $FlowExpectedError[duplicate-class-member]
   p = () => "property function";
   q: number;
   constructor() {

@@ -1043,107 +1043,107 @@ References:
               ^ [1]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:784:5
+Error ---------------------------------------------------------------------------------------------------- test.js:785:5
 
 It is unsafe to call a property function in the constructor before all class properties are definitely initialized.
 [uninitialized-instance-property]
 
-   784|     this.p(); // PropertyFunctionCallBeforeEverythingInitialized
+   785|     this.p(); // PropertyFunctionCallBeforeEverythingInitialized
             ^^^^^^^^
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:796:5
+Error ---------------------------------------------------------------------------------------------------- test.js:798:5
 
 It is unsafe to call a property function in the constructor before all class properties are definitely initialized.
 [uninitialized-instance-property]
 
-   796|     this.p(); // PropertyFunctionCallBeforeEverythingInitialized
+   798|     this.p(); // PropertyFunctionCallBeforeEverythingInitialized
             ^^^^^^^^
 
 
-Error --------------------------------------------------------------------------------------------------- test.js:1105:3
+Error --------------------------------------------------------------------------------------------------- test.js:1107:3
 
 Class property not definitely initialized in the constructor. Can you add an assignment to the property declaration?
 [uninitialized-instance-property]
 
-   1105|   p: T; // TODO spurious error
+   1107|   p: T; // TODO spurious error
            ^
 
 
-Error --------------------------------------------------------------------------------------------------- test.js:1109:3
+Error --------------------------------------------------------------------------------------------------- test.js:1111:3
 
 Class property not definitely initialized in the constructor. Can you add an assignment to the property declaration?
 [uninitialized-instance-property]
 
-   1109|   p; // TODO spurious error
+   1111|   p; // TODO spurious error
            ^
 
 
-Error --------------------------------------------------------------------------------------------------- test.js:1111:6
+Error --------------------------------------------------------------------------------------------------- test.js:1113:6
 
 It is unsafe to read from a class property before it is definitely initialized. [uninitialized-instance-property]
 
-   1111|     (this.p: void); // TODO spurious error
+   1113|     (this.p: void); // TODO spurious error
               ^^^^^^
 
 
-Error --------------------------------------------------------------------------------------------------- test.js:1164:3
+Error --------------------------------------------------------------------------------------------------- test.js:1166:3
 
 Class property not definitely initialized in the constructor. Can you add an assignment to the property declaration?
 [uninitialized-instance-property]
 
-   1164|   p; // TODO spurious error
+   1166|   p; // TODO spurious error
            ^
 
 
-Error --------------------------------------------------------------------------------------------------- test.js:1166:5
+Error --------------------------------------------------------------------------------------------------- test.js:1168:5
 
 It is unsafe to read from a class property before it is definitely initialized. [uninitialized-instance-property]
 
-   1166|     this.p; // TODO spurious error
+   1168|     this.p; // TODO spurious error
              ^^^^^^
 
 
-Error --------------------------------------------------------------------------------------------------- test.js:1171:3
+Error --------------------------------------------------------------------------------------------------- test.js:1173:3
 
 Class property not definitely initialized in the constructor. Can you add an assignment to the property declaration?
 [uninitialized-instance-property]
 
-   1171|   #p; // TODO spurious error
+   1173|   #p; // TODO spurious error
            ^^
 
 
-Error --------------------------------------------------------------------------------------------------- test.js:1173:5
+Error --------------------------------------------------------------------------------------------------- test.js:1175:5
 
 It is unsafe to read from a class property before it is definitely initialized. [uninitialized-instance-property]
 
-   1173|     this.#p; // TODO spurious error
+   1175|     this.#p; // TODO spurious error
              ^^^^^^^
 
 
-Error --------------------------------------------------------------------------------------------------- test.js:1194:3
+Error --------------------------------------------------------------------------------------------------- test.js:1196:3
 
 Class property not definitely initialized in the constructor. Can you add an assignment to the property declaration?
 [uninitialized-instance-property]
 
-   1194|   #p1; // TODO spurious error
+   1196|   #p1; // TODO spurious error
            ^^^
 
 
-Error --------------------------------------------------------------------------------------------------- test.js:1198:5
+Error --------------------------------------------------------------------------------------------------- test.js:1200:5
 
 It is unsafe to call a method in the constructor before all class properties are definitely initialized.
 [uninitialized-instance-property]
 
-   1198|     this.m(); // TODO spurious error
+   1200|     this.m(); // TODO spurious error
              ^^^^^^^^
 
 
-Error -------------------------------------------------------------------------------------------------- test.js:1284:13
+Error -------------------------------------------------------------------------------------------------- test.js:1286:13
 
 It is unsafe to read from a class property before it is definitely initialized. [uninitialized-instance-property]
 
-   1284|   b = P65_a(this.b);
+   1286|   b = P65_a(this.b);
                      ^^^^^^
 
 

@@ -439,6 +439,11 @@ and 'loc t' =
       reason: 'loc virtual_reason;
       recursion: 'loc Nel.t;
     }
+  | EDuplicateClassMember of {
+      loc: 'loc;
+      name: string;
+      static: bool;
+    }
 
 and 'loc null_write = {
   null_loc: 'loc;
@@ -1022,6 +1027,8 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
     EDefinitionCycle (Nel.map (fun (reason, recur) -> (map_reason reason, Nel.map f recur)) elts)
   | ERecursiveDefinition { reason; recursion } ->
     ERecursiveDefinition { reason = map_reason reason; recursion = Nel.map f recursion }
+  | EDuplicateClassMember { loc; name; static } ->
+    EDuplicateClassMember { loc = f loc; name; static }
 
 let desc_of_reason r = Reason.desc_of_reason ~unwrap:(is_scalar_reason r) r
 
@@ -1249,7 +1256,8 @@ let util_use_op_of_msg nope util = function
   | EDefinitionCycle _
   | ERecursiveDefinition _
   | EAnnotationInference _
-  | EAnnotationInferenceRecursive _ ->
+  | EAnnotationInferenceRecursive _
+  | EDuplicateClassMember _ ->
     nope
 
 (* Not all messages (i.e. those whose locations are based on use_ops) have locations that can be
@@ -1423,6 +1431,7 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | EEnumMemberDuplicateValue { loc; _ } -> Some loc
   | ESpeculationAmbiguous { reason; _ } -> Some (poly_loc_of_reason reason)
   | EBuiltinLookupFailed { reason; _ } -> Some (poly_loc_of_reason reason)
+  | EDuplicateClassMember { loc; _ } -> Some loc
   | EUnableToSpread _
   | ECannotSpreadInterface _
   | ECannotSpreadIndexerOnRight _
@@ -3636,6 +3645,23 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
             text " with the name of the object, or rewriting the object as a class.";
           ];
       }
+  | EDuplicateClassMember { name; static; _ } ->
+    let member_type =
+      if static then
+        "Static class"
+      else
+        "Class"
+    in
+    Normal
+      {
+        features =
+          [
+            code name;
+            text " has already been declared in this class. ";
+            text member_type;
+            text " member names must be unique.";
+          ];
+      }
   | EInvalidDeclaration { declaration = reason; null_write = None } ->
     Normal
       {
@@ -4054,6 +4080,7 @@ let error_code_of_message err : error_code option =
   | EAnnotationInferenceRecursive _ -> Some InvalidExportedAnnotationRecursive
   | EDefinitionCycle _ -> Some DefinitionCycle
   | ERecursiveDefinition _ -> Some RecursiveDefinition
+  | EDuplicateClassMember _ -> Some DuplicateClassMember
   (* lints should match their lint name *)
   | EUntypedTypeImport _
   | EUntypedImport _

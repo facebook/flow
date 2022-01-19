@@ -40,6 +40,20 @@ struct
   (* Utilities *)
   (*************)
 
+  type class_member_kind =
+    | Class_Member_Field
+    | Class_Member_Getter
+    | Class_Member_GetterSetter
+    | Class_Member_Method
+    | Class_Member_Setter
+
+  type seen_names = {
+    static_names: class_member_kind SMap.t;
+    instance_names: class_member_kind SMap.t;
+  }
+
+  let empty_seen_names = { static_names = SMap.empty; instance_names = SMap.empty }
+
   (* We use this function to indicate places where an annotation is potentially available but
    * must be decomposed in some way before it is passed down *)
   let hint_decompose_opt_todo (x : Type.t option) : Type.t option = x
@@ -8074,6 +8088,40 @@ struct
         (* All classes have a static "name" property. *)
         let class_sig = add_name_field class_sig in
 
+        let check_duplicate_name public_seen_names member_loc name ~static ~private_ kind =
+          if private_ then
+            (* duplicate private names are a parser error - so we don't need to check them *)
+            public_seen_names
+          else
+            let names_map =
+              if static then
+                public_seen_names.static_names
+              else
+                public_seen_names.instance_names
+            in
+            let names_map' =
+              match SMap.find_opt name names_map with
+              | Some seen ->
+                (match (kind, seen) with
+                | (Class_Member_Getter, Class_Member_Setter)
+                | (Class_Member_Setter, Class_Member_Getter) ->
+                  (* One getter and one setter are allowed as long as it's not used as a field
+                     We use the special type here to indicate we've seen both a getter and a
+                     setter for the name so that future getters/setters can have an error raised. *)
+                  SMap.add name Class_Member_GetterSetter names_map
+                | _ ->
+                  Flow.add_output
+                    cx
+                    Error_message.(EDuplicateClassMember { loc = member_loc; name; static });
+                  names_map)
+              | None -> SMap.add name kind names_map
+            in
+            if static then
+              { public_seen_names with static_names = names_map' }
+            else
+              { public_seen_names with instance_names = names_map' }
+        in
+
         (* NOTE: We used to mine field declarations from field assignments in a
            constructor as a convenience, but it was not worth it: often, all that did
            was exchange a complaint about a missing field for a complaint about a
@@ -8091,10 +8139,10 @@ struct
            initializer/body (respectively) will not get checked, and the corresponding
            nodes of the typed AST will be filled in with error nodes.
         *)
-        let (class_sig, rev_elements) =
+        let (class_sig, rev_elements, _) =
           List.fold_left
             (let open Ast.Class in
-            fun (c, rev_elements) ->
+            fun (c, rev_elements, public_seen_names) ->
               let add_method_sig_and_element
                   ~method_loc
                   ~name
@@ -8167,18 +8215,32 @@ struct
                       }
                     )
                 in
-                let add =
+                let (add, class_member_kind) =
                   match kind with
-                  | Method.Constructor -> add_constructor (Some id_loc) ~set_asts ~set_type
+                  | Method.Constructor ->
+                    let add = add_constructor (Some id_loc) ~set_asts ~set_type in
+                    (add, None)
                   | Method.Method ->
-                    if private_ then
-                      add_private_method ~static name id_loc ~set_asts ~set_type
-                    else
-                      add_method ~static name id_loc ~set_asts ~set_type
-                  | Method.Get -> add_getter ~static name id_loc ~set_asts ~set_type
-                  | Method.Set -> add_setter ~static name id_loc ~set_asts ~set_type
+                    let add =
+                      if private_ then
+                        add_private_method ~static name id_loc ~set_asts ~set_type
+                      else
+                        add_method ~static name id_loc ~set_asts ~set_type
+                    in
+                    (add, Some Class_Member_Method)
+                  | Method.Get ->
+                    let add = add_getter ~static name id_loc ~set_asts ~set_type in
+                    (add, Some Class_Member_Getter)
+                  | Method.Set ->
+                    let add = add_setter ~static name id_loc ~set_asts ~set_type in
+                    (add, Some Class_Member_Setter)
                 in
-                (add method_sig c, get_element :: rev_elements)
+                let public_seen_names' =
+                  match class_member_kind with
+                  | Some k -> check_duplicate_name public_seen_names id_loc name ~static ~private_ k
+                  | None -> public_seen_names
+                in
+                (add method_sig c, get_element :: rev_elements, public_seen_names')
               in
               function
               (* instance and static methods *)
@@ -8270,7 +8332,13 @@ struct
                       }
                     )
                 in
-                (add_private_field ~static name id_loc polarity field c, get_element :: rev_elements)
+                let public_seen_names' =
+                  check_duplicate_name public_seen_names id_loc name static true Class_Member_Field
+                in
+                ( add_private_field ~static name id_loc polarity field c,
+                  get_element :: rev_elements,
+                  public_seen_names'
+                )
               | Body.Property
                   ( loc,
                     {
@@ -8304,22 +8372,34 @@ struct
                       }
                     )
                 in
-                (add_field ~static name id_loc polarity field c, get_element :: rev_elements)
+                let public_seen_names' =
+                  check_duplicate_name public_seen_names id_loc name static false Class_Member_Field
+                in
+                ( add_field ~static name id_loc polarity field c,
+                  get_element :: rev_elements,
+                  public_seen_names'
+                )
               (* literal LHS *)
               | ( Body.Method (loc, { Method.key = Ast.Expression.Object.Property.Literal _; _ })
                 | Body.Property (loc, { Property.key = Ast.Expression.Object.Property.Literal _; _ })
                   ) as elem ->
                 Flow.add_output cx Error_message.(EUnsupportedSyntax (loc, ClassPropertyLiteral));
-                (c, (fun () -> Tast_utils.error_mapper#class_element elem) :: rev_elements)
+                ( c,
+                  (fun () -> Tast_utils.error_mapper#class_element elem) :: rev_elements,
+                  public_seen_names
+                )
               (* computed LHS *)
               | ( Body.Method (loc, { Method.key = Ast.Expression.Object.Property.Computed _; _ })
                 | Body.Property
                     (loc, { Property.key = Ast.Expression.Object.Property.Computed _; _ }) ) as elem
                 ->
                 Flow.add_output cx Error_message.(EUnsupportedSyntax (loc, ClassPropertyComputed));
-                (c, (fun () -> Tast_utils.error_mapper#class_element elem) :: rev_elements)
+                ( c,
+                  (fun () -> Tast_utils.error_mapper#class_element elem) :: rev_elements,
+                  public_seen_names
+                )
             )
-            (class_sig, [])
+            (class_sig, [], empty_seen_names)
             elements
         in
         let elements = List.rev rev_elements in

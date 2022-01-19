@@ -212,6 +212,230 @@ Classes may not have fields named `constructor`.
         ^^^^^^^^^^^
 
 
+Error ---------------------------------------------------------------------------------- class_duplicate_members.js:38:7
+
+`getterFirst1` has already been declared in this class. Class member names must be unique. [duplicate-class-member]
+
+   38|   get getterFirst1() { return 1 } // error
+             ^^^^^^^^^^^^
+
+
+Error ---------------------------------------------------------------------------------- class_duplicate_members.js:39:7
+
+`getterFirst1` has already been declared in this class. Class member names must be unique. [duplicate-class-member]
+
+   39|   set getterFirst1(a) {} // error
+             ^^^^^^^^^^^^
+
+
+Error ---------------------------------------------------------------------------------- class_duplicate_members.js:42:7
+
+`getterFirst2` has already been declared in this class. Class member names must be unique. [duplicate-class-member]
+
+   42|   get getterFirst2() { return 1 } // error
+             ^^^^^^^^^^^^
+
+
+Error ---------------------------------------------------------------------------------- class_duplicate_members.js:44:7
+
+`getterFirst2` has already been declared in this class. Class member names must be unique. [duplicate-class-member]
+
+   44|   set getterFirst2(a) {} // error
+             ^^^^^^^^^^^^
+
+
+Error ---------------------------------------------------------------------------------- class_duplicate_members.js:48:7
+
+`setterFirst1` has already been declared in this class. Class member names must be unique. [duplicate-class-member]
+
+   48|   set setterFirst1(a) { return 1 } // error
+             ^^^^^^^^^^^^
+
+
+Error ---------------------------------------------------------------------------------- class_duplicate_members.js:49:7
+
+`setterFirst1` has already been declared in this class. Class member names must be unique. [duplicate-class-member]
+
+   49|   get setterFirst1() {} // error
+             ^^^^^^^^^^^^
+
+
+Error ---------------------------------------------------------------------------------- class_duplicate_members.js:52:7
+
+`setterFirst2` has already been declared in this class. Class member names must be unique. [duplicate-class-member]
+
+   52|   set setterFirst2(a) { return 1 } // error
+             ^^^^^^^^^^^^
+
+
+Error ---------------------------------------------------------------------------------- class_duplicate_members.js:54:7
+
+`setterFirst2` has already been declared in this class. Class member names must be unique. [duplicate-class-member]
+
+   54|   get setterFirst2() {} // error
+             ^^^^^^^^^^^^
+
+
+Error ---------------------------------------------------------------------------------- class_duplicate_members.js:57:7
+
+`propFirst` has already been declared in this class. Class member names must be unique. [duplicate-class-member]
+
+   57|   get propFirst() { return 1 } // error
+             ^^^^^^^^^
+
+
+Error ---------------------------------------------------------------------------------- class_duplicate_members.js:58:7
+
+`propFirst` has already been declared in this class. Class member names must be unique. [duplicate-class-member]
+
+   58|   set propFirst(a) {} // error
+             ^^^^^^^^^
+
+
+Error ---------------------------------------------------------------------------------- class_duplicate_members.js:61:7
+
+`methodFirst` has already been declared in this class. Class member names must be unique. [duplicate-class-member]
+
+   61|   get methodFirst() { return 1 } // error
+             ^^^^^^^^^^^
+
+
+Error ---------------------------------------------------------------------------------- class_duplicate_members.js:62:7
+
+`methodFirst` has already been declared in this class. Class member names must be unique. [duplicate-class-member]
+
+   62|   set methodFirst(a) {} // error
+             ^^^^^^^^^^^
+
+
+Error ---------------------------------------------------------------------------------- class_duplicate_members.js:67:3
+
+`propFirst` has already been declared in this class. Class member names must be unique. [duplicate-class-member]
+
+   67|   propFirst = 2; // error
+         ^^^^^^^^^
+
+
+Error ---------------------------------------------------------------------------------- class_duplicate_members.js:70:3
+
+`methodFirst` has already been declared in this class. Class member names must be unique. [duplicate-class-member]
+
+   70|   methodFirst = () => {}; // error
+         ^^^^^^^^^^^
+
+
+Error ---------------------------------------------------------------------------------- class_duplicate_members.js:73:3
+
+`getterFirst` has already been declared in this class. Class member names must be unique. [duplicate-class-member]
+
+   73|   getterFirst = 1; // error
+         ^^^^^^^^^^^
+
+
+Error ---------------------------------------------------------------------------------- class_duplicate_members.js:76:3
+
+`setterFirst` has already been declared in this class. Class member names must be unique. [duplicate-class-member]
+
+   76|   setterFirst = 1; // error
+         ^^^^^^^^^^^
+
+
+Error ---------------------------------------------------------------------------------- class_duplicate_members.js:81:3
+
+`methodFirst` has already been declared in this class. Class member names must be unique. [duplicate-class-member]
+
+   81|   methodFirst() {} // error
+         ^^^^^^^^^^^
+
+
+Error ---------------------------------------------------------------------------------- class_duplicate_members.js:84:3
+
+`propFirst` has already been declared in this class. Class member names must be unique. [duplicate-class-member]
+
+   84|   propFirst() {} // error
+         ^^^^^^^^^
+
+
+Error ---------------------------------------------------------------------------------- class_duplicate_members.js:87:3
+
+`getterFirst` has already been declared in this class. Class member names must be unique. [duplicate-class-member]
+
+   87|   getterFirst() {} // error
+         ^^^^^^^^^^^
+
+
+Error ---------------------------------------------------------------------------------- class_duplicate_members.js:90:3
+
+`setterFirst` has already been declared in this class. Class member names must be unique. [duplicate-class-member]
+
+   90|   setterFirst() {}; // error
+         ^^^^^^^^^^^
+
+
+Error --------------------------------------------------------------------------------- class_duplicate_members.js:96:10
+
+`a` has already been declared in this class. Static class member names must be unique. [duplicate-class-member]
+
+   96|   static a = () => {}; // error
+                ^
+
+
+Error --------------------------------------------------------------------------------- class_duplicate_members.js:97:14
+
+`a` has already been declared in this class. Static class member names must be unique. [duplicate-class-member]
+
+   97|   static get a() { return () => {}; } // error
+                    ^
+
+
+Error --------------------------------------------------------------------------------- class_duplicate_members.js:98:14
+
+`a` has already been declared in this class. Static class member names must be unique. [duplicate-class-member]
+
+   98|   static set a(a) { } // error
+                    ^
+
+
+Error --------------------------------------------------------------------------------- class_duplicate_members.js:99:10
+
+`a` has already been declared in this class. Static class member names must be unique. [duplicate-class-member]
+
+   99|   static a() {} // error
+                ^
+
+
+Error -------------------------------------------------------------------------------- class_duplicate_members.js:105:11
+
+`a` has already been declared in this class. Class member names must be unique. [duplicate-class-member]
+
+   105|   declare a: string; // error
+                  ^
+
+
+Error -------------------------------------------------------------------------------- class_duplicate_members.js:108:11
+
+`b` has already been declared in this class. Class member names must be unique. [duplicate-class-member]
+
+   108|   declare b: string; // error
+                  ^
+
+
+Error -------------------------------------------------------------------------------- class_duplicate_members.js:111:11
+
+`c` has already been declared in this class. Class member names must be unique. [duplicate-class-member]
+
+   111|   declare c: () => void; // error
+                  ^
+
+
+Error -------------------------------------------------------------------------------- class_duplicate_members.js:114:11
+
+`d` has already been declared in this class. Class member names must be unique. [duplicate-class-member]
+
+   114|   declare d: void; // error
+                  ^
+
+
 Error ----------------------------------------------------------------------- declared_class_constructor_property.js:8:3
 
 Classes may not have fields named `constructor`.
@@ -836,4 +1060,4 @@ References:
 
 
 
-Found 50 errors
+Found 78 errors

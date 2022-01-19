@@ -4,12 +4,16 @@
 
 class C {
   foo(): number { return 0; }
+  // $FlowExpectedError[duplicate-class-member]
   foo(): string { return "hello" } // last wins
   x: number;
+  // $FlowExpectedError[duplicate-class-member]
   x: string; // last wins
   bar(): number { return 0; }
+  // $FlowExpectedError[duplicate-class-member]
   bar: string; // error: can't shadow proto with incompatible own
   qux: number; // error: can't shadow proto with incompatible own
+  // $FlowExpectedError[duplicate-class-member]
   qux(): string { return "hello" }
 }
 
