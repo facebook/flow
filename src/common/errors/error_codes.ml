@@ -154,6 +154,7 @@ type error_code =
   | InvalidDeclaration
   | DefinitionCycle
   | RecursiveDefinition
+  | LogicalAssignmentOperatorsNotSupported
 
 let code_of_lint : Lints.lint_kind -> error_code = function
   | Lints.UntypedTypeImport -> UntypedTypeImport
@@ -331,3 +332,4 @@ let string_of_code : error_code -> string = function
   | InvalidDeclaration -> "invalid-declaration"
   | DefinitionCycle -> "definition-cycle"
   | RecursiveDefinition -> "recursive-definition"
+  | LogicalAssignmentOperatorsNotSupported -> "logical-assignment-operators-not-supported"

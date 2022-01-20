@@ -104,6 +104,9 @@ type t =
   | T_EXP_ASSIGN
   | T_MINUS_ASSIGN
   | T_PLUS_ASSIGN
+  | T_NULLISH_ASSIGN
+  | T_AND_ASSIGN
+  | T_OR_ASSIGN
   | T_ASSIGN
   | T_PLING_PERIOD
   | T_PLING_PLING
@@ -281,6 +284,9 @@ let token_to_string = function
   | T_EXP_ASSIGN -> "T_EXP_ASSIGN"
   | T_MINUS_ASSIGN -> "T_MINUS_ASSIGN"
   | T_PLUS_ASSIGN -> "T_PLUS_ASSIGN"
+  | T_NULLISH_ASSIGN -> "T_NULLISH_ASSIGN"
+  | T_AND_ASSIGN -> "T_AND_ASSIGN"
+  | T_OR_ASSIGN -> "T_OR_ASSIGN"
   | T_ASSIGN -> "T_ASSIGN"
   | T_PLING_PERIOD -> "T_PLING_PERIOD"
   | T_PLING_PLING -> "T_PLING_PLING"
@@ -416,6 +422,9 @@ let value_of_token = function
   | T_EXP_ASSIGN -> "**="
   | T_MINUS_ASSIGN -> "-="
   | T_PLUS_ASSIGN -> "+="
+  | T_NULLISH_ASSIGN -> "??="
+  | T_AND_ASSIGN -> "&&="
+  | T_OR_ASSIGN -> "||="
   | T_ASSIGN -> "="
   | T_PLING_PERIOD -> "?."
   | T_PLING_PLING -> "??"

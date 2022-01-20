@@ -327,6 +327,9 @@ module Expression
       | T_EXP_ASSIGN -> Some (Some ExpAssign)
       | T_MINUS_ASSIGN -> Some (Some MinusAssign)
       | T_PLUS_ASSIGN -> Some (Some PlusAssign)
+      | T_NULLISH_ASSIGN -> Some (Some NullishAssign)
+      | T_AND_ASSIGN -> Some (Some AndAssign)
+      | T_OR_ASSIGN -> Some (Some OrAssign)
       | T_ASSIGN -> Some None
       | _ -> None
     in

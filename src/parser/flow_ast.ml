@@ -1229,6 +1229,9 @@ and Expression : sig
       | BitOrAssign
       | BitXorAssign
       | BitAndAssign
+      | NullishAssign
+      | AndAssign
+      | OrAssign
 
     and ('M, 'T) t = {
       operator: operator option;

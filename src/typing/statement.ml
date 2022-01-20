@@ -6113,6 +6113,14 @@ struct
              mem
       | _ -> ());
       (lhs_t, lhs_ast, rhs_ast)
+    | Assignment.NullishAssign
+    | Assignment.AndAssign
+    | Assignment.OrAssign ->
+      let reason = mk_reason (RCustom (Flow_ast_utils.string_of_assignment_operator op)) loc in
+      let lhs_ast = assignment_lhs cx lhs in
+      let rhs_ast = expression cx ~hint:None rhs in
+      Flow.add_output cx (Error_message.ELogicalAssignmentOperatorsNotSupported reason);
+      (AnyT.error reason, lhs_ast, rhs_ast)
 
   (* traverse assignment expressions *)
   and assignment cx loc (lhs, op, rhs) =

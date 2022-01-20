@@ -72,3 +72,13 @@
   // TODO(T56716039): If you read a write-only property after it is written, there is no error
   // o.p -= 2; // Error: property is non-readable
 }
+
+{
+  // Logical operator assignments are not yet supported
+  let x = 1;
+  x ??= 1;
+
+  let b = true;
+  b ||= false;
+  b &&= false;
+}

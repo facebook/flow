@@ -852,6 +852,9 @@ module Peek = struct
         | T_EXP_ASSIGN
         | T_MINUS_ASSIGN
         | T_PLUS_ASSIGN
+        | T_NULLISH_ASSIGN
+        | T_AND_ASSIGN
+        | T_OR_ASSIGN
         | T_ASSIGN
         | T_PLING_PERIOD
         | T_PLING_PLING

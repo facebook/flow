@@ -151,6 +151,9 @@ let string_of_assignment_operator op =
   | BitOrAssign -> "|="
   | BitXorAssign -> "^="
   | BitAndAssign -> "&="
+  | NullishAssign -> "??="
+  | AndAssign -> "&&="
+  | OrAssign -> "||="
 
 let string_of_binary_operator op =
   let open Flow_ast.Expression.Binary in

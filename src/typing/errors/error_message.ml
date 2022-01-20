@@ -444,6 +444,7 @@ and 'loc t' =
       name: string;
       static: bool;
     }
+  | ELogicalAssignmentOperatorsNotSupported of 'loc virtual_reason
 
 and 'loc null_write = {
   null_loc: 'loc;
@@ -1029,6 +1030,8 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
     ERecursiveDefinition { reason = map_reason reason; recursion = Nel.map f recursion }
   | EDuplicateClassMember { loc; name; static } ->
     EDuplicateClassMember { loc = f loc; name; static }
+  | ELogicalAssignmentOperatorsNotSupported r ->
+    ELogicalAssignmentOperatorsNotSupported (map_reason r)
 
 let desc_of_reason r = Reason.desc_of_reason ~unwrap:(is_scalar_reason r) r
 
@@ -1257,7 +1260,8 @@ let util_use_op_of_msg nope util = function
   | ERecursiveDefinition _
   | EAnnotationInference _
   | EAnnotationInferenceRecursive _
-  | EDuplicateClassMember _ ->
+  | EDuplicateClassMember _
+  | ELogicalAssignmentOperatorsNotSupported _ ->
     nope
 
 (* Not all messages (i.e. those whose locations are based on use_ops) have locations that can be
@@ -1320,7 +1324,8 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | EEnumNotIterable { reason; _ }
   | ERecursiveDefinition { reason; _ }
   | EDefinitionCycle ((reason, _), _)
-  | EInvalidDeclaration { declaration = reason; _ } ->
+  | EInvalidDeclaration { declaration = reason; _ }
+  | ELogicalAssignmentOperatorsNotSupported reason ->
     Some (poly_loc_of_reason reason)
   | EExponentialSpread
       {
@@ -3813,6 +3818,11 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
       @ [text "Please add type annotations to these definitions"]
     in
     Normal { features }
+  | ELogicalAssignmentOperatorsNotSupported reason ->
+    let features =
+      [text "logical operator assignment "; ref reason; text " is not yet supported."]
+    in
+    Normal { features }
 
 let is_lint_error = function
   | EUntypedTypeImport _
@@ -4101,3 +4111,4 @@ let error_code_of_message err : error_code option =
       | Errors.LintError kind -> Some (Error_codes.code_of_lint kind)
       | _ -> None
     end
+  | ELogicalAssignmentOperatorsNotSupported _ -> Some LogicalAssignmentOperatorsNotSupported
