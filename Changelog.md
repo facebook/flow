@@ -1,3 +1,8 @@
+### 0.170.0
+
+Another light release due to the new year. Changes are mainly internal --
+refactoring or progress towards future features.
+
 ### 0.169.0
 
 This release is light on changes due to the holidays. Happy New Year!
