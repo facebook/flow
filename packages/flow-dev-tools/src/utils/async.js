@@ -8,11 +8,13 @@
  * @format
  */
 
+import type {Options as GlobOptions} from 'glob';
+
 const {exec: cp_exec} = require('child_process');
 const {createInterface: rl_createInterface} = require('readline');
 const {ncp: ncp_ncp} = require('ncp');
 const {format} = require('util');
-const {glob: glob_glob} = require('glob');
+const glob_glob = require('glob');
 const mkdirp_mkdirp = require('mkdirp');
 const rimraf_rimraf = require('rimraf');
 
@@ -129,11 +131,6 @@ function drain(writer: stream$Writable | tty$WriteStream): Promise<void> {
   });
 }
 
-type GlobOptions = {
-  cwd?: string,
-  nodir?: boolean,
-  dot?: boolean,
-};
 function glob(pattern: string, options: GlobOptions): Promise<Array<string>> {
   return new Promise((resolve, reject) => {
     glob_glob(pattern, options, (err, files) => {
