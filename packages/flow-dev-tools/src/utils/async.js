@@ -12,7 +12,6 @@ import type {Options as GlobOptions} from 'glob';
 
 const {exec: cp_exec} = require('child_process');
 const {createInterface: rl_createInterface} = require('readline');
-const {ncp: ncp_ncp} = require('ncp');
 const {format} = require('util');
 const glob_glob = require('glob');
 const mkdirp_mkdirp = require('mkdirp');
@@ -94,37 +93,6 @@ function mkdirp(dir: string): Promise<void> {
   });
 }
 
-export type NCPFile = {
-  name: string,
-  mode: number,
-  mtime: Date,
-  atime: Date,
-};
-
-type NCPOptions = {
-  filter?: RegExp | ((filename: string) => boolean),
-  transform?: (read: ReadStream, write: WriteStream, file: NCPFile) => mixed,
-  clobber?: boolean,
-  dereference?: boolean,
-  stopOnErr?: boolean,
-  errs?: any,
-};
-function ncp(
-  source: string,
-  dest: string,
-  options?: NCPOptions,
-): Promise<void> {
-  return new Promise((resolve, reject) => {
-    ncp_ncp(source, dest, options || {}, err => {
-      if (err) {
-        reject(err);
-      } else {
-        resolve();
-      }
-    });
-  });
-}
-
 function drain(writer: stream$Writable | tty$WriteStream): Promise<void> {
   return new Promise((resolve, reject) => {
     writer.once('drain', resolve);
@@ -192,7 +160,6 @@ module.exports = {
   execManual,
   rimraf,
   mkdirp,
-  ncp,
   drain,
   glob,
   isRunning,
