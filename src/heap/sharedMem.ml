@@ -1219,7 +1219,9 @@ module NewAPI = struct
     let compressed = Bytes.create compress_bound in
     let compressed_bsize =
       match level with
-      | None -> Lz4.compress_default serialized compressed
+      | None 
+      | Some 0 -> 
+          Lz4.compress_default serialized compressed
       | Some level -> Lz4.compress_hc serialized compressed ~level
     in
     let compressed_wsize = (compressed_bsize + 8) / 8 in
@@ -1251,7 +1253,7 @@ module NewAPI = struct
   (** ASTs *)
 
   let prepare_write_ast ast =
-    prepare_write_compressed Serialized_ast_tag ast ~level:Lz4.compression_level_max
+    prepare_write_compressed Serialized_ast_tag ast ~level:1
 
   let read_ast addr = read_compressed Serialized_ast_tag addr
 
