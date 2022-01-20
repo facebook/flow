@@ -11,6 +11,8 @@
 const {execSync, spawn} = require('child_process');
 const {randomBytes} = require('crypto');
 const {createWriteStream, realpathSync} = require('fs');
+const {appendFile, readdir, readFile, unlink, writeFile} =
+  require('fs').promises;
 const {platform, tmpdir} = require('os');
 const {basename, dirname, extname, join, sep: dir_sep} = require('path');
 const {format} = require('util');
@@ -21,18 +23,7 @@ const {URI: VscodeURI, uriToFsPath} = require('vscode-uri');
 
 import type {LSPMessage, RpcConnection} from './lsp';
 
-const {
-  appendFile,
-  exec,
-  execManual,
-  isRunning,
-  mkdirp,
-  readdir,
-  readFile,
-  sleep,
-  unlink,
-  writeFile,
-} = require('../utils/async');
+const {exec, execManual, isRunning, mkdirp, sleep} = require('../utils/async');
 const {getTestsDir} = require('../constants');
 const {default: ShellMocker} = require('./ShellMocker');
 
@@ -205,6 +196,7 @@ class TestBuilder {
 
   async addCode(code: string): Promise<void> {
     const filename = this.getFileName();
+    // $FlowIssue
     await appendFile(filename, '\n' + code + '\n');
     await this.forceRecheck([filename]);
   }

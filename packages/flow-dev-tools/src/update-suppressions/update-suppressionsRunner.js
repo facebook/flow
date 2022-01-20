@@ -21,7 +21,7 @@ const {
 } = require('../errors');
 const getAst = require('../comment/getAst').default;
 
-const {readFile, writeFile} = require('../utils/async');
+const {readFile, writeFile} = require('fs').promises;
 const {
   removeUnusedErrorSuppressionFromText,
   isLintSuppression,
@@ -259,7 +259,7 @@ async function updateSuppressions(
   comment: string,
   flowBinPath: string,
 ): Promise<void> {
-  const contentsString = await readFile(filename);
+  const contentsString = await readFile(filename, 'utf8');
   const contents = await updateSuppressionsInText(
     Buffer.from(contentsString, 'utf8'),
     allRoots,

@@ -12,9 +12,10 @@
  * seven time world champion of testing shell commands */
 
 const {watch} = require('fs');
+const {readFile, writeFile} = require('fs').promises;
 const {join} = require('path');
 
-const {mkdirp, writeFile, readFile} = require('../utils/async');
+const {mkdirp} = require('../utils/async');
 
 type ProcessEnv = {[key: string]: string | void};
 
@@ -77,7 +78,7 @@ class ShellMocker {
   }
 
   async get(name: string): Promise<Invocations> {
-    const contents = await readFile(this.outFile(name));
+    const contents = await readFile(this.outFile(name), 'utf8');
     const lines = contents.split('\n');
     lines.pop(); // remove trailing empty string
     return lines.map(line => line.split(' '));

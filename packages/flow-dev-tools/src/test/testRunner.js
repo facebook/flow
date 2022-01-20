@@ -9,13 +9,13 @@
  */
 
 const chalk = require('chalk');
-
+const {readFile, symlink} = require('fs').promises;
 const {format} = require('util');
 const {basename, dirname, resolve, join} = require('path');
 const {spawn} = require('child_process');
 
 const {getTestsDir} = require('../constants');
-const {drain, readFile, rimraf, symlink} = require('../utils/async');
+const {drain, rimraf} = require('../utils/async');
 const {Builder} = require('./builder');
 const {findTestsByName, findTestsByRun, loadSuite} = require('./findTests');
 const {RunQueue} = require('./RunQueue');
@@ -330,7 +330,7 @@ async function runOnce(suites: {[suiteName: string]: Suite}, args) {
             process.env['VISUAL'] || process.env['EDITOR'] || 'cat';
           let logContents = '';
           try {
-            logContents = await readFile(logFile);
+            logContents = await readFile(logFile, 'utf8');
           } catch (e) {
             logContents = e.message != null ? e.message : String(e);
           }

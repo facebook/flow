@@ -12,7 +12,7 @@ const chalk = require('chalk');
 const {isAbsolute, join} = require('path');
 const {format} = require('util');
 
-const {readFile, writeFile} = require('../utils/async');
+const {readFile, writeFile} = require('fs').promises;
 const {default: Builder} = require('../test/builder');
 const {findTestsByName, findTestsByRun} = require('../test/findTests');
 const parser = require('flow-parser');
@@ -207,7 +207,7 @@ async function runner(args: Args): Promise<void> {
                   if (!isAbsolute(filename)) {
                     filename = join(getTestsDir(), suiteName, filename);
                   }
-                  const code = await readFile(filename);
+                  const code = await readFile(filename, 'utf8');
                   const ast = parser.parse(code, {});
                   const range =
                     assertLoc &&

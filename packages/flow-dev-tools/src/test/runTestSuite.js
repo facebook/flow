@@ -10,11 +10,12 @@
 
 const chalk = require('chalk');
 const {format} = require('util');
+const {writeFile} = require('fs').promises;
 
 const {noErrors} = require('../flowResult');
 const {TestStep, TestStepFirstStage} = require('./TestStep');
 const {newEnv} = require('./stepEnv');
-const {withTimeout, writeFile} = require('../utils/async');
+const {withTimeout} = require('../utils/async');
 
 import type {Builder, TestBuilder} from './builder';
 import type {Suite} from './Suite';

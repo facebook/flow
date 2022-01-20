@@ -13,7 +13,7 @@ const {join} = require('path');
 const {collateLocs, getUnusedSuppressionErrors} = require('../errors');
 const getAst = require('./getAst').default;
 
-const {readFile, writeFile} = require('../utils/async');
+const {readFile, writeFile} = require('fs').promises;
 const {removeUnusedErrorSuppressionFromText} = require('./commentMutator');
 
 import type {Args} from './remove-commentsCommand';
@@ -35,7 +35,7 @@ async function removeUnusedErrorSuppressions(
   errors: Array<FlowLoc>,
   flowBinPath: string,
 ): Promise<void> {
-  const contentsString = await readFile(filename);
+  const contentsString = await readFile(filename, 'utf8');
   const contents = await removeUnusedErrorSuppressionsFromText(
     Buffer.from(contentsString, 'utf8'),
     errors,

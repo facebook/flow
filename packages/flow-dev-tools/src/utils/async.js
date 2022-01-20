@@ -10,16 +10,6 @@
 
 const {exec: cp_exec} = require('child_process');
 const {createInterface: rl_createInterface} = require('readline');
-const {
-  appendFile: fs_appendFile,
-  exists: fs_exists,
-  readdir: fs_readdir,
-  readFile: fs_readFile,
-  rename: fs_rename,
-  symlink: fs_symlink,
-  unlink: fs_unlink,
-  writeFile: fs_writeFile,
-} = require('fs');
 const {ncp: ncp_ncp} = require('ncp');
 const {format} = require('util');
 const {glob: glob_glob} = require('glob');
@@ -78,92 +68,9 @@ function execManual(
   );
 }
 
-type WriteFileOptions = {
-  encoding?: string | null,
-  mode?: number,
-  flag?: string,
-};
-function writeFile(
-  filename: string,
-  data: string,
-  options?: WriteFileOptions = {},
-): Promise<void> {
-  return new Promise((resolve, reject) => {
-    fs_writeFile(filename, data, options, err => {
-      if (err == null) {
-        resolve();
-      } else {
-        reject(err);
-      }
-    });
-  });
-}
-
-function appendFile(filename: string, data: string): Promise<void> {
-  return new Promise((resolve, reject) => {
-    fs_appendFile(filename, data, err => {
-      if (err == null) {
-        resolve();
-      } else {
-        reject(err);
-      }
-    });
-  });
-}
-
-function readFile(filename: string): Promise<string> {
-  return new Promise((resolve, reject) => {
-    fs_readFile(filename, 'utf-8', (err, data) => {
-      if (err == null) {
-        // Even if we check out the files without CRLF, reading seems to add it
-        // in.
-        resolve(data.replace(/\r\n/g, '\n'));
-      } else {
-        reject(err);
-      }
-    });
-  });
-}
-
-function readdir(dir: string): Promise<Array<string>> {
-  return new Promise((resolve, reject) => {
-    fs_readdir(dir, (err, data) => {
-      if (err == null) {
-        resolve(data);
-      } else {
-        reject(err);
-      }
-    });
-  });
-}
-
-function rename(old_path: string, new_path: string): Promise<void> {
-  return new Promise((resolve, reject) => {
-    fs_rename(old_path, new_path, err => {
-      if (err == null) {
-        resolve();
-      } else {
-        reject(err);
-      }
-    });
-  });
-}
-
 function rimraf(path: string): Promise<void> {
   return new Promise((resolve, reject) => {
     rimraf_rimraf(path, err => {
-      if (err == null) {
-        resolve();
-      } else {
-        reject(err);
-      }
-    });
-  });
-}
-
-function unlink(file: string): Promise<void> {
-  return new Promise((resolve, reject) => {
-    fs_unlink(file, err => {
       if (err == null) {
         resolve();
       } else {
@@ -219,22 +126,6 @@ function ncp(
 function drain(writer: stream$Writable | tty$WriteStream): Promise<void> {
   return new Promise((resolve, reject) => {
     writer.once('drain', resolve);
-  });
-}
-
-function exists(path: string): Promise<boolean> {
-  return new Promise((resolve, reject) => {
-    fs_exists(path, resolve);
-  });
-}
-
-function symlink(
-  target: string | Buffer,
-  path: string | Buffer,
-): Promise<void> {
-  return new Promise((resolve, reject) => {
-    // $FlowIssue - symlink can omit the type
-    fs_symlink(target.toString(), path.toString(), resolve);
   });
 }
 
@@ -302,18 +193,10 @@ function withTimeout<A, B>(
 module.exports = {
   exec,
   execManual,
-  writeFile,
-  appendFile,
-  readFile,
-  readdir,
-  rename,
   rimraf,
-  unlink,
   mkdirp,
   ncp,
   drain,
-  exists,
-  symlink,
   glob,
   isRunning,
   sleep,

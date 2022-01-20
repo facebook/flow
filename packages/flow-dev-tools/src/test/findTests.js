@@ -8,10 +8,11 @@
  * @format
  */
 
+const {access, readFile} = require('fs').promises;
 const {dirname, normalize, relative, resolve} = require('path');
 const {format} = require('util');
 
-const {exists, glob, readFile} = require('../utils/async');
+const {glob} = require('../utils/async');
 const {default: Builder} = require('./builder');
 const {getTestsDir} = require('../constants');
 const {default: Suite} = require('./Suite');
@@ -81,6 +82,15 @@ function loadSuite(suiteName: string): Suite {
   return loadSuiteByFilename(resolve(getTestsDir(), suiteName, 'test.js'));
 }
 
+async function exists(dir: string): Promise<boolean> {
+  try {
+    await access(dir);
+    return true;
+  } catch (_) {
+    return false;
+  }
+}
+
 async function findTestsByRun(
   runID: string,
   failedOnly: boolean,
@@ -101,7 +111,7 @@ async function findTestsByRun(
 
   let resultContents = await Promise.all(
     results.map(async filename => {
-      const rawContents = await readFile(filename);
+      const rawContents = await readFile(filename, 'utf8');
       try {
         return JSON.parse(rawContents);
       } catch (e) {

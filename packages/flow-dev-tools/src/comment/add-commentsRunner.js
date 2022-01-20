@@ -14,7 +14,7 @@ const {format} = require('util');
 
 const blessed = require('blessed');
 
-const {readFile, writeFile} = require('../utils/async');
+const {readFile, writeFile} = require('fs').promises;
 const {
   mainLocOfError,
   prettyPrintError,
@@ -691,12 +691,12 @@ async function addCommentsToSource(
   source: string,
   locs: Array<Suppression>,
 ): Promise<number> {
-  const codeBuffer = await readFile(source);
+  const codeString = await readFile(source, 'utf8');
 
   const [code, commentCount] = await addCommentsToCode(
     args.comment,
     args.error_code,
-    codeBuffer.toString(),
+    codeString,
     locs,
     args.bin,
   );
