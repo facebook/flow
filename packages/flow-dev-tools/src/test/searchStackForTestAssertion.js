@@ -8,7 +8,6 @@
  * @format
  */
 
-const {sync: resolve} = require('resolve');
 const {dirname} = require('path');
 
 import type {AssertionLocation} from './assertions/assertionTypes';
