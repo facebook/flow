@@ -4,7 +4,6 @@
   "license": "MIT",
   "version": "0.1.0",
   "dependencies": {
-    "blessed": "^0.1.81",
     "chalk": "^4.1.2",
     "diff": "^3.5.0",
     "flow-parser": "*",
