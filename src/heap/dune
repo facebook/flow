@@ -15,7 +15,7 @@
 (rule
   (target heap_libc_flags.txt)
   (enabled_if (= %{system} "linux"))
-  (action (with-stdout-to %{target} (echo "(-latomic)"))))
+  (action (with-stdout-to %{target} (echo "(-latomic -lrt)"))))
 
 (rule
   (target heap_libc_flags.txt)

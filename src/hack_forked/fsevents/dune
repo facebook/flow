@@ -1,6 +1,7 @@
 (library
   (name fsevents)
   (wrapped false)
+  (enabled_if (= %{system} macosx))
   (foreign_stubs (language c) (names
     fsevents_stubs))
   (c_library_flags
