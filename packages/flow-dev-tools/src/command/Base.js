@@ -147,6 +147,7 @@ class Base<T: Object> {
           process.stderr.write(format('Unsupported flag:', flag, '\n'));
           this.showUsage(this.BAD_ARGS);
         }
+        return true;
       },
     });
     for (const flag of flags) {
