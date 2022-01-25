@@ -14,7 +14,11 @@
   "dependencies": {
     "@babel/plugin-syntax-flow": "^7.12.1"
   },
+  "peerDependencies": {
+    "@babel/core": "^7.0.0-0"
+  },
   "devDependencies": {
+    "@babel/core": "^7.16.10",
     "babel-plugin-tester": "^10.0.0",
     "jest": "^27.4.3"
   }
