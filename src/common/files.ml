@@ -124,7 +124,8 @@ let is_flow_file ~options =
   let is_valid_path = is_valid_path ~options in
   (fun path -> is_valid_path path && not (is_directory path))
 
-let realpath path =
+(* TODO: use Unix.realpath from OCaml 4.13+ *)
+let realpath_ path =
   match Sys_utils.realpath path with
   | Some path -> path
   | None -> path
@@ -154,8 +155,8 @@ let kind_of_path path =
       | S_LNK ->
         (try
            match (stat path).st_kind with
-           | S_REG -> Reg (realpath path)
-           | S_DIR -> Dir (realpath path, true)
+           | S_REG -> Reg (realpath_ path)
+           | S_DIR -> Dir (realpath_ path, true)
            | _ -> Other
            (* Don't spew errors on broken symlinks *)
          with
