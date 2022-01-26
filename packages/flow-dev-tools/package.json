@@ -9,7 +9,6 @@
     "flow-parser": "*",
     "flow-remove-types": "*",
     "glob": "^7.0.3",
-    "jest": "^27",
     "minimist": "~1.2.3",
     "mkdirp": "^0.5.1",
     "rimraf": "^2.5.2",
@@ -18,8 +17,18 @@
     "vscode-jsonrpc": "^6.0.0",
     "vscode-uri": "^2.1.2"
   },
+  "devDependencies": {
+    "jest": "^27"
+  },
   "scripts": {
     "test": "jest"
+  },
+  "jest": {
+    "rootDir": "src",
+    "testEnvironment": "node",
+    "transform": {
+      "^.+\\.js(?:\\.flow)?$": "flow-remove-types/jest"
+    }
   },
   "engines": {
     "node": ">=12"

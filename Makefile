@@ -344,6 +344,7 @@ RELEASE_TAGS=$(if $(FLOW_RELEASE),-tag warn_a,)
 OCB=ocamlbuild -use-ocamlfind -no-links -j $(OCAMLBUILD_JOBS)
 
 NPM?=npm
+YARN?=yarn
 
 all: bin/flow$(EXE)
 
@@ -498,7 +499,7 @@ do-test:
 	./tool test
 
 do-test-tool:
-	FLOW_BIN=../../bin/flow$(EXE) ${MAKE} -C packages/flow-dev-tools test
+	FLOW_BIN=../../bin/flow$(EXE) ${YARN} --cwd packages/flow-dev-tools test
 
 test-tool: bin/flow$(EXE)
 	${MAKE} do-test-tool
