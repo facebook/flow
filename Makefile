@@ -343,6 +343,8 @@ RELEASE_TAGS=$(if $(FLOW_RELEASE),-tag warn_a,)
 
 OCB=ocamlbuild -use-ocamlfind -no-links -j $(OCAMLBUILD_JOBS)
 
+NPM?=npm
+
 all: bin/flow$(EXE)
 
 all-homebrew:
@@ -541,7 +543,7 @@ dist/flow.zip: dist/flow/flow$(EXE)
 dist/npm-%.tgz: FORCE
 	@mkdir -p $(@D)
 	@mkdir -p npm-$(*F)-tmp
-	cd npm-$(*F)-tmp && npm pack ../packages/$(*F)/
+	cd npm-$(*F)-tmp && ${NPM} pack ../packages/$(*F)/
 	mv npm-$(*F)-tmp/$(*F)-*.tgz dist/npm-$(*F).tgz
 	@rm -rf npm-$(*F)-tmp
 
