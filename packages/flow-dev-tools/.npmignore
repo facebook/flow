@@ -1,0 +1,3 @@
+.flowconfig
+flow-typed/
+**/*.test.js
