@@ -29,8 +29,8 @@ let get_libs dir =
 
 (* Turn the (name, contents) list into a PPX ast (string * string) array
  * expression *)
-let compute lib_dir =
-  let open Ast_helper in
+let compute ~loc lib_dir =
+  let open Ast_builder.Default in
   let libs = get_libs lib_dir in
   let hash =
     let state = Xx.init 0L in
@@ -39,40 +39,41 @@ let compute lib_dir =
         Xx.update state file;
         Xx.update state contents)
       libs;
-    state |> Xx.digest |> Xx.to_string |> Const.string |> Exp.constant
+    state |> Xx.digest |> Xx.to_string |> estring ~loc
   in
   let contents =
-    libs
-    |> List.map (fun (name, contents) ->
-           Exp.tuple [Exp.constant (Const.string name); Exp.constant (Const.string contents)]
-       )
-    |> Exp.array
+    let elements =
+      List.map
+        (fun (name, contents) -> pexp_tuple ~loc [estring ~loc name; estring ~loc contents])
+        libs
+    in
+    { pexp_desc = Pexp_array elements; pexp_loc = loc; pexp_loc_stack = []; pexp_attributes = [] }
   in
   (hash, contents)
 
-let memo path cache_ref =
+let memo ~loc path cache_ref =
   match !cache_ref with
   | Some result -> result
   | None ->
-    let result = compute path in
+    let result = compute ~loc path in
     cache_ref := Some result;
     result
 
-let flowlib_hash ~loc:_ ~path:_ =
-  let (hash, _contents) = memo !flowlib_dir_ref flowlib_cache in
+let flowlib_hash ~loc ~path:_ =
+  let (hash, _contents) = memo ~loc !flowlib_dir_ref flowlib_cache in
   hash
 
 (* Whenever we see [%flowlib_contents], replace it wil the flowlib contents *)
-let flowlib_contents ~loc:_ ~path:_ =
-  let (_hash, contents) = memo !flowlib_dir_ref flowlib_cache in
+let flowlib_contents ~loc ~path:_ =
+  let (_hash, contents) = memo ~loc !flowlib_dir_ref flowlib_cache in
   contents
 
-let prelude_hash ~loc:_ ~path:_ =
-  let (hash, _contents) = memo !prelude_dir_ref prelude_cache in
+let prelude_hash ~loc ~path:_ =
+  let (hash, _contents) = memo ~loc !prelude_dir_ref prelude_cache in
   hash
 
-let prelude_contents ~loc:_ ~path:_ =
-  let (_hash, contents) = memo !prelude_dir_ref prelude_cache in
+let prelude_contents ~loc ~path:_ =
+  let (_hash, contents) = memo ~loc !prelude_dir_ref prelude_cache in
   contents
 
 let make_rule name f =
