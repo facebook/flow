@@ -177,7 +177,7 @@ module Flow_js = struct end
 let mk_check_file ~options ~reader ~cache () =
   let open Type_sig_collections in
   let module ConsGen = Annotation_inference.ConsGen in
-  let module Merge = Type_sig_merge.Make (ConsGen) in
+  let module Merge = Type_sig_merge in
   let module Pack = Type_sig_pack in
   let module Bin = Type_sig_bin in
   let module Heap = SharedMem.NewAPI in

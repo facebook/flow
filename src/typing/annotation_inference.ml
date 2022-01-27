@@ -69,13 +69,89 @@ let get_builtin_typeapp cx reason x targs =
   let t = Flow_js_utils.lookup_builtin_strict cx x reason in
   TypeUtil.typeapp reason t targs
 
-module type Annotation_inference_sig = sig
-  include Type_sig_merge.CONS_GEN
+module type S = sig
+  val unresolved_tvar : Context.t -> Reason.t -> int
+
+  val mk_typeof_annotation : Context.t -> ?trace:Type.trace -> Reason.t -> Type.t -> Type.t
+
+  val mk_type_reference : Context.t -> Reason.t -> Type.t -> Type.t
+
+  val get_prop : Context.t -> Type.use_op -> Reason.t -> Reason.name -> Type.t -> Type.t
+
+  val get_elem : Context.t -> Type.use_op -> Reason.t -> key:Type.t -> Type.t -> Type.t
+
+  val qualify_type :
+    Context.t -> Type.use_op -> Reason.t -> Reason.t * Reason.name -> Type.t -> Type.t
+
+  val assert_export_is_type : Context.t -> Reason.t -> string -> Type.t -> Type.t
+
+  val resolve_id : Context.t -> Type.ident -> Type.t -> unit
+
+  val mk_sig_tvar : Context.t -> Reason.t -> Type.t Lazy.t -> Type.t
+
+  val cjs_require : Context.t -> Type.t -> Reason.t -> bool -> Type.t
+
+  val export_named :
+    Context.t ->
+    Reason.reason ->
+    Type.export_kind ->
+    (ALoc.t option * Type.t) NameUtils.Map.t ->
+    Type.t ->
+    Type.t
+
+  val cjs_extract_named_exports :
+    Context.t -> Reason.reason -> Reason.reason * Type.exporttypes * bool -> Type.t -> Type.t
+
+  val import_default :
+    Context.t -> Reason.t -> Type.import_kind -> string -> string -> bool -> Type.t -> Type.t
+
+  val import_named :
+    Context.t -> Reason.t -> Type.import_kind -> string -> string -> bool -> Type.t -> Type.t
+
+  val import_ns : Context.t -> Reason.t -> bool -> Type.t -> Type.t
+
+  val import_typeof : Context.t -> Reason.t -> string -> Type.t -> Type.t
+
+  val specialize :
+    Context.t ->
+    Type.t ->
+    Type.use_op ->
+    Reason.t ->
+    Reason.t ->
+    Type.t list Base.Option.t ->
+    Type.t
+
+  val copy_named_exports : Context.t -> from_ns:Type.t -> Reason.t -> module_t:Type.t -> Type.t
+
+  val copy_type_exports : Context.t -> from_ns:Type.t -> Reason.t -> module_t:Type.t -> Type.t
+
+  val unary_minus : Context.t -> Reason.t -> Type.t -> Type.t
+
+  val unary_not : Context.t -> Reason.t -> Type.t -> Type.t
+
+  val mixin : Context.t -> Reason.t -> Type.t -> Type.t
+
+  val object_spread :
+    Context.t ->
+    Type.use_op ->
+    Reason.reason ->
+    Type.Object.Spread.target ->
+    Type.Object.Spread.state ->
+    Type.t ->
+    Type.t
+
+  val obj_test_proto : Context.t -> Reason.t -> Type.t -> Type.t
+
+  val obj_rest : Context.t -> Reason.t -> string list -> Type.t -> Type.t
+
+  val arr_rest : Context.t -> Type.use_op -> Reason.t -> int -> Type.t -> Type.t
+
+  val set_dst_cx : Context.t -> unit
 
   val elab_t : Context.t -> ?seen:ISet.t -> Type.t -> Type.AConstraint.op -> Type.t
 end
 
-module rec ConsGen : Annotation_inference_sig = struct
+module rec ConsGen : S = struct
   (* Annotation inference is performed in the context of the definition module (this
    * is what the input `cx` in elab_t etc. represents). However, in order to be
    * able to raise errors during annotation inference, we need to have access to the
