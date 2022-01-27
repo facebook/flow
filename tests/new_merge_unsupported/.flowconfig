@@ -8,6 +8,5 @@
 
 [options]
 no_flowlib=false
-experimental.new_merge=true
 
 [strict]

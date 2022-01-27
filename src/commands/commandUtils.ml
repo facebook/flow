@@ -849,7 +849,6 @@ module Options_flags = struct
     trust_mode: Options.trust_mode option;
     env_mode: Options.env_mode option;
     abstract_locations: bool;
-    new_merge: bool;
     verbose: Verbose.t option;
     wait_for_recheck: bool option;
     include_suppressions: bool;
@@ -912,7 +911,6 @@ let options_flags =
       temp_dir
       quiet
       merge_timeout
-      new_merge
       abstract_locations
       include_suppressions
       trust_mode
@@ -943,7 +941,6 @@ let options_flags =
         quiet;
         merge_timeout;
         trust_mode;
-        new_merge;
         abstract_locations;
         include_suppressions;
         prioritize_dependency_checks;
@@ -986,7 +983,6 @@ let options_flags =
              ^ "0 means no timeout (default: 100)"
              )
            ~env:"FLOW_MERGE_TIMEOUT"
-      |> flag "--new-merge" no_arg ~doc:""
       |> flag
            "--abstract-locations"
            no_arg
@@ -1262,7 +1258,6 @@ let make_options
     | Some FlowConfig.Non_lazy -> false
     | None -> false
   in
-  let opt_new_merge = options_flags.new_merge || FlowConfig.new_merge flowconfig in
   let opt_abstract_locations =
     options_flags.abstract_locations
     || Base.Option.value (FlowConfig.abstract_locations flowconfig) ~default:true
@@ -1374,7 +1369,6 @@ let make_options
     opt_node_resolver_allow_root_relative = FlowConfig.node_resolver_allow_root_relative flowconfig;
     opt_node_resolver_root_relative_dirnames =
       FlowConfig.node_resolver_root_relative_dirnames flowconfig;
-    opt_new_merge;
     opt_abstract_locations;
     opt_include_suppressions = options_flags.include_suppressions;
     opt_trust_mode =
