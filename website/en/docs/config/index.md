@@ -8,12 +8,9 @@ can generate a default `.flowconfig` by running `flow init`.
 
 ### `.flowconfig` format <a class="toc" id="toc-flowconfig-format" href="#toc-flowconfig-format"></a>
 
-The `.flowconfig` uses a custom format that vaguely resembles INI files. We are
-not proud of our custom format and plan to support a better format in the
-future. [GitHub issue #153](https://github.com/facebook/flow/issues/153) tracks
-this.
+The `.flowconfig` uses a custom format that vaguely resembles INI files.
 
-The `.flowconfig` consists of 8 sections:
+The `.flowconfig` consists of different sections:
 
 * [`[include]`](include)
 * [`[ignore]`](ignore)
@@ -23,6 +20,7 @@ The `.flowconfig` consists of 8 sections:
 * [`[options]`](options)
 * [`[version]`](version)
 * [`[declarations]`](declarations)
+* [`[strict]`](../strict/#toc-enabling-flow-strict-in-a-flowconfig)
 
 ### Comments <a class="toc" id="toc-comments" href="#toc-comments"></a>
 
