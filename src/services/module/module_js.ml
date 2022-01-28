@@ -861,8 +861,6 @@ let calc_old_modules workers ~all_providers_mutator ~options ~reader new_or_chan
       ~merge:List.rev_append
       ~next:(MultiWorkerLwt.next workers (FilenameSet.elements new_or_changed_or_deleted))
   in
-  (* files may or may not be registered as module providers.
-     when they are, we need to clear their registrations *)
   let old_modules =
     List.fold_left
       (fun acc (file, module_provider_assoc) ->
@@ -872,9 +870,7 @@ let calc_old_modules workers ~all_providers_mutator ~options ~reader new_or_chan
               all_providers_mutator
               file
               module_name;
-            match provider with
-            | Some f when f = file -> (module_name, provider) :: acc
-            | _ -> acc)
+            (module_name, provider) :: acc)
           acc
           module_provider_assoc)
       []
