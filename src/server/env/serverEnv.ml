@@ -25,6 +25,9 @@ type errors = {
   (* errors are stored in a map from file path to error set, so that the errors
      from checking particular files can be cleared during recheck. *)
   local_errors: Flow_error.ErrorSet.t Utils_js.FilenameMap.t;
+  (* duplicate providers found during commit_modules are stored separately so
+     they can be cleared easily *)
+  duplicate_providers: (File_key.t * File_key.t Nel.t) SMap.t;
   (* errors encountered during merge have to be stored separately so
      dependencies can be cleared during merge. *)
   merge_errors: Flow_error.ErrorSet.t Utils_js.FilenameMap.t;

@@ -15,23 +15,11 @@
 
 open Utils_js
 
-type error =
-  | ModuleDuplicateProviderError of {
-      module_name: string;
-      provider: File_key.t;
-      conflict: File_key.t;
-    }
-
 let choose_provider_and_warn_about_duplicates =
-  let warn_duplicate_providers m current modules errmap =
-    List.fold_left
-      (fun acc f ->
-        let w =
-          ModuleDuplicateProviderError { module_name = m; provider = current; conflict = f }
-        in
-        FilenameMap.add f [w] acc ~combine:(fun old new_ -> Base.List.rev_append new_ old))
-      errmap
-      modules
+  let warn_duplicate_providers m provider duplicates acc =
+    match duplicates with
+    | [] -> acc
+    | f :: fs -> SMap.add m (provider, (f, fs)) acc
   in
   fun m errmap providers fallback ->
     let (definitions, implementations) = List.partition Files.has_flow_ext providers in
@@ -43,10 +31,10 @@ let choose_provider_and_warn_about_duplicates =
     (* Else use the first definition *)
     | ([], defn :: dup_defns) -> (defn, warn_duplicate_providers m defn dup_defns errmap)
     (* Don't complain about the first implementation being a duplicate *)
-    | (impl :: dup_impls, defn :: dup_defns) ->
+    | (_impl :: dup_impls, defn :: dup_defns) ->
       let errmap =
         errmap
-        |> warn_duplicate_providers m impl dup_impls
+        |> warn_duplicate_providers m defn dup_impls
         |> warn_duplicate_providers m defn dup_defns
       in
       (defn, errmap)
@@ -175,9 +163,9 @@ module type MODULE_SYSTEM = sig
     FilenameSet.t ->
     (* set of candidate provider files *)
     (* map from files to error sets (accumulator) *)
-    error list FilenameMap.t ->
+    (File_key.t * File_key.t Nel.t) SMap.t ->
     (* file, error map (accumulator) *)
-    File_key.t * error list FilenameMap.t
+    File_key.t * (File_key.t * File_key.t Nel.t) SMap.t
 end
 
 (****************** Node module system *********************)
@@ -741,30 +729,14 @@ let commit_modules ~transaction ~workers ~options ~reader ~is_init new_or_change
   let debug = Options.is_debug_mode options in
   let mutator = Module_heaps.Commit_modules_mutator.create transaction is_init in
   (* prep for registering new mappings in NameHeap *)
-  let (to_remove, providers, to_replace, errmap, changed_modules) =
+  let (to_remove, to_replace, duplicate_providers, changed_modules) =
     List.fold_left
-      (fun (rem, prov, rep, errmap, diff) (m, f_opt) ->
+      (fun (rem, rep, errmap, diff) (m, f_opt) ->
         match Module_hashtables.Mutator_reader.find_in_all_providers_unsafe ~reader m with
         | ps when FilenameSet.is_empty ps ->
           if debug then prerr_endlinef "no remaining providers: %S" (Modulename.to_string m);
-          (Modulename.Set.add m rem, prov, rep, errmap, Modulename.Set.add m diff)
+          (Modulename.Set.add m rem, rep, errmap, Modulename.Set.add m diff)
         | ps ->
-          (* incremental: install empty error sets here for provider candidates.
-             this will have the effect of resetting downstream errors for these
-             files, when the returned error map is used by our caller.
-             IMPORTANT: since each file may (does) provide more than one module,
-             files may already have acquired errors earlier in this fold, so we
-             must only add an empty entry if no entry is already present
-          *)
-          let errmap =
-            FilenameSet.fold
-              (fun f acc ->
-                match FilenameMap.find_opt f acc with
-                | Some _ -> acc
-                | None -> FilenameMap.add f [] acc)
-              ps
-              errmap
-          in
           (* now choose provider for m *)
           let (p, errmap) = choose_provider ~options (Modulename.to_string m) ps errmap in
           (* register chosen provider in NameHeap *)
@@ -785,7 +757,7 @@ let commit_modules ~transaction ~workers ~options ~reader ~is_init new_or_change
                 else
                   diff
               in
-              (rem, prov, rep, errmap, diff)
+              (rem, rep, errmap, diff)
             ) else (
               (* When can this happen? Say m pointed to f before, a different file
                  f' that provides m changed (so m is not in old_modules), and
@@ -797,7 +769,7 @@ let commit_modules ~transaction ~workers ~options ~reader ~is_init new_or_change
                   (File_key.to_string p)
                   (File_key.to_string f);
               let diff = Modulename.Set.add m diff in
-              (rem, p :: prov, (m, p) :: rep, errmap, diff)
+              (rem, (m, p) :: rep, errmap, diff)
             )
           | None ->
             (* When can this happen? Either m pointed to a file that used to
@@ -809,15 +781,15 @@ let commit_modules ~transaction ~workers ~options ~reader ~is_init new_or_change
                 (Modulename.to_string m)
                 (File_key.to_string p);
             let diff = Modulename.Set.add m diff in
-            (rem, p :: prov, (m, p) :: rep, errmap, diff)))
-      (Modulename.Set.empty, [], [], FilenameMap.empty, Modulename.Set.empty)
+            (rem, (m, p) :: rep, errmap, diff)))
+      (Modulename.Set.empty, [], SMap.empty, Modulename.Set.empty)
       dirty_modules
   in
   let%lwt () =
     Module_heaps.Commit_modules_mutator.remove_and_replace mutator ~workers ~to_remove ~to_replace
   in
   if debug then prerr_endlinef "*** done committing modules ***";
-  Lwt.return (providers, changed_modules, errmap)
+  Lwt.return (changed_modules, duplicate_providers)
 
 let get_module_providers ~reader ~audit file_key file_addr =
   let get_provider = Module_heaps.Mutator_reader.get_provider ~reader ~audit in

@@ -7,13 +7,6 @@
 
 open Utils_js
 
-type error =
-  | ModuleDuplicateProviderError of {
-      module_name: string;
-      provider: File_key.t;
-      conflict: File_key.t;
-    }
-
 val eponymous_module : File_key.t -> Modulename.t
 
 (* export and import functions for the module system *)
@@ -62,14 +55,12 @@ val commit_modules :
   options:Options.t ->
   reader:Mutator_state_reader.t ->
   is_init:bool ->
-  FilenameSet.t ->
   (* parsed / unparsed files *)
-  (Modulename.t * File_key.t option) list ->
+  FilenameSet.t ->
   (* dirty modules *)
-  (File_key.t list * (* providers *)
-                     Modulename.Set.t * (* changed modules *)
-  error list FilenameMap.t)
-  Lwt.t
+  (Modulename.t * File_key.t option) list ->
+  (* changed modules and duplicate providers *)
+  (Modulename.Set.t * (File_key.t * File_key.t Nel.t) SMap.t) Lwt.t
 
 (* filenames to error sets *)
 

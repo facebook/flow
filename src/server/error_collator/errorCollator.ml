@@ -100,12 +100,32 @@ let regenerate ~reader =
     let suppressed = List.rev_append file_suppressed suppressed in
     (errors, suppressed, unused)
   in
+  let collate_duplicate_providers =
+    let pos = Loc.{ line = 1; column = 0 } in
+    let f module_name provider acc duplicate =
+      let conflict = Loc.{ source = Some duplicate; start = pos; _end = pos } in
+      let err =
+        Error_message.EDuplicateModuleProvider { module_name; provider; conflict }
+        |> Flow_error.error_of_msg ~trace_reasons:[] ~source_file:duplicate
+        |> Flow_error.make_error_printable
+      in
+      Errors.ConcreteLocPrintableErrorSet.add err acc
+    in
+    let f module_name (provider, duplicates) acc =
+      let provider = Loc.{ source = Some provider; start = pos; _end = pos } in
+      Nel.fold_left (f module_name provider) acc duplicates
+    in
+    SMap.fold f
+  in
   fun ~options env ->
     MonitorRPC.status_update ~event:ServerStatus.Collating_errors_start;
-    let { local_errors; merge_errors; warnings; suppressions } = env.errors in
+    let { local_errors; duplicate_providers; merge_errors; warnings; suppressions } = env.errors in
+    let collated_errorset =
+      collate_duplicate_providers duplicate_providers ConcreteLocPrintableErrorSet.empty
+    in
     let acc_err_fun = acc_fun ~options suppressions (fun _ -> ConcreteLocPrintableErrorSet.union) in
     let (collated_errorset, collated_suppressed_errors, unused) =
-      (ConcreteLocPrintableErrorSet.empty, [], suppressions)
+      (collated_errorset, [], suppressions)
       |> FilenameMap.fold acc_err_fun local_errors
       |> FilenameMap.fold acc_err_fun merge_errors
     in

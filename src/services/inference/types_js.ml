@@ -11,17 +11,22 @@ open Utils_js
 
 (****************** typecheck job helpers *********************)
 
-let clear_errors (files : FilenameSet.t) errors =
-  FilenameSet.fold
-    (fun file { ServerEnv.local_errors; merge_errors; warnings; suppressions } ->
-      {
-        ServerEnv.local_errors = FilenameMap.remove file local_errors;
-        merge_errors = FilenameMap.remove file merge_errors;
-        warnings = FilenameMap.remove file warnings;
-        suppressions = Error_suppressions.remove file suppressions;
-      })
-    files
+let clear_errors files errors =
+  let { ServerEnv.local_errors; duplicate_providers; merge_errors; warnings; suppressions } =
     errors
+  in
+  let (local_errors, merge_errors, warnings, suppressions) =
+    FilenameSet.fold
+      (fun file (local_errors, merge_errors, warnings, suppressions) ->
+        ( FilenameMap.remove file local_errors,
+          FilenameMap.remove file merge_errors,
+          FilenameMap.remove file warnings,
+          Error_suppressions.remove file suppressions
+        ))
+      files
+      (local_errors, merge_errors, warnings, suppressions)
+  in
+  { ServerEnv.local_errors; duplicate_providers; merge_errors; warnings; suppressions }
 
 let update_errset map file errset =
   if Flow_error.ErrorSet.is_empty errset then
@@ -35,18 +40,6 @@ let update_errset map file errset =
     FilenameMap.add file errset map
 
 let merge_error_maps = FilenameMap.union ~combine:(fun _ x y -> Some (Flow_error.ErrorSet.union x y))
-
-(* Filter out duplicate provider error, if any, for the given file. *)
-let filter_duplicate_provider map file =
-  match FilenameMap.find_opt file map with
-  | Some prev_errset ->
-    let new_errset =
-      Flow_error.ErrorSet.filter
-        (fun err -> not (Flow_error.kind_of_error err = Errors.DuplicateProviderError))
-        prev_errset
-    in
-    FilenameMap.add file new_errset map
-  | None -> map
 
 let collate_parse_results parse_results =
   let {
@@ -102,22 +95,6 @@ let reparse ~options ~profiling ~transaction ~reader ~workers ~modified =
       Lwt.return (collate_parse_results results)
   )
 
-let flow_error_of_module_error file err =
-  match err with
-  | Module_js.ModuleDuplicateProviderError { module_name; provider; conflict } ->
-    Error_message.(
-      let provider =
-        let pos = Loc.{ line = 1; column = 0 } in
-        ALoc.of_loc Loc.{ source = Some provider; start = pos; _end = pos }
-      in
-      let conflict =
-        let pos = Loc.{ line = 1; column = 0 } in
-        ALoc.of_loc Loc.{ source = Some conflict; start = pos; _end = pos }
-      in
-      EDuplicateModuleProvider { module_name; provider; conflict }
-    )
-    |> Flow_error.error_of_msg ~trace_reasons:[] ~source_file:file
-
 (* commit providers for old and new modules, collect errors. *)
 let commit_modules
     ~transaction
@@ -128,7 +105,7 @@ let commit_modules
     ~profiling
     ~workers
     ~old_modules
-    ~local_errors
+    ~duplicate_providers
     ~new_or_changed =
   (* conservatively approximate set of modules whose providers will change *)
   (* register providers for modules, warn on dupes etc. *)
@@ -137,7 +114,23 @@ let commit_modules
         Module_js.calc_new_modules ~reader workers ~all_providers_mutator new_or_changed
       in
       let dirty_modules = List.rev_append old_modules new_modules in
-      let%lwt (providers, changed_modules, errmap) =
+      (* Clear duplicate provider errors for all dirty modules. *)
+      let duplicate_providers =
+        (* Avoid iterating over dirty modules when there are no duplicate
+         * providers. This is most useful on init, when all modules are dirty,
+         * but should also be true for most rechecks. *)
+        if SMap.is_empty duplicate_providers then
+          duplicate_providers
+        else
+          List.fold_left
+            (fun acc (m, _) ->
+              match m with
+              | Modulename.String m -> SMap.remove m acc
+              | Modulename.Filename _ -> acc)
+            duplicate_providers
+            dirty_modules
+      in
+      let%lwt (changed_modules, new_duplicate_providers) =
         Module_js.commit_modules
           ~transaction
           ~workers
@@ -147,32 +140,7 @@ let commit_modules
           new_or_changed
           dirty_modules
       in
-
-      (* Providers might be new but not changed. This typically happens when old
-         providers are deleted, and previously duplicate providers become new
-         providers. In such cases, we must clear the old duplicate provider errors
-         for the new providers.
-
-         (Note that this is unncessary when the providers are changed, because in
-         that case they are rechecked and *all* their errors are cleared. But we
-         don't care about optimizing that case for now.) *)
-      let errors = List.fold_left filter_duplicate_provider local_errors providers in
-      Lwt.return
-        ( changed_modules,
-          FilenameMap.fold
-            (fun file errors acc ->
-              let errset =
-                List.fold_left
-                  (fun acc err ->
-                    let error = flow_error_of_module_error file err in
-                    Flow_error.ErrorSet.add error acc)
-                  Flow_error.ErrorSet.empty
-                  errors
-              in
-              update_errset acc file errset)
-            errmap
-            errors
-        )
+      Lwt.return (changed_modules, SMap.union duplicate_providers new_duplicate_providers)
   )
 
 module DirectDependentFilesCache : sig
@@ -1124,7 +1092,7 @@ end = struct
     in
 
     (* clear errors for new, changed and deleted files *)
-    let { ServerEnv.local_errors; merge_errors; warnings; suppressions } =
+    let { ServerEnv.local_errors; duplicate_providers; merge_errors; warnings; suppressions } =
       clear_errors new_or_changed_or_deleted errors
     in
     (* clear stale coverage info *)
@@ -1352,7 +1320,7 @@ end = struct
       CheckedSet.filter files_to_force ~f:(fun fn _ -> FilenameSet.mem fn unchanged)
     in
     MonitorRPC.status_update ServerStatus.Resolving_dependencies_progress;
-    let%lwt (changed_modules, local_errors) =
+    let%lwt (changed_modules, duplicate_providers) =
       (* TODO remove after lookup overhaul *)
       Module_js.clear_filename_cache ();
       commit_modules
@@ -1364,7 +1332,7 @@ end = struct
         ~workers
         ~old_modules
         ~new_or_changed
-        ~local_errors
+        ~duplicate_providers
         ~is_init:false
     in
     (* direct_dependent_files are unchanged files which directly depend on changed modules,
@@ -1454,7 +1422,9 @@ end = struct
     Hh_logger.info "Done updating index";
 
     let env = { env with ServerEnv.files = parsed; unparsed; dependency_info; exports; coverage } in
-    let errors = { ServerEnv.local_errors; merge_errors; warnings; suppressions } in
+    let errors =
+      { ServerEnv.local_errors; duplicate_providers; merge_errors; warnings; suppressions }
+    in
     let intermediate_values =
       ( deleted,
         direct_dependent_files,
@@ -2169,7 +2139,7 @@ let init_from_saved_state ~profiling ~workers ~saved_state ~updates options =
 
     let all_providers_mutator = Module_hashtables.All_providers_mutator.create transaction in
     (* This will restore InfoHeap, NameHeap, & all_providers hashtable *)
-    let%lwt _ =
+    let%lwt (_changed_modules, duplicate_providers) =
       commit_modules
         ~transaction
         ~reader
@@ -2179,11 +2149,12 @@ let init_from_saved_state ~profiling ~workers ~saved_state ~updates options =
         ~profiling
         ~workers
         ~old_modules:[]
-        ~local_errors
+        ~duplicate_providers:SMap.empty
         ~new_or_changed:all_files
     in
     let errors =
-      { ServerEnv.local_errors; merge_errors = FilenameMap.empty; warnings; suppressions }
+      let merge_errors = FilenameMap.empty in
+      { ServerEnv.local_errors; duplicate_providers; merge_errors; warnings; suppressions }
     in
     let dependency_info = Dependency_info.of_map dependency_graph in
 
@@ -2326,7 +2297,7 @@ let init_from_scratch ~profiling ~workers options =
   Hh_logger.info "Resolving dependencies";
   MonitorRPC.status_update ServerStatus.Resolving_dependencies_progress;
   let all_providers_mutator = Module_hashtables.All_providers_mutator.create transaction in
-  let%lwt (_changed_modules, local_errors) =
+  let%lwt (_changed_modules, duplicate_providers) =
     commit_modules
       ~transaction
       ~reader
@@ -2336,7 +2307,7 @@ let init_from_scratch ~profiling ~workers options =
       ~workers
       ~old_modules:[]
       ~new_or_changed
-      ~local_errors
+      ~duplicate_providers:SMap.empty
       ~is_init:true
   in
   let%lwt (resolve_errors, _resolved_requires_changed) =
@@ -2358,7 +2329,8 @@ let init_from_scratch ~profiling ~workers options =
   Hh_logger.info "Done";
 
   let errors =
-    { ServerEnv.local_errors; merge_errors = FilenameMap.empty; warnings; suppressions }
+    let merge_errors = FilenameMap.empty in
+    { ServerEnv.local_errors; duplicate_providers; merge_errors; warnings; suppressions }
   in
   let env =
     mk_init_env
