@@ -680,13 +680,22 @@ let watch =
      returned an error. Let's do a best effort attempt to infer the relative path for each bad
      include. *)
   let guess_missing_relative_paths terms watch_root failed_paths =
-    let failed_paths = SSet.elements failed_paths in
+    let watch_root =
+      let normalized = Sys_utils.normalize_filename_dir_sep watch_root in
+      if String_utils.string_ends_with normalized "/" then
+        normalized
+      else
+        normalized ^ "/"
+    in
+    let failed_paths =
+      SSet.elements failed_paths |> Base.List.map ~f:Sys_utils.normalize_filename_dir_sep
+    in
     let (terms, failed_paths) =
       List.fold
         ~f:(fun (terms, failed_paths) path ->
           let open String_utils in
           if string_starts_with path watch_root then
-            let relative_path = lstrip (lstrip path watch_root) Caml.Filename.dir_sep in
+            let relative_path = lstrip path watch_root in
             (prepend_relative_path_term ~relative_path ~terms, failed_paths)
           else
             (terms, path :: failed_paths))
