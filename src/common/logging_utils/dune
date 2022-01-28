@@ -3,6 +3,7 @@
   (wrapped false)
   (libraries
     flow_common
+    flow_interaction_logging
     flow_logging
     collections ; hack
     imported_core ; hack

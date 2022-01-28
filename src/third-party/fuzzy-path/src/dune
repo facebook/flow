@@ -1,6 +1,20 @@
-(library 
+(library
  (name fuzzy_path)
  (wrapped false)
  (foreign_archives ../fuzzy-path)
- (c_library_flags -lstdc++)
+ (c_library_flags (:include c_library_flags.sexp))
 )
+
+(rule
+  (target c_library_flags.sexp)
+  (enabled_if (or
+    (= %{system} "cygwin")
+    (= %{system} "mingw64")))
+  (action (with-stdout-to %{target} (echo "(-Wl,-static-libstdc++ -lstdc++.a -lpthread.a)"))))
+
+(rule
+  (target c_library_flags.sexp)
+  (enabled_if (and
+    (<> %{system} "cygwin")
+    (<> %{system} "mingw64")))
+  (action (with-stdout-to %{target} (echo "(-Wl,-static-libstdc++ -lstdc++ -lpthread)"))))

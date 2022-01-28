@@ -4,7 +4,7 @@
   (libraries
     base
     flow_common_lwt
-    flow_logging_stubs
+    flow_logging
     flow_vcs
     buffered_line_reader_lwt
     hh_json

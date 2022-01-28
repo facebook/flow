@@ -19,7 +19,17 @@
 
 (rule
   (target heap_libc_flags.txt)
-  (enabled_if (<> %{system} "linux"))
+  (enabled_if (or
+    (= %{system} "cygwin")
+    (= %{system} "mingw64")))
+  (action (with-stdout-to %{target} (echo "(-latomic.a)"))))
+
+(rule
+  (target heap_libc_flags.txt)
+  (enabled_if (and
+    (<> %{system} "linux")
+    (<> %{system} "cygwin")
+    (<> %{system} "mingw64")))
   (action (with-stdout-to %{target} (echo "()"))))
 
 (library

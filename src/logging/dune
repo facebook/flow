@@ -31,4 +31,5 @@ let () =
   let is_fb = Sys.file_exists fb_dune in
   let logging = entry is_fb "flow_logging" in
   let logging_lwt = entry is_fb "logging_common_lwt" in
-  Jbuild_plugin.V1.send (String.concat "\n\n" [logging; logging_lwt])
+  let interaction_logging = entry is_fb "flow_interaction_logging" in
+  Jbuild_plugin.V1.send (String.concat "\n\n" [logging; logging_lwt; interaction_logging])

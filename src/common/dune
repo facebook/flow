@@ -12,14 +12,12 @@
     flow_common_lints
     flow_common_span
     flow_common_utils
-    flow_logging
     flow_parser_utils_aloc
     flow_version
-    logging_common ; hack
     heap_ident ; hack
     hh_json ; hack
     sys_utils ; hack
-    xx 
+    xx
     )
   (preprocess (pps ppx_deriving.std))
 )

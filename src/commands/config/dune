@@ -4,6 +4,7 @@
   (libraries
     base
     flow_common
+    flow_logging
     semver
     xx
   )
