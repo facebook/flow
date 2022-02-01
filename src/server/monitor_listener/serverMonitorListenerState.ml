@@ -259,12 +259,12 @@ let requeue_workload workload =
   in
   recheck_acc := next
 
-let get_and_clear_recheck_workload ~prioritize_dependency_checks ~process_updates ~get_forced =
+let get_and_clear_recheck_workload ~process_updates ~get_forced =
   recheck_fetch ~process_updates ~get_forced ~priority:Normal;
   let recheck_workload = !recheck_acc in
   let { files_to_force; files_to_prioritize; files_to_recheck; _ } = recheck_workload in
-  (* when prioritize_dependency_checks is enabled, if there are any dependencies to force, then we
-     will return them first and leave everything else in the queue for the next recheck.
+  (* if there are any dependencies to force, then we will return them first and leave everything
+     else in the queue for the next recheck.
 
      if there are any files_to_prioritize, those are included in the next recheck but do not
      themselves cause a prioritized recheck. the use-case for this is unexpected changes that
@@ -278,7 +278,7 @@ let get_and_clear_recheck_workload ~prioritize_dependency_checks ~process_update
   let (dependencies_to_force, files_to_force) =
     CheckedSet.partition ~f:(fun _file -> CheckedSet.is_dependency) files_to_force
   in
-  if (not prioritize_dependency_checks) || CheckedSet.is_empty dependencies_to_force then (
+  if CheckedSet.is_empty dependencies_to_force then (
     recheck_acc := empty_recheck_workload;
     (Normal, recheck_workload)
   ) else

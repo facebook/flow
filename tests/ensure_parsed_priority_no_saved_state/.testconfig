@@ -1,3 +1,0 @@
-shell: test.sh
-start_args: --lazy-mode fs --file-watcher none
-skip_saved_state: true

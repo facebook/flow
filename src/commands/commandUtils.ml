@@ -852,7 +852,6 @@ module Options_flags = struct
     verbose: Verbose.t option;
     wait_for_recheck: bool option;
     include_suppressions: bool;
-    prioritize_dependency_checks: bool option;
   }
 end
 
@@ -914,8 +913,7 @@ let options_flags =
       abstract_locations
       include_suppressions
       trust_mode
-      env_mode
-      prioritize_dependency_checks =
+      env_mode =
     (match merge_timeout with
     | Some timeout when timeout < 0 ->
       Exit.(exit ~msg:"--merge-timeout must be non-negative" Commandline_usage_error)
@@ -943,7 +941,6 @@ let options_flags =
         trust_mode;
         abstract_locations;
         include_suppressions;
-        prioritize_dependency_checks;
       }
   in
   fun prev ->
@@ -1016,7 +1013,6 @@ let options_flags =
               )
            )
            ~doc:""
-      |> flag "--prioritize-dep-checks" (optional bool) ~doc:(* experimental *) ""
     )
 
 let saved_state_flags =
@@ -1278,12 +1274,6 @@ let make_options
   let opt_direct_dependent_files_fix =
     Base.Option.value (FlowConfig.direct_dependent_files_fix flowconfig) ~default:true
   in
-  let opt_prioritize_dependency_checks =
-    Base.Option.first_some
-      options_flags.prioritize_dependency_checks
-      (FlowConfig.prioritize_dependency_checks flowconfig)
-    |> Base.Option.value ~default:false
-  in
   let strict_mode = FlowConfig.strict_mode flowconfig in
   let opt_temp_dir = Path.to_string temp_dir in
   let opt_log_file = server_log_file ~flowconfig_name ~tmp_dir:opt_temp_dir root flowconfig in
@@ -1403,7 +1393,6 @@ let make_options
     opt_format;
     opt_autoimports = Base.Option.value (FlowConfig.autoimports flowconfig) ~default:true;
     opt_flowconfig_hash = flowconfig_hash;
-    opt_prioritize_dependency_checks;
     opt_gc_worker =
       {
         Options.gc_minor_heap_size =
