@@ -21,49 +21,49 @@ exception Module_not_found of string
 type metadata = {
   (* local *)
   checked: bool;
-  munge_underscores: bool;
-  verbose: Verbose.t option;
   include_suppressions: bool;
   jsx: Options.jsx_mode;
+  munge_underscores: bool;
   strict: bool;
   strict_local: bool;
+  verbose: Verbose.t option;
   (* global *)
   any_propagation: bool;
   automatic_require_default: bool;
   babel_loose_array_spread: bool;
-  max_literal_length: int;
+  cycle_errors: bool;
   enable_const_params: bool;
   enable_enums: bool;
   enable_relay_integration: bool;
+  enforce_local_inference_annotations: bool;
+  enforce_strict_call_arity: bool;
+  enforce_this_annotations: bool;
   env_mode: Options.env_mode;
   env_mode_constrain_write_dirs: string list;
-  enforce_strict_call_arity: bool;
-  enforce_local_inference_annotations: bool;
-  local_inference_annotation_dirs: string list;
-  enforce_this_annotations: bool;
-  experimental_infer_indexers: bool;
   exact_by_default: bool;
+  experimental_infer_indexers: bool;
   facebook_fbs: string option;
   facebook_fbt: string option;
   facebook_module_interop: bool;
   haste_module_ref_prefix: string option;
   ignore_non_literal_requires: bool;
+  local_inference_annotation_dirs: string list;
+  max_literal_length: int;
   max_trace_depth: int;
+  max_workers: int;
   react_runtime: Options.react_runtime;
   react_server_component_exts: SSet.t;
   recursion_limit: int;
   relay_integration_excludes: Str.regexp list;
   relay_integration_module_prefix: string option;
   relay_integration_module_prefix_includes: Str.regexp list;
-  statement_reorder_checking: Options.statement_order_mode;
-  cycle_errors: bool;
   root: Path.t;
   run_post_inference_implicit_instantiation: bool;
+  statement_reorder_checking: Options.statement_order_mode;
   strict_es6_import_export: bool;
   strict_es6_import_export_excludes: string list;
   strip_root: bool;
   suppress_types: SSet.t;
-  max_workers: int;
   trust_mode: Options.trust_mode;
   type_asserts: bool;
 }
@@ -215,33 +215,34 @@ let metadata_of_options options =
   {
     (* local *)
     checked = Options.all options;
-    munge_underscores = Options.should_munge_underscores options;
-    verbose = Options.verbose options;
     include_suppressions = Options.include_suppressions options;
     jsx = Options.Jsx_react;
+    munge_underscores = Options.should_munge_underscores options;
     strict = false;
     strict_local = false;
+    verbose = Options.verbose options;
     (* global *)
     any_propagation = Options.any_propagation options;
     automatic_require_default = Options.automatic_require_default options;
     babel_loose_array_spread = Options.babel_loose_array_spread options;
-    max_literal_length = Options.max_literal_length options;
+    cycle_errors = Options.cycle_errors options;
     enable_const_params = Options.enable_const_params options;
     enable_enums = Options.enums options;
     enable_relay_integration = Options.enable_relay_integration options;
+    enforce_local_inference_annotations = Options.enforce_local_inference_annotations options;
+    enforce_strict_call_arity = Options.enforce_strict_call_arity options;
+    enforce_this_annotations = Options.enforce_this_annotations options;
     env_mode = Options.env_mode options;
     env_mode_constrain_write_dirs = Options.env_mode_constrain_write_dirs options;
-    enforce_strict_call_arity = Options.enforce_strict_call_arity options;
-    enforce_local_inference_annotations = Options.enforce_local_inference_annotations options;
-    local_inference_annotation_dirs = Options.local_inference_annotation_dirs options;
-    enforce_this_annotations = Options.enforce_this_annotations options;
-    experimental_infer_indexers = Options.experimental_infer_indexers options;
     exact_by_default = Options.exact_by_default options;
+    experimental_infer_indexers = Options.experimental_infer_indexers options;
     facebook_fbs = Options.facebook_fbs options;
     facebook_fbt = Options.facebook_fbt options;
     facebook_module_interop = Options.facebook_module_interop options;
     haste_module_ref_prefix = Options.haste_module_ref_prefix options;
     ignore_non_literal_requires = Options.should_ignore_non_literal_requires options;
+    local_inference_annotation_dirs = Options.local_inference_annotation_dirs options;
+    max_literal_length = Options.max_literal_length options;
     max_trace_depth = Options.max_trace_depth options;
     max_workers = Options.max_workers options;
     react_runtime = Options.react_runtime options;
@@ -251,11 +252,10 @@ let metadata_of_options options =
     relay_integration_module_prefix = Options.relay_integration_module_prefix options;
     relay_integration_module_prefix_includes =
       Options.relay_integration_module_prefix_includes options;
-    statement_reorder_checking = Options.statement_reorder_checking options;
-    cycle_errors = Options.cycle_errors options;
     root = Options.root options;
     run_post_inference_implicit_instantiation =
       Options.run_post_inference_implicit_instantiation options;
+    statement_reorder_checking = Options.statement_reorder_checking options;
     strict_es6_import_export = Options.strict_es6_import_export options;
     strict_es6_import_export_excludes = Options.strict_es6_import_export_excludes options;
     strip_root = Options.should_strip_root options;
