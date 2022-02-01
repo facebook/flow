@@ -463,6 +463,10 @@ let signal =
     fun _ _ ->
   ()
 
+external is_rosetta : unit -> bool = "hh_is_rosetta"
+
+let is_rosetta = is_rosetta ()
+
 external get_total_ram : unit -> int = "hh_sysinfo_totalram"
 
 external uptime : unit -> int = "hh_sysinfo_uptime"
