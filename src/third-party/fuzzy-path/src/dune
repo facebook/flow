@@ -14,7 +14,13 @@
 
 (rule
   (target c_library_flags.sexp)
+  (enabled_if (= %{system} "macosx"))
+  (action (with-stdout-to %{target} (echo "(-lstdc++ -lpthread)"))))
+
+(rule
+  (target c_library_flags.sexp)
   (enabled_if (and
+    (<> %{system} "macosx")
     (<> %{system} "cygwin")
     (<> %{system} "mingw64")))
   (action (with-stdout-to %{target} (echo "(-Wl,-static-libstdc++ -lstdc++ -lpthread)"))))
