@@ -87,6 +87,7 @@ type t = {
   opt_env_mode: env_mode;
   opt_env_mode_constrain_write_dirs: string list;
   opt_exact_by_default: bool;
+  opt_exact_empty_objects: bool;
   opt_experimental_infer_indexers: bool;
   opt_facebook_fbs: string option;
   opt_facebook_fbt: string option;
@@ -189,6 +190,8 @@ let env_mode opts = opts.opt_env_mode
 let env_mode_constrain_write_dirs opts = opts.opt_env_mode_constrain_write_dirs
 
 let exact_by_default opts = opts.opt_exact_by_default
+
+let exact_empty_objects opts = opts.opt_exact_empty_objects
 
 let experimental_infer_indexers opts = opts.opt_experimental_infer_indexers
 

@@ -41,6 +41,7 @@ type metadata = {
   env_mode: Options.env_mode;
   env_mode_constrain_write_dirs: string list;
   exact_by_default: bool;
+  exact_empty_objects: bool;
   experimental_infer_indexers: bool;
   facebook_fbs: string option;
   facebook_fbt: string option;
@@ -235,6 +236,7 @@ let metadata_of_options options =
     env_mode = Options.env_mode options;
     env_mode_constrain_write_dirs = Options.env_mode_constrain_write_dirs options;
     exact_by_default = Options.exact_by_default options;
+    exact_empty_objects = Options.exact_empty_objects options;
     experimental_infer_indexers = Options.experimental_infer_indexers options;
     facebook_fbs = Options.facebook_fbs options;
     facebook_fbt = Options.facebook_fbt options;
@@ -436,6 +438,8 @@ let evaluated cx = cx.ccx.sig_cx.evaluated
 let goals cx = cx.ccx.goal_map
 
 let exact_by_default cx = cx.metadata.exact_by_default
+
+let exact_empty_objects cx = cx.metadata.exact_empty_objects
 
 let enforce_local_inference_annotations cx = cx.metadata.enforce_local_inference_annotations
 

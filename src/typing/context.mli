@@ -62,6 +62,7 @@ type metadata = {
   env_mode: Options.env_mode;
   env_mode_constrain_write_dirs: string list;
   exact_by_default: bool;
+  exact_empty_objects: bool;
   experimental_infer_indexers: bool;
   facebook_fbs: string option;
   facebook_fbt: string option;
@@ -180,6 +181,8 @@ val evaluated : t -> Type.t Type.Eval.Map.t
 val goals : t -> Type.t IMap.t
 
 val exact_by_default : t -> bool
+
+val exact_empty_objects : t -> bool
 
 val enforce_local_inference_annotations : t -> bool
 

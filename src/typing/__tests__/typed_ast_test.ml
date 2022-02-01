@@ -35,6 +35,7 @@ let metadata =
     env_mode = Options.ClassicEnv [];
     env_mode_constrain_write_dirs = [];
     exact_by_default = false;
+    exact_empty_objects = false;
     experimental_infer_indexers = false;
     facebook_fbs = None;
     facebook_fbt = None;

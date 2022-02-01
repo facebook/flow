@@ -100,6 +100,8 @@ val env_mode_constrain_write_dirs : config -> string list
 
 val exact_by_default : config -> bool
 
+val exact_empty_objects : config -> bool option
+
 val facebook_fbs : config -> string option
 
 val facebook_fbt : config -> string option
