@@ -187,20 +187,7 @@ module Callee_finder = struct
     | Found None -> None
 end
 
-let ty_normalizer_options =
-  Ty_normalizer_env.
-    {
-      expand_internal_types = false;
-      flag_shadowed_type_params = false;
-      preserve_inferred_literal_types = false;
-      evaluate_type_destructors = false;
-      optimize_types = true;
-      omit_targ_defaults = false;
-      merge_bot_and_any_kinds = true;
-      verbose_normalizer = false;
-      max_depth = Some 50;
-    }
-  
+let ty_normalizer_options = Ty_normalizer_env.default_options
 
 let rec collect_functions ~jsdoc ~exact_by_default acc = function
   | Ty.Fun { Ty.fun_params; fun_rest_param; fun_return; _ } ->

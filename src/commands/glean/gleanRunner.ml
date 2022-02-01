@@ -603,19 +603,7 @@ let declaration_infos ~root ~write_root ~scope_info ~file ~file_sig ~full_cx ~re
        typed_ast
     );
   let genv = Ty_normalizer_env.mk_genv ~full_cx ~file ~typed_ast ~file_sig in
-  let options =
-    {
-      Ty_normalizer_env.expand_internal_types = false;
-      flag_shadowed_type_params = false;
-      preserve_inferred_literal_types = false;
-      evaluate_type_destructors = false;
-      optimize_types = true;
-      omit_targ_defaults = false;
-      merge_bot_and_any_kinds = true;
-      verbose_normalizer = false;
-      max_depth = Some 50;
-    }
-  in
+  let options = Ty_normalizer_env.default_options in
   let exact_by_default = Context.exact_by_default full_cx in
   let documentations = Find_documentation.def_loc_to_comment_loc_map ast in
   Base.List.fold
