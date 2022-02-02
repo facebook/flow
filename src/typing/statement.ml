@@ -2959,7 +2959,7 @@ struct
         reason
         ~frozen
         ~default_proto:obj_proto
-        ~empty_unsealed:true
+        ~empty_unsealed:(not @@ Context.exact_empty_objects cx)
     in
     (t, List.rev rev_prop_asts)
 

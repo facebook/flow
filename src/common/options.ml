@@ -87,6 +87,7 @@ type t = {
   opt_env_mode: env_mode;
   opt_env_mode_constrain_write_dirs: string list;
   opt_exact_by_default: bool;
+  opt_exact_empty_objects: bool;
   opt_experimental_infer_indexers: bool;
   opt_facebook_fbs: string option;
   opt_facebook_fbt: string option;
@@ -191,6 +192,8 @@ let env_mode_constrain_write_dirs opts = opts.opt_env_mode_constrain_write_dirs
 
 let exact_by_default opts = opts.opt_exact_by_default
 
+let exact_empty_objects opts = opts.opt_exact_empty_objects
+
 let experimental_infer_indexers opts = opts.opt_experimental_infer_indexers
 
 let facebook_fbs opts = opts.opt_facebook_fbs
@@ -258,6 +261,8 @@ let module_name_mappers opts = opts.opt_module_name_mappers
 let module_system opts = opts.opt_module
 
 let modules_are_use_strict opts = opts.opt_modules_are_use_strict
+
+let new_merge opts = opts.opt_new_merge
 
 let node_main_fields opts = opts.opt_node_main_fields
 

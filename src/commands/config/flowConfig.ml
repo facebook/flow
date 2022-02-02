@@ -63,6 +63,7 @@ module Opts = struct
     env_mode: Options.env_mode;
     env_mode_constrain_write_dirs: string list;
     exact_by_default: bool;
+    exact_empty_objects: bool option;
     facebook_fbs: string option;
     facebook_fbt: string option;
     facebook_module_interop: bool;
@@ -195,6 +196,7 @@ module Opts = struct
       env_mode = Options.ClassicEnv [];
       env_mode_constrain_write_dirs = [];
       exact_by_default = false;
+      exact_empty_objects = None;
       facebook_fbs = None;
       facebook_fbt = None;
       facebook_module_interop = false;
@@ -820,6 +822,7 @@ module Opts = struct
       ("emoji", boolean (fun opts v -> Ok { opts with emoji = Some v }));
       ("enums", boolean (fun opts v -> Ok { opts with enums = v }));
       ("exact_by_default", boolean (fun opts v -> Ok { opts with exact_by_default = v }));
+      ("exact_empty_objects", boolean (fun opts v -> Ok { opts with exact_empty_objects = Some v }));
       ("experimental.abstract_locations", abstract_locations_parser);
       ("experimental.const_params", boolean (fun opts v -> Ok { opts with enable_const_params = v }));
       ("experimental.cycle_errors", boolean (fun opts v -> Ok { opts with cycle_errors = v }));
@@ -1475,6 +1478,8 @@ let env_mode c = c.options.Opts.env_mode
 let env_mode_constrain_write_dirs c = c.options.Opts.env_mode_constrain_write_dirs
 
 let exact_by_default c = c.options.Opts.exact_by_default
+
+let exact_empty_objects c = c.options.Opts.exact_empty_objects
 
 let facebook_fbs c = c.options.Opts.facebook_fbs
 
