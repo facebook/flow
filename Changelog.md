@@ -1,3 +1,24 @@
+### 0.171.0
+
+Likely to cause new Flow errors:
+* Disallow duplicate member names in classes.
+* Error if an interface is imported as a value.
+
+Notable bug fixes:
+* Fix Watchman file watcher on Windows when an include path doesn't exist.
+* Fix a parse error when a newline appears after a class method definition's name.
+
+Parser:
+* Add support for parsing logical assignment operators (thanks @strub).
+* Fix compliance with estree: `export * as x from 'y'` is now an `ExportAllDeclaration` with an `exported` key.
+* Permanently enable parsing of nullish coalescing, and remove the `esproposal_nullish_coalescing` option.
+* Permanently enable parsing of optional chaining, and remove the `esproposal_optional_chaining` option.
+* Permanently enable parsing of class static fields, and remove the `esproposal_class_static_fields` option.
+* Permanently enable parsing of class instance fields, and remove the `esproposal_class_instance_fields` option.
+
+Library Definitions:
+* Make some `options` parameters in node's `fsPromises` optional.
+
 ### 0.170.0
 
 Another light release due to the new year. Changes are mainly internal --
