@@ -12,35 +12,22 @@ open Token
 open Lex_env
 
 let lexeme = Sedlexing.Utf8.lexeme
-
 let lexeme_to_buffer = Sedlexing.Utf8.lexeme_to_buffer
-
 let lexeme_to_buffer2 = Sedlexing.Utf8.lexeme_to_buffer2
-
 let sub_lexeme = Sedlexing.Utf8.sub_lexeme
-
 let letter = [%sedlex.regexp? 'a' .. 'z' | 'A' .. 'Z' | '$']
-
 let id_letter = [%sedlex.regexp? letter | '_']
-
 let digit = [%sedlex.regexp? '0' .. '9']
-
 let digit_non_zero = [%sedlex.regexp? '1' .. '9']
-
 let decintlit = [%sedlex.regexp? '0' | ('1' .. '9', Star digit)]
 
 (* DecimalIntegerLiteral *)
 
 let alphanumeric = [%sedlex.regexp? digit | letter]
-
 let word = [%sedlex.regexp? (letter, Star alphanumeric)]
-
 let hex_digit = [%sedlex.regexp? digit | 'a' .. 'f' | 'A' .. 'F']
-
 let non_hex_letter = [%sedlex.regexp? 'g' .. 'z' | 'G' .. 'Z' | '$']
-
 let bin_digit = [%sedlex.regexp? '0' | '1']
-
 let oct_digit = [%sedlex.regexp? '0' .. '7']
 
 (* This regex could be simplified to (digit Star (digit OR '_' digit))
@@ -56,20 +43,16 @@ let underscored_hex =
   [%sedlex.regexp? Plus hex_digit | (hex_digit, Star (hex_digit | ('_', hex_digit)))]
 
 let underscored_digit = [%sedlex.regexp? Plus digit | (digit_non_zero, Star (digit | ('_', digit)))]
-
 let underscored_decimal = [%sedlex.regexp? Plus digit | (digit, Star (digit | ('_', digit)))]
 
 (* Different ways you can write a number *)
 let binnumber = [%sedlex.regexp? ('0', ('B' | 'b'), underscored_bin)]
-
 let octnumber = [%sedlex.regexp? ('0', ('O' | 'o'), underscored_oct)]
-
 let legacyoctnumber = [%sedlex.regexp? ('0', Plus oct_digit)]
 
 (* no underscores allowed *)
 
 let legacynonoctnumber = [%sedlex.regexp? ('0', Star oct_digit, '8' .. '9', Star digit)]
-
 let hexnumber = [%sedlex.regexp? ('0', ('X' | 'x'), underscored_hex)]
 
 let scinumber =
@@ -81,19 +64,12 @@ let scinumber =
     )]
 
 let wholenumber = [%sedlex.regexp? (underscored_digit, Opt '.')]
-
 let floatnumber = [%sedlex.regexp? (Opt underscored_digit, '.', underscored_decimal)]
-
 let binbigint = [%sedlex.regexp? (binnumber, 'n')]
-
 let octbigint = [%sedlex.regexp? (octnumber, 'n')]
-
 let hexbigint = [%sedlex.regexp? (hexnumber, 'n')]
-
 let scibigint = [%sedlex.regexp? (scinumber, 'n')]
-
 let wholebigint = [%sedlex.regexp? (underscored_digit, 'n')]
-
 let floatbigint = [%sedlex.regexp? ((floatnumber | (underscored_digit, '.')), 'n')]
 
 (* 2-8 alphanumeric characters. I could match them directly, but this leads to
@@ -154,21 +130,13 @@ let whitespace =
 (* minus sign in front of negative numbers
    (only for types! regular numbers use T_MINUS!) *)
 let neg = [%sedlex.regexp? ('-', Star whitespace)]
-
 let line_terminator_sequence = [%sedlex.regexp? '\n' | '\r' | "\r\n" | 0x2028 | 0x2029]
-
 let line_terminator_sequence_start = [%sedlex.regexp? '\n' | '\r' | 0x2028 | 0x2029]
-
 let hex_quad = [%sedlex.regexp? (hex_digit, hex_digit, hex_digit, hex_digit)]
-
 let unicode_escape = [%sedlex.regexp? ("\\u", hex_quad)]
-
 let codepoint_escape = [%sedlex.regexp? ("\\u{", Plus hex_digit, '}')]
-
 let js_id_start = [%sedlex.regexp? '$' | '_' | id_start | unicode_escape | codepoint_escape]
-
 let ascii_id_start = [%sedlex.regexp? '$' | '_' | 'a' .. 'z' | 'A' .. 'Z']
-
 let ascii_id_continue = [%sedlex.regexp? '$' | '_' | 'a' .. 'z' | 'A' .. 'Z' | '0' .. '9']
 
 let js_id_continue =
@@ -1859,13 +1827,9 @@ let wrap f =
   (fun env -> helper [] env)
 
 let regexp = wrap regexp
-
 let jsx_tag = wrap jsx_tag
-
 let template_tail = wrap template_tail
-
 let type_token = wrap type_token
-
 let token = wrap token
 
 let is_valid_identifier_name lexbuf =

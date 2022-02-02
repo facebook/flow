@@ -31,26 +31,20 @@ module FindProviders (L : Loc_sig.S) : sig
   }
 
   type entry = (L.LSet.t, state) base_entry
-
   type env
 
   module EntrySet : Flow_set.S with type elt = entry
 
   val empty_env : env
-
   val compute_provider_env : (L.t, L.t) Ast.Program.t' -> env
-
   val all_entries : env -> EntrySet.t
-
   val get_providers_for_toplevel_var : string -> env -> L.LSet.t option
-
   val print_full_env : env -> string
 end = struct
   module Id : sig
     type t
 
     val new_id : unit -> t
-
     val compare : t -> t -> int
   end = struct
     type t = int
@@ -124,7 +118,6 @@ end = struct
   }
 
   type intermediate_entry = (write_state L.LMap.t, intermediate_state) base_entry
-
   type entry = (L.LSet.t, state) base_entry
 
   module EntrySet = Flow_set.Make (struct
@@ -335,7 +328,6 @@ end = struct
     loop 0 (Nel.to_list env) []
 
   let get_entry var entries = SMap.find_opt var entries |> Option.value ~default:(empty_entry var)
-
   let empty_provider_info = { exact_locs = L.LSet.empty; relative_locs = L.LSet.empty }
 
   let get_provider_info var providers =
@@ -498,26 +490,18 @@ end = struct
         | None -> super#declare_function loc expr
 
       method! block = this#enter_scope Lex super#block
-
       method! catch_clause = this#enter_scope Lex super#catch_clause
-
       method! do_while = this#enter_scope Lex super#do_while
-
       method! for_statement = this#enter_scope Lex super#for_statement
-
       method! for_in_statement = this#enter_scope Lex super#for_in_statement
-
       method! for_of_statement = this#enter_scope Lex super#for_of_statement
-
       method! while_ = this#enter_scope Lex super#while_
-
       method! with_ = this#enter_scope Lex super#with_
 
       method! class_body ((loc, _) as body) =
         this#enter_scope Var (fun _ body -> super#class_body body) loc body
 
       method! class_expression = this#enter_scope Lex super#class_expression
-
       method! arrow_function = this#enter_scope Var super#arrow_function
 
       method! function_expression_or_method =

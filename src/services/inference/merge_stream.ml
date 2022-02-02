@@ -34,7 +34,6 @@
 open Utils_js
 
 type element = Component of File_key.t Nel.t
-
 type 'a merge_result = (File_key.t * bool * 'a) list
 
 type node = {
@@ -277,7 +276,5 @@ let merge ~master_mutator stream =
 
 (* NOTE: call these functions only at the end of merge, not during. *)
 let total_files stream = stream.total_files
-
 let skipped_count stream = stream.skipped_files
-
 let sig_new_or_changed stream = stream.new_or_changed_files

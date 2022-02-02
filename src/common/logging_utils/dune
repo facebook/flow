@@ -1,14 +1,13 @@
 (library
-  (name flow_logging_utils)
-  (wrapped false)
-  (libraries
-    flow_common
-    flow_interaction_logging
-    flow_logging
-    collections ; hack
-    imported_core ; hack
-    logging_common ; hack
-    sys_utils ; hack
-    utils_core ; hack
-  )
-)
+ (name flow_logging_utils)
+ (wrapped false)
+ (libraries
+  flow_common
+  flow_interaction_logging
+  flow_logging
+  collections ; hack
+  imported_core ; hack
+  logging_common ; hack
+  sys_utils ; hack
+  utils_core ; hack
+  ))

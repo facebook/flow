@@ -23,17 +23,12 @@ module ScopeHelper : sig
     Generic_cx.t -> ALoc.id list -> (Generic_cx.t -> unit) -> (unit -> 'a) -> 'a
 
   val in_class_toplevel_scope : ALoc.id list -> ALoc.id -> (unit -> 'a) -> 'a
-
   val in_class_prop_scope : Generic_cx.t -> (Generic_cx.t -> unit) -> (unit -> 'a) -> 'a
 end = struct
   let class_tparams : ALoc.id list ref = ref []
-
   let clear_class_tparams () = class_tparams := []
-
   let get_class_tparams () = !class_tparams
-
   let set_class_tparams params = class_tparams := params
-
   let init () = clear_class_tparams ()
 
   let in_function_scope cx tparams set_cx f =
@@ -61,7 +56,6 @@ end = struct
 end
 
 type ml = ALoc.t
-
 type tl = ALoc.t * Type.t
 
 (* This visitor walks the AST and produces a generic context (generic_cx.ml), which contains information about
@@ -72,13 +66,9 @@ type tl = ALoc.t * Type.t
 class finder cx =
   object (this)
     inherit [ml, tl, ml, tl] Flow_polymorphic_ast_mapper.mapper as super
-
     method on_type_annot a = a
-
     method on_loc_annot a = a
-
     val mutable gcx : Generic_cx.t = Generic_cx.new_gcx ()
-
     method set_gcx gcx' = gcx <- gcx'
 
     method exec ast =

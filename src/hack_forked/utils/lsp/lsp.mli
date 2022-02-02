@@ -14,9 +14,7 @@ module DocumentUri : sig
   type t = DocumentUri of string
 
   val compare : t -> t -> int
-
   val of_string : string -> t
-
   val to_string : t -> string
 end
 
@@ -193,7 +191,6 @@ end
 
 module CancelRequest : sig
   type params = cancelParams
-
   and cancelParams = { id: lsp_id }
 end
 
@@ -201,25 +198,15 @@ module CodeActionKind : sig
   type t = string * string list
 
   val is_kind : t -> t -> bool
-
   val contains_kind : t -> t list -> bool
-
   val contains_kind_opt : default:bool -> t -> t list option -> bool
-
   val kind_of_string : string -> t
-
   val string_of_kind : t -> string
-
   val sub_kind : t -> string -> t
-
   val quickfix : t
-
   val refactor : t
-
   val refactor_extract : t
-
   val source : t
-
   val source_organize_imports : t
 end
 
@@ -337,7 +324,6 @@ module Initialize : sig
   }
 
   and result = { server_capabilities: server_capabilities }
-
   and errorData = { retry: bool }
 
   and trace =
@@ -364,7 +350,6 @@ module Initialize : sig
   }
 
   and dynamicRegistration = { dynamicRegistration: bool }
-
   and workspaceEdit = { documentChanges: bool }
 
   and textDocumentClientCapabilities = {
@@ -377,11 +362,8 @@ module Initialize : sig
   }
 
   and windowClientCapabilities = { status: bool }
-
   and telemetryClientCapabilities = { connectionStatus: bool }
-
   and experimentalClientCapabilities = { snippetTextEdit: bool }
-
   and experimentalServerCapabilities = { server_snippetTextEdit: bool }
 
   and server_capabilities = {
@@ -424,12 +406,10 @@ module Initialize : sig
   }
 
   and documentLinkOptions = { doclink_resolveProvider: bool }
-
   and executeCommandOptions = { commands: Command.name list }
 end
 
 module Shutdown : sig end
-
 module Exit : sig end
 
 module Rage : sig
@@ -443,13 +423,11 @@ end
 
 module CodeLensResolve : sig
   type params = CodeLens.t
-
   and result = CodeLens.t
 end
 
 module Hover : sig
   type params = TextDocumentPositionParams.t
-
   and result = hoverResult option
 
   and hoverResult = {
@@ -471,11 +449,8 @@ module PublishDiagnostics : sig
     | Hint
 
   val min_diagnosticSeverity : int
-
   val max_diagnosticSeverity : int
-
   val diagnosticSeverity_to_enum : diagnosticSeverity -> int
-
   val diagnosticSeverity_of_enum : int -> diagnosticSeverity option
 
   type params = publishDiagnosticsParams
@@ -505,13 +480,11 @@ end
 
 module DidOpen : sig
   type params = didOpenTextDocumentParams
-
   and didOpenTextDocumentParams = { textDocument: TextDocumentItem.t }
 end
 
 module DidClose : sig
   type params = didCloseTextDocumentParams
-
   and didCloseTextDocumentParams = { textDocument: TextDocumentIdentifier.t }
 end
 
@@ -545,7 +518,6 @@ end
 
 module DidChangeWatchedFiles : sig
   type registerOptions = { watchers: fileSystemWatcher list }
-
   and fileSystemWatcher = { globPattern: string }
 
   type fileChangeType =
@@ -564,13 +536,11 @@ end
 
 module Definition : sig
   type params = TextDocumentPositionParams.t
-
   and result = DefinitionLocation.t list
 end
 
 module TypeDefinition : sig
   type params = TextDocumentPositionParams.t
-
   and result = DefinitionLocation.t list
 end
 
@@ -708,7 +678,6 @@ end
 
 module CompletionItemResolve : sig
   type params = Completion.completionItem
-
   and result = Completion.completionItem
 end
 
@@ -725,9 +694,7 @@ end
 
 module WorkspaceSymbol : sig
   type params = workspaceSymbolParams
-
   and result = SymbolInformation.t list
-
   and workspaceSymbolParams = { query: string }
 end
 
@@ -752,7 +719,6 @@ end
 
 module FindReferences : sig
   type params = referenceParams
-
   and result = Location.t list
 
   and referenceParams = {
@@ -768,9 +734,7 @@ end
 
 module GoToImplementation : sig
   type params = implementationParams
-
   and result = Location.t list
-
   and implementationParams = { loc: TextDocumentPositionParams.t }
 end
 
@@ -810,7 +774,6 @@ end
 
 module DocumentFormatting : sig
   type params = documentFormattingParams
-
   and result = TextEdit.t list
 
   and documentFormattingParams = {
@@ -826,7 +789,6 @@ end
 
 module DocumentRangeFormatting : sig
   type params = documentRangeFormattingParams
-
   and result = TextEdit.t list
 
   and documentRangeFormattingParams = {
@@ -838,7 +800,6 @@ end
 
 module DocumentOnTypeFormatting : sig
   type params = documentOnTypeFormattingParams
-
   and result = TextEdit.t list
 
   and documentOnTypeFormattingParams = {
@@ -916,7 +877,6 @@ end
 
 module Rename : sig
   type params = renameParams
-
   and result = WorkspaceEdit.t
 
   and renameParams = {
@@ -928,15 +888,12 @@ end
 
 module DocumentCodeLens : sig
   type params = codelensParams
-
   and result = CodeLens.t list
-
   and codelensParams = { textDocument: TextDocumentIdentifier.t }
 end
 
 module ExecuteCommand : sig
   type params = executeCommandParams
-
   and result = unit
 
   and executeCommandParams = {
@@ -969,7 +926,6 @@ module ShowMessageRequest : sig
     | Absent
 
   and params = showMessageRequestParams
-
   and result = messageActionItem option
 
   and showMessageRequestParams = {
@@ -983,7 +939,6 @@ end
 
 module ShowStatus : sig
   type params = showStatusParams
-
   and result = ShowMessageRequest.messageActionItem option
 
   and showStatusParams = {
@@ -996,13 +951,11 @@ end
 
 module ConnectionStatus : sig
   type params = connectionStatusParams
-
   and connectionStatusParams = { isConnected: bool }
 end
 
 module ToggleTypeCoverage : sig
   type params = toggleTypeCoverageParams
-
   and toggleTypeCoverageParams = { toggle: bool }
 end
 
@@ -1135,7 +1088,6 @@ type lsp_message =
   | NotificationMessage of lsp_notification
 
 type 'a lsp_handler = 'a lsp_result_handler * 'a lsp_error_handler
-
 and 'a lsp_error_handler = Error.t * string -> 'a -> 'a
 
 and 'a lsp_result_handler =

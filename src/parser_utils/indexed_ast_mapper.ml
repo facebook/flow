@@ -8,7 +8,6 @@
 class index_mapper =
   object
     inherit [Loc.t, Loc.t, ILoc.t, ILoc.t] Flow_polymorphic_ast_mapper.mapper
-
     val mutable counter = 0
 
     method on_loc_annot loc =
@@ -25,8 +24,6 @@ class index_mapper =
 class unindex_mapper =
   object
     inherit [ILoc.t, ILoc.t, Loc.t, Loc.t] Flow_polymorphic_ast_mapper.mapper
-
     method on_loc_annot (loc, _id) = loc
-
     method on_type_annot (loc, _id) = loc
   end

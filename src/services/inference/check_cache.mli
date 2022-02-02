@@ -18,5 +18,4 @@ val find_or_create :
   Type_sig_merge.file
 
 val remove : t -> File_key.t -> unit
-
 val clear : t -> unit

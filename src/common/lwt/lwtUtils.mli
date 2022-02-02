@@ -6,9 +6,7 @@
  *)
 
 val iter_all : unit Lwt.t list -> unit Lwt.t
-
 val all : 'a Lwt.t list -> 'a list Lwt.t
-
 val output_graph : Lwt_io.output_channel -> ('a -> string) -> ('a * 'a list) list -> unit Lwt.t
 
 val fold_result_s :

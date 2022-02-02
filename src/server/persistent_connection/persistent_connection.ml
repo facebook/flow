@@ -36,9 +36,7 @@ let remove_cache_entry client filename =
   FilenameCache.remove_entry file_key client.type_parse_artifacts_cache
 
 let active_clients : single_client IMap.t ref = ref IMap.empty
-
 let get_client client_id = IMap.find_opt client_id !active_clients
-
 let empty = []
 
 let send_message_to_client (response : Prot.message_from_server) client =
@@ -114,7 +112,6 @@ let remove_client client_id =
   active_clients := IMap.remove client_id !active_clients
 
 let add_client_to_clients clients client_id = client_id :: clients
-
 let remove_client_from_clients clients client_id = List.filter (fun id -> id != client_id) clients
 
 let get_subscribed_clients =
@@ -238,11 +235,8 @@ let get_file (client : single_client) (fn : string) : File_input.t =
   | Some content -> File_input.FileContent (Some fn, content)
 
 let get_id client = client.client_id
-
 let lsp_initialize_params (client : single_client) = client.lsp_initialize_params
-
 let client_config client = client.client_config
-
 let type_parse_artifacts_cache client = client.type_parse_artifacts_cache
 
 let clear_type_parse_artifacts_caches () =

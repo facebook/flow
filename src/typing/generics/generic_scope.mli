@@ -6,7 +6,5 @@
  *)
 
 val init : Generic_cx.t -> Generic_cx.t
-
 val in_scope : Generic_cx.t -> ALoc.id list -> (Generic_cx.t -> 'a) -> 'a
-
 val scope_id : unit -> Scope_id.t

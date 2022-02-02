@@ -6,11 +6,8 @@
  *)
 
 let json_data_of_result str acc = ("result", Hh_json.JSON_String str) :: acc
-
 let json_data_of_error str acc = ("error", Hh_json.JSON_String str) :: acc
-
 let json_data_of_loc loc acc = ("loc", Reason.json_of_loc ~offset_table:None loc) :: acc
-
 let json_data_of_type str acc = ("type", Hh_json.JSON_String str) :: acc
 
 let type_at_pos

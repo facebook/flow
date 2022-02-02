@@ -10,9 +10,7 @@ open Flow_ast
 open Parser_env
 
 let id = Flow_ast_mapper.id
-
 let map_loc = Flow_ast_mapper.map_loc
-
 let map_opt = Flow_ast_mapper.map_opt
 
 let id_list_last (map : 'a -> 'a) (lst : 'a list) : 'a list =
@@ -556,11 +554,8 @@ let statement_add_comments
 class ['loc] comment_bounds_collector ~loc =
   object (this)
     inherit ['loc] Flow_ast_mapper.mapper
-
     val mutable first_leading = None
-
     val mutable last_trailing = None
-
     method comment_bounds = (first_leading, last_trailing)
 
     method collect_comments : 'internal. ('loc, 'internal) Syntax.t -> unit =

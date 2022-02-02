@@ -96,9 +96,7 @@ let compare a b =
     compare_identifier_lists a_build b_build
 
 let incr_major { major; _ } = { zero with major = succ major }
-
 let incr_minor { major; minor; _ } = { zero with major; minor = succ minor }
-
 let incr_patch { major; minor; patch; _ } = { zero with major; minor; patch = succ patch }
 
 let string_of_identifier = function

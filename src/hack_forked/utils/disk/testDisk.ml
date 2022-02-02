@@ -24,9 +24,7 @@ type file =
 
 module Helpers = struct
   exception Relative_parent_not_supported
-
   exception Is_not_actual_file
-
   exception Cannot_overwrite_existing_directory_with_actual_file
 end
 
@@ -43,7 +41,6 @@ let mtimes = Hashtbl.create 10
 let cwd = ref "/fake/initial_cwd"
 
 let getcwd () = !cwd
-
 let chdir s = cwd := s
 
 let rec mkdir_p path root =

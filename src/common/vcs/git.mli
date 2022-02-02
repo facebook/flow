@@ -10,7 +10,6 @@ type error_status = Vcs_utils.error_status =
   | Errored of string
 
 val merge_base : ?cwd:string -> string -> string -> (string, error_status) result Lwt.t
-
 val files_changed_since : ?cwd:string -> string -> (string list, error_status) result Lwt.t
 
 val files_changed_since_mergebase_with :

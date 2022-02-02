@@ -15,58 +15,34 @@ open Comment_attachment
 
 module type STATEMENT = sig
   val for_ : env -> (Loc.t, Loc.t) Statement.t
-
   val if_ : env -> (Loc.t, Loc.t) Statement.t
-
   val let_ : env -> (Loc.t, Loc.t) Statement.t
-
   val try_ : env -> (Loc.t, Loc.t) Statement.t
-
   val while_ : env -> (Loc.t, Loc.t) Statement.t
-
   val with_ : env -> (Loc.t, Loc.t) Statement.t
-
   val block : env -> (Loc.t, Loc.t) Statement.t
-
   val break : env -> (Loc.t, Loc.t) Statement.t
-
   val continue : env -> (Loc.t, Loc.t) Statement.t
-
   val debugger : env -> (Loc.t, Loc.t) Statement.t
-
   val declare : ?in_module:bool -> env -> (Loc.t, Loc.t) Statement.t
-
   val declare_export_declaration : ?allow_export_type:bool -> env -> (Loc.t, Loc.t) Statement.t
-
   val declare_opaque_type : env -> (Loc.t, Loc.t) Statement.t
-
   val do_while : env -> (Loc.t, Loc.t) Statement.t
-
   val empty : env -> (Loc.t, Loc.t) Statement.t
 
   val export_declaration :
     decorators:(Loc.t, Loc.t) Class.Decorator.t list -> env -> (Loc.t, Loc.t) Statement.t
 
   val expression : env -> (Loc.t, Loc.t) Statement.t
-
   val import_declaration : env -> (Loc.t, Loc.t) Statement.t
-
   val interface : env -> (Loc.t, Loc.t) Statement.t
-
   val maybe_labeled : env -> (Loc.t, Loc.t) Statement.t
-
   val opaque_type : env -> (Loc.t, Loc.t) Statement.t
-
   val return : env -> (Loc.t, Loc.t) Statement.t
-
   val switch : env -> (Loc.t, Loc.t) Statement.t
-
   val throw : env -> (Loc.t, Loc.t) Statement.t
-
   val type_alias : env -> (Loc.t, Loc.t) Statement.t
-
   val var : env -> (Loc.t, Loc.t) Statement.t
-
   val const : env -> (Loc.t, Loc.t) Statement.t
 end
 
@@ -611,7 +587,6 @@ module Statement
           ( Loc.btwn start_loc end_loc,
             Statement.Switch.Case.
               { test; consequent; comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing () }
-            
           )
           :: acc
         in
@@ -898,7 +873,6 @@ module Statement
     in
     Statement.TypeAlias.
       { id; tparams; right; comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing () }
-    
 
   and declare_type_alias env =
     with_loc
@@ -1000,7 +974,6 @@ module Statement
         supertype;
         comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing ();
       }
-    
 
   and declare_opaque_type env =
     with_loc
@@ -1043,7 +1016,6 @@ module Statement
     in
     Statement.Interface.
       { id; tparams; body; extends; comments = Flow_ast_utils.mk_comments_opt ~leading () }
-    
 
   and declare_interface env =
     with_loc
@@ -1173,7 +1145,6 @@ module Statement
     let annot = (loc, annot) in
     Statement.DeclareFunction.
       { id; annot; predicate; comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing () }
-    
 
   and declare_function_statement env =
     with_loc
@@ -1206,7 +1177,6 @@ module Statement
     in
     Statement.DeclareVariable.
       { id = name; annot; comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing () }
-    
 
   and declare_var_statement env =
     with_loc

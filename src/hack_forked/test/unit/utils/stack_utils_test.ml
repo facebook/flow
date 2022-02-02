@@ -16,5 +16,4 @@ let merge_bytes_test () =
   true
 
 let tests = [("merge_bytes_test", merge_bytes_test)]
-
 let () = Unit_test.run_all tests

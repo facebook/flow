@@ -6,9 +6,7 @@
  *)
 
 let log_oc = ref None
-
 let enabled = ref true
-
 let disable () = enabled := false
 
 let init pids_file =

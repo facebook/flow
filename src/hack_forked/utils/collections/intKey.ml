@@ -8,5 +8,4 @@
 type t = int
 
 let compare = ( - )
-
 let pp = Format.pp_print_int

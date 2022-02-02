@@ -713,9 +713,7 @@ let sort_and_dedup_changes changes =
 class loc_stripper =
   object
     inherit [Loc.t, Loc.t, Loc.t, Loc.t] Flow_polymorphic_ast_mapper.mapper
-
     method on_loc_annot _ = Loc.none
-
     method on_type_annot _ = Loc.none
   end
 
@@ -757,7 +755,6 @@ module Identifier_finder = struct
   class mapper target =
     object (this)
       inherit [Loc.t] Flow_ast_contains_mapper.mapper
-
       method loc_annot_contains_target loc = Loc.contains loc target
 
       method! identifier id =

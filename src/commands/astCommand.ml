@@ -156,7 +156,6 @@ let main
                 types = true;
                 use_strict;
               }
-            
         in
 
         let filename = File_input.path_of_file_input file in

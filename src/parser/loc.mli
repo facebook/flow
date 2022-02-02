@@ -19,13 +19,9 @@ type t = {
 [@@deriving show]
 
 val none : t
-
 val is_none : t -> bool
-
 val btwn : t -> t -> t
-
 val char_before : t -> t
-
 val first_char : t -> t
 
 (** [contains loc1 loc2] returns true if [loc1] entirely overlaps [loc2] *)
@@ -42,20 +38,14 @@ val intersects : t -> t -> bool
 val lines_intersect : t -> t -> bool
 
 val pos_cmp : position -> position -> int
-
 val span_compare : t -> t -> int
-
 val compare : t -> t -> int
-
 val equal : t -> t -> bool
-
 val debug_to_string : ?include_source:bool -> t -> string
 
 (* Relatively compact; suitable for use as a unique string identifier *)
 val to_string_no_source : t -> string
-
 val mk_loc : ?source:File_key.t -> int * int -> int * int -> t
-
 val source : t -> File_key.t option
 
 (** Produces a zero-width Loc.t, where start = end *)

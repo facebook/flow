@@ -47,7 +47,6 @@ let add ?singleton ~commit ~rollback transaction =
   transaction.mutators <- { commit; rollback } :: transaction.mutators
 
 let commit transaction = Lwt_list.iter_s (fun mutator -> mutator.commit ()) transaction.mutators
-
 let rollback transaction = Lwt_list.iter_s (fun mutator -> mutator.rollback ()) transaction.mutators
 
 let with_transaction f =

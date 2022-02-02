@@ -79,7 +79,5 @@ let exists f = function
   | Builtins -> false
 
 let check_suffix filename suffix = exists (fun fn -> Filename.check_suffix fn suffix) filename
-
 let chop_suffix filename suffix = map (fun fn -> Filename.chop_suffix fn suffix) filename
-
 let with_suffix filename suffix = map (fun fn -> fn ^ suffix) filename

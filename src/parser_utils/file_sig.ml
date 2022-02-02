@@ -117,7 +117,6 @@ struct
   [@@deriving show]
 
   type error = IndeterminateModuleType of L.t
-
   type tolerable_t = t * tolerable_error list
 
   let empty_module_sig =

@@ -89,13 +89,9 @@ module Unix : sig
   exception Unix_error of error * string * string
 
   val error_message : error -> string
-
   val handle_unix_error : ('a -> 'b) -> 'a -> 'b
-
   val environment : unit -> string array
-
   val getenv : string -> string
-
   val putenv : string -> string -> unit
 
   type process_status = Unix.process_status =
@@ -108,33 +104,21 @@ module Unix : sig
     | WUNTRACED
 
   val execv : string -> string array -> 'a
-
   val execve : string -> string array -> string array -> 'a
-
   val execvp : string -> string array -> 'a
-
   val execvpe : string -> string array -> string array -> 'a
-
   val fork : unit -> int
-
   val wait : unit -> int * process_status
-
   val waitpid : wait_flag list -> int -> int * process_status
-
   val system : string -> process_status
-
   val getpid : unit -> int
-
   val getppid : unit -> int
-
   val nice : int -> int
 
   type file_descr = Unix.file_descr
 
   val stdin : file_descr
-
   val stdout : file_descr
-
   val stderr : file_descr
 
   type open_flag = Unix.open_flag =
@@ -157,25 +141,15 @@ module Unix : sig
   type file_perm = int
 
   val openfile : string -> open_flag list -> file_perm -> file_descr
-
   val close : file_descr -> unit
-
   val read : file_descr -> bytes -> int -> int -> int
-
   val write : file_descr -> bytes -> int -> int -> int
-
   val single_write : file_descr -> bytes -> int -> int -> int
-
   val write_substring : file_descr -> string -> int -> int -> int
-
   val single_write_substring : file_descr -> string -> int -> int -> int
-
   val in_channel_of_descr : file_descr -> in_channel
-
   val out_channel_of_descr : file_descr -> out_channel
-
   val descr_of_in_channel : in_channel -> file_descr
-
   val descr_of_out_channel : out_channel -> file_descr
 
   type seek_command = Unix.seek_command =
@@ -184,9 +158,7 @@ module Unix : sig
     | SEEK_END
 
   val lseek : file_descr -> int -> seek_command -> int
-
   val truncate : string -> int -> unit
-
   val ftruncate : file_descr -> int -> unit
 
   type file_kind = Unix.file_kind =
@@ -214,17 +186,13 @@ module Unix : sig
   }
 
   val stat : string -> stats
-
   val lstat : string -> stats
-
   val fstat : file_descr -> stats
-
   val isatty : file_descr -> bool
 
   module LargeFile = Unix.LargeFile
 
   val unlink : string -> unit
-
   val link : ?follow:bool -> string -> string -> unit
 
   type access_permission = Unix.access_permission =
@@ -234,72 +202,43 @@ module Unix : sig
     | F_OK
 
   val chmod : string -> file_perm -> unit
-
   val fchmod : file_descr -> file_perm -> unit
-
   val chown : string -> int -> int -> unit
-
   val fchown : file_descr -> int -> int -> unit
-
   val umask : int -> int
-
   val access : string -> access_permission list -> unit
-
   val dup : ?cloexec:bool -> file_descr -> file_descr
-
   val dup2 : ?cloexec:bool -> file_descr -> file_descr -> unit
-
   val set_nonblock : file_descr -> unit
-
   val clear_nonblock : file_descr -> unit
-
   val set_close_on_exec : file_descr -> unit
-
   val clear_close_on_exec : file_descr -> unit
-
   val rmdir : string -> unit
-
   val chroot : string -> unit
 
   type dir_handle = Unix.dir_handle
 
   val opendir : string -> dir_handle
-
   val readdir : dir_handle -> string
-
   val rewinddir : dir_handle -> unit
-
   val closedir : dir_handle -> unit
-
   val pipe : ?cloexec:bool -> unit -> file_descr * file_descr
-
   val mkfifo : string -> file_perm -> unit
-
   val create_process : string -> string array -> file_descr -> file_descr -> file_descr -> int
 
   val create_process_env :
     string -> string array -> string array -> file_descr -> file_descr -> file_descr -> int
 
   val open_process_in : string -> in_channel
-
   val open_process_out : string -> out_channel
-
   val open_process : string -> in_channel * out_channel
-
   val open_process_full : string -> string array -> in_channel * out_channel * in_channel
-
   val close_process_in : in_channel -> process_status
-
   val close_process_out : out_channel -> process_status
-
   val close_process : in_channel * out_channel -> process_status
-
   val close_process_full : in_channel * out_channel * in_channel -> process_status
-
   val symlink : ?to_dir:bool -> string -> string -> unit
-
   val has_symlink : unit -> bool
-
   val readlink : string -> string
 
   val select :
@@ -318,7 +257,6 @@ module Unix : sig
     | F_TRLOCK
 
   val lockf : file_descr -> lock_command -> int -> unit
-
   val kill : int -> int -> unit
 
   type sigprocmask_command = Unix.sigprocmask_command =
@@ -327,11 +265,8 @@ module Unix : sig
     | SIG_UNBLOCK
 
   val sigprocmask : sigprocmask_command -> int list -> int list
-
   val sigpending : unit -> int list
-
   val sigsuspend : int list -> unit
-
   val pause : unit -> unit
 
   type process_times = Unix.process_times = {
@@ -354,23 +289,14 @@ module Unix : sig
   }
 
   val time : unit -> float
-
   val gettimeofday : unit -> float
-
   val gmtime : float -> tm
-
   val localtime : float -> tm
-
   val mktime : tm -> float * tm
-
   val alarm : int -> int
-
   val sleep : int -> unit
-
   val sleepf : float -> unit
-
   val times : unit -> process_times
-
   val utimes : string -> float -> float -> unit
 
   type interval_timer = Unix.interval_timer =
@@ -384,25 +310,15 @@ module Unix : sig
   }
 
   val getitimer : interval_timer -> interval_timer_status
-
   val setitimer : interval_timer -> interval_timer_status -> interval_timer_status
-
   val getuid : unit -> int
-
   val geteuid : unit -> int
-
   val setuid : int -> unit
-
   val getgid : unit -> int
-
   val getegid : unit -> int
-
   val setgid : int -> unit
-
   val getgroups : unit -> int array
-
   val setgroups : int array -> unit
-
   val initgroups : string -> int -> unit
 
   type passwd_entry = Unix.passwd_entry = {
@@ -423,27 +339,18 @@ module Unix : sig
   }
 
   val getlogin : unit -> string
-
   val getpwnam : string -> passwd_entry
-
   val getgrnam : string -> group_entry
-
   val getpwuid : int -> passwd_entry
-
   val getgrgid : int -> group_entry
 
   type inet_addr = Unix.inet_addr
 
   val inet_addr_of_string : string -> inet_addr
-
   val string_of_inet_addr : inet_addr -> string
-
   val inet_addr_any : inet_addr
-
   val inet_addr_loopback : inet_addr
-
   val inet6_addr_any : inet_addr
-
   val inet6_addr_loopback : inet_addr
 
   type socket_domain = Unix.socket_domain =
@@ -462,17 +369,11 @@ module Unix : sig
     | ADDR_INET of inet_addr * int
 
   val socket : ?cloexec:bool -> socket_domain -> socket_type -> int -> file_descr
-
   val domain_of_sockaddr : sockaddr -> socket_domain
-
   val socketpair : ?cloexec:bool -> socket_domain -> socket_type -> int -> file_descr * file_descr
-
   val accept : ?cloexec:bool -> file_descr -> file_descr * sockaddr
-
   val bind : file_descr -> sockaddr -> unit
-
   val connect : file_descr -> sockaddr -> unit
-
   val listen : file_descr -> int -> unit
 
   type shutdown_command = Unix.shutdown_command =
@@ -481,9 +382,7 @@ module Unix : sig
     | SHUTDOWN_ALL
 
   val shutdown : file_descr -> shutdown_command -> unit
-
   val getsockname : file_descr -> sockaddr
-
   val getpeername : file_descr -> sockaddr
 
   type msg_flag = Unix.msg_flag =
@@ -492,15 +391,10 @@ module Unix : sig
     | MSG_PEEK
 
   val recv : file_descr -> bytes -> int -> int -> msg_flag list -> int
-
   val recvfrom : file_descr -> bytes -> int -> int -> msg_flag list -> int * sockaddr
-
   val send : file_descr -> bytes -> int -> int -> msg_flag list -> int
-
   val send_substring : file_descr -> string -> int -> int -> msg_flag list -> int
-
   val sendto : file_descr -> bytes -> int -> int -> msg_flag list -> sockaddr -> int
-
   val sendto_substring : file_descr -> string -> int -> int -> msg_flag list -> sockaddr -> int
 
   type socket_bool_option = Unix.socket_bool_option =
@@ -529,27 +423,16 @@ module Unix : sig
     | SO_SNDTIMEO
 
   val getsockopt : file_descr -> socket_bool_option -> bool
-
   val setsockopt : file_descr -> socket_bool_option -> bool -> unit
-
   val getsockopt_int : file_descr -> socket_int_option -> int
-
   val setsockopt_int : file_descr -> socket_int_option -> int -> unit
-
   val getsockopt_optint : file_descr -> socket_optint_option -> int option
-
   val setsockopt_optint : file_descr -> socket_optint_option -> int option -> unit
-
   val getsockopt_float : file_descr -> socket_float_option -> float
-
   val setsockopt_float : file_descr -> socket_float_option -> float -> unit
-
   val getsockopt_error : file_descr -> error option
-
   val open_connection : sockaddr -> in_channel * out_channel
-
   val shutdown_connection : in_channel -> unit
-
   val establish_server : (in_channel -> out_channel -> unit) -> sockaddr -> unit
 
   type host_entry = Unix.host_entry = {
@@ -573,17 +456,11 @@ module Unix : sig
   }
 
   val gethostname : unit -> string
-
   val gethostbyname : string -> host_entry
-
   val gethostbyaddr : inet_addr -> host_entry
-
   val getprotobyname : string -> protocol_entry
-
   val getprotobynumber : int -> protocol_entry
-
   val getservbyname : string -> string -> service_entry
-
   val getservbyport : int -> string -> service_entry
 
   type addr_info = Unix.addr_info = {
@@ -667,9 +544,7 @@ module Unix : sig
     | TCSAFLUSH
 
   val tcsetattr : file_descr -> setattr_when -> terminal_io -> unit
-
   val tcsendbreak : file_descr -> int -> unit
-
   val tcdrain : file_descr -> unit
 
   type flush_queue = Unix.flush_queue =
@@ -686,35 +561,22 @@ module Unix : sig
     | TCION
 
   val tcflow : file_descr -> flow_action -> unit
-
   val setsid : unit -> int
-
   val getcwd : unit -> string
-
   val chdir : string -> unit
-
   val mkdir : string -> int -> unit
-
   val rename : string -> string -> unit
 end
 
 module Sys : sig
   val argv : string array
-
   val executable_name : string
-
   external remove : string -> unit = "caml_sys_remove"
-
   external getenv : string -> string = "caml_sys_getenv"
-
   val getenv_opt : string -> string option
-
   external command : string -> int = "caml_sys_system_command"
-
   external time : unit -> (float[@unboxed]) = "caml_sys_time" "caml_sys_time_unboxed" [@@noalloc]
-
   val interactive : bool ref
-
   val os_type : string
 
   type backend_type = Sys.backend_type =
@@ -723,25 +585,15 @@ module Sys : sig
     | Other of string
 
   val backend_type : backend_type
-
   val unix : bool
-
   val win32 : bool
-
   val cygwin : bool
-
   val word_size : int
-
   val int_size : int
-
   val big_endian : bool
-
   val max_string_length : int
-
   val max_array_length : int
-
   external runtime_variant : unit -> string = "caml_runtime_variant"
-
   external runtime_parameters : unit -> string = "caml_runtime_parameters"
 
   type signal_behavior = Sys.signal_behavior =
@@ -750,86 +602,47 @@ module Sys : sig
     | Signal_handle of (int -> unit)
 
   external signal : int -> signal_behavior -> signal_behavior = "caml_install_signal_handler"
-
   val set_signal : int -> signal_behavior -> unit
-
   val sigabrt : int
-
   val sigalrm : int
-
   val sigfpe : int
-
   val sighup : int
-
   val sigill : int
-
   val sigint : int
-
   val sigkill : int
-
   val sigpipe : int
-
   val sigquit : int
-
   val sigsegv : int
-
   val sigterm : int
-
   val sigusr1 : int
-
   val sigusr2 : int
-
   val sigchld : int
-
   val sigcont : int
-
   val sigstop : int
-
   val sigtstp : int
-
   val sigttin : int
-
   val sigttou : int
-
   val sigvtalrm : int
-
   val sigprof : int
-
   val sigbus : int
-
   val sigpoll : int
-
   val sigsys : int
-
   val sigtrap : int
-
   val sigurg : int
-
   val sigxcpu : int
-
   val sigxfsz : int
 
   exception Break
 
   val catch_break : bool -> unit
-
   val ocaml_version : string
-
   val enable_runtime_warnings : bool -> unit
-
   val runtime_warnings_enabled : unit -> bool
-
   external opaque_identity : 'a -> 'a = "%opaque"
-
   val getcwd : unit -> string
-
   val chdir : string -> unit
-
   val is_directory : string -> bool
-
   val rename : string -> string -> unit
-
   val file_exists : string -> bool
-
   val readdir : string -> string array
 end

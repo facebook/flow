@@ -44,13 +44,9 @@ module Lookahead : sig
   type t
 
   val create : Lex_env.t -> Lex_mode.t -> t
-
   val peek_0 : t -> Lex_result.t
-
   val peek_1 : t -> Lex_result.t
-
   val lex_env_0 : t -> Lex_env.t
-
   val junk : t -> unit
 end = struct
   type la_result = (Lex_env.t * Lex_result.t) option
@@ -232,47 +228,26 @@ let init_env ?(token_sink = None) ?(parse_options = None) source content =
 
 (* getters: *)
 let in_strict_mode env = env.in_strict_mode
-
 let lex_mode env = List.hd !(env.lex_mode_stack)
-
 let in_export env = env.in_export
-
 let comments env = !(env.comments)
-
 let labels env = env.labels
-
 let in_loop env = env.in_loop
-
 let in_switch env = env.in_switch
-
 let in_formal_parameters env = env.in_formal_parameters
-
 let in_function env = env.in_function
-
 let allow_yield env = env.allow_yield
-
 let allow_await env = env.allow_await
-
 let allow_directive env = env.allow_directive
-
 let allow_super env = env.allow_super
-
 let no_in env = env.no_in
-
 let no_call env = env.no_call
-
 let no_let env = env.no_let
-
 let no_anon_function_type env = env.no_anon_function_type
-
 let no_new env = env.no_new
-
 let errors env = !(env.errors)
-
 let parse_options env = env.parse_options
-
 let source env = env.source
-
 let should_parse_types env = env.parse_options.types
 
 (* mutators: *)
@@ -338,7 +313,6 @@ let consume_comments_until env pos = env.consumed_comments_pos := pos
 
 (* lookahead: *)
 let lookahead_0 env = Lookahead.peek_0 !(env.lookahead)
-
 let lookahead_1 env = Lookahead.peek_1 !(env.lookahead)
 
 let lookahead ~i env =
@@ -454,7 +428,6 @@ let last_token env =
   | None -> None
 
 let without_error_callback env = { env with error_callback = None }
-
 let add_label env label = { env with labels = SSet.add label env.labels }
 
 let enter_function env ~async ~generator =
@@ -659,9 +632,7 @@ module Peek = struct
   open Token
 
   let ith_token ~i env = Lex_result.token (lookahead ~i env)
-
   let ith_loc ~i env = Lex_result.loc (lookahead ~i env)
-
   let ith_errors ~i env = Lex_result.errors (lookahead ~i env)
 
   let ith_comments ~i env =
@@ -674,7 +645,6 @@ module Peek = struct
         comments
 
   let token env = ith_token ~i:0 env
-
   let loc env = ith_loc ~i:0 env
 
   (* loc_skip_lookahead is used to give a loc hint to optional tokens such as type annotations *)
@@ -687,7 +657,6 @@ module Peek = struct
     Loc.{ loc with start = loc._end }
 
   let errors env = ith_errors ~i:0 env
-
   let comments env = ith_comments ~i:0 env
 
   let has_eaten_comments env =
@@ -911,9 +880,7 @@ module Peek = struct
   (* This returns true if the next token is identifier-ish (even if it is an
      error) *)
   let is_identifier env = ith_is_identifier ~i:0 env
-
   let is_identifier_name env = ith_is_identifier_name ~i:0 env
-
   let is_type_identifier env = ith_is_type_identifier ~i:0 env
 
   let is_function env =
@@ -963,7 +930,6 @@ let error_on_decorators env =
   List.iter (fun decorator -> error_at env (fst decorator, Parse_error.UnsupportedDecorator))
 
 let strict_error env e = if in_strict_mode env then error env e
-
 let strict_error_at env (loc, e) = if in_strict_mode env then error_at env (loc, e)
 
 let function_as_statement_error_at env loc =

@@ -10,13 +10,9 @@ module Ast = Flow_ast
 
 module type S = sig
   module L : Loc_sig.S
-
   module Scope_api : Scope_api_sig.S with module L = L
-
   module Ssa_api : Ssa_api.S with module L = L
-
   module Provider_api : Provider_api.S with module L = L
-
   module ReasonSet : Flow_set.S with type elt = L.t virtual_reason
 
   type read_loc = L.t
@@ -90,7 +86,6 @@ module type S = sig
   end
 
   type refinement_kind = Refi.refinement_kind
-
   type refinement = Refi.refinement
 
   type env_entry =
@@ -113,21 +108,13 @@ module type S = sig
   }
 
   val empty : env_info
-
   val write_locs_of_read_loc : values -> read_loc -> write_locs
-
   val writes_of_write_loc : for_type:bool -> write_loc -> L.t list
-
   val refinements_of_write_loc : env_info -> write_loc -> refinement_kind list
-
   val print_values : values -> string
-
   val sources_of_use : for_type:bool -> env_info -> L.t -> L.LSet.t
-
   val source_bindings : for_type:bool -> env_info -> L.LSet.t L.LMap.t
-
   val show_refinement_kind : refinement_kind -> string
-
   val show_refinement_kind_without_locs : refinement_kind -> string
 end
 
@@ -383,6 +370,8 @@ end
 
 module With_Loc =
   Make (Loc_sig.LocS) (Ssa_api.With_Loc) (Scope_api.With_Loc) (Provider_api.LocProviders)
+
 module With_ALoc =
   Make (Loc_sig.ALocS) (Ssa_api.With_ALoc) (Scope_api.With_ALoc) (Provider_api.ALocProviders)
+
 include With_ALoc

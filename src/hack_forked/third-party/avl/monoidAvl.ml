@@ -46,71 +46,43 @@ module type MonoidOrderedType = sig
 
   (* This better be associative *)
   val compose : monoelt -> monoelt -> monoelt
-
   val make : elt -> monoelt
 end
 
 module type S = sig
   type elt
-
   type monoelt
-
   type t
 
   val empty : t
-
   val is_empty : t -> bool
-
   val mem : elt -> t -> bool
-
   val add : elt -> t -> t
-
   val singleton : elt -> t
-
   val remove : elt -> t -> t
-
   val union : t -> t -> t
-
   val inter : t -> t -> t
-
   val diff : t -> t -> t
-
   val compare : t -> t -> int
-
   val equal : t -> t -> bool
-
   val subset : t -> t -> bool
-
   val iter : (elt -> unit) -> t -> unit
-
   val fold : (elt -> 'a -> 'a) -> t -> 'a -> 'a
-
   val for_all : (elt -> bool) -> t -> bool
-
   val exists : (elt -> bool) -> t -> bool
-
   val filter : (elt -> bool) -> t -> t
-
   val partition : (elt -> bool) -> t -> t * t
-
   val cardinal : t -> int
-
   val elements : t -> elt list
-
   val min_elt : t -> elt
-
   val max_elt : t -> elt
-
   val choose : t -> elt
-
   val split : elt -> t -> t * bool * t
-
   val walk : (monoelt -> bool) -> (elt -> unit) -> t -> unit
 end
 
 module Make (Ord : MonoidOrderedType) = struct
   type elt = Ord.elt
-
   type monoelt = Ord.monoelt
 
   type t =
@@ -147,7 +119,8 @@ module Make (Ord : MonoidOrderedType) = struct
         if hl >= hr then
           hl + 1
         else
-          hr + 1 )
+          hr + 1
+      )
 
   let bal l v r =
     let hl =
@@ -169,8 +142,7 @@ module Make (Ord : MonoidOrderedType) = struct
         else (
           match lr with
           | Empty -> invalid_arg "Set.bal"
-          | Node (_, lrl, lrv, lrr, _) ->
-            create (create ll lv lrl) lrv (create lrr v r)
+          | Node (_, lrl, lrv, lrr, _) -> create (create ll lv lrl) lrv (create lrr v r)
         )
     else if hr > hl + 2 then
       match r with
@@ -181,8 +153,7 @@ module Make (Ord : MonoidOrderedType) = struct
         else (
           match rl with
           | Empty -> invalid_arg "Set.bal"
-          | Node (_, rll, rlv, rlr, _) ->
-            create (create l v rll) rlv (create rlr rv rr)
+          | Node (_, rll, rlv, rlr, _) -> create (create l v rll) rlv (create rlr rv rr)
         )
     else
       create l v r
@@ -266,7 +237,8 @@ module Make (Ord : MonoidOrderedType) = struct
            ( if c < 0 then
              l
            else
-             r )
+             r
+           )
 
   let singleton x = Node (Ord.make x, Empty, x, Empty, 1)
 
@@ -338,7 +310,6 @@ module Make (Ord : MonoidOrderedType) = struct
         compare_aux (cons_enum r1 e1) (cons_enum r2 e2)
 
   let compare s1 s2 = compare_aux (cons_enum s1 End) (cons_enum s2 End)
-
   let equal s1 s2 = compare s1 s2 = 0
 
   let rec subset s1 s2 =
@@ -385,8 +356,10 @@ module Make (Ord : MonoidOrderedType) = struct
              ( if p v then
                add v accu
              else
-               accu )
-             l)
+               accu
+             )
+             l
+          )
           r
     in
     filt Empty s
@@ -400,8 +373,10 @@ module Make (Ord : MonoidOrderedType) = struct
              ( if p v then
                (add v t, f)
              else
-               (t, add v f) )
-             l)
+               (t, add v f)
+             )
+             l
+          )
           r
     in
     part (Empty, Empty) s
@@ -415,7 +390,6 @@ module Make (Ord : MonoidOrderedType) = struct
     | Node (_, l, v, r, _) -> elements_aux (v :: elements_aux accu r) l
 
   let elements s = elements_aux [] s
-
   let choose = min_elt
 
   let rec walk cut_branch work t =

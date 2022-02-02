@@ -180,18 +180,14 @@ module type S = sig
   [@@deriving show]
 
   type error = IndeterminateModuleType of L.t
-
   type tolerable_t = t * tolerable_error list
 
   val empty : t
-
   val default_opts : options
-
   val program : ast:(L.t, L.t) Flow_ast.Program.t -> opts:options -> (tolerable_t, error) result
 
   (* Use for debugging; not for exposing info to the end user *)
   val to_string : t -> string
-
   val require_loc_map : module_sig -> L.t Nel.t SMap.t
 
   (* Only the keys returned by `require_loc_map` *)
@@ -200,33 +196,19 @@ module type S = sig
   class mapper :
     object
       method error : error -> error
-
       method export : string * (L.t * export) -> string * (L.t * export)
-
       method export_star : L.t * export_star -> L.t * export_star
-
       method file_sig : t -> t
-
       method ident : L.t Flow_ast_utils.ident -> L.t Flow_ast_utils.ident
-
       method source : L.t Flow_ast_utils.source -> L.t Flow_ast_utils.source
-
       method named_export_kind : named_export_kind -> named_export_kind
-
       method imported_locs : imported_locs -> imported_locs
-
       method loc : L.t -> L.t
-
       method module_kind : module_kind -> module_kind
-
       method module_sig : module_sig -> module_sig
-
       method require : require -> require
-
       method require_bindings : require_bindings -> require_bindings
-
       method tolerable_error : tolerable_error -> tolerable_error
-
       method type_export : string * (L.t * type_export) -> string * (L.t * type_export)
     end
 end

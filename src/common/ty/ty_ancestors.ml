@@ -10,15 +10,10 @@ open Ty_symbol
 class ['self] iter_ty_base =
   object (_ : 'self)
     method private on_string : 'env. 'env -> string -> unit = (fun _env _x -> ())
-
     method private on_name : 'env. 'env -> Reason.name -> unit = (fun _env _x -> ())
-
     method private on_bool : 'env. 'env -> bool -> unit = (fun _env _x -> ())
-
     method private on_int : 'env. 'env -> int -> unit = (fun _env _x -> ())
-
     method private on_symbol : 'env. 'env -> symbol -> unit = (fun _env _x -> ())
-
     method private on_aloc : 'env. 'env -> ALoc.t -> unit = (fun _env _x -> ())
 
     method private on_option : 'env 'a 'b. ('env -> 'a -> 'b) -> 'env -> 'a option -> 'b option =
@@ -36,11 +31,8 @@ class ['self] iter2_ty_base =
       (fun _env _x _y -> ())
 
     method private on_bool : 'env. 'env -> bool -> bool -> unit = (fun _env _x _y -> ())
-
     method private on_int : 'env. 'env -> int -> int -> unit = (fun _env _x _y -> ())
-
     method private on_symbol : 'env. 'env -> symbol -> symbol -> unit = (fun _env _x _y -> ())
-
     method private on_aloc : 'env. 'env -> ALoc.t -> ALoc.t -> unit = (fun _env _x _y -> ())
 
     method private fail_option : 'env 'a. 'env -> 'a option -> 'a option -> unit =
@@ -73,15 +65,10 @@ class ['self] iter2_ty_base =
 class ['self] map_ty_base =
   object (_ : 'self)
     method private on_string : 'env -> string -> string = (fun _ x -> x)
-
     method private on_name : 'env -> Reason.name -> Reason.name = (fun _ x -> x)
-
     method private on_bool : 'env -> bool -> bool = (fun _ x -> x)
-
     method private on_int : 'env -> int -> int = (fun _ x -> x)
-
     method private on_symbol : 'env -> symbol -> symbol = (fun _ x -> x)
-
     method private on_aloc : 'env -> ALoc.t -> ALoc.t = (fun _ x -> x)
 
     method private on_list : 'env 'a 'b. ('env -> 'a -> 'b) -> 'env -> 'a list -> 'b list =
@@ -94,15 +81,10 @@ class ['self] map_ty_base =
 class ['self] endo_ty_base =
   object (_self : 'self)
     method private on_string : 'env -> string -> string = (fun _ x -> x)
-
     method private on_name : 'env -> Reason.name -> Reason.name = (fun _ x -> x)
-
     method private on_bool : 'env -> bool -> bool = (fun _ x -> x)
-
     method private on_int : 'env -> int -> int = (fun _ x -> x)
-
     method private on_symbol : 'env -> symbol -> symbol = (fun _ x -> x)
-
     method private on_aloc : 'env -> ALoc.t -> ALoc.t = (fun _ x -> x)
 
     (* Copied from
@@ -197,24 +179,17 @@ class ['self] endo_ty_base =
 class virtual ['e] monoid =
   object
     method virtual private zero : 'e
-
     method virtual private plus : 'e -> 'e -> 'e
   end
 
 class virtual ['self] reduce_ty_base =
   object (self : 'self)
     inherit ['acc] monoid
-
     method private on_string : 'env. 'env -> string -> 'acc = (fun _ _ -> self#zero)
-
     method private on_name : 'env. 'env -> Reason.name -> 'acc = (fun _ _ -> self#zero)
-
     method private on_int : 'env. 'env -> int -> 'acc = (fun _ _ -> self#zero)
-
     method private on_bool : 'env. 'env -> bool -> 'acc = (fun _ _ -> self#zero)
-
     method private on_symbol : 'env. 'env -> symbol -> 'acc = (fun _ _ -> self#zero)
-
     method private on_aloc : 'env. 'env -> ALoc.t -> 'acc = (fun _ _ -> self#zero)
 
     method private on_list : 'env 'a. ('env -> 'a -> 'acc) -> 'env -> 'a list -> 'acc =
@@ -236,17 +211,11 @@ class virtual ['self] reduce_ty_base =
 class virtual ['self] mapreduce_ty_base =
   object (self : 'self)
     inherit ['acc] monoid
-
     method private on_string : 'env -> string -> string * 'acc = (fun _ x -> (x, self#zero))
-
     method private on_name : 'env -> Reason.name -> Reason.name * 'acc = (fun _ x -> (x, self#zero))
-
     method private on_bool : 'env -> bool -> bool * 'acc = (fun _ x -> (x, self#zero))
-
     method private on_int : 'env -> int -> int * 'acc = (fun _ x -> (x, self#zero))
-
     method private on_symbol : 'env -> symbol -> symbol * 'acc = (fun _ x -> (x, self#zero))
-
     method private on_aloc : 'env -> ALoc.t -> ALoc.t * 'acc = (fun _ x -> (x, self#zero))
 
     method private on_list : 'a 'b. ('env -> 'a -> 'b * 'acc) -> 'env -> 'a list -> 'b list * 'acc =

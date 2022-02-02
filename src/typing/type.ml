@@ -34,13 +34,9 @@ open Utils_js
    proof of the typing derivation based on these reasons as axioms. *)
 
 type ident = int
-
 type index = int
-
 type sense = bool
-
 type tvar = reason * ident
-
 type number_literal = float * string [@@deriving ord]
 
 module rec TypeTerm : sig
@@ -447,9 +443,7 @@ module rec TypeTerm : sig
     | Frame of 'loc virtual_frame_use_op * 'loc virtual_use_op
 
   and use_op = ALoc.t virtual_use_op
-
   and root_use_op = ALoc.t virtual_root_use_op
-
   and frame_use_op = ALoc.t virtual_frame_use_op
 
   and use_t =
@@ -1002,7 +996,6 @@ module rec TypeTerm : sig
     | UnresolvedType
 
   and fun_param = string option * t
-
   and fun_rest_param = string option * ALoc.t * t
 
   (* used by FunT *)
@@ -1298,7 +1291,6 @@ module rec TypeTerm : sig
   }
 
   and typeparams_nonempty = ALoc.t * typeparam Nel.t
-
   and typeparams = typeparams_nonempty option
 
   and selector =
@@ -1340,13 +1332,9 @@ module rec TypeTerm : sig
     | ObjectMapConst of t
 
   and prototype = t
-
   and super = t
-
   and static = t
-
   and implements = t list
-
   and t_out = t
 
   and custom_fun_kind =
@@ -1519,27 +1507,16 @@ and Property : sig
   type t = TypeTerm.property
 
   val polarity : t -> Polarity.t
-
   val read_t : t -> TypeTerm.t option
-
   val write_t : ?ctx:TypeTerm.write_ctx -> t -> TypeTerm.t option
-
   val read_loc : t -> ALoc.t option
-
   val write_loc : t -> ALoc.t option
-
   val first_loc : t -> ALoc.t option
-
   val iter_t : (TypeTerm.t -> unit) -> t -> unit
-
   val fold_t : ('a -> TypeTerm.t -> 'a) -> 'a -> t -> 'a
-
   val map_t : (TypeTerm.t -> TypeTerm.t) -> t -> t
-
   val ident_map_t : (TypeTerm.t -> TypeTerm.t) -> t -> t
-
   val forall_t : (TypeTerm.t -> bool) -> t -> bool
-
   val assert_field : t -> TypeTerm.t
 end = struct
   open TypeTerm
@@ -1683,43 +1660,27 @@ end
 
 and Properties : sig
   type t = Property.t NameUtils.Map.t
-
   type id
 
   module Map : WrappedMap.S with type key = id
-
   module Set : Flow_set.S with type elt = id
 
   type map = t Map.t
 
   val add_field : name -> Polarity.t -> ALoc.t option -> TypeTerm.t -> t -> t
-
   val add_getter : name -> ALoc.t option -> TypeTerm.t -> t -> t
-
   val add_setter : name -> ALoc.t option -> TypeTerm.t -> t -> t
-
   val add_method : name -> ALoc.t option -> TypeTerm.t -> t -> t
-
   val generate_id : unit -> id
-
   val id_of_int : int -> id
-
   val id_as_int : id -> int option
-
   val id_of_aloc_id : ALoc.id -> id
-
   val fake_id : id
-
   val string_of_id : id -> string
-
   val extract_named_exports : t -> Exports.t
-
   val iter_t : (TypeTerm.t -> unit) -> t -> unit
-
   val map_t : (TypeTerm.t -> TypeTerm.t) -> t -> t
-
   val map_fields : (TypeTerm.t -> TypeTerm.t) -> t -> t
-
   val mapi_fields : (name -> TypeTerm.t -> TypeTerm.t) -> t -> t
 end = struct
   open TypeTerm
@@ -1761,7 +1722,6 @@ end = struct
       map
 
   let add_method x loc t = NameUtils.Map.add x (Method (loc, t))
-
   let fake_id = id_of_int 0
 
   let extract_named_exports pmap =
@@ -1774,7 +1734,6 @@ end = struct
       NameUtils.Map.empty
 
   let iter_t f = NameUtils.Map.iter (fun _ -> Property.iter_t f)
-
   let map_t f = NameUtils.Map.map (Property.map_t f)
 
   let map_fields f =
@@ -1794,17 +1753,11 @@ and Eval : sig
   type id
 
   val compare_id : id -> id -> int
-
   val id_of_int : int -> id
-
   val id_as_int : id -> int option
-
   val id_of_aloc_id : ALoc.id -> id
-
   val string_of_id : id -> string
-
   val generate_id : unit -> id
-
   val equal_id : id -> id -> bool
 
   module Map : WrappedMap.S with type key = id
@@ -1813,7 +1766,6 @@ end = struct
 
   module Map : WrappedMap.S with type key = id = WrappedMap.Make (struct
     type key = id
-
     type t = key
 
     let compare = compare_id
@@ -1824,17 +1776,11 @@ and Poly : sig
   type id
 
   val compare_id : id -> id -> int
-
   val equal_id : id -> id -> bool
-
   val id_of_int : int -> id
-
   val id_as_int : id -> int option
-
   val id_of_aloc_id : ALoc.id -> id
-
   val string_of_id : id -> string
-
   val generate_id : unit -> id
 
   module Set : Flow_set.S with type elt = id
@@ -1843,7 +1789,6 @@ end = struct
 
   module Set : Flow_set.S with type elt = id = Flow_set.Make (struct
     type elt = id
-
     type t = elt
 
     let compare = compare_id
@@ -1852,7 +1797,6 @@ end
 
 and Exports : sig
   type t = (ALoc.t option * TypeTerm.t) NameUtils.Map.t
-
   type id
 
   module Map : WrappedMap.S with type key = id
@@ -1860,16 +1804,13 @@ and Exports : sig
   type map = t Map.t
 
   val mk_id : unit -> id
-
   val string_of_id : id -> string
 end = struct
   type t = (ALoc.t option * TypeTerm.t) NameUtils.Map.t
-
   type id = int
 
   module Map : WrappedMap.S with type key = id = WrappedMap.Make (struct
     type key = id
-
     type t = key
 
     let compare (x : int) y = Stdlib.compare x y
@@ -1878,7 +1819,6 @@ end = struct
   type map = t Map.t
 
   let mk_id = Reason.mk_id
-
   let string_of_id = string_of_int
 end
 
@@ -1906,9 +1846,7 @@ and UnionRep : sig
   val members : t -> TypeTerm.t list
 
   val members_nel : t -> TypeTerm.t * TypeTerm.t Nel.t
-
   val cons : TypeTerm.t -> t -> t
-
   val rev_append : t -> t -> t
 
   (** map rep r to rep r' along type mapping f. if nothing would be changed,
@@ -1924,7 +1862,6 @@ and UnionRep : sig
     unit
 
   val optimize_enum_only : t -> flatten:(TypeTerm.t list -> TypeTerm.t list) -> unit
-
   val is_optimized_finally : t -> bool
 
   (** quick membership tests for enums and disjoint unions *)
@@ -1948,9 +1885,7 @@ and UnionRep : sig
     quick_mem_result
 
   val check_enum : t -> UnionEnumSet.t option
-
   val string_of_specialization : t -> string
-
   val contains_only_flattened_types : TypeTerm.t list -> bool
 end = struct
   (* canonicalize a type w.r.t. enum membership *)
@@ -2022,9 +1957,7 @@ end = struct
       (t0, t1, ts, ref enum)
 
   let members (t0, t1, ts, _) = t0 :: t1 :: ts
-
   let members_nel (t0, t1, ts, _) = (t0, (t1, ts))
-
   let cons t0 (t1, t2, ts, _) = make t0 t1 (t2 :: ts)
 
   let rev_append rep1 rep2 =
@@ -2369,13 +2302,9 @@ end = struct
   type t = TypeTerm.t * TypeTerm.t * TypeTerm.t list
 
   let make t0 t1 ts = (t0, t1, ts)
-
   let members (t0, t1, ts) = t0 :: t1 :: ts
-
   let members_nel (t0, t1, ts) = (t0, (t1, ts))
-
   let map f (t0, t1, ts) = make (f t0) (f t1) (Base.List.map ~f ts)
-
   let append ts2 (t0, t1, ts1) = make t0 t1 (ts1 @ ts2)
 
   let ident_map f ((t0, t1, ts) as rep) =
@@ -2429,7 +2358,6 @@ and Object : sig
   }
 
   and props = prop NameUtils.Map.t
-
   and prop = TypeTerm.t * bool * (* method *) bool
 
   (* own *)
@@ -2566,9 +2494,7 @@ and React : sig
      * then resolve each mixin in turn. This is recursive, as mixins can have
      * mixins. *)
     and stack = stack_head * stack_tail
-
     and stack_head = resolved_object * spec
-
     and stack_tail = (stack_head * TypeTerm.t list * spec maybe_known list) list
 
     and spec = {
@@ -2581,11 +2507,8 @@ and React : sig
     }
 
     and statics = resolved_object maybe_known
-
     and prop_types = resolved_object maybe_known
-
     and default_props = resolved_object maybe_known
-
     and initial_state = resolved_object or_null maybe_known
 
     and 'a maybe_known =
@@ -2635,7 +2558,6 @@ external type_term_compare : TypeTerm.t -> TypeTerm.t -> int = "caml_fast_generi
 
 module UseTypeSet : Flow_set.S with type elt = TypeTerm.use_t = Flow_set.Make (struct
   type elt = TypeTerm.use_t
-
   type t = elt
 
   let compare = use_t_compare
@@ -2648,7 +2570,6 @@ end)
 *)
 module TypeSet : Flow_set.S with type elt = TypeTerm.t = Flow_set.Make (struct
   type elt = TypeTerm.t
-
   type t = elt
 
   let compare = type_term_compare
@@ -2656,7 +2577,6 @@ end)
 
 module TypeMap = Flow_map.Make (struct
   type key = TypeTerm.t
-
   type t = key
 
   let compare = type_term_compare
@@ -2665,9 +2585,7 @@ end)
 module Constraint = struct
   module UseTypeKey = struct
     type speculation_id = int
-
     type case_id = int
-
     type t = TypeTerm.use_t * (speculation_id * case_id) option
 
     let compare (x, assoc1) (y, assoc2) =
@@ -2990,9 +2908,7 @@ module AConstraint = struct
   end)
 
   let new_root constraints = Root { rank = 0; constraints = lazy constraints }
-
   let fully_resolved_root = { rank = 0; constraints = lazy Annot_resolved }
-
   let fully_resolved_node = Root fully_resolved_root
 
   let deps_of_constraint = function
@@ -3067,17 +2983,13 @@ let open_tvar tvar =
 
 module type PrimitiveType = sig
   val desc : reason_desc
-
   val make : reason -> trust_rep -> t
 end
 
 module Primitive (P : PrimitiveType) = struct
   let desc = P.desc
-
   let at tok = P.make (mk_annot_reason desc tok)
-
   let why reason = P.make (replace_desc_reason desc reason)
-
   let make = P.make
 
   let why_with_use_desc ~use_desc r trust =
@@ -3092,37 +3004,31 @@ end
 
 module NumT = Primitive (struct
   let desc = RNumber
-
   let make r trust = DefT (r, trust, NumT AnyLiteral)
 end)
 
 module StrT = Primitive (struct
   let desc = RString
-
   let make r trust = DefT (r, trust, StrT AnyLiteral)
 end)
 
 module BoolT = Primitive (struct
   let desc = RBoolean
-
   let make r trust = DefT (r, trust, BoolT None)
 end)
 
 module SymbolT = Primitive (struct
   let desc = RSymbol
-
   let make r trust = DefT (r, trust, SymbolT)
 end)
 
 module MixedT = Primitive (struct
   let desc = RMixed
-
   let make r trust = DefT (r, trust, MixedT Mixed_everything)
 end)
 
 module EmptyT = Primitive (struct
   let desc = REmpty
-
   let make r trust = DefT (r, trust, EmptyT)
 end)
 
@@ -3132,19 +3038,12 @@ module AnyT = struct
     | _ -> RAnyImplicit
 
   let make source r = AnyT (r, source)
-
   let at source = mk_annot_reason (desc source) %> make source
-
   let why source = replace_desc_reason (desc source) %> make source
-
   let annot = why AnnotatedAny
-
   let error = why (AnyError None)
-
   let error_of_kind kind = why (AnyError (Some kind))
-
   let untyped = why Untyped
-
   let locationless source = desc source |> locationless_reason |> make source
 
   let source = function
@@ -3154,79 +3053,50 @@ end
 
 module Unsoundness = struct
   let constructor = Unsound Constructor
-
   let computed_nonlit_key = Unsound ComputedNonLiteralKey
-
   let function_proto = Unsound FunctionPrototype
-
   let merged = Unsound Merged
-
   let instance_of_refi = Unsound InstanceOfRefinement
-
   let unresolved = Unsound UnresolvedType
-
   let resolve_spread = Unsound ResolveSpread
-
   let unimplemented = Unsound Unimplemented
-
   let inference_hooks = Unsound InferenceHooks
-
   let exports = Unsound Exports
-
   let bound_fn_this = Unsound BoundFunctionThis
-
   let dummy_static = Unsound DummyStatic
-
   let merged_any = AnyT.make merged
-
   let instance_of_refi_any = AnyT.make instance_of_refi
-
   let unresolved_any = AnyT.make unresolved
-
   let resolve_spread_any = AnyT.make resolve_spread
-
   let constructor_any = AnyT.make constructor
-
   let function_proto_any = AnyT.make function_proto
-
   let computed_nonlit_key_any = AnyT.make computed_nonlit_key
-
   let unimplemented_any = AnyT.make unimplemented
-
   let inference_hooks_any = AnyT.make inference_hooks
-
   let exports_any = AnyT.make exports
-
   let bound_fn_this_any = AnyT.make bound_fn_this
-
   let dummy_static_any = AnyT.make dummy_static
-
   let why kind = Unsound kind |> AnyT.why
-
   let at kind = Unsound kind |> AnyT.at
 end
 
 module VoidT = Primitive (struct
   let desc = RVoid
-
   let make r trust = DefT (r, trust, VoidT)
 end)
 
 module NullT = Primitive (struct
   let desc = RNull
-
   let make r trust = DefT (r, trust, NullT)
 end)
 
 module ObjProtoT = Primitive (struct
   let desc = RDummyPrototype
-
   let make r _ = ObjProtoT r
 end)
 
 module NullProtoT = Primitive (struct
   let desc = RNull
-
   let make r _ = NullProtoT r
 end)
 
@@ -3748,11 +3618,8 @@ let annot use_desc = function
    want to encourage this pattern, but we also don't want to block uses of this
    pattern. Thus, we compromise by not tracking the property types. *)
 let dummy_static = update_desc_reason (fun desc -> RStatics desc) %> Unsoundness.dummy_static_any
-
 let dummy_prototype = ObjProtoT (locationless_reason RDummyPrototype)
-
 let bound_function_dummy_this loc = mk_reason RDummyThis loc |> Unsoundness.bound_fn_this_any
-
 let dummy_this loc = mk_reason RDummyThis loc |> MixedT.make |> with_trust bogus_trust
 
 let implicit_mixed_this r =
@@ -3798,14 +3665,14 @@ let mk_methodcalltype targs args ?meth_generic_this ?(meth_strict_arity = true) 
 (* A bound function type is a method type whose `this` parameter has been
    bound to some type. Currently, if the function's `this` parameter is not
    explicitly annotated we model this unsoundly using `any`, but if it is
-   then we create a methodtype with a specific `this` type.  *)
+   then we create a methodtype with a specific `this` type. *)
 
 let mk_boundfunctiontype ~this = mk_methodtype this
 
 (* A function type is a method type whose `this` parameter has been
    bound to to the global object. Currently, if the function's `this` parameter is not
    explicitly annotated we model this using `mixed`, but if it is
-   then we create a methodtype with a specific `this` type.  *)
+   then we create a methodtype with a specific `this` type. *)
 
 let mk_functiontype reason ?(this = global_this reason) = mk_methodtype this
 
@@ -3819,9 +3686,7 @@ let mk_boundfunctioncalltype this targs args ?(call_strict_arity = true) tout =
   }
 
 let mk_functioncalltype reason = mk_boundfunctioncalltype (global_this reason)
-
 let mk_opt_functioncalltype reason targs args strict = (global_this reason, targs, args, strict)
-
 let mk_opt_boundfunctioncalltype this targs args strict = (this, targs, args, strict)
 
 let mk_opt_methodcalltype
@@ -3924,9 +3789,7 @@ let apply_method_action use_op reason_call this_arg action =
 
 module TypeParams : sig
   val to_list : typeparams -> typeparam list
-
   val of_list : ALoc.t -> typeparam list -> typeparams
-
   val map : (typeparam -> typeparam) -> typeparams -> typeparams
 end = struct
   let to_list tparams =

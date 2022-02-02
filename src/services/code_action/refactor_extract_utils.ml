@@ -28,9 +28,7 @@ module InsertionPointCollectors = struct
   class virtual ['M, 'N] function_and_method_insertion_point_visitor =
     object (this)
       inherit ['M, 'N, 'M, 'N] Flow_polymorphic_ast_mapper.mapper as super
-
       method on_loc_annot x = x
-
       method on_type_annot x = x
 
       method virtual visit_named_function
@@ -92,17 +90,13 @@ module InsertionPointCollectors = struct
   class function_and_method_insertion_point_collector reader extracted_loc =
     object (this)
       inherit Typed_ast_utils.type_parameter_mapper as type_parameter_mapper
-
       inherit! [ALoc.t, ALoc.t * Type.t] function_and_method_insertion_point_visitor
 
       (* Override the following methods from type_parameter_mapper back *)
 
       method! type_param = type_parameter_mapper#type_param
-
       method! type_params_opt = type_parameter_mapper#type_params_opt
-
       method! class_ = type_parameter_mapper#class_
-
       val mutable acc = []
 
       method visit_named_function ~is_method ~function_name ~body_loc =
@@ -135,7 +129,6 @@ module InsertionPointCollectors = struct
   class class_insertion_point_collector reader extracted_loc =
     object (this)
       inherit Typed_ast_utils.type_parameter_mapper as super
-
       val mutable acc = None
 
       method private collect_name_and_loc ~tparams_rev class_name body_loc =
@@ -214,9 +207,7 @@ module AstExtractor = struct
           }
 
       val mutable collect_statement = true
-
       val mutable collected_expression = None
-
       val mutable collected_type = None
 
       method visit_named_function ~is_method ~function_name ~body_loc =
@@ -346,15 +337,10 @@ module InformationCollectors = struct
   class extracted_information_collector =
     object (this)
       inherit [Loc.t] Flow_ast_mapper.mapper as super
-
       val mutable _has_this_super = false
-
       val mutable _async = false
-
       val mutable _has_unwrapped_control_flow = false
-
       val mutable _inside_loop = false
-
       val mutable _inside_switch = false
 
       method private inside_loop : 'a. (Loc.t -> 'a -> 'a) -> Loc.t -> 'a -> 'a =
@@ -366,9 +352,7 @@ module InformationCollectors = struct
           statement
 
       method has_this_super = _has_this_super
-
       method is_async = _async
-
       method has_unwrapped_control_flow = _has_unwrapped_control_flow
 
       (* Do not recurse down into nested classes. *)
@@ -386,9 +370,7 @@ module InformationCollectors = struct
         this#inside_loop super#for_of_statement loc statement
 
       method! for_in_statement loc statement = this#inside_loop super#for_in_statement loc statement
-
       method! do_while loc statement = this#inside_loop super#do_while loc statement
-
       method! while_ loc statement = this#inside_loop super#while_ loc statement
 
       method! switch loc statement =
@@ -501,7 +483,6 @@ module RefactorProgramMappers = struct
                 statements =
                   super#statement_list program_body.statements @ [function_declaration_statement];
               }
-            
           )
         else
           super#program program
@@ -859,13 +840,9 @@ module TypeSynthesizer = struct
   class type_collector reader (locs : LocSet.t) =
     object (this)
       inherit Typed_ast_utils.type_parameter_mapper as super
-
       val mutable acc = LocMap.empty
-
       method! on_loc_annot x = x
-
       method! on_type_annot x = x
-
       method collected_types = acc
 
       method private collect_type_at_loc ~tparams_rev loc t =

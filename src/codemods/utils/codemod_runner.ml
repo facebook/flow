@@ -54,7 +54,6 @@ let extract_flowlibs_or_exit options =
   | None -> ()
 
 type 'a unit_result = ('a, ALoc.t * Error_message.internal_error) result
-
 type 'a result_list = (File_key.t * 'a option unit_result) list
 
 type ('a, 'ctx) abstract_visitor =
@@ -72,9 +71,7 @@ module type SIMPLE_TYPED_RUNNER_CONFIG = sig
   type accumulator
 
   val reporter : accumulator Codemod_report.t
-
   val check_options : Options.t -> Options.t
-
   val visit : (accumulator, Codemod_context.Typed.t) abstract_visitor
 end
 
@@ -82,7 +79,6 @@ module type UNTYPED_RUNNER_CONFIG = sig
   type accumulator
 
   val reporter : accumulator Codemod_report.t
-
   val visit : (accumulator, Codemod_context.Untyped.t) abstract_visitor
 end
 
@@ -92,9 +88,7 @@ module type UNTYPED_FLOW_INIT_RUNNER_CONFIG = sig
   (* Runner init function which is called after Types_js.init but before any of the
    * jobs. This is useful to setup/populate any shared memory for the jobs. *)
   val init : reader:State_reader.t -> unit
-
   val reporter : accumulator Codemod_report.t
-
   val visit : (accumulator, Codemod_context.UntypedFlowInit.t) abstract_visitor
 end
 
@@ -110,7 +104,6 @@ end
  *)
 module type STEP_RUNNER = sig
   type env
-
   type accumulator
 
   val reporter : accumulator Codemod_report.t
@@ -232,13 +225,10 @@ let mk_next ~options ~workers roots =
 
 module type TYPED_RUNNER_WITH_PREPASS_CONFIG = sig
   type accumulator
-
   type prepass_state
-
   type prepass_result
 
   val reporter : accumulator Codemod_report.t
-
   val prepass_init : unit -> prepass_state
 
   val prepass_run :
@@ -251,7 +241,6 @@ module type TYPED_RUNNER_WITH_PREPASS_CONFIG = sig
     prepass_result
 
   val store_precheck_result : prepass_result unit_result FilenameMap.t -> unit
-
   val visit : (accumulator, Codemod_context.Typed.t) abstract_visitor
 end
 
@@ -418,7 +407,6 @@ end
 
 module TypedRunner (TypedRunnerConfig : TYPED_RUNNER_CONFIG) : STEP_RUNNER = struct
   type env = ServerEnv.env
-
   type accumulator = TypedRunnerConfig.accumulator
 
   let reporter = TypedRunnerConfig.reporter
@@ -524,7 +512,6 @@ let untyped_digest ~reporter results =
  * info other than what is passed to the job is available but means this runner is fast. *)
 module UntypedRunner (C : UNTYPED_RUNNER_CONFIG) : STEP_RUNNER = struct
   type env = unit
-
   type accumulator = C.accumulator
 
   let reporter = C.reporter
@@ -573,9 +560,7 @@ module UntypedRunner (C : UNTYPED_RUNNER_CONFIG) : STEP_RUNNER = struct
     )
 
   let digest = untyped_digest ~reporter:C.reporter
-
   let init_run genv roots = run genv roots
-
   let recheck_run genv _env ~iteration:_ roots = run genv roots
 end
 
@@ -589,7 +574,6 @@ end
 
 module UntypedFlowInitRunner (C : UNTYPED_FLOW_INIT_RUNNER_CONFIG) : STEP_RUNNER = struct
   type env = unit
-
   type accumulator = C.accumulator
 
   let reporter = C.reporter
@@ -637,9 +621,7 @@ module UntypedFlowInitRunner (C : UNTYPED_FLOW_INIT_RUNNER_CONFIG) : STEP_RUNNER
     )
 
   let digest = untyped_digest ~reporter:C.reporter
-
   let init_run genv roots = run genv roots
-
   let recheck_run genv _env ~iteration:_ roots = run genv roots
 end
 

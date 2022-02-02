@@ -353,7 +353,6 @@ class ['loc] mapper =
         { param = param'; body = body'; comments = comments' }
 
     method class_declaration loc (cls : ('loc, 'loc) Ast.Class.t) = this#class_ loc cls
-
     method class_expression loc (cls : ('loc, 'loc) Ast.Class.t) = this#class_ loc cls
 
     method class_ _loc (cls : ('loc, 'loc) Ast.Class.t) =
@@ -1347,7 +1346,6 @@ class ['loc] mapper =
       | Qualified i -> id this#typeof_qualified_identifier i git (fun i -> Qualified i)
 
     method typeof_identifier id = this#identifier id
-
     method typeof_member_identifier id = this#identifier id
 
     method typeof_qualified_identifier qual =
@@ -1584,9 +1582,7 @@ class ['loc] mapper =
         (loc, { name; comments = comments' })
 
     method type_identifier (id : ('loc, 'loc) Ast.Identifier.t) = this#identifier id
-
     method type_identifier_reference (id : ('loc, 'loc) Ast.Identifier.t) = this#type_identifier id
-
     method binding_type_identifier (id : ('loc, 'loc) Ast.Identifier.t) = this#type_identifier id
 
     method interface _loc (interface : ('loc, 'loc) Ast.Statement.Interface.t) =
@@ -1846,7 +1842,6 @@ class ['loc] mapper =
         id this#jsx_attribute_name_namespaced ns name (fun ns -> NamespacedName ns)
 
     method jsx_attribute_name_identifier ident = this#jsx_identifier ident
-
     method jsx_attribute_name_namespaced ns = this#jsx_namespaced_name ns
 
     method jsx_attribute_value (value : ('loc, 'loc) Ast.JSX.Attribute.value) =
@@ -1923,9 +1918,7 @@ class ['loc] mapper =
         id this#jsx_element_name_member_expression expr name (fun expr -> MemberExpression expr)
 
     method jsx_element_name_identifier ident = this#jsx_identifier ident
-
     method jsx_element_name_namespaced ns = this#jsx_namespaced_name ns
-
     method jsx_element_name_member_expression expr = this#jsx_member_expression expr
 
     method jsx_namespaced_name (namespaced_name : ('loc, 'loc) Ast.JSX.NamespacedName.t) =
@@ -2034,7 +2027,6 @@ class ['loc] mapper =
       this#identifier ident
 
     method member_private_name (name : 'loc Ast.PrivateName.t) = this#private_name name
-
     method member_property_expression (expr : ('loc, 'loc) Ast.Expression.t) = this#expression expr
 
     method meta_property _loc (expr : 'loc Ast.Expression.MetaProperty.t) =
@@ -2147,7 +2139,6 @@ class ['loc] mapper =
       id_loc this#literal loc lit literal (fun lit -> (loc, lit))
 
     method object_key_identifier (ident : ('loc, 'loc) Ast.Identifier.t) = this#identifier ident
-
     method object_key_computed (key : ('loc, 'loc) Ast.ComputedKey.t) = this#computed_key key
 
     method opaque_type _loc (otype : ('loc, 'loc) Ast.Statement.OpaqueType.t) =

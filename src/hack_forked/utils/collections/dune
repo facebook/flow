@@ -1,5 +1,4 @@
 (library
-  (name collections)
-  (wrapped false)
-  (libraries
-    base))
+ (name collections)
+ (wrapped false)
+ (libraries base))

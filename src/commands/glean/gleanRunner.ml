@@ -10,9 +10,7 @@ module TypeScheme = Type.TypeScheme
 class member_searcher add_member =
   object (this)
     inherit Typed_ast_utils.type_parameter_mapper
-
     method! on_loc_annot x = x
-
     method! on_type_annot x = x
 
     method! member member =
@@ -31,7 +29,6 @@ class type_reference_searcher add_reference =
       [ALoc.t, ALoc.t * Type.t, ALoc.t, ALoc.t * Type.t] Flow_polymorphic_ast_mapper.mapper as super
 
     method on_loc_annot x = x
-
     method on_type_annot x = x
 
     method! generic_identifier_type git =

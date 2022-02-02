@@ -70,7 +70,6 @@ class property_assignment (property_names : SSet.t) =
      * are initialized when the constructor exits.
      *)
     val mutable final_ssa_env : Ssa_builder.With_ALoc.Env.t = SMap.empty
-
     method final_ssa_env = final_ssa_env
 
     method! pop_ssa_env saved_state =
@@ -92,7 +91,6 @@ class property_assignment (property_names : SSet.t) =
       Loc_collections.ALocMap.find_opt read_loc read_loc_metadata
 
     method! identifier (ident : (ALoc.t, ALoc.t) Ast.Identifier.t) = ident
-
     method! jsx_element_name_identifier (ident : (ALoc.t, ALoc.t) Ast.JSX.Identifier.t) = ident
 
     method! member loc (expr : (ALoc.t, ALoc.t) Ast.Expression.Member.t) =
@@ -168,7 +166,6 @@ class property_assignment (property_names : SSet.t) =
       []
 
     method this_escape_errors = this_escape_errors
-
     method private add_this_escape_error error = this_escape_errors <- error :: this_escape_errors
 
     method! expression expr =

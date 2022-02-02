@@ -719,7 +719,6 @@ and Statement : sig
   module EnumDeclaration : sig
     module DefaultedMember : sig
       type 'M t = 'M * 'M t'
-
       and 'M t' = { id: ('M, 'M) Identifier.t } [@@deriving show]
     end
 
@@ -1023,7 +1022,6 @@ and Expression : sig
   module CallTypeArg : sig
     module Implicit : sig
       type ('M, 'T) t = 'T * 'M t'
-
       and 'M t' = { comments: ('M, unit) Syntax.t option } [@@deriving show]
     end
 
@@ -1560,7 +1558,6 @@ and JSX : sig
 
   module Closing : sig
     type ('M, 'T) t = 'M * ('M, 'T) t'
-
     and ('M, 'T) t' = { name: ('M, 'T) name } [@@deriving show]
   end
 

@@ -10,11 +10,8 @@ val polarity : 'a Flow_ast.Variance.t option -> Polarity.t
 class type_parameter_mapper :
   object
     inherit [ALoc.t, ALoc.t * Type.t, ALoc.t, ALoc.t * Type.t] Flow_polymorphic_ast_mapper.mapper
-
     method on_loc_annot : ALoc.t -> ALoc.t
-
     method on_type_annot : ALoc.t * Type.t -> ALoc.t * Type.t
-
     method annot_with_tparams : 'a. (tparams_rev:Type.typeparam list -> 'a) -> 'a
   end
 

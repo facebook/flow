@@ -1,5 +1,4 @@
 (library
-  (name flow_third_party_sourcemaps)
-  (wrapped false)
-  (libraries
-    flow_third_party_vlq))
+ (name flow_third_party_sourcemaps)
+ (wrapped false)
+ (libraries flow_third_party_vlq))

@@ -23,15 +23,11 @@
 
 module type S = sig
   type 'a result
-
   type fd
-
   type t
 
   val create : fd -> t
-
   val get_null_reader : unit -> t result
-
   val has_buffered_content : t -> bool
 
   (**
@@ -42,26 +38,18 @@ module type S = sig
   val is_readable : t -> bool
 
   val get_fd : t -> fd
-
   val get_next_line : t -> string result
-
   val get_next_bytes : t -> int -> string result
 end
 
 module type READER = sig
   type 'a result
-
   type fd
 
   val return : 'a -> 'a result
-
   val fail : exn -> 'a result
-
   val ( >>= ) : 'a result -> ('a -> 'b result) -> 'b result
-
   val read : fd -> buffer:bytes -> offset:int -> size:int -> int result
-
   val is_readable : fd -> bool
-
   val open_devnull : unit -> fd result
 end

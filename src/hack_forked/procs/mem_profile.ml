@@ -8,5 +8,4 @@
 (* See src/facebook/profile/statMemProfMemProfile.ml for the implementation we use for statmemprof. *)
 
 let start () = ()
-
 let stop () = ()

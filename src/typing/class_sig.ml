@@ -14,7 +14,6 @@ include Class_sig_intf
 module Make (Env : Env_sig.S) (Abnormal : Abnormal_sig.S with module Env := Env) (F : Func_sig.S) =
 struct
   type func_sig = F.t
-
   type func_params_tast = F.func_params_tast
 
   type set_asts =
@@ -30,7 +29,6 @@ struct
     | Infer of func_sig * set_asts
 
   type field' = ALoc.t option * Polarity.t * field
-
   type typeapp = ALoc.t * Type.t * Type.t list option
 
   type extends =
@@ -319,7 +317,6 @@ struct
       x
 
   let mem_constructor { constructor; _ } = constructor <> []
-
   let mem_field x = with_sig (fun s -> SMap.mem x s.fields)
 
   let iter_methods_with_name f s =
@@ -449,7 +446,6 @@ struct
     SMap.map to_prop_converter %> NameUtils.namemap_of_smap %> Context.generate_property_map cx
 
   let fields_to_prop_map = to_prop_map to_field
-
   let methods_to_prop_map ~cx ~this_default = to_prop_map (to_method this_default) cx
 
   let elements ~this ?constructor s super =
@@ -979,7 +975,6 @@ struct
                     ),
                     FunProtoT super_reason
                   )
-                
             in
 
             (this_t, TypeUtil.class_type this_t, super, static_super)

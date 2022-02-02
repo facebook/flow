@@ -27,7 +27,6 @@ open Flow_ast_visitor
 class ['loc] lexical_hoister ~flowmin_compatibility ~enable_enums =
   object (this)
     inherit ['loc Bindings.t, 'loc] visitor ~init:Bindings.empty as super
-
     val mutable let_kind = Bindings.Let
 
     method private add_let_binding ?kind entry =
@@ -179,18 +178,14 @@ class ['loc] lexical_hoister ~flowmin_compatibility ~enable_enums =
 class ['loc] hoister ~flowmin_compatibility ~enable_enums ~with_types =
   object (this)
     inherit ['loc] lexical_hoister ~flowmin_compatibility ~enable_enums as super
-
     val mutable lexical = true
-
     method private add_var_binding entry = this#update_acc Bindings.(add (entry, Bindings.Var))
-
     method private add_type_binding entry = this#update_acc Bindings.(add (entry, Bindings.Type))
 
     method! private add_const_binding ?kind entry =
       if lexical then super#add_const_binding ?kind entry
 
     method! private add_let_binding ?kind entry = if lexical then super#add_let_binding ?kind entry
-
     method! flowmin_compatibility_statement = this#base_statement
 
     method! nonlexical_statement stmt =

@@ -13,7 +13,6 @@
 (* https://msdn.microsoft.com/en-us/library/windows/desktop/ff819129(v=vs.85).aspx *)
 
 let percent_re = Str.regexp {|%\([0-9a-fA-F]?[0-9a-fA-F]?\)|}
-
 let slash_re = Str.regexp {|/|} (* matches a single slash *)
 
 let dos_url_re =

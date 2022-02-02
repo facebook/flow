@@ -16,5 +16,4 @@ let test_write_and_read_directly_cwd () =
   contents = "hello"
 
 let tests = [("test_write_and_read_directly_cwd", test_write_and_read_directly_cwd)]
-
 let () = Unit_test.run_all tests

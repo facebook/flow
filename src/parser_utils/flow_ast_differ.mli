@@ -17,7 +17,6 @@ type 'a change' =
 [@@deriving show]
 
 type 'a change = Loc.t * 'a change' [@@deriving show]
-
 type 'a changes = 'a change list [@@deriving show]
 
 (* Algorithm to use to compute diff. Trivial algorithm just compares lists pairwise and generates

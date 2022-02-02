@@ -22,17 +22,12 @@ type kind =
 [@@deriving show]
 
 type 'loc entry = ('loc, 'loc) Ast.Identifier.t * kind
-
 type 'loc t = 'loc entry list
 
 let empty = []
-
 let singleton x = [x]
-
 let add = List.cons
-
 let push = List.append
-
 let exists = List.exists
 
 let to_assoc t =

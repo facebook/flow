@@ -34,5 +34,4 @@ let find_write { types; _ } loc =
   ALocMap.find_opt loc types |> Base.Option.map ~f:TypeUtil.type_t_of_annotated_or_inferred
 
 let empty = { types = ALocMap.empty; var_info = Env_api.empty; resolved = ALocSet.empty }
-
 let with_info var_info = { empty with var_info }

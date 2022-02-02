@@ -63,7 +63,8 @@ let union_flatten =
     | UnionT (_, rep) -> union_flatten cx seen @@ UnionRep.members rep
     | MaybeT (r, t) ->
       DefT (r, Trust.bogus_trust (), NullT)
-      :: DefT (r, Trust.bogus_trust (), VoidT) :: flatten cx seen t
+      :: DefT (r, Trust.bogus_trust (), VoidT)
+      :: flatten cx seen t
     | OptionalT { reason = r; type_ = t; use_desc } ->
       let void_t = VoidT.why_with_use_desc ~use_desc r |> with_trust Trust.bogus_trust in
       void_t :: flatten cx seen t
@@ -795,7 +796,6 @@ class virtual ['a] t =
           ObjectMapConst t''
 
     method virtual props : Context.t -> 'a -> Properties.id -> Properties.id
-
     method virtual eval_id : Context.t -> 'a -> Eval.id -> Eval.id
 
     method prop cx map_cx prop =

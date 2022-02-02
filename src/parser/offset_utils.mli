@@ -48,9 +48,6 @@ exception Offset_lookup_failed of Loc.position * string
  * `Offset_lookup_failed` if the given position does not exist in the file contents which were used
  * to construct the table. *)
 val offset : t -> Loc.position -> int
-
 val debug_string : t -> string
-
 val line_lengths : t -> int list
-
 val contains_multibyte_character : t -> bool

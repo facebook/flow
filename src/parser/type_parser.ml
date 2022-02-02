@@ -14,15 +14,10 @@ open Comment_attachment
 
 module type TYPE = sig
   val _type : env -> (Loc.t, Loc.t) Ast.Type.t
-
   val type_identifier : env -> (Loc.t, Loc.t) Ast.Identifier.t
-
   val type_params : env -> (Loc.t, Loc.t) Ast.Type.TypeParams.t option
-
   val type_args : env -> (Loc.t, Loc.t) Ast.Type.TypeArgs.t option
-
   val generic : env -> Loc.t * (Loc.t, Loc.t) Ast.Type.Generic.t
-
   val _object : is_class:bool -> env -> Loc.t * (Loc.t, Loc.t) Type.Object.t
 
   val interface_helper :
@@ -30,11 +25,8 @@ module type TYPE = sig
     (Loc.t * (Loc.t, Loc.t) Ast.Type.Generic.t) list * (Loc.t * (Loc.t, Loc.t) Ast.Type.Object.t)
 
   val function_param_list : env -> (Loc.t, Loc.t) Type.Function.Params.t
-
   val annotation : env -> (Loc.t, Loc.t) Ast.Type.annotation
-
   val annotation_opt : env -> (Loc.t, Loc.t) Ast.Type.annotation_or_hint
-
   val predicate_opt : env -> (Loc.t, Loc.t) Ast.Type.Predicate.t option
 
   val annotation_and_predicate_opt :
@@ -699,8 +691,7 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
                 value;
                 static = static <> None;
                 comments = Flow_ast_utils.mk_comments_opt ~leading ();
-              }
-            )
+              })
           env
       in
       Type.Object.CallProperty prop
@@ -725,8 +716,7 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
                 _method = false;
                 variance;
                 comments = Flow_ast_utils.mk_comments_opt ~leading ();
-              }
-            )
+              })
           env
       in
       Type.Object.Property prop
@@ -772,8 +762,7 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
                 _method = false;
                 variance = None;
                 comments = Flow_ast_utils.mk_comments_opt ~leading ();
-              }
-            )
+              })
           env
       in
       Type.Object.Property prop
@@ -1459,26 +1448,15 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
     ret
 
   let _type = wrap _type
-
   let type_identifier = wrap type_identifier
-
   let type_params = wrap type_params
-
   let type_args = wrap type_args
-
   let _object ~is_class env = wrap (_object ~is_class ~allow_exact:false ~allow_spread:false) env
-
   let interface_helper = wrap interface_helper
-
   let function_param_list = wrap function_param_list
-
   let annotation = wrap annotation
-
   let annotation_opt = wrap annotation_opt
-
   let predicate_opt = wrap predicate_opt
-
   let annotation_and_predicate_opt = wrap annotation_and_predicate_opt
-
   let generic = wrap generic
 end

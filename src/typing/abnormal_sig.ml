@@ -44,14 +44,9 @@ module type S = sig
     (ALoc.t, ALoc.t * Type.t) Flow_ast.Expression.t * t option
 
   val ignore_break_to_label : string option -> 'a * t option -> 'a * t option
-
   val ignore_break_or_continue_to_label : string option -> 'a * t option -> 'a * t option
-
   val save : ?env:Env.t -> t -> unit
-
   val swap_saved : t -> Env.t option -> Env.t option
-
   val clear_saved : t -> Env.t option
-
   val try_with_abnormal_exn : f:(unit -> 'a) -> on_abnormal_exn:(payload * t -> 'a) -> unit -> 'a
 end

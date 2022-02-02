@@ -1,8 +1,4 @@
 (library
-  (name flow_common_build_id)
-  (wrapped false)
-  (libraries
-    sys_utils
-    xx
-  )
-)
+ (name flow_common_build_id)
+ (wrapped false)
+ (libraries sys_utils xx))

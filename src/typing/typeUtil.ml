@@ -172,11 +172,8 @@ let reason_of_t_add_id = reason_of_t
    | OpenT (r, id) -> prefix_reason (spf "%d: " id) r
    | t -> reason_of_t t *)
 let reason_of_use_t_add_id = reason_of_use_t
-
 let desc_of_t = reason_of_t %> desc_of_reason
-
 let loc_of_t = reason_of_t %> aloc_of_reason
-
 let def_loc_of_t = reason_of_t %> def_aloc_of_reason
 
 (* TODO make a type visitor *)

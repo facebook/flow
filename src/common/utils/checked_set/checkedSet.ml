@@ -44,13 +44,9 @@ let combine a b =
   | _ -> Dependency
 
 let empty = FilenameMap.empty
-
 let is_empty = FilenameMap.is_empty
-
 let of_focused_list = List.fold_left (fun acc f -> FilenameMap.add f Focused acc) empty
-
 let cardinal = FilenameMap.cardinal
-
 let mem = FilenameMap.mem
 
 let add =
@@ -68,9 +64,7 @@ let add =
     |> add_all dependencies Dependency
 
 let remove set_to_remove = FilenameMap.filter (fun k _ -> not (FilenameSet.mem k set_to_remove))
-
 let fold f acc checked = FilenameMap.fold (fun k _ acc -> f acc k) checked acc
-
 let union = FilenameMap.union ~combine:(fun _ a b -> Some (combine a b))
 
 (** [diff a b] removes from [a] every key which exists in [b] and which has an equal or higher
@@ -124,26 +118,20 @@ let count ~f checked =
 
 (* Gives you a FilenameSet of all the checked files *)
 let all = filter_into_set ~f:(fun _ -> true)
-
 let is_focused kind = kind = Focused
-
 let is_dependent kind = kind = Dependent
-
 let is_dependency kind = kind = Dependency
 
 (* Gives you a FilenameSet of all the focused files *)
 let focused = filter_into_set ~f:is_focused
-
 let focused_cardinal = count ~f:is_focused
 
 (* Gives you a FilenameSet of all the dependent files *)
 let dependents = filter_into_set ~f:is_dependent
-
 let dependents_cardinal = count ~f:is_dependent
 
 (* Gives you a FilenameSet of all the dependency files *)
 let dependencies = filter_into_set ~f:is_dependency
-
 let dependencies_cardinal = count ~f:is_dependency
 
 let mem_kind ~f fn t =
@@ -152,9 +140,7 @@ let mem_kind ~f fn t =
   | None -> false
 
 let mem_focused = mem_kind ~f:is_focused
-
 let mem_dependent = mem_kind ~f:is_dependent
-
 let mem_dependency = mem_kind ~f:is_dependency
 
 (* Helper function for debugging *)

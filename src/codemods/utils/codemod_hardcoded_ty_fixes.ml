@@ -65,11 +65,8 @@ module Make (Extra : BASE_STATS) = struct
       ~cctx ~lint_severities ~suppress_types ~imports_react ~preserve_literals acc =
     object (this)
       inherit Insert_type_utils.patch_up_react_mapper ~imports_react () as super
-
       val mutable acc = acc
-
       method acc () = acc
-
       val sanitized_any = Builtins.flowfixme_ty lint_severities suppress_types
 
       method! on_t env t =

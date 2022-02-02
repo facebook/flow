@@ -191,7 +191,6 @@ type sat_result =
      }
 
    The rules below show examples of what scenario triggers them.
-
 *)
 
 let rec satisfies ~printer id1 id2 =

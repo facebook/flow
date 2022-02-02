@@ -12,7 +12,6 @@ module T = Flow_ast.Type
 
 module Let_syntax = struct
   let bind x ~f = x >>= f
-
   let map x ~f = x >>| f
 end
 
@@ -39,9 +38,7 @@ let mk_generic x targs =
   { T.Generic.id = T.Generic.Identifier.Unqualified x; targs; comments = None }
 
 let mk_targs arguments = (Loc.none, { T.TypeArgs.arguments; comments = None })
-
 let mk_generic_type x targs = (Loc.none, T.Generic (mk_generic x targs))
-
 let mk_typeof_expr x = T.Typeof.Target.Unqualified x
 
 let builtin_from_string ?targs x =

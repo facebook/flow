@@ -6,7 +6,6 @@
  *)
 
 type module_ref = string
-
 type require = module_ref * ALoc.t Nel.t * Modulename.t
 
 type check_file =

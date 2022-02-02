@@ -37,7 +37,6 @@ and expression_context_group =
   | In_for_init
 
 val default_opts : opts
-
 val normal_context : expression_context
 
 val program :
@@ -48,15 +47,10 @@ val program :
   Layout.layout_node
 
 val program_simple : ?opts:opts -> (Loc.t, Loc.t) Flow_ast.Program.t -> Layout.layout_node
-
 val literal : opts:opts -> Loc.t -> Loc.t Flow_ast.Literal.t -> Layout.layout_node
-
 val number_literal_type : Loc.t -> Loc.t Flow_ast.NumberLiteral.t -> Layout.layout_node
-
 val string_literal_type : Loc.t -> Loc.t Flow_ast.StringLiteral.t -> Layout.layout_node
-
 val bigint_literal_type : Loc.t -> Loc.t Flow_ast.BigIntLiteral.t -> Layout.layout_node
-
 val boolean_literal_type : Loc.t -> Loc.t Flow_ast.BooleanLiteral.t -> Layout.layout_node
 
 val expression :
@@ -78,16 +72,13 @@ val object_property :
   opts:opts -> (Loc.t, Loc.t) Flow_ast.Expression.Object.property -> Layout.layout_node
 
 val class_method : opts:opts -> (Loc.t, Loc.t) Flow_ast.Class.Method.t -> Layout.layout_node
-
 val class_property : opts:opts -> (Loc.t, Loc.t) Flow_ast.Class.Property.t -> Layout.layout_node
 
 val class_private_field :
   opts:opts -> (Loc.t, Loc.t) Flow_ast.Class.PrivateField.t -> Layout.layout_node
 
 val type_ : opts:opts -> (Loc.t, Loc.t) Flow_ast.Type.t -> Layout.layout_node
-
 val variance : Loc.t Flow_ast.Variance.t -> Layout.layout_node
-
 val type_param : opts:opts -> (Loc.t, Loc.t) Flow_ast.Type.TypeParam.t -> Layout.layout_node
 
 val type_annotation :
@@ -115,9 +106,6 @@ val function_params :
   Layout.layout_node
 
 val better_quote : prefer_single_quotes:bool -> string -> string
-
 val utf8_escape : quote:string -> string -> string
-
 val wrap_in_parens : ?with_break:bool -> Layout.layout_node -> Layout.layout_node
-
 val with_semicolon : Layout.layout_node -> Layout.layout_node

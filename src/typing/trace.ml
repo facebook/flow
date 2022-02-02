@@ -11,9 +11,7 @@ open Type
 open TypeUtil
 
 let compare = Stdlib.compare
-
 let trace_depth = snd
-
 let dummy_trace = ([], 0)
 
 (* Single-step trace with no parent. This corresponds to a
@@ -51,7 +49,6 @@ let concat_trace ~max ts =
 (* used to index trace nodes *)
 module TraceMap : WrappedMap.S with type key = trace_step list = WrappedMap.Make (struct
   type key = trace_step list
-
   type t = key
 
   let compare = compare

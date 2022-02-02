@@ -53,13 +53,9 @@ module type C = sig
   type t
 
   val enable_enums : t -> bool
-
   val jsx : t -> Options.jsx_mode
-
   val react_runtime : t -> Options.react_runtime
-
   val enable_const_params : t -> bool
-
   val env_mode : t -> Options.env_mode
 end
 
@@ -73,7 +69,6 @@ module type S = sig
   module Env_api : Env_api.S with module L = Loc_sig.ALocS
 
   type cx
-
   type abrupt_kind
 
   exception AbruptCompletionExn of abrupt_kind
@@ -107,8 +102,10 @@ module Make
     Env_api.Provider_api
 
   module Ssa_builder = Ssa_builder.Make (Loc_sig.ALocS) (Ssa_api) (Scope_builder)
+
   module Invalidation_api =
     Invalidation_api.Make (Loc_sig.ALocS) (Scope_api) (Ssa_api) (Provider_api)
+
   module Env_api = Env_api
   open Scope_builder
   open Env_api.Refi
@@ -126,7 +123,6 @@ module Make
     | OtherTest
 
   let merge_and ref1 ref2 = AND (ref1, ref2)
-
   let merge_or ref1 ref2 = OR (ref1, ref2)
 
   (* For every read of a variable x, we are interested in tracking writes to x
@@ -148,44 +144,26 @@ module Make
     module WriteSet : Flow_set.S with type elt = write_state
 
     val empty : unit -> t
-
     val uninitialized : ALoc.t -> t
-
     val undefined : L.t virtual_reason -> t
-
     val undeclared_class : L.t virtual_reason -> string -> t
-
     val merge : t -> t -> t
-
     val global : string -> t
-
     val one : ALoc.t virtual_reason -> t
-
     val all : ALoc.t virtual_reason list -> t
-
     val of_write : write_state -> t
-
     val simplify : t -> Env_api.write_loc list
-
     val id_of_val : t -> int
-
     val refinement : int -> t -> t
-
     val projection : ALoc.t -> t
-
     val undeclared : string -> ALoc.t -> t
 
     (* unwraps a RefinementWrite into just the underlying write *)
     val unrefine : int -> t -> t
-
     val unrefine_deeply : int -> t -> t
-
     val normalize_through_refinements : write_state -> WriteSet.t
-
     val writes_of_uninitialized : (int -> bool) -> t -> write_state list
-
     val is_global_undefined : t -> bool
-
     val is_undeclared : t -> bool
   end = struct
     let curr_id = ref 0
@@ -233,19 +211,12 @@ module Make
       { id; write_state }
 
     let of_write = mk_with_write_state
-
     let empty () = mk_with_write_state @@ PHI []
-
     let uninitialized r = mk_with_write_state (Uninitialized r)
-
     let undefined r = mk_with_write_state (Undefined r)
-
     let undeclared_class def name = mk_with_write_state (UndeclaredClass { def; name })
-
     let projection loc = mk_with_write_state @@ Projection loc
-
     let refinement refinement_id val_t = mk_with_write_state @@ Refinement { refinement_id; val_t }
-
     let undeclared name def_loc = mk_with_write_state @@ Undeclared (name, def_loc)
 
     let rec unrefine_deeply_write_state id write_state =
@@ -334,9 +305,7 @@ module Make
       | Refinement { val_t; _ } -> normalize_through_refinements val_t.write_state
 
     let global name = mk_with_write_state @@ Global name
-
     let one reason = mk_with_write_state @@ Loc reason
-
     let all locs = mk_with_write_state @@ join (Base.List.map ~f:(fun reason -> Loc reason) locs)
 
     (* Simplification converts a Val.t to a list of locations. *)
@@ -419,13 +388,9 @@ module Make
       | Throw
 
     let label_opt = Base.Option.map ~f:Flow_ast_utils.name_of_ident
-
     let break x = Break (label_opt x)
-
     let continue x = Continue (label_opt x)
-
     let return = Return
-
     let throw = Throw
 
     (* match particular abrupt completions *)
@@ -662,7 +627,6 @@ module Make
         }
 
       method values : Env_api.values = L.LMap.map Val.simplify env_state.values
-
       method write_entries : Env_api.env_entry L.LMap.t = env_state.write_entries
 
       method private new_id () =
@@ -938,7 +902,6 @@ module Make
           env_state.env
 
       method havoc_current_env ~all = this#havoc_env ~all ~force_initialization:false
-
       method havoc_uninitialized_env = this#havoc_env ~force_initialization:true ~all:true
 
       method refinement_may_be_undefined id =
@@ -3183,7 +3146,6 @@ module Make
           ~with_types:true as super
 
       val mutable values = env_values
-
       method values = values
 
       method any_identifier loc =
@@ -3274,4 +3236,5 @@ end
 
 module Make_Test_With_Cx (Context : C) =
   Make (Scope_api.With_ALoc) (Ssa_api.With_ALoc) (Env_api.With_ALoc) (Context) (DummyFlow (Context))
+
 module Make_of_flow = Make (Scope_api.With_ALoc) (Ssa_api.With_ALoc) (Env_api.With_ALoc)

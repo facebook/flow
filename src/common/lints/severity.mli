@@ -11,13 +11,8 @@ type severity =
   | Err
 
 val string_of_severity : severity -> string
-
 val output_string_of_severity : severity -> string
-
 val severity_of_string : string -> severity option
-
 val severity_cmp : severity -> severity -> int
-
 val severity_min : severity -> severity -> severity
-
 val severity_max : severity -> severity -> severity

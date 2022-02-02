@@ -243,7 +243,6 @@ let ty_normalizer_options =
       verbose_normalizer = false;
       max_depth = Some 50;
     }
-  
 
 let extract ~include_proto_members ~cx ~typed_ast ~file_sig scheme =
   let genv = Ty_normalizer_env.mk_genv ~full_cx:cx ~file:(Context.file cx) ~typed_ast ~file_sig in

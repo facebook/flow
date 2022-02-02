@@ -10,9 +10,7 @@ external hh_counter_next : unit -> int = "hh_counter_next"
 type t = int [@@deriving eq]
 
 let compare x y = x - y
-
 let track_names = ref false
-
 let trace = ref IMap.empty
 
 let tmp () =

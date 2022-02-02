@@ -185,9 +185,7 @@ class documentation_searcher find =
         member
 
     method! enum_boolean_member member = this#enum_initialized_member member
-
     method! enum_number_member member = this#enum_initialized_member member
-
     method! enum_string_member member = this#enum_initialized_member member
 
     method! export_named_declaration loc decl =
@@ -251,9 +249,7 @@ module Remove_types = struct
   class type_remover ~(reader : Parsing_heaps.Reader.reader) =
     object
       inherit [ALoc.t, ALoc.t * Type.t, Loc.t, Loc.t] Flow_polymorphic_ast_mapper.mapper
-
       method on_loc_annot x = Parsing_heaps.Reader.loc_of_aloc ~reader x
-
       method on_type_annot (x, _) = Parsing_heaps.Reader.loc_of_aloc ~reader x
     end
 

@@ -52,7 +52,6 @@ external raw_init : Unix.file_descr -> fsenv = "caml_fsnotify_init"
    The return value is an opaque `watcher_id`, currently it contains
    the corresponding thread id. *)
 external raw_add_watch : fsenv -> string -> watcher_id = "caml_fsnotify_add_watch"
-
 external raw_read_events : fsenv -> event list = "caml_fsnotify_read_events"
 
 (** Init *)

@@ -36,23 +36,14 @@ module FileSuppressions : sig
   type t
 
   val empty : t
-
   val is_empty : t -> bool
-
   val add : Loc.t -> applicable_codes -> t -> t
-
   val remove : Loc.t -> applicable_codes -> t -> t
-
   val union : t -> t -> t
-
   val add_lint_suppression : Loc.t -> t -> t
-
   val remove_lint_suppression : Loc.t -> t -> t
-
   val suppression_at_loc : Loc.t -> t -> (LocSet.t * applicable_codes) option
-
   val all_unused_locs : t -> LocSet.t
-
   val universally_suppressed_codes : t -> CodeLocSet.t
 end = struct
   type error_suppressions = (LocSet.t * applicable_codes) SpanMap.t

@@ -97,14 +97,11 @@ type record_entry = {
 }
 
 type record_data = record_entry SMap.t
-
 type record = record_data ref
 
 (* Creates a new empty record *)
 let create () = ref SMap.empty
-
 let global : record list ref = ref [create ()]
-
 let push_global () = global := create () :: !global
 
 let pop_global () =
@@ -115,7 +112,6 @@ let pop_global () =
   | _ -> failwith "Measure.pop_global called with empty stack"
 
 let serialize record = !record
-
 let deserialize data = ref data
 
 let new_entry =
@@ -251,11 +247,8 @@ let get_helper f ?record name =
   | Some entry -> Some (f entry)
 
 let get_sum = get_helper (fun { count; mean; _ } -> count *. mean)
-
 let get_mean = get_helper (fun { mean; _ } -> mean)
-
 let get_count = get_helper (fun { count; _ } -> count)
-
 let get_max = get_helper (fun { max; _ } -> max)
 
 let pretty_num f =

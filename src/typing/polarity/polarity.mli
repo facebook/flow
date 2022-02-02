@@ -12,11 +12,7 @@ type t =
 [@@deriving show]
 
 val compat : t * t -> bool
-
 val inv : t -> t
-
 val mult : t * t -> t
-
 val string : t -> string
-
 val sigil : t -> string

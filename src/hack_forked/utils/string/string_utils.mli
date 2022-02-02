@@ -14,15 +14,10 @@
 exception Incorrect_format
 
 val soi : int -> string
-
 val string_of_char : char -> string
-
 val string_before : string -> int -> string
-
 val string_after : string -> int -> string
-
 val string_starts_with : string -> string -> bool
-
 val string_ends_with : string -> string -> bool
 
 (** [substring_index needle haystack] returns the index of the first occurrence of
@@ -44,7 +39,6 @@ val lstrip : string -> string -> string
 val rstrip : string -> string -> string
 
 val rpartition : string -> char -> string * string
-
 val truncate : int -> string -> string
 
 (** [index_not_from_opt str i chars] is like [index_from_opt], but returns the index of the first
@@ -64,21 +58,13 @@ val rindex_not_from_opt : string -> int -> string -> int option
 val rindex_not_opt : string -> string -> int option
 
 val zero_code : int
-
 val nine_code : int
-
 val is_decimal_digit : char -> bool
-
 val is_lowercase_char : char -> bool
-
 val is_not_lowercase : string -> int -> int -> bool
-
 val fold_left : f:('a -> char -> 'a) -> acc:'a -> string -> 'a
-
 val split : char -> string -> string list
-
 val split2 : char -> string -> (string * string) option
-
 val split2_exn : char -> string -> string * string
 
 (** [replace_char needle replacement str] replaces all instances of the [needle]
@@ -100,19 +86,16 @@ val split_on_newlines : string -> string list
 
 module Internal : sig
   val to_list : string -> char list
-
   val of_list : char list -> string
 end
 
 val to_list : string -> char list
-
 val of_list : char list -> string
 
 module CharSet : sig
   include Flow_set.S with type elt = Char.t
 
   val of_string : string -> t
-
   val to_string : t -> string
 end
 

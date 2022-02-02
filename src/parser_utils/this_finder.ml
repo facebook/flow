@@ -17,9 +17,7 @@ module Make (LocSet : Flow_set.S) = struct
       (* Any mentions of `this` in these constructs would reference
          the `this` within those structures, so we ignore them *)
       method! class_ _ x = x
-
       method! function_declaration _ x = x
-
       method! function_expression_or_method _ x = x
     end
 end

@@ -8,9 +8,7 @@
 open Utils_js
 
 type element = Component of File_key.t Nel.t
-
 type 'a merge_result = (File_key.t * bool * 'a) list
-
 type 'a t
 
 val create :
@@ -23,7 +21,6 @@ val create :
   'a t
 
 val update_server_status : 'a t -> unit
-
 val next : 'a t -> unit -> element list Bucket.bucket
 
 val merge :
@@ -34,7 +31,5 @@ val merge :
   'a merge_result
 
 val total_files : 'a t -> int
-
 val skipped_count : 'a t -> int
-
 val sig_new_or_changed : 'a t -> FilenameSet.t

@@ -9,8 +9,8 @@ exception Unexpected_eof
 exception Invalid_base64 of char
 
 module type S = sig
-  val encode: Buffer.t -> int -> unit
-  val decode: char Stream.t -> int
+  val encode : Buffer.t -> int -> unit
+  val decode : char Stream.t -> int
 end
 
 module Base64 : S

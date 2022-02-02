@@ -63,19 +63,11 @@ type state = {
 }
 
 val init : unit -> unit
-
 val start : start_state:state -> trigger:trigger -> id
-
 val recheck_start : start_state:state -> unit
-
 val log : end_state:state -> ux:ux -> id:id -> unit
-
 val log_pushed_errors : end_state:state -> errors_reason:LspProt.errors_reason -> unit
-
 val trigger_of_lsp_msg : Lsp.lsp_message -> trigger option
-
 val gc : get_state:(unit -> state) -> float
-
 val flush : unit -> unit Lwt.t
-
 val dismiss_tracks : state -> unit

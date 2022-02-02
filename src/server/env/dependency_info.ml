@@ -16,7 +16,6 @@ type partial_dependency_graph =
   (Utils_js.FilenameSet.t * Utils_js.FilenameSet.t) Utils_js.FilenameMap.t
 
 let extract_sig_map map = FilenameMap.map (fun (sig_deps, _impl_deps) -> sig_deps) map
-
 let extract_impl_map map = FilenameMap.map (fun (_sig_deps, impl_deps) -> impl_deps) map
 
 let of_map map =
@@ -41,7 +40,6 @@ let update old_dep_info partial_dep_graph to_remove =
   }
 
 let implementation_dependency_graph dep_info = dep_info.implementation_dependency_graph
-
 let sig_dependency_graph dep_info = dep_info.sig_dependency_graph
 
 let map_filenames f dep_info =

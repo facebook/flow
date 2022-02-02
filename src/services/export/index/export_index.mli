@@ -22,16 +22,13 @@ module ExportSet : sig
   include Flow_set.S with type elt = export
 
   val pp : Format.formatter -> t -> unit
-
   val show : t -> string
 end
 
 type t [@@deriving show]
 
 val empty : t
-
 val add : string -> source -> kind -> t -> t
-
 val merge : t -> t -> t
 
 (** [subtract to_remove t] removes all of the exports in [to_remove] from [t], and
@@ -39,17 +36,10 @@ val merge : t -> t -> t
 val subtract : t -> t -> t * string list
 
 val find : string -> t -> ExportSet.t
-
 val find_seq : string -> t -> export Seq.t
-
 val fold_names : f:('acc -> string -> ExportSet.t -> 'acc) -> init:'acc -> t -> 'acc
-
 val fold : f:('acc -> string -> export -> 'acc) -> init:'acc -> t -> 'acc
-
 val map : f:(export -> export) -> t -> t
-
 val keys : t -> string list
-
 val kind_is_type : kind -> bool
-
 val kind_is_value : kind -> bool

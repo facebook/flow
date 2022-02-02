@@ -8,9 +8,7 @@
 open Flow_ast
 
 type 'loc binding = 'loc * string
-
 type 'loc ident = 'loc * string [@@deriving show]
-
 type 'loc source = 'loc * string [@@deriving show]
 
 let rec fold_bindings_of_pattern =
@@ -79,19 +77,12 @@ let negate_number_literal (value, raw) =
   (~-.value, raw)
 
 let loc_of_statement = fst
-
 let loc_of_expression = fst
-
 let loc_of_pattern = fst
-
 let loc_of_ident = fst
-
 let name_of_ident (_, { Identifier.name; comments = _ }) = name
-
 let source_of_ident (loc, { Identifier.name; comments = _ }) = (loc, name)
-
 let ident_of_source ?comments (loc, name) = (loc, { Identifier.name; comments })
-
 let mk_comments ?(leading = []) ?(trailing = []) a = { Syntax.leading; trailing; internal = a }
 
 let mk_comments_opt ?(leading = []) ?(trailing = []) () =

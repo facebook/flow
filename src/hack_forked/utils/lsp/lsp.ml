@@ -46,9 +46,7 @@ module DocumentUri = struct
   type t = DocumentUri of string
 
   let compare (DocumentUri x) (DocumentUri y) = String.compare x y
-
   let of_string (s : string) : t = DocumentUri s
-
   let to_string (DocumentUri s) : string = s
 end
 
@@ -310,7 +308,6 @@ module CodeActionKind = struct
   let quickfix = kind_of_string "quickfix"
 
   let refactor = kind_of_string "refactor"
-
   let refactor_extract = kind_of_string "refactor.extract"
 
   (** Document wide code actions *)
@@ -322,7 +319,6 @@ end
 (** Cancellation notification, method="$/cancelRequest" *)
 module CancelRequest = struct
   type params = cancelParams
-
   and cancelParams = { id: lsp_id  (** the request id to cancel *) }
 end
 
@@ -462,7 +458,6 @@ module Initialize = struct
   }
 
   and result = { server_capabilities: server_capabilities  (** "capabilities" over wire *) }
-
   and errorData = { retry: bool  (** should client retry the initialize request *) }
 
   and trace =
@@ -515,7 +510,6 @@ module Initialize = struct
 
   (* Flow LSP specific capabilities. *)
   and experimentalClientCapabilities = { snippetTextEdit: bool }
-
   and experimentalServerCapabilities = { server_snippetTextEdit: bool }
 
   (** What capabilities the server provides *)
@@ -587,14 +581,12 @@ end
 (** Code Lens resolve request, method="codeLens/resolve" *)
 module CodeLensResolve = struct
   type params = CodeLens.t
-
   and result = CodeLens.t
 end
 
 (** Hover request, method="textDocument/hover" *)
 module Hover = struct
   type params = TextDocumentPositionParams.t
-
   and result = hoverResult option
 
   and hoverResult = {
@@ -695,7 +687,6 @@ end
 (** Watched files changed notification, method="workspace/didChangeWatchedFiles" *)
 module DidChangeWatchedFiles = struct
   type registerOptions = { watchers: fileSystemWatcher list }
-
   and fileSystemWatcher = { globPattern: string }
 
   type fileChangeType =
@@ -715,7 +706,6 @@ end
 (** Goto Definition request, method="textDocument/definition" *)
 module Definition = struct
   type params = TextDocumentPositionParams.t
-
   and result = DefinitionLocation.t list
 
   (* wire: either a single one or an array *)
@@ -724,7 +714,6 @@ end
 (** Goto TypeDefinition request, method="textDocument/typeDefinition" *)
 module TypeDefinition = struct
   type params = TextDocumentPositionParams.t
-
   and result = DefinitionLocation.t list
 end
 
@@ -890,7 +879,6 @@ end
 (* Completion Item Resolve request, method="completionItem/resolve" *)
 module CompletionItemResolve = struct
   type params = Completion.completionItem
-
   and result = Completion.completionItem
 end
 
@@ -909,9 +897,7 @@ end
 (* Workspace Symbols request, method="workspace/symbol" *)
 module WorkspaceSymbol = struct
   type params = workspaceSymbolParams
-
   and result = SymbolInformation.t list
-
   and workspaceSymbolParams = { query: string (* a non-empty query string *) }
 end
 
@@ -938,7 +924,6 @@ end
 (* Find References request, method="textDocument/references" *)
 module FindReferences = struct
   type params = referenceParams
-
   and result = Location.t list
 
   and referenceParams = {
@@ -957,9 +942,7 @@ end
 (* Go To Implementation request, method="textDocument/implementation" *)
 module GoToImplementation = struct
   type params = implementationParams
-
   and result = Location.t list
-
   and implementationParams = { loc: TextDocumentPositionParams.t }
 end
 
@@ -1007,7 +990,6 @@ end
 (* Document Formatting request, method="textDocument/formatting" *)
 module DocumentFormatting = struct
   type params = documentFormattingParams
-
   and result = TextEdit.t list
 
   and documentFormattingParams = {
@@ -1027,7 +1009,6 @@ end
 (* Document Range Formatting request, method="textDocument/rangeFormatting" *)
 module DocumentRangeFormatting = struct
   type params = documentRangeFormattingParams
-
   and result = TextEdit.t list
 
   and documentRangeFormattingParams = {
@@ -1040,7 +1021,6 @@ end
 (* Document On Type Formatting req., method="textDocument/onTypeFormatting" *)
 module DocumentOnTypeFormatting = struct
   type params = documentOnTypeFormattingParams
-
   and result = TextEdit.t list
 
   and documentOnTypeFormattingParams = {
@@ -1123,7 +1103,6 @@ end
 (* Workspace Rename request, method="textDocument/rename" *)
 module Rename = struct
   type params = renameParams
-
   and result = WorkspaceEdit.t
 
   and renameParams = {
@@ -1136,16 +1115,13 @@ end
 (* Code Lens request, method="textDocument/codeLens" *)
 module DocumentCodeLens = struct
   type params = codelensParams
-
   and result = CodeLens.t list
-
   and codelensParams = { textDocument: TextDocumentIdentifier.t }
 end
 
 (* Execute a command, method="workspace/executeCommand" *)
 module ExecuteCommand = struct
   type params = executeCommandParams
-
   and result = unit
 
   and executeCommandParams = {
@@ -1181,7 +1157,6 @@ module ShowMessageRequest = struct
     | Absent
 
   and params = showMessageRequestParams
-
   and result = messageActionItem option
 
   and showMessageRequestParams = {
@@ -1196,7 +1171,6 @@ end
 (* ShowStatus request, method="window/showStatus" *)
 module ShowStatus = struct
   type params = showStatusParams
-
   and result = ShowMessageRequest.messageActionItem option
 
   and showStatusParams = {
@@ -1210,14 +1184,12 @@ end
 (* ConnectionStatus notification, method="telemetry/connectionStatus" *)
 module ConnectionStatus = struct
   type params = connectionStatusParams
-
   and connectionStatusParams = { isConnected: bool }
 end
 
 (* Module for dynamic view, method="workspace/toggleTypeCoverage" *)
 module ToggleTypeCoverage = struct
   type params = toggleTypeCoverageParams
-
   and toggleTypeCoverageParams = { toggle: bool }
 end
 
@@ -1367,7 +1339,6 @@ type lsp_message =
   | NotificationMessage of lsp_notification
 
 type 'a lsp_handler = 'a lsp_result_handler * 'a lsp_error_handler
-
 and 'a lsp_error_handler = Error.t * string -> 'a -> 'a
 
 and 'a lsp_result_handler =

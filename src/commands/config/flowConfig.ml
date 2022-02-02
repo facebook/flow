@@ -10,11 +10,8 @@ open Utils_js
 let ( >>= ) = Base.Result.( >>= )
 
 type line = int * string
-
 type section = line * line list
-
 type warning = int * string
-
 type error = int * string
 
 type file_watcher =
@@ -28,14 +25,11 @@ type lazy_mode =
   | Watchman_DEPRECATED  (** lazy_mode=watchman is deprecated, but implies file_watcher=Watchman *)
 
 let default_temp_dir = Filename.concat Sys_utils.temp_dir_name "flow"
-
 let map_add map (key, value) = SMap.add key value map
 
 module Opts = struct
   type raw_value = int * string
-
   type raw_values = raw_value list
-
   type raw_options = raw_values SMap.t
 
   type error_kind =
@@ -278,10 +272,10 @@ module Opts = struct
             SMap.add
               key
               ((line_num, value)
-               ::
-               (match SMap.find_opt key map with
-               | Some values -> values
-               | None -> [])
+              ::
+              (match SMap.find_opt key map with
+              | Some values -> values
+              | None -> [])
               )
               map
           in
@@ -367,7 +361,6 @@ module Opts = struct
       Error ("Expected a mapping of form: " ^ "'single-quoted-string' -> 'single-quoted-string'")
 
   let boolean = enum [("true", true); ("false", false)]
-
   let string = opt optparse_string
 
   let uint =
@@ -506,8 +499,7 @@ module Opts = struct
         ("dependency", Options.Dependency);
         ("lexical_with_dependency_validation", Options.LexicalWithDependencyValidation);
       ]
-      (fun opts v -> Ok { opts with statement_reorder_checking = v }
-    )
+      (fun opts v -> Ok { opts with statement_reorder_checking = v })
 
   let post_inference_implicit_instantiation_parser =
     boolean (fun opts v -> Ok { opts with run_post_inference_implicit_instantiation = v })
@@ -534,9 +526,9 @@ module Opts = struct
     boolean (fun opts v -> Ok { opts with facebook_module_interop = v })
 
   let file_watcher_parser =
-    enum [("none", NoFileWatcher); ("dfind", DFind); ("watchman", Watchman)] (fun opts v ->
-        Ok { opts with file_watcher = Some v }
-    )
+    enum
+      [("none", NoFileWatcher); ("dfind", DFind); ("watchman", Watchman)]
+      (fun opts v -> Ok { opts with file_watcher = Some v })
 
   let file_watcher_mergebase_with_parser =
     string (fun opts v -> Ok { opts with file_watcher_mergebase_with = Some v })
@@ -589,8 +581,7 @@ module Opts = struct
         ("watchman", Watchman_DEPRECATED);
         ("none", Non_lazy);
       ]
-      (fun opts v -> Ok { opts with lazy_mode = Some v }
-    )
+      (fun opts v -> Ok { opts with lazy_mode = Some v })
 
   let merge_timeout_parser =
     uint (fun opts v ->
@@ -604,9 +595,9 @@ module Opts = struct
     )
 
   let module_system_parser =
-    enum [("node", Options.Node); ("haste", Options.Haste)] (fun opts v ->
-        Ok { opts with module_system = v }
-    )
+    enum
+      [("node", Options.Node); ("haste", Options.Haste)]
+      (fun opts v -> Ok { opts with module_system = v })
 
   let name_mapper_parser =
     mapping
@@ -662,8 +653,7 @@ module Opts = struct
   let react_runtime_parser =
     enum
       [("classic", Options.ReactRuntimeClassic); ("automatic", Options.ReactRuntimeAutomatic)]
-      (fun opts react_runtime -> Ok { opts with react_runtime }
-    )
+      (fun opts react_runtime -> Ok { opts with react_runtime })
 
   let react_server_component_exts_parser =
     string
@@ -703,8 +693,7 @@ module Opts = struct
       [
         ("none", Options.Dummy_fetcher); ("local", Options.Local_fetcher); ("fb", Options.Fb_fetcher);
       ]
-      (fun opts saved_state_fetcher -> Ok { opts with saved_state_fetcher }
-    )
+      (fun opts saved_state_fetcher -> Ok { opts with saved_state_fetcher })
 
   let shm_hash_table_pow_parser =
     uint (fun opts shm_hash_table_pow -> Ok { opts with shm_hash_table_pow })
@@ -732,8 +721,7 @@ module Opts = struct
   let trust_mode_parser =
     enum
       [("check", Options.CheckTrust); ("silent", Options.SilentTrust); ("none", Options.NoTrust)]
-      (fun opts trust_mode -> Ok { opts with trust_mode }
-    )
+      (fun opts trust_mode -> Ok { opts with trust_mode })
 
   let env_mode_parser =
     string (fun opts s ->
@@ -971,15 +959,10 @@ end = struct
   open Printf
 
   let section_header o section = fprintf o "[%s]\n" section
-
   let ignores o = Base.List.iter ~f:(fprintf o "%s\n")
-
   let untyped o = Base.List.iter ~f:(fprintf o "%s\n")
-
   let declarations o = Base.List.iter ~f:(fprintf o "%s\n")
-
   let includes o = Base.List.iter ~f:(fprintf o "%s\n")
-
   let libs o = Base.List.iter ~f:(fprintf o "%s\n")
 
   let options =
@@ -1336,8 +1319,7 @@ let is_not_comment =
       (* Line starts with # *)
       Str.regexp_string ";";
       (* Line starts with ; *)
-      Str.regexp_string "\240\159\146\169";
-      (* Line starts with poop emoji *)
+      Str.regexp_string "\240\159\146\169" (* Line starts with poop emoji *);
     ]
   in
   fun (_, line) ->
@@ -1433,188 +1415,102 @@ let libs config = config.libs
 
 (* options *)
 let abstract_locations c = c.options.Opts.abstract_locations
-
 let all c = c.options.Opts.all
-
 let autoimports c = c.options.Opts.autoimports
-
 let automatic_require_default c = c.options.Opts.automatic_require_default
-
 let babel_loose_array_spread c = c.options.Opts.babel_loose_array_spread
-
 let cycle_errors c = c.options.Opts.cycle_errors
-
 let direct_dependent_files_fix c = c.options.Opts.direct_dependent_files_fix
-
 let disable_live_non_parse_errors c = c.options.Opts.disable_live_non_parse_errors
-
 let emoji c = c.options.Opts.emoji
-
 let enable_const_params c = c.options.Opts.enable_const_params
-
 let enforce_local_inference_annotations c = c.options.Opts.enforce_local_inference_annotations
-
 let enforce_strict_call_arity c = c.options.Opts.enforce_strict_call_arity
-
 let enforce_this_annotations c = c.options.Opts.enforce_this_annotations
-
 let enums c = c.options.Opts.enums
-
 let env_mode c = c.options.Opts.env_mode
-
 let env_mode_constrain_write_dirs c = c.options.Opts.env_mode_constrain_write_dirs
-
 let exact_by_default c = c.options.Opts.exact_by_default
-
 let exact_empty_objects c = c.options.Opts.exact_empty_objects
-
 let facebook_fbs c = c.options.Opts.facebook_fbs
-
 let facebook_fbt c = c.options.Opts.facebook_fbt
-
 let facebook_module_interop c = c.options.Opts.facebook_module_interop
-
 let file_watcher c = c.options.Opts.file_watcher
-
 let file_watcher_mergebase_with c = c.options.Opts.file_watcher_mergebase_with
-
 let file_watcher_timeout c = c.options.Opts.file_watcher_timeout
-
 let format_bracket_spacing c = c.options.Opts.format_bracket_spacing
-
 let format_single_quotes c = c.options.Opts.format_single_quotes
-
 let gc_worker_custom_major_ratio c = c.options.Opts.gc_worker_custom_major_ratio
-
 let gc_worker_custom_minor_max_size c = c.options.Opts.gc_worker_custom_minor_max_size
-
 let gc_worker_custom_minor_ratio c = c.options.Opts.gc_worker_custom_minor_ratio
-
 let gc_worker_major_heap_increment c = c.options.Opts.gc_worker_major_heap_increment
-
 let gc_worker_minor_heap_size c = c.options.Opts.gc_worker_minor_heap_size
-
 let gc_worker_space_overhead c = c.options.Opts.gc_worker_space_overhead
-
 let gc_worker_window_size c = c.options.Opts.gc_worker_window_size
-
 let haste_module_ref_prefix c = c.options.Opts.haste_module_ref_prefix
-
 let haste_name_reducers c = c.options.Opts.haste_name_reducers
-
 let haste_paths_excludes c = c.options.Opts.haste_paths_excludes
-
 let haste_paths_includes c = c.options.Opts.haste_paths_includes
-
 let haste_use_name_reducers c = c.options.Opts.haste_use_name_reducers
-
 let ignore_non_literal_requires c = c.options.Opts.ignore_non_literal_requires
-
 let include_warnings c = c.options.Opts.include_warnings
-
 let lazy_mode c = c.options.Opts.lazy_mode
 
 (* global defaults for lint severities and strict mode *)
 let lint_severities c = c.lint_severities
-
 let local_inference_annotation_dirs c = c.options.Opts.local_inference_annotation_dirs
-
 let log_file c = c.options.Opts.log_file
-
 let log_saving c = c.options.Opts.log_saving
-
 let max_files_checked_per_worker c = c.options.Opts.max_files_checked_per_worker
-
 let max_header_tokens c = c.options.Opts.max_header_tokens
-
 let max_literal_length c = c.options.Opts.max_literal_length
-
 let max_rss_bytes_for_check_per_worker c = c.options.Opts.max_rss_bytes_for_check_per_worker
-
 let max_seconds_for_check_per_worker c = c.options.Opts.max_seconds_for_check_per_worker
-
 let max_workers c = c.options.Opts.max_workers
-
 let merge_timeout c = c.options.Opts.merge_timeout
-
 let module_file_exts c = c.options.Opts.module_file_exts
-
 let module_name_mappers c = c.options.Opts.module_name_mappers
-
 let module_resource_exts c = c.options.Opts.module_resource_exts
-
 let module_system c = c.options.Opts.module_system
-
 let modules_are_use_strict c = c.options.Opts.modules_are_use_strict
-
 let munge_underscores c = c.options.Opts.munge_underscores
-
 let no_flowlib c = c.options.Opts.no_flowlib
-
 let node_main_fields c = c.options.Opts.node_main_fields
-
 let node_resolver_allow_root_relative c = c.options.Opts.node_resolver_allow_root_relative
-
 let node_resolver_dirnames c = c.options.Opts.node_resolver_dirnames
-
 let node_resolver_root_relative_dirnames c = c.options.Opts.node_resolver_root_relative_dirnames
-
 let react_runtime c = c.options.Opts.react_runtime
-
 let react_server_component_exts c = c.options.Opts.react_server_component_exts
-
 let recursion_limit c = c.options.Opts.recursion_limit
-
 let refactor c = c.options.Opts.refactor
-
 let relay_integration c = c.options.Opts.relay_integration
-
 let relay_integration_excludes c = c.options.Opts.relay_integration_excludes
-
 let relay_integration_module_prefix c = c.options.Opts.relay_integration_module_prefix
 
 let relay_integration_module_prefix_includes c =
   c.options.Opts.relay_integration_module_prefix_includes
 
 let required_version c = c.version
-
 let root_name c = c.options.Opts.root_name
 
 let run_post_inference_implicit_instantiation c =
   c.options.Opts.run_post_inference_implicit_instantiation
 
 let saved_state_fetcher c = c.options.Opts.saved_state_fetcher
-
 let saved_state_load_sighashes c = c.options.Opts.saved_state_load_sighashes
-
 let shm_hash_table_pow c = c.options.Opts.shm_hash_table_pow
-
 let shm_heap_size c = c.options.Opts.shm_heap_size
-
 let shm_log_level c = c.options.Opts.shm_log_level
-
 let statement_reorder_checking c = c.options.Opts.statement_reorder_checking
-
 let strict_es6_import_export c = c.options.Opts.strict_es6_import_export
-
 let strict_es6_import_export_excludes c = c.options.Opts.strict_es6_import_export_excludes
-
 let strict_mode c = c.strict_mode
-
 let suppress_types c = c.options.Opts.suppress_types
-
 let temp_dir c = c.options.Opts.temp_dir
-
 let traces c = c.options.Opts.traces
-
 let trust_mode c = c.options.Opts.trust_mode
-
 let type_asserts c = c.options.Opts.type_asserts
-
 let wait_for_recheck c = c.options.Opts.wait_for_recheck
-
 let watchman_defer_states c = c.options.Opts.watchman_defer_states
-
 let watchman_survive_restarts c = c.options.Opts.watchman_survive_restarts
-
 let watchman_sync_timeout c = c.options.Opts.watchman_sync_timeout

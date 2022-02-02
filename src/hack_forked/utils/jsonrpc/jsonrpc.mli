@@ -33,14 +33,12 @@ type message = {
 }
 
 val parse_message : json:Hh_json.json -> timestamp:float -> message
-
 val message_to_short_string : message -> string
 
 type queue
 
 (* must call Daemon.entry_point at start of your main *)
 val make_queue : unit -> queue
-
 val get_read_fd : queue -> Unix.file_descr (* can be used for 'select' *)
 
 val has_message : queue -> bool
@@ -61,11 +59,9 @@ val respond : writer -> ?powered_by:string -> message -> Hh_json.json -> unit
 
 (* notify/request are for initiating JsonRPC messages *)
 val notify : writer -> ?powered_by:string -> string -> Hh_json.json -> unit
-
 val get_next_request_id : unit -> int
 
 (* For logging purposes, you can get a copy of which JsonRPC message was last    *)
 (* sent by this module - be it a response, notification, request or cancellation *)
 val last_sent : unit -> Hh_json.json option
-
 val clear_last_sent : unit -> unit

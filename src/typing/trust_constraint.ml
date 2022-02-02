@@ -29,11 +29,8 @@ and bounds = {
 }
 
 let get_constraints { constraints; _ } = constraints
-
 let get_bounds { lowervars; uppervars; _ } = (lowervars, uppervars)
-
 let get_trust { trust; _ } = trust
-
 let resolved_trust_constraint _ trust = TrustResolved trust
 
 let new_unresolved_root initial =
@@ -45,9 +42,7 @@ let new_unresolved_root initial =
     }
 
 let new_resolved_root trust = TrustRoot { rank = 0; constraints = TrustResolved trust }
-
 let new_goto id = TrustGoto id
-
 let set_trust bounds trust = bounds.trust <- trust
 
 let extend_uppervars bounds new_uppervars =

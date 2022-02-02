@@ -6,23 +6,14 @@
  *)
 
 type workload = ServerEnv.env -> ServerEnv.env Lwt.t
-
 type parallelizable_workload = ServerEnv.env -> unit Lwt.t
-
 type t
 
 val create : unit -> t
-
 val push : name:string -> workload -> t -> unit
-
 val push_parallelizable : name:string -> parallelizable_workload -> t -> unit
-
 val requeue_parallelizable : name:string -> parallelizable_workload -> t -> unit
-
 val pop : t -> workload option
-
 val pop_parallelizable : t -> parallelizable_workload option
-
 val wait_for_workload : t -> unit Lwt.t
-
 val wait_for_parallelizable_workload : t -> unit Lwt.t

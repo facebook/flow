@@ -73,25 +73,16 @@ let string_of_event_kind = function
   | Unmount -> "UNMOUNT"
 
 type watch = int
-
 type event = watch * event_kind list * int32 * string option
 
 external create : unit -> Unix.file_descr = "caml_inotify_init"
-
-external add_watch : Unix.file_descr -> string -> selector list -> watch
-  = "caml_inotify_add_watch"
-
+external add_watch : Unix.file_descr -> string -> selector list -> watch = "caml_inotify_add_watch"
 external rm_watch : Unix.file_descr -> watch -> unit = "caml_inotify_rm_watch"
-
-external convert : Bytes.t -> watch * event_kind list * int32 * int
-  = "caml_inotify_convert"
-
+external convert : Bytes.t -> watch * event_kind list * int32 * int = "caml_inotify_convert"
 external struct_size : unit -> int = "caml_inotify_struct_size"
-
 external name_max : unit -> int = "caml_inotify_name_max"
 
 let int_of_watch watch = watch
-
 let watch_of_int watch = watch
 
 let string_of_event (watch, events, cookie, name) =
@@ -119,16 +110,12 @@ let read fd =
   let buf_size = event_size + name_max () + 1 in
   let buf = Bytes.create buf_size in
   let bytes_read = Unix.read fd buf 0 buf_size in
-  let read_c_string pos =
-    Bytes.sub_string buf pos (Bytes.index_from buf pos '\x00' - pos)
-  in
+  let read_c_string pos = Bytes.sub_string buf pos (Bytes.index_from buf pos '\x00' - pos) in
   let rec read_one pos rest =
     if bytes_read < pos + event_size then
       rest
     else
-      let (watch, mask, cookie, len) =
-        convert (Bytes.sub buf pos event_size)
-      in
+      let (watch, mask, cookie, len) = convert (Bytes.sub buf pos event_size) in
       if bytes_read < pos + event_size + len then
         rest
       else

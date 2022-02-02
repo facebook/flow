@@ -9,7 +9,6 @@ module type NODE = sig
   type t
 
   val compare : t -> t -> int
-
   val to_string : t -> string
 end
 
@@ -22,6 +21,5 @@ module Make
      a list only depend on keys in a subsequent list
   *)
   val topsort : roots:NSet.t -> NSet.t NMap.t -> N.t Nel.t list
-
   val log : N.t Nel.t list -> unit
 end

@@ -33,57 +33,32 @@
 open Type_sig_collections
 
 type buf = (char, Bigarray.int8_unsigned_elt, Bigarray.c_layout) Bigarray.Array1.t
-
 type 'k pos = int
-
 type 'k tbl
-
 type 'k opt
-
 type 'k hashed
-
 type 'k serialized
-
 type str
-
 type dyn_module
-
 type packed
-
 type local_def
-
 type remote_ref
-
 type pattern
-
 type type_export
-
 type cjs_module_info
-
 type cjs_module
-
 type es_export
-
 type es_module_info
-
 type es_module
 
 external ( .!() ) : 'a array -> int -> 'a = "%array_unsafe_get"
-
 external buf_set32 : buf -> int -> int32 -> unit = "%caml_bigstring_set32"
-
 external buf_set64 : buf -> int -> int64 -> unit = "%caml_bigstring_set64"
-
 external buf_write_string : buf -> int -> int -> string -> unit = "type_sig_bin_write_string"
-
 external buf_get32 : buf -> int -> int32 = "%caml_bigstring_get32"
-
 external buf_get64 : buf -> int -> int64 = "%caml_bigstring_get64"
-
 external buf_read_string : buf -> int -> int -> string = "type_sig_bin_read_string"
-
 external buf_read_serialized : buf -> int -> 'a = "type_sig_bin_read_serialized"
-
 external hash_serialized : buf -> int -> int64 = "type_sig_bin_hash_serialized"
 
 let serialize x = Marshal.to_string x []
@@ -274,27 +249,16 @@ let write type_sig =
   (size, write)
 
 let module_kind buf = Int32.to_int (buf_get32 buf 0)
-
 let module_refs buf = Int32.to_int (buf_get32 buf 4)
-
 let local_defs buf = Int32.to_int (buf_get32 buf 8)
-
 let remote_refs buf = Int32.to_int (buf_get32 buf 12)
-
 let pattern_defs buf = Int32.to_int (buf_get32 buf 16)
-
 let patterns buf = Int32.to_int (buf_get32 buf 20)
-
 let cjs_module_type_exports buf pos = Int32.to_int (buf_get32 buf pos)
-
 let cjs_module_exports buf pos = Int32.to_int (buf_get32 buf (pos + 4))
-
 let cjs_module_info buf pos = Int32.to_int (buf_get32 buf (pos + 8))
-
 let es_module_type_exports buf pos = Int32.to_int (buf_get32 buf pos)
-
 let es_module_exports buf pos = Int32.to_int (buf_get32 buf (pos + 4))
-
 let es_module_info buf pos = Int32.to_int (buf_get32 buf (pos + 8))
 
 let read_str buf pos =
@@ -343,23 +307,14 @@ let read_opt f buf pos =
     Some (f buf pos)
 
 let read_hashed f buf pos = f buf (pos + 8)
-
 let read_hash = buf_get64
-
 let read_type_export : buf -> int -> Locs.index Type_sig_pack.type_export = buf_read_serialized
-
 let read_packed : buf -> int -> Locs.index Type_sig_pack.packed = buf_read_serialized
-
 let read_cjs_info : buf -> int -> Locs.index Type_sig_pack.cjs_module_info = buf_read_serialized
-
 let read_es_export : buf -> int -> Locs.index Type_sig_pack.export = buf_read_serialized
-
 let read_es_info : buf -> int -> Locs.index Type_sig_pack.es_module_info = buf_read_serialized
-
 let read_local_def : buf -> int -> Locs.index Type_sig_pack.packed_def = buf_read_serialized
-
 let read_remote_ref : buf -> int -> Locs.index Type_sig_pack.remote_ref = buf_read_serialized
-
 let read_pattern : buf -> int -> Locs.index Type_sig_pack.pattern = buf_read_serialized
 
 let read_cjs_module buf pos =

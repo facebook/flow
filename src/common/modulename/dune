@@ -1,9 +1,9 @@
 (library
-  (name flow_common_modulename)
-  (wrapped false)
-  (libraries
-    flow_parser
-    collections ; hack
+ (name flow_common_modulename)
+ (wrapped false)
+ (libraries
+  flow_parser
+  collections ; hack
   )
-  (preprocess (pps ppx_deriving.std))
-)
+ (preprocess
+  (pps ppx_deriving.std)))

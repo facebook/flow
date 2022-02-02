@@ -9,11 +9,8 @@ module Ast = Flow_ast
 
 module type S = sig
   type 'T ast = (ALoc.t, 'T) Ast.Function.Params.t
-
   type 'T param_ast = (ALoc.t, 'T) Ast.Function.Param.t
-
   type 'T rest_ast = (ALoc.t, 'T) Ast.Function.RestParam.t
-
   type 'T this_ast = (ALoc.t, 'T) Ast.Function.ThisParam.t
 
   type pattern =
@@ -56,17 +53,11 @@ module type S = sig
       }
 
   val param_type : param -> string option * Type.t
-
   val rest_type : rest -> string option * ALoc.t * Type.t
-
   val this_type : this_param -> Type.t
-
   val subst_param : Context.t -> Type.t SMap.t -> param -> param
-
   val subst_rest : Context.t -> Type.t SMap.t -> rest -> rest
-
   val subst_this : Context.t -> Type.t SMap.t -> this_param -> this_param
-
   val bind : Context.t -> string -> Type.annotated_or_inferred -> ALoc.t -> unit
 
   val destruct :
@@ -85,8 +76,6 @@ module type S = sig
     (ALoc.t, ALoc.t * Type.t) Ast.Expression.t option
 
   val eval_param : Context.t -> param -> ALoc.t * (ALoc.t, ALoc.t * Type.t) Ast.Function.Param.t'
-
   val eval_rest : Context.t -> rest -> ALoc.t * (ALoc.t, ALoc.t * Type.t) Ast.Function.RestParam.t'
-
   val eval_this : 'a -> this_param -> ALoc.t * (ALoc.t, ALoc.t * Type.t) Ast.Function.ThisParam.t'
 end

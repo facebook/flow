@@ -30,9 +30,7 @@ type error_kind =
 type error = error_kind * string
 
 val error_to_string : error -> string
-
 val from_type : options:options -> genv:genv -> Type.t -> (Ty.elt, error) result
-
 val from_scheme : options:options -> genv:genv -> Type.TypeScheme.t -> (Ty.elt, error) result
 
 (* The following differ from mapping `from_type` on each input as it folds over

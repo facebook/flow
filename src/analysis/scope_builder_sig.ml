@@ -7,7 +7,6 @@
 
 module type S = sig
   module L : Loc_sig.S
-
   module Api : Scope_api_sig.S with module L = L
 
   module Acc : sig
@@ -29,7 +28,6 @@ module type S = sig
     -> with_types:bool
     -> object
          inherit [Acc.t, L.t] Flow_ast_visitor.visitor
-
          method with_bindings : 'a. ?lexical:bool -> L.t -> L.t Bindings.t -> ('a -> 'a) -> 'a -> 'a
 
          method private scoped_for_statement :

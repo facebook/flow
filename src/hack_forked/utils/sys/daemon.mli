@@ -8,34 +8,22 @@
 (** Type-safe versions of the channels in Pervasives/Stdlib. *)
 
 type 'a in_channel
-
 type 'a out_channel
-
 type ('in_, 'out) channel_pair = 'in_ in_channel * 'out out_channel
 
 val to_channel : 'a out_channel -> ?flags:Marshal.extern_flags list -> ?flush:bool -> 'a -> unit
-
 val from_channel : ?timeout:Timeout.t -> 'a in_channel -> 'a
-
 val flush : 'a out_channel -> unit
 
 (* This breaks the type safety, but is necessary in order to allow select() *)
 val descr_of_in_channel : 'a in_channel -> Unix.file_descr
-
 val descr_of_out_channel : 'a out_channel -> Unix.file_descr
-
 val cast_in : 'a in_channel -> Timeout.in_channel
-
 val cast_out : 'a out_channel -> Stdlib.out_channel
-
 val close_out : 'a out_channel -> unit
-
 val output_string : 'a out_channel -> string -> unit
-
 val close_in : 'a in_channel -> unit
-
 val input_char : 'a in_channel -> char
-
 val input_value : 'a in_channel -> 'b
 
 (** Spawning new process *)
@@ -51,7 +39,6 @@ val input_value : 'a in_channel -> 'b
 
    All required data must be passed through the typed channels.
    associated to the spawned process.
-
 *)
 
 (* Alternate entry points *)
@@ -74,9 +61,7 @@ type ('in_, 'out) handle = {
 
 (* for unit tests *)
 val devnull : unit -> ('a, 'b) handle
-
 val fd_of_path : string -> Unix.file_descr
-
 val null_fd : unit -> Unix.file_descr
 
 (* Fork and run a function that communicates via the typed channels *)

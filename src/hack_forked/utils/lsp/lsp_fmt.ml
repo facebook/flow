@@ -88,7 +88,6 @@ let parse_location (j : json option) : Location.t =
       uri = Jget.string_exn j "uri" |> DocumentUri.of_string;
       range = Jget.obj_exn j "range" |> parse_range_exn;
     }
-  
 
 let parse_range_opt (json : json option) : range option =
   if json = None then
@@ -105,7 +104,6 @@ let parse_versionedTextDocumentIdentifier (json : json option) : VersionedTextDo
       uri = Jget.string_exn json "uri" |> DocumentUri.of_string;
       version = Jget.int_d json "version" 0;
     }
-  
 
 let parse_textDocumentItem (json : json option) : TextDocumentItem.t =
   TextDocumentItem.
@@ -115,7 +113,6 @@ let parse_textDocumentItem (json : json option) : TextDocumentItem.t =
       version = Jget.int_d json "version" 0;
       text = Jget.string_exn json "text";
     }
-  
 
 let print_textDocumentItem (item : TextDocumentItem.t) : json =
   TextDocumentItem.(
@@ -140,7 +137,6 @@ let parse_textDocumentPositionParams (params : json option) : TextDocumentPositi
       textDocument = Jget.obj_exn params "textDocument" |> parse_textDocumentIdentifier;
       position = Jget.obj_exn params "position" |> parse_position;
     }
-  
 
 let parse_textEdit (params : json option) : TextEdit.t option =
   match params with
@@ -225,7 +221,6 @@ let parse_codeLens (json : json option) : CodeLens.t =
       command = Jget.obj_exn json "command" |> parse_command;
       data = Jget.obj_exn json "data";
     }
-  
 
 let print_codeLens ~key (codeLens : CodeLens.t) : json =
   CodeLens.(
@@ -330,7 +325,6 @@ let parse_didSave (params : json option) : DidSave.params =
       textDocument = Jget.obj_exn params "textDocument" |> parse_textDocumentIdentifier;
       text = Jget.string_opt params "text";
     }
-  
 
 (************************************************************************)
 (* textDocument/didChange notification                                  *)
@@ -444,7 +438,6 @@ end
 (************************************************************************)
 
 let parse_codeLensResolve (params : json option) : CodeLensResolve.params = parse_codeLens params
-
 let print_codeLensResolve ~key (r : CodeLensResolve.result) : json = print_codeLens ~key r
 
 (************************************************************************)
@@ -458,7 +451,6 @@ let parse_documentRename (params : json option) : Rename.params =
       position = Jget.obj_exn params "position" |> parse_position;
       newName = Jget.string_exn params "newName";
     }
-  
 
 let print_documentRename : Rename.result -> json = print_workspaceEdit
 
@@ -469,7 +461,6 @@ let print_documentRename : Rename.result -> json = print_workspaceEdit
 let parse_documentCodeLens (params : json option) : DocumentCodeLens.params =
   DocumentCodeLens.
     { textDocument = Jget.obj_exn params "textDocument" |> parse_textDocumentIdentifier }
-  
 
 let print_documentCodeLens ~key (r : DocumentCodeLens.result) : json =
   JSON_Array (Base.List.map r ~f:(print_codeLens ~key))
@@ -486,7 +477,6 @@ let parse_executeCommand (params : json option) : ExecuteCommand.params =
         Jget.array_opt params "arguments"
         |> Base.Option.map ~f:(Base.List.map ~f:(fun j -> Base.Option.value_exn j));
     }
-  
 
 let print_executeCommand (() : ExecuteCommand.result) : json = JSON_Null
 
@@ -968,7 +958,6 @@ let print_workspaceSymbol (r : WorkspaceSymbol.result) : json =
 let parse_documentSymbol (params : json option) : DocumentSymbol.params =
   DocumentSymbol.
     { textDocument = Jget.obj_exn params "textDocument" |> parse_textDocumentIdentifier }
-  
 
 module DocumentSymbolFmt = struct
   open DocumentSymbol
@@ -1459,8 +1448,7 @@ module DidChangeWatchedFilesFmt = struct
                  JSON_Object
                    [
                      ("globPattern", JSON_String watcher.globPattern);
-                     ("kind", int_ 7);
-                     (* all events: create, change, and delete *)
+                     ("kind", int_ 7) (* all events: create, change, and delete *);
                    ]
              )
             )
@@ -1530,7 +1518,8 @@ let print_error ?(include_error_stack_trace = true) (e : Error.t) (stack : strin
   in
   let entries =
     ("code", int_ (Error.code_to_enum e.Error.code))
-    :: ("message", string_ e.Error.message) :: entries
+    :: ("message", string_ e.Error.message)
+    :: entries
   in
   JSON_Object entries
 

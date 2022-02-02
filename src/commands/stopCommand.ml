@@ -58,7 +58,6 @@ let main base_flags temp_dir quiet root () =
         },
         { client_type = Ephemeral }
       )
-    
   in
 
   CommandConnectSimple.(

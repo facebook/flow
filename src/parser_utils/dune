@@ -1,7 +1,8 @@
 (library
  (name flow_parser_utils)
  (wrapped false)
- (modules (:standard \ flow_ast_visitor file_sig file_sig_sig))
+ (modules
+  (:standard \ flow_ast_visitor file_sig file_sig_sig))
  (libraries
   cycle_hash
   dtoa
@@ -22,16 +23,10 @@
  (name flow_ast_visitor)
  (wrapped false)
  (modules flow_ast_visitor)
- (libraries
-  flow_parser
-  ))
+ (libraries flow_parser))
 
 (library
  (name flow_file_sig)
  (wrapped false)
  (modules file_sig file_sig_sig)
- (libraries
-  flow_ast_visitor
-  flow_parser_utils
-  flow_analysis
-  ))
+ (libraries flow_ast_visitor flow_parser_utils flow_analysis))

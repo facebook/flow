@@ -23,13 +23,8 @@ type t =
 
 (* For debugging purposes *)
 val string_of_extracted_type : (Type.t, Type.t) generic_t -> string
-
 val to_command_result : t -> ((ALoc.t option * Type.t) SMap.t, string) result
-
 val extract : ?exclude_proto_members:bool -> Context.t -> Type.t -> t
-
 val extract_type : Context.t -> Type.t -> (Type.t, Type.t) generic_t
-
 val extract_members : ?exclude_proto_members:bool -> Context.t -> (Type.t, Type.t) generic_t -> t
-
 val resolve_type : Context.t -> Type.t -> Type.t

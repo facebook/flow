@@ -25,17 +25,11 @@ module Make
 
   module Func_type_params = Func_params.Make (struct
     type 'T ast = (ALoc.t, 'T) Ast.Type.Function.Params.t
-
     type 'T param_ast = (ALoc.t, 'T) Ast.Type.Function.Param.t
-
     type 'T rest_ast = (ALoc.t, 'T) Ast.Type.Function.RestParam.t
-
     type 'T this_ast = (ALoc.t, ALoc.t * Type.t) Ast.Type.Function.ThisParam.t
-
     type param = Type.t * (ALoc.t * Type.t) param_ast
-
     type rest = Type.t * (ALoc.t * Type.t) rest_ast
-
     type this_param = Type.t * (ALoc.t * Type.t) this_ast
 
     let id_name (_, { Ast.Identifier.name; _ }) = name
@@ -70,9 +64,7 @@ module Make
       (t, tast)
 
     let eval_param _cx (_, tast) = tast
-
     let eval_rest _cx (_, tast) = tast
-
     let eval_this _cx (_, tast) = tast
   end)
 
@@ -1336,7 +1328,6 @@ module Make
       }
 
       let empty = { dict = None; pmap = NameUtils.Map.empty; tail = []; proto = None; calls = [] }
-
       let empty_slice = Slice { dict = None; pmap = NameUtils.Map.empty }
 
       let head_slice { dict; pmap; _ } =
@@ -1991,7 +1982,6 @@ module Make
                               value = Object.Property.Init ((func_loc, ft), Function func_ast);
                             }
                           )
-                        
                       )
                     | (true, Property.Identifier _, _) ->
                       Flow.add_output cx Error_message.(EInternal (loc, MethodNotAFunction));
@@ -2023,7 +2013,6 @@ module Make
                               value = Object.Property.Init value_ast;
                             }
                           )
-                        
                       )
                     (* unsafe getter property *)
                     | ( _,
@@ -2045,7 +2034,6 @@ module Make
                               value = Object.Property.Get (get_loc, func_ast);
                             }
                           )
-                        
                       )
                     (* unsafe setter property *)
                     | ( _,
@@ -2074,7 +2062,6 @@ module Make
                               value = Object.Property.Set (set_loc, func_ast);
                             }
                           )
-                        
                       )
                   )
                 in

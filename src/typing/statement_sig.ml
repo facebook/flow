@@ -9,13 +9,9 @@ module Ast = Flow_ast
 
 module type S = sig
   module Env : Env_sig.S
-
   module Abnormal : Abnormal_sig.S with module Env := Env
-
   module Import_export : module type of Import_export.Make (Env)
-
   module Toplevels : module type of Toplevels.DependencyToplevels (Env) (Abnormal)
-
   module Anno : Type_annotation_sig.S with module Env := Env
 
   val expression :
@@ -29,6 +25,5 @@ module type S = sig
     Context.t -> (ALoc.t, ALoc.t) Ast.Statement.t -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t
 
   val toplevel_decls : Context.t -> (ALoc.t, ALoc.t) Ast.Statement.t list -> unit
-
   val for_of_elemt : Context.t -> Type.t -> Reason.reason -> bool -> Type.t
 end

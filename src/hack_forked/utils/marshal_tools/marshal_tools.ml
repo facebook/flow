@@ -25,17 +25,11 @@
  *)
 
 exception Invalid_Int_Size_Exception
-
 exception Payload_Size_Too_Large_Exception
-
 exception Malformed_Preamble_Exception
-
 exception Writing_Preamble_Exception
-
 exception Writing_Payload_Exception
-
 exception Reading_Preamble_Exception
-
 exception Reading_Payload_Exception
 
 (* We want to marshal exceptions (or at least their message+stacktrace) over  *)
@@ -65,19 +59,13 @@ let error_to_verbose_string (err : error) : string =
 
 module type WRITER_READER = sig
   type 'a result
-
   type fd
 
   val return : 'a -> 'a result
-
   val fail : exn -> 'a result
-
   val ( >>= ) : 'a result -> ('a -> 'b result) -> 'b result
-
   val write : ?timeout:Timeout.t -> fd -> buffer:bytes -> offset:int -> size:int -> int result
-
   val read : ?timeout:Timeout.t -> fd -> buffer:bytes -> offset:int -> size:int -> int result
-
   val log : string -> unit
 end
 
@@ -86,13 +74,10 @@ module type REGULAR_WRITER_READER =
 
 module RegularWriterReader : REGULAR_WRITER_READER = struct
   type 'a result = 'a
-
   type fd = Unix.file_descr
 
   let return x = x
-
   let fail exn = raise exn
-
   let ( >>= ) a f = f a
 
   let rec write ?timeout fd ~buffer ~offset ~size =
@@ -142,12 +127,10 @@ module MarshalToolsFunctor (WriterReader : WRITER_READER) : sig
   val from_fd_with_preamble : ?timeout:Timeout.t -> WriterReader.fd -> 'a WriterReader.result
 end = struct
   let ( >>= ) = WriterReader.( >>= )
-
   let preamble_start_sentinel = '\142'
 
   (* Size in bytes. *)
   let preamble_core_size = 4
-
   let expected_preamble_size = preamble_core_size + 1
 
   (* Payload size in bytes = 2^31 - 1. *)

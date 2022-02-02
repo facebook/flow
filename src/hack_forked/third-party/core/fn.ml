@@ -11,7 +11,8 @@ let forever f =
     f ();
     forever ()
   in
-  (try forever () with e -> e)
+  try forever () with
+  | e -> e
 
 (* The typical use case for these functions is to pass in functional arguments and get
    functions as a result. For this reason, we tell the compiler where to insert

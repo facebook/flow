@@ -16,7 +16,6 @@ module ErrorStats = struct
   type t = { num_total_errors: int }
 
   let empty = { num_total_errors = 0 }
-
   let combine c1 c2 = { num_total_errors = c1.num_total_errors + c2.num_total_errors }
 
   let serialize s =

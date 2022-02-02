@@ -1,11 +1,10 @@
 (library
-  (name flow_lsp)
-  (wrapped false)
-  (libraries
-    flow_commands_utils
-    flow_common_lsp_conversions
-    flow_exit_status
-    logging_common_lwt
-  )
-  (preprocess (pps lwt_ppx))
-)
+ (name flow_lsp)
+ (wrapped false)
+ (libraries
+  flow_commands_utils
+  flow_common_lsp_conversions
+  flow_exit_status
+  logging_common_lwt)
+ (preprocess
+  (pps lwt_ppx)))

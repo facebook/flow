@@ -1,24 +1,23 @@
 (library
-  (name flow_monitor)
-  (wrapped false)
-  (libraries
-    dfind_lwt
-    flow_common
-    flow_common_lwt
-    flow_exit_status
-    logging_common_lwt
-    flow_logging_utils
-    flow_monitor_connections
-    flow_monitor_logger
-    flow_monitor_utils
-    flow_server
-    flow_server_files
-    flow_server_watchman_expression_terms
-    flow_vcs
-    lwt.unix
-    semver
-    socket
-    watchman
-  )
-  (preprocess (pps lwt_ppx))
-)
+ (name flow_monitor)
+ (wrapped false)
+ (libraries
+  dfind_lwt
+  flow_common
+  flow_common_lwt
+  flow_exit_status
+  logging_common_lwt
+  flow_logging_utils
+  flow_monitor_connections
+  flow_monitor_logger
+  flow_monitor_utils
+  flow_server
+  flow_server_files
+  flow_server_watchman_expression_terms
+  flow_vcs
+  lwt.unix
+  semver
+  socket
+  watchman)
+ (preprocess
+  (pps lwt_ppx)))

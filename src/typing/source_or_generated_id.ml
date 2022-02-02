@@ -24,7 +24,6 @@ let compare_id a b =
   | (Generated _, Source _) -> 1
 
 let equal_id a b = compare_id a b = 0
-
 let id_of_int i = Generated i
 
 let id_as_int = function
@@ -32,7 +31,6 @@ let id_as_int = function
   | _ -> None
 
 let generate_id = Reason.mk_id %> id_of_int
-
 let id_of_aloc_id aloc_id = Source aloc_id
 
 let string_of_id = function

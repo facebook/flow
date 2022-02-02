@@ -13,27 +13,16 @@ open Type
 
 module type S = sig
   val mk_module_t : Context.t -> Reason.t -> Type.t
-
   val require : Context.t -> ALoc.t * string -> ALoc.t -> Type.t
-
   val import : Context.t -> ALoc.t * string -> Type.tvar
-
   val import_ns : Context.t -> Reason.t -> ALoc.t * string -> Type.t
-
   val get_module_exports : Context.t -> ALoc.t -> Type.t
-
   val set_module_exports : Context.t -> ALoc.t -> Type.t -> unit
-
   val cjs_clobber : Context.t -> ALoc.t -> Type.t -> unit
-
   val export : Context.t -> Reason.name -> ALoc.t -> Type.t -> unit
-
   val export_type : Context.t -> Reason.name -> ALoc.t option -> Type.t -> unit
-
   val export_binding : Context.t -> Reason.name -> ALoc.t -> Flow_ast.Statement.export_kind -> unit
-
   val export_star : Context.t -> ALoc.t -> Type.t -> unit
-
   val export_type_star : Context.t -> ALoc.t -> Type.t -> unit
 end
 
@@ -108,7 +97,6 @@ module Make (Env : Env_sig.S) = struct
      final value is (initial object or otherwise) is checked against the type
      declared for exports or any other use of exports. *)
   let get_module_exports cx loc = Env.get_internal_var cx "exports" loc
-
   let set_module_exports cx loc t = Env.set_internal_var cx "exports" t loc
 
   let cjs_clobber cx loc t =
@@ -127,7 +115,6 @@ module Make (Env : Env_sig.S) = struct
     | Error msg -> Flow.add_output cx msg
 
   let export_type cx name = Module_info.export_type (Context.module_info cx) name
-
   let export_type_star cx = Module_info.export_type_star (Context.module_info cx)
 
   let export_binding cx name loc = function

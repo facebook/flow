@@ -14,9 +14,7 @@ module FreeVars = struct
   let searcher =
     object
       inherit [_] Ty.reduce_ty as super
-
       method zero = ISet.empty
-
       method plus = ISet.union
 
       method! on_t env t =
@@ -82,11 +80,8 @@ let symbols_of_type =
     let o =
       object (_self)
         inherit [_] reduce_ty as _super
-
         method zero = []
-
         method plus = List.rev_append
-
         method! on_symbol _env s = [s]
       end
     in
@@ -140,7 +135,6 @@ module Simplify = struct
 
             (* All Bot kinds are equivalent *)
             method! private on_bot_kind () _ _ = ()
-
             method! private on_any_kind () _ _ = ()
           end
         else
@@ -244,5 +238,4 @@ module Simplify = struct
 end
 
 let simplify_type ~merge_kinds ?(sort = false) = Simplify.run_type ~merge_kinds ~sort
-
 let simplify_elt ~merge_kinds ?(sort = false) = Simplify.run_elt ~merge_kinds ~sort

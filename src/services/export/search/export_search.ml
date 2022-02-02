@@ -145,9 +145,7 @@ let search ?(options = Fuzzy_path.default_options) query { index; value_matcher;
   Fuzzy_path.search ~options query_txt matcher |> take ~n:max_results ~index ~query
 
 let search_values ?options query t = search ?options (Value query) t
-
 let search_types ?options query t = search ?options (Type query) t
-
 let get name { index; value_matcher = _; type_matcher = _ } = Export_index.find name index
 
 let get_values name t =
@@ -159,5 +157,4 @@ let get_types name t =
   |> Export_index.ExportSet.filter (fun (_file_key, kind) -> Export_index.kind_is_type kind)
 
 let pp fmt { index; _ } = Export_index.pp fmt index
-
 let show { index; _ } = Export_index.show index

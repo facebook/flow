@@ -10,7 +10,6 @@ open Type_sig_collections
 module P = Type_sig_pack
 
 type node = Cycle_hash.node
-
 type read_hash = Cycle_hash.read_hash
 
 type 'a checked_dep =
@@ -86,11 +85,8 @@ let import_ns edge dep_edge = function
     edge ns
 
 let edge_local_def edge file index = edge (Local_defs.get file.local_defs index)
-
 let edge_remote_ref edge file index = edge (Remote_refs.get file.remote_refs index)
-
 let edge_pattern edge file index = edge (Patterns.get file.patterns index)
-
 let edge_pattern_def edge file index = edge (Pattern_defs.get file.pattern_defs index)
 
 let edge_require edge dep_edge file index =
@@ -159,9 +155,7 @@ and visit_eval edge dep_edge file t op =
   visit_op edge dep_edge file op
 
 and visit_annot edge dep_edge file t = iter_annot ignore (visit_packed edge dep_edge file) t
-
 and visit_value edge dep_edge file t = iter_value ignore (visit_packed edge dep_edge file) t
-
 and visit_op edge dep_edge file op = iter_op (visit_packed edge dep_edge file) op
 
 let visit_def edge dep_edge file def = iter_def ignore (visit_packed edge dep_edge file) def

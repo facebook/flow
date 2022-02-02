@@ -35,21 +35,12 @@ type file = {
 }
 
 val def_reason : (ALoc.t, 'b) Type_sig.def -> Reason.t
-
 val remote_ref_reason : ALoc.t Pack.remote_ref -> Reason.t
-
 val merge_pattern : file -> ALoc.t Pack.pattern -> Type.t
-
 val merge_remote_ref : file -> Reason.t -> ALoc.t Pack.remote_ref -> Type.t
-
 val merge_export : file -> ALoc.t Pack.export -> ALoc.t option * Type.t
-
 val merge_type_export : file -> Reason.t -> ALoc.t Pack.type_export -> ALoc.t option * Type.t
-
 val merge_exports : file -> Reason.t -> exports -> Type.t
-
 val merge_def : file -> Reason.t -> (ALoc.t, ALoc.t Pack.packed) Type_sig.def -> Type.t
-
 val merge_resource_module_t : Context.t -> string -> ALoc.t -> Type.t
-
 val merge : file -> ALoc.t Pack.packed -> Type.t

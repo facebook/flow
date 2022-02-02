@@ -26,17 +26,13 @@ type buf = (char, Bigarray.int8_unsigned_elt, Bigarray.c_layout) Bigarray.Array1
 (* Phantom type parameter provides type-safety to callers of this API.
  * Internally, these are all just ints, so be careful! *)
 type _ addr = int
-
 type serialized_tag = Serialized_resolved_requires
 
 let heap_ref : buf option ref = ref None
 
 exception Out_of_shared_memory
-
 exception Hash_table_full
-
 exception Heap_full
-
 exception Failed_memfd_init of Unix.error
 
 let () =
@@ -219,7 +215,6 @@ module type Key = sig
   type t
 
   val to_string : t -> string
-
   val compare : t -> t -> int
 end
 
@@ -244,19 +239,13 @@ module HashtblSegment (Key : Key) = struct
   type hash = string
 
   external hh_add : hash -> _ addr -> unit = "hh_add"
-
   external hh_mem : hash -> bool = "hh_mem"
-
   external hh_get : hash -> _ addr = "hh_get"
-
   external hh_remove : hash -> unit = "hh_remove"
-
   external hh_move : hash -> hash -> unit = "hh_move"
 
   let hh_add x y = WorkerCancel.with_worker_exit (fun () -> hh_add x y)
-
   let hh_mem x = WorkerCancel.with_worker_exit (fun () -> hh_mem x)
-
   let hh_get x = WorkerCancel.with_worker_exit (fun () -> hh_get x)
 
   (* The hash table supports a kind of versioning, where a key can be "oldified"
@@ -265,17 +254,11 @@ module HashtblSegment (Key : Key) = struct
    * occupy distinct hash table slots by giving them distinct prefixes. *)
 
   let new_prefix = Prefix.make ()
-
   let old_prefix = Prefix.make ()
-
   let new_hash_of_key k = Digest.string (Prefix.make_key new_prefix (Key.to_string k))
-
   let old_hash_of_key k = Digest.string (Prefix.make_key old_prefix (Key.to_string k))
-
   let add k addr = hh_add (new_hash_of_key k) addr
-
   let mem k = hh_mem (new_hash_of_key k)
-
   let mem_old k = hh_mem (old_hash_of_key k)
 
   let get_hash hash =
@@ -285,7 +268,6 @@ module HashtblSegment (Key : Key) = struct
       None
 
   let get k = get_hash (new_hash_of_key k)
-
   let get_old k = get_hash (old_hash_of_key k)
 
   let remove k =
@@ -343,15 +325,11 @@ module type CacheType = sig
   include DebugCacheType
 
   type key
-
   type value
 
   val add : key -> value -> unit
-
   val get : key -> value option
-
   val remove : key -> unit
-
   val clear : unit -> unit
 end
 
@@ -361,29 +339,19 @@ end
 
 module type NoCache = sig
   type key
-
   type value
 
   module KeySet : Flow_set.S with type elt = key
 
   val add : key -> value -> unit
-
   val get : key -> value option
-
   val get_old : key -> value option
-
   val remove_old_batch : KeySet.t -> unit
-
   val remove_batch : KeySet.t -> unit
-
   val mem : key -> bool
-
   val mem_old : key -> bool
-
   val oldify : key -> unit
-
   val oldify_batch : KeySet.t -> unit
-
   val revive_batch : KeySet.t -> unit
 end
 
@@ -395,19 +363,14 @@ end
 
 module type LocalCache = sig
   module DebugL1 : DebugCacheType
-
   module DebugL2 : DebugCacheType
 
   type key
-
   type value
 
   val add : key -> value -> unit
-
   val get : key -> value option
-
   val remove : key -> unit
-
   val clear : unit -> unit
 end
 
@@ -415,7 +378,6 @@ module type WithCache = sig
   include NoCache
 
   val write_around : key -> value -> unit
-
   val get_no_cache : key -> value option
 
   module DebugCache : LocalCache with type key = key and type value = value
@@ -436,18 +398,14 @@ struct
   module KeySet = Flow_set.Make (Key)
 
   type key = Key.t
-
   type value = Value.t
 
   (* Returns address into the heap, alloc size, and orig size *)
   external hh_store : Value.t -> int -> _ addr * int * int = "hh_store_ocaml"
-
   external hh_deserialize : _ addr -> Value.t = "hh_deserialize"
-
   external hh_get_size : _ addr -> int = "hh_get_size"
 
   let hh_store x = WorkerCancel.with_worker_exit (fun () -> hh_store x Tag.tag)
-
   let hh_deserialize x = WorkerCancel.with_worker_exit (fun () -> hh_deserialize x)
 
   let log_serialize compressed original =
@@ -480,7 +438,6 @@ struct
     if hh_log_level () > 0 && compressed_size > 0 then log_serialize compressed_size original_size
 
   let mem = Tbl.mem
-
   let mem_old = Tbl.mem_old
 
   let deserialize addr =
@@ -499,13 +456,9 @@ struct
     | Some addr -> Some (deserialize addr)
 
   let remove_batch keys = KeySet.iter Tbl.remove keys
-
   let oldify = Tbl.oldify
-
   let oldify_batch keys = KeySet.iter oldify keys
-
   let revive_batch keys = KeySet.iter Tbl.revive keys
-
   let remove_old_batch keys = KeySet.iter Tbl.remove_old keys
 end
 
@@ -537,27 +490,17 @@ module NoCacheAddr (Key : Key) (Value : AddrValue) = struct
   module KeySet = Flow_set.Make (Key)
 
   type key = Key.t
-
   type value = Value.t addr
 
   let add = Tbl.add
-
   let mem = Tbl.mem
-
   let mem_old = Tbl.mem_old
-
   let get = Tbl.get
-
   let get_old = Tbl.get_old
-
   let remove_batch keys = KeySet.iter Tbl.remove keys
-
   let oldify = Tbl.oldify
-
   let oldify_batch keys = KeySet.iter oldify keys
-
   let revive_batch keys = KeySet.iter Tbl.revive keys
-
   let remove_old_batch keys = KeySet.iter Tbl.remove_old keys
 end
 
@@ -567,7 +510,6 @@ end
 
 module type CacheConfig = sig
   type key
-
   type value
 
   (* The capacity of the cache *)
@@ -582,9 +524,7 @@ module FreqCache (Config : CacheConfig) :
   CacheType with type key := Config.key and type value := Config.value = struct
   (* The cache itself *)
   let (cache : (Config.key, int ref * Config.value) Hashtbl.t) = Hashtbl.create (2 * Config.capacity)
-
   let size = ref 0
-
   let get_size () = !size
 
   let clear () =
@@ -659,11 +599,8 @@ end
 module OrderedCache (Config : CacheConfig) :
   CacheType with type key := Config.key and type value := Config.value = struct
   let (cache : (Config.key, Config.value) Hashtbl.t) = Hashtbl.create Config.capacity
-
   let queue = Queue.create ()
-
   let size = ref 0
-
   let get_size () = !size
 
   let clear () =
@@ -711,7 +648,6 @@ let invalidate_callback_list = ref []
 
 module LocalCache (Config : CacheConfig) = struct
   type key = Config.key
-
   type value = Config.value
 
   (* Young values cache *)
@@ -761,14 +697,12 @@ struct
   module Direct = NoCache (Key) (Value)
 
   type key = Direct.key
-
   type value = Direct.value
 
   module KeySet = Direct.KeySet
 
   module Cache = LocalCache (struct
     type nonrec key = key
-
     type nonrec value = value
 
     let capacity = 1000
@@ -822,7 +756,6 @@ struct
 
   (* We don't cache old objects, they are not accessed often enough. *)
   let get_old = Direct.get_old
-
   let mem_old = Direct.mem_old
 
   let mem x =
@@ -849,10 +782,12 @@ struct
   let () =
     invalidate_callback_list :=
       begin
-        fun () ->
-        Cache.clear ()
+        begin
+          fun () ->
+          Cache.clear ()
+        end
+        :: !invalidate_callback_list
       end
-      :: !invalidate_callback_list
 
   let remove_old_batch = Direct.remove_old_batch
 end
@@ -865,35 +800,21 @@ module NewAPI = struct
   }
 
   type heap_string
-
   type heap_int64
-
   type 'a addr_tbl
-
   type 'a opt
-
   type ast
-
   type docblock
-
   type aloc_table
-
   type type_sig
-
   type file_sig
-
   type exports
-
   type checked_file
-
   type unparsed_file
-
   type dyn_file
-
   type size = int
 
   let bsize_wsize bsize = bsize * Sys.word_size / 8
-
   let addr_offset addr size = addr + bsize_wsize size
 
   let get_heap () =
@@ -919,16 +840,13 @@ module NewAPI = struct
       destination has been allocated. Also prefer higher-level APIs below. *)
 
   external unsafe_read_int8 : buf -> int -> int = "%caml_ba_unsafe_ref_1"
-
   external read_int64 : buf -> int -> int64 = "%caml_bigstring_get64"
 
   (* Read a string from the heap at the specified address with the specified
    * size (in words). This read is not bounds checked or type checked; caller
    * must ensure that the given destination contains string data. *)
   external unsafe_read_string : _ addr -> int -> string = "hh_read_string"
-
   external unsafe_write_int8 : buf -> int -> int -> unit = "%caml_ba_unsafe_set_1"
-
   external unsafe_write_int64 : buf -> int -> int64 -> unit = "%caml_bigstring_set64u"
 
   (* Write a string at the specified address in the heap. This write is not
@@ -994,7 +912,6 @@ module NewAPI = struct
 
   (* avoid unused constructor warning *)
   let () = ignore Serialized_tag
-
   let () = ignore Serialized_resolved_requires_tag
 
   (* constant constructors are integers *)
@@ -1002,9 +919,7 @@ module NewAPI = struct
 
   (* double-check integer value is consistent with hh_shared.c *)
   let () = assert (tag_val Addr_tbl_tag = 10)
-
   let header_size = 1
-
   let with_header_size f x = header_size + f x
 
   (* Write a header at a specified address in the heap. This write is not
@@ -1091,9 +1006,7 @@ module NewAPI = struct
     Int64.(to_int (shift_right_logical hd64 2))
 
   let obj_tag hd = hd land 0x3F
-
   let obj_size hd = hd lsr 6
-
   let assert_tag hd tag = assert (obj_tag hd = tag_val tag)
 
   let read_header_checked heap tag addr =
@@ -1194,7 +1107,6 @@ module NewAPI = struct
       f addr
 
   let is_none addr = addr == null_addr
-
   let is_some addr = addr != null_addr
 
   (** Compressed OCaml values
@@ -1245,13 +1157,11 @@ module NewAPI = struct
   (** ASTs *)
 
   let prepare_write_ast ast = prepare_write_compressed Serialized_ast_tag ast
-
   let read_ast addr = read_compressed Serialized_ast_tag addr
 
   (** Docblocks *)
 
   let docblock_size = string_size
-
   let read_docblock addr = read_string_generic Docblock_tag addr 0
 
   let write_docblock chunk docblock =
@@ -1304,19 +1214,16 @@ module NewAPI = struct
   (** File sigs *)
 
   let prepare_write_file_sig file_sig = prepare_write_compressed Serialized_file_sig_tag file_sig
-
   let read_file_sig addr = read_compressed Serialized_file_sig_tag addr
 
   (** Exports *)
 
   let prepare_write_exports exports = prepare_write_compressed Serialized_exports_tag exports
-
   let read_exports addr = read_compressed Serialized_exports_tag addr
 
   (** Checked files *)
 
   let checked_file_size = 8 * addr_size
-
   let unparsed_file_size = 2 * addr_size
 
   let write_checked_file chunk hash module_name exports =
@@ -1338,7 +1245,6 @@ module NewAPI = struct
     addr
 
   let dyn_checked_file = Obj.magic
-
   let dyn_unparsed_file = Obj.magic
 
   let assert_checked_file addr =
@@ -1362,50 +1268,27 @@ module NewAPI = struct
     addr
 
   let file_hash_addr file = addr_offset file 1
-
   let module_name_addr file = addr_offset file 2
-
   let ast_addr file = addr_offset file 3
-
   let docblock_addr file = addr_offset file 4
-
   let aloc_table_addr file = addr_offset file 5
-
   let type_sig_addr file = addr_offset file 6
-
   let file_sig_addr file = addr_offset file 7
-
   let exports_addr file = addr_offset file 8
-
   let set_file_generic offset file addr = unsafe_write_addr_at (get_heap ()) (offset file) addr
-
   let set_file_module_name = set_file_generic module_name_addr
-
   let set_file_ast = set_file_generic ast_addr
-
   let set_file_docblock = set_file_generic docblock_addr
-
   let set_file_aloc_table = set_file_generic aloc_table_addr
-
   let set_file_type_sig = set_file_generic type_sig_addr
-
   let set_file_sig = set_file_generic file_sig_addr
-
   let get_file_generic offset file = read_addr (get_heap ()) (offset file)
-
   let get_file_hash = get_file_generic file_hash_addr
-
   let get_file_module_name = get_file_generic module_name_addr
-
   let get_file_ast = get_file_generic ast_addr
-
   let get_file_docblock = get_file_generic docblock_addr
-
   let get_file_aloc_table = get_file_generic aloc_table_addr
-
   let get_file_type_sig = get_file_generic type_sig_addr
-
   let get_file_sig = get_file_generic file_sig_addr
-
   let get_file_exports = get_file_generic exports_addr
 end

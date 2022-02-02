@@ -48,9 +48,7 @@ type t = {
 (*************)
 
 let description { description; _ } = description
-
 let params { params; _ } = params
-
 let unrecognized_tags { unrecognized_tags; _ } = unrecognized_tags
 
 (***********)
@@ -67,13 +65,11 @@ module Parser = struct
       | 0x202f | 0x205f | 0x3000 )]
 
   let line_terminator_sequence = [%sedlex.regexp? '\n' | '\r' | "\r\n" | 0x2028 | 0x2029]
-
   let identifier = [%sedlex.regexp? Plus (Compl (white_space | '[' | '.' | ']' | '=' | '{'))]
 
   (* Helpers *)
 
   let empty = { description = None; params = []; unrecognized_tags = [] }
-
   let trimmed_string_of_buffer buffer = buffer |> Buffer.contents |> String.trim
 
   let description_of_desc_buf desc_buf =

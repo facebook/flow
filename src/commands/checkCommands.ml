@@ -144,7 +144,6 @@ module CheckCommand = struct
             saved_state_force_recheck = false;
             saved_state_no_fallback = false;
           }
-        
       in
 
       make_options

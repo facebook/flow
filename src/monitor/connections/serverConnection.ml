@@ -9,6 +9,5 @@
 
 include FlowServerMonitorConnection.Make (struct
   type in_message = MonitorProt.server_to_monitor_message
-
   type out_message = MonitorProt.monitor_to_server_message
 end)

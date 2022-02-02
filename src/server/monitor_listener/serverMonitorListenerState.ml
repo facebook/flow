@@ -11,7 +11,6 @@ type env_update = ServerEnv.env -> ServerEnv.env
 
 (* Workloads are client requests which we processes FIFO *)
 let workload_stream = WorkloadStream.create ()
-
 let push_new_workload ~name workload = WorkloadStream.push ~name workload workload_stream
 
 let push_new_parallelizable_workload ~name workload =
@@ -33,7 +32,6 @@ let requeue_deferred_parallelizable_workloads () =
 (* Env updates are...well...updates to our env. They must be handled in the main thread. Also FIFO
  * but are quick to handle *)
 let (env_update_stream, push_new_env_update) = Lwt_stream.create ()
-
 let push_new_env_update env_update = push_new_env_update (Some env_update)
 
 (* Outstanding cancellation requests are lodged here as soon as they arrive

@@ -1,12 +1,6 @@
 (library
-  (name flow_common_lwt)
-  (wrapped false)
-  (libraries
-    base
-    imported_core
-    lwt
-    lwt.unix
-    utils_core
-  )
-  (preprocess (pps lwt_ppx))
-)
+ (name flow_common_lwt)
+ (wrapped false)
+ (libraries base imported_core lwt lwt.unix utils_core)
+ (preprocess
+  (pps lwt_ppx)))

@@ -1000,11 +1000,8 @@ and dump_prop_ (depth, tvars) cx p =
    one of the termination mechanisms: depth or tvar-set.
 *)
 let dump_t ?(depth = 3) cx t = dump_t_ (depth, ISet.empty) cx t
-
 let dump_use_t ?(depth = 3) cx t = dump_use_t_ (depth, ISet.empty) cx t
-
 let dump_prop ?(depth = 3) cx p = dump_prop_ (depth, ISet.empty) cx p
-
 let dump_tvar ?(depth = 3) cx id = dump_tvar_ (depth, ISet.empty) cx id
 
 let dump_flow ?(depth = 3) cx (l, u) =

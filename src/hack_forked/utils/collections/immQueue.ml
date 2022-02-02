@@ -14,11 +14,8 @@ type 'a t = {
 exception Empty
 
 let empty = { incoming = []; outgoing = []; length = 0 }
-
 let length t = t.length
-
 let is_empty t = length t = 0
-
 let push t x = { t with incoming = x :: t.incoming; length = t.length + 1 }
 
 let prepare_for_read t =
@@ -50,7 +47,6 @@ let iter t ~f =
   List.iter f (List.rev t.incoming)
 
 let from_list x = { incoming = []; outgoing = x; length = List.length x }
-
 let to_list x = x.outgoing @ List.rev x.incoming
 
 let concat t =

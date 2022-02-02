@@ -44,13 +44,9 @@ let expr ?default e =
   | None -> Expr e
 
 let elem key reason default = Selector (reason, default, Elem key)
-
 let prop x reason has_default default = Selector (reason, default, Prop (x, has_default))
-
 let arr_rest i reason default = Selector (reason, default, ArrRest i)
-
 let obj_rest xs reason default = Selector (reason, default, ObjRest xs)
-
 let default reason d = Selector (reason, d, Default)
 
 let rec fold ~expr ~cons ~selector = function

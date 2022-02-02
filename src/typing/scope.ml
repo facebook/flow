@@ -182,7 +182,6 @@ module Entry = struct
     Type { type_binding_kind; type_state = state; type_loc = loc; type_ }
 
   let new_type ~loc ?(state = State.Undeclared) type_ = new_type_ TypeBinding state loc type_
-
   let new_import_type ~loc type_ = new_type_ ImportTypeBinding State.Initialized loc type_
 
   (* accessors *)

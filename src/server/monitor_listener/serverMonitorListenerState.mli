@@ -9,20 +9,15 @@ type env_update = ServerEnv.env -> ServerEnv.env
 
 (* APIs to add to the state *)
 val push_new_workload : name:string -> WorkloadStream.workload -> unit
-
 val push_new_parallelizable_workload : name:string -> WorkloadStream.parallelizable_workload -> unit
-
 val defer_parallelizable_workload : name:string -> WorkloadStream.parallelizable_workload -> unit
-
 val requeue_deferred_parallelizable_workloads : unit -> unit
-
 val push_new_env_update : env_update -> unit
 
 val push_files_to_recheck :
   ?metadata:MonitorProt.file_watcher_metadata -> reason:LspProt.recheck_reason -> SSet.t -> unit
 
 val push_files_to_prioritize : reason:LspProt.recheck_reason -> SSet.t -> unit
-
 val push_files_to_force_focused_and_recheck : reason:LspProt.recheck_reason -> SSet.t -> unit
 
 val push_dependencies_to_prioritize :
@@ -58,11 +53,8 @@ val wait_for_updates_for_recheck :
   unit Lwt.t
 
 val pop_next_workload : unit -> WorkloadStream.workload option
-
 val wait_and_pop_parallelizable_workload : unit -> WorkloadStream.parallelizable_workload Lwt.t
-
 val update_env : ServerEnv.env -> ServerEnv.env
-
 val requeue_workload : recheck_workload -> unit
 
 val get_and_clear_recheck_workload :

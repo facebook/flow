@@ -20,7 +20,6 @@ let pre_fork_callbacks : (unit -> unit) list ref = ref [flush_all]
 let post_fork_child_callbacks : (unit -> unit) list ref = ref []
 
 let on_fork f = pre_fork_callbacks := f :: !pre_fork_callbacks
-
 let post_fork_child f = post_fork_child_callbacks := f :: !post_fork_child_callbacks
 
 (* You should always use this instead of Unix.fork, so that the callbacks get

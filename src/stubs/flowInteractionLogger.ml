@@ -6,7 +6,6 @@
  *)
 
 let init () = ()
-
 let set_server_config ~timeout_log_saving:_ ~flowconfig_name:_ ~root:_ ~root_name:_ = ()
 
 let interaction
@@ -24,5 +23,4 @@ let interaction
   ()
 
 let flush () = Lwt.return_unit
-
 let disable_logging () = ()

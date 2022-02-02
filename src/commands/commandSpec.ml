@@ -6,7 +6,6 @@
  *)
 
 exception Show_help
-
 exception Failed_to_parse of string * string
 
 module ArgSpec = struct
@@ -484,13 +483,8 @@ let command spec main =
   }
 
 let run command = command.main
-
 let name command = command.cmdname
-
 let doc command = command.cmddoc
-
 let flags command = command.flags
-
 let args_of_argv command = command.args_of_argv
-
 let string_of_usage command = command.string_of_usage ()

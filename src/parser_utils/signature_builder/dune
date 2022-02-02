@@ -1,10 +1,6 @@
 (library
-  (name flow_parser_utils_signature_builder)
-  (wrapped false)
-  (libraries
-    flow_common
-    flow_parser
-    )
-    (preprocess (pps ppx_deriving.std))
-  )
-
+ (name flow_parser_utils_signature_builder)
+ (wrapped false)
+ (libraries flow_common flow_parser)
+ (preprocess
+  (pps ppx_deriving.std)))

@@ -19,9 +19,7 @@ module Super_finder = struct
       (* Any mentions of `this` in these constructs would reference
          the `this` within those structures, so we ignore them *)
       method! class_ _ x = x
-
       method! function_declaration _ x = x
-
       method! function_expression_or_method _ x = x
     end
 
@@ -42,7 +40,6 @@ module Arguments_finder = struct
       (* Any mentions of `this` in these constructs would reference
          the `this` within those structures, so we ignore them *)
       method! function_declaration _ x = x
-
       method! function_expression_or_method _ x = x
     end
 
@@ -54,13 +51,9 @@ end
 class mapper target =
   object (this)
     inherit [Loc.t] Flow_ast_contains_mapper.mapper as super
-
     method private target_contains loc = Loc.contains target loc
-
     method private target_contained_by loc = Loc.contains loc target
-
     method private is_target loc = Loc.equal target loc
-
     method loc_annot_contains_target = this#target_contained_by
 
     method private is_constructor =

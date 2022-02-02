@@ -6,7 +6,5 @@
  *)
 
 val alphanumeric_alphabet : string
-
 val short_string_with_alphabet : string -> string
-
 val short_string : unit -> string

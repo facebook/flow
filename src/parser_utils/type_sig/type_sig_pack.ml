@@ -135,7 +135,6 @@ type 'loc packed =
     }
 
 and 'loc packed_value = ('loc, 'loc packed) value
-
 and 'loc packed_annot = ('loc, 'loc packed) annot [@@deriving map, show { with_path = false }]
 
 type 'loc packed_def = ('loc, 'loc packed) def [@@deriving map, show { with_path = false }]
@@ -231,7 +230,6 @@ let pack_smap f map =
   (ks, vs)
 
 let pack_loc loc = Locs.index_exn loc
-
 let pack_star (loc, mref) = (pack_loc loc, Module_refs.index_exn mref)
 
 let rec pack_parsed cx = function
@@ -477,21 +475,13 @@ and pack_type_export = function
     ExportTypeFrom index
 
 and pack_value cx def = map_value pack_loc (pack_parsed cx) def
-
 and pack_def cx def = map_def pack_loc (pack_parsed cx) def
-
 and pack_tparams cx tparams = map_tparams pack_loc (pack_parsed cx) tparams
-
 and pack_annot cx t = map_annot pack_loc (pack_parsed cx) t
-
 and pack_fun cx def = map_fun_sig pack_loc (pack_parsed cx) def
-
 and pack_class cx def = map_class_sig pack_loc (pack_parsed cx) def
-
 and pack_declare_class cx def = map_declare_class_sig pack_loc (pack_parsed cx) def
-
 and pack_interface cx def = map_interface_sig pack_loc (pack_parsed cx) def
-
 and pack_op cx op = map_op (pack_parsed cx) op
 
 and pack_builtin = function

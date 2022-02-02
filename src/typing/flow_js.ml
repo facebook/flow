@@ -106,7 +106,6 @@ module ConstFoldExpansion : sig
   val guard : int -> reason * int -> (int -> 't) -> 't
 end = struct
   let rmaps : int ConstFoldMap.t IMap.t ref = ref IMap.empty
-
   let get_rmap id = IMap.find_opt id !rmaps |> Base.Option.value ~default:ConstFoldMap.empty
 
   let increment reason_with_pos rmap =
@@ -145,7 +144,6 @@ let expect_proper_def t =
   if not (is_proper_def t) then assert_false (spf "Did not expect %s" (string_of_ctor t))
 
 let expect_proper_def_use t = lift_to_use expect_proper_def t
-
 let subst = Subst.subst
 
 let check_canceled =
@@ -260,13 +258,9 @@ struct
           t_)
 
     let mk_targ = ImplicitTypeArgument.mk_targ
-
     let is_subtype = FlowJs.rec_flow_t
-
     let reposition = FlowJs.reposition
-
     let unresolved_id = Tvar.mk_no_wrap
-
     let resolve_id cx trace ~use_op id t = FlowJs.rec_unify cx trace ~use_op (OpenT id) t
   end)
 
@@ -274,7 +268,6 @@ struct
     type r = Type.t -> unit
 
     let reposition = FlowJs.reposition
-
     let return cx ~use_op trace t tout = FlowJs.rec_flow_t cx ~use_op trace (t, tout)
 
     let import_type cx trace reason name export_t =
@@ -309,9 +302,7 @@ struct
       FlowJs.rec_flow cx trace (export_t, AssertImportIsValueT (reason, name))
 
     let error_type _ _ = ()
-
     let fix_this_class = FlowJs.fix_this_class
-
     let mk_typeof_annotation = FlowJs.mk_typeof_annotation
   end
 
@@ -437,15 +428,10 @@ struct
     type r = Type.tvar -> unit
 
     let read_prop = read_prop
-
     let error_type _ _ = ()
-
     let return cx ~use_op trace t tout = FlowJs.rec_flow_t cx ~use_op trace (t, OpenT tout)
-
     let dict_read_check = FlowJs.rec_flow_t
-
     let enum_proto = enum_proto
-
     let reposition = FlowJs.reposition
 
     let cg_lookup cx trace ~obj_t t (reason_op, strict, propref, use_op, ids) tout =
@@ -7980,11 +7966,10 @@ struct
       else
         op2
 
-  and flow_use_op cx op1 u =
-    mod_use_op_of_use_t (fun op2 -> pick_use_op cx op1 op2) u
-    (***********************)
-    (* bounds manipulation *)
-    (***********************)
+  and flow_use_op cx op1 u = mod_use_op_of_use_t (fun op2 -> pick_use_op cx op1 op2) u
+  (***********************)
+  (* bounds manipulation *)
+  (***********************)
 
   (** The following general considerations apply when manipulating bounds.
 
@@ -8066,10 +8051,10 @@ struct
              each (root_id, bounds) trace
            | _ -> ()
        )
-    (* for each id in id1 + bounds1.lowertvars:
-       id.bounds.upper += t2
-    *)
-    (* When going through bounds1.lowertvars, filter out id1. **)
+  (* for each id in id1 + bounds1.lowertvars:
+     id.bounds.upper += t2
+  *)
+  (* When going through bounds1.lowertvars, filter out id1. **)
 
   (** As an optimization, skip id1 when it will become either a resolved root or a
       goto node (so that updating its bounds is unnecessary). **)
@@ -8080,10 +8065,10 @@ struct
         let t2 = flow_use_op cx use_op t2 in
         add_upper cx t2 (Trace.concat_trace ~max [trace_l; trace]) bounds
     )
-    (* for each id in id2 + bounds2.uppertvars:
-       id.bounds.lower += t1
-    *)
-    (* When going through bounds2.uppertvars, filter out id2. **)
+  (* for each id in id2 + bounds2.uppertvars:
+     id.bounds.lower += t1
+  *)
+  (* When going through bounds2.uppertvars, filter out id2. **)
 
   (** As an optimization, skip id2 when it will become either a resolved root or a
       goto node (so that updating its bounds is unnecessary). **)
@@ -8116,10 +8101,10 @@ struct
            let new_use_op = pick_use_op cx use_op new_use_op in
            edges_from_t cx (Trace.concat_trace ~max [trace_l; trace]) ~new_use_op ~opt l (id, bounds)
        )
-    (* for each id in id1 + bounds1.lowertvars:
-     *   id.bounds.upper += t2
-     *   for each l in bounds1.lower: l => t2
-     *)
+  (* for each id in id1 + bounds1.lowertvars:
+   *   id.bounds.upper += t2
+   *   for each l in bounds1.lower: l => t2
+   *)
 
   (** As an invariant, bounds1.lower should already contain id.bounds.lower for
       each id in bounds1.lowertvars. **)
@@ -8137,10 +8122,10 @@ struct
       edges_to_t cx trace ~opt (id1, bounds1) t2;
       flows_to_t cx trace bounds1.lower t2
     )
-    (* for each id in id2 + bounds2.uppertvars:
-     *   id.bounds.lower += t1
-     *   for each u in bounds2.upper: t1 => u
-     *)
+  (* for each id in id2 + bounds2.uppertvars:
+   *   id.bounds.lower += t1
+   *   for each u in bounds2.upper: t1 => u
+   *)
 
   (** As an invariant, bounds2.upper should already contain id.bounds.upper for
       each id in bounds2.uppertvars. **)
@@ -8157,10 +8142,10 @@ struct
   (* bounds.lowertvars += id *)
   and add_lowertvar id trace use_op bounds =
     bounds.lowertvars <- IMap.add id (trace, use_op) bounds.lowertvars
-    (* for each id in id1 + bounds1.lowertvars:
-       id.bounds.uppertvars += id2
-    *)
-    (* When going through bounds1.lowertvars, filter out id1. **)
+  (* for each id in id1 + bounds1.lowertvars:
+     id.bounds.uppertvars += id2
+  *)
+  (* When going through bounds1.lowertvars, filter out id1. **)
 
   (** As an optimization, skip id1 when it will become either a resolved root or a
       goto node (so that updating its bounds is unnecessary). **)
@@ -8171,10 +8156,10 @@ struct
         let use_op = pick_use_op cx use_op new_use_op in
         add_uppertvar id2 (Trace.concat_trace ~max [trace_l; trace]) use_op bounds
     )
-    (* for each id in id2 + bounds2.uppertvars:
-       id.bounds.lowertvars += id1
-    *)
-    (* When going through bounds2.uppertvars, filter out id2. **)
+  (* for each id in id2 + bounds2.uppertvars:
+     id.bounds.lowertvars += id1
+  *)
+  (* When going through bounds2.uppertvars, filter out id2. **)
 
   (** As an optimization, skip id2 when it will become either a resolved root or a
       goto node (so that updating its bounds is unnecessary). **)
@@ -9570,12 +9555,12 @@ module rec FlowJs : Flow_common.S = struct
   module ObjectKit = Object_kit.Kit (FlowJs)
   module SpeculationKit = Speculation_kit.Make (FlowJs)
   module SubtypingKit = Subtyping_kit.Make (FlowJs)
+
   include
     M__flow (FlowJs) (React) (CheckPolarity) (TrustKit) (CustomFun) (ObjectKit) (SpeculationKit)
       (SubtypingKit)
 
   let widen_obj_type = ObjectKit.widen_obj_type
-
   let perform_read_prop_action = GetPropTKit.perform_read_prop_action
 end
 

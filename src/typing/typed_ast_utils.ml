@@ -25,7 +25,6 @@ class type_parameter_mapper =
       [ALoc.t, ALoc.t * Type.t, ALoc.t, ALoc.t * Type.t] Flow_polymorphic_ast_mapper.mapper as super
 
     method on_loc_annot (x : ALoc.t) = x
-
     method on_type_annot (x : ALoc.t * Type.t) = x
 
     (* Since the mapper wasn't originally written to pass an accumulator value
@@ -145,7 +144,6 @@ module Type_at_pos = struct
   class type_at_pos_searcher (target_loc : Loc.t) =
     object (self)
       inherit type_parameter_mapper as super
-
       method covers_target loc = Reason.in_range target_loc (ALoc.to_loc_exn loc)
 
       method find_loc : 'a. ALoc.t -> Type.t -> tparams_rev:Type.typeparam list -> 'a =
@@ -214,7 +212,6 @@ let find_type_at_pos_annotation = Type_at_pos.find
 class type_at_aloc_map_folder =
   object
     inherit type_parameter_mapper
-
     val mutable map = ALocMap.empty
 
     method! on_type_annot x =
@@ -229,7 +226,6 @@ class type_at_aloc_map_folder =
 class type_at_aloc_list_folder =
   object
     inherit type_parameter_mapper
-
     val mutable l = []
 
     method! on_type_annot x =
@@ -259,9 +255,7 @@ let typed_ast_to_list typed_ast : (ALoc.t * Type.TypeScheme.t) list =
 let error_mapper =
   object
     inherit [ALoc.t, ALoc.t, ALoc.t, ALoc.t * Type.t] Flow_polymorphic_ast_mapper.mapper
-
     method on_loc_annot loc = loc
-
     method on_type_annot loc = (loc, Type.AnyT.at (Type.AnyError None) loc)
   end
 
@@ -269,9 +263,7 @@ let error_mapper =
 let unimplemented_mapper =
   object
     inherit [ALoc.t, ALoc.t, ALoc.t, ALoc.t * Type.t] Flow_polymorphic_ast_mapper.mapper
-
     method on_loc_annot loc = loc
-
     method on_type_annot loc = (loc, Type.(AnyT.at (Unsound Unimplemented)) loc)
   end
 
@@ -279,8 +271,6 @@ let unimplemented_mapper =
 let unchecked_mapper =
   object
     inherit [ALoc.t, ALoc.t, ALoc.t, ALoc.t * Type.t] Flow_polymorphic_ast_mapper.mapper
-
     method on_loc_annot loc = loc
-
     method on_type_annot loc = (loc, Type.(AnyT.at (Unsound Unchecked)) loc)
   end

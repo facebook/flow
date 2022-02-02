@@ -25,9 +25,7 @@ type 'a bucket =
 type 'a next = unit -> 'a bucket
 
 let max_size_ref = ref 500
-
 let max_size () = !max_size_ref
-
 let set_max_bucket_size x = max_size_ref := x
 
 let calculate_bucket_size ~num_jobs ~num_workers ~max_size =

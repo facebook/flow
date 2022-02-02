@@ -14,11 +14,8 @@ module Make (Set : Flow_set.S) (Map : WrappedMap.S with type key = Set.elt) = st
   }
 
   type t = node Map.t
-
   type elt = Map.key
-
   type set = Set.t
-
   type map = Set.t Map.t
 
   let empty_entry = { forward = Set.empty; backward = Set.empty }
@@ -139,9 +136,7 @@ module Make (Set : Flow_set.S) (Map : WrappedMap.S with type key = Set.elt) = st
     graph
 
   let to_map graph = Map.map (fun { forward; _ } -> forward) graph
-
   let to_backward_map graph = Map.map (fun { backward; _ } -> backward) graph
-
   let find elt graph = (Map.find elt graph).forward
 
   let find_opt elt graph =

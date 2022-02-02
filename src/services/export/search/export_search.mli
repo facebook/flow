@@ -6,7 +6,6 @@
  *)
 
 type t [@@deriving show]
-
 type search_options = Fuzzy_path.options
 
 type search_result = {
@@ -23,19 +22,11 @@ type search_results = {
 [@@deriving show]
 
 val init : Export_index.t -> t
-
 val merge : Export_index.t -> t -> t
-
 val subtract : Export_index.t -> t -> t
-
 val default_options : search_options
-
 val search_values : ?options:search_options -> string -> t -> search_results
-
 val search_types : ?options:search_options -> string -> t -> search_results
-
 val get : string -> t -> Export_index.ExportSet.t
-
 val get_values : string -> t -> Export_index.ExportSet.t
-
 val get_types : string -> t -> Export_index.ExportSet.t

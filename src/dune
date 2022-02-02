@@ -1,16 +1,14 @@
 (executable
-  (name flow)
-  (modes native byte_complete)
-  (modules
-    flow)
-  (libraries
-    flow_glean
-    flow_commands
-    flow_exit_status
-    flow_extra_commands
-    flow_logging_utils
-    flow_parser
-    default_injector_config
-    lz4 ; see dune-workspace
-  )
-)
+ (name flow)
+ (modes native byte_complete)
+ (modules flow)
+ (libraries
+  flow_glean
+  flow_commands
+  flow_exit_status
+  flow_extra_commands
+  flow_logging_utils
+  flow_parser
+  default_injector_config
+  lz4 ; see dune-workspace
+  ))

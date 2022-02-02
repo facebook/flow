@@ -10,7 +10,6 @@ open Type
 
 module type BASE = sig
   val flow : Context.t -> Type.t * Type.use_t -> unit
-
   val flow_opt : Context.t -> ?trace:Type.trace -> Type.t * Type.use_t -> unit
 
   val flow_p :
@@ -34,7 +33,6 @@ module type BASE = sig
     Type.t
 
   val rec_flow : Context.t -> Type.trace -> Type.t * Type.use_t -> unit
-
   val rec_flow_t : Context.t -> Type.trace -> use_op:Type.use_op -> Type.t * Type.t -> unit
 
   val rec_unify :
@@ -81,11 +79,8 @@ end
 
 module type TRUST_CHECKING = sig
   val trust_flow_to_use_t : Context.t -> Type.trace -> Type.t -> Type.use_t -> unit
-
   val trust_flow : Context.t -> Type.trace -> Type.use_op -> Type.t -> Type.t -> unit
-
   val mk_trust_var : Context.t -> ?initial:Trust.trust_qualifier -> unit -> Type.ident
-
   val strengthen_trust : Context.t -> Type.ident -> Trust.trust_qualifier -> Error_message.t -> unit
 end
 
@@ -97,18 +92,14 @@ module type BUILTINS = sig
     Context.t -> ?trace:Type.trace -> Reason.reason -> Type.React.PropType.complex -> Type.t
 
   val get_builtin : Context.t -> ?trace:Type.trace -> name -> reason -> Type.t
-
   val get_builtin_tvar : Context.t -> ?trace:Type.trace -> name -> reason -> Type.ident
 
   val get_builtin_typeapp :
     Context.t -> ?trace:Type.trace -> reason -> name -> Type.t list -> Type.t
 
   val lookup_builtin_strict : Context.t -> name -> reason -> Type.t
-
   val lookup_builtin_strict_tvar : Context.t -> name -> reason -> Type.ident
-
   val lookup_builtin_with_default : Context.t -> name -> Type.t -> Type.t
-
   val set_builtin : Context.t -> ?trace:Type.trace -> name -> Type.t -> unit
 
   val perform_read_prop_action :
@@ -219,17 +210,11 @@ end
 
 module type S = sig
   include BASE
-
   include BUILTINS
-
   include EVAL
-
   include REACT
-
   include SUBTYPING
-
   include CHECK_POLARITY
-
   include TRUST_CHECKING
 
   val mk_typeof_annotation : Context.t -> ?trace:Type.trace -> reason -> Type.t -> Type.t

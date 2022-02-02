@@ -10,18 +10,14 @@
  *)
 module type S = sig
   type 'a t
-
   type key
 
   val make : max_size:int -> 'a t
-
   val clear : 'a t -> unit
-
   val remove_entry : key -> 'a t -> unit
 
   (* Returns the value as well as a boolean which is true if the cache was hit and false if it
    * missed. *)
   val with_cache : key -> 'a Lwt.t Lazy.t -> 'a t -> ('a * bool) Lwt.t
-
   val with_cache_sync : key -> 'a Lazy.t -> 'a t -> 'a * bool
 end

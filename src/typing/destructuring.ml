@@ -85,7 +85,6 @@ module Make (Env : Env_sig.S) (Statement : Statement_sig.S with module Env := En
                       );
                   comments = None;
                 }
-              
           )
       )
     in
@@ -121,7 +120,6 @@ module Make (Env : Env_sig.S) (Statement : Statement_sig.S with module Env := En
                   property = PropertyIdentifier (loc, { Ast.Identifier.name = x; comments });
                   comments = None;
                 }
-              
           )
       )
     in
@@ -293,7 +291,6 @@ module Make (Env : Env_sig.S) (Statement : Statement_sig.S with module Env := En
             Error_message.(EUnsupportedSyntax (loc, DestructuringExpressionPattern));
           Expression (Tast_utils.error_mapper#expression e)
       )
-    
 
   and array_elements cx ~f acc =
     let open Ast.Pattern.Array in

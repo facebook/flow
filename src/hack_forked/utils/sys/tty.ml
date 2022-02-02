@@ -100,8 +100,7 @@ let emoji_spinner =
       (* Face With Tears of Joy *)
       "\xF0\x9F\xA4\x94";
       (* Thinking Face *)
-      "\xF0\x9F\x92\xAF";
-      (* Hundred Points *)
+      "\xF0\x9F\x92\xAF" (* Hundred Points *);
     ]
 
 (* See https://github.com/yarnpkg/yarn/issues/405. *)

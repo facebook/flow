@@ -6,5 +6,4 @@
  *)
 
 val start : unit -> unit
-
 val stop : unit -> unit

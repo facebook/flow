@@ -1,29 +1,24 @@
 (library
-  (name procs_bucket)
-  (wrapped false)
-  (modules
-    bucket)
-  (libraries
-    base
-    imported_core))
+ (name procs_bucket)
+ (wrapped false)
+ (modules bucket)
+ (libraries base imported_core))
 
 (library
-  (name procs_procs)
-  (wrapped false)
-  (modules
-    mem_profile
-    worker
-    workerController)
-  (preprocess (pps lwt_ppx))  
-  (libraries
-    base
-    flow_exit_status
-    flow_exit
-    flow_common
-    heap_shared_mem
-    marshal_tools
-    procs_bucket
-    procfs
-    lwt.unix
-    sys_utils
-    worker_cancel))
+ (name procs_procs)
+ (wrapped false)
+ (modules mem_profile worker workerController)
+ (preprocess
+  (pps lwt_ppx))
+ (libraries
+  base
+  flow_exit_status
+  flow_exit
+  flow_common
+  heap_shared_mem
+  marshal_tools
+  procs_bucket
+  procfs
+  lwt.unix
+  sys_utils
+  worker_cancel))

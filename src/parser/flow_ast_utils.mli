@@ -6,9 +6,7 @@
  *)
 
 type 'loc binding = 'loc * string
-
 type 'loc ident = 'loc * string [@@deriving show]
-
 type 'loc source = 'loc * string [@@deriving show]
 
 val fold_bindings_of_pattern :
@@ -25,17 +23,11 @@ val partition_directives :
   (Loc.t, Loc.t) Flow_ast.Statement.t list * (Loc.t, Loc.t) Flow_ast.Statement.t list
 
 val negate_number_literal : float * string -> float * string
-
 val loc_of_expression : ('a, 'a) Flow_ast.Expression.t -> 'a
-
 val loc_of_statement : ('a, 'a) Flow_ast.Statement.t -> 'a
-
 val loc_of_pattern : ('a, 'a) Flow_ast.Pattern.t -> 'a
-
 val loc_of_ident : ('a, 'a) Flow_ast.Identifier.t -> 'a
-
 val name_of_ident : ('loc, 'a) Flow_ast.Identifier.t -> string
-
 val source_of_ident : ('a, 'a) Flow_ast.Identifier.t -> 'a source
 
 val ident_of_source :
@@ -113,5 +105,4 @@ module ExpressionSort : sig
 end
 
 val string_of_assignment_operator : Flow_ast.Expression.Assignment.operator -> string
-
 val string_of_binary_operator : Flow_ast.Expression.Binary.operator -> string

@@ -312,16 +312,13 @@ let telemetry (writer : Jsonrpc.writer) (level : MessageType.t) (message : strin
   print_logMessage level message |> Jsonrpc.notify writer "telemetry/event"
 
 let telemetry_error (writer : Jsonrpc.writer) = telemetry writer MessageType.ErrorMessage
-
 let telemetry_log (writer : Jsonrpc.writer) = telemetry writer MessageType.LogMessage
 
 let log (writer : Jsonrpc.writer) (level : MessageType.t) (message : string) : unit =
   print_logMessage level message |> Jsonrpc.notify writer "window/logMessage"
 
 let log_error (writer : Jsonrpc.writer) = log writer MessageType.ErrorMessage
-
 let log_warning (writer : Jsonrpc.writer) = log writer MessageType.WarningMessage
-
 let log_info (writer : Jsonrpc.writer) = log writer MessageType.InfoMessage
 
 let dismiss_diagnostics (writer : Jsonrpc.writer) (diagnostic_uris : UriSet.t) : UriSet.t =

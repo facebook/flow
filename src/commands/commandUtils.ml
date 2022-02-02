@@ -1064,7 +1064,6 @@ let base_flags =
   (fun prev -> CommandSpec.ArgSpec.(prev |> collect collect_base_flags |> flowconfig_name_flag))
 
 let default_file_watcher_timeout = 120
-
 let default_file_watcher_mergebase_with = "master"
 
 let file_watcher_flag prev =
@@ -1180,7 +1179,13 @@ let no_cgroup_flag =
           | flow_exe :: command :: args -> flow_exe :: command :: "--no-cgroup" :: args
         in
         systemd_exe
-        :: "--quiet" :: "--user" :: "--scope" :: "--slice" :: "flow.slice" :: "--" :: flow_args
+        :: "--quiet"
+        :: "--user"
+        :: "--scope"
+        :: "--slice"
+        :: "flow.slice"
+        :: "--"
+        :: flow_args
         |> Array.of_list
         |> Unix.execv systemd_exe
   in

@@ -68,11 +68,8 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
     type t
 
     val empty : t
-
     val mk_env : (unit -> int) -> t -> L.t Bindings.t -> t
-
     val get : string -> t -> Def.t option
-
     val defs : t -> Def.t SMap.t
   end = struct
     type t = Def.t SMap.t list
@@ -113,13 +110,9 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
   class scope_builder ~flowmin_compatibility ~enable_enums ~with_types =
     object (this)
       inherit [Acc.t, L.t] visitor ~init:Acc.init as super
-
       val mutable env = Env.empty
-
       val mutable current_scope_opt = None
-
       val mutable scope_counter = 0
-
       val mutable uses = []
 
       method private new_scope =

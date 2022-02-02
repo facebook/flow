@@ -8,7 +8,6 @@
 open Base
 
 exception Expected_throw_missing
-
 exception Thrown_exception_mismatched of (exn * exn)
 
 let expect_throws e f x =

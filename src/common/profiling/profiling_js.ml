@@ -23,26 +23,19 @@
  *)
 module Timing : sig
   type running
-
   type finished
 
   val with_timing_lwt : label:string -> f:(running -> 'a Lwt.t) -> (finished * 'a) Lwt.t
-
   val with_timing : label:string -> f:(running -> 'a) -> finished * 'a
 
   val with_timer_lwt :
     ?should_print:bool -> timer:string -> f:(unit -> 'a Lwt.t) -> running -> 'a Lwt.t
 
   val with_timer : ?should_print:bool -> timer:string -> f:(unit -> 'a) -> running -> 'a
-
   val get_total_wall_duration : finished -> float
-
   val to_json : abridged:bool -> finished -> Hh_json.json
-
   val to_json_legacy : abridged:bool -> finished -> Hh_json.json
-
   val print_summary_timing_table : finished -> unit
-
   val merge : from:finished -> into:running -> unit
 end = struct
   type time_measurement = {
@@ -860,15 +853,11 @@ end
 
 module Memory : sig
   type running
-
   type finished
 
   val with_memory_lwt : label:string -> f:(running -> 'a Lwt.t) -> (finished * 'a) Lwt.t
-
   val with_memory : label:string -> f:(running -> 'a) -> finished * 'a
-
   val legacy_sample_memory : metric:string -> value:float -> running -> unit
-
   val sample_memory : group:string -> metric:string -> value:float -> running -> unit
 
   val add_memory :
@@ -881,9 +870,7 @@ module Memory : sig
     unit
 
   val to_json : abridged:bool -> finished -> Hh_json.json
-
   val print_summary_memory_table : finished -> unit
-
   val merge : from:finished -> into:running -> unit
 end = struct
   type memory_result = {

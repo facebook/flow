@@ -1,4 +1,3 @@
 (library
-  (name flow_autofix_options)
-  (wrapped false)
-)
+ (name flow_autofix_options)
+ (wrapped false))

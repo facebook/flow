@@ -14,11 +14,7 @@
 exception Malformed of string
 
 val read_headers : Buffered_line_reader.t -> string list
-
 val parse_headers_to_lowercase_map : string list -> string SMap.t
-
 val parse_charset : string -> string option
-
 val read_message_utf8 : Buffered_line_reader.t -> string
-
 val write_message : out_channel -> string -> unit

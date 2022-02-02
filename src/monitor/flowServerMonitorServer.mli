@@ -15,7 +15,6 @@ val notify_new_persistent_connection :
   client_id:LspProt.client_id -> lsp_init_params:Lsp.Initialize.params -> unit
 
 val notify_dead_persistent_connection : client_id:LspProt.client_id -> unit
-
 val start : FlowServerMonitorOptions.t -> unit Lwt.t
 
 type stop_reason =

@@ -292,11 +292,9 @@ end)
 
 module Autostop : sig
   val cancel_countdown : unit -> unit
-
   val start_countdown : unit -> unit
 end = struct
   let current_countdown = ref Lwt.return_unit
-
   let cancel_countdown () = Lwt.cancel !current_countdown
 
   let start_countdown () =

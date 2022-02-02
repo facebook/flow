@@ -10,17 +10,12 @@ exception Worker_should_exit
 let () = Callback.register_exception "worker_should_exit" Worker_should_exit
 
 external stop_workers : unit -> unit = "hh_stop_workers"
-
 external resume_workers : unit -> unit = "hh_resume_workers"
-
 external check_should_exit : unit -> unit = "hh_check_should_exit"
-
 external set_can_worker_stop : bool -> unit = "hh_set_can_worker_stop"
-
 external get_can_worker_stop : unit -> bool = "hh_get_can_worker_stop"
 
 let on_worker_cancelled = ref (fun () -> ())
-
 let set_on_worker_cancelled f = on_worker_cancelled := f
 
 let with_worker_exit f =

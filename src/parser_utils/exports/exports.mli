@@ -15,7 +15,5 @@ type export =
 type t = export list [@@deriving show { with_path = false }]
 
 val of_module : 'a Packed_type_sig.Module.t -> t
-
 val of_builtins : 'a Packed_type_sig.Builtins.t -> t
-
 val empty : t

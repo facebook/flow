@@ -13,7 +13,6 @@ let ( * ) : 'a 'b 'c 'd. ('a -> 'c) -> ('b -> 'd) -> 'a * 'b -> 'c * 'd =
 class virtual ['M, 'T, 'N, 'U] mapper =
   object (this)
     method virtual on_loc_annot : 'M -> 'N
-
     method virtual on_type_annot : 'T -> 'U
 
     method program (program : ('M, 'T) Ast.Program.t) : ('N, 'U) Ast.Program.t =
@@ -71,7 +70,6 @@ class virtual ['M, 'T, 'N, 'U] mapper =
           | TypeAlias stuff -> TypeAlias (this#type_alias stuff)
           | DeclareOpaqueType otype -> DeclareOpaqueType (this#declare_opaque_type otype)
         )
-      
 
     method comment ((annot, c) : 'M Ast.Comment.t) : 'N Ast.Comment.t = (this#on_loc_annot annot, c)
 
@@ -131,7 +129,6 @@ class virtual ['M, 'T, 'N, 'U] mapper =
           | Update x -> Update (this#update_expression x)
           | Yield x -> Yield (this#yield x)
         )
-      
 
     method arg_list ((annot, args) : ('M, 'T) Ast.Expression.ArgList.t)
         : ('N, 'U) Ast.Expression.ArgList.t =
@@ -233,7 +230,6 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       { param = param'; body = body'; comments = comments' }
 
     method class_declaration cls = this#class_ cls
-
     method class_expression cls = this#class_ cls
 
     method class_ (cls : ('M, 'T) Ast.Class.t) : ('N, 'U) Ast.Class.t =
@@ -996,7 +992,6 @@ class virtual ['M, 'T, 'N, 'U] mapper =
         Qualified (this#on_type_annot annot, { qualification = qualification'; id = id' })
 
     method typeof_identifier id = this#t_identifier id
-
     method typeof_member_identifier id = this#t_identifier id
 
     method tuple_type (t : ('M, 'T) Ast.Type.Tuple.t) : ('N, 'U) Ast.Type.Tuple.t =
@@ -1088,7 +1083,6 @@ class virtual ['M, 'T, 'N, 'U] mapper =
           | BigIntLiteral t' -> BigIntLiteral (this#bigint_literal t')
           | BooleanLiteral t' -> BooleanLiteral (this#boolean_literal t')
         )
-      
 
     method implicit (t : ('M, 'T) Ast.Expression.CallTypeArg.Implicit.t)
         : ('N, 'U) Ast.Expression.CallTypeArg.Implicit.t =
@@ -1404,7 +1398,6 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       | NamespacedName nname -> NamespacedName (this#jsx_attribute_name_namespaced nname)
 
     method jsx_attribute_name_identifier id = this#jsx_identifier id
-
     method jsx_attribute_name_namespaced nname = this#jsx_namespaced_name nname
 
     method jsx_attribute_value (value : ('M, 'T) Ast.JSX.Attribute.value)
@@ -1462,9 +1455,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
         MemberExpression (this#jsx_element_name_member_expression member_exp)
 
     method jsx_element_name_identifier ident = this#jsx_identifier ident
-
     method jsx_element_name_namespaced ns = this#jsx_namespaced_name ns
-
     method jsx_element_name_member_expression expr = this#jsx_member_expression expr
 
     method jsx_namespaced_name (namespaced_name : ('M, 'T) Ast.JSX.NamespacedName.t)

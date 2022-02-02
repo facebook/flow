@@ -8,11 +8,8 @@
 type t
 
 val add_not_yet_seen_builtin : t -> Reason.name -> Type.t -> unit
-
 val get_builtin : t -> Reason.name -> on_missing:(unit -> Type.t) -> Type.t
-
 val set_builtin : flow_t:(Type.t * Type.t -> unit) -> t -> Reason.name -> Type.t -> unit
-
 val empty : unit -> t
 
 val optimize_entries :

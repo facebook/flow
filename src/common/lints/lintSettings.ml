@@ -20,7 +20,6 @@ type 'a t = {
 }
 
 type warning = int * string
-
 type error = int * string
 
 let default_explicit_values =
@@ -74,7 +73,6 @@ let map f settings =
 (* SEVERITY-SPECIFIC FUNCTIONS *)
 
 let empty_severities = { default_value = Off; explicit_values = LintMap.empty }
-
 let default_severities = { empty_severities with explicit_values = default_explicit_values }
 
 let is_enabled lint_kind settings =

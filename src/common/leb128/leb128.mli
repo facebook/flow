@@ -7,6 +7,5 @@
 
 module Unsigned : sig
   val read : (unit -> int) -> int
-
   val write : (int -> unit) -> int -> unit
 end

@@ -9,7 +9,6 @@ module type LOOP = sig
   type acc
 
   val main : acc -> acc Lwt.t
-
   val catch : acc -> Exception.t -> unit Lwt.t
 end
 

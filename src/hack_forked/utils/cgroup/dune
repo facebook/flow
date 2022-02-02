@@ -1,10 +1,6 @@
 (library
-  (name cgroup)
-  (wrapped false)
-  (libraries
-    base
-    lwt
-    lwt.unix
-    procfs
-  )
-  (preprocess (pps lwt_ppx)))
+ (name cgroup)
+ (wrapped false)
+ (libraries base lwt lwt.unix procfs)
+ (preprocess
+  (pps lwt_ppx)))

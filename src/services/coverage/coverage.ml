@@ -284,11 +284,8 @@ class visitor =
 class ['a, 'l, 't] coverage_folder ~(f : 'l -> 't -> 'a -> 'a) ~(init : 'a) =
   object (this)
     inherit ['l, 'l * 't, 'l, 'l * 't] Flow_polymorphic_ast_mapper.mapper as super
-
     val mutable acc : 'a = init
-
     method on_loc_annot x = x
-
     method on_type_annot x = x
 
     method! expression exp =

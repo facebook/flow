@@ -19,12 +19,10 @@ module Time : sig
   type t
 
   val get : unit -> t
-
   val compare : t -> t -> int
 
   (* The beginning of times *)
   val bot : t
-
   val to_string : t -> string
 end
 

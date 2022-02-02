@@ -17,7 +17,6 @@
  *)
 
 type workload = ServerEnv.env -> ServerEnv.env Lwt.t
-
 type parallelizable_workload = ServerEnv.env -> unit Lwt.t
 
 type 'a item = {

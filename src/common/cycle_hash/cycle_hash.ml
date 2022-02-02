@@ -24,7 +24,6 @@
  *)
 
 type read_hash = unit -> int64
-
 type write_hash = int64 -> unit
 
 type node = {
@@ -37,9 +36,7 @@ type node = {
 }
 
 and visit = edge -> dep_edge -> unit
-
 and edge = node -> unit
-
 and dep_edge = read_hash -> unit
 
 type cx = {
@@ -136,5 +133,4 @@ let rec strongconnect cx v =
   end
 
 let root cx node = if node.index = -1 then strongconnect cx node
-
 let read_hash node = node.read_hash ()

@@ -32,25 +32,15 @@ type persistent_delay = {
 }
 
 let context = ref { from = None }
-
 let disable_logging () = ()
-
 let get_context () = !context
-
 let get_from_I_AM_A_CLOWN () = !context.from
-
 let restore_context _ = ()
-
 let set_command _ = ()
-
 let set_from from = context := { from }
-
 let set_root _ = ()
-
 let set_root_name _ = ()
-
 let set_saved_state_filename _ = ()
-
 let set_monitor_options ~file_watcher:_ ~vcs:_ = ()
 
 let set_server_options
@@ -77,21 +67,13 @@ let init_done
   ()
 
 let init_flow_command ~init_id:_ = ()
-
 let init_worker ~init_id:_ _ = ()
-
 let should_log () = false
-
 let killed _ = ()
-
 let lock_lost _ = ()
-
 let lock_stolen _ = ()
-
 let out_of_date _ = ()
-
 let exit ?error:_ _ _ = ()
-
 let report_from_monitor_server_exit_due_to_signal _ = ()
 
 let recheck
@@ -118,11 +100,8 @@ let recheck
   ()
 
 let recheck_series ~recheck_count:_ ~profiling:_ = ()
-
 let murdered_by_oom_killer _ = ()
-
 let ephemeral_command_success ~json_data:_ ~client_context:_ ~profiling:_ = ()
-
 let ephemeral_command_failure ~json_data:_ ~client_context:_ = ()
 
 let persistent_command_success
@@ -154,7 +133,6 @@ let persistent_command_failure
   ()
 
 let persistent_expected_error ~request:_ ~client_context:_ ~error:_ = ()
-
 let persistent_unexpected_error ~request:_ ~client_context:_ ~error:_ = ()
 
 let saved_state_fb_fetcher_success
@@ -168,39 +146,21 @@ let saved_state_fb_fetcher_success
   ()
 
 let saved_state_fb_fetcher_error ~step:_ ~trace:_ ~profiling:_ = ()
-
 let load_saved_state_success ~changed_files_count:_ = ()
-
 let load_saved_state_error ~saved_state_filename:_ ~changed_files_count:_ ~invalid_reason:_ = ()
-
 let idle_heartbeat ~idle_time:_ ~profiling:_ = ()
-
 let live_parse_errors ~request:_ ~data:_ ~wall_start:_ = ()
-
 let live_non_parse_errors ~request:_ ~data:_ ~wall_start:_ = ()
-
 let live_non_parse_errors_failed ~request:_ ~data:_ ~wall_start:_ = ()
-
 let file_watcher_event_started ~name:_ ~data:_ = ()
-
 let file_watcher_event_finished ~name:_ ~data:_ = ()
-
 let watchman_error ?request:_ ?response:_ _ = ()
-
 let watchman_warning _ = ()
-
 let watchman_uncaught_failure _ = ()
-
 let watchman_connection_reestablished _ = ()
-
 let watchman_connection_reestablishment_failed _ = ()
-
 let sharedmem_gc_ran _ _ _ _ = ()
-
 let sharedmem_init_done _ = ()
-
 let sharedmem_failed_memfd_init _ = ()
-
 let worker_exception _ = ()
-
 let dfind_ready _ _ = ()

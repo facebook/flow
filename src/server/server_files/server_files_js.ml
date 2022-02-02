@@ -60,20 +60,13 @@ let config_file flowconfig_name root = Path.to_string (Path.concat root flowconf
  * Which can cause ENAMETOOLONG or stuff like that. So let's cap our filenames (without extensions)
  * at 200 characters *)
 let max_root_part_len = 200
-
 let log_file = file_of_root ~max_root_part_len "log"
-
 let monitor_log_file = file_of_root ~max_root_part_len "monitor_log"
-
 let lock_file = file_of_root ~max_root_part_len "lock"
-
 let pids_file = file_of_root ~max_root_part_len "pids"
-
 let recheck_stats_file = file_of_root ~max_root_part_len "recheck_stats"
 
 (* Socket files don't care about length. socket.ml will worry about abridging those *)
 let socket_file = file_of_root "sockv3"
-
 let legacy2_socket_file = file_of_root "sockv2"
-
 let legacy1_socket_file = file_of_root "sock"

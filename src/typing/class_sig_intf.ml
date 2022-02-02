@@ -7,9 +7,7 @@
 
 module type S = sig
   type func_sig
-
   type func_params_tast
-
   type t
 
   type set_asts =
@@ -25,7 +23,6 @@ module type S = sig
     | Infer of func_sig * set_asts
 
   type field' = ALoc.t option * Polarity.t * field
-
   type typeapp = ALoc.t * Type.t * Type.t list option
 
   type extends =
@@ -164,7 +161,6 @@ module type S = sig
               Context.t -> Reason.t -> Type.typeparams -> Type.typeparam * Type.t
 
   val this_or_mixed_of_t : static:bool -> t -> Type.t
-
   val fields_to_prop_map : Context.t -> field' SMap.t -> Type.Properties.id
 
   (** 1. Manipulation *)
@@ -204,7 +200,6 @@ module type S = sig
 
   module This : sig
     val is_bound_to_empty : t -> bool
-
     val in_class : (ALoc.t, ALoc.t) Flow_ast.Class.t -> bool
   end
 end

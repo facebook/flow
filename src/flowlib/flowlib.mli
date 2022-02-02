@@ -10,7 +10,5 @@ type libdir =
   | Prelude of Path.t
 
 val libdir : no_flowlib:bool -> Path.t -> libdir
-
 val path_of_libdir : libdir -> Path.t
-
 val extract : libdir -> unit

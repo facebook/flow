@@ -50,5 +50,4 @@ let equal_tests =
        ]
 
 let tests = "xx" >::: [to_string_tests; equal_tests]
-
 let () = run_test_tt_main tests

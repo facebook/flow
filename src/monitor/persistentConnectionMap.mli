@@ -6,11 +6,7 @@
  *)
 
 val add : client_id:LspProt.client_id -> client:PersistentConnection.t -> unit
-
 val get : client_id:LspProt.client_id -> PersistentConnection.t option
-
 val remove : client_id:LspProt.client_id -> unit
-
 val cardinal : unit -> int
-
 val get_all_clients : unit -> PersistentConnection.t list

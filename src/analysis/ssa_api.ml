@@ -15,13 +15,10 @@ module type S = sig
     | Uninitialized
 
   type write_locs = write_loc list
-
   type values = write_locs L.LMap.t
 
   val uninitialized : write_loc
-
   val write_locs_of_read_loc : values -> read_loc -> write_locs
-
   val is_dead_write_loc : values -> L.t -> bool
 end
 
@@ -35,11 +32,9 @@ module Make (L : Loc_sig.S) : S with module L = L = struct
     | Uninitialized
 
   type write_locs = write_loc list
-
   type values = write_locs L.LMap.t
 
   let uninitialized = Uninitialized
-
   let write_locs_of_read_loc values read_loc = L.LMap.find read_loc values
 
   let is_dead_write_loc values loc =

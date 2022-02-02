@@ -13,7 +13,6 @@ val add_require_tvars :
 
 module Make_Inference (Env : Env_sig.S) : sig
   module Statement : Statement_sig.S with module Env := Env
-
   module Abnormal : Abnormal_sig.S with module Env := Env
 end
 
@@ -40,9 +39,6 @@ module type S = sig
 end
 
 module Make (_ : Env_sig.S) : S
-
 module NewEnvInference : S
-
 module EnvInference : S
-
 include S

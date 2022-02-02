@@ -225,7 +225,6 @@ let mapper
           num_error_vars = LSet.cardinal loc_error_set;
           num_renamable_vars = ALocSet.cardinal renamable;
         }
-      
 
     method! variable_declarator_pattern ~kind ((ploc, patt) : ('loc, 'loc) Ast.Pattern.t) =
       let get_annot ty annot =

@@ -68,7 +68,6 @@ exception Syntax_error of string
 *)
 
 let peek env = env.data.[env.pos]
-
 let has_more env = String.length env.data > env.pos
 
 let syntax_error env msg =
@@ -132,9 +131,7 @@ let js_literal env s js =
     syntax_error env err_msg
 
 let js_true env = js_literal env "true" (JSON_Bool true)
-
 let js_false env = js_literal env "false" (JSON_Bool false)
-
 let js_null env = js_literal env "null" JSON_Null
 
 let buf_eat buf env c =
@@ -346,9 +343,7 @@ module type Output_stream_intf = sig
   type t
 
   val add_char : t -> char -> unit
-
   val add_string : t -> string -> unit
-
   val add_substring : t -> string -> int -> int -> unit
 end
 
@@ -356,9 +351,7 @@ module Buffer_stream : Output_stream_intf with type t = Buffer.t = struct
   type t = Buffer.t
 
   let add_char b c = Buffer.add_char b c
-
   let add_string b s = Buffer.add_string b s
-
   let add_substring b s ofs len = Buffer.add_substring b s ofs len
 end
 
@@ -366,9 +359,7 @@ module Channel_stream : Output_stream_intf with type t = Stdlib.out_channel = st
   type t = Stdlib.out_channel
 
   let add_char b c = Stdlib.output_char b c
-
   let add_string b s = Stdlib.output_string b s
-
   let add_substring b s ofs len = Stdlib.output_substring b s ofs len
 end
 
@@ -525,7 +516,6 @@ let output_json_endline ~pretty (oc : out_channel) (json : json) =
   flush oc
 
 let print_json_endline ?(pretty = false) (json : json) = output_json_endline ~pretty stdout json
-
 let prerr_json_endline ?(pretty = false) (json : json) = output_json_endline ~pretty stderr json
 
 let json_of_string ?(strict = true) s =
@@ -533,7 +523,6 @@ let json_of_string ?(strict = true) s =
   js_value lb
 
 let json_of_file ?strict filename = json_of_string ?strict (string_of_file filename)
-
 let int_ n = JSON_Number (string_of_int n)
 
 let float_ n =
@@ -609,29 +598,17 @@ module type Access = sig
   type 'a m = ('a * keytrace, access_failure) result
 
   val keytrace_to_string : keytrace -> string
-
   val access_failure_to_string : access_failure -> string
-
   val return : 'a -> 'a m
-
   val ( >>= ) : 'a m -> ('a * keytrace -> 'b m) -> 'b m
-
   val counit_with : (access_failure -> 'a) -> 'a m -> 'a
-
   val to_option : 'a m -> 'a option
-
   val get_obj : string -> json * keytrace -> json m
-
   val get_bool : string -> json * keytrace -> bool m
-
   val get_string : string -> json * keytrace -> string m
-
   val get_number : string -> json * keytrace -> string m
-
   val get_number_int : string -> json * keytrace -> int m
-
   val get_array : string -> json * keytrace -> json list m
-
   val get_val : string -> json * keytrace -> json m
 end
 

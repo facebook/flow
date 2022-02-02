@@ -20,7 +20,6 @@ type t = {
 }
 
 let empty = { stems = []; stem_map = PathMap.empty }
-
 let stems matcher = matcher.stems
 
 (* given a path, return the max prefix not containing a wildcard

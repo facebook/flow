@@ -33,5 +33,4 @@ val connect_once :
   (Timeout.in_channel * out_channel, error) result
 
 val busy_reason_to_string : busy_reason -> string
-
 val error_to_string : error -> string

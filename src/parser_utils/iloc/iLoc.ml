@@ -15,7 +15,6 @@ let compare (a_loc, a_id) (b_loc, b_id) =
     i
 
 let equal (a_loc, a_id) (b_loc, b_id) = Loc.equal a_loc b_loc && a_id = b_id
-
 let none = (Loc.none, 0)
 
 let debug_to_string ?include_source (loc, id) =

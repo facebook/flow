@@ -9,13 +9,9 @@ open Type.TypeContext
 module ALocMap = Loc_collections.ALocMap
 
 exception Props_not_found of Type.Properties.id
-
 exception Call_not_found of int
-
 exception Exports_not_found of Type.Exports.id
-
 exception Require_not_found of string
-
 exception Module_not_found of string
 
 type metadata = {
@@ -358,7 +354,6 @@ let make ccx metadata file aloc_table module_ref phase =
   }
 
 let sig_cx cx = cx.ccx.sig_cx
-
 let trust_graph_sig sig_cx = sig_cx.trust_graph
 
 (* modules *)
@@ -388,19 +383,12 @@ let module_ref cx =
 
 (* accessors *)
 let current_phase cx = cx.phase
-
 let all_unresolved cx = cx.ccx.all_unresolved
-
 let trust_constructor cx = cx.trust_constructor
-
 let cx_with_trust cx trust = { cx with trust_constructor = trust }
-
 let metadata cx = cx.metadata
-
 let max_literal_length cx = cx.metadata.max_literal_length
-
 let babel_loose_array_spread cx = cx.metadata.babel_loose_array_spread
-
 let builtins cx = cx.ccx.builtins
 
 let enable_const_params cx =
@@ -419,38 +407,24 @@ let relay_integration_module_prefix cx =
     cx.metadata.relay_integration_module_prefix
 
 let env_mode cx = cx.metadata.env_mode
-
 let enforce_strict_call_arity cx = cx.metadata.enforce_strict_call_arity
-
 let errors cx = cx.ccx.errors
-
 let error_suppressions cx = cx.ccx.error_suppressions
-
 let evaluated cx = cx.ccx.sig_cx.evaluated
-
 let goals cx = cx.ccx.goal_map
-
 let exact_by_default cx = cx.metadata.exact_by_default
-
 let exact_empty_objects cx = cx.metadata.exact_empty_objects
-
 let enforce_local_inference_annotations cx = cx.metadata.enforce_local_inference_annotations
-
 let local_inference_annotation_dirs cx = cx.metadata.local_inference_annotation_dirs
-
 let enforce_this_annotations cx = cx.metadata.enforce_this_annotations
-
 let experimental_infer_indexers cx = cx.metadata.experimental_infer_indexers
-
 let statement_reorder_checking cx = cx.metadata.statement_reorder_checking
-
 let cycle_errors cx = cx.metadata.cycle_errors
 
 let run_post_inference_implicit_instantiation cx =
   cx.metadata.run_post_inference_implicit_instantiation
 
 let file cx = cx.file
-
 let aloc_tables cx = cx.ccx.aloc_tables
 
 let find_props cx id =
@@ -474,9 +448,7 @@ let find_tvar cx id =
   | Not_found -> raise (Union_find.Tvar_not_found id)
 
 let graph cx = cx.ccx.sig_cx.graph
-
 let trust_graph cx = trust_graph_sig cx.ccx.sig_cx
-
 let is_checked cx = cx.metadata.checked
 
 let is_verbose cx =
@@ -488,23 +460,14 @@ let is_verbose cx =
     Base.List.mem files (File_key.to_string file) ~equal:String.equal
 
 let is_strict cx = Base.Option.is_some cx.declare_module_ref || cx.metadata.strict
-
 let is_strict_local cx = cx.metadata.strict_local
-
 let include_suppressions cx = cx.metadata.include_suppressions
-
 let severity_cover cx = cx.ccx.severity_cover
-
 let max_trace_depth cx = cx.metadata.max_trace_depth
-
 let require_map cx = cx.require_map
-
 let property_maps cx = cx.ccx.sig_cx.property_maps
-
 let call_props cx = cx.ccx.sig_cx.call_props
-
 let export_maps cx = cx.ccx.sig_cx.export_maps
-
 let react_runtime cx = cx.metadata.react_runtime
 
 let in_react_server_component_file cx =
@@ -513,59 +476,32 @@ let in_react_server_component_file cx =
   SSet.exists (File_key.check_suffix file) exts
 
 let recursion_limit cx = cx.metadata.recursion_limit
-
 let root cx = cx.metadata.root
-
 let facebook_fbs cx = cx.metadata.facebook_fbs
-
 let facebook_fbt cx = cx.metadata.facebook_fbt
-
 let facebook_module_interop cx = cx.metadata.facebook_module_interop
-
 let haste_module_ref_prefix cx = cx.metadata.haste_module_ref_prefix
-
 let should_ignore_non_literal_requires cx = cx.metadata.ignore_non_literal_requires
-
 let should_munge_underscores cx = cx.metadata.munge_underscores
-
 let should_strip_root cx = cx.metadata.strip_root
-
 let suppress_types cx = cx.metadata.suppress_types
-
 let type_asserts_map cx = cx.ccx.type_asserts_map
-
 let literal_subtypes cx = cx.ccx.literal_subtypes
-
 let constrained_writes cx = cx.ccx.constrained_writes
-
 let type_graph cx = cx.ccx.type_graph
-
 let matching_props cx = cx.ccx.matching_props
-
 let trust_mode cx = cx.metadata.trust_mode
-
 let type_asserts cx = cx.metadata.type_asserts
-
 let verbose cx = cx.metadata.verbose
-
 let max_workers cx = cx.metadata.max_workers
-
 let jsx cx = cx.metadata.jsx
-
 let exists_checks cx = cx.ccx.exists_checks
-
 let exists_excuses cx = cx.ccx.exists_excuses
-
 let voidable_checks cx = cx.ccx.voidable_checks
-
 let implicit_instantiation_checks cx = cx.ccx.implicit_instantiation_checks
-
 let inferred_indexers cx = cx.ccx.inferred_indexers
-
 let environment cx = cx.environment
-
 let any_propagation cx = cx.metadata.any_propagation
-
 let automatic_require_default cx = cx.metadata.automatic_require_default
 
 let trust_tracking cx =
@@ -646,11 +582,8 @@ let add_trust_var cx id bounds =
   cx.ccx.sig_cx <- { cx.ccx.sig_cx with trust_graph }
 
 let add_type_assert cx k v = cx.ccx.type_asserts_map <- ALocMap.add k v cx.ccx.type_asserts_map
-
 let add_matching_props cx c = cx.ccx.matching_props <- c :: cx.ccx.matching_props
-
 let add_literal_subtypes cx c = cx.ccx.literal_subtypes <- c :: cx.ccx.literal_subtypes
-
 let add_constrained_write cx c = cx.ccx.constrained_writes <- c :: cx.ccx.constrained_writes
 
 let add_voidable_check cx voidable_check =
@@ -668,7 +601,6 @@ let add_implicit_instantiation_ctor cx lhs poly_t use_op reason_op args =
     let check =
       Implicit_instantiation_check.
         { lhs; poly_t; operation = (use_op, reason_op, Constructor args) }
-      
     in
 
     cx.ccx.implicit_instantiation_checks <- check :: cx.ccx.implicit_instantiation_checks
@@ -683,27 +615,16 @@ let add_inferred_indexer cx loc dict =
       cx.ccx.inferred_indexers
 
 let set_all_unresolved cx all_unresolved = cx.ccx.all_unresolved <- all_unresolved
-
 let set_evaluated cx evaluated = cx.ccx.sig_cx <- { cx.ccx.sig_cx with evaluated }
-
 let set_goals cx goals = cx.ccx.goal_map <- goals
-
 let set_graph cx graph = cx.ccx.sig_cx <- { cx.ccx.sig_cx with graph }
-
 let set_trust_graph cx trust_graph = cx.ccx.sig_cx <- { cx.ccx.sig_cx with trust_graph }
-
 let set_property_maps cx property_maps = cx.ccx.sig_cx <- { cx.ccx.sig_cx with property_maps }
-
 let set_call_props cx call_props = cx.ccx.sig_cx <- { cx.ccx.sig_cx with call_props }
-
 let set_export_maps cx export_maps = cx.ccx.sig_cx <- { cx.ccx.sig_cx with export_maps }
-
 let set_type_graph cx type_graph = cx.ccx.type_graph <- type_graph
-
 let set_exists_checks cx exists_checks = cx.ccx.exists_checks <- exists_checks
-
 let set_exists_excuses cx exists_excuses = cx.ccx.exists_excuses <- exists_excuses
-
 let set_environment cx env = cx.environment <- env
 
 (* Given a sig context, it makes sense to clear the parts that are shared with
@@ -806,24 +727,16 @@ let find_real_props cx id =
   find_props cx id |> NameUtils.Map.filter (fun x _ -> not (Reason.is_internal_name x))
 
 let iter_props cx id f = find_props cx id |> NameUtils.Map.iter f
-
 let iter_real_props cx id f = find_real_props cx id |> NameUtils.Map.iter f
-
 let fold_real_props cx id f = find_real_props cx id |> NameUtils.Map.fold f
-
 let has_prop cx id x = find_props cx id |> NameUtils.Map.mem x
-
 let get_prop cx id x = find_props cx id |> NameUtils.Map.find_opt x
-
 let set_prop cx id x p = find_props cx id |> NameUtils.Map.add x p |> add_property_map cx id
-
 let has_export cx id name = find_exports cx id |> NameUtils.Map.mem name
-
 let set_export cx id name t = find_exports cx id |> NameUtils.Map.add name t |> add_export_map cx id
 
 (* constructors *)
 let make_aloc_id cx aloc = ALoc.id_of_aloc cx.aloc_table aloc
-
 let make_generic_id cx name loc = Generic.make_bound_id (make_aloc_id cx loc) name
 
 let generate_property_map cx pmap =
@@ -921,21 +834,13 @@ let find_trust_graph cx id =
   constraints
 
 let constraint_cache cx = cx.ccx.constraint_cache
-
 let subst_cache cx = cx.ccx.subst_cache
-
 let instantiation_cache cx = cx.ccx.instantiation_cache
-
 let repos_cache cx = cx.ccx.repos_cache
-
 let eval_id_cache cx = cx.ccx.eval_id_cache
-
 let eval_repos_cache cx = cx.ccx.eval_repos_cache
-
 let fix_cache cx = cx.ccx.fix_cache
-
 let spread_cache cx = cx.ccx.spread_cache
-
 let speculation_state cx = cx.ccx.speculation_state
 
 let speculation_id cx =

@@ -6,23 +6,14 @@
  *)
 
 type cx
-
 type node
-
 type read_hash = unit -> int64
-
 type write_hash = int64 -> unit
-
 type edge = node -> unit
-
 type dep_edge = read_hash -> unit
-
 type visit = edge -> dep_edge -> unit
 
 val create_cx : unit -> cx
-
 val create_node : visit -> read_hash -> write_hash -> node
-
 val root : cx -> node -> unit
-
 val read_hash : node -> int64

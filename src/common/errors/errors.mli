@@ -54,17 +54,11 @@ module Friendly : sig
   }
 
   val docs : docs
-
   val message_of_string : string -> 'a message
-
   val text : string -> 'a message_feature
-
   val code : string -> 'a message_feature
-
   val ref : ?loc:bool -> Reason.concrete_reason -> Loc.t message_feature
-
   val conjunction_concat : ?conjunction:string -> 'a message list -> 'a message
-
   val capitalize : 'a message -> 'a message
 end
 
@@ -95,11 +89,8 @@ val mk_speculation_error :
   Loc.t printable_error
 
 val loc_of_printable_error : 'loc printable_error -> 'loc
-
 val locs_of_printable_error : 'loc printable_error -> 'loc list
-
 val kind_of_printable_error : 'loc printable_error -> error_kind
-
 val code_of_printable_error : 'loc printable_error -> Error_codes.error_code option
 
 module ConcreteLocPrintableErrorSet : Flow_set.S with type elt = Loc.t printable_error

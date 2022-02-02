@@ -1088,7 +1088,6 @@ class ['a] t =
       )
 
     method private list : 't. ('a -> 't -> 'a) -> 'a -> 't list -> 'a = List.fold_left
-
     method private nel : 't. ('a -> 't -> 'a) -> 'a -> 't Nel.t -> 'a = Nel.fold_left
 
     method private opt : 't. ('a -> 't -> 'a) -> 'a -> 't option -> 'a =

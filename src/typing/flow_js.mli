@@ -12,9 +12,7 @@ exception Not_expect_bound of string
 
 (* propagates sources to sinks following a subtype relation *)
 val flow : Context.t -> Type.t * Type.use_t -> unit
-
 val flow_t : Context.t -> Type.t * Type.t -> unit
-
 val unify : Context.t -> ?use_op:Type.use_op -> Type.t -> Type.t -> unit
 
 val flow_p :
@@ -45,7 +43,6 @@ val filter_optional : Context.t -> ?trace:Type.trace -> reason -> Type.t -> Type
 
 module Cache : sig
   val stats_poly_instantiation : Context.t -> Hashtbl.statistics
-
   val summarize_flow_constraint : Context.t -> (string * int) list
 end
 
@@ -110,20 +107,14 @@ val add_output : Context.t -> ?trace:Type.trace -> Error_message.t -> unit
 (* builtins *)
 
 val get_builtin : Context.t -> ?trace:Type.trace -> name -> reason -> Type.t
-
 val get_builtin_tvar : Context.t -> ?trace:Type.trace -> name -> reason -> Type.ident
-
 val get_builtin_type : Context.t -> ?trace:Type.trace -> reason -> ?use_desc:bool -> name -> Type.t
-
 val set_builtin : Context.t -> ?trace:Type.trace -> name -> Type.t -> unit
-
 val mk_instance : Context.t -> ?trace:Type.trace -> reason -> ?use_desc:bool -> Type.t -> Type.t
-
 val mk_typeof_annotation : Context.t -> ?trace:Type.trace -> reason -> Type.t -> Type.t
 
 (* trust *)
 val mk_trust_var : Context.t -> ?initial:Trust.trust_qualifier -> unit -> Type.ident
-
 val strengthen_trust : Context.t -> Type.ident -> Trust.trust_qualifier -> Error_message.t -> unit
 
 val widen_obj_type :

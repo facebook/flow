@@ -147,6 +147,8 @@ end
 
 module With_ALoc =
   Make (Loc_sig.ALocS) (Scope_api.With_ALoc) (Ssa_api.With_ALoc) (Provider_api.ALocProviders)
+
 module With_Loc =
   Make (Loc_sig.LocS) (Scope_api.With_Loc) (Ssa_api.With_Loc) (Provider_api.LocProviders)
+
 include With_ALoc

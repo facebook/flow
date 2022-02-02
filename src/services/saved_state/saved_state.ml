@@ -145,9 +145,7 @@ end = struct
     type t
 
     val make : root:string -> t
-
     val normalize_path : t -> string -> string
-
     val normalize_file_key : t -> File_key.t -> File_key.t
   end = struct
     type t = {
@@ -443,9 +441,7 @@ end = struct
     type t
 
     val make : root:string -> t
-
     val denormalize_path : t -> string -> string
-
     val denormalize_file_key : t -> File_key.t -> File_key.t
   end = struct
     type t = {

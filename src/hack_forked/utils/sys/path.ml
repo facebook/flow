@@ -12,20 +12,15 @@ module S = struct
   type t = string
 
   let compare = Stdlib.compare
-
   let to_string x = x
 end
 
 type t = S.t
 
 let dummy_path : t = ""
-
 let cat = Sys_utils.cat
-
 let compare = Stdlib.compare
-
 let dirname = Filename.dirname
-
 let basename = Filename.basename
 
 (**
@@ -52,7 +47,6 @@ let make path =
 let make_unsafe path = path
 
 let to_string path = path
-
 let concat path more = make (Filename.concat path more)
 
 let parent path =

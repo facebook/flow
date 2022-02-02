@@ -160,27 +160,15 @@ let init ~options ~genv ~tparams_rev ~imported_names =
   { options; genv; depth = 0; tparams_rev; imported_names; under_type_alias = SymbolSet.empty }
 
 let descend e = { e with depth = e.depth + 1 }
-
 let get_cx e = e.genv.cx
-
 let expand_internal_types e = e.options.expand_internal_types
-
 let evaluate_type_destructors e = e.options.evaluate_type_destructors
-
 let flag_shadowed_type_params e = e.options.flag_shadowed_type_params
-
 let preserve_inferred_literal_types e = e.options.preserve_inferred_literal_types
-
 let omit_targ_defaults e = e.options.omit_targ_defaults
-
 let max_depth e = e.options.max_depth
-
 let merge_bot_and_any_kinds e = e.options.merge_bot_and_any_kinds
-
 let current_file e = e.genv.file
-
 let add_typeparam env typeparam = { env with tparams_rev = typeparam :: env.tparams_rev }
-
 let set_type_alias name e = { e with under_type_alias = SymbolSet.add name e.under_type_alias }
-
 let seen_type_alias name e = SymbolSet.mem name e.under_type_alias

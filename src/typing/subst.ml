@@ -17,7 +17,6 @@ open Reason
 let substituter =
   object (self)
     inherit [Type.t SMap.t * bool * use_op option] Type_mapper.t_with_uses as super
-
     method tvar _cx _map_cx _r id = id
 
     method call_prop cx map_cx id =

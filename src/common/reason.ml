@@ -334,9 +334,7 @@ type 'loc virtual_reason = {
 [@@deriving eq]
 
 type reason = ALoc.t virtual_reason
-
 type concrete_reason = Loc.t virtual_reason
-
 type t = reason
 
 let concretize_equal aloc_tables = equal_virtual_reason (ALoc.concretize_equal aloc_tables)
@@ -483,9 +481,7 @@ let func_reason ~async ~generator =
   mk_reason (RFunction func_desc)
 
 let poly_loc_of_reason r = r.loc
-
 let aloc_of_reason = poly_loc_of_reason
-
 let loc_of_reason = poly_loc_of_reason
 
 (* TODO return ALoc *)
@@ -495,13 +491,9 @@ let def_poly_loc_of_reason r =
   | None -> aloc_of_reason r
 
 let def_aloc_of_reason = def_poly_loc_of_reason
-
 let def_loc_of_reason = def_poly_loc_of_reason
-
 let annot_poly_loc_of_reason r = r.annot_loc_opt
-
 let annot_aloc_of_reason = annot_poly_loc_of_reason
-
 let annot_loc_of_reason = annot_poly_loc_of_reason
 
 let function_desc_prefix = function
@@ -918,7 +910,6 @@ let update_desc_new_reason f r =
   mk_reason_internal (f (desc_of_reason ~unwrap:false r)) (poly_loc_of_reason r) None None
 
 let replace_desc_reason desc r = mk_reason_internal desc r.loc r.def_loc_opt r.annot_loc_opt
-
 let replace_desc_new_reason desc r = mk_reason_internal desc r.loc None None
 
 (* returns reason with new location and description of original *)

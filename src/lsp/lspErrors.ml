@@ -24,11 +24,8 @@ module List = Base.List
  *    then we replace the server's non-parse errors for that file with the live non-parse errors.
  *)
 type errors = PublishDiagnostics.diagnostic list
-
 type parse_errors = ParseErrors of errors
-
 type non_parse_errors = NonParseErrors of errors
-
 type split_errors = parse_errors * non_parse_errors
 
 (* Server errors are the main errors that the Flow server reports to us. They come in two flavors *)
@@ -115,7 +112,6 @@ let limit_errors errors =
             relatedInformation = [];
             relatedLocations = [];
           }
-        
       in
 
       diagnostic :: retain

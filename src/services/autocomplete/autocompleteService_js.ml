@@ -9,7 +9,6 @@ open Base.Result
 open Loc_collections
 
 let loc_of_aloc = Parsing_heaps.Reader.loc_of_aloc
-
 let max_autoimport_suggestions = 100
 
 let default_autoimport_options =
@@ -19,10 +18,8 @@ let default_autoimport_options =
       max_results = max_autoimport_suggestions;
       num_threads = Base.Int.max 1 (Sys_utils.nbr_procs - 2);
     }
-  
 
 let autocomplete_suffix = "AUTO332"
-
 let suffix_len = String.length autocomplete_suffix
 
 let add_autocomplete_token contents line column =
@@ -244,7 +241,6 @@ let ty_normalizer_options =
       verbose_normalizer = false;
       max_depth = Some 50;
     }
-  
 
 type ac_result = {
   result: ServerProt.Response.Completion.t;
@@ -318,13 +314,9 @@ let members_of_type
 class type_collector (reader : Parsing_heaps.Reader.reader) (locs : LocSet.t) =
   object
     inherit [ALoc.t, ALoc.t * Type.t, ALoc.t, ALoc.t * Type.t] Flow_polymorphic_ast_mapper.mapper
-
     val mutable acc = LocMap.empty
-
     method on_loc_annot x = x
-
     method on_type_annot x = x
-
     method collected_types = acc
 
     method! t_identifier (((aloc, t), _) as ident) =
@@ -781,15 +773,10 @@ let type_exports_of_module_ty ~ac_loc ~exact_by_default ~documentation_of_module
 class local_type_identifiers_searcher =
   object (this)
     inherit [ALoc.t, ALoc.t * Type.t, ALoc.t, ALoc.t * Type.t] Flow_polymorphic_ast_mapper.mapper
-
     method on_loc_annot x = x
-
     method on_type_annot x = x
-
     val mutable rev_ids = []
-
     method rev_ids = rev_ids
-
     method add_id id = rev_ids <- id :: rev_ids
 
     method! type_alias (Flow_ast.Statement.TypeAlias.{ id; _ } as x) =

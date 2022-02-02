@@ -8,11 +8,8 @@
 open Ppxlib
 
 let flowlib_dir_ref = ref ""
-
 let prelude_dir_ref = ref ""
-
 let flowlib_cache = ref None
-
 let prelude_cache = ref None
 
 (* Read in all the flowlib files *)

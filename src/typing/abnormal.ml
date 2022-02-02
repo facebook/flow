@@ -26,9 +26,7 @@ module Make (Env : Env_sig.S) : Abnormal_sig.S with module Env := Env = struct
 
   (* called from traversal. abnormal indicates control flow directive encountered *)
   let throw_stmt_control_flow_exception stmt abnormal = raise (Exn (Stmt stmt, abnormal))
-
   let throw_stmts_control_flow_exception stmts abnormal = raise (Exn (Stmts stmts, abnormal))
-
   let throw_expr_control_flow_exception loc expr abnormal = raise (Exn (Expr (loc, expr), abnormal))
 
   (* if argument is Some abnormal, throw it *)
@@ -125,7 +123,6 @@ module Make (Env : Env_sig.S) : Abnormal_sig.S with module Env := Env = struct
 
   module AbnormalMap : WrappedMap.S with type key = t = WrappedMap.Make (struct
     type abnormal = t
-
     type t = abnormal
 
     let compare = Stdlib.compare

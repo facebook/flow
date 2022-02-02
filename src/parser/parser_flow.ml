@@ -46,8 +46,10 @@ module rec Parse : PARSER = struct
   module Pattern_cover = Pattern_cover.Cover (Parse)
   module Expression = Expression_parser.Expression (Parse) (Type) (Declaration) (Pattern_cover)
   module Object = Object_parser.Object (Parse) (Type) (Declaration) (Expression) (Pattern_cover)
+
   module Statement =
     Statement_parser.Statement (Parse) (Type) (Declaration) (Object) (Pattern_cover)
+
   module Pattern = Pattern_parser.Pattern (Parse) (Type)
   module JSX = Jsx_parser.JSX (Parse)
 
@@ -283,21 +285,13 @@ module rec Parse : PARSER = struct
     | _ -> expr_or_pattern
 
   and conditional = Expression.conditional
-
   and assignment = Expression.assignment
-
   and left_hand_side = Expression.left_hand_side
-
   and object_initializer = Object._initializer
-
   and object_key = Object.key
-
   and class_declaration = Object.class_declaration
-
   and class_expression = Object.class_expression
-
   and is_assignable_lhs = Expression.is_assignable_lhs
-
   and number = Expression.number
 
   and identifier_with_type =
@@ -367,9 +361,7 @@ module rec Parse : PARSER = struct
     )
 
   and jsx_element_or_fragment = JSX.element_or_fragment
-
   and pattern = Pattern.pattern
-
   and pattern_from_expr = Pattern.from_expr
 end
 
@@ -391,7 +383,6 @@ let with_eof parser env =
   ast
 
 let parse_statement env fail = do_parse env (with_eof Parse.statement_list_item) fail
-
 let parse_expression env fail = do_parse env (with_eof Parse.expression) fail
 
 let parse_program fail ?(token_sink = None) ?(parse_options = None) filename content =

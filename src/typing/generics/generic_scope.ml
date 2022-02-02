@@ -24,13 +24,10 @@ open Scope_id
 *)
 
 type scope = ALocIDSet.t
-
 type stack = (Scope_id.t * scope) Nel.t
 
 let initial_id = new_id ()
-
 let stack : stack ref = ref (Nel.one (initial_id, ALocIDSet.empty))
-
 let flatten_stack = Nel.fold_left (fun a (_, b) -> ALocIDSet.union a b) ALocIDSet.empty
 
 let update_scope gcx this_id =

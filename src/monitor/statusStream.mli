@@ -9,13 +9,9 @@ val reset :
   FlowServerMonitorOptions.file_watcher -> ServerStatus.restart_reason option -> unit Lwt.t
 
 val update : status:ServerStatus.status -> unit
-
 val file_watcher_ready : unit -> unit
-
 val file_watcher_deferred : string -> unit
-
 val call_on_free : f:(unit -> unit Lwt.t) -> unit Lwt.t
-
 val get_status : unit -> ServerStatus.status * FileWatcherStatus.status
 
 val wait_for_signficant_status :

@@ -104,8 +104,7 @@ let autocomplete_response_to_json ~strip_root response =
       JSON_Object
         [
           ("error", JSON_String error);
-          ("result", JSON_Array []);
-          (* TODO: remove this? kept for BC *)
+          ("result", JSON_Array []) (* TODO: remove this? kept for BC *);
         ]
     | Ok { ServerProt.Response.Completion.items; is_incomplete = _ } ->
       let results = Base.List.map ~f:(autocomplete_result_to_json ~strip_root) items in

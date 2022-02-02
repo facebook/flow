@@ -36,9 +36,7 @@ end
 
 module FixCodemod (Opts : FIX_CODEMOD_OPTIONS) = struct
   type accumulator = unit
-
   type prepass_state = unit
-
   type prepass_result = transformable_error list FilenameMap.t
 
   let prepass_init () = ()
@@ -125,7 +123,6 @@ let spec =
            )
         );
     }
-  
 
 let main (CommandUtils.Codemod_params ({ anon; _ } as codemod_params)) error_codes () =
   let komodo_flags =

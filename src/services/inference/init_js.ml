@@ -19,7 +19,6 @@ module Parsing = Parsing_service_js
 module Infer = Type_inference_js
 
 let is_ok { Parsing.parsed; _ } = not (FilenameSet.is_empty parsed)
-
 let is_fail { Parsing.failed; _ } = fst failed <> []
 
 type lib_result =

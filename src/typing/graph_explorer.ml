@@ -45,7 +45,6 @@ open Utils_js
 *)
 
 type unexplored = { mutable rev_deps: ISet.t }
-
 type explored = { mutable deps: ISet.t }
 
 type node =
@@ -56,7 +55,6 @@ module Tbl = Hashtbl.Make (struct
   type t = int
 
   let equal a b = a = b
-
   let hash = Hashtbl.hash
 end)
 

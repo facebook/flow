@@ -203,13 +203,9 @@ and reason_desc_function =
   | RUnknown
 
 type reason_desc = ALoc.t virtual_reason_desc
-
 type 'loc virtual_reason
-
 type reason = ALoc.t virtual_reason
-
 type concrete_reason = Loc.t virtual_reason
-
 type t = reason (* convenience *)
 
 (* reason constructor *)
@@ -217,15 +213,10 @@ val mk_reason : 'loc virtual_reason_desc -> 'loc -> 'loc virtual_reason
 
 (* ranges *)
 val in_range : Loc.t -> Loc.t -> bool
-
 val string_of_desc : 'loc virtual_reason_desc -> string
-
 val map_reason_locs : ('a -> 'b) -> 'a virtual_reason -> 'b virtual_reason
-
 val map_desc_locs : ('a -> 'b) -> 'a virtual_reason_desc -> 'b virtual_reason_desc
-
 val string_of_loc : ?strip_root:Path.t option -> Loc.t -> string
-
 val string_of_aloc : ?strip_root:Path.t option -> ALoc.t -> string
 
 val json_of_loc :
@@ -243,77 +234,44 @@ val json_of_loc_props :
   (string * Hh_json.json) list
 
 val json_of_source : ?strip_root:Path.t option -> File_key.t option -> Hh_json.json
-
 val json_source_type_of_source : File_key.t option -> Hh_json.json
-
 val locationless_reason : reason_desc -> reason
-
 val func_reason : async:bool -> generator:bool -> ALoc.t -> reason
-
 val display_string_of_name : name -> string
-
 val is_internal_name : name -> bool
-
 val internal_name : string -> name
-
 val internal_name_of_name : name -> name
-
 val is_internal_module_name : name -> bool
-
 val internal_module_name : string -> name
-
 val uninternal_name : name -> string
-
 val is_instantiable_reason : 'loc virtual_reason -> bool
-
 val is_constant_reason : 'loc virtual_reason -> bool
-
 val is_typemap_reason : 'loc virtual_reason -> bool
-
 val is_calltype_reason : 'loc virtual_reason -> bool
-
 val is_nullish_reason : 'loc virtual_reason -> bool
-
 val is_scalar_reason : 'loc virtual_reason -> bool
-
 val is_array_reason : 'loc virtual_reason -> bool
-
 val is_literal_object_reason : 'loc virtual_reason -> bool
-
 val is_literal_array_reason : 'loc virtual_reason -> bool
-
 val builtin_reason : reason_desc -> reason
 
 (* reason location preds *)
 val is_builtin_reason : ('loc -> File_key.t option) -> 'loc virtual_reason -> bool
-
 val is_lib_reason : reason -> bool
-
 val is_lib_reason_def : reason -> bool
-
 val is_blamable_reason : reason -> bool
-
 val string_of_source : ?strip_root:Path.t option -> File_key.t -> string
-
 val string_of_reason : ?strip_root:Path.t option -> reason -> string
-
 val dump_reason : ?strip_root:Path.t option -> reason -> string
 
 (* accessors *)
 val poly_loc_of_reason : 'loc virtual_reason -> 'loc
-
 val loc_of_reason : concrete_reason -> Loc.t
-
 val aloc_of_reason : reason -> ALoc.t
-
 val def_aloc_of_reason : reason -> ALoc.t
-
 val def_loc_of_reason : concrete_reason -> Loc.t
-
 val annot_aloc_of_reason : reason -> ALoc.t option
-
 val desc_of_reason : ?unwrap:bool -> 'loc virtual_reason -> 'loc virtual_reason_desc
-
 val annot_loc_of_reason : concrete_reason -> Loc.t option
 
 (* simple way to get derived reasons whose descriptions are
@@ -351,19 +309,12 @@ val mk_annot_reason : 'loc virtual_reason_desc -> 'loc -> 'loc virtual_reason
 module ReasonMap : WrappedMap.S with type key = reason
 
 val mk_expression_reason : (ALoc.t, ALoc.t) Flow_ast.Expression.t -> reason
-
 val mk_pattern_reason : (ALoc.t, ALoc.t) Flow_ast.Pattern.t -> reason
-
 val unknown_elem_empty_array_desc : reason_desc
-
 val inferred_union_elem_array_desc : reason_desc
-
 val invalidate_rtype_alias : 'loc virtual_reason_desc -> 'loc virtual_reason_desc
-
 val code_desc_of_literal : 'loc Flow_ast.Literal.t -> string
-
 val code_desc_of_expression : wrap:bool -> ('a, 'b) Flow_ast.Expression.t -> string
-
 val code_desc_of_pattern : ('a, 'b) Flow_ast.Pattern.t -> string
 
 (* Pass in any available aloc tables to be used when comparing abstract and concrete locations from

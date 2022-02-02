@@ -20,15 +20,10 @@ type json =
 exception Syntax_error of string
 
 val json_to_string : ?sort_keys:bool -> ?pretty:bool -> json -> string
-
 val json_to_multiline : ?sort_keys:bool -> json -> string
-
 val json_to_output : out_channel -> json -> unit
-
 val json_to_multiline_output : out_channel -> json -> unit
-
 val json_of_string : ?strict:bool -> string -> json
-
 val json_of_file : ?strict:bool -> string -> json
 
 val json_truncate :
@@ -51,29 +46,17 @@ val json_truncate_string :
   string
 
 val print_json_endline : ?pretty:bool -> json -> unit
-
 val prerr_json_endline : ?pretty:bool -> json -> unit
-
 val get_object_exn : json -> (string * json) list
-
 val get_array_exn : json -> json list
-
 val get_string_exn : json -> string
-
 val get_number_exn : json -> string
-
 val get_number_int_exn : json -> int
-
 val get_bool_exn : json -> bool
-
 val opt_string_to_json : string option -> json
-
 val opt_int_to_json : int option -> json
-
 val int_ : int -> json
-
 val float_ : float -> json
-
 val string_ : string -> json
 
 (* Types and functions for monadic API for traversing a JSON object. *)
@@ -169,11 +152,8 @@ module type Access = sig
   type 'a m = ('a * keytrace, access_failure) result
 
   val keytrace_to_string : keytrace -> string
-
   val access_failure_to_string : access_failure -> string
-
   val return : 'a -> 'a m
-
   val ( >>= ) : 'a m -> ('a * keytrace -> 'b m) -> 'b m
 
   (* This is a comonad, but we need a little help to deal with failure *)
@@ -196,28 +176,19 @@ module type Access = sig
    *
    *)
   val get_obj : string -> json * keytrace -> json m
-
   val get_bool : string -> json * keytrace -> bool m
-
   val get_string : string -> json * keytrace -> string m
-
   val get_number : string -> json * keytrace -> string m
-
   val get_number_int : string -> json * keytrace -> int m
-
   val get_array : string -> json * keytrace -> json list m
-
   val get_val : string -> json * keytrace -> json m (* any expected type *)
 end
 
 module Access : Access
 
 val get_field : (json * Access.keytrace -> 'a Access.m) -> (string -> 'a) -> json -> 'a
-
 val get_field_opt : (json * Access.keytrace -> 'a Access.m) -> json -> 'a option
 
 module JsonKey : Set.OrderedType with type t = json
-
 module JSet : Flow_set.S with type elt = json
-
 module JMap : WrappedMap.S with type key = json

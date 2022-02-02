@@ -47,7 +47,6 @@ type errors =
 exception FailedToInsertType of errors
 
 let expected err = FailedToInsertType (Expected err)
-
 let unexpected err = FailedToInsertType (Unexpected err)
 
 exception FoundAmbiguousType
@@ -185,7 +184,6 @@ class fixme_ambiguous_types_mapper =
   end
 
 let fixme_ambiguous_types = (new fixme_ambiguous_types_mapper)#on_t ()
-
 let simplify = Ty_utils.simplify_type ~merge_kinds:true ~sort:true
 
 (* Generate an equivalent Flow_ast.Type *)
@@ -228,15 +226,10 @@ class mapper ~strict ~synth_type target =
   let target_is_point = Utils.is_point target in
   object (this)
     inherit [Loc.t] Flow_ast_contains_mapper.mapper as super
-
     method private target_contains loc = Loc.contains target loc
-
     method private target_contained_by loc = Loc.contains loc target
-
     method private is_target loc = Loc.equal target loc
-
     method loc_annot_contains_target = this#target_contained_by
-
     method private synth_type_annotation_hint loc = Flow_ast.Type.Available (synth_type loc)
 
     (* If a type is missing and in the range of target then add a type annotation hint *)

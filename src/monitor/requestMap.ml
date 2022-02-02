@@ -11,9 +11,7 @@
  * Every request in this map has been sent to the server and no reply has been processed yet *)
 
 let mutex = Lwt_mutex.create ()
-
 let map = ref SMap.empty
-
 let last_id = ref 0
 
 let add ~request ~client =

@@ -1,4 +1,5 @@
 (library
-  (name avl)
-  (wrapped false)
-  (flags (:standard -w @a-4-27)))
+ (name avl)
+ (wrapped false)
+ (flags
+  (:standard -w @a-4-27)))

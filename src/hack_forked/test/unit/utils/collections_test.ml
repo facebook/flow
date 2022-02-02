@@ -86,5 +86,4 @@ let test_ImmQueue () =
     true
 
 let tests = [("test_WrappedMap_union", test_WrappedMap_union); ("test_ImmQueue", test_ImmQueue)]
-
 let () = Unit_test.run_all tests

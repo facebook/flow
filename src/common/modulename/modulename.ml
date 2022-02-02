@@ -32,9 +32,7 @@ module Key = struct
   type nonrec t = t
 
   let pp = pp
-
   let to_string = to_string
-
   let compare : t -> t -> int = compare
 end
 
@@ -42,7 +40,6 @@ module Set = struct
   include Flow_set.Make (Key)
 
   let pp = make_pp Key.pp
-
   let show x = Format.asprintf "%a" pp x
 end
 
@@ -50,6 +47,5 @@ module Map = struct
   include WrappedMap.Make (Key)
 
   let pp pp_data = make_pp Key.pp pp_data
-
   let show pp_data x = Format.asprintf "%a" (pp pp_data) x
 end

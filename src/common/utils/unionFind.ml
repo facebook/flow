@@ -18,9 +18,7 @@ type 'a t = {
 }
 
 let default_size = 32
-
 let make_with_size n = { indices = Hashtbl.create n; entries = ResizableArray.make n }
-
 let make () = make_with_size default_size
 
 let push t x =
@@ -34,17 +32,11 @@ let get_entry t i =
   | None -> raise Not_found
 
 let get_value t i = (get_entry t i).value
-
 let get_parent t i = (get_entry t i).parent
-
 let get_next t i = (get_entry t i).next
-
 let get_rank t i = (get_entry t i).rank
-
 let set_parent t i parent = (get_entry t i).parent <- parent
-
 let set_next t i next = (get_entry t i).next <- next
-
 let set_rank t i rank = (get_entry t i).rank <- rank
 
 let of_list lst =

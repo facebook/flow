@@ -109,7 +109,6 @@ let cat_no_fail filename =
   content
 
 let nl_regexp = Str.regexp "[\r\n]"
-
 let split_lines = Str.split nl_regexp
 
 (** Returns true if substring occurs somewhere inside str. *)
@@ -468,19 +467,14 @@ external is_rosetta : unit -> bool = "hh_is_rosetta"
 let is_rosetta = is_rosetta ()
 
 external get_total_ram : unit -> int = "hh_sysinfo_totalram"
-
 external uptime : unit -> int = "hh_sysinfo_uptime"
-
 external nproc : unit -> int = "nproc"
 
 let total_ram = get_total_ram ()
-
 let nbr_procs = nproc ()
 
 external set_priorities : cpu_priority:int -> io_priority:int -> unit = "hh_set_priorities"
-
 external pid_of_handle : int -> int = "pid_of_handle"
-
 external handle_of_pid_for_termination : int -> int = "handle_of_pid_for_termination"
 
 let terminate_process pid = Unix.kill pid Sys.sigkill
@@ -640,7 +634,5 @@ type rusage = {
 }
 
 external getrusage : unit -> rusage = "hh_getrusage"
-
 external start_gc_profiling : unit -> unit = "hh_start_gc_profiling" [@@noalloc]
-
 external get_gc_time : unit -> float * float = "hh_get_gc_time"

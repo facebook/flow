@@ -47,7 +47,6 @@ type ('k, 'v) partial_node = {
 type ('k, 'v) leaf_tuple = 'k * 'v
 
 external ( ~!! ) : ('k, 'v) t0 -> ('k, 'v) leaf_tuple = "%identity"
-
 external ( ~! ) : ('k, 'v) t0 -> ('k, 'v) partial_node = "%identity"
 
 let[@inline] height = function
@@ -56,9 +55,7 @@ let[@inline] height = function
   | Node { h; _ } -> h
 
 let singleton x d = Leaf { v = x; d }
-
 let sorted_two_nodes_larger node v d = Node { l = node; v; d; r = Empty; h = 2 }
-
 let sorted_two_nodes_smaller v d node = Node { l = Empty; v; d; r = node; h = 2 }
 
 let create l x d r =
@@ -297,7 +294,6 @@ let rec keys_aux accu tree =
   | Node { l; v; r; _ } -> keys_aux (v :: keys_aux accu r) l
 
 let keys s = keys_aux [] s
-
 let ordered_keys = keys
 
 let rec for_all p = function
@@ -367,82 +363,48 @@ end
 
 module type S = sig
   type key
-
   type +'a t
 
   val empty : 'a t
-
   val is_empty : 'a t -> bool
-
   val mem : key -> 'a t -> bool
-
   val add : key -> 'a -> 'a t -> 'a t
-
   val update : key -> ('a option -> 'a option) -> 'a t -> 'a t
-
   val adjust : key -> ('a option -> 'a) -> 'a t -> 'a t
-
   val singleton : key -> 'a -> 'a t
 
   (* when [remove k map] failed to remove [k], the original [map] is returned *)
   val remove : key -> 'a t -> 'a t
-
   val merge : (key -> 'a option -> 'b option -> 'c option) -> 'a t -> 'b t -> 'c t
-
   val union : (key -> 'a -> 'a -> 'a option) -> 'a t -> 'a t -> 'a t
-
   val compare : ('a -> 'a -> int) -> 'a t -> 'a t -> int
-
   val equal : ('a -> 'a -> bool) -> 'a t -> 'a t -> bool
-
   val iter : (key -> 'a -> unit) -> 'a t -> unit
-
   val fold : (key -> 'a -> 'b -> 'b) -> 'a t -> 'b -> 'b
-
   val for_all : (key -> 'a -> bool) -> 'a t -> bool
-
   val exists : (key -> 'a -> bool) -> 'a t -> bool
-
   val filter : (key -> 'a -> bool) -> 'a t -> 'a t
-
   val partition : (key -> 'a -> bool) -> 'a t -> 'a t * 'a t
-
   val cardinal : 'a t -> int
-
   val bindings : 'a t -> (key * 'a) list
-
   val min_binding : 'a t -> key * 'a
-
   val min_binding_opt : 'a t -> (key * 'a) option
-
   val max_binding : 'a t -> key * 'a
-
   val max_binding_opt : 'a t -> (key * 'a) option
-
   val keys : 'a t -> key list
-
   val ordered_keys : 'a t -> key list
-
   val ident_map_key : ?combine:('a -> 'a -> 'a) -> (key -> key) -> 'a t -> 'a t
-
   val choose : 'a t -> key * 'a
-
   val choose_opt : 'a t -> (key * 'a) option
-
   val split : key -> 'a t -> 'a t * 'a option * 'a t
-
   val find : key -> 'a t -> 'a
-
   val find_opt : key -> 'a t -> 'a option
-
   val map : ('a -> 'b) -> 'a t -> 'b t
-
   val mapi : (key -> 'a -> 'b) -> 'a t -> 'b t
 end
 
 module Make (Ord : OrderedType) : S with type key = Ord.t = struct
   type key = Ord.t
-
   type 'a t = (key, 'a) t1
 
   let rec add x data m =
@@ -788,43 +750,24 @@ module Make (Ord : OrderedType) : S with type key = Ord.t = struct
     equal_aux (cons_enum m1 End) (cons_enum m2 End)
 
   let cardinal = cardinal
-
   let bindings = bindings
-
   let keys = keys
-
   let choose = min_binding
-
   let choose_opt = min_binding_opt
-
   let empty = empty
-
   let singleton = singleton
-
   let is_empty = is_empty
-
   let min_binding = min_binding
-
   let min_binding_opt = min_binding_opt
-
   let max_binding = max_binding
-
   let max_binding_opt = max_binding_opt
-
   let fold = fold
-
   let iter = iter
-
   let for_all = for_all
-
   let exists = exists
-
   let mapi = mapi
-
   let map = map
-
   let filter = filter
-
   let ordered_keys = keys
 
   let ident_map_key ?combine f map =

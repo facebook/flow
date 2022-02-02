@@ -10,9 +10,7 @@ open Reason
 open Utils_js
 
 exception EDebugThrow of ALoc.t
-
 exception EMergeTimeout of float * string
-
 exception ECheckTimeout of float * string
 
 type invalid_char_set =
@@ -2718,7 +2716,8 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
       in
       let features =
         text "Cannot build a typed interface for this module. "
-        :: text "You should annotate the exports of this module with types. " :: features
+        :: text "You should annotate the exports of this module with types. "
+        :: features
       in
       Normal { features }
     )
@@ -3529,7 +3528,8 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
             Friendly.conjunction_concat
               (Base.List.map ~f:(fun member -> [code member]) left_to_check)
         in
-        text "the members " :: members_features @ [text " of enum "; ref enum_reason; text " have"]
+        (text "the members " :: members_features)
+        @ [text " of enum "; ref enum_reason; text " have"]
     in
     let default_features =
       match default_case with
@@ -3544,7 +3544,7 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
       | None -> []
     in
     let features =
-      text "Incomplete exhaustive check: " :: left_to_check_features
+      (text "Incomplete exhaustive check: " :: left_to_check_features)
       @ [text " not been considered in check of "; desc reason; text "."]
       @ default_features
     in

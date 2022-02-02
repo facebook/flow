@@ -9,18 +9,11 @@ module type S = sig
   type t
 
   val string : string -> t
-
   val bool : bool -> t
-
   val obj : (string * t) list -> t
-
   val array : t list -> t
-
   val number : float -> t
-
   val int : int -> t
-
   val null : t
-
   val regexp : Loc.t -> string -> string -> t
 end

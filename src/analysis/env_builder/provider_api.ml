@@ -11,20 +11,15 @@ module type S = sig
   type info
 
   val empty : info
-
   val is_provider : info -> L.t -> bool
-
   val get_providers_for_toplevel_var : string -> info -> L.LSet.t option
-
   val find_providers : (L.t, L.t) Flow_ast.Program.t -> info
-
   val print_full_env : info -> string
 
   val providers_of_def :
     info -> L.t -> (Find_providers.state * L.t Reason.virtual_reason list) option
 
   val is_provider_of_annotated : info -> L.t -> bool
-
   val is_provider_state_fully_initialized : Find_providers.state -> bool
 end
 

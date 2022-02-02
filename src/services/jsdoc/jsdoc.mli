@@ -42,9 +42,7 @@ type t
 (*************)
 
 val description : t -> string option
-
 val params : t -> Params.t
-
 val unrecognized_tags : t -> Unrecognized_tags.t
 
 (***********)

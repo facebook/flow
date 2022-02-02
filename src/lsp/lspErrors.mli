@@ -25,5 +25,4 @@ val update_errors_due_to_change_and_send :
   (Hh_json.json -> unit) -> Lsp.DidChange.didChangeTextDocumentParams -> t -> t
 
 val clear_all_live_errors_and_send : (Hh_json.json -> unit) -> Lsp.DocumentUri.t -> t -> t
-
 val clear_all_errors_and_send : (Hh_json.json -> unit) -> t -> t

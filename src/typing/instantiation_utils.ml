@@ -64,11 +64,8 @@ module TypeAppExpansion : sig
   type entry
 
   val push_unless_loop : Context.t -> Type.t * Type.t list -> bool
-
   val pop : unit -> unit
-
   val get : unit -> entry list
-
   val set : entry list -> unit
 end = struct
   (* Array types function like type applications but are not implemented as such. Unless
@@ -84,7 +81,6 @@ end = struct
 
   module RootSet : Flow_set.S with type elt = root = Flow_set.Make (struct
     type elt = root
-
     type t = elt
 
     let compare = Stdlib.compare
@@ -122,7 +118,6 @@ end = struct
      elements of the list to strings. Should probably be moved somewhere else
      for general reuse. *)
   let string_of_list list sep f = list |> Base.List.map ~f |> String.concat sep
-
   let string_of_desc_of_t t = DescFormat.name_of_instance_reason (reason_of_t t)
 
   let string_of_desc_of_root = function
@@ -191,8 +186,6 @@ end = struct
       )
 
   let pop () = stack := List.tl !stack
-
   let get () = !stack
-
   let set _stack = stack := _stack
 end

@@ -25,7 +25,6 @@ struct
   module Toplevels = Toplevels.DependencyToplevels (Env) (Abnormal)
 
   type func_params = F.t
-
   type func_params_tast = (ALoc.t * Type.t) F.ast
 
   type t = {

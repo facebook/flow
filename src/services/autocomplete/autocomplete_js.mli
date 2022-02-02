@@ -54,5 +54,4 @@ val process_location :
   process_location_result option
 
 val autocomplete_set_hooks : cursor:Loc.t -> unit
-
 val autocomplete_unset_hooks : unit -> unit

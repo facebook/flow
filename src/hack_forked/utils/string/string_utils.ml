@@ -8,11 +8,8 @@
 exception Incorrect_format
 
 let soi = string_of_int
-
 let string_of_char = String.make 1
-
 let string_before s n = String.sub s 0 n
-
 let string_after s n = String.sub s n (String.length s - n)
 
 let string_starts_with long short =
@@ -257,14 +254,12 @@ module Internal = struct
 end
 
 let to_list = Internal.to_list
-
 let of_list = Internal.of_list
 
 module CharSet = struct
   include Flow_set.Make (Char)
 
   let of_string str = of_list (Internal.to_list str)
-
   let to_string set = Internal.of_list (elements set)
 end
 

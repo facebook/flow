@@ -17,7 +17,6 @@
  *****************************************************************************)
 
 type request = Request of (serializer -> unit)
-
 and serializer = { send: 'a. 'a -> unit }
 
 type job_status = Job_terminated of Unix.process_status

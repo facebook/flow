@@ -226,13 +226,9 @@ end = struct
   (**************)
 
   let generic_talias name targs = Ty.mk_generic_talias name targs
-
   let builtin_t name = generic_talias (Ty.builtin_symbol name) None
-
   let generic_builtin_t name ts = generic_talias (Ty.builtin_symbol name) (Some ts)
-
   let empty_type = Ty.Bot Ty.EmptyType
-
   let empty_matching_prop_t = Ty.Bot Ty.EmptyMatchingPropT
 
   let mk_empty bot_kind =
@@ -422,7 +418,6 @@ end = struct
   (***********************)
 
   let opt_param = Ty.{ prm_optional = true }
-
   let non_opt_param = Ty.{ prm_optional = false }
 
   let mk_fun ?(params = []) ?rest ?tparams ?(static = Ty.(TypeOf FunProto)) ret =
@@ -666,7 +661,6 @@ end = struct
       env:Env.t -> ?proto:bool -> T.Properties.id -> int option -> (Ty.prop list, error) t
 
     val convert_obj_t : env:Env.t -> Reason.reason -> Type.objtype -> (Ty.obj_t, error) t
-
     val convert_type_destructor_unevaluated : env:Env.t -> Type.t -> T.destructor -> (Ty.t, error) t
   end = struct
     let rec type__ =
@@ -1803,17 +1797,11 @@ end = struct
         type__
 
     let convert_type_params_t = type_params_t
-
     let convert_react_component_class = react_component_class
-
     let convert_instance_t = instance_t
-
     let convert_inline_interface = inline_interface
-
     let convert_obj_props_t = obj_props_t
-
     let convert_obj_t = obj_ty
-
     let convert_type_destructor_unevaluated = type_destructor_unevaluated
   end
 
@@ -2208,7 +2196,6 @@ end = struct
 
   module type EXPAND_MEMBERS_CONVERTER = sig
     val include_proto_members : bool
-
     val idx_hook : unit -> unit
   end
 
@@ -2274,7 +2261,7 @@ end = struct
       let%map obj_props =
         if include_proto_members then
           let%map super_ty = type__ ~env ~proto:true ~imode:IMInstance super in
-          Ty.SpreadProp super_ty :: own_ty_props @ proto_ty_props
+          (Ty.SpreadProp super_ty :: own_ty_props) @ proto_ty_props
         else
           return (own_ty_props @ proto_ty_props)
       in
@@ -2444,7 +2431,6 @@ end = struct
   let run_expand_members ~include_proto_members ~idx_hook =
     let module Converter = ExpandMembersConverter (struct
       let include_proto_members = include_proto_members
-
       let idx_hook = idx_hook
     end) in
     run_type_aux ~f:Converter.convert_t ~simpl:Ty_utils.simplify_type

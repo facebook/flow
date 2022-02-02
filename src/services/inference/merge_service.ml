@@ -9,9 +9,7 @@ module Heap = SharedMem.NewAPI
 open Utils_js
 
 type duration = float
-
 type 'a unit_result = ('a, ALoc.t * Error_message.internal_error) result
-
 type merge_result = Error_suppressions.t * duration
 
 type check_type_result =

@@ -17,7 +17,6 @@ let empty_table file = { file; locs = [||] }
 type key = int
 
 let compare_key : key -> key -> int = Stdlib.compare
-
 let string_of_key = string_of_int
 
 module Repr : sig
@@ -29,16 +28,12 @@ module Repr : sig
     | Concrete
 
   val of_loc : Loc.t -> t
-
   val of_key : File_key.t option -> key -> t
-
   val source : t -> File_key.t option
-
   val update_source : (File_key.t option -> File_key.t option) -> t -> t
 
   (* `is_keyed x` is equivalent to `kind x = Keyed` *)
   val is_keyed : t -> bool
-
   val kind : t -> kind
 
   (* Raises unless `kind` returns `Keyed` *)
@@ -122,15 +117,10 @@ end
 type t = Repr.t
 
 let pp fmt _ = Format.pp_print_string fmt "<opaque>"
-
 let pp_id fmt _ = Format.pp_print_string fmt "<opaque>"
-
 let show _ = "<opaque>"
-
 let show_id _ = "<opaque>"
-
 let of_loc = Repr.of_loc
-
 let to_loc_exn = Repr.to_loc_exn
 
 let to_loc table loc =
@@ -159,9 +149,7 @@ let to_loc_with_tables tables loc =
   to_loc aloc_table loc
 
 let none = Repr.of_loc Loc.none
-
 let source = Repr.source
-
 let update_source = Repr.update_source
 
 let debug_to_string ?(include_source = false) loc =
@@ -310,11 +298,8 @@ let equal_id a b = quick_compare a b = 0
 
 module ALocRepresentationDoNotUse = struct
   let is_keyed = Repr.is_keyed
-
   let get_key_exn = Repr.get_key_exn
-
   let string_of_key = string_of_key
-
   let make_table file locs = { file; locs }
 
   let init_table file len f =
@@ -322,6 +307,5 @@ module ALocRepresentationDoNotUse = struct
     { file; locs }
 
   let make_keyed = Repr.of_key
-
   let make_id = Repr.of_key
 end

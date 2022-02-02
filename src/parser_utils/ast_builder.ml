@@ -59,7 +59,6 @@ module Types = struct
   end
 
   let mixed = (Loc.none, Ast.Type.Mixed None)
-
   let annotation t = (Loc.none, t)
 
   let object_ ?(loc = Loc.none) ?exact ?inexact properties =
@@ -90,7 +89,6 @@ let string_literal ?comments value =
   { Ast.StringLiteral.value; raw = Printf.sprintf "%S" value; comments }
 
 let number_literal ?comments value raw = { Ast.NumberLiteral.value; raw; comments }
-
 let boolean_literal ?comments value = { Ast.BooleanLiteral.value; comments }
 
 module Literals = struct
@@ -100,7 +98,6 @@ module Literals = struct
     { value = String value; raw = Printf.sprintf "%S" value; comments }
 
   let number ?(comments = None) value raw = { value = Number value; raw; comments }
-
   let int value = number (float_of_int value) (Printf.sprintf "%d" value)
 
   let bool ?(comments = None) is_true =
@@ -158,7 +155,6 @@ module Patterns = struct
             comments = None;
           }
       )
-    
 end
 
 module Functions = struct
@@ -274,7 +270,6 @@ module JSXs = struct
     Attribute.Identifier (loc, { Identifier.name; comments })
 
   let attr_literal lit = Attribute.Literal (Loc.none, lit)
-
   let attr ?(loc = Loc.none) name value = Opening.Attribute (loc, { Attribute.name; value })
 
   let element
@@ -299,11 +294,8 @@ module Statements = struct
   open Ast.Statement
 
   let empty ?comments () = (Loc.none, Empty { Empty.comments })
-
   let block ?comments children = (Loc.none, Block { Block.body = children; comments })
-
   let while_ test ?comments body = (Loc.none, While { While.test; body; comments })
-
   let do_while body ?comments test = (Loc.none, DoWhile { DoWhile.body; test; comments })
 
   let for_raw ?comments init test update body =
@@ -366,7 +358,6 @@ module Statements = struct
     (loc, If { If.test; consequent; alternate; comments })
 
   let if_alternate ?(loc = Loc.none) ?comments body = (loc, { If.Alternate.body; comments })
-
   let return ?(loc = Loc.none) ?comments expr = (loc, Return { Return.argument = expr; comments })
 
   let directive ?(loc = Loc.none) txt =
@@ -439,9 +430,7 @@ module Expressions = struct
     (loc, Identifier (loc, { Ast.Identifier.name; comments }))
 
   let array ?(loc = Loc.none) ?comments elements = (loc, Array { Array.elements; comments })
-
   let array_expression expr = Array.Expression expr
-
   let array_hole ?(loc = Loc.none) () = Array.Hole loc
 
   let arg_list ?(loc = Loc.none) ?comments arguments : (Loc.t, 'a) ArgList.t =
@@ -469,7 +458,6 @@ module Expressions = struct
     (loc, ArrowFunction fn)
 
   let class_ ?(loc = Loc.none) ?super ?id elements = (loc, Class (Classes.make ?super ?id elements))
-
   let literal ?(loc = Loc.none) lit = (loc, Literal lit)
 
   let assignment ?(loc = Loc.none) ?comments left ?operator right =
@@ -479,15 +467,10 @@ module Expressions = struct
     (loc, Binary { Binary.operator = op; left; right; comments })
 
   let plus left right = binary ~op:Binary.Plus left right
-
   let minus left right = binary ~op:Binary.Minus left right
-
   let mult left right = binary ~op:Binary.Mult left right
-
   let instanceof left right = binary ~op:Binary.Instanceof left right
-
   let in_ left right = binary ~op:Binary.In left right
-
   let equal left right = binary ~op:Binary.Equal left right
 
   let conditional ?(loc = Loc.none) ?comments test consequent alternate =
@@ -500,16 +483,13 @@ module Expressions = struct
     (loc, Unary { Unary.operator = op; argument; comments })
 
   let unary_plus (b : (Loc.t, Loc.t) Ast.Expression.t) = unary ~op:Unary.Plus b
-
   let unary_minus (b : (Loc.t, Loc.t) Ast.Expression.t) = unary ~op:Unary.Minus b
-
   let unary_not (b : (Loc.t, Loc.t) Ast.Expression.t) = unary ~op:Unary.Not b
 
   let update ?(loc = Loc.none) ?comments ~op ~prefix argument =
     (loc, Update { Update.operator = op; prefix; argument; comments })
 
   let increment ~prefix argument = update ~op:Update.Increment ~prefix argument
-
   let decrement ~prefix argument = update ~op:Update.Decrement ~prefix argument
 
   let object_property_key ?(loc = Loc.none) (k : string) =
@@ -573,15 +553,10 @@ module Expressions = struct
     Spread (loc, { SpreadElement.argument = expr; comments })
 
   let jsx_element ?(loc = Loc.none) elem = (loc, JSXElement elem)
-
   let true_ () = literal (Literals.bool true)
-
   let false_ () = literal (Literals.bool false)
-
   let parenthesis_hint () = literal (Literals.string "_flowmin_paren_")
-
   let logical_and (l : (Loc.t, Loc.t) Ast.Expression.t) r = logical ~op:Logical.And l r
-
   let logical_or (l : (Loc.t, Loc.t) Ast.Expression.t) r = logical ~op:Logical.Or l r
 
   let typecast ?(loc = Loc.none) ?comments expression annotation =
@@ -589,11 +564,8 @@ module Expressions = struct
 
   module Literals = struct
     let string ?loc value = literal ?loc (Literals.string value)
-
     let number ?loc value raw = literal ?loc (Literals.number value raw)
-
     let int ?loc value = literal ?loc (Literals.int value)
-
     let bool ?loc is_true = literal ?loc (Literals.bool is_true)
   end
 end
@@ -622,7 +594,6 @@ let ast_of_string ~parser str =
           types = true;
           use_strict = false;
         }
-      
   in
 
   let env = Parser_env.init_env ~token_sink:None ~parse_options None str in

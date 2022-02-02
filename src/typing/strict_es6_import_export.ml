@@ -153,7 +153,6 @@ class this_visitor =
 
     (* Function decls and exprs will have a new scope, so `this` usage is allowed *)
     method! function_declaration _ func = func
-
     method! function_expression_or_method _ func = func
   end
 
@@ -171,7 +170,6 @@ class import_export_visitor ~cx ~scope_info ~declarations =
   in
   object (this)
     inherit [unit, ALoc.t] Flow_ast_visitor.visitor ~init:() as super
-
     method private add_error err = Flow_js.add_output cx err
 
     method private import_star_reason import_star =
@@ -204,7 +202,6 @@ class import_export_visitor ~cx ~scope_info ~declarations =
       this#add_error (Error_message.EExportRenamedDefault { loc; name; is_reexport })
 
     method private import_star_from_use use = ALocMap.find_opt use import_star_uses
-
     method private is_import_star_use use = this#import_star_from_use use <> None
 
     method add_exported_this_errors func =

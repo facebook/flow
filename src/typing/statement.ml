@@ -57,9 +57,7 @@ struct
   (* We use this function to indicate places where an annotation is potentially available but
    * must be decomposed in some way before it is passed down *)
   let hint_decompose_opt_todo (x : Type.t option) : Type.t option = x
-
   let hint_of_type (t : Type.t) = Some t
-
   let hint_of_loc_todo loc = Some (AnyT.at (AnyError None) loc)
 
   module ObjectExpressionAcc = struct
@@ -93,7 +91,6 @@ struct
         Some (Slice { slice_pmap = obj_pmap })
 
     let add_prop f acc = { acc with obj_pmap = f acc.obj_pmap }
-
     let add_proto p acc = { acc with proto = Some p }
 
     let add_spread t acc =
@@ -105,11 +102,8 @@ struct
       { acc with obj_pmap = NameUtils.Map.empty; tail = Spread t :: tail }
 
     let set_seal ~allow_sealed sealed acc = { acc with obj_sealed = allow_sealed && sealed }
-
     let sealed acc = acc.obj_sealed
-
     let set_obj_key_autocomplete acc = { acc with obj_key_autocomplete = true }
-
     let obj_key_autocomplete acc = acc.obj_key_autocomplete
 
     let elements_rev acc =
@@ -208,9 +202,7 @@ struct
   end
 
   let ident_name = Flow_ast_utils.name_of_ident
-
   let mk_ident ~comments name = { Ast.Identifier.name; comments }
-
   let snd_fst ((_, x), _) = x
 
   let inference_hook_tvar cx ploc =
@@ -300,7 +292,6 @@ struct
       (* Any returns in these constructs would be for nested function definitions, so we short-circuit
      *)
       method! class_ _ x = x
-
       method! function_declaration _ x = x
     end
 
@@ -6899,8 +6890,7 @@ struct
         let (_, _, ast, preds, sentinel_refinement) =
           optional_chain
             ~cond:(Some cond) (* We do want to allow possibly absent properties... *)
-            ~is_existence_check:
-              false
+            ~is_existence_check:false
               (* ...but we don't generate predicates about
                  their existence at the top level: "a.b === undefined" must not generate the
                  predicate "a.b exists". *)
@@ -8590,7 +8580,6 @@ struct
       let finder =
         object (_self)
           inherit [Loc_collections.ALocSet.t] Type_visitor.t as super
-
           val mutable tparams : string list = []
 
           method! type_ cx pole acc t =

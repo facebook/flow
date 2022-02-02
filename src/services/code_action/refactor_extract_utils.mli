@@ -74,7 +74,6 @@ module InformationCollectors : sig
   }
 
   val collect_statements_information : (Loc.t, Loc.t) Flow_ast.Statement.t list -> t
-
   val collect_expression_information : (Loc.t, Loc.t) Flow_ast.Expression.t -> t
 end
 

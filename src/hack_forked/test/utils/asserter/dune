@@ -1,6 +1,4 @@
 (library
-  (name asserter)
-  (modules asserter)
-  (libraries
-    hh_json
-    str))
+ (name asserter)
+ (modules asserter)
+ (libraries hh_json str))

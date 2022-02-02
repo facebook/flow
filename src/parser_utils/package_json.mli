@@ -8,11 +8,7 @@
 type t
 
 val empty : t
-
 val create : name:string option -> main:string option -> t
-
 val name : t -> string option
-
 val main : t -> string option
-
 val parse : node_main_fields:string list -> (Loc.t, Loc.t) Flow_ast.Expression.Object.t -> t

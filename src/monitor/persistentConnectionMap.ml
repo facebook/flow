@@ -10,13 +10,8 @@
  * monitor really needs to do is keep track of which connection goes with which ID *)
 
 let map = ref IMap.empty
-
 let add ~client_id ~client = map := IMap.add client_id client !map
-
 let get ~client_id = IMap.find_opt client_id !map
-
 let remove ~client_id = map := IMap.remove client_id !map
-
 let cardinal () = IMap.cardinal !map
-
 let get_all_clients () = IMap.bindings !map |> Base.List.map ~f:snd

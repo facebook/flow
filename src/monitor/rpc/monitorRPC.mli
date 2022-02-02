@@ -11,9 +11,7 @@ type channels =
   (MonitorProt.monitor_to_server_message, MonitorProt.server_to_monitor_message) Daemon.channel_pair
 
 val init : channels:channels -> unit
-
 val disable : unit -> unit
-
 val read : unit -> MonitorProt.monitor_to_server_message Lwt.t
 
 val respond_to_request :

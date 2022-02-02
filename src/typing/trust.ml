@@ -123,128 +123,80 @@ type ident = int
 
 module TrustRepresentation : sig
   type trust_qualifier
-
   type trust_rep
-
   type trust_level
 
   val fail_trust : (int -> string, unit, string) format -> trust_qualifier -> 'a
-
   val fail_trust_rep : (int -> string, unit, string) format -> trust_rep -> 'a
-
   val untag_ident : trust_rep -> ident
-
   val untag_qualifier : trust_rep -> trust_qualifier
-
   val tag_ident : ident -> trust_rep
-
   val tag_qualifier : trust_qualifier -> trust_rep
-
   val is_ident : trust_rep -> bool
-
   val is_qualifier : trust_rep -> bool
-
   val bot : trust_level
-
   val top : trust_level
-
   val unk : trust_level
-
   val enf : trust_level
-
   val get_taint : trust_qualifier -> trust_level
-
   val get_pub : trust_qualifier -> trust_level
-
   val make_trust : trust_level -> trust_level -> trust_qualifier
 end = struct
   type bitrep = int
-
   type trust_qualifier = bitrep
-
   type trust_rep = bitrep
 
   let fail s (n : int) = Utils_js.assert_false (Utils_js.spf s n)
-
   let fail_trust s (n : trust_qualifier) = fail s n
-
   let fail_trust_rep s (n : trust_rep) = fail s n
 
   module Tag : sig
     type tag
 
     val qualifier : tag
-
     val ident : tag
-
     val get_tag : trust_rep -> tag
-
     val untag : trust_rep -> bitrep
-
     val tag : tag -> bitrep -> trust_rep
   end = struct
     type tag = int
 
     let tag_size = 1
-
     let tag_mask = mask tag_size
-
     let qualifier = 0
-
     let ident = 1
-
     let get_tag n = n land tag_mask
-
     let untag n = n lsr tag_size
-
     let tag t n = (n lsl tag_size) lor t
   end
 
   let is_ident (n : trust_rep) : bool = Tag.get_tag n = Tag.ident
-
   let is_qualifier (n : trust_rep) : bool = Tag.get_tag n = Tag.qualifier
-
   let untag_ident : trust_rep -> ident = Tag.untag
-
   let untag_qualifier : trust_rep -> trust_qualifier = Tag.untag
-
   let tag_qualifier : trust_qualifier -> trust_rep = Tag.tag Tag.qualifier
-
   let tag_ident : ident -> trust_rep = Tag.tag Tag.ident
 
   module Elt : sig
     type trust_level
 
     val bot : trust_level
-
     val top : trust_level
-
     val unk : trust_level
-
     val enf : trust_level
-
     val get_taint : trust_qualifier -> trust_level
-
     val get_pub : trust_qualifier -> trust_level
-
     val make_trust : trust_level -> trust_level -> trust_qualifier
   end = struct
     type trust_level = int
 
     let elt_size = 2
-
     let elt_mask = mask elt_size
-
     let bot : trust_level = 0
-
     let top : trust_level = 1
-
     let unk : trust_level = 2
-
     let enf : trust_level = 3
-
     let get_taint (n : trust_qualifier) : trust_level = (n lsr elt_size) land elt_mask
-
     let get_pub (n : trust_qualifier) : trust_level = n land elt_mask
 
     let make_trust (taint : trust_level) (pub : trust_level) : trust_qualifier =
@@ -261,25 +213,15 @@ type expanded_trust =
   | InferredTrust of ident
 
 let dynamic = make_trust bot bot
-
 let initial = make_trust top bot
-
 let terminal = make_trust bot top
-
 let static = make_trust top top
-
 let infertrust = make_trust unk unk
-
 let dynamic_info = tag_qualifier dynamic
-
 let _initial_info = tag_qualifier initial
-
 let _terminal_info = tag_qualifier terminal
-
 let _static_info = tag_qualifier static
-
 let infer_info = tag_qualifier infertrust
-
 let bad_trust_rep n = fail_trust "invalid trust_qualifier representation: %d" n
 
 let expand n =
@@ -306,7 +248,6 @@ let as_ident n =
     fail_trust_rep "trust_rep value does not represent inference ident: %d" n
 
 let from_ident ident = tag_ident ident
-
 let from_qualifier n = tag_qualifier n
 
 let trust_value ~default n =
@@ -373,23 +314,16 @@ let literal_trust () = infer_info
 (* annot_trust is the trust_qualifier of standard type annotations; currently, unless they're made to be
    trusted with the below operators, they accept untrusted values. *)
 let annot_trust () = dynamic_info
-
 let unknown_qualifier () = infertrust
-
 let dynamic_qualifier () = dynamic
 
 (* Given a trust_qualifier datum, add (if not already present) the requirement that it
    be trusted or private. *)
 let make_trusted n = make_trust top (get_pub n)
-
 let make_private n = make_trust (get_taint n) top
-
 let make_enforced n = make_trust enf (get_pub n)
-
 let is_tainted n = get_taint n = bot
-
 let is_public n = get_pub n = bot
-
 let subtype_bit l u = l = u || (l = bot && u = top) || l = unk || u = unk || l = enf || u = enf
 
 let subtype_trust l u =

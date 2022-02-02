@@ -6,13 +6,10 @@
  *)
 
 type state
-
 type hash = int64
 
 external init : (int64[@unboxed]) -> state = "caml_xx_init" "caml_xx_init_unboxed"
-
 external update : state -> string -> unit = "caml_xx_update" [@@noalloc]
-
 external update_int : state -> 'a (* int *) -> unit = "caml_xx_update_int" [@@noalloc]
 
 external update_int64 : state -> (int64[@unboxed]) -> unit

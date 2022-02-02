@@ -21,7 +21,6 @@ type 'a change' =
 [@@deriving show]
 
 type 'a change = Loc.t * 'a change' [@@deriving show]
-
 type 'a changes = 'a change list [@@deriving show]
 
 type diff_algorithm =
@@ -185,8 +184,8 @@ let standard_list_diff (old_list : 'a list) (new_list : 'a list) : 'a diff_resul
         (* We are only removing the first element of the insertion. We make sure to indicate
            that the rest of the insert should have a leading separator between it and the replace. *)
         (i2, Replace (y, x))
-        ::
-        convert_to_replace ((i2, Insert { items = rst; separator; leading_separator = true }) :: t)
+        :: convert_to_replace
+             ((i2, Insert { items = rst; separator; leading_separator = true }) :: t)
       | h :: t -> h :: convert_to_replace t
     in
     (* Deletes are added for every element of old_list that does not have a
@@ -309,7 +308,6 @@ let replace loc old_node new_node =
   (expand_loc_with_comments loc old_node, Replace (old_node, new_node))
 
 let delete loc node = (expand_loc_with_comments loc node, Delete node)
-
 let insert ~sep nodes = Insert { items = nodes; separator = sep; leading_separator = false }
 
 (* This is needed because all of the functions assume that if they are called, there is some

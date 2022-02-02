@@ -43,11 +43,8 @@ end
 module TimerQueue = PriorityQueue.Make (TimerKey)
 
 let next_id = ref 1
-
 let queue = TimerQueue.make_empty 8
-
 let current_timer = ref None
-
 let cancelled = ref ISet.empty
 
 (* Get's the next timer. Any expired timers have their callbacks invoked *)

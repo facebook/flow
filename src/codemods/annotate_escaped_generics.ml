@@ -153,7 +153,6 @@ let gen_import_statements file (symbols : Ty_symbol.symbol SymbolMap.t) =
             comments = None;
           }
       )
-    
   in
 
   SymbolMap.fold (fun remote local acc -> gen_import_statement remote local :: acc) symbols []
@@ -164,11 +163,8 @@ module UnitStats : Insert_type_utils.BASE_STATS with type t = unit = struct
   type t = unit
 
   let empty = ()
-
   let combine _ _ = ()
-
   let serialize _s = []
-
   let report _s = []
 end
 

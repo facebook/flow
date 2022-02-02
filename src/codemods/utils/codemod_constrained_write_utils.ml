@@ -27,9 +27,9 @@ let declaration_locs_of_constrained_write_error cx error =
   Base.Option.value_map ~f:find_constrained_writes ~default:LocSet.empty use_op_opt
 
 (* An assignment A to a variable X is trivially extractable into a const if:
-  1. A is not a provider for X (if it is a provider, it may be used to constrain writes to X later on)
-  2. All reads of X either reach *only* A, and no other assignments, OR they reach a set of writes that do not
-     include A.
+   1. A is not a provider for X (if it is a provider, it may be used to constrain writes to X later on)
+   2. All reads of X either reach *only* A, and no other assignments, OR they reach a set of writes that do not
+      include A.
 *)
 let is_extractable_assignment cx relevant_declarations =
   let { Loc_env.var_info = { Env_api.ssa_values; scopes; providers; _ }; _ } =

@@ -66,7 +66,7 @@ let calc_direct_dependents dependency_graph files =
    `files`. This set include `files`.
 
    A file is a dependent of `files` whenever its code depends on any file whose *signature*, in
-   turn, directly or transitively depends on `files`.  *)
+   turn, directly or transitively depends on `files`. *)
 let calc_all_dependents ~sig_dependency_graph ~implementation_dependency_graph files =
   let all_sig_dependents = closure sig_dependency_graph Backward files in
   let all_dependents = calc_direct_dependents implementation_dependency_graph all_sig_dependents in

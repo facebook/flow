@@ -38,9 +38,7 @@ let extract_member_def ~reader cx this name =
 class type_killer (reader : Parsing_heaps.Reader.reader) =
   object
     inherit [ALoc.t, ALoc.t * Type.t, Loc.t, Loc.t] Flow_polymorphic_ast_mapper.mapper
-
     method on_loc_annot x = loc_of_aloc ~reader x
-
     method on_type_annot (x, _) = loc_of_aloc ~reader x
   end
 
@@ -182,7 +180,6 @@ module Depth = struct
   }
 
   let empty = { length = 0; locs = [] }
-
   let add loc { length; locs } = { length = length + 1; locs = loc :: locs }
 end
 

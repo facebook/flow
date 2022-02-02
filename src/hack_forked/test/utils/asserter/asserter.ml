@@ -9,7 +9,6 @@ module type Comparator = sig
   type t
 
   val to_string : t -> string
-
   val is_equal : t -> t -> bool
 end
 
@@ -17,7 +16,6 @@ module String_comparator = struct
   type t = string
 
   let to_string x = x
-
   let is_equal x y = String.equal x y
 end
 
@@ -25,7 +23,6 @@ module Int_comparator = struct
   type t = int
 
   let to_string x = string_of_int x
-
   let is_equal x y = x = y
 end
 

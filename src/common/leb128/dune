@@ -1,3 +1,2 @@
 (library
- (name leb128)
-)
+ (name leb128))

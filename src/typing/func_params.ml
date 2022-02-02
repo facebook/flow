@@ -18,17 +18,11 @@ include Func_params_intf
 
 module Make (C : Config) = struct
   type 'T ast = 'T C.ast
-
   type 'T param_ast = 'T C.param_ast
-
   type 'T rest_ast = 'T C.rest_ast
-
   type 'T this_ast = 'T C.this_ast
-
   type param = C.param
-
   type rest = C.rest
-
   type this_param = C.this_param
 
   type reconstruct =
@@ -45,11 +39,8 @@ module Make (C : Config) = struct
   }
 
   let empty reconstruct = { params_rev = []; rest = None; this_ = None; reconstruct }
-
   let add_param p x = { x with params_rev = p :: x.params_rev }
-
   let add_rest r x = { x with rest = Some r }
-
   let add_this t x = { x with this_ = Some t }
 
   let value { params_rev; _ } =
@@ -61,7 +52,6 @@ module Make (C : Config) = struct
       params_rev
 
   let rest { rest; _ } = Base.Option.map ~f:C.rest_type rest
-
   let this { this_; _ } = Base.Option.map ~f:C.this_type this_
 
   let subst cx map { params_rev; rest; this_; reconstruct } =

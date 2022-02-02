@@ -10,6 +10,5 @@ type name = string
 class ['acc] reducer (n : name) ~(init : 'acc) =
   object (_this)
     inherit ['acc, Loc.t] Flow_ast_visitor.visitor ~init
-
     val log = (fun s -> Hh_logger.info "{%s}: %s%!" n s)
   end

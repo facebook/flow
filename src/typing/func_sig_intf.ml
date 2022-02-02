@@ -16,7 +16,6 @@ type kind =
 
 module type S = sig
   type func_params
-
   type func_params_tast
 
   type t = {
@@ -116,6 +115,5 @@ module type S = sig
   (** 1. Util *)
 
   val to_ctor_sig : t -> t
-
   val this_param : func_params -> Type.t option
 end

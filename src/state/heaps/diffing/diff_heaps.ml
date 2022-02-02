@@ -10,7 +10,6 @@
  * when updating files that have been transformed by a worker process.
  *)
 type patch = (int * int * string) list
-
 type key = File_key.t
 
 module DiffPatchHeap =
@@ -23,7 +22,5 @@ module DiffPatchHeap =
     end)
 
 let set_diff = Expensive.wrap DiffPatchHeap.add
-
 let get_diff = DiffPatchHeap.get
-
 let remove_batch = DiffPatchHeap.remove_batch

@@ -14,11 +14,9 @@ open Loc_collections
 
 module type Ordering = sig
   type t
-
   type loc
 
   val make : Context.t -> (loc, loc) Ast.Statement.t list -> t
-
   val compare : t -> (loc, loc) Ast.Statement.t -> (loc, loc) Ast.Statement.t -> int
 end
 
@@ -95,17 +93,14 @@ end
 
 module LexicalOrdering : Ordering with type loc = ALoc.t and type t = unit = struct
   type t = unit
-
   type loc = ALoc.t
 
   let make _ _ = ()
-
   let compare _ (l1, _) (l2, _) = Loc.compare (ALoc.to_loc_exn l1) (ALoc.to_loc_exn l2)
 end
 
 module DependencyOrdering : Ordering with type loc = ALoc.t = struct
   type t = ALocSet.t ALocMap.t option
-
   type loc = ALoc.t
 
   let make cx stmts =

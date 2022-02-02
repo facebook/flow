@@ -150,9 +150,7 @@ module DirectDependentFilesCache : sig
     cache_key:FilenameSet.t -> on_miss:FilenameSet.t Lwt.t Lazy.t -> FilenameSet.t Lwt.t
 end = struct
   let max_size = 100
-
   let cache : FilenameSet.t FilenameCache.t = FilenameCache.make ~max_size
-
   let clear () = FilenameCache.clear cache
 
   let with_cache ~cache_key ~on_miss =
@@ -2498,5 +2496,4 @@ let full_check ~profiling ~options ~workers ?focus_targets env =
   )
 
 let debug_determine_what_to_recheck = Recheck.determine_what_to_recheck
-
 let debug_include_dependencies_and_dependents = include_dependencies_and_dependents

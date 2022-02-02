@@ -24,9 +24,6 @@ val tvar_appears_in_type : is_toplevel:bool -> Ty.tvar -> Ty.t -> bool
  * exceeds the max parameter.
  *)
 val size_of_type : ?max:int -> Ty.t -> int option
-
 val simplify_type : merge_kinds:bool -> ?sort:bool -> Ty.t -> Ty.t
-
 val simplify_elt : merge_kinds:bool -> ?sort:bool -> Ty.elt -> Ty.elt
-
 val symbols_of_type : Ty.t -> Ty_symbol.symbol list

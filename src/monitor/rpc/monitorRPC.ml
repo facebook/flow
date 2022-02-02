@@ -32,7 +32,6 @@ let with_channel select_channel ~on_disabled ~f =
   | Initialized { infd; outfd } -> f (select_channel (infd, outfd))
 
 let with_infd ~on_disabled ~f = with_channel fst ~on_disabled ~f
-
 let with_outfd ~on_disabled ~f = with_channel snd ~on_disabled ~f
 
 (* The main server process will initialize this with the channels to the monitor process *)

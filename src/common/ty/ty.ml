@@ -372,9 +372,7 @@ class ['A] comparator_ty =
         end
 
     method! private on_bool _env x y = assert0 (Stdlib.compare x y)
-
     method! private on_symbol _env x y = assert0 (Stdlib.compare x y)
-
     method! private on_aloc _env x y = assert0 (ALoc.compare x y)
 
     method! private fail_option _env x _y =
@@ -391,31 +389,18 @@ class ['A] comparator_ty =
     (* The following methods are ordered respectively with the
        definitions in this file to make it easier to check *)
     method! private fail_t env x y = fail_gen this#tag_of_t env x y
-
     method! private fail_any_kind env x y = fail_gen this#tag_of_any_kind env x y
-
     method! private fail_upper_bound_kind env x y = fail_gen this#tag_of_upper_bound_kind env x y
-
     method! private fail_bot_kind env x y = fail_gen this#tag_of_bot_kind env x y
-
     method! private fail_gen_kind env x y = fail_gen this#tag_of_gen_kind env x y
-
     method! private fail_obj_kind env x y = fail_gen this#tag_of_obj_kind env x y
-
     method! private fail_prop env x y = fail_gen this#tag_of_prop env x y
-
     method! private fail_named_prop env x y = fail_gen this#tag_of_named_prop env x y
-
     method! private fail_utility env x y = fail_gen this#tag_of_utility env x y
-
     method! private fail_polarity env x y = fail_gen this#tag_of_polarity env x y
-
     method! private fail_unsoundness_kind env x y = fail_gen this#tag_of_unsoundness_kind env x y
-
     method! private fail_builtin_or_symbol env x y = fail_gen this#tag_of_builtin_or_symbol env x y
-
     method! private fail_decl env x y = fail_gen this#tag_of_decl env x y
-
     method! private fail_elt env x y = fail_gen this#tag_of_elt env x y
 
     (* types will show up in unions and intersections in ascending order *)
@@ -619,9 +604,7 @@ let mk_object ?(obj_kind = InexactObj) ?(obj_frozen = false) ?obj_literal obj_pr
   Obj { obj_kind; obj_frozen; obj_literal; obj_props }
 
 let mk_generic_class symbol targs = Generic (symbol, ClassKind, targs)
-
 let mk_generic_interface symbol targs = Generic (symbol, InterfaceKind, targs)
-
 let mk_generic_talias symbol targs = Generic (symbol, TypeAliasKind, targs)
 
 let rec mk_exact ty =

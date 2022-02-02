@@ -16,5 +16,4 @@ let compress_bound input_size =
     input_size + (input_size / 255) + 16
 
 external compress_default : string -> bytes -> int = "caml_lz4_compress_default" [@@noalloc]
-
 external decompress_safe : buf -> bytes -> int = "caml_lz4_decompress_safe" [@@noalloc]

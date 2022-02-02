@@ -45,7 +45,6 @@ let init _roots = { fd = wrap Inotify.create (); wpaths = WMap.empty }
 let select_events =
   Inotify.
     [S_Create; S_Delete; S_Delete_self; S_Modify; S_Move_self; S_Moved_from; S_Moved_to; S_Attrib]
-  
 
 (* Returns None if we're already watching that path and Some watch otherwise *)
 let add_watch env path =
@@ -105,7 +104,6 @@ end)
 type fd_select = Unix.file_descr * (unit -> unit)
 
 let make_callback fdmap (fd, callback) = FDMap.add fd callback fdmap
-
 let invoke_callback fdmap fd = (FDMap.find fd fdmap) ()
 
 let select env ?(read_fdl = []) ?(write_fdl = []) ~timeout callback =

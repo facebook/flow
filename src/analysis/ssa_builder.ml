@@ -36,23 +36,14 @@ struct
     type t
 
     val mk_unresolved : int -> t
-
     val empty : unit -> t
-
     val uninitialized : unit -> t
-
     val new_id : unit -> int
-
     val merge : t -> t -> t
-
     val one : L.t virtual_reason -> t
-
     val all : L.t virtual_reason list -> t
-
     val resolve : unresolved:t -> t -> unit
-
     val simplify : t -> Ssa_api.write_loc list
-
     val id_of_val : t -> int
   end = struct
     let curr_id = ref 0
@@ -84,9 +75,7 @@ struct
       { id; write_state }
 
     let mk_unresolved id = mk_with_write_state @@ REF (ref (Unresolved id))
-
     let empty () = mk_with_write_state @@ PHI []
-
     let uninitialized () = mk_with_write_state Uninitialized
 
     let join = function
@@ -134,7 +123,6 @@ struct
         mk_with_write_state @@ join (WriteSet.elements vals)
 
     let one reason = mk_with_write_state @@ Loc reason
-
     let all locs = mk_with_write_state @@ join (Base.List.map ~f:(fun reason -> Loc reason) locs)
 
     (* Resolving unresolved to t essentially models an equation of the form
@@ -208,13 +196,9 @@ struct
       | Throw
 
     let label_opt = Base.Option.map ~f:Flow_ast_utils.name_of_ident
-
     let break x = Break (label_opt x)
-
     let continue x = Continue (label_opt x)
-
     let return = Return
-
     let throw = Throw
 
     (* match particular abrupt completions *)
@@ -263,13 +247,9 @@ struct
       (* We maintain a map of read locations to raw Val.t terms, which are
          simplified to lists of write locations once the analysis is done. *)
       val mutable values : Val.t L.LMap.t = L.LMap.empty
-
       method values : Ssa_api.values = L.LMap.map Val.simplify values
-
       val mutable unbound_names : SSet.t = SSet.empty
-
       method unbound_names : SSet.t = unbound_names
-
       val mutable id = 0
 
       method mk_unresolved =
@@ -282,7 +262,6 @@ struct
          higher-level "control-flow-graph" operations that can be implemented using
          them, e.g., those that deal with branches and loops. *)
       val mutable ssa_env : ssa SMap.t = SMap.empty
-
       method ssa_env : Env.t = SMap.map (fun { val_ref; _ } -> !val_ref) ssa_env
 
       method merge_remote_ssa_env (env : Env.t) : unit =

@@ -10,9 +10,7 @@ open Lints
 type t = LintSet.t
 
 let empty = LintSet.empty
-
 let fold = LintSet.fold
-
 let iter = LintSet.iter
 
 let of_lines =

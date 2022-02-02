@@ -20,9 +20,7 @@ module type SIMPLE_TYPED_RUNNER_CONFIG = sig
   type accumulator
 
   val reporter : accumulator Codemod_report.t
-
   val check_options : Options.t -> Options.t
-
   val visit : (accumulator, Codemod_context.Typed.t) abstract_visitor
 end
 
@@ -30,7 +28,6 @@ module type UNTYPED_RUNNER_CONFIG = sig
   type accumulator
 
   val reporter : accumulator Codemod_report.t
-
   val visit : (accumulator, Codemod_context.Untyped.t) abstract_visitor
 end
 
@@ -38,21 +35,16 @@ module type UNTYPED_FLOW_INIT_RUNNER_CONFIG = sig
   type accumulator
 
   val init : reader:State_reader.t -> unit
-
   val reporter : accumulator Codemod_report.t
-
   val visit : (accumulator, Codemod_context.UntypedFlowInit.t) abstract_visitor
 end
 
 module type TYPED_RUNNER_WITH_PREPASS_CONFIG = sig
   type accumulator
-
   type prepass_state
-
   type prepass_result
 
   val reporter : accumulator Codemod_report.t
-
   val prepass_init : unit -> prepass_state
 
   val prepass_run :
@@ -65,7 +57,6 @@ module type TYPED_RUNNER_WITH_PREPASS_CONFIG = sig
     prepass_result
 
   val store_precheck_result : prepass_result unit_result Utils_js.FilenameMap.t -> unit
-
   val visit : (accumulator, Codemod_context.Typed.t) abstract_visitor
 end
 
@@ -74,9 +65,6 @@ module type RUNNABLE = sig
 end
 
 module MakeSimpleTypedRunner (C : SIMPLE_TYPED_RUNNER_CONFIG) : RUNNABLE
-
 module MakeUntypedFlowInitRunner (C : UNTYPED_FLOW_INIT_RUNNER_CONFIG) : RUNNABLE
-
 module MakeUntypedRunner (C : UNTYPED_RUNNER_CONFIG) : RUNNABLE
-
 module MakeTypedRunnerWithPrepass (C : TYPED_RUNNER_WITH_PREPASS_CONFIG) : RUNNABLE

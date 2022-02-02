@@ -176,6 +176,6 @@ let rec edits_of_changes ?(opts = Js_layout_generator.default_opts) changes =
       (( new_loc,
          Replace (old_node, Statement ((new_loc, expression_statement), TopLevelParentOfStatement))
        )
-       :: tl
+      :: tl
       )
   | hd :: tl -> edit_of_change ~opts hd :: edits_of_changes ~opts tl

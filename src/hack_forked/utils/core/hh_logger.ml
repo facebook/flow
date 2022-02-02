@@ -30,13 +30,9 @@ type dest = {
  * We could dup2 stderr to a pipe and have a child process write to both original stderr and the
  * file, but that's kind of overkill. This is good enough *)
 let dupe_log : (string * out_channel) option ref = ref None
-
 let set_log filename fd = dupe_log := Some (filename, fd)
-
 let get_log_name () = Base.Option.map !dupe_log ~f:fst
-
 let id : string option ref = ref None
-
 let set_id passed_id = id := Some passed_id
 
 let id_string () =
@@ -94,21 +90,13 @@ module Level : sig
     | Debug
 
   val min_level_file : unit -> t
-
   val min_level_stderr : unit -> t
-
   val min_level : unit -> t
-
   val set_min_level_file : t -> unit
-
   val set_min_level_stderr : t -> unit
-
   val set_min_level : t -> unit
-
   val passes_min_level : t -> bool
-
   val log : t -> ?exn:Exception.t -> ('a, unit, string, string, string, unit) format6 -> 'a
-
   val log_duration : t -> string -> float -> float
 end = struct
   type t =
@@ -128,11 +116,8 @@ end = struct
     | Debug -> 1
 
   let min_level_file_ref = ref Info
-
   let min_level_stderr_ref = ref Info
-
   let min_level_file () = !min_level_file_ref
-
   let min_level_stderr () = !min_level_stderr_ref
 
   let min_level () =
@@ -144,7 +129,6 @@ end = struct
       !min_level_stderr_ref
 
   let set_min_level_file level = min_level_file_ref := level
-
   let set_min_level_stderr level = min_level_stderr_ref := level
 
   let set_min_level level =
@@ -153,9 +137,7 @@ end = struct
     ()
 
   let passes_min_level_file level = int_of_level level >= int_of_level !min_level_file_ref
-
   let passes_min_level_stderr level = int_of_level level >= int_of_level !min_level_stderr_ref
-
   let passes_min_level level = passes_min_level_file level || passes_min_level_stderr level
 
   let log level ?exn fmt =
@@ -174,15 +156,9 @@ end
 
 (* Default log instructions to INFO level *)
 let log ?(lvl = Level.Info) fmt = Level.log lvl fmt
-
 let log_duration fmt t = Level.log_duration Level.Info fmt t
-
 let fatal ?exn fmt = Level.log Level.Fatal ?exn fmt
-
 let error ?exn fmt = Level.log Level.Error ?exn fmt
-
 let warn ?exn fmt = Level.log Level.Warn ?exn fmt
-
 let info ?exn fmt = Level.log Level.Info ?exn fmt
-
 let debug ?exn fmt = Level.log Level.Debug ?exn fmt

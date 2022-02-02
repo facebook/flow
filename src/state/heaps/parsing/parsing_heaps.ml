@@ -17,13 +17,9 @@ module FileHeap =
     end)
 
 type locs_tbl = Loc.t Type_sig_collections.Locs.t
-
 type type_sig = Type_sig_collections.Locs.index Packed_type_sig.Module.t
-
 type file_addr = Heap.dyn_file SharedMem.addr
-
 type checked_file_addr = Heap.checked_file SharedMem.addr
-
 type unparsed_file_addr = Heap.unparsed_file SharedMem.addr
 
 (* There's some redundancy in the visitors here, but an attempt to avoid repeated code led,
@@ -31,11 +27,8 @@ type unparsed_file_addr = Heap.unparsed_file SharedMem.addr
 let loc_compactifier =
   object (this)
     inherit [Loc.t, Loc.t, RelativeLoc.t, RelativeLoc.t] Flow_polymorphic_ast_mapper.mapper
-
     method private compactify_loc loc = RelativeLoc.of_loc loc
-
     method on_loc_annot = this#compactify_loc
-
     method on_type_annot = this#compactify_loc
   end
 
@@ -44,11 +37,8 @@ let compactify_loc ast = loc_compactifier#program ast
 let loc_decompactifier source =
   object (this)
     inherit [RelativeLoc.t, RelativeLoc.t, Loc.t, Loc.t] Flow_polymorphic_ast_mapper.mapper
-
     method private decompactify_loc loc = RelativeLoc.to_loc loc source
-
     method on_loc_annot = this#decompactify_loc
-
     method on_type_annot = this#decompactify_loc
   end
 
@@ -140,7 +130,6 @@ let add_unparsed_file file_key hash module_name =
   FileHeap.add file_key (dyn_unparsed_file addr)
 
 let is_checked_file = Heap.is_checked_file
-
 let coerce_checked_file = Heap.coerce_checked_file
 
 let read_file_hash file_addr =
@@ -148,7 +137,6 @@ let read_file_hash file_addr =
   get_file_hash file_addr |> read_int64
 
 let read_checked_file_hash file_addr = Heap.dyn_checked_file file_addr |> read_file_hash
-
 let read_unparsed_file_hash file_addr = Heap.dyn_unparsed_file file_addr |> read_file_hash
 
 let read_module_name file_addr =
@@ -156,7 +144,6 @@ let read_module_name file_addr =
   get_file_module_name file_addr |> read_opt read_string
 
 let read_checked_module_name file_addr = Heap.dyn_checked_file file_addr |> read_module_name
-
 let read_unparsed_module_name file_addr = Heap.dyn_unparsed_file file_addr |> read_module_name
 
 let read_ast file_key file_addr =
@@ -221,7 +208,6 @@ let read_exports file_addr : Exports.t =
 
 module ASTCache = SharedMem.LocalCache (struct
   type key = File_key.t
-
   type value = (Loc.t, Loc.t) Flow_ast.Program.t
 
   let capacity = 1000
@@ -229,7 +215,6 @@ end)
 
 module ALocTableCache = SharedMem.LocalCache (struct
   type key = File_key.t
-
   type value = ALoc.table
 
   let capacity = 1000
@@ -267,49 +252,27 @@ module type READER = sig
   type reader
 
   val get_file_addr : reader:reader -> File_key.t -> file_addr option
-
   val get_checked_file_addr : reader:reader -> File_key.t -> checked_file_addr option
-
   val has_ast : reader:reader -> File_key.t -> bool
-
   val get_ast : reader:reader -> File_key.t -> (Loc.t, Loc.t) Flow_ast.Program.t option
-
   val get_aloc_table : reader:reader -> File_key.t -> ALoc.table option
-
   val get_docblock : reader:reader -> File_key.t -> Docblock.t option
-
   val get_exports : reader:reader -> File_key.t -> Exports.t option
-
   val get_tolerable_file_sig : reader:reader -> File_key.t -> File_sig.With_Loc.tolerable_t option
-
   val get_file_sig : reader:reader -> File_key.t -> File_sig.With_Loc.t option
-
   val get_type_sig : reader:reader -> File_key.t -> type_sig option
-
   val get_file_hash : reader:reader -> File_key.t -> Xx.hash option
-
   val get_file_addr_unsafe : reader:reader -> File_key.t -> file_addr
-
   val get_checked_file_addr_unsafe : reader:reader -> File_key.t -> checked_file_addr
-
   val get_unparsed_file_addr_unsafe : reader:reader -> File_key.t -> unparsed_file_addr
-
   val get_ast_unsafe : reader:reader -> File_key.t -> (Loc.t, Loc.t) Flow_ast.Program.t
-
   val get_aloc_table_unsafe : reader:reader -> File_key.t -> ALoc.table
-
   val get_docblock_unsafe : reader:reader -> File_key.t -> Docblock.t
-
   val get_exports_unsafe : reader:reader -> File_key.t -> Exports.t
-
   val get_tolerable_file_sig_unsafe : reader:reader -> File_key.t -> File_sig.With_Loc.tolerable_t
-
   val get_file_sig_unsafe : reader:reader -> File_key.t -> File_sig.With_Loc.t
-
   val get_type_sig_unsafe : reader:reader -> File_key.t -> type_sig
-
   val get_file_hash_unsafe : reader:reader -> File_key.t -> Xx.hash
-
   val loc_of_aloc : reader:reader -> ALoc.t -> Loc.t
 end
 
@@ -331,9 +294,7 @@ module Mutator_reader = struct
   type reader = Mutator_state_reader.t
 
   let ( let* ) = Option.bind
-
   let get_file_addr ~reader:_ = FileHeap.get
-
   let get_old_file_addr ~reader:_ = FileHeap.get_old
 
   let get_checked_file_addr ~reader file =
@@ -485,7 +446,6 @@ module Reparse_mutator : sig
   type master_mutator (* Used by the master process *)
 
   val create : Transaction.t -> FilenameSet.t -> master_mutator * worker_mutator
-
   val revive_files : master_mutator -> FilenameSet.t -> unit
 end = struct
   type master_mutator = unit
@@ -537,7 +497,6 @@ module Reader : READER with type reader = State_reader.t = struct
   type reader = State_reader.t
 
   let ( let* ) = Option.bind
-
   let should_use_oldified key = FilenameSet.mem key !currently_oldified_files
 
   let get_file_addr ~reader:_ key =
@@ -784,7 +743,6 @@ end
 
 module From_saved_state : sig
   val add_parsed : File_key.t -> Xx.hash -> string option -> Exports.t -> unit
-
   val add_unparsed : File_key.t -> Xx.hash -> string option -> unit
 end = struct
   let add_parsed file_key hash module_name exports =

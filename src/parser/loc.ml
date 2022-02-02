@@ -165,5 +165,4 @@ let source loc = loc.source
 let cursor source line column = { source; start = { line; column }; _end = { line; column } }
 
 let start_loc loc = { loc with _end = loc.start }
-
 let end_loc loc = { loc with start = loc._end }

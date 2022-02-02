@@ -15,13 +15,9 @@ let run_list : 'node. ('node -> 'node) -> 'node list -> unit = (fun visit -> Lis
 class ['acc, 'loc] visitor ~init =
   object (this)
     inherit ['loc] Flow_ast_mapper.mapper
-
     val mutable acc : 'acc = init
-
     method acc = acc
-
     method set_acc x = acc <- x
-
     method update_acc f = acc <- f acc
 
     method eval : 'node. ('node -> 'node) -> 'node -> 'acc =

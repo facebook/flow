@@ -39,9 +39,7 @@ open Insert_type_utils
 
 module Let_syntax = struct
   let return = return
-
   let bind x ~f = x >>= f
-
   let map x ~f = x >>| f
 end
 
@@ -179,7 +177,6 @@ let mapper ~preserve_literals ~max_type_size ~default_any (cctx : Codemod_contex
 
     (* initialized in this#program *)
     val mutable sig_verification_loc_tys = LMap.empty
-
     val mutable total_errors = 0
 
     method private annotate_class_prop loc prop ty =
@@ -238,7 +235,6 @@ let mapper ~preserve_literals ~max_type_size ~default_any (cctx : Codemod_contex
             Ast.Expression.TypeCast
               Ast.Expression.TypeCast.
                 { expression = e; annot = (Loc.none, flowfixme_ast); comments = None }
-              
           )
         in
         this#opt_annotate ~f ~error ~expr:(Some expr) loc type_entry expr

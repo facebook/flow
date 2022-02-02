@@ -20,13 +20,9 @@ let of_list_exn = function
   | [] -> failwith "of_list_exn given empty list"
 
 let one x = (x, [])
-
 let cons x0 (x1, xs) = (x0, x1 :: xs)
-
 let mem ~equal y (x1, xs) = equal x1 y || Base.List.mem ~equal xs y
-
 let for_all f (x1, xs) = f x1 && Base.List.for_all ~f xs
-
 let exists f (x1, xs) = f x1 || Base.List.exists ~f xs
 
 let iter f (x, xs) =
@@ -34,7 +30,6 @@ let iter f (x, xs) =
   Base.List.iter ~f xs
 
 let map f (x, xs) = (f x, Base.List.map ~f xs)
-
 let ( >>| ) l f = map f l
 
 let ident_map f ((x, xs) as original) =
@@ -81,13 +76,9 @@ let append xs ys =
   | z :: zs -> (z, zs)
 
 let length (_, xs) = 1 + Base.List.length xs
-
 let fold_left f acc (x, xs) = Base.List.fold_left ~f ~init:acc (x :: xs)
-
 let hd (x, _) = x
-
 let tl (_, xs) = xs
-
 let nth nel n = Base.List.nth_exn (to_list nel) n
 
 let dedup ?(compare = Stdlib.compare) (x, xs) =

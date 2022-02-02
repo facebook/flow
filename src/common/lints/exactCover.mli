@@ -33,7 +33,6 @@ val file_cover : File_key.t -> 'a -> 'a t
  * ambiguity, this looks at the location of the first character in the provided
  * location. Errors if queried for a file not contained in this cover. *)
 val find : Loc.t -> 'a t -> 'a
-
 val find_opt : Loc.t -> 'a t -> 'a option
 
 (* Supports O(j*(j+k)) operations to modify a range of a cover being constructed,

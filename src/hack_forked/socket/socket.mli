@@ -8,7 +8,5 @@
 type addr
 
 val with_addr : addr -> (Unix.sockaddr -> 'a) -> 'a
-
 val addr_for_open : string -> addr
-
 val init_unix_socket : string -> Unix.file_descr

@@ -23,5 +23,4 @@
 type t
 
 val of_loc : Loc.t -> t
-
 val to_loc : t -> File_key.t option -> Loc.t

@@ -21,7 +21,6 @@ module P = Type_sig_parse
 module Option = Base.Option
 
 let mark_loc loc = Locs.mark loc ignore
-
 let mark_mref mref = Module_refs.mark mref ignore
 
 let rec mark_parsed = function
@@ -135,21 +134,13 @@ and mark_pattern = function
   | P.UnsupportedLiteralP loc -> mark_loc loc
 
 and mark_value def = iter_value mark_loc mark_parsed def
-
 and mark_def def = iter_def mark_loc mark_parsed def
-
 and mark_tparams tparams = iter_tparams mark_loc mark_parsed tparams
-
 and mark_annot t = iter_annot mark_loc mark_parsed t
-
 and mark_fun def = iter_fun_sig mark_loc mark_parsed def
-
 and mark_class def = iter_class_sig mark_loc mark_parsed def
-
 and mark_declare_class def = iter_declare_class_sig mark_loc mark_parsed def
-
 and mark_interface def = iter_interface_sig mark_loc mark_parsed def
-
 and mark_op op = iter_op mark_parsed op
 
 and resolve_ref (P.Ref ({ ref_loc; name; scope; resolved = _ } as ref)) =

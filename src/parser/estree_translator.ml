@@ -15,9 +15,7 @@ module Translate (Impl : Translator_intf.S) (Config : Config) : sig
   type t
 
   val program : Offset_utils.t option -> (Loc.t, Loc.t) Ast.Program.t -> t
-
   val expression : Offset_utils.t option -> (Loc.t, Loc.t) Ast.Expression.t -> t
-
   val errors : (Loc.t * Parse_error.t) list -> t
 end
 with type t = Impl.t = struct
@@ -1828,7 +1826,6 @@ with type t = Impl.t = struct
                 start = { loc.start with column = loc.start.column + 1 };
                 _end = { loc._end with column = loc._end.column - 1 };
               }
-            
           in
 
           node "JSXEmptyExpression" empty_loc []
@@ -1930,6 +1927,5 @@ with type t = Impl.t = struct
     { program; expression }
 
   let program offset_table = (make_functions offset_table).program
-
   let expression offset_table = (make_functions offset_table).expression
 end

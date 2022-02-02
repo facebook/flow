@@ -67,55 +67,35 @@
 
 module Make () : sig
   type 'a builder
-
   type 'a indexed
-
   type 'a t
-
   type index = private int [@@deriving show]
-
   type 'a node
 
   val create : unit -> 'a builder
-
   val push : 'a builder -> 'a -> 'a node
-
   val tail_exn : 'a builder -> 'a node
-
   val splice : 'a node -> ('a builder -> 'b) -> 'b
-
   val value : 'a node -> 'a
-
   val modify : 'a node -> ('a -> 'a) -> unit
 
   (* If this node has already been marked, does nothing. Otherwise calls the
    * provided function with the node's value. *)
   val mark : 'a node -> ('a -> unit) -> unit
-
   val compact : ?merge:('a -> 'a -> 'a option) -> 'a builder -> 'a indexed
 
   (* This function is guaranteed to succeed if, and only if, the node has
    * already been marked and the builder producing this node was compacted. *)
   val index_exn : 'a node -> index
-
   val copy : ('a -> 'b) -> 'a indexed -> 'b t
-
   val init : int -> (int -> 'a) -> 'a t
-
   val get : 'a t -> index -> 'a
-
   val length : 'a t -> int
-
   val iter : ('a -> unit) -> 'a t -> unit
-
   val iteri : (index -> 'a -> unit) -> 'a t -> unit
-
   val map : ('a -> 'b) -> 'a t -> 'b t
-
   val mapi : (index -> 'a -> 'b) -> 'a t -> 'b t
-
   val to_array : 'a t -> 'a array
-
   val to_array_map : ('a -> 'b) -> 'a t -> 'b array
 
   module IndexSet : Flow_set.S with type elt = index
@@ -124,9 +104,7 @@ module Make () : sig
     type 'a builder
 
     val create : unit -> 'a builder
-
     val push : 'a builder -> 'a -> 'a node
-
     val compact : 'a builder -> 'a indexed
   end
 end

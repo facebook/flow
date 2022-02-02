@@ -9,17 +9,12 @@ open Polarity
 
 module type S = sig
   type t
-
   type key
 
   val empty : t
-
   val add : key -> Polarity.t -> t -> (Polarity.t * t) option
-
   val get : key -> t -> Polarity.t option
-
   val mem : key -> Polarity.t -> t -> bool
-
   val exclude : key -> t -> t
 end
 
@@ -27,7 +22,6 @@ module Make (Key : Map.OrderedType) : S with type key = Key.t = struct
   module Map = WrappedMap.Make (Key)
 
   type t = Polarity.t Map.t
-
   type key = Map.key
 
   let empty = Map.empty

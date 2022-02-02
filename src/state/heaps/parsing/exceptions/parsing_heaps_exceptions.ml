@@ -6,13 +6,8 @@
  *)
 
 exception File_not_found of string
-
 exception Ast_not_found of string
-
 exception ALoc_table_not_found of string
-
 exception Docblock_not_found of string
-
 exception Requires_not_found of string
-
 exception Type_sig_not_found of string

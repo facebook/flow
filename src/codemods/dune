@@ -1,9 +1,6 @@
 (library
-  (name flow_codemods)
-  (wrapped false)
-  (libraries
-    flow_codemod_utils
-    flow_service_type_info
-  )
-  (preprocess (pps ppx_let))
-)
+ (name flow_codemods)
+ (wrapped false)
+ (libraries flow_codemod_utils flow_service_type_info)
+ (preprocess
+  (pps ppx_let)))

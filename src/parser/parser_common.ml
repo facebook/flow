@@ -19,7 +19,6 @@ type pattern_cover =
 
 module type PARSER = sig
   val program : env -> (Loc.t, Loc.t) Program.t
-
   val statement : env -> (Loc.t, Loc.t) Statement.t
 
   val statement_list_item :
@@ -31,19 +30,12 @@ module type PARSER = sig
     term_fn:(Token.t -> bool) -> env -> (Loc.t, Loc.t) Statement.t list * bool
 
   val module_body : term_fn:(Token.t -> bool) -> env -> (Loc.t, Loc.t) Statement.t list
-
   val expression : env -> (Loc.t, Loc.t) Expression.t
-
   val expression_or_pattern : env -> pattern_cover
-
   val conditional : env -> (Loc.t, Loc.t) Expression.t
-
   val assignment : env -> (Loc.t, Loc.t) Expression.t
-
   val left_hand_side : env -> (Loc.t, Loc.t) Expression.t
-
   val object_initializer : env -> Loc.t * (Loc.t, Loc.t) Expression.Object.t * pattern_errors
-
   val identifier : ?restricted_error:Parse_error.t -> env -> (Loc.t, Loc.t) Identifier.t
 
   val identifier_with_type :
@@ -59,17 +51,11 @@ module type PARSER = sig
     Loc.t * [ `Element of (Loc.t, Loc.t) JSX.element | `Fragment of (Loc.t, Loc.t) JSX.fragment ]
 
   val pattern : env -> Parse_error.t -> (Loc.t, Loc.t) Pattern.t
-
   val pattern_from_expr : env -> (Loc.t, Loc.t) Expression.t -> (Loc.t, Loc.t) Pattern.t
-
   val object_key : ?class_body:bool -> env -> Loc.t * (Loc.t, Loc.t) Expression.Object.Property.key
-
   val class_declaration : env -> (Loc.t, Loc.t) Class.Decorator.t list -> (Loc.t, Loc.t) Statement.t
-
   val class_expression : env -> (Loc.t, Loc.t) Expression.t
-
   val is_assignable_lhs : (Loc.t, Loc.t) Expression.t -> bool
-
   val number : env -> Token.number_type -> string -> float
 end
 

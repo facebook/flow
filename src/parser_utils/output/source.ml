@@ -77,7 +77,6 @@ let add_string ?name str src =
                 source;
                 original_loc = { line = loc.Loc.start.Loc.line; col = loc.Loc.start.Loc.column };
               }
-            
           in
 
           Sourcemap.add_mapping ~original ~generated:src.pos sourcemap
@@ -107,7 +106,5 @@ let add_newline source =
   { source with pos = pos_new_line source.pos }
 
 let add_space num b = add_string (String.make num ' ') b
-
 let contents b = Buffer.contents b.buffer
-
 let sourcemap b = b.sourcemap

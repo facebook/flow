@@ -70,9 +70,7 @@ module Make (Ord : Map.OrderedType) : S with type key = Ord.t = struct
     merge_env env s1 s2 ~combine:f
 
   let values m = fold (fun _ v acc -> v :: acc) m []
-
   let fold_env env f m init = fold (fun key v (env, acc) -> f env key v acc) m (env, init)
-
   let elements m = fold (fun k v acc -> (k, v) :: acc) m []
 
   let map_env f env m =

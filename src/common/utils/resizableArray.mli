@@ -27,10 +27,8 @@ val shrink : 'a t -> unit
 
 (* Returns None if the index is out of bounds. *)
 val get : 'a t -> int -> 'a option
-
 val size : 'a t -> int
 
 (* Exposed only for white box testing. Do not use this. Really. *)
 val underlying_array_size_do_not_use : 'a t -> int
-
 val to_hashtbl : 'a t -> ('a, int) Hashtbl.t

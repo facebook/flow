@@ -8,19 +8,11 @@
 type t = int [@@deriving eq]
 
 val compare : t -> t -> int
-
 val track_names : bool ref
-
 val tmp : unit -> t
-
 val to_string : t -> string
-
 val debug : ?normalize:(int -> int) -> t -> string
-
 val get_name : t -> string
-
 val set_name : t -> string -> unit
-
 val make : string -> t
-
 val pp : Format.formatter -> t -> unit

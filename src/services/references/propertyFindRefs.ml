@@ -10,7 +10,6 @@ open Loc_collections
 open GetDefUtils
 
 let loc_of_aloc = Parsing_heaps.Reader.loc_of_aloc
-
 let add_ref_kind kind = Base.List.map ~f:(fun loc -> (kind, loc))
 
 module LiteralToPropLoc : sig

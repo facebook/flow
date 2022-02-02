@@ -23,18 +23,13 @@ module type READER = sig
   type reader
 
   val get_provider : reader:reader -> (Modulename.t -> File_key.t option) Expensive.t
-
   val get_provider_unsafe : reader:reader -> (Modulename.t -> File_key.t) Expensive.t
-
   val module_exists : reader:reader -> Modulename.t -> bool
-
   val get_resolved_requires_unsafe : reader:reader -> (File_key.t -> resolved_requires) Expensive.t
 end
 
 module Mutator_reader : READER with type reader = Mutator_state_reader.t
-
 module Reader : READER with type reader = State_reader.t
-
 module Reader_dispatcher : READER with type reader = Abstract_state_reader.t
 
 module Commit_modules_mutator : sig
@@ -54,7 +49,6 @@ module Resolved_requires_mutator : sig
   type t
 
   val create : Transaction.t -> Utils_js.FilenameSet.t -> t
-
   val add_resolved_requires : t -> File_key.t -> resolved_requires -> bool
 end
 

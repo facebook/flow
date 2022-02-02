@@ -288,7 +288,6 @@ and dump_elt ~depth = function
   | Decl d -> spf "Decl (%s)" (dump_decl ~depth d)
 
 let dump_binding (v, ty) = Utils_js.spf "type %s = %s" (dump_tvar v) (dump_t ty)
-
 let dump_env_t s = Base.List.map ~f:dump_binding s |> String.concat "\n"
 
 let string_of_polarity = function

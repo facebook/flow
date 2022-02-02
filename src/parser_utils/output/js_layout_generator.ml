@@ -89,9 +89,7 @@ let context_after_token ctxt = { ctxt with left = Normal_left }
 
 (* JS layout helpers *)
 let not_supported loc message = failwith (message ^ " at " ^ Loc.debug_to_string loc)
-
 let with_semicolon node = fuse [node; Atom ";"]
-
 let with_pretty_semicolon node = fuse [node; IfPretty (Atom ";", Empty)]
 
 let wrap_in_parens ?(with_break = false) item =
@@ -123,7 +121,6 @@ let deoptionalize l =
 
 (* See https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Operator_Precedence *)
 let max_precedence = 22
-
 let min_precedence = 1
 
 (* 0 means always parenthesize, which is not a precedence decision *)
@@ -418,7 +415,6 @@ let utf8_escape =
     str |> lookahead_fold_wtf_8 (f ~quote) (Buffer.create (String.length str)) |> Buffer.contents
 
 let is_single_linebreak prev next = Loc.(next.start.line = prev._end.line + 1)
-
 let is_multi_linebreak prev next = Loc.(next.start.line > prev._end.line + 1)
 
 let layout_comment loc comment =

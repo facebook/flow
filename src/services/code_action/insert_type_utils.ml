@@ -9,11 +9,8 @@ open Utils_js
 module Ast = Flow_ast
 
 let ( >>| ) = Base.Result.( >>| )
-
 let ( >>= ) = Base.Result.( >>= )
-
 let return = Base.Result.return
-
 let mapM f xs = Base.Result.all (Base.List.map ~f xs)
 
 let show m =
@@ -309,11 +306,8 @@ module type BASE_STATS = sig
   type t
 
   val empty : t
-
   val combine : t -> t -> t
-
   val serialize : t -> string list
-
   val report : t -> string list
 end
 
@@ -364,7 +358,6 @@ module UntypedAcc (Extra : BASE_STATS) = struct
   }
 
   let empty = { changed_set = FilenameSet.empty; stats = Extra.empty }
-
   let update_stats c stats = { c with stats }
 
   let combine c1 c2 =
@@ -465,11 +458,8 @@ module Builtins = struct
     | None -> Ty.Any (Ty.Annotated ALoc.none)
 
   let flowfixme_ty = flowfixme_generic_ty ~preference:"$FlowFixMe"
-
   let flowfixme_empty_ty = flowfixme_generic_ty ~preference:"$FlowFixMeEmpty"
-
   let empty = Ty.Bot Ty.EmptyType
-
   let flowfixme_ty_default = flowfixme_ty LintSettings.empty_severities SSet.empty
 
   let flowfixme_ast ~exact_by_default ~lint_severities ~suppress_types =

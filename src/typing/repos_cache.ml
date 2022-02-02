@@ -156,7 +156,6 @@ type ident = Type.ident
 
 module ReposMap = WrappedMap.Make (struct
   type key = ident * Reason.t
-
   type t = key
 
   let compare = Stdlib.compare

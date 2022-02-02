@@ -26,22 +26,16 @@ type t
 
    On Unix, the type `in_channel` is in fact an alias for
    `Stdlib.in_channel`.
-
 *)
 val with_timeout : timeout:int -> on_timeout:(unit -> 'a) -> do_:(t -> 'a) -> 'a
-
 val check_timeout : t -> unit
 
 type in_channel
 
 val open_in : string -> in_channel
-
 val close_in : in_channel -> unit
-
 val close_in_noerr : in_channel -> unit
-
 val in_channel_of_descr : Unix.file_descr -> in_channel
-
 val descr_of_in_channel : in_channel -> Unix.file_descr
 
 val select :
@@ -53,19 +47,12 @@ val select :
   Unix.file_descr list * Unix.file_descr list * Unix.file_descr list
 
 val input : ?timeout:t -> in_channel -> bytes -> int -> int -> int
-
 val really_input : ?timeout:t -> in_channel -> bytes -> int -> int -> unit
-
 val input_char : ?timeout:t -> in_channel -> char
-
 val input_line : ?timeout:t -> in_channel -> string
-
 val input_value : ?timeout:t -> in_channel -> 'a
-
 val open_process : string -> string array -> in_channel * out_channel
-
 val open_process_in : string -> string array -> in_channel
-
 val close_process_in : in_channel -> Unix.process_status
 
 val read_process :

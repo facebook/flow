@@ -22,7 +22,6 @@ module Tarjan =
 
 module FindDependencies : sig
   val depends : Env_api.env_info -> Name_def.def -> ALoc.t Nel.t ALocMap.t
-
   val recursively_resolvable : Name_def.def -> bool
 end = struct
   (* This analysis consumes variable defs and returns a map representing the variables that need to be
@@ -56,11 +55,8 @@ end = struct
   class use_visitor ({ Env_api.env_values; env_entries; _ } as env) init =
     object (this)
       inherit [ALoc.t Nel.t ALocMap.t, ALoc.t] Flow_ast_visitor.visitor ~init as super
-
       val mutable this_ = None
-
       method this_ = this_
-
       method set_this_ this_' = this_ <- this_'
 
       method add ~why t =
@@ -156,15 +152,10 @@ end = struct
         fpt
 
       method! member_property_identifier (id : (ALoc.t, ALoc.t) Ast.Identifier.t) = id
-
       method! typeof_member_identifier ident = ident
-
       method! member_type_identifier (id : (ALoc.t, ALoc.t) Ast.Identifier.t) = id
-
       method! pattern_object_property_identifier_key ?kind:_ id = id
-
       method! enum_member_identifier id = id
-
       method! object_key_identifier (id : (ALoc.t, ALoc.t) Ast.Identifier.t) = id
 
       (* For classes/functions that are known to be fully annotated, we skip property bodies *)

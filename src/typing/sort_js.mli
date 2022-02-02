@@ -12,5 +12,4 @@ open Utils_js
    a list only depend on keys in a subsequent list
 *)
 val topsort : roots:FilenameSet.t -> FilenameSet.t FilenameMap.t -> File_key.t Nel.t list
-
 val log : File_key.t Nel.t list -> unit

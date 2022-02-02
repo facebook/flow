@@ -14,7 +14,6 @@ let spf = Printf.sprintf
  * at some point *)
 module Memoize : sig
   val forever : f:(unit -> 'a Lwt.t) -> unit -> 'a Lwt.t
-
   val until : seconds:float -> f:(unit -> 'a Lwt.t) -> unit -> 'a Lwt.t
 end = struct
   let forever ~f =

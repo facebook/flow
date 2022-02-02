@@ -12,8 +12,6 @@ module type S = sig
   type t (* an element of the group *)
 
   val zero : t
-
   val ( + ) : t -> t -> t
-
   val ( - ) : t -> t -> t
 end

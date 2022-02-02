@@ -261,7 +261,6 @@ let mapper cctx =
   let { Loc_env.var_info = { Env_api.ssa_values; _ }; _ } = Context.environment cx in
   object (this)
     inherit [Acc.t] Codemod_ast_mapper.mapper "Rename variables" Acc.empty as super
-
     val mutable renaming_map = ALocMap.empty (* Not really mutable--set in method `program` *)
 
     method! program ast =
@@ -281,7 +280,6 @@ let mapper cctx =
                 num_renamed_vars = ALocMap.cardinal map;
                 num_name_collisions = collisions;
               }
-            
           in
 
           this#update_acc (fun acc ->
@@ -294,17 +292,11 @@ let mapper cctx =
 
     (* Skip keys, qualified identifiers *)
     method! object_key_identifier ident = ident
-
     method! typeof_member_identifier ident = ident
-
     method! member_property_identifier ident = ident
-
     method! member_type_identifier ident = ident
-
     method! enum_member_identifier id = id
-
     method! pattern_object_property_identifier_key ?kind:_ id = id
-
     method! pattern_identifier ?kind:_ id = id
 
     (* Figure out if a use of the variable at `loc` has been renamed, by seeing if

@@ -20,12 +20,9 @@ type 'a t
 
 (* Called at the initialization of the server (cf server.ml) *)
 val set_log : out_channel -> unit
-
 val ( >>= ) : 'a t -> ('a -> 'b t) -> 'b t
-
 val return : 'a -> 'a t
 
 (* Calls (f path), never fails, logs the nasty exceptions *)
 val call : (string -> 'a t) -> string -> 'a t
-
 val wrap : ('a -> 'b) -> 'a -> 'b t

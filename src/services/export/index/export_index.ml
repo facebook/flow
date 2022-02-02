@@ -99,7 +99,6 @@ let add : string -> source -> kind -> t -> t =
   (fun name file_key kind t -> SMap.update name (add_file file_key kind) t)
 
 let merge x y = SMap.union ~combine:(fun _key a b -> Some (ExportSet.union a b)) x y
-
 let fold_names ~f ~init t = SMap.fold (fun name exports acc -> f acc name exports) t init
 
 let fold ~f ~init t =

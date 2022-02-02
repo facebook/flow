@@ -9,7 +9,6 @@ module Translate (Impl : Translator_intf.S) : sig
   type t
 
   val token : Offset_utils.t -> Parser_env.token_sink_result -> t
-
   val token_list : Offset_utils.t -> Parser_env.token_sink_result list -> t
 end
 with type t = Impl.t = struct

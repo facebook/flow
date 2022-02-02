@@ -50,7 +50,6 @@ val cprintf :
  * a client can output between sleeps if it happens to be waiting on
  * a busy server (e.g. one that's initializing) *)
 val spinner : ?angery_reaccs_only:bool -> unit -> string
-
 val spinner_used : unit -> bool
 
 (* Output a "clear current line" escape sequence to out_channel if it's
@@ -69,7 +68,6 @@ val eprintf : ('a, out_channel, unit) format -> 'a
 
 (* Whether the terminal supports color *)
 val supports_color : unit -> bool
-
 val should_color : color_mode -> bool
 
 (* Whether the terminal supports emoji *)

@@ -13,7 +13,6 @@ open Speculation_state
 type speculation_id = int
 
 val init_speculation : Context.t -> speculation_id -> unit
-
 val add_unresolved_to_speculation : Context.t -> speculation_id -> Type.ident -> unit
 
 (* Maintain a stack of speculative branches. See Speculation for the contents
@@ -26,13 +25,10 @@ val add_unresolved_to_speculation : Context.t -> speculation_id -> Type.ident ->
    (2) any errors cause short-cutting
 *)
 val set_speculative : Context.t -> branch -> unit
-
 val restore_speculative : Context.t -> unit
-
 val speculating : Context.t -> bool
 
 (* decide whether an action should be deferred.
    when speculating, actions that involve unresolved tvars are deferred. *)
 val defer_action : Context.t -> action -> bool
-
 val case_diff : Context.t -> case -> case -> (Type.ident * Reason.reason) list

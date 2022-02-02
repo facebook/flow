@@ -31,5 +31,4 @@ let test_position () =
 (* TODO: write a load more printing+parsing tests *)
 
 let tests = [("test_position", test_position)]
-
 let () = Unit_test.run_all tests

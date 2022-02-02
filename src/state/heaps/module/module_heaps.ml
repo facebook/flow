@@ -145,7 +145,6 @@ module Resolved_requires_mutator : sig
   type t
 
   val create : Transaction.t -> Utils_js.FilenameSet.t -> t
-
   val add_resolved_requires : t -> File_key.t -> resolved_requires -> bool
 end = struct
   type t = unit
@@ -193,11 +192,8 @@ module type READER = sig
   type reader
 
   val get_provider : reader:reader -> (Modulename.t -> File_key.t option) Expensive.t
-
   val get_provider_unsafe : reader:reader -> (Modulename.t -> File_key.t) Expensive.t
-
   val module_exists : reader:reader -> Modulename.t -> bool
-
   val get_resolved_requires_unsafe : reader:reader -> (File_key.t -> resolved_requires) Expensive.t
 end
 
@@ -205,7 +201,6 @@ module Mutator_reader : READER with type reader = Mutator_state_reader.t = struc
   type reader = Mutator_state_reader.t
 
   let get_provider ~reader:_ = Expensive.wrap NameHeap.get
-
   let module_exists ~reader:_ = NameHeap.mem
 
   let get_provider_unsafe ~reader ~audit m =

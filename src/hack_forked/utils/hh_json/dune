@@ -1,6 +1,4 @@
 (library
-  (name hh_json)
-  (wrapped false)
-  (libraries
-    collections
-    imported_core))
+ (name hh_json)
+ (wrapped false)
+ (libraries collections imported_core))

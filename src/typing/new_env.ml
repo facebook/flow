@@ -34,75 +34,41 @@ module New_env : S = struct
   module Old_env = Env.Env
 
   let peek_env = Old_env.peek_env
-
   let merge_env = Old_env.merge_env
-
   let update_env = Old_env.update_env
-
   let clone_env = Old_env.clone_env
-
   let copy_env = Old_env.copy_env
-
   let widen_env = Old_env.widen_env
-
   let havoc_heap_refinements_with_propname = Old_env.havoc_heap_refinements_with_propname
-
   let havoc_local_refinements = Old_env.havoc_local_refinements
-
   let havoc_heap_refinements = Old_env.havoc_heap_refinements
-
   let havoc_vars = Old_env.havoc_vars
-
   let reset_current_activation = Old_env.reset_current_activation
-
   let havoc_all = Old_env.havoc_all
-
   let refine_expr = Old_env.refine_expr
-
   let get_current_env_refi = Old_env.get_current_env_refi
-
   let save_excluded_symbols = Old_env.save_excluded_symbols
-
   let set_internal_var = Old_env.set_internal_var
-
   let get_internal_var = Old_env.get_internal_var
-
   let get_class_entries = Old_env.get_class_entries
-
   let bind_class = Old_env.bind_class
-
   let restore_excluded_symbols = Old_env.restore_excluded_symbols
-
   let trunc_env = Old_env.trunc_env
-
   let env_depth = Old_env.env_depth
-
   let in_lex_scope = Old_env.in_lex_scope
-
   let pop_var_scope = Old_env.pop_var_scope
-
   let push_var_scope = Old_env.push_var_scope
-
   let in_predicate_scope = Old_env.in_predicate_scope
-
   let in_generator_scope = Old_env.in_generator_scope
-
   let in_async_scope = Old_env.in_async_scope
-
   let var_scope_kind = Old_env.var_scope_kind
-
   let string_of_env = Old_env.string_of_env
-
   let in_global_scope = Old_env.in_global_scope
-
   let in_toplevel_scope = Old_env.in_toplevel_scope
-
   let is_provider = Old_env.is_provider
-
   let install_provider = Old_env.install_provider
 
   type t = Old_env.t
-
   type scope = Old_env.scope
 
   let this_type_params = ref ALocMap.empty
@@ -445,11 +411,8 @@ module New_env : S = struct
       set_env_entry cx ~use_op t loc
 
   let set_var cx ~use_op _name t loc = set_env_entry cx ~use_op t loc
-
   let bind cx t loc = set_env_entry cx ~use_op:Type.unknown_use t loc
-
   let bind_var ?state:_ cx _ t loc = bind cx (TypeUtil.type_t_of_annotated_or_inferred t) loc
-
   let bind_let ?state:_ cx _ t loc = bind cx (TypeUtil.type_t_of_annotated_or_inferred t) loc
 
   let bind_implicit_let ?state kind cx name t loc =
@@ -470,7 +433,6 @@ module New_env : S = struct
     bind cx (TypeUtil.type_t_of_annotated_or_inferred t) loc
 
   let bind_const ?state:_ cx _ t loc = bind cx (TypeUtil.type_t_of_annotated_or_inferred t) loc
-
   let bind_import cx _ t loc = bind cx t loc
 
   let bind_declare_var cx name t loc =
@@ -488,9 +450,7 @@ module New_env : S = struct
     | OrdinaryName _ -> bind cx t loc
 
   let bind_type ?state:(_ = Scope.State.Declared) cx _name t loc = bind cx t loc
-
   let bind_import_type cx _name t loc = bind cx t loc
-
   let bind_this_tparam ~state:_ _cx t loc = this_type_params := ALocMap.add loc t !this_type_params
 
   let declare_let cx name =
@@ -564,7 +524,6 @@ module New_env : S = struct
     | OrdinaryName _ -> init_entry ~has_anno cx ~use_op t loc
 
   let init_type cx _name t loc = set_env_entry cx ~use_op:unknown_use t loc
-
   let pseudo_init_declared_type _ _ _ = ()
 
   let unify_declared_type ?(lookup_mode = ForValue) cx name loc t =

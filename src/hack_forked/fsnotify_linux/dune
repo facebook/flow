@@ -1,7 +1,6 @@
 (library
-  (name fsnotify_Linux)
-  (wrapped false)
-  (enabled_if (= %{system} linux))
-  (libraries
-    inotify
-    utils_core))
+ (name fsnotify_Linux)
+ (wrapped false)
+ (enabled_if
+  (= %{system} linux))
+ (libraries inotify utils_core))

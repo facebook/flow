@@ -225,9 +225,7 @@ module ImportsHelper : sig
     -> reserved_names:SSet.t
     -> object
          method type_ : Ty.t -> (Ty.t, Error.kind) result
-
          method to_import_stmts : unit -> (Loc.t, Loc.t) Ast.Statement.t list
-
          method to_import_bindings : (string * Autofix_imports.bindings) list
        end
 
@@ -395,11 +393,8 @@ end = struct
     type t
 
     val empty : t
-
     val add : ImportInfo.t -> t -> t
-
     val next_index : Ty.symbol -> use_mode -> t -> int
-
     val fold : (ImportInfo.t -> 'a -> 'a) -> t -> 'a -> 'a
   end = struct
     type t = ImportInfo.t Nel.t NameUtils.Map.t
@@ -474,7 +469,6 @@ end = struct
   class remote_converter ~iteration ~file ~reserved_names =
     object (self)
       val mutable name_map = ImportedNameMap.empty
-
       val mutable symbol_cache = SymbolWithUseModeMap.empty
 
       method private gen_import_stmt index use_mode remote_symbol

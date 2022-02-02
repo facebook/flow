@@ -8,9 +8,7 @@
 module Hh_bucket = Bucket
 
 let report_canceled_callback = ref (fun ~total:_ ~finished:_ -> ())
-
 let set_report_canceled_callback callback = report_canceled_callback := callback
-
 let report_canceled ~total ~finished = !report_canceled_callback ~total ~finished
 
 let single_threaded_call_with_worker_id job merge neutral next =

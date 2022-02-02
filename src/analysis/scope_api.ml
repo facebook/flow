@@ -9,9 +9,7 @@ module Make (L : Loc_sig.S) = struct
   module L = L
 
   type scope = int
-
   type use = L.t
-
   type uses = L.LSet.t
 
   module Def = struct
@@ -129,7 +127,6 @@ module Make (L : Loc_sig.S) = struct
     | Missing_def _ -> L.LSet.empty
 
   let def_is_unused info def = L.LSet.is_empty (uses_of_def info ~exclude_def:true def)
-
   let toplevel_scopes = [0]
 
   let scope info scope_id =

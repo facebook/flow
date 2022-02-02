@@ -13,11 +13,8 @@ type t = {
 }
 
 let empty = { name = None; main = None }
-
 let create ~name ~main = { name; main }
-
 let name package = package.name
-
 let main package = package.main
 
 (* Given a list of JSON properties, extract the string properties and turn it into a string SMap.t

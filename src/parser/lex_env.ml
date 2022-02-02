@@ -50,17 +50,11 @@ let clone env =
   { env with lex_lb }
 
 let lexbuf env = env.lex_lb
-
 let source env = env.lex_source
-
 let state env = env.lex_state
-
 let line env = env.lex_bol.line
-
 let bol_offset env = env.lex_bol.offset
-
 let is_in_comment_syntax env = env.lex_in_comment_syntax
-
 let is_comment_syntax_enabled env = env.lex_enable_comment_syntax
 
 let in_comment_syntax is_in env =

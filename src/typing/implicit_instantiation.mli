@@ -11,7 +11,6 @@ module type OBSERVER = sig
   type output
 
   val on_constant_tparam : Context.t -> string -> output
-
   val on_pinned_tparam : Context.t -> string -> Type.t -> output
 
   val on_missing_bounds :

@@ -8,7 +8,6 @@
 type audit
 
 val ok : audit
-
 val warn : audit
 
 type 'a t = audit:audit -> 'a

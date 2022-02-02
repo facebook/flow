@@ -15,9 +15,7 @@ open Utils_js
 
 module type INPUT = sig
   include Flow_common.BASE
-
   include Flow_common.BUILTINS
-
   include Flow_common.SUBTYPING
 end
 

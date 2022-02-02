@@ -24,7 +24,6 @@ let strengthen newtrust cx trust err =
   )
 
 let make_trusted = unknown_qualifier () |> make_trusted |> strengthen
-
 let make_private = unknown_qualifier () |> make_private |> strengthen
 
 (* Get the trust of a trust_rep, whether it's an ident or a fixed trust. *)

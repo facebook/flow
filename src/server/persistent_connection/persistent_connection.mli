@@ -7,7 +7,6 @@
 
 (* Stores all the necessary information about current persistent connections *)
 type t
-
 type single_client
 
 module Client_config : sig
@@ -17,13 +16,9 @@ module Client_config : sig
 end
 
 val empty : t
-
 val add_client : LspProt.client_id -> Lsp.Initialize.params -> unit
-
 val remove_client : LspProt.client_id -> unit
-
 val add_client_to_clients : t -> LspProt.client_id -> t
-
 val remove_client_from_clients : t -> LspProt.client_id -> t
 
 (* Send updates to all clients that are subscribed *)
@@ -38,9 +33,7 @@ val update_clients :
   unit
 
 val send_lsp : t -> Lsp.lsp_message option * LspProt.metadata -> unit
-
 val send_start_recheck : t -> unit
-
 val send_end_recheck : lazy_stats:ServerProt.Response.lazy_stats -> t -> unit
 
 (* Send a message to just one client *)
@@ -69,7 +62,6 @@ val client_did_change :
   (unit, string * Utils.callstack) result
 
 val client_did_close : single_client -> filenames:string Nel.t -> bool
-
 val client_did_change_configuration : single_client -> Client_config.t -> unit
 
 (** Returns either FileContent for this file if it was opened by the persistent
@@ -77,18 +69,13 @@ val client_did_change_configuration : single_client -> Client_config.t -> unit
 val get_file : single_client -> string -> File_input.t
 
 val get_client : LspProt.client_id -> single_client option
-
 val get_id : single_client -> LspProt.client_id
-
 val lsp_initialize_params : single_client -> Lsp.Initialize.params
-
 val client_config : single_client -> Client_config.t
 
 val type_parse_artifacts_cache :
   single_client -> (Types_js_types.file_artifacts, Flow_error.ErrorSet.t) result FilenameCache.t
 
 val clear_type_parse_artifacts_caches : unit -> unit
-
 val push_outstanding_handler : single_client -> Lsp.lsp_id -> unit Lsp.lsp_handler -> unit
-
 val pop_outstanding_handler : single_client -> Lsp.lsp_id -> unit Lsp.lsp_handler option

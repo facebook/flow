@@ -8,18 +8,14 @@
 exception Key_not_found of (* message *) string * (* key *) string
 
 let spf = Printf.sprintf
-
 let print_endlinef fmt = Printf.ksprintf print_endline fmt
-
 let prerr_endlinef fmt = Printf.ksprintf prerr_endline fmt
-
 let exe_name = Filename.basename Sys.executable_name
 
 module FilenameSet = struct
   include Flow_set.Make (File_key)
 
   let pp = make_pp File_key.pp
-
   let show x = Format.asprintf "%a" pp x
 end
 
@@ -79,15 +75,10 @@ let call_succeeds try_function function_input =
   | _ -> false
 
 let map_pair f g (a, b) = (f a, g b)
-
 let map_fst f (a, b) = (f a, b)
-
 let map_snd g (a, b) = (a, g b)
-
 let swap (a, b) = (b, a)
-
 let mk_tuple x y = (x, y)
-
 let mk_tuple_swapped x y = (y, x)
 
 let rec iter2opt f = function
@@ -110,9 +101,7 @@ let rec toFixpoint f x =
     toFixpoint f x'
 
 let uncurry f (x, y) = f x y
-
 let curry f x y = f (x, y)
-
 let ( %> ) f g x = g (f x)
 
 (**
@@ -293,7 +282,6 @@ let ( %>>| ) (result : ('ok, 'err) result) (f : 'ok -> 'a Lwt.t) : ('a, 'err) re
     Lwt.return (Ok new_x)
 
 let bind2 ~f x y = Base.Result.bind x (fun x -> Base.Result.bind y (f x))
-
 let map2 ~f x y = Base.Result.bind x (fun x -> Base.Result.map y ~f:(f x))
 
 let debug_print_current_stack_trace () =

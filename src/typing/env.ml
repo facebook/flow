@@ -58,7 +58,6 @@ module Env : Env_sig.S = struct
   (****************)
 
   type scope = Scope.t
-
   type t = scope list
 
   (* the environment is a scope stack, which mutates as an AST is
@@ -75,18 +74,14 @@ module Env : Env_sig.S = struct
      to the override. See Init_js.load_lib_files.
   *)
   let exclude_symbols : NameUtils.Set.t ref = ref NameUtils.Set.empty
-
   let set_exclude_symbols syms = exclude_symbols := syms
-
   let is_excluded name = NameUtils.Set.mem name !exclude_symbols
 
   (* scopes *)
 
   (* return the current scope *)
   let peek_scope () = List.hd !scopes
-
   let in_toplevel_scope () = Scope.is_toplevel (peek_scope ())
-
   let in_global_scope () = Scope.is_global (peek_scope ())
 
   (* return current scope stack *)
@@ -834,11 +829,8 @@ module Env : Env_sig.S = struct
       )
 
   let declare_let = declare_value_entry Entry.(Let (LetVarBinding, Havocable))
-
   let declare_implicit_let kind = declare_value_entry Entry.(Let (kind, Havocable))
-
   let declare_const = declare_value_entry Entry.(Const ConstVarBinding)
-
   let declare_implicit_const kind = declare_value_entry (Entry.Const kind)
 
   let initialized_value_entry specific v =
@@ -894,15 +886,10 @@ module Env : Env_sig.S = struct
       )
 
   let init_var = init_value_entry Entry.(Var Havocable)
-
   let init_let = init_value_entry Entry.(Let (LetVarBinding, Havocable))
-
   let init_implicit_let kind = init_value_entry Entry.(Let (kind, Havocable))
-
   let init_fun = init_implicit_let ~has_anno:false Entry.FunctionBinding
-
   let init_const = init_value_entry Entry.(Const ConstVarBinding)
-
   let init_implicit_const kind = init_value_entry Entry.(Const kind)
 
   (* update type alias to reflect initialization in code *)
@@ -1070,9 +1057,7 @@ module Env : Env_sig.S = struct
 
   (* query var's specific type *)
   let query_var ?(lookup_mode = ForValue) = read_entry ~lookup_mode ~specific:true
-
   let query_var_non_specific ?(lookup_mode = ForValue) = read_entry ~lookup_mode ~specific:false
-
   let get_internal_var cx name loc = query_var cx (internal_name name) loc
 
   let get_var_annotation cx name loc =
@@ -1740,7 +1725,6 @@ module Env : Env_sig.S = struct
     change
 
   let set_expr _cx k l t1 t2 = add_heap_refinement Changeset.Write k l t1 t2 |> ignore
-
   let refine_expr = add_heap_refinement Changeset.Refine
 
   (* add predicate refinements from given preds map to environment.
@@ -1840,7 +1824,6 @@ module Env : Env_sig.S = struct
     result
 
   let new_env = false
-
   let record_expression_type_if_needed _ _ _ = ()
 
   let discriminant_after_negated_cases cx _switch_loc refinement_key_opt discriminant =

@@ -13,9 +13,7 @@ open Insert_type_utils
 
 module Let_syntax = struct
   let return = return
-
   let bind x ~f = x >>= f
-
   let map x ~f = x >>| f
 end
 
@@ -29,13 +27,9 @@ module Queries = struct
 
       (* Skip keys, qualified identifiers *)
       method! object_key_identifier ident = ident
-
       method! member_property_identifier ident = ident
-
       method! member_type_identifier ident = ident
-
       method! typeof_member_identifier ident = ident
-
       method! enum_member_identifier id = id
 
       method! identifier id =
@@ -154,17 +148,11 @@ module Make (Extra : BASE_STATS) = struct
     (cctx : Codemod_context.Typed.t) =
     object (this)
       inherit [Acc.t, Loc.t] Flow_ast_visitor.visitor ~init:Acc.empty as super
-
       val mutable added_annotations_locmap = LMap.empty
-
       val mutable wont_annotate_locs = LSet.empty
-
       val mutable codemod_error_locs = LSet.empty
-
       val mutable remote_converter = None
-
       val mutable hardcoded_imports = HardCodedImportMap.empty
-
       method private get_remote_converter = Base.Option.value_exn remote_converter
 
       method private serialize t =

@@ -196,7 +196,6 @@ module Friendly = struct
    * Is an example of an incompatibility error message. *)
 
   let text s = Inline [Text s]
-
   let code s = Inline [Code s]
 
   let ref ?(loc = true) r =
@@ -292,7 +291,7 @@ module Friendly = struct
   (* Adds some message to the beginning of a group message. *)
   let append_group_message message { group_message; group_message_list; group_message_post } =
     {
-      group_message = message @ text " " :: uncapitalize group_message;
+      group_message = message @ (text " " :: uncapitalize group_message);
       group_message_list;
       group_message_post;
     }
@@ -387,7 +386,7 @@ module Friendly = struct
          * the root. *)
         let message =
           match error.root with
-          | Some { root_message; _ } when show_root -> root_message @ text " " :: message
+          | Some { root_message; _ } when show_root -> root_message @ (text " " :: message)
           | _ -> message
         in
         let message =
@@ -417,7 +416,7 @@ module Friendly = struct
           if frames = [] then
             message
           else
-            message @ text " in " :: frames
+            message @ (text " in " :: frames)
         in
         let explanations =
           Base.Option.value_map
@@ -429,13 +428,13 @@ module Friendly = struct
           if explanations = [] then
             message
           else
-            message @ text ". " :: explanations
+            message @ (text ". " :: explanations)
         in
         (* Add the root to our error message when we are configured to show
          * the root. *)
         let message =
           match error.root with
-          | Some { root_message; _ } when show_root -> root_message @ text " " :: message
+          | Some { root_message; _ } when show_root -> root_message @ (text " " :: message)
           | _ -> message
         in
         (* Finish our error message with a period. But only if frames
@@ -525,7 +524,7 @@ module Friendly = struct
                   if message = [] then
                     root_message
                   else
-                    root_message @ text " " :: message
+                    root_message @ (text " " :: message)
                 | _ -> message
               in
               (* Finish our error message with a colon. *)
@@ -577,7 +576,7 @@ module Friendly = struct
               let group_message_post =
                 let explanations =
                   if List.length explanations > 0 then
-                    text "\n\n" :: explanations @ [text "."]
+                    (text "\n\n" :: explanations) @ [text "."]
                   else
                     explanations
                 in
@@ -591,7 +590,7 @@ module Friendly = struct
             else
               ( group_message_list,
                 if List.length explanations > 0 then
-                  Some (text "\n" :: explanations @ [text "."])
+                  Some ((text "\n" :: explanations) @ [text "."])
                 else
                   None
               )
@@ -712,11 +711,10 @@ module Friendly = struct
       extra =
         ( if not (IMap.is_empty references) then
           InfoLeaf [(Loc.none, ["References:"])]
-          ::
-          (references
-          |> IMap.bindings
-          |> Base.List.map ~f:(fun (id, loc) -> InfoLeaf [(loc, ["[" ^ string_of_int id ^ "]"])])
-          )
+          :: (references
+             |> IMap.bindings
+             |> Base.List.map ~f:(fun (id, loc) -> InfoLeaf [(loc, ["[" ^ string_of_int id ^ "]"])])
+             )
         else
           []
         );
@@ -806,24 +804,16 @@ type stdin_file = (Path.t * string) option
 let append_trace_reasons message_list trace_reasons =
   match trace_reasons with
   | [] -> message_list
-  | _ -> message_list @ BlameM (Loc.none, "Trace:") :: trace_reasons
+  | _ -> message_list @ (BlameM (Loc.none, "Trace:") :: trace_reasons)
 
 let default_style text = (Tty.Normal Tty.Default, text)
-
 let source_fragment_style text = (Tty.Normal Tty.Default, text)
-
 let error_fragment_style text = (Tty.Normal Tty.Red, text)
-
 let warning_fragment_style text = (Tty.Normal Tty.Yellow, text)
-
 let line_number_style text = (Tty.Bold Tty.Default, text)
-
 let comment_style text = (Tty.Bold Tty.Default, text)
-
 let comment_file_style text = (Tty.BoldUnderline Tty.Default, text)
-
 let dim_style text = (Tty.Dim Tty.Default, text)
-
 let lib_prefix = "[LIB] "
 
 let is_short_lib filename =
@@ -1298,7 +1288,7 @@ module Cli_output = struct
                 1
             in
             let underline = String.make underline_size '^' in
-            line_number_style line_number_text :: highlighted_line
+            (line_number_style line_number_text :: highlighted_line)
             @ [comment_style (Printf.sprintf "\n%s%s %s" padding underline s)]
             @ see_another_file ~is_lib filename
             @ [default_style "\n"]
@@ -2247,7 +2237,9 @@ module Cli_output = struct
                      let width = width + 2 + String.length string_id in
                      let acc =
                        dim_style "["
-                       :: (Tty.Normal (get_tty_color id colors), string_id) :: dim_style "]" :: acc
+                       :: (Tty.Normal (get_tty_color id colors), string_id)
+                       :: dim_style "]"
+                       :: acc
                      in
                      (width, acc))
                    (1, [default_style " "])
@@ -2408,12 +2400,11 @@ module Cli_output = struct
                 (List.fold_left
                    (fun acc code_frame ->
                      code_frame
-                     ::
-                     [
-                       default_style (String.make (gutter_width + max_line_number_length) ' ');
-                       dim_style ":";
-                       default_style "\n";
-                     ]
+                     :: [
+                          default_style (String.make (gutter_width + max_line_number_length) ' ');
+                          dim_style ":";
+                          default_style "\n";
+                        ]
                      :: acc)
                    [code_frame]
                    code_frames
@@ -2954,8 +2945,7 @@ module Json_output = struct
         | CommentM _ -> "Comment"
       in
       ("descr", JSON_String desc)
-      ::
-      ("type", JSON_String type_)
+      :: ("type", JSON_String type_)
       ::
       (match loc with
       | None -> deprecated_json_props_of_loc ~strip_root Loc.none
@@ -3055,12 +3045,12 @@ module Json_output = struct
       in
       JSON_Object
         (("message", json_of_infos ~json_of_message infos)
-         ::
-         (match kids with
-         | None -> []
-         | Some kids ->
-           let kids = Base.List.map ~f:(json_of_info_tree ~json_of_message) kids in
-           [("children", JSON_Array kids)])
+        ::
+        (match kids with
+        | None -> []
+        | Some kids ->
+          let kids = Base.List.map ~f:(json_of_info_tree ~json_of_message) kids in
+          [("children", JSON_Array kids)])
         )
     )
 

@@ -53,7 +53,6 @@ let export_star info loc ns =
   | CJS (Some _) -> Error (Error_message.EIndeterminateModuleType loc)
 
 let export_type info name loc t = info.type_named <- NameUtils.Map.add name (loc, t) info.type_named
-
 let export_type_star info loc ns = info.type_star <- (loc, ns) :: info.type_star
 
 let cjs_clobber info loc =

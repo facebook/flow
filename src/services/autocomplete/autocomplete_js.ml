@@ -83,7 +83,6 @@ exception Found of process_location_result
 class process_request_searcher (from_trigger_character : bool) (cursor : Loc.t) =
   object (this)
     inherit Typed_ast_utils.type_parameter_mapper as super
-
     method covers_target loc = covers_target cursor loc
 
     method find : 'a. ALoc.t -> string -> autocomplete_type -> 'a =
@@ -605,13 +604,9 @@ class process_request_searcher (from_trigger_character : bool) (cursor : Loc.t) 
   end
 
 let autocomplete_id ~cursor _cx _ac_name ac_loc = covers_target cursor ac_loc
-
 let autocomplete_literal ~cursor _cx ac_loc = covers_target cursor ac_loc
-
 let autocomplete_object_key ~cursor _cx _ac_name ac_loc = covers_target cursor ac_loc
-
 let autocomplete_member ~cursor _cx _ac_name ac_loc _this_t = covers_target cursor ac_loc
-
 let autocomplete_jsx ~cursor _cx _ac_name ac_loc = covers_target cursor ac_loc
 
 let process_location ~trigger_character ~cursor ~typed_ast =

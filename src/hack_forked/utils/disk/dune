@@ -1,6 +1,4 @@
 (library
-  (name disk)
-  (wrapped false)
-  (libraries
-    injector_config
-    unix))
+ (name disk)
+ (wrapped false)
+ (libraries injector_config unix))

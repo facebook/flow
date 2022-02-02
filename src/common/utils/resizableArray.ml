@@ -47,9 +47,7 @@ let push arr elt =
   arr.size <- arr.size + 1
 
 let shrink arr = if arr.size <> Array.length arr.arr then change_capacity arr arr.size
-
 let size arr = arr.size
-
 let underlying_array_size_do_not_use arr = Array.length arr.arr
 
 let to_hashtbl arr =

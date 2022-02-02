@@ -23,35 +23,25 @@ type exit_reason =
 class type watcher =
   object
     method name : string
-
     method start_init : unit
-
     method wait_for_init : timeout:float option -> (unit, string) result Lwt.t
 
     method get_and_clear_changed_files :
       (SSet.t * MonitorProt.file_watcher_metadata option * bool) Lwt.t
 
     method wait_for_changed_files : unit Lwt.t
-
     method stop : unit Lwt.t
-
     method waitpid : exit_reason Lwt.t
-
     method getpid : int option
   end
 
 class dummy : watcher =
   object
     method name = "dummy"
-
     method start_init = ()
-
     method wait_for_init ~timeout:_ = Lwt.return (Ok ())
-
     method get_and_clear_changed_files = Lwt.return (SSet.empty, None, false)
-
     method wait_for_changed_files = Lwt.return_unit
-
     method stop = Lwt.return_unit
 
     method waitpid =
@@ -115,13 +105,9 @@ let changes_since_mergebase =
 class dfind (monitor_options : FlowServerMonitorOptions.t) : watcher =
   object (self)
     val mutable dfind_instance = None
-
     val mutable is_initial = true
-
     val mutable watch_paths = []
-
     val mutable files = SSet.empty
-
     method name = "dfind"
 
     method private get_dfind =
@@ -467,11 +453,8 @@ end = struct
     (watchman_options : FlowServerMonitorOptions.watchman_options) : watcher =
     object (self)
       val mutable env = None
-
       val mutable init_thread = None
-
       val mutable init_settings = None
-
       method name = "watchman"
 
       method private get_env =

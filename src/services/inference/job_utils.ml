@@ -18,8 +18,8 @@ let out_of_memory ~options ~start_rss =
     | Error _ -> false)
 
 (* Check as many files as it can before it hits the timeout. The timeout is soft,
-* so the file which exceeds the timeout won't be canceled. We expect most buckets
-* to not hit the timeout *)
+   * so the file which exceeds the timeout won't be canceled. We expect most buckets
+   * to not hit the timeout *)
 let rec job_helper ~check ~post_check ~options ~start_time ~start_rss acc = function
   | [] -> (acc, [])
   | unfinished_files when out_of_time ~options ~start_time ->
@@ -53,7 +53,7 @@ let job ~post_check ~reader ~options acc files =
   job_helper ~check ~post_check ~options ~start_time ~start_rss acc files
 
 (* A stateful (next, merge) pair. This lets us re-queue unfinished files which are returned
-* when a bucket times out *)
+   * when a bucket times out *)
 let mk_next ~intermediate_result_callback ~max_size ~workers ~files =
   let total_count = List.length files in
   let todo = ref (files, total_count) in

@@ -11,7 +11,6 @@
 
 module type S = sig
   module Env : Env_sig.S
-
   module Class_type_sig : Class_sig_intf.S
 
   val convert :
@@ -95,7 +94,6 @@ module type S = sig
     Class_type_sig.t * Type.t * (ALoc.t, ALoc.t * Type.t) Flow_ast.Statement.DeclareClass.t
 
   val polarity : 'a Flow_ast.Variance.t option -> Polarity.t
-
   val qualified_name : (ALoc.t, ALoc.t) Flow_ast.Type.Generic.Identifier.t -> string
 
   val error_type :

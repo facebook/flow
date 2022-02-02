@@ -12,9 +12,7 @@ type compressed = {
 }
 
 external marshal_and_compress : 'a -> compressed = "marshal_and_compress_stub"
-
 external decompress_and_unmarshal : compressed -> 'a = "decompress_and_unmarshal_stub"
 
 let compressed_size { compressed_size; _ } = compressed_size
-
 let uncompressed_size { uncompressed_size; _ } = uncompressed_size

@@ -196,7 +196,6 @@ module Annotate_escaped_generics = struct
       include Annotate_escaped_generics
 
       let check_options o = o
-
       let visit = visit ~default_any ~preserve_literals ~max_type_size
     end) in
     main (module Runner) codemod_flags ()
@@ -268,7 +267,6 @@ module Annotate_lti_command = struct
             opt_enforce_this_annotations = true;
             opt_local_inference_annotation_dirs = [];
           }
-        
 
       let visit =
         let mapper =

@@ -1,22 +1,20 @@
 (library
-  (name flow_service_saved_state)
-  (wrapped false)
-  (libraries
-    flow_common_build_id
-    flow_common_profiling
-    flow_config
-    flow_parser_utils
-    flow_saved_state_stubs
-    flow_server_env
-    flow_server_files
-    flow_service_saved_state_compression
-    flow_state_heaps_module
-    flow_state_heaps_parsing
-    flow_typing
-    sys_utils ; hack
-    xx
-    flow_state_heaps_context
-  )
-  (preprocess (pps lwt_ppx))
-)
-
+ (name flow_service_saved_state)
+ (wrapped false)
+ (libraries
+  flow_common_build_id
+  flow_common_profiling
+  flow_config
+  flow_parser_utils
+  flow_saved_state_stubs
+  flow_server_env
+  flow_server_files
+  flow_service_saved_state_compression
+  flow_state_heaps_module
+  flow_state_heaps_parsing
+  flow_typing
+  sys_utils ; hack
+  xx
+  flow_state_heaps_context)
+ (preprocess
+  (pps lwt_ppx)))

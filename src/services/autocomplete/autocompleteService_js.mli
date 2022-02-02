@@ -29,7 +29,5 @@ val autocomplete_get_results :
   string option * (string * autocomplete_service_result)
 
 val autocomplete_suffix : string
-
 val suffix_len : int
-
 val add_autocomplete_token : string -> int -> int -> string * string

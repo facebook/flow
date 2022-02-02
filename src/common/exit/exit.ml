@@ -10,9 +10,7 @@ include FlowExitStatus
 type json_mode = { pretty: bool }
 
 let json_mode = ref None
-
 let set_json_mode ~pretty = json_mode := Some { pretty }
-
 let unset_json_mode () = json_mode := None
 
 let exit =

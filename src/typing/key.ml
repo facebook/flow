@@ -41,7 +41,6 @@ and proj_uses_propname ~private_ propname = function
   | [] -> false
 
 let compare = Stdlib.compare
-
 let is_simple (_, ps) = List.length ps = 0
 
 let reason_desc =

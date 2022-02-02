@@ -16,13 +16,9 @@ open Asserter
 *)
 
 let systemd_pid = 1
-
 let java_pid = 118813
-
 let python_pid1 = 527111
-
 let python_pid2 = 527663
-
 let proc_test_pid = ref 527674
 
 let systemd_cmdline =
@@ -40,13 +36,9 @@ let python_cmdline2 =
   "[xarexec]\x00/usr/local/bin/threshold-monitor\x00-tt\x00/mnt/xarfuse/uid-0/456/__run_xar_main__.py"
 
 let proc_test_cmdline = "/data/users/unixname/proc_test/proc_test.opt\x00"
-
 let proc_path_format = format_of_string "/proc/%d/"
-
 let cmdline_path_format = format_of_string "%s/cmdline"
-
 let stat_path_format = format_of_string "%s/stat"
-
 let stat_format = format_of_string "%d (%s) R %d 123 456"
 
 let create_proc_dir (pid : int) : string =

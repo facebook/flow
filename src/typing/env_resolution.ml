@@ -20,7 +20,6 @@ module Make (Env : Env_sig.S) (Statement : Statement_sig.S with module Env := En
 
   module Cache = struct
     let annotation _ _ = ()
-
     let expression _ _ = ()
   end
 

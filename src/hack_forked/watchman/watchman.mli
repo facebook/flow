@@ -69,13 +69,9 @@ type failure =
 type env
 
 val init : init_settings -> env option Lwt.t
-
 val get_mergebase_and_changes : env -> (mergebase_and_changes option, failure) Result.t Lwt.t
-
 val get_changes : env -> (env * pushed_changes, failure) Result.t Lwt.t
-
 val close : env -> unit Lwt.t
-
 val force_update_clockspec : clock -> env -> unit
 
 (* Expose some things for testing. *)
@@ -83,7 +79,6 @@ module Testing : sig
   type error_kind
 
   val get_test_env : unit -> env Lwt.t
-
   val test_settings : init_settings
 
   val transform_asynchronous_get_changes_response :

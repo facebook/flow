@@ -24,21 +24,13 @@ type options = {
 }
 
 let default_lib_dir options = options.default_lib_dir
-
 let ignores options = options.ignores
-
 let untyped options = options.untyped
-
 let declarations options = options.declarations
-
 let includes options = options.includes
-
 let lib_paths options = options.lib_paths
-
 let module_file_exts options = options.module_file_exts
-
 let module_resource_exts options = options.module_resource_exts
-
 let node_resolver_dirnames options = options.node_resolver_dirnames
 
 (* During node module resolution, we need to look for node_modules/ directories
@@ -50,11 +42,8 @@ let node_resolver_dirnames options = options.node_resolver_dirnames
  * of which directories contain node_modules/ directories and which aliases we've
  * seen *)
 let node_modules_containers = ref SMap.empty
-
 let global_file_name = "(global)"
-
 let flow_ext = ".flow"
-
 let has_flow_ext file = File_key.check_suffix file flow_ext
 
 let chop_flow_ext file =
@@ -335,17 +324,11 @@ let get_all =
 
 (* Local reference to the module exported by a file. *)
 let module_ref file = File_key.to_string file
-
 let lib_module_ref = ""
-
 let dir_sep = Str.regexp "[/\\\\]"
-
 let current_dir_name = Str.regexp_string Filename.current_dir_name
-
 let parent_dir_name = Str.regexp_string Filename.parent_dir_name
-
 let absolute_path_regexp = Str.regexp "^\\(/\\|[A-Za-z]:[/\\\\]\\)"
-
 let project_root_token = Str.regexp_string "<PROJECT_ROOT>"
 
 let dir_filter_of_options (options : options) f =

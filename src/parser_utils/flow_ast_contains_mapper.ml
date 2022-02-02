@@ -12,7 +12,6 @@
 class virtual ['L] mapper =
   object (this)
     inherit ['L] Flow_ast_mapper.mapper as super
-
     method virtual loc_annot_contains_target : 'L -> bool
 
     method! program ((l, _) as x) =

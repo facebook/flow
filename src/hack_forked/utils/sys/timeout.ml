@@ -39,7 +39,6 @@ module Alarm_timeout = struct
     | Timeout exn_id when exn_id = id -> on_timeout ()
 
   let check_timeout _ = ()
-
   let select ?timeout:_ = Sys_utils.select_non_intr
 
   (** Channel *)
@@ -47,13 +46,9 @@ module Alarm_timeout = struct
   type in_channel = Stdlib.in_channel * int option
 
   let ignore_timeout f ?timeout:_ (ic, _pid) = f ic
-
   let input = ignore_timeout Stdlib.input
-
   let really_input = ignore_timeout Stdlib.really_input
-
   let input_char = ignore_timeout Stdlib.input_char
-
   let input_line = ignore_timeout Stdlib.input_line
 
   let input_value_with_workaround ic =
@@ -68,15 +63,10 @@ module Alarm_timeout = struct
       raise e
 
   let input_value = ignore_timeout input_value_with_workaround
-
   let open_in name = (Stdlib.open_in name, None)
-
   let close_in (ic, _) = Stdlib.close_in ic
-
   let close_in_noerr (ic, _) = Stdlib.close_in_noerr ic
-
   let in_channel_of_descr fd = (Unix.in_channel_of_descr fd, None)
-
   let descr_of_in_channel (ic, _) = Unix.descr_of_in_channel ic
 
   let open_process cmd args =
@@ -479,19 +469,14 @@ module type S = sig
   type t
 
   val with_timeout : timeout:int -> on_timeout:(unit -> 'a) -> do_:(t -> 'a) -> 'a
-
   val check_timeout : t -> unit
 
   type in_channel
 
   val in_channel_of_descr : Unix.file_descr -> in_channel
-
   val descr_of_in_channel : in_channel -> Unix.file_descr
-
   val open_in : string -> in_channel
-
   val close_in : in_channel -> unit
-
   val close_in_noerr : in_channel -> unit
 
   val select :
@@ -503,19 +488,12 @@ module type S = sig
     Unix.file_descr list * Unix.file_descr list * Unix.file_descr list
 
   val input : ?timeout:t -> in_channel -> bytes -> int -> int -> int
-
   val really_input : ?timeout:t -> in_channel -> bytes -> int -> int -> unit
-
   val input_char : ?timeout:t -> in_channel -> char
-
   val input_line : ?timeout:t -> in_channel -> string
-
   val input_value : ?timeout:t -> in_channel -> 'a
-
   val open_process : string -> string array -> in_channel * out_channel
-
   val open_process_in : string -> string array -> in_channel
-
   val close_process_in : in_channel -> Unix.process_status
 
   val read_process :
@@ -527,14 +505,11 @@ module type S = sig
     'a
 
   val open_connection : ?timeout:t -> Unix.sockaddr -> in_channel * out_channel
-
   val shutdown_connection : in_channel -> unit
-
   val is_timeout_exn : t -> exn -> bool
 end
 
 let select = (module Select_timeout : S)
-
 let alarm = (module Alarm_timeout : S)
 
 include

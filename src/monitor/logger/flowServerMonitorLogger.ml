@@ -20,7 +20,6 @@
  * *)
 
 type 'a logger_fn = ?exn:exn -> ('a, unit, string, unit) format4 -> 'a
-
 type 'a logger_fn_s = ?exn:Exception.t -> ('a, unit, string, unit) format4 -> 'a
 
 type dest = {
@@ -115,23 +114,15 @@ let init_logger log_fd =
 (* Async logging APIs. These are the APIs you should generally use. Since they're async, they
  * won't make the monitor unresponsive while they're logging *)
 let fatal ?exn fmt = Lwt_log_core.ign_fatal_f ?exn fmt
-
 let error ?exn fmt = Lwt_log_core.ign_error_f ?exn fmt
-
 let warn ?exn fmt = Lwt_log_core.ign_warning_f ?exn fmt
-
 let info ?exn fmt = Lwt_log_core.ign_info_f ?exn fmt
-
 let debug ?exn fmt = Lwt_log_core.ign_debug_f ?exn fmt
 
 (* Synchronous versions just delegate to Hh_logger. These are mainly used for debugging, when you
  * want a logging call to write to the log RIGHT NOW. *)
 let fatal_s = Hh_logger.fatal
-
 let error_s = Hh_logger.error
-
 let warn_s = Hh_logger.warn
-
 let info_s = Hh_logger.info
-
 let debug_s = Hh_logger.debug

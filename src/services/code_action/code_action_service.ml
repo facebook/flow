@@ -15,9 +15,7 @@ let include_code_action ~only kind =
   | Some only -> Base.List.exists ~f:(fun prefix -> Lsp.CodeActionKind.is_kind prefix kind) only
 
 let include_quick_fixes only = include_code_action ~only Lsp.CodeActionKind.quickfix
-
 let include_extract_refactors only = include_code_action ~only Lsp.CodeActionKind.refactor_extract
-
 let include_add_missing_imports_action only = include_code_action ~only add_missing_imports_kind
 
 let include_organize_imports_actions only =
@@ -30,7 +28,6 @@ let layout_options options =
       bracket_spacing = Options.format_bracket_spacing options;
       single_quotes = Options.format_single_quotes options;
     }
-  
 
 let autofix_exports_code_actions
     ~options ~full_cx ~ast ~file_sig ~tolerable_errors ~typed_ast ~diagnostics uri loc =

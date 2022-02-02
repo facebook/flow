@@ -95,13 +95,9 @@ let is_directory x =
   | Sys_error _ -> false
 
 let file_exists = Sys.file_exists
-
 let getcwd = Sys.getcwd
-
 let chdir = Sys.chdir
-
 let mkdir = Unix.mkdir
-
 let readdir = Sys.readdir
 
 let rename old target =

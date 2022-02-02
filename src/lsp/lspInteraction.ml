@@ -311,7 +311,6 @@ let rec dismiss_tracks end_state =
   end
 
 let init () = FlowInteractionLogger.init ()
-
 let flush () = FlowInteractionLogger.flush ()
 
 (* Not every message the lsp process receives triggers an interaction. This function

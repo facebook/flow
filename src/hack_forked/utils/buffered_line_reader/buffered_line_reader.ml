@@ -12,15 +12,11 @@ let chunk_size = 65536
 module Regular_reader :
   Buffered_line_reader_sig.READER with type 'a result = 'a and type fd = Unix.file_descr = struct
   type 'a result = 'a
-
   type fd = Unix.file_descr
 
   let return x = x
-
   let fail exn = raise exn
-
   let ( >>= ) a f = f a
-
   let read fd ~buffer ~offset ~size = Unix.read fd buffer offset size
 
   let is_readable fd =
@@ -35,7 +31,6 @@ module Functor (Reader : Buffered_line_reader_sig.READER) :
   let ( >>= ) = Reader.( >>= )
 
   type fd = Reader.fd
-
   type 'a result = 'a Reader.result
 
   type t = {
@@ -153,11 +148,8 @@ module Functor (Reader : Buffered_line_reader_sig.READER) :
         Reader.return @@ String.sub remainder 0 size
 
   let has_buffered_content r = !(r.unconsumed_buffer) <> None
-
   let is_readable r = has_buffered_content r || Reader.is_readable r.fd
-
   let create fd = { fd; unconsumed_buffer = ref None }
-
   let null_reader_ref = ref None
 
   let get_null_reader () =

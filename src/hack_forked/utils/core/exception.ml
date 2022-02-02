@@ -32,7 +32,6 @@ let wrap exn =
    match on the raw exception or print it, but should not reraise it since it
    will not include the correct backtrace; use `reraise` or `to_exn` instead. *)
 let unwrap { exn; backtrace = _ } = exn
-
 let reraise { exn; backtrace } = Printexc.raise_with_backtrace exn backtrace
 
 (* Converts back to an `exn` with the right backtrace. Generally, avoid this in favor of
@@ -55,7 +54,6 @@ let wrap_unraised ?(frames = 100) exn =
   { exn; backtrace }
 
 let get_ctor_string { exn; backtrace = _ } = Printexc.to_string exn
-
 let get_backtrace_string { exn = _; backtrace } = Printexc.raw_backtrace_to_string backtrace
 
 let to_string t =

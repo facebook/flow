@@ -14,15 +14,10 @@ open Comment_attachment
 
 module type EXPRESSION = sig
   val assignment : env -> (Loc.t, Loc.t) Expression.t
-
   val assignment_cover : env -> pattern_cover
-
   val conditional : env -> (Loc.t, Loc.t) Expression.t
-
   val is_assignable_lhs : (Loc.t, Loc.t) Expression.t -> bool
-
   val left_hand_side : env -> (Loc.t, Loc.t) Expression.t
-
   val number : env -> number_type -> string -> float
 
   val sequence :
@@ -112,7 +107,6 @@ module Expression
       false
 
   let as_expression = Pattern_cover.as_expression
-
   let as_pattern = Pattern_cover.as_pattern
 
   (* AssignmentExpression :
@@ -251,8 +245,7 @@ module Expression
         let open Expression in
         Yield
           Yield.
-            { argument; delegate; comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing () }
-          )
+            { argument; delegate; comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing () })
       env
 
   and is_lhs =
@@ -963,7 +956,6 @@ module Expression
             property = PropertyExpression expr;
             comments = Flow_ast_utils.mk_comments_opt ~trailing ();
           }
-        
       in
 
       let member =
@@ -1338,7 +1330,6 @@ module Expression
         let head =
           Ast.Expression.TemplateLiteral.
             (start_loc, { Element.value = { Element.cooked; raw }; tail = is_tail })
-          
         in
 
         if is_tail then
@@ -1351,7 +1342,6 @@ module Expression
       ( loc,
         Expression.TemplateLiteral.
           { quasis; expressions; comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing () }
-        
       )
 
   and tagged_template env start_loc tag part =

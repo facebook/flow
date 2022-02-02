@@ -31,13 +31,9 @@ let default_info =
 
 (* accessors *)
 let flow info = info.flow
-
 let typeAssert info = info.typeAssert
-
 let preventMunge info = info.preventMunge
-
 let providesModule info = info.providesModule
-
 let jsx info = info.jsx
 
 let is_strict info =

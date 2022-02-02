@@ -194,18 +194,14 @@ module Response = struct
   end
 
   type autocomplete_response = (Completion.t, string) result
-
   type autofix_exports_response = (Replacement_printer.patch * string list, string) result
-
   type coverage_response = ((Loc.t * Coverage_response.expression_coverage) list, string) result
 
   type batch_coverage_response =
     ((File_key.t * Coverage_response.file_coverage) list, string) result
 
   type dump_types_response = ((Loc.t * string) list, string) result
-
   type get_def_response = (Loc.t, string) result
-
   type get_imports_response = Loc.t Nel.t Modulename.Map.t SMap.t * SSet.t
 
   type infer_type_response_ok =
@@ -217,15 +213,11 @@ module Response = struct
       }
 
   type infer_type_response = (infer_type_response_ok, string) result
-
   type insert_type_response = (Replacement_printer.patch, string) result
-
   type textedit = Loc.t * string
-
   type rage_response = (string * string) list
 
   type graph_response = (graph_response_subgraph, string) result
-
   and graph_response_subgraph = (string * string list) list
 
   type status_response =
@@ -238,7 +230,6 @@ module Response = struct
     | NOT_COVERED
 
   type check_file_response = status_response
-
   type find_module_response = File_key.t option
 
   type response =

@@ -71,45 +71,29 @@ module Jget = struct
 
   (* Accessors which return None on absence *)
   let string_opt = get_opt Access.get_string
-
   let bool_opt = get_opt Access.get_bool
-
   let obj_opt = get_opt Access.get_obj
-
   let val_opt = get_opt Access.get_val
-
   let int_opt json key = get_opt Access.get_number json key |> int_string_opt
-
   let float_opt json key = get_opt Access.get_number json key |> float_string_opt
-
   let array_opt json key = get_opt Access.get_array json key |> list_opt
 
   (* array_opt lifts all the array's members into the "json option" monad *)
 
   (* Accessors which return a supplied default on absence *)
   let string_d json key ~default = Base.Option.value (string_opt json key) ~default
-
   let bool_d json key ~default = Base.Option.value (bool_opt json key) ~default
-
   let int_d json key ~default = Base.Option.value (int_opt json key) ~default
-
   let float_d json key ~default = Base.Option.value (float_opt json key) ~default
-
   let array_d json key ~default = Base.Option.value (array_opt json key) ~default
 
   (* Accessors which throw "Error.Parse key" on absence *)
   let bool_exn = get_exn bool_opt
-
   let string_exn = get_exn string_opt
-
   let val_exn = get_exn val_opt
-
   let int_exn = get_exn int_opt
-
   let float_exn = get_exn float_opt
-
   let array_exn = get_exn array_opt
-
   let obj_exn json key = Some (get_exn obj_opt json key)
 
   (* obj_exn lifts the result into the "json option" monad *)

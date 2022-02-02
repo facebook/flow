@@ -1,9 +1,6 @@
 (library
  (name flow_env_builder)
  (wrapped false)
- (libraries
-    flow_analysis
-    flow_typing_type
-    flow_typing_errors)
+ (libraries flow_analysis flow_typing_type flow_typing_errors)
  (preprocess
   (pps ppx_deriving.std)))

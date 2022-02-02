@@ -9,7 +9,6 @@ module ImplicitInstantiationKit : Implicit_instantiation.KIT = Implicit_instanti
   type output = unit
 
   let on_constant_tparam _ _ = ()
-
   let on_pinned_tparam _ _ _ = ()
 
   let on_missing_bounds cx name ~tparam_binder_reason ~instantiation_reason =

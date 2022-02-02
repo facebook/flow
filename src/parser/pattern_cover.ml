@@ -11,13 +11,9 @@ open Parser_env
 
 module type COVER = sig
   val as_expression : env -> pattern_cover -> (Loc.t, Loc.t) Expression.t
-
   val as_pattern : ?err:Parse_error.t -> env -> pattern_cover -> (Loc.t, Loc.t) Pattern.t
-
   val empty_errors : pattern_errors
-
   val rev_append_errors : pattern_errors -> pattern_errors -> pattern_errors
-
   val rev_errors : pattern_errors -> pattern_errors
 end
 

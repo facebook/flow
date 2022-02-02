@@ -59,5 +59,4 @@ let blame_ids_of_type cx gcx ty scope_id reason =
   base_mark_ids_of_type (Some reason) cx gcx ty scope_id
 
 let get_id_annotation_reason { blame_reasons; _ } id = IMap.find_opt id blame_reasons
-
 let get_marked_ids { marked_ids; _ } = marked_ids

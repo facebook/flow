@@ -6,11 +6,7 @@
  *)
 
 val first_upto_n : int -> (int -> 'a option) -> 'a list -> 'a list
-
 val ident_map : ('a -> 'a) -> 'a list -> 'a list
-
 val zipi : 'a list -> 'b list -> (int * 'a * 'b) list
-
 val dedup : 'a list -> 'a list
-
 val to_string : string -> ('a -> string) -> 'a list -> string

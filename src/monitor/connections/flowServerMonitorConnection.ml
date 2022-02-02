@@ -27,7 +27,6 @@ module Logger = FlowServerMonitorLogger
 
 module type CONNECTION_PROCESSOR = sig
   type in_message
-
   type out_message
 end
 
@@ -37,9 +36,7 @@ type 'out_message command =
 
 module type CONNECTION = sig
   type t
-
   type in_message
-
   type out_message
 
   val create :
@@ -62,15 +59,10 @@ module type CONNECTION = sig
     ((unit -> unit) * t) Lwt.t
 
   val write : msg:out_message -> t -> unit
-
   val write_and_close : msg:out_message -> t -> unit
-
   val close_immediately : t -> unit Lwt.t
-
   val flush_and_close : t -> unit Lwt.t
-
   val is_closed : t -> bool
-
   val wait_for_closed : t -> unit Lwt.t
 end
 
@@ -132,7 +124,6 @@ module Make (ConnectionProcessor : CONNECTION_PROCESSOR) :
     conn.close ()
 
   let is_closed conn = Lwt_stream.is_closed conn.command_stream
-
   let wait_for_closed conn = conn.wait_for_closed_thread
 
   module CommandLoop = LwtLoop.Make (struct

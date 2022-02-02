@@ -46,13 +46,8 @@ type t =
 exception Exit_with of t
 
 val error_code : t -> int
-
 val error_type : int -> t
-
 val error_type_opt : int -> t option
-
 val unpack_process_status : Unix.process_status -> string * int
-
 val to_string : t -> string
-
 val json_props_of_t : ?msg:string -> t -> (string * Hh_json.json) list

@@ -1,5 +1,6 @@
 # -*- conf -*-
 
+version = 0.20.1
 break-cases = all
 break-fun-decl = smart
 break-infix = fit-or-vertical

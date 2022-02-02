@@ -13,7 +13,6 @@ module State : sig
     | Initialized
 
   val to_string : t -> string
-
   val compare : t -> t -> int
 end
 
@@ -43,7 +42,6 @@ module Entry : sig
     | ConstLike
 
   val string_of_let_binding_kind : let_binding_kind -> string
-
   val string_of_value_kind : value_kind -> string
 
   type value_binding = {
@@ -107,29 +105,17 @@ module Entry : sig
     t
 
   val new_type : loc:ALoc.t -> ?state:State.t -> Type.t -> t
-
   val new_import_type : loc:ALoc.t -> Type.t -> t
-
   val entry_loc : t -> ALoc.t
-
   val assign_loc : t -> ALoc.t
-
   val declared_type : t -> Type.t
-
   val actual_type : t -> Type.t
-
   val string_of_kind : t -> string
-
   val kind_of_value : value_binding -> value_kind
-
   val general_of_value : value_binding -> Type.t
-
   val state_of_value : value_binding -> State.t
-
   val havoc : ?on_call:(Type.t -> Type.t -> Type.t -> Type.t) -> Reason.name -> t -> t
-
   val reset : ALoc.t -> Reason.name -> t -> t
-
   val is_lex : t -> bool
 end
 
@@ -166,41 +152,23 @@ type t = {
 }
 
 val fresh_impl : kind -> t
-
 val fresh : ?var_scope_kind:var_scope_kind -> unit -> t
-
 val fresh_lex : unit -> t
-
 val clone : t -> t
-
 val iter_entries : (Reason.name -> Entry.t -> unit) -> t -> unit
-
 val update_entries : (Reason.name -> Entry.t -> Entry.t) -> t -> unit
-
 val add_entry : Reason.name -> Entry.t -> t -> unit
-
 val remove_entry : Reason.name -> t -> unit
-
 val get_entry : Reason.name -> t -> Entry.t option
-
 val update_refis : (Key_map.key -> refi_binding -> refi_binding) -> t -> unit
-
 val add_refi : Key_map.key -> refi_binding -> t -> unit
-
 val remove_refi : Key_map.key -> t -> unit
-
 val get_refi : Key_map.key -> t -> refi_binding option
-
 val havoc_refi : Key_map.key -> t -> unit
-
 val filter_refis_using_propname : private_:bool -> string -> 'a Key_map.t -> 'a Key_map.t
-
 val havoc_refis : ?name:string -> private_:bool -> t -> unit
-
 val havoc_all_refis : ?name:string -> t -> unit
-
 val havoc : t -> unit
-
 val reset : ALoc.t -> t -> unit
 
 val add_declare_func_annot :
@@ -210,7 +178,5 @@ val get_declare_func_annot :
   string -> t -> (ALoc.t, ALoc.t * Type.t) Flow_ast.Type.annotation option
 
 val is_lex : t -> bool
-
 val is_global : t -> bool
-
 val is_toplevel : t -> bool

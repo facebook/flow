@@ -13,11 +13,8 @@ type t = {
 }
 
 let token result = result.lex_token
-
 let loc result = result.lex_loc
-
 let comments result = result.lex_comments
-
 let errors result = result.lex_errors
 
 let debug_string_of_lex_result lex_result =

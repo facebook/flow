@@ -8,7 +8,7 @@
 (* stops walking the tree *)
 exception Found
 
-(*  This type is distinct from the one raised by the searcher because
+(* This type is distinct from the one raised by the searcher because
    it would never make sense for the searcher to raise LocNotFound *)
 type ('M, 'T) result =
   | OwnDef of 'M
@@ -51,11 +51,8 @@ class ['M, 'T] searcher
   let annot_covers_target annot = covers_target (loc_of_annot annot) in
   object (this)
     inherit ['M, 'T, 'M, 'T] Flow_polymorphic_ast_mapper.mapper as super
-
     val mutable in_require_declarator = false
-
     val mutable found_loc_ = LocNotFound
-
     method found_loc = found_loc_
 
     method with_in_require_declarator value f =
@@ -66,7 +63,6 @@ class ['M, 'T] searcher
       result
 
     method on_loc_annot (x : 'M) = x
-
     method on_type_annot (x : 'T) = x
 
     method own_def : 'a. 'M -> 'a =

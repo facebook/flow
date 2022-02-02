@@ -15,11 +15,8 @@ module Make
     (Destructuring : Destructuring_sig.S)
     (Statement : Statement_sig.S with module Env := Env) : Func_stmt_config_sig.S = struct
   type 'T ast = (ALoc.t, 'T) Ast.Function.Params.t
-
   type 'T param_ast = (ALoc.t, 'T) Ast.Function.Param.t
-
   type 'T rest_ast = (ALoc.t, 'T) Ast.Function.RestParam.t
-
   type 'T this_ast = (ALoc.t, 'T) Ast.Function.ThisParam.t
 
   type pattern =

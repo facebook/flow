@@ -18,9 +18,7 @@ module Make () = struct
   }
 
   type 'a builder = 'a node option ref
-
   type 'a indexed = (int * 'a node) option
-
   type 'a t = 'a array
 
   let create () = ref None
@@ -61,7 +59,6 @@ module Make () = struct
     x
 
   let value node = node.data
-
   let modify node f = node.data <- f node.data
 
   let mark node f =
@@ -145,17 +142,11 @@ module Make () = struct
   external get : 'a t -> index -> 'a = "%array_unsafe_get"
 
   let length = Array.length
-
   let iter = Array.iter
-
   let iteri = Array.iteri
-
   let map = Array.map
-
   let mapi = Array.mapi
-
   let to_array x = x
-
   let to_array_map = map
 
   module IndexSet = Flow_set.Make (struct

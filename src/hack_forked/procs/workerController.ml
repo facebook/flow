@@ -31,7 +31,6 @@ open Worker
  *****************************************************************************)
 
 type process_id = int
-
 type worker_id = int
 
 type worker_failure =
@@ -39,7 +38,6 @@ type worker_failure =
   | Worker_quit of Unix.process_status option
 
 exception Worker_failed of (process_id * worker_failure)
-
 exception Worker_busy
 
 type send_job_failure =
@@ -145,7 +143,6 @@ let wrap_request w f x =
   | None -> Request (fun { send } -> send (f x))
 
 type 'a entry_state = 'a * Caml.Gc.control * SharedMem.handle * int
-
 type 'a entry = ('a entry_state * Unix.file_descr option, request, void) Daemon.entry
 
 let entry_counter = ref 0

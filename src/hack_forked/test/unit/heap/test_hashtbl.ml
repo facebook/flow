@@ -23,19 +23,12 @@ let expect ~msg bool =
   )
 
 let add = TestHeap.add
-
 let get = TestHeap.get
-
 let mem = TestHeap.mem
-
 let mem_old = TestHeap.mem_old
-
 let oldify k = TestHeap.oldify_batch (SSet.singleton k)
-
 let revive k = TestHeap.revive_batch (SSet.singleton k)
-
 let remove k = TestHeap.remove_batch (SSet.singleton k)
-
 let remove_old k = TestHeap.remove_old_batch (SSet.singleton k)
 
 let expect_equals ~name value expected =

@@ -90,9 +90,7 @@ and 'loc tyname =
     }
 
 and 'loc parsed_value = ('loc loc_node, 'loc parsed) value
-
 and 'loc parsed_annot = ('loc loc_node, 'loc parsed) annot
-
 and 'loc parsed_def = ('loc loc_node, 'loc parsed) def
 
 and 'loc export =
@@ -289,15 +287,10 @@ and 'loc binding_node =
   | RemoteBinding of 'loc remote_ref_node
 
 and 'loc loc_node = 'loc Locs.node
-
 and 'loc local_def_node = 'loc local_binding Local_defs.node
-
 and module_ref_node = string Module_refs.node
-
 and 'loc remote_ref_node = 'loc remote_binding Remote_refs.node
-
 and 'loc pattern_def_node = 'loc parsed Pattern_defs.node
-
 and 'loc pattern_node = 'loc pattern Patterns.node
 
 and 'loc tables = {
@@ -322,17 +315,11 @@ let create_tables () =
   }
 
 let push_loc tbls = Locs.push tbls.locs
-
 let push_local_def tbls = Local_defs.push tbls.local_defs
-
 let push_module_ref tbls = Module_refs.Interned.push tbls.module_refs
-
 let push_remote_ref tbls = Remote_refs.push tbls.remote_refs
-
 let push_pattern_def tbls = Pattern_defs.push tbls.pattern_defs
-
 let push_pattern tbls = Patterns.push tbls.patterns
-
 let splice tbls id_loc f = Locs.splice id_loc (fun locs -> f { tbls with locs })
 
 let polarity = function
@@ -341,7 +328,6 @@ let polarity = function
   | Some (_, { Ast.Variance.kind = Ast.Variance.Minus; comments = _ }) -> Polarity.Negative
 
 let id_name (_, { Ast.Identifier.name; comments = _ }) = name
-
 let val_ref scope ref_loc name = ValRef (Ref { ref_loc; name; scope; resolved = None })
 
 let merge_accessors a b =
@@ -460,15 +446,12 @@ module Exports = struct
       ()
 
   let add_type name t (Exports e) = e.types <- SMap.add name t e.types
-
   let add_type_star loc mref (Exports e) = e.type_stars <- (loc, mref) :: e.type_stars
 end
 
 module Scope = struct
   let create_global () = Global { names = SMap.empty; modules = SMap.empty }
-
   let create_module ~strict = Module { names = SMap.empty; exports = Exports.create ~strict }
-
   let push_lex parent = Lexical { parent; names = SMap.empty }
 
   let push_declare_module loc name parent =
@@ -793,7 +776,6 @@ module Scope = struct
     modify_exports (add loc mref) scope
 
   let cjs_clobber scope t = modify_exports (Exports.cjs_clobber t) scope
-
   let cjs_set_prop scope name prop = modify_exports (Exports.cjs_set_prop ~assign name prop) scope
 
   (* a `declare module` that has no explicit exports via `declare module.exports =` or
@@ -833,9 +815,7 @@ end
 
 module ObjAnnotAcc = struct
   type 'loc prop = ('loc loc_node, 'loc parsed) obj_annot_prop
-
   type 'loc dict = 'loc parsed obj_annot_dict
-
   type 'loc elem = ('loc loc_node, 'loc parsed) obj_spread_annot_elem
 
   type 'loc t = {
@@ -847,7 +827,6 @@ module ObjAnnotAcc = struct
   }
 
   let empty = { dict = None; props = SMap.empty; tail = []; proto = None; calls_rev = [] }
-
   let empty_slice = ObjSpreadAnnotSlice { dict = None; props = SMap.empty }
 
   let head_slice { dict; props; _ } =
@@ -939,11 +918,8 @@ module ClassAcc = struct
   }
 
   let empty = { static = SMap.empty; proto = SMap.empty; own = SMap.empty }
-
   let map_static f acc = { acc with static = f acc.static }
-
   let map_proto f acc = { acc with proto = f acc.proto }
-
   let map_own f acc = { acc with own = f acc.own }
 
   let add_field ~static name id_loc polarity t acc =
@@ -978,7 +954,6 @@ end
 
 module DeclareClassAcc = struct
   type 'loc prop = ('loc loc_node, 'loc parsed) interface_prop
-
   type 'loc calls = 'loc parsed list
 
   type 'loc t = {
@@ -990,11 +965,8 @@ module DeclareClassAcc = struct
   }
 
   let empty = { static = SMap.empty; proto = SMap.empty; own = SMap.empty; scalls = []; calls = [] }
-
   let map_static f acc = { acc with static = f acc.static }
-
   let map_proto f acc = { acc with proto = f acc.proto }
-
   let map_own f acc = { acc with own = f acc.own }
 
   let add_field ~static name id_loc polarity t acc =
@@ -1071,7 +1043,6 @@ module InterfaceAcc = struct
   }
 
   let empty = { props = SMap.empty; calls = [] }
-
   let map_props f acc = { acc with props = f acc.props }
 
   let add_field name id_loc polarity t acc =
@@ -1111,7 +1082,6 @@ end
 
 module ObjectLiteralAcc = struct
   type 'loc prop = ('loc loc_node, 'loc parsed) obj_value_prop
-
   type 'loc elem = ('loc loc_node, 'loc parsed) obj_value_spread_elem
 
   type 'loc t = {
@@ -1129,7 +1099,6 @@ module ObjectLiteralAcc = struct
       Some (ObjValueSpreadSlice acc.props)
 
   let add_proto x acc = { acc with proto = Some x }
-
   let map_props f acc = { acc with props = f acc.props }
 
   let add_field name id_loc t acc =

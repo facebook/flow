@@ -29,9 +29,7 @@ module KeyMirrorStats = struct
     }
 
   let add_converted x = { x with converted = x.converted + 1 }
-
   let add_inconvertible x = { x with inconvertible = x.inconvertible + 1 }
-
   let add_illformed x = { x with illformed = x.illformed + 1 }
 
   let serialize x =

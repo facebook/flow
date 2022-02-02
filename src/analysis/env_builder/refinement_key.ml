@@ -23,17 +23,11 @@ module type REFINEMENT_KEY = sig
   }
 
   val debug_string_of_t : t -> string
-
   val of_optional_chain : ('a, L.t) Flow_ast.Expression.t -> t option
-
   val of_expression : ('a, L.t) Flow_ast.Expression.t -> t option
-
   val of_argument : ('a, L.t) Flow_ast.Expression.expression_or_spread -> t option
-
   val of_name : string -> L.t -> t
-
   val lookup_of_name : string -> lookup
-
   val lookup_of_name_with_projections : string -> proj list -> lookup
 
   val lookup_of_member :
@@ -43,7 +37,6 @@ module type REFINEMENT_KEY = sig
     ?allow_optional:bool -> ('a, L.t) Flow_ast.Expression.t -> lookup option
 
   val proj_uses_propname : private_:bool -> string -> proj list -> bool
-
   val reason_desc : t -> L.t Reason.virtual_reason_desc
 end
 
@@ -156,9 +149,7 @@ module Make (L : Loc_sig.S) : REFINEMENT_KEY with module L = L = struct
     | Flow_ast.Expression.Expression e -> of_expression e
 
   let lookup_of_name name = { base = name; projections = [] }
-
   let lookup_of_name_with_projections base projections = { base; projections }
-
   let of_name name loc = { loc; lookup = lookup_of_name name }
 
   let rec lookup_of_optional_chain expr =

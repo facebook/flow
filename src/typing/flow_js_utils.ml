@@ -14,7 +14,6 @@ open Utils_js
 module FlowError = Flow_error
 
 type cx = Context.t
-
 type loc = ALoc.t
 
 (* These possible_* functions would ideally be in constraint.ml, but since they use
@@ -799,11 +798,8 @@ module type Instantiation_helper_sig = sig
     Type.t
 
   val is_subtype : Context.t -> Type.trace -> use_op:use_op -> Type.t * Type.t -> unit
-
   val mk_targ : Context.t -> Type.typeparam -> Reason.t -> Reason.t -> Type.t
-
   val unresolved_id : Context.t -> Reason.t -> int
-
   val resolve_id : Context.t -> Type.trace -> use_op:use_op -> Type.tvar -> Type.t -> unit
 end
 
@@ -998,9 +994,7 @@ module type Import_export_helper_sig = sig
     Type.t
 
   val assert_import_is_value : Context.t -> Type.trace -> Reason.t -> string -> Type.t -> unit
-
   val import_type : Context.t -> Type.trace -> Reason.t -> string -> Type.t -> Type.t
-
   val import_typeof : Context.t -> Type.trace -> Reason.t -> string -> Type.t -> Type.t
 
   val export_named :
@@ -1033,7 +1027,6 @@ module type Import_export_helper_sig = sig
     Context.t -> Type.trace -> Reason.reason -> Reason.reason * Type.t * bool -> Type.t
 
   val mk_typeof_annotation : Context.t -> ?trace:Type.trace -> reason -> Type.t -> Type.t
-
   val error_type : Reason.t -> r
 end
 
@@ -1583,7 +1576,6 @@ module type Get_prop_helper_sig = sig
     Context.t -> Type.trace -> reason:Reason.t -> Reason.t * Trust.trust_rep * Type.enum_t -> Type.t
 
   val return : Context.t -> use_op:use_op -> Type.trace -> Type.t -> r
-
   val error_type : Reason.t -> r
 
   val cg_get_prop :

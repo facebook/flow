@@ -6,11 +6,8 @@
  *)
 
 type key = File_key.t
-
 type patch = (int * int * string) list
 
 val set_diff : (key -> patch -> unit) Expensive.t
-
 val get_diff : key -> patch option
-
 val remove_batch : Utils_js.FilenameSet.t -> unit

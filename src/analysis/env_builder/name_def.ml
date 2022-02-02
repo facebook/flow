@@ -90,11 +90,8 @@ module Destructure = struct
     | Some e -> Select (Default e, acc)
 
   let array_element acc i = Select (Elem i, acc)
-
   let array_rest_element acc i = Select (ArrRest i, acc)
-
   let object_named_property acc x ~has_default = Select (Prop { prop = x; has_default }, acc)
-
   let object_computed_property acc e = Select (Computed e, acc)
 
   let object_rest_property acc xs has_computed =
@@ -213,7 +210,6 @@ let def_of_class ({ Ast.Class.body = (_, { Ast.Class.Body.body; _ }); _ } as cla
 class def_finder =
   object (this)
     inherit [map, ALoc.t] Flow_ast_visitor.visitor ~init:ALocMap.empty as super
-
     method add_binding loc reason src = this#update_acc (ALocMap.add loc (src, reason))
 
     method! variable_declarator ~kind decl =

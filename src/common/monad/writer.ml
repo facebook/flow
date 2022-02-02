@@ -7,19 +7,16 @@
 
 module type S = sig
   type m
-
   type 'a t = 'a * m
 
   include Monad.S with type 'a t := 'a t
 
   val tell : m -> unit t
-
   val listen : 'a t -> ('a * m) t
 end
 
 module Make (M : Monoid.S) : S with type m := M.t = struct
   type m = M.t
-
   type 'a t = 'a * m
 
   let map w ~f =
@@ -42,6 +39,5 @@ module Make (M : Monoid.S) : S with type m := M.t = struct
   end)
 
   let tell m = ((), m)
-
   let listen (x, s) = ((x, s), s)
 end

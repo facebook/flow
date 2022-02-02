@@ -6,7 +6,5 @@
  *)
 
 val json_of_sourcemap : Sourcemap.t -> Hh_json.json
-
 val sourcemap_of_json : Hh_json.json -> Sourcemap.t
-
 val sourcemap_of_string : string -> Sourcemap.t

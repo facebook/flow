@@ -20,13 +20,9 @@ type 'loc t = {
 }
 
 let loc_of_error { loc; _ } = loc
-
 let msg_of_error { msg; _ } = msg
-
 let code_of_error err = msg_of_error err |> Error_message.error_code_of_message
-
 let source_file { source_file; _ } = source_file
-
 let trace_reasons { trace_reasons; _ } = trace_reasons
 
 let map_loc_of_error f { loc; msg; source_file; trace_reasons } =
@@ -38,7 +34,6 @@ let map_loc_of_error f { loc; msg; source_file; trace_reasons } =
   }
 
 let concretize_error = map_loc_of_error
-
 let kind_of_error err = msg_of_error err |> kind_of_msg
 
 module Error (M : Set.OrderedType) : Set.OrderedType with type t = M.t t = struct
@@ -53,11 +48,8 @@ module ConcreteErrorSet = Flow_set.Make (Error (Loc))
 (* Rank scores for signals of different strength on an x^2 scale so that greater
  * signals dominate lesser signals. *)
 let reason_score = 100
-
 let frame_score = reason_score * 2
-
 let type_arg_frame_score = frame_score * 2
-
 let tuple_element_frame_score = type_arg_frame_score * 2
 
 (* Gets the score of a use_op. Used in score_of_msg. See the comment on
@@ -521,12 +513,11 @@ let rec make_error_printable ?(speculation = false) (error : Loc.t t) : Loc.t Er
                   [text "its "; ref (update_desc_reason (fun _ -> RCustom "initial assignment") r)]
                 | providers ->
                   text "one of its initial assignments"
-                  ::
-                  (Base.List.map
-                     ~f:(fun r -> ref (update_desc_reason (fun _ -> RCustom "") r))
-                     providers
-                  |> Base.List.intersperse ~sep:(text ",")
-                  )
+                  :: (Base.List.map
+                        ~f:(fun r -> ref (update_desc_reason (fun _ -> RCustom "") r))
+                        providers
+                     |> Base.List.intersperse ~sep:(text ",")
+                     )
               in
               let message =
                 [text "All writes to "; code name; text " must be compatible with the type of "]
@@ -769,7 +760,7 @@ let rec make_error_printable ?(speculation = false) (error : Loc.t t) : Loc.t Er
       let make_error loc message =
         let message =
           match additional_message with
-          | Some additional_message -> message @ text ". " :: additional_message
+          | Some additional_message -> message @ (text ". " :: additional_message)
           | None -> message
         in
         mk_use_op_error loc use_op message

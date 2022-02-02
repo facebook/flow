@@ -1,4 +1,3 @@
 (library
-  (name flow_common_audit)
-  (wrapped false)
-)
+ (name flow_common_audit)
+ (wrapped false))

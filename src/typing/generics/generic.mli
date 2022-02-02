@@ -6,7 +6,6 @@
  *)
 
 type id
-
 type spread_id
 
 type sat_result =
@@ -15,29 +14,17 @@ type sat_result =
   | Upper of id
 
 val to_string : id -> string
-
 val equal_id : id -> id -> bool
-
 val collapse : id -> id -> id option
-
 val spread_empty : spread_id
-
 val make_spread : id -> spread_id
-
 val make_bound_id : ALoc.id -> string -> id
-
 val make_spread_id : spread_id -> id option
-
 val make_spread_id_exn : spread_id -> id
-
 val spread_subtract : spread_id -> spread_id -> spread_id
-
 val spread_append : spread_id -> spread_id -> spread_id
-
 val spread_exists : spread_id -> bool
-
 val fold_ids : f:(ALoc.id -> string -> 'a -> 'a) -> acc:'a -> id -> 'a
-
 val satisfies : printer:(string list Lazy.t -> unit) -> id -> id -> sat_result
 
 module ArraySpread : sig
@@ -51,6 +38,5 @@ module ArraySpread : sig
     | Generic of (id * ro_status)
 
   val merge : printer:(string list Lazy.t -> unit) -> t -> id option -> ro_status -> t
-
   val to_option : t -> id option
 end

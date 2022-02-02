@@ -22,7 +22,6 @@ module Time = struct
 
   (* The beginning of times *)
   let bot = 0
-
   let to_string x = string_of_int x
 end
 
@@ -35,9 +34,7 @@ module TimeFiles = MonoidAvl.Make (struct
   type monoelt = Time.t
 
   let neutral = Time.bot
-
   let make = fst
-
   let compose = max
 end)
 

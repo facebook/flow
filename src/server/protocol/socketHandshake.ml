@@ -32,7 +32,6 @@ let build_revision =
  *)
 
 type client_handshake_wire = string * string
-
 type server_handshake_wire = string * string option
 
 (** What to do on a version mismatch *)
@@ -74,7 +73,6 @@ type monitor_to_client_2 =
   | Server_ready
 
 type client_handshake = client_to_monitor_1 * client_to_monitor_2
-
 type server_handshake = monitor_to_client_1 * monitor_to_client_2 option
 
 let version_mismatch_strategy_to_string = function

@@ -19,19 +19,13 @@ module AbstractTranslator : Translator_intf.S with type t = json = struct
   type t = json
 
   let string x = JString x
-
   let bool x = JBool x
-
   let obj props = JObject props
-
   let array arr = JArray arr
-
   let number x = JNumber x
-
   let int x = number (float x) (* TODO: this is inefficient, push ints to C *)
 
   let null = JNull
-
   let regexp _loc _pattern _flags = JNull
 end
 

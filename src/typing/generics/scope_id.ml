@@ -11,7 +11,6 @@ module ScopeInternal : sig
   val new_id : unit -> t
 
   module ScopeSet : Flow_set.S with type elt = t
-
   module ScopeMap : WrappedMap.S with type key = t
 end = struct
   type t = int

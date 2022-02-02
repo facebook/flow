@@ -9,9 +9,7 @@ open Utils_js
 module Result = Base.Result
 
 let ( >>= ) = Result.( >>= )
-
 let ( >>| ) = Result.( >>| )
-
 let loc_of_aloc = Parsing_heaps.Reader.loc_of_aloc
 
 module ObjectKeyAtLoc : sig
@@ -144,7 +142,6 @@ type single_def_info =
  * literal which is associated with multiple types) then there will be multiple locations in no
  * particular order. *)
 type property_def_info = single_def_info Nel.t
-
 type def_info = property_def_info * string (* name *)
 
 let loc_of_single_def_info = function
@@ -152,7 +149,6 @@ let loc_of_single_def_info = function
   | Object loc -> loc
 
 let all_locs_of_property_def_info def_info = def_info |> Nel.map loc_of_single_def_info
-
 let all_locs_of_def_info (def_info, _) = all_locs_of_property_def_info def_info
 
 type def_loc =

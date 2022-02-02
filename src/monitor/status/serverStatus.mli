@@ -53,19 +53,11 @@ type restart_reason =
   | Restart
 
 val initial_status : status
-
 val update : event:event -> status:status -> status
-
 val string_of_status : ?use_emoji:bool -> ?terse:bool -> status -> string
-
 val is_free : status -> bool
-
 val is_significant_transition : status -> status -> bool
-
 val get_progress : status -> string option * int option * int option
-
 val get_summary : status -> summary option
-
 val log_of_summaries : root:Path.t -> summary list -> FlowEventLogger.persistent_delay
-
 val change_init_to_restart : restart_reason option -> status -> status

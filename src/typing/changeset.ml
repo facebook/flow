@@ -48,9 +48,7 @@ module RefiRefSet : Flow_set.S with type elt = RefiRef.t = Flow_set.Make (RefiRe
 type t = EntryRefSet.t * RefiRefSet.t
 
 let empty = (EntryRefSet.empty, RefiRefSet.empty)
-
 let add_var var_ref (vars, refis) = (EntryRefSet.add var_ref vars, refis)
-
 let add_refi refi_ref (vars, refis) = (vars, RefiRefSet.add refi_ref refis)
 
 (* ugh ocaml *)
@@ -72,9 +70,7 @@ let include_ops ops (vars, refis) =
   )
 
 let include_reads = include_ops [Read]
-
 let include_writes = include_ops [Write]
-
 let exclude_refines = include_ops [Read; Write]
 
 let iter ?ops f_vars f_refis changeset =
@@ -87,13 +83,9 @@ let iter ?ops f_vars f_refis changeset =
   refis |> RefiRefSet.iter f_refis
 
 let iter_reads = iter ~ops:[Read]
-
 let iter_writes = iter ~ops:[Write]
-
 let iter_refines = iter ~ops:[Refine]
-
 let iter_type_updates = iter ~ops:[Write; Refine]
-
 let is_empty (vars, refis) = vars = EntryRefSet.empty && refis = RefiRefSet.empty
 
 let union (vars1, refis1) (vars2, refis2) =
@@ -155,13 +147,9 @@ module Global = struct
   type 'a stack = 'a list ref
 
   let changesets : t stack = ref []
-
   let is_active () = List.length !changesets > 0
-
   let init () = changesets := []
-
   let push () = changesets := (EntryRefSet.empty, RefiRefSet.empty) :: !changesets
-
   let pop () = changesets := List.tl !changesets
 
   (* return the current changeset *)

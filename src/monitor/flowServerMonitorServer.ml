@@ -79,15 +79,11 @@ let stop reason =
 (* Exit after 7 days of no requests *)
 module Doomsday : sig
   val start_clock : unit -> unit Lwt.t
-
   val postpone : unit -> unit
 end = struct
   let seven_days_in_secs = 3600. *. 24. *. 7.
-
   let time_in_seven_days () = Unix.time () +. seven_days_in_secs
-
   let doomsday_time = ref (time_in_seven_days ())
-
   let postpone () = doomsday_time := time_in_seven_days ()
 
   let rec start_clock () =
@@ -109,9 +105,7 @@ module ServerInstance : sig
   type t
 
   val start : FlowServerMonitorOptions.t -> ServerStatus.restart_reason option -> t Lwt.t
-
   val cleanup : t -> unit Lwt.t
-
   val pid_of : t -> int
 end = struct
   type t = {

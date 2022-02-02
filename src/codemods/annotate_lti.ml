@@ -13,9 +13,7 @@ open Insert_type_utils
 
 module Let_syntax = struct
   let return = return
-
   let bind x ~f = x >>= f
-
   let map x ~f = x >>| f
 end
 
@@ -151,7 +149,6 @@ module ErrorStats = struct
   type t = { num_total_errors: int }
 
   let empty = { num_total_errors = 0 }
-
   let combine c1 c2 = { num_total_errors = c1.num_total_errors + c2.num_total_errors }
 
   let serialize s =

@@ -3,10 +3,10 @@ let fold_count fold t ~f =
       if f a then
         n + 1
       else
-        n)
+        n
+  )
 
-let fold_sum
-    (type a) (module M : Commutative_group.S with type t = a) fold t ~f =
+let fold_sum (type a) (module M : Commutative_group.S with type t = a) fold t ~f =
   fold t ~init:M.zero ~f:(fun n a -> M.( + ) n (f a))
 
 let fold_min fold t ~cmp =
@@ -17,7 +17,8 @@ let fold_min fold t ~cmp =
         if cmp min elt > 0 then
           Some elt
         else
-          acc)
+          acc
+  )
 
 let fold_max fold t ~cmp =
   fold t ~init:None ~f:(fun acc elt ->
@@ -27,4 +28,5 @@ let fold_max fold t ~cmp =
         if cmp max elt < 0 then
           Some elt
         else
-          acc)
+          acc
+  )

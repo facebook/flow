@@ -42,7 +42,6 @@ let parse_content file content =
           types = true;
           use_strict = false;
         }
-      
   in
 
   let (ast, parse_errors) =
@@ -382,10 +381,8 @@ let types_to_json types ~strip_root =
         |> List.map (fun (loc, str) ->
                let json_assoc =
                  ("type", JSON_String str)
-                 ::
-                 ("reasons", JSON_Array [])
-                 ::
-                 ("loc", json_of_loc ~strip_root ~offset_table:None loc)
+                 :: ("reasons", JSON_Array [])
+                 :: ("loc", json_of_loc ~strip_root ~offset_table:None loc)
                  :: Errors.deprecated_json_props_of_loc ~strip_root loc
                in
                JSON_Object json_assoc
@@ -436,17 +433,10 @@ let () =
     (Js.wrap_callback (fun name content -> Sys_js.create_file ~name ~content))
 
 let () = Js.Unsafe.set exports "initBuiltins" (Js.wrap_callback init_builtins_js)
-
 let () = Js.Unsafe.set exports "check" (Js.wrap_callback check_js)
-
 let () = Js.Unsafe.set exports "checkContent" (Js.wrap_callback check_content_js)
-
 let () = Js.Unsafe.set exports "dumpTypes" (Js.wrap_callback dump_types)
-
 let () = Js.Unsafe.set exports "jsOfOcamlVersion" (Js.string Sys_js.js_of_ocaml_version)
-
 let () = Js.Unsafe.set exports "flowVersion" (Js.string Flow_version.version)
-
 let () = Js.Unsafe.set exports "parse" (Js.wrap_callback Flow_parser_js.parse)
-
 let () = Js.Unsafe.set exports "typeAtPos" (Js.wrap_callback type_at_pos)

@@ -30,7 +30,6 @@ let mutex = Lwt_mutex.create ()
 
 (* A list of callbacks which will be invoked once the next time the server is free *)
 let to_call_on_free = ref []
-
 let significant_transition = Lwt_condition.create ()
 
 let check_if_free =

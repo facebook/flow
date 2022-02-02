@@ -20,8 +20,8 @@ module Set = Flow_set.Make (struct
 end)
 
 (* We might have an SMap that consists only of ordinary names. We only need to use a NameUtils.Map if
-  * the map might contain internal names. If we can prove by construction that a map only contains
-  * ordinary names, we should use an SMap to avoid losing that information. *)
+   * the map might contain internal names. If we can prove by construction that a map only contains
+   * ordinary names, we should use an SMap to avoid losing that information. *)
 let smap_mem name map =
   match name with
   | OrdinaryName str -> SMap.mem str map

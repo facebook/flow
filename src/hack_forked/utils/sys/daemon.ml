@@ -6,9 +6,7 @@
  *)
 
 type 'a in_channel = Timeout.in_channel
-
 type 'a out_channel = Stdlib.out_channel
-
 type ('in_, 'out) channel_pair = 'in_ in_channel * 'out out_channel
 
 type ('in_, 'out) handle = {
@@ -29,13 +27,9 @@ let from_channel : ?timeout:Timeout.t -> 'a in_channel -> 'a =
  (fun ?timeout ic -> Timeout.input_value ?timeout ic)
 
 let flush : 'a out_channel -> unit = Stdlib.flush
-
 let descr_of_in_channel : 'a in_channel -> Unix.file_descr = Timeout.descr_of_in_channel
-
 let descr_of_out_channel : 'a out_channel -> Unix.file_descr = Unix.descr_of_out_channel
-
 let cast_in ic = ic
-
 let cast_out oc = oc
 
 (* We cannot fork() on Windows, so in order to emulate this in a
@@ -68,7 +62,6 @@ module Entry : sig
     ('param, 'input, 'output) t -> 'param -> Unix.file_descr * Unix.file_descr -> unit
 
   val get_context : unit -> ('param, 'input, 'output) t * 'param * ('input, 'output) channel_pair
-
   val clear_context : unit -> unit
 end = struct
   type ('param, 'input, 'output) t = string
@@ -157,7 +150,6 @@ let exec entry param ic oc =
     exit 2
 
 let register_entry_point = Entry.register
-
 let name_of_entry = Entry.name_of_entry
 
 let fd_of_path path =
@@ -290,13 +282,8 @@ let kill h =
   Sys_utils.terminate_process h.pid
 
 let close_out = close_out
-
 let output_string = output_string
-
 let flush = flush
-
 let close_in = Timeout.close_in
-
 let input_char ic = Timeout.input_char ic
-
 let input_value ic = Timeout.input_value ic

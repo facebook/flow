@@ -71,24 +71,17 @@ let get_builtin_typeapp cx reason x targs =
 
 module type S = sig
   val unresolved_tvar : Context.t -> Reason.t -> int
-
   val mk_typeof_annotation : Context.t -> ?trace:Type.trace -> Reason.t -> Type.t -> Type.t
-
   val mk_type_reference : Context.t -> Reason.t -> Type.t -> Type.t
-
   val get_prop : Context.t -> Type.use_op -> Reason.t -> Reason.name -> Type.t -> Type.t
-
   val get_elem : Context.t -> Type.use_op -> Reason.t -> key:Type.t -> Type.t -> Type.t
 
   val qualify_type :
     Context.t -> Type.use_op -> Reason.t -> Reason.t * Reason.name -> Type.t -> Type.t
 
   val assert_export_is_type : Context.t -> Reason.t -> string -> Type.t -> Type.t
-
   val resolve_id : Context.t -> Type.ident -> Type.t -> unit
-
   val mk_sig_tvar : Context.t -> Reason.t -> Type.t Lazy.t -> Type.t
-
   val cjs_require : Context.t -> Type.t -> Reason.t -> bool -> Type.t
 
   val export_named :
@@ -109,7 +102,6 @@ module type S = sig
     Context.t -> Reason.t -> Type.import_kind -> string -> string -> bool -> Type.t -> Type.t
 
   val import_ns : Context.t -> Reason.t -> bool -> Type.t -> Type.t
-
   val import_typeof : Context.t -> Reason.t -> string -> Type.t -> Type.t
 
   val specialize :
@@ -122,13 +114,9 @@ module type S = sig
     Type.t
 
   val copy_named_exports : Context.t -> from_ns:Type.t -> Reason.t -> module_t:Type.t -> Type.t
-
   val copy_type_exports : Context.t -> from_ns:Type.t -> Reason.t -> module_t:Type.t -> Type.t
-
   val unary_minus : Context.t -> Reason.t -> Type.t -> Type.t
-
   val unary_not : Context.t -> Reason.t -> Type.t -> Type.t
-
   val mixin : Context.t -> Reason.t -> Type.t -> Type.t
 
   val object_spread :
@@ -141,13 +129,9 @@ module type S = sig
     Type.t
 
   val obj_test_proto : Context.t -> Reason.t -> Type.t -> Type.t
-
   val obj_rest : Context.t -> Reason.t -> string list -> Type.t -> Type.t
-
   val arr_rest : Context.t -> Type.use_op -> Reason.t -> int -> Type.t -> Type.t
-
   val set_dst_cx : Context.t -> unit
-
   val elab_t : Context.t -> ?seen:ISet.t -> Type.t -> Type.AConstraint.op -> Type.t
 end
 
@@ -159,7 +143,6 @@ module rec ConsGen : S = struct
    * Check_serivce.mk_check_file once per file right after the destination context
    * is created. *)
   let dst_cx_ref = ref None
-
   let set_dst_cx cx = dst_cx_ref := Some cx
 
   (* Errors created with [error_unsupported] are actually reported. Compare this to
@@ -220,22 +203,16 @@ module rec ConsGen : S = struct
      * as a monomorphic type. In this case, the only sensible thing to do is to
      * use the bound of each parameter as the argument to the intantiation. *)
     let mk_targ _cx typeparam _reason_op _reason_tapp = typeparam.Type.bound
-
     let is_subtype _cx _trace ~use_op:_ (_t1, _t2) = ()
-
     let reposition cx ?trace:_ loc ?desc:_ ?annot_loc:_ t = reposition cx loc t
-
     let unresolved_id = Avar.unresolved
-
     let resolve_id cx _trace ~use_op:_ (_, id) t = ConsGen.resolve_id cx id t
   end
 
   module InstantiationKit = Flow_js_utils.Instantiation_kit (Instantiation_helper)
 
   let instantiate_poly cx = InstantiationKit.instantiate_poly cx dummy_trace
-
   let mk_typeapp_of_poly cx = InstantiationKit.mk_typeapp_of_poly cx dummy_trace
-
   let fix_this_class cx = InstantiationKit.fix_this_class cx dummy_trace
 
   (***********)
@@ -245,16 +222,13 @@ module rec ConsGen : S = struct
     type r = Type.t
 
     let reposition cx ?trace:_ loc ?desc:_ ?annot_loc:_ t = reposition cx loc t
-
     let return _cx ~use_op:_ _trace t = t
 
     let import_type cx _ reason export_name t =
       ConsGen.elab_t cx t (Annot_ImportTypeT (reason, export_name))
 
     let import_typeof cx _trace reason export_name t = ConsGen.import_typeof cx reason export_name t
-
     let export_named cx _trace (reason, named, kind) t = ConsGen.export_named cx reason kind named t
-
     let export_named_fresh_var = export_named
 
     let export_type cx _trace (reason, export_name, target_module_t) export_t =
@@ -265,11 +239,8 @@ module rec ConsGen : S = struct
 
     (* This check is bypassed in annotation inference *)
     let assert_import_is_value _cx _trace _reason _name _export_t = ()
-
     let error_type = AnyT.error
-
     let fix_this_class = InstantiationKit.fix_this_class
-
     let mk_typeof_annotation = ConsGen.mk_typeof_annotation
   end
 
@@ -284,6 +255,7 @@ module rec ConsGen : S = struct
   module CopyNamedExportsTKit = Flow_js_utils.CopyNamedExportsT_kit (Import_export_helper)
   module CopyTypeExportsTKit = Flow_js_utils.CopyTypeExportsT_kit (Import_export_helper)
   module ExportTypeTKit = Flow_js_utils.ExportTypeT_kit (Import_export_helper)
+
   module CJSExtractNamedExportsTKit =
     Flow_js_utils.CJSExtractNamedExportsT_kit (Import_export_helper)
 
@@ -338,7 +310,6 @@ module rec ConsGen : S = struct
 
     (* We will not be doing subtyping checks in annotation inference. *)
     let dict_read_check _ _ ~use_op:_ _ = ()
-
     let reposition cx ?trace:_ loc ?desc:_ ?annot_loc:_ t = reposition cx loc t
 
     let enum_proto cx _trace ~reason (enum_reason, trust, enum) =
@@ -509,7 +480,6 @@ module rec ConsGen : S = struct
               union_reason = None;
               curr_resolve_idx = 0;
             }
-          
         )
       in
       let t = object_spread cx use_op reason target state t in
@@ -1177,7 +1147,6 @@ module rec ConsGen : S = struct
     mk_lazy_tvar cx reason f
 
   and cjs_require cx t reason is_strict = elab_t cx t (Annot_CJSRequireT (reason, is_strict))
-
   and export_named cx reason kind named t = elab_t cx t (Annot_ExportNamedT (reason, named, kind))
 
   and cjs_extract_named_exports cx reason local_module t =
@@ -1200,13 +1169,9 @@ module rec ConsGen : S = struct
     elab_t cx from_ns (Annot_CopyTypeExportsT (reason, module_t))
 
   and unary_minus cx reason_op t = elab_t cx t (Annot_UnaryMinusT reason_op)
-
   and unary_not cx reason_op t = elab_t cx t (Annot_NotT reason_op)
-
   and mixin cx reason t = elab_t cx t (Annot_MixinT reason)
-
   and obj_rest cx reason xs t = elab_t cx t (Annot_ObjRestT (reason, xs))
-
   and arr_rest cx _use_op reason_op _i t = error_unsupported_reason cx t reason_op
 
   and object_kit_concrete =
@@ -1306,6 +1271,5 @@ module rec ConsGen : S = struct
     object_kit cx use_op reason resolve_tool Type.Object.ReadOnly t
 
   and make_exact cx reason t = elab_t cx t (Annot_MakeExactT reason)
-
   and obj_test_proto cx reason_op t = elab_t cx t (Annot_ObjTestProtoT reason_op)
 end

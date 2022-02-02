@@ -29,7 +29,6 @@ let lsp_range_to_flow_loc ?source (range : Lsp.range) =
       start = lsp_position_to_flow_position range.start;
       _end = lsp_position_to_flow_position range.end_;
     }
-  
 
 let loc_to_lsp_range (loc : Loc.t) : Lsp.range =
   Loc.(
@@ -128,10 +127,8 @@ let flow_completion_item_to_lsp
                     );
                     ("completion", JSON_String item.name);
                   ];
-              ]
-            ;
+              ];
         }
-      
   in
 
   let labelDetails =

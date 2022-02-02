@@ -11,9 +11,7 @@ module Procedure_decider = struct
   class decider =
     object (this)
       inherit [bool, Loc.t] visitor ~init:true
-
       method private no = this#update_acc (fun _ -> false)
-
       method! function_ _loc (expr : (Loc.t, Loc.t) Flow_ast.Function.t) = expr
 
       method! return _loc (stmt : (Loc.t, Loc.t) Flow_ast.Statement.Return.t) =
@@ -61,9 +59,7 @@ module This_finder = struct
       (* Any mentions of `this` in these constructs would reference
          the `this` within those structures, so we ignore them *)
       method! class_ _ x = x
-
       method! function_declaration _ x = x
-
       method! function_expression_or_method _ x = x
     end
 

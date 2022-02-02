@@ -15,7 +15,6 @@
 (*****************************************************************************)
 
 type process_id = int
-
 type worker_id = int
 
 type worker_failure =
@@ -38,9 +37,7 @@ exception Worker_failed_to_send_job of send_job_failure
 
 (* The type of a worker visible to the outside world *)
 type worker
-
 type call_wrapper = { wrap: 'x 'b. ('x -> 'b) -> 'x -> 'b }
-
 type 'a entry
 
 val register_entry_point : restore:('a -> worker_id:int -> unit) -> 'a entry

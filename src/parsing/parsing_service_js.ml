@@ -116,7 +116,6 @@ let parse_source_file ~fail ~types ~use_strict content file =
           types;
           use_strict;
         }
-      
   in
 
   let (ast, parse_errors) = Parser_flow.program_file ~fail ~parse_options content (Some file) in
@@ -134,7 +133,6 @@ let parse_package_json_file ~node_main_fields content file =
           types = true;
           use_strict = false;
         }
-      
   in
 
   match Parser_flow.package_json_file ~parse_options content (Some file) with
@@ -143,11 +141,8 @@ let parse_package_json_file ~node_main_fields content file =
 
 (* Avoid lexing unbounded in perverse cases *)
 let docblock_max_tokens = 10
-
 let attributes_rx = Str.regexp "[ \t\r\n\\*/]+"
-
 let lines_rx = Str.regexp "\\(\r\n\\|\n\\|\r\\)"
-
 let pragma_rx = Str.regexp "^@"
 
 let extract_docblock =

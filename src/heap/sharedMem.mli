@@ -12,30 +12,22 @@ type config = {
 }
 
 type handle = Unix.file_descr
-
 type buf = (char, Bigarray.int8_unsigned_elt, Bigarray.c_layout) Bigarray.Array1.t
 
 (* Addresses are represented as integers, but are well-typed via a phantom
  * type parameter. The type checker will ensure that a `foo addr` is not
  * passed where a `bar addr` is expected. *)
 type 'k addr [@@immediate]
-
 type serialized_tag = Serialized_resolved_requires
 
 exception Out_of_shared_memory
-
 exception Hash_table_full
-
 exception Heap_full
 
 val connect : handle -> worker_id:int -> unit
-
 val on_compact : (unit -> unit -> unit) ref
-
 val collect_slice : ?force:bool -> int -> bool
-
 val collect_full : unit -> unit
-
 val compact : unit -> unit
 
 type table_stats = {
@@ -45,16 +37,13 @@ type table_stats = {
 }
 
 val hash_stats : unit -> table_stats
-
 val heap_size : unit -> int
-
 val init : config -> num_workers:int -> (handle, unit) result
 
 module type Key = sig
   type t
 
   val to_string : t -> string
-
   val compare : t -> t -> int
 end
 
@@ -74,29 +63,19 @@ end
 
 module type NoCache = sig
   type key
-
   type value
 
   module KeySet : Flow_set.S with type elt = key
 
   val add : key -> value -> unit
-
   val get : key -> value option
-
   val get_old : key -> value option
-
   val remove_old_batch : KeySet.t -> unit
-
   val remove_batch : KeySet.t -> unit
-
   val mem : key -> bool
-
   val mem_old : key -> bool
-
   val oldify : key -> unit
-
   val oldify_batch : KeySet.t -> unit
-
   val revive_batch : KeySet.t -> unit
 end
 
@@ -112,25 +91,19 @@ end
 
 module type LocalCache = sig
   type key
-
   type value
 
   module DebugL1 : DebugCacheType
-
   module DebugL2 : DebugCacheType
 
   val add : key -> value -> unit
-
   val get : key -> value option
-
   val remove : key -> unit
-
   val clear : unit -> unit
 end
 
 module type CacheConfig = sig
   type key
-
   type value
 
   val capacity : int
@@ -140,7 +113,6 @@ module type WithCache = sig
   include NoCache
 
   val write_around : key -> value -> unit
-
   val get_no_cache : key -> value option
 
   module DebugCache : LocalCache with type key = key and type value = value
@@ -218,15 +190,12 @@ module NewAPI : sig
   (* Phantom type tag for file sig, which contains a serialized representation
    * of the imports/requires of a file. *)
   type file_sig
-
   type exports
 
   (* Phantom type tag for checked file objects. A checked file contains
    * references to the filename, any local definitions, exports, etc. *)
   type checked_file
-
   type unparsed_file
-
   type dyn_file
 
   (* Before writing to the heap, we first calculate the required size (in words)
@@ -243,29 +212,23 @@ module NewAPI : sig
   (* headers *)
 
   val header_size : size
-
   val with_header_size : ('a -> size) -> 'a -> size
 
   (* strings *)
 
   val string_size : string -> size
-
   val write_string : chunk -> string -> heap_string addr
-
   val read_string : heap_string addr -> string
 
   (* hash *)
 
   val int64_size : size
-
   val write_int64 : chunk -> int64 -> heap_int64 addr
-
   val read_int64 : heap_int64 addr -> int64
 
   (* addr tbl *)
 
   val addr_tbl_size : 'a array -> size
-
   val write_addr_tbl : (chunk -> 'a -> 'k addr) -> chunk -> 'a array -> 'k addr_tbl addr
 
   val read_addr_tbl_generic :
@@ -276,109 +239,73 @@ module NewAPI : sig
   (* opt *)
 
   val opt_size : ('a -> size) -> 'a option -> size
-
   val write_opt : (chunk -> 'a -> 'k addr) -> chunk -> 'a option -> 'k opt addr
-
   val read_opt : ('a addr -> 'b) -> 'a opt addr -> 'b option
-
   val read_opt_exn : ('a addr -> 'b) -> 'a opt addr -> 'b
-
   val is_none : 'a opt addr -> bool
-
   val is_some : 'a opt addr -> bool
 
   (* ast *)
 
   val prepare_write_ast : string -> size * (chunk -> ast addr)
-
   val read_ast : ast addr -> string
 
   (* file sig *)
 
   val prepare_write_file_sig : string -> size * (chunk -> file_sig addr)
-
   val read_file_sig : file_sig addr -> string
 
   (* exports *)
 
   val prepare_write_exports : string -> size * (chunk -> exports addr)
-
   val read_exports : exports addr -> string
 
   (* docblock *)
 
   val docblock_size : string -> size
-
   val write_docblock : chunk -> string -> docblock addr
-
   val read_docblock : docblock addr -> string
 
   (* aloc table *)
 
   val aloc_table_size : string -> size
-
   val write_aloc_table : chunk -> string -> aloc_table addr
-
   val read_aloc_table : aloc_table addr -> string
 
   (* type sig *)
 
   val type_sig_size : int -> size
-
   val write_type_sig : chunk -> int -> (buf -> unit) -> type_sig addr
-
   val read_type_sig : type_sig addr -> (buf -> 'a) -> 'a
-
   val type_sig_buf : type_sig addr -> buf
 
   (* checked file *)
 
   val checked_file_size : size
-
   val unparsed_file_size : size
 
   val write_checked_file :
     chunk -> heap_int64 addr -> heap_string opt addr -> exports addr -> checked_file addr
 
   val write_unparsed_file : chunk -> heap_int64 addr -> heap_string opt addr -> unparsed_file addr
-
   val dyn_checked_file : checked_file addr -> dyn_file addr
-
   val dyn_unparsed_file : unparsed_file addr -> dyn_file addr
-
   val is_checked_file : dyn_file addr -> bool
-
   val assert_checked_file : dyn_file addr -> checked_file addr
-
   val coerce_checked_file : dyn_file addr -> checked_file addr option
-
   val assert_unparsed_file : dyn_file addr -> unparsed_file addr
-
   val set_file_module_name : dyn_file addr -> heap_string opt addr -> unit
-
   val set_file_ast : checked_file addr -> ast addr -> unit
-
   val set_file_docblock : checked_file addr -> docblock addr -> unit
-
   val set_file_aloc_table : checked_file addr -> aloc_table addr -> unit
-
   val set_file_type_sig : checked_file addr -> type_sig addr -> unit
-
   val set_file_sig : checked_file addr -> file_sig addr -> unit
-
   val get_file_hash : dyn_file addr -> heap_int64 addr
-
   val get_file_module_name : dyn_file addr -> heap_string opt addr
-
   val get_file_ast : checked_file addr -> ast opt addr
-
   val get_file_docblock : checked_file addr -> docblock opt addr
-
   val get_file_aloc_table : checked_file addr -> aloc_table opt addr
-
   val get_file_type_sig : checked_file addr -> type_sig opt addr
-
   val get_file_sig : checked_file addr -> file_sig opt addr
-
   val get_file_exports : checked_file addr -> exports addr
 end

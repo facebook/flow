@@ -38,11 +38,8 @@ module Typed = struct
       | Error e -> Error (NormalizationError e))
 
   let file_sig ccx = ccx.file_sig
-
   let metadata ccx = ccx.metadata
-
   let context ccx = ccx.full_cx
-
   let typed_ast ccx = ccx.typed_ast
 end
 

@@ -33,7 +33,6 @@ module ReversePackageHeap =
  * a transaction *)
 module Package_heap_mutator : sig
   val add_package_json : string -> Package_json.t -> unit
-
   val add_error : string -> unit
 end = struct
   let add_package_json filename package_json =
@@ -49,7 +48,6 @@ module type READER = sig
   type reader
 
   val get_package : reader:reader -> string -> (Package_json.t, unit) result option
-
   val get_package_directory : reader:reader -> string -> string option
 end
 
@@ -57,7 +55,6 @@ module Mutator_reader : READER with type reader = Mutator_state_reader.t = struc
   type reader = Mutator_state_reader.t
 
   let get_package ~reader:_ = PackageHeap.get
-
   let get_package_directory ~reader:_ = ReversePackageHeap.get
 end
 
@@ -67,7 +64,6 @@ module Reader : READER with type reader = State_reader.t = struct
   (* We don't support incrementally updating the package heaps, so we never actually oldify
    * anything. Therefore we always can read from the package heap directly *)
   let get_package ~reader:_ = PackageHeap.get
-
   let get_package_directory ~reader:_ = ReversePackageHeap.get
 end
 

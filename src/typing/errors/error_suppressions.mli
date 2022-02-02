@@ -13,9 +13,7 @@ val empty : t
 
 (* Raises if the given loc has `source` set to `None` *)
 val add : Loc.t -> Suppression_comments.applicable_codes -> t -> t
-
 val add_lint_suppressions : Loc_collections.LocSet.t -> t -> t
-
 val remove : File_key.t -> t -> t
 
 (* Union the two collections of suppressions. If they both contain suppressions for a given file,
@@ -25,9 +23,7 @@ val union : t -> t -> t
 (* Union the two collections of suppressions. If they both contain suppressions for a given file,
  * discard those included in the first argument. *)
 val update_suppressions : t -> t -> t
-
 val all_unused_locs : t -> Loc_collections.LocSet.t
-
 val universally_suppressed_codes : t -> CodeLocSet.t
 
 val filter_suppressed_errors :

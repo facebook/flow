@@ -13,13 +13,8 @@ type init_settings = {
 }
 
 let init ?exit_on_parent_exit:_ ?log_pid:_ ?init_id:_ _ _ = ()
-
 let disable_logging () = ()
-
 let log _ = ()
-
 let logger_pid () = None
-
 let should_log () = false
-
 let flush _ = ()

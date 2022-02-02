@@ -6,7 +6,6 @@
  *)
 
 type patch = (int * int * string) list
-
 type loc_patch = (Loc.t * string) list
 
 val show_patch : patch -> string
@@ -27,5 +26,4 @@ val mk_patch_ast_differ_unsafe :
   patch
 
 val print : patch -> string -> string
-
 val print_unsafe : patch -> File_input.t -> string

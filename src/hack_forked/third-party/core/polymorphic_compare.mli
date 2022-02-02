@@ -9,21 +9,12 @@ val compare : 'a -> 'a -> int
 val ascending : 'a -> 'a -> int
 
 val descending : 'a -> 'a -> int
-
 val ( < ) : 'a -> 'a -> bool
-
 val ( <= ) : 'a -> 'a -> bool
-
 val ( > ) : 'a -> 'a -> bool
-
 val ( >= ) : 'a -> 'a -> bool
-
 val ( = ) : 'a -> 'a -> bool
-
 val ( <> ) : 'a -> 'a -> bool
-
 val equal : 'a -> 'a -> bool
-
 val min : 'a -> 'a -> 'a
-
 val max : 'a -> 'a -> 'a

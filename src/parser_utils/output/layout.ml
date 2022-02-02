@@ -35,13 +35,9 @@ let seq = { break = Break_if_needed; inline = (false, false); indent = 2 }
 
 (* Whitespace utils *)
 let space = Atom " "
-
 let pretty_space = IfPretty (space, Empty)
-
 let ugly_space = IfPretty (Empty, space)
-
 let flat_ugly_space = IfBreak (Empty, ugly_space)
-
 let hardline = Newline
 
 (** Force a line break (`\n`) in pretty mode *)
@@ -300,7 +296,6 @@ let fuse_with_space =
 
 module Debug : sig
   val string_of_layout : layout_node -> string
-
   val layout_of_layout : layout_node -> layout_node
 end = struct
   let spf = Printf.sprintf

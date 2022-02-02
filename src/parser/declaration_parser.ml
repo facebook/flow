@@ -15,11 +15,8 @@ module SSet = Flow_set.Make (String)
 
 module type DECLARATION = sig
   val async : env -> bool * Loc.t Comment.t list
-
   val generator : env -> bool * Loc.t Comment.t list
-
   val variance : env -> bool -> bool -> Loc.t Variance.t option
-
   val function_params : await:bool -> yield:bool -> env -> (Loc.t, Loc.t) Ast.Function.Params.t
 
   val function_body :
@@ -54,7 +51,6 @@ module type DECLARATION = sig
     * (Loc.t * Parse_error.t) list
 
   val _function : env -> (Loc.t, Loc.t) Statement.t
-
   val enum_declaration : env -> (Loc.t, Loc.t) Statement.t
 end
 

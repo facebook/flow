@@ -10,6 +10,5 @@
 
 include FlowServerMonitorConnection.Make (struct
   type in_message = ServerProt.Request.command_with_context
-
   type out_message = MonitorProt.monitor_to_client_message
 end)

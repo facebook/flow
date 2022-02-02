@@ -62,19 +62,12 @@ let merge_trust_var constr =
 class context_optimizer ~no_lowers =
   object (self)
     inherit [Polarity.t] Type_mapper.t_with_uses as super
-
     val mutable reduced_graph : Type.Constraint.node IMap.t = IMap.empty
-
     val mutable reduced_trust_graph = IMap.empty
-
     val mutable reduced_property_maps = Properties.Map.empty
-
     val mutable reduced_call_props = IMap.empty
-
     val mutable reduced_export_maps = Exports.Map.empty
-
     val mutable reduced_evaluated = Eval.Map.empty
-
     val mutable export_reason = None
 
     method tvar cx pole r id =
@@ -287,14 +280,9 @@ class context_optimizer ~no_lowers =
       Utils_js.assert_false "choice kit uses should not appear in signatures"
 
     method get_reduced_graph = reduced_graph
-
     method get_reduced_trust_graph = reduced_trust_graph
-
     method get_reduced_property_maps = reduced_property_maps
-
     method get_reduced_call_props = reduced_call_props
-
     method get_reduced_export_maps = reduced_export_maps
-
     method get_reduced_evaluated = reduced_evaluated
   end

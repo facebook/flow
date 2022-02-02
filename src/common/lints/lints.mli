@@ -48,9 +48,7 @@ type lint_kind =
   | ExportRenamedDefault
 
 val string_of_kind : lint_kind -> string
-
 val kinds_of_string : string -> lint_kind list option
 
 module LintMap : WrappedMap.S with type key = lint_kind
-
 module LintSet : Flow_set.S with type elt = lint_kind

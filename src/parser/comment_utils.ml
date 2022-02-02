@@ -25,7 +25,6 @@ class ['loc] inline_comments_stripper =
   end
 
 let strip_inlined_comments p = (new inline_comments_stripper)#program p
-
 let strip_inlined_comments_expression expr = (new inline_comments_stripper)#expression expr
 
 let strip_comments_list

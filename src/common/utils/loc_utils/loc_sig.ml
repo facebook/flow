@@ -9,9 +9,7 @@ module type S = sig
   type t [@@deriving show]
 
   val compare : t -> t -> int
-
   val equal : t -> t -> bool
-
   val none : t
 
   (* Exposes the underlying representation of the location. Use for debugging purposes only. Do not
@@ -22,7 +20,6 @@ module type S = sig
     include WrappedMap.S with type key = t
 
     val pp : (Format.formatter -> 'a -> unit) -> Format.formatter -> 'a t -> unit
-
     val show : (Format.formatter -> 'a -> unit) -> 'a t -> string
   end
 
@@ -30,7 +27,6 @@ module type S = sig
     include Flow_set.S with type elt = t
 
     val pp : Format.formatter -> t -> unit
-
     val show : t -> string
   end
 
@@ -64,11 +60,8 @@ module LocS : S with type t = Loc.t = struct
   type t = Loc.t [@@deriving show]
 
   let compare = Loc.compare
-
   let equal = Loc.equal
-
   let debug_to_string = Loc.debug_to_string
-
   let none = Loc.none
 
   module LMap = struct
@@ -113,11 +106,8 @@ module ALocS : S with type t = ALoc.t = struct
   type t = ALoc.t [@@deriving show]
 
   let compare = ALoc.compare
-
   let equal = ALoc.equal
-
   let none = ALoc.none
-
   let debug_to_string = ALoc.debug_to_string
 
   module LMap = struct
@@ -162,11 +152,8 @@ module ILocS : S with type t = ILoc.t = struct
   type t = ILoc.t [@@deriving show]
 
   let compare = ILoc.compare
-
   let equal = ILoc.equal
-
   let none = ILoc.none
-
   let debug_to_string = ILoc.debug_to_string
 
   module LMap = struct

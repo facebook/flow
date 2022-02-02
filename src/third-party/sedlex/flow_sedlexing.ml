@@ -7,7 +7,6 @@ external ( .![] ) : string -> int -> char = "%string_unsafe_get"
 external ( .![]<- ) : bytes -> int -> char -> unit = "%bytes_unsafe_set"
 
 exception InvalidCodepoint of int
-
 exception MalFormed
 
 (* Absolute position from the beginning of the stream *)
@@ -73,8 +72,7 @@ let from_int_array a =
   let len = Array.length a in
   { empty_lexbuf with buf = a; len }
 
-let from_int_sub_array a len =
-  { empty_lexbuf with buf = a; len }
+let from_int_sub_array a len = { empty_lexbuf with buf = a; len }
 
 let new_line lexbuf =
   if lexbuf.curr_line != 0 then lexbuf.curr_line <- lexbuf.curr_line + 1;
@@ -122,17 +120,11 @@ let rollback lexbuf =
   lexbuf.curr_line <- lexbuf.start_line
 
 let lexeme_start lexbuf = lexbuf.start_pos + lexbuf.offset
-
 let lexeme_end lexbuf = lexbuf.pos + lexbuf.offset
-
 let loc lexbuf = (lexbuf.start_pos + lexbuf.offset, lexbuf.pos + lexbuf.offset)
-
 let lexeme_length lexbuf = lexbuf.pos - lexbuf.start_pos
-
 let sub_lexeme lexbuf pos len = Array.sub lexbuf.buf (lexbuf.start_pos + pos) len
-
 let lexeme lexbuf = Array.sub lexbuf.buf lexbuf.start_pos (lexbuf.pos - lexbuf.start_pos)
-
 
 (* Decode UTF-8 encoded [s] into codepoints in [a], returning the length of the
  * decoded string.

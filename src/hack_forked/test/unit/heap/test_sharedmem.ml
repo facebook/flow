@@ -11,7 +11,6 @@ module IntVal = struct
   type t = int
 
   let prefix = Prefix.make ()
-
   let description = "IntVal"
 end
 

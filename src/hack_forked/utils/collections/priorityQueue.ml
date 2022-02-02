@@ -14,7 +14,6 @@ module Make (Ord : Set.OrderedType) = struct
   }
 
   let rec make_empty n = { __queue = Array.make n None; size = 0 }
-
   and is_empty t = t.size = 0
 
   and pop t =

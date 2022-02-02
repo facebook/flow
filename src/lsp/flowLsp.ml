@@ -19,14 +19,13 @@ module List = Base.List
 
 (* LSP exit codes are specified at https://microsoft.github.io/language-server-protocol/specification#exit *)
 let lsp_exit_ok () = exit 0
-
 let lsp_exit_bad () = exit 1
 
 (* Given an ID that came from the server, we have to wrap it when we pass it
    on to the client, to encode which instance of the server it came from.
    That way, if a response comes back later from the client after the server
    has died, we'll know to discard it. We wrap it as "serverid:#id" for
-   numeric ids, and "serverid:'id" for strings.  *)
+   numeric ids, and "serverid:'id" for strings. *)
 type wrapped_id = {
   server_id: int;
   message_id: lsp_id;
@@ -141,11 +140,8 @@ and state =
   | Post_shutdown  (** we received the shutdown request. *)
 
 exception Client_fatal_connection_exception of Marshal_tools.remote_exception_data
-
 exception Client_recoverable_connection_exception of Marshal_tools.remote_exception_data
-
 exception Server_fatal_connection_exception of Marshal_tools.remote_exception_data
-
 exception Changed_file_not_open of Lsp.DocumentUri.t
 
 type event =
@@ -194,7 +190,6 @@ let update_ienv f state =
   | Disconnected denv -> Disconnected { denv with d_ienv = f denv.d_ienv }
 
 let get_root (state : server_state) : Path.t = (get_ienv state).i_root
-
 let get_flowconfig (state : server_state) : FlowConfig.config = (get_ienv state).i_flowconfig
 
 let get_initialize_params (state : server_state) : Lsp.Initialize.params =
@@ -677,10 +672,9 @@ let do_initialize flowconfig params : Initialize.result =
     let supported_code_action_kinds =
       if supports_source_actions then
         CodeActionKind.source
-        ::
-        CodeActionKind.kind_of_string "source.addMissingImports.flow"
-        ::
-        CodeActionKind.kind_of_string "source.organizeImports.flow" :: supported_code_action_kinds
+        :: CodeActionKind.kind_of_string "source.addMissingImports.flow"
+        :: CodeActionKind.kind_of_string "source.organizeImports.flow"
+        :: supported_code_action_kinds
       else
         supported_code_action_kinds
     in
@@ -698,7 +692,6 @@ let do_initialize flowconfig params : Initialize.result =
         willSaveWaitUntil = false;
         save = Some { includeText = false };
       }
-    
   in
 
   let server_snippetTextEdit = Lsp_helpers.supports_experimental_snippet_text_edit params in
@@ -1076,7 +1069,6 @@ let parse_and_cache (state : server_state) (uri : Lsp.DocumentUri.t) :
           types = true;
           use_strict;
         }
-      
   in
 
   let parse file =
@@ -1662,7 +1654,6 @@ let try_connect flowconfig_name (env : disconnected_env) : server_state =
         },
         { client_type = Persistent { lsp_init_params = env.d_ienv.i_initialize_params } }
       )
-    
   in
 
   let conn =
@@ -2070,7 +2061,6 @@ and main_handle_initialized_unsafe flowconfig_name (state : server_state) (event
           metadata with
           error_info = Some (UnexpectedError, exception_constructor, Utils.Callstack stack);
         }
-      
     in
 
     let outgoing =
@@ -2086,7 +2076,6 @@ and main_handle_initialized_unsafe flowconfig_name (state : server_state) (event
                 ^ "See the Flow logs for more details.";
               data = None;
             }
-          
         in
 
         Some (ResponseMessage (id, ErrorResult (e, stack)))
@@ -2161,9 +2150,8 @@ and main_handle_initialized_unsafe flowconfig_name (state : server_state) (event
             Hh_json.(
               JSON_Object
                 (("uri", JSON_String (Lsp.DocumentUri.to_string uri))
-                 ::
-                 ("error_count", JSON_Number (List.length live_diagnostics |> string_of_int))
-                 :: metadata.LspProt.extra_data
+                :: ("error_count", JSON_Number (List.length live_diagnostics |> string_of_int))
+                :: metadata.LspProt.extra_data
                 )
               |> json_to_string
             )

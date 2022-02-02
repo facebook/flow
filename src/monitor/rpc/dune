@@ -1,8 +1,7 @@
 (library
-  (name flow_monitor_rpc)
-  (wrapped false)
-  (libraries
-    flow_server_protocol
-    sys_utils ; hack
-  )
-)
+ (name flow_monitor_rpc)
+ (wrapped false)
+ (libraries
+  flow_server_protocol
+  sys_utils ; hack
+  ))

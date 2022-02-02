@@ -32,9 +32,7 @@ module All_providers_mutator : sig
   type t
 
   val create : Transaction.t -> t
-
   val add_provider : t -> File_key.t -> Modulename.t -> unit
-
   val remove_provider : t -> File_key.t -> Modulename.t -> unit
 end = struct
   type t = unit

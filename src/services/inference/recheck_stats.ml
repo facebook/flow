@@ -6,21 +6,13 @@
  *)
 
 let per_file_time_guess = 0.003
-
 let per_file_time_key = "per_file_time"
-
 let estimates_key = "estimates"
-
 let estimated_time_to_recheck_key = "estimated_time_to_recheck"
-
 let estimated_time_to_restart_key = "estimated_time_to_restart"
-
 let estimated_time_to_init_key = "estimated_time_to_init"
-
 let estimated_time_per_file_key = "estimated_time_per_file"
-
 let estimated_files_to_recheck_key = "estimated_files_to_recheck"
-
 let estimated_files_to_init_key = "estimated_files_to_init"
 
 type estimates = {
@@ -152,7 +144,6 @@ let save_averages ~options ?estimates new_averages =
                 ]
             );
           ]
-        
     )
   in
   let json_str =
@@ -160,7 +151,7 @@ let save_averages ~options ?estimates new_averages =
       json_to_string
       @@ JSON_Object
            ((per_file_time_key, JSON_Number (Dtoa.ecma_string_of_float new_averages.per_file_time))
-            :: estimates
+           :: estimates
            )
     )
   in
