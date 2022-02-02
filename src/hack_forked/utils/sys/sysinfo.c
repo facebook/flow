@@ -11,6 +11,7 @@
 #include <caml/unixsupport.h>
 
 #include <assert.h>
+#include <errno.h>
 #ifdef __linux__
 #include <sys/sysinfo.h>
 #endif
@@ -41,6 +42,26 @@ CAMLprim value hh_sysinfo_totalram(value unit) {
   /* Not implemented */
   CAMLreturn(Val_long(0));
 #endif
+}
+
+/**
+ * Whether we're running under Rosetta on Apple Silicon
+ */
+CAMLprim value hh_is_rosetta(value unit) {
+  CAMLparam1(unit);
+  int ret = 0;
+#ifdef __APPLE__
+  size_t size = sizeof(ret);
+  if (-1 == sysctlbyname("sysctl.proc_translated", &ret, &size, NULL, 0)) {
+    if (errno == ENOENT) {
+      // e.g. Intel
+      ret = 0;
+    } else {
+      uerror("sysctl", Nothing);
+    }
+  }
+#endif
+  CAMLreturn(Val_bool(ret));
 }
 
 CAMLprim value hh_sysinfo_uptime(value unit) {

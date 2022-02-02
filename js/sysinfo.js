@@ -9,3 +9,8 @@
 function hh_sysinfo_totalram() {
   return 0;
 }
+
+//Provides: hh_is_rosetta const
+function hh_is_rosetta() {
+  return false;
+}
