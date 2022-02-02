@@ -76,6 +76,8 @@ val automatic_require_default : config -> bool option
 
 val babel_loose_array_spread : config -> bool option
 
+val cycle_errors : config -> bool
+
 val direct_dependent_files_fix : config -> bool option
 
 val disable_live_non_parse_errors : config -> bool option
@@ -86,11 +88,9 @@ val enable_const_params : config -> bool
 
 val enforce_local_inference_annotations : config -> bool
 
-val local_inference_annotation_dirs : config -> string list
+val enforce_strict_call_arity : config -> bool
 
 val enforce_this_annotations : config -> bool
-
-val enforce_strict_call_arity : config -> bool
 
 val enums : config -> bool
 
@@ -130,14 +130,6 @@ val gc_worker_space_overhead : config -> int option
 
 val gc_worker_window_size : config -> int option
 
-val relay_integration : config -> bool
-
-val relay_integration_excludes : config -> string list
-
-val relay_integration_module_prefix : config -> string option
-
-val relay_integration_module_prefix_includes : config -> string list
-
 val haste_module_ref_prefix : config -> string option
 
 val haste_name_reducers : config -> (Str.regexp * string) list
@@ -153,6 +145,11 @@ val ignore_non_literal_requires : config -> bool
 val include_warnings : config -> bool
 
 val lazy_mode : config -> lazy_mode option
+
+(* global defaults for lint suppressions and strict mode *)
+val lint_severities : config -> Severity.severity LintSettings.t
+
+val local_inference_annotation_dirs : config -> string list
 
 val log_file : config -> Path.t option
 
@@ -198,8 +195,6 @@ val node_resolver_root_relative_dirnames : config -> string list
 
 val prioritize_dependency_checks : config -> bool option
 
-val required_version : config -> string option
-
 val react_runtime : config -> Options.react_runtime
 
 val react_server_component_exts : config -> SSet.t
@@ -208,15 +203,21 @@ val recursion_limit : config -> int
 
 val refactor : config -> bool option
 
-val root_name : config -> string option
+val relay_integration : config -> bool
 
-val statement_reorder_checking : config -> Options.statement_order_mode
+val relay_integration_excludes : config -> string list
+
+val relay_integration_module_prefix : config -> string option
+
+val relay_integration_module_prefix_includes : config -> string list
+
+val required_version : config -> string option
+
+val root_name : config -> string option
 
 val run_post_inference_implicit_instantiation : config -> bool
 
 val saved_state_fetcher : config -> Options.saved_state_fetcher
-
-val cycle_errors : config -> bool
 
 val saved_state_load_sighashes : config -> bool
 
@@ -226,9 +227,13 @@ val shm_heap_size : config -> int
 
 val shm_log_level : config -> int
 
+val statement_reorder_checking : config -> Options.statement_order_mode
+
 val strict_es6_import_export : config -> bool
 
 val strict_es6_import_export_excludes : config -> string list
+
+val strict_mode : config -> StrictModeSettings.t
 
 val suppress_types : config -> SSet.t
 
@@ -240,15 +245,10 @@ val trust_mode : config -> Options.trust_mode
 
 val type_asserts : config -> bool
 
-val watchman_sync_timeout : config -> int option
+val wait_for_recheck : config -> bool
 
 val watchman_defer_states : config -> string list
 
 val watchman_survive_restarts : config -> bool option
 
-val wait_for_recheck : config -> bool
-
-(* global defaults for lint suppressions and strict mode *)
-val lint_severities : config -> Severity.severity LintSettings.t
-
-val strict_mode : config -> StrictModeSettings.t
+val watchman_sync_timeout : config -> int option

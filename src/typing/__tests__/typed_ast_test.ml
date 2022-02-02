@@ -13,34 +13,36 @@ include Type_inference_js.Make_Inference (Env)
 (* pretty much copied from Flow_dot_js *)
 let metadata =
   {
-    Context.checked (* local *) = true;
-    munge_underscores = false;
-    verbose = None;
+    (* local *)
+    Context.checked = true;
+    include_suppressions = false;
     jsx = Options.Jsx_react;
+    munge_underscores = false;
     strict = false;
     strict_local = false;
-    include_suppressions = false;
+    verbose = None;
     (* global *)
     any_propagation = true;
     automatic_require_default = false;
     babel_loose_array_spread = false;
-    max_literal_length = 100;
+    cycle_errors = false;
     enable_const_params = false;
     enable_enums = true;
     enable_relay_integration = false;
+    enforce_local_inference_annotations = false;
+    enforce_strict_call_arity = true;
+    enforce_this_annotations = false;
     env_mode = Options.ClassicEnv [];
     env_mode_constrain_write_dirs = [];
-    enforce_strict_call_arity = true;
-    enforce_local_inference_annotations = false;
-    local_inference_annotation_dirs = [];
-    enforce_this_annotations = false;
-    experimental_infer_indexers = false;
     exact_by_default = false;
+    experimental_infer_indexers = false;
     facebook_fbs = None;
     facebook_fbt = None;
     facebook_module_interop = false;
     haste_module_ref_prefix = None;
     ignore_non_literal_requires = false;
+    local_inference_annotation_dirs = [];
+    max_literal_length = 100;
     max_trace_depth = 0;
     max_workers = 0;
     react_runtime = Options.ReactRuntimeClassic;
@@ -49,16 +51,15 @@ let metadata =
     relay_integration_excludes = [];
     relay_integration_module_prefix = None;
     relay_integration_module_prefix_includes = [];
-    statement_reorder_checking = Options.Lexical;
     root = Path.dummy_path;
     run_post_inference_implicit_instantiation = false;
+    statement_reorder_checking = Options.Lexical;
     strict_es6_import_export = false;
     strict_es6_import_export_excludes = [];
     strip_root = true;
     suppress_types = SSet.empty;
     trust_mode = Options.NoTrust;
     type_asserts = false;
-    cycle_errors = false;
   }
 
 (* somewhat copied from Flow_dot_js *)

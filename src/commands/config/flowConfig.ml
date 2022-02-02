@@ -51,22 +51,24 @@ module Opts = struct
     autoimports: bool option;
     automatic_require_default: bool option;
     babel_loose_array_spread: bool option;
+    cycle_errors: bool;
     direct_dependent_files_fix: bool option;
     disable_live_non_parse_errors: bool option;
     emoji: bool option;
     enable_const_params: bool;
     enforce_local_inference_annotations: bool;
-    local_inference_annotation_dirs: string list;
-    enforce_this_annotations: bool;
     enforce_strict_call_arity: bool;
+    enforce_this_annotations: bool;
     enums: bool;
+    env_mode: Options.env_mode;
+    env_mode_constrain_write_dirs: string list;
     exact_by_default: bool;
     facebook_fbs: string option;
     facebook_fbt: string option;
     facebook_module_interop: bool;
+    file_watcher: file_watcher option;
     file_watcher_mergebase_with: string option;
     file_watcher_timeout: int option;
-    file_watcher: file_watcher option;
     format_bracket_spacing: bool option;  (** print spaces between brackets in object literals *)
     format_single_quotes: bool option;  (** prefer single-quoted strings *)
     gc_worker_custom_major_ratio: int option;  (** Gc.control's custom_major_ratio *)
@@ -77,10 +79,6 @@ module Opts = struct
     gc_worker_space_overhead: int option;  (** Gc.control's space_overhead *)
     gc_worker_window_size: int option;  (** Gc.control's window_size *)
     generate_tests: bool;
-    relay_integration: bool;
-    relay_integration_excludes: string list;
-    relay_integration_module_prefix: string option;
-    relay_integration_module_prefix_includes: string list;
     haste_module_ref_prefix: string option;
     haste_name_reducers: (Str.regexp * string) list;
     haste_paths_excludes: string list;
@@ -89,6 +87,7 @@ module Opts = struct
     ignore_non_literal_requires: bool;
     include_warnings: bool;
     lazy_mode: lazy_mode option;
+    local_inference_annotation_dirs: string list;
     log_file: Path.t option;
     log_saving: Options.log_saving SMap.t;
     max_files_checked_per_worker: int;
@@ -115,8 +114,10 @@ module Opts = struct
     react_server_component_exts: SSet.t;
     recursion_limit: int;
     refactor: bool option;
-    statement_reorder_checking: Options.statement_order_mode;
-    cycle_errors: bool;
+    relay_integration: bool;
+    relay_integration_excludes: string list;
+    relay_integration_module_prefix: string option;
+    relay_integration_module_prefix_includes: string list;
     root_name: string option;
     run_post_inference_implicit_instantiation: bool;
     saved_state_fetcher: Options.saved_state_fetcher;
@@ -124,12 +125,11 @@ module Opts = struct
     shm_hash_table_pow: int;
     shm_heap_size: int;
     shm_log_level: int;
-    strict_es6_import_export_excludes: string list;
+    statement_reorder_checking: Options.statement_order_mode;
     strict_es6_import_export: bool;
+    strict_es6_import_export_excludes: string list;
     suppress_types: SSet.t;
     temp_dir: string;
-    env_mode: Options.env_mode;
-    env_mode_constrain_write_dirs: string list;
     traces: int;
     trust_mode: Options.trust_mode;
     type_asserts: bool;
@@ -183,15 +183,17 @@ module Opts = struct
       autoimports = None;
       automatic_require_default = None;
       babel_loose_array_spread = None;
+      cycle_errors = false;
       direct_dependent_files_fix = None;
       disable_live_non_parse_errors = None;
       emoji = None;
       enable_const_params = false;
       enforce_local_inference_annotations = false;
-      local_inference_annotation_dirs = [];
-      enforce_this_annotations = false;
       enforce_strict_call_arity = true;
+      enforce_this_annotations = false;
       enums = false;
+      env_mode = Options.ClassicEnv [];
+      env_mode_constrain_write_dirs = [];
       exact_by_default = false;
       facebook_fbs = None;
       facebook_fbt = None;
@@ -209,10 +211,6 @@ module Opts = struct
       gc_worker_space_overhead = None;
       gc_worker_window_size = None;
       generate_tests = false;
-      relay_integration = false;
-      relay_integration_excludes = [];
-      relay_integration_module_prefix = None;
-      relay_integration_module_prefix_includes = ["<PROJECT_ROOT>/.*"];
       haste_module_ref_prefix = None;
       haste_name_reducers =
         [(Str.regexp "^\\(.*/\\)?\\([a-zA-Z0-9$_.-]+\\)\\.js\\(\\.flow\\)?$", "\\2")];
@@ -222,6 +220,7 @@ module Opts = struct
       ignore_non_literal_requires = false;
       include_warnings = false;
       lazy_mode = None;
+      local_inference_annotation_dirs = [];
       log_file = None;
       log_saving = SMap.empty;
       max_files_checked_per_worker = 100;
@@ -248,8 +247,10 @@ module Opts = struct
       react_server_component_exts;
       recursion_limit = 10000;
       refactor = None;
-      statement_reorder_checking = Options.Lexical;
-      cycle_errors = false;
+      relay_integration = false;
+      relay_integration_excludes = [];
+      relay_integration_module_prefix = None;
+      relay_integration_module_prefix_includes = ["<PROJECT_ROOT>/.*"];
       root_name = None;
       run_post_inference_implicit_instantiation = false;
       saved_state_fetcher = Options.Dummy_fetcher;
@@ -257,12 +258,11 @@ module Opts = struct
       shm_hash_table_pow = 19;
       shm_heap_size = (* 25GB *) 1024 * 1024 * 1024 * 25;
       shm_log_level = 0;
+      statement_reorder_checking = Options.Lexical;
       strict_es6_import_export = false;
       strict_es6_import_export_excludes = [];
       suppress_types = SSet.empty |> SSet.add "$FlowFixMe";
       temp_dir = default_temp_dir;
-      env_mode = Options.ClassicEnv [];
-      env_mode_constrain_write_dirs = [];
       traces = 0;
       trust_mode = Options.NoTrust;
       type_asserts = false;
@@ -822,38 +822,38 @@ module Opts = struct
       ("exact_by_default", boolean (fun opts v -> Ok { opts with exact_by_default = v }));
       ("experimental.abstract_locations", abstract_locations_parser);
       ("experimental.const_params", boolean (fun opts v -> Ok { opts with enable_const_params = v }));
+      ("experimental.cycle_errors", boolean (fun opts v -> Ok { opts with cycle_errors = v }));
       ("experimental.direct_dependent_files_fix", direct_dependent_files_fix_parser);
       ("experimental.disable_live_non_parse_errors", disable_live_non_parse_errors_parser);
       ("experimental.enforce_local_inference_annotations", enforce_local_inference_annotations);
-      ("experimental.local_inference_annotation_dirs", local_inference_annotation_dirs);
       ("experimental.enforce_this_annotations", enforce_this_annotations);
       ("experimental.enums", boolean (fun opts v -> Ok { opts with enums = v }));
+      ("experimental.env_mode", env_mode_parser);
+      ("experimental.env_mode.constrain_writes.includes", env_mode_constrain_write_dirs_parser);
       ("experimental.facebook_module_interop", facebook_module_interop_parser);
+      ("experimental.local_inference_annotation_dirs", local_inference_annotation_dirs);
       ("experimental.module.automatic_require_default", automatic_require_default_parser);
       ("experimental.new_check", new_check_parser);
       ("experimental.new_merge", new_merge_parser);
       ("experimental.prioritize_dependency_checks", prioritize_dependency_checks_parser);
       ("experimental.react.server_component_ext", react_server_component_exts_parser);
       ("experimental.refactor", boolean (fun opts v -> Ok { opts with refactor = Some v }));
-      ("experimental.statement_reorder_checking", statement_reorder_checking_parser);
-      ("experimental.cycle_errors", boolean (fun opts v -> Ok { opts with cycle_errors = v }));
       ( "experimental.run_post_inference_implicit_instantiation",
         post_inference_implicit_instantiation_parser
       );
+      ("experimental.statement_reorder_checking", statement_reorder_checking_parser);
       ("experimental.strict_call_arity", enforce_strict_call_arity_parser);
-      ("experimental.strict_es6_import_export.excludes", strict_es6_import_export_excludes_parser);
       ("experimental.strict_es6_import_export", strict_es6_import_export_parser);
-      ("experimental.env_mode", env_mode_parser);
-      ("experimental.env_mode.constrain_writes.includes", env_mode_constrain_write_dirs_parser);
+      ("experimental.strict_es6_import_export.excludes", strict_es6_import_export_excludes_parser);
       ("experimental.type_asserts", boolean (fun opts v -> Ok { opts with type_asserts = v }));
       ("facebook.fbs", string (fun opts v -> Ok { opts with facebook_fbs = Some v }));
       ("facebook.fbt", string (fun opts v -> Ok { opts with facebook_fbt = Some v }));
-      ("file_watcher_timeout", uint (fun opts v -> Ok { opts with file_watcher_timeout = Some v }));
+      ("file_watcher", file_watcher_parser);
       ("file_watcher.mergebase_with", file_watcher_mergebase_with_parser);
       ("file_watcher.watchman.defer_state", watchman_defer_states_parser);
       ("file_watcher.watchman.survive_restarts", watchman_survive_restarts_parser);
       ("file_watcher.watchman.sync_timeout", watchman_sync_timeout_parser);
-      ("file_watcher", file_watcher_parser);
+      ("file_watcher_timeout", uint (fun opts v -> Ok { opts with file_watcher_timeout = Some v }));
       ("format.bracket_spacing", format_bracket_spacing_parser);
       ("format.single_quotes", format_single_quotes_parser);
       ("gc.worker.custom_major_ratio", gc_worker_custom_major_ratio_parser);
@@ -863,12 +863,6 @@ module Opts = struct
       ("gc.worker.minor_heap_size", gc_worker_minor_heap_size_parser);
       ("gc.worker.space_overhead", gc_worker_space_overhead_parser);
       ("gc.worker.window_size", gc_worker_window_size_parser);
-      ("relay_integration", boolean (fun opts v -> Ok { opts with relay_integration = v }));
-      ("relay_integration.excludes", relay_integration_excludes_parser);
-      ( "relay_integration.module_prefix",
-        string (fun opts v -> Ok { opts with relay_integration_module_prefix = Some v })
-      );
-      ("relay_integration.module_prefix.includes", relay_integration_module_prefix_includes_parser);
       ("include_warnings", boolean (fun opts v -> Ok { opts with include_warnings = v }));
       ("lazy_mode", lazy_mode_parser);
       ("log.file", filepath (fun opts v -> Ok { opts with log_file = Some v }));
@@ -878,8 +872,9 @@ module Opts = struct
       ("merge_timeout", merge_timeout_parser);
       ("module.file_ext", file_ext_parser);
       ("module.ignore_non_literal_requires", ignore_non_literal_requires_parser);
-      ("module.name_mapper.extension", name_mapper_extension_parser);
       ("module.name_mapper", name_mapper_parser);
+      ("module.name_mapper.extension", name_mapper_extension_parser);
+      ("module.system", module_system_parser);
       ("module.system.haste.module_ref_prefix", haste_module_ref_prefix_parser);
       ("module.system.haste.name_reducers", haste_name_reducers_parser);
       ("module.system.haste.paths.excludes", haste_paths_excludes_parser);
@@ -889,13 +884,18 @@ module Opts = struct
       ("module.system.node.main_field", node_main_field_parser);
       ("module.system.node.resolve_dirname", node_resolve_dirname_parser);
       ("module.system.node.root_relative_dirname", node_resolver_root_relative_dirnames_parser);
-      ("module.system", module_system_parser);
       ("module.use_strict", boolean (fun opts v -> Ok { opts with modules_are_use_strict = v }));
       ("munge_underscores", boolean (fun opts v -> Ok { opts with munge_underscores = v }));
       ("name", root_name_parser);
       ("no_flowlib", boolean (fun opts v -> Ok { opts with no_flowlib = v }));
       ("react.runtime", react_runtime_parser);
       ("recursion_limit", uint (fun opts v -> Ok { opts with recursion_limit = v }));
+      ("relay_integration", boolean (fun opts v -> Ok { opts with relay_integration = v }));
+      ("relay_integration.excludes", relay_integration_excludes_parser);
+      ( "relay_integration.module_prefix",
+        string (fun opts v -> Ok { opts with relay_integration_module_prefix = Some v })
+      );
+      ("relay_integration.module_prefix.includes", relay_integration_module_prefix_includes_parser);
       ("saved_state.fetcher", saved_state_fetcher_parser);
       ( "saved_state.load_sighashes",
         boolean (fun opts v -> Ok { opts with saved_state_load_sighashes = v })
@@ -1452,27 +1452,21 @@ let automatic_require_default c = c.options.Opts.automatic_require_default
 
 let babel_loose_array_spread c = c.options.Opts.babel_loose_array_spread
 
+let cycle_errors c = c.options.Opts.cycle_errors
+
 let direct_dependent_files_fix c = c.options.Opts.direct_dependent_files_fix
 
 let disable_live_non_parse_errors c = c.options.Opts.disable_live_non_parse_errors
 
 let emoji c = c.options.Opts.emoji
 
-let format_bracket_spacing c = c.options.Opts.format_bracket_spacing
-
-let format_single_quotes c = c.options.Opts.format_single_quotes
-
-let max_literal_length c = c.options.Opts.max_literal_length
-
 let enable_const_params c = c.options.Opts.enable_const_params
 
 let enforce_local_inference_annotations c = c.options.Opts.enforce_local_inference_annotations
 
-let local_inference_annotation_dirs c = c.options.Opts.local_inference_annotation_dirs
+let enforce_strict_call_arity c = c.options.Opts.enforce_strict_call_arity
 
 let enforce_this_annotations c = c.options.Opts.enforce_this_annotations
-
-let enforce_strict_call_arity c = c.options.Opts.enforce_strict_call_arity
 
 let enums c = c.options.Opts.enums
 
@@ -1482,32 +1476,35 @@ let env_mode_constrain_write_dirs c = c.options.Opts.env_mode_constrain_write_di
 
 let exact_by_default c = c.options.Opts.exact_by_default
 
-let file_watcher c = c.options.Opts.file_watcher
-
-let file_watcher_mergebase_with c = c.options.Opts.file_watcher_mergebase_with
-
-let file_watcher_timeout c = c.options.Opts.file_watcher_timeout
-
-let watchman_sync_timeout c = c.options.Opts.watchman_sync_timeout
-
-let watchman_defer_states c = c.options.Opts.watchman_defer_states
-
-let watchman_survive_restarts c = c.options.Opts.watchman_survive_restarts
-
 let facebook_fbs c = c.options.Opts.facebook_fbs
 
 let facebook_fbt c = c.options.Opts.facebook_fbt
 
 let facebook_module_interop c = c.options.Opts.facebook_module_interop
 
-let relay_integration c = c.options.Opts.relay_integration
+let file_watcher c = c.options.Opts.file_watcher
 
-let relay_integration_excludes c = c.options.Opts.relay_integration_excludes
+let file_watcher_mergebase_with c = c.options.Opts.file_watcher_mergebase_with
 
-let relay_integration_module_prefix c = c.options.Opts.relay_integration_module_prefix
+let file_watcher_timeout c = c.options.Opts.file_watcher_timeout
 
-let relay_integration_module_prefix_includes c =
-  c.options.Opts.relay_integration_module_prefix_includes
+let format_bracket_spacing c = c.options.Opts.format_bracket_spacing
+
+let format_single_quotes c = c.options.Opts.format_single_quotes
+
+let gc_worker_custom_major_ratio c = c.options.Opts.gc_worker_custom_major_ratio
+
+let gc_worker_custom_minor_max_size c = c.options.Opts.gc_worker_custom_minor_max_size
+
+let gc_worker_custom_minor_ratio c = c.options.Opts.gc_worker_custom_minor_ratio
+
+let gc_worker_major_heap_increment c = c.options.Opts.gc_worker_major_heap_increment
+
+let gc_worker_minor_heap_size c = c.options.Opts.gc_worker_minor_heap_size
+
+let gc_worker_space_overhead c = c.options.Opts.gc_worker_space_overhead
+
+let gc_worker_window_size c = c.options.Opts.gc_worker_window_size
 
 let haste_module_ref_prefix c = c.options.Opts.haste_module_ref_prefix
 
@@ -1525,6 +1522,11 @@ let include_warnings c = c.options.Opts.include_warnings
 
 let lazy_mode c = c.options.Opts.lazy_mode
 
+(* global defaults for lint severities and strict mode *)
+let lint_severities c = c.lint_severities
+
+let local_inference_annotation_dirs c = c.options.Opts.local_inference_annotation_dirs
+
 let log_file c = c.options.Opts.log_file
 
 let log_saving c = c.options.Opts.log_saving
@@ -1532,6 +1534,8 @@ let log_saving c = c.options.Opts.log_saving
 let max_files_checked_per_worker c = c.options.Opts.max_files_checked_per_worker
 
 let max_header_tokens c = c.options.Opts.max_header_tokens
+
+let max_literal_length c = c.options.Opts.max_literal_length
 
 let max_rss_bytes_for_check_per_worker c = c.options.Opts.max_rss_bytes_for_check_per_worker
 
@@ -1575,7 +1579,21 @@ let recursion_limit c = c.options.Opts.recursion_limit
 
 let refactor c = c.options.Opts.refactor
 
+let relay_integration c = c.options.Opts.relay_integration
+
+let relay_integration_excludes c = c.options.Opts.relay_integration_excludes
+
+let relay_integration_module_prefix c = c.options.Opts.relay_integration_module_prefix
+
+let relay_integration_module_prefix_includes c =
+  c.options.Opts.relay_integration_module_prefix_includes
+
+let required_version c = c.version
+
 let root_name c = c.options.Opts.root_name
+
+let run_post_inference_implicit_instantiation c =
+  c.options.Opts.run_post_inference_implicit_instantiation
 
 let saved_state_fetcher c = c.options.Opts.saved_state_fetcher
 
@@ -1587,9 +1605,13 @@ let shm_heap_size c = c.options.Opts.shm_heap_size
 
 let shm_log_level c = c.options.Opts.shm_log_level
 
+let statement_reorder_checking c = c.options.Opts.statement_reorder_checking
+
 let strict_es6_import_export c = c.options.Opts.strict_es6_import_export
 
 let strict_es6_import_export_excludes c = c.options.Opts.strict_es6_import_export_excludes
+
+let strict_mode c = c.strict_mode
 
 let suppress_types c = c.options.Opts.suppress_types
 
@@ -1601,32 +1623,10 @@ let trust_mode c = c.options.Opts.trust_mode
 
 let type_asserts c = c.options.Opts.type_asserts
 
-let required_version c = c.version
-
-let statement_reorder_checking c = c.options.Opts.statement_reorder_checking
-
-let cycle_errors c = c.options.Opts.cycle_errors
-
-let run_post_inference_implicit_instantiation c =
-  c.options.Opts.run_post_inference_implicit_instantiation
-
 let wait_for_recheck c = c.options.Opts.wait_for_recheck
 
-(* global defaults for lint severities and strict mode *)
-let lint_severities c = c.lint_severities
+let watchman_defer_states c = c.options.Opts.watchman_defer_states
 
-let strict_mode c = c.strict_mode
+let watchman_survive_restarts c = c.options.Opts.watchman_survive_restarts
 
-let gc_worker_minor_heap_size c = c.options.Opts.gc_worker_minor_heap_size
-
-let gc_worker_major_heap_increment c = c.options.Opts.gc_worker_major_heap_increment
-
-let gc_worker_space_overhead c = c.options.Opts.gc_worker_space_overhead
-
-let gc_worker_window_size c = c.options.Opts.gc_worker_window_size
-
-let gc_worker_custom_major_ratio c = c.options.Opts.gc_worker_custom_major_ratio
-
-let gc_worker_custom_minor_ratio c = c.options.Opts.gc_worker_custom_minor_ratio
-
-let gc_worker_custom_minor_max_size c = c.options.Opts.gc_worker_custom_minor_max_size
+let watchman_sync_timeout c = c.options.Opts.watchman_sync_timeout
