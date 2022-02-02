@@ -1084,7 +1084,7 @@ module ImportTypeT_kit (F : Import_export_helper_sig) = struct
     | DefT (_, _, PolyT { tparams_loc; tparams = typeparams; t_out = ThisClassT _; _ }) ->
       let targs = typeparams |> Nel.map (fun tp -> BoundT (tp.reason, tp.name)) |> Nel.to_list in
       let tapp = implicit_typeapp t targs in
-      Some (poly_type (Context.generate_poly_id cx) tparams_loc typeparams (class_type tapp))
+      Some (poly_type (Type.Poly.generate_id ()) tparams_loc typeparams (class_type tapp))
     | DefT (_, _, PolyT { t_out = DefT (_, _, TypeT _); _ }) -> Some t
     (* fix this-abstracted class when used as a type *)
     | ThisClassT (r, i, this) -> Some (F.fix_this_class cx trace reason (r, i, this))

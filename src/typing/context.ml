@@ -125,11 +125,6 @@ type component_t = {
   mutable type_graph: Graph_explorer.graph;
   (* map of speculation ids to sets of unresolved tvars *)
   mutable all_unresolved: ISet.t IMap.t;
-  (* We track nominal ids in the context to help decide when the types exported by a module have
-     meaningfully changed: see Merge_js.ContextOptimizer. We care about two different types of
-     nominal ids, one for object properties and one for polymorphic types. **)
-  mutable nominal_prop_ids: ISet.t;
-  mutable nominal_poly_ids: Type.Poly.Set.t;
   (* map from TypeAssert assertion locations to the type being asserted *)
   mutable type_asserts_map: (type_assert_kind * ALoc.t) ALocMap.t;
   mutable errors: Flow_error.ErrorSet.t;
@@ -318,8 +313,6 @@ let make_ccx master_cx =
     goal_map = IMap.empty;
     type_graph = Graph_explorer.new_graph ();
     all_unresolved = IMap.empty;
-    nominal_poly_ids = Type.Poly.Set.empty;
-    nominal_prop_ids = ISet.empty;
     type_asserts_map = ALocMap.empty;
     matching_props = [];
     literal_subtypes = [];
@@ -479,10 +472,6 @@ let find_require cx loc =
 let find_tvar cx id =
   try IMap.find id cx.ccx.sig_cx.graph with
   | Not_found -> raise (Union_find.Tvar_not_found id)
-
-let mem_nominal_poly_id cx id = Type.Poly.Set.mem id cx.ccx.nominal_poly_ids
-
-let mem_nominal_prop_id cx id = ISet.mem id cx.ccx.nominal_prop_ids
 
 let graph cx = cx.ccx.sig_cx.graph
 
@@ -655,11 +644,6 @@ let add_tvar cx id bounds =
 let add_trust_var cx id bounds =
   let trust_graph = IMap.add id bounds cx.ccx.sig_cx.trust_graph in
   cx.ccx.sig_cx <- { cx.ccx.sig_cx with trust_graph }
-
-let add_nominal_prop_id cx id = cx.ccx.nominal_prop_ids <- ISet.add id cx.ccx.nominal_prop_ids
-
-let add_nominal_poly_id cx id =
-  cx.ccx.nominal_poly_ids <- Type.Poly.Set.add id cx.ccx.nominal_poly_ids
 
 let add_type_assert cx k v = cx.ccx.type_asserts_map <- ALocMap.add k v cx.ccx.type_asserts_map
 
@@ -844,7 +828,6 @@ let make_generic_id cx name loc = Generic.make_bound_id (make_aloc_id cx loc) na
 
 let generate_property_map cx pmap =
   let id = Reason.mk_id () in
-  add_nominal_prop_id cx (id :> int);
   let id = Type.Properties.id_of_int id in
   add_property_map cx id pmap;
   id
@@ -867,11 +850,6 @@ let make_export_map cx tmap =
   let id = Type.Exports.mk_id () in
   add_export_map cx id tmap;
   id
-
-let generate_poly_id cx =
-  let nominal = Type.Poly.generate_id () in
-  add_nominal_poly_id cx nominal;
-  nominal
 
 let make_source_poly_id cx aloc = make_aloc_id cx aloc |> Type.Poly.id_of_aloc_id
 

@@ -123,11 +123,11 @@ struct
       }
     in
     let t = DefT (reason, make_trust (), FunT (static, prototype, funtype)) in
-    let t = poly_type_of_tparams (Context.generate_poly_id cx) tparams t in
+    let t = poly_type_of_tparams (Type.Poly.generate_id ()) tparams t in
     Flow.unify cx t knot;
     t
 
-  let methodtype cx this_default { reason; tparams; fparams; return_t; _ } =
+  let methodtype this_default { reason; tparams; fparams; return_t; _ } =
     let params = F.value fparams in
     let (params_names, params_tlist) = List.split params in
     let rest_param = F.rest fparams in
@@ -151,7 +151,7 @@ struct
             )
         )
     in
-    poly_type_of_tparams (Context.generate_poly_id cx) tparams t
+    poly_type_of_tparams (Type.Poly.generate_id ()) tparams t
 
   let gettertype ({ return_t; _ } : t) = TypeUtil.type_t_of_annotated_or_inferred return_t
 

@@ -955,7 +955,7 @@ struct
       in
       let type_ =
         poly_type_of_tparams
-          (Context.generate_poly_id cx)
+          (Type.Poly.generate_id ())
           tparams
           (DefT (r, bogus_trust (), TypeT (TypeAliasKind, t)))
       in
@@ -1026,7 +1026,7 @@ struct
       let t = OpaqueT (mk_reason (ROpaqueType name) name_loc, opaquetype) in
       let type_ =
         poly_type_of_tparams
-          (Context.generate_poly_id cx)
+          (Type.Poly.generate_id ())
           tparams
           (DefT (r, bogus_trust (), TypeT (OpaqueKind, t)))
       in

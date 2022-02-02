@@ -443,17 +443,16 @@ struct
     in
     Type.Field (loc, t, polarity)
 
-  let to_method cx this_default (loc, fsig, _, _) =
-    Type.Method (loc, F.methodtype cx this_default fsig)
+  let to_method this_default (loc, fsig, _, _) = Type.Method (loc, F.methodtype this_default fsig)
 
   let to_prop_map to_prop_converter cx =
     SMap.map to_prop_converter %> NameUtils.namemap_of_smap %> Context.generate_property_map cx
 
   let fields_to_prop_map = to_prop_map to_field
 
-  let methods_to_prop_map ~cx ~this_default = to_prop_map (to_method cx this_default) cx
+  let methods_to_prop_map ~cx ~this_default = to_prop_map (to_method this_default) cx
 
-  let elements cx ~this ?constructor s super =
+  let elements ~this ?constructor s super =
     (* To determine the default `this` parameter for a method without `this` annotation, we
        default to the instance/static `this` type *)
     let this_default (x : F.t) =
@@ -477,7 +476,7 @@ struct
         (fun _name xs ->
           let ms =
             Nel.rev_map
-              (fun (loc, x, _, set_type) -> (loc, F.methodtype cx (this_default x) x, set_type))
+              (fun (loc, x, _, set_type) -> (loc, F.methodtype (this_default x) x, set_type))
               xs
           in
           (* Keep track of these before intersections are merged, to enable
@@ -493,7 +492,7 @@ struct
     let () =
       SMap.iter
         (fun _name (loc, x, _, set_type) ->
-          Base.Option.iter loc ~f:(fun _loc -> set_type (F.methodtype cx (this_default x) x)))
+          Base.Option.iter loc ~f:(fun _loc -> set_type (F.methodtype (this_default x) x)))
         s.private_methods
     in
     (* Re-add the constructor as a method. *)
@@ -571,7 +570,7 @@ struct
     let s = x.static in
     let (inited_fields, fields, methods, call) =
       let loc = aloc_of_reason x.static.reason in
-      elements cx ~this:(this_or_mixed loc x |> TypeUtil.class_type) s x.super
+      elements ~this:(this_or_mixed loc x |> TypeUtil.class_type) s x.super
     in
     let props =
       SMap.union fields methods ~combine:(fun _ _ ->
@@ -600,7 +599,7 @@ struct
       let ts =
         List.rev_map
           (fun (loc, t, _, _) ->
-            (loc, F.methodtype cx (Type.dummy_this (aloc_of_reason s.instance.reason)) t))
+            (loc, F.methodtype (Type.dummy_this (aloc_of_reason s.instance.reason)) t))
           s.constructor
       in
       match ts with
@@ -622,7 +621,7 @@ struct
     in
     let (initialized_fields, fields, methods, call) =
       let loc = aloc_of_reason s.instance.reason in
-      elements cx ~this:(this_or_mixed loc s) ?constructor s.instance s.super
+      elements ~this:(this_or_mixed loc s) ?constructor s.instance s.super
     in
     {
       Type.class_id = s.id;
@@ -851,12 +850,12 @@ struct
        at runtime even if the static type is a supertype. *)
     let inst_loc = aloc_of_reason reason in
     let (_, own, proto, _call) =
-      elements ~this:(this_or_mixed inst_loc x) cx ?constructor:None x.instance x.super
+      elements ~this:(this_or_mixed inst_loc x) ?constructor:None x.instance x.super
     in
     let static =
       (* NOTE: The own, proto maps are disjoint by construction. *)
       let (_, own, proto, _call) =
-        elements ~this:(this_or_mixed inst_loc x |> class_type) cx x.static x.super
+        elements ~this:(this_or_mixed inst_loc x |> class_type) x.static x.super
       in
       SMap.union own proto
     in
@@ -921,7 +920,7 @@ struct
       else
         (this_class_type this true, this_class_type this false)
     in
-    let poly t = poly_type_of_tparams (Context.generate_poly_id cx) x.tparams t in
+    let poly t = poly_type_of_tparams (Type.Poly.generate_id ()) x.tparams t in
     (poly t_inner, poly t_outer)
 
   (* Processes the bodies of instance and static class members. *)

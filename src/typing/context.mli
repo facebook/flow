@@ -214,10 +214,6 @@ val find_require : t -> ALoc.t -> Type.tvar
 
 val find_tvar : t -> Type.ident -> Type.Constraint.node
 
-val mem_nominal_prop_id : t -> Type.ident -> bool
-
-val mem_nominal_poly_id : t -> Type.Poly.id -> bool
-
 val graph : t -> Type.Constraint.node IMap.t
 
 val trust_graph : t -> Trust_constraint.node IMap.t
@@ -473,8 +469,6 @@ val make_source_property_map : t -> Type.Properties.t -> ALoc.t -> Type.Properti
 val make_call_prop : t -> Type.t -> int
 
 val make_export_map : t -> Type.Exports.t -> Type.Exports.id
-
-val generate_poly_id : t -> Type.Poly.id
 
 val make_source_poly_id : t -> ALoc.t -> Type.Poly.id
 

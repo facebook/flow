@@ -2577,11 +2577,7 @@ struct
           rec_flow
             cx
             trace
-            ( poly_type
-                (Context.generate_poly_id cx)
-                tparams_loc
-                xs
-                (this_class_type instance is_this),
+            ( poly_type (Type.Poly.generate_id ()) tparams_loc xs (this_class_type instance is_this),
               UseT (unknown_use, tvar)
             )
         | (AnyT (_, src), MixinT (r, tvar)) ->

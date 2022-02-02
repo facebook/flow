@@ -788,7 +788,7 @@ module rec ConsGen : S = struct
       let static = ObjProtoT r in
       let super = ObjProtoT r in
       let instance = DefT (r, trust, InstanceT (static, super, [], insttype)) in
-      poly_type (Context.generate_poly_id cx) tparams_loc xs (this_class_type instance is_this)
+      poly_type (Type.Poly.generate_id ()) tparams_loc xs (this_class_type instance is_this)
     | (AnyT (_, src), Annot_MixinT r) -> AnyT.why src r
     (***********************)
     (* Type specialization *)

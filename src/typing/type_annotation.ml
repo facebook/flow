@@ -1976,7 +1976,7 @@ module Make
                         Ast.Type.Object.Property.Init (func_loc, Ast.Type.Function func)
                       ) ->
                       let (fsig, func_ast) = mk_func_sig cx tparams_map loc func in
-                      let ft = Func_type_sig.methodtype cx this fsig in
+                      let ft = Func_type_sig.methodtype this fsig in
                       let append_method =
                         match (static, name) with
                         | (false, "constructor") -> append_constructor (Some id_loc)

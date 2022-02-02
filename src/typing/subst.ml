@@ -113,8 +113,7 @@ let substituter =
               DefT
                 ( reason,
                   trust,
-                  PolyT
-                    { tparams_loc; tparams = xs; t_out = inner_; id = Context.generate_poly_id cx }
+                  PolyT { tparams_loc; tparams = xs; t_out = inner_; id = Type.Poly.generate_id () }
                 )
             else
               t
