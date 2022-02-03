@@ -1,0 +1,63 @@
+Error ------------------------------------------------------------------------------------------------------ test.js:4:9
+
+Cannot import `aaa_vs_zzz__aaa` because there is no `aaa_vs_zzz__aaa` export in `./aaa_vs_zzz`. Did you mean
+`aaa_vs_zzz__zzz`? [missing-export]
+
+   4| import {aaa_vs_zzz__aaa} from './aaa_vs_zzz'; // error
+              ^^^^^^^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------------------ test.js:9:9
+
+Cannot import `aaa_vs_bbb__bbb` because there is no `aaa_vs_bbb__bbb` export in `./aaa_vs_bbb`. Did you mean
+`aaa_vs_bbb__aaa`? [missing-export]
+
+   9| import {aaa_vs_bbb__bbb} from './aaa_vs_bbb'; // error
+              ^^^^^^^^^^^^^^^
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:13:9
+
+Cannot import `aaa_vs_aaa_js__aaa__js` because there is no `aaa_vs_aaa_js__aaa__js` export in `./aaa_vs_aaa_js.aaa`.
+[missing-export]
+
+   13| import {aaa_vs_aaa_js__aaa__js} from './aaa_vs_aaa_js.aaa'; // error
+               ^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:17:9
+
+Cannot import `zzz_vs_zzz_js__zzz__js` because there is no `zzz_vs_zzz_js__zzz__js` export in `./zzz_vs_zzz_js.zzz`.
+[missing-export]
+
+   17| import {zzz_vs_zzz_js__zzz__js} from './zzz_vs_zzz_js.zzz'; // error
+               ^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:21:9
+
+Cannot import `js_vs_zzz_js__zzz__js` because there is no `js_vs_zzz_js__zzz__js` export in `./js_vs_zzz_js`.
+[missing-export]
+
+   21| import {js_vs_zzz_js__zzz__js} from './js_vs_zzz_js'; // error
+               ^^^^^^^^^^^^^^^^^^^^^
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:23:9
+
+Cannot import `js_vs_zzz_js__js` because there is no `js_vs_zzz_js__js` export in `./js_vs_zzz_js.zzz`. [missing-export]
+
+   23| import {js_vs_zzz_js__js as js2} from './js_vs_zzz_js.zzz'; // error
+               ^^^^^^^^^^^^^^^^
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:27:47
+
+Cannot resolve module `./multiple_exts`. [cannot-resolve-module]
+
+   27| import {multiple_exts as multiple_exts1} from './multiple_exts'; // error
+                                                     ^^^^^^^^^^^^^^^^^
+
+
+
+Found 7 errors

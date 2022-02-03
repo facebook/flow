@@ -319,7 +319,7 @@ module Node = struct
     (* We do not try resource file extensions here. So while you can write
      * require('foo') to require foo.js, it should never resolve to foo.css
      *)
-    let file_exts = SSet.elements (Files.module_file_exts file_options) in
+    let file_exts = Files.module_file_exts file_options in
     lazy_seq
       [
         lazy (path_if_exists ~file_options resolution_acc path);

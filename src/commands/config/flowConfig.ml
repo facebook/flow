@@ -98,7 +98,7 @@ module Opts = struct
     max_seconds_for_check_per_worker: float;
     max_workers: int;
     merge_timeout: int option;
-    module_file_exts: SSet.t;
+    module_file_exts: string list;
     module_name_mappers: (Str.regexp * string) list;
     module_resource_exts: SSet.t;
     module_system: Options.module_system;
@@ -150,13 +150,8 @@ module Opts = struct
     in
     Ok (config, warnings)
 
-  let module_file_exts =
-    SSet.empty
-    |> SSet.add ".js"
-    |> SSet.add ".jsx"
-    |> SSet.add ".json"
-    |> SSet.add ".mjs"
-    |> SSet.add ".cjs"
+  (** the order of this list determines precedence. ./foo resolves to foo.js before foo.json *)
+  let module_file_exts = [".js"; ".jsx"; ".mjs"; ".cjs"; ".json"]
 
   let module_resource_exts =
     SSet.empty
@@ -412,7 +407,7 @@ module Opts = struct
 
   let file_ext_parser =
     string
-      ~init:(fun opts -> { opts with module_file_exts = SSet.empty })
+      ~init:(fun opts -> { opts with module_file_exts = [] })
       ~multiple:true
       (fun opts v ->
         if String_utils.string_ends_with v Files.flow_ext then
@@ -423,8 +418,11 @@ module Opts = struct
             ^ Files.flow_ext
             ^ "'"
             )
+        else if Base.List.mem opts.module_file_exts v ~equal:String.equal then
+          (* ignore duplicates. doesn't seem super important to error. *)
+          Ok opts
         else
-          let module_file_exts = SSet.add v opts.module_file_exts in
+          let module_file_exts = v :: opts.module_file_exts in
           Ok { opts with module_file_exts })
 
   let haste_name_reducers_parser =

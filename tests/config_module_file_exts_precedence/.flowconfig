@@ -1,0 +1,6 @@
+[options]
+; this ordering determines precedence
+module.file_ext=.zzz
+module.file_ext=.js
+module.file_ext=.aaa
+module.file_ext=.bbb

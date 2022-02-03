@@ -18,7 +18,7 @@ type options = {
   declarations: (string * Str.regexp) list;
   includes: Path_matcher.t;
   lib_paths: Path.t list;
-  module_file_exts: SSet.t;
+  module_file_exts: string list;
   module_resource_exts: SSet.t;
   node_resolver_dirnames: string list;
 }
@@ -35,7 +35,7 @@ val includes : options -> Path_matcher.t
 
 val lib_paths : options -> Path.t list
 
-val module_file_exts : options -> SSet.t
+val module_file_exts : options -> string list
 
 val module_resource_exts : options -> SSet.t
 

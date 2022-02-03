@@ -18,7 +18,7 @@ type options = {
   declarations: (string * Str.regexp) list;
   includes: Path_matcher.t;
   lib_paths: Path.t list;
-  module_file_exts: SSet.t;
+  module_file_exts: string list;
   module_resource_exts: SSet.t;
   node_resolver_dirnames: string list;
 }
@@ -80,7 +80,8 @@ let is_json_file filename = Utils_js.extension_of_filename filename = Some ".jso
 
 (* This is the set of file extensions which we watch for changes *)
 let get_all_watched_extensions options =
-  SSet.union options.module_file_exts options.module_resource_exts
+  let module_file_exts = SSet.of_list options.module_file_exts in
+  SSet.union module_file_exts options.module_resource_exts
 
 let is_valid_path =
   (* Given a file foo.bar.baz.bat, checks the extensions .bat, .baz.bat, and .bar.baz.bat *)
