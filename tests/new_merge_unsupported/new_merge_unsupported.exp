@@ -211,7 +211,7 @@ References:
 Error --------------------------------------------------------------------------------------- ops_on_eval_objmap.js:7:19
 
 Cannot use property `f` on `$ObjMap` [1] in an export position. Please provide an (alternative) annotation for property
-`f` [2]. [invalid-exported-annotation]
+`f` [2]. (Try using the `$ObjMapConst` utility type instead.) [invalid-exported-annotation]
 
    ops_on_eval_objmap.js:7:19
    7| export const x2 = t.f;
@@ -226,7 +226,7 @@ References:
 Error -------------------------------------------------------------------------------------- ops_on_eval_objmap.js:10:19
 
 Cannot use computed property on `$ObjMap` [1] in an export position. Please provide an (alternative) annotation for
-computed property [2]. [invalid-exported-annotation]
+computed property [2]. (Try using the `$ObjMapConst` utility type instead.) [invalid-exported-annotation]
 
    ops_on_eval_objmap.js:10:19
    10| export const x3 = t[('': string)];
@@ -241,7 +241,7 @@ References:
 Error -------------------------------------------------------------------------------------- ops_on_eval_objmap.js:13:19
 
 Cannot use spread on `$ObjMap` [1] in an export position. Please provide an (alternative) annotation for spread [2].
-[invalid-exported-annotation]
+(Try using the `$ObjMapConst` utility type instead.) [invalid-exported-annotation]
 
    ops_on_eval_objmap.js:13:19
    13| export const x4 = { ...t };
@@ -255,8 +255,8 @@ References:
 
 Error -------------------------------------------------------------------------------------- ops_on_eval_objmap.js:16:17
 
-Cannot use exact on `$ObjMap` [1] in an export position. Please provide an (alternative) annotation for exact [2].
-[invalid-exported-annotation]
+Cannot use exact on `$ObjMap` [1] in an export position. Please provide an (alternative) annotation for exact [2]. (Try
+using the `$ObjMapConst` utility type instead.) [invalid-exported-annotation]
 
    ops_on_eval_objmap.js:16:17
    16| declare var y5: $Exact<T>;
@@ -271,7 +271,7 @@ References:
 Error -------------------------------------------------------------------------------------- ops_on_eval_objmap.js:20:37
 
 Cannot use prototype on `$ObjMap` [1] in an export position. Please provide an (alternative) annotation for
-prototype [2]. [invalid-exported-annotation]
+prototype [2]. (Try using the `$ObjMapConst` utility type instead.) [invalid-exported-annotation]
 
    ops_on_eval_objmap.js:20:37
    20| declare export var x8: { __proto__: T };
@@ -286,7 +286,7 @@ References:
 Error -------------------------------------------------------------------------------------- ops_on_eval_objmap.js:23:20
 
 Cannot use unary not on `$ObjMap` [1] in an export position. Please provide an (alternative) annotation for unary
-not [2]. [invalid-exported-annotation]
+not [2]. (Try using the `$ObjMapConst` utility type instead.) [invalid-exported-annotation]
 
    ops_on_eval_objmap.js:23:20
    23| export const x11 = !t;
@@ -301,7 +301,7 @@ References:
 Error -------------------------------------------------------------------------------------- ops_on_eval_objmap.js:26:18
 
 Cannot use `$KeyMirror` on `$ObjMap` [1] in an export position. Please provide an (alternative) annotation for
-`$KeyMirror` [2]. [invalid-exported-annotation]
+`$KeyMirror` [2]. (Try using the `$ObjMapConst` utility type instead.) [invalid-exported-annotation]
 
    ops_on_eval_objmap.js:26:18
    26| declare var y12: $KeyMirror<T>;
@@ -316,7 +316,7 @@ References:
 Error -------------------------------------------------------------------------------------- ops_on_eval_objmap.js:30:18
 
 Cannot use `$ObjMapConst` on `$ObjMap` [1] in an export position. Please provide an (alternative) annotation for
-`$ObjMapConst` [2]. [invalid-exported-annotation]
+`$ObjMapConst` [2]. (Try using the `$ObjMapConst` utility type instead.) [invalid-exported-annotation]
 
    ops_on_eval_objmap.js:30:18
    30| declare var y13: $ObjMapConst<T, any>;
@@ -331,7 +331,7 @@ References:
 Error -------------------------------------------------------------------------------------- ops_on_eval_objmap.js:34:18
 
 Cannot use key set on `$ObjMap` [1] in an export position. Please provide an (alternative) annotation for key set [2].
-[invalid-exported-annotation]
+(Try using the `$ObjMapConst` utility type instead.) [invalid-exported-annotation]
 
    ops_on_eval_objmap.js:34:18
    34| declare var y14: $Keys<T>;
@@ -346,7 +346,7 @@ References:
 Error -------------------------------------------------------------------------------------- ops_on_eval_objmapi.js:7:19
 
 Cannot use property `f` on `$ObjMapi` [1] in an export position. Please provide an (alternative) annotation for property
-`f` [2]. [invalid-exported-annotation]
+`f` [2]. (Try using the `$KeyMirror` utility type instead.) [invalid-exported-annotation]
 
    ops_on_eval_objmapi.js:7:19
    7| export const x2 = t.f;
@@ -361,7 +361,7 @@ References:
 Error ------------------------------------------------------------------------------------- ops_on_eval_objmapi.js:10:19
 
 Cannot use computed property on `$ObjMapi` [1] in an export position. Please provide an (alternative) annotation for
-computed property [2]. [invalid-exported-annotation]
+computed property [2]. (Try using the `$KeyMirror` utility type instead.) [invalid-exported-annotation]
 
    ops_on_eval_objmapi.js:10:19
    10| export const x3 = t[('': string)];
@@ -376,7 +376,7 @@ References:
 Error ------------------------------------------------------------------------------------- ops_on_eval_objmapi.js:13:19
 
 Cannot use spread on `$ObjMapi` [1] in an export position. Please provide an (alternative) annotation for spread [2].
-[invalid-exported-annotation]
+(Try using the `$KeyMirror` utility type instead.) [invalid-exported-annotation]
 
    ops_on_eval_objmapi.js:13:19
    13| export const x4 = { ...t };
@@ -390,8 +390,8 @@ References:
 
 Error ------------------------------------------------------------------------------------- ops_on_eval_objmapi.js:16:17
 
-Cannot use exact on `$ObjMapi` [1] in an export position. Please provide an (alternative) annotation for exact [2].
-[invalid-exported-annotation]
+Cannot use exact on `$ObjMapi` [1] in an export position. Please provide an (alternative) annotation for exact [2]. (Try
+using the `$KeyMirror` utility type instead.) [invalid-exported-annotation]
 
    ops_on_eval_objmapi.js:16:17
    16| declare var y5: $Exact<T>;
@@ -406,7 +406,7 @@ References:
 Error ------------------------------------------------------------------------------------- ops_on_eval_objmapi.js:20:37
 
 Cannot use prototype on `$ObjMapi` [1] in an export position. Please provide an (alternative) annotation for
-prototype [2]. [invalid-exported-annotation]
+prototype [2]. (Try using the `$KeyMirror` utility type instead.) [invalid-exported-annotation]
 
    ops_on_eval_objmapi.js:20:37
    20| declare export var x8: { __proto__: T };
@@ -421,7 +421,7 @@ References:
 Error ------------------------------------------------------------------------------------- ops_on_eval_objmapi.js:23:20
 
 Cannot use unary not on `$ObjMapi` [1] in an export position. Please provide an (alternative) annotation for unary
-not [2]. [invalid-exported-annotation]
+not [2]. (Try using the `$KeyMirror` utility type instead.) [invalid-exported-annotation]
 
    ops_on_eval_objmapi.js:23:20
    23| export const x11 = !t;
@@ -436,7 +436,7 @@ References:
 Error ------------------------------------------------------------------------------------- ops_on_eval_objmapi.js:26:18
 
 Cannot use `$KeyMirror` on `$ObjMapi` [1] in an export position. Please provide an (alternative) annotation for
-`$KeyMirror` [2]. [invalid-exported-annotation]
+`$KeyMirror` [2]. (Try using the `$KeyMirror` utility type instead.) [invalid-exported-annotation]
 
    ops_on_eval_objmapi.js:26:18
    26| declare var y12: $KeyMirror<T>;
@@ -451,7 +451,7 @@ References:
 Error ------------------------------------------------------------------------------------- ops_on_eval_objmapi.js:30:18
 
 Cannot use `$ObjMapConst` on `$ObjMapi` [1] in an export position. Please provide an (alternative) annotation for
-`$ObjMapConst` [2]. [invalid-exported-annotation]
+`$ObjMapConst` [2]. (Try using the `$KeyMirror` utility type instead.) [invalid-exported-annotation]
 
    ops_on_eval_objmapi.js:30:18
    30| declare var y13: $ObjMapConst<T, any>;
@@ -466,7 +466,7 @@ References:
 Error ------------------------------------------------------------------------------------- ops_on_eval_objmapi.js:34:18
 
 Cannot use key set on `$ObjMapi` [1] in an export position. Please provide an (alternative) annotation for key set [2].
-[invalid-exported-annotation]
+(Try using the `$KeyMirror` utility type instead.) [invalid-exported-annotation]
 
    ops_on_eval_objmapi.js:34:18
    34| declare var y14: $Keys<T>;

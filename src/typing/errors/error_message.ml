@@ -432,7 +432,7 @@ and 'loc t' =
       null_write: 'loc null_write option;
     }
   | EInvalidGraphQL of 'loc * Graphql.error
-  | EAnnotationInference of 'loc * 'loc virtual_reason * 'loc virtual_reason
+  | EAnnotationInference of 'loc * 'loc virtual_reason * 'loc virtual_reason * string option
   | EAnnotationInferenceRecursive of 'loc * 'loc virtual_reason
   | EDefinitionCycle of ('loc virtual_reason * 'loc Nel.t) Nel.t
   | ERecursiveDefinition of {
@@ -1022,7 +1022,8 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
             null_write;
       }
   | EInvalidGraphQL (loc, err) -> EInvalidGraphQL (f loc, err)
-  | EAnnotationInference (loc, r1, r2) -> EAnnotationInference (f loc, map_reason r1, map_reason r2)
+  | EAnnotationInference (loc, r1, r2, suggestion) ->
+    EAnnotationInference (f loc, map_reason r1, map_reason r2, suggestion)
   | EAnnotationInferenceRecursive (loc, r) -> EAnnotationInferenceRecursive (f loc, map_reason r)
   | EDefinitionCycle elts ->
     EDefinitionCycle (Nel.map (fun (reason, recur) -> (map_reason reason, Nel.map f recur)) elts)
@@ -1408,7 +1409,7 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | EObjectThisReference (loc, _)
   | EImportInternalReactServerModule loc
   | EInvalidGraphQL (loc, _)
-  | EAnnotationInference (loc, _, _)
+  | EAnnotationInference (loc, _, _, _)
   | EAnnotationInferenceRecursive (loc, _) ->
     Some loc
   | EImplicitInstantiationUnderconstrainedError { reason_call; _ } ->
@@ -3751,7 +3752,12 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
         [text "Expected a GraphQL fragment, query, mutation, or subscription."]
     in
     Normal { features }
-  | EAnnotationInference (_, reason_op, reason) ->
+  | EAnnotationInference (_, reason_op, reason, suggestion) ->
+    let suggestion =
+      match suggestion with
+      | Some util -> [text " (Try using the "; code util; text " utility type instead.)"]
+      | None -> []
+    in
     let features =
       [
         text "Cannot use ";
@@ -3763,6 +3769,7 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
         ref reason_op;
         text ".";
       ]
+      @ suggestion
     in
     Normal { features }
   | EAnnotationInferenceRecursive (_, reason) ->

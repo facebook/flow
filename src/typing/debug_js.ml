@@ -1821,7 +1821,7 @@ let dump_error_message =
         | Graphql.InvalidGraphQL -> "invalid graphql"
       in
       spf "EInvalidGraphQL (%s) (%s)" (string_of_aloc loc) err_str
-    | EAnnotationInference (loc, reason_op, reason) ->
+    | EAnnotationInference (loc, reason_op, reason, _) ->
       spf
         "EAnnotationInference (%s) (%s) (%s)"
         (string_of_aloc loc)
