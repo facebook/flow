@@ -35,7 +35,6 @@ type lint_kind =
   | UnsafeGettersSetters
   | UnnecessaryOptionalChain
   | UnnecessaryInvariant
-  | SignatureVerificationFailure
   | ImplicitInexactObject
   | UninitializedInstanceProperty
   | AmbiguousObjectType
@@ -74,7 +73,6 @@ let string_of_kind = function
   | UnsafeGettersSetters -> "unsafe-getters-setters"
   | UnnecessaryOptionalChain -> "unnecessary-optional-chain"
   | UnnecessaryInvariant -> "unnecessary-invariant"
-  | SignatureVerificationFailure -> "signature-verification-failure"
   | ImplicitInexactObject -> "implicit-inexact-object"
   | UninitializedInstanceProperty -> "uninitialized-instance-property"
   | AmbiguousObjectType -> "ambiguous-object-type"
@@ -113,7 +111,6 @@ let kinds_of_string = function
   | "unsafe-getters-setters" -> Some [UnsafeGettersSetters]
   | "unnecessary-optional-chain" -> Some [UnnecessaryOptionalChain]
   | "unnecessary-invariant" -> Some [UnnecessaryInvariant]
-  | "signature-verification-failure" -> Some [SignatureVerificationFailure]
   | "implicit-inexact-object" -> Some [ImplicitInexactObject]
   | "ambiguous-object-type" -> Some [AmbiguousObjectType]
   | "require-explicit-enum-switch-cases" -> Some [RequireExplicitEnumSwitchCases]

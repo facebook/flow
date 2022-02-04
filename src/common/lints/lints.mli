@@ -35,7 +35,6 @@ type lint_kind =
   | UnsafeGettersSetters
   | UnnecessaryOptionalChain
   | UnnecessaryInvariant
-  | SignatureVerificationFailure
   | ImplicitInexactObject
   | UninitializedInstanceProperty
   | AmbiguousObjectType

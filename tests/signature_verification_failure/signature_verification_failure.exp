@@ -149,148 +149,148 @@ simple key in object: [signature-verification-failure]
                                  ^^^^^^^
 
 
-Error ----------------------------------------------------------------------------------------------------- misc.js:3:15
+Error ----------------------------------------------------------------------------------------------------- misc.js:3:24
 
-The type argument of a temporary base type must be a compatible literal type [invalid-temp-type]
+Cannot resolve module `react`. [cannot-resolve-module]
 
-   3| export var a: $TEMPORARY$number<'a'> = 42;
-                    ^^^^^^^^^^^^^^^^^^^^^^
+   3| import * as React from 'react';
+                             ^^^^^^^
 
 
 Error ----------------------------------------------------------------------------------------------------- misc.js:5:15
 
+The type argument of a temporary base type must be a compatible literal type [invalid-temp-type]
+
+   5| export var a: $TEMPORARY$number<'a'> = 42;
+                    ^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error ----------------------------------------------------------------------------------------------------- misc.js:7:15
+
 Cannot use type without exactly 1 type argument. [nonpolymorphic-type-app]
 
-   5| export var b: $TEMPORARY$number<1, 1> = 42;
+   7| export var b: $TEMPORARY$number<1, 1> = 42;
                     ^^^^^^^^^^^^^^^^^^^^^^^
-
-
-Error ----------------------------------------------------------------------------------------------------- misc.js:7:18
-
-Cannot build a typed interface for this module. You should annotate the exports of this module with types. Expected
-simple key in object: [signature-verification-failure]
-
-   7| export const c = {['a' + 'b']: 42};
-                       ^^^^^^^^^^^^^^^^^
 
 
 Error ----------------------------------------------------------------------------------------------------- misc.js:9:18
 
+Cannot build a typed interface for this module. You should annotate the exports of this module with types. Expected
+simple key in object: [signature-verification-failure]
+
+   9| export const c = {['a' + 'b']: 42};
+                       ^^^^^^^^^^^^^^^^^
+
+
+Error ---------------------------------------------------------------------------------------------------- misc.js:11:18
+
 Cannot build a typed interface for this module. You should annotate the exports of this module with types. Unexpected
 spread in array: [signature-verification-failure]
 
-   9| export const d = [...c];
-                       ^^^^^^
+   11| export const d = [...c];
+                        ^^^^^^
 
 
-Error ----------------------------------------------------------------------------------------------------- misc.js:9:22
+Error ---------------------------------------------------------------------------------------------------- misc.js:11:22
 
 Property `@@iterator` is missing in object literal [1] but exists in `$Iterable` [2]. [prop-missing]
 
-   misc.js:9:22
-    9| export const d = [...c];
+   misc.js:11:22
+   11| export const d = [...c];
                             ^
 
 References:
-   misc.js:7:18
-    7| export const c = {['a' + 'b']: 42};
+   misc.js:9:18
+    9| export const c = {['a' + 'b']: 42};
                         ^^^^^^^^^^^^^^^^^ [1]
    <BUILTINS>/prelude.js:48:11
    48| interface $Iterable<+Yield,+Return,-Next> {
                  ^^^^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- misc.js:11:19
+Error ---------------------------------------------------------------------------------------------------- misc.js:13:19
 
 Cannot reassign constant `d` [1]. [reassign-const]
 
-   misc.js:11:19
-   11| export const e = (d += d);
+   misc.js:13:19
+   13| export const e = (d += d);
                          ^
 
 References:
-   misc.js:9:14
-    9| export const d = [...c];
+   misc.js:11:14
+   11| export const d = [...c];
                     ^ [1]
 
 
-Error ---------------------------------------------------------------------------------------------------- misc.js:11:19
+Error ---------------------------------------------------------------------------------------------------- misc.js:13:19
 
 Cannot add `d` and `d` because array literal [1] is incompatible with string [2]. [incompatible-type]
 
-   misc.js:11:19
-   11| export const e = (d += d);
+   misc.js:13:19
+   13| export const e = (d += d);
                          ^
 
 References:
-   misc.js:9:18
-    9| export const d = [...c];
+   misc.js:11:18
+   11| export const d = [...c];
                         ^^^^^^ [1]
-   misc.js:11:19
-   11| export const e = (d += d);
+   misc.js:13:19
+   13| export const e = (d += d);
                          ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- misc.js:11:24
+Error ---------------------------------------------------------------------------------------------------- misc.js:13:24
 
 Cannot add `d` and `d` because array literal [1] is incompatible with string [2]. [incompatible-type]
 
-   misc.js:11:24
-   11| export const e = (d += d);
+   misc.js:13:24
+   13| export const e = (d += d);
                               ^
 
 References:
-   misc.js:9:18
-    9| export const d = [...c];
+   misc.js:11:18
+   11| export const d = [...c];
                         ^^^^^^ [1]
-   misc.js:11:19
-   11| export const e = (d += d);
+   misc.js:13:19
+   13| export const e = (d += d);
                          ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- misc.js:11:19
+Error ---------------------------------------------------------------------------------------------------- misc.js:13:19
 
 Cannot build a typed interface for this module. You should annotate the exports of this module with types. Cannot
 determine the type of this assignment expression. Please provide an annotation, e.g., by adding a type cast around this
 expression. [signature-verification-failure]
 
-   11| export const e = (d += d);
+   13| export const e = (d += d);
                          ^^^^^^
 
 
-Error ---------------------------------------------------------------------------------------------------- misc.js:15:18
+Error ---------------------------------------------------------------------------------------------------- misc.js:17:18
 
 BigInt bigint literal `42n` [1] is not yet supported. [bigint-unsupported]
 
-   15| export const u = 42n;
+   17| export const u = 42n;
                         ^^^ [1]
 
 
-Error ---------------------------------------------------------------------------------------------------- misc.js:17:18
+Error ---------------------------------------------------------------------------------------------------- misc.js:19:18
 
 Cannot build a typed interface for this module. You should annotate the exports of this module with types. Cannot
 determine the type of this literal. Please provide an annotation, e.g., by adding a type cast around this expression.
 [signature-verification-failure]
 
-   17| export const w = /foo/;
+   19| export const w = /foo/;
                         ^^^^^
 
 
-Error ---------------------------------------------------------------------------------------------------- misc.js:19:18
-
-Cannot resolve name `React`. [cannot-resolve-name]
-
-   19| export const x = <f />;
-                        ^^^^^
-
-
-Error ---------------------------------------------------------------------------------------------------- misc.js:19:18
+Error ---------------------------------------------------------------------------------------------------- misc.js:21:18
 
 Cannot build a typed interface for this module. You should annotate the exports of this module with types. Cannot
 determine the type of this JSX element. Please provide an annotation, e.g., by adding a type cast around this
 expression. [signature-verification-failure]
 
-   19| export const x = <f />;
+   21| export const x = <f />;
                         ^^^^^
 
 

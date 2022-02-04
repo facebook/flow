@@ -166,7 +166,6 @@ let code_of_lint : Lints.lint_kind -> error_code = function
   | Lints.UnsafeGettersSetters -> UnsafeGettersSetters
   | Lints.UnnecessaryOptionalChain -> UnnecessaryOptionalChain
   | Lints.UnnecessaryInvariant -> UnnecessaryInvariant
-  | Lints.SignatureVerificationFailure -> SignatureVerificationFailure
   | Lints.ImplicitInexactObject -> ImplicitInexactObject
   | Lints.UninitializedInstanceProperty -> UninitializedInstanceProperty
   | Lints.AmbiguousObjectType -> AmbiguousObjectType

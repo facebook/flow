@@ -442,6 +442,11 @@ let mk_check_file options ~reader () =
       let (cx, typed_ast) = check_file file requires ast comments file_sig docblock aloc_table in
       let coverage = Coverage.file_coverage ~full_cx:cx typed_ast in
       let errors = Context.errors cx in
+      let errors =
+        tolerable_errors
+        |> Inference_utils.set_of_file_sig_tolerable_errors ~source_file:file
+        |> Flow_error.ErrorSet.union errors
+      in
       let suppressions = Context.error_suppressions cx in
       let severity_cover = Context.severity_cover cx in
       let include_suppressions = Context.include_suppressions cx in
@@ -453,13 +458,6 @@ let mk_check_file options ~reader () =
           errors
           aloc_tables
           severity_cover
-      in
-      (* add tolerable errors after filtering lints since SignatureVerificationFailure is currently
-         an unusual lint that should not be suppressed. *)
-      let errors =
-        tolerable_errors
-        |> Inference_utils.set_of_file_sig_tolerable_errors ~source_file:file
-        |> Flow_error.ErrorSet.union errors
       in
       let duration = Unix.gettimeofday () -. start_time in
       Some

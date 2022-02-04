@@ -1494,7 +1494,6 @@ let kind_of_msg =
     | ESketchyNumberLint (kind, _) -> LintError (Lints.SketchyNumber kind)
     | EUnnecessaryOptionalChain _ -> LintError Lints.UnnecessaryOptionalChain
     | EUnnecessaryInvariant _ -> LintError Lints.UnnecessaryInvariant
-    | ESignatureVerification _ -> LintError Lints.SignatureVerificationFailure
     | EImplicitInexactObject _ -> LintError Lints.ImplicitInexactObject
     | EAmbiguousObjectType _ -> LintError Lints.AmbiguousObjectType
     | EEnumNotAllChecked { default_case = Some _; _ } ->

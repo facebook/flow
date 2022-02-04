@@ -216,6 +216,7 @@ let init ~options ~reader lib_files =
   Merge_js.optimize_builtins master_cx;
 
   let (errors, warnings, suppressions) =
+    let errors = Context.errors master_cx |> Flow_error.ErrorSet.union parse_and_sig_errors in
     let suppressions = Context.error_suppressions master_cx in
     let severity_cover = Context.severity_cover master_cx in
     let include_suppressions = Context.include_suppressions master_cx in
@@ -223,14 +224,11 @@ let init ~options ~reader lib_files =
       Error_suppressions.filter_lints
         ~include_suppressions
         suppressions
-        (Context.errors master_cx)
+        errors
         (Context.aloc_tables master_cx)
         severity_cover
     in
-    ( error_set_to_filemap (Flow_error.ErrorSet.union parse_and_sig_errors errors),
-      error_set_to_filemap warnings,
-      suppressions
-    )
+    (error_set_to_filemap errors, error_set_to_filemap warnings, suppressions)
   in
   (* store master signature context to heap *)
   Context_heaps.Init_master_context_mutator.add_master ~audit:Expensive.ok master_cx;
