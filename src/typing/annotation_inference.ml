@@ -170,14 +170,17 @@ module rec ConsGen : S = struct
    * The only kind of errors that are reported here are "unsupported" cases. These
    * are mostly cases that rely on subtyping, which is not implemented here; most
    * commonly evaluating call-like EvalTs and speculation. *)
-  let error_unsupported cx t op =
-    let reason_op = AConstraint.display_reason_of_op op in
+  let error_unsupported_reason cx t reason_op =
     let loc = Reason.aloc_of_reason reason_op in
     let msg = Error_message.EAnnotationInference (loc, reason_op, TypeUtil.reason_of_t t) in
     (match !dst_cx_ref with
     | None -> assert false
     | Some dst_cx -> Flow_js_utils.add_annot_inference_error ~src_cx:cx ~dst_cx msg);
     AnyT.error reason_op
+
+  let error_unsupported cx t op =
+    let reason_op = AConstraint.display_reason_of_op op in
+    error_unsupported_reason cx t reason_op
 
   let error_recursive cx reason =
     let loc = Reason.aloc_of_reason reason in
@@ -1204,7 +1207,7 @@ module rec ConsGen : S = struct
 
   and obj_rest cx reason xs t = elab_t cx t (Annot_ObjRestT (reason, xs))
 
-  and arr_rest _cx _use_op _reason _i _t = failwith "TODO Annotation_inference.arr_rest"
+  and arr_rest cx _use_op reason_op _i t = error_unsupported_reason cx t reason_op
 
   and object_kit_concrete =
     let rec widen_obj_type cx ~use_op reason t =
