@@ -17,6 +17,8 @@ Table of contents:
 - [`$NonMaybeType<T>`](#toc-nonmaybe)
 - [`$ObjMap<T, F>`](#toc-objmap)
 - [`$ObjMapi<T, F>`](#toc-objmapi)
+- [`$ObjMapConst<O, T>`](#toc-objmapconst)
+- [`$KeyMirror<O>`](#toc-keymirror)
 - [`$TupleMap<T, F>`](#toc-tuplemap)
 - [`$Call<F, T...>`](#toc-call)
 - [`Class<T>`](#toc-class)
@@ -455,7 +457,7 @@ const o = {
 
 type ExtractReturnObjectType = <K, V>(K, () => V) => { k: K, v: V };
 
-declare function run<O: Object>(o: O): $ObjMapi<O, ExtractReturnObjectType>;
+declare function run<O: {...}>(o: O): $ObjMapi<O, ExtractReturnObjectType>;
 
 (run(o).a: { k: 'a', v: boolean }); // Ok
 (run(o).b: { k: 'b', v: string });  // Ok
@@ -466,6 +468,57 @@ declare function run<O: Object>(o: O): $ObjMapi<O, ExtractReturnObjectType>;
 // $ExpectError
 run(o).c;                           // Nope, c was not in the original object
 ```
+
+## `$ObjMapConst<O, T>` <a class="toc" id="toc-objmapconst" href="#toc-objmapconst"></a>
+
+`$ObjMapConst<Obj, T>` is a special case of `$ObjMap<Obj, F>`, when `F` is a constant
+function type, e.g. `() => T`. Instead of writing `$ObjMap<Obj, () => T>`, you
+can write `$ObjMapConst<Obj, T>`. For example:
+```js
+// @flow
+const obj = {
+  a: true,
+  b: 'foo'
+};
+
+declare function run<O: {...}>(o: O): $ObjMapConst<O, number>;
+
+// newObj is of type {a: number, b: number}
+const newObj = run(obj);
+
+(newObj.a: number); // Ok
+// $ExpectedError
+(newObj.b: string); // Error property b is a number
+```
+
+Tip: Prefer using `$ObjMapConst` instead of `$ObjMap` (if possible) to fix certain
+kinds of `[invalid-exported-annotation]` errors.
+
+## `$KeyMirror<O>` <a class="toc" id="toc-keymirror" href="#toc-keymirror"></a>
+
+`$KeyMirror<Obj>` is a special case of `$ObjMapi<Obj, F>`, when `F` is the identity
+function type, ie. `<K>(K) => K`. In other words, it maps each property of an object
+to the type of the property key. Instead of writing `$ObjMapi<Obj, <K>(K) => K>`,
+you can write `$KeyMirror<Obj>`. For example:
+```js
+// @flow
+const obj = {
+  a: true,
+  b: 'foo'
+};
+
+declare function run<O: {...}>(o: O): $KeyMirror<O>;
+
+// newObj is of type {a: 'a', b: 'b'}
+const newObj = run(obj);
+
+(newObj.a: 'a'); // Ok
+// $ExpectedError
+(newObj.b: 'a'); // Error string 'b' is incompatible with 'a'
+```
+
+Tip: Prefer using `$KeyMirror` instead of `$ObjMapi` (if possible) to fix certain
+kinds of `[invalid-exported-annotation]` errors.
 
 ## `$TupleMap<T, F>` <a class="toc" id="toc-tuplemap" href="#toc-tuplemap"></a>
 
