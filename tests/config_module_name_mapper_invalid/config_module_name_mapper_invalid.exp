@@ -1,0 +1,1 @@
+.flowconfig:2 Error parsing value for "module.name_mapper". Invalid ocaml regular expression: [ class not closed by ]

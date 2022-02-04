@@ -1,0 +1,2 @@
+[options]
+module.name_mapper='[x' -> 'unclosed character class'

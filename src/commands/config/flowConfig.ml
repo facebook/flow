@@ -342,6 +342,10 @@ module Opts = struct
     try Ok (Scanf.unescaped str) with
     | Scanf.Scan_failure reason -> Error (spf "Invalid ocaml string: %s" reason)
 
+  let optparse_regexp str =
+    try Ok (Str.regexp str) with
+    | Failure reason -> Error (spf "Invalid ocaml regular expression: %s" reason)
+
   let enum values =
     opt (fun str ->
         let values = Base.List.fold_left ~f:map_add ~init:SMap.empty values in
@@ -358,13 +362,14 @@ module Opts = struct
 
   let filepath = opt (fun str -> Ok (Path.make str))
 
-  let optparse_mapping str =
+  let optparse_mapping =
     let regexp_str = "^'\\([^']*\\)'[ \t]*->[ \t]*'\\([^']*\\)'$" in
     let regexp = Str.regexp regexp_str in
-    if Str.string_match regexp str 0 then
-      Ok (Str.matched_group 1 str, Str.matched_group 2 str)
-    else
-      Error ("Expected a mapping of form: " ^ "'single-quoted-string' -> 'single-quoted-string'")
+    fun str ->
+      if Str.string_match regexp str 0 then
+        Ok (Str.matched_group 1 str, Str.matched_group 2 str)
+      else
+        Error ("Expected a mapping of form: " ^ "'single-quoted-string' -> 'single-quoted-string'")
 
   let boolean = enum [("true", true); ("false", false)]
 
@@ -429,7 +434,7 @@ module Opts = struct
     mapping
       ~init:(fun opts -> { opts with haste_name_reducers = [] })
       ~multiple:true
-      (fun (pattern, template) -> Ok (Str.regexp pattern, template))
+      (fun (pattern, template) -> optparse_regexp pattern >>= fun pattern -> Ok (pattern, template))
       (fun opts v -> Ok { opts with haste_name_reducers = v :: opts.haste_name_reducers })
 
   let haste_paths_excludes_parser =
@@ -611,7 +616,7 @@ module Opts = struct
   let name_mapper_parser =
     mapping
       ~multiple:true
-      (fun (pattern, template) -> Ok (Str.regexp pattern, template))
+      (fun (pattern, template) -> optparse_regexp pattern >>= fun pattern -> Ok (pattern, template))
       (fun opts v ->
         let module_name_mappers = v :: opts.module_name_mappers in
         Ok { opts with module_name_mappers })
@@ -620,7 +625,8 @@ module Opts = struct
     mapping
       ~multiple:true
       (fun (file_ext, template) ->
-        Ok (Str.regexp ("^\\(.*\\)\\." ^ Str.quote file_ext ^ "$"), template))
+        optparse_regexp ("^\\(.*\\)\\." ^ Str.quote file_ext ^ "$") >>= fun pattern ->
+        Ok (pattern, template))
       (fun opts v ->
         let module_name_mappers = v :: opts.module_name_mappers in
         Ok { opts with module_name_mappers })
