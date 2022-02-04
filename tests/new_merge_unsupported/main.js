@@ -98,3 +98,49 @@ import {
 
 import { x as x_inst_rest } from './ops_on_inst_rest';
 (x_inst_rest: any);
+
+
+import {
+  x2 as objmap_x2,
+  x3 as objmap_x3,
+  x4 as objmap_x4,
+  x5 as objmap_x5,
+  x8 as objmap_x8,
+  x11 as objmap_x11,
+  x12 as objmap_x12,
+  x13 as objmap_x13,
+  x14 as objmap_x14,
+} from './ops_on_eval_objmap';
+
+(objmap_x2: any);
+(objmap_x3: any);
+(objmap_x4: any);
+(objmap_x5: any);
+(objmap_x8.__proto__: any);
+(objmap_x11: any);
+(objmap_x12: any);
+(objmap_x13: any);
+(objmap_x14: any);
+
+
+import {
+  x2 as objmapi_x2,
+  x3 as objmapi_x3,
+  x4 as objmapi_x4,
+  x5 as objmapi_x5,
+  x8 as objmapi_x8,
+  x11 as objmapi_x11,
+  x12 as objmapi_x12,
+  x13 as objmapi_x13,
+  x14 as objmapi_x14,
+} from './ops_on_eval_objmapi';
+
+(objmapi_x2: any);
+(objmapi_x3: any);
+(objmapi_x4: any);
+(objmapi_x5: any);
+(objmapi_x8.__proto__: any);
+(objmapi_x11: any);
+(objmapi_x12: any);
+(objmapi_x13: any);
+(objmapi_x14: any);

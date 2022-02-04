@@ -208,6 +208,276 @@ References:
                 ^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
+Error --------------------------------------------------------------------------------------- ops_on_eval_objmap.js:7:19
+
+Cannot use property `f` on `$ObjMap` [1] in an export position. Please provide an (alternative) annotation for property
+`f` [2]. [invalid-exported-annotation]
+
+   ops_on_eval_objmap.js:7:19
+   7| export const x2 = t.f;
+                        ^^^ [2]
+
+References:
+   ops_on_eval_objmap.js:3:10
+   3| type T = $ObjMap<{ f: number }, () => string>;
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error -------------------------------------------------------------------------------------- ops_on_eval_objmap.js:10:19
+
+Cannot use computed property on `$ObjMap` [1] in an export position. Please provide an (alternative) annotation for
+computed property [2]. [invalid-exported-annotation]
+
+   ops_on_eval_objmap.js:10:19
+   10| export const x3 = t[('': string)];
+                         ^^^^^^^^^^^^^^^ [2]
+
+References:
+   ops_on_eval_objmap.js:3:10
+    3| type T = $ObjMap<{ f: number }, () => string>;
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error -------------------------------------------------------------------------------------- ops_on_eval_objmap.js:13:19
+
+Cannot use spread on `$ObjMap` [1] in an export position. Please provide an (alternative) annotation for spread [2].
+[invalid-exported-annotation]
+
+   ops_on_eval_objmap.js:13:19
+   13| export const x4 = { ...t };
+                         ^^^^^^^^ [2]
+
+References:
+   ops_on_eval_objmap.js:3:10
+    3| type T = $ObjMap<{ f: number }, () => string>;
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error -------------------------------------------------------------------------------------- ops_on_eval_objmap.js:16:17
+
+Cannot use exact on `$ObjMap` [1] in an export position. Please provide an (alternative) annotation for exact [2].
+[invalid-exported-annotation]
+
+   ops_on_eval_objmap.js:16:17
+   16| declare var y5: $Exact<T>;
+                       ^^^^^^^^^ [2]
+
+References:
+   ops_on_eval_objmap.js:3:10
+    3| type T = $ObjMap<{ f: number }, () => string>;
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error -------------------------------------------------------------------------------------- ops_on_eval_objmap.js:20:37
+
+Cannot use prototype on `$ObjMap` [1] in an export position. Please provide an (alternative) annotation for
+prototype [2]. [invalid-exported-annotation]
+
+   ops_on_eval_objmap.js:20:37
+   20| declare export var x8: { __proto__: T };
+                                           ^ [2]
+
+References:
+   ops_on_eval_objmap.js:3:10
+    3| type T = $ObjMap<{ f: number }, () => string>;
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error -------------------------------------------------------------------------------------- ops_on_eval_objmap.js:23:20
+
+Cannot use unary not on `$ObjMap` [1] in an export position. Please provide an (alternative) annotation for unary
+not [2]. [invalid-exported-annotation]
+
+   ops_on_eval_objmap.js:23:20
+   23| export const x11 = !t;
+                          ^^ [2]
+
+References:
+   ops_on_eval_objmap.js:3:10
+    3| type T = $ObjMap<{ f: number }, () => string>;
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error -------------------------------------------------------------------------------------- ops_on_eval_objmap.js:26:18
+
+Cannot use `$KeyMirror` on `$ObjMap` [1] in an export position. Please provide an (alternative) annotation for
+`$KeyMirror` [2]. [invalid-exported-annotation]
+
+   ops_on_eval_objmap.js:26:18
+   26| declare var y12: $KeyMirror<T>;
+                        ^^^^^^^^^^^^^ [2]
+
+References:
+   ops_on_eval_objmap.js:3:10
+    3| type T = $ObjMap<{ f: number }, () => string>;
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error -------------------------------------------------------------------------------------- ops_on_eval_objmap.js:30:18
+
+Cannot use `$ObjMapConst` on `$ObjMap` [1] in an export position. Please provide an (alternative) annotation for
+`$ObjMapConst` [2]. [invalid-exported-annotation]
+
+   ops_on_eval_objmap.js:30:18
+   30| declare var y13: $ObjMapConst<T, any>;
+                        ^^^^^^^^^^^^^^^^^^^^ [2]
+
+References:
+   ops_on_eval_objmap.js:3:10
+    3| type T = $ObjMap<{ f: number }, () => string>;
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error -------------------------------------------------------------------------------------- ops_on_eval_objmap.js:34:18
+
+Cannot use key set on `$ObjMap` [1] in an export position. Please provide an (alternative) annotation for key set [2].
+[invalid-exported-annotation]
+
+   ops_on_eval_objmap.js:34:18
+   34| declare var y14: $Keys<T>;
+                        ^^^^^^^^ [2]
+
+References:
+   ops_on_eval_objmap.js:3:10
+    3| type T = $ObjMap<{ f: number }, () => string>;
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error -------------------------------------------------------------------------------------- ops_on_eval_objmapi.js:7:19
+
+Cannot use property `f` on `$ObjMapi` [1] in an export position. Please provide an (alternative) annotation for property
+`f` [2]. [invalid-exported-annotation]
+
+   ops_on_eval_objmapi.js:7:19
+   7| export const x2 = t.f;
+                        ^^^ [2]
+
+References:
+   ops_on_eval_objmapi.js:3:10
+   3| type T = $ObjMapi<{ f: number }, <K>(K) => K>;
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------- ops_on_eval_objmapi.js:10:19
+
+Cannot use computed property on `$ObjMapi` [1] in an export position. Please provide an (alternative) annotation for
+computed property [2]. [invalid-exported-annotation]
+
+   ops_on_eval_objmapi.js:10:19
+   10| export const x3 = t[('': string)];
+                         ^^^^^^^^^^^^^^^ [2]
+
+References:
+   ops_on_eval_objmapi.js:3:10
+    3| type T = $ObjMapi<{ f: number }, <K>(K) => K>;
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------- ops_on_eval_objmapi.js:13:19
+
+Cannot use spread on `$ObjMapi` [1] in an export position. Please provide an (alternative) annotation for spread [2].
+[invalid-exported-annotation]
+
+   ops_on_eval_objmapi.js:13:19
+   13| export const x4 = { ...t };
+                         ^^^^^^^^ [2]
+
+References:
+   ops_on_eval_objmapi.js:3:10
+    3| type T = $ObjMapi<{ f: number }, <K>(K) => K>;
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------- ops_on_eval_objmapi.js:16:17
+
+Cannot use exact on `$ObjMapi` [1] in an export position. Please provide an (alternative) annotation for exact [2].
+[invalid-exported-annotation]
+
+   ops_on_eval_objmapi.js:16:17
+   16| declare var y5: $Exact<T>;
+                       ^^^^^^^^^ [2]
+
+References:
+   ops_on_eval_objmapi.js:3:10
+    3| type T = $ObjMapi<{ f: number }, <K>(K) => K>;
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------- ops_on_eval_objmapi.js:20:37
+
+Cannot use prototype on `$ObjMapi` [1] in an export position. Please provide an (alternative) annotation for
+prototype [2]. [invalid-exported-annotation]
+
+   ops_on_eval_objmapi.js:20:37
+   20| declare export var x8: { __proto__: T };
+                                           ^ [2]
+
+References:
+   ops_on_eval_objmapi.js:3:10
+    3| type T = $ObjMapi<{ f: number }, <K>(K) => K>;
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------- ops_on_eval_objmapi.js:23:20
+
+Cannot use unary not on `$ObjMapi` [1] in an export position. Please provide an (alternative) annotation for unary
+not [2]. [invalid-exported-annotation]
+
+   ops_on_eval_objmapi.js:23:20
+   23| export const x11 = !t;
+                          ^^ [2]
+
+References:
+   ops_on_eval_objmapi.js:3:10
+    3| type T = $ObjMapi<{ f: number }, <K>(K) => K>;
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------- ops_on_eval_objmapi.js:26:18
+
+Cannot use `$KeyMirror` on `$ObjMapi` [1] in an export position. Please provide an (alternative) annotation for
+`$KeyMirror` [2]. [invalid-exported-annotation]
+
+   ops_on_eval_objmapi.js:26:18
+   26| declare var y12: $KeyMirror<T>;
+                        ^^^^^^^^^^^^^ [2]
+
+References:
+   ops_on_eval_objmapi.js:3:10
+    3| type T = $ObjMapi<{ f: number }, <K>(K) => K>;
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------- ops_on_eval_objmapi.js:30:18
+
+Cannot use `$ObjMapConst` on `$ObjMapi` [1] in an export position. Please provide an (alternative) annotation for
+`$ObjMapConst` [2]. [invalid-exported-annotation]
+
+   ops_on_eval_objmapi.js:30:18
+   30| declare var y13: $ObjMapConst<T, any>;
+                        ^^^^^^^^^^^^^^^^^^^^ [2]
+
+References:
+   ops_on_eval_objmapi.js:3:10
+    3| type T = $ObjMapi<{ f: number }, <K>(K) => K>;
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------- ops_on_eval_objmapi.js:34:18
+
+Cannot use key set on `$ObjMapi` [1] in an export position. Please provide an (alternative) annotation for key set [2].
+[invalid-exported-annotation]
+
+   ops_on_eval_objmapi.js:34:18
+   34| declare var y14: $Keys<T>;
+                        ^^^^^^^^ [2]
+
+References:
+   ops_on_eval_objmapi.js:3:10
+    3| type T = $ObjMapi<{ f: number }, <K>(K) => K>;
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
 Error ------------------------------------------------------------------------------------------ ops_on_inst_rest.js:5:8
 
 Cannot use rest on `C` [1] in an export position. Please provide an (alternative) annotation for rest [2].
@@ -693,4 +963,4 @@ References:
 
 
 
-Found 47 errors
+Found 65 errors
