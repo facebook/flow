@@ -169,7 +169,8 @@ let rec edits_of_changes ?(opts = Js_layout_generator.default_opts) changes =
             )
         )
     )
-    :: (loc2, Delete _) :: tl
+    :: (loc2, Delete _)
+    :: tl
     when Loc.contains new_loc (Loc.btwn loc1 loc2) ->
     edits_of_changes
       ~opts

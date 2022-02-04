@@ -25,7 +25,6 @@ module Make (M : Monoid.S) : S with type m := M.t = struct
 
   include Monad.Make (struct
     type 'a z = 'a t (* 4.02.1 doesn't have nonrec *)
-
     type 'a t = 'a z
 
     let return x = (x, M.empty)

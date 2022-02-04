@@ -149,7 +149,8 @@ type 'loc virtual_reason_desc =
   | ROpaqueType of string
   | RTypeParam of
       string * ('loc virtual_reason_desc * 'loc) * (*reason op *)
-      ('loc virtual_reason_desc * 'loc) (* reason tapp *)
+      ('loc virtual_reason_desc * 'loc)
+    (* reason tapp *)
   | RTypeof of string
   | RMethod of string option
   | RMethodCall of string option

@@ -98,7 +98,6 @@ end = struct
   }
 
   type running = running_timer ref (* The current running parent *)
-
   type finished = result
 
   (* Returns the user cpu and system cpu times *)

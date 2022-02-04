@@ -40,7 +40,6 @@ type queue
 (* must call Daemon.entry_point at start of your main *)
 val make_queue : unit -> queue
 val get_read_fd : queue -> Unix.file_descr (* can be used for 'select' *)
-
 val has_message : queue -> bool
 
 val get_message :

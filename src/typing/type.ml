@@ -607,7 +607,8 @@ module rec TypeTerm : sig
         lookup_action: lookup_action;
         ids: Properties.Set.t option;
         method_accessible: bool;
-      } (* operations on objects *)
+      }
+    (* operations on objects *)
     (* Resolves the object into which the properties are assigned *)
     | ObjAssignToT of use_op * reason * t * t * obj_assign_kind
     (* Resolves the object from which the properties are assigned *)

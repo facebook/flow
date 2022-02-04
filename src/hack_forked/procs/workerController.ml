@@ -74,7 +74,6 @@ let use_prespawned = not Sys.win32
 let max_workers = 1000
 
 type void (* an empty type *)
-
 type call_wrapper = { wrap: 'x 'b. ('x -> 'b) -> 'x -> 'b }
 
 (*****************************************************************************
