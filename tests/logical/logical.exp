@@ -29,509 +29,509 @@ References:
                              ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------ logical.js:101:12
+Error ------------------------------------------------------------------------------------------------ logical.js:123:12
 
 Cannot return `(x != null) && (x > 10)` because boolean [1] is incompatible with string [2]. [incompatible-return]
 
-   logical.js:101:12
-   101|     return x != null && x > 10;
+   logical.js:123:12
+   123|     return x != null && x > 10;
                    ^^^^^^^^^ [1]
 
 References:
-   logical.js:99:23
-    99| function logical3a(): string { // expected `: boolean`
+   logical.js:121:23
+   121| function logical3a(): string { // expected `: boolean`
                               ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------ logical.js:101:25
+Error ------------------------------------------------------------------------------------------------ logical.js:123:25
 
 Cannot return `(x != null) && (x > 10)` because boolean [1] is incompatible with string [2]. [incompatible-return]
 
-   logical.js:101:25
-   101|     return x != null && x > 10;
+   logical.js:123:25
+   123|     return x != null && x > 10;
                                 ^^^^^^ [1]
 
 References:
-   logical.js:99:23
-    99| function logical3a(): string { // expected `: boolean`
+   logical.js:121:23
+   121| function logical3a(): string { // expected `: boolean`
                               ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------ logical.js:109:12
+Error ------------------------------------------------------------------------------------------------ logical.js:131:12
 
 Cannot return `(x != null) && x` because boolean [1] is incompatible with number [2]. [incompatible-return]
 
-   logical.js:109:12
-   109|     return x != null && x;
+   logical.js:131:12
+   131|     return x != null && x;
                    ^^^^^^^^^ [1]
 
 References:
-   logical.js:107:23
-   107| function logical3b(): number { // expected `: boolean | number`
+   logical.js:129:23
+   129| function logical3b(): number { // expected `: boolean | number`
                               ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------ logical.js:117:12
+Error ------------------------------------------------------------------------------------------------ logical.js:139:12
 
 Cannot return `(x != undefined) && x` because boolean [1] is incompatible with number [2]. [incompatible-return]
 
-   logical.js:117:12
-   117|     return x != undefined && x;
+   logical.js:139:12
+   139|     return x != undefined && x;
                    ^^^^^^^^^^^^^^ [1]
 
 References:
-   logical.js:115:24
-   115| function logical3c(): ?number { // expected `: boolean | ?number`
+   logical.js:137:24
+   137| function logical3c(): ?number { // expected `: boolean | ?number`
                                ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------ logical.js:124:12
+Error ------------------------------------------------------------------------------------------------ logical.js:154:12
 
 Cannot return `x && '123'` because boolean [1] is incompatible with string [2]. [incompatible-return]
 
-   logical.js:124:12
-   124|     return x && '123';
+   logical.js:154:12
+   154|     return x && '123';
                    ^
 
 References:
-   logical.js:123:22
-   123| function logical4(x: boolean): string { // expected `: boolean | string`
+   logical.js:153:22
+   153| function logical4(x: boolean): string { // expected `: boolean | string`
                              ^^^^^^^ [1]
-   logical.js:123:32
-   123| function logical4(x: boolean): string { // expected `: boolean | string`
+   logical.js:153:32
+   153| function logical4(x: boolean): string { // expected `: boolean | string`
                                        ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------ logical.js:148:12
+Error ------------------------------------------------------------------------------------------------ logical.js:178:12
 
 Cannot return `x || 0` because boolean [1] is incompatible with string [2]. [incompatible-return]
 
-   logical.js:148:12
-   148|     return x || 0;
+   logical.js:178:12
+   178|     return x || 0;
                    ^
 
 References:
-   logical.js:147:13
-   147|     var x = true;
+   logical.js:177:13
+   177|     var x = true;
                     ^^^^ [1]
-   logical.js:146:23
-   146| function logical5c(): string { // expected `: boolean`
+   logical.js:176:23
+   176| function logical5c(): string { // expected `: boolean`
                               ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------ logical.js:176:12
+Error ------------------------------------------------------------------------------------------------ logical.js:206:12
 
 Cannot return `true || '123'` because boolean [1] is incompatible with number [2]. [incompatible-return]
 
-   logical.js:176:12
-   176|     return true || '123';
+   logical.js:206:12
+   206|     return true || '123';
                    ^^^^ [1]
 
 References:
-   logical.js:175:23
-   175| function logical6d(): number { // expected `: boolean`
+   logical.js:205:23
+   205| function logical6d(): number { // expected `: boolean`
                               ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------ logical.js:281:12
+Error ------------------------------------------------------------------------------------------------ logical.js:333:12
 
 Cannot return `x || (1 && 'foo')` because boolean [1] is incompatible with string [2]. [incompatible-return]
 
-   logical.js:281:12
-   281|     return x || (1 && 'foo');
+   logical.js:333:12
+   333|     return x || (1 && 'foo');
                    ^
 
 References:
-   logical.js:280:13
-   280|     var x = true;
+   logical.js:332:13
+   332|     var x = true;
                     ^^^^ [1]
-   logical.js:279:23
-   279| function logical8f(): string { // expected `: boolean`
+   logical.js:331:23
+   331| function logical8f(): string { // expected `: boolean`
                               ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------ logical.js:291:22
+Error ------------------------------------------------------------------------------------------------ logical.js:343:22
 
 Cannot return `x || y || false` because: [incompatible-return]
  - Either boolean [1] is incompatible with number [2].
  - Or boolean [1] is incompatible with string [3].
 
-   logical.js:291:22
-   291|     return x || y || false;
+   logical.js:343:22
+   343|     return x || y || false;
                              ^^^^^ [1]
 
 References:
-   logical.js:290:4
-   290| ): number | string { // expected `: number | string | boolean`
+   logical.js:342:4
+   342| ): number | string { // expected `: number | string | boolean`
            ^^^^^^ [2]
-   logical.js:290:13
-   290| ): number | string { // expected `: number | string | boolean`
+   logical.js:342:13
+   342| ): number | string { // expected `: number | string | boolean`
                     ^^^^^^ [3]
 
 
-Error ------------------------------------------------------------------------------------------------ logical.js:315:22
+Error ------------------------------------------------------------------------------------------------ logical.js:367:22
 
 Cannot return `x && y && false` because: [incompatible-return]
  - Either boolean [1] is incompatible with number [2].
  - Or boolean [1] is incompatible with string [3].
 
-   logical.js:315:22
-   315|     return x && y && false;
+   logical.js:367:22
+   367|     return x && y && false;
                              ^^^^^ [1]
 
 References:
-   logical.js:314:4
-   314| ): number | string { // expected `: number | string | boolean`
+   logical.js:366:4
+   366| ): number | string { // expected `: number | string | boolean`
            ^^^^^^ [2]
-   logical.js:314:13
-   314| ): number | string { // expected `: number | string | boolean`
+   logical.js:366:13
+   366| ): number | string { // expected `: number | string | boolean`
                     ^^^^^^ [3]
 
 
-Error ------------------------------------------------------------------------------------------------ logical.js:322:12
+Error ------------------------------------------------------------------------------------------------ logical.js:374:12
 
 Cannot return `false && x && y` because boolean [1] is incompatible with array type [2]. [incompatible-return]
 
-   logical.js:322:12
-   322|     return false && x && y;
+   logical.js:374:12
+   374|     return false && x && y;
                    ^^^^^ [1]
 
 References:
-   logical.js:321:44
-   321| function logical10b(x: number, y: string): Array<any> { // expected `: boolean`
+   logical.js:373:44
+   373| function logical10b(x: number, y: string): Array<any> { // expected `: boolean`
                                                    ^^^^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------ logical.js:329:12
+Error ------------------------------------------------------------------------------------------------ logical.js:381:12
 
 Cannot return `x && false && y` because number [1] is incompatible with array type [2]. [incompatible-return]
 
-   logical.js:329:12
-   329|     return x && false && y;
+   logical.js:381:12
+   381|     return x && false && y;
                    ^
 
 References:
-   logical.js:328:24
-   328| function logical10c(x: number, y: string): Array<any> { // expected `number | boolean`
+   logical.js:380:24
+   380| function logical10c(x: number, y: string): Array<any> { // expected `number | boolean`
                                ^^^^^^ [1]
-   logical.js:328:44
-   328| function logical10c(x: number, y: string): Array<any> { // expected `number | boolean`
+   logical.js:380:44
+   380| function logical10c(x: number, y: string): Array<any> { // expected `number | boolean`
                                                    ^^^^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------ logical.js:329:17
+Error ------------------------------------------------------------------------------------------------ logical.js:381:17
 
 Cannot return `x && false && y` because boolean [1] is incompatible with array type [2]. [incompatible-return]
 
-   logical.js:329:17
-   329|     return x && false && y;
+   logical.js:381:17
+   381|     return x && false && y;
                         ^^^^^ [1]
 
 References:
-   logical.js:328:44
-   328| function logical10c(x: number, y: string): Array<any> { // expected `number | boolean`
+   logical.js:380:44
+   380| function logical10c(x: number, y: string): Array<any> { // expected `number | boolean`
                                                    ^^^^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------ logical.js:348:18
+Error ------------------------------------------------------------------------------------------------ logical.js:400:18
 
 Cannot assign `y || true` to `y` because boolean [1] is incompatible with number [2]. [incompatible-type]
 
-   logical.js:348:18
-   348|         y = y || true; // expected a number
+   logical.js:400:18
+   400|         y = y || true; // expected a number
                          ^^^^ [1]
 
 References:
-   logical.js:346:24
-   346| function logical11b(y: number): number {
+   logical.js:398:24
+   398| function logical11b(y: number): number {
                                ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------ logical.js:348:18
+Error ------------------------------------------------------------------------------------------------ logical.js:400:18
 
 boolean [1] is incompatible with number [2]. [incompatible-type]
 
-   logical.js:348:18
-   348|         y = y || true; // expected a number
+   logical.js:400:18
+   400|         y = y || true; // expected a number
                          ^^^^ [1]
 
 References:
-   logical.js:346:24
-   346| function logical11b(y: number): number {
+   logical.js:398:24
+   398| function logical11b(y: number): number {
                                ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------ logical.js:363:12
+Error ------------------------------------------------------------------------------------------------ logical.js:415:12
 
 Cannot return `y` because boolean [1] is incompatible with number [2]. [incompatible-return]
 
-   logical.js:363:12
-   363|     return y;
+   logical.js:415:12
+   415|     return y;
                    ^
 
 References:
-   logical.js:361:13
-   361|         z = false;
+   logical.js:413:13
+   413|         z = false;
                     ^^^^^ [1]
-   logical.js:356:24
-   356| function logical12a(): number {
+   logical.js:408:24
+   408| function logical12a(): number {
                                ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------ logical.js:371:18
+Error ------------------------------------------------------------------------------------------------ logical.js:423:18
 
 Cannot assign `y && true` to `y` because boolean [1] is incompatible with number [2]. [incompatible-type]
 
-   logical.js:371:18
-   371|         y = y && true; // expected a number
+   logical.js:423:18
+   423|         y = y && true; // expected a number
                          ^^^^ [1]
 
 References:
-   logical.js:369:24
-   369| function logical12b(y: number): number {
+   logical.js:421:24
+   421| function logical12b(y: number): number {
                                ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------ logical.js:371:18
+Error ------------------------------------------------------------------------------------------------ logical.js:423:18
 
 boolean [1] is incompatible with number [2]. [incompatible-type]
 
-   logical.js:371:18
-   371|         y = y && true; // expected a number
+   logical.js:423:18
+   423|         y = y && true; // expected a number
                          ^^^^ [1]
 
 References:
-   logical.js:369:24
-   369| function logical12b(y: number): number {
+   logical.js:421:24
+   421| function logical12b(y: number): number {
                                ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------ logical.js:381:13
+Error ------------------------------------------------------------------------------------------------ logical.js:433:13
 
 Cannot return array literal because number [1] is incompatible with string [2] in property `x` of array element.
 [incompatible-return]
 
-   logical.js:381:13
-   381|         {x: x && "bar"},
+   logical.js:433:13
+   433|         {x: x && "bar"},
                     ^
 
 References:
-   logical.js:379:23
-   379| function logical13(x: number): Array<{x: string}> {
+   logical.js:431:23
+   431| function logical13(x: number): Array<{x: string}> {
                               ^^^^^^ [1]
-   logical.js:379:42
-   379| function logical13(x: number): Array<{x: string}> {
+   logical.js:431:42
+   431| function logical13(x: number): Array<{x: string}> {
                                                  ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------ logical.js:383:21
+Error ------------------------------------------------------------------------------------------------ logical.js:435:21
 
 Cannot return array literal because boolean [1] is incompatible with string [2] in property `x` of array element.
 [incompatible-return]
 
-   logical.js:383:21
-   383|         {x: true && false},
+   logical.js:435:21
+   435|         {x: true && false},
                             ^^^^^ [1]
 
 References:
-   logical.js:379:42
-   379| function logical13(x: number): Array<{x: string}> {
+   logical.js:431:42
+   431| function logical13(x: number): Array<{x: string}> {
                                                  ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------ logical.js:384:13
+Error ------------------------------------------------------------------------------------------------ logical.js:436:13
 
 Cannot return array literal because boolean [1] is incompatible with string [2] in property `x` of array element.
 [incompatible-return]
 
-   logical.js:384:13
-   384|         {x: false && false},
+   logical.js:436:13
+   436|         {x: false && false},
                     ^^^^^ [1]
 
 References:
-   logical.js:379:42
-   379| function logical13(x: number): Array<{x: string}> {
+   logical.js:431:42
+   431| function logical13(x: number): Array<{x: string}> {
                                                  ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------ logical.js:397:13
+Error ------------------------------------------------------------------------------------------------ logical.js:449:13
 
 Cannot return array literal because number [1] is incompatible with string [2] in property `x` of array element.
 [incompatible-return]
 
-   logical.js:397:13
-   397|         {x: x || "bar"},
+   logical.js:449:13
+   449|         {x: x || "bar"},
                     ^
 
 References:
-   logical.js:395:23
-   395| function logical14(x: number): Array<{x: string}> {
+   logical.js:447:23
+   447| function logical14(x: number): Array<{x: string}> {
                               ^^^^^^ [1]
-   logical.js:395:42
-   395| function logical14(x: number): Array<{x: string}> {
+   logical.js:447:42
+   447| function logical14(x: number): Array<{x: string}> {
                                                  ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------ logical.js:399:22
+Error ------------------------------------------------------------------------------------------------ logical.js:451:22
 
 Cannot return array literal because boolean [1] is incompatible with string [2] in property `x` of array element.
 [incompatible-return]
 
-   logical.js:399:22
-   399|         {x: false || true},
+   logical.js:451:22
+   451|         {x: false || true},
                              ^^^^ [1]
 
 References:
-   logical.js:395:42
-   395| function logical14(x: number): Array<{x: string}> {
+   logical.js:447:42
+   447| function logical14(x: number): Array<{x: string}> {
                                                  ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------ logical.js:400:13
+Error ------------------------------------------------------------------------------------------------ logical.js:452:13
 
 Cannot return array literal because boolean [1] is incompatible with string [2] in property `x` of array element.
 [incompatible-return]
 
-   logical.js:400:13
-   400|         {x: true || false},
+   logical.js:452:13
+   452|         {x: true || false},
                     ^^^^ [1]
 
 References:
-   logical.js:395:42
-   395| function logical14(x: number): Array<{x: string}> {
+   logical.js:447:42
+   447| function logical14(x: number): Array<{x: string}> {
                                                  ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------ logical.js:510:11
+Error ------------------------------------------------------------------------------------------------ logical.js:562:11
 
 Cannot return `x.y && x.z` because string [1] is incompatible with boolean [2]. [incompatible-return]
 
-   logical.js:510:11
-   510|   return (x.y && x.z); // error: x.y is a string
+   logical.js:562:11
+   562|   return (x.y && x.z); // error: x.y is a string
                   ^^^
 
 References:
-   logical.js:509:29
-   509| function logical19a(x: { y: string, z: boolean }): boolean {
+   logical.js:561:29
+   561| function logical19a(x: { y: string, z: boolean }): boolean {
                                     ^^^^^^ [1]
-   logical.js:509:52
-   509| function logical19a(x: { y: string, z: boolean }): boolean {
+   logical.js:561:52
+   561| function logical19a(x: { y: string, z: boolean }): boolean {
                                                            ^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------ logical.js:513:11
+Error ------------------------------------------------------------------------------------------------ logical.js:565:11
 
 Cannot return `x.y || x.z` because string [1] is incompatible with boolean [2]. [incompatible-return]
 
-   logical.js:513:11
-   513|   return (x.y || x.z); // error: x.y is a string
+   logical.js:565:11
+   565|   return (x.y || x.z); // error: x.y is a string
                   ^^^
 
 References:
-   logical.js:512:29
-   512| function logical19b(x: { y: string, z: boolean }): boolean {
+   logical.js:564:29
+   564| function logical19b(x: { y: string, z: boolean }): boolean {
                                     ^^^^^^ [1]
-   logical.js:512:52
-   512| function logical19b(x: { y: string, z: boolean }): boolean {
+   logical.js:564:52
+   564| function logical19b(x: { y: string, z: boolean }): boolean {
                                                            ^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------ logical.js:523:10
+Error ------------------------------------------------------------------------------------------------ logical.js:575:10
 
 Cannot cast `x && x.y` to number because string [1] is incompatible with number [2]. [incompatible-cast]
 
-   logical.js:523:10
-   523|   ((x && x.y): number); // error, x.y is a string (no error about x)
+   logical.js:575:10
+   575|   ((x && x.y): number); // error, x.y is a string (no error about x)
                  ^^^
 
 References:
-   logical.js:522:27
-   522| function logical21(x: {y: string} & {}): void {
+   logical.js:574:27
+   574| function logical21(x: {y: string} & {}): void {
                                   ^^^^^^ [1]
-   logical.js:523:16
-   523|   ((x && x.y): number); // error, x.y is a string (no error about x)
+   logical.js:575:16
+   575|   ((x && x.y): number); // error, x.y is a string (no error about x)
                        ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------- logical.js:531:7
+Error ------------------------------------------------------------------------------------------------- logical.js:583:7
 
 Cannot cast `a ?? false` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
 
-   logical.js:531:7
-   531|     ((a ?? false): empty); // should error on `a` and `false`
+   logical.js:583:7
+   583|     ((a ?? false): empty); // should error on `a` and `false`
               ^
 
 References:
-   logical.js:529:20
-   529|     declare var a: indirection1 | indirection2;
+   logical.js:581:20
+   581|     declare var a: indirection1 | indirection2;
                            ^^^^^^^^^^^^ [1]
-   logical.js:531:20
-   531|     ((a ?? false): empty); // should error on `a` and `false`
+   logical.js:583:20
+   583|     ((a ?? false): empty); // should error on `a` and `false`
                            ^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------- logical.js:531:7
+Error ------------------------------------------------------------------------------------------------- logical.js:583:7
 
 Cannot cast `a ?? false` to empty because string [1] is incompatible with empty [2]. [incompatible-cast]
 
-   logical.js:531:7
-   531|     ((a ?? false): empty); // should error on `a` and `false`
+   logical.js:583:7
+   583|     ((a ?? false): empty); // should error on `a` and `false`
               ^
 
 References:
-   logical.js:529:35
-   529|     declare var a: indirection1 | indirection2;
+   logical.js:581:35
+   581|     declare var a: indirection1 | indirection2;
                                           ^^^^^^^^^^^^ [1]
-   logical.js:531:20
-   531|     ((a ?? false): empty); // should error on `a` and `false`
+   logical.js:583:20
+   583|     ((a ?? false): empty); // should error on `a` and `false`
                            ^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------ logical.js:531:12
+Error ------------------------------------------------------------------------------------------------ logical.js:583:12
 
 Cannot cast `a ?? false` to empty because boolean [1] is incompatible with empty [2]. [incompatible-cast]
 
-   logical.js:531:12
-   531|     ((a ?? false): empty); // should error on `a` and `false`
+   logical.js:583:12
+   583|     ((a ?? false): empty); // should error on `a` and `false`
                    ^^^^^ [1]
 
 References:
-   logical.js:531:20
-   531|     ((a ?? false): empty); // should error on `a` and `false`
+   logical.js:583:20
+   583|     ((a ?? false): empty); // should error on `a` and `false`
                            ^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------- logical.js:537:7
+Error ------------------------------------------------------------------------------------------------- logical.js:589:7
 
 Cannot cast `b && false` to empty because number literal `0` [1] is incompatible with empty [2]. [incompatible-cast]
 
-   logical.js:537:7
-   537|     ((b && false): empty); // should only error on `b`
+   logical.js:589:7
+   589|     ((b && false): empty); // should only error on `b`
               ^
 
 References:
-   logical.js:535:20
-   535|     declare var b: indirection3 | indirection4;
+   logical.js:587:20
+   587|     declare var b: indirection3 | indirection4;
                            ^^^^^^^^^^^^ [1]
-   logical.js:537:20
-   537|     ((b && false): empty); // should only error on `b`
+   logical.js:589:20
+   589|     ((b && false): empty); // should only error on `b`
                            ^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------- logical.js:537:7
+Error ------------------------------------------------------------------------------------------------- logical.js:589:7
 
 Cannot cast `b && false` to empty because empty string [1] is incompatible with empty [2]. [incompatible-cast]
 
-   logical.js:537:7
-   537|     ((b && false): empty); // should only error on `b`
+   logical.js:589:7
+   589|     ((b && false): empty); // should only error on `b`
               ^
 
 References:
-   logical.js:535:35
-   535|     declare var b: indirection3 | indirection4;
+   logical.js:587:35
+   587|     declare var b: indirection3 | indirection4;
                                           ^^^^^^^^^^^^ [1]
-   logical.js:537:20
-   537|     ((b && false): empty); // should only error on `b`
+   logical.js:589:20
+   589|     ((b && false): empty); // should only error on `b`
                            ^^^^^ [2]
 
 

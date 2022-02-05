@@ -33,3 +33,11 @@ function refinement(x: mixed): mixed {
 function g(x: any): string {
   return x ?? 1;
 }
+
+function h(x: {}): {} {
+  return x ?? 1;
+}
+
+function i(x: {||}): {||} {
+  return x ?? 1;
+}

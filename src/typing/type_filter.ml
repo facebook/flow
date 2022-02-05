@@ -113,6 +113,7 @@ let rec not_exists t =
   | DefT (r, trust, BoolT None) -> DefT (r, trust, BoolT (Some false))
   | DefT (r, trust, StrT AnyLiteral) -> DefT (r, trust, StrT (Literal (None, OrdinaryName "")))
   | DefT (r, trust, NumT AnyLiteral) -> DefT (r, trust, NumT (Literal (None, (0., "0"))))
+  | ExactT (_, t) -> not_exists t
   (* an intersection passes through iff all of its members pass through *)
   | IntersectionT (r, rep) -> recurse_into_intersection not_exists (r, InterRep.members rep)
   (* things that don't track truthiness pass through *)

@@ -94,6 +94,28 @@ function logical2k(x: Function): string {
 }
 
 /**
+ * A literal on the left side of &&
+ */
+function logical2l(x: {}): string {
+    return x && 'foo';
+}
+
+/**
+ * A literal on the left side of &&
+ */
+function logical2m(x: {||}): string {
+    return x && 'foo';
+}
+
+/**
+ * A literal on the left side of &&
+ * We allow `$Exact<void>`
+ */
+function logical2n(x: $Exact<void>): void | string {
+    return x && 'foo';
+}
+
+/**
  * An expression on the left side of &&
  */
 function logical3a(): string { // expected `: boolean`
@@ -115,6 +137,14 @@ function logical3b(): number { // expected `: boolean | number`
 function logical3c(): ?number { // expected `: boolean | ?number`
     var x: ?number = null;
     return x != undefined && x;
+}
+
+/**
+ * Usage of `$Exact` on non-literal.
+ * Could be falsey or not.
+ */
+function logical3d<T: void | {||}>(x: $Exact<T>): $Exact<T> | string {
+    return x && 'foo';
 }
 
 /**
@@ -188,6 +218,28 @@ function logical6e(): string {
  */
 function logical6f(): number {
     return 123 || 'foo';
+}
+
+/**
+ * A literal on the left side of ||
+ */
+function logical6g(x: {}): {} {
+    return x || 'foo';
+}
+
+/**
+ * A literal on the left side of ||
+ */
+function logical6h(x: {||}): {||} {
+    return x || 'foo';
+}
+
+/**
+ * A literal on the left side of ||
+ * We allow `$Exact<void>`
+ */
+function logical6i(x: $Exact<void>): string {
+    return x || 'foo';
 }
 
 /**
