@@ -219,21 +219,69 @@ let read_exports file_addr : Exports.t =
   let deserialize x = Marshal.from_string x 0 in
   get_file_exports file_addr |> read_exports |> deserialize
 
-module ASTCache = SharedMem.LocalCache (struct
-  type key = File_key.t
+module Reader_cache : sig
+  val get_ast : File_key.t -> (Loc.t, Loc.t) Flow_ast.Program.t option
 
-  type value = (Loc.t, Loc.t) Flow_ast.Program.t
+  val add_ast : File_key.t -> (Loc.t, Loc.t) Flow_ast.Program.t -> unit
 
-  let capacity = 1000
-end)
+  val get_aloc_table : File_key.t -> ALoc.table option
 
-module ALocTableCache = SharedMem.LocalCache (struct
-  type key = File_key.t
+  val add_aloc_table : File_key.t -> ALoc.table -> unit
 
-  type value = ALoc.table
+  val remove_batch : FilenameSet.t -> unit
+end = struct
+  module ASTCache = SharedMem.LocalCache (struct
+    type key = File_key.t
 
-  let capacity = 1000
-end)
+    type value = (Loc.t, Loc.t) Flow_ast.Program.t
+
+    let capacity = 1000
+  end)
+
+  module ALocTableCache = SharedMem.LocalCache (struct
+    type key = File_key.t
+
+    type value = ALoc.table
+
+    let capacity = 1000
+  end)
+
+  let get_ast = ASTCache.get
+
+  let add_ast = ASTCache.add
+
+  let get_aloc_table = ALocTableCache.get
+
+  let add_aloc_table = ALocTableCache.add
+
+  let remove file =
+    ASTCache.remove file;
+    ALocTableCache.remove file
+
+  let remove_batch files = FilenameSet.iter remove files
+end
+
+module Mutator_cache : sig
+  val get_aloc_table : File_key.t -> ALoc.table option
+
+  val add_aloc_table : File_key.t -> ALoc.table -> unit
+
+  val clear : unit -> unit
+end = struct
+  module ALocTableCache = SharedMem.LocalCache (struct
+    type key = File_key.t
+
+    type value = ALoc.table
+
+    let capacity = 1000
+  end)
+
+  let get_aloc_table = ALocTableCache.get
+
+  let add_aloc_table = ALocTableCache.add
+
+  let clear = ALocTableCache.clear
+end
 
 (* Groups operations on the multiple heaps that need to stay in sync *)
 module ParsingHeaps = struct
@@ -245,22 +293,12 @@ module ParsingHeaps = struct
   let add_unparsed file hash module_name =
     WorkerCancel.with_no_cancellations (fun () -> add_unparsed_file file hash module_name)
 
-  let oldify_batch files =
-    WorkerCancel.with_no_cancellations (fun () ->
-        FileHeap.oldify_batch files;
-        FilenameSet.iter ASTCache.remove files;
-        FilenameSet.iter ALocTableCache.remove files
-    )
+  let oldify_batch files = WorkerCancel.with_no_cancellations (fun () -> FileHeap.oldify_batch files)
 
   let remove_old_batch files =
     WorkerCancel.with_no_cancellations (fun () -> FileHeap.remove_old_batch files)
 
-  let revive_batch files =
-    WorkerCancel.with_no_cancellations (fun () ->
-        FileHeap.revive_batch files;
-        FilenameSet.iter ASTCache.remove files;
-        FilenameSet.iter ALocTableCache.remove files
-    )
+  let revive_batch files = WorkerCancel.with_no_cancellations (fun () -> FileHeap.revive_batch files)
 end
 
 module type READER = sig
@@ -354,12 +392,12 @@ module Mutator_reader = struct
     read_ast file addr
 
   let get_aloc_table ~reader file =
-    match ALocTableCache.get file with
+    match Mutator_cache.get_aloc_table file with
     | Some _ as cached -> cached
     | None ->
       let* addr = get_checked_file_addr ~reader file in
       let* aloc_table = read_aloc_table file addr in
-      ALocTableCache.add file aloc_table;
+      Mutator_cache.add_aloc_table file aloc_table;
       Some aloc_table
 
   let get_docblock ~reader file =
@@ -412,12 +450,12 @@ module Mutator_reader = struct
     read_ast_unsafe file addr
 
   let get_aloc_table_unsafe ~reader file =
-    match ALocTableCache.get file with
+    match Mutator_cache.get_aloc_table file with
     | Some aloc_table -> aloc_table
     | None ->
       let addr = get_checked_file_addr_unsafe ~reader file in
       let aloc_table = read_aloc_table_unsafe file addr in
-      ALocTableCache.add file aloc_table;
+      Mutator_cache.add_aloc_table file aloc_table;
       aloc_table
 
   let get_docblock_unsafe ~reader file =
@@ -493,7 +531,10 @@ end = struct
   let commit () =
     WorkerCancel.with_no_cancellations (fun () ->
         Hh_logger.debug "Committing parsing heaps";
-        ParsingHeaps.remove_old_batch !currently_oldified_files;
+        let files = !currently_oldified_files in
+        Mutator_cache.clear ();
+        Reader_cache.remove_batch files;
+        ParsingHeaps.remove_old_batch files;
         currently_oldified_files := FilenameSet.empty
     );
     Lwt.return_unit
@@ -501,7 +542,9 @@ end = struct
   let rollback () =
     WorkerCancel.with_no_cancellations (fun () ->
         Hh_logger.debug "Rolling back parsing heaps";
-        ParsingHeaps.revive_batch !currently_oldified_files;
+        let files = !currently_oldified_files in
+        Mutator_cache.clear ();
+        ParsingHeaps.revive_batch files;
         currently_oldified_files := FilenameSet.empty
     );
     Lwt.return_unit
@@ -556,30 +599,22 @@ module Reader : READER with type reader = State_reader.t = struct
     | Some addr -> Heap.get_file_ast addr |> Heap.is_some
 
   let get_ast ~reader key =
-    if should_use_oldified key then
+    match Reader_cache.get_ast key with
+    | Some _ as cached -> cached
+    | None ->
       let* addr = get_checked_file_addr ~reader key in
-      read_ast key addr
-    else
-      match ASTCache.get key with
-      | Some _ as cached -> cached
-      | None ->
-        let* addr = get_checked_file_addr ~reader key in
-        let* ast = read_ast key addr in
-        ASTCache.add key ast;
-        Some ast
+      let* ast = read_ast key addr in
+      Reader_cache.add_ast key ast;
+      Some ast
 
   let get_aloc_table ~reader file =
-    if should_use_oldified file then
+    match Reader_cache.get_aloc_table file with
+    | Some _ as cached -> cached
+    | None ->
       let* addr = get_checked_file_addr ~reader file in
-      read_aloc_table file addr
-    else
-      match ALocTableCache.get file with
-      | Some _ as cached -> cached
-      | None ->
-        let* addr = get_checked_file_addr ~reader file in
-        let* aloc_table = read_aloc_table file addr in
-        ALocTableCache.add file aloc_table;
-        Some aloc_table
+      let* aloc_table = read_aloc_table file addr in
+      Reader_cache.add_aloc_table file aloc_table;
+      Some aloc_table
 
   let get_docblock ~reader key =
     let* addr = get_checked_file_addr ~reader key in
@@ -624,17 +659,13 @@ module Reader : READER with type reader = State_reader.t = struct
     read_ast_unsafe file addr
 
   let get_aloc_table_unsafe ~reader file =
-    if should_use_oldified file then
+    match Reader_cache.get_aloc_table file with
+    | Some aloc_table -> aloc_table
+    | None ->
       let addr = get_checked_file_addr_unsafe ~reader file in
-      read_aloc_table_unsafe file addr
-    else
-      match ALocTableCache.get file with
-      | Some aloc_table -> aloc_table
-      | None ->
-        let addr = get_checked_file_addr_unsafe ~reader file in
-        let aloc_table = read_aloc_table_unsafe file addr in
-        ALocTableCache.add file aloc_table;
-        aloc_table
+      let aloc_table = read_aloc_table_unsafe file addr in
+      Reader_cache.add_aloc_table file aloc_table;
+      aloc_table
 
   let get_docblock_unsafe ~reader file =
     let addr = get_checked_file_addr_unsafe ~reader file in
