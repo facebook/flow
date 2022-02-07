@@ -1057,15 +1057,6 @@ struct
       )
     (*******************************************************)
     | (switch_loc, Switch { Switch.discriminant; cases; comments }) ->
-      (* add default if absent *)
-      let (cases, added_default) =
-        Switch.Case.(
-          if List.exists (fun (_, { test; _ }) -> test = None) cases then
-            (cases, false)
-          else
-            (cases @ [(switch_loc, { test = None; consequent = []; comments = None })], true)
-        )
-      in
       (* typecheck discriminant *)
       let discriminant_ast = expression cx ~hint:None discriminant in
       let exhaustive_check_incomplete_out =
@@ -1103,12 +1094,12 @@ struct
             Some state
           in
           (* traverse case list, get list of control flow exits and list of ASTs *)
-          let (exits_rev, cases_ast_rev, switch_state, fallthrough_case) =
+          let (exits_rev, cases_ast_rev, switch_state, fallthrough_case, has_default) =
             cases
             |> Base.List.fold_left
-                 ~init:([], [], None, None)
+                 ~init:([], [], None, None, false)
                  ~f:(fun
-                      (exits, cases_ast, switch_state, fallthrough_case)
+                      (exits, cases_ast, switch_state, fallthrough_case, has_default)
                       (loc, { Switch.Case.test; consequent; comments })
                     ->
                    (* compute predicates implied by case expr or default *)
@@ -1165,18 +1156,6 @@ struct
                          Toplevels.toplevels statement cx consequent
                      )
                    in
-                   if
-                     added_default
-                     && Base.Option.is_none test
-                     && Base.Option.is_none fallthrough_case
-                   then
-                     Env.init_let
-                       cx
-                       ~use_op:unknown_use
-                       (internal_name "maybe_exhaustively_checked")
-                       ~has_anno:false
-                       exhaustive_check_incomplete_out
-                       (loc_of_t exhaustive_check_incomplete_out);
                    let break_opt = Abnormal.swap_saved (Abnormal.Break None) save_break in
                    (* restore ambient changes and save case writes *)
                    let case_writes =
@@ -1222,19 +1201,43 @@ struct
                      (loc, { Switch.Case.test = test_ast; consequent = consequent_ast; comments })
                      :: cases_ast,
                      switch_state,
-                     fallthrough_case
+                     fallthrough_case,
+                     has_default || Base.Option.is_none test
                    )
                )
           in
-          let cases_ast =
-            List.(
-              if added_default then
-                cases_ast_rev |> tl |> rev
-              else
-                rev cases_ast_rev
-            )
-          in
+          let cases_ast = List.rev cases_ast_rev in
           let exits = List.rev exits_rev in
+          (* If no default was present, record a write to maybe_exhaustively_checked and then update
+           * the switch state to account for this write in the total/partial writes. We need to also
+           * merge in the fallthrough case if one existed. *)
+          let (switch_state, fallthrough_case) =
+            if not has_default then (
+              let case_env = Env.clone_env case_start_env in
+              Env.update_env switch_loc case_env;
+              let save_changes = Changeset.Global.clear () in
+              Base.Option.iter fallthrough_case ~f:(fun (env, writes, refis, _) ->
+                  let changes = Changeset.union writes refis in
+                  Env.merge_env cx switch_loc (case_env, case_env, env) changes
+              );
+              if Base.Option.is_none fallthrough_case then
+                Env.init_let
+                  cx
+                  ~use_op:unknown_use
+                  (internal_name "maybe_exhaustively_checked")
+                  ~has_anno:false
+                  exhaustive_check_incomplete_out
+                  (loc_of_t exhaustive_check_incomplete_out);
+              let case_writes = Changeset.include_writes save_changes |> Changeset.Global.merge in
+              (* If we handle the fallthrough case explicitly here then there is no need to merge
+               * in those changes a second time. Instead, we set the fallthrough_case to None *)
+              ( update_switch_state switch_state (case_env, case_writes, Changeset.empty, switch_loc),
+                None
+              )
+            ) else
+              (switch_state, fallthrough_case)
+          in
+
           (* if last case fell out, update terminal switch state with it *)
           let switch_state =
             Base.Option.fold ~init:switch_state fallthrough_case ~f:update_switch_state
@@ -1281,12 +1284,15 @@ struct
                 (* the new case exits differently from previous ones - fail *)
                 None
             in
-            loop (None, false, case_exits)
+            if has_default then
+              loop (None, false, case_exits)
+            else
+              None
           in
           let enum_exhaustive_check = enum_exhaustive_check_of_switch_cases cases_ast in
           let ((_, discriminant_t), _) = discriminant_ast in
           let discriminant_after_check =
-            if added_default then
+            if not has_default then
               let refinement_key = Refinement.key ~allow_optional:true discriminant in
               Env.discriminant_after_negated_cases cx switch_loc refinement_key discriminant
             else
