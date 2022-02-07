@@ -944,18 +944,18 @@ module NewAPI = struct
       Prefer using interfaces based on the `chunk` APIs, which ensure that the
       destination has been allocated. Also prefer higher-level APIs below. *)
 
-  external unsafe_read_int8 : buf -> int -> int = "%caml_ba_unsafe_ref_1"
+  external buf_read_int8 : buf -> int -> int = "%caml_ba_ref_1"
 
-  external read_int64 : buf -> int -> int64 = "%caml_bigstring_get64"
+  external buf_write_int8 : buf -> int -> int -> unit = "%caml_ba_set_1"
+
+  external buf_read_int64 : buf -> int -> int64 = "%caml_bigstring_get64"
+
+  external buf_write_int64 : buf -> int -> int64 -> unit = "%caml_bigstring_set64"
 
   (* Read a string from the heap at the specified address with the specified
    * size (in words). This read is not bounds checked or type checked; caller
    * must ensure that the given destination contains string data. *)
   external unsafe_read_string : _ addr -> int -> string = "hh_read_string"
-
-  external unsafe_write_int8 : buf -> int -> int -> unit = "%caml_ba_unsafe_set_1"
-
-  external unsafe_write_int64 : buf -> int -> int64 -> unit = "%caml_bigstring_set64u"
 
   (* Write a string at the specified address in the heap. This write is not
    * bounds checked; caller must ensure the given destination has already been
@@ -977,10 +977,9 @@ module NewAPI = struct
    * internal use of null should be hidden from callers of this module. *)
   let null_addr = 0
 
-  (* Write an address at a specified address in the heap. This write is not
-   * bounds checked; caller must ensure the given destination has already been
-   * allocated. *)
-  let unsafe_write_addr_at heap dst addr = unsafe_write_int64 heap dst (Int64.of_int addr)
+  (* Write an address at a specified address in the heap. The caller must ensure
+   * the given destination has already been allocated. *)
+  let unsafe_write_addr_at heap dst addr = buf_write_int64 heap dst (Int64.of_int addr)
 
   (* Write an address into the given chunk and advance the chunk address. This
    * write is not bounds checked; caller must ensure the given destination has
@@ -991,7 +990,7 @@ module NewAPI = struct
 
   (* Read an address from the heap. *)
   let read_addr heap addr =
-    let addr64 = read_int64 heap addr in
+    let addr64 = buf_read_int64 heap addr in
     (* double-check that the data looks like an address *)
     assert (Int64.logand addr64 1L = 0L);
     Int64.to_int addr64
@@ -1002,9 +1001,8 @@ module NewAPI = struct
 
   let with_header_size f x = header_size + f x
 
-  (* Write a header at a specified address in the heap. This write is not
-   * bounds checked; caller must ensure the given destination has already been
-   * allocated.
+  (* Write a header at a specified address in the heap. The caller must ensure
+   * the given destination has already been allocated.
    *
    * The low bytes of the header includes a 6-bit tag and 2 GC bits, initially
    * 0b01, or "white." See hh_shared.c for more about the GC. The size of the
@@ -1015,7 +1013,7 @@ module NewAPI = struct
     let ( lsl ) = Int64.shift_left in
     let ( lor ) = Int64.logor in
     let hd = (obj_size lsl 8) lor (tag lsl 2) lor 1L in
-    unsafe_write_int64 heap dst hd
+    buf_write_int64 heap dst hd
 
   (* Consume space in the chunk for the object described by the given header,
    * write header, advance chunk address, and return address to the header. This
@@ -1064,7 +1062,7 @@ module NewAPI = struct
     let ( lsl ) = Int64.shift_left in
     let ( lor ) = Int64.logor in
     let hd = (obj_size lsl 36) lor (decompress_capacity lsl 8) lor (tag lsl 2) lor 1L in
-    unsafe_write_int64 heap dst hd
+    buf_write_int64 heap dst hd
 
   (* See `write_header` above *)
   let write_serialized_header chunk tag obj_size decompress_capacity =
@@ -1079,7 +1077,7 @@ module NewAPI = struct
   (* Read a header from the heap. The low 2 bits of the header are reserved for
    * GC and not used in OCaml. *)
   let read_header heap addr =
-    let hd64 = read_int64 heap addr in
+    let hd64 = buf_read_int64 heap addr in
     (* Double-check that the data looks like a header. All reachable headers
      * will have the lsb set. *)
     assert (Int64.(logand hd64 1L = 1L));
@@ -1129,14 +1127,14 @@ module NewAPI = struct
   let write_int64 chunk n =
     let addr = write_header chunk Int64_tag int64_size in
     let data_addr = chunk.next_addr in
-    unsafe_write_int64 chunk.heap data_addr n;
+    buf_write_int64 chunk.heap data_addr n;
     chunk.next_addr <- addr_offset data_addr int64_size;
     addr
 
   let read_int64 addr =
     let heap = get_heap () in
     let _ = read_header_checked heap Int64_tag addr in
-    read_int64 heap (addr_offset addr header_size)
+    buf_read_int64 heap (addr_offset addr header_size)
 
   (** Address tables *)
 
@@ -1217,7 +1215,7 @@ module NewAPI = struct
       let addr = write_serialized_header chunk tag compressed_wsize decompress_capacity in
       unsafe_write_bytes_at chunk.next_addr compressed ~pos:0 ~len:compressed_bsize;
       let offset_index = bsize_wsize compressed_wsize - 1 in
-      unsafe_write_int8 chunk.heap (chunk.next_addr + offset_index) (offset_index - compressed_bsize);
+      buf_write_int8 chunk.heap (chunk.next_addr + offset_index) (offset_index - compressed_bsize);
       chunk.next_addr <- addr_offset chunk.next_addr compressed_wsize;
       addr
     in
@@ -1229,7 +1227,7 @@ module NewAPI = struct
     let compressed_wsize = hd lsr 34 in
     let offset_index = bsize_wsize compressed_wsize - 1 in
     let compressed_bsize =
-      offset_index - unsafe_read_int8 heap (addr_offset addr header_size + offset_index)
+      offset_index - buf_read_int8 heap (addr_offset addr header_size + offset_index)
     in
     let buf = Bigarray.Array1.sub heap (addr_offset addr header_size) compressed_bsize in
     let decompress_capacity = bsize_wsize ((hd lsr 6) land 0xFFFFFFF) in
@@ -1279,7 +1277,7 @@ module NewAPI = struct
     let size = type_sig_size bsize in
     let addr = write_header chunk Type_sig_tag size in
     let offset_index = bsize_wsize size - 1 in
-    unsafe_write_int8 chunk.heap (addr_offset addr header_size + offset_index) (offset_index - bsize);
+    buf_write_int8 chunk.heap (addr_offset addr header_size + offset_index) (offset_index - bsize);
     let buf = Bigarray.Array1.sub chunk.heap (addr_offset addr header_size) bsize in
     f buf;
     chunk.next_addr <- addr_offset chunk.next_addr size;
@@ -1289,9 +1287,7 @@ module NewAPI = struct
     let heap = get_heap () in
     let hd = read_header_checked heap Type_sig_tag addr in
     let offset_index = bsize_wsize (obj_size hd) - 1 in
-    let bsize =
-      offset_index - unsafe_read_int8 heap (addr_offset addr header_size + offset_index)
-    in
+    let bsize = offset_index - buf_read_int8 heap (addr_offset addr header_size + offset_index) in
     Bigarray.Array1.sub heap (addr_offset addr header_size) bsize
 
   let read_type_sig addr f = f (type_sig_buf addr)
