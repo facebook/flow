@@ -217,6 +217,11 @@ typedef struct {
    * monotonically until compaction, when all free space is reclaimed. */
   uintnat free_bsize;
 
+  /* Transaction counter. Entities being written by the current transaction will
+   * have an entity version >= this counter. Committed entities will have a
+   * version < this counter. */
+  intnat next_version;
+
   /* Logging level for shared memory statistics
    * 0 = nothing
    * 1 = log totals, averages, min, max bytes marshalled and unmarshalled
@@ -283,10 +288,15 @@ typedef uintnat hh_header_t;
 typedef uintnat hh_tag_t;
 
 // Keep these in sync with "tag" type definition in sharedMem.ml
-#define Heap_string_tag 3
-#define Serialized_tag 8
+#define Entity_tag 0
+#define Heap_string_tag 4
+#define Serialized_tag 9
 
 static _Bool should_scan(hh_tag_t tag) {
+  // The zero tag represents "entities" which need to be handled specially.
+  // Callers to this function should first check for 0.
+  assert(tag != Entity_tag);
+
   // By convention, only tags below Heap_string_tag contain pointers. We can
   // exploit this fact to reduce pointer finding to a single branch.
   //
@@ -430,6 +440,10 @@ static uintnat roots_ptr = 0;
 // Holds the current position of the sweep phase between slices.
 static addr_t sweep_ptr = NULL_ADDR;
 
+// Holds the value `info->next_version` at the moment when marking begins. We
+// use this value to detect unreachable versioned data.
+static intnat gc_version_threshold = 0;
+
 /*****************************************************************************/
 /* Globals */
 /*****************************************************************************/
@@ -483,6 +497,21 @@ CAMLprim value hh_log_level(value unit) {
   CAMLparam1(unit);
   assert(info != NULL);
   CAMLreturn(Val_long(info->log_level));
+}
+
+CAMLprim value hh_next_version(value unit) {
+  intnat v = 0;
+  if (info) {
+    v = info->next_version;
+  }
+  return Val_long(v);
+}
+
+CAMLprim value hh_commit_transaction(value unit) {
+  CAMLparam1(unit);
+  assert(info != NULL);
+  info->next_version += 2;
+  CAMLreturn(Val_unit);
 }
 
 CAMLprim value hh_hash_stats(value unit) {
@@ -961,6 +990,7 @@ CAMLprim value hh_start_cycle(value unit) {
   gc_end = info->heap;
   roots_ptr = 0;
   sweep_ptr = info->heap_init;
+  gc_version_threshold = info->next_version;
   info->gc_phase = Phase_mark;
   CAMLreturn(Val_unit);
 }
@@ -1032,6 +1062,26 @@ static inline void mark_slice_darken(addr_t addr) {
   }
 }
 
+// Entities have a committed value and potentially a "latest" value which is
+// being written by the current transaction. There are two cases:
+//
+// 1. entity_version < gc_version_threshold
+//
+//    The data at `entity_version & 1` is the committed value and is reachable.
+//    The other slot is unreachable.
+//
+// 2. entity_version >= gc_version_threshold
+//
+//    The data at `entity_version & 1` is the latest value and is reachable. The
+//    other slot is the committed and is also reachable.
+static void mark_entity(addr_t v) {
+  intnat entity_version = Deref(Obj_field(v, 2));
+  mark_slice_darken(Deref(Obj_field(v, entity_version & 1)));
+  if (entity_version >= gc_version_threshold) {
+    mark_slice_darken(Deref(Obj_field(v, ~entity_version & 1)));
+  }
+}
+
 // Perform a bounded amount of marking work, incrementally. During the marking
 // phase, this function is called repeatedly until marking is complete. Once
 // complete, this function will transition to the sweep phase.
@@ -1073,7 +1123,11 @@ CAMLprim value hh_mark_slice(value work_val) {
       hd = Deref(v);
       tag = Obj_tag(hd);
       size = Obj_wosize_tag(hd, tag);
-      if (should_scan(tag)) {
+      if (tag == Entity_tag) {
+        mark_entity(v);
+        v = NULL_ADDR;
+        start = 0;
+      } else if (should_scan(tag)) {
         // Avoid scanning large objects all at once
         end = start + work;
         if (size < end) {
@@ -1233,14 +1287,25 @@ static void gc_thread(addr_t p) {
   Deref(q) = p;
 }
 
+// See comment above `mark_entity`
+static void gc_scan_entity(addr_t v) {
+  intnat entity_version = Deref(Obj_field(v, 2));
+  gc_thread(Obj_field(v, entity_version & 1));
+  if (entity_version >= gc_version_threshold) {
+    gc_thread(Obj_field(v, ~entity_version & 1));
+  }
+}
+
 // As we walk the heap, we must be sure to thread every pointer to live data, as
 // any live object may be relocated.
-static void gc_scan(addr_t addr) {
-  hh_header_t hd = Deref(addr);
+static void gc_scan(addr_t v) {
+  hh_header_t hd = Deref(v);
   hh_tag_t tag = Obj_tag(hd);
-  if (should_scan(tag)) {
+  if (tag == Entity_tag) {
+    gc_scan_entity(v);
+  } else if (should_scan(tag)) {
     for (int i = 0; i < Obj_wosize_tag(hd, tag); i++) {
-      gc_thread(Obj_field(addr, i));
+      gc_thread(Obj_field(v, i));
     }
   }
 }
@@ -1331,6 +1396,7 @@ CAMLprim value hh_compact(value unit) {
   // future collections can free the space if the object becomes unreachable.
   src = info->heap_init;
   dst = info->heap_init;
+  intnat next_version = info->next_version;
   while (src < heap_ptr) {
     hh_header_t hd = Deref(src);
     intnat size;
@@ -1340,7 +1406,27 @@ CAMLprim value hh_compact(value unit) {
       gc_update(src, dst);
       hd = Deref(src);
       size = Obj_bhsize(hd);
-      memmove(Ptr_of_addr(dst), Ptr_of_addr(src), size);
+      if (Obj_tag(hd) == Entity_tag) {
+        // Move entities manually, resetting the entity version to 0 and writing
+        // the previous entity data to the correct offset. If the entity version
+        // is >= the next version, that means we're compacting after a canceled
+        // recheck, so we must preserve the committed and latest data.
+        intnat v = Deref(Obj_field(src, 2));
+        addr_t data0 = Deref(Obj_field(src, v & 1));
+        addr_t data1 = NULL_ADDR;
+        if (v >= next_version) {
+          data1 = Deref(Obj_field(src, ~v & 1));
+          v = 2;
+        } else {
+          v = 0;
+        }
+        Deref(dst) = hd;
+        Deref(Obj_field(dst, 0)) = data0;
+        Deref(Obj_field(dst, 1)) = data1;
+        Deref(Obj_field(dst, 2)) = v;
+      } else {
+        memmove(Ptr_of_addr(dst), Ptr_of_addr(src), size);
+      }
       dst += size;
     }
     src += size;
@@ -1361,6 +1447,10 @@ CAMLprim value hh_compact(value unit) {
   gc_end = dst;
 
   info->free_bsize = 0;
+
+  // All live entities have been reset to version 0, so we can also reset the
+  // global version counter.
+  info->next_version = 2;
 
   CAMLreturn(Val_unit);
 }

@@ -31,17 +31,18 @@ type _ addr = int
  * of object headers. Any changes made here must be kept in sync with
  * hh_shared.c -- e.g., the should_scan function. *)
 type tag =
+  | Entity_tag (* 0 *)
   | Addr_tbl_tag
   | Checked_file_tag
   | Unparsed_file_tag
   (* tags defined below this point are scanned for pointers *)
-  | String_tag (* 3 *)
+  | String_tag (* 4 *)
   | Int64_tag
   | Docblock_tag
   | ALoc_table_tag
   | Type_sig_tag
   (* tags defined above this point are serialized+compressed *)
-  | Serialized_tag (* 8 *)
+  | Serialized_tag (* 9 *)
   | Serialized_resolved_requires_tag
   | Serialized_ast_tag
   | Serialized_file_sig_tag
@@ -55,7 +56,10 @@ let heap_ref : buf option ref = ref None
 let tag_val : tag -> int = Obj.magic
 
 (* double-check integer values are consistent with hh_shared.c *)
-let () = assert (tag_val String_tag = 3 && tag_val Serialized_tag = 8)
+let () =
+  assert (tag_val Entity_tag = 0);
+  assert (tag_val String_tag = 4);
+  assert (tag_val Serialized_tag = 9)
 
 exception Out_of_shared_memory
 
@@ -152,6 +156,13 @@ external hh_log_level : unit -> int = "hh_log_level"
 (* The total number of slots in our hashtable *)
 (*****************************************************************************)
 external hash_stats : unit -> table_stats = "hh_hash_stats"
+
+external get_next_version : unit -> int = "hh_next_version" [@@noalloc]
+
+(* Any entities which were advanced since the last commit will be committed
+ * after this. Committing the transaction requries synchronization with readers
+ * and writers. *)
+external commit_transaction : unit -> unit = "hh_commit_transaction"
 
 let on_compact = ref (fun _ _ -> ())
 
@@ -894,6 +905,8 @@ module NewAPI = struct
 
   type heap_int64
 
+  type 'a entity
+
   type 'a addr_tbl
 
   type 'a opt
@@ -1124,11 +1137,14 @@ module NewAPI = struct
 
   let int64_size = 1
 
+  (* Write an int64 into the given chunk and advance the chunk address. *)
+  let unsafe_write_int64 chunk n =
+    buf_write_int64 chunk.heap chunk.next_addr n;
+    chunk.next_addr <- addr_offset chunk.next_addr int64_size
+
   let write_int64 chunk n =
     let addr = write_header chunk Int64_tag int64_size in
-    let data_addr = chunk.next_addr in
-    buf_write_int64 chunk.heap data_addr n;
-    chunk.next_addr <- addr_offset data_addr int64_size;
+    unsafe_write_int64 chunk n;
     addr
 
   let read_int64 addr =
@@ -1189,6 +1205,94 @@ module NewAPI = struct
   let is_none addr = addr == null_addr
 
   let is_some addr = addr != null_addr
+
+  (** Entities
+   *
+   * We often want to represent some entity, like a file, where we can write new
+   * data while keeping the old data around. For example, during a recheck we
+   * process updates and write new data while serving IDE requests from the
+   * committed data.
+   *
+   * Entities are a versioned data structure that support storing up to two
+   * versions at any point in time: a "committed" and "latest" version.
+   *
+   * Each entity stores its version number. There is also a global version
+   * counter. Each version corresponds to a "slot" which is either 0 or 1. We
+   * compute the slot from the version by taking the least significant bit.
+   *
+   * Entities support reading committed data concurrently with updates without
+   * synchronization. The global version counter can not be updated
+   * concurrently, however.
+   *)
+
+  let version_size = 1
+
+  let entity_size = (2 * addr_size) + version_size
+
+  let version_addr entity = addr_offset entity 3
+
+  let write_entity_data heap entity_addr slot data =
+    let data_addr = addr_offset entity_addr (header_size + slot) in
+    let data = Option.value data ~default:null_addr in
+    unsafe_write_addr_at heap data_addr data
+
+  let write_entity chunk data =
+    let addr = write_header chunk Entity_tag entity_size in
+    unsafe_write_addr chunk null_addr;
+    unsafe_write_addr chunk null_addr;
+    let version = get_next_version () in
+    unsafe_write_int64 chunk (Int64.of_int version);
+    let slot = version land 1 in
+    write_entity_data chunk.heap addr slot data;
+    addr
+
+  let get_entity_version heap entity = Int64.to_int (buf_read_int64 heap (version_addr entity))
+
+  (* To write new data for an entity, we advance its version, then write the new
+   * data to the appropriate slot. To support concurrent readers, we do this
+   * somewhat carefully.
+   *
+   * A concurrent reader might observe the entity version either before the we
+   * write a new version or after. In either case, the reader will compute the
+   * same slot value -- the committed data has not moved.
+   *
+   * Two concurrent writers are not supported, but could be if there is a need.
+   * As is, nothing will go wrong, except that writers will race to write into
+   * the data slot.
+   *
+   * Advancing an entity which has already been advanced to the latest version
+   * will simply overwrite the previous latest data.
+   *)
+  let entity_advance entity data =
+    let heap = get_heap () in
+    let version = get_next_version () in
+    let entity_version = get_entity_version heap entity in
+    let slot =
+      if entity_version >= version then
+        entity_version land 1
+      else
+        let slot = lnot entity_version land 1 in
+        let new_version = version lor slot in
+        buf_write_int64 heap (version_addr entity) (Int64.of_int new_version);
+        slot
+    in
+    write_entity_data heap entity slot data
+
+  let entity_read_committed entity =
+    let heap = get_heap () in
+    let next_version = get_next_version () in
+    let v = ref (get_entity_version heap entity) in
+    if !v >= next_version then v := lnot !v;
+    let slot = !v land 1 in
+    let data = addr_offset entity (header_size + slot) in
+    read_addr heap data
+
+  let entity_read_latest entity =
+    let heap = get_heap () in
+    let entity_version = get_entity_version heap entity in
+    let slot = entity_version land 1 in
+    let data = addr_offset entity (header_size + slot) in
+    read_addr heap data
 
   (** Compressed OCaml values
 

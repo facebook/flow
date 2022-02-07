@@ -50,6 +50,8 @@ val heap_size : unit -> int
 
 val init : config -> num_workers:int -> (handle, unit) result
 
+val commit_transaction : unit -> unit
+
 module type Key = sig
   type t
 
@@ -199,6 +201,10 @@ module NewAPI : sig
   (* Phantom type tag for int64 data, like hashes *)
   type heap_int64
 
+  (* Phantom type tag for entities, which can store both a "committed" and
+   * "latest" value. *)
+  type 'a entity
+
   (* Phantom type tag for addr map objects, which are arrays of addresses to
    * another kind of object. For example, a `heap_string addr_tbl addr` is an
    * array of addresses to string objects. *)
@@ -293,6 +299,18 @@ module NewAPI : sig
   val is_none : 'a opt addr -> bool
 
   val is_some : 'a opt addr -> bool
+
+  (* entities *)
+
+  val entity_size : int
+
+  val write_entity : chunk -> 'k addr option -> 'k entity addr
+
+  val entity_advance : 'k entity addr -> 'k addr option -> unit
+
+  val entity_read_committed : 'k entity addr -> 'k opt addr
+
+  val entity_read_latest : 'k entity addr -> 'k opt addr
 
   (* ast *)
 

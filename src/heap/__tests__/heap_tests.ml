@@ -32,9 +32,22 @@ module H3 =
       type t = heap_string addr_tbl addr_tbl
     end)
 
+module Ent =
+  NoCacheAddr
+    (StringKey)
+    (struct
+      type t = heap_string entity
+    end)
+
 let assert_heap_size wsize =
   let bsize = wsize * (Sys.word_size / 8) in
   assert (SharedMem.heap_size () = bsize)
+
+let assert_null_committed entity = assert (is_none (entity_read_committed entity))
+
+let assert_committed f entity data = assert (data = read_opt_exn f (entity_read_committed entity))
+
+let assert_latest f entity data = assert (data = read_opt_exn f (entity_read_latest entity))
 
 let collect_test _ctxt =
   let foo = "foo" in
@@ -88,7 +101,92 @@ let collect_test _ctxt =
   SharedMem.compact ();
   assert_heap_size 0
 
-let tests = "heap_tests" >::: ["collect" >:: collect_test]
+let entities_test _ctxt =
+  let foo = "foo" in
+  let bar = "bar" in
+
+  (* write foo, bar, and ent=foo to heap *)
+  let size = (3 * header_size) + string_size foo + string_size bar + entity_size in
+  let (foo, bar, ent) =
+    alloc size (fun chunk ->
+        let foo = write_string chunk foo in
+        let bar = write_string chunk bar in
+        let ent = write_entity chunk (Some foo) in
+        (foo, bar, ent)
+    )
+  in
+
+  (* uncommitted *)
+  assert_null_committed ent;
+  assert_latest Fun.id ent foo;
+
+  (* commit foo *)
+  commit_transaction ();
+  assert_committed Fun.id ent foo;
+  assert_latest Fun.id ent foo;
+
+  (* advance ent=bar, foo still committed *)
+  entity_advance ent (Some bar);
+  assert_committed Fun.id ent foo;
+  assert_latest Fun.id ent bar;
+
+  (* commit bar *)
+  commit_transaction ();
+  assert_committed Fun.id ent bar;
+  assert_latest Fun.id ent bar;
+
+  (* clean up *)
+  compact ();
+  assert_heap_size 0
+
+let entities_compact_test _ctxt =
+  let foo = "foo" in
+  let bar = "bar" in
+  let foo_size = header_size + string_size foo in
+  let bar_size = header_size + string_size bar in
+  let size = foo_size + bar_size + header_size + entity_size in
+  let (bar, ent) =
+    alloc size (fun chunk ->
+        let foo = write_string chunk foo in
+        let bar = write_string chunk bar in
+        let ent = write_entity chunk (Some foo) in
+        (bar, ent)
+    )
+  in
+
+  (* keep ent alive *)
+  let key = "ent_key" in
+  assert (ent = Ent.add key ent);
+
+  commit_transaction ();
+  entity_advance ent (Some bar);
+
+  (* compact before commit: both foo, bar reachable *)
+  compact ();
+  assert_heap_size size;
+  let ent = Option.get (Ent.get key) in
+  assert_committed read_string ent "foo";
+  assert_latest read_string ent "bar";
+
+  (* compact after commit: foo unreachable *)
+  commit_transaction ();
+  compact ();
+  assert_heap_size (size - foo_size);
+  let ent = Option.get (Ent.get key) in
+  assert_committed read_string ent "bar";
+  assert_latest read_string ent "bar";
+
+  Ent.remove_batch (SSet.singleton key);
+  compact ();
+  assert_heap_size 0
+
+let tests =
+  "heap_tests"
+  >::: [
+         "collect" >:: collect_test;
+         "entities" >:: entities_test;
+         "entities_compact" >:: entities_compact_test;
+       ]
 
 let () =
   let config = { heap_size = 1024 * 1024 * 1024; hash_table_pow = 14; log_level = 0 } in
