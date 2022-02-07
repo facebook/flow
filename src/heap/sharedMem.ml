@@ -27,9 +27,35 @@ type buf = (char, Bigarray.int8_unsigned_elt, Bigarray.c_layout) Bigarray.Array1
  * Internally, these are all just ints, so be careful! *)
 type _ addr = int
 
+(* The integer values corresponding to these tags are encoded in the low byte
+ * of object headers. Any changes made here must be kept in sync with
+ * hh_shared.c -- e.g., the should_scan function. *)
+type tag =
+  | Addr_tbl_tag
+  | Checked_file_tag
+  | Unparsed_file_tag
+  (* tags defined below this point are scanned for pointers *)
+  | String_tag (* 3 *)
+  | Int64_tag
+  | Docblock_tag
+  | ALoc_table_tag
+  | Type_sig_tag
+  (* tags defined above this point are serialized+compressed *)
+  | Serialized_tag (* 8 *)
+  | Serialized_resolved_requires_tag
+  | Serialized_ast_tag
+  | Serialized_file_sig_tag
+  | Serialized_exports_tag
+
 type serialized_tag = Serialized_resolved_requires
 
 let heap_ref : buf option ref = ref None
+
+(* constant constructors are integers *)
+let tag_val : tag -> int = Obj.magic
+
+(* double-check integer values are consistent with hh_shared.c *)
+let () = assert (tag_val String_tag = 3 && tag_val Serialized_tag = 8)
 
 exception Out_of_shared_memory
 
@@ -512,14 +538,14 @@ end
 module NoCache (Key : Key) (Value : Value) =
   NoCacheInternal (Key) (Value)
     (struct
-      let tag = 0
+      let tag = tag_val Serialized_tag
     end)
 
 module NoCacheTag (Key : Key) (Value : Value) (Tag : SerializedTag) = struct
   let tag =
     (* Tag values here must match the corresponding values from NewAPI.tag *)
     match Tag.value with
-    | Serialized_resolved_requires -> 1
+    | Serialized_resolved_requires -> tag_val Serialized_resolved_requires_tag
 
   include
     NoCacheInternal (Key) (Value)
@@ -971,37 +997,6 @@ module NewAPI = struct
     Int64.to_int addr64
 
   (** Headers *)
-
-  (* The integer values corresponding to these tags are encoded in the low byte
-   * of object headers. Any changes made here must be kept in sync with
-   * hh_shared.c -- e.g., the should_scan function. *)
-  type tag =
-    | Serialized_tag
-    | Serialized_resolved_requires_tag
-    | Serialized_ast_tag
-    | Serialized_file_sig_tag
-    | Serialized_exports_tag
-    (* tags defined above this point are serialized+compressed *)
-    | String_tag (* 5 *)
-    | Int64_tag
-    | Docblock_tag
-    | ALoc_table_tag
-    | Type_sig_tag
-    (* tags defined below this point are scanned for pointers *)
-    | Addr_tbl_tag (* 10 *)
-    | Checked_file_tag
-    | Unparsed_file_tag
-
-  (* avoid unused constructor warning *)
-  let () = ignore Serialized_tag
-
-  let () = ignore Serialized_resolved_requires_tag
-
-  (* constant constructors are integers *)
-  let tag_val : tag -> int = Obj.magic
-
-  (* double-check integer value is consistent with hh_shared.c *)
-  let () = assert (tag_val Addr_tbl_tag = 10)
 
   let header_size = 1
 

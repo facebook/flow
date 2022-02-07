@@ -283,17 +283,16 @@ typedef uintnat hh_header_t;
 typedef uintnat hh_tag_t;
 
 // Keep these in sync with "tag" type definition in sharedMem.ml
-#define Heap_string_tag 5
-#define Addr_tbl_tag 10
+#define Heap_string_tag 3
+#define Serialized_tag 8
 
 static _Bool should_scan(hh_tag_t tag) {
-  // By convention, tags below Addr_tbl_tag contain no pointers, whereas
-  // Addr_tbl_tag and above contain only pointers. We can exploit this fact to
-  // reduce pointer finding to a single branch.
+  // By convention, only tags below Heap_string_tag contain pointers. We can
+  // exploit this fact to reduce pointer finding to a single branch.
   //
   // In the future, if we add different layouts with a mixture of pointers and
   // other data, scanning for pointers will probably require a jump table.
-  return tag >= Addr_tbl_tag;
+  return tag < Heap_string_tag;
 }
 
 #define NULL_ADDR 0
@@ -329,7 +328,7 @@ static _Bool should_scan(hh_tag_t tag) {
 // from other objects, so we need to look up the tag to read the size.
 
 #define Obj_tag(hd) (((hd) >> 2) & 0x3F)
-#define Obj_wosize_shift(tag) ((tag) < Heap_string_tag ? 36 : 8)
+#define Obj_wosize_shift(tag) ((tag) < Serialized_tag ? 8 : 36)
 #define Obj_wosize_tag(hd, tag) ((hd) >> Obj_wosize_shift(tag))
 #define Obj_wosize(hd) (Obj_wosize_tag(hd, Obj_tag(hd)))
 #define Obj_whsize(hd) (1 + Obj_wosize(hd))
