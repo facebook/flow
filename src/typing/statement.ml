@@ -1083,18 +1083,14 @@ struct
           (* each case starts with this env - begins as clone of incoming_env
              plus bindings, also accumulates negative refis from case tests *)
           let case_start_env = Env.clone_env incoming_env in
-          (* Some (env, writes, refis, reason) when a case falls through *)
-          let fallthrough_case = ref None in
-          (* switch_state tracks case effects and is used to create outgoing env *)
-          let switch_state = ref None in
-          let update_switch_state (case_env, case_writes, _, loc) =
+          let update_switch_state current_state (case_env, case_writes, _, loc) =
             let case_env =
               (* keep the last `incoming_depth` items *)
               let to_drop = Base.List.length case_env - incoming_depth in
               Base.List.drop case_env to_drop
             in
             let state =
-              match !switch_state with
+              match current_state with
               | None -> (case_env, Changeset.empty, case_writes)
               | Some (env, partial_writes, total_writes) ->
                 let case_diff = Changeset.comp case_writes total_writes in
@@ -1104,12 +1100,17 @@ struct
                 Env.merge_env cx loc (env, env, case_env) case_writes;
                 (env, partial_writes, total_writes)
             in
-            switch_state := Some state
+            Some state
           in
           (* traverse case list, get list of control flow exits and list of ASTs *)
-          let (exits, cases_ast) =
+          let (exits_rev, cases_ast_rev, switch_state, fallthrough_case) =
             cases
-            |> Base.List.map ~f:(fun (loc, { Switch.Case.test; consequent; comments }) ->
+            |> Base.List.fold_left
+                 ~init:([], [], None, None)
+                 ~f:(fun
+                      (exits, cases_ast, switch_state, fallthrough_case)
+                      (loc, { Switch.Case.test; consequent; comments })
+                    ->
                    (* compute predicates implied by case expr or default *)
                    let (test_ast, preds, not_preds, xtypes) =
                      match test with
@@ -1151,7 +1152,7 @@ struct
                    (* add test refinements - save changelist for later *)
                    let test_refis = Env.refine_with_preds cx loc preds xtypes in
                    (* merge env changes from fallthrough case, if present *)
-                   Base.Option.iter !fallthrough_case ~f:(fun (env, writes, refis, _) ->
+                   Base.Option.iter fallthrough_case ~f:(fun (env, writes, refis, _) ->
                        let changes = Changeset.union writes refis in
                        Env.merge_env cx loc (case_env, case_env, env) changes
                    );
@@ -1167,7 +1168,7 @@ struct
                    if
                      added_default
                      && Base.Option.is_none test
-                     && Base.Option.is_none !fallthrough_case
+                     && Base.Option.is_none fallthrough_case
                    then
                      Env.init_let
                        cx
@@ -1193,45 +1194,55 @@ struct
                      | None -> (true, Base.Option.is_some break_opt)
                    in
                    (* save state for fallthrough *)
-                   fallthrough_case :=
+                   let fallthrough_case =
                      if falls_through then
                        Some (case_env, case_writes, test_refis, loc)
                      else
-                       None;
+                       None
+                   in
 
                    (* if we break to end, add effects to terminal state *)
-                   ( if breaks_to_end then
-                     match break_opt with
-                     | None ->
-                       Flow.add_output cx Error_message.(EInternal (loc, BreakEnvMissingForCase))
-                     | Some break_env ->
-                       update_switch_state (break_env, case_writes, test_refis, loc)
-                   );
+                   let switch_state =
+                     if breaks_to_end then
+                       match break_opt with
+                       | None ->
+                         Flow.add_output cx Error_message.(EInternal (loc, BreakEnvMissingForCase));
+                         switch_state
+                       | Some break_env ->
+                         update_switch_state switch_state (break_env, case_writes, test_refis, loc)
+                     else
+                       switch_state
+                   in
 
                    (* add negative refis of this case's test to common start env *)
                    (* TODO add API to do this without having to swap in env *)
                    Env.update_env loc case_start_env;
                    let _ = Env.refine_with_preds cx loc not_preds xtypes in
-                   ( exit,
+                   ( exit :: exits,
                      (loc, { Switch.Case.test = test_ast; consequent = consequent_ast; comments })
+                     :: cases_ast,
+                     switch_state,
+                     fallthrough_case
                    )
                )
-            |> List.split
           in
           let cases_ast =
             List.(
               if added_default then
-                cases_ast |> rev |> tl |> rev
+                cases_ast_rev |> tl |> rev
               else
-                cases_ast
+                rev cases_ast_rev
             )
           in
+          let exits = List.rev exits_rev in
           (* if last case fell out, update terminal switch state with it *)
-          Base.Option.iter !fallthrough_case ~f:update_switch_state;
+          let switch_state =
+            Base.Option.fold ~init:switch_state fallthrough_case ~f:update_switch_state
+          in
 
           (* env in switch_state has accumulated switch effects. now merge in
              original types for partially written values, and swap env in *)
-          Base.Option.iter !switch_state ~f:(fun (env, partial_writes, _) ->
+          Base.Option.iter switch_state ~f:(fun (env, partial_writes, _) ->
               Env.merge_env cx switch_loc (env, env, incoming_env) partial_writes;
               Env.update_env switch_loc env
           );
