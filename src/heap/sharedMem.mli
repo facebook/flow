@@ -158,8 +158,15 @@ module NoCache (Key : Key) (Value : Value) :
 module NoCacheTag (Key : Key) (Value : Value) (_ : SerializedTag) :
   NoCacheTag with type key = Key.t and type value = Value.t and module KeySet = Flow_set.Make(Key)
 
-module NoCacheAddr (Key : Key) (Value : AddrValue) :
-  NoCache with type key = Key.t and type value = Value.t addr and module KeySet = Flow_set.Make(Key)
+module NoCacheAddr (Key : Key) (Value : AddrValue) : sig
+  include
+    NoCache
+      with type key = Key.t
+       and type value = Value.t addr
+       and module KeySet = Flow_set.Make(Key)
+
+  val add : Key.t -> Value.t addr -> Value.t addr
+end
 
 val debug_value_size : Obj.t -> int
 

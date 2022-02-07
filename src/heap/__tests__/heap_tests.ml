@@ -62,8 +62,8 @@ let collect_test _ctxt =
   alloc size (fun chunk ->
       let foo_addr = write_string chunk foo in
       let tbl2_addr = write_addr_tbl (write_addr_tbl write_string) chunk tbl2 in
-      H1.add foo_key foo_addr;
-      H3.add tbl2_key tbl2_addr
+      assert (foo_addr = H1.add foo_key foo_addr);
+      assert (tbl2_addr = H3.add tbl2_key tbl2_addr)
   );
   assert_heap_size size;
 

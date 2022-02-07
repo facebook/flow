@@ -1553,9 +1553,15 @@ CAMLprim value hh_add(value key, value addr) {
       if (hashtbl[slot].addr == NULL_ADDR) {
         // Two threads may be racing to write this value, so try to grab the
         // slot atomically.
-        if (__sync_bool_compare_and_swap(
-                &hashtbl[slot].addr, NULL_ADDR, elt.addr)) {
+        addr_t old_addr = __sync_val_compare_and_swap(
+            &hashtbl[slot].addr, NULL_ADDR, elt.addr);
+
+        if (old_addr == NULL_ADDR) {
           __sync_fetch_and_add(&info->hcounter_filled, 1);
+        } else {
+          // Another thread won the race, but since the slot hashes match, it
+          // wrote the value we were trying to write, so our work is done.
+          addr = Val_long(old_addr);
         }
       }
 
@@ -1593,6 +1599,7 @@ CAMLprim value hh_add(value key, value addr) {
         // The slot was non-zero, so we failed to grab the slot. However, the
         // thread which won the race wrote the value we were trying to write,
         // meaning out work is done.
+        addr = Val_long(old.addr);
         break;
       }
     }
@@ -1604,7 +1611,7 @@ CAMLprim value hh_add(value key, value addr) {
     }
   }
 
-  CAMLreturn(Val_unit);
+  CAMLreturn(addr);
 }
 
 /*****************************************************************************/

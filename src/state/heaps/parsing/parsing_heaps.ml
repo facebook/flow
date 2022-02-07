@@ -117,10 +117,10 @@ let add_checked_file file_key hash module_name docblock ast locs type_sig file_s
         set_file_aloc_table file aloc_table;
         set_file_type_sig file type_sig;
         set_file_sig file file_sig;
-        file
+        dyn_checked_file file
     )
   in
-  FileHeap.add file_key (dyn_checked_file file_addr)
+  assert (file_addr = FileHeap.add file_key file_addr)
 
 let add_unparsed_file file_key hash module_name =
   let open Heap in
@@ -130,14 +130,15 @@ let add_unparsed_file file_key hash module_name =
     + int64_size
     + opt_size (with_header_size string_size) module_name
   in
-  let addr =
+  let file_addr =
     alloc size (fun chunk ->
         let hash = write_int64 chunk hash in
         let module_name = write_opt write_string chunk module_name in
-        write_unparsed_file chunk hash module_name
+        let file = write_unparsed_file chunk hash module_name in
+        dyn_unparsed_file file
     )
   in
-  FileHeap.add file_key (dyn_unparsed_file addr)
+  assert (file_addr = FileHeap.add file_key file_addr)
 
 let is_checked_file = Heap.is_checked_file
 
@@ -829,15 +830,16 @@ end = struct
       + opt_size (with_header_size string_size) module_name
       + exports_size
     in
-    let addr =
+    let file_addr =
       alloc size (fun chunk ->
           let hash = write_int64 chunk hash in
           let module_name = write_opt write_string chunk module_name in
           let exports = write_exports chunk in
-          write_checked_file chunk hash module_name exports
+          let file = write_checked_file chunk hash module_name exports in
+          dyn_checked_file file
       )
     in
-    FileHeap.add file_key (dyn_checked_file addr)
+    assert (file_addr = FileHeap.add file_key file_addr)
 
   let add_unparsed = ParsingHeaps.add_unparsed
 end

@@ -269,7 +269,7 @@ end
 module HashtblSegment (Key : Key) = struct
   type hash = string
 
-  external hh_add : hash -> _ addr -> unit = "hh_add"
+  external hh_add : hash -> 'k addr -> 'k addr = "hh_add"
 
   external hh_mem : hash -> bool = "hh_mem"
 
@@ -502,7 +502,7 @@ struct
 
   let add key value =
     let (addr, compressed_size, original_size) = hh_store value in
-    Tbl.add key addr;
+    ignore (Tbl.add key addr);
     if hh_log_level () > 0 && compressed_size > 0 then log_serialize compressed_size original_size
 
   let mem = Tbl.mem
