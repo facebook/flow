@@ -668,6 +668,11 @@ let file_liness ~root ~write_root ~file:file_key =
   in
   return Src.FileLines.(to_json { file; lengths; hasUnicodeOrTabs; endsInNewline })
 
+(* Latest version of the 'all' schema supported by this indexer *)
+let all_schema_version = 7
+
+let flow_schema_version = 3
+
 let make ~output_dir ~write_root =
   (module Codemod_runner.MakeSimpleTypedRunner (struct
     type accumulator = {
@@ -775,27 +780,28 @@ let make ~output_dir ~write_root =
         output_string out_channel "["
       else
         output_string out_channel ",";
-      output_facts "flow.LocalDeclarationReference.3" local_declaration_reference;
+      let flow_pred pred = Printf.sprintf "flow.%s.%d" pred flow_schema_version in
+      output_facts (flow_pred "LocalDeclarationReference") local_declaration_reference;
       output_string out_channel ",";
-      output_facts "flow.DeclarationInfo.3" declaration_info;
+      output_facts (flow_pred "DeclarationInfo") declaration_info;
       output_string out_channel ",";
-      output_facts "flow.SourceOfExport.3" source_of_export;
+      output_facts (flow_pred "SourceOfExport") source_of_export;
       output_string out_channel ",";
-      output_facts "flow.ImportDeclaration.3" import_declaration;
+      output_facts (flow_pred "ImportDeclaration") import_declaration;
       output_string out_channel ",";
-      output_facts "flow.MemberDeclarationReference.3" member_declaration_reference;
+      output_facts (flow_pred "MemberDeclarationReference") member_declaration_reference;
       output_string out_channel ",";
-      output_facts "flow.MemberDeclarationInfo.3" member_declaration_info;
+      output_facts (flow_pred "MemberDeclarationInfo") member_declaration_info;
       output_string out_channel ",";
-      output_facts "flow.TypeDeclarationReference.3" type_declaration_reference;
+      output_facts (flow_pred "TypeDeclarationReference") type_declaration_reference;
       output_string out_channel ",";
-      output_facts "flow.TypeDeclarationInfo.3" type_declaration_info;
+      output_facts (flow_pred "TypeDeclarationInfo") type_declaration_info;
       output_string out_channel ",";
-      output_facts "flow.TypeImportDeclaration.3" type_import_declaration;
+      output_facts (flow_pred "TypeImportDeclaration") type_import_declaration;
       output_string out_channel ",";
-      output_facts "flow.SourceOfTypeExport.3" source_of_type_export;
+      output_facts (flow_pred "SourceOfTypeExport") source_of_type_export;
       output_string out_channel ",";
-      output_facts "flow.FileOfStringModule.3" file_of_string_module;
+      output_facts (flow_pred "FileOfStringModule") file_of_string_module;
       output_string out_channel ",";
       output_facts "src.FileLines.1" file_lines;
       close_out out_channel;
