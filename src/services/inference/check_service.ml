@@ -56,31 +56,17 @@ let copier =
       else
         let (root_id, constraints) = Context.find_constraints src_cx id in
         if id == root_id then (
-          let constraints =
+          let t =
             lazy
-              (let t =
-                 match Lazy.force constraints with
-                 | Unresolved { lower; _ } ->
-                   lazy
-                     (let ts = TypeMap.keys lower |> List.filter Type.is_proper_def in
-                      match ts with
-                      | [t] -> t
-                      | t0 :: t1 :: ts -> UnionT (r, UnionRep.make t0 t1 ts)
-                      | [] -> Unsoundness.merged_any r
-                     )
-                 | Resolved (_, t) -> lazy t
-                 | FullyResolved (_, t) -> t
-               in
-               let t =
-                 lazy
-                   (let t = Lazy.force t in
-                    let (_ : Context.t) = self#type_ src_cx pole dst_cx t in
-                    t
-                   )
-               in
-               FullyResolved (unknown_use, t)
-              )
+              (match Lazy.force constraints with
+              | Unresolved _
+              | Resolved _ ->
+                failwith "unexpected unresolved constraint"
+              | FullyResolved (_, (lazy t)) ->
+                let (_ : Context.t) = self#type_ src_cx pole dst_cx t in
+                t)
           in
+          let constraints = Lazy.from_val (FullyResolved (unknown_use, t)) in
           let node = Root { rank = 0; constraints } in
           Context.set_graph dst_cx (IMap.add id node dst_graph);
           dst_cx
