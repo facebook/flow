@@ -8,8 +8,7 @@
 val scan_for_suppressions :
   Context.t -> Severity.severity LintSettings.t -> Loc.t Flow_ast.Comment.t list -> unit
 
-val add_require_tvars :
-  unresolved_tvar:(Context.t -> Reason.t -> Type.ident) -> Context.t -> File_sig.With_ALoc.t -> unit
+val add_require_tvars : Context.t -> File_sig.With_ALoc.t -> unit
 
 module Make_Inference (Env : Env_sig.S) : sig
   module Statement : Statement_sig.S with module Env := Env

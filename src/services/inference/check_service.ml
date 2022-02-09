@@ -150,6 +150,8 @@ let get_lint_severities metadata options =
   let strict_mode = Options.strict_mode options in
   Merge_js.get_lint_severities metadata strict_mode lint_severities
 
+let resolve_require_id = Flow_js.resolve_id
+
 [@@@warning "-60"]
 
 (* Don't use Flow_js directly from Check_service. Instead, encode the respective
@@ -381,7 +383,7 @@ let mk_check_file ~options ~reader ~cache () =
     let connect loc =
       let module_t = module_t loc in
       let (_, require_id) = Context.find_require cx loc in
-      ConsGen.resolve_id cx require_id module_t
+      resolve_require_id cx require_id module_t
     in
     Nel.iter connect locs
   in
@@ -398,7 +400,7 @@ let mk_check_file ~options ~reader ~cache () =
       | _ -> Type_inference_js.infer_ast
     in
     let lint_severities = get_lint_severities metadata options in
-    Type_inference_js.add_require_tvars ~unresolved_tvar:ConsGen.unresolved_tvar cx file_sig;
+    Type_inference_js.add_require_tvars cx file_sig;
     List.iter (connect_require cx) requires;
     let typed_ast = infer_ast cx file_key comments ast ~lint_severities in
     Merge_js.post_merge_checks cx master_cx ast typed_ast metadata file_sig;

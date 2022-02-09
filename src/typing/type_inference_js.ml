@@ -12,10 +12,10 @@ module Ast = Flow_ast
 
 module NameResolver = Name_resolver.Make_of_flow (Context) (Flow_js_utils)
 
-let add_require_tvars ~unresolved_tvar =
+let add_require_tvars =
   let add cx desc loc =
     let reason = Reason.mk_reason desc loc in
-    let id = unresolved_tvar cx reason in
+    let id = Tvar.mk_no_wrap cx reason in
     Context.add_require cx loc (reason, id)
   in
   let add_decl cx m_name desc loc =
@@ -537,7 +537,7 @@ module Make (Env : Env_sig.S) : S = struct
     let () =
       (* TODO: Wait a minute, why do we bother with requires for lib files? Pretty
          confident that we don't support them in any sensible way. *)
-      add_require_tvars ~unresolved_tvar:Tvar.mk_no_wrap cx file_sig
+      add_require_tvars cx file_sig
     in
     let module_scope = Scope.fresh ~var_scope_kind:Scope.Global () in
 
