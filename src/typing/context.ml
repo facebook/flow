@@ -885,7 +885,7 @@ let rec find_resolved cx t_in =
   match t_in with
   | Type.OpenT (_, id) ->
     begin
-      match Lazy.force (find_graph cx id) with
+      match find_graph cx id with
       | Type.Constraint.Resolved (_, t)
       | Type.Constraint.FullyResolved (_, (lazy t)) ->
         Some t

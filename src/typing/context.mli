@@ -472,9 +472,9 @@ val make_export_map : t -> Type.Exports.t -> Type.Exports.id
 
 val make_source_poly_id : t -> ALoc.t -> Type.Poly.id
 
-val find_constraints : t -> Type.ident -> Type.ident * Type.Constraint.constraints Lazy.t
+val find_constraints : t -> Type.ident -> Type.ident * Type.Constraint.constraints
 
-val find_graph : t -> Type.ident -> Type.Constraint.constraints Lazy.t
+val find_graph : t -> Type.ident -> Type.Constraint.constraints
 
 val find_root : t -> Type.ident -> Type.ident * Type.Constraint.root
 

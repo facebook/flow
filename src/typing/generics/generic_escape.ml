@@ -112,7 +112,7 @@ class escape_finder ~gcx ~(add_output : Context.t -> ?trace:Type.trace -> Error_
     method! tvar cx pole ({ seen; tvar_ids; annot_reason; use_op; top_level_reason; _ } as acc) r id
         =
       let open Constraint in
-      let (root_id, (lazy constraints)) = Context.find_constraints cx id in
+      let (root_id, constraints) = Context.find_constraints cx id in
       if id != root_id then
         self#tvar cx pole acc r root_id
       else if IMap.mem id tvar_ids then
@@ -172,7 +172,7 @@ let scan_for_escapes
         seen
       else
         let seen = ISet.add var_id seen in
-        match Lazy.force (Context.find_graph cx var_id) with
+        match Context.find_graph cx var_id with
         | Unresolved bounds -> Type.TypeMap.fold scan_type bounds.lower seen
         | Resolved (use_op, ty) -> scan_type ty (Trace.dummy_trace, use_op) seen
         | FullyResolved _ -> seen

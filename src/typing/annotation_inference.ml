@@ -59,7 +59,7 @@ let function_like_op op = object_like_op op
 
 let get_fully_resolved_type cx id =
   let (_, node) = Context.find_root cx id in
-  match Lazy.force node.Constraint.constraints with
+  match node.Constraint.constraints with
   | Constraint.FullyResolved (_, (lazy t)) -> t
   | Constraint.Resolved _
   | Constraint.Unresolved _ ->
@@ -400,7 +400,7 @@ module rec ConsGen : S = struct
           ensure_annot_resolved cx reason id
         )
     in
-    let constraints = Lazy.from_val (Constraint.FullyResolved (unknown_use, t)) in
+    let constraints = Constraint.FullyResolved (unknown_use, t) in
     Context.add_tvar cx id (Constraint.Root { Constraint.rank = 0; constraints });
     tvar
 
@@ -1225,7 +1225,7 @@ module rec ConsGen : S = struct
       | OpenT (_, id) ->
         let open Constraint in
         begin
-          match Lazy.force (Context.find_graph cx id) with
+          match Context.find_graph cx id with
           | exception Union_find.Tvar_not_found _ ->
             error_internal_reason cx "widen_obj_type" reason
           | Unresolved _

@@ -56,7 +56,7 @@ let rec collect_of_types ?log_unresolved cx = List.fold_left (collect_of_type ?l
 
 and collect_of_type ?log_unresolved cx acc = function
   | OpenT (r, id) ->
-    let (id, (lazy constraints)) = Context.find_constraints cx id in
+    let (id, constraints) = Context.find_constraints cx id in
     if IMap.mem id acc then
       acc
     else (
@@ -295,7 +295,7 @@ and collect_of_type_map ?log_unresolved cx acc = function
 (* In some positions, like annots, we trust that tvars are 0->1. *)
 and collect_of_binding ?log_unresolved cx acc = function
   | OpenT ((_, id) as tvar) ->
-    let (id, (lazy constraints)) = Context.find_constraints cx id in
+    let (id, constraints) = Context.find_constraints cx id in
     if IMap.mem id acc then
       acc
     else (

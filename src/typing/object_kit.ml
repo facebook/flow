@@ -33,7 +33,7 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
     | OpenT (r, id) ->
       let open Constraint in
       begin
-        match Lazy.force (Context.find_graph cx id) with
+        match Context.find_graph cx id with
         | Unresolved _ ->
           let open Object in
           let widened_id = Tvar.mk_no_wrap cx r in

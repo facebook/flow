@@ -2718,7 +2718,7 @@ module Constraint = struct
   }
 
   include Union_find.Make (struct
-    type t = constraints Lazy.t
+    type t = constraints
   end)
 
   let new_bounds () =
@@ -2730,7 +2730,7 @@ module Constraint = struct
     }
 
   let new_unresolved_root () =
-    let constraints = Lazy.from_val (Unresolved (new_bounds ())) in
+    let constraints = Unresolved (new_bounds ()) in
     Root { rank = 0; constraints }
 
   (* For any constraints, return a list of def types that form either the lower
@@ -2747,8 +2747,7 @@ module Constraint = struct
     | FullyResolved (use_op, (lazy t)) ->
       [TypeTerm.UseT (use_op, t)]
 
-  let fully_resolved_node t =
-    Root { rank = 0; constraints = lazy (FullyResolved (unknown_use, lazy t)) }
+  let fully_resolved_node t = Root { rank = 0; constraints = FullyResolved (unknown_use, lazy t) }
 end
 
 (**************************)

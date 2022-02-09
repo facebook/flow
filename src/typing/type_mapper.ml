@@ -28,7 +28,7 @@ let unwrap_type =
       else (
         seen := ISet.add id !seen;
         Type.Constraint.(
-          match Lazy.force (Context.find_graph cx id) with
+          match Context.find_graph cx id with
           | Resolved (_, t')
           | FullyResolved (_, (lazy t')) ->
             unwrap seen cx t'
@@ -52,7 +52,7 @@ let union_flatten =
       else (
         seen := ISet.add id !seen;
         Type.Constraint.(
-          match Lazy.force (Context.find_graph cx id) with
+          match Context.find_graph cx id with
           | Resolved (_, t')
           | FullyResolved (_, (lazy t')) ->
             flatten cx seen t'

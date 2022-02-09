@@ -94,7 +94,7 @@ module Normalize_this_getPropT = struct
         (fun props type_ ->
           match (props, type_) with
           | (Ok props, T.OpenT (_, id)) ->
-            let (_, (lazy constraints)) = Context.find_constraints full_cx id in
+            let (_, constraints) = Context.find_constraints full_cx id in
             (match constraints with
             | T.Constraint.Unresolved bounds -> get_props bounds >>| fun props' -> props' @ props
             | _ -> Error "Bounds are already resolved")
