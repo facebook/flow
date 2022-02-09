@@ -369,11 +369,11 @@ module rec ConsGen : S = struct
   let rec ensure_annot_resolved cx reason id =
     let module A = Type.AConstraint in
     match Context.find_avar cx id with
-    | (_, { A.constraints = (lazy A.Annot_resolved); _ }) -> ()
-    | (_, { A.constraints = (lazy (A.Annot_unresolved _)); _ }) ->
+    | (_, { A.constraints = A.Annot_resolved; _ }) -> ()
+    | (_, { A.constraints = A.Annot_unresolved _; _ }) ->
       resolve_id cx id (error_recursive cx reason)
-    | (root_id, { A.constraints = (lazy (A.Annot_op { id = dep_id; _ })); _ }) ->
-      let (_, { A.constraints = (lazy dep_constraint); _ }) = Context.find_avar cx dep_id in
+    | (root_id, { A.constraints = A.Annot_op { id = dep_id; _ }; _ }) ->
+      let (_, { A.constraints = dep_constraint; _ }) = Context.find_avar cx dep_id in
       A.update_deps_of_constraint dep_constraint ~f:(fun deps ->
           ISet.filter
             (fun id2 ->
@@ -421,7 +421,7 @@ module rec ConsGen : S = struct
       let (root_id1, root1) = Context.find_avar cx id in
       Context.add_avar cx root_id1 A.fully_resolved_node;
       Context.add_tvar cx root_id1 (C.fully_resolved_node t);
-      let dependents1 = deps_of_constraint (Lazy.force root1.A.constraints) in
+      let dependents1 = deps_of_constraint root1.A.constraints in
       resolve_dependent_set cx dependents1 t
 
   (** Makes id1 a goto node to id2. It also appends depndents of id1 to those of id2.
@@ -432,7 +432,7 @@ module rec ConsGen : S = struct
     let module T = Type.Constraint in
     Context.add_tvar cx id1 (T.Goto id2);
     Context.add_avar cx id1 (A.Goto id2);
-    match Lazy.force root2.A.constraints with
+    match root2.A.constraints with
     | (A.Annot_op _ | A.Annot_unresolved _) as constraint_ ->
       update_deps_of_constraint ~f:(ISet.union dependents1) constraint_
     | A.Annot_resolved ->
@@ -447,14 +447,14 @@ module rec ConsGen : S = struct
     if id1 = id2 then
       ()
     else if root1.A.rank < root2.A.rank then
-      let deps1 = deps_of_constraint (Lazy.force root1.A.constraints) in
+      let deps1 = deps_of_constraint root1.A.constraints in
       goto cx id1 deps1 (id2, root2)
     else if root2.A.rank < root1.A.rank then
-      let deps2 = deps_of_constraint (Lazy.force root2.A.constraints) in
+      let deps2 = deps_of_constraint root2.A.constraints in
       goto cx id2 deps2 (id1, root1)
     else (
       Context.add_avar cx id2 (A.Root { root2 with A.rank = root1.A.rank + 1 });
-      let deps1 = deps_of_constraint (Lazy.force root1.A.constraints) in
+      let deps1 = deps_of_constraint root1.A.constraints in
       goto cx id1 deps1 (id2, root2)
     )
 
@@ -467,7 +467,7 @@ module rec ConsGen : S = struct
     else
       let module A = Type.AConstraint in
       let (_, { A.constraints; _ }) = Context.find_avar cx id in
-      match Lazy.force constraints with
+      match constraints with
       | A.Annot_resolved ->
         (* [id] may refer to a lazily resolved constraint (e.g. created through
          * [mk_lazy_tvar]). To protect against trying to force recursive lazy

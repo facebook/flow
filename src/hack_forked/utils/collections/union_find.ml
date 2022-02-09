@@ -28,7 +28,7 @@ struct
       solutions of the tvar (see below). *)
   type root = {
     rank: int;
-    constraints: Constraints.t Lazy.t;
+    constraints: Constraints.t;
   }
 
   (** Type variables are unknowns, and we are ultimately interested in constraints

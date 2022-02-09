@@ -2718,7 +2718,7 @@ module Constraint = struct
   }
 
   include Union_find.Make (struct
-    type t = constraints
+    type t = constraints Lazy.t
   end)
 
   let new_bounds () =
@@ -2989,9 +2989,9 @@ module AConstraint = struct
     type t = constraints
   end)
 
-  let new_root constraints = Root { rank = 0; constraints = lazy constraints }
+  let new_root constraints = Root { rank = 0; constraints }
 
-  let fully_resolved_root = { rank = 0; constraints = lazy Annot_resolved }
+  let fully_resolved_root = { rank = 0; constraints = Annot_resolved }
 
   let fully_resolved_node = Root fully_resolved_root
 

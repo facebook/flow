@@ -24,5 +24,5 @@ let unresolved_with_id cx id reason =
 let constrained cx op id =
   let id' = init_avar cx (Annot_op { op; id; dependents = ISet.empty }) in
   let (_, dep_root) = Context.find_avar cx id in
-  update_deps_of_constraint ~f:(ISet.add id') (Lazy.force dep_root.constraints);
+  update_deps_of_constraint ~f:(ISet.add id') dep_root.constraints;
   id'

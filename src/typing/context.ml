@@ -967,7 +967,7 @@ let iter_annot_dependent_set cx f set =
         if ISet.mem root_id seen then
           seen
         else
-          let constraints = Lazy.force root.Type.AConstraint.constraints in
+          let constraints = root.Type.AConstraint.constraints in
           let op = Type.AConstraint.to_annot_op_exn constraints in
           let () = f root_id op in
           ISet.add root_id seen)
