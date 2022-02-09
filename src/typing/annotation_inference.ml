@@ -369,9 +369,11 @@ module rec ConsGen : S = struct
   let rec ensure_annot_resolved cx reason id =
     let module A = Type.AConstraint in
     match Context.find_avar cx id with
-    | (_, { A.constraints = A.Annot_resolved; _ }) -> ()
+    | (_, { A.constraints = A.Annot_resolved; _ }) -> get_fully_resolved_type cx id
     | (_, { A.constraints = A.Annot_unresolved _; _ }) ->
-      resolve_id cx id (error_recursive cx reason)
+      let t = error_recursive cx reason in
+      resolve_id cx id t;
+      t
     | (root_id, { A.constraints = A.Annot_op { id = dep_id; _ }; _ }) ->
       let (_, { A.constraints = dep_constraint; _ }) = Context.find_avar cx dep_id in
       A.update_deps_of_constraint dep_constraint ~f:(fun deps ->
@@ -381,22 +383,24 @@ module rec ConsGen : S = struct
               root_id <> root_id2)
             deps
       );
-      resolve_id cx id (error_recursive cx reason)
+      let t = error_recursive cx reason in
+      resolve_id cx id t;
+      t
 
   and mk_lazy_tvar cx reason f =
     let id = Reason.mk_id () in
     let tvar = OpenT (reason, id) in
-    let constraints =
+    let t =
       lazy
         ( Avar.unresolved_with_id cx id reason;
           f id;
           (* Before forcing the type constraint of [id] we need to make sure the
            * respective annotation constraint has been processed. If not we infer
            * the empty type. *)
-          ensure_annot_resolved cx reason id;
-          Lazy.force (Context.find_graph cx id)
+          ensure_annot_resolved cx reason id
         )
     in
+    let constraints = Lazy.from_val (Constraint.FullyResolved (unknown_use, t)) in
     Context.add_tvar cx id (Constraint.Root { Constraint.rank = 0; constraints });
     tvar
 
