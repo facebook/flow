@@ -39,14 +39,12 @@ type file = {
   key: File_key.t;
   cx: Context.t;
   dependencies: (string * (ALoc.t -> Type.t)) Module_refs.t;
-  exports: unit -> Type.t;
-  local_defs: (unit -> ALoc.t * string * Type.t) Local_defs.t;
-  remote_refs: (unit -> ALoc.t * string * Type.t) Remote_refs.t;
+  exports: Type.t;
+  local_defs: (ALoc.t * string * Type.t) Lazy.t Local_defs.t;
+  remote_refs: (ALoc.t * string * Type.t) Lazy.t Remote_refs.t;
   patterns: Type.t Lazy.t Patterns.t;
   pattern_defs: Type.t Lazy.t Pattern_defs.t;
 }
-
-let visit f = f ()
 
 let def_reason = function
   | TypeAlias { id_loc; name; _ }
@@ -282,11 +280,11 @@ let merge_ref : 'a. _ -> (_ -> _ -> _ -> 'a) -> _ -> 'a =
  fun file f ref ->
   match ref with
   | Pack.LocalRef { ref_loc; index } ->
-    let (_loc, name, t) = visit (Local_defs.get file.local_defs index) in
+    let (lazy (_loc, name, t)) = Local_defs.get file.local_defs index in
     let t = reposition_sig_tvar file.cx ref_loc t in
     f t ref_loc name
   | Pack.RemoteRef { ref_loc; index } ->
-    let (_loc, name, t) = visit (Remote_refs.get file.remote_refs index) in
+    let (lazy (_loc, name, t)) = Remote_refs.get file.remote_refs index in
     let t = reposition_sig_tvar file.cx ref_loc t in
     f t ref_loc name
   | Pack.BuiltinRef { ref_loc; name } ->
@@ -320,11 +318,11 @@ let merge_type_export file reason = function
     in
     merge_ref file f ref
   | Pack.ExportTypeBinding index ->
-    let (loc, name, t) = visit (Local_defs.get file.local_defs index) in
+    let (lazy (loc, name, t)) = Local_defs.get file.local_defs index in
     let t = ConsGen.assert_export_is_type file.cx reason name t in
     (Some loc, t)
   | Pack.ExportTypeFrom index ->
-    let (loc, _name, t) = visit (Remote_refs.get file.remote_refs index) in
+    let (lazy (loc, _name, t)) = Remote_refs.get file.remote_refs index in
     (Some loc, t)
 
 let mk_commonjs_module_t cx reason strict t =
@@ -1643,16 +1641,16 @@ let merge_def file reason = function
 let merge_export file = function
   | Pack.ExportRef ref -> merge_ref file (fun t ref_loc _ -> (Some ref_loc, t)) ref
   | Pack.ExportBinding index ->
-    let (loc, _name, t) = visit (Local_defs.get file.local_defs index) in
+    let (lazy (loc, _name, t)) = Local_defs.get file.local_defs index in
     (Some loc, t)
   | Pack.ExportDefault { default_loc; def } ->
     let t = merge file def in
     (Some default_loc, t)
   | Pack.ExportDefaultBinding { default_loc; index } ->
-    let (_loc, _name, t) = visit (Local_defs.get file.local_defs index) in
+    let (lazy (_loc, _name, t)) = Local_defs.get file.local_defs index in
     (Some default_loc, t)
   | Pack.ExportFrom index ->
-    let (loc, _name, t) = visit (Remote_refs.get file.remote_refs index) in
+    let (lazy (loc, _name, t)) = Remote_refs.get file.remote_refs index in
     (Some loc, t)
 
 let merge_resource_module_t cx f loc =

@@ -27,9 +27,9 @@ type file = {
   key: File_key.t;
   cx: Context.t;
   dependencies: (string * (ALoc.t -> Type.t)) Module_refs.t;
-  exports: unit -> Type.t;
-  local_defs: (unit -> ALoc.t * string * Type.t) Local_defs.t;
-  remote_refs: (unit -> ALoc.t * string * Type.t) Remote_refs.t;
+  exports: Type.t;
+  local_defs: (ALoc.t * string * Type.t) Lazy.t Local_defs.t;
+  remote_refs: (ALoc.t * string * Type.t) Lazy.t Remote_refs.t;
   patterns: Type.t Lazy.t Patterns.t;
   pattern_defs: Type.t Lazy.t Pattern_defs.t;
 }

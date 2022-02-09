@@ -196,7 +196,7 @@ let mk_check_file ~options ~reader ~cache () =
   and sig_module_t cx file_key file_addr _loc =
     let create_file = dep_file file_key file_addr in
     let file = Check_cache.find_or_create cache ~find_leader ~master_cx ~create_file file_key in
-    let t = file.Type_sig_merge.exports () in
+    let t = file.Type_sig_merge.exports in
     copy_into cx file.Type_sig_merge.cx t;
     t
   (* Create a Type_sig_merge.file record for a dependency, which we use to
@@ -301,38 +301,31 @@ let mk_check_file ~options ~reader ~cache () =
           |> Merge.merge_exports (Lazy.force file_rec) reason
           )
       in
-      let t = ConsGen.mk_sig_tvar cx reason resolved in
-      (fun () -> t)
+      ConsGen.mk_sig_tvar cx reason resolved
     in
 
     let local_def file_rec buf pos =
-      let thunk =
-        lazy
-          (let def = Pack.map_packed_def aloc (Bin.read_local_def buf pos) in
-           let loc = Type_sig.def_id_loc def in
-           let name = Type_sig.def_name def in
-           let reason = Type_sig_merge.def_reason def in
-           let resolved = lazy (Merge.merge_def (Lazy.force file_rec) reason def) in
-           let t = ConsGen.mk_sig_tvar cx reason resolved in
-           (loc, name, t)
-          )
-      in
-      (fun () -> Lazy.force thunk)
+      lazy
+        (let def = Pack.map_packed_def aloc (Bin.read_local_def buf pos) in
+         let loc = Type_sig.def_id_loc def in
+         let name = Type_sig.def_name def in
+         let reason = Type_sig_merge.def_reason def in
+         let resolved = lazy (Merge.merge_def (Lazy.force file_rec) reason def) in
+         let t = ConsGen.mk_sig_tvar cx reason resolved in
+         (loc, name, t)
+        )
     in
 
     let remote_ref file_rec buf pos =
-      let thunk =
-        lazy
-          (let remote_ref = Pack.map_remote_ref aloc (Bin.read_remote_ref buf pos) in
-           let loc = Pack.remote_ref_loc remote_ref in
-           let name = Pack.remote_ref_name remote_ref in
-           let reason = Type_sig_merge.remote_ref_reason remote_ref in
-           let resolved = lazy (Merge.merge_remote_ref (Lazy.force file_rec) reason remote_ref) in
-           let t = ConsGen.mk_sig_tvar cx reason resolved in
-           (loc, name, t)
-          )
-      in
-      (fun () -> Lazy.force thunk)
+      lazy
+        (let remote_ref = Pack.map_remote_ref aloc (Bin.read_remote_ref buf pos) in
+         let loc = Pack.remote_ref_loc remote_ref in
+         let name = Pack.remote_ref_name remote_ref in
+         let reason = Type_sig_merge.remote_ref_reason remote_ref in
+         let resolved = lazy (Merge.merge_remote_ref (Lazy.force file_rec) reason remote_ref) in
+         let t = ConsGen.mk_sig_tvar cx reason resolved in
+         (loc, name, t)
+        )
     in
 
     let pattern_def file_rec buf pos =
