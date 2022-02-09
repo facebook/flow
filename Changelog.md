@@ -3,6 +3,7 @@
 Likely to cause new Flow errors:
 * Disallow duplicate member names in classes.
 * Error if an interface is imported as a value.
+* The `experimental.new_merge` option becomes `true` by default. This is an internal change in the way file signatures are computed, but may cause new `[invalid-exported-annotation]` errors when a file exports types that include certain kinds of complex operations, such as projections over complex utility types like `$ObjMap`. These errors can be fixed by replacing these complex types with simpler ones. In certain cases, the newly added `$KeyMirror` and `$ObjMapConst` types (that are exempt of this restriction) can be used instead.
 
 Notable bug fixes:
 * Fix Watchman file watcher on Windows when an include path doesn't exist.
