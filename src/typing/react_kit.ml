@@ -150,7 +150,7 @@ let lookup_defaults cx trace component ~reason_op ~rec_flow upper pole =
    * therefore so would our props analysis. So instead we make the
    * stateful assumption that `defaultProps` was already written to
    * the component statics which may not always be true. *)
-  let strict =
+  let lookup_kind =
     NonstrictReturning (Some (DefT (reason_missing, bogus_trust (), VoidT), upper), None)
   in
   let propref = Named (reason_prop, name) in
@@ -163,7 +163,7 @@ let lookup_defaults cx trace component ~reason_op ~rec_flow upper pole =
       LookupT
         {
           reason = reason_op;
-          lookup_kind = strict;
+          lookup_kind;
           ts = [];
           propref;
           lookup_action = action;
@@ -608,7 +608,7 @@ module Kit (Flow : Flow_common.S) : REACT = struct
         (* Create the key type. *)
         let key_t = optional (maybe (get_builtin_type cx reason_key (OrdinaryName "React$Key"))) in
         (* Flow the config input key type to the key type. *)
-        let kind = NonstrictReturning (None, None) in
+        let lookup_kind = NonstrictReturning (None, None) in
         let propref = Named (reason_key, OrdinaryName "key") in
         let use_op =
           Frame
@@ -629,7 +629,7 @@ module Kit (Flow : Flow_common.S) : REACT = struct
             LookupT
               {
                 reason = reason_key;
-                lookup_kind = kind;
+                lookup_kind;
                 ts = [];
                 propref;
                 lookup_action = action;
@@ -654,7 +654,7 @@ module Kit (Flow : Flow_common.S) : REACT = struct
           optional (maybe (get_builtin_typeapp cx reason_ref (OrdinaryName "React$Ref") [l]))
         in
         (* Flow the config input ref type to the ref type. *)
-        let kind = NonstrictReturning (None, None) in
+        let lookup_kind = NonstrictReturning (None, None) in
         let propref = Named (reason_ref, OrdinaryName "ref") in
         let use_op =
           Frame
@@ -675,7 +675,7 @@ module Kit (Flow : Flow_common.S) : REACT = struct
             LookupT
               {
                 reason = reason_ref;
-                lookup_kind = kind;
+                lookup_kind;
                 ts = [];
                 propref;
                 lookup_action = action;

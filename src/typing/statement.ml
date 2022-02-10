@@ -123,24 +123,22 @@ struct
     let proto { proto; _ } = proto
 
     let mk_object_from_spread_acc cx acc reason ~frozen ~default_proto ~empty_unsealed =
-      let mk_object reason ?(proto = default_proto) ~sealed props =
+      let sealed = sealed acc in
+      match elements_rev acc with
+      | (Slice { slice_pmap }, []) ->
+        let sealed = sealed && not (NameUtils.Map.is_empty slice_pmap && empty_unsealed) in
+        let proto = Base.Option.value ~default:default_proto (proto acc) in
         let obj_kind =
           if sealed || frozen || obj_key_autocomplete acc then
             Exact
           else
             UnsealedInFile (ALoc.source (Reason.aloc_of_reason reason))
         in
-        let obj_t = Obj_type.mk_with_proto cx reason ~obj_kind ~frozen ~props proto in
+        let obj_t = Obj_type.mk_with_proto cx reason ~obj_kind ~frozen ~props:slice_pmap proto in
         if obj_key_autocomplete acc then
           Tvar.mk_where cx reason (fun tvar -> Flow_js.flow_t cx (obj_t, tvar))
         else
           obj_t
-      in
-      let sealed = sealed acc in
-      match elements_rev acc with
-      | (Slice { slice_pmap }, []) ->
-        let sealed = sealed && not (NameUtils.Map.is_empty slice_pmap && empty_unsealed) in
-        mk_object reason ~sealed ?proto:(proto acc) slice_pmap
       | os ->
         let (t, ts, head_slice) =
           let (t, ts) = os in

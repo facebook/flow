@@ -322,7 +322,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
               speculative_object_write cx lflds s up
             else
               (* otherwise, look up the property in the prototype *)
-              let strict =
+              let lookup_kind =
                 match (Obj_type.sealed_in_op ureason lflags.obj_kind, ldict) with
                 | (false, None) -> ShadowRead (Some lreason, Nel.one lflds)
                 | (true, None) -> Strict lreason
@@ -335,7 +335,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
                   LookupT
                     {
                       reason = ureason;
-                      lookup_kind = strict;
+                      lookup_kind;
                       ts = [];
                       propref;
                       lookup_action = LookupProp (use_op, up);
@@ -917,12 +917,12 @@ module Make (Flow : INPUT) : OUTPUT = struct
        * typeapp, eval, maybe, optional, and intersection should have boiled
        * away by this point. Generics should have been "unsealed" as well. *)
       let propref = Named (reason, OrdinaryName x) in
-      let strict = NonstrictReturning (None, None) in
+      let lookup_kind = NonstrictReturning (None, None) in
       let u =
         LookupT
           {
             reason;
-            lookup_kind = strict;
+            lookup_kind;
             ts = [];
             propref;
             lookup_action = MatchProp (use_op, t);
@@ -1447,7 +1447,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
           match NameUtils.Map.find_opt s lflds with
           | Some lp -> rec_flow_p cx ~trace ~use_op lreason ureason propref (lp, up)
           | _ ->
-            let strict =
+            let lookup_kind =
               match up with
               | Field (_, OptionalT _, _) -> NonstrictReturning (None, None)
               | _ -> Strict lreason
@@ -1462,7 +1462,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
                     LookupT
                       {
                         reason = ureason;
-                        lookup_kind = strict;
+                        lookup_kind;
                         ts = [];
                         propref;
                         lookup_action = LookupProp (use_op, up);

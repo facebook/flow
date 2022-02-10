@@ -1539,7 +1539,7 @@ module Access_prop_options = struct
     use_op: Type.use_op;
     previously_seen_props: Type.Properties.Set.t;
     allow_method_access: bool;
-    strict: Type.lookup_kind;
+    lookup_kind: Type.lookup_kind;
   }
 end
 
@@ -1601,7 +1601,7 @@ module GetPropT_kit (F : Get_prop_helper_sig) = struct
       let own_props = Context.find_props cx insttype.own_props in
       let proto_props = Context.find_props cx insttype.proto_props in
       let fields = NameUtils.Map.union own_props proto_props in
-      let strict =
+      let lookup_kind =
         if insttype.has_unknown_react_mixins then
           NonstrictReturning (None, None)
         else
@@ -1612,7 +1612,7 @@ module GetPropT_kit (F : Get_prop_helper_sig) = struct
           Access_prop_options.use_op;
           previously_seen_props = Properties.Set.of_list [insttype.own_props; insttype.proto_props];
           allow_method_access = false;
-          strict;
+          lookup_kind;
         }
       in
       (* Instance methods cannot be unbound *)
@@ -1714,13 +1714,13 @@ module GetPropT_kit (F : Get_prop_helper_sig) = struct
     | None ->
       (match propref with
       | Named _ ->
-        let strict =
+        let lookup_kind =
           if Obj_type.sealed_in_op reason_op o.flags.obj_kind then
             Strict reason_obj
           else
             ShadowRead (None, Nel.one o.props_tmap)
         in
-        let x = (reason_op, strict, propref, use_op, Properties.Set.singleton o.props_tmap) in
+        let x = (reason_op, lookup_kind, propref, use_op, Properties.Set.singleton o.props_tmap) in
         F.cg_lookup cx trace ~obj_t:l o.proto_t x
       | Computed elem_t ->
         (match elem_t with

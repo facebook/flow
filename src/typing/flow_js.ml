@@ -390,7 +390,7 @@ struct
         LookupT
           {
             reason = reason_op;
-            lookup_kind = options.Access_prop_options.strict;
+            lookup_kind = options.Access_prop_options.lookup_kind;
             ts = [];
             propref;
             lookup_action = action;
@@ -448,7 +448,7 @@ struct
 
     let reposition = FlowJs.reposition
 
-    let cg_lookup cx trace ~obj_t t (reason_op, strict, propref, use_op, ids) tout =
+    let cg_lookup cx trace ~obj_t t (reason_op, lookup_kind, propref, use_op, ids) tout =
       FlowJs.rec_flow
         cx
         trace
@@ -456,7 +456,7 @@ struct
           LookupT
             {
               reason = reason_op;
-              lookup_kind = strict;
+              lookup_kind;
               ts = [];
               propref;
               lookup_action = ReadProp { use_op; obj_t; tout };
@@ -3532,7 +3532,7 @@ struct
           let own_props = Context.find_props cx instance.own_props in
           let proto_props = Context.find_props cx instance.proto_props in
           let fields = NameUtils.Map.union own_props proto_props in
-          let strict = Strict reason_c in
+          let lookup_kind = Strict reason_c in
           let options =
             {
               Access_prop_options.use_op;
@@ -3541,7 +3541,7 @@ struct
               allow_method_access = true;
               previously_seen_props =
                 Properties.Set.of_list [instance.own_props; instance.proto_props];
-              strict;
+              lookup_kind;
             }
           in
           set_prop cx ~mode ~wr_ctx trace options reason_prop reason_op l super x fields tin prop_t
@@ -3591,14 +3591,14 @@ struct
           let own_props = Context.find_props cx instance.own_props in
           let proto_props = Context.find_props cx instance.proto_props in
           let fields = NameUtils.Map.union own_props proto_props in
-          let strict = Strict reason_c in
+          let lookup_kind = Strict reason_c in
           let options =
             {
               Access_prop_options.use_op;
               allow_method_access = false;
               previously_seen_props =
                 Properties.Set.of_list [instance.own_props; instance.proto_props];
-              strict;
+              lookup_kind;
             }
           in
           match_prop cx trace options reason_prop reason_op super x fields (OpenT prop_t)
@@ -3636,7 +3636,7 @@ struct
           let props = NameUtils.Map.union own_props proto_props in
           let tvar = Tvar.mk_no_wrap cx reason_lookup in
           let funt = OpenT (reason_lookup, tvar) in
-          let strict =
+          let lookup_kind =
             if instance.has_unknown_react_mixins then
               NonstrictReturning (None, None)
             else
@@ -3648,7 +3648,7 @@ struct
               previously_seen_props =
                 Properties.Set.of_list [instance.own_props; instance.proto_props];
               use_op;
-              strict;
+              lookup_kind;
             }
           in
           read_prop cx trace options reason_prop reason_lookup l super x props (reason_lookup, tvar);
@@ -3940,7 +3940,7 @@ struct
             LookupT
               {
                 reason = reason_op;
-                lookup_kind = strict;
+                lookup_kind;
                 ts = try_ts_on_failure;
                 propref;
                 lookup_action = action;
@@ -3950,16 +3950,16 @@ struct
           ) ->
           (match GetPropTKit.get_obj_prop cx trace o propref reason_op with
           | Some (p, target_kind) ->
-            (match strict with
+            (match lookup_kind with
             | NonstrictReturning (_, Some (id, _)) -> Context.test_prop_hit cx id
             | _ -> ());
             perform_lookup_action cx trace propref p target_kind reason_obj reason_op action
           | None ->
-            let strict =
-              match (Obj_type.sealed_in_op reason_op o.flags.obj_kind, strict) with
+            let lookup_kind =
+              match (Obj_type.sealed_in_op reason_op o.flags.obj_kind, lookup_kind) with
               | (false, ShadowRead (strict, ids)) -> ShadowRead (strict, Nel.cons o.props_tmap ids)
               | (false, ShadowWrite ids) -> ShadowWrite (Nel.cons o.props_tmap ids)
-              | _ -> strict
+              | _ -> lookup_kind
             in
             rec_flow
               cx
@@ -3968,7 +3968,7 @@ struct
                 LookupT
                   {
                     reason = reason_op;
-                    lookup_kind = strict;
+                    lookup_kind;
                     ts = try_ts_on_failure;
                     propref;
                     lookup_action = action;
@@ -3980,7 +3980,7 @@ struct
             LookupT
               {
                 reason = reason_op;
-                lookup_kind = kind;
+                lookup_kind;
                 ts = _;
                 propref;
                 lookup_action = action;
@@ -3997,7 +3997,7 @@ struct
             ()
           | _ ->
             let p = Field (None, AnyT.untyped reason_op, Polarity.Neutral) in
-            (match kind with
+            (match lookup_kind with
             | NonstrictReturning (_, Some (id, _)) -> Context.test_prop_hit cx id
             | _ -> ());
             perform_lookup_action cx trace propref p DynamicProperty reason reason_op action)
@@ -6520,7 +6520,7 @@ struct
         Access_prop_options.use_op;
         allow_method_access = true;
         previously_seen_props = Properties.Set.empty;
-        strict = NonstrictReturning (None, None);
+        lookup_kind = NonstrictReturning (None, None);
       }
     in
     lookup_prop cx trace options t reason_prop lreason x (SuperProp (use_op, p))
@@ -6570,14 +6570,14 @@ struct
               )
             in
             let void_reason = replace_desc_reason RVoid (fst tvar) in
-            let strict =
+            let lookup_kind =
               NonstrictReturning
                 (Some (DefT (void_reason, bogus_trust (), VoidT), default_tout), None)
             in
             LookupT
               {
                 reason;
-                lookup_kind = strict;
+                lookup_kind;
                 ts = [];
                 propref = Named (reason, OrdinaryName x);
                 lookup_action = action;
@@ -7165,7 +7165,7 @@ struct
             )
         else
           let sealed = Obj_type.sealed_in_op reason_op o.flags.obj_kind in
-          let strict =
+          let lookup_kind =
             if sealed then
               Strict reason_obj
             else
@@ -7178,7 +7178,7 @@ struct
               LookupT
                 {
                   reason = reason_op;
-                  lookup_kind = strict;
+                  lookup_kind;
                   ts = [];
                   propref;
                   lookup_action = action;
