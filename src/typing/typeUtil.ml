@@ -905,7 +905,6 @@ let annotated_or_inferred_of_option ~default = function
   | None -> Inferred default
 
 let subtype_this_of_function { this_t = (this, subtyping); _ } =
-  if subtyping then
-    this
-  else
-    reason_of_t this |> implicit_mixed_this
+  match subtyping with
+  | This_Function -> this
+  | This_Method _ -> reason_of_t this |> implicit_mixed_this

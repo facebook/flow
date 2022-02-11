@@ -1092,7 +1092,7 @@ and merge_class_prop file = function
      * TODO Fix once T71257430 is closed. *)
     let reason = Reason.(mk_reason RFunctionType fn_loc) in
     let statics = Type.dummy_static reason in
-    let t = merge_fun ~ignore_this_when_subtyping:true file reason def statics in
+    let t = merge_fun ~is_method:true file reason def statics in
     Type.Method (Some id_loc, t)
 
 and merge_obj_annot_prop file = function
@@ -1115,7 +1115,7 @@ and merge_interface_prop file = function
     let merge_method fn_loc def =
       let reason = Reason.(mk_reason RFunctionType fn_loc) in
       let statics = Type.dummy_static reason in
-      merge_fun ~ignore_this_when_subtyping:true file reason def statics
+      merge_fun ~is_method:true file reason def statics
     in
     let finish = function
       | (t, []) -> t
@@ -1436,7 +1436,7 @@ and merge_predicate file base_t loc p =
   Type.OpenPredT { reason; base_t; m_pos; m_neg }
 
 and merge_fun
-    ?(ignore_this_when_subtyping = false)
+    ?(is_method = false)
     file
     reason
     (FunSig { tparams; params; rest_param; this_param; return; predicate })
@@ -1471,11 +1471,17 @@ and merge_fun
     | None -> return
     | Some (loc, p) -> merge_predicate file return loc p
   in
+  let this_status =
+    if is_method then
+      Type.This_Method { unbound = false }
+    else
+      Type.This_Function
+  in
   let t =
     let open Type in
     let funtype =
       {
-        this_t = (this_t, not ignore_this_when_subtyping);
+        this_t = (this_t, this_status);
         params;
         rest_param;
         return_t = return;

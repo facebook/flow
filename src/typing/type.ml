@@ -1006,20 +1006,22 @@ module rec TypeTerm : sig
   and fun_rest_param = string option * ALoc.t * t
 
   (* used by FunT *)
-  (* FunTs carry around two `this` types, one to be used during subtyping and
-     one to be treated as the param when the function is called. This is to allow
-     more lenient subtyping between class methods without sacrificing soundness
-     when calling functions. If subtype_this_t is None, param_this_t is used
-     for both operations *)
   and funtype = {
-    this_t: t * bool;
-    (* use for subtyping? *)
+    this_t: t * this_status;
     params: fun_param list;
     rest_param: fun_rest_param option;
     return_t: t;
     is_predicate: bool;
     def_reason: Reason.t;
   }
+
+  (* FunTs carry around two `this` types, one to be used during subtyping and
+     one to be treated as the param when the function is called. This is to allow
+     more lenient subtyping between class methods without sacrificing soundness
+     when calling functions. *)
+  and this_status =
+    | This_Method of { unbound: bool }
+    | This_Function
 
   (* Used by CallT and similar constructors *)
   and funcalltype = {
@@ -3774,7 +3776,7 @@ let default_obj_assign_kind = ObjAssign { assert_exact = false }
 (* A method type is a function type with `this` specified. *)
 let mk_methodtype
     this_t
-    ?(subtyping = true)
+    ?(subtyping = This_Function)
     tins
     ~rest_param
     ~def_reason

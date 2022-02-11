@@ -561,21 +561,6 @@ References:
 
 Error --------------------------------------------------------------------------------------- object_prototype.js:151:39
 
-Cannot assign `x.toLocaleString` to `xToLocaleString2` because function type [1] cannot be unbound from the context [1]
-where it was defined in the `this` parameter. [method-unbinding]
-
-   object_prototype.js:151:39
-    151| var xToLocaleString2 : () => number = x.toLocaleString; // error
-                                               ^^^^^^^^^^^^^^^^
-
-References:
-   <BUILTINS>/core.js:1496:5
-   1496|     toLocaleString(locales?: string | Array<string>, options?: Intl$DateTimeFormatOptions): string;
-             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-
-
-Error --------------------------------------------------------------------------------------- object_prototype.js:151:39
-
 Cannot assign `x.toLocaleString` to `xToLocaleString2` because string [1] is incompatible with number [2] in the return
 value. [incompatible-type]
 
@@ -700,4 +685,4 @@ References:
 
 
 
-Found 48 errors
+Found 47 errors

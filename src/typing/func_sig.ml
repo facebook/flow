@@ -114,7 +114,7 @@ struct
     in
     let funtype =
       {
-        Type.this_t = (F.this fparams |> Base.Option.value ~default:this_default, true);
+        Type.this_t = (F.this fparams |> Base.Option.value ~default:this_default, This_Function);
         params = F.value fparams;
         rest_param = F.rest fparams;
         return_t = TypeUtil.type_t_of_annotated_or_inferred return_t;
@@ -142,7 +142,7 @@ struct
               dummy_prototype,
               mk_boundfunctiontype
                 ~this:param_this_t
-                ~subtyping:false
+                ~subtyping:(This_Method { unbound = false })
                 params_tlist
                 ~rest_param
                 ~def_reason

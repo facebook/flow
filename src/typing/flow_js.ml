@@ -406,21 +406,38 @@ struct
           }
       )
 
+  let rec unbind_this_method = function
+    | DefT
+        ( r,
+          trust,
+          FunT (static, proto, ({ this_t = (this_t, This_Method { unbound = false }); _ } as ft))
+        ) ->
+      DefT
+        ( r,
+          trust,
+          FunT (static, proto, { ft with this_t = (this_t, This_Method { unbound = true }) })
+        )
+    | DefT (r, trust, PolyT { tparams_loc; tparams; t_out; id }) ->
+      DefT (r, trust, PolyT { tparams_loc; tparams; t_out = unbind_this_method t_out; id })
+    | IntersectionT (r, rep) -> IntersectionT (r, InterRep.map unbind_this_method rep)
+    | t -> t
+
   let access_prop cx trace options reason_prop reason_op super x pmap action =
     let { Access_prop_options.use_op; allow_method_access; _ } = options in
     match NameUtils.Map.find_opt x pmap with
     | Some p ->
-      ( if not allow_method_access then
+      let p =
         match p with
-        | Method (_, t) ->
+        | Method (r, t) when not allow_method_access ->
           add_output
             cx
             ~trace
             (Error_message.EMethodUnbinding
                { use_op; reason_op = reason_prop; reason_prop = reason_of_t t }
-            )
-        | _ -> ()
-      );
+            );
+          Method (r, unbind_this_method t)
+        | _ -> p
+      in
       let propref = Named (reason_prop, x) in
       perform_lookup_action cx trace propref p PropertyMapProperty reason_prop reason_op action
     | None -> lookup_prop cx trace options super reason_prop reason_op x action
@@ -1191,7 +1208,9 @@ struct
                     mk_reason RPrototype fun_loc |> Unsoundness.function_proto_any,
                     {
                       this_t =
-                        (mk_reason RThis fun_loc |> MixedT.make |> with_trust bogus_trust, true);
+                        ( mk_reason RThis fun_loc |> MixedT.make |> with_trust bogus_trust,
+                          This_Function
+                        );
                       params = [(Some "value", MixedT.at fun_loc |> with_trust bogus_trust)];
                       rest_param = None;
                       return_t;
