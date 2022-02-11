@@ -2794,6 +2794,7 @@ module AConstraint = struct
     | Annot_GetKeysT of Reason.t
     | Annot_ToStringT of Reason.t
     | Annot_ObjRestT of Reason.t * string list
+    | Annot_GetValuesT of Reason.t
     | Annot__Future_added_value__ of Reason.t
 
   (** This kind of constraint is meant to represent type annotations. Unlike the
@@ -2884,6 +2885,7 @@ module AConstraint = struct
     | Annot_GetKeysT _ -> "Annot_GetKeysT"
     | Annot_ToStringT _ -> "Annot_ToStringT"
     | Annot_ObjRestT _ -> "Annot_ObjRestT"
+    | Annot_GetValuesT _ -> "Annot_GetValuesT"
     | Annot__Future_added_value__ _ -> "Annot__Future_added_value__"
 
   let reason_of_op = function
@@ -2918,6 +2920,7 @@ module AConstraint = struct
     | Annot_GetKeysT r
     | Annot_ToStringT r
     | Annot_ObjRestT (r, _)
+    | Annot_GetValuesT r
     | Annot__Future_added_value__ r ->
       r
 
@@ -2954,6 +2957,7 @@ module AConstraint = struct
     | Annot_GetKeysT _
     | Annot_ToStringT _
     | Annot_ObjRestT _
+    | Annot_GetValuesT _
     | Annot__Future_added_value__ _ ->
       None
 

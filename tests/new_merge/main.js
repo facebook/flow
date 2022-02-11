@@ -174,3 +174,7 @@ import {
 (C27.Q: string); // error
 (x27.q: number);
 (x27.q: string); // error
+
+import type { T as T28 } from './values';
+declare var t28: T28;
+(t28: empty); // error number (length) ~> empty

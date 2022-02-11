@@ -798,5 +798,22 @@ References:
                 ^^^^^^ [2]
 
 
+Error ---------------------------------------------------------------------------------------------------- main.js:180:2
 
-Found 50 errors
+Cannot cast `t28` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+
+   main.js:180:2
+   180| (t28: empty); // error number (length) ~> empty
+         ^^^
+
+References:
+   main.js:179:18
+   179| declare var t28: T28;
+                         ^^^ [1]
+   main.js:180:7
+   180| (t28: empty); // error number (length) ~> empty
+              ^^^^^ [2]
+
+
+
+Found 51 errors
