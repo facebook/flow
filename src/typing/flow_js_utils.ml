@@ -498,6 +498,7 @@ let exact_obj_error cx trace obj_kind ~use_op ~exact_reason l =
 (** TODO: (1) Define a more general partial equality, that takes into
     account unified type variables. (2) Get rid of UnionRep.quick_mem. **)
 let union_optimization_guard =
+  let unwrap_type cx t = Base.Option.value (Context.find_resolved cx t) ~default:t in
   (* Compare l to u. Flatten both unions and then check that each element
      of l is comparable to an element of u. Note that the comparator need not
      be symmetric. *)
@@ -526,7 +527,7 @@ let union_optimization_guard =
         match (UnionRep.check_enum rep1, UnionRep.check_enum rep2) with
         | (Some enums1, Some enums2) -> UnionEnumSet.subset enums1 enums2
         | (_, _) ->
-          let unwrap rep = UnionRep.members rep |> Base.List.map ~f:(Type_mapper.unwrap_type cx) in
+          let unwrap rep = UnionRep.members rep |> Base.List.map ~f:(unwrap_type cx) in
           let lts = unwrap rep1 in
           let uts = unwrap rep2 in
           (* Pointwise subtyping check: O(N) *)

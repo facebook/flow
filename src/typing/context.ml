@@ -881,18 +881,23 @@ let find_root cx id =
   cx.ccx.sig_cx <- { cx.ccx.sig_cx with graph = graph' };
   (root_id, constraints)
 
-let rec find_resolved cx t_in =
-  match t_in with
-  | Type.OpenT (_, id) ->
-    begin
-      match find_graph cx id with
-      | Type.Constraint.Resolved (_, t)
-      | Type.Constraint.FullyResolved (_, (lazy t)) ->
-        Some t
-      | Type.Constraint.Unresolved _ -> None
-    end
-  | Type.AnnotT (_, t, _) -> find_resolved cx t
-  | t -> Some t
+let find_resolved =
+  let rec loop cx seen t_in =
+    match t_in with
+    | Type.OpenT (_, id) ->
+      if ISet.mem id seen then
+        Some t_in
+      else begin
+        match find_graph cx id with
+        | Type.Constraint.Resolved (_, t)
+        | Type.Constraint.FullyResolved (_, (lazy t)) ->
+          loop cx (ISet.add id seen) t
+        | Type.Constraint.Unresolved _ -> None
+      end
+    | Type.AnnotT (_, t, _) -> loop cx seen t
+    | t -> Some t
+  in
+  (fun cx t_in -> loop cx ISet.empty t_in)
 
 let rec find_trust_root cx (id : Trust_constraint.ident) =
   Trust_constraint.(
