@@ -911,6 +911,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
     (************)
     (* matching *)
     (************)
+    | (MatchingPropT _, GenericT { bound; _ }) -> rec_flow_t cx trace ~use_op (l, bound)
     | (MatchingPropT (reason, x, t), l) ->
       (* Things that can have properties are object-like (objects, instances,
        * and their exact versions). Notably, "meta" types like union, annot,
@@ -918,6 +919,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
        * away by this point. Generics should have been "unsealed" as well. *)
       let propref = Named (reason, OrdinaryName x) in
       let lookup_kind = NonstrictReturning (None, None) in
+      let drop_generic = true in
       let u =
         LookupT
           {
@@ -925,7 +927,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
             lookup_kind;
             ts = [];
             propref;
-            lookup_action = MatchProp (use_op, t);
+            lookup_action = MatchProp { use_op; drop_generic; prop_t = t };
             method_accessible = true;
             ids = Some Properties.Set.empty;
           }

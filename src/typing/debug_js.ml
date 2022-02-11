@@ -425,7 +425,7 @@ and dump_use_t_ (depth, tvars) cx t =
     | WriteProp { tin; _ } -> spf "Write %s" (kid tin)
     | LookupProp (op, p) -> spf "Lookup (%s, %s)" (string_of_use_op op) (prop p)
     | SuperProp (_, p) -> spf "Super %s" (prop p)
-    | MatchProp (_, tin) -> spf "Match %s" (kid tin)
+    | MatchProp { prop_t = tin; _ } -> spf "Match %s" (kid tin)
   in
   let specialize_cache = function
     | None -> "None"

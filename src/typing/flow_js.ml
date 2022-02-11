@@ -361,10 +361,17 @@ struct
           let msg = Error_message.EPropNotWritable { reason_prop; prop_name; use_op } in
           add_output cx ~trace msg
       end
-    | MatchProp (use_op, tin) ->
+    | MatchProp { use_op; drop_generic = drop_generic_; prop_t = tin } ->
       begin
         match Property.read_t p with
-        | Some t -> rec_flow cx trace (tin, UseT (use_op, t))
+        | Some t ->
+          let t =
+            if drop_generic_ then
+              drop_generic t
+            else
+              t
+          in
+          rec_flow cx trace (tin, UseT (use_op, t))
         | None ->
           let (reason_prop, prop_name) =
             match propref with
@@ -7124,7 +7131,7 @@ struct
               (Error_message.EPrivateLookupFailed ((reason_op, reason_c), x, use_op))))
 
   and match_prop cx trace options reason_prop reason_op super x pmap prop_t =
-    MatchProp (options.Access_prop_options.use_op, prop_t)
+    MatchProp { use_op = options.Access_prop_options.use_op; drop_generic = false; prop_t }
     |> access_prop cx trace options reason_prop reason_op super x pmap
 
   and set_prop
@@ -7212,7 +7219,7 @@ struct
           add_output cx ~trace (Error_message.EObjectComputedPropertyAssign (reason_op, reason_prop))))
 
   and match_obj_prop cx trace ~use_op o propref reason_obj reason_op prop_t =
-    MatchProp (use_op, prop_t)
+    MatchProp { use_op; drop_generic = false; prop_t }
     |> writelike_obj_prop cx trace ~use_op o propref reason_obj reason_op prop_t
 
   and write_obj_prop cx trace ~use_op ~mode o propref reason_obj reason_op tin prop_tout =

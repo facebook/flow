@@ -229,11 +229,11 @@ let detect_matching_props_violations cx =
   let open Type in
   let resolver = new resolver_visitor in
   let step (reason, key, sentinel, obj) =
-    let obj = resolver#type_ cx () obj in
     let sentinel = resolver#type_ cx () sentinel in
     match drop_generic sentinel with
     (* TODO: it should not be possible to create a MatchingPropT with a non-tvar tout *)
     | DefT (_, _, (BoolT (Some _) | StrT (Literal _) | NumT (Literal _))) ->
+      let obj = resolver#type_ cx () obj in
       (* Limit the check to promitive literal sentinels *)
       let use_op =
         Op

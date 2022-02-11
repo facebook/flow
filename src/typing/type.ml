@@ -1153,7 +1153,11 @@ module rec TypeTerm : sig
       }
     | LookupProp of use_op * Property.t
     | SuperProp of use_op * Property.t
-    | MatchProp of use_op * t
+    | MatchProp of {
+        use_op: use_op;
+        drop_generic: bool;
+        prop_t: t;
+      }
 
   and write_ctx =
     | ThisInCtor

@@ -78,5 +78,45 @@ References:
                                        ^^^^^^ [2]
 
 
+Error ------------------------------------------------------------------------------------------------- generics.js:5:19
 
-Found 4 errors
+Cannot compare string [1] with property `type` of object type [2] because string [1] is incompatible with literal
+union [3]. [incompatible-type]
+
+   generics.js:5:19
+   5|   if (mm.type === 'q'); // Error 'q' is not included in 's' | 'p'
+                        ^^^ [1]
+
+References:
+   generics.js:3:31
+   3| function f1<T: 's' | 'p'>(mm: { type: T }) {
+                                    ^^^^^^^^^^^ [2]
+   generics.js:3:16
+   3| function f1<T: 's' | 'p'>(mm: { type: T }) {
+                     ^^^^^^^^^ [3]
+
+
+Error ------------------------------------------------------------------------------------------------ generics.js:14:19
+
+Cannot compare string [1] with property `type` of `M` [2] because: [incompatible-type]
+ - Either string [1] is incompatible with string literal `s` [3].
+ - Or string [1] is incompatible with string literal `p` [4].
+
+   generics.js:14:19
+   14|   if (mm.type === 'q'); // Error 'q' is not included in 's' | 'p'
+                         ^^^ [1]
+
+References:
+   generics.js:11:13
+   11|   const mm: M = m_orig;
+                   ^ [2]
+   generics.js:8:24
+    8| type Message = { type: 's', v: number } | { type: 'p', x: string };
+                              ^^^ [3]
+   generics.js:8:51
+    8| type Message = { type: 's', v: number } | { type: 'p', x: string };
+                                                         ^^^ [4]
+
+
+
+Found 6 errors

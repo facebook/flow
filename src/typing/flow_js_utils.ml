@@ -415,7 +415,7 @@ let use_op_of_lookup_action = function
   | WriteProp { use_op; _ }
   | LookupProp (use_op, _)
   | SuperProp (use_op, _)
-  | MatchProp (use_op, _) ->
+  | MatchProp { use_op; _ } ->
     use_op
 
 exception SpeculativeError of Error_message.t

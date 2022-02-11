@@ -883,7 +883,7 @@ class ['a] t =
       | LookupProp (_, prop)
       | SuperProp (_, prop) ->
         self#prop cx pole_TODO acc prop
-      | MatchProp (_, t) -> self#type_ cx pole_TODO acc t
+      | MatchProp { prop_t = t; _ } -> self#type_ cx pole_TODO acc t
 
     method private elem_action cx acc =
       function
