@@ -44,7 +44,8 @@ let object_like_op = function
   | Annot_GetPropT _
   | Annot_GetElemT _
   | Annot_LookupT _
-  | Annot_ObjRestT _ ->
+  | Annot_ObjRestT _
+  | Annot_GetValuesT _ ->
     true
 
 let primitive_promoting_op = function
@@ -530,6 +531,9 @@ module rec ConsGen : S = struct
     | (EvalT (t, TypeDestructorT (_, reason, TypeMap (ObjectMapConst t')), _), _) ->
       let t = elab_t cx t (Annot_ObjMapConst (reason, t')) in
       elab_t cx t op
+    | (EvalT (t, TypeDestructorT (_, reason, ValuesType), _), _) ->
+      let t = elab_t cx t (Annot_GetValuesT reason) in
+      elab_t cx t op
     | (EvalT (_, TypeDestructorT (_, _, TypeMap (ObjectMap _)), _), _) ->
       error_unsupported ~suggestion:"$ObjMapConst" cx t op
     | (EvalT (_, TypeDestructorT (_, _, TypeMap (ObjectMapi _)), _), _) ->
@@ -703,6 +707,15 @@ module rec ConsGen : S = struct
       let keylist = Flow_js_utils.keylist_of_props own_props reason_op in
       union_of_ts reason_op keylist
     | (AnyT _, Annot_GetKeysT reason_op) -> with_trust literal_trust (StrT.why reason_op)
+    (***********)
+    (* $Values *)
+    (***********)
+    | (DefT (_, _, ObjT o), Annot_GetValuesT reason) ->
+      Flow_js_utils.get_values_type_of_obj_t cx o reason
+    | (DefT (_, _, InstanceT (_, _, _, { own_props; _ })), Annot_GetValuesT reason) ->
+      Flow_js_utils.get_values_type_of_instance_t cx own_props reason
+    (* Any will always be ok *)
+    | (AnyT (_, src), Annot_GetValuesT reason) -> AnyT.why src reason
     (********************************)
     (* Union and intersection types *)
     (********************************)

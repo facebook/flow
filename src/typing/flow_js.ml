@@ -1726,70 +1726,10 @@ struct
         (* values *)
         (**********)
         | (DefT (_, _, ObjT o), GetValuesT (reason, values)) ->
-          let {
-            flags;
-            proto_t = _;
-            props_tmap = tmap;
-            call_t = _ (* call props excluded from values *);
-          } =
-            o
-          in
-          (* Find all of the props. *)
-          let props = Context.find_props cx tmap in
-          (* Get the read type for all readable properties and discard the rest. *)
-          let ts =
-            NameUtils.Map.fold
-              (fun _ prop ts ->
-                match Property.read_t prop with
-                | Some t ->
-                  let t =
-                    if flags.frozen then
-                      match t with
-                      | DefT (t_reason, trust, StrT (Literal (_, (OrdinaryName _ as name)))) ->
-                        let t_reason = replace_desc_reason (RStringLit name) t_reason in
-                        DefT (t_reason, trust, SingletonStrT name)
-                      | DefT (t_reason, trust, NumT (Literal (_, lit))) ->
-                        let t_reason = replace_desc_reason (RNumberLit (snd lit)) t_reason in
-                        DefT (t_reason, trust, SingletonNumT lit)
-                      | DefT (t_reason, trust, BoolT (Some lit)) ->
-                        let t_reason = replace_desc_reason (RBooleanLit lit) t_reason in
-                        DefT (t_reason, trust, SingletonBoolT lit)
-                      | _ -> t
-                    else
-                      t
-                  in
-                  t :: ts
-                | None -> ts)
-              props
-              []
-          in
-          (* If the object has a dictionary value then add that to our types. *)
-          let ts =
-            match flags.obj_kind with
-            | Indexed { value; _ } -> value :: ts
-            | _ -> ts
-          in
-          (* Create a union type from all our selected types. *)
-          let values_l = Type_mapper.union_flatten cx ts |> union_of_ts reason in
+          let values_l = Flow_js_utils.get_values_type_of_obj_t cx o reason in
           rec_flow_t ~use_op:unknown_use cx trace (values_l, values)
         | (DefT (_, _, InstanceT (_, _, _, { own_props; _ })), GetValuesT (reason, values)) ->
-          (* Find all of the props. *)
-          let props = Context.find_props cx own_props in
-          (* Get the read type for all readable properties and discard the rest. *)
-          let ts =
-            NameUtils.Map.fold
-              (fun key prop ts ->
-                match Property.read_t prop with
-                (* We don't want to include the property type if its name is the
-                   internal value "$key" because that will be the type for the instance
-                   index and not the value. *)
-                | Some t when key != OrdinaryName "$key" -> t :: ts
-                | _ -> ts)
-              props
-              []
-          in
-          (* Create a union type from all our selected types. *)
-          let values_l = Type_mapper.union_flatten cx ts |> union_of_ts reason in
+          let values_l = Flow_js_utils.get_values_type_of_instance_t cx own_props reason in
           rec_flow_t ~use_op:unknown_use cx trace (values_l, values)
         (* Any will always be ok *)
         | (AnyT (_, src), GetValuesT (reason, values)) ->
