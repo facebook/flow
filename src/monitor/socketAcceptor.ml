@@ -198,7 +198,8 @@ let perform_handshake_and_get_client_handshake ~client_fd =
     in
     let error_client () =
       let%lwt () = respond Server_will_hangup None in
-      failwith "Build mismatch, so rejecting attempted connection"
+      Logger.error "Build mismatch, so rejecting attempted connection";
+      Lwt.return None
     in
     let stop_server () =
       let%lwt () = respond Server_will_exit None in
@@ -208,13 +209,13 @@ let perform_handshake_and_get_client_handshake ~client_fd =
       Exit.exit ~msg Exit.Build_id_mismatch
     in
     let fd_as_int = client_fd |> Lwt_unix.unix_file_descr |> Obj.magic in
-    (* Stop request *)
     if client_handshake.is_stop_request then
+      (* Stop request *)
       let%lwt () = respond Server_will_exit None in
       let%lwt () = close client_fd () in
       Server.stop Server.Stopped
-      (* Binary version mismatch *)
     else if client_handshake.client_build_id <> build_revision then
+      (* Binary version mismatch *)
       match client_handshake.version_mismatch_strategy with
       | Always_stop_server -> stop_server ()
       | Stop_server_if_older ->
@@ -224,16 +225,17 @@ let perform_handshake_and_get_client_handshake ~client_fd =
         else
           error_client ()
       | Error_client -> error_client ()
-    (* Too many clients *)
-    else if Sys.unix && fd_as_int > 500 then
+    else if Sys.unix && fd_as_int > 500 then (
+      (* Too many clients *)
       (* We currently rely on using Unix.select, which doesn't work for fds >= FD_SETSIZE (1024).
        * So we can't have an unlimited number of clients. So if the new fd is too large, let's
        * reject it.
        * TODO(glevi): Figure out whether this check is needed for Windows *)
       let%lwt () = respond Server_will_hangup (Some Server_has_too_many_clients) in
-      failwith (spf "Too many clients, so rejecting new connection (%d)" fd_as_int)
+      Logger.error "Too many clients, so rejecting new connection (%d)" fd_as_int;
+      Lwt.return None
+    ) else if not (StatusStream.ever_been_free ()) then
       (* Server still initializing *)
-    else if not (StatusStream.ever_been_free ()) then
       let client = Base.Option.value_exn client in
       let status = StatusStream.get_status () in
       if client_handshake.server_should_hangup_if_still_initializing then (
@@ -259,16 +261,16 @@ let perform_handshake_and_get_client_handshake ~client_fd =
 let catch close exn =
   (* We catch all exceptions, since one bad connection shouldn't kill the whole monitor *)
   begin
-    match exn with
+    match Exception.unwrap exn with
     (* Monitor is dying *)
     | Lwt.Canceled -> ()
     | Marshal_tools.Malformed_Preamble_Exception ->
       Logger.error
-        ~exn
+        ~exn:(Exception.to_exn exn)
         "Someone tried to connect to the socket, but spoke a different protocol. Ignoring them"
-    | exn ->
+    | _ ->
       Logger.error
-        ~exn
+        ~exn:(Exception.to_exn exn)
         "Exception while trying to establish new connection over the socket. Closing connection"
   end;
   close ()
@@ -313,6 +315,10 @@ module MonitorSocketAcceptorLoop = SocketAcceptorLoop (struct
   let name = "socket connection"
 
   let create_socket_connection ~autostop (client_fd, _) =
+    (* Autostop is meant to be "edge-triggered", i.e. when we transition
+       from 1 connections to 0 connections then it might stop the server.
+       But when an attempt to connect has failed, we need to close without
+       triggering an autostop. *)
     let close_without_autostop = close client_fd in
     let close () =
       let%lwt () = close_without_autostop () in
@@ -324,22 +330,19 @@ module MonitorSocketAcceptorLoop = SocketAcceptorLoop (struct
         Lwt.return_unit
     in
     try%lwt
-      let%lwt client = perform_handshake_and_get_client_handshake ~client_fd in
-      Autostop.cancel_countdown ();
-      SocketHandshake.(
-        match client with
-        | Some { client_type = Ephemeral; _ } -> create_ephemeral_connection ~client_fd ~close
-        | Some { client_type = Persistent { lsp_init_params }; _ } ->
-          create_persistent_connection ~client_fd ~close ~lsp_init_params
-        | None -> close_without_autostop ()
-      )
+      match%lwt perform_handshake_and_get_client_handshake ~client_fd with
+      | Some client ->
+        let open SocketHandshake in
+        Autostop.cancel_countdown ();
+        (match client with
+        | { client_type = Ephemeral; _ } -> create_ephemeral_connection ~client_fd ~close
+        | { client_type = Persistent { lsp_init_params }; _ } ->
+          create_persistent_connection ~client_fd ~close ~lsp_init_params)
+      | None -> close_without_autostop ()
     with
-    | exn -> catch close_without_autostop exn
-
-  (* Autostop is meant to be "edge-triggered", i.e. when we transition  *)
-  (* from 1 connections to 0 connections then it might stop the server. *)
-  (* But this catch clause is fired when an attempt to connect has      *)
-  (* failed, and that's why it never triggers an autostop.              *)
+    | exn ->
+      let exn = Exception.wrap exn in
+      catch close_without_autostop exn
 end)
 
 let run monitor_socket_fd ~autostop =
@@ -357,7 +360,9 @@ module LegacySocketAcceptorLoop = SocketAcceptorLoop (struct
       Logger.fatal "%s" msg;
       Server.stop Server.Legacy_client
     with
-    | exn -> catch close exn
+    | exn ->
+      let exn = Exception.wrap exn in
+      catch close exn
 end)
 
 let run_legacy legacy_socket_fd =
