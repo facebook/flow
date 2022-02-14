@@ -147,8 +147,12 @@ let close client_fd () =
    * it, does shutting down first actually make any difference? *)
   begin
     try Lwt_unix.(shutdown client_fd SHUTDOWN_ALL) with
-    (* Already closed *)
-    | Unix.Unix_error ((Unix.EBADF | Unix.ENOTCONN), _, _) -> ()
+    | Unix.(Unix_error ((EBADF | ENOTCONN | ECONNRESET | ECONNABORTED), _, _)) ->
+      (* These errors happen when the connection is already closed, so we can
+         ignore them. Note that POSIX and Windows have different errors:
+         see https://man7.org/linux/man-pages/man2/shutdown.2.html
+         and https://docs.microsoft.com/en-us/windows/win32/api/winsock/nf-winsock-shutdown *)
+      ()
     | exn -> Logger.error ~exn "Failed to shutdown socket client"
   end;
   try%lwt Lwt_unix.close client_fd with
