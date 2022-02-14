@@ -187,100 +187,103 @@ type recheck_outcome =
  * the current one.
  *)
 let rec recheck_single ~recheck_count genv env =
-  ServerMonitorListenerState.(
-    let env = update_env env in
-    let options = genv.ServerEnv.options in
-    let process_updates ?skip_incompatible = process_updates ?skip_incompatible ~options env in
-    (* This ref is an estimate of the files which will be checked by the time the recheck is done.
-     * As the recheck progresses, the estimate will get better. We use this estimate to prevent
-     * canceling the recheck to force a file which we were already going to check
-     *
-     * This early estimate is not a very good estimate, since it's missing new dependents and
-     * dependencies. However it should be good enough to prevent rechecks continuously restarting as
-     * the server gets spammed with autocomplete requests *)
-    let will_be_checked_files = ref env.ServerEnv.checked_files in
-    let get_forced () = !will_be_checked_files in
-    let (priority, workload) = get_and_clear_recheck_workload ~process_updates ~get_forced in
-    let file_watcher_metadata = workload.metadata in
-    let files_to_recheck =
-      CheckedSet.add
-        ~focused:workload.files_to_recheck
-        ~dependencies:workload.files_to_prioritize
-        CheckedSet.empty
-    in
-    let files_to_recheck =
-      if file_watcher_metadata.MonitorProt.missed_changes then
-        (* If the file watcher missed some changes, it's possible that previously-modified
-           files have been reverted when it wasn't watching. Since previously-modified
-           files are focused, we recheck all focused files. *)
-        CheckedSet.add ~focused:(CheckedSet.focused env.checked_files) files_to_recheck
-      else
-        files_to_recheck
-    in
-    let files_to_force = workload.files_to_force in
-    let recheck_reasons_rev = workload.recheck_reasons_rev in
-    if CheckedSet.is_empty files_to_recheck && CheckedSet.is_empty files_to_force then
-      Lwt.return (Nothing_to_do env)
+  let env = ServerMonitorListenerState.update_env env in
+  let options = genv.ServerEnv.options in
+  let process_updates ?skip_incompatible = process_updates ?skip_incompatible ~options env in
+  (* This ref is an estimate of the files which will be checked by the time the recheck is done.
+   * As the recheck progresses, the estimate will get better. We use this estimate to prevent
+   * canceling the recheck to force a file which we were already going to check
+   *
+   * This early estimate is not a very good estimate, since it's missing new dependents and
+   * dependencies. However it should be good enough to prevent rechecks continuously restarting as
+   * the server gets spammed with autocomplete requests *)
+  let will_be_checked_files = ref env.ServerEnv.checked_files in
+  let get_forced () = !will_be_checked_files in
+  let (priority, workload) =
+    ServerMonitorListenerState.get_and_clear_recheck_workload ~process_updates ~get_forced
+  in
+  let {
+    ServerMonitorListenerState.metadata = file_watcher_metadata;
+    files_to_recheck;
+    files_to_prioritize;
+    files_to_force;
+    recheck_reasons_rev;
+  } =
+    workload
+  in
+  let files_to_recheck =
+    CheckedSet.add ~focused:files_to_recheck ~dependencies:files_to_prioritize CheckedSet.empty
+  in
+  let files_to_recheck =
+    if file_watcher_metadata.MonitorProt.missed_changes then
+      (* If the file watcher missed some changes, it's possible that previously-modified
+         files have been reverted when it wasn't watching. Since previously-modified
+         files are focused, we recheck all focused files. *)
+      CheckedSet.add ~focused:(CheckedSet.focused env.checked_files) files_to_recheck
     else
-      (* Start the parallelizable workloads loop and return a function which will stop the loop *)
-      let stop_parallelizable_workloads = start_parallelizable_workloads env in
-      let post_cancel () =
-        Hh_logger.info
-          "Recheck successfully canceled. Restarting the recheck to include new file changes";
-        (* The canceled recheck, or a preceding sequence of canceled rechecks where none completed,
-         * may have introduced garbage into shared memory. Since we immediately start another
-         * recheck, we should first check whether we need to compact. Otherwise, sharedmem could
-         * potentially grow unbounded.
-         *
-         * The constant budget provided here should be sufficient to fully scan a 25G heap within 5
-         * iterations. We want to avoid the scenario where repeatedly cancelled rechecks cause the
-         * heap to grow faster than we can scan. An algorithmic approach to determine the amount of
-         * work based on the allocation rate would be better. *)
-        let _done : bool = SharedMem.collect_slice 20000000 in
-        requeue_workload workload;
-        recheck_single ~recheck_count:(recheck_count + 1) genv env
+      files_to_recheck
+  in
+  if CheckedSet.is_empty files_to_recheck && CheckedSet.is_empty files_to_force then
+    Lwt.return (Nothing_to_do env)
+  else
+    (* Start the parallelizable workloads loop and return a function which will stop the loop *)
+    let stop_parallelizable_workloads = start_parallelizable_workloads env in
+    let post_cancel () =
+      Hh_logger.info
+        "Recheck successfully canceled. Restarting the recheck to include new file changes";
+      (* The canceled recheck, or a preceding sequence of canceled rechecks where none completed,
+       * may have introduced garbage into shared memory. Since we immediately start another
+       * recheck, we should first check whether we need to compact. Otherwise, sharedmem could
+       * potentially grow unbounded.
+       *
+       * The constant budget provided here should be sufficient to fully scan a 25G heap within 5
+       * iterations. We want to avoid the scenario where repeatedly cancelled rechecks cause the
+       * heap to grow faster than we can scan. An algorithmic approach to determine the amount of
+       * work based on the allocation rate would be better. *)
+      let _done : bool = SharedMem.collect_slice 20000000 in
+      ServerMonitorListenerState.requeue_workload workload;
+      recheck_single ~recheck_count:(recheck_count + 1) genv env
+    in
+    let f () =
+      let recheck_reasons = List.rev recheck_reasons_rev in
+      let%lwt (profiling, env) =
+        try%lwt
+          recheck
+            genv
+            env
+            ~files_to_force
+            ~file_watcher_metadata
+            ~recheck_reasons
+            ~will_be_checked_files
+            files_to_recheck
+        with
+        | exn ->
+          let exn = Exception.wrap exn in
+          let%lwt () = stop_parallelizable_workloads () in
+          Exception.reraise exn
       in
-      let f () =
-        let recheck_reasons = List.rev recheck_reasons_rev in
-        let%lwt (profiling, env) =
-          try%lwt
-            recheck
-              genv
-              env
-              ~files_to_force
-              ~file_watcher_metadata
-              ~recheck_reasons
-              ~will_be_checked_files
-              files_to_recheck
-          with
-          | exn ->
-            let exn = Exception.wrap exn in
-            let%lwt () = stop_parallelizable_workloads () in
-            Exception.reraise exn
-        in
-        let%lwt () = stop_parallelizable_workloads () in
+      let%lwt () = stop_parallelizable_workloads () in
 
-        (* Now that the recheck is done, it's safe to retry deferred parallelizable workloads *)
-        ServerMonitorListenerState.requeue_deferred_parallelizable_workloads ();
-        Lwt.return (Completed_recheck { profiling; env; recheck_count })
-      in
+      (* Now that the recheck is done, it's safe to retry deferred parallelizable workloads *)
+      ServerMonitorListenerState.requeue_deferred_parallelizable_workloads ();
+      Lwt.return (Completed_recheck { profiling; env; recheck_count })
+    in
 
-      (* adding files_to_force to will_be_checked_files makes sure that future requests for
-          the same files doesn't cause us to cancel a check that was already working on
-          checking those files (see [get_forced]). note: will_be_checked_files is also passed
-          into [recheck] and mutated further when we determine what to recheck, but forced
-          files are definitely checked, so we can add them now. *)
-      will_be_checked_files := CheckedSet.union files_to_force !will_be_checked_files;
+    (* adding files_to_force to will_be_checked_files makes sure that future requests for
+        the same files doesn't cause us to cancel a check that was already working on
+        checking those files (see [get_forced]). note: will_be_checked_files is also passed
+        into [recheck] and mutated further when we determine what to recheck, but forced
+        files are definitely checked, so we can add them now. *)
+    will_be_checked_files := CheckedSet.union files_to_force !will_be_checked_files;
 
-      run_but_cancel_on_file_changes
-        ~options
-        env
-        ~get_forced
-        ~priority
-        ~f
-        ~pre_cancel:stop_parallelizable_workloads
-        ~post_cancel
-  )
+    run_but_cancel_on_file_changes
+      ~options
+      env
+      ~get_forced
+      ~priority
+      ~f
+      ~pre_cancel:stop_parallelizable_workloads
+      ~post_cancel
 
 let recheck_loop =
   (* It's not obvious to Mr Gabe how we should merge together the profiling info from multiple
