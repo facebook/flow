@@ -236,8 +236,16 @@ let rec dump_t_ (depth, tvars) cx t =
     | ThisClassT (_, inst, _) -> p ~extra:(kid inst) t
     | BoundT (_, name) -> p ~extra:name t
     | GenericT { name; bound; _ } -> p ~extra:(spf "%s: %s" name (kid bound)) t
-    | DefT (_, trust, ObjT { props_tmap; _ }) ->
-      p ~trust:(Some trust) t ~extra:(Properties.string_of_id props_tmap)
+    | DefT (_, trust, ObjT { props_tmap; flags; _ }) ->
+      let obj_kind =
+        match flags.obj_kind with
+        | Exact -> "Exact"
+        | Inexact -> "Inexact"
+        | Indexed { key; value; _ } ->
+          spf "Indexed {[%s]: %s}" (p ~reason:false key) (p ~reason:false value)
+        | UnsealedInFile _ -> "UnsealedInFile"
+      in
+      p ~trust:(Some trust) t ~extra:(spf "%s, %s" (Properties.string_of_id props_tmap) obj_kind)
     | DefT (_, trust, ArrT (ArrayAT (elemt, None))) ->
       p ~trust:(Some trust) ~extra:(spf "Array %s" (kid elemt)) t
     | DefT (_, trust, ArrT (ArrayAT (elemt, Some tup))) ->
