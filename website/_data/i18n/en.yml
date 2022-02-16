@@ -374,6 +374,9 @@ docs_additional_reading: "Additional Reading"
 "/docs/tools/babel/":
   title: "Babel"
   description: "Learn how to use Flow with Babel"
+"/docs/tools/eslint/":
+  title: "ESLint"
+  description: "Learn how to use Flow with ESLint"
 "/docs/tools/flow-remove-types/":
   title: "flow-remove-types"
   description: "Learn how to use Flow with flow-remove-types"

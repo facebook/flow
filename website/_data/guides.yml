@@ -143,6 +143,7 @@
   pages:
     - path: "/docs/tools/"
     - path: "/docs/tools/babel/"
+    - path: "/docs/tools/eslint/"
     - path: "/docs/tools/flow-remove-types/"
     - path: "/docs/tools/create-react-app/"
 
