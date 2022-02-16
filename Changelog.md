@@ -1,3 +1,14 @@
+### 0.172.0
+
+Bug Fixes:
+* Exact objects are treated as truthy in logical expressions
+* Add support for operations on `$Values<>` types in an export position (e.g. [Try Flow](https://flow.org/try/#0CYUwxgNghgTiAEA3W8D2AjAVgLngb3gDNcByQkgGngHNTqT4BfAbgChRJYFkZ4BrXABIAalAgBXEAGcAPABcAngAcQqQmiwA+NiAAeS1DDnxFK+ABV4AXhPLV6vgDoIIAHbU5AC2ZA))
+* Respect the order of `module.file_ext` when resolving imports. Before, they were tried alphabetically.
+
+Misc:
+* Change `signature-verification-failure` from a lint to a normal error. It is no longer valid in the `[lints]` section of `.flowconfig`.
+* Improve performance of IDE commands when Flow is busy typechecking
+
 ### 0.171.0
 
 Likely to cause new Flow errors:
