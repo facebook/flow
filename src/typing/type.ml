@@ -490,7 +490,7 @@ module rec TypeTerm : sig
     | MatchPropT of use_op * reason * propref * tvar
     (* The same comment on SetPrivatePropT applies here *)
     | GetPrivatePropT of use_op * reason * string * class_binding list * bool * tvar
-    | TestPropT of reason * ident * propref * tvar
+    | TestPropT of use_op * reason * ident * propref * tvar
     (* SetElemT has a `tout` parameter to serve as a trigger for ordering
        operations. We only need this in one place: object literal initialization.
        In particular, a computed property in the object initializer users SetElemT
@@ -906,7 +906,7 @@ module rec TypeTerm : sig
         * t option
     | OptGetPropT of use_op * reason * propref
     | OptGetPrivatePropT of use_op * reason * string * class_binding list * bool
-    | OptTestPropT of reason * ident * propref
+    | OptTestPropT of use_op * reason * ident * propref
     | OptGetElemT of use_op * reason * t
     | OptCallElemT of (* call *) reason * (* lookup *) reason * t * opt_method_action
 
@@ -3893,7 +3893,7 @@ let apply_opt_use opt_use t_out =
   | OptCallT (u, r, f) -> CallT (u, r, apply_opt_funcalltype f t_out)
   | OptGetPropT (u, r, p) -> GetPropT (u, r, p, t_out)
   | OptGetPrivatePropT (u, r, s, cbs, b) -> GetPrivatePropT (u, r, s, cbs, b, t_out)
-  | OptTestPropT (r, i, p) -> TestPropT (r, i, p, t_out)
+  | OptTestPropT (u, r, i, p) -> TestPropT (u, r, i, p, t_out)
   | OptGetElemT (u, r, t) -> GetElemT (u, r, t, t_out)
   | OptCallElemT (r1, r2, elt, call) -> CallElemT (r1, r2, elt, apply_opt_action call t_out)
 

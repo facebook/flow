@@ -888,8 +888,17 @@ and dump_use_t_ (depth, tvars) cx t =
       p
         ~extra:(spf "%s, %s, %s" (string_of_use_op use_op) (object_kit resolve_tool tool) (kid tout))
         t
-    | TestPropT (_, _, prop, (preason, ptvar)) ->
-      p ~extra:(spf "(%s), (%s, %s)" (propref prop) (string_of_reason preason) (tvar ptvar)) t
+    | TestPropT (use_op, _, _, prop, (preason, ptvar)) ->
+      p
+        ~extra:
+          (spf
+             "%s, (%s), (%s, %s)"
+             (string_of_use_op use_op)
+             (propref prop)
+             (string_of_reason preason)
+             (tvar ptvar)
+          )
+        t
     | ThisSpecializeT (_, this, _) -> p ~extra:(spf "%s" (kid this)) t
     | ToStringT (_, arg) -> p ~extra:(use_kid arg) t
     | UnaryMinusT _ -> p t

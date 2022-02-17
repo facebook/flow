@@ -338,7 +338,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- heap.js:192:18
 
-Property `bar` is missing in mixed [1]. [incompatible-type]
+Cannot get `x.bar` because property `bar` is missing in mixed [1]. [incompatible-type]
 
    heap.js:192:18
    192|     if (typeof x.bar === 'string') {} // error, so `x.bar` refinement is empty

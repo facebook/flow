@@ -259,7 +259,7 @@ class ['a] t =
         acc
       | GetPropT (_, _, p, t)
       | MatchPropT (_, _, p, t)
-      | TestPropT (_, _, p, t) ->
+      | TestPropT (_, _, _, p, t) ->
         let acc = self#propref cx acc p in
         let acc = self#tout cx pole_TODO acc t in
         acc

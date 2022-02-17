@@ -439,7 +439,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- null.js:17:5
 
-Property `p` is missing in object type [1]. [prop-missing]
+Cannot get `o_nonstrict.p` because property `p` is missing in object type [1]. [prop-missing]
 
    null.js:17:5
    17| if (o_nonstrict.p) { // Error - property p is unknown
@@ -471,7 +471,8 @@ References:
 
 Error -------------------------------------------------------------------------------------------- ternary-crash.js:2:33
 
-property `constructor` [1] cannot be unbound from the context [2] where it was defined. [method-unbinding]
+Cannot get `err.constructor` because property `constructor` [1] cannot be unbound from the context [2] where it was
+defined. [method-unbinding]
 
    ternary-crash.js:2:33
       2| const constructor = (typeof err.constructor === 'function') ? err.constructor : Error;

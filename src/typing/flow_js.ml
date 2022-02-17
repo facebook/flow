@@ -2013,15 +2013,15 @@ struct
                   method_accessible;
                 }
             )
-        | (IntersectionT _, TestPropT (reason, _, prop, tout)) ->
-          rec_flow cx trace (l, GetPropT (unknown_use, reason, prop, tout))
+        | (IntersectionT _, TestPropT (use_op, reason, _, prop, tout)) ->
+          rec_flow cx trace (l, GetPropT (use_op, reason, prop, tout))
         | ( IntersectionT _,
-            OptionalChainT ({ t_out = TestPropT (reason, _, prop, tout); _ } as opt_chain)
+            OptionalChainT ({ t_out = TestPropT (use_op, reason, _, prop, tout); _ } as opt_chain)
           ) ->
           rec_flow
             cx
             trace
-            (l, OptionalChainT { opt_chain with t_out = GetPropT (unknown_use, reason, prop, tout) })
+            (l, OptionalChainT { opt_chain with t_out = GetPropT (use_op, reason, prop, tout) })
         (* extends **)
         | (IntersectionT (_, rep), ExtendsUseT (use_op, reason, try_ts_on_failure, l, u)) ->
           let (t, ts) = InterRep.members_nel rep in
@@ -4717,7 +4717,7 @@ struct
           ) ->
           let access = (use_op, access_reason, (prop_reason, member_name)) in
           GetPropTKit.on_EnumObjectT cx trace enum_reason trust enum access tout
-        | (DefT (_, _, EnumObjectT _), TestPropT (reason, _, prop, tout)) ->
+        | (DefT (_, _, EnumObjectT _), TestPropT (_, reason, _, prop, tout)) ->
           rec_flow cx trace (l, GetPropT (Op (GetProperty reason), reason, prop, tout))
         | ( DefT (enum_reason, trust, EnumObjectT enum),
             MethodT (use_op, call_reason, lookup_reason, (Named _ as propref), action, prop_t)
@@ -4878,31 +4878,27 @@ struct
            know what the type of the property would be, we set things up so that the
            result of the read cannot be used in any interesting way. *)
         (**************************************************************************)
-        | (DefT (_, _, NullT), TestPropT (reason_op, _, propref, tout)) ->
+        | (DefT (_, _, NullT), TestPropT (use_op, reason_op, _, propref, tout)) ->
           (* The wildcard TestPropT implementation forwards the lower bound to
              LookupT. This is unfortunate, because LookupT is designed to terminate
              (successfully) on NullT, but property accesses on null should be type
              errors. Ideally, we should prevent LookupT constraints from being
              syntax-driven, in order to preserve the delicate invariants that
              surround it. *)
-          rec_flow cx trace (l, GetPropT (unknown_use, reason_op, propref, tout))
-        | (DefT (r, trust, MixedT (Mixed_truthy | Mixed_non_maybe)), TestPropT (_, id, _, tout)) ->
+          rec_flow cx trace (l, GetPropT (use_op, reason_op, propref, tout))
+        | ( DefT (r, trust, MixedT (Mixed_truthy | Mixed_non_maybe)),
+            TestPropT (use_op, _, id, _, tout)
+          ) ->
           (* Special-case property tests of definitely non-null/non-void values to
              return mixed and treat them as a hit. *)
           Context.test_prop_hit cx id;
-          rec_flow_t
-            cx
-            trace
-            ~use_op:unknown_use
-            (DefT (r, trust, MixedT Mixed_everything), OpenT tout)
-        | (_, TestPropT (reason_op, id, propref, tout)) ->
+          rec_flow_t cx trace ~use_op (DefT (r, trust, MixedT Mixed_everything), OpenT tout)
+        | (_, TestPropT (use_op, reason_op, id, propref, tout)) ->
           (* NonstrictReturning lookups unify their result, but we don't want to
              unify with the tout tvar directly, so we create an indirection here to
              ensure we only supply lower bounds to tout. *)
           let lookup_default =
-            Tvar.mk_where cx reason_op (fun tvar ->
-                rec_flow_t ~use_op:unknown_use cx trace (tvar, OpenT tout)
-            )
+            Tvar.mk_where cx reason_op (fun tvar -> rec_flow_t ~use_op cx trace (tvar, OpenT tout))
           in
           let name = name_of_propref propref in
           let test_info = Some (id, (reason_op, reason_of_t l)) in
@@ -4949,7 +4945,7 @@ struct
                   lookup_kind;
                   ts = [];
                   propref;
-                  lookup_action = ReadProp { use_op = unknown_use; obj_t = l; tout };
+                  lookup_action = ReadProp { use_op; obj_t = l; tout };
                   method_accessible =
                     begin
                       match l with

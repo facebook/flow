@@ -365,7 +365,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:89:7
 
-property `m` [1] cannot be unbound from the context [2] where it was defined. [method-unbinding]
+Cannot get `a.m` because property `m` [1] cannot be unbound from the context [2] where it was defined.
+[method-unbinding]
 
    test.js:89:7
    89| if (a.m) {} // err
@@ -379,7 +380,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:92:7
 
-property `m` [1] cannot be unbound from the context [2] where it was defined. [method-unbinding]
+Cannot get `b.m` because property `m` [1] cannot be unbound from the context [2] where it was defined.
+[method-unbinding]
 
    test.js:92:7
    92| if (b.m) {} // err
@@ -393,7 +395,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:94:7
 
-property `x` [1] cannot be unbound from the context [2] where it was defined. [method-unbinding]
+Cannot get `b.x` because property `x` [1] cannot be unbound from the context [2] where it was defined.
+[method-unbinding]
 
    test.js:94:7
    94| if (b.x) {} // err
@@ -407,7 +410,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:96:7
 
-property `m` [1] cannot be unbound from the context [2] where it was defined. [method-unbinding]
+Cannot get `j.m` because property `m` [1] cannot be unbound from the context [2] where it was defined.
+[method-unbinding]
 
    test.js:96:7
    96| if (j.m) {} // err
@@ -421,7 +425,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:99:7
 
-property `m` [1] cannot be unbound from the context [2] where it was defined. [method-unbinding]
+Cannot get `i.m` because property `m` [1] cannot be unbound from the context [2] where it was defined.
+[method-unbinding]
 
    test.js:99:7
    99| if (i.m) {} // err

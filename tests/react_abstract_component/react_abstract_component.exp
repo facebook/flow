@@ -706,7 +706,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- test_prop.js:5:7
 
-Property `notOnEitherSFCOrClass` is missing in `React.AbstractComponentStatics` [1]. [prop-missing]
+Cannot get `x.notOnEitherSFCOrClass` because property `notOnEitherSFCOrClass` is missing in
+`React.AbstractComponentStatics` [1]. [prop-missing]
 
    test_prop.js:5:7
      5|   if (x.notOnEitherSFCOrClass) {} // Error Not on any component

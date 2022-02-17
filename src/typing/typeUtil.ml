@@ -141,7 +141,7 @@ and reason_of_use_t = function
   | ObjKitT (_, reason, _, _, _) -> reason
   | SubstOnPredT (_, reason, _, _) -> reason
   | SuperT (_, reason, _) -> reason
-  | TestPropT (reason, _, _, _) -> reason
+  | TestPropT (_, reason, _, _, _) -> reason
   | ThisSpecializeT (reason, _, _) -> reason
   | ToStringT (reason, _) -> reason
   | UnaryMinusT (reason, _) -> reason
@@ -331,7 +331,7 @@ and mod_reason_of_use_t f = function
     ObjKitT (use_op, f reason, resolve_tool, tool, tout)
   | SubstOnPredT (use_op, reason, subst, t) -> SubstOnPredT (use_op, f reason, subst, t)
   | SuperT (op, reason, inst) -> SuperT (op, f reason, inst)
-  | TestPropT (reason, id, n, t) -> TestPropT (f reason, id, n, t)
+  | TestPropT (op, reason, id, n, t) -> TestPropT (op, f reason, id, n, t)
   | ThisSpecializeT (reason, this, k) -> ThisSpecializeT (f reason, this, k)
   | ToStringT (reason, t) -> ToStringT (f reason, t)
   | UnaryMinusT (reason, t) -> UnaryMinusT (f reason, t)
@@ -364,7 +364,7 @@ and mod_reason_of_opt_use_t f = function
   | OptGetPropT (use_op, reason, n) -> OptGetPropT (use_op, f reason, n)
   | OptGetPrivatePropT (use_op, reason, name, bindings, static) ->
     OptGetPrivatePropT (use_op, f reason, name, bindings, static)
-  | OptTestPropT (reason, id, n) -> OptTestPropT (f reason, id, n)
+  | OptTestPropT (use_op, reason, id, n) -> OptTestPropT (use_op, f reason, id, n)
   | OptGetElemT (use_op, reason, it) -> OptGetElemT (use_op, f reason, it)
   | OptCallElemT (r1, r2, elt, call) -> OptCallElemT (f r1, r2, elt, call)
 
@@ -389,6 +389,7 @@ let rec util_use_op_of_use_t :
   | SetPrivatePropT (op, r, s, m, c, b, t, tp) ->
     util op (fun op -> SetPrivatePropT (op, r, s, m, c, b, t, tp))
   | GetPropT (op, r, p, t) -> util op (fun op -> GetPropT (op, r, p, t))
+  | TestPropT (op, r, id, p, t) -> util op (fun op -> TestPropT (op, r, id, p, t))
   | MatchPropT (op, r, p, t) -> util op (fun op -> MatchPropT (op, r, p, t))
   | GetPrivatePropT (op, r, s, c, b, t) -> util op (fun op -> GetPrivatePropT (op, r, s, c, b, t))
   | SetElemT (op, r, t1, m, t2, t3) -> util op (fun op -> SetElemT (op, r, t1, m, t2, t3))
@@ -428,7 +429,6 @@ let rec util_use_op_of_use_t :
   | AssertIterableT ({ use_op; _ } as contents) ->
     util use_op (fun use_op -> AssertIterableT { contents with use_op })
   | MakeExactT (_, _)
-  | TestPropT (_, _, _, _)
   | CallElemT (_, _, _, _)
   | GetStaticsT (_, _)
   | GetProtoT (_, _)

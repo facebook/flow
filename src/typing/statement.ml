@@ -7626,7 +7626,7 @@ struct
   *)
   and get_prop_opt_use ~cond reason ~use_op (prop_reason, name) =
     if Base.Option.is_some cond then
-      OptTestPropT (reason, mk_id (), Named (prop_reason, OrdinaryName name))
+      OptTestPropT (use_op, reason, mk_id (), Named (prop_reason, OrdinaryName name))
     else
       OptGetPropT (use_op, reason, Named (prop_reason, OrdinaryName name))
 
