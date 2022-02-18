@@ -13,7 +13,7 @@ as it points to line 5.
 */
 function test1(b: boolean) {
   var data = { x: 0 };
-  if (b) data = { z: 0 };
+  if (b) data = { x: 0, z: 0 };
   o['fun'](data);
 }
 /*The error position for this one is ok.*/

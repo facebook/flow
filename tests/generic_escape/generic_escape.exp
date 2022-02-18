@@ -1264,8 +1264,44 @@ References:
                          ^ [3]
 
 
+Error --------------------------------------------------------------------------------------------------- spreads.js:5:9
 
-Found 64 errors
+Cannot assign object literal to `esc` because type variable `X` [1] cannot escape from the scope in which it was
+defined [2] (try adding a type annotation to `esc` [3]). [escaped-generic]
+
+   spreads.js:5:9
+   5|   esc = {...x, ...y};
+              ^^^^^^^^^^^^ [1]
+
+References:
+   spreads.js:4:13
+   4| function hh<X: {}, Y: {}>(x: X, y: Y) {
+                  ^ [2]
+   spreads.js:3:5
+   3| var esc;
+          ^^^ [3]
+
+
+Error --------------------------------------------------------------------------------------------------- spreads.js:5:9
+
+Cannot assign object literal to `esc` because type variable `Y` [1] cannot escape from the scope in which it was
+defined [2] (try adding a type annotation to `esc` [3]). [escaped-generic]
+
+   spreads.js:5:9
+   5|   esc = {...x, ...y};
+              ^^^^^^^^^^^^ [1]
+
+References:
+   spreads.js:4:20
+   4| function hh<X: {}, Y: {}>(x: X, y: Y) {
+                         ^ [2]
+   spreads.js:3:5
+   3| var esc;
+          ^^^ [3]
+
+
+
+Found 66 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

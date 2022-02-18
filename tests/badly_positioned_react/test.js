@@ -20,5 +20,5 @@ function create1<P: Object>(
 
 class Foo extends React.Component<Props> {}
 
-Foo = create(create1(Foo));
-<Foo />;
+const Foo1 = create(create1(Foo));
+<Foo1 />;

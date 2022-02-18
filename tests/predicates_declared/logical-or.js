@@ -9,7 +9,7 @@ var s = 'a';
 var n = r(s) || 1;
 (n: number);
 
-var x = "";
+var x = 0;
 if (x = r(s) || 1) {
   (x: number);
 }

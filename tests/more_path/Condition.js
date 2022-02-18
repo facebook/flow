@@ -24,8 +24,7 @@ class C { qux() { } }
 
 function foo() {
 
-  var c = "...";
-  c = new C();
+  var c = new C();
   if (bar()) {
     c.qux();
   }

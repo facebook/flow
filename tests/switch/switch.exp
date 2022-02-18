@@ -35,9 +35,9 @@ Cannot cast `a` to string because number [1] is incompatible with string [2]. [i
             ^
 
 References:
-   switch_default_fallthrough.js:10:13
-   10|         a = 0;
-                   ^ [1]
+   switch_default_fallthrough.js:5:12
+    5|     var a: number | string = "";
+                  ^^^^^^ [1]
    switch_default_fallthrough.js:16:10
    16|     (a : string); // error, string | number ~/> string
                 ^^^^^^ [2]
@@ -52,9 +52,9 @@ Cannot cast `a` to number because string [1] is incompatible with number [2]. [i
             ^
 
 References:
-   switch_default_fallthrough.js:5:13
-    5|     var a = "";
-                   ^^ [1]
+   switch_default_fallthrough.js:5:21
+    5|     var a: number | string = "";
+                           ^^^^^^ [1]
    switch_default_fallthrough.js:17:10
    17|     (a : number); // error, string | number ~/> number
                 ^^^^^^ [2]
@@ -86,9 +86,9 @@ Cannot cast `a` to string because number [1] is incompatible with string [2]. [i
             ^
 
 References:
-   switch_default_fallthrough.js:30:13
-   30|         a = 0;
-                   ^ [1]
+   switch_default_fallthrough.js:25:12
+   25|     var a: number | string = "";
+                  ^^^^^^ [1]
    switch_default_fallthrough.js:39:10
    39|     (a : string); // error, string | number ~/> string
                 ^^^^^^ [2]
@@ -103,9 +103,9 @@ Cannot cast `a` to number because string [1] is incompatible with number [2]. [i
             ^
 
 References:
-   switch_default_fallthrough.js:25:13
-   25|     var a = "";
-                   ^^ [1]
+   switch_default_fallthrough.js:25:21
+   25|     var a: number | string = "";
+                           ^^^^^^ [1]
    switch_default_fallthrough.js:40:10
    40|     (a : number); // error, string | number ~/> number
                 ^^^^^^ [2]
@@ -120,9 +120,9 @@ Cannot cast `b` to string because number [1] is incompatible with string [2]. [i
             ^
 
 References:
-   switch_default_fallthrough.js:35:13
-   35|         b = 0;
-                   ^ [1]
+   switch_default_fallthrough.js:26:12
+   26|     var b: number | string = "";
+                  ^^^^^^ [1]
    switch_default_fallthrough.js:43:10
    43|     (b : string); // error, string | number ~/> string
                 ^^^^^^ [2]
@@ -137,9 +137,9 @@ Cannot cast `b` to number because string [1] is incompatible with number [2]. [i
             ^
 
 References:
-   switch_default_fallthrough.js:26:13
-   26|     var b = "";
-                   ^^ [1]
+   switch_default_fallthrough.js:26:21
+   26|     var b: number | string = "";
+                           ^^^^^^ [1]
    switch_default_fallthrough.js:44:10
    44|     (b : number); // error, string | number ~/> number
                 ^^^^^^ [2]

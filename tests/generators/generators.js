@@ -52,11 +52,11 @@ function *widen_yield() {
   yield "";
   yield true;
 }
-for (var x of widen_yield()) {
-  if (typeof x === "number") {
-  } else if (typeof x === "boolean") {
+for (var x1 of widen_yield()) {
+  if (typeof x1 === "number") {
+  } else if (typeof x1 === "boolean") {
   } else {
-    (x : string) // ok, sherlock
+    (x1 : string) // ok, sherlock
   }
 }
 
@@ -75,8 +75,8 @@ function *delegate_yield_generator() {
 
   yield *inner();
 }
-for (var x of delegate_yield_generator()) {
-  (x : number) // error: string ~> number
+for (var x2 of delegate_yield_generator()) {
+  (x2 : number) // error: string ~> number
 }
 
 function *delegate_return_generator() {

@@ -6,7 +6,7 @@ class Foo {
   m() {
     let x = this.f;
     if (x === '') {
-      x = { x : "" };
+      let x1 = { x : "" };
     }
   }
 }

@@ -406,7 +406,7 @@ function logical11b(y: number): number {
  * && in a loop
  */
 function logical12a(): number {
-    var y = 1;
+    var y: number | boolean = 1;
     var z = true;
     for (var x = 0; x < 5; x++) {
         y = z && y;

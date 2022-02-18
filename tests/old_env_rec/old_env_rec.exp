@@ -1,0 +1,44 @@
+Error ------------------------------------------------------------------------------------------------ eval_union.js:9:5
+
+Cannot call `arr.forEach` because property `forEach` is missing in `Array` [1]. [prop-missing]
+
+   eval_union.js:9:5
+   9| arr.forEach(x => acc.push(x.f));
+          ^^^^^^^
+
+References:
+   eval_union.js:7:18
+   7| declare var arr: Array<{ +f: ?number }>;
+                       ^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------- eval_union.js:9:22
+
+Cannot call `acc.push` because property `push` is missing in `Array` [1]. [prop-missing]
+
+   eval_union.js:9:22
+    9| arr.forEach(x => acc.push(x.f));
+                            ^^^^
+
+References:
+   <BUILTINS>/prelude.js:30:15
+   30| declare class Array<T> extends $ReadOnlyArray<T> {}
+                     ^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------- eval_union.js:10:11
+
+Cannot call `acc.filter` because property `filter` is missing in `Array` [1]. [prop-missing]
+
+   eval_union.js:10:11
+   10| acc = acc.filter(Boolean);
+                 ^^^^^^
+
+References:
+   <BUILTINS>/prelude.js:30:15
+   30| declare class Array<T> extends $ReadOnlyArray<T> {}
+                     ^^^^^ [1]
+
+
+
+Found 3 errors

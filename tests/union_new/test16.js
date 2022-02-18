@@ -13,6 +13,6 @@ foo(() => qux());
 function bar(x: Bar) { }
 bar(() => qux());
 
-var x = false;
+var x: boolean | string = false;
 function qux() { return x; }
 x = "";

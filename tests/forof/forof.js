@@ -62,27 +62,27 @@ function *funky() {
   return "";
 }
 
-for (var x of funky1) {
-  x = x * 3; // error
+for (var x1 of funky1) {
+  const x1_ = x1 * 3; // error
 }
 
-for (var x of funky2) {
-  x();
+for (var x2 of funky2) {
+  x2();
 }
 
-for (var x of funky3) {
-  if (!x) continue;
-  for (var y of x) {
+for (var x3 of funky3) {
+  if (!x3) continue;
+  for (var y of x3) {
     y();
   }
 }
 
-for (var x of funky4) {
-  (x : void)
+for (var x4 of funky4) {
+  (x4 : void)
 }
 
-for (var x of funky()) {
-  (x : number); // error
-  (x : boolean); // error
-  (x : string) //error
+for (var x5 of funky()) {
+  (x5 : number); // error
+  (x5 : boolean); // error
+  (x5 : string) //error
 }

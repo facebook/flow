@@ -4,7 +4,7 @@
  */
 
 function foo() {
-    var x = 0;
+    var x: number | string | boolean = 0;
     var y;
     try {
         x = "";

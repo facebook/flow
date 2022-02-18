@@ -155,36 +155,36 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- class.js:122:4
 
-Cannot cast `x` to number because string [1] is incompatible with number [2]. [incompatible-cast]
+Cannot cast `x1` to number because string [1] is incompatible with number [2]. [incompatible-cast]
 
    class.js:122:4
-   122|   (x : number) // error: string ~> number
-           ^
+   122|   (x1 : number) // error: string ~> number
+           ^^
 
 References:
    class.js:56:13
     56|       yield "";
                     ^^ [1]
-   class.js:122:8
-   122|   (x : number) // error: string ~> number
-               ^^^^^^ [2]
+   class.js:122:9
+   122|   (x1 : number) // error: string ~> number
+                ^^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------------- class.js:128:4
 
-Cannot cast `x` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+Cannot cast `x2` to string because number [1] is incompatible with string [2]. [incompatible-cast]
 
    class.js:128:4
-   128|   (x : string) // error: number ~> string
-           ^
+   128|   (x2 : string) // error: number ~> string
+           ^^
 
 References:
    class.js:75:38
     75|   *delegate_yield_iterable(xs: Array<number>) {
                                              ^^^^^^ [1]
-   class.js:128:8
-   128|   (x : string) // error: number ~> string
-               ^^^^^^ [2]
+   class.js:128:9
+   128|   (x2 : string) // error: number ~> string
+                ^^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------------- class_failure.js:5:22
@@ -357,19 +357,19 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- generators.js:79:4
 
-Cannot cast `x` to number because string [1] is incompatible with number [2]. [incompatible-cast]
+Cannot cast `x2` to number because string [1] is incompatible with number [2]. [incompatible-cast]
 
    generators.js:79:4
-   79|   (x : number) // error: string ~> number
-          ^
+   79|   (x2 : number) // error: string ~> number
+          ^^
 
 References:
    generators.js:73:11
    73|     yield "";
                  ^^ [1]
-   generators.js:79:8
-   79|   (x : number) // error: string ~> number
-              ^^^^^^ [2]
+   generators.js:79:9
+   79|   (x2 : number) // error: string ~> number
+               ^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------- generators.js:87:19

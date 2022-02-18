@@ -270,9 +270,9 @@ Cannot return `y` because boolean [1] is incompatible with number [2]. [incompat
                    ^
 
 References:
-   logical.js:413:13
-   413|         z = false;
-                    ^^^^^ [1]
+   logical.js:409:21
+   409|     var y: number | boolean = 1;
+                            ^^^^^^^ [1]
    logical.js:408:24
    408| function logical12a(): number {
                                ^^^^^^ [2]

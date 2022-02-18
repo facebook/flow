@@ -2,8 +2,8 @@
  * @flow
  */
 function foo(x : mixed): string {
-    var a = "";
-    var b = "";
+    var a: number | string = "";
+    var b: number | string = "";
 
     switch (x) {
       case "foo":
@@ -22,8 +22,8 @@ function foo(x : mixed): string {
 }
 
 function baz(x: mixed): number {
-    var a = "";
-    var b = "";
+    var a: number | string = "";
+    var b: number | string = "";
 
     switch (x) {
       case "baz":

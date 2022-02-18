@@ -108,22 +108,22 @@ examples.widen_next().next(0)
 examples.widen_next().next("")
 examples.widen_next().next(true)
 
-for (var x of examples.widen_yield()) {
-  if (typeof x === "number") {
-  } else if (typeof x === "boolean") {
+for (var x0 of examples.widen_yield()) {
+  if (typeof x0 === "number") {
+  } else if (typeof x0 === "boolean") {
   } else {
-    (x : string) // ok, sherlock
+    (x0 : string) // ok, sherlock
   }
 }
 
 examples.delegate_next_generator().next("");
 
-for (var x of examples.delegate_yield_generator()) {
-  (x : number) // error: string ~> number
+for (var x1 of examples.delegate_yield_generator()) {
+  (x1 : number) // error: string ~> number
 }
 
 examples.delegate_next_iterable([]).next(""); // error: Iterator has no next value
 
-for (var x of examples.delegate_yield_iterable([])) {
-  (x : string) // error: number ~> string
+for (var x2 of examples.delegate_yield_iterable([])) {
+  (x2 : string) // error: number ~> string
 }

@@ -24,9 +24,9 @@ Cannot assign `array[0]` to `x` because string [1] is incompatible with number [
                          ^^^^^^^^
 
 References:
-   array.js:7:45
-   7|     array = array.map (function () { return "..."; });
-                                                  ^^^^^ [1]
+   array.js:5:18
+   5| var array: Array<string> = [];
+                       ^^^^^^ [1]
    array.js:8:11
    8|     var x:number = array[0]; // error: string !~> number
                 ^^^^^^ [2]

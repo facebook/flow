@@ -298,21 +298,6 @@ function-poly-2.js:11:12 = {
   "start":12,
   "end":17
 }
-function-poly-3.js:8:1 = {
-  "type":"number | string",
-  "reasons":[],
-  "loc":{
-    "source":"function-poly-3.js",
-    "type":"SourceFile",
-    "start":{"line":8,"column":1,"offset":73},
-    "end":{"line":8,"column":1,"offset":74}
-  },
-  "path":"function-poly-3.js",
-  "line":8,
-  "endline":8,
-  "start":1,
-  "end":1
-}
 function-poly-4.js:3:11 = {
   "type":"<T>(x: T) => {|f: T|}",
   "reasons":[],
