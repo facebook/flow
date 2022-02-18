@@ -761,7 +761,9 @@ module Expression
     else
       match Peek.token env with
       | T_LPAREN -> arguments env (left_to_callee env)
-      | T_LESS_THAN when should_parse_types env ->
+      | T_LSHIFT
+      | T_LESS_THAN
+        when should_parse_types env ->
         (* If we are parsing types, then f<T>(e) is a function call with a
            type application. If we aren't, it's a nested binary expression. *)
         let error_callback _ _ = raise Try.Rollback in
@@ -901,10 +903,15 @@ module Expression
         }
     in
     fun env ->
-      if Peek.token env = T_LESS_THAN then
-        Some (with_loc args env)
-      else
-        None
+      Eat.push_lex_mode env Lex_mode.TYPE;
+      let node =
+        if Peek.token env = T_LESS_THAN then
+          Some (with_loc args env)
+        else
+          None
+      in
+      Eat.pop_lex_mode env;
+      node
 
   and arguments =
     let spread_element env =
