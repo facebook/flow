@@ -28,8 +28,6 @@ show_help() {
   echo "        quiet output (hides status, just prints results)"
   echo "    -s"
   echo "        test saved state"
-  echo "    -m"
-  echo "        test new merge"
   echo "    -v"
   echo "        verbose output (shows skipped tests)"
   echo "    -h"
