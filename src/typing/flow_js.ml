@@ -5309,6 +5309,7 @@ struct
                 ts = [];
                 propref;
                 lookup_action = action;
+                ids;
                 _;
               }
           ) ->
@@ -5328,7 +5329,15 @@ struct
             Base.Option.value ~default:unknown_use (Some (use_op_of_lookup_action action))
           in
           Base.Option.iter test_opt ~f:(fun (id, reasons) ->
-              Context.test_prop_miss cx id (name_of_propref propref) reasons use_op
+              let suggestion =
+                match propref with
+                | Named (_, OrdinaryName name) ->
+                  Base.Option.bind ids ~f:(fun ids ->
+                      prop_typo_suggestion cx (Properties.Set.elements ids) name
+                  )
+                | _ -> None
+              in
+              Context.test_prop_miss cx id (name_of_propref propref) reasons use_op suggestion
           );
 
           begin

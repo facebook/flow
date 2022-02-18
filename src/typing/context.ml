@@ -71,7 +71,7 @@ type metadata = {
 
 type test_prop_hit_or_miss =
   | Hit
-  | Miss of Reason.name option * (Reason.t * Reason.t) * Type.use_op
+  | Miss of Reason.name option * (Reason.t * Reason.t) * Type.use_op * string option
 
 type type_assert_kind =
   | Is
@@ -737,17 +737,17 @@ let clear_master_shared cx master_cx =
 let test_prop_hit cx id =
   cx.ccx.test_prop_hits_and_misses <- IMap.add id Hit cx.ccx.test_prop_hits_and_misses
 
-let test_prop_miss cx id name reasons use =
+let test_prop_miss cx id name reasons use suggestion =
   if not (IMap.mem id cx.ccx.test_prop_hits_and_misses) then
     cx.ccx.test_prop_hits_and_misses <-
-      IMap.add id (Miss (name, reasons, use)) cx.ccx.test_prop_hits_and_misses
+      IMap.add id (Miss (name, reasons, use, suggestion)) cx.ccx.test_prop_hits_and_misses
 
 let test_prop_get_never_hit cx =
   List.fold_left
     (fun acc (_, hit_or_miss) ->
       match hit_or_miss with
       | Hit -> acc
-      | Miss (name, reasons, use_op) -> (name, reasons, use_op) :: acc)
+      | Miss (name, reasons, use_op, suggestion) -> (name, reasons, use_op, suggestion) :: acc)
     []
     (IMap.bindings cx.ccx.test_prop_hits_and_misses)
 

@@ -417,9 +417,16 @@ val clear_master_shared : t -> master_context -> unit
 val test_prop_hit : t -> Type.ident -> unit
 
 val test_prop_miss :
-  t -> Type.ident -> Reason.name option -> Reason.t * Reason.t -> Type.use_op -> unit
+  t ->
+  Type.ident ->
+  Reason.name option ->
+  Reason.t * Reason.t ->
+  Type.use_op ->
+  string option ->
+  unit
 
-val test_prop_get_never_hit : t -> (Reason.name option * (Reason.t * Reason.t) * Type.use_op) list
+val test_prop_get_never_hit :
+  t -> (Reason.name option * (Reason.t * Reason.t) * Type.use_op * string option) list
 
 val computed_property_state_for_id : t -> Type.ident -> computed_property_state option
 

@@ -51,3 +51,7 @@ C.s11111;
 C.s22222;
 C.s33333;
 
+// Test prop suggestions:
+if (x.asd) {} // Error with suggestion
+if (b.fooo) {} // Error with suggestion
+if (C.s333) {} // Error with suggestion

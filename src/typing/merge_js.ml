@@ -65,12 +65,10 @@ let detect_sketchy_null_checks cx =
 let detect_test_prop_misses cx =
   let misses = Context.test_prop_get_never_hit cx in
   Base.List.iter
-    ~f:(fun (prop_name, (reason_prop, reason_obj), use_op) ->
+    ~f:(fun (prop_name, (reason_prop, reason_obj), use_op, suggestion) ->
       Flow_js.add_output
         cx
-        (Error_message.EPropNotFound
-           { prop_name; reason_prop; reason_obj; use_op; suggestion = None }
-        ))
+        (Error_message.EPropNotFound { prop_name; reason_prop; reason_obj; use_op; suggestion }))
     misses
 
 let detect_unnecessary_optional_chains cx =

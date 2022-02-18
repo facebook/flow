@@ -3541,7 +3541,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- tagged_union.js:111:9
 
-Cannot get `x.legnth` because property `legnth` is missing in array type [1]. [prop-missing]
+Cannot get `x.legnth` because property `legnth` (did you mean `length`?) is missing in array type [1]. [prop-missing]
 
    tagged_union.js:111:9
    111|     if (x.legnth === 0) { // Error, typos
@@ -3572,7 +3572,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- tagged_union.js:116:9
 
-Cannot get `y.legnth` because property `legnth` is missing in string [1]. [prop-missing]
+Cannot get `y.legnth` because property `legnth` (did you mean `length`?) is missing in string [1]. [prop-missing]
 
    tagged_union.js:116:9
    116|     if (y.legnth === 0) { // Error, typo
@@ -3621,7 +3621,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- tagged_union.js:121:9
 
-Cannot get `z.toStirng` because property `toStirng` is missing in number [1]. [prop-missing]
+Cannot get `z.toStirng` because property `toStirng` (did you mean `toString`?) is missing in number [1]. [prop-missing]
 
    tagged_union.js:121:9
    121|     if (z.toStirng === 0) { // Error, typo
@@ -3670,7 +3670,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- tagged_union.js:126:9
 
-Cannot get `q.valeuOf` because property `valeuOf` is missing in boolean [1]. [prop-missing]
+Cannot get `q.valeuOf` because property `valeuOf` (did you mean `valueOf`?) is missing in boolean [1]. [prop-missing]
 
    tagged_union.js:126:9
    126|     if (q.valeuOf === 0) { // Error, typo
@@ -3866,7 +3866,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- tagged_union.js:162:9
 
-Cannot get `x.badBool` because property `badBool` is missing in object type [1]. [prop-missing]
+Cannot get `x.badBool` because property `badBool` (did you mean `bool`?) is missing in object type [1]. [prop-missing]
 
    tagged_union.js:162:9
    162|     if (x.badBool === true) { // Error, reading unknown property
