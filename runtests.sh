@@ -22,6 +22,8 @@ show_help() {
   echo "        run the test DIR/tests/TEST, equivalent to a filter of \"^TEST$\""
   echo "    -e"
   echo "        test using new implementation of the type environment"
+  echo "    -c"
+  echo "        test using constrained writes"
   echo "    -r"
   echo "        re-record failing tests to update expected output"
   echo "    -q"
@@ -45,8 +47,9 @@ verbose=0
 quiet=0
 relative="$THIS_DIR"
 new_env=0
-export saved_state filter new_env
-while getopts "b:d:f:elqrst:vh?" opt; do
+constrained_writes=0
+export saved_state filter new_env constrained_writes
+while getopts "b:d:f:eclqrst:vh?" opt; do
   case "$opt" in
   b)
     FLOW="$OPTARG"
@@ -59,6 +62,9 @@ while getopts "b:d:f:elqrst:vh?" opt; do
     ;;
   e)
     new_env=1
+    ;;
+  c)
+    constrained_writes=1
     ;;
   l)
     list_tests=1
@@ -96,6 +102,11 @@ if [ -n "$specific_test" ]; then
   fi
 
   filter="^$specific_test$"
+fi
+
+if [[ "$new_env" -eq 1 ]] && [[ "$constrained_writes" -eq 1 ]]; then
+  printf "Can only set one new environment flag at a time (-e or -c).\n"
+  exit 1
 fi
 
 FLOW="${FLOW:-$1}"

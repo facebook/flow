@@ -1007,6 +1007,7 @@ let options_flags =
               (enum
                  [
                    ("classic", Options.ClassicEnv []);
+                   ("constrained-writes", Options.ClassicEnv [Options.ConstrainWrites]);
                    ("ssa", Options.SSAEnv { resolved = false });
                    ("resolved", Options.SSAEnv { resolved = true });
                  ]
