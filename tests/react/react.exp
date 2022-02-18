@@ -3199,8 +3199,8 @@ Cannot cast `propName` to empty because string [1] is incompatible with empty [2
                ^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:474:13
-   474|   propName: string,
+   <BUILTINS>/react.js:475:13
+   475|   propName: string,
                     ^^^^^^ [1]
    proptype_custom_validator.js:8:18
      8|       (propName: empty); // error: propName is a string
@@ -3216,8 +3216,8 @@ Cannot cast `componentName` to empty because string [1] is incompatible with emp
                ^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:475:18
-   475|   componentName: string,
+   <BUILTINS>/react.js:476:18
+   476|   componentName: string,
                          ^^^^^^ [1]
    proptype_custom_validator.js:9:23
      9|       (componentName: empty); // error: componentName is a string
@@ -3233,8 +3233,8 @@ Cannot cast `href` to empty because string [1] is incompatible with empty [2]. [
                ^^^^
 
 References:
-   <BUILTINS>/react.js:476:10
-   476|   href?: string) => ?Error;
+   <BUILTINS>/react.js:477:10
+   477|   href?: string) => ?Error;
                  ^^^^^^ [1]
    proptype_custom_validator.js:10:14
     10|       (href: empty); // error: href is an optional string
@@ -3250,8 +3250,8 @@ Cannot cast `href` to empty because undefined [1] is incompatible with empty [2]
                ^^^^
 
 References:
-   <BUILTINS>/react.js:476:10
-   476|   href?: string) => ?Error;
+   <BUILTINS>/react.js:477:10
+   477|   href?: string) => ?Error;
                  ^^^^^^ [1]
    proptype_custom_validator.js:10:14
     10|       (href: empty); // error: href is an optional string
@@ -3267,8 +3267,8 @@ Cannot return `0` because mixed [1] is incompatible with `Error` [2]. [incompati
                          ^^^^^ [1]
 
 References:
-   <BUILTINS>/react.js:476:22
-   476|   href?: string) => ?Error;
+   <BUILTINS>/react.js:477:22
+   477|   href?: string) => ?Error;
                              ^^^^^ [2]
 
 
@@ -3928,8 +3928,8 @@ first parameter. [incompatible-cast]
          ^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:485:17
-   485|   (typeChecker: ReactPropsCheckType) => ReactPropsChainableTypeChecker;
+   <BUILTINS>/react.js:486:17
+   486|   (typeChecker: ReactPropsCheckType) => ReactPropsChainableTypeChecker;
                         ^^^^^^^^^^^^^^^^^^^ [1]
    proptypes_builtins.js:3:14
      3| type NoFun = mixed => empty;
@@ -3946,8 +3946,8 @@ empty [2] in the return value. [incompatible-cast]
          ^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:485:41
-   485|   (typeChecker: ReactPropsCheckType) => ReactPropsChainableTypeChecker;
+   <BUILTINS>/react.js:486:41
+   486|   (typeChecker: ReactPropsCheckType) => ReactPropsChainableTypeChecker;
                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    proptypes_builtins.js:3:23
      3| type NoFun = mixed => empty;
@@ -3964,8 +3964,8 @@ empty [2] in the return value. [incompatible-cast]
          ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:487:27
-   487|   (expectedClass: any) => ReactPropsChainableTypeChecker;
+   <BUILTINS>/react.js:488:27
+   488|   (expectedClass: any) => ReactPropsChainableTypeChecker;
                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    proptypes_builtins.js:3:23
      3| type NoFun = mixed => empty;
@@ -3982,8 +3982,8 @@ the first parameter. [incompatible-cast]
          ^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:489:17
-   489|   (typeChecker: ReactPropsCheckType) => ReactPropsChainableTypeChecker;
+   <BUILTINS>/react.js:490:17
+   490|   (typeChecker: ReactPropsCheckType) => ReactPropsChainableTypeChecker;
                         ^^^^^^^^^^^^^^^^^^^ [1]
    proptypes_builtins.js:3:14
      3| type NoFun = mixed => empty;
@@ -4000,8 +4000,8 @@ empty [2] in the return value. [incompatible-cast]
          ^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:489:41
-   489|   (typeChecker: ReactPropsCheckType) => ReactPropsChainableTypeChecker;
+   <BUILTINS>/react.js:490:41
+   490|   (typeChecker: ReactPropsCheckType) => ReactPropsChainableTypeChecker;
                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    proptypes_builtins.js:3:23
      3| type NoFun = mixed => empty;
@@ -4018,8 +4018,8 @@ parameter. [incompatible-cast]
          ^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:491:20
-   491|   (expectedValues: Array<any>) => ReactPropsChainableTypeChecker;
+   <BUILTINS>/react.js:492:20
+   492|   (expectedValues: Array<any>) => ReactPropsChainableTypeChecker;
                            ^^^^^^^^^^ [1]
    proptypes_builtins.js:3:14
      3| type NoFun = mixed => empty;
@@ -4036,8 +4036,8 @@ empty [2] in the return value. [incompatible-cast]
          ^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:491:35
-   491|   (expectedValues: Array<any>) => ReactPropsChainableTypeChecker;
+   <BUILTINS>/react.js:492:35
+   492|   (expectedValues: Array<any>) => ReactPropsChainableTypeChecker;
                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    proptypes_builtins.js:3:23
      3| type NoFun = mixed => empty;
@@ -4054,8 +4054,8 @@ parameter. [incompatible-cast]
          ^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:493:25
-   493|   (arrayOfTypeCheckers: Array<ReactPropsCheckType>) =>
+   <BUILTINS>/react.js:494:25
+   494|   (arrayOfTypeCheckers: Array<ReactPropsCheckType>) =>
                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    proptypes_builtins.js:3:14
      3| type NoFun = mixed => empty;
@@ -4072,8 +4072,8 @@ empty [2] in the return value. [incompatible-cast]
          ^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:494:5
-   494|     ReactPropsChainableTypeChecker;
+   <BUILTINS>/react.js:495:5
+   495|     ReactPropsChainableTypeChecker;
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    proptypes_builtins.js:3:23
      3| type NoFun = mixed => empty;
@@ -4090,8 +4090,8 @@ parameter. [incompatible-cast]
          ^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:496:16
-   496|   (shapeTypes: { [key: string]: ReactPropsCheckType, ... }) =>
+   <BUILTINS>/react.js:497:16
+   497|   (shapeTypes: { [key: string]: ReactPropsCheckType, ... }) =>
                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    proptypes_builtins.js:3:14
      3| type NoFun = mixed => empty;
@@ -4108,8 +4108,8 @@ empty [2] in the return value. [incompatible-cast]
          ^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:497:5
-   497|     ReactPropsChainableTypeChecker;
+   <BUILTINS>/react.js:498:5
+   498|     ReactPropsChainableTypeChecker;
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    proptypes_builtins.js:3:23
      3| type NoFun = mixed => empty;
@@ -4488,8 +4488,8 @@ Cannot call `React.useMutationEffect` because property `useMutationEffect` is mi
 
 References:
    <BUILTINS>/react.js:428:26
-                                 v-
-   428|   declare export default {|
+                                 v
+   428|   declare export default {
    429|     +DOM: typeof DOM,
    430|     +PropTypes: typeof PropTypes,
    431|     +version: typeof version,
@@ -4505,7 +4505,6 @@ References:
    441|     +forwardRef: typeof forwardRef,
    442|     +isValidElement: typeof isValidElement,
       :
-   449|     +Profiler: typeof Profiler,
    450|     +Suspense: typeof Suspense,
    451|     +useContext: typeof useContext,
    452|     +useState: typeof useState,
@@ -4519,8 +4518,9 @@ References:
    460|     +useTransition: typeof useTransition,
    461|     +useDeferredValue: typeof useDeferredValue,
    462|     +startTransition: typeof startTransition,
-   463|   |};
-          -^ [1]
+   463|     ...
+   464|   };
+          ^ [1]
 
 
 Error ----------------------------------------------------------------------------------------- useContext_hook.js:21:18
@@ -4632,8 +4632,8 @@ Cannot call `React.useDebugValue` because property `useDebugValue` is missing in
 
 References:
    <BUILTINS>/react.js:428:26
-                                 v-
-   428|   declare export default {|
+                                 v
+   428|   declare export default {
    429|     +DOM: typeof DOM,
    430|     +PropTypes: typeof PropTypes,
    431|     +version: typeof version,
@@ -4649,7 +4649,6 @@ References:
    441|     +forwardRef: typeof forwardRef,
    442|     +isValidElement: typeof isValidElement,
       :
-   449|     +Profiler: typeof Profiler,
    450|     +Suspense: typeof Suspense,
    451|     +useContext: typeof useContext,
    452|     +useState: typeof useState,
@@ -4663,8 +4662,9 @@ References:
    460|     +useTransition: typeof useTransition,
    461|     +useDeferredValue: typeof useDeferredValue,
    462|     +startTransition: typeof startTransition,
-   463|   |};
-          -^ [1]
+   463|     ...
+   464|   };
+          ^ [1]
 
 
 Error -------------------------------------------------------------------------------------------- useEffect_hook.js:6:9
@@ -4919,8 +4919,8 @@ Cannot call `React.useMutationEffect` because property `useMutationEffect` is mi
 
 References:
    <BUILTINS>/react.js:428:26
-                                 v-
-   428|   declare export default {|
+                                 v
+   428|   declare export default {
    429|     +DOM: typeof DOM,
    430|     +PropTypes: typeof PropTypes,
    431|     +version: typeof version,
@@ -4936,7 +4936,6 @@ References:
    441|     +forwardRef: typeof forwardRef,
    442|     +isValidElement: typeof isValidElement,
       :
-   449|     +Profiler: typeof Profiler,
    450|     +Suspense: typeof Suspense,
    451|     +useContext: typeof useContext,
    452|     +useState: typeof useState,
@@ -4950,8 +4949,9 @@ References:
    460|     +useTransition: typeof useTransition,
    461|     +useDeferredValue: typeof useDeferredValue,
    462|     +startTransition: typeof startTransition,
-   463|   |};
-          -^ [1]
+   463|     ...
+   464|   };
+          ^ [1]
 
 
 Error ----------------------------------------------------------------------------------- useMutationEffect_hook.js:11:9
@@ -4964,8 +4964,8 @@ Cannot call `React.useMutationEffect` because property `useMutationEffect` is mi
 
 References:
    <BUILTINS>/react.js:428:26
-                                 v-
-   428|   declare export default {|
+                                 v
+   428|   declare export default {
    429|     +DOM: typeof DOM,
    430|     +PropTypes: typeof PropTypes,
    431|     +version: typeof version,
@@ -4981,7 +4981,6 @@ References:
    441|     +forwardRef: typeof forwardRef,
    442|     +isValidElement: typeof isValidElement,
       :
-   449|     +Profiler: typeof Profiler,
    450|     +Suspense: typeof Suspense,
    451|     +useContext: typeof useContext,
    452|     +useState: typeof useState,
@@ -4995,8 +4994,9 @@ References:
    460|     +useTransition: typeof useTransition,
    461|     +useDeferredValue: typeof useDeferredValue,
    462|     +startTransition: typeof startTransition,
-   463|   |};
-          -^ [1]
+   463|     ...
+   464|   };
+          ^ [1]
 
 
 Error ----------------------------------------------------------------------------------- useMutationEffect_hook.js:12:9
@@ -5009,8 +5009,8 @@ Cannot call `React.useMutationEffect` because property `useMutationEffect` is mi
 
 References:
    <BUILTINS>/react.js:428:26
-                                 v-
-   428|   declare export default {|
+                                 v
+   428|   declare export default {
    429|     +DOM: typeof DOM,
    430|     +PropTypes: typeof PropTypes,
    431|     +version: typeof version,
@@ -5026,7 +5026,6 @@ References:
    441|     +forwardRef: typeof forwardRef,
    442|     +isValidElement: typeof isValidElement,
       :
-   449|     +Profiler: typeof Profiler,
    450|     +Suspense: typeof Suspense,
    451|     +useContext: typeof useContext,
    452|     +useState: typeof useState,
@@ -5040,8 +5039,9 @@ References:
    460|     +useTransition: typeof useTransition,
    461|     +useDeferredValue: typeof useDeferredValue,
    462|     +startTransition: typeof startTransition,
-   463|   |};
-          -^ [1]
+   463|     ...
+   464|   };
+          ^ [1]
 
 
 Error ----------------------------------------------------------------------------------- useMutationEffect_hook.js:13:9
@@ -5054,8 +5054,8 @@ Cannot call `React.useMutationEffect` because property `useMutationEffect` is mi
 
 References:
    <BUILTINS>/react.js:428:26
-                                 v-
-   428|   declare export default {|
+                                 v
+   428|   declare export default {
    429|     +DOM: typeof DOM,
    430|     +PropTypes: typeof PropTypes,
    431|     +version: typeof version,
@@ -5071,7 +5071,6 @@ References:
    441|     +forwardRef: typeof forwardRef,
    442|     +isValidElement: typeof isValidElement,
       :
-   449|     +Profiler: typeof Profiler,
    450|     +Suspense: typeof Suspense,
    451|     +useContext: typeof useContext,
    452|     +useState: typeof useState,
@@ -5085,8 +5084,9 @@ References:
    460|     +useTransition: typeof useTransition,
    461|     +useDeferredValue: typeof useDeferredValue,
    462|     +startTransition: typeof startTransition,
-   463|   |};
-          -^ [1]
+   463|     ...
+   464|   };
+          ^ [1]
 
 
 Error ----------------------------------------------------------------------------------- useMutationEffect_hook.js:16:9
@@ -5099,8 +5099,8 @@ Cannot call `React.useMutationEffect` because property `useMutationEffect` is mi
 
 References:
    <BUILTINS>/react.js:428:26
-                                 v-
-   428|   declare export default {|
+                                 v
+   428|   declare export default {
    429|     +DOM: typeof DOM,
    430|     +PropTypes: typeof PropTypes,
    431|     +version: typeof version,
@@ -5116,7 +5116,6 @@ References:
    441|     +forwardRef: typeof forwardRef,
    442|     +isValidElement: typeof isValidElement,
       :
-   449|     +Profiler: typeof Profiler,
    450|     +Suspense: typeof Suspense,
    451|     +useContext: typeof useContext,
    452|     +useState: typeof useState,
@@ -5130,8 +5129,9 @@ References:
    460|     +useTransition: typeof useTransition,
    461|     +useDeferredValue: typeof useDeferredValue,
    462|     +startTransition: typeof startTransition,
-   463|   |};
-          -^ [1]
+   463|     ...
+   464|   };
+          ^ [1]
 
 
 Error ----------------------------------------------------------------------------------- useMutationEffect_hook.js:17:9
@@ -5144,8 +5144,8 @@ Cannot call `React.useMutationEffect` because property `useMutationEffect` is mi
 
 References:
    <BUILTINS>/react.js:428:26
-                                 v-
-   428|   declare export default {|
+                                 v
+   428|   declare export default {
    429|     +DOM: typeof DOM,
    430|     +PropTypes: typeof PropTypes,
    431|     +version: typeof version,
@@ -5161,7 +5161,6 @@ References:
    441|     +forwardRef: typeof forwardRef,
    442|     +isValidElement: typeof isValidElement,
       :
-   449|     +Profiler: typeof Profiler,
    450|     +Suspense: typeof Suspense,
    451|     +useContext: typeof useContext,
    452|     +useState: typeof useState,
@@ -5175,8 +5174,9 @@ References:
    460|     +useTransition: typeof useTransition,
    461|     +useDeferredValue: typeof useDeferredValue,
    462|     +startTransition: typeof startTransition,
-   463|   |};
-          -^ [1]
+   463|     ...
+   464|   };
+          ^ [1]
 
 
 Error ----------------------------------------------------------------------------------- useMutationEffect_hook.js:18:9
@@ -5189,8 +5189,8 @@ Cannot call `React.useMutationEffect` because property `useMutationEffect` is mi
 
 References:
    <BUILTINS>/react.js:428:26
-                                 v-
-   428|   declare export default {|
+                                 v
+   428|   declare export default {
    429|     +DOM: typeof DOM,
    430|     +PropTypes: typeof PropTypes,
    431|     +version: typeof version,
@@ -5206,7 +5206,6 @@ References:
    441|     +forwardRef: typeof forwardRef,
    442|     +isValidElement: typeof isValidElement,
       :
-   449|     +Profiler: typeof Profiler,
    450|     +Suspense: typeof Suspense,
    451|     +useContext: typeof useContext,
    452|     +useState: typeof useState,
@@ -5220,8 +5219,9 @@ References:
    460|     +useTransition: typeof useTransition,
    461|     +useDeferredValue: typeof useDeferredValue,
    462|     +startTransition: typeof startTransition,
-   463|   |};
-          -^ [1]
+   463|     ...
+   464|   };
+          ^ [1]
 
 
 Error ----------------------------------------------------------------------------------- useMutationEffect_hook.js:22:9
@@ -5234,8 +5234,8 @@ Cannot call `React.useMutationEffect` because property `useMutationEffect` is mi
 
 References:
    <BUILTINS>/react.js:428:26
-                                 v-
-   428|   declare export default {|
+                                 v
+   428|   declare export default {
    429|     +DOM: typeof DOM,
    430|     +PropTypes: typeof PropTypes,
    431|     +version: typeof version,
@@ -5251,7 +5251,6 @@ References:
    441|     +forwardRef: typeof forwardRef,
    442|     +isValidElement: typeof isValidElement,
       :
-   449|     +Profiler: typeof Profiler,
    450|     +Suspense: typeof Suspense,
    451|     +useContext: typeof useContext,
    452|     +useState: typeof useState,
@@ -5265,8 +5264,9 @@ References:
    460|     +useTransition: typeof useTransition,
    461|     +useDeferredValue: typeof useDeferredValue,
    462|     +startTransition: typeof startTransition,
-   463|   |};
-          -^ [1]
+   463|     ...
+   464|   };
+          ^ [1]
 
 
 Error ----------------------------------------------------------------------------------- useMutationEffect_hook.js:23:9
@@ -5279,8 +5279,8 @@ Cannot call `React.useMutationEffect` because property `useMutationEffect` is mi
 
 References:
    <BUILTINS>/react.js:428:26
-                                 v-
-   428|   declare export default {|
+                                 v
+   428|   declare export default {
    429|     +DOM: typeof DOM,
    430|     +PropTypes: typeof PropTypes,
    431|     +version: typeof version,
@@ -5296,7 +5296,6 @@ References:
    441|     +forwardRef: typeof forwardRef,
    442|     +isValidElement: typeof isValidElement,
       :
-   449|     +Profiler: typeof Profiler,
    450|     +Suspense: typeof Suspense,
    451|     +useContext: typeof useContext,
    452|     +useState: typeof useState,
@@ -5310,8 +5309,9 @@ References:
    460|     +useTransition: typeof useTransition,
    461|     +useDeferredValue: typeof useDeferredValue,
    462|     +startTransition: typeof startTransition,
-   463|   |};
-          -^ [1]
+   463|     ...
+   464|   };
+          ^ [1]
 
 
 Error ------------------------------------------------------------------------------------------- useReducer_hook.js:6:9

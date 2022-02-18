@@ -48,8 +48,8 @@ Cannot get `React.Missing` because property `Missing` is missing in module `reac
                      ^^^^^^^
 
 References:
-   <BUILTINS>/react.js:469:27
-   469|   declare module.exports: $Exports<'react'>;
+   <BUILTINS>/react.js:470:27
+   470|   declare module.exports: $Exports<'react'>;
                                   ^^^^^^^^^^^^^^^^^ [1]
 
 
@@ -158,8 +158,8 @@ Cannot get `React.Missing` because property `Missing` is missing in module `reac
                      ^^^^^^^
 
 References:
-   <BUILTINS>/react.js:469:27
-   469|   declare module.exports: $Exports<'react'>;
+   <BUILTINS>/react.js:470:27
+   470|   declare module.exports: $Exports<'react'>;
                                   ^^^^^^^^^^^^^^^^^ [1]
 
 
@@ -191,8 +191,8 @@ Cannot get `React.Node` because property `Node` is missing in object type [1]. [
 
 References:
    <BUILTINS>/react.js:428:26
-                                 v-
-   428|   declare export default {|
+                                 v
+   428|   declare export default {
    429|     +DOM: typeof DOM,
    430|     +PropTypes: typeof PropTypes,
    431|     +version: typeof version,
@@ -208,7 +208,6 @@ References:
    441|     +forwardRef: typeof forwardRef,
    442|     +isValidElement: typeof isValidElement,
       :
-   449|     +Profiler: typeof Profiler,
    450|     +Suspense: typeof Suspense,
    451|     +useContext: typeof useContext,
    452|     +useState: typeof useState,
@@ -222,8 +221,9 @@ References:
    460|     +useTransition: typeof useTransition,
    461|     +useDeferredValue: typeof useDeferredValue,
    462|     +startTransition: typeof startTransition,
-   463|   |};
-          -^ [1]
+   463|     ...
+   464|   };
+          ^ [1]
 
 
 Error ----------------------------------------------------------------------------------------------- es-default.js:6:12
@@ -236,8 +236,8 @@ Cannot get `React.Node` because property `Node` is missing in object type [1]. [
 
 References:
    <BUILTINS>/react.js:428:26
-                                 v-
-   428|   declare export default {|
+                                 v
+   428|   declare export default {
    429|     +DOM: typeof DOM,
    430|     +PropTypes: typeof PropTypes,
    431|     +version: typeof version,
@@ -253,7 +253,6 @@ References:
    441|     +forwardRef: typeof forwardRef,
    442|     +isValidElement: typeof isValidElement,
       :
-   449|     +Profiler: typeof Profiler,
    450|     +Suspense: typeof Suspense,
    451|     +useContext: typeof useContext,
    452|     +useState: typeof useState,
@@ -267,8 +266,9 @@ References:
    460|     +useTransition: typeof useTransition,
    461|     +useDeferredValue: typeof useDeferredValue,
    462|     +startTransition: typeof startTransition,
-   463|   |};
-          -^ [1]
+   463|     ...
+   464|   };
+          ^ [1]
 
 
 Error ----------------------------------------------------------------------------------------------- es-default.js:7:14
@@ -281,8 +281,8 @@ Cannot get `React.Missing` because property `Missing` is missing in object type 
 
 References:
    <BUILTINS>/react.js:428:26
-                                 v-
-   428|   declare export default {|
+                                 v
+   428|   declare export default {
    429|     +DOM: typeof DOM,
    430|     +PropTypes: typeof PropTypes,
    431|     +version: typeof version,
@@ -298,7 +298,6 @@ References:
    441|     +forwardRef: typeof forwardRef,
    442|     +isValidElement: typeof isValidElement,
       :
-   449|     +Profiler: typeof Profiler,
    450|     +Suspense: typeof Suspense,
    451|     +useContext: typeof useContext,
    452|     +useState: typeof useState,
@@ -312,8 +311,9 @@ References:
    460|     +useTransition: typeof useTransition,
    461|     +useDeferredValue: typeof useDeferredValue,
    462|     +startTransition: typeof startTransition,
-   463|   |};
-          -^ [1]
+   463|     ...
+   464|   };
+          ^ [1]
 
 
 Error --------------------------------------------------------------------------------------- es-namespace-pascal.js:4:2
