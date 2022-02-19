@@ -5012,41 +5012,6 @@ struct
         | (_, SealGenericT { reason = _; id; name; cont }) ->
           let reason = reason_of_t l in
           continue cx trace (GenericT { reason; id; name; bound = l }) cont
-        | (GenericT { reason; bound; _ }, MethodT (use_op, call_r, lookup_r, propref, action, t_opt))
-          ->
-          (* Flow conflates the receiver with the this argument when calling a method.
-             We need to keep around the original GenericT because the method we are calling
-             might be expecting a generic (esp in the case of classes), but cannot use it
-             as the receiver to look up the type of the method on the object or class.
-             So we fix the this argument of the method to the generic but continue to
-             resolve the receiver until we can determine the method's type *)
-          let action =
-            match action with
-            | CallM mct -> CallM { mct with meth_generic_this = Some l }
-            | ChainM (r1, r2, t, mct, tout) ->
-              ChainM (r1, r2, t, { mct with meth_generic_this = Some l }, tout)
-          in
-          rec_flow
-            cx
-            trace
-            ( position_generic_bound reason bound,
-              MethodT (use_op, call_r, lookup_r, propref, action, t_opt)
-            )
-        | ( GenericT { reason; bound; _ },
-            PrivateMethodT (use_op, call_r, lookup_r, prop_name, scopes, static, action, prop_t)
-          ) ->
-          let action =
-            match action with
-            | CallM mct -> CallM { mct with meth_generic_this = Some l }
-            | ChainM (r1, r2, t, mct, tout) ->
-              ChainM (r1, r2, t, { mct with meth_generic_this = Some l }, tout)
-          in
-          rec_flow
-            cx
-            trace
-            ( position_generic_bound reason bound,
-              PrivateMethodT (use_op, call_r, lookup_r, prop_name, scopes, static, action, prop_t)
-            )
         | (GenericT { reason; bound; _ }, _) ->
           rec_flow cx trace (position_generic_bound reason bound, u)
         (***************)
@@ -5707,27 +5672,32 @@ struct
     let narrow_generic_tvar ?(use_op = unknown_use) mk_use_t t_out =
       narrow_generic_use mk_use_t (UseT (use_op, OpenT t_out))
     in
-    let wait_for_concrete_bound () =
-      rec_flow cx trace (bound, SealGenericT { reason; id; name; cont = Upper u });
+    let wait_for_concrete_bound ?(upper = u) () =
+      rec_flow cx trace (bound, SealGenericT { reason; id; name; cont = Upper upper });
       true
     in
-    let distribute_union_intersection () =
+    let distribute_union_intersection ?(upper = u) () =
       match bound with
       | UnionT (_, rep) ->
         let (t1, (t2, ts)) = UnionRep.members_nel rep in
         let union_of_generics =
           UnionRep.make (make_generic t1) (make_generic t2) (Base.List.map ~f:make_generic ts)
         in
-        rec_flow cx trace (UnionT (reason, union_of_generics), u);
+        rec_flow cx trace (UnionT (reason, union_of_generics), upper);
         true
       | IntersectionT (_, rep) ->
         let (t1, (t2, ts)) = InterRep.members_nel rep in
         let inter_of_generics =
           InterRep.make (make_generic t1) (make_generic t2) (Base.List.map ~f:make_generic ts)
         in
-        rec_flow cx trace (IntersectionT (reason, inter_of_generics), u);
+        rec_flow cx trace (IntersectionT (reason, inter_of_generics), upper);
         true
       | _ -> false
+    in
+    let update_action_meth_generic_this l = function
+      | CallM mct -> CallM { mct with meth_generic_this = Some l }
+      | ChainM (r1, r2, t, mct, tout) ->
+        ChainM (r1, r2, t, { mct with meth_generic_this = Some l }, tout)
     in
     if
       match bound with
@@ -5858,12 +5828,30 @@ struct
           distribute_union_intersection ()
         else
           wait_for_concrete_bound ()
-      | MethodT _
-      | PrivateMethodT _ ->
-        if is_concrete bound && not (is_literal_type bound) then
-          distribute_union_intersection ()
-        else
-          wait_for_concrete_bound ()
+      | MethodT (op, r1, r2, prop, action, prop_t) ->
+        let l = make_generic bound in
+        let action' = update_action_meth_generic_this l action in
+        let u' = MethodT (op, r1, r2, prop, action', prop_t) in
+        let consumed =
+          if is_concrete bound && not (is_literal_type bound) then
+            distribute_union_intersection ~upper:u' ()
+          else
+            wait_for_concrete_bound ~upper:u' ()
+        in
+        if not consumed then rec_flow cx trace (position_generic_bound reason bound, u');
+        true
+      | PrivateMethodT (op, r1, r2, prop, scopes, static, action, prop_t) ->
+        let l = make_generic bound in
+        let action' = update_action_meth_generic_this l action in
+        let u' = PrivateMethodT (op, r1, r2, prop, scopes, static, action', prop_t) in
+        let consumed =
+          if is_concrete bound && not (is_literal_type bound) then
+            distribute_union_intersection ~upper:u' ()
+          else
+            wait_for_concrete_bound ~upper:u' ()
+        in
+        if not consumed then rec_flow cx trace (position_generic_bound reason bound, u');
+        true
       | ObjKitT _
       | UseT (_, IntersectionT _) ->
         if is_concrete bound then
