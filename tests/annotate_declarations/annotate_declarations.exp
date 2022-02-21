@@ -29,7 +29,7 @@ var z: null | number | string = null; // null | number | string
 z = 42;
 z = "a";
 
-var w: boolean | number = 42; // number | bool, don't take on upper bound
+var w: number | boolean = 42; // number | bool, don't take on upper bound
 w = true;
 function ub(x: string) { }
 ub(w);

@@ -29,8 +29,42 @@ References:
                         ^ [2]
 
 
+Error ---------------------------------------------------------------------------------------------------- test.js:26:28
 
-Found 2 errors
+`A` [1] is incompatible with `C` [2]. [incompatible-type]
+
+   test.js:26:28
+   26|     invariant(c instanceof A);
+                                  ^
+
+References:
+   test.js:17:9
+   17|   class A  { }
+               ^ [1]
+   test.js:23:29
+   23|   function f(a: A, b: B, c: C) {
+                                   ^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:27:28
+
+`C` [1] is incompatible with `A` [2]. [incompatible-type]
+
+   test.js:27:28
+   27|     invariant(a instanceof C)
+                                  ^
+
+References:
+   test.js:19:9
+   19|   class C { }
+               ^ [1]
+   test.js:23:17
+   23|   function f(a: A, b: B, c: C) {
+                       ^ [2]
+
+
+
+Found 4 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

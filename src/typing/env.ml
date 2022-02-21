@@ -1205,18 +1205,14 @@ module Env : Env_sig.S = struct
       | Value ({ Entry.kind = Let _ | Var _; closure_writes; general; _ } as v) ->
         let change = (scope.id, name, op) in
         Changeset.Global.change_var change;
-        let use_op =
-          match op with
-          | Changeset.Write -> use_op
-          | Changeset.Refine -> use_op
-          | Changeset.Read -> unknown_use
-          (* this is impossible *)
-        in
         begin
-          match closure_writes with
-          | Some (writes_by_closure, t, _) when ALocSet.mem loc writes_by_closure ->
+          match (closure_writes, op) with
+          | (_, Changeset.Refine) -> ()
+          | (_, Changeset.Read) -> assert_false "read op during variable update"
+          | (Some (writes_by_closure, t, _), Changeset.Write) when ALocSet.mem loc writes_by_closure
+            ->
             Flow.flow cx (specific, UseT (use_op, t))
-          | _ -> Flow.flow cx (specific, UseT (use_op, Entry.general_of_value v))
+          | (_, Changeset.Write) -> Flow.flow cx (specific, UseT (use_op, Entry.general_of_value v))
         end;
 
         install_provider cx specific name loc;
@@ -1280,8 +1276,6 @@ module Env : Env_sig.S = struct
       | Value ({ Entry.kind = Const _; _ } as v) ->
         let change = (scope.id, name, Changeset.Refine) in
         Changeset.Global.change_var change;
-        let general = Entry.general_of_value v in
-        Flow.flow cx (specific, UseT (Op (Internal Refinement), general));
         let update = Value { v with value_state = State.Initialized; specific } in
         Scope.add_entry name update scope;
         Some change
@@ -1750,6 +1744,13 @@ module Env : Env_sig.S = struct
      others can be obtained via query_var.
   *)
   let refine_with_preds cx loc preds orig_types =
+    let check_instanceof_subtypes ~general_type pred t =
+      match pred with
+      | LeftP (InstanceofTest, _) ->
+        let u = UseT (Op (Internal Refinement), general_type) in
+        Context.add_literal_subtypes cx (t, u)
+      | _ -> ()
+    in
     let rec check_literal_subtypes ~general_type pred =
       (* When refining a type against a literal, we want to be sure that that literal can actually
          inhabit that type *)
@@ -1799,6 +1800,7 @@ module Env : Env_sig.S = struct
             let general_type = query_var_non_specific cx name loc in
             check_literal_subtypes ~general_type pred;
             let refi_type = mk_refi_type orig_type pred refi_reason in
+            check_instanceof_subtypes ~general_type pred refi_type;
             let refine =
               match Entry.kind_of_value v with
               | Const _ -> refine_const

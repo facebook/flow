@@ -348,21 +348,18 @@ Property `current` is not readable. [cannot-read]
                ^^^^^^^
 
 
-Error ------------------------------------------------------------------------------------------- flow_to_general.js:5:4
+Error ----------------------------------------------------------------------------------------- flow_to_general.js:14:11
 
-Cannot cast `x` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+string literal `C` [1] is incompatible with literal union [2]. [incompatible-type]
 
-   flow_to_general.js:5:4
-   5|   (x: empty);
-         ^
+   flow_to_general.js:14:11
+   14| if (p === 'C') { }
+                 ^^^ [1]
 
 References:
-   flow_to_general.js:4:7
-   4|   if (typeof x === 'number') { }
-            ^^^^^^^^^^^^^^^^^^^^^ [1]
-   flow_to_general.js:5:7
-   5|   (x: empty);
-            ^^^^^ [2]
+   flow_to_general.js:11:23
+   11| declare var x: { p?: ?T };
+                             ^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------------ fn.js:14:22

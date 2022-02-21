@@ -414,49 +414,10 @@ References:
           ^ [3]
 
 
-Error ----------------------------------------------------------------------------------------------------- func.js:11:7
-
-Type variable `X` [1] cannot escape from the scope in which it was defined [2] (try adding a type annotation to
-`x` [3]). [escaped-generic]
-
-   func.js:11:7
-   11|   if (typeof x === 'string') return x;
-             ^^^^^^^^^^^^^^^^^^^^^ [1]
-
-References:
-   func.js:15:12
-   15| function h<X>(x: X, a: X => string = (name: X) => tostring(name)): string {
-                  ^ [2]
-   func.js:10:19
-   10| function tostring(x): string {
-                         ^ [3]
-
-
 Error ---------------------------------------------------------------------------------------------------- func.js:15:60
 
 Cannot call `tostring` with `name` bound to `x` because `X` [1] contains type variable `X` [2] which cannot escape from
 the scope in which it was defined [2] (try adding a type annotation to `x` [3]). [escaped-generic]
-
-   func.js:15:60
-   15| function h<X>(x: X, a: X => string = (name: X) => tostring(name)): string {
-                                                                  ^^^^
-
-References:
-   func.js:15:45
-   15| function h<X>(x: X, a: X => string = (name: X) => tostring(name)): string {
-                                                   ^ [1]
-   func.js:15:12
-   15| function h<X>(x: X, a: X => string = (name: X) => tostring(name)): string {
-                  ^ [2]
-   func.js:10:19
-   10| function tostring(x): string {
-                         ^ [3]
-
-
-Error ---------------------------------------------------------------------------------------------------- func.js:15:60
-
-Type variable `X` [1] cannot escape from the scope in which it was defined [2] (try adding a type annotation to
-`x` [3]). [escaped-generic]
 
    func.js:15:60
    15| function h<X>(x: X, a: X => string = (name: X) => tostring(name)): string {
@@ -1301,7 +1262,7 @@ References:
 
 
 
-Found 66 errors
+Found 64 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches
