@@ -348,6 +348,23 @@ Property `current` is not readable. [cannot-read]
                ^^^^^^^
 
 
+Error ------------------------------------------------------------------------------------------- flow_to_general.js:5:4
+
+Cannot cast `x` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+
+   flow_to_general.js:5:4
+   5|   (x: empty);
+         ^
+
+References:
+   flow_to_general.js:4:7
+   4|   if (typeof x === 'number') { }
+            ^^^^^^^^^^^^^^^^^^^^^ [1]
+   flow_to_general.js:5:7
+   5|   (x: empty);
+            ^^^^^ [2]
+
+
 Error ------------------------------------------------------------------------------------------------------ fn.js:14:22
 
 Cannot call `takesBotFunction` with `x` bound to `x` because the parameter types of an unknown function [1] are unknown.
@@ -4490,7 +4507,7 @@ Cannot perform arithmetic operation because undefined [1] is not a number. [unsa
 
 
 
-Found 304 errors
+Found 305 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches
