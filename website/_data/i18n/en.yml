@@ -63,6 +63,7 @@ homepage_featurettes:
       existing workflow and toolchain.
 
 homepage_ready_to_get_going: "Ready to get going?"
+homepage_watch_intro_video: "Watch Introductory Video"
 
 navbar_getting_started: "Getting Started"
 navbar_documentation: "Docs"
