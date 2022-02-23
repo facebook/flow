@@ -1,4 +1,4 @@
->>> react.js (#changes: 1)
+>>> react.js (#changes: 2)
 //@flow
 import * as React from 'react';
 
@@ -16,7 +16,18 @@ if (("some condition": any)) {
   component = <Component2 id={42} />
 }
 
->>> test.js (#changes: 9)
+
+let x: number | string | Fbt = '';
+
+if (("condition": any)) {
+  x = (<fbt> Hello </fbt>);
+} else {
+  declare var y: Fbt;
+  x = y;
+}
+x = 1;
+
+>>> test.js (#changes: 10)
 // @flow
 
 var x: number | string = 42; // number | string
@@ -86,6 +97,18 @@ if (w) {
   x9 = "hello"
 }
 x9;
+
+function provenance(condition: bool) {
+  function foo() { return new (class C { }) };
+  function bar() { return new (class C { }) };
+  let x: C | C | number;
+  if (condition) {
+    x = foo();
+  } else {
+    x = bar();
+  }
+  x = 42;
+}
 
 >>> underconstrained.js (#changes: 8)
 //@flow
@@ -168,10 +191,10 @@ function set_app() {
 
 Stats:
   Files changed:                            3
-  Number of annotations added:             18
-  Total size of annotations:               72
-  Number of vars with write errors:        18
-  Number of possibly renamable vars:       17
+  Number of annotations added:             20
+  Total size of annotations:               81
+  Number of vars with write errors:        20
+  Number of possibly renamable vars:       22
 
 Errors:
   Missing annot./normalizer error:          0

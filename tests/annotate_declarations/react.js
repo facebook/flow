@@ -14,3 +14,14 @@ var component = <Component1 label={"component"} />
 if (("some condition": any)) {
   component = <Component2 id={42} />
 }
+
+
+let x = '';
+
+if (("condition": any)) {
+  x = (<fbt> Hello </fbt>);
+} else {
+  declare var y: Fbt;
+  x = y;
+}
+x = 1;

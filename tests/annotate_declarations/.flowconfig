@@ -1,2 +1,7 @@
 [options]
 experimental.env_mode=constrain_writes
+facebook.fbs=Fbs
+facebook.fbt=FbtElement
+
+[libs]
+declarations

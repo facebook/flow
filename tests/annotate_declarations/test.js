@@ -67,3 +67,15 @@ if (w) {
   x9 = "hello"
 }
 x9;
+
+function provenance(condition: bool) {
+  function foo() { return new (class C { }) };
+  function bar() { return new (class C { }) };
+  let x;
+  if (condition) {
+    x = foo();
+  } else {
+    x = bar();
+  }
+  x = 42;
+}

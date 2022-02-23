@@ -101,6 +101,26 @@ module Simplify = struct
     sort: bool;
   }
 
+  class comparator_base =
+    object
+      inherit [unit] Ty.comparator_ty as super
+
+      method! on_symbol env name1 name2 =
+        let open Ty_symbol in
+        (* It's possible for two symbols to have the same provenance and name but different locations
+           due to certain hardcoded fixes, e.g. FbtElement -> Fbt. We should consider these
+           to be the same symbol regardless. *)
+        if
+          name1.sym_name = name2.sym_name
+          && ALoc.source name1.sym_def_loc = ALoc.source name2.sym_def_loc
+        then
+          match (name1.sym_provenance, name2.sym_provenance) with
+          | (Library l1, Library l2) when l1 = l2 -> ()
+          | _ -> super#on_symbol env name1 name2
+        else
+          super#on_symbol env name1 name2
+    end
+
   (* When merge_kinds is set to true then all kinds of Any (resp. Bot) types
    * are considered equivalent when comparing types. Specifically for the Bot type
    * we implement a predicate 'is_bot' that determines when the type should be
@@ -136,7 +156,7 @@ module Simplify = struct
       let comparator =
         if merge_kinds then
           object
-            inherit [unit] Ty.comparator_ty
+            inherit comparator_base
 
             (* All Bot kinds are equivalent *)
             method! private on_bot_kind () _ _ = ()
@@ -144,7 +164,7 @@ module Simplify = struct
             method! private on_any_kind () _ _ = ()
           end
         else
-          new Ty.comparator_ty
+          new comparator_base
       in
       comparator#compare ()
     in
