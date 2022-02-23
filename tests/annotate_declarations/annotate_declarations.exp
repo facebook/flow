@@ -17,7 +17,7 @@ if (("some condition": any)) {
 }
 
 
-let x: number | string | Fbt = '';
+let x: number | Fbt = '';
 
 if (("condition": any)) {
   x = (<fbt> Hello </fbt>);
