@@ -437,13 +437,13 @@ References:
                     ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- null.js:17:5
+Error ---------------------------------------------------------------------------------------------------- null.js:17:17
 
 Cannot get `o_nonstrict.p` because property `p` is missing in object type [1]. [prop-missing]
 
-   null.js:17:5
+   null.js:17:17
    17| if (o_nonstrict.p) { // Error - property p is unknown
-           ^^^^^^^^^^^^^
+                       ^
 
 References:
    null.js:16:26

@@ -335,13 +335,13 @@ References:
              ^ [1]
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:55:5
+Error ----------------------------------------------------------------------------------------------------- test.js:55:7
 
 Cannot get `x.asd` because property `asd` (did you mean `asdf`?) is missing in object literal [1]. [prop-missing]
 
-   test.js:55:5
+   test.js:55:7
    55| if (x.asd) {} // Error with suggestion
-           ^^^^^
+             ^^^
 
 References:
    test.js:3:9
@@ -349,13 +349,13 @@ References:
                ^^^^^^^^^^ [1]
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:56:5
+Error ----------------------------------------------------------------------------------------------------- test.js:56:7
 
 Cannot get `b.fooo` because property `fooo` (did you mean `foo`?) is missing in `B` [1]. [prop-missing]
 
-   test.js:56:5
+   test.js:56:7
    56| if (b.fooo) {} // Error with suggestion
-           ^^^^^^
+             ^^^^
 
 References:
    test.js:31:9
@@ -363,13 +363,13 @@ References:
                ^^^^^ [1]
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:57:5
+Error ----------------------------------------------------------------------------------------------------- test.js:57:7
 
 Cannot get `C.s333` because property `s333` (did you mean `s3333`?) is missing in statics of `C` [1]. [prop-missing]
 
-   test.js:57:5
+   test.js:57:7
    57| if (C.s333) {} // Error with suggestion
-           ^^^^^^
+             ^^^^
 
 References:
    test.js:25:7

@@ -431,13 +431,13 @@ References:
                                                            ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------ prop_test.js:12:7
+Error ------------------------------------------------------------------------------------------------ prop_test.js:12:9
 
 Cannot get `p.xxx` because property `xxx` is missing in `Person` [1]. [prop-missing]
 
-   prop_test.js:12:7
+   prop_test.js:12:9
    12|   if (p.xxx) {     // Error - xxx doesn't exist in the exact type
-             ^^^^^
+               ^^^
 
 References:
    prop_test.js:11:36

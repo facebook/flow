@@ -4901,7 +4901,12 @@ struct
             Tvar.mk_where cx reason_op (fun tvar -> rec_flow_t ~use_op cx trace (tvar, OpenT tout))
           in
           let name = name_of_propref propref in
-          let test_info = Some (id, (reason_op, reason_of_t l)) in
+          let reason_prop =
+            match propref with
+            | Named (reason_prop, _) -> reason_prop
+            | Computed _ -> reason_op
+          in
+          let test_info = Some (id, (reason_prop, reason_of_t l)) in
           let lookup_default =
             match l with
             | DefT (_, _, ObjT { flags; _ }) when Obj_type.is_legacy_exact_DO_NOT_USE flags.obj_kind
