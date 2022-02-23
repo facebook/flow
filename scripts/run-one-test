@@ -350,6 +350,12 @@ runtest() {
                 return $RUNTEST_SKIP
             fi
 
+            if ([[ "$new_env" -eq 1 ]]) && \
+              [ "$(awk '$1=="TODO_new_env:"{print $2}' .testconfig)" == "true" ]
+            then
+                return $RUNTEST_SKIP
+            fi
+
             # wait_for_recheck
             if [ "$(awk '$1=="wait_for_recheck:"{print $2}' .testconfig)" == "false" ]
             then
