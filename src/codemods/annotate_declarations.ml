@@ -154,12 +154,7 @@ module Simplify = struct
     | _ -> t
 end
 
-let mapper
-    ~preserve_literals
-    ~max_type_size
-    ~default_any
-    ~filter_deep_empty
-    (cctx : Codemod_context.Typed.t) =
+let mapper ~preserve_literals ~max_type_size ~default_any (cctx : Codemod_context.Typed.t) =
   let { Codemod_context.Typed.file_sig; docblock; metadata; options; _ } = cctx in
   let imports_react = Insert_type_imports.ImportsHelper.imports_react file_sig in
   let metadata = Context.docblock_overrides docblock metadata in
@@ -230,12 +225,7 @@ let mapper
     method! variable_declarator_pattern ~kind ((ploc, patt) : ('loc, 'loc) Ast.Pattern.t) =
       let get_annot ty annot =
         let f loc _annot ty' =
-          let simplified =
-            if filter_deep_empty then
-              Simplify.normalize ty'
-            else
-              ty'
-          in
+          let simplified = Simplify.normalize ty' in
           this#annotate_node loc simplified (fun a -> Ast.Type.Available a)
         in
         let error _ = Ast.Type.Available (Loc.none, flowfixme_ast) in

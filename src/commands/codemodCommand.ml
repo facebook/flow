@@ -314,14 +314,10 @@ module Annotate_declarations_command = struct
                "--default-any"
                no_arg
                ~doc:"Adds 'any' to all locations where normalization or validation fails"
-          |> flag
-               "--filter-deep-empty"
-               no_arg
-               ~doc:"Remove elements from unions that deeply contain inferred empty types"
         );
     }
 
-  let main codemod_flags preserve_literals max_type_size default_any filter_deep_empty () =
+  let main codemod_flags preserve_literals max_type_size default_any () =
     let open Codemod_utils in
     let open Insert_type_utils in
     let module Runner = Codemod_runner.MakeSimpleTypedRunner (struct
@@ -350,13 +346,7 @@ module Annotate_declarations_command = struct
         | SSAEnv _ -> { o with opt_env_mode = ClassicEnv [ConstrainWrites; ClassicTypeAtPos] }
 
       let visit =
-        let mapper =
-          Annotate_declarations.mapper
-            ~preserve_literals
-            ~max_type_size
-            ~default_any
-            ~filter_deep_empty
-        in
+        let mapper = Annotate_declarations.mapper ~preserve_literals ~max_type_size ~default_any in
         Codemod_utils.make_visitor (Mapper mapper)
     end) in
     main (module Runner) codemod_flags ()
