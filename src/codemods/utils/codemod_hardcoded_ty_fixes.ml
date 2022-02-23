@@ -157,6 +157,45 @@ module Make (Extra : BASE_STATS) = struct
               ts
           in
 
+          (* React.Node | React.Element<'div'> becomes just React.Node *)
+          let has_react_node =
+            List.exists
+              (function
+                | Ty.Generic
+                    ( {
+                        Ty.sym_name = Reason.OrdinaryName ("Node" | "React.Node");
+                        sym_provenance = Ty_symbol.Library _;
+                        sym_def_loc;
+                        _;
+                      },
+                      _,
+                      _
+                    ) ->
+                  is_react_loc sym_def_loc
+                | _ -> false)
+              ts
+          in
+          let ts =
+            if has_react_node && from_bounds then
+              List.filter
+                (function
+                  | Ty.Generic
+                      ( {
+                          Ty.sym_name = Reason.OrdinaryName ("Element" | "React.Element");
+                          sym_provenance = Ty_symbol.Library _;
+                          sym_def_loc;
+                          _;
+                        },
+                        _,
+                        Some _
+                      ) ->
+                    not (is_react_loc sym_def_loc)
+                  | _ -> true)
+                ts
+            else
+              ts
+          in
+
           (match ts with
           | [] -> Ty.mk_union ~from_bounds (ty1, ty2 :: tys)
           | [t] -> t

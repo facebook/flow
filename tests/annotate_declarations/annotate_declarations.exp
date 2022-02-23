@@ -1,4 +1,4 @@
->>> react.js (#changes: 2)
+>>> react.js (#changes: 3)
 //@flow
 import * as React from 'react';
 
@@ -26,6 +26,9 @@ if (("condition": any)) {
   x = y;
 }
 x = 1;
+
+let z: React.Node = <Component1 label={"c"} />;
+z = <div>Hello</div>;
 
 >>> test.js (#changes: 10)
 // @flow
@@ -191,10 +194,10 @@ function set_app() {
 
 Stats:
   Files changed:                            3
-  Number of annotations added:             20
-  Total size of annotations:               81
-  Number of vars with write errors:        20
-  Number of possibly renamable vars:       22
+  Number of annotations added:             21
+  Total size of annotations:               91
+  Number of vars with write errors:        21
+  Number of possibly renamable vars:       23
 
 Errors:
   Missing annot./normalizer error:          0

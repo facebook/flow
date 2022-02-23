@@ -25,3 +25,6 @@ if (("condition": any)) {
   x = y;
 }
 x = 1;
+
+let z = <Component1 label={"c"} />;
+z = <div>Hello</div>;
