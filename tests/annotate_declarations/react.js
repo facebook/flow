@@ -28,3 +28,4 @@ x = 1;
 
 let z = <Component1 label={"c"} />;
 z = <div>Hello</div>;
+z = <fbt> Hello </fbt>

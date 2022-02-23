@@ -190,6 +190,17 @@ module Make (Extra : BASE_STATS) = struct
                         Some _
                       ) ->
                     not (is_react_loc sym_def_loc)
+                  | Ty.Generic
+                      ( {
+                          Ty.sym_name = Reason.OrdinaryName "Fbt";
+                          sym_provenance = Ty_symbol.Library _;
+                          _;
+                        },
+                        _,
+                        None
+                      )
+                    when (Codemod_context.Typed.metadata cctx).Context.facebook_fbt <> None ->
+                    false
                   | _ -> true)
                 ts
             else

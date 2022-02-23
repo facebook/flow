@@ -29,6 +29,7 @@ x = 1;
 
 let z: React.Node = <Component1 label={"c"} />;
 z = <div>Hello</div>;
+z = <fbt> Hello </fbt>
 
 >>> test.js (#changes: 10)
 // @flow
@@ -195,9 +196,9 @@ function set_app() {
 Stats:
   Files changed:                            3
   Number of annotations added:             21
-  Total size of annotations:               91
+  Total size of annotations:               92
   Number of vars with write errors:        21
-  Number of possibly renamable vars:       23
+  Number of possibly renamable vars:       24
 
 Errors:
   Missing annot./normalizer error:          0
