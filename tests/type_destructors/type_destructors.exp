@@ -800,6 +800,23 @@ References:
                ^^ [1]
 
 
+Error ---------------------------------------------------------------------------------------------------- tvar5.js:5:13
+
+Cannot cast `unReadOnly(...)` to empty because object type [1] is incompatible with empty [2]. [incompatible-cast]
+
+   tvar5.js:5:13
+   5| (unReadOnly(foo): empty); // error
+                  ^^^
+
+References:
+   tvar5.js:4:28
+   4| declare var foo: $ReadOnly<{foo: string}>;
+                                 ^^^^^^^^^^^^^ [1]
+   tvar5.js:5:19
+   5| (unReadOnly(foo): empty); // error
+                        ^^^^^ [2]
+
+
 Error ---------------------------------------------------------------------------------------------------- union.js:2:40
 
 Cannot assign `true` to `x1` because: [incompatible-type]
@@ -858,7 +875,7 @@ References:
 
 
 
-Found 57 errors
+Found 58 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

@@ -92,6 +92,24 @@ References:
                                           ^ [2]
 
 
+Error -------------------------------------------------------------------------------------------- clone_element.js:28:2
+
+Cannot cast `React.cloneElement(...).type` to statics of `B` because property `bar` is missing in object type [1] but
+exists in object type [2]. [prop-missing]
+
+   clone_element.js:28:2
+   28| (React.cloneElement(a).type: Class<B>); // Error: `a` has a type of `A`.
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   clone_element.js:8:33
+    8| class A extends React.Component<{foo: number}, void> {}
+                                       ^^^^^^^^^^^^^ [1]
+   clone_element.js:9:33
+    9| class B extends React.Component<{foo: number, bar: number}, void> {}
+                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
 Error ------------------------------------------------------------------------------------------- clone_element.js:30:30
 
 Cannot get `React.cloneElement(...).props.bar` because property `bar` is missing in object type [1]. [prop-missing]
@@ -3333,4 +3351,4 @@ References:
 
 
 
-Found 203 errors
+Found 204 errors

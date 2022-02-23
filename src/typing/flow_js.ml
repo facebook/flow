@@ -647,6 +647,17 @@ struct
          * type argument which will be instantiated with an open tvar. Polymorphic
          * type arguments will also always get some type upper bound with the
          * default type being MixedT. We destruct these upper bounds. *)
+        | (TypeDestructorTriggerT _, ReposLowerT (reason_op, use_desc, u)) ->
+          let loc = aloc_of_reason reason_op in
+          let desc =
+            if use_desc then
+              Some (desc_of_reason reason_op)
+            else
+              None
+          in
+          rec_flow cx trace (reposition cx ~trace loc ?desc l, u)
+        | (TypeDestructorTriggerT _, TypeCastT (use_op, cast_to_t)) ->
+          rec_flow cx trace (l, UseT (use_op, cast_to_t))
         | (TypeDestructorTriggerT _, _) -> ()
         (************************)
         (* Full type resolution *)
