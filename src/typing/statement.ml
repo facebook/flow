@@ -6132,10 +6132,119 @@ struct
     | Assignment.AndAssign
     | Assignment.OrAssign ->
       let reason = mk_reason (RCustom (Flow_ast_utils.string_of_assignment_operator op)) loc in
-      let lhs_ast = assignment_lhs cx lhs in
-      let rhs_ast = expression cx ~hint:None rhs in
-      Flow.add_output cx (Error_message.ELogicalAssignmentOperatorsNotSupported reason);
-      (AnyT.error reason, lhs_ast, rhs_ast)
+      let (((_, lhs_t), _) as lhs_pattern_ast) = assignment_lhs cx lhs in
+      let left_expr =
+        match lhs with
+        | (lhs_loc, Ast.Pattern.Identifier { Ast.Pattern.Identifier.name; _ }) ->
+          Some (lhs_loc, Ast.Expression.Identifier name)
+        | (lhs_loc, Ast.Pattern.Expression (_, Ast.Expression.Member mem)) ->
+          Some (lhs_loc, Ast.Expression.Member mem)
+        | _ -> None
+      in
+      let update_env result_t =
+        match lhs with
+        | ( _,
+            Ast.Pattern.Identifier
+              { Ast.Pattern.Identifier.name = (id_loc, { Ast.Identifier.name; comments = _ }); _ }
+          ) ->
+          let use_op =
+            Op
+              (AssignVar
+                 {
+                   var = Some (mk_reason (RIdentifier (OrdinaryName name)) id_loc);
+                   init = reason_of_t result_t;
+                 }
+              )
+          in
+          Env.set_var cx ~use_op name result_t id_loc
+        | (lhs_loc, Ast.Pattern.Expression (_, Ast.Expression.Member mem)) ->
+          let lhs_prop_reason = mk_pattern_reason lhs in
+          let make_op ~lhs ~prop = Op (UpdateProperty { lhs; prop }) in
+          let reconstruct_ast mem = Ast.Expression.Member mem in
+          ignore
+          @@ assign_member
+               cx
+               ~make_op
+               ~t:result_t
+               ~lhs_loc
+               ~lhs_expr:(Ast.Expression.Member mem)
+               ~lhs_prop_reason
+               ~reconstruct_ast
+               ~mode:Assign
+               mem
+        | _ -> ()
+      in
+      (match left_expr with
+      | None ->
+        ( AnyT.error reason,
+          lhs_pattern_ast,
+          (fun () -> expression cx ~hint:None rhs)
+          |> Abnormal.catch_expr_control_flow_exception
+          |> fst
+        )
+      | Some left_expr ->
+        (match op with
+        | Assignment.NullishAssign ->
+          let ((((_, rhs_t), _) as rhs_ast), right_abnormal) =
+            Abnormal.catch_expr_control_flow_exception (fun () ->
+                expression cx ~hint:(hint_of_loc_todo (fst rhs)) rhs
+            )
+          in
+          let rhs_t =
+            match right_abnormal with
+            | Some Abnormal.Throw -> EmptyT.at loc |> with_trust bogus_trust
+            | None -> rhs_t
+            | Some _ -> assert_false "Unexpected abnormal control flow from within expression"
+          in
+          let result_t =
+            Tvar.mk_no_wrap_where cx reason (fun t ->
+                Flow.flow cx (lhs_t, NullishCoalesceT (reason, rhs_t, t))
+            )
+          in
+          let () = update_env result_t in
+          (lhs_t, lhs_pattern_ast, rhs_ast)
+        | Assignment.AndAssign ->
+          let (((_, lhs_t), _), map, _, xtypes) =
+            predicates_of_condition ~cond:OtherTest cx left_expr
+          in
+          let ((((_, rhs_t), _) as rhs_ast), right_abnormal) =
+            Abnormal.catch_expr_control_flow_exception (fun () ->
+                Env.in_refined_env cx loc map xtypes (fun () -> expression cx ~hint:None rhs)
+            )
+          in
+          let rhs_t =
+            match right_abnormal with
+            | Some Abnormal.Throw -> EmptyT.at loc |> with_trust bogus_trust
+            | None -> rhs_t
+            | Some _ -> assert_false "Unexpected abnormal control flow from within expression"
+          in
+          let result_t =
+            Tvar.mk_no_wrap_where cx reason (fun t -> Flow.flow cx (lhs_t, AndT (reason, rhs_t, t)))
+          in
+          let () = update_env result_t in
+          (lhs_t, lhs_pattern_ast, rhs_ast)
+        | Assignment.OrAssign ->
+          let () = check_default_pattern cx left_expr rhs in
+          let (((_, lhs_t), _), _, not_map, xtypes) =
+            predicates_of_condition ~cond:OtherTest cx left_expr
+          in
+          let ((((_, rhs_t), _) as rhs_ast), right_abnormal) =
+            Abnormal.catch_expr_control_flow_exception (fun () ->
+                Env.in_refined_env cx loc not_map xtypes (fun () -> expression cx ~hint:None rhs)
+            )
+          in
+          let rhs_t =
+            match right_abnormal with
+            | Some Abnormal.Throw -> EmptyT.at loc |> with_trust bogus_trust
+            | None -> rhs_t
+            | Some _ -> assert_false "Unexpected abnormal control flow from within expression"
+          in
+          let result_t =
+            Tvar.mk_no_wrap_where cx reason (fun t -> Flow.flow cx (lhs_t, OrT (reason, rhs_t, t)))
+          in
+          let () = update_env result_t in
+          (lhs_t, lhs_pattern_ast, rhs_ast)
+        | _ -> assert_false "Unexpected operator"))
 
   (* traverse assignment expressions *)
   and assignment cx loc (lhs, op, rhs) =

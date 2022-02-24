@@ -1850,8 +1850,6 @@ let dump_error_message =
     | ERecursiveDefinition _ -> "ERecursiveDefinition"
     | EDuplicateClassMember { loc; name; _ } ->
       spf "EDuplicateClassMember (%s) (%s)" (string_of_aloc loc) name
-    | ELogicalAssignmentOperatorsNotSupported reason ->
-      spf "ELogicalAssignmentsOperatorNotSupported (%s)" (dump_reason cx reason)
 
 module Verbose = struct
   let verbose_in_file cx verbose =
