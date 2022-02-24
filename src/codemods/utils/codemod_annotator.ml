@@ -150,6 +150,7 @@ module Make (Extra : BASE_STATS) = struct
     ~suppress_types
     ~imports_react
     ~preserve_literals
+    ~generalize_maybe
     ~default_any
     (cctx : Codemod_context.Typed.t) =
     object (this)
@@ -181,6 +182,7 @@ module Make (Extra : BASE_STATS) = struct
               ~suppress_types
               ~imports_react
               ~preserve_literals
+              ~generalize_maybe
               acc
               loc
               ty
@@ -216,6 +218,7 @@ module Make (Extra : BASE_STATS) = struct
               ~suppress_types
               ~imports_react
               ~preserve_literals
+              ~generalize_maybe
               acc
               loc
               ty

@@ -228,6 +228,7 @@ let mapper ~default_any ~preserve_literals ~max_type_size (ask : Codemod_context
         ~imports_react
         ~preserve_literals
         ~default_any
+        ~generalize_maybe:false
         ask as super
 
     val mutable remote_symbols_map = SymbolMap.empty

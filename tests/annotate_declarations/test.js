@@ -6,9 +6,13 @@ x = "a";
 var y = null; // no change
 y = 42;
 
-var z = null; // null | number | string
+var z = null; // ?(number | string)
 z = 42;
 z = "a";
+
+
+var z2 = undefined; // ?number
+z2 = 42;
 
 var w = 42; // number | bool, don't take on upper bound
 w = true;

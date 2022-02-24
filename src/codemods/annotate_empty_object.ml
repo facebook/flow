@@ -57,6 +57,7 @@ let mapper ~preserve_literals ~max_type_size ~default_any (cctx : Codemod_contex
         ~imports_react
         ~preserve_literals
         ~default_any
+        ~generalize_maybe:false
         cctx as super
 
     method private post_run () = ErrorStats.{ num_total_errors = 0 }

@@ -194,6 +194,7 @@ let mapper
         ~suppress_types
         ~imports_react
         ~preserve_literals
+        ~generalize_maybe:false
         ~default_any
         cctx as super
 
@@ -216,6 +217,7 @@ let mapper
           ~suppress_types
           ~imports_react
           ~preserve_literals
+          ~generalize_maybe:false
           acc
           loc
           ty

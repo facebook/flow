@@ -31,7 +31,7 @@ let z: React.Node = <Component1 label={"c"} />;
 z = <div>Hello</div>;
 z = <fbt> Hello </fbt>
 
->>> test.js (#changes: 10)
+>>> test.js (#changes: 11)
 // @flow
 
 var x: number | string = 42; // number | string
@@ -40,9 +40,13 @@ x = "a";
 var y = null; // no change
 y = 42;
 
-var z: null | number | string = null; // null | number | string
+var z: ?(number | string) = null; // ?(number | string)
 z = 42;
 z = "a";
+
+
+var z2: ?number = undefined; // ?number
+z2 = 42;
 
 var w: number | boolean = 42; // number | bool, don't take on upper bound
 w = true;
@@ -195,10 +199,10 @@ function set_app() {
 
 Stats:
   Files changed:                            3
-  Number of annotations added:             21
-  Total size of annotations:               92
-  Number of vars with write errors:        21
-  Number of possibly renamable vars:       24
+  Number of annotations added:             22
+  Total size of annotations:               95
+  Number of vars with write errors:        22
+  Number of possibly renamable vars:       25
 
 Errors:
   Missing annot./normalizer error:          0

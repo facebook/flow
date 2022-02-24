@@ -154,7 +154,9 @@ module Simplify = struct
     | _ -> t
 end
 
-let mapper ~preserve_literals ~max_type_size ~default_any (cctx : Codemod_context.Typed.t) =
+let mapper
+    ~preserve_literals ~generalize_maybe ~max_type_size ~default_any (cctx : Codemod_context.Typed.t)
+    =
   let { Codemod_context.Typed.file_sig; docblock; metadata; options; _ } = cctx in
   let imports_react = Insert_type_imports.ImportsHelper.imports_react file_sig in
   let metadata = Context.docblock_overrides docblock metadata in
@@ -207,6 +209,7 @@ let mapper ~preserve_literals ~max_type_size ~default_any (cctx : Codemod_contex
         ~suppress_types
         ~imports_react
         ~preserve_literals
+        ~generalize_maybe
         ~default_any
         cctx as super
 

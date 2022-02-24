@@ -175,6 +175,7 @@ let mapper ~preserve_literals ~max_type_size ~default_any (cctx : Codemod_contex
         ~imports_react
         ~preserve_literals
         ~default_any
+        ~generalize_maybe:false
         cctx as super
 
     (* initialized in this#program *)

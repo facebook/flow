@@ -307,6 +307,10 @@ module Annotate_declarations_command = struct
                (required ~default:Literals.Never (enum preserve_string_literals_level))
                ~doc:""
           |> flag
+               "--generalize-maybe"
+               no_arg
+               ~doc:"Generalize annotations containing null or void to maybe types"
+          |> flag
                "--max-type-size"
                (required ~default:100 int)
                ~doc:"The maximum number of nodes allowed in a single type annotation (default: 100)"
@@ -317,7 +321,7 @@ module Annotate_declarations_command = struct
         );
     }
 
-  let main codemod_flags preserve_literals max_type_size default_any () =
+  let main codemod_flags preserve_literals generalize_maybe max_type_size default_any () =
     let open Codemod_utils in
     let open Insert_type_utils in
     let module Runner = Codemod_runner.MakeSimpleTypedRunner (struct
@@ -346,7 +350,13 @@ module Annotate_declarations_command = struct
         | SSAEnv _ -> { o with opt_env_mode = ClassicEnv [ConstrainWrites; ClassicTypeAtPos] }
 
       let visit =
-        let mapper = Annotate_declarations.mapper ~preserve_literals ~max_type_size ~default_any in
+        let mapper =
+          Annotate_declarations.mapper
+            ~preserve_literals
+            ~generalize_maybe
+            ~max_type_size
+            ~default_any
+        in
         Codemod_utils.make_visitor (Mapper mapper)
     end) in
     main (module Runner) codemod_flags ()

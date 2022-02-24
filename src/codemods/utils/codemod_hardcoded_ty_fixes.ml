@@ -62,7 +62,8 @@ module Make (Extra : BASE_STATS) = struct
   module Acc = Acc (Extra)
 
   let mapper_type_normalization_hardcoded_fixes
-      ~cctx ~lint_severities ~suppress_types ~imports_react ~preserve_literals acc =
+      ~cctx ~lint_severities ~suppress_types ~imports_react ~preserve_literals ~generalize_maybe acc
+      =
     object (this)
       inherit Insert_type_utils.patch_up_react_mapper ~imports_react () as super
 
@@ -152,6 +153,18 @@ module Make (Extra : BASE_STATS) = struct
                 (function
                   | Ty.Str _ -> false
                   | _ -> true)
+                ts
+            else
+              ts
+          in
+
+          let ts =
+            if generalize_maybe && from_bounds && List.length ts > 1 then
+              if List.mem Ty.Null ts && not (List.mem Ty.Void ts) then
+                Ty.Void :: ts
+              else if List.mem Ty.Void ts && not (List.mem Ty.Null ts) then
+                Ty.Null :: ts
+              else
                 ts
             else
               ts
@@ -314,7 +327,16 @@ module Make (Extra : BASE_STATS) = struct
         | _ -> super#on_t env t
     end
 
-  let run ~cctx ~lint_severities ~suppress_types ~imports_react ~preserve_literals acc loc t =
+  let run
+      ~cctx
+      ~lint_severities
+      ~suppress_types
+      ~imports_react
+      ~preserve_literals
+      ~generalize_maybe
+      acc
+      loc
+      t =
     let mapper =
       mapper_type_normalization_hardcoded_fixes
         ~cctx
@@ -322,6 +344,7 @@ module Make (Extra : BASE_STATS) = struct
         ~suppress_types
         ~imports_react
         ~preserve_literals
+        ~generalize_maybe
         acc
     in
     let t' = mapper#on_t loc t in
