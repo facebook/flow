@@ -61,6 +61,16 @@ ignore_files "$IMPL_FILES"
 assert_ok "$FLOW" force-recheck $IMPL_FILES
 assert_errors "$FLOW" status .
 
+printf "\n\n======Start off with neither .js files nor .flow files======\n"
+assert_ok "$FLOW" stop .
+ignore_files "$DECL_FILES"
+start_flow .
+
+assert_errors "$FLOW" status .
+use_files "$DECL_FILES"
+assert_ok "$FLOW" force-recheck $DECL_FILES
+assert_errors "$FLOW" status .
+
 # reset
 use_files "$IMPL_FILES"
 ignore_files "$DECL_FILES"

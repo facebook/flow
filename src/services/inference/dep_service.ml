@@ -103,7 +103,7 @@ let calc_direct_dependents_job acc (root_files, root_modules) =
   let root_files =
     List.fold_left
       (fun acc f ->
-        match f with
+        match Files.chop_flow_ext f with
         | File_key.SourceFile s
         | File_key.JsonFile s
         | File_key.ResourceFile s ->
