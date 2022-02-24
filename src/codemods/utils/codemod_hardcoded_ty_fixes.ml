@@ -72,7 +72,7 @@ module Make (Extra : BASE_STATS) = struct
 
       val sanitized_any = Builtins.flowfixme_ty lint_severities suppress_types
 
-      method! on_Union env t_union from_bounds ty1 ty2 tys =
+      method! on_Union env _ from_bounds ty1 ty2 tys =
         (* The following moves the `any` component of a union to the beginning of the
          * union. This is a heuristic that helps union resolution later on. *)
         let (ty1, ty2, tys) =
@@ -124,7 +124,7 @@ module Make (Extra : BASE_STATS) = struct
            `has_type_aliases` step above, but we must have simplified in order to see a
            unified representation for Fbt as below. *)
         match ts with
-        | [] -> super#on_Union env t_union from_bounds ty1 ty2 tys
+        | [] -> super#on_t env (Ty.mk_union ~from_bounds (ty1, ty2 :: tys))
         | [t] -> this#on_t env t
         | ts ->
           let ts = Base.List.map ~f:(this#on_t env) ts in
