@@ -131,6 +131,7 @@ let defer_if_relevant cx branch action =
   | _ ->
     let action_tvars = action_tvars cx action in
     let all_unresolved = IMap.find speculation_id (Context.all_unresolved cx) in
+    let all_unresolved = ISet.map (fun id -> fst @@ Context.find_root cx id) all_unresolved in
     let relevant_action_tvars = IMap.filter (fun id _ -> ISet.mem id all_unresolved) action_tvars in
     let defer = not (IMap.is_empty relevant_action_tvars) in
     if defer then (
