@@ -1798,7 +1798,8 @@ References:
 
 Error ----------------------------------------------------------------------------------- missing-property-cond.js:23:10
 
-Cannot get `o.p4.x` because property `x` is missing in property `p4` does not exist [1]. [incompatible-use]
+Cannot get `o.p4.x` because property `x` is missing in `void` (due to access of non-existent property `p4`) [1].
+[incompatible-use]
 
    missing-property-cond.js:23:10
    23|     o.p4.x; // error

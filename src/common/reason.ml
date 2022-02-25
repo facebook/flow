@@ -653,8 +653,9 @@ let rec string_of_desc = function
   | RPropertyOf (x, d) -> spf "property `%s` of %s" (display_string_of_name x) (string_of_desc d)
   | RPropertyIsAString (OrdinaryName "") -> "empty string"
   | RPropertyIsAString x -> spf "string `%s`" (display_string_of_name x)
-  | RMissingProperty (Some x) -> spf "property `%s` does not exist" (display_string_of_name x)
-  | RMissingProperty None -> "computed property does not exist"
+  | RMissingProperty (Some x) ->
+    spf "`void` (due to access of non-existent property `%s`)" (display_string_of_name x)
+  | RMissingProperty None -> "`void` (due to access of a computed property which does not exist)"
   | RUnknownProperty (Some x) -> spf "property `%s` of unknown type" (display_string_of_name x)
   | RUnknownProperty None -> "computed property of unknown type"
   | RUnknownUnspecifiedProperty d ->
