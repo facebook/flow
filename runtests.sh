@@ -173,11 +173,17 @@ print_failure() {
         cat "$diff_file"
       fi
     fi
+    # new-env mode may use a non-standard extension
+    if [[ "$new_env" -eq 1 ]] && [ -f "${dir}${name}.exp.new_env" ]; then
+      ext=".exp.new_env"
+    else
+      ext=".exp"
+    fi
 
     if [[ "$record" -eq 1 ]]; then
       # Copy .out to .exp, replacing the current version, if present, with
       # <VERSION>, so that the .exp doesn't have to be updated on each release.
-      sed 's/'"${VERSION//./\\.}"'/<VERSION>/g' "${dir}${name}.out" > "${dir}${name}.exp"
+      sed 's/'"${VERSION//./\\.}"'/<VERSION>/g' "${dir}${name}.out" > "${dir}${name}${ext}"
       rm "${dir}${name}.out"
       rm -f "$err_file"
       rm "$diff_file"

@@ -193,6 +193,11 @@ runtest() {
     dir=${dir%*/}
     name=${dir##*/}
     exp_file="${name}.exp"
+    if [[ "$new_env" -eq 1 ]]; then
+      if [ -f "$dir/$exp_file.new_env" ]; then
+        exp_file="$exp_file.new_env"
+      fi
+    fi
     # On Windows we skip some tests as symlinks not available
     if [ "$OSTYPE" = "msys" ]  &&
       ([ "$name" = "symlink" ] ||
@@ -376,11 +381,11 @@ runtest() {
           env_flag="--env-mode constrained-writes"
         fi
         if [[ "$new_env" -eq 1 ]]; then
-          env_flag="--env-mode ssa"
-          if [ "$cmd" != "check" ]
-          then
-            return $RUNTEST_SKIP
-          fi
+            env_flag="--env-mode ssa"
+            if [ "$cmd" != "check" ]
+            then
+              return $RUNTEST_SKIP
+            fi
         fi
 
         # Helper function to generate saved state. If anything goes wrong, it
