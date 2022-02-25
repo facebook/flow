@@ -45,7 +45,18 @@ module type S = sig
 
   and write_locs = write_loc list
 
-  type values = write_locs L.LMap.t
+  type val_kind =
+    | Type
+    | Value
+
+  type read = {
+    def_loc: L.t option;
+    write_locs: write_locs;
+    val_kind: val_kind option;
+    name: string option;
+  }
+
+  type values = read L.LMap.t
 
   module Refi : sig
     type refinement_kind =
@@ -229,7 +240,18 @@ module Make
 
   include Refi
 
-  type values = write_locs L.LMap.t
+  type val_kind =
+    | Type
+    | Value
+
+  type read = {
+    def_loc: L.t option;
+    write_locs: write_locs;
+    val_kind: val_kind option;
+    name: string option;
+  }
+
+  type values = read L.LMap.t
 
   type env_entry =
     (* Not every assignment actually produces a write. For example, when a
@@ -265,7 +287,9 @@ module Make
       List.fold_left refinement_ids_of_ssa_write (refinement_id :: acc) writes
     | _ -> acc
 
-  let write_locs_of_read_loc values read_loc = L.LMap.find read_loc values
+  let write_locs_of_read_loc values read_loc =
+    let { write_locs; def_loc = _; val_kind = _; name = _ } = L.LMap.find read_loc values in
+    write_locs
 
   let rec writes_of_write_loc ~for_type write_loc =
     match write_loc with
@@ -291,13 +315,21 @@ module Make
   let sources_of_use ~for_type { env_values = vals; refinement_of_id; _ } loc =
     let write_locs =
       L.LMap.find_opt loc vals
-      |> Base.Option.value_map ~default:[] ~f:(List.map (writes_of_write_loc ~for_type))
+      |> Base.Option.value_map
+           ~default:[]
+           ~f:(fun { write_locs; def_loc = _; val_kind = _; name = _ } ->
+             List.map (writes_of_write_loc ~for_type) write_locs
+         )
       |> List.flatten
       |> L.LSet.of_list
     in
     let refi_locs =
       L.LMap.find_opt loc vals
-      |> Base.Option.value_map ~default:[] ~f:(List.fold_left refinement_ids_of_ssa_write [])
+      |> Base.Option.value_map
+           ~default:[]
+           ~f:(fun { write_locs; def_loc = _; val_kind = _; name = _ } ->
+             List.fold_left refinement_ids_of_ssa_write [] write_locs
+         )
       |> List.map (fun id -> fst (refinement_of_id id))
       |> List.fold_left L.LSet.union L.LSet.empty
     in
@@ -337,7 +369,7 @@ module Make
       let kvlist = L.LMap.bindings values in
       let strlist =
         Base.List.map
-          ~f:(fun (read_loc, write_locs) ->
+          ~f:(fun (read_loc, { def_loc = _; val_kind = _; write_locs; name = _ }) ->
             Printf.sprintf
               "%s => { %s }"
               (L.debug_to_string read_loc)

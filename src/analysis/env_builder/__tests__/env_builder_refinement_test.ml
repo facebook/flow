@@ -63,7 +63,7 @@ let print_values refinement_of_id =
     let kvlist = L.LMap.bindings values in
     let strlist =
       Base.List.map
-        ~f:(fun (read_loc, write_locs) ->
+        ~f:(fun (read_loc, { def_loc = _; val_kind = _; write_locs; name = _ }) ->
           Printf.sprintf
             "%s => {\n    %s\n  }"
             (L.debug_to_string read_loc)

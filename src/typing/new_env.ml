@@ -269,8 +269,16 @@ module New_env = struct
       |> phi cx reason
       |> refine cx reason loc refi
     in
-    let var_state = find_var var_info loc in
-    type_of_state var_state None
+    let { Env_api.def_loc; write_locs; val_kind; name } = find_var var_info loc in
+    match (val_kind, name, def_loc) with
+    | (Some Env_api.Type, Some name, Some def_loc) when not for_type ->
+      Flow_js.add_output
+        cx
+        (Error_message.EBindingError
+           (Error_message.ETypeInValuePosition, loc, OrdinaryName name, def_loc)
+        );
+      AnyT.at (AnyError None) loc
+    | _ -> type_of_state write_locs None
 
   let get_this_type_param_if_necessary ~otherwise name loc =
     if name = OrdinaryName "this" then
@@ -339,8 +347,8 @@ module New_env = struct
       |> not
     in
     try
-      let var_state = find_var var_info loc in
-      local_def_exists var_state
+      let { Env_api.def_loc = _; write_locs; val_kind = _; name = _ } = find_var var_info loc in
+      local_def_exists write_locs
     with
     | LocEnvEntryNotFound _ -> false
 

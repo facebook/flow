@@ -169,7 +169,7 @@ module Make
 
     val of_write : write_state -> t
 
-    val simplify : t -> Env_api.write_loc list
+    val simplify : ALoc.t option -> Bindings.kind option -> string option -> t -> Env_api.read
 
     val id_of_val : t -> int
 
@@ -343,8 +343,7 @@ module Make
 
     let all locs = mk_with_write_state @@ join (Base.List.map ~f:(fun reason -> Loc reason) locs)
 
-    (* Simplification converts a Val.t to a list of locations. *)
-    let rec simplify t =
+    let rec simplify_val t =
       let vals = normalize t.write_state in
       Base.List.map
         ~f:(function
@@ -357,10 +356,21 @@ module Make
           | Projection loc -> Env_api.Projection loc
           | Loc r -> Env_api.Write r
           | Refinement { refinement_id; val_t } ->
-            Env_api.Refinement { writes = simplify val_t; refinement_id }
+            Env_api.Refinement { writes = simplify_val val_t; refinement_id }
           | Global name -> Env_api.Global name
           | PHI _ -> failwith "A normalized value cannot be a PHI")
         (WriteSet.elements vals)
+
+    (* Simplification converts a Val.t to a list of locations. *)
+    let simplify def_loc binding_kind_opt name value =
+      let write_locs = simplify_val value in
+      let val_kind =
+        match binding_kind_opt with
+        | Some Bindings.Type -> Some Env_api.Type
+        | Some _ -> Some Env_api.Value
+        | None -> None
+      in
+      { Env_api.def_loc; write_locs; val_kind; name }
 
     let id_of_val { id; write_state = _ } = id
 
@@ -472,10 +482,17 @@ module Make
     refinement_id: int;
   }
 
+  type read_entry = {
+    def_loc: ALoc.t option;
+    binding_kind_opt: Bindings.kind option;
+    value: Val.t;
+    name: string option;
+  }
+
   type name_resolver_state = {
-    (* We maintain a map of read locations to raw Val.t terms, which are
+    (* We maintain a map of read locations to raw Val.t and their def locs terms, which are
        simplified to lists of write locations once the analysis is done. *)
-    values: Val.t L.LMap.t;
+    values: read_entry L.LMap.t;
     (* We also maintain a list of all write locations, for use in populating the env with
        types. *)
     write_entries: Env_api.env_entry Loc_sig.ALocS.LMap.t;
@@ -698,7 +715,11 @@ module Make
           jsx_base_name;
         }
 
-      method values : Env_api.values = L.LMap.map Val.simplify env_state.values
+      method values : Env_api.values =
+        L.LMap.map
+          (fun { def_loc; value; binding_kind_opt; name } ->
+            Val.simplify def_loc binding_kind_opt name value)
+          env_state.values
 
       method write_entries : Env_api.env_entry L.LMap.t = env_state.write_entries
 
@@ -1218,14 +1239,19 @@ module Make
        * in the new_env, which does know if it's querying a value or a type.
        * *)
       method any_identifier loc name =
-        let { val_ref; havoc; _ } = SMap.find name env_state.env in
+        let { val_ref; havoc; def_loc; kind; _ } = SMap.find name env_state.env in
         let v =
           if env_state.visiting_hoisted_type then
             havoc
           else
             !val_ref
         in
-        let values = L.LMap.add loc v env_state.values in
+        let values =
+          L.LMap.add
+            loc
+            { def_loc; value = v; binding_kind_opt = Some kind; name = Some name }
+            env_state.values
+        in
         env_state <- { env_state with values }
 
       method! identifier (ident : (ALoc.t, ALoc.t) Ast.Identifier.t) =
@@ -1931,7 +1957,19 @@ module Make
               (match discriminant_after_all_negated_refinements with
               | Some discriminant ->
                 env_state <-
-                  { env_state with values = L.LMap.add switch_loc discriminant env_state.values }
+                  {
+                    env_state with
+                    values =
+                      L.LMap.add
+                        switch_loc
+                        {
+                          def_loc = None;
+                          value = discriminant;
+                          binding_kind_opt = None;
+                          name = None;
+                        }
+                        env_state.values;
+                  }
               | None -> ());
 
               this#pop_refinement_scope ();
@@ -3178,7 +3216,19 @@ module Make
           (match this#get_val_of_expression expr with
           | None -> ()
           | Some refined_v ->
-            let values = L.LMap.add loc refined_v env_state.values in
+            (* We model a heap refinement as a separate const binding. We prefer this over using
+             * None so that we can report errors when using this value in a type position *)
+            let values =
+              L.LMap.add
+                loc
+                {
+                  def_loc = None;
+                  value = refined_v;
+                  binding_kind_opt = Some Bindings.Const;
+                  name = None;
+                }
+                env_state.values
+            in
             env_state <- { env_state with values });
           super#expression expr
         | _ -> super#expression expr
@@ -3225,25 +3275,32 @@ module Make
 
       method values = values
 
-      method any_identifier loc =
+      method any_identifier loc name =
         values <-
           L.LMap.update
             loc
             (function
-              | None -> Some [Env_api.Unreachable loc]
+              | None ->
+                Some
+                  {
+                    Env_api.def_loc = None;
+                    write_locs = [Env_api.Unreachable loc];
+                    val_kind = None;
+                    name = Some name;
+                  }
               | x -> x)
             values
 
       method! binding_type_identifier ident = super#identifier ident
 
       method! identifier (ident : (ALoc.t, ALoc.t) Ast.Identifier.t) =
-        let (loc, _) = ident in
-        this#any_identifier loc;
+        let (loc, { Flow_ast.Identifier.name; _ }) = ident in
+        this#any_identifier loc name;
         super#identifier ident
 
       method private jsx_function_call loc =
         match Context.react_runtime cx with
-        | Options.ReactRuntimeClassic -> this#any_identifier loc
+        | Options.ReactRuntimeClassic -> this#any_identifier loc "React"
         | _ -> ()
 
       method! jsx_element loc expr =
