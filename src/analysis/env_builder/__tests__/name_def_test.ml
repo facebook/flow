@@ -23,6 +23,8 @@ module Name_resolver = Name_resolver.Make_Test_With_Cx (struct
   let env_mode _cx = Options.SSAEnv { resolved = true }
 
   let enable_const_params _cx = false
+
+  let add_new_env_literal_subtypes _ _ = ()
 end)
 
 let string_of_root = function

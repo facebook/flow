@@ -284,6 +284,8 @@ val matching_props : t -> (Reason.reason * string * Type.t * Type.t) list
 
 val literal_subtypes : t -> (Type.t * Type.use_t) list
 
+val new_env_literal_subtypes : t -> (ALoc.t * Env_api.new_env_literal_check) list
+
 val constrained_writes : t -> (Type.t * Type.use_t) list
 
 val verbose : t -> Verbose.t option
@@ -351,6 +353,8 @@ val add_type_assert : t -> ALoc.t -> type_assert_kind * ALoc.t -> unit
 val add_matching_props : t -> Reason.reason * string * Type.t * Type.t -> unit
 
 val add_literal_subtypes : t -> Type.t * Type.use_t -> unit
+
+val add_new_env_literal_subtypes : t -> ALoc.t * Env_api.new_env_literal_check -> unit
 
 val add_constrained_write : t -> Type.t * Type.use_t -> unit
 

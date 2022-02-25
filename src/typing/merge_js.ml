@@ -255,24 +255,51 @@ let detect_matching_props_violations cx =
 let detect_literal_subtypes =
   let lb_visitor = new resolver_visitor in
   let ub_visitor =
-    object (self)
+    object (_self)
       inherit resolver_visitor as super
 
       method! type_ cx map_cx t =
         let open Type in
-        match t with
-        | GenericT { bound; _ } -> self#type_ cx map_cx bound
-        | t -> super#type_ cx map_cx t
+        match super#type_ cx map_cx t with
+        | GenericT { bound; _ } -> bound
+        | t -> t
     end
   in
   fun cx ->
-    let checks = Context.literal_subtypes cx in
-    List.iter
-      (fun (t, u) ->
-        let t = lb_visitor#type_ cx () t in
-        let u = ub_visitor#use_type cx () u in
-        Flow_js.flow cx (t, u))
-      checks
+    match Context.env_mode cx with
+    | Options.SSAEnv _ ->
+      let new_env_checks = Context.new_env_literal_subtypes cx in
+      List.iter
+        (fun (loc, check) ->
+          let open Type in
+          let env = Context.environment cx in
+          let u =
+            UseT (Op (Internal Refinement), New_env.New_env.provider_type_for_def_loc env loc)
+          in
+          let l =
+            match check with
+            | Env_api.SingletonNum (lit_loc, sense, num, raw) ->
+              let reason = lit_loc |> Reason.(mk_reason (RNumberLit raw)) in
+              DefT (reason, bogus_trust (), NumT (Literal (Some sense, (num, raw))))
+            | Env_api.SingletonBool (lit_loc, b) ->
+              let reason = lit_loc |> Reason.(mk_reason (RBooleanLit b)) in
+              DefT (reason, bogus_trust (), BoolT (Some b))
+            | Env_api.SingletonStr (lit_loc, sense, str) ->
+              let reason = lit_loc |> Reason.(mk_reason (RStringLit (OrdinaryName str))) in
+              DefT (reason, bogus_trust (), StrT (Literal (Some sense, Reason.OrdinaryName str)))
+          in
+          let l = lb_visitor#type_ cx () l in
+          let u = ub_visitor#use_type cx () u in
+          Flow_js.flow cx (l, u))
+        new_env_checks
+    | _ ->
+      let checks = Context.literal_subtypes cx in
+      List.iter
+        (fun (t, u) ->
+          let t = lb_visitor#type_ cx () t in
+          let u = ub_visitor#use_type cx () u in
+          Flow_js.flow cx (t, u))
+        checks
 
 let check_constrained_writes init_cx master_cx =
   let checks = Context.constrained_writes init_cx in

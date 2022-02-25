@@ -16,7 +16,7 @@ module type S = sig
   val resolve_env_entry : Context.t -> Type.t -> ALoc.t -> unit
 end
 
-module New_env : S = struct
+module New_env = struct
   (* The new env handles all the logic for regular variables internally, but
      internal variables still need to be handled by name, which makes them
      incompatible with the new environment as it stands. Eventually we'll need

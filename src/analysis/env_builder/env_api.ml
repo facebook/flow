@@ -8,6 +8,11 @@
 open Reason
 module Ast = Flow_ast
 
+type new_env_literal_check =
+  | SingletonNum of ALoc.t * bool * float * string
+  | SingletonBool of ALoc.t * bool
+  | SingletonStr of ALoc.t * bool * string
+
 module type S = sig
   module L : Loc_sig.S
 

@@ -61,6 +61,8 @@ module type C = sig
   val enable_const_params : t -> bool
 
   val env_mode : t -> Options.env_mode
+
+  val add_new_env_literal_subtypes : t -> ALoc.t * Env_api.new_env_literal_check -> unit
 end
 
 module type F = sig
@@ -84,6 +86,8 @@ module type S = sig
   val program :
     cx -> (ALoc.t, ALoc.t) Flow_ast.Program.t -> Env_api.values * (int -> Env_api.refinement)
 end
+
+module PostInferenceCheck = Env_api
 
 module Make
     (Scope_api : Scope_api_sig.S with module L = Loc_sig.ALocS)
@@ -637,6 +641,39 @@ module Make
       (SMap.add jsx_base_name entry globals, Some jsx_base_name)
 
   class name_resolver cx (prepass_info, prepass_values, unbound_names) provider_info =
+    let add_output =
+      match Context.env_mode cx with
+      | Options.SSAEnv _ -> FlowAPIUtils.add_output cx
+      | _ -> (fun ?trace:_ _ -> ())
+    in
+
+    let add_literal_subtype_test =
+      let rec f refinee_loc literal =
+        match literal with
+        | SingletonNumR { loc; lit = (num, raw); sense } ->
+          Context.add_new_env_literal_subtypes
+            cx
+            (refinee_loc, PostInferenceCheck.SingletonNum (loc, sense, num, raw))
+        | SingletonBoolR { loc; lit; sense } ->
+          Context.add_new_env_literal_subtypes
+            cx
+            (refinee_loc, PostInferenceCheck.SingletonBool (loc, lit = sense))
+        | SingletonStrR { loc; lit; sense } ->
+          Context.add_new_env_literal_subtypes
+            cx
+            (refinee_loc, PostInferenceCheck.SingletonStr (loc, sense, lit))
+        | NotR r -> f refinee_loc r
+        | AndR (r1, r2)
+        | OrR (r1, r2) ->
+          f refinee_loc r1;
+          f refinee_loc r2
+        | _ -> ()
+      in
+      match Context.env_mode cx with
+      | Options.SSAEnv _ -> f
+      | _ -> (fun _ _ -> ())
+    in
+
     object (this)
       inherit
         Scope_builder.scope_builder
@@ -1150,14 +1187,14 @@ module Make
           (match def_loc with
           | None -> failwith "Cannot have an undeclared binding without a def loc"
           | Some def_loc ->
-            this#add_output
+            add_output
               Error_message.(
                 EBindingError (EReferencedBeforeDeclaration, loc, OrdinaryName x, def_loc)
               ))
         | _ ->
           (match error_for_assignment_kind cx x loc def_loc stored_binding_kind kind !val_ref with
           | Some err ->
-            this#add_output err;
+            add_output err;
             let write_entries = L.LMap.add loc Env_api.NonAssigningWrite env_state.write_entries in
             env_state <- { env_state with write_entries }
           | _ ->
@@ -2152,7 +2189,7 @@ module Make
             update_write_entries ~assigning:true
           | Some err ->
             update_write_entries ~assigning:false;
-            this#add_output err)
+            add_output err)
         | (_, Flow_ast.Expression.Member member) ->
           this#assign_member ~update_entry:true member loc undefined undefined_reason
         | _ -> ()
@@ -2625,6 +2662,13 @@ module Make
             else
               NotR refinement
           in
+          (match refinement_key.RefinementKey.lookup with
+          | { RefinementKey.base; projections = [] } ->
+            let { val_ref = _; def_loc; _ } = SMap.find base env_state.env in
+            (match def_loc with
+            | None -> ()
+            | Some def_loc -> add_literal_subtype_test def_loc refinement)
+          | _ -> ());
           this#add_refinement refinement_key (L.LSet.singleton loc, refinement)
         | _ -> ()
 
@@ -3159,11 +3203,6 @@ module Make
       method! jsx_fragment loc expr =
         this#jsx_function_call loc;
         super#jsx_fragment loc expr
-
-      method add_output err =
-        match Context.env_mode cx with
-        | Options.SSAEnv _ -> FlowAPIUtils.add_output cx err
-        | _ -> ()
     end
 
   (* The EnvBuilder does not traverse dead code, but statement.ml does. Dead code
