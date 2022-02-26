@@ -58,6 +58,7 @@ let print_values refinement_of_id =
     | Global name -> "Global " ^ name
     | Unreachable _ -> "unreachable"
     | Undefined _ -> "undefined"
+    | DeclaredFunction l -> Printf.sprintf "declared function %s" (L.debug_to_string l)
   in
   fun values ->
     let kvlist = L.LMap.bindings values in

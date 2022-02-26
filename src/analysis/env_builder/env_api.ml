@@ -42,6 +42,7 @@ module type S = sig
     | Projection of L.t
     | Unreachable of L.t
     | Undefined of L.t Reason.virtual_reason
+    | DeclaredFunction of L.t
 
   and write_locs = write_loc list
 
@@ -189,6 +190,7 @@ module Make
     | Projection of L.t
     | Unreachable of L.t
     | Undefined of L.t Reason.virtual_reason
+    | DeclaredFunction of L.t
 
   and write_locs = write_loc list
 
@@ -304,6 +306,7 @@ module Make
     | Projection _ -> []
     | Unreachable _ -> []
     | Undefined r -> [Reason.poly_loc_of_reason r]
+    | DeclaredFunction l -> [l]
 
   let rec refinements_of_write_loc ({ refinement_of_id; _ } as env) write_loc =
     match write_loc with
@@ -353,6 +356,7 @@ module Make
       | Projection l -> Printf.sprintf "projection at %s" (L.debug_to_string l)
       | Unreachable _ -> "unreachable"
       | Undefined _ -> "undefined"
+      | DeclaredFunction l -> Printf.sprintf "declared function %s" (L.debug_to_string l)
       | Write reason ->
         let loc = Reason.poly_loc_of_reason reason in
         Utils_js.spf

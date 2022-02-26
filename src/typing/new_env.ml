@@ -137,7 +137,7 @@ module New_env = struct
     | Some (Find_providers.AnnotatedVar, _) -> true
     | _ -> false
 
-  let provider_type_for_def_loc env def_loc =
+  let provider_type_for_def_loc ?(intersect = false) env def_loc =
     let { Loc_env.var_info; _ } = env in
     let providers =
       find_providers var_info def_loc
@@ -148,6 +148,8 @@ module New_env = struct
     | None -> assert_false (spf "Missing providers for %s" (ALoc.debug_to_string def_loc))
     | Some [] -> MixedT.make (mk_reason (RCustom "no providers") def_loc) (Trust.bogus_trust ())
     | Some [t] -> t
+    | Some (t1 :: t2 :: ts) when intersect ->
+      IntersectionT (mk_reason (RCustom "providers") def_loc, InterRep.make t1 t2 ts)
     | Some (t1 :: t2 :: ts) ->
       UnionT (mk_reason (RCustom "providers") def_loc, UnionRep.make t1 t2 ts)
 
@@ -222,6 +224,7 @@ module New_env = struct
           | Env_api.Undefined reason
           | Env_api.Uninitialized reason ->
             Type.(VoidT.make reason |> with_trust Trust.bogus_trust)
+          | Env_api.DeclaredFunction loc -> provider_type_for_def_loc ~intersect:true env loc
           | Env_api.Undeclared (name, def_loc) ->
             Flow_js.add_output
               cx
@@ -335,6 +338,7 @@ module New_env = struct
       Base.List.exists
         ~f:(function
           | Env_api.With_ALoc.Undefined _ -> true
+          | Env_api.With_ALoc.DeclaredFunction _ -> true
           | Env_api.With_ALoc.Uninitialized _ -> true
           | Env_api.With_ALoc.UndeclaredClass _ -> true
           | Env_api.With_ALoc.Write _ -> true

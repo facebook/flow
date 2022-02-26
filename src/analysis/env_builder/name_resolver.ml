@@ -179,6 +179,8 @@ module Make
 
     val undeclared : string -> ALoc.t -> t
 
+    val declared_function : ALoc.t -> t
+
     (* unwraps a RefinementWrite into just the underlying write *)
     val unrefine : int -> t -> t
 
@@ -191,6 +193,8 @@ module Make
     val is_global_undefined : t -> bool
 
     val is_undeclared : t -> bool
+
+    val is_declared_function : t -> bool
   end = struct
     let curr_id = ref 0
 
@@ -210,6 +214,7 @@ module Make
           val_t: t;
         }
       | Undefined of ALoc.t virtual_reason
+      | DeclaredFunction of ALoc.t
 
     and t = {
       id: int;
@@ -225,6 +230,11 @@ module Make
       match t.write_state with
       | Undeclared _ -> true
       | UndeclaredClass _ -> true
+      | _ -> false
+
+    let is_declared_function t =
+      match t.write_state with
+      | DeclaredFunction _ -> true
       | _ -> false
 
     let new_id () =
@@ -247,6 +257,8 @@ module Make
     let undeclared_class def name = mk_with_write_state (UndeclaredClass { def; name })
 
     let projection loc = mk_with_write_state @@ Projection loc
+
+    let declared_function loc = mk_with_write_state @@ DeclaredFunction loc
 
     let refinement refinement_id val_t = mk_with_write_state @@ Refinement { refinement_id; val_t }
 
@@ -289,6 +301,7 @@ module Make
       match t with
       | Uninitialized _
       | Undefined _
+      | DeclaredFunction _
       | Undeclared _
       | UndeclaredClass _
       | Projection _
@@ -322,6 +335,7 @@ module Make
       match t with
       | Uninitialized _
       | Undefined _
+      | DeclaredFunction _
       | Undeclared _
       | UndeclaredClass _
       | Projection _
@@ -350,6 +364,7 @@ module Make
           | Uninitialized l when WriteSet.cardinal vals <= 1 ->
             Env_api.Uninitialized (mk_reason RUninitialized l)
           | Undefined r -> Env_api.Undefined r
+          | DeclaredFunction l -> Env_api.DeclaredFunction l
           | Undeclared (name, loc) -> Env_api.Undeclared (name, loc)
           | UndeclaredClass { def; name } -> Env_api.UndeclaredClass { def; name }
           | Uninitialized l -> Env_api.Uninitialized (mk_reason RPossiblyUninitialized l)
@@ -379,6 +394,7 @@ module Make
         match v with
         | Undeclared _ -> []
         | Undefined _ -> []
+        | DeclaredFunction _ -> []
         | Uninitialized _ -> [v]
         | UndeclaredClass _ -> [v]
         | PHI states -> Base.List.concat_map ~f:state_is_uninitialized states
@@ -1060,6 +1076,23 @@ module Make
                 heap_refinements = ref HeapRefinementMap.empty;
                 kind;
               }
+            | Bindings.DeclaredFunction ->
+              let (_, providers) = this#providers_of_def_loc loc in
+              let write_entries =
+                Base.List.fold
+                  ~f:(fun acc r -> L.LMap.add (poly_loc_of_reason r) (Env_api.AssigningWrite r) acc)
+                  ~init:env_state.write_entries
+                  providers
+              in
+              env_state <- { env_state with write_entries };
+              let declared_function = Val.declared_function loc in
+              {
+                val_ref = ref declared_function;
+                havoc = declared_function;
+                def_loc = Some loc;
+                heap_refinements = ref HeapRefinementMap.empty;
+                kind;
+              }
             | _ ->
               let initial_val =
                 match kind with
@@ -1219,10 +1252,23 @@ module Make
             let write_entries = L.LMap.add loc Env_api.NonAssigningWrite env_state.write_entries in
             env_state <- { env_state with write_entries }
           | _ ->
-            val_ref := Val.one reason;
             this#havoc_heap_refinements heap_refinements;
             let write_entries =
-              L.LMap.add loc (Env_api.AssigningWrite reason) env_state.write_entries
+              if not (Val.is_declared_function !val_ref) then (
+                val_ref := Val.one reason;
+                L.LMap.add loc (Env_api.AssigningWrite reason) env_state.write_entries
+              ) else
+                (* All of the providers are aleady in the map. We don't want to overwrite them with
+                 * a non-assigning write. We _do_ want to enter regular function declarations as
+                 * non-assigning writes so that they are not checked against the providers in
+                * New_env.set_env_entry *)
+                L.LMap.update
+                  loc
+                  (fun x ->
+                    match x with
+                    | None -> Some Env_api.NonAssigningWrite
+                    | _ -> x)
+                  env_state.write_entries
             in
             env_state <- { env_state with write_entries }));
         super#identifier ident
