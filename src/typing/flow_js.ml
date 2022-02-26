@@ -2033,6 +2033,8 @@ struct
             cx
             trace
             (l, OptionalChainT { opt_chain with t_out = GetPropT (use_op, reason, prop, tout) })
+        | (IntersectionT _, DestructuringT (reason, kind, selector, tout, id)) ->
+          destruct cx ~trace reason kind l selector tout id
         (* extends **)
         | (IntersectionT (_, rep), ExtendsUseT (use_op, reason, try_ts_on_failure, l, u)) ->
           let (t, ts) = InterRep.members_nel rep in
@@ -4168,21 +4170,8 @@ struct
         (*****************)
         (* destructuring *)
         (*****************)
-        | (_, DestructuringT (reason, kind, s, tout, id)) ->
-          begin
-            match kind with
-            | DestructAnnot ->
-              (* NB: BecomeT used to enforce that 0->1 property is preserved. Is
-               * currently necessary, since 0->1 annotations are not always
-               * recursively 0->1 -- e.g., class instance types. *)
-              let tvar = Tvar.mk_no_wrap cx reason in
-              eval_selector cx ~trace reason l s (reason, tvar) id;
-              rec_flow
-                cx
-                trace
-                (OpenT (reason, tvar), BecomeT { reason; t = OpenT tout; empty_success = false })
-            | DestructInfer -> eval_selector cx ~trace reason l s tout id
-          end
+        | (_, DestructuringT (reason, kind, selector, tout, id)) ->
+          destruct cx ~trace reason kind l selector tout id
         (**************)
         (* object kit *)
         (**************)
@@ -6525,6 +6514,20 @@ struct
           id
       in
       result
+
+  and destruct cx ~trace reason kind t selector tout id =
+    match kind with
+    | DestructAnnot ->
+      (* NB: BecomeT used to enforce that 0->1 property is preserved. Is
+       * currently necessary, since 0->1 annotations are not always
+       * recursively 0->1 -- e.g., class instance types. *)
+      let tvar = Tvar.mk_no_wrap cx reason in
+      eval_selector cx ~trace reason t selector (reason, tvar) id;
+      rec_flow
+        cx
+        trace
+        (OpenT (reason, tvar), BecomeT { reason; t = OpenT tout; empty_success = false })
+    | DestructInfer -> eval_selector cx ~trace reason t selector tout id
 
   and eval_selector cx ?trace reason curr_t s tvar id =
     flow_opt
