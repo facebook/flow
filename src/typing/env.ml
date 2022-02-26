@@ -1733,7 +1733,8 @@ module Env : Env_sig.S = struct
     Scope.add_refi key refi scope;
     change
 
-  let set_expr _cx k l t1 t2 = add_heap_refinement Changeset.Write k l t1 t2 |> ignore
+  let set_expr _cx k l ~refined:t1 ~original:t2 =
+    add_heap_refinement Changeset.Write k l t1 t2 |> ignore
 
   let refine_expr = add_heap_refinement Changeset.Refine
 

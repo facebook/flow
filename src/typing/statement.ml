@@ -8999,7 +8999,7 @@ struct
          object and refinement types - `o` and `t` here - are
          fully resolved.
       *)
-      Env.(set_expr cx key (fst exp) t orig_t)
+      Env.(set_expr cx key (fst exp) ~refined:t ~original:orig_t)
     | None -> ()
 
   and mk_initial_arguments_reason =

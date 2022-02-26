@@ -206,7 +206,7 @@ module type S = sig
 
   val set_internal_var : Context.t -> string -> Type.t -> ALoc.t -> unit
 
-  val set_expr : Context.t -> Key.t -> ALoc.t -> Type.t -> Type.t -> unit
+  val set_expr : Context.t -> Key.t -> ALoc.t -> refined:Type.t -> original:Type.t -> unit
 
   val refine_expr : Key.t -> ALoc.t -> Type.t -> Type.t -> int * Key.t * Changeset.op
 

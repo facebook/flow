@@ -387,13 +387,13 @@ module New_env = struct
   (*  Writing  *)
   (*************)
 
-  let set_expr cx _key loc _o e =
+  let set_expr cx _key loc ~refined ~original:_ =
     let env = Context.environment cx in
     match Loc_env.find_write env loc with
     | None ->
       (* As below, this entry is empty if the refinement is never read from *)
       ()
-    | Some w -> Flow_js.unify cx ~use_op:unknown_use e w
+    | Some w -> Flow_js.unify cx ~use_op:unknown_use refined w
 
   let set_env_entry cx ~use_op t loc =
     let ({ Loc_env.var_info; resolved; _ } as env) = Context.environment cx in
