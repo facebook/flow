@@ -692,4 +692,13 @@ x = 'a'; // p
     w = 42;
          "
                "[(5, 8) to (5, 9)]";
+         "declared_function"
+         >:: mk_provider_loc_test
+               (mk_loc (2, 26) (2, 27))
+               "
+         declare function f(): number;
+         declare function f(x: string): string;
+         function f(x: any): any { return null }
+         "
+               "[]";
        ]

@@ -28,6 +28,7 @@ module FindProviders (L : Loc_sig.S) : sig
     declare_locs: L.LSet.t;
     def_locs: L.LSet.t;
     provider_locs: 'locs;
+    binding_kind: Bindings.kind;
   }
 
   type entry = (L.LSet.t, state) base_entry
@@ -121,6 +122,7 @@ end = struct
     declare_locs: L.LSet.t;
     def_locs: L.LSet.t;
     provider_locs: 'locs;
+    binding_kind: Bindings.kind;
   }
 
   type intermediate_entry = (write_state L.LMap.t, intermediate_state) base_entry
@@ -263,7 +265,7 @@ end = struct
       Some (Initialized (d, None))
 
   (**** Functions for manipulating environments ****)
-  let empty_entry name =
+  let empty_entry name binding_kind =
     {
       entry_id = Id.new_id ();
       name;
@@ -271,6 +273,7 @@ end = struct
       provider_locs = L.LMap.empty;
       declare_locs = L.LSet.empty;
       def_locs = L.LSet.empty;
+      binding_kind;
     }
 
   let env_invariant_violated s = failwith ("Environment invariant violated: " ^ s)
@@ -320,7 +323,7 @@ end = struct
         )
       (* If we don't see the variable in the root var scope, it's a global--create a dummy entry for it *)
       | [({ entries; kind = Var; _ } as hd)] ->
-        ( empty_entry var,
+        ( empty_entry var Bindings.Var,
           var_scopes_off,
           fun entry ->
             List.append (List.rev rev_head) [{ hd with entries = SMap.add var entry entries }]
@@ -334,7 +337,8 @@ end = struct
 
     loop 0 (Nel.to_list env) []
 
-  let get_entry var entries = SMap.find_opt var entries |> Option.value ~default:(empty_entry var)
+  let get_entry var default_binding entries =
+    SMap.find_opt var entries |> Option.value ~default:(empty_entry var default_binding)
 
   let empty_provider_info = { exact_locs = L.LSet.empty; relative_locs = L.LSet.empty }
 
@@ -372,6 +376,7 @@ end = struct
               provider_locs = providers1;
               declare_locs = declares1;
               def_locs = defs1;
+              binding_kind = binding_kind1;
             },
             {
               entry_id = _;
@@ -380,6 +385,7 @@ end = struct
               provider_locs = providers2;
               declare_locs = declares2;
               def_locs = defs2;
+              binding_kind = binding_kind2;
             }
           ) ->
           assert (name1 = name2);
@@ -398,6 +404,22 @@ end = struct
                 providers2;
             declare_locs = L.LSet.union declares1 declares2;
             def_locs = L.LSet.union defs1 defs2;
+            binding_kind =
+              (* We care about the binding kind so that we can report declared functions as
+               * providers. Declared functions aren't typically declared inside a branching
+               * statement, but there is no syntax error preventing someone from doing that.
+               * To account for this case, we consider a binding to be for a declared function if
+               * at least one branch was a declared function. In all other non-equal cases we
+               * just use Var, since we're only concerned with declared functions here *)
+              ( if binding_kind1 = binding_kind2 then
+                binding_kind1
+              else if
+              binding_kind1 = Bindings.DeclaredFunction || binding_kind2 = Bindings.DeclaredFunction
+            then
+                Bindings.DeclaredFunction
+              else
+                Bindings.Var
+              );
           }
     in
     let rec join_scopes scope1 scope2 =
@@ -699,7 +721,13 @@ end = struct
         let (env, ({ init_state = write_state } as cx)) = this#acc in
         let (entries, reconstruct_env) = find_entries_for_new_variable kind env in
         let ({ declare_locs; state = cur_state; provider_locs; _ } as entry) =
-          get_entry var entries
+          let binding_kind =
+            match kind with
+            | Ast.Statement.VariableDeclaration.Var -> Bindings.Var
+            | Ast.Statement.VariableDeclaration.Let -> Bindings.Let
+            | Ast.Statement.VariableDeclaration.Const -> Bindings.Const
+          in
+          get_entry var binding_kind entries
         in
         let declare_locs = L.LSet.add loc declare_locs in
         let new_state = extended_state_opt ~state:cur_state ~write_state in
