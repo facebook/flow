@@ -609,6 +609,7 @@ module Make
       | (Bindings.Const, Some _)
       | (Bindings.Class, Some _)
       | (Bindings.Function, Some _)
+      | (Bindings.Type, Some _)
         when not (Val.is_undeclared v) ->
         Some
           Error_message.(
