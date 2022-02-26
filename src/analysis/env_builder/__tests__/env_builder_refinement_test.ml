@@ -3464,7 +3464,7 @@ while (x.foo === 3) {
   } else { throw 'error'}
   x.foo;
 }
-x.foo; // x.foo === 4 refinement should not be present
+x.foo;
 |};
     [%expect {|
       [
@@ -3486,11 +3486,14 @@ x.foo; // x.foo === 4 refinement should not be present
         (7, 2) to (7, 3) => {
           {refinement = SentinelR foo; writes = {refinement = SentinelR foo; writes = (2, 4) to (2, 5): (`x`)}}
         };
+        (7, 2) to (7, 7) => {
+          {refinement = 4; writes = {refinement = 3; writes = projection at (3, 7) to (3, 12)}}
+        };
         (9, 0) to (9, 1) => {
           {refinement = Not (SentinelR foo); writes = (2, 4) to (2, 5): (`x`),{refinement = SentinelR foo; writes = (2, 4) to (2, 5): (`x`)}}
         };
         (9, 0) to (9, 5) => {
-          {refinement = Not (3); writes = projection at (3, 7) to (3, 12)}
+          {refinement = Not (3); writes = projection at (3, 7) to (3, 12),{refinement = 4; writes = projection at (3, 7) to (3, 12)}}
         }] |}]
 
 let%expect_test "heap_refinement_write" =

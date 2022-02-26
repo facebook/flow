@@ -1549,8 +1549,8 @@ module Make
         this#pop_refinement_scope ();
         this#reset_env env0;
         this#merge_conditional_branches_with_refinements
-          (then_env_no_refinements, then_env_with_refinements)
-          (else_env_no_refinements, else_env_with_refinements);
+          (then_env_no_refinements, then_env_with_refinements, then_completion_state)
+          (else_env_no_refinements, else_env_with_refinements, else_completion_state);
 
         (* merge completions *)
         let if_completion_states = (then_completion_state, [else_completion_state]) in
@@ -1581,8 +1581,11 @@ module Make
         this#pop_refinement_scope ();
         this#reset_env env0;
         this#merge_conditional_branches_with_refinements
-          (consequent_env_no_refinements, consequent_env_with_refinements)
-          (alternate_env_no_refinements, alternate_env_with_refinements);
+          ( consequent_env_no_refinements,
+            consequent_env_with_refinements,
+            consequent_completion_state
+          )
+          (alternate_env_no_refinements, alternate_env_with_refinements, alternate_completion_state);
 
         (* merge completions *)
         let conditional_completion_states =
@@ -1591,32 +1594,39 @@ module Make
         this#merge_completion_states conditional_completion_states;
         expr
 
-      method merge_conditional_branches_with_refinements (env1, refined_env1) (env2, refined_env2)
-          : unit =
+      method merge_conditional_branches_with_refinements
+          (env1, refined_env1, completion_state1) (env2, refined_env2, completion_state2) : unit =
         (* We only want to merge the refined environments from the two branches of an if-statement
          * if there was an assignment in one of the branches. Otherwise, merging the positive and
          * negative branches of the refinement into a union would be unnecessary work to
-         * reconstruct the original type *)
-        SMap.iter
-          (fun name { val_ref; heap_refinements; _ } ->
-            let { Env.env_val = value1; heap_refinements = _ } = SMap.find name env1 in
-            let { Env.env_val = value2; heap_refinements = _ } = SMap.find name env2 in
-            let { Env.env_val = refined_value1; heap_refinements = heap_refinements1 } =
-              SMap.find name refined_env1
-            in
-            let { Env.env_val = refined_value2; heap_refinements = heap_refinements2 } =
-              SMap.find name refined_env2
-            in
-            (* If the same key exists on both versions of the object then we can
-             * merge the two heap refinements, even though the underlying value
-             * has changed. This is because the final object does indeed have
-             * one of the two refinements at the merge *)
-            heap_refinements := this#merge_heap_refinements heap_refinements1 heap_refinements2;
-            if Val.id_of_val value1 = Val.id_of_val value2 then
-              val_ref := value1
-            else
-              val_ref := Val.merge refined_value1 refined_value2)
-          env_state.env
+         * reconstruct the original type.
+         *
+         * If one of the branches abnormally completes then we can just take the refinements
+         * from the other branch. *)
+        match (completion_state1, completion_state2) with
+        | (None, Some _) -> this#reset_env refined_env1
+        | (Some _, None) -> this#reset_env refined_env2
+        | _ ->
+          SMap.iter
+            (fun name { val_ref; heap_refinements; _ } ->
+              let { Env.env_val = value1; heap_refinements = _ } = SMap.find name env1 in
+              let { Env.env_val = value2; heap_refinements = _ } = SMap.find name env2 in
+              let { Env.env_val = refined_value1; heap_refinements = heap_refinements1 } =
+                SMap.find name refined_env1
+              in
+              let { Env.env_val = refined_value2; heap_refinements = heap_refinements2 } =
+                SMap.find name refined_env2
+              in
+              (* If the same key exists on both versions of the object then we can
+               * merge the two heap refinements, even though the underlying value
+               * has changed. This is because the final object does indeed have
+               * one of the two refinements at the merge *)
+              heap_refinements := this#merge_heap_refinements heap_refinements1 heap_refinements2;
+              if Val.id_of_val value1 = Val.id_of_val value2 then
+                val_ref := value1
+              else
+                val_ref := Val.merge refined_value1 refined_value2)
+            env_state.env
 
       method with_env_state f =
         let pre_state = env_state in
