@@ -38,3 +38,6 @@ export function thisWithinNestedAsyncFunction(): () => void {
     this;
   }
 }
+
+// Do not error if the function has a this param
+export function hasThisParam(this: string) { this; }
