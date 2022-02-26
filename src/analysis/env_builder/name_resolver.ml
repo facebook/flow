@@ -1062,6 +1062,19 @@ module Make
                 heap_refinements = ref HeapRefinementMap.empty;
                 kind;
               }
+            | Bindings.DeclaredClass ->
+              let reason = mk_reason (RIdentifier (OrdinaryName name)) loc in
+              let write_entries =
+                L.LMap.add loc (Env_api.AssigningWrite reason) env_state.write_entries
+              in
+              env_state <- { env_state with write_entries };
+              {
+                val_ref = ref (Val.one reason);
+                havoc = Val.one reason;
+                def_loc = Some loc;
+                heap_refinements = ref HeapRefinementMap.empty;
+                kind;
+              }
             | Bindings.Class ->
               let (havoc, providers) = this#providers_of_def_loc loc in
               let write_entries =

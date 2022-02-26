@@ -15,6 +15,7 @@ type kind =
   | Enum
   | Function
   | Class
+  | DeclaredClass
   | Parameter
   | CatchParameter
   | Import

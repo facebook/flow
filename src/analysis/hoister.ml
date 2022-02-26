@@ -44,6 +44,9 @@ class ['loc] lexical_hoister ~flowmin_compatibility ~enable_enums =
     method private add_declared_function_binding entry =
       this#update_acc Bindings.(add (entry, Bindings.DeclaredFunction))
 
+    method private add_declared_class_binding entry =
+      this#update_acc Bindings.(add (entry, Bindings.DeclaredClass))
+
     (* Ignore all statements except variable declarations, class declarations, and
        import declarations. The ignored statements cannot contain lexical
        bindings in the current scope. *)
@@ -155,7 +158,7 @@ class ['loc] lexical_hoister ~flowmin_compatibility ~enable_enums =
 
     method! declare_class loc (decl : ('loc, 'loc) Ast.Statement.DeclareClass.t) =
       let open Ast.Statement.DeclareClass in
-      this#add_let_binding ~kind:Bindings.Class decl.id;
+      this#add_declared_class_binding decl.id;
       super#declare_class loc decl
 
     method! declare_function loc (decl : ('loc, 'loc) Ast.Statement.DeclareFunction.t) =
