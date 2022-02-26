@@ -968,7 +968,9 @@ module Make
           (fun index -> function
             | None -> ()
             | Some key ->
-              this#add_refinement key (L.LSet.singleton callee_loc, LatentR { func = callee; index }))
+              this#add_refinement
+                key
+                (L.LSet.singleton callee_loc, LatentR { func = callee; index = index + 1 }))
           refinement_keys_by_arg
 
       method havoc_heap_refinements heap_refinements = heap_refinements := HeapRefinementMap.empty
