@@ -717,25 +717,34 @@ end = struct
           ~enter_lex_child:enter_new_lex_child as super
 
       (* Add a new variable declaration to the scope, which may or may not be a provider as well. *)
-      method new_entry var kind loc =
+      method new_entry var binding_kind kind loc =
         let (env, ({ init_state = write_state } as cx)) = this#acc in
         let (entries, reconstruct_env) = find_entries_for_new_variable kind env in
-        let ({ declare_locs; state = cur_state; provider_locs; _ } as entry) =
-          let binding_kind =
-            match kind with
-            | Ast.Statement.VariableDeclaration.Var -> Bindings.Var
-            | Ast.Statement.VariableDeclaration.Let -> Bindings.Let
-            | Ast.Statement.VariableDeclaration.Const -> Bindings.Const
-          in
+        let ( {
+                declare_locs;
+                state = cur_state;
+                provider_locs;
+                binding_kind = stored_binding_kind;
+                _;
+              } as entry
+            ) =
           get_entry var binding_kind entries
         in
         let declare_locs = L.LSet.add loc declare_locs in
-        let new_state = extended_state_opt ~state:cur_state ~write_state in
-        let (state, provider_locs) =
-          Base.Option.value_map
-            ~f:(fun state -> (state, L.LMap.add loc write_state provider_locs))
-            ~default:(cur_state, provider_locs)
-            new_state
+        let (new_state, state, provider_locs) =
+          match (binding_kind, stored_binding_kind) with
+          | (Bindings.DeclaredFunction, Bindings.DeclaredFunction) ->
+            (* TODO: It would be better if we modeled providers as Inter | UnionLike. This would
+             * make it clear that certain providers are meant to be intersected and others
+             * are meant to be unioned. *)
+            (Some Annotated, Annotated, L.LMap.add loc Annotation provider_locs)
+          | (_, Bindings.DeclaredFunction) -> (None, cur_state, provider_locs)
+          | _ ->
+            let new_state = extended_state_opt ~state:cur_state ~write_state in
+            Base.Option.value_map
+              ~f:(fun state -> (new_state, state, L.LMap.add loc write_state provider_locs))
+              ~default:(new_state, cur_state, provider_locs)
+              new_state
         in
         let entries = SMap.add var { entry with declare_locs; state; provider_locs } entries in
         let env = reconstruct_env entries in
@@ -875,14 +884,29 @@ end = struct
       method! pattern_identifier ?kind ((loc, { Ast.Identifier.name; comments = _ }) as ident) =
         begin
           match kind with
-          | Some kind -> this#new_entry name kind loc
+          | Some kind ->
+            let binding_kind =
+              match kind with
+              | Ast.Statement.VariableDeclaration.Var -> Bindings.Var
+              | Ast.Statement.VariableDeclaration.Let -> Bindings.Let
+              | Ast.Statement.VariableDeclaration.Const -> Bindings.Const
+            in
+            this#new_entry name binding_kind kind loc
           | _ -> ()
         end;
         super#identifier ident
 
       method! function_identifier ((loc, { Ast.Identifier.name; comments = _ }) as ident) =
-        this#new_entry name Flow_ast.Statement.VariableDeclaration.Let loc;
+        this#new_entry name Bindings.Function Flow_ast.Statement.VariableDeclaration.Let loc;
         super#identifier ident
+
+      method! declare_function
+          stmt_loc
+          ( { Flow_ast.Statement.DeclareFunction.id = (loc, { Flow_ast.Identifier.name; _ }); _ } as
+          stmt
+          ) =
+        this#new_entry name Bindings.DeclaredFunction Flow_ast.Statement.VariableDeclaration.Let loc;
+        super#declare_function stmt_loc stmt
 
       method! for_in_left_declaration left =
         let (_, decl) = left in

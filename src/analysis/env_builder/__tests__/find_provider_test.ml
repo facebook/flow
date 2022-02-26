@@ -694,11 +694,11 @@ x = 'a'; // p
                "[(5, 8) to (5, 9)]";
          "declared_function"
          >:: mk_provider_loc_test
-               (mk_loc (2, 26) (2, 27))
+               (mk_loc (2, 17) (2, 18))
                "
-         declare function f(): number;
-         declare function f(x: string): string;
-         function f(x: any): any { return null }
+declare function f(): number;
+declare function f(x: string): string;
+function f(x: any): any { return null }
          "
-               "[]";
+               "[(1, 17) to (1, 18)], [(2, 17) to (2, 18)]";
        ]
