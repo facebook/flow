@@ -20,9 +20,11 @@ show_help() {
   echo "        run tests in DIR/tests/"
   echo "    -t TEST"
   echo "        run the test DIR/tests/TEST, equivalent to a filter of \"^TEST$\""
+  echo "    -c"
+  echo "        only run check tests"
   echo "    -e"
   echo "        test using new implementation of the type environment"
-  echo "    -c"
+  echo "    -w"
   echo "        test using constrained writes"
   echo "    -r"
   echo "        re-record failing tests to update expected output"
@@ -47,9 +49,10 @@ verbose=0
 quiet=0
 relative="$THIS_DIR"
 new_env=0
+check_only=0
 constrained_writes=0
-export saved_state filter new_env constrained_writes
-while getopts "b:d:f:eclqrst:vh?" opt; do
+export saved_state filter check_only new_env constrained_writes
+while getopts "b:d:f:celqwrst:vh?" opt; do
   case "$opt" in
   b)
     FLOW="$OPTARG"
@@ -60,11 +63,11 @@ while getopts "b:d:f:eclqrst:vh?" opt; do
   f)
     filter="$OPTARG"
     ;;
+  c)
+    check_only=1
+    ;;
   e)
     new_env=1
-    ;;
-  c)
-    constrained_writes=1
     ;;
   l)
     list_tests=1
@@ -74,6 +77,9 @@ while getopts "b:d:f:eclqrst:vh?" opt; do
     ;;
   q)
     quiet=1
+    ;;
+  w)
+    constrained_writes=1
     ;;
   r)
     record=1

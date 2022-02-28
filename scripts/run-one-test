@@ -377,15 +377,15 @@ runtest() {
             flowlib=""
         fi
 
+        if [[ "$check_only" -eq 1 ]] && [[ "$cmd" != "check" ]]; then
+          return $RUNTEST_SKIP
+        fi
+
         if [[ "$constrained_writes" -eq 1 ]]; then
           env_flag="--env-mode constrained-writes"
         fi
         if [[ "$new_env" -eq 1 ]]; then
-            env_flag="--env-mode ssa"
-            if [ "$cmd" != "check" ]
-            then
-              return $RUNTEST_SKIP
-            fi
+          env_flag="--env-mode ssa"
         fi
 
         # Helper function to generate saved state. If anything goes wrong, it
