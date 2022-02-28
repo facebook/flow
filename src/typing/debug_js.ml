@@ -239,7 +239,7 @@ let rec dump_t_ (depth, tvars) cx t =
              (Poly.string_of_id id)
           )
         t
-    | ThisClassT (_, inst, _) -> p ~extra:(kid inst) t
+    | ThisClassT (_, inst, _, _) -> p ~extra:(kid inst) t
     | GenericT { name; bound; _ } ->
       p ~extra:(spf "%s: %s" (Subst_name.string_of_subst_name name) (kid bound)) t
     | DefT (_, trust, ObjT { props_tmap; flags; _ }) ->

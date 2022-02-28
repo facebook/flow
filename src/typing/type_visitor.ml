@@ -77,7 +77,7 @@ class ['a] t =
         let acc = self#list (self#predicate cx) acc (Key_map.values p_map) in
         let acc = self#list (self#predicate cx) acc (Key_map.values n_map) in
         acc
-      | ThisClassT (_, t, _) -> self#type_ cx pole acc t
+      | ThisClassT (_, t, _, _) -> self#type_ cx pole acc t
       | ThisTypeAppT (_, t, this, ts_opt) ->
         let acc = self#type_ cx P.Positive acc t in
         let acc = self#type_ cx pole acc this in

@@ -64,7 +64,7 @@ val make_exact_object :
 
 val class_type : ?structural:bool -> ?annot_loc:ALoc.t -> Type.t -> Type.t
 
-val this_class_type : Type.t -> bool -> Type.t
+val this_class_type : Type.t -> bool -> Subst_name.t -> Type.t
 
 val extends_type : reason -> Type.t -> Type.t -> Type.t
 

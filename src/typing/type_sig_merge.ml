@@ -1348,7 +1348,7 @@ and merge_class tps file reason id def =
       }
     in
     let inst = DefT (reason, trust, InstanceT (static, super, implements, insttype)) in
-    let t = TypeUtil.this_class_type inst false in
+    let t = TypeUtil.this_class_type inst false (Subst_name.Name "this") in
     ConsGen.resolve_id file.cx rec_type t;
     t
   in
@@ -1624,7 +1624,7 @@ let merge_declare_class file reason id def =
       }
     in
     let inst = DefT (reason, trust, InstanceT (static, super, implements, insttype)) in
-    let t = TypeUtil.this_class_type inst false in
+    let t = TypeUtil.this_class_type inst false (Subst_name.Name "this") in
     ConsGen.resolve_id file.cx rec_type t;
     t
   in

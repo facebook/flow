@@ -194,7 +194,7 @@ and collect_of_type ?log_unresolved cx acc = function
   | ExactT (_, t)
   | DefT (_, _, TypeT (_, t))
   | DefT (_, _, ClassT t)
-  | ThisClassT (_, t, _) ->
+  | ThisClassT (_, t, _, _) ->
     collect_of_type ?log_unresolved cx acc t
   | KeysT (_, t) -> collect_of_type ?log_unresolved cx acc t
   | ShapeT (_, t) -> collect_of_type ?log_unresolved cx acc t

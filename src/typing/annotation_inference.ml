@@ -574,8 +574,8 @@ module rec ConsGen : S = struct
            }
         );
       AnyT.error reason
-    | (ThisClassT (r, i, is_this), Annot_UseT_TypeT reason) ->
-      let c = fix_this_class cx reason (r, i, is_this) in
+    | (ThisClassT (r, i, is_this, this_name), Annot_UseT_TypeT reason) ->
+      let c = fix_this_class cx reason (r, i, is_this, this_name) in
       elab_t cx c op
     | (DefT (_, _, ClassT it), Annot_UseT_TypeT reason) ->
       (* a class value annotation becomes the instance type *)
@@ -792,12 +792,14 @@ module rec ConsGen : S = struct
     (**********)
     (* Mixins *)
     (**********)
-    | (ThisClassT (_, DefT (_, trust, InstanceT (_, _, _, instance)), is_this), Annot_MixinT r) ->
+    | ( ThisClassT (_, DefT (_, trust, InstanceT (_, _, _, instance)), is_this, this_name),
+        Annot_MixinT r
+      ) ->
       (* A class can be viewed as a mixin by extracting its immediate properties,
        * and "erasing" its static and super *)
       let static = ObjProtoT r in
       let super = ObjProtoT r in
-      this_class_type (DefT (r, trust, InstanceT (static, super, [], instance))) is_this
+      this_class_type (DefT (r, trust, InstanceT (static, super, [], instance))) is_this this_name
     | ( DefT
           ( _,
             _,
@@ -805,7 +807,8 @@ module rec ConsGen : S = struct
               {
                 tparams_loc;
                 tparams = xs;
-                t_out = ThisClassT (_, DefT (_, trust, InstanceT (_, _, _, insttype)), is_this);
+                t_out =
+                  ThisClassT (_, DefT (_, trust, InstanceT (_, _, _, insttype)), is_this, this_name);
                 _;
               }
           ),
@@ -814,7 +817,11 @@ module rec ConsGen : S = struct
       let static = ObjProtoT r in
       let super = ObjProtoT r in
       let instance = DefT (r, trust, InstanceT (static, super, [], insttype)) in
-      poly_type (Type.Poly.generate_id ()) tparams_loc xs (this_class_type instance is_this)
+      poly_type
+        (Type.Poly.generate_id ())
+        tparams_loc
+        xs
+        (this_class_type instance is_this this_name)
     | (AnyT (_, src), Annot_MixinT r) -> AnyT.why src r
     (***********************)
     (* Type specialization *)
@@ -826,8 +833,8 @@ module rec ConsGen : S = struct
       mk_typeapp_of_poly cx ~use_op ~reason_op ~reason_tapp id tparams_loc xs t ts
     | ((DefT (_, _, ClassT _) | ThisClassT _), Annot_SpecializeT (_, _, _, None)) -> t
     | (AnyT _, Annot_SpecializeT _) -> t
-    | (ThisClassT (_, i, _), Annot_ThisSpecializeT (reason, this)) ->
-      let i = subst cx (Subst_name.Map.singleton (Subst_name.Name "this") this) i in
+    | (ThisClassT (_, i, _, this_name), Annot_ThisSpecializeT (reason, this)) ->
+      let i = subst cx (Subst_name.Map.singleton this_name this) i in
       reposition cx (aloc_of_reason reason) i
     (* this-specialization of non-this-abstracted classes is a no-op *)
     | (DefT (_, _, ClassT i), Annot_ThisSpecializeT (reason, _this)) ->
@@ -841,9 +848,9 @@ module rec ConsGen : S = struct
       let reason_op = Type.AConstraint.reason_of_op op in
       let t = instantiate_poly cx ~use_op ~reason_op ~reason_tapp (tparams_loc, ids, t) in
       elab_t cx t op
-    | (ThisClassT (r, i, is_this), _) ->
+    | (ThisClassT (r, i, is_this, this_name), _) ->
       let reason = Type.AConstraint.reason_of_op op in
-      let t = fix_this_class cx reason (r, i, is_this) in
+      let t = fix_this_class cx reason (r, i, is_this, this_name) in
       elab_t cx t op
     (*****************************)
     (* React Abstract Components *)

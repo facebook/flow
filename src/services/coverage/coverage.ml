@@ -177,7 +177,7 @@ class visitor =
       | OpenPredT { base_t = t; m_pos = _; m_neg = _; reason = _ }
       | ShapeT (_, t)
       | GenericT { bound = t; _ }
-      | ThisClassT (_, t, _)
+      | ThisClassT (_, t, _, _)
       | ThisTypeAppT (_, t, _, _) ->
         self#type_ cx t
       | UnionT (_, rep) ->

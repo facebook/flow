@@ -119,13 +119,13 @@ let substituter =
                 )
             else
               t
-          | ThisClassT (reason, this, i) ->
-            let map = Subst_name.Map.remove (Subst_name.Name "this") map in
+          | ThisClassT (reason, this, i, this_name) ->
+            let map = Subst_name.Map.remove this_name map in
             let this_ = self#type_ cx (map, force, use_op) this in
             if this_ == this then
               t
             else
-              ThisClassT (reason, this_, i)
+              ThisClassT (reason, this_, i, this_name)
           | TypeAppT (r, op, c, ts) ->
             let c' = self#type_ cx map_cx c in
             let ts' = ListUtils.ident_map (self#type_ cx map_cx) ts in

@@ -1085,9 +1085,9 @@ module Make (Flow : INPUT) : OUTPUT = struct
     (* TODO: ideally we'd do the same when lower bounds flow to a
      * this-abstracted class, but fixing the class is easier; might need to
      * revisit *)
-    | (_, ThisClassT (r, i, this)) ->
+    | (_, ThisClassT (r, i, this, this_name)) ->
       let reason = reason_of_t l in
-      rec_flow cx trace (l, UseT (use_op, fix_this_class cx trace reason (r, i, this)))
+      rec_flow cx trace (l, UseT (use_op, fix_this_class cx trace reason (r, i, this, this_name)))
     | (DefT (reason_tapp, _, PolyT { tparams_loc; tparams = ids; _ }), DefT (_, _, TypeT _)) ->
       add_output
         cx
@@ -1115,9 +1115,9 @@ module Make (Flow : INPUT) : OUTPUT = struct
       let t_ = instantiate_poly cx trace ~use_op ~reason_op ~reason_tapp (tparams_loc, ids, t) in
       rec_flow_t cx trace ~use_op (t_, u)
     (* when a this-abstracted class flows to upper bounds, fix the class *)
-    | (ThisClassT (r, i, this), _) ->
+    | (ThisClassT (r, i, this, this_name), _) ->
       let reason = reason_of_t u in
-      rec_flow_t cx trace ~use_op (fix_this_class cx trace reason (r, i, this), u)
+      rec_flow_t cx trace ~use_op (fix_this_class cx trace reason (r, i, this, this_name), u)
     (*****************************)
     (* React Abstract Components *)
     (*****************************)

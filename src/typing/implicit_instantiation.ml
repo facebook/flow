@@ -304,7 +304,7 @@ module Make (Observer : OBSERVER) : KIT with type output = Observer.output = str
       match get_t cx t with
       | DefT (_, _, FunT (_, _, funtype)) ->
         check_fun cx ~tparams ~bounds_map ~return_t:funtype.return_t ~implicit_instantiation
-      | ThisClassT (_, DefT (_, _, InstanceT (_, _, _, _insttype)), _) ->
+      | ThisClassT (_, DefT (_, _, InstanceT (_, _, _, _insttype)), _, _) ->
         (match operation with
         | (_, _, Check.Call _) ->
           (* This case is hit when calling a static function. We will implicitly

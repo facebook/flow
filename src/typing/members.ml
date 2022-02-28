@@ -316,7 +316,7 @@ let intersect_members cx members =
       map
 
 and instantiate_type = function
-  | ThisClassT (_, t, _)
+  | ThisClassT (_, t, _, _)
   | DefT (_, _, ClassT t)
   | (AnyT _ as t)
   | DefT (_, _, TypeT (_, t))
@@ -415,7 +415,7 @@ let rec extract_type cx this_t =
   | DefT (_, _, PolyT { t_out = sub_type; _ }) ->
     (* TODO: replace type parameters with stable/proper names? *)
     extract_type cx sub_type
-  | ThisClassT (_, DefT (_, _, InstanceT (static, _, _, _)), _)
+  | ThisClassT (_, DefT (_, _, InstanceT (static, _, _, _)), _, _)
   | DefT (_, _, ClassT (DefT (_, _, InstanceT (static, _, _, _)))) ->
     extract_type cx static
   | DefT (_, _, FunT _) as t -> Success t

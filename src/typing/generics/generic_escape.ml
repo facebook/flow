@@ -91,13 +91,13 @@ class escape_finder ~gcx ~(add_output : Context.t -> ?trace:Type.trace -> Error_
         in
         let acc = super#type_ cx pole { acc with names_in_scope } ty in
         { acc with names_in_scope = prev_names }
-      | (ThisClassT _, _) ->
+      | (ThisClassT (_, _, _, this_name), _) ->
         let prev_names = names_in_scope in
         let acc =
           super#type_
             cx
             pole
-            { acc with names_in_scope = Subst_name.Set.add (Subst_name.Name "this") names_in_scope }
+            { acc with names_in_scope = Subst_name.Set.add this_name names_in_scope }
             ty
         in
         { acc with names_in_scope = prev_names }

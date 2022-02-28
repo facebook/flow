@@ -80,7 +80,7 @@ module rec TypeTerm : sig
     (* this-abstracted class. If `is_this` is true, then this literally comes from
        `this` as an annotation or expression, and should be fixed to an internal
        view of the class, which is a generic whose upper bound is the class. *)
-    | ThisClassT of reason * t * (* is_this *) bool
+    | ThisClassT of reason * t * (* is_this *) bool * Subst_name.t
     (* this instantiation *)
     | ThisTypeAppT of reason * t * t * t list option
     (* type application *)

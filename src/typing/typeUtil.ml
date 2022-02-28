@@ -37,7 +37,7 @@ let rec reason_of_t = function
   | OpaqueT (reason, _) -> reason
   | OpenPredT { reason; m_pos = _; m_neg = _; base_t = _ } -> reason
   | ShapeT (reason, _) -> reason
-  | ThisClassT (reason, _, _) -> reason
+  | ThisClassT (reason, _, _, _) -> reason
   | ThisTypeAppT (reason, _, _, _) -> reason
   | TypeAppT (reason, _, _, _) -> reason
   | AnyT (reason, _) -> reason
@@ -209,7 +209,7 @@ let rec mod_reason_of_t f = function
   | OpenPredT { reason; base_t; m_pos; m_neg } ->
     OpenPredT { reason = f reason; base_t; m_pos; m_neg }
   | ShapeT (reason, t) -> ShapeT (f reason, t)
-  | ThisClassT (reason, t, is_this) -> ThisClassT (f reason, t, is_this)
+  | ThisClassT (reason, t, is_this, this_name) -> ThisClassT (f reason, t, is_this, this_name)
   | ThisTypeAppT (reason, t1, t2, t3) -> ThisTypeAppT (f reason, t1, t2, t3)
   | TypeAppT (reason, t1, t2, t3) -> TypeAppT (f reason, t1, t2, t3)
 
@@ -765,9 +765,9 @@ let class_type ?(structural = false) ?annot_loc t =
   in
   DefT (reason, bogus_trust (), ClassT t)
 
-let this_class_type t is_this =
+let this_class_type t is_this this_name =
   let reason = update_desc_new_reason (fun desc -> RClass desc) (reason_of_t t) in
-  ThisClassT (reason, t, is_this)
+  ThisClassT (reason, t, is_this, this_name)
 
 let extends_type r l u =
   let reason = update_desc_reason (fun desc -> RExtends desc) r in

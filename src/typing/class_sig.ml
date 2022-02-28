@@ -921,7 +921,9 @@ struct
         let class_type = class_type ~structural:true this in
         (class_type, class_type)
       else
-        (this_class_type this true, this_class_type this false)
+        ( this_class_type this true (Subst_name.Name "this"),
+          this_class_type this false (Subst_name.Name "this")
+        )
     in
     let poly t = poly_type_of_tparams (Type.Poly.generate_id ()) x.tparams t in
     (poly t_inner, poly t_outer)

@@ -932,7 +932,7 @@ module Instantiation_kit (H : Instantiation_helper_sig) = struct
      fixpoint is some `this`, substitute it as This in the instance type, and
      finally unify it with the instance type. Return the class type wrapping the
      instance type. *)
-  let fix_this_class cx trace reason (r, i, is_this) =
+  let fix_this_class cx trace reason (r, i, is_this, this_name) =
     let i' =
       match Flow_cache.Fix.find cx is_this i with
       | Some i' -> i'
@@ -945,15 +945,15 @@ module Instantiation_kit (H : Instantiation_helper_sig) = struct
           if is_this then
             GenericT
               {
-                id = Context.make_generic_id cx (Subst_name.Name "this") (def_aloc_of_reason r);
+                id = Context.make_generic_id cx this_name (def_aloc_of_reason r);
                 reason;
-                name = Subst_name.Name "this";
+                name = this_name;
                 bound = this;
               }
           else
             this
         in
-        let i' = subst cx (Subst_name.Map.singleton (Subst_name.Name "this") this_generic) i in
+        let i' = subst cx (Subst_name.Map.singleton this_name this_generic) i in
         Flow_cache.Fix.add cx is_this i i';
         resolve_id cx trace ~use_op:unknown_use tvar i';
         i'
@@ -1042,7 +1042,11 @@ module type Import_export_helper_sig = sig
   val return : Context.t -> use_op:use_op -> Type.trace -> Type.t -> r
 
   val fix_this_class :
-    Context.t -> Type.trace -> Reason.reason -> Reason.reason * Type.t * bool -> Type.t
+    Context.t ->
+    Type.trace ->
+    Reason.reason ->
+    Reason.reason * Type.t * bool * Subst_name.t ->
+    Type.t
 
   val mk_typeof_annotation : Context.t -> ?trace:Type.trace -> reason -> Type.t -> Type.t
 
@@ -1099,7 +1103,8 @@ module ImportTypeT_kit (F : Import_export_helper_sig) = struct
       Some (poly_type (Type.Poly.generate_id ()) tparams_loc typeparams (class_type tapp))
     | DefT (_, _, PolyT { t_out = DefT (_, _, TypeT _); _ }) -> Some t
     (* fix this-abstracted class when used as a type *)
-    | ThisClassT (r, i, this) -> Some (F.fix_this_class cx trace reason (r, i, this))
+    | ThisClassT (r, i, this, this_name) ->
+      Some (F.fix_this_class cx trace reason (r, i, this, this_name))
     | DefT (enum_reason, trust, EnumObjectT enum) ->
       let enum_type = mk_enum_type ~trust enum_reason enum in
       Some (DefT (reason, trust, TypeT (ImportEnumKind, enum_type)))
@@ -1423,7 +1428,7 @@ module AssertExportIsTypeT_kit (F : Import_export_helper_sig) = struct
   let rec is_type = function
     | DefT (_, _, ClassT _)
     | DefT (_, _, EnumObjectT _)
-    | ThisClassT (_, _, _)
+    | ThisClassT (_, _, _, _)
     | DefT (_, _, TypeT _)
     | AnyT _ ->
       true

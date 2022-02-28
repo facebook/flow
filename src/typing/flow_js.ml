@@ -2502,14 +2502,18 @@ struct
 
         (* A class can be viewed as a mixin by extracting its immediate properties,
            and "erasing" its static and super *)
-        | (ThisClassT (_, DefT (_, trust, InstanceT (_, _, _, instance)), is_this), MixinT (r, tvar))
-          ->
+        | ( ThisClassT (_, DefT (_, trust, InstanceT (_, _, _, instance)), is_this, this_name),
+            MixinT (r, tvar)
+          ) ->
           let static = ObjProtoT r in
           let super = ObjProtoT r in
           rec_flow
             cx
             trace
-            ( this_class_type (DefT (r, trust, InstanceT (static, super, [], instance))) is_this,
+            ( this_class_type
+                (DefT (r, trust, InstanceT (static, super, [], instance)))
+                is_this
+                this_name,
               UseT (unknown_use, tvar)
             )
         | ( DefT
@@ -2519,7 +2523,9 @@ struct
                   {
                     tparams_loc;
                     tparams = xs;
-                    t_out = ThisClassT (_, DefT (_, trust, InstanceT (_, _, _, insttype)), is_this);
+                    t_out =
+                      ThisClassT
+                        (_, DefT (_, trust, InstanceT (_, _, _, insttype)), is_this, this_name);
                     _;
                   }
               ),
@@ -2531,7 +2537,11 @@ struct
           rec_flow
             cx
             trace
-            ( poly_type (Type.Poly.generate_id ()) tparams_loc xs (this_class_type instance is_this),
+            ( poly_type
+                (Type.Poly.generate_id ())
+                tparams_loc
+                xs
+                (this_class_type instance is_this this_name),
               UseT (unknown_use, tvar)
             )
         | (AnyT (_, src), MixinT (r, tvar)) ->
@@ -2637,8 +2647,8 @@ struct
         | (AnyT _, SpecializeT (_, _, _, _, _, tvar)) ->
           rec_flow_t ~use_op:unknown_use cx trace (l, tvar)
         (* this-specialize a this-abstracted class by substituting This *)
-        | (ThisClassT (_, i, _), ThisSpecializeT (r, this, k)) ->
-          let i = subst cx (Subst_name.Map.singleton (Subst_name.Name "this") this) i in
+        | (ThisClassT (_, i, _, this_name), ThisSpecializeT (r, this, k)) ->
+          let i = subst cx (Subst_name.Map.singleton this_name this) i in
           continue_repos cx trace r i k
         (* this-specialization of non-this-abstracted classes is a no-op *)
         | (DefT (_, _, ClassT i), ThisSpecializeT (r, _this, k)) ->
@@ -2797,9 +2807,9 @@ struct
               rec_flow cx trace (t_, u)
           end
         (* when a this-abstracted class flows to upper bounds, fix the class *)
-        | (ThisClassT (r, i, this), _) ->
+        | (ThisClassT (r, i, this, this_name), _) ->
           let reason = reason_of_use_t u in
-          rec_flow cx trace (fix_this_class cx trace reason (r, i, this), u)
+          rec_flow cx trace (fix_this_class cx trace reason (r, i, this, this_name), u)
         (*****************************)
         (* React Abstract Components *)
         (*****************************)
