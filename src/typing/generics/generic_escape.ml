@@ -16,6 +16,7 @@ type acc = {
   annot_reason: reason option;
   scope_id: Scope_id.t;
   use_op: use_op;
+  names_in_scope: SSet.t;
 }
 
 class escape_finder ~gcx ~(add_output : Context.t -> ?trace:Type.trace -> Error_message.t -> unit) =
@@ -27,7 +28,15 @@ class escape_finder ~gcx ~(add_output : Context.t -> ?trace:Type.trace -> Error_
         self#type_
           cx
           Polarity.Positive
-          { seen; tvar_ids; top_level_reason; annot_reason; scope_id; use_op }
+          {
+            seen;
+            tvar_ids;
+            top_level_reason;
+            annot_reason;
+            scope_id;
+            use_op;
+            names_in_scope = SSet.empty;
+          }
           ty
       in
       seen
@@ -35,10 +44,19 @@ class escape_finder ~gcx ~(add_output : Context.t -> ?trace:Type.trace -> Error_
     method! type_
         cx
         pole
-        ({ seen = _; top_level_reason; annot_reason; scope_id; use_op; tvar_ids = _ } as acc)
+        ( {
+            seen = _;
+            top_level_reason;
+            annot_reason;
+            scope_id;
+            use_op;
+            tvar_ids = _;
+            names_in_scope;
+          } as acc
+        )
         ty =
       match (ty, ALoc.source (def_aloc_of_reason (reason_of_t ty))) with
-      | (GenericT { id; _ }, _) ->
+      | (GenericT { id; name; _ }, _) when not (SSet.mem name names_in_scope) ->
         let err_fn id name acc =
           let is_escaped = not @@ Generic_cx.in_scope gcx scope_id id in
           if is_escaped then
@@ -61,6 +79,23 @@ class escape_finder ~gcx ~(add_output : Context.t -> ?trace:Type.trace -> Error_
           acc
         else
           super#type_ cx pole acc ty
+      | (GenericT _, _) -> acc
+      | (DefT (_, _, PolyT { tparams; _ }), _) ->
+        let prev_names = names_in_scope in
+        let names_in_scope =
+          Nel.map (fun { name; _ } -> name) tparams
+          |> Nel.to_list
+          |> SSet.of_list
+          |> SSet.union names_in_scope
+        in
+        let acc = super#type_ cx pole { acc with names_in_scope } ty in
+        { acc with names_in_scope = prev_names }
+      | (ThisClassT _, _) ->
+        let prev_names = names_in_scope in
+        let acc =
+          super#type_ cx pole { acc with names_in_scope = SSet.add "this" names_in_scope } ty
+        in
+        { acc with names_in_scope = prev_names }
       | (DefT (_, _, InstanceT (_, _, _, { type_args; _ })), Some key) when key <> Context.file cx
         ->
         (* It's really expensive to explore imported instances, and it's usually not necessary to do

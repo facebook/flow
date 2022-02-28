@@ -644,9 +644,7 @@ struct
       | None -> Flow.mk_instance cx reason self
       | _ ->
         let open Type in
-        let targs =
-          Base.List.map ~f:(fun tp -> BoundT (tp.Type.reason, tp.name)) (TypeParams.to_list tparams)
-        in
+        let (_, targs) = Flow_js_utils.mk_tparams cx (TypeParams.to_list tparams) in
         TypeUtil.typeapp reason self targs
     in
     let this_reason = replace_desc_reason RThisType reason in
@@ -660,7 +658,7 @@ struct
         is_this = true;
       }
     in
-    (this_tp, Type.BoundT (this_reason, "this"))
+    (this_tp, Flow_js_utils.generic_of_tparam cx ~f:(fun x -> x) this_tp)
 
   let supertype cx x =
     let super_reason = update_desc_reason (fun d -> RSuperOf d) x.instance.reason in

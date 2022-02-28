@@ -16,7 +16,6 @@
  * Some constructors that we, perhaps controversially, consider concrete are:
  *  - AnyWithLowerBoundT
  *  - AnyWithUpperBoundT
- *  - BoundT
  *  - KeysT
  *
  * In addition to being considered concrete the above constructors are also

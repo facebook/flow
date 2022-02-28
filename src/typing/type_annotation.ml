@@ -1861,7 +1861,9 @@ module Make
       in
       let polarity = polarity variance in
       let tparam = { reason; name; bound; polarity; default; is_this = false } in
-      let t = BoundT (reason, name) in
+      let param_loc = aloc_of_reason reason in
+      let tp_id = Context.make_generic_id cx name param_loc in
+      let t = GenericT { reason; name; bound; id = tp_id } in
       let name_ast =
         let (loc, id_name) = id in
         (loc, id_name)

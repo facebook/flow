@@ -14,11 +14,12 @@ module Kit (Flow : Flow_common.S) : Flow_common.CHECK_POLARITY = struct
   (* TODO: flesh this out *)
   let rec check_polarity cx ?trace tparams polarity = function
     (* base case *)
-    | BoundT (reason, name) ->
+    | (BoundT (reason, name) | GenericT { reason; name; _ }) as t ->
       begin
-        match SMap.find_opt name tparams with
-        | None -> ()
-        | Some tp ->
+        match (SMap.find_opt name tparams, t) with
+        | (None, GenericT { bound; _ }) -> check_polarity cx ?trace tparams polarity bound
+        | (None, _) -> ()
+        | (Some tp, _) ->
           if not (Polarity.compat (tp.polarity, polarity)) then
             Flow_js_utils.add_output
               cx
@@ -151,7 +152,6 @@ module Kit (Flow : Flow_common.S) : Flow_common.CHECK_POLARITY = struct
       check_polarity cx ?trace tparams (Polarity.inv polarity) config;
       check_polarity cx ?trace tparams polarity instance
     | ShapeT (_, t) -> check_polarity cx ?trace tparams polarity t
-    | GenericT { bound; _ } -> check_polarity cx ?trace tparams polarity bound
     | KeysT (_, t) -> check_polarity cx ?trace tparams Polarity.Positive t
     (* TODO *)
     | CustomFunT _

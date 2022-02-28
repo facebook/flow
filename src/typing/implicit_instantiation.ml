@@ -78,7 +78,7 @@ module Make (Observer : OBSERVER) : KIT with type output = Observer.output = str
 
       method! type_ cx pole ((marked, tparam_names) as acc) =
         function
-        | BoundT (_, s) ->
+        | (BoundT (_, s) | GenericT { name = s; _ }) as t ->
           if SSet.mem s tparam_names then
             match Marked.add s pole marked with
             | None -> acc
@@ -87,7 +87,7 @@ module Make (Observer : OBSERVER) : KIT with type output = Observer.output = str
               | None -> (marked, tparam_names)
               | Some t -> self#type_ cx pole (marked, tparam_names) t)
           else
-            acc
+            super#type_ cx pole acc t
         (* We remove any tparam names from the map when entering a PolyT to avoid naming conflicts. *)
         | DefT (_, _, PolyT { tparams; t_out = t; _ }) ->
           let tparam_names' =

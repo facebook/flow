@@ -93,6 +93,26 @@ class type_parameter_mapper =
       let cls = super#class_ cls in
       rev_bound_tparams <- originally_bound_tparams;
       cls
+
+    method! declare_class decl =
+      let open Reason in
+      let { Ast.Statement.DeclareClass.id; _ } = decl in
+      let ((_, bound), _) = id in
+      let this_tparam =
+        {
+          Type.name = "this";
+          reason = replace_desc_reason RThisType (TypeUtil.reason_of_t bound);
+          bound;
+          polarity = Polarity.Positive;
+          default = None;
+          is_this = true;
+        }
+      in
+      let originally_bound_tparams = rev_bound_tparams in
+      rev_bound_tparams <- this_tparam :: rev_bound_tparams;
+      let decl = super#declare_class decl in
+      rev_bound_tparams <- originally_bound_tparams;
+      decl
   end
 
 (* Find exact location match *)

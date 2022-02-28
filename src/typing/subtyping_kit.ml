@@ -1050,7 +1050,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
             let bound1 = Subst.subst cx ~use_op prev_map1 param1.bound in
             let bound2 = Subst.subst cx ~use_op prev_map2 param2.bound in
             rec_flow cx trace (bound2, UseT (use_op, bound1));
-            let map1 = Flow_js_utils.generic_bound cx prev_map1 param1 in
+            let (_, map1) = Flow_js_utils.generic_bound cx prev_map1 param1 in
             let map2 = SMap.add param2.name (SMap.find param1.name map1) prev_map2 in
             (map1, map2)
         )
