@@ -24,7 +24,7 @@ class type_parameter_mapper :
  *
  *)
 val find_exact_match_annotation :
-  (ALoc.t, ALoc.t * Type.t) Flow_ast.Program.t -> ALoc.t -> Type.TypeScheme.t option
+  Context.t -> (ALoc.t, ALoc.t * Type.t) Flow_ast.Program.t -> ALoc.t -> Type.TypeScheme.t option
 
 (**
  * Find the first typed AST entry for "type-at-pos" related queries. A query
@@ -41,7 +41,10 @@ val find_exact_match_annotation :
  * in direct response to a client query, which are typically concrete locations.
  *)
 val find_type_at_pos_annotation :
-  (ALoc.t, ALoc.t * Type.t) Flow_ast.Program.t -> Loc.t -> (Loc.t * Type.TypeScheme.t) option
+  Context.t ->
+  (ALoc.t, ALoc.t * Type.t) Flow_ast.Program.t ->
+  Loc.t ->
+  (Loc.t * Type.TypeScheme.t) option
 
 val typed_ast_to_map :
   (ALoc.t, ALoc.t * Type.t) Flow_polymorphic_ast_mapper.Ast.Program.t ->

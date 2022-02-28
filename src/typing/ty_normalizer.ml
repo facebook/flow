@@ -735,7 +735,7 @@ end = struct
       | BoundT (reason, name) -> bound_t reason name
       | GenericT { bound; reason; name; _ } ->
         let loc = Reason.def_aloc_of_reason reason in
-        let default t = type_with_alias_reason ~env t in
+        let default _ = type__ ~env bound in
         lookup_tparam ~default env bound name loc
       | AnnotT (_, t, _) -> type__ ~env t
       | EvalT (t, d, id) -> eval_t ~env ~cont t id d
@@ -2139,10 +2139,10 @@ end = struct
     let extract_imported_idents requires =
       List.fold_left (fun acc require -> from_require require acc) [] requires
 
-    let extract_schemes typed_ast (imported_locs : acc_t) =
+    let extract_schemes cx typed_ast (imported_locs : acc_t) =
       List.fold_left
         (fun acc (loc, name, import_mode) ->
-          match Typed_ast_utils.find_exact_match_annotation typed_ast loc with
+          match Typed_ast_utils.find_exact_match_annotation cx typed_ast loc with
           | Some scheme -> (name, loc, import_mode, scheme) :: acc
           | None -> acc)
         []
@@ -2198,11 +2198,12 @@ end = struct
 
   let run_imports ~options ~genv =
     Imports.(
-      let { Env.file_sig = { File_sig.module_sig = { File_sig.requires; _ }; _ }; typed_ast; _ } =
+      let { Env.file_sig = { File_sig.module_sig = { File_sig.requires; _ }; _ }; typed_ast; cx; _ }
+          =
         genv
       in
       extract_imported_idents requires
-      |> extract_schemes typed_ast
+      |> extract_schemes cx typed_ast
       |> normalize_imports ~options ~genv
     )
 

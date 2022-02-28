@@ -29,7 +29,7 @@ module Typed = struct
   let ty_at_loc norm_opts ccx loc =
     let { full_cx; file; file_sig; typed_ast; _ } = ccx in
     let aloc = ALoc.of_loc loc in
-    match Typed_ast_utils.find_exact_match_annotation typed_ast aloc with
+    match Typed_ast_utils.find_exact_match_annotation full_cx typed_ast aloc with
     | None -> Error MissingTypeAnnotation
     | Some scheme ->
       let genv = Ty_normalizer_env.mk_genv ~full_cx ~file ~file_sig ~typed_ast in

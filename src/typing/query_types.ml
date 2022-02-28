@@ -49,7 +49,7 @@ let type_at_pos_type
       max_depth = Some max_depth;
     }
   in
-  match find_type_at_pos_annotation typed_ast loc with
+  match find_type_at_pos_annotation full_cx typed_ast loc with
   | None -> FailureNoMatch
   | Some (loc, scheme) -> type_of_scheme ~options ~full_cx ~file ~file_sig typed_ast loc scheme
 

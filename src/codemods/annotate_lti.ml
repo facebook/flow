@@ -131,11 +131,12 @@ module Normalize_this_getPropT = struct
 
   let ty_from_locs cctx locs =
     let typed_ast = Codemod_context.Typed.typed_ast cctx in
+    let cx = Codemod_context.Typed.context cctx in
 
     locs
     |> LSet.elements
     |> List.filter_map (fun loc ->
-           ALoc.of_loc loc |> Typed_ast_utils.find_exact_match_annotation typed_ast
+           ALoc.of_loc loc |> Typed_ast_utils.find_exact_match_annotation cx typed_ast
        )
     |> List.map (fun { T.TypeScheme.type_; _ } -> type_)
     |> build_combined_type ~cctx
