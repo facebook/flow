@@ -121,7 +121,7 @@ class finder cx =
     method! function_ node =
       let {
         Ast.Function.id = ident;
-        params;
+        params = (_annot, { Ast.Function.Params.params = params_list; rest; comments = _; this_ });
         body;
         async = _;
         generator = _;
@@ -133,16 +133,34 @@ class finder cx =
       } =
         node
       in
+
+      let tparams = this#get_tparams tparams in
+
+      (* Inlining of function_params and function_param *)
+      let function_param param =
+        let open Ast.Function.Param in
+        let (annot, { argument; default }) = param in
+        let _ = this#on_loc_annot annot in
+        let _ = this#function_param_pattern argument in
+        ScopeHelper.in_function_scope gcx tparams this#set_gcx (fun () ->
+            let _ = Base.Option.map ~f:this#expression default in
+            ()
+        );
+        param
+      in
+
+      let _ = Base.List.map ~f:function_param params_list in
+      let _ = Base.Option.map ~f:this#function_rest_param rest in
+      let _ = Base.Option.map ~f:this#function_this_param this_ in
+
       let (_ : (ml, tl) Ast.Identifier.t option) = map_opt this#t_function_identifier ident in
       let (_ : (ml, tl) Ast.Type.annotation_or_hint) =
         this#labeled_type_annotation_hint "return" return
       in
       let (_ : (ml, tl) Ast.Type.Predicate.t option) = map_opt this#type_predicate predicate in
-      let tparams = this#get_tparams tparams in
       (* Check the function body in a scope that contains both the function's parameters and also any
          class type parameters if we're inside a class toplevel. *)
       ScopeHelper.in_function_scope gcx tparams this#set_gcx (fun () ->
-          let (_ : (ml, tl) Ast.Function.Params.t) = this#function_params params in
           let (_ : (ml, tl) Ast.Function.body) = this#function_body body in
           ()
       );
@@ -226,6 +244,18 @@ class finder cx =
       );
       prop
 
+    method! declare_class cls = cls
+
+    method! declare_function node =
+      let { Ast.Statement.DeclareFunction.id = _; annot = _; predicate; comments = _ } = node in
+      begin
+        match predicate with
+        | Some (_, { Ast.Type.Predicate.kind = Ast.Type.Predicate.Declared ((_, ty), _); _ }) ->
+          this#mark ty
+        | _ -> ()
+      end;
+      node
+
     method object_key_label key =
       match key with
       | Ast.Expression.Object.Property.Literal _ -> ("literal property", false)
@@ -297,27 +327,26 @@ class finder cx =
         | Missing (loc, ty) ->
           let (_ : ALoc.t * Type.t) = this#on_type_annot (loc, ty) in
           this#blame (mk_reason (RCustom name) loc) ty
-        | Available annot ->
-          let (_ : (ml, tl) Ast.Type.annotation) = this#type_annotation annot in
-          ()
+        | Available _annot -> ()
       end;
       node
 
     method! binding_pattern ?(kind = Ast.Statement.VariableDeclaration.Var) ((_, patt) as expr) =
       (* We can only suggest annotations for bare variable declarations, not destructurings. *)
       let open Ast.Pattern in
-      begin
-        match patt with
-        | Identifier
-            {
-              Identifier.name = ((loc, ty), { Ast.Identifier.name; _ });
-              annot = Ast.Type.Missing _;
-              _;
-            } ->
-          this#blame (mk_reason (RIdentifier (OrdinaryName name)) loc) ty
-        | _ -> ()
-      end;
-      super#binding_pattern ~kind expr
+      match patt with
+      | Identifier
+          {
+            Identifier.name = ((loc, ty), { Ast.Identifier.name; _ });
+            annot = Ast.Type.Missing _;
+            _;
+          } ->
+        this#blame (mk_reason (RIdentifier (OrdinaryName name)) loc) ty;
+        expr
+      | Array { Array.annot = Ast.Type.Missing _; _ }
+      | Object { Object.annot = Ast.Type.Missing _; _ } ->
+        super#binding_pattern ~kind expr
+      | _ -> expr
 
     method! t_pattern_identifier ?kind (((_, ty), _) as node) =
       (* If `kind` is None, then this is the LHS of an assignment, while it it's Some _, it's a variable

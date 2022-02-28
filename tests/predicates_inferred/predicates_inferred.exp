@@ -185,5 +185,22 @@ The return type of a predicate function cannot contain a generic type. The funct
                                    ^
 
 
+Error ------------------------------------------------------------------------------------------- wf-polymorphic.js:8:40
 
-Found 14 errors
+Type variable `X` [1] cannot escape from the scope in which it was defined [2]. [escaped-generic]
+
+   wf-polymorphic.js:8:40
+   8| declare function g<X>(x: X): X %checks(x); // error: poly return in %checks
+                                             ^
+
+References:
+   wf-polymorphic.js:8:26
+   8| declare function g<X>(x: X): X %checks(x); // error: poly return in %checks
+                               ^ [1]
+   wf-polymorphic.js:8:20
+   8| declare function g<X>(x: X): X %checks(x); // error: poly return in %checks
+                         ^ [2]
+
+
+
+Found 15 errors

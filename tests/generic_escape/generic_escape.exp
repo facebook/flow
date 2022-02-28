@@ -1206,23 +1206,19 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- pred.js:9:44
 
-Cannot return `x` because predicate encoded in return [1] contains type variable `X` [2] which cannot escape from the
-scope in which it was defined [3]. [escaped-generic]
+Type variable `X` [1] cannot escape from the scope in which it was defined [2]. [escaped-generic]
 
    pred.js:9:44
    9| declare function g<X>(x: X): mixed %checks(x);
                                                  ^
 
 References:
-   pred.js:9:36
-   9| declare function g<X>(x: X): mixed %checks(x);
-                                         ^^^^^^^^^^ [1]
    pred.js:9:26
    9| declare function g<X>(x: X): mixed %checks(x);
-                               ^ [2]
+                               ^ [1]
    pred.js:9:20
    9| declare function g<X>(x: X): mixed %checks(x);
-                         ^ [3]
+                         ^ [2]
 
 
 Error --------------------------------------------------------------------------------------------------- spreads.js:5:9

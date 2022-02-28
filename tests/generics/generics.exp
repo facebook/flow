@@ -43,7 +43,7 @@ References:
 Error ------------------------------------------------------------------------------------------------ generics.js:11:11
 
 Cannot assign `u` to `v.u` because type variable `T` [1] cannot escape from the scope in which it was defined [2] (try
-adding a type annotation to `v` [3]). [escaped-generic]
+adding a type annotation to `o` [3]). [escaped-generic]
 
    generics.js:11:11
    11|     v.u = u; 
@@ -56,9 +56,9 @@ References:
    generics.js:7:9
     7| class D<T> {
                ^ [2]
-   generics.js:9:16
-    9|   m<S>(z:S,u:T,v):S {
-                      ^ [3]
+   generics.js:17:5
+   17| var o = {};
+           ^ [3]
 
 
 Error ------------------------------------------------------------------------------------------------ generics.js:19:16
