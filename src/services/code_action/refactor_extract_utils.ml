@@ -884,19 +884,20 @@ module TypeSynthesizer = struct
 
   class generic_name_collector =
     object
-      inherit [SSet.t] Type_visitor.t as super
+      inherit [Subst_name.Set.t] Type_visitor.t as super
 
       method! type_ cx pole acc ty =
         let open Type in
         match ty with
-        | GenericT { id; _ } -> Generic.fold_ids ~f:(fun _ name acc -> SSet.add name acc) ~acc id
+        | GenericT { id; _ } ->
+          Generic.fold_ids ~f:(fun _ name acc -> Subst_name.Set.add name acc) ~acc id
         | _ -> super#type_ cx pole acc ty
     end
 
   let keep_used_tparam_rev ~cx ~tparams_rev ~type_ =
     let generic_name_collector = new generic_name_collector in
     let collect_used_generic_names t acc = generic_name_collector#type_ cx Polarity.Neutral acc t in
-    let appeared_generic_names = collect_used_generic_names type_ SSet.empty in
+    let appeared_generic_names = collect_used_generic_names type_ Subst_name.Set.empty in
     (* It's not enough to only collect used generic names from the type, but also the generic
        parameters themselves, since constraints on generic parameter may cause them to refer
        to each other. e.g. <A, B: A, C: A = B>.
@@ -906,7 +907,7 @@ module TypeSynthesizer = struct
     tparams_rev
     |> List.fold_left
          (fun (tparams, appeared_generic_names) ({ Type.name; bound; default; _ } as tparam) ->
-           if SSet.mem name appeared_generic_names then
+           if Subst_name.Set.mem name appeared_generic_names then
              let appeared_generic_names = collect_used_generic_names bound appeared_generic_names in
              let appeared_generic_names =
                match default with
@@ -982,7 +983,7 @@ module TypeSynthesizer = struct
           let%map (_, ast) = default |> type_scheme_of_type |> synth_type Loc.none in
           Some ast
       in
-      Ast_builder.Types.type_param ~bound ?variance ?default name
+      Ast_builder.Types.type_param ~bound ?variance ?default (Subst_name.string_of_subst_name name)
     in
     let type_synthesizer loc =
       match LocMap.find_opt loc type_at_loc_map with

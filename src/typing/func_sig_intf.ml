@@ -23,7 +23,7 @@ module type S = sig
     reason: Reason.t;
     kind: kind;
     tparams: Type.typeparams;
-    tparams_map: Type.t SMap.t;
+    tparams_map: Type.t Subst_name.Map.t;
     fparams: func_params;
     body: (ALoc.t, ALoc.t) Flow_ast.Function.body option;
     return_t: Type.annotated_or_inferred;
@@ -46,7 +46,7 @@ module type S = sig
       from this module to evaluate the initializer in the appropriate context,
       where `this` and `super` point to the appropriate types. *)
   val field_initializer :
-    Type.t SMap.t ->
+    Type.t Subst_name.Map.t ->
     (* type params map *)
     Reason.t ->
     (ALoc.t, ALoc.t) Flow_ast.Expression.t ->
@@ -65,8 +65,8 @@ module type S = sig
 
       This signature's own type parameters will be subtituted by the
       `check_with_generics` function. *)
-  val subst : Context.t -> Type.t SMap.t -> (* type params map *)
-                                            t -> t
+  val subst : Context.t -> Type.t Subst_name.Map.t -> (* type params map *)
+                                                      t -> t
 
   (** Invoke callback with type parameters substituted by upper/lower bounds. *)
   val check_with_generics : Context.t -> (t -> 'a) -> t -> 'a

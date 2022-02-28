@@ -73,7 +73,7 @@ module rec TypeTerm : sig
     (* bound type variable *)
     | GenericT of {
         reason: reason;
-        name: string;
+        name: Subst_name.t;
         bound: t;
         id: Generic.id;
       }
@@ -432,13 +432,13 @@ module rec TypeTerm : sig
         upper: 'loc virtual_reason;
       }
     | TypeArgCompatibility of {
-        name: string;
+        name: Subst_name.t;
         targ: 'loc virtual_reason;
         lower: 'loc virtual_reason;
         upper: 'loc virtual_reason;
         polarity: Polarity.t;
       }
-    | TypeParamBound of { name: string }
+    | TypeParamBound of { name: Subst_name.t }
     | UnifyFlip
 
   and 'loc virtual_use_op =
@@ -571,7 +571,7 @@ module rec TypeTerm : sig
     (* operation on this-abstracted classes *)
     | ThisSpecializeT of reason * t * cont
     (* variance check on polymorphic types *)
-    | VarianceCheckT of reason * typeparam SMap.t * t list * Polarity.t
+    | VarianceCheckT of reason * typeparam Subst_name.Map.t * t list * Polarity.t
     | TypeAppVarianceCheckT of use_op * reason * reason * (t * t) list
     (* In TypeAppT (c, ts) ~> TypeAppT (c, ts) we need to check both cs against
      * each other which means that we must concretize them first. *)
@@ -829,7 +829,7 @@ module rec TypeTerm : sig
     | SealGenericT of {
         reason: reason;
         id: Generic.id;
-        name: string;
+        name: Subst_name.t;
         cont: cont;
       }
     | OptionalIndexedAccessT of {
@@ -1238,7 +1238,7 @@ module rec TypeTerm : sig
 
   and insttype = {
     class_id: ALoc.id;
-    type_args: (string * reason * t * Polarity.t) list;
+    type_args: (Subst_name.t * reason * t * Polarity.t) list;
     own_props: Properties.id;
     proto_props: Properties.id;
     inst_call_t: int option;
@@ -1256,7 +1256,7 @@ module rec TypeTerm : sig
     opaque_id: ALoc.id;
     underlying_t: t option;
     super_t: t option;
-    opaque_type_args: (string * reason * t * Polarity.t) list;
+    opaque_type_args: (Subst_name.t * reason * t * Polarity.t) list;
     opaque_name: string;
   }
 
@@ -1295,7 +1295,7 @@ module rec TypeTerm : sig
 
   and typeparam = {
     reason: reason;
-    name: string;
+    name: Subst_name.t;
     bound: t;
     polarity: Polarity.t;
     default: t option;

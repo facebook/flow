@@ -42,7 +42,7 @@ module type S = sig
 
   val this : t -> Type.t option
 
-  val subst : Context.t -> Type.t SMap.t -> t -> t
+  val subst : Context.t -> Type.t Subst_name.Map.t -> t -> t
 
   val eval : Context.t -> t -> (ALoc.t * Type.t) ast option
 end
@@ -68,11 +68,11 @@ module type Config = sig
 
   val this_type : this_param -> Type.t
 
-  val subst_param : Context.t -> Type.t SMap.t -> param -> param
+  val subst_param : Context.t -> Type.t Subst_name.Map.t -> param -> param
 
-  val subst_rest : Context.t -> Type.t SMap.t -> rest -> rest
+  val subst_rest : Context.t -> Type.t Subst_name.Map.t -> rest -> rest
 
-  val subst_this : Context.t -> Type.t SMap.t -> this_param -> this_param
+  val subst_this : Context.t -> Type.t Subst_name.Map.t -> this_param -> this_param
 
   val eval_param : Context.t -> param -> (ALoc.t * Type.t) param_ast
 

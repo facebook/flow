@@ -827,7 +827,7 @@ module rec ConsGen : S = struct
     | ((DefT (_, _, ClassT _) | ThisClassT _), Annot_SpecializeT (_, _, _, None)) -> t
     | (AnyT _, Annot_SpecializeT _) -> t
     | (ThisClassT (_, i, _), Annot_ThisSpecializeT (reason, this)) ->
-      let i = subst cx (SMap.singleton "this" this) i in
+      let i = subst cx (Subst_name.Map.singleton (Subst_name.Name "this") this) i in
       reposition cx (aloc_of_reason reason) i
     (* this-specialization of non-this-abstracted classes is a no-op *)
     | (DefT (_, _, ClassT i), Annot_ThisSpecializeT (reason, _this)) ->

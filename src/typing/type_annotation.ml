@@ -746,14 +746,19 @@ module Make
               | _ -> error_type cx loc (Error_message.ECharSetAnnot loc) t_ast
           )
         | "this" ->
-          if SMap.mem "this" tparams_map then
+          if Subst_name.Map.mem (Subst_name.Name "this") tparams_map then
             (* We model a this type like a type parameter. The bound on a this
                type reflects the interface of `this` exposed in the current
                environment. Currently, we only support this types in a class
                environment: a this type in class C is bounded by C. *)
             check_type_arg_arity cx loc t_ast targs 0 (fun () ->
                 reconstruct_ast
-                  (Flow.reposition cx loc ~annot_loc:loc (SMap.find "this" tparams_map))
+                  (Flow.reposition
+                     cx
+                     loc
+                     ~annot_loc:loc
+                     (Subst_name.Map.find (Subst_name.Name "this") tparams_map)
+                  )
                   None
             )
           else (
@@ -956,9 +961,15 @@ module Make
           let (_, targs) = convert_type_params () in
           reconstruct_ast (AnyT.at AnnotatedAny loc) targs
         (* in-scope type vars *)
-        | _ when SMap.mem name tparams_map ->
+        | _ when Subst_name.Map.mem (Subst_name.Name name) tparams_map ->
           check_type_arg_arity cx loc t_ast targs 0 (fun () ->
-              let t = Flow.reposition cx loc ~annot_loc:loc (SMap.find name tparams_map) in
+              let t =
+                Flow.reposition
+                  cx
+                  loc
+                  ~annot_loc:loc
+                  (Subst_name.Map.find (Subst_name.Name name) tparams_map)
+              in
               reconstruct_ast t None
           )
         | "$Pred" ->
@@ -1826,7 +1837,7 @@ module Make
 
   (* take a list of AST type param declarations,
      do semantic checking and create types for them. *)
-  and mk_type_param_declarations cx ?(tparams_map = SMap.empty) tparams =
+  and mk_type_param_declarations cx ?(tparams_map = Subst_name.Map.empty) tparams =
     let add_type_param (tparams, tparams_map, bounds_map, rev_asts) (loc, type_param) =
       let {
         Ast.Type.TypeParam.name = (name_loc, { Ast.Identifier.name; comments = _ }) as id;
@@ -1860,10 +1871,10 @@ module Make
           (Some t, default_ast)
       in
       let polarity = polarity variance in
-      let tparam = { reason; name; bound; polarity; default; is_this = false } in
-      let param_loc = aloc_of_reason reason in
-      let tp_id = Context.make_generic_id cx name param_loc in
-      let t = GenericT { reason; name; bound; id = tp_id } in
+      let tparam =
+        { reason; name = Subst_name.Name name; bound; polarity; default; is_this = false }
+      in
+      let t = Flow_js_utils.generic_of_tparam ~f:(fun x -> x) cx tparam in
       let name_ast =
         let (loc, id_name) = id in
         (loc, id_name)
@@ -1875,8 +1886,8 @@ module Make
       in
       let tparams = tparam :: tparams in
       ( tparams,
-        SMap.add name t tparams_map,
-        SMap.add name (Flow.subst cx bounds_map bound) bounds_map,
+        Subst_name.Map.add (Subst_name.Name name) t tparams_map,
+        Subst_name.Map.add (Subst_name.Name name) (Flow.subst cx bounds_map bound) bounds_map,
         ast :: rev_asts
       )
     in
@@ -1884,7 +1895,7 @@ module Make
     | None -> (None, tparams_map, None)
     | Some (tparams_loc, { Ast.Type.TypeParams.params = tparams; comments }) ->
       let (rev_tparams, tparams_map, _, rev_asts) =
-        List.fold_left add_type_param ([], tparams_map, SMap.empty, []) tparams
+        List.fold_left add_type_param ([], tparams_map, Subst_name.Map.empty, []) tparams
       in
       let tparams_ast =
         Some (tparams_loc, { Ast.Type.TypeParams.params = List.rev rev_asts; comments })
@@ -2278,7 +2289,9 @@ module Make
         let self = Tvar.mk cx reason in
         let (tparams, tparams_map, tparam_asts) = mk_type_param_declarations cx tparams in
         let (this_tparam, this_t) = mk_this self cx reason tparams in
-        let tparams_map_with_this = SMap.add "this" this_t tparams_map in
+        let tparams_map_with_this =
+          Subst_name.Map.add (Subst_name.Name "this") this_t tparams_map
+        in
         let (iface_sig, extends_ast, mixins_ast, implements_ast) =
           let id = Context.make_aloc_id cx id_loc in
           let (extends, extends_ast) =

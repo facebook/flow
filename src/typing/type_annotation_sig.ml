@@ -16,19 +16,19 @@ module type S = sig
 
   val convert :
     Context.t ->
-    Type.t SMap.t ->
+    Type.t Subst_name.Map.t ->
     (ALoc.t, ALoc.t) Flow_ast.Type.t ->
     (ALoc.t, ALoc.t * Type.t) Flow_ast.Type.t
 
   val convert_list :
     Context.t ->
-    Type.t SMap.t ->
+    Type.t Subst_name.Map.t ->
     (ALoc.t, ALoc.t) Flow_ast.Type.t list ->
     Type.t list * (ALoc.t, ALoc.t * Type.t) Flow_ast.Type.t list
 
   val convert_opt :
     Context.t ->
-    Type.t SMap.t ->
+    Type.t Subst_name.Map.t ->
     (ALoc.t, ALoc.t) Flow_ast.Type.t option ->
     Type.t option * (ALoc.t, ALoc.t * Type.t) Flow_ast.Type.t option
 
@@ -41,7 +41,7 @@ module type S = sig
 
   val mk_super :
     Context.t ->
-    Type.t SMap.t ->
+    Type.t Subst_name.Map.t ->
     ALoc.t ->
     Type.t ->
     (ALoc.t, ALoc.t) Flow_ast.Type.TypeArgs.t option ->
@@ -50,14 +50,14 @@ module type S = sig
 
   val mk_type_annotation :
     Context.t ->
-    Type.t SMap.t ->
+    Type.t Subst_name.Map.t ->
     Reason.t ->
     (ALoc.t, ALoc.t) Flow_ast.Type.annotation_or_hint ->
     Type.annotated_or_inferred * (ALoc.t, ALoc.t * Type.t) Flow_ast.Type.annotation_or_hint
 
   val mk_return_type_annotation :
     Context.t ->
-    Type.t SMap.t ->
+    Type.t Subst_name.Map.t ->
     Reason.t ->
     definitely_returns_void:bool ->
     (ALoc.t, ALoc.t) Flow_ast.Type.annotation_or_hint ->
@@ -65,22 +65,24 @@ module type S = sig
 
   val mk_type_available_annotation :
     Context.t ->
-    Type.t SMap.t ->
+    Type.t Subst_name.Map.t ->
     (ALoc.t, ALoc.t) Flow_ast.Type.annotation ->
     Type.t * (ALoc.t, ALoc.t * Type.t) Flow_ast.Type.annotation
 
   val mk_nominal_type :
     Context.t ->
     Reason.t ->
-    Type.t SMap.t ->
+    Type.t Subst_name.Map.t ->
     Type.t * (ALoc.t, ALoc.t) Flow_ast.Type.TypeArgs.t option ->
     Type.t * (ALoc.t, ALoc.t * Type.t) Flow_ast.Type.TypeArgs.t option
 
   val mk_type_param_declarations :
     Context.t ->
-    ?tparams_map:Type.t SMap.t ->
+    ?tparams_map:Type.t Subst_name.Map.t ->
     (ALoc.t, ALoc.t) Flow_ast.Type.TypeParams.t option ->
-    Type.typeparams * Type.t SMap.t * (ALoc.t, ALoc.t * Type.t) Flow_ast.Type.TypeParams.t option
+    Type.typeparams
+    * Type.t Subst_name.Map.t
+    * (ALoc.t, ALoc.t * Type.t) Flow_ast.Type.TypeParams.t option
 
   val mk_interface_sig :
     Context.t ->

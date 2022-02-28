@@ -471,7 +471,7 @@ val set_export : t -> Type.Exports.id -> Reason.name -> ALoc.t option * Type.t -
 (* constructors *)
 val make_aloc_id : t -> ALoc.t -> ALoc.id
 
-val make_generic_id : t -> string -> ALoc.t -> Generic.id
+val make_generic_id : t -> Subst_name.t -> ALoc.t -> Generic.id
 
 val generate_property_map : t -> Type.Properties.t -> Type.Properties.id
 

@@ -229,12 +229,19 @@ let rec dump_t_ (depth, tvars) cx t =
           (spf
              "%s [%s] #%s"
              (kid c)
-             (String.concat "; " (Base.List.map ~f:(fun tp -> tp.name) (Nel.to_list tps)))
+             (String.concat
+                "; "
+                (Base.List.map
+                   ~f:(fun tp -> Subst_name.string_of_subst_name tp.name)
+                   (Nel.to_list tps)
+                )
+             )
              (Poly.string_of_id id)
           )
         t
     | ThisClassT (_, inst, _) -> p ~extra:(kid inst) t
-    | GenericT { name; bound; _ } -> p ~extra:(spf "%s: %s" name (kid bound)) t
+    | GenericT { name; bound; _ } ->
+      p ~extra:(spf "%s: %s" (Subst_name.string_of_subst_name name) (kid bound)) t
     | DefT (_, trust, ObjT { props_tmap; flags; _ }) ->
       let obj_kind =
         match flags.obj_kind with
@@ -921,8 +928,10 @@ and dump_use_t_ (depth, tvars) cx t =
       p ~extra:check_str t
     | FilterOptionalT (_, arg) -> p ~reason:false ~extra:(kid arg) t
     | FilterMaybeT (_, arg) -> p ~reason:false ~extra:(kid arg) t
-    | SealGenericT { name; cont = Lower (_, l); _ } -> p ~extra:(spf "%s <~ %s" name (kid l)) t
-    | SealGenericT { name; cont = Upper u; _ } -> p ~extra:(spf "%s ~> %s" name (use_kid u)) t
+    | SealGenericT { name; cont = Lower (_, l); _ } ->
+      p ~extra:(spf "%s <~ %s" (Subst_name.string_of_subst_name name) (kid l)) t
+    | SealGenericT { name; cont = Upper u; _ } ->
+      p ~extra:(spf "%s ~> %s" (Subst_name.string_of_subst_name name) (use_kid u)) t
     | CondT (_, then_t, else_t, tout) ->
       p
         t

@@ -530,7 +530,8 @@ function foo<A>() {
                ( function_name,
                  body_loc,
                  is_method,
-                 tparams_rev |> List.map (fun { Type.name; _ } -> name)
+                 tparams_rev
+                 |> List.map (fun { Type.name; _ } -> Subst_name.string_of_subst_name name)
                )
            )
       in
@@ -568,7 +569,11 @@ let find_closest_enclosing_class_tests =
       with
       | None -> None
       | Some { InsertionPointCollectors.class_name; body_loc; tparams_rev } ->
-        Some (class_name, body_loc, tparams_rev |> List.map (fun { Type.name; _ } -> name))
+        Some
+          ( class_name,
+            body_loc,
+            tparams_rev |> List.map (fun { Type.name; _ } -> Subst_name.string_of_subst_name name)
+          )
     in
     let printer = function
       | None -> "None"

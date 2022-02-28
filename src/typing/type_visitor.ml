@@ -344,7 +344,7 @@ class ['a] t =
         let acc = self#cont cx acc k in
         acc
       | VarianceCheckT (_, tparams, targs, _) ->
-        let acc = self#smap (self#type_param cx pole_TODO) acc tparams in
+        let acc = self#substmap (self#type_param cx pole_TODO) acc tparams in
         let acc = List.fold_left (self#type_ cx pole_TODO) acc targs in
         acc
       | TypeAppVarianceCheckT (_, _, _, ts) ->
@@ -712,7 +712,7 @@ class ['a] t =
       | None -> acc
       | Some t -> self#type_ cx pole acc t
 
-    method private type_param cx pole acc tp =
+    method type_param cx pole acc tp =
       let { reason = _; name = _; bound; default; polarity = p; is_this = _ } = tp in
       let pole = P.mult (pole, p) in
       let acc = self#type_ cx pole acc bound in
@@ -835,7 +835,7 @@ class ['a] t =
       | Named _ -> acc
       | Computed t -> self#type_ cx pole_TODO acc t
 
-    method private class_binding
+    method class_binding
         cx
         acc
         {
@@ -1095,6 +1095,9 @@ class ['a] t =
 
     method private smap : 't. ('a -> 't -> 'a) -> 'a -> 't SMap.t -> 'a =
       (fun f acc smap -> SMap.fold (fun _ t acc -> f acc t) smap acc)
+
+    method private substmap : 't. ('a -> 't -> 'a) -> 'a -> 't Subst_name.Map.t -> 'a =
+      (fun f acc smap -> Subst_name.Map.fold (fun _ t acc -> f acc t) smap acc)
 
     method private namemap : 't. ('a -> 't -> 'a) -> 'a -> 't NameUtils.Map.t -> 'a =
       (fun f acc smap -> NameUtils.Map.fold (fun _ t acc -> f acc t) smap acc)

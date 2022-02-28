@@ -16,7 +16,7 @@ open Reason
 (** Substitute bound type variables with associated types in a type. **)
 let substituter =
   object (self)
-    inherit [Type.t SMap.t * bool * use_op option] Type_mapper.t_with_uses as super
+    inherit [Type.t Subst_name.Map.t * bool * use_op option] Type_mapper.t_with_uses as super
 
     method tvar _cx _map_cx _r id = id
 
@@ -62,15 +62,17 @@ let substituter =
 
     method! type_ cx map_cx t =
       let (map, force, use_op) = map_cx in
-      if SMap.is_empty map then
+      if Subst_name.Map.is_empty map then
         t
       else
         let t_out =
           match t with
+          | GenericT { name = Subst_name.Synthetic name; _ } ->
+            failwith (Utils_js.spf "Cannot substitute through synthetic name %s" name)
           | GenericT { reason = tp_reason; name; _ } ->
             let annot_loc = aloc_of_reason tp_reason in
             begin
-              match SMap.find_opt name map with
+              match Subst_name.Map.find_opt name map with
               | None -> super#type_ cx map_cx t
               | Some (GenericT _ as param_t) ->
                 mod_reason_of_t
@@ -95,7 +97,7 @@ let substituter =
                         Some default_
                   in
                   ( { typeparam with bound; default } :: xs,
-                    SMap.remove typeparam.name map,
+                    Subst_name.Map.remove typeparam.name map,
                     changed || bound != typeparam.bound || default != typeparam.default
                   ))
                 ([], map, false)
@@ -118,7 +120,7 @@ let substituter =
             else
               t
           | ThisClassT (reason, this, i) ->
-            let map = SMap.remove "this" map in
+            let map = Subst_name.Map.remove (Subst_name.Name "this") map in
             let this_ = self#type_ cx (map, force, use_op) this in
             if this_ == this then
               t
@@ -131,7 +133,7 @@ let substituter =
               t
             else
               (* If the TypeAppT changed then one of the type arguments had a
-               * BoundT that was substituted. In this case, also change the use_op
+               * GenericT that was substituted. In this case, also change the use_op
                * so we can point at the op which instantiated the types that
                * were substituted. *)
               let use_op = Base.Option.value use_op ~default:op in
@@ -143,7 +145,7 @@ let substituter =
               t
             else
               (* If the EvalT changed then either the target or destructor had a
-               * BoundT that was substituted. In this case, also change the use_op
+               * GenericT that was substituted. In this case, also change the use_op
                * so we can point at the op which instantiated the types that
                * were substituted. *)
               let use_op = Base.Option.value use_op ~default:op in

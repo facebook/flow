@@ -265,7 +265,7 @@ struct
   let convert_call_targs_opt cx = function
     | None -> (None, None)
     | Some (loc, args) ->
-      let (targts, targs_ast) = convert_call_targs cx SMap.empty args in
+      let (targts, targs_ast) = convert_call_targs cx Subst_name.Map.empty args in
       (Some targts, Some (loc, targs_ast))
 
   class return_finder =
@@ -962,7 +962,9 @@ struct
         | None -> ()
         | Some (_, tps) ->
           (* TODO: use tparams_map *)
-          let tparams = Nel.fold_left (fun acc tp -> SMap.add tp.name tp acc) SMap.empty tps in
+          let tparams =
+            Nel.fold_left (fun acc tp -> Subst_name.Map.add tp.name tp acc) Subst_name.Map.empty tps
+          in
           Flow.check_polarity cx tparams Polarity.Positive t
       end;
 
@@ -1008,14 +1010,16 @@ struct
         | None -> ()
         | Some (_, tps) ->
           (* TODO: use tparams_map *)
-          let tparams = Nel.fold_left (fun acc tp -> SMap.add tp.name tp acc) SMap.empty tps in
+          let tparams =
+            Nel.fold_left (fun acc tp -> Subst_name.Map.add tp.name tp acc) Subst_name.Map.empty tps
+          in
           Base.Option.iter underlying_t ~f:(Flow.check_polarity cx tparams Polarity.Positive);
           Base.Option.iter super_t ~f:(Flow.check_polarity cx tparams Polarity.Positive)
       end;
       let opaque_type_args =
         Base.List.map
           ~f:(fun { name; reason; polarity; _ } ->
-            let t = SMap.find name tparams_map in
+            let t = Subst_name.Map.find name tparams_map in
             (name, reason, t, polarity))
           (TypeParams.to_list tparams)
       in
@@ -2080,7 +2084,7 @@ struct
             comments;
           }
       ) ->
-      let (t, annot_ast) = Anno.mk_type_available_annotation cx SMap.empty annot in
+      let (t, annot_ast) = Anno.mk_type_available_annotation cx Subst_name.Map.empty annot in
       Env.unify_declared_type cx (OrdinaryName name) id_loc t;
       (loc, DeclareVariable { DeclareVariable.id = ((id_loc, t), id); annot = annot_ast; comments })
     | (loc, DeclareFunction declare_function) ->
@@ -2095,7 +2099,7 @@ struct
           declare_function
         in
         let { Ast.Identifier.name; comments = _ } = id_name in
-        let (t, annot_ast) = Anno.mk_type_available_annotation cx SMap.empty annot in
+        let (t, annot_ast) = Anno.mk_type_available_annotation cx Subst_name.Map.empty annot in
         Env.unify_declared_fun_type cx (OrdinaryName name) id_loc t;
         let predicate = Base.Option.map ~f:Tast_utils.error_mapper#type_predicate predicate in
         ( loc,
@@ -2274,7 +2278,7 @@ struct
             end
           | D.DefaultType (loc, t) ->
             let default_loc = Base.Option.value_exn default in
-            let (((_, t), _) as t_ast) = Anno.convert cx SMap.empty (loc, t) in
+            let (((_, t), _) as t_ast) = Anno.convert cx Subst_name.Map.empty (loc, t) in
             Import_export.export cx (OrdinaryName "default") default_loc t;
             D.DefaultType t_ast
           | D.NamedType (loc, ({ TypeAlias.id; _ } as t)) ->
@@ -2311,7 +2315,7 @@ struct
       (loc, DeclareExportDeclaration { decl with D.declaration })
     | (loc, DeclareModuleExports { Ast.Statement.DeclareModuleExports.annot = (t_loc, t); comments })
       ->
-      let (((_, t), _) as t_ast) = Anno.convert cx SMap.empty t in
+      let (((_, t), _) as t_ast) = Anno.convert cx Subst_name.Map.empty t in
       Import_export.cjs_clobber cx loc t;
       ( loc,
         DeclareModuleExports { Ast.Statement.DeclareModuleExports.annot = (t_loc, t_ast); comments }
@@ -2999,7 +3003,9 @@ struct
         mk_reason (RIdentifier (OrdinaryName name)) id_loc
       | (ploc, _) -> mk_reason RDestructuring ploc
     in
-    let (annot_or_inferred, annot_ast) = Anno.mk_type_annotation cx SMap.empty id_reason annot in
+    let (annot_or_inferred, annot_ast) =
+      Anno.mk_type_annotation cx Subst_name.Map.empty id_reason annot
+    in
     let annot_t = type_t_of_annotated_or_inferred annot_or_inferred in
     (* Identifiers do not need to be initialized at the declaration site as long
      * as they are definitely initialized before use. Destructuring patterns must
@@ -3195,7 +3201,7 @@ struct
       let (t, l) = logical cx loc l in
       ((loc, t), Logical l)
     | TypeCast { TypeCast.expression = e; annot; comments } ->
-      let (t, annot') = Anno.mk_type_available_annotation cx SMap.empty annot in
+      let (t, annot') = Anno.mk_type_available_annotation cx Subst_name.Map.empty annot in
       let (((_, infer_t), _) as e') = expression cx ~hint:(hint_of_type t) e in
       let use_op = Op (Cast { lower = mk_expression_reason e; upper = reason_of_t t }) in
       Flow.flow cx (infer_t, TypeCastT (use_op, t));
@@ -3250,7 +3256,7 @@ struct
         } ->
       let targts_opt =
         Base.Option.map targs (fun (targts_loc, args) ->
-            (targts_loc, convert_call_targs cx SMap.empty args)
+            (targts_loc, convert_call_targs cx Subst_name.Map.empty args)
         )
       in
       let (argts, arges) =
@@ -3329,7 +3335,9 @@ struct
           comments;
         } ->
       let targts =
-        Base.Option.map targs (fun (loc, args) -> (loc, convert_call_targs cx SMap.empty args))
+        Base.Option.map targs (fun (loc, args) ->
+            (loc, convert_call_targs cx Subst_name.Map.empty args)
+        )
       in
       let (argts, args) =
         match arguments with
@@ -3963,7 +3971,7 @@ struct
         when not (Env.local_scope_entry_exists cx id_loc n) ->
         let targs =
           Base.Option.map targs (fun (args_loc, args) ->
-              (args_loc, snd (convert_call_targs cx SMap.empty args))
+              (args_loc, snd (convert_call_targs cx Subst_name.Map.empty args))
           )
         in
         let (lhs_t, arguments) =
@@ -4232,7 +4240,7 @@ struct
         let (((_, callee_t), _) as callee) = expression cx ~hint:None callee in
         let targs =
           Base.Option.map targs (fun (loc, args) ->
-              (loc, snd (convert_call_targs cx SMap.empty args))
+              (loc, snd (convert_call_targs cx Subst_name.Map.empty args))
           )
         in
         (* NOTE: if an invariant expression throws abnormal control flow, the
@@ -7893,7 +7901,7 @@ struct
             ( targs_loc,
               { CallTypeArgs.arguments = [Ast.Expression.CallTypeArg.Explicit targ]; comments }
             ) ->
-          let (((_, ty), _) as targ) = Anno.convert cx SMap.empty targ in
+          let (((_, ty), _) as targ) = Anno.convert cx Subst_name.Map.empty targ in
           ( ty,
             Some
               ( targs_loc,
@@ -7990,7 +7998,9 @@ struct
         (args_loc, { ArgList.arguments = [Expression (arg_loc, Object o)]; comments })
       ) ->
       let targs =
-        Base.Option.map ~f:(fun (loc, targs) -> (loc, convert_call_targs cx SMap.empty targs)) targs
+        Base.Option.map
+          ~f:(fun (loc, targs) -> (loc, convert_call_targs cx Subst_name.Map.empty targs))
+          targs
       in
       let (((_, arg_t), _) as e_ast) =
         let { Object.properties; comments } = o in
@@ -8017,7 +8027,7 @@ struct
         Some (targs_loc, targs),
         _
       ) ->
-      let targs = snd (convert_call_targs cx SMap.empty targs) in
+      let targs = snd (convert_call_targs cx Subst_name.Map.empty targs) in
       let (_argts, args) = arg_list cx args in
       let arity =
         if m = "freeze" || m = "defineProperty" then
@@ -8162,7 +8172,9 @@ struct
         in
         let (tparams, tparams_map, tparams_ast) = Anno.mk_type_param_declarations cx tparams in
         let (this_tparam, this_t) = mk_this self cx reason tparams in
-        let tparams_map_with_this = SMap.add "this" this_t tparams_map in
+        let tparams_map_with_this =
+          Subst_name.Map.add (Subst_name.Name "this") this_t tparams_map
+        in
         let (class_sig, extends_ast, implements_ast) =
           let id = Context.make_aloc_id cx name_loc in
           let (extends, extends_ast) = mk_extends cx tparams_map_with_this extends in
@@ -8715,7 +8727,7 @@ struct
         object (_self)
           inherit [Loc_collections.ALocSet.t] Type_visitor.t as super
 
-          val mutable tparams : string list = []
+          val mutable tparams : Subst_name.t list = []
 
           method! type_ cx pole acc t =
             match t with
@@ -8846,7 +8858,7 @@ struct
      and super` to the environment, and return the signature. *)
   and function_decl id cx ~hint ~needs_this_param reason func this_recipe super =
     let (func_sig, reconstruct_func) =
-      mk_func_sig cx ~hint ~needs_this_param SMap.empty reason func
+      mk_func_sig cx ~hint ~needs_this_param Subst_name.Map.empty reason func
     in
     let save_return = Abnormal.clear_saved Abnormal.Return in
     let save_throw = Abnormal.clear_saved Abnormal.Throw in

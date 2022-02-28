@@ -61,11 +61,11 @@ module type S = sig
 
   val this_type : this_param -> Type.t
 
-  val subst_param : Context.t -> Type.t SMap.t -> param -> param
+  val subst_param : Context.t -> Type.t Subst_name.Map.t -> param -> param
 
-  val subst_rest : Context.t -> Type.t SMap.t -> rest -> rest
+  val subst_rest : Context.t -> Type.t Subst_name.Map.t -> rest -> rest
 
-  val subst_this : Context.t -> Type.t SMap.t -> this_param -> this_param
+  val subst_this : Context.t -> Type.t Subst_name.Map.t -> this_param -> this_param
 
   val bind : Context.t -> string -> Type.annotated_or_inferred -> ALoc.t -> unit
 

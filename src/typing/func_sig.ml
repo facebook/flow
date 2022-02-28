@@ -32,7 +32,7 @@ struct
     reason: reason;
     kind: kind;
     tparams: Type.typeparams;
-    tparams_map: Type.t SMap.t;
+    tparams_map: Type.t Subst_name.Map.t;
     fparams: func_params;
     body: (ALoc.t, ALoc.t) Ast.Function.body option;
     return_t: Type.annotated_or_inferred;
@@ -47,7 +47,7 @@ struct
       reason;
       kind = Ctor;
       tparams = None;
-      tparams_map = SMap.empty;
+      tparams_map = Subst_name.Map.empty;
       fparams = F.empty (fun _ _ _ -> None);
       body = None;
       return_t = Annotated (VoidT.why reason |> with_trust bogus_trust);
@@ -83,9 +83,10 @@ struct
          )
     in
     let map =
-      TypeParams.to_list tparams |> List.fold_left (fun map tp -> SMap.remove tp.name map) map
+      TypeParams.to_list tparams
+      |> List.fold_left (fun map tp -> Subst_name.Map.remove tp.name map) map
     in
-    let tparams_map = SMap.map (Flow.subst cx map) tparams_map in
+    let tparams_map = Subst_name.Map.map (Flow.subst cx map) tparams_map in
     let fparams = F.subst cx map fparams in
     let return_t = TypeUtil.map_annotated_or_inferred (Flow.subst cx map) return_t in
     { x with tparams; tparams_map; fparams; return_t }
@@ -96,7 +97,7 @@ struct
         f
           {
             x with
-            tparams_map = SMap.map (Flow.subst cx map) tparams_map;
+            tparams_map = Subst_name.Map.map (Flow.subst cx map) tparams_map;
             fparams = F.subst cx map fparams;
             return_t = TypeUtil.map_annotated_or_inferred (Flow.subst cx map) return_t;
           }
@@ -203,14 +204,14 @@ struct
     Scope.add_entry (internal_name "super") super function_scope;
 
     (* bind type params *)
-    SMap.iter
+    Subst_name.Map.iter
       (fun name t ->
         let r = reason_of_t t in
         let loc = aloc_of_reason r in
-        if name <> "this" then
+        if Subst_name.string_of_subst_name name <> "this" then
           Env.bind_type
             cx
-            name
+            (Subst_name.string_of_subst_name name)
             (DefT (r, bogus_trust (), TypeT (TypeParamKind, t)))
             loc
             ~state:Scope.State.Initialized

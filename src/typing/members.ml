@@ -267,8 +267,8 @@ let instantiate_poly_t cx t args =
               | ({ default = None; _ }, []) -> (AnyT.error (reason_of_t t), [], true)
               | (_, t :: ts) -> (t, ts, too_few_args)
             in
-            (SMap.add typeparam.name t map, ts, too_few_args))
-          (SMap.empty, args, false)
+            (Subst_name.Map.add typeparam.name t map, ts, too_few_args))
+          (Subst_name.Map.empty, args, false)
           type_params
       in
       if too_few_args then (

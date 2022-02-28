@@ -13,7 +13,7 @@ open Utils_js
    definition site for `this`.) *)
 type generic = {
   id: ALoc.id;
-  name: string;
+  name: Subst_name.t;
 }
 
 (* A bound corresponds to the upper bound annotated on a type variable,
@@ -65,8 +65,9 @@ type spread_id = bound list
 let rec bound_to_string =
   let open Utils_js in
   function
-  | { generic = { name; _ }; super = None } -> name
-  | { generic = { name; _ }; super = Some id } -> spf "%s:%s" name (to_string id)
+  | { generic = { name; _ }; super = None } -> Subst_name.string_of_subst_name name
+  | { generic = { name; _ }; super = Some id } ->
+    spf "%s:%s" (Subst_name.string_of_subst_name name) (to_string id)
 
 and to_string id =
   let open Utils_js in
@@ -74,6 +75,10 @@ and to_string id =
   | Bound bound -> bound_to_string bound
   | Spread ids ->
     spf "{ ...%s }" (String.concat ", ..." (Base.List.map ~f:bound_to_string (Nel.to_list ids)))
+
+let subst_name_of_id = function
+  | Bound { generic = { name; _ }; super = None } -> name
+  | id -> Subst_name.Synthetic (to_string id)
 
 let rec equal_bound
     { generic = { id = id1; _ }; super = super1 } { generic = { id = id2; _ }; super = super2 } =

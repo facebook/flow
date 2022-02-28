@@ -54,7 +54,7 @@ module type S = sig
   (** 1. Constructors **)
 
   (** Create signature with no elements. *)
-  val empty : ALoc.id -> Reason.t -> Type.typeparams -> Type.t SMap.t -> super -> t
+  val empty : ALoc.id -> Reason.t -> Type.typeparams -> Type.t Subst_name.Map.t -> super -> t
 
   (** Add constructor to signature.
 

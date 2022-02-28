@@ -32,7 +32,7 @@ module Make (Env : Env_sig.S) (Statement : Statement_sig.S with module Env := En
     in
     match b with
     | Root (Annotation anno) ->
-      let (t, anno) = Type_annotation.mk_type_available_annotation cx SMap.empty anno in
+      let (t, anno) = Type_annotation.mk_type_available_annotation cx Subst_name.Map.empty anno in
       Cache.annotation cx anno;
       t
     | Root (Value exp) ->

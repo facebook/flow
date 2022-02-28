@@ -69,10 +69,11 @@ val resolve_spread_list :
 
 (* polymorphism *)
 
-val subst : Context.t -> ?use_op:Type.use_op -> ?force:bool -> Type.t SMap.t -> Type.t -> Type.t
+val subst :
+  Context.t -> ?use_op:Type.use_op -> ?force:bool -> Type.t Subst_name.Map.t -> Type.t -> Type.t
 
 val check_polarity :
-  Context.t -> ?trace:Type.trace -> Type.typeparam SMap.t -> Polarity.t -> Type.t -> unit
+  Context.t -> ?trace:Type.trace -> Type.typeparam Subst_name.Map.t -> Polarity.t -> Type.t -> unit
 
 (* selectors *)
 

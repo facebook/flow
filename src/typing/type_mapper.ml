@@ -1083,7 +1083,7 @@ class virtual ['a] t_with_uses =
         else
           ThisSpecializeT (r, this', k')
       | VarianceCheckT (r, tparams, targs, p) ->
-        let tparams' = SMap.ident_map (self#type_param cx map_cx) tparams in
+        let tparams' = Subst_name.Map.ident_map (self#type_param cx map_cx) tparams in
         let targs' = ListUtils.ident_map (self#type_ cx map_cx) targs in
         if tparams' == tparams && targs' == targs then
           t

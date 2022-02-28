@@ -16,11 +16,19 @@ module ImplicitInstantiationKit : Implicit_instantiation.KIT = Implicit_instanti
     Flow_js.add_output
       cx
       (Error_message.EImplicitInstantiationUnderconstrainedError
-         { bound = name; reason_call = instantiation_reason; reason_l = tparam_binder_reason }
+         {
+           bound = Subst_name.string_of_subst_name name;
+           reason_call = instantiation_reason;
+           reason_l = tparam_binder_reason;
+         }
       )
 
   let on_upper_non_t cx name u ~tparam_binder_reason ~instantiation_reason:_ =
-    let msg = name ^ " contains a non-Type.t upper bound " ^ Type.string_of_use_ctor u in
+    let msg =
+      Subst_name.string_of_subst_name name
+      ^ " contains a non-Type.t upper bound "
+      ^ Type.string_of_use_ctor u
+    in
     Flow_js.add_output
       cx
       (Error_message.EImplicitInstantiationTemporaryError
@@ -319,7 +327,9 @@ let check_constrained_writes init_cx master_cx =
             | RParameter (Some name)
             | RRestParameter (Some name) ->
               RUnknownParameter name
-            | RTypeParam (name, _, _) -> RCustom (spf "unknown implicit instantiation of `%s`" name)
+            | RTypeParam (name, _, _) ->
+              RCustom
+                (spf "unknown implicit instantiation of `%s`" (Subst_name.string_of_subst_name name))
             | desc -> desc
             )
       in

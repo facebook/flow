@@ -605,7 +605,7 @@ let generic_of_tparam cx ~f { bound; name; reason = param_reason; is_this = _; _
 
 let generic_bound cx prev_map ({ name; _ } as tparam) =
   let generic = generic_of_tparam cx ~f:(subst cx prev_map) tparam in
-  (generic, SMap.add name generic prev_map)
+  (generic, Subst_name.Map.add name generic prev_map)
 
 let mk_tparams cx params =
   let (map, rev_lst) =
@@ -613,7 +613,7 @@ let mk_tparams cx params =
       ~f:(fun (prev_map, rev_lst) tparam ->
         let (generic, map) = generic_bound cx prev_map tparam in
         (map, generic :: rev_lst))
-      ~init:(SMap.empty, [])
+      ~init:(Subst_name.Map.empty, [])
       params
   in
   (map, List.rev rev_lst)
@@ -623,7 +623,7 @@ let mk_tparams cx params =
   *)
 let check_with_generics cx params f =
   if params = [] then
-    f SMap.empty
+    f Subst_name.Map.empty
   else
     (* main - run f over a collection of arg maps generated for params *)
     let (map, _) = mk_tparams cx params in
@@ -697,8 +697,8 @@ let instantiate_poly_param_upper_bounds cx typeparams =
     Nel.fold_left
       (fun (map, list) { name; bound; _ } ->
         let t = subst cx map bound in
-        (SMap.add name t map, t :: list))
-      (SMap.empty, [])
+        (Subst_name.Map.add name t map, t :: list))
+      (Subst_name.Map.empty, [])
       typeparams
   in
   List.rev revlist
@@ -862,8 +862,8 @@ module Instantiation_kit (H : Instantiation_helper_sig) = struct
           let t_ = cache_instantiate cx trace ~use_op ?cache typeparam reason_op reason_tapp t in
           let frame = Frame (TypeParamBound { name = typeparam.name }, use_op) in
           is_subtype cx trace ~use_op:frame (t_, subst cx ~use_op map typeparam.bound);
-          (SMap.add typeparam.name t_ map, ts))
-        (SMap.empty, ts)
+          (Subst_name.Map.add typeparam.name t_ map, ts))
+        (Subst_name.Map.empty, ts)
         xs
     in
     reposition cx ~trace (aloc_of_reason reason_tapp) (subst cx ~use_op map t)
@@ -945,15 +945,15 @@ module Instantiation_kit (H : Instantiation_helper_sig) = struct
           if is_this then
             GenericT
               {
-                id = Context.make_generic_id cx "this" (def_aloc_of_reason r);
+                id = Context.make_generic_id cx (Subst_name.Name "this") (def_aloc_of_reason r);
                 reason;
-                name = "this";
+                name = Subst_name.Name "this";
                 bound = this;
               }
           else
             this
         in
-        let i' = subst cx (SMap.singleton "this" this_generic) i in
+        let i' = subst cx (Subst_name.Map.singleton (Subst_name.Name "this") this_generic) i in
         Flow_cache.Fix.add cx is_this i i';
         resolve_id cx trace ~use_op:unknown_use tvar i';
         i'

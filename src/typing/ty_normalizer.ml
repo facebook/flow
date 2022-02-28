@@ -215,10 +215,10 @@ end = struct
         match List.find_opt shadow_pred env.Env.tparams_rev with
         | Some { T.reason; _ } when Reason.def_aloc_of_reason reason <> tp_loc ->
           terr ~kind:ShadowTypeParam (Some t)
-        | Some _ -> return (Ty.Bound (tp_loc, tp_name))
+        | Some _ -> return (Ty.Bound (tp_loc, Subst_name.string_of_subst_name tp_name))
         | None -> assert false
       else
-        return (Ty.Bound (tp_loc, tp_name))
+        return (Ty.Bound (tp_loc, Subst_name.string_of_subst_name tp_name))
     | None -> default t
 
   (**************)
@@ -1604,7 +1604,7 @@ end = struct
       let tp_polarity = type_polarity polarity in
       let%bind tp_bound = param_bound ~env bound in
       let%map tp_default = default_t ~env default in
-      { Ty.tp_name = name; tp_bound; tp_polarity; tp_default }
+      { Ty.tp_name = Subst_name.string_of_subst_name name; tp_bound; tp_polarity; tp_default }
 
     and opt_t ~env t =
       let (t, opt) =
@@ -1872,7 +1872,9 @@ end = struct
         | RType name ->
           let loc = Reason.def_aloc_of_reason r in
           let default t = TypeConverter.convert_t ~env t in
-          let%map p = lookup_tparam ~default env t (display_string_of_name name) loc in
+          let%map p =
+            lookup_tparam ~default env t (Subst_name.Name (display_string_of_name name)) loc
+          in
           Ty.Type p
         | desc -> terr ~kind:BadTypeAlias ~msg:(spf "type param: %s" (string_of_desc desc)) (Some t)
       in

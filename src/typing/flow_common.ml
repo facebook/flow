@@ -76,7 +76,12 @@ end
 
 module type CHECK_POLARITY = sig
   val check_polarity :
-    Context.t -> ?trace:Type.trace -> Type.typeparam SMap.t -> Polarity.t -> Type.t -> unit
+    Context.t ->
+    ?trace:Type.trace ->
+    Type.typeparam Subst_name.Map.t ->
+    Polarity.t ->
+    Type.t ->
+    unit
 end
 
 module type TRUST_CHECKING = sig
@@ -154,8 +159,8 @@ module type SUBTYPING = sig
     use_op:use_op ->
     reason ->
     reason ->
-    (string * reason * Type.t * Polarity.t) list ->
-    (string * reason * Type.t * Polarity.t) list ->
+    (Subst_name.t * reason * Type.t * Polarity.t) list ->
+    (Subst_name.t * reason * Type.t * Polarity.t) list ->
     unit
 
   val instantiate_this_class :

@@ -76,7 +76,7 @@ struct
   type t = {
     id: ALoc.id;
     tparams: Type.typeparams;
-    tparams_map: Type.t SMap.t;
+    tparams_map: Type.t Subst_name.Map.t;
     super: super;
     (* Multiple function signatures indicates an overloaded constructor. Note that
        function signatures are stored in reverse definition order. *)
@@ -424,7 +424,7 @@ struct
           {
             id = x.id;
             tparams = x.tparams;
-            tparams_map = SMap.map (Flow.subst cx map) x.tparams_map;
+            tparams_map = Subst_name.Map.map (Flow.subst cx map) x.tparams_map;
             super = subst_super cx map x.super;
             constructor =
               Base.List.map
@@ -615,7 +615,7 @@ struct
     let type_args =
       Base.List.map
         ~f:(fun { Type.name; reason; polarity; _ } ->
-          let t = SMap.find name s.tparams_map in
+          let t = Subst_name.Map.find name s.tparams_map in
           (name, reason, t, polarity))
         (Type.TypeParams.to_list s.tparams)
     in
@@ -650,7 +650,7 @@ struct
     let this_reason = replace_desc_reason RThisType reason in
     let this_tp =
       {
-        Type.name = "this";
+        Type.name = Subst_name.Name "this";
         reason = this_reason;
         bound = rec_instance_type;
         polarity = Polarity.Positive;
@@ -906,7 +906,12 @@ struct
       match tparams_with_this with
       | Some (_, tps) when check_polarity ->
         (* TODO: use tparams_map instead of calculating this here *)
-        let tparams = Nel.fold_left (fun acc tp -> SMap.add tp.Type.name tp acc) SMap.empty tps in
+        let tparams =
+          Nel.fold_left
+            (fun acc tp -> Subst_name.Map.add tp.Type.name tp acc)
+            Subst_name.Map.empty
+            tps
+        in
         Flow.check_polarity cx tparams Polarity.Positive this
       | _ -> ()
     end;

@@ -148,7 +148,9 @@ type 'loc virtual_reason_desc =
   | RTypeAlias of string * 'loc option (* reliable def loc *) * 'loc virtual_reason_desc
   | ROpaqueType of string
   | RTypeParam of
-      string * ('loc virtual_reason_desc * 'loc) * (*reason op *)
+      Subst_name.t
+      * ('loc virtual_reason_desc * 'loc)
+      * (*reason op *)
       ('loc virtual_reason_desc * 'loc) (* reason tapp *)
   | RTypeof of string
   | RMethod of string option
@@ -630,7 +632,7 @@ let rec string_of_desc = function
   | RType x -> spf "`%s`" (prettify_react_util (display_string_of_name x))
   | RTypeAlias (x, _, _) -> spf "`%s`" (prettify_react_util x)
   | ROpaqueType x -> spf "`%s`" (prettify_react_util x)
-  | RTypeParam (x, _, _) -> spf "`%s`" x
+  | RTypeParam (x, _, _) -> spf "`%s`" (Subst_name.string_of_subst_name x)
   | RTypeof x -> spf "`typeof %s`" x
   | RMethod (Some x) -> spf "method `%s`" x
   | RMethod None -> "computed method"

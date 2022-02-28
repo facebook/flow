@@ -49,7 +49,7 @@ let mk_object_type
   in
   Generic.make_spread_id generics
   |> Base.Option.value_map ~default:t ~f:(fun id ->
-         GenericT { bound = t; reason; id; name = Generic.to_string id }
+         GenericT { bound = t; reason; id; name = Generic.subst_name_of_id id }
      )
 
 let is_widened_reason_desc r =

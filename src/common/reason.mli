@@ -110,7 +110,8 @@ type 'loc virtual_reason_desc =
   | RType of name
   | RTypeAlias of string * 'loc option * 'loc virtual_reason_desc
   | ROpaqueType of string
-  | RTypeParam of string * ('loc virtual_reason_desc * 'loc) * ('loc virtual_reason_desc * 'loc)
+  | RTypeParam of
+      Subst_name.t * ('loc virtual_reason_desc * 'loc) * ('loc virtual_reason_desc * 'loc)
   | RTypeof of string
   | RMethod of string option
   | RMethodCall of string option

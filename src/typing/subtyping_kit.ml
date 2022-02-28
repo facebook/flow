@@ -1045,13 +1045,15 @@ module Make (Flow : INPUT) : OUTPUT = struct
         Base.List.fold2_exn
           (Nel.to_list params1)
           (Nel.to_list params2)
-          ~init:(SMap.empty, SMap.empty)
+          ~init:(Subst_name.Map.empty, Subst_name.Map.empty)
           ~f:(fun (prev_map1, prev_map2) param1 param2 ->
             let bound1 = Subst.subst cx ~use_op prev_map1 param1.bound in
             let bound2 = Subst.subst cx ~use_op prev_map2 param2.bound in
             rec_flow cx trace (bound2, UseT (use_op, bound1));
             let (_, map1) = Flow_js_utils.generic_bound cx prev_map1 param1 in
-            let map2 = SMap.add param2.name (SMap.find param1.name map1) prev_map2 in
+            let map2 =
+              Subst_name.Map.add param2.name (Subst_name.Map.find param1.name map1) prev_map2
+            in
             (map1, map2)
         )
       in
@@ -1067,9 +1069,9 @@ module Make (Flow : INPUT) : OUTPUT = struct
             Base.List.fold2_exn
               (Nel.to_list params1)
               (Nel.to_list params2)
-              ~init:SMap.empty
+              ~init:Subst_name.Map.empty
               ~f:(fun prev_map { name = n1; _ } { name = n2; _ } ->
-                SMap.add n2 (SMap.find n1 map1) prev_map
+                Subst_name.Map.add n2 (Subst_name.Map.find n1 map1) prev_map
             )
           in
           let inst2 = Subst.subst cx ~use_op map2 t2 in
@@ -1835,7 +1837,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
     | (GenericT { reason; bound; _ }, _) ->
       rec_flow_t cx trace ~use_op (reposition_reason cx reason bound, u)
     | (_, GenericT { reason; name; _ }) ->
-      let desc = RIncompatibleInstantiation name in
+      let desc = RIncompatibleInstantiation (Subst_name.string_of_subst_name name) in
       let bot = DefT (replace_desc_reason desc reason, literal_trust (), EmptyT) in
       rec_flow_t cx trace ~use_op (l, bot)
     | (ObjProtoT reason, _) ->

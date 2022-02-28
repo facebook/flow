@@ -1170,9 +1170,11 @@ and merge_tparam tps file tp =
     | None -> None
     | Some t -> Some (merge tps file t)
   in
-  let tp = { Type.reason; name; polarity; bound; default; is_this = false } in
+  let tp =
+    { Type.reason; name = Subst_name.Name name; polarity; bound; default; is_this = false }
+  in
   let t = Flow_js_utils.generic_of_tparam file.cx ~f:(fun x -> x) tp in
-  (tp, (name, reason, t, polarity), SMap.add name t tps)
+  (tp, (Subst_name.Name name, reason, t, polarity), SMap.add name t tps)
 
 and merge_op tps file op = map_op (merge tps file) op
 
@@ -1300,7 +1302,7 @@ and merge_class tps file reason id def =
     let this =
       let this_tp =
         {
-          Type.name = "this";
+          Type.name = Subst_name.Name "this";
           reason = this_reason;
           bound = Type.OpenT (this_reason, rec_type);
           polarity = Polarity.Positive;
@@ -1558,7 +1560,7 @@ let merge_declare_class file reason id def =
     let this =
       let this_tp =
         {
-          Type.name = "this";
+          Type.name = Subst_name.Name "this";
           reason = this_reason;
           bound = Type.OpenT (this_reason, rec_type);
           polarity = Polarity.Positive;

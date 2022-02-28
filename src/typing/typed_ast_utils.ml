@@ -57,7 +57,7 @@ class type_parameter_mapper =
         | Some ((_, t), _) -> Some t
       in
       let polarity = polarity variance in
-      { Type.reason; name; bound; polarity; default; is_this = false }
+      { Type.reason; name = Subst_name.Name name; bound; polarity; default; is_this = false }
 
     (* Record and restore the parameter environment around nodes that might
        update it. *)
@@ -81,7 +81,7 @@ class type_parameter_mapper =
       in
       let this_tparam =
         {
-          Type.name = "this";
+          Type.name = Subst_name.Name "this";
           reason = replace_desc_reason RThisType (TypeUtil.reason_of_t bound);
           bound;
           polarity = Polarity.Positive;
@@ -101,7 +101,7 @@ class type_parameter_mapper =
       let ((_, bound), _) = id in
       let this_tparam =
         {
-          Type.name = "this";
+          Type.name = Subst_name.Name "this";
           reason = replace_desc_reason RThisType (TypeUtil.reason_of_t bound);
           bound;
           polarity = Polarity.Positive;

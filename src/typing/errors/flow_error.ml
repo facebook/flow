@@ -622,7 +622,8 @@ let rec make_error_printable ?(speculation = false) (error : Loc.t t) : Loc.t Er
             | Frame (TypeArgCompatibility { targ; lower; _ }, use_op) ->
               `Frame (lower, use_op, [text "type argument "; ref targ])
             | Frame (TypeParamBound { name }, use_op) ->
-              `FrameWithoutLoc (use_op, [text "type argument "; code name])
+              `FrameWithoutLoc
+                (use_op, [text "type argument "; code (Subst_name.string_of_subst_name name)])
             | Frame (FunCompatibility { lower; _ }, use_op) -> `NextWithLoc (lower, use_op)
             | Frame (FunMissingArg _, use_op)
             | Frame (ImplicitTypeParam, use_op)

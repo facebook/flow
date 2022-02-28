@@ -727,7 +727,9 @@ let extract_to_type_alias_refactors
         | _ ->
           Some
             (type_params_to_add
-            |> List.map (fun { Type.name; _ } -> Types.unqualified_generic name)
+            |> List.map (fun { Type.name; _ } ->
+                   Types.unqualified_generic (Subst_name.string_of_subst_name name)
+               )
             |> Types.type_args
             )
       in

@@ -7,7 +7,7 @@
 
 open Type
 open Polarity
-module TypeParamMarked = Marked.Make (StringKey)
+module TypeParamMarked = Marked.Make (Subst_name)
 module Marked = TypeParamMarked
 module Check = Context.Implicit_instantiation_check
 
@@ -27,20 +27,20 @@ let reduce_implicit_instantiation_check reducer cx pole check =
 module type OBSERVER = sig
   type output
 
-  val on_constant_tparam : Context.t -> string -> output
+  val on_constant_tparam : Context.t -> Subst_name.t -> output
 
-  val on_pinned_tparam : Context.t -> string -> Type.t -> output
+  val on_pinned_tparam : Context.t -> Subst_name.t -> Type.t -> output
 
   val on_missing_bounds :
     Context.t ->
-    string ->
+    Subst_name.t ->
     tparam_binder_reason:Reason.reason ->
     instantiation_reason:Reason.reason ->
     output
 
   val on_upper_non_t :
     Context.t ->
-    string ->
+    Subst_name.t ->
     Type.use_t ->
     tparam_binder_reason:Reason.reason ->
     instantiation_reason:Reason.reason ->
@@ -53,7 +53,7 @@ module type KIT = sig
   val fold :
     Context.t ->
     Context.master_context ->
-    f:(Context.t -> 'acc -> Check.t -> output SMap.t -> 'acc) ->
+    f:(Context.t -> 'acc -> Check.t -> output Subst_name.Map.t -> 'acc) ->
     init:'acc ->
     post:(init_cx:Context.t -> cx:Context.t -> unit) ->
     Check.t list ->
@@ -74,16 +74,16 @@ module Make (Observer : OBSERVER) : KIT with type output = Observer.output = str
    *)
   class implicit_instantiation_visitor ~bounds_map =
     object (self)
-      inherit [Marked.t * SSet.t] Type_visitor.t as super
+      inherit [Marked.t * Subst_name.Set.t] Type_visitor.t as super
 
       method! type_ cx pole ((marked, tparam_names) as acc) =
         function
         | GenericT { name = s; _ } as t ->
-          if SSet.mem s tparam_names then
+          if Subst_name.Set.mem s tparam_names then
             match Marked.add s pole marked with
             | None -> acc
             | Some (_, marked) ->
-              (match SMap.find_opt s bounds_map with
+              (match Subst_name.Map.find_opt s bounds_map with
               | None -> (marked, tparam_names)
               | Some t -> self#type_ cx pole (marked, tparam_names) t)
           else
@@ -91,7 +91,7 @@ module Make (Observer : OBSERVER) : KIT with type output = Observer.output = str
         (* We remove any tparam names from the map when entering a PolyT to avoid naming conflicts. *)
         | DefT (_, _, PolyT { tparams; t_out = t; _ }) ->
           let tparam_names' =
-            Nel.fold_left (fun names x -> SSet.remove x.name names) tparam_names tparams
+            Nel.fold_left (fun names x -> Subst_name.Set.remove x.name names) tparam_names tparams
           in
           let (marked, _) = self#type_ cx pole (marked, tparam_names') t in
           (* TODO(jmbrown): Handle defaults on type parameters *)
@@ -210,9 +210,9 @@ module Make (Observer : OBSERVER) : KIT with type output = Observer.output = str
           let targ =
             Instantiation_utils.ImplicitTypeArgument.mk_targ cx tparam reason_op reason_tapp
           in
-          (ExplicitArg targ :: targs, SMap.add tparam.name targ map))
+          (ExplicitArg targ :: targs, Subst_name.Map.add tparam.name targ map))
         tparams
-        ([], SMap.empty)
+        ([], Subst_name.Map.empty)
     in
     let () =
       match op with
@@ -238,14 +238,16 @@ module Make (Observer : OBSERVER) : KIT with type output = Observer.output = str
   let pin_types cx tparam_map marked_tparams bounds_map implicit_instantiation =
     let { Check.operation = (_, instantiation_reason, _); _ } = implicit_instantiation in
     let use_upper_bounds cx name tvar tparam_binder_reason instantiation_reason =
-      let upper_t = merge_upper_bounds tparam_binder_reason (SMap.find name bounds_map) cx tvar in
+      let upper_t =
+        merge_upper_bounds tparam_binder_reason (Subst_name.Map.find name bounds_map) cx tvar
+      in
       match upper_t with
       | UpperEmpty -> Observer.on_missing_bounds cx name ~tparam_binder_reason ~instantiation_reason
       | UpperNonT u -> Observer.on_upper_non_t cx name ~tparam_binder_reason ~instantiation_reason u
       | UpperT t -> Observer.on_pinned_tparam cx name t
     in
     tparam_map
-    |> SMap.mapi (fun name t ->
+    |> Subst_name.Map.mapi (fun name t ->
            let tparam_binder_reason = TypeUtil.reason_of_t t in
            match Marked.get name marked_tparams with
            | None -> Observer.on_constant_tparam cx name
@@ -271,7 +273,8 @@ module Make (Observer : OBSERVER) : KIT with type output = Observer.output = str
     (* Visit the return type *)
     let visitor = new implicit_instantiation_visitor ~bounds_map in
     let tparam_names =
-      tparams |> List.fold_left (fun set tparam -> SSet.add tparam.name set) SSet.empty
+      tparams
+      |> List.fold_left (fun set tparam -> Subst_name.Set.add tparam.name set) Subst_name.Set.empty
     in
     let (marked_tparams, _) = visitor#type_ cx Positive (Marked.empty, tparam_names) return_t in
     check_instantiation cx ~tparams ~marked_tparams ~implicit_instantiation
@@ -291,7 +294,12 @@ module Make (Observer : OBSERVER) : KIT with type output = Observer.output = str
   let implicitly_instantiate cx implicit_instantiation =
     let { Check.poly_t = (_, tparams, t); operation; _ } = implicit_instantiation in
     let tparams = Nel.to_list tparams in
-    let bounds_map = List.fold_left (fun map x -> SMap.add x.name x.bound map) SMap.empty tparams in
+    let bounds_map =
+      List.fold_left
+        (fun map x -> Subst_name.Map.add x.name x.bound map)
+        Subst_name.Map.empty
+        tparams
+    in
     let (tparams_map, marked_tparams) =
       match get_t cx t with
       | DefT (_, _, FunT (_, _, funtype)) ->
@@ -303,7 +311,7 @@ module Make (Observer : OBSERVER) : KIT with type output = Observer.output = str
            * instantiate the type variables on the class, but using an instance's
            * type params in a static method does not make sense. We ignore this case
            * intentionally *)
-          (SMap.empty, Marked.empty)
+          (Subst_name.Map.empty, Marked.empty)
         | (_, _, Check.Constructor _) -> check_instance cx ~tparams ~implicit_instantiation)
       | _ -> failwith "No other possible lower bounds"
     in

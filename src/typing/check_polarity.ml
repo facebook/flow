@@ -16,7 +16,7 @@ module Kit (Flow : Flow_common.S) : Flow_common.CHECK_POLARITY = struct
     (* base case *)
     | GenericT { reason; name; bound; _ } ->
       begin
-        match SMap.find_opt name tparams with
+        match Subst_name.Map.find_opt name tparams with
         | None -> check_polarity cx ?trace tparams polarity bound
         | Some tp ->
           if not (Polarity.compat (tp.polarity, polarity)) then
@@ -24,7 +24,12 @@ module Kit (Flow : Flow_common.S) : Flow_common.CHECK_POLARITY = struct
               cx
               ?trace
               (Error_message.EPolarityMismatch
-                 { reason; name; expected_polarity = tp.polarity; actual_polarity = polarity }
+                 {
+                   reason;
+                   name = Subst_name.string_of_subst_name name;
+                   expected_polarity = tp.polarity;
+                   actual_polarity = polarity;
+                 }
               )
       end
     (* No need to walk into tvars, since we're looking for GenericT types, which
@@ -127,7 +132,7 @@ module Kit (Flow : Flow_common.S) : Flow_common.CHECK_POLARITY = struct
         Nel.fold_left
           (fun acc tp ->
             check_polarity_typeparam cx ?trace acc polarity tp;
-            SMap.add tp.name tp acc)
+            Subst_name.Map.add tp.name tp acc)
           tparams
           tps
       in

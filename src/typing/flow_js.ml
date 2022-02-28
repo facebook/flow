@@ -2623,11 +2623,11 @@ struct
                     let t1 = subst cx ~use_op map1 default in
                     let t2 = subst cx ~use_op map2 default in
                     flow_targs t1 t2;
-                    ([], SMap.add name t1 map1, SMap.add name t2 map2)
+                    ([], Subst_name.Map.add name t1 map1, Subst_name.Map.add name t2 map2)
                   | (_, (t1, t2) :: targs) ->
                     flow_targs t1 t2;
-                    (targs, SMap.add name t1 map1, SMap.add name t2 map2))
-                (targs, SMap.empty, SMap.empty)
+                    (targs, Subst_name.Map.add name t1 map1, Subst_name.Map.add name t2 map2))
+                (targs, Subst_name.Map.empty, Subst_name.Map.empty)
                 tparams
             in
             assert (unused_targs = [])
@@ -2638,7 +2638,7 @@ struct
           rec_flow_t ~use_op:unknown_use cx trace (l, tvar)
         (* this-specialize a this-abstracted class by substituting This *)
         | (ThisClassT (_, i, _), ThisSpecializeT (r, this, k)) ->
-          let i = subst cx (SMap.singleton "this" this) i in
+          let i = subst cx (Subst_name.Map.singleton (Subst_name.Name "this") this) i in
           continue_repos cx trace r i k
         (* this-specialization of non-this-abstracted classes is a no-op *)
         | (DefT (_, _, ClassT i), ThisSpecializeT (r, _this, k)) ->
@@ -3030,13 +3030,13 @@ struct
               state_t =
                 mk_tvar
                   (update_desc_reason (fun d ->
-                       RTypeParam ("State", (d, loc_op), (desc_tapp, loc_tapp))
+                       RTypeParam (Subst_name.Name "State", (d, loc_op), (desc_tapp, loc_tapp))
                    )
                   );
               default_t =
                 mk_tvar
                   (update_desc_reason (fun d ->
-                       RTypeParam ("Default", (d, loc_op), (desc_tapp, loc_tapp))
+                       RTypeParam (Subst_name.Name "Default", (d, loc_op), (desc_tapp, loc_tapp))
                    )
                   );
             }
@@ -3621,7 +3621,12 @@ struct
           ) ->
           (* BoundTs from private methods are not on the InstanceT due to scoping rules,
              so we need to substitute those BoundTs when the method is called. *)
-          let scopes = Subst.subst_class_bindings cx (SMap.singleton "this" l) scopes in
+          let scopes =
+            Subst.subst_class_bindings
+              cx
+              (Subst_name.Map.singleton (Subst_name.Name "this") l)
+              scopes
+          in
           let tvar = Tvar.mk_no_wrap cx reason_lookup in
           let funt = OpenT (reason_lookup, tvar) in
           let l =
@@ -6835,8 +6840,8 @@ struct
       Nel.fold_left
         (fun (ts, map) typeparam ->
           let t = Unsoundness.why InstanceOfRefinement reason_op in
-          (t :: ts, SMap.add typeparam.name t map))
-        ([], SMap.empty)
+          (t :: ts, Subst_name.Map.add typeparam.name t map))
+        ([], Subst_name.Map.empty)
         xs
     in
     let ts = List.rev ts in
@@ -8716,7 +8721,7 @@ struct
             let spread_array =
               Base.Option.value_map
                 ~f:(fun id ->
-                  GenericT { id; bound = spread_array; reason; name = Generic.to_string id })
+                  GenericT { id; bound = spread_array; reason; name = Generic.subst_name_of_id id })
                 ~default:spread_array
                 generic
             in
@@ -8926,7 +8931,7 @@ struct
           in
           Base.Option.value_map
             ~f:(fun id ->
-              GenericT { bound = t; id; name = Generic.to_string id; reason = reason_of_t t })
+              GenericT { bound = t; id; name = Generic.subst_name_of_id id; reason = reason_of_t t })
             ~default:t
             generic
       in
@@ -9089,7 +9094,7 @@ struct
               let arr =
                 Base.Option.value_map
                   ~f:(fun id ->
-                    GenericT { bound = arr; reason = r; id; name = Generic.to_string id })
+                    GenericT { bound = arr; reason = r; id; name = Generic.subst_name_of_id id })
                   ~default:arr
                   generic
               in
