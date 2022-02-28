@@ -626,8 +626,6 @@ let poly_minimum_arity =
   in
   Nel.fold_left f 0
 
-let position_generic_bound reason = mod_reason_of_t (Fn.const reason)
-
 (** Object Subtyping *)
 
 let speculative_object_write cx flds s up =

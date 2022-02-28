@@ -1826,22 +1826,14 @@ module Make (Flow : INPUT) : OUTPUT = struct
             cx
             trace
             ~use_op
-            (position_generic_bound reason1 bound1, position_generic_bound reason2 bound2)
+            (reposition_reason cx reason1 bound1, reposition_reason cx reason2 bound2)
         | Generic.Lower id ->
-          rec_flow_t
-            cx
-            trace
-            ~use_op
-            (GenericT { g1 with id }, position_generic_bound reason2 bound2)
+          rec_flow_t cx trace ~use_op (GenericT { g1 with id }, reposition_reason cx reason2 bound2)
         | Generic.Upper id ->
-          rec_flow_t
-            cx
-            trace
-            ~use_op
-            (position_generic_bound reason1 bound1, GenericT { g2 with id })
+          rec_flow_t cx trace ~use_op (reposition_reason cx reason1 bound1, GenericT { g2 with id })
       end
     | (GenericT { reason; bound; _ }, _) ->
-      rec_flow_t cx trace ~use_op (position_generic_bound reason bound, u)
+      rec_flow_t cx trace ~use_op (reposition_reason cx reason bound, u)
     | (_, GenericT { reason; name; _ }) ->
       let desc = RIncompatibleInstantiation name in
       let bot = DefT (replace_desc_reason desc reason, literal_trust (), EmptyT) in

@@ -577,7 +577,9 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- intersection.js:8:4
 
-Cannot cast `x` to intersection type because intersection type [1] is incompatible with boolean [2]. [incompatible-cast]
+Cannot cast `x` to intersection type because: [incompatible-cast]
+ - Either number [1] is incompatible with boolean [2].
+ - Or string [1] is incompatible with boolean [2].
 
    intersection.js:8:4
    8|   (x: number & string & boolean); // nope
@@ -642,9 +644,9 @@ Cannot cast `y` to union type because: [incompatible-cast]
             ^
 
 References:
-   maybe.js:3:27
-    3| function f<X: number, Y: ?number, Z: ?X>(
-                                 ^^^^^^ [1]
+   maybe.js:5:6
+    5|   y: Y,
+            ^ [1]
    maybe.js:31:9
    31|     (y: null | void); // nope
                ^^^^ [2]
@@ -681,9 +683,9 @@ Cannot cast `z` to union type because: [incompatible-cast]
             ^
 
 References:
-   maybe.js:3:39
-    3| function f<X: number, Y: ?number, Z: ?X>(
-                                             ^ [1]
+   maybe.js:6:6
+    6|   z: Z,
+            ^ [1]
    maybe.js:44:9
    44|     (z: null | void); // nope
                ^^^^ [2]
@@ -735,9 +737,9 @@ Cannot cast `yu` to union type because null or undefined [1] is incompatible wit
           ^^
 
 References:
-   maybe.js:3:26
-    3| function f<X: number, Y: ?number, Z: ?X>(
-                                ^^^^^^^ [1]
+   maybe.js:8:8
+    8|   yu?: Y,
+              ^ [1]
    maybe.js:59:8
    59|   (yu: void | number); // nope
               ^^^^ [2]
@@ -793,9 +795,9 @@ Cannot cast `yu` to union type because: [incompatible-cast]
             ^^
 
 References:
-   maybe.js:3:27
-    3| function f<X: number, Y: ?number, Z: ?X>(
-                                 ^^^^^^ [1]
+   maybe.js:8:8
+    8|   yu?: Y,
+              ^ [1]
    maybe.js:67:10
    67|     (yu: null | void); // nope
                 ^^^^ [2]
@@ -866,9 +868,9 @@ Cannot cast `zu` to union type because: [incompatible-cast]
             ^^
 
 References:
-   maybe.js:3:39
-    3| function f<X: number, Y: ?number, Z: ?X>(
-                                             ^ [1]
+   maybe.js:9:8
+    9|   zu?: Z,
+              ^ [1]
    maybe.js:81:10
    81|     (zu: null | void); // nope
                 ^^^^ [2]
@@ -1401,9 +1403,9 @@ Cannot cast `y` to `X` because boolean [1] is incompatible with `X` [2]. [incomp
             ^
 
 References:
-   union.js:3:32
+   union.js:3:50
     3| function f1<X: boolean, Y: X | boolean>(x: X, y: Y) {
-                                      ^^^^^^^ [1]
+                                                        ^ [1]
    union.js:17:9
    17|     (y: X); // nope
                ^ [2]

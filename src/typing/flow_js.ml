@@ -2186,7 +2186,7 @@ struct
           let reason = reason_of_t l in
           let (lt, generic) =
             match l with
-            | GenericT { bound; id; reason; _ } -> (position_generic_bound reason bound, Some id)
+            | GenericT { bound; id; reason; _ } -> (reposition_reason cx reason bound, Some id)
             | _ -> (l, None)
           in
           let arrtype =
@@ -5018,7 +5018,7 @@ struct
           let reason = reason_of_t l in
           continue cx trace (GenericT { reason; id; name; bound = l }) cont
         | (GenericT { reason; bound; _ }, _) ->
-          rec_flow cx trace (position_generic_bound reason bound, u)
+          rec_flow cx trace (reposition_reason cx reason bound, u)
         (***************)
         (* unsupported *)
         (***************)
@@ -5665,7 +5665,7 @@ struct
     let narrow_generic_with_continuation mk_use_t cont =
       let t_out' = (reason, Tvar.mk_no_wrap cx reason) in
       let use_t = mk_use_t t_out' in
-      rec_flow cx trace (position_generic_bound reason bound, use_t);
+      rec_flow cx trace (reposition_reason cx reason bound, use_t);
       rec_flow cx trace (OpenT t_out', SealGenericT { reason; id; name; cont })
     in
     let narrow_generic_use mk_use_t use_t_out =
@@ -5678,7 +5678,10 @@ struct
       narrow_generic_use mk_use_t (UseT (use_op, OpenT t_out))
     in
     let wait_for_concrete_bound ?(upper = u) () =
-      rec_flow cx trace (bound, SealGenericT { reason; id; name; cont = Upper upper });
+      rec_flow
+        cx
+        trace
+        (reposition_reason cx reason bound, SealGenericT { reason; id; name; cont = Upper upper });
       true
     in
     let distribute_union_intersection ?(upper = u) () =
@@ -5723,7 +5726,7 @@ struct
         rec_flow
           cx
           trace
-          (position_generic_bound reason bound, SealGenericT { reason; id; name; cont = Upper u });
+          (reposition_reason cx reason bound, SealGenericT { reason; id; name; cont = Upper u });
         true
       | DefT (_, _, EmptyT) -> empty_success u
       | _ -> false
@@ -5750,7 +5753,7 @@ struct
       (* the above case is not needed for correctness, but rather avoids a slow path in TupleMap *)
       | UseT (_, ShapeT _)
       | UseT (Op (Coercion _), DefT (_, _, StrT _)) ->
-        rec_flow cx trace (position_generic_bound reason bound, u);
+        rec_flow cx trace (reposition_reason cx reason bound, u);
         true
       | ReactKitT _ ->
         if is_concrete bound && not (is_literal_type bound) then
@@ -5843,7 +5846,7 @@ struct
           else
             wait_for_concrete_bound ~upper:u' ()
         in
-        if not consumed then rec_flow cx trace (position_generic_bound reason bound, u');
+        if not consumed then rec_flow cx trace (reposition_reason cx reason bound, u');
         true
       | PrivateMethodT (op, r1, r2, prop, scopes, static, action, prop_t) ->
         let l = make_generic bound in
@@ -5855,7 +5858,7 @@ struct
           else
             wait_for_concrete_bound ~upper:u' ()
         in
-        if not consumed then rec_flow cx trace (position_generic_bound reason bound, u');
+        if not consumed then rec_flow cx trace (reposition_reason cx reason bound, u');
         true
       | ObjKitT _
       | UseT (_, IntersectionT _) ->
@@ -9358,8 +9361,6 @@ struct
       | ExactT (r, t) ->
         let r = mod_reason r in
         ExactT (r, recurse seen t)
-      | GenericT ({ reason; bound; _ } as generic) ->
-        GenericT { generic with reason = mod_reason reason; bound = recurse seen bound }
       | t -> mod_reason_of_t mod_reason t
     in
     recurse IMap.empty t
