@@ -13,10 +13,94 @@ open Reason
 (* substitutions *)
 (*****************)
 
+type replacement =
+  | TypeSubst of Type.t * (* Free vars in type *) Subst_name.Set.t
+  | AlphaRename of Subst_name.t
+
+type fv_acc = {
+  bound: Subst_name.Set.t;
+  free: Subst_name.Set.t;
+}
+
+let visitor =
+  object (self)
+    inherit [fv_acc] Type_visitor.t as super
+
+    method! type_ cx pole { bound; free } t =
+      match t with
+      | GenericT { name; _ } when not (Subst_name.Set.mem name bound) ->
+        super#type_ cx pole { free = Subst_name.Set.add name free; bound } t
+      | DefT (_, _, PolyT { tparams_loc = _; tparams = xs; t_out = inner; _ }) ->
+        let orig_bound = bound in
+        let { free; bound } =
+          Nel.fold_left
+            (fun { free; bound } tp ->
+              self#type_param cx pole { free; bound = Subst_name.Set.add tp.name bound } tp)
+            { free; bound }
+            xs
+        in
+        let { free; _ } = self#type_ cx pole { free; bound } inner in
+        { free; bound = orig_bound }
+      | ThisClassT (_, t, _, this_name) ->
+        let { free; _ } =
+          self#type_ cx pole { free; bound = Subst_name.Set.add this_name bound } t
+        in
+        { free; bound }
+      | _ -> super#type_ cx pole { bound; free } t
+  end
+
+let free_var_finder cx t =
+  let { free; _ } =
+    visitor#type_
+      cx
+      Polarity.Positive
+      { free = Subst_name.Set.empty; bound = Subst_name.Set.empty }
+      t
+  in
+  free
+
 (** Substitute bound type variables with associated types in a type. **)
+
+let new_name name fvs =
+  let (ct, n) =
+    match name with
+    | Subst_name.Synthetic n -> failwith (Utils_js.spf "Cannot rename synthetic name %s" n)
+    | Subst_name.Name n -> (0, n)
+    | Subst_name.Id (ct, n) -> (ct, n)
+  in
+  let rec loop ct =
+    let name = Subst_name.Id (ct, n) in
+    if not @@ Subst_name.Set.mem name fvs then
+      name
+    else
+      loop (ct + 1)
+  in
+  loop (ct + 1)
+
+let fvs_of_map map =
+  Subst_name.Map.fold
+    (fun _ t acc ->
+      match t with
+      | TypeSubst (_, fvs) -> Subst_name.Set.union fvs acc
+      | AlphaRename _ -> acc)
+    map
+    Subst_name.Set.empty
+
+let avoid_capture map name =
+  let fvs = fvs_of_map map in
+  if Subst_name.Set.mem name fvs then
+    let new_name =
+      new_name name (Subst_name.Map.fold (fun n _ acc -> Subst_name.Set.add n acc) map fvs)
+    in
+    (new_name, Subst_name.Map.add name (AlphaRename new_name) map)
+  else
+    (name, Subst_name.Map.remove name map)
+
 let substituter =
   object (self)
-    inherit [Type.t Subst_name.Map.t * bool * use_op option] Type_mapper.t_with_uses as super
+    inherit [replacement Subst_name.Map.t * bool * use_op option] Type_mapper.t_with_uses as super
+
+    val mutable change_id = false
 
     method tvar _cx _map_cx _r id = id
 
@@ -69,23 +153,31 @@ let substituter =
           match t with
           | GenericT { name = Subst_name.Synthetic name; _ } ->
             failwith (Utils_js.spf "Cannot substitute through synthetic name %s" name)
-          | GenericT { reason = tp_reason; name; _ } ->
+          | GenericT ({ reason = tp_reason; name; _ } as gen) ->
             let annot_loc = aloc_of_reason tp_reason in
             begin
               match Subst_name.Map.find_opt name map with
               | None -> super#type_ cx map_cx t
-              | Some (GenericT _ as param_t) ->
+              | Some (TypeSubst ((GenericT _ as param_t), _)) ->
+                change_id <- true;
                 mod_reason_of_t
                   (fun param_reason ->
                     annot_reason ~annot_loc @@ repos_reason annot_loc param_reason)
                   param_t
-              | Some param_t -> param_t
+              | Some (TypeSubst (param_t, _)) ->
+                change_id <- true;
+                param_t
+              | Some (AlphaRename name') ->
+                let t = GenericT { gen with name = name' } in
+                super#type_ cx map_cx t
             end
-          | DefT (reason, trust, PolyT { tparams_loc; tparams = xs; t_out = inner; _ }) ->
+          | DefT (reason, trust, PolyT { tparams_loc; tparams = xs; t_out = inner; id }) ->
+            let prev_change_id = change_id in
+            change_id <- false;
             let (xs, map, changed) =
               Nel.fold_left
                 (fun (xs, map, changed) typeparam ->
-                  let bound = self#type_ cx (map, force, use_op) typeparam.bound in
+                  let bound = self#type_ cx (map, force, use_op) typeparam.Type.bound in
                   let default =
                     match typeparam.default with
                     | None -> None
@@ -96,36 +188,36 @@ let substituter =
                       else
                         Some default_
                   in
-                  ( { typeparam with bound; default } :: xs,
-                    Subst_name.Map.remove typeparam.name map,
+                  let (name, map) = avoid_capture map typeparam.name in
+                  ( { typeparam with bound; default; name } :: xs,
+                    map,
                     changed || bound != typeparam.bound || default != typeparam.default
                   ))
                 ([], map, false)
                 xs
             in
             let xs = xs |> List.rev |> Nel.of_list in
-            (* The constructed list will always be nonempty because we fold over a nonempty list and add
-             * an element to the resulting list for every element in the original list. It's just a bit
-             * tricky to show this by construction while preserving the exact semantics of the above code.
-             *)
             let xs = Base.Option.value_exn xs in
             let inner_ = self#type_ cx (map, false, None) inner in
             let changed = changed || inner_ != inner in
+            let id =
+              if change_id then
+                Type.Poly.generate_id ()
+              else
+                id
+            in
+            change_id <- prev_change_id || change_id;
             if changed then
-              DefT
-                ( reason,
-                  trust,
-                  PolyT { tparams_loc; tparams = xs; t_out = inner_; id = Type.Poly.generate_id () }
-                )
+              DefT (reason, trust, PolyT { tparams_loc; tparams = xs; t_out = inner_; id })
             else
               t
           | ThisClassT (reason, this, i, this_name) ->
-            let map = Subst_name.Map.remove this_name map in
+            let (name, map) = avoid_capture map this_name in
             let this_ = self#type_ cx (map, force, use_op) this in
-            if this_ == this then
+            if this_ == this && name == this_name then
               t
             else
-              ThisClassT (reason, this_, i, this_name)
+              ThisClassT (reason, this_, i, name)
           | TypeAppT (r, op, c, ts) ->
             let c' = self#type_ cx map_cx c in
             let ts' = ListUtils.ident_map (self#type_ cx map_cx) ts in
@@ -187,9 +279,14 @@ let substituter =
     method eval_id _cx _map_cx _id = assert false
   end
 
-let subst cx ?use_op ?(force = true) map = substituter#type_ cx (map, force, use_op)
+let subst cx ?use_op ?(force = true) map ty =
+  let map = Subst_name.Map.map (fun t -> TypeSubst (t, free_var_finder cx t)) map in
+  substituter#type_ cx (map, force, use_op) ty
 
-let subst_class_bindings cx ?use_op ?(force = true) map =
-  ListUtils.ident_map (substituter#class_binding cx (map, force, use_op))
+let subst_class_bindings cx ?use_op ?(force = true) map cbs =
+  let map = Subst_name.Map.map (fun t -> TypeSubst (t, free_var_finder cx t)) map in
+  ListUtils.ident_map (substituter#class_binding cx (map, force, use_op)) cbs
 
-let subst_destructor cx ?use_op ?(force = true) map = substituter#destructor cx (map, force, use_op)
+let subst_destructor cx ?use_op ?(force = true) map des =
+  let map = Subst_name.Map.map (fun t -> TypeSubst (t, free_var_finder cx t)) map in
+  substituter#destructor cx (map, force, use_op) des
