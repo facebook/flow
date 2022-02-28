@@ -1215,14 +1215,9 @@ module Make
           ~this:(implicit_mixed_this reason)
           iface_sig
       in
-      Class_type_sig.check_with_generics
-        cx
-        (fun iface_sig ->
-          Class_type_sig.check_super cx reason iface_sig;
-          Class_type_sig.check_implements cx reason iface_sig;
-          Class_type_sig.check_methods cx reason iface_sig)
-        iface_sig
-      |> ignore;
+      Class_type_sig.check_super cx reason iface_sig;
+      Class_type_sig.check_implements cx reason iface_sig;
+      Class_type_sig.check_methods cx reason iface_sig;
       ( (loc, Class_type_sig.thistype cx iface_sig),
         Interface
           {

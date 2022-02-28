@@ -181,9 +181,6 @@ module type S = sig
       with its type **)
   val check_methods : Context.t -> Reason.reason -> t -> unit
 
-  (** Invoke callback with type parameters substituted by upper/lower bounds. *)
-  val check_with_generics : Context.t -> (t -> 'a) -> t -> 'a
-
   (** Evaluate the class body. *)
   val toplevels :
     Context.t ->

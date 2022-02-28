@@ -1032,56 +1032,33 @@ module Make (Flow : INPUT) : OUTPUT = struct
        * -----------
        * For each type parameter pair (ai:bi, ai':bi') we create the constraints:
        *
-       * bi[ai/Ai, ..., a_(i-1)/A_(i-1)] <: bi'[ai'/Ai, ..., a_(i-1)'/A_(i-1)]
+       * bi[ai, ..., a_(i-1)] <: bi'[ai'/ai, ..., a_(i-1)'/a_(i-1)]
        *
-       * where ai is a BoundT
-       *       Ai is the corresponding GenericT that is produced by [generic_bound]
-       *       t[a/b] denotes substitution of a by b in t
-       *
-       * Note that for the right-hand side, we maintain a map that maps primed
-       * params (a1', a2', etc.) to GenericTs of the left-hand side (A1, A2, etc.).
+       * where ai is a GenericT
        *)
-      let (_, _) =
+      let (map1, map2) =
         Base.List.fold2_exn
           (Nel.to_list params1)
           (Nel.to_list params2)
           ~init:(Subst_name.Map.empty, Subst_name.Map.empty)
           ~f:(fun (prev_map1, prev_map2) param1 param2 ->
-            let bound1 = Subst.subst cx ~use_op prev_map1 param1.bound in
             let bound2 = Subst.subst cx ~use_op prev_map2 param2.bound in
-            rec_flow cx trace (bound2, UseT (use_op, bound1));
-            let (_, map1) = Flow_js_utils.generic_bound cx prev_map1 param1 in
-            let map2 =
-              Subst_name.Map.add param2.name (Subst_name.Map.find param1.name map1) prev_map2
-            in
+            rec_flow cx trace (bound2, UseT (use_op, param1.bound));
+            let (gen, map1) = Flow_js_utils.generic_bound cx prev_map1 param1 in
+            let map2 = Subst_name.Map.add param2.name gen prev_map2 in
             (map1, map2)
         )
       in
 
       (* 2nd Premise
        * -----------
-       * We check t <: t' after substituting each bound ai with a GenericT type
-       * Ai, that is bound by bi.
+       * We check t <: t' after substituting ai' for ai
        *)
-      check_with_generics cx (Nel.to_list params1) (fun map1 ->
-          let inst1 = Subst.subst cx ~use_op map1 t1 in
-          let map2 =
-            Base.List.fold2_exn
-              (Nel.to_list params1)
-              (Nel.to_list params2)
-              ~init:Subst_name.Map.empty
-              ~f:(fun prev_map { name = n1; _ } { name = n2; _ } ->
-                Subst_name.Map.add n2 (Subst_name.Map.find n1 map1) prev_map
-            )
-          in
-          let inst2 = Subst.subst cx ~use_op map2 t2 in
-          rec_flow_t ~use_op cx trace (inst1, inst2)
-      )
+      let t1 = Subst.subst cx ~use_op map1 t1 in
+      let t2 = Subst.subst cx ~use_op map2 t2 in
+      rec_flow_t ~use_op cx trace (t1, t2)
     (* general case **)
-    | (_, DefT (_, _, PolyT { tparams = ids; t_out = t; _ })) ->
-      check_with_generics cx (Nel.to_list ids) (fun map_ ->
-          rec_flow cx trace (l, UseT (use_op, Subst.subst cx ~use_op map_ t))
-      )
+    | (_, DefT (_, _, PolyT { t_out = t; _ })) -> rec_flow cx trace (l, UseT (use_op, t))
     (* TODO: ideally we'd do the same when lower bounds flow to a
      * this-abstracted class, but fixing the class is easier; might need to
      * revisit *)

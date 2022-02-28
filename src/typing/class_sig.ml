@@ -330,53 +330,6 @@ struct
 
   let iter_methods f = iter_methods_with_name (fun _ -> f)
 
-  (* TODO? *)
-  let subst_field cx map (loc, polarity, field) =
-    ( loc,
-      polarity,
-      match field with
-      | Annot t -> Annot (Flow.subst cx map t)
-      | Infer (fsig, set_asts) -> Infer (F.subst cx map fsig, set_asts)
-    )
-
-  let subst_sig cx map s =
-    let subst_func_sig (loc, sig_, f, g) = (loc, F.subst cx map sig_, f, g) in
-    {
-      reason = s.reason;
-      fields = SMap.map (subst_field cx map) s.fields;
-      private_fields = SMap.map (subst_field cx map) s.private_fields;
-      proto_fields = SMap.map (subst_field cx map) s.proto_fields;
-      methods = SMap.map (Nel.map subst_func_sig) s.methods;
-      private_methods = SMap.map subst_func_sig s.private_methods;
-      getters = SMap.map subst_func_sig s.getters;
-      setters = SMap.map subst_func_sig s.setters;
-      calls = Base.List.map ~f:(Flow.subst cx map) s.calls;
-    }
-
-  let subst_typeapp cx map (loc, c, targs) =
-    let c = Flow.subst cx map c in
-    let targs = Base.Option.map ~f:(Base.List.map ~f:(Flow.subst cx map)) targs in
-    (loc, c, targs)
-
-  let subst_extends cx map = function
-    | Explicit tapp -> Explicit (subst_typeapp cx map tapp)
-    | Implicit { null = _ } as extends -> extends
-
-  let subst_super cx map = function
-    | Interface { inline; extends; callable } ->
-      Interface { inline; extends = Base.List.map ~f:(subst_typeapp cx map) extends; callable }
-    | Class { extends; mixins; implements; this_t; this_tparam } ->
-      let this_tparam_loc = aloc_of_reason this_tparam.Type.reason in
-      let this_t_annot_reason = annot_reason ~annot_loc:this_tparam_loc this_tparam.Type.reason in
-      Class
-        {
-          extends = subst_extends cx map extends;
-          mixins = Base.List.map ~f:(subst_typeapp cx map) mixins;
-          implements = Base.List.map ~f:(subst_typeapp cx map) implements;
-          this_t = Flow.reposition_reason cx this_t_annot_reason (Flow.subst cx map this_t);
-          this_tparam;
-        }
-
   let this_tparam x =
     match x.super with
     | Class { this_tparam; _ } -> Some this_tparam
@@ -414,26 +367,6 @@ struct
     (* Obviously there is at least one element since we just added `this_tp` *)
     let tparams_nel = Base.Option.value_exn (Nel.of_list tparams_lst) in
     Some (loc, tparams_nel)
-
-  let check_with_generics cx f x =
-    let tparams_with_this =
-      this_tparam x |> Base.Option.value_map ~default:x.tparams ~f:(tparams_with_this x.tparams)
-    in
-    Flow_js_utils.check_with_generics cx (Type.TypeParams.to_list tparams_with_this) (fun map ->
-        f
-          {
-            id = x.id;
-            tparams = x.tparams;
-            tparams_map = Subst_name.Map.map (Flow.subst cx map) x.tparams_map;
-            super = subst_super cx map x.super;
-            constructor =
-              Base.List.map
-                ~f:(fun (loc, sig_, g, h) -> (loc, F.subst cx map sig_, g, h))
-                x.constructor;
-            static = subst_sig cx map x.static;
-            instance = subst_sig cx map x.instance;
-          }
-    )
 
   let to_field (loc, polarity, field) =
     let t =
@@ -777,24 +710,18 @@ struct
       | Class { this_t; _ } -> this_t
     in
     let check_method msig ~static name id_loc =
-      (* The this parameter of the method, if annotated, must be a supertype
-         of the instance *)
-      F.check_with_generics
-        cx
-        (fun msig ->
-          Base.Option.iter
-            ~f:(fun this_param ->
-              let self =
-                if static then
-                  TypeUtil.class_type self
-                else
-                  self
-              in
-              let reason = mk_reason (RMethod (Some name)) id_loc in
-              let use_op = Op (ClassMethodDefinition { def = reason; name = def_reason }) in
-              Flow.flow cx (self, UseT (use_op, this_param)))
-            (F.this_param msig.F.fparams))
-        msig
+      Base.Option.iter
+        ~f:(fun this_param ->
+          let self =
+            if static then
+              TypeUtil.class_type self
+            else
+              self
+          in
+          let reason = mk_reason (RMethod (Some name)) id_loc in
+          let use_op = Op (ClassMethodDefinition { def = reason; name = def_reason }) in
+          Flow.flow cx (self, UseT (use_op, this_param)))
+        (F.this_param msig.F.fparams)
     in
 
     with_sig
@@ -943,9 +870,7 @@ struct
         let method_ this_recipe super ~set_asts f =
           let save_return = Abnormal.clear_saved Abnormal.Return in
           let save_throw = Abnormal.clear_saved Abnormal.Throw in
-          let (_, params_ast, body_ast, init_ast) =
-            f |> F.check_with_generics cx (F.toplevels None cx this_recipe super)
-          in
+          let (_, params_ast, body_ast, init_ast) = F.toplevels None cx this_recipe super f in
           set_asts (params_ast, body_ast, init_ast);
           ignore (Abnormal.swap_saved Abnormal.Return save_return);
           ignore (Abnormal.swap_saved Abnormal.Throw save_throw)
@@ -965,7 +890,7 @@ struct
               | Explicit (annot_loc, c, targs) ->
                 (* Eagerly specialize when there are no targs *)
                 (* TODO: We can also specialize when there are targs, because this
-                   code executes within check_with_generics. However, the type normalizer
+                   code is not instantiated. However, the type normalizer
                    expects a PolyT here. *)
                 let c =
                   if targs = None then

@@ -57,20 +57,6 @@ module type S = sig
 
   (** 1. Manipulation *)
 
-  (** Return a signature with types from provided map substituted.
-
-      Note that this function does not substitute type parameters declared by the
-      function itself, which may shadow the names of type parameters in the
-      provided map.
-
-      This signature's own type parameters will be subtituted by the
-      `check_with_generics` function. *)
-  val subst : Context.t -> Type.t Subst_name.Map.t -> (* type params map *)
-                                                      t -> t
-
-  (** Invoke callback with type parameters substituted by upper/lower bounds. *)
-  val check_with_generics : Context.t -> (t -> 'a) -> t -> 'a
-
   val toplevels :
     (ALoc.t, ALoc.t) Flow_ast.Identifier.t option ->
     (* id *)

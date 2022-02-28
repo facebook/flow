@@ -64,14 +64,6 @@ module Make (C : Config) = struct
 
   let this { this_; _ } = Base.Option.map ~f:C.this_type this_
 
-  let subst cx map { params_rev; rest; this_; reconstruct } =
-    {
-      params_rev = Base.List.map ~f:(C.subst_param cx map) params_rev;
-      rest = Base.Option.map ~f:(C.subst_rest cx map) rest;
-      this_ = Base.Option.map ~f:(C.subst_this cx map) this_;
-      reconstruct;
-    }
-
   let eval cx { params_rev; rest; this_; reconstruct } =
     let params = List.rev params_rev in
     let param_tasts_rev = List.rev_map (C.eval_param cx) params in

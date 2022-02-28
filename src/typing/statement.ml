@@ -629,13 +629,9 @@ struct
     in
     let interface_helper cx loc (iface_sig, self) =
       let def_reason = mk_reason (desc_of_t self) loc in
-      Class_type_sig.check_with_generics
-        cx
-        (fun iface_sig ->
-          Class_type_sig.check_super cx def_reason iface_sig;
-          Class_type_sig.check_implements cx def_reason iface_sig;
-          Class_type_sig.check_methods cx def_reason iface_sig)
-        iface_sig;
+      Class_type_sig.check_super cx def_reason iface_sig;
+      Class_type_sig.check_implements cx def_reason iface_sig;
+      Class_type_sig.check_methods cx def_reason iface_sig;
       let (t_internal, t) = Class_type_sig.classtype ~check_polarity:false cx iface_sig in
       Flow.unify cx self t_internal;
       t
@@ -1035,11 +1031,7 @@ struct
       Flow.(
         let () =
           match (underlying_t, super_t) with
-          | (Some l, Some u) ->
-            Flow_js_utils.check_with_generics cx (TypeParams.to_list tparams) (fun map_ ->
-                flow_t cx (subst cx map_ l, subst cx map_ u)
-            )
-            |> ignore
+          | (Some l, Some u) -> flow_t cx (l, u)
           | _ -> ()
         in
         Env.init_type cx name type_ name_loc;
@@ -8076,36 +8068,33 @@ struct
     let (class_sig, class_ast_f) = mk_class_sig cx name_loc reason self c in
     let instance_this_type = Class_stmt_sig.this_or_mixed_of_t ~static:false class_sig in
     let static_this_type = Class_stmt_sig.this_or_mixed_of_t ~static:true class_sig in
-    class_sig
-    |> Class_stmt_sig.check_with_generics cx (fun class_sig ->
-           let public_property_map =
-             Class_stmt_sig.fields_to_prop_map cx
-             @@ Class_stmt_sig.public_fields_of_signature ~static:false class_sig
-           in
-           let private_property_map =
-             Class_stmt_sig.fields_to_prop_map cx
-             @@ Class_stmt_sig.private_fields_of_signature ~static:false class_sig
-           in
-           Class_stmt_sig.check_super cx def_reason class_sig;
-           Class_stmt_sig.check_implements cx def_reason class_sig;
-           Class_stmt_sig.check_methods cx def_reason class_sig;
-           if this_in_class || not (Class_stmt_sig.This.is_bound_to_empty class_sig) then
-             Class_stmt_sig.toplevels
-               cx
-               class_sig
-               ~private_property_map
-               ~instance_this_type
-               ~static_this_type;
+    let public_property_map =
+      Class_stmt_sig.fields_to_prop_map cx
+      @@ Class_stmt_sig.public_fields_of_signature ~static:false class_sig
+    in
+    let private_property_map =
+      Class_stmt_sig.fields_to_prop_map cx
+      @@ Class_stmt_sig.private_fields_of_signature ~static:false class_sig
+    in
+    Class_stmt_sig.check_super cx def_reason class_sig;
+    Class_stmt_sig.check_implements cx def_reason class_sig;
+    Class_stmt_sig.check_methods cx def_reason class_sig;
+    if this_in_class || not (Class_stmt_sig.This.is_bound_to_empty class_sig) then
+      Class_stmt_sig.toplevels
+        cx
+        class_sig
+        ~private_property_map
+        ~instance_this_type
+        ~static_this_type;
 
-           let class_body = Ast.Class.((snd c.body).Body.body) in
-           Context.add_voidable_check
-             cx
-             {
-               Context.public_property_map;
-               private_property_map;
-               errors = Property_assignment.eval_property_assignment class_body;
-             }
-       );
+    let class_body = Ast.Class.((snd c.body).Body.body) in
+    Context.add_voidable_check
+      cx
+      {
+        Context.public_property_map;
+        private_property_map;
+        errors = Property_assignment.eval_property_assignment class_body;
+      };
     let (class_t_internal, class_t) = Class_stmt_sig.classtype cx class_sig in
     Flow.unify cx self class_t_internal;
     (class_t, class_ast_f general)
@@ -8812,9 +8801,10 @@ struct
              *
              *   T' ~> P<X>
              *
-             * which is potentially ill-formed since it appears outside a check_with_generics
-             * call (leads to Not_expect_bounds exception). We disallow this case
-             * and instead propagate the original return type T.
+             * which was previously ill-formed since it was outside a check_with_generics
+             * call (led to Not_expect_bounds exception). We disallow this case
+             * and instead propagate the original return type T; with the removal of
+             * check_with_generics this may no longer be necessary.
              *)
             let () =
               Loc_collections.ALocSet.iter
@@ -8863,8 +8853,7 @@ struct
     let save_return = Abnormal.clear_saved Abnormal.Return in
     let save_throw = Abnormal.clear_saved Abnormal.Throw in
     let (this_t, params_ast, body_ast, _) =
-      func_sig
-      |> Func_stmt_sig.check_with_generics cx (Func_stmt_sig.toplevels id cx this_recipe super)
+      Func_stmt_sig.toplevels id cx this_recipe super func_sig
     in
     ignore (Abnormal.swap_saved Abnormal.Return save_return);
     ignore (Abnormal.swap_saved Abnormal.Throw save_throw);
@@ -8906,9 +8895,7 @@ struct
         else
           Type.implicit_mixed_this reason
       in
-      (* If `this` is a bound type variable, we cannot create the type here, and
-         instead must wait until `check_with_generics` to instantiate the type.
-         However, the default behavior of `this` still depends on how it
+      (* The default behavior of `this` still depends on how it
          was created, so we must provide the recipe based on where `function_decl`
          is invoked. *)
       let t =

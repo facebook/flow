@@ -42,8 +42,6 @@ module type S = sig
 
   val this : t -> Type.t option
 
-  val subst : Context.t -> Type.t Subst_name.Map.t -> t -> t
-
   val eval : Context.t -> t -> (ALoc.t * Type.t) ast option
 end
 

@@ -559,21 +559,11 @@ end = struct
     if Env.evaluate_type_destructors env || force_eval then
       let cx = Env.get_cx env in
       Recursive.with_cache (EvalKey id) ~f:(fun () ->
-          Flow_js_utils.check_with_generics cx (List.rev env.Env.tparams_rev) (fun map_ ->
-              let trace = Trace.dummy_trace in
-              let t' = Subst.subst cx map_ t in
-              let d' = Subst.subst_destructor cx map_ d in
-              let id' =
-                if t == t' && d == d' then
-                  id
-                else
-                  Type.Eval.generate_id ()
-              in
-              let (_, tout) = Flow_js.mk_type_destructor cx ~trace use_op reason t' d' id' in
-              match Lookahead.peek env tout with
-              | Lookahead.LowerBounds [t] -> cont ~env t
-              | _ -> default ~env tout
-          )
+          let trace = Trace.dummy_trace in
+          let (_, tout) = Flow_js.mk_type_destructor cx ~trace use_op reason t d id in
+          match Lookahead.peek env tout with
+          | Lookahead.LowerBounds [t] -> cont ~env t
+          | _ -> default ~env tout
       )
     else
       non_eval ~env t d

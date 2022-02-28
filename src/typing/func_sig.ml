@@ -70,39 +70,6 @@ struct
       knot = MixedT.why reason |> with_trust bogus_trust;
     }
 
-  let subst cx map x =
-    let { tparams; tparams_map; fparams; return_t; _ } = x in
-    (* Remove shadowed type params from `map`, but allow bounds/defaults to be
-       substituted if they refer to a type param before it is shadowed. *)
-    let tparams =
-      tparams
-      |> TypeParams.map (fun tp ->
-             let bound = Flow.subst cx map tp.bound in
-             let default = Base.Option.map ~f:(Flow.subst cx map) tp.default in
-             { tp with bound; default }
-         )
-    in
-    let map =
-      TypeParams.to_list tparams
-      |> List.fold_left (fun map tp -> Subst_name.Map.remove tp.name map) map
-    in
-    let tparams_map = Subst_name.Map.map (Flow.subst cx map) tparams_map in
-    let fparams = F.subst cx map fparams in
-    let return_t = TypeUtil.map_annotated_or_inferred (Flow.subst cx map) return_t in
-    { x with tparams; tparams_map; fparams; return_t }
-
-  let check_with_generics cx f x =
-    let { tparams; tparams_map; fparams; return_t; _ } = x in
-    Flow_js_utils.check_with_generics cx (tparams |> TypeParams.to_list) (fun map ->
-        f
-          {
-            x with
-            tparams_map = Subst_name.Map.map (Flow.subst cx map) tparams_map;
-            fparams = F.subst cx map fparams;
-            return_t = TypeUtil.map_annotated_or_inferred (Flow.subst cx map) return_t;
-          }
-    )
-
   let functiontype cx this_default { reason; kind; tparams; fparams; return_t; knot; _ } =
     let make_trust = Context.trust_constructor cx in
     let static =
