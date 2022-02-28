@@ -71,7 +71,6 @@ module rec TypeTerm : sig
        substitution, but otherwise works in much the same way as usual. *)
     | EvalT of t * defer_use_t * Eval.id
     (* bound type variable *)
-    | BoundT of reason * string
     | GenericT of {
         reason: reason;
         name: string;
@@ -3442,7 +3441,6 @@ let string_of_ctor = function
   | OpenT _ -> "OpenT"
   | AnyT _ -> "AnyT"
   | AnnotT _ -> "AnnotT"
-  | BoundT _ -> "BoundT"
   | InternalT (ChoiceKitT (_, tool)) ->
     spf
       "ChoiceKitT %s"

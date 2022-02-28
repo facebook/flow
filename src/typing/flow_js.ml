@@ -120,25 +120,6 @@ end = struct
     f count
 end
 
-exception Not_expect_bound of string
-
-(* Sometimes we don't expect to see type parameters, e.g. when they should have
-   been substituted away. *)
-let not_expect_bound cx t =
-  match t with
-  | BoundT _ ->
-    raise
-      (Not_expect_bound
-         (spf
-            "Did not expect %s : %s"
-            (string_of_ctor t)
-            (Debug_js.string_of_reason cx (reason_of_t t))
-         )
-      )
-  | _ -> ()
-
-let not_expect_bound_use cx t = lift_to_use (not_expect_bound cx) t
-
 (* Sometimes we expect to see only proper def types. Proper def types make sense
    as use types. *)
 let expect_proper_def t =
@@ -516,12 +497,6 @@ struct
 
       (* Expect that l is a def type. On the other hand, u may be a use type or a
          def type: the latter typically when we have annotations. *)
-
-      (* Type parameters should always be substituted out, and as such they should
-         never appear "exposed" in flows. (They can still appear bound inside
-         polymorphic definitions.) *)
-      not_expect_bound cx l;
-      not_expect_bound_use cx u;
 
       (* Types that are classified as def types but don't make sense as use types
          should not appear as use types. *)
@@ -6176,7 +6151,6 @@ struct
     | ThisTypeAppT _ ->
       false
     (* Should never occur as the lower bound of any *)
-    | BoundT _
     | InternalT (ChoiceKitT _)
     | InternalT (ExtendsT _)
     | ModuleT _ ->
@@ -8336,8 +8310,6 @@ struct
          flows should also be enforced here. In particular, we don't expect t1 or t2
          to be type parameters, and we don't expect t1 or t2 to be def types that
          don't make sense as use types. See __flow for more details. *)
-      not_expect_bound cx t1;
-      not_expect_bound cx t1;
       expect_proper_def t1;
       expect_proper_def t2;
 
@@ -9381,7 +9353,7 @@ struct
         )
       | _ ->
         (* If this is not a tvar, then it should be 0->1 (see TODO). Note that
-           BoundT types potentially appear unsubstituted at this point, so we can't
+           GenericT types potentially appear unsubstituted at this point, so we can't
            emit constraints even if we wanted to. *)
         (* TODO: Even in this case, the type might recursively include tvars, which
            allows them to widen unexpectedly and may cause unpreditable behavior. *)

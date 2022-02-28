@@ -14,12 +14,11 @@ module Kit (Flow : Flow_common.S) : Flow_common.CHECK_POLARITY = struct
   (* TODO: flesh this out *)
   let rec check_polarity cx ?trace tparams polarity = function
     (* base case *)
-    | (BoundT (reason, name) | GenericT { reason; name; _ }) as t ->
+    | GenericT { reason; name; bound; _ } ->
       begin
-        match (SMap.find_opt name tparams, t) with
-        | (None, GenericT { bound; _ }) -> check_polarity cx ?trace tparams polarity bound
-        | (None, _) -> ()
-        | (Some tp, _) ->
+        match SMap.find_opt name tparams with
+        | None -> check_polarity cx ?trace tparams polarity bound
+        | Some tp ->
           if not (Polarity.compat (tp.polarity, polarity)) then
             Flow_js_utils.add_output
               cx
@@ -28,14 +27,14 @@ module Kit (Flow : Flow_common.S) : Flow_common.CHECK_POLARITY = struct
                  { reason; name; expected_polarity = tp.polarity; actual_polarity = polarity }
               )
       end
-    (* No need to walk into tvars, since we're looking for BoundT types, which
+    (* No need to walk into tvars, since we're looking for GenericT types, which
      * will certainly never appear in the bounds of a tvar. *)
     | OpenT _ -> ()
     (* This type can appear in an annotation due to the $Pred type constructor,
-     * but it won't contain a BoundT. *)
+     * but it won't contain a GenericT. *)
     | OpenPredT _ -> ()
     (* The annot will resolve to some type, but it doesn't matter because that
-     * type will certainly not contain a BoundT. *)
+     * type will certainly not contain a GenericT. *)
     | AnnotT _ -> ()
     | AnyT _
     | DefT (_, _, BoolT _)
@@ -85,11 +84,11 @@ module Kit (Flow : Flow_common.S) : Flow_common.CHECK_POLARITY = struct
       check_polarity_propmap cx ?trace ~skip_ctor:true tparams polarity proto_props;
       Base.Option.iter call_t ~f:(check_polarity_call cx ?trace tparams polarity)
     (* We can ignore the statics and prototype of function annotations, since
-     * they will always be "uninteresting," never containing a BoundT. *)
+     * they will always be "uninteresting," never containing a GenericT. *)
     | DefT (_, _, FunT (_static, _prototype, f)) ->
       let {
         (* Similarly, we can ignore this types, which can not be explicitly
-         * provided, and thus will not contain a BoundT. *)
+         * provided, and thus will not contain a GenericT. *)
         this_t = _;
         params;
         rest_param;
@@ -141,10 +140,10 @@ module Kit (Flow : Flow_common.S) : Flow_common.CHECK_POLARITY = struct
       ()
     | ThisTypeAppT (_, c, _, Some targs)
     | TypeAppT (_, _, c, targs) ->
-      (* Type arguments in a typeapp might contain a BoundT, but the root type
+      (* Type arguments in a typeapp might contain a GenericT, but the root type
        * which defines the type parameters is not necessarily resolved at this
        * point. We need to know the polarity of the type parameters in order to
-       * know the position of any found BoundTs. This constraint will continue
+       * know the position of any found GenericTs. This constraint will continue
        * checking the type args once the root type is resolved. *)
       let reason = reason_of_t c in
       Flow.flow_opt cx ?trace (c, VarianceCheckT (reason, tparams, targs, polarity))

@@ -257,7 +257,6 @@ let extract ~include_proto_members ~cx ~typed_ast ~file_sig scheme =
       ~genv
       scheme
   with
-  | exception Flow_js.Not_expect_bound x -> Error x
   | Error error -> Error (Ty_normalizer.error_to_string error)
   | Ok (Ty.Any _) -> Error "not enough type information to extract members"
   | Ok this_ty ->

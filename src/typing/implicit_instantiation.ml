@@ -78,7 +78,7 @@ module Make (Observer : OBSERVER) : KIT with type output = Observer.output = str
 
       method! type_ cx pole ((marked, tparam_names) as acc) =
         function
-        | (BoundT (_, s) | GenericT { name = s; _ }) as t ->
+        | GenericT { name = s; _ } as t ->
           if SSet.mem s tparam_names then
             match Marked.add s pole marked with
             | None -> acc

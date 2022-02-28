@@ -67,18 +67,6 @@ let substituter =
       else
         let t_out =
           match t with
-          | BoundT (tp_reason, name) ->
-            let annot_loc = aloc_of_reason tp_reason in
-            begin
-              match SMap.find_opt name map with
-              | None -> t
-              | Some (GenericT _ as param_t) ->
-                mod_reason_of_t
-                  (fun param_reason ->
-                    annot_reason ~annot_loc @@ repos_reason annot_loc param_reason)
-                  param_t
-              | Some param_t -> param_t
-            end
           | GenericT { reason = tp_reason; name; _ } ->
             let annot_loc = aloc_of_reason tp_reason in
             begin

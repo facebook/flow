@@ -50,7 +50,6 @@ class ['a] t =
           self#eval_id cx pole acc id
         in
         acc
-      | BoundT _ -> acc
       | GenericT { bound; _ } -> self#type_ cx pole acc bound
       | ExactT (_, t) -> self#type_ cx pole acc t
       | ShapeT (_, t) -> self#type_ cx pole acc t

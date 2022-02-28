@@ -8725,9 +8725,7 @@ struct
               let acc = super#type_ cx pole acc t in
               tparams <- old_tparams;
               acc
-            | BoundT (_, name)
-            | GenericT { name; _ }
-              when not (List.exists (fun x -> x = name) tparams) ->
+            | GenericT { name; _ } when not (List.exists (fun x -> x = name) tparams) ->
               Loc_collections.ALocSet.add (TypeUtil.loc_of_t t) acc
             | _ -> super#type_ cx pole acc t
         end

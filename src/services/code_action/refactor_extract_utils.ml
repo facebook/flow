@@ -889,7 +889,6 @@ module TypeSynthesizer = struct
       method! type_ cx pole acc ty =
         let open Type in
         match ty with
-        | BoundT (_, name) -> SSet.add name acc
         | GenericT { id; _ } -> Generic.fold_ids ~f:(fun _ name acc -> SSet.add name acc) ~acc id
         | _ -> super#type_ cx pole acc ty
     end
