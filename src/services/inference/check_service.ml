@@ -254,7 +254,7 @@ let mk_check_file ~options ~reader ~cache () =
         lazy
           (Bin.read_hashed Bin.read_packed buf pos
           |> Pack.map_packed aloc
-          |> Merge.merge (Lazy.force file_rec)
+          |> Merge.merge SMap.empty (Lazy.force file_rec)
           )
       in
       let es_export buf pos =
@@ -331,7 +331,11 @@ let mk_check_file ~options ~reader ~cache () =
     in
 
     let pattern_def file_rec buf pos =
-      lazy (Bin.read_packed buf pos |> Pack.map_packed aloc |> Merge.merge (Lazy.force file_rec))
+      lazy
+        (Bin.read_packed buf pos
+        |> Pack.map_packed aloc
+        |> Merge.merge SMap.empty (Lazy.force file_rec)
+        )
     in
 
     let pattern file_rec buf pos =

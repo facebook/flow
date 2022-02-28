@@ -1043,8 +1043,19 @@ tparam_import.js
 
 {
   "expressions":{
-    "untainted_count":3,
+    "untainted_count":1,
     "untainted_locs":[
+      {
+        "source":"tparam_import.js",
+        "type":"SourceFile",
+        "start":{"line":5,"column":8,"offset":60},
+        "end":{"line":8,"column":2,"offset":103}
+      }
+    ],
+    "tainted_count":0,
+    "tainted_locs":[],
+    "uncovered_count":2,
+    "uncovered_locs":[
       {
         "source":"tparam_import.js",
         "type":"SourceFile",
@@ -1054,23 +1065,13 @@ tparam_import.js
       {
         "source":"tparam_import.js",
         "type":"SourceFile",
-        "start":{"line":5,"column":8,"offset":60},
-        "end":{"line":8,"column":2,"offset":103}
-      },
-      {
-        "source":"tparam_import.js",
-        "type":"SourceFile",
         "start":{"line":10,"column":8,"offset":112},
         "end":{"line":10,"column":42,"offset":147}
       }
     ],
-    "tainted_count":0,
-    "tainted_locs":[],
-    "uncovered_count":0,
-    "uncovered_locs":[],
     "empty_count":0,
     "empty_locs":[]
   }
 }
-Covered: 100.00% (3 of 3 expressions)
+Covered: 33.33% (1 of 3 expressions)
 

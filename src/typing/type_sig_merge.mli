@@ -34,6 +34,8 @@ type file = {
   pattern_defs: Type.t Lazy.t Pattern_defs.t;
 }
 
+type tparams_map = Type.t SMap.t
+
 val def_reason : (ALoc.t, 'b) Type_sig.def -> Reason.t
 
 val remote_ref_reason : ALoc.t Pack.remote_ref -> Reason.t
@@ -52,4 +54,4 @@ val merge_def : file -> Reason.t -> (ALoc.t, ALoc.t Pack.packed) Type_sig.def ->
 
 val merge_resource_module_t : Context.t -> string -> ALoc.t -> Type.t
 
-val merge : file -> ALoc.t Pack.packed -> Type.t
+val merge : tparams_map -> file -> ALoc.t Pack.packed -> Type.t
