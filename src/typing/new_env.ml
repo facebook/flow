@@ -120,12 +120,10 @@ module New_env = struct
       let env' = Loc_env.update_reason env loc (TypeUtil.reason_of_t t) in
       Context.set_environment cx env'
 
-  exception LocEnvEntryNotFound of ALoc.t
-
-  let find_var { Env_api.env_values; _ } loc =
+  let find_var_opt { Env_api.env_values; _ } loc =
     match ALocMap.find_opt loc env_values with
-    | None -> raise (LocEnvEntryNotFound loc)
-    | Some x -> x
+    | Some x -> Ok x
+    | None -> Error loc
 
   let find_refi { Env_api.refinement_of_id; _ } = refinement_of_id
 
@@ -182,7 +180,7 @@ module New_env = struct
       | InstanceOfR (loc, _) ->
         (* Instanceof refinements store the loc they check against, which is a read in the env *)
         let reason = mk_reason (RCustom "RHS of `instanceof` operator") loc in
-        let t = read_entry ~for_type:false cx loc reason in
+        let t = read_entry_exn ~for_type:false cx loc reason in
         Flow_js.flow cx (t, AssertInstanceofRHST reason);
         LeftP (InstanceofTest, t)
       | IsArrayR -> ArrP
@@ -202,7 +200,7 @@ module New_env = struct
       | LatentR { func = (func_loc, _); index } ->
         (* Latent refinements store the loc of the callee, which is a read in the env *)
         let reason = mk_reason (RCustom "Function call") func_loc in
-        let t = read_entry ~for_type:false cx func_loc reason in
+        let t = read_entry_exn ~for_type:false cx func_loc reason in
         LatentP (t, index)
       | PropExistsR { propname; loc } ->
         PropExistsP (propname, mk_reason (RProperty (Some (OrdinaryName propname))) loc)
@@ -275,16 +273,23 @@ module New_env = struct
       |> phi cx reason
       |> refine cx reason loc refi
     in
-    let { Env_api.def_loc; write_locs; val_kind; name } = find_var var_info loc in
-    match (val_kind, name, def_loc) with
-    | (Some Env_api.Type, Some name, Some def_loc) when not for_type ->
-      Flow_js.add_output
-        cx
-        (Error_message.EBindingError
-           (Error_message.ETypeInValuePosition, loc, OrdinaryName name, def_loc)
-        );
-      AnyT.at (AnyError None) loc
-    | _ -> type_of_state write_locs None
+    match find_var_opt var_info loc with
+    | Error loc -> Error loc
+    | Ok { Env_api.def_loc; write_locs; val_kind; name } ->
+      (match (val_kind, name, def_loc) with
+      | (Some Env_api.Type, Some name, Some def_loc) when not for_type ->
+        Flow_js.add_output
+          cx
+          (Error_message.EBindingError
+             (Error_message.ETypeInValuePosition, loc, OrdinaryName name, def_loc)
+          );
+        Ok (AnyT.at (AnyError None) loc)
+      | _ -> Ok (type_of_state write_locs None))
+
+  and read_entry_exn ~for_type cx loc reason =
+    match read_entry ~for_type cx loc reason with
+    | Error loc -> failwith (Utils_js.spf "LocEnvEntryNotFound %s" (Reason.string_of_aloc loc))
+    | Ok x -> x
 
   let get_this_type_param_if_necessary ~otherwise name loc =
     if name = OrdinaryName "this" then
@@ -296,8 +301,9 @@ module New_env = struct
 
   let get_refinement cx key loc =
     let reason = mk_reason (Key.reason_desc key) loc in
-    try Some (read_entry ~for_type:false cx loc reason) with
-    | LocEnvEntryNotFound _ -> None
+    match read_entry ~for_type:false cx loc reason with
+    | Ok x -> Some x
+    | Error _ -> None
 
   let get_var ?(lookup_mode = ForValue) cx name loc =
     let for_type =
@@ -308,7 +314,7 @@ module New_env = struct
     ignore lookup_mode;
     let name = OrdinaryName name in
     get_this_type_param_if_necessary name loc ~otherwise:(fun () ->
-        read_entry ~for_type cx loc (mk_reason (RIdentifier name) loc)
+        read_entry_exn ~for_type cx loc (mk_reason (RIdentifier name) loc)
     )
 
   let query_var ?(lookup_mode = ForValue) cx name ?desc loc =
@@ -328,7 +334,7 @@ module New_env = struct
             | ForType -> true
             | _ -> false
           in
-          read_entry ~for_type cx loc (mk_reason desc loc)
+          read_entry_exn ~for_type cx loc (mk_reason desc loc)
       )
 
   let var_ref ?(lookup_mode = ForValue) cx ?desc name loc =
@@ -353,11 +359,9 @@ module New_env = struct
         states
       |> not
     in
-    try
-      let { Env_api.def_loc = _; write_locs; val_kind = _; name = _ } = find_var var_info loc in
-      local_def_exists write_locs
-    with
-    | LocEnvEntryNotFound _ -> false
+    match find_var_opt var_info loc with
+    | Ok { Env_api.def_loc = _; write_locs; val_kind = _; name = _ } -> local_def_exists write_locs
+    | Error _ -> false
 
   let local_scope_entry_exists cx loc name = not (is_global_var cx name loc)
 
@@ -668,8 +672,9 @@ module New_env = struct
       | None -> RCustom "discriminant of switch"
       | Some refinement_key -> Key.reason_desc refinement_key
     in
-    try Some (read_entry ~for_type:false cx switch_loc (mk_reason reason_desc switch_loc)) with
-    | LocEnvEntryNotFound _ -> None
+    match read_entry ~for_type:false cx switch_loc (mk_reason reason_desc switch_loc) with
+    | Ok t -> Some t
+    | Error _ -> None
 
   let init_import ~lookup_mode:_ cx _name loc t = set_env_entry ~use_op:unknown_use cx t loc
 end
