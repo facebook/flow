@@ -137,6 +137,10 @@ let detect_sketchy_null_checks cx master_cx =
                ~default:cur_checks
         (* Ignore AnyTs for sketchy null checks; otherwise they'd always trigger the lint. *)
         | AnyT _ -> cur_checks
+        | GenericT { bound = t; _ }
+        | OpaqueT (_, { underlying_t = Some t; _ })
+        | OpaqueT (_, { underlying_t = None; super_t = Some t; _ }) ->
+          make_checks seen cur_checks loc t
         | MaybeT (r, t) ->
           let acc = make_checks seen cur_checks loc t in
           let acc = make_checks seen acc loc (NullT.why r (Trust.bogus_trust ())) in

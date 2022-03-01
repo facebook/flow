@@ -34,6 +34,60 @@ References:
                  ^^^^^^^ [2]
 
 
+Error ------------------------------------------------------------------------------------------------------- new.js:7:9
+
+Sketchy null check on number [1] which is potentially 0. Perhaps you meant to check for null or undefined [2]?
+[sketchy-null-number]
+
+   new.js:7:9
+   7|     if (x) {}
+              ^
+
+References:
+   new.js:6:15
+   6| function f<X: number>(x: ?X, t: ?T, s: ?S) {
+                    ^^^^^^ [1]
+   new.js:6:26
+   6| function f<X: number>(x: ?X, t: ?T, s: ?S) {
+                               ^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------------ new.js:8:14
+
+Sketchy null check on number [1] which is potentially 0. Perhaps you meant to check for null or undefined [2]?
+[sketchy-null-number]
+
+   new.js:8:14
+   8|     else if (t) { }
+                   ^
+
+References:
+   new.js:3:17
+   3| opaque type T = number;
+                      ^^^^^^ [1]
+   new.js:6:33
+   6| function f<X: number>(x: ?X, t: ?T, s: ?S) {
+                                      ^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------------ new.js:9:14
+
+Sketchy null check on number [1] which is potentially 0. Perhaps you meant to check for null or undefined [2]?
+[sketchy-null-number]
+
+   new.js:9:14
+   9|     else if (s) { }
+                   ^
+
+References:
+   new.js:4:24
+   4| declare opaque type S: number;
+                             ^^^^^^ [1]
+   new.js:6:40
+   6| function f<X: number>(x: ?X, t: ?T, s: ?S) {
+                                             ^^ [2]
+
+
 Error ------------------------------------------------------------------------------------------ partial_across_B.js:4:6
 
 Sketchy null check on string [1] which is potentially an empty string. Perhaps you meant to check for null or
@@ -350,4 +404,4 @@ References:
 
 
 
-Found 21 errors
+Found 24 errors
