@@ -30,6 +30,19 @@ let initialize ({ types; _ } as info) loc t =
   in
   { info with types }
 
+let update_reason ({ types; _ } as info) loc reason =
+  let f _ = reason in
+  let types =
+    ALocMap.update
+      loc
+      (function
+        | Some (Type.Annotated t) -> Some (Type.Annotated (TypeUtil.mod_reason_of_t f t))
+        | Some (Type.Inferred t) -> Some (Type.Inferred (TypeUtil.mod_reason_of_t f t))
+        | None -> failwith "Cannot update reason on non-existent entry")
+      types
+  in
+  { info with types }
+
 let find_write { types; _ } loc =
   ALocMap.find_opt loc types |> Base.Option.map ~f:TypeUtil.type_t_of_annotated_or_inferred
 

@@ -257,8 +257,22 @@ let detect_matching_props_violations cx =
       Flow_js.flow cx (MatchingPropT (reason, key, sentinel), UseT (use_op, drop_generic obj))
     | _ -> ()
   in
-  let matching_props = Context.matching_props cx in
-  List.iter step matching_props
+  match Context.env_mode cx with
+  | Options.SSAEnv _ ->
+    let matching_props = Context.new_env_matching_props cx in
+    List.iter
+      (fun (prop_name, other_loc, obj_loc) ->
+        let env = Context.environment cx in
+        let other_t_opt = Loc_env.find_write env other_loc in
+        let obj_t_opt = Loc_env.find_write env obj_loc in
+        match (other_t_opt, obj_t_opt) with
+        | (Some other_t, Some obj_t) ->
+          step (TypeUtil.reason_of_t other_t, prop_name, other_t, obj_t)
+        | _ -> failwith "Missing typing information for matching props test.")
+      matching_props
+  | _ ->
+    let matching_props = Context.matching_props cx in
+    List.iter step matching_props
 
 let detect_literal_subtypes =
   let lb_visitor = new resolver_visitor in

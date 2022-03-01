@@ -176,6 +176,7 @@ type component_t = {
   mutable literal_subtypes: (Type.t * Type.use_t) list;
   mutable new_env_literal_subtypes: (ALoc.t * Env_api.new_env_literal_check) list;
   mutable matching_props: (Reason.reason * string * Type.t * Type.t) list;
+  mutable new_env_matching_props: (string * ALoc.t * ALoc.t) list;
   mutable implicit_instantiation_checks: Implicit_instantiation_check.t list;
   mutable inferred_indexers: Type.dicttype list ALocMap.t;
   mutable constrained_writes: (Type.t * Type.use_t) list;
@@ -316,6 +317,7 @@ let make_ccx master_cx =
     all_unresolved = IMap.empty;
     type_asserts_map = ALocMap.empty;
     matching_props = [];
+    new_env_matching_props = [];
     literal_subtypes = [];
     new_env_literal_subtypes = [];
     constrained_writes = [];
@@ -546,6 +548,8 @@ let type_graph cx = cx.ccx.type_graph
 
 let matching_props cx = cx.ccx.matching_props
 
+let new_env_matching_props cx = cx.ccx.new_env_matching_props
+
 let trust_mode cx = cx.metadata.trust_mode
 
 let type_asserts cx = cx.metadata.type_asserts
@@ -652,6 +656,9 @@ let add_trust_var cx id bounds =
 let add_type_assert cx k v = cx.ccx.type_asserts_map <- ALocMap.add k v cx.ccx.type_asserts_map
 
 let add_matching_props cx c = cx.ccx.matching_props <- c :: cx.ccx.matching_props
+
+let add_new_env_matching_props cx c =
+  cx.ccx.new_env_matching_props <- c :: cx.ccx.new_env_matching_props
 
 let add_literal_subtypes cx c = cx.ccx.literal_subtypes <- c :: cx.ccx.literal_subtypes
 

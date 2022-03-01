@@ -115,7 +115,10 @@ module New_env = struct
     let env = Context.environment cx in
     match Loc_env.find_write env loc with
     | None -> ()
-    | Some w -> Flow_js.unify cx ~use_op:unknown_use t w
+    | Some w ->
+      Flow_js.unify cx ~use_op:unknown_use t w;
+      let env' = Loc_env.update_reason env loc (TypeUtil.reason_of_t t) in
+      Context.set_environment cx env'
 
   exception LocEnvEntryNotFound of ALoc.t
 

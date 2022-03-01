@@ -63,6 +63,8 @@ module type C = sig
   val env_mode : t -> Options.env_mode
 
   val add_new_env_literal_subtypes : t -> ALoc.t * Env_api.new_env_literal_check -> unit
+
+  val add_new_env_matching_props : t -> string * ALoc.t * ALoc.t -> unit
 end
 
 module type F = sig
@@ -2794,7 +2796,7 @@ module Make
         | ( _,
             Expression.Member
               {
-                Expression.Member._object;
+                Expression.Member._object = (obj_loc, _) as _object;
                 property =
                   ( Expression.Member.PropertyIdentifier (ploc, { Identifier.name = prop_name; _ })
                   | Expression.Member.PropertyExpression
@@ -2807,8 +2809,13 @@ module Make
           | Some refinement_key ->
             let refinement = SentinelR (prop_name, other_loc) in
             let reason = mk_reason (RProperty (Some (OrdinaryName prop_name))) ploc in
+            let obj_reason = mk_reason (RefinementKey.reason_desc refinement_key) obj_loc in
+            Context.add_new_env_matching_props cx (prop_name, other_loc, obj_loc);
             let write_entries =
-              L.LMap.add other_loc (Env_api.AssigningWrite reason) env_state.write_entries
+              L.LMap.add
+                obj_loc
+                (Env_api.AssigningWrite obj_reason)
+                (L.LMap.add other_loc (Env_api.AssigningWrite reason) env_state.write_entries)
             in
             env_state <- { env_state with write_entries };
             let refinement =

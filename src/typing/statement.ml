@@ -7013,6 +7013,7 @@ struct
             None
           | (true, Some name) ->
             Env.record_expression_type_if_needed cx (aloc_of_reason (reason_of_t val_t)) val_t;
+            Env.record_expression_type_if_needed cx (aloc_of_reason (reason_of_t obj_t)) obj_t;
             let pred = LeftP (SentinelProp prop_name, val_t) in
             Some (name, obj_t, pred, sense)
         in
