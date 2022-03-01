@@ -105,10 +105,13 @@ let rec not_exists t =
     DefT (r, trust, EmptyT)
   | DefT (reason, trust, ClassT _) -> DefT (reason, trust, EmptyT)
   (* unknown boolies become falsy *)
-  | MaybeT (r, _) ->
+  | MaybeT (r, t) ->
     UnionT
       ( r,
-        UnionRep.make (Trust.bogus_trust () |> NullT.why r) (Trust.bogus_trust () |> VoidT.why r) []
+        UnionRep.make
+          (Trust.bogus_trust () |> NullT.why r)
+          (Trust.bogus_trust () |> VoidT.why r)
+          [not_exists t]
       )
   | DefT (r, trust, BoolT None) -> DefT (r, trust, BoolT (Some false))
   | DefT (r, trust, StrT AnyLiteral) -> DefT (r, trust, StrT (Literal (None, OrdinaryName "")))

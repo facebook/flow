@@ -3921,9 +3921,10 @@ struct
              that it has a truthy type (that's what the "ExistsP" predicate does). If we're
              deeper in the chain, then cond will be None, and we only care if the expression
              is null or undefined, not if it's false/0/"". *)
-          if Base.Option.is_some cond then
+          if Base.Option.is_some cond then (
+            Context.add_exists_check cx loc lhs_t;
             ExistsP (Some loc)
-          else
+          ) else
             NotP MaybeP
         in
         match Refinement.key ~allow_optional:true expr with
@@ -6933,10 +6934,6 @@ struct
   and predicates_of_condition cx ~cond e =
     let open Ast in
     let open Expression in
-    (* refinement key if expr is eligible, along with unrefined type *)
-    let refinable_lvalue ~allow_optional e =
-      (Refinement.key ~allow_optional e, condition ~cond cx e)
-    in
     (* package empty result (no refinements derived) from test type *)
     let empty_result test_tast = (test_tast, Key_map.empty, Key_map.empty, Key_map.empty) in
     let add_predicate key unrefined_t pred sense (test_tast, ps, notps, tmap) =
@@ -7526,6 +7523,7 @@ struct
     | (_, Assignment { Assignment.left = (loc, Ast.Pattern.Identifier id); _ }) ->
       let (((_, expr), _) as tast) = expression cx ~hint:None e in
       let id = id.Ast.Pattern.Identifier.name in
+      Context.add_exists_check cx loc expr;
       (match Refinement.key ~allow_optional:true (loc, Ast.Expression.Identifier id) with
       | Some name -> result tast name expr (ExistsP (Some loc)) true
       | None -> empty_result tast)
@@ -7680,9 +7678,11 @@ struct
     (* ids *)
     | (loc, This _)
     | (loc, Identifier _) ->
-      (match refinable_lvalue ~allow_optional:true e with
-      | (Some name, (((_, t), _) as e)) -> result e name t (ExistsP (Some loc)) true
-      | (None, e) -> empty_result e)
+      let (((_, t), _) as e) = condition ~cond cx e in
+      Context.add_exists_check cx loc t;
+      (match Refinement.key ~allow_optional:true e with
+      | Some name -> result e name t (ExistsP (Some loc)) true
+      | None -> empty_result e)
     (* e.m(...) *)
     (* TODO: Don't trap method calls for now *)
     | (_, Call { Call.callee = (_, (Member _ | OptionalMember _)); _ }) ->

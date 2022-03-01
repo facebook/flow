@@ -3185,9 +3185,9 @@ undefined [2]? [sketchy-null-bool]
             ^^^^^^
 
 References:
-   refinement.js:43:22
-    43| declare var bMaybe: ?B;
-                             ^ [1]
+   refinement.js:6:6
+     6| enum B of boolean {
+             ^ [1]
    refinement.js:43:21
     43| declare var bMaybe: ?B;
                             ^^ [2]
@@ -3203,9 +3203,9 @@ undefined [2]? [sketchy-null-bool]
              ^^^^^^
 
 References:
-   refinement.js:43:22
-    43| declare var bMaybe: ?B;
-                             ^ [1]
+   refinement.js:6:6
+     6| enum B of boolean {
+             ^ [1]
    refinement.js:43:21
     43| declare var bMaybe: ?B;
                             ^^ [2]
@@ -3221,9 +3221,9 @@ undefined [2]? [sketchy-null-number]
             ^^^^^^
 
 References:
-   refinement.js:167:22
-   167| declare var nMaybe: ?N;
-                             ^ [1]
+   refinement.js:140:6
+   140| enum N of number {
+             ^ [1]
    refinement.js:167:21
    167| declare var nMaybe: ?N;
                             ^^ [2]
@@ -3239,9 +3239,9 @@ undefined [2]? [sketchy-null-number]
              ^^^^^^
 
 References:
-   refinement.js:167:22
-   167| declare var nMaybe: ?N;
-                             ^ [1]
+   refinement.js:140:6
+   140| enum N of number {
+             ^ [1]
    refinement.js:167:21
    167| declare var nMaybe: ?N;
                             ^^ [2]
@@ -3257,9 +3257,9 @@ null or undefined [2]? [sketchy-null-string]
             ^^^^^^
 
 References:
-   refinement.js:253:22
-   253| declare var sMaybe: ?S;
-                             ^ [1]
+   refinement.js:226:6
+   226| enum S of string {
+             ^ [1]
    refinement.js:253:21
    253| declare var sMaybe: ?S;
                             ^^ [2]
@@ -3275,9 +3275,9 @@ null or undefined [2]? [sketchy-null-string]
              ^^^^^^
 
 References:
-   refinement.js:253:22
-   253| declare var sMaybe: ?S;
-                             ^ [1]
+   refinement.js:226:6
+   226| enum S of string {
+             ^ [1]
    refinement.js:253:21
    253| declare var sMaybe: ?S;
                             ^^ [2]

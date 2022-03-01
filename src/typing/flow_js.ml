@@ -7235,25 +7235,18 @@ struct
     flow_opt cx ?trace (opt_t, FilterOptionalT (unknown_use, OpenT (reason, tvar)));
     tvar
 
-  and update_sketchy_null cx opt_loc t =
-    match opt_loc with
-    | Some loc -> Context.add_exists_check cx loc t
-    | None -> ()
-
   (**********)
   (* guards *)
   (**********)
   and guard cx trace source pred result sink =
     match pred with
-    | ExistsP loc ->
-      update_sketchy_null cx loc source;
+    | ExistsP _ ->
       begin
         match Type_filter.exists source with
         | DefT (_, _, EmptyT) -> ()
         | _ -> rec_flow_t cx trace ~use_op:unknown_use (result, OpenT sink)
       end
-    | NotP (ExistsP loc) ->
-      update_sketchy_null cx loc source;
+    | NotP (ExistsP _) ->
       begin
         match Type_filter.not_exists source with
         | DefT (_, _, EmptyT) -> ()
@@ -7418,12 +7411,10 @@ struct
     (************************)
     (* truthyness *)
     (************************)
-    | ExistsP loc ->
-      update_sketchy_null cx loc l;
+    | ExistsP _ ->
       let filtered = Type_filter.exists l in
       rec_flow_t cx trace ~use_op:unknown_use (filtered, OpenT t)
-    | NotP (ExistsP loc) ->
-      update_sketchy_null cx loc l;
+    | NotP (ExistsP _) ->
       let filtered = Type_filter.not_exists l in
       rec_flow_t cx trace ~use_op:unknown_use (filtered, OpenT t)
     | PropExistsP (key, r) -> prop_exists_test cx trace key r true l t

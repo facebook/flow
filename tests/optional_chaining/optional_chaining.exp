@@ -2312,6 +2312,30 @@ References:
 
 Error -------------------------------------------------------------------------------------------- refinements.js:148:18
 
+Sketchy null check on string [1] which is potentially an empty string. Perhaps you meant to check for null or
+undefined [2]? [sketchy-null-string]
+
+   refinements.js:148:18
+   148| var x11: empty = a11?.a || b11?.a;
+                         ^^^^^^ [2]
+
+References:
+   refinements.js:145:24
+   145| declare var a11: ?({a: string} | {});
+                               ^^^^^^ [1]
+
+
+Error -------------------------------------------------------------------------------------------- refinements.js:148:18
+
+Sketchy null check on mixed [1] which is potentially false. Perhaps you meant to check for null or undefined [1]?
+[sketchy-null-mixed]
+
+   148| var x11: empty = a11?.a || b11?.a;
+                         ^^^^^^ [1]
+
+
+Error -------------------------------------------------------------------------------------------- refinements.js:148:18
+
 Cannot assign `a11?.a || b11?.a` to `x11` because string [1] is incompatible with empty [2]. [incompatible-type]
 
    refinements.js:148:18
@@ -3657,7 +3681,7 @@ References:
 
 
 
-Found 229 errors
+Found 231 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

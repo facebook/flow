@@ -36,7 +36,7 @@ module ImplicitInstantiationKit : Implicit_instantiation.KIT = Implicit_instanti
       )
 end)
 
-let detect_sketchy_null_checks cx =
+let detect_sketchy_null_checks cx master_cx =
   let add_error ~loc ~null_loc kind falsy_loc =
     Error_message.ESketchyNullLint { kind; loc; null_loc; falsy_loc } |> Flow_js.add_output cx
   in
@@ -70,23 +70,64 @@ let detect_sketchy_null_checks cx =
     let open Loc_collections in
     let open ExistsCheck in
     let checks = Context.exists_checks cx in
-    if not @@ ALocMap.is_empty checks then
+    if not @@ ALocMap.is_empty checks then (
+      let file = Context.file cx in
+      let metadata = Context.metadata cx in
+      let aloc_table = Utils_js.FilenameMap.find file (Context.aloc_tables cx) in
+      let module_ref = Files.module_ref file in
+      let ccx = Context.make_ccx master_cx in
+
       let reducer =
         new Context_optimizer.context_optimizer ~no_lowers:(fun _ r ->
             Type.EmptyT.make r (Type.bogus_trust ())
         )
       in
+      let checks = ALocMap.map (Type.TypeSet.map (reducer#type_ cx Polarity.Neutral)) checks in
+      Context.merge_into
+        ccx
+        {
+          Type.TypeContext.graph = reducer#get_reduced_graph;
+          trust_graph = reducer#get_reduced_trust_graph;
+          property_maps = reducer#get_reduced_property_maps;
+          call_props = reducer#get_reduced_call_props;
+          export_maps = reducer#get_reduced_export_maps;
+          evaluated = reducer#get_reduced_evaluated;
+        };
 
-      let rec make_checks cur_checks loc t =
+      let cx =
+        Context.make
+          ccx
+          metadata
+          file
+          aloc_table
+          (Reason.OrdinaryName module_ref)
+          Context.PostInference
+      in
+
+      let rec make_checks seen cur_checks loc t =
         let open Type in
         let open TypeUtil in
         let open Reason in
         match t with
+        | AnnotT (_, t, _) -> make_checks seen cur_checks loc t
+        | OpenT (_, id) when ISet.mem id seen -> cur_checks
+        | OpenT (_, id) ->
+          Context.find_resolved cx t
+          |> Base.Option.value_map
+               ~f:(make_checks (ISet.add id seen) cur_checks loc)
+               ~default:cur_checks
         (* Ignore AnyTs for sketchy null checks; otherwise they'd always trigger the lint. *)
         | AnyT _ -> cur_checks
+        | MaybeT (r, t) ->
+          let acc = make_checks seen cur_checks loc t in
+          let acc = make_checks seen acc loc (NullT.why r (Trust.bogus_trust ())) in
+          make_checks seen acc loc (VoidT.why r (Trust.bogus_trust ()))
+        | OptionalT { reason = r; type_ = t; _ } ->
+          let acc = make_checks seen cur_checks loc t in
+          make_checks seen acc loc (VoidT.why r (Trust.bogus_trust ()))
         | UnionT (_, rep) ->
           UnionRep.members rep
-          |> Base.List.fold ~f:(fun acc t -> make_checks acc loc t) ~init:cur_checks
+          |> Base.List.fold ~f:(fun acc t -> make_checks seen acc loc t) ~init:cur_checks
         | _ ->
           let t_loc =
             let reason = reason_of_t t in
@@ -124,13 +165,10 @@ let detect_sketchy_null_checks cx =
 
       ALocMap.fold
         (fun loc tset acc ->
-          Type.TypeSet.fold
-            (fun t acc -> reducer#type_ cx Polarity.Neutral t |> make_checks acc loc)
-            tset
-            acc)
+          Type.TypeSet.fold (fun t acc -> make_checks ISet.empty acc loc t) tset acc)
         checks
         ALocMap.empty
-    else
+    ) else
       ALocMap.empty
   in
 
@@ -470,7 +508,7 @@ let get_lint_severities metadata strict_mode lint_severities =
  *)
 let post_merge_checks cx master_cx ast tast metadata file_sig =
   let results = [(cx, ast, tast)] in
-  detect_sketchy_null_checks cx;
+  detect_sketchy_null_checks cx master_cx;
   detect_non_voidable_properties cx;
   check_implicit_instantiations cx master_cx;
   detect_test_prop_misses cx;
