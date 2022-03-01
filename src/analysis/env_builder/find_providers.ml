@@ -957,6 +957,18 @@ end = struct
           | _ -> failwith "unexpected AST node")
         | _ -> failwith "Syntactically valid for-in loops must have exactly one left declaration");
         left
+
+      method! function_param_pattern (expr : ('loc, 'loc) Ast.Pattern.t) =
+        (* NOTE: All function parameters are considered annotated, whether this
+         * annotation is explicitly provided, is contextually inferred, or is
+         * implicitly `any` when missing. *)
+        let init_state = Annotation in
+        ignore
+        @@ this#in_context
+             ~mod_cx:(fun _cx -> { init_state })
+             (fun () -> super#function_param_pattern expr);
+
+        expr
     end
 
   let find_declaration_statements { Ast.Program.statements; _ } =
