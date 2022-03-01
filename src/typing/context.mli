@@ -296,7 +296,7 @@ val max_workers : t -> int
 
 val jsx : t -> Options.jsx_mode
 
-val exists_checks : t -> ExistsCheck.t ALocMap.t
+val exists_checks : t -> Type.TypeSet.t ALocMap.t
 
 val exists_excuses : t -> ExistsCheck.t ALocMap.t
 
@@ -402,7 +402,9 @@ val set_call_props : t -> Type.t IMap.t -> unit
 
 val set_export_maps : t -> Type.Exports.map -> unit
 
-val set_exists_checks : t -> ExistsCheck.t ALocMap.t -> unit
+val set_exists_checks : t -> Type.TypeSet.t ALocMap.t -> unit
+
+val add_exists_check : t -> ALoc.t -> Type.t -> unit
 
 val set_exists_excuses : t -> ExistsCheck.t ALocMap.t -> unit
 

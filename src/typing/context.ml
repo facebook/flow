@@ -131,7 +131,7 @@ type component_t = {
   mutable error_suppressions: Error_suppressions.t;
   mutable severity_cover: ExactCover.lint_severity_cover Utils_js.FilenameMap.t;
   (* map from exists proposition locations to the types of values running through them *)
-  mutable exists_checks: ExistsCheck.t ALocMap.t;
+  mutable exists_checks: Type.TypeSet.t ALocMap.t;
   (* map from exists proposition locations to the types of excuses for them *)
   (* If a variable appears in something like `x || ''`, the existence check
    * is excused and not considered sketchy. (The program behaves identically to how it would
@@ -715,6 +715,14 @@ let set_export_maps cx export_maps = cx.ccx.sig_cx <- { cx.ccx.sig_cx with expor
 let set_type_graph cx type_graph = cx.ccx.type_graph <- type_graph
 
 let set_exists_checks cx exists_checks = cx.ccx.exists_checks <- exists_checks
+
+let add_exists_check cx loc t =
+  let tset =
+    match ALocMap.find_opt loc cx.ccx.exists_checks with
+    | Some tset -> Type.TypeSet.add t tset
+    | None -> Type.TypeSet.singleton t
+  in
+  set_exists_checks cx (ALocMap.add loc tset cx.ccx.exists_checks)
 
 let set_exists_excuses cx exists_excuses = cx.ccx.exists_excuses <- exists_excuses
 

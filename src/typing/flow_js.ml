@@ -20,7 +20,6 @@
 
 open Flow_js_utils
 open Utils_js
-open Loc_collections
 open Reason
 open Type
 open TypeUtil
@@ -7237,52 +7236,9 @@ struct
     tvar
 
   and update_sketchy_null cx opt_loc t =
-    ExistsCheck.(
-      match t with
-      (* Ignore AnyTs for sketchy null checks; otherwise they'd always trigger the lint. *)
-      | AnyT _ -> ()
-      | UnionT (_, rep) -> UnionRep.members rep |> Base.List.iter ~f:(update_sketchy_null cx opt_loc)
-      | _ ->
-        (match opt_loc with
-        | None -> ()
-        | Some loc ->
-          let t_loc =
-            let reason = reason_of_t t in
-            match annot_aloc_of_reason reason with
-            | Some loc -> Some loc
-            | None -> Some (def_aloc_of_reason reason)
-          in
-          let exists_checks = Context.exists_checks cx in
-          let exists_check =
-            ALocMap.find_opt loc exists_checks |> Base.Option.value ~default:ExistsCheck.empty
-          in
-          let exists_check =
-            match Type_filter.maybe t with
-            | DefT (_, _, EmptyT) -> exists_check
-            | _ -> { exists_check with null_loc = t_loc }
-          in
-          let exists_check =
-            match t |> Type_filter.not_exists |> Type_filter.not_maybe with
-            | DefT (_, _, BoolT _) -> { exists_check with bool_loc = t_loc }
-            | DefT (_, _, StrT _) -> { exists_check with string_loc = t_loc }
-            | DefT (_, _, NumT _) -> { exists_check with number_loc = t_loc }
-            | DefT (_, _, MixedT _) -> { exists_check with mixed_loc = t_loc }
-            | DefT (_, _, EnumT { representation_t = DefT (_, _, BoolT _); _ }) ->
-              { exists_check with enum_bool_loc = t_loc }
-            | DefT (_, _, EnumT { representation_t = DefT (_, _, StrT _); _ }) ->
-              { exists_check with enum_string_loc = t_loc }
-            | DefT (_, _, EnumT { representation_t = DefT (_, _, NumT _); _ }) ->
-              { exists_check with enum_number_loc = t_loc }
-            | _ -> exists_check
-          in
-          let exists_checks =
-            if exists_check = ExistsCheck.empty then
-              exists_checks
-            else
-              ALocMap.add loc exists_check exists_checks
-          in
-          Context.set_exists_checks cx exists_checks)
-    )
+    match opt_loc with
+    | Some loc -> Context.add_exists_check cx loc t
+    | None -> ()
 
   (**********)
   (* guards *)

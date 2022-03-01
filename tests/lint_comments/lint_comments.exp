@@ -135,9 +135,9 @@ References:
    simple_sketchies.js:111:20
    111| function n(o: { p: number|null|void, ... }) {
                            ^^^^^^ [1]
-   simple_sketchies.js:111:32
+   simple_sketchies.js:111:27
    111| function n(o: { p: number|null|void, ... }) {
-                                       ^^^^ [2]
+                                  ^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------- simple_sketchies.js:131:24

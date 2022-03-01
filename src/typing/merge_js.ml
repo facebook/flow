@@ -66,9 +66,75 @@ let detect_sketchy_null_checks cx =
         ()
     )
   in
-  Loc_collections.ALocMap.iter
-    (detect_function (Context.exists_excuses cx))
-    (Context.exists_checks cx)
+  let exists_checks =
+    let open Loc_collections in
+    let open ExistsCheck in
+    let checks = Context.exists_checks cx in
+    if not @@ ALocMap.is_empty checks then
+      let reducer =
+        new Context_optimizer.context_optimizer ~no_lowers:(fun _ r ->
+            Type.EmptyT.make r (Type.bogus_trust ())
+        )
+      in
+
+      let rec make_checks cur_checks loc t =
+        let open Type in
+        let open TypeUtil in
+        let open Reason in
+        match t with
+        (* Ignore AnyTs for sketchy null checks; otherwise they'd always trigger the lint. *)
+        | AnyT _ -> cur_checks
+        | UnionT (_, rep) ->
+          UnionRep.members rep
+          |> Base.List.fold ~f:(fun acc t -> make_checks acc loc t) ~init:cur_checks
+        | _ ->
+          let t_loc =
+            let reason = reason_of_t t in
+            match annot_aloc_of_reason reason with
+            | Some loc -> Some loc
+            | None -> Some (def_aloc_of_reason reason)
+          in
+          let exists_check =
+            ALocMap.find_opt loc cur_checks |> Base.Option.value ~default:ExistsCheck.empty
+          in
+          let exists_check =
+            match Type_filter.maybe t with
+            | DefT (_, _, EmptyT) -> exists_check
+            | _ -> { exists_check with null_loc = t_loc }
+          in
+          let exists_check =
+            match t |> Type_filter.not_exists |> Type_filter.not_maybe with
+            | DefT (_, _, BoolT _) -> { exists_check with bool_loc = t_loc }
+            | DefT (_, _, StrT _) -> { exists_check with string_loc = t_loc }
+            | DefT (_, _, NumT _) -> { exists_check with number_loc = t_loc }
+            | DefT (_, _, MixedT _) -> { exists_check with mixed_loc = t_loc }
+            | DefT (_, _, EnumT { representation_t = DefT (_, _, BoolT _); _ }) ->
+              { exists_check with enum_bool_loc = t_loc }
+            | DefT (_, _, EnumT { representation_t = DefT (_, _, StrT _); _ }) ->
+              { exists_check with enum_string_loc = t_loc }
+            | DefT (_, _, EnumT { representation_t = DefT (_, _, NumT _); _ }) ->
+              { exists_check with enum_number_loc = t_loc }
+            | _ -> exists_check
+          in
+          if exists_check = ExistsCheck.empty then
+            cur_checks
+          else
+            ALocMap.add loc exists_check cur_checks
+      in
+
+      ALocMap.fold
+        (fun loc tset acc ->
+          Type.TypeSet.fold
+            (fun t acc -> reducer#type_ cx Polarity.Neutral t |> make_checks acc loc)
+            tset
+            acc)
+        checks
+        ALocMap.empty
+    else
+      ALocMap.empty
+  in
+
+  Loc_collections.ALocMap.iter (detect_function (Context.exists_excuses cx)) exists_checks
 
 let detect_test_prop_misses cx =
   let misses = Context.test_prop_get_never_hit cx in
