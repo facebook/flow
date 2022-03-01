@@ -78,9 +78,28 @@ let detect_sketchy_null_checks cx master_cx =
       let ccx = Context.make_ccx master_cx in
 
       let reducer =
-        new Context_optimizer.context_optimizer ~no_lowers:(fun _ r ->
-            Type.EmptyT.make r (Type.bogus_trust ())
-        )
+        object
+          inherit
+            Context_optimizer.context_optimizer
+              ~no_lowers:(fun _ r -> Type.EmptyT.make r (Type.bogus_trust ())) as super
+
+          method! type_ cx pole t =
+            let open Type in
+            match t with
+            | ModuleT _
+            | EvalT _
+            | ThisClassT _
+            | TypeDestructorTriggerT _
+            | OpenPredT _
+            | DefT
+                ( _,
+                  _,
+                  ( InstanceT _ | ClassT _ | FunT _ | ArrT _ | ObjT _ | PolyT _
+                  | ReactAbstractComponentT _ )
+                ) ->
+              t
+            | _ -> super#type_ cx pole t
+        end
       in
       let checks = ALocMap.map (Type.TypeSet.map (reducer#type_ cx Polarity.Neutral)) checks in
       Context.merge_into
