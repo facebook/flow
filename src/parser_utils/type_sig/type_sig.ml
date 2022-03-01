@@ -37,7 +37,7 @@ type ('key, 'loc, 'a) predicate =
   | AndP of ('key, 'loc, 'a) predicate * ('key, 'loc, 'a) predicate
   | OrP of ('key, 'loc, 'a) predicate * ('key, 'loc, 'a) predicate
   | NotP of ('key, 'loc, 'a) predicate
-  | ExistsP of 'key * 'loc option
+  | ExistsP of 'key
   | InstanceofP of 'key * 'a
   | ArrP of 'key
   | NullP of 'key

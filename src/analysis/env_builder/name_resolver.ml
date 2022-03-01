@@ -2527,7 +2527,7 @@ module Make
       method identifier_refinement ((loc, ident) as identifier) =
         ignore @@ this#identifier identifier;
         let { Flow_ast.Identifier.name; _ } = ident in
-        this#add_refinement (RefinementKey.of_name name loc) (L.LSet.singleton loc, TruthyR loc)
+        this#add_refinement (RefinementKey.of_name name loc) (L.LSet.singleton loc, TruthyR)
 
       method assignment_refinement loc assignment =
         ignore @@ this#assignment loc assignment;
@@ -2537,9 +2537,7 @@ module Make
             Flow_ast.Pattern.Identifier
               { Flow_ast.Pattern.Identifier.name = (_, { Flow_ast.Identifier.name; _ }); _ }
           ) ->
-          this#add_refinement
-            (RefinementKey.of_name name id_loc)
-            (L.LSet.singleton loc, TruthyR id_loc)
+          this#add_refinement (RefinementKey.of_name name id_loc) (L.LSet.singleton loc, TruthyR)
         | _ -> ()
 
       method private merge_two_refinement_scopes ~merge refinements1 refinements2 =
@@ -2632,7 +2630,7 @@ module Make
             this#pop_refinement_scope ();
             this#pop_refinement_scope ();
             this#push_refinement_scope LookupMap.empty;
-            this#add_refinement_to_expr left (L.LSet.singleton loc, TruthyR loc);
+            this#add_refinement_to_expr left (L.LSet.singleton loc, TruthyR);
             let truthy_refinements = this#peek_new_refinements () in
             this#pop_refinement_scope ();
             this#push_refinement_scope LookupMap.empty;
@@ -3147,7 +3145,7 @@ module Make
         (match RefinementKey.of_expression (loc, expr) with
         | None -> ()
         | Some refinement_key_access ->
-          this#add_refinement refinement_key_access (L.LSet.singleton loc, TruthyR loc));
+          this#add_refinement refinement_key_access (L.LSet.singleton loc, TruthyR));
         let open Flow_ast.Expression in
         let open Flow_ast.Expression.Member in
         let optional =

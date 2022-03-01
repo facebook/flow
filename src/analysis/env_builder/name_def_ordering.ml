@@ -98,7 +98,7 @@ end = struct
             writes_of_refinement l;
             writes_of_refinement r
           | NotR r -> writes_of_refinement r
-          | TruthyR _
+          | TruthyR
           | NullR
           | UndefinedR
           | MaybeR

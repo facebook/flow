@@ -64,7 +64,7 @@ module type S = sig
       | AndR of refinement_kind * refinement_kind
       | OrR of refinement_kind * refinement_kind
       | NotR of refinement_kind
-      | TruthyR of L.t
+      | TruthyR
       | NullR
       | UndefinedR
       | MaybeR
@@ -199,7 +199,7 @@ module Make
       | AndR of refinement_kind * refinement_kind
       | OrR of refinement_kind * refinement_kind
       | NotR of refinement_kind
-      | TruthyR of L.t
+      | TruthyR
       | NullR
       | UndefinedR
       | MaybeR
@@ -394,7 +394,7 @@ module Make
         (show_refinement_kind_without_locs l)
         (show_refinement_kind_without_locs r)
     | NotR r -> Printf.sprintf "Not (%s)" (show_refinement_kind_without_locs r)
-    | TruthyR _ -> "Truthy"
+    | TruthyR -> "Truthy"
     | NullR -> "Null"
     | UndefinedR -> "Undefined"
     | MaybeR -> "Maybe"

@@ -3812,7 +3812,7 @@ let%expect_test "predicate_exists" =
                    ];
                  rest_param = None; this_param = None;
                  return = (Annot (Mixed [1:37-42]));
-                 predicate = (Some ([2:2-11], (Some (ExistsP ("x", (Some [2:9-10]))))))};
+                 predicate = (Some ([2:2-11], (Some (ExistsP "x"))))};
                statics = {}})}
         |];
       info =

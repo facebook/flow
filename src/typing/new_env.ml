@@ -173,7 +173,7 @@ module New_env = struct
       | AndR (r1, r2) -> AndP (predicate_of_refinement cx r1, predicate_of_refinement cx r2)
       | OrR (r1, r2) -> OrP (predicate_of_refinement cx r1, predicate_of_refinement cx r2)
       | NotR r -> NotP (predicate_of_refinement cx r)
-      | TruthyR loc -> ExistsP (Some loc)
+      | TruthyR -> ExistsP
       | NullR -> NullP
       | UndefinedR -> VoidP
       | MaybeR -> MaybeP

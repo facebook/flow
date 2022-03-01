@@ -1420,14 +1420,14 @@ struct
           (match Type_filter.exists left with
           | DefT (_, _, EmptyT) ->
             (* falsy *)
-            rec_flow cx trace (left, PredicateT (NotP (ExistsP None), u))
+            rec_flow cx trace (left, PredicateT (NotP ExistsP, u))
           | _ ->
             (match Type_filter.not_exists left with
             | DefT (_, _, EmptyT) ->
               (* truthy *)
               rec_flow cx trace (right, UseT (unknown_use, OpenT u))
             | _ ->
-              rec_flow cx trace (left, PredicateT (NotP (ExistsP None), u));
+              rec_flow cx trace (left, PredicateT (NotP ExistsP, u));
               rec_flow cx trace (right, UseT (unknown_use, OpenT u))))
         | (left, OrT (_, right, u)) ->
           (* a truthy || b ~> a
@@ -1436,14 +1436,14 @@ struct
           (match Type_filter.not_exists left with
           | DefT (_, _, EmptyT) ->
             (* truthy *)
-            rec_flow cx trace (left, PredicateT (ExistsP None, u))
+            rec_flow cx trace (left, PredicateT (ExistsP, u))
           | _ ->
             (match Type_filter.exists left with
             | DefT (_, _, EmptyT) ->
               (* falsy *)
               rec_flow cx trace (right, UseT (unknown_use, OpenT u))
             | _ ->
-              rec_flow cx trace (left, PredicateT (ExistsP None, u));
+              rec_flow cx trace (left, PredicateT (ExistsP, u));
               rec_flow cx trace (right, UseT (unknown_use, OpenT u))))
         (* a not-nullish ?? b ~> a
            a nullish ?? b ~> b
@@ -1943,9 +1943,7 @@ struct
                that the check is guaranteed to fail (assuming the union doesn't
                degenerate to a singleton) *)
             rec_flow_t ~use_op:unknown_use cx trace (l, OpenT result)
-        | ( UnionT (_, rep),
-            PredicateT (((MaybeP | NotP MaybeP | ExistsP _ | NotP (ExistsP _)) as p), t)
-          )
+        | (UnionT (_, rep), PredicateT (((MaybeP | NotP MaybeP | ExistsP | NotP ExistsP) as p), t))
           when UnionRep.is_optimized_finally rep ->
           predicate cx trace t l p
         | (UnionT (_, rep), _)
@@ -7240,13 +7238,13 @@ struct
   (**********)
   and guard cx trace source pred result sink =
     match pred with
-    | ExistsP _ ->
+    | ExistsP ->
       begin
         match Type_filter.exists source with
         | DefT (_, _, EmptyT) -> ()
         | _ -> rec_flow_t cx trace ~use_op:unknown_use (result, OpenT sink)
       end
-    | NotP (ExistsP _) ->
+    | NotP ExistsP ->
       begin
         match Type_filter.not_exists source with
         | DefT (_, _, EmptyT) -> ()
@@ -7411,10 +7409,10 @@ struct
     (************************)
     (* truthyness *)
     (************************)
-    | ExistsP _ ->
+    | ExistsP ->
       let filtered = Type_filter.exists l in
       rec_flow_t cx trace ~use_op:unknown_use (filtered, OpenT t)
-    | NotP (ExistsP _) ->
+    | NotP ExistsP ->
       let filtered = Type_filter.not_exists l in
       rec_flow_t cx trace ~use_op:unknown_use (filtered, OpenT t)
     | PropExistsP (key, r) -> prop_exists_test cx trace key r true l t
@@ -7438,16 +7436,7 @@ struct
       rec_flow cx trace (fun_t, CallLatentPredT (neg_reason, false, idx, l, t))
 
   and prop_exists_test cx trace key reason sense obj result =
-    prop_exists_test_generic
-      key
-      reason
-      cx
-      trace
-      result
-      obj
-      sense
-      (ExistsP None, NotP (ExistsP None))
-      obj
+    prop_exists_test_generic key reason cx trace result obj sense (ExistsP, NotP ExistsP) obj
 
   and prop_non_maybe_test cx trace key reason sense obj result =
     prop_exists_test_generic key reason cx trace result obj sense (NotP MaybeP, MaybeP) obj

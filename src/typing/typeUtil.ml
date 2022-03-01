@@ -840,7 +840,7 @@ let push_type_alias_reason r t =
 let rec eq_predicate (p1, p2) =
   match (p1, p2) with
   (* trivial *)
-  | (ExistsP _, ExistsP _)
+  | (ExistsP, ExistsP)
   | (NullP, NullP)
   | (MaybeP, MaybeP)
   | (BoolP _, BoolP _)

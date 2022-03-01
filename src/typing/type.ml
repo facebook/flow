@@ -932,7 +932,7 @@ module rec TypeTerm : sig
     | LeftP of binary_test * t
     | RightP of binary_test * t
     (* Only track locations of existence checks created when walking the AST *)
-    | ExistsP (* truthy *) of ALoc.t option (* Location of the existence check *)
+    | ExistsP (* truthy *)
     | NullP (* null *)
     | MaybeP (* null or undefined *)
     | SingletonBoolP of ALoc.t * bool (* true or false *)
@@ -3693,7 +3693,7 @@ let rec string_of_predicate = function
     spf "left operand of %s with right operand = %s" (string_of_binary_test b) (string_of_ctor t)
   | RightP (b, t) ->
     spf "right operand of %s with left operand = %s" (string_of_binary_test b) (string_of_ctor t)
-  | ExistsP _ -> "truthy"
+  | ExistsP -> "truthy"
   | NullP -> "null"
   | MaybeP -> "null or undefined"
   | SingletonBoolP (_, false) -> "false"

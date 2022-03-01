@@ -3923,7 +3923,7 @@ struct
              is null or undefined, not if it's false/0/"". *)
           if Base.Option.is_some cond then (
             Context.add_exists_check cx loc lhs_t;
-            ExistsP (Some loc)
+            ExistsP
           ) else
             NotP MaybeP
         in
@@ -7525,7 +7525,7 @@ struct
       let id = id.Ast.Pattern.Identifier.name in
       Context.add_exists_check cx loc expr;
       (match Refinement.key ~allow_optional:true (loc, Ast.Expression.Identifier id) with
-      | Some name -> result tast name expr (ExistsP (Some loc)) true
+      | Some name -> result tast name expr ExistsP true
       | None -> empty_result tast)
     (* expr instanceof t *)
     | (loc, Binary { Binary.operator = Binary.Instanceof; left; right; comments }) ->
@@ -7681,7 +7681,7 @@ struct
       let (((_, t), _) as e) = condition ~cond cx e in
       Context.add_exists_check cx loc t;
       (match Refinement.key ~allow_optional:true e with
-      | Some name -> result e name t (ExistsP (Some loc)) true
+      | Some name -> result e name t ExistsP true
       | None -> empty_result e)
     (* e.m(...) *)
     (* TODO: Don't trap method calls for now *)

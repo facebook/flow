@@ -2964,7 +2964,7 @@ and predicate opts scope tbls pnames =
   let refine_id test id =
     let%map key = refinement_key id in
     match test with
-    | `Exists loc -> ExistsP (key, Some loc)
+    | `Exists -> ExistsP key
     | `Instanceof right ->
       let t = expression opts scope tbls right in
       InstanceofP (key, t)
@@ -2995,7 +2995,7 @@ and predicate opts scope tbls pnames =
     let%bind key = refinement_key id in
     let%bind prop = refinement_prop prop in
     match test with
-    | `Exists _ -> None
+    | `Exists -> None
     | `Instanceof _ -> None
     | `IsArray -> None
     | `Eq (_, sense, eq_test) ->
@@ -3196,7 +3196,7 @@ and predicate opts scope tbls pnames =
   fun (loc, expr) ->
     let loc = push_loc tbls loc in
     match expr with
-    | E.Identifier id -> refine_id (`Exists loc) id
+    | E.Identifier id -> refine_id `Exists id
     | E.Logical { E.Logical.operator; left; right; comments = _ } -> logical left right operator
     | E.Unary { E.Unary.operator; argument; comments = _ } -> unary argument operator
     | E.Binary { E.Binary.operator; left; right; comments = _ } -> binary loc left right operator

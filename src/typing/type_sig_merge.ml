@@ -1391,7 +1391,7 @@ and merge_predicate tps file base_t loc p =
     | NotP p ->
       let (pos, neg) = pred p in
       (neg, pos)
-    | ExistsP (key, loc) -> singleton key (Type.ExistsP loc)
+    | ExistsP key -> singleton key Type.ExistsP
     | InstanceofP (key, t) ->
       let t = merge tps file t in
       singleton key Type.(LeftP (InstanceofTest, t))

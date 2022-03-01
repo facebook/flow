@@ -720,7 +720,7 @@ class virtual ['a] t =
           p
         else
           RightP (test, t')
-      | ExistsP _
+      | ExistsP
       | NullP
       | MaybeP
       | SingletonBoolP _

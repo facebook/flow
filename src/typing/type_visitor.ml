@@ -170,7 +170,7 @@ class ['a] t =
       | NotP p -> self#predicate cx acc p
       | LeftP (_, t) -> self#type_ cx P.Positive acc t
       | RightP (_, t) -> self#type_ cx P.Positive acc t
-      | ExistsP _ -> acc
+      | ExistsP -> acc
       | NullP -> acc
       | MaybeP -> acc
       | SingletonBoolP _ -> acc
