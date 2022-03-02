@@ -281,8 +281,6 @@ val is_array_reason : 'loc virtual_reason -> bool
 
 val is_literal_object_reason : 'loc virtual_reason -> bool
 
-val is_literal_array_reason : 'loc virtual_reason -> bool
-
 val builtin_reason : reason_desc -> reason
 
 (* reason location preds *)

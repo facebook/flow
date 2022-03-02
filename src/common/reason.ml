@@ -885,13 +885,6 @@ let is_literal_object_reason r =
     true
   | _ -> false
 
-let is_literal_array_reason r =
-  match desc_of_reason r with
-  | RArrayLit
-  | REmptyArrayLit ->
-    true
-  | _ -> false
-
 let builtin_reason desc =
   { Loc.none with Loc.source = Some File_key.Builtins } |> ALoc.of_loc |> mk_reason desc
 
