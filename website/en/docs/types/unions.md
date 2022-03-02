@@ -99,7 +99,7 @@ By checking the typeof our value and testing to see if it is a number, Flow
 knows that inside of that block it is only a number. We can then write code
 which treats our value as a number inside of that block.
 
-### Disjoint Object Unions <a class="toc" id="toc-disjoint-object-unions" href="#toc-disjointo-object-unions"></a>
+### Disjoint Object Unions <a class="toc" id="toc-disjoint-object-unions" href="#toc-disjoint-object-unions"></a>
 
 There's a special type of union in Flow known as a "disjoint object union" which can
 be used in [refinements](../../lang/refinements/). These disjoint object unions are
