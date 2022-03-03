@@ -1,3 +1,26 @@
+### 0.173.0
+
+Likely to cause new Flow errors:
+* Modified the behavior of `instanceof` checks and other refinements to more consistently detect when impossible or invalid refinements are made. This will result in new errors in such cases.
+
+New Features:
+* Improved error messages by providing a suggested property when properties are missing in a conditional context.
+
+Notable bug fixes:
+* Fix "matching property" checks with generic inputs ([try-Flow](https://flow.org/try/#0GYVwdgxgLglg9mABMAjAHgCoC5EHIDOuiAPngA64B8AFALa04DeiUAnmQKY4aIC+AlIkYAoRIhjBEdWgDo2nRAF5leQvwDciAPRbEIfBwAmLOIg4Anc3HPDew4fI6IAsh3z4AhgHMnioS3YuVVwAGkQANxwwEFoAIws+En9HHFwKMIAPHHwocxgwLz51e1BIWARkACY0ZxxXd28OGloAfWsYLzrBETEIBBzEejqlQba8r2KxCSl6OUClFQJcDW1dfSMTM0trWyA)). Thanks @gnprice for bringing up this issue and exploring potential causes!
+* Fixed a bug where the use of certain utility types in polymorphic functions caused errors to not be reported (e.g. [try-Flow](https://flow.org/try/#0FAMwrgdgxgLglgewgAkgJQKYEMAmB5CAGwE8AeAFQD4AKADwC5kASTXAkiygSkfOQG9kAJwwwwQlLQDcyAL7AoSAM4xkIBAkYts+ImX7rNyFULgQA5rMrIAvAMOMARACMsQx7KkLlq1zhLkxAAOGDiM-K4AXowmZpa2qBCsuiTUhlwyAPSZyOQAFnBKxnkIYIQ4yBhCQghCwEA))
+* Fix a bug where the [method-unbinding] error was reported twice
+
+Misc:
+* OCaml version 4.12.1 is required to build Flow
+* React default exports are now inexact, as technically this can include unknown properties (experimental features)
+
+Parser:
+*  Fixed a bug where type parameter instantiations that start with `<` (e.g., `f<<T>()=>S>()`) would be incorrectly parsed as the left shift operator.
+
+Library Definitions:
+* Add bindings for NodeJS [`util.types`](https://nodejs.org/docs/latest-v10.x/api/util.html#util_util_types)
+
 ### 0.172.0
 
 Bug Fixes:
