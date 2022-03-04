@@ -1186,31 +1186,29 @@ module NewAPI = struct
     | None -> 0
     | Some x -> f x
 
-  let write_opt f chunk = function
-    | None -> null_addr
-    | Some x -> f chunk x
+  let opt_none = null_addr
 
   let read_opt f addr =
-    if addr = null_addr then
+    if addr = opt_none then
       None
     else
       Some (f addr)
 
   let read_opt_exn f addr =
-    if addr = null_addr then
+    if addr = opt_none then
       invalid_arg "addr is null"
     else
       f addr
 
   let read_opt_bind f addr =
-    if addr = null_addr then
+    if addr = opt_none then
       None
     else
       f addr
 
-  let is_none addr = addr == null_addr
+  let is_none addr = addr == opt_none
 
-  let is_some addr = addr != null_addr
+  let is_some addr = addr != opt_none
 
   (** Entities
    *
@@ -1443,6 +1441,7 @@ module NewAPI = struct
   let unparsed_file_size = 2 * addr_size
 
   let write_checked_file chunk hash module_name exports =
+    let module_name = Option.value module_name ~default:opt_none in
     let checked_file = write_header chunk Checked_file_tag checked_file_size in
     unsafe_write_addr chunk hash;
     unsafe_write_addr chunk module_name;
@@ -1455,6 +1454,7 @@ module NewAPI = struct
     checked_file
 
   let write_unparsed_file chunk hash module_name =
+    let module_name = Option.value module_name ~default:opt_none in
     let addr = write_header chunk Unparsed_file_tag unparsed_file_size in
     unsafe_write_addr chunk hash;
     unsafe_write_addr chunk module_name;

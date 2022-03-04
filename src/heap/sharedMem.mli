@@ -290,8 +290,6 @@ module NewAPI : sig
 
   val opt_size : ('a -> size) -> 'a option -> size
 
-  val write_opt : (chunk -> 'a -> 'k addr) -> chunk -> 'a option -> 'k opt addr
-
   val read_opt : ('a addr -> 'b) -> 'a opt addr -> 'b option
 
   val read_opt_exn : ('a addr -> 'b) -> 'a opt addr -> 'b
@@ -367,9 +365,10 @@ module NewAPI : sig
   val unparsed_file_size : size
 
   val write_checked_file :
-    chunk -> heap_int64 addr -> heap_string opt addr -> exports addr -> checked_file addr
+    chunk -> heap_int64 addr -> heap_string addr option -> exports addr -> checked_file addr
 
-  val write_unparsed_file : chunk -> heap_int64 addr -> heap_string opt addr -> unparsed_file addr
+  val write_unparsed_file :
+    chunk -> heap_int64 addr -> heap_string addr option -> unparsed_file addr
 
   val dyn_checked_file : checked_file addr -> dyn_file addr
 

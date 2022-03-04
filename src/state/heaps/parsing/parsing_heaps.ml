@@ -122,7 +122,7 @@ let add_checked_file file_key hash module_name docblock ast locs type_sig file_s
       in
       let write chunk =
         let hash = write_int64 chunk hash in
-        let module_name = write_opt write_string chunk module_name in
+        let module_name = Option.map (write_string chunk) module_name in
         let exports = write_exports chunk in
         let data = write_checked_file chunk hash module_name exports in
         add_file_maybe chunk (dyn_checked_file data);
@@ -168,7 +168,7 @@ let add_unparsed_file file_key hash module_name =
   let file =
     alloc size (fun chunk ->
         let hash = write_int64 chunk hash in
-        let module_name = write_opt write_string chunk module_name in
+        let module_name = Option.map (write_string chunk) module_name in
         let data = write_unparsed_file chunk hash module_name in
         write_file_maybe chunk (dyn_unparsed_file data)
     )
@@ -882,7 +882,7 @@ end = struct
     let file =
       alloc size (fun chunk ->
           let hash = write_int64 chunk hash in
-          let module_name = write_opt write_string chunk module_name in
+          let module_name = Option.map (write_string chunk) module_name in
           let exports = write_exports chunk in
           let data = write_checked_file chunk hash module_name exports in
           write_entity chunk (Some (dyn_checked_file data))
