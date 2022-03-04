@@ -9,4 +9,10 @@
 
 type t = unit
 
-let create _transaction = ()
+let commit () =
+  SharedMem.commit_transaction ();
+  Lwt.return_unit
+
+let rollback () = Lwt.return_unit
+
+let create transaction = Transaction.add ~commit ~rollback transaction

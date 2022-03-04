@@ -125,6 +125,7 @@ type worker_mutator = {
     type_sig ->
     unit;
   add_unparsed: File_key.t -> Xx.hash -> string option -> unit;
+  clear_not_found: File_key.t -> unit;
 }
 
 module Parse_mutator : sig
@@ -136,7 +137,9 @@ module Reparse_mutator : sig
 
   val create : Transaction.t -> Utils_js.FilenameSet.t -> master_mutator * worker_mutator
 
-  val revive_files : master_mutator -> Utils_js.FilenameSet.t -> unit
+  val record_unchanged : master_mutator -> Utils_js.FilenameSet.t -> unit
+
+  val record_not_found : master_mutator -> Utils_js.FilenameSet.t -> unit
 end
 
 module From_saved_state : sig

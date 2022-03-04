@@ -296,6 +296,8 @@ module NewAPI : sig
 
   val read_opt_exn : ('a addr -> 'b) -> 'a opt addr -> 'b
 
+  val read_opt_bind : ('a addr -> 'b option) -> 'a opt addr -> 'b option
+
   val is_none : 'a opt addr -> bool
 
   val is_some : 'a opt addr -> bool

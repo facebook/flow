@@ -1202,6 +1202,12 @@ module NewAPI = struct
     else
       f addr
 
+  let read_opt_bind f addr =
+    if addr = null_addr then
+      None
+    else
+      f addr
+
   let is_none addr = addr == null_addr
 
   let is_some addr = addr != null_addr

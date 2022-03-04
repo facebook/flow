@@ -13,7 +13,7 @@ module FileHeap =
   SharedMem.NoCacheAddr
     (File_key)
     (struct
-      type t = Heap.dyn_file
+      type t = Heap.dyn_file Heap.entity
     end)
 
 type locs_tbl = Loc.t Type_sig_collections.Locs.t
@@ -77,15 +77,39 @@ let add_checked_file file_key hash module_name docblock ast locs type_sig file_s
     + type_sig_size sig_bsize
     + file_sig_size
   in
-  let (size, write_file_maybe) =
+  let saved_state_or_fresh_parse =
     match FileHeap.get file_key with
-    | Some addr ->
-      (* If there is an existing file heap entry, it must be a checked file. How
-       * do we know this? We should only hit this case via `ensure_parsed` and
-       * we only call `ensure_parsed` on checked files. *)
-      let addr = assert_checked_file addr in
-      (size, Fun.const addr)
+    | Some file ->
+      (* If we loaded from a saved state, we will have some existing data with a
+       * matching hash. In this case, we want to update the existing data with
+       * parse information. *)
+      let f addr =
+        let recorded_hash = read_int64 (get_file_hash addr) in
+        if Int64.equal recorded_hash hash then
+          (* We know that file is checked (we are in add_checked_file) and the
+           * existing record's hash matches, so the file must have been checked
+           * before as well. *)
+          Some (assert_checked_file addr)
+        else
+          None
+      in
+      (match read_opt_bind f (entity_read_latest file) with
+      | Some data -> Either.Left data
+      | None ->
+        let write _ data = entity_advance file (Some data) in
+        Either.Right (size, write))
     | None ->
+      let size = size + header_size + entity_size in
+      let write chunk data =
+        let file = write_entity chunk (Some data) in
+        assert (file = FileHeap.add file_key file)
+      in
+      Either.Right (size, write)
+  in
+  let (size, add_file_maybe) =
+    match saved_state_or_fresh_parse with
+    | Either.Left existing_data -> (size, Fun.const existing_data)
+    | Either.Right (size, add_file_maybe) ->
       let exports = serialize exports in
       let (exports_size, write_exports) = prepare_write_exports exports in
       let size =
@@ -100,27 +124,25 @@ let add_checked_file file_key hash module_name docblock ast locs type_sig file_s
         let hash = write_int64 chunk hash in
         let module_name = write_opt write_string chunk module_name in
         let exports = write_exports chunk in
-        write_checked_file chunk hash module_name exports
+        let data = write_checked_file chunk hash module_name exports in
+        add_file_maybe chunk (dyn_checked_file data);
+        data
       in
       (size, write)
   in
-  let file_addr =
-    alloc size (fun chunk ->
-        let file = write_file_maybe chunk in
-        let ast = write_ast chunk in
-        let docblock = write_docblock chunk docblock in
-        let aloc_table = write_aloc_table chunk aloc_table in
-        let type_sig = write_type_sig chunk sig_bsize write_sig in
-        let file_sig = write_file_sig chunk in
-        set_file_ast file ast;
-        set_file_docblock file docblock;
-        set_file_aloc_table file aloc_table;
-        set_file_type_sig file type_sig;
-        set_file_sig file file_sig;
-        dyn_checked_file file
-    )
-  in
-  assert (file_addr = FileHeap.add file_key file_addr)
+  alloc size (fun chunk ->
+      let data = add_file_maybe chunk in
+      let ast = write_ast chunk in
+      let docblock = write_docblock chunk docblock in
+      let aloc_table = write_aloc_table chunk aloc_table in
+      let type_sig = write_type_sig chunk sig_bsize write_sig in
+      let file_sig = write_file_sig chunk in
+      set_file_ast data ast;
+      set_file_docblock data docblock;
+      set_file_aloc_table data aloc_table;
+      set_file_type_sig data type_sig;
+      set_file_sig data file_sig
+  )
 
 let add_unparsed_file file_key hash module_name =
   let open Heap in
@@ -130,15 +152,28 @@ let add_unparsed_file file_key hash module_name =
     + int64_size
     + opt_size (with_header_size string_size) module_name
   in
-  let file_addr =
+  let (size, write_file_maybe) =
+    match FileHeap.get file_key with
+    | Some file ->
+      let write _chunk data =
+        entity_advance file (Some data);
+        file
+      in
+      (size, write)
+    | None ->
+      let size = size + header_size + entity_size in
+      let write chunk data = write_entity chunk (Some data) in
+      (size, write)
+  in
+  let file =
     alloc size (fun chunk ->
         let hash = write_int64 chunk hash in
         let module_name = write_opt write_string chunk module_name in
-        let file = write_unparsed_file chunk hash module_name in
-        dyn_unparsed_file file
+        let data = write_unparsed_file chunk hash module_name in
+        write_file_maybe chunk (dyn_unparsed_file data)
     )
   in
-  assert (file_addr = FileHeap.add file_key file_addr)
+  assert (file = FileHeap.add file_key file)
 
 let is_checked_file = Heap.is_checked_file
 
@@ -284,23 +319,20 @@ end = struct
   let clear = ALocTableCache.clear
 end
 
-(* Groups operations on the multiple heaps that need to stay in sync *)
-module ParsingHeaps = struct
-  let add_parsed file ~exports hash module_name docblock ast file_sig locs type_sig =
-    WorkerCancel.with_no_cancellations (fun () ->
-        add_checked_file file hash module_name docblock ast locs type_sig file_sig exports
-    )
+let add_parsed file ~exports hash module_name docblock ast file_sig locs type_sig =
+  WorkerCancel.with_no_cancellations (fun () ->
+      add_checked_file file hash module_name docblock ast locs type_sig file_sig exports
+  )
 
-  let add_unparsed file hash module_name =
-    WorkerCancel.with_no_cancellations (fun () -> add_unparsed_file file hash module_name)
+let add_unparsed file hash module_name =
+  WorkerCancel.with_no_cancellations (fun () -> add_unparsed_file file hash module_name)
 
-  let oldify_batch files = WorkerCancel.with_no_cancellations (fun () -> FileHeap.oldify_batch files)
-
-  let remove_old_batch files =
-    WorkerCancel.with_no_cancellations (fun () -> FileHeap.remove_old_batch files)
-
-  let revive_batch files = WorkerCancel.with_no_cancellations (fun () -> FileHeap.revive_batch files)
-end
+let clear_not_found file_key =
+  WorkerCancel.with_no_cancellations (fun () ->
+      match FileHeap.get file_key with
+      | Some file -> Heap.entity_advance file None
+      | None -> ()
+  )
 
 module type READER = sig
   type reader
@@ -352,7 +384,7 @@ module type READER = sig
   val loc_of_aloc : reader:reader -> ALoc.t -> Loc.t
 end
 
-let loc_of_aloc ~get_aloc_table_unsafe ~reader aloc =
+let loc_of_aloc ~reader ~get_aloc_table_unsafe aloc =
   let table =
     lazy
       (let source =
@@ -371,9 +403,14 @@ module Mutator_reader = struct
 
   let ( let* ) = Option.bind
 
-  let get_file_addr ~reader:_ = FileHeap.get
+  let get_file_addr ~reader:_ file_key =
+    let* file = FileHeap.get file_key in
+    Heap.(read_opt Fun.id (entity_read_latest file))
 
-  let get_old_file_addr ~reader:_ = FileHeap.get_old
+  let get_old_file_addr ~reader:_ file_key =
+    let* file = FileHeap.get file_key in
+    let* data = Heap.(read_opt Fun.id (entity_read_committed file)) in
+    Some data
 
   let get_checked_file_addr ~reader file =
     let* addr = get_file_addr ~reader file in
@@ -500,6 +537,7 @@ type worker_mutator = {
     type_sig ->
     unit;
   add_unparsed: File_key.t -> Xx.hash -> string option -> unit;
+  clear_not_found: File_key.t -> unit;
 }
 
 (* Parsing is pretty easy - there is no before state and no chance of rollbacks, so we don't
@@ -507,88 +545,98 @@ type worker_mutator = {
 module Parse_mutator : sig
   val create : unit -> worker_mutator
 end = struct
-  let create () = { add_parsed = ParsingHeaps.add_parsed; add_unparsed = ParsingHeaps.add_unparsed }
+  let create () =
+    let clear_not_found _ = () in
+    { add_parsed; add_unparsed; clear_not_found }
 end
 
-(* Reparsing is more complicated than parsing, since we need to worry about transactions
+(* Reparsing is more complicated than parsing, since we need to worry about transactions.
  *
- * Will immediately oldify `files`. When committed, will remove the oldified files. When rolled
- * back, will revive the oldified files.
+ * Modified files will be advanced based on the current transaction. Advancing a
+ * file ensures that the previous committed data is still available. Committing
+ * the transaction will publish the new data to all readers by bumping the
+ * global transaction counter, see Mutator_state_reader.
  *
- * If you revive some files before the transaction ends, then those won't be affected by
- * commit/rollback
+ * If the transaction is rolled back, we will revert changed entities. Ideally,
+ * we would not need to roll back / undo any writes when a transaction rolls
+ * back, assuming the next recheck is guaranteed to contain a superset of this
+ * recheck's files.
+ *
+ * This assumption does not hold for priority rechecks, where we cancel a
+ * recheck, schedule a minimal recheck to unblock the IDE request, then
+ * re-start the original recheck.
  *)
-let currently_oldified_files : FilenameSet.t ref = ref FilenameSet.empty
-
 module Reparse_mutator : sig
   type master_mutator (* Used by the master process *)
 
   val create : Transaction.t -> FilenameSet.t -> master_mutator * worker_mutator
 
-  val revive_files : master_mutator -> FilenameSet.t -> unit
+  val record_unchanged : master_mutator -> FilenameSet.t -> unit
+
+  val record_not_found : master_mutator -> FilenameSet.t -> unit
 end = struct
   type master_mutator = unit
 
-  let commit () =
-    WorkerCancel.with_no_cancellations (fun () ->
-        Hh_logger.debug "Committing parsing heaps";
-        let files = !currently_oldified_files in
-        Mutator_cache.clear ();
-        Reader_cache.remove_batch files;
-        ParsingHeaps.remove_old_batch files;
-        currently_oldified_files := FilenameSet.empty
-    );
-    Lwt.return_unit
+  (* We can conservatively invalidate caches for all `files`, but we can be a
+   * bit more precise by only invalidating changed files. If parsing reveals
+   * unchanged files, we remove them from this set. *)
+  let changed_files = ref FilenameSet.empty
 
-  let rollback () =
-    WorkerCancel.with_no_cancellations (fun () ->
-        Hh_logger.debug "Rolling back parsing heaps";
-        let files = !currently_oldified_files in
-        Mutator_cache.clear ();
-        ParsingHeaps.revive_batch files;
-        currently_oldified_files := FilenameSet.empty
-    );
-    Lwt.return_unit
+  (* When the transaction commits, we will remove these from the shared hash
+   * table, so sharedmem GC can collect them. *)
+  let not_found_files = ref FilenameSet.empty
 
-  (* Ideally we'd assert that file was oldified and not revived, but it's too expensive to pass the
-   * set of oldified files to the worker *)
-  let add_parsed = ParsingHeaps.add_parsed
+  let rollback_changed () =
+    FilenameSet.iter (fun key -> Option.iter Heap.entity_rollback (FileHeap.get key)) !changed_files
 
-  (* Ideally we'd assert that file was oldified and not revived, but it's too expensive to pass the
-   * set of oldified files to the worker *)
-  let add_unparsed = ParsingHeaps.add_unparsed
+  let reset_refs () =
+    changed_files := FilenameSet.empty;
+    not_found_files := FilenameSet.empty
 
   let create transaction files =
-    WorkerCancel.with_no_cancellations (fun () ->
-        currently_oldified_files := files;
-        ParsingHeaps.oldify_batch files;
-        Transaction.add ~singleton:"Reparse" ~commit ~rollback transaction;
-        ((), { add_parsed; add_unparsed })
-    )
+    changed_files := files;
 
-  let revive_files () files =
-    WorkerCancel.with_no_cancellations (fun () ->
-        (* Every file in files should be in the oldified set *)
-        assert (FilenameSet.is_empty (FilenameSet.diff files !currently_oldified_files));
-        currently_oldified_files := FilenameSet.diff !currently_oldified_files files;
-        ParsingHeaps.revive_batch files
-    )
+    let commit () =
+      WorkerCancel.with_no_cancellations (fun () ->
+          Hh_logger.debug "Committing parsing heaps";
+          Mutator_cache.clear ();
+          Reader_cache.remove_batch !changed_files;
+          FileHeap.remove_batch !not_found_files;
+          reset_refs ()
+      );
+      Lwt.return_unit
+    in
+
+    let rollback () =
+      WorkerCancel.with_no_cancellations (fun () ->
+          Hh_logger.debug "Rolling back parsing heaps";
+          Mutator_cache.clear ();
+          rollback_changed ();
+          reset_refs ()
+      );
+      Lwt.return_unit
+    in
+
+    Transaction.add ~singleton:"Reparse" ~commit ~rollback transaction;
+
+    ((), { add_parsed; add_unparsed; clear_not_found })
+
+  let record_unchanged () unchanged = changed_files := FilenameSet.diff !changed_files unchanged
+
+  let record_not_found () not_found = not_found_files := not_found
 end
 
-(* This peaks at the Reparse_mutator's state and uses that to determine whether to read from the
- * old or new heap. This is used by code outside of a init/recheck, like commands *)
-module Reader : READER with type reader = State_reader.t = struct
+(* This uses `entity_read_committed` and can be used by code outside of a
+ * init/recheck, like commands, to see a consistent snapshot of type state even
+ * in the middle of a recheck. *)
+module Reader = struct
   type reader = State_reader.t
 
   let ( let* ) = Option.bind
 
-  let should_use_oldified key = FilenameSet.mem key !currently_oldified_files
-
   let get_file_addr ~reader:_ key =
-    if should_use_oldified key then
-      FileHeap.get_old key
-    else
-      FileHeap.get key
+    let* file = FileHeap.get key in
+    Heap.(read_opt Fun.id (entity_read_committed file))
 
   let get_checked_file_addr ~reader key =
     let* addr = get_file_addr ~reader key in
@@ -824,22 +872,23 @@ end = struct
     let (exports_size, write_exports) = Heap.prepare_write_exports exports in
     let open Heap in
     let size =
-      (3 * header_size)
+      (4 * header_size)
+      + entity_size
       + checked_file_size
       + int64_size
       + opt_size (with_header_size string_size) module_name
       + exports_size
     in
-    let file_addr =
+    let file =
       alloc size (fun chunk ->
           let hash = write_int64 chunk hash in
           let module_name = write_opt write_string chunk module_name in
           let exports = write_exports chunk in
-          let file = write_checked_file chunk hash module_name exports in
-          dyn_checked_file file
+          let data = write_checked_file chunk hash module_name exports in
+          write_entity chunk (Some (dyn_checked_file data))
       )
     in
-    assert (file_addr = FileHeap.add file_key file_addr)
+    assert (file = FileHeap.add file_key file)
 
-  let add_unparsed = ParsingHeaps.add_unparsed
+  let add_unparsed = add_unparsed
 end

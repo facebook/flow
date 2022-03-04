@@ -500,11 +500,15 @@ let reducer
   let filename_string = File_key.to_string file in
   match cat filename_string with
   | exception _ ->
-    (* It turns out that sometimes files appear and disappear very quickly. Just
-     * because someone told us that this file exists and needs to be parsed, it
-     * doesn't mean it actually still exists. If anything goes wrong reading this
-     * file, let's skip it. We don't need to notify our caller, since they'll
-     * probably get the delete event anyway *)
+    (* The file watcher does not distinguish between modified or deleted files,
+     * we distinguish by parsing. Either the wather notified us because the file
+     * was deleted, or because the file was modified and then the file was
+     * deleted before we got to this point.
+     *
+     * In either case, we update the file entity so that the latest data is
+     * empty, indicating no file. We also record these files so their shared
+     * hash table keys can be removed when the transaction commits. *)
+    worker_mutator.Parsing_heaps.clear_not_found file;
     { acc with not_found = FilenameSet.add file acc.not_found }
   | content ->
     let hash = hash_content content in
@@ -712,8 +716,8 @@ let reparse
       workers
       next
   in
-  (* restore old parsing info for unchanged files *)
-  Parsing_heaps.Reparse_mutator.revive_files master_mutator results.unchanged;
+  Parsing_heaps.Reparse_mutator.record_unchanged master_mutator results.unchanged;
+  Parsing_heaps.Reparse_mutator.record_not_found master_mutator results.not_found;
   Lwt.return results
 
 let make_parse_options_internal
