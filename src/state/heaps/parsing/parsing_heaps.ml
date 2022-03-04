@@ -238,7 +238,7 @@ let read_ast_unsafe file_key parse =
   | Some ast -> ast
   | None -> raise (Ast_not_found (File_key.to_string file_key))
 
-let read_docblock parse =
+let read_docblock parse : Docblock.t option =
   let open Heap in
   let deserialize x = Marshal.from_string x 0 in
   get_docblock parse |> read_opt (fun addr -> read_docblock addr |> deserialize)
@@ -268,7 +268,7 @@ let read_type_sig_unsafe file_key parse =
   | Some type_sig -> type_sig
   | None -> raise (Type_sig_not_found (File_key.to_string file_key))
 
-let read_tolerable_file_sig parse =
+let read_tolerable_file_sig parse : File_sig.With_Loc.tolerable_t option =
   let open Heap in
   let deserialize x = Marshal.from_string x 0 in
   get_file_sig parse |> read_opt (fun addr -> read_file_sig addr |> deserialize)
@@ -814,7 +814,7 @@ module Reader = struct
   let get_type_sig_unsafe ~reader file =
     let addr = get_file_addr_unsafe file in
     let parse = get_parse_unsafe ~reader file addr in
-    read_docblock_unsafe file parse
+    read_type_sig_unsafe file parse
 
   let get_file_hash_unsafe ~reader file =
     let addr = get_file_addr_unsafe file in
