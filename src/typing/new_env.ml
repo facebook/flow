@@ -146,7 +146,7 @@ module New_env = struct
       |> Base.Option.all
     in
     match providers with
-    | None -> assert_false (spf "Missing providers for %s" (ALoc.debug_to_string def_loc))
+    | None -> assert_false (spf "Missing providers for %s" (Reason.string_of_aloc def_loc))
     | Some [] -> MixedT.make (mk_reason (RCustom "no providers") def_loc) (Trust.bogus_trust ())
     | Some [t] -> t
     | Some (t1 :: t2 :: ts) when intersect ->
@@ -247,8 +247,8 @@ module New_env = struct
               [
                 spf
                   "reading %s from location %s"
-                  (ALoc.debug_to_string loc)
-                  (Reason.aloc_of_reason def |> ALoc.debug_to_string);
+                  (Reason.string_of_aloc loc)
+                  (Reason.aloc_of_reason def |> Reason.string_of_aloc);
               ];
             Base.Option.value_exn (Reason.aloc_of_reason def |> Loc_env.find_write env)
           | Env_api.With_ALoc.Write reason ->
@@ -257,8 +257,8 @@ module New_env = struct
               [
                 spf
                   "reading %s from location %s"
-                  (ALoc.debug_to_string loc)
-                  (Reason.aloc_of_reason reason |> ALoc.debug_to_string);
+                  (Reason.string_of_aloc loc)
+                  (Reason.aloc_of_reason reason |> Reason.string_of_aloc);
               ];
             Base.Option.value_exn (Reason.aloc_of_reason reason |> Loc_env.find_write env)
           | Env_api.With_ALoc.Refinement { refinement_id; writes } ->
@@ -405,7 +405,9 @@ module New_env = struct
   let set_env_entry cx ~use_op t loc =
     let ({ Loc_env.var_info; resolved; _ } as env) = Context.environment cx in
     if not (ALocSet.mem loc resolved) then begin
-      Debug_js.Verbose.print_if_verbose cx [spf "writing to location %s" (ALoc.debug_to_string loc)];
+      Debug_js.Verbose.print_if_verbose
+        cx
+        [spf "writing to location %s" (Reason.string_of_aloc loc)];
       begin
         match Loc_env.find_write env loc with
         | None ->
@@ -434,7 +436,7 @@ module New_env = struct
     end else
       Debug_js.Verbose.print_if_verbose
         cx
-        [spf "Location %s already fully resolved" (ALoc.debug_to_string loc)]
+        [spf "Location %s already fully resolved" (Reason.string_of_aloc loc)]
 
   let resolve_env_entry cx t loc =
     set_env_entry cx ~use_op:unknown_use t loc;

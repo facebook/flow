@@ -24,7 +24,7 @@ let initialize ({ types; _ } as info) loc t =
     ALocMap.update
       loc
       (function
-        | Some _ -> failwith (Utils_js.spf "%s already initialized" (ALoc.debug_to_string loc))
+        | Some _ -> failwith (Utils_js.spf "%s already initialized" (Reason.string_of_aloc loc))
         | None -> Some t)
       types
   in
