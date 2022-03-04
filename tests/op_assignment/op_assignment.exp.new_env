@@ -1,0 +1,299 @@
+Error ----------------------------------------------------------------------------------------------------- test.js:69:3
+
+Cannot reassign constant `x` [1]. [reassign-const]
+
+   test.js:69:3
+   69|   x += 2; // Error: cannot reassign constant
+         ^
+
+References:
+   test.js:68:9
+   68|   const x = 1;
+               ^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:70:3
+
+Cannot reassign constant `x` [1]. [reassign-const]
+
+   test.js:70:3
+   70|   x -= 2; // Error: cannot reassign constant
+         ^
+
+References:
+   test.js:68:9
+   68|   const x = 1;
+               ^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:71:3
+
+Cannot reassign constant `x` [1]. [reassign-const]
+
+   test.js:71:3
+   71|   x *= 2; // Error: cannot reassign constant
+         ^
+
+References:
+   test.js:68:9
+   68|   const x = 1;
+               ^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:72:3
+
+Cannot reassign constant `x` [1]. [reassign-const]
+
+   test.js:72:3
+   72|   x /= 2; // Error: cannot reassign constant
+         ^
+
+References:
+   test.js:68:9
+   68|   const x = 1;
+               ^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:73:3
+
+Cannot reassign constant `x` [1]. [reassign-const]
+
+   test.js:73:3
+   73|   x **= 2; // Error: cannot reassign constant
+         ^
+
+References:
+   test.js:68:9
+   68|   const x = 1;
+               ^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:74:3
+
+Cannot reassign constant `x` [1]. [reassign-const]
+
+   test.js:74:3
+   74|   x %= 2; // Error: cannot reassign constant
+         ^
+
+References:
+   test.js:68:9
+   68|   const x = 1;
+               ^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:75:3
+
+Cannot reassign constant `x` [1]. [reassign-const]
+
+   test.js:75:3
+   75|   x &&= 2; // Error: cannot reassign constant
+         ^
+
+References:
+   test.js:68:9
+   68|   const x = 1;
+               ^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:76:3
+
+Cannot reassign constant `x` [1]. [reassign-const]
+
+   test.js:76:3
+   76|   x ||= 2; // Error: cannot reassign constant
+         ^
+
+References:
+   test.js:68:9
+   68|   const x = 1;
+               ^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:77:3
+
+Cannot reassign constant `x` [1]. [reassign-const]
+
+   test.js:77:3
+   77|   x ??= 2; // Error: cannot reassign constant
+         ^
+
+References:
+   test.js:68:9
+   68|   const x = 1;
+               ^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:83:3
+
+Cannot reassign constant `sx` [1]. [reassign-const]
+
+   test.js:83:3
+   83|   sx += "b"; // Error: cannot reassign constant
+         ^^
+
+References:
+   test.js:82:9
+   82|   const sx = "a";
+               ^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:89:5
+
+Cannot update `o.p` because property `p` is not writable. [cannot-write]
+
+   89|   o.p += 2; // Error: property is non-writable
+           ^
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:90:5
+
+Cannot update `o.p` because property `p` is not writable. [cannot-write]
+
+   90|   o.p -= 2; // Error: property is non-writable
+           ^
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:91:5
+
+Cannot update `o.p` because property `p` is not writable. [cannot-write]
+
+   91|   o.p *= 2; // Error: property is non-writable
+           ^
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:92:5
+
+Cannot update `o.p` because property `p` is not writable. [cannot-write]
+
+   92|   o.p /= 2; // Error: property is non-writable
+           ^
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:93:5
+
+Cannot update `o.p` because property `p` is not writable. [cannot-write]
+
+   93|   o.p **= 2; // Error: property is non-writable
+           ^
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:94:5
+
+Cannot update `o.p` because property `p` is not writable. [cannot-write]
+
+   94|   o.p %= 2; // Error: property is non-writable
+           ^
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:95:5
+
+Cannot update `o.p` because property `p` is not writable. [cannot-write]
+
+   95|   o.p &&= 2; // Error: property is non-writable
+           ^
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:96:5
+
+Cannot update `o.p` because property `p` is not writable. [cannot-write]
+
+   96|   o.p ||= 2; // Error: property is non-writable
+           ^
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:97:5
+
+Cannot update `o.p` because property `p` is not writable. [cannot-write]
+
+   97|   o.p ??= 2; // Error: property is non-writable
+           ^
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:103:5
+
+Cannot update `o.p` because property `p` is not writable. [cannot-write]
+
+   103|   o.p += "b"; // Error: property is non-writable
+            ^
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:109:5
+
+Cannot get `o.p` because property `p` is not readable. [cannot-read]
+
+   109|   o.p += 2; // Error: property is non-readable
+            ^
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:119:9
+
+Cannot assign &&= to `x` because number [1] is incompatible with boolean [2]. [incompatible-type]
+
+   test.js:119:9
+   119|   x &&= 3; // Error: number not assignable to boolean
+                ^ [1]
+
+References:
+   test.js:116:10
+   116|   let x: boolean = false;
+                 ^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:120:9
+
+Cannot assign ||= to `y` because number [1] is incompatible with boolean [2]. [incompatible-type]
+
+   test.js:120:9
+   120|   y ||= 3; // Error: number not assignable to boolean
+                ^ [1]
+
+References:
+   test.js:117:10
+   117|   let y: boolean = false;
+                 ^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:121:9
+
+Cannot assign ??= to `z` because number [1] is incompatible with boolean [2]. [incompatible-type]
+
+   test.js:121:9
+   121|   z ??= 3; // Error: number not assignable to boolean
+                ^ [1]
+
+References:
+   test.js:118:11
+   118|   let z: ?boolean = false;
+                  ^^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- test.js:140:29
+
+Cannot expect number as the return type of function because number [1] is incompatible with implicitly-returned
+undefined. [incompatible-return]
+
+   140|   function alwaysThrows1(): number { x ??= invariant(false); } // Error
+                                    ^^^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------------------------- test.js:141:29
+
+Cannot expect number as the return type of function because number [1] is incompatible with implicitly-returned
+undefined. [incompatible-return]
+
+   141|   function alwaysThrows2(): number { y &&= invariant(false); } // Error
+                                    ^^^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------------------------- test.js:142:29
+
+Cannot expect number as the return type of function because number [1] is incompatible with implicitly-returned
+undefined. [incompatible-return]
+
+   142|   function alwaysThrows3(): number { x ||= invariant(false); } // Error
+                                    ^^^^^^ [1]
+
+
+
+Found 27 errors

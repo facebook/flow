@@ -1420,7 +1420,7 @@ module Make
       (* Order of evaluation matters *)
       method! assignment _loc (expr : (ALoc.t, ALoc.t) Ast.Expression.Assignment.t) =
         let open Ast.Expression.Assignment in
-        let { operator; left; right; comments = _ } = expr in
+        let { operator; left = (left_loc, _) as left; right; comments = _ } = expr in
         begin
           match operator with
           | None ->
@@ -1435,7 +1435,10 @@ module Make
                 (* given `o.x = e`, read o then read e *)
                 this#assign_expression ~update_entry:true e right
             end
-          | Some _ ->
+          | Some
+              ( PlusAssign | MinusAssign | MultAssign | ExpAssign | DivAssign | ModAssign
+              | LShiftAssign | RShiftAssign | RShift3Assign | BitOrAssign | BitXorAssign
+              | BitAndAssign ) ->
             let open Ast.Pattern in
             begin
               match left with
@@ -1449,6 +1452,51 @@ module Make
                 this#assign_expression ~update_entry:true e right
               | (_, (Object _ | Array _)) -> statement_error
             end
+          | Some ((OrAssign | AndAssign | NullishAssign) as operator) ->
+            let left_expr =
+              match left with
+              | (lhs_loc, Ast.Pattern.Identifier { Ast.Pattern.Identifier.name; _ }) ->
+                Some (lhs_loc, Ast.Expression.Identifier name)
+              | (lhs_loc, Ast.Pattern.Expression (_, Ast.Expression.Member mem)) ->
+                Some (lhs_loc, Ast.Expression.Member mem)
+              | _ -> None
+            in
+            this#push_refinement_scope LookupMap.empty;
+            (match left_expr with
+            | None -> statement_error
+            | Some left_expr ->
+              (* THe LHS is unconditionally evaluated, so we don't run-to-completion and catch the
+               * error here *)
+              (match operator with
+              | OrAssign
+              | AndAssign ->
+                ignore (this#expression_refinement left_expr)
+              | NullishAssign ->
+                ignore (this#expression left_expr);
+                this#add_refinement_to_expr left_expr (L.LSet.singleton left_loc, NotR MaybeR)
+              | _ -> ()));
+            let env1 = this#env_without_latest_refinements in
+            let env1_with_refinements = this#env in
+            (match operator with
+            | NullishAssign
+            | OrAssign ->
+              this#negate_new_refinements ()
+            | _ -> ());
+            (* The RHS is _only_ evaluated if the LHS fails its check. That means that patterns like
+               * x || invariant(false) should propagate the truthy refinement to the next line. We keep track
+               * of the completion state on the rhs to do that. If the LHS throws then the entire expression
+               * throws, so there's no need to catch the exception from the LHS *)
+            let rhs_completion_state =
+              this#run_to_completion (fun () -> ignore @@ this#expression right)
+            in
+            (match rhs_completion_state with
+            | Some AbruptCompletion.Throw ->
+              this#reset_env env1_with_refinements;
+              this#pop_refinement_scope_without_unrefining ()
+            | _ ->
+              this#pop_refinement_scope ();
+              this#merge_self_env env1);
+            ignore @@ this#assignment_pattern left
         end;
         expr
 

@@ -90,7 +90,7 @@ let print_ssa_test ?(custom_jsx = None) ?(react_runtime_automatic=false) content
       jsx_mode := Options.Jsx_pragma (str, aloc_ast)
 
   );
-  let aloc_ast = parse_with_alocs contents in 
+  let aloc_ast = parse_with_alocs contents in
   let refined_reads, refinement_of_id = Name_resolver.program () aloc_ast in
   print_values refinement_of_id refined_reads;
   react_runtime := Options.ReactRuntimeClassic;
@@ -215,6 +215,72 @@ let%expect_test "logical_nested2" =
       };
       (2, 18) to (2, 19) => {
         {refinement = Truthy; writes = {refinement = Not (And (Truthy, Truthy)); writes = (1, 4) to (1, 5): (`x`)}}
+      }] |}]
+
+let%expect_test "logical_assignment_and" =
+  print_ssa_test {|let x = null;
+x &&= x;|}; [%expect {|
+    [
+      (2, 0) to (2, 1) => {
+        (1, 4) to (1, 5): (`x`)
+      };
+      (2, 6) to (2, 7) => {
+        {refinement = Truthy; writes = (1, 4) to (1, 5): (`x`)}
+      }] |}]
+
+let%expect_test "logical_assignment_or" =
+  print_ssa_test {|let x = null;
+x ||= x;|}; [%expect {|
+    [
+      (2, 0) to (2, 1) => {
+        (1, 4) to (1, 5): (`x`)
+      };
+      (2, 6) to (2, 7) => {
+        {refinement = Not (Truthy); writes = (1, 4) to (1, 5): (`x`)}
+      }] |}]
+
+let%expect_test "logical_assignment_nullish" =
+  print_ssa_test {|let x = null;
+x ??= x;|}; [%expect {|
+    [
+      (2, 0) to (2, 1) => {
+        (1, 4) to (1, 5): (`x`)
+      };
+      (2, 6) to (2, 7) => {
+        {refinement = Not (Not (Maybe)); writes = (1, 4) to (1, 5): (`x`)}
+      }] |}]
+
+let%expect_test "logical_assignment_and_throws" =
+  print_ssa_test {|let x = null;
+x &&= invariant(false);|}; [%expect {|
+    [
+      (2, 0) to (2, 1) => {
+        (1, 4) to (1, 5): (`x`)
+      };
+      (2, 6) to (2, 15) => {
+        Global invariant
+      }] |}]
+
+let%expect_test "logical_assignment_or_throws" =
+  print_ssa_test {|let x = null;
+x ||= invariant(false);|}; [%expect {|
+    [
+      (2, 0) to (2, 1) => {
+        (1, 4) to (1, 5): (`x`)
+      };
+      (2, 6) to (2, 15) => {
+        Global invariant
+      }] |}]
+
+let%expect_test "logical_assignment_nullish_throws" =
+  print_ssa_test {|let x = null;
+x ??= invariant(false);|}; [%expect {|
+    [
+      (2, 0) to (2, 1) => {
+        (1, 4) to (1, 5): (`x`)
+      };
+      (2, 6) to (2, 15) => {
+        Global invariant
       }] |}]
 
 let%expect_test "assignment_truthy" =
@@ -3400,7 +3466,7 @@ while (x.foo === 3) {
   x.foo;
   break;
 }
-x.foo; // No heap refinement here from guard, but union of === 4 and projection 
+x.foo; // No heap refinement here from guard, but union of === 4 and projection
 |};
     [%expect {|
       [
