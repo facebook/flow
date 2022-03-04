@@ -63,8 +63,25 @@ References:
                        ^ [2]
 
 
+Error ---------------------------------------------------------------------------------------------------- test.js:32:17
 
-Found 4 errors
+Cannot extend `D` [1] with `obj` because object type [2] is not inheritable. [incompatible-use]
+
+   test.js:32:17
+   32| class D extends obj {}
+                       ^^^
+
+References:
+   test.js:32:7
+   32| class D extends obj {}
+             ^ [1]
+   test.js:31:18
+   31| declare var obj: {};
+                        ^^ [2]
+
+
+
+Found 5 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

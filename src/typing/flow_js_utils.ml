@@ -388,6 +388,7 @@ let error_message_kind_of_upper = function
   | ArrRestT _ -> Error_message.IncompatibleArrRestT
   | SuperT _ -> Error_message.IncompatibleSuperT
   | MixinT _ -> Error_message.IncompatibleMixinT
+  | SpecializeT (Op (ClassExtendsCheck _), _, _, _, _, _) -> Error_message.IncompatibleSuperT
   | SpecializeT _ -> Error_message.IncompatibleSpecializeT
   | ConcretizeTypeAppsT _ -> Error_message.IncompatibleSpecializeT
   | ThisSpecializeT _ -> Error_message.IncompatibleThisSpecializeT

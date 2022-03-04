@@ -491,12 +491,12 @@ struct
     in
     (initialized_fields, fields, methods, call)
 
-  let specialize cx targs c =
+  let specialize cx use_op targs c =
     let open Type in
     let open TypeUtil in
     let reason = reason_of_t c in
     Tvar.mk_where cx reason (fun tvar ->
-        Flow.flow cx (c, SpecializeT (unknown_use, reason, reason, None, targs, tvar))
+        Flow.flow cx (c, SpecializeT (use_op, reason, reason, None, targs, tvar))
     )
 
   let statictype cx static_proto x =
@@ -638,7 +638,10 @@ struct
           (* Eagerly specialize when there are no targs *)
           let c =
             if targs = None then
-              specialize cx targs c
+              let use_op =
+                Op (ClassExtendsCheck { def = reason_of_t c; extends = x.instance.reason })
+              in
+              specialize cx use_op targs c
             else
               c
           in
@@ -663,7 +666,7 @@ struct
             (* Eagerly specialize when there are no targs *)
             let c =
               if targs = None then
-                specialize cx targs c
+                specialize cx unknown_use targs c
               else
                 c
             in
@@ -879,6 +882,7 @@ struct
           | Infer (fsig, set_asts) -> method_ this_recipe super ~set_asts fsig
         in
         let (instance_this_default, static_this_default, super, static_super) =
+          let open Type in
           let super_reason = update_desc_reason (fun d -> RSuperOf d) x.instance.reason in
           match x.super with
           | Interface _ -> failwith "tried to evaluate toplevel of interface"
@@ -892,22 +896,26 @@ struct
                    expects a PolyT here. *)
                 let c =
                   if targs = None then
-                    specialize cx targs c
+                    let use_op =
+                      Op
+                        (ClassExtendsCheck
+                           { def = TypeUtil.reason_of_t c; extends = x.instance.reason }
+                        )
+                    in
+                    specialize cx use_op targs c
                   else
                     c
                 in
                 let t = TypeUtil.this_typeapp ~annot_loc c this_t targs in
                 (t, TypeUtil.class_type ~annot_loc t)
               | Implicit { null } ->
-                Type.
-                  ( ( if null then
-                      NullProtoT super_reason
-                    else
-                      ObjProtoT super_reason
-                    ),
-                    FunProtoT super_reason
-                  )
-                
+                ( ( if null then
+                    NullProtoT super_reason
+                  else
+                    ObjProtoT super_reason
+                  ),
+                  FunProtoT super_reason
+                )
             in
 
             (this_t, TypeUtil.class_type this_t, super, static_super)
