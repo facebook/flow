@@ -132,6 +132,7 @@ GEM
     unicode-display_width (1.7.0)
 
 PLATFORMS
+  x86_64-darwin-21
   x86_64-linux
 
 DEPENDENCIES
@@ -144,4 +145,4 @@ RUBY VERSION
    ruby 2.6.6p146
 
 BUNDLED WITH
-   2.2.24
+   2.3.8
