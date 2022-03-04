@@ -117,13 +117,13 @@ let sig_hash ~root =
       in
       ES { filename; type_exports; exports; ns }
     in
-    fun dep_key dep_addr ->
-      let buf = Heap.read_opt_exn Heap.type_sig_buf (Heap.get_file_type_sig dep_addr) in
+    fun dep_key dep_parse ->
+      let buf = Heap.read_opt_exn Heap.type_sig_buf (Heap.get_type_sig dep_parse) in
       Bin.read_module_kind (cjs_module dep_key) (es_module dep_key) buf (Bin.module_kind buf)
   in
 
   (* Create a Type_sig_hash.checked_dep record for a file in the merged component. *)
-  let cyclic_dep file_key file_addr file =
+  let cyclic_dep file_key parse file =
     let filename = Fun.const (hash_file_key file_key) in
 
     let type_export buf pos =
@@ -213,7 +213,7 @@ let sig_hash ~root =
       ES { filename; type_exports; exports; ns }
     in
 
-    let buf = Heap.read_opt_exn Heap.type_sig_buf (Heap.get_file_type_sig file_addr) in
+    let buf = Heap.read_opt_exn Heap.type_sig_buf (Heap.get_type_sig parse) in
     Bin.read_module_kind cjs_module es_module buf (Bin.module_kind buf)
   in
 
@@ -222,20 +222,21 @@ let sig_hash ~root =
     | None -> Unchecked
     | Some (File_key.ResourceFile f) -> resource_dep f
     | Some dep ->
-      let addr = Parsing_heaps.Mutator_reader.get_file_addr_unsafe ~reader dep in
-      (match Heap.coerce_checked_file addr with
+      let addr = Parsing_heaps.get_file_addr_unsafe dep in
+      (match Parsing_heaps.Mutator_reader.get_parse ~reader addr with
       | None -> Unchecked
-      | Some addr ->
+      | Some parse ->
         (match FilenameMap.find_opt dep component_map with
         | Some i -> Cyclic (lazy (Lazy.force component_rec).(i))
-        | None -> Acyclic (lazy (acyclic_dep dep addr))))
+        | None -> Acyclic (lazy (acyclic_dep dep parse))))
   in
 
   (* Create a Type_sig_hash.file record for a file in the merged component. *)
   let component_file ~reader component_rec component_map file_key =
-    let file_addr = Parsing_heaps.Mutator_reader.get_checked_file_addr_unsafe ~reader file_key in
+    let file_addr = Parsing_heaps.get_file_addr_unsafe file_key in
+    let parse = Parsing_heaps.Mutator_reader.get_parse_unsafe ~reader file_key file_addr in
 
-    let buf = Heap.read_opt_exn Heap.type_sig_buf (Heap.get_file_type_sig file_addr) in
+    let buf = Heap.read_opt_exn Heap.type_sig_buf (Heap.get_type_sig parse) in
 
     let dependencies =
       let { Module_heaps.resolved_modules; _ } =
@@ -316,7 +317,7 @@ let sig_hash ~root =
         }
     in
 
-    cyclic_dep file_key file_addr (Lazy.force file_rec)
+    cyclic_dep file_key parse (Lazy.force file_rec)
   in
 
   fun ~reader component ->
@@ -363,8 +364,8 @@ let merge_component ~worker_mutator ~options ~reader ((leader_f, _) as component
    * unchecked.
    *
    * It also follows when the head is checked, the tail must be checked too! *)
-  let leader_addr = Parsing_heaps.Mutator_reader.get_file_addr_unsafe ~reader leader_f in
-  if not (Heap.is_checked_file leader_addr) then
+  let leader_addr = Parsing_heaps.get_file_addr_unsafe leader_f in
+  if not (Parsing_heaps.Mutator_reader.is_checked_file ~reader leader_addr) then
     let diff = false in
     (diff, Ok None)
   else
@@ -379,15 +380,16 @@ let merge_component ~worker_mutator ~options ~reader ((leader_f, _) as component
     let (cx, _) =
       Nel.map
         (fun file ->
-          let addr = Parsing_heaps.Mutator_reader.get_checked_file_addr_unsafe ~reader file in
-          let docblock = Parsing_heaps.read_docblock_unsafe file addr in
+          let addr = Parsing_heaps.get_file_addr_unsafe file in
+          let parse = Parsing_heaps.Mutator_reader.get_parse_unsafe ~reader file addr in
+          let docblock = Parsing_heaps.read_docblock_unsafe file parse in
           let metadata = Context.docblock_overrides docblock metadata in
           let lint_severities = Merge_js.get_lint_severities metadata strict_mode lint_severities in
-          let aloc_table = lazy (Parsing_heaps.read_aloc_table_unsafe file addr) in
+          let aloc_table = lazy (Parsing_heaps.read_aloc_table_unsafe file parse) in
           let module_ref = Reason.OrdinaryName (Files.module_ref file) in
           let cx = Context.make ccx metadata file aloc_table module_ref Context.Merging in
           let (_, { Flow_ast.Program.all_comments = comments; _ }) =
-            Parsing_heaps.read_ast_unsafe file addr
+            Parsing_heaps.read_ast_unsafe file parse
           in
           Type_inference_js.scan_for_suppressions cx lint_severities comments;
           cx)
@@ -401,13 +403,13 @@ let merge_component ~worker_mutator ~options ~reader ((leader_f, _) as component
     (diff, Ok (Some (suppressions, duration)))
 
 let mk_check_file options ~reader () =
-  let get_ast_unsafe file addr =
-    let ast = Parsing_heaps.read_ast_unsafe file addr in
+  let get_ast_unsafe file parse =
+    let ast = Parsing_heaps.read_ast_unsafe file parse in
     let (_, { Flow_ast.Program.all_comments; _ }) = ast in
     (all_comments, Ast_loc_utils.loc_to_aloc_mapper#program ast)
   in
-  let get_tolerable_file_sig_unsafe file addr =
-    Parsing_heaps.read_tolerable_file_sig_unsafe file addr |> File_sig.abstractify
+  let get_tolerable_file_sig_unsafe file parse =
+    Parsing_heaps.read_tolerable_file_sig_unsafe file parse |> File_sig.abstractify
   in
   let get_type_sig_unsafe = Parsing_heaps.read_type_sig_unsafe in
   let get_aloc_table_unsafe = Parsing_heaps.read_aloc_table_unsafe in
@@ -419,15 +421,15 @@ let mk_check_file options ~reader () =
   in
   fun file ->
     let start_time = Unix.gettimeofday () in
-    let addr = Parsing_heaps.Mutator_reader.get_file_addr_unsafe ~reader file in
-    match Heap.coerce_checked_file addr with
+    let addr = Parsing_heaps.get_file_addr_unsafe file in
+    match Parsing_heaps.Mutator_reader.get_parse ~reader addr with
     | None -> None
-    | Some addr ->
-      let (comments, ast) = get_ast_unsafe file addr in
-      let type_sig = get_type_sig_unsafe file addr in
-      let (file_sig, tolerable_errors) = get_tolerable_file_sig_unsafe file addr in
-      let docblock = get_docblock_unsafe file addr in
-      let aloc_table = lazy (get_aloc_table_unsafe file addr) in
+    | Some parse ->
+      let (comments, ast) = get_ast_unsafe file parse in
+      let type_sig = get_type_sig_unsafe file parse in
+      let (file_sig, tolerable_errors) = get_tolerable_file_sig_unsafe file parse in
+      let docblock = get_docblock_unsafe file parse in
+      let aloc_table = lazy (get_aloc_table_unsafe file parse) in
       let requires =
         let require_loc_map = File_sig.With_ALoc.(require_loc_map file_sig.module_sig) in
         let { Module_heaps.resolved_modules; _ } =

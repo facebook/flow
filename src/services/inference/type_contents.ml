@@ -212,8 +212,8 @@ let unchecked_dependencies ~options ~reader file file_sig =
       Modulename.Set.empty
   in
   let should_be_checked f =
-    match Parsing_heaps.Reader.get_file_addr ~reader f with
-    | Some addr -> Parsing_heaps.is_checked_file addr
+    match Parsing_heaps.get_file_addr f with
+    | Some addr -> Parsing_heaps.Reader.is_checked_file ~reader addr
     | None -> false
   in
   let has_been_checked f = Base.Option.is_some (Context_heaps.Reader.find_leader_opt ~reader f) in

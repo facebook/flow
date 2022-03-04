@@ -33,16 +33,17 @@ type _ addr = int
 type tag =
   | Entity_tag (* 0 *)
   | Addr_tbl_tag
-  | Checked_file_tag
-  | Unparsed_file_tag
+  | Unparse_tag
+  | Parse_tag
+  | File_tag
   (* tags defined below this point are scanned for pointers *)
-  | String_tag (* 4 *)
+  | String_tag (* 5 *)
   | Int64_tag
   | Docblock_tag
   | ALoc_table_tag
   | Type_sig_tag
   (* tags defined above this point are serialized+compressed *)
-  | Serialized_tag (* 9 *)
+  | Serialized_tag (* 10 *)
   | Serialized_resolved_requires_tag
   | Serialized_ast_tag
   | Serialized_file_sig_tag
@@ -58,8 +59,8 @@ let tag_val : tag -> int = Obj.magic
 (* double-check integer values are consistent with hh_shared.c *)
 let () =
   assert (tag_val Entity_tag = 0);
-  assert (tag_val String_tag = 4);
-  assert (tag_val Serialized_tag = 9)
+  assert (tag_val String_tag = 5);
+  assert (tag_val Serialized_tag = 10)
 
 exception Out_of_shared_memory
 
@@ -923,11 +924,11 @@ module NewAPI = struct
 
   type exports
 
-  type checked_file
+  type unparse
 
-  type unparsed_file
+  type parse
 
-  type dyn_file
+  type file
 
   type size = int
 
@@ -1434,99 +1435,94 @@ module NewAPI = struct
 
   let read_exports addr = read_compressed Serialized_exports_tag addr
 
-  (** Checked files *)
+  (** Field utils *)
 
-  let checked_file_size = 8 * addr_size
+  let set_generic offset base = unsafe_write_addr_at (get_heap ()) (offset base)
 
-  let unparsed_file_size = 2 * addr_size
+  let get_generic offset base = read_addr (get_heap ()) (offset base)
 
-  let write_checked_file chunk hash module_name exports =
+  (** Unparse *)
+
+  let unparse_size = 2 * addr_size
+
+  let write_unparse chunk hash module_name =
     let module_name = Option.value module_name ~default:opt_none in
-    let checked_file = write_header chunk Checked_file_tag checked_file_size in
+    let addr = write_header chunk Unparse_tag unparse_size in
     unsafe_write_addr chunk hash;
     unsafe_write_addr chunk module_name;
+    addr
+
+  let file_hash_addr unparse = addr_offset unparse 1
+
+  let module_name_addr unparse = addr_offset unparse 2
+
+  let get_file_hash = get_generic file_hash_addr
+
+  let get_module_name = get_generic module_name_addr
+
+  (** Parse *)
+
+  let parse_size = 6 * addr_size
+
+  let write_parse chunk exports =
+    let addr = write_header chunk Parse_tag parse_size in
     unsafe_write_addr chunk null_addr;
     unsafe_write_addr chunk null_addr;
     unsafe_write_addr chunk null_addr;
     unsafe_write_addr chunk null_addr;
     unsafe_write_addr chunk null_addr;
     unsafe_write_addr chunk exports;
-    checked_file
-
-  let write_unparsed_file chunk hash module_name =
-    let module_name = Option.value module_name ~default:opt_none in
-    let addr = write_header chunk Unparsed_file_tag unparsed_file_size in
-    unsafe_write_addr chunk hash;
-    unsafe_write_addr chunk module_name;
     addr
 
-  let dyn_checked_file = Obj.magic
+  let ast_addr parse = addr_offset parse 1
 
-  let dyn_unparsed_file = Obj.magic
+  let docblock_addr parse = addr_offset parse 2
 
-  let assert_checked_file addr =
-    let hd = read_header (get_heap ()) addr in
-    assert_tag hd Checked_file_tag;
+  let aloc_table_addr parse = addr_offset parse 3
+
+  let type_sig_addr parse = addr_offset parse 4
+
+  let file_sig_addr parse = addr_offset parse 5
+
+  let exports_addr parse = addr_offset parse 6
+
+  let set_ast = set_generic ast_addr
+
+  let set_docblock = set_generic docblock_addr
+
+  let set_aloc_table = set_generic aloc_table_addr
+
+  let set_type_sig = set_generic type_sig_addr
+
+  let set_file_sig = set_generic file_sig_addr
+
+  let get_ast = get_generic ast_addr
+
+  let get_docblock = get_generic docblock_addr
+
+  let get_aloc_table = get_generic aloc_table_addr
+
+  let get_type_sig = get_generic type_sig_addr
+
+  let get_file_sig = get_generic file_sig_addr
+
+  let get_exports = get_generic exports_addr
+
+  (** Checked files *)
+
+  let file_size = 2 * addr_size
+
+  let write_file chunk unparse parse =
+    let addr = write_header chunk File_tag file_size in
+    unsafe_write_addr chunk unparse;
+    unsafe_write_addr chunk parse;
     addr
 
-  let is_checked_file addr =
-    let hd = read_header (get_heap ()) addr in
-    obj_tag hd = tag_val Checked_file_tag
+  let unparse_addr file = addr_offset file 1
 
-  let coerce_checked_file addr =
-    if is_checked_file addr then
-      Some addr
-    else
-      None
+  let parse_addr file = addr_offset file 2
 
-  let assert_unparsed_file addr =
-    let hd = read_header (get_heap ()) addr in
-    assert_tag hd Unparsed_file_tag;
-    addr
+  let get_unparse = get_generic unparse_addr
 
-  let file_hash_addr file = addr_offset file 1
-
-  let module_name_addr file = addr_offset file 2
-
-  let ast_addr file = addr_offset file 3
-
-  let docblock_addr file = addr_offset file 4
-
-  let aloc_table_addr file = addr_offset file 5
-
-  let type_sig_addr file = addr_offset file 6
-
-  let file_sig_addr file = addr_offset file 7
-
-  let exports_addr file = addr_offset file 8
-
-  let set_file_generic offset file addr = unsafe_write_addr_at (get_heap ()) (offset file) addr
-
-  let set_file_ast = set_file_generic ast_addr
-
-  let set_file_docblock = set_file_generic docblock_addr
-
-  let set_file_aloc_table = set_file_generic aloc_table_addr
-
-  let set_file_type_sig = set_file_generic type_sig_addr
-
-  let set_file_sig = set_file_generic file_sig_addr
-
-  let get_file_generic offset file = read_addr (get_heap ()) (offset file)
-
-  let get_file_hash = get_file_generic file_hash_addr
-
-  let get_file_module_name = get_file_generic module_name_addr
-
-  let get_file_ast = get_file_generic ast_addr
-
-  let get_file_docblock = get_file_generic docblock_addr
-
-  let get_file_aloc_table = get_file_generic aloc_table_addr
-
-  let get_file_type_sig = get_file_generic type_sig_addr
-
-  let get_file_sig = get_file_generic file_sig_addr
-
-  let get_file_exports = get_file_generic exports_addr
+  let get_parse = get_generic parse_addr
 end

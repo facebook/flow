@@ -810,18 +810,18 @@ let get_imports ~options ~reader module_names =
     let module_name = module_name_of_string ~options module_name_str in
     match Module_heaps.Reader.get_provider ~reader ~audit:Expensive.warn module_name with
     | Some file ->
-      let addr = Parsing_heaps.Reader.get_file_addr_unsafe ~reader file in
+      let addr = Parsing_heaps.get_file_addr_unsafe file in
       (* We do not process all modules which are stored in our module
        * database. In case we do not process a module its requirements
        * are not kept track of. To avoid confusing results we notify the
        * client that these modules have not been processed.
        *)
-      (match Parsing_heaps.coerce_checked_file addr with
-      | Some addr ->
+      (match Parsing_heaps.Reader.get_parse ~reader addr with
+      | Some parse ->
         let { Module_heaps.resolved_modules; _ } =
           Module_heaps.Reader.get_resolved_requires_unsafe ~reader ~audit:Expensive.warn file
         in
-        let fsig = Parsing_heaps.read_file_sig_unsafe file addr in
+        let fsig = Parsing_heaps.read_file_sig_unsafe file parse in
         let requires = File_sig.With_Loc.(require_loc_map fsig.module_sig) in
         let mlocs =
           SMap.fold

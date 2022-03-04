@@ -234,13 +234,11 @@ module NewAPI : sig
 
   type exports
 
-  (* Phantom type tag for checked file objects. A checked file contains
-   * references to the filename, any local definitions, exports, etc. *)
-  type checked_file
+  type unparse
 
-  type unparsed_file
+  type parse
 
-  type dyn_file
+  type file
 
   (* Before writing to the heap, we first calculate the required size (in words)
    * for all the heap objects we would like to write. We will pass this size
@@ -358,53 +356,51 @@ module NewAPI : sig
 
   val type_sig_buf : type_sig addr -> buf
 
+  (* unparse data *)
+
+  val unparse_size : size
+
+  val write_unparse : chunk -> heap_int64 addr -> heap_string addr option -> unparse addr
+
+  val get_file_hash : unparse addr -> heap_int64 addr
+
+  val get_module_name : unparse addr -> heap_string opt addr
+
+  (* parse data *)
+
+  val parse_size : size
+
+  val write_parse : chunk -> exports addr -> parse addr
+
+  val set_ast : parse addr -> ast addr -> unit
+
+  val set_docblock : parse addr -> docblock addr -> unit
+
+  val set_aloc_table : parse addr -> aloc_table addr -> unit
+
+  val set_type_sig : parse addr -> type_sig addr -> unit
+
+  val set_file_sig : parse addr -> file_sig addr -> unit
+
+  val get_ast : parse addr -> ast opt addr
+
+  val get_docblock : parse addr -> docblock opt addr
+
+  val get_aloc_table : parse addr -> aloc_table opt addr
+
+  val get_type_sig : parse addr -> type_sig opt addr
+
+  val get_file_sig : parse addr -> file_sig opt addr
+
+  val get_exports : parse addr -> exports addr
+
   (* checked file *)
 
-  val checked_file_size : size
+  val file_size : size
 
-  val unparsed_file_size : size
+  val write_file : chunk -> unparse entity addr -> parse entity addr -> file addr
 
-  val write_checked_file :
-    chunk -> heap_int64 addr -> heap_string addr option -> exports addr -> checked_file addr
+  val get_unparse : file addr -> unparse entity addr
 
-  val write_unparsed_file :
-    chunk -> heap_int64 addr -> heap_string addr option -> unparsed_file addr
-
-  val dyn_checked_file : checked_file addr -> dyn_file addr
-
-  val dyn_unparsed_file : unparsed_file addr -> dyn_file addr
-
-  val is_checked_file : dyn_file addr -> bool
-
-  val assert_checked_file : dyn_file addr -> checked_file addr
-
-  val coerce_checked_file : dyn_file addr -> checked_file addr option
-
-  val assert_unparsed_file : dyn_file addr -> unparsed_file addr
-
-  val set_file_ast : checked_file addr -> ast addr -> unit
-
-  val set_file_docblock : checked_file addr -> docblock addr -> unit
-
-  val set_file_aloc_table : checked_file addr -> aloc_table addr -> unit
-
-  val set_file_type_sig : checked_file addr -> type_sig addr -> unit
-
-  val set_file_sig : checked_file addr -> file_sig addr -> unit
-
-  val get_file_hash : dyn_file addr -> heap_int64 addr
-
-  val get_file_module_name : dyn_file addr -> heap_string opt addr
-
-  val get_file_ast : checked_file addr -> ast opt addr
-
-  val get_file_docblock : checked_file addr -> docblock opt addr
-
-  val get_file_aloc_table : checked_file addr -> aloc_table opt addr
-
-  val get_file_type_sig : checked_file addr -> type_sig opt addr
-
-  val get_file_sig : checked_file addr -> file_sig opt addr
-
-  val get_file_exports : checked_file addr -> exports addr
+  val get_parse : file addr -> parse entity addr
 end

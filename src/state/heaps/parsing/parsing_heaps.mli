@@ -9,47 +9,44 @@ type locs_tbl = Loc.t Type_sig_collections.Locs.t
 
 type type_sig = Type_sig_collections.Locs.index Packed_type_sig.Module.t
 
-type file_addr = SharedMem.NewAPI.dyn_file SharedMem.addr
+type file_addr = SharedMem.NewAPI.file SharedMem.addr
 
-type checked_file_addr = SharedMem.NewAPI.checked_file SharedMem.addr
+type unparse_addr = SharedMem.NewAPI.unparse SharedMem.addr
 
-type unparsed_file_addr = SharedMem.NewAPI.unparsed_file SharedMem.addr
+type parse_addr = SharedMem.NewAPI.parse SharedMem.addr
 
-val is_checked_file : file_addr -> bool
+val get_file_addr : File_key.t -> file_addr option
 
-val coerce_checked_file : file_addr -> checked_file_addr option
+val get_file_addr_unsafe : File_key.t -> file_addr
 
-val read_checked_file_hash : checked_file_addr -> Xx.hash
+val read_file_hash : unparse_addr -> Xx.hash
 
-val read_unparsed_file_hash : unparsed_file_addr -> Xx.hash
+val read_module_name : unparse_addr -> string option
 
-val read_module_name : file_addr -> string option
+val read_ast_unsafe : File_key.t -> parse_addr -> (Loc.t, Loc.t) Flow_ast.Program.t
 
-val read_checked_module_name : checked_file_addr -> string option
+val read_docblock_unsafe : File_key.t -> parse_addr -> Docblock.t
 
-val read_unparsed_module_name : unparsed_file_addr -> string option
+val read_aloc_table_unsafe : File_key.t -> parse_addr -> ALoc.table
 
-val read_ast_unsafe : File_key.t -> checked_file_addr -> (Loc.t, Loc.t) Flow_ast.Program.t
+val read_type_sig_unsafe : File_key.t -> parse_addr -> type_sig
 
-val read_docblock_unsafe : File_key.t -> checked_file_addr -> Docblock.t
+val read_tolerable_file_sig_unsafe : File_key.t -> parse_addr -> File_sig.With_Loc.tolerable_t
 
-val read_aloc_table_unsafe : File_key.t -> checked_file_addr -> ALoc.table
+val read_file_sig_unsafe : File_key.t -> parse_addr -> File_sig.With_Loc.t
 
-val read_type_sig_unsafe : File_key.t -> checked_file_addr -> type_sig
-
-val read_tolerable_file_sig_unsafe :
-  File_key.t -> checked_file_addr -> File_sig.With_Loc.tolerable_t
-
-val read_file_sig_unsafe : File_key.t -> checked_file_addr -> File_sig.With_Loc.t
-
-val read_exports : checked_file_addr -> Exports.t
+val read_exports : parse_addr -> Exports.t
 
 module type READER = sig
   type reader
 
-  val get_file_addr : reader:reader -> File_key.t -> file_addr option
+  val is_checked_file : reader:reader -> file_addr -> bool
 
-  val get_checked_file_addr : reader:reader -> File_key.t -> checked_file_addr option
+  val get_unparse : reader:reader -> file_addr -> unparse_addr option
+
+  val get_parse : reader:reader -> file_addr -> parse_addr option
+
+  val get_parse_unparse : reader:reader -> file_addr -> (unparse_addr * parse_addr) option
 
   val has_ast : reader:reader -> File_key.t -> bool
 
@@ -69,11 +66,9 @@ module type READER = sig
 
   val get_file_hash : reader:reader -> File_key.t -> Xx.hash option
 
-  val get_file_addr_unsafe : reader:reader -> File_key.t -> file_addr
+  val get_unparse_unsafe : reader:reader -> File_key.t -> file_addr -> unparse_addr
 
-  val get_checked_file_addr_unsafe : reader:reader -> File_key.t -> checked_file_addr
-
-  val get_unparsed_file_addr_unsafe : reader:reader -> File_key.t -> unparsed_file_addr
+  val get_parse_unsafe : reader:reader -> File_key.t -> file_addr -> parse_addr
 
   val get_ast_unsafe : reader:reader -> File_key.t -> (Loc.t, Loc.t) Flow_ast.Program.t
 
@@ -97,14 +92,15 @@ end
 module Mutator_reader : sig
   include READER with type reader = Mutator_state_reader.t
 
-  val get_old_file_addr : reader:Mutator_state_reader.t -> File_key.t -> file_addr option
+  val get_old_unparse : reader:reader -> file_addr -> unparse_addr option
 
-  val get_old_checked_file_addr :
-    reader:Mutator_state_reader.t -> File_key.t -> checked_file_addr option
+  val get_old_parse : reader:reader -> file_addr -> parse_addr option
 
-  val get_old_file_hash : reader:Mutator_state_reader.t -> File_key.t -> Xx.hash option
+  val get_old_parse_unparse : reader:reader -> file_addr -> (unparse_addr * parse_addr) option
 
-  val get_old_exports : reader:Mutator_state_reader.t -> File_key.t -> Exports.t option
+  val get_old_file_hash : reader:reader -> File_key.t -> Xx.hash option
+
+  val get_old_exports : reader:reader -> File_key.t -> Exports.t option
 end
 
 module Reader : READER with type reader = State_reader.t

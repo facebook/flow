@@ -216,12 +216,15 @@ let from_of_source ~options ~reader ~src_dir source =
   | Export_index.Global -> None
   | Export_index.Builtin from -> Some from
   | Export_index.File_key from ->
-    (match Parsing_heaps.Reader.get_file_addr ~reader from with
+    (match Parsing_heaps.get_file_addr from with
     | None -> None
     | Some addr ->
-      let module_name = Parsing_heaps.read_module_name addr in
-      let node_resolver_dirnames = Options.file_options options |> Files.node_resolver_dirnames in
-      path_of_modulename ~node_resolver_dirnames ~reader src_dir from module_name)
+      (match Parsing_heaps.Reader.get_unparse ~reader addr with
+      | None -> None
+      | Some unparse ->
+        let module_name = Parsing_heaps.read_module_name unparse in
+        let node_resolver_dirnames = Options.file_options options |> Files.node_resolver_dirnames in
+        path_of_modulename ~node_resolver_dirnames ~reader src_dir from module_name))
 
 let text_edits_of_import ~options ~reader ~src_dir ~ast kind name source =
   let from = from_of_source ~options ~reader ~src_dir source in

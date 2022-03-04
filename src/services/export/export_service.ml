@@ -59,11 +59,11 @@ let add_imports_of_module ~source ~module_name exports index =
     ~init:index
     names
 
-let add_imports_of_checked_file file_key addr index =
+let add_imports_of_checked_file file_key unparse parse index =
   let source = Export_index.File_key file_key in
-  let exports = Parsing_heaps.read_exports addr in
+  let exports = Parsing_heaps.read_exports parse in
   let module_name =
-    match Parsing_heaps.read_checked_module_name addr with
+    match Parsing_heaps.read_module_name unparse with
     | Some name -> Modulename.String name
     | None -> Modulename.Filename (Files.chop_flow_ext file_key)
   in
@@ -95,17 +95,18 @@ let index ~workers ~reader parsed : (Export_index.t * Export_index.t) Lwt.t =
         (* TODO: when a file changes, the below removes the file entirely and then adds
             back the new info, even though much or all of it is probably still the same.
            instead, diff the old and new exports and make minimal changes. *)
+        let file = Parsing_heaps.get_file_addr_unsafe file_key in
         let to_remove =
           (* get old exports so we can remove outdated entries *)
-          match Parsing_heaps.Mutator_reader.get_old_checked_file_addr ~reader file_key with
-          | Some addr -> add_imports_of_checked_file file_key addr to_remove
+          match Parsing_heaps.Mutator_reader.get_old_parse_unparse ~reader file with
+          | Some (unparse, parse) -> add_imports_of_checked_file file_key unparse parse to_remove
           | None ->
             (* if it wasn't checked before, there were no entries added *)
             to_remove
         in
         let to_add =
-          match Parsing_heaps.Mutator_reader.get_checked_file_addr ~reader file_key with
-          | Some addr -> add_imports_of_checked_file file_key addr to_add
+          match Parsing_heaps.Mutator_reader.get_parse_unparse ~reader file with
+          | Some (unparse, parse) -> add_imports_of_checked_file file_key unparse parse to_add
           | None ->
             (* TODO: handle unchecked module names, maybe still parse? *)
             to_add

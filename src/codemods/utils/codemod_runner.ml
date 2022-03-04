@@ -183,9 +183,9 @@ let merge_targets ~env ~options ~profiling ~get_dependent_files roots =
 
 let merge_job ~worker_mutator ~options ~reader component =
   let leader = Nel.hd component in
-  let addr = Parsing_heaps.Mutator_reader.get_file_addr_unsafe ~reader leader in
+  let addr = Parsing_heaps.get_file_addr_unsafe leader in
   let diff =
-    if Parsing_heaps.is_checked_file addr then
+    if Parsing_heaps.Mutator_reader.is_checked_file ~reader addr then
       let root = Options.root options in
       let hash = Merge_service.sig_hash ~root ~reader component in
       Context_heaps.Merge_context_mutator.add_merge_on_diff worker_mutator component hash
