@@ -286,7 +286,6 @@ module rec TypeTerm : sig
       }
     | ClassExtendsCheck of {
         def: 'loc virtual_reason;
-        name: 'loc virtual_reason;
         extends: 'loc virtual_reason;
       }
     | ClassImplementsCheck of {

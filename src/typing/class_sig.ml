@@ -804,9 +804,7 @@ struct
       own;
 
     let (super, _) = supertype cx x in
-    let use_op =
-      Op (ClassExtendsCheck { def = def_reason; name = reason; extends = reason_of_t super })
-    in
+    let use_op = Op (ClassExtendsCheck { def = def_reason; extends = reason_of_t super }) in
     Flow.flow
       cx
       ( super,

@@ -521,9 +521,8 @@ let rec mod_loc_of_virtual_use_op f =
     | AssignVar { var; init } ->
       AssignVar { var = Base.Option.map ~f:mod_reason var; init = mod_reason init }
     | Cast { lower; upper } -> Cast { lower = mod_reason lower; upper = mod_reason upper }
-    | ClassExtendsCheck { def; name; extends } ->
-      ClassExtendsCheck
-        { def = mod_reason def; name = mod_reason name; extends = mod_reason extends }
+    | ClassExtendsCheck { def; extends } ->
+      ClassExtendsCheck { def = mod_reason def; extends = mod_reason extends }
     | ClassMethodDefinition { def; name } ->
       ClassMethodDefinition { def = mod_reason def; name = mod_reason name }
     | ClassImplementsCheck { def; name; implements } ->

@@ -401,7 +401,7 @@ let rec make_error_printable ?(speculation = false) (error : Loc.t t) : Loc.t Er
               `Root (op, None, [text "Cannot initialize "; desc op; text " with "; desc body])
             | Op (Cast { lower; upper }) ->
               `Root (lower, None, [text "Cannot cast "; desc lower; text " to "; desc upper])
-            | Op (ClassExtendsCheck { extends; def; _ }) ->
+            | Op (ClassExtendsCheck { extends; def }) ->
               `Root (def, None, [text "Cannot extend "; ref extends; text " with "; desc def])
             | Op (ClassMethodDefinition { name; def }) ->
               `Root (def, None, [text "Cannot define "; ref def; text " on "; desc name])
