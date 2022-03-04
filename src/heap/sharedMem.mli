@@ -396,9 +396,20 @@ module NewAPI : sig
 
   (* checked file *)
 
+  type file_kind =
+    | Source_file
+    | Json_file
+    | Resource_file
+    | Lib_file
+
   val file_size : size
 
-  val write_file : chunk -> unparse entity addr -> parse entity addr -> file addr
+  val write_file :
+    chunk -> file_kind -> heap_string addr -> unparse entity addr -> parse entity addr -> file addr
+
+  val get_file_kind : file addr -> file_kind
+
+  val get_file_name : file addr -> heap_string addr
 
   val get_unparse : file addr -> unparse entity addr
 

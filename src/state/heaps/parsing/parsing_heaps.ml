@@ -54,6 +54,13 @@ let loc_decompactifier source =
 
 let decompactify_loc file ast = (loc_decompactifier (Some file))#program ast
 
+let file_kind_and_name = function
+  | File_key.Builtins -> invalid_arg "builtins"
+  | File_key.SourceFile f -> (Heap.Source_file, f)
+  | File_key.ResourceFile f -> (Heap.Resource_file, f)
+  | File_key.JsonFile f -> (Heap.Json_file, f)
+  | File_key.LibFile f -> (Heap.Lib_file, f)
+
 (* Write parsed data for checked file to shared memory. If we loaded from saved
  * state, a checked file entry will already exist without parse data and this
  * function will update the existing entry in place. Otherwise, we will create a
@@ -104,11 +111,13 @@ let add_checked_file file_key hash module_name docblock ast locs type_sig file_s
         in
         Either.Right (size, write))
     | None ->
-      let size = size + (3 * header_size) + (2 * entity_size) + file_size in
+      let (file_kind, file_name) = file_kind_and_name file_key in
+      let size = size + (4 * header_size) + (2 * entity_size) + string_size file_name + file_size in
       let write chunk unparse parse =
+        let file_name = write_string chunk file_name in
         let unparse = write_entity chunk (Some unparse) in
         let parse = write_entity chunk (Some parse) in
-        let file = write_file chunk unparse parse in
+        let file = write_file chunk file_kind file_name unparse parse in
         assert (file = FileHeap.add file_key file)
       in
       Either.Right (size, write)
@@ -170,11 +179,13 @@ let add_unparsed_file file_key hash module_name =
       in
       (size, write)
     | None ->
-      let size = size + (3 * header_size) + (2 * entity_size) + file_size in
+      let (file_kind, file_name) = file_kind_and_name file_key in
+      let size = size + (4 * header_size) + (2 * entity_size) + string_size file_name + file_size in
       let write chunk unparse =
+        let file_name = write_string chunk file_name in
         let unparse = write_entity chunk (Some unparse) in
         let parse = write_entity chunk None in
-        let file = write_file chunk unparse parse in
+        let file = write_file chunk file_kind file_name unparse parse in
         assert (file = FileHeap.add file_key file)
       in
       (size, write)
@@ -943,12 +954,14 @@ module From_saved_state : sig
   val add_unparsed : File_key.t -> Xx.hash -> string option -> unit
 end = struct
   let add_parsed file_key hash module_name exports =
+    let (file_kind, file_name) = file_kind_and_name file_key in
     let exports = Marshal.to_string exports [] in
     let (exports_size, write_exports) = Heap.prepare_write_exports exports in
     let open Heap in
     let size =
-      (7 * header_size)
+      (8 * header_size)
       + (2 * entity_size)
+      + string_size file_name
       + unparse_size
       + parse_size
       + file_size
@@ -957,12 +970,13 @@ end = struct
       + exports_size
     in
     alloc size (fun chunk ->
+        let file_name = write_string chunk file_name in
         let hash = write_int64 chunk hash in
         let module_name = Option.map (write_string chunk) module_name in
         let exports = write_exports chunk in
         let unparse = write_entity chunk (Some (write_unparse chunk hash module_name)) in
         let parse = write_entity chunk (Some (write_parse chunk exports)) in
-        let file = write_file chunk unparse parse in
+        let file = write_file chunk file_kind file_name unparse parse in
         assert (file = FileHeap.add file_key file)
     )
 

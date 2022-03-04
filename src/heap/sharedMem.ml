@@ -35,15 +35,18 @@ type tag =
   | Addr_tbl_tag
   | Unparse_tag
   | Parse_tag
-  | File_tag
+  | Source_file_tag
+  | Json_file_tag
+  | Resource_file_tag
+  | Lib_file_tag
   (* tags defined below this point are scanned for pointers *)
-  | String_tag (* 5 *)
+  | String_tag (* 8 *)
   | Int64_tag
   | Docblock_tag
   | ALoc_table_tag
   | Type_sig_tag
   (* tags defined above this point are serialized+compressed *)
-  | Serialized_tag (* 10 *)
+  | Serialized_tag (* 13 *)
   | Serialized_resolved_requires_tag
   | Serialized_ast_tag
   | Serialized_file_sig_tag
@@ -59,8 +62,8 @@ let tag_val : tag -> int = Obj.magic
 (* double-check integer values are consistent with hh_shared.c *)
 let () =
   assert (tag_val Entity_tag = 0);
-  assert (tag_val String_tag = 5);
-  assert (tag_val Serialized_tag = 10)
+  assert (tag_val String_tag = 8);
+  assert (tag_val Serialized_tag = 13)
 
 exception Out_of_shared_memory
 
@@ -1510,17 +1513,48 @@ module NewAPI = struct
 
   (** Checked files *)
 
-  let file_size = 2 * addr_size
+  type file_kind =
+    | Source_file
+    | Json_file
+    | Resource_file
+    | Lib_file
 
-  let write_file chunk unparse parse =
-    let addr = write_header chunk File_tag file_size in
+  let file_tag = function
+    | Source_file -> Source_file_tag
+    | Json_file -> Json_file_tag
+    | Resource_file -> Resource_file_tag
+    | Lib_file -> Lib_file_tag
+
+  let file_size = 3 * addr_size
+
+  let write_file chunk kind file_name unparse parse =
+    let addr = write_header chunk (file_tag kind) file_size in
+    unsafe_write_addr chunk file_name;
     unsafe_write_addr chunk unparse;
     unsafe_write_addr chunk parse;
     addr
 
-  let unparse_addr file = addr_offset file 1
+  let file_name_addr file = addr_offset file 1
 
-  let parse_addr file = addr_offset file 2
+  let unparse_addr file = addr_offset file 2
+
+  let parse_addr file = addr_offset file 3
+
+  let get_file_kind file =
+    let hd = read_header (get_heap ()) file in
+    let tag = obj_tag hd in
+    if tag = tag_val Source_file_tag then
+      Source_file
+    else if tag = tag_val Json_file_tag then
+      Json_file
+    else if tag = tag_val Resource_file_tag then
+      Resource_file
+    else if tag = tag_val Lib_file_tag then
+      Lib_file
+    else
+      failwith "get_file_kind: unexpected tag"
+
+  let get_file_name = get_generic file_name_addr
 
   let get_unparse = get_generic unparse_addr
 
