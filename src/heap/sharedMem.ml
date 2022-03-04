@@ -1294,6 +1294,28 @@ module NewAPI = struct
     let data = addr_offset entity (header_size + slot) in
     read_addr heap data
 
+  (* The next version is always an even number. Entities written to the
+   * transaction for the next version will have the entity version that is
+   * either equal or exactly 1 greater (see entity_advance).
+   *
+   * To roll back, we change the entity version to be less than the next version
+   * while also alternating the stamp. *)
+  let entity_rollback entity =
+    let heap = get_heap () in
+    let next_version = get_next_version () in
+    let entity_version = get_entity_version heap entity in
+    let diff =
+      if entity_version == next_version then
+        1
+      else if entity_version > next_version then
+        3
+      else
+        0
+    in
+    if diff > 0 then
+      let new_version = entity_version - diff in
+      buf_write_int64 heap (version_addr entity) (Int64.of_int new_version)
+
   (** Compressed OCaml values
 
       We store OCaml values as serialized+compressed blobs in the heap. The

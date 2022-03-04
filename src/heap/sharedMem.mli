@@ -312,6 +312,8 @@ module NewAPI : sig
 
   val entity_read_latest : 'k entity addr -> 'k opt addr
 
+  val entity_rollback : _ entity addr -> unit
+
   (* ast *)
 
   val prepare_write_ast : string -> size * (chunk -> ast addr)
