@@ -1502,8 +1502,6 @@ module NewAPI = struct
 
   let set_file_generic offset file addr = unsafe_write_addr_at (get_heap ()) (offset file) addr
 
-  let set_file_module_name = set_file_generic module_name_addr
-
   let set_file_ast = set_file_generic ast_addr
 
   let set_file_docblock = set_file_generic docblock_addr

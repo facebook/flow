@@ -383,8 +383,6 @@ module NewAPI : sig
 
   val assert_unparsed_file : dyn_file addr -> unparsed_file addr
 
-  val set_file_module_name : dyn_file addr -> heap_string opt addr -> unit
-
   val set_file_ast : checked_file addr -> ast addr -> unit
 
   val set_file_docblock : checked_file addr -> docblock addr -> unit
