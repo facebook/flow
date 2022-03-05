@@ -49,3 +49,8 @@ function foo(x: {[key: string]: mixed}) {
 var x2 = f(42);
 (x2: string);
 x2 = y;
+
+
+var p11 = 0;
+var y11 = [1];
+if(y11[(p11: empty)]) { }

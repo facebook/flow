@@ -379,6 +379,23 @@ References:
                               ^^^^^^ [2]
 
 
+Error ----------------------------------------------------------------------------------------------------- test.js:56:9
+
+Cannot cast `p11` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+
+   test.js:56:9
+   56| if(y11[(p11: empty)]) { }
+               ^^^
+
+References:
+   test.js:54:11
+   54| var p11 = 0;
+                 ^ [1]
+   test.js:56:14
+   56| if(y11[(p11: empty)]) { }
+                    ^^^^^ [2]
+
+
 Error ---------------------------------------------------------------------------------------------- undef_class.js:3:17
 
 Cannot use variable `C` [1] because the declaration either comes later or was skipped. [reference-before-declaration]
@@ -411,4 +428,4 @@ References:
 
 
 
-Found 25 errors
+Found 26 errors

@@ -3205,6 +3205,7 @@ module Make
         | OptionalMember OptionalMember.{ member = { Member._object; property; _ }; _ }
         | Member Member.{ _object; property; _ } ->
           ignore @@ this#expression _object;
+          ignore @@ this#member_property property;
           let propname =
             match property with
             | PropertyIdentifier (_, { Flow_ast.Identifier.name; _ })
