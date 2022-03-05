@@ -180,7 +180,7 @@ module New_env = struct
       | InstanceOfR (loc, _) ->
         (* Instanceof refinements store the loc they check against, which is a read in the env *)
         let reason = mk_reason (RCustom "RHS of `instanceof` operator") loc in
-        let t = read_entry_exn ~for_type:false cx loc reason in
+        let t = read_entry_exn ~lookup_mode:ForValue cx loc reason in
         Flow_js.flow cx (t, AssertInstanceofRHST reason);
         LeftP (InstanceofTest, t)
       | IsArrayR -> ArrP
@@ -200,7 +200,7 @@ module New_env = struct
       | LatentR { func = (func_loc, _); index } ->
         (* Latent refinements store the loc of the callee, which is a read in the env *)
         let reason = mk_reason (RCustom "Function call") func_loc in
-        let t = read_entry_exn ~for_type:false cx func_loc reason in
+        let t = read_entry_exn ~lookup_mode:ForValue cx func_loc reason in
         LatentP (t, index)
       | PropExistsR { propname; loc } ->
         PropExistsP (propname, mk_reason (RProperty (Some (OrdinaryName propname))) loc)
@@ -217,31 +217,24 @@ module New_env = struct
       ~default:t
       refi
 
-  and read_entry ~for_type cx loc reason =
+  and read_entry ~lookup_mode cx loc reason =
     let ({ Loc_env.var_info; _ } as env) = Context.environment cx in
     let rec type_of_state states refi =
       Base.List.map
-        ~f:(function
-          | Env_api.Undefined reason
-          | Env_api.Uninitialized reason ->
+        ~f:(fun entry ->
+          match (entry, lookup_mode) with
+          | (Env_api.Undefined reason, _)
+          | (Env_api.Uninitialized reason, _) ->
             Type.(VoidT.make reason |> with_trust Trust.bogus_trust)
-          | Env_api.DeclaredFunction loc -> provider_type_for_def_loc ~intersect:true env loc
-          | Env_api.Undeclared (name, def_loc) ->
+          | (Env_api.DeclaredFunction loc, _) -> provider_type_for_def_loc ~intersect:true env loc
+          | (Env_api.Undeclared (name, def_loc), _) ->
             Flow_js.add_output
               cx
               Error_message.(
                 EBindingError (EReferencedBeforeDeclaration, loc, OrdinaryName name, def_loc)
               );
             Type.(AnyT.make (AnyError None) reason)
-          | Env_api.UndeclaredClass { name; def } when not for_type ->
-            let def_loc = aloc_of_reason def in
-            Flow_js.add_output
-              cx
-              Error_message.(
-                EBindingError (EReferencedBeforeDeclaration, loc, OrdinaryName name, def_loc)
-              );
-            Type.(AnyT.make (AnyError None) reason)
-          | Env_api.UndeclaredClass { def; _ } ->
+          | (Env_api.UndeclaredClass { def; _ }, ForType) ->
             Debug_js.Verbose.print_if_verbose
               cx
               [
@@ -251,7 +244,15 @@ module New_env = struct
                   (Reason.aloc_of_reason def |> Reason.string_of_aloc);
               ];
             Base.Option.value_exn (Reason.aloc_of_reason def |> Loc_env.find_write env)
-          | Env_api.With_ALoc.Write reason ->
+          | (Env_api.UndeclaredClass { name; def }, _) ->
+            let def_loc = aloc_of_reason def in
+            Flow_js.add_output
+              cx
+              Error_message.(
+                EBindingError (EReferencedBeforeDeclaration, loc, OrdinaryName name, def_loc)
+              );
+            Type.(AnyT.make (AnyError None) reason)
+          | (Env_api.With_ALoc.Write reason, _) ->
             Debug_js.Verbose.print_if_verbose
               cx
               [
@@ -261,14 +262,15 @@ module New_env = struct
                   (Reason.aloc_of_reason reason |> Reason.string_of_aloc);
               ];
             Base.Option.value_exn (Reason.aloc_of_reason reason |> Loc_env.find_write env)
-          | Env_api.With_ALoc.Refinement { refinement_id; writes } ->
+          | (Env_api.With_ALoc.Refinement { refinement_id; writes }, _) ->
             find_refi var_info refinement_id |> Base.Option.some |> type_of_state writes
-          | Env_api.With_ALoc.Global name ->
+          | (Env_api.With_ALoc.Global name, _) ->
             Flow_js.get_builtin cx (Reason.OrdinaryName name) reason
-          | Env_api.With_ALoc.Unreachable loc ->
+          | (Env_api.With_ALoc.Unreachable loc, _) ->
             let reason = mk_reason (RCustom "unreachable value") loc in
             EmptyT.make reason (Trust.bogus_trust ())
-          | Env_api.With_ALoc.Projection loc -> Base.Option.value_exn (Loc_env.find_write env loc))
+          | (Env_api.With_ALoc.Projection loc, _) ->
+            Base.Option.value_exn (Loc_env.find_write env loc))
         states
       |> phi cx reason
       |> refine cx reason loc refi
@@ -276,8 +278,8 @@ module New_env = struct
     match find_var_opt var_info loc with
     | Error loc -> Error loc
     | Ok { Env_api.def_loc; write_locs; val_kind; name } ->
-      (match (val_kind, name, def_loc) with
-      | (Some Env_api.Type, Some name, Some def_loc) when not for_type ->
+      (match (val_kind, name, def_loc, lookup_mode) with
+      | (Some Env_api.Type, Some name, Some def_loc, (ForValue | ForTypeof)) ->
         Flow_js.add_output
           cx
           (Error_message.EBindingError
@@ -286,8 +288,8 @@ module New_env = struct
         Ok (AnyT.at (AnyError None) loc)
       | _ -> Ok (type_of_state write_locs None))
 
-  and read_entry_exn ~for_type cx loc reason =
-    match read_entry ~for_type cx loc reason with
+  and read_entry_exn ~lookup_mode cx loc reason =
+    match read_entry ~lookup_mode cx loc reason with
     | Error loc -> failwith (Utils_js.spf "LocEnvEntryNotFound %s" (Reason.string_of_aloc loc))
     | Ok x -> x
 
@@ -301,20 +303,15 @@ module New_env = struct
 
   let get_refinement cx key loc =
     let reason = mk_reason (Key.reason_desc key) loc in
-    match read_entry ~for_type:false cx loc reason with
+    match read_entry ~lookup_mode:ForValue cx loc reason with
     | Ok x -> Some x
     | Error _ -> None
 
   let get_var ?(lookup_mode = ForValue) cx name loc =
-    let for_type =
-      match lookup_mode with
-      | ForType -> true
-      | _ -> false
-    in
     ignore lookup_mode;
     let name = OrdinaryName name in
     get_this_type_param_if_necessary name loc ~otherwise:(fun () ->
-        read_entry_exn ~for_type cx loc (mk_reason (RIdentifier name) loc)
+        read_entry_exn ~lookup_mode cx loc (mk_reason (RIdentifier name) loc)
     )
 
   let query_var ?(lookup_mode = ForValue) cx name ?desc loc =
@@ -329,12 +326,7 @@ module New_env = struct
             | Some desc -> desc
             | None -> RIdentifier name
           in
-          let for_type =
-            match lookup_mode with
-            | ForType -> true
-            | _ -> false
-          in
-          read_entry_exn ~for_type cx loc (mk_reason desc loc)
+          read_entry_exn ~lookup_mode cx loc (mk_reason desc loc)
       )
 
   let var_ref ?(lookup_mode = ForValue) cx ?desc name loc =
@@ -674,7 +666,7 @@ module New_env = struct
       | None -> RCustom "discriminant of switch"
       | Some refinement_key -> Key.reason_desc refinement_key
     in
-    match read_entry ~for_type:false cx switch_loc (mk_reason reason_desc switch_loc) with
+    match read_entry ~lookup_mode:ForValue cx switch_loc (mk_reason reason_desc switch_loc) with
     | Ok t -> Some t
     | Error _ -> None
 
