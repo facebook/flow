@@ -227,6 +227,8 @@ module New_env = struct
           | (Env_api.Uninitialized reason, _) ->
             Type.(VoidT.make reason |> with_trust Trust.bogus_trust)
           | (Env_api.DeclaredFunction loc, _) -> provider_type_for_def_loc ~intersect:true env loc
+          | (Env_api.Undeclared (_name, def_loc), ForTypeof) ->
+            Base.Option.value_exn (Loc_env.find_write env def_loc)
           | (Env_api.Undeclared (name, def_loc), _) ->
             Flow_js.add_output
               cx
