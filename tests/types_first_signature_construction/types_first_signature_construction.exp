@@ -1,33 +1,3 @@
-Error ---------------------------------------------------------------------------------------------------- file1.js:4:17
-
-Cannot assign function to `bar` because string [1] is incompatible with number [2] in the first parameter.
-[incompatible-type]
-
-   file1.js:4:17
-   4| function bar(x: string): string { return ""; }
-                      ^^^^^^ [1]
-
-References:
-   file1.js:5:25
-   5| declare function bar(x: number): number; // error: cannot declare
-                              ^^^^^^ [2]
-
-
-Error ---------------------------------------------------------------------------------------------------- file1.js:4:26
-
-Cannot assign function to `bar` because string [1] is incompatible with number [2] in the return value.
-[incompatible-type]
-
-   file1.js:4:26
-   4| function bar(x: string): string { return ""; }
-                               ^^^^^^ [1]
-
-References:
-   file1.js:5:34
-   5| declare function bar(x: number): number; // error: cannot declare
-                                       ^^^^^^ [2]
-
-
 Error ---------------------------------------------------------------------------------------------------- file1.js:5:18
 
 Cannot declare `bar` [1] because the name is already bound. [name-already-bound]
@@ -214,4 +184,4 @@ References:
 
 
 
-Found 14 errors
+Found 12 errors

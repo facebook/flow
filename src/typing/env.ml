@@ -1127,6 +1127,9 @@ module Env : Env_sig.S = struct
     fun cx name aloc t ->
       Entry.(
         match get_current_env_entry name with
+        | Some (Value { Entry.kind = Let (FunctionBinding, _); _ }) ->
+          (* This is already a 'name-already-bound' error. No need to unify types. *)
+          ()
         | Some (Value v) -> Flow.unify cx t (find_type aloc (general_of_value v))
         | _ -> ()
       )
