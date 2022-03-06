@@ -514,13 +514,13 @@ let command =
       ~name:"codemod"
       ~doc:"Runs large-scale codebase refactors"
       [
-        (Annotate_exports_command.spec.CommandSpec.name, Annotate_exports_command.command);
-        (Annotate_escaped_generics.spec.CommandSpec.name, Annotate_escaped_generics.command);
-        (Annotate_lti_command.spec.CommandSpec.name, Annotate_lti_command.command);
         (Annotate_declarations_command.spec.CommandSpec.name, Annotate_declarations_command.command);
-        (Rename_redefinitions_command.spec.CommandSpec.name, Rename_redefinitions_command.command);
-        (KeyMirror_command.spec.CommandSpec.name, KeyMirror_command.command);
         (Annotate_empty_object_command.spec.CommandSpec.name, Annotate_empty_object_command.command);
+        (Annotate_escaped_generics.spec.CommandSpec.name, Annotate_escaped_generics.command);
+        (Annotate_exports_command.spec.CommandSpec.name, Annotate_exports_command.command);
+        (Annotate_lti_command.spec.CommandSpec.name, Annotate_lti_command.command);
+        (KeyMirror_command.spec.CommandSpec.name, KeyMirror_command.command);
+        (Rename_redefinitions_command.spec.CommandSpec.name, Rename_redefinitions_command.command);
       ]
   in
   CommandSpec.command spec main

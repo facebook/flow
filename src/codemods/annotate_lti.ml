@@ -169,35 +169,18 @@ module Acc = Insert_type_utils.Acc (ErrorStats)
 let mapper
     ~preserve_literals ~max_type_size ~default_any ~add_this_params (cctx : Codemod_context.Typed.t)
     =
-  let { Codemod_context.Typed.file_sig; docblock; metadata; options; _ } = cctx in
-  let imports_react = Insert_type_imports.ImportsHelper.imports_react file_sig in
-  let metadata = Context.docblock_overrides docblock metadata in
-  let { Context.strict; strict_local; _ } = metadata in
-  let lint_severities =
-    if strict || strict_local then
-      StrictModeSettings.fold
-        (fun lint_kind lint_severities ->
-          LintSettings.set_value lint_kind (Severity.Err, None) lint_severities)
-        (Options.strict_mode options)
-        (Options.lint_severities options)
-    else
-      Options.lint_severities options
-  in
-  let suppress_types = Options.suppress_types options in
-  let exact_by_default = Options.exact_by_default options in
-  let flowfixme_ast = Builtins.flowfixme_ast ~lint_severities ~suppress_types ~exact_by_default in
+  let lint_severities = Codemod_context.Typed.lint_severities cctx in
+  let flowfixme_ast = Codemod_context.Typed.flowfixme_ast ~lint_severities cctx in
   object (this)
     inherit
       Codemod_lti_annotator.mapper
-        ~max_type_size
-        ~exact_by_default
-        ~lint_severities
-        ~suppress_types
-        ~imports_react
-        ~preserve_literals
-        ~generalize_maybe:false
+        cctx
         ~default_any
-        cctx as super
+        ~generalize_maybe:false
+        ~lint_severities
+        ~max_type_size
+        ~preserve_literals
+        () as super
 
     val mutable loc_error_map = LMap.empty
 
@@ -212,16 +195,7 @@ let mapper
 
     method private fix_and_validate loc ty =
       let (acc', ty) =
-        Hardcoded_Ty_Fixes.run
-          ~cctx
-          ~lint_severities
-          ~suppress_types
-          ~imports_react
-          ~preserve_literals
-          ~generalize_maybe:false
-          acc
-          loc
-          ty
+        Hardcoded_Ty_Fixes.run ~cctx ~preserve_literals ~generalize_maybe:false acc loc ty
       in
       this#set_acc acc';
       Codemod_annotator.validate_ty cctx ~max_type_size ty

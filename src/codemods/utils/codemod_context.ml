@@ -44,6 +44,25 @@ module Typed = struct
   let context ccx = ccx.full_cx
 
   let typed_ast ccx = ccx.typed_ast
+
+  let lint_severities ccx =
+    let { docblock; metadata; options; _ } = ccx in
+    let metadata = Context.docblock_overrides docblock metadata in
+    let { Context.strict; strict_local; _ } = metadata in
+    if strict || strict_local then
+      StrictModeSettings.fold
+        (fun lint_kind lint_severities ->
+          LintSettings.set_value lint_kind (Severity.Err, None) lint_severities)
+        (Options.strict_mode options)
+        (Options.lint_severities options)
+    else
+      Options.lint_severities options
+
+  let flowfixme_ast ~lint_severities ccx =
+    let { options; _ } = ccx in
+    let suppress_types = Options.suppress_types options in
+    let exact_by_default = Options.exact_by_default options in
+    Insert_type_utils.Builtins.flowfixme_ast ~lint_severities ~suppress_types ~exact_by_default
 end
 
 module Untyped = struct

@@ -15,35 +15,18 @@ module Codemod_empty_annotator = Codemod_annotator.Make (Insert_type_utils.UnitS
 module Acc = Insert_type_utils.Acc (Insert_type_utils.UnitStats)
 
 let mapper ~preserve_literals ~max_type_size ~default_any (cctx : Codemod_context.Typed.t) =
-  let { Codemod_context.Typed.file_sig; docblock; metadata; options; _ } = cctx in
-  let imports_react = Insert_type_imports.ImportsHelper.imports_react file_sig in
-  let metadata = Context.docblock_overrides docblock metadata in
-  let { Context.strict; strict_local; _ } = metadata in
-  let lint_severities =
-    if strict || strict_local then
-      StrictModeSettings.fold
-        (fun lint_kind lint_severities ->
-          LintSettings.set_value lint_kind (Severity.Err, None) lint_severities)
-        (Options.strict_mode options)
-        (Options.lint_severities options)
-    else
-      Options.lint_severities options
-  in
-  let suppress_types = Options.suppress_types options in
-  let exact_by_default = Options.exact_by_default options in
-  let flowfixme_ast = Builtins.flowfixme_ast ~lint_severities ~suppress_types ~exact_by_default in
+  let lint_severities = Codemod_context.Typed.lint_severities cctx in
+  let flowfixme_ast = Codemod_context.Typed.flowfixme_ast ~lint_severities cctx in
   object (this)
     inherit
       Codemod_empty_annotator.mapper
-        ~max_type_size
-        ~exact_by_default
-        ~lint_severities
-        ~suppress_types
-        ~imports_react
-        ~preserve_literals
+        cctx
         ~default_any
         ~generalize_maybe:false
-        cctx as super
+        ~lint_severities
+        ~max_type_size
+        ~preserve_literals
+        () as super
 
     method private post_run () = ()
 

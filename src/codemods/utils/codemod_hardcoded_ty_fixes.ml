@@ -329,11 +329,12 @@ module Make (Extra : BASE_STATS) = struct
 
   let run
       ~cctx
-      ~lint_severities
-      ~suppress_types
-      ~imports_react
       ~preserve_literals
       ~generalize_maybe
+      ?(lint_severities = Codemod_context.Typed.lint_severities cctx)
+      ?(suppress_types = Options.suppress_types cctx.Codemod_context.Typed.options)
+      ?(imports_react =
+        Insert_type_imports.ImportsHelper.imports_react cctx.Codemod_context.Typed.file_sig)
       acc
       loc
       t =
