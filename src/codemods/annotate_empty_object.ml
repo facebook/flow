@@ -11,23 +11,8 @@ module LSet = Loc_collections.LocSet
 open Insert_type_utils
 open Reason
 open Loc_collections
-
-module ErrorStats = struct
-  type t = { num_total_errors: int }
-
-  let empty = { num_total_errors = 0 }
-
-  let combine c1 c2 = { num_total_errors = c1.num_total_errors + c2.num_total_errors }
-
-  let serialize s =
-    let open Utils_js in
-    [spf "total_errors: %d" s.num_total_errors]
-
-  let report s = [string_of_row ~indent:2 "Number of empty object errors" s.num_total_errors]
-end
-
-module Codemod_empty_annotator = Codemod_annotator.Make (ErrorStats)
-module Acc = Insert_type_utils.Acc (ErrorStats)
+module Codemod_empty_annotator = Codemod_annotator.Make (Insert_type_utils.UnitStats)
+module Acc = Insert_type_utils.Acc (Insert_type_utils.UnitStats)
 
 let mapper ~preserve_literals ~max_type_size ~default_any (cctx : Codemod_context.Typed.t) =
   let { Codemod_context.Typed.file_sig; docblock; metadata; options; _ } = cctx in
@@ -60,7 +45,7 @@ let mapper ~preserve_literals ~max_type_size ~default_any (cctx : Codemod_contex
         ~generalize_maybe:false
         cctx as super
 
-    method private post_run () = ErrorStats.{ num_total_errors = 0 }
+    method private post_run () = ()
 
     method private unsealed_annot loc ty =
       let { Codemod_context.Typed.full_cx = cx; file; file_sig; typed_ast; _ } = cctx in

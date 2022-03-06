@@ -161,20 +161,8 @@ let gen_import_statements file (symbols : Ty_symbol.symbol SymbolMap.t) =
 
 (* The mapper *)
 
-module UnitStats : Insert_type_utils.BASE_STATS with type t = unit = struct
-  type t = unit
-
-  let empty = ()
-
-  let combine _ _ = ()
-
-  let serialize _s = []
-
-  let report _s = []
-end
-
-module Accumulator = Insert_type_utils.Acc (UnitStats)
-module Unit_Codemod_annotator = Codemod_annotator.Make (UnitStats)
+module Accumulator = Insert_type_utils.Acc (Insert_type_utils.UnitStats)
+module Unit_Codemod_annotator = Codemod_annotator.Make (Insert_type_utils.UnitStats)
 
 let reporter =
   {

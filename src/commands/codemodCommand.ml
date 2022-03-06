@@ -484,9 +484,8 @@ module Annotate_empty_object_command = struct
 
   let main codemod_flags preserve_literals max_type_size default_any () =
     let open Codemod_utils in
-    let open Insert_type_utils in
     let module Runner = Codemod_runner.MakeSimpleTypedRunner (struct
-      module Acc = Acc (Annotate_empty_object.ErrorStats)
+      module Acc = Annotate_empty_object.Acc
 
       type accumulator = Acc.t
 
