@@ -1976,14 +1976,12 @@ module Make
         this#for_in_or_of_left_declaration left;
         left
 
-      method scoped_for_in_or_of_statement traverse_left right body =
-        (* This is only evaluated once and so does not need to be scouted
-         * You might be wondering why the lhs has to be scouted-- the LHS can be a pattern that
+      method scoped_for_in_or_of_statement traverse_left body =
+        (* You might be wondering why the lhs has to be scouted-- the LHS can be a pattern that
          * includes a default write with a variable that is written to inside the loop. It's
          * critical that we catch loops in the dependency graph with such variables, since the
          * ordering algorithm will not have a good place to ask for an annotation in that case.
          *)
-        ignore @@ this#expression right;
         let scout () =
           traverse_left ();
           ignore @@ this#run_to_completion (fun () -> ignore @@ this#statement body)
@@ -2009,14 +2007,19 @@ module Make
         let open Flow_ast.Statement.ForIn in
         let { left; right; body; each = _; comments = _ } = stmt in
         let traverse_left () = ignore (this#for_in_statement_lhs left) in
-        this#scoped_for_in_or_of_statement traverse_left right body;
+        this#push_refinement_scope LookupMap.empty;
+        ignore @@ this#expression_refinement right;
+        this#scoped_for_in_or_of_statement traverse_left body;
+        this#pop_refinement_scope ();
         stmt
 
       method! scoped_for_of_statement _loc stmt =
         let open Flow_ast.Statement.ForOf in
         let { left; right; body; await = _; comments = _ } = stmt in
+        (* This is only evaluated once and so does not need to be scouted *)
+        ignore @@ this#expression right;
         let traverse_left () = ignore (this#for_of_statement_lhs left) in
-        this#scoped_for_in_or_of_statement traverse_left right body;
+        this#scoped_for_in_or_of_statement traverse_left body;
         stmt
 
       (***********************************************************)
