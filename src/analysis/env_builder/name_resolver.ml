@@ -1111,6 +1111,16 @@ module Make
                 heap_refinements = ref HeapRefinementMap.empty;
                 kind;
               }
+            | Bindings.Import ->
+              let reason = mk_reason (RIdentifier (OrdinaryName name)) loc in
+              let havoc = Val.one reason in
+              {
+                val_ref = ref havoc;
+                havoc;
+                def_loc = Some loc;
+                heap_refinements = ref HeapRefinementMap.empty;
+                kind;
+              }
             | _ ->
               let initial_val =
                 match kind with

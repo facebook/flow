@@ -4295,7 +4295,7 @@ w;
           (4, 14) to (4, 15): (`S`)
         };
         (2, 11) to (2, 12) => {
-          (uninitialized)
+          (4, 17) to (4, 18): (`t`)
         };
         (3, 7) to (3, 8) => {
           (4, 40) to (4, 41): (`W`)
@@ -4332,19 +4332,19 @@ import typeof * as NST from ''
     [%expect {|
       [
         (2, 1) to (2, 3) => {
-          (uninitialized)
+          (11, 12) to (11, 14): (`NS`)
         };
         (2, 5) to (2, 8) => {
           (12, 19) to (12, 22): (`NST`)
         };
         (3, 1) to (3, 3) => {
-          (uninitialized)
+          (10, 7) to (10, 9): (`ps`)
         };
         (3, 5) to (3, 7) => {
           (8, 14) to (8, 16): (`ns`)
         };
         (4, 1) to (4, 3) => {
-          (uninitialized)
+          (10, 7) to (10, 9): (`ps`)
         };
         (4, 5) to (4, 7) => {
           (9, 12) to (9, 14): (`ms`)
@@ -5117,4 +5117,18 @@ exports.foo = 1;
       [
         (2, 0) to (2, 7) => {
           Global exports
+        }] |}]
+
+let%expect_test "import_havoc" =
+  print_ssa_test {|
+import {func} from './a';
+
+function f() {
+  func();
+}
+|};
+    [%expect {|
+      [
+        (5, 2) to (5, 6) => {
+          (2, 8) to (2, 12): (`func`)
         }] |}]
