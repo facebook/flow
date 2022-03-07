@@ -5024,7 +5024,8 @@ struct
                   ~get_result:get_mem_t
                   ~test_hooks
                   ~get_opt_use
-                  ~refine:(fun () -> Refinement.get ~allow_optional:true cx (loc, callee_expr) loc)
+                  ~refine:(fun () ->
+                    Refinement.get ~allow_optional:true cx (lookup_loc, callee_expr) lookup_loc)
                   ~refinement_action:handle_refined_callee
                   ~get_reason:(Fn.const expr_reason)
               in
