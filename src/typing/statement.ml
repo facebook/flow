@@ -3648,6 +3648,26 @@ struct
         );
         Env.push_var_scope scope;
         let (class_t, c) = mk_class cx class_loc ~name_loc ~general:tvar reason c in
+        (* mk_class above ensures that the function name in the inline declaration
+           has the same type as its references inside the class.
+           However, in the new env, we need to perform a bind of the class declaration type to the
+           name to ensure that the environment knows the type of both the declaration and usages. *)
+        if Env.new_env then (
+          let name = OrdinaryName name in
+          let reason = mk_reason (RType name) name_loc in
+          let tvar = Tvar.mk cx reason in
+          Env.bind_implicit_let Scope.Entry.ClassNameBinding cx name (Inferred tvar) name_loc;
+
+          let kind = Scope.Entry.ClassNameBinding in
+          Env.declare_implicit_let kind cx name name_loc;
+          let use_op =
+            Op
+              (AssignVar
+                 { var = Some (mk_reason (RIdentifier name) name_loc); init = reason_of_t class_t }
+              )
+          in
+          Env.init_implicit_let kind cx ~use_op name ~has_anno:false class_t name_loc
+        );
         Env.pop_var_scope ();
         Flow.flow_t cx (class_t, tvar);
         ((class_loc, class_t), Class c)
