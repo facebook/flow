@@ -2051,35 +2051,25 @@ module Make
       (* POST = ENVN | ENVN'                                     *)
       (***********************************************************)
       method! switch_cases switch_loc discriminant cases =
+        let incoming_env = this#env in
         this#expecting_abrupt_completions (fun () ->
-            let (env, case_completion_states, total_refinements, has_default) =
+            let (case_starting_env, case_completion_states, fallthrough_env, has_default) =
               List.fold_left
                 (fun acc stuff ->
                   let (_loc, case) = stuff in
                   this#env_switch_case discriminant acc case)
-                (this#empty_env, [], [], false)
+                (incoming_env, [], None, false)
                 cases
             in
-            (* Only merge the pre-env if the switch was non-exhaustive
-             * TODO: Each refinement that ends in a break will be reachable via
-             * the PHI node at the end of the switch. Should we get rid of these refinements?
-             *)
-            ( if has_default then
-              this#reset_env env
-            else
-              let negated_total_refinements = List.map this#negate_refinements total_refinements in
-              let conjuncted_negated_total_refinements =
-                this#conjunct_all_refinements negated_total_refinements
-              in
-              this#push_refinement_scope conjuncted_negated_total_refinements;
-              (* Statement.ml uses this to determine if the switch was exhaustive, so
-               * the name-resolver records the Val.t to be queried later, keyed by
-               * the location of the switch. We add this directly to the values map,
-               * since there is no risk of the switch loc clashing with an expression loc. *)
+            (* Re-read the discriminant to restore it after all the eq-tests *)
+            this#reset_env incoming_env;
+            ignore @@ this#expression discriminant;
+            this#reset_env case_starting_env;
+            ( if not has_default then
               let discriminant_after_all_negated_refinements =
                 this#get_val_of_expression discriminant
               in
-              (match discriminant_after_all_negated_refinements with
+              match discriminant_after_all_negated_refinements with
               | Some discriminant ->
                 env_state <-
                   {
@@ -2095,11 +2085,19 @@ module Make
                         }
                         env_state.values;
                   }
-              | None -> ());
-
-              this#pop_refinement_scope ();
-              this#merge_self_env env
+              | None -> ()
             );
+
+            (match fallthrough_env with
+            (* If the switch has a default then it is exhaustive. Thus, the post-env can be
+             * determined by joining all of the breaks with the last fallthrough env. If there
+             * was no fallthrough env, then the we can use empty as the base. *)
+            | Some env when has_default -> this#reset_env env
+            | None when has_default -> this#reset_env this#empty_env
+            (* If the switch wasn't exhaustive then merge with the case_starting_env as a base. If
+             * the last case fell out then merge that in too. *)
+            | Some fallthrough -> this#merge_remote_env fallthrough
+            | _ -> ());
 
             (* In general, cases are non-exhaustive, but if it has a default case then it is! *)
             let completion_state =
@@ -2114,6 +2112,7 @@ module Make
               else
                 None
             in
+
             this#commit_abrupt_completion_matching
               AbruptCompletion.(mem [break None])
               completion_state
@@ -2122,57 +2121,44 @@ module Make
 
       method private env_switch_case
           discriminant
-          (env, case_completion_states, total_refinements, has_default)
+          (case_starting_env, case_completion_states, fallthrough_env, has_default)
           (case : (ALoc.t, ALoc.t) Ast.Statement.Switch.Case.t') =
         let open Ast.Statement.Switch.Case in
         let { test; consequent; comments = _ } = case in
-        let (has_default, total_refinements) =
+        this#reset_env case_starting_env;
+        (* Reset discriminant *)
+        this#push_refinement_scope LookupMap.empty;
+        let (has_default, latest_refinements, case_starting_env) =
           match test with
-          | None ->
-            (* In the default case we negate the refinements introduced by all the other cases and
-             * AND them together. Much of Flow's "exhaustiveness" checking relies on the final
-             * refinement generated here *)
-            let negated_total_refinements = List.map this#negate_refinements total_refinements in
-            let conjuncted_negated_total_refinements =
-              this#conjunct_all_refinements negated_total_refinements
-            in
-            this#push_refinement_scope conjuncted_negated_total_refinements;
-            (true, total_refinements)
+          | None -> (true, LookupMap.empty, this#env)
           | Some test ->
-            this#push_refinement_scope LookupMap.empty;
             ignore @@ this#expression test;
             let (loc, _) = test in
-            (* eq_test re-reads the discriminant. We don't want to actually update the writes that
-             * reach the discriminant read as we consider each case, so we restore the writes at the
-             * discriminant's location after calling eq_test *)
-            let (discriminant_loc, _) = discriminant in
-            let discriminant_read = L.LMap.find_opt discriminant_loc env_state.values in
             this#eq_test ~strict:true ~sense:true ~cond_context:SwitchTest loc discriminant test;
-            env_state <-
-              {
-                env_state with
-                values =
-                  L.LMap.update discriminant_loc (fun _ -> discriminant_read) env_state.values;
-              };
-            (has_default, this#peek_new_refinements () :: total_refinements)
+            (has_default, this#peek_new_refinements (), this#env_without_latest_refinements)
         in
-        (* The refinement scope for this case is a disjunction of the refinement scope left
-         * over from the previous case and the refinement introduced by this case. If the previous
-         * case ended in a break then the previous refinement scope left over is None.
-         *
-         * This disjunction is modeled entirely via PHI nodes. We take the env left over from the
-         * previous case and then merge it with the refined env0 we generated here.
-         *)
-        let env0 = this#env in
-        let env0_no_refinements = this#env_without_latest_refinements in
-        this#merge_env env0 env;
+        (match fallthrough_env with
+        | None -> ()
+        | Some fallthrough -> this#merge_self_env fallthrough);
         let case_completion_state =
           this#run_to_completion (fun () -> ignore @@ this#statement_list consequent)
         in
-        let env' = this#env in
+        let fallthrough_env =
+          match case_completion_state with
+          | None -> Some this#env
+          | Some _ -> None
+        in
         this#pop_refinement_scope ();
-        this#reset_env env0_no_refinements;
-        (env', case_completion_state :: case_completion_states, total_refinements, has_default)
+        this#reset_env case_starting_env;
+        let negated_refinements = this#negate_refinements latest_refinements in
+        this#push_refinement_scope negated_refinements;
+        let case_starting_env = this#env in
+        this#pop_refinement_scope ();
+        ( case_starting_env,
+          case_completion_state :: case_completion_states,
+          fallthrough_env,
+          has_default
+        )
 
       (****************************************)
       (* [PRE] try { s1 } catch { s2 } [POST] *)

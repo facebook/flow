@@ -2976,19 +2976,19 @@ x;
           {refinement = Null; writes = (1, 4) to (1, 5): (`x`)}
         };
         (7, 4) to (7, 5) => {
-          {refinement = 3; writes = (1, 4) to (1, 5): (`x`)}
+          {refinement = 3; writes = {refinement = Not (Null); writes = (1, 4) to (1, 5): (`x`)}}
         };
         (10, 4) to (10, 5) => {
-          {refinement = false; writes = (1, 4) to (1, 5): (`x`)}
+          {refinement = false; writes = {refinement = Not (3); writes = {refinement = Not (Null); writes = (1, 4) to (1, 5): (`x`)}}}
         };
         (13, 4) to (13, 5) => {
-          {refinement = And (And (Not (false), Not (3)), Not (Null)); writes = (1, 4) to (1, 5): (`x`)}
+          {refinement = Not (false); writes = {refinement = Not (3); writes = {refinement = Not (Null); writes = (1, 4) to (1, 5): (`x`)}}}
         };
         (16, 0) to (16, 1) => {
           {refinement = Null; writes = (1, 4) to (1, 5): (`x`)},
-          {refinement = 3; writes = (1, 4) to (1, 5): (`x`)},
-          {refinement = false; writes = (1, 4) to (1, 5): (`x`)},
-          {refinement = And (And (Not (false), Not (3)), Not (Null)); writes = (1, 4) to (1, 5): (`x`)}
+          {refinement = 3; writes = {refinement = Not (Null); writes = (1, 4) to (1, 5): (`x`)}},
+          {refinement = false; writes = {refinement = Not (3); writes = {refinement = Not (Null); writes = (1, 4) to (1, 5): (`x`)}}},
+          {refinement = Not (false); writes = {refinement = Not (3); writes = {refinement = Not (Null); writes = (1, 4) to (1, 5): (`x`)}}}
         }]|}]
 
 let%expect_test "switch_with_fallthroughs" =
@@ -3005,7 +3005,7 @@ switch (x) {
   default: {
     x;
   }
-};
+}
 x;
 |};
     [%expect {|
@@ -3021,23 +3021,23 @@ x;
         };
         (6, 4) to (6, 5) => {
           {refinement = Null; writes = (1, 4) to (1, 5): (`x`)},
-          {refinement = 3; writes = (1, 4) to (1, 5): (`x`)}
+          {refinement = 3; writes = {refinement = Not (Null); writes = (1, 4) to (1, 5): (`x`)}}
         };
         (10, 4) to (10, 5) => {
-          {refinement = true; writes = (1, 4) to (1, 5): (`x`)},
-          {refinement = false; writes = (1, 4) to (1, 5): (`x`)}
+          {refinement = true; writes = {refinement = Not (3); writes = {refinement = Not (Null); writes = (1, 4) to (1, 5): (`x`)}}},
+          {refinement = false; writes = {refinement = Not (true); writes = {refinement = Not (3); writes = {refinement = Not (Null); writes = (1, 4) to (1, 5): (`x`)}}}}
         };
         (12, 4) to (12, 5) => {
-          {refinement = true; writes = (1, 4) to (1, 5): (`x`)},
-          {refinement = false; writes = (1, 4) to (1, 5): (`x`)},
-          {refinement = And (And (And (Not (false), Not (true)), Not (3)), Not (Null)); writes = (1, 4) to (1, 5): (`x`)}
+          {refinement = true; writes = {refinement = Not (3); writes = {refinement = Not (Null); writes = (1, 4) to (1, 5): (`x`)}}},
+          {refinement = false; writes = {refinement = Not (true); writes = {refinement = Not (3); writes = {refinement = Not (Null); writes = (1, 4) to (1, 5): (`x`)}}}},
+          {refinement = Not (false); writes = {refinement = Not (true); writes = {refinement = Not (3); writes = {refinement = Not (Null); writes = (1, 4) to (1, 5): (`x`)}}}}
         };
         (15, 0) to (15, 1) => {
           {refinement = Null; writes = (1, 4) to (1, 5): (`x`)},
-          {refinement = 3; writes = (1, 4) to (1, 5): (`x`)},
-          {refinement = true; writes = (1, 4) to (1, 5): (`x`)},
-          {refinement = false; writes = (1, 4) to (1, 5): (`x`)},
-          {refinement = And (And (And (Not (false), Not (true)), Not (3)), Not (Null)); writes = (1, 4) to (1, 5): (`x`)}
+          {refinement = 3; writes = {refinement = Not (Null); writes = (1, 4) to (1, 5): (`x`)}},
+          {refinement = true; writes = {refinement = Not (3); writes = {refinement = Not (Null); writes = (1, 4) to (1, 5): (`x`)}}},
+          {refinement = false; writes = {refinement = Not (true); writes = {refinement = Not (3); writes = {refinement = Not (Null); writes = (1, 4) to (1, 5): (`x`)}}}},
+          {refinement = Not (false); writes = {refinement = Not (true); writes = {refinement = Not (3); writes = {refinement = Not (Null); writes = (1, 4) to (1, 5): (`x`)}}}}
         }] |}]
 
 let%expect_test "switch_throw_in_default" =
@@ -3071,17 +3071,17 @@ x;
         };
         (6, 4) to (6, 5) => {
           {refinement = Null; writes = (1, 4) to (1, 5): (`x`)},
-          {refinement = 3; writes = (1, 4) to (1, 5): (`x`)}
+          {refinement = 3; writes = {refinement = Not (Null); writes = (1, 4) to (1, 5): (`x`)}}
         };
         (10, 4) to (10, 5) => {
-          {refinement = true; writes = (1, 4) to (1, 5): (`x`)},
-          {refinement = false; writes = (1, 4) to (1, 5): (`x`)}
+          {refinement = true; writes = {refinement = Not (3); writes = {refinement = Not (Null); writes = (1, 4) to (1, 5): (`x`)}}},
+          {refinement = false; writes = {refinement = Not (true); writes = {refinement = Not (3); writes = {refinement = Not (Null); writes = (1, 4) to (1, 5): (`x`)}}}}
         };
         (16, 0) to (16, 1) => {
           {refinement = Null; writes = (1, 4) to (1, 5): (`x`)},
-          {refinement = 3; writes = (1, 4) to (1, 5): (`x`)},
-          {refinement = true; writes = (1, 4) to (1, 5): (`x`)},
-          {refinement = false; writes = (1, 4) to (1, 5): (`x`)}
+          {refinement = 3; writes = {refinement = Not (Null); writes = (1, 4) to (1, 5): (`x`)}},
+          {refinement = true; writes = {refinement = Not (3); writes = {refinement = Not (Null); writes = (1, 4) to (1, 5): (`x`)}}},
+          {refinement = false; writes = {refinement = Not (true); writes = {refinement = Not (3); writes = {refinement = Not (Null); writes = (1, 4) to (1, 5): (`x`)}}}}
         }] |}]
 
 let%expect_test "global_refinement" =
@@ -4721,8 +4721,14 @@ switch (y.x) { // Does not report a Projection
         (3, 8) to (3, 9) => {
           (2, 4) to (2, 5): (`y`)
         };
+        (3, 8) to (3, 11) => {
+          {refinement = Not (ONE); writes = projection at (3, 8) to (3, 11)}
+        };
         (7, 7) to (7, 8) => {
-          {refinement = And (Not (SentinelR x), Not (SentinelR x)); writes = (2, 4) to (2, 5): (`y`)}
+          {refinement = Not (SentinelR x); writes = {refinement = Not (SentinelR x); writes = (2, 4) to (2, 5): (`y`)}}
+        };
+        (7, 7) to (7, 10) => {
+          {refinement = Not (TWO); writes = {refinement = Not (ONE); writes = projection at (3, 8) to (3, 11)}}
         }] |}]
 
 let%expect_test "no_refinement_write_on_indexed" =
@@ -4758,7 +4764,7 @@ switch (y) {
     [%expect {|
       [
         (3, 0) to (6, 1) => {
-          {refinement = And (Not (TWO), Not (ONE)); writes = (2, 4) to (2, 5): (`y`)}
+          {refinement = Not (TWO); writes = {refinement = Not (ONE); writes = (2, 4) to (2, 5): (`y`)}}
         };
         (3, 8) to (3, 9) => {
           (2, 4) to (2, 5): (`y`)
@@ -4777,10 +4783,13 @@ let obj = {};
     [%expect {|
       [
         (3, 2) to (8, 3) => {
-          {refinement = And (Not (b), Not (a)); writes = projection at (3, 10) to (3, 15)}
+          {refinement = Not (b); writes = {refinement = Not (a); writes = projection at (3, 10) to (3, 15)}}
         };
         (3, 10) to (3, 13) => {
           (2, 4) to (2, 7): (`obj`)
+        };
+        (3, 10) to (3, 15) => {
+          {refinement = Not (a); writes = projection at (3, 10) to (3, 15)}
         }] |}]
 
 let%expect_test "switch_exhaustive_fallthrough_return" =
@@ -4795,10 +4804,13 @@ let obj = {};
     [%expect {|
       [
         (3, 2) to (7, 3) => {
-          {refinement = And (Not (b), Not (a)); writes = projection at (3, 10) to (3, 15)}
+          {refinement = Not (b); writes = {refinement = Not (a); writes = projection at (3, 10) to (3, 15)}}
         };
         (3, 10) to (3, 13) => {
           (2, 4) to (2, 7): (`obj`)
+        };
+        (3, 10) to (3, 15) => {
+          {refinement = Not (a); writes = projection at (3, 10) to (3, 15)}
         }] |}]
 
 let%expect_test "reference_before_declaration" =
@@ -4954,8 +4966,14 @@ function foo(r: Rule) {
         (14, 12) to (14, 13) => {
           {refinement = SentinelR x; writes = (12, 8) to (12, 9): (`y`)}
         };
+        (14, 12) to (14, 15) => {
+          {refinement = Not (ONE); writes = projection at (14, 12) to (14, 15)}
+        };
         (17, 16) to (17, 17) => {
-          {refinement = And (Not (SentinelR x), Not (SentinelR x)); writes = {refinement = SentinelR x; writes = (12, 8) to (12, 9): (`y`)}}
+          {refinement = Not (SentinelR x); writes = {refinement = Not (SentinelR x); writes = {refinement = SentinelR x; writes = (12, 8) to (12, 9): (`y`)}}}
+        };
+        (17, 16) to (17, 19) => {
+          {refinement = Not (TWO); writes = {refinement = Not (ONE); writes = projection at (14, 12) to (14, 15)}}
         }] |}]
 
 let%expect_test "prop_exists" =
