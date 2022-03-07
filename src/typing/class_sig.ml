@@ -871,7 +871,7 @@ struct
         let method_ this_recipe super ~set_asts f =
           let save_return = Abnormal.clear_saved Abnormal.Return in
           let save_throw = Abnormal.clear_saved Abnormal.Throw in
-          let (_, params_ast, body_ast, init_ast) = F.toplevels None cx this_recipe super f in
+          let (_, params_ast, body_ast, init_ast) = F.toplevels cx this_recipe super f in
           set_asts (params_ast, body_ast, init_ast);
           ignore (Abnormal.swap_saved Abnormal.Return save_return);
           ignore (Abnormal.swap_saved Abnormal.Throw save_throw)

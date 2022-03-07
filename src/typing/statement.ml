@@ -736,7 +736,7 @@ struct
         let name = OrdinaryName name in
         let reason = func_reason ~async ~generator sig_loc in
         let general = Tvar.mk_where cx reason (Env.unify_declared_type cx name name_loc) in
-        let (fn_type, func_ast) = mk_function_declaration None cx ~general reason func in
+        let (fn_type, func_ast) = mk_function_declaration cx ~general reason func in
         (fn_type, id, (loc, FunctionDeclaration func_ast))
     in
     function
@@ -2360,7 +2360,7 @@ struct
               let { Ast.Function.sig_loc; async; generator; _ } = fn in
               let reason = func_reason ~async ~generator sig_loc in
               let general = Tvar.mk cx reason in
-              let (t, fn) = mk_function_declaration None cx ~general reason fn in
+              let (t, fn) = mk_function_declaration cx ~general reason fn in
               Flow_js.flow_t cx (t, general);
               (loc, general, (loc, FunctionDeclaration fn))
             | ClassDeclaration ({ Ast.Class.id = None; _ } as c) ->
@@ -2687,7 +2687,6 @@ struct
       let tvar = Tvar.mk cx reason in
       let (t, func) =
         mk_function_expression
-          None
           cx
           ~hint:(hint_decompose_opt_todo object_hint)
           ~general:tvar
@@ -2725,7 +2724,6 @@ struct
       let (function_type, func) =
         mk_function_expression
           ~hint:(hint_decompose_opt_todo object_hint)
-          None
           cx
           ~general:tvar
           ~needs_this_param:false
@@ -2765,7 +2763,6 @@ struct
       let tvar = Tvar.mk cx reason in
       let (function_type, func) =
         mk_function_expression
-          None
           cx
           ~hint:(hint_decompose_opt_todo object_hint)
           ~general:tvar
@@ -3503,7 +3500,22 @@ struct
       let reason = func_reason ~async ~generator sig_loc in
       let tvar = Tvar.mk cx reason in
       let (t, func) =
-        mk_function_expression id cx ~hint reason ~needs_this_param:true ~general:tvar func
+        match id with
+        | None -> mk_function_expression cx ~hint reason ~needs_this_param:true ~general:tvar func
+        | Some (name_loc, { Ast.Identifier.name; comments = _ }) ->
+          let scope = Scope.fresh () in
+          Env.push_var_scope scope;
+          let name = OrdinaryName name in
+          Env.bind_fun cx name tvar name_loc;
+          let (t, func) =
+            mk_function_expression cx ~hint reason ~needs_this_param:true ~general:tvar func
+          in
+          let use_op =
+            Op (AssignVar { var = Some (mk_reason (RIdentifier name) loc); init = reason_of_t t })
+          in
+          Env.init_fun cx ~use_op name t name_loc;
+          Env.pop_var_scope ();
+          (t, func)
       in
       Flow.flow_t cx (t, tvar);
       ((loc, t), Function func)
@@ -8846,11 +8858,10 @@ struct
             Error_message.(EUnsupportedSyntax (loc, PredicateDeclarationForImplementation));
           (annotated_or_inferred, Some (Tast_utils.error_mapper#type_predicate pred))
       in
-      let knot = Tvar.mk cx reason in
       let return_t =
         mk_inference_target_with_annots return_annotated_or_inferred (hint_decompose_opt_todo hint)
       in
-      ( { Func_stmt_sig.reason; kind; tparams; tparams_map; fparams; body; return_t; knot },
+      ( { Func_stmt_sig.reason; kind; tparams; tparams_map; fparams; body; return_t },
         fun params body fun_type ->
           {
             func with
@@ -8868,15 +8879,13 @@ struct
      signature consisting of type parameters, parameter types, parameter names,
      and return type, check the body against that signature by adding `this`
      and super` to the environment, and return the signature. *)
-  and function_decl id cx ~hint ~needs_this_param reason func this_recipe super =
+  and function_decl cx ~hint ~needs_this_param reason func this_recipe super =
     let (func_sig, reconstruct_func) =
       mk_func_sig cx ~hint ~needs_this_param Subst_name.Map.empty reason func
     in
     let save_return = Abnormal.clear_saved Abnormal.Return in
     let save_throw = Abnormal.clear_saved Abnormal.Throw in
-    let (this_t, params_ast, body_ast, _) =
-      Func_stmt_sig.toplevels id cx this_recipe super func_sig
-    in
+    let (this_t, params_ast, body_ast, _) = Func_stmt_sig.toplevels cx this_recipe super func_sig in
     ignore (Abnormal.swap_saved Abnormal.Return save_return);
     ignore (Abnormal.swap_saved Abnormal.Throw save_throw);
     let fun_type = Func_stmt_sig.functiontype cx this_t func_sig in
@@ -8891,15 +8900,15 @@ struct
     Env.init_let cx ~use_op:unknown_use ix ~has_anno:false t loc
 
   (* Process a function declaration, returning a (polymorphic) function type. *)
-  and mk_function_declaration id cx ~general reason func =
-    mk_function id cx ~hint:None ~general ~needs_this_param:true reason func
+  and mk_function_declaration cx ~general reason func =
+    mk_function cx ~hint:None ~general ~needs_this_param:true reason func
 
   (* Process a function expression, returning a (polymorphic) function type. *)
-  and mk_function_expression id cx ~hint ~general ~needs_this_param reason func =
-    mk_function id cx ~hint ~needs_this_param ~general reason func
+  and mk_function_expression cx ~hint ~general ~needs_this_param reason func =
+    mk_function cx ~hint ~needs_this_param ~general reason func
 
   (* Internal helper function. Use `mk_function_declaration` and `mk_function_expression` instead. *)
-  and mk_function id cx ~hint ~general ~needs_this_param reason func =
+  and mk_function cx ~hint ~general ~needs_this_param reason func =
     let loc = aloc_of_reason reason in
     (* Normally, functions do not have access to super. *)
     let super =
@@ -8935,7 +8944,7 @@ struct
       (type_t_of_annotated_or_inferred t, this)
     in
     let (fun_type, reconstruct_ast) =
-      function_decl id cx ~needs_this_param ~hint reason func this_recipe super
+      function_decl cx ~needs_this_param ~hint reason func this_recipe super
     in
     (fun_type, reconstruct_ast general)
 
@@ -8943,7 +8952,6 @@ struct
   and mk_arrow cx ~hint reason func =
     let loc = aloc_of_reason reason in
     let (_, super) = Env.find_entry cx (internal_name "super") loc in
-    let { Ast.Function.id; _ } = func in
     let this_recipe _ =
       let (_, this) = Env.find_entry cx (internal_name "this") loc in
       (* Do not expose the type of `this` in the function's type. This call to
@@ -8953,7 +8961,7 @@ struct
       (dummy_this loc, this)
     in
     let (fun_type, reconstruct_ast) =
-      function_decl id cx ~needs_this_param:false ~hint reason func this_recipe super
+      function_decl cx ~needs_this_param:false ~hint reason func this_recipe super
     in
     (fun_type, reconstruct_ast fun_type)
 

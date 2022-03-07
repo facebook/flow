@@ -1756,7 +1756,6 @@ module Make
       let (fparams, params_ast) = convert_params cx tparams_map func.Ast.Type.Function.params in
       let (((_, return_t), _) as return_ast) = convert cx tparams_map func.return in
       let reason = mk_annot_reason RFunctionType loc in
-      let knot = Tvar.mk cx reason in
       ( {
           Func_type_sig.reason;
           kind = Func_sig.Ordinary;
@@ -1765,7 +1764,6 @@ module Make
           fparams;
           body = None;
           return_t = Annotated return_t;
-          knot;
         },
         {
           Ast.Type.Function.tparams = tparams_ast;

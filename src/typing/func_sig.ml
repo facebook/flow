@@ -12,10 +12,6 @@ open Type
 open TypeUtil
 include Func_sig_intf
 
-(* We use this value to indicate places where values stored in the environment can have
- * an annotation with some more work *)
-let annotated_todo t = Inferred t
-
 module Make
     (Env : Env_sig.S)
     (Abnormal : Abnormal_sig.S with module Env := Env)
@@ -36,8 +32,6 @@ struct
     fparams: func_params;
     body: (ALoc.t, ALoc.t) Ast.Function.body option;
     return_t: Type.annotated_or_inferred;
-    (* To be unified with the type of the function. *)
-    knot: Type.t;
   }
 
   let this_param = F.this
@@ -51,9 +45,6 @@ struct
       fparams = F.empty (fun _ _ _ -> None);
       body = None;
       return_t = Annotated (VoidT.why reason |> with_trust bogus_trust);
-      (* This can't be directly recursively called. In case this type is accidentally used downstream,
-       * stub it out with mixed. *)
-      knot = MixedT.why reason |> with_trust bogus_trust;
     }
 
   let field_initializer tparams_map reason expr return_annot_or_inferred =
@@ -65,12 +56,9 @@ struct
       fparams = F.empty (fun _ _ _ -> None);
       body = None;
       return_t = return_annot_or_inferred;
-      (* This can't be recursively called. In case this type is accidentally used downstream, stub it
-       * out with mixed. *)
-      knot = MixedT.why reason |> with_trust bogus_trust;
     }
 
-  let functiontype cx this_default { reason; kind; tparams; fparams; return_t; knot; _ } =
+  let functiontype cx this_default { reason; kind; tparams; fparams; return_t; _ } =
     let make_trust = Context.trust_constructor cx in
     let static =
       let proto = FunProtoT reason in
@@ -91,9 +79,7 @@ struct
       }
     in
     let t = DefT (reason, make_trust (), FunT (static, prototype, funtype)) in
-    let t = poly_type_of_tparams (Type.Poly.generate_id ()) tparams t in
-    Flow.unify cx t knot;
-    t
+    poly_type_of_tparams (Type.Poly.generate_id ()) tparams t
 
   let methodtype this_default { reason; tparams; fparams; return_t; _ } =
     let params = F.value fparams in
@@ -128,8 +114,8 @@ struct
     | [(_, param_t)] -> param_t
     | _ -> failwith "Setter property with unexpected type"
 
-  let toplevels id cx this_recipe super x =
-    let { reason = reason_fn; kind; tparams_map; fparams; body; return_t; knot; _ } = x in
+  let toplevels cx this_recipe super x =
+    let { reason = reason_fn; kind; tparams_map; fparams; body; return_t; _ } = x in
     let loc =
       let open Ast.Function in
       match body with
@@ -192,11 +178,6 @@ struct
 
     (* add param bindings *)
     let params_ast = F.eval cx fparams in
-    (* early-add our own name binding for recursive calls. *)
-    Base.Option.iter id ~f:(fun (loc, { Ast.Identifier.name; comments = _ }) ->
-        let entry = annotated_todo knot |> Scope.Entry.new_var ~loc ~provider:knot in
-        Scope.add_entry (OrdinaryName name) entry function_scope
-    );
 
     let (yield_t, next_t) =
       if kind = Generator || kind = AsyncGenerator then

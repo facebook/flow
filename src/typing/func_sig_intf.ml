@@ -27,7 +27,6 @@ module type S = sig
     fparams: func_params;
     body: (ALoc.t, ALoc.t) Flow_ast.Function.body option;
     return_t: Type.annotated_or_inferred;
-    knot: Type.t;
   }
 
   (** 1. Constructors *)
@@ -58,8 +57,6 @@ module type S = sig
   (** 1. Manipulation *)
 
   val toplevels :
-    (ALoc.t, ALoc.t) Flow_ast.Identifier.t option ->
-    (* id *)
     Context.t ->
     (func_params -> Type.t * Scope.Entry.t) ->
     (* this recipe *)
