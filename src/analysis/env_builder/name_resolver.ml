@@ -2575,7 +2575,9 @@ module Make
       method identifier_refinement ((loc, ident) as identifier) =
         ignore @@ this#identifier identifier;
         let { Flow_ast.Identifier.name; _ } = ident in
-        this#add_refinement (RefinementKey.of_name name loc) (L.LSet.singleton loc, TruthyR)
+        let { val_ref; _ } = SMap.find name env_state.env in
+        if not (Val.is_undeclared !val_ref) then
+          this#add_refinement (RefinementKey.of_name name loc) (L.LSet.singleton loc, TruthyR)
 
       method assignment_refinement loc assignment =
         ignore @@ this#assignment loc assignment;
