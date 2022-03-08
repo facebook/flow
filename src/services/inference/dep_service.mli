@@ -7,9 +7,6 @@
 
 open Utils_js
 
-val implementation_file :
-  reader:Mutator_state_reader.t -> (Modulename.t -> File_key.t option) Expensive.t
-
 val calc_direct_dependents :
   MultiWorkerLwt.worker list option ->
   candidates:FilenameSet.t ->
