@@ -194,10 +194,6 @@ module type READER = sig
 
   val get_provider : reader:reader -> (Modulename.t -> File_key.t option) Expensive.t
 
-  val get_provider_unsafe : reader:reader -> (Modulename.t -> File_key.t) Expensive.t
-
-  val module_exists : reader:reader -> Modulename.t -> bool
-
   val get_resolved_requires_unsafe : reader:reader -> (File_key.t -> resolved_requires) Expensive.t
 end
 
@@ -205,13 +201,6 @@ module Mutator_reader : READER with type reader = Mutator_state_reader.t = struc
   type reader = Mutator_state_reader.t
 
   let get_provider ~reader:_ = Expensive.wrap NameHeap.get
-
-  let module_exists ~reader:_ = NameHeap.mem
-
-  let get_provider_unsafe ~reader ~audit m =
-    match get_provider ~reader ~audit m with
-    | Some file -> file
-    | None -> failwith (Printf.sprintf "file name not found for module %s" (Modulename.to_string m))
 
   let get_resolved_requires_unsafe ~reader:_ =
     Expensive.wrap (fun f ->
@@ -235,17 +224,6 @@ module Reader : READER with type reader = State_reader.t = struct
       Expensive.wrap NameHeap.get_old ~audit key
     else
       Expensive.wrap NameHeap.get ~audit key
-
-  let module_exists ~reader:_ key =
-    if should_use_old_nameheap key then
-      NameHeap.mem_old key
-    else
-      NameHeap.mem key
-
-  let get_provider_unsafe ~reader ~audit m =
-    match get_provider ~reader ~audit m with
-    | Some file -> file
-    | None -> failwith (Printf.sprintf "file name not found for module %s" (Modulename.to_string m))
 
   let get_resolved_requires_unsafe ~reader:_ =
     Expensive.wrap (fun f ->
@@ -271,16 +249,6 @@ module Reader_dispatcher : READER with type reader = Abstract_state_reader.t = s
     match reader with
     | Mutator_state_reader reader -> Mutator_reader.get_provider ~reader
     | State_reader reader -> Reader.get_provider ~reader
-
-  let module_exists ~reader =
-    match reader with
-    | Mutator_state_reader reader -> Mutator_reader.module_exists ~reader
-    | State_reader reader -> Reader.module_exists ~reader
-
-  let get_provider_unsafe ~reader =
-    match reader with
-    | Mutator_state_reader reader -> Mutator_reader.get_provider_unsafe ~reader
-    | State_reader reader -> Reader.get_provider_unsafe ~reader
 
   let get_resolved_requires_unsafe ~reader =
     match reader with

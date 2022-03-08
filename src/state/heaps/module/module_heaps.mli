@@ -24,10 +24,6 @@ module type READER = sig
 
   val get_provider : reader:reader -> (Modulename.t -> File_key.t option) Expensive.t
 
-  val get_provider_unsafe : reader:reader -> (Modulename.t -> File_key.t) Expensive.t
-
-  val module_exists : reader:reader -> Modulename.t -> bool
-
   val get_resolved_requires_unsafe : reader:reader -> (File_key.t -> resolved_requires) Expensive.t
 end
 
