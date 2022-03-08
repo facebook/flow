@@ -192,7 +192,7 @@ end
 module type READER = sig
   type reader
 
-  val get_provider : reader:reader -> (Modulename.t -> File_key.t option) Expensive.t
+  val get_provider : reader:reader -> Modulename.t -> File_key.t option
 
   val get_resolved_requires_unsafe : reader:reader -> (File_key.t -> resolved_requires) Expensive.t
 end
@@ -200,7 +200,7 @@ end
 module Mutator_reader : READER with type reader = Mutator_state_reader.t = struct
   type reader = Mutator_state_reader.t
 
-  let get_provider ~reader:_ = Expensive.wrap NameHeap.get
+  let get_provider ~reader:_ = NameHeap.get
 
   let get_resolved_requires_unsafe ~reader:_ =
     Expensive.wrap (fun f ->
@@ -219,11 +219,11 @@ module Reader : READER with type reader = State_reader.t = struct
   let should_use_old_resolved_requires f =
     Utils_js.FilenameSet.mem f !currently_oldified_resolved_requires
 
-  let get_provider ~reader:_ ~audit key =
+  let get_provider ~reader:_ key =
     if should_use_old_nameheap key then
-      Expensive.wrap NameHeap.get_old ~audit key
+      NameHeap.get_old key
     else
-      Expensive.wrap NameHeap.get ~audit key
+      NameHeap.get key
 
   let get_resolved_requires_unsafe ~reader:_ =
     Expensive.wrap (fun f ->

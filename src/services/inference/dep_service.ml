@@ -157,8 +157,8 @@ let calc_direct_dependents workers ~candidates ~root_files ~root_modules =
    registered to provide r and the file is checked. Such a file must be merged
    before any file that requires module r, so this notion naturally gives rise
    to a dependency ordering among files for merging. *)
-let implementation_file ~reader ~audit m =
-  match Module_heaps.Mutator_reader.get_provider ~reader ~audit m with
+let implementation_file ~reader m =
+  match Module_heaps.Mutator_reader.get_provider ~reader m with
   | Some f when Parsing_heaps.(Mutator_reader.is_checked_file ~reader (get_file_addr_unsafe f)) ->
     Some f
   | _ -> None
@@ -180,7 +180,7 @@ let file_dependencies ~audit ~reader file =
   SSet.fold
     (fun mref (sig_files, all_files) ->
       let m = SMap.find mref resolved_modules in
-      match implementation_file ~reader m ~audit:Expensive.ok with
+      match implementation_file ~reader m with
       | Some f ->
         if SSet.mem mref sig_require_set then
           (FilenameSet.add f sig_files, FilenameSet.add f all_files)

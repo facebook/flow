@@ -120,7 +120,6 @@ let rec process_request ~options ~reader ~cx ~is_legit_require ~typed_ast :
       let filename =
         Module_heaps.Reader.get_provider
           ~reader
-          ~audit:Expensive.warn
           (Module_js.imported_module
              ~options
              ~reader:(Abstract_state_reader.State_reader reader)

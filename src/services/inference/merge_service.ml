@@ -218,7 +218,7 @@ let sig_hash ~root =
   in
 
   let file_dependency ~reader component_rec component_map m =
-    match Module_heaps.Mutator_reader.get_provider ~reader ~audit:Expensive.ok m with
+    match Module_heaps.Mutator_reader.get_provider ~reader m with
     | None -> Unchecked
     | Some (File_key.ResourceFile f) -> resource_dep f
     | Some dep ->

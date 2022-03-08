@@ -22,7 +22,7 @@ val mk_resolved_requires :
 module type READER = sig
   type reader
 
-  val get_provider : reader:reader -> (Modulename.t -> File_key.t option) Expensive.t
+  val get_provider : reader:reader -> Modulename.t -> File_key.t option
 
   val get_resolved_requires_unsafe : reader:reader -> (File_key.t -> resolved_requires) Expensive.t
 end

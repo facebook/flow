@@ -196,7 +196,6 @@ let printable_errors_of_file_artifacts_result ~options ~env filename result =
 (** Resolves dependencies of [file_sig] specifically for checking contents, rather than
     for persisting in the heap. Notably, does not error if a required module is not found. *)
 let unchecked_dependencies ~options ~reader file file_sig =
-  let audit = Expensive.warn in
   let node_modules_containers = !Files.node_modules_containers in
   let resolved_requires =
     let require_loc_map = File_sig.With_Loc.(require_loc_map file_sig.module_sig) in
@@ -219,7 +218,7 @@ let unchecked_dependencies ~options ~reader file file_sig =
   let has_been_checked f = Base.Option.is_some (Context_heaps.Reader.find_leader_opt ~reader f) in
   Modulename.Set.fold
     (fun m acc ->
-      match Module_heaps.Reader.get_provider ~reader m ~audit with
+      match Module_heaps.Reader.get_provider ~reader m with
       | Some f ->
         if should_be_checked f && not (has_been_checked f) then
           FilenameSet.add f acc
