@@ -56,6 +56,17 @@ module LogFlusher = LwtLoop.Make (struct
     Exception.reraise exn
 end)
 
+let fallback_error_handler msg exn =
+  let msg =
+    Printf.sprintf
+      "%s: %s\n%s"
+      msg
+      (Exception.get_ctor_string exn)
+      (Exception.get_full_backtrace_string max_int exn)
+  in
+  Logger.fatal_s ~exn "%s. Exiting" msg;
+  Exit.(exit ~msg Unknown_error)
+
 (* This is the common entry point for both daemonize and start. *)
 let internal_start ~is_daemon ?waiting_fd monitor_options =
   let { FlowServerMonitorOptions.server_options; argv; _ } = monitor_options in
@@ -121,14 +132,7 @@ let internal_start ~is_daemon ?waiting_fd monitor_options =
     (Lwt.async_exception_hook :=
        fun exn ->
          let exn = Exception.wrap exn in
-         let msg =
-           Printf.sprintf
-             "Uncaught async exception: %s\n%s"
-             (Exception.get_ctor_string exn)
-             (Exception.get_full_backtrace_string max_int exn)
-         in
-         Logger.fatal_s ~exn "Uncaught async exception. Exiting";
-         Exit.(exit ~msg Unknown_error)
+         fallback_error_handler "Uncaught async exception" exn
     );
 
     Logger.init_logger log_fd;
@@ -147,23 +151,43 @@ let internal_start ~is_daemon ?waiting_fd monitor_options =
     in
     (* Don't start the server until we've set up the threads to handle the waiting channel *)
     Lwt.async (fun () ->
-        let%lwt () = handle_waiting_start_command in
-        FlowServerMonitorServer.start monitor_options
+        try%lwt
+          let%lwt () = handle_waiting_start_command in
+          FlowServerMonitorServer.start monitor_options
+        with
+        | e ->
+          let e = Exception.wrap e in
+          fallback_error_handler "Uncaught exception in FlowServerMonitorServer thread" e
     );
 
     (* We can start up the socket acceptor even before the server starts *)
     Lwt.async (fun () ->
-        SocketAcceptor.run
-          (Lwt_unix.of_unix_file_descr ~blocking:false ~set_flags:true monitor_socket_fd)
-          monitor_options.FlowServerMonitorOptions.autostop
+        try%lwt
+          SocketAcceptor.run
+            (Lwt_unix.of_unix_file_descr ~blocking:false ~set_flags:true monitor_socket_fd)
+            monitor_options.FlowServerMonitorOptions.autostop
+        with
+        | exn ->
+          let exn = Exception.wrap exn in
+          fallback_error_handler "Uncaught exception in SocketAcceptor thread" exn
     );
     Lwt.async (fun () ->
-        SocketAcceptor.run_legacy
-          (Lwt_unix.of_unix_file_descr ~blocking:false ~set_flags:true legacy2_socket_fd)
+        try%lwt
+          SocketAcceptor.run_legacy
+            (Lwt_unix.of_unix_file_descr ~blocking:false ~set_flags:true legacy2_socket_fd)
+        with
+        | exn ->
+          let exn = Exception.wrap exn in
+          fallback_error_handler "Uncaught exception in SocketAcceptor legacy thread" exn
     );
     Lwt.async (fun () ->
-        SocketAcceptor.run_legacy
-          (Lwt_unix.of_unix_file_descr ~blocking:false ~set_flags:true legacy1_socket_fd)
+        try%lwt
+          SocketAcceptor.run_legacy
+            (Lwt_unix.of_unix_file_descr ~blocking:false ~set_flags:true legacy1_socket_fd)
+        with
+        | exn ->
+          let exn = Exception.wrap exn in
+          fallback_error_handler "Uncaught exception in SocketAcceptor legacy thread" exn
     );
 
     (* Wait forever! Mwhahahahahaha *)
