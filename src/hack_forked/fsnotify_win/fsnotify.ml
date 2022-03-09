@@ -62,7 +62,14 @@ let init roots =
   Unix.set_close_on_exec in_fd;
   Unix.set_close_on_exec out_fd;
   let fsenv = raw_init out_fd in
-  let watchers = Base.List.map roots ~f:(raw_add_watch fsenv) in
+  let watchers =
+    Base.List.filter_map roots ~f:(fun root ->
+        try Some (raw_add_watch fsenv root) with
+        | Unix.Unix_error (Unix.ENOENT, _, _) ->
+          prerr_endline ("Not watching root \"" ^ root ^ "\": file not found.");
+          None
+    )
+  in
   { fsenv; fd = in_fd; watchers; wpaths = SSet.empty }
 
 (** Faked add_watch, as for `fsnotify_darwin`. *)

@@ -44,7 +44,8 @@ struct fsenv {
 
 // Parameter to the watching thread
 struct wenv {
-  char* wpath; // the directory to be watched
+  char* wpath; // path of the directory to be watched
+  HANDLE dir_handle; // handle of the directory to be watched
   struct fsenv* fsenv; // where to store the events.
 };
 
@@ -129,25 +130,11 @@ static value parse_events(struct events* events) {
 static DWORD watcher_thread_main(LPVOID param) {
   char* buf;
   struct wenv* wenv = (struct wenv*)param;
-  HANDLE dir_handle = CreateFile(
-      wenv->wpath,
-      FILE_LIST_DIRECTORY,
-      FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
-      NULL,
-      OPEN_EXISTING,
-      FILE_FLAG_BACKUP_SEMANTICS,
-      NULL);
-
-  if (dir_handle == INVALID_HANDLE_VALUE) {
-    win32_maperr(GetLastError());
-    uerror("CreateFile", Nothing);
-  }
-
   while (TRUE) {
     DWORD size;
     buf = malloc(FILE_NOTIFY_BUFFER_LENGTH);
     if (!ReadDirectoryChangesW(
-            dir_handle,
+            wenv->dir_handle,
             buf,
             FILE_NOTIFY_BUFFER_LENGTH,
             TRUE,
@@ -163,7 +150,8 @@ static DWORD watcher_thread_main(LPVOID param) {
   }
 
   free(buf);
-  CloseHandle(dir_handle);
+  CloseHandle(wenv->dir_handle);
+  free(wenv);
   return 0;
 }
 
@@ -175,6 +163,22 @@ value caml_fsnotify_add_watch(value vfsenv, value path) {
   struct wenv* wenv = malloc(sizeof(struct wenv));
   wenv->wpath = _strdup(_fullpath(output, String_val(path), _MAX_PATH));
   wenv->fsenv = fsenv;
+
+  HANDLE dir_handle = CreateFile(
+      wenv->wpath,
+      FILE_LIST_DIRECTORY,
+      FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
+      NULL,
+      OPEN_EXISTING,
+      FILE_FLAG_BACKUP_SEMANTICS,
+      NULL);
+
+  if (dir_handle == INVALID_HANDLE_VALUE) {
+    win32_maperr(GetLastError());
+    uerror("CreateFile", Nothing);
+  }
+  wenv->dir_handle = dir_handle;
+
   HANDLE th = CreateThread(NULL, 0, watcher_thread_main, wenv, 0, NULL);
   if (th == INVALID_HANDLE_VALUE) {
     win32_maperr(GetLastError());
