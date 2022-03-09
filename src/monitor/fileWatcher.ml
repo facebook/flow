@@ -130,12 +130,18 @@ class dfind (monitor_options : FlowServerMonitorOptions.t) : watcher =
       | Some dfind -> dfind
 
     method start_init =
-      let file_options =
-        Options.file_options monitor_options.FlowServerMonitorOptions.server_options
-      in
+      let server_options = monitor_options.FlowServerMonitorOptions.server_options in
+      let file_options = Options.file_options server_options in
       watch_paths <- Files.watched_paths file_options;
-      let null_fd = Daemon.null_fd () in
-      let fds = (null_fd, null_fd, null_fd) in
+      let in_fd = Daemon.null_fd () in
+      let log_file =
+        let flowconfig_name = Options.flowconfig_name server_options in
+        let tmp_dir = Options.temp_dir server_options in
+        let root = Options.root server_options in
+        Server_files_js.dfind_log_file ~flowconfig_name ~tmp_dir root
+      in
+      let log_fd = Daemon.fd_of_path log_file in
+      let fds = (in_fd, log_fd, log_fd) in
       let dfind = DfindLibLwt.init fds ("flow_server_events", watch_paths) in
       dfind_instance <- Some dfind
 
