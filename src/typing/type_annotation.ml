@@ -300,7 +300,9 @@ module Make
       let t_unapplied =
         Tvar.mk_no_wrap_where cx qid_reason (fun t ->
             let use_op = Op (GetProperty qid_reason) in
-            Flow.flow cx (m, GetPropT (use_op, qid_reason, Named (id_reason, OrdinaryName name), t))
+            Flow.flow
+              cx
+              (m, GetPropT (use_op, qid_reason, None, Named (id_reason, OrdinaryName name), t))
         )
       in
       let (t, targs) = mk_nominal_type cx reason tparams_map (t_unapplied, targs) in
@@ -1286,7 +1288,9 @@ module Make
             let use_op =
               Op (GetProperty (mk_reason (RType (OrdinaryName (qualified_name qualified))) loc))
             in
-            Flow.flow cx (m, GetPropT (use_op, id_reason, Named (id_reason, OrdinaryName name), t))
+            Flow.flow
+              cx
+              (m, GetPropT (use_op, id_reason, None, Named (id_reason, OrdinaryName name), t))
         )
       in
       (t, Qualified (loc, { qualification; id = ((id_loc, t), id_name) }))
@@ -1309,7 +1313,9 @@ module Make
             let use_op =
               Op (GetProperty (mk_reason (RType (OrdinaryName (typeof_name qualified))) loc))
             in
-            Flow.flow cx (m, GetPropT (use_op, id_reason, Named (id_reason, OrdinaryName name), t))
+            Flow.flow
+              cx
+              (m, GetPropT (use_op, id_reason, None, Named (id_reason, OrdinaryName name), t))
         )
       in
       (t, Qualified ((loc, t), { qualification; id = ((id_loc, t), id_name) }))

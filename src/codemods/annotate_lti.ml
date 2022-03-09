@@ -79,7 +79,7 @@ module Normalize_this_getPropT = struct
         (fun prop_names upper ->
           match (prop_names, upper) with
           | (Ok prop_names, T.MethodT (_, _, _, T.Named (_, Reason.OrdinaryName name), _, _))
-          | (Ok prop_names, T.GetPropT (_, _, T.Named (_, Reason.OrdinaryName name), _)) ->
+          | (Ok prop_names, T.GetPropT (_, _, _, T.Named (_, Reason.OrdinaryName name), _)) ->
             Ok (name :: prop_names)
           | (_, _) -> Error "Not all uses are property accesses")
         (Ok [])

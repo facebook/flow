@@ -277,6 +277,21 @@ References:
             ^^^^^ [2]
 
 
+Error --------------------------------------------------------------------------------------------------- literal.js:6:2
+
+Cannot cast `o_get.q` to empty because `void` (due to access of non-existent property `q`) [1] is incompatible with
+empty [2]. [incompatible-cast]
+
+   literal.js:6:2
+   6| (o_get.q: empty); // error: property `q` not found
+       ^^^^^^^ [1]
+
+References:
+   literal.js:6:11
+   6| (o_get.q: empty); // error: property `q` not found
+                ^^^^^ [2]
+
+
 Error --------------------------------------------------------------------------------------------------- literal.js:6:8
 
 Cannot get `o_get.q` because property `q` is missing in object literal [1]. [prop-missing]
@@ -314,6 +329,21 @@ References:
    literal.js:13:22
    13| (o_method.__proto__: empty); // error: function ~> empty
                             ^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- literal.js:17:2
+
+Cannot cast `o_shorthand.q` to empty because `void` (due to access of non-existent property `q`) [1] is incompatible
+with empty [2]. [incompatible-cast]
+
+   literal.js:17:2
+   17| (o_shorthand.q: empty); // error: property `q` not found
+        ^^^^^^^^^^^^^ [1]
+
+References:
+   literal.js:17:17
+   17| (o_shorthand.q: empty); // error: property `q` not found
+                       ^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------- literal.js:17:14
@@ -381,6 +411,21 @@ References:
                          ^ [1]
    literal.js:24:12
    24| (o_loop.p: empty); // error: number ~> empty
+                  ^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- literal.js:25:2
+
+Cannot cast `o_loop.q` to empty because `void` (due to access of non-existent property `q`) [1] is incompatible with
+empty [2]. [incompatible-cast]
+
+   literal.js:25:2
+   25| (o_loop.q: empty); // error: property `q` not found
+        ^^^^^^^^ [1]
+
+References:
+   literal.js:25:12
+   25| (o_loop.q: empty); // error: property `q` not found
                   ^^^^^ [2]
 
 
@@ -485,4 +530,4 @@ References:
 
 
 
-Found 34 errors
+Found 37 errors

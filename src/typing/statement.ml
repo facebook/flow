@@ -2593,7 +2593,7 @@ struct
       let t =
         let reason = mk_reason (RIdentifier local_name) loc in
         Tvar.mk_no_wrap_where cx reason (fun tout ->
-            let use_t = GetPropT (unknown_use, reason, Named (reason, local_name), tout) in
+            let use_t = GetPropT (unknown_use, reason, None, Named (reason, local_name), tout) in
             Flow.flow cx (source_ns_t, use_t)
         )
       in
@@ -7640,7 +7640,9 @@ struct
             let use_op = Op (GetProperty (mk_expression_reason e)) in
             Flow.flow
               cx
-              (obj_t, GetPropT (use_op, reason, Named (prop_reason, OrdinaryName "isArray"), t))
+              ( obj_t,
+                GetPropT (use_op, reason, None, Named (prop_reason, OrdinaryName "isArray"), t)
+              )
         )
       in
       let make_ast_and_pred arg bool =
@@ -7768,10 +7770,11 @@ struct
      would make everything involving Refinement be in the same place.
   *)
   and get_prop_opt_use ~cond reason ~use_op (prop_reason, name) =
+    let id = mk_id () in
     if Base.Option.is_some cond then
-      OptTestPropT (use_op, reason, mk_id (), Named (prop_reason, OrdinaryName name))
+      OptTestPropT (use_op, reason, id, Named (prop_reason, OrdinaryName name))
     else
-      OptGetPropT (use_op, reason, Named (prop_reason, OrdinaryName name))
+      OptGetPropT (use_op, reason, Some id, Named (prop_reason, OrdinaryName name))
 
   and get_prop ~cond cx reason ~use_op tobj (prop_reason, name) =
     let opt_use = get_prop_opt_use ~cond reason ~use_op (prop_reason, name) in

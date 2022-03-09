@@ -101,6 +101,7 @@ let get_intrinsic
       GetPropT
         ( use_op,
           reason,
+          None,
           (match literal with
           | Literal (_, name) -> Named (replace_desc_reason (RReactElement (Some name)) reason, name)
           | _ -> Computed component),

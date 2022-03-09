@@ -483,7 +483,7 @@ module rec TypeTerm : sig
      * fields when the InstanceT ~> SetPrivatePropT constraint is processsed *)
     | SetPrivatePropT of
         use_op * reason * string * set_mode * class_binding list * bool * t * t option
-    | GetPropT of use_op * reason * propref * tvar
+    | GetPropT of use_op * reason * ident option * propref * tvar
     (* For shapes *)
     | MatchPropT of use_op * reason * propref * tvar
     (* The same comment on SetPrivatePropT applies here *)
@@ -902,7 +902,7 @@ module rec TypeTerm : sig
         * bool
         * opt_method_action
         * t option
-    | OptGetPropT of use_op * reason * propref
+    | OptGetPropT of use_op * reason * ident option * propref
     | OptGetPrivatePropT of use_op * reason * string * class_binding list * bool
     | OptTestPropT of use_op * reason * ident * propref
     | OptGetElemT of use_op * reason * t
@@ -3888,7 +3888,7 @@ let apply_opt_use opt_use t_out =
   | OptPrivateMethodT (op, r1, r2, p, scopes, static, action, prop_tout) ->
     PrivateMethodT (op, r1, r2, p, scopes, static, apply_opt_action action t_out, prop_tout)
   | OptCallT (u, r, f) -> CallT (u, r, apply_opt_funcalltype f t_out)
-  | OptGetPropT (u, r, p) -> GetPropT (u, r, p, t_out)
+  | OptGetPropT (u, r, i, p) -> GetPropT (u, r, i, p, t_out)
   | OptGetPrivatePropT (u, r, s, cbs, b) -> GetPrivatePropT (u, r, s, cbs, b, t_out)
   | OptTestPropT (u, r, i, p) -> TestPropT (u, r, i, p, t_out)
   | OptGetElemT (u, r, t) -> GetElemT (u, r, t, t_out)

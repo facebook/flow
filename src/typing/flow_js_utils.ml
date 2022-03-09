@@ -361,9 +361,9 @@ let error_message_kind_of_lower = function
     None
 
 let error_message_kind_of_upper = function
-  | GetPropT (_, _, Named (r, name), _) ->
+  | GetPropT (_, _, _, Named (r, name), _) ->
     Error_message.IncompatibleGetPropT (aloc_of_reason r, Some name)
-  | GetPropT (_, _, Computed t, _) -> Error_message.IncompatibleGetPropT (loc_of_t t, None)
+  | GetPropT (_, _, _, Computed t, _) -> Error_message.IncompatibleGetPropT (loc_of_t t, None)
   | GetPrivatePropT (_, _, _, _, _, _) -> Error_message.IncompatibleGetPrivatePropT
   | SetPropT (_, _, Named (r, name), _, _, _, _) ->
     Error_message.IncompatibleSetPropT (aloc_of_reason r, Some name)
@@ -1594,7 +1594,11 @@ module type Get_prop_helper_sig = sig
   val error_type : Reason.t -> r
 
   val cg_get_prop :
-    Context.t -> Type.trace -> Type.t -> use_op * reason * (Reason.t * Reason.name) -> r
+    Context.t ->
+    Type.trace ->
+    Type.t ->
+    use_op * reason * Type.ident option * (Reason.t * Reason.name) ->
+    r
 end
 
 module GetPropT_kit (F : Get_prop_helper_sig) = struct
@@ -1635,7 +1639,7 @@ module GetPropT_kit (F : Get_prop_helper_sig) = struct
       F.error_type reason_op
 
   let on_EnumObjectT cx trace enum_reason trust enum access =
-    let (_, access_reason, (prop_reason, member_name)) = access in
+    let (_, access_reason, _, (prop_reason, member_name)) = access in
     let { members; _ } = enum in
     let error_invalid_access ~suggestion =
       let member_reason = replace_desc_reason (RIdentifier member_name) prop_reason in
@@ -1716,16 +1720,25 @@ module GetPropT_kit (F : Get_prop_helper_sig) = struct
       add_output cx ~trace msg;
       F.error_type ureason
 
-  let read_obj_prop cx trace ~use_op o propref reason_obj reason_op =
+  let read_obj_prop cx trace ~use_op o propref reason_obj reason_op lookup_info =
     let l = DefT (reason_obj, bogus_trust (), ObjT o) in
     match get_obj_prop cx trace o propref reason_op with
-    | Some (p, _target_kind) -> perform_read_prop_action cx trace use_op propref p reason_op
+    | Some (p, _target_kind) ->
+      Base.Option.iter ~f:(fun (id, _) -> Context.test_prop_hit cx id) lookup_info;
+      perform_read_prop_action cx trace use_op propref p reason_op
     | None ->
       (match propref with
-      | Named _ ->
+      | Named (reason_prop, name) ->
         let lookup_kind =
           if Obj_type.sealed_in_op reason_op o.flags.obj_kind then
-            Strict reason_obj
+            match lookup_info with
+            | Some (id, lookup_default_tout) when Obj_type.is_exact o.flags.obj_kind ->
+              let lookup_default =
+                let r = replace_desc_reason (RMissingProperty (Some name)) reason_op in
+                Some (DefT (r, bogus_trust (), VoidT), lookup_default_tout)
+              in
+              NonstrictReturning (lookup_default, Some (id, (reason_prop, reason_obj)))
+            | _ -> Strict reason_obj
           else
             ShadowRead (None, Nel.one o.props_tmap)
         in

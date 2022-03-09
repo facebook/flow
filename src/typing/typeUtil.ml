@@ -91,7 +91,7 @@ and reason_of_use_t = function
   | GetElemT (_, reason, _, _) -> reason
   | GetKeysT (reason, _) -> reason
   | GetValuesT (reason, _) -> reason
-  | GetPropT (_, reason, _, _) -> reason
+  | GetPropT (_, reason, _, _, _) -> reason
   | GetPrivatePropT (_, reason, _, _, _, _) -> reason
   | GetProtoT (reason, _) -> reason
   | GetStaticsT (reason, _) -> reason
@@ -266,7 +266,7 @@ and mod_reason_of_use_t f = function
   | GetElemT (use_op, reason, it, et) -> GetElemT (use_op, f reason, it, et)
   | GetKeysT (reason, t) -> GetKeysT (f reason, t)
   | GetValuesT (reason, t) -> GetValuesT (f reason, t)
-  | GetPropT (use_op, reason, n, t) -> GetPropT (use_op, f reason, n, t)
+  | GetPropT (use_op, reason, id, n, t) -> GetPropT (use_op, f reason, id, n, t)
   | GetPrivatePropT (use_op, reason, name, bindings, static, t) ->
     GetPrivatePropT (use_op, f reason, name, bindings, static, t)
   | GetProtoT (reason, t) -> GetProtoT (f reason, t)
@@ -359,7 +359,7 @@ and mod_reason_of_opt_use_t f = function
     OptMethodT (op, f r1, r2, ref, action, prop_tout)
   | OptPrivateMethodT (op, r1, r2, props, cbs, static, action, prop_tout) ->
     OptPrivateMethodT (op, f r1, r2, props, cbs, static, action, prop_tout)
-  | OptGetPropT (use_op, reason, n) -> OptGetPropT (use_op, f reason, n)
+  | OptGetPropT (use_op, reason, id, n) -> OptGetPropT (use_op, f reason, id, n)
   | OptGetPrivatePropT (use_op, reason, name, bindings, static) ->
     OptGetPrivatePropT (use_op, f reason, name, bindings, static)
   | OptTestPropT (use_op, reason, id, n) -> OptTestPropT (use_op, f reason, id, n)
@@ -386,7 +386,7 @@ let rec util_use_op_of_use_t :
   | SetPropT (op, r, p, m, w, t, tp) -> util op (fun op -> SetPropT (op, r, p, m, w, t, tp))
   | SetPrivatePropT (op, r, s, m, c, b, t, tp) ->
     util op (fun op -> SetPrivatePropT (op, r, s, m, c, b, t, tp))
-  | GetPropT (op, r, p, t) -> util op (fun op -> GetPropT (op, r, p, t))
+  | GetPropT (op, r, id, p, t) -> util op (fun op -> GetPropT (op, r, id, p, t))
   | TestPropT (op, r, id, p, t) -> util op (fun op -> TestPropT (op, r, id, p, t))
   | MatchPropT (op, r, p, t) -> util op (fun op -> MatchPropT (op, r, p, t))
   | GetPrivatePropT (op, r, s, c, b, t) -> util op (fun op -> GetPrivatePropT (op, r, s, c, b, t))

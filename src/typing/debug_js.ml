@@ -758,7 +758,7 @@ and dump_use_t_ (depth, tvars) cx t =
     | GetKeysT _ -> p t
     | GetValuesT _ -> p t
     | MatchPropT (use_op, _, prop, (preason, ptvar))
-    | GetPropT (use_op, _, prop, (preason, ptvar)) ->
+    | GetPropT (use_op, _, _, prop, (preason, ptvar)) ->
       p
         ~extra:
           (spf

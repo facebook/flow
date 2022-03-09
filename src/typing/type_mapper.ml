@@ -867,13 +867,13 @@ class virtual ['a] t_with_uses =
           t
         else
           SetPrivatePropT (use_op, r, prop, mode, scopes', static, t'', prop_t')
-      | GetPropT (use_op, r, prop, t') ->
+      | GetPropT (use_op, r, id, prop, t') ->
         let prop' = self#prop_ref cx map_cx prop in
         let t'' = self#tout cx map_cx t' in
         if prop' == prop && t'' == t' then
           t
         else
-          GetPropT (use_op, r, prop', t'')
+          GetPropT (use_op, r, id, prop', t'')
       | MatchPropT (use_op, r, prop, t') ->
         let prop' = self#prop_ref cx map_cx prop in
         let t'' = self#tout cx map_cx t' in
@@ -1583,12 +1583,12 @@ class virtual ['a] t_with_uses =
           t
         else
           OptPrivateMethodT (op, r1, r2, prop, scopes', static, opt_action', tout')
-      | OptGetPropT (use_op, r, prop) ->
+      | OptGetPropT (use_op, r, id, prop) ->
         let prop' = self#prop_ref cx map_cx prop in
         if prop' == prop then
           t
         else
-          OptGetPropT (use_op, r, prop')
+          OptGetPropT (use_op, r, id, prop')
       | OptGetPrivatePropT (use_op, r, prop, scopes, static) ->
         let scopes' = ListUtils.ident_map (self#class_binding cx map_cx) scopes in
         if scopes' == scopes then

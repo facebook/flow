@@ -352,7 +352,7 @@ module rec ConsGen : S = struct
     let cg_lookup cx _trace ~obj_t:_ t (reason_op, _kind, propref, use_op, _ids) =
       cg_lookup_ cx use_op t reason_op propref
 
-    let cg_get_prop cx _trace t (use_op, access_reason, (prop_reason, name)) =
+    let cg_get_prop cx _trace t (use_op, access_reason, _, (prop_reason, name)) =
       ConsGen.elab_t cx t (Annot_GetPropT (access_reason, use_op, Named (prop_reason, name)))
   end
 
@@ -960,7 +960,7 @@ module rec ConsGen : S = struct
     | (DefT (_, _, ObjT _), Annot_GetPropT (reason_op, _, Named (_, OrdinaryName "constructor"))) ->
       Unsoundness.why Constructor reason_op
     | (DefT (reason_obj, _, ObjT o), Annot_GetPropT (reason_op, use_op, propref)) ->
-      GetPropTKit.read_obj_prop cx dummy_trace ~use_op o propref reason_obj reason_op
+      GetPropTKit.read_obj_prop cx dummy_trace ~use_op o propref reason_obj reason_op None
     | (AnyT _, Annot_GetPropT (reason_op, _, _)) -> AnyT (reason_op, Untyped)
     | (DefT (_, _, FunT (_, t, _)), Annot_GetPropT (_, _, Named (_, OrdinaryName "prototype"))) -> t
     | (DefT (reason, _, ClassT instance), Annot_GetPropT (_, _, Named (_, OrdinaryName "prototype")))
@@ -1046,7 +1046,7 @@ module rec ConsGen : S = struct
     | ( DefT (enum_reason, trust, EnumObjectT enum),
         Annot_GetPropT (access_reason, use_op, Named (prop_reason, member_name))
       ) ->
-      let access = (use_op, access_reason, (prop_reason, member_name)) in
+      let access = (use_op, access_reason, None, (prop_reason, member_name)) in
       GetPropTKit.on_EnumObjectT cx dummy_trace enum_reason trust enum access
     | (DefT (enum_reason, _, EnumObjectT _), Annot_GetElemT (reason_op, _, elem)) ->
       let reason = reason_of_t elem in
