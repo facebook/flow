@@ -72,7 +72,7 @@ let format_errors
           suppressed_errors
       in
       let () =
-        Errors.Cli_output.format_errors
+        Errors.Cli_output.print_errors
           ~out_channel:stdout
           ~flags
           ~strip_root
