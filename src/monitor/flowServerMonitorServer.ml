@@ -239,18 +239,9 @@ end = struct
       push_to_command_stream (Some Notify_file_changes);
       Lwt.return watcher
 
-    let catch (watcher : acc) exn =
-      match Exception.unwrap exn with
-      | FileWatcher.FileWatcherDied exn ->
-        let msg = spf "File watcher (%s) died" watcher#name in
-        Logger.fatal ~exn:(Exception.to_exn exn) "%s" msg;
-        let error =
-          (Exception.get_ctor_string exn, Utils.Callstack (Exception.get_backtrace_string exn))
-        in
-        exit ~error ~msg Exit.Dfind_died
-      | _ ->
-        Logger.fatal ~exn:(Exception.to_exn exn) "Uncaught exception in Server file watcher loop";
-        Exception.reraise exn
+    let catch (_ : acc) exn =
+      Logger.fatal ~exn:(Exception.to_exn exn) "Uncaught exception in Server file watcher loop";
+      Exception.reraise exn
   end)
 
   (* The monitor is exiting. Let's try and shut down the server gracefully *)
