@@ -270,6 +270,7 @@ end = struct
           ]
       in
       let%lwt () = ServerConnection.close_immediately connection in
+      let pretty_pid = Sys_utils.pid_of_handle pid in
       let still_alive =
         match server_status with
         | Some (Unix.WEXITED exit_status) ->
@@ -286,27 +287,31 @@ end = struct
               in
               Logger.error
                 "Tried to kill the server process (%d), which exited with the wrong exit code: %s"
-                pid
+                pretty_pid
                 exit_status_string
           end;
           false
         | Some (Unix.WSIGNALED signal) ->
           Logger.error
             "Tried to kill the server process (%d), but for some reason it was killed with %s signal"
-            pid
+            pretty_pid
             (PrintSignal.string_of_signal signal);
           false
         | Some (Unix.WSTOPPED signal) ->
           Logger.error
             "Tried to kill the server process (%d), but for some reason it was stopped with %s signal"
-            pid
+            pretty_pid
             (PrintSignal.string_of_signal signal);
           true
         | None ->
-          Logger.error "Tried to kill the server process (%d), but it didn't die" pid;
+          Logger.error "Tried to kill the server process (%d), but it didn't die" pretty_pid;
           true
       in
-      if still_alive then Unix.kill pid Sys.sigkill;
+      ( if still_alive then
+        try Unix.kill pid Sys.sigkill with
+        | Unix.Unix_error (Unix.ESRCH, _, _) ->
+          Logger.info "Server process (%d) no longer exists" pretty_pid
+      );
 
       Lwt.return_unit
     with
