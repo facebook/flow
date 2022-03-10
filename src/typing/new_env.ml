@@ -138,6 +138,12 @@ module New_env = struct
     | Some (Find_providers.AnnotatedVar _, _) -> true
     | _ -> false
 
+  let is_def_loc_predicate_function { Env_api.providers; _ } loc =
+    let providers = Env_api.Provider_api.providers_of_def providers loc in
+    match providers with
+    | Some (Find_providers.AnnotatedVar { predicate }, _) -> predicate
+    | _ -> false
+
   let provider_type_for_def_loc ?(intersect = false) env def_loc =
     let { Loc_env.var_info; _ } = env in
     let providers =
@@ -432,6 +438,24 @@ module New_env = struct
         cx
         [spf "Location %s already fully resolved" (Reason.string_of_aloc loc)]
 
+  (* Sanity check for predicate functions: If there are multiple declare function
+   * providers, make sure none of them have a predicate. *)
+  let check_predicate_declare_function cx ~predicate name loc =
+    let { Loc_env.var_info; _ } = Context.environment cx in
+    match Env_api.Provider_api.providers_of_def var_info.Env_api.providers loc with
+    (* This check is only relevant when there are multiple providers *)
+    | Some (_, def_reason :: _) ->
+      let def_loc = Reason.aloc_of_reason def_reason in
+      let def_loc_is_pred = is_def_loc_predicate_function var_info def_loc in
+      (* Raise an error for an overload (other than the first one) if:
+       * - The first overload is a predicate function (`def_loc_is_pred`), or
+       * - The current overload is a predicate function (`predicate`). *)
+      if def_loc <> loc && (predicate || def_loc_is_pred) then
+        Flow_js_utils.add_output
+          cx
+          (Error_message.EBindingError (Error_message.ENameAlreadyBound, loc, name, def_loc))
+    | _ -> ()
+
   let resolve_env_entry cx t loc =
     set_env_entry cx ~use_op:unknown_use t loc;
     let ({ Loc_env.resolved; _ } as env) = Context.environment cx in
@@ -500,7 +524,9 @@ module New_env = struct
     | InternalName _
     | InternalModuleName _ ->
       Old_env.bind_declare_fun cx ~predicate name t loc
-    | OrdinaryName _ -> bind cx t loc
+    | OrdinaryName _ ->
+      check_predicate_declare_function cx ~predicate name loc;
+      bind cx t loc
 
   let bind_type ?state:(_ = Scope.State.Declared) cx _name t loc = bind cx t loc
 

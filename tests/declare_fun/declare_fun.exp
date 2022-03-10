@@ -86,6 +86,20 @@ References:
                         ^ [1]
 
 
+Error -------------------------------------------------------------------------------------------- declare_pred.js:37:18
+
+Cannot declare `l` [1] because the name is already bound. [name-already-bound]
+
+   declare_pred.js:37:18
+   37| declare function l(x: string): bool %checks (x === "A");
+                        ^
+
+References:
+   declare_pred.js:36:18
+   36| declare function l(x: boolean): bool;
+                        ^ [1]
+
+
 Error ------------------------------------------------------------------------------------------------------ err.js:4:18
 
 Cannot declare `f` [1] because the name is already bound. [name-already-bound]
@@ -132,4 +146,4 @@ References:
 
 
 
-Found 9 errors
+Found 10 errors
