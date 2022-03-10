@@ -591,7 +591,7 @@ module Make
                 binding_kind = Scope.Entry.FunctionBinding;
               }
           )
-      | (Bindings.DeclaredFunction, None) ->
+      | (Bindings.DeclaredFunction _, None) ->
         let def_reason = mk_reason (RIdentifier (OrdinaryName name)) def_loc in
         Some
           Error_message.(
@@ -1094,7 +1094,7 @@ module Make
                 heap_refinements = ref HeapRefinementMap.empty;
                 kind;
               }
-            | Bindings.DeclaredFunction ->
+            | Bindings.DeclaredFunction _ ->
               let (_, providers) = this#providers_of_def_loc loc in
               let write_entries =
                 Base.List.fold

@@ -19,7 +19,7 @@ type kind =
   | Parameter
   | CatchParameter
   | Import
-  | DeclaredFunction
+  | DeclaredFunction of { predicate: bool }
 [@@deriving show]
 
 type 'loc t

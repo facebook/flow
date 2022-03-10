@@ -11,7 +11,9 @@ module Ast = Flow_ast
 
 (* This describes the state of a variable AFTER the provider analysis, suitable for external consumption *)
 type state =
-  | AnnotatedVar
+  | AnnotatedVar of {
+      predicate: bool; (* true iff this annotation corresponds to a predicate function (%checks) *)
+    }
   | InitializedVar
   | NullInitializedVar
   | UninitializedVar
@@ -71,7 +73,7 @@ end = struct
      initializers were discovered. They will be simplified later on. *)
   type intermediate_state =
     (* Annotations are always on declarations, so they don't need depth *)
-    | Annotated
+    | Annotated of { predicate: bool }
     (* number of var scope levels deep that the initializer, and null initializer if applicable, was found from the
        scope in which it was declared--lets us prioritize initializers from nearer
        scopes even if they're lexically later in the program.
@@ -88,7 +90,7 @@ end = struct
   (* This describes a single assingment/initialization of a var (rather than the var's state as a whole). ints are
      number of scopes deeper than the variable's declaration that the assignment occurs *)
   type write_state =
-    | Annotation
+    | Annotation of { predicate: bool }
     | Value of int
     | Null of int
     | Nothing
@@ -166,9 +168,10 @@ end = struct
   (* Compute the joined state of a variable, when modified in separate branches *)
   let combine_states init1 init2 =
     match (init1, init2) with
-    | (Annotated, _)
-    | (_, Annotated) ->
-      Annotated
+    | (Annotated { predicate = p1 }, Annotated { predicate = p2 }) ->
+      Annotated { predicate = p1 || p2 }
+    | (Annotated { predicate }, _) -> Annotated { predicate }
+    | (_, Annotated { predicate }) -> Annotated { predicate }
     | (Initialized (n, i), Initialized (m, j)) ->
       let p = min n m in
       let k =
@@ -209,16 +212,16 @@ end = struct
       var x;
       *)
       None
-    | (Annotated, _) ->
+    | (Annotated _, _) ->
       (*
       var x: string; var x: number; provider is string
       *)
       None
-    | (_, Annotation) ->
+    | (_, Annotation { predicate }) ->
       (*
        var x = 42; var x: string, provider is string
       *)
-      Some Annotated
+      Some (Annotated { predicate })
     | (Uninitialized, Null d) ->
       (*
        var x; x = null provider is null
@@ -413,12 +416,12 @@ end = struct
                * just use Var, since we're only concerned with declared functions here *)
               ( if binding_kind1 = binding_kind2 then
                 binding_kind1
-              else if
-              binding_kind1 = Bindings.DeclaredFunction || binding_kind2 = Bindings.DeclaredFunction
-            then
-                Bindings.DeclaredFunction
               else
-                Bindings.Var
+                match (binding_kind1, binding_kind2) with
+                | (Bindings.DeclaredFunction { predicate }, _)
+                | (_, Bindings.DeclaredFunction { predicate }) ->
+                  Bindings.DeclaredFunction { predicate }
+                | _ -> Bindings.Var
               );
           }
     in
@@ -733,12 +736,18 @@ end = struct
         let declare_locs = L.LSet.add loc declare_locs in
         let (new_state, state, provider_locs) =
           match (binding_kind, stored_binding_kind) with
-          | (Bindings.DeclaredFunction, Bindings.DeclaredFunction) ->
+          | ( Bindings.DeclaredFunction { predicate = p1 },
+              Bindings.DeclaredFunction { predicate = p2 }
+            ) ->
             (* TODO: It would be better if we modeled providers as Inter | UnionLike. This would
              * make it clear that certain providers are meant to be intersected and others
              * are meant to be unioned. *)
-            (Some Annotated, Annotated, L.LMap.add loc Annotation provider_locs)
-          | (_, Bindings.DeclaredFunction) -> (None, cur_state, provider_locs)
+            let predicate = p1 || p2 in
+            ( Some (Annotated { predicate }),
+              Annotated { predicate },
+              L.LMap.add loc (Annotation { predicate }) provider_locs
+            )
+          | (_, Bindings.DeclaredFunction _) -> (None, cur_state, provider_locs)
           | _ ->
             let new_state = extended_state_opt ~state:cur_state ~write_state in
             Base.Option.value_map
@@ -762,7 +771,7 @@ end = struct
         let (_ : ('a, 'b) Ast.Type.annotation) = this#type_annotation annot in
         let (_ : ('a, 'b) Ast.Identifier.t) =
           this#in_context
-            ~mod_cx:(fun _cx -> { init_state = Annotation })
+            ~mod_cx:(fun _cx -> { init_state = Annotation { predicate = false } })
             (fun () -> this#pattern_identifier ~kind:Ast.Statement.VariableDeclaration.Var ident)
         in
         decl
@@ -781,7 +790,7 @@ end = struct
         in
         let init_state =
           match (init, annot) with
-          | (_, Some (Ast.Type.Available _)) -> Annotation
+          | (_, Some (Ast.Type.Available _)) -> Annotation { predicate = false }
           | (None, _) -> Nothing
           | (Some (_, Ast.Expression.Literal { Ast.Literal.value = Ast.Literal.Null; _ }), _) ->
             Null 0
@@ -818,7 +827,7 @@ end = struct
         in
         let init_state =
           match return with
-          | Ast.Type.Available _ -> Annotation
+          | Ast.Type.Available _ -> Annotation { predicate = Option.is_some predicate }
           | _ -> Value 0
         in
 
@@ -861,7 +870,7 @@ end = struct
         in
         let init_state =
           match return with
-          | Ast.Type.Available _ -> Annotation
+          | Ast.Type.Available _ -> Annotation { predicate = Option.is_some predicate }
           | _ -> Value 0
         in
 
@@ -901,11 +910,13 @@ end = struct
         super#identifier ident
 
       method! declare_function
-          stmt_loc
-          ( { Flow_ast.Statement.DeclareFunction.id = (loc, { Flow_ast.Identifier.name; _ }); _ } as
-          stmt
-          ) =
-        this#new_entry name Bindings.DeclaredFunction Flow_ast.Statement.VariableDeclaration.Let loc;
+          stmt_loc ({ Flow_ast.Statement.DeclareFunction.id; predicate; _ } as stmt) =
+        let (loc, { Flow_ast.Identifier.name; _ }) = id in
+        this#new_entry
+          name
+          (Bindings.DeclaredFunction { predicate = Option.is_some predicate })
+          Flow_ast.Statement.VariableDeclaration.Let
+          loc;
         super#declare_function stmt_loc stmt
 
       method! for_in_left_declaration left =
@@ -922,7 +933,7 @@ end = struct
               | (_, Array { Array.annot = Ast.Type.Available _; _ })
               | (_, Object { Object.annot = Ast.Type.Available _; _ })
               | (_, Identifier { Identifier.annot = Ast.Type.Available _; _ }) ->
-                Annotation
+                Annotation { predicate = false }
               | _ -> Value 0
             in
             ignore
@@ -947,7 +958,7 @@ end = struct
               | (_, Array { Array.annot = Ast.Type.Available _; _ })
               | (_, Object { Object.annot = Ast.Type.Available _; _ })
               | (_, Identifier { Identifier.annot = Ast.Type.Available _; _ }) ->
-                Annotation
+                Annotation { predicate = false }
               | _ -> Value 0
             in
             ignore
@@ -962,7 +973,7 @@ end = struct
         (* NOTE: All function parameters are considered annotated, whether this
          * annotation is explicitly provided, is contextually inferred, or is
          * implicitly `any` when missing. *)
-        let init_state = Annotation in
+        let init_state = Annotation { predicate = false } in
         ignore
         @@ this#in_context
              ~mod_cx:(fun _cx -> { init_state })
@@ -1079,8 +1090,8 @@ end = struct
       L.LMap.fold
         (fun loc write_state acc ->
           match (write_state, state) with
-          | (Annotation, Annotated) -> L.LSet.add loc acc
-          | (Annotation, _) -> assert_false "Invariant violated"
+          | (Annotation _, Annotated _) -> L.LSet.add loc acc
+          | (Annotation _, _) -> assert_false "Invariant violated"
           | (Null n, (NullInitialized m | Initialized (_, Some m)))
           | (Value n, Initialized (m, _)) ->
             if n = m then
@@ -1096,7 +1107,7 @@ end = struct
     in
     let state =
       match state with
-      | Annotated -> AnnotatedVar
+      | Annotated { predicate } -> AnnotatedVar { predicate }
       | Initialized _ -> InitializedVar
       | NullInitialized _ -> NullInitializedVar
       | Uninitialized -> UninitializedVar

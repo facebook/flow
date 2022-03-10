@@ -56,7 +56,7 @@ module Make (L : Loc_sig.S) : S with module L = L = struct
   let all_annotated_providers entries =
     EntrySet.fold
       (function
-        | { state = Find_providers.AnnotatedVar; provider_locs; _ } ->
+        | { state = Find_providers.AnnotatedVar _; provider_locs; _ } ->
           (fun acc -> L.LSet.union provider_locs acc)
         | _ -> (fun acc -> acc))
       entries
@@ -69,7 +69,7 @@ module Make (L : Loc_sig.S) : S with module L = L = struct
     Find_providers.(
       function
       | InitializedVar
-      | AnnotatedVar ->
+      | AnnotatedVar _ ->
         true
       | UninitializedVar
       | NullInitializedVar ->

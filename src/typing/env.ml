@@ -803,6 +803,7 @@ module Env : Env_sig.S = struct
               in
               Scope.add_entry name entry scope
             | _ ->
+              Utils_js.prerr_endlinef "already_bound-1";
               (* declare function shadows some other kind of binding *)
               already_bound_error cx name prev loc)
           )

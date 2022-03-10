@@ -135,7 +135,7 @@ module New_env = struct
   let is_def_loc_annotated { Env_api.providers; _ } loc =
     let providers = Env_api.Provider_api.providers_of_def providers loc in
     match providers with
-    | Some (Find_providers.AnnotatedVar, _) -> true
+    | Some (Find_providers.AnnotatedVar _, _) -> true
     | _ -> false
 
   let provider_type_for_def_loc ?(intersect = false) env def_loc =
