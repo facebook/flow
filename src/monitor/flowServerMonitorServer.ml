@@ -386,6 +386,9 @@ end = struct
     Logger.debug "Initializing file watcher (%s)" watcher#name;
     watcher#start_init;
     let file_watcher_pid = watcher#getpid in
+    Base.Option.iter file_watcher_pid ~f:(fun pid ->
+        Logger.info "Spawned file watcher (pid=%d)" (Sys_utils.pid_of_handle pid)
+    );
     let handle =
       let init_id = Random_id.short_string () in
       Server.daemonize ~init_id ~log_file ~shared_mem_config ~argv ~file_watcher_pid server_options
@@ -415,7 +418,7 @@ end = struct
 
     let pid = handle.Daemon.pid in
 
-    Logger.info "Spawned %s (pid=%d)" name pid;
+    Logger.info "Spawned %s (pid=%d)" name (Sys_utils.pid_of_handle pid);
 
     (* Close the connection to the server when we're about to exit *)
     let on_exit_thread =
