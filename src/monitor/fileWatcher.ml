@@ -7,8 +7,6 @@
 
 module Logger = FlowServerMonitorLogger
 
-exception FileWatcherDied of Exception.t
-
 type exit_reason =
   | Watcher_stopped
   | Watcher_died
@@ -184,12 +182,14 @@ class dfind (monitor_options : FlowServerMonitorOptions.t) : watcher =
             files <- SSet.union files new_files;
             Lwt.return_unit
           with
-          | Sys_error msg as e when msg = "Broken pipe" ->
-            let exn = Exception.wrap e in
-            raise (FileWatcherDied exn)
-          | (End_of_file | Unix.Unix_error (Unix.EPIPE, _, _)) as e ->
-            let exn = Exception.wrap e in
-            raise (FileWatcherDied exn)
+          (* ignore the dfind server dying. use waitpid to detect this instead *)
+          | Sys_error msg when msg = "Broken pipe" ->
+            Logger.debug "Connection to dfind broke";
+            Lwt.return_unit
+          | End_of_file
+          | Unix.Unix_error (Unix.EPIPE, _, _) ->
+            Logger.debug "Connection to dfind broke";
+            Lwt.return_unit
       )
 
     method get_and_clear_changed_files =

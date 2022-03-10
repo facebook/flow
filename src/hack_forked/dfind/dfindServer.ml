@@ -68,7 +68,7 @@ let run_daemon (scuba_table, roots) (ic, oc) =
   let message_in_callback () =
     let () = Marshal_tools.from_fd_with_preamble infd in
     let count = SSet.cardinal !acc in
-    if count > 0 then Hh_logger.log "Sending %d file updates\n%!" count;
+    if count > 0 then Hh_logger.log "Sending %d file updates" count;
     Marshal_tools.to_fd_with_preamble outfd (Updates !acc) |> ignore;
     acc := SSet.empty
   in
