@@ -5,8 +5,6 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-let ( >>= ) = Lwt.( >>= )
-
 type t = {
   infd: Lwt_unix.file_descr;
   outfd: Lwt_unix.file_descr;
@@ -29,21 +27,21 @@ let init log_fds (scuba_table, roots) =
 let pid handle = handle.daemon_handle.Daemon.pid
 
 let wait_until_ready handle =
-  Marshal_tools_lwt.from_fd_with_preamble handle.infd >>= fun msg ->
+  let%lwt msg = Marshal_tools_lwt.from_fd_with_preamble handle.infd in
   assert (msg = DfindServer.Ready);
   Lwt.return ()
 
 let request_changes handle =
-  Marshal_tools_lwt.to_fd_with_preamble handle.outfd () >>= fun _ ->
+  let%lwt _ = Marshal_tools_lwt.to_fd_with_preamble handle.outfd () in
   Marshal_tools_lwt.from_fd_with_preamble handle.infd
 
 let get_changes handle =
   let rec loop acc =
-    (request_changes handle >>= function
-     | DfindServer.Updates s -> Lwt.return s
-     | DfindServer.Ready -> assert false
-    )
-    >>= fun diff ->
+    let%lwt diff =
+      match%lwt request_changes handle with
+      | DfindServer.Updates s -> Lwt.return s
+      | DfindServer.Ready -> assert false
+    in
     if SSet.is_empty diff then
       Lwt.return acc
     else
