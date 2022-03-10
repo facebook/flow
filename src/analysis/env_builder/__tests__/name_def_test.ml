@@ -56,9 +56,7 @@ let string_of_import_kind =
   | ImportType -> "type "
   | ImportValue -> ""
 
-let string_of_import =
-  let open Ast.Statement.ImportDeclaration in
-  function
+let string_of_import = function
   | Named { kind; remote } ->
     spf "%s%s" (Base.Option.value_map ~f:string_of_import_kind ~default:"" kind) remote
   | Namespace -> "namespace"
