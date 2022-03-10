@@ -107,6 +107,8 @@ module New_env = struct
 
   let this_type_params = ref ALocMap.empty
 
+  let valid_declaration_check = Old_env.valid_declaration_check
+
   (************************)
   (* Helpers **************)
   (************************)
@@ -487,16 +489,22 @@ module New_env = struct
 
   let bind cx t loc = set_env_entry cx ~use_op:Type.unknown_use t loc
 
-  let bind_var ?state:_ cx _ t loc = bind cx (TypeUtil.type_t_of_annotated_or_inferred t) loc
+  let bind_var ?state:_ cx name t loc =
+    valid_declaration_check cx (OrdinaryName name) loc;
+    bind cx (TypeUtil.type_t_of_annotated_or_inferred t) loc
 
-  let bind_let ?state:_ cx _ t loc = bind cx (TypeUtil.type_t_of_annotated_or_inferred t) loc
+  let bind_let ?state:_ cx name t loc =
+    valid_declaration_check cx (OrdinaryName name) loc;
+    bind cx (TypeUtil.type_t_of_annotated_or_inferred t) loc
 
   let bind_implicit_let ?state kind cx name t loc =
     match name with
     | InternalName _
     | InternalModuleName _ ->
       Old_env.bind_implicit_let ?state kind cx name t loc
-    | OrdinaryName _ -> bind cx (TypeUtil.type_t_of_annotated_or_inferred t) loc
+    | OrdinaryName _ ->
+      valid_declaration_check cx name loc;
+      bind cx (TypeUtil.type_t_of_annotated_or_inferred t) loc
 
   let bind_fun ?state cx name t loc =
     match name with

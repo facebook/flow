@@ -407,32 +407,35 @@ module Env : Env_sig.S = struct
 
   (* helpers *)
 
+  let valid_declaration_check cx name loc =
+    let { Loc_env.var_info = { Env_api.scopes = info; ssa_values = values; providers; _ }; _ } =
+      Context.environment cx
+    in
+    let error null_write =
+      let null_write =
+        Base.Option.map
+          ~f:(fun null_loc -> Error_message.{ null_loc; initialized = ALoc.equal loc null_loc })
+          null_write
+      in
+      Flow.add_output
+        cx
+        Error_message.(
+          EInvalidDeclaration { declaration = mk_reason (RIdentifier name) loc; null_write }
+        )
+    in
+    match Invalidation_api.declaration_validity info values providers loc with
+    | Invalidation_api.Valid -> ()
+    | Invalidation_api.NotWritten -> error None
+    | Invalidation_api.NullWritten null_loc -> error (Some null_loc)
+
   let promote_non_const cx name loc spec =
     if Reason.is_internal_name name then
       (None, spec)
     else
-      let { Loc_env.var_info = { Env_api.scopes = info; ssa_values = values; providers; _ }; _ } =
+      let { Loc_env.var_info = { Env_api.scopes = info; ssa_values = values; _ }; _ } =
         Context.environment cx
       in
-      begin
-        let error null_write =
-          let null_write =
-            Base.Option.map
-              ~f:(fun null_loc -> Error_message.{ null_loc; initialized = ALoc.equal loc null_loc })
-              null_write
-          in
-          Flow.add_output
-            cx
-            Error_message.(
-              EInvalidDeclaration { declaration = mk_reason (RIdentifier name) loc; null_write }
-            )
-        in
-        match Invalidation_api.declaration_validity info values providers loc with
-        | Invalidation_api.Valid -> ()
-        | Invalidation_api.NotWritten -> error None
-        | Invalidation_api.NullWritten null_loc -> error (Some null_loc)
-      end;
-
+      valid_declaration_check cx name loc;
       if spec <> Entry.ConstLike && Invalidation_api.is_const_like info values loc then
         (None, Entry.ConstLike)
       else if spec <> Entry.NotWrittenByClosure then

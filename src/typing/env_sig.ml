@@ -244,4 +244,6 @@ module type S = sig
     (Reason.name * Key.proj list) option ->
     (ALoc.t, ALoc.t) Flow_ast.Expression.t ->
     Type.t option
+
+  val valid_declaration_check : Context.t -> Reason.name -> ALoc.t -> unit
 end
