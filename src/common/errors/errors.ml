@@ -1202,6 +1202,7 @@ module Cli_output = struct
        convenient to keep the flags about errors co-located *)
     max_warnings: int option;
     one_line: bool;
+    list_files: bool;
     show_all_errors: bool;
     show_all_branches: bool;
     unicode: bool;
@@ -2928,9 +2929,26 @@ module Cli_output = struct
       Base.Option.iter lazy_msg ~f:(Printf.fprintf out_channel "\n%s\n");
       ()
 
+  let list_files ~out_channel ~strip_root ~errors ~warnings =
+    let fold_files error acc =
+      match Loc.source (loc_of_printable_error error) with
+      | None -> acc
+      | Some File_key.Builtins -> acc
+      | Some file -> SSet.add (print_file_key ~strip_root (Some file)) acc
+    in
+    let files =
+      SSet.empty
+      |> ConcreteLocPrintableErrorSet.fold fold_files errors
+      |> ConcreteLocPrintableErrorSet.fold fold_files warnings
+    in
+    SSet.iter (Printf.fprintf out_channel "%s\n%!") files
+
   let print_errors
       ~out_channel ~flags ?(stdin_file = None) ~strip_root ~errors ~warnings ~lazy_msg () =
-    format_errors ~out_channel ~flags ~stdin_file ~strip_root ~errors ~warnings ~lazy_msg ()
+    if flags.list_files then
+      list_files ~out_channel ~strip_root ~errors ~warnings
+    else
+      format_errors ~out_channel ~flags ~stdin_file ~strip_root ~errors ~warnings ~lazy_msg ()
 end
 
 (* JSON output *)

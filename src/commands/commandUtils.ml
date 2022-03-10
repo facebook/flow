@@ -98,6 +98,7 @@ let collect_error_flags
     include_warnings
     max_warnings
     one_line
+    list_files
     show_all_errors
     show_all_branches
     unicode
@@ -124,6 +125,7 @@ let collect_error_flags
       include_warnings;
       max_warnings;
       one_line;
+      list_files;
       show_all_errors;
       show_all_branches;
       unicode;
@@ -163,6 +165,7 @@ let error_flags prev =
          ~doc:"Display terminal output in color. never, always, auto (default: auto)"
     |> warning_flags
     |> flag "--one-line" no_arg ~doc:"Escapes newlines so that each error prints on one line"
+    |> flag "--list-files" no_arg ~doc:"List files with errors"
     |> flag
          "--show-all-errors"
          no_arg
