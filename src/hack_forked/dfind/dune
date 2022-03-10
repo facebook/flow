@@ -13,4 +13,5 @@
     marshal_tools_lwt
     sys_utils
   )
+  (preprocess (pps lwt_ppx))
 )
