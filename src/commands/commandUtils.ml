@@ -1061,6 +1061,7 @@ let flowconfig_name_flag prev =
               "Set the name of the flow configuration file. (default: %s)"
               Server_files_js.default_flowconfig_name
            )
+         ~env:"FLOW_CONFIG_NAME"
   )
 
 let base_flags =
