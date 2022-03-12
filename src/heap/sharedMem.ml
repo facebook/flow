@@ -415,6 +415,8 @@ module type NoCache = sig
 
   val remove_old_batch : KeySet.t -> unit
 
+  val remove : key -> unit
+
   val remove_batch : KeySet.t -> unit
 
   val mem : key -> bool
@@ -539,7 +541,9 @@ struct
     | None -> None
     | Some addr -> Some (deserialize addr)
 
-  let remove_batch keys = KeySet.iter Tbl.remove keys
+  let remove = Tbl.remove
+
+  let remove_batch keys = KeySet.iter remove keys
 
   let oldify = Tbl.oldify
 
@@ -591,7 +595,9 @@ module NoCacheAddr (Key : Key) (Value : AddrValue) = struct
 
   let get_old = Tbl.get_old
 
-  let remove_batch keys = KeySet.iter Tbl.remove keys
+  let remove = Tbl.remove
+
+  let remove_batch keys = KeySet.iter remove keys
 
   let oldify = Tbl.oldify
 
@@ -883,9 +889,11 @@ struct
     Direct.revive_batch keys;
     KeySet.iter Cache.remove keys
 
-  let remove_batch xs =
-    Direct.remove_batch xs;
-    KeySet.iter Cache.remove xs
+  let remove x =
+    Direct.remove x;
+    Cache.remove x
+
+  let remove_batch xs = KeySet.iter remove xs
 
   let () =
     invalidate_callback_list :=
