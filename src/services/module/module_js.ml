@@ -725,7 +725,7 @@ let add_parsed_resolved_requires ~mutator ~reader ~options ~node_modules_contain
    (b) remove the unregistered modules from NameHeap
    (c) register the new providers in NameHeap
 *)
-let commit_modules ~transaction ~workers ~options ~reader ~is_init new_or_changed dirty_modules =
+let commit_modules ~transaction ~workers ~options ~reader ~is_init dirty_modules =
   let debug = Options.is_debug_mode options in
   let mutator = Parsing_heaps.Commit_modules_mutator.create transaction is_init in
   (* prep for registering new mappings in NameHeap *)
@@ -752,7 +752,8 @@ let commit_modules ~transaction ~workers ~options ~reader ~is_init new_or_change
                   (Modulename.to_string m)
                   (File_key.to_string p);
               let unchanged =
-                if FilenameSet.mem p new_or_changed then
+                let p_addr = Parsing_heaps.get_file_addr_unsafe p in
+                if SharedMem.NewAPI.file_changed p_addr then
                   unchanged
                 else
                   Modulename.Set.add m unchanged

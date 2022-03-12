@@ -1322,6 +1322,11 @@ module NewAPI = struct
       let new_version = entity_version - diff in
       buf_write_int64 heap (version_addr entity) (Int64.of_int new_version)
 
+  let entity_changed entity =
+    let version = get_next_version () in
+    let entity_version = get_entity_version (get_heap ()) entity in
+    entity_version >= version
+
   (** Compressed OCaml values
 
       We store OCaml values as serialized+compressed blobs in the heap. The
@@ -1563,4 +1568,6 @@ module NewAPI = struct
   let get_file_name = get_generic file_name_addr
 
   let get_parse = get_generic parse_addr
+
+  let file_changed file = entity_changed (get_parse file)
 end

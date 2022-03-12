@@ -131,14 +131,7 @@ let commit_modules
             duplicate_providers
       in
       let%lwt (changed_modules, new_duplicate_providers) =
-        Module_js.commit_modules
-          ~transaction
-          ~workers
-          ~options
-          ~reader
-          ~is_init
-          new_or_changed
-          dirty_modules
+        Module_js.commit_modules ~transaction ~workers ~options ~reader ~is_init dirty_modules
       in
       Lwt.return (changed_modules, SMap.union duplicate_providers new_duplicate_providers)
   )

@@ -414,4 +414,6 @@ module NewAPI : sig
   val get_file_name : file addr -> heap_string addr
 
   val get_parse : file addr -> [ `typed | `untyped ] parse entity addr
+
+  val file_changed : file addr -> bool
 end

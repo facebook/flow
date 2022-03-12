@@ -55,8 +55,6 @@ val commit_modules :
   options:Options.t ->
   reader:Mutator_state_reader.t ->
   is_init:bool ->
-  (* parsed / unparsed files *)
-  FilenameSet.t ->
   (* dirty modules *)
   Modulename.Set.t ->
   (* changed modules and duplicate providers *)
