@@ -17,12 +17,10 @@ module FileHeap =
     end)
 
 module NameHeap =
-  SharedMem.NoCache
+  SharedMem.NoCacheAddr
     (Modulename.Key)
     (struct
-      type t = File_key.t
-
-      let description = "Name"
+      type t = Heap.file Heap.entity
     end)
 
 type locs_tbl = Loc.t Type_sig_collections.Locs.t
@@ -32,6 +30,8 @@ type type_sig = Type_sig_collections.Locs.index Packed_type_sig.Module.t
 type file_addr = Heap.file SharedMem.addr
 
 type +'a parse_addr = 'a Heap.parse SharedMem.addr
+
+type module_addr = Heap.file Heap.entity SharedMem.addr
 
 (* There's some redundancy in the visitors here, but an attempt to avoid repeated code led,
  * inexplicably, to a shared heap size regression under types-first: D15481813 *)
@@ -67,6 +67,31 @@ let file_kind_and_name = function
   | File_key.ResourceFile f -> (Heap.Resource_file, f)
   | File_key.JsonFile f -> (Heap.Json_file, f)
   | File_key.LibFile f -> (Heap.Lib_file, f)
+
+let prepare_add_module_maybe size mname =
+  match NameHeap.get mname with
+  | Some _ -> (size, Fun.const ())
+  | None ->
+    let open Heap in
+    let size = size + header_size + entity_size in
+    let write chunk =
+      let m = write_entity chunk None in
+      ignore (NameHeap.add mname m)
+    in
+    (size, write)
+
+let prepare_add_file_module_maybe size file_key =
+  match file_key with
+  | File_key.LibFile _ -> (size, Fun.const ())
+  | _ ->
+    let mname = Modulename.Filename (Files.chop_flow_ext file_key) in
+    prepare_add_module_maybe size mname
+
+let prepare_add_haste_module_maybe size = function
+  | None -> (size, Fun.const ())
+  | Some name ->
+    let mname = Modulename.String name in
+    prepare_add_module_maybe size mname
 
 (* Write parsed data for checked file to shared memory. If we loaded from saved
  * state, a checked file entry will already exist without parse data and this
@@ -116,7 +141,9 @@ let add_checked_file file_key hash module_name docblock ast locs type_sig file_s
     | None ->
       let (file_kind, file_name) = file_kind_and_name file_key in
       let size = size + (3 * header_size) + entity_size + string_size file_name + file_size in
+      let (size, add_file_module_maybe) = prepare_add_file_module_maybe size file_key in
       let write chunk parse =
+        add_file_module_maybe chunk;
         let file_name = write_string chunk file_name in
         let parse = write_entity chunk (Some parse) in
         let file = write_file chunk file_kind file_name parse in
@@ -138,7 +165,9 @@ let add_checked_file file_key hash module_name docblock ast locs type_sig file_s
         + opt_size (with_header_size string_size) module_name
         + exports_size
       in
+      let (size, add_haste_module_maybe) = prepare_add_haste_module_maybe size module_name in
       let write chunk =
+        add_haste_module_maybe chunk;
         let hash = write_int64 chunk hash in
         let module_name = Option.map (write_string chunk) module_name in
         let exports = write_exports chunk in
@@ -170,6 +199,7 @@ let add_unparsed_file file_key hash module_name =
     + int64_size
     + opt_size (with_header_size string_size) module_name
   in
+  let (size, add_haste_module_maybe) = prepare_add_haste_module_maybe size module_name in
   let (size, add_file_maybe) =
     match FileHeap.get file_key with
     | Some file ->
@@ -178,7 +208,9 @@ let add_unparsed_file file_key hash module_name =
     | None ->
       let (file_kind, file_name) = file_kind_and_name file_key in
       let size = size + (3 * header_size) + entity_size + string_size file_name + file_size in
+      let (size, add_file_module_maybe) = prepare_add_file_module_maybe size file_key in
       let write chunk parse =
+        add_file_module_maybe chunk;
         let file_name = write_string chunk file_name in
         let parse = write_entity chunk (Some parse) in
         let file = write_file chunk file_kind file_name parse in
@@ -187,6 +219,7 @@ let add_unparsed_file file_key hash module_name =
       (size, write)
   in
   alloc size (fun chunk ->
+      add_haste_module_maybe chunk;
       let hash = write_int64 chunk hash in
       let module_name = Option.map (write_string chunk) module_name in
       let parse = write_untyped_parse chunk hash module_name in
@@ -207,12 +240,35 @@ let rollback_file file_key =
     let open Heap in
     entity_rollback (get_parse file)
 
+let rollback_module m =
+  match NameHeap.get m with
+  | None -> ()
+  | Some provider -> Heap.entity_rollback provider
+
 let get_file_addr = FileHeap.get
 
 let get_file_addr_unsafe file =
   match get_file_addr file with
   | Some addr -> addr
   | None -> raise (File_not_found (File_key.to_string file))
+
+let get_module_addr_unsafe m =
+  match NameHeap.get m with
+  | Some addr -> addr
+  | None -> raise (Module_not_found (Modulename.to_string m))
+
+let read_file_name file =
+  let open Heap in
+  get_file_name file |> read_string
+
+let read_file_key file =
+  let open Heap in
+  let fn = read_file_name file in
+  match get_file_kind file with
+  | Source_file -> File_key.SourceFile fn
+  | Json_file -> File_key.JsonFile fn
+  | Resource_file -> File_key.ResourceFile fn
+  | Lib_file -> File_key.LibFile fn
 
 let read_file_hash parse =
   let open Heap in
@@ -358,7 +414,7 @@ let clear_not_found file_key = WorkerCancel.with_no_cancellations (fun () -> cle
 module type READER = sig
   type reader
 
-  val get_provider : reader:reader -> Modulename.t -> File_key.t option
+  val get_provider : reader:reader -> Modulename.t -> file_addr option
 
   val is_typed_file : reader:reader -> file_addr -> bool
 
@@ -431,7 +487,9 @@ module Mutator_reader = struct
 
   let read_old ~reader:_ addr = Heap.entity_read_committed addr
 
-  let get_provider ~reader:_ key = NameHeap.get key
+  let get_provider ~reader m =
+    let* addr = NameHeap.get m in
+    Heap.read_opt Fun.id (read ~reader addr)
 
   let is_typed_file ~reader file =
     let parse = read ~reader (Heap.get_parse file) in
@@ -672,74 +730,36 @@ end = struct
   let record_not_found () not_found = not_found_files := not_found
 end
 
-let currently_oldified_nameheap_modulenames : Modulename.Set.t ref = ref Modulename.Set.empty
+module Commit_modules_mutator = struct
+  type t = unit
 
-module Commit_modules_mutator : sig
-  type t
+  let dirty_modules = ref Modulename.Set.empty
 
-  val create : Transaction.t -> is_init:bool -> t
+  let no_providers = ref Modulename.Set.empty
 
-  val remove_and_replace :
-    t ->
-    workers:MultiWorkerLwt.worker list option ->
-    to_remove:Modulename.Set.t ->
-    to_replace:(Modulename.t * File_key.t) list ->
-    unit Lwt.t
-end = struct
-  type t = { is_init: bool }
+  let reset_refs () =
+    dirty_modules := Modulename.Set.empty;
+    no_providers := Modulename.Set.empty
 
-  let commit mutator =
+  let commit () =
     WorkerCancel.with_no_cancellations (fun () ->
-        Hh_logger.debug "Committing NameHeap";
-        if not mutator.is_init then
-          NameHeap.remove_old_batch !currently_oldified_nameheap_modulenames;
-        currently_oldified_nameheap_modulenames := Modulename.Set.empty
+        NameHeap.remove_batch !no_providers;
+        reset_refs ()
     );
     Lwt.return_unit
 
-  let rollback mutator =
+  let rollback () =
     WorkerCancel.with_no_cancellations (fun () ->
-        Hh_logger.debug "Rolling back NameHeap";
-        if not mutator.is_init then NameHeap.revive_batch !currently_oldified_nameheap_modulenames;
-        currently_oldified_nameheap_modulenames := Modulename.Set.empty
+        Modulename.Set.iter rollback_module !dirty_modules;
+        reset_refs ()
     );
     Lwt.return_unit
 
-  let create transaction ~is_init =
-    WorkerCancel.with_no_cancellations (fun () ->
-        let mutator = { is_init } in
-        let commit () = commit mutator in
-        let rollback () = rollback mutator in
-        Transaction.add ~singleton:"Commit_modules" ~commit ~rollback transaction;
-        mutator
-    )
+  let create transaction modules =
+    dirty_modules := modules;
+    Transaction.add ~singleton:"Commit_modules" ~commit ~rollback transaction
 
-  let remove_and_replace mutator ~workers ~to_remove ~to_replace =
-    (* During init we don't need to worry about oldifying, reviving, or removing old entries *)
-    if not mutator.is_init then (
-      (* NOTE: oldifying something twice permanently removes it, because... legacy. so it's
-         important that we oldify a single set, in case a name is in both to_remove and to_replace
-         (e.g. a moved module). It's also possible that a name is already oldified, and we should
-         probably call [oldify_batch (Modulename.Set.diff to_oldify oldify)], but will avoid
-         rocking the boat for now. *)
-      let oldified = !currently_oldified_nameheap_modulenames in
-      let to_oldify =
-        List.fold_left (fun set (f, _) -> Modulename.Set.add f set) to_remove to_replace
-      in
-      currently_oldified_nameheap_modulenames := Modulename.Set.union oldified to_oldify;
-      NameHeap.oldify_batch to_oldify
-    );
-
-    (* Remove *)
-    NameHeap.remove_batch to_remove;
-
-    (* Replace *)
-    MultiWorkerLwt.call
-      workers
-      ~job:(fun () to_replace -> List.iter (fun (m, f) -> NameHeap.add m f) to_replace)
-      ~neutral:()
-      ~merge:(fun () () -> ())
-      ~next:(MultiWorkerLwt.next workers to_replace)
+  let record_no_providers () modules = no_providers := modules
 end
 
 (* This uses `entity_read_committed` and can be used by code outside of a
@@ -750,15 +770,11 @@ module Reader = struct
 
   let ( let* ) = Option.bind
 
-  let should_use_old_nameheap key = Modulename.Set.mem key !currently_oldified_nameheap_modulenames
-
   let read ~reader:_ addr = Heap.entity_read_latest addr
 
-  let get_provider ~reader:_ key =
-    if should_use_old_nameheap key then
-      NameHeap.get_old key
-    else
-      NameHeap.get key
+  let get_provider ~reader m =
+    let* addr = NameHeap.get m in
+    Heap.read_opt Fun.id (read ~reader addr)
 
   let is_typed_file ~reader file =
     let parse = read ~reader (Heap.get_parse file) in
@@ -1031,7 +1047,11 @@ end = struct
       + opt_size (with_header_size string_size) module_name
       + exports_size
     in
+    let (size, add_file_module_maybe) = prepare_add_file_module_maybe size file_key in
+    let (size, add_haste_module_maybe) = prepare_add_haste_module_maybe size module_name in
     alloc size (fun chunk ->
+        add_file_module_maybe chunk;
+        add_haste_module_maybe chunk;
         let file_name = write_string chunk file_name in
         let hash = write_int64 chunk hash in
         let module_name = Option.map (write_string chunk) module_name in

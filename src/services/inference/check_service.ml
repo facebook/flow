@@ -190,12 +190,13 @@ let mk_check_file ~options ~reader ~cache () =
   let rec dep_module_t cx mref m =
     match get_provider m with
     | None -> unknown_module_t cx mref m
-    | Some (File_key.ResourceFile f) -> Merge.merge_resource_module_t cx f
-    | Some dep_file ->
-      let dep_addr = Parsing_heaps.get_file_addr_unsafe dep_file in
-      (match get_typed_parse dep_addr with
-      | Some parse -> sig_module_t cx dep_file parse
-      | None -> unchecked_module_t cx mref)
+    | Some dep_addr ->
+      (match Parsing_heaps.read_file_key dep_addr with
+      | File_key.ResourceFile f -> Merge.merge_resource_module_t cx f
+      | dep_file ->
+        (match get_typed_parse dep_addr with
+        | Some parse -> sig_module_t cx dep_file parse
+        | None -> unchecked_module_t cx mref))
   and sig_module_t cx file_key parse _loc =
     let create_file = dep_file file_key parse in
     let file = Check_cache.find_or_create cache ~find_leader ~master_cx ~create_file file_key in

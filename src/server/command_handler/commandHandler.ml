@@ -758,7 +758,9 @@ let find_module ~options ~reader (moduleref, filename) =
       (ALoc.of_loc loc)
       moduleref
   in
-  Parsing_heaps.Reader.get_provider ~reader module_name
+  match Parsing_heaps.Reader.get_provider ~reader module_name with
+  | Some addr -> Some (Parsing_heaps.read_file_key addr)
+  | None -> None
 
 let get_def ~options ~reader ~env ~profiling ~type_parse_artifacts_cache (file_input, line, col) =
   match of_file_input ~options ~env file_input with
@@ -809,8 +811,7 @@ let get_imports ~options ~reader module_names =
   let add_to_results (map, non_flow) module_name_str =
     let module_name = module_name_of_string ~options module_name_str in
     match Parsing_heaps.Reader.get_provider ~reader module_name with
-    | Some file ->
-      let addr = Parsing_heaps.get_file_addr_unsafe file in
+    | Some addr ->
       (* We do not process all modules which are stored in our module
        * database. In case we do not process a module its requirements
        * are not kept track of. To avoid confusing results we notify the
@@ -818,6 +819,7 @@ let get_imports ~options ~reader module_names =
        *)
       (match Parsing_heaps.Reader.get_typed_parse ~reader addr with
       | Some parse ->
+        let file = Parsing_heaps.read_file_key addr in
         let { Module_heaps.resolved_modules; _ } =
           Module_heaps.Reader.get_resolved_requires_unsafe ~reader ~audit:Expensive.warn file
         in

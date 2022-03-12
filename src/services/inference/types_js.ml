@@ -101,7 +101,6 @@ let commit_modules
     ~reader
     ~all_providers_mutator
     ~options
-    ~is_init
     ~profiling
     ~workers
     ~old_modules
@@ -131,7 +130,7 @@ let commit_modules
             duplicate_providers
       in
       let%lwt (changed_modules, new_duplicate_providers) =
-        Module_js.commit_modules ~transaction ~workers ~options ~reader ~is_init dirty_modules
+        Module_js.commit_modules ~transaction ~workers ~options ~reader dirty_modules
       in
       Lwt.return (changed_modules, SMap.union duplicate_providers new_duplicate_providers)
   )
@@ -1326,7 +1325,6 @@ end = struct
         ~old_modules
         ~new_or_changed
         ~duplicate_providers
-        ~is_init:false
     in
     (* direct_dependent_files are unchanged files which directly depend on changed modules,
        or are new / changed files that are phantom dependents. *)
@@ -2138,7 +2136,6 @@ let init_from_saved_state ~profiling ~workers ~saved_state ~updates options =
         ~reader
         ~all_providers_mutator
         ~options
-        ~is_init:true
         ~profiling
         ~workers
         ~old_modules:Modulename.Set.empty
@@ -2301,7 +2298,6 @@ let init_from_scratch ~profiling ~workers options =
       ~old_modules:Modulename.Set.empty
       ~new_or_changed
       ~duplicate_providers:SMap.empty
-      ~is_init:true
   in
   let%lwt (resolve_errors, _resolved_requires_changed) =
     resolve_requires ~transaction ~reader ~options ~profiling ~workers ~parsed ~parsed_set

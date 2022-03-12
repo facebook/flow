@@ -415,5 +415,7 @@ module NewAPI : sig
 
   val get_parse : file addr -> [ `typed | `untyped ] parse entity addr
 
+  val files_equal : file addr -> file addr -> bool
+
   val file_changed : file addr -> bool
 end

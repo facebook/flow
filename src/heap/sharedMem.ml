@@ -1569,5 +1569,7 @@ module NewAPI = struct
 
   let get_parse = get_generic parse_addr
 
+  let files_equal = Int.equal
+
   let file_changed file = entity_changed (get_parse file)
 end

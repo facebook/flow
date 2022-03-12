@@ -117,7 +117,7 @@ let rec process_request ~options ~reader ~cx ~is_legit_require ~typed_ast :
     let module_t = Type.OpenT (Context.find_require cx source_loc) |> Members.resolve_type cx in
     (* function just so we don't do the work unless it's actually needed. *)
     let get_imported_file () =
-      let filename =
+      let provider =
         Parsing_heaps.Reader.get_provider
           ~reader
           (Module_js.imported_module
@@ -129,8 +129,10 @@ let rec process_request ~options ~reader ~cx ~is_legit_require ~typed_ast :
              name
           )
       in
-      match filename with
-      | Some file -> Ok Loc.{ none with source = Some file }
+      match provider with
+      | Some addr ->
+        let file = Parsing_heaps.read_file_key addr in
+        Ok Loc.{ none with source = Some file }
       | None -> Error (spf "Failed to find imported file %s" name)
     in
     Type.(

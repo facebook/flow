@@ -54,7 +54,6 @@ val commit_modules :
   workers:MultiWorkerLwt.worker list option ->
   options:Options.t ->
   reader:Mutator_state_reader.t ->
-  is_init:bool ->
   (* dirty modules *)
   Modulename.Set.t ->
   (* changed modules and duplicate providers *)

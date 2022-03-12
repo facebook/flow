@@ -210,17 +210,14 @@ let unchecked_dependencies ~options ~reader file file_sig =
       require_loc_map
       Modulename.Set.empty
   in
-  let should_be_checked f =
-    match Parsing_heaps.get_file_addr f with
-    | Some addr -> Parsing_heaps.Reader.is_typed_file ~reader addr
-    | None -> false
-  in
+  let should_be_checked = Parsing_heaps.Reader.is_typed_file ~reader in
   let has_been_checked f = Base.Option.is_some (Context_heaps.Reader.find_leader_opt ~reader f) in
   Modulename.Set.fold
     (fun m acc ->
       match Parsing_heaps.Reader.get_provider ~reader m with
-      | Some f ->
-        if should_be_checked f && not (has_been_checked f) then
+      | Some addr ->
+        let f = Parsing_heaps.read_file_key addr in
+        if should_be_checked addr && not (has_been_checked f) then
           FilenameSet.add f acc
         else
           acc

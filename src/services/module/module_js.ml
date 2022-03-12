@@ -725,24 +725,30 @@ let add_parsed_resolved_requires ~mutator ~reader ~options ~node_modules_contain
    (b) remove the unregistered modules from NameHeap
    (c) register the new providers in NameHeap
 *)
-let commit_modules ~transaction ~workers ~options ~reader ~is_init dirty_modules =
+let commit_modules ~transaction ~workers ~options ~reader dirty_modules =
+  (* TODO: keep workers parameter, will use workers here soon *)
+  ignore workers;
   let debug = Options.is_debug_mode options in
-  let mutator = Parsing_heaps.Commit_modules_mutator.create transaction is_init in
+  let mutator = Parsing_heaps.Commit_modules_mutator.create transaction dirty_modules in
   (* prep for registering new mappings in NameHeap *)
-  let (to_remove, to_replace, duplicate_providers, unchanged) =
+  let (unchanged, no_providers, duplicate_providers) =
     Modulename.Set.fold
-      (fun m (rem, rep, errmap, unchanged) ->
+      (fun m (unchanged, no_providers, errmap) ->
+        let m_addr = Parsing_heaps.get_module_addr_unsafe m in
         match Module_hashtables.Mutator_reader.find_in_all_providers_unsafe ~reader m with
         | ps when FilenameSet.is_empty ps ->
           if debug then prerr_endlinef "no remaining providers: %S" (Modulename.to_string m);
-          (Modulename.Set.add m rem, rep, errmap, unchanged)
+          SharedMem.NewAPI.entity_advance m_addr None;
+          let no_providers = Modulename.Set.add m no_providers in
+          (unchanged, no_providers, errmap)
         | ps ->
           (* now choose provider for m *)
           let (p, errmap) = choose_provider ~options (Modulename.to_string m) ps errmap in
+          let p_addr = Parsing_heaps.get_file_addr_unsafe p in
           (* register chosen provider in NameHeap *)
           (match Parsing_heaps.Mutator_reader.get_provider ~reader m with
           | Some f ->
-            if f = p then (
+            if SharedMem.NewAPI.files_equal f p_addr then (
               (* When can this happen? Say m pointed to f before, a different file
                  f' that provides m changed (so m is not in old_modules), but f
                  continues to be the chosen provider = p (winning over f'). *)
@@ -752,13 +758,12 @@ let commit_modules ~transaction ~workers ~options ~reader ~is_init dirty_modules
                   (Modulename.to_string m)
                   (File_key.to_string p);
               let unchanged =
-                let p_addr = Parsing_heaps.get_file_addr_unsafe p in
                 if SharedMem.NewAPI.file_changed p_addr then
                   unchanged
                 else
                   Modulename.Set.add m unchanged
               in
-              (rem, rep, errmap, unchanged)
+              (unchanged, no_providers, errmap)
             ) else (
               (* When can this happen? Say m pointed to f before, a different file
                  f' that provides m changed (so m is not in old_modules), and
@@ -768,8 +773,9 @@ let commit_modules ~transaction ~workers ~options ~reader ~is_init dirty_modules
                   "new provider: %S -> %s replaces %s"
                   (Modulename.to_string m)
                   (File_key.to_string p)
-                  (File_key.to_string f);
-              (rem, (m, p) :: rep, errmap, unchanged)
+                  (Parsing_heaps.read_file_name f);
+              SharedMem.NewAPI.entity_advance m_addr (Some p_addr);
+              (unchanged, no_providers, errmap)
             )
           | None ->
             (* When can this happen? Either m pointed to a file that used to
@@ -780,13 +786,12 @@ let commit_modules ~transaction ~workers ~options ~reader ~is_init dirty_modules
                 "initial provider %S -> %s"
                 (Modulename.to_string m)
                 (File_key.to_string p);
-            (rem, (m, p) :: rep, errmap, unchanged)))
+            SharedMem.NewAPI.entity_advance m_addr (Some p_addr);
+            (unchanged, no_providers, errmap)))
       dirty_modules
-      (Modulename.Set.empty, [], SMap.empty, Modulename.Set.empty)
+      (Modulename.Set.empty, Modulename.Set.empty, SMap.empty)
   in
-  let%lwt () =
-    Parsing_heaps.Commit_modules_mutator.remove_and_replace mutator ~workers ~to_remove ~to_replace
-  in
+  Parsing_heaps.Commit_modules_mutator.record_no_providers mutator no_providers;
   let changed_modules = Modulename.Set.diff dirty_modules unchanged in
   if debug then prerr_endlinef "*** done committing modules ***";
   Lwt.return (changed_modules, duplicate_providers)
