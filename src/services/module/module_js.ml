@@ -729,13 +729,13 @@ let commit_modules ~transaction ~workers ~options ~reader ~is_init new_or_change
   let debug = Options.is_debug_mode options in
   let mutator = Parsing_heaps.Commit_modules_mutator.create transaction is_init in
   (* prep for registering new mappings in NameHeap *)
-  let (to_remove, to_replace, duplicate_providers, changed_modules) =
+  let (to_remove, to_replace, duplicate_providers, unchanged) =
     Modulename.Set.fold
-      (fun m (rem, rep, errmap, diff) ->
+      (fun m (rem, rep, errmap, unchanged) ->
         match Module_hashtables.Mutator_reader.find_in_all_providers_unsafe ~reader m with
         | ps when FilenameSet.is_empty ps ->
           if debug then prerr_endlinef "no remaining providers: %S" (Modulename.to_string m);
-          (Modulename.Set.add m rem, rep, errmap, Modulename.Set.add m diff)
+          (Modulename.Set.add m rem, rep, errmap, unchanged)
         | ps ->
           (* now choose provider for m *)
           let (p, errmap) = choose_provider ~options (Modulename.to_string m) ps errmap in
@@ -751,13 +751,13 @@ let commit_modules ~transaction ~workers ~options ~reader ~is_init new_or_change
                   "unchanged provider: %S -> %s"
                   (Modulename.to_string m)
                   (File_key.to_string p);
-              let diff =
+              let unchanged =
                 if FilenameSet.mem p new_or_changed then
-                  Modulename.Set.add m diff
+                  unchanged
                 else
-                  diff
+                  Modulename.Set.add m unchanged
               in
-              (rem, rep, errmap, diff)
+              (rem, rep, errmap, unchanged)
             ) else (
               (* When can this happen? Say m pointed to f before, a different file
                  f' that provides m changed (so m is not in old_modules), and
@@ -768,8 +768,7 @@ let commit_modules ~transaction ~workers ~options ~reader ~is_init new_or_change
                   (Modulename.to_string m)
                   (File_key.to_string p)
                   (File_key.to_string f);
-              let diff = Modulename.Set.add m diff in
-              (rem, (m, p) :: rep, errmap, diff)
+              (rem, (m, p) :: rep, errmap, unchanged)
             )
           | None ->
             (* When can this happen? Either m pointed to a file that used to
@@ -780,14 +779,14 @@ let commit_modules ~transaction ~workers ~options ~reader ~is_init new_or_change
                 "initial provider %S -> %s"
                 (Modulename.to_string m)
                 (File_key.to_string p);
-            let diff = Modulename.Set.add m diff in
-            (rem, (m, p) :: rep, errmap, diff)))
+            (rem, (m, p) :: rep, errmap, unchanged)))
       dirty_modules
       (Modulename.Set.empty, [], SMap.empty, Modulename.Set.empty)
   in
   let%lwt () =
     Parsing_heaps.Commit_modules_mutator.remove_and_replace mutator ~workers ~to_remove ~to_replace
   in
+  let changed_modules = Modulename.Set.diff dirty_modules unchanged in
   if debug then prerr_endlinef "*** done committing modules ***";
   Lwt.return (changed_modules, duplicate_providers)
 
