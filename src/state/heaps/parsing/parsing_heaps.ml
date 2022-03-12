@@ -17,7 +17,7 @@ module FileHeap =
     end)
 
 module NameHeap =
-  SharedMem.WithCache
+  SharedMem.NoCache
     (Modulename.Key)
     (struct
       type t = File_key.t
