@@ -816,7 +816,7 @@ let get_imports ~options ~reader module_names =
        * are not kept track of. To avoid confusing results we notify the
        * client that these modules have not been processed.
        *)
-      (match Parsing_heaps.Reader.get_parse ~reader addr with
+      (match Parsing_heaps.Reader.get_typed_parse ~reader addr with
       | Some parse ->
         let { Module_heaps.resolved_modules; _ } =
           Module_heaps.Reader.get_resolved_requires_unsafe ~reader ~audit:Expensive.warn file

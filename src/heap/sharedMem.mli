@@ -18,7 +18,7 @@ type buf = (char, Bigarray.int8_unsigned_elt, Bigarray.c_layout) Bigarray.Array1
 (* Addresses are represented as integers, but are well-typed via a phantom
  * type parameter. The type checker will ensure that a `foo addr` is not
  * passed where a `bar addr` is expected. *)
-type 'k addr [@@immediate]
+type +'k addr [@@immediate]
 
 type serialized_tag = Serialized_resolved_requires
 
@@ -234,9 +234,7 @@ module NewAPI : sig
 
   type exports
 
-  type unparse
-
-  type parse
+  type +'a parse
 
   type file
 
@@ -356,45 +354,49 @@ module NewAPI : sig
 
   val type_sig_buf : type_sig addr -> buf
 
-  (* unparse data *)
-
-  val unparse_size : size
-
-  val write_unparse : chunk -> heap_int64 addr -> heap_string addr option -> unparse addr
-
-  val get_file_hash : unparse addr -> heap_int64 addr
-
-  val get_module_name : unparse addr -> heap_string opt addr
-
   (* parse data *)
 
-  val parse_size : size
+  val untyped_parse_size : size
 
-  val write_parse : chunk -> exports addr -> parse addr
+  val typed_parse_size : size
 
-  val set_ast : parse addr -> ast addr -> unit
+  val write_untyped_parse :
+    chunk -> heap_int64 addr -> heap_string addr option -> [ `untyped ] parse addr
 
-  val set_docblock : parse addr -> docblock addr -> unit
+  val write_typed_parse :
+    chunk -> heap_int64 addr -> heap_string addr option -> exports addr -> [ `typed ] parse addr
 
-  val set_aloc_table : parse addr -> aloc_table addr -> unit
+  val is_typed : [> ] parse addr -> bool
 
-  val set_type_sig : parse addr -> type_sig addr -> unit
+  val coerce_typed : [> ] parse addr -> [ `typed ] parse addr option
 
-  val set_file_sig : parse addr -> file_sig addr -> unit
+  val get_file_hash : [> ] parse addr -> heap_int64 addr
 
-  val get_ast : parse addr -> ast opt addr
+  val get_module_name : [> ] parse addr -> heap_string opt addr
 
-  val get_docblock : parse addr -> docblock opt addr
+  val get_ast : [ `typed ] parse addr -> ast opt addr
 
-  val get_aloc_table : parse addr -> aloc_table opt addr
+  val get_docblock : [ `typed ] parse addr -> docblock opt addr
 
-  val get_type_sig : parse addr -> type_sig opt addr
+  val get_aloc_table : [ `typed ] parse addr -> aloc_table opt addr
 
-  val get_file_sig : parse addr -> file_sig opt addr
+  val get_type_sig : [ `typed ] parse addr -> type_sig opt addr
 
-  val get_exports : parse addr -> exports addr
+  val get_file_sig : [ `typed ] parse addr -> file_sig opt addr
 
-  (* checked file *)
+  val get_exports : [ `typed ] parse addr -> exports addr
+
+  val set_ast : [ `typed ] parse addr -> ast addr -> unit
+
+  val set_docblock : [ `typed ] parse addr -> docblock addr -> unit
+
+  val set_aloc_table : [ `typed ] parse addr -> aloc_table addr -> unit
+
+  val set_type_sig : [ `typed ] parse addr -> type_sig addr -> unit
+
+  val set_file_sig : [ `typed ] parse addr -> file_sig addr -> unit
+
+  (* file data *)
 
   type file_kind =
     | Source_file
@@ -405,13 +407,11 @@ module NewAPI : sig
   val file_size : size
 
   val write_file :
-    chunk -> file_kind -> heap_string addr -> unparse entity addr -> parse entity addr -> file addr
+    chunk -> file_kind -> heap_string addr -> [ `typed | `untyped ] parse entity addr -> file addr
 
   val get_file_kind : file addr -> file_kind
 
   val get_file_name : file addr -> heap_string addr
 
-  val get_unparse : file addr -> unparse entity addr
-
-  val get_parse : file addr -> parse entity addr
+  val get_parse : file addr -> [ `typed | `untyped ] parse entity addr
 end

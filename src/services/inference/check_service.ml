@@ -174,7 +174,7 @@ let mk_check_file ~options ~reader ~cache () =
   let audit = Expensive.ok in
 
   let get_provider = Module_heaps.Reader_dispatcher.get_provider ~reader in
-  let get_parse = Parsing_heaps.Reader_dispatcher.get_parse ~reader in
+  let get_typed_parse = Parsing_heaps.Reader_dispatcher.get_typed_parse ~reader in
   let find_leader = Context_heaps.Reader_dispatcher.find_leader ~reader in
   let get_resolved_requires_unsafe =
     Module_heaps.Reader_dispatcher.get_resolved_requires_unsafe ~reader ~audit
@@ -193,7 +193,7 @@ let mk_check_file ~options ~reader ~cache () =
     | Some (File_key.ResourceFile f) -> Merge.merge_resource_module_t cx f
     | Some dep_file ->
       let dep_addr = Parsing_heaps.get_file_addr_unsafe dep_file in
-      (match get_parse dep_addr with
+      (match get_typed_parse dep_addr with
       | Some parse -> sig_module_t cx dep_file parse
       | None -> unchecked_module_t cx mref)
   and sig_module_t cx file_key parse _loc =

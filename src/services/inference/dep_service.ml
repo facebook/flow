@@ -159,13 +159,13 @@ let calc_direct_dependents workers ~candidates ~root_files ~root_modules =
    to a dependency ordering among files for merging. *)
 let implementation_file ~reader m =
   match Module_heaps.Mutator_reader.get_provider ~reader m with
-  | Some f when Parsing_heaps.(Mutator_reader.is_checked_file ~reader (get_file_addr_unsafe f)) ->
+  | Some f when Parsing_heaps.(Mutator_reader.is_typed_file ~reader (get_file_addr_unsafe f)) ->
     Some f
   | _ -> None
 
 let file_dependencies ~audit ~reader file =
   let file_addr = Parsing_heaps.get_file_addr_unsafe file in
-  let parse = Parsing_heaps.Mutator_reader.get_parse_unsafe ~reader file file_addr in
+  let parse = Parsing_heaps.Mutator_reader.get_typed_parse_unsafe ~reader file file_addr in
   let file_sig = Parsing_heaps.read_file_sig_unsafe file parse in
   let require_set = File_sig.With_Loc.(require_set file_sig.module_sig) in
   let sig_require_set =

@@ -216,17 +216,16 @@ end = struct
   (* Collect all the data for a single parsed file *)
   let collect_normalized_data_for_parsed_file ~normalizer ~reader fn parsed_heaps =
     let addr = Parsing_heaps.get_file_addr_unsafe fn in
-    let unparse = Parsing_heaps.Reader.get_unparse_unsafe ~reader fn addr in
-    let parse = Parsing_heaps.Reader.get_parse_unsafe ~reader fn addr in
+    let parse = Parsing_heaps.Reader.get_typed_parse_unsafe ~reader fn addr in
     let file_data =
       {
-        module_name = Parsing_heaps.read_module_name unparse;
+        module_name = Parsing_heaps.read_module_name parse;
         normalized_file_data =
           {
             resolved_requires =
               Module_heaps.Reader.get_resolved_requires_unsafe ~reader ~audit:Expensive.ok fn;
             exports = Parsing_heaps.read_exports parse;
-            hash = Parsing_heaps.read_file_hash unparse;
+            hash = Parsing_heaps.read_file_hash parse;
           };
         sig_hash = Context_heaps.Reader.sig_hash_opt ~reader fn;
       }
@@ -244,11 +243,11 @@ end = struct
   (* Collect all the data for a single unparsed file *)
   let collect_normalized_data_for_unparsed_file ~normalizer ~reader fn unparsed_heaps =
     let addr = Parsing_heaps.get_file_addr_unsafe fn in
-    let unparse = Parsing_heaps.Reader.get_unparse_unsafe ~reader fn addr in
+    let parse = Parsing_heaps.Reader.get_parse_unsafe ~reader fn addr in
     let relative_file_data =
       {
-        unparsed_module_name = Parsing_heaps.read_module_name unparse;
-        unparsed_hash = Parsing_heaps.read_file_hash unparse;
+        unparsed_module_name = Parsing_heaps.read_module_name parse;
+        unparsed_hash = Parsing_heaps.read_file_hash parse;
       }
     in
     let relative_fn = FileNormalizer.normalize_file_key normalizer fn in

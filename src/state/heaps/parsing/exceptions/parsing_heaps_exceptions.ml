@@ -7,9 +7,9 @@
 
 exception File_not_found of string
 
-exception File_not_unparsed of string
-
 exception File_not_parsed of string
+
+exception File_not_typed of string
 
 exception Ast_not_found of string
 

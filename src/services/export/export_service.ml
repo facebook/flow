@@ -59,11 +59,11 @@ let add_imports_of_module ~source ~module_name exports index =
     ~init:index
     names
 
-let add_imports_of_checked_file file_key unparse parse index =
+let add_imports_of_checked_file file_key parse index =
   let source = Export_index.File_key file_key in
   let exports = Parsing_heaps.read_exports parse in
   let module_name =
-    match Parsing_heaps.read_module_name unparse with
+    match Parsing_heaps.read_module_name parse with
     | Some name -> Modulename.String name
     | None -> Modulename.Filename (Files.chop_flow_ext file_key)
   in
@@ -98,15 +98,15 @@ let index ~workers ~reader parsed : (Export_index.t * Export_index.t) Lwt.t =
         let file = Parsing_heaps.get_file_addr_unsafe file_key in
         let to_remove =
           (* get old exports so we can remove outdated entries *)
-          match Parsing_heaps.Mutator_reader.get_old_parse_unparse ~reader file with
-          | Some (unparse, parse) -> add_imports_of_checked_file file_key unparse parse to_remove
+          match Parsing_heaps.Mutator_reader.get_old_typed_parse ~reader file with
+          | Some parse -> add_imports_of_checked_file file_key parse to_remove
           | None ->
             (* if it wasn't checked before, there were no entries added *)
             to_remove
         in
         let to_add =
-          match Parsing_heaps.Mutator_reader.get_parse_unparse ~reader file with
-          | Some (unparse, parse) -> add_imports_of_checked_file file_key unparse parse to_add
+          match Parsing_heaps.Mutator_reader.get_typed_parse ~reader file with
+          | Some parse -> add_imports_of_checked_file file_key parse to_add
           | None ->
             (* TODO: handle unchecked module names, maybe still parse? *)
             to_add

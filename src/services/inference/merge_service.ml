@@ -223,7 +223,7 @@ let sig_hash ~root =
     | Some (File_key.ResourceFile f) -> resource_dep f
     | Some dep ->
       let addr = Parsing_heaps.get_file_addr_unsafe dep in
-      (match Parsing_heaps.Mutator_reader.get_parse ~reader addr with
+      (match Parsing_heaps.Mutator_reader.get_typed_parse ~reader addr with
       | None -> Unchecked
       | Some parse ->
         (match FilenameMap.find_opt dep component_map with
@@ -234,7 +234,7 @@ let sig_hash ~root =
   (* Create a Type_sig_hash.file record for a file in the merged component. *)
   let component_file ~reader component_rec component_map file_key =
     let file_addr = Parsing_heaps.get_file_addr_unsafe file_key in
-    let parse = Parsing_heaps.Mutator_reader.get_parse_unsafe ~reader file_key file_addr in
+    let parse = Parsing_heaps.Mutator_reader.get_typed_parse_unsafe ~reader file_key file_addr in
 
     let buf = Heap.read_opt_exn Heap.type_sig_buf (Heap.get_type_sig parse) in
 
@@ -355,17 +355,17 @@ let merge_component ~worker_mutator ~options ~reader ((leader_f, _) as component
   (* We choose the head file as the leader, and the tail as followers. It is
    * always OK to choose the head as leader, as explained below.
    *
-   * Note that cycles cannot happen between unchecked files. Why? Because files
+   * Note that cycles cannot happen between untyped files. Why? Because files
    * in cycles must have their dependencies recorded, yet dependencies are never
-   * recorded for unchecked files.
+   * recorded for untyped files.
    *
-   * It follows that when the head is unchecked, there are no other files! We
-   * don't have to worry that some other file may be checked when the head is
-   * unchecked.
+   * It follows that when the head is untyped, there are no other files! We
+   * don't have to worry that some other file may be typed when the head is
+   * untyped.
    *
-   * It also follows when the head is checked, the tail must be checked too! *)
+   * It also follows when the head is typed, the tail must be typed too! *)
   let leader_addr = Parsing_heaps.get_file_addr_unsafe leader_f in
-  if not (Parsing_heaps.Mutator_reader.is_checked_file ~reader leader_addr) then
+  if not (Parsing_heaps.Mutator_reader.is_typed_file ~reader leader_addr) then
     let diff = false in
     (diff, Ok None)
   else
@@ -381,7 +381,7 @@ let merge_component ~worker_mutator ~options ~reader ((leader_f, _) as component
       Nel.map
         (fun file ->
           let addr = Parsing_heaps.get_file_addr_unsafe file in
-          let parse = Parsing_heaps.Mutator_reader.get_parse_unsafe ~reader file addr in
+          let parse = Parsing_heaps.Mutator_reader.get_typed_parse_unsafe ~reader file addr in
           let docblock = Parsing_heaps.read_docblock_unsafe file parse in
           let metadata = Context.docblock_overrides docblock metadata in
           let lint_severities = Merge_js.get_lint_severities metadata strict_mode lint_severities in
@@ -422,7 +422,7 @@ let mk_check_file options ~reader () =
   fun file ->
     let start_time = Unix.gettimeofday () in
     let addr = Parsing_heaps.get_file_addr_unsafe file in
-    match Parsing_heaps.Mutator_reader.get_parse ~reader addr with
+    match Parsing_heaps.Mutator_reader.get_typed_parse ~reader addr with
     | None -> None
     | Some parse ->
       let (comments, ast) = get_ast_unsafe file parse in

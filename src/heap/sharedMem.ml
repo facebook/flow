@@ -25,7 +25,7 @@ type buf = (char, Bigarray.int8_unsigned_elt, Bigarray.c_layout) Bigarray.Array1
 
 (* Phantom type parameter provides type-safety to callers of this API.
  * Internally, these are all just ints, so be careful! *)
-type _ addr = int
+type +'k addr = int
 
 (* The integer values corresponding to these tags are encoded in the low byte
  * of object headers. Any changes made here must be kept in sync with
@@ -33,8 +33,8 @@ type _ addr = int
 type tag =
   | Entity_tag (* 0 *)
   | Addr_tbl_tag
-  | Unparse_tag
-  | Parse_tag
+  | Untyped_tag
+  | Typed_tag
   | Source_file_tag
   | Json_file_tag
   | Resource_file_tag
@@ -927,9 +927,7 @@ module NewAPI = struct
 
   type exports
 
-  type unparse
-
-  type parse
+  type +'a parse
 
   type file
 
@@ -1444,31 +1442,24 @@ module NewAPI = struct
 
   let get_generic offset base = read_addr (get_heap ()) (offset base)
 
-  (** Unparse *)
+  (** Parse data *)
 
-  let unparse_size = 2 * addr_size
+  let untyped_parse_size = 2 * addr_size
 
-  let write_unparse chunk hash module_name =
+  let typed_parse_size = 8 * addr_size
+
+  let write_untyped_parse chunk hash module_name =
     let module_name = Option.value module_name ~default:opt_none in
-    let addr = write_header chunk Unparse_tag unparse_size in
+    let addr = write_header chunk Untyped_tag untyped_parse_size in
     unsafe_write_addr chunk hash;
     unsafe_write_addr chunk module_name;
     addr
 
-  let file_hash_addr unparse = addr_offset unparse 1
-
-  let module_name_addr unparse = addr_offset unparse 2
-
-  let get_file_hash = get_generic file_hash_addr
-
-  let get_module_name = get_generic module_name_addr
-
-  (** Parse *)
-
-  let parse_size = 6 * addr_size
-
-  let write_parse chunk exports =
-    let addr = write_header chunk Parse_tag parse_size in
+  let write_typed_parse chunk hash module_name exports =
+    let module_name = Option.value module_name ~default:opt_none in
+    let addr = write_header chunk Typed_tag typed_parse_size in
+    unsafe_write_addr chunk hash;
+    unsafe_write_addr chunk module_name;
     unsafe_write_addr chunk null_addr;
     unsafe_write_addr chunk null_addr;
     unsafe_write_addr chunk null_addr;
@@ -1477,27 +1468,35 @@ module NewAPI = struct
     unsafe_write_addr chunk exports;
     addr
 
-  let ast_addr parse = addr_offset parse 1
+  let is_typed parse =
+    let hd = read_header (get_heap ()) parse in
+    obj_tag hd = tag_val Typed_tag
 
-  let docblock_addr parse = addr_offset parse 2
+  let coerce_typed parse =
+    if is_typed parse then
+      Some parse
+    else
+      None
 
-  let aloc_table_addr parse = addr_offset parse 3
+  let file_hash_addr parse = addr_offset parse 1
 
-  let type_sig_addr parse = addr_offset parse 4
+  let module_name_addr parse = addr_offset parse 2
 
-  let file_sig_addr parse = addr_offset parse 5
+  let ast_addr parse = addr_offset parse 3
 
-  let exports_addr parse = addr_offset parse 6
+  let docblock_addr parse = addr_offset parse 4
 
-  let set_ast = set_generic ast_addr
+  let aloc_table_addr parse = addr_offset parse 5
 
-  let set_docblock = set_generic docblock_addr
+  let type_sig_addr parse = addr_offset parse 6
 
-  let set_aloc_table = set_generic aloc_table_addr
+  let file_sig_addr parse = addr_offset parse 7
 
-  let set_type_sig = set_generic type_sig_addr
+  let exports_addr parse = addr_offset parse 8
 
-  let set_file_sig = set_generic file_sig_addr
+  let get_file_hash = get_generic file_hash_addr
+
+  let get_module_name = get_generic module_name_addr
 
   let get_ast = get_generic ast_addr
 
@@ -1511,7 +1510,17 @@ module NewAPI = struct
 
   let get_exports = get_generic exports_addr
 
-  (** Checked files *)
+  let set_ast = set_generic ast_addr
+
+  let set_docblock = set_generic docblock_addr
+
+  let set_aloc_table = set_generic aloc_table_addr
+
+  let set_type_sig = set_generic type_sig_addr
+
+  let set_file_sig = set_generic file_sig_addr
+
+  (** File data *)
 
   type file_kind =
     | Source_file
@@ -1525,20 +1534,17 @@ module NewAPI = struct
     | Resource_file -> Resource_file_tag
     | Lib_file -> Lib_file_tag
 
-  let file_size = 3 * addr_size
+  let file_size = 2 * addr_size
 
-  let write_file chunk kind file_name unparse parse =
+  let write_file chunk kind file_name parse =
     let addr = write_header chunk (file_tag kind) file_size in
     unsafe_write_addr chunk file_name;
-    unsafe_write_addr chunk unparse;
     unsafe_write_addr chunk parse;
     addr
 
   let file_name_addr file = addr_offset file 1
 
-  let unparse_addr file = addr_offset file 2
-
-  let parse_addr file = addr_offset file 3
+  let parse_addr file = addr_offset file 2
 
   let get_file_kind file =
     let hd = read_header (get_heap ()) file in
@@ -1555,8 +1561,6 @@ module NewAPI = struct
       failwith "get_file_kind: unexpected tag"
 
   let get_file_name = get_generic file_name_addr
-
-  let get_unparse = get_generic unparse_addr
 
   let get_parse = get_generic parse_addr
 end

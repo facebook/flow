@@ -22,9 +22,7 @@ type type_sig = Type_sig_collections.Locs.index Packed_type_sig.Module.t
 
 type file_addr = Heap.file SharedMem.addr
 
-type unparse_addr = Heap.unparse SharedMem.addr
-
-type parse_addr = Heap.parse SharedMem.addr
+type +'a parse_addr = 'a Heap.parse SharedMem.addr
 
 (* There's some redundancy in the visitors here, but an attempt to avoid repeated code led,
  * inexplicably, to a shared heap size regression under types-first: D15481813 *)
@@ -87,37 +85,32 @@ let add_checked_file file_key hash module_name docblock ast locs type_sig file_s
   let saved_state_or_fresh_parse =
     match FileHeap.get file_key with
     | Some file ->
-      let unparse = get_unparse file in
-      let parse = get_parse file in
       (* If we loaded from a saved state, we will have some existing data with a
        * matching hash. In this case, we want to update the existing data with
        * parse information. *)
-      let f existing_unparse =
-        let existing_hash = read_int64 (get_file_hash existing_unparse) in
+      let f existing_parse =
+        let existing_hash = read_int64 (get_file_hash existing_parse) in
         if Int64.equal existing_hash hash then
-          (* We know that file is parsed (we are in add_checked_file) and the
-           * existing record's hash matches, so the file must have been parsed
+          (* We know that file is typed (we are in add_checked_file) and the
+           * existing record's hash matches, so the file must have been typed
            * before as well. *)
-          Some (read_opt_exn Fun.id (entity_read_latest parse))
+          Heap.coerce_typed existing_parse
         else
           None
       in
-      (match read_opt_bind f (entity_read_latest unparse) with
+      let parse_ent = get_parse file in
+      (match read_opt_bind f (entity_read_latest parse_ent) with
       | Some existing_parse -> Either.Left existing_parse
       | None ->
-        let write _ new_unparse new_parse =
-          entity_advance unparse (Some new_unparse);
-          entity_advance parse (Some new_parse)
-        in
+        let write _ new_parse = entity_advance parse_ent (Some new_parse) in
         Either.Right (size, write))
     | None ->
       let (file_kind, file_name) = file_kind_and_name file_key in
-      let size = size + (4 * header_size) + (2 * entity_size) + string_size file_name + file_size in
-      let write chunk unparse parse =
+      let size = size + (3 * header_size) + entity_size + string_size file_name + file_size in
+      let write chunk parse =
         let file_name = write_string chunk file_name in
-        let unparse = write_entity chunk (Some unparse) in
         let parse = write_entity chunk (Some parse) in
-        let file = write_file chunk file_kind file_name unparse parse in
+        let file = write_file chunk file_kind file_name parse in
         assert (file = FileHeap.add file_key file)
       in
       Either.Right (size, write)
@@ -130,9 +123,8 @@ let add_checked_file file_key hash module_name docblock ast locs type_sig file_s
       let (exports_size, write_exports) = prepare_write_exports exports in
       let size =
         size
-        + (4 * header_size)
-        + unparse_size
-        + parse_size
+        + (3 * header_size)
+        + typed_parse_size
         + int64_size
         + opt_size (with_header_size string_size) module_name
         + exports_size
@@ -141,9 +133,8 @@ let add_checked_file file_key hash module_name docblock ast locs type_sig file_s
         let hash = write_int64 chunk hash in
         let module_name = Option.map (write_string chunk) module_name in
         let exports = write_exports chunk in
-        let unparse = write_unparse chunk hash module_name in
-        let parse = write_parse chunk exports in
-        add_file_maybe chunk unparse parse;
+        let parse = write_typed_parse chunk hash module_name exports in
+        add_file_maybe chunk (parse :> [ `typed | `untyped ] parse_addr);
         parse
       in
       (size, write)
@@ -166,26 +157,22 @@ let add_unparsed_file file_key hash module_name =
   let open Heap in
   let size =
     (2 * header_size)
-    + unparse_size
+    + untyped_parse_size
     + int64_size
     + opt_size (with_header_size string_size) module_name
   in
   let (size, add_file_maybe) =
     match FileHeap.get file_key with
     | Some file ->
-      let write _chunk new_unparse =
-        entity_advance (get_unparse file) (Some new_unparse);
-        entity_advance (get_parse file) None
-      in
+      let write _chunk new_parse = entity_advance (get_parse file) (Some new_parse) in
       (size, write)
     | None ->
       let (file_kind, file_name) = file_kind_and_name file_key in
-      let size = size + (4 * header_size) + (2 * entity_size) + string_size file_name + file_size in
-      let write chunk unparse =
+      let size = size + (3 * header_size) + entity_size + string_size file_name + file_size in
+      let write chunk parse =
         let file_name = write_string chunk file_name in
-        let unparse = write_entity chunk (Some unparse) in
-        let parse = write_entity chunk None in
-        let file = write_file chunk file_kind file_name unparse parse in
+        let parse = write_entity chunk (Some parse) in
+        let file = write_file chunk file_kind file_name parse in
         assert (file = FileHeap.add file_key file)
       in
       (size, write)
@@ -193,8 +180,8 @@ let add_unparsed_file file_key hash module_name =
   alloc size (fun chunk ->
       let hash = write_int64 chunk hash in
       let module_name = Option.map (write_string chunk) module_name in
-      let unparse = write_unparse chunk hash module_name in
-      add_file_maybe chunk unparse
+      let parse = write_untyped_parse chunk hash module_name in
+      add_file_maybe chunk (parse :> [ `typed | `untyped ] parse_addr)
   )
 
 let clear_file file_key =
@@ -202,7 +189,6 @@ let clear_file file_key =
   | None -> ()
   | Some file ->
     let open Heap in
-    entity_advance (get_unparse file) None;
     entity_advance (get_parse file) None
 
 let rollback_file file_key =
@@ -210,7 +196,6 @@ let rollback_file file_key =
   | None -> ()
   | Some file ->
     let open Heap in
-    entity_rollback (get_unparse file);
     entity_rollback (get_parse file)
 
 let get_file_addr = FileHeap.get
@@ -220,13 +205,13 @@ let get_file_addr_unsafe file =
   | Some addr -> addr
   | None -> raise (File_not_found (File_key.to_string file))
 
-let read_file_hash unparse =
+let read_file_hash parse =
   let open Heap in
-  get_file_hash unparse |> read_int64
+  get_file_hash parse |> read_int64
 
-let read_module_name unparse =
+let read_module_name parse =
   let open Heap in
-  get_module_name unparse |> read_opt read_string
+  get_module_name parse |> read_opt read_string
 
 let read_ast file_key parse =
   let open Heap in
@@ -364,13 +349,11 @@ let clear_not_found file_key = WorkerCancel.with_no_cancellations (fun () -> cle
 module type READER = sig
   type reader
 
-  val is_checked_file : reader:reader -> file_addr -> bool
+  val is_typed_file : reader:reader -> file_addr -> bool
 
-  val get_unparse : reader:reader -> file_addr -> unparse_addr option
+  val get_parse : reader:reader -> file_addr -> [ `typed | `untyped ] parse_addr option
 
-  val get_parse : reader:reader -> file_addr -> parse_addr option
-
-  val get_parse_unparse : reader:reader -> file_addr -> (unparse_addr * parse_addr) option
+  val get_typed_parse : reader:reader -> file_addr -> [ `typed ] parse_addr option
 
   val has_ast : reader:reader -> File_key.t -> bool
 
@@ -390,9 +373,10 @@ module type READER = sig
 
   val get_file_hash : reader:reader -> File_key.t -> Xx.hash option
 
-  val get_unparse_unsafe : reader:reader -> File_key.t -> file_addr -> unparse_addr
+  val get_parse_unsafe :
+    reader:reader -> File_key.t -> file_addr -> [ `typed | `untyped ] parse_addr
 
-  val get_parse_unsafe : reader:reader -> File_key.t -> file_addr -> parse_addr
+  val get_typed_parse_unsafe : reader:reader -> File_key.t -> file_addr -> [ `typed ] parse_addr
 
   val get_ast_unsafe : reader:reader -> File_key.t -> (Loc.t, Loc.t) Flow_ast.Program.t
 
@@ -436,34 +420,24 @@ module Mutator_reader = struct
 
   let read_old ~reader:_ addr = Heap.entity_read_committed addr
 
-  let is_checked_file ~reader file = Heap.is_some (read ~reader (Heap.get_parse file))
-
-  let get_unparse ~reader file = Heap.read_opt Fun.id (read ~reader (Heap.get_unparse file))
-
-  let get_old_unparse ~reader file = Heap.read_opt Fun.id (read_old ~reader (Heap.get_unparse file))
+  let is_typed_file ~reader file =
+    let parse = read ~reader (Heap.get_parse file) in
+    Heap.is_some parse && Heap.read_opt_exn Heap.is_typed parse
 
   let get_parse ~reader file = Heap.read_opt Fun.id (read ~reader (Heap.get_parse file))
 
-  let get_parse_unparse ~reader file =
-    let f parse =
-      let unparse = Heap.read_opt_exn Fun.id (read ~reader (Heap.get_unparse file)) in
-      (unparse, parse)
-    in
-    Heap.read_opt f (read ~reader (Heap.get_parse file))
+  let get_typed_parse ~reader file =
+    Heap.read_opt_bind Heap.coerce_typed (read ~reader (Heap.get_parse file))
 
   let get_old_parse ~reader file = Heap.read_opt Fun.id (read_old ~reader (Heap.get_parse file))
 
-  let get_old_parse_unparse ~reader file =
-    let f parse =
-      let unparse = Heap.read_opt_exn Fun.id (read_old ~reader (Heap.get_unparse file)) in
-      (unparse, parse)
-    in
-    Heap.read_opt f (read_old ~reader (Heap.get_parse file))
+  let get_old_typed_parse ~reader file =
+    Heap.read_opt_bind Heap.coerce_typed (read_old ~reader (Heap.get_parse file))
 
   let has_ast ~reader file =
     let parse_opt =
       let* file_addr = get_file_addr file in
-      get_parse ~reader file_addr
+      get_typed_parse ~reader file_addr
     in
     match parse_opt with
     | None -> false
@@ -471,7 +445,7 @@ module Mutator_reader = struct
 
   let get_ast ~reader file =
     let* addr = get_file_addr file in
-    let* parse = get_parse ~reader addr in
+    let* parse = get_typed_parse ~reader addr in
     read_ast file parse
 
   let get_aloc_table ~reader file =
@@ -479,64 +453,65 @@ module Mutator_reader = struct
     | Some _ as cached -> cached
     | None ->
       let* addr = get_file_addr file in
-      let* parse = get_parse ~reader addr in
+      let* parse = get_typed_parse ~reader addr in
       let* aloc_table = read_aloc_table file parse in
       Mutator_cache.add_aloc_table file aloc_table;
       Some aloc_table
 
   let get_docblock ~reader file =
     let* addr = get_file_addr file in
-    let* parse = get_parse ~reader addr in
+    let* parse = get_typed_parse ~reader addr in
     read_docblock parse
 
   let get_exports ~reader file =
     let* addr = get_file_addr file in
-    let* parse = get_parse ~reader addr in
+    let* parse = get_typed_parse ~reader addr in
     Some (read_exports parse)
 
   let get_old_exports ~reader file =
     let* addr = get_file_addr file in
-    let* parse = get_old_parse ~reader addr in
+    let* parse = get_old_typed_parse ~reader addr in
     Some (read_exports parse)
 
   let get_tolerable_file_sig ~reader file =
     let* addr = get_file_addr file in
-    let* parse = get_parse ~reader addr in
+    let* parse = get_typed_parse ~reader addr in
     read_tolerable_file_sig parse
 
   let get_file_sig ~reader file =
     let* addr = get_file_addr file in
-    let* parse = get_parse ~reader addr in
+    let* parse = get_typed_parse ~reader addr in
     read_file_sig parse
 
   let get_type_sig ~reader file =
     let* addr = get_file_addr file in
-    let* parse = get_parse ~reader addr in
+    let* parse = get_typed_parse ~reader addr in
     read_type_sig parse
 
   let get_file_hash ~reader file =
     let* addr = get_file_addr file in
-    let* unparse = get_unparse ~reader addr in
-    Some (read_file_hash unparse)
+    let* parse = get_parse ~reader addr in
+    Some (read_file_hash parse)
 
   let get_old_file_hash ~reader file =
     let* addr = get_file_addr file in
-    let* unparse = get_old_unparse ~reader addr in
-    Some (read_file_hash unparse)
-
-  let get_unparse_unsafe ~reader file addr =
-    match get_unparse ~reader addr with
-    | Some unparse -> unparse
-    | None -> raise (File_not_unparsed (File_key.to_string file))
+    let* parse = get_old_parse ~reader addr in
+    Some (read_file_hash parse)
 
   let get_parse_unsafe ~reader file addr =
     match get_parse ~reader addr with
     | Some parse -> parse
     | None -> raise (File_not_parsed (File_key.to_string file))
 
+  let get_typed_parse_unsafe ~reader file addr =
+    let parse = get_parse_unsafe ~reader file addr in
+    match Heap.coerce_typed parse with
+    | Some parse -> parse
+    | None -> raise (File_not_typed (File_key.to_string file))
+
   let get_ast_unsafe ~reader file =
     let addr = get_file_addr_unsafe file in
-    let parse = get_parse_unsafe ~reader file addr in
+    let parse = get_typed_parse_unsafe ~reader file addr in
     read_ast_unsafe file parse
 
   let get_aloc_table_unsafe ~reader file =
@@ -544,40 +519,40 @@ module Mutator_reader = struct
     | Some aloc_table -> aloc_table
     | None ->
       let addr = get_file_addr_unsafe file in
-      let parse = get_parse_unsafe ~reader file addr in
+      let parse = get_typed_parse_unsafe ~reader file addr in
       let aloc_table = read_aloc_table_unsafe file parse in
       Mutator_cache.add_aloc_table file aloc_table;
       aloc_table
 
   let get_docblock_unsafe ~reader file =
     let addr = get_file_addr_unsafe file in
-    let parse = get_parse_unsafe ~reader file addr in
+    let parse = get_typed_parse_unsafe ~reader file addr in
     read_docblock_unsafe file parse
 
   let get_exports_unsafe ~reader file =
     let addr = get_file_addr_unsafe file in
-    let parse = get_parse_unsafe ~reader file addr in
+    let parse = get_typed_parse_unsafe ~reader file addr in
     read_exports parse
 
   let get_tolerable_file_sig_unsafe ~reader file =
     let addr = get_file_addr_unsafe file in
-    let parse = get_parse_unsafe ~reader file addr in
+    let parse = get_typed_parse_unsafe ~reader file addr in
     read_tolerable_file_sig_unsafe file parse
 
   let get_file_sig_unsafe ~reader file =
     let addr = get_file_addr_unsafe file in
-    let parse = get_parse_unsafe ~reader file addr in
+    let parse = get_typed_parse_unsafe ~reader file addr in
     read_file_sig_unsafe file parse
 
   let get_type_sig_unsafe ~reader file =
     let addr = get_file_addr_unsafe file in
-    let parse = get_parse_unsafe ~reader file addr in
+    let parse = get_typed_parse_unsafe ~reader file addr in
     read_type_sig_unsafe file parse
 
   let get_file_hash_unsafe ~reader file =
     let addr = get_file_addr_unsafe file in
-    let unparse = get_unparse_unsafe ~reader file addr in
-    read_file_hash unparse
+    let parse = get_parse_unsafe ~reader file addr in
+    read_file_hash parse
 
   let loc_of_aloc = loc_of_aloc ~get_aloc_table_unsafe
 end
@@ -694,23 +669,19 @@ module Reader = struct
 
   let read ~reader:_ addr = Heap.entity_read_latest addr
 
-  let is_checked_file ~reader file = Heap.is_some (read ~reader (Heap.get_parse file))
-
-  let get_unparse ~reader file = Heap.read_opt Fun.id (read ~reader (Heap.get_unparse file))
+  let is_typed_file ~reader file =
+    let parse = read ~reader (Heap.get_parse file) in
+    Heap.is_some parse && Heap.read_opt_exn Heap.is_typed parse
 
   let get_parse ~reader file = Heap.read_opt Fun.id (read ~reader (Heap.get_parse file))
 
-  let get_parse_unparse ~reader file =
-    let f parse =
-      let unparse = Heap.read_opt_exn Fun.id (read ~reader (Heap.get_unparse file)) in
-      (unparse, parse)
-    in
-    Heap.read_opt f (read ~reader (Heap.get_parse file))
+  let get_typed_parse ~reader file =
+    Heap.read_opt_bind Heap.coerce_typed (read ~reader (Heap.get_parse file))
 
   let has_ast ~reader file =
     let parse_opt =
       let* file_addr = get_file_addr file in
-      get_parse ~reader file_addr
+      get_typed_parse ~reader file_addr
     in
     match parse_opt with
     | None -> false
@@ -721,7 +692,7 @@ module Reader = struct
     | Some _ as cached -> cached
     | None ->
       let* addr = get_file_addr file in
-      let* parse = get_parse ~reader addr in
+      let* parse = get_typed_parse ~reader addr in
       let* ast = read_ast file parse in
       Reader_cache.add_ast file ast;
       Some ast
@@ -731,54 +702,55 @@ module Reader = struct
     | Some _ as cached -> cached
     | None ->
       let* addr = get_file_addr file in
-      let* parse = get_parse ~reader addr in
+      let* parse = get_typed_parse ~reader addr in
       let* aloc_table = read_aloc_table file parse in
       Reader_cache.add_aloc_table file aloc_table;
       Some aloc_table
 
   let get_docblock ~reader file =
     let* addr = get_file_addr file in
-    let* parse = get_parse ~reader addr in
+    let* parse = get_typed_parse ~reader addr in
     read_docblock parse
 
   let get_exports ~reader file =
     let* addr = get_file_addr file in
-    let* parse = get_parse ~reader addr in
+    let* parse = get_typed_parse ~reader addr in
     Some (read_exports parse)
 
   let get_tolerable_file_sig ~reader file =
     let* addr = get_file_addr file in
-    let* parse = get_parse ~reader addr in
+    let* parse = get_typed_parse ~reader addr in
     read_tolerable_file_sig parse
 
   let get_file_sig ~reader file =
     let* addr = get_file_addr file in
-    let* parse = get_parse ~reader addr in
+    let* parse = get_typed_parse ~reader addr in
     read_file_sig parse
 
   let get_type_sig ~reader file =
     let* addr = get_file_addr file in
-    let* parse = get_parse ~reader addr in
+    let* parse = get_typed_parse ~reader addr in
     read_type_sig parse
 
   let get_file_hash ~reader file =
     let* addr = get_file_addr file in
-    let* unparse = get_unparse ~reader addr in
-    Some (read_file_hash unparse)
-
-  let get_unparse_unsafe ~reader file addr =
-    match get_unparse ~reader addr with
-    | Some unparse -> unparse
-    | None -> raise (File_not_unparsed (File_key.to_string file))
+    let* parse = get_parse ~reader addr in
+    Some (read_file_hash parse)
 
   let get_parse_unsafe ~reader file addr =
     match get_parse ~reader addr with
     | Some parse -> parse
     | None -> raise (File_not_parsed (File_key.to_string file))
 
+  let get_typed_parse_unsafe ~reader file addr =
+    let parse = get_parse_unsafe ~reader file addr in
+    match Heap.coerce_typed parse with
+    | Some parse -> parse
+    | None -> raise (File_not_typed (File_key.to_string file))
+
   let get_ast_unsafe ~reader file =
     let addr = get_file_addr_unsafe file in
-    let parse = get_parse_unsafe ~reader file addr in
+    let parse = get_typed_parse_unsafe ~reader file addr in
     read_ast_unsafe file parse
 
   let get_aloc_table_unsafe ~reader file =
@@ -786,40 +758,40 @@ module Reader = struct
     | Some aloc_table -> aloc_table
     | None ->
       let addr = get_file_addr_unsafe file in
-      let parse = get_parse_unsafe ~reader file addr in
+      let parse = get_typed_parse_unsafe ~reader file addr in
       let aloc_table = read_aloc_table_unsafe file parse in
       Reader_cache.add_aloc_table file aloc_table;
       aloc_table
 
   let get_docblock_unsafe ~reader file =
     let addr = get_file_addr_unsafe file in
-    let parse = get_parse_unsafe ~reader file addr in
+    let parse = get_typed_parse_unsafe ~reader file addr in
     read_docblock_unsafe file parse
 
   let get_exports_unsafe ~reader file =
     let addr = get_file_addr_unsafe file in
-    let parse = get_parse_unsafe ~reader file addr in
+    let parse = get_typed_parse_unsafe ~reader file addr in
     read_exports parse
 
   let get_tolerable_file_sig_unsafe ~reader file =
     let addr = get_file_addr_unsafe file in
-    let parse = get_parse_unsafe ~reader file addr in
+    let parse = get_typed_parse_unsafe ~reader file addr in
     read_tolerable_file_sig_unsafe file parse
 
   let get_file_sig_unsafe ~reader file =
     let addr = get_file_addr_unsafe file in
-    let parse = get_parse_unsafe ~reader file addr in
+    let parse = get_typed_parse_unsafe ~reader file addr in
     read_file_sig_unsafe file parse
 
   let get_type_sig_unsafe ~reader file =
     let addr = get_file_addr_unsafe file in
-    let parse = get_parse_unsafe ~reader file addr in
+    let parse = get_typed_parse_unsafe ~reader file addr in
     read_type_sig_unsafe file parse
 
   let get_file_hash_unsafe ~reader file =
     let addr = get_file_addr_unsafe file in
-    let unparse = get_unparse_unsafe ~reader file addr in
-    read_file_hash unparse
+    let parse = get_parse_unsafe ~reader file addr in
+    read_file_hash parse
 
   let loc_of_aloc = loc_of_aloc ~get_aloc_table_unsafe
 end
@@ -830,25 +802,20 @@ module Reader_dispatcher : READER with type reader = Abstract_state_reader.t = s
 
   open Abstract_state_reader
 
-  let is_checked_file ~reader =
+  let is_typed_file ~reader =
     match reader with
-    | Mutator_state_reader reader -> Mutator_reader.is_checked_file ~reader
-    | State_reader reader -> Reader.is_checked_file ~reader
-
-  let get_unparse ~reader =
-    match reader with
-    | Mutator_state_reader reader -> Mutator_reader.get_unparse ~reader
-    | State_reader reader -> Reader.get_unparse ~reader
+    | Mutator_state_reader reader -> Mutator_reader.is_typed_file ~reader
+    | State_reader reader -> Reader.is_typed_file ~reader
 
   let get_parse ~reader =
     match reader with
     | Mutator_state_reader reader -> Mutator_reader.get_parse ~reader
     | State_reader reader -> Reader.get_parse ~reader
 
-  let get_parse_unparse ~reader =
+  let get_typed_parse ~reader =
     match reader with
-    | Mutator_state_reader reader -> Mutator_reader.get_parse_unparse ~reader
-    | State_reader reader -> Reader.get_parse_unparse ~reader
+    | Mutator_state_reader reader -> Mutator_reader.get_typed_parse ~reader
+    | State_reader reader -> Reader.get_typed_parse ~reader
 
   let has_ast ~reader =
     match reader with
@@ -895,15 +862,15 @@ module Reader_dispatcher : READER with type reader = Abstract_state_reader.t = s
     | Mutator_state_reader reader -> Mutator_reader.get_file_hash ~reader
     | State_reader reader -> Reader.get_file_hash ~reader
 
-  let get_unparse_unsafe ~reader =
-    match reader with
-    | Mutator_state_reader reader -> Mutator_reader.get_unparse_unsafe ~reader
-    | State_reader reader -> Reader.get_unparse_unsafe ~reader
-
   let get_parse_unsafe ~reader =
     match reader with
     | Mutator_state_reader reader -> Mutator_reader.get_parse_unsafe ~reader
     | State_reader reader -> Reader.get_parse_unsafe ~reader
+
+  let get_typed_parse_unsafe ~reader =
+    match reader with
+    | Mutator_state_reader reader -> Mutator_reader.get_typed_parse_unsafe ~reader
+    | State_reader reader -> Reader.get_typed_parse_unsafe ~reader
 
   let get_ast_unsafe ~reader =
     match reader with
@@ -959,11 +926,10 @@ end = struct
     let (exports_size, write_exports) = Heap.prepare_write_exports exports in
     let open Heap in
     let size =
-      (8 * header_size)
-      + (2 * entity_size)
+      (6 * header_size)
+      + entity_size
       + string_size file_name
-      + unparse_size
-      + parse_size
+      + typed_parse_size
       + file_size
       + int64_size
       + opt_size (with_header_size string_size) module_name
@@ -974,9 +940,9 @@ end = struct
         let hash = write_int64 chunk hash in
         let module_name = Option.map (write_string chunk) module_name in
         let exports = write_exports chunk in
-        let unparse = write_entity chunk (Some (write_unparse chunk hash module_name)) in
-        let parse = write_entity chunk (Some (write_parse chunk exports)) in
-        let file = write_file chunk file_kind file_name unparse parse in
+        let parse = write_typed_parse chunk hash module_name exports in
+        let parse = write_entity chunk (Some (parse :> [ `typed | `untyped ] parse_addr)) in
+        let file = write_file chunk file_kind file_name parse in
         assert (file = FileHeap.add file_key file)
     )
 
