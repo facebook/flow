@@ -727,7 +727,7 @@ let add_parsed_resolved_requires ~mutator ~reader ~options ~node_modules_contain
 *)
 let commit_modules ~transaction ~workers ~options ~reader ~is_init new_or_changed dirty_modules =
   let debug = Options.is_debug_mode options in
-  let mutator = Module_heaps.Commit_modules_mutator.create transaction is_init in
+  let mutator = Parsing_heaps.Commit_modules_mutator.create transaction is_init in
   (* prep for registering new mappings in NameHeap *)
   let (to_remove, to_replace, duplicate_providers, changed_modules) =
     List.fold_left
@@ -786,13 +786,13 @@ let commit_modules ~transaction ~workers ~options ~reader ~is_init new_or_change
       dirty_modules
   in
   let%lwt () =
-    Module_heaps.Commit_modules_mutator.remove_and_replace mutator ~workers ~to_remove ~to_replace
+    Parsing_heaps.Commit_modules_mutator.remove_and_replace mutator ~workers ~to_remove ~to_replace
   in
   if debug then prerr_endlinef "*** done committing modules ***";
   Lwt.return (changed_modules, duplicate_providers)
 
 let get_module_providers ~reader file_key parse =
-  let get_provider = Module_heaps.Mutator_reader.get_provider ~reader in
+  let get_provider = Parsing_heaps.Mutator_reader.get_provider ~reader in
   let eponymous_module_provider =
     let m = eponymous_module file_key in
     (m, get_provider m)

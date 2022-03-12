@@ -5,18 +5,6 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-(********************************** Name Heap *********************************)
-(* Maps module names to the filenames which provide those modules             *)
-
-module NameHeap =
-  SharedMem.WithCache
-    (Modulename.Key)
-    (struct
-      type t = File_key.t
-
-      let description = "Name"
-    end)
-
 (*************************** Resolved Requires Heap ***************************)
 (* Maps filenames to which other modules they require                         *)
 
@@ -67,76 +55,6 @@ module ResolvedRequiresHeap =
     end)
 
 (*********************************** Mutators *********************************)
-
-let currently_oldified_nameheap_modulenames : Modulename.Set.t ref = ref Modulename.Set.empty
-
-module Commit_modules_mutator : sig
-  type t
-
-  val create : Transaction.t -> is_init:bool -> t
-
-  val remove_and_replace :
-    t ->
-    workers:MultiWorkerLwt.worker list option ->
-    to_remove:Modulename.Set.t ->
-    to_replace:(Modulename.t * File_key.t) list ->
-    unit Lwt.t
-end = struct
-  type t = { is_init: bool }
-
-  let commit mutator =
-    WorkerCancel.with_no_cancellations (fun () ->
-        Hh_logger.debug "Committing NameHeap";
-        if not mutator.is_init then
-          NameHeap.remove_old_batch !currently_oldified_nameheap_modulenames;
-        currently_oldified_nameheap_modulenames := Modulename.Set.empty
-    );
-    Lwt.return_unit
-
-  let rollback mutator =
-    WorkerCancel.with_no_cancellations (fun () ->
-        Hh_logger.debug "Rolling back NameHeap";
-        if not mutator.is_init then NameHeap.revive_batch !currently_oldified_nameheap_modulenames;
-        currently_oldified_nameheap_modulenames := Modulename.Set.empty
-    );
-    Lwt.return_unit
-
-  let create transaction ~is_init =
-    WorkerCancel.with_no_cancellations (fun () ->
-        let mutator = { is_init } in
-        let commit () = commit mutator in
-        let rollback () = rollback mutator in
-        Transaction.add ~singleton:"Commit_modules" ~commit ~rollback transaction;
-        mutator
-    )
-
-  let remove_and_replace mutator ~workers ~to_remove ~to_replace =
-    (* During init we don't need to worry about oldifying, reviving, or removing old entries *)
-    if not mutator.is_init then (
-      (* NOTE: oldifying something twice permanently removes it, because... legacy. so it's
-         important that we oldify a single set, in case a name is in both to_remove and to_replace
-         (e.g. a moved module). It's also possible that a name is already oldified, and we should
-         probably call [oldify_batch (Modulename.Set.diff to_oldify oldify)], but will avoid
-         rocking the boat for now. *)
-      let oldified = !currently_oldified_nameheap_modulenames in
-      let to_oldify =
-        List.fold_left (fun set (f, _) -> Modulename.Set.add f set) to_remove to_replace
-      in
-      currently_oldified_nameheap_modulenames := Modulename.Set.union oldified to_oldify;
-      NameHeap.oldify_batch to_oldify
-    );
-
-    (* Remove *)
-    NameHeap.remove_batch to_remove;
-
-    (* Replace *)
-    MultiWorkerLwt.call
-      workers
-      ~job:(fun () to_replace -> List.iter (fun (m, f) -> NameHeap.add m f) to_replace)
-      ~neutral:()
-      ~merge:(fun () () -> ())
-      ~next:(MultiWorkerLwt.next workers to_replace)
-end
 
 let currently_oldified_resolved_requires : Utils_js.FilenameSet.t ref =
   ref Utils_js.FilenameSet.empty
@@ -192,15 +110,11 @@ end
 module type READER = sig
   type reader
 
-  val get_provider : reader:reader -> Modulename.t -> File_key.t option
-
   val get_resolved_requires_unsafe : reader:reader -> (File_key.t -> resolved_requires) Expensive.t
 end
 
 module Mutator_reader : READER with type reader = Mutator_state_reader.t = struct
   type reader = Mutator_state_reader.t
-
-  let get_provider ~reader:_ = NameHeap.get
 
   let get_resolved_requires_unsafe ~reader:_ =
     Expensive.wrap (fun f ->
@@ -214,16 +128,8 @@ end
 module Reader : READER with type reader = State_reader.t = struct
   type reader = State_reader.t
 
-  let should_use_old_nameheap key = Modulename.Set.mem key !currently_oldified_nameheap_modulenames
-
   let should_use_old_resolved_requires f =
     Utils_js.FilenameSet.mem f !currently_oldified_resolved_requires
-
-  let get_provider ~reader:_ key =
-    if should_use_old_nameheap key then
-      NameHeap.get_old key
-    else
-      NameHeap.get key
 
   let get_resolved_requires_unsafe ~reader:_ =
     Expensive.wrap (fun f ->
@@ -244,11 +150,6 @@ module Reader_dispatcher : READER with type reader = Abstract_state_reader.t = s
   type reader = Abstract_state_reader.t
 
   open Abstract_state_reader
-
-  let get_provider ~reader =
-    match reader with
-    | Mutator_state_reader reader -> Mutator_reader.get_provider ~reader
-    | State_reader reader -> Reader.get_provider ~reader
 
   let get_resolved_requires_unsafe ~reader =
     match reader with

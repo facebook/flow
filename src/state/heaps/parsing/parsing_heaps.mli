@@ -39,6 +39,8 @@ val read_exports : [ `typed ] parse_addr -> Exports.t
 module type READER = sig
   type reader
 
+  val get_provider : reader:reader -> Modulename.t -> File_key.t option
+
   val is_typed_file : reader:reader -> file_addr -> bool
 
   val get_parse : reader:reader -> file_addr -> [ `typed | `untyped ] parse_addr option
@@ -132,6 +134,19 @@ module Reparse_mutator : sig
   val record_unchanged : master_mutator -> Utils_js.FilenameSet.t -> unit
 
   val record_not_found : master_mutator -> Utils_js.FilenameSet.t -> unit
+end
+
+module Commit_modules_mutator : sig
+  type t
+
+  val create : Transaction.t -> is_init:bool -> t
+
+  val remove_and_replace :
+    t ->
+    workers:MultiWorkerLwt.worker list option ->
+    to_remove:Modulename.Set.t ->
+    to_replace:(Modulename.t * File_key.t) list ->
+    unit Lwt.t
 end
 
 module From_saved_state : sig

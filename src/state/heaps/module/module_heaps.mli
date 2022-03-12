@@ -22,8 +22,6 @@ val mk_resolved_requires :
 module type READER = sig
   type reader
 
-  val get_provider : reader:reader -> Modulename.t -> File_key.t option
-
   val get_resolved_requires_unsafe : reader:reader -> (File_key.t -> resolved_requires) Expensive.t
 end
 
@@ -32,19 +30,6 @@ module Mutator_reader : READER with type reader = Mutator_state_reader.t
 module Reader : READER with type reader = State_reader.t
 
 module Reader_dispatcher : READER with type reader = Abstract_state_reader.t
-
-module Commit_modules_mutator : sig
-  type t
-
-  val create : Transaction.t -> is_init:bool -> t
-
-  val remove_and_replace :
-    t ->
-    workers:MultiWorkerLwt.worker list option ->
-    to_remove:Modulename.Set.t ->
-    to_replace:(Modulename.t * File_key.t) list ->
-    unit Lwt.t
-end
 
 module Resolved_requires_mutator : sig
   type t

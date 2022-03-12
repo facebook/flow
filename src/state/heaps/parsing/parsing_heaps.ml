@@ -16,6 +16,15 @@ module FileHeap =
       type t = Heap.file
     end)
 
+module NameHeap =
+  SharedMem.WithCache
+    (Modulename.Key)
+    (struct
+      type t = File_key.t
+
+      let description = "Name"
+    end)
+
 type locs_tbl = Loc.t Type_sig_collections.Locs.t
 
 type type_sig = Type_sig_collections.Locs.index Packed_type_sig.Module.t
@@ -349,6 +358,8 @@ let clear_not_found file_key = WorkerCancel.with_no_cancellations (fun () -> cle
 module type READER = sig
   type reader
 
+  val get_provider : reader:reader -> Modulename.t -> File_key.t option
+
   val is_typed_file : reader:reader -> file_addr -> bool
 
   val get_parse : reader:reader -> file_addr -> [ `typed | `untyped ] parse_addr option
@@ -419,6 +430,8 @@ module Mutator_reader = struct
   let read ~reader:_ addr = Heap.entity_read_latest addr
 
   let read_old ~reader:_ addr = Heap.entity_read_committed addr
+
+  let get_provider ~reader:_ key = NameHeap.get key
 
   let is_typed_file ~reader file =
     let parse = read ~reader (Heap.get_parse file) in
@@ -659,6 +672,76 @@ end = struct
   let record_not_found () not_found = not_found_files := not_found
 end
 
+let currently_oldified_nameheap_modulenames : Modulename.Set.t ref = ref Modulename.Set.empty
+
+module Commit_modules_mutator : sig
+  type t
+
+  val create : Transaction.t -> is_init:bool -> t
+
+  val remove_and_replace :
+    t ->
+    workers:MultiWorkerLwt.worker list option ->
+    to_remove:Modulename.Set.t ->
+    to_replace:(Modulename.t * File_key.t) list ->
+    unit Lwt.t
+end = struct
+  type t = { is_init: bool }
+
+  let commit mutator =
+    WorkerCancel.with_no_cancellations (fun () ->
+        Hh_logger.debug "Committing NameHeap";
+        if not mutator.is_init then
+          NameHeap.remove_old_batch !currently_oldified_nameheap_modulenames;
+        currently_oldified_nameheap_modulenames := Modulename.Set.empty
+    );
+    Lwt.return_unit
+
+  let rollback mutator =
+    WorkerCancel.with_no_cancellations (fun () ->
+        Hh_logger.debug "Rolling back NameHeap";
+        if not mutator.is_init then NameHeap.revive_batch !currently_oldified_nameheap_modulenames;
+        currently_oldified_nameheap_modulenames := Modulename.Set.empty
+    );
+    Lwt.return_unit
+
+  let create transaction ~is_init =
+    WorkerCancel.with_no_cancellations (fun () ->
+        let mutator = { is_init } in
+        let commit () = commit mutator in
+        let rollback () = rollback mutator in
+        Transaction.add ~singleton:"Commit_modules" ~commit ~rollback transaction;
+        mutator
+    )
+
+  let remove_and_replace mutator ~workers ~to_remove ~to_replace =
+    (* During init we don't need to worry about oldifying, reviving, or removing old entries *)
+    if not mutator.is_init then (
+      (* NOTE: oldifying something twice permanently removes it, because... legacy. so it's
+         important that we oldify a single set, in case a name is in both to_remove and to_replace
+         (e.g. a moved module). It's also possible that a name is already oldified, and we should
+         probably call [oldify_batch (Modulename.Set.diff to_oldify oldify)], but will avoid
+         rocking the boat for now. *)
+      let oldified = !currently_oldified_nameheap_modulenames in
+      let to_oldify =
+        List.fold_left (fun set (f, _) -> Modulename.Set.add f set) to_remove to_replace
+      in
+      currently_oldified_nameheap_modulenames := Modulename.Set.union oldified to_oldify;
+      NameHeap.oldify_batch to_oldify
+    );
+
+    (* Remove *)
+    NameHeap.remove_batch to_remove;
+
+    (* Replace *)
+    MultiWorkerLwt.call
+      workers
+      ~job:(fun () to_replace -> List.iter (fun (m, f) -> NameHeap.add m f) to_replace)
+      ~neutral:()
+      ~merge:(fun () () -> ())
+      ~next:(MultiWorkerLwt.next workers to_replace)
+end
+
 (* This uses `entity_read_committed` and can be used by code outside of a
  * init/recheck, like commands, to see a consistent snapshot of type state even
  * in the middle of a recheck. *)
@@ -667,7 +750,15 @@ module Reader = struct
 
   let ( let* ) = Option.bind
 
+  let should_use_old_nameheap key = Modulename.Set.mem key !currently_oldified_nameheap_modulenames
+
   let read ~reader:_ addr = Heap.entity_read_latest addr
+
+  let get_provider ~reader:_ key =
+    if should_use_old_nameheap key then
+      NameHeap.get_old key
+    else
+      NameHeap.get key
 
   let is_typed_file ~reader file =
     let parse = read ~reader (Heap.get_parse file) in
@@ -801,6 +892,11 @@ module Reader_dispatcher : READER with type reader = Abstract_state_reader.t = s
   type reader = Abstract_state_reader.t
 
   open Abstract_state_reader
+
+  let get_provider ~reader =
+    match reader with
+    | Mutator_state_reader reader -> Mutator_reader.get_provider ~reader
+    | State_reader reader -> Reader.get_provider ~reader
 
   let is_typed_file ~reader =
     match reader with

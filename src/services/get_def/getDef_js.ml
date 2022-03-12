@@ -118,7 +118,7 @@ let rec process_request ~options ~reader ~cx ~is_legit_require ~typed_ast :
     (* function just so we don't do the work unless it's actually needed. *)
     let get_imported_file () =
       let filename =
-        Module_heaps.Reader.get_provider
+        Parsing_heaps.Reader.get_provider
           ~reader
           (Module_js.imported_module
              ~options
