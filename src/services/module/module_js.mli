@@ -35,7 +35,7 @@ val calc_new_modules :
   all_providers_mutator:Module_hashtables.All_providers_mutator.t ->
   reader:Mutator_state_reader.t ->
   FilenameSet.t ->
-  (Modulename.t * File_key.t option) list Lwt.t
+  Modulename.Set.t Lwt.t
 
 (* remove module records being tracked for given files;
    returns the set of modules removed
@@ -46,7 +46,7 @@ val calc_old_modules :
   options:Options.t ->
   reader:Mutator_state_reader.t ->
   FilenameSet.t ->
-  (Modulename.t * File_key.t option) list Lwt.t
+  Modulename.Set.t Lwt.t
 
 (* repick providers for old and new modules *)
 val commit_modules :
@@ -58,7 +58,7 @@ val commit_modules :
   (* parsed / unparsed files *)
   FilenameSet.t ->
   (* dirty modules *)
-  (Modulename.t * File_key.t option) list ->
+  Modulename.Set.t ->
   (* changed modules and duplicate providers *)
   (Modulename.Set.t * (File_key.t * File_key.t Nel.t) SMap.t) Lwt.t
 

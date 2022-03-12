@@ -730,8 +730,8 @@ let commit_modules ~transaction ~workers ~options ~reader ~is_init new_or_change
   let mutator = Parsing_heaps.Commit_modules_mutator.create transaction is_init in
   (* prep for registering new mappings in NameHeap *)
   let (to_remove, to_replace, duplicate_providers, changed_modules) =
-    List.fold_left
-      (fun (rem, rep, errmap, diff) (m, f_opt) ->
+    Modulename.Set.fold
+      (fun m (rem, rep, errmap, diff) ->
         match Module_hashtables.Mutator_reader.find_in_all_providers_unsafe ~reader m with
         | ps when FilenameSet.is_empty ps ->
           if debug then prerr_endlinef "no remaining providers: %S" (Modulename.to_string m);
@@ -740,7 +740,7 @@ let commit_modules ~transaction ~workers ~options ~reader ~is_init new_or_change
           (* now choose provider for m *)
           let (p, errmap) = choose_provider ~options (Modulename.to_string m) ps errmap in
           (* register chosen provider in NameHeap *)
-          (match f_opt with
+          (match Parsing_heaps.Mutator_reader.get_provider ~reader m with
           | Some f ->
             if f = p then (
               (* When can this happen? Say m pointed to f before, a different file
@@ -782,8 +782,8 @@ let commit_modules ~transaction ~workers ~options ~reader ~is_init new_or_change
                 (File_key.to_string p);
             let diff = Modulename.Set.add m diff in
             (rem, (m, p) :: rep, errmap, diff)))
-      (Modulename.Set.empty, [], SMap.empty, Modulename.Set.empty)
       dirty_modules
+      (Modulename.Set.empty, [], SMap.empty, Modulename.Set.empty)
   in
   let%lwt () =
     Parsing_heaps.Commit_modules_mutator.remove_and_replace mutator ~workers ~to_remove ~to_replace
@@ -791,17 +791,11 @@ let commit_modules ~transaction ~workers ~options ~reader ~is_init new_or_change
   if debug then prerr_endlinef "*** done committing modules ***";
   Lwt.return (changed_modules, duplicate_providers)
 
-let get_module_providers ~reader file_key parse =
-  let get_provider = Parsing_heaps.Mutator_reader.get_provider ~reader in
-  let eponymous_module_provider =
-    let m = eponymous_module file_key in
-    (m, get_provider m)
-  in
+let get_modules file_key parse =
+  let acc = [eponymous_module file_key] in
   match Parsing_heaps.read_module_name parse with
-  | None -> [eponymous_module_provider]
-  | Some name ->
-    let m = Modulename.String name in
-    [(m, get_provider m); eponymous_module_provider]
+  | None -> acc
+  | Some name -> Modulename.String name :: acc
 
 (* Calculate the set of modules whose current providers are changed or deleted files.
 
@@ -824,7 +818,7 @@ let calc_old_modules workers ~all_providers_mutator ~options ~reader new_or_chan
     let f acc file =
       let addr = Parsing_heaps.get_file_addr_unsafe file in
       match Parsing_heaps.Mutator_reader.get_old_parse ~reader addr with
-      | Some parse -> (file, get_module_providers ~reader file parse) :: acc
+      | Some parse -> (file, get_modules file parse) :: acc
       | None -> acc
     in
     MultiWorkerLwt.call
@@ -836,21 +830,20 @@ let calc_old_modules workers ~all_providers_mutator ~options ~reader new_or_chan
   in
   let old_modules =
     List.fold_left
-      (fun acc (file, module_provider_assoc) ->
+      (fun acc (file, modules) ->
         List.fold_left
-          (fun acc (module_name, provider) ->
-            Module_hashtables.All_providers_mutator.remove_provider
-              all_providers_mutator
-              file
-              module_name;
-            (module_name, provider) :: acc)
+          (fun acc m ->
+            Module_hashtables.All_providers_mutator.remove_provider all_providers_mutator file m;
+            Modulename.Set.add m acc)
           acc
-          module_provider_assoc)
-      []
+          modules)
+      Modulename.Set.empty
       file_module_assoc
   in
   if Options.is_debug_mode options then
-    prerr_endlinef "*** old modules (changed and deleted files) %d ***" (List.length old_modules);
+    prerr_endlinef
+      "*** old modules (changed and deleted files) %d ***"
+      (Modulename.Set.cardinal old_modules);
   Lwt.return old_modules
 
 let calc_new_modules workers ~all_providers_mutator ~reader new_or_changed =
@@ -858,7 +851,7 @@ let calc_new_modules workers ~all_providers_mutator ~reader new_or_changed =
     let f acc file =
       let addr = Parsing_heaps.get_file_addr_unsafe file in
       let parse = Parsing_heaps.Mutator_reader.get_parse_unsafe ~reader file addr in
-      (file, get_module_providers ~reader file parse) :: acc
+      (file, get_modules file parse) :: acc
     in
     MultiWorkerLwt.call
       workers
@@ -869,14 +862,14 @@ let calc_new_modules workers ~all_providers_mutator ~reader new_or_changed =
   in
   let new_modules =
     List.fold_left
-      (fun acc (file, module_provider_assoc) ->
+      (fun acc (file, modules) ->
         List.fold_left
-          (fun acc (module_, provider) ->
-            Module_hashtables.All_providers_mutator.add_provider all_providers_mutator file module_;
-            (module_, provider) :: acc)
+          (fun acc m ->
+            Module_hashtables.All_providers_mutator.add_provider all_providers_mutator file m;
+            Modulename.Set.add m acc)
           acc
-          module_provider_assoc)
-      []
+          modules)
+      Modulename.Set.empty
       file_module_assoc
   in
   Lwt.return new_modules

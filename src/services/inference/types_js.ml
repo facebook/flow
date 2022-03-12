@@ -113,7 +113,7 @@ let commit_modules
       let%lwt new_modules =
         Module_js.calc_new_modules ~reader workers ~all_providers_mutator new_or_changed
       in
-      let dirty_modules = List.rev_append old_modules new_modules in
+      let dirty_modules = Modulename.Set.union old_modules new_modules in
       (* Clear duplicate provider errors for all dirty modules. *)
       let duplicate_providers =
         (* Avoid iterating over dirty modules when there are no duplicate
@@ -122,13 +122,13 @@ let commit_modules
         if SMap.is_empty duplicate_providers then
           duplicate_providers
         else
-          List.fold_left
-            (fun acc (m, _) ->
+          Modulename.Set.fold
+            (fun m acc ->
               match m with
               | Modulename.String m -> SMap.remove m acc
               | Modulename.Filename _ -> acc)
-            duplicate_providers
             dirty_modules
+            duplicate_providers
       in
       let%lwt (changed_modules, new_duplicate_providers) =
         Module_js.commit_modules
@@ -2148,7 +2148,7 @@ let init_from_saved_state ~profiling ~workers ~saved_state ~updates options =
         ~is_init:true
         ~profiling
         ~workers
-        ~old_modules:[]
+        ~old_modules:Modulename.Set.empty
         ~duplicate_providers:SMap.empty
         ~new_or_changed:all_files
     in
@@ -2305,7 +2305,7 @@ let init_from_scratch ~profiling ~workers options =
       ~options
       ~profiling
       ~workers
-      ~old_modules:[]
+      ~old_modules:Modulename.Set.empty
       ~new_or_changed
       ~duplicate_providers:SMap.empty
       ~is_init:true
