@@ -628,6 +628,12 @@ module Make
           Error_message.(
             EBindingError (ENameAlreadyBound, assignment_loc, OrdinaryName name, def_loc)
           )
+      | (Bindings.Parameter, Some Flow_ast.Statement.VariableDeclaration.(Let | Const))
+        when not (Val.is_undeclared v) ->
+        Some
+          Error_message.(
+            EBindingError (ENameAlreadyBound, assignment_loc, OrdinaryName name, def_loc)
+          )
       | _ -> None)
 
   let initialize_globals unbound_names =
