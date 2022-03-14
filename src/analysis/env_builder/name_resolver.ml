@@ -617,6 +617,11 @@ module Make
           Error_message.(
             EBindingError (ENameAlreadyBound, assignment_loc, OrdinaryName name, def_loc)
           )
+      | (Bindings.Type, None) ->
+        Some
+          Error_message.(
+            EBindingError (ETypeInValuePosition, assignment_loc, OrdinaryName name, def_loc)
+          )
       | (Bindings.Parameter, Some _) when Context.enable_const_params cx && not (Val.is_undeclared v)
         ->
         Some
@@ -1247,7 +1252,30 @@ module Make
             raise (AbruptCompletion.Exn abrupt_completion)
           | _ -> ()
 
-      method! binding_type_identifier ident = super#identifier ident
+      method! binding_type_identifier ident =
+        let (loc, { Flow_ast.Identifier.name; comments = _ }) = ident in
+        let { kind; def_loc; _ } = SMap.find name env_state.env in
+        (match def_loc with
+        (* Identifiers with no binding can never reintroduce "cannot reassign binding" errors *)
+        | None -> ()
+        | Some def_loc ->
+          (match kind with
+          | Bindings.Type when not (ALoc.equal loc def_loc) ->
+            (* Types are already bind in hoister,
+               so we only check for rebind in different locations. *)
+            add_output
+              Error_message.(EBindingError (ENameAlreadyBound, loc, OrdinaryName name, def_loc))
+          | Bindings.Type -> ()
+          | Bindings.Var
+          | Bindings.Const
+          | Bindings.Let
+          | Bindings.Class
+          | Bindings.Function
+          | Bindings.Parameter ->
+            add_output
+              Error_message.(EBindingError (ENameAlreadyBound, loc, OrdinaryName name, def_loc))
+          | _ -> ()));
+        super#identifier ident
 
       method! function_identifier ident =
         (* The parent flow_ast_mapper treats functions as Vars, but in Flow
