@@ -1562,7 +1562,20 @@ module Make
                  * uninitialized. *)
                 Flow_ast_utils.fold_bindings_of_pattern
                   (fun () (loc, { Flow_ast.Identifier.name; _ }) ->
-                    let { val_ref; _ } = SMap.find name env_state.env in
+                    let { val_ref; kind = stored_binding_kind; def_loc; _ } =
+                      SMap.find name env_state.env
+                    in
+                    let () =
+                      error_for_assignment_kind
+                        cx
+                        name
+                        loc
+                        def_loc
+                        stored_binding_kind
+                        (Some kind)
+                        !val_ref
+                      |> Base.Option.iter ~f:add_output
+                    in
                     if Val.is_undeclared !val_ref then val_ref := Val.uninitialized loc)
                   ()
                   id;
