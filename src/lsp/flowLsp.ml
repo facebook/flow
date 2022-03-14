@@ -1675,9 +1675,12 @@ let try_connect flowconfig_name (env : disconnected_env) : server_state =
   match conn with
   | Ok (ic, oc) ->
     let i_server_id = env.d_ienv.i_server_id + 1 in
+    (* this flag is set to false to prevent restart loops when the flowconfig changes.
+       once we successfully reconnect, it should be reset back to true (the default). *)
+    let i_can_autostart_after_version_mismatch = true in
     let new_env =
       {
-        c_ienv = { env.d_ienv with i_server_id };
+        c_ienv = { env.d_ienv with i_server_id; i_can_autostart_after_version_mismatch };
         c_conn = { ic; oc };
         c_server_status = (ServerStatus.initial_status, None);
         c_about_to_exit_code = None;
