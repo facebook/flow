@@ -45,6 +45,8 @@ val description : t -> string option
 
 val params : t -> Params.t
 
+val deprecated : t -> string option
+
 val unrecognized_tags : t -> Unrecognized_tags.t
 
 (***********)

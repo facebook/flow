@@ -47,7 +47,8 @@ let string_of_option (f : 'a -> string) : 'a option -> string = function
   | None -> "None"
   | Some x -> Printf.sprintf "Some %s" (f x)
 
-let mk_test comment ?(should_not_parse = false) ?description ?params ?unrecognized_tags ctxt =
+let mk_test
+    comment ?(should_not_parse = false) ?description ?params ?unrecognized_tags ?deprecated ctxt =
   match Jsdoc.of_comments comment with
   | None -> assert_bool "JSDoc didn't parse" should_not_parse
   | Some jsdoc ->
@@ -69,6 +70,13 @@ let mk_test comment ?(should_not_parse = false) ?description ?params ?unrecogniz
           params
           (Jsdoc.params jsdoc)
     );
+    assert_equal
+      ~ctxt
+      ~cmp:(Base.Option.equal String.equal)
+      ~printer:(string_of_option (Printf.sprintf "%S"))
+      ~msg:"deprecated"
+      deprecated
+      (Jsdoc.deprecated jsdoc);
     Base.Option.iter unrecognized_tags ~f:(fun unrecognized_tags ->
         assert_equal
           ~ctxt
@@ -84,6 +92,10 @@ let tests =
   >::: [
          "dont_parse_line" >:: mk_test (mk_line_comment "* foo") ~should_not_parse:true;
          "parse_description" >:: mk_test (mk_block_comment "* foo") ~description:(Some "foo");
+         "parse_deprecated_with_str"
+         >:: mk_test (mk_block_comment "* @deprecated foo") ~deprecated:"foo";
+         "parse_deprecated_without_str"
+         >:: mk_test (mk_block_comment "* @deprecated") ~deprecated:"";
          "trim_whitespace_and_asterisks"
          >:: mk_test
                (mk_block_comment

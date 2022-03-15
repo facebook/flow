@@ -40,6 +40,7 @@ end
 type t = {
   description: string option;
   params: Params.t;
+  deprecated: string option;
   unrecognized_tags: Unrecognized_tags.t;
 }
 
@@ -50,6 +51,8 @@ type t = {
 let description { description; _ } = description
 
 let params { params; _ } = params
+
+let deprecated { deprecated; _ } = deprecated
 
 let unrecognized_tags { unrecognized_tags; _ } = unrecognized_tags
 
@@ -72,7 +75,7 @@ module Parser = struct
 
   (* Helpers *)
 
-  let empty = { description = None; params = []; unrecognized_tags = [] }
+  let empty = { description = None; params = []; deprecated = None; unrecognized_tags = [] }
 
   let trimmed_string_of_buffer buffer = buffer |> Buffer.contents |> String.trim
 
@@ -212,6 +215,11 @@ module Parser = struct
     let jsdoc = { jsdoc with description } in
     tag jsdoc lexbuf
 
+  and deprecated_tag jsdoc lexbuf =
+    let deprecated_tag_buf = Buffer.create 127 in
+    let deprecated = Some (Base.Option.value ~default:"" (description deprecated_tag_buf lexbuf)) in
+    { jsdoc with deprecated }
+
   and unrecognized_tag jsdoc name lexbuf =
     let desc_buf = Buffer.create 127 in
     let description = description desc_buf lexbuf in
@@ -227,6 +235,7 @@ module Parser = struct
     | "description"
     | "desc" ->
       description_tag jsdoc lexbuf
+    | "deprecated" -> deprecated_tag jsdoc lexbuf
     | identifier ->
       let name = Sedlexing.Utf8.lexeme lexbuf in
       unrecognized_tag jsdoc name lexbuf
