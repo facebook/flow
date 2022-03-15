@@ -1706,6 +1706,7 @@ let handle_persistent_autocomplete_lsp
   let client_config = Persistent_connection.client_config client in
   let lsp_init_params = Persistent_connection.lsp_initialize_params client in
   let is_snippet_supported = Lsp_helpers.supports_snippets lsp_init_params in
+  let is_tags_supported = Lsp_helpers.supports_tags lsp_init_params in
   let is_preselect_supported = Lsp_helpers.supports_preselect lsp_init_params in
   let is_label_detail_supported =
     Lsp_helpers.supports_completion_item_label_details lsp_init_params
@@ -1748,6 +1749,7 @@ let handle_persistent_autocomplete_lsp
       Flow_lsp_conversions.flow_completions_to_lsp
         ?token
         ~is_snippet_supported
+        ~is_tags_supported
         ~is_preselect_supported
         ~is_label_detail_supported
         completions

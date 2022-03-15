@@ -812,6 +812,7 @@ let parse_completionItem (params : json option) : CompletionItemResolve.params =
       kind = Base.Option.bind (Jget.int_opt params "kind") completionItemKind_of_enum;
       detail = Jget.string_opt params "detail";
       documentation = None;
+      tags = None;
       preselect = Jget.bool_d params "preselect" ~default:false;
       sortText = Jget.string_opt params "sortText";
       filterText = Jget.string_opt params "filterText";
@@ -846,6 +847,11 @@ let print_completionItem ~key (item : Completion.completionItem) : json =
                     JSON_String (String.trim (Base.List.fold doc ~init:"" ~f:string_of_markedString))
                   );
                 ]
+          )
+        );
+        ( "tags",
+          Base.Option.map item.tags ~f:(fun tags ->
+              JSON_Array (List.map (fun tag -> int_ @@ CompletionItemTag.to_enum tag) tags)
           )
         );
         ( "preselect",
@@ -1157,6 +1163,13 @@ module CompletionClientCapabilitiesFmt = struct
     {
       snippetSupport = Jget.bool_d json "snippetSupport" ~default:false;
       preselectSupport = Jget.bool_d json "preselectSupport" ~default:false;
+      tagSupport =
+        Jget.array_d json "tagSupport" ~default:[]
+        |> List.filter_map (function
+               | Some (JSON_Number num_string) ->
+                 num_string |> int_of_string_opt |> Base.Option.bind ~f:CompletionItemTag.of_enum
+               | _ -> None
+               );
       labelDetailsSupport = Jget.bool_d json "labelDetailsSupport" ~default:false;
     }
 

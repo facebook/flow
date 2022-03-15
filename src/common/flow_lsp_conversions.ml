@@ -87,6 +87,7 @@ let flow_signature_help_to_lsp
 let flow_completion_item_to_lsp
     ?token
     ~is_snippet_supported:(_ : bool)
+    ~(is_tags_supported : Lsp.CompletionItemTag.t -> bool)
     ~(is_preselect_supported : bool)
     ~(is_label_detail_supported : bool)
     (item : ServerProt.Response.Completion.completion_item) : Lsp.Completion.completionItem =
@@ -108,6 +109,7 @@ let flow_completion_item_to_lsp
       item.text_edits
   in
   let documentation = Base.Option.map item.documentation ~f:(fun doc -> [Lsp.MarkedString doc]) in
+  let tags = Base.Option.map item.tags ~f:(List.filter is_tags_supported) in
   let command =
     Some
       Lsp.Command.
@@ -149,6 +151,7 @@ let flow_completion_item_to_lsp
     kind = item.kind;
     detail;
     documentation;
+    tags;
     preselect = is_preselect_supported && item.preselect;
     sortText = item.sort_text;
     filterText = None;
@@ -162,6 +165,7 @@ let flow_completion_item_to_lsp
 let flow_completions_to_lsp
     ?token
     ~(is_snippet_supported : bool)
+    ~(is_tags_supported : Lsp.CompletionItemTag.t -> bool)
     ~(is_preselect_supported : bool)
     ~(is_label_detail_supported : bool)
     (completions : ServerProt.Response.Completion.t) : Lsp.Completion.result =
@@ -172,6 +176,7 @@ let flow_completions_to_lsp
         (flow_completion_item_to_lsp
            ?token
            ~is_snippet_supported
+           ~is_tags_supported
            ~is_preselect_supported
            ~is_label_detail_supported
         )

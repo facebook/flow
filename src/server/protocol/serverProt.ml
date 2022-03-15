@@ -182,6 +182,7 @@ module Response = struct
       sort_text: string option;
       preselect: bool;
       documentation: string option;
+      tags: Lsp.CompletionItemTag.t list option;
       log_info: string;
       source: string option;  (** autoimport source *)
       type_: string option;

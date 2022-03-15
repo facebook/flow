@@ -161,6 +161,7 @@ let autocomplete_create_result
     ?(rank = 0)
     ?(preselect = false)
     ?documentation
+    ?tags
     ~exact_by_default
     ~log_info
     (name, loc)
@@ -177,14 +178,22 @@ let autocomplete_create_result
     sort_text;
     preselect;
     documentation;
+    tags;
     log_info;
     source = None;
     type_ = lsp_detail;
   }
 
 let autocomplete_create_result_decl
-    ?insert_text ~rank ?(preselect = false) ?documentation ~exact_by_default ~log_info (name, loc) d
-    =
+    ?insert_text
+    ~rank
+    ?(preselect = false)
+    ?documentation
+    ?tags
+    ~exact_by_default
+    ~log_info
+    (name, loc)
+    d =
   let open Ty in
   let (kind, (cli_detail, lsp_detail)) =
     match d with
@@ -202,6 +211,7 @@ let autocomplete_create_result_decl
     sort_text;
     preselect;
     documentation;
+    tags;
     log_info;
     source = None;
     type_ = lsp_detail;
@@ -508,6 +518,7 @@ let completion_item_of_autoimport
       sort_text = sort_text_of_rank 101 (* TODO: use a constant *);
       preselect = false;
       documentation = None;
+      tags = None;
       log_info = "global";
       source = None;
       type_ = None;
@@ -522,6 +533,7 @@ let completion_item_of_autoimport
       sort_text = sort_text_of_rank 100 (* TODO: use a constant *);
       preselect = false;
       documentation = None;
+      tags = None;
       log_info = "autoimport";
       source = Some from;
       type_ = None (* TODO: include the type *);
@@ -637,6 +649,7 @@ let autocomplete_id
         sort_text = sort_text_of_rank rank;
         preselect = false;
         documentation = None;
+        tags = None;
         log_info = "this";
         source = None;
         type_ = None (* TODO: include the class type *);
@@ -656,6 +669,7 @@ let autocomplete_id
         sort_text = sort_text_of_rank rank;
         preselect = false;
         documentation = None;
+        tags = None;
         log_info = "super";
         source = None;
         type_ = None (* TODO: include the parent class type *);
@@ -718,6 +732,7 @@ let type_exports_of_module_ty ~ac_loc ~exact_by_default ~documentation_of_module
               sort_text = None;
               preselect = false;
               documentation = documentation_of_module_member sym_def_loc;
+              tags = None;
               log_info = "qualified type alias";
               source = None;
               type_ = lsp_detail;
@@ -734,6 +749,7 @@ let type_exports_of_module_ty ~ac_loc ~exact_by_default ~documentation_of_module
               sort_text = None;
               preselect = false;
               documentation = documentation_of_module_member sym_def_loc;
+              tags = None;
               log_info = "qualified interface";
               source = None;
               type_ = lsp_detail;
@@ -750,6 +766,7 @@ let type_exports_of_module_ty ~ac_loc ~exact_by_default ~documentation_of_module
               sort_text = None;
               preselect = false;
               documentation = documentation_of_module_member sym_def_loc;
+              tags = None;
               log_info = "qualified class";
               source = None;
               type_ = lsp_detail;
@@ -766,6 +783,7 @@ let type_exports_of_module_ty ~ac_loc ~exact_by_default ~documentation_of_module
               sort_text = None;
               preselect = false;
               documentation = documentation_of_module_member sym_def_loc;
+              tags = None;
               log_info = "qualified enum";
               source = None;
               type_ = lsp_detail;
@@ -840,6 +858,7 @@ let make_builtin_type ~ac_loc name =
     sort_text = sort_text_of_rank 0;
     preselect = false;
     documentation = None;
+    tags = None;
     log_info = "builtin type";
     source = None;
     type_ = None;
@@ -870,6 +889,7 @@ let make_utility_type ~ac_loc name =
     sort_text = sort_text_of_rank 102 (* below globals *);
     preselect = false;
     documentation = None;
+    tags = None;
     log_info = "builtin type";
     source = None;
     type_ = None;
@@ -907,6 +927,7 @@ let make_type_param ~ac_loc { Type.name; _ } =
     sort_text = sort_text_of_rank 0;
     preselect = false;
     documentation = None;
+    tags = None;
     log_info = "unqualified type parameter";
     source = None;
     type_ = None;
