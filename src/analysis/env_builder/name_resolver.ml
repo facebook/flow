@@ -609,6 +609,7 @@ module Make
             EBindingError (ENameAlreadyBound, assignment_loc, OrdinaryName name, def_loc)
           )
       | (Bindings.Const, Some _)
+      | (Bindings.Let, Some _)
       | (Bindings.Class, Some _)
       | (Bindings.Function, Some _)
       | (Bindings.Type, Some _)
@@ -1797,7 +1798,7 @@ module Make
             match projections with
             | [] ->
               this#havoc_heap_refinements heap_refinements;
-              if kind <> Bindings.Const then val_ref := havoc
+              if kind <> Bindings.Const && not (Val.is_undeclared !val_ref) then val_ref := havoc
             | _ -> heap_refinements := HeapRefinementMap.remove projections !heap_refinements)
           changed_vars
 
