@@ -248,10 +248,12 @@ module CompletionItemTag : sig
 end
 
 module CompletionClientCapabilities : sig
+  type tagSupport = { valueSet: CompletionItemTag.t list }
+
   type completionItem = {
     snippetSupport: bool;
     preselectSupport: bool;
-    tagSupport: CompletionItemTag.t list;
+    tagSupport: tagSupport;
     labelDetailsSupport: bool;
   }
 

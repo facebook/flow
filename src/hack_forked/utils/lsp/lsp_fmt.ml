@@ -1159,17 +1159,22 @@ end
 module CompletionClientCapabilitiesFmt = struct
   open CompletionClientCapabilities
 
-  let completionItem_of_json json =
+  let tagSupport_of_json json =
     {
-      snippetSupport = Jget.bool_d json "snippetSupport" ~default:false;
-      preselectSupport = Jget.bool_d json "preselectSupport" ~default:false;
-      tagSupport =
-        Jget.array_d json "tagSupport" ~default:[]
+      valueSet =
+        Jget.array_d json "valueSet" ~default:[]
         |> List.filter_map (function
                | Some (JSON_Number num_string) ->
                  num_string |> int_of_string_opt |> Base.Option.bind ~f:CompletionItemTag.of_enum
                | _ -> None
                );
+    }
+
+  let completionItem_of_json json =
+    {
+      snippetSupport = Jget.bool_d json "snippetSupport" ~default:false;
+      preselectSupport = Jget.bool_d json "preselectSupport" ~default:false;
+      tagSupport = Jget.obj_opt json "tagSupport" |> tagSupport_of_json;
       labelDetailsSupport = Jget.bool_d json "labelDetailsSupport" ~default:false;
     }
 

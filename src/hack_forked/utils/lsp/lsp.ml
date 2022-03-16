@@ -351,11 +351,13 @@ module CompletionItemTag = struct
 end
 
 module CompletionClientCapabilities = struct
+  type tagSupport = { valueSet: CompletionItemTag.t list }
+
   (** The client supports the following `CompletionItem` specific capabilities. *)
   type completionItem = {
     snippetSupport: bool;  (** client can do snippets as insert text *)
     preselectSupport: bool;  (** client supports the preselect property *)
-    tagSupport: CompletionItemTag.t list;  (** client supports the tags property *)
+    tagSupport: tagSupport;  (** client supports the tags property *)
     labelDetailsSupport: bool;  (** proposed for 3.17 *)
   }
 
