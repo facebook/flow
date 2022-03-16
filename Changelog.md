@@ -1,3 +1,24 @@
+### 0.174.0
+
+Likely to cause new Flow errors:
+* Flow now detects sketchy null errors that arise via optional chaining, and which involve opaque types, type aliases, or generics.
+* Fixed an issue that caused us to previously miss some errors when the type involved was an intersection.
+
+New Features:
+* Access from a union of exact objects, on a property that is on one but not all of the objects, now results in the type of that property or `void`, instead of an error.
+* Add type checking support for logical assignment operators.
+
+Notable bug fixes:
+* Fix a crash when using the default file watcher (dfind) on Windows if an [include] directory doesn't exist.
+* Do not attempt to unify the type of a `declare` function that comes after a function declaration of the same name ([try-Flow](https://flow.org/try/#0GYVwdgxgLglg9mABACwBQEoBciDOUBOMYA5ogN6L4CmUI+SARA4gL4BQAJlRADYCG1RKEiwEKDNgBGcODwDcQA)).
+* Improve wording of class-extends errors ([try-Flow](https://flow.org/try/#0FAEwpgxgNghgTmABAN3og9gIwFYC5EDeAvgNzDQwDOliAIomAB4AuYAdiDVtoUUA)).
+* Don't report `this-in-exported-function` for functions with a `this` parameter.
+
+Misc:
+* Added `--list-files` flag to `status` and `check` commands. This will dump a list of files that contain errors instead of the error messages.
+* The default file watcher (dfind) now logs to a `.dfind_log` file alongside the `.log` and `.monitor_log` files.
+* Changed the way Flow computes coverage for type parameters with uncovered upper bounds. Previously, a type parameter was always considered covered when it appeared in a function signature, class declaration, or type alias, even if the type parameter's upper bound was `any`. With this change, such type parameters are now considered to be uncovered. This results in Flow now computing a lower coverage percentage on modules where this pattern is present or that import types from other modules that use this pattern.
+
 ### 0.173.0
 
 Likely to cause new Flow errors:
