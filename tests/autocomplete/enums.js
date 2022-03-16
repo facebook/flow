@@ -4,6 +4,7 @@
 
 enum E {
   Foo,
+  /** @deprecated */
   Bar,
 }
 

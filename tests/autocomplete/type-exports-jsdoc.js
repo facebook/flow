@@ -1,6 +1,9 @@
 //@flow
 
-/** this is ExportFoo */
+/**
+ * this is ExportFoo.
+ * @deprecated Use number instead.
+ */
 export type ExportFoo = number;
 /** this is ExportBar */
 export type ExportBar<T> = ?T;

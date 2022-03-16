@@ -480,7 +480,7 @@ Flags: --pretty
   ]
 }
 
-member_class_property.js:8:5
+member_class_property.js:10:5
 Flags: --lsp
 {
   "label":"baz",
@@ -490,13 +490,36 @@ Flags: --lsp
   "sortText":"00000000000000000000",
   "insertTextFormat":1,
   "textEdit":{
-    "range":{"start":{"line":7,"character":4},"end":{"line":7,"character":4}},
+    "range":{"start":{"line":9,"character":4},"end":{"line":9,"character":4}},
     "newText":"baz"
   },
   "command":{
     "title":"",
     "command":"log:<PLACEHOLDER_PROJECT_URL>",
     "arguments":["textDocument/completion","member",{"token":null,"completion":"baz"}]
+  }
+}
+{
+  "label":"baz_DEPRECATED",
+  "labelDetails":{"detail":": number"},
+  "kind":6,
+  "detail":"number",
+  "documentation":{"kind":"markdown","value":"**@deprecated**"},
+  "tags":[1],
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":9,"character":4},"end":{"line":9,"character":4}},
+    "newText":"baz_DEPRECATED"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "member",
+      {"token":null,"completion":"baz_DEPRECATED"}
+    ]
   }
 }
 {
@@ -511,7 +534,7 @@ Flags: --lsp
   "sortText":"00000000000000000001",
   "insertTextFormat":1,
   "textEdit":{
-    "range":{"start":{"line":7,"character":4},"end":{"line":7,"character":4}},
+    "range":{"start":{"line":9,"character":4},"end":{"line":9,"character":4}},
     "newText":"hasOwnProperty"
   },
   "command":{
@@ -536,7 +559,7 @@ Flags: --lsp
   "sortText":"00000000000000000001",
   "insertTextFormat":1,
   "textEdit":{
-    "range":{"start":{"line":7,"character":4},"end":{"line":7,"character":4}},
+    "range":{"start":{"line":9,"character":4},"end":{"line":9,"character":4}},
     "newText":"isPrototypeOf"
   },
   "command":{
@@ -561,7 +584,7 @@ Flags: --lsp
   "sortText":"00000000000000000001",
   "insertTextFormat":1,
   "textEdit":{
-    "range":{"start":{"line":7,"character":4},"end":{"line":7,"character":4}},
+    "range":{"start":{"line":9,"character":4},"end":{"line":9,"character":4}},
     "newText":"propertyIsEnumerable"
   },
   "command":{
@@ -586,7 +609,7 @@ Flags: --lsp
   "sortText":"00000000000000000001",
   "insertTextFormat":1,
   "textEdit":{
-    "range":{"start":{"line":7,"character":4},"end":{"line":7,"character":4}},
+    "range":{"start":{"line":9,"character":4},"end":{"line":9,"character":4}},
     "newText":"toLocaleString"
   },
   "command":{
@@ -608,7 +631,7 @@ Flags: --lsp
   "sortText":"00000000000000000001",
   "insertTextFormat":1,
   "textEdit":{
-    "range":{"start":{"line":7,"character":4},"end":{"line":7,"character":4}},
+    "range":{"start":{"line":9,"character":4},"end":{"line":9,"character":4}},
     "newText":"toString"
   },
   "command":{
@@ -629,7 +652,7 @@ Flags: --lsp
   "sortText":"00000000000000000001",
   "insertTextFormat":1,
   "textEdit":{
-    "range":{"start":{"line":7,"character":4},"end":{"line":7,"character":4}},
+    "range":{"start":{"line":9,"character":4},"end":{"line":9,"character":4}},
     "newText":"valueOf"
   },
   "command":{
@@ -660,7 +683,7 @@ Flags: --pretty
   ]
 }
 
-member_interface_property.js:9:5
+member_interface_property.js:10:5
 Flags: --lsp
 {
   "label":"bar",
@@ -670,7 +693,7 @@ Flags: --lsp
   "sortText":"00000000000000000000",
   "insertTextFormat":1,
   "textEdit":{
-    "range":{"start":{"line":8,"character":4},"end":{"line":8,"character":4}},
+    "range":{"start":{"line":9,"character":4},"end":{"line":9,"character":4}},
     "newText":"bar"
   },
   "command":{
@@ -684,10 +707,12 @@ Flags: --lsp
   "labelDetails":{"detail":": string"},
   "kind":6,
   "detail":"string",
+  "documentation":{"kind":"markdown","value":"**@deprecated**"},
+  "tags":[1],
   "sortText":"00000000000000000000",
   "insertTextFormat":1,
   "textEdit":{
-    "range":{"start":{"line":8,"character":4},"end":{"line":8,"character":4}},
+    "range":{"start":{"line":9,"character":4},"end":{"line":9,"character":4}},
     "newText":"baz"
   },
   "command":{
@@ -708,7 +733,7 @@ Flags: --lsp
   "sortText":"00000000000000000001",
   "insertTextFormat":1,
   "textEdit":{
-    "range":{"start":{"line":8,"character":4},"end":{"line":8,"character":4}},
+    "range":{"start":{"line":9,"character":4},"end":{"line":9,"character":4}},
     "newText":"hasOwnProperty"
   },
   "command":{
@@ -733,7 +758,7 @@ Flags: --lsp
   "sortText":"00000000000000000001",
   "insertTextFormat":1,
   "textEdit":{
-    "range":{"start":{"line":8,"character":4},"end":{"line":8,"character":4}},
+    "range":{"start":{"line":9,"character":4},"end":{"line":9,"character":4}},
     "newText":"isPrototypeOf"
   },
   "command":{
@@ -758,7 +783,7 @@ Flags: --lsp
   "sortText":"00000000000000000001",
   "insertTextFormat":1,
   "textEdit":{
-    "range":{"start":{"line":8,"character":4},"end":{"line":8,"character":4}},
+    "range":{"start":{"line":9,"character":4},"end":{"line":9,"character":4}},
     "newText":"propertyIsEnumerable"
   },
   "command":{
@@ -783,7 +808,7 @@ Flags: --lsp
   "sortText":"00000000000000000001",
   "insertTextFormat":1,
   "textEdit":{
-    "range":{"start":{"line":8,"character":4},"end":{"line":8,"character":4}},
+    "range":{"start":{"line":9,"character":4},"end":{"line":9,"character":4}},
     "newText":"toLocaleString"
   },
   "command":{
@@ -805,7 +830,7 @@ Flags: --lsp
   "sortText":"00000000000000000001",
   "insertTextFormat":1,
   "textEdit":{
-    "range":{"start":{"line":8,"character":4},"end":{"line":8,"character":4}},
+    "range":{"start":{"line":9,"character":4},"end":{"line":9,"character":4}},
     "newText":"toString"
   },
   "command":{
@@ -826,7 +851,7 @@ Flags: --lsp
   "sortText":"00000000000000000001",
   "insertTextFormat":1,
   "textEdit":{
-    "range":{"start":{"line":8,"character":4},"end":{"line":8,"character":4}},
+    "range":{"start":{"line":9,"character":4},"end":{"line":9,"character":4}},
     "newText":"valueOf"
   },
   "command":{
@@ -3242,17 +3267,19 @@ Flags: --lsp
   }
 }
 
-enums.js:10:3
+enums.js:11:3
 Flags: --lsp
 {
   "label":"Bar",
   "labelDetails":{"detail":": E"},
   "kind":6,
   "detail":"E",
+  "documentation":{"kind":"markdown","value":"**@deprecated**"},
+  "tags":[1],
   "sortText":"00000000000000000000",
   "insertTextFormat":1,
   "textEdit":{
-    "range":{"start":{"line":9,"character":2},"end":{"line":9,"character":2}},
+    "range":{"start":{"line":10,"character":2},"end":{"line":10,"character":2}},
     "newText":"Bar"
   },
   "command":{
@@ -3269,7 +3296,7 @@ Flags: --lsp
   "sortText":"00000000000000000000",
   "insertTextFormat":1,
   "textEdit":{
-    "range":{"start":{"line":9,"character":2},"end":{"line":9,"character":2}},
+    "range":{"start":{"line":10,"character":2},"end":{"line":10,"character":2}},
     "newText":"Foo"
   },
   "command":{
@@ -3286,7 +3313,7 @@ Flags: --lsp
   "sortText":"00000000000000000001",
   "insertTextFormat":1,
   "textEdit":{
-    "range":{"start":{"line":9,"character":2},"end":{"line":9,"character":2}},
+    "range":{"start":{"line":10,"character":2},"end":{"line":10,"character":2}},
     "newText":"cast"
   },
   "command":{
@@ -3303,7 +3330,7 @@ Flags: --lsp
   "sortText":"00000000000000000001",
   "insertTextFormat":1,
   "textEdit":{
-    "range":{"start":{"line":9,"character":2},"end":{"line":9,"character":2}},
+    "range":{"start":{"line":10,"character":2},"end":{"line":10,"character":2}},
     "newText":"getName"
   },
   "command":{
@@ -3320,7 +3347,7 @@ Flags: --lsp
   "sortText":"00000000000000000001",
   "insertTextFormat":1,
   "textEdit":{
-    "range":{"start":{"line":9,"character":2},"end":{"line":9,"character":2}},
+    "range":{"start":{"line":10,"character":2},"end":{"line":10,"character":2}},
     "newText":"isValid"
   },
   "command":{
@@ -3337,7 +3364,7 @@ Flags: --lsp
   "sortText":"00000000000000000001",
   "insertTextFormat":1,
   "textEdit":{
-    "range":{"start":{"line":9,"character":2},"end":{"line":9,"character":2}},
+    "range":{"start":{"line":10,"character":2},"end":{"line":10,"character":2}},
     "newText":"members"
   },
   "command":{
@@ -3372,7 +3399,7 @@ Flags: --pretty
   ]
 }
 
-jsdoc.js:15:4
+jsdoc.js:18:4
 Flags: --lsp
 {
   "label":"Bar",
@@ -3383,7 +3410,7 @@ Flags: --lsp
   "sortText":"00000000000000000000",
   "insertTextFormat":1,
   "textEdit":{
-    "range":{"start":{"line":14,"character":3},"end":{"line":14,"character":3}},
+    "range":{"start":{"line":17,"character":3},"end":{"line":17,"character":3}},
     "newText":"Bar"
   },
   "command":{
@@ -3405,7 +3432,7 @@ Flags: --lsp
   "sortText":"00000000000000000000",
   "insertTextFormat":1,
   "textEdit":{
-    "range":{"start":{"line":14,"character":3},"end":{"line":14,"character":3}},
+    "range":{"start":{"line":17,"character":3},"end":{"line":17,"character":3}},
     "newText":"BooleanEnum"
   },
   "command":{
@@ -3427,7 +3454,7 @@ Flags: --lsp
   "sortText":"00000000000000000000",
   "insertTextFormat":1,
   "textEdit":{
-    "range":{"start":{"line":14,"character":3},"end":{"line":14,"character":3}},
+    "range":{"start":{"line":17,"character":3},"end":{"line":17,"character":3}},
     "newText":"DefaultedStringEnum"
   },
   "command":{
@@ -3449,7 +3476,7 @@ Flags: --lsp
   "sortText":"00000000000000000000",
   "insertTextFormat":1,
   "textEdit":{
-    "range":{"start":{"line":14,"character":3},"end":{"line":14,"character":3}},
+    "range":{"start":{"line":17,"character":3},"end":{"line":17,"character":3}},
     "newText":"InitializedStringEnum"
   },
   "command":{
@@ -3471,7 +3498,7 @@ Flags: --lsp
   "sortText":"00000000000000000000",
   "insertTextFormat":1,
   "textEdit":{
-    "range":{"start":{"line":14,"character":3},"end":{"line":14,"character":3}},
+    "range":{"start":{"line":17,"character":3},"end":{"line":17,"character":3}},
     "newText":"NumberEnum"
   },
   "command":{
@@ -3493,7 +3520,7 @@ Flags: --lsp
   "sortText":"00000000000000000000",
   "insertTextFormat":1,
   "textEdit":{
-    "range":{"start":{"line":14,"character":3},"end":{"line":14,"character":3}},
+    "range":{"start":{"line":17,"character":3},"end":{"line":17,"character":3}},
     "newText":"SymbolEnum"
   },
   "command":{
@@ -3515,7 +3542,7 @@ Flags: --lsp
   "sortText":"00000000000000000000",
   "insertTextFormat":1,
   "textEdit":{
-    "range":{"start":{"line":14,"character":3},"end":{"line":14,"character":3}},
+    "range":{"start":{"line":17,"character":3},"end":{"line":17,"character":3}},
     "newText":"baz"
   },
   "command":{
@@ -3537,7 +3564,7 @@ Flags: --lsp
   "sortText":"00000000000000000000",
   "insertTextFormat":1,
   "textEdit":{
-    "range":{"start":{"line":14,"character":3},"end":{"line":14,"character":3}},
+    "range":{"start":{"line":17,"character":3},"end":{"line":17,"character":3}},
     "newText":"foo"
   },
   "command":{
@@ -3562,7 +3589,7 @@ Flags: --lsp
   "sortText":"00000000000000000000",
   "insertTextFormat":1,
   "textEdit":{
-    "range":{"start":{"line":14,"character":3},"end":{"line":14,"character":3}},
+    "range":{"start":{"line":17,"character":3},"end":{"line":17,"character":3}},
     "newText":"qux"
   },
   "command":{
@@ -3580,11 +3607,12 @@ Flags: --lsp
   "labelDetails":{"detail":"() => void"},
   "kind":3,
   "detail":"() => void",
-  "documentation":{"kind":"markdown","value":"a JSDoc in the same file"},
+  "documentation":{"kind":"markdown","value":"**@deprecated** \n\na JSDoc in the same file."},
+  "tags":[1],
   "sortText":"00000000000000000000",
   "insertTextFormat":1,
   "textEdit":{
-    "range":{"start":{"line":14,"character":3},"end":{"line":14,"character":3}},
+    "range":{"start":{"line":17,"character":3},"end":{"line":17,"character":3}},
     "newText":"x"
   },
   "command":{
@@ -5524,7 +5552,7 @@ Flags: --lsp
   }
 }
 
-types-jsdoc.js:16:6
+types-jsdoc.js:19:6
 Flags: --lsp
 {
   "label":"any",
@@ -5533,7 +5561,7 @@ Flags: --lsp
   "sortText":"00000000000000000000",
   "insertTextFormat":1,
   "textEdit":{
-    "range":{"start":{"line":15,"character":5},"end":{"line":15,"character":5}},
+    "range":{"start":{"line":18,"character":5},"end":{"line":18,"character":5}},
     "newText":"any"
   },
   "command":{
@@ -5549,7 +5577,7 @@ Flags: --lsp
   "sortText":"00000000000000000000",
   "insertTextFormat":1,
   "textEdit":{
-    "range":{"start":{"line":15,"character":5},"end":{"line":15,"character":5}},
+    "range":{"start":{"line":18,"character":5},"end":{"line":18,"character":5}},
     "newText":"boolean"
   },
   "command":{
@@ -5569,7 +5597,7 @@ Flags: --lsp
   "sortText":"00000000000000000000",
   "insertTextFormat":1,
   "textEdit":{
-    "range":{"start":{"line":15,"character":5},"end":{"line":15,"character":5}},
+    "range":{"start":{"line":18,"character":5},"end":{"line":18,"character":5}},
     "newText":"empty"
   },
   "command":{
@@ -5585,7 +5613,7 @@ Flags: --lsp
   "sortText":"00000000000000000000",
   "insertTextFormat":1,
   "textEdit":{
-    "range":{"start":{"line":15,"character":5},"end":{"line":15,"character":5}},
+    "range":{"start":{"line":18,"character":5},"end":{"line":18,"character":5}},
     "newText":"false"
   },
   "command":{
@@ -5601,7 +5629,7 @@ Flags: --lsp
   "sortText":"00000000000000000000",
   "insertTextFormat":1,
   "textEdit":{
-    "range":{"start":{"line":15,"character":5},"end":{"line":15,"character":5}},
+    "range":{"start":{"line":18,"character":5},"end":{"line":18,"character":5}},
     "newText":"mixed"
   },
   "command":{
@@ -5617,7 +5645,7 @@ Flags: --lsp
   "sortText":"00000000000000000000",
   "insertTextFormat":1,
   "textEdit":{
-    "range":{"start":{"line":15,"character":5},"end":{"line":15,"character":5}},
+    "range":{"start":{"line":18,"character":5},"end":{"line":18,"character":5}},
     "newText":"null"
   },
   "command":{
@@ -5633,7 +5661,7 @@ Flags: --lsp
   "sortText":"00000000000000000000",
   "insertTextFormat":1,
   "textEdit":{
-    "range":{"start":{"line":15,"character":5},"end":{"line":15,"character":5}},
+    "range":{"start":{"line":18,"character":5},"end":{"line":18,"character":5}},
     "newText":"number"
   },
   "command":{
@@ -5649,7 +5677,7 @@ Flags: --lsp
   "sortText":"00000000000000000000",
   "insertTextFormat":1,
   "textEdit":{
-    "range":{"start":{"line":15,"character":5},"end":{"line":15,"character":5}},
+    "range":{"start":{"line":18,"character":5},"end":{"line":18,"character":5}},
     "newText":"bigint"
   },
   "command":{
@@ -5665,7 +5693,7 @@ Flags: --lsp
   "sortText":"00000000000000000000",
   "insertTextFormat":1,
   "textEdit":{
-    "range":{"start":{"line":15,"character":5},"end":{"line":15,"character":5}},
+    "range":{"start":{"line":18,"character":5},"end":{"line":18,"character":5}},
     "newText":"string"
   },
   "command":{
@@ -5681,7 +5709,7 @@ Flags: --lsp
   "sortText":"00000000000000000000",
   "insertTextFormat":1,
   "textEdit":{
-    "range":{"start":{"line":15,"character":5},"end":{"line":15,"character":5}},
+    "range":{"start":{"line":18,"character":5},"end":{"line":18,"character":5}},
     "newText":"true"
   },
   "command":{
@@ -5697,7 +5725,7 @@ Flags: --lsp
   "sortText":"00000000000000000000",
   "insertTextFormat":1,
   "textEdit":{
-    "range":{"start":{"line":15,"character":5},"end":{"line":15,"character":5}},
+    "range":{"start":{"line":18,"character":5},"end":{"line":18,"character":5}},
     "newText":"void"
   },
   "command":{
@@ -5713,7 +5741,7 @@ Flags: --lsp
   "sortText":"00000000000000000000",
   "insertTextFormat":1,
   "textEdit":{
-    "range":{"start":{"line":15,"character":5},"end":{"line":15,"character":5}},
+    "range":{"start":{"line":18,"character":5},"end":{"line":18,"character":5}},
     "newText":"symbol"
   },
   "command":{
@@ -5729,7 +5757,7 @@ Flags: --lsp
   "sortText":"00000000000000000102",
   "insertTextFormat":1,
   "textEdit":{
-    "range":{"start":{"line":15,"character":5},"end":{"line":15,"character":5}},
+    "range":{"start":{"line":18,"character":5},"end":{"line":18,"character":5}},
     "newText":"Class"
   },
   "command":{
@@ -5745,7 +5773,7 @@ Flags: --lsp
   "sortText":"00000000000000000102",
   "insertTextFormat":1,
   "textEdit":{
-    "range":{"start":{"line":15,"character":5},"end":{"line":15,"character":5}},
+    "range":{"start":{"line":18,"character":5},"end":{"line":18,"character":5}},
     "newText":"$Call"
   },
   "command":{
@@ -5761,7 +5789,7 @@ Flags: --lsp
   "sortText":"00000000000000000102",
   "insertTextFormat":1,
   "textEdit":{
-    "range":{"start":{"line":15,"character":5},"end":{"line":15,"character":5}},
+    "range":{"start":{"line":18,"character":5},"end":{"line":18,"character":5}},
     "newText":"$CharSet"
   },
   "command":{
@@ -5781,7 +5809,7 @@ Flags: --lsp
   "sortText":"00000000000000000102",
   "insertTextFormat":1,
   "textEdit":{
-    "range":{"start":{"line":15,"character":5},"end":{"line":15,"character":5}},
+    "range":{"start":{"line":18,"character":5},"end":{"line":18,"character":5}},
     "newText":"$Diff"
   },
   "command":{
@@ -5797,7 +5825,7 @@ Flags: --lsp
   "sortText":"00000000000000000102",
   "insertTextFormat":1,
   "textEdit":{
-    "range":{"start":{"line":15,"character":5},"end":{"line":15,"character":5}},
+    "range":{"start":{"line":18,"character":5},"end":{"line":18,"character":5}},
     "newText":"$ElementType"
   },
   "command":{
@@ -5817,7 +5845,7 @@ Flags: --lsp
   "sortText":"00000000000000000102",
   "insertTextFormat":1,
   "textEdit":{
-    "range":{"start":{"line":15,"character":5},"end":{"line":15,"character":5}},
+    "range":{"start":{"line":18,"character":5},"end":{"line":18,"character":5}},
     "newText":"$Exact"
   },
   "command":{
@@ -5833,7 +5861,7 @@ Flags: --lsp
   "sortText":"00000000000000000102",
   "insertTextFormat":1,
   "textEdit":{
-    "range":{"start":{"line":15,"character":5},"end":{"line":15,"character":5}},
+    "range":{"start":{"line":18,"character":5},"end":{"line":18,"character":5}},
     "newText":"$Exports"
   },
   "command":{
@@ -5853,7 +5881,7 @@ Flags: --lsp
   "sortText":"00000000000000000102",
   "insertTextFormat":1,
   "textEdit":{
-    "range":{"start":{"line":15,"character":5},"end":{"line":15,"character":5}},
+    "range":{"start":{"line":18,"character":5},"end":{"line":18,"character":5}},
     "newText":"$KeyMirror"
   },
   "command":{
@@ -5873,7 +5901,7 @@ Flags: --lsp
   "sortText":"00000000000000000102",
   "insertTextFormat":1,
   "textEdit":{
-    "range":{"start":{"line":15,"character":5},"end":{"line":15,"character":5}},
+    "range":{"start":{"line":18,"character":5},"end":{"line":18,"character":5}},
     "newText":"$Keys"
   },
   "command":{
@@ -5889,7 +5917,7 @@ Flags: --lsp
   "sortText":"00000000000000000102",
   "insertTextFormat":1,
   "textEdit":{
-    "range":{"start":{"line":15,"character":5},"end":{"line":15,"character":5}},
+    "range":{"start":{"line":18,"character":5},"end":{"line":18,"character":5}},
     "newText":"$NonMaybeType"
   },
   "command":{
@@ -5909,7 +5937,7 @@ Flags: --lsp
   "sortText":"00000000000000000102",
   "insertTextFormat":1,
   "textEdit":{
-    "range":{"start":{"line":15,"character":5},"end":{"line":15,"character":5}},
+    "range":{"start":{"line":18,"character":5},"end":{"line":18,"character":5}},
     "newText":"$ObjMap"
   },
   "command":{
@@ -5929,7 +5957,7 @@ Flags: --lsp
   "sortText":"00000000000000000102",
   "insertTextFormat":1,
   "textEdit":{
-    "range":{"start":{"line":15,"character":5},"end":{"line":15,"character":5}},
+    "range":{"start":{"line":18,"character":5},"end":{"line":18,"character":5}},
     "newText":"$ObjMapi"
   },
   "command":{
@@ -5949,7 +5977,7 @@ Flags: --lsp
   "sortText":"00000000000000000102",
   "insertTextFormat":1,
   "textEdit":{
-    "range":{"start":{"line":15,"character":5},"end":{"line":15,"character":5}},
+    "range":{"start":{"line":18,"character":5},"end":{"line":18,"character":5}},
     "newText":"$PropertyType"
   },
   "command":{
@@ -5969,7 +5997,7 @@ Flags: --lsp
   "sortText":"00000000000000000102",
   "insertTextFormat":1,
   "textEdit":{
-    "range":{"start":{"line":15,"character":5},"end":{"line":15,"character":5}},
+    "range":{"start":{"line":18,"character":5},"end":{"line":18,"character":5}},
     "newText":"$ReadOnly"
   },
   "command":{
@@ -5989,7 +6017,7 @@ Flags: --lsp
   "sortText":"00000000000000000102",
   "insertTextFormat":1,
   "textEdit":{
-    "range":{"start":{"line":15,"character":5},"end":{"line":15,"character":5}},
+    "range":{"start":{"line":18,"character":5},"end":{"line":18,"character":5}},
     "newText":"$Rest"
   },
   "command":{
@@ -6005,7 +6033,7 @@ Flags: --lsp
   "sortText":"00000000000000000102",
   "insertTextFormat":1,
   "textEdit":{
-    "range":{"start":{"line":15,"character":5},"end":{"line":15,"character":5}},
+    "range":{"start":{"line":18,"character":5},"end":{"line":18,"character":5}},
     "newText":"$Shape"
   },
   "command":{
@@ -6021,7 +6049,7 @@ Flags: --lsp
   "sortText":"00000000000000000102",
   "insertTextFormat":1,
   "textEdit":{
-    "range":{"start":{"line":15,"character":5},"end":{"line":15,"character":5}},
+    "range":{"start":{"line":18,"character":5},"end":{"line":18,"character":5}},
     "newText":"$TupleMap"
   },
   "command":{
@@ -6041,7 +6069,7 @@ Flags: --lsp
   "sortText":"00000000000000000102",
   "insertTextFormat":1,
   "textEdit":{
-    "range":{"start":{"line":15,"character":5},"end":{"line":15,"character":5}},
+    "range":{"start":{"line":18,"character":5},"end":{"line":18,"character":5}},
     "newText":"$Values"
   },
   "command":{
@@ -6059,11 +6087,12 @@ Flags: --lsp
   "labelDetails":{"detail":"type myFoo = number"},
   "kind":13,
   "detail":"type myFoo = number",
-  "documentation":{"kind":"markdown","value":"this is myFoo"},
+  "documentation":{"kind":"markdown","value":"**@deprecated** \n\nthis is myFoo."},
+  "tags":[1],
   "sortText":"00000000000000000000",
   "insertTextFormat":1,
   "textEdit":{
-    "range":{"start":{"line":15,"character":5},"end":{"line":15,"character":5}},
+    "range":{"start":{"line":18,"character":5},"end":{"line":18,"character":5}},
     "newText":"myFoo"
   },
   "command":{
@@ -6085,7 +6114,7 @@ Flags: --lsp
   "sortText":"00000000000000000000",
   "insertTextFormat":1,
   "textEdit":{
-    "range":{"start":{"line":15,"character":5},"end":{"line":15,"character":5}},
+    "range":{"start":{"line":18,"character":5},"end":{"line":18,"character":5}},
     "newText":"myBar"
   },
   "command":{
@@ -6107,7 +6136,7 @@ Flags: --lsp
   "sortText":"00000000000000000000",
   "insertTextFormat":1,
   "textEdit":{
-    "range":{"start":{"line":15,"character":5},"end":{"line":15,"character":5}},
+    "range":{"start":{"line":18,"character":5},"end":{"line":18,"character":5}},
     "newText":"myInterface"
   },
   "command":{
@@ -6125,11 +6154,15 @@ Flags: --lsp
   "labelDetails":{"detail":"type ExportFoo = number"},
   "kind":13,
   "detail":"type ExportFoo = number",
-  "documentation":{"kind":"markdown","value":"this is ExportFoo"},
+  "documentation":{
+    "kind":"markdown",
+    "value":"**@deprecated** Use number instead.\n\nthis is ExportFoo."
+  },
+  "tags":[1],
   "sortText":"00000000000000000000",
   "insertTextFormat":1,
   "textEdit":{
-    "range":{"start":{"line":15,"character":5},"end":{"line":15,"character":5}},
+    "range":{"start":{"line":18,"character":5},"end":{"line":18,"character":5}},
     "newText":"ExportFoo"
   },
   "command":{
@@ -6151,7 +6184,7 @@ Flags: --lsp
   "sortText":"00000000000000000000",
   "insertTextFormat":1,
   "textEdit":{
-    "range":{"start":{"line":15,"character":5},"end":{"line":15,"character":5}},
+    "range":{"start":{"line":18,"character":5},"end":{"line":18,"character":5}},
     "newText":"ExportBar"
   },
   "command":{
@@ -6173,7 +6206,7 @@ Flags: --lsp
   "sortText":"00000000000000000000",
   "insertTextFormat":1,
   "textEdit":{
-    "range":{"start":{"line":15,"character":5},"end":{"line":15,"character":5}},
+    "range":{"start":{"line":18,"character":5},"end":{"line":18,"character":5}},
     "newText":"ExportClass"
   },
   "command":{
@@ -6195,7 +6228,7 @@ Flags: --lsp
   "sortText":"00000000000000000000",
   "insertTextFormat":1,
   "textEdit":{
-    "range":{"start":{"line":15,"character":5},"end":{"line":15,"character":5}},
+    "range":{"start":{"line":18,"character":5},"end":{"line":18,"character":5}},
     "newText":"ExportInterface"
   },
   "command":{
@@ -6217,7 +6250,7 @@ Flags: --lsp
   "sortText":"00000000000000000000",
   "insertTextFormat":1,
   "textEdit":{
-    "range":{"start":{"line":15,"character":5},"end":{"line":15,"character":5}},
+    "range":{"start":{"line":18,"character":5},"end":{"line":18,"character":5}},
     "newText":"ExportEnum"
   },
   "command":{
@@ -6239,7 +6272,7 @@ Flags: --lsp
   "sortText":"00000000000000000000",
   "insertTextFormat":1,
   "textEdit":{
-    "range":{"start":{"line":15,"character":5},"end":{"line":15,"character":5}},
+    "range":{"start":{"line":18,"character":5},"end":{"line":18,"character":5}},
     "newText":"exportValue"
   },
   "command":{
@@ -6261,7 +6294,7 @@ Flags: --lsp
   "sortText":"00000000000000000000",
   "insertTextFormat":1,
   "textEdit":{
-    "range":{"start":{"line":15,"character":5},"end":{"line":15,"character":5}},
+    "range":{"start":{"line":18,"character":5},"end":{"line":18,"character":5}},
     "newText":"myClass"
   },
   "command":{
@@ -6283,7 +6316,7 @@ Flags: --lsp
   "sortText":"00000000000000000000",
   "insertTextFormat":1,
   "textEdit":{
-    "range":{"start":{"line":15,"character":5},"end":{"line":15,"character":5}},
+    "range":{"start":{"line":18,"character":5},"end":{"line":18,"character":5}},
     "newText":"myEnum"
   },
   "command":{
@@ -6370,7 +6403,11 @@ Flags: --lsp
   "labelDetails":{"detail":"type ExportFoo = number"},
   "kind":6,
   "detail":"type ExportFoo = number",
-  "documentation":{"kind":"markdown","value":"this is ExportFoo"},
+  "documentation":{
+    "kind":"markdown",
+    "value":"**@deprecated** Use number instead.\n\nthis is ExportFoo."
+  },
+  "tags":[1],
   "sortText":"00000000000000000003",
   "insertTextFormat":1,
   "textEdit":{
@@ -6438,6 +6475,8 @@ Flags: --lsp
   "labelDetails":{"detail":": number"},
   "kind":6,
   "detail":"number",
+  "documentation":{"kind":"markdown","value":"**@deprecated**"},
+  "tags":[1],
   "sortText":"00000000000000000000",
   "insertTextFormat":1,
   "textEdit":{
@@ -8494,7 +8533,7 @@ Flags: --pretty
   ]
 }
 
-indexed-access-1.js:7:12
+indexed-access-1.js:8:12
 Flags: --lsp
 {
   "label":"'bar'",
@@ -8504,7 +8543,7 @@ Flags: --lsp
   "sortText":"00000000000000000000",
   "insertTextFormat":1,
   "textEdit":{
-    "range":{"start":{"line":6,"character":11},"end":{"line":6,"character":11}},
+    "range":{"start":{"line":7,"character":11},"end":{"line":7,"character":11}},
     "newText":"'bar'"
   },
   "command":{
@@ -8522,10 +8561,12 @@ Flags: --lsp
   "labelDetails":{"detail":": number"},
   "kind":6,
   "detail":"number",
+  "documentation":{"kind":"markdown","value":"**@deprecated**"},
+  "tags":[1],
   "sortText":"00000000000000000000",
   "insertTextFormat":1,
   "textEdit":{
-    "range":{"start":{"line":6,"character":11},"end":{"line":6,"character":11}},
+    "range":{"start":{"line":7,"character":11},"end":{"line":7,"character":11}},
     "newText":"'foo'"
   },
   "command":{
@@ -8545,7 +8586,7 @@ Flags: --lsp
   "sortText":"00000000000000000000",
   "insertTextFormat":1,
   "textEdit":{
-    "range":{"start":{"line":6,"character":11},"end":{"line":6,"character":11}},
+    "range":{"start":{"line":7,"character":11},"end":{"line":7,"character":11}},
     "newText":"any"
   },
   "command":{
@@ -8561,7 +8602,7 @@ Flags: --lsp
   "sortText":"00000000000000000000",
   "insertTextFormat":1,
   "textEdit":{
-    "range":{"start":{"line":6,"character":11},"end":{"line":6,"character":11}},
+    "range":{"start":{"line":7,"character":11},"end":{"line":7,"character":11}},
     "newText":"boolean"
   },
   "command":{
@@ -8581,7 +8622,7 @@ Flags: --lsp
   "sortText":"00000000000000000000",
   "insertTextFormat":1,
   "textEdit":{
-    "range":{"start":{"line":6,"character":11},"end":{"line":6,"character":11}},
+    "range":{"start":{"line":7,"character":11},"end":{"line":7,"character":11}},
     "newText":"empty"
   },
   "command":{
@@ -8597,7 +8638,7 @@ Flags: --lsp
   "sortText":"00000000000000000000",
   "insertTextFormat":1,
   "textEdit":{
-    "range":{"start":{"line":6,"character":11},"end":{"line":6,"character":11}},
+    "range":{"start":{"line":7,"character":11},"end":{"line":7,"character":11}},
     "newText":"false"
   },
   "command":{
@@ -8613,7 +8654,7 @@ Flags: --lsp
   "sortText":"00000000000000000000",
   "insertTextFormat":1,
   "textEdit":{
-    "range":{"start":{"line":6,"character":11},"end":{"line":6,"character":11}},
+    "range":{"start":{"line":7,"character":11},"end":{"line":7,"character":11}},
     "newText":"mixed"
   },
   "command":{
@@ -8629,7 +8670,7 @@ Flags: --lsp
   "sortText":"00000000000000000000",
   "insertTextFormat":1,
   "textEdit":{
-    "range":{"start":{"line":6,"character":11},"end":{"line":6,"character":11}},
+    "range":{"start":{"line":7,"character":11},"end":{"line":7,"character":11}},
     "newText":"null"
   },
   "command":{
@@ -8645,7 +8686,7 @@ Flags: --lsp
   "sortText":"00000000000000000000",
   "insertTextFormat":1,
   "textEdit":{
-    "range":{"start":{"line":6,"character":11},"end":{"line":6,"character":11}},
+    "range":{"start":{"line":7,"character":11},"end":{"line":7,"character":11}},
     "newText":"number"
   },
   "command":{
@@ -8661,7 +8702,7 @@ Flags: --lsp
   "sortText":"00000000000000000000",
   "insertTextFormat":1,
   "textEdit":{
-    "range":{"start":{"line":6,"character":11},"end":{"line":6,"character":11}},
+    "range":{"start":{"line":7,"character":11},"end":{"line":7,"character":11}},
     "newText":"bigint"
   },
   "command":{
@@ -8677,7 +8718,7 @@ Flags: --lsp
   "sortText":"00000000000000000000",
   "insertTextFormat":1,
   "textEdit":{
-    "range":{"start":{"line":6,"character":11},"end":{"line":6,"character":11}},
+    "range":{"start":{"line":7,"character":11},"end":{"line":7,"character":11}},
     "newText":"string"
   },
   "command":{
@@ -8693,7 +8734,7 @@ Flags: --lsp
   "sortText":"00000000000000000000",
   "insertTextFormat":1,
   "textEdit":{
-    "range":{"start":{"line":6,"character":11},"end":{"line":6,"character":11}},
+    "range":{"start":{"line":7,"character":11},"end":{"line":7,"character":11}},
     "newText":"true"
   },
   "command":{
@@ -8709,7 +8750,7 @@ Flags: --lsp
   "sortText":"00000000000000000000",
   "insertTextFormat":1,
   "textEdit":{
-    "range":{"start":{"line":6,"character":11},"end":{"line":6,"character":11}},
+    "range":{"start":{"line":7,"character":11},"end":{"line":7,"character":11}},
     "newText":"void"
   },
   "command":{
@@ -8725,7 +8766,7 @@ Flags: --lsp
   "sortText":"00000000000000000000",
   "insertTextFormat":1,
   "textEdit":{
-    "range":{"start":{"line":6,"character":11},"end":{"line":6,"character":11}},
+    "range":{"start":{"line":7,"character":11},"end":{"line":7,"character":11}},
     "newText":"symbol"
   },
   "command":{
@@ -8741,7 +8782,7 @@ Flags: --lsp
   "sortText":"00000000000000000102",
   "insertTextFormat":1,
   "textEdit":{
-    "range":{"start":{"line":6,"character":11},"end":{"line":6,"character":11}},
+    "range":{"start":{"line":7,"character":11},"end":{"line":7,"character":11}},
     "newText":"Class"
   },
   "command":{
@@ -8757,7 +8798,7 @@ Flags: --lsp
   "sortText":"00000000000000000102",
   "insertTextFormat":1,
   "textEdit":{
-    "range":{"start":{"line":6,"character":11},"end":{"line":6,"character":11}},
+    "range":{"start":{"line":7,"character":11},"end":{"line":7,"character":11}},
     "newText":"$Call"
   },
   "command":{
@@ -8773,7 +8814,7 @@ Flags: --lsp
   "sortText":"00000000000000000102",
   "insertTextFormat":1,
   "textEdit":{
-    "range":{"start":{"line":6,"character":11},"end":{"line":6,"character":11}},
+    "range":{"start":{"line":7,"character":11},"end":{"line":7,"character":11}},
     "newText":"$CharSet"
   },
   "command":{
@@ -8793,7 +8834,7 @@ Flags: --lsp
   "sortText":"00000000000000000102",
   "insertTextFormat":1,
   "textEdit":{
-    "range":{"start":{"line":6,"character":11},"end":{"line":6,"character":11}},
+    "range":{"start":{"line":7,"character":11},"end":{"line":7,"character":11}},
     "newText":"$Diff"
   },
   "command":{
@@ -8809,7 +8850,7 @@ Flags: --lsp
   "sortText":"00000000000000000102",
   "insertTextFormat":1,
   "textEdit":{
-    "range":{"start":{"line":6,"character":11},"end":{"line":6,"character":11}},
+    "range":{"start":{"line":7,"character":11},"end":{"line":7,"character":11}},
     "newText":"$ElementType"
   },
   "command":{
@@ -8829,7 +8870,7 @@ Flags: --lsp
   "sortText":"00000000000000000102",
   "insertTextFormat":1,
   "textEdit":{
-    "range":{"start":{"line":6,"character":11},"end":{"line":6,"character":11}},
+    "range":{"start":{"line":7,"character":11},"end":{"line":7,"character":11}},
     "newText":"$Exact"
   },
   "command":{
@@ -8845,7 +8886,7 @@ Flags: --lsp
   "sortText":"00000000000000000102",
   "insertTextFormat":1,
   "textEdit":{
-    "range":{"start":{"line":6,"character":11},"end":{"line":6,"character":11}},
+    "range":{"start":{"line":7,"character":11},"end":{"line":7,"character":11}},
     "newText":"$Exports"
   },
   "command":{
@@ -8865,7 +8906,7 @@ Flags: --lsp
   "sortText":"00000000000000000102",
   "insertTextFormat":1,
   "textEdit":{
-    "range":{"start":{"line":6,"character":11},"end":{"line":6,"character":11}},
+    "range":{"start":{"line":7,"character":11},"end":{"line":7,"character":11}},
     "newText":"$KeyMirror"
   },
   "command":{
@@ -8885,7 +8926,7 @@ Flags: --lsp
   "sortText":"00000000000000000102",
   "insertTextFormat":1,
   "textEdit":{
-    "range":{"start":{"line":6,"character":11},"end":{"line":6,"character":11}},
+    "range":{"start":{"line":7,"character":11},"end":{"line":7,"character":11}},
     "newText":"$Keys"
   },
   "command":{
@@ -8901,7 +8942,7 @@ Flags: --lsp
   "sortText":"00000000000000000102",
   "insertTextFormat":1,
   "textEdit":{
-    "range":{"start":{"line":6,"character":11},"end":{"line":6,"character":11}},
+    "range":{"start":{"line":7,"character":11},"end":{"line":7,"character":11}},
     "newText":"$NonMaybeType"
   },
   "command":{
@@ -8921,7 +8962,7 @@ Flags: --lsp
   "sortText":"00000000000000000102",
   "insertTextFormat":1,
   "textEdit":{
-    "range":{"start":{"line":6,"character":11},"end":{"line":6,"character":11}},
+    "range":{"start":{"line":7,"character":11},"end":{"line":7,"character":11}},
     "newText":"$ObjMap"
   },
   "command":{
@@ -8941,7 +8982,7 @@ Flags: --lsp
   "sortText":"00000000000000000102",
   "insertTextFormat":1,
   "textEdit":{
-    "range":{"start":{"line":6,"character":11},"end":{"line":6,"character":11}},
+    "range":{"start":{"line":7,"character":11},"end":{"line":7,"character":11}},
     "newText":"$ObjMapi"
   },
   "command":{
@@ -8961,7 +9002,7 @@ Flags: --lsp
   "sortText":"00000000000000000102",
   "insertTextFormat":1,
   "textEdit":{
-    "range":{"start":{"line":6,"character":11},"end":{"line":6,"character":11}},
+    "range":{"start":{"line":7,"character":11},"end":{"line":7,"character":11}},
     "newText":"$PropertyType"
   },
   "command":{
@@ -8981,7 +9022,7 @@ Flags: --lsp
   "sortText":"00000000000000000102",
   "insertTextFormat":1,
   "textEdit":{
-    "range":{"start":{"line":6,"character":11},"end":{"line":6,"character":11}},
+    "range":{"start":{"line":7,"character":11},"end":{"line":7,"character":11}},
     "newText":"$ReadOnly"
   },
   "command":{
@@ -9001,7 +9042,7 @@ Flags: --lsp
   "sortText":"00000000000000000102",
   "insertTextFormat":1,
   "textEdit":{
-    "range":{"start":{"line":6,"character":11},"end":{"line":6,"character":11}},
+    "range":{"start":{"line":7,"character":11},"end":{"line":7,"character":11}},
     "newText":"$Rest"
   },
   "command":{
@@ -9017,7 +9058,7 @@ Flags: --lsp
   "sortText":"00000000000000000102",
   "insertTextFormat":1,
   "textEdit":{
-    "range":{"start":{"line":6,"character":11},"end":{"line":6,"character":11}},
+    "range":{"start":{"line":7,"character":11},"end":{"line":7,"character":11}},
     "newText":"$Shape"
   },
   "command":{
@@ -9033,7 +9074,7 @@ Flags: --lsp
   "sortText":"00000000000000000102",
   "insertTextFormat":1,
   "textEdit":{
-    "range":{"start":{"line":6,"character":11},"end":{"line":6,"character":11}},
+    "range":{"start":{"line":7,"character":11},"end":{"line":7,"character":11}},
     "newText":"$TupleMap"
   },
   "command":{
@@ -9053,7 +9094,7 @@ Flags: --lsp
   "sortText":"00000000000000000102",
   "insertTextFormat":1,
   "textEdit":{
-    "range":{"start":{"line":6,"character":11},"end":{"line":6,"character":11}},
+    "range":{"start":{"line":7,"character":11},"end":{"line":7,"character":11}},
     "newText":"$Values"
   },
   "command":{
@@ -9071,10 +9112,12 @@ Flags: --lsp
   "labelDetails":{"detail":"type K = \"foo\""},
   "kind":13,
   "detail":"type K = \"foo\"",
+  "documentation":{"kind":"markdown","value":"**@deprecated**"},
+  "tags":[1],
   "sortText":"00000000000000000000",
   "insertTextFormat":1,
   "textEdit":{
-    "range":{"start":{"line":6,"character":11},"end":{"line":6,"character":11}},
+    "range":{"start":{"line":7,"character":11},"end":{"line":7,"character":11}},
     "newText":"K"
   },
   "command":{
@@ -9095,7 +9138,7 @@ Flags: --lsp
   "sortText":"00000000000000000000",
   "insertTextFormat":1,
   "textEdit":{
-    "range":{"start":{"line":6,"character":11},"end":{"line":6,"character":11}},
+    "range":{"start":{"line":7,"character":11},"end":{"line":7,"character":11}},
     "newText":"O"
   },
   "command":{
@@ -9116,7 +9159,7 @@ Flags: --lsp
   "sortText":"00000000000000000000",
   "insertTextFormat":1,
   "textEdit":{
-    "range":{"start":{"line":6,"character":11},"end":{"line":6,"character":11}},
+    "range":{"start":{"line":7,"character":11},"end":{"line":7,"character":11}},
     "newText":"T"
   },
   "command":{
