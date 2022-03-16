@@ -26,17 +26,17 @@ type placement =
 module ImportSource = struct
   let compare a b =
     (* TODO: sort global modules above ../ above ./ *)
-    String.compare a b
+    Base.Option.compare String.compare a b
 
   let of_statement = function
     | ( _,
         Statement.ImportDeclaration
           { Statement.ImportDeclaration.source = (_, { StringLiteral.value; _ }); _ }
       ) ->
-      value
+      Some value
     | _ ->
       (* TODO: handle requires *)
-      failwith "only imports are handled so far"
+      None
 
   let is_lower source =
     String.length source > 1
@@ -435,7 +435,7 @@ let existing_import ~bindings ~from imports =
     Base.List.filter
       ~f:(fun stmt ->
         section_matches_bindings bindings (Section.of_statement stmt)
-        && ImportSource.of_statement stmt = from)
+        && ImportSource.of_statement stmt = Some from)
       imports
   in
   let bindings_type_matches ~default ~specifiers =
