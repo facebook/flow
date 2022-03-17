@@ -361,6 +361,30 @@ module Object
             let (value, errs) = parse_assignment_pattern ~key env in
             let prop = Init { key; value; shorthand = true } in
             (prop, errs)
+          (* Attempt to recover from prepending of object key, e.g.
+             const x = {
+               foo // <-- inserted here
+               bar: 1,
+             };
+          *)
+          | T_IDENTIFIER _ as t ->
+            let value = parse_shorthand env key in
+            let prop = Init { key; value; shorthand = true } in
+            let unexpected = Token.explanation_of_token t in
+            let expected =
+              Printf.sprintf
+                "%s or %s"
+                (Token.explanation_of_token ~use_article:true T_COLON)
+                (Token.explanation_of_token ~use_article:true T_COMMA)
+            in
+            let errs =
+              {
+                if_expr =
+                  [(Peek.loc env, Parse_error.UnexpectedWithExpected (unexpected, expected))];
+                if_patt = [];
+              }
+            in
+            (prop, errs)
           | _ ->
             let (value, errs) = parse_value env in
             let prop = Init { key; value; shorthand = false } in
@@ -466,7 +490,8 @@ module Object
         in
         (match Peek.token env with
         | T_RCURLY
-        | T_EOF ->
+        | T_EOF
+        | T_IDENTIFIER _ (* We have already errored in this case, attempt to recover. *) ->
           ()
         | _ -> Expect.token env T_COMMA);
         let errs = Pattern_cover.rev_append_errors new_errs errs in
