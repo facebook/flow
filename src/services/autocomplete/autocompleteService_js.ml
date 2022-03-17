@@ -1456,7 +1456,17 @@ let autocomplete_qualified_type ~reader ~cx ~ac_loc ~file_sig ~typed_ast ~tparam
     { result = { ServerProt.Response.Completion.items; is_incomplete = false }; errors_to_log }
 
 let autocomplete_object_key
-    ~reader ~options ~cx ~file_sig ~typed_ast ~token obj_type ac_aloc ~tparams_rev =
+    ~reader
+    ~options
+    ~cx
+    ~file_sig
+    ~typed_ast
+    ~token
+    ~used_keys
+    ~spreads
+    obj_type
+    ac_aloc
+    ~tparams_rev =
   let ac_loc =
     let ac_loc = loc_of_aloc ~reader ac_aloc |> remove_autocomplete_token_from_loc in
     (* If the token is a string literal, then the end of the token may be inaccurate
@@ -1469,18 +1479,31 @@ let autocomplete_object_key
   in
   let exact_by_default = Context.exact_by_default cx in
   let exclude_keys =
-    match
-      members_of_type
-        ~reader
-        ~exclude_proto_members:true
-        cx
-        file_sig
-        typed_ast
-        obj_type
-        ~tparams_rev
-    with
-    | Error _ -> SSet.empty
-    | Ok (mems, _, _) -> mems |> Base.List.map ~f:(fun (name, _, _, _) -> name) |> SSet.of_list
+    Base.List.fold ~init:used_keys spreads ~f:(fun acc (spread_loc, spread_type) ->
+        (* Only exclude the keys of spreads after our prop. If the spread is before our
+           insertion we do not use it to exclude properties from our autcomplete
+           suggestions. It is a common pattern to use a spread to set default values and
+           then override some of those defaults. *)
+        if Loc.compare spread_loc ac_loc < 0 then
+          acc
+        else
+          let spread_keys =
+            match
+              members_of_type
+                ~reader
+                ~exclude_proto_members:true
+                cx
+                file_sig
+                typed_ast
+                spread_type
+                ~tparams_rev
+            with
+            | Error _ -> SSet.empty
+            | Ok (members, _, _) ->
+              Base.List.map members ~f:(fun (name, _, _, _) -> name) |> SSet.of_list
+          in
+          SSet.union acc spread_keys
+    )
   in
   let upper_bound = upper_bound_t_of_t ~cx obj_type in
   match
@@ -1561,7 +1584,7 @@ let autocomplete_get_results
         (* TODO: complete module names *)
         ("Acmodule", AcEmpty "Module")
       | Ac_enum -> ("Acenum", AcEmpty "Enum")
-      | Ac_key { obj_type } ->
+      | Ac_key { obj_type; used_keys; spreads } ->
         ( "Ackey",
           autocomplete_object_key
             ~reader
@@ -1570,6 +1593,8 @@ let autocomplete_get_results
             ~file_sig
             ~typed_ast
             ~token
+            ~used_keys
+            ~spreads
             obj_type
             ac_loc
             ~tparams_rev

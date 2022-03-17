@@ -18,7 +18,11 @@ type autocomplete_type =
   | Ac_id of ac_id  (** identifier references *)
   | Ac_class_key  (** class method name or property name *)
   | Ac_enum  (** identifier in enum declaration *)
-  | Ac_key of { obj_type: Type.t }  (** object key *)
+  | Ac_key of {
+      obj_type: Type.t;
+      used_keys: SSet.t;
+      spreads: (Loc.t * Type.t) list;
+    }  (** object key *)
   | Ac_literal of { lit_type: Type.t }  (** inside a literal like a string or regex *)
   | Ac_module  (** a module name *)
   | Ac_type  (** type identifiers *)

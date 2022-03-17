@@ -1001,6 +1001,18 @@ object_literal.js:7:17
 Flags: --pretty
 {"result":[{"name":"bar","type":"number"},{"name":"foo","type":"string"}]}
 
+object_literal.js:12:4
+Flags: --pretty
+{
+  "result":[{"name":"baz","type":"boolean | void"},{"name":"foo","type":"string | void"}]
+}
+
+object_literal.js:15:4
+Flags: --pretty
+{
+  "result":[{"name":"baz","type":"boolean | void"},{"name":"foo","type":"string | void"}]
+}
+
 optional_object.js:3:5
 Flags: --pretty
 {
@@ -2267,6 +2279,10 @@ Flags: --pretty
     {"name":"valueOf","type":"() => mixed"}
   ]
 }
+
+object_keys_spread.js:22:15
+Flags: --pretty
+{"result":[{"name":"a","type":"number"},{"name":"c","type":"number"}]}
 
 union-2.js:4:3
 Flags: --pretty

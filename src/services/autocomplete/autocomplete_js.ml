@@ -18,7 +18,11 @@ type autocomplete_type =
   | Ac_id of ac_id  (** identifier references *)
   | Ac_class_key  (** class method name or property name *)
   | Ac_enum  (** identifier in enum declaration *)
-  | Ac_key of { obj_type: Type.t }  (** object key *)
+  | Ac_key of {
+      obj_type: Type.t;
+      used_keys: SSet.t;
+      spreads: (Loc.t * Type.t) list;
+    }  (** object key *)
   | Ac_literal of { lit_type: Type.t }  (** inside a literal like a string or regex *)
   | Ac_module  (** a module name *)
   | Ac_type  (** type identifiers *)
@@ -471,19 +475,37 @@ class process_request_searcher (from_trigger_character : bool) (cursor : Loc.t) 
     method object_with_type obj_type obj =
       let open Flow_ast.Expression.Object in
       let { properties; comments } = obj in
+      let (used_keys, spreads) =
+        Base.List.fold properties ~init:(SSet.empty, []) ~f:(fun acc prop ->
+            let (used_keys, spreads) = acc in
+            match prop with
+            | Property (_, (Property.Init { key; _ } | Property.Method { key; _ })) ->
+              (match key with
+              | Property.Identifier (_, { Flow_ast.Identifier.name; _ })
+              | Property.Literal (_, { Flow_ast.Literal.value = Flow_ast.Literal.String name; _ })
+                ->
+                (SSet.add name used_keys, spreads)
+              | _ -> acc)
+            | Property _ -> acc
+            | SpreadProperty (_, { SpreadProperty.argument = ((spread_loc, spread_type), _); _ }) ->
+              (used_keys, (ALoc.to_loc_exn spread_loc, spread_type) :: spreads)
+        )
+      in
       Base.Option.iter ~f:(fun syntax -> ignore (this#syntax_with_internal syntax)) comments;
       Base.List.iter
-        ~f:(fun prop -> ignore (this#object_property_or_spread_property_with_type obj_type prop))
+        ~f:(fun prop ->
+          ignore
+            (this#object_property_or_spread_property_with_type ~used_keys ~spreads obj_type prop))
         properties;
       obj
 
-    method object_property_or_spread_property_with_type obj_type prop =
+    method object_property_or_spread_property_with_type ~used_keys ~spreads obj_type prop =
       let open Flow_ast.Expression.Object in
       match prop with
-      | Property p -> Property (this#object_property_with_type obj_type p)
+      | Property p -> Property (this#object_property_with_type ~used_keys ~spreads obj_type p)
       | SpreadProperty s -> SpreadProperty (this#spread_property s)
 
-    method object_property_with_type obj_type prop =
+    method object_property_with_type ~used_keys ~spreads obj_type prop =
       let open Flow_ast.Expression.Object.Property in
       (match snd prop with
       | Init
@@ -494,7 +516,7 @@ class process_request_searcher (from_trigger_character : bool) (cursor : Loc.t) 
             _;
           }
         when this#covers_target loc ->
-        this#find loc token (Ac_key { obj_type })
+        this#find loc token (Ac_key { obj_type; used_keys; spreads })
       | _ -> ());
       this#object_property prop
 

@@ -76,6 +76,7 @@ queries_in_file autocomplete "import_source.js" --pretty
 queries_in_file autocomplete "object-with-prototype.js" --pretty
 queries_in_file autocomplete "object-spread-1.js" --pretty
 queries_in_file autocomplete "object-spread-2.js" --pretty
+queries_in_file autocomplete "object_keys_spread.js" --pretty
 queries_in_file autocomplete "union-2.js" --pretty
 queries_in_file autocomplete "type-alias.js" --pretty
 queries_in_file autocomplete "intersection.js" --pretty
