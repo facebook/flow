@@ -1,3 +1,7 @@
+### 0.174.1
+
+Fix crash when Flow receives duplicate file deletion notifications introduced in v0.174.
+
 ### 0.174.0
 
 Likely to cause new Flow errors:
