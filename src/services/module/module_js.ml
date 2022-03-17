@@ -821,10 +821,12 @@ let get_modules file_key parse =
 let calc_old_modules workers ~all_providers_mutator ~options ~reader new_or_changed_or_deleted =
   let%lwt file_module_assoc =
     let f acc file =
-      let addr = Parsing_heaps.get_file_addr_unsafe file in
-      match Parsing_heaps.Mutator_reader.get_old_parse ~reader addr with
-      | Some parse -> (file, get_modules file parse) :: acc
+      match Parsing_heaps.get_file_addr file with
       | None -> acc
+      | Some addr ->
+        (match Parsing_heaps.Mutator_reader.get_old_parse ~reader addr with
+        | Some parse -> (file, get_modules file parse) :: acc
+        | None -> acc)
     in
     MultiWorkerLwt.call
       workers

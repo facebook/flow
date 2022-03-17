@@ -95,23 +95,25 @@ let index ~workers ~reader parsed : (Export_index.t * Export_index.t) Lwt.t =
         (* TODO: when a file changes, the below removes the file entirely and then adds
             back the new info, even though much or all of it is probably still the same.
            instead, diff the old and new exports and make minimal changes. *)
-        let file = Parsing_heaps.get_file_addr_unsafe file_key in
-        let to_remove =
-          (* get old exports so we can remove outdated entries *)
-          match Parsing_heaps.Mutator_reader.get_old_typed_parse ~reader file with
-          | Some parse -> add_imports_of_checked_file file_key parse to_remove
-          | None ->
-            (* if it wasn't checked before, there were no entries added *)
-            to_remove
-        in
-        let to_add =
-          match Parsing_heaps.Mutator_reader.get_typed_parse ~reader file with
-          | Some parse -> add_imports_of_checked_file file_key parse to_add
-          | None ->
-            (* TODO: handle unchecked module names, maybe still parse? *)
-            to_add
-        in
-        (to_add, to_remove)
+        (match Parsing_heaps.get_file_addr file_key with
+        | None -> (to_add, to_remove)
+        | Some file ->
+          let to_remove =
+            (* get old exports so we can remove outdated entries *)
+            match Parsing_heaps.Mutator_reader.get_old_typed_parse ~reader file with
+            | Some parse -> add_imports_of_checked_file file_key parse to_remove
+            | None ->
+              (* if it wasn't checked before, there were no entries added *)
+              to_remove
+          in
+          let to_add =
+            match Parsing_heaps.Mutator_reader.get_typed_parse ~reader file with
+            | Some parse -> add_imports_of_checked_file file_key parse to_add
+            | None ->
+              (* TODO: handle unchecked module names, maybe still parse? *)
+              to_add
+          in
+          (to_add, to_remove))
     in
     fun ~reader files ->
       let init = (Export_index.empty, Export_index.empty) in
