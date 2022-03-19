@@ -6,7 +6,6 @@
  *)
 
 open Utils_js
-open Parsing_heaps_exceptions
 module Heap = SharedMem.NewAPI
 
 module FileHeap =
@@ -22,6 +21,24 @@ module NameHeap =
     (struct
       type t = Heap.file Heap.entity
     end)
+
+exception File_not_found of string
+
+exception File_not_parsed of string
+
+exception File_not_typed of string
+
+exception Ast_not_found of string
+
+exception ALoc_table_not_found of string
+
+exception Docblock_not_found of string
+
+exception Requires_not_found of string
+
+exception Type_sig_not_found of string
+
+exception Module_not_found of string
 
 type locs_tbl = Loc.t Type_sig_collections.Locs.t
 
