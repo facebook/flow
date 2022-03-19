@@ -212,9 +212,6 @@ module NewAPI : sig
    * array of addresses to string objects. *)
   type 'a addr_tbl
 
-  (* Phantom type tag for optional objects. *)
-  type 'a opt
-
   (* Phantom type tag for ASTs. *)
   type ast
 
@@ -284,18 +281,6 @@ module NewAPI : sig
 
   val read_addr_tbl : ('k addr -> 'a) -> 'k addr_tbl addr -> 'a array
 
-  (* opt *)
-
-  val opt_size : ('a -> size) -> 'a option -> size
-
-  val read_opt : 'a opt addr -> 'a addr option
-
-  val read_opt_exn : 'a opt addr -> 'a addr
-
-  val is_none : 'a opt addr -> bool
-
-  val is_some : 'a opt addr -> bool
-
   (* entities *)
 
   val entity_size : int
@@ -304,9 +289,9 @@ module NewAPI : sig
 
   val entity_advance : 'k entity addr -> 'k addr option -> unit
 
-  val entity_read_committed : 'k entity addr -> 'k opt addr
+  val entity_read_committed : 'k entity addr -> 'k addr option
 
-  val entity_read_latest : 'k entity addr -> 'k opt addr
+  val entity_read_latest : 'k entity addr -> 'k addr option
 
   val entity_rollback : _ entity addr -> unit
 
@@ -372,17 +357,17 @@ module NewAPI : sig
 
   val get_file_hash : [> ] parse addr -> heap_int64 addr
 
-  val get_module_name : [> ] parse addr -> heap_string opt addr
+  val get_module_name : [> ] parse addr -> heap_string addr option
 
-  val get_ast : [ `typed ] parse addr -> ast opt addr
+  val get_ast : [ `typed ] parse addr -> ast addr option
 
-  val get_docblock : [ `typed ] parse addr -> docblock opt addr
+  val get_docblock : [ `typed ] parse addr -> docblock addr option
 
-  val get_aloc_table : [ `typed ] parse addr -> aloc_table opt addr
+  val get_aloc_table : [ `typed ] parse addr -> aloc_table addr option
 
-  val get_type_sig : [ `typed ] parse addr -> type_sig opt addr
+  val get_type_sig : [ `typed ] parse addr -> type_sig addr option
 
-  val get_file_sig : [ `typed ] parse addr -> file_sig opt addr
+  val get_file_sig : [ `typed ] parse addr -> file_sig addr option
 
   val get_exports : [ `typed ] parse addr -> exports addr
 

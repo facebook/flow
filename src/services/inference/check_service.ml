@@ -222,7 +222,7 @@ let mk_check_file ~options ~reader ~cache () =
       aloc loc |> ALoc.to_loc aloc_table |> ALoc.of_loc
     in
 
-    let buf = Heap.type_sig_buf (Heap.read_opt_exn (Heap.get_type_sig parse)) in
+    let buf = Heap.type_sig_buf (Option.get (Heap.get_type_sig parse)) in
 
     let cx =
       let docblock = Parsing_heaps.read_docblock_unsafe file_key parse in

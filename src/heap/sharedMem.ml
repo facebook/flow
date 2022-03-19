@@ -921,8 +921,6 @@ module NewAPI = struct
 
   type 'a addr_tbl
 
-  type 'a opt
-
   type ast
 
   type docblock
@@ -1192,27 +1190,13 @@ module NewAPI = struct
 
   (** Optionals *)
 
-  let opt_size f = function
-    | None -> 0
-    | Some x -> f x
-
   let opt_none = null_addr
 
   let read_opt addr =
-    if addr = opt_none then
+    if addr == opt_none then
       None
     else
       Some addr
-
-  let read_opt_exn addr =
-    if addr = opt_none then
-      invalid_arg "addr is null"
-    else
-      addr
-
-  let is_none addr = addr == opt_none
-
-  let is_some addr = addr != opt_none
 
   (** Entities
    *
@@ -1293,14 +1277,14 @@ module NewAPI = struct
     if !v >= next_version then v := lnot !v;
     let slot = !v land 1 in
     let data = addr_offset entity (header_size + slot) in
-    read_addr heap data
+    read_opt (read_addr heap data)
 
   let entity_read_latest entity =
     let heap = get_heap () in
     let entity_version = get_entity_version heap entity in
     let slot = entity_version land 1 in
     let data = addr_offset entity (header_size + slot) in
-    read_addr heap data
+    read_opt (read_addr heap data)
 
   (* The next version is always an even number. Entities written to the
    * transaction for the next version will have the entity version that is
@@ -1449,6 +1433,8 @@ module NewAPI = struct
 
   let get_generic offset base = read_addr (get_heap ()) (offset base)
 
+  let get_generic_opt offset base = read_opt (get_generic offset base)
+
   (** Parse data *)
 
   let untyped_parse_size = 2 * addr_size
@@ -1503,17 +1489,17 @@ module NewAPI = struct
 
   let get_file_hash = get_generic file_hash_addr
 
-  let get_module_name = get_generic module_name_addr
+  let get_module_name = get_generic_opt module_name_addr
 
-  let get_ast = get_generic ast_addr
+  let get_ast = get_generic_opt ast_addr
 
-  let get_docblock = get_generic docblock_addr
+  let get_docblock = get_generic_opt docblock_addr
 
-  let get_aloc_table = get_generic aloc_table_addr
+  let get_aloc_table = get_generic_opt aloc_table_addr
 
-  let get_type_sig = get_generic type_sig_addr
+  let get_type_sig = get_generic_opt type_sig_addr
 
-  let get_file_sig = get_generic file_sig_addr
+  let get_file_sig = get_generic_opt file_sig_addr
 
   let get_exports = get_generic exports_addr
 
