@@ -171,7 +171,7 @@ let file_dependencies ~audit ~reader file =
   let sig_require_set =
     let module Heap = SharedMem.NewAPI in
     let module Bin = Type_sig_bin in
-    let buf = Heap.read_opt_exn Heap.type_sig_buf (Heap.get_type_sig parse) in
+    let buf = Heap.type_sig_buf (Heap.read_opt_exn (Heap.get_type_sig parse)) in
     Bin.fold_tbl Bin.read_str SSet.add buf (Bin.module_refs buf) SSet.empty
   in
   let { Module_heaps.resolved_modules; _ } =

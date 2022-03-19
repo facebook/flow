@@ -119,21 +119,24 @@ let add_checked_file file_key hash module_name docblock ast locs type_sig file_s
   let saved_state_or_fresh_parse =
     match FileHeap.get file_key with
     | Some file ->
+      let parse_ent = get_parse file in
       (* If we loaded from a saved state, we will have some existing data with a
        * matching hash. In this case, we want to update the existing data with
        * parse information. *)
-      let f existing_parse =
-        let existing_hash = read_int64 (get_file_hash existing_parse) in
-        if Int64.equal existing_hash hash then
-          (* We know that file is typed (we are in add_checked_file) and the
-           * existing record's hash matches, so the file must have been typed
-           * before as well. *)
-          Heap.coerce_typed existing_parse
-        else
-          None
+      let unchanged_parse_opt =
+        match read_opt (entity_read_latest parse_ent) with
+        | None -> None
+        | Some existing_parse ->
+          let existing_hash = read_int64 (get_file_hash existing_parse) in
+          if Int64.equal existing_hash hash then
+            (* We know that file is typed (we are in add_checked_file) and the
+             * existing record's hash matches, so the file must have been typed
+             * before as well. *)
+            coerce_typed existing_parse
+          else
+            None
       in
-      let parse_ent = get_parse file in
-      (match read_opt_bind f (entity_read_latest parse_ent) with
+      (match unchanged_parse_opt with
       | Some existing_parse -> Either.Left existing_parse
       | None ->
         let write _ new_parse = entity_advance parse_ent (Some new_parse) in
@@ -276,12 +279,14 @@ let read_file_hash parse =
 
 let read_module_name parse =
   let open Heap in
-  get_module_name parse |> read_opt read_string
+  get_module_name parse |> read_opt |> Option.map read_string
 
 let read_ast file_key parse =
   let open Heap in
   let deserialize x = Marshal.from_string x 0 in
-  get_ast parse |> read_opt (fun addr -> read_ast addr |> deserialize |> decompactify_loc file_key)
+  get_ast parse
+  |> read_opt
+  |> Option.map (fun addr -> read_ast addr |> deserialize |> decompactify_loc file_key)
 
 let read_ast_unsafe file_key parse =
   match read_ast file_key parse with
@@ -291,7 +296,7 @@ let read_ast_unsafe file_key parse =
 let read_docblock parse : Docblock.t option =
   let open Heap in
   let deserialize x = Marshal.from_string x 0 in
-  get_docblock parse |> read_opt (fun addr -> read_docblock addr |> deserialize)
+  get_docblock parse |> read_opt |> Option.map (fun addr -> read_docblock addr |> deserialize)
 
 let read_docblock_unsafe file_key parse =
   match read_docblock parse with
@@ -302,7 +307,8 @@ let read_aloc_table file_key parse =
   let open Heap in
   let init = ALoc.ALocRepresentationDoNotUse.init_table file_key in
   get_aloc_table parse
-  |> read_opt (fun addr -> read_aloc_table addr |> Packed_locs.unpack (Some file_key) init)
+  |> read_opt
+  |> Option.map (fun addr -> read_aloc_table addr |> Packed_locs.unpack (Some file_key) init)
 
 let read_aloc_table_unsafe file_key parse =
   match read_aloc_table file_key parse with
@@ -311,7 +317,7 @@ let read_aloc_table_unsafe file_key parse =
 
 let read_type_sig parse =
   let open Heap in
-  get_type_sig parse |> read_opt (fun addr -> read_type_sig addr Type_sig_bin.read)
+  get_type_sig parse |> read_opt |> Option.map (fun addr -> read_type_sig addr Type_sig_bin.read)
 
 let read_type_sig_unsafe file_key parse =
   match read_type_sig parse with
@@ -321,7 +327,7 @@ let read_type_sig_unsafe file_key parse =
 let read_tolerable_file_sig parse : File_sig.With_Loc.tolerable_t option =
   let open Heap in
   let deserialize x = Marshal.from_string x 0 in
-  get_file_sig parse |> read_opt (fun addr -> read_file_sig addr |> deserialize)
+  get_file_sig parse |> read_opt |> Option.map (fun addr -> read_file_sig addr |> deserialize)
 
 let read_file_sig parse = Option.map fst (read_tolerable_file_sig parse)
 
@@ -489,21 +495,23 @@ module Mutator_reader = struct
 
   let get_provider ~reader m =
     let* addr = NameHeap.get m in
-    Heap.read_opt Fun.id (read ~reader addr)
+    Heap.read_opt (read ~reader addr)
 
   let is_typed_file ~reader file =
     let parse = read ~reader (Heap.get_parse file) in
-    Heap.is_some parse && Heap.read_opt_exn Heap.is_typed parse
+    Heap.is_some parse && Heap.is_typed (Heap.read_opt_exn parse)
 
-  let get_parse ~reader file = Heap.read_opt Fun.id (read ~reader (Heap.get_parse file))
+  let get_parse ~reader file = Heap.read_opt (read ~reader (Heap.get_parse file))
 
   let get_typed_parse ~reader file =
-    Heap.read_opt_bind Heap.coerce_typed (read ~reader (Heap.get_parse file))
+    let* parse = Heap.read_opt (read ~reader (Heap.get_parse file)) in
+    Heap.coerce_typed parse
 
-  let get_old_parse ~reader file = Heap.read_opt Fun.id (read_old ~reader (Heap.get_parse file))
+  let get_old_parse ~reader file = Heap.read_opt (read_old ~reader (Heap.get_parse file))
 
   let get_old_typed_parse ~reader file =
-    Heap.read_opt_bind Heap.coerce_typed (read_old ~reader (Heap.get_parse file))
+    let* parse = Heap.read_opt (read_old ~reader (Heap.get_parse file)) in
+    Heap.coerce_typed parse
 
   let has_ast ~reader file =
     let parse_opt =
@@ -774,16 +782,17 @@ module Reader = struct
 
   let get_provider ~reader m =
     let* addr = NameHeap.get m in
-    Heap.read_opt Fun.id (read ~reader addr)
+    Heap.read_opt (read ~reader addr)
 
   let is_typed_file ~reader file =
     let parse = read ~reader (Heap.get_parse file) in
-    Heap.is_some parse && Heap.read_opt_exn Heap.is_typed parse
+    Heap.is_some parse && Heap.is_typed (Heap.read_opt_exn parse)
 
-  let get_parse ~reader file = Heap.read_opt Fun.id (read ~reader (Heap.get_parse file))
+  let get_parse ~reader file = Heap.read_opt (read ~reader (Heap.get_parse file))
 
   let get_typed_parse ~reader file =
-    Heap.read_opt_bind Heap.coerce_typed (read ~reader (Heap.get_parse file))
+    let* parse = Heap.read_opt (read ~reader (Heap.get_parse file)) in
+    Heap.coerce_typed parse
 
   let has_ast ~reader file =
     let parse_opt =

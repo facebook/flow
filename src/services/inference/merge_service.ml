@@ -118,7 +118,7 @@ let sig_hash ~root =
       ES { filename; type_exports; exports; ns }
     in
     fun dep_key dep_parse ->
-      let buf = Heap.read_opt_exn Heap.type_sig_buf (Heap.get_type_sig dep_parse) in
+      let buf = Heap.type_sig_buf (Heap.read_opt_exn (Heap.get_type_sig dep_parse)) in
       Bin.read_module_kind (cjs_module dep_key) (es_module dep_key) buf (Bin.module_kind buf)
   in
 
@@ -213,7 +213,7 @@ let sig_hash ~root =
       ES { filename; type_exports; exports; ns }
     in
 
-    let buf = Heap.read_opt_exn Heap.type_sig_buf (Heap.get_type_sig parse) in
+    let buf = Heap.type_sig_buf (Heap.read_opt_exn (Heap.get_type_sig parse)) in
     Bin.read_module_kind cjs_module es_module buf (Bin.module_kind buf)
   in
 
@@ -237,7 +237,7 @@ let sig_hash ~root =
     let file_addr = Parsing_heaps.get_file_addr_unsafe file_key in
     let parse = Parsing_heaps.Mutator_reader.get_typed_parse_unsafe ~reader file_key file_addr in
 
-    let buf = Heap.read_opt_exn Heap.type_sig_buf (Heap.get_type_sig parse) in
+    let buf = Heap.type_sig_buf (Heap.read_opt_exn (Heap.get_type_sig parse)) in
 
     let dependencies =
       let { Module_heaps.resolved_modules; _ } =

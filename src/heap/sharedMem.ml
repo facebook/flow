@@ -1198,23 +1198,17 @@ module NewAPI = struct
 
   let opt_none = null_addr
 
-  let read_opt f addr =
+  let read_opt addr =
     if addr = opt_none then
       None
     else
-      Some (f addr)
+      Some addr
 
-  let read_opt_exn f addr =
+  let read_opt_exn addr =
     if addr = opt_none then
       invalid_arg "addr is null"
     else
-      f addr
-
-  let read_opt_bind f addr =
-    if addr = opt_none then
-      None
-    else
-      f addr
+      addr
 
   let is_none addr = addr == opt_none
 

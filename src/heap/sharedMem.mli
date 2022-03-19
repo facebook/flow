@@ -288,11 +288,9 @@ module NewAPI : sig
 
   val opt_size : ('a -> size) -> 'a option -> size
 
-  val read_opt : ('a addr -> 'b) -> 'a opt addr -> 'b option
+  val read_opt : 'a opt addr -> 'a addr option
 
-  val read_opt_exn : ('a addr -> 'b) -> 'a opt addr -> 'b
-
-  val read_opt_bind : ('a addr -> 'b option) -> 'a opt addr -> 'b option
+  val read_opt_exn : 'a opt addr -> 'a addr
 
   val is_none : 'a opt addr -> bool
 

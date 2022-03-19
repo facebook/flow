@@ -45,11 +45,12 @@ let assert_heap_size wsize =
 
 let assert_null_committed entity = assert (is_none (entity_read_committed entity))
 
-let assert_committed f entity data = assert (data = read_opt_exn f (entity_read_committed entity))
+let assert_committed f entity data = assert (data = f (read_opt_exn (entity_read_committed entity)))
 
-let assert_latest f entity data = assert (data = read_opt_exn f (entity_read_latest entity))
+let assert_latest f entity data = assert (data = f (read_opt_exn (entity_read_latest entity)))
 
-let assert_latest_opt f entity data = assert (data = read_opt f (entity_read_latest entity))
+let assert_latest_opt f entity data =
+  assert (data = Option.map f (read_opt (entity_read_latest entity)))
 
 let collect_test _ctxt =
   let foo = "foo" in
