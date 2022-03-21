@@ -181,6 +181,8 @@ module Make
 
     val undeclared : string -> ALoc.t -> t
 
+    val declared_but_skipped : string -> ALoc.t -> t
+
     val declared_function : ALoc.t -> t
 
     (* unwraps a RefinementWrite into just the underlying write *)
@@ -196,6 +198,8 @@ module Make
 
     val is_undeclared : t -> bool
 
+    val is_undeclared_or_skipped : t -> bool
+
     val is_declared_function : t -> bool
   end = struct
     let curr_id = ref 0
@@ -203,6 +207,7 @@ module Make
     type write_state =
       | Uninitialized of ALoc.t
       | Undeclared of string * ALoc.t
+      | DeclaredButSkipped of string * ALoc.t
       | UndeclaredClass of {
           def: ALoc.t virtual_reason;
           name: string;
@@ -231,6 +236,13 @@ module Make
     let is_undeclared t =
       match t.write_state with
       | Undeclared _ -> true
+      | UndeclaredClass _ -> true
+      | _ -> false
+
+    let is_undeclared_or_skipped t =
+      match t.write_state with
+      | Undeclared _ -> true
+      | DeclaredButSkipped _ -> true
       | UndeclaredClass _ -> true
       | _ -> false
 
@@ -265,6 +277,8 @@ module Make
     let refinement refinement_id val_t = mk_with_write_state @@ Refinement { refinement_id; val_t }
 
     let undeclared name def_loc = mk_with_write_state @@ Undeclared (name, def_loc)
+
+    let declared_but_skipped name def_loc = mk_with_write_state @@ DeclaredButSkipped (name, def_loc)
 
     let rec unrefine_deeply_write_state id write_state =
       match write_state with
@@ -305,6 +319,7 @@ module Make
       | Undefined _
       | DeclaredFunction _
       | Undeclared _
+      | DeclaredButSkipped _
       | UndeclaredClass _
       | Projection _
       | Global _
@@ -339,6 +354,7 @@ module Make
       | Undefined _
       | DeclaredFunction _
       | Undeclared _
+      | DeclaredButSkipped _
       | UndeclaredClass _
       | Projection _
       | Global _
@@ -367,7 +383,9 @@ module Make
             Env_api.Uninitialized (mk_reason RUninitialized l)
           | Undefined r -> Env_api.Undefined r
           | DeclaredFunction l -> Env_api.DeclaredFunction l
-          | Undeclared (name, loc) -> Env_api.Undeclared (name, loc)
+          | Undeclared (name, loc)
+          | DeclaredButSkipped (name, loc) ->
+            Env_api.Undeclared (name, loc)
           | UndeclaredClass { def; name } -> Env_api.UndeclaredClass { def; name }
           | Uninitialized l -> Env_api.Uninitialized (mk_reason RPossiblyUninitialized l)
           | Projection loc -> Env_api.Projection loc
@@ -395,6 +413,7 @@ module Make
       let rec state_is_uninitialized v =
         match v with
         | Undeclared _ -> []
+        | DeclaredButSkipped _ -> []
         | Undefined _ -> []
         | DeclaredFunction _ -> []
         | Uninitialized _ -> [v]
@@ -722,12 +741,10 @@ module Make
       | _ -> (fun _ _ -> ())
     in
 
+    let enable_enums = Context.enable_enums cx in
     object (this)
       inherit
-        Scope_builder.scope_builder
-          ~flowmin_compatibility:false
-          ~enable_enums:(Context.enable_enums cx)
-          ~with_types:true as super
+        Scope_builder.scope_builder ~flowmin_compatibility:false ~enable_enums ~with_types:true as super
 
       val invalidation_caches = Invalidation_api.mk_caches ()
 
@@ -1002,11 +1019,11 @@ module Make
             let uninitialized_writes =
               lazy (Val.writes_of_uninitialized this#refinement_may_be_undefined !val_ref)
             in
-            let val_is_undeclared = Val.is_undeclared !val_ref in
+            let val_is_undeclared_or_skipped = Val.is_undeclared_or_skipped !val_ref in
             let havoc_ref =
               if force_initialization then
                 havoc
-              else if val_is_undeclared then
+              else if val_is_undeclared_or_skipped then
                 !val_ref
               else
                 Base.List.fold
@@ -1023,7 +1040,9 @@ module Make
                    prepass_values
                    (Base.Option.value_exn def_loc (* checked against none above *))
               || force_initialization
-                 && (List.length (Lazy.force uninitialized_writes) > 0 || val_is_undeclared)
+                 && (List.length (Lazy.force uninitialized_writes) > 0
+                    || val_is_undeclared_or_skipped
+                    )
             then
               val_ref := havoc_ref)
           env_state.env
@@ -1300,9 +1319,9 @@ module Make
         (match kind with
         (* Assignments to undeclared bindings that aren't part of declarations do not
          * initialize those bindings. *)
-        | None when Val.is_undeclared !val_ref ->
+        | None when Val.is_undeclared_or_skipped !val_ref ->
           (match def_loc with
-          | None -> failwith "Cannot have an undeclared binding without a def loc"
+          | None -> failwith "Cannot have an undeclared or skipped binding without a def loc"
           | Some def_loc ->
             add_output
               Error_message.(
@@ -1798,7 +1817,8 @@ module Make
             match projections with
             | [] ->
               this#havoc_heap_refinements heap_refinements;
-              if kind <> Bindings.Const && not (Val.is_undeclared !val_ref) then val_ref := havoc
+              if kind <> Bindings.Const && not (Val.is_undeclared_or_skipped !val_ref) then
+                val_ref := havoc
             | _ -> heap_refinements := HeapRefinementMap.remove projections !heap_refinements)
           changed_vars
 
@@ -2083,7 +2103,24 @@ module Make
       method! switch loc switch =
         let open Flow_ast.Statement.Switch in
         let incoming_env = this#env in
-        let switch = super#switch loc switch in
+        let { discriminant; cases; comments = _ } = switch in
+        let _ = this#expression discriminant in
+        let lexical_hoist = new lexical_hoister ~flowmin_compatibility:false ~enable_enums in
+        let cases_with_lexical_bindings =
+          Base.List.map cases ~f:(fun ((_, { Case.consequent; _ }) as case) ->
+              let bindings = lexical_hoist#acc |> Bindings.to_map in
+              let _ = lexical_hoist#statement_list consequent in
+              (case, bindings)
+          )
+        in
+        let _ =
+          this#with_bindings
+            ~lexical:true
+            loc
+            lexical_hoist#acc
+            (this#switch_cases_with_lexical_bindings loc discriminant)
+            cases_with_lexical_bindings
+        in
         let post_env = this#env in
         (* After all refinements and potential shadowing inside switch,
            we need to re-read the discriminant to restore it. *)
@@ -2120,16 +2157,16 @@ module Make
       (*   [ENVi+1 | ENVi'] si+1 [ENVi+1']                       *)
       (* POST = ENVN | ENVN'                                     *)
       (***********************************************************)
-      method! switch_cases switch_loc discriminant cases =
+      method private switch_cases_with_lexical_bindings
+          switch_loc discriminant cases_with_lexical_bindings =
         let incoming_env = this#env in
         this#expecting_abrupt_completions (fun () ->
             let (case_starting_env, case_completion_states, fallthrough_env, has_default) =
               List.fold_left
-                (fun acc stuff ->
-                  let (_loc, case) = stuff in
-                  this#env_switch_case discriminant acc case)
+                (fun acc ((_loc, case), bindings) ->
+                  this#env_switch_case discriminant acc (case, bindings))
                 (incoming_env, [], None, false)
-                cases
+                cases_with_lexical_bindings
             in
             this#reset_env case_starting_env;
             ( if not has_default then
@@ -2184,12 +2221,12 @@ module Make
               AbruptCompletion.(mem [break None])
               completion_state
         );
-        cases
+        cases_with_lexical_bindings
 
       method private env_switch_case
           discriminant
           (case_starting_env, case_completion_states, fallthrough_env, has_default)
-          (case : (ALoc.t, ALoc.t) Ast.Statement.Switch.Case.t') =
+          (case, lexical_bindings) =
         let open Ast.Statement.Switch.Case in
         let { test; consequent; comments = _ } = case in
         this#reset_env case_starting_env;
@@ -2207,6 +2244,18 @@ module Make
         (match fallthrough_env with
         | None -> ()
         | Some fallthrough -> this#merge_self_env fallthrough);
+        let () =
+          lexical_bindings
+          |> SMap.iter (fun name (kind, (loc, _)) ->
+                 match kind with
+                 | Bindings.Let
+                 | Bindings.Const ->
+                   let { val_ref; heap_refinements; _ } = SMap.find name env_state.env in
+                   this#havoc_heap_refinements heap_refinements;
+                   val_ref := Val.declared_but_skipped name loc
+                 | _ -> ()
+             )
+        in
         let case_completion_state =
           this#run_to_completion (fun () -> ignore @@ this#statement_list consequent)
         in
@@ -2632,7 +2681,7 @@ module Make
         ignore @@ this#identifier identifier;
         let { Flow_ast.Identifier.name; _ } = ident in
         let { val_ref; _ } = SMap.find name env_state.env in
-        if not (Val.is_undeclared !val_ref) then
+        if not (Val.is_undeclared_or_skipped !val_ref) then
           this#add_refinement (RefinementKey.of_name name loc) (L.LSet.singleton loc, TruthyR)
 
       method assignment_refinement loc assignment =
