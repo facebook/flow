@@ -399,6 +399,7 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
 
       (* helper for function params and body *)
       method private lambda params predicate body =
+        let open Ast.Function in
         (* function params and bindings within the function body share the same scope *)
         let bindings =
           let hoist = new hoister ~flowmin_compatibility ~enable_enums ~with_types in
@@ -413,11 +414,22 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
           | BodyBlock (loc, _) ->
             loc
         in
+        (* We need to visit function param default expressions outside of function scope. *)
+        let (_, { Params.params = params_list; rest; this_; comments = _ }) = params in
+        params_list
+        |> List.iter (fun (_, { Ast.Function.Param.default; argument = _ }) ->
+               run_opt this#expression default
+           );
         this#with_bindings
           body_loc
           bindings
           (fun () ->
-            run this#function_params params;
+            params_list
+            |> List.iter (fun (_, { Ast.Function.Param.argument; default = _ }) ->
+                   run this#function_param_pattern argument
+               );
+            run_opt this#function_rest_param rest;
+            run_opt this#function_this_param this_;
             run_opt this#predicate predicate;
             run this#function_body_any body)
           ()
