@@ -268,9 +268,9 @@ typedef struct {
 // +-------------------------------+--------------------------------+------+--+
 // |                               |                                |      |
 // |                               |                                |      * 0-1
-// GC |                               |                                | | |
-// * 2-7 tag |                               | |                               *
-// 31-1 decompress capacity (in words)
+// |                               |                                |        GC
+// |                               |                                * 2-7 tag
+// |                               * 31-1 decompress capacity (in words)
 // * 63-32 compressed size (in words)
 //
 // For GC, to distinguish headers from (word-aligned) pointers, the least bits
