@@ -2375,6 +2375,28 @@ let%expect_test "switch_weird_decl" =
         (undeclared)
       }] |}]
 
+let%expect_test "switch_shadow" =
+  print_ssa_test {|function switch_scope(x) {
+  switch (x) {
+    default:
+      let x;
+      x = ""; // doesn't refine outer x
+      x
+  }
+  x
+}|};
+  [%expect {|
+    [
+      (2, 10) to (2, 11) => {
+        (1, 22) to (1, 23): (`x`)
+      };
+      (6, 6) to (6, 7) => {
+        (5, 6) to (5, 7): (`x`)
+      };
+      (8, 2) to (8, 3) => {
+        (1, 22) to (1, 23): (`x`)
+      }] |}]
+
 let%expect_test "for_in" =
   print_ssa_test {|let stuff = {}
 for (let thing in stuff) {

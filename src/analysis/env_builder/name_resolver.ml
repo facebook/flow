@@ -2080,6 +2080,18 @@ module Make
         this#scoped_for_in_or_of_statement traverse_left body;
         stmt
 
+      method! switch loc switch =
+        let open Flow_ast.Statement.Switch in
+        let incoming_env = this#env in
+        let switch = super#switch loc switch in
+        let post_env = this#env in
+        (* After all refinements and potential shadowing inside switch,
+           we need to re-read the discriminant to restore it. *)
+        this#reset_env incoming_env;
+        ignore @@ this#expression switch.discriminant;
+        this#reset_env post_env;
+        switch
+
       (***********************************************************)
       (* [PRE] switch (e) { case e1: s1 ... case eN: sN } [POST] *)
       (***********************************************************)
@@ -2119,9 +2131,6 @@ module Make
                 (incoming_env, [], None, false)
                 cases
             in
-            (* Re-read the discriminant to restore it after all the eq-tests *)
-            this#reset_env incoming_env;
-            ignore @@ this#expression discriminant;
             this#reset_env case_starting_env;
             ( if not has_default then
               let discriminant_after_all_negated_refinements =
