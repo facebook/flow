@@ -404,7 +404,7 @@ module New_env = struct
       ()
     | Some w -> Flow_js.unify cx ~use_op:unknown_use refined w
 
-  let set_env_entry cx ~use_op t loc =
+  let set_env_entry cx ~use_op ?potential_global_name t loc =
     let ({ Loc_env.var_info; resolved; _ } as env) = Context.environment cx in
     if not (ALocSet.mem loc resolved) then begin
       Debug_js.Verbose.print_if_verbose
@@ -435,6 +435,12 @@ module New_env = struct
             Flow_js.flow cx (t, UseT (use_op, general))
           else
             Context.add_constrained_write cx (t, UseT (use_op, general))
+        else
+          Base.Option.iter potential_global_name ~f:(fun name ->
+              if SSet.mem name var_info.Env_api.unbound_names then
+                let name = Reason.OrdinaryName name in
+                ignore @@ Flow_js.get_builtin cx name (mk_reason (RIdentifier name) loc)
+          )
     end else
       Debug_js.Verbose.print_if_verbose
         cx
@@ -485,7 +491,7 @@ module New_env = struct
     else
       set_env_entry cx ~use_op t loc
 
-  let set_var cx ~use_op _name t loc = set_env_entry cx ~use_op t loc
+  let set_var cx ~use_op name t loc = set_env_entry cx ~use_op ~potential_global_name:name t loc
 
   let bind cx t loc = set_env_entry cx ~use_op:Type.unknown_use t loc
 

@@ -123,6 +123,7 @@ module type S = sig
   type env_info = {
     scopes: Scope_api.info;
     ssa_values: Ssa_api.values;
+    unbound_names: SSet.t;
     env_values: values;
     env_entries: env_entry L.LMap.t;
     providers: Provider_api.info;
@@ -268,6 +269,7 @@ module Make
   type env_info = {
     scopes: Scope_api.info;
     ssa_values: Ssa_api.values;
+    unbound_names: SSet.t;
     env_values: values;
     env_entries: env_entry L.LMap.t;
     providers: Provider_api.info;
@@ -278,6 +280,7 @@ module Make
     {
       scopes = Scope_builder.Acc.init;
       ssa_values = L.LMap.empty;
+      unbound_names = SSet.empty;
       env_values = L.LMap.empty;
       env_entries = L.LMap.empty;
       providers = Provider_api.empty;

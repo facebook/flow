@@ -3558,7 +3558,7 @@ module Make
       | Options.Jsx_pragma (_, ast) -> Some ast
     in
     let enable_enums = Context.enable_enums cx in
-    let (_ssa_completion_state, ((scopes, ssa_values, _) as prepass)) =
+    let (_ssa_completion_state, ((scopes, ssa_values, unbound_names) as prepass)) =
       Ssa_builder.program_with_scope_and_jsx_pragma
         ~flowmin_compatibility:false
         ~enable_enums
@@ -3583,6 +3583,7 @@ module Make
       {
         Env_api.scopes;
         ssa_values;
+        unbound_names;
         env_values = dead_code_marker#values;
         env_entries = env_walk#write_entries;
         providers;
