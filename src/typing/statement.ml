@@ -1750,7 +1750,7 @@ struct
 
           let update_ast = Base.Option.map ~f:(expression cx ~hint:None) update in
           let newset = Changeset.Global.merge oldset in
-          Env.copy_env cx loc (env, body_env) newset;
+          Env.copy_env cx loc (do_env, body_env) newset;
 
           Env.update_env loc do_env;
           let _ = Env.refine_with_preds cx loc not_preds xtypes in

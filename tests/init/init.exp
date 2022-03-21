@@ -28,7 +28,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- hoisted.js:31:3
 
-Cannot call `f` because uninitialized variable [1] is not a function. [not-a-function]
+Cannot call `f` because possibly uninitialized variable [1] is not a function. [not-a-function]
 
    hoisted.js:31:3
    31|   f(); // error, possibly undefined
@@ -297,7 +297,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- hoisted2.js:219:18
 
-Cannot assign `x` to `y` because uninitialized variable [1] is incompatible with number [2]. [incompatible-type]
+Cannot assign `x` to `y` because possibly uninitialized variable [1] is incompatible with number [2].
+[incompatible-type]
 
    hoisted2.js:219:18
    219|   var y:number = x; // error
