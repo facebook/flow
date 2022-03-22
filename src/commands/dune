@@ -44,6 +44,7 @@
     flow_flowlib
     flow_server
     flow_server_files
+    flow_vcs
     find ; hack
   )
 )
@@ -71,5 +72,6 @@
     flow_parser
     flow_server_status
     flow_service_autocomplete
+    flow_vcs
   )
 )

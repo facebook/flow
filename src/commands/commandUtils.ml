@@ -1810,12 +1810,24 @@ let choose_file_watcher ~flowconfig ~lazy_mode ~file_watcher ~file_watcher_debug
         sync_timeout;
       }
 
-let choose_file_watcher_mergebase_with ~flowconfig mergebase_with =
-  match
-    Base.Option.first_some mergebase_with (FlowConfig.file_watcher_mergebase_with flowconfig)
-  with
+let choose_file_watcher_mergebase_with ~flowconfig vcs mergebase_with =
+  match mergebase_with with
   | Some x -> x
-  | None -> default_file_watcher_mergebase_with
+  | None ->
+    let mergebase_with =
+      match vcs with
+      | Some Vcs.Git -> FlowConfig.file_watcher_mergebase_with_git flowconfig
+      | Some Vcs.Hg -> FlowConfig.file_watcher_mergebase_with_hg flowconfig
+      | None -> None
+    in
+    let mergebase_with =
+      match mergebase_with with
+      | Some x -> Some x
+      | None -> FlowConfig.file_watcher_mergebase_with flowconfig
+    in
+    (match mergebase_with with
+    | Some x -> x
+    | None -> default_file_watcher_mergebase_with)
 
 let choose_file_watcher_timeout ~flowconfig cli_timeout =
   match Base.Option.first_some cli_timeout (FlowConfig.file_watcher_timeout flowconfig) with

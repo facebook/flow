@@ -112,6 +112,10 @@ val file_watcher : config -> file_watcher option
 
 val file_watcher_mergebase_with : config -> string option
 
+val file_watcher_mergebase_with_git : config -> string option
+
+val file_watcher_mergebase_with_hg : config -> string option
+
 val file_watcher_timeout : config -> int option
 
 val format_bracket_spacing : config -> bool option

@@ -130,8 +130,9 @@ let main
       ~file_watcher_debug
       ~sync_timeout:file_watcher_sync_timeout
   in
+  let vcs = Vcs.find root in
   let file_watcher_mergebase_with =
-    choose_file_watcher_mergebase_with ~flowconfig file_watcher_mergebase_with
+    choose_file_watcher_mergebase_with ~flowconfig vcs file_watcher_mergebase_with
   in
   let file_watcher_timeout = choose_file_watcher_timeout ~flowconfig file_watcher_timeout in
   let monitor_options =

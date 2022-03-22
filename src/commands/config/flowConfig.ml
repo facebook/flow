@@ -69,6 +69,8 @@ module Opts = struct
     facebook_module_interop: bool;
     file_watcher: file_watcher option;
     file_watcher_mergebase_with: string option;
+    file_watcher_mergebase_with_git: string option;
+    file_watcher_mergebase_with_hg: string option;
     file_watcher_timeout: int option;
     format_bracket_spacing: bool option;  (** print spaces between brackets in object literals *)
     format_single_quotes: bool option;  (** prefer single-quoted strings *)
@@ -195,6 +197,8 @@ module Opts = struct
       facebook_module_interop = false;
       file_watcher = None;
       file_watcher_mergebase_with = None;
+      file_watcher_mergebase_with_git = None;
+      file_watcher_mergebase_with_hg = None;
       file_watcher_timeout = None;
       format_bracket_spacing = None;
       format_single_quotes = None;
@@ -546,6 +550,12 @@ module Opts = struct
   let file_watcher_mergebase_with_parser =
     string (fun opts v -> Ok { opts with file_watcher_mergebase_with = Some v })
 
+  let file_watcher_mergebase_with_git_parser =
+    string (fun opts v -> Ok { opts with file_watcher_mergebase_with_git = Some v })
+
+  let file_watcher_mergebase_with_hg_parser =
+    string (fun opts v -> Ok { opts with file_watcher_mergebase_with_hg = Some v })
+
   let format_bracket_spacing_parser =
     boolean (fun opts v -> Ok { opts with format_bracket_spacing = Some v })
 
@@ -846,6 +856,8 @@ module Opts = struct
       ("facebook.fbt", string (fun opts v -> Ok { opts with facebook_fbt = Some v }));
       ("file_watcher", file_watcher_parser);
       ("file_watcher.mergebase_with", file_watcher_mergebase_with_parser);
+      ("file_watcher.mergebase_with_git", file_watcher_mergebase_with_git_parser);
+      ("file_watcher.mergebase_with_hg", file_watcher_mergebase_with_hg_parser);
       ("file_watcher.watchman.defer_state", watchman_defer_states_parser);
       ("file_watcher.watchman.survive_restarts", watchman_survive_restarts_parser);
       ("file_watcher.watchman.sync_timeout", watchman_sync_timeout_parser);
@@ -1483,6 +1495,10 @@ let facebook_module_interop c = c.options.Opts.facebook_module_interop
 let file_watcher c = c.options.Opts.file_watcher
 
 let file_watcher_mergebase_with c = c.options.Opts.file_watcher_mergebase_with
+
+let file_watcher_mergebase_with_git c = c.options.Opts.file_watcher_mergebase_with_git
+
+let file_watcher_mergebase_with_hg c = c.options.Opts.file_watcher_mergebase_with_hg
 
 let file_watcher_timeout c = c.options.Opts.file_watcher_timeout
 
