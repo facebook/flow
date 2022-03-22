@@ -200,7 +200,7 @@ struct
         in
         let tout = Tvar.mk cx reason in
         let use_op = Op (ObjectSpread { op = reason }) in
-        let l = Flow.widen_obj_type cx ~use_op:unknown_use reason t in
+        let l = Flow.widen_obj_type cx ~use_op reason t in
         Flow.flow cx (l, ObjKitT (use_op, reason, tool, Type.Object.Spread (target, state), tout));
         tout
   end
