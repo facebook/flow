@@ -1702,6 +1702,20 @@ x;|};
           {refinement = Not (Not (Maybe)); writes = (1, 4) to (1, 5): (`x`),(5, 4) to (5, 5): (`x`)}
         }] |}]
 
+let%expect_test "while_with_var_write" =
+  print_ssa_test {|
+while (true) {
+  var a = function() {}
+}
+a()|};
+  [%expect {|
+    [
+      (5, 0) to (5, 1) => {
+        (uninitialized),
+        (3, 6) to (3, 7): (`a`)
+      }]
+      |}]
+
 let%expect_test "while_continue" =
   print_ssa_test {|let x = undefined;
 while (x != null) {

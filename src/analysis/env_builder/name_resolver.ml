@@ -1823,7 +1823,11 @@ module Make
             | [] ->
               this#havoc_heap_refinements heap_refinements;
               if kind <> Bindings.Const && not (Val.is_undeclared_or_skipped !val_ref) then
-                val_ref := havoc
+                val_ref :=
+                  Base.List.fold
+                    ~init:havoc
+                    ~f:(fun acc write -> Val.merge acc (Val.of_write write))
+                    (Val.writes_of_uninitialized this#refinement_may_be_undefined !val_ref)
             | _ -> heap_refinements := HeapRefinementMap.remove projections !heap_refinements)
           changed_vars
 
@@ -2070,8 +2074,8 @@ module Make
           ignore @@ this#run_to_completion (fun () -> ignore @@ this#statement body)
         in
         let visit_guard_and_body () =
-          traverse_left ();
           let env = this#env in
+          traverse_left ();
           let loop_completion_state =
             this#run_to_completion (fun () -> ignore @@ this#statement body)
           in
