@@ -637,6 +637,11 @@ module Make
           Error_message.(
             EBindingError (ENameAlreadyBound, assignment_loc, OrdinaryName name, def_loc)
           )
+      | (Bindings.Enum, None) ->
+        Some
+          Error_message.(
+            EBindingError (EEnumReassigned, assignment_loc, OrdinaryName name, def_loc)
+          )
       | (Bindings.Type, None) ->
         Some
           Error_message.(
