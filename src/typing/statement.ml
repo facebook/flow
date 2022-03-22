@@ -2484,7 +2484,7 @@ struct
                 )
               in
               let local_ast = ((local_loc, module_ns_typeof), local_id) in
-              ( [(import_loc, local_name, module_ns_typeof, None)],
+              ( [(local_loc, local_name, module_ns_typeof, None)],
                 Some (ImportDeclaration.ImportNamespaceSpecifier (loc_with_star, local_ast))
               )
             | ImportDeclaration.ImportValue ->
