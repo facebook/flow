@@ -25,10 +25,13 @@ const x = 4;
 const x = 4;
 `.trimLeft();
 
-  const errorsByLine = addErrorByLine(new Map(), testInput, loc, [
-    'foo',
-    'bar',
-  ]);
+  const errorsByLine = addErrorByLine(
+    new Map(),
+    testInput,
+    loc,
+    [],
+    ['foo', 'bar'],
+  );
   await expectUpdatedComments(testInput, testOutput, errorsByLine, flowBinPath);
 });
 
@@ -44,10 +47,13 @@ const x = 4;
 const x = 4;
 `.trimLeft();
 
-  const errorsByLine = addErrorByLine(new Map(), testInput, loc, [
-    'foo',
-    'bar',
-  ]);
+  const errorsByLine = addErrorByLine(
+    new Map(),
+    testInput,
+    loc,
+    [],
+    ['foo', 'bar'],
+  );
   await expectUpdatedComments(testInput, testOutput, errorsByLine, flowBinPath);
 });
 
@@ -64,7 +70,7 @@ const x = 4;
 const x = 4;
 `.trimLeft();
 
-  const errorsByLine = addErrorByLine(new Map(), testInput, loc, ['foo']);
+  const errorsByLine = addErrorByLine(new Map(), testInput, loc, [], ['foo']);
   await expectUpdatedComments(testInput, testOutput, errorsByLine, flowBinPath);
 });
 
@@ -81,10 +87,13 @@ const x = 4;
 const x = 4;
 `.trimLeft();
 
-  const errorsByLine = addErrorByLine(new Map(), testInput, loc, [
-    'foo',
-    'bar',
-  ]);
+  const errorsByLine = addErrorByLine(
+    new Map(),
+    testInput,
+    loc,
+    [],
+    ['foo', 'bar'],
+  );
   await expectUpdatedComments(testInput, testOutput, errorsByLine, flowBinPath);
 });
 
@@ -101,10 +110,13 @@ const x = 4;
 const x = 4;
 `.trimLeft();
 
-  const errorsByLine = addErrorByLine(new Map(), testInput, loc, [
-    'foo',
-    'bar',
-  ]);
+  const errorsByLine = addErrorByLine(
+    new Map(),
+    testInput,
+    loc,
+    [],
+    ['foo', 'bar'],
+  );
   await expectUpdatedComments(testInput, testOutput, errorsByLine, flowBinPath);
 });
 
@@ -121,18 +133,80 @@ const x = 4;
 const x = 4;
 `.trimLeft();
 
-  const errorsByLine = addErrorByLine(new Map(), testInput, loc, ['foo']);
+  const errorsByLine = addErrorByLine(new Map(), testInput, loc, [], ['foo']);
   await expectUpdatedComments(testInput, testOutput, errorsByLine, flowBinPath);
 });
 
-function addErrorByLine(errorsByLine, contents, loc, unusedRoots) {
+test('updateSuppressionsInText handles JSX children', async () => {
+  const testInput = `
+(<Foo>
+  {someExpr}
+  {anotherExpr}
+</Foo>);
+`.trimLeft();
+
+  const loc = makeLoc(testInput, 1, 7, 4, 1);
+
+  const testOutput = `
+// $FlowFixMe[code]
+(<Foo>
+  {someExpr}
+  {anotherExpr}
+</Foo>);
+`.trimLeft();
+
+  const errorsByLine = addErrorByLine(new Map(), testInput, loc, ['code'], []);
+  await expectUpdatedComments(
+    testInput,
+    testOutput,
+    errorsByLine,
+    flowBinPath,
+    [],
+  );
+});
+
+test('updateSuppressionsInText handles JSX children with multiline open tag', async () => {
+  const testInput = `
+(<Foo
+  bar="baz">
+  {someExpr}
+  {anotherExpr}
+</Foo>);
+`.trimLeft();
+
+  const loc = makeLoc(testInput, 2, 13, 5, 1);
+
+  const testOutput = `
+(<Foo
+  // $FlowFixMe[code]
+  bar="baz">
+  {someExpr}
+  {anotherExpr}
+</Foo>);
+`.trimLeft();
+
+  const errorsByLine = addErrorByLine(new Map(), testInput, loc, ['code'], []);
+  await expectUpdatedComments(
+    testInput,
+    testOutput,
+    errorsByLine,
+    flowBinPath,
+    [],
+  );
+});
+
+function addErrorByLine(errorsByLine, contents, loc, errorCodes, unusedRoots) {
+  const unusedSuppressions =
+    unusedRoots && unusedRoots.length > 0
+      ? {
+          roots: new Set(unusedRoots),
+          bins: new Set().add(''),
+          loc: loc,
+        }
+      : undefined;
   errorsByLine.set(loc.start.line, {
-    unusedSuppressions: {
-      roots: new Set(unusedRoots),
-      bins: new Set().add(''),
-      loc: loc,
-    },
-    errorCodes: new Set(),
+    unusedSuppressions,
+    errorCodes: new Set(errorCodes),
     loc: loc,
   });
   return errorsByLine;
@@ -178,10 +252,11 @@ async function expectUpdatedComments(
   expectedOutput,
   errorsByLine,
   flowBinPath,
+  sites = ['foo', 'bar'],
 ) {
   const actualOutput = await updateSuppressionsInText(
     Buffer.from(input),
-    new Set(['foo', 'bar']),
+    new Set(sites),
     1,
     errorsByLine,
     '',

@@ -36,7 +36,22 @@ function getContext(
       path[i + 1].key === 'children'
     ) {
       // We've entered a JSX children block
-      inside = JSX;
+
+      // for errors that span the entire children block, the error starts
+      // on the character after the opening tag, meaning the suppression
+      // will end up inside the tag rather than inside the child:
+      //
+      //  <Foo
+      //    bar="baz">
+      //              ^ error starts here
+      // v error ends here
+      //  </Foo>
+      //
+      // so, if the start line of the error is <= the ending line
+      // of the opening tag, the suppression is not inside JSX.
+      if (ast.openingElement.loc.end.line < loc.start.line) {
+        inside = JSX;
+      }
       i++;
     } else if (
       i < path.length - 1 &&
