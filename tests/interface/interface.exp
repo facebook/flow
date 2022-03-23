@@ -210,7 +210,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ interface.js:7:13
 
-Cannot reference type `I` [1] from a value position. [type-as-value]
+Cannot use type `I` [1] as a value. Types are erased and don't exist at runtime. [type-as-value]
 
    interface.js:7:13
    7| var i = new I(); // error

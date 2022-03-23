@@ -100,7 +100,9 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- importer.js:41:5
 
-Cannot reference type `ClsType` [1] from a value position. [type-as-value]
+Cannot use type `ClsType` [1] as a value. Types are erased and don't exist at runtime. If the exported binding can also
+be used as a value, try importing it using `import ClsType` instead of `import type ClsType` and `import {ClsType}`
+instead of `import type {ClsType}`. [type-as-value]
 
    importer.js:41:5
    41| new ClsType();
@@ -142,7 +144,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- types_only.js:11:9
 
-Cannot reference type `standaloneType2` [1] from a value position. [type-as-value]
+Cannot use type `standaloneType2` [1] as a value. Types are erased and don't exist at runtime. [type-as-value]
 
    types_only.js:11:9
    11| export {standaloneType2}; // Error: Missing `type` keyword

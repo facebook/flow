@@ -1027,8 +1027,15 @@ module Env : Env_sig.S = struct
     let (scope, entry) = find_entry cx name ?desc loc in
     Entry.(
       match entry with
-      | Type _ when lookup_mode != ForType ->
-        let msg = Error_message.ETypeInValuePosition in
+      | Type { type_binding_kind; _ } when lookup_mode != ForType ->
+        let imported =
+          match type_binding_kind with
+          | ImportTypeBinding -> true
+          | TypeBinding -> false
+        in
+        let msg =
+          Error_message.ETypeInValuePosition { imported; name = display_string_of_name name }
+        in
         binding_error msg cx name entry loc;
         AnyT.at (AnyError None) (entry_loc entry)
       | Type t -> t.type_

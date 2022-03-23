@@ -289,11 +289,11 @@ module New_env = struct
     | Error loc -> Error loc
     | Ok { Env_api.def_loc; write_locs; val_kind; name } ->
       (match (val_kind, name, def_loc, lookup_mode) with
-      | (Some (Env_api.Type _), Some name, Some def_loc, (ForValue | ForTypeof)) ->
+      | (Some (Env_api.Type { imported }), Some name, Some def_loc, (ForValue | ForTypeof)) ->
         Flow_js.add_output
           cx
           (Error_message.EBindingError
-             (Error_message.ETypeInValuePosition, loc, OrdinaryName name, def_loc)
+             (Error_message.ETypeInValuePosition { imported; name }, loc, OrdinaryName name, def_loc)
           );
         Ok (AnyT.at (AnyError None) loc)
       | _ -> Ok (type_of_state write_locs None))

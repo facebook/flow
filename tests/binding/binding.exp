@@ -289,7 +289,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ rebinding.js:41:3
 
-Cannot reference type `A` [1] from a value position. [type-as-value]
+Cannot use type `A` [1] as a value. Types are erased and don't exist at runtime. [type-as-value]
 
    rebinding.js:41:3
    41|   A = 42;           // error: type alias ref'd from value pos

@@ -74,7 +74,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- typeof.js:73:15
 
-Cannot reference type `numberAlias` [1] from a value position. [type-as-value]
+Cannot use type `numberAlias` [1] as a value. Types are erased and don't exist at runtime. [type-as-value]
 
    typeof.js:73:15
    73| var f: typeof numberAlias = 42; // Error: 'typeof <<type-alias>>' makes no sense...

@@ -192,7 +192,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- enum-object.js:19:1
 
-Cannot reference type `EO` [1] from a value position. [type-as-value]
+Cannot use type `EO` [1] as a value. Types are erased and don't exist at runtime. [type-as-value]
 
    enum-object.js:19:1
    19| EO.A;

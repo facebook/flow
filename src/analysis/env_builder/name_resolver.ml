@@ -642,10 +642,11 @@ module Make
           Error_message.(
             EBindingError (EEnumReassigned, assignment_loc, OrdinaryName name, def_loc)
           )
-      | (Bindings.Type _, None) ->
+      | (Bindings.Type { imported }, None) ->
         Some
           Error_message.(
-            EBindingError (ETypeInValuePosition, assignment_loc, OrdinaryName name, def_loc)
+            EBindingError
+              (ETypeInValuePosition { imported; name }, assignment_loc, OrdinaryName name, def_loc)
           )
       | (Bindings.Parameter, Some _) when Context.enable_const_params cx && not (Val.is_undeclared v)
         ->

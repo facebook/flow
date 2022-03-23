@@ -462,7 +462,10 @@ and exactness_error_kind =
 and binding_error =
   | ENameAlreadyBound
   | EReferencedBeforeDeclaration
-  | ETypeInValuePosition
+  | ETypeInValuePosition of {
+      imported: bool;
+      name: string;
+    }
   | ETypeAliasInValuePosition
   | EConstReassigned
   | EConstParamReassigned
@@ -2415,6 +2418,14 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
     (* We can call to_loc here because reaching this point requires that everything else
        in the error message is concretized already; making Scopes polymorphic is not a good idea *)
     let x = mk_reason desc (entry_loc |> ALoc.to_loc_exn) in
+    let type_as_value_msg x =
+      [
+        text "Cannot use type ";
+        ref x;
+        text " as a value. ";
+        text "Types are erased and don't exist at runtime.";
+      ]
+    in
     let features =
       match binding_error with
       | ENameAlreadyBound ->
@@ -2435,9 +2446,22 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
             text " because the declaration ";
             text "either comes later or was skipped.";
           ]
-      | ETypeInValuePosition
+      | ETypeInValuePosition { imported = true; name } ->
+        type_as_value_msg x
+        @ [
+            text " If the exported binding can also be used as a value, try importing it using ";
+            code (spf "import %s" name);
+            text " instead of ";
+            code (spf "import type %s" name);
+            text " and ";
+            code (spf "import {%s}" name);
+            text " instead of ";
+            code (spf "import type {%s}" name);
+            text ".";
+          ]
+      | ETypeInValuePosition { imported = false; name = _ }
       | ETypeAliasInValuePosition ->
-        [text "Cannot reference type "; ref x; text " from a value position."]
+        type_as_value_msg x
       | EConstReassigned
       | EConstParamReassigned ->
         [text "Cannot reassign constant "; ref x; text "."]
@@ -3902,7 +3926,7 @@ let error_code_of_message err : error_code option =
       match binding_error with
       | ENameAlreadyBound -> Some NameAlreadyBound
       | EReferencedBeforeDeclaration -> Some ReferenceBeforeDeclaration
-      | ETypeInValuePosition
+      | ETypeInValuePosition _
       | ETypeAliasInValuePosition ->
         Some TypeAsValue
       | EConstReassigned

@@ -8,7 +8,9 @@ Cannot resolve module `somewhere`. [cannot-resolve-module]
 
 Error ---------------------------------------------------------------------------------------------- enum-crash.js:11:10
 
-Cannot reference type `Enum` [1] from a value position. [type-as-value]
+Cannot use type `Enum` [1] as a value. Types are erased and don't exist at runtime. If the exported binding can also be
+used as a value, try importing it using `import Enum` instead of `import type Enum` and `import {Enum}` instead of
+`import type {Enum}`. [type-as-value]
 
    enum-crash.js:11:10
    11|     case Enum.FOO:
