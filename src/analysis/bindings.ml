@@ -11,7 +11,7 @@ type kind =
   | Var
   | Let
   | Const
-  | Type
+  | Type of { imported: bool }
   | Enum
   | Function
   | Class

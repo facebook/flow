@@ -187,7 +187,8 @@ class ['loc] hoister ~flowmin_compatibility ~enable_enums ~with_types =
 
     method private add_var_binding entry = this#update_acc Bindings.(add (entry, Bindings.Var))
 
-    method private add_type_binding entry = this#update_acc Bindings.(add (entry, Bindings.Type))
+    method private add_type_binding ~imported entry =
+      this#update_acc Bindings.(add (entry, Bindings.Type { imported }))
 
     method! private add_const_binding ?kind entry =
       if lexical then super#add_const_binding ?kind entry
@@ -229,17 +230,17 @@ class ['loc] hoister ~flowmin_compatibility ~enable_enums ~with_types =
 
     method! type_alias loc (alias : ('loc, 'loc) Ast.Statement.TypeAlias.t) =
       let open Ast.Statement.TypeAlias in
-      if with_types then this#add_type_binding alias.id;
+      if with_types then this#add_type_binding ~imported:false alias.id;
       super#type_alias loc alias
 
     method! opaque_type loc (alias : ('loc, 'loc) Ast.Statement.OpaqueType.t) =
       let open Ast.Statement.OpaqueType in
-      if with_types then this#add_type_binding alias.id;
+      if with_types then this#add_type_binding ~imported:false alias.id;
       super#opaque_type loc alias
 
     method! interface loc (interface : ('loc, 'loc) Ast.Statement.Interface.t) =
       let open Ast.Statement.Interface in
-      if with_types then this#add_type_binding interface.id;
+      if with_types then this#add_type_binding ~imported:false interface.id;
       super#interface loc interface
 
     method! import_declaration loc decl =
@@ -264,7 +265,7 @@ class ['loc] hoister ~flowmin_compatibility ~enable_enums ~with_types =
         | (_, ImportTypeof)
         | (Some ImportType, _)
         | (Some ImportTypeof, _) ->
-          (with_types, this#add_type_binding)
+          (with_types, this#add_type_binding ~imported:true)
       in
       (match specifier with
       | { local = Some binding; remote = _; kind }
@@ -281,7 +282,7 @@ class ['loc] hoister ~flowmin_compatibility ~enable_enums ~with_types =
         | ImportType
         | ImportTypeof
           when with_types ->
-          this#add_type_binding id
+          this#add_type_binding ~imported:true id
         | _ -> ()
       end;
       id
@@ -294,7 +295,7 @@ class ['loc] hoister ~flowmin_compatibility ~enable_enums ~with_types =
         | ImportType
         | ImportTypeof
           when with_types ->
-          this#add_type_binding id
+          this#add_type_binding ~imported:true id
         | _ -> ()
       end;
       id

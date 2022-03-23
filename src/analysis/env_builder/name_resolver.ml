@@ -401,7 +401,7 @@ module Make
       let write_locs = simplify_val value in
       let val_kind =
         match binding_kind_opt with
-        | Some Bindings.Type -> Some Env_api.Type
+        | Some (Bindings.Type { imported }) -> Some (Env_api.Type { imported })
         | Some _ -> Some Env_api.Value
         | None -> None
       in
@@ -631,7 +631,7 @@ module Make
       | (Bindings.Let, Some _)
       | (Bindings.Class, Some _)
       | (Bindings.Function, Some _)
-      | (Bindings.Type, Some _)
+      | (Bindings.Type _, Some _)
         when not (Val.is_undeclared v) ->
         Some
           Error_message.(
@@ -642,7 +642,7 @@ module Make
           Error_message.(
             EBindingError (EEnumReassigned, assignment_loc, OrdinaryName name, def_loc)
           )
-      | (Bindings.Type, None) ->
+      | (Bindings.Type _, None) ->
         Some
           Error_message.(
             EBindingError (ETypeInValuePosition, assignment_loc, OrdinaryName name, def_loc)
@@ -1087,7 +1087,7 @@ module Make
       method private mk_env =
         SMap.mapi (fun name (kind, (loc, _)) ->
             match kind with
-            | Bindings.Type ->
+            | Bindings.Type _ ->
               let reason = mk_reason (RType (OrdinaryName name)) loc in
               let write_entries =
                 L.LMap.add loc (Env_api.AssigningWrite reason) env_state.write_entries
@@ -1291,12 +1291,12 @@ module Make
         | None -> ()
         | Some def_loc ->
           (match kind with
-          | Bindings.Type when not (ALoc.equal loc def_loc) ->
+          | Bindings.Type _ when not (ALoc.equal loc def_loc) ->
             (* Types are already bind in hoister,
                so we only check for rebind in different locations. *)
             add_output
               Error_message.(EBindingError (ENameAlreadyBound, loc, OrdinaryName name, def_loc))
-          | Bindings.Type -> ()
+          | Bindings.Type _ -> ()
           | Bindings.Var
           | Bindings.Const
           | Bindings.Let
