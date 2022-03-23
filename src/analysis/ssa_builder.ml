@@ -1051,6 +1051,7 @@ struct
         this#expecting_abrupt_completions (fun () ->
             let open Ast.Statement.Try in
             let { block = (loc, block); handler; finalizer; comments = _ } = stmt in
+            let pre_env = this#ssa_env in
             let try_completion_state =
               this#run_to_completion (fun () -> ignore @@ this#block loc block)
             in
@@ -1061,7 +1062,12 @@ struct
                 (* NOTE: Havoc-ing the state when entering the handler is probably
                    overkill. We can be more precise but still correct by collecting all
                    possible writes in the try-block and merging them with the state when
-                   entering the try-block. *)
+                   entering the try-block.
+                   We havoc on top of the pre-env because the try-block may have initialized
+                   some variables, and we want to make sure we model the fact that they may
+                   still be uninitialized in the catch block.
+                *)
+                this#reset_ssa_env pre_env;
                 this#havoc_current_ssa_env;
                 let catch_completion_state =
                   this#run_to_completion (fun () -> ignore @@ this#catch_clause loc clause)
