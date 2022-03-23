@@ -1087,10 +1087,16 @@ struct
               match finalizer with
               | Some (_loc, block) ->
                 (* NOTE: Havoc-ing the state when entering the finalizer is probably
-                   overkill. We can be more precise but still correct by collecting
-                   all possible writes in the handler and merging them with the state
-                   when entering the handler (which in turn should already account for
-                   any contributions by the try-block). *)
+                    overkill. We can be more precise but still correct by collecting
+                    all possible writes in the handler and merging them with the state
+                    when entering the handler (which in turn should already account for
+                    any contributions by the try-block).
+
+                   We reset to the pre-env before havocing so that variables that are uninitialized
+                   before the try/catch blocks are not thought to be definitely initialized when
+                   entering the finally block.
+                *)
+                this#reset_ssa_env pre_env;
                 this#havoc_current_ssa_env;
                 ignore @@ this#block loc block
               | None -> ()

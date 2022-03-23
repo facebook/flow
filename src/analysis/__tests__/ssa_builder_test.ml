@@ -605,4 +605,39 @@ try {
                       (mk_loc (7, 2) (7, 3))
                       [mk_write (1, 4) (1, 5) "x"; mk_write (3, 2) (3, 3) "x"]
                );
+         "try_finally_initialization"
+         >:: mk_ssa_builder_test
+               "function test(a, b) {
+  var c;
+  try {
+    c = b();
+  } finally {};
+  return c;
+}"
+               LocMap.(
+                 empty
+                 |> add (mk_loc (4, 8) (4, 9)) [mk_write (1, 17) (1, 18) "b"]
+                 |> add (mk_loc (6, 9) (6, 10)) [Ssa_api.uninitialized; mk_write (4, 4) (4, 5) "c"]
+               );
+         "try_catch_finally_initialization"
+         >:: mk_ssa_builder_test
+               "function test(a, b) {
+  var c;
+  try {
+    c = b();
+  } catch {
+    c = b()
+  } finally {};
+  return c;
+}"
+               LocMap.(
+                 empty
+                 |> add (mk_loc (4, 8) (4, 9)) [mk_write (1, 17) (1, 18) "b"]
+                 |> add (mk_loc (6, 8) (6, 9)) [mk_write (1, 17) (1, 18) "b"]
+                 |> add
+                      (mk_loc (8, 9) (8, 10))
+                      [
+                        Ssa_api.uninitialized; mk_write (4, 4) (4, 5) "c"; mk_write (6, 4) (6, 5) "c";
+                      ]
+               );
        ]
