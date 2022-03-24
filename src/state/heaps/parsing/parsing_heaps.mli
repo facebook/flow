@@ -13,13 +13,13 @@ type file_addr = SharedMem.NewAPI.file SharedMem.addr
 
 type +'a parse_addr = 'a SharedMem.NewAPI.parse SharedMem.addr
 
-type module_addr = SharedMem.NewAPI.file SharedMem.NewAPI.entity SharedMem.addr
+type provider_addr = SharedMem.NewAPI.file SharedMem.NewAPI.entity SharedMem.addr
 
 val get_file_addr : File_key.t -> file_addr option
 
 val get_file_addr_unsafe : File_key.t -> file_addr
 
-val get_module_addr_unsafe : Modulename.t -> module_addr
+val get_provider_ent : Modulename.t -> provider_addr option
 
 val read_file_name : file_addr -> string
 

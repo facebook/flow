@@ -728,66 +728,70 @@ let add_parsed_resolved_requires ~mutator ~reader ~options ~node_modules_contain
 let commit_modules ~transaction ~workers ~options ~reader dirty_modules =
   (* TODO: keep workers parameter, will use workers here soon *)
   ignore workers;
+  let module Heap = SharedMem.NewAPI in
   let debug = Options.is_debug_mode options in
   let mutator = Parsing_heaps.Commit_modules_mutator.create transaction dirty_modules in
   (* prep for registering new mappings in NameHeap *)
   let (unchanged, no_providers, duplicate_providers) =
     Modulename.Set.fold
       (fun m (unchanged, no_providers, errmap) ->
-        let m_addr = Parsing_heaps.get_module_addr_unsafe m in
-        match Module_hashtables.Mutator_reader.find_in_all_providers_unsafe ~reader m with
-        | ps when FilenameSet.is_empty ps ->
+        let provider_ent = Option.get (Parsing_heaps.get_provider_ent m) in
+        let old_provider = Heap.entity_read_latest provider_ent in
+        let (new_provider, errmap) =
+          match Module_hashtables.Mutator_reader.find_in_all_providers_unsafe ~reader m with
+          | ps when FilenameSet.is_empty ps -> (None, errmap)
+          | ps ->
+            let (p, errmap) = choose_provider ~options (Modulename.to_string m) ps errmap in
+            let p_addr = Parsing_heaps.get_file_addr_unsafe p in
+            (Some (p, p_addr), errmap)
+        in
+        match (old_provider, new_provider) with
+        | (_, None) ->
           if debug then prerr_endlinef "no remaining providers: %S" (Modulename.to_string m);
-          SharedMem.NewAPI.entity_advance m_addr None;
+          Heap.entity_advance provider_ent None;
           let no_providers = Modulename.Set.add m no_providers in
           (unchanged, no_providers, errmap)
-        | ps ->
-          (* now choose provider for m *)
-          let (p, errmap) = choose_provider ~options (Modulename.to_string m) ps errmap in
-          let p_addr = Parsing_heaps.get_file_addr_unsafe p in
-          (* register chosen provider in NameHeap *)
-          (match Parsing_heaps.Mutator_reader.get_provider ~reader m with
-          | Some f ->
-            if SharedMem.NewAPI.files_equal f p_addr then (
-              (* When can this happen? Say m pointed to f before, a different file
-                 f' that provides m changed (so m is not in old_modules), but f
-                 continues to be the chosen provider = p (winning over f'). *)
-              if debug then
-                prerr_endlinef
-                  "unchanged provider: %S -> %s"
-                  (Modulename.to_string m)
-                  (File_key.to_string p);
-              let unchanged =
-                if SharedMem.NewAPI.file_changed p_addr then
-                  unchanged
-                else
-                  Modulename.Set.add m unchanged
-              in
-              (unchanged, no_providers, errmap)
-            ) else (
-              (* When can this happen? Say m pointed to f before, a different file
-                 f' that provides m changed (so m is not in old_modules), and
-                 now f' becomes the chosen provider = p (winning over f). *)
-              if debug then
-                prerr_endlinef
-                  "new provider: %S -> %s replaces %s"
-                  (Modulename.to_string m)
-                  (File_key.to_string p)
-                  (Parsing_heaps.read_file_name f);
-              SharedMem.NewAPI.entity_advance m_addr (Some p_addr);
-              (unchanged, no_providers, errmap)
-            )
-          | None ->
-            (* When can this happen? Either m pointed to a file that used to
-               provide m and changed or got deleted (causing m to be in
-               old_modules), or m didn't have a provider before. *)
+        | (None, Some (pkey, p)) ->
+          (* When can this happen? Either m pointed to a file that used to
+             provide m and changed or got deleted (causing m to be in
+             old_modules), or m didn't have a provider before. *)
+          if debug then
+            prerr_endlinef
+              "initial provider %S -> %s"
+              (Modulename.to_string m)
+              (File_key.to_string pkey);
+          SharedMem.NewAPI.entity_advance provider_ent (Some p);
+          (unchanged, no_providers, errmap)
+        | (Some old_p, Some (new_pkey, new_p)) ->
+          if Heap.files_equal old_p new_p then (
+            (* When can this happen? Say m pointed to f before, a different file
+               f' that provides m changed (so m is not in old_modules), but f
+               continues to be the chosen provider = p (winning over f'). *)
             if debug then
               prerr_endlinef
-                "initial provider %S -> %s"
+                "unchanged provider: %S -> %s"
                 (Modulename.to_string m)
-                (File_key.to_string p);
-            SharedMem.NewAPI.entity_advance m_addr (Some p_addr);
-            (unchanged, no_providers, errmap)))
+                (File_key.to_string new_pkey);
+            let unchanged =
+              if SharedMem.NewAPI.file_changed old_p then
+                unchanged
+              else
+                Modulename.Set.add m unchanged
+            in
+            (unchanged, no_providers, errmap)
+          ) else (
+            (* When can this happen? Say m pointed to f before, a different file
+               f' that provides m changed (so m is not in old_modules), and
+               now f' becomes the chosen provider = p (winning over f). *)
+            if debug then
+              prerr_endlinef
+                "new provider: %S -> %s replaces %s"
+                (Modulename.to_string m)
+                (File_key.to_string new_pkey)
+                (Parsing_heaps.read_file_name old_p);
+            SharedMem.NewAPI.entity_advance provider_ent (Some new_p);
+            (unchanged, no_providers, errmap)
+          ))
       dirty_modules
       (Modulename.Set.empty, Modulename.Set.empty, SMap.empty)
   in

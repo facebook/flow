@@ -15,11 +15,18 @@ module FileHeap =
       type t = Heap.file
     end)
 
-module NameHeap =
+module FileModuleHeap =
   SharedMem.NoCacheAddr
-    (Modulename.Key)
+    (File_key)
     (struct
-      type t = Heap.file Heap.entity
+      type t = Heap.file_module
+    end)
+
+module HasteModuleHeap =
+  SharedMem.NoCacheAddr
+    (StringKey)
+    (struct
+      type t = Heap.haste_module
     end)
 
 exception File_not_found of string
@@ -38,8 +45,6 @@ exception Requires_not_found of string
 
 exception Type_sig_not_found of string
 
-exception Module_not_found of string
-
 type locs_tbl = Loc.t Type_sig_collections.Locs.t
 
 type type_sig = Type_sig_collections.Locs.index Packed_type_sig.Module.t
@@ -48,7 +53,9 @@ type file_addr = Heap.file SharedMem.addr
 
 type +'a parse_addr = 'a Heap.parse SharedMem.addr
 
-type module_addr = Heap.file Heap.entity SharedMem.addr
+type provider_addr = Heap.file Heap.entity SharedMem.addr
+
+let ( let* ) = Option.bind
 
 (* There's some redundancy in the visitors here, but an attempt to avoid repeated code led,
  * inexplicably, to a shared heap size regression under types-first: D15481813 *)
@@ -85,30 +92,56 @@ let file_kind_and_name = function
   | File_key.JsonFile f -> (Heap.Json_file, f)
   | File_key.LibFile f -> (Heap.Lib_file, f)
 
-let prepare_add_module_maybe size mname =
-  match NameHeap.get mname with
-  | Some _ -> (size, Fun.const ())
-  | None ->
-    let open Heap in
-    let size = size + header_size + entity_size in
-    let write chunk =
-      let m = write_entity chunk None in
-      ignore (NameHeap.add mname m)
-    in
-    (size, write)
+let get_file_addr = FileHeap.get
+
+let get_file_addr_unsafe file =
+  match get_file_addr file with
+  | Some addr -> addr
+  | None -> raise (File_not_found (File_key.to_string file))
+
+let get_haste_module = HasteModuleHeap.get
+
+let get_file_module = FileModuleHeap.get
+
+let get_provider_ent = function
+  | Modulename.String name ->
+    let* haste_module = get_haste_module name in
+    Some (Heap.get_haste_provider haste_module)
+  | Modulename.Filename file_key ->
+    let* file_module = get_file_module file_key in
+    Some (Heap.get_file_provider file_module)
 
 let prepare_add_file_module_maybe size file_key =
   match file_key with
   | File_key.LibFile _ -> (size, Fun.const ())
   | _ ->
-    let mname = Modulename.Filename (Files.chop_flow_ext file_key) in
-    prepare_add_module_maybe size mname
+    let file_module_key = Files.chop_flow_ext file_key in
+    (match FileModuleHeap.get file_module_key with
+    | Some _ -> (size, Fun.const ())
+    | None ->
+      let open Heap in
+      let size = size + (2 * header_size) + file_module_size + entity_size in
+      let write chunk =
+        let provider = write_entity chunk None in
+        let m = write_file_module chunk provider in
+        ignore (FileModuleHeap.add file_module_key m)
+      in
+      (size, write))
 
 let prepare_add_haste_module_maybe size = function
   | None -> (size, Fun.const ())
   | Some name ->
-    let mname = Modulename.String name in
-    prepare_add_module_maybe size mname
+    (match HasteModuleHeap.get name with
+    | Some _ -> (size, Fun.const ())
+    | None ->
+      let open Heap in
+      let size = size + (2 * header_size) + haste_module_size + entity_size in
+      let write chunk =
+        let provider = write_entity chunk None in
+        let m = write_haste_module chunk provider in
+        ignore (HasteModuleHeap.add name m)
+      in
+      (size, write))
 
 (* Write parsed data for checked file to shared memory. If we loaded from saved
  * state, a checked file entry will already exist without parse data and this
@@ -258,22 +291,10 @@ let rollback_file file_key =
     let open Heap in
     entity_rollback (get_parse file)
 
-let rollback_module m =
-  match NameHeap.get m with
+let rollback_module mname =
+  match get_provider_ent mname with
   | None -> ()
   | Some provider -> Heap.entity_rollback provider
-
-let get_file_addr = FileHeap.get
-
-let get_file_addr_unsafe file =
-  match get_file_addr file with
-  | Some addr -> addr
-  | None -> raise (File_not_found (File_key.to_string file))
-
-let get_module_addr_unsafe m =
-  match NameHeap.get m with
-  | Some addr -> addr
-  | None -> raise (Module_not_found (Modulename.to_string m))
 
 let read_file_name file =
   let open Heap in
@@ -499,15 +520,13 @@ let loc_of_aloc ~reader ~get_aloc_table_unsafe aloc =
 module Mutator_reader = struct
   type reader = Mutator_state_reader.t
 
-  let ( let* ) = Option.bind
-
   let read ~reader:_ addr = Heap.entity_read_latest addr
 
   let read_old ~reader:_ addr = Heap.entity_read_committed addr
 
   let get_provider ~reader m =
-    let* addr = NameHeap.get m in
-    read ~reader addr
+    let* provider = get_provider_ent m in
+    read ~reader provider
 
   let is_typed_file ~reader file =
     match read ~reader (Heap.get_parse file) with
@@ -762,9 +781,13 @@ module Commit_modules_mutator = struct
     dirty_modules := Modulename.Set.empty;
     no_providers := Modulename.Set.empty
 
+  let remove_module = function
+    | Modulename.String name -> HasteModuleHeap.remove name
+    | Modulename.Filename file_key -> FileModuleHeap.remove file_key
+
   let commit () =
     WorkerCancel.with_no_cancellations (fun () ->
-        NameHeap.remove_batch !no_providers;
+        Modulename.Set.iter remove_module !no_providers;
         reset_refs ()
     );
     Lwt.return_unit
@@ -789,13 +812,11 @@ end
 module Reader = struct
   type reader = State_reader.t
 
-  let ( let* ) = Option.bind
-
   let read ~reader:_ addr = Heap.entity_read_latest addr
 
   let get_provider ~reader m =
-    let* addr = NameHeap.get m in
-    read ~reader addr
+    let* provider = get_provider_ent m in
+    read ~reader provider
 
   let is_typed_file ~reader file =
     match read ~reader (Heap.get_parse file) with

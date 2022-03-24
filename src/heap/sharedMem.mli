@@ -237,6 +237,10 @@ module NewAPI : sig
 
   type file
 
+  type haste_module
+
+  type file_module
+
   (* Before writing to the heap, we first calculate the required size (in words)
    * for all the heap objects we would like to write. We will pass this size
    * into the `alloc` function below, to get a chunk which we use to perform
@@ -403,4 +407,20 @@ module NewAPI : sig
   val files_equal : file addr -> file addr -> bool
 
   val file_changed : file addr -> bool
+
+  (* haste module *)
+
+  val haste_module_size : size
+
+  val write_haste_module : chunk -> file entity addr -> haste_module addr
+
+  val get_haste_provider : haste_module addr -> file entity addr
+
+  (* file module *)
+
+  val file_module_size : size
+
+  val write_file_module : chunk -> file entity addr -> file_module addr
+
+  val get_file_provider : file_module addr -> file entity addr
 end

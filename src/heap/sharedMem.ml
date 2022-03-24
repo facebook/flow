@@ -39,14 +39,16 @@ type tag =
   | Json_file_tag
   | Resource_file_tag
   | Lib_file_tag
+  | Haste_module_tag
+  | File_module_tag
   (* tags defined below this point are scanned for pointers *)
-  | String_tag (* 8 *)
+  | String_tag (* 10 *)
   | Int64_tag
   | Docblock_tag
   | ALoc_table_tag
   | Type_sig_tag
   (* tags defined above this point are serialized+compressed *)
-  | Serialized_tag (* 13 *)
+  | Serialized_tag (* 15 *)
   | Serialized_resolved_requires_tag
   | Serialized_ast_tag
   | Serialized_file_sig_tag
@@ -62,8 +64,8 @@ let tag_val : tag -> int = Obj.magic
 (* double-check integer values are consistent with hh_shared.c *)
 let () =
   assert (tag_val Entity_tag = 0);
-  assert (tag_val String_tag = 8);
-  assert (tag_val Serialized_tag = 13)
+  assert (tag_val String_tag = 10);
+  assert (tag_val Serialized_tag = 15)
 
 exception Out_of_shared_memory
 
@@ -937,6 +939,10 @@ module NewAPI = struct
 
   type file
 
+  type haste_module
+
+  type file_module
+
   type size = int
 
   let bsize_wsize bsize = bsize * Sys.word_size / 8
@@ -1560,4 +1566,30 @@ module NewAPI = struct
   let files_equal = Int.equal
 
   let file_changed file = entity_changed (get_parse file)
+
+  (** Haste modules *)
+
+  let haste_module_size = addr_size
+
+  let write_haste_module chunk provider =
+    let addr = write_header chunk Haste_module_tag haste_module_size in
+    unsafe_write_addr chunk provider;
+    addr
+
+  let haste_provider_addr m = addr_offset m 1
+
+  let get_haste_provider = get_generic haste_provider_addr
+
+  (** File modules *)
+
+  let file_module_size = addr_size
+
+  let write_file_module chunk provider =
+    let addr = write_header chunk File_module_tag file_module_size in
+    unsafe_write_addr chunk provider;
+    addr
+
+  let file_provider_addr m = addr_offset m 1
+
+  let get_file_provider = get_generic file_provider_addr
 end
