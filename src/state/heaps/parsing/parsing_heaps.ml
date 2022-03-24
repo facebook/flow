@@ -129,17 +129,18 @@ let prepare_add_file_module_maybe size file_key =
       (size, write))
 
 let prepare_add_haste_module_maybe size = function
-  | None -> (size, Fun.const ())
+  | None -> (size, Fun.const None)
   | Some name ->
     (match HasteModuleHeap.get name with
-    | Some _ -> (size, Fun.const ())
+    | Some _ as addr -> (size, Fun.const addr)
     | None ->
       let open Heap in
-      let size = size + (2 * header_size) + haste_module_size + entity_size in
+      let size = size + (3 * header_size) + haste_module_size + string_size name + entity_size in
       let write chunk =
+        let heap_name = write_string chunk name in
         let provider = write_entity chunk None in
-        let m = write_haste_module chunk provider in
-        ignore (HasteModuleHeap.add name m)
+        let m = write_haste_module chunk heap_name provider in
+        Some (HasteModuleHeap.add name m)
       in
       (size, write))
 
@@ -211,18 +212,12 @@ let add_checked_file file_key hash module_name docblock ast locs type_sig file_s
       let exports = serialize exports in
       let (exports_size, write_exports) = prepare_write_exports exports in
       let size = size + (3 * header_size) + typed_parse_size + int64_size + exports_size in
-      let size =
-        match module_name with
-        | None -> size
-        | Some name -> size + header_size + string_size name
-      in
       let (size, add_haste_module_maybe) = prepare_add_haste_module_maybe size module_name in
       let write chunk =
-        add_haste_module_maybe chunk;
         let hash = write_int64 chunk hash in
-        let module_name = Option.map (write_string chunk) module_name in
+        let haste_module = add_haste_module_maybe chunk in
         let exports = write_exports chunk in
-        let parse = write_typed_parse chunk hash module_name exports in
+        let parse = write_typed_parse chunk hash haste_module exports in
         add_file_maybe chunk (parse :> [ `typed | `untyped ] parse_addr);
         parse
       in
@@ -245,11 +240,6 @@ let add_checked_file file_key hash module_name docblock ast locs type_sig file_s
 let add_unparsed_file file_key hash module_name =
   let open Heap in
   let size = (2 * header_size) + untyped_parse_size + int64_size in
-  let size =
-    match module_name with
-    | None -> size
-    | Some name -> size + header_size + string_size name
-  in
   let (size, add_haste_module_maybe) = prepare_add_haste_module_maybe size module_name in
   let (size, add_file_maybe) =
     match FileHeap.get file_key with
@@ -270,10 +260,9 @@ let add_unparsed_file file_key hash module_name =
       (size, write)
   in
   alloc size (fun chunk ->
-      add_haste_module_maybe chunk;
       let hash = write_int64 chunk hash in
-      let module_name = Option.map (write_string chunk) module_name in
-      let parse = write_untyped_parse chunk hash module_name in
+      let haste_module = add_haste_module_maybe chunk in
+      let parse = write_untyped_parse chunk hash haste_module in
       add_file_maybe chunk (parse :> [ `typed | `untyped ] parse_addr)
   )
 
@@ -315,7 +304,7 @@ let read_file_hash parse =
 
 let read_module_name parse =
   let open Heap in
-  get_module_name parse |> Option.map read_string
+  get_haste_module parse |> Option.map (fun m -> get_haste_name m |> read_string)
 
 let read_ast file_key parse =
   let open Heap in
@@ -1090,21 +1079,15 @@ end = struct
       + int64_size
       + exports_size
     in
-    let size =
-      match module_name with
-      | None -> size
-      | Some name -> size + header_size + string_size name
-    in
     let (size, add_file_module_maybe) = prepare_add_file_module_maybe size file_key in
     let (size, add_haste_module_maybe) = prepare_add_haste_module_maybe size module_name in
     alloc size (fun chunk ->
         add_file_module_maybe chunk;
-        add_haste_module_maybe chunk;
         let file_name = write_string chunk file_name in
         let hash = write_int64 chunk hash in
-        let module_name = Option.map (write_string chunk) module_name in
+        let haste_module = add_haste_module_maybe chunk in
         let exports = write_exports chunk in
-        let parse = write_typed_parse chunk hash module_name exports in
+        let parse = write_typed_parse chunk hash haste_module exports in
         let parse = write_entity chunk (Some (parse :> [ `typed | `untyped ] parse_addr)) in
         let file = write_file chunk file_kind file_name parse in
         assert (file = FileHeap.add file_key file)

@@ -350,10 +350,10 @@ module NewAPI : sig
   val typed_parse_size : size
 
   val write_untyped_parse :
-    chunk -> heap_int64 addr -> heap_string addr option -> [ `untyped ] parse addr
+    chunk -> heap_int64 addr -> haste_module addr option -> [ `untyped ] parse addr
 
   val write_typed_parse :
-    chunk -> heap_int64 addr -> heap_string addr option -> exports addr -> [ `typed ] parse addr
+    chunk -> heap_int64 addr -> haste_module addr option -> exports addr -> [ `typed ] parse addr
 
   val is_typed : [> ] parse addr -> bool
 
@@ -361,7 +361,7 @@ module NewAPI : sig
 
   val get_file_hash : [> ] parse addr -> heap_int64 addr
 
-  val get_module_name : [> ] parse addr -> heap_string addr option
+  val get_haste_module : [> ] parse addr -> haste_module addr option
 
   val get_ast : [ `typed ] parse addr -> ast addr option
 
@@ -412,7 +412,9 @@ module NewAPI : sig
 
   val haste_module_size : size
 
-  val write_haste_module : chunk -> file entity addr -> haste_module addr
+  val write_haste_module : chunk -> heap_string addr -> file entity addr -> haste_module addr
+
+  val get_haste_name : haste_module addr -> heap_string addr
 
   val get_haste_provider : haste_module addr -> file entity addr
 

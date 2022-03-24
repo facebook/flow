@@ -1447,18 +1447,18 @@ module NewAPI = struct
 
   let typed_parse_size = 8 * addr_size
 
-  let write_untyped_parse chunk hash module_name =
-    let module_name = Option.value module_name ~default:opt_none in
+  let write_untyped_parse chunk hash haste_module =
+    let haste_module = Option.value haste_module ~default:opt_none in
     let addr = write_header chunk Untyped_tag untyped_parse_size in
     unsafe_write_addr chunk hash;
-    unsafe_write_addr chunk module_name;
+    unsafe_write_addr chunk haste_module;
     addr
 
-  let write_typed_parse chunk hash module_name exports =
-    let module_name = Option.value module_name ~default:opt_none in
+  let write_typed_parse chunk hash haste_module exports =
+    let haste_module = Option.value haste_module ~default:opt_none in
     let addr = write_header chunk Typed_tag typed_parse_size in
     unsafe_write_addr chunk hash;
-    unsafe_write_addr chunk module_name;
+    unsafe_write_addr chunk haste_module;
     unsafe_write_addr chunk null_addr;
     unsafe_write_addr chunk null_addr;
     unsafe_write_addr chunk null_addr;
@@ -1479,7 +1479,7 @@ module NewAPI = struct
 
   let file_hash_addr parse = addr_offset parse 1
 
-  let module_name_addr parse = addr_offset parse 2
+  let haste_module_addr parse = addr_offset parse 2
 
   let ast_addr parse = addr_offset parse 3
 
@@ -1495,7 +1495,7 @@ module NewAPI = struct
 
   let get_file_hash = get_generic file_hash_addr
 
-  let get_module_name = get_generic_opt module_name_addr
+  let get_haste_module = get_generic_opt haste_module_addr
 
   let get_ast = get_generic_opt ast_addr
 
@@ -1569,14 +1569,19 @@ module NewAPI = struct
 
   (** Haste modules *)
 
-  let haste_module_size = addr_size
+  let haste_module_size = 2 * addr_size
 
-  let write_haste_module chunk provider =
+  let write_haste_module chunk name provider =
     let addr = write_header chunk Haste_module_tag haste_module_size in
+    unsafe_write_addr chunk name;
     unsafe_write_addr chunk provider;
     addr
 
-  let haste_provider_addr m = addr_offset m 1
+  let haste_name_addr m = addr_offset m 1
+
+  let haste_provider_addr m = addr_offset m 2
+
+  let get_haste_name = get_generic haste_name_addr
 
   let get_haste_provider = get_generic haste_provider_addr
 
