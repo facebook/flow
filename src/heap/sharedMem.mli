@@ -396,11 +396,18 @@ module NewAPI : sig
   val file_size : size
 
   val write_file :
-    chunk -> file_kind -> heap_string addr -> [ `typed | `untyped ] parse entity addr -> file addr
+    chunk ->
+    file_kind ->
+    heap_string addr ->
+    file_module addr option ->
+    [ `typed | `untyped ] parse entity addr ->
+    file addr
 
   val get_file_kind : file addr -> file_kind
 
   val get_file_name : file addr -> heap_string addr
+
+  val get_file_module : file addr -> file_module addr option
 
   val get_parse : file addr -> [ `typed | `untyped ] parse entity addr
 

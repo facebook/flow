@@ -113,18 +113,18 @@ let get_provider_ent = function
 
 let prepare_add_file_module_maybe size file_key =
   match file_key with
-  | File_key.LibFile _ -> (size, Fun.const ())
+  | File_key.LibFile _ -> (size, Fun.const None)
   | _ ->
     let file_module_key = Files.chop_flow_ext file_key in
     (match FileModuleHeap.get file_module_key with
-    | Some _ -> (size, Fun.const ())
+    | Some _ as addr -> (size, Fun.const addr)
     | None ->
       let open Heap in
       let size = size + (2 * header_size) + file_module_size + entity_size in
       let write chunk =
         let provider = write_entity chunk None in
         let m = write_file_module chunk provider in
-        ignore (FileModuleHeap.add file_module_key m)
+        Some (FileModuleHeap.add file_module_key m)
       in
       (size, write))
 
@@ -197,10 +197,10 @@ let add_checked_file file_key hash module_name docblock ast locs type_sig file_s
       let size = size + (3 * header_size) + entity_size + string_size file_name + file_size in
       let (size, add_file_module_maybe) = prepare_add_file_module_maybe size file_key in
       let write chunk parse =
-        add_file_module_maybe chunk;
         let file_name = write_string chunk file_name in
+        let file_module = add_file_module_maybe chunk in
         let parse = write_entity chunk (Some parse) in
-        let file = write_file chunk file_kind file_name parse in
+        let file = write_file chunk file_kind file_name file_module parse in
         assert (file = FileHeap.add file_key file)
       in
       Either.Right (size, write)
@@ -251,10 +251,10 @@ let add_unparsed_file file_key hash module_name =
       let size = size + (3 * header_size) + entity_size + string_size file_name + file_size in
       let (size, add_file_module_maybe) = prepare_add_file_module_maybe size file_key in
       let write chunk parse =
-        add_file_module_maybe chunk;
         let file_name = write_string chunk file_name in
+        let file_module = add_file_module_maybe chunk in
         let parse = write_entity chunk (Some parse) in
-        let file = write_file chunk file_kind file_name parse in
+        let file = write_file chunk file_kind file_name file_module parse in
         assert (file = FileHeap.add file_key file)
       in
       (size, write)
@@ -1082,14 +1082,14 @@ end = struct
     let (size, add_file_module_maybe) = prepare_add_file_module_maybe size file_key in
     let (size, add_haste_module_maybe) = prepare_add_haste_module_maybe size module_name in
     alloc size (fun chunk ->
-        add_file_module_maybe chunk;
         let file_name = write_string chunk file_name in
+        let file_module = add_file_module_maybe chunk in
         let hash = write_int64 chunk hash in
         let haste_module = add_haste_module_maybe chunk in
         let exports = write_exports chunk in
         let parse = write_typed_parse chunk hash haste_module exports in
         let parse = write_entity chunk (Some (parse :> [ `typed | `untyped ] parse_addr)) in
-        let file = write_file chunk file_kind file_name parse in
+        let file = write_file chunk file_kind file_name file_module parse in
         assert (file = FileHeap.add file_key file)
     )
 

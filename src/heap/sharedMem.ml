@@ -1533,17 +1533,21 @@ module NewAPI = struct
     | Resource_file -> Resource_file_tag
     | Lib_file -> Lib_file_tag
 
-  let file_size = 2 * addr_size
+  let file_size = 3 * addr_size
 
-  let write_file chunk kind file_name parse =
+  let write_file chunk kind file_name file_module parse =
+    let file_module = Option.value file_module ~default:opt_none in
     let addr = write_header chunk (file_tag kind) file_size in
     unsafe_write_addr chunk file_name;
+    unsafe_write_addr chunk file_module;
     unsafe_write_addr chunk parse;
     addr
 
   let file_name_addr file = addr_offset file 1
 
-  let parse_addr file = addr_offset file 2
+  let file_module_addr file = addr_offset file 2
+
+  let parse_addr file = addr_offset file 3
 
   let get_file_kind file =
     let hd = read_header (get_heap ()) file in
@@ -1560,6 +1564,8 @@ module NewAPI = struct
       failwith "get_file_kind: unexpected tag"
 
   let get_file_name = get_generic file_name_addr
+
+  let get_file_module = get_generic_opt file_module_addr
 
   let get_parse = get_generic parse_addr
 
