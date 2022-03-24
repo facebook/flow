@@ -290,6 +290,20 @@ let tests =
                  (2, mk_loc (1, 16) (1, 17));
                ];
          (* function params and body *)
+         "scope_loc_arrow_function_with_default"
+         >:: mk_scope_builder_scope_loc_test
+               "const x = (foo = 3) => 1;"
+               [
+                 (0, mk_loc (1, 0) (1, 25));
+                 (* program *)
+                 (1, mk_loc (1, 10) (1, 24));
+                 (* function name (lexical) *)
+                 (2, mk_loc (1, 23) (1, 24));
+                 (* function parameters *)
+                 (3, mk_loc (1, 23) (1, 24));
+                 (* function body *)
+               ];
+         (* function params and body with default parameters *)
          "scope_loc_for_in"
          >:: mk_scope_builder_scope_loc_test
                "for (let a in b) {}; 42"

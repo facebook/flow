@@ -400,39 +400,63 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
       (* helper for function params and body *)
       method private lambda params predicate body =
         let open Ast.Function in
-        (* function params and bindings within the function body share the same scope *)
-        let bindings =
-          let hoist = new hoister ~flowmin_compatibility ~enable_enums ~with_types in
-          run hoist#function_params params;
-          run hoist#function_body_any body;
-          hoist#acc
-        in
         let body_loc =
-          let open Ast.Function in
           match body with
           | BodyExpression (loc, _)
           | BodyBlock (loc, _) ->
             loc
         in
-        (* We need to visit function param default expressions outside of function scope. *)
-        let (_, { Params.params = params_list; rest; this_; comments = _ }) = params in
-        params_list
-        |> List.iter (fun (_, { Ast.Function.Param.default; argument = _ }) ->
-               run_opt this#expression default
-           );
-        this#with_bindings
-          body_loc
-          bindings
-          (fun () ->
-            params_list
-            |> List.iter (fun (_, { Ast.Function.Param.argument; default = _ }) ->
-                   run this#function_param_pattern argument
-               );
-            run_opt this#function_rest_param rest;
-            run_opt this#function_this_param this_;
-            run_opt this#predicate predicate;
-            run this#function_body_any body)
-          ()
+        (* We need to visit function param default expressions
+           without bindings inside the function body. *)
+        let (_, { Params.params = params_list; _ }) = params in
+        let has_default_parameters =
+          Base.List.exists params_list ~f:(fun (_, { Ast.Function.Param.default; argument = _ }) ->
+              Option.is_some default
+          )
+        in
+        (* We need to create a second scope when we have default parameters.
+           See https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Functions/Default_parameters#scope_effects
+        *)
+        if has_default_parameters then
+          let param_bindings =
+            let hoist = new hoister ~flowmin_compatibility ~enable_enums ~with_types in
+            run hoist#function_params params;
+            hoist#acc
+          in
+          let body_bindings =
+            let hoist = new hoister ~flowmin_compatibility ~enable_enums ~with_types in
+            run hoist#function_body_any body;
+            hoist#acc
+          in
+          this#with_bindings
+            ~lexical:true
+            body_loc
+            param_bindings
+            (fun () ->
+              run this#function_params params;
+              this#with_bindings
+                body_loc
+                body_bindings
+                (fun () ->
+                  run_opt this#predicate predicate;
+                  run this#function_body_any body)
+                ())
+            ()
+        else
+          let bindings =
+            let hoist = new hoister ~flowmin_compatibility ~enable_enums ~with_types in
+            run hoist#function_params params;
+            run hoist#function_body_any body;
+            hoist#acc
+          in
+          this#with_bindings
+            body_loc
+            bindings
+            (fun () ->
+              run this#function_params params;
+              run_opt this#predicate predicate;
+              run this#function_body_any body)
+            ()
 
       method! declare_module _loc m =
         let open Ast.Statement.DeclareModule in
