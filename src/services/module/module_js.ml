@@ -16,20 +16,23 @@
 open Utils_js
 
 let choose_provider_and_warn_about_duplicates =
-  let warn_duplicate_providers m provider duplicates acc =
+  let warn_duplicate_providers m (provider, _) duplicates acc =
     match duplicates with
     | [] -> acc
-    | f :: fs -> SMap.add m (provider, (f, fs)) acc
+    | (f, _) :: fs -> SMap.add m (provider, (f, List.map fst fs)) acc
   in
   fun m errmap providers fallback ->
-    let (definitions, implementations) = List.partition Files.has_flow_ext providers in
+    let (definitions, implementations) =
+      let f (key, _) = Files.has_flow_ext key in
+      List.partition f providers
+    in
     match (implementations, definitions) with
     (* If there are no definitions or implementations, use the fallback *)
     | ([], []) -> (fallback (), errmap)
     (* Else if there are no definitions, use the first implementation *)
-    | (impl :: dup_impls, []) -> (impl, warn_duplicate_providers m impl dup_impls errmap)
+    | (impl :: dup_impls, []) -> (Some (snd impl), warn_duplicate_providers m impl dup_impls errmap)
     (* Else use the first definition *)
-    | ([], defn :: dup_defns) -> (defn, warn_duplicate_providers m defn dup_defns errmap)
+    | ([], defn :: dup_defns) -> (Some (snd defn), warn_duplicate_providers m defn dup_defns errmap)
     (* Don't complain about the first implementation being a duplicate *)
     | (_impl :: dup_impls, defn :: dup_defns) ->
       let errmap =
@@ -37,7 +40,7 @@ let choose_provider_and_warn_about_duplicates =
         |> warn_duplicate_providers m defn dup_impls
         |> warn_duplicate_providers m defn dup_defns
       in
-      (defn, errmap)
+      (Some (snd defn), errmap)
 
 (**
  * A set of module.name_mapper config entry allows users to specify regexp
@@ -158,14 +161,14 @@ module type MODULE_SYSTEM = sig
      files with that exported name. also check for duplicates and
      generate warnings, as dictated by module system rules. *)
   val choose_provider :
-    string ->
     (* module name *)
-    FilenameSet.t ->
+    string ->
     (* set of candidate provider files *)
+    (File_key.t * Parsing_heaps.file_addr) list ->
     (* map from files to error sets (accumulator) *)
     (File_key.t * File_key.t Nel.t) SMap.t ->
     (* file, error map (accumulator) *)
-    File_key.t * (File_key.t * File_key.t Nel.t) SMap.t
+    Parsing_heaps.file_addr option * (File_key.t * File_key.t Nel.t) SMap.t
 end
 
 (****************** Node module system *********************)
@@ -449,8 +452,7 @@ module Node = struct
      our implementation of exported_name, so anything but a
      singleton provider set is craziness. *)
   let choose_provider m files errmap =
-    let files = FilenameSet.elements files in
-    let fallback () = failwith (spf "internal error: empty provider set for module %S" m) in
+    let fallback () = None in
     choose_provider_and_warn_about_duplicates m errmap files fallback
 end
 
@@ -571,12 +573,15 @@ module Haste : MODULE_SYSTEM = struct
      we pick one arbitrarily and issue duplicate module warnings for the
      rest. *)
   let choose_provider m files errmap =
-    match FilenameSet.elements files with
-    | [] -> failwith (spf "internal error: empty provider set for module %S" m)
-    | [f] -> (f, errmap)
+    match files with
+    | [] -> (None, errmap)
+    | [(_, p)] -> (Some p, errmap)
     | files ->
-      let (mocks, non_mocks) = List.partition is_mock files in
-      let fallback () = List.hd mocks in
+      let (mocks, non_mocks) =
+        let f (key, _) = is_mock key in
+        List.partition f files
+      in
+      let fallback () = Some (snd (List.hd mocks)) in
       choose_provider_and_warn_about_duplicates m errmap non_mocks fallback
 end
 
@@ -736,37 +741,38 @@ let commit_modules ~transaction ~workers ~options dirty_modules =
         (Heap.get_file_provider m, Heap.get_file_all_providers_exclusive m)
     in
     let all_providers =
-      all_providers |> List.map Parsing_heaps.read_file_key |> FilenameSet.of_list
+      let f acc f =
+        let key = Parsing_heaps.read_file_key f in
+        FilenameMap.add key f acc
+      in
+      List.fold_left f FilenameMap.empty all_providers |> FilenameMap.bindings
     in
     let old_provider = Heap.entity_read_latest provider_ent in
-    let (new_provider, errmap) =
-      if FilenameSet.is_empty all_providers then
-        (None, errmap)
-      else
-        let (p, errmap) = choose_provider ~options mname_str all_providers errmap in
-        let p_addr = Parsing_heaps.get_file_addr_unsafe p in
-        (Some (p, p_addr), errmap)
-    in
+    let (new_provider, errmap) = choose_provider ~options mname_str all_providers errmap in
     match (old_provider, new_provider) with
     | (_, None) ->
       if debug then prerr_endlinef "no remaining providers: %S" mname_str;
       Heap.entity_advance provider_ent None;
       let no_providers = Modulename.Set.add mname no_providers in
       (unchanged, no_providers, errmap)
-    | (None, Some (pkey, p)) ->
+    | (None, Some p) ->
       (* When can this happen? Either m pointed to a file that used to
          provide m and changed or got deleted (causing m to be in
          old_modules), or m didn't have a provider before. *)
-      if debug then prerr_endlinef "initial provider %S -> %s" mname_str (File_key.to_string pkey);
+      if debug then
+        prerr_endlinef "initial provider %S -> %s" mname_str (Parsing_heaps.read_file_name p);
       Heap.entity_advance provider_ent (Some p);
       (unchanged, no_providers, errmap)
-    | (Some old_p, Some (new_pkey, new_p)) ->
+    | (Some old_p, Some new_p) ->
       if Heap.files_equal old_p new_p then (
         (* When can this happen? Say m pointed to f before, a different file
            f' that provides m changed (so m is not in old_modules), but f
            continues to be the chosen provider = p (winning over f'). *)
         if debug then
-          prerr_endlinef "unchanged provider: %S -> %s" mname_str (File_key.to_string new_pkey);
+          prerr_endlinef
+            "unchanged provider: %S -> %s"
+            mname_str
+            (Parsing_heaps.read_file_name new_p);
         let unchanged =
           if Heap.file_changed old_p then
             unchanged
@@ -782,7 +788,7 @@ let commit_modules ~transaction ~workers ~options dirty_modules =
           prerr_endlinef
             "new provider: %S -> %s replaces %s"
             mname_str
-            (File_key.to_string new_pkey)
+            (Parsing_heaps.read_file_name new_p)
             (Parsing_heaps.read_file_name old_p);
         Heap.entity_advance provider_ent (Some new_p);
         (unchanged, no_providers, errmap)
