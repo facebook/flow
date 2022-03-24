@@ -60,6 +60,8 @@ type results = {
   not_found: FilenameSet.t;
   (* package.json files parsed *)
   package_json: File_key.t list * parse_error option list;
+  (* set of modules that need to be committed *)
+  dirty_modules: Modulename.Set.t;
 }
 
 let empty_result =
@@ -71,6 +73,7 @@ let empty_result =
     unchanged = FilenameSet.empty;
     not_found = FilenameSet.empty;
     package_json = ([], []);
+    dirty_modules = Modulename.Set.empty;
   }
 
 (**************************** internal *********************************)
@@ -508,8 +511,10 @@ let reducer
      * In either case, we update the file entity so that the latest data is
      * empty, indicating no file. We also record these files so their shared
      * hash table keys can be removed when the transaction commits. *)
-    worker_mutator.Parsing_heaps.clear_not_found file;
-    { acc with not_found = FilenameSet.add file acc.not_found }
+    let dirty_modules = worker_mutator.Parsing_heaps.clear_not_found file in
+    let not_found = FilenameSet.add file acc.not_found in
+    let dirty_modules = Modulename.Set.union dirty_modules acc.dirty_modules in
+    { acc with not_found; dirty_modules }
   | content ->
     let hash = hash_content content in
     (* If skip_changed is true, then we're currently ensuring some files are parsed. That
@@ -536,21 +541,26 @@ let reducer
             (* if parse_options.fail == true, then parse errors will hit Parse_fail below. otherwise,
                ignore any parse errors we get here. *)
             let file_sig = (file_sig, tolerable_errors) in
-            worker_mutator.Parsing_heaps.add_parsed
-              file
-              ~exports
-              hash
-              module_name
-              info
-              ast
-              file_sig
-              locs
-              type_sig;
-            { acc with parsed = FilenameSet.add file acc.parsed }
+            let dirty_modules =
+              worker_mutator.Parsing_heaps.add_parsed
+                file
+                ~exports
+                hash
+                module_name
+                info
+                ast
+                file_sig
+                locs
+                type_sig
+            in
+            let parsed = FilenameSet.add file acc.parsed in
+            let dirty_modules = Modulename.Set.union dirty_modules acc.dirty_modules in
+            { acc with parsed; dirty_modules }
           | Parse_fail error ->
-            worker_mutator.Parsing_heaps.add_unparsed file hash module_name;
+            let dirty_modules = worker_mutator.Parsing_heaps.add_unparsed file hash module_name in
             let failed = (file :: fst acc.failed, error :: snd acc.failed) in
-            { acc with failed }
+            let dirty_modules = Modulename.Set.union dirty_modules acc.dirty_modules in
+            { acc with failed; dirty_modules }
           | Parse_skip (Skip_package_json result) ->
             let error =
               let file_str = File_key.to_string file in
@@ -562,21 +572,25 @@ let reducer
                 Package_heaps.Package_heap_mutator.add_error file_str;
                 Some err
             in
-            worker_mutator.Parsing_heaps.add_unparsed file hash module_name;
+            let dirty_modules = worker_mutator.Parsing_heaps.add_unparsed file hash module_name in
             let unparsed = FilenameSet.add file acc.unparsed in
             let package_json = (file :: fst acc.package_json, error :: snd acc.package_json) in
-            { acc with unparsed; package_json }
+            let dirty_modules = Modulename.Set.union dirty_modules acc.dirty_modules in
+            { acc with unparsed; package_json; dirty_modules }
           | Parse_skip Skip_non_flow_file
           | Parse_skip Skip_resource_file ->
-            worker_mutator.Parsing_heaps.add_unparsed file hash module_name;
-            { acc with unparsed = FilenameSet.add file acc.unparsed }
+            let dirty_modules = worker_mutator.Parsing_heaps.add_unparsed file hash module_name in
+            let unparsed = FilenameSet.add file acc.unparsed in
+            let dirty_modules = Modulename.Set.union dirty_modules acc.dirty_modules in
+            { acc with unparsed; dirty_modules }
         end
       | (docblock_errors, info) ->
         let module_name = exported_module file info in
-        worker_mutator.Parsing_heaps.add_unparsed file hash module_name;
+        let dirty_modules = worker_mutator.Parsing_heaps.add_unparsed file hash module_name in
         let error = Docblock_errors docblock_errors in
         let failed = (file :: fst acc.failed, error :: snd acc.failed) in
-        { acc with failed }
+        let dirty_modules = Modulename.Set.union dirty_modules acc.dirty_modules in
+        { acc with failed; dirty_modules }
     )
 
 (* merge is just memberwise union/concat of results *)
@@ -597,6 +611,7 @@ let merge a b =
        let (b1, b2) = b.package_json in
        (List.rev_append a1 b1, List.rev_append a2 b2)
       );
+    dirty_modules = Modulename.Set.union a.dirty_modules b.dirty_modules;
   }
 
 let opt_or_alternate opt alternate =
@@ -840,6 +855,7 @@ let ensure_parsed ~reader options workers files =
         unchanged = _;
         not_found;
         package_json = _;
+        dirty_modules = _;
       } =
     parse
       ~worker_mutator

@@ -63,6 +63,11 @@ let chop_flow_ext file =
   else
     file
 
+(* Every <file>.js can be imported by its path, so it effectively exports a
+   module by the name <file>.js. Every <file>.js.flow shadows the corresponding
+   <file>.js, so it effectively exports a module by the name <file>.js. *)
+let eponymous_module file = Modulename.Filename (chop_flow_ext file)
+
 let is_directory path =
   try Sys.is_directory path with
   | Sys_error _ -> false
