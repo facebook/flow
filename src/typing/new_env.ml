@@ -415,7 +415,7 @@ module New_env = struct
         | None ->
           (* If we don't see a spot for this write, it's because it's never read from. *)
           ()
-        | Some w -> Flow_js.unify cx ~use_op t w
+        | Some w -> Flow_js.unify cx ~use_op w t
       end;
 
       (* We only perform a subtyping check if this is an assigning write. We call
