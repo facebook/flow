@@ -485,8 +485,9 @@ module New_env = struct
   (* init_entry is called on variable declarations (not assignments), and `t`
      is the RHS type. If the variable is annotated, we just need to check t against
      its type; but if it's not annotated, the RHS t becomes the variable's type. *)
-  let init_entry cx ~use_op ~has_anno t loc =
-    if has_anno then
+  let init_entry cx ~use_op ~has_anno:_ t loc =
+    let { Loc_env.var_info; _ } = Context.environment cx in
+    if is_def_loc_annotated var_info loc then
       subtype_entry cx ~use_op t loc
     else
       set_env_entry cx ~use_op t loc
