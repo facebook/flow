@@ -100,6 +100,7 @@ module Opts = struct
     max_seconds_for_check_per_worker: float;
     max_workers: int;
     merge_timeout: int option;
+    missing_module_generators: (Str.regexp * string) list;
     module_file_exts: string list;
     module_name_mappers: (Str.regexp * string) list;
     module_resource_exts: SSet.t;
@@ -229,6 +230,7 @@ module Opts = struct
       max_seconds_for_check_per_worker = 5.0;
       max_workers = Sys_utils.nbr_procs;
       merge_timeout = Some 100;
+      missing_module_generators = [];
       module_file_exts;
       module_name_mappers = [];
       module_resource_exts;
@@ -618,6 +620,15 @@ module Opts = struct
         Ok { opts with merge_timeout }
     )
 
+  let missing_module_generators_parser =
+    mapping
+      ~init:(fun opts -> { opts with missing_module_generators = [] })
+      ~multiple:true
+      (fun (pattern, generator) ->
+        optparse_regexp pattern >>= fun pattern -> Ok (pattern, generator))
+      (fun opts v ->
+        Ok { opts with missing_module_generators = v :: opts.missing_module_generators })
+
   let module_system_parser =
     enum [("node", Options.Node); ("haste", Options.Haste)] (fun opts v ->
         Ok { opts with module_system = v }
@@ -882,6 +893,7 @@ module Opts = struct
       ("module.ignore_non_literal_requires", ignore_non_literal_requires_parser);
       ("module.name_mapper", name_mapper_parser);
       ("module.name_mapper.extension", name_mapper_extension_parser);
+      ("module.missing_module_generators", missing_module_generators_parser);
       ("module.system", module_system_parser);
       ("module.system.haste.module_ref_prefix", haste_module_ref_prefix_parser);
       ("module.system.haste.name_reducers", haste_name_reducers_parser);
@@ -1558,6 +1570,8 @@ let max_seconds_for_check_per_worker c = c.options.Opts.max_seconds_for_check_pe
 let max_workers c = c.options.Opts.max_workers
 
 let merge_timeout c = c.options.Opts.merge_timeout
+
+let missing_module_generators c = c.options.Opts.missing_module_generators
 
 let module_file_exts c = c.options.Opts.module_file_exts
 
