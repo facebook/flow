@@ -25,3 +25,13 @@ let unit_reporter =
   let combine _ _ = () in
   let empty = () in
   { report; combine; empty }
+
+module type S = sig
+  type t
+
+  val report : reporter_options -> t -> string
+
+  val combine : t -> t -> t
+
+  val empty : t
+end
