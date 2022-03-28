@@ -52,6 +52,7 @@ type metadata = {
   max_literal_length: int;
   max_trace_depth: int;
   max_workers: int;
+  missing_module_generators: (Str.regexp * string) list;
   react_runtime: Options.react_runtime;
   react_server_component_exts: SSet.t;
   recursion_limit: int;
@@ -244,6 +245,7 @@ let metadata_of_options options =
     max_literal_length = Options.max_literal_length options;
     max_trace_depth = Options.max_trace_depth options;
     max_workers = Options.max_workers options;
+    missing_module_generators = Options.missing_module_generators options;
     react_runtime = Options.react_runtime options;
     react_server_component_exts = Options.react_server_component_exts options;
     recursion_limit = Options.recursion_limit options;
@@ -557,6 +559,8 @@ let type_asserts cx = cx.metadata.type_asserts
 let verbose cx = cx.metadata.verbose
 
 let max_workers cx = cx.metadata.max_workers
+
+let missing_module_generators cx = cx.metadata.missing_module_generators
 
 let jsx cx = cx.metadata.jsx
 

@@ -233,7 +233,8 @@ module Make (Flow : INPUT) : OUTPUT = struct
         let reason_prop = replace_desc_reason (RProperty prop_name) ureason in
         let error_message =
           if is_builtin_reason ALoc.source lreason then
-            Error_message.EBuiltinLookupFailed { reason = reason_prop; name = prop_name }
+            Error_message.EBuiltinLookupFailed
+              { reason = reason_prop; name = prop_name; potential_generator = None }
           else
             Error_message.EStrictLookupFailed
               {
@@ -1403,7 +1404,8 @@ module Make (Flow : INPUT) : OUTPUT = struct
             let reason_prop = replace_desc_reason (RProperty prop_name) ureason in
             let error_message =
               if is_builtin_reason ALoc.source lreason then
-                Error_message.EBuiltinLookupFailed { reason = reason_prop; name = prop_name }
+                Error_message.EBuiltinLookupFailed
+                  { reason = reason_prop; name = prop_name; potential_generator = None }
               else
                 Error_message.EStrictLookupFailed
                   {
@@ -1483,7 +1485,8 @@ module Make (Flow : INPUT) : OUTPUT = struct
           let reason_prop = replace_desc_reason (RProperty prop_name) reason_op in
           let error_message =
             if is_builtin_reason ALoc.source reason then
-              Error_message.EBuiltinLookupFailed { reason = reason_prop; name = prop_name }
+              Error_message.EBuiltinLookupFailed
+                { reason = reason_prop; name = prop_name; potential_generator = None }
             else
               Error_message.EStrictLookupFailed
                 {

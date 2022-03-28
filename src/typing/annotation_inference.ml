@@ -1070,7 +1070,8 @@ module rec ConsGen : S = struct
       ) ->
       let error_message =
         if Reason.is_builtin_reason ALoc.source reason then
-          Error_message.EBuiltinLookupFailed { reason = reason_prop; name = Some x }
+          Error_message.EBuiltinLookupFailed
+            { reason = reason_prop; name = Some x; potential_generator = None }
         else
           let suggestion = None in
           Error_message.EStrictLookupFailed

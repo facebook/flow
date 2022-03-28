@@ -1354,12 +1354,15 @@ let dump_error_message =
         name
         (Polarity.string expected_polarity)
         (Polarity.string actual_polarity)
-    | EBuiltinLookupFailed { reason; name } ->
+    | EBuiltinLookupFailed { reason; name; potential_generator } ->
       spf
-        "EBuiltinLookupFailed { reason = %s; name = %S }"
+        "EBuiltinLookupFailed { reason = %s; name = %S; potential_generator = %s }"
         (dump_reason cx reason)
         (match name with
         | Some x -> spf "Some(%S)" (Reason.display_string_of_name x)
+        | None -> "None")
+        (match potential_generator with
+        | Some generator -> spf "Some(%s)" generator
         | None -> "None")
     | EStrictLookupFailed { reason_prop; reason_obj; name; suggestion; use_op } ->
       spf

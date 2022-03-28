@@ -698,7 +698,14 @@ let instantiate_poly_param_upper_bounds cx typeparams =
 let lookup_builtin_strict cx x reason =
   let builtins = Context.builtins cx in
   Builtins.get_builtin builtins x ~on_missing:(fun () ->
-      add_output cx (Error_message.EBuiltinLookupFailed { reason; name = Some x });
+      let potential_generator =
+        Context.missing_module_generators cx
+        |> Base.List.find ~f:(fun (pattern, _) -> Str.string_match pattern (uninternal_name x) 0)
+        |> Base.Option.map ~f:snd
+      in
+      add_output
+        cx
+        (Error_message.EBuiltinLookupFailed { reason; name = Some x; potential_generator });
       AnyT.error_of_kind UnresolvedName reason
   )
 

@@ -73,6 +73,7 @@ type metadata = {
   max_literal_length: int;
   max_trace_depth: int;
   max_workers: int;
+  missing_module_generators: (Str.regexp * string) list;
   react_runtime: Options.react_runtime;
   react_server_component_exts: SSet.t;
   recursion_limit: int;
@@ -293,6 +294,8 @@ val constrained_writes : t -> (Type.t * Type.use_t) list
 val verbose : t -> Verbose.t option
 
 val max_workers : t -> int
+
+val missing_module_generators : t -> (Str.regexp * string) list
 
 val jsx : t -> Options.jsx_mode
 

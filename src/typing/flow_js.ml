@@ -3184,7 +3184,8 @@ struct
               let reason_prop = replace_desc_reason (RProperty prop_name) reason_op in
               let error_message =
                 if is_builtin_reason ALoc.source reason then
-                  Error_message.EBuiltinLookupFailed { reason = reason_prop; name = prop_name }
+                  Error_message.EBuiltinLookupFailed
+                    { reason = reason_prop; name = prop_name; potential_generator = None }
                 else
                   Error_message.EStrictLookupFailed
                     {
@@ -5144,7 +5145,8 @@ struct
           ) ->
           let error_message =
             if is_builtin_reason ALoc.source reason then
-              Error_message.EBuiltinLookupFailed { reason = reason_prop; name = Some x }
+              Error_message.EBuiltinLookupFailed
+                { reason = reason_prop; name = Some x; potential_generator = None }
             else
               let use_op = Some (use_op_of_lookup_action action) in
               let suggestion =
@@ -5192,7 +5194,8 @@ struct
             let reason_prop = reason_of_t elem_t in
             let error_message =
               if is_builtin_reason ALoc.source reason then
-                Error_message.EBuiltinLookupFailed { reason = reason_prop; name = None }
+                Error_message.EBuiltinLookupFailed
+                  { reason = reason_prop; name = None; potential_generator = None }
               else
                 let use_op = Some (use_op_of_lookup_action action) in
                 Error_message.EStrictLookupFailed
@@ -5223,7 +5226,8 @@ struct
           | Some strict_reason ->
             let error_message =
               if is_builtin_reason ALoc.source reason then
-                Error_message.EBuiltinLookupFailed { reason = reason_prop; name = Some x }
+                Error_message.EBuiltinLookupFailed
+                  { reason = reason_prop; name = Some x; potential_generator = None }
               else
                 let use_op = Some (use_op_of_lookup_action action) in
                 let suggestion =
@@ -6492,7 +6496,8 @@ struct
              in
              let error_message =
                if is_builtin_reason ALoc.source lreason then
-                 Error_message.EBuiltinLookupFailed { reason = reason_prop; name = prop_name }
+                 Error_message.EBuiltinLookupFailed
+                   { reason = reason_prop; name = prop_name; potential_generator = None }
                else
                  Error_message.EStrictLookupFailed
                    {

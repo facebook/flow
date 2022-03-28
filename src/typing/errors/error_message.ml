@@ -111,6 +111,7 @@ and 'loc t' =
   | EBuiltinLookupFailed of {
       reason: 'loc virtual_reason;
       name: Reason.name option;
+      potential_generator: string option;
     }
   | EStrictLookupFailed of {
       reason_prop: 'loc virtual_reason;
@@ -682,8 +683,8 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
     EPropNotWritable { reason_prop = map_reason reason_prop; prop_name; use_op = map_use_op use_op }
   | EPropPolarityMismatch ((r1, r2), p, ps, op) ->
     EPropPolarityMismatch ((map_reason r1, map_reason r2), p, ps, map_use_op op)
-  | EBuiltinLookupFailed { reason; name } ->
-    EBuiltinLookupFailed { reason = map_reason reason; name }
+  | EBuiltinLookupFailed { reason; name; potential_generator } ->
+    EBuiltinLookupFailed { reason = map_reason reason; name; potential_generator }
   | EStrictLookupFailed { reason_prop; reason_obj; name; suggestion; use_op } ->
     EStrictLookupFailed
       {
@@ -2012,11 +2013,22 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
       ]
     in
     Normal { features }
-  | EBuiltinLookupFailed { reason; name } ->
+  | EBuiltinLookupFailed { reason; name; potential_generator } ->
     let features =
       match name with
       | Some x when is_internal_module_name x ->
+        let potential_generator_features =
+          match potential_generator with
+          | Some generator ->
+            [
+              text " Try running the command ";
+              code generator;
+              text " to generate the missing module.";
+            ]
+          | None -> []
+        in
         [text "Cannot resolve module "; code (uninternal_name x); text "."]
+        @ potential_generator_features
       | None -> [text "Cannot resolve name "; desc reason; text "."]
       | Some x when is_internal_name x -> [text "Cannot resolve name "; desc reason; text "."]
       | Some x -> [text "Cannot resolve name "; code (display_string_of_name x); text "."]
