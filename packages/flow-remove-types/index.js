@@ -148,6 +148,8 @@ function resultPrinter(options, source, removedNodes) {
 
 var LINE_RX = /(\r\n?|\n|\u2028|\u2029)/;
 
+var THIS_PARAM_MARKER = '__THIS_PARAM_MARKER__';
+
 // A collection of methods for each AST type names which contain Flow types to
 // be removed.
 var removeFlowVisitor = {
@@ -171,9 +173,14 @@ var removeFlowVisitor = {
   ClassExpression: removeImplementedInterfaces,
 
   Identifier: function (context, node, ast) {
+    if (node[THIS_PARAM_MARKER] === true) {
+      removeNode(context, node);
+      removeTrailingCommaNode(context, node);
+      return false;
+    }
     if (node.optional) {
       // Find the optional token.
-      var idx = findTokenIndex(ast.tokens, startOf(node));
+      var idx = findTokenIndexAtStartOfNode(ast.tokens, node);
       do {
         idx++;
       } while (getLabel(ast.tokens[idx]) !== '?');
@@ -183,16 +190,22 @@ var removeFlowVisitor = {
 
   FunctionDeclaration: function (context, node) {
     if (node.params && node.params.length) {
-      if (node.params[0].name === 'this') {
-        return removeNode(context, node.params[0], undefined, node.params[1]);
+      if (
+        node.params[0].type === 'Identifier' &&
+        node.params[0].name === 'this'
+      ) {
+        node.params[0][THIS_PARAM_MARKER] = true;
       }
     }
   },
 
   FunctionExpression: function (context, node) {
     if (node.params && node.params.length) {
-      if (node.params[0].name === 'this') {
-        return removeNode(context, node.params[0], undefined, node.params[1]);
+      if (
+        node.params[0].type === 'Identifier' &&
+        node.params[0].name === 'this'
+      ) {
+        node.params[0][THIS_PARAM_MARKER] = true;
       }
     }
   },
@@ -223,7 +236,7 @@ var removeFlowVisitor = {
       var ast = context.ast;
 
       // Flow quirk: Remove importKind which is outside the node
-      var idxStart = findTokenIndex(ast.tokens, startOf(node));
+      var idxStart = findTokenIndexAtStartOfNode(ast.tokens, node);
       var maybeImportKind = ast.tokens[idxStart - 1];
       var maybeImportKindLabel = getLabel(maybeImportKind);
       if (
@@ -233,19 +246,8 @@ var removeFlowVisitor = {
         removeNode(context, maybeImportKind);
       }
 
-      // Remove the node itself
       removeNode(context, node);
-
-      // Remove trailing comma
-      var idx = findTokenIndex(ast.tokens, endOf(node));
-
-      while (isComment(ast.tokens[idx])) {
-        // NOTE: ast.tokens has no comments in Flow
-        idx++;
-      }
-      if (getLabel(ast.tokens[idx]) === ',') {
-        removeNode(context, ast.tokens[idx]);
-      }
+      removeTrailingCommaNode(context, node);
       return false;
     }
   },
@@ -264,12 +266,12 @@ var removeFlowVisitor = {
     var returnType = node.returnType;
     if (returnType) {
       var ast = context.ast;
-      var paramEndIdx = findTokenIndex(ast.tokens, startOf(returnType));
+      var paramEndIdx = findTokenIndexAtStartOfNode(ast.tokens, returnType);
       do {
         paramEndIdx--;
       } while (isComment(ast.tokens[paramEndIdx]));
 
-      var arrowIdx = findTokenIndex(ast.tokens, endOf(returnType));
+      var arrowIdx = findTokenIndexAtEndOfNode(ast.tokens, returnType);
       while (getLabel(ast.tokens[arrowIdx]) !== '=>') {
         arrowIdx++;
       }
@@ -302,12 +304,12 @@ function removeImplementedInterfaces(context, node, ast) {
   if (node.implements && node.implements.length > 0) {
     var first = node.implements[0];
     var last = node.implements[node.implements.length - 1];
-    var idx = findTokenIndex(ast.tokens, startOf(first));
+    var idx = findTokenIndexAtStartOfNode(ast.tokens, first);
     do {
       idx--;
     } while (ast.tokens[idx].value !== 'implements');
 
-    var lastIdx = findTokenIndex(ast.tokens, startOf(last));
+    var lastIdx = findTokenIndexAtStartOfNode(ast.tokens, last);
     do {
       if (!isComment(ast.tokens[idx])) {
         // NOTE: ast.tokens has no comments in Flow
@@ -319,7 +321,7 @@ function removeImplementedInterfaces(context, node, ast) {
 
 // Append node to the list of removed nodes, ensuring the order of the nodes
 // in the list.
-function removeNode(context, node, _ast, nextInList) {
+function removeNode(context, node) {
   var removedNodes = context.removedNodes;
   var length = removedNodes.length;
   var index = length;
@@ -327,16 +329,6 @@ function removeNode(context, node, _ast, nextInList) {
   // Check for line's leading and trailing space to be removed.
   var spaceNode = context.pretty ? getLeadingSpaceNode(context, node) : null;
   var lineNode = context.pretty ? getTrailingLineNode(context, node) : null;
-  var commaNode = nextInList
-    ? createNode({
-        start: endOf(node),
-        end: startOf(nextInList),
-        loc: {
-          start: endOf(node),
-          end: startOf(nextInList),
-        },
-      })
-    : null;
 
   while (index > 0 && endOf(removedNodes[index - 1]) > startOf(node)) {
     index--;
@@ -349,9 +341,6 @@ function removeNode(context, node, _ast, nextInList) {
     removedNodes.push(node);
     if (lineNode) {
       removedNodes.push(lineNode);
-    }
-    if (commaNode) {
-      removedNodes.push(commaNode);
     }
   } else {
     if (lineNode) {
@@ -377,6 +366,22 @@ function removeNodeIfNotCommentType(context, node) {
     return false;
   }
   return removeNode(context, node);
+}
+
+function removeTrailingCommaNode(context, node) {
+  var ast = context.ast;
+
+  // Remove trailing comma (potentially the next node)
+  var idx = findTokenIndexAtEndOfNode(ast.tokens, node) + 1;
+
+  while (isComment(ast.tokens[idx])) {
+    // NOTE: ast.tokens has no comments in Flow
+    idx++;
+  }
+  if (getLabel(ast.tokens[idx]) === ',') {
+    removeNode(context, ast.tokens[idx]);
+  }
+  return false;
 }
 
 function getPragmaNode(context, start, size) {
@@ -463,7 +468,7 @@ function getSpliceNodeAtPos(context, pos, loc, value) {
 // Returns true if node is the last to be removed from a line.
 function isLastNodeRemovedFromLine(context, node) {
   var tokens = context.ast.tokens;
-  var priorTokenIdx = findTokenIndex(tokens, startOf(node)) - 1;
+  var priorTokenIdx = findTokenIndexAtStartOfNode(tokens, node) - 1;
   var token = tokens[priorTokenIdx];
   var line = node.loc.end.line;
 
@@ -500,7 +505,7 @@ function isRemovedToken(context, token) {
 
   // Iterate through the tokens contained by the removed node to find a match.
   var tokens = context.ast.tokens;
-  var tokenIdx = findTokenIndex(tokens, startOf(node));
+  var tokenIdx = findTokenIndexAtStartOfNode(tokens, node);
   while (endOf(tokens[tokenIdx]) <= endOf(node)) {
     if (token === tokens[tokenIdx]) {
       return true;
@@ -546,16 +551,23 @@ function visit(ast, context, visitor) {
 
 // Given an array of sorted tokens, find the index of the token which contains
 // the given offset. Uses binary search for O(log N) performance.
-function findTokenIndex(tokens, offset) {
+function findTokenIndex(tokens, offset, matchBiasParam) {
+  // Token ranges often overlap at the edges e.g {start: 0, end: 100}, {start: 100, end: 300}. The
+  // `matchBiasParam` param allows a user to specify what to do in this case, defaulting to matching
+  // against the start of a token range.
+  var matchBias = matchBiasParam === 'end' ? 'end' : 'start';
   var min = 0;
   var max = tokens.length - 1;
+  var ptr;
 
   while (min <= max) {
-    var ptr = ((min + max) / 2) | 0;
+    ptr = ((min + max) / 2) | 0;
     var token = tokens[ptr];
-    if (endOf(token) <= offset) {
+    var end = endOf(token);
+    var start = startOf(token);
+    if (end < offset || (matchBias === 'start' && end === offset)) {
       min = ptr + 1;
-    } else if (startOf(token) > offset) {
+    } else if (start > offset || (matchBias === 'end' && start === offset)) {
       max = ptr - 1;
     } else {
       return ptr;
@@ -563,6 +575,13 @@ function findTokenIndex(tokens, offset) {
   }
 
   return ptr;
+}
+
+function findTokenIndexAtStartOfNode(tokens, node) {
+  return findTokenIndex(tokens, startOf(node), 'start');
+}
+function findTokenIndexAtEndOfNode(tokens, node) {
+  return findTokenIndex(tokens, endOf(node), 'end');
 }
 
 // True if the provided token is a comment.
