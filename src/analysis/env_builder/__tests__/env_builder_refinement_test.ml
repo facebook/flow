@@ -57,6 +57,8 @@ let print_values refinement_of_id =
       let refinement_str = show_refinement_kind_without_locs (snd refinement) in
       let writes_str = String.concat "," (List.map print_value writes) in
       Printf.sprintf "{refinement = %s; writes = %s}" refinement_str writes_str
+    | This -> "This"
+    | Super -> "Super"
     | Global name -> "Global " ^ name
     | Unreachable _ -> "unreachable"
     | Undefined _ -> "undefined"
@@ -3375,6 +3377,25 @@ if (x.foo === 3) {
         (6, 4) to (6, 9) => {
           {refinement = 4; writes = {refinement = 3; writes = projection at (3, 4) to (3, 9)}}
         }] |}]
+
+let%expect_test "heap_refinement_this_basic" =
+  print_ssa_test {|
+if (this.foo === 3) {
+  this.foo;
+}
+|};
+    [%expect {|
+      [
+        (2, 4) to (2, 8) => {
+          This
+        };
+        (3, 2) to (3, 6) => {
+          {refinement = SentinelR foo; writes = This}
+        };
+        (3, 2) to (3, 10) => {
+          {refinement = 3; writes = projection at (2, 4) to (2, 12)}
+        }]
+     |}]
 
 let%expect_test "heap_refinement_basic" =
   print_ssa_test {|

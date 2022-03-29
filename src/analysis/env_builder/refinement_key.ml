@@ -107,6 +107,8 @@ module Make (L : Loc_sig.S) : REFINEMENT_KEY with module L = L = struct
     let open Flow_ast.Expression in
     function
     | (_, Identifier id) -> Some (lookup_of_identifier id)
+    | (_, This _) -> Some lookup_of_this
+    | (_, Super _) -> Some lookup_of_super
     | (_, OptionalMember { OptionalMember.member; _ }) when allow_optional ->
       lookup_of_member ~allow_optional member
     | (_, Member member) -> lookup_of_member ~allow_optional member
@@ -143,6 +145,10 @@ module Make (L : Loc_sig.S) : REFINEMENT_KEY with module L = L = struct
 
   and lookup_of_identifier (_, { Flow_ast.Identifier.name; comments = _ }) =
     { base = name; projections = [] }
+
+  and lookup_of_this = { base = "this"; projections = [] }
+
+  and lookup_of_super = { base = "super"; projections = [] }
 
   let of_expression expr =
     let loc = fst expr in

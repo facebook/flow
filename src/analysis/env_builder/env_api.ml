@@ -38,6 +38,8 @@ module type S = sig
         refinement_id: int;
         writes: write_locs;
       }
+    | This
+    | Super
     | Global of string
     | Projection of L.t
     | Unreachable of L.t
@@ -187,6 +189,8 @@ module Make
         refinement_id: int;
         writes: write_locs;
       }
+    | This
+    | Super
     | Global of string
     | Projection of L.t
     | Unreachable of L.t
@@ -305,6 +309,8 @@ module Make
     | Write r -> [Reason.poly_loc_of_reason r]
     | Uninitialized _ -> []
     | Undeclared _ -> []
+    | This -> []
+    | Super -> []
     | Global _ -> []
     | Projection _ -> []
     | Unreachable _ -> []
@@ -370,6 +376,8 @@ module Make
         let refinement_id_str = string_of_int refinement_id in
         let writes_str = String.concat "," (List.map print_write_loc writes) in
         Printf.sprintf "{refinement_id = %s; writes = %s}" refinement_id_str writes_str
+      | This -> "this"
+      | Super -> "super"
       | Global name -> "Global " ^ name
     in
     fun values ->

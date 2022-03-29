@@ -276,6 +276,10 @@ module New_env = struct
             find_refi var_info refinement_id |> Base.Option.some |> type_of_state writes
           | (Env_api.With_ALoc.Global name, _) ->
             Flow_js.get_builtin cx (Reason.OrdinaryName name) reason
+          | (Env_api.With_ALoc.This, _) ->
+            Old_env.query_var ~lookup_mode cx (Reason.InternalName "this") loc
+          | (Env_api.With_ALoc.Super, _) ->
+            Old_env.query_var ~lookup_mode cx (Reason.InternalName "super") loc
           | (Env_api.With_ALoc.Unreachable loc, _) ->
             let reason = mk_reason (RCustom "unreachable value") loc in
             EmptyT.make reason (Trust.bogus_trust ())
@@ -357,6 +361,8 @@ module New_env = struct
           | Env_api.With_ALoc.Undeclared _ -> true
           | Env_api.With_ALoc.Refinement { refinement_id = _; writes } -> local_def_exists writes
           | Env_api.With_ALoc.Projection _ -> true
+          | Env_api.With_ALoc.This -> true
+          | Env_api.With_ALoc.Super -> true
           | Env_api.With_ALoc.Global _ -> false)
         states
       |> not

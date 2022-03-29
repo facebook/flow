@@ -163,6 +163,10 @@ module Make
 
     val merge : t -> t -> t
 
+    val this : t
+
+    val super : t
+
     val global : string -> t
 
     val one : ALoc.t virtual_reason -> t
@@ -213,6 +217,8 @@ module Make
           name: string;
         }
       | Projection of ALoc.t
+      | This
+      | Super
       | Global of string
       | Loc of ALoc.t virtual_reason
       | PHI of write_state list
@@ -322,6 +328,8 @@ module Make
       | DeclaredButSkipped _
       | UndeclaredClass _
       | Projection _
+      | This
+      | Super
       | Global _
       | Loc _
       | Refinement _ ->
@@ -358,6 +366,8 @@ module Make
       | UndeclaredClass _
       | Projection _
       | Global _
+      | This
+      | Super
       | Loc _ ->
         WriteSet.singleton t
       | PHI ts ->
@@ -368,6 +378,10 @@ module Make
           WriteSet.empty
           ts
       | Refinement { val_t; _ } -> normalize_through_refinements val_t.write_state
+
+    let this = mk_with_write_state This
+
+    let super = mk_with_write_state Super
 
     let global name = mk_with_write_state @@ Global name
 
@@ -392,6 +406,8 @@ module Make
           | Loc r -> Env_api.Write r
           | Refinement { refinement_id; val_t } ->
             Env_api.Refinement { writes = simplify_val val_t; refinement_id }
+          | This -> Env_api.This
+          | Super -> Env_api.Super
           | Global name -> Env_api.Global name
           | PHI _ -> failwith "A normalized value cannot be a PHI")
         (WriteSet.elements vals)
@@ -426,6 +442,8 @@ module Make
           else
             states
         | Loc _ -> []
+        | This -> []
+        | Super -> []
         | Global _ -> []
         | Projection _ -> []
       in
@@ -663,20 +681,39 @@ module Make
       | _ -> None)
 
   let initialize_globals unbound_names =
-    SSet.fold
-      (fun name acc ->
-        let entry =
-          {
-            val_ref = ref (Val.global name);
-            havoc = Val.global name;
-            def_loc = None;
-            heap_refinements = ref HeapRefinementMap.empty;
-            kind = Bindings.Var;
-          }
-        in
-        SMap.add name entry acc)
-      unbound_names
-      SMap.empty
+    SMap.empty
+    |> SSet.fold
+         (fun name acc ->
+           let entry =
+             {
+               val_ref = ref (Val.global name);
+               havoc = Val.global name;
+               def_loc = None;
+               heap_refinements = ref HeapRefinementMap.empty;
+               kind = Bindings.Var;
+             }
+           in
+           SMap.add name entry acc)
+         unbound_names
+    (* this has to come later, since this can be thought to be unbound names in SSA builder when it's used as a type. *)
+    |> SMap.add
+         "this"
+         {
+           val_ref = ref Val.this;
+           havoc = Val.this;
+           def_loc = None;
+           heap_refinements = ref HeapRefinementMap.empty;
+           kind = Bindings.Var;
+         }
+    |> SMap.add
+         "super"
+         {
+           val_ref = ref Val.super;
+           havoc = Val.super;
+           def_loc = None;
+           heap_refinements = ref HeapRefinementMap.empty;
+           kind = Bindings.Var;
+         }
 
   (* Statement.ml tries to extract the name and traverse at the location of the
    * jsx element if it's an identifier, otherwise it just traverses the
@@ -1387,6 +1424,14 @@ module Make
             env_state.values
         in
         env_state <- { env_state with values }
+
+      method! this_expression loc this_ =
+        this#any_identifier loc "this";
+        this_
+
+      method! super_expression loc super_ =
+        this#any_identifier loc "super";
+        super_
 
       method! identifier (ident : (ALoc.t, ALoc.t) Ast.Identifier.t) =
         let (loc, { Ast.Identifier.name = x; comments = _ }) = ident in
