@@ -34,7 +34,7 @@ Intl.DateTimeFormat([ 'en', 'en-GB' ], {
   second: '2-digit',
   timeZoneName: 'long'
 }) // correct
-
+const DateTimeFormat = Intl.DateTimeFormat;
 new DateTimeFormat().select() // incorrect
 
 new DateTimeFormat().format() // correct

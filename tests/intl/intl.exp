@@ -118,12 +118,76 @@ References:
                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------- collator.js:24:5
+Error ------------------------------------------------------------------------------------------------ collator.js:24:16
 
-Cannot resolve name `Collator`. [cannot-resolve-name]
+Cannot call `(new Collator()).format` because property `format` is missing in `Intl$Collator` [1]. [prop-missing]
 
+   collator.js:24:16
    24| new Collator().format() // incorrect
-           ^^^^^^^^
+                      ^^^^^^
+
+References:
+   collator.js:24:1
+   24| new Collator().format() // incorrect
+       ^^^^^^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------ collator.js:25:16
+
+Cannot call `(new Collator()).compare` because function [1] requires another argument. [incompatible-call]
+
+   collator.js:25:16
+   25| new Collator().compare() // incorrect
+                      ^^^^^^^
+
+References:
+   <BUILTINS>/intl.js:33:3
+   33|   compare (string, string): number;
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------ collator.js:26:16
+
+Cannot call `(new Collator()).compare` because function [1] requires another argument. [incompatible-call]
+
+   collator.js:26:16
+   26| new Collator().compare('a') // incorrect
+                      ^^^^^^^
+
+References:
+   <BUILTINS>/intl.js:33:3
+   33|   compare (string, string): number;
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------ collator.js:32:10
+
+Cannot call `Collator.getCanonicalLocales` because property `getCanonicalLocales` is missing in statics of
+`Intl$Collator` [1]. [prop-missing]
+
+   collator.js:32:10
+   32| Collator.getCanonicalLocales() // incorrect
+                ^^^^^^^^^^^^^^^^^^^
+
+References:
+   <BUILTINS>/intl.js:22:15
+   22| declare class Intl$Collator {
+                     ^^^^^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------ collator.js:34:29
+
+Cannot call `Collator.supportedLocalesOf` with `1` bound to `locales` because number [1] is incompatible with
+string [2]. [incompatible-call]
+
+   collator.js:34:29
+   34| Collator.supportedLocalesOf(1) // incorrect
+                                   ^ [1]
+
+References:
+   <BUILTINS>/intl.js:20:21
+   20| type Intl$Locales = Intl$Locale | Intl$Locale[]
+                           ^^^^^^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------- date_time_format.js:5:30
@@ -351,12 +415,49 @@ References:
                          ^^^^^^^^^^^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------- date_time_format.js:38:5
+Error ---------------------------------------------------------------------------------------- date_time_format.js:38:22
 
-Cannot resolve name `DateTimeFormat`. [cannot-resolve-name]
+Cannot call `(new DateTimeFormat()).select` because property `select` is missing in `Intl$DateTimeFormat` [1].
+[prop-missing]
 
+   date_time_format.js:38:22
    38| new DateTimeFormat().select() // incorrect
-           ^^^^^^^^^^^^^^
+                            ^^^^^^
+
+References:
+   date_time_format.js:38:1
+   38| new DateTimeFormat().select() // incorrect
+       ^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------- date_time_format.js:50:16
+
+Cannot call `DateTimeFormat.getCanonicalLocales` because property `getCanonicalLocales` is missing in statics of
+`Intl$DateTimeFormat` [1]. [prop-missing]
+
+   date_time_format.js:50:16
+   50| DateTimeFormat.getCanonicalLocales() // incorrect
+                      ^^^^^^^^^^^^^^^^^^^
+
+References:
+   <BUILTINS>/intl.js:62:15
+   62| declare class Intl$DateTimeFormat {
+                     ^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------- date_time_format.js:52:35
+
+Cannot call `DateTimeFormat.supportedLocalesOf` with `1` bound to `locales` because number [1] is incompatible with
+string [2]. [incompatible-call]
+
+   date_time_format.js:52:35
+   52| DateTimeFormat.supportedLocalesOf(1) // incorrect
+                                         ^ [1]
+
+References:
+   <BUILTINS>/intl.js:20:21
+   20| type Intl$Locales = Intl$Locale | Intl$Locale[]
+                           ^^^^^^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- intl.js:2:19
@@ -659,12 +760,63 @@ References:
                                      ^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------- number_format.js:32:5
+Error ------------------------------------------------------------------------------------------- number_format.js:32:20
 
-Cannot resolve name `NumberFormat`. [cannot-resolve-name]
+Cannot call `(new NumberFormat()).select` because property `select` is missing in `Intl$NumberFormat` [1].
+[prop-missing]
 
+   number_format.js:32:20
    32| new NumberFormat().select() // incorrect
-           ^^^^^^^^^^^^
+                          ^^^^^^
+
+References:
+   number_format.js:32:1
+   32| new NumberFormat().select() // incorrect
+       ^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------- number_format.js:33:20
+
+Cannot call `(new NumberFormat()).format` because function [1] requires another argument. [incompatible-call]
+
+   number_format.js:33:20
+    33| new NumberFormat().format() // incorrect
+                           ^^^^^^
+
+References:
+   <BUILTINS>/intl.js:130:3
+   130|   format (number): string;
+          ^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------- number_format.js:39:14
+
+Cannot call `NumberFormat.getCanonicalLocales` because property `getCanonicalLocales` is missing in statics of
+`Intl$NumberFormat` [1]. [prop-missing]
+
+   number_format.js:39:14
+    39| NumberFormat.getCanonicalLocales() // incorrect
+                     ^^^^^^^^^^^^^^^^^^^
+
+References:
+   <BUILTINS>/intl.js:119:15
+   119| declare class Intl$NumberFormat {
+                      ^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------- number_format.js:41:33
+
+Cannot call `NumberFormat.supportedLocalesOf` with `1` bound to `locales` because number [1] is incompatible with
+string [2]. [incompatible-call]
+
+   number_format.js:41:33
+   41| NumberFormat.supportedLocalesOf(1) // incorrect
+                                       ^ [1]
+
+References:
+   <BUILTINS>/intl.js:20:21
+   20| type Intl$Locales = Intl$Locale | Intl$Locale[]
+                           ^^^^^^^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------- plural_rules.js:3:16
@@ -863,7 +1015,7 @@ References:
 
 
 
-Found 58 errors
+Found 67 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

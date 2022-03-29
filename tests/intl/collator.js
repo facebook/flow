@@ -20,7 +20,7 @@ Intl.Collator([ 'en', 'en-GB' ], {
   numeric: true,
   caseFirst: 'false'
 }) // correct
-
+const Collator = Intl.Collator;
 new Collator().format() // incorrect
 new Collator().compare() // incorrect
 new Collator().compare('a') // incorrect
