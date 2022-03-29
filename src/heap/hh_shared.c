@@ -194,6 +194,9 @@ static int win32_getpagesize(void) {
 // represent offsets into the hash table itself.
 typedef uintnat addr_t;
 
+// A field is either an address or a tagged integer, distinguished by low bit.
+typedef uintnat field_t;
+
 typedef struct {
   /* Layout information, used by workers to create memory mappings. */
   size_t locals_bsize;
@@ -1049,15 +1052,15 @@ static void mark_stack_reset(void) {
 // except we allocate white to avoid needing to sweep. Because we allocate
 // white and don't sweep these addresses, it's important that they are not
 // darkened.
-static inline void mark_slice_darken(addr_t addr) {
-  if (addr != NULL_ADDR && addr < gc_end) {
-    hh_header_t hd = Deref(addr);
+static inline void mark_slice_darken(field_t fld) {
+  if ((fld & 1) == 0 && fld != NULL_ADDR && fld < gc_end) {
+    hh_header_t hd = Deref(fld);
     if (Is_white(hd)) {
-      Deref(addr) = Black_hd(hd);
+      Deref(fld) = Black_hd(hd);
       if (mark_stack_ptr == mark_stack_end) {
         mark_stack_resize();
       }
-      *mark_stack_ptr++ = addr;
+      *mark_stack_ptr++ = fld;
     }
   }
 }
@@ -1279,12 +1282,11 @@ CAMLprim value hh_sweep_slice(value work_val) {
 // | X |<--| * |<--| * |
 // +---+   +---+   +---+
 static void gc_thread(addr_t p) {
-  if (Deref(p) == NULL_ADDR) {
-    return;
+  field_t q = Deref(p);
+  if ((q & 1) == 0 && q != NULL_ADDR) {
+    Deref(p) = Deref(q);
+    Deref(q) = p;
   }
-  uintnat q = Deref(p);
-  Deref(p) = Deref(q);
-  Deref(q) = p;
 }
 
 // See comment above `mark_entity`
