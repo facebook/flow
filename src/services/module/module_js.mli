@@ -5,10 +5,6 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-open Utils_js
-
-val eponymous_module : File_key.t -> Modulename.t
-
 (* export and import functions for the module system *)
 val exported_module : options:Options.t -> File_key.t -> Docblock.t -> string option
 
@@ -27,33 +23,11 @@ val imported_module :
   string ->
   Modulename.t
 
-(* add module records for given files;
-   returns the set of modules added
-*)
-val calc_new_modules :
-  MultiWorkerLwt.worker list option ->
-  all_providers_mutator:Module_hashtables.All_providers_mutator.t ->
-  reader:Mutator_state_reader.t ->
-  FilenameSet.t ->
-  Modulename.Set.t Lwt.t
-
-(* remove module records being tracked for given files;
-   returns the set of modules removed
-*)
-val calc_old_modules :
-  MultiWorkerLwt.worker list option ->
-  all_providers_mutator:Module_hashtables.All_providers_mutator.t ->
-  options:Options.t ->
-  reader:Mutator_state_reader.t ->
-  FilenameSet.t ->
-  Modulename.Set.t Lwt.t
-
-(* repick providers for old and new modules *)
+(* repick providers for dirty modules *)
 val commit_modules :
   transaction:Transaction.t ->
   workers:MultiWorkerLwt.worker list option ->
   options:Options.t ->
-  reader:Mutator_state_reader.t ->
   (* dirty modules *)
   Modulename.Set.t ->
   (* changed modules and duplicate providers *)

@@ -50,6 +50,7 @@ let collate_parse_results parse_results =
     unchanged;
     not_found;
     package_json;
+    dirty_modules;
   } =
     parse_results
   in
@@ -73,7 +74,7 @@ let collate_parse_results parse_results =
       errors
   in
   let unparsed = FilenameSet.union (FilenameSet.of_list failed) unparsed in
-  (parsed, unparsed, unchanged, not_found, local_errors, package_json)
+  (parsed, unparsed, unchanged, not_found, dirty_modules, local_errors, package_json)
 
 let parse ~options ~profiling ~workers ~reader parse_next =
   Memory_utils.with_memory_timer_lwt ~options "Parsing" profiling (fun () ->
@@ -95,24 +96,8 @@ let reparse ~options ~profiling ~transaction ~reader ~workers ~modified =
       Lwt.return (collate_parse_results results)
   )
 
-(* commit providers for old and new modules, collect errors. *)
-let commit_modules
-    ~transaction
-    ~reader
-    ~all_providers_mutator
-    ~options
-    ~profiling
-    ~workers
-    ~old_modules
-    ~duplicate_providers
-    ~new_or_changed =
-  (* conservatively approximate set of modules whose providers will change *)
-  (* register providers for modules, warn on dupes etc. *)
+let commit_modules ~transaction ~options ~profiling ~workers ~duplicate_providers dirty_modules =
   Memory_utils.with_memory_timer_lwt ~options "CommitModules" profiling (fun () ->
-      let%lwt new_modules =
-        Module_js.calc_new_modules ~reader workers ~all_providers_mutator new_or_changed
-      in
-      let dirty_modules = Modulename.Set.union old_modules new_modules in
       (* Clear duplicate provider errors for all dirty modules. *)
       let duplicate_providers =
         (* Avoid iterating over dirty modules when there are no duplicate
@@ -130,7 +115,7 @@ let commit_modules
             duplicate_providers
       in
       let%lwt (changed_modules, new_duplicate_providers) =
-        Module_js.commit_modules ~transaction ~workers ~options ~reader dirty_modules
+        Module_js.commit_modules ~transaction ~workers ~options dirty_modules
       in
       Lwt.return (changed_modules, SMap.union duplicate_providers new_duplicate_providers)
   )
@@ -1069,7 +1054,8 @@ end = struct
      *
      * Parsing also gives us new local_errors, including parse errors, docblock
      * errors, etc. *)
-    let%lwt (parsed_set, unparsed_set, unchanged_parse, deleted, new_local_errors, _) =
+    let%lwt (parsed_set, unparsed_set, unchanged_parse, deleted, dirty_modules, new_local_errors, _)
+        =
       let modified = CheckedSet.all updates in
       reparse ~options ~profiling ~transaction ~reader ~workers ~modified
     in
@@ -1295,18 +1281,6 @@ end = struct
     let unchanged_checked =
       CheckedSet.remove new_or_changed_or_deleted env.ServerEnv.checked_files
     in
-    let all_providers_mutator = Module_hashtables.All_providers_mutator.create transaction in
-    (* clear out records of files, and names of modules provided by those files *)
-    let%lwt old_modules =
-      Memory_utils.with_memory_timer_lwt ~options "ModuleClearFiles" profiling (fun () ->
-          Module_js.calc_old_modules
-            ~reader
-            workers
-            ~all_providers_mutator
-            ~options
-            new_or_changed_or_deleted
-      )
-    in
     (* We may be forcing a recheck on some unchanged files *)
     let unchanged_files_to_force =
       CheckedSet.filter files_to_force ~f:(fun fn _ -> FilenameSet.mem fn unchanged)
@@ -1315,16 +1289,7 @@ end = struct
     let%lwt (changed_modules, duplicate_providers) =
       (* TODO remove after lookup overhaul *)
       Module_js.clear_filename_cache ();
-      commit_modules
-        ~transaction
-        ~reader
-        ~all_providers_mutator
-        ~options
-        ~profiling
-        ~workers
-        ~old_modules
-        ~new_or_changed
-        ~duplicate_providers
+      commit_modules ~transaction ~options ~profiling ~workers ~duplicate_providers dirty_modules
     in
     (* direct_dependent_files are unchanged files which directly depend on changed modules,
        or are new / changed files that are phantom dependents. *)
@@ -2054,14 +2019,14 @@ let init_from_saved_state ~profiling ~workers ~saved_state ~updates options =
     (* Restore PackageHeap and the ReversePackageHeap *)
     FilenameMap.iter (fun fn -> Module_js.add_package (File_key.to_string fn)) package_heaps;
 
-    let restore_parsed ~load_sighashes acc (fn, parsed_file_data) =
+    let restore_parsed ~load_sighashes (fns, dirty_modules) (fn, parsed_file_data) =
       let { Saved_state.module_name; normalized_file_data; sig_hash } = parsed_file_data in
       let { Saved_state.hash; exports; resolved_requires } =
         Saved_state.denormalize_file_data ~root normalized_file_data
       in
 
       (* Restore the FileHeap *)
-      Parsing_heaps.From_saved_state.add_parsed fn hash module_name exports;
+      let ms = Parsing_heaps.From_saved_state.add_parsed fn hash module_name exports in
 
       (* Restore the ResolvedRequiresHeap *)
       Module_heaps.From_saved_state.add_resolved_requires fn resolved_requires;
@@ -2070,40 +2035,42 @@ let init_from_saved_state ~profiling ~workers ~saved_state ~updates options =
         (* Restore the SigHashHeap *)
         Base.Option.iter ~f:(Context_heaps.From_saved_state.add_sig_hash fn) sig_hash;
 
-      FilenameSet.add fn acc
+      (FilenameSet.add fn fns, Modulename.Set.union ms dirty_modules)
     in
 
-    let restore_unparsed acc (fn, unparsed_file_data) =
+    let restore_unparsed (fns, dirty_modules) (fn, unparsed_file_data) =
       let { Saved_state.unparsed_module_name; unparsed_hash } = unparsed_file_data in
 
       (* Restore the FileHeap *)
-      Parsing_heaps.From_saved_state.add_unparsed fn unparsed_hash unparsed_module_name;
+      let ms = Parsing_heaps.From_saved_state.add_unparsed fn unparsed_hash unparsed_module_name in
 
-      FilenameSet.add fn acc
+      (FilenameSet.add fn fns, Modulename.Set.union ms dirty_modules)
     in
 
     Hh_logger.info "Restoring heaps";
-    let%lwt (parsed_set, unparsed_set, all_files) =
+    let%lwt (parsed, unparsed, dirty_modules) =
       Memory_utils.with_memory_timer_lwt ~options "RestoreHeaps" profiling (fun () ->
           let load_sighashes = Options.saved_state_load_sighashes options in
-          let%lwt parsed_set =
+          let neutral = (FilenameSet.empty, Modulename.Set.empty) in
+          let merge (a1, a2) (b1, b2) = (FilenameSet.union a1 b1, Modulename.Set.union a2 b2) in
+          let%lwt (parsed, dirty_modules_parsed) =
             MultiWorkerLwt.call
               workers
               ~job:(List.fold_left (restore_parsed ~load_sighashes))
-              ~merge:FilenameSet.union
-              ~neutral:FilenameSet.empty
+              ~merge
+              ~neutral
               ~next:(MultiWorkerLwt.next workers parsed_heaps)
           in
-          let%lwt unparsed_set =
+          let%lwt (unparsed, dirty_modules_unparsed) =
             MultiWorkerLwt.call
               workers
               ~job:(List.fold_left restore_unparsed)
-              ~merge:FilenameSet.union
-              ~neutral:FilenameSet.empty
+              ~merge
+              ~neutral
               ~next:(MultiWorkerLwt.next workers unparsed_heaps)
           in
-          let all_files = FilenameSet.union parsed_set unparsed_set in
-          Lwt.return (parsed_set, unparsed_set, all_files)
+          let dirty_modules = Modulename.Set.union dirty_modules_parsed dirty_modules_unparsed in
+          Lwt.return (parsed, unparsed, dirty_modules)
       )
     in
     Hh_logger.info "Loading libraries";
@@ -2128,19 +2095,15 @@ let init_from_saved_state ~profiling ~workers ~saved_state ~updates options =
     Hh_logger.info "Resolving dependencies";
     MonitorRPC.status_update ServerStatus.Resolving_dependencies_progress;
 
-    let all_providers_mutator = Module_hashtables.All_providers_mutator.create transaction in
     (* This will restore InfoHeap, NameHeap, & all_providers hashtable *)
     let%lwt (_changed_modules, duplicate_providers) =
       commit_modules
         ~transaction
-        ~reader
-        ~all_providers_mutator
         ~options
         ~profiling
         ~workers
-        ~old_modules:Modulename.Set.empty
         ~duplicate_providers:SMap.empty
-        ~new_or_changed:all_files
+        dirty_modules
     in
     let errors =
       let merge_errors = FilenameMap.empty in
@@ -2151,14 +2114,14 @@ let init_from_saved_state ~profiling ~workers ~saved_state ~updates options =
     Hh_logger.info "Indexing files";
     let%lwt exports =
       Memory_utils.with_memory_timer_lwt ~options "Indexing" profiling (fun () ->
-          Export_service.init ~workers ~reader ~libs:lib_exports parsed_set
+          Export_service.init ~workers ~reader ~libs:lib_exports parsed
       )
     in
 
     let env =
       mk_init_env
-        ~files:parsed_set
-        ~unparsed:unparsed_set
+        ~files:parsed
+        ~unparsed
         ~package_json_files:(FilenameMap.keys package_heaps)
         ~dependency_info
         ~ordered_libs
@@ -2254,6 +2217,7 @@ let init_from_scratch ~profiling ~workers options =
             unparsed_set,
             unchanged,
             _not_found,
+            dirty_modules,
             local_errors,
             (package_json_files, package_json_errors)
           ) =
@@ -2262,7 +2226,6 @@ let init_from_scratch ~profiling ~workers options =
   assert (FilenameSet.is_empty unchanged);
 
   let parsed = FilenameSet.elements parsed_set in
-  let new_or_changed = FilenameSet.union parsed_set unparsed_set in
 
   (* Parsing won't raise warnings *)
   let warnings = FilenameMap.empty in
@@ -2286,18 +2249,14 @@ let init_from_scratch ~profiling ~workers options =
 
   Hh_logger.info "Resolving dependencies";
   MonitorRPC.status_update ServerStatus.Resolving_dependencies_progress;
-  let all_providers_mutator = Module_hashtables.All_providers_mutator.create transaction in
   let%lwt (_changed_modules, duplicate_providers) =
     commit_modules
       ~transaction
-      ~reader
-      ~all_providers_mutator
       ~options
       ~profiling
       ~workers
-      ~old_modules:Modulename.Set.empty
-      ~new_or_changed
       ~duplicate_providers:SMap.empty
+      dirty_modules
   in
   let%lwt (resolve_errors, _resolved_requires_changed) =
     resolve_requires ~transaction ~reader ~options ~profiling ~workers ~parsed ~parsed_set

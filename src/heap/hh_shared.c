@@ -1917,3 +1917,18 @@ CAMLprim value hh_iter_serialized(value f, value filter_tag_val) {
   }
   CAMLreturn(Val_unit);
 }
+
+CAMLprim value hh_compare_exchange_weak(
+    value addr_val,
+    value expected_val,
+    value desired_val) {
+  uintnat* ptr = (uintnat*)Ptr_of_addr(Long_val(addr_val));
+  uintnat expected = Long_val(expected_val);
+  return Val_bool(__atomic_compare_exchange_n(
+      ptr,
+      &expected,
+      Long_val(desired_val),
+      1,
+      __ATOMIC_SEQ_CST,
+      __ATOMIC_SEQ_CST));
+}

@@ -225,11 +225,6 @@ and file_exists path =
 
 let resolve_symlinks path = Path.to_string (Path.make path)
 
-(* Every <file>.js can be imported by its path, so it effectively exports a
-   module by the name <file>.js. Every <file>.js.flow shadows the corresponding
-   <file>.js, so it effectively exports a module by the name <file>.js. *)
-let eponymous_module file = Modulename.Filename (Files.chop_flow_ext file)
-
 (*******************************)
 
 module Node = struct
@@ -447,7 +442,7 @@ module Node = struct
     match choose_candidate candidates with
     | Some str ->
       let options = Options.file_options options in
-      eponymous_module (Files.filename_from_string ~options str)
+      Files.eponymous_module (Files.filename_from_string ~options str)
     | None -> Modulename.String import_str
 
   (* in node, file names are module names, as guaranteed by
@@ -566,7 +561,7 @@ module Haste : MODULE_SYSTEM = struct
     match resolved with
     | Some name ->
       let options = Options.file_options options in
-      eponymous_module (Files.filename_from_string ~options name)
+      Files.eponymous_module (Files.filename_from_string ~options name)
     | None -> Modulename.String chosen_candidate
 
   (* in haste, many files may provide the same module. here we're also
@@ -725,162 +720,84 @@ let add_parsed_resolved_requires ~mutator ~reader ~options ~node_modules_contain
    (b) remove the unregistered modules from NameHeap
    (c) register the new providers in NameHeap
 *)
-let commit_modules ~transaction ~workers ~options ~reader dirty_modules =
-  (* TODO: keep workers parameter, will use workers here soon *)
-  ignore workers;
+let commit_modules ~transaction ~workers ~options dirty_modules =
   let module Heap = SharedMem.NewAPI in
   let debug = Options.is_debug_mode options in
-  let mutator = Parsing_heaps.Commit_modules_mutator.create transaction dirty_modules in
-  (* prep for registering new mappings in NameHeap *)
-  let (unchanged, no_providers, duplicate_providers) =
-    Modulename.Set.fold
-      (fun m (unchanged, no_providers, errmap) ->
-        let provider_ent = Option.get (Parsing_heaps.get_provider_ent m) in
-        let old_provider = Heap.entity_read_latest provider_ent in
-        let (new_provider, errmap) =
-          match Module_hashtables.Mutator_reader.find_in_all_providers_unsafe ~reader m with
-          | ps when FilenameSet.is_empty ps -> (None, errmap)
-          | ps ->
-            let (p, errmap) = choose_provider ~options (Modulename.to_string m) ps errmap in
-            let p_addr = Parsing_heaps.get_file_addr_unsafe p in
-            (Some (p, p_addr), errmap)
+  let mutator = Parsing_heaps.Commit_modules_mutator.create transaction in
+  let f (unchanged, no_providers, errmap) mname =
+    let mname_str = Modulename.to_string mname in
+    let (provider_ent, all_providers) =
+      match mname with
+      | Modulename.String name ->
+        let m = Parsing_heaps.get_haste_module_unsafe name in
+        (Heap.get_haste_provider m, Heap.get_haste_all_providers_exclusive m)
+      | Modulename.Filename key ->
+        let m = Parsing_heaps.get_file_module_unsafe key in
+        (Heap.get_file_provider m, Heap.get_file_all_providers_exclusive m)
+    in
+    let all_providers =
+      all_providers |> List.map Parsing_heaps.read_file_key |> FilenameSet.of_list
+    in
+    let old_provider = Heap.entity_read_latest provider_ent in
+    let (new_provider, errmap) =
+      if FilenameSet.is_empty all_providers then
+        (None, errmap)
+      else
+        let (p, errmap) = choose_provider ~options mname_str all_providers errmap in
+        let p_addr = Parsing_heaps.get_file_addr_unsafe p in
+        (Some (p, p_addr), errmap)
+    in
+    match (old_provider, new_provider) with
+    | (_, None) ->
+      if debug then prerr_endlinef "no remaining providers: %S" mname_str;
+      Heap.entity_advance provider_ent None;
+      let no_providers = Modulename.Set.add mname no_providers in
+      (unchanged, no_providers, errmap)
+    | (None, Some (pkey, p)) ->
+      (* When can this happen? Either m pointed to a file that used to
+         provide m and changed or got deleted (causing m to be in
+         old_modules), or m didn't have a provider before. *)
+      if debug then prerr_endlinef "initial provider %S -> %s" mname_str (File_key.to_string pkey);
+      Heap.entity_advance provider_ent (Some p);
+      (unchanged, no_providers, errmap)
+    | (Some old_p, Some (new_pkey, new_p)) ->
+      if Heap.files_equal old_p new_p then (
+        (* When can this happen? Say m pointed to f before, a different file
+           f' that provides m changed (so m is not in old_modules), but f
+           continues to be the chosen provider = p (winning over f'). *)
+        if debug then
+          prerr_endlinef "unchanged provider: %S -> %s" mname_str (File_key.to_string new_pkey);
+        let unchanged =
+          if Heap.file_changed old_p then
+            unchanged
+          else
+            Modulename.Set.add mname unchanged
         in
-        match (old_provider, new_provider) with
-        | (_, None) ->
-          if debug then prerr_endlinef "no remaining providers: %S" (Modulename.to_string m);
-          Heap.entity_advance provider_ent None;
-          let no_providers = Modulename.Set.add m no_providers in
-          (unchanged, no_providers, errmap)
-        | (None, Some (pkey, p)) ->
-          (* When can this happen? Either m pointed to a file that used to
-             provide m and changed or got deleted (causing m to be in
-             old_modules), or m didn't have a provider before. *)
-          if debug then
-            prerr_endlinef
-              "initial provider %S -> %s"
-              (Modulename.to_string m)
-              (File_key.to_string pkey);
-          SharedMem.NewAPI.entity_advance provider_ent (Some p);
-          (unchanged, no_providers, errmap)
-        | (Some old_p, Some (new_pkey, new_p)) ->
-          if Heap.files_equal old_p new_p then (
-            (* When can this happen? Say m pointed to f before, a different file
-               f' that provides m changed (so m is not in old_modules), but f
-               continues to be the chosen provider = p (winning over f'). *)
-            if debug then
-              prerr_endlinef
-                "unchanged provider: %S -> %s"
-                (Modulename.to_string m)
-                (File_key.to_string new_pkey);
-            let unchanged =
-              if SharedMem.NewAPI.file_changed old_p then
-                unchanged
-              else
-                Modulename.Set.add m unchanged
-            in
-            (unchanged, no_providers, errmap)
-          ) else (
-            (* When can this happen? Say m pointed to f before, a different file
-               f' that provides m changed (so m is not in old_modules), and
-               now f' becomes the chosen provider = p (winning over f). *)
-            if debug then
-              prerr_endlinef
-                "new provider: %S -> %s replaces %s"
-                (Modulename.to_string m)
-                (File_key.to_string new_pkey)
-                (Parsing_heaps.read_file_name old_p);
-            SharedMem.NewAPI.entity_advance provider_ent (Some new_p);
-            (unchanged, no_providers, errmap)
-          ))
-      dirty_modules
-      (Modulename.Set.empty, Modulename.Set.empty, SMap.empty)
+        (unchanged, no_providers, errmap)
+      ) else (
+        (* When can this happen? Say m pointed to f before, a different file
+           f' that provides m changed (so m is not in old_modules), and
+           now f' becomes the chosen provider = p (winning over f). *)
+        if debug then
+          prerr_endlinef
+            "new provider: %S -> %s replaces %s"
+            mname_str
+            (File_key.to_string new_pkey)
+            (Parsing_heaps.read_file_name old_p);
+        Heap.entity_advance provider_ent (Some new_p);
+        (unchanged, no_providers, errmap)
+      )
+  in
+  let%lwt (unchanged, no_providers, duplicate_providers) =
+    MultiWorkerLwt.call
+      workers
+      ~job:(List.fold_left f)
+      ~neutral:(Modulename.Set.empty, Modulename.Set.empty, SMap.empty)
+      ~merge:(fun (a1, a2, a3) (b1, b2, b3) ->
+        (Modulename.Set.union a1 b1, Modulename.Set.union a2 b2, SMap.union a3 b3))
+      ~next:(MultiWorkerLwt.next workers (Modulename.Set.elements dirty_modules))
   in
   Parsing_heaps.Commit_modules_mutator.record_no_providers mutator no_providers;
   let changed_modules = Modulename.Set.diff dirty_modules unchanged in
   if debug then prerr_endlinef "*** done committing modules ***";
   Lwt.return (changed_modules, duplicate_providers)
-
-let get_modules file_key parse =
-  let acc = [eponymous_module file_key] in
-  match Parsing_heaps.read_module_name parse with
-  | None -> acc
-  | Some name -> Modulename.String name :: acc
-
-(* Calculate the set of modules whose current providers are changed or deleted files.
-
-   Possibilities:
-   1. file is current registered module provider for a given module name
-   2. file is not current provider, but record is still registered
-   3. file isn't in the map at all. This means file is new.
-   We return the set of module names whose current providers are the same as the
-   given files (#1). This is the set commit_modules expects as its second
-   argument.
-
-   NOTE: The notion of "current provider" is murky, since every file at least
-   provides its eponymous module. So we also include it in the returned set.
-
-   TODO: Does a .flow file also provide its eponymous module? Or does it provide
-   the eponymous module of the file it shadows?
-*)
-let calc_old_modules workers ~all_providers_mutator ~options ~reader new_or_changed_or_deleted =
-  let%lwt file_module_assoc =
-    let f acc file =
-      match Parsing_heaps.get_file_addr file with
-      | None -> acc
-      | Some addr ->
-        (match Parsing_heaps.Mutator_reader.get_old_parse ~reader addr with
-        | Some parse -> (file, get_modules file parse) :: acc
-        | None -> acc)
-    in
-    MultiWorkerLwt.call
-      workers
-      ~job:(List.fold_left f)
-      ~neutral:[]
-      ~merge:List.rev_append
-      ~next:(MultiWorkerLwt.next workers (FilenameSet.elements new_or_changed_or_deleted))
-  in
-  let old_modules =
-    List.fold_left
-      (fun acc (file, modules) ->
-        List.fold_left
-          (fun acc m ->
-            Module_hashtables.All_providers_mutator.remove_provider all_providers_mutator file m;
-            Modulename.Set.add m acc)
-          acc
-          modules)
-      Modulename.Set.empty
-      file_module_assoc
-  in
-  if Options.is_debug_mode options then
-    prerr_endlinef
-      "*** old modules (changed and deleted files) %d ***"
-      (Modulename.Set.cardinal old_modules);
-  Lwt.return old_modules
-
-let calc_new_modules workers ~all_providers_mutator ~reader new_or_changed =
-  let%lwt file_module_assoc =
-    let f acc file =
-      let addr = Parsing_heaps.get_file_addr_unsafe file in
-      let parse = Parsing_heaps.Mutator_reader.get_parse_unsafe ~reader file addr in
-      (file, get_modules file parse) :: acc
-    in
-    MultiWorkerLwt.call
-      workers
-      ~job:(List.fold_left f)
-      ~neutral:[]
-      ~merge:List.rev_append
-      ~next:(MultiWorkerLwt.next workers (FilenameSet.elements new_or_changed))
-  in
-  let new_modules =
-    List.fold_left
-      (fun acc (file, modules) ->
-        List.fold_left
-          (fun acc m ->
-            Module_hashtables.All_providers_mutator.add_provider all_providers_mutator file m;
-            Modulename.Set.add m acc)
-          acc
-          modules)
-      Modulename.Set.empty
-      file_module_assoc
-  in
-  Lwt.return new_modules

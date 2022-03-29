@@ -992,6 +992,9 @@ module NewAPI = struct
   external unsafe_write_bytes_at : _ addr -> bytes -> pos:int -> len:int -> unit = "hh_write_bytes"
     [@@noalloc]
 
+  external compare_exchange_weak : _ addr -> int -> int -> bool = "hh_compare_exchange_weak"
+    [@@noalloc]
+
   (** Addresses *)
 
   let addr_size = 1
@@ -1198,8 +1201,10 @@ module NewAPI = struct
 
   let opt_none = null_addr
 
+  let is_none addr = addr == opt_none
+
   let read_opt addr =
-    if addr == opt_none then
+    if is_none addr then
       None
     else
       Some addr
@@ -1443,15 +1448,16 @@ module NewAPI = struct
 
   (** Parse data *)
 
-  let untyped_parse_size = 2 * addr_size
+  let untyped_parse_size = 3 * addr_size
 
-  let typed_parse_size = 8 * addr_size
+  let typed_parse_size = 9 * addr_size
 
   let write_untyped_parse chunk hash haste_module =
     let haste_module = Option.value haste_module ~default:opt_none in
     let addr = write_header chunk Untyped_tag untyped_parse_size in
     unsafe_write_addr chunk hash;
     unsafe_write_addr chunk haste_module;
+    unsafe_write_addr chunk null_addr (* next haste provider *);
     addr
 
   let write_typed_parse chunk hash haste_module exports =
@@ -1459,6 +1465,7 @@ module NewAPI = struct
     let addr = write_header chunk Typed_tag typed_parse_size in
     unsafe_write_addr chunk hash;
     unsafe_write_addr chunk haste_module;
+    unsafe_write_addr chunk null_addr (* next haste provider *);
     unsafe_write_addr chunk null_addr;
     unsafe_write_addr chunk null_addr;
     unsafe_write_addr chunk null_addr;
@@ -1481,17 +1488,19 @@ module NewAPI = struct
 
   let haste_module_addr parse = addr_offset parse 2
 
-  let ast_addr parse = addr_offset parse 3
+  let next_haste_provider_addr parse = addr_offset parse 3
 
-  let docblock_addr parse = addr_offset parse 4
+  let ast_addr parse = addr_offset parse 4
 
-  let aloc_table_addr parse = addr_offset parse 5
+  let docblock_addr parse = addr_offset parse 5
 
-  let type_sig_addr parse = addr_offset parse 6
+  let aloc_table_addr parse = addr_offset parse 6
 
-  let file_sig_addr parse = addr_offset parse 7
+  let type_sig_addr parse = addr_offset parse 7
 
-  let exports_addr parse = addr_offset parse 8
+  let file_sig_addr parse = addr_offset parse 8
+
+  let exports_addr parse = addr_offset parse 9
 
   let get_file_hash = get_generic file_hash_addr
 
@@ -1533,7 +1542,7 @@ module NewAPI = struct
     | Resource_file -> Resource_file_tag
     | Lib_file -> Lib_file_tag
 
-  let file_size = 3 * addr_size
+  let file_size = 4 * addr_size
 
   let write_file chunk kind file_name file_module parse =
     let file_module = Option.value file_module ~default:opt_none in
@@ -1541,6 +1550,7 @@ module NewAPI = struct
     unsafe_write_addr chunk file_name;
     unsafe_write_addr chunk file_module;
     unsafe_write_addr chunk parse;
+    unsafe_write_addr chunk null_addr (* next file provider *);
     addr
 
   let file_name_addr file = addr_offset file 1
@@ -1548,6 +1558,8 @@ module NewAPI = struct
   let file_module_addr file = addr_offset file 2
 
   let parse_addr file = addr_offset file 3
+
+  let next_file_provider_addr file = addr_offset file 4
 
   let get_file_kind file =
     let hd = read_header (get_heap ()) file in
@@ -1573,34 +1585,184 @@ module NewAPI = struct
 
   let file_changed file = entity_changed (get_parse file)
 
+  (** All providers *)
+
+  let add_provider head_addr next_addr file =
+    let heap = get_heap () in
+    let rec loop () =
+      let head = read_addr heap head_addr in
+      unsafe_write_addr_at heap next_addr head;
+      if not (compare_exchange_weak head_addr head file) then loop ()
+    in
+    loop ()
+
   (** Haste modules *)
 
-  let haste_module_size = 2 * addr_size
+  let haste_module_size = 3 * addr_size
 
   let write_haste_module chunk name provider =
     let addr = write_header chunk Haste_module_tag haste_module_size in
     unsafe_write_addr chunk name;
     unsafe_write_addr chunk provider;
+    unsafe_write_addr chunk null_addr (* all providers *);
     addr
+
+  let haste_modules_equal = Int.equal
 
   let haste_name_addr m = addr_offset m 1
 
   let haste_provider_addr m = addr_offset m 2
 
+  let haste_all_providers_addr m = addr_offset m 3
+
   let get_haste_name = get_generic haste_name_addr
 
   let get_haste_provider = get_generic haste_provider_addr
 
+  let add_haste_provider m file parse =
+    let head_addr = haste_all_providers_addr m in
+    let next_addr = next_haste_provider_addr parse in
+    add_provider head_addr next_addr file
+
+  (* Iterate through linked list of providers, accumulating a list. While
+   * traversing, we also remove any files which are no longer providers.
+   *
+   * Deferred delete happens here because concurrent deletion from a linked
+   * list is complicated (but possible!) and we need to iterate over all
+   * providers anyway, so it's much more convenient to do it here.
+   *
+   * Deferred deletions _must_ be performed before a transaction commits. If a
+   * transaction is rolled back, changes to the all providers list need to be
+   * unwound. *)
+  let get_haste_all_providers_exclusive m =
+    let heap = get_heap () in
+    let rec loop acc node_addr node =
+      if is_none node then
+        acc
+      else
+        let parse_ent = get_parse node in
+        match entity_read_latest parse_ent with
+        | Some parse when m == get_generic haste_module_addr parse ->
+          (* `node` is a current provider of `m` *)
+          let next_addr = next_haste_provider_addr parse in
+          let next = read_addr heap next_addr in
+          loop (node :: acc) next_addr next
+        | _ ->
+          (* `node` no longer provides `m` -- perform deferred deletion.
+           * Invariant: `node` used to provide `m`, so the next item in this
+           * list comes from the committed parse data. *)
+          let old_parse = Option.get (entity_read_committed parse_ent) in
+          assert (m == get_generic haste_module_addr old_parse);
+          let next_addr = next_haste_provider_addr old_parse in
+          let next = read_addr heap next_addr in
+          unsafe_write_addr_at heap node_addr next;
+          loop acc node_addr next
+    in
+    let head_addr = haste_all_providers_addr m in
+    let head = read_addr heap head_addr in
+    loop [] head_addr head
+
+  (* In the case of a transaction rollback, we need to remove providers which
+   * were added during the transaction.
+   *
+   * This function also performs deferred deletion, since we might as well. It
+   * speeds up subsequent traversals.
+   *
+   * TODO: It is unfortunate that this function duplicates so much of the logic
+   * from `get_haste_all_providers` above. It would be nice to share more code,
+   * if possible.
+   *)
+  let remove_haste_provider_exclusive m file =
+    let heap = get_heap () in
+    let rec loop node_addr node =
+      if is_none node then
+        ()
+      else
+        let parse_ent = get_parse node in
+        match entity_read_latest parse_ent with
+        | Some parse when m == get_generic haste_module_addr parse ->
+          let next_addr = next_haste_provider_addr parse in
+          let next = read_addr heap next_addr in
+          if node == file then
+            unsafe_write_addr_at heap node_addr next
+          else
+            loop next_addr next
+        | _ ->
+          let old_parse = Option.get (entity_read_committed parse_ent) in
+          assert (m == get_generic haste_module_addr old_parse);
+          let next_addr = next_haste_provider_addr old_parse in
+          let next = read_addr heap next_addr in
+          unsafe_write_addr_at heap node_addr next;
+          loop node_addr next
+    in
+    let head_addr = haste_all_providers_addr m in
+    let head = read_addr heap head_addr in
+    loop head_addr head
+
   (** File modules *)
 
-  let file_module_size = addr_size
+  let file_module_size = 2 * addr_size
 
   let write_file_module chunk provider =
     let addr = write_header chunk File_module_tag file_module_size in
     unsafe_write_addr chunk provider;
+    unsafe_write_addr chunk null_addr (* all providers *);
     addr
 
   let file_provider_addr m = addr_offset m 1
 
+  let file_all_providers_addr m = addr_offset m 2
+
   let get_file_provider = get_generic file_provider_addr
+
+  let add_file_provider m file =
+    let head_addr = file_all_providers_addr m in
+    let next_addr = next_file_provider_addr file in
+    add_provider head_addr next_addr file
+
+  (* Iterate through linked list of providers, accumulating a list. While
+   * traversing, we also remove any files which are no longer providers.
+   *
+   * See `get_haste_all_providers_exclusive` for more details about deferred
+   * deletion. *)
+  let get_file_all_providers_exclusive m =
+    let heap = get_heap () in
+    let rec loop acc node_addr node =
+      if is_none node then
+        acc
+      else
+        let next_addr = next_file_provider_addr node in
+        let next = read_addr heap next_addr in
+        match entity_read_latest (get_parse node) with
+        | Some _ ->
+          (* As long as `node` has some parse information, then the file exists
+           * and provides `m`. *)
+          loop (node :: acc) next_addr next
+        | None ->
+          (* `node` has no parse information, and thus does not exist and does
+           * not provide `m`. *)
+          unsafe_write_addr_at heap node_addr next;
+          loop acc node_addr next
+    in
+    let head_addr = file_all_providers_addr m in
+    let head = read_addr heap head_addr in
+    loop [] head_addr head
+
+  (* See `remove_haste_provider_exclusive` *)
+  let remove_file_provider_exclusive m file =
+    let heap = get_heap () in
+    let rec loop node_addr node =
+      if is_none node then
+        ()
+      else
+        let next_addr = next_file_provider_addr node in
+        let next = read_addr heap next_addr in
+        if node == file then
+          unsafe_write_addr_at heap node_addr next
+        else
+          loop next_addr next
+    in
+    let head_addr = file_all_providers_addr m in
+    let head = read_addr heap head_addr in
+    loop head_addr head
 end

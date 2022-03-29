@@ -62,6 +62,8 @@ type results = {
   not_found: FilenameSet.t;
   (* package.json files parsed *)
   package_json: File_key.t list * parse_error option list;
+  (* set of modules that need to be committed *)
+  dirty_modules: Modulename.Set.t;
 }
 
 type parse_options = {

@@ -13,13 +13,19 @@ type file_addr = SharedMem.NewAPI.file SharedMem.addr
 
 type +'a parse_addr = 'a SharedMem.NewAPI.parse SharedMem.addr
 
+type haste_module_addr = SharedMem.NewAPI.haste_module SharedMem.addr
+
+type file_module_addr = SharedMem.NewAPI.file_module SharedMem.addr
+
 type provider_addr = SharedMem.NewAPI.file SharedMem.NewAPI.entity SharedMem.addr
 
 val get_file_addr : File_key.t -> file_addr option
 
 val get_file_addr_unsafe : File_key.t -> file_addr
 
-val get_provider_ent : Modulename.t -> provider_addr option
+val get_haste_module_unsafe : string -> haste_module_addr
+
+val get_file_module_unsafe : File_key.t -> file_module_addr
 
 val read_file_name : file_addr -> string
 
@@ -125,9 +131,9 @@ type worker_mutator = {
     File_sig.With_Loc.tolerable_t ->
     locs_tbl ->
     type_sig ->
-    unit;
-  add_unparsed: File_key.t -> Xx.hash -> string option -> unit;
-  clear_not_found: File_key.t -> unit;
+    Modulename.Set.t;
+  add_unparsed: File_key.t -> Xx.hash -> string option -> Modulename.Set.t;
+  clear_not_found: File_key.t -> Modulename.Set.t;
 }
 
 module Parse_mutator : sig
@@ -147,13 +153,13 @@ end
 module Commit_modules_mutator : sig
   type t
 
-  val create : Transaction.t -> Modulename.Set.t -> t
+  val create : Transaction.t -> t
 
   val record_no_providers : t -> Modulename.Set.t -> unit
 end
 
 module From_saved_state : sig
-  val add_parsed : File_key.t -> Xx.hash -> string option -> Exports.t -> unit
+  val add_parsed : File_key.t -> Xx.hash -> string option -> Exports.t -> Modulename.Set.t
 
-  val add_unparsed : File_key.t -> Xx.hash -> string option -> unit
+  val add_unparsed : File_key.t -> Xx.hash -> string option -> Modulename.Set.t
 end

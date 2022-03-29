@@ -551,6 +551,7 @@ module UntypedRunner (C : UNTYPED_RUNNER_CONFIG) : STEP_RUNNER = struct
                   unchanged = _;
                   not_found = _;
                   package_json = _;
+                  dirty_modules = _;
                 } =
               Parsing_service_js.parse_with_defaults ~reader options workers next
             in
