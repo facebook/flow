@@ -314,7 +314,7 @@ module New_env = struct
   let get_refinement cx key loc =
     let reason = mk_reason (Key.reason_desc key) loc in
     match read_entry ~lookup_mode:ForValue cx loc reason with
-    | Ok x -> Some x
+    | Ok x -> Some (Flow_js.reposition cx loc x)
     | Error _ -> None
 
   let get_var ?(lookup_mode = ForValue) cx name loc =
