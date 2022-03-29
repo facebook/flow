@@ -1,25 +1,3 @@
-/* @providesModule This */
-
-function F() { this.x = 0; }
-F.prototype.m = function() { this.y = 0; }
-
-function foo(p:string) { }
-
-var o1 = new F(); // sets o1.x to 0
-o1.x = "";
-foo(o1.x); // ok by definite assignment
-
-var o2 = new F();
-o1.y = 0;
-o2.y = "";
-foo(o2.y); // setting o1.y to 0 has no effect on o2.y
-
-var o3 = new F();
-o3.m(); // sets o3.y to 0
-o3.y = "";
-foo(o3.y); // ok by definite assignment
-foo(o2.y); // setting o3.y to 0 has no effect on o2.y
-
 /*
  * this bindings:
  */

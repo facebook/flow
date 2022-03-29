@@ -2235,21 +2235,6 @@ import_source.js:3:17
 Flags: --pretty
 {"result":[]}
 
-object-with-prototype.js:9:11
-Flags: --pretty
-{
-  "result":[
-    {"name":"bar","type":"string"},
-    {"name":"baz","type":"string"},
-    {"name":"hasOwnProperty","type":"(prop: mixed) => boolean"},
-    {"name":"isPrototypeOf","type":"(o: mixed) => boolean"},
-    {"name":"propertyIsEnumerable","type":"(prop: mixed) => boolean"},
-    {"name":"toLocaleString","type":"() => string"},
-    {"name":"toString","type":"() => string"},
-    {"name":"valueOf","type":"() => mixed"}
-  ]
-}
-
 object-spread-1.js:9:3
 Flags: --pretty
 {

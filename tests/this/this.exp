@@ -1,124 +1,124 @@
-Error ---------------------------------------------------------------------------------------------------- This.js:29:15
+Error ----------------------------------------------------------------------------------------------------- This.js:7:15
 
 Cannot get `this.x` because property `x` is missing in global object [1]. [prop-missing]
 
-   This.js:29:15
-   29|   return this.x
-                     ^
+   This.js:7:15
+   7|   return this.x
+                    ^
 
 References:
-   This.js:29:10
-   29|   return this.x
-                ^^^^ [1]
+   This.js:7:10
+   7|   return this.x
+               ^^^^ [1]
 
 
-Error ---------------------------------------------------------------------------------------------------- This.js:29:10
+Error ----------------------------------------------------------------------------------------------------- This.js:7:10
 
 Cannot return `this.x` because string [1] is incompatible with number [2]. [incompatible-return]
 
-   This.js:29:10
-   29|   return this.x
+   This.js:7:10
+    7|   return this.x
                 ^^^^^^
 
 References:
-   This.js:34:24
-   34| var f1_3 = f1.bind({x: ""})();           // error, string -> number
+   This.js:12:24
+   12| var f1_3 = f1.bind({x: ""})();           // error, string -> number
                               ^^ [1]
-   This.js:28:17
-   28| function f1() : number {
+   This.js:6:17
+    6| function f1() : number {
                        ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- This.js:33:21
+Error ---------------------------------------------------------------------------------------------------- This.js:11:21
 
 Cannot assign `f1.bind(...)()` to `f1_2` because number [1] is incompatible with string [2]. [incompatible-type]
 
-   This.js:33:21
-   33| var f1_2 : string = f1.bind({x: 0})();   // error, number -> string
+   This.js:11:21
+   11| var f1_2 : string = f1.bind({x: 0})();   // error, number -> string
                            ^^^^^^^^^^^^^^^^^
 
 References:
-   This.js:28:17
-   28| function f1() : number {
+   This.js:6:17
+    6| function f1() : number {
                        ^^^^^^ [1]
-   This.js:33:12
-   33| var f1_2 : string = f1.bind({x: 0})();   // error, number -> string
+   This.js:11:12
+   11| var f1_2 : string = f1.bind({x: 0})();   // error, number -> string
                   ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- This.js:41:15
+Error ---------------------------------------------------------------------------------------------------- This.js:19:15
 
 Cannot get `this.x` because property `x` is missing in global object [1]. [prop-missing]
 
-   This.js:41:15
-   41|   return this.x
+   This.js:19:15
+   19|   return this.x
                      ^
 
 References:
-   This.js:41:10
-   41|   return this.x
+   This.js:19:10
+   19|   return this.x
                 ^^^^ [1]
 
 
-Error ---------------------------------------------------------------------------------------------------- This.js:48:34
+Error ---------------------------------------------------------------------------------------------------- This.js:26:34
 
 Cannot get `this.x` because property `x` is missing in global object [1]. [prop-missing]
 
-   This.js:48:34
-   48|     var a2 = () => { return this.x };
+   This.js:26:34
+   26|     var a2 = () => { return this.x };
                                         ^
 
 References:
-   This.js:48:29
-   48|     var a2 = () => { return this.x };
+   This.js:26:29
+   26|     var a2 = () => { return this.x };
                                    ^^^^ [1]
 
 
-Error ---------------------------------------------------------------------------------------------------- This.js:49:12
+Error ---------------------------------------------------------------------------------------------------- This.js:27:12
 
 Cannot return `a2()` because string [1] is incompatible with number [2]. [incompatible-return]
 
-   This.js:49:12
-   49|     return a2()
+   This.js:27:12
+   27|     return a2()
                   ^^^^
 
 References:
-   This.js:54:24
-   54| var f2_3 = f2.bind({x: ""})();           // error, string -> number
+   This.js:32:24
+   32| var f2_3 = f2.bind({x: ""})();           // error, string -> number
                               ^^ [1]
-   This.js:47:17
-   47| function f2() : number {
+   This.js:25:17
+   25| function f2() : number {
                        ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- This.js:53:21
+Error ---------------------------------------------------------------------------------------------------- This.js:31:21
 
 Cannot assign `f2.bind(...)()` to `f2_2` because number [1] is incompatible with string [2]. [incompatible-type]
 
-   This.js:53:21
-   53| var f2_2 : string = f2.bind({x: 0})();   // error, number -> string
+   This.js:31:21
+   31| var f2_2 : string = f2.bind({x: 0})();   // error, number -> string
                            ^^^^^^^^^^^^^^^^^
 
 References:
-   This.js:47:17
-   47| function f2() : number {
+   This.js:25:17
+   25| function f2() : number {
                        ^^^^^^ [1]
-   This.js:53:12
-   53| var f2_2 : string = f2.bind({x: 0})();   // error, number -> string
+   This.js:31:12
+   31| var f2_2 : string = f2.bind({x: 0})();   // error, number -> string
                   ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- This.js:58:2
+Error ----------------------------------------------------------------------------------------------------- This.js:36:2
 
 Cannot cast `this` to undefined because global object [1] is incompatible with undefined [2]. [incompatible-cast]
 
-   This.js:58:2
-   58| (this: void);
+   This.js:36:2
+   36| (this: void);
         ^^^^ [1]
 
 References:
-   This.js:58:8
-   58| (this: void);
+   This.js:36:8
+   36| (this: void);
               ^^^^ [2]
 
 

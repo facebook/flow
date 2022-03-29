@@ -275,7 +275,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- es6modules.js:70:5
 
-Cannot call `CJS_Clobb_Class_NS` because module `CommonJS_Clobbering_Class` [1] is not a function. [not-a-function]
+Cannot use `new` on module `CommonJS_Clobbering_Class` [1]. Only classes can be constructed. [invalid-constructor]
 
    es6modules.js:70:5
    70| new CJS_Clobb_Class_NS(); // Error: Namespace object isn't constructable

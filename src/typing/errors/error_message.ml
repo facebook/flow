@@ -193,6 +193,7 @@ and 'loc t' =
       valid: 'loc virtual_reason;
       use_op: 'loc virtual_use_op;
     }
+  | EInvalidConstructor of 'loc virtual_reason
   | EUnsupportedKeyInObjectType of 'loc
   | EPredAnnot of 'loc
   | ERefineAnnot of 'loc
@@ -556,7 +557,6 @@ and 'loc upper_kind =
   | IncompatibleMethodT of 'loc * name option
   | IncompatibleCallT
   | IncompatibleMixedCallT
-  | IncompatibleConstructorT
   | IncompatibleGetElemT of 'loc
   | IncompatibleSetElemT of 'loc
   | IncompatibleCallElemT of 'loc
@@ -598,13 +598,13 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
     | IncompatibleSetElemT loc -> IncompatibleSetElemT (f loc)
     | IncompatibleCallElemT loc -> IncompatibleCallElemT (f loc)
     | ( IncompatibleGetPrivatePropT | IncompatibleSetPrivatePropT | IncompatibleCallT
-      | IncompatibleMixedCallT | IncompatibleConstructorT | IncompatibleElemTOfArrT
-      | IncompatibleObjAssignFromTSpread | IncompatibleObjAssignFromT | IncompatibleObjRestT
-      | IncompatibleObjSealT | IncompatibleArrRestT | IncompatibleSuperT | IncompatibleMixinT
-      | IncompatibleSpecializeT | IncompatibleThisSpecializeT | IncompatibleVarianceCheckT
-      | IncompatibleGetKeysT | IncompatibleGetValuesT | IncompatibleUnaryMinusT
-      | IncompatibleMapTypeTObject | IncompatibleTypeAppVarianceCheckT | IncompatibleGetStaticsT
-      | IncompatibleBindT | IncompatibleUnclassified _ ) as u ->
+      | IncompatibleMixedCallT | IncompatibleElemTOfArrT | IncompatibleObjAssignFromTSpread
+      | IncompatibleObjAssignFromT | IncompatibleObjRestT | IncompatibleObjSealT
+      | IncompatibleArrRestT | IncompatibleSuperT | IncompatibleMixinT | IncompatibleSpecializeT
+      | IncompatibleThisSpecializeT | IncompatibleVarianceCheckT | IncompatibleGetKeysT
+      | IncompatibleGetValuesT | IncompatibleUnaryMinusT | IncompatibleMapTypeTObject
+      | IncompatibleTypeAppVarianceCheckT | IncompatibleGetStaticsT | IncompatibleBindT
+      | IncompatibleUnclassified _ ) as u ->
       u
   in
   let map_unsupported_syntax = function
@@ -730,6 +730,7 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
   | EInvalidCharSet { invalid = (ir, set); valid; use_op } ->
     EInvalidCharSet
       { invalid = (map_reason ir, set); valid = map_reason valid; use_op = map_use_op use_op }
+  | EInvalidConstructor r -> EInvalidConstructor (map_reason r)
   | EIncompatibleWithShape (l, u, use_op) ->
     EIncompatibleWithShape (map_reason l, map_reason u, map_use_op use_op)
   | EInvalidObjectKit { reason; reason_op; use_op } ->
@@ -1206,6 +1207,7 @@ let util_use_op_of_msg nope util = function
   | EInstanceofRHS _
   | EObjectComputedPropertyAccess (_, _)
   | EObjectComputedPropertyAssign (_, _)
+  | EInvalidConstructor _
   | EInvalidLHSInAssignment _
   | EUnsupportedImplements _
   | EReactElementFunArity (_, _, _)
@@ -1325,6 +1327,7 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | EEnumNotIterable { reason; _ }
   | ERecursiveDefinition { reason; _ }
   | EDefinitionCycle ((reason, _), _)
+  | EInvalidConstructor reason
   | EInvalidDeclaration { declaration = reason; _ } ->
     Some (poly_loc_of_reason reason)
   | EExponentialSpread
@@ -3251,6 +3254,18 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
       ]
     in
     Normal { features }
+  | EInvalidConstructor reason ->
+    Normal
+      {
+        features =
+          [
+            text "Cannot use ";
+            code "new";
+            text " on ";
+            ref reason;
+            text ". Only classes can be constructed.";
+          ];
+      }
   | EInvalidPrototype (_, reason) ->
     Normal
       {
@@ -3904,9 +3919,7 @@ let error_code_of_use_op use_op ~default =
   Base.Option.first_some (fold_use_op code_of_root code_of_frame use_op) (Some default)
 
 let error_code_of_upper_kind = function
-  | IncompatibleConstructorT
-  | IncompatibleCallT ->
-    Some NotAFunction
+  | IncompatibleCallT -> Some NotAFunction
   | IncompatibleObjAssignFromTSpread
   | IncompatibleArrRestT ->
     Some NotAnArray
@@ -4027,6 +4040,7 @@ let error_code_of_message err : error_code option =
   (* We don't want these to be suppressible *)
   | EInternal (_, _) -> None
   | EInvalidCharSet _ -> Some InvalidCharsetTypeArg
+  | EInvalidConstructor _ -> Some InvalidConstructor
   | EInvalidLHSInAssignment _ -> Some InvalidLhs
   | EInvalidObjectKit _ -> Some NotAnObject
   | EInvalidPrototype _ -> Some NotAnObject

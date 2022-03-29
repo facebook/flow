@@ -1032,9 +1032,7 @@ let rec make_error_printable ?(speculation = false) (error : Loc.t t) : Loc.t Er
           use_loc
           use_op
           [text "the parameter types of an "; ref lower; text " are unknown"]
-      | IncompatibleCallT
-      | IncompatibleConstructorT ->
-        nope "is not a function"
+      | IncompatibleCallT -> nope "is not a function"
       | IncompatibleObjAssignFromTSpread
       | IncompatibleArrRestT ->
         nope "is not an array"

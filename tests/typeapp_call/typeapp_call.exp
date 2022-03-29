@@ -326,34 +326,6 @@ References:
              ^^^^^^^ [1]
 
 
-Error ----------------------------------------------------------------------------------------------------- new.js:22:22
-
-Cannot call `F` with `0` bound to `y` because number [1] is incompatible with string [2]. [incompatible-call]
-
-   new.js:22:22
-   22| new F<string>("foo", 0); // error, number ~> string
-                            ^ [1]
-
-References:
-   new.js:22:7
-   22| new F<string>("foo", 0); // error, number ~> string
-             ^^^^^^ [2]
-
-
-Error ------------------------------------------------------------------------------------------------------ new.js:25:1
-
-Cannot construct non-polymorphic function [1] with type arguments. [nonpolymorphic-type-arg]
-
-   new.js:25:1
-   25| new NonPolyF<string>; // error: expected polymorphic type
-       ^^^^^^^^^^^^^^^^^^^^
-
-References:
-   new.js:24:1
-   24| function NonPolyF() {}
-       ^^^^^^^^^^^^^^^^^^^ [1]
-
-
 Error --------------------------------------------------------------------------------------------------- require.js:1:1
 
 Cannot call non-polymorphic function with type arguments. [nonpolymorphic-type-arg]
@@ -371,4 +343,4 @@ Cannot resolve module `foo`. [cannot-resolve-module]
 
 
 
-Found 25 errors
+Found 23 errors

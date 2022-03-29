@@ -11,8 +11,6 @@ class C {
 var e = async function () {};
 var et = async function<T> (a: T) {};
 
-var n = new async function() {};
-
 var o = { async m() {} };
 var ot = { async m<T>(a: T) {} };
 var oz = { async async() {} };

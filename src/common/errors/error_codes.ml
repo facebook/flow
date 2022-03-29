@@ -64,6 +64,7 @@ type error_code =
   | InvalidCharsetTypeArg
   | InvalidCompare
   | InvalidComputedProp
+  | InvalidConstructor
   | InvalidEnumAccess
   | InvalidExact
   | InvalidExhaustiveCheck
@@ -241,6 +242,7 @@ let string_of_code : error_code -> string = function
   | InvalidCharsetTypeArg -> "invalid-charset-type-arg"
   | InvalidCompare -> "invalid-compare"
   | InvalidComputedProp -> "invalid-computed-prop"
+  | InvalidConstructor -> "invalid-constructor"
   | InvalidEnumAccess -> "invalid-enum-access"
   | InvalidExact -> "invalid-exact"
   | InvalidExhaustiveCheck -> "invalid-exhaustive-check"

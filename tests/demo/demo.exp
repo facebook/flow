@@ -32,7 +32,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ 2/B.js:3:13
 
-Cannot call `A` because exports [1] is not a function. [not-a-function]
+Cannot use `new` on exports [1]. Only classes can be constructed. [invalid-constructor]
 
    3| var z = new A("42").getX();
                   ^

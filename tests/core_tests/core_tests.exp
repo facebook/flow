@@ -1,6 +1,6 @@
 Error ------------------------------------------------------------------------------------------------------ json.js:4:5
 
-Cannot call `JSON` because object type [1] is not a function. [not-a-function]
+Cannot use `new` on object type [1]. Only classes can be constructed. [invalid-constructor]
 
    json.js:4:5
       4| new JSON(); // ERROR

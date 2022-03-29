@@ -3321,46 +3321,6 @@ struct
           in
           (* return this *)
           rec_flow cx trace (ret, ObjTestT (annot_reason ~annot_loc reason_op, this, t))
-        (****************************************************************)
-        (* function types derive objects through explicit instantiation *)
-        (****************************************************************)
-        | ( DefT (lreason, _, FunT (_, proto, ({ this_t = (this, _); return_t = ret; _ } as ft))),
-            ConstructorT (use_op, reason_op, targs, args, t)
-          ) ->
-          (* TODO: closure *)
-          (* create new object **)
-          let reason_c = replace_desc_reason RNewObject reason_op in
-          let objtype =
-            let obj_kind = UnsealedInFile (ALoc.source (loc_of_t proto)) in
-            let flags = { default_flags with obj_kind } in
-            let call = None in
-            let pmap = Context.generate_property_map cx NameUtils.Map.empty in
-            mk_objecttype ~flags ~call pmap proto
-          in
-          let new_obj = DefT (reason_c, bogus_trust (), ObjT objtype) in
-          (* error if type arguments are provided to non-polymorphic constructor **)
-          Base.Option.iter targs ~f:(fun _ ->
-              add_output
-                cx
-                ~trace
-                Error_message.(
-                  ECallTypeArity
-                    {
-                      call_loc = aloc_of_reason reason_op;
-                      is_new = true;
-                      reason_arity = lreason;
-                      expected_arity = 0;
-                    }
-                )
-          );
-
-          (* call function with this = new_obj, params = args **)
-          rec_flow_t cx trace ~use_op:unknown_use (new_obj, this);
-          multiflow_call cx trace ~use_op reason_op args ft;
-
-          (* if ret is object-like, return ret; otherwise return new_obj **)
-          let reason_o = replace_desc_reason RConstructorReturn reason_op in
-          rec_flow cx trace (ret, ObjTestT (reason_o, new_obj, t))
         | (AnyT _, ConstructorT (use_op, reason_op, targs, args, t)) ->
           ignore targs;
 
@@ -3369,6 +3329,10 @@ struct
             (fun t -> rec_flow cx trace (t, UseT (use_op, AnyT.untyped reason_op)))
             args;
           rec_flow_t cx trace ~use_op:unknown_use (AnyT.untyped reason_op, t)
+        (* Only classes (and `any`) can be constructed. *)
+        | (_, ConstructorT (use_op, reason_op, _, _, t)) ->
+          add_output cx ~trace Error_message.(EInvalidConstructor (reason_of_t l));
+          rec_flow_t cx trace ~use_op (AnyT.error reason_op, t)
         (* Since we don't know the signature of a method on AnyT, assume every
            parameter is an AnyT. *)
         | ( AnyT _,

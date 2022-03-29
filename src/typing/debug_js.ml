@@ -1211,7 +1211,6 @@ let dump_error_message =
     | IncompatibleMethodT _ -> "IncompatibleMethodT"
     | IncompatibleCallT -> "IncompatibleCallT"
     | IncompatibleMixedCallT -> "IncompatibleMixedCallT"
-    | IncompatibleConstructorT -> "IncompatibleConstructorT"
     | IncompatibleGetElemT _ -> "IncompatibleGetElemT"
     | IncompatibleSetElemT _ -> "IncompatibleSetElemT"
     | IncompatibleCallElemT _ -> "IncompatibleCallElemT"
@@ -1694,6 +1693,7 @@ let dump_error_message =
         in
         spf "ESketchyNumberLint (%s) (%s)" kind_str (dump_reason cx reason)
       )
+    | EInvalidConstructor reason -> spf "EInvalidConstructor (%s)" (dump_reason cx reason)
     | EInvalidPrototype (loc, reason) ->
       spf "EInvalidPrototype (%s) (%s)" (string_of_aloc loc) (dump_reason cx reason)
     | EUnnecessaryOptionalChain (loc, _) -> spf "EUnnecessaryOptionalChain (%s)" (string_of_aloc loc)
