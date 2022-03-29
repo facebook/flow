@@ -247,7 +247,7 @@ let parts_to_replace_t cx = function
   | DefT (_, _, ObjT { call_t = Some id; _ }) ->
     begin
       match Context.find_call cx id with
-      | DefT (_, _, FunT (_, _, ft)) ->
+      | DefT (_, _, FunT (_, ft)) ->
         let ts =
           List.fold_left
             (fun acc (_, t) ->
@@ -263,7 +263,7 @@ let parts_to_replace_t cx = function
         | _ -> ts)
       | _ -> []
     end
-  | DefT (_, _, FunT (_, _, ft)) ->
+  | DefT (_, _, FunT (_, ft)) ->
     let ts =
       List.fold_left
         (fun acc (_, t) ->
@@ -327,23 +327,21 @@ let replace_parts =
     | UseT (op, DefT (r1, t1, ObjT ({ call_t = Some id; _ } as o))) as u ->
       begin
         match Context.find_call cx id with
-        | DefT (r2, t2, FunT (static, proto, ft)) ->
+        | DefT (r2, t2, FunT (static, ft)) ->
           let (resolved, params) = replace_params [] (resolved, ft.params) in
           let (resolved, rest_param) = replace_rest_param (resolved, ft.rest_param) in
           assert (resolved = []);
           let id' =
-            Context.make_call_prop
-              cx
-              (DefT (r2, t2, FunT (static, proto, { ft with params; rest_param })))
+            Context.make_call_prop cx (DefT (r2, t2, FunT (static, { ft with params; rest_param })))
           in
           UseT (op, DefT (r1, t1, ObjT { o with call_t = Some id' }))
         | _ -> u
       end
-    | UseT (op, DefT (r, trust, FunT (t1, t2, ft))) ->
+    | UseT (op, DefT (r, trust, FunT (t1, ft))) ->
       let (resolved, params) = replace_params [] (resolved, ft.params) in
       let (resolved, rest_param) = replace_rest_param (resolved, ft.rest_param) in
       assert (resolved = []);
-      UseT (op, DefT (r, trust, FunT (t1, t2, { ft with params; rest_param })))
+      UseT (op, DefT (r, trust, FunT (t1, { ft with params; rest_param })))
     | CallT (op, r, callt) ->
       let (resolved, call_args_tlist) = replace_args [] (resolved, callt.call_args_tlist) in
       assert (resolved = []);

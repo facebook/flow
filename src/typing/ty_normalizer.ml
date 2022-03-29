@@ -756,7 +756,7 @@ end = struct
       | OptionalT { reason = _; type_ = t; use_desc = _ } ->
         let%map t = type__ ~env t in
         Ty.mk_union ~from_bounds:false (Ty.Void, [t])
-      | DefT (_, _, FunT (static, _, f)) ->
+      | DefT (_, _, FunT (static, f)) ->
         let%map t = fun_ty ~env static f None in
         Ty.Fun t
       | DefT (r, _, ObjT o) ->
@@ -1224,7 +1224,7 @@ end = struct
       let open Type in
       match t with
       | ThisClassT (_, t, _, _) -> this_class_t ~env t
-      | DefT (_, _, FunT (static, _, f)) ->
+      | DefT (_, _, FunT (static, f)) ->
         let%bind (env, ps) = type_params_t ~env typeparams in
         let%map fun_t = fun_ty ~env static f ps in
         Ty.Fun fun_t
@@ -2409,7 +2409,7 @@ end = struct
         Ty.mk_union ~from_bounds:false (Ty.Void, [Ty.Null; t])
       | IntersectionT (_, rep) -> app_intersection ~f:(type__ ~env ~proto ~imode) rep
       | UnionT (_, rep) -> app_union ~from_bounds:false ~f:(type__ ~env ~proto ~imode) rep
-      | DefT (_, _, FunT (static, _, _)) -> type__ ~env ~proto ~imode static
+      | DefT (_, _, FunT (static, _)) -> type__ ~env ~proto ~imode static
       | TypeAppT (r, use_op, t, ts) -> type_app_t ~env ~proto ~imode r use_op t ts
       | DefT (_, _, TypeT (_, t)) -> type__ ~env ~proto ~imode t
       | OptionalT { type_ = t; _ } ->

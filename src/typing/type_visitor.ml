@@ -116,9 +116,8 @@ class ['a] t =
         let { enum_id = _; members = _; representation_t; has_unknown_members = _ } = enum in
         let acc = self#type_ cx pole acc representation_t in
         acc
-      | FunT (static, prototype, funtype) ->
+      | FunT (static, funtype) ->
         let acc = self#type_ cx pole acc static in
-        let acc = self#type_ cx pole_TODO acc prototype in
         let acc = self#fun_type cx pole acc funtype in
         acc
       | ObjT objtype -> self#obj_type cx pole acc objtype

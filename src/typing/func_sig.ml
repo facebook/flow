@@ -64,10 +64,6 @@ struct
       let proto = FunProtoT reason in
       Obj_type.mk_unsealed cx reason ~proto
     in
-    let prototype =
-      let reason = replace_desc_reason RPrototype reason in
-      Obj_type.mk_unsealed cx reason
-    in
     let funtype =
       {
         Type.this_t = (F.this fparams |> Base.Option.value ~default:this_default, This_Function);
@@ -78,7 +74,7 @@ struct
         def_reason = reason;
       }
     in
-    let t = DefT (reason, make_trust (), FunT (static, prototype, funtype)) in
+    let t = DefT (reason, make_trust (), FunT (static, funtype)) in
     poly_type_of_tparams (Type.Poly.generate_id ()) tparams t
 
   let methodtype this_default { reason; tparams; fparams; return_t; _ } =
@@ -93,7 +89,6 @@ struct
           bogus_trust (),
           FunT
             ( dummy_static reason,
-              dummy_prototype,
               mk_boundfunctiontype
                 ~this:param_this_t
                 ~subtyping:(This_Method { unbound = false })

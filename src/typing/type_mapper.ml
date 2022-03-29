@@ -267,14 +267,13 @@ class virtual ['a] t =
       | NullT
       | VoidT ->
         t
-      | FunT (s, p, f) ->
+      | FunT (s, f) ->
         let s' = self#type_ cx map_cx s in
-        let p' = self#type_ cx map_cx p in
         let f' = self#fun_type cx map_cx f in
-        if s == s' && p == p' && f == f' then
+        if s == s' && f == f' then
           t
         else
-          FunT (s', p', f')
+          FunT (s', f')
       | ObjT objtype ->
         let objtype' = self#obj_type cx map_cx objtype in
         if objtype' == objtype then

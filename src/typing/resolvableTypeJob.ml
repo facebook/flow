@@ -128,7 +128,7 @@ and collect_of_type ?log_unresolved cx acc = function
       | Some id -> Context.find_call cx id :: ts
     in
     collect_of_types ?log_unresolved cx acc ts
-  | DefT (_, _, FunT (_, _, { params; return_t; _ })) ->
+  | DefT (_, _, FunT (_, { params; return_t; _ })) ->
     let ts = List.fold_left (fun acc (_, t) -> t :: acc) [return_t] params in
     collect_of_types ?log_unresolved cx acc ts
   | DefT (_, _, ArrT (ArrayAT (elemt, tuple_types))) ->

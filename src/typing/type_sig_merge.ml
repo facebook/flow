@@ -9,7 +9,6 @@ open Type_sig
 open Type_sig_collections
 module Pack = Type_sig_pack
 module Option = Base.Option
-module Fn = Base.Fn
 module ConsGen = Annotation_inference.ConsGen
 
 [@@@warning "-60"]
@@ -155,7 +154,6 @@ let add_default_constructor reason extends props =
           let reason = Reason.(replace_desc_reason RDefaultConstructor reason) in
           let return = Type.VoidT.why reason trust in
           let statics = Type.dummy_static reason in
-          let proto = Type.dummy_prototype in
           let funtype =
             Type.mk_boundfunctiontype
               []
@@ -164,7 +162,7 @@ let add_default_constructor reason extends props =
               ~rest_param:None
               ~def_reason:reason
           in
-          Some Type.(Method (None, DefT (reason, trust, FunT (statics, proto, funtype))))
+          Some Type.(Method (None, DefT (reason, trust, FunT (statics, funtype))))
         | prop -> prop)
       props
 
@@ -838,7 +836,6 @@ and merge_annot tps file = function
       OpenPredT { reason = out_reason; base_t = MixedT.at loc trust; m_pos = emp; m_neg = emp }
     in
     let statics = dummy_static static_reason in
-    let proto = Unsoundness.function_proto_any Reason.(mk_reason RPrototype loc) in
     let functiontype =
       mk_functiontype
         fun_reason
@@ -849,7 +846,7 @@ and merge_annot tps file = function
         ~params_names:key_strs
         ~is_predicate:true
     in
-    DefT (fun_reason, trust, FunT (statics, proto, functiontype))
+    DefT (fun_reason, trust, FunT (statics, functiontype))
   | Refine { loc; base; fn_pred; index } ->
     let reason = Reason.(mk_reason (RCustom "refined type") loc) in
     let base = merge tps file base in
@@ -1454,10 +1451,6 @@ and merge_fun
     reason
     (FunSig { tparams; params; rest_param; this_param; return; predicate })
     statics =
-  let prototype =
-    let reason = Reason.(update_desc_reason (Fn.const RPrototype) reason) in
-    Type.Unsoundness.function_proto_any reason
-  in
   let t (tps, _) =
     let open Type in
     let params =
@@ -1502,7 +1495,7 @@ and merge_fun
         def_reason = reason;
       }
     in
-    DefT (reason, trust, FunT (statics, prototype, funtype))
+    DefT (reason, trust, FunT (statics, funtype))
   in
   merge_tparams_targs tps file reason t tparams
 

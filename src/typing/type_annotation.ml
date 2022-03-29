@@ -1000,7 +1000,6 @@ module Make
                        infer_trust cx,
                        FunT
                          ( dummy_static static_reason,
-                           mk_reason RPrototype loc |> Unsoundness.function_proto_any,
                            mk_functiontype
                              fun_reason
                              tins
@@ -1130,7 +1129,6 @@ module Make
             infer_trust cx,
             FunT
               ( statics_t,
-                mk_reason RPrototype loc |> Unsoundness.function_proto_any,
                 {
                   this_t = (this_t, This_Function);
                   params = List.rev rev_params;

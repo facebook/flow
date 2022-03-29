@@ -3273,7 +3273,6 @@ struct
                 bogus_trust (),
                 FunT
                   ( dummy_static reason,
-                    dummy_prototype,
                     mk_functiontype
                       reason
                       []

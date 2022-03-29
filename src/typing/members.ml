@@ -51,7 +51,7 @@ let rec merge_type cx =
   | (DefT (_, _, VoidT), (MaybeT _ as t))
   | ((MaybeT _ as t), DefT (_, _, VoidT)) ->
     t
-  | ((DefT (_, _, FunT (_, _, ft1)) as fun1), (DefT (_, _, FunT (_, _, ft2)) as fun2)) ->
+  | ((DefT (_, _, FunT (_, ft1)) as fun1), (DefT (_, _, FunT (_, ft2)) as fun2)) ->
     (* Functions with different number of parameters cannot be merged into a
      * single function type. Instead, we should turn them into a union *)
     let params =
@@ -106,7 +106,6 @@ let rec merge_type cx =
             bogus_trust (),
             FunT
               ( dummy_static reason,
-                dummy_prototype,
                 mk_functiontype reason tins tout ~rest_param ~def_reason:reason ~params_names
               )
           )
@@ -548,10 +547,8 @@ let rec extract_members ?(exclude_proto_members = false) cx = function
     in
     let named_exports = NameUtils.display_smap_of_namemap named_exports in
     SuccessModule (named_exports, cjs_export)
-  | Success (DefT (_, _, FunT (static, proto, _))) ->
-    let members = extract_members_as_map ~exclude_proto_members cx static in
-    let prot_members = extract_members_as_map ~exclude_proto_members cx proto in
-    Success (AugmentableSMap.augment prot_members ~with_bindings:members)
+  | Success (DefT (_, _, FunT (static, _))) ->
+    Success (extract_members_as_map ~exclude_proto_members cx static)
   | Success (DefT (enum_reason, trust, EnumObjectT enum) as enum_object_t) ->
     let { members; representation_t; _ } = enum in
     let enum_t = mk_enum_type ~trust enum_reason enum in

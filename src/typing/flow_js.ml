@@ -388,15 +388,9 @@ struct
 
   let rec unbind_this_method = function
     | DefT
-        ( r,
-          trust,
-          FunT (static, proto, ({ this_t = (this_t, This_Method { unbound = false }); _ } as ft))
-        ) ->
-      DefT
-        ( r,
-          trust,
-          FunT (static, proto, { ft with this_t = (this_t, This_Method { unbound = true }) })
-        )
+        (r, trust, FunT (static, ({ this_t = (this_t, This_Method { unbound = false }); _ } as ft)))
+      ->
+      DefT (r, trust, FunT (static, { ft with this_t = (this_t, This_Method { unbound = true }) }))
     | DefT (r, trust, PolyT { tparams_loc; tparams; t_out; id }) ->
       DefT (r, trust, PolyT { tparams_loc; tparams; t_out = unbind_this_method t_out; id })
     | IntersectionT (r, rep) -> IntersectionT (r, InterRep.map unbind_this_method rep)
@@ -1194,7 +1188,6 @@ struct
                 bogus_trust (),
                 FunT
                   ( dummy_static reason,
-                    mk_reason RPrototype fun_loc |> Unsoundness.function_proto_any,
                     {
                       this_t =
                         ( mk_reason RThis fun_loc |> MixedT.make |> with_trust bogus_trust,
@@ -2466,7 +2459,7 @@ struct
            `params`) raise errors, but also propagate the unrefined types (as if the
            refinement never took place).
         *)
-        | ( DefT (lreason, _, FunT (_, _, { params; return_t; is_predicate = true; _ })),
+        | ( DefT (lreason, _, FunT (_, { params; return_t; is_predicate = true; _ })),
             CallLatentPredT (reason, sense, index, unrefined_t, fresh_t)
           ) ->
           (* TODO: for the moment we only support simple keys (empty projection)
@@ -2849,7 +2842,7 @@ struct
             trace
             (l, React_kit.component_class cx r ~get_builtin_typeapp props)
         (* Functions with rest params or that are predicates cannot be React components *)
-        | ( DefT (reason, _, FunT (_, _, { params; rest_param = None; is_predicate = false; _ })),
+        | ( DefT (reason, _, FunT (_, { params; rest_param = None; is_predicate = false; _ })),
             ReactPropsToOut (_, props)
           ) ->
           (* Contravariance *)
@@ -2857,10 +2850,7 @@ struct
           |> Base.Option.value_map ~f:snd ~default:(Obj_type.mk ~obj_kind:Exact cx reason)
           |> fun t -> rec_flow_t ~use_op:unknown_use cx trace (t, props)
         | ( DefT
-              ( reason,
-                _,
-                FunT (_, _, { params; return_t; rest_param = None; is_predicate = false; _ })
-              ),
+              (reason, _, FunT (_, { params; return_t; rest_param = None; is_predicate = false; _ })),
             ReactInToProps (reason_op, props)
           ) ->
           (* Contravariance *)
@@ -2881,7 +2871,7 @@ struct
           ) ->
           begin
             match Context.find_call cx id with
-            | ( DefT (_, _, FunT (_, _, { rest_param = None; is_predicate = false; _ }))
+            | ( DefT (_, _, FunT (_, { rest_param = None; is_predicate = false; _ }))
               | DefT (_, _, PolyT { t_out = DefT (_, _, FunT _); _ }) ) as fun_t ->
               (* Keep the object's reason for better error reporting *)
               rec_flow cx trace (Fn.const r |> Fn.flip mod_reason_of_t fun_t, u)
@@ -2899,8 +2889,7 @@ struct
         (***********************************************)
 
         (* FunT ~> CallT *)
-        | (DefT (reason_fundef, _, FunT (_, _, funtype)), CallT (use_op, reason_callsite, calltype))
-          ->
+        | (DefT (reason_fundef, _, FunT (_, funtype)), CallT (use_op, reason_callsite, calltype)) ->
           let { this_t = (o1, _); params = _; return_t = t1; _ } = funtype in
           let {
             call_this_t = o2;
@@ -4245,36 +4234,6 @@ struct
           rec_flow_t cx trace ~use_op:unknown_use (obj_key_mirror cx trust o reason_op, tout)
         | (DefT (_, trust, ObjT o), MapTypeT (_, reason_op, ObjectMapConst target, tout)) ->
           rec_flow_t cx trace ~use_op:unknown_use (obj_map_const cx trust o reason_op target, tout)
-        (***********************************************)
-        (* functions may have their prototypes written *)
-        (***********************************************)
-        | ( DefT (_, _, FunT (_, t, _)),
-            SetPropT (use_op, reason_op, Named (_, OrdinaryName "prototype"), _, _, tin, _)
-          ) ->
-          rec_flow
-            cx
-            trace
-            ( tin,
-              ObjAssignFromT
-                ( use_op,
-                  reason_op,
-                  t,
-                  AnyT.locationless Unsoundness.function_proto,
-                  default_obj_assign_kind
-                )
-            )
-        (*********************************)
-        (* ... and their prototypes read *)
-        (*********************************)
-        | ( DefT (_, _, FunT (_, t, _)),
-            GetPropT (_, _, _, Named (_, OrdinaryName "prototype"), tout)
-          ) ->
-          rec_flow_t cx trace ~use_op:unknown_use (t, OpenT tout)
-        | ( DefT (reason, _, ClassT instance),
-            GetPropT (_, _, _, Named (_, OrdinaryName "prototype"), tout)
-          ) ->
-          let instance = reposition cx ~trace (aloc_of_reason reason) instance in
-          rec_flow_t cx trace ~use_op:unknown_use (instance, OpenT tout)
         (***************************************************************)
         (* functions may be called by passing a receiver and arguments *)
         (***************************************************************)
@@ -4408,7 +4367,7 @@ struct
           let call_targs = None in
           let funtype = { funtype with call_this_t; call_targs; call_args_tlist } in
           rec_flow cx trace (func, BindT (use_op, reason_op, funtype, false))
-        | ( DefT (reason, _, FunT (_, _, ({ this_t = (o1, _); _ } as ft))),
+        | ( DefT (reason, _, FunT (_, ({ this_t = (o1, _); _ } as ft))),
             BindT (use_op, reason_op, calltype, _)
           ) ->
           let {
@@ -4615,7 +4574,7 @@ struct
         (*********************)
         (* functions statics *)
         (*********************)
-        | ( DefT (reason, _, FunT (static, _, _)),
+        | ( DefT (reason, _, FunT (static, _)),
             MethodT (use_op, reason_call, reason_lookup, propref, action, prop_t)
           ) ->
           let method_type =
@@ -4628,8 +4587,16 @@ struct
             ~f:(fun prop_t -> rec_flow_t cx trace ~use_op:unknown_use (method_type, prop_t))
             prop_t;
           rec_flow cx trace (method_type, apply_method_action use_op reason_call l action)
-        | (DefT (reason, _, FunT (static, _, _)), _) when object_like_op u ->
+        | (DefT (reason, _, FunT (static, _)), _) when object_like_op u ->
           rec_flow cx trace (static, ReposLowerT (reason, false, u))
+        (*****************************************)
+        (* classes can have their prototype read *)
+        (*****************************************)
+        | ( DefT (reason, _, ClassT instance),
+            GetPropT (_, _, _, Named (_, OrdinaryName "prototype"), tout)
+          ) ->
+          let instance = reposition cx ~trace (aloc_of_reason reason) instance in
+          rec_flow_t cx trace ~use_op:unknown_use (instance, OpenT tout)
         (*****************)
         (* class statics *)
         (*****************)
@@ -5954,7 +5921,7 @@ struct
     | UseT (use_op, (OpaqueT _ as t)) ->
       if Context.any_propagation cx then rec_flow_t cx trace ~use_op (expand_any cx any t, t);
       true
-    | UseT (use_op, DefT (_, _, FunT (_, _, funtype))) ->
+    | UseT (use_op, DefT (_, _, FunT (_, funtype))) ->
       if Context.any_propagation cx then
         any_prop_to_function use_op funtype covariant_flow contravariant_flow;
       true
@@ -6124,7 +6091,7 @@ struct
       if Context.any_propagation cx then rec_flow_t cx trace ~use_op (any, t)
     in
     match l with
-    | DefT (_, _, FunT (_, _, funtype)) ->
+    | DefT (_, _, FunT (_, funtype)) ->
       (* function types are contravariant in the arguments *)
       any_prop_to_function use_op funtype covariant_flow contravariant_flow;
       true
@@ -7540,14 +7507,6 @@ struct
       let arrt = get_builtin_typeapp cx ~trace reason (OrdinaryName "Array") [elemt] in
       let pred = NotP (LeftP (InstanceofTest, right)) in
       rec_flow cx trace (arrt, PredicateT (pred, result))
-    (* An object is considered `instanceof` a function F when it is constructed
-       by F. Note that this is incomplete with respect to the runtime semantics,
-       where instanceof is transitive: if F.prototype `instanceof` G, then the
-       object is `instanceof` G. There is nothing fundamentally difficult in
-       modeling the complete semantics, but we haven't found a need to do it. **)
-    | (true, (DefT (_, _, ObjT { proto_t = proto2; _ }) as obj), DefT (_, _, FunT (_, proto1, _)))
-      when proto1 = proto2 ->
-      rec_flow_t cx trace ~use_op:unknown_use (obj, OpenT result)
     (* Suppose that we have an instance x of class C, and we check whether x is
        `instanceof` class A. To decide what the appropriate refinement for x
        should be, we need to decide whether C extends A, choosing either C or A
@@ -7601,9 +7560,6 @@ struct
     (* Prune the type when any other `instanceof` check succeeds (since this is
        impossible). *)
     | (true, _, _) -> ()
-    | (false, DefT (_, _, ObjT { proto_t = proto2; _ }), DefT (_, _, FunT (_, proto1, _)))
-      when proto1 = proto2 ->
-      ()
     (* Like above, now suppose that we have an instance x of class C, and we
        check whether x is _not_ `instanceof` class A. To decide what the
        appropriate refinement for x should be, we need to decide whether C
@@ -8384,7 +8340,7 @@ struct
             lpmap
             upmap
           |> ignore
-        | (DefT (_, _, FunT (_, _, funtype1)), DefT (_, _, FunT (_, _, funtype2)))
+        | (DefT (_, _, FunT (_, funtype1)), DefT (_, _, FunT (_, funtype2)))
           when List.length funtype1.params = List.length funtype2.params ->
           rec_unify cx trace ~use_op (fst funtype1.this_t) (fst funtype2.this_t);
           List.iter2
@@ -8989,7 +8945,6 @@ struct
             bogus_trust (),
             FunT
               ( dummy_static bound_reason,
-                dummy_prototype,
                 mk_methodtype
                   (dummy_this (aloc_of_reason reason_op))
                   params_tlist

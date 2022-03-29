@@ -302,7 +302,7 @@ module Make (Observer : OBSERVER) : KIT with type output = Observer.output = str
     in
     let (tparams_map, marked_tparams) =
       match get_t cx t with
-      | DefT (_, _, FunT (_, _, funtype)) ->
+      | DefT (_, _, FunT (_, funtype)) ->
         check_fun cx ~tparams ~bounds_map ~return_t:funtype.return_t ~implicit_instantiation
       | ThisClassT (_, DefT (_, _, InstanceT (_, _, _, _insttype)), _, _) ->
         (match operation with

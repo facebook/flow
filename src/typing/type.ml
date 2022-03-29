@@ -199,7 +199,7 @@ module rec TypeTerm : sig
     | NullT
     | VoidT
     | SymbolT
-    | FunT of static * prototype * funtype
+    | FunT of static * funtype
     | ObjT of objtype
     | ArrT of arrtype
     (* type of a class *)
@@ -3724,11 +3724,11 @@ let string_of_type_t_kind = function
   | InstanceKind -> "InstanceKind"
 
 let extract_setter_type = function
-  | DefT (_, _, FunT (_, _, { params = [(_, param_t)]; _ })) -> param_t
+  | DefT (_, _, FunT (_, { params = [(_, param_t)]; _ })) -> param_t
   | _ -> failwith "Setter property with unexpected type"
 
 let extract_getter_type = function
-  | DefT (_, _, FunT (_, _, { return_t; _ })) -> return_t
+  | DefT (_, _, FunT (_, { return_t; _ })) -> return_t
   | _ -> failwith "Getter property with unexpected type"
 
 let elemt_of_arrtype = function

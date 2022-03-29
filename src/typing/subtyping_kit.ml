@@ -1147,7 +1147,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
       (* check instancel <: instanceu *)
       rec_flow_t cx trace ~use_op (this, instance)
     (* Function Component ~> AbstractComponent *)
-    | ( DefT (reasonl, _, FunT (_, _, { return_t; _ })),
+    | ( DefT (reasonl, _, FunT (_, { return_t; _ })),
         DefT (_reasonu, _, ReactAbstractComponentT { config; instance })
       ) ->
       (* Function components will not always have an annotation, so the config may
@@ -1198,7 +1198,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
         ~use_op
         cx
         trace
-        (Context.find_call cx id, DefT (reasonu, trust, FunT (mixed, mixed, funtype)));
+        (Context.find_call cx id, DefT (reasonu, trust, FunT (mixed, funtype)));
 
       (* An object component instance type is always void, so flow void to instance *)
       rec_flow_t
@@ -1217,7 +1217,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
     (***********************************************)
 
     (* FunT ~> FunT *)
-    | (DefT (lreason, _, FunT (_, _, ft1)), DefT (ureason, _, FunT (_, _, ft2))) ->
+    | (DefT (lreason, _, FunT (_, ft1)), DefT (ureason, _, FunT (_, ft2))) ->
       let use_op =
         Frame
           ( FunCompatibility { lower = lreason; upper = ureason },
@@ -1620,11 +1620,10 @@ module Make (Flow : INPUT) : OUTPUT = struct
       | _ -> add_output cx ~trace Error_message.(EValueUsedAsType { reason_use }))
     | (DefT (rl, _, ClassT l), DefT (_, _, ClassT u)) ->
       rec_flow cx trace (reposition cx ~trace (aloc_of_reason rl) l, UseT (use_op, u))
-    | ( DefT (_, _, FunT (static1, prototype, _)),
+    | ( DefT (_, _, FunT (static1, _)),
         DefT (_, _, ClassT (DefT (_, _, InstanceT (static2, _, _, _))))
       ) ->
-      rec_unify cx trace ~use_op static1 static2;
-      rec_unify cx trace ~use_op prototype u
+      rec_unify cx trace ~use_op static1 static2
     (***********************************************)
     (* You can use a function as a callable object *)
     (***********************************************)
@@ -1680,7 +1679,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
      * members, clearly intending for function types to match the former
      * instead of the latter.
      *)
-    | (DefT (reason, _, FunT (statics, _, _)), DefT (reason_o, _, ObjT { props_tmap; _ })) ->
+    | (DefT (reason, _, FunT (statics, _)), DefT (reason_o, _, ObjT { props_tmap; _ })) ->
       if
         not
           (quick_error_fun_as_obj
@@ -1695,7 +1694,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
       then
         rec_flow_t cx trace ~use_op (statics, u)
     (* TODO: similar concern as above *)
-    | ( DefT (reason, _, FunT (statics, _, _)),
+    | ( DefT (reason, _, FunT (statics, _)),
         DefT (reason_inst, _, InstanceT (_, _, _, { own_props; inst_kind = InterfaceKind _; _ }))
       ) ->
       if
@@ -1741,7 +1740,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
     (*********************)
     (* functions statics *)
     (*********************)
-    | (DefT (reason, _, FunT (static, _, _)), AnyT _) ->
+    | (DefT (reason, _, FunT (static, _)), AnyT _) ->
       rec_flow cx trace (static, ReposLowerT (reason, false, UseT (use_op, u)))
     (*****************)
     (* class statics *)

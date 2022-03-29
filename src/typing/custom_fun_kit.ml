@@ -131,7 +131,6 @@ module Kit (Flow : Flow_common.S) = struct
       let funt =
         FunT
           ( dummy_static reason_op,
-            dummy_prototype,
             mk_functiontype reason_op [OpenT tin] ~rest_param:None ~def_reason:reason_op (OpenT tvar)
           )
       in

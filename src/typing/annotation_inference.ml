@@ -962,7 +962,6 @@ module rec ConsGen : S = struct
     | (DefT (reason_obj, _, ObjT o), Annot_GetPropT (reason_op, use_op, propref)) ->
       GetPropTKit.read_obj_prop cx dummy_trace ~use_op o propref reason_obj reason_op None
     | (AnyT _, Annot_GetPropT (reason_op, _, _)) -> AnyT (reason_op, Untyped)
-    | (DefT (_, _, FunT (_, t, _)), Annot_GetPropT (_, _, Named (_, OrdinaryName "prototype"))) -> t
     | (DefT (reason, _, ClassT instance), Annot_GetPropT (_, _, Named (_, OrdinaryName "prototype")))
       ->
       reposition cx (aloc_of_reason reason) instance
@@ -1031,7 +1030,7 @@ module rec ConsGen : S = struct
     (********************)
     (* Function Statics *)
     (********************)
-    | (DefT (reason, _, FunT (static, _, _)), _) when object_like_op op ->
+    | (DefT (reason, _, FunT (static, _)), _) when object_like_op op ->
       let static = reposition cx (aloc_of_reason reason) static in
       elab_t cx static op
     (*****************)

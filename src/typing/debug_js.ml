@@ -196,7 +196,7 @@ let rec dump_t_ (depth, tvars) cx t =
           | Some b -> spf "%B" b
           | None -> "")
         t
-    | DefT (_, trust, FunT (_, _, { params; return_t; this_t; _ })) ->
+    | DefT (_, trust, FunT (_, { params; return_t; this_t; _ })) ->
       p
         ~trust:(Some trust)
         ~extra:
