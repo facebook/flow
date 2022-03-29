@@ -217,19 +217,47 @@ function f          () {}
                                   
                          
 
-//this params
+// `this` params
 
                                          
                                
 function z (             ) {}
 function u (               ...a) {}
-
-function v (                   ...a) {}
-
+function v (             
+     ...a) {}
 function w (    
-                    ...a) {}
+          
+
+    ) {}
+function x (    
+          
+
+    
+   ...a) {}
+function i(
+          
+) {}
+function j(
+          
+  a        
+) {}
+
+function jj(
+          
+  a        
+) {
+  function jjj(         a        ) {}
+}
 
 const f = function(            ) {}
 const g = function(              ...a) {}
 const h = function(    
-          ...a) {}
+         
+...a) {}
+const k = function(    
+        
+
+ ) {}
+const kk = function(    
+         
+a        ,) {}

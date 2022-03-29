@@ -170,15 +170,31 @@ function f() {}
 
 // Declare export
 
-//this params
+// `this` params
 
 function z () {}
-function u (...a) {}
+function u ( ...a) {}
+function v (
+ ...a) {}
+function w (
+) {}
+function x (
+   ...a) {}
+function i(
+) {}
+function j(
+  a
+) {}
 
-function v (...a) {}
-
-function w (...a) {}
+function jj(
+  a
+) {
+  function jjj( a) {}
+}
 
 const f = function() {}
-const g = function(...a) {}
+const g = function( ...a) {}
 const h = function(...a) {}
+const k = function(
+) {}
+const kk = function(a,) {}
