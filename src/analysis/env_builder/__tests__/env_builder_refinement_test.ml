@@ -62,6 +62,7 @@ let print_values refinement_of_id =
     | Global name -> "Global " ^ name
     | Unreachable _ -> "unreachable"
     | Undefined _ -> "undefined"
+    | Number _ -> "number"
     | DeclaredFunction l -> Printf.sprintf "declared function %s" (L.debug_to_string l)
   in
   fun values ->
@@ -4472,13 +4473,13 @@ x.a;
         (2, 4) to (2, 5): (`x`)
       };
       (4, 0) to (4, 3) => {
-        (3, 2) to (3, 5): (some property)
+        number
       };
       (5, 0) to (5, 1) => {
         (2, 4) to (2, 5): (`x`)
       };
       (5, 0) to (5, 3) => {
-        (4, 0) to (4, 3): (some property)
+        number
       }] |}]
 
 let%expect_test "op_assign_heap" =

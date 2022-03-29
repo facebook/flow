@@ -159,6 +159,8 @@ module Make
 
     val undefined : L.t virtual_reason -> t
 
+    val number : L.t virtual_reason -> t
+
     val undeclared_class : L.t virtual_reason -> string -> t
 
     val merge : t -> t -> t
@@ -227,6 +229,7 @@ module Make
           val_t: t;
         }
       | Undefined of ALoc.t virtual_reason
+      | Number of ALoc.t virtual_reason
       | DeclaredFunction of ALoc.t
 
     and t = {
@@ -273,6 +276,8 @@ module Make
     let uninitialized r = mk_with_write_state (Uninitialized r)
 
     let undefined r = mk_with_write_state (Undefined r)
+
+    let number r = mk_with_write_state (Number r)
 
     let undeclared_class def name = mk_with_write_state (UndeclaredClass { def; name })
 
@@ -323,6 +328,7 @@ module Make
       match t with
       | Uninitialized _
       | Undefined _
+      | Number _
       | DeclaredFunction _
       | Undeclared _
       | DeclaredButSkipped _
@@ -360,6 +366,7 @@ module Make
       match t with
       | Uninitialized _
       | Undefined _
+      | Number _
       | DeclaredFunction _
       | Undeclared _
       | DeclaredButSkipped _
@@ -396,6 +403,7 @@ module Make
           | Uninitialized l when WriteSet.cardinal vals <= 1 ->
             Env_api.Uninitialized (mk_reason RUninitialized l)
           | Undefined r -> Env_api.Undefined r
+          | Number r -> Env_api.Number r
           | DeclaredFunction l -> Env_api.DeclaredFunction l
           | Undeclared (name, loc)
           | DeclaredButSkipped (name, loc) ->
@@ -431,6 +439,7 @@ module Make
         | Undeclared _ -> []
         | DeclaredButSkipped _ -> []
         | Undefined _ -> []
+        | Number _ -> []
         | DeclaredFunction _ -> []
         | Uninitialized _ -> [v]
         | UndeclaredClass _ -> [v]
@@ -1677,8 +1686,18 @@ module Make
             ignore @@ this#expression argument;
             ignore @@ this#pattern_expression argument;
             let val_reason = mk_reason RSomeProperty loc in
-            let assigned_val = Val.one val_reason in
-            this#assign_member ~update_entry:true member loc assigned_val val_reason
+            let assigned_val = Val.number val_reason in
+            (* We explicitly write a number instead of using the location of the write to avoid
+             * location clashes between the read of the member and the write of the member. If
+             * we don't do this then expressions like o.x++ will attempt to unify the read of o.x
+             * with the write of o.x that happens in that update expression *)
+            (match RefinementKey.lookup_of_member member ~allow_optional:false with
+            | Some lookup ->
+              this#map_val_with_lookup
+                lookup
+                (fun _ -> assigned_val)
+                ~create_val_for_heap:(Some (fun () -> assigned_val))
+            | _ -> ())
           | _ -> (* given 'o()++`, read o *) ignore @@ this#expression argument
         end;
         expr
