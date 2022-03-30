@@ -151,7 +151,7 @@ let clear_cache_if_resolved_requires_changed resolved_requires_changed =
 
 let resolve_requires ~transaction ~reader ~options ~profiling ~workers ~parsed ~parsed_set =
   let node_modules_containers = !Files.node_modules_containers in
-  let mutator = Module_heaps.Resolved_requires_mutator.create transaction parsed_set in
+  let mutator = Parsing_heaps.Resolved_requires_mutator.create transaction parsed_set in
   let merge (changed1, errors1) (changed2, errors2) =
     (changed1 || changed2, FilenameMap.union errors1 errors2)
   in
@@ -2026,10 +2026,9 @@ let init_from_saved_state ~profiling ~workers ~saved_state ~updates options =
       in
 
       (* Restore the FileHeap *)
-      let ms = Parsing_heaps.From_saved_state.add_parsed fn hash module_name exports in
-
-      (* Restore the ResolvedRequiresHeap *)
-      Module_heaps.From_saved_state.add_resolved_requires fn resolved_requires;
+      let ms =
+        Parsing_heaps.From_saved_state.add_parsed fn hash module_name exports resolved_requires
+      in
 
       if load_sighashes then
         (* Restore the SigHashHeap *)

@@ -80,7 +80,7 @@ val merge :
 
 val mk_check :
   Options.t ->
-  reader:Module_heaps.Mutator_reader.reader ->
+  reader:Parsing_heaps.Mutator_reader.reader ->
   unit ->
   File_key.t ->
   check_result option unit_result

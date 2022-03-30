@@ -171,13 +171,11 @@ let mk_check_file ~options ~reader ~cache () =
   let module Pack = Type_sig_pack in
   let module Bin = Type_sig_bin in
   let module Heap = SharedMem.NewAPI in
-  let audit = Expensive.ok in
-
   let get_provider = Parsing_heaps.Reader_dispatcher.get_provider ~reader in
   let get_typed_parse = Parsing_heaps.Reader_dispatcher.get_typed_parse ~reader in
   let find_leader = Context_heaps.Reader_dispatcher.find_leader ~reader in
   let get_resolved_requires_unsafe =
-    Module_heaps.Reader_dispatcher.get_resolved_requires_unsafe ~reader ~audit
+    Parsing_heaps.Reader_dispatcher.get_resolved_requires_unsafe ~reader
   in
 
   let master_cx = Context_heaps.Reader_dispatcher.find_master ~reader in
@@ -232,7 +230,7 @@ let mk_check_file ~options ~reader ~cache () =
     in
 
     let dependencies =
-      let { Module_heaps.resolved_modules; _ } = get_resolved_requires_unsafe file_key in
+      let { Parsing_heaps.resolved_modules; _ } = get_resolved_requires_unsafe file_key parse in
       let f buf pos =
         let mref = Bin.read_str buf pos in
         let m = SMap.find mref resolved_modules in

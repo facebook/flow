@@ -91,7 +91,7 @@ References:
 
 Found 2 errors
 
- Resolved requires are unchanged
+ Resolved requires changed
 
 == Delete src/node_modules/dependency.js changes an error ==
 Error --------------------------------------------------------------------------------------------- src/dependent.js:4:2

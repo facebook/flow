@@ -99,7 +99,7 @@ let calc_direct_dependents_job acc (root_files, root_modules) =
    * accumulator argument. We can exploit this to return a set from workers
    * while the server accumulates lists of sets. *)
   assert (acc = []);
-  let open Module_heaps in
+  let open Parsing_heaps in
   let root_files =
     List.fold_left
       (fun acc f ->
@@ -116,11 +116,11 @@ let calc_direct_dependents_job acc (root_files, root_modules) =
   in
   let root_modules = Modulename.Set.of_list root_modules in
   let dependents = ref FilenameSet.empty in
-  Module_heaps.iter_resolved_requires (fun { file_key; resolved_modules; phantom_dependents; _ } ->
+  Parsing_heaps.iter_resolved_requires (fun file { resolved_modules; phantom_dependents; _ } ->
       if not (SSet.disjoint root_files phantom_dependents) then
-        dependents := FilenameSet.add file_key !dependents
+        dependents := FilenameSet.add (Parsing_heaps.read_file_key file) !dependents
       else if SMap.exists (fun _ m -> Modulename.Set.mem m root_modules) resolved_modules then
-        dependents := FilenameSet.add file_key !dependents
+        dependents := FilenameSet.add (Parsing_heaps.read_file_key file) !dependents
   );
   !dependents
 
@@ -163,7 +163,7 @@ let implementation_file ~reader m =
     Some (Parsing_heaps.read_file_key f)
   | _ -> None
 
-let file_dependencies ~audit ~reader file =
+let file_dependencies ~reader file =
   let file_addr = Parsing_heaps.get_file_addr_unsafe file in
   let parse = Parsing_heaps.Mutator_reader.get_typed_parse_unsafe ~reader file file_addr in
   let file_sig = Parsing_heaps.read_file_sig_unsafe file parse in
@@ -174,8 +174,8 @@ let file_dependencies ~audit ~reader file =
     let buf = Heap.type_sig_buf (Option.get (Heap.get_type_sig parse)) in
     Bin.fold_tbl Bin.read_str SSet.add buf (Bin.module_refs buf) SSet.empty
   in
-  let { Module_heaps.resolved_modules; _ } =
-    Module_heaps.Mutator_reader.get_resolved_requires_unsafe ~reader ~audit file
+  let { Parsing_heaps.resolved_modules; _ } =
+    Parsing_heaps.Mutator_reader.get_resolved_requires_unsafe ~reader file parse
   in
   SSet.fold
     (fun mref (sig_files, all_files) ->
@@ -198,7 +198,7 @@ let calc_partial_dependency_graph ~reader workers files ~parsed =
       workers
       ~job:
         (List.fold_left (fun dependency_info file ->
-             let dependencies = file_dependencies ~audit:Expensive.ok ~reader file in
+             let dependencies = file_dependencies ~reader file in
              FilenameMap.add file dependencies dependency_info
          )
         )

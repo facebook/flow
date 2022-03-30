@@ -20,8 +20,6 @@ type buf = (char, Bigarray.int8_unsigned_elt, Bigarray.c_layout) Bigarray.Array1
  * passed where a `bar addr` is expected. *)
 type +'k addr [@@immediate]
 
-type serialized_tag = Serialized_resolved_requires
-
 exception Out_of_shared_memory
 
 exception Hash_table_full
@@ -66,10 +64,6 @@ module type Value = sig
   val description : string
 end
 
-module type SerializedTag = sig
-  val value : serialized_tag
-end
-
 module type AddrValue = sig
   type t
 end
@@ -102,12 +96,6 @@ module type NoCache = sig
   val oldify_batch : KeySet.t -> unit
 
   val revive_batch : KeySet.t -> unit
-end
-
-module type NoCacheTag = sig
-  include NoCache
-
-  val iter : (value -> unit) -> unit
 end
 
 module type DebugCacheType = sig
@@ -158,9 +146,6 @@ module WithCache (Key : Key) (Value : Value) :
 
 module NoCache (Key : Key) (Value : Value) :
   NoCache with type key = Key.t and type value = Value.t and module KeySet = Flow_set.Make(Key)
-
-module NoCacheTag (Key : Key) (Value : Value) (_ : SerializedTag) :
-  NoCacheTag with type key = Key.t and type value = Value.t and module KeySet = Flow_set.Make(Key)
 
 module NoCacheAddr (Key : Key) (Value : AddrValue) : sig
   include
@@ -232,6 +217,8 @@ module NewAPI : sig
   type file_sig
 
   type exports
+
+  type resolved_requires
 
   type +'a parse
 
@@ -317,6 +304,14 @@ module NewAPI : sig
 
   val read_exports : exports addr -> string
 
+  (* resolved requires *)
+
+  val prepare_write_resolved_requires : string -> size * (chunk -> resolved_requires addr)
+
+  val read_resolved_requires : resolved_requires addr -> string
+
+  val iter_resolved_requires : (file addr -> resolved_requires addr -> unit) -> unit
+
   (* docblock *)
 
   val docblock_size : string -> size
@@ -353,7 +348,12 @@ module NewAPI : sig
     chunk -> heap_int64 addr -> haste_module addr option -> [ `untyped ] parse addr
 
   val write_typed_parse :
-    chunk -> heap_int64 addr -> haste_module addr option -> exports addr -> [ `typed ] parse addr
+    chunk ->
+    heap_int64 addr ->
+    haste_module addr option ->
+    exports addr ->
+    resolved_requires entity addr ->
+    [ `typed ] parse addr
 
   val is_typed : [> ] parse addr -> bool
 
@@ -374,6 +374,8 @@ module NewAPI : sig
   val get_file_sig : [ `typed ] parse addr -> file_sig addr option
 
   val get_exports : [ `typed ] parse addr -> exports addr
+
+  val get_resolved_requires : [ `typed ] parse addr -> resolved_requires entity addr
 
   val set_ast : [ `typed ] parse addr -> ast addr -> unit
 
