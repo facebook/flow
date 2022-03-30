@@ -200,11 +200,10 @@ let unchecked_dependencies ~options ~reader file file_sig =
   let resolved_requires =
     let require_loc_map = File_sig.With_Loc.(require_loc_map file_sig.module_sig) in
     SMap.fold
-      (fun r locs resolved_rs ->
-        let loc = Nel.hd locs |> ALoc.of_loc in
+      (fun r _locs resolved_rs ->
         let resolved_r =
           let reader = Abstract_state_reader.State_reader reader in
-          Module_js.imported_module ~options ~reader ~node_modules_containers file loc r
+          Module_js.imported_module ~options ~reader ~node_modules_containers file r
         in
         Modulename.Set.add resolved_r resolved_rs)
       require_loc_map

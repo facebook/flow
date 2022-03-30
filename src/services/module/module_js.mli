@@ -8,17 +8,13 @@
 (* export and import functions for the module system *)
 val exported_module : options:Options.t -> File_key.t -> Docblock.t -> string option
 
-type resolution_acc = {
-  mutable paths: SSet.t;
-  mutable errors: Error_message.t list;
-}
+type resolution_acc = { mutable paths: SSet.t }
 
 val imported_module :
   options:Options.t ->
   reader:Abstract_state_reader.t ->
   node_modules_containers:SSet.t SMap.t ->
   File_key.t ->
-  ALoc.t ->
   ?resolution_acc:resolution_acc ->
   string ->
   Modulename.t
@@ -42,7 +38,7 @@ val add_parsed_resolved_requires :
   options:Options.t ->
   node_modules_containers:SSet.t SMap.t ->
   File_key.t ->
-  bool * Flow_error.ErrorSet.t
+  bool
 
 val add_package : string -> (Package_json.t, 'a) result -> unit
 

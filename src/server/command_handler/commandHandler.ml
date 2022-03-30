@@ -748,14 +748,12 @@ let get_cycle ~env fn types_only =
 
 let find_module ~options ~reader (moduleref, filename) =
   let file = File_key.SourceFile filename in
-  let loc = { Loc.none with Loc.source = Some file } in
   let module_name =
     Module_js.imported_module
       ~options
       ~reader:(Abstract_state_reader.State_reader reader)
       ~node_modules_containers:!Files.node_modules_containers
       file
-      (ALoc.of_loc loc)
       moduleref
   in
   match Parsing_heaps.Reader.get_provider ~reader module_name with

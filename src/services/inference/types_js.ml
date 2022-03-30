@@ -152,16 +152,13 @@ let clear_cache_if_resolved_requires_changed resolved_requires_changed =
 let resolve_requires ~transaction ~reader ~options ~profiling ~workers ~parsed ~parsed_set =
   let node_modules_containers = !Files.node_modules_containers in
   let mutator = Parsing_heaps.Resolved_requires_mutator.create transaction parsed_set in
-  let merge (changed1, errors1) (changed2, errors2) =
-    (changed1 || changed2, FilenameMap.union errors1 errors2)
-  in
-  let%lwt (resolved_requires_changed, errors) =
+  let%lwt resolved_requires_changed =
     Memory_utils.with_memory_timer_lwt ~options "ResolveRequires" profiling (fun () ->
         MultiWorkerLwt.call
           workers
           ~job:
-            (List.fold_left (fun (changed, errors_acc) filename ->
-                 let (resolved_requires_changed, errors) =
+            (List.fold_left (fun acc filename ->
+                 let changed =
                    Module_js.add_parsed_resolved_requires
                      filename
                      ~mutator
@@ -169,20 +166,16 @@ let resolve_requires ~transaction ~reader ~options ~profiling ~workers ~parsed ~
                      ~options
                      ~node_modules_containers
                  in
-                 let changed = changed || resolved_requires_changed in
-                 if Flow_error.ErrorSet.is_empty errors then
-                   (changed, errors_acc)
-                 else
-                   (changed, FilenameMap.add filename errors errors_acc)
+                 acc || changed
              )
             )
-          ~neutral:(false, FilenameMap.empty)
-          ~merge
+          ~neutral:false
+          ~merge:( || )
           ~next:(MultiWorkerLwt.next workers parsed)
     )
   in
   clear_cache_if_resolved_requires_changed resolved_requires_changed;
-  Lwt.return (errors, resolved_requires_changed)
+  Lwt.return resolved_requires_changed
 
 let error_set_of_internal_error file (loc, internal_error) =
   Error_message.EInternal (loc, internal_error)
@@ -1310,12 +1303,11 @@ end = struct
     in
     Hh_logger.info "Re-resolving parsed and directly dependent files";
     let%lwt () = ensure_parsed ~options ~profiling ~workers ~reader direct_dependent_files in
-    let%lwt (resolve_errors, resolved_requires_changed) =
+    let%lwt resolved_requires_changed =
       let parsed_set = FilenameSet.union parsed_set direct_dependent_files in
       let parsed = FilenameSet.elements parsed_set in
       resolve_requires ~transaction ~reader ~options ~profiling ~workers ~parsed ~parsed_set
     in
-    let local_errors = FilenameMap.union resolve_errors local_errors in
 
     Hh_logger.info "Recalculating dependency graph";
     let parsed = FilenameSet.union parsed_set unchanged in
@@ -2252,10 +2244,9 @@ let init_from_scratch ~profiling ~workers options =
       ~duplicate_providers:SMap.empty
       dirty_modules
   in
-  let%lwt (resolve_errors, _resolved_requires_changed) =
+  let%lwt _resolved_requires_changed =
     resolve_requires ~transaction ~reader ~options ~profiling ~workers ~parsed ~parsed_set
   in
-  let local_errors = FilenameMap.union resolve_errors local_errors in
   let%lwt dependency_info =
     Memory_utils.with_memory_timer_lwt ~options "CalcDepsTypecheck" profiling (fun () ->
         Dep_service.calc_dependency_info ~reader workers ~parsed:parsed_set

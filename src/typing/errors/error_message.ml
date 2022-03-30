@@ -208,7 +208,6 @@ and 'loc t' =
   | EMissingLocalAnnotation of 'loc virtual_reason
   | EBindingError of binding_error * 'loc * name * ALoc.t
   | ERecursionLimit of ('loc virtual_reason * 'loc virtual_reason)
-  | EModuleOutsideRoot of 'loc * string
   | EUninitializedInstanceProperty of 'loc * Lints.property_assignment_kind
   | EEnumsNotEnabled of 'loc
   | EUnsafeGetSet of 'loc
@@ -482,7 +481,6 @@ and docblock_error =
   | InvalidJSXAttribute of string option
 
 and internal_error =
-  | PackageHeapNotFound of string
   | AbnormalControlFlow
   | MethodNotAFunction
   | OptionalMethod
@@ -830,7 +828,6 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
   | EMissingLocalAnnotation r -> EMissingLocalAnnotation (map_reason r)
   | EBindingError (b, loc, s, scope) -> EBindingError (b, f loc, s, scope)
   | ERecursionLimit (r1, r2) -> ERecursionLimit (map_reason r1, map_reason r2)
-  | EModuleOutsideRoot (loc, s) -> EModuleOutsideRoot (f loc, s)
   | EUnsafeGetSet loc -> EUnsafeGetSet (f loc)
   | EUninitializedInstanceProperty (loc, e) -> EUninitializedInstanceProperty (f loc, e)
   | EEnumsNotEnabled loc -> EEnumsNotEnabled (f loc)
@@ -1183,7 +1180,6 @@ let util_use_op_of_msg nope util = function
   | EMissingLocalAnnotation _
   | EBindingError (_, _, _, _)
   | ERecursionLimit (_, _)
-  | EModuleOutsideRoot (_, _)
   | EUnsafeGetSet _
   | EUninitializedInstanceProperty _
   | EEnumsNotEnabled _
@@ -1391,7 +1387,6 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | EEnumsNotEnabled loc
   | EUnsafeGetSet loc
   | EUninitializedInstanceProperty (loc, _)
-  | EModuleOutsideRoot (loc, _)
   | EUseArrayLiteral loc
   | EUnsupportedSyntax (loc, _)
   | EInternal (loc, _)
@@ -1547,7 +1542,6 @@ let enum_name_of_reason reason =
   | _ -> None
 
 let string_of_internal_error = function
-  | PackageHeapNotFound pkg -> spf "package %S was not found in the PackageHeap!" pkg
   | AbnormalControlFlow -> "abnormal control flow"
   | MethodNotAFunction -> "expected function type"
   | OptionalMethod -> "optional methods are not supported"
@@ -2485,29 +2479,6 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
     in
     Normal { features }
   | ERecursionLimit _ -> Normal { features = [text "*** Recursion limit exceeded ***"] }
-  | EModuleOutsideRoot (_, package_relative_to_root) ->
-    let features =
-      [
-        text "This module resolves to ";
-        code package_relative_to_root;
-        text " which ";
-        text "is outside both your root directory and all of the entries in the ";
-        code "[include]";
-        text " section of your ";
-        code ".flowconfig";
-        text ". ";
-        text "You should either add this directory to the ";
-        code "[include]";
-        text " ";
-        text "section of your ";
-        code ".flowconfig";
-        text ", move your ";
-        code ".flowconfig";
-        text " file higher in the project directory tree, or ";
-        text "move this package under your Flow root directory.";
-      ]
-    in
-    Normal { features }
   | EUnsafeGetSet _ ->
     let features =
       [
@@ -4060,7 +4031,6 @@ let error_code_of_message err : error_code option =
   | EMissingTypeArgs _ -> Some MissingTypeArg
   | EMixedImportAndRequire _ -> Some MixedImportAndRequire
   | EToplevelLibraryImport _ -> Some ToplevelLibraryImport
-  | EModuleOutsideRoot (_, _) -> Some InvalidModule
   | ENoDefaultExport (_, _, _) -> Some MissingExport
   | ENoNamedExport (_, _, _, _) -> Some MissingExport
   | ENonConstVarExport _ -> Some NonConstVarExport

@@ -511,8 +511,8 @@ let check_contents_context ~reader options file ast docblock file_sig =
   let required =
     let require_loc_map = File_sig.With_ALoc.(require_loc_map file_sig.module_sig) in
     let node_modules_containers = !Files.node_modules_containers in
-    let f mref ((loc, _) as locs) acc =
-      let m = Module_js.imported_module ~options ~reader ~node_modules_containers file loc mref in
+    let f mref locs acc =
+      let m = Module_js.imported_module ~options ~reader ~node_modules_containers file mref in
       (mref, locs, m) :: acc
     in
     SMap.fold f require_loc_map []

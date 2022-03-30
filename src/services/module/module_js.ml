@@ -138,10 +138,7 @@ let package_incompatible ~reader filename new_package =
         (* This shouldn't happen -- if it does, it probably means we need to add cases above *)
         Incompatible Unknown
 
-type resolution_acc = {
-  mutable paths: SSet.t;
-  mutable errors: Error_message.t list;
-}
+type resolution_acc = { mutable paths: SSet.t }
 
 (* Specification of a module system. Currently this signature is sufficient to
    model both Haste and Node, but should be further generalized. *)
@@ -157,7 +154,6 @@ module type MODULE_SYSTEM = sig
     reader:Abstract_state_reader.t ->
     SSet.t SMap.t ->
     File_key.t ->
-    ALoc.t ->
     ?resolution_acc:resolution_acc ->
     string ->
     Modulename.t
@@ -267,8 +263,7 @@ module Node = struct
          )
       )
 
-  let parse_main
-      ~reader ~root ~file_options (loc : ALoc.t) resolution_acc package_filename file_exts =
+  let parse_main ~reader ~file_options resolution_acc package_filename file_exts =
     let package_filename = resolve_symlinks package_filename in
     if (not (file_exists package_filename)) || Files.is_ignored file_options package_filename then
       None
@@ -279,29 +274,7 @@ module Node = struct
         | Some (Error ()) ->
           (* invalid, but we already raised an error when building PackageHeap *)
           Package_json.empty
-        | None ->
-          begin
-            match resolution_acc with
-            | Some resolution_acc ->
-              let msg =
-                let is_included = Files.is_included file_options package_filename in
-                let project_root_str = Path.to_string root in
-                let is_contained_in_root = Files.is_prefix project_root_str package_filename in
-                let package_relative_to_root =
-                  spf
-                    "<<PROJECT_ROOT>>%s%s"
-                    Filename.dir_sep
-                    (Files.relative_path project_root_str package_filename)
-                in
-                if is_included || is_contained_in_root then
-                  Error_message.(EInternal (loc, PackageHeapNotFound package_relative_to_root))
-                else
-                  Error_message.EModuleOutsideRoot (loc, package_relative_to_root)
-              in
-              resolution_acc.errors <- msg :: resolution_acc.errors
-            | None -> ()
-          end;
-          Package_json.empty
+        | None -> Package_json.empty
       in
       match Package_json.main package with
       | None -> None
@@ -316,7 +289,7 @@ module Node = struct
             lazy (path_if_exists_with_file_exts ~file_options resolution_acc path_w_index file_exts);
           ]
 
-  let resolve_relative ~options ~reader (loc : ALoc.t) ?resolution_acc root_path rel_path =
+  let resolve_relative ~options ~reader ?resolution_acc root_path rel_path =
     let file_options = Options.file_options options in
     let path = Files.normalize_path root_path rel_path in
     (* We do not try resource file extensions here. So while you can write
@@ -330,9 +303,7 @@ module Node = struct
         lazy
           (parse_main
              ~reader
-             ~root:(Options.root options)
              ~file_options
-             loc
              resolution_acc
              (Filename.concat path "package.json")
              file_exts
@@ -346,7 +317,7 @@ module Node = struct
           );
       ]
 
-  let rec node_module ~options ~reader node_modules_containers file loc resolution_acc dir r =
+  let rec node_module ~options ~reader node_modules_containers file resolution_acc dir r =
     let file_options = Options.file_options options in
     lazy_seq
       [
@@ -361,7 +332,6 @@ module Node = struct
                          resolve_relative
                            ~options
                            ~reader
-                           loc
                            ?resolution_acc
                            dir
                            (spf "%s%s%s" dirname Filename.dir_sep r)
@@ -381,7 +351,6 @@ module Node = struct
                ~reader
                node_modules_containers
                file
-               loc
                resolution_acc
                (Filename.dirname dir)
                r
@@ -393,13 +362,12 @@ module Node = struct
   let explicitly_relative r =
     Str.string_match Files.current_dir_name r 0 || Str.string_match Files.parent_dir_name r 0
 
-  let resolve_import
-      ~options ~reader node_modules_containers f (loc : ALoc.t) ?resolution_acc import_str =
+  let resolve_import ~options ~reader node_modules_containers f ?resolution_acc import_str =
     let file = File_key.to_string f in
     let dir = Filename.dirname file in
     let root_str = Options.root options |> Path.to_string in
     if explicitly_relative import_str || absolute import_str then
-      resolve_relative ~options ~reader loc ?resolution_acc dir import_str
+      resolve_relative ~options ~reader ?resolution_acc dir import_str
     else
       lazy_seq
         [
@@ -415,33 +383,23 @@ module Node = struct
                             else
                               Filename.concat root_str root_relative_dirname
                           in
-                          resolve_relative ~options ~reader loc ?resolution_acc root_str import_str
+                          resolve_relative ~options ~reader ?resolution_acc root_str import_str
                          )
                    )
                 )
             else
               None
             );
-          lazy
-            (node_module
-               ~options
-               ~reader
-               node_modules_containers
-               f
-               loc
-               resolution_acc
-               dir
-               import_str
-            );
+          lazy (node_module ~options ~reader node_modules_containers f resolution_acc dir import_str);
         ]
 
-  let imported_module ~options ~reader node_modules_containers file loc ?resolution_acc import_str =
+  let imported_module ~options ~reader node_modules_containers file ?resolution_acc import_str =
     let candidates = module_name_candidates ~options import_str in
     let rec choose_candidate = function
       | [] -> None
       | candidate :: candidates ->
         let resolved =
-          resolve_import ~options ~reader node_modules_containers file loc ?resolution_acc candidate
+          resolve_import ~options ~reader node_modules_containers file ?resolution_acc candidate
         in
         (match resolved with
         | None -> choose_candidate candidates
@@ -529,20 +487,19 @@ module Haste : MODULE_SYSTEM = struct
       |> Base.Option.map ~f:(fun package -> Files.construct_path package rest)
 
   (* similar to Node resolution, with possible special cases *)
-  let resolve_import ~options ~reader node_modules_containers f loc ?resolution_acc r =
+  let resolve_import ~options ~reader node_modules_containers f ?resolution_acc r =
     let file = File_key.to_string f in
     lazy_seq
       [
-        lazy (Node.resolve_import ~options ~reader node_modules_containers f loc ?resolution_acc r);
+        lazy (Node.resolve_import ~options ~reader node_modules_containers f ?resolution_acc r);
         lazy
           (match expanded_name ~reader r with
           | Some r ->
-            Node.resolve_relative ~options ~reader loc ?resolution_acc (Filename.dirname file) r
+            Node.resolve_relative ~options ~reader ?resolution_acc (Filename.dirname file) r
           | None -> None);
       ]
 
-  let imported_module
-      ~options ~reader node_modules_containers file loc ?resolution_acc imported_name =
+  let imported_module ~options ~reader node_modules_containers file ?resolution_acc imported_name =
     let candidates = module_name_candidates ~options imported_name in
     (*
      * In Haste, we don't have an autoritative list of all valid module names
@@ -556,14 +513,7 @@ module Haste : MODULE_SYSTEM = struct
      *)
     let chosen_candidate = List.hd candidates in
     let resolved =
-      resolve_import
-        ~options
-        ~reader
-        node_modules_containers
-        file
-        loc
-        ?resolution_acc
-        chosen_candidate
+      resolve_import ~options ~reader node_modules_containers file ?resolution_acc chosen_candidate
     in
     match resolved with
     | Some name ->
@@ -617,9 +567,9 @@ let exported_module ~options =
   let module M = (val get_module_system options) in
   M.exported_module options
 
-let imported_module ~options ~reader ~node_modules_containers file loc ?resolution_acc r =
+let imported_module ~options ~reader ~node_modules_containers file ?resolution_acc r =
   let module M = (val get_module_system options) in
-  M.imported_module ~options ~reader node_modules_containers file loc ?resolution_acc r
+  M.imported_module ~options ~reader node_modules_containers file ?resolution_acc r
 
 let choose_provider ~options m files errmap =
   let module M = (val get_module_system options) in
@@ -633,47 +583,34 @@ let choose_provider ~options m files errmap =
 
     TODO [perf]: measure size and possibly optimize *)
 let resolved_requires_of ~options ~reader node_modules_containers file require_loc =
-  let resolution_acc = { paths = SSet.empty; errors = [] } in
+  let resolution_acc = { paths = SSet.empty } in
   let resolved_modules =
     SMap.fold
-      (fun mref locs acc ->
+      (fun mref _locs acc ->
         let m =
-          let loc = Nel.hd locs in
-          imported_module file loc mref ~options ~reader ~node_modules_containers ~resolution_acc
+          imported_module file mref ~options ~reader ~node_modules_containers ~resolution_acc
         in
         SMap.add mref m acc)
       require_loc
       SMap.empty
   in
-  let { paths = phantom_dependencies; errors } = resolution_acc in
-  (errors, Parsing_heaps.mk_resolved_requires ~resolved_modules ~phantom_dependencies)
+  let { paths = phantom_dependencies } = resolution_acc in
+  Parsing_heaps.mk_resolved_requires ~resolved_modules ~phantom_dependencies
 
 let add_parsed_resolved_requires ~mutator ~reader ~options ~node_modules_containers file =
   let file_addr = Parsing_heaps.get_file_addr_unsafe file in
   let parse = Parsing_heaps.Mutator_reader.get_typed_parse_unsafe ~reader file file_addr in
   let file_sig = Parsing_heaps.read_file_sig_unsafe file parse |> File_sig.abstractify_locs in
   let require_loc = File_sig.With_ALoc.(require_loc_map file_sig.module_sig) in
-  let (errors, resolved_requires) =
+  let resolved_requires =
     let reader = Abstract_state_reader.Mutator_state_reader reader in
     resolved_requires_of ~options ~reader node_modules_containers file require_loc
   in
-  let resolved_requires_changed =
-    Parsing_heaps.Resolved_requires_mutator.add_resolved_requires
-      mutator
-      file_addr
-      parse
-      resolved_requires
-  in
-  let errorset =
-    List.fold_left
-      (fun acc msg ->
-        Flow_error.ErrorSet.add
-          (Flow_error.error_of_msg ~trace_reasons:[] ~source_file:file msg)
-          acc)
-      Flow_error.ErrorSet.empty
-      errors
-  in
-  (resolved_requires_changed, errorset)
+  Parsing_heaps.Resolved_requires_mutator.add_resolved_requires
+    mutator
+    file_addr
+    parse
+    resolved_requires
 
 (* Repick providers for modules that are exported by new and changed files, or
    were provided by changed and deleted files.

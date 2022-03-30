@@ -113,7 +113,7 @@ let rec process_request ~options ~reader ~cx ~is_legit_require ~typed_ast :
         Ok (loc_of_aloc ~reader aloc)
     in
     loop v
-  | Get_def_request.Require ((source_loc, name), require_loc) ->
+  | Get_def_request.Require ((source_loc, name), _require_loc) ->
     let module_t = Type.OpenT (Context.find_require cx source_loc) |> Members.resolve_type cx in
     (* function just so we don't do the work unless it's actually needed. *)
     let get_imported_file () =
@@ -125,7 +125,6 @@ let rec process_request ~options ~reader ~cx ~is_legit_require ~typed_ast :
              ~reader:(Abstract_state_reader.State_reader reader)
              ~node_modules_containers:!Files.node_modules_containers
              (Context.file cx)
-             require_loc
              name
           )
       in
