@@ -1623,7 +1623,7 @@ let get_local_request_handler ienv (id, result) =
     Some (ienv, handler)
   | None -> None
 
-let try_connect flowconfig_name (env : disconnected_env) : server_state =
+let try_connect ~version_mismatch_strategy flowconfig_name (env : disconnected_env) : server_state =
   let flowconfig = read_flowconfig_from_disk flowconfig_name env.d_ienv.i_root in
   (* If the version in .flowconfig has changed under our feet then we mustn't
      connect. We'll terminate and trust the editor to relaunch an ok version. *)
@@ -1652,13 +1652,7 @@ let try_connect flowconfig_name (env : disconnected_env) : server_state =
           client_version = Flow_version.version;
           is_stop_request = false;
           server_should_hangup_if_still_initializing = true;
-          (* only exit if we'll restart it *)
-          version_mismatch_strategy =
-            ( if env.d_autostart then
-              Stop_server_if_older
-            else
-              SocketHandshake.Error_client
-            );
+          version_mismatch_strategy;
         },
         { client_type = Persistent { lsp_init_params = env.d_ienv.i_initialize_params } }
       )
@@ -2275,7 +2269,24 @@ and main_handle_initialized_unsafe flowconfig_name (state : server_state) (event
     let cenv = show_connected_status cenv in
     Ok (Connected cenv, LogNotNeeded)
   | (Disconnected env, Tick) ->
-    let server_state = try_connect flowconfig_name env in
+    (* the flow binary may have changed since we (the lsp process) were started.
+       on our first attempt to connect, version_mismatch_strategy is set to
+       Always_stop_server: since we just spawned, we can assume that we are the
+       most up-to-date version of the binary. if we connect to an already-running
+       server and the version mismatches, always stop the server.
+
+       after that, if we ever get a version mismatch then the server must have
+       restarted more recently than we have, so _it_ is the most up-to-date binary
+       and we should exit.
+
+       note that if the initial case happens and we stop the already-running server,
+       try_connect doesn't immediately connect to it; we try again on the next tick
+       (you are here!). if we somehow mismatch again -- e.g. the flow binary was
+       updated immediately after the lsp was spawned, so our assumption that we were
+       the latest binary was false -- we'll exit. the chances of this race happening
+       repeatedly is virtually impossible. *)
+    let version_mismatch_strategy = SocketHandshake.Error_client in
+    let server_state = try_connect ~version_mismatch_strategy flowconfig_name env in
     Ok (server_state, LogNotNeeded)
   | (_, Server_message _) ->
     failwith
@@ -2367,8 +2378,14 @@ and main_handle_unsafe flowconfig_name (state : state) (event : event) :
         d_ienv
     in
 
+    (* there may be an already-running flow server that's running a binary that has since
+       changed on disk. since we (the lsp process) were just spawned, we are using the
+       more up-to-date binary, so if we're a different binary than the server, the server
+       should exit so we can restart a new one. *)
+    let version_mismatch_strategy = SocketHandshake.Always_stop_server in
+
     let env = { d_ienv; d_autostart = true; d_server_status = None } in
-    Ok (Initialized (try_connect flowconfig_name env), LogNeeded metadata)
+    Ok (Initialized (try_connect ~version_mismatch_strategy flowconfig_name env), LogNeeded metadata)
   | (_, Client_message (NotificationMessage InitializedNotification, _metadata)) ->
     Ok (state, LogNotNeeded)
   | (_, Client_message (NotificationMessage SetTraceNotification, _metadata))
