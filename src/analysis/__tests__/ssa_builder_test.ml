@@ -468,6 +468,14 @@ let tests =
                  |> add (mk_loc (1, 47) (1, 48)) [mk_write (1, 14) (1, 15) "x"]
                  |> add (mk_loc (1, 51) (1, 52)) [mk_write (1, 17) (1, 18) "y"]
                );
+         "param_defaults_shadowed"
+         >:: mk_ssa_builder_test
+               "let a = 0; function foo(x = a, y = x) { let a = 1; }"
+               LocMap.(
+                 empty
+                 |> add (mk_loc (1, 28) (1, 29)) [Ssa_api.uninitialized; mk_write (1, 4) (1, 5) "a"]
+                 |> add (mk_loc (1, 35) (1, 36)) [mk_write (1, 24) (1, 25) "x"]
+               );
          "enums"
          >:: mk_ssa_builder_test
                ~enable_enums:true
