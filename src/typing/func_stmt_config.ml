@@ -167,7 +167,7 @@ module Make
     | Object { annot; properties; comments } ->
       let default = eval_default cx default in
       let properties =
-        let default = Base.Option.map default (fun ((_, t), _) -> Default.expr t) in
+        let default = Base.Option.map default ~f:(fun ((_, t), _) -> Default.expr t) in
         let init =
           Destructuring.empty
             ?default
@@ -190,7 +190,7 @@ module Make
     | Array { annot; elements; comments } ->
       let default = eval_default cx default in
       let elements =
-        let default = Base.Option.map default (fun ((_, t), _) -> Default.expr t) in
+        let default = Base.Option.map default ~f:(fun ((_, t), _) -> Default.expr t) in
         let init =
           Destructuring.empty
             ?default

@@ -45,9 +45,9 @@ let parse_lib_file ~reader options file =
     in
     Lwt.return
       ( if is_ok results then
-        let ast = Parsing_heaps.Mutator_reader.get_ast_unsafe reader lib_file in
+        let ast = Parsing_heaps.Mutator_reader.get_ast_unsafe ~reader lib_file in
         let (file_sig, tolerable_errors) =
-          Parsing_heaps.Mutator_reader.get_tolerable_file_sig_unsafe reader lib_file
+          Parsing_heaps.Mutator_reader.get_tolerable_file_sig_unsafe ~reader lib_file
         in
         Lib_ok { ast; file_sig; tolerable_errors }
       else if is_fail results then

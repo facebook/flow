@@ -505,7 +505,7 @@ end = struct
 
   let progress_fn real_total ~total:_ ~start ~length:_ =
     MonitorRPC.status_update
-      ServerStatus.(Load_saved_state_progress { total = Some real_total; finished = start })
+      ~event:ServerStatus.(Load_saved_state_progress { total = Some real_total; finished = start })
 
   (* Denormalize the data for all the parsed files. This is kind of slow :( *)
   let denormalize_parsed_heaps ~denormalizer parsed_heaps =
@@ -620,7 +620,7 @@ end = struct
     let filename = Path.to_string saved_state_filename in
     Hh_logger.info "Reading saved-state file at %S" filename;
 
-    MonitorRPC.status_update ServerStatus.Read_saved_state;
+    MonitorRPC.status_update ~event:ServerStatus.Read_saved_state;
 
     let%lwt fd =
       try%lwt Lwt_unix.openfile filename [Unix.O_RDONLY; Unix.O_NONBLOCK] 0o666 with

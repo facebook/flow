@@ -56,13 +56,13 @@ let create_proc_dir (pid : int) : string =
 
 let create_cmdline (pid : int) (cmdline : string) : unit =
   let proc_dir = create_proc_dir pid in
-  Disk.write_file (Printf.sprintf cmdline_path_format proc_dir) cmdline
+  Disk.write_file ~file:(Printf.sprintf cmdline_path_format proc_dir) ~contents:cmdline
 
 let create_stat (name : string) (pid : int) (ppid : int) : unit =
   let proc_dir = create_proc_dir pid in
   Disk.write_file
-    (Printf.sprintf stat_path_format proc_dir)
-    (Printf.sprintf stat_format pid name ppid)
+    ~file:(Printf.sprintf stat_path_format proc_dir)
+    ~contents:(Printf.sprintf stat_format pid name ppid)
 
 let setup ~(use_test_stubbing : bool) : unit =
   if use_test_stubbing then (

@@ -160,7 +160,7 @@ end = struct
       StatusStream.update ~status;
       Lwt.return_unit
     | MonitorProt.PersistentConnectionResponse (client_id, response) ->
-      (match PersistentConnectionMap.get client_id with
+      (match PersistentConnectionMap.get ~client_id with
       | None -> Logger.error "Failed to look up persistent client #%d" client_id
       | Some connection -> PersistentConnection.write ~msg:response connection);
       Lwt.return_unit

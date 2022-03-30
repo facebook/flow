@@ -183,7 +183,7 @@ let check_that_we_care_about_this_file =
       Ok ()
     else
       let (_, docblock) =
-        Parsing_service_js.(parse_docblock docblock_max_tokens file_key content)
+        Parsing_service_js.(parse_docblock ~max_tokens:docblock_max_tokens file_key content)
       in
       if Docblock.is_flow docblock then
         Ok ()

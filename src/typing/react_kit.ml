@@ -980,13 +980,13 @@ module Kit (Flow : Flow_common.S) : REACT = struct
           match NameUtils.Map.find_opt x props with
           | Some _ as p -> p
           | None ->
-            Base.Option.map dict (fun { key; value; dict_polarity; _ } ->
+            Base.Option.map dict ~f:(fun { key; value; dict_polarity; _ } ->
                 rec_flow_t ~use_op:unknown_use cx trace (string_key x reason_op, key);
                 Field (None, value, dict_polarity)
             )
         in
         let read_prop x (obj : resolved_object) =
-          Base.Option.bind (get_prop x obj) Property.read_t
+          Base.Option.bind (get_prop x obj) ~f:Property.read_t
         in
         let read_stack x (((obj, _), _) : stack) = read_prop x obj in
         let map_spec f ((obj, spec), tail) = ((obj, f spec), tail) in

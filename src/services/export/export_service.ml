@@ -123,7 +123,7 @@ let index ~workers ~reader parsed : (Export_index.t * Export_index.t) Lwt.t =
   in
 
   MonitorRPC.status_update
-    ServerStatus.(Indexing_progress { finished = 0; total = Some total_count });
+    ~event:ServerStatus.(Indexing_progress { finished = 0; total = Some total_count });
   let%lwt (to_add, to_remove, _count) =
     MultiWorkerLwt.call
       workers
@@ -132,7 +132,7 @@ let index ~workers ~reader parsed : (Export_index.t * Export_index.t) Lwt.t =
       ~merge:(fun (to_add, to_remove, count) (to_add_acc, to_remove_acc, finished) ->
         let finished = finished + count in
         MonitorRPC.status_update
-          ServerStatus.(Indexing_progress { total = Some total_count; finished });
+          ~event:ServerStatus.(Indexing_progress { total = Some total_count; finished });
         (to_add :: to_add_acc, to_remove :: to_remove_acc, finished))
       ~next:(MultiWorkerLwt.next workers parsed)
   in

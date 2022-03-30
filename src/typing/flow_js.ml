@@ -1710,7 +1710,7 @@ struct
                 Flow_js_utils.keylist_of_props (Context.find_props cx props_tmap) reason_op
               in
               rec_flow cx trace (union_of_ts reason_op keylist, keys);
-              Base.Option.iter dict_t (fun { key; _ } ->
+              Base.Option.iter dict_t ~f:(fun { key; _ } ->
                   rec_flow cx trace (key, ToStringT (reason_op, keys))
               )
           end
@@ -1894,7 +1894,7 @@ struct
               in
               (match
                  UnionRep.quick_mem_enum
-                   (TypeUtil.quick_subtype (Context.trust_errors cx))
+                   ~quick_subtype:(TypeUtil.quick_subtype (Context.trust_errors cx))
                    (DefT (r, Trust.bogus_trust (), def))
                    rep
                with
@@ -1919,7 +1919,7 @@ struct
                     UnionRep.join_quick_mem_results
                       ( acc,
                         UnionRep.quick_mem_enum
-                          (TypeUtil.quick_subtype (Context.trust_errors cx))
+                          ~quick_subtype:(TypeUtil.quick_subtype (Context.trust_errors cx))
                           (DefT (r, Trust.bogus_trust (), def))
                           rep
                       ))

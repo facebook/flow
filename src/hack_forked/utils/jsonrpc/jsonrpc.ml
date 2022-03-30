@@ -289,7 +289,7 @@ let get_message (queue : queue) =
   let item = Queue.pop queue.messages in
   match item with
   | Timestamped_json { tj_json; tj_timestamp } ->
-    Lwt.return (`Message (parse_message tj_json tj_timestamp))
+    Lwt.return (`Message (parse_message ~json:tj_json ~timestamp:tj_timestamp))
   | Fatal_exception data -> Lwt.return (`Fatal_exception data)
   | Recoverable_exception data -> Lwt.return (`Recoverable_exception data)
 

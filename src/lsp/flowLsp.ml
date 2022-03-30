@@ -1388,7 +1388,7 @@ let do_rage flowconfig_name (state : server_state) : Rage.result =
       (* monitor log file isn't retained anywhere. But since flow lsp doesn't
            take a --monitor-log-file option, then we know where it must be. *)
       let monitor_log_file =
-        CommandUtils.monitor_log_file flowconfig_name tmp_dir start_env.CommandConnect.root
+        CommandUtils.monitor_log_file ~flowconfig_name ~tmp_dir start_env.CommandConnect.root
       in
       let items = add_file items server_log_file in
       let items = add_file items monitor_log_file in

@@ -930,7 +930,7 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
                 properties ~is_class ~allow_inexact ~allow_spread ~exact env acc
             end
           | _ ->
-            let prop = spread_property env start_loc leading in
+            let prop = spread_property env start_loc ~leading in
             semicolon exact env;
             properties
               ~is_class
@@ -1101,7 +1101,7 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
               | T_LPAREN ->
                 error_unexpected_proto env proto;
                 error_unexpected_variance env variance;
-                method_property env start_loc static key leading
+                method_property env start_loc static key ~leading
               | T_COLON
               | T_PLING ->
                 init_property env start_loc ~variance ~static ~proto ~leading key
@@ -1121,7 +1121,7 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
               | T_LPAREN ->
                 error_unexpected_proto env proto;
                 error_unexpected_variance env variance;
-                method_property env start_loc static key leading
+                method_property env start_loc static key ~leading
               | _ ->
                 error_invalid_property_name env is_class static key;
                 init_property env start_loc ~variance ~static ~proto ~leading key

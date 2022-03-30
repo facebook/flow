@@ -445,7 +445,7 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
               in
               (* Merge the dictionary from our config with the defaults dictionary. *)
               let dict =
-                Base.Option.merge config_dict defaults_dict (fun d1 d2 ->
+                Base.Option.merge config_dict defaults_dict ~f:(fun d1 d2 ->
                     {
                       dict_name = None;
                       key = UnionT (reason, UnionRep.make d1.key d2.key []);
@@ -487,7 +487,7 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
               (* Create a new dictionary from our config's dictionary with a
                * positive polarity. *)
               let dict =
-                Base.Option.map config_dict (fun d ->
+                Base.Option.map config_dict ~f:(fun d ->
                     {
                       dict_name = None;
                       key = d.key;

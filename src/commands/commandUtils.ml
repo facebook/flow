@@ -1676,7 +1676,7 @@ let rec connect_and_make_request flowconfig_name =
             Some (FileWatcherStatus.string_of_status watcher_status)
         | (server_status, _) -> Some (ServerStatus.string_of_status ~use_emoji server_status)
       in
-      Base.Option.iter status_string (fun status_string ->
+      Base.Option.iter status_string ~f:(fun status_string ->
           if not quiet then eprintf_with_spinner "Please wait. %s" status_string
       );
 

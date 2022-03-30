@@ -51,7 +51,7 @@ module Queries = struct
 
   let used_names prog =
     let idents = ref SSet.empty in
-    let visitor = new ident_visitor idents in
+    let visitor = new ident_visitor ~init:idents in
     let _ = visitor#program prog in
     !idents
 end

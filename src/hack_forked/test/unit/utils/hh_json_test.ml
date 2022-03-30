@@ -26,7 +26,7 @@ let test_escape_unescape_data =
   ]
 
 let test_escape_unescape () =
-  List.for_all test_escape_unescape_data (fun s ->
+  List.for_all test_escape_unescape_data ~f:(fun s ->
       let json = Hh_json.JSON_String s in
       let encoded = Hh_json.json_to_string json in
       let decoded = Hh_json.json_of_string encoded in

@@ -2863,7 +2863,7 @@ module Make
             let truthy_refinements = this#peek_new_refinements () in
             this#pop_refinement_scope ();
             this#push_refinement_scope LookupMap.empty;
-            this#merge_refinement_scopes merge_and nullish truthy_refinements;
+            this#merge_refinement_scopes ~merge:merge_and nullish truthy_refinements;
             let lhs_latest_refinements = this#peek_new_refinements () in
             this#pop_refinement_scope ();
             (lhs_latest_refinements, rhs_latest_refinements, env1, rhs_completion_state)
@@ -2884,7 +2884,7 @@ module Make
           this#merge_self_env env2
         | _ ->
           this#merge_self_env env1;
-          this#merge_refinement_scopes merge lhs_latest_refinements rhs_latest_refinements
+          this#merge_refinement_scopes ~merge lhs_latest_refinements rhs_latest_refinements
 
       method null_test ~strict ~sense loc expr other =
         ignore @@ this#expression expr;

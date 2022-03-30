@@ -32,7 +32,7 @@ module Reordered_argument_map (S : WrappedMap.S) = struct
 
   let merge m1 m2 ~f = merge f m1 m2
 
-  let filter m ~f = filter m f
+  let filter m ~f = filter m ~f
 
   let partition m ~f = partition f m
 end

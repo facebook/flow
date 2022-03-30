@@ -1285,7 +1285,7 @@ end = struct
     let unchanged_files_to_force =
       CheckedSet.filter files_to_force ~f:(fun fn _ -> FilenameSet.mem fn unchanged)
     in
-    MonitorRPC.status_update ServerStatus.Resolving_dependencies_progress;
+    MonitorRPC.status_update ~event:ServerStatus.Resolving_dependencies_progress;
     let%lwt (changed_modules, duplicate_providers) =
       (* TODO remove after lookup overhaul *)
       Module_js.clear_filename_cache ();
@@ -1972,7 +1972,7 @@ let make_next_files ~libs ~file_options root =
     let files = make_next_raw () in
     let finished = !total in
     let length = List.length files in
-    MonitorRPC.status_update ServerStatus.(Parsing_progress { finished; total = None });
+    MonitorRPC.status_update ~event:ServerStatus.(Parsing_progress { finished; total = None });
     total := finished + length;
 
     files |> Base.List.map ~f:(Files.filename_from_string ~options:file_options) |> Bucket.of_list
@@ -2087,7 +2087,7 @@ let init_from_saved_state ~profiling ~workers ~saved_state ~updates options =
       init_libs ~options ~profiling ~local_errors ~warnings ~suppressions ~reader ordered_libs
     in
     Hh_logger.info "Resolving dependencies";
-    MonitorRPC.status_update ServerStatus.Resolving_dependencies_progress;
+    MonitorRPC.status_update ~event:ServerStatus.Resolving_dependencies_progress;
 
     (* This will restore InfoHeap, NameHeap, & all_providers hashtable *)
     let%lwt (_changed_modules, duplicate_providers) =
@@ -2206,7 +2206,7 @@ let init_from_scratch ~profiling ~workers options =
   let (ordered_libs, libs) = Files.init file_options in
   let next_files = make_next_files ~libs ~file_options (Options.root options) in
   Hh_logger.info "Parsing";
-  MonitorRPC.status_update ServerStatus.(Parsing_progress { finished = 0; total = None });
+  MonitorRPC.status_update ~event:ServerStatus.(Parsing_progress { finished = 0; total = None });
   let%lwt ( parsed_set,
             unparsed_set,
             unchanged,
@@ -2242,7 +2242,7 @@ let init_from_scratch ~profiling ~workers options =
   in
 
   Hh_logger.info "Resolving dependencies";
-  MonitorRPC.status_update ServerStatus.Resolving_dependencies_progress;
+  MonitorRPC.status_update ~event:ServerStatus.Resolving_dependencies_progress;
   let%lwt (_changed_modules, duplicate_providers) =
     commit_modules
       ~transaction
@@ -2313,7 +2313,7 @@ let load_saved_state ~profiling ~workers options =
        let%lwt (load_profiling, saved_state) =
          Saved_state.load ~workers ~saved_state_filename ~options
        in
-       Profiling_js.merge load_profiling profiling;
+       Profiling_js.merge ~from:load_profiling ~into:profiling;
 
        let updates =
          Recheck_updates.process_updates

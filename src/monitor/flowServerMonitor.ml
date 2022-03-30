@@ -165,7 +165,7 @@ let internal_start ~is_daemon ?waiting_fd monitor_options =
         try%lwt
           SocketAcceptor.run
             (Lwt_unix.of_unix_file_descr ~blocking:false ~set_flags:true monitor_socket_fd)
-            monitor_options.FlowServerMonitorOptions.autostop
+            ~autostop:monitor_options.FlowServerMonitorOptions.autostop
         with
         | exn ->
           let exn = Exception.wrap exn in

@@ -292,9 +292,9 @@ let ( %>>| ) (result : ('ok, 'err) result) (f : 'ok -> 'a Lwt.t) : ('a, 'err) re
     let%lwt new_x = f x in
     Lwt.return (Ok new_x)
 
-let bind2 ~f x y = Base.Result.bind x (fun x -> Base.Result.bind y (f x))
+let bind2 ~f x y = Base.Result.bind x ~f:(fun x -> Base.Result.bind y ~f:(f x))
 
-let map2 ~f x y = Base.Result.bind x (fun x -> Base.Result.map y ~f:(f x))
+let map2 ~f x y = Base.Result.bind x ~f:(fun x -> Base.Result.map y ~f:(f x))
 
 let debug_print_current_stack_trace () =
   Hh_logger.info "Current backtrace:\n%s" (Exception.get_current_callstack_string 200)

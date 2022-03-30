@@ -643,7 +643,7 @@ let get_defaults ~types_mode ~use_strict options =
 
 let progress_fn ~total ~start ~length:_ =
   let finished = start in
-  MonitorRPC.status_update ServerStatus.(Parsing_progress { total = Some total; finished })
+  MonitorRPC.status_update ~event:ServerStatus.(Parsing_progress { total = Some total; finished })
 
 let next_of_filename_set ?(with_progress = false) workers filenames =
   if with_progress then
@@ -827,7 +827,7 @@ let ensure_parsed ~reader options workers files =
   let worker_mutator = Parsing_heaps.Parse_mutator.create () in
   let progress_fn ~total ~start ~length:_ =
     MonitorRPC.status_update
-      ServerStatus.(Parsing_progress { total = Some total; finished = start })
+      ~event:ServerStatus.(Parsing_progress { total = Some total; finished = start })
   in
   let%lwt files_missing_asts =
     MultiWorkerLwt.call

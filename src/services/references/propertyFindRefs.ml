@@ -130,7 +130,7 @@ let property_find_refs_in_file ~reader options ast_info file_key def_info name =
     let literal_prop_refs_result =
       (* Lazy to avoid this computation if there are no potentially-relevant object literals to
        * examine *)
-      let prop_loc_map = lazy (LiteralToPropLoc.make ast name) in
+      let prop_loc_map = lazy (LiteralToPropLoc.make ast ~prop_name:name) in
       let get_prop_loc_if_relevant (obj_aloc, into_type) =
         type_matches_locs ~reader cx into_type def_info name >>| function
         | false -> None

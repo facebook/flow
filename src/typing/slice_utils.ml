@@ -1007,7 +1007,7 @@ let intersect2
       props2
   in
   let dict =
-    Base.Option.merge dict1 dict2 (fun d1 d2 ->
+    Base.Option.merge dict1 dict2 ~f:(fun d1 d2 ->
         {
           dict_name = None;
           key = intersection d1.key d2.key;

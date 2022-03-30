@@ -3244,7 +3244,7 @@ struct
           comments;
         } ->
       let targts_opt =
-        Base.Option.map targs (fun (targts_loc, args) ->
+        Base.Option.map targs ~f:(fun (targts_loc, args) ->
             (targts_loc, convert_call_targs cx Subst_name.Map.empty args)
         )
       in
@@ -3323,7 +3323,7 @@ struct
           comments;
         } ->
       let targts =
-        Base.Option.map targs (fun (loc, args) ->
+        Base.Option.map targs ~f:(fun (loc, args) ->
             (loc, convert_call_targs cx Subst_name.Map.empty args)
         )
       in
@@ -3994,7 +3994,7 @@ struct
           }
         when not (Env.local_scope_entry_exists cx id_loc n) ->
         let targs =
-          Base.Option.map targs (fun (args_loc, args) ->
+          Base.Option.map targs ~f:(fun (args_loc, args) ->
               (args_loc, snd (convert_call_targs cx Subst_name.Map.empty args))
           )
         in
@@ -4263,7 +4263,7 @@ struct
         (* TODO: require *)
         let (((_, callee_t), _) as callee) = expression cx ~hint:None callee in
         let targs =
-          Base.Option.map targs (fun (loc, args) ->
+          Base.Option.map targs ~f:(fun (loc, args) ->
               (loc, snd (convert_call_targs cx Subst_name.Map.empty args))
           )
         in
@@ -8502,7 +8502,13 @@ struct
                     )
                 in
                 let public_seen_names' =
-                  check_duplicate_name public_seen_names id_loc name static true Class_Member_Field
+                  check_duplicate_name
+                    public_seen_names
+                    id_loc
+                    name
+                    ~static
+                    ~private_:true
+                    Class_Member_Field
                 in
                 ( add_private_field ~static name id_loc polarity field c,
                   get_element :: rev_elements,
@@ -8542,7 +8548,13 @@ struct
                     )
                 in
                 let public_seen_names' =
-                  check_duplicate_name public_seen_names id_loc name static false Class_Member_Field
+                  check_duplicate_name
+                    public_seen_names
+                    id_loc
+                    name
+                    ~static
+                    ~private_:false
+                    Class_Member_Field
                 in
                 ( add_field ~static name id_loc polarity field c,
                   get_element :: rev_elements,

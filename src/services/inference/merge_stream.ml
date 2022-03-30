@@ -169,7 +169,7 @@ let update_server_status stream =
       Merging_progress { finished = stream.merged_files; total = Some stream.total_files }
     )
   in
-  MonitorRPC.status_update status
+  MonitorRPC.status_update ~event:status
 
 let next stream =
   let rec take acc n =

@@ -66,7 +66,7 @@ module Make (Env : Env_sig.S) (Statement : Statement_sig.S with module Env := En
     in
     let reason = mk_reason (RCustom (Utils_js.spf "element %d" i)) loc in
     let init =
-      Base.Option.map init (fun init ->
+      Base.Option.map init ~f:(fun init ->
           ( loc,
             let open Ast.Expression in
             Member
@@ -90,28 +90,28 @@ module Make (Env : Env_sig.S) (Statement : Statement_sig.S with module Env := En
       )
     in
     let refinement =
-      Base.Option.bind init (fun init -> Refinement.get ~allow_optional:true cx init loc)
+      Base.Option.bind init ~f:(fun init -> Refinement.get ~allow_optional:true cx init loc)
     in
     let (parent, current) =
       match refinement with
       | Some t -> (None, t)
       | None -> (Some current, destruct cx reason ~annot (Elem key) current)
     in
-    let default = Base.Option.map default (Default.elem key reason) in
+    let default = Base.Option.map default ~f:(Default.elem key reason) in
     { acc with parent; current; init; default }
 
   let array_rest_element cx acc i loc =
     let { current; default; annot; _ } = acc in
     let reason = mk_reason RArrayPatternRestProp loc in
     let (parent, current) = (Some current, destruct cx reason ~annot (ArrRest i) current) in
-    let default = Base.Option.map default (Default.arr_rest i reason) in
+    let default = Base.Option.map default ~f:(Default.arr_rest i reason) in
     { acc with parent; current; default }
 
   let object_named_property ~has_default cx acc loc x comments =
     let { current; init; default; annot; _ } = acc in
     let reason = mk_reason (RProperty (Some (OrdinaryName x))) loc in
     let init =
-      Base.Option.map init (fun init ->
+      Base.Option.map init ~f:(fun init ->
           ( loc,
             let open Ast.Expression in
             Member
@@ -126,10 +126,10 @@ module Make (Env : Env_sig.S) (Statement : Statement_sig.S with module Env := En
       )
     in
     let refinement =
-      Base.Option.bind init (fun init -> Refinement.get ~allow_optional:true cx init loc)
+      Base.Option.bind init ~f:(fun init -> Refinement.get ~allow_optional:true cx init loc)
     in
     let default =
-      Base.Option.map default (fun default ->
+      Base.Option.map default ~f:(fun default ->
           let d = Default.prop x reason has_default default in
           if has_default then
             Default.default reason d
@@ -165,7 +165,7 @@ module Make (Env : Env_sig.S) (Statement : Statement_sig.S with module Env := En
     let (((loc, t), _) as e') = Statement.expression cx ~hint:None e in
     let reason = mk_reason (RProperty None) loc in
     let init =
-      Base.Option.map init (fun init ->
+      Base.Option.map init ~f:(fun init ->
           ( loc,
             Ast.Expression.(
               Member Member.{ _object = init; property = PropertyExpression e; comments = None }
@@ -174,21 +174,21 @@ module Make (Env : Env_sig.S) (Statement : Statement_sig.S with module Env := En
       )
     in
     let refinement =
-      Base.Option.bind init (fun init -> Refinement.get ~allow_optional:true cx init loc)
+      Base.Option.bind init ~f:(fun init -> Refinement.get ~allow_optional:true cx init loc)
     in
     let (parent, current) =
       match refinement with
       | Some t -> (None, t)
       | None -> (Some current, destruct cx reason ~annot (Elem t) current)
     in
-    let default = Base.Option.map default (Default.elem t reason) in
+    let default = Base.Option.map default ~f:(Default.elem t reason) in
     ({ acc with parent; current; init; default }, e')
 
   let object_rest_property cx acc xs loc =
     let { current; default; annot; _ } = acc in
     let reason = mk_reason RObjectPatternRestProp loc in
     let (parent, current) = (Some current, destruct cx reason ~annot (ObjRest xs) current) in
-    let default = Base.Option.map default (Default.obj_rest xs reason) in
+    let default = Base.Option.map default ~f:(Default.obj_rest xs reason) in
     { acc with parent; current; default }
 
   let object_property

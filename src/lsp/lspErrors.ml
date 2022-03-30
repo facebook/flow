@@ -127,7 +127,7 @@ let is_parse_error =
 let is_not_parse_error d = not (is_parse_error d)
 
 let split errors =
-  let (parse_errors, non_parse_errors) = List.partition_tf errors is_parse_error in
+  let (parse_errors, non_parse_errors) = List.partition_tf errors ~f:is_parse_error in
   (ParseErrors parse_errors, NonParseErrors non_parse_errors)
 
 let choose_errors
