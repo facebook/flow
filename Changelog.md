@@ -1,3 +1,22 @@
+### 0.175.0
+
+Notable changes:
+* Improve error messages when using a type as a value
+* Improve error messages in `for` loops
+* Correctly determine the scope of default expressions in function params
+* Add `FLOW_CONFIG_NAME` env as alternative to passing `--flowconfig-name`
+* Add `file_watcher.mergebase_with.{git,hg}` configs to support projects accessible via multiple VCSs (e.g. git mirrors of hg repositories)
+
+IDE integration:
+* Surface deprecated autocompletion results so they appear with a strikethrough in VS Code
+* Fix a bug where changing libdefs, package.json files or the .flowconfig multiple times will cause the IDE to report "server is stopped".
+* Fix a bug where the IDE is unable to start the server if it is downgraded
+* Improve suggestions when autocompleting keys in an object literal
+* Fix an exception when autocompleting a result that would add to an import to an existing `require()`
+
+flow-remove-types:
+* Fix handling of `this` param with trailing commas
+
 ### 0.174.1
 
 Fix crash when Flow receives duplicate file deletion notifications introduced in v0.174.
