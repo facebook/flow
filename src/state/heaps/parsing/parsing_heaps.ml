@@ -68,22 +68,22 @@ type provider_addr = Heap.file Heap.entity SharedMem.addr
 
 type resolved_requires = {
   resolved_modules: Modulename.t SMap.t;
-  phantom_dependents: SSet.t;
+  phantom_dependencies: SSet.t;
   hash: Xx.hash;
 }
 [@@deriving show]
 
 let ( let* ) = Option.bind
 
-let mk_resolved_requires ~resolved_modules ~phantom_dependents =
+let mk_resolved_requires ~resolved_modules ~phantom_dependencies =
   let state = Xx.init 0L in
   SMap.iter
     (fun reference modulename ->
       Xx.update state reference;
       Xx.update state (Modulename.to_string modulename))
     resolved_modules;
-  SSet.iter (Xx.update state) phantom_dependents;
-  { resolved_modules; phantom_dependents; hash = Xx.digest state }
+  SSet.iter (Xx.update state) phantom_dependencies;
+  { resolved_modules; phantom_dependencies; hash = Xx.digest state }
 
 (* There's some redundancy in the visitors here, but an attempt to avoid repeated code led,
  * inexplicably, to a shared heap size regression under types-first: D15481813 *)

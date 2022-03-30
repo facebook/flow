@@ -645,8 +645,8 @@ let resolved_requires_of ~options ~reader node_modules_containers file require_l
       require_loc
       SMap.empty
   in
-  let { paths = phantom_dependents; errors } = resolution_acc in
-  (errors, Parsing_heaps.mk_resolved_requires ~resolved_modules ~phantom_dependents)
+  let { paths = phantom_dependencies; errors } = resolution_acc in
+  (errors, Parsing_heaps.mk_resolved_requires ~resolved_modules ~phantom_dependencies)
 
 let add_parsed_resolved_requires ~mutator ~reader ~options ~node_modules_containers file =
   let file_addr = Parsing_heaps.get_file_addr_unsafe file in

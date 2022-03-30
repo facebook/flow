@@ -116,8 +116,8 @@ let calc_direct_dependents_job acc (root_files, root_modules) =
   in
   let root_modules = Modulename.Set.of_list root_modules in
   let dependents = ref FilenameSet.empty in
-  Parsing_heaps.iter_resolved_requires (fun file { resolved_modules; phantom_dependents; _ } ->
-      if not (SSet.disjoint root_files phantom_dependents) then
+  Parsing_heaps.iter_resolved_requires (fun file { resolved_modules; phantom_dependencies; _ } ->
+      if not (SSet.disjoint root_files phantom_dependencies) then
         dependents := FilenameSet.add (Parsing_heaps.read_file_key file) !dependents
       else if SMap.exists (fun _ m -> Modulename.Set.mem m root_modules) resolved_modules then
         dependents := FilenameSet.add (Parsing_heaps.read_file_key file) !dependents
