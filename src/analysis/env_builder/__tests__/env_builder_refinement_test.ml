@@ -2414,6 +2414,46 @@ let%expect_test "switch_shadow" =
         (1, 22) to (1, 23): (`x`)
       }] |}]
 
+let%expect_test "switch_nested_block_shadow" =
+  print_ssa_test {|function switch_scope() {
+  switch ('foo') {
+    case 'foo': {
+      const bar = 3;
+      break;
+    }
+  }
+  bar;
+  const {bar} = {};
+  bar;
+}|};
+  [%expect {|
+    [
+      (8, 2) to (8, 5) => {
+        (undeclared)
+      };
+      (10, 2) to (10, 5) => {
+        (9, 9) to (9, 12): (`bar`)
+      }] |}]
+
+let%expect_test "for_nested_block_shadow" =
+  print_ssa_test {|function for_scope() {
+  for (;;) {
+    const bar = 3;
+    break;
+  }
+  bar;
+  const {bar} = {};
+  bar;
+}|};
+  [%expect {|
+    [
+      (6, 2) to (6, 5) => {
+        (undeclared)
+      };
+      (8, 2) to (8, 5) => {
+        (7, 9) to (7, 12): (`bar`)
+      }] |}]
+
 let%expect_test "for_in" =
   print_ssa_test {|let stuff = {}
 for (let thing in stuff) {
@@ -3077,6 +3117,25 @@ x;
           {refinement = true; writes = {refinement = Not (3); writes = {refinement = Not (Null); writes = (1, 4) to (1, 5): (`x`)}}},
           {refinement = false; writes = {refinement = Not (true); writes = {refinement = Not (3); writes = {refinement = Not (Null); writes = (1, 4) to (1, 5): (`x`)}}}},
           {refinement = Not (false); writes = {refinement = Not (true); writes = {refinement = Not (3); writes = {refinement = Not (Null); writes = (1, 4) to (1, 5): (`x`)}}}}
+        }] |}]
+
+let%expect_test "switch_merge_all_breaks" =
+  print_ssa_test {|let x;
+switch (1) {
+  case 1:
+    x = 1;
+    break;
+  default:
+    x = 2;
+    break;
+};
+x;
+|};
+    [%expect {|
+      [
+        (10, 0) to (10, 1) => {
+          (4, 4) to (4, 5): (`x`),
+          (7, 4) to (7, 5): (`x`)
         }] |}]
 
 let%expect_test "switch_throw_in_default" =

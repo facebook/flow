@@ -480,6 +480,7 @@ module Make
     type entry = {
       env_val: Val.t;
       heap_refinements: heap_refinement_map;
+      def_loc: ALoc.t option;
     }
 
     type t = entry SMap.t
@@ -831,8 +832,8 @@ module Make
 
       method env : Env.t =
         SMap.map
-          (fun { val_ref; heap_refinements; _ } ->
-            { Env.env_val = !val_ref; heap_refinements = !heap_refinements })
+          (fun { val_ref; heap_refinements; def_loc; _ } ->
+            { Env.env_val = !val_ref; heap_refinements = !heap_refinements; def_loc })
           env_state.env
 
       (* We often want to merge the refinement scopes and writes of two environments with
@@ -851,7 +852,7 @@ module Make
           | Some { refinement_id; _ } -> Val.unrefine refinement_id v
         in
         SMap.mapi
-          (fun name { val_ref; heap_refinements; _ } ->
+          (fun name { val_ref; heap_refinements; def_loc; _ } ->
             let head = List.hd env_state.latest_refinements in
             let lookup_key = RefinementKey.lookup_of_name name in
             let env_val = unrefine head lookup_key !val_ref in
@@ -862,7 +863,7 @@ module Make
                   unrefine head lookup_key v)
                 !heap_refinements
             in
-            { Env.env_val; heap_refinements = unrefined_heap_refinements })
+            { Env.env_val; heap_refinements = unrefined_heap_refinements; def_loc })
           env_state.env
 
       method merge_heap_refinements =
@@ -941,7 +942,11 @@ module Make
             heap_entries_after_loop
         in
         List.iter2
-          (fun { Env.env_val = after_guard; heap_refinements = heap_entries_after_guard }
+          (fun {
+                 Env.env_val = after_guard;
+                 heap_refinements = heap_entries_after_guard;
+                 def_loc = _;
+               }
                { val_ref = after_loop; heap_refinements = heap_entries_after_loop; _ } ->
             after_loop := Val.merge after_guard !after_loop;
             heap_entries_after_loop :=
@@ -955,10 +960,14 @@ module Make
         (* NOTE: env might have more keys than env_state.env, since the environment it
            describes might be nested inside the current environment *)
         SMap.iter
-          (fun x { val_ref; heap_refinements = heap_refinements1; _ } ->
-            let { Env.env_val; heap_refinements = heap_refinements2 } = SMap.find x env in
-            val_ref := Val.merge !val_ref env_val;
-            heap_refinements1 := this#merge_heap_refinements !heap_refinements1 heap_refinements2)
+          (fun x { val_ref; heap_refinements = heap_refinements1; def_loc = def_loc_1; _ } ->
+            let { Env.env_val; heap_refinements = heap_refinements2; def_loc = def_loc_2 } =
+              SMap.find x env
+            in
+            if def_loc_1 = def_loc_2 then (
+              val_ref := Val.merge !val_ref env_val;
+              heap_refinements1 := this#merge_heap_refinements !heap_refinements1 heap_refinements2
+            ))
           env_state.env
 
       method merge_env (env1 : Env.t) (env2 : Env.t) : unit =
@@ -967,8 +976,8 @@ module Make
         let env = SMap.values env_state.env in
         list_iter3
           (fun { val_ref; heap_refinements; _ }
-               { Env.env_val = value1; heap_refinements = heap_refinements1 }
-               { Env.env_val = value2; heap_refinements = heap_refinements2 } ->
+               { Env.env_val = value1; heap_refinements = heap_refinements1; def_loc = _ }
+               { Env.env_val = value2; heap_refinements = heap_refinements2; def_loc = _ } ->
             val_ref := Val.merge value1 value2;
             heap_refinements := this#merge_heap_refinements heap_refinements1 heap_refinements2)
           env
@@ -980,7 +989,7 @@ module Make
         let env = SMap.values env_state.env in
         List.iter2
           (fun { val_ref; heap_refinements; _ }
-               { Env.env_val = value; heap_refinements = new_heap_refinements } ->
+               { Env.env_val = value; heap_refinements = new_heap_refinements; def_loc = _ } ->
             val_ref := Val.merge !val_ref value;
             heap_refinements := this#merge_heap_refinements !heap_refinements new_heap_refinements)
           env
@@ -991,7 +1000,7 @@ module Make
         let env = SMap.values env_state.env in
         List.iter2
           (fun { val_ref; heap_refinements; _ }
-               { Env.env_val; heap_refinements = old_heap_refinements } ->
+               { Env.env_val; heap_refinements = old_heap_refinements; def_loc = _ } ->
             val_ref := env_val;
             heap_refinements := old_heap_refinements)
           env
@@ -999,7 +1008,15 @@ module Make
 
       method empty_env : Env.t =
         SMap.map
-          (fun _ -> { Env.env_val = Val.empty (); heap_refinements = HeapRefinementMap.empty })
+          (fun _ ->
+            {
+              Env.env_val = Val.empty ();
+              heap_refinements = HeapRefinementMap.empty;
+              (* The empty env is always used as a reset value,
+                 and the reset_env method (see above) does not mutate def_loc at all.
+                 Therefore, the value of def_loc here does not matter. *)
+              def_loc = None;
+            })
           env_state.env
 
       (* This method applies a function over the value stored with a refinement key. It is
@@ -1035,7 +1052,7 @@ module Make
         | Some { RefinementKey.loc = _; lookup = { RefinementKey.base; projections } } ->
           (match SMap.find_opt base this#env with
           | None -> None
-          | Some { Env.env_val; heap_refinements } ->
+          | Some { Env.env_val; heap_refinements; def_loc = _ } ->
             (match projections with
             | [] -> Some env_val
             | _ -> HeapRefinementMap.find_opt projections heap_refinements))
@@ -1820,12 +1837,24 @@ module Make
         | _ ->
           SMap.iter
             (fun name { val_ref; heap_refinements; _ } ->
-              let { Env.env_val = value1; heap_refinements = _ } = SMap.find name env1 in
-              let { Env.env_val = value2; heap_refinements = _ } = SMap.find name env2 in
-              let { Env.env_val = refined_value1; heap_refinements = heap_refinements1 } =
+              let { Env.env_val = value1; heap_refinements = _; def_loc = _ } =
+                SMap.find name env1
+              in
+              let { Env.env_val = value2; heap_refinements = _; def_loc = _ } =
+                SMap.find name env2
+              in
+              let {
+                Env.env_val = refined_value1;
+                heap_refinements = heap_refinements1;
+                def_loc = _;
+              } =
                 SMap.find name refined_env1
               in
-              let { Env.env_val = refined_value2; heap_refinements = heap_refinements2 } =
+              let {
+                Env.env_val = refined_value2;
+                heap_refinements = heap_refinements2;
+                def_loc = _;
+              } =
                 SMap.find name refined_env2
               in
               (* If the same key exists on both versions of the object then we can
@@ -1862,8 +1891,10 @@ module Make
             scout ();
             let post_env = this#env in
             SMap.fold
-              (fun name { Env.env_val = env_val1; heap_refinements = _ } acc ->
-                let { Env.env_val = env_val2; heap_refinements = _ } = SMap.find name pre_env in
+              (fun name { Env.env_val = env_val1; heap_refinements = _; def_loc = _ } acc ->
+                let { Env.env_val = env_val2; heap_refinements = _; def_loc = _ } =
+                  SMap.find name pre_env
+                in
                 let normalized_val1 = Val.normalize_through_refinements env_val1.Val.write_state in
                 let normalized_val2 = Val.normalize_through_refinements env_val2.Val.write_state in
                 if Val.WriteSet.equal normalized_val1 normalized_val2 then
