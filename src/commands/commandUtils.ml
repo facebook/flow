@@ -1361,7 +1361,6 @@ let make_options
     opt_merge_timeout;
     opt_missing_module_generators = FlowConfig.missing_module_generators flowconfig;
     opt_saved_state_fetcher;
-    opt_saved_state_load_sighashes = FlowConfig.saved_state_load_sighashes flowconfig;
     opt_saved_state_force_recheck = saved_state_options_flags.saved_state_force_recheck;
     opt_saved_state_no_fallback = saved_state_options_flags.saved_state_no_fallback;
     opt_node_resolver_allow_root_relative = FlowConfig.node_resolver_allow_root_relative flowconfig;

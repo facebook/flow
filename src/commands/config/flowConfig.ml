@@ -123,7 +123,6 @@ module Opts = struct
     root_name: string option;
     run_post_inference_implicit_instantiation: bool;
     saved_state_fetcher: Options.saved_state_fetcher;
-    saved_state_load_sighashes: bool;
     shm_hash_table_pow: int;
     shm_heap_size: int;
     shm_log_level: int;
@@ -253,7 +252,6 @@ module Opts = struct
       root_name = None;
       run_post_inference_implicit_instantiation = false;
       saved_state_fetcher = Options.Dummy_fetcher;
-      saved_state_load_sighashes = false;
       shm_hash_table_pow = 19;
       shm_heap_size = (* 25GB *) 1024 * 1024 * 1024 * 25;
       shm_log_level = 0;
@@ -917,9 +915,6 @@ module Opts = struct
       );
       ("relay_integration.module_prefix.includes", relay_integration_module_prefix_includes_parser);
       ("saved_state.fetcher", saved_state_fetcher_parser);
-      ( "saved_state.load_sighashes",
-        boolean (fun opts v -> Ok { opts with saved_state_load_sighashes = v })
-      );
       ("server.max_workers", uint (fun opts v -> Ok { opts with max_workers = v }));
       ("sharedmemory.hash_table_pow", shm_hash_table_pow_parser);
       ("sharedmemory.heap_size", uint (fun opts shm_heap_size -> Ok { opts with shm_heap_size }));
@@ -1620,8 +1615,6 @@ let run_post_inference_implicit_instantiation c =
   c.options.Opts.run_post_inference_implicit_instantiation
 
 let saved_state_fetcher c = c.options.Opts.saved_state_fetcher
-
-let saved_state_load_sighashes c = c.options.Opts.saved_state_load_sighashes
 
 let shm_hash_table_pow c = c.options.Opts.shm_hash_table_pow
 

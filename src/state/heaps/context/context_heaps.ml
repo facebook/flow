@@ -126,13 +126,8 @@ end = struct
       | None -> true
       | Some xx_old -> xx <> xx_old
     in
-    let has_old_state = lazy (LeaderHeap.mem_old leader_f) in
     WorkerCancel.with_no_cancellations (fun () ->
-        (* The component might not have old data in the heap, but is still marked as unchanged.
-         * This can happen when we load sig hashes from the saved state. Normally, if a component is
-         * unchanged, we skip writing the sig cx and instead just revive the old one, but in this
-         * case there is no old one so we have to write it. *)
-        if diff || not (Lazy.force has_old_state) then (
+        if diff then (
           (* Ideally we'd assert that each file is a member of the oldified files too *)
           Nel.iter (fun f -> LeaderHeap.add f leader_f) component;
           SigHashHeap.add leader_f xx
@@ -163,8 +158,6 @@ module type READER = sig
 
   val find_leader_opt : reader:reader -> File_key.t -> File_key.t option
 
-  val sig_hash_opt : reader:reader -> File_key.t -> Xx.hash option
-
   val find_master : reader:reader -> Context.master_context
 end
 
@@ -184,8 +177,6 @@ module Mutator_reader : sig
   include READER with type reader = Mutator_state_reader.t
 
   val sig_hash_changed : reader:reader -> File_key.t -> bool
-
-  val leader_mem_old : reader:reader -> File_key.t -> bool
 end = struct
   type reader = Mutator_state_reader.t
 
@@ -197,10 +188,6 @@ end = struct
     | None -> raise (Key_not_found ("LeaderHeap", File_key.to_string file))
 
   let find_master ~reader = find_master ~reader
-
-  let sig_hash_opt ~reader:_ = SigHashHeap.get
-
-  let leader_mem_old ~reader:_ = LeaderHeap.mem_old
 
   let sig_hash_changed ~reader:_ f =
     match SigHashHeap.get f with
@@ -227,12 +214,6 @@ module Reader : READER with type reader = State_reader.t = struct
     | Some leader -> leader
     | None -> raise (Key_not_found ("LeaderHeap", File_key.to_string file))
 
-  let sig_hash_opt ~reader:_ file =
-    if should_use_oldified file then
-      SigHashHeap.get_old file
-    else
-      SigHashHeap.get file
-
   let find_master ~reader = find_master ~reader
 end
 
@@ -251,17 +232,8 @@ module Reader_dispatcher : READER with type reader = Abstract_state_reader.t = s
     | Mutator_state_reader reader -> Mutator_reader.find_leader ~reader
     | State_reader reader -> Reader.find_leader ~reader
 
-  let sig_hash_opt ~reader =
-    match reader with
-    | Mutator_state_reader reader -> Mutator_reader.sig_hash_opt ~reader
-    | State_reader reader -> Reader.sig_hash_opt ~reader
-
   let find_master ~reader =
     match reader with
     | Mutator_state_reader reader -> Mutator_reader.find_master ~reader
     | State_reader reader -> Reader.find_master ~reader
-end
-
-module From_saved_state = struct
-  let add_sig_hash = SigHashHeap.add
 end

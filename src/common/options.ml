@@ -139,7 +139,6 @@ type t = {
   opt_run_post_inference_implicit_instantiation: bool;
   opt_saved_state_fetcher: saved_state_fetcher;
   opt_saved_state_force_recheck: bool;
-  opt_saved_state_load_sighashes: bool;
   opt_saved_state_no_fallback: bool;
   opt_statement_reorder_checking: statement_order_mode;
   opt_strict_es6_import_export: bool;
@@ -294,8 +293,6 @@ let run_post_inference_implicit_instantiation opts =
 let saved_state_fetcher opts = opts.opt_saved_state_fetcher
 
 let saved_state_force_recheck opts = opts.opt_saved_state_force_recheck
-
-let saved_state_load_sighashes opts = opts.opt_saved_state_load_sighashes
 
 let saved_state_no_fallback opts = opts.opt_saved_state_no_fallback
 

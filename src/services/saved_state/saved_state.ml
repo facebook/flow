@@ -19,19 +19,6 @@ type normalized_file_data = denormalized_file_data
 type parsed_file_data = {
   module_name: string option;
   normalized_file_data: normalized_file_data;
-  (* Right now there is no guarantee that this is Some, for two reasons:
-   * - We allow saved state to be saved from a lazy server, meaning that it's possible that *no*
-   *   files will have been merged, and therefore none will have a sig hash.
-   * - We do not typecheck all parsed files, so even on a full init some files may have None here.
-   *
-   * The sig hashes drive optimizations, so whether or not they are included for any given file
-   * should not affect correctness.
-   *
-   * The landscape around merging and sig hashing will change dramatically with types-first 2.0, so
-   * I think that it makes sense to wait for it before deciding upon any stronger invariant to
-   * enforce here.
-   *)
-  sig_hash: Xx.hash option;
 }
 
 (* We also need to store the info for unparsed files *)
@@ -208,9 +195,9 @@ end = struct
     let resolved_requires = normalize_resolved_requires ~normalizer resolved_requires in
     { resolved_requires; exports; hash }
 
-  let normalize_parsed_data ~normalizer { module_name; normalized_file_data; sig_hash } =
+  let normalize_parsed_data ~normalizer { module_name; normalized_file_data } =
     let normalized_file_data = normalize_file_data ~normalizer normalized_file_data in
-    { module_name; normalized_file_data; sig_hash }
+    { module_name; normalized_file_data }
 
   (* Collect all the data for a single parsed file *)
   let collect_normalized_data_for_parsed_file ~normalizer ~reader fn parsed_heaps =
@@ -226,7 +213,6 @@ end = struct
             exports = Parsing_heaps.read_exports parse;
             hash = Parsing_heaps.read_file_hash parse;
           };
-        sig_hash = Context_heaps.Reader.sig_hash_opt ~reader fn;
       }
     in
     let relative_fn = FileNormalizer.normalize_file_key normalizer fn in

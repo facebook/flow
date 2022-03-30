@@ -2019,8 +2019,8 @@ let init_from_saved_state ~profiling ~workers ~saved_state ~updates options =
     (* Restore PackageHeap and the ReversePackageHeap *)
     FilenameMap.iter (fun fn -> Module_js.add_package (File_key.to_string fn)) package_heaps;
 
-    let restore_parsed ~load_sighashes (fns, dirty_modules) (fn, parsed_file_data) =
-      let { Saved_state.module_name; normalized_file_data; sig_hash } = parsed_file_data in
+    let restore_parsed (fns, dirty_modules) (fn, parsed_file_data) =
+      let { Saved_state.module_name; normalized_file_data } = parsed_file_data in
       let { Saved_state.hash; exports; resolved_requires } =
         Saved_state.denormalize_file_data ~root normalized_file_data
       in
@@ -2029,10 +2029,6 @@ let init_from_saved_state ~profiling ~workers ~saved_state ~updates options =
       let ms =
         Parsing_heaps.From_saved_state.add_parsed fn hash module_name exports resolved_requires
       in
-
-      if load_sighashes then
-        (* Restore the SigHashHeap *)
-        Base.Option.iter ~f:(Context_heaps.From_saved_state.add_sig_hash fn) sig_hash;
 
       (FilenameSet.add fn fns, Modulename.Set.union ms dirty_modules)
     in
@@ -2049,13 +2045,12 @@ let init_from_saved_state ~profiling ~workers ~saved_state ~updates options =
     Hh_logger.info "Restoring heaps";
     let%lwt (parsed, unparsed, dirty_modules) =
       Memory_utils.with_memory_timer_lwt ~options "RestoreHeaps" profiling (fun () ->
-          let load_sighashes = Options.saved_state_load_sighashes options in
           let neutral = (FilenameSet.empty, Modulename.Set.empty) in
           let merge (a1, a2) (b1, b2) = (FilenameSet.union a1 b1, Modulename.Set.union a2 b2) in
           let%lwt (parsed, dirty_modules_parsed) =
             MultiWorkerLwt.call
               workers
-              ~job:(List.fold_left (restore_parsed ~load_sighashes))
+              ~job:(List.fold_left restore_parsed)
               ~merge
               ~neutral
               ~next:(MultiWorkerLwt.next workers parsed_heaps)
