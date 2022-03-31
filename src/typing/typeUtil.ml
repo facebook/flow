@@ -64,7 +64,7 @@ and reason_of_use_t = function
   | AssertIterableT { reason; _ } -> reason
   | AssertImportIsValueT (reason, _) -> reason
   | BecomeT { reason; _ } -> reason
-  | BindT (_, reason, _, _) -> reason
+  | BindT (_, reason, _) -> reason
   | CallElemT (reason, _, _, _) -> reason
   | CallLatentPredT (reason, _, _, _, _) -> reason
   | CallOpenPredT (reason, _, _, _, _) -> reason
@@ -231,7 +231,7 @@ and mod_reason_of_use_t f = function
     AssertIterableT { contents with reason = f reason }
   | AssertImportIsValueT (reason, name) -> AssertImportIsValueT (f reason, name)
   | BecomeT { reason; t; empty_success } -> BecomeT { reason = f reason; t; empty_success }
-  | BindT (use_op, reason, ft, pass) -> BindT (use_op, f reason, ft, pass)
+  | BindT (use_op, reason, ft) -> BindT (use_op, f reason, ft)
   | CallElemT (reason_call, reason_lookup, t, ft) -> CallElemT (f reason_call, reason_lookup, t, ft)
   | CallLatentPredT (reason, b, k, l, t) -> CallLatentPredT (f reason, b, k, l, t)
   | CallOpenPredT (reason, sense, key, l, t) -> CallOpenPredT (f reason, sense, key, l, t)
@@ -378,7 +378,7 @@ let rec util_use_op_of_use_t :
   in
   match u with
   | UseT (op, t) -> util op (fun op -> UseT (op, t))
-  | BindT (op, r, f, b) -> util op (fun op -> BindT (op, r, f, b))
+  | BindT (op, r, f) -> util op (fun op -> BindT (op, r, f))
   | CallT (op, r, f) -> util op (fun op -> CallT (op, r, f))
   | MethodT (op, r1, r2, p, f, tm) -> util op (fun op -> MethodT (op, r1, r2, p, f, tm))
   | PrivateMethodT (op, r1, r2, x, c, s, a, p) ->

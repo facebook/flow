@@ -458,7 +458,7 @@ module rec TypeTerm : sig
     (*************)
 
     (* operations on runtime values, such as functions, objects, and arrays *)
-    | BindT of use_op * reason * funcalltype * bool (* pass-through *)
+    | BindT of use_op * reason * funcalltype
     | CallT of use_op * reason * funcalltype
     (* The last position is an optional type that probes into the type of the
        method called. This will be primarily used for type-table bookkeeping. *)

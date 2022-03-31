@@ -235,7 +235,7 @@ class ['a] t =
     method use_type_ cx (acc : 'a) =
       function
       | UseT (_, t) -> self#type_ cx P.Negative acc t
-      | BindT (_, _, fn, _)
+      | BindT (_, _, fn)
       | CallT (_, _, fn) ->
         self#fun_call_type cx acc fn
       | MethodT (_, _, _, p, fn, prop_t) ->

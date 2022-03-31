@@ -803,12 +803,12 @@ class virtual ['a] t_with_uses =
           t
         else
           UseT (u, t'')
-      | BindT (op, r, funcall, passthrough) ->
+      | BindT (op, r, funcall) ->
         let funcall' = self#fun_call_type cx map_cx funcall in
         if funcall == funcall' then
           t
         else
-          BindT (op, r, funcall', passthrough)
+          BindT (op, r, funcall')
       | CallT (op, r, funcall) ->
         let funcall' = self#fun_call_type cx map_cx funcall in
         if funcall == funcall' then

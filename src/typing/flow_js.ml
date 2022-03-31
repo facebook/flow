@@ -4329,9 +4329,9 @@ struct
           let call_this_t = extract_non_spread cx ~trace first_arg in
           let call_targs = None in
           let funtype = { funtype with call_this_t; call_targs; call_args_tlist } in
-          rec_flow cx trace (func, BindT (use_op, reason_op, funtype, false))
+          rec_flow cx trace (func, BindT (use_op, reason_op, funtype))
         | ( DefT (reason, _, FunT (_, ({ this_t = (o1, _); _ } as ft))),
-            BindT (use_op, reason_op, calltype, _)
+            BindT (use_op, reason_op, calltype)
           ) ->
           let {
             call_this_t = o2;
@@ -4354,7 +4354,7 @@ struct
           rec_flow cx trace (Context.find_call cx id, u)
         | (DefT (_, _, InstanceT (_, _, _, { inst_call_t = Some id; _ })), BindT _) ->
           rec_flow cx trace (Context.find_call cx id, u)
-        | (AnyT _, BindT (use_op, reason, calltype, _)) ->
+        | (AnyT _, BindT (use_op, reason, calltype)) ->
           let {
             call_this_t;
             call_targs = _;
@@ -4369,8 +4369,6 @@ struct
           call_args_iter
             (fun param_t -> rec_flow cx trace (AnyT.untyped reason, UseT (use_op, param_t)))
             call_args_tlist;
-          rec_flow_t cx trace ~use_op:unknown_use (l, OpenT call_tout)
-        | (_, BindT (_, _, { call_tout; _ }, true)) ->
           rec_flow_t cx trace ~use_op:unknown_use (l, OpenT call_tout)
         (***************************************************************)
         (* Enable structural subtyping for upperbounds like interfaces *)
