@@ -11,7 +11,6 @@
   flow_parser_utils
   flow_state_heaps_parsing
   flow_typing
-  flow_state_heaps_module
   flow_service_jsdoc
   flow_service_inference_module
   flow_codemod_utils
