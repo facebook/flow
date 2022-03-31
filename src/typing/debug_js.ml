@@ -41,7 +41,6 @@ let string_of_destructor = function
   | ElementType _ -> "ElementType"
   | OptionalIndexedAccessNonMaybeType _ -> "OptionalIndexedAccessNonMaybeType"
   | OptionalIndexedAccessResultType _ -> "OptionalIndexedAccessResultType"
-  | Bind _ -> "Bind"
   | ReadOnlyType -> "ReadOnly"
   | PartialType -> "PartialType"
   | SpreadType _ -> "Spread"
@@ -156,7 +155,6 @@ let rec dump_t_ (depth, tvars) cx t =
     | ReactCreateElement -> "ReactCreateElement"
     | ReactCloneElement -> "ReactCloneElement"
     | ReactElementFactory _ -> "ReactElementFactory"
-    | ReactCreateClass -> "ReactCreateClass"
     | Idx -> "Idx"
     | TypeAssertIs -> "TypeAssert.is"
     | TypeAssertThrows -> "TypeAssert.throws"
@@ -483,27 +481,6 @@ and dump_use_t_ (depth, tvars) cx t =
           | Shape tool -> spf "Shape (%s)" (resolve_object tool)
         )
       in
-      let create_class =
-        CreateClass.(
-          let tool = function
-            | Spec _ -> "Spec"
-            | Mixins _ -> "Mixins"
-            | Statics _ -> "Statics"
-            | PropTypes (_, tool) -> spf "PropTypes (%s)" (resolve_object tool)
-            | DefaultProps _ -> "DefaultProps"
-            | InitialState _ -> "InitialState"
-          in
-          let knot { this; static; state_t; default_t } =
-            spf
-              "{this = %s; static = %s; state = %s; default = %s}"
-              (kid this)
-              (kid static)
-              (kid state_t)
-              (kid default_t)
-          in
-          (fun t k -> spf "%s, %s" (tool t) (knot k))
-        )
-      in
       function
       | CreateElement0 (_, config, (children, children_spread), tout)
       | CreateElement (_, _, config, (children, children_spread), tout) ->
@@ -527,8 +504,6 @@ and dump_use_t_ (depth, tvars) cx t =
       | GetRef tout -> spf "GetRef (%s)" (kid tout)
       | SimplifyPropType (tool, tout) ->
         spf "SimplifyPropType (%s, %s)" (simplify_prop_type tool) (kid tout)
-      | CreateClass (tool, knot, tout) ->
-        spf "CreateClass (%s, %s)" (create_class tool knot) (kid tout)
     )
   in
   let slice { Object.reason = _; props; flags = { obj_kind; _ }; generics = _; interface = _ } =
@@ -1597,11 +1572,6 @@ let dump_error_message =
     | EInvalidReactPropType { reason; use_op; tool = _ } ->
       spf
         "EInvalidReactPropType { reason = %s; use_op = %s; _ }"
-        (dump_reason cx reason)
-        (string_of_use_op use_op)
-    | EInvalidReactCreateClass { reason; use_op; tool = _ } ->
-      spf
-        "EInvalidReactCreateClass { reason = %s; use_op = %s; _ }"
         (dump_reason cx reason)
         (string_of_use_op use_op)
     | EReactElementFunArity (reason, _, _) ->

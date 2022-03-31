@@ -18,10 +18,6 @@ function hoc<Props, Component: React.ComponentType<Props>>(
 
 type Props_NoProps = {};
 
-const Legacy_NoProps = React.createClass({propTypes: {}});
-<Legacy_NoProps />; // OK: There are no props.
-<Legacy_NoProps foo={42} />; // OK: Extra props are fine.
-
 class Class_NoProps extends React.Component<Props_NoProps> {}
 <Class_NoProps />; // OK: There are no props.
 <Class_NoProps foo={42} />; // OK: Extra props are fine.
@@ -73,76 +69,6 @@ type Props_ManyProps = {
   boolean2: boolean,
   number: number,
 };
-
-const Legacy_ManyProps = React.createClass({
-  propTypes: {
-    string1: React.PropTypes.string.isRequired,
-    string2: React.PropTypes.string.isRequired,
-    boolean1: React.PropTypes.bool.isRequired,
-    boolean2: React.PropTypes.bool.isRequired,
-    number: React.PropTypes.number.isRequired,
-  },
-});
-<Legacy_ManyProps />; // Error: There are no props.
-<Legacy_ManyProps // OK: All props are defined.
-  string1="foo"
-  string2={'bar'}
-  boolean1
-  boolean2={false}
-  number={42}
-/>;
-<Legacy_ManyProps // OK: Other props are allowed.
-  string1="foo"
-  string2={'bar'}
-  boolean1
-  boolean2={false}
-  number={42}
-  a={1}
-  b={2}
-  c={3}
-/>;
-<Legacy_ManyProps // Error: All props have an incorrect type.
-  string1={null}
-  string2={null}
-  boolean1={null}
-  boolean2={null}
-  number={null}
-/>;
-<Legacy_ManyProps // OK: All props are defined.
-  string1="foo"
-  string2={'bar'}
-  boolean1
-  boolean2={false}
-  {...{number: 42}}
-/>;
-<Legacy_ManyProps // OK: All props are defined.
-  {...{string1: 'foo', string2: 'bar'}}
-  {...{boolean1: true, boolean2: false}}
-  {...{number: 42}}
-/>;
-<Legacy_ManyProps // Error: Missing `number`.
-  {...{string1: 'foo', string2: 'bar'}}
-  {...{boolean1: true, boolean2: false}}
-/>;
-<Legacy_ManyProps // OK: Extra props are allowed.
-  string1="foo"
-  string2={'bar'}
-  boolean1
-  boolean2={false}
-  {...{number: 42, a: 1, b: 2, c: 3}}
-/>;
-<Legacy_ManyProps // OK: `number` is overwritten at the end of the element.
-  {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
-  boolean1
-  boolean2={false}
-  number={42}
-/>;
-<Legacy_ManyProps // Error: `number` cannot be null.
-  boolean1
-  boolean2={false}
-  number={42}
-  {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
-/>;
 
 class Class_ManyProps extends React.Component<Props_ManyProps> {}
 <Class_ManyProps />; // Error: There are no props.
@@ -771,28 +697,6 @@ const EnhancedFunction_ManyProps = hoc(Function_ManyProps);
 
 type Props_OptionalProps = {foo: ?number, bar?: number};
 
-const Legacy_OptionalProps = React.createClass({
-  propTypes: {
-    foo: React.PropTypes.number.isRequired,
-    bar: React.PropTypes.number,
-  },
-});
-<Legacy_OptionalProps />; // Error: `foo` is required.
-<Legacy_OptionalProps foo={42} />; // OK: `foo` is defined.
-<Legacy_OptionalProps foo={undefined} />; // Error: No ?number proptype.
-<Legacy_OptionalProps // OK: Both props are defined with a correct type.
-  foo={4}
-  bar={2}
-/>;
-<Legacy_OptionalProps // Error: `foo` has a bad type.
-  foo="nope"
-  bar={2}
-/>;
-<Legacy_OptionalProps // Error: `bar` has a bad type.
-  foo={4}
-  bar="nope"
-/>;
-
 class Class_OptionalProps extends React.Component<Props_OptionalProps> {}
 <Class_OptionalProps />; // Error: `foo` is required.
 <Class_OptionalProps foo={42} />; // OK: `foo` is defined.
@@ -974,26 +878,6 @@ type Props_DefaultProps = {
   foo: number,
   bar: number,
 };
-
-const Legacy_DefaultProps = React.createClass({
-  propTypes: {
-    foo: React.PropTypes.number.isRequired,
-    bar: React.PropTypes.number.isRequired,
-  },
-  getDefaultProps: () => ({
-    foo: 42,
-  }),
-});
-<Legacy_DefaultProps // OK: It has all the props.
-  foo={1}
-  bar={2}
-/>;
-<Legacy_DefaultProps // OK: It is missing a default prop.
-  bar={2}
-/>;
-<Legacy_DefaultProps // Error: It is missing a required non-default prop.
-  foo={1}
-/>;
 
 class Class_DefaultProps extends React.Component<Props_DefaultProps> {
   static defaultProps = {

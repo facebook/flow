@@ -1318,7 +1318,6 @@ module rec TypeTerm : sig
     | ElementType of { index_type: t }
     | OptionalIndexedAccessNonMaybeType of { index: optional_indexed_access_index }
     | OptionalIndexedAccessResultType of { void_reason: reason }
-    | Bind of t
     | ReadOnlyType
     | PartialType
     | SpreadType of
@@ -1362,7 +1361,6 @@ module rec TypeTerm : sig
     | Compose of bool
     (* 3rd party libs *)
     | ReactPropType of React.PropType.t
-    | ReactCreateClass
     | ReactCreateElement
     | ReactCloneElement
     | ReactElementFactory of t
@@ -2553,64 +2551,6 @@ and React : sig
       | Shape of resolve_object
   end
 
-  module CreateClass : sig
-    (* In order to derive a component instance type from a specification, we
-     * need to resolve the spec object itself and a number of its fields. We do
-     * this in order, accumulating the resolved information until we have enough
-     * to compute the instance type. *)
-    type tool =
-      | Spec of stack_tail
-      | Mixins of stack
-      | Statics of stack
-      | PropTypes of stack * resolve_object
-      | DefaultProps of TypeTerm.t list * default_props option
-      | InitialState of TypeTerm.t list * initial_state option
-
-    (* When we encounter mixins, we push the current spec's props into a stack,
-     * then resolve each mixin in turn. This is recursive, as mixins can have
-     * mixins. *)
-    and stack = stack_head * stack_tail
-
-    and stack_head = resolved_object * spec
-
-    and stack_tail = (stack_head * TypeTerm.t list * spec maybe_known list) list
-
-    and spec = {
-      obj: resolved_object;
-      statics: statics option;
-      prop_types: prop_types option;
-      get_default_props: TypeTerm.t list;
-      get_initial_state: TypeTerm.t list;
-      unknown_mixins: reason list;
-    }
-
-    and statics = resolved_object maybe_known
-
-    and prop_types = resolved_object maybe_known
-
-    and default_props = resolved_object maybe_known
-
-    and initial_state = resolved_object or_null maybe_known
-
-    and 'a maybe_known =
-      | Known of 'a
-      | Unknown of reason
-
-    and 'a or_null =
-      | NotNull of 'a
-      | Null of reason
-
-    (* Components have some recursive dependencies. For example, the instance
-     * type depends on the return value of its methods, but those methods also
-     * depend on `this`. We use these tvars to "tie the knot" in those cases. *)
-    type knot = {
-      this: TypeTerm.t;
-      static: TypeTerm.t;
-      state_t: TypeTerm.t;
-      default_t: TypeTerm.t;
-    }
-  end
-
   type tool =
     | CreateElement0 of bool * TypeTerm.t * (TypeTerm.t list * TypeTerm.t option) * TypeTerm.t_out
     | CreateElement of
@@ -2621,7 +2561,6 @@ and React : sig
     | GetConfigType of TypeTerm.t * TypeTerm.t_out
     | GetRef of TypeTerm.t_out
     | SimplifyPropType of SimplifyPropType.tool * TypeTerm.t_out
-    | CreateClass of CreateClass.tool * CreateClass.knot * TypeTerm.t_out
 end =
   React
 

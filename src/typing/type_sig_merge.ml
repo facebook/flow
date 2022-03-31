@@ -772,9 +772,7 @@ and merge_annot tps file = function
   | ReactPropTypeShape loc ->
     let reason = Reason.(mk_reason RFunctionType loc) in
     Type.(CustomFunT (reason, ReactPropType React.(PropType.Complex PropType.Shape)))
-  | ReactCreateClass loc ->
-    let reason = Reason.(mk_reason RFunctionType loc) in
-    Type.CustomFunT (reason, Type.ReactCreateClass)
+  | ReactCreateClass loc -> Type.AnyT.at Type.Untyped loc
   | ReactCreateElement loc ->
     let reason = Reason.(mk_reason RFunctionType loc) in
     Type.CustomFunT (reason, Type.ReactCreateElement)

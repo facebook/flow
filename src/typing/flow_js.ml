@@ -3027,43 +3027,6 @@ struct
         | (CustomFunT (reason, ReactPropType (React.PropType.Complex kind)), _)
           when function_like_op u ->
           rec_flow cx trace (get_builtin_prop_type cx ~trace reason kind, u)
-        | ( CustomFunT (_, ReactCreateClass),
-            CallT
-              (use_op, reason_op, { call_targs = None; call_args_tlist = arg1 :: _; call_tout; _ })
-          ) ->
-          let loc_op = aloc_of_reason reason_op in
-          let loc_tapp = def_aloc_of_reason (fst call_tout) in
-          let desc_tapp = desc_of_reason (fst call_tout) in
-          let spec = extract_non_spread cx ~trace arg1 in
-          let mk_tvar f = Tvar.mk cx (f reason_op) in
-          let knot =
-            {
-              React.CreateClass.this = mk_tvar (replace_desc_reason RThisType);
-              static = mk_tvar (replace_desc_reason RThisType);
-              state_t =
-                mk_tvar
-                  (update_desc_reason (fun d ->
-                       RTypeParam (Subst_name.Name "State", (d, loc_op), (desc_tapp, loc_tapp))
-                   )
-                  );
-              default_t =
-                mk_tvar
-                  (update_desc_reason (fun d ->
-                       RTypeParam (Subst_name.Name "Default", (d, loc_op), (desc_tapp, loc_tapp))
-                   )
-                  );
-            }
-          in
-          rec_flow
-            cx
-            trace
-            ( spec,
-              ReactKitT
-                ( use_op,
-                  reason_op,
-                  React.CreateClass (React.CreateClass.Spec [], knot, OpenT call_tout)
-                )
-            )
         | (_, ReactKitT (use_op, reason_op, tool)) -> ReactJs.run cx trace ~use_op reason_op l tool
         (* Facebookisms are special Facebook-specific functions that are not
            expressable with our current type syntax, so we've hacked in special
@@ -5925,7 +5888,6 @@ struct
       if Context.any_propagation cx then
         any_prop_to_function use_op funtype covariant_flow contravariant_flow;
       true
-    | ReactKitT (_, _, React.CreateClass (React.CreateClass.PropTypes _, _, _))
     | ReactKitT (_, _, React.SimplifyPropType _) ->
       (* Propagating through here causes exponential blowup. React PropTypes are deprecated
          anyways, so it is not unreasonable to just not trust them *)
@@ -6066,7 +6028,6 @@ struct
     | UseT (_, CustomFunT (_, ObjectGetPrototypeOf))
     | UseT (_, CustomFunT (_, ObjectSetPrototypeOf))
     | UseT (_, CustomFunT (_, Compose _))
-    | UseT (_, CustomFunT (_, ReactCreateClass))
     | UseT (_, CustomFunT (_, ReactCreateElement))
     | UseT (_, CustomFunT (_, ReactCloneElement))
     | UseT (_, CustomFunT (_, Idx))
@@ -6154,7 +6115,6 @@ struct
     | CustomFunT (_, ObjectGetPrototypeOf)
     | CustomFunT (_, ObjectSetPrototypeOf)
     | CustomFunT (_, Compose _)
-    | CustomFunT (_, ReactCreateClass)
     | CustomFunT (_, ReactCreateElement)
     | CustomFunT (_, ReactCloneElement)
     | CustomFunT (_, Idx)
@@ -6713,7 +6673,6 @@ struct
                 upper = UseT (unknown_use, OpenT tout);
                 id = Reason.mk_id ();
               }
-          | Bind t -> BindT (use_op, reason, mk_boundfunctioncalltype t None [] tout, true)
           | SpreadType (options, todo_rev, head_slice) ->
             Object.(
               Object.Spread.(

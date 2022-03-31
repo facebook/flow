@@ -261,11 +261,6 @@ and 'loc t' =
       use_op: 'loc virtual_use_op;
       tool: React.SimplifyPropType.tool;
     }
-  | EInvalidReactCreateClass of {
-      reason: 'loc virtual_reason;
-      use_op: 'loc virtual_use_op;
-      tool: React.CreateClass.tool;
-    }
   | EReactElementFunArity of 'loc virtual_reason * string * int
   | EFunctionCallExtraArg of 'loc virtual_reason * 'loc virtual_reason * int * 'loc virtual_use_op
   | EUnsupportedSetProto of 'loc virtual_reason
@@ -515,7 +510,6 @@ and 'loc unsupported_syntax =
   | InvariantSpreadArgument
   | ClassPropertyLiteral
   | ClassPropertyComputed
-  | ReactCreateClassPropertyNonInit
   | RequireDynamicArgument
   | CatchParameterAnnotation
   | CatchParameterDeclaration
@@ -610,13 +604,13 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
     | ( ComprehensionExpression | GeneratorExpression | MetaPropertyExpression
       | ObjectPropertyLiteralNonString | ObjectPropertyGetSet | ObjectPropertyComputedGetSet
       | InvariantSpreadArgument | ClassPropertyLiteral | ClassPropertyComputed
-      | ReactCreateClassPropertyNonInit | RequireDynamicArgument | CatchParameterAnnotation
-      | CatchParameterDeclaration | DestructuringObjectPropertyLiteralNonString
-      | DestructuringExpressionPattern | PredicateDeclarationForImplementation
-      | PredicateDeclarationWithoutExpression | PredicateDeclarationAnonymousParameters
-      | PredicateInvalidBody | PredicateFunctionAbstractReturnType | PredicateVoidReturn
-      | MultipleIndexers | MultipleProtos | ExplicitCallAfterProto | ExplicitProtoAfterCall
-      | SpreadArgument | ImportDynamicArgument | IllegalName | UnsupportedInternalSlot _ ) as u ->
+      | RequireDynamicArgument | CatchParameterAnnotation | CatchParameterDeclaration
+      | DestructuringObjectPropertyLiteralNonString | DestructuringExpressionPattern
+      | PredicateDeclarationForImplementation | PredicateDeclarationWithoutExpression
+      | PredicateDeclarationAnonymousParameters | PredicateInvalidBody
+      | PredicateFunctionAbstractReturnType | PredicateVoidReturn | MultipleIndexers
+      | MultipleProtos | ExplicitCallAfterProto | ExplicitProtoAfterCall | SpreadArgument
+      | ImportDynamicArgument | IllegalName | UnsupportedInternalSlot _ ) as u ->
       u
   in
   function
@@ -749,8 +743,6 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
     EInvalidReactConfigType { reason = map_reason reason; use_op = map_use_op use_op }
   | EInvalidReactPropType { reason; use_op; tool } ->
     EInvalidReactPropType { reason = map_reason reason; use_op = map_use_op use_op; tool }
-  | EInvalidReactCreateClass { reason; use_op; tool } ->
-    EInvalidReactCreateClass { reason = map_reason reason; use_op = map_use_op use_op; tool }
   | EFunctionCallExtraArg (rl, ru, n, op) ->
     EFunctionCallExtraArg (map_reason rl, map_reason ru, n, map_use_op op)
   | EDebugPrint (r, s) -> EDebugPrint (map_reason r, s)
@@ -1104,8 +1096,6 @@ let util_use_op_of_msg nope util = function
     util use_op (fun use_op -> EInvalidReactConfigType { reason; use_op })
   | EInvalidReactPropType { reason; use_op; tool } ->
     util use_op (fun use_op -> EInvalidReactPropType { reason; use_op; tool })
-  | EInvalidReactCreateClass { reason; use_op; tool } ->
-    util use_op (fun use_op -> EInvalidReactCreateClass { reason; use_op; tool })
   | EFunctionCallExtraArg (rl, ru, n, op) ->
     util op (fun op -> EFunctionCallExtraArg (rl, ru, n, op))
   | ECannotSpreadInterface { spread_reason; interface_reason; use_op } ->
@@ -1443,7 +1433,6 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | ENotAReactComponent _
   | EInvalidReactConfigType _
   | EInvalidReactPropType _
-  | EInvalidReactCreateClass _
   | EIncompatibleWithUseOp _
   | ETrustIncompatibleWithUseOp _
   | EEnumIncompatible _
@@ -2339,8 +2328,6 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
         [text "Unsupported arguments in call to "; code "invariant"; text "."]
       | ClassPropertyLiteral -> [text "Literal properties not yet supported."]
       | ClassPropertyComputed -> [text "Computed property keys not supported."]
-      | ReactCreateClassPropertyNonInit ->
-        [text "Unsupported property specification in "; code "createClass"; text "."]
       | RequireDynamicArgument ->
         [text "The parameter passed to "; code "require"; text " must be a string literal."]
       | ImportDynamicArgument ->
@@ -2864,24 +2851,6 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
           | Shape ResolveObject -> "is not an object"
           | Shape (ResolveDict _) -> is_not_prop_type
           | Shape (ResolveProp _) -> is_not_prop_type
-        in
-        UseOp { loc = loc_of_reason reason; features = [ref reason; text (" " ^ msg)]; use_op }
-      )
-    )
-  | EInvalidReactCreateClass { reason; use_op; tool } ->
-    React.(
-      React.CreateClass.(
-        let is_not_prop_type = "is not a React propType" in
-        let msg =
-          match tool with
-          | Spec _ -> "is not an exact object"
-          | Mixins _ -> "is not a tuple"
-          | Statics _ -> "is not an object"
-          | PropTypes (_, ResolveObject) -> "is not an object"
-          | PropTypes (_, ResolveDict _) -> is_not_prop_type
-          | PropTypes (_, ResolveProp _) -> is_not_prop_type
-          | DefaultProps _ -> "is not an object"
-          | InitialState _ -> "is not an object or null"
         in
         UseOp { loc = loc_of_reason reason; features = [ref reason; text (" " ^ msg)]; use_op }
       )
@@ -4016,7 +3985,6 @@ let error_code_of_message err : error_code option =
   | EInvalidObjectKit _ -> Some NotAnObject
   | EInvalidPrototype _ -> Some NotAnObject
   | EInvalidReactConfigType _ -> Some InvalidReactConfig
-  | EInvalidReactCreateClass _ -> Some InvalidReactCreateClass
   | EInvalidReactPropType _ -> Some InvalidPropType
   | EInvalidTypeArgs (_, _) -> Some InvalidTypeArg
   | EInvalidTypeof _ -> Some IllegalTypeof

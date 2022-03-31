@@ -1430,11 +1430,6 @@ end = struct
         | DebugSleep -> return Ty.(mk_fun ~params:[(Some "seconds", Num None, non_opt_param)] Void)
         (* reactPropType: any (TODO) *)
         | ReactPropType _ -> return Ty.explicit_any
-        (* reactCreateClass: (spec: any) => ReactClass<any> *)
-        | ReactCreateClass ->
-          let params = [(Some "spec", Ty.explicit_any, non_opt_param)] in
-          let x = Ty.builtin_symbol (Reason.OrdinaryName "ReactClass") in
-          return (mk_fun ~params (generic_talias x (Some [Ty.explicit_any])))
         (*
          * 1. Component class:
          *    <T>(name: ReactClass<T>, config: T, children?: any) => React$Element<T>
@@ -1490,7 +1485,6 @@ end = struct
         | Compose false -> return (builtin_t (Reason.OrdinaryName "$Compose"))
         | Compose true -> return (builtin_t (Reason.OrdinaryName "$ComposeReverse"))
         | ReactPropType t -> react_prop_type ~env t
-        | ReactCreateClass -> return (builtin_t (Reason.OrdinaryName "React$CreateClass"))
         | ReactCreateElement -> return (builtin_t (Reason.OrdinaryName "React$CreateElement"))
         | ReactCloneElement -> return (builtin_t (Reason.OrdinaryName "React$CloneElement"))
         | ReactElementFactory t ->
@@ -1738,7 +1732,7 @@ end = struct
       | T.ReactConfigType default_props ->
         let%map default_props' = type__ ~env default_props in
         Ty.Utility (Ty.ReactConfigType (ty, default_props'))
-      | (T.RestType (T.Object.Rest.ReactConfigMerge _, _) | T.Bind _) as d ->
+      | T.RestType (T.Object.Rest.ReactConfigMerge _, _) as d ->
         terr ~kind:BadEvalT ~msg:(Debug_js.string_of_destructor d) None
 
     and latent_pred_t ~env id t =

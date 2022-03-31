@@ -1,15 +1,9 @@
 // @flow
 
-var React = require('react');
-import type {Element} from 'react';
+const React = require('react');
 
-var A = React.createClass({
-  propTypes: { foo: React.PropTypes.string.isRequired }
-});
-
-var B = React.createClass({
-  propTypes: { bar: React.PropTypes.string.isRequired }
-});
+declare function A({foo: string}): React.Node;
+declare function B({bar: string}): React.Node;
 
 function f(b) {
   if (b) {

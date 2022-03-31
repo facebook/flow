@@ -1,3537 +1,3201 @@
-Error ----------------------------------------------------------------------------------------------------- test.js:31:2
+Error ----------------------------------------------------------------------------------------------------- test.js:27:2
 
 Cannot create `ClassExact_NoProps` element because property `foo` is missing in `Props_NoProps` [1] but exists in
 props [2]. [prop-missing]
 
-   test.js:31:2
-   31| <ClassExact_NoProps foo={42} />; // Error: Exact type does not have `foo`.
+   test.js:27:2
+   27| <ClassExact_NoProps foo={42} />; // Error: Exact type does not have `foo`.
         ^^^^^^^^^^^^^^^^^^
 
 References:
-   test.js:29:57
-   29| class ClassExact_NoProps extends React.Component<$Exact<Props_NoProps>> {}
+   test.js:25:57
+   25| class ClassExact_NoProps extends React.Component<$Exact<Props_NoProps>> {}
                                                                ^^^^^^^^^^^^^ [1]
-   test.js:31:1
-   31| <ClassExact_NoProps foo={42} />; // Error: Exact type does not have `foo`.
+   test.js:27:1
+   27| <ClassExact_NoProps foo={42} />; // Error: Exact type does not have `foo`.
        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:43:2
+Error ----------------------------------------------------------------------------------------------------- test.js:39:2
 
 Cannot create `FunctionExact_NoProps` element because property `foo` is missing in `Props_NoProps` [1] but exists in
 props [2]. [prop-missing]
 
-   test.js:43:2
-   43| <FunctionExact_NoProps foo={42} />; // Error: Exact type does not have `foo`.
+   test.js:39:2
+   39| <FunctionExact_NoProps foo={42} />; // Error: Exact type does not have `foo`.
         ^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   test.js:41:46
-   41| const FunctionExact_NoProps = (props: $Exact<Props_NoProps>) => any;
+   test.js:37:46
+   37| const FunctionExact_NoProps = (props: $Exact<Props_NoProps>) => any;
                                                     ^^^^^^^^^^^^^ [1]
-   test.js:43:1
-   43| <FunctionExact_NoProps foo={42} />; // Error: Exact type does not have `foo`.
+   test.js:39:1
+   39| <FunctionExact_NoProps foo={42} />; // Error: Exact type does not have `foo`.
        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:51:2
+Error ----------------------------------------------------------------------------------------------------- test.js:47:2
 
 Cannot create `AbstractExact_NoProps` element because property `foo` is missing in `Props_NoProps` [1] but exists in
 props [2]. [prop-missing]
 
-   test.js:51:2
-   51| <AbstractExact_NoProps foo={42} />; // Error: Exact type does not have `foo`.
+   test.js:47:2
+   47| <AbstractExact_NoProps foo={42} />; // Error: Exact type does not have `foo`.
         ^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   test.js:49:57
-   49| const AbstractExact_NoProps: React.ComponentType<$Exact<Props_NoProps>> = any;
+   test.js:45:57
+   45| const AbstractExact_NoProps: React.ComponentType<$Exact<Props_NoProps>> = any;
                                                                ^^^^^^^^^^^^^ [1]
-   test.js:51:1
-   51| <AbstractExact_NoProps foo={42} />; // Error: Exact type does not have `foo`.
+   test.js:47:1
+   47| <AbstractExact_NoProps foo={42} />; // Error: Exact type does not have `foo`.
        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:86:2
-
-Cannot create `Legacy_ManyProps` element because property `boolean1` is missing in props [1] but exists in propTypes of
-React component [2]. [prop-missing]
-
-   test.js:86:2
-   86| <Legacy_ManyProps />; // Error: There are no props.
-        ^^^^^^^^^^^^^^^^
-
-References:
-   test.js:86:1
-   86| <Legacy_ManyProps />; // Error: There are no props.
-       ^^^^^^^^^^^^^^^^^^^^ [1]
-   test.js:78:14
-                    v
-   78|   propTypes: {
-   79|     string1: React.PropTypes.string.isRequired,
-   80|     string2: React.PropTypes.string.isRequired,
-   81|     boolean1: React.PropTypes.bool.isRequired,
-   82|     boolean2: React.PropTypes.bool.isRequired,
-   83|     number: React.PropTypes.number.isRequired,
-   84|   },
-         ^ [2]
-
-
-Error ----------------------------------------------------------------------------------------------------- test.js:86:2
-
-Cannot create `Legacy_ManyProps` element because property `boolean2` is missing in props [1] but exists in propTypes of
-React component [2]. [prop-missing]
-
-   test.js:86:2
-   86| <Legacy_ManyProps />; // Error: There are no props.
-        ^^^^^^^^^^^^^^^^
-
-References:
-   test.js:86:1
-   86| <Legacy_ManyProps />; // Error: There are no props.
-       ^^^^^^^^^^^^^^^^^^^^ [1]
-   test.js:78:14
-                    v
-   78|   propTypes: {
-   79|     string1: React.PropTypes.string.isRequired,
-   80|     string2: React.PropTypes.string.isRequired,
-   81|     boolean1: React.PropTypes.bool.isRequired,
-   82|     boolean2: React.PropTypes.bool.isRequired,
-   83|     number: React.PropTypes.number.isRequired,
-   84|   },
-         ^ [2]
-
-
-Error ----------------------------------------------------------------------------------------------------- test.js:86:2
-
-Cannot create `Legacy_ManyProps` element because property `number` is missing in props [1] but exists in propTypes of
-React component [2]. [prop-missing]
-
-   test.js:86:2
-   86| <Legacy_ManyProps />; // Error: There are no props.
-        ^^^^^^^^^^^^^^^^
-
-References:
-   test.js:86:1
-   86| <Legacy_ManyProps />; // Error: There are no props.
-       ^^^^^^^^^^^^^^^^^^^^ [1]
-   test.js:78:14
-                    v
-   78|   propTypes: {
-   79|     string1: React.PropTypes.string.isRequired,
-   80|     string2: React.PropTypes.string.isRequired,
-   81|     boolean1: React.PropTypes.bool.isRequired,
-   82|     boolean2: React.PropTypes.bool.isRequired,
-   83|     number: React.PropTypes.number.isRequired,
-   84|   },
-         ^ [2]
-
-
-Error ----------------------------------------------------------------------------------------------------- test.js:86:2
-
-Cannot create `Legacy_ManyProps` element because property `string1` is missing in props [1] but exists in propTypes of
-React component [2]. [prop-missing]
-
-   test.js:86:2
-   86| <Legacy_ManyProps />; // Error: There are no props.
-        ^^^^^^^^^^^^^^^^
-
-References:
-   test.js:86:1
-   86| <Legacy_ManyProps />; // Error: There are no props.
-       ^^^^^^^^^^^^^^^^^^^^ [1]
-   test.js:78:14
-                    v
-   78|   propTypes: {
-   79|     string1: React.PropTypes.string.isRequired,
-   80|     string2: React.PropTypes.string.isRequired,
-   81|     boolean1: React.PropTypes.bool.isRequired,
-   82|     boolean2: React.PropTypes.bool.isRequired,
-   83|     number: React.PropTypes.number.isRequired,
-   84|   },
-         ^ [2]
-
-
-Error ----------------------------------------------------------------------------------------------------- test.js:86:2
-
-Cannot create `Legacy_ManyProps` element because property `string2` is missing in props [1] but exists in propTypes of
-React component [2]. [prop-missing]
-
-   test.js:86:2
-   86| <Legacy_ManyProps />; // Error: There are no props.
-        ^^^^^^^^^^^^^^^^
-
-References:
-   test.js:86:1
-   86| <Legacy_ManyProps />; // Error: There are no props.
-       ^^^^^^^^^^^^^^^^^^^^ [1]
-   test.js:78:14
-                    v
-   78|   propTypes: {
-   79|     string1: React.PropTypes.string.isRequired,
-   80|     string2: React.PropTypes.string.isRequired,
-   81|     boolean1: React.PropTypes.bool.isRequired,
-   82|     boolean2: React.PropTypes.bool.isRequired,
-   83|     number: React.PropTypes.number.isRequired,
-   84|   },
-         ^ [2]
-
-
-Error --------------------------------------------------------------------------------------------------- test.js:105:12
-
-Cannot create `Legacy_ManyProps` element because null [1] is incompatible with string [2] in property `string1`.
-[incompatible-type]
-
-   test.js:105:12
-   105|   string1={null}
-                   ^^^^ [1]
-
-References:
-   test.js:79:14
-    79|     string1: React.PropTypes.string.isRequired,
-                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
-
-
-Error --------------------------------------------------------------------------------------------------- test.js:106:12
-
-Cannot create `Legacy_ManyProps` element because null [1] is incompatible with string [2] in property `string2`.
-[incompatible-type]
-
-   test.js:106:12
-   106|   string2={null}
-                   ^^^^ [1]
-
-References:
-   test.js:80:14
-    80|     string2: React.PropTypes.string.isRequired,
-                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
-
-
-Error --------------------------------------------------------------------------------------------------- test.js:107:13
-
-Cannot create `Legacy_ManyProps` element because null [1] is incompatible with boolean [2] in property `boolean1`.
-[incompatible-type]
-
-   test.js:107:13
-   107|   boolean1={null}
-                    ^^^^ [1]
-
-References:
-   test.js:81:15
-    81|     boolean1: React.PropTypes.bool.isRequired,
-                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
-
-
-Error --------------------------------------------------------------------------------------------------- test.js:108:13
-
-Cannot create `Legacy_ManyProps` element because null [1] is incompatible with boolean [2] in property `boolean2`.
-[incompatible-type]
-
-   test.js:108:13
-   108|   boolean2={null}
-                    ^^^^ [1]
-
-References:
-   test.js:82:15
-    82|     boolean2: React.PropTypes.bool.isRequired,
-                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
-
-
-Error --------------------------------------------------------------------------------------------------- test.js:109:11
-
-Cannot create `Legacy_ManyProps` element because null [1] is incompatible with number [2] in property `number`.
-[incompatible-type]
-
-   test.js:109:11
-   109|   number={null}
-                  ^^^^ [1]
-
-References:
-   test.js:83:13
-    83|     number: React.PropTypes.number.isRequired,
-                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
-
-
-Error ---------------------------------------------------------------------------------------------------- test.js:123:2
-
-Cannot create `Legacy_ManyProps` element because property `number` is missing in props [1] but exists in propTypes of
-React component [2]. [prop-missing]
-
-   test.js:123:2
-   123| <Legacy_ManyProps // Error: Missing `number`.
-         ^^^^^^^^^^^^^^^^
-
-References:
-   test.js:123:1
-        v--------------------------------------------
-   123| <Legacy_ManyProps // Error: Missing `number`.
-   124|   {...{string1: 'foo', string2: 'bar'}}
-   125|   {...{boolean1: true, boolean2: false}}
-   126| />;
-        -^ [1]
-   test.js:78:14
-                     v
-    78|   propTypes: {
-    79|     string1: React.PropTypes.string.isRequired,
-    80|     string2: React.PropTypes.string.isRequired,
-    81|     boolean1: React.PropTypes.bool.isRequired,
-    82|     boolean2: React.PropTypes.bool.isRequired,
-    83|     number: React.PropTypes.number.isRequired,
-    84|   },
-          ^ [2]
-
-
-Error --------------------------------------------------------------------------------------------------- test.js:144:54
-
-Cannot create `Legacy_ManyProps` element because null or undefined [1] is incompatible with number [2] in property
-`number`. [incompatible-type]
-
-   test.js:144:54
-   144|   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
-                                                             ^^^^^^^ [1]
-
-References:
-   test.js:83:13
-    83|     number: React.PropTypes.number.isRequired,
-                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
-
-
-Error ---------------------------------------------------------------------------------------------------- test.js:148:2
+Error ----------------------------------------------------------------------------------------------------- test.js:74:2
 
 Cannot create `Class_ManyProps` element because property `boolean1` is missing in props [1] but exists in
 `Props_ManyProps` [2]. [prop-missing]
 
-   test.js:148:2
-   148| <Class_ManyProps />; // Error: There are no props.
-         ^^^^^^^^^^^^^^^
+   test.js:74:2
+   74| <Class_ManyProps />; // Error: There are no props.
+        ^^^^^^^^^^^^^^^
 
 References:
-   test.js:148:1
-   148| <Class_ManyProps />; // Error: There are no props.
-        ^^^^^^^^^^^^^^^^^^^ [1]
-   test.js:147:47
-   147| class Class_ManyProps extends React.Component<Props_ManyProps> {}
-                                                      ^^^^^^^^^^^^^^^ [2]
+   test.js:74:1
+   74| <Class_ManyProps />; // Error: There are no props.
+       ^^^^^^^^^^^^^^^^^^^ [1]
+   test.js:73:47
+   73| class Class_ManyProps extends React.Component<Props_ManyProps> {}
+                                                     ^^^^^^^^^^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:148:2
+Error ----------------------------------------------------------------------------------------------------- test.js:74:2
 
 Cannot create `Class_ManyProps` element because property `boolean2` is missing in props [1] but exists in
 `Props_ManyProps` [2]. [prop-missing]
 
-   test.js:148:2
-   148| <Class_ManyProps />; // Error: There are no props.
-         ^^^^^^^^^^^^^^^
+   test.js:74:2
+   74| <Class_ManyProps />; // Error: There are no props.
+        ^^^^^^^^^^^^^^^
 
 References:
-   test.js:148:1
-   148| <Class_ManyProps />; // Error: There are no props.
-        ^^^^^^^^^^^^^^^^^^^ [1]
-   test.js:147:47
-   147| class Class_ManyProps extends React.Component<Props_ManyProps> {}
-                                                      ^^^^^^^^^^^^^^^ [2]
+   test.js:74:1
+   74| <Class_ManyProps />; // Error: There are no props.
+       ^^^^^^^^^^^^^^^^^^^ [1]
+   test.js:73:47
+   73| class Class_ManyProps extends React.Component<Props_ManyProps> {}
+                                                     ^^^^^^^^^^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:148:2
+Error ----------------------------------------------------------------------------------------------------- test.js:74:2
 
 Cannot create `Class_ManyProps` element because property `number` is missing in props [1] but exists in
 `Props_ManyProps` [2]. [prop-missing]
 
-   test.js:148:2
-   148| <Class_ManyProps />; // Error: There are no props.
-         ^^^^^^^^^^^^^^^
+   test.js:74:2
+   74| <Class_ManyProps />; // Error: There are no props.
+        ^^^^^^^^^^^^^^^
 
 References:
-   test.js:148:1
-   148| <Class_ManyProps />; // Error: There are no props.
-        ^^^^^^^^^^^^^^^^^^^ [1]
-   test.js:147:47
-   147| class Class_ManyProps extends React.Component<Props_ManyProps> {}
-                                                      ^^^^^^^^^^^^^^^ [2]
+   test.js:74:1
+   74| <Class_ManyProps />; // Error: There are no props.
+       ^^^^^^^^^^^^^^^^^^^ [1]
+   test.js:73:47
+   73| class Class_ManyProps extends React.Component<Props_ManyProps> {}
+                                                     ^^^^^^^^^^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:148:2
+Error ----------------------------------------------------------------------------------------------------- test.js:74:2
 
 Cannot create `Class_ManyProps` element because property `string1` is missing in props [1] but exists in
 `Props_ManyProps` [2]. [prop-missing]
 
-   test.js:148:2
-   148| <Class_ManyProps />; // Error: There are no props.
-         ^^^^^^^^^^^^^^^
+   test.js:74:2
+   74| <Class_ManyProps />; // Error: There are no props.
+        ^^^^^^^^^^^^^^^
 
 References:
-   test.js:148:1
-   148| <Class_ManyProps />; // Error: There are no props.
-        ^^^^^^^^^^^^^^^^^^^ [1]
-   test.js:147:47
-   147| class Class_ManyProps extends React.Component<Props_ManyProps> {}
-                                                      ^^^^^^^^^^^^^^^ [2]
+   test.js:74:1
+   74| <Class_ManyProps />; // Error: There are no props.
+       ^^^^^^^^^^^^^^^^^^^ [1]
+   test.js:73:47
+   73| class Class_ManyProps extends React.Component<Props_ManyProps> {}
+                                                     ^^^^^^^^^^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:148:2
+Error ----------------------------------------------------------------------------------------------------- test.js:74:2
 
 Cannot create `Class_ManyProps` element because property `string2` is missing in props [1] but exists in
 `Props_ManyProps` [2]. [prop-missing]
 
-   test.js:148:2
-   148| <Class_ManyProps />; // Error: There are no props.
-         ^^^^^^^^^^^^^^^
+   test.js:74:2
+   74| <Class_ManyProps />; // Error: There are no props.
+        ^^^^^^^^^^^^^^^
 
 References:
-   test.js:148:1
-   148| <Class_ManyProps />; // Error: There are no props.
-        ^^^^^^^^^^^^^^^^^^^ [1]
-   test.js:147:47
-   147| class Class_ManyProps extends React.Component<Props_ManyProps> {}
-                                                      ^^^^^^^^^^^^^^^ [2]
+   test.js:74:1
+   74| <Class_ManyProps />; // Error: There are no props.
+       ^^^^^^^^^^^^^^^^^^^ [1]
+   test.js:73:47
+   73| class Class_ManyProps extends React.Component<Props_ManyProps> {}
+                                                     ^^^^^^^^^^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- test.js:167:12
+Error ---------------------------------------------------------------------------------------------------- test.js:93:12
 
 Cannot create `Class_ManyProps` element because null [1] is incompatible with string [2] in property `string1`.
 [incompatible-type]
 
-   test.js:167:12
-   167|   string1={null}
-                   ^^^^ [1]
+   test.js:93:12
+   93|   string1={null}
+                  ^^^^ [1]
 
 References:
-   test.js:70:12
-    70|   string1: string,
-                   ^^^^^^ [2]
+   test.js:66:12
+   66|   string1: string,
+                  ^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- test.js:168:12
+Error ---------------------------------------------------------------------------------------------------- test.js:94:12
 
 Cannot create `Class_ManyProps` element because null [1] is incompatible with string [2] in property `string2`.
 [incompatible-type]
 
-   test.js:168:12
-   168|   string2={null}
-                   ^^^^ [1]
+   test.js:94:12
+   94|   string2={null}
+                  ^^^^ [1]
 
 References:
-   test.js:71:12
-    71|   string2: string,
-                   ^^^^^^ [2]
+   test.js:67:12
+   67|   string2: string,
+                  ^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- test.js:169:13
+Error ---------------------------------------------------------------------------------------------------- test.js:95:13
 
 Cannot create `Class_ManyProps` element because null [1] is incompatible with boolean [2] in property `boolean1`.
 [incompatible-type]
 
-   test.js:169:13
-   169|   boolean1={null}
-                    ^^^^ [1]
+   test.js:95:13
+   95|   boolean1={null}
+                   ^^^^ [1]
 
 References:
-   test.js:72:13
-    72|   boolean1: boolean,
-                    ^^^^^^^ [2]
+   test.js:68:13
+   68|   boolean1: boolean,
+                   ^^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- test.js:170:13
+Error ---------------------------------------------------------------------------------------------------- test.js:96:13
 
 Cannot create `Class_ManyProps` element because null [1] is incompatible with boolean [2] in property `boolean2`.
 [incompatible-type]
 
-   test.js:170:13
-   170|   boolean2={null}
-                    ^^^^ [1]
+   test.js:96:13
+   96|   boolean2={null}
+                   ^^^^ [1]
 
 References:
-   test.js:73:13
-    73|   boolean2: boolean,
-                    ^^^^^^^ [2]
+   test.js:69:13
+   69|   boolean2: boolean,
+                   ^^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- test.js:171:11
+Error ---------------------------------------------------------------------------------------------------- test.js:97:11
 
 Cannot create `Class_ManyProps` element because null [1] is incompatible with number [2] in property `number`.
 [incompatible-type]
 
-   test.js:171:11
-   171|   number={null}
-                  ^^^^ [1]
+   test.js:97:11
+   97|   number={null}
+                 ^^^^ [1]
 
 References:
-   test.js:74:11
-    74|   number: number,
-                  ^^^^^^ [2]
+   test.js:70:11
+   70|   number: number,
+                 ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:185:2
+Error ---------------------------------------------------------------------------------------------------- test.js:111:2
 
 Cannot create `Class_ManyProps` element because property `number` is missing in props [1] but exists in
 `Props_ManyProps` [2]. [prop-missing]
 
-   test.js:185:2
-   185| <Class_ManyProps // Error: Missing `number`.
+   test.js:111:2
+   111| <Class_ManyProps // Error: Missing `number`.
          ^^^^^^^^^^^^^^^
 
 References:
-   test.js:185:1
+   test.js:111:1
         v-------------------------------------------
-   185| <Class_ManyProps // Error: Missing `number`.
-   186|   {...{string1: 'foo', string2: 'bar'}}
-   187|   {...{boolean1: true, boolean2: false}}
-   188| />;
+   111| <Class_ManyProps // Error: Missing `number`.
+   112|   {...{string1: 'foo', string2: 'bar'}}
+   113|   {...{boolean1: true, boolean2: false}}
+   114| />;
         -^ [1]
-   test.js:147:47
-   147| class Class_ManyProps extends React.Component<Props_ManyProps> {}
+   test.js:73:47
+    73| class Class_ManyProps extends React.Component<Props_ManyProps> {}
                                                       ^^^^^^^^^^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- test.js:206:54
+Error --------------------------------------------------------------------------------------------------- test.js:132:54
 
 Cannot create `Class_ManyProps` element because null or undefined [1] is incompatible with number [2] in property
 `number`. [incompatible-type]
 
-   test.js:206:54
-   206|   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
+   test.js:132:54
+   132|   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
                                                              ^^^^^^^ [1]
 
 References:
-   test.js:74:11
-    74|   number: number,
+   test.js:70:11
+    70|   number: number,
                   ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:210:2
+Error ---------------------------------------------------------------------------------------------------- test.js:136:2
 
 Cannot create `ClassExact_ManyProps` element because property `boolean1` is missing in props [1] but exists in
 `Props_ManyProps` [2]. [prop-missing]
 
-   test.js:210:2
-   210| <ClassExact_ManyProps />; // Error: There are no props.
+   test.js:136:2
+   136| <ClassExact_ManyProps />; // Error: There are no props.
          ^^^^^^^^^^^^^^^^^^^^
 
 References:
-   test.js:210:1
-   210| <ClassExact_ManyProps />; // Error: There are no props.
+   test.js:136:1
+   136| <ClassExact_ManyProps />; // Error: There are no props.
         ^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   test.js:209:59
-   209| class ClassExact_ManyProps extends React.Component<$Exact<Props_ManyProps>> {}
+   test.js:135:59
+   135| class ClassExact_ManyProps extends React.Component<$Exact<Props_ManyProps>> {}
                                                                   ^^^^^^^^^^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:210:2
+Error ---------------------------------------------------------------------------------------------------- test.js:136:2
 
 Cannot create `ClassExact_ManyProps` element because property `boolean2` is missing in props [1] but exists in
 `Props_ManyProps` [2]. [prop-missing]
 
-   test.js:210:2
-   210| <ClassExact_ManyProps />; // Error: There are no props.
+   test.js:136:2
+   136| <ClassExact_ManyProps />; // Error: There are no props.
          ^^^^^^^^^^^^^^^^^^^^
 
 References:
-   test.js:210:1
-   210| <ClassExact_ManyProps />; // Error: There are no props.
+   test.js:136:1
+   136| <ClassExact_ManyProps />; // Error: There are no props.
         ^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   test.js:209:59
-   209| class ClassExact_ManyProps extends React.Component<$Exact<Props_ManyProps>> {}
+   test.js:135:59
+   135| class ClassExact_ManyProps extends React.Component<$Exact<Props_ManyProps>> {}
                                                                   ^^^^^^^^^^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:210:2
+Error ---------------------------------------------------------------------------------------------------- test.js:136:2
 
 Cannot create `ClassExact_ManyProps` element because property `number` is missing in props [1] but exists in
 `Props_ManyProps` [2]. [prop-missing]
 
-   test.js:210:2
-   210| <ClassExact_ManyProps />; // Error: There are no props.
+   test.js:136:2
+   136| <ClassExact_ManyProps />; // Error: There are no props.
          ^^^^^^^^^^^^^^^^^^^^
 
 References:
-   test.js:210:1
-   210| <ClassExact_ManyProps />; // Error: There are no props.
+   test.js:136:1
+   136| <ClassExact_ManyProps />; // Error: There are no props.
         ^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   test.js:209:59
-   209| class ClassExact_ManyProps extends React.Component<$Exact<Props_ManyProps>> {}
+   test.js:135:59
+   135| class ClassExact_ManyProps extends React.Component<$Exact<Props_ManyProps>> {}
                                                                   ^^^^^^^^^^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:210:2
+Error ---------------------------------------------------------------------------------------------------- test.js:136:2
 
 Cannot create `ClassExact_ManyProps` element because property `string1` is missing in props [1] but exists in
 `Props_ManyProps` [2]. [prop-missing]
 
-   test.js:210:2
-   210| <ClassExact_ManyProps />; // Error: There are no props.
+   test.js:136:2
+   136| <ClassExact_ManyProps />; // Error: There are no props.
          ^^^^^^^^^^^^^^^^^^^^
 
 References:
-   test.js:210:1
-   210| <ClassExact_ManyProps />; // Error: There are no props.
+   test.js:136:1
+   136| <ClassExact_ManyProps />; // Error: There are no props.
         ^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   test.js:209:59
-   209| class ClassExact_ManyProps extends React.Component<$Exact<Props_ManyProps>> {}
+   test.js:135:59
+   135| class ClassExact_ManyProps extends React.Component<$Exact<Props_ManyProps>> {}
                                                                   ^^^^^^^^^^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:210:2
+Error ---------------------------------------------------------------------------------------------------- test.js:136:2
 
 Cannot create `ClassExact_ManyProps` element because property `string2` is missing in props [1] but exists in
 `Props_ManyProps` [2]. [prop-missing]
 
-   test.js:210:2
-   210| <ClassExact_ManyProps />; // Error: There are no props.
+   test.js:136:2
+   136| <ClassExact_ManyProps />; // Error: There are no props.
          ^^^^^^^^^^^^^^^^^^^^
 
 References:
-   test.js:210:1
-   210| <ClassExact_ManyProps />; // Error: There are no props.
+   test.js:136:1
+   136| <ClassExact_ManyProps />; // Error: There are no props.
         ^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   test.js:209:59
-   209| class ClassExact_ManyProps extends React.Component<$Exact<Props_ManyProps>> {}
+   test.js:135:59
+   135| class ClassExact_ManyProps extends React.Component<$Exact<Props_ManyProps>> {}
                                                                   ^^^^^^^^^^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:218:2
+Error ---------------------------------------------------------------------------------------------------- test.js:144:2
 
 Cannot create `ClassExact_ManyProps` element because property `a` is missing in `Props_ManyProps` [1] but exists in
 props [2]. [prop-missing]
 
-   test.js:218:2
-   218| <ClassExact_ManyProps // Error: Extra props are not allowed.
+   test.js:144:2
+   144| <ClassExact_ManyProps // Error: Extra props are not allowed.
          ^^^^^^^^^^^^^^^^^^^^
 
 References:
-   test.js:209:59
-   209| class ClassExact_ManyProps extends React.Component<$Exact<Props_ManyProps>> {}
+   test.js:135:59
+   135| class ClassExact_ManyProps extends React.Component<$Exact<Props_ManyProps>> {}
                                                                   ^^^^^^^^^^^^^^^ [1]
-   test.js:218:1
+   test.js:144:1
         v-----------------------------------------------------------
-   218| <ClassExact_ManyProps // Error: Extra props are not allowed.
-   219|   string1="foo"
-   220|   string2={'bar'}
-   221|   boolean1
-   222|   boolean2={false}
-   223|   number={42}
-   224|   a={1}
-   225|   b={2}
-   226|   c={3}
-   227| />;
+   144| <ClassExact_ManyProps // Error: Extra props are not allowed.
+   145|   string1="foo"
+   146|   string2={'bar'}
+   147|   boolean1
+   148|   boolean2={false}
+   149|   number={42}
+   150|   a={1}
+   151|   b={2}
+   152|   c={3}
+   153| />;
         -^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:218:2
+Error ---------------------------------------------------------------------------------------------------- test.js:144:2
 
 Cannot create `ClassExact_ManyProps` element because property `b` is missing in `Props_ManyProps` [1] but exists in
 props [2]. [prop-missing]
 
-   test.js:218:2
-   218| <ClassExact_ManyProps // Error: Extra props are not allowed.
+   test.js:144:2
+   144| <ClassExact_ManyProps // Error: Extra props are not allowed.
          ^^^^^^^^^^^^^^^^^^^^
 
 References:
-   test.js:209:59
-   209| class ClassExact_ManyProps extends React.Component<$Exact<Props_ManyProps>> {}
+   test.js:135:59
+   135| class ClassExact_ManyProps extends React.Component<$Exact<Props_ManyProps>> {}
                                                                   ^^^^^^^^^^^^^^^ [1]
-   test.js:218:1
+   test.js:144:1
         v-----------------------------------------------------------
-   218| <ClassExact_ManyProps // Error: Extra props are not allowed.
-   219|   string1="foo"
-   220|   string2={'bar'}
-   221|   boolean1
-   222|   boolean2={false}
-   223|   number={42}
-   224|   a={1}
-   225|   b={2}
-   226|   c={3}
-   227| />;
+   144| <ClassExact_ManyProps // Error: Extra props are not allowed.
+   145|   string1="foo"
+   146|   string2={'bar'}
+   147|   boolean1
+   148|   boolean2={false}
+   149|   number={42}
+   150|   a={1}
+   151|   b={2}
+   152|   c={3}
+   153| />;
         -^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:218:2
+Error ---------------------------------------------------------------------------------------------------- test.js:144:2
 
 Cannot create `ClassExact_ManyProps` element because property `c` is missing in `Props_ManyProps` [1] but exists in
 props [2]. [prop-missing]
 
-   test.js:218:2
-   218| <ClassExact_ManyProps // Error: Extra props are not allowed.
+   test.js:144:2
+   144| <ClassExact_ManyProps // Error: Extra props are not allowed.
          ^^^^^^^^^^^^^^^^^^^^
 
 References:
-   test.js:209:59
-   209| class ClassExact_ManyProps extends React.Component<$Exact<Props_ManyProps>> {}
+   test.js:135:59
+   135| class ClassExact_ManyProps extends React.Component<$Exact<Props_ManyProps>> {}
                                                                   ^^^^^^^^^^^^^^^ [1]
-   test.js:218:1
+   test.js:144:1
         v-----------------------------------------------------------
-   218| <ClassExact_ManyProps // Error: Extra props are not allowed.
-   219|   string1="foo"
-   220|   string2={'bar'}
-   221|   boolean1
-   222|   boolean2={false}
-   223|   number={42}
-   224|   a={1}
-   225|   b={2}
-   226|   c={3}
-   227| />;
+   144| <ClassExact_ManyProps // Error: Extra props are not allowed.
+   145|   string1="foo"
+   146|   string2={'bar'}
+   147|   boolean1
+   148|   boolean2={false}
+   149|   number={42}
+   150|   a={1}
+   151|   b={2}
+   152|   c={3}
+   153| />;
         -^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- test.js:229:12
+Error --------------------------------------------------------------------------------------------------- test.js:155:12
 
 Cannot create `ClassExact_ManyProps` element because null [1] is incompatible with string [2] in property `string1`.
 [incompatible-type]
 
-   test.js:229:12
-   229|   string1={null}
+   test.js:155:12
+   155|   string1={null}
                    ^^^^ [1]
 
 References:
-   test.js:70:12
-    70|   string1: string,
+   test.js:66:12
+    66|   string1: string,
                    ^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- test.js:230:12
+Error --------------------------------------------------------------------------------------------------- test.js:156:12
 
 Cannot create `ClassExact_ManyProps` element because null [1] is incompatible with string [2] in property `string2`.
 [incompatible-type]
 
-   test.js:230:12
-   230|   string2={null}
+   test.js:156:12
+   156|   string2={null}
                    ^^^^ [1]
 
 References:
-   test.js:71:12
-    71|   string2: string,
+   test.js:67:12
+    67|   string2: string,
                    ^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- test.js:231:13
+Error --------------------------------------------------------------------------------------------------- test.js:157:13
 
 Cannot create `ClassExact_ManyProps` element because null [1] is incompatible with boolean [2] in property `boolean1`.
 [incompatible-type]
 
-   test.js:231:13
-   231|   boolean1={null}
+   test.js:157:13
+   157|   boolean1={null}
                     ^^^^ [1]
 
 References:
-   test.js:72:13
-    72|   boolean1: boolean,
+   test.js:68:13
+    68|   boolean1: boolean,
                     ^^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- test.js:232:13
+Error --------------------------------------------------------------------------------------------------- test.js:158:13
 
 Cannot create `ClassExact_ManyProps` element because null [1] is incompatible with boolean [2] in property `boolean2`.
 [incompatible-type]
 
-   test.js:232:13
-   232|   boolean2={null}
+   test.js:158:13
+   158|   boolean2={null}
                     ^^^^ [1]
 
 References:
-   test.js:73:13
-    73|   boolean2: boolean,
+   test.js:69:13
+    69|   boolean2: boolean,
                     ^^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- test.js:233:11
+Error --------------------------------------------------------------------------------------------------- test.js:159:11
 
 Cannot create `ClassExact_ManyProps` element because null [1] is incompatible with number [2] in property `number`.
 [incompatible-type]
 
-   test.js:233:11
-   233|   number={null}
+   test.js:159:11
+   159|   number={null}
                   ^^^^ [1]
 
 References:
-   test.js:74:11
-    74|   number: number,
+   test.js:70:11
+    70|   number: number,
                   ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:247:2
+Error ---------------------------------------------------------------------------------------------------- test.js:173:2
 
 Cannot create `ClassExact_ManyProps` element because property `number` is missing in props [1] but exists in
 `Props_ManyProps` [2]. [prop-missing]
 
-   test.js:247:2
-   247| <ClassExact_ManyProps // Error: Missing `number`.
+   test.js:173:2
+   173| <ClassExact_ManyProps // Error: Missing `number`.
          ^^^^^^^^^^^^^^^^^^^^
 
 References:
-   test.js:247:1
+   test.js:173:1
         v------------------------------------------------
-   247| <ClassExact_ManyProps // Error: Missing `number`.
-   248|   {...{string1: 'foo', string2: 'bar'}}
-   249|   {...{boolean1: true, boolean2: false}}
-   250| />;
+   173| <ClassExact_ManyProps // Error: Missing `number`.
+   174|   {...{string1: 'foo', string2: 'bar'}}
+   175|   {...{boolean1: true, boolean2: false}}
+   176| />;
         -^ [1]
-   test.js:209:59
-   209| class ClassExact_ManyProps extends React.Component<$Exact<Props_ManyProps>> {}
+   test.js:135:59
+   135| class ClassExact_ManyProps extends React.Component<$Exact<Props_ManyProps>> {}
                                                                   ^^^^^^^^^^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:251:2
+Error ---------------------------------------------------------------------------------------------------- test.js:177:2
 
 Cannot create `ClassExact_ManyProps` element because property `a` is missing in `Props_ManyProps` [1] but exists in
 props [2]. [prop-missing]
 
-   test.js:251:2
-   251| <ClassExact_ManyProps // Error: Extra props are not allowed.
+   test.js:177:2
+   177| <ClassExact_ManyProps // Error: Extra props are not allowed.
          ^^^^^^^^^^^^^^^^^^^^
 
 References:
-   test.js:209:59
-   209| class ClassExact_ManyProps extends React.Component<$Exact<Props_ManyProps>> {}
+   test.js:135:59
+   135| class ClassExact_ManyProps extends React.Component<$Exact<Props_ManyProps>> {}
                                                                   ^^^^^^^^^^^^^^^ [1]
-   test.js:251:1
+   test.js:177:1
         v-----------------------------------------------------------
-   251| <ClassExact_ManyProps // Error: Extra props are not allowed.
-   252|   string1="foo"
-   253|   string2={'bar'}
-   254|   boolean1
-   255|   boolean2={false}
-   256|   {...{number: 42, a: 1, b: 2, c: 3}}
-   257| />;
+   177| <ClassExact_ManyProps // Error: Extra props are not allowed.
+   178|   string1="foo"
+   179|   string2={'bar'}
+   180|   boolean1
+   181|   boolean2={false}
+   182|   {...{number: 42, a: 1, b: 2, c: 3}}
+   183| />;
         -^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:251:2
+Error ---------------------------------------------------------------------------------------------------- test.js:177:2
 
 Cannot create `ClassExact_ManyProps` element because property `b` is missing in `Props_ManyProps` [1] but exists in
 props [2]. [prop-missing]
 
-   test.js:251:2
-   251| <ClassExact_ManyProps // Error: Extra props are not allowed.
+   test.js:177:2
+   177| <ClassExact_ManyProps // Error: Extra props are not allowed.
          ^^^^^^^^^^^^^^^^^^^^
 
 References:
-   test.js:209:59
-   209| class ClassExact_ManyProps extends React.Component<$Exact<Props_ManyProps>> {}
+   test.js:135:59
+   135| class ClassExact_ManyProps extends React.Component<$Exact<Props_ManyProps>> {}
                                                                   ^^^^^^^^^^^^^^^ [1]
-   test.js:251:1
+   test.js:177:1
         v-----------------------------------------------------------
-   251| <ClassExact_ManyProps // Error: Extra props are not allowed.
-   252|   string1="foo"
-   253|   string2={'bar'}
-   254|   boolean1
-   255|   boolean2={false}
-   256|   {...{number: 42, a: 1, b: 2, c: 3}}
-   257| />;
+   177| <ClassExact_ManyProps // Error: Extra props are not allowed.
+   178|   string1="foo"
+   179|   string2={'bar'}
+   180|   boolean1
+   181|   boolean2={false}
+   182|   {...{number: 42, a: 1, b: 2, c: 3}}
+   183| />;
         -^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:251:2
+Error ---------------------------------------------------------------------------------------------------- test.js:177:2
 
 Cannot create `ClassExact_ManyProps` element because property `c` is missing in `Props_ManyProps` [1] but exists in
 props [2]. [prop-missing]
 
-   test.js:251:2
-   251| <ClassExact_ManyProps // Error: Extra props are not allowed.
+   test.js:177:2
+   177| <ClassExact_ManyProps // Error: Extra props are not allowed.
          ^^^^^^^^^^^^^^^^^^^^
 
 References:
-   test.js:209:59
-   209| class ClassExact_ManyProps extends React.Component<$Exact<Props_ManyProps>> {}
+   test.js:135:59
+   135| class ClassExact_ManyProps extends React.Component<$Exact<Props_ManyProps>> {}
                                                                   ^^^^^^^^^^^^^^^ [1]
-   test.js:251:1
+   test.js:177:1
         v-----------------------------------------------------------
-   251| <ClassExact_ManyProps // Error: Extra props are not allowed.
-   252|   string1="foo"
-   253|   string2={'bar'}
-   254|   boolean1
-   255|   boolean2={false}
-   256|   {...{number: 42, a: 1, b: 2, c: 3}}
-   257| />;
+   177| <ClassExact_ManyProps // Error: Extra props are not allowed.
+   178|   string1="foo"
+   179|   string2={'bar'}
+   180|   boolean1
+   181|   boolean2={false}
+   182|   {...{number: 42, a: 1, b: 2, c: 3}}
+   183| />;
         -^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- test.js:268:54
+Error --------------------------------------------------------------------------------------------------- test.js:194:54
 
 Cannot create `ClassExact_ManyProps` element because null or undefined [1] is incompatible with number [2] in property
 `number`. [incompatible-type]
 
-   test.js:268:54
-   268|   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
+   test.js:194:54
+   194|   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
                                                              ^^^^^^^ [1]
 
 References:
-   test.js:74:11
-    74|   number: number,
+   test.js:70:11
+    70|   number: number,
                   ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:272:2
+Error ---------------------------------------------------------------------------------------------------- test.js:198:2
 
 Cannot create `ClassPure_ManyProps` element because property `boolean1` is missing in props [1] but exists in
 `Props_ManyProps` [2]. [prop-missing]
 
-   test.js:272:2
-   272| <ClassPure_ManyProps />; // Error: There are no props.
+   test.js:198:2
+   198| <ClassPure_ManyProps />; // Error: There are no props.
          ^^^^^^^^^^^^^^^^^^^
 
 References:
-   test.js:272:1
-   272| <ClassPure_ManyProps />; // Error: There are no props.
+   test.js:198:1
+   198| <ClassPure_ManyProps />; // Error: There are no props.
         ^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   test.js:271:55
-   271| class ClassPure_ManyProps extends React.PureComponent<Props_ManyProps> {}
+   test.js:197:55
+   197| class ClassPure_ManyProps extends React.PureComponent<Props_ManyProps> {}
                                                               ^^^^^^^^^^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:272:2
+Error ---------------------------------------------------------------------------------------------------- test.js:198:2
 
 Cannot create `ClassPure_ManyProps` element because property `boolean2` is missing in props [1] but exists in
 `Props_ManyProps` [2]. [prop-missing]
 
-   test.js:272:2
-   272| <ClassPure_ManyProps />; // Error: There are no props.
+   test.js:198:2
+   198| <ClassPure_ManyProps />; // Error: There are no props.
          ^^^^^^^^^^^^^^^^^^^
 
 References:
-   test.js:272:1
-   272| <ClassPure_ManyProps />; // Error: There are no props.
+   test.js:198:1
+   198| <ClassPure_ManyProps />; // Error: There are no props.
         ^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   test.js:271:55
-   271| class ClassPure_ManyProps extends React.PureComponent<Props_ManyProps> {}
+   test.js:197:55
+   197| class ClassPure_ManyProps extends React.PureComponent<Props_ManyProps> {}
                                                               ^^^^^^^^^^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:272:2
+Error ---------------------------------------------------------------------------------------------------- test.js:198:2
 
 Cannot create `ClassPure_ManyProps` element because property `number` is missing in props [1] but exists in
 `Props_ManyProps` [2]. [prop-missing]
 
-   test.js:272:2
-   272| <ClassPure_ManyProps />; // Error: There are no props.
+   test.js:198:2
+   198| <ClassPure_ManyProps />; // Error: There are no props.
          ^^^^^^^^^^^^^^^^^^^
 
 References:
-   test.js:272:1
-   272| <ClassPure_ManyProps />; // Error: There are no props.
+   test.js:198:1
+   198| <ClassPure_ManyProps />; // Error: There are no props.
         ^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   test.js:271:55
-   271| class ClassPure_ManyProps extends React.PureComponent<Props_ManyProps> {}
+   test.js:197:55
+   197| class ClassPure_ManyProps extends React.PureComponent<Props_ManyProps> {}
                                                               ^^^^^^^^^^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:272:2
+Error ---------------------------------------------------------------------------------------------------- test.js:198:2
 
 Cannot create `ClassPure_ManyProps` element because property `string1` is missing in props [1] but exists in
 `Props_ManyProps` [2]. [prop-missing]
 
-   test.js:272:2
-   272| <ClassPure_ManyProps />; // Error: There are no props.
+   test.js:198:2
+   198| <ClassPure_ManyProps />; // Error: There are no props.
          ^^^^^^^^^^^^^^^^^^^
 
 References:
-   test.js:272:1
-   272| <ClassPure_ManyProps />; // Error: There are no props.
+   test.js:198:1
+   198| <ClassPure_ManyProps />; // Error: There are no props.
         ^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   test.js:271:55
-   271| class ClassPure_ManyProps extends React.PureComponent<Props_ManyProps> {}
+   test.js:197:55
+   197| class ClassPure_ManyProps extends React.PureComponent<Props_ManyProps> {}
                                                               ^^^^^^^^^^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:272:2
+Error ---------------------------------------------------------------------------------------------------- test.js:198:2
 
 Cannot create `ClassPure_ManyProps` element because property `string2` is missing in props [1] but exists in
 `Props_ManyProps` [2]. [prop-missing]
 
-   test.js:272:2
-   272| <ClassPure_ManyProps />; // Error: There are no props.
+   test.js:198:2
+   198| <ClassPure_ManyProps />; // Error: There are no props.
          ^^^^^^^^^^^^^^^^^^^
 
 References:
-   test.js:272:1
-   272| <ClassPure_ManyProps />; // Error: There are no props.
+   test.js:198:1
+   198| <ClassPure_ManyProps />; // Error: There are no props.
         ^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   test.js:271:55
-   271| class ClassPure_ManyProps extends React.PureComponent<Props_ManyProps> {}
+   test.js:197:55
+   197| class ClassPure_ManyProps extends React.PureComponent<Props_ManyProps> {}
                                                               ^^^^^^^^^^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- test.js:291:12
+Error --------------------------------------------------------------------------------------------------- test.js:217:12
 
 Cannot create `ClassPure_ManyProps` element because null [1] is incompatible with string [2] in property `string1`.
 [incompatible-type]
 
-   test.js:291:12
-   291|   string1={null}
+   test.js:217:12
+   217|   string1={null}
                    ^^^^ [1]
 
 References:
-   test.js:70:12
-    70|   string1: string,
+   test.js:66:12
+    66|   string1: string,
                    ^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- test.js:292:12
+Error --------------------------------------------------------------------------------------------------- test.js:218:12
 
 Cannot create `ClassPure_ManyProps` element because null [1] is incompatible with string [2] in property `string2`.
 [incompatible-type]
 
-   test.js:292:12
-   292|   string2={null}
+   test.js:218:12
+   218|   string2={null}
                    ^^^^ [1]
 
 References:
-   test.js:71:12
-    71|   string2: string,
+   test.js:67:12
+    67|   string2: string,
                    ^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- test.js:293:13
+Error --------------------------------------------------------------------------------------------------- test.js:219:13
 
 Cannot create `ClassPure_ManyProps` element because null [1] is incompatible with boolean [2] in property `boolean1`.
 [incompatible-type]
 
-   test.js:293:13
-   293|   boolean1={null}
+   test.js:219:13
+   219|   boolean1={null}
                     ^^^^ [1]
 
 References:
-   test.js:72:13
-    72|   boolean1: boolean,
+   test.js:68:13
+    68|   boolean1: boolean,
                     ^^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- test.js:294:13
+Error --------------------------------------------------------------------------------------------------- test.js:220:13
 
 Cannot create `ClassPure_ManyProps` element because null [1] is incompatible with boolean [2] in property `boolean2`.
 [incompatible-type]
 
-   test.js:294:13
-   294|   boolean2={null}
+   test.js:220:13
+   220|   boolean2={null}
                     ^^^^ [1]
 
 References:
-   test.js:73:13
-    73|   boolean2: boolean,
+   test.js:69:13
+    69|   boolean2: boolean,
                     ^^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- test.js:295:11
+Error --------------------------------------------------------------------------------------------------- test.js:221:11
 
 Cannot create `ClassPure_ManyProps` element because null [1] is incompatible with number [2] in property `number`.
 [incompatible-type]
 
-   test.js:295:11
-   295|   number={null}
+   test.js:221:11
+   221|   number={null}
                   ^^^^ [1]
 
 References:
-   test.js:74:11
-    74|   number: number,
+   test.js:70:11
+    70|   number: number,
                   ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:309:2
+Error ---------------------------------------------------------------------------------------------------- test.js:235:2
 
 Cannot create `ClassPure_ManyProps` element because property `number` is missing in props [1] but exists in
 `Props_ManyProps` [2]. [prop-missing]
 
-   test.js:309:2
-   309| <ClassPure_ManyProps // Error: Missing `number`.
+   test.js:235:2
+   235| <ClassPure_ManyProps // Error: Missing `number`.
          ^^^^^^^^^^^^^^^^^^^
 
 References:
-   test.js:309:1
+   test.js:235:1
         v-----------------------------------------------
-   309| <ClassPure_ManyProps // Error: Missing `number`.
-   310|   {...{string1: 'foo', string2: 'bar'}}
-   311|   {...{boolean1: true, boolean2: false}}
-   312| />;
+   235| <ClassPure_ManyProps // Error: Missing `number`.
+   236|   {...{string1: 'foo', string2: 'bar'}}
+   237|   {...{boolean1: true, boolean2: false}}
+   238| />;
         -^ [1]
-   test.js:271:55
-   271| class ClassPure_ManyProps extends React.PureComponent<Props_ManyProps> {}
+   test.js:197:55
+   197| class ClassPure_ManyProps extends React.PureComponent<Props_ManyProps> {}
                                                               ^^^^^^^^^^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- test.js:330:54
+Error --------------------------------------------------------------------------------------------------- test.js:256:54
 
 Cannot create `ClassPure_ManyProps` element because null or undefined [1] is incompatible with number [2] in property
 `number`. [incompatible-type]
 
-   test.js:330:54
-   330|   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
+   test.js:256:54
+   256|   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
                                                              ^^^^^^^ [1]
 
 References:
-   test.js:74:11
-    74|   number: number,
+   test.js:70:11
+    70|   number: number,
                   ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:334:2
+Error ---------------------------------------------------------------------------------------------------- test.js:260:2
 
 Cannot create `Function_ManyProps` element because property `boolean1` is missing in props [1] but exists in
 `Props_ManyProps` [2]. [prop-missing]
 
-   test.js:334:2
-   334| <Function_ManyProps />; // Error: There are no props.
+   test.js:260:2
+   260| <Function_ManyProps />; // Error: There are no props.
          ^^^^^^^^^^^^^^^^^^
 
 References:
-   test.js:334:1
-   334| <Function_ManyProps />; // Error: There are no props.
+   test.js:260:1
+   260| <Function_ManyProps />; // Error: There are no props.
         ^^^^^^^^^^^^^^^^^^^^^^ [1]
-   test.js:333:36
-   333| const Function_ManyProps = (props: Props_ManyProps) => any;
+   test.js:259:36
+   259| const Function_ManyProps = (props: Props_ManyProps) => any;
                                            ^^^^^^^^^^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:334:2
+Error ---------------------------------------------------------------------------------------------------- test.js:260:2
 
 Cannot create `Function_ManyProps` element because property `boolean2` is missing in props [1] but exists in
 `Props_ManyProps` [2]. [prop-missing]
 
-   test.js:334:2
-   334| <Function_ManyProps />; // Error: There are no props.
+   test.js:260:2
+   260| <Function_ManyProps />; // Error: There are no props.
          ^^^^^^^^^^^^^^^^^^
 
 References:
-   test.js:334:1
-   334| <Function_ManyProps />; // Error: There are no props.
+   test.js:260:1
+   260| <Function_ManyProps />; // Error: There are no props.
         ^^^^^^^^^^^^^^^^^^^^^^ [1]
-   test.js:333:36
-   333| const Function_ManyProps = (props: Props_ManyProps) => any;
+   test.js:259:36
+   259| const Function_ManyProps = (props: Props_ManyProps) => any;
                                            ^^^^^^^^^^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:334:2
+Error ---------------------------------------------------------------------------------------------------- test.js:260:2
 
 Cannot create `Function_ManyProps` element because property `number` is missing in props [1] but exists in
 `Props_ManyProps` [2]. [prop-missing]
 
-   test.js:334:2
-   334| <Function_ManyProps />; // Error: There are no props.
+   test.js:260:2
+   260| <Function_ManyProps />; // Error: There are no props.
          ^^^^^^^^^^^^^^^^^^
 
 References:
-   test.js:334:1
-   334| <Function_ManyProps />; // Error: There are no props.
+   test.js:260:1
+   260| <Function_ManyProps />; // Error: There are no props.
         ^^^^^^^^^^^^^^^^^^^^^^ [1]
-   test.js:333:36
-   333| const Function_ManyProps = (props: Props_ManyProps) => any;
+   test.js:259:36
+   259| const Function_ManyProps = (props: Props_ManyProps) => any;
                                            ^^^^^^^^^^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:334:2
+Error ---------------------------------------------------------------------------------------------------- test.js:260:2
 
 Cannot create `Function_ManyProps` element because property `string1` is missing in props [1] but exists in
 `Props_ManyProps` [2]. [prop-missing]
 
-   test.js:334:2
-   334| <Function_ManyProps />; // Error: There are no props.
+   test.js:260:2
+   260| <Function_ManyProps />; // Error: There are no props.
          ^^^^^^^^^^^^^^^^^^
 
 References:
-   test.js:334:1
-   334| <Function_ManyProps />; // Error: There are no props.
+   test.js:260:1
+   260| <Function_ManyProps />; // Error: There are no props.
         ^^^^^^^^^^^^^^^^^^^^^^ [1]
-   test.js:333:36
-   333| const Function_ManyProps = (props: Props_ManyProps) => any;
+   test.js:259:36
+   259| const Function_ManyProps = (props: Props_ManyProps) => any;
                                            ^^^^^^^^^^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:334:2
+Error ---------------------------------------------------------------------------------------------------- test.js:260:2
 
 Cannot create `Function_ManyProps` element because property `string2` is missing in props [1] but exists in
 `Props_ManyProps` [2]. [prop-missing]
 
-   test.js:334:2
-   334| <Function_ManyProps />; // Error: There are no props.
+   test.js:260:2
+   260| <Function_ManyProps />; // Error: There are no props.
          ^^^^^^^^^^^^^^^^^^
 
 References:
-   test.js:334:1
-   334| <Function_ManyProps />; // Error: There are no props.
+   test.js:260:1
+   260| <Function_ManyProps />; // Error: There are no props.
         ^^^^^^^^^^^^^^^^^^^^^^ [1]
-   test.js:333:36
-   333| const Function_ManyProps = (props: Props_ManyProps) => any;
+   test.js:259:36
+   259| const Function_ManyProps = (props: Props_ManyProps) => any;
                                            ^^^^^^^^^^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- test.js:353:12
+Error --------------------------------------------------------------------------------------------------- test.js:279:12
 
 Cannot create `Function_ManyProps` element because null [1] is incompatible with string [2] in property `string1`.
 [incompatible-type]
 
-   test.js:353:12
-   353|   string1={null}
+   test.js:279:12
+   279|   string1={null}
                    ^^^^ [1]
 
 References:
-   test.js:70:12
-    70|   string1: string,
+   test.js:66:12
+    66|   string1: string,
                    ^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- test.js:354:12
+Error --------------------------------------------------------------------------------------------------- test.js:280:12
 
 Cannot create `Function_ManyProps` element because null [1] is incompatible with string [2] in property `string2`.
 [incompatible-type]
 
-   test.js:354:12
-   354|   string2={null}
+   test.js:280:12
+   280|   string2={null}
                    ^^^^ [1]
 
 References:
-   test.js:71:12
-    71|   string2: string,
+   test.js:67:12
+    67|   string2: string,
                    ^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- test.js:355:13
+Error --------------------------------------------------------------------------------------------------- test.js:281:13
 
 Cannot create `Function_ManyProps` element because null [1] is incompatible with boolean [2] in property `boolean1`.
 [incompatible-type]
 
-   test.js:355:13
-   355|   boolean1={null}
+   test.js:281:13
+   281|   boolean1={null}
                     ^^^^ [1]
 
 References:
-   test.js:72:13
-    72|   boolean1: boolean,
+   test.js:68:13
+    68|   boolean1: boolean,
                     ^^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- test.js:356:13
+Error --------------------------------------------------------------------------------------------------- test.js:282:13
 
 Cannot create `Function_ManyProps` element because null [1] is incompatible with boolean [2] in property `boolean2`.
 [incompatible-type]
 
-   test.js:356:13
-   356|   boolean2={null}
+   test.js:282:13
+   282|   boolean2={null}
                     ^^^^ [1]
 
 References:
-   test.js:73:13
-    73|   boolean2: boolean,
+   test.js:69:13
+    69|   boolean2: boolean,
                     ^^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- test.js:357:11
+Error --------------------------------------------------------------------------------------------------- test.js:283:11
 
 Cannot create `Function_ManyProps` element because null [1] is incompatible with number [2] in property `number`.
 [incompatible-type]
 
-   test.js:357:11
-   357|   number={null}
+   test.js:283:11
+   283|   number={null}
                   ^^^^ [1]
 
 References:
-   test.js:74:11
-    74|   number: number,
+   test.js:70:11
+    70|   number: number,
                   ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:371:2
+Error ---------------------------------------------------------------------------------------------------- test.js:297:2
 
 Cannot create `Function_ManyProps` element because property `number` is missing in props [1] but exists in
 `Props_ManyProps` [2]. [prop-missing]
 
-   test.js:371:2
-   371| <Function_ManyProps // Error: Missing `number`.
+   test.js:297:2
+   297| <Function_ManyProps // Error: Missing `number`.
          ^^^^^^^^^^^^^^^^^^
 
 References:
-   test.js:371:1
+   test.js:297:1
         v----------------------------------------------
-   371| <Function_ManyProps // Error: Missing `number`.
-   372|   {...{string1: 'foo', string2: 'bar'}}
-   373|   {...{boolean1: true, boolean2: false}}
-   374| />;
+   297| <Function_ManyProps // Error: Missing `number`.
+   298|   {...{string1: 'foo', string2: 'bar'}}
+   299|   {...{boolean1: true, boolean2: false}}
+   300| />;
         -^ [1]
-   test.js:333:36
-   333| const Function_ManyProps = (props: Props_ManyProps) => any;
+   test.js:259:36
+   259| const Function_ManyProps = (props: Props_ManyProps) => any;
                                            ^^^^^^^^^^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- test.js:392:54
+Error --------------------------------------------------------------------------------------------------- test.js:318:54
 
 Cannot create `Function_ManyProps` element because null or undefined [1] is incompatible with number [2] in property
 `number`. [incompatible-type]
 
-   test.js:392:54
-   392|   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
+   test.js:318:54
+   318|   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
                                                              ^^^^^^^ [1]
 
 References:
-   test.js:74:11
-    74|   number: number,
+   test.js:70:11
+    70|   number: number,
                   ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:396:2
+Error ---------------------------------------------------------------------------------------------------- test.js:322:2
 
 Cannot create `FunctionExact_ManyProps` element because property `boolean1` is missing in props [1] but exists in
 `Props_ManyProps` [2]. [prop-missing]
 
-   test.js:396:2
-   396| <FunctionExact_ManyProps />; // Error: There are no props.
+   test.js:322:2
+   322| <FunctionExact_ManyProps />; // Error: There are no props.
          ^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   test.js:396:1
-   396| <FunctionExact_ManyProps />; // Error: There are no props.
+   test.js:322:1
+   322| <FunctionExact_ManyProps />; // Error: There are no props.
         ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   test.js:395:48
-   395| const FunctionExact_ManyProps = (props: $Exact<Props_ManyProps>) => any;
+   test.js:321:48
+   321| const FunctionExact_ManyProps = (props: $Exact<Props_ManyProps>) => any;
                                                        ^^^^^^^^^^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:396:2
+Error ---------------------------------------------------------------------------------------------------- test.js:322:2
 
 Cannot create `FunctionExact_ManyProps` element because property `boolean2` is missing in props [1] but exists in
 `Props_ManyProps` [2]. [prop-missing]
 
-   test.js:396:2
-   396| <FunctionExact_ManyProps />; // Error: There are no props.
+   test.js:322:2
+   322| <FunctionExact_ManyProps />; // Error: There are no props.
          ^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   test.js:396:1
-   396| <FunctionExact_ManyProps />; // Error: There are no props.
+   test.js:322:1
+   322| <FunctionExact_ManyProps />; // Error: There are no props.
         ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   test.js:395:48
-   395| const FunctionExact_ManyProps = (props: $Exact<Props_ManyProps>) => any;
+   test.js:321:48
+   321| const FunctionExact_ManyProps = (props: $Exact<Props_ManyProps>) => any;
                                                        ^^^^^^^^^^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:396:2
+Error ---------------------------------------------------------------------------------------------------- test.js:322:2
 
 Cannot create `FunctionExact_ManyProps` element because property `number` is missing in props [1] but exists in
 `Props_ManyProps` [2]. [prop-missing]
 
-   test.js:396:2
-   396| <FunctionExact_ManyProps />; // Error: There are no props.
+   test.js:322:2
+   322| <FunctionExact_ManyProps />; // Error: There are no props.
          ^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   test.js:396:1
-   396| <FunctionExact_ManyProps />; // Error: There are no props.
+   test.js:322:1
+   322| <FunctionExact_ManyProps />; // Error: There are no props.
         ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   test.js:395:48
-   395| const FunctionExact_ManyProps = (props: $Exact<Props_ManyProps>) => any;
+   test.js:321:48
+   321| const FunctionExact_ManyProps = (props: $Exact<Props_ManyProps>) => any;
                                                        ^^^^^^^^^^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:396:2
+Error ---------------------------------------------------------------------------------------------------- test.js:322:2
 
 Cannot create `FunctionExact_ManyProps` element because property `string1` is missing in props [1] but exists in
 `Props_ManyProps` [2]. [prop-missing]
 
-   test.js:396:2
-   396| <FunctionExact_ManyProps />; // Error: There are no props.
+   test.js:322:2
+   322| <FunctionExact_ManyProps />; // Error: There are no props.
          ^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   test.js:396:1
-   396| <FunctionExact_ManyProps />; // Error: There are no props.
+   test.js:322:1
+   322| <FunctionExact_ManyProps />; // Error: There are no props.
         ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   test.js:395:48
-   395| const FunctionExact_ManyProps = (props: $Exact<Props_ManyProps>) => any;
+   test.js:321:48
+   321| const FunctionExact_ManyProps = (props: $Exact<Props_ManyProps>) => any;
                                                        ^^^^^^^^^^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:396:2
+Error ---------------------------------------------------------------------------------------------------- test.js:322:2
 
 Cannot create `FunctionExact_ManyProps` element because property `string2` is missing in props [1] but exists in
 `Props_ManyProps` [2]. [prop-missing]
 
-   test.js:396:2
-   396| <FunctionExact_ManyProps />; // Error: There are no props.
+   test.js:322:2
+   322| <FunctionExact_ManyProps />; // Error: There are no props.
          ^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   test.js:396:1
-   396| <FunctionExact_ManyProps />; // Error: There are no props.
+   test.js:322:1
+   322| <FunctionExact_ManyProps />; // Error: There are no props.
         ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   test.js:395:48
-   395| const FunctionExact_ManyProps = (props: $Exact<Props_ManyProps>) => any;
+   test.js:321:48
+   321| const FunctionExact_ManyProps = (props: $Exact<Props_ManyProps>) => any;
                                                        ^^^^^^^^^^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:404:2
+Error ---------------------------------------------------------------------------------------------------- test.js:330:2
 
 Cannot create `FunctionExact_ManyProps` element because property `a` is missing in `Props_ManyProps` [1] but exists in
 props [2]. [prop-missing]
 
-   test.js:404:2
-   404| <FunctionExact_ManyProps // OK: Other props are allowed.
+   test.js:330:2
+   330| <FunctionExact_ManyProps // OK: Other props are allowed.
          ^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   test.js:395:48
-   395| const FunctionExact_ManyProps = (props: $Exact<Props_ManyProps>) => any;
+   test.js:321:48
+   321| const FunctionExact_ManyProps = (props: $Exact<Props_ManyProps>) => any;
                                                        ^^^^^^^^^^^^^^^ [1]
-   test.js:404:1
+   test.js:330:1
         v-------------------------------------------------------
-   404| <FunctionExact_ManyProps // OK: Other props are allowed.
-   405|   string1="foo"
-   406|   string2={'bar'}
-   407|   boolean1
-   408|   boolean2={false}
-   409|   number={42}
-   410|   a={1}
-   411|   b={2}
-   412|   c={3}
-   413| />;
+   330| <FunctionExact_ManyProps // OK: Other props are allowed.
+   331|   string1="foo"
+   332|   string2={'bar'}
+   333|   boolean1
+   334|   boolean2={false}
+   335|   number={42}
+   336|   a={1}
+   337|   b={2}
+   338|   c={3}
+   339| />;
         -^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:404:2
+Error ---------------------------------------------------------------------------------------------------- test.js:330:2
 
 Cannot create `FunctionExact_ManyProps` element because property `b` is missing in `Props_ManyProps` [1] but exists in
 props [2]. [prop-missing]
 
-   test.js:404:2
-   404| <FunctionExact_ManyProps // OK: Other props are allowed.
+   test.js:330:2
+   330| <FunctionExact_ManyProps // OK: Other props are allowed.
          ^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   test.js:395:48
-   395| const FunctionExact_ManyProps = (props: $Exact<Props_ManyProps>) => any;
+   test.js:321:48
+   321| const FunctionExact_ManyProps = (props: $Exact<Props_ManyProps>) => any;
                                                        ^^^^^^^^^^^^^^^ [1]
-   test.js:404:1
+   test.js:330:1
         v-------------------------------------------------------
-   404| <FunctionExact_ManyProps // OK: Other props are allowed.
-   405|   string1="foo"
-   406|   string2={'bar'}
-   407|   boolean1
-   408|   boolean2={false}
-   409|   number={42}
-   410|   a={1}
-   411|   b={2}
-   412|   c={3}
-   413| />;
+   330| <FunctionExact_ManyProps // OK: Other props are allowed.
+   331|   string1="foo"
+   332|   string2={'bar'}
+   333|   boolean1
+   334|   boolean2={false}
+   335|   number={42}
+   336|   a={1}
+   337|   b={2}
+   338|   c={3}
+   339| />;
         -^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:404:2
+Error ---------------------------------------------------------------------------------------------------- test.js:330:2
 
 Cannot create `FunctionExact_ManyProps` element because property `c` is missing in `Props_ManyProps` [1] but exists in
 props [2]. [prop-missing]
 
-   test.js:404:2
-   404| <FunctionExact_ManyProps // OK: Other props are allowed.
+   test.js:330:2
+   330| <FunctionExact_ManyProps // OK: Other props are allowed.
          ^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   test.js:395:48
-   395| const FunctionExact_ManyProps = (props: $Exact<Props_ManyProps>) => any;
+   test.js:321:48
+   321| const FunctionExact_ManyProps = (props: $Exact<Props_ManyProps>) => any;
                                                        ^^^^^^^^^^^^^^^ [1]
-   test.js:404:1
+   test.js:330:1
         v-------------------------------------------------------
-   404| <FunctionExact_ManyProps // OK: Other props are allowed.
-   405|   string1="foo"
-   406|   string2={'bar'}
-   407|   boolean1
-   408|   boolean2={false}
-   409|   number={42}
-   410|   a={1}
-   411|   b={2}
-   412|   c={3}
-   413| />;
+   330| <FunctionExact_ManyProps // OK: Other props are allowed.
+   331|   string1="foo"
+   332|   string2={'bar'}
+   333|   boolean1
+   334|   boolean2={false}
+   335|   number={42}
+   336|   a={1}
+   337|   b={2}
+   338|   c={3}
+   339| />;
         -^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- test.js:415:12
+Error --------------------------------------------------------------------------------------------------- test.js:341:12
 
 Cannot create `FunctionExact_ManyProps` element because null [1] is incompatible with string [2] in property `string1`.
 [incompatible-type]
 
-   test.js:415:12
-   415|   string1={null}
+   test.js:341:12
+   341|   string1={null}
                    ^^^^ [1]
 
 References:
-   test.js:70:12
-    70|   string1: string,
+   test.js:66:12
+    66|   string1: string,
                    ^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- test.js:416:12
+Error --------------------------------------------------------------------------------------------------- test.js:342:12
 
 Cannot create `FunctionExact_ManyProps` element because null [1] is incompatible with string [2] in property `string2`.
 [incompatible-type]
 
-   test.js:416:12
-   416|   string2={null}
+   test.js:342:12
+   342|   string2={null}
                    ^^^^ [1]
 
 References:
-   test.js:71:12
-    71|   string2: string,
+   test.js:67:12
+    67|   string2: string,
                    ^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- test.js:417:13
+Error --------------------------------------------------------------------------------------------------- test.js:343:13
 
 Cannot create `FunctionExact_ManyProps` element because null [1] is incompatible with boolean [2] in property
 `boolean1`. [incompatible-type]
 
-   test.js:417:13
-   417|   boolean1={null}
+   test.js:343:13
+   343|   boolean1={null}
                     ^^^^ [1]
 
 References:
-   test.js:72:13
-    72|   boolean1: boolean,
+   test.js:68:13
+    68|   boolean1: boolean,
                     ^^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- test.js:418:13
+Error --------------------------------------------------------------------------------------------------- test.js:344:13
 
 Cannot create `FunctionExact_ManyProps` element because null [1] is incompatible with boolean [2] in property
 `boolean2`. [incompatible-type]
 
-   test.js:418:13
-   418|   boolean2={null}
+   test.js:344:13
+   344|   boolean2={null}
                     ^^^^ [1]
 
 References:
-   test.js:73:13
-    73|   boolean2: boolean,
+   test.js:69:13
+    69|   boolean2: boolean,
                     ^^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- test.js:419:11
+Error --------------------------------------------------------------------------------------------------- test.js:345:11
 
 Cannot create `FunctionExact_ManyProps` element because null [1] is incompatible with number [2] in property `number`.
 [incompatible-type]
 
-   test.js:419:11
-   419|   number={null}
+   test.js:345:11
+   345|   number={null}
                   ^^^^ [1]
 
 References:
-   test.js:74:11
-    74|   number: number,
+   test.js:70:11
+    70|   number: number,
                   ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:433:2
+Error ---------------------------------------------------------------------------------------------------- test.js:359:2
 
 Cannot create `FunctionExact_ManyProps` element because property `number` is missing in props [1] but exists in
 `Props_ManyProps` [2]. [prop-missing]
 
-   test.js:433:2
-   433| <FunctionExact_ManyProps // Error: Missing `number`.
+   test.js:359:2
+   359| <FunctionExact_ManyProps // Error: Missing `number`.
          ^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   test.js:433:1
+   test.js:359:1
         v---------------------------------------------------
-   433| <FunctionExact_ManyProps // Error: Missing `number`.
-   434|   {...{string1: 'foo', string2: 'bar'}}
-   435|   {...{boolean1: true, boolean2: false}}
-   436| />;
+   359| <FunctionExact_ManyProps // Error: Missing `number`.
+   360|   {...{string1: 'foo', string2: 'bar'}}
+   361|   {...{boolean1: true, boolean2: false}}
+   362| />;
         -^ [1]
-   test.js:395:48
-   395| const FunctionExact_ManyProps = (props: $Exact<Props_ManyProps>) => any;
+   test.js:321:48
+   321| const FunctionExact_ManyProps = (props: $Exact<Props_ManyProps>) => any;
                                                        ^^^^^^^^^^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:437:2
+Error ---------------------------------------------------------------------------------------------------- test.js:363:2
 
 Cannot create `FunctionExact_ManyProps` element because property `a` is missing in `Props_ManyProps` [1] but exists in
 props [2]. [prop-missing]
 
-   test.js:437:2
-   437| <FunctionExact_ManyProps // Error: Extra props are not allowed.
+   test.js:363:2
+   363| <FunctionExact_ManyProps // Error: Extra props are not allowed.
          ^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   test.js:395:48
-   395| const FunctionExact_ManyProps = (props: $Exact<Props_ManyProps>) => any;
+   test.js:321:48
+   321| const FunctionExact_ManyProps = (props: $Exact<Props_ManyProps>) => any;
                                                        ^^^^^^^^^^^^^^^ [1]
-   test.js:437:1
+   test.js:363:1
         v--------------------------------------------------------------
-   437| <FunctionExact_ManyProps // Error: Extra props are not allowed.
-   438|   string1="foo"
-   439|   string2={'bar'}
-   440|   boolean1
-   441|   boolean2={false}
-   442|   {...{number: 42, a: 1, b: 2, c: 3}}
-   443| />;
+   363| <FunctionExact_ManyProps // Error: Extra props are not allowed.
+   364|   string1="foo"
+   365|   string2={'bar'}
+   366|   boolean1
+   367|   boolean2={false}
+   368|   {...{number: 42, a: 1, b: 2, c: 3}}
+   369| />;
         -^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:437:2
+Error ---------------------------------------------------------------------------------------------------- test.js:363:2
 
 Cannot create `FunctionExact_ManyProps` element because property `b` is missing in `Props_ManyProps` [1] but exists in
 props [2]. [prop-missing]
 
-   test.js:437:2
-   437| <FunctionExact_ManyProps // Error: Extra props are not allowed.
+   test.js:363:2
+   363| <FunctionExact_ManyProps // Error: Extra props are not allowed.
          ^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   test.js:395:48
-   395| const FunctionExact_ManyProps = (props: $Exact<Props_ManyProps>) => any;
+   test.js:321:48
+   321| const FunctionExact_ManyProps = (props: $Exact<Props_ManyProps>) => any;
                                                        ^^^^^^^^^^^^^^^ [1]
-   test.js:437:1
+   test.js:363:1
         v--------------------------------------------------------------
-   437| <FunctionExact_ManyProps // Error: Extra props are not allowed.
-   438|   string1="foo"
-   439|   string2={'bar'}
-   440|   boolean1
-   441|   boolean2={false}
-   442|   {...{number: 42, a: 1, b: 2, c: 3}}
-   443| />;
+   363| <FunctionExact_ManyProps // Error: Extra props are not allowed.
+   364|   string1="foo"
+   365|   string2={'bar'}
+   366|   boolean1
+   367|   boolean2={false}
+   368|   {...{number: 42, a: 1, b: 2, c: 3}}
+   369| />;
         -^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:437:2
+Error ---------------------------------------------------------------------------------------------------- test.js:363:2
 
 Cannot create `FunctionExact_ManyProps` element because property `c` is missing in `Props_ManyProps` [1] but exists in
 props [2]. [prop-missing]
 
-   test.js:437:2
-   437| <FunctionExact_ManyProps // Error: Extra props are not allowed.
+   test.js:363:2
+   363| <FunctionExact_ManyProps // Error: Extra props are not allowed.
          ^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   test.js:395:48
-   395| const FunctionExact_ManyProps = (props: $Exact<Props_ManyProps>) => any;
+   test.js:321:48
+   321| const FunctionExact_ManyProps = (props: $Exact<Props_ManyProps>) => any;
                                                        ^^^^^^^^^^^^^^^ [1]
-   test.js:437:1
+   test.js:363:1
         v--------------------------------------------------------------
-   437| <FunctionExact_ManyProps // Error: Extra props are not allowed.
-   438|   string1="foo"
-   439|   string2={'bar'}
-   440|   boolean1
-   441|   boolean2={false}
-   442|   {...{number: 42, a: 1, b: 2, c: 3}}
-   443| />;
+   363| <FunctionExact_ManyProps // Error: Extra props are not allowed.
+   364|   string1="foo"
+   365|   string2={'bar'}
+   366|   boolean1
+   367|   boolean2={false}
+   368|   {...{number: 42, a: 1, b: 2, c: 3}}
+   369| />;
         -^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- test.js:454:54
+Error --------------------------------------------------------------------------------------------------- test.js:380:54
 
 Cannot create `FunctionExact_ManyProps` element because null or undefined [1] is incompatible with number [2] in
 property `number`. [incompatible-type]
 
-   test.js:454:54
-   454|   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
+   test.js:380:54
+   380|   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
                                                              ^^^^^^^ [1]
 
 References:
-   test.js:74:11
-    74|   number: number,
+   test.js:70:11
+    70|   number: number,
                   ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:458:2
+Error ---------------------------------------------------------------------------------------------------- test.js:384:2
 
 Cannot create `Abstract_ManyProps` element because property `boolean1` is missing in props [1] but exists in
 `Props_ManyProps` [2]. [prop-missing]
 
-   test.js:458:2
-   458| <Abstract_ManyProps />; // Error: There are no props.
+   test.js:384:2
+   384| <Abstract_ManyProps />; // Error: There are no props.
          ^^^^^^^^^^^^^^^^^^
 
 References:
-   test.js:458:1
-   458| <Abstract_ManyProps />; // Error: There are no props.
+   test.js:384:1
+   384| <Abstract_ManyProps />; // Error: There are no props.
         ^^^^^^^^^^^^^^^^^^^^^^ [1]
-   test.js:457:47
-   457| const Abstract_ManyProps: React.ComponentType<Props_ManyProps> = any;
+   test.js:383:47
+   383| const Abstract_ManyProps: React.ComponentType<Props_ManyProps> = any;
                                                       ^^^^^^^^^^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:458:2
+Error ---------------------------------------------------------------------------------------------------- test.js:384:2
 
 Cannot create `Abstract_ManyProps` element because property `boolean2` is missing in props [1] but exists in
 `Props_ManyProps` [2]. [prop-missing]
 
-   test.js:458:2
-   458| <Abstract_ManyProps />; // Error: There are no props.
+   test.js:384:2
+   384| <Abstract_ManyProps />; // Error: There are no props.
          ^^^^^^^^^^^^^^^^^^
 
 References:
-   test.js:458:1
-   458| <Abstract_ManyProps />; // Error: There are no props.
+   test.js:384:1
+   384| <Abstract_ManyProps />; // Error: There are no props.
         ^^^^^^^^^^^^^^^^^^^^^^ [1]
-   test.js:457:47
-   457| const Abstract_ManyProps: React.ComponentType<Props_ManyProps> = any;
+   test.js:383:47
+   383| const Abstract_ManyProps: React.ComponentType<Props_ManyProps> = any;
                                                       ^^^^^^^^^^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:458:2
+Error ---------------------------------------------------------------------------------------------------- test.js:384:2
 
 Cannot create `Abstract_ManyProps` element because property `number` is missing in props [1] but exists in
 `Props_ManyProps` [2]. [prop-missing]
 
-   test.js:458:2
-   458| <Abstract_ManyProps />; // Error: There are no props.
+   test.js:384:2
+   384| <Abstract_ManyProps />; // Error: There are no props.
          ^^^^^^^^^^^^^^^^^^
 
 References:
-   test.js:458:1
-   458| <Abstract_ManyProps />; // Error: There are no props.
+   test.js:384:1
+   384| <Abstract_ManyProps />; // Error: There are no props.
         ^^^^^^^^^^^^^^^^^^^^^^ [1]
-   test.js:457:47
-   457| const Abstract_ManyProps: React.ComponentType<Props_ManyProps> = any;
+   test.js:383:47
+   383| const Abstract_ManyProps: React.ComponentType<Props_ManyProps> = any;
                                                       ^^^^^^^^^^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:458:2
+Error ---------------------------------------------------------------------------------------------------- test.js:384:2
 
 Cannot create `Abstract_ManyProps` element because property `string1` is missing in props [1] but exists in
 `Props_ManyProps` [2]. [prop-missing]
 
-   test.js:458:2
-   458| <Abstract_ManyProps />; // Error: There are no props.
+   test.js:384:2
+   384| <Abstract_ManyProps />; // Error: There are no props.
          ^^^^^^^^^^^^^^^^^^
 
 References:
-   test.js:458:1
-   458| <Abstract_ManyProps />; // Error: There are no props.
+   test.js:384:1
+   384| <Abstract_ManyProps />; // Error: There are no props.
         ^^^^^^^^^^^^^^^^^^^^^^ [1]
-   test.js:457:47
-   457| const Abstract_ManyProps: React.ComponentType<Props_ManyProps> = any;
+   test.js:383:47
+   383| const Abstract_ManyProps: React.ComponentType<Props_ManyProps> = any;
                                                       ^^^^^^^^^^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:458:2
+Error ---------------------------------------------------------------------------------------------------- test.js:384:2
 
 Cannot create `Abstract_ManyProps` element because property `string2` is missing in props [1] but exists in
 `Props_ManyProps` [2]. [prop-missing]
 
-   test.js:458:2
-   458| <Abstract_ManyProps />; // Error: There are no props.
+   test.js:384:2
+   384| <Abstract_ManyProps />; // Error: There are no props.
          ^^^^^^^^^^^^^^^^^^
 
 References:
-   test.js:458:1
-   458| <Abstract_ManyProps />; // Error: There are no props.
+   test.js:384:1
+   384| <Abstract_ManyProps />; // Error: There are no props.
         ^^^^^^^^^^^^^^^^^^^^^^ [1]
-   test.js:457:47
-   457| const Abstract_ManyProps: React.ComponentType<Props_ManyProps> = any;
+   test.js:383:47
+   383| const Abstract_ManyProps: React.ComponentType<Props_ManyProps> = any;
                                                       ^^^^^^^^^^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- test.js:477:12
+Error --------------------------------------------------------------------------------------------------- test.js:403:12
 
 Cannot create `Abstract_ManyProps` element because null [1] is incompatible with string [2] in property `string1`.
 [incompatible-type]
 
-   test.js:477:12
-   477|   string1={null}
+   test.js:403:12
+   403|   string1={null}
                    ^^^^ [1]
 
 References:
-   test.js:70:12
-    70|   string1: string,
+   test.js:66:12
+    66|   string1: string,
                    ^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- test.js:478:12
+Error --------------------------------------------------------------------------------------------------- test.js:404:12
 
 Cannot create `Abstract_ManyProps` element because null [1] is incompatible with string [2] in property `string2`.
 [incompatible-type]
 
-   test.js:478:12
-   478|   string2={null}
+   test.js:404:12
+   404|   string2={null}
                    ^^^^ [1]
 
 References:
-   test.js:71:12
-    71|   string2: string,
+   test.js:67:12
+    67|   string2: string,
                    ^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- test.js:479:13
+Error --------------------------------------------------------------------------------------------------- test.js:405:13
 
 Cannot create `Abstract_ManyProps` element because null [1] is incompatible with boolean [2] in property `boolean1`.
 [incompatible-type]
 
-   test.js:479:13
-   479|   boolean1={null}
+   test.js:405:13
+   405|   boolean1={null}
                     ^^^^ [1]
 
 References:
-   test.js:72:13
-    72|   boolean1: boolean,
+   test.js:68:13
+    68|   boolean1: boolean,
                     ^^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- test.js:480:13
+Error --------------------------------------------------------------------------------------------------- test.js:406:13
 
 Cannot create `Abstract_ManyProps` element because null [1] is incompatible with boolean [2] in property `boolean2`.
 [incompatible-type]
 
-   test.js:480:13
-   480|   boolean2={null}
+   test.js:406:13
+   406|   boolean2={null}
                     ^^^^ [1]
 
 References:
-   test.js:73:13
-    73|   boolean2: boolean,
+   test.js:69:13
+    69|   boolean2: boolean,
                     ^^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- test.js:481:11
+Error --------------------------------------------------------------------------------------------------- test.js:407:11
 
 Cannot create `Abstract_ManyProps` element because null [1] is incompatible with number [2] in property `number`.
 [incompatible-type]
 
-   test.js:481:11
-   481|   number={null}
+   test.js:407:11
+   407|   number={null}
                   ^^^^ [1]
 
 References:
-   test.js:74:11
-    74|   number: number,
+   test.js:70:11
+    70|   number: number,
                   ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:495:2
+Error ---------------------------------------------------------------------------------------------------- test.js:421:2
 
 Cannot create `Abstract_ManyProps` element because property `number` is missing in props [1] but exists in
 `Props_ManyProps` [2]. [prop-missing]
 
-   test.js:495:2
-   495| <Abstract_ManyProps // Error: Missing `number`.
+   test.js:421:2
+   421| <Abstract_ManyProps // Error: Missing `number`.
          ^^^^^^^^^^^^^^^^^^
 
 References:
-   test.js:495:1
+   test.js:421:1
         v----------------------------------------------
-   495| <Abstract_ManyProps // Error: Missing `number`.
-   496|   {...{string1: 'foo', string2: 'bar'}}
-   497|   {...{boolean1: true, boolean2: false}}
-   498| />;
+   421| <Abstract_ManyProps // Error: Missing `number`.
+   422|   {...{string1: 'foo', string2: 'bar'}}
+   423|   {...{boolean1: true, boolean2: false}}
+   424| />;
         -^ [1]
-   test.js:457:47
-   457| const Abstract_ManyProps: React.ComponentType<Props_ManyProps> = any;
+   test.js:383:47
+   383| const Abstract_ManyProps: React.ComponentType<Props_ManyProps> = any;
                                                       ^^^^^^^^^^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- test.js:516:54
+Error --------------------------------------------------------------------------------------------------- test.js:442:54
 
 Cannot create `Abstract_ManyProps` element because null or undefined [1] is incompatible with number [2] in property
 `number`. [incompatible-type]
 
-   test.js:516:54
-   516|   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
+   test.js:442:54
+   442|   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
                                                              ^^^^^^^ [1]
 
 References:
-   test.js:74:11
-    74|   number: number,
+   test.js:70:11
+    70|   number: number,
                   ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:521:2
+Error ---------------------------------------------------------------------------------------------------- test.js:447:2
 
 Cannot create `AbstractExact_ManyProps` element because property `boolean1` is missing in props [1] but exists in
 `Props_ManyProps` [2]. [prop-missing]
 
-   test.js:521:2
-   521| <AbstractExact_ManyProps />; // Error: There are no props.
+   test.js:447:2
+   447| <AbstractExact_ManyProps />; // Error: There are no props.
          ^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   test.js:521:1
-   521| <AbstractExact_ManyProps />; // Error: There are no props.
+   test.js:447:1
+   447| <AbstractExact_ManyProps />; // Error: There are no props.
         ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   test.js:519:59
-   519| const AbstractExact_ManyProps: React.ComponentType<$Exact<Props_ManyProps>>
+   test.js:445:59
+   445| const AbstractExact_ManyProps: React.ComponentType<$Exact<Props_ManyProps>>
                                                                   ^^^^^^^^^^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:521:2
+Error ---------------------------------------------------------------------------------------------------- test.js:447:2
 
 Cannot create `AbstractExact_ManyProps` element because property `boolean2` is missing in props [1] but exists in
 `Props_ManyProps` [2]. [prop-missing]
 
-   test.js:521:2
-   521| <AbstractExact_ManyProps />; // Error: There are no props.
+   test.js:447:2
+   447| <AbstractExact_ManyProps />; // Error: There are no props.
          ^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   test.js:521:1
-   521| <AbstractExact_ManyProps />; // Error: There are no props.
+   test.js:447:1
+   447| <AbstractExact_ManyProps />; // Error: There are no props.
         ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   test.js:519:59
-   519| const AbstractExact_ManyProps: React.ComponentType<$Exact<Props_ManyProps>>
+   test.js:445:59
+   445| const AbstractExact_ManyProps: React.ComponentType<$Exact<Props_ManyProps>>
                                                                   ^^^^^^^^^^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:521:2
+Error ---------------------------------------------------------------------------------------------------- test.js:447:2
 
 Cannot create `AbstractExact_ManyProps` element because property `number` is missing in props [1] but exists in
 `Props_ManyProps` [2]. [prop-missing]
 
-   test.js:521:2
-   521| <AbstractExact_ManyProps />; // Error: There are no props.
+   test.js:447:2
+   447| <AbstractExact_ManyProps />; // Error: There are no props.
          ^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   test.js:521:1
-   521| <AbstractExact_ManyProps />; // Error: There are no props.
+   test.js:447:1
+   447| <AbstractExact_ManyProps />; // Error: There are no props.
         ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   test.js:519:59
-   519| const AbstractExact_ManyProps: React.ComponentType<$Exact<Props_ManyProps>>
+   test.js:445:59
+   445| const AbstractExact_ManyProps: React.ComponentType<$Exact<Props_ManyProps>>
                                                                   ^^^^^^^^^^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:521:2
+Error ---------------------------------------------------------------------------------------------------- test.js:447:2
 
 Cannot create `AbstractExact_ManyProps` element because property `string1` is missing in props [1] but exists in
 `Props_ManyProps` [2]. [prop-missing]
 
-   test.js:521:2
-   521| <AbstractExact_ManyProps />; // Error: There are no props.
+   test.js:447:2
+   447| <AbstractExact_ManyProps />; // Error: There are no props.
          ^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   test.js:521:1
-   521| <AbstractExact_ManyProps />; // Error: There are no props.
+   test.js:447:1
+   447| <AbstractExact_ManyProps />; // Error: There are no props.
         ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   test.js:519:59
-   519| const AbstractExact_ManyProps: React.ComponentType<$Exact<Props_ManyProps>>
+   test.js:445:59
+   445| const AbstractExact_ManyProps: React.ComponentType<$Exact<Props_ManyProps>>
                                                                   ^^^^^^^^^^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:521:2
+Error ---------------------------------------------------------------------------------------------------- test.js:447:2
 
 Cannot create `AbstractExact_ManyProps` element because property `string2` is missing in props [1] but exists in
 `Props_ManyProps` [2]. [prop-missing]
 
-   test.js:521:2
-   521| <AbstractExact_ManyProps />; // Error: There are no props.
+   test.js:447:2
+   447| <AbstractExact_ManyProps />; // Error: There are no props.
          ^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   test.js:521:1
-   521| <AbstractExact_ManyProps />; // Error: There are no props.
+   test.js:447:1
+   447| <AbstractExact_ManyProps />; // Error: There are no props.
         ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   test.js:519:59
-   519| const AbstractExact_ManyProps: React.ComponentType<$Exact<Props_ManyProps>>
+   test.js:445:59
+   445| const AbstractExact_ManyProps: React.ComponentType<$Exact<Props_ManyProps>>
                                                                   ^^^^^^^^^^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:529:2
+Error ---------------------------------------------------------------------------------------------------- test.js:455:2
 
 Cannot create `AbstractExact_ManyProps` element because property `a` is missing in `Props_ManyProps` [1] but exists in
 props [2]. [prop-missing]
 
-   test.js:529:2
-   529| <AbstractExact_ManyProps // Error: Other props are not allowed.
+   test.js:455:2
+   455| <AbstractExact_ManyProps // Error: Other props are not allowed.
          ^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   test.js:519:59
-   519| const AbstractExact_ManyProps: React.ComponentType<$Exact<Props_ManyProps>>
+   test.js:445:59
+   445| const AbstractExact_ManyProps: React.ComponentType<$Exact<Props_ManyProps>>
                                                                   ^^^^^^^^^^^^^^^ [1]
-   test.js:529:1
+   test.js:455:1
         v--------------------------------------------------------------
-   529| <AbstractExact_ManyProps // Error: Other props are not allowed.
-   530|   string1="foo"
-   531|   string2={'bar'}
-   532|   boolean1
-   533|   boolean2={false}
-   534|   number={42}
-   535|   a={1}
-   536|   b={2}
-   537|   c={3}
-   538| />;
+   455| <AbstractExact_ManyProps // Error: Other props are not allowed.
+   456|   string1="foo"
+   457|   string2={'bar'}
+   458|   boolean1
+   459|   boolean2={false}
+   460|   number={42}
+   461|   a={1}
+   462|   b={2}
+   463|   c={3}
+   464| />;
         -^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:529:2
+Error ---------------------------------------------------------------------------------------------------- test.js:455:2
 
 Cannot create `AbstractExact_ManyProps` element because property `b` is missing in `Props_ManyProps` [1] but exists in
 props [2]. [prop-missing]
 
-   test.js:529:2
-   529| <AbstractExact_ManyProps // Error: Other props are not allowed.
+   test.js:455:2
+   455| <AbstractExact_ManyProps // Error: Other props are not allowed.
          ^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   test.js:519:59
-   519| const AbstractExact_ManyProps: React.ComponentType<$Exact<Props_ManyProps>>
+   test.js:445:59
+   445| const AbstractExact_ManyProps: React.ComponentType<$Exact<Props_ManyProps>>
                                                                   ^^^^^^^^^^^^^^^ [1]
-   test.js:529:1
+   test.js:455:1
         v--------------------------------------------------------------
-   529| <AbstractExact_ManyProps // Error: Other props are not allowed.
-   530|   string1="foo"
-   531|   string2={'bar'}
-   532|   boolean1
-   533|   boolean2={false}
-   534|   number={42}
-   535|   a={1}
-   536|   b={2}
-   537|   c={3}
-   538| />;
+   455| <AbstractExact_ManyProps // Error: Other props are not allowed.
+   456|   string1="foo"
+   457|   string2={'bar'}
+   458|   boolean1
+   459|   boolean2={false}
+   460|   number={42}
+   461|   a={1}
+   462|   b={2}
+   463|   c={3}
+   464| />;
         -^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:529:2
+Error ---------------------------------------------------------------------------------------------------- test.js:455:2
 
 Cannot create `AbstractExact_ManyProps` element because property `c` is missing in `Props_ManyProps` [1] but exists in
 props [2]. [prop-missing]
 
-   test.js:529:2
-   529| <AbstractExact_ManyProps // Error: Other props are not allowed.
+   test.js:455:2
+   455| <AbstractExact_ManyProps // Error: Other props are not allowed.
          ^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   test.js:519:59
-   519| const AbstractExact_ManyProps: React.ComponentType<$Exact<Props_ManyProps>>
+   test.js:445:59
+   445| const AbstractExact_ManyProps: React.ComponentType<$Exact<Props_ManyProps>>
                                                                   ^^^^^^^^^^^^^^^ [1]
-   test.js:529:1
+   test.js:455:1
         v--------------------------------------------------------------
-   529| <AbstractExact_ManyProps // Error: Other props are not allowed.
-   530|   string1="foo"
-   531|   string2={'bar'}
-   532|   boolean1
-   533|   boolean2={false}
-   534|   number={42}
-   535|   a={1}
-   536|   b={2}
-   537|   c={3}
-   538| />;
+   455| <AbstractExact_ManyProps // Error: Other props are not allowed.
+   456|   string1="foo"
+   457|   string2={'bar'}
+   458|   boolean1
+   459|   boolean2={false}
+   460|   number={42}
+   461|   a={1}
+   462|   b={2}
+   463|   c={3}
+   464| />;
         -^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- test.js:540:12
+Error --------------------------------------------------------------------------------------------------- test.js:466:12
 
 Cannot create `AbstractExact_ManyProps` element because null [1] is incompatible with string [2] in property `string1`.
 [incompatible-type]
 
-   test.js:540:12
-   540|   string1={null}
+   test.js:466:12
+   466|   string1={null}
                    ^^^^ [1]
 
 References:
-   test.js:70:12
-    70|   string1: string,
+   test.js:66:12
+    66|   string1: string,
                    ^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- test.js:541:12
+Error --------------------------------------------------------------------------------------------------- test.js:467:12
 
 Cannot create `AbstractExact_ManyProps` element because null [1] is incompatible with string [2] in property `string2`.
 [incompatible-type]
 
-   test.js:541:12
-   541|   string2={null}
+   test.js:467:12
+   467|   string2={null}
                    ^^^^ [1]
 
 References:
-   test.js:71:12
-    71|   string2: string,
+   test.js:67:12
+    67|   string2: string,
                    ^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- test.js:542:13
+Error --------------------------------------------------------------------------------------------------- test.js:468:13
 
 Cannot create `AbstractExact_ManyProps` element because null [1] is incompatible with boolean [2] in property
 `boolean1`. [incompatible-type]
 
-   test.js:542:13
-   542|   boolean1={null}
+   test.js:468:13
+   468|   boolean1={null}
                     ^^^^ [1]
 
 References:
-   test.js:72:13
-    72|   boolean1: boolean,
+   test.js:68:13
+    68|   boolean1: boolean,
                     ^^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- test.js:543:13
+Error --------------------------------------------------------------------------------------------------- test.js:469:13
 
 Cannot create `AbstractExact_ManyProps` element because null [1] is incompatible with boolean [2] in property
 `boolean2`. [incompatible-type]
 
-   test.js:543:13
-   543|   boolean2={null}
+   test.js:469:13
+   469|   boolean2={null}
                     ^^^^ [1]
 
 References:
-   test.js:73:13
-    73|   boolean2: boolean,
+   test.js:69:13
+    69|   boolean2: boolean,
                     ^^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- test.js:544:11
+Error --------------------------------------------------------------------------------------------------- test.js:470:11
 
 Cannot create `AbstractExact_ManyProps` element because null [1] is incompatible with number [2] in property `number`.
 [incompatible-type]
 
-   test.js:544:11
-   544|   number={null}
+   test.js:470:11
+   470|   number={null}
                   ^^^^ [1]
 
 References:
-   test.js:74:11
-    74|   number: number,
+   test.js:70:11
+    70|   number: number,
                   ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:558:2
+Error ---------------------------------------------------------------------------------------------------- test.js:484:2
 
 Cannot create `AbstractExact_ManyProps` element because property `number` is missing in props [1] but exists in
 `Props_ManyProps` [2]. [prop-missing]
 
-   test.js:558:2
-   558| <AbstractExact_ManyProps // Error: Missing `number`.
+   test.js:484:2
+   484| <AbstractExact_ManyProps // Error: Missing `number`.
          ^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   test.js:558:1
+   test.js:484:1
         v---------------------------------------------------
-   558| <AbstractExact_ManyProps // Error: Missing `number`.
-   559|   {...{string1: 'foo', string2: 'bar'}}
-   560|   {...{boolean1: true, boolean2: false}}
-   561| />;
+   484| <AbstractExact_ManyProps // Error: Missing `number`.
+   485|   {...{string1: 'foo', string2: 'bar'}}
+   486|   {...{boolean1: true, boolean2: false}}
+   487| />;
         -^ [1]
-   test.js:519:59
-   519| const AbstractExact_ManyProps: React.ComponentType<$Exact<Props_ManyProps>>
+   test.js:445:59
+   445| const AbstractExact_ManyProps: React.ComponentType<$Exact<Props_ManyProps>>
                                                                   ^^^^^^^^^^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:562:2
+Error ---------------------------------------------------------------------------------------------------- test.js:488:2
 
 Cannot create `AbstractExact_ManyProps` element because property `a` is missing in `Props_ManyProps` [1] but exists in
 props [2]. [prop-missing]
 
-   test.js:562:2
-   562| <AbstractExact_ManyProps // Error: Extra props are not allowed.
+   test.js:488:2
+   488| <AbstractExact_ManyProps // Error: Extra props are not allowed.
          ^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   test.js:519:59
-   519| const AbstractExact_ManyProps: React.ComponentType<$Exact<Props_ManyProps>>
+   test.js:445:59
+   445| const AbstractExact_ManyProps: React.ComponentType<$Exact<Props_ManyProps>>
                                                                   ^^^^^^^^^^^^^^^ [1]
-   test.js:562:1
+   test.js:488:1
         v--------------------------------------------------------------
-   562| <AbstractExact_ManyProps // Error: Extra props are not allowed.
-   563|   string1="foo"
-   564|   string2={'bar'}
-   565|   boolean1
-   566|   boolean2={false}
-   567|   {...{number: 42, a: 1, b: 2, c: 3}}
-   568| />;
+   488| <AbstractExact_ManyProps // Error: Extra props are not allowed.
+   489|   string1="foo"
+   490|   string2={'bar'}
+   491|   boolean1
+   492|   boolean2={false}
+   493|   {...{number: 42, a: 1, b: 2, c: 3}}
+   494| />;
         -^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:562:2
+Error ---------------------------------------------------------------------------------------------------- test.js:488:2
 
 Cannot create `AbstractExact_ManyProps` element because property `b` is missing in `Props_ManyProps` [1] but exists in
 props [2]. [prop-missing]
 
-   test.js:562:2
-   562| <AbstractExact_ManyProps // Error: Extra props are not allowed.
+   test.js:488:2
+   488| <AbstractExact_ManyProps // Error: Extra props are not allowed.
          ^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   test.js:519:59
-   519| const AbstractExact_ManyProps: React.ComponentType<$Exact<Props_ManyProps>>
+   test.js:445:59
+   445| const AbstractExact_ManyProps: React.ComponentType<$Exact<Props_ManyProps>>
                                                                   ^^^^^^^^^^^^^^^ [1]
-   test.js:562:1
+   test.js:488:1
         v--------------------------------------------------------------
-   562| <AbstractExact_ManyProps // Error: Extra props are not allowed.
-   563|   string1="foo"
-   564|   string2={'bar'}
-   565|   boolean1
-   566|   boolean2={false}
-   567|   {...{number: 42, a: 1, b: 2, c: 3}}
-   568| />;
+   488| <AbstractExact_ManyProps // Error: Extra props are not allowed.
+   489|   string1="foo"
+   490|   string2={'bar'}
+   491|   boolean1
+   492|   boolean2={false}
+   493|   {...{number: 42, a: 1, b: 2, c: 3}}
+   494| />;
         -^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:562:2
+Error ---------------------------------------------------------------------------------------------------- test.js:488:2
 
 Cannot create `AbstractExact_ManyProps` element because property `c` is missing in `Props_ManyProps` [1] but exists in
 props [2]. [prop-missing]
 
-   test.js:562:2
-   562| <AbstractExact_ManyProps // Error: Extra props are not allowed.
+   test.js:488:2
+   488| <AbstractExact_ManyProps // Error: Extra props are not allowed.
          ^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   test.js:519:59
-   519| const AbstractExact_ManyProps: React.ComponentType<$Exact<Props_ManyProps>>
+   test.js:445:59
+   445| const AbstractExact_ManyProps: React.ComponentType<$Exact<Props_ManyProps>>
                                                                   ^^^^^^^^^^^^^^^ [1]
-   test.js:562:1
+   test.js:488:1
         v--------------------------------------------------------------
-   562| <AbstractExact_ManyProps // Error: Extra props are not allowed.
-   563|   string1="foo"
-   564|   string2={'bar'}
-   565|   boolean1
-   566|   boolean2={false}
-   567|   {...{number: 42, a: 1, b: 2, c: 3}}
-   568| />;
+   488| <AbstractExact_ManyProps // Error: Extra props are not allowed.
+   489|   string1="foo"
+   490|   string2={'bar'}
+   491|   boolean1
+   492|   boolean2={false}
+   493|   {...{number: 42, a: 1, b: 2, c: 3}}
+   494| />;
         -^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- test.js:579:54
+Error --------------------------------------------------------------------------------------------------- test.js:505:54
 
 Cannot create `AbstractExact_ManyProps` element because null or undefined [1] is incompatible with number [2] in
 property `number`. [incompatible-type]
 
-   test.js:579:54
-   579|   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
+   test.js:505:54
+   505|   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
                                                              ^^^^^^^ [1]
 
 References:
-   test.js:74:11
-    74|   number: number,
+   test.js:70:11
+    70|   number: number,
                   ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:583:2
+Error ---------------------------------------------------------------------------------------------------- test.js:509:2
 
 Cannot create `Member_ManyProps.prop` element because property `boolean1` is missing in props [1] but exists in
 `Props_ManyProps` [2]. [prop-missing]
 
-   test.js:583:2
-   583| <Member_ManyProps.prop />; // Error: There are no props.
+   test.js:509:2
+   509| <Member_ManyProps.prop />; // Error: There are no props.
          ^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   test.js:583:1
-   583| <Member_ManyProps.prop />; // Error: There are no props.
+   test.js:509:1
+   509| <Member_ManyProps.prop />; // Error: There are no props.
         ^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   test.js:147:47
-   147| class Class_ManyProps extends React.Component<Props_ManyProps> {}
+   test.js:73:47
+    73| class Class_ManyProps extends React.Component<Props_ManyProps> {}
                                                       ^^^^^^^^^^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:583:2
+Error ---------------------------------------------------------------------------------------------------- test.js:509:2
 
 Cannot create `Member_ManyProps.prop` element because property `boolean2` is missing in props [1] but exists in
 `Props_ManyProps` [2]. [prop-missing]
 
-   test.js:583:2
-   583| <Member_ManyProps.prop />; // Error: There are no props.
+   test.js:509:2
+   509| <Member_ManyProps.prop />; // Error: There are no props.
          ^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   test.js:583:1
-   583| <Member_ManyProps.prop />; // Error: There are no props.
+   test.js:509:1
+   509| <Member_ManyProps.prop />; // Error: There are no props.
         ^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   test.js:147:47
-   147| class Class_ManyProps extends React.Component<Props_ManyProps> {}
+   test.js:73:47
+    73| class Class_ManyProps extends React.Component<Props_ManyProps> {}
                                                       ^^^^^^^^^^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:583:2
+Error ---------------------------------------------------------------------------------------------------- test.js:509:2
 
 Cannot create `Member_ManyProps.prop` element because property `number` is missing in props [1] but exists in
 `Props_ManyProps` [2]. [prop-missing]
 
-   test.js:583:2
-   583| <Member_ManyProps.prop />; // Error: There are no props.
+   test.js:509:2
+   509| <Member_ManyProps.prop />; // Error: There are no props.
          ^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   test.js:583:1
-   583| <Member_ManyProps.prop />; // Error: There are no props.
+   test.js:509:1
+   509| <Member_ManyProps.prop />; // Error: There are no props.
         ^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   test.js:147:47
-   147| class Class_ManyProps extends React.Component<Props_ManyProps> {}
+   test.js:73:47
+    73| class Class_ManyProps extends React.Component<Props_ManyProps> {}
                                                       ^^^^^^^^^^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:583:2
+Error ---------------------------------------------------------------------------------------------------- test.js:509:2
 
 Cannot create `Member_ManyProps.prop` element because property `string1` is missing in props [1] but exists in
 `Props_ManyProps` [2]. [prop-missing]
 
-   test.js:583:2
-   583| <Member_ManyProps.prop />; // Error: There are no props.
+   test.js:509:2
+   509| <Member_ManyProps.prop />; // Error: There are no props.
          ^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   test.js:583:1
-   583| <Member_ManyProps.prop />; // Error: There are no props.
+   test.js:509:1
+   509| <Member_ManyProps.prop />; // Error: There are no props.
         ^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   test.js:147:47
-   147| class Class_ManyProps extends React.Component<Props_ManyProps> {}
+   test.js:73:47
+    73| class Class_ManyProps extends React.Component<Props_ManyProps> {}
                                                       ^^^^^^^^^^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:583:2
+Error ---------------------------------------------------------------------------------------------------- test.js:509:2
 
 Cannot create `Member_ManyProps.prop` element because property `string2` is missing in props [1] but exists in
 `Props_ManyProps` [2]. [prop-missing]
 
-   test.js:583:2
-   583| <Member_ManyProps.prop />; // Error: There are no props.
+   test.js:509:2
+   509| <Member_ManyProps.prop />; // Error: There are no props.
          ^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   test.js:583:1
-   583| <Member_ManyProps.prop />; // Error: There are no props.
+   test.js:509:1
+   509| <Member_ManyProps.prop />; // Error: There are no props.
         ^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   test.js:147:47
-   147| class Class_ManyProps extends React.Component<Props_ManyProps> {}
+   test.js:73:47
+    73| class Class_ManyProps extends React.Component<Props_ManyProps> {}
                                                       ^^^^^^^^^^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- test.js:602:12
+Error --------------------------------------------------------------------------------------------------- test.js:528:12
 
 Cannot create `Member_ManyProps.prop` element because null [1] is incompatible with string [2] in property `string1`.
 [incompatible-type]
 
-   test.js:602:12
-   602|   string1={null}
+   test.js:528:12
+   528|   string1={null}
                    ^^^^ [1]
 
 References:
-   test.js:70:12
-    70|   string1: string,
+   test.js:66:12
+    66|   string1: string,
                    ^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- test.js:603:12
+Error --------------------------------------------------------------------------------------------------- test.js:529:12
 
 Cannot create `Member_ManyProps.prop` element because null [1] is incompatible with string [2] in property `string2`.
 [incompatible-type]
 
-   test.js:603:12
-   603|   string2={null}
+   test.js:529:12
+   529|   string2={null}
                    ^^^^ [1]
 
 References:
-   test.js:71:12
-    71|   string2: string,
+   test.js:67:12
+    67|   string2: string,
                    ^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- test.js:604:13
+Error --------------------------------------------------------------------------------------------------- test.js:530:13
 
 Cannot create `Member_ManyProps.prop` element because null [1] is incompatible with boolean [2] in property `boolean1`.
 [incompatible-type]
 
-   test.js:604:13
-   604|   boolean1={null}
+   test.js:530:13
+   530|   boolean1={null}
                     ^^^^ [1]
 
 References:
-   test.js:72:13
-    72|   boolean1: boolean,
+   test.js:68:13
+    68|   boolean1: boolean,
                     ^^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- test.js:605:13
+Error --------------------------------------------------------------------------------------------------- test.js:531:13
 
 Cannot create `Member_ManyProps.prop` element because null [1] is incompatible with boolean [2] in property `boolean2`.
 [incompatible-type]
 
-   test.js:605:13
-   605|   boolean2={null}
+   test.js:531:13
+   531|   boolean2={null}
                     ^^^^ [1]
 
 References:
-   test.js:73:13
-    73|   boolean2: boolean,
+   test.js:69:13
+    69|   boolean2: boolean,
                     ^^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- test.js:606:11
+Error --------------------------------------------------------------------------------------------------- test.js:532:11
 
 Cannot create `Member_ManyProps.prop` element because null [1] is incompatible with number [2] in property `number`.
 [incompatible-type]
 
-   test.js:606:11
-   606|   number={null}
+   test.js:532:11
+   532|   number={null}
                   ^^^^ [1]
 
 References:
-   test.js:74:11
-    74|   number: number,
+   test.js:70:11
+    70|   number: number,
                   ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:620:2
+Error ---------------------------------------------------------------------------------------------------- test.js:546:2
 
 Cannot create `Member_ManyProps.prop` element because property `number` is missing in props [1] but exists in
 `Props_ManyProps` [2]. [prop-missing]
 
-   test.js:620:2
-   620| <Member_ManyProps.prop // Error: Missing `number`.
+   test.js:546:2
+   546| <Member_ManyProps.prop // Error: Missing `number`.
          ^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   test.js:620:1
+   test.js:546:1
         v-------------------------------------------------
-   620| <Member_ManyProps.prop // Error: Missing `number`.
-   621|   {...{string1: 'foo', string2: 'bar'}}
-   622|   {...{boolean1: true, boolean2: false}}
-   623| />;
+   546| <Member_ManyProps.prop // Error: Missing `number`.
+   547|   {...{string1: 'foo', string2: 'bar'}}
+   548|   {...{boolean1: true, boolean2: false}}
+   549| />;
         -^ [1]
-   test.js:147:47
-   147| class Class_ManyProps extends React.Component<Props_ManyProps> {}
+   test.js:73:47
+    73| class Class_ManyProps extends React.Component<Props_ManyProps> {}
                                                       ^^^^^^^^^^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- test.js:641:54
+Error --------------------------------------------------------------------------------------------------- test.js:567:54
 
 Cannot create `Member_ManyProps.prop` element because null or undefined [1] is incompatible with number [2] in property
 `number`. [incompatible-type]
 
-   test.js:641:54
-   641|   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
+   test.js:567:54
+   567|   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
                                                              ^^^^^^^ [1]
 
 References:
-   test.js:74:11
-    74|   number: number,
+   test.js:70:11
+    70|   number: number,
                   ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:645:2
+Error ---------------------------------------------------------------------------------------------------- test.js:571:2
 
 Cannot create `EnhancedClass_ManyProps` element because property `boolean1` is missing in props [1] but exists in
 `Props_ManyProps` [2]. [prop-missing]
 
-   test.js:645:2
-   645| <EnhancedClass_ManyProps />; // Error: There are no props.
+   test.js:571:2
+   571| <EnhancedClass_ManyProps />; // Error: There are no props.
          ^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   test.js:645:1
-   645| <EnhancedClass_ManyProps />; // Error: There are no props.
+   test.js:571:1
+   571| <EnhancedClass_ManyProps />; // Error: There are no props.
         ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    test.js:11:24
     11| ): React.ComponentType<React.ElementConfig<Component>> {
                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:645:2
+Error ---------------------------------------------------------------------------------------------------- test.js:571:2
 
 Cannot create `EnhancedClass_ManyProps` element because property `boolean2` is missing in props [1] but exists in
 `Props_ManyProps` [2]. [prop-missing]
 
-   test.js:645:2
-   645| <EnhancedClass_ManyProps />; // Error: There are no props.
+   test.js:571:2
+   571| <EnhancedClass_ManyProps />; // Error: There are no props.
          ^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   test.js:645:1
-   645| <EnhancedClass_ManyProps />; // Error: There are no props.
+   test.js:571:1
+   571| <EnhancedClass_ManyProps />; // Error: There are no props.
         ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    test.js:11:24
     11| ): React.ComponentType<React.ElementConfig<Component>> {
                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:645:2
+Error ---------------------------------------------------------------------------------------------------- test.js:571:2
 
 Cannot create `EnhancedClass_ManyProps` element because property `number` is missing in props [1] but exists in
 `Props_ManyProps` [2]. [prop-missing]
 
-   test.js:645:2
-   645| <EnhancedClass_ManyProps />; // Error: There are no props.
+   test.js:571:2
+   571| <EnhancedClass_ManyProps />; // Error: There are no props.
          ^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   test.js:645:1
-   645| <EnhancedClass_ManyProps />; // Error: There are no props.
+   test.js:571:1
+   571| <EnhancedClass_ManyProps />; // Error: There are no props.
         ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    test.js:11:24
     11| ): React.ComponentType<React.ElementConfig<Component>> {
                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:645:2
+Error ---------------------------------------------------------------------------------------------------- test.js:571:2
 
 Cannot create `EnhancedClass_ManyProps` element because property `string1` is missing in props [1] but exists in
 `Props_ManyProps` [2]. [prop-missing]
 
-   test.js:645:2
-   645| <EnhancedClass_ManyProps />; // Error: There are no props.
+   test.js:571:2
+   571| <EnhancedClass_ManyProps />; // Error: There are no props.
          ^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   test.js:645:1
-   645| <EnhancedClass_ManyProps />; // Error: There are no props.
+   test.js:571:1
+   571| <EnhancedClass_ManyProps />; // Error: There are no props.
         ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    test.js:11:24
     11| ): React.ComponentType<React.ElementConfig<Component>> {
                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:645:2
+Error ---------------------------------------------------------------------------------------------------- test.js:571:2
 
 Cannot create `EnhancedClass_ManyProps` element because property `string2` is missing in props [1] but exists in
 `Props_ManyProps` [2]. [prop-missing]
 
-   test.js:645:2
-   645| <EnhancedClass_ManyProps />; // Error: There are no props.
+   test.js:571:2
+   571| <EnhancedClass_ManyProps />; // Error: There are no props.
          ^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   test.js:645:1
-   645| <EnhancedClass_ManyProps />; // Error: There are no props.
+   test.js:571:1
+   571| <EnhancedClass_ManyProps />; // Error: There are no props.
         ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    test.js:11:24
     11| ): React.ComponentType<React.ElementConfig<Component>> {
                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- test.js:664:12
+Error --------------------------------------------------------------------------------------------------- test.js:590:12
 
 Cannot create `EnhancedClass_ManyProps` element because null [1] is incompatible with string [2] in property `string1`.
 [incompatible-type]
 
-   test.js:664:12
-   664|   string1={null}
+   test.js:590:12
+   590|   string1={null}
                    ^^^^ [1]
 
 References:
-   test.js:70:12
-    70|   string1: string,
+   test.js:66:12
+    66|   string1: string,
                    ^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- test.js:665:12
+Error --------------------------------------------------------------------------------------------------- test.js:591:12
 
 Cannot create `EnhancedClass_ManyProps` element because null [1] is incompatible with string [2] in property `string2`.
 [incompatible-type]
 
-   test.js:665:12
-   665|   string2={null}
+   test.js:591:12
+   591|   string2={null}
                    ^^^^ [1]
 
 References:
-   test.js:71:12
-    71|   string2: string,
+   test.js:67:12
+    67|   string2: string,
                    ^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- test.js:666:13
+Error --------------------------------------------------------------------------------------------------- test.js:592:13
 
 Cannot create `EnhancedClass_ManyProps` element because null [1] is incompatible with boolean [2] in property
 `boolean1`. [incompatible-type]
 
-   test.js:666:13
-   666|   boolean1={null}
+   test.js:592:13
+   592|   boolean1={null}
                     ^^^^ [1]
 
 References:
-   test.js:72:13
-    72|   boolean1: boolean,
+   test.js:68:13
+    68|   boolean1: boolean,
                     ^^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- test.js:667:13
+Error --------------------------------------------------------------------------------------------------- test.js:593:13
 
 Cannot create `EnhancedClass_ManyProps` element because null [1] is incompatible with boolean [2] in property
 `boolean2`. [incompatible-type]
 
-   test.js:667:13
-   667|   boolean2={null}
+   test.js:593:13
+   593|   boolean2={null}
                     ^^^^ [1]
 
 References:
-   test.js:73:13
-    73|   boolean2: boolean,
+   test.js:69:13
+    69|   boolean2: boolean,
                     ^^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- test.js:668:11
+Error --------------------------------------------------------------------------------------------------- test.js:594:11
 
 Cannot create `EnhancedClass_ManyProps` element because null [1] is incompatible with number [2] in property `number`.
 [incompatible-type]
 
-   test.js:668:11
-   668|   number={null}
+   test.js:594:11
+   594|   number={null}
                   ^^^^ [1]
 
 References:
-   test.js:74:11
-    74|   number: number,
+   test.js:70:11
+    70|   number: number,
                   ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:682:2
+Error ---------------------------------------------------------------------------------------------------- test.js:608:2
 
 Cannot create `EnhancedClass_ManyProps` element because property `number` is missing in props [1] but exists in
 `Props_ManyProps` [2]. [prop-missing]
 
-   test.js:682:2
-   682| <EnhancedClass_ManyProps // Error: Missing `number`.
+   test.js:608:2
+   608| <EnhancedClass_ManyProps // Error: Missing `number`.
          ^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   test.js:682:1
+   test.js:608:1
         v---------------------------------------------------
-   682| <EnhancedClass_ManyProps // Error: Missing `number`.
-   683|   {...{string1: 'foo', string2: 'bar'}}
-   684|   {...{boolean1: true, boolean2: false}}
-   685| />;
+   608| <EnhancedClass_ManyProps // Error: Missing `number`.
+   609|   {...{string1: 'foo', string2: 'bar'}}
+   610|   {...{boolean1: true, boolean2: false}}
+   611| />;
         -^ [1]
    test.js:11:24
     11| ): React.ComponentType<React.ElementConfig<Component>> {
                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- test.js:703:54
+Error --------------------------------------------------------------------------------------------------- test.js:629:54
 
 Cannot create `EnhancedClass_ManyProps` element because null or undefined [1] is incompatible with number [2] in
 property `number`. [incompatible-type]
 
-   test.js:703:54
-   703|   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
+   test.js:629:54
+   629|   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
                                                              ^^^^^^^ [1]
 
 References:
-   test.js:74:11
-    74|   number: number,
+   test.js:70:11
+    70|   number: number,
                   ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:707:2
+Error ---------------------------------------------------------------------------------------------------- test.js:633:2
 
 Cannot create `EnhancedFunction_ManyProps` element because property `boolean1` is missing in props [1] but exists in
 `Props_ManyProps` [2]. [prop-missing]
 
-   test.js:707:2
-   707| <EnhancedFunction_ManyProps />; // Error: There are no props.
+   test.js:633:2
+   633| <EnhancedFunction_ManyProps />; // Error: There are no props.
          ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   test.js:707:1
-   707| <EnhancedFunction_ManyProps />; // Error: There are no props.
+   test.js:633:1
+   633| <EnhancedFunction_ManyProps />; // Error: There are no props.
         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    test.js:11:24
     11| ): React.ComponentType<React.ElementConfig<Component>> {
                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:707:2
+Error ---------------------------------------------------------------------------------------------------- test.js:633:2
 
 Cannot create `EnhancedFunction_ManyProps` element because property `boolean2` is missing in props [1] but exists in
 `Props_ManyProps` [2]. [prop-missing]
 
-   test.js:707:2
-   707| <EnhancedFunction_ManyProps />; // Error: There are no props.
+   test.js:633:2
+   633| <EnhancedFunction_ManyProps />; // Error: There are no props.
          ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   test.js:707:1
-   707| <EnhancedFunction_ManyProps />; // Error: There are no props.
+   test.js:633:1
+   633| <EnhancedFunction_ManyProps />; // Error: There are no props.
         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    test.js:11:24
     11| ): React.ComponentType<React.ElementConfig<Component>> {
                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:707:2
+Error ---------------------------------------------------------------------------------------------------- test.js:633:2
 
 Cannot create `EnhancedFunction_ManyProps` element because property `number` is missing in props [1] but exists in
 `Props_ManyProps` [2]. [prop-missing]
 
-   test.js:707:2
-   707| <EnhancedFunction_ManyProps />; // Error: There are no props.
+   test.js:633:2
+   633| <EnhancedFunction_ManyProps />; // Error: There are no props.
          ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   test.js:707:1
-   707| <EnhancedFunction_ManyProps />; // Error: There are no props.
+   test.js:633:1
+   633| <EnhancedFunction_ManyProps />; // Error: There are no props.
         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    test.js:11:24
     11| ): React.ComponentType<React.ElementConfig<Component>> {
                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:707:2
+Error ---------------------------------------------------------------------------------------------------- test.js:633:2
 
 Cannot create `EnhancedFunction_ManyProps` element because property `string1` is missing in props [1] but exists in
 `Props_ManyProps` [2]. [prop-missing]
 
-   test.js:707:2
-   707| <EnhancedFunction_ManyProps />; // Error: There are no props.
+   test.js:633:2
+   633| <EnhancedFunction_ManyProps />; // Error: There are no props.
          ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   test.js:707:1
-   707| <EnhancedFunction_ManyProps />; // Error: There are no props.
+   test.js:633:1
+   633| <EnhancedFunction_ManyProps />; // Error: There are no props.
         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    test.js:11:24
     11| ): React.ComponentType<React.ElementConfig<Component>> {
                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:707:2
+Error ---------------------------------------------------------------------------------------------------- test.js:633:2
 
 Cannot create `EnhancedFunction_ManyProps` element because property `string2` is missing in props [1] but exists in
 `Props_ManyProps` [2]. [prop-missing]
 
-   test.js:707:2
-   707| <EnhancedFunction_ManyProps />; // Error: There are no props.
+   test.js:633:2
+   633| <EnhancedFunction_ManyProps />; // Error: There are no props.
          ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   test.js:707:1
-   707| <EnhancedFunction_ManyProps />; // Error: There are no props.
+   test.js:633:1
+   633| <EnhancedFunction_ManyProps />; // Error: There are no props.
         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    test.js:11:24
     11| ): React.ComponentType<React.ElementConfig<Component>> {
                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- test.js:726:12
+Error --------------------------------------------------------------------------------------------------- test.js:652:12
 
 Cannot create `EnhancedFunction_ManyProps` element because null [1] is incompatible with string [2] in property
 `string1`. [incompatible-type]
 
-   test.js:726:12
-   726|   string1={null}
+   test.js:652:12
+   652|   string1={null}
                    ^^^^ [1]
 
 References:
-   test.js:70:12
-    70|   string1: string,
+   test.js:66:12
+    66|   string1: string,
                    ^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- test.js:727:12
+Error --------------------------------------------------------------------------------------------------- test.js:653:12
 
 Cannot create `EnhancedFunction_ManyProps` element because null [1] is incompatible with string [2] in property
 `string2`. [incompatible-type]
 
-   test.js:727:12
-   727|   string2={null}
+   test.js:653:12
+   653|   string2={null}
                    ^^^^ [1]
 
 References:
-   test.js:71:12
-    71|   string2: string,
+   test.js:67:12
+    67|   string2: string,
                    ^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- test.js:728:13
+Error --------------------------------------------------------------------------------------------------- test.js:654:13
 
 Cannot create `EnhancedFunction_ManyProps` element because null [1] is incompatible with boolean [2] in property
 `boolean1`. [incompatible-type]
 
-   test.js:728:13
-   728|   boolean1={null}
+   test.js:654:13
+   654|   boolean1={null}
                     ^^^^ [1]
 
 References:
-   test.js:72:13
-    72|   boolean1: boolean,
+   test.js:68:13
+    68|   boolean1: boolean,
                     ^^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- test.js:729:13
+Error --------------------------------------------------------------------------------------------------- test.js:655:13
 
 Cannot create `EnhancedFunction_ManyProps` element because null [1] is incompatible with boolean [2] in property
 `boolean2`. [incompatible-type]
 
-   test.js:729:13
-   729|   boolean2={null}
+   test.js:655:13
+   655|   boolean2={null}
                     ^^^^ [1]
 
 References:
-   test.js:73:13
-    73|   boolean2: boolean,
+   test.js:69:13
+    69|   boolean2: boolean,
                     ^^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- test.js:730:11
+Error --------------------------------------------------------------------------------------------------- test.js:656:11
 
 Cannot create `EnhancedFunction_ManyProps` element because null [1] is incompatible with number [2] in property
 `number`. [incompatible-type]
 
-   test.js:730:11
-   730|   number={null}
+   test.js:656:11
+   656|   number={null}
                   ^^^^ [1]
 
 References:
-   test.js:74:11
-    74|   number: number,
+   test.js:70:11
+    70|   number: number,
                   ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:744:2
+Error ---------------------------------------------------------------------------------------------------- test.js:670:2
 
 Cannot create `EnhancedFunction_ManyProps` element because property `number` is missing in props [1] but exists in
 `Props_ManyProps` [2]. [prop-missing]
 
-   test.js:744:2
-   744| <EnhancedFunction_ManyProps // Error: Missing `number`.
+   test.js:670:2
+   670| <EnhancedFunction_ManyProps // Error: Missing `number`.
          ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   test.js:744:1
+   test.js:670:1
         v------------------------------------------------------
-   744| <EnhancedFunction_ManyProps // Error: Missing `number`.
-   745|   {...{string1: 'foo', string2: 'bar'}}
-   746|   {...{boolean1: true, boolean2: false}}
-   747| />;
+   670| <EnhancedFunction_ManyProps // Error: Missing `number`.
+   671|   {...{string1: 'foo', string2: 'bar'}}
+   672|   {...{boolean1: true, boolean2: false}}
+   673| />;
         -^ [1]
    test.js:11:24
     11| ): React.ComponentType<React.ElementConfig<Component>> {
                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- test.js:765:54
+Error --------------------------------------------------------------------------------------------------- test.js:691:54
 
 Cannot create `EnhancedFunction_ManyProps` element because null or undefined [1] is incompatible with number [2] in
 property `number`. [incompatible-type]
 
-   test.js:765:54
-   765|   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
+   test.js:691:54
+   691|   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
                                                              ^^^^^^^ [1]
 
 References:
-   test.js:74:11
-    74|   number: number,
+   test.js:70:11
+    70|   number: number,
                   ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:780:2
-
-Cannot create `Legacy_OptionalProps` element because property `foo` is missing in props [1] but exists in propTypes of
-React component [2]. [prop-missing]
-
-   test.js:780:2
-   780| <Legacy_OptionalProps />; // Error: `foo` is required.
-         ^^^^^^^^^^^^^^^^^^^^
-
-References:
-   test.js:780:1
-   780| <Legacy_OptionalProps />; // Error: `foo` is required.
-        ^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   test.js:775:14
-                     v
-   775|   propTypes: {
-   776|     foo: React.PropTypes.number.isRequired,
-   777|     bar: React.PropTypes.number,
-   778|   },
-          ^ [2]
-
-
-Error --------------------------------------------------------------------------------------------------- test.js:782:28
-
-Cannot create `Legacy_OptionalProps` element because undefined [1] is incompatible with number [2] in property `foo`.
-[incompatible-type]
-
-   test.js:782:28
-   782| <Legacy_OptionalProps foo={undefined} />; // Error: No ?number proptype.
-                                   ^^^^^^^^^ [1]
-
-References:
-   test.js:776:10
-   776|     foo: React.PropTypes.number.isRequired,
-                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
-
-
-Error ---------------------------------------------------------------------------------------------------- test.js:788:7
-
-Cannot create `Legacy_OptionalProps` element because string [1] is incompatible with number [2] in property `foo`.
-[incompatible-type]
-
-   test.js:788:7
-   788|   foo="nope"
-              ^^^^^^ [1]
-
-References:
-   test.js:776:10
-   776|     foo: React.PropTypes.number.isRequired,
-                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
-
-
-Error ---------------------------------------------------------------------------------------------------- test.js:793:7
-
-Cannot create `Legacy_OptionalProps` element because string [1] is incompatible with number [2] in property `bar`.
-[incompatible-type]
-
-   test.js:793:7
-   793|   bar="nope"
-              ^^^^^^ [1]
-
-References:
-   test.js:777:10
-   777|     bar: React.PropTypes.number,
-                 ^^^^^^^^^^^^^^^^^^^^^^ [2]
-
-
-Error ---------------------------------------------------------------------------------------------------- test.js:797:2
+Error ---------------------------------------------------------------------------------------------------- test.js:701:2
 
 Cannot create `Class_OptionalProps` element because property `foo` is missing in props [1] but exists in
 `Props_OptionalProps` [2]. [prop-missing]
 
-   test.js:797:2
-   797| <Class_OptionalProps />; // Error: `foo` is required.
+   test.js:701:2
+   701| <Class_OptionalProps />; // Error: `foo` is required.
          ^^^^^^^^^^^^^^^^^^^
 
 References:
-   test.js:797:1
-   797| <Class_OptionalProps />; // Error: `foo` is required.
+   test.js:701:1
+   701| <Class_OptionalProps />; // Error: `foo` is required.
         ^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   test.js:796:51
-   796| class Class_OptionalProps extends React.Component<Props_OptionalProps> {}
+   test.js:700:51
+   700| class Class_OptionalProps extends React.Component<Props_OptionalProps> {}
                                                           ^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:805:7
+Error ---------------------------------------------------------------------------------------------------- test.js:709:7
 
 Cannot create `Class_OptionalProps` element because string [1] is incompatible with number [2] in property `foo`.
 [incompatible-type]
 
-   test.js:805:7
-   805|   foo="nope"
+   test.js:709:7
+   709|   foo="nope"
               ^^^^^^ [1]
 
 References:
-   test.js:772:35
-   772| type Props_OptionalProps = {foo: ?number, bar?: number};
+   test.js:698:35
+   698| type Props_OptionalProps = {foo: ?number, bar?: number};
                                           ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:810:7
+Error ---------------------------------------------------------------------------------------------------- test.js:714:7
 
 Cannot create `Class_OptionalProps` element because string [1] is incompatible with number [2] in property `bar`.
 [incompatible-type]
 
-   test.js:810:7
-   810|   bar="nope"
+   test.js:714:7
+   714|   bar="nope"
               ^^^^^^ [1]
 
 References:
-   test.js:772:49
-   772| type Props_OptionalProps = {foo: ?number, bar?: number};
+   test.js:698:49
+   698| type Props_OptionalProps = {foo: ?number, bar?: number};
                                                         ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:815:2
+Error ---------------------------------------------------------------------------------------------------- test.js:719:2
 
 Cannot create `ClassExact_OptionalProps` element because property `foo` is missing in props [1] but exists in
 `Props_OptionalProps` [2]. [prop-missing]
 
-   test.js:815:2
-   815| <ClassExact_OptionalProps />; // Error: `foo` is required.
+   test.js:719:2
+   719| <ClassExact_OptionalProps />; // Error: `foo` is required.
          ^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   test.js:815:1
-   815| <ClassExact_OptionalProps />; // Error: `foo` is required.
+   test.js:719:1
+   719| <ClassExact_OptionalProps />; // Error: `foo` is required.
         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   test.js:814:34
-   814|   extends React.Component<$Exact<Props_OptionalProps>> {}
+   test.js:718:34
+   718|   extends React.Component<$Exact<Props_OptionalProps>> {}
                                          ^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:823:7
+Error ---------------------------------------------------------------------------------------------------- test.js:727:7
 
 Cannot create `ClassExact_OptionalProps` element because string [1] is incompatible with number [2] in property `foo`.
 [incompatible-type]
 
-   test.js:823:7
-   823|   foo="nope"
+   test.js:727:7
+   727|   foo="nope"
               ^^^^^^ [1]
 
 References:
-   test.js:772:35
-   772| type Props_OptionalProps = {foo: ?number, bar?: number};
+   test.js:698:35
+   698| type Props_OptionalProps = {foo: ?number, bar?: number};
                                           ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:828:7
+Error ---------------------------------------------------------------------------------------------------- test.js:732:7
 
 Cannot create `ClassExact_OptionalProps` element because string [1] is incompatible with number [2] in property `bar`.
 [incompatible-type]
 
-   test.js:828:7
-   828|   bar="nope"
+   test.js:732:7
+   732|   bar="nope"
               ^^^^^^ [1]
 
 References:
-   test.js:772:49
-   772| type Props_OptionalProps = {foo: ?number, bar?: number};
+   test.js:698:49
+   698| type Props_OptionalProps = {foo: ?number, bar?: number};
                                                         ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:833:2
+Error ---------------------------------------------------------------------------------------------------- test.js:737:2
 
 Cannot create `ClassPure_OptionalProps` element because property `foo` is missing in props [1] but exists in
 `Props_OptionalProps` [2]. [prop-missing]
 
-   test.js:833:2
-   833| <ClassPure_OptionalProps />; // Error: `foo` is required.
+   test.js:737:2
+   737| <ClassPure_OptionalProps />; // Error: `foo` is required.
          ^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   test.js:833:1
-   833| <ClassPure_OptionalProps />; // Error: `foo` is required.
+   test.js:737:1
+   737| <ClassPure_OptionalProps />; // Error: `foo` is required.
         ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   test.js:832:31
-   832|   extends React.PureComponent<Props_OptionalProps> {}
+   test.js:736:31
+   736|   extends React.PureComponent<Props_OptionalProps> {}
                                       ^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:841:7
+Error ---------------------------------------------------------------------------------------------------- test.js:745:7
 
 Cannot create `ClassPure_OptionalProps` element because string [1] is incompatible with number [2] in property `foo`.
 [incompatible-type]
 
-   test.js:841:7
-   841|   foo="nope"
+   test.js:745:7
+   745|   foo="nope"
               ^^^^^^ [1]
 
 References:
-   test.js:772:35
-   772| type Props_OptionalProps = {foo: ?number, bar?: number};
+   test.js:698:35
+   698| type Props_OptionalProps = {foo: ?number, bar?: number};
                                           ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:846:7
+Error ---------------------------------------------------------------------------------------------------- test.js:750:7
 
 Cannot create `ClassPure_OptionalProps` element because string [1] is incompatible with number [2] in property `bar`.
 [incompatible-type]
 
-   test.js:846:7
-   846|   bar="nope"
+   test.js:750:7
+   750|   bar="nope"
               ^^^^^^ [1]
 
 References:
-   test.js:772:49
-   772| type Props_OptionalProps = {foo: ?number, bar?: number};
+   test.js:698:49
+   698| type Props_OptionalProps = {foo: ?number, bar?: number};
                                                         ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:850:2
+Error ---------------------------------------------------------------------------------------------------- test.js:754:2
 
 Cannot create `Function_OptionalProps` element because property `foo` is missing in props [1] but exists in
 `Props_OptionalProps` [2]. [prop-missing]
 
-   test.js:850:2
-   850| <Function_OptionalProps />; // Error: `foo` is required.
+   test.js:754:2
+   754| <Function_OptionalProps />; // Error: `foo` is required.
          ^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   test.js:850:1
-   850| <Function_OptionalProps />; // Error: `foo` is required.
+   test.js:754:1
+   754| <Function_OptionalProps />; // Error: `foo` is required.
         ^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   test.js:849:40
-   849| const Function_OptionalProps = (props: Props_OptionalProps) => any;
+   test.js:753:40
+   753| const Function_OptionalProps = (props: Props_OptionalProps) => any;
                                                ^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:858:7
+Error ---------------------------------------------------------------------------------------------------- test.js:762:7
 
 Cannot create `Function_OptionalProps` element because string [1] is incompatible with number [2] in property `foo`.
 [incompatible-type]
 
-   test.js:858:7
-   858|   foo="nope"
+   test.js:762:7
+   762|   foo="nope"
               ^^^^^^ [1]
 
 References:
-   test.js:772:35
-   772| type Props_OptionalProps = {foo: ?number, bar?: number};
+   test.js:698:35
+   698| type Props_OptionalProps = {foo: ?number, bar?: number};
                                           ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:863:7
+Error ---------------------------------------------------------------------------------------------------- test.js:767:7
 
 Cannot create `Function_OptionalProps` element because string [1] is incompatible with number [2] in property `bar`.
 [incompatible-type]
 
-   test.js:863:7
-   863|   bar="nope"
+   test.js:767:7
+   767|   bar="nope"
               ^^^^^^ [1]
 
 References:
-   test.js:772:49
-   772| type Props_OptionalProps = {foo: ?number, bar?: number};
+   test.js:698:49
+   698| type Props_OptionalProps = {foo: ?number, bar?: number};
                                                         ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:867:2
+Error ---------------------------------------------------------------------------------------------------- test.js:771:2
 
 Cannot create `FunctionExact_OptionalProps` element because property `foo` is missing in props [1] but exists in
 `Props_OptionalProps` [2]. [prop-missing]
 
-   test.js:867:2
-   867| <FunctionExact_OptionalProps />; // Error: `foo` is required.
+   test.js:771:2
+   771| <FunctionExact_OptionalProps />; // Error: `foo` is required.
          ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   test.js:867:1
-   867| <FunctionExact_OptionalProps />; // Error: `foo` is required.
+   test.js:771:1
+   771| <FunctionExact_OptionalProps />; // Error: `foo` is required.
         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   test.js:866:52
-   866| const FunctionExact_OptionalProps = (props: $Exact<Props_OptionalProps>) => any;
+   test.js:770:52
+   770| const FunctionExact_OptionalProps = (props: $Exact<Props_OptionalProps>) => any;
                                                            ^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:875:7
+Error ---------------------------------------------------------------------------------------------------- test.js:779:7
 
 Cannot create `FunctionExact_OptionalProps` element because string [1] is incompatible with number [2] in property
 `foo`. [incompatible-type]
 
-   test.js:875:7
-   875|   foo="nope"
+   test.js:779:7
+   779|   foo="nope"
               ^^^^^^ [1]
 
 References:
-   test.js:772:35
-   772| type Props_OptionalProps = {foo: ?number, bar?: number};
+   test.js:698:35
+   698| type Props_OptionalProps = {foo: ?number, bar?: number};
                                           ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:880:7
+Error ---------------------------------------------------------------------------------------------------- test.js:784:7
 
 Cannot create `FunctionExact_OptionalProps` element because string [1] is incompatible with number [2] in property
 `bar`. [incompatible-type]
 
-   test.js:880:7
-   880|   bar="nope"
+   test.js:784:7
+   784|   bar="nope"
               ^^^^^^ [1]
 
 References:
-   test.js:772:49
-   772| type Props_OptionalProps = {foo: ?number, bar?: number};
+   test.js:698:49
+   698| type Props_OptionalProps = {foo: ?number, bar?: number};
                                                         ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:884:2
+Error ---------------------------------------------------------------------------------------------------- test.js:788:2
 
 Cannot create `Abstract_OptionalProps` element because property `foo` is missing in props [1] but exists in
 `Props_OptionalProps` [2]. [prop-missing]
 
-   test.js:884:2
-   884| <Abstract_OptionalProps />; // Error: `foo` is required.
+   test.js:788:2
+   788| <Abstract_OptionalProps />; // Error: `foo` is required.
          ^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   test.js:884:1
-   884| <Abstract_OptionalProps />; // Error: `foo` is required.
+   test.js:788:1
+   788| <Abstract_OptionalProps />; // Error: `foo` is required.
         ^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   test.js:883:51
-   883| const Abstract_OptionalProps: React.ComponentType<Props_OptionalProps> = any;
+   test.js:787:51
+   787| const Abstract_OptionalProps: React.ComponentType<Props_OptionalProps> = any;
                                                           ^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:892:7
+Error ---------------------------------------------------------------------------------------------------- test.js:796:7
 
 Cannot create `Abstract_OptionalProps` element because string [1] is incompatible with number [2] in property `foo`.
 [incompatible-type]
 
-   test.js:892:7
-   892|   foo="nope"
+   test.js:796:7
+   796|   foo="nope"
               ^^^^^^ [1]
 
 References:
-   test.js:772:35
-   772| type Props_OptionalProps = {foo: ?number, bar?: number};
+   test.js:698:35
+   698| type Props_OptionalProps = {foo: ?number, bar?: number};
                                           ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:897:7
+Error ---------------------------------------------------------------------------------------------------- test.js:801:7
 
 Cannot create `Abstract_OptionalProps` element because string [1] is incompatible with number [2] in property `bar`.
 [incompatible-type]
 
-   test.js:897:7
-   897|   bar="nope"
+   test.js:801:7
+   801|   bar="nope"
               ^^^^^^ [1]
 
 References:
-   test.js:772:49
-   772| type Props_OptionalProps = {foo: ?number, bar?: number};
+   test.js:698:49
+   698| type Props_OptionalProps = {foo: ?number, bar?: number};
                                                         ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:902:2
+Error ---------------------------------------------------------------------------------------------------- test.js:806:2
 
 Cannot create `AbstractExact_OptionalProps` element because property `foo` is missing in props [1] but exists in
 `Props_OptionalProps` [2]. [prop-missing]
 
-   test.js:902:2
-   902| <AbstractExact_OptionalProps />; // Error: `foo` is required.
+   test.js:806:2
+   806| <AbstractExact_OptionalProps />; // Error: `foo` is required.
          ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   test.js:902:1
-   902| <AbstractExact_OptionalProps />; // Error: `foo` is required.
+   test.js:806:1
+   806| <AbstractExact_OptionalProps />; // Error: `foo` is required.
         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   test.js:901:30
-   901|   React.ComponentType<$Exact<Props_OptionalProps>> = any;
+   test.js:805:30
+   805|   React.ComponentType<$Exact<Props_OptionalProps>> = any;
                                      ^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:910:7
+Error ---------------------------------------------------------------------------------------------------- test.js:814:7
 
 Cannot create `AbstractExact_OptionalProps` element because string [1] is incompatible with number [2] in property
 `foo`. [incompatible-type]
 
-   test.js:910:7
-   910|   foo="nope"
+   test.js:814:7
+   814|   foo="nope"
               ^^^^^^ [1]
 
 References:
-   test.js:772:35
-   772| type Props_OptionalProps = {foo: ?number, bar?: number};
+   test.js:698:35
+   698| type Props_OptionalProps = {foo: ?number, bar?: number};
                                           ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:915:7
+Error ---------------------------------------------------------------------------------------------------- test.js:819:7
 
 Cannot create `AbstractExact_OptionalProps` element because string [1] is incompatible with number [2] in property
 `bar`. [incompatible-type]
 
-   test.js:915:7
-   915|   bar="nope"
+   test.js:819:7
+   819|   bar="nope"
               ^^^^^^ [1]
 
 References:
-   test.js:772:49
-   772| type Props_OptionalProps = {foo: ?number, bar?: number};
+   test.js:698:49
+   698| type Props_OptionalProps = {foo: ?number, bar?: number};
                                                         ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:919:2
+Error ---------------------------------------------------------------------------------------------------- test.js:823:2
 
 Cannot create `Member_OptionalProps.prop` element because property `foo` is missing in props [1] but exists in
 `Props_OptionalProps` [2]. [prop-missing]
 
-   test.js:919:2
-   919| <Member_OptionalProps.prop />; // Error: `foo` is required.
+   test.js:823:2
+   823| <Member_OptionalProps.prop />; // Error: `foo` is required.
          ^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   test.js:919:1
-   919| <Member_OptionalProps.prop />; // Error: `foo` is required.
+   test.js:823:1
+   823| <Member_OptionalProps.prop />; // Error: `foo` is required.
         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   test.js:796:51
-   796| class Class_OptionalProps extends React.Component<Props_OptionalProps> {}
+   test.js:700:51
+   700| class Class_OptionalProps extends React.Component<Props_OptionalProps> {}
                                                           ^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:927:7
+Error ---------------------------------------------------------------------------------------------------- test.js:831:7
 
 Cannot create `Member_OptionalProps.prop` element because string [1] is incompatible with number [2] in property `foo`.
 [incompatible-type]
 
-   test.js:927:7
-   927|   foo="nope"
+   test.js:831:7
+   831|   foo="nope"
               ^^^^^^ [1]
 
 References:
-   test.js:772:35
-   772| type Props_OptionalProps = {foo: ?number, bar?: number};
+   test.js:698:35
+   698| type Props_OptionalProps = {foo: ?number, bar?: number};
                                           ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:932:7
+Error ---------------------------------------------------------------------------------------------------- test.js:836:7
 
 Cannot create `Member_OptionalProps.prop` element because string [1] is incompatible with number [2] in property `bar`.
 [incompatible-type]
 
-   test.js:932:7
-   932|   bar="nope"
+   test.js:836:7
+   836|   bar="nope"
               ^^^^^^ [1]
 
 References:
-   test.js:772:49
-   772| type Props_OptionalProps = {foo: ?number, bar?: number};
+   test.js:698:49
+   698| type Props_OptionalProps = {foo: ?number, bar?: number};
                                                         ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:936:2
+Error ---------------------------------------------------------------------------------------------------- test.js:840:2
 
 Cannot create `EnhancedClass_OptionalProps` element because property `foo` is missing in props [1] but exists in
 `Props_OptionalProps` [2]. [prop-missing]
 
-   test.js:936:2
-   936| <EnhancedClass_OptionalProps />; // Error: `foo` is required.
+   test.js:840:2
+   840| <EnhancedClass_OptionalProps />; // Error: `foo` is required.
          ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   test.js:936:1
-   936| <EnhancedClass_OptionalProps />; // Error: `foo` is required.
+   test.js:840:1
+   840| <EnhancedClass_OptionalProps />; // Error: `foo` is required.
         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    test.js:11:24
     11| ): React.ComponentType<React.ElementConfig<Component>> {
                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:944:7
+Error ---------------------------------------------------------------------------------------------------- test.js:848:7
 
 Cannot create `EnhancedClass_OptionalProps` element because string [1] is incompatible with number [2] in property
 `foo`. [incompatible-type]
 
-   test.js:944:7
-   944|   foo="nope"
+   test.js:848:7
+   848|   foo="nope"
               ^^^^^^ [1]
 
 References:
-   test.js:772:35
-   772| type Props_OptionalProps = {foo: ?number, bar?: number};
+   test.js:698:35
+   698| type Props_OptionalProps = {foo: ?number, bar?: number};
                                           ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:949:7
+Error ---------------------------------------------------------------------------------------------------- test.js:853:7
 
 Cannot create `EnhancedClass_OptionalProps` element because string [1] is incompatible with number [2] in property
 `bar`. [incompatible-type]
 
-   test.js:949:7
-   949|   bar="nope"
+   test.js:853:7
+   853|   bar="nope"
               ^^^^^^ [1]
 
 References:
-   test.js:772:49
-   772| type Props_OptionalProps = {foo: ?number, bar?: number};
+   test.js:698:49
+   698| type Props_OptionalProps = {foo: ?number, bar?: number};
                                                         ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:953:2
+Error ---------------------------------------------------------------------------------------------------- test.js:857:2
 
 Cannot create `EnhancedFunction_OptionalProps` element because property `foo` is missing in props [1] but exists in
 `Props_OptionalProps` [2]. [prop-missing]
 
-   test.js:953:2
-   953| <EnhancedFunction_OptionalProps />; // Error: `foo` is required.
+   test.js:857:2
+   857| <EnhancedFunction_OptionalProps />; // Error: `foo` is required.
          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   test.js:953:1
-   953| <EnhancedFunction_OptionalProps />; // Error: `foo` is required.
+   test.js:857:1
+   857| <EnhancedFunction_OptionalProps />; // Error: `foo` is required.
         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    test.js:11:24
     11| ): React.ComponentType<React.ElementConfig<Component>> {
                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:961:7
+Error ---------------------------------------------------------------------------------------------------- test.js:865:7
 
 Cannot create `EnhancedFunction_OptionalProps` element because string [1] is incompatible with number [2] in property
 `foo`. [incompatible-type]
 
-   test.js:961:7
-   961|   foo="nope"
+   test.js:865:7
+   865|   foo="nope"
               ^^^^^^ [1]
 
 References:
-   test.js:772:35
-   772| type Props_OptionalProps = {foo: ?number, bar?: number};
+   test.js:698:35
+   698| type Props_OptionalProps = {foo: ?number, bar?: number};
                                           ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:966:7
+Error ---------------------------------------------------------------------------------------------------- test.js:870:7
 
 Cannot create `EnhancedFunction_OptionalProps` element because string [1] is incompatible with number [2] in property
 `bar`. [incompatible-type]
 
-   test.js:966:7
-   966|   bar="nope"
+   test.js:870:7
+   870|   bar="nope"
               ^^^^^^ [1]
 
 References:
-   test.js:772:49
-   772| type Props_OptionalProps = {foo: ?number, bar?: number};
+   test.js:698:49
+   698| type Props_OptionalProps = {foo: ?number, bar?: number};
                                                         ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:994:2
-
-Cannot create `Legacy_DefaultProps` element because property `bar` is missing in props [1] but exists in propTypes of
-React component [2]. [prop-missing]
-
-   test.js:994:2
-   994| <Legacy_DefaultProps // Error: It is missing a required non-default prop.
-         ^^^^^^^^^^^^^^^^^^^
-
-References:
-   test.js:994:1
-        v------------------------------------------------------------------------
-   994| <Legacy_DefaultProps // Error: It is missing a required non-default prop.
-   995|   foo={1}
-   996| />;
-        -^ [1]
-   test.js:979:14
-                     v
-   979|   propTypes: {
-   980|     foo: React.PropTypes.number.isRequired,
-   981|     bar: React.PropTypes.number.isRequired,
-   982|   },
-          ^ [2]
-
-
-Error --------------------------------------------------------------------------------------------------- test.js:1010:2
+Error ---------------------------------------------------------------------------------------------------- test.js:894:2
 
 Cannot create `Class_DefaultProps` element because property `bar` is missing in props [1] but exists in
 `Props_DefaultProps` [2]. [prop-missing]
 
-   test.js:1010:2
-   1010| <Class_DefaultProps // Error: It is missing a required non-default prop.
-          ^^^^^^^^^^^^^^^^^^
+   test.js:894:2
+   894| <Class_DefaultProps // Error: It is missing a required non-default prop.
+         ^^^^^^^^^^^^^^^^^^
 
 References:
-   test.js:1010:1
-         v-----------------------------------------------------------------------
-   1010| <Class_DefaultProps // Error: It is missing a required non-default prop.
-   1011|   foo={1}
-   1012| />;
-         -^ [1]
-   test.js:998:50
-    998| class Class_DefaultProps extends React.Component<Props_DefaultProps> {
-                                                          ^^^^^^^^^^^^^^^^^^ [2]
+   test.js:894:1
+        v-----------------------------------------------------------------------
+   894| <Class_DefaultProps // Error: It is missing a required non-default prop.
+   895|   foo={1}
+   896| />;
+        -^ [1]
+   test.js:882:50
+   882| class Class_DefaultProps extends React.Component<Props_DefaultProps> {
+                                                         ^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- test.js:1027:2
+Error ---------------------------------------------------------------------------------------------------- test.js:911:2
 
 Cannot create `ClassExact_DefaultProps` element because property `bar` is missing in props [1] but exists in
 `Props_DefaultProps` [2]. [prop-missing]
 
-   test.js:1027:2
-   1027| <ClassExact_DefaultProps // Error: It is missing a required non-default prop.
-          ^^^^^^^^^^^^^^^^^^^^^^^
+   test.js:911:2
+   911| <ClassExact_DefaultProps // Error: It is missing a required non-default prop.
+         ^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   test.js:1027:1
-         v----------------------------------------------------------------------------
-   1027| <ClassExact_DefaultProps // Error: It is missing a required non-default prop.
-   1028|   foo={1}
-   1029| />;
-         -^ [1]
-   test.js:1015:34
-   1015|   extends React.Component<$Exact<Props_DefaultProps>> {
-                                          ^^^^^^^^^^^^^^^^^^ [2]
+   test.js:911:1
+        v----------------------------------------------------------------------------
+   911| <ClassExact_DefaultProps // Error: It is missing a required non-default prop.
+   912|   foo={1}
+   913| />;
+        -^ [1]
+   test.js:899:34
+   899|   extends React.Component<$Exact<Props_DefaultProps>> {
+                                         ^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- test.js:1043:2
+Error ---------------------------------------------------------------------------------------------------- test.js:927:2
 
 Cannot create `ClassPure_DefaultProps` element because property `bar` is missing in props [1] but exists in
 `Props_DefaultProps` [2]. [prop-missing]
 
-   test.js:1043:2
-   1043| <ClassPure_DefaultProps // Error: It is missing a required non-default prop.
-          ^^^^^^^^^^^^^^^^^^^^^^
+   test.js:927:2
+   927| <ClassPure_DefaultProps // Error: It is missing a required non-default prop.
+         ^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   test.js:1043:1
-         v---------------------------------------------------------------------------
-   1043| <ClassPure_DefaultProps // Error: It is missing a required non-default prop.
-   1044|   foo={1}
-   1045| />;
-         -^ [1]
-   test.js:1031:58
-   1031| class ClassPure_DefaultProps extends React.PureComponent<Props_DefaultProps> {
-                                                                  ^^^^^^^^^^^^^^^^^^ [2]
+   test.js:927:1
+        v---------------------------------------------------------------------------
+   927| <ClassPure_DefaultProps // Error: It is missing a required non-default prop.
+   928|   foo={1}
+   929| />;
+        -^ [1]
+   test.js:915:58
+   915| class ClassPure_DefaultProps extends React.PureComponent<Props_DefaultProps> {
+                                                                 ^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- test.js:1060:2
+Error ---------------------------------------------------------------------------------------------------- test.js:944:2
 
 Cannot create `Function_DefaultProps` element because property `bar` is missing in props [1] but exists in
 `Props_DefaultProps` [2]. [prop-missing]
 
-   test.js:1060:2
-   1060| <Function_DefaultProps // Error: It is missing a required non-default prop.
-          ^^^^^^^^^^^^^^^^^^^^^
+   test.js:944:2
+   944| <Function_DefaultProps // Error: It is missing a required non-default prop.
+         ^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   test.js:1060:1
-         v--------------------------------------------------------------------------
-   1060| <Function_DefaultProps // Error: It is missing a required non-default prop.
-   1061|   foo={1}
-   1062| />;
-         -^ [1]
-   test.js:1047:39
-   1047| function Function_DefaultProps(props: Props_DefaultProps) {
-                                               ^^^^^^^^^^^^^^^^^^ [2]
+   test.js:944:1
+        v--------------------------------------------------------------------------
+   944| <Function_DefaultProps // Error: It is missing a required non-default prop.
+   945|   foo={1}
+   946| />;
+        -^ [1]
+   test.js:931:39
+   931| function Function_DefaultProps(props: Props_DefaultProps) {
+                                              ^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- test.js:1077:2
+Error ---------------------------------------------------------------------------------------------------- test.js:961:2
 
 Cannot create `FunctionExact_DefaultProps` element because property `bar` is missing in props [1] but exists in
 `Props_DefaultProps` [2]. [prop-missing]
 
-   test.js:1077:2
-   1077| <FunctionExact_DefaultProps // Error: It is missing a required non-default prop.
-          ^^^^^^^^^^^^^^^^^^^^^^^^^^
+   test.js:961:2
+   961| <FunctionExact_DefaultProps // Error: It is missing a required non-default prop.
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   test.js:1077:1
-         v-------------------------------------------------------------------------------
-   1077| <FunctionExact_DefaultProps // Error: It is missing a required non-default prop.
-   1078|   foo={1}
-   1079| />;
-         -^ [1]
-   test.js:1064:51
-   1064| function FunctionExact_DefaultProps(props: $Exact<Props_DefaultProps>) {
-                                                           ^^^^^^^^^^^^^^^^^^ [2]
+   test.js:961:1
+        v-------------------------------------------------------------------------------
+   961| <FunctionExact_DefaultProps // Error: It is missing a required non-default prop.
+   962|   foo={1}
+   963| />;
+        -^ [1]
+   test.js:948:51
+   948| function FunctionExact_DefaultProps(props: $Exact<Props_DefaultProps>) {
+                                                          ^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- test.js:1089:2
+Error ---------------------------------------------------------------------------------------------------- test.js:973:2
 
 Cannot create `Member_DefaultProps.prop` element because property `bar` is missing in props [1] but exists in
 `Props_DefaultProps` [2]. [prop-missing]
 
-   test.js:1089:2
-   1089| <Member_DefaultProps.prop // Error: It is missing a required non-default prop.
-          ^^^^^^^^^^^^^^^^^^^^^^^^
+   test.js:973:2
+   973| <Member_DefaultProps.prop // Error: It is missing a required non-default prop.
+         ^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   test.js:1089:1
-         v-----------------------------------------------------------------------------
-   1089| <Member_DefaultProps.prop // Error: It is missing a required non-default prop.
-   1090|   foo={1}
-   1091| />;
-         -^ [1]
-   test.js:998:50
-    998| class Class_DefaultProps extends React.Component<Props_DefaultProps> {
-                                                          ^^^^^^^^^^^^^^^^^^ [2]
+   test.js:973:1
+        v-----------------------------------------------------------------------------
+   973| <Member_DefaultProps.prop // Error: It is missing a required non-default prop.
+   974|   foo={1}
+   975| />;
+        -^ [1]
+   test.js:882:50
+   882| class Class_DefaultProps extends React.Component<Props_DefaultProps> {
+                                                         ^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- test.js:1101:2
+Error ---------------------------------------------------------------------------------------------------- test.js:985:2
 
 Cannot create `EnhancedClass_DefaultProps` element because property `bar` is missing in props [1] but exists in
 `Props_DefaultProps` [2]. [prop-missing]
 
-   test.js:1101:2
-   1101| <EnhancedClass_DefaultProps // Error: It is missing a required non-default prop.
-          ^^^^^^^^^^^^^^^^^^^^^^^^^^
+   test.js:985:2
+   985| <EnhancedClass_DefaultProps // Error: It is missing a required non-default prop.
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   test.js:1101:1
-         v-------------------------------------------------------------------------------
-   1101| <EnhancedClass_DefaultProps // Error: It is missing a required non-default prop.
-   1102|   foo={1}
-   1103| />;
-         -^ [1]
+   test.js:985:1
+        v-------------------------------------------------------------------------------
+   985| <EnhancedClass_DefaultProps // Error: It is missing a required non-default prop.
+   986|   foo={1}
+   987| />;
+        -^ [1]
    test.js:11:24
-     11| ): React.ComponentType<React.ElementConfig<Component>> {
-                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+    11| ): React.ComponentType<React.ElementConfig<Component>> {
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- test.js:1113:2
+Error ---------------------------------------------------------------------------------------------------- test.js:997:2
 
 Cannot create `EnhancedFunction_DefaultProps` element because property `bar` is missing in props [1] but exists in
 `Props_DefaultProps` [2]. [prop-missing]
 
-   test.js:1113:2
-   1113| <EnhancedFunction_DefaultProps // Error: It is missing a required non-default prop.
-          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   test.js:997:2
+   997| <EnhancedFunction_DefaultProps // Error: It is missing a required non-default prop.
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   test.js:1113:1
-         v----------------------------------------------------------------------------------
-   1113| <EnhancedFunction_DefaultProps // Error: It is missing a required non-default prop.
-   1114|   foo={1}
-   1115| />;
-         -^ [1]
+   test.js:997:1
+        v----------------------------------------------------------------------------------
+   997| <EnhancedFunction_DefaultProps // Error: It is missing a required non-default prop.
+   998|   foo={1}
+   999| />;
+        -^ [1]
    test.js:11:24
-     11| ): React.ComponentType<React.ElementConfig<Component>> {
-                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+    11| ): React.ComponentType<React.ElementConfig<Component>> {
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 
-Found 196 errors
+Found 179 errors

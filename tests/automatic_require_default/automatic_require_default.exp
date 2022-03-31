@@ -21,8 +21,8 @@ Cannot get `React.NotAType` because property `NotAType` is missing in module `re
                     ^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:470:27
-   470|   declare module.exports: $Exports<'react'>;
+   <BUILTINS>/react.js:443:27
+   443|   declare module.exports: $Exports<'react'>;
                                   ^^^^^^^^^^^^^^^^^ [1]
 
 

@@ -198,12 +198,6 @@ class context_optimizer ~no_lowers =
           OptionalIndexedAccessNonMaybeType { index = OptionalIndexedAccessTypeIndex index_type' }
       | OptionalIndexedAccessNonMaybeType { index = OptionalIndexedAccessStrLitIndex _ } -> t
       | OptionalIndexedAccessResultType _ -> t
-      | Bind t' ->
-        let t'' = self#type_ cx map_cx t' in
-        if t'' == t' then
-          t
-        else
-          Bind t''
       | ReadOnlyType -> t
       | PartialType -> t
       | SpreadType (options, tlist, acc) ->

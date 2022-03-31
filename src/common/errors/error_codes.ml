@@ -89,7 +89,6 @@ type error_code =
   | InvalidPropertyTypeArg
   | InvalidPropType
   | InvalidReactConfig
-  | InvalidReactCreateClass
   | InvalidRefineTypeArg
   | InvalidTrustedTypeArg
   | InvalidTupleArity
@@ -267,7 +266,6 @@ let string_of_code : error_code -> string = function
   | InvalidPropertyTypeArg -> "invalid-property-type-arg"
   | InvalidPropType -> "invalid-prop-type"
   | InvalidReactConfig -> "invalid-react-config"
-  | InvalidReactCreateClass -> "invalid-react-create-class"
   | InvalidRefineTypeArg -> "invalid-refine-type-arg"
   | InvalidTrustedTypeArg -> "invalid-trusted-type-arg"
   | InvalidTupleArity -> "invalid-tuple-arity"

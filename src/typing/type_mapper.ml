@@ -7,18 +7,6 @@
 
 open Type
 
-let maybe_known f x =
-  React.CreateClass.(
-    match x with
-    | Known x' ->
-      let x'' = f x' in
-      if x'' == x' then
-        x
-      else
-        Known x''
-    | Unknown x -> Unknown x
-  )
-
 (* NOTE: While union flattening could be performed at any time, it is most effective when we know
    that all tvars have been resolved. *)
 let union_flatten =
@@ -496,12 +484,6 @@ class virtual ['a] t =
           t
         else
           OptionalIndexedAccessNonMaybeType { index = OptionalIndexedAccessTypeIndex index_type' }
-      | Bind t' ->
-        let t'' = self#type_ cx map_cx t' in
-        if t'' == t' then
-          t
-        else
-          Bind t''
       | ReadOnlyType -> t
       | PartialType -> t
       | SpreadType (options, tlist, acc) ->
@@ -588,7 +570,6 @@ class virtual ['a] t =
       | ObjectSetPrototypeOf
       | Compose _
       | ReactPropType _
-      | ReactCreateClass
       | ReactCreateElement
       | ReactCloneElement
       | Idx
@@ -2016,14 +1997,6 @@ class virtual ['a] t_with_uses =
             t
           else
             SimplifyPropType (tool', t'')
-        | CreateClass (tool, knot, t') ->
-          let tool' = self#create_class_tool cx map_cx tool in
-          let knot' = self#create_class_knot cx map_cx knot in
-          let t'' = self#type_ cx map_cx t' in
-          if tool' == tool && knot' == knot && t'' == t' then
-            t
-          else
-            CreateClass (tool', knot', t'')
       )
 
     method private instance_slice cx map_cx t =
@@ -2198,53 +2171,6 @@ class virtual ['a] t_with_uses =
             Shape resolve_object'
       )
 
-    method create_class_tool cx map_cx tool =
-      React.CreateClass.(
-        match tool with
-        | Spec tail ->
-          let tail' = self#stack_tail cx map_cx tail in
-          if tail' == tail then
-            tool
-          else
-            Spec tail'
-        | Mixins (head, tail) ->
-          let head' = self#stack_head cx map_cx head in
-          let tail' = self#stack_tail cx map_cx tail in
-          if head' == head && tail' == tail then
-            tool
-          else
-            Mixins (head', tail')
-        | Statics (head, tail) ->
-          let head' = self#stack_head cx map_cx head in
-          let tail' = self#stack_tail cx map_cx tail in
-          if head' == head && tail' == tail then
-            tool
-          else
-            Statics (head', tail')
-        | PropTypes ((head, tail), resolve_object) ->
-          let head' = self#stack_head cx map_cx head in
-          let tail' = self#stack_tail cx map_cx tail in
-          let resolve_object' = self#resolve_object cx map_cx resolve_object in
-          if head' == head && tail' == tail && resolve_object' == resolve_object then
-            tool
-          else
-            PropTypes ((head', tail'), resolve_object')
-        | DefaultProps (tlist, default_props) ->
-          let tlist' = ListUtils.ident_map (self#type_ cx map_cx) tlist in
-          let default_props' = OptionUtils.ident_map (self#default_props cx map_cx) default_props in
-          if tlist' == tlist && default_props' == default_props then
-            tool
-          else
-            DefaultProps (tlist', default_props')
-        | InitialState (tlist, initial_state) ->
-          let tlist' = ListUtils.ident_map (self#type_ cx map_cx) tlist in
-          let initial_state' = OptionUtils.ident_map (self#initial_state cx map_cx) initial_state in
-          if tlist' == tlist && initial_state' == initial_state then
-            tool
-          else
-            InitialState (tlist', initial_state')
-      )
-
     method resolved_param cx map_cx t =
       match t with
       | ResolvedArg (t', g) ->
@@ -2312,23 +2238,6 @@ class virtual ['a] t_with_uses =
             t
           else
             ResolveProp (s, props', obj')
-      )
-
-    method create_class_knot cx map_cx t =
-      React.CreateClass.(
-        let this' = self#type_ cx map_cx t.this in
-        let static' = self#type_ cx map_cx t.static in
-        let state_t' = self#type_ cx map_cx t.state_t in
-        let default_t' = self#type_ cx map_cx t.default_t in
-        if
-          this' == t.this
-          && static' == t.static
-          && state_t' == t.state_t
-          && default_t' == t.default_t
-        then
-          t
-        else
-          { this = this'; static = static'; state_t = state_t'; default_t = default_t' }
       )
 
     method resolve cx map_cx t =
@@ -2408,60 +2317,6 @@ class virtual ['a] t_with_uses =
         else
           IntersectionCases (tlist', use_t')
 
-    method stack_tail cx map_cx tail = ListUtils.ident_map (self#stack_tail_elem cx map_cx) tail
-
-    method stack_tail_elem cx map_cx ((head, tlist, maybespeclist) as t) =
-      let head' = self#stack_head cx map_cx head in
-      let tlist' = ListUtils.ident_map (self#type_ cx map_cx) tlist in
-      let maybespeclist' =
-        ListUtils.ident_map (maybe_known (self#create_class_spec cx map_cx)) maybespeclist
-      in
-      if head' == head && tlist' == tlist && maybespeclist' == maybespeclist then
-        t
-      else
-        (head', tlist', maybespeclist')
-
-    method create_class_spec cx map_cx t =
-      React.CreateClass.(
-        let obj = self#resolved_object cx map_cx t.obj in
-        let statics =
-          OptionUtils.ident_map (maybe_known (self#resolved_object cx map_cx)) t.statics
-        in
-        let prop_types =
-          OptionUtils.ident_map (maybe_known (self#resolved_object cx map_cx)) t.prop_types
-        in
-        let get_default_props = ListUtils.ident_map (self#type_ cx map_cx) t.get_default_props in
-        let get_initial_state = ListUtils.ident_map (self#type_ cx map_cx) t.get_initial_state in
-        if
-          obj == t.obj
-          && statics == t.statics
-          && prop_types == t.prop_types
-          && get_default_props == t.get_default_props
-          && get_initial_state == t.get_initial_state
-        then
-          t
-        else
-          {
-            obj;
-            statics;
-            prop_types;
-            get_default_props;
-            get_initial_state;
-            unknown_mixins = t.unknown_mixins;
-          }
-      )
-
-    method stack_head cx map_cx ((obj, spec) as t) =
-      let obj' = self#resolved_object cx map_cx obj in
-      let spec' = self#create_class_spec cx map_cx spec in
-      if obj' == obj && spec' == spec then
-        t
-      else
-        (obj', spec')
-
-    method default_props cx map_cx default_props =
-      maybe_known (self#resolved_object cx map_cx) default_props
-
     method resolved_object cx map_cx ((r, props, flags) as t) =
       let flags' = self#obj_flags cx map_cx flags in
       let props' = NameUtils.Map.ident_map (Property.ident_map_t (self#type_ cx map_cx)) props in
@@ -2469,19 +2324,4 @@ class virtual ['a] t_with_uses =
         t
       else
         (r, props', flags')
-
-    method initial_state cx map_cx t =
-      React.CreateClass.(
-        maybe_known
-          (fun x ->
-            match x with
-            | NotNull obj ->
-              let obj' = self#resolved_object cx map_cx obj in
-              if obj' == obj then
-                x
-              else
-                NotNull obj'
-            | Null _ -> x)
-          t
-      )
   end

@@ -233,7 +233,6 @@ module Kit (Flow : Flow_common.S) = struct
     | ObjectGetPrototypeOf
     | ObjectSetPrototypeOf
     | ReactPropType _
-    | ReactCreateClass
     | Idx
     | TypeAssertIs
     | TypeAssertThrows
