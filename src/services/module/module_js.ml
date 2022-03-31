@@ -756,7 +756,7 @@ let commit_modules ~transaction ~workers ~options dirty_modules =
     let (new_provider, errmap) = choose_provider ~options mname_str all_providers errmap in
     match (old_provider, new_provider) with
     | (_, None) ->
-      if debug then prerr_endlinef "no remaining providers: %S" mname_str;
+      if debug then prerr_endlinef "no remaining providers: %s" mname_str;
       Heap.entity_advance provider_ent None;
       let no_providers = Modulename.Set.add mname no_providers in
       (unchanged, no_providers, errmap)
@@ -765,7 +765,7 @@ let commit_modules ~transaction ~workers ~options dirty_modules =
          provide m and changed or got deleted (causing m to be in
          old_modules), or m didn't have a provider before. *)
       if debug then
-        prerr_endlinef "initial provider %S -> %s" mname_str (Parsing_heaps.read_file_name p);
+        prerr_endlinef "initial provider %s -> %s" mname_str (Parsing_heaps.read_file_name p);
       Heap.entity_advance provider_ent (Some p);
       (unchanged, no_providers, errmap)
     | (Some old_p, Some new_p) ->
@@ -775,7 +775,7 @@ let commit_modules ~transaction ~workers ~options dirty_modules =
            continues to be the chosen provider = p (winning over f'). *)
         if debug then
           prerr_endlinef
-            "unchanged provider: %S -> %s"
+            "unchanged provider: %s -> %s"
             mname_str
             (Parsing_heaps.read_file_name new_p);
         let unchanged =
@@ -791,7 +791,7 @@ let commit_modules ~transaction ~workers ~options dirty_modules =
            now f' becomes the chosen provider = p (winning over f). *)
         if debug then
           prerr_endlinef
-            "new provider: %S -> %s replaces %s"
+            "new provider: %s -> %s replaces %s"
             mname_str
             (Parsing_heaps.read_file_name new_p)
             (Parsing_heaps.read_file_name old_p);

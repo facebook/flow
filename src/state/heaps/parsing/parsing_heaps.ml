@@ -234,15 +234,17 @@ let add_checked_file file_key hash module_name docblock ast locs type_sig file_s
     match FileHeap.get file_key with
     | Some file ->
       let parse_ent = get_parse file in
-      let write _ parse =
+      let write new_file_module _ parse =
         entity_advance parse_ent (Some parse);
-        (file, None)
+        (file, new_file_module)
       in
       (* If we loaded from a saved state, we will have some existing data with a
        * matching hash. In this case, we want to update the existing data with
        * parse information. *)
       (match entity_read_latest parse_ent with
-      | None -> Either.Right (size, write, None)
+      | None ->
+        let new_file_module = get_file_module file in
+        Either.Right (size, write new_file_module, None)
       | Some existing_parse ->
         let existing_hash = read_int64 (get_file_hash existing_parse) in
         if Int64.equal existing_hash hash then
@@ -251,7 +253,10 @@ let add_checked_file file_key hash module_name docblock ast locs type_sig file_s
            * before as well. *)
           Either.Left (Option.get (coerce_typed existing_parse))
         else
-          Either.Right (size, write, get_haste_module existing_parse))
+          (* Because a parsed file record already existed, a file module
+           * certainly also exists and the file is already a provider. *)
+          let new_file_module = None in
+          Either.Right (size, write new_file_module, get_haste_module existing_parse))
     | None ->
       let (file_kind, file_name) = file_kind_and_name file_key in
       let size = size + (3 * header_size) + entity_size + string_size file_name + file_size in
@@ -312,15 +317,19 @@ let add_unparsed_file file_key hash module_name =
     match FileHeap.get file_key with
     | Some file ->
       let parse_ent = get_parse file in
-      let write _ parse =
-        entity_advance (get_parse file) (Some parse);
-        (file, None)
+      let write new_file_module _ parse =
+        entity_advance parse_ent (Some parse);
+        (file, new_file_module)
       in
-      let old_haste_module =
-        let* parse = entity_read_latest parse_ent in
-        get_haste_module parse
-      in
-      (size, write, old_haste_module)
+      (match entity_read_latest parse_ent with
+      | None ->
+        let new_file_module = get_file_module file in
+        (size, write new_file_module, None)
+      | Some parse ->
+        (* Because a parsed file record already existed, a file module
+         * certainly also exists and the file is already a provider. *)
+        let new_file_module = None in
+        (size, write new_file_module, get_haste_module parse))
     | None ->
       let (file_kind, file_name) = file_kind_and_name file_key in
       let size = size + (3 * header_size) + entity_size + string_size file_name + file_size in
