@@ -59,6 +59,7 @@ let print_values refinement_of_id =
       Printf.sprintf "{refinement = %s; writes = %s}" refinement_str writes_str
     | This -> "This"
     | Super -> "Super"
+    | Arguments -> "Arguments"
     | Global name -> "Global " ^ name
     | Unreachable _ -> "unreachable"
     | Undefined _ -> "undefined"
@@ -3180,6 +3181,28 @@ x;
           {refinement = 3; writes = {refinement = Not (Null); writes = (1, 4) to (1, 5): (`x`)}},
           {refinement = true; writes = {refinement = Not (3); writes = {refinement = Not (Null); writes = (1, 4) to (1, 5): (`x`)}}},
           {refinement = false; writes = {refinement = Not (true); writes = {refinement = Not (3); writes = {refinement = Not (Null); writes = (1, 4) to (1, 5): (`x`)}}}}
+        }] |}]
+
+let%expect_test "arguments_read" =
+  print_ssa_test {|
+arguments;
+|};
+    [%expect {|
+      [
+        (2, 0) to (2, 9) => {
+          Arguments
+        }] |}]
+
+let%expect_test "arguments_shadowed" =
+  print_ssa_test {|
+function foo(arguments) {
+  arguments;
+}
+|};
+    [%expect {|
+      [
+        (3, 2) to (3, 11) => {
+          (2, 13) to (2, 22): (`arguments`)
         }] |}]
 
 let%expect_test "global_refinement" =

@@ -169,6 +169,8 @@ module Make
 
     val super : t
 
+    val arguments : t
+
     val global : string -> t
 
     val one : ALoc.t virtual_reason -> t
@@ -221,6 +223,7 @@ module Make
       | Projection of ALoc.t
       | This
       | Super
+      | Arguments
       | Global of string
       | Loc of ALoc.t virtual_reason
       | PHI of write_state list
@@ -336,6 +339,7 @@ module Make
       | Projection _
       | This
       | Super
+      | Arguments
       | Global _
       | Loc _
       | Refinement _ ->
@@ -375,6 +379,7 @@ module Make
       | Global _
       | This
       | Super
+      | Arguments
       | Loc _ ->
         WriteSet.singleton t
       | PHI ts ->
@@ -389,6 +394,8 @@ module Make
     let this = mk_with_write_state This
 
     let super = mk_with_write_state Super
+
+    let arguments = mk_with_write_state Arguments
 
     let global name = mk_with_write_state @@ Global name
 
@@ -416,6 +423,7 @@ module Make
             Env_api.Refinement { writes = simplify_val val_t; refinement_id }
           | This -> Env_api.This
           | Super -> Env_api.Super
+          | Arguments -> Env_api.Arguments
           | Global name -> Env_api.Global name
           | PHI _ -> failwith "A normalized value cannot be a PHI")
         (WriteSet.elements vals)
@@ -453,6 +461,7 @@ module Make
         | Loc _ -> []
         | This -> []
         | Super -> []
+        | Arguments -> []
         | Global _ -> []
         | Projection _ -> []
       in
@@ -720,6 +729,15 @@ module Make
          {
            val_ref = ref Val.super;
            havoc = Val.super;
+           def_loc = None;
+           heap_refinements = ref HeapRefinementMap.empty;
+           kind = Bindings.Var;
+         }
+    |> SMap.add
+         "arguments"
+         {
+           val_ref = ref Val.arguments;
+           havoc = Val.arguments;
            def_loc = None;
            heap_refinements = ref HeapRefinementMap.empty;
            kind = Bindings.Var;
