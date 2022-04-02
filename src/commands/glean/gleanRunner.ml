@@ -180,7 +180,8 @@ let type_import_declarations ~root ~write_root ~reader ~resolved_requires ~file_
     types_info @ typesof_info @ typesof_ns_info
   | Require _
   | ImportDynamic _
-  | Import0 _ ->
+  | Import0 _
+  | ExportFrom _ ->
     [])
   |> Base.List.map ~f:(TypeImportDeclaration.to_json ~root ~write_root)
 
@@ -266,7 +267,8 @@ let import_declarations ~root ~write_root ~reader ~resolved_requires ~file_sig =
         let declaration = Declaration.{ loc; name } in
         return ImportDeclaration.{ import; declaration }))
   | ImportDynamic _
-  | Import0 _ ->
+  | Import0 _
+  | ExportFrom _ ->
     []
   | Import { source = (_, module_ref); named; ns; _ } ->
     let module_ = module_of_module_ref ~resolved_requires ~root ~write_root module_ref in

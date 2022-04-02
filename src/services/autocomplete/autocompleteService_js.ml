@@ -1312,7 +1312,8 @@ let should_autoimport_react ~options ~imports ~file_sig =
                 named
             | Require { bindings = None; _ }
             | Import0 _
-            | ImportDynamic _ ->
+            | ImportDynamic _
+            | ExportFrom _ ->
               false)
           file_sig.module_sig.requires
       in

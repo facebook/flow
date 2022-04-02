@@ -775,7 +775,8 @@ end = struct
         | Import { ns = Some (_, "React"); _ } -> raise Found_react_import
         | Import _
         | ImportDynamic _
-        | Import0 _ ->
+        | Import0 _
+        | ExportFrom _ ->
           ()
       in
       let from_requires requires = List.iter from_require requires in

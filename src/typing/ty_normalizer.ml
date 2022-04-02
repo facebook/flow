@@ -2114,7 +2114,8 @@ end = struct
         |> from_imported_locs_map ~import_mode:Ty.TypeMode types
         |> from_imported_locs_map ~import_mode:Ty.TypeofMode typesof
       | ImportDynamic _
-      | Import0 _ ->
+      | Import0 _
+      | ExportFrom _ ->
         acc
 
     let extract_imported_idents requires =
