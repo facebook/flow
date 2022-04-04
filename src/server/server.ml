@@ -327,6 +327,7 @@ let check_once ~init_id ~shared_mem_config ~format_errors ?focus_targets options
   PidLog.disable ();
   MonitorRPC.disable ();
 
+  FlowEventLogger.set_eden (Some (Eden.is_eden (Options.root options)));
   LoggingUtils.set_server_options ~server_options:options;
 
   let should_log_server_profiles = Options.should_profile options && not Sys.win32 in
