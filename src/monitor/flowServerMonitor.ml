@@ -83,6 +83,7 @@ let internal_start ~is_daemon ?waiting_fd monitor_options =
       | Some Vcs.Git -> "git"
     in
     FlowEventLogger.set_monitor_options ~file_watcher ~vcs;
+    FlowEventLogger.set_eden (Some (Eden.is_eden root));
     LoggingUtils.set_server_options ~server_options
   in
   let tmp_dir = Options.temp_dir server_options in

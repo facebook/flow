@@ -43,6 +43,8 @@ let restore_context _ = ()
 
 let set_command _ = ()
 
+let set_eden _ = ()
+
 let set_from from = context := { from }
 
 let set_root _ = ()

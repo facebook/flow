@@ -12,6 +12,7 @@
     flow_server_monitor_listener
     flow_server_rechecker
     flow_service_inference
+    flow_vcs
     flow_flowlib
   )
   (preprocess (pps lwt_ppx))
