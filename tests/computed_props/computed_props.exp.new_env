@@ -6,9 +6,12 @@ https://flow.org/en/docs/types/literals/ for more information on literal types. 
 
    object_keys.js:14:36
    14| Object.keys(y).map(k => { return {[k]: k} }); // Error
-                                          ^ [1]
+                                          ^
 
 References:
+   object_keys.js:14:20
+   14| Object.keys(y).map(k => { return {[k]: k} }); // Error
+                          ^ [1]
    object_keys.js:14:1
    14| Object.keys(y).map(k => { return {[k]: k} }); // Error
        ^^^^^^^^^^^^^^ [2]
@@ -154,9 +157,12 @@ information on literal types. [invalid-computed-prop]
 
    union.js:5:13
    5| const a = {[k]: 3}; // Error, k has multiple lower bounds
-                  ^ [1]
+                  ^
 
 References:
+   union.js:4:13
+   4| declare var k: key;
+                  ^ [1]
    union.js:4:16
    4| declare var k: key;
                      ^^^ [2]

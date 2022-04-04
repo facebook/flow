@@ -173,7 +173,12 @@ module New_env = struct
  *  may want to compute a more specific least upper bound for these writes.
  *)
   let phi cx reason ts =
-    Tvar.mk_where cx reason (fun tvar -> Base.List.iter ts ~f:(fun t -> Flow_js.flow_t cx (t, tvar)))
+    match ts with
+    | [t] -> t
+    | _ ->
+      Tvar.mk_where cx reason (fun tvar ->
+          Base.List.iter ts ~f:(fun t -> Flow_js.flow_t cx (t, tvar))
+      )
 
   let rec predicate_of_refinement cx =
     Env_api.Refi.(
