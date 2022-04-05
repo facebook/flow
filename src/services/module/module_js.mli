@@ -37,7 +37,7 @@ val commit_modules :
 
 (* resolve and add requires from context to store *)
 val add_parsed_resolved_requires :
-  mutator:Module_heaps.Resolved_requires_mutator.t ->
+  mutator:Parsing_heaps.Resolved_requires_mutator.t ->
   reader:Mutator_state_reader.t ->
   options:Options.t ->
   node_modules_containers:SSet.t SMap.t ->

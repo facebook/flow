@@ -8,7 +8,7 @@
 open Utils_js
 
 type denormalized_file_data = {
-  resolved_requires: Module_heaps.resolved_requires;
+  resolved_requires: Parsing_heaps.resolved_requires;
   exports: Exports.t;
   hash: Xx.hash;
 }
@@ -193,8 +193,7 @@ end = struct
     loop 0 saved_state_version_length
 
   let normalize_resolved_requires
-      ~normalizer { Module_heaps.file_key; resolved_modules; phantom_dependents; hash } =
-    let file_key = FileNormalizer.normalize_file_key normalizer file_key in
+      ~normalizer { Parsing_heaps.resolved_modules; phantom_dependents; hash } =
     let phantom_dependents =
       SSet.map (FileNormalizer.normalize_path normalizer) phantom_dependents
     in
@@ -203,7 +202,7 @@ end = struct
         (modulename_map_fn ~f:(FileNormalizer.normalize_file_key normalizer))
         resolved_modules
     in
-    { Module_heaps.file_key; resolved_modules; phantom_dependents; hash }
+    { Parsing_heaps.resolved_modules; phantom_dependents; hash }
 
   let normalize_file_data ~normalizer { resolved_requires; exports; hash } =
     let resolved_requires = normalize_resolved_requires ~normalizer resolved_requires in
@@ -217,13 +216,13 @@ end = struct
   let collect_normalized_data_for_parsed_file ~normalizer ~reader fn parsed_heaps =
     let addr = Parsing_heaps.get_file_addr_unsafe fn in
     let parse = Parsing_heaps.Reader.get_typed_parse_unsafe ~reader fn addr in
+    let resolved_requires = Parsing_heaps.Reader.get_resolved_requires_unsafe fn ~reader parse in
     let file_data =
       {
         module_name = Parsing_heaps.read_module_name parse;
         normalized_file_data =
           {
-            resolved_requires =
-              Module_heaps.Reader.get_resolved_requires_unsafe ~reader ~audit:Expensive.ok fn;
+            resolved_requires;
             exports = Parsing_heaps.read_exports parse;
             hash = Parsing_heaps.read_file_hash parse;
           };
@@ -505,14 +504,13 @@ end = struct
       read_version fd (Bytes.create saved_state_version_length) 0 saved_state_version_length
 
   let denormalize_resolved_requires
-      ~root { Module_heaps.file_key; resolved_modules; phantom_dependents; hash = _ } =
+      ~root { Parsing_heaps.resolved_modules; phantom_dependents; hash = _ } =
     (* We do our best to avoid reading the file system (which Path.make will do) *)
     let phantom_dependents = SSet.map (Files.absolute_path root) phantom_dependents in
     let resolved_modules =
       SMap.map (modulename_map_fn ~f:(denormalize_file_key_nocache ~root)) resolved_modules
     in
-    let file_key = denormalize_file_key_nocache ~root file_key in
-    Module_heaps.mk_resolved_requires file_key ~resolved_modules ~phantom_dependents
+    Parsing_heaps.mk_resolved_requires ~resolved_modules ~phantom_dependents
 
   (** Turns all the relative paths in a file's data back into absolute paths. *)
   let denormalize_file_data ~root { resolved_requires; exports; hash } =

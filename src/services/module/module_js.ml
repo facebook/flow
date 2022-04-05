@@ -646,19 +646,23 @@ let resolved_requires_of ~options ~reader node_modules_containers file require_l
       SMap.empty
   in
   let { paths = phantom_dependents; errors } = resolution_acc in
-  (errors, Module_heaps.mk_resolved_requires file ~resolved_modules ~phantom_dependents)
+  (errors, Parsing_heaps.mk_resolved_requires ~resolved_modules ~phantom_dependents)
 
 let add_parsed_resolved_requires ~mutator ~reader ~options ~node_modules_containers file =
-  let file_sig =
-    Parsing_heaps.Mutator_reader.get_file_sig_unsafe ~reader file |> File_sig.abstractify_locs
-  in
+  let file_addr = Parsing_heaps.get_file_addr_unsafe file in
+  let parse = Parsing_heaps.Mutator_reader.get_typed_parse_unsafe ~reader file file_addr in
+  let file_sig = Parsing_heaps.read_file_sig_unsafe file parse |> File_sig.abstractify_locs in
   let require_loc = File_sig.With_ALoc.(require_loc_map file_sig.module_sig) in
   let (errors, resolved_requires) =
     let reader = Abstract_state_reader.Mutator_state_reader reader in
     resolved_requires_of ~options ~reader node_modules_containers file require_loc
   in
   let resolved_requires_changed =
-    Module_heaps.Resolved_requires_mutator.add_resolved_requires mutator file resolved_requires
+    Parsing_heaps.Resolved_requires_mutator.add_resolved_requires
+      mutator
+      file_addr
+      parse
+      resolved_requires
   in
   let errorset =
     List.fold_left

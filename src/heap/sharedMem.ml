@@ -54,8 +54,6 @@ type tag =
   | Serialized_file_sig_tag
   | Serialized_exports_tag
 
-type serialized_tag = Serialized_resolved_requires
-
 let heap_ref : buf option ref = ref None
 
 (* constant constructors are integers *)
@@ -170,6 +168,9 @@ external get_next_version : unit -> int = "hh_next_version" [@@noalloc]
  * and writers. *)
 external commit_transaction : unit -> unit = "hh_commit_transaction"
 
+(* Iterate the shared hash table. *)
+external hh_iter : (_ addr -> unit) -> unit = "hh_iter"
+
 let on_compact = ref (fun _ _ -> ())
 
 let compact_helper () =
@@ -270,10 +271,6 @@ module type Value = sig
   type t
 
   val description : string
-end
-
-module type SerializedTag = sig
-  val value : serialized_tag
 end
 
 module type AddrValue = sig
@@ -432,12 +429,6 @@ module type NoCache = sig
   val revive_batch : KeySet.t -> unit
 end
 
-module type NoCacheTag = sig
-  include NoCache
-
-  val iter : (value -> unit) -> unit
-end
-
 module type LocalCache = sig
   module DebugL1 : DebugCacheType
 
@@ -470,11 +461,7 @@ end
 (* A functor returning an implementation of the S module without caching. *)
 (*****************************************************************************)
 
-module NoCacheInternal
-    (Key : Key)
-    (Value : Value) (Tag : sig
-      val tag : int
-    end) :
+module NoCache (Key : Key) (Value : Value) :
   NoCache with type key = Key.t and type value = Value.t and module KeySet = Flow_set.Make(Key) =
 struct
   module Tbl = HashtblSegment (Key)
@@ -491,7 +478,7 @@ struct
 
   external hh_get_size : _ addr -> int = "hh_get_size"
 
-  let hh_store x = WorkerCancel.with_worker_exit (fun () -> hh_store x Tag.tag)
+  let hh_store x = WorkerCancel.with_worker_exit (fun () -> hh_store x (tag_val Serialized_tag))
 
   let hh_deserialize x = WorkerCancel.with_worker_exit (fun () -> hh_deserialize x)
 
@@ -554,29 +541,6 @@ struct
   let revive_batch keys = KeySet.iter Tbl.revive keys
 
   let remove_old_batch keys = KeySet.iter Tbl.remove_old keys
-end
-
-module NoCache (Key : Key) (Value : Value) =
-  NoCacheInternal (Key) (Value)
-    (struct
-      let tag = tag_val Serialized_tag
-    end)
-
-module NoCacheTag (Key : Key) (Value : Value) (Tag : SerializedTag) = struct
-  let tag =
-    (* Tag values here must match the corresponding values from NewAPI.tag *)
-    match Tag.value with
-    | Serialized_resolved_requires -> tag_val Serialized_resolved_requires_tag
-
-  include
-    NoCacheInternal (Key) (Value)
-      (struct
-        let tag = tag
-      end)
-
-  external hh_iter_serialized : ('a -> unit) -> int -> unit = "hh_iter_serialized"
-
-  let iter f = WorkerCancel.with_worker_exit (fun () -> hh_iter_serialized f tag)
 end
 
 module NoCacheAddr (Key : Key) (Value : AddrValue) = struct
@@ -934,6 +898,8 @@ module NewAPI = struct
   type file_sig
 
   type exports
+
+  type resolved_requires
 
   type +'a parse
 
@@ -1438,6 +1404,13 @@ module NewAPI = struct
 
   let read_exports addr = read_compressed Serialized_exports_tag addr
 
+  (** Resolved requires *)
+
+  let prepare_write_resolved_requires resolved_requires =
+    prepare_write_compressed Serialized_resolved_requires_tag resolved_requires
+
+  let read_resolved_requires addr = read_compressed Serialized_resolved_requires_tag addr
+
   (** Field utils *)
 
   let set_generic offset base = unsafe_write_addr_at (get_heap ()) (offset base)
@@ -1450,7 +1423,7 @@ module NewAPI = struct
 
   let untyped_parse_size = 3 * addr_size
 
-  let typed_parse_size = 9 * addr_size
+  let typed_parse_size = 10 * addr_size
 
   let write_untyped_parse chunk hash haste_module =
     let haste_module = Option.value haste_module ~default:opt_none in
@@ -1460,7 +1433,7 @@ module NewAPI = struct
     unsafe_write_addr chunk null_addr (* next haste provider *);
     addr
 
-  let write_typed_parse chunk hash haste_module exports =
+  let write_typed_parse chunk hash haste_module exports resolved_requires =
     let haste_module = Option.value haste_module ~default:opt_none in
     let addr = write_header chunk Typed_tag typed_parse_size in
     unsafe_write_addr chunk hash;
@@ -1472,6 +1445,7 @@ module NewAPI = struct
     unsafe_write_addr chunk null_addr;
     unsafe_write_addr chunk null_addr;
     unsafe_write_addr chunk exports;
+    unsafe_write_addr chunk resolved_requires;
     addr
 
   let is_typed parse =
@@ -1502,6 +1476,8 @@ module NewAPI = struct
 
   let exports_addr parse = addr_offset parse 9
 
+  let resolved_requires_addr parse = addr_offset parse 10
+
   let get_file_hash = get_generic file_hash_addr
 
   let get_haste_module = get_generic_opt haste_module_addr
@@ -1517,6 +1493,8 @@ module NewAPI = struct
   let get_file_sig = get_generic_opt file_sig_addr
 
   let get_exports = get_generic exports_addr
+
+  let get_resolved_requires = get_generic resolved_requires_addr
 
   let set_ast = set_generic ast_addr
 
@@ -1765,4 +1743,21 @@ module NewAPI = struct
     let head_addr = file_all_providers_addr m in
     let head = read_addr heap head_addr in
     loop head_addr head
+
+  let iter_resolved_requires f =
+    let heap = get_heap () in
+    let f addr =
+      let hd = read_header heap addr in
+      if obj_tag hd = tag_val Source_file_tag then
+        match entity_read_latest (get_parse addr) with
+        | None -> ()
+        | Some parse ->
+          let hd = read_header heap parse in
+          if obj_tag hd = tag_val Typed_tag then (
+            match entity_read_latest (get_resolved_requires parse) with
+            | None -> ()
+            | Some resolved_requires -> f addr resolved_requires
+          )
+    in
+    hh_iter f
 end

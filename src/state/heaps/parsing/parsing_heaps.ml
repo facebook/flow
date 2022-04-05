@@ -50,6 +50,8 @@ exception Haste_module_not_found of string
 
 exception File_module_not_found of string
 
+exception Resolved_requires_not_found of string
+
 type locs_tbl = Loc.t Type_sig_collections.Locs.t
 
 type type_sig = Type_sig_collections.Locs.index Packed_type_sig.Module.t
@@ -64,7 +66,24 @@ type file_module_addr = Heap.file_module SharedMem.addr
 
 type provider_addr = Heap.file Heap.entity SharedMem.addr
 
+type resolved_requires = {
+  resolved_modules: Modulename.t SMap.t;
+  phantom_dependents: SSet.t;
+  hash: Xx.hash;
+}
+[@@deriving show]
+
 let ( let* ) = Option.bind
+
+let mk_resolved_requires ~resolved_modules ~phantom_dependents =
+  let state = Xx.init 0L in
+  SMap.iter
+    (fun reference modulename ->
+      Xx.update state reference;
+      Xx.update state (Modulename.to_string modulename))
+    resolved_modules;
+  SSet.iter (Xx.update state) phantom_dependents;
+  { resolved_modules; phantom_dependents; hash = Xx.digest state }
 
 (* There's some redundancy in the visitors here, but an attempt to avoid repeated code led,
  * inexplicably, to a shared heap size regression under types-first: D15481813 *)
@@ -277,13 +296,16 @@ let add_checked_file file_key hash module_name docblock ast locs type_sig file_s
     | Either.Right (size, add_file_maybe, old_haste_module) ->
       let exports = serialize exports in
       let (exports_size, write_exports) = prepare_write_exports exports in
-      let size = size + (3 * header_size) + typed_parse_size + int64_size + exports_size in
+      let size =
+        size + (4 * header_size) + typed_parse_size + int64_size + exports_size + entity_size
+      in
       let (size, add_haste_module_maybe) = prepare_add_haste_module_maybe size module_name in
       let write chunk =
         let hash = write_int64 chunk hash in
         let haste_module = add_haste_module_maybe chunk in
         let exports = write_exports chunk in
-        let parse = write_typed_parse chunk hash haste_module exports in
+        let resolved_requires = write_entity chunk None in
+        let parse = write_typed_parse chunk hash haste_module exports resolved_requires in
         let (file, new_file_module) =
           add_file_maybe chunk (parse :> [ `typed | `untyped ] parse_addr)
         in
@@ -564,6 +586,9 @@ let read_exports parse : Exports.t =
   let deserialize x = Marshal.from_string x 0 in
   get_exports parse |> read_exports |> deserialize
 
+let read_resolved_requires addr : resolved_requires =
+  Marshal.from_string (Heap.read_resolved_requires addr) 0
+
 module Reader_cache : sig
   val get_ast : File_key.t -> (Loc.t, Loc.t) Flow_ast.Program.t option
 
@@ -671,6 +696,9 @@ module type READER = sig
     reader:reader -> File_key.t -> file_addr -> [ `typed | `untyped ] parse_addr
 
   val get_typed_parse_unsafe : reader:reader -> File_key.t -> file_addr -> [ `typed ] parse_addr
+
+  val get_resolved_requires_unsafe :
+    reader:reader -> File_key.t -> [ `typed ] parse_addr -> resolved_requires
 
   val get_ast_unsafe : reader:reader -> File_key.t -> (Loc.t, Loc.t) Flow_ast.Program.t
 
@@ -807,6 +835,12 @@ module Mutator_reader = struct
     match Heap.coerce_typed parse with
     | Some parse -> parse
     | None -> raise (File_not_typed (File_key.to_string file))
+
+  let get_resolved_requires_unsafe ~reader file parse =
+    let resolved_requires = Heap.get_resolved_requires parse in
+    match read ~reader resolved_requires with
+    | Some resolved_requires -> read_resolved_requires resolved_requires
+    | None -> raise (Resolved_requires_not_found (File_key.to_string file))
 
   let get_ast_unsafe ~reader file =
     let addr = get_file_addr_unsafe file in
@@ -985,6 +1019,82 @@ module Commit_modules_mutator = struct
   let record_no_providers () modules = no_providers := modules
 end
 
+module Resolved_requires_mutator = struct
+  type t = unit
+
+  let dirty_files = ref FilenameSet.empty
+
+  let rollback_resolved_requires file_key =
+    let open SharedMem.NewAPI in
+    let entity =
+      let* file = get_file_addr file_key in
+      let* parse = entity_read_latest (get_parse file) in
+      let* parse = coerce_typed parse in
+      Some (get_resolved_requires parse)
+    in
+    Option.iter entity_rollback entity
+
+  let commit () =
+    dirty_files := FilenameSet.empty;
+    Lwt.return_unit
+
+  let rollback () =
+    WorkerCancel.with_no_cancellations (fun () ->
+        FilenameSet.iter rollback_resolved_requires !dirty_files
+    );
+    dirty_files := FilenameSet.empty;
+    Lwt.return_unit
+
+  let create transaction files =
+    dirty_files := files;
+    Transaction.add ~commit ~rollback transaction
+
+  (* To detect whether resolved requires have changed, we load the old resolved
+   * requires for this file and compare hashes. There are two interesting cases:
+   *
+   * 1. If this file is unchanged, then we advance the resolved requires entity
+   *    of the latest parse. The "old" resolved requires is the latest version
+   *    before updating.
+   *
+   * 2. If the file is changed, then the "old" resolved requires is the latest
+   *    version of the *committed* parse, but we advance the resolved requires
+   *    entity of the *latest* parse, as with case (1).
+   *
+   * If the hashes are unchanged, then for case (1) we can do nothing, but for
+   * case (2) we need to advance the resolved requires entity of the latest
+   * parse, because fresh parses start out without resolved requires.
+   *)
+  let add_resolved_requires () file parse resolved_requires =
+    let module Heap = SharedMem.NewAPI in
+    let old_resolved_requires =
+      let* old_parse = Heap.entity_read_committed (Heap.get_parse file) in
+      let* old_parse = Heap.coerce_typed old_parse in
+      let old_ent = Heap.get_resolved_requires old_parse in
+      match Heap.entity_read_latest old_ent with
+      | Some addr ->
+        let { hash; _ } = read_resolved_requires addr in
+        Some (old_ent, hash, addr)
+      | None -> None
+    in
+    let open Heap in
+    let ent = get_resolved_requires parse in
+    match old_resolved_requires with
+    | Some (old_ent, hash, addr) when Int64.equal hash resolved_requires.hash ->
+      if ent == old_ent then
+        ()
+      else
+        entity_advance ent (Some addr);
+      false
+    | _ ->
+      let resolved_requires = Marshal.to_string resolved_requires [] in
+      let (size, write) = prepare_write_resolved_requires resolved_requires in
+      alloc (header_size + size) (fun chunk ->
+          let resolved_requires = write chunk in
+          entity_advance ent (Some resolved_requires)
+      );
+      true
+end
+
 (* This uses `entity_read_committed` and can be used by code outside of a
  * init/recheck, like commands, to see a consistent snapshot of type state even
  * in the middle of a recheck. *)
@@ -1077,6 +1187,12 @@ module Reader = struct
     match Heap.coerce_typed parse with
     | Some parse -> parse
     | None -> raise (File_not_typed (File_key.to_string file))
+
+  let get_resolved_requires_unsafe ~reader file parse =
+    let resolved_requires = Heap.get_resolved_requires parse in
+    match read ~reader resolved_requires with
+    | Some resolved_requires -> read_resolved_requires resolved_requires
+    | None -> raise (Resolved_requires_not_found (File_key.to_string file))
 
   let get_ast_unsafe ~reader file =
     let addr = get_file_addr_unsafe file in
@@ -1207,6 +1323,11 @@ module Reader_dispatcher : READER with type reader = Abstract_state_reader.t = s
     | Mutator_state_reader reader -> Mutator_reader.get_typed_parse_unsafe ~reader
     | State_reader reader -> Reader.get_typed_parse_unsafe ~reader
 
+  let get_resolved_requires_unsafe ~reader =
+    match reader with
+    | Mutator_state_reader reader -> Mutator_reader.get_resolved_requires_unsafe ~reader
+    | State_reader reader -> Reader.get_resolved_requires_unsafe ~reader
+
   let get_ast_unsafe ~reader =
     match reader with
     | Mutator_state_reader reader -> Mutator_reader.get_ast_unsafe ~reader
@@ -1250,24 +1371,25 @@ module Reader_dispatcher : READER with type reader = Abstract_state_reader.t = s
   let loc_of_aloc = loc_of_aloc ~get_aloc_table_unsafe
 end
 
-module From_saved_state : sig
-  val add_parsed : File_key.t -> Xx.hash -> string option -> Exports.t -> MSet.t
-
-  val add_unparsed : File_key.t -> Xx.hash -> string option -> MSet.t
-end = struct
-  let add_parsed file_key hash module_name exports =
+module From_saved_state = struct
+  let add_parsed file_key hash module_name exports resolved_requires =
     let (file_kind, file_name) = file_kind_and_name file_key in
     let exports = Marshal.to_string exports [] in
-    let (exports_size, write_exports) = Heap.prepare_write_exports exports in
+    let resolved_requires = Marshal.to_string resolved_requires [] in
     let open Heap in
+    let (exports_size, write_exports) = prepare_write_exports exports in
+    let (resolved_requires_size, write_resolved_requires) =
+      prepare_write_resolved_requires resolved_requires
+    in
     let size =
-      (6 * header_size)
-      + entity_size
+      (8 * header_size)
+      + (2 * entity_size)
       + string_size file_name
       + typed_parse_size
       + file_size
       + int64_size
       + exports_size
+      + resolved_requires_size
     in
     let (size, add_file_module_maybe) = prepare_add_file_module_maybe size file_key in
     let (size, add_haste_module_maybe) = prepare_add_haste_module_maybe size module_name in
@@ -1277,7 +1399,9 @@ end = struct
         let hash = write_int64 chunk hash in
         let haste_module = add_haste_module_maybe chunk in
         let exports = write_exports chunk in
-        let parse = write_typed_parse chunk hash haste_module exports in
+        let resolved_requires = write_resolved_requires chunk in
+        let resolved_requires_ent = write_entity chunk (Some resolved_requires) in
+        let parse = write_typed_parse chunk hash haste_module exports resolved_requires_ent in
         let parse_ent = write_entity chunk (Some (parse :> [ `typed | `untyped ] parse_addr)) in
         let file = write_file chunk file_kind file_name file_module parse_ent in
         assert (file = FileHeap.add file_key file);
@@ -1286,3 +1410,8 @@ end = struct
 
   let add_unparsed = add_unparsed
 end
+
+let iter_resolved_requires f =
+  SharedMem.NewAPI.iter_resolved_requires (fun file resolved_requires ->
+      f file (read_resolved_requires resolved_requires)
+  )

@@ -19,6 +19,16 @@ type file_module_addr = SharedMem.NewAPI.file_module SharedMem.addr
 
 type provider_addr = SharedMem.NewAPI.file SharedMem.NewAPI.entity SharedMem.addr
 
+type resolved_requires = {
+  resolved_modules: Modulename.t SMap.t;
+  phantom_dependents: SSet.t;
+  hash: Xx.hash;
+}
+[@@deriving show]
+
+val mk_resolved_requires :
+  resolved_modules:Modulename.t SMap.t -> phantom_dependents:SSet.t -> resolved_requires
+
 val get_file_addr : File_key.t -> file_addr option
 
 val get_file_addr_unsafe : File_key.t -> file_addr
@@ -83,6 +93,9 @@ module type READER = sig
     reader:reader -> File_key.t -> file_addr -> [ `typed | `untyped ] parse_addr
 
   val get_typed_parse_unsafe : reader:reader -> File_key.t -> file_addr -> [ `typed ] parse_addr
+
+  val get_resolved_requires_unsafe :
+    reader:reader -> File_key.t -> [ `typed ] parse_addr -> resolved_requires
 
   val get_ast_unsafe : reader:reader -> File_key.t -> (Loc.t, Loc.t) Flow_ast.Program.t
 
@@ -158,8 +171,19 @@ module Commit_modules_mutator : sig
   val record_no_providers : t -> Modulename.Set.t -> unit
 end
 
+module Resolved_requires_mutator : sig
+  type t
+
+  val create : Transaction.t -> Utils_js.FilenameSet.t -> t
+
+  val add_resolved_requires : t -> file_addr -> [ `typed ] parse_addr -> resolved_requires -> bool
+end
+
 module From_saved_state : sig
-  val add_parsed : File_key.t -> Xx.hash -> string option -> Exports.t -> Modulename.Set.t
+  val add_parsed :
+    File_key.t -> Xx.hash -> string option -> Exports.t -> resolved_requires -> Modulename.Set.t
 
   val add_unparsed : File_key.t -> Xx.hash -> string option -> Modulename.Set.t
 end
+
+val iter_resolved_requires : (file_addr -> resolved_requires -> unit) -> unit

@@ -51,7 +51,7 @@ let remove_dot_flow_suffix = function
   | module_ -> module_
 
 let module_of_module_ref ~resolved_requires ~root ~write_root module_ref =
-  SMap.find module_ref resolved_requires.Module_heaps.resolved_modules
+  SMap.find module_ref resolved_requires.Parsing_heaps.resolved_modules
   |> Module.of_modulename ~root ~write_root
 
 let loc_of_index ~loc_source ~reader (i : Type_sig_collections.Locs.index) : Loc.t =
@@ -712,7 +712,10 @@ let make ~output_dir ~write_root =
       let root = Options.root options in
       let reader = State_reader.create () in
       let resolved_requires =
-        Module_heaps.Reader.get_resolved_requires_unsafe ~reader ~audit:Expensive.warn file
+        let open Parsing_heaps in
+        get_file_addr_unsafe file
+        |> Reader.get_typed_parse_unsafe ~reader file
+        |> Reader.get_resolved_requires_unsafe ~reader file
       in
       let scope_info =
         Scope_builder.program ~enable_enums:(Options.enums options) ~with_types:false ast
