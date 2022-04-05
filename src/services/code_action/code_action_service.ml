@@ -221,8 +221,8 @@ let from_of_source ~options ~reader ~src_dir source =
     | Some addr ->
       (match Parsing_heaps.Reader.get_parse ~reader addr with
       | None -> None
-      | Some parse ->
-        let module_name = Parsing_heaps.read_module_name parse in
+      | Some _ ->
+        let module_name = Parsing_heaps.Reader.get_haste_name ~reader addr in
         let node_resolver_dirnames = Options.file_options options |> Files.node_resolver_dirnames in
         path_of_modulename ~node_resolver_dirnames ~reader src_dir from module_name))
 

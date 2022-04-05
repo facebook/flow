@@ -35,6 +35,7 @@ type tag =
   | Addr_tbl_tag
   | Untyped_tag
   | Typed_tag
+  | Haste_info_tag
   | Source_file_tag
   | Json_file_tag
   | Resource_file_tag
@@ -42,13 +43,13 @@ type tag =
   | Haste_module_tag
   | File_module_tag
   (* tags defined below this point are scanned for pointers *)
-  | String_tag (* 10 *)
+  | String_tag (* 11 *)
   | Int64_tag
   | Docblock_tag
   | ALoc_table_tag
   | Type_sig_tag
   (* tags defined above this point are serialized+compressed *)
-  | Serialized_tag (* 15 *)
+  | Serialized_tag (* 16 *)
   | Serialized_resolved_requires_tag
   | Serialized_ast_tag
   | Serialized_file_sig_tag
@@ -62,8 +63,8 @@ let tag_val : tag -> int = Obj.magic
 (* double-check integer values are consistent with hh_shared.c *)
 let () =
   assert (tag_val Entity_tag = 0);
-  assert (tag_val String_tag = 10);
-  assert (tag_val Serialized_tag = 15)
+  assert (tag_val String_tag = 11);
+  assert (tag_val Serialized_tag = 16)
 
 exception Out_of_shared_memory
 
@@ -903,6 +904,8 @@ module NewAPI = struct
 
   type +'a parse
 
+  type haste_info
+
   type file
 
   type haste_module
@@ -1421,24 +1424,18 @@ module NewAPI = struct
 
   (** Parse data *)
 
-  let untyped_parse_size = 3 * addr_size
+  let untyped_parse_size = 1 * addr_size
 
-  let typed_parse_size = 10 * addr_size
+  let typed_parse_size = 8 * addr_size
 
-  let write_untyped_parse chunk hash haste_module =
-    let haste_module = Option.value haste_module ~default:opt_none in
+  let write_untyped_parse chunk hash =
     let addr = write_header chunk Untyped_tag untyped_parse_size in
     unsafe_write_addr chunk hash;
-    unsafe_write_addr chunk haste_module;
-    unsafe_write_addr chunk null_addr (* next haste provider *);
     addr
 
-  let write_typed_parse chunk hash haste_module exports resolved_requires =
-    let haste_module = Option.value haste_module ~default:opt_none in
+  let write_typed_parse chunk hash exports resolved_requires =
     let addr = write_header chunk Typed_tag typed_parse_size in
     unsafe_write_addr chunk hash;
-    unsafe_write_addr chunk haste_module;
-    unsafe_write_addr chunk null_addr (* next haste provider *);
     unsafe_write_addr chunk null_addr;
     unsafe_write_addr chunk null_addr;
     unsafe_write_addr chunk null_addr;
@@ -1460,27 +1457,21 @@ module NewAPI = struct
 
   let file_hash_addr parse = addr_offset parse 1
 
-  let haste_module_addr parse = addr_offset parse 2
+  let ast_addr parse = addr_offset parse 2
 
-  let next_haste_provider_addr parse = addr_offset parse 3
+  let docblock_addr parse = addr_offset parse 3
 
-  let ast_addr parse = addr_offset parse 4
+  let aloc_table_addr parse = addr_offset parse 4
 
-  let docblock_addr parse = addr_offset parse 5
+  let type_sig_addr parse = addr_offset parse 5
 
-  let aloc_table_addr parse = addr_offset parse 6
+  let file_sig_addr parse = addr_offset parse 6
 
-  let type_sig_addr parse = addr_offset parse 7
+  let exports_addr parse = addr_offset parse 7
 
-  let file_sig_addr parse = addr_offset parse 8
-
-  let exports_addr parse = addr_offset parse 9
-
-  let resolved_requires_addr parse = addr_offset parse 10
+  let resolved_requires_addr parse = addr_offset parse 8
 
   let get_file_hash = get_generic file_hash_addr
-
-  let get_haste_module = get_generic_opt haste_module_addr
 
   let get_ast = get_generic_opt ast_addr
 
@@ -1506,6 +1497,24 @@ module NewAPI = struct
 
   let set_file_sig = set_generic file_sig_addr
 
+  (** Haste info *)
+
+  let haste_info_size = 2 * addr_size
+
+  let write_haste_info chunk haste_module =
+    let addr = write_header chunk Haste_info_tag haste_info_size in
+    unsafe_write_addr chunk haste_module;
+    unsafe_write_addr chunk null_addr (* next haste provider *);
+    addr
+
+  let haste_module_addr parse = addr_offset parse 1
+
+  let next_haste_provider_addr parse = addr_offset parse 2
+
+  let get_haste_module = get_generic haste_module_addr
+
+  let haste_info_equal = Int.equal
+
   (** File data *)
 
   type file_kind =
@@ -1520,24 +1529,27 @@ module NewAPI = struct
     | Resource_file -> Resource_file_tag
     | Lib_file -> Lib_file_tag
 
-  let file_size = 4 * addr_size
+  let file_size = 5 * addr_size
 
-  let write_file chunk kind file_name file_module parse =
+  let write_file chunk kind file_name parse haste_info file_module =
     let file_module = Option.value file_module ~default:opt_none in
     let addr = write_header chunk (file_tag kind) file_size in
     unsafe_write_addr chunk file_name;
-    unsafe_write_addr chunk file_module;
     unsafe_write_addr chunk parse;
+    unsafe_write_addr chunk haste_info;
+    unsafe_write_addr chunk file_module;
     unsafe_write_addr chunk null_addr (* next file provider *);
     addr
 
   let file_name_addr file = addr_offset file 1
 
-  let file_module_addr file = addr_offset file 2
+  let parse_addr file = addr_offset file 2
 
-  let parse_addr file = addr_offset file 3
+  let haste_info_addr file = addr_offset file 3
 
-  let next_file_provider_addr file = addr_offset file 4
+  let file_module_addr file = addr_offset file 4
+
+  let next_file_provider_addr file = addr_offset file 5
 
   let get_file_kind file =
     let hd = read_header (get_heap ()) file in
@@ -1556,6 +1568,8 @@ module NewAPI = struct
   let get_file_name = get_generic file_name_addr
 
   let get_file_module = get_generic_opt file_module_addr
+
+  let get_haste_info = get_generic haste_info_addr
 
   let get_parse = get_generic parse_addr
 
@@ -1597,9 +1611,9 @@ module NewAPI = struct
 
   let get_haste_provider = get_generic haste_provider_addr
 
-  let add_haste_provider m file parse =
+  let add_haste_provider m file provider =
     let head_addr = haste_all_providers_addr m in
-    let next_addr = next_haste_provider_addr parse in
+    let next_addr = next_haste_provider_addr provider in
     add_provider head_addr next_addr file
 
   (* Iterate through linked list of providers, accumulating a list. While
@@ -1618,20 +1632,20 @@ module NewAPI = struct
       if is_none node then
         acc
       else
-        let parse_ent = get_parse node in
-        match entity_read_latest parse_ent with
-        | Some parse when m == get_generic haste_module_addr parse ->
+        let haste_ent = get_haste_info node in
+        match entity_read_latest haste_ent with
+        | Some haste_info when m == get_generic haste_module_addr haste_info ->
           (* `node` is a current provider of `m` *)
-          let next_addr = next_haste_provider_addr parse in
+          let next_addr = next_haste_provider_addr haste_info in
           let next = read_addr heap next_addr in
           loop (node :: acc) next_addr next
         | _ ->
           (* `node` no longer provides `m` -- perform deferred deletion.
            * Invariant: `node` used to provide `m`, so the next item in this
-           * list comes from the committed parse data. *)
-          let old_parse = Option.get (entity_read_committed parse_ent) in
-          assert (m == get_generic haste_module_addr old_parse);
-          let next_addr = next_haste_provider_addr old_parse in
+           * list comes from the committed haste info. *)
+          let old_haste_info = Option.get (entity_read_committed haste_ent) in
+          assert (m == get_generic haste_module_addr old_haste_info);
+          let next_addr = next_haste_provider_addr old_haste_info in
           let next = read_addr heap next_addr in
           unsafe_write_addr_at heap node_addr next;
           loop acc node_addr next
@@ -1656,19 +1670,19 @@ module NewAPI = struct
       if is_none node then
         ()
       else
-        let parse_ent = get_parse node in
-        match entity_read_latest parse_ent with
-        | Some parse when m == get_generic haste_module_addr parse ->
-          let next_addr = next_haste_provider_addr parse in
+        let haste_ent = get_haste_info node in
+        match entity_read_latest haste_ent with
+        | Some haste_info when m == get_generic haste_module_addr haste_info ->
+          let next_addr = next_haste_provider_addr haste_info in
           let next = read_addr heap next_addr in
           if node == file then
             unsafe_write_addr_at heap node_addr next
           else
             loop next_addr next
         | _ ->
-          let old_parse = Option.get (entity_read_committed parse_ent) in
-          assert (m == get_generic haste_module_addr old_parse);
-          let next_addr = next_haste_provider_addr old_parse in
+          let old_haste_info = Option.get (entity_read_committed haste_ent) in
+          assert (m == get_generic haste_module_addr old_haste_info);
+          let next_addr = next_haste_provider_addr old_haste_info in
           let next = read_addr heap next_addr in
           unsafe_write_addr_at heap node_addr next;
           loop node_addr next
