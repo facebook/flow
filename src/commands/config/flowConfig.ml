@@ -139,6 +139,7 @@ module Opts = struct
     watchman_survive_restarts: bool option;
     watchman_sync_timeout: int option;
   }
+  [@@warning "-69"]
 
   let warn_on_unknown_opts (raw_opts, config) : (t * warning list, error) result =
     (* If the user specified any options that aren't defined, issue a warning *)

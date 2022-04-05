@@ -17,6 +17,7 @@ and root = {
   rank: int;
   constraints: constraints;
 }
+[@@warning "-69"]
 
 and constraints =
   | TrustResolved of trust_qualifier

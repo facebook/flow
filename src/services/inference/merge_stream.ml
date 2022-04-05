@@ -62,6 +62,7 @@ type 'a t = {
   mutable skipped_files: int;
   mutable new_or_changed_files: FilenameSet.t;
 }
+[@@warning "-69"]
 
 let add_ready node stream =
   assert (node.blocking = 0);

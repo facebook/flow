@@ -10,6 +10,8 @@ type compressed = {
   compressed_size: int;
   uncompressed_size: int;
 }
+[@@warning "-69"]
+(* field used in external code *)
 
 external marshal_and_compress : 'a -> compressed = "marshal_and_compress_stub"
 

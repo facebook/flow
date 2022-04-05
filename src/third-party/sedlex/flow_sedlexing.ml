@@ -34,6 +34,7 @@ type lexbuf = {
   mutable marked_line: int;
   mutable marked_val: int;
 }
+[@@warning "-69"]
 
 let lexbuf_clone (x : lexbuf) : lexbuf =
   {

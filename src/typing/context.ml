@@ -184,6 +184,7 @@ type component_t = {
   (* map from annot tvar ids to nodes used during annotation processing *)
   mutable annot_graph: Type.AConstraint.node IMap.t;
 }
+[@@warning "-69"]
 
 type phase =
   | InitLib

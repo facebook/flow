@@ -115,6 +115,7 @@ type worker = {
   (* On Windows, a function to spawn a worker. *)
   spawn: unit -> (void, request) Daemon.handle;
 }
+[@@warning "-69"]
 
 let worker_id w = w.id
 

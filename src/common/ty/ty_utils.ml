@@ -10,6 +10,7 @@ module FreeVars = struct
     is_toplevel: bool;
     skip: ISet.t;
   }
+  [@@warning "-69"]
 
   let searcher =
     object

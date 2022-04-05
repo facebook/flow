@@ -892,6 +892,7 @@ end = struct
     high_water_mark_delta: float;
     is_legacy: bool;
   }
+  [@@warning "-69"]
 
   and running' = {
     running_groups_rev: string list;
