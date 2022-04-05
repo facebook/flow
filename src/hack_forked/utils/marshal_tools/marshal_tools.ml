@@ -70,8 +70,6 @@ module type WRITER_READER = sig
 
   val return : 'a -> 'a result
 
-  val fail : exn -> 'a result
-
   val ( >>= ) : 'a result -> ('a -> 'b result) -> 'b result
 
   val write : ?timeout:Timeout.t -> fd -> buffer:bytes -> offset:int -> size:int -> int result
@@ -90,8 +88,6 @@ module RegularWriterReader : REGULAR_WRITER_READER = struct
   type fd = Unix.file_descr
 
   let return x = x
-
-  let fail exn = raise exn
 
   let ( >>= ) a f = f a
 
@@ -207,7 +203,7 @@ end = struct
     let preamble = make_preamble size in
     ( ( write_payload ?timeout fd preamble 0 expected_preamble_size >>= fun preamble_bytes_written ->
         if preamble_bytes_written <> expected_preamble_size then
-          WriterReader.fail Writing_Preamble_Exception
+          raise Writing_Preamble_Exception
         else
           WriterReader.return ()
       )
@@ -215,7 +211,7 @@ end = struct
     )
     >>= fun bytes_written ->
     if bytes_written <> size then
-      WriterReader.fail Writing_Payload_Exception
+      raise Writing_Payload_Exception
     else
       WriterReader.return size
 
@@ -234,10 +230,10 @@ end = struct
     ( WriterReader.read ?timeout fd ~buffer:preamble ~offset:0 ~size:expected_preamble_size
     >>= fun bytes_read ->
       if bytes_read = 0 (* Unix manpage for read says 0 bytes read indicates end of file. *) then
-        WriterReader.fail End_of_file
+        raise End_of_file
       else if bytes_read <> expected_preamble_size then (
         WriterReader.log (Printf.sprintf "Error, only read %d bytes for preamble." bytes_read);
-        WriterReader.fail Reading_Preamble_Exception
+        raise Reading_Preamble_Exception
       ) else
         WriterReader.return ()
     )
@@ -246,7 +242,7 @@ end = struct
     let payload = Bytes.create payload_size in
     read_payload ?timeout fd payload 0 payload_size >>= fun payload_size_read ->
     if payload_size_read <> payload_size then
-      WriterReader.fail Reading_Payload_Exception
+      raise Reading_Payload_Exception
     else
       WriterReader.return (Marshal.from_bytes payload 0)
 end
