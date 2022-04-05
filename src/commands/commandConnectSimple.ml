@@ -98,14 +98,11 @@ let establish_connection ~flowconfig_name ~timeout ~client_handshake ~tmp_dir ro
   let sockaddr = Socket.addr_for_open (Server_files.socket_file ~flowconfig_name ~tmp_dir root) in
   Ok (sockaddr, open_connection ~timeout ~client_handshake sockaddr)
 
-let get_handshake ~timeout:_ sockaddr ic oc =
+let get_handshake ~timeout sockaddr ic oc =
   SocketHandshake.(
-    (* TODO (glevi) - If we want this read to timeout on Windows, we need to make Marshal_tools
-     * respect Timeout. That said, this is a lower priority fix, since we rarely run into
-     * trouble right here. *)
     try
       let fd = Timeout.descr_of_in_channel ic in
-      let wire = (Marshal_tools.from_fd_with_preamble fd : server_handshake_wire) in
+      let wire = (Marshal_tools.from_fd_with_preamble ~timeout fd : server_handshake_wire) in
       let server_handshake =
         ( fst wire |> Hh_json.json_of_string |> json_to__monitor_to_client_1,
           snd wire |> Base.Option.map ~f:(fun s : monitor_to_client_2 -> Marshal.from_string s 0)
