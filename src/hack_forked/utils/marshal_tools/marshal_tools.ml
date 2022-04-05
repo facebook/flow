@@ -201,19 +201,15 @@ end = struct
     let payload = Marshal.to_bytes obj flags in
     let size = Bytes.length payload in
     let preamble = make_preamble size in
-    ( ( write_payload ?timeout fd preamble 0 expected_preamble_size >>= fun preamble_bytes_written ->
-        if preamble_bytes_written <> expected_preamble_size then
-          raise Writing_Preamble_Exception
-        else
-          WriterReader.return ()
-      )
-    >>= fun () -> write_payload ?timeout fd payload 0 size
-    )
-    >>= fun bytes_written ->
-    if bytes_written <> size then
-      raise Writing_Payload_Exception
+    write_payload ?timeout fd preamble 0 expected_preamble_size >>= fun preamble_bytes_written ->
+    if preamble_bytes_written <> expected_preamble_size then
+      raise Writing_Preamble_Exception
     else
-      WriterReader.return size
+      write_payload ?timeout fd payload 0 size >>= fun bytes_written ->
+      if bytes_written <> size then
+        raise Writing_Payload_Exception
+      else
+        WriterReader.return size
 
   let rec read_payload ?timeout fd buffer offset to_read =
     if to_read = 0 then
@@ -227,24 +223,20 @@ end = struct
 
   let from_fd_with_preamble ?timeout fd =
     let preamble = Bytes.create expected_preamble_size in
-    ( WriterReader.read ?timeout fd ~buffer:preamble ~offset:0 ~size:expected_preamble_size
-    >>= fun bytes_read ->
-      if bytes_read = 0 (* Unix manpage for read says 0 bytes read indicates end of file. *) then
-        raise End_of_file
-      else if bytes_read <> expected_preamble_size then (
-        WriterReader.log (Printf.sprintf "Error, only read %d bytes for preamble." bytes_read);
-        raise Reading_Preamble_Exception
-      ) else
-        WriterReader.return ()
-    )
-    >>= fun () ->
-    let payload_size = parse_preamble preamble in
-    let payload = Bytes.create payload_size in
-    read_payload ?timeout fd payload 0 payload_size >>= fun payload_size_read ->
-    if payload_size_read <> payload_size then
-      raise Reading_Payload_Exception
-    else
-      WriterReader.return (Marshal.from_bytes payload 0)
+    read_payload ?timeout fd preamble 0 expected_preamble_size >>= fun bytes_read ->
+    if bytes_read = 0 (* Unix manpage for read says 0 bytes read indicates end of file. *) then
+      raise End_of_file
+    else if bytes_read <> expected_preamble_size then (
+      WriterReader.log (Printf.sprintf "Error, only read %d bytes for preamble." bytes_read);
+      raise Reading_Preamble_Exception
+    ) else
+      let payload_size = parse_preamble preamble in
+      let payload = Bytes.create payload_size in
+      read_payload ?timeout fd payload 0 payload_size >>= fun payload_size_read ->
+      if payload_size_read <> payload_size then
+        raise Reading_Payload_Exception
+      else
+        WriterReader.return (Marshal.from_bytes payload 0)
 end
 
 module RegularMarshalTools = MarshalToolsFunctor (RegularWriterReader)
