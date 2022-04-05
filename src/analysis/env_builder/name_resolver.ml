@@ -204,6 +204,8 @@ module Make
 
     val is_global_undefined : t -> bool
 
+    val is_global : t -> bool
+
     val is_undeclared : t -> bool
 
     val is_undeclared_or_skipped : t -> bool
@@ -243,6 +245,11 @@ module Make
     let is_global_undefined t =
       match t.write_state with
       | Global "undefined" -> true
+      | _ -> false
+
+    let is_global t =
+      match t.write_state with
+      | Global _ -> true
       | _ -> false
 
     let is_undeclared t =
@@ -1424,8 +1431,14 @@ module Make
             this#havoc_heap_refinements heap_refinements;
             let write_entries =
               if not (Val.is_declared_function !val_ref) then (
+                let write_entry =
+                  if Val.is_global !val_ref then
+                    Env_api.GlobalWrite reason
+                  else
+                    Env_api.AssigningWrite reason
+                in
                 val_ref := Val.one reason;
-                L.LMap.add loc (Env_api.AssigningWrite reason) env_state.write_entries
+                L.LMap.add loc write_entry env_state.write_entries
               ) else
                 (* All of the providers are aleady in the map. We don't want to overwrite them with
                  * a non-assigning write. We _do_ want to enter regular function declarations as
@@ -3678,7 +3691,7 @@ module Make
       | Options.Jsx_pragma (_, ast) -> Some ast
     in
     let enable_enums = Context.enable_enums cx in
-    let (_ssa_completion_state, ((scopes, ssa_values, unbound_names) as prepass)) =
+    let (_ssa_completion_state, ((scopes, ssa_values, _) as prepass)) =
       Ssa_builder.program_with_scope_and_jsx_pragma
         ~flowmin_compatibility:false
         ~enable_enums
@@ -3703,7 +3716,6 @@ module Make
       {
         Env_api.scopes;
         ssa_values;
-        unbound_names;
         env_values = dead_code_marker#values;
         env_entries = env_walk#write_entries;
         providers;

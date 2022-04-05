@@ -122,12 +122,12 @@ module type S = sig
      * incompatibility of the write that is never performed. When the new_env finds a
      * NonAssigningWrite it will not subtype the given type against the providers. *)
     | AssigningWrite of L.t virtual_reason
+    | GlobalWrite of L.t virtual_reason
     | NonAssigningWrite
 
   type env_info = {
     scopes: Scope_api.info;
     ssa_values: Ssa_api.values;
-    unbound_names: SSet.t;
     env_values: values;
     env_entries: env_entry L.LMap.t;
     providers: Provider_api.info;
@@ -272,12 +272,12 @@ module Make
      * incompatibility of the write that is never performed. When the new_env finds a
      * NonAssigningWrite it will not subtype the given type against the providers. *)
     | AssigningWrite of L.t virtual_reason
+    | GlobalWrite of L.t virtual_reason
     | NonAssigningWrite
 
   type env_info = {
     scopes: Scope_api.info;
     ssa_values: Ssa_api.values;
-    unbound_names: SSet.t;
     env_values: values;
     env_entries: env_entry L.LMap.t;
     providers: Provider_api.info;
@@ -288,7 +288,6 @@ module Make
     {
       scopes = Scope_builder.Acc.init;
       ssa_values = L.LMap.empty;
-      unbound_names = SSet.empty;
       env_values = L.LMap.empty;
       env_entries = L.LMap.empty;
       providers = Provider_api.empty;

@@ -1003,5 +1003,13 @@ References:
                      ^^^^^^ [2]
 
 
+Error --------------------------------------------------------------------------------------------------- unbound.js:3:1
 
-Found 71 errors
+Cannot resolve name `unbound`. [cannot-resolve-name]
+
+   3| unbound = 1; // Error
+      ^^^^^^^
+
+
+
+Found 72 errors

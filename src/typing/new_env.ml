@@ -443,6 +443,12 @@ module New_env = struct
        * with number. We should only emit an error saying that a const cannot be reassigned. *)
       match ALocMap.find_opt loc var_info.Env_api.env_entries with
       | Some Env_api.NonAssigningWrite -> ()
+      | Some (Env_api.GlobalWrite _) ->
+        if is_provider cx loc then
+          Base.Option.iter potential_global_name ~f:(fun name ->
+              let name = Reason.OrdinaryName name in
+              ignore @@ Flow_js.get_builtin cx name (mk_reason (RIdentifier name) loc)
+          )
       | _ ->
         if not (is_provider cx loc) then
           let general = provider_type_for_def_loc env loc in
@@ -450,12 +456,6 @@ module New_env = struct
             Flow_js.flow cx (t, UseT (use_op, general))
           else
             Context.add_constrained_write cx (t, UseT (use_op, general))
-        else
-          Base.Option.iter potential_global_name ~f:(fun name ->
-              if SSet.mem name var_info.Env_api.unbound_names then
-                let name = Reason.OrdinaryName name in
-                ignore @@ Flow_js.get_builtin cx name (mk_reason (RIdentifier name) loc)
-          )
     end else
       Debug_js.Verbose.print_if_verbose
         cx
@@ -662,7 +662,8 @@ module New_env = struct
     ALocMap.fold
       (fun loc env_entry env ->
         match env_entry with
-        | Env_api.AssigningWrite reason ->
+        | Env_api.AssigningWrite reason
+        | Env_api.GlobalWrite reason ->
           let t = Inferred (Tvar.mk cx reason) in
           (* Treat everything as inferred for now for the purposes of annotated vs inferred *)
           Loc_env.initialize env loc t
