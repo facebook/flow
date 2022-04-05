@@ -2547,11 +2547,8 @@ module Make
           this#havoc_current_env ~all:false;
         expr
 
-      method! new_ _loc (expr : (ALoc.t, ALoc.t) Ast.Expression.New.t) =
-        let open Ast.Expression.New in
-        let { callee; targs = _; arguments; comments = _ } = expr in
-        ignore @@ this#expression callee;
-        ignore @@ Flow_ast_mapper.map_opt this#call_arguments arguments;
+      method! new_ loc (expr : (ALoc.t, ALoc.t) Ast.Expression.New.t) =
+        ignore @@ super#new_ loc expr;
         this#havoc_current_env ~all:false;
         expr
 

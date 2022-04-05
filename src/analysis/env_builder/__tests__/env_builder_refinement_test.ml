@@ -3984,6 +3984,20 @@ var C: React.ComponentType;
           (2, 12) to (2, 17): (`React`)
         }] |}]
 
+let%expect_test "new_type_arg" =
+  print_ssa_test {|
+type A = number;
+new Set<A>();
+|};
+    [%expect {|
+      [
+        (3, 4) to (3, 7) => {
+          Global Set
+        };
+        (3, 8) to (3, 9) => {
+          (2, 5) to (2, 6): (`A`)
+        }] |}]
+
 let%expect_test "class_as_type" =
   print_ssa_test {|
 class C { }
