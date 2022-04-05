@@ -219,7 +219,7 @@ end = struct
     let resolved_requires = Parsing_heaps.Reader.get_resolved_requires_unsafe fn ~reader parse in
     let file_data =
       {
-        module_name = Parsing_heaps.read_module_name parse;
+        module_name = Parsing_heaps.Reader.get_haste_name ~reader addr;
         normalized_file_data =
           {
             resolved_requires;
@@ -245,7 +245,7 @@ end = struct
     let parse = Parsing_heaps.Reader.get_parse_unsafe ~reader fn addr in
     let relative_file_data =
       {
-        unparsed_module_name = Parsing_heaps.read_module_name parse;
+        unparsed_module_name = Parsing_heaps.Reader.get_haste_name ~reader addr;
         unparsed_hash = Parsing_heaps.read_file_hash parse;
       }
     in

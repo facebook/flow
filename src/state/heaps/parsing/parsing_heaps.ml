@@ -60,6 +60,8 @@ type file_addr = Heap.file SharedMem.addr
 
 type +'a parse_addr = 'a Heap.parse SharedMem.addr
 
+type haste_info_addr = Heap.haste_info SharedMem.addr
+
 type haste_module_addr = Heap.haste_module SharedMem.addr
 
 type file_module_addr = Heap.file_module SharedMem.addr
@@ -168,19 +170,36 @@ let prepare_add_file_module_maybe size file_key =
       in
       (size, write))
 
-let prepare_add_haste_module_maybe size = function
+let prepare_add_haste_module_maybe size name =
+  match HasteModuleHeap.get name with
+  | Some addr -> (size, Fun.const addr)
+  | None ->
+    let open Heap in
+    let size = size + (3 * header_size) + haste_module_size + string_size name + entity_size in
+    let write chunk =
+      let heap_name = write_string chunk name in
+      let provider = write_entity chunk None in
+      let m = write_haste_module chunk heap_name provider in
+      HasteModuleHeap.add name m
+    in
+    (size, write)
+
+let prepare_write_new_haste_info_maybe size old_haste_info = function
   | None -> (size, Fun.const None)
   | Some name ->
-    (match HasteModuleHeap.get name with
-    | Some _ as addr -> (size, Fun.const addr)
-    | None ->
-      let open Heap in
-      let size = size + (3 * header_size) + haste_module_size + string_size name + entity_size in
+    let open Heap in
+    let haste_module_unchanged old_info =
+      let old_name = read_string (get_haste_name (get_haste_module old_info)) in
+      String.equal name old_name
+    in
+    (match old_haste_info with
+    | Some old_info when haste_module_unchanged old_info -> (size, Fun.const old_haste_info)
+    | _ ->
+      let size = size + header_size + haste_info_size in
+      let (size, add_haste_module_maybe) = prepare_add_haste_module_maybe size name in
       let write chunk =
-        let heap_name = write_string chunk name in
-        let provider = write_entity chunk None in
-        let m = write_haste_module chunk heap_name provider in
-        Some (HasteModuleHeap.add name m)
+        let haste_module = add_haste_module_maybe chunk in
+        Some (write_haste_info chunk haste_module)
       in
       (size, write))
 
@@ -202,29 +221,92 @@ let prepare_add_haste_module_maybe size = function
  * dirtiness! We can skip re-picking a provider for modules which keep the same
  * provider, but we still need to re-check its dependents.
  *)
-let calc_dirty_modules file_key file parse old_haste_module new_haste_module new_file_module =
+let calc_dirty_modules file_key file haste_ent new_file_module =
   let open Heap in
+  let (old_haste_info, new_haste_info, changed_haste_info) =
+    let new_info = entity_read_latest haste_ent in
+    if entity_changed haste_ent then
+      let old_info = entity_read_committed haste_ent in
+      (old_info, new_info, None)
+    else
+      (* Changing `file` does not cause `new_m`'s provider to be re-picked,
+       * but the module is still dirty because `file` changed. (see TODO) *)
+      (None, None, new_info)
+  in
   let dirty_modules =
-    match (old_haste_module, new_haste_module) with
-    | (None, None) -> MSet.empty
-    | (None, Some m) ->
-      add_haste_provider m file parse;
+    match old_haste_info with
+    | None -> MSet.empty
+    | Some info ->
+      let m = get_haste_module info in
       MSet.singleton (haste_modulename m)
-    | (Some m, None) -> MSet.singleton (haste_modulename m)
-    | (Some old_m, Some new_m) ->
-      if haste_modules_equal old_m new_m then
-        (* Changing `file` does not cause `new_m`'s provider to be re-picked,
-         * but the module is still dirty because `file` changed. (see TODO) *)
-        MSet.singleton (haste_modulename new_m)
-      else (
-        add_haste_provider new_m file parse;
-        MSet.empty |> MSet.add (haste_modulename old_m) |> MSet.add (haste_modulename new_m)
-      )
+  in
+  let dirty_modules =
+    match new_haste_info with
+    | None -> dirty_modules
+    | Some info ->
+      let m = get_haste_module info in
+      add_haste_provider m file info;
+      MSet.add (haste_modulename m) dirty_modules
+  in
+  let dirty_modules =
+    match changed_haste_info with
+    | None -> dirty_modules
+    | Some info ->
+      let m = get_haste_module info in
+      MSet.add (haste_modulename m) dirty_modules
   in
   Option.iter (fun m -> add_file_provider m file) new_file_module;
   (* Changing `file` does not cause the eponymous module's provider to be
    * re-picked, but it is still dirty because `file` changed. (see TODO) *)
   MSet.add (Files.eponymous_module file_key) dirty_modules
+
+let prepare_create_file size file_key module_name =
+  let open Heap in
+  let (file_kind, file_name) = file_kind_and_name file_key in
+  let size = size + (4 * header_size) + (2 * entity_size) + string_size file_name + file_size in
+  let (size, write_new_haste_info_maybe) =
+    prepare_write_new_haste_info_maybe size None module_name
+  in
+  let (size, add_file_module_maybe) = prepare_add_file_module_maybe size file_key in
+  let write chunk parse =
+    let file_name = write_string chunk file_name in
+    let parse_ent = write_entity chunk (Some parse) in
+    let haste_info = write_new_haste_info_maybe chunk in
+    let haste_ent = write_entity chunk haste_info in
+    let file_module = add_file_module_maybe chunk in
+    let file = write_file chunk file_kind file_name parse_ent haste_ent file_module in
+    assert (file = FileHeap.add file_key file);
+    calc_dirty_modules file_key file haste_ent file_module
+  in
+  (size, write)
+
+let prepare_update_file size file_key file parse_ent module_name =
+  let open Heap in
+  let haste_ent = get_haste_info file in
+  let old_haste_info = entity_read_latest haste_ent in
+  let (size, write_new_haste_info_maybe) =
+    prepare_write_new_haste_info_maybe size old_haste_info module_name
+  in
+  let new_file_module =
+    (* If we are re-parsing an unparsed file, we need to re-add ourselves to the
+     * file module's provider list. If the file is already parsed, then we are
+     * certainly already a provider, so we don't need to re-add. *)
+    match entity_read_latest parse_ent with
+    | None -> get_file_module file
+    | Some _ -> None
+  in
+  let write chunk parse =
+    entity_advance parse_ent (Some parse);
+    let new_haste_info = write_new_haste_info_maybe chunk in
+    let () =
+      match (old_haste_info, new_haste_info) with
+      | (None, None) -> ()
+      | (Some old_info, Some new_info) when haste_info_equal old_info new_info -> ()
+      | _ -> entity_advance haste_ent new_haste_info
+    in
+    calc_dirty_modules file_key file haste_ent new_file_module
+  in
+  (size, write)
 
 (* Write parsed data for checked file to shared memory. If we loaded from saved
  * state, a checked file entry will already exist without parse data and this
@@ -251,67 +333,39 @@ let add_checked_file file_key hash module_name docblock ast locs type_sig file_s
   in
   let unchanged_or_fresh_parse =
     match FileHeap.get file_key with
+    | None -> Either.Right (prepare_create_file size file_key module_name)
     | Some file ->
       let parse_ent = get_parse file in
-      let write new_file_module _ parse =
-        entity_advance parse_ent (Some parse);
-        (file, new_file_module)
-      in
       (* If we loaded from a saved state, we will have some existing data with a
        * matching hash. In this case, we want to update the existing data with
        * parse information. *)
-      (match entity_read_latest parse_ent with
-      | None ->
-        let new_file_module = get_file_module file in
-        Either.Right (size, write new_file_module, None)
-      | Some existing_parse ->
-        let existing_hash = read_int64 (get_file_hash existing_parse) in
-        if Int64.equal existing_hash hash then
-          (* We know that file is typed (we are in add_checked_file) and the
-           * existing record's hash matches, so the file must have been typed
-           * before as well. *)
-          Either.Left (Option.get (coerce_typed existing_parse))
-        else
-          (* Because a parsed file record already existed, a file module
-           * certainly also exists and the file is already a provider. *)
-          let new_file_module = None in
-          Either.Right (size, write new_file_module, get_haste_module existing_parse))
-    | None ->
-      let (file_kind, file_name) = file_kind_and_name file_key in
-      let size = size + (3 * header_size) + entity_size + string_size file_name + file_size in
-      let (size, add_file_module_maybe) = prepare_add_file_module_maybe size file_key in
-      let write chunk parse =
-        let file_name = write_string chunk file_name in
-        let file_module = add_file_module_maybe chunk in
-        let parse_ent = write_entity chunk (Some parse) in
-        let file = write_file chunk file_kind file_name file_module parse_ent in
-        assert (file = FileHeap.add file_key file);
-        (file, file_module)
+      let file_hash_unchanged parse =
+        let old_hash = read_int64 (get_file_hash parse) in
+        Int64.equal hash old_hash
       in
-      Either.Right (size, write, None)
+      (match entity_read_latest parse_ent with
+      | Some existing_parse when file_hash_unchanged existing_parse ->
+        (* We know that file is typed (we are in add_checked_file) and the
+         * existing record's hash matches, so the file must have been typed
+         * before as well. *)
+        Either.Left (Option.get (coerce_typed existing_parse))
+      | _ -> Either.Right (prepare_update_file size file_key file parse_ent module_name))
   in
   let (size, add_file_maybe) =
     match unchanged_or_fresh_parse with
     | Either.Left unchanged_parse -> (size, Fun.const (unchanged_parse, MSet.empty))
-    | Either.Right (size, add_file_maybe, old_haste_module) ->
+    | Either.Right (size, add_file_maybe) ->
       let exports = serialize exports in
       let (exports_size, write_exports) = prepare_write_exports exports in
       let size =
         size + (4 * header_size) + typed_parse_size + int64_size + exports_size + entity_size
       in
-      let (size, add_haste_module_maybe) = prepare_add_haste_module_maybe size module_name in
       let write chunk =
         let hash = write_int64 chunk hash in
-        let haste_module = add_haste_module_maybe chunk in
         let exports = write_exports chunk in
         let resolved_requires = write_entity chunk None in
-        let parse = write_typed_parse chunk hash haste_module exports resolved_requires in
-        let (file, new_file_module) =
-          add_file_maybe chunk (parse :> [ `typed | `untyped ] parse_addr)
-        in
-        let dirty_modules =
-          calc_dirty_modules file_key file parse old_haste_module haste_module new_file_module
-        in
+        let parse = write_typed_parse chunk hash exports resolved_requires in
+        let dirty_modules = add_file_maybe chunk (parse :> [ `typed | `untyped ] parse_addr) in
         (parse, dirty_modules)
       in
       (size, write)
@@ -334,46 +388,17 @@ let add_checked_file file_key hash module_name docblock ast locs type_sig file_s
 let add_unparsed_file file_key hash module_name =
   let open Heap in
   let size = (2 * header_size) + untyped_parse_size + int64_size in
-  let (size, add_haste_module_maybe) = prepare_add_haste_module_maybe size module_name in
-  let (size, add_file_maybe, old_haste_module) =
+  let (size, add_file_maybe) =
     match FileHeap.get file_key with
+    | None -> prepare_create_file size file_key module_name
     | Some file ->
       let parse_ent = get_parse file in
-      let write new_file_module _ parse =
-        entity_advance parse_ent (Some parse);
-        (file, new_file_module)
-      in
-      (match entity_read_latest parse_ent with
-      | None ->
-        let new_file_module = get_file_module file in
-        (size, write new_file_module, None)
-      | Some parse ->
-        (* Because a parsed file record already existed, a file module
-         * certainly also exists and the file is already a provider. *)
-        let new_file_module = None in
-        (size, write new_file_module, get_haste_module parse))
-    | None ->
-      let (file_kind, file_name) = file_kind_and_name file_key in
-      let size = size + (3 * header_size) + entity_size + string_size file_name + file_size in
-      let (size, add_file_module_maybe) = prepare_add_file_module_maybe size file_key in
-      let write chunk parse =
-        let file_name = write_string chunk file_name in
-        let file_module = add_file_module_maybe chunk in
-        let parse_ent = write_entity chunk (Some parse) in
-        let file = write_file chunk file_kind file_name file_module parse_ent in
-        assert (file = FileHeap.add file_key file);
-        (file, file_module)
-      in
-      (size, write, None)
+      prepare_update_file size file_key file parse_ent module_name
   in
   alloc size (fun chunk ->
       let hash = write_int64 chunk hash in
-      let haste_module = add_haste_module_maybe chunk in
-      let parse = write_untyped_parse chunk hash haste_module in
-      let (file, new_file_module) =
-        add_file_maybe chunk (parse :> [ `typed | `untyped ] parse_addr)
-      in
-      calc_dirty_modules file_key file parse old_haste_module haste_module new_file_module
+      let parse = write_untyped_parse chunk hash in
+      add_file_maybe chunk (parse :> [ `typed | `untyped ] parse_addr)
   )
 
 (* If this file used to exist, but no longer does, then it was deleted. Record
@@ -387,16 +412,20 @@ let clear_file file_key =
     let parse_ent = get_parse file in
     (match entity_read_latest parse_ent with
     | None -> MSet.empty
-    | Some parse ->
+    | Some _ ->
       entity_advance parse_ent None;
       let dirty_modules =
         match get_file_module file with
         | None -> MSet.empty
         | Some _ -> MSet.singleton (Files.eponymous_module file_key)
       in
-      (match get_haste_module parse with
+      let haste_ent = get_haste_info file in
+      (match entity_read_latest haste_ent with
       | None -> dirty_modules
-      | Some m -> MSet.add (haste_modulename m) dirty_modules))
+      | Some haste_info ->
+        entity_advance haste_ent None;
+        let m = get_haste_module haste_info in
+        MSet.add (haste_modulename m) dirty_modules))
 
 (* Rolling back a transaction requires that we undo changes we made to the file
  * as well as changes we made to modules affected by the file changes. Rolling
@@ -423,32 +452,32 @@ let clear_file file_key =
  *        | F |   | * |...|
  *        +---+---+---+---+
  *
- * For a haste module (M), a provider (F) is logically deleted if its parse
- * entity's (E) latest data (P) no longer points back to the haste module. In
- * this case, the list continues from the committed parse data (P'):
+ * For a haste module (M), a provider (F) is logically deleted if its haste info
+ * entity's (E) latest data (H) no longer points back to the haste module. In
+ * this case, the list continues from the committed haste info (H'):
  *
  *  +---+---+---+   +---+---+---+    +---+---+---+
- *  | M | * |...|   | E | * | * |--->| P'| M | * |---> next provider
+ *  | M | * |...|   | E | * | * |--->| H'| M | * |---> next provider
  *  +---+---+---+   +---+---+---+    +---+---+---+
  *        |         ^     |
  *    providers     |     +---+
- *        |       parse       |     +--> haste module
+ *        |    haste_info     |     +--> haste module
  *        v         |         v     |    null / does not point to M
  *        +---+---+---+---+   +---+---+
- *        | F |   | * |...|   | P | * |
+ *        | F |   | * |...|   | H | * |
  *        +---+---+---+---+   +---+---+
  *
- * Both of the above rules depend on the latest/committed state of the parse
- * entity, which also needs to be rolled back. We need to be careful about when
- * the parse entity is rolled back.
+ * Both of the above rules depend on the latest/committed state of the parse and
+ * haste entities, which also needs to be rolled back. We need to be careful
+ * about when the parse and haste entities are rolled back.
  *
  * To deal with rolling back deferred deletions, we first ensure that any
  * deferred deletions are fully performed, which must happen before we roll back
- * parse entity.
+ * parse/haste entities.
  *
  * We then can re-add the file to the all providers list, but this must happen
- * *after* we roll back the parse data. Otherwise, the file will still appear to
- * be logically deleted.
+ * *after* we roll back the parse/haste data. Otherwise, the file will still
+ * appear to be logically deleted.
  *
  * In addition to rolling back changes to the file and to dirty modules' all
  * providers list, we also roll back each dirty module's provider entity which
@@ -456,25 +485,28 @@ let clear_file file_key =
  *)
 let rollback_file =
   let open Heap in
-  let get_haste_module_p p = Option.map (fun m -> (m, p)) (get_haste_module p) in
+  let get_haste_module_info info = (get_haste_module info, info) in
   let rollback_file file =
     let parse_ent = get_parse file in
-    let old_parse = entity_read_committed parse_ent in
-    let new_parse = entity_read_latest parse_ent in
-    let (old_file_module, new_file_module, old_haste_module, new_haste_module) =
-      match (old_parse, new_parse) with
-      | (None, None) -> (None, None, None, None)
-      | (None, Some new_p) -> (None, get_file_module file, None, get_haste_module new_p)
-      | (Some old_p, None) -> (get_file_module file, None, get_haste_module_p old_p, None)
-      | (Some old_p, Some new_p) -> (None, None, get_haste_module_p old_p, get_haste_module new_p)
+    let (old_file_module, new_file_module) =
+      match (entity_read_committed parse_ent, entity_read_latest parse_ent) with
+      | (None, None)
+      | (Some _, Some _) ->
+        (None, None)
+      | (None, Some _) -> (None, get_file_module file)
+      | (Some _, None) -> (get_file_module file, None)
     in
+    let haste_ent = get_haste_info file in
     let (old_haste_module, new_haste_module) =
-      match (old_haste_module, new_haste_module) with
-      | (Some (old_m, _), Some new_m) when Heap.haste_modules_equal old_m new_m -> (None, None)
-      | _ -> (old_haste_module, new_haste_module)
+      if entity_changed haste_ent then
+        let old_info = entity_read_committed haste_ent in
+        let new_info = entity_read_latest haste_ent in
+        (Option.map get_haste_module_info old_info, Option.map get_haste_module new_info)
+      else
+        (None, None)
     in
     (* Remove new providers and process deferred deletions for old providers
-     * before rolling back this file's parse entity. *)
+     * before rolling back this file's parse and haste entities. *)
     old_file_module
     |> Option.iter (fun m ->
            entity_rollback (get_file_provider m);
@@ -495,11 +527,12 @@ let rollback_file =
            entity_rollback (get_haste_provider m);
            remove_haste_provider_exclusive m file
        );
-    (* Add back the deleted providers after rolling back the file's parse
-     * entity. *)
+    (* Add back the deleted providers after rolling back the file's parse and
+     * haste entities. *)
     entity_rollback parse_ent;
+    entity_rollback haste_ent;
     old_file_module |> Option.iter (fun m -> add_file_provider m file);
-    old_haste_module |> Option.iter (fun (m, p) -> add_haste_provider m file p)
+    old_haste_module |> Option.iter (fun (m, info) -> add_haste_provider m file info)
   in
   fun file_key ->
     match FileHeap.get file_key with
@@ -523,9 +556,9 @@ let read_file_hash parse =
   let open Heap in
   get_file_hash parse |> read_int64
 
-let read_module_name parse =
+let read_module_name info =
   let open Heap in
-  get_haste_module parse |> Option.map (fun m -> get_haste_name m |> read_string)
+  get_haste_module info |> get_haste_name |> read_string
 
 let read_ast file_key parse =
   let open Heap in
@@ -674,6 +707,10 @@ module type READER = sig
 
   val get_typed_parse : reader:reader -> file_addr -> [ `typed ] parse_addr option
 
+  val get_haste_info : reader:reader -> file_addr -> haste_info_addr option
+
+  val get_haste_name : reader:reader -> file_addr -> string option
+
   val has_ast : reader:reader -> File_key.t -> bool
 
   val get_ast : reader:reader -> File_key.t -> (Loc.t, Loc.t) Flow_ast.Program.t option
@@ -755,11 +792,19 @@ module Mutator_reader = struct
     let* parse = get_parse ~reader file in
     Heap.coerce_typed parse
 
+  let get_haste_info ~reader file = read ~reader (Heap.get_haste_info file)
+
+  let get_haste_name ~reader file =
+    let* info = get_haste_info ~reader file in
+    Some (read_module_name info)
+
   let get_old_parse ~reader file = read_old ~reader (Heap.get_parse file)
 
   let get_old_typed_parse ~reader file =
     let* parse = get_old_parse ~reader file in
     Heap.coerce_typed parse
+
+  let get_old_haste_info ~reader file = read_old ~reader (Heap.get_haste_info file)
 
   let has_ast ~reader file =
     let parse_opt =
@@ -1118,6 +1163,12 @@ module Reader = struct
     let* parse = get_parse ~reader file in
     Heap.coerce_typed parse
 
+  let get_haste_info ~reader file = read ~reader (Heap.get_haste_info file)
+
+  let get_haste_name ~reader file =
+    let* info = get_haste_info ~reader file in
+    Some (read_module_name info)
+
   let has_ast ~reader file =
     let parse_opt =
       let* file_addr = get_file_addr file in
@@ -1268,6 +1319,16 @@ module Reader_dispatcher : READER with type reader = Abstract_state_reader.t = s
     | Mutator_state_reader reader -> Mutator_reader.get_typed_parse ~reader
     | State_reader reader -> Reader.get_typed_parse ~reader
 
+  let get_haste_info ~reader =
+    match reader with
+    | Mutator_state_reader reader -> Mutator_reader.get_haste_info ~reader
+    | State_reader reader -> Reader.get_haste_info ~reader
+
+  let get_haste_name ~reader =
+    match reader with
+    | Mutator_state_reader reader -> Mutator_reader.get_haste_name ~reader
+    | State_reader reader -> Reader.get_haste_name ~reader
+
   let has_ast ~reader =
     match reader with
     | Mutator_state_reader reader -> Mutator_reader.has_ast ~reader
@@ -1382,8 +1443,8 @@ module From_saved_state = struct
       prepare_write_resolved_requires resolved_requires
     in
     let size =
-      (8 * header_size)
-      + (2 * entity_size)
+      (9 * header_size)
+      + (3 * entity_size)
       + string_size file_name
       + typed_parse_size
       + file_size
@@ -1392,20 +1453,23 @@ module From_saved_state = struct
       + resolved_requires_size
     in
     let (size, add_file_module_maybe) = prepare_add_file_module_maybe size file_key in
-    let (size, add_haste_module_maybe) = prepare_add_haste_module_maybe size module_name in
+    let (size, write_new_haste_info_maybe) =
+      prepare_write_new_haste_info_maybe size None module_name
+    in
     alloc size (fun chunk ->
         let file_name = write_string chunk file_name in
         let file_module = add_file_module_maybe chunk in
         let hash = write_int64 chunk hash in
-        let haste_module = add_haste_module_maybe chunk in
+        let haste_info = write_new_haste_info_maybe chunk in
+        let haste_ent = write_entity chunk haste_info in
         let exports = write_exports chunk in
         let resolved_requires = write_resolved_requires chunk in
         let resolved_requires_ent = write_entity chunk (Some resolved_requires) in
-        let parse = write_typed_parse chunk hash haste_module exports resolved_requires_ent in
+        let parse = write_typed_parse chunk hash exports resolved_requires_ent in
         let parse_ent = write_entity chunk (Some (parse :> [ `typed | `untyped ] parse_addr)) in
-        let file = write_file chunk file_kind file_name file_module parse_ent in
+        let file = write_file chunk file_kind file_name parse_ent haste_ent file_module in
         assert (file = FileHeap.add file_key file);
-        calc_dirty_modules file_key file parse None haste_module file_module
+        calc_dirty_modules file_key file haste_ent file_module
     )
 
   let add_unparsed = add_unparsed

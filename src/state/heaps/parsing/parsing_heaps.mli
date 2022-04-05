@@ -13,6 +13,8 @@ type file_addr = SharedMem.NewAPI.file SharedMem.addr
 
 type +'a parse_addr = 'a SharedMem.NewAPI.parse SharedMem.addr
 
+type haste_info_addr = SharedMem.NewAPI.haste_info SharedMem.addr
+
 type haste_module_addr = SharedMem.NewAPI.haste_module SharedMem.addr
 
 type file_module_addr = SharedMem.NewAPI.file_module SharedMem.addr
@@ -43,7 +45,7 @@ val read_file_key : file_addr -> File_key.t
 
 val read_file_hash : [> ] parse_addr -> Xx.hash
 
-val read_module_name : [> ] parse_addr -> string option
+val read_module_name : haste_info_addr -> string
 
 val read_ast_unsafe : File_key.t -> [ `typed ] parse_addr -> (Loc.t, Loc.t) Flow_ast.Program.t
 
@@ -70,6 +72,10 @@ module type READER = sig
   val get_parse : reader:reader -> file_addr -> [ `typed | `untyped ] parse_addr option
 
   val get_typed_parse : reader:reader -> file_addr -> [ `typed ] parse_addr option
+
+  val get_haste_info : reader:reader -> file_addr -> haste_info_addr option
+
+  val get_haste_name : reader:reader -> file_addr -> string option
 
   val has_ast : reader:reader -> File_key.t -> bool
 
@@ -122,6 +128,8 @@ module Mutator_reader : sig
   val get_old_parse : reader:reader -> file_addr -> [ `typed | `untyped ] parse_addr option
 
   val get_old_typed_parse : reader:reader -> file_addr -> [ `typed ] parse_addr option
+
+  val get_old_haste_info : reader:reader -> file_addr -> haste_info_addr option
 
   val get_old_file_hash : reader:reader -> File_key.t -> Xx.hash option
 

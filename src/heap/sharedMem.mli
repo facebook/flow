@@ -222,6 +222,8 @@ module NewAPI : sig
 
   type +'a parse
 
+  type haste_info
+
   type file
 
   type haste_module
@@ -286,6 +288,8 @@ module NewAPI : sig
 
   val entity_rollback : _ entity addr -> unit
 
+  val entity_changed : _ entity addr -> bool
+
   (* ast *)
 
   val prepare_write_ast : string -> size * (chunk -> ast addr)
@@ -344,13 +348,11 @@ module NewAPI : sig
 
   val typed_parse_size : size
 
-  val write_untyped_parse :
-    chunk -> heap_int64 addr -> haste_module addr option -> [ `untyped ] parse addr
+  val write_untyped_parse : chunk -> heap_int64 addr -> [ `untyped ] parse addr
 
   val write_typed_parse :
     chunk ->
     heap_int64 addr ->
-    haste_module addr option ->
     exports addr ->
     resolved_requires entity addr ->
     [ `typed ] parse addr
@@ -360,8 +362,6 @@ module NewAPI : sig
   val coerce_typed : [> ] parse addr -> [ `typed ] parse addr option
 
   val get_file_hash : [> ] parse addr -> heap_int64 addr
-
-  val get_haste_module : [> ] parse addr -> haste_module addr option
 
   val get_ast : [ `typed ] parse addr -> ast addr option
 
@@ -387,6 +387,16 @@ module NewAPI : sig
 
   val set_file_sig : [ `typed ] parse addr -> file_sig addr -> unit
 
+  (* haste info *)
+
+  val haste_info_size : size
+
+  val write_haste_info : chunk -> haste_module addr -> haste_info addr
+
+  val get_haste_module : haste_info addr -> haste_module addr
+
+  val haste_info_equal : haste_info addr -> haste_info addr -> bool
+
   (* file data *)
 
   type file_kind =
@@ -401,8 +411,9 @@ module NewAPI : sig
     chunk ->
     file_kind ->
     heap_string addr ->
-    file_module addr option ->
     [ `typed | `untyped ] parse entity addr ->
+    haste_info entity addr ->
+    file_module addr option ->
     file addr
 
   val get_file_kind : file addr -> file_kind
@@ -410,6 +421,8 @@ module NewAPI : sig
   val get_file_name : file addr -> heap_string addr
 
   val get_file_module : file addr -> file_module addr option
+
+  val get_haste_info : file addr -> haste_info entity addr
 
   val get_parse : file addr -> [ `typed | `untyped ] parse entity addr
 
@@ -429,7 +442,7 @@ module NewAPI : sig
 
   val get_haste_provider : haste_module addr -> file entity addr
 
-  val add_haste_provider : haste_module addr -> file addr -> [> ] parse addr -> unit
+  val add_haste_provider : haste_module addr -> file addr -> haste_info addr -> unit
 
   val get_haste_all_providers_exclusive : haste_module addr -> file addr list
 

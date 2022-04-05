@@ -111,8 +111,7 @@ let gen_import_statements file (symbols : Ty_symbol.symbol SymbolMap.t) =
     let module_name =
       let reader = State_reader.create () in
       Parsing_heaps.get_file_addr_unsafe remote_source
-      |> Parsing_heaps.Reader.get_parse_unsafe ~reader remote_source
-      |> Parsing_heaps.read_module_name
+      |> Parsing_heaps.Reader.get_haste_name ~reader
     in
     (* Relativize module name *)
     let module_name =

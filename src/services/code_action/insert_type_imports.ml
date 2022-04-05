@@ -494,8 +494,7 @@ end = struct
               Modulename.String "react-redux"
             else
               let addr = Parsing_heaps.get_file_addr_unsafe remote_source in
-              let parse = Parsing_heaps.Reader.get_parse_unsafe ~reader remote_source addr in
-              (match Parsing_heaps.read_module_name parse with
+              (match Parsing_heaps.Reader.get_haste_name ~reader addr with
               | Some name -> Modulename.String name
               | None -> Modulename.Filename (Files.chop_flow_ext remote_source))
           | None -> failwith "No source"
