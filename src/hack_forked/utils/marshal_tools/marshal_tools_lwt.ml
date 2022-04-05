@@ -23,8 +23,6 @@ module Marshal_tools_lwt = Marshal_tools.MarshalToolsFunctor (struct
     if timeout <> None then raise (Invalid_argument "Use lwt timeouts directly");
     let%lwt () = Lwt_unix.wait_read fd in
     Lwt_unix.read fd buffer offset size
-
-  let log str = Lwt_log_core.ign_error str
 end)
 
 include Marshal_tools_lwt
