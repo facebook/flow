@@ -2976,64 +2976,92 @@ module Make
         let (applied, changeset, map) =
           LookupMap.fold
             (fun key (loc, refinement) (applied, changeset, map) ->
-              let add_refinements v =
-                let ssa_id = Val.base_id_of_val v in
-                let refinement_id = this#new_id () in
-                env_state <-
-                  {
-                    env_state with
-                    refinement_heap =
-                      IMap.add refinement_id (BASE refinement) env_state.refinement_heap;
-                  };
-                let latest_refinement_opt = IMap.find_opt ssa_id applied in
-                let (final_refinement_id, unrefined_v) =
-                  match latest_refinement_opt with
-                  | Some (_, existing_refinement_id) ->
-                    let unrefined_v = Val.unrefine existing_refinement_id v in
-                    let new_refinement_id = this#new_id () in
-                    let new_chain = AND (existing_refinement_id, refinement_id) in
-                    env_state <-
-                      {
-                        env_state with
-                        refinement_heap =
-                          IMap.add new_refinement_id new_chain env_state.refinement_heap;
-                      };
-
-                    (new_refinement_id, unrefined_v)
-                  | None -> (refinement_id, v)
-                in
-                ( (ssa_id, refinement_id, final_refinement_id),
-                  Val.refinement final_refinement_id unrefined_v
-                )
+              (* Prevent refinement on undeclared const/let.
+                 We should only error if the undeclared const/let is in the same activation scope
+                 as the current one. Although we have no information about the current scope, this
+                 is not a problem. We will force initialization for all bindings before we visit a
+                 lambda. *)
+              let should_not_refine =
+                let { RefinementKey.base; projections } = key in
+                if projections = [] then
+                  match SMap.find base env_state.env with
+                  | { val_ref; kind = Bindings.Const | Bindings.Let; def_loc = Some def_loc; _ }
+                    when Val.is_undeclared_or_skipped !val_ref ->
+                    refinement
+                    |> fst
+                    |> L.LSet.iter (fun loc ->
+                           add_output
+                             Error_message.(
+                               EBindingError
+                                 (EReferencedBeforeDeclaration, loc, OrdinaryName base, def_loc)
+                             )
+                       );
+                    true
+                  | _ -> false
+                else
+                  false
               in
-              match
-                this#map_val_with_lookup_result
-                  key
-                  ~create_val_for_heap:
-                    ( lazy
-                      (let reason =
-                         mk_reason
-                           (RefinementKey.reason_desc { RefinementKey.lookup = key; loc })
-                           loc
-                       in
-                       let write_entries =
-                         L.LMap.add loc (Env_api.AssigningWrite reason) env_state.write_entries
-                       in
-                       env_state <- { env_state with write_entries };
-                       Val.projection loc
-                      )
-                      )
-                  add_refinements
-              with
-              | Some ((ssa_id, base_refinement_id, final_refinement_id), change) ->
-                ( IMap.add ssa_id (key, final_refinement_id) applied,
-                  Base.Option.value_map
-                    ~f:(fun change -> LookupMap.add key change changeset)
-                    ~default:changeset
-                    change,
-                  IMap.add ssa_id (key, base_refinement_id) map
-                )
-              | None -> (applied, changeset, map))
+              if should_not_refine then
+                (applied, changeset, map)
+              else
+                let add_refinements v =
+                  let ssa_id = Val.base_id_of_val v in
+                  let refinement_id = this#new_id () in
+                  env_state <-
+                    {
+                      env_state with
+                      refinement_heap =
+                        IMap.add refinement_id (BASE refinement) env_state.refinement_heap;
+                    };
+                  let latest_refinement_opt = IMap.find_opt ssa_id applied in
+                  let (final_refinement_id, unrefined_v) =
+                    match latest_refinement_opt with
+                    | Some (_, existing_refinement_id) ->
+                      let unrefined_v = Val.unrefine existing_refinement_id v in
+                      let new_refinement_id = this#new_id () in
+                      let new_chain = AND (existing_refinement_id, refinement_id) in
+                      env_state <-
+                        {
+                          env_state with
+                          refinement_heap =
+                            IMap.add new_refinement_id new_chain env_state.refinement_heap;
+                        };
+
+                      (new_refinement_id, unrefined_v)
+                    | None -> (refinement_id, v)
+                  in
+                  ( (ssa_id, refinement_id, final_refinement_id),
+                    Val.refinement final_refinement_id unrefined_v
+                  )
+                in
+                match
+                  this#map_val_with_lookup_result
+                    key
+                    ~create_val_for_heap:
+                      ( lazy
+                        (let reason =
+                           mk_reason
+                             (RefinementKey.reason_desc { RefinementKey.lookup = key; loc })
+                             loc
+                         in
+                         let write_entries =
+                           L.LMap.add loc (Env_api.AssigningWrite reason) env_state.write_entries
+                         in
+                         env_state <- { env_state with write_entries };
+                         Val.projection loc
+                        )
+                        )
+                    add_refinements
+                with
+                | Some ((ssa_id, base_refinement_id, final_refinement_id), change) ->
+                  ( IMap.add ssa_id (key, final_refinement_id) applied,
+                    Base.Option.value_map
+                      ~f:(fun change -> LookupMap.add key change changeset)
+                      ~default:changeset
+                      change,
+                    IMap.add ssa_id (key, base_refinement_id) map
+                  )
+                | None -> (applied, changeset, map))
             refinements
             (applied, LookupMap.empty, IMap.empty)
         in
