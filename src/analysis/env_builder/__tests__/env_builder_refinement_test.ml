@@ -4992,14 +4992,20 @@ let%expect_test "reference_before_declaration" =
   _const;
   _let;
   _var;
-  _func;
+  _func1;
+  _func2;
+  _func3;
+  _func4;
   _class;
   E;
 
   const _const = 3;
   let _let = 3;
   var _var = 3;
-  function _func() {}
+  function _func1() {}
+  export function _func2() {}
+  export default function _func3() {}
+  declare export function _func4(): void
 class _class {}
   enum E { A }
 |};
@@ -5014,13 +5020,22 @@ class _class {}
         (4, 2) to (4, 6) => {
           (uninitialized)
         };
-        (5, 2) to (5, 7) => {
-          (12, 11) to (12, 16): (`_func`)
+        (5, 2) to (5, 8) => {
+          (15, 11) to (15, 17): (`_func1`)
         };
         (6, 2) to (6, 8) => {
-          (undeclared class) (13, 6) to (13, 12): (`_class`)
+          (16, 18) to (16, 24): (`_func2`)
         };
-        (7, 2) to (7, 3) => {
+        (7, 2) to (7, 8) => {
+          (17, 26) to (17, 32): (`_func3`)
+        };
+        (8, 2) to (8, 8) => {
+          declared function (18, 26) to (18, 32)
+        };
+        (9, 2) to (9, 8) => {
+          (undeclared class) (19, 6) to (19, 12): (`_class`)
+        };
+        (10, 2) to (10, 3) => {
           (undeclared)
         }] |}]
 

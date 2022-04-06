@@ -2730,7 +2730,23 @@ module Make
             (function
               | (_, FunctionDeclaration _) -> true
               | (_, DeclareFunction _) -> true
-              | _ -> false)
+              | ( _,
+                  ExportDefaultDeclaration
+                    ExportDefaultDeclaration.
+                      { declaration = Declaration (_, FunctionDeclaration _); _ }
+                ) ->
+                true
+              | ( _,
+                  ExportNamedDeclaration
+                    ExportNamedDeclaration.{ declaration = Some (_, FunctionDeclaration _); _ }
+                ) ->
+                true
+              | ( _,
+                  DeclareExportDeclaration
+                    DeclareExportDeclaration.{ declaration = Some (Function _); _ }
+                )
+              | _ ->
+                false)
             stmts
         in
         ignore @@ super#statement_list (function_decls @ other_stmts);
