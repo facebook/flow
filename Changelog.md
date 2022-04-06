@@ -1,3 +1,10 @@
+### 0.175.1
+
+Bug fixes:
+* Fix an incremental bug which would sometimes cause Flow to choose the wrong provider for a haste module, most commonly when one of those providers is a .js.flow file.
+* Fix ability of `flow stop` to kill stuck servers
+* Fix rare crashes when processes exit unexpectedly
+
 ### 0.175.0
 
 Notable changes:
