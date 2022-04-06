@@ -215,10 +215,10 @@ let%expect_test "logical_nested2" =
         {refinement = Truthy; writes = (1, 4) to (1, 5): (`x`)}
       };
       (2, 13) to (2, 14) => {
-        {refinement = Not (And (Truthy, Truthy)); writes = (1, 4) to (1, 5): (`x`)}
+        {refinement = Or (Not (Truthy), Not (Truthy)); writes = (1, 4) to (1, 5): (`x`)}
       };
       (2, 18) to (2, 19) => {
-        {refinement = Truthy; writes = {refinement = Not (And (Truthy, Truthy)); writes = (1, 4) to (1, 5): (`x`)}}
+        {refinement = Truthy; writes = {refinement = Or (Not (Truthy), Not (Truthy)); writes = (1, 4) to (1, 5): (`x`)}}
       }] |}]
 
 let%expect_test "logical_assignment_and" =
@@ -560,7 +560,7 @@ let%expect_test "unary_negation" =
         {refinement = Not (Truthy); writes = (1, 4) to (1, 5): (`x`)}
       };
       (4, 13) to (4, 14) => {
-        {refinement = Not (Or (Truthy, Truthy)); writes = (1, 4) to (1, 5): (`x`)}
+        {refinement = And (Not (Truthy), Not (Truthy)); writes = (1, 4) to (1, 5): (`x`)}
       }] |}]
 
 let%expect_test "typeof_bool" =
@@ -1380,10 +1380,10 @@ x;|};
           Global invariant
         };
         (2, 22) to (2, 23) => {
-          {refinement = And (Not (Maybe), Truthy); writes = (1, 4) to (1, 5): (`x`)}
+          {refinement = Not (Maybe); writes = (1, 4) to (1, 5): (`x`)}
         };
         (3, 0) to (3, 1) => {
-          {refinement = And (Not (Maybe), Truthy); writes = (1, 4) to (1, 5): (`x`)}
+          {refinement = Not (Maybe); writes = (1, 4) to (1, 5): (`x`)}
         }] |}]
 
 let%expect_test "if_else_statement" =
@@ -5285,4 +5285,253 @@ function f() {
       [
         (5, 2) to (5, 6) => {
           (2, 8) to (2, 12): (`func`)
+        }] |}]
+
+let%expect_test "test27" =
+  print_ssa_test {|
+if (!x.a) { x.c; } else { x.b; }
+|};
+    [%expect {|
+      [
+        (2, 5) to (2, 6) => {
+          Global x
+        };
+        (2, 12) to (2, 13) => {
+          {refinement = Not (PropExistsR (a)); writes = Global x}
+        };
+        (2, 26) to (2, 27) => {
+          {refinement = PropExistsR (a); writes = Global x}
+        }] |}]
+
+let%expect_test "conjunct" =
+  print_ssa_test {|
+if (x.a && x.b)
+  { x.a; x.b }
+else
+  { x.a; x.b }
+|};
+    [%expect {|
+      [
+        (2, 4) to (2, 5) => {
+          Global x
+        };
+        (2, 11) to (2, 12) => {
+          {refinement = PropExistsR (a); writes = Global x}
+        };
+        (3, 4) to (3, 5) => {
+          {refinement = And (PropExistsR (a), PropExistsR (b)); writes = Global x}
+        };
+        (3, 4) to (3, 7) => {
+          {refinement = Truthy; writes = projection at (2, 4) to (2, 7)}
+        };
+        (3, 9) to (3, 10) => {
+          {refinement = And (PropExistsR (a), PropExistsR (b)); writes = Global x}
+        };
+        (3, 9) to (3, 12) => {
+          {refinement = Truthy; writes = projection at (2, 11) to (2, 14)}
+        };
+        (5, 4) to (5, 5) => {
+          {refinement = Or (Not (PropExistsR (a)), Not (PropExistsR (b))); writes = Global x}
+        };
+        (5, 9) to (5, 10) => {
+          {refinement = Or (Not (PropExistsR (a)), Not (PropExistsR (b))); writes = Global x}
+        }] |}]
+
+let%expect_test "disjunct" =
+  print_ssa_test {|
+if (x.a || x.b)
+  { x.a; x.b }
+else
+  { x.a; x.b }
+|};
+    [%expect {|
+      [
+        (2, 4) to (2, 5) => {
+          Global x
+        };
+        (2, 11) to (2, 12) => {
+          {refinement = Not (PropExistsR (a)); writes = Global x}
+        };
+        (3, 4) to (3, 5) => {
+          {refinement = Or (PropExistsR (a), PropExistsR (b)); writes = Global x}
+        };
+        (3, 9) to (3, 10) => {
+          {refinement = Or (PropExistsR (a), PropExistsR (b)); writes = Global x}
+        };
+        (5, 4) to (5, 5) => {
+          {refinement = And (Not (PropExistsR (a)), Not (PropExistsR (b))); writes = Global x}
+        };
+        (5, 4) to (5, 7) => {
+          {refinement = Not (Truthy); writes = projection at (2, 4) to (2, 7)}
+        };
+        (5, 9) to (5, 10) => {
+          {refinement = And (Not (PropExistsR (a)), Not (PropExistsR (b))); writes = Global x}
+        };
+        (5, 9) to (5, 12) => {
+          {refinement = Not (Truthy); writes = projection at (2, 11) to (2, 14)}
+        }] |}]
+
+let%expect_test "complex" =
+  print_ssa_test {|
+if ((x.a || x.b) && x.c)
+  { x.a; x.b; x.c }
+else
+  { x.a; x.b; x.c }
+|};
+    [%expect {|
+      [
+        (2, 5) to (2, 6) => {
+          Global x
+        };
+        (2, 12) to (2, 13) => {
+          {refinement = Not (PropExistsR (a)); writes = Global x}
+        };
+        (2, 20) to (2, 21) => {
+          {refinement = Or (PropExistsR (a), PropExistsR (b)); writes = Global x}
+        };
+        (3, 4) to (3, 5) => {
+          {refinement = And (Or (PropExistsR (a), PropExistsR (b)), PropExistsR (c)); writes = Global x}
+        };
+        (3, 9) to (3, 10) => {
+          {refinement = And (Or (PropExistsR (a), PropExistsR (b)), PropExistsR (c)); writes = Global x}
+        };
+        (3, 14) to (3, 15) => {
+          {refinement = And (Or (PropExistsR (a), PropExistsR (b)), PropExistsR (c)); writes = Global x}
+        };
+        (3, 14) to (3, 17) => {
+          {refinement = Truthy; writes = projection at (2, 20) to (2, 23)}
+        };
+        (5, 4) to (5, 5) => {
+          {refinement = Or (And (Not (PropExistsR (a)), Not (PropExistsR (b))), Not (PropExistsR (c))); writes = Global x}
+        };
+        (5, 9) to (5, 10) => {
+          {refinement = Or (And (Not (PropExistsR (a)), Not (PropExistsR (b))), Not (PropExistsR (c))); writes = Global x}
+        };
+        (5, 14) to (5, 15) => {
+          {refinement = Or (And (Not (PropExistsR (a)), Not (PropExistsR (b))), Not (PropExistsR (c))); writes = Global x}
+        }] |}]
+
+let%expect_test "changeset" =
+  print_ssa_test {|
+if (x && x.a)
+  { x.a; }
+else
+  { x.a; }
+x.a;
+|};
+    [%expect {|
+      [
+        (2, 4) to (2, 5) => {
+          Global x
+        };
+        (2, 9) to (2, 10) => {
+          {refinement = Truthy; writes = Global x}
+        };
+        (3, 4) to (3, 5) => {
+          {refinement = And (Truthy, PropExistsR (a)); writes = Global x}
+        };
+        (3, 4) to (3, 7) => {
+          {refinement = Truthy; writes = projection at (2, 9) to (2, 12)}
+        };
+        (5, 4) to (5, 5) => {
+          {refinement = Or (Not (Truthy), Not (PropExistsR (a))); writes = Global x}
+        };
+        (6, 0) to (6, 1) => {
+          Global x
+        }] |}]
+
+let%expect_test "no_changeset" =
+  print_ssa_test {|
+if (x.a)
+  { x.a; }
+else
+  { x.a; }
+x.a;
+|};
+    [%expect {|
+      [
+        (2, 4) to (2, 5) => {
+          Global x
+        };
+        (3, 4) to (3, 5) => {
+          {refinement = PropExistsR (a); writes = Global x}
+        };
+        (3, 4) to (3, 7) => {
+          {refinement = Truthy; writes = projection at (2, 4) to (2, 7)}
+        };
+        (5, 4) to (5, 5) => {
+          {refinement = Not (PropExistsR (a)); writes = Global x}
+        };
+        (5, 4) to (5, 7) => {
+          {refinement = Not (Truthy); writes = projection at (2, 4) to (2, 7)}
+        };
+        (6, 0) to (6, 1) => {
+          Global x
+        };
+        (6, 0) to (6, 3) => {
+          {refinement = Truthy; writes = projection at (2, 4) to (2, 7)},
+          {refinement = Not (Truthy); writes = projection at (2, 4) to (2, 7)}
+        }] |}]
+
+let%expect_test "changeset_update" =
+  print_ssa_test {|
+if (x.a)
+  { x.a = 42 }
+x.a;
+|};
+    [%expect {|
+      [
+        (2, 4) to (2, 5) => {
+          Global x
+        };
+        (3, 4) to (3, 5) => {
+          {refinement = PropExistsR (a); writes = Global x}
+        };
+        (3, 4) to (3, 7) => {
+          {refinement = Truthy; writes = projection at (2, 4) to (2, 7)}
+        };
+        (4, 0) to (4, 1) => {
+          Global x
+        };
+        (4, 0) to (4, 3) => {
+          (3, 4) to (3, 7): (some property),
+          {refinement = Not (Truthy); writes = projection at (2, 4) to (2, 7)}
+        }] |}]
+
+let%expect_test "changeset_pre_exist" =
+  print_ssa_test {|
+if(x && x.a) {
+  if(x && x.a) {}
+  else {
+    x.a;
+  }
+  x.a;
+}
+|};
+    [%expect {|
+      [
+        (2, 3) to (2, 4) => {
+          Global x
+        };
+        (2, 8) to (2, 9) => {
+          {refinement = Truthy; writes = Global x}
+        };
+        (3, 5) to (3, 6) => {
+          {refinement = And (Truthy, PropExistsR (a)); writes = Global x}
+        };
+        (3, 10) to (3, 11) => {
+          {refinement = Truthy; writes = {refinement = And (Truthy, PropExistsR (a)); writes = Global x}}
+        };
+        (5, 4) to (5, 5) => {
+          {refinement = Or (Not (Truthy), Not (PropExistsR (a))); writes = {refinement = And (Truthy, PropExistsR (a)); writes = Global x}}
+        };
+        (5, 4) to (5, 7) => {
+          {refinement = Truthy; writes = projection at (2, 8) to (2, 11)}
+        };
+        (7, 2) to (7, 3) => {
+          {refinement = And (Truthy, PropExistsR (a)); writes = Global x}
+        };
+        (7, 2) to (7, 5) => {
+          {refinement = Truthy; writes = projection at (2, 8) to (2, 11)},
+          {refinement = Truthy; writes = {refinement = Truthy; writes = projection at (2, 8) to (2, 11)}}
         }] |}]

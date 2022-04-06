@@ -167,7 +167,7 @@ module Make (L : Loc_sig.S) : REFINEMENT_KEY with module L = L = struct
 
   let of_name name loc = { loc; lookup = lookup_of_name name }
 
-  let rec lookup_of_optional_chain expr =
+  let rec of_optional_chain expr =
     let open Flow_ast.Expression in
     match expr with
     | (_, Call _) -> None
@@ -176,21 +176,15 @@ module Make (L : Loc_sig.S) : REFINEMENT_KEY with module L = L = struct
         OptionalMember
           {
             OptionalMember.member =
-              { Member._object = (_, Identifier (_, { Flow_ast.Identifier.name; _ })); _ };
+              { Member._object = (loc, Identifier (_, { Flow_ast.Identifier.name; _ })); _ };
             _;
           }
       ) ->
-      Some (lookup_of_name name)
+      Some { loc; lookup = lookup_of_name name }
     | (_, OptionalMember { OptionalMember.member = { Member._object = subject; _ }; _ })
     | (_, OptionalCall { OptionalCall.call = { Call.callee = subject; _ }; _ }) ->
-      lookup_of_optional_chain subject
+      of_optional_chain subject
     | _ -> None
-
-  let of_optional_chain expr =
-    let loc = fst expr in
-    match lookup_of_optional_chain expr with
-    | None -> None
-    | Some lookup -> Some { loc; lookup }
 
   let reason_desc refinement_key =
     let { lookup; _ } = refinement_key in
