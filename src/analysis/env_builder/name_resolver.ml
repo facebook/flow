@@ -3233,7 +3233,7 @@ module Make
       method null_test ~strict ~sense loc expr other =
         ignore @@ this#expression expr;
         let (optional_chain_refinement, refis) =
-          this#maybe_sentinel_and_chain_refinement ~sense loc expr other
+          this#maybe_sentinel_and_chain_refinement ~sense ~strict loc expr other
         in
         let refis =
           match RefinementKey.of_expression expr with
@@ -3275,7 +3275,7 @@ module Make
       method void_test ~sense ~strict ~check_for_bound_undefined loc expr other =
         ignore @@ this#expression expr;
         let (optional_chain_refinement, refis) =
-          this#maybe_sentinel_and_chain_refinement ~sense loc expr other
+          this#maybe_sentinel_and_chain_refinement ~sense ~strict loc expr other
         in
         let is_global_undefined () =
           match SMap.find_opt "undefined" env_state.env with
@@ -3320,8 +3320,8 @@ module Make
         in
         this#commit_refinement refis
 
-      method default_optional_chain_refinement_handler ~sense loc expr other =
-        match this#maybe_sentinel_and_chain_refinement ~sense loc expr other with
+      method default_optional_chain_refinement_handler ~sense ~strict loc expr other =
+        match this#maybe_sentinel_and_chain_refinement ~sense ~strict loc expr other with
         | (None, refis) -> refis
         | (Some name, refis) ->
           this#extend_refinement name (L.LSet.singleton loc, NotR MaybeR) refis
@@ -3352,7 +3352,7 @@ module Make
 
       method literal_test ~strict ~sense loc expr refinement other =
         ignore @@ this#expression expr;
-        let refis = this#default_optional_chain_refinement_handler ~sense loc expr other in
+        let refis = this#default_optional_chain_refinement_handler ~sense ~strict loc expr other in
         let refis =
           match RefinementKey.of_expression expr with
           | Some refinement_key when strict ->
@@ -3374,7 +3374,7 @@ module Make
         in
         this#commit_refinement refis
 
-      method maybe_sentinel_and_chain_refinement ~sense loc expr (other_loc, _) =
+      method maybe_sentinel_and_chain_refinement ~sense ~strict loc expr (other_loc, _) =
         let open Flow_ast in
         let expr' =
           match expr with
@@ -3383,17 +3383,21 @@ module Make
           | _ -> expr
         in
         let refis =
-          match expr' with
-          | ( _,
-              Expression.Member
-                {
-                  Expression.Member._object = (obj_loc, _) as _object;
-                  property =
-                    ( Expression.Member.PropertyIdentifier (ploc, { Identifier.name = prop_name; _ })
-                    | Expression.Member.PropertyExpression
-                        (ploc, Expression.Literal { Literal.value = Literal.String prop_name; _ }) );
-                  _;
-                }
+          match (strict, expr') with
+          | ( true,
+              ( _,
+                Expression.Member
+                  {
+                    Expression.Member._object = (obj_loc, _) as _object;
+                    property =
+                      ( Expression.Member.PropertyIdentifier
+                          (ploc, { Identifier.name = prop_name; _ })
+                      | Expression.Member.PropertyExpression
+                          (ploc, Expression.Literal { Literal.value = Literal.String prop_name; _ })
+                        );
+                    _;
+                  }
+              )
             ) ->
             let (_ : ('a, 'b) Ast.Expression.t) = this#expression _object in
             (match RefinementKey.of_expression _object with
@@ -3602,13 +3606,13 @@ module Make
          * NOTE: Switch statements do not introduce sentinel refinements *)
         | (((_, Expression.Member _) as expr), other) ->
           ignore @@ this#expression expr;
-          let (_, refis) = this#maybe_sentinel_and_chain_refinement ~sense loc expr other in
+          let (_, refis) = this#maybe_sentinel_and_chain_refinement ~sense ~strict loc expr other in
           this#commit_refinement refis;
           ignore @@ this#expression other
         | (other, ((_, Expression.Member _) as expr)) when not (cond_context = SwitchTest) ->
           ignore @@ this#expression other;
           ignore @@ this#expression expr;
-          let (_, refis) = this#maybe_sentinel_and_chain_refinement ~sense loc expr other in
+          let (_, refis) = this#maybe_sentinel_and_chain_refinement ~sense ~strict loc expr other in
           this#commit_refinement refis
         | _ ->
           ignore @@ this#expression left;

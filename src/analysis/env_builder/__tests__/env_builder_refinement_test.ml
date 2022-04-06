@@ -1177,6 +1177,26 @@ x?.foo && x|};
           {refinement = And (Not (Maybe), PropExistsR (foo)); writes = (1, 4) to (1, 5): (`x`)}
         }] |}]
 
+let%expect_test "no_sentinel_in_non_strict" =
+  print_ssa_test {|
+var x : {p:?string} = {p:"xxx"};
+if (x.p != null) {
+  alert("");
+  x.p;
+}
+|};
+    [%expect {|
+      [
+        (3, 4) to (3, 5) => {
+          (2, 4) to (2, 5): (`x`)
+        };
+        (4, 2) to (4, 7) => {
+          Global alert
+        };
+        (5, 2) to (5, 3) => {
+          (2, 4) to (2, 5): (`x`)
+        }] |}]
+
 let%expect_test "conditional_expression" =
   print_ssa_test {|let x = undefined;
 (x ? x: x) && x|};
