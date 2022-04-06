@@ -75,8 +75,8 @@ function f5() {
 // phasing of AST traversal, and will be fixed.
 //
 
-var x: C;       // ok
-
+var x1: C;       // ok
+var x2: typeof C // ok
 var y = new C(); // error: let ref before decl from value position
 
 class C {}

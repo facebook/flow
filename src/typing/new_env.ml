@@ -250,7 +250,7 @@ module New_env = struct
                 EBindingError (EReferencedBeforeDeclaration, loc, OrdinaryName name, def_loc)
               );
             Type.(AnyT.make (AnyError None) reason)
-          | (Env_api.UndeclaredClass { def; _ }, ForType) ->
+          | (Env_api.UndeclaredClass { def; _ }, (ForType | ForTypeof)) ->
             Debug_js.Verbose.print_if_verbose
               cx
               [
