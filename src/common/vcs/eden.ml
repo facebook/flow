@@ -39,7 +39,7 @@ let rec is_eden_win32 ~recursion_limit dir =
     false
   else if file_exists (concat (concat dir ".eden") "config") then
     true
-  else if is_directory (concat dir ".hg") || is_directory (concat dir ".git") then
+  else if file_exists (concat dir ".hg") || file_exists (concat dir ".git") then
     (* small optimization. if we hit a different VCS, definitely not eden. *)
     false
   else if recursion_limit <= 0 then
