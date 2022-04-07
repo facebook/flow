@@ -390,15 +390,17 @@ end = struct
       Server.daemonize ~init_id ~log_file ~shared_mem_config ~argv ~file_watcher_pid server_options
     in
     let (ic, oc) = handle.Daemon.channels in
+    (* we explicitly want to let Lwt determine the blocking mode here.
+       the fd's created by Server.daemonize are (currently) pipes
+       from Unix.pipe. Unix pipes are non-blocking, but Windows pipes
+       are (currently?) blocking. we could explicitly use blocking mode
+       on Windows, but it's too many implicit assumptions. *)
+    let blocking = None in
     let in_fd =
-      ic
-      |> Daemon.descr_of_in_channel
-      |> Lwt_unix.of_unix_file_descr ~blocking:false ~set_flags:true
+      ic |> Daemon.descr_of_in_channel |> Lwt_unix.of_unix_file_descr ?blocking ~set_flags:true
     in
     let out_fd =
-      oc
-      |> Daemon.descr_of_out_channel
-      |> Lwt_unix.of_unix_file_descr ~blocking:false ~set_flags:true
+      oc |> Daemon.descr_of_out_channel |> Lwt_unix.of_unix_file_descr ?blocking ~set_flags:true
     in
     let close () =
       (* Lwt.join will run these threads in parallel and only finish when EVERY thread has finished
