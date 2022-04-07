@@ -2583,6 +2583,34 @@ module Make
               ~finally:(fun () -> this#reset_env env)
         )
 
+      method! class_property loc prop =
+        let open Ast.Class.Property in
+        let { static; _ } = prop in
+        if static then
+          super#class_property loc prop
+        else
+          let env = this#env in
+          this#run
+            (fun () ->
+              this#havoc_uninitialized_env;
+              ignore @@ super#class_property loc prop)
+            ~finally:(fun () -> this#reset_env env);
+          prop
+
+      method! class_private_field loc field =
+        let open Ast.Class.PrivateField in
+        let { static; _ } = field in
+        if static then
+          super#class_private_field loc field
+        else
+          let env = this#env in
+          this#run
+            (fun () ->
+              this#havoc_uninitialized_env;
+              ignore @@ super#class_private_field loc field)
+            ~finally:(fun () -> this#reset_env env);
+          field
+
       method! declare_function loc expr =
         match Declare_function_utils.declare_function_to_function_declaration_simple loc expr with
         | Some stmt ->

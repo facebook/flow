@@ -4674,7 +4674,7 @@ class D extends C {
   [%expect {|
     [
       (3, 7) to (3, 8) => {
-        (undeclared class) (5, 6) to (5, 7): (`D`)
+        (5, 6) to (5, 7): (`D`)
       };
       (5, 16) to (5, 17) => {
         (2, 6) to (2, 7): (`C`)
@@ -4767,7 +4767,7 @@ class D extends C {
   [%expect {|
     [
       (3, 7) to (3, 8) => {
-        (undeclared class) (5, 6) to (5, 7): (`D`)
+        (5, 6) to (5, 7): (`D`)
       };
       (5, 16) to (5, 17) => {
         (2, 6) to (2, 7): (`C`)
