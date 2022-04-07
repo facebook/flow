@@ -81,7 +81,7 @@ Error --------------------------------------------------------------------------
 
 The right-hand side of an `instanceof` expression must be an object, but got string [1]. [invalid-in-rhs]
 
-   91|   if (x instanceof 'bad') {} // error
+   91|   if (x instanceof 'bad') {x;} // error
                           ^^^^^ [1]
 
 
@@ -89,7 +89,7 @@ Error --------------------------------------------------------------------------
 
 The right-hand side of an `instanceof` expression must be an object, but got mixed [1]. [invalid-in-rhs]
 
-   93|   if (x instanceof ('bad': mixed)) {} // error
+   93|   if (x instanceof ('bad': mixed)) {x;} // error
                                   ^^^^^ [1]
 
 

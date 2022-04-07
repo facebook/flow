@@ -88,7 +88,12 @@ function foo1(x: Array<number> | number) {
 
 function nonObjectRHS(x: Object) {
   const y = x instanceof 'bad'; // error
-  if (x instanceof 'bad') {} // error
-  if (x instanceof ('bad': any)) {} // ok
-  if (x instanceof ('bad': mixed)) {} // error
+  if (x instanceof 'bad') {x;} // error
+  if (x instanceof ('bad': any)) {x;} // ok
+  if (x instanceof ('bad': mixed)) {x;} // error
+}
+
+function not_refinement_or_val_rhs(x: Object) {
+  const immutable = {Map: class Map {}}
+  if (x instanceof immutable.Map) {x}
 }

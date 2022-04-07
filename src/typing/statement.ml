@@ -5644,6 +5644,7 @@ struct
     | Instanceof ->
       let left = expression cx ~hint:None left in
       let (((right_loc, right_t), _) as right) = expression cx ~hint:None right in
+      Env.record_expression_type_if_needed cx right_loc right_t;
       let reason_rhs = mk_reason (RCustom "RHS of `instanceof` operator") right_loc in
       Flow.flow cx (right_t, AssertInstanceofRHST reason_rhs);
       (BoolT.at loc |> with_trust literal_trust, { operator; left; right; comments })
