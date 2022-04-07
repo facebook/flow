@@ -451,6 +451,52 @@ module Annotate_empty_object_command = struct
   let command = CommandSpec.command spec main
 end
 
+module Annotate_use_state_command = struct
+  let doc = "Adds explicit type arguments to `useState`/`React.useState` calls"
+
+  let spec =
+    let module Literals = Codemod_hardcoded_ty_fixes.PreserveLiterals in
+    let preserve_string_literals_level =
+      Literals.[("always", Always); ("never", Never); ("auto", Auto)]
+    in
+    let name = "annotate-use-state" in
+    {
+      CommandSpec.name;
+      doc;
+      usage =
+        Printf.sprintf "Usage: %s codemod %s [OPTION]... [FILE]\n\n%s\n" name Utils_js.exe_name doc;
+      args =
+        CommandSpec.ArgSpec.(
+          empty
+          |> CommandUtils.codemod_flags
+          |> flag
+               "--preserve-literals"
+               (required ~default:Literals.Never (enum preserve_string_literals_level))
+               ~doc:""
+          |> common_annotate_flags
+        );
+    }
+
+  let main codemod_flags preserve_literals max_type_size default_any () =
+    let open Codemod_utils in
+    let module Runner = Codemod_runner.MakeSimpleTypedRunner (struct
+      module Acc = Annotate_use_state.Acc
+
+      type accumulator = Acc.t
+
+      let reporter = string_reporter (module Acc)
+
+      let check_options o = o
+
+      let visit =
+        let mapper = Annotate_use_state.mapper ~preserve_literals ~max_type_size ~default_any in
+        Codemod_utils.make_visitor (Mapper mapper)
+    end) in
+    main (module Runner) codemod_flags ()
+
+  let command = CommandSpec.command spec main
+end
+
 let command =
   let main (cmd, argv) () = CommandUtils.run_command cmd argv in
   let spec =
@@ -463,6 +509,7 @@ let command =
         (Annotate_escaped_generics.spec.CommandSpec.name, Annotate_escaped_generics.command);
         (Annotate_exports_command.spec.CommandSpec.name, Annotate_exports_command.command);
         (Annotate_lti_command.spec.CommandSpec.name, Annotate_lti_command.command);
+        (Annotate_use_state_command.spec.CommandSpec.name, Annotate_use_state_command.command);
         (KeyMirror_command.spec.CommandSpec.name, KeyMirror_command.command);
         (Rename_redefinitions_command.spec.CommandSpec.name, Rename_redefinitions_command.command);
       ]
