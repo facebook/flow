@@ -1183,7 +1183,7 @@ module Env : Env_sig.S = struct
      We also ban such reassignments in non-exported functions and classes in order to
      allow their types to be eagerly resolved.
   *)
-  let check_let_bound_reassignment op cx name entry loc =
+  let has_illegal_let_bound_reassignment op cx name entry loc =
     let open Entry in
     match (op, entry) with
     | ( Changeset.Write,
@@ -1204,70 +1204,74 @@ module Env : Env_sig.S = struct
       let reason = mk_reason (RType name) value_declare_loc in
       Flow.add_output
         cx
-        Error_message.(EAssignConstLikeBinding { loc; definition = reason; binding_kind })
-    | _ -> ()
+        Error_message.(EAssignConstLikeBinding { loc; definition = reason; binding_kind });
+      true
+    | _ -> false
 
   (* helper: update let or var entry *)
   let update_var op cx ~use_op name specific loc =
     let (scope, entry) = find_entry cx name loc in
-    check_let_bound_reassignment op cx name entry loc;
-    Entry.(
-      match entry with
-      | Value ({ Entry.kind = Let _ as kind; value_state = State.Undeclared; _ } as v)
-        when (not (allow_forward_ref kind)) && same_activation scope ->
-        tdz_error cx name loc v;
-        None
-      | Value ({ Entry.kind = Let _ | Var _; closure_writes; general; _ } as v) ->
-        let change = (scope.id, name, op) in
-        Changeset.Global.change_var change;
-        begin
-          match (closure_writes, op) with
-          | (_, Changeset.Refine) -> ()
-          | (_, Changeset.Read) -> assert_false "read op during variable update"
-          | (Some (writes_by_closure, t, _), Changeset.Write) when ALocSet.mem loc writes_by_closure
-            ->
-            Flow.flow cx (specific, UseT (use_op, t))
-          | (_, Changeset.Write) -> Flow.flow cx (specific, UseT (use_op, Entry.general_of_value v))
-        end;
+    if has_illegal_let_bound_reassignment op cx name entry loc then
+      None
+    else
+      Entry.(
+        match entry with
+        | Value ({ Entry.kind = Let _ as kind; value_state = State.Undeclared; _ } as v)
+          when (not (allow_forward_ref kind)) && same_activation scope ->
+          tdz_error cx name loc v;
+          None
+        | Value ({ Entry.kind = Let _ | Var _; closure_writes; general; _ } as v) ->
+          let change = (scope.id, name, op) in
+          Changeset.Global.change_var change;
+          begin
+            match (closure_writes, op) with
+            | (_, Changeset.Refine) -> ()
+            | (_, Changeset.Read) -> assert_false "read op during variable update"
+            | (Some (writes_by_closure, t, _), Changeset.Write)
+              when ALocSet.mem loc writes_by_closure ->
+              Flow.flow cx (specific, UseT (use_op, t))
+            | (_, Changeset.Write) ->
+              Flow.flow cx (specific, UseT (use_op, Entry.general_of_value v))
+          end;
 
-        install_provider cx specific name loc;
+          install_provider cx specific name loc;
 
-        begin
-          match (general, op) with
-          | (Inferred _, Changeset.Write) -> constrain_by_provider cx ~use_op specific name loc
-          | _ -> ()
-        end;
+          begin
+            match (general, op) with
+            | (Inferred _, Changeset.Write) -> constrain_by_provider cx ~use_op specific name loc
+            | _ -> ()
+          end;
 
-        (* add updated entry *)
-        let update =
-          Entry.Value
-            { v with Entry.value_state = State.Initialized; specific; value_assign_loc = loc }
-        in
-        Scope.add_entry name update scope;
-        Some change
-      | Value { Entry.kind = Const ConstVarBinding; _ } ->
-        let msg = Error_message.EConstReassigned in
-        binding_error msg cx name entry loc;
-        None
-      | Value { Entry.kind = Const EnumNameBinding; _ } ->
-        let msg = Error_message.EEnumReassigned in
-        binding_error msg cx name entry loc;
-        None
-      | Value { Entry.kind = Const ConstImportBinding; _ } ->
-        let msg = Error_message.EImportReassigned in
-        binding_error msg cx name entry loc;
-        None
-      | Value { Entry.kind = Const ConstParamBinding; _ } ->
-        (* TODO: remove extra info when surface syntax is added *)
-        let msg = Error_message.EConstParamReassigned in
-        binding_error msg cx name entry loc;
-        None
-      | Type _ ->
-        let msg = Error_message.ETypeAliasInValuePosition in
-        binding_error msg cx name entry loc;
-        None
-      | Class _ -> assert_false "Internal error: update_var called on Class"
-    )
+          (* add updated entry *)
+          let update =
+            Entry.Value
+              { v with Entry.value_state = State.Initialized; specific; value_assign_loc = loc }
+          in
+          Scope.add_entry name update scope;
+          Some change
+        | Value { Entry.kind = Const ConstVarBinding; _ } ->
+          let msg = Error_message.EConstReassigned in
+          binding_error msg cx name entry loc;
+          None
+        | Value { Entry.kind = Const EnumNameBinding; _ } ->
+          let msg = Error_message.EEnumReassigned in
+          binding_error msg cx name entry loc;
+          None
+        | Value { Entry.kind = Const ConstImportBinding; _ } ->
+          let msg = Error_message.EImportReassigned in
+          binding_error msg cx name entry loc;
+          None
+        | Value { Entry.kind = Const ConstParamBinding; _ } ->
+          (* TODO: remove extra info when surface syntax is added *)
+          let msg = Error_message.EConstParamReassigned in
+          binding_error msg cx name entry loc;
+          None
+        | Type _ ->
+          let msg = Error_message.ETypeAliasInValuePosition in
+          binding_error msg cx name entry loc;
+          None
+        | Class _ -> assert_false "Internal error: update_var called on Class"
+      )
 
   (* update var by direct assignment *)
   let set_var cx ~use_op name t loc =
