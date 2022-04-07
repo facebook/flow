@@ -404,14 +404,15 @@ let detect_matching_props_violations cx =
 let detect_literal_subtypes =
   let lb_visitor = new resolver_visitor in
   let ub_visitor =
+    let open Type in
+    let rec unwrap = function
+      | GenericT { bound; _ } -> unwrap bound
+      | t -> t
+    in
     object (_self)
       inherit resolver_visitor as super
 
-      method! type_ cx map_cx t =
-        let open Type in
-        match super#type_ cx map_cx t with
-        | GenericT { bound; _ } -> bound
-        | t -> t
+      method! type_ cx map_cx t = t |> super#type_ cx map_cx |> unwrap
     end
   in
   fun cx ->
