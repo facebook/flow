@@ -3091,6 +3091,29 @@ x;
           {refinement = Not (false); writes = {refinement = Not (3); writes = {refinement = Not (Null); writes = (1, 4) to (1, 5): (`x`)}}}
         }]|}]
 
+let%expect_test "switch_prop_return_every_case" =
+  print_ssa_test {|function foo() {
+let x = undefined;
+switch (x) {
+  case 1:
+    return;
+  case 2:
+    return;
+  default:
+    return;
+};
+}
+|};
+    [%expect {|
+      [
+        (2, 8) to (2, 17) => {
+          Global undefined
+        };
+        (3, 8) to (3, 9) => {
+          (2, 4) to (2, 5): (`x`)
+        }]
+      |}]
+
 let%expect_test "switch_with_fallthroughs" =
   print_ssa_test {|let x = undefined;
 switch (x) {

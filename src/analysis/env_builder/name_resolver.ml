@@ -2325,20 +2325,22 @@ module Make
               (case, bindings)
           )
         in
-        let _ =
-          this#with_bindings
-            ~lexical:true
-            loc
-            lexical_hoist#acc
-            (this#switch_cases_with_lexical_bindings loc discriminant)
-            cases_with_lexical_bindings
-        in
-        let post_env = this#env in
-        (* After all refinements and potential shadowing inside switch,
-           we need to re-read the discriminant to restore it. *)
-        this#reset_env incoming_env;
-        ignore @@ this#expression switch.discriminant;
-        this#reset_env post_env;
+        this#run
+          (fun () ->
+            ignore
+            @@ this#with_bindings
+                 ~lexical:true
+                 loc
+                 lexical_hoist#acc
+                 (this#switch_cases_with_lexical_bindings loc discriminant)
+                 cases_with_lexical_bindings)
+          ~finally:(fun () ->
+            let post_env = this#env in
+            (* After all refinements and potential shadowing inside switch,
+               we need to re-read the discriminant to restore it. *)
+            this#reset_env incoming_env;
+            ignore @@ this#expression switch.discriminant;
+            this#reset_env post_env);
         switch
 
       (***********************************************************)
