@@ -270,30 +270,40 @@ module Make (Env : Env_sig.S) (Statement : Statement_sig.S with module Env := En
     f ~use_op ~name_loc name default current
 
   let rec pattern cx ~(f : callback) acc (loc, p) =
-    Ast.Pattern.
-      ( (loc, acc.current),
-        match p with
-        | Array { Array.elements; annot; comments } ->
-          let elements = array_elements cx ~f acc elements in
-          let annot = Tast_utils.unimplemented_mapper#type_annotation_hint annot in
-          Array { Array.elements; annot; comments }
-        | Object { Object.properties; annot; comments } ->
-          let properties = object_properties cx ~f acc properties in
-          let annot = Tast_utils.unimplemented_mapper#type_annotation_hint annot in
-          Object { Object.properties; annot; comments }
-        | Identifier { Identifier.name = id; optional; annot } ->
-          let (id_loc, { Ast.Identifier.name; comments }) = id in
-          let annot = Tast_utils.unimplemented_mapper#type_annotation_hint annot in
-          let id_ty = identifier cx ~f acc id_loc name in
-          let id = ((id_loc, id_ty), { Ast.Identifier.name; comments }) in
-          Identifier { Identifier.name = id; optional; annot }
-        | Expression e ->
-          Flow_js.add_output
-            cx
-            Error_message.(EUnsupportedSyntax (loc, DestructuringExpressionPattern));
-          Expression (Tast_utils.error_mapper#expression e)
-      )
-    
+    let check_for_invalid_annot annot =
+      match (acc.parent, annot) with
+      | (Some _, Ast.Type.Available (loc, _)) ->
+        Flow_js.add_output
+          cx
+          Error_message.(EUnsupportedSyntax (loc, AnnotationInsideDestructuring))
+      | _ -> ()
+    in
+    let open Ast.Pattern in
+    ( (loc, acc.current),
+      match p with
+      | Array { Array.elements; annot; comments } ->
+        check_for_invalid_annot annot;
+        let elements = array_elements cx ~f acc elements in
+        let annot = Tast_utils.unimplemented_mapper#type_annotation_hint annot in
+        Array { Array.elements; annot; comments }
+      | Object { Object.properties; annot; comments } ->
+        check_for_invalid_annot annot;
+        let properties = object_properties cx ~f acc properties in
+        let annot = Tast_utils.unimplemented_mapper#type_annotation_hint annot in
+        Object { Object.properties; annot; comments }
+      | Identifier { Identifier.name = id; optional; annot } ->
+        let (id_loc, { Ast.Identifier.name; comments }) = id in
+        check_for_invalid_annot annot;
+        let annot = Tast_utils.unimplemented_mapper#type_annotation_hint annot in
+        let id_ty = identifier cx ~f acc id_loc name in
+        let id = ((id_loc, id_ty), { Ast.Identifier.name; comments }) in
+        Identifier { Identifier.name = id; optional; annot }
+      | Expression e ->
+        Flow_js.add_output
+          cx
+          Error_message.(EUnsupportedSyntax (loc, DestructuringExpressionPattern));
+        Expression (Tast_utils.error_mapper#expression e)
+    )
 
   and array_elements cx ~f acc =
     let open Ast.Pattern.Array in

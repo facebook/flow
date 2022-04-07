@@ -501,6 +501,7 @@ and internal_error =
   | UnexpectedAnnotationInference of string
 
 and 'loc unsupported_syntax =
+  | AnnotationInsideDestructuring
   | ComprehensionExpression
   | GeneratorExpression
   | MetaPropertyExpression
@@ -610,7 +611,8 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
       | PredicateDeclarationAnonymousParameters | PredicateInvalidBody
       | PredicateFunctionAbstractReturnType | PredicateVoidReturn | MultipleIndexers
       | MultipleProtos | ExplicitCallAfterProto | ExplicitProtoAfterCall | SpreadArgument
-      | ImportDynamicArgument | IllegalName | UnsupportedInternalSlot _ ) as u ->
+      | ImportDynamicArgument | IllegalName | UnsupportedInternalSlot _
+      | AnnotationInsideDestructuring ) as u ->
       u
   in
   function
@@ -2321,6 +2323,16 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
       | GeneratorExpression
       | MetaPropertyExpression ->
         [text "Not supported."]
+      | AnnotationInsideDestructuring ->
+        [
+          text "Annotations inside of destructuring are not supported. ";
+          text "Annotate the top-level pattern instead. ";
+          text "For example, instead of the invalid ";
+          code "const [a: number, b: string] = ...";
+          text " do ";
+          code "const [a, b]: [number, string] = ...";
+          text ".";
+        ]
       | ObjectPropertyLiteralNonString -> [text "Non-string literal property keys not supported."]
       | ObjectPropertyGetSet -> [text "Get/set properties not yet supported."]
       | ObjectPropertyComputedGetSet -> [text "Computed getters and setters are not yet supported."]
