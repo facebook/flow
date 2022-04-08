@@ -95,5 +95,5 @@ function nonObjectRHS(x: Object) {
 
 function not_refinement_or_val_rhs(x: Object) {
   const immutable = {Map: class Map {}}
-  if (x instanceof immutable.Map) {x}
+  if (x instanceof immutable.Map) {(x: immutable.Map)}
 }
