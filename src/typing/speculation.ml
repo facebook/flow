@@ -92,10 +92,13 @@ let add_unresolved_to_speculation cx speculation_id id =
   |> IMap.add speculation_id (ISet.singleton root_id) ~combine:ISet.union
   |> Context.set_all_unresolved cx
 
-let ignore_type ignore id r =
+let ignore_type cx ignore id r =
   match ignore with
-  | Some ignore_id when ignore_id = id -> true
-  | _ -> Reason.is_instantiable_reason r
+  | Some ignore_id ->
+    let (root_ignore_id, _) = Context.find_root cx ignore_id in
+    let (root_id, _) = Context.find_root cx id in
+    root_ignore_id = root_id || Reason.is_instantiable_reason r
+  | None -> Reason.is_instantiable_reason r
 
 let set_speculative cx branch =
   let state = Context.speculation_state cx in
@@ -135,7 +138,7 @@ let defer_if_relevant cx branch action =
     let relevant_action_tvars = IMap.filter (fun id _ -> ISet.mem id all_unresolved) action_tvars in
     let defer = not (IMap.is_empty relevant_action_tvars) in
     if defer then (
-      let is_benign = IMap.exists (ignore_type ignore) action_tvars in
+      let is_benign = IMap.exists (ignore_type cx ignore) action_tvars in
       if not is_benign then
         case.unresolved <-
           IMap.fold (fun id _ acc -> ISet.add id acc) relevant_action_tvars case.unresolved;
