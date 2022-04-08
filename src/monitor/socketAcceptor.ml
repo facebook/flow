@@ -25,23 +25,26 @@ let handle_persistent_message ~client_id ~msg ~connection:_ =
 module type STATUS_WRITER = sig
   type t
 
-  val write : ServerStatus.status * FileWatcherStatus.status -> t -> unit
+  val write : ServerStatus.status * FileWatcherStatus.status -> t -> bool
 end
 
 (* A loop that sends the Server's busy status to a waiting connection every 0.5 seconds *)
 module StatusLoop (Writer : STATUS_WRITER) = LwtLoop.Make (struct
+  exception Break
+
   type acc = Writer.t
 
   let main conn =
     let%lwt status = StatusStream.wait_for_signficant_status ~timeout:0.5 in
-    Writer.write status conn;
+    if not (Writer.write status conn) then
+      (* The connection closed its write stream, likely it is closed or closing *)
+      raise Break;
     Lwt.return conn
 
   let catch _ exn =
     begin
       match Exception.unwrap exn with
-      (* The connection closed its write stream, likely it is closed or closing *)
-      | Lwt_stream.Closed -> ()
+      | Break -> ()
       | _ -> Logger.error ~exn:(Exception.to_exn exn) "StatusLoop threw an exception"
     end;
     Lwt.return_unit
@@ -83,7 +86,8 @@ let create_ephemeral_connection ~client_fd ~close =
   start ();
 
   (* Send the current server state immediate *)
-  EphemeralConnection.write ~msg:(MonitorProt.Please_hold (StatusStream.get_status ())) conn;
+  let msg = MonitorProt.Please_hold (StatusStream.get_status ()) in
+  ignore (EphemeralConnection.write ~msg conn);
 
   (* Start sending the status to the ephemeral connection *)
   Lwt.async (fun () -> EphemeralStatusLoop.run ~cancel_condition:ExitSignal.signal conn);
@@ -118,8 +122,7 @@ let create_persistent_connection ~client_fd ~close ~lsp_init_params =
   (* On exit, do our best to send all pending messages to the waiting client *)
   let close_on_exit =
     let%lwt _ = Lwt_condition.wait ExitSignal.signal in
-    (try PersistentConnection.write ~msg:LspProt.(NotificationFromServer EOF) conn with
-    | Lwt_stream.Closed -> ());
+    ignore (PersistentConnection.write ~msg:LspProt.(NotificationFromServer EOF) conn);
     PersistentConnection.flush_and_close conn
   in
   (* Lwt.pick returns the first thread to finish and cancels the rest. *)
@@ -129,9 +132,8 @@ let create_persistent_connection ~client_fd ~close ~lsp_init_params =
   Lwt.async (fun () ->
       PersistentConnectionMap.add ~client_id ~client:conn;
       start ();
-      PersistentConnection.write
-        ~msg:LspProt.(NotificationFromServer (Please_hold (StatusStream.get_status ())))
-        conn;
+      let msg = LspProt.(NotificationFromServer (Please_hold (StatusStream.get_status ()))) in
+      ignore (PersistentConnection.write ~msg conn);
       let%lwt () = PersistentStatusLoop.run ~cancel_condition:ExitSignal.signal conn in
       Lwt.return_unit
   );
