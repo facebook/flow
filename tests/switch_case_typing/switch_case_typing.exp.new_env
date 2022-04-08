@@ -384,9 +384,9 @@ References:
    test.js:106:10
    106|   "ERR": 'err',
                  ^^^^^ [1]
-   test.js:112:9
-   112| switch (o.type) {
-                ^ [2]
+   test.js:109:5
+   109| if (o.type === KeyObj.ERR) {} // error
+            ^ [2]
    test.js:60:30
     60| type DisjointUnion = { type: 'foo' } | { type: 'bar' } | { type: 'baz' }
                                      ^^^^^ [3]

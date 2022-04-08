@@ -430,7 +430,7 @@ module Make
           | Projection loc -> Env_api.Projection loc
           | Loc r -> Env_api.Write r
           | Refinement { refinement_id; val_t } ->
-            Env_api.Refinement { writes = simplify_val val_t; refinement_id }
+            Env_api.Refinement { writes = simplify_val val_t; refinement_id; write_id = val_t.id }
           | This -> Env_api.This
           | Super -> Env_api.Super
           | Arguments -> Env_api.Arguments
@@ -447,7 +447,15 @@ module Make
         | Some _ -> Some Env_api.Value
         | None -> None
       in
-      { Env_api.def_loc; write_locs; val_kind; name }
+      let id =
+        match name with
+        (* We delegate to the old env for this and super, so we shouldn't cache results about them *)
+        | Some "this"
+        | Some "super" ->
+          None
+        | _ -> Some value.id
+      in
+      { Env_api.def_loc; write_locs; val_kind; name; id }
 
     let id_of_val { id; write_state = _ } = id
 
@@ -4028,6 +4036,7 @@ module Make
                     write_locs = [Env_api.Unreachable loc];
                     val_kind = None;
                     name = Some name;
+                    id = None;
                   }
               | x -> x)
             values

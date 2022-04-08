@@ -218,14 +218,6 @@ Cannot resolve name `x`. [cannot-resolve-name]
             ^
 
 
-Error ------------------------------------------------------------------------------------------------- Closure.js:141:4
-
-Cannot resolve name `x`. [cannot-resolve-name]
-
-   141|   (x: void); // should error
-           ^
-
-
 Error ----------------------------------------------------------------------------------------------- cond_havoc.js:8:22
 
 Cannot assign empty string to `x` because string [1] is incompatible with number [2]. All writes to `x` must be
@@ -263,4 +255,4 @@ References:
 
 
 
-Found 16 errors
+Found 15 errors

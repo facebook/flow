@@ -52,7 +52,7 @@ let print_values refinement_of_id =
         "%s: (%s)"
         (L.debug_to_string loc)
         Reason.(desc_of_reason reason |> string_of_desc)
-    | Refinement { refinement_id; writes } ->
+    | Refinement { refinement_id; writes; write_id = _ } ->
       let refinement = refinement_of_id refinement_id in
       let refinement_str = show_refinement_kind_without_locs (snd refinement) in
       let writes_str = String.concat "," (List.map print_value writes) in
@@ -70,7 +70,7 @@ let print_values refinement_of_id =
     let kvlist = L.LMap.bindings values in
     let strlist =
       Base.List.map
-        ~f:(fun (read_loc, { def_loc = _; val_kind = _; write_locs; name = _ }) ->
+        ~f:(fun (read_loc, { def_loc = _; val_kind = _; write_locs; name = _; id = _ }) ->
           Printf.sprintf
             "%s => {\n    %s\n  }"
             (L.debug_to_string read_loc)

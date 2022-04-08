@@ -37,6 +37,7 @@ module type S = sig
     | Refinement of {
         refinement_id: int;
         writes: write_locs;
+        write_id: int;
       }
     | This
     | Super
@@ -59,6 +60,7 @@ module type S = sig
     write_locs: write_locs;
     val_kind: val_kind option;
     name: string option;
+    id: int option;
   }
 
   type values = read L.LMap.t
@@ -190,6 +192,7 @@ module Make
     | Refinement of {
         refinement_id: int;
         writes: write_locs;
+        write_id: int;
       }
     | This
     | Super
@@ -260,6 +263,7 @@ module Make
     write_locs: write_locs;
     val_kind: val_kind option;
     name: string option;
+    id: int option;
   }
 
   type values = read L.LMap.t
@@ -295,17 +299,17 @@ module Make
     }
 
   let rec refinement_ids_of_ssa_write acc = function
-    | Refinement { refinement_id; writes } ->
+    | Refinement { refinement_id; writes; write_id = _ } ->
       List.fold_left refinement_ids_of_ssa_write (refinement_id :: acc) writes
     | _ -> acc
 
   let write_locs_of_read_loc values read_loc =
-    let { write_locs; def_loc = _; val_kind = _; name = _ } = L.LMap.find read_loc values in
+    let { write_locs; def_loc = _; val_kind = _; name = _; id = _ } = L.LMap.find read_loc values in
     write_locs
 
   let rec writes_of_write_loc ~for_type write_loc =
     match write_loc with
-    | Refinement { refinement_id = _; writes } ->
+    | Refinement { refinement_id = _; write_id = _; writes } ->
       writes |> List.map (writes_of_write_loc ~for_type) |> List.flatten
     | UndeclaredClass { def; _ } when for_type -> [Reason.poly_loc_of_reason def]
     | UndeclaredClass _ -> []
@@ -324,7 +328,7 @@ module Make
 
   let rec refinements_of_write_loc ({ refinement_of_id; _ } as env) write_loc =
     match write_loc with
-    | Refinement { refinement_id; writes } ->
+    | Refinement { refinement_id; writes; write_id = _ } ->
       let writes = writes |> List.map (refinements_of_write_loc env) |> List.flatten in
       (refinement_of_id refinement_id |> snd) :: writes
     | _ -> []
@@ -334,7 +338,7 @@ module Make
       L.LMap.find_opt loc vals
       |> Base.Option.value_map
            ~default:[]
-           ~f:(fun { write_locs; def_loc = _; val_kind = _; name = _ } ->
+           ~f:(fun { write_locs; def_loc = _; val_kind = _; name = _; id = _ } ->
              List.map (writes_of_write_loc ~for_type) write_locs
          )
       |> List.flatten
@@ -344,7 +348,7 @@ module Make
       L.LMap.find_opt loc vals
       |> Base.Option.value_map
            ~default:[]
-           ~f:(fun { write_locs; def_loc = _; val_kind = _; name = _ } ->
+           ~f:(fun { write_locs; def_loc = _; val_kind = _; name = _; id = _ } ->
              List.fold_left refinement_ids_of_ssa_write [] write_locs
          )
       |> List.map (fun id -> fst (refinement_of_id id))
@@ -378,7 +382,7 @@ module Make
           "%s: (%s)"
           (L.debug_to_string loc)
           Reason.(desc_of_reason reason |> string_of_desc)
-      | Refinement { refinement_id; writes } ->
+      | Refinement { refinement_id; writes; write_id = _ } ->
         let refinement_id_str = string_of_int refinement_id in
         let writes_str = String.concat "," (List.map print_write_loc writes) in
         Printf.sprintf "{refinement_id = %s; writes = %s}" refinement_id_str writes_str
@@ -391,7 +395,7 @@ module Make
       let kvlist = L.LMap.bindings values in
       let strlist =
         Base.List.map
-          ~f:(fun (read_loc, { def_loc = _; val_kind = _; write_locs; name = _ }) ->
+          ~f:(fun (read_loc, { def_loc = _; val_kind = _; write_locs; name = _; id = _ }) ->
             Printf.sprintf
               "%s => { %s }"
               (L.debug_to_string read_loc)

@@ -1018,21 +1018,6 @@ References:
              ^^^^^^^^^^^^^^^^^ [1]
 
 
-Error ----------------------------------------------------------------------------------------- tdz_class_fields.js:7:17
-
-Cannot use variable `forwardReferenced` [1] because the declaration either comes later or was skipped.
-[reference-before-declaration]
-
-   tdz_class_fields.js:7:17
-    7|     static #d = forwardReferenced; // Should error
-                       ^^^^^^^^^^^^^^^^^
-
-References:
-   tdz_class_fields.js:10:7
-   10| const forwardReferenced = 0;
-             ^^^^^^^^^^^^^^^^^ [1]
-
-
 Error --------------------------------------------------------------------------------------------------- unbound.js:3:1
 
 Cannot resolve name `unbound`. [cannot-resolve-name]
@@ -1042,4 +1027,4 @@ Cannot resolve name `unbound`. [cannot-resolve-name]
 
 
 
-Found 74 errors
+Found 73 errors
