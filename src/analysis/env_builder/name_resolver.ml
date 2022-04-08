@@ -3277,150 +3277,101 @@ module Make
           this#merge_refinement_scopes ~conjunction lhs_latest_refinements rhs_latest_refinements
 
       method null_test ~strict ~sense loc expr other =
-        ignore @@ this#expression expr;
-        let (optional_chain_refinement, refis) =
-          this#maybe_sentinel_and_chain_refinement ~sense ~strict loc expr other
-        in
+        let refis = this#maybe_sentinel ~sense ~strict loc expr other in
         let refis =
           match RefinementKey.of_expression expr with
           | None -> refis
-          | Some refinement_key ->
+          | Some key ->
             let refinement =
               if strict then
                 NullR
               else
-                MaybeR
+                NotR MaybeR
             in
-            let refinement =
-              if sense then
-                refinement
-              else
-                NotR refinement
-            in
-            let refis =
-              this#extend_refinement refinement_key (L.LSet.singleton loc, refinement) refis
-            in
-            (match optional_chain_refinement with
-            | Some refinement_key ->
-              (* Optional chaining with ==/=== null can be tricky. If the value before ? is
-               * null or undefined then the entire chain evaluates to undefined. That leaves us
-               * with these cases:
-               * a?.b === null THEN a non-maybe and a.b null ELSE a maybe or a.b non-null
-               * a?.b == null THEN no refinement ELSE a non maybe and a.b non-null
-               * TODO: figure out how to model the negation of an optional chain refinement without
-               * introducing a second mapping for the negation of refinements.
-               *)
-              if (strict && sense) || ((not sense) && not strict) then
-                this#extend_refinement refinement_key (L.LSet.singleton loc, NotR MaybeR) refis
-              else
-                refis
-            | None -> refis)
+            this#extend_refinement key (L.LSet.singleton loc, refinement) refis
         in
-        this#commit_refinement refis
+        ignore @@ this#optional_chain expr;
+        this#commit_refinement refis;
+        if strict <> sense then this#negate_new_refinements ()
 
       method void_test ~sense ~strict ~check_for_bound_undefined loc expr other =
-        ignore @@ this#expression expr;
-        let (optional_chain_refinement, refis) =
-          this#maybe_sentinel_and_chain_refinement ~sense ~strict loc expr other
-        in
+        let refis = this#maybe_sentinel ~sense ~strict loc expr other in
         let is_global_undefined () =
           match SMap.find_opt "undefined" env_state.env with
           | None -> false
           | Some { val_ref = v; _ } -> Val.is_global_undefined !v
         in
-        let refis =
-          match RefinementKey.of_expression expr with
-          | None -> refis
-          | Some refinement_key ->
-            (* Only add the refinement if undefined is not re-bound *)
-            if (not check_for_bound_undefined) || is_global_undefined () then
+        if (not check_for_bound_undefined) || is_global_undefined () then begin
+          let refis =
+            match RefinementKey.of_expression expr with
+            | None -> refis
+            | Some key ->
               let refinement =
                 if strict then
-                  UndefinedR
+                  NotR UndefinedR
                 else
-                  MaybeR
+                  NotR MaybeR
               in
-              let refinement =
-                if sense then
-                  refinement
-                else
-                  NotR refinement
-              in
-              let refis =
-                this#extend_refinement refinement_key (L.LSet.singleton loc, refinement) refis
-              in
-              match optional_chain_refinement with
-              | None -> refis
-              | Some refinement_key ->
-                (* Optional chaining against void is also difficult... (see null_test)
-                 * a?.b === undefined THEN a maybe or a.b is undefined ELSE a non-maybe and a.b not undefined
-                 * a?.b == undefined THEN a maybe or a.b maybe ELSE a non-maybe and a.b not undefined
-                 * TODO: we can't model this disjunction without heap refinements, so until then we
-                 * won't add any refinements for the sense && strict and sense && not strict cases *)
-                if not sense then
-                  this#extend_refinement refinement_key (L.LSet.singleton loc, NotR MaybeR) refis
-                else
-                  refis
-            else
-              refis
-        in
-        this#commit_refinement refis
-
-      method default_optional_chain_refinement_handler ~sense ~strict loc expr other =
-        match this#maybe_sentinel_and_chain_refinement ~sense ~strict loc expr other with
-        | (None, refis) -> refis
-        | (Some name, refis) ->
-          this#extend_refinement name (L.LSet.singleton loc, NotR MaybeR) refis
+              this#extend_refinement key (L.LSet.singleton loc, refinement) refis
+          in
+          ignore @@ this#optional_chain expr;
+          this#commit_refinement refis;
+          if sense then this#negate_new_refinements ()
+        end else begin
+          ignore @@ this#optional_chain expr;
+          this#commit_refinement refis
+        end
 
       method typeof_test loc arg typename sense =
-        ignore @@ this#expression arg;
-        let refinement =
+        let (refinement, undef) =
           match typename with
-          | "boolean" -> Some (BoolR loc)
-          | "function" -> Some FunctionR
-          | "number" -> Some (NumberR loc)
-          | "object" -> Some ObjectR
-          | "string" -> Some (StringR loc)
-          | "symbol" -> Some (SymbolR loc)
-          | "undefined" -> Some UndefinedR
-          | _ -> None
+          | "boolean" -> (Some (BoolR loc), false)
+          | "function" -> (Some FunctionR, false)
+          | "number" -> (Some (NumberR loc), false)
+          | "object" -> (Some ObjectR, false)
+          | "string" -> (Some (StringR loc), false)
+          | "symbol" -> (Some (SymbolR loc), false)
+          | "undefined" -> (Some UndefinedR, true)
+          | _ -> (None, false)
         in
         match (refinement, RefinementKey.of_expression arg) with
         | (Some ref, Some refinement_key) ->
+          ignore @@ this#optional_chain arg;
           let refinement =
-            if sense then
+            if sense && not undef then
               ref
             else
               NotR ref
           in
-          this#add_single_refinement refinement_key (L.LSet.singleton loc, refinement)
-        | _ -> ()
+          this#add_single_refinement refinement_key (L.LSet.singleton loc, refinement);
+          if sense && undef then this#negate_new_refinements ()
+        | _ -> ignore @@ this#optional_chain arg
 
       method literal_test ~strict ~sense loc expr refinement other =
-        ignore @@ this#expression expr;
-        let refis = this#default_optional_chain_refinement_handler ~sense ~strict loc expr other in
+        let refis = this#maybe_sentinel ~sense ~strict loc expr other in
         let refis =
           match RefinementKey.of_expression expr with
-          | Some refinement_key when strict ->
+          | Some ({ RefinementKey.lookup; loc = _ } as key) when strict ->
             let refinement =
               if sense then
                 refinement
               else
                 NotR refinement
             in
-            (match refinement_key.RefinementKey.lookup with
+            (match lookup with
             | { RefinementKey.base; projections = [] } ->
               let { val_ref = _; def_loc; _ } = SMap.find base env_state.env in
               (match def_loc with
               | None -> ()
               | Some def_loc -> add_literal_subtype_test def_loc refinement)
             | _ -> ());
-            this#extend_refinement refinement_key (L.LSet.singleton loc, refinement) refis
+            this#extend_refinement key (L.LSet.singleton loc, refinement) refis
           | _ -> refis
         in
+        ignore @@ this#optional_chain expr;
         this#commit_refinement refis
 
-      method maybe_sentinel_and_chain_refinement ~sense ~strict loc expr (other_loc, _) =
+      method maybe_sentinel ~sense ~strict loc expr (other_loc, _) =
         let open Flow_ast in
         let expr' =
           match expr with
@@ -3445,7 +3396,6 @@ module Make
                   }
               )
             ) ->
-            let (_ : ('a, 'b) Ast.Expression.t) = this#expression _object in
             (match RefinementKey.of_expression _object with
             | Some refinement_key ->
               let reason = mk_reason (RProperty (Some (OrdinaryName prop_name))) ploc in
@@ -3470,11 +3420,7 @@ module Make
             ignore (this#expression expr : ('a, 'b) Ast.Expression.t);
             LookupMap.empty
         in
-        (* We return the refinement to the callers to handle specially. null_test and void_test have the
-         * most interesting behaviors *)
-        match RefinementKey.of_optional_chain expr with
-        | Some refinement_key -> (Some refinement_key, refis)
-        | None -> (None, refis)
+        refis
 
       method eq_test ~strict ~sense ~cond_context loc left right =
         let open Flow_ast in
@@ -3647,25 +3593,25 @@ module Make
          * non-literal value we are comparing against may be null or undefined,
          * in which case we'd need to use the special case behavior. Since we can't
          * know at this point, we conservatively do not refine at all based on optional
-         * chains by ignoring the output of maybe_sentinel_and_chain_refinement.
+         * chains by ignoring the output of maybe_sentinel.
          *
          * NOTE: Switch statements do not introduce sentinel refinements *)
         | (((_, Expression.Member _) as expr), other) ->
           ignore @@ this#expression expr;
-          let (_, refis) = this#maybe_sentinel_and_chain_refinement ~sense ~strict loc expr other in
+          let refis = this#maybe_sentinel ~sense ~strict loc expr other in
           this#commit_refinement refis;
           ignore @@ this#expression other
         | (other, ((_, Expression.Member _) as expr)) when not (cond_context = SwitchTest) ->
           ignore @@ this#expression other;
           ignore @@ this#expression expr;
-          let (_, refis) = this#maybe_sentinel_and_chain_refinement ~sense ~strict loc expr other in
+          let refis = this#maybe_sentinel ~sense ~strict loc expr other in
           this#commit_refinement refis
         | _ ->
           ignore @@ this#expression left;
           ignore @@ this#expression right
 
       method instance_test loc expr instance =
-        ignore @@ this#expression expr;
+        ignore @@ this#optional_chain expr;
         ignore @@ this#expression instance;
         match RefinementKey.of_expression expr with
         | None -> ()
@@ -3752,12 +3698,16 @@ module Make
            );
          comments = _;
         } ->
+          let refi =
+            match RefinementKey.of_expression arg with
+            | None -> LookupMap.empty
+            | Some refinement_key ->
+              this#start_refinement refinement_key (L.LSet.singleton loc, IsArrayR)
+          in
+
           ignore @@ this#expression callee;
-          ignore @@ this#expression arg;
-          (match RefinementKey.of_expression arg with
-          | None -> ()
-          | Some refinement_key ->
-            this#add_single_refinement refinement_key (L.LSet.singleton loc, IsArrayR))
+          ignore @@ this#optional_chain arg;
+          this#commit_refinement refi
         (* Latent refinements are only applied on function calls where the function call is an identifier *)
         | {
          Flow_ast.Expression.Call.callee = (_, Flow_ast.Expression.Identifier _) as callee;
@@ -3808,15 +3758,55 @@ module Make
           this#merge_self_refinement_scope negated_refinements
         | _ -> ignore @@ this#unary_expression loc unary
 
-      method member_expression_refinement loc expr =
-        (* Add a PropExists refinement to the object and a
-         * Truthy heap refinement to the access *)
-        let refis =
-          match RefinementKey.of_expression (loc, expr) with
-          | None -> LookupMap.empty
-          | Some refinement_key_access ->
-            this#start_refinement refinement_key_access (L.LSet.singleton loc, TruthyR)
+      method optional_chain (loc, expr) =
+        let open Ast.Expression in
+        let () =
+          match expr with
+          | OptionalMember _
+          | Member _ ->
+            (match this#get_val_of_expression (loc, expr) with
+            | None -> ()
+            | Some refined_v ->
+              (* We model a heap refinement as a separate const binding. We prefer this over using
+               * None so that we can report errors when using this value in a type position *)
+              let values =
+                L.LMap.add
+                  loc
+                  {
+                    def_loc = None;
+                    value = refined_v;
+                    binding_kind_opt = Some Bindings.Const;
+                    name = None;
+                  }
+                  env_state.values
+              in
+              env_state <- { env_state with values })
+          | _ -> ()
         in
+        let () =
+          match expr with
+          | OptionalMember _ -> this#member_expression_refinement loc expr LookupMap.empty
+          | OptionalCall
+              { OptionalCall.call = { Call.callee; targs; arguments; comments = _ }; optional } ->
+            let refi =
+              match RefinementKey.of_expression callee with
+              | Some refinement_key_obj when optional ->
+                this#start_refinement refinement_key_obj (L.LSet.singleton loc, NotR MaybeR)
+              | _ -> LookupMap.empty
+            in
+
+            ignore @@ this#optional_chain callee;
+            this#commit_refinement refi;
+            let _targs' = Base.Option.map ~f:this#call_type_args targs in
+            let _arguments' = this#call_arguments arguments in
+            this#havoc_current_env ~all:false
+          | Member mem -> ignore @@ this#member loc mem
+          | Call call -> ignore @@ this#call loc call
+          | _ -> ignore @@ this#expression (loc, expr)
+        in
+        (loc, expr)
+
+      method member_expression_refinement loc expr refis =
         let open Flow_ast.Expression in
         let open Flow_ast.Expression.Member in
         let optional =
@@ -3827,8 +3817,7 @@ module Make
         match expr with
         | OptionalMember OptionalMember.{ member = { Member._object; property; _ }; _ }
         | Member Member.{ _object; property; _ } ->
-          ignore @@ this#expression _object;
-          ignore @@ this#member_property property;
+          ignore @@ this#optional_chain _object;
           let propname =
             match property with
             | PropertyIdentifier (_, { Flow_ast.Identifier.name; _ })
@@ -3838,18 +3827,24 @@ module Make
               Some name
             | _ -> None
           in
-          (match (RefinementKey.of_expression _object, propname) with
-          | (_, None)
-          | (None, _) ->
-            this#commit_refinement refis
-          | (Some refinement_key_obj, Some propname) ->
+          (match RefinementKey.of_expression _object with
+          | None -> ignore @@ this#member_property property
+          | Some refinement_key_obj ->
             if optional then
               this#add_single_refinement refinement_key_obj (L.LSet.singleton loc, NotR MaybeR);
-            this#extend_refinement
-              refinement_key_obj
-              (L.LSet.singleton loc, PropExistsR { propname; loc })
-              refis
-            |> this#commit_refinement)
+            ignore @@ this#member_property property;
+            let refis =
+              Base.Option.value_map
+                ~f:(fun propname ->
+                  this#extend_refinement
+                    refinement_key_obj
+                    (L.LSet.singleton loc, PropExistsR { propname; loc })
+                    refis)
+                ~default:refis
+                propname
+            in
+
+            this#commit_refinement refis)
         | _ ->
           failwith "member_expression_refinement can only be called on OptionalMember or Member"
 
@@ -3876,7 +3871,14 @@ module Make
           expression
         | Member _
         | OptionalMember _ ->
-          this#member_expression_refinement loc expr;
+          (* Add a PropExists refinement to the object and a
+           * Truthy heap refinement to the access *)
+          let refis =
+            match RefinementKey.of_expression (loc, expr) with
+            | None -> LookupMap.empty
+            | Some key -> this#start_refinement key (L.LSet.singleton loc, TruthyR)
+          in
+          this#member_expression_refinement loc expr refis;
           expression
         | Array _
         | ArrowFunction _
@@ -3962,26 +3964,14 @@ module Make
 
       method! expression expr =
         match expr with
-        | (loc, Flow_ast.Expression.Member _)
-        | (loc, Flow_ast.Expression.OptionalMember _) ->
-          (match this#get_val_of_expression expr with
-          | None -> ()
-          | Some refined_v ->
-            (* We model a heap refinement as a separate const binding. We prefer this over using
-             * None so that we can report errors when using this value in a type position *)
-            let values =
-              L.LMap.add
-                loc
-                {
-                  def_loc = None;
-                  value = refined_v;
-                  binding_kind_opt = Some Bindings.Const;
-                  name = None;
-                }
-                env_state.values
-            in
-            env_state <- { env_state with values });
-          super#expression expr
+        | (_, Flow_ast.Expression.Call _)
+        | (_, Flow_ast.Expression.OptionalCall _)
+        | (_, Flow_ast.Expression.Member _)
+        | (_, Flow_ast.Expression.OptionalMember _) ->
+          this#push_refinement_scope empty_refinements;
+          let res = this#optional_chain expr in
+          this#pop_refinement_scope ();
+          res
         | _ -> super#expression expr
 
       method! private hoist_annotations f =

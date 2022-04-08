@@ -149,3 +149,7 @@ var x11: empty = a11?.a || b11?.a;
 
 declare var e: ?string;
 if (e?.length) { }
+
+function havoc_d() {
+  d = null;
+}

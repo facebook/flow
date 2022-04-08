@@ -22,3 +22,7 @@ delete x?.i2[x.a][0];
 delete x?.i3[x.a].a;
 
 x?.f2(x.a)(x.a); // havoc refinements
+
+function havoc_x() {
+  x = null;
+}

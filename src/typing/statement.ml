@@ -5198,7 +5198,7 @@ struct
           let (((_, t), _) as res) = expression ?cond ~hint:None cx ex in
           (t, None, res, None, None))
     in
-    let (_, _, ((loc, t), _), _, _) = result in
+    let (t, _, ((loc, _), _), _, _) = result in
     Env.record_expression_type_if_needed cx loc t;
     result
 
