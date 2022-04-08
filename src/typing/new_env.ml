@@ -420,7 +420,9 @@ module New_env = struct
     | Some w -> Flow_js.unify cx ~use_op:unknown_use refined w
 
   let set_env_entry cx ~use_op ?potential_global_name t loc =
-    let ({ Loc_env.var_info; resolved; _ } as env) = Context.environment cx in
+    let ({ Loc_env.var_info = { Env_api.providers; scopes; _ } as var_info; resolved; _ } as env) =
+      Context.environment cx
+    in
     if not (ALocSet.mem loc resolved) then begin
       Debug_js.Verbose.print_if_verbose
         cx
@@ -455,6 +457,19 @@ module New_env = struct
           if is_def_loc_annotated var_info loc then
             Flow_js.flow cx (t, UseT (use_op, general))
           else
+            let use_op =
+              match Scope_api.With_ALoc.(def_of_use_opt scopes loc) with
+              | Some { Scope_api.With_ALoc.Def.locs = (declaration, _); actual_name = name; _ } ->
+                let provider_locs =
+                  Base.Option.value_map
+                    ~f:snd
+                    ~default:[]
+                    (Env_api.Provider_api.providers_of_def providers loc)
+                in
+                Frame
+                  (ConstrainedAssignment { name; declaration; providers = provider_locs }, use_op)
+              | None -> use_op
+            in
             Context.add_constrained_write cx (t, UseT (use_op, general))
     end else
       Debug_js.Verbose.print_if_verbose
