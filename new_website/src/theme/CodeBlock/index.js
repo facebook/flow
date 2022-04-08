@@ -8,7 +8,7 @@
  */
 
 import React from 'react';
-import OriginalCodeBlock from '@theme-init/CodeBlock';
+import OriginalCodeBlock from '@theme-original/CodeBlock';
 import FlowCheckCodeBlock from '../../components/FlowCheckCodeBlock';
 
 export default function CodeBlock(props) {

@@ -1,0 +1,6 @@
+[ignore]
+<PROJECT_ROOT>/src/.*
+.*/node_modules/.*
+
+[options]
+all=true

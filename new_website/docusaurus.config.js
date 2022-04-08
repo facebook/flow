@@ -19,17 +19,6 @@ module.exports = {
   organizationName: 'facebook', // Usually your GitHub org/user name.
   projectName: 'flow', // Usually your repo name.
   trailingSlash: true,
-  webpack: {
-    // Compiling flow.js is too slow with babel...
-    jsLoader: isServer => ({
-      loader: require.resolve('esbuild-loader'),
-      options: {
-        loader: 'tsx',
-        format: isServer ? 'cjs' : undefined,
-        target: isServer ? 'node12' : 'es2017',
-      },
-    }),
-  },
   plugins: [
     function polyfillNodeBuiltinsForFlowJS(context, options) {
       return {
