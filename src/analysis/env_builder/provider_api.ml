@@ -34,17 +34,17 @@ module Make (L : Loc_sig.S) : S with module L = L = struct
   open FP
 
   type info = {
-    all_entries: EntrySet.t;
     all_exact_providers: L.LSet.t;
     all_annotated_providers: L.LSet.t;
+    all_providers_of_writes: (Find_providers.state * L.t Reason.virtual_reason list) L.LMap.t;
     raw_env: env;
   }
 
   let empty =
     {
-      all_entries = EntrySet.empty;
       all_exact_providers = L.LSet.empty;
       all_annotated_providers = L.LSet.empty;
+      all_providers_of_writes = L.LMap.empty;
       raw_env = empty_env;
     }
 
@@ -76,18 +76,21 @@ module Make (L : Loc_sig.S) : S with module L = L = struct
         false
     )
 
-  let providers_of_def { all_entries; _ } loc =
-    Base.List.find_map
-      ~f:(fun { declare_locs; def_locs; provider_locs; name; state; _ } ->
-        if L.LSet.mem loc declare_locs || L.LSet.mem loc def_locs then
-          let provider_reasons =
-            L.LSet.elements provider_locs
-            |> Base.List.map ~f:Reason.(mk_reason (RIdentifier (OrdinaryName name)))
-          in
-          Some (state, provider_reasons)
-        else
-          None)
-      (EntrySet.elements all_entries)
+  let providers_of_def { all_providers_of_writes; _ } loc =
+    L.LMap.find_opt loc all_providers_of_writes
+
+  let all_providers_of_writes set =
+    EntrySet.fold
+      (fun { declare_locs; def_locs; provider_locs; name; state; _ } ->
+        let provider_reasons =
+          L.LSet.elements provider_locs
+          |> Base.List.map ~f:Reason.(mk_reason (RIdentifier (OrdinaryName name)))
+        in
+        L.LSet.fold
+          (fun loc -> L.LMap.add loc (state, provider_reasons))
+          (L.LSet.union def_locs declare_locs))
+      set
+      L.LMap.empty
 
   let get_providers_for_toplevel_var var { raw_env; _ } = get_providers_for_toplevel_var var raw_env
 
@@ -95,9 +98,9 @@ module Make (L : Loc_sig.S) : S with module L = L = struct
     let env = compute_provider_env program in
     let all_entries = all_entries env in
     {
-      all_entries;
       all_exact_providers = all_exact_providers all_entries;
       all_annotated_providers = all_annotated_providers all_entries;
+      all_providers_of_writes = all_providers_of_writes all_entries;
       raw_env = env;
     }
 
