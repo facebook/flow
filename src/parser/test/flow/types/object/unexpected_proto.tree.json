@@ -6,7 +6,11 @@
     },
     {
       "loc":{"source":null,"start":{"line":2,"column":18},"end":{"line":2,"column":19}},
-      "message":"Unexpected token `:`"
+      "message":"Unexpected token `:`, expected a type"
+    },
+    {
+      "loc":{"source":null,"start":{"line":2,"column":18},"end":{"line":2,"column":19}},
+      "message":"Unexpected token `:`, expected the token `,`"
     },
     {
       "loc":{"source":null,"start":{"line":2,"column":18},"end":{"line":2,"column":19}},
@@ -18,7 +22,7 @@
     },
     {
       "loc":{"source":null,"start":{"line":2,"column":22},"end":{"line":2,"column":23}},
-      "message":"Unexpected token `}`"
+      "message":"Unexpected token `}`, expected a type"
     }
   ],
   "type":"Program",
@@ -195,6 +199,7 @@
               "loc":{"source":null,"start":{"line":8,"column":11},"end":{"line":8,"column":21}},
               "range":[168,178],
               "params":[],
+              "this":null,
               "returnType":{
                 "type":"GenericTypeAnnotation",
                 "loc":{"source":null,"start":{"line":8,"column":20},"end":{"line":8,"column":21}},

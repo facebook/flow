@@ -10,7 +10,11 @@
     },
     {
       "loc":{"source":null,"start":{"line":4,"column":0},"end":{"line":4,"column":0}},
-      "message":"Unexpected end of input"
+      "message":"Unexpected end of input, expected a type"
+    },
+    {
+      "loc":{"source":null,"start":{"line":4,"column":0},"end":{"line":4,"column":0}},
+      "message":"Unexpected end of input, expected the token `,`"
     },
     {
       "loc":{"source":null,"start":{"line":4,"column":0},"end":{"line":4,"column":0}},

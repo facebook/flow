@@ -14,15 +14,15 @@
     },
     {
       "loc":{"source":null,"start":{"line":5,"column":0},"end":{"line":5,"column":0}},
-      "message":"Unexpected end of input"
-    },
-    {
-      "loc":{"source":null,"start":{"line":5,"column":0},"end":{"line":5,"column":0}},
-      "message":"Unexpected end of input, expected the token `}`"
+      "message":"Unexpected end of input, expected a type"
     },
     {
       "loc":{"source":null,"start":{"line":5,"column":0},"end":{"line":5,"column":0}},
       "message":"Unexpected end of input, expected the token `,`"
+    },
+    {
+      "loc":{"source":null,"start":{"line":5,"column":0},"end":{"line":5,"column":0}},
+      "message":"Unexpected end of input, expected the token `}`"
     },
     {
       "loc":{"source":null,"start":{"line":5,"column":0},"end":{"line":5,"column":0}},

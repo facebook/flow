@@ -6,7 +6,11 @@
     },
     {
       "loc":{"source":null,"start":{"line":1,"column":32},"end":{"line":1,"column":33}},
-      "message":"Unexpected token `:`"
+      "message":"Unexpected token `:`, expected a type"
+    },
+    {
+      "loc":{"source":null,"start":{"line":1,"column":32},"end":{"line":1,"column":33}},
+      "message":"Unexpected token `:`, expected the token `,`"
     },
     {
       "loc":{"source":null,"start":{"line":1,"column":32},"end":{"line":1,"column":33}},
@@ -18,7 +22,7 @@
     },
     {
       "loc":{"source":null,"start":{"line":1,"column":36},"end":{"line":1,"column":37}},
-      "message":"Unexpected token `}`"
+      "message":"Unexpected token `}`, expected a type"
     }
   ],
   "type":"Program",

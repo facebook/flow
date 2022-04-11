@@ -370,7 +370,7 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
       (match primitive env with
       | Some t -> (loc, t)
       | None ->
-        error_unexpected env;
+        error_unexpected ~expected:"a type" env;
         (loc, Type.Any None))
 
   and is_primitive = function
@@ -871,7 +871,7 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
         Eat.token env
       | T_RCURLYBAR when exact -> ()
       | T_RCURLY when not exact -> ()
-      | _ -> error_unexpected env
+      | _ -> Expect.error env T_COMMA
     in
     let error_unexpected_variance env = function
       | Some (loc, _) -> error_at env (loc, Parse_error.UnexpectedVariance)
