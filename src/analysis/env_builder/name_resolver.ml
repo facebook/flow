@@ -430,7 +430,17 @@ module Make
           | Projection loc -> Env_api.Projection loc
           | Loc r -> Env_api.Write r
           | Refinement { refinement_id; val_t } ->
-            Env_api.Refinement { writes = simplify_val val_t; refinement_id; write_id = val_t.id }
+            Env_api.Refinement
+              {
+                writes = simplify_val val_t;
+                refinement_id;
+                (* We delegate to the old env for this and super,
+                   so we shouldn't cache results about them. *)
+                write_id =
+                  (match val_t with
+                  | { id = _; write_state = This | Super } -> None
+                  | { id; write_state = _ } -> Some id);
+              }
           | This -> Env_api.This
           | Super -> Env_api.Super
           | Arguments -> Env_api.Arguments
@@ -448,12 +458,9 @@ module Make
         | None -> None
       in
       let id =
-        match name with
-        (* We delegate to the old env for this and super, so we shouldn't cache results about them *)
-        | Some "this"
-        | Some "super" ->
-          None
-        | _ -> Some value.id
+        match value with
+        | { id = _; write_state = This | Super } -> None
+        | { id; write_state = _ } -> Some id
       in
       { Env_api.def_loc; write_locs; val_kind; name; id }
 

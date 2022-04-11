@@ -37,7 +37,7 @@ module type S = sig
     | Refinement of {
         refinement_id: int;
         writes: write_locs;
-        write_id: int;
+        write_id: int option;
       }
     | This
     | Super
@@ -192,7 +192,7 @@ module Make
     | Refinement of {
         refinement_id: int;
         writes: write_locs;
-        write_id: int;
+        write_id: int option;
       }
     | This
     | Super

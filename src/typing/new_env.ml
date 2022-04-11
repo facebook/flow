@@ -285,7 +285,7 @@ module New_env = struct
                | (Env_api.With_ALoc.Refinement { refinement_id; writes; write_id }, _) ->
                  find_refi var_info refinement_id
                  |> Base.Option.some
-                 |> type_of_state writes (Some write_id)
+                 |> type_of_state writes write_id
                | (Env_api.With_ALoc.Global name, _) ->
                  Flow_js.get_builtin cx (Reason.OrdinaryName name) reason
                | (Env_api.With_ALoc.This, _) ->
