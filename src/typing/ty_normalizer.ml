@@ -884,7 +884,7 @@ end = struct
 
     and any_t reason kind =
       match kind with
-      | T.AnnotatedAny ->
+      | T.(AnnotatedAny | CatchAny) ->
         let aloc = Reason.aloc_of_reason reason in
         Ty.Annotated aloc
       | T.AnyError kind -> Ty.AnyError (any_error_kind kind)

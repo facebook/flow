@@ -975,6 +975,7 @@ module rec TypeTerm : sig
     | Mixed_function
 
   and any_source =
+    | CatchAny
     | AnnotatedAny
     | AnyError of any_error_kind option
     | Unsound of unsoundness_kind

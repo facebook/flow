@@ -679,7 +679,7 @@ struct
               }
           ) ->
           let r = mk_reason (RCustom "catch") loc in
-          let t = Tvar.mk cx r in
+          let t = AnyT.why CatchAny r in
           let (stmts, abnormal_opt) =
             Env.in_lex_scope (fun () ->
                 Scope.(

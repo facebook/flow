@@ -931,27 +931,6 @@ References:
                      ^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- misc.js:143:9
-
-Cannot assign `y` to `e` because type variable `X` [1] cannot escape from the scope in which it was defined [2] (try
-adding a type annotation to `e` [3]). [escaped-generic]
-
-   misc.js:143:9
-   143|     e = y;
-                ^
-
-References:
-   misc.js:142:20
-   142|   function f<X>(y: X) {
-                           ^ [1]
-   misc.js:142:14
-   142|   function f<X>(y: X) {
-                     ^ [2]
-   misc.js:141:10
-   141| } catch (e) {
-                 ^ [3]
-
-
 Error ---------------------------------------------------------------------------------------------------- misc.js:148:9
 
 Cannot assign `y` to `x` because type variable `X` [1] cannot escape from the scope in which it was defined [2].
@@ -1144,7 +1123,7 @@ References:
 
 
 
-Found 58 errors
+Found 57 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches
