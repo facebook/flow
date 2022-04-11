@@ -3773,7 +3773,15 @@ module Make
           | OptionalMember _
           | Member _ ->
             (match this#get_val_of_expression (loc, expr) with
-            | None -> ()
+            | None ->
+              (* In some cases, we may re-visit the same expression multiple times via different
+                 environments--for example, visiting the discriminant of a switch statement. In
+                 these cases, it's possible that there was a val for an expression in a previous
+                 environment which is no longer available when seen through a subsequent. In order
+                 to prevent old environment values from "leaking" through, we need to actively remove
+                 values that may have previously existed but no longer do. *)
+              let values = L.LMap.remove loc env_state.values in
+              env_state <- { env_state with values }
             | Some refined_v ->
               (* We model a heap refinement as a separate const binding. We prefer this over using
                * None so that we can report errors when using this value in a type position *)
