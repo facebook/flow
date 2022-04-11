@@ -183,6 +183,8 @@ val remove_entry : Reason.name -> t -> unit
 
 val get_entry : Reason.name -> t -> Entry.t option
 
+val iter_refis : (Key_map.key -> refi_binding -> unit) -> t -> unit
+
 val update_refis : (Key_map.key -> refi_binding -> refi_binding) -> t -> unit
 
 val add_refi : Key_map.key -> refi_binding -> t -> unit
@@ -197,7 +199,7 @@ val filter_refis_using_propname : private_:bool -> string -> 'a Key_map.t -> 'a 
 
 val havoc_refis : ?name:string -> private_:bool -> t -> unit
 
-val havoc_all_refis : ?name:string -> t -> unit
+val havoc_all_refis : t -> unit
 
 val havoc : t -> unit
 
