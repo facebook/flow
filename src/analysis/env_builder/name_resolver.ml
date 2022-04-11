@@ -2789,9 +2789,9 @@ module Make
               | ( _,
                   DeclareExportDeclaration
                     DeclareExportDeclaration.{ declaration = Some (Function _); _ }
-                )
-              | _ ->
-                false)
+                ) ->
+                true
+              | _ -> false)
             stmts
         in
         ignore @@ super#statement_list (function_decls @ other_stmts);
