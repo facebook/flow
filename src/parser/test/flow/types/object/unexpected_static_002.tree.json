@@ -5,12 +5,8 @@
       "message":"Unexpected token `[`, expected the token `:`"
     },
     {
-      "loc":{"source":null,"start":{"line":2,"column":20},"end":{"line":2,"column":21}},
-      "message":"Unexpected token `]`, expected the token `,`"
-    },
-    {
-      "loc":{"source":null,"start":{"line":2,"column":20},"end":{"line":2,"column":21}},
-      "message":"Unexpected token `]`, expected an identifier"
+      "loc":{"source":null,"start":{"line":2,"column":18},"end":{"line":2,"column":19}},
+      "message":"Unexpected token `[`, expected the token `,`"
     }
   ],
   "type":"Program",
@@ -39,8 +35,8 @@
         "properties":[
           {
             "type":"ObjectTypeProperty",
-            "loc":{"source":null,"start":{"line":2,"column":11},"end":{"line":2,"column":20}},
-            "range":[80,89],
+            "loc":{"source":null,"start":{"line":2,"column":11},"end":{"line":2,"column":17}},
+            "range":[80,86],
             "key":{
               "type":"Identifier",
               "loc":{"source":null,"start":{"line":2,"column":11},"end":{"line":2,"column":17}},
@@ -50,6 +46,25 @@
               "optional":false
             },
             "value":{
+              "type":"AnyTypeAnnotation",
+              "loc":{"source":null,"start":{"line":2,"column":11},"end":{"line":2,"column":17}},
+              "range":[80,86]
+            },
+            "method":false,
+            "optional":false,
+            "static":false,
+            "proto":false,
+            "variance":null,
+            "kind":"init"
+          }
+        ],
+        "indexers":[
+          {
+            "type":"ObjectTypeIndexer",
+            "loc":{"source":null,"start":{"line":2,"column":18},"end":{"line":2,"column":24}},
+            "range":[87,93],
+            "id":null,
+            "key":{
               "type":"GenericTypeAnnotation",
               "loc":{"source":null,"start":{"line":2,"column":19},"end":{"line":2,"column":20}},
               "range":[88,89],
@@ -62,25 +77,6 @@
                 "optional":false
               },
               "typeParameters":null
-            },
-            "method":false,
-            "optional":false,
-            "static":false,
-            "proto":false,
-            "variance":null,
-            "kind":"init"
-          },
-          {
-            "type":"ObjectTypeProperty",
-            "loc":{"source":null,"start":{"line":2,"column":20},"end":{"line":2,"column":24}},
-            "range":[89,93],
-            "key":{
-              "type":"Identifier",
-              "loc":{"source":null,"start":{"line":2,"column":20},"end":{"line":2,"column":21}},
-              "range":[89,90],
-              "name":"",
-              "typeAnnotation":null,
-              "optional":false
             },
             "value":{
               "type":"GenericTypeAnnotation",
@@ -96,15 +92,10 @@
               },
               "typeParameters":null
             },
-            "method":false,
-            "optional":false,
             "static":false,
-            "proto":false,
-            "variance":null,
-            "kind":"init"
+            "variance":null
           }
         ],
-        "indexers":[],
         "callProperties":[],
         "internalSlots":[]
       }

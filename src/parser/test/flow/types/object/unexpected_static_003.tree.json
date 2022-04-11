@@ -3,6 +3,10 @@
     {
       "loc":{"source":null,"start":{"line":2,"column":18},"end":{"line":2,"column":21}},
       "message":"Unexpected token `...`, expected the token `:`"
+    },
+    {
+      "loc":{"source":null,"start":{"line":2,"column":18},"end":{"line":2,"column":21}},
+      "message":"Unexpected token `...`, expected the token `,`"
     }
   ],
   "type":"Program",
@@ -31,8 +35,8 @@
         "properties":[
           {
             "type":"ObjectTypeProperty",
-            "loc":{"source":null,"start":{"line":2,"column":11},"end":{"line":2,"column":22}},
-            "range":[78,89],
+            "loc":{"source":null,"start":{"line":2,"column":11},"end":{"line":2,"column":17}},
+            "range":[78,84],
             "key":{
               "type":"Identifier",
               "loc":{"source":null,"start":{"line":2,"column":11},"end":{"line":2,"column":17}},
@@ -42,6 +46,22 @@
               "optional":false
             },
             "value":{
+              "type":"AnyTypeAnnotation",
+              "loc":{"source":null,"start":{"line":2,"column":11},"end":{"line":2,"column":17}},
+              "range":[78,84]
+            },
+            "method":false,
+            "optional":false,
+            "static":false,
+            "proto":false,
+            "variance":null,
+            "kind":"init"
+          },
+          {
+            "type":"ObjectTypeSpreadProperty",
+            "loc":{"source":null,"start":{"line":2,"column":18},"end":{"line":2,"column":22}},
+            "range":[85,89],
+            "argument":{
               "type":"GenericTypeAnnotation",
               "loc":{"source":null,"start":{"line":2,"column":21},"end":{"line":2,"column":22}},
               "range":[88,89],
@@ -54,13 +74,7 @@
                 "optional":false
               },
               "typeParameters":null
-            },
-            "method":false,
-            "optional":false,
-            "static":false,
-            "proto":false,
-            "variance":null,
-            "kind":"init"
+            }
           }
         ],
         "indexers":[],

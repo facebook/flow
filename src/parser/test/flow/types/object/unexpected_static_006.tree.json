@@ -3,10 +3,6 @@
     {
       "loc":{"source":null,"start":{"line":2,"column":18},"end":{"line":2,"column":24}},
       "message":"Use of future reserved word in strict mode"
-    },
-    {
-      "loc":{"source":null,"start":{"line":2,"column":29},"end":{"line":2,"column":30}},
-      "message":"Unexpected token `:`, expected the token `=>`"
     }
   ],
   "type":"Program",
@@ -35,8 +31,8 @@
         "properties":[
           {
             "type":"ObjectTypeProperty",
-            "loc":{"source":null,"start":{"line":2,"column":11},"end":{"line":2,"column":32}},
-            "range":[53,74],
+            "loc":{"source":null,"start":{"line":2,"column":11},"end":{"line":2,"column":17}},
+            "range":[53,59],
             "key":{
               "type":"Identifier",
               "loc":{"source":null,"start":{"line":2,"column":11},"end":{"line":2,"column":17}},
@@ -46,9 +42,33 @@
               "optional":false
             },
             "value":{
+              "type":"AnyTypeAnnotation",
+              "loc":{"source":null,"start":{"line":2,"column":11},"end":{"line":2,"column":17}},
+              "range":[53,59]
+            },
+            "method":false,
+            "optional":false,
+            "static":false,
+            "proto":false,
+            "variance":null,
+            "kind":"init"
+          },
+          {
+            "type":"ObjectTypeProperty",
+            "loc":{"source":null,"start":{"line":2,"column":18},"end":{"line":2,"column":32}},
+            "range":[60,74],
+            "key":{
+              "type":"Identifier",
+              "loc":{"source":null,"start":{"line":2,"column":18},"end":{"line":2,"column":24}},
+              "range":[60,66],
+              "name":"static",
+              "typeAnnotation":null,
+              "optional":false
+            },
+            "value":{
               "type":"FunctionTypeAnnotation",
-              "loc":{"source":null,"start":{"line":2,"column":24},"end":{"line":2,"column":32}},
-              "range":[66,74],
+              "loc":{"source":null,"start":{"line":2,"column":18},"end":{"line":2,"column":32}},
+              "range":[60,74],
               "params":[],
               "this":null,
               "returnType":{
@@ -83,7 +103,7 @@
                 ]
               }
             },
-            "method":false,
+            "method":true,
             "optional":false,
             "static":false,
             "proto":false,

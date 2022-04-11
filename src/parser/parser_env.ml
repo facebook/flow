@@ -1004,11 +1004,9 @@ module Eat = struct
 
   (** [maybe env t] eats the next token and returns [true] if it is [t], else return [false] *)
   let maybe env t =
-    if Token.equal (Peek.token env) t then (
-      token env;
-      true
-    ) else
-      false
+    let is_t = Token.equal (Peek.token env) t in
+    if is_t then token env;
+    is_t
 
   let push_lex_mode env mode =
     env.lex_mode_stack := mode :: !(env.lex_mode_stack);
@@ -1113,15 +1111,18 @@ module Expect = struct
     if not (Token.equal (Peek.token env) t) then error env t;
     Eat.token env
 
+  (** [token_maybe env T_FOO] eats a token if it is [T_FOO], and errors without consuming if
+      not. Returns whether it consumed a token, like [Eat.maybe]. *)
+  let token_maybe env t =
+    let ate = Eat.maybe env t in
+    if not ate then error env t;
+    ate
+
   (** [token_opt env T_FOO] eats a token if it is [T_FOO], and errors without consuming if not.
       This differs from [token], which always consumes. Only use [token_opt] when it's ok for
       the parser to not advance, like if you are guaranteed that something else has eaten a
       token. *)
-  let token_opt env t =
-    if not (Token.equal (Peek.token env) t) then
-      error env t
-    else
-      Eat.token env
+  let token_opt env t = ignore (token_maybe env t)
 
   let identifier env name =
     let t = Peek.token env in

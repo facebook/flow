@@ -705,7 +705,7 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
       in
       Type.Object.CallProperty prop
     in
-    let init_property env start_loc ~variance ~static ~proto ~leading key =
+    let init_property env start_loc ~variance ~static ~proto ~leading (key_loc, key) =
       ignore proto;
       if not (should_parse_types env) then error env Parse_error.UnexpectedTypeAnnotation;
       let prop =
@@ -713,8 +713,12 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
           ~start_loc
           (fun env ->
             let optional = Eat.maybe env T_PLING in
-            Expect.token env T_COLON;
-            let value = _type env in
+            let value =
+              if Expect.token_maybe env T_COLON then
+                _type env
+              else
+                (key_loc, Type.Any None)
+            in
             Type.Object.Property.
               {
                 key;
@@ -1067,7 +1071,7 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
               )
           in
           let static = None in
-          init_property env start_loc ~variance ~static ~proto ~leading:[] key
+          init_property env start_loc ~variance ~static ~proto ~leading:[] (static_loc, key)
         | (None, Some proto_loc, (T_PLING | T_COLON)) ->
           (* We speculatively parsed `proto` as a proto modifier, but now
              that we've parsed the next token, we changed our minds and want
@@ -1080,7 +1084,7 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
               )
           in
           let proto = None in
-          init_property env start_loc ~variance ~static ~proto ~leading:[] key
+          init_property env start_loc ~variance ~static ~proto ~leading:[] (proto_loc, key)
         | _ ->
           let object_key env =
             Eat.push_lex_mode env Lex_mode.NORMAL;
@@ -1090,7 +1094,7 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
           in
           let leading_key = Peek.comments env in
           (match object_key env with
-          | ( _,
+          | ( key_loc,
               ( Expression.Object.Property.Identifier
                   (_, { Identifier.name = ("get" | "set") as name; comments = _ }) as key
               )
@@ -1104,7 +1108,7 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
                 method_property env start_loc static key ~leading
               | T_COLON
               | T_PLING ->
-                init_property env start_loc ~variance ~static ~proto ~leading key
+                init_property env start_loc ~variance ~static ~proto ~leading (key_loc, key)
               | _ ->
                 ignore (object_key_remove_trailing env key);
                 let key = object_key env in
@@ -1114,7 +1118,7 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
                 error_unexpected_variance env variance;
                 getter_or_setter ~is_getter ~leading env start_loc static key
             end
-          | (_, key) ->
+          | (key_loc, key) ->
             begin
               match Peek.token env with
               | T_LESS_THAN
@@ -1124,7 +1128,7 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
                 method_property env start_loc static key ~leading
               | _ ->
                 error_invalid_property_name env is_class static key;
-                init_property env start_loc ~variance ~static ~proto ~leading key
+                init_property env start_loc ~variance ~static ~proto ~leading (key_loc, key)
             end))
     in
     fun ~is_class ~allow_exact ~allow_spread env ->
