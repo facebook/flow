@@ -35,6 +35,14 @@ let error_of_parse_error ~source_file (loc, err) =
 let set_of_parse_error ~source_file =
   error_of_parse_error ~source_file %> Flow_error.ErrorSet.singleton
 
+let error_of_parse_exception ~source_file exn =
+  let file_loc = Loc.{ none with source = Some source_file } |> ALoc.of_loc in
+  Error_message.EInternal (file_loc, Error_message.ParseJobException exn)
+  |> Flow_error.error_of_msg ~trace_reasons:[] ~source_file
+
+let set_of_parse_exception ~source_file =
+  error_of_parse_exception ~source_file %> Flow_error.ErrorSet.singleton
+
 let error_of_file_sig_error ~source_file err =
   File_sig.With_Loc.(
     let flow_err =

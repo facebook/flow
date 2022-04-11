@@ -15,6 +15,10 @@ val error_of_parse_error : source_file:File_key.t -> Loc.t * Parse_error.t -> AL
 
 val set_of_parse_error : source_file:File_key.t -> Loc.t * Parse_error.t -> Flow_error.ErrorSet.t
 
+val error_of_parse_exception : source_file:File_key.t -> Exception.t -> ALoc.t Flow_error.t
+
+val set_of_parse_exception : source_file:File_key.t -> Exception.t -> Flow_error.ErrorSet.t
+
 val error_of_file_sig_error :
   source_file:File_key.t -> File_sig.With_Loc.error -> ALoc.t Flow_error.t
 

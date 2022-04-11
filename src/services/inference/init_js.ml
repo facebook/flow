@@ -122,6 +122,8 @@ let load_lib_files ~ccx ~options ~reader files =
            | Lib_fail fail ->
              let errors =
                match fail with
+               | Parsing.Uncaught_exception exn ->
+                 Inference_utils.set_of_parse_exception ~source_file:lib_file exn
                | Parsing.Parse_error error ->
                  Inference_utils.set_of_parse_error ~source_file:lib_file error
                | Parsing.Docblock_errors errs ->

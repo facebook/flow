@@ -33,6 +33,7 @@ and parse_skip_reason =
 and parse_error = Loc.t * Parse_error.t
 
 and parse_failure =
+  | Uncaught_exception of Exception.t
   | Docblock_errors of docblock_error list
   | Parse_error of parse_error
   | File_sig_error of File_sig.With_Loc.error

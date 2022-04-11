@@ -6,7 +6,6 @@
  *)
 
 type t =
-  | Assertion of string
   | EnumBooleanMemberNotInitialized of {
       enum_name: string;
       member_name: string;
@@ -173,7 +172,6 @@ let error loc e = raise (Error ((loc, e), []))
 
 module PP = struct
   let error = function
-    | Assertion str -> "Unexpected parser state: " ^ str
     | EnumBooleanMemberNotInitialized { enum_name; member_name } ->
       Printf.sprintf
         "Boolean enum members need to be initialized. Use either `%s = true,` or `%s = false,` in enum `%s`."

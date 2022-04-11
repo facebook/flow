@@ -31,6 +31,7 @@ and parse_skip_reason =
 and parse_error = Loc.t * Parse_error.t
 
 and parse_failure =
+  | Uncaught_exception of Exception.t
   | Docblock_errors of docblock_error list
   | Parse_error of parse_error
   | File_sig_error of File_sig.With_Loc.error
@@ -461,10 +462,16 @@ let do_parse ~parse_options ~info content file =
   | Parse_error.Error (e, _) -> Parse_fail (Parse_error e)
   | e ->
     let e = Exception.wrap e in
-    let s = Exception.get_ctor_string e in
-    let loc = Loc.{ none with source = Some file } in
-    let err = (loc, Parse_error.Assertion s) in
-    Parse_fail (Parse_error err)
+    ( if FlowEventLogger.should_log () then
+      let e_str =
+        Printf.sprintf
+          "%s\nBacktrace: %s"
+          (Exception.get_ctor_string e)
+          (Exception.get_full_backtrace_string max_int e)
+      in
+      FlowEventLogger.parsing_exception e_str
+    );
+    Parse_fail (Uncaught_exception e)
 
 let hash_content content =
   let state = Xx.init 0L in
