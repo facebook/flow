@@ -3901,6 +3901,7 @@ module Make
             | None -> LookupMap.empty
             | Some key -> this#start_refinement key (L.LSet.singleton loc, TruthyR)
           in
+          ignore @@ this#expression expression;
           this#member_expression_refinement loc expr refis;
           expression
         | Array _

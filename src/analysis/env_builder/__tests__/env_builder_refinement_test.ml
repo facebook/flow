@@ -5568,6 +5568,9 @@ if(x && x.a) {
         (3, 10) to (3, 11) => {
           {refinement = Truthy; writes = {refinement = And (Truthy, PropExistsR (a)); writes = Global x}}
         };
+        (3, 10) to (3, 13) => {
+          {refinement = Truthy; writes = projection at (2, 8) to (2, 11)}
+        };
         (5, 4) to (5, 5) => {
           {refinement = Or (Not (Truthy), Not (PropExistsR (a))); writes = {refinement = And (Truthy, PropExistsR (a)); writes = Global x}}
         };
