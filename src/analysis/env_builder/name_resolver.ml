@@ -64,7 +64,7 @@ module type C = sig
 
   val add_new_env_literal_subtypes : t -> ALoc.t * Env_api.new_env_literal_check -> unit
 
-  val add_new_env_matching_props : t -> string * ALoc.t * ALoc.t -> unit
+  val add_new_env_matching_props : t -> string * ALoc.t * Reason.reason -> unit
 end
 
 module type F = sig
@@ -2392,8 +2392,8 @@ module Make
         this#expecting_abrupt_completions (fun () ->
             let (case_starting_env, case_completion_states, fallthrough_env, has_default) =
               List.fold_left
-                (fun acc ((_loc, case), bindings) ->
-                  this#env_switch_case discriminant acc (case, bindings))
+                (fun acc ((loc, case), bindings) ->
+                  this#env_switch_case discriminant acc (loc, case, bindings))
                 (incoming_env, [], None, false)
                 cases_with_lexical_bindings
             in
@@ -2455,7 +2455,7 @@ module Make
       method private env_switch_case
           discriminant
           (case_starting_env, case_completion_states, fallthrough_env, has_default)
-          (case, lexical_bindings) =
+          (case_loc, case, lexical_bindings) =
         let open Ast.Statement.Switch.Case in
         let { test; consequent; comments = _ } = case in
         this#reset_env case_starting_env;
@@ -2465,6 +2465,28 @@ module Make
           match test with
           | None -> (true, empty_refinements, this#env)
           | Some test ->
+            (* As a convention, locate refined versions of the discriminant on
+               case locations, in order to read them from the environment for
+               filtered TestProp checks. *)
+            begin
+              match discriminant with
+              | (_, Ast.Expression.Member { Ast.Expression.Member._object; _ }) ->
+                begin
+                  match this#get_val_of_expression _object with
+                  | None ->
+                    let values = L.LMap.remove case_loc env_state.values in
+                    env_state <- { env_state with values }
+                  | Some refined_v ->
+                    let values =
+                      L.LMap.add
+                        case_loc
+                        { def_loc = None; value = refined_v; binding_kind_opt = None; name = None }
+                        env_state.values
+                    in
+                    env_state <- { env_state with values }
+                end
+              | _ -> ()
+            end;
             ignore @@ this#expression test;
             let (loc, _) = test in
             this#eq_test ~strict:true ~sense:true ~cond_context:SwitchTest loc discriminant test;
@@ -3415,7 +3437,7 @@ module Make
             | Some refinement_key ->
               let reason = mk_reason (RProperty (Some (OrdinaryName prop_name))) ploc in
               let obj_reason = mk_reason (RefinementKey.reason_desc refinement_key) obj_loc in
-              Context.add_new_env_matching_props cx (prop_name, other_loc, obj_loc);
+              Context.add_new_env_matching_props cx (prop_name, other_loc, obj_reason);
               let write_entries =
                 L.LMap.add
                   obj_loc

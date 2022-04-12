@@ -177,7 +177,7 @@ type component_t = {
   mutable literal_subtypes: (Type.t * Type.use_t) list;
   mutable new_env_literal_subtypes: (ALoc.t * Env_api.new_env_literal_check) list;
   mutable matching_props: (Reason.reason * string * Type.t * Type.t) list;
-  mutable new_env_matching_props: (string * ALoc.t * ALoc.t) list;
+  mutable new_env_matching_props: (string * ALoc.t * Reason.reason) list;
   mutable implicit_instantiation_checks: Implicit_instantiation_check.t list;
   mutable inferred_indexers: Type.dicttype list ALocMap.t;
   mutable constrained_writes: (Type.t * Type.use_t) list;

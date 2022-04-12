@@ -388,13 +388,24 @@ let detect_matching_props_violations cx =
   | Options.SSAEnv _ ->
     let matching_props = Context.new_env_matching_props cx in
     List.iter
-      (fun (prop_name, other_loc, obj_loc) ->
+      (fun (prop_name, other_loc, obj_reason) ->
+        let open Reason in
         let env = Context.environment cx in
         let other_t_opt = Loc_env.find_write env other_loc in
-        let obj_t_opt = Loc_env.find_write env obj_loc in
+        let obj_t_opt =
+          New_env.New_env.read_entry
+            ~lookup_mode:Env_sig.LookupMode.ForValue
+            cx
+            (aloc_of_reason obj_reason)
+            obj_reason
+        in
         match (other_t_opt, obj_t_opt) with
-        | (Some other_t, Some obj_t) ->
-          step (TypeUtil.reason_of_t other_t, prop_name, other_t, obj_t)
+        | (Some other_t, Ok obj_t) -> step (TypeUtil.reason_of_t other_t, prop_name, other_t, obj_t)
+        | (Some _, _) ->
+          (* It's currently possible to not have a type to read from a location, in
+             cases where we defer to the old environment for a given expression, e.g.
+             `this.x`. We should eventually be able to enforce this consistently *)
+          ()
         | _ -> failwith "Missing typing information for matching props test.")
       matching_props
   | _ ->

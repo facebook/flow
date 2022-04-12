@@ -1101,13 +1101,20 @@ struct
                      match test with
                      | None -> (None, Key_map.empty, Key_map.empty, Key_map.empty)
                      | Some expr ->
+                       let open Ast.Expression in
+                       let fake_discriminant =
+                         match discriminant with
+                         | (mem_loc, Member ({ Member._object = (_, x) as _object; _ } as mem))
+                           when Base.Option.is_some (Refinement.key ~allow_optional:true _object) ->
+                           (mem_loc, Member { mem with Member._object = (loc, x) })
+                         | _ -> discriminant
+                       in
                        let fake =
                          ( loc,
-                           let open Ast.Expression in
                            Binary
                              {
                                Binary.operator = Binary.StrictEqual;
-                               left = discriminant;
+                               left = fake_discriminant;
                                right = expr;
                                comments = None;
                              }
@@ -5416,18 +5423,17 @@ struct
       let t = Env.var_ref ~lookup_mode:ForValue cx (OrdinaryName name) loc in
       (* We want to make sure that the reason description for the type we return
        * is always `RIdentifier name`. *)
-      match desc_of_t t with
-      | RIdentifier name' when OrdinaryName name = name' -> t
-      | _ ->
-        (match t with
+      match (desc_of_t t, t) with
+      | (RIdentifier name', _) when OrdinaryName name = name' -> t
+      | (_, OpenT _) ->
         (* If this is an `OpenT` we can change its reason description directly. *)
-        | OpenT _ -> mod_reason_of_t (replace_desc_new_reason (RIdentifier (OrdinaryName name))) t
-        (* If this is not an `OpenT` then create a new type variable with our
-         * desired reason and unify it with our type. This adds a level of
-         * indirection so that we don't modify the underlying reason of our type. *)
-        | _ ->
-          let reason = mk_reason (RIdentifier (OrdinaryName name)) loc in
-          Tvar.mk_where cx reason (Flow.unify cx t))
+        mod_reason_of_t (replace_desc_new_reason (RIdentifier (OrdinaryName name))) t
+      (* If this is not an `OpenT` then create a new type variable with our
+       * desired reason and unify it with our type. This adds a level of
+       * indirection so that we don't modify the underlying reason of our type. *)
+      | _ ->
+        let reason = mk_reason (RIdentifier (OrdinaryName name)) loc in
+        Tvar.mk_where cx reason (Flow.unify cx t)
 
   and identifier cx { Ast.Identifier.name; comments = _ } loc =
     let t = identifier_ cx name loc in

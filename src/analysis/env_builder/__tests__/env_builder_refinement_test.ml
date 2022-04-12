@@ -4918,6 +4918,12 @@ switch (y.x) { // Does not report a Projection
         (3, 8) to (3, 9) => {
           (2, 4) to (2, 5): (`y`)
         };
+        (4, 4) to (4, 22) => {
+          (2, 4) to (2, 5): (`y`)
+        };
+        (5, 4) to (5, 22) => {
+          {refinement = Not (SentinelR x); writes = (2, 4) to (2, 5): (`y`)}
+        };
         (7, 7) to (7, 8) => {
           {refinement = Not (SentinelR x); writes = {refinement = Not (SentinelR x); writes = (2, 4) to (2, 5): (`y`)}}
         };
@@ -4981,6 +4987,12 @@ let obj = {};
         };
         (3, 10) to (3, 13) => {
           (2, 4) to (2, 7): (`obj`)
+        };
+        (4, 4) to (5, 14) => {
+          (2, 4) to (2, 7): (`obj`)
+        };
+        (6, 4) to (7, 14) => {
+          {refinement = Not (SentinelR k); writes = (2, 4) to (2, 7): (`obj`)}
         }] |}]
 
 let%expect_test "switch_exhaustive_fallthrough_return" =
@@ -4999,6 +5011,12 @@ let obj = {};
         };
         (3, 10) to (3, 13) => {
           (2, 4) to (2, 7): (`obj`)
+        };
+        (4, 4) to (4, 13) => {
+          (2, 4) to (2, 7): (`obj`)
+        };
+        (5, 4) to (6, 14) => {
+          {refinement = Not (SentinelR k); writes = (2, 4) to (2, 7): (`obj`)}
         }] |}]
 
 let%expect_test "reference_before_declaration" =
@@ -5168,6 +5186,12 @@ function foo(r: Rule) {
         };
         (14, 12) to (14, 13) => {
           {refinement = SentinelR x; writes = (12, 8) to (12, 9): (`y`)}
+        };
+        (15, 6) to (15, 24) => {
+          {refinement = SentinelR x; writes = (12, 8) to (12, 9): (`y`)}
+        };
+        (16, 6) to (16, 24) => {
+          {refinement = Not (SentinelR x); writes = {refinement = SentinelR x; writes = (12, 8) to (12, 9): (`y`)}}
         };
         (17, 16) to (17, 17) => {
           {refinement = Not (SentinelR x); writes = {refinement = Not (SentinelR x); writes = {refinement = SentinelR x; writes = (12, 8) to (12, 9): (`y`)}}}

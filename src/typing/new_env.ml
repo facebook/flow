@@ -118,6 +118,9 @@ module New_env = struct
     match Loc_env.find_write env loc with
     | None -> ()
     | Some w ->
+      Debug_js.Verbose.print_if_verbose
+        cx
+        [spf "recording expression at location %s" (Reason.string_of_aloc loc)];
       Flow_js.unify cx ~use_op:unknown_use t w;
       let env' = Loc_env.update_reason env loc (TypeUtil.reason_of_t t) in
       Context.set_environment cx env'
@@ -434,6 +437,7 @@ module New_env = struct
 
   let set_expr cx _key loc ~refined ~original:_ =
     let env = Context.environment cx in
+    Debug_js.Verbose.print_if_verbose cx [spf "set expr at location %s" (Reason.string_of_aloc loc)];
     match Loc_env.find_write env loc with
     | None ->
       (* As below, this entry is empty if the refinement is never read from *)
