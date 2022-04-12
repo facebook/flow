@@ -563,6 +563,23 @@ module KeepAliveLoop = LwtLoop.Make (struct
           (true, None)
       )
 
+  (* Ephemeral commands are stateless, so they can survive a server restart. However a persistent
+   * connection might have state, so it's wrong to allow it to survive. Maybe in the future we can
+   * tell the persistent connection that the server has died and let it adjust its state, but for
+   * now lets close all persistent connections *)
+  let killall_persistent_connections exit_type =
+    PersistentConnectionMap.get_all_clients ()
+    |> Lwt_list.iter_p (fun conn ->
+           let wrote =
+             PersistentConnection.write
+               ~msg:LspProt.(NotificationFromServer (ServerExit exit_type))
+               conn
+           in
+           (* it's ok if the stream is already closed, we must be shutting down already *)
+           ignore wrote;
+           PersistentConnection.flush_and_close conn
+       )
+
   let should_monitor_exit_with_signaled_server signal =
     (* While there are many scary things which can cause segfaults, in practice we've mostly seen
      * them when the Flow server hits some infinite or very deep recursion (like Base.List.map ~f:on a
@@ -608,25 +625,13 @@ module KeepAliveLoop = LwtLoop.Make (struct
             ~msg:(spf "Flow server exited with invalid exit code (%d)" exit_status)
             Exit.Unknown_error
         | Some exit_type ->
-          (* There are a few specific reasons where the persistent client wants *)
-          (* to know why the flow server is about to fatally close the persistent  *)
-          (* connection. This WEXITED case covers them. (It doesn't matter that    *)
-          (* it also sends the reason in a few additional cases as well.)          *)
-          let send_close conn =
-            ignore
-              (PersistentConnection.write
-                 ~msg:LspProt.(NotificationFromServer (ServerExit exit_type))
-                 conn
-              )
-          in
-          PersistentConnectionMap.get_all_clients () |> List.iter send_close;
-
           let (should_monitor_exit_with_server, restart_reason) =
             process_server_exit monitor_options exit_type
           in
           if should_monitor_exit_with_server then
             exit ~msg:"Dying along with server" exit_type
           else
+            let%lwt () = killall_persistent_connections exit_type in
             Lwt.return restart_reason
       end
     | Unix.WSIGNALED signal ->
@@ -662,19 +667,10 @@ module KeepAliveLoop = LwtLoop.Make (struct
         Lwt.return (push_to_command_stream (Some (Write_ephemeral_request { request; client }))))
       requests
 
-  (* Ephemeral commands are stateless, so they can survive a server restart. However a persistent
-   * connection might have state, so it's wrong to allow it to survive. Maybe in the future we can
-   * tell the persistent connection that the server has died and let it adjust its state, but for
-   * now lets close all persistent connections *)
-  let killall_persistent_connections () =
-    PersistentConnectionMap.get_all_clients ()
-    |> Lwt_list.iter_p PersistentConnection.close_immediately
-
   let main (monitor_options, restart_reason) =
     let%lwt () = requeue_stalled_requests () in
     let%lwt server = ServerInstance.start monitor_options restart_reason in
     let%lwt restart_reason = wait_for_server_to_die monitor_options server in
-    let%lwt () = killall_persistent_connections () in
     Lwt.return (monitor_options, restart_reason)
 
   let catch _ exn =
