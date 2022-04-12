@@ -9,6 +9,7 @@ open Name_def
 open Type
 open Reason
 open Loc_collections
+module Ast = Flow_ast
 
 module type S = sig
   val resolve_component :
@@ -77,20 +78,60 @@ module Make (Env : Env_sig.S) (Statement : Statement_sig.S with module Env := En
             (t, DestructuringT (reason, DestructInfer, selector, tout, Reason.mk_id ()))
       )
 
-  let resolve cx id_loc (def, _def_reason) =
+  let resolve_inferred_function cx id_loc reason function_ =
+    let cache = Context.node_cache cx in
+    let ((fun_type, _) as fn) =
+      (* TODO: This is intended to be the general type for the variable in the old environment, needed
+         for generic escape detection. We can do generic escape differently in the future and remove
+         this when we kill the old env. *)
+      let general = Tvar.mk cx reason in
+      Statement.mk_function cx ~hint:None ~needs_this_param:true ~general reason function_
+    in
+    Node_cache.set_function cache id_loc fn;
+    fun_type
+
+  let resolve_annotated_function cx reason ({ Ast.Function.body; params; _ } as function_) =
+    let (({ Statement.Func_stmt_sig.fparams; _ } as func_sig), _) =
+      Statement.mk_func_sig
+        cx
+        ~hint:None
+        ~needs_this_param:true
+        Subst_name.Map.empty
+        reason
+        function_
+    in
+    let this_t =
+      let default =
+        if Signature_utils.This_finder.found_this_in_body_or_params body params then
+          let loc = aloc_of_reason reason in
+          Tvar.mk cx (mk_reason RThis loc)
+        else
+          Type.implicit_mixed_this reason
+      in
+      Base.Option.value (Statement.Func_stmt_params.this fparams) ~default
+    in
+    Statement.Func_stmt_sig.functiontype cx this_t func_sig
+
+  let resolve cx id_loc (def, def_reason) =
     let t =
       match def with
       | Binding (loc, b) -> resolve_binding cx loc b
+      | Function { function_; fully_annotated = false } ->
+        resolve_inferred_function cx id_loc def_reason function_
+      | Function { function_; fully_annotated = true } ->
+        resolve_annotated_function cx def_reason function_
       | _ -> Tvar.mk cx (mk_reason (RCustom "unhandled def") id_loc)
     in
-    Debug_js.Verbose.print_if_verbose
+    Debug_js.Verbose.print_if_verbose_lazy
       cx
-      [
-        Printf.sprintf
-          "Setting variable at %s to %s"
-          (ALoc.debug_to_string id_loc)
-          (Debug_js.dump_t cx t);
-      ];
+      ( lazy
+        [
+          Printf.sprintf
+            "Setting variable at %s to %s"
+            (ALoc.debug_to_string id_loc)
+            (Debug_js.dump_t cx t);
+        ]
+        );
     New_env.New_env.resolve_env_entry cx t id_loc
 
   let resolve_component cx graph component =

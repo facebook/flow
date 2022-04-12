@@ -264,7 +264,7 @@ class def_finder =
       Destructure.pattern ~f:this#add_binding (Root Catch) pat;
       super#catch_clause_pattern pat
 
-    method! function_ loc expr =
+    method! function_expression loc expr =
       let open Ast.Function in
       let { id; async; generator; _ } = expr in
       begin
@@ -273,7 +273,18 @@ class def_finder =
           this#add_binding id_loc (func_reason ~async ~generator loc) (def_of_function expr)
         | None -> ()
       end;
-      super#function_ loc expr
+      super#function_expression loc expr
+
+    method! function_declaration loc expr =
+      let open Ast.Function in
+      let { id; async; generator; _ } = expr in
+      begin
+        match id with
+        | Some (id_loc, _) ->
+          this#add_binding id_loc (func_reason ~async ~generator loc) (def_of_function expr)
+        | None -> ()
+      end;
+      super#function_expression loc expr
 
     method! class_ loc expr =
       let open Ast.Class in

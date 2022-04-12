@@ -182,5 +182,122 @@ References:
                  ^^^^^^ [2]
 
 
+Error ------------------------------------------------------------------------------------------------ function.js:11:10
 
-Found 11 errors
+Cannot compute a type for function because its definition includes references to itself [1]. Please add a type
+annotation to this definition [recursive-definition]
+
+   function.js:11:10
+   11| var x = (function h() { (h(): empty); return 42 });
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   function.js:11:26
+   11| var x = (function h() { (h(): empty); return 42 });
+                                ^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------ function.js:11:26
+
+Cannot cast `h()` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+
+   function.js:11:26
+   11| var x = (function h() { (h(): empty); return 42 });
+                                ^^^
+
+References:
+   function.js:11:46
+   11| var x = (function h() { (h(): empty); return 42 });
+                                                    ^^ [1]
+   function.js:11:31
+   11| var x = (function h() { (h(): empty); return 42 });
+                                     ^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- function.js:13:2
+
+Cannot cast `f()` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+
+   function.js:13:2
+   13| (f(): empty);
+        ^^^
+
+References:
+   function.js:8:12
+    8|     return 42;
+                  ^^ [1]
+   function.js:13:7
+   13| (f(): empty);
+             ^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- function.js:14:2
+
+Cannot cast `g()` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+
+   function.js:14:2
+   14| (g(): empty);
+        ^^^
+
+References:
+   function.js:8:12
+    8|     return 42;
+                  ^^ [1]
+   function.js:14:7
+   14| (g(): empty);
+             ^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ function.js:25:34
+
+Cannot cast `k()` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+
+   function.js:25:34
+   25| var y = (function k(): number { (k(): empty); return 42 });
+                                        ^^^
+
+References:
+   function.js:25:24
+   25| var y = (function k(): number { (k(): empty); return 42 });
+                              ^^^^^^ [1]
+   function.js:25:39
+   25| var y = (function k(): number { (k(): empty); return 42 });
+                                             ^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- function.js:27:2
+
+Cannot cast `h()` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+
+   function.js:27:2
+   27| (h(): empty);
+        ^^^
+
+References:
+   function.js:17:15
+   17| function h(): number {
+                     ^^^^^^ [1]
+   function.js:27:7
+   27| (h(): empty);
+             ^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- function.js:28:2
+
+Cannot cast `i()` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+
+   function.js:28:2
+   28| (i(): empty);
+        ^^^
+
+References:
+   function.js:21:15
+   21| function i(): number {
+                     ^^^^^^ [1]
+   function.js:28:7
+   28| (i(): empty);
+             ^^^^^ [2]
+
+
+
+Found 18 errors

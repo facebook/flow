@@ -16,8 +16,8 @@ module Make
     (Env : Env_sig.S)
     (Abnormal : Abnormal_sig.S with module Env := Env)
     (Statement : Statement_sig.S with module Env := Env)
-    (F : Func_params.S) =
-struct
+    (F : Func_params.S) :
+  S with type func_params = F.t and type func_params_tast = (ALoc.t * Type.t) F.ast = struct
   module Toplevels = Toplevels.DependencyToplevels (Env) (Abnormal)
 
   type func_params = F.t

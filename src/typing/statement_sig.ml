@@ -18,6 +18,10 @@ module type S = sig
 
   module Anno : Type_annotation_sig.S with module Env := Env
 
+  module Func_stmt_params : Func_params_intf.S
+
+  module Func_stmt_sig : Func_sig_intf.S with type func_params := Func_stmt_params.t
+
   val expression :
     ?cond:Type.cond_context ->
     Context.t ->
@@ -31,4 +35,27 @@ module type S = sig
   val toplevel_decls : Context.t -> (ALoc.t, ALoc.t) Ast.Statement.t list -> unit
 
   val for_of_elemt : Context.t -> Type.t -> Reason.reason -> bool -> Type.t
+
+  val mk_function :
+    Context.t ->
+    hint:Type.t option ->
+    needs_this_param:bool ->
+    general:Type.t ->
+    Reason.reason ->
+    (ALoc.t, ALoc.t) Ast.Function.t ->
+    Type.t * (ALoc.t, ALoc.t * Type.t) Ast.Function.t
+
+  val mk_func_sig :
+    Context.t ->
+    hint:Type.t option ->
+    needs_this_param:bool ->
+    Type.t Subst_name.Map.t ->
+    Reason.reason ->
+    (ALoc.t, ALoc.t) Ast.Function.t ->
+    Func_stmt_sig.t
+    * ((ALoc.t, ALoc.t * Type.t) Ast.Function.Params.t ->
+      (ALoc.t, ALoc.t * Type.t) Ast.Function.body ->
+      Type.t ->
+      (ALoc.t, ALoc.t * Type.t) Ast.Function.t
+      )
 end

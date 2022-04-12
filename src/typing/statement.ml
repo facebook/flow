@@ -6903,15 +6903,11 @@ struct
       let (loc, { Ast.JSX.Identifier.name; comments }) = member.property in
       (loc, mk_ident ~comments name)
     in
-    let member =
-      Ast.Expression.Member
-        {
-          Ast.Expression.Member._object;
-          property = Ast.Expression.Member.PropertyIdentifier property;
-          comments = None;
-        }
-    in
-    (mloc, member)
+    Ast.Expression.Member.
+      ( mloc,
+        Ast.Expression.Member { _object; property = PropertyIdentifier property; comments = None }
+      )
+    
 
   (* reverses jsx_title_member_to_expression *)
   and expression_to_jsx_title_member loc member =
@@ -8937,45 +8933,66 @@ struct
     mk_function cx ~hint ~needs_this_param ~general reason func
 
   (* Internal helper function. Use `mk_function_declaration` and `mk_function_expression` instead. *)
-  and mk_function cx ~hint ~general ~needs_this_param reason func =
-    let loc = aloc_of_reason reason in
-    (* Normally, functions do not have access to super. *)
-    let super =
-      let t = ObjProtoT (mk_reason RNoSuper loc) in
-      Scope.Entry.new_let (Inferred t) ~provider:t ~loc ~state:Scope.State.Initialized
+  and mk_function
+      cx ~hint ~needs_this_param ~general reason ({ Ast.Function.id = func_id; _ } as func) =
+    let node_cache = Context.node_cache cx in
+    let cached =
+      Base.Option.value_map
+        ~default:None
+        ~f:(fun (id_loc, _) -> Node_cache.get_function node_cache id_loc)
+        func_id
     in
-    let this_recipe fparams =
-      let default =
-        if
-          Signature_utils.This_finder.found_this_in_body_or_params
-            func.Ast.Function.body
-            func.Ast.Function.params
-        then
-          Tvar.mk cx (mk_reason RThis loc)
-        else
-          Type.implicit_mixed_this reason
+    match cached with
+    | Some cached ->
+      Debug_js.Verbose.print_if_verbose_lazy
+        cx
+        (lazy [spf "Function cache hit at %s" (ALoc.debug_to_string (aloc_of_reason reason))]);
+      cached
+    | None ->
+      let loc = aloc_of_reason reason in
+
+      (* Normally, functions do not have access to super. *)
+      let super =
+        let t = ObjProtoT (mk_reason RNoSuper loc) in
+        Scope.Entry.new_let (Inferred t) ~provider:t ~loc ~state:Scope.State.Initialized
       in
       (* The default behavior of `this` still depends on how it
          was created, so we must provide the recipe based on where `function_decl`
          is invoked. *)
-      let t =
-        match Func_stmt_params.this fparams with
-        | Some t -> Inferred t
-        | None -> Annotated default
+      let this_recipe fparams =
+        let default =
+          if
+            Signature_utils.This_finder.found_this_in_body_or_params
+              func.Ast.Function.body
+              func.Ast.Function.params
+          then
+            Tvar.mk cx (mk_reason RThis loc)
+          else
+            Type.implicit_mixed_this reason
+        in
+        (* If `this` is a bound type variable, we cannot create the type here, and
+           instead must wait until `check_with_generics` to instantiate the type.
+           However, the default behavior of `this` still depends on how it
+           was created, so we must provide the recipe based on where `function_decl`
+           is invoked. *)
+        let t =
+          match Func_stmt_params.this fparams with
+          | Some t -> Inferred t
+          | None -> Annotated default
+        in
+        let this =
+          Scope.Entry.new_let
+            t
+            ~provider:(type_t_of_annotated_or_inferred t)
+            ~loc
+            ~state:Scope.State.Initialized
+        in
+        (type_t_of_annotated_or_inferred t, this)
       in
-      let this =
-        Scope.Entry.new_let
-          t
-          ~provider:(type_t_of_annotated_or_inferred t)
-          ~loc
-          ~state:Scope.State.Initialized
+      let (fun_type, reconstruct_ast) =
+        function_decl cx ~needs_this_param ~hint reason func this_recipe super
       in
-      (type_t_of_annotated_or_inferred t, this)
-    in
-    let (fun_type, reconstruct_ast) =
-      function_decl cx ~needs_this_param ~hint reason func this_recipe super
-    in
-    (fun_type, reconstruct_ast general)
+      (fun_type, reconstruct_ast general)
 
   (* Process an arrow function, returning a (polymorphic) function type. *)
   and mk_arrow cx ~hint reason func =
