@@ -1,3 +1,15 @@
+### 0.176.0
+
+Likely to cause new Flow errors:
+* Banned usage of `new` on functions. Move usages of this pattern to use ES6 classes instead. If the pattern exists in third-party code that cannot be changed directly, you can use a [declaration file](https://flow.org/en/docs/declarations/) to type the legacy pattern with a `declare class`.
+* Error on type annotations nested inside of destructuring - these were always invalid, we just ignored them before
+
+Notable changes:
+* Removed special support for `React.createClass` from Flow. It is now just typed as `any`. Migrate any components using it to class components or function components.
+* Added the `module.missing_module_generators` option, which can be used (multiple times) to specify `'regex' -> 'command'` pairs. When a module is missing, if its name matches one of the regexes, we will add a suggestion in the error message to run `command` to generate it (and resolve the error).
+* Fixed bugs responsible for some LSP "server is stopped" errors
+* Fixed a bug that could cause the server to become unresponsive on Windows
+
 ### 0.175.1
 
 Bug fixes:
