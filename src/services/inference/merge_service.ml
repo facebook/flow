@@ -414,7 +414,7 @@ let mk_check_file options ~reader () =
   let get_docblock_unsafe = Parsing_heaps.read_docblock_unsafe in
   let check_file =
     let reader = Abstract_state_reader.Mutator_state_reader reader in
-    let cache = Check_cache.create ~capacity:1000 in
+    let cache = Check_cache.create ~capacity:10000000 in
     Check_service.mk_check_file ~options ~reader ~cache ()
   in
   fun file ->
@@ -477,7 +477,7 @@ let mk_check_file options ~reader () =
  * Any state derived from the values in this cache also needs to be reset in the
  * event of a compaction, which can be done in the SharedMem.on_compact
  * callback. *)
-let check_contents_cache = Check_cache.create ~capacity:1000
+let check_contents_cache = Check_cache.create ~capacity:10000
 
 (* Variation of merge_context where requires may not have already been
    resolved. This is used by commands that make up a context on the fly. *)
