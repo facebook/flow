@@ -1275,7 +1275,7 @@ module Statement
         in
         module_items env ~module_kind (stmt :: acc)
     in
-    let declare_module_ env start_loc leading =
+    let declare_module_ ~leading env =
       let id =
         match Peek.token env with
         | T_STRING str ->
@@ -1283,8 +1283,8 @@ module Statement
             (string_literal_remove_trailing env (string_literal env str))
         | _ -> Statement.DeclareModule.Identifier (id_remove_trailing env (Parse.identifier env))
       in
-      let (body_loc, ((module_kind, body), comments)) =
-        with_loc
+      let (body, module_kind) =
+        with_loc_extra
           (fun env ->
             let leading = Peek.comments env in
             Expect.token env T_LCURLY;
@@ -1297,32 +1297,31 @@ module Statement
             in
             Expect.token env T_RCURLY;
             let { trailing; _ } = statement_end_trailing_comments env in
-            ( (module_kind, body),
+            let comments =
               Flow_ast_utils.mk_comments_with_internal_opt ~leading ~trailing ~internal ()
-            ))
+            in
+            let body = { Statement.Block.body; comments } in
+            (body, module_kind))
           env
       in
-      let body = (body_loc, { Statement.Block.body; comments }) in
-      let loc = Loc.btwn start_loc body_loc in
       let kind =
         match module_kind with
         | Some k -> k
         | None -> Statement.DeclareModule.CommonJS
       in
       let comments = Flow_ast_utils.mk_comments_opt ~leading () in
-      (loc, Statement.(DeclareModule DeclareModule.{ id; body; kind; comments }))
+      Statement.(DeclareModule DeclareModule.{ id; body; kind; comments })
     in
-    fun ?(in_module = false) env ->
+    fun ~in_module env ->
       let start_loc = Peek.loc env in
       let leading = Peek.comments env in
       Expect.token env T_DECLARE;
       let leading = leading @ Peek.comments env in
       Expect.identifier env "module";
       if in_module || Peek.token env = T_PERIOD then
-        let (loc, exports) = with_loc (declare_module_exports ~leading) env in
-        (Loc.btwn start_loc loc, exports)
+        with_loc ~start_loc (declare_module_exports ~leading) env
       else
-        declare_module_ env start_loc leading
+        with_loc ~start_loc (declare_module_ ~leading) env
 
   and declare_module_exports ~leading env =
     let leading_period = Peek.comments env in
