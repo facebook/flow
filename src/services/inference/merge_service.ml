@@ -539,8 +539,9 @@ let with_async_logging_timer ~interval ~on_timer ~f =
   let ret =
     try f () with
     | e ->
+      let exn = Exception.wrap e in
       cancel_timer ();
-      raise e
+      Exception.reraise exn
   in
   cancel_timer ();
   ret
