@@ -18,22 +18,17 @@ end
 module Make (Env : Env_sig.S) (Statement : Statement_sig.S with module Env := Env) : S = struct
   module Type_annotation = Statement.Anno
 
-  module Cache = struct
-    let annotation _ _ = ()
-
-    let expression _ _ = ()
-  end
-
   let rec resolve_binding cx loc b =
+    let cache = Context.node_cache cx in
     let expression ~hint ?cond exp =
       let (((_, t), _) as exp) = Statement.expression ~hint ?cond cx exp in
-      Cache.expression cx exp;
+      Node_cache.set_expression cache exp;
       t
     in
     match b with
     | Root (Annotation anno) ->
       let (t, anno) = Type_annotation.mk_type_available_annotation cx Subst_name.Map.empty anno in
-      Cache.annotation cx anno;
+      Node_cache.set_annotation cache anno;
       t
     | Root (Value exp) ->
       (* TODO: look up the annotation for the variable at loc and pass in *)

@@ -1796,7 +1796,16 @@ module Make
     | _ -> mk_type_annotation cx tparams_map reason annot
 
   and mk_type_available_annotation cx tparams_map (loc, annot) =
-    let (((_, t), _) as annot_ast) = convert cx tparams_map annot in
+    let node_cache = Context.node_cache cx in
+    let (((_, t), _) as annot_ast) =
+      match Node_cache.get_annotation node_cache loc with
+      | Some (_, node) ->
+        Debug_js.Verbose.print_if_verbose_lazy
+          cx
+          (lazy [spf "Annotation cache hit at %s" (ALoc.debug_to_string loc)]);
+        node
+      | None -> convert cx tparams_map annot
+    in
     (t, (loc, annot_ast))
 
   and mk_function_type_annotation cx tparams_map (loc, f) =

@@ -210,6 +210,7 @@ type t = {
   trust_constructor: unit -> Trust.trust_rep;
   mutable declare_module_ref: Module_info.t option;
   mutable environment: Loc_env.t;
+  node_cache: Node_cache.t;
 }
 
 let metadata_of_options options =
@@ -364,6 +365,7 @@ let make ccx metadata file aloc_table module_ref phase =
     trust_constructor = Trust.literal_trust;
     declare_module_ref = None;
     environment = Loc_env.empty;
+    node_cache = Node_cache.empty;
   }
 
 let sig_cx cx = cx.ccx.sig_cx
@@ -582,6 +584,8 @@ let inferred_indexers cx = cx.ccx.inferred_indexers
 let environment cx = cx.environment
 
 let any_propagation cx = cx.metadata.any_propagation
+
+let node_cache cx = cx.node_cache
 
 let automatic_require_default cx = cx.metadata.automatic_require_default
 

@@ -311,6 +311,8 @@ val inferred_indexers : t -> Type.dicttype list ALocMap.t
 
 val environment : t -> Loc_env.t
 
+val node_cache : t -> Node_cache.t
+
 val pid_prefix : t -> string
 
 val copy_of_context : t -> t

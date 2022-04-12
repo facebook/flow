@@ -3154,7 +3154,15 @@ struct
   (* can raise Abnormal.(Exn (Stmt _, _))
    * annot should become a Type.t option when we have the ability to
    * inspect annotations and recurse into them *)
-  and expression ?cond cx ~hint (loc, e) = expression_ ~cond ~hint cx loc e
+  and expression ?cond cx ~hint (loc, e) =
+    let node_cache = Context.node_cache cx in
+    match Node_cache.get_expression node_cache loc with
+    | Some node ->
+      Debug_js.Verbose.print_if_verbose_lazy
+        cx
+        (lazy [spf "Expression cache hit at %s" (ALoc.debug_to_string loc)]);
+      node
+    | None -> expression_ ~cond ~hint cx loc e
 
   and this_ cx loc this =
     let open Ast.Expression in
