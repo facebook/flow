@@ -26,9 +26,9 @@ module type CONNECTION = sig
     on_read:(msg:in_message -> connection:t -> unit Lwt.t) ->
     ((unit -> unit) * t) Lwt.t
 
-  val write : msg:out_message -> t -> unit
+  val write : msg:out_message -> t -> bool
 
-  val write_and_close : msg:out_message -> t -> unit
+  val write_and_close : msg:out_message -> t -> bool
 
   val close_immediately : t -> unit Lwt.t
 

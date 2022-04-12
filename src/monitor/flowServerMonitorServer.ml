@@ -130,39 +130,31 @@ end = struct
       Logger.debug "Read a response to request '%s' from the server!" request_id;
       let%lwt request = RequestMap.remove ~request_id in
       (match request with
-      | None ->
-        Logger.error "Failed to look up request '%s'" request_id;
-        Lwt.return_unit
+      | None -> Logger.error "Failed to look up request '%s'" request_id
       | Some (_, client) ->
         let msg = MonitorProt.Data response in
-        begin
-          try EphemeralConnection.write_and_close ~msg client with
-          | Lwt_stream.Closed ->
-            Logger.debug "Client for request '%s' is dead. Throwing away response" request_id
-        end;
-        Lwt.return_unit)
+        if not (EphemeralConnection.write_and_close ~msg client) then
+          Logger.debug "Client for request '%s' is dead. Throwing away response" request_id);
+      Lwt.return_unit
     | MonitorProt.RequestFailed (request_id, exn_str) ->
       Logger.error "Server threw exception when processing '%s': %s" request_id exn_str;
       let%lwt request = RequestMap.remove ~request_id in
       (match request with
-      | None ->
-        Logger.error "Failed to look up request '%s'" request_id;
-        Lwt.return_unit
+      | None -> Logger.error "Failed to look up request '%s'" request_id
       | Some (_, client) ->
         let msg = MonitorProt.ServerException exn_str in
-        begin
-          try EphemeralConnection.write_and_close ~msg client with
-          | Lwt_stream.Closed ->
-            Logger.debug "Client for request '%s' is dead. Throwing away response" request_id
-        end;
-        Lwt.return_unit)
+        if not (EphemeralConnection.write_and_close ~msg client) then
+          Logger.debug "Client for request '%s' is dead. Throwing away response" request_id);
+      Lwt.return_unit
     | MonitorProt.StatusUpdate status ->
       StatusStream.update ~status;
       Lwt.return_unit
     | MonitorProt.PersistentConnectionResponse (client_id, response) ->
       (match PersistentConnectionMap.get ~client_id with
       | None -> Logger.error "Failed to look up persistent client #%d" client_id
-      | Some connection -> PersistentConnection.write ~msg:response connection);
+      | Some connection ->
+        if not (PersistentConnection.write ~msg:response connection) then
+          Logger.debug "Persistent client #%d is dead. Throwing away response" client_id);
       Lwt.return_unit
 
   module CommandLoop = LwtLoop.Make (struct
@@ -170,7 +162,12 @@ end = struct
 
     (* Writes a message to the out-stream of the monitor, to be eventually *)
     (* picked up by the server. *)
-    let send_request ~msg conn = ServerConnection.write ~msg conn
+    let send_request ~msg conn =
+      if not (ServerConnection.write ~msg conn) then
+        (* Another Lwt thread has already closed ServerConnection. We trust
+           that it will properly handle the server dying, so we can just drop
+           it here. *)
+        Logger.debug "Server connection is closed. Throwing away request"
 
     (* In order to try and avoid races between the file system and a command (like `flow status`),
      * we check for file system notification before sending a request to the server *)
@@ -247,11 +244,8 @@ end = struct
   (* The monitor is exiting. Let's try and shut down the server gracefully *)
   let cleanup_on_exit ~exit_status ~exit_msg ~connection ~pid =
     let () =
-      try
-        let msg = MonitorProt.(PleaseDie (MonitorExiting (exit_status, exit_msg))) in
-        ServerConnection.write ~msg connection
-      with
-      | Lwt_stream.Closed ->
+      let msg = MonitorProt.(PleaseDie (MonitorExiting (exit_status, exit_msg))) in
+      if not (ServerConnection.write ~msg connection) then
         (* Connection to the server has already closed. The server is likely already dead *)
         ()
     in
@@ -619,12 +613,11 @@ module KeepAliveLoop = LwtLoop.Make (struct
           (* connection. This WEXITED case covers them. (It doesn't matter that    *)
           (* it also sends the reason in a few additional cases as well.)          *)
           let send_close conn =
-            try
-              PersistentConnection.write
-                ~msg:LspProt.(NotificationFromServer (ServerExit exit_type))
-                conn
-            with
-            | _ -> ()
+            ignore
+              (PersistentConnection.write
+                 ~msg:LspProt.(NotificationFromServer (ServerExit exit_type))
+                 conn
+              )
           in
           PersistentConnectionMap.get_all_clients () |> List.iter send_close;
 
