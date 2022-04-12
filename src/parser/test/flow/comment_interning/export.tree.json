@@ -1,11 +1,11 @@
 {
   "errors":[
     {
-      "loc":{"source":null,"start":{"line":3,"column":19},"end":{"line":3,"column":83}},
+      "loc":{"source":null,"start":{"line":3,"column":45},"end":{"line":3,"column":52}},
       "message":"Duplicate export for `default`"
     },
     {
-      "loc":{"source":null,"start":{"line":27,"column":20},"end":{"line":27,"column":36}},
+      "loc":{"source":null,"start":{"line":27,"column":27},"end":{"line":27,"column":34}},
       "message":"Duplicate export for `default`"
     }
   ],
@@ -294,6 +294,7 @@
         "value":"Foo",
         "raw":"'Foo'"
       },
+      "exported":null,
       "exportKind":"value"
     },
     {
@@ -323,6 +324,7 @@
         "value":"Foo",
         "raw":"'Foo'"
       },
+      "exported":null,
       "exportKind":"type"
     },
     {
@@ -519,6 +521,7 @@
         "value":"source",
         "raw":"'source'"
       },
+      "exported":null,
       "exportKind":"value"
     },
     {
@@ -548,6 +551,7 @@
         "value":"source",
         "raw":"'source'"
       },
+      "exported":null,
       "exportKind":"type"
     },
     {

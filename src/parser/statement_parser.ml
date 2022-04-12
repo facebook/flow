@@ -1458,7 +1458,6 @@ module Statement
   and export_declaration ~decorators =
     with_loc (fun env ->
         let env = env |> with_strict true |> with_in_export true in
-        let start_loc = Peek.loc env in
         let leading = Peek.comments env in
         Expect.token env T_EXPORT;
         match Peek.token env with
@@ -1467,9 +1466,7 @@ module Statement
           Statement.ExportDefaultDeclaration.(
             let leading = leading @ Peek.comments env in
             let (default, ()) = with_loc (fun env -> Expect.token env T_DEFAULT) env in
-            record_export
-              env
-              (Flow_ast_utils.ident_of_source (Loc.btwn start_loc (Peek.loc env), "default"));
+            record_export env (Flow_ast_utils.ident_of_source (default, "default"));
             let (declaration, trailing) =
               if Peek.is_function env then
                 (* export default [async] function [foo] (...) { ... } *)
