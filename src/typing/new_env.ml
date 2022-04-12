@@ -444,62 +444,67 @@ module New_env = struct
       ()
     | Some w -> Flow_js.unify cx ~use_op:unknown_use refined w
 
-  let set_env_entry cx ~use_op ?potential_global_name t loc =
-    let ({ Loc_env.var_info = { Env_api.providers; scopes; _ } as var_info; resolved; _ } as env) =
-      Context.environment cx
-    in
+  (* Unifies `t` with the entry in the loc_env's map. This allows it to be looked up for Write
+   * entries reported by the name_resolver as well as providers for the provider analysis *)
+  let unify_write_entry cx ~use_op t loc =
+    let ({ Loc_env.resolved; _ } as env) = Context.environment cx in
     if not (ALocSet.mem loc resolved) then begin
       Debug_js.Verbose.print_if_verbose
         cx
         [spf "writing to location %s" (Reason.string_of_aloc loc)];
-      begin
-        match Loc_env.find_write env loc with
-        | None ->
-          (* If we don't see a spot for this write, it's because it's never read from. *)
-          ()
-        | Some w -> Flow_js.unify cx ~use_op w t
-      end;
-
-      (* We only perform a subtyping check if this is an assigning write. We call
-       * writes to immutable bindings non-assigning writes. For example:
-       * const x: number = 3;
-       * x = 'string';
-       *
-       * Since the x = 'string' doesn't actually assign a value to x, we should
-       * not perform a subtyping check and a second error saying string is incompatible
-       * with number. We should only emit an error saying that a const cannot be reassigned. *)
-      match ALocMap.find_opt loc var_info.Env_api.env_entries with
-      | Some Env_api.NonAssigningWrite -> ()
-      | Some (Env_api.GlobalWrite _) ->
-        if is_provider cx loc then
-          Base.Option.iter potential_global_name ~f:(fun name ->
-              let name = Reason.OrdinaryName name in
-              ignore @@ Flow_js.get_builtin cx name (mk_reason (RIdentifier name) loc)
-          )
-      | _ ->
-        if not (is_provider cx loc) then
-          let general = provider_type_for_def_loc env loc in
-          if is_def_loc_annotated var_info loc then
-            Flow_js.flow cx (t, UseT (use_op, general))
-          else
-            let use_op =
-              match Scope_api.With_ALoc.(def_of_use_opt scopes loc) with
-              | Some { Scope_api.With_ALoc.Def.locs = (declaration, _); actual_name = name; _ } ->
-                let provider_locs =
-                  Base.Option.value_map
-                    ~f:snd
-                    ~default:[]
-                    (Env_api.Provider_api.providers_of_def providers loc)
-                in
-                Frame
-                  (ConstrainedAssignment { name; declaration; providers = provider_locs }, use_op)
-              | None -> use_op
-            in
-            Context.add_constrained_write cx (t, UseT (use_op, general))
+      match Loc_env.find_write env loc with
+      | None ->
+        (* If we don't see a spot for this write, it's because it's never read from. *)
+        ()
+      | Some w -> Flow_js.unify cx ~use_op w t
     end else
       Debug_js.Verbose.print_if_verbose
         cx
         [spf "Location %s already fully resolved" (Reason.string_of_aloc loc)]
+
+  let subtype_against_providers cx ~use_op ?potential_global_name t loc =
+    let ({ Loc_env.var_info = { Env_api.providers; scopes; _ } as var_info; _ } as env) =
+      Context.environment cx
+    in
+    (* We only perform a subtyping check if this is an assigning write. We call
+     * writes to immutable bindings non-assigning writes. For example:
+     * const x: number = 3;
+     * x = 'string';
+     *
+     * Since the x = 'string' doesn't actually assign a value to x, we should
+     * not perform a subtyping check and a second error saying string is incompatible
+     * with number. We should only emit an error saying that a const cannot be reassigned. *)
+    match ALocMap.find_opt loc var_info.Env_api.env_entries with
+    | Some Env_api.NonAssigningWrite -> ()
+    | Some (Env_api.GlobalWrite _) ->
+      if is_provider cx loc then
+        Base.Option.iter potential_global_name ~f:(fun name ->
+            let name = Reason.OrdinaryName name in
+            ignore @@ Flow_js.get_builtin cx name (mk_reason (RIdentifier name) loc)
+        )
+    | _ ->
+      if not (is_provider cx loc) then
+        let general = provider_type_for_def_loc env loc in
+        if is_def_loc_annotated var_info loc then
+          Flow_js.flow cx (t, UseT (use_op, general))
+        else
+          let use_op =
+            match Scope_api.With_ALoc.(def_of_use_opt scopes loc) with
+            | Some { Scope_api.With_ALoc.Def.locs = (declaration, _); actual_name = name; _ } ->
+              let provider_locs =
+                Base.Option.value_map
+                  ~f:snd
+                  ~default:[]
+                  (Env_api.Provider_api.providers_of_def providers loc)
+              in
+              Frame (ConstrainedAssignment { name; declaration; providers = provider_locs }, use_op)
+            | None -> use_op
+          in
+          Context.add_constrained_write cx (t, UseT (use_op, general))
+
+  let assign_env_value_entry cx ~use_op ?potential_global_name t loc =
+    unify_write_entry cx ~use_op t loc;
+    subtype_against_providers cx ~use_op ?potential_global_name t loc
 
   (* Sanity check for predicate functions: If there are multiple declare function
    * providers, make sure none of them have a predicate. *)
@@ -520,7 +525,7 @@ module New_env = struct
     | _ -> ()
 
   let resolve_env_entry cx t loc =
-    set_env_entry cx ~use_op:unknown_use t loc;
+    assign_env_value_entry cx ~use_op:unknown_use t loc;
     let ({ Loc_env.resolved; _ } as env) = Context.environment cx in
     Context.set_environment cx { env with Loc_env.resolved = ALocSet.add loc resolved }
 
@@ -545,11 +550,12 @@ module New_env = struct
     if is_def_loc_annotated var_info loc then
       subtype_entry cx ~use_op t loc
     else
-      set_env_entry cx ~use_op t loc
+      assign_env_value_entry cx ~use_op t loc
 
-  let set_var cx ~use_op name t loc = set_env_entry cx ~use_op ~potential_global_name:name t loc
+  let set_var cx ~use_op name t loc =
+    assign_env_value_entry cx ~use_op ~potential_global_name:name t loc
 
-  let bind cx t loc = set_env_entry cx ~use_op:Type.unknown_use t loc
+  let bind cx t loc = assign_env_value_entry cx ~use_op:Type.unknown_use t loc
 
   let bind_var ?state:_ cx name t loc =
     valid_declaration_check cx (OrdinaryName name) loc;
@@ -658,7 +664,7 @@ module New_env = struct
     | InternalName _
     | InternalModuleName _ ->
       Old_env.init_fun cx ~use_op name t loc
-    | OrdinaryName _ -> set_env_entry cx ~use_op t loc
+    | OrdinaryName _ -> assign_env_value_entry cx ~use_op t loc
 
   let init_const cx ~use_op name ~has_anno t loc =
     match name with
@@ -674,7 +680,7 @@ module New_env = struct
       Old_env.init_implicit_const kind cx ~use_op name ~has_anno t loc
     | OrdinaryName _ -> init_entry ~has_anno cx ~use_op t loc
 
-  let init_type cx _name t loc = set_env_entry cx ~use_op:unknown_use t loc
+  let init_type cx _name t loc = assign_env_value_entry cx ~use_op:unknown_use t loc
 
   let pseudo_init_declared_type _ _ _ = ()
 
@@ -683,14 +689,14 @@ module New_env = struct
     | InternalName _
     | InternalModuleName _ ->
       Old_env.unify_declared_type ~lookup_mode cx name loc t
-    | OrdinaryName _ -> set_env_entry cx ~use_op:unknown_use t loc
+    | OrdinaryName _ -> assign_env_value_entry cx ~use_op:unknown_use t loc
 
   let unify_declared_fun_type cx name loc t =
     match name with
     | InternalName _
     | InternalModuleName _ ->
       Old_env.unify_declared_fun_type cx name loc t
-    | OrdinaryName _ -> set_env_entry cx ~use_op:unknown_use t loc
+    | OrdinaryName _ -> assign_env_value_entry cx ~use_op:unknown_use t loc
 
   (************************)
   (* Variable Declaration *)
@@ -769,5 +775,6 @@ module New_env = struct
     | Ok t -> Some t
     | Error _ -> None
 
-  let init_import ~lookup_mode:_ cx _name loc t = set_env_entry ~use_op:unknown_use cx t loc
+  let init_import ~lookup_mode:_ cx _name loc t =
+    assign_env_value_entry ~use_op:unknown_use cx t loc
 end
