@@ -69,6 +69,12 @@ module type S = sig
     (ALoc.t, ALoc.t) Flow_ast.Type.annotation ->
     Type.t * (ALoc.t, ALoc.t * Type.t) Flow_ast.Type.annotation
 
+  val mk_function_type_annotation :
+    Context.t ->
+    Type.t Subst_name.Map.t ->
+    ALoc.t * (ALoc.t, ALoc.t) Flow_ast.Type.Function.t ->
+    Type.t * (ALoc.t * (ALoc.t, ALoc.t * Type.t) Flow_ast.Type.Function.t)
+
   val mk_nominal_type :
     Context.t ->
     Reason.t ->

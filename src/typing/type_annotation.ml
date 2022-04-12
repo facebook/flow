@@ -1498,23 +1498,19 @@ module Make
        Object.Property.key =
          Ast.Expression.Object.Property.Identifier
            (id_loc, ({ Ast.Identifier.name; comments = _ } as id_name));
-       value = Object.Property.Get (loc, f);
+       value = Object.Property.Get ((loc, _) as getter);
        _method;
        _;
       } ->
         Flow_js.add_output cx (Error_message.EUnsafeGettersSetters loc);
-        let (function_type, f_ast) =
-          match convert cx tparams_map (loc, Ast.Type.Function f) with
-          | ((_, function_type), Ast.Type.Function f_ast) -> (function_type, f_ast)
-          | _ -> assert false
-        in
+        let (function_type, getter_ast) = mk_function_type_annotation cx tparams_map getter in
         let return_t = Type.extract_getter_type function_type in
         ( Acc.add_prop (Properties.add_getter (OrdinaryName name) (Some id_loc) return_t) acc,
           {
             prop with
             Object.Property.key =
               Ast.Expression.Object.Property.Identifier ((id_loc, return_t), id_name);
-            value = Object.Property.Get (loc, f_ast);
+            value = Object.Property.Get getter_ast;
           }
         )
       (* unsafe setter property *)
@@ -1522,23 +1518,19 @@ module Make
        Object.Property.key =
          Ast.Expression.Object.Property.Identifier
            (id_loc, ({ Ast.Identifier.name; comments = _ } as id_name));
-       value = Object.Property.Set (loc, f);
+       value = Object.Property.Set ((loc, _) as setter);
        _method;
        _;
       } ->
         Flow_js.add_output cx (Error_message.EUnsafeGettersSetters loc);
-        let (function_type, f_ast) =
-          match convert cx tparams_map (loc, Ast.Type.Function f) with
-          | ((_, function_type), Ast.Type.Function f_ast) -> (function_type, f_ast)
-          | _ -> assert false
-        in
+        let (function_type, setter_ast) = mk_function_type_annotation cx tparams_map setter in
         let param_t = Type.extract_setter_type function_type in
         ( Acc.add_prop (Properties.add_setter (OrdinaryName name) (Some id_loc) param_t) acc,
           {
             prop with
             Object.Property.key =
               Ast.Expression.Object.Property.Identifier ((id_loc, param_t), id_name);
-            value = Object.Property.Set (loc, f_ast);
+            value = Object.Property.Set setter_ast;
           }
         )
       | { Object.Property.value = Object.Property.Get _ | Object.Property.Set _; _ } ->
@@ -1548,11 +1540,8 @@ module Make
     in
     let make_call cx tparams_map loc call =
       let { Object.CallProperty.value = (fn_loc, fn); static; comments } = call in
-      let (t, fn) =
-        match convert cx tparams_map (loc, Ast.Type.Function fn) with
-        | ((_, t), Ast.Type.Function fn) -> (t, fn)
-        | _ -> assert false
-      in
+      (* note: this uses [loc] instead of [fn_loc]. not sure if this is intentional. *)
+      let (t, (_, fn)) = mk_function_type_annotation cx tparams_map (loc, fn) in
       (t, { Object.CallProperty.value = (fn_loc, fn); static; comments })
     in
     let make_dict cx tparams_map indexer =
@@ -1810,6 +1799,11 @@ module Make
     let (((_, t), _) as annot_ast) = convert cx tparams_map annot in
     (t, (loc, annot_ast))
 
+  and mk_function_type_annotation cx tparams_map (loc, f) =
+    match convert cx tparams_map (loc, Ast.Type.Function f) with
+    | ((_, function_type), Ast.Type.Function f_ast) -> (function_type, (loc, f_ast))
+    | _ -> assert false
+
   and mk_singleton_string cx loc key =
     let reason = mk_annot_reason (RStringLit (OrdinaryName key)) loc in
     DefT (reason, infer_trust cx, SingletonStrT (OrdinaryName key))
@@ -1934,16 +1928,10 @@ module Make
         List.fold_left
           Ast.Type.Object.(
             fun (x, rev_prop_asts) -> function
-              | CallProperty (loc, { CallProperty.value = (value_loc, ft); static; comments }) ->
-                let ((_, t), ft) = convert cx tparams_map (value_loc, Ast.Type.Function ft) in
-                let ft =
-                  match ft with
-                  | Ast.Type.Function ft -> ft
-                  | _ -> assert false
-                in
+              | CallProperty (loc, { CallProperty.value; static; comments }) ->
+                let (t, value) = mk_function_type_annotation cx tparams_map value in
                 ( append_call ~static t x,
-                  CallProperty (loc, { CallProperty.value = (value_loc, ft); static; comments })
-                  :: rev_prop_asts
+                  CallProperty (loc, { CallProperty.value; static; comments }) :: rev_prop_asts
                 )
               | Indexer (loc, { Indexer.static; _ }) as indexer_prop when mem_field ~static "$key" x
                 ->
