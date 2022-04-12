@@ -1228,7 +1228,7 @@ module Statement
         (* TODO: This is a semantic analysis and shouldn't be in the parser *)
         let module_kind =
           let open Statement in
-          let (loc, stmt) = stmt in
+          let (_loc, stmt) = stmt in
           match (module_kind, stmt) with
           (*
            * The first time we see either a `declare export` or a
@@ -1238,17 +1238,17 @@ module Statement
            * exceptions to this rule because they are valid in both CommonJS
            * and ES modules (and thus do not indicate an intent for either).
            *)
-          | (None, DeclareModuleExports _) -> Some (DeclareModule.CommonJS loc)
+          | (None, DeclareModuleExports _) -> Some DeclareModule.CommonJS
           | (None, DeclareExportDeclaration { DeclareExportDeclaration.declaration; _ }) ->
             (match declaration with
             | Some (DeclareExportDeclaration.NamedType _)
             | Some (DeclareExportDeclaration.Interface _) ->
               module_kind
-            | _ -> Some (DeclareModule.ES loc))
+            | _ -> Some DeclareModule.ES)
           (*
            * There should never be more than one `declare module.exports`
            * statement *)
-          | (Some (DeclareModule.CommonJS _), DeclareModuleExports _) ->
+          | (Some DeclareModule.CommonJS, DeclareModuleExports _) ->
             error env Parse_error.DuplicateDeclareModuleExports;
             module_kind
           (*
@@ -1259,10 +1259,10 @@ module Statement
            * The 1 exception to this rule is that `export type/interface` are
            * both ok in CommonJS modules.
            *)
-          | (Some (DeclareModule.ES _), DeclareModuleExports _) ->
+          | (Some DeclareModule.ES, DeclareModuleExports _) ->
             error env Parse_error.AmbiguousDeclareModuleKind;
             module_kind
-          | ( Some (DeclareModule.CommonJS _),
+          | ( Some DeclareModule.CommonJS,
               DeclareExportDeclaration { DeclareExportDeclaration.declaration; _ }
             ) ->
             (match declaration with
@@ -1307,7 +1307,7 @@ module Statement
       let kind =
         match module_kind with
         | Some k -> k
-        | None -> Statement.DeclareModule.CommonJS loc
+        | None -> Statement.DeclareModule.CommonJS
       in
       let comments = Flow_ast_utils.mk_comments_opt ~leading () in
       (loc, Statement.(DeclareModule DeclareModule.{ id; body; kind; comments }))

@@ -489,14 +489,9 @@ class virtual ['M, 'T, 'N, 'U] mapper =
         | Identifier id -> Identifier (this#t_identifier id)
         | Literal (annot, name) -> Literal (this#on_type_annot annot, this#string_literal name)
       in
-      let kind' =
-        match kind with
-        | CommonJS annot -> CommonJS (this#on_loc_annot annot)
-        | ES annot -> ES (this#on_loc_annot annot)
-      in
       let body' = (this#on_loc_annot * this#block) body in
       let comments' = Base.Option.map ~f:this#syntax comments in
-      { id = id'; body = body'; kind = kind'; comments = comments' }
+      { id = id'; body = body'; kind; comments = comments' }
 
     method declare_module_exports (exports : ('M, 'T) Ast.Statement.DeclareModuleExports.t)
         : ('N, 'U) Ast.Statement.DeclareModuleExports.t =
