@@ -571,50 +571,42 @@ module Statement
     )
 
   and switch =
+    let case ~seen_default env =
+      let leading = Peek.comments env in
+      let (test, trailing) =
+        match Peek.token env with
+        | T_DEFAULT ->
+          if seen_default then error env Parse_error.MultipleDefaultsInSwitch;
+          Expect.token env T_DEFAULT;
+          (None, Eat.trailing_comments env)
+        | _ ->
+          Expect.token env T_CASE;
+          (Some (Parse.expression env), [])
+      in
+      let seen_default = seen_default || test = None in
+      Expect.token env T_COLON;
+      let { trailing = line_end_trailing; _ } = statement_end_trailing_comments env in
+      let trailing = trailing @ line_end_trailing in
+      let term_fn = function
+        | T_RCURLY
+        | T_DEFAULT
+        | T_CASE ->
+          true
+        | _ -> false
+      in
+      let consequent = Parse.statement_list ~term_fn (env |> with_in_switch true) in
+      let comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing () in
+      let case = { Statement.Switch.Case.test; consequent; comments } in
+      (case, seen_default)
+    in
     let rec case_list env (seen_default, acc) =
       match Peek.token env with
       | T_EOF
       | T_RCURLY ->
         List.rev acc
       | _ ->
-        let start_loc = Peek.loc env in
-        let leading = Peek.comments env in
-        let (test, trailing) =
-          match Peek.token env with
-          | T_DEFAULT ->
-            if seen_default then error env Parse_error.MultipleDefaultsInSwitch;
-            Expect.token env T_DEFAULT;
-            (None, Eat.trailing_comments env)
-          | _ ->
-            Expect.token env T_CASE;
-            (Some (Parse.expression env), [])
-        in
-        let seen_default = seen_default || test = None in
-        let end_loc = Peek.loc env in
-        Expect.token env T_COLON;
-        let { trailing = line_end_trailing; _ } = statement_end_trailing_comments env in
-        let trailing = trailing @ line_end_trailing in
-        let term_fn = function
-          | T_RCURLY
-          | T_DEFAULT
-          | T_CASE ->
-            true
-          | _ -> false
-        in
-        let consequent = Parse.statement_list ~term_fn (env |> with_in_switch true) in
-        let end_loc =
-          match List.rev consequent with
-          | last_stmt :: _ -> fst last_stmt
-          | _ -> end_loc
-        in
-        let acc =
-          ( Loc.btwn start_loc end_loc,
-            Statement.Switch.Case.
-              { test; consequent; comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing () }
-            
-          )
-          :: acc
-        in
+        let (case_, seen_default) = with_loc_extra (case ~seen_default) env in
+        let acc = case_ :: acc in
         case_list env (seen_default, acc)
     in
     with_loc (fun env ->
