@@ -2604,20 +2604,32 @@ and main_handle_error (exn : Exception.t) (state : state) (event : event option)
       Lsp_helpers.telemetry_error to_stdout report;
       let (d_autostart, d_ienv) =
         match state with
-        | Initialized (Connected { c_ienv; c_about_to_exit_code; _ })
-          when c_about_to_exit_code = Some FlowExit.Flowconfig_changed
-               || c_about_to_exit_code = Some FlowExit.Server_out_of_date ->
+        | Initialized
+            (Connected
+              {
+                c_ienv;
+                c_about_to_exit_code =
+                  Some (FlowExit.Flowconfig_changed | FlowExit.Server_out_of_date);
+                _;
+              }
+              ) ->
           (* we allow at most one autostart_after_version_mismatch per
              instance so as to avoid getting into version battles. *)
           let previous = c_ienv.i_can_autostart_after_version_mismatch in
           let d_ienv = { c_ienv with i_can_autostart_after_version_mismatch = false } in
           (previous, d_ienv)
+        | Initialized
+            (Connected
+              { c_ienv; c_about_to_exit_code = Some FlowExit.File_watcher_missed_changes; _ }
+              ) ->
+          (* TODO: we should fix the monitor to just handle this without exiting!
+             in the meantime, just restart the monitor, which will recrawl. *)
+          (true, c_ienv)
         | Initialized (Connected { c_ienv; _ }) -> (false, c_ienv)
         | Initialized (Disconnected { d_ienv; _ }) -> (false, d_ienv)
         | Pre_init _
         | Post_shutdown ->
           failwith "Unexpected server error in inapplicable state"
-        (* crash *)
       in
       let env = { d_ienv; d_autostart; d_server_status = None } in
       (match state with

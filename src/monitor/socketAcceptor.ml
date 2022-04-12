@@ -121,7 +121,15 @@ let create_persistent_connection ~client_fd ~close ~lsp_init_params =
   in
   (* On exit, do our best to send all pending messages to the waiting client *)
   let close_on_exit =
-    let%lwt _ = Lwt_condition.wait ExitSignal.signal in
+    let%lwt (exit_status, _) = Lwt_condition.wait ExitSignal.signal in
+    (* Notifies the client why the connection is closing. This can be useful to
+       the persistent client to decide if it should autostart a new monitor. *)
+    ignore
+      (PersistentConnection.write
+         ~msg:LspProt.(NotificationFromServer (ServerExit exit_status))
+         conn
+      );
+    (* TODO: we don't need this anymore, just use ServerExit *)
     ignore (PersistentConnection.write ~msg:LspProt.(NotificationFromServer EOF) conn);
     PersistentConnection.flush_and_close conn
   in
