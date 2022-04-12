@@ -493,6 +493,7 @@ and internal_error =
   | RestParameterNotIdentifierPattern
   | InterfaceTypeSpread
   | DebugThrow
+  | ParseJobException of Exception.t
   | MergeTimeout of float
   | MergeJobException of Exception.t
   | CheckTimeout of float
@@ -1550,6 +1551,7 @@ let string_of_internal_error = function
   | RestParameterNotIdentifierPattern -> "unexpected rest parameter, expected an identifier pattern"
   | InterfaceTypeSpread -> "unexpected spread property in interface"
   | DebugThrow -> "debug throw"
+  | ParseJobException exc -> "uncaught exception: " ^ Exception.to_string exc
   | MergeTimeout s -> spf "merge job timed out after %0.2f seconds" s
   | MergeJobException exc -> "uncaught exception: " ^ Exception.to_string exc
   | CheckTimeout s -> spf "check job timed out after %0.2f seconds" s

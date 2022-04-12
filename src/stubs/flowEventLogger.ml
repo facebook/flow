@@ -206,3 +206,5 @@ let sharedmem_failed_memfd_init _ = ()
 let worker_exception _ = ()
 
 let dfind_ready _ _ = ()
+
+let parsing_exception _ = ()

@@ -61,6 +61,8 @@ let collate_parse_results parse_results =
       (fun errors file error ->
         let errset =
           match error with
+          | Parsing_service_js.Uncaught_exception exn ->
+            Inference_utils.set_of_parse_exception ~source_file:file exn
           | Parsing_service_js.Parse_error err ->
             Inference_utils.set_of_parse_error ~source_file:file err
           | Parsing_service_js.Docblock_errors errs ->
