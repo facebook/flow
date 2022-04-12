@@ -462,6 +462,8 @@ module New_env = struct
         cx
         [spf "Location %s already fully resolved" (Reason.string_of_aloc loc)]
 
+  (* Subtypes the given type against the providers for a def loc. Should be used on assignments to
+   * non-import value bindings *)
   let subtype_against_providers cx ~use_op ?potential_global_name t loc =
     let ({ Loc_env.var_info = { Env_api.providers; scopes; _ } as var_info; _ } as env) =
       Context.environment cx
@@ -525,7 +527,7 @@ module New_env = struct
     | _ -> ()
 
   let resolve_env_entry cx t loc =
-    assign_env_value_entry cx ~use_op:unknown_use t loc;
+    unify_write_entry cx ~use_op:unknown_use t loc;
     let ({ Loc_env.resolved; _ } as env) = Context.environment cx in
     Context.set_environment cx { env with Loc_env.resolved = ALocSet.add loc resolved }
 
@@ -555,11 +557,14 @@ module New_env = struct
   let set_var cx ~use_op name t loc =
     assign_env_value_entry cx ~use_op ~potential_global_name:name t loc
 
-  let bind cx t loc = assign_env_value_entry cx ~use_op:Type.unknown_use t loc
+  let bind cx t loc = unify_write_entry cx ~use_op:Type.unknown_use t loc
 
   let bind_var ?state:_ cx name t loc =
     valid_declaration_check cx (OrdinaryName name) loc;
-    bind cx (TypeUtil.type_t_of_annotated_or_inferred t) loc
+    (* TODO: Vars can be bound multiple times and we need to make sure that the
+     * annots are all compatible with each other. For that reason, we subtype
+     * against providers when just binding a var *)
+    assign_env_value_entry cx ~use_op:unknown_use (TypeUtil.type_t_of_annotated_or_inferred t) loc
 
   let bind_let ?state:_ cx name t loc =
     valid_declaration_check cx (OrdinaryName name) loc;
@@ -680,7 +685,7 @@ module New_env = struct
       Old_env.init_implicit_const kind cx ~use_op name ~has_anno t loc
     | OrdinaryName _ -> init_entry ~has_anno cx ~use_op t loc
 
-  let init_type cx _name t loc = assign_env_value_entry cx ~use_op:unknown_use t loc
+  let init_type cx _name t loc = unify_write_entry cx ~use_op:unknown_use t loc
 
   let pseudo_init_declared_type _ _ _ = ()
 
@@ -689,14 +694,14 @@ module New_env = struct
     | InternalName _
     | InternalModuleName _ ->
       Old_env.unify_declared_type ~lookup_mode cx name loc t
-    | OrdinaryName _ -> assign_env_value_entry cx ~use_op:unknown_use t loc
+    | OrdinaryName _ -> unify_write_entry cx ~use_op:unknown_use t loc
 
   let unify_declared_fun_type cx name loc t =
     match name with
     | InternalName _
     | InternalModuleName _ ->
       Old_env.unify_declared_fun_type cx name loc t
-    | OrdinaryName _ -> assign_env_value_entry cx ~use_op:unknown_use t loc
+    | OrdinaryName _ -> unify_write_entry cx ~use_op:unknown_use t loc
 
   (************************)
   (* Variable Declaration *)
@@ -775,6 +780,5 @@ module New_env = struct
     | Ok t -> Some t
     | Error _ -> None
 
-  let init_import ~lookup_mode:_ cx _name loc t =
-    assign_env_value_entry ~use_op:unknown_use cx t loc
+  let init_import ~lookup_mode:_ cx _name loc t = unify_write_entry ~use_op:unknown_use cx t loc
 end
