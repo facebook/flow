@@ -587,6 +587,7 @@ end = struct
       | RImportStarTypeOf name
       | RImportStar name ->
         return (symbol_from_reason env reason (Reason.OrdinaryName name))
+      | RType name -> return (symbol_from_reason env reason name)
       | desc ->
         let desc = Reason.show_virtual_reason_desc (fun _ _ -> ()) desc in
         let msg = "could not extract imported type alias name from reason: " ^ desc in
