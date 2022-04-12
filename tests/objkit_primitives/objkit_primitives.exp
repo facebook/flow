@@ -1,1 +1,34 @@
-Found 0 errors
+Error ---------------------------------------------------------------------------------------------------- test.js:17:21
+
+Cannot spread object literal because number [1] is not an object. [not-an-object]
+
+   17| const a: {||} = {...3}; // ERROR
+                           ^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:18:25
+
+Cannot spread object literal because number literal `3` [1] is not an object. [not-an-object]
+
+   18| const b: {||} = {...(3: 3)}; // ERROR
+                               ^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:19:21
+
+Cannot spread object literal because string [1] is not an object. [not-an-object]
+
+   19| const c: {||} = {...''}; // ERROR
+                           ^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:20:26
+
+Cannot spread object literal because empty string [1] is not an object. [not-an-object]
+
+   20| const d: {||} = {...('': '')}; // ERROR
+                                ^^ [1]
+
+
+
+Found 4 errors

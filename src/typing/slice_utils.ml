@@ -1179,7 +1179,7 @@ let resolve
    * `const {x, ...y} = 3;` tries to get `x` from Number.
    * They don't make sense with $ReadOnly's semantics, since $ReadOnly doesn't model
    * copying/spreading an object. *)
-  | DefT (_, _, (StrT _ | NumT _ | BoolT _))
+  | DefT (_, _, BoolT _)
     when match tool with
          | ObjectWiden _
          | Spread _ ->
