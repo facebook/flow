@@ -9,7 +9,7 @@ module TypeScheme = Type.TypeScheme
 
 class member_searcher add_member =
   object (this)
-    inherit Typed_ast_utils.type_parameter_mapper
+    inherit Typed_ast_utils.type_parameter_mapper as super
 
     method! on_loc_annot x = x
 
@@ -22,7 +22,7 @@ class member_searcher add_member =
       | PropertyIdentifier ((aloc, _), Flow_ast.Identifier.{ name; _ }) ->
         this#annot_with_tparams (add_member ~type_ ~aloc ~name)
       | _ -> ());
-      member
+      super#member member
   end
 
 class type_reference_searcher add_reference =
