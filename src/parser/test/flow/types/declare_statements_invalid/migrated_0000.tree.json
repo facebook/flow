@@ -19,17 +19,17 @@
       "range":[34,57],
       "id":{
         "type":"Identifier",
-        "loc":{"source":null,"start":{"line":2,"column":17},"end":{"line":3,"column":0}},
-        "range":[51,58],
+        "loc":{"source":null,"start":{"line":2,"column":17},"end":{"line":2,"column":23}},
+        "range":[51,57],
         "name":"foo",
         "typeAnnotation":{
           "type":"TypeAnnotation",
-          "loc":{"source":null,"start":{"line":2,"column":20},"end":{"line":3,"column":0}},
-          "range":[54,58],
+          "loc":{"source":null,"start":{"line":2,"column":20},"end":{"line":2,"column":23}},
+          "range":[54,57],
           "typeAnnotation":{
             "type":"FunctionTypeAnnotation",
-            "loc":{"source":null,"start":{"line":2,"column":20},"end":{"line":3,"column":0}},
-            "range":[54,58],
+            "loc":{"source":null,"start":{"line":2,"column":20},"end":{"line":2,"column":23}},
+            "range":[54,57],
             "params":[],
             "this":null,
             "returnType":{

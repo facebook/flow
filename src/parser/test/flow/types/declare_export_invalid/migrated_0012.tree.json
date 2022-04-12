@@ -24,17 +24,17 @@
         "range":[49,64],
         "id":{
           "type":"Identifier",
-          "loc":{"source":null,"start":{"line":2,"column":24},"end":{"line":3,"column":0}},
-          "range":[58,65],
+          "loc":{"source":null,"start":{"line":2,"column":24},"end":{"line":2,"column":30}},
+          "range":[58,64],
           "name":"foo",
           "typeAnnotation":{
             "type":"TypeAnnotation",
-            "loc":{"source":null,"start":{"line":2,"column":27},"end":{"line":3,"column":0}},
-            "range":[61,65],
+            "loc":{"source":null,"start":{"line":2,"column":27},"end":{"line":2,"column":30}},
+            "range":[61,64],
             "typeAnnotation":{
               "type":"FunctionTypeAnnotation",
-              "loc":{"source":null,"start":{"line":2,"column":27},"end":{"line":3,"column":0}},
-              "range":[61,65],
+              "loc":{"source":null,"start":{"line":2,"column":27},"end":{"line":2,"column":30}},
+              "range":[61,64],
               "params":[],
               "this":null,
               "returnType":{

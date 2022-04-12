@@ -1133,26 +1133,28 @@ module Statement
     let leading = leading @ Peek.comments env in
     Expect.token env T_FUNCTION;
     let id = id_remove_trailing env (Parse.identifier env) in
-    let start_sig_loc = Peek.loc env in
-    let tparams = type_params_remove_trailing env (Type.type_params env) in
-    let params = Type.function_param_list env in
-    Expect.token env T_COLON;
-    let return =
-      let return = Type._type env in
-      let has_predicate =
-        Eat.push_lex_mode env Lex_mode.TYPE;
-        let type_token = Peek.token env in
-        Eat.pop_lex_mode env;
-        type_token = T_CHECKS
-      in
-      if has_predicate then
-        type_remove_trailing env return
-      else
-        return
+    let annot =
+      with_loc
+        (fun env ->
+          let tparams = type_params_remove_trailing env (Type.type_params env) in
+          let params = Type.function_param_list env in
+          Expect.token env T_COLON;
+          let return =
+            let return = Type._type env in
+            let has_predicate =
+              Eat.push_lex_mode env Lex_mode.TYPE;
+              let type_token = Peek.token env in
+              Eat.pop_lex_mode env;
+              type_token = T_CHECKS
+            in
+            if has_predicate then
+              type_remove_trailing env return
+            else
+              return
+          in
+          Ast.Type.(Function { Function.params; return; tparams; comments = None }))
+        env
     in
-    let end_loc = fst return in
-    let loc = Loc.btwn start_sig_loc end_loc in
-    let annot = (loc, Ast.Type.(Function { Function.params; return; tparams; comments = None })) in
     let predicate = Type.predicate_opt env in
     let (trailing, annot, predicate) =
       match (semicolon env, predicate) with
@@ -1162,7 +1164,7 @@ module Statement
       | (Implicit { remove_trailing; _ }, Some pred) ->
         ([], annot, Some (remove_trailing pred (fun remover pred -> remover#predicate pred)))
     in
-    let annot = (loc, annot) in
+    let annot = (fst annot, annot) in
     Statement.DeclareFunction.
       { id; annot; predicate; comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing () }
     
