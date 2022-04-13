@@ -172,6 +172,8 @@ external commit_transaction : unit -> unit = "hh_commit_transaction"
 (* Iterate the shared hash table. *)
 external hh_iter : (_ addr -> unit) -> unit = "hh_iter"
 
+let is_init_transaction () = get_next_version () == 0
+
 let on_compact = ref (fun _ _ -> ())
 
 let compact_helper () =
