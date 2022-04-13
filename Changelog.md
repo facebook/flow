@@ -1,3 +1,7 @@
+### 0.176.1
+
+Fix crash when comparing abstract and concrete locations when simplifying normalized types.
+
 ### 0.176.0
 
 Likely to cause new Flow errors:
