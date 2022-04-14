@@ -1,2 +1,3 @@
 shell: test.sh
 wait_for_recheck: false
+TODO_new_env: true
