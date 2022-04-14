@@ -3314,7 +3314,8 @@ module Make
           this#merge_refinement_scopes ~conjunction lhs_latest_refinements rhs_latest_refinements
 
       method null_test ~strict ~sense loc expr other =
-        let refis = this#maybe_sentinel ~sense ~strict loc expr other in
+        (* Negating if sense is false is handled by negate_new_refinements. *)
+        let refis = this#maybe_sentinel ~sense:true ~strict loc expr other in
         let refis =
           match RefinementKey.of_expression expr with
           | None -> refis
@@ -3332,7 +3333,8 @@ module Make
         if strict <> sense then this#negate_new_refinements ()
 
       method void_test ~sense ~strict ~check_for_bound_undefined loc expr other =
-        let refis = this#maybe_sentinel ~sense ~strict loc expr other in
+        (* Negating if sense is true is handled by negate_new_refinements. *)
+        let refis = this#maybe_sentinel ~sense:false ~strict loc expr other in
         let is_global_undefined () =
           match SMap.find_opt "undefined" env_state.env with
           | None -> false

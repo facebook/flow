@@ -344,6 +344,48 @@ let%expect_test "strict_neq_null" =
         {refinement = Not (Null); writes = (1, 4) to (1, 5): (`x`)}
       }] |}]
 
+let%expect_test "strict_eq_null_sentinel" =
+  print_ssa_test {|
+if (o.err === null) {
+  o
+} else {
+  o;
+}
+|};
+    [%expect {|
+      [
+        (2, 4) to (2, 5) => {
+          Global o
+        };
+        (3, 2) to (3, 3) => {
+          {refinement = SentinelR err; writes = Global o}
+        };
+        (5, 2) to (5, 3) => {
+          {refinement = Not (SentinelR err); writes = Global o}
+        }]
+      |}]
+
+let%expect_test "strict_neq_null_sentinel" =
+  print_ssa_test {|
+if (o.err !== null) {
+  o
+} else {
+  o;
+}
+|};
+    [%expect {|
+      [
+        (2, 4) to (2, 5) => {
+          Global o
+        };
+        (3, 2) to (3, 3) => {
+          {refinement = Not (SentinelR err); writes = Global o}
+        };
+        (5, 2) to (5, 3) => {
+          {refinement = SentinelR err; writes = Global o}
+        }]
+      |}]
+
 let%expect_test "eq_undefined" =
   print_ssa_test {|let x = undefined;
 (x == undefined) && x|};
@@ -415,6 +457,54 @@ let%expect_test "strict_neq_undefined" =
       (2, 21) to (2, 22) => {
         {refinement = Not (Undefined); writes = (1, 4) to (1, 5): (`x`)}
       }] |}]
+
+let%expect_test "strict_eq_undefined_sentinel" =
+  print_ssa_test {|
+if (o.err === undefined) {
+  o
+} else {
+  o;
+}
+|};
+    [%expect {|
+      [
+        (2, 4) to (2, 5) => {
+          Global o
+        };
+        (2, 14) to (2, 23) => {
+          Global undefined
+        };
+        (3, 2) to (3, 3) => {
+          {refinement = Not (Not (SentinelR err)); writes = Global o}
+        };
+        (5, 2) to (5, 3) => {
+          {refinement = Not (SentinelR err); writes = Global o}
+        }]
+      |}]
+
+let%expect_test "strict_neq_undefined_sentinel" =
+  print_ssa_test {|
+if (o.err !== undefined) {
+  o
+} else {
+  o;
+}
+|};
+    [%expect {|
+      [
+        (2, 4) to (2, 5) => {
+          Global o
+        };
+        (2, 14) to (2, 23) => {
+          Global undefined
+        };
+        (3, 2) to (3, 3) => {
+          {refinement = Not (SentinelR err); writes = Global o}
+        };
+        (5, 2) to (5, 3) => {
+          {refinement = Not (Not (SentinelR err)); writes = Global o}
+        }]
+      |}]
 
 let%expect_test "undefined_already_bound" =
   print_ssa_test {|let undefined = 3;
