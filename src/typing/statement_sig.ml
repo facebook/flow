@@ -69,4 +69,16 @@ module type S = sig
     Type.t
 
   val arith_assign : Context.t -> ALoc.t -> Type.t -> Type.t -> Type.t
+
+  val type_alias :
+    Context.t ->
+    ALoc.t ->
+    (ALoc.t, ALoc.t) Ast.Statement.TypeAlias.t ->
+    Type.t * (ALoc.t, ALoc.t * Type.t) Ast.Statement.TypeAlias.t
+
+  val opaque_type :
+    Context.t ->
+    ALoc.t ->
+    (ALoc.t, ALoc.t) Ast.Statement.OpaqueType.t ->
+    Type.t * (ALoc.t, ALoc.t * Type.t) Ast.Statement.OpaqueType.t
 end

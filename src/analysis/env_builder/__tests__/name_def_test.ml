@@ -85,9 +85,9 @@ let string_of_source = function
          ~default:"<anonymous>"
          id
       )
-  | TypeAlias { Ast.Statement.TypeAlias.right = (loc, _); _ } ->
+  | TypeAlias (_, { Ast.Statement.TypeAlias.right = (loc, _); _ }) ->
     spf "alias %s" (ALoc.debug_to_string loc)
-  | OpaqueType { Ast.Statement.OpaqueType.id = (loc, _); _ } ->
+  | OpaqueType (_, { Ast.Statement.OpaqueType.id = (loc, _); _ }) ->
     spf "opaque %s" (ALoc.debug_to_string loc)
   | TypeParam (loc, _) -> spf "tparam %s" (ALoc.debug_to_string loc)
   | Enum (loc, _) -> spf "enum %s" (ALoc.debug_to_string loc)

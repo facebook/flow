@@ -67,8 +67,8 @@ type def =
       class_: (ALoc.t, ALoc.t) Ast.Class.t;
     }
   | DeclaredClass of (ALoc.t, ALoc.t) Ast.Statement.DeclareClass.t
-  | TypeAlias of (ALoc.t, ALoc.t) Ast.Statement.TypeAlias.t
-  | OpaqueType of (ALoc.t, ALoc.t) Ast.Statement.OpaqueType.t
+  | TypeAlias of ALoc.t * (ALoc.t, ALoc.t) Ast.Statement.TypeAlias.t
+  | OpaqueType of ALoc.t * (ALoc.t, ALoc.t) Ast.Statement.OpaqueType.t
   | TypeParam of (ALoc.t, ALoc.t) Ast.Type.TypeParam.t
   | Interface of (ALoc.t, ALoc.t) Ast.Statement.Interface.t
   | Enum of ALoc.t Ast.Statement.EnumDeclaration.body
@@ -414,13 +414,13 @@ class def_finder =
     method! type_alias loc (alias : ('loc, 'loc) Ast.Statement.TypeAlias.t) =
       let open Ast.Statement.TypeAlias in
       let { id = (id_loc, { Ast.Identifier.name; _ }); _ } = alias in
-      this#add_binding id_loc (mk_reason (RType (OrdinaryName name)) id_loc) (TypeAlias alias);
+      this#add_binding id_loc (mk_reason (RType (OrdinaryName name)) id_loc) (TypeAlias (loc, alias));
       super#type_alias loc alias
 
     method! opaque_type loc (otype : ('loc, 'loc) Ast.Statement.OpaqueType.t) =
       let open Ast.Statement.OpaqueType in
       let { id = (id_loc, { Ast.Identifier.name; _ }); _ } = otype in
-      this#add_binding id_loc (mk_reason (ROpaqueType name) id_loc) (OpaqueType otype);
+      this#add_binding id_loc (mk_reason (ROpaqueType name) id_loc) (OpaqueType (loc, otype));
       super#opaque_type loc otype
 
     method! type_param (tparam : ('loc, 'loc) Ast.Type.TypeParam.t) =

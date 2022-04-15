@@ -160,6 +160,18 @@ module Make (Env : Env_sig.S) (Statement : Statement_sig.S with module Env := En
     Flow_js.flow cx (id_t, AssertArithmeticOperandT reason);
     NumT.at exp_loc |> with_trust literal_trust
 
+  let resolve_type_alias cx loc alias =
+    let cache = Context.node_cache cx in
+    let (t, ast) = Statement.type_alias cx loc alias in
+    Node_cache.set_alias cache loc (t, ast);
+    t
+
+  let resolve_opaque_type cx loc opaque =
+    let cache = Context.node_cache cx in
+    let (t, ast) = Statement.opaque_type cx loc opaque in
+    Node_cache.set_opaque cache loc (t, ast);
+    t
+
   let resolve cx id_loc (def, def_reason) =
     let t =
       match def with
@@ -170,6 +182,8 @@ module Make (Env : Env_sig.S) (Statement : Statement_sig.S with module Env := En
         resolve_annotated_function cx def_reason function_
       | OpAssign { exp_loc; op; rhs } -> resolve_op_assign cx ~id_loc ~exp_loc def_reason op rhs
       | Update { exp_loc; op = _ } -> resolve_update cx ~id_loc ~exp_loc def_reason
+      | TypeAlias (loc, alias) -> resolve_type_alias cx loc alias
+      | OpaqueType (loc, opaque) -> resolve_opaque_type cx loc opaque
       | _ -> Tvar.mk cx (mk_reason (RCustom "unhandled def") id_loc)
     in
     Debug_js.Verbose.print_if_verbose_lazy

@@ -1,3 +1,31 @@
+Error -------------------------------------------------------------------------------------------------- aliases.js:3:12
+
+Cannot assign `"hello world"` to `x` because string [1] is incompatible with number [2]. [incompatible-type]
+
+   aliases.js:3:12
+   3| var x: T = "hello world";
+                 ^^^^^^^^^^^^^ [1]
+
+References:
+   aliases.js:3:8
+   3| var x: T = "hello world";
+             ^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- aliases.js:7:12
+
+Cannot assign `"hello world"` to `x` because string [1] is incompatible with number [2]. [incompatible-type]
+
+   aliases.js:7:12
+   7| var x: A = "hello world";
+                 ^^^^^^^^^^^^^ [1]
+
+References:
+   aliases.js:7:8
+   7| var x: A = "hello world";
+             ^ [2]
+
+
 Error -------------------------------------------------------------------------------------------------- bindings.js:4:2
 
 Cannot cast `x` to string because number [1] is incompatible with string [2]. [incompatible-cast]
@@ -365,4 +393,4 @@ References:
 
 
 
-Found 22 errors
+Found 24 errors

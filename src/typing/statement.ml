@@ -925,130 +925,32 @@ struct
       Tast_utils.error_mapper#statement s
     | ( ( loc,
           DeclareTypeAlias
-            {
-              TypeAlias.id = (name_loc, ({ Ast.Identifier.name; comments = _ } as id));
-              tparams;
-              right;
-              comments;
-            }
+            ({ TypeAlias.id = (name_loc, { Ast.Identifier.name; comments = _ }); _ } as alias)
         )
       | ( loc,
           TypeAlias
-            {
-              TypeAlias.id = (name_loc, ({ Ast.Identifier.name; comments = _ } as id));
-              tparams;
-              right;
-              comments;
-            }
+            ({ TypeAlias.id = (name_loc, { Ast.Identifier.name; comments = _ }); _ } as alias)
         ) ) as stmt ->
-      let r = DescFormat.type_reason (OrdinaryName name) name_loc in
-      let (tparams, tparams_map, tparams_ast) = Anno.mk_type_param_declarations cx tparams in
-      let (((_, t), _) as right_ast) = Anno.convert cx tparams_map right in
-      let t =
-        mod_reason_of_t (update_desc_reason (fun desc -> RTypeAlias (name, Some name_loc, desc))) t
-      in
-      let type_ =
-        poly_type_of_tparams
-          (Type.Poly.generate_id ())
-          tparams
-          (DefT (r, bogus_trust (), TypeT (TypeAliasKind, t)))
-      in
-      begin
-        match tparams with
-        | None -> ()
-        | Some (_, tps) ->
-          (* TODO: use tparams_map *)
-          let tparams =
-            Nel.fold_left (fun acc tp -> Subst_name.Map.add tp.name tp acc) Subst_name.Map.empty tps
-          in
-          Flow.check_polarity cx tparams Polarity.Positive t
-      end;
-
+      let (type_, type_alias_ast) = type_alias cx loc alias in
       Env.init_type cx name type_ name_loc;
-      let type_alias_ast =
-        {
-          TypeAlias.id = ((name_loc, type_), id);
-          tparams = tparams_ast;
-          right = right_ast;
-          comments;
-        }
-      in
       (match stmt with
       | (_, DeclareTypeAlias _) -> (loc, DeclareTypeAlias type_alias_ast)
       | (_, TypeAlias _) -> (loc, TypeAlias type_alias_ast)
       | _ -> assert false)
     | ( ( loc,
           DeclareOpaqueType
-            {
-              OpaqueType.id = (name_loc, ({ Ast.Identifier.name; comments = _ } as id));
-              tparams;
-              impltype;
-              supertype;
-              comments;
-            }
+            ({ OpaqueType.id = (name_loc, { Ast.Identifier.name; comments = _ }); _ } as otype)
         )
       | ( loc,
           OpaqueType
-            {
-              OpaqueType.id = (name_loc, ({ Ast.Identifier.name; comments = _ } as id));
-              tparams;
-              impltype;
-              supertype;
-              comments;
-            }
+            ({ OpaqueType.id = (name_loc, { Ast.Identifier.name; comments = _ }); _ } as otype)
         ) ) as stmt ->
-      let r = DescFormat.type_reason (OrdinaryName name) name_loc in
-      let (tparams, tparams_map, tparams_ast) = Anno.mk_type_param_declarations cx tparams in
-      let (underlying_t, impltype_ast) = Anno.convert_opt cx tparams_map impltype in
-      let (super_t, supertype_ast) = Anno.convert_opt cx tparams_map supertype in
-      begin
-        match tparams with
-        | None -> ()
-        | Some (_, tps) ->
-          (* TODO: use tparams_map *)
-          let tparams =
-            Nel.fold_left (fun acc tp -> Subst_name.Map.add tp.name tp acc) Subst_name.Map.empty tps
-          in
-          Base.Option.iter underlying_t ~f:(Flow.check_polarity cx tparams Polarity.Positive);
-          Base.Option.iter super_t ~f:(Flow.check_polarity cx tparams Polarity.Positive)
-      end;
-      let opaque_type_args =
-        Base.List.map
-          ~f:(fun { name; reason; polarity; _ } ->
-            let t = Subst_name.Map.find name tparams_map in
-            (name, reason, t, polarity))
-          (TypeParams.to_list tparams)
-      in
-      let opaque_id = Context.make_aloc_id cx name_loc in
-      let opaquetype = { underlying_t; super_t; opaque_id; opaque_type_args; opaque_name = name } in
-      let t = OpaqueT (mk_reason (ROpaqueType name) name_loc, opaquetype) in
-      let type_ =
-        poly_type_of_tparams
-          (Type.Poly.generate_id ())
-          tparams
-          (DefT (r, bogus_trust (), TypeT (OpaqueKind, t)))
-      in
-      Flow.(
-        let () =
-          match (underlying_t, super_t) with
-          | (Some l, Some u) -> flow_t cx (l, u)
-          | _ -> ()
-        in
-        Env.init_type cx name type_ name_loc;
-        let opaque_type_ast =
-          {
-            OpaqueType.id = ((name_loc, type_), id);
-            tparams = tparams_ast;
-            impltype = impltype_ast;
-            supertype = supertype_ast;
-            comments;
-          }
-        in
-        (match stmt with
-        | (_, DeclareOpaqueType _) -> (loc, DeclareOpaqueType opaque_type_ast)
-        | (_, OpaqueType _) -> (loc, OpaqueType opaque_type_ast)
-        | _ -> assert false)
-      )
+      let (type_, opaque_type_ast) = opaque_type cx loc otype in
+      Env.init_type cx name type_ name_loc;
+      (match stmt with
+      | (_, DeclareOpaqueType _) -> (loc, DeclareOpaqueType opaque_type_ast)
+      | (_, OpaqueType _) -> (loc, OpaqueType opaque_type_ast)
+      | _ -> assert false)
     (*******************************************************)
     | (switch_loc, Switch { Switch.discriminant; cases; comments }) ->
       (* typecheck discriminant *)
@@ -2563,6 +2465,124 @@ struct
       cx
       (right_t, AssertIterableT { use_op = unknown_use; reason = iterable_reason; async; targs });
     elem_t
+
+  and type_alias
+      cx
+      loc
+      {
+        Ast.Statement.TypeAlias.id = (name_loc, ({ Ast.Identifier.name; comments = _ } as id));
+        tparams;
+        right;
+        comments;
+      } =
+    let cache = Context.node_cache cx in
+    match Node_cache.get_alias cache loc with
+    | Some info ->
+      Debug_js.Verbose.print_if_verbose_lazy
+        cx
+        (lazy [spf "Alias cache hit at %s" (ALoc.debug_to_string loc)]);
+      info
+    | None ->
+      let r = DescFormat.type_reason (OrdinaryName name) name_loc in
+      let (tparams, tparams_map, tparams_ast) = Anno.mk_type_param_declarations cx tparams in
+      let (((_, t), _) as right_ast) = Anno.convert cx tparams_map right in
+      let t =
+        mod_reason_of_t (update_desc_reason (fun desc -> RTypeAlias (name, Some name_loc, desc))) t
+      in
+      let type_ =
+        poly_type_of_tparams
+          (Type.Poly.generate_id ())
+          tparams
+          (DefT (r, bogus_trust (), TypeT (TypeAliasKind, t)))
+      in
+      begin
+        match tparams with
+        | None -> ()
+        | Some (_, tps) ->
+          (* TODO: use tparams_map *)
+          let tparams =
+            Nel.fold_left (fun acc tp -> Subst_name.Map.add tp.name tp acc) Subst_name.Map.empty tps
+          in
+          Flow.check_polarity cx tparams Polarity.Positive t
+      end;
+
+      let type_alias_ast =
+        {
+          Ast.Statement.TypeAlias.id = ((name_loc, type_), id);
+          tparams = tparams_ast;
+          right = right_ast;
+          comments;
+        }
+      in
+      (type_, type_alias_ast)
+
+  and opaque_type
+      cx
+      loc
+      {
+        Ast.Statement.OpaqueType.id = (name_loc, ({ Ast.Identifier.name; comments = _ } as id));
+        tparams;
+        impltype;
+        supertype;
+        comments;
+      } =
+    let cache = Context.node_cache cx in
+    match Node_cache.get_opaque cache loc with
+    | Some info ->
+      Debug_js.Verbose.print_if_verbose_lazy
+        cx
+        (lazy [spf "Opaque type cache hit at %s" (ALoc.debug_to_string loc)]);
+      info
+    | None ->
+      let r = DescFormat.type_reason (OrdinaryName name) name_loc in
+      let (tparams, tparams_map, tparams_ast) = Anno.mk_type_param_declarations cx tparams in
+      let (underlying_t, impltype_ast) = Anno.convert_opt cx tparams_map impltype in
+      let (super_t, supertype_ast) = Anno.convert_opt cx tparams_map supertype in
+      begin
+        match tparams with
+        | None -> ()
+        | Some (_, tps) ->
+          (* TODO: use tparams_map *)
+          let tparams =
+            Nel.fold_left (fun acc tp -> Subst_name.Map.add tp.name tp acc) Subst_name.Map.empty tps
+          in
+          Base.Option.iter underlying_t ~f:(Flow.check_polarity cx tparams Polarity.Positive);
+          Base.Option.iter super_t ~f:(Flow.check_polarity cx tparams Polarity.Positive)
+      end;
+      let opaque_type_args =
+        Base.List.map
+          ~f:(fun { name; reason; polarity; _ } ->
+            let t = Subst_name.Map.find name tparams_map in
+            (name, reason, t, polarity))
+          (TypeParams.to_list tparams)
+      in
+      let opaque_id = Context.make_aloc_id cx name_loc in
+      let opaquetype = { underlying_t; super_t; opaque_id; opaque_type_args; opaque_name = name } in
+      let t = OpaqueT (mk_reason (ROpaqueType name) name_loc, opaquetype) in
+      let type_ =
+        poly_type_of_tparams
+          (Type.Poly.generate_id ())
+          tparams
+          (DefT (r, bogus_trust (), TypeT (OpaqueKind, t)))
+      in
+      let () =
+        Flow.(
+          match (underlying_t, super_t) with
+          | (Some l, Some u) -> flow_t cx (l, u)
+          | _ -> ()
+        )
+      in
+
+      let opaque_type_ast =
+        {
+          Ast.Statement.OpaqueType.id = ((name_loc, type_), id);
+          tparams = tparams_ast;
+          impltype = impltype_ast;
+          supertype = supertype_ast;
+          comments;
+        }
+      in
+      (type_, opaque_type_ast)
 
   and export_specifiers cx loc source export_kind =
     let open Ast.Statement in
