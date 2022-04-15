@@ -32,6 +32,21 @@ References:
                   ^^^^^^ [2]
 
 
+Error ----------------------------------------------------------------------------------------------- typecheck.js:32:15
+
+Cannot call `expectNum` with empty string bound to `a` because string [1] is incompatible with number [2].
+[incompatible-call]
+
+   typecheck.js:32:15
+   32|     expectNum(""); // error
+                     ^^ [1]
+
+References:
+   typecheck.js:35:25
+   35|   function expectNum(a: number) { }
+                               ^^^^^^ [2]
+
+
 Error ---------------------------------------------------------------------------------------------- unreachable.js:5:19
 
 Cannot call `baz` because uninitialized variable [1] is not a function. [not-a-function]
@@ -74,4 +89,4 @@ Unreachable code. [unreachable-code]
 
 
 
-Found 6 errors
+Found 7 errors

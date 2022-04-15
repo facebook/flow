@@ -1315,6 +1315,48 @@ Unreachable code. [unreachable-code]
                                                       ^^^^^^
 
 
+Error ------------------------------------------------------------------------------------------- invalidation.js:107:51
+
+Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
+
+   invalidation.js:107:51
+   107|   if (a.b) { do { continue; } while (f());    a.b.c; } // error
+                                                          ^
+
+References:
+   invalidation.js:38:15
+    38| type A = {b?: {c: boolean}};
+                      ^^^^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------- invalidation.js:108:51
+
+Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
+
+   invalidation.js:108:51
+   108|   if (a.b) { do { break;    } while (f());    a.b.c; } // ideally ok, error acceptable
+                                                          ^
+
+References:
+   invalidation.js:38:15
+    38| type A = {b?: {c: boolean}};
+                      ^^^^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------- invalidation.js:109:51
+
+Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
+
+   invalidation.js:109:51
+   109|   if (a.b) { do { return;   } while (f());    a.b.c; } // error[unreachable-code]
+                                                          ^
+
+References:
+   invalidation.js:38:15
+    38| type A = {b?: {c: boolean}};
+                      ^^^^^^^^^^^^ [1]
+
+
 Error ------------------------------------------------------------------------------------------- invalidation.js:109:47
 
 Unreachable code. [unreachable-code]
@@ -1631,6 +1673,34 @@ Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatib
 
    invalidation.js:163:56
    163|   if (a.b) { l: while (f()) { break l;    }        a.b.c; } // error
+                                                               ^
+
+References:
+   invalidation.js:38:15
+    38| type A = {b?: {c: boolean}};
+                      ^^^^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------- invalidation.js:167:56
+
+Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
+
+   invalidation.js:167:56
+   167|   if (a.b) { l: do { continue l; } while (f());    a.b.c; } // error
+                                                               ^
+
+References:
+   invalidation.js:38:15
+    38| type A = {b?: {c: boolean}};
+                      ^^^^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------- invalidation.js:168:56
+
+Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
+
+   invalidation.js:168:56
+   168|   if (a.b) { l: do { break l;    } while (f());    a.b.c; } // ideally ok, error acceptable
                                                                ^
 
 References:
@@ -4911,7 +4981,7 @@ Cannot perform arithmetic operation because undefined [1] is not a number. [unsa
 
 
 
-Found 334 errors
+Found 339 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

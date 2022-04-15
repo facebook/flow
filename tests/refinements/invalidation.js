@@ -104,7 +104,7 @@ type A = {b?: {c: boolean}};
   if (a.b) { do { f(); continue; } while (p); a.b.c; } // TODO error
   if (a.b) { do { f(); break;    } while (p); a.b.c; } // TODO error
   if (a.b) { do { f(); return;   } while (p); a.b.c; } // error[unreachable-code]
-  if (a.b) { do { continue; } while (f());    a.b.c; } // TODO error
+  if (a.b) { do { continue; } while (f());    a.b.c; } // error
   if (a.b) { do { break;    } while (f());    a.b.c; } // ideally ok, error acceptable
   if (a.b) { do { return;   } while (f());    a.b.c; } // error[unreachable-code]
   // … for…
@@ -164,7 +164,7 @@ type A = {b?: {c: boolean}};
   // … do-while…
   if (a.b) { l: do { f(); continue l; } while (p); a.b.c; } // TODO error
   if (a.b) { l: do { f(); break l;    } while (p); a.b.c; } // TODO error
-  if (a.b) { l: do { continue l; } while (f());    a.b.c; } // TODO error
+  if (a.b) { l: do { continue l; } while (f());    a.b.c; } // error
   if (a.b) { l: do { break l;    } while (f());    a.b.c; } // ideally ok, error acceptable
   // … for…
   if (a.b) { l: for (; p;) { f(); continue l; }    a.b.c; } // error
