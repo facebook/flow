@@ -1,3 +1,7 @@
+### 0.176.2
+
+Revert changes that are causing bugs in non-lazy mode.
+
 ### 0.176.1
 
 Fix crash when comparing abstract and concrete locations when simplifying normalized types.
