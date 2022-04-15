@@ -1083,7 +1083,7 @@ module Env : Env_sig.S = struct
   (* query var's specific type *)
   let query_var ?(lookup_mode = ForValue) = read_entry ~lookup_mode ~specific:true
 
-  let query_var_non_specific ?(lookup_mode = ForValue) = read_entry ~lookup_mode ~specific:false
+  let query_var_non_specific = read_entry ~lookup_mode:ForValue ?desc:None ~specific:false
 
   let get_internal_var cx name loc = query_var cx (internal_name name) loc
 
@@ -1779,37 +1779,6 @@ module Env : Env_sig.S = struct
         Context.add_literal_subtypes cx (t, u)
       | _ -> ()
     in
-    let rec check_literal_subtypes ~general_type pred =
-      (* When refining a type against a literal, we want to be sure that that literal can actually
-         inhabit that type *)
-      match pred with
-      | SingletonBoolP (loc, b) ->
-        let reason = loc |> mk_reason (RBooleanLit b) in
-        let l = DefT (reason, bogus_trust (), BoolT (Some b)) in
-        let u = UseT (Op (Internal Refinement), general_type) in
-        Context.add_literal_subtypes cx (l, u)
-      | SingletonStrP (loc, b, str) ->
-        let reason = loc |> mk_reason (RStringLit (OrdinaryName str)) in
-        let l = DefT (reason, bogus_trust (), StrT (Literal (Some b, OrdinaryName str))) in
-        let u = UseT (Op (Internal Refinement), general_type) in
-        Context.add_literal_subtypes cx (l, u)
-      | SingletonNumP (loc, b, ((_, str) as num)) ->
-        let reason = loc |> mk_reason (RNumberLit str) in
-        let l = DefT (reason, bogus_trust (), NumT (Literal (Some b, num))) in
-        let u = UseT (Op (Internal Refinement), general_type) in
-        Context.add_literal_subtypes cx (l, u)
-      | LeftP (SentinelProp name, t) ->
-        let reason = TypeUtil.reason_of_t t in
-        (* Store any potential sentinel type. Later on, when the check is fired (in
-           merge_js.ml), we only focus on primitive literal types. *)
-        Context.add_matching_props cx (reason, name, t, general_type)
-      | NotP p -> check_literal_subtypes ~general_type p
-      | OrP (p1, p2)
-      | AndP (p1, p2) ->
-        check_literal_subtypes ~general_type p1;
-        check_literal_subtypes ~general_type p2
-      | _ -> ()
-    in
     let refine_type orig_type pred refined_type =
       Flow.flow cx (orig_type, PredicateT (pred, refined_type))
     in
@@ -1826,7 +1795,6 @@ module Env : Env_sig.S = struct
           | (_, Value v) ->
             let orig_type = query_var cx name loc in
             let general_type = query_var_non_specific cx name loc in
-            check_literal_subtypes ~general_type pred;
             let refi_type = mk_refi_type orig_type pred refi_reason in
             check_instanceof_subtypes ~general_type pred refi_type;
             let refine =

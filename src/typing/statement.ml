@@ -7080,11 +7080,17 @@ struct
           | (false, _)
           | (_, None) ->
             None
-          | (true, Some name) ->
+          | (true, Some ((name, projections) as refinement_key)) ->
             Env.record_expression_type_if_needed cx (aloc_of_reason (reason_of_t val_t)) val_t;
             Env.record_expression_type_if_needed cx (aloc_of_reason (reason_of_t obj_t)) obj_t;
             let pred = LeftP (SentinelProp prop_name, val_t) in
-            Some (name, obj_t, pred, sense)
+            ( if projections = [] then
+              let general_type = Env.query_var_non_specific cx name (fst expr) in
+              (* Store any potential sentinel type. Later on, when the check is fired (in
+                 merge_js.ml), we only focus on primitive literal types. *)
+              Context.add_matching_props cx (reason_of_t val_t, prop_name, val_t, general_type)
+            );
+            Some (refinement_key, obj_t, pred, sense)
         in
         (* Note here we're calling optional_chain on the whole expression, not on _object.
            We could "look down" one level and call it on _object and wouldn't need the
@@ -7226,9 +7232,31 @@ struct
       let ast = reconstruct_ast expr_ast in
       flow_eqt ~strict loc (t, val_t);
       let refinement =
-        if strict then
-          Refinement.key ~allow_optional:true expr
-        else
+        if strict then (
+          let key = Refinement.key ~allow_optional:true expr in
+          (match (Env.new_env, key) with
+          | (false, Some ((OrdinaryName _ as name), [])) ->
+            let general_type = Env.query_var_non_specific cx name (fst expr) in
+            (match pred with
+            | SingletonBoolP (loc, b) ->
+              let reason = loc |> mk_reason (RBooleanLit b) in
+              let l = DefT (reason, bogus_trust (), BoolT (Some b)) in
+              let u = UseT (Op (Internal Refinement), general_type) in
+              Context.add_literal_subtypes cx (l, u)
+            | SingletonStrP (loc, b, str) ->
+              let reason = loc |> mk_reason (RStringLit (OrdinaryName str)) in
+              let l = DefT (reason, bogus_trust (), StrT (Literal (Some b, OrdinaryName str))) in
+              let u = UseT (Op (Internal Refinement), general_type) in
+              Context.add_literal_subtypes cx (l, u)
+            | SingletonNumP (loc, b, ((_, str) as num)) ->
+              let reason = loc |> mk_reason (RNumberLit str) in
+              let l = DefT (reason, bogus_trust (), NumT (Literal (Some b, num))) in
+              let u = UseT (Op (Internal Refinement), general_type) in
+              Context.add_literal_subtypes cx (l, u)
+            | _ -> ())
+          | _ -> ());
+          key
+        ) else
           None
       in
       let out =

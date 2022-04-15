@@ -1,0 +1,194 @@
+Error ------------------------------------------------------------------------------------------------------ test.js:9:8
+
+string literal `bar` [1] is incompatible with string literal `foo` [2]. [incompatible-type]
+
+   test.js:9:8
+   9|   case 'bar': // Error
+             ^^^^^ [1]
+
+References:
+   test.js:4:16
+   4| declare var x: Literal;
+                     ^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:10:8
+
+number literal `1` [1] is incompatible with string literal `foo` [2]. [incompatible-type]
+
+   test.js:10:8
+   10|   case 1: // Error
+              ^ [1]
+
+References:
+   test.js:4:16
+    4| declare var x: Literal;
+                      ^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:16:8
+
+Cannot compare string [1] with property `p` of object type [2] because string [1] is incompatible with string literal
+`foo` [3]. [incompatible-type]
+
+   test.js:16:8
+   16|   case 'bar': // Error
+              ^^^^^ [1]
+
+References:
+   test.js:5:16
+    5| declare var o: {p: Literal}
+                      ^^^^^^^^^^^^ [2]
+   test.js:5:20
+    5| declare var o: {p: Literal}
+                          ^^^^^^^ [3]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:17:8
+
+Cannot compare number [1] with property `p` of object type [2] because number [1] is incompatible with string literal
+`foo` [3]. [incompatible-type]
+
+   test.js:17:8
+   17|   case 1: // Error
+              ^ [1]
+
+References:
+   test.js:5:16
+    5| declare var o: {p: Literal}
+                      ^^^^^^^^^^^^ [2]
+   test.js:5:20
+    5| declare var o: {p: Literal}
+                          ^^^^^^^ [3]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:22:11
+
+string literal `bar` [1] is incompatible with string literal `foo` [2]. [incompatible-type]
+
+   test.js:22:11
+   22| if (x === 'bar') {} // Error
+                 ^^^^^ [1]
+
+References:
+   test.js:4:16
+    4| declare var x: Literal;
+                      ^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:23:11
+
+number literal `1` [1] is incompatible with string literal `foo` [2]. [incompatible-type]
+
+   test.js:23:11
+   23| if (x === 1) {} // Error
+                 ^ [1]
+
+References:
+   test.js:4:16
+    4| declare var x: Literal;
+                      ^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:26:13
+
+Cannot compare string [1] with property `p` of object type [2] because string [1] is incompatible with string literal
+`foo` [3]. [incompatible-type]
+
+   test.js:26:13
+   26| if (o.p === 'bar') {} // Error
+                   ^^^^^ [1]
+
+References:
+   test.js:5:16
+    5| declare var o: {p: Literal}
+                      ^^^^^^^^^^^^ [2]
+   test.js:5:20
+    5| declare var o: {p: Literal}
+                          ^^^^^^^ [3]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:27:13
+
+Cannot compare number [1] with property `p` of object type [2] because number [1] is incompatible with string literal
+`foo` [3]. [incompatible-type]
+
+   test.js:27:13
+   27| if (o.p === 1) {} // Error
+                   ^ [1]
+
+References:
+   test.js:5:16
+    5| declare var o: {p: Literal}
+                      ^^^^^^^^^^^^ [2]
+   test.js:5:20
+    5| declare var o: {p: Literal}
+                          ^^^^^^^ [3]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:30:29
+
+string literal `bar` [1] is incompatible with string literal `foo` [2]. [incompatible-type]
+
+   test.js:30:29
+   30| if (true && (false || x === 'bar')) {} // Error
+                                   ^^^^^ [1]
+
+References:
+   test.js:4:16
+    4| declare var x: Literal;
+                      ^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:31:31
+
+Cannot compare string [1] with property `p` of object type [2] because string [1] is incompatible with string literal
+`foo` [3]. [incompatible-type]
+
+   test.js:31:31
+   31| if (true && (false || o.p === 'bar')) {} // Error
+                                     ^^^^^ [1]
+
+References:
+   test.js:5:16
+    5| declare var o: {p: Literal}
+                      ^^^^^^^^^^^^ [2]
+   test.js:5:20
+    5| declare var o: {p: Literal}
+                          ^^^^^^^ [3]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:32:29
+
+number literal `1` [1] is incompatible with string literal `foo` [2]. [incompatible-type]
+
+   test.js:32:29
+   32| if (true && (false || x === 1)) {} // Error
+                                   ^ [1]
+
+References:
+   test.js:4:16
+    4| declare var x: Literal;
+                      ^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:33:31
+
+Cannot compare number [1] with property `p` of object type [2] because number [1] is incompatible with string literal
+`foo` [3]. [incompatible-type]
+
+   test.js:33:31
+   33| if (true && (false || o.p === 1)) {} // Error
+                                     ^ [1]
+
+References:
+   test.js:5:16
+    5| declare var o: {p: Literal}
+                      ^^^^^^^^^^^^ [2]
+   test.js:5:20
+    5| declare var o: {p: Literal}
+                          ^^^^^^^ [3]
+
+
+
+Found 12 errors
