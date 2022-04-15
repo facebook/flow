@@ -150,6 +150,7 @@ module Make (Extra : BASE_STATS) = struct
     ~lint_severities
     ~max_type_size
     ~preserve_literals
+    ~merge_arrays
     ?(exact_by_default = Options.exact_by_default cctx.Codemod_context.Typed.options)
     ?(suppress_types = Options.suppress_types cctx.Codemod_context.Typed.options)
     ?(imports_react =
@@ -185,6 +186,7 @@ module Make (Extra : BASE_STATS) = struct
               ~imports_react
               ~preserve_literals
               ~generalize_maybe
+              ~merge_arrays
               acc
               loc
               ty
@@ -221,6 +223,7 @@ module Make (Extra : BASE_STATS) = struct
               ~imports_react
               ~preserve_literals
               ~generalize_maybe
+              ~merge_arrays
               acc
               loc
               ty

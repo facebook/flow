@@ -294,11 +294,16 @@ module Annotate_declarations_command = struct
                "--generalize-maybe"
                no_arg
                ~doc:"Generalize annotations containing null or void to maybe types"
+          |> flag
+               "--merge-array-elements"
+               no_arg
+               ~doc:"combine arrays appearing in toplevel unions to a single array"
           |> common_annotate_flags
         );
     }
 
-  let main codemod_flags preserve_literals generalize_maybe max_type_size default_any () =
+  let main
+      codemod_flags preserve_literals generalize_maybe merge_arrays max_type_size default_any () =
     let module Runner = Codemod_runner.MakeSimpleTypedRunner (struct
       module Acc = Annotate_declarations.Acc
 
@@ -326,6 +331,7 @@ module Annotate_declarations_command = struct
             ~generalize_maybe
             ~max_type_size
             ~default_any
+            ~merge_arrays
         in
         Codemod_utils.make_visitor (Codemod_utils.Mapper mapper)
     end) in

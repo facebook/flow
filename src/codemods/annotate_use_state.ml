@@ -21,6 +21,7 @@ let mapper ~preserve_literals ~max_type_size ~default_any (cctx : Codemod_contex
         ~lint_severities
         ~max_type_size
         ~preserve_literals
+        ~merge_arrays:false
         () as super
 
     method private post_run () = ()

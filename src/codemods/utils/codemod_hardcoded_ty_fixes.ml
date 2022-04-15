@@ -327,10 +327,42 @@ module Make (Extra : BASE_STATS) = struct
         | _ -> super#on_t env t
     end
 
+  (* Converts types like 'Array<T> | Array<S> | R' to '$ReadOnlyArray<T | S> | R'
+   * In certain kinds of codemods this has shown to cause fewer [ambiguous-speculation]
+   * errros. *)
+  let array_simplification t =
+    let open Ty in
+    let arr_elts ts =
+      List.fold_left
+        (fun (arr_acc, other_acc) t ->
+          match t with
+          | Arr { arr_elt_t; _ } -> (arr_elt_t :: arr_acc, other_acc)
+          | _ -> (arr_acc, t :: other_acc))
+        ([], [])
+        ts
+    in
+    let members = bk_union t |> Nel.to_list in
+    let (arr_members, other_members) = arr_elts members in
+    match arr_members with
+    | []
+    | [_] ->
+      t
+    | t :: ts ->
+      let arr =
+        Arr
+          {
+            arr_elt_t = mk_union ~from_bounds:true (t, ts);
+            arr_literal = None;
+            arr_readonly = true;
+          }
+      in
+      mk_union ~from_bounds:true (arr, other_members)
+
   let run
       ~cctx
       ~preserve_literals
       ~generalize_maybe
+      ~merge_arrays
       ?(lint_severities = Codemod_context.Typed.lint_severities cctx)
       ?(suppress_types = Options.suppress_types cctx.Codemod_context.Typed.options)
       ?(imports_react =
@@ -349,6 +381,12 @@ module Make (Extra : BASE_STATS) = struct
         acc
     in
     let t' = mapper#on_t loc t in
+    let t' =
+      if merge_arrays then
+        array_simplification t'
+      else
+        t'
+    in
     let t'' =
       if t == t' then
         t

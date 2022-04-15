@@ -180,6 +180,7 @@ let mapper
         ~lint_severities
         ~max_type_size
         ~preserve_literals
+        ~merge_arrays:false
         () as super
 
     val mutable loc_error_map = LMap.empty
@@ -195,7 +196,14 @@ let mapper
 
     method private fix_and_validate loc ty =
       let (acc', ty) =
-        Hardcoded_Ty_Fixes.run ~cctx ~preserve_literals ~generalize_maybe:false acc loc ty
+        Hardcoded_Ty_Fixes.run
+          ~cctx
+          ~preserve_literals
+          ~generalize_maybe:false
+          ~merge_arrays:false
+          acc
+          loc
+          ty
       in
       this#set_acc acc';
       Codemod_annotator.validate_ty cctx ~max_type_size ty

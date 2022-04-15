@@ -155,8 +155,12 @@ module Simplify = struct
 end
 
 let mapper
-    ~preserve_literals ~generalize_maybe ~max_type_size ~default_any (cctx : Codemod_context.Typed.t)
-    =
+    ~preserve_literals
+    ~generalize_maybe
+    ~max_type_size
+    ~default_any
+    ~merge_arrays
+    (cctx : Codemod_context.Typed.t) =
   let lint_severities = Codemod_context.Typed.lint_severities cctx in
   let flowfixme_ast = Codemod_context.Typed.flowfixme_ast ~lint_severities cctx in
   let cx = Codemod_context.Typed.context cctx in
@@ -194,6 +198,7 @@ let mapper
         ~lint_severities
         ~max_type_size
         ~preserve_literals
+        ~merge_arrays
         () as super
 
     val mutable renamable = ALocSet.empty

@@ -196,6 +196,7 @@ let mapper ~default_any ~preserve_literals ~max_type_size (cctx : Codemod_contex
         ~lint_severities
         ~max_type_size
         ~preserve_literals
+        ~merge_arrays:false
         () as super
 
     val mutable remote_symbols_map = SymbolMap.empty
