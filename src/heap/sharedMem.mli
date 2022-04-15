@@ -50,8 +50,6 @@ val init : config -> num_workers:int -> (handle, unit) result
 
 val commit_transaction : unit -> unit
 
-val is_init_transaction : unit -> bool
-
 module type Key = sig
   type t
 
