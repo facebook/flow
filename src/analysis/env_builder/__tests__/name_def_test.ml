@@ -63,9 +63,9 @@ let string_of_import = function
   | Default -> "default"
 
 let string_of_source = function
-  | Binding (_, b) -> string_of_binding b
-  | Update (loc, _) -> spf "crement %s" (ALoc.debug_to_string loc)
-  | OpAssign (loc, _, _) -> spf "opassign %s" (ALoc.debug_to_string loc)
+  | Binding b -> string_of_binding b
+  | Update _ -> "[in/de]crement"
+  | OpAssign _ -> "opassign"
   | Function { function_ = { Ast.Function.id; _ }; _ } ->
     spf
       "fun %s"

@@ -21,7 +21,7 @@ module Tarjan =
     (ALocSet)
 
 module FindDependencies : sig
-  val depends : Env_api.env_info -> Name_def.def -> ALoc.t Nel.t ALocMap.t
+  val depends : Env_api.env_info -> ALoc.t -> Name_def.def -> ALoc.t Nel.t ALocMap.t
 
   val recursively_resolvable : Name_def.def -> bool
 end = struct
@@ -240,7 +240,7 @@ end = struct
 
   (* For all the possible defs, explore the def's structure with the class above
      to find what variables have to be resolved before this def itself can be resolved *)
-  let depends ({ Env_api.providers; _ } as env) =
+  let depends ({ Env_api.providers; _ } as env) id_loc =
     let visitor = new use_visitor env ALocMap.empty in
     let depends_of_node mk_visit state =
       visitor#set_acc state;
@@ -385,7 +385,7 @@ end = struct
       else
         ALocMap.empty
     in
-    let depends_of_binding id_loc bind =
+    let depends_of_binding bind =
       let state = depends_of_lhs id_loc in
       let rec rhs_loop bind state =
         match bind with
@@ -396,22 +396,22 @@ end = struct
       in
       rhs_loop bind state
     in
-    let depends_of_update id_loc =
+    let depends_of_update () =
       let state = depends_of_lhs id_loc in
       let visitor = new use_visitor env state in
       let writes = visitor#find_writes ~for_type:false id_loc in
       Base.List.iter ~f:(visitor#add ~why:id_loc) writes;
       visitor#acc
     in
-    let depends_of_op_assign id_loc rhs =
+    let depends_of_op_assign rhs =
       (* reusing depends_of_update, since the LHS of an op-assign is handled identically to an update *)
-      let state = depends_of_update id_loc in
+      let state = depends_of_update () in
       depends_of_expression rhs state
     in
     function
-    | Binding (id_loc, binding) -> depends_of_binding id_loc binding
-    | Update (id_loc, _) -> depends_of_update id_loc
-    | OpAssign (id_loc, _, rhs) -> depends_of_op_assign id_loc rhs
+    | Binding binding -> depends_of_binding binding
+    | Update _ -> depends_of_update ()
+    | OpAssign { rhs; _ } -> depends_of_op_assign rhs
     | Function { fully_annotated; function_ } -> depends_of_fun fully_annotated function_
     | Class { fully_annotated; class_ } -> depends_of_class fully_annotated class_
     | DeclaredClass decl -> depends_of_declared_class decl
@@ -434,7 +434,7 @@ end = struct
       | Select (_, b) -> bind_loop b
     in
     function
-    | Binding (_, bind) -> bind_loop bind
+    | Binding bind -> bind_loop bind
     | TypeAlias _
     | OpaqueType _
     | TypeParam _
@@ -475,7 +475,7 @@ type result =
   | IllegalSCC of (element * ALoc.t virtual_reason * ALoc.t Nel.t) Nel.t
 
 let dependencies env loc (def, _) acc =
-  let depends = FindDependencies.depends env def in
+  let depends = FindDependencies.depends env loc def in
   ALocMap.add loc depends acc
 
 let build_graph env map = ALocMap.fold (dependencies env) map ALocMap.empty

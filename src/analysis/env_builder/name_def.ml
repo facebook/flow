@@ -48,9 +48,16 @@ type import =
   | Default
 
 type def =
-  | Binding of ALoc.t * binding
-  | OpAssign of ALoc.t * Ast.Expression.Assignment.operator * (ALoc.t, ALoc.t) Ast.Expression.t
-  | Update of ALoc.t * Ast.Expression.Update.operator
+  | Binding of binding
+  | OpAssign of {
+      exp_loc: ALoc.t;
+      op: Ast.Expression.Assignment.operator;
+      rhs: (ALoc.t, ALoc.t) Ast.Expression.t;
+    }
+  | Update of {
+      exp_loc: ALoc.t;
+      op: Ast.Expression.Update.operator;
+    }
   | Function of {
       fully_annotated: bool;
       function_: (ALoc.t, ALoc.t) Ast.Function.t;
@@ -115,7 +122,7 @@ module Destructure = struct
     | Property.Literal (_, _) -> (acc, xs, false)
 
   let identifier ~f acc (name_loc, { Ast.Identifier.name; _ }) =
-    f name_loc (mk_reason (RIdentifier (OrdinaryName name)) name_loc) (Binding (name_loc, acc))
+    f name_loc (mk_reason (RIdentifier (OrdinaryName name)) name_loc) (Binding acc)
 
   let rec pattern ~f acc (_, p) =
     match p with
@@ -234,7 +241,7 @@ class def_finder =
       this#add_binding
         id_loc
         (mk_reason (RIdentifier (OrdinaryName name)) id_loc)
-        (Binding (id_loc, Root (Annotation annot)));
+        (Binding (Root (Annotation annot)));
       super#declare_variable loc decl
 
     method! function_param (param : ('loc, 'loc) Ast.Function.Param.t) =
@@ -311,7 +318,7 @@ class def_finder =
         this#add_binding
           id_loc
           (func_reason ~async:false ~generator:false loc)
-          (Binding (id_loc, Root (Annotation annot)));
+          (Binding (Root (Annotation annot)));
         super#declare_function loc decl
 
     method! declare_class loc (decl : ('loc, 'loc) Ast.Statement.DeclareClass.t) =
@@ -336,7 +343,7 @@ class def_finder =
           this#add_binding
             id_loc
             (mk_reason (RIdentifier (OrdinaryName name)) id_loc)
-            (OpAssign (id_loc, operator, right))
+            (OpAssign { exp_loc = loc; op = operator; rhs = right })
         | _ -> ()
       in
       super#assignment loc expr
@@ -350,7 +357,7 @@ class def_finder =
           this#add_binding
             id_loc
             (mk_reason (RIdentifier (OrdinaryName name)) id_loc)
-            (Update (id_loc, operator))
+            (Update { exp_loc = loc; op = operator })
         | _ -> ()
       end;
       super#update_expression loc expr

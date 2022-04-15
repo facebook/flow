@@ -14,6 +14,8 @@ module type S = sig
   include Env_sig.S
 
   val resolve_env_entry : Context.t -> Type.t -> ALoc.t -> unit
+
+  val read_entry : for_type:bool -> Context.t -> ALoc.t -> reason -> Type.t
 end
 
 module New_env = struct

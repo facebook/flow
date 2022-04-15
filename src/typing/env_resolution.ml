@@ -19,26 +19,27 @@ end
 module Make (Env : Env_sig.S) (Statement : Statement_sig.S with module Env := Env) : S = struct
   module Type_annotation = Statement.Anno
 
-  let rec resolve_binding cx loc b =
+  let expression cx ~hint ?cond exp =
     let cache = Context.node_cache cx in
-    let expression ~hint ?cond exp =
-      let (((_, t), _) as exp) = Statement.expression ~hint ?cond cx exp in
-      Node_cache.set_expression cache exp;
-      t
-    in
+    let (((_, t), _) as exp) = Statement.expression ~hint ?cond cx exp in
+    Node_cache.set_expression cache exp;
+    t
+
+  let rec resolve_binding cx loc b =
     match b with
     | Root (Annotation anno) ->
+      let cache = Context.node_cache cx in
       let (t, anno) = Type_annotation.mk_type_available_annotation cx Subst_name.Map.empty anno in
       Node_cache.set_annotation cache anno;
       t
     | Root (Value exp) ->
       (* TODO: look up the annotation for the variable at loc and pass in *)
-      expression ~hint:None exp
+      expression cx ~hint:None exp
     | Root (Contextual _) -> Tvar.mk cx (mk_reason (RCustom "contextual variable") loc)
     | Root Catch -> AnyT.annot (mk_reason (RCustom "catch parameter") loc)
     | Root (For (kind, exp)) ->
       let reason = mk_reason (RCustom "for-in") loc (*TODO: loc should be loc of loop *) in
-      let right_t = expression ~hint:None ~cond:OtherTest exp in
+      let right_t = expression cx ~hint:None ~cond:OtherTest exp in
       begin
         match kind with
         | In ->
@@ -65,7 +66,7 @@ module Make (Env : Env_sig.S) (Statement : Statement_sig.S with module Env := En
           (* TODO: eveyrthing after a computed prop should be optional *)
           Type.ObjRest used_props
         | Name_def.Computed exp ->
-          let t = expression ~hint:None exp in
+          let t = expression cx ~hint:None exp in
           Type.Elem t
         | Name_def.Default _exp ->
           (* TODO: change the way default works to see exp as a source *)
@@ -112,14 +113,63 @@ module Make (Env : Env_sig.S) (Statement : Statement_sig.S with module Env := En
     in
     Statement.Func_stmt_sig.functiontype cx this_t func_sig
 
+  let resolve_op_assign cx ~id_loc ~exp_loc id_reason op rhs =
+    let open Ast.Expression in
+    match op with
+    | Assignment.PlusAssign ->
+      (* lhs += rhs *)
+      let reason = mk_reason (RCustom "+=") exp_loc in
+      let lhs_t =
+        New_env.New_env.read_entry_exn ~lookup_mode:Env_sig.LookupMode.ForValue cx id_loc id_reason
+      in
+      let rhs_t = expression cx ~hint:None rhs in
+      Statement.plus_assign
+        cx
+        ~reason
+        ~lhs_reason:id_reason
+        ~rhs_reason:(mk_expression_reason rhs)
+        lhs_t
+        rhs_t
+    | Assignment.MinusAssign
+    | Assignment.MultAssign
+    | Assignment.ExpAssign
+    | Assignment.DivAssign
+    | Assignment.ModAssign
+    | Assignment.LShiftAssign
+    | Assignment.RShiftAssign
+    | Assignment.RShift3Assign
+    | Assignment.BitOrAssign
+    | Assignment.BitXorAssign
+    | Assignment.BitAndAssign ->
+      (* lhs (numop)= rhs *)
+      let lhs_t =
+        New_env.New_env.read_entry_exn ~lookup_mode:Env_sig.LookupMode.ForValue cx id_loc id_reason
+      in
+      let rhs_t = expression cx ~hint:None rhs in
+      Statement.arith_assign cx exp_loc lhs_t rhs_t
+    | Assignment.NullishAssign
+    | Assignment.AndAssign
+    | Assignment.OrAssign ->
+      Tvar.mk cx (mk_reason (RCustom "unhandled def") id_loc)
+
+  let resolve_update cx ~id_loc ~exp_loc id_reason =
+    let reason = mk_reason (RCustom "update") exp_loc in
+    let id_t =
+      New_env.New_env.read_entry_exn ~lookup_mode:Env_sig.LookupMode.ForValue cx id_loc id_reason
+    in
+    Flow_js.flow cx (id_t, AssertArithmeticOperandT reason);
+    NumT.at exp_loc |> with_trust literal_trust
+
   let resolve cx id_loc (def, def_reason) =
     let t =
       match def with
-      | Binding (loc, b) -> resolve_binding cx loc b
+      | Binding b -> resolve_binding cx id_loc b
       | Function { function_; fully_annotated = false } ->
         resolve_inferred_function cx id_loc def_reason function_
       | Function { function_; fully_annotated = true } ->
         resolve_annotated_function cx def_reason function_
+      | OpAssign { exp_loc; op; rhs } -> resolve_op_assign cx ~id_loc ~exp_loc def_reason op rhs
+      | Update { exp_loc; op = _ } -> resolve_update cx ~id_loc ~exp_loc def_reason
       | _ -> Tvar.mk cx (mk_reason (RCustom "unhandled def") id_loc)
     in
     Debug_js.Verbose.print_if_verbose_lazy

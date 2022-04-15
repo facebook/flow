@@ -6073,6 +6073,22 @@ struct
     in
     (t, lhs, typed_rhs)
 
+  and plus_assign cx ~reason ~lhs_reason ~rhs_reason lhs_t rhs_t =
+    let result_t = Tvar.mk cx reason in
+    (* lhs = lhs + rhs *)
+    let () =
+      let use_op = Op (Addition { op = reason; left = lhs_reason; right = rhs_reason }) in
+      Flow.flow cx (lhs_t, AdderT (use_op, reason, false, rhs_t, result_t))
+    in
+    result_t
+
+  and arith_assign cx loc lhs_t rhs_t =
+    let reason = mk_reason (RCustom "(numop)=") loc in
+    (* lhs = lhs (numop) rhs *)
+    Flow.flow cx (lhs_t, AssertArithmeticOperandT reason);
+    Flow.flow cx (rhs_t, AssertArithmeticOperandT reason);
+    NumT.at loc |> with_trust literal_trust
+
   (* traverse assignment expressions with operators (`lhs += rhs`, `lhs *= rhs`, etc) *)
   and op_assignment cx loc lhs op rhs =
     let open Ast.Expression in
@@ -6082,16 +6098,14 @@ struct
       let reason = mk_reason (RCustom "+=") loc in
       let (((_, lhs_t), _) as lhs_ast) = assignment_lhs cx lhs in
       let (((_, rhs_t), _) as rhs_ast) = expression cx ~hint:None rhs in
-      let result_t = Tvar.mk cx reason in
-      (* lhs = lhs + rhs *)
-      let () =
-        let use_op =
-          Op
-            (Addition
-               { op = reason; left = mk_pattern_reason lhs; right = mk_expression_reason rhs }
-            )
-        in
-        Flow.flow cx (lhs_t, AdderT (use_op, reason, false, rhs_t, result_t))
+      let result_t =
+        plus_assign
+          cx
+          ~reason
+          ~lhs_reason:(mk_pattern_reason lhs)
+          ~rhs_reason:(mk_expression_reason rhs)
+          lhs_t
+          rhs_t
       in
       (* enforce state-based guards for binding update, e.g., const *)
       (match lhs with
@@ -6135,14 +6149,9 @@ struct
     | Assignment.BitXorAssign
     | Assignment.BitAndAssign ->
       (* lhs (numop)= rhs *)
-      let reason = mk_reason (RCustom "(numop)=") loc in
       let (((_, lhs_t), _) as lhs_ast) = assignment_lhs cx lhs in
       let (((_, rhs_t), _) as rhs_ast) = expression cx ~hint:None rhs in
-      (* lhs = lhs (numop) rhs *)
-      Flow.flow cx (lhs_t, AssertArithmeticOperandT reason);
-      Flow.flow cx (rhs_t, AssertArithmeticOperandT reason);
-
-      let result_t = NumT.at loc |> with_trust literal_trust in
+      let result_t = arith_assign cx loc lhs_t rhs_t in
       (* enforce state-based guards for binding update, e.g., const *)
       (match lhs with
       | ( _,
