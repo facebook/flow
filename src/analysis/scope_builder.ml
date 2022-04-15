@@ -110,6 +110,39 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
       env :: parent_env
   end
 
+  class function_annot_collector_and_remover =
+    object (this)
+      inherit [(L.t, L.t) Ast.Type.annotation list, L.t] visitor ~init:[]
+
+      method! type_annotation_hint return =
+        let open Ast.Type in
+        match return with
+        | Available annot ->
+          acc <- annot :: acc;
+          Missing L.none
+        | Missing _ -> return
+
+      method! function_param param =
+        let open Ast.Function.Param in
+        let (loc, { argument; default }) = param in
+        let argument' = this#function_param_pattern argument in
+        (loc, { argument = argument'; default })
+
+      method! function_params params =
+        let open Ast.Function in
+        let (loc, { Params.params = params_list; rest; comments; this_ }) = params in
+        let params_list' = Flow_ast_mapper.map_list this#function_param params_list in
+        let rest' = Flow_ast_mapper.map_opt this#function_rest_param rest in
+        let this_' =
+          Base.Option.bind this_ ~f:(fun (_, { ThisParam.annot; comments = _ }) ->
+              acc <- annot :: acc;
+              None
+          )
+        in
+        let comments' = this#syntax_opt comments in
+        (loc, { Params.params = params_list'; rest = rest'; comments = comments'; this_ = this_' })
+    end
+
   class scope_builder ~flowmin_compatibility ~enable_enums ~with_types =
     object (this)
       inherit [Acc.t, L.t] visitor ~init:Acc.init as super
@@ -405,6 +438,17 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
           | BodyExpression (loc, _)
           | BodyBlock (loc, _) ->
             loc
+        in
+        (* The old env will first visit all param type annotations before visiting param names.
+           We need to separate them so that we can visit the annotation and names in different
+           scopes. *)
+        let params =
+          let visitor = new function_annot_collector_and_remover in
+          let params = visitor#function_params params in
+          visitor#acc
+          |> Base.List.rev
+          |> Base.List.iter ~f:(fun annot -> ignore @@ this#type_annotation annot);
+          params
         in
         (* We need to visit function param default expressions
            without bindings inside the function body. *)

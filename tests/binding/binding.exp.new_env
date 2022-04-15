@@ -887,6 +887,22 @@ Cannot resolve name `b`. [cannot-resolve-name]
                           ^
 
 
+Error -------------------------------------------------------------------------------------------------- scope.js:129:21
+
+Cannot resolve name `selfRef`. [cannot-resolve-name]
+
+   129|     selfRef: typeof selfRef // Error: cannot resolve selfRef
+                            ^^^^^^^
+
+
+Error -------------------------------------------------------------------------------------------------- scope.js:133:15
+
+Cannot resolve name `forwardRef`. [cannot-resolve-name]
+
+   133|     x: typeof forwardRef, // Error: cannot resolve forwardRef
+                      ^^^^^^^^^^
+
+
 Error ----------------------------------------------------------------------------------------------------- tdz.js:25:11
 
 Cannot use variable `x` [1] because the declaration either comes later or was skipped. [reference-before-declaration]
@@ -1027,4 +1043,4 @@ Cannot resolve name `unbound`. [cannot-resolve-name]
 
 
 
-Found 73 errors
+Found 75 errors
