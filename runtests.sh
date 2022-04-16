@@ -179,11 +179,16 @@ print_failure() {
         cat "$diff_file"
       fi
     fi
-    # new-env mode may use a non-standard extension
-    if [[ "$new_env" -eq 1 ]] && [ -f "${dir}${name}.exp.new_env" ]; then
-      ext=".exp.new_env"
-    else
-      ext=".exp"
+    # Default expected file extension is .exp
+    ext=".exp"
+    # constrained-writes and new-env modes may use a non-standard extension
+    if [[ "$new_env" -eq 1 ]] && [ -f "${dir}${name}${ext}.new_env" ]; then
+      ext="${ext}.new_env"
+    elif [[ "$new_env" -eq 1 || "$constrained_writes" -eq 1 ]] \
+      && [ -f "${dir}${name}${ext}.cw" ];
+    then
+      # compare new-env results against constrained-writes expected behavior if exists
+      ext="${ext}.cw"
     fi
 
     if [[ "$record" -eq 1 ]]; then
