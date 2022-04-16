@@ -13,9 +13,9 @@ function sorry(really: bool) {
 }
 
 function foo0(b: bool): number {
-  var x = 0;
+  var x: number | string = 0;
   if (b) {
-    var x = ""; // error: string ~> number
+    var x = "";
   }
-  return x;
+  return x;  // error: string ~> number
 }
