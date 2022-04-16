@@ -67,6 +67,25 @@ References:
                      ^^^^^^ [2]
 
 
+Error --------------------------------------------------------------------------------------------------- break.js:17:13
+
+Cannot assign empty string to `x` because string [1] is incompatible with boolean [2]. All writes to `x` must be
+compatible with the type of its initializer [3]. Add an annotation to `x` [3] if a different type is desired.
+[incompatible-type]
+
+   break.js:17:13
+   17|         x = "";
+                   ^^ [1]
+
+References:
+   break.js:12:23
+   12|     var x = b ? null: false;
+                             ^^^^^ [2]
+   break.js:12:9
+   12|     var x = b ? null: false;
+               ^ [3]
+
+
 Error --------------------------------------------------------------------------------------------------- break.js:19:24
 
 Cannot assign `x` to `z` because boolean [1] is incompatible with number [2]. [incompatible-type]
@@ -150,6 +169,25 @@ References:
    break.js:31:13
    31|       let y:number = x; // error: boolean !~> number
                    ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- break.js:32:11
+
+Cannot assign empty string to `x` because string [1] is incompatible with boolean [2]. All writes to `x` must be
+compatible with the type of its initializer [3]. Add an annotation to `x` [3] if a different type is desired.
+[incompatible-type]
+
+   break.js:32:11
+   32|       x = "";
+                 ^^ [1]
+
+References:
+   break.js:27:23
+   27|     var x = b ? null: false;
+                             ^^^^^ [2]
+   break.js:27:9
+   27|     var x = b ? null: false;
+               ^ [3]
 
 
 Error --------------------------------------------------------------------------------------------------- break.js:35:22
@@ -255,4 +293,7 @@ References:
 
 
 
-Found 15 errors
+Found 17 errors
+
+Only showing the most relevant union/intersection branches.
+To see all branches, re-run Flow with --show-all-branches
