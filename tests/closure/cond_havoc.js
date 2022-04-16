@@ -4,7 +4,7 @@
 // call to f() within if should properly havoc x.
 //
 function example(b: bool): number {
-  var x = 0;
+  var x: number | string = 0;
   function f() { x = "" }
   if (b) {
     f();

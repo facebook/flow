@@ -9,7 +9,7 @@ function takes_string(_: string) {}
 // global write from function
 //
 
-var global_x = 'hello';
+var global_x: number | string = 'hello';
 
 function global_f() {}
 function global_g() {
@@ -28,7 +28,7 @@ global_x = 42;
 //
 
 function local_func() {
-  var local_x = 'hello';
+  var local_x: string | number = 'hello';
 
   function local_f() {}
   function local_g() {
@@ -47,7 +47,7 @@ function local_func() {
 // global write from method
 //
 
-var global_y = 'hello';
+var global_y: string | number = 'hello';
 
 var global_o = {
   f: function() {},
@@ -68,7 +68,7 @@ global_y = 42;
 //
 
 function local_meth() {
-  var local_y = 'hello';
+  var local_y: string | number = 'hello';
 
   var local_o = {
     f: function() {},
@@ -90,7 +90,7 @@ function havoc_before_decl() {
   function havoc() {
     x = 10;
   }
-  var x = 'hello world';
+  var x: number | string = 'hello world';
   havoc();
   (x: string); // blame
 }

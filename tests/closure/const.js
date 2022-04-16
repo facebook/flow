@@ -14,7 +14,7 @@ function g(x: ?number) {
     call_me = () => { var y:number = const_x; };
   }
 
-  var var_x = x;
+  var var_x: ?number = x;
   if (var_x) {
     // error: var_x might no longer be truthy when call_me is called
     call_me = () => { var y:number = var_x; };  // error

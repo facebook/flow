@@ -168,9 +168,9 @@ Cannot cast `x` to string because number [1] is incompatible with string [2]. [i
              ^
 
 References:
-   Closure.js:100:9
-   100|     x = 10;
-                ^^ [1]
+   Closure.js:102:10
+   102|   var x: number | string = 'hello world';
+                 ^^^^^^ [1]
    Closure.js:105:9
    105|     (x: string); // blame
                 ^^^^^^ [2]
