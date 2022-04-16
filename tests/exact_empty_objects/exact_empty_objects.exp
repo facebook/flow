@@ -307,6 +307,244 @@ References:
                 ^^^^^^ [2]
 
 
+Error ----------------------------------------------------------------------------------------------- defaulting.js:70:4
+
+Cannot cast `a` to boolean literal `true` because number [1] is incompatible with boolean literal `true` [2].
+[incompatible-cast]
+
+   defaulting.js:70:4
+   70|   (a: true); // ERROR
+          ^
+
+References:
+   defaulting.js:59:9
+   59|   prop: number,
+               ^^^^^^ [1]
+   defaulting.js:70:7
+   70|   (a: true); // ERROR
+             ^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- defaulting.js:70:4
+
+Cannot cast `a` to boolean literal `true` because `void` (due to access of non-existent property `prop`) [1] is
+incompatible with boolean literal `true` [2]. [incompatible-cast]
+
+   defaulting.js:70:4
+   70|   (a: true); // ERROR
+          ^
+
+References:
+   defaulting.js:67:13
+   67|   const a = x.prop;
+                   ^^^^^^ [1]
+   defaulting.js:70:7
+   70|   (a: true); // ERROR
+             ^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- defaulting.js:71:4
+
+Cannot cast `a` to number because `void` (due to access of non-existent property `prop`) [1] is incompatible with
+number [2]. [incompatible-cast]
+
+   defaulting.js:71:4
+   71|   (a: number); // ERROR
+          ^
+
+References:
+   defaulting.js:67:13
+   67|   const a = x.prop;
+                   ^^^^^^ [1]
+   defaulting.js:71:7
+   71|   (a: number); // ERROR
+             ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- defaulting.js:72:4
+
+Cannot cast `a` to undefined because number [1] is incompatible with undefined [2]. [incompatible-cast]
+
+   defaulting.js:72:4
+   72|   (a: void); // ERROR
+          ^
+
+References:
+   defaulting.js:59:9
+   59|   prop: number,
+               ^^^^^^ [1]
+   defaulting.js:72:7
+   72|   (a: void); // ERROR
+             ^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- defaulting.js:73:6
+
+Cannot get `x.XXX` because property `XXX` is missing in object type [1]. [prop-missing]
+
+   defaulting.js:73:6
+   73|   (x.XXX); // ERROR
+            ^^^
+
+References:
+   defaulting.js:58:17
+                       v
+   58| declare var n: ?{
+   59|   prop: number,
+   60|   ...
+   61| };
+       ^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------- defaulting.js:73:6
+
+Cannot get `x.XXX` because property `XXX` is missing in object literal [1]. [prop-missing]
+
+   defaulting.js:73:6
+   73|   (x.XXX); // ERROR
+            ^^^
+
+References:
+   defaulting.js:65:18
+   65|   const x = n ?? {};
+                        ^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------- defaulting.js:78:4
+
+Cannot cast `prop` to number because `void` (due to access of non-existent property `prop`) [1] is incompatible with
+number [2]. [incompatible-cast]
+
+   defaulting.js:78:4
+   78|   (prop: number); // ERROR
+          ^^^^
+
+References:
+   defaulting.js:76:10
+   76|   const {prop} = x;
+                ^^^^ [1]
+   defaulting.js:78:10
+   78|   (prop: number); // ERROR
+                ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- defaulting.js:94:4
+
+Cannot cast `a` to boolean literal `true` because number [1] is incompatible with boolean literal `true` [2].
+[incompatible-cast]
+
+   defaulting.js:94:4
+   94|   (a: true); // ERROR
+          ^
+
+References:
+   defaulting.js:83:9
+   83|   prop: number;
+               ^^^^^^ [1]
+   defaulting.js:94:7
+   94|   (a: true); // ERROR
+             ^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- defaulting.js:94:4
+
+Cannot cast `a` to boolean literal `true` because `void` (due to access of non-existent property `prop`) [1] is
+incompatible with boolean literal `true` [2]. [incompatible-cast]
+
+   defaulting.js:94:4
+   94|   (a: true); // ERROR
+          ^
+
+References:
+   defaulting.js:91:13
+   91|   const a = x.prop;
+                   ^^^^^^ [1]
+   defaulting.js:94:7
+   94|   (a: true); // ERROR
+             ^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- defaulting.js:95:4
+
+Cannot cast `a` to number because `void` (due to access of non-existent property `prop`) [1] is incompatible with
+number [2]. [incompatible-cast]
+
+   defaulting.js:95:4
+   95|   (a: number); // ERROR
+          ^
+
+References:
+   defaulting.js:91:13
+   91|   const a = x.prop;
+                   ^^^^^^ [1]
+   defaulting.js:95:7
+   95|   (a: number); // ERROR
+             ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- defaulting.js:96:4
+
+Cannot cast `a` to undefined because number [1] is incompatible with undefined [2]. [incompatible-cast]
+
+   defaulting.js:96:4
+   96|   (a: void); // ERROR
+          ^
+
+References:
+   defaulting.js:83:9
+   83|   prop: number;
+               ^^^^^^ [1]
+   defaulting.js:96:7
+   96|   (a: void); // ERROR
+             ^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- defaulting.js:97:6
+
+Cannot get `x.XXX` because property `XXX` is missing in `C` [1]. [prop-missing]
+
+   defaulting.js:97:6
+   97|   (x.XXX); // ERROR
+            ^^^
+
+References:
+   defaulting.js:85:17
+   85| declare var c: ?C;
+                       ^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------- defaulting.js:97:6
+
+Cannot get `x.XXX` because property `XXX` is missing in object literal [1]. [prop-missing]
+
+   defaulting.js:97:6
+   97|   (x.XXX); // ERROR
+            ^^^
+
+References:
+   defaulting.js:89:18
+   89|   const x = c ?? {};
+                        ^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------- defaulting.js:102:4
+
+Cannot cast `prop` to number because `void` (due to access of non-existent property `prop`) [1] is incompatible with
+number [2]. [incompatible-cast]
+
+   defaulting.js:102:4
+   102|   (prop: number); // ERROR
+           ^^^^
+
+References:
+   defaulting.js:100:10
+   100|   const {prop} = x;
+                 ^^^^ [1]
+   defaulting.js:102:10
+   102|   (prop: number); // ERROR
+                 ^^^^^^ [2]
+
+
 Error ------------------------------------------------------------------------------------------------------ test.js:4:2
 
 Cannot cast object literal to object type because property `a` is missing in object literal [1] but exists in object
@@ -425,4 +663,4 @@ References:
 
 
 
-Found 26 errors
+Found 40 errors

@@ -956,7 +956,17 @@ module rec ConsGen : S = struct
     (************)
     | (DefT (r, _, InstanceT (_, super, _, insttype)), Annot_GetPropT (reason_op, use_op, propref))
       ->
-      GetPropTKit.on_InstanceT cx dummy_trace ~l:t r super insttype use_op reason_op propref
+      GetPropTKit.on_InstanceT
+        cx
+        dummy_trace
+        ~l:t
+        ~id:None
+        r
+        super
+        insttype
+        use_op
+        reason_op
+        propref
     | (DefT (_, _, ObjT _), Annot_GetPropT (reason_op, _, Named (_, OrdinaryName "constructor"))) ->
       Unsoundness.why Constructor reason_op
     | (DefT (reason_obj, _, ObjT o), Annot_GetPropT (reason_op, use_op, propref)) ->

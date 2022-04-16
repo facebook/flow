@@ -1553,6 +1553,8 @@ module Access_prop_options = struct
     previously_seen_props: Type.Properties.Set.t;
     allow_method_access: bool;
     lookup_kind: Type.lookup_kind;
+    (* Same `id` as in `GetPropT` and `TestPropT`: it represents some syntactic access. *)
+    id: ident option;
   }
 end
 
@@ -1606,7 +1608,7 @@ module type Get_prop_helper_sig = sig
 end
 
 module GetPropT_kit (F : Get_prop_helper_sig) = struct
-  let on_InstanceT cx trace ~l r super insttype use_op reason_op propref =
+  let on_InstanceT cx trace ~l ~id r super insttype use_op reason_op propref =
     match propref with
     | Named (_, OrdinaryName "constructor") ->
       F.return
@@ -1630,6 +1632,7 @@ module GetPropT_kit (F : Get_prop_helper_sig) = struct
           previously_seen_props = Properties.Set.of_list [insttype.own_props; insttype.proto_props];
           allow_method_access = false;
           lookup_kind;
+          id;
         }
       in
       (* Instance methods cannot be unbound *)

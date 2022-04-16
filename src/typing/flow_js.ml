@@ -397,7 +397,7 @@ struct
     | t -> t
 
   let access_prop cx trace options reason_prop reason_op super x pmap action =
-    let { Access_prop_options.use_op; allow_method_access; _ } = options in
+    let { Access_prop_options.use_op; allow_method_access; id; _ } = options in
     match NameUtils.Map.find_opt x pmap with
     | Some p ->
       let p =
@@ -412,6 +412,7 @@ struct
           Method (r, unbind_this_method t)
         | _ -> p
       in
+      Base.Option.iter id ~f:(Context.test_prop_hit cx);
       let propref = Named (reason_prop, x) in
       perform_lookup_action cx trace propref p PropertyMapProperty reason_prop reason_op action
     | None -> lookup_prop cx trace options super reason_prop reason_op x action
@@ -3437,6 +3438,7 @@ struct
               previously_seen_props =
                 Properties.Set.of_list [instance.own_props; instance.proto_props];
               lookup_kind;
+              id = None;
             }
           in
           set_prop cx ~mode ~wr_ctx trace options reason_prop reason_op l super x fields tin prop_t
@@ -3494,6 +3496,7 @@ struct
               previously_seen_props =
                 Properties.Set.of_list [instance.own_props; instance.proto_props];
               lookup_kind;
+              id = None;
             }
           in
           match_prop cx trace options reason_prop reason_op super x fields (OpenT prop_t)
@@ -3501,9 +3504,9 @@ struct
         (* ... and their fields read *)
         (*****************************)
         | ( DefT (r, _, InstanceT (_, super, _, insttype)),
-            GetPropT (use_op, reason_op, _, propref, t)
+            GetPropT (use_op, reason_op, id, propref, t)
           ) ->
-          GetPropTKit.on_InstanceT cx trace ~l r super insttype use_op reason_op propref t
+          GetPropTKit.on_InstanceT cx trace ~l ~id r super insttype use_op reason_op propref t
         | ( DefT (reason_c, _, InstanceT (_, _, _, instance)),
             GetPrivatePropT (use_op, reason_op, prop_name, scopes, static, tout)
           ) ->
@@ -3545,6 +3548,7 @@ struct
                 Properties.Set.of_list [instance.own_props; instance.proto_props];
               use_op;
               lookup_kind;
+              id = None;
             }
           in
           read_prop cx trace options reason_prop reason_lookup l super x props (reason_lookup, tvar);
@@ -6411,6 +6415,7 @@ struct
         allow_method_access = true;
         previously_seen_props = Properties.Set.empty;
         lookup_kind = NonstrictReturning (None, None);
+        id = None;
       }
     in
     lookup_prop cx trace options t reason_prop lreason x (SuperProp (use_op, p))
