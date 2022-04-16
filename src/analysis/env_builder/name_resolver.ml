@@ -2722,9 +2722,9 @@ module Make
           env_state <- { env_state with write_entries }
         in
         match argument with
-        | (_, Flow_ast.Expression.Identifier (_, { Flow_ast.Identifier.name; _ })) ->
+        | (_, Flow_ast.Expression.Identifier (id_loc, { Flow_ast.Identifier.name; _ })) ->
           let { kind; def_loc; val_ref; _ } = SMap.find name env_state.env in
-          (match error_for_assignment_kind cx name loc def_loc kind None !val_ref with
+          (match error_for_assignment_kind cx name id_loc def_loc kind None !val_ref with
           | None ->
             val_ref := undefined;
             update_write_entries ~assigning:true

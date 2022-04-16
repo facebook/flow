@@ -7,7 +7,7 @@ delete obj1.f; // error, f is required
 declare var obj2: { f?: number };
 delete obj2.f; //fine
 
-var x = 42;
+var x: number | void = 42;
 delete x;
 (x: number);
 (x: number | void);
