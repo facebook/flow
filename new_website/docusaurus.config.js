@@ -28,6 +28,25 @@ module.exports = {
         },
       };
     },
+    function enableWasm() {
+      return {
+        name: 'enableWasm',
+        configureWebpack() {
+          return {
+            experiments: {syncWebAssembly: true},
+            module: {
+              rules: [
+                {
+                  test: /\.wasm$/i,
+                  loader: 'file-loader',
+                  type: 'javascript/auto',
+                },
+              ],
+            },
+          };
+        },
+      };
+    },
   ],
   themeConfig: {
     prism: {
@@ -48,6 +67,12 @@ module.exports = {
           to: 'docs/',
           activeBasePath: 'docs',
           label: 'Docs',
+          position: 'left',
+        },
+        {
+          to: 'try/',
+          activeBasePath: 'try',
+          label: 'Try',
           position: 'left',
         },
         {

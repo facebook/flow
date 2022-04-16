@@ -1,5 +1,6 @@
 [ignore]
 <PROJECT_ROOT>/src/.*
+<PROJECT_ROOT>/docusaurus.config.js
 .*/node_modules/.*
 
 [options]

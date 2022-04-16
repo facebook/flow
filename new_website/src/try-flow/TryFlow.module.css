@@ -1,0 +1,126 @@
+/**
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ *
+ * @format
+ */
+
+.tryEditor {
+    display: flex;
+    flex: 1;
+    height: calc(100vh - var(--ifm-navbar-height));
+}
+
+.code,
+.results {
+    flex: 1;
+    width: 50%;
+}
+
+.code {
+    background: #fff;
+}
+
+.results {
+    position: relative;
+    font-size: 12px;
+    background: #f7f7f7;
+    border-left: 1px solid #ddd;
+    overflow: auto;
+}
+
+.toolbar {
+    position: relative;
+    background: #fff;
+    border-bottom: 1px solid #ddd;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.toolbar:after {
+    content: "";
+    display: block;
+    clear: both;
+}
+
+.tab {
+    border-right: 1px solid #ddd;
+    cursor: pointer;
+    float: left;
+    font-size: 14px;
+    font-weight: bold;
+    padding: 7px 15px;
+}
+
+.version {
+    position: absolute;
+    right: 5px;
+    top: 0px;
+    line-height: 36px;
+}
+
+.selectedTab {
+    background: #f7f7f7;
+    border-bottom: 1px solid #f7f7f7;
+    margin-bottom: -1px;
+}
+
+.loader {
+    position: relative;
+    margin: 150px auto 0;
+    width: 70px;
+    text-align: center;
+}
+
+.loader > div {
+    width: 18px;
+    height: 18px;
+    background-color: #ddd;
+
+    border-radius: 100%;
+    display: inline-block;
+    -webkit-animation: sk-bouncedelay 1.4s infinite ease-in-out both;
+    animation: sk-bouncedelay 1.4s infinite ease-in-out both;
+}
+
+.bounce1 {
+    -webkit-animation-delay: -0.32s;
+    animation-delay: -0.32s;
+}
+
+.bounce2 {
+    -webkit-animation-delay: -0.16s;
+    animation-delay: -0.16s;
+}
+
+.resultBody {
+    padding: 7px 10px;
+}
+
+.errors ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.errors  li + li {
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: solid #eee 1px;
+}
+
+.errors li ul li,
+.errors li ul li + li {
+    padding: inherit;
+    padding-left: 20px;
+    margin: inherit;
+    border: none;
+}
+
+.msgHighlight,
+.msgType {
+    cursor: pointer;
+}

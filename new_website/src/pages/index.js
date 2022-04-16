@@ -38,14 +38,14 @@ export default function Home() {
           <iframe
             className="gh-btn"
             src="https://ghbtns.com/github-btn.html?user=facebook&repo=flow&type=star&count=false&size=large"
-            frameborder="0"
+            frameBorder="0"
             scrolling="0"
             width="160px"
             height="30px"
             title="Star"></iframe>
           <div className={clsx(styles.featureHeroText)}>
             Current version:{' '}
-            <strong class="navbar-text">
+            <strong className="navbar-text">
               {/* TODO: add release */}
               <a href="">RELEASE_NAME</a>
             </strong>
