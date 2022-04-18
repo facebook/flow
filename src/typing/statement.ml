@@ -2299,31 +2299,14 @@ struct
     | (import_loc, ImportDeclaration import_decl) ->
       let { ImportDeclaration.source; specifiers; default; import_kind; comments } = import_decl in
       let (source_loc, { Ast.StringLiteral.value = module_name; _ }) = source in
-      let type_kind_of_kind = function
-        | ImportDeclaration.ImportType -> Type.ImportType
-        | ImportDeclaration.ImportTypeof -> Type.ImportTypeof
-        | ImportDeclaration.ImportValue -> Type.ImportValue
-      in
-      let module_t = OpenT (Import_export.import cx (source_loc, module_name)) in
-      let get_imported_t get_reason import_kind remote_export_name local_name =
-        Tvar.mk_where cx get_reason (fun t ->
-            let import_type =
-              if remote_export_name = "default" then
-                ImportDefaultT
-                  (get_reason, import_kind, (local_name, module_name), t, Context.is_strict cx)
-              else
-                ImportNamedT
-                  (get_reason, import_kind, remote_export_name, module_name, t, Context.is_strict cx)
-            in
-            Flow.flow cx (module_t, import_type)
-        )
-      in
+
       let (specifiers, specifiers_ast) =
         match specifiers with
         | Some (ImportDeclaration.ImportNamedSpecifiers named_specifiers) ->
           let (named_specifiers, named_specifiers_ast) =
             named_specifiers
-            |> Base.List.map ~f:(function { ImportDeclaration.local; remote; kind } ->
+            |> Base.List.map ~f:(function
+                   | { Ast.Statement.ImportDeclaration.local; remote; kind } ->
                    let ( remote_name_loc,
                          ({ Ast.Identifier.name = remote_name; comments = _ } as rmt)
                        ) =
@@ -2332,23 +2315,20 @@ struct
                    let (loc, { Ast.Identifier.name = local_name; comments = _ }) =
                      Base.Option.value ~default:remote local
                    in
+                   let import_reason =
+                     mk_reason (RNamedImportedType (module_name, local_name)) (fst remote)
+                   in
+                   let import_kind = Base.Option.value ~default:import_kind kind in
                    let imported_t =
-                     let import_reason =
-                       mk_reason (RNamedImportedType (module_name, local_name)) (fst remote)
-                     in
-                     if
-                       Type_inference_hooks_js.dispatch_member_hook
-                         cx
-                         remote_name
-                         remote_name_loc
-                         module_t
-                     then
-                       Unsoundness.why InferenceHooks import_reason
-                     else
-                       let import_kind =
-                         type_kind_of_kind (Base.Option.value ~default:import_kind kind)
-                       in
-                       get_imported_t import_reason import_kind remote_name local_name
+                     import_named_specifier_type
+                       cx
+                       import_reason
+                       import_kind
+                       ~source_loc
+                       ~module_name
+                       ~remote_name_loc
+                       ~remote_name
+                       ~local_name
                    in
                    let remote_ast = ((remote_name_loc, imported_t), rmt) in
                    let local_ast =
@@ -2358,7 +2338,11 @@ struct
                      )
                    in
                    ( (loc, local_name, imported_t, kind),
-                     { ImportDeclaration.local = local_ast; remote = remote_ast; kind }
+                     {
+                       Ast.Statement.ImportDeclaration.local = local_ast;
+                       remote = remote_ast;
+                       kind;
+                     }
                    )
                    )
             |> List.split
@@ -2370,55 +2354,53 @@ struct
                 (local_loc, ({ Flow_ast.Identifier.name = local_name; _ } as local_id))
               )
               ) ->
-          let import_reason =
-            let import_reason_desc =
-              match import_kind with
-              | ImportDeclaration.ImportType -> RImportStarType local_name
-              | ImportDeclaration.ImportTypeof -> RImportStarTypeOf local_name
-              | ImportDeclaration.ImportValue -> RImportStar local_name
+          let (specifier, namespace_specifier_ast) =
+            let import_reason =
+              let import_reason_desc =
+                match import_kind with
+                | ImportDeclaration.ImportType -> RImportStarType local_name
+                | ImportDeclaration.ImportTypeof -> RImportStarTypeOf local_name
+                | ImportDeclaration.ImportValue -> RImportStar local_name
+              in
+              mk_reason import_reason_desc local_loc
             in
-            mk_reason import_reason_desc import_loc
+            let t =
+              import_namespace_specifier_type
+                cx
+                import_reason
+                import_kind
+                ~source_loc
+                ~module_name
+                ~local_loc
+            in
+
+            let local_ast = ((local_loc, t), local_id) in
+            ((local_loc, local_name, t, None), local_ast)
           in
-          begin
-            match import_kind with
-            | ImportDeclaration.ImportType -> assert_false "import type * is a parse error"
-            | ImportDeclaration.ImportTypeof ->
-              let bind_reason = repos_reason local_loc import_reason in
-              let module_ns_t =
-                Import_export.import_ns cx import_reason (fst source, module_name)
-              in
-              let module_ns_typeof =
-                Tvar.mk_where cx bind_reason (fun t ->
-                    Flow.flow cx (module_ns_t, ImportTypeofT (bind_reason, "*", t))
-                )
-              in
-              let local_ast = ((local_loc, module_ns_typeof), local_id) in
-              ( [(local_loc, local_name, module_ns_typeof, None)],
-                Some (ImportDeclaration.ImportNamespaceSpecifier (loc_with_star, local_ast))
-              )
-            | ImportDeclaration.ImportValue ->
-              let reason = mk_reason (RModule (OrdinaryName module_name)) import_loc in
-              let module_ns_t = Import_export.import_ns cx reason (fst source, module_name) in
-              let local_ast = ((local_loc, module_ns_t), local_id) in
-              ( [(local_loc, local_name, module_ns_t, None)],
-                Some (ImportDeclaration.ImportNamespaceSpecifier (loc_with_star, local_ast))
-              )
-          end
+          ( [specifier],
+            Some
+              (ImportDeclaration.ImportNamespaceSpecifier (loc_with_star, namespace_specifier_ast))
+          )
         | None -> ([], None)
       in
       let (specifiers, default_ast) =
         match default with
-        | Some local ->
-          let (loc, ({ Ast.Identifier.name = local_name; comments = _ } as id)) = local in
-          let import_reason = mk_reason (RDefaultImportedType (local_name, module_name)) loc in
-          let imported_t =
-            if Type_inference_hooks_js.dispatch_member_hook cx "default" loc module_t then
-              Unsoundness.why InferenceHooks import_reason
-            else
-              let import_kind = type_kind_of_kind import_kind in
-              get_imported_t import_reason import_kind "default" local_name
+        | Some (loc, ({ Ast.Identifier.name = local_name; comments = _ } as id)) ->
+          let (specifier, ast) =
+            let import_reason = mk_reason (RDefaultImportedType (local_name, module_name)) loc in
+            let imported_t =
+              import_default_specifier_type
+                cx
+                import_reason
+                import_kind
+                ~source_loc
+                ~module_name
+                ~local_loc:loc
+                ~local_name
+            in
+            ((loc, local_name, imported_t, None), ((loc, imported_t), id))
           in
-          ((loc, local_name, imported_t, None) :: specifiers, Some ((loc, imported_t), id))
+          (specifier :: specifiers, Some ast)
         | None -> (specifiers, None)
       in
       List.iter
@@ -2583,6 +2565,64 @@ struct
         }
       in
       (type_, opaque_type_ast)
+
+  and type_kind_of_kind = function
+    | Ast.Statement.ImportDeclaration.ImportType -> Type.ImportType
+    | Ast.Statement.ImportDeclaration.ImportTypeof -> Type.ImportTypeof
+    | Ast.Statement.ImportDeclaration.ImportValue -> Type.ImportValue
+
+  and get_imported_t cx get_reason module_name module_t import_kind remote_export_name local_name =
+    Tvar.mk_where cx get_reason (fun t ->
+        let import_type =
+          if remote_export_name = "default" then
+            ImportDefaultT
+              (get_reason, import_kind, (local_name, module_name), t, Context.is_strict cx)
+          else
+            ImportNamedT
+              (get_reason, import_kind, remote_export_name, module_name, t, Context.is_strict cx)
+        in
+        Flow.flow cx (module_t, import_type)
+    )
+
+  and import_named_specifier_type
+      cx
+      import_reason
+      import_kind
+      ~source_loc
+      ~module_name
+      ~remote_name_loc
+      ~remote_name
+      ~local_name =
+    let module_t = OpenT (Import_export.import cx (source_loc, module_name)) in
+    if Type_inference_hooks_js.dispatch_member_hook cx remote_name remote_name_loc module_t then
+      Unsoundness.why InferenceHooks import_reason
+    else
+      let import_kind = type_kind_of_kind import_kind in
+      get_imported_t cx import_reason module_name module_t import_kind remote_name local_name
+
+  and import_namespace_specifier_type
+      cx import_reason import_kind ~source_loc ~module_name ~local_loc =
+    let open Ast.Statement in
+    match import_kind with
+    | ImportDeclaration.ImportType -> assert_false "import type * is a parse error"
+    | ImportDeclaration.ImportTypeof ->
+      let bind_reason = repos_reason local_loc import_reason in
+      let module_ns_t = Import_export.import_ns cx import_reason (source_loc, module_name) in
+      Tvar.mk_where cx bind_reason (fun t ->
+          Flow.flow cx (module_ns_t, ImportTypeofT (bind_reason, "*", t))
+      )
+    | ImportDeclaration.ImportValue ->
+      let reason = mk_reason (RModule (OrdinaryName module_name)) local_loc in
+      Import_export.import_ns cx reason (source_loc, module_name)
+
+  and import_default_specifier_type
+      cx import_reason import_kind ~source_loc ~module_name ~local_loc ~local_name =
+    let module_t = OpenT (Import_export.import cx (source_loc, module_name)) in
+    if Type_inference_hooks_js.dispatch_member_hook cx "default" local_loc module_t then
+      Unsoundness.why InferenceHooks import_reason
+    else
+      let import_kind = type_kind_of_kind import_kind in
+      get_imported_t cx import_reason module_name module_t import_kind "default" local_name
 
   and export_specifiers cx loc source export_kind =
     let open Ast.Statement in

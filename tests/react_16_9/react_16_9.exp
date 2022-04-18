@@ -8,9 +8,9 @@ Cannot get `React.ProfilerOnRenderFnType` because property `ProfilerOnRenderFnTy
                                ^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   profiler.js:3:1
+   profiler.js:3:13
    3| import * as React from 'react';
-      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+                  ^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------------ profiler.js:17:13

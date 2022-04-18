@@ -172,6 +172,37 @@ module Make (Env : Env_sig.S) (Statement : Statement_sig.S with module Env := En
     Node_cache.set_opaque cache loc (t, ast);
     t
 
+  let resolve_import cx id_loc import_reason import_kind module_name source_loc import =
+    match import with
+    | Name_def.Named { kind; remote; remote_loc; local } ->
+      let import_kind = Base.Option.value ~default:import_kind kind in
+      Statement.import_named_specifier_type
+        cx
+        import_reason
+        import_kind
+        ~source_loc
+        ~module_name
+        ~remote_name_loc:remote_loc
+        ~remote_name:remote
+        ~local_name:local
+    | Namespace ->
+      Statement.import_namespace_specifier_type
+        cx
+        import_reason
+        import_kind
+        ~source_loc
+        ~module_name
+        ~local_loc:id_loc
+    | Default local_name ->
+      Statement.import_default_specifier_type
+        cx
+        import_reason
+        import_kind
+        ~source_loc
+        ~module_name
+        ~local_loc:id_loc
+        ~local_name
+
   let resolve cx id_loc (def, def_reason) =
     let t =
       match def with
@@ -184,6 +215,8 @@ module Make (Env : Env_sig.S) (Statement : Statement_sig.S with module Env := En
       | Update { exp_loc; op = _ } -> resolve_update cx ~id_loc ~exp_loc def_reason
       | TypeAlias (loc, alias) -> resolve_type_alias cx loc alias
       | OpaqueType (loc, opaque) -> resolve_opaque_type cx loc opaque
+      | Import { import_kind; source; source_loc; import } ->
+        resolve_import cx id_loc def_reason import_kind source source_loc import
       | _ -> Tvar.mk cx (mk_reason (RCustom "unhandled def") id_loc)
     in
     Debug_js.Verbose.print_if_verbose_lazy

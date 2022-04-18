@@ -57,10 +57,10 @@ let string_of_import_kind =
   | ImportValue -> ""
 
 let string_of_import = function
-  | Named { kind; remote } ->
+  | Named { kind; remote; local = _; remote_loc = _ } ->
     spf "%s%s" (Base.Option.value_map ~f:string_of_import_kind ~default:"" kind) remote
   | Namespace -> "namespace"
-  | Default -> "default"
+  | Default _ -> "default"
 
 let string_of_source = function
   | Binding b -> string_of_binding b
@@ -92,7 +92,7 @@ let string_of_source = function
   | TypeParam (loc, _) -> spf "tparam %s" (ALoc.debug_to_string loc)
   | Enum (loc, _) -> spf "enum %s" (ALoc.debug_to_string loc)
   | Interface _ -> "interface"
-  | Import { import_kind; source; import } ->
+  | Import { import_kind; source; import; source_loc = _ } ->
     spf "import %s%s from %s" (string_of_import_kind import_kind) (string_of_import import) source
 
 let print_values values =

@@ -366,9 +366,9 @@ Cannot get `React.Missing` because property `Missing` is missing in module `Reac
                    ^^^^^^^
 
 References:
-   es-namespace-pascal.js:1:1
+   es-namespace-pascal.js:1:13
    1| import * as React from 'React';
-      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+                  ^^^^^ [1]
 
 
 Error ---------------------------------------------------------------------------------------------- es-namespace.js:4:2
@@ -421,9 +421,9 @@ Cannot get `React.Missing` because property `Missing` is missing in module `reac
                    ^^^^^^^
 
 References:
-   es-namespace.js:1:1
+   es-namespace.js:1:13
    1| import * as React from 'react';
-      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+                  ^^^^^ [1]
 
 
 

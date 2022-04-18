@@ -43,9 +43,11 @@ type import =
   | Named of {
       kind: Ast.Statement.ImportDeclaration.import_kind option;
       remote: string;
+      remote_loc: ALoc.t;
+      local: string;
     }
   | Namespace
-  | Default
+  | Default of string
 
 type def =
   | Binding of binding
@@ -76,6 +78,7 @@ type def =
       import_kind: Ast.Statement.ImportDeclaration.import_kind;
       import: import;
       source: string;
+      source_loc: ALoc.t;
     }
 
 type map = (def * ALoc.t virtual_reason) ALocMap.t
@@ -445,7 +448,7 @@ class def_finder =
       let open Ast.Statement.ImportDeclaration in
       let {
         import_kind;
-        source = (_, { Ast.StringLiteral.value = source; _ });
+        source = (source_loc, { Ast.StringLiteral.value = source; _ });
         specifiers;
         default;
         comments = _;
@@ -465,28 +468,39 @@ class def_finder =
               in
               this#add_binding
                 id_loc
-                (mk_reason (RIdentifier (OrdinaryName name)) id_loc)
-                (Import { import_kind; source; import = Named { kind; remote } }))
+                (mk_reason (RNamedImportedType (source, name)) rem_id_loc)
+                (Import
+                   {
+                     import_kind;
+                     source;
+                     source_loc;
+                     import = Named { kind; remote; remote_loc = rem_id_loc; local = name };
+                   }
+                ))
             specifiers
         | Some (ImportNamespaceSpecifier (_, (id_loc, { Ast.Identifier.name; _ }))) ->
+          let import_reason =
+            let import_reason_desc =
+              match import_kind with
+              | ImportType -> RImportStarType name
+              | ImportTypeof -> RImportStarTypeOf name
+              | ImportValue -> RImportStar name
+            in
+            mk_reason import_reason_desc id_loc
+          in
           this#add_binding
             id_loc
-            (mk_reason (RIdentifier (OrdinaryName name)) loc)
-            (Import { import_kind; source; import = Namespace })
+            import_reason
+            (Import { import_kind; source; source_loc; import = Namespace })
         | None -> ()
       end;
       Base.Option.iter
         ~f:(fun (id_loc, { Ast.Identifier.name; _ }) ->
-          let desc =
-            match import_kind with
-            | ImportType -> RImportStarType name
-            | ImportTypeof -> RImportStarTypeOf name
-            | ImportValue -> RImportStar name
-          in
+          let import_reason = mk_reason (RDefaultImportedType (name, source)) id_loc in
           this#add_binding
             id_loc
-            (mk_reason desc id_loc)
-            (Import { import_kind; source; import = Default }))
+            import_reason
+            (Import { import_kind; source; source_loc; import = Default name }))
         default;
       super#import_declaration loc decl
   end
