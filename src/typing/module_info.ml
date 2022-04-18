@@ -34,23 +34,20 @@ let empty_cjs_module ref =
 
 let export info name loc t =
   match info.kind with
-  | CJS None ->
-    info.kind <- ES { named = NameUtils.Map.singleton name (Some loc, t); star = [] };
-    Ok ()
+  | CJS None -> info.kind <- ES { named = NameUtils.Map.singleton name (Some loc, t); star = [] }
   | ES { named; star } ->
-    info.kind <- ES { named = NameUtils.Map.add name (Some loc, t) named; star };
-    Ok ()
-  | CJS (Some _) -> Error (Error_message.EIndeterminateModuleType loc)
+    info.kind <- ES { named = NameUtils.Map.add name (Some loc, t) named; star }
+  | CJS (Some _) ->
+    (* Indeterminate module. We already errored during parsing. *)
+    ()
 
 let export_star info loc ns =
   match info.kind with
-  | CJS None ->
-    info.kind <- ES { named = NameUtils.Map.empty; star = [(loc, ns)] };
-    Ok ()
-  | ES { named; star } ->
-    info.kind <- ES { named; star = (loc, ns) :: star };
-    Ok ()
-  | CJS (Some _) -> Error (Error_message.EIndeterminateModuleType loc)
+  | CJS None -> info.kind <- ES { named = NameUtils.Map.empty; star = [(loc, ns)] }
+  | ES { named; star } -> info.kind <- ES { named; star = (loc, ns) :: star }
+  | CJS (Some _) ->
+    (* Indeterminate module. We already errored during parsing. *)
+    ()
 
 let export_type info name loc t = info.type_named <- NameUtils.Map.add name (loc, t) info.type_named
 
@@ -60,8 +57,8 @@ let cjs_clobber info loc =
   match info.kind with
   | CJS _ ->
     info.kind <- CJS (Some loc);
-    Ok ()
-  | ES _ -> Error (Error_message.EIndeterminateModuleType loc)
+    true
+  | ES _ -> false
 
 (* Re-exporting names from another file can lead to conflicts. We resolve
  * conflicts on a last-export-wins basis. Star exports are accumulated in

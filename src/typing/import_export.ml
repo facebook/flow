@@ -112,19 +112,11 @@ module Make (Env : Env_sig.S) = struct
   let set_module_exports cx loc t = Env.set_internal_var cx "exports" t loc
 
   let cjs_clobber cx loc t =
-    match Module_info.cjs_clobber (Context.module_info cx) loc with
-    | Ok () -> set_module_exports cx loc t
-    | Error msg -> Flow.add_output cx msg
+    if Module_info.cjs_clobber (Context.module_info cx) loc then set_module_exports cx loc t
 
-  let export cx name loc t =
-    match Module_info.export (Context.module_info cx) name loc t with
-    | Ok () -> ()
-    | Error msg -> Flow.add_output cx msg
+  let export cx name loc t = Module_info.export (Context.module_info cx) name loc t
 
-  let export_star cx loc ns =
-    match Module_info.export_star (Context.module_info cx) loc ns with
-    | Ok () -> ()
-    | Error msg -> Flow.add_output cx msg
+  let export_star cx loc ns = Module_info.export_star (Context.module_info cx) loc ns
 
   let export_type cx name = Module_info.export_type (Context.module_info cx) name
 
