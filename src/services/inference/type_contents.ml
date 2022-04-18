@@ -11,15 +11,6 @@ open Types_js_types
 type parse_contents_return =
   | Parsed of parse_artifacts  (** Note that there may be parse errors *)
   | Skipped
-  | File_sig_error of File_sig.With_Loc.error
-      (** These errors are currently fatal to the parse. It would be nice to make them not fatal, at
-       * which point this whole type could be replaced by just `parse_artifacts option` *)
-  | Docblock_errors of Parsing_service_js.docblock_error list
-      (** Normally these are included in `Parse_artifacts` since they do not prevent us from
-       * parsing. However, for consistency with `flow status` and `flow check`, we return docblock
-       * errors instead of the file sig error if we encounter a file sig error but have previously
-       * encountered docblock errors. We could eliminate this case by changing the behavior of the
-       * main error-checking code, or by making file sig errors non-fatal to the parse. *)
 
 (* This puts a nicer interface for do_parse. At some point, `do_parse` itself should be
  * rethought, at which point `parse_contents` could call it directly without confusion. This would
@@ -45,36 +36,22 @@ let do_parse_wrapper ~options filename contents =
     Parsed
       (Parse_artifacts { docblock; docblock_errors; ast; file_sig; tolerable_errors; parse_errors })
   | Parsing_service_js.Parse_fail fails ->
-    let errors =
-      match fails with
-      | Parsing_service_js.Uncaught_exception exn ->
-        (* we have historically just blown up here, so we will continue to do so. *)
-        Exception.reraise exn
-      | Parsing_service_js.Parse_error (loc, err) ->
-        (* We pass `~fail:false` to `do_parse` above, so we should never reach this case. *)
-        failwith
-          (Utils_js.spf
-             "Unexpectedly encountered Parse_fail with parse error: %s at %s"
-             (Parse_error.PP.error err)
-             (Loc.debug_to_string loc)
-          )
-      | Parsing_service_js.Docblock_errors _ ->
-        (* Parsing_service_js.do_parse cannot create these. They are only created by another
-         * caller of do_parse. It would be nice to prove this fact via the type system. *)
-        failwith "Unexpectedly encountered docblock errors"
-      | Parsing_service_js.File_sig_error err ->
-        begin
-          match docblock_errors with
-          | [] ->
-            (* Even with `~fail:false`, `do_parse` cannot currently recover from file sig errors, so
-               * we must handle them here. *)
-            File_sig_error err
-          | _ ->
-            (* See comments on parse_contents_return type for an explanation of this behavior *)
-            Docblock_errors docblock_errors
-        end
-    in
-    errors
+    (match fails with
+    | Parsing_service_js.Uncaught_exception exn ->
+      (* we have historically just blown up here, so we will continue to do so. *)
+      Exception.reraise exn
+    | Parsing_service_js.Parse_error (loc, err) ->
+      (* We pass `~fail:false` to `do_parse` above, so we should never reach this case. *)
+      failwith
+        (Utils_js.spf
+           "Unexpectedly encountered Parse_fail with parse error: %s at %s"
+           (Parse_error.PP.error err)
+           (Loc.debug_to_string loc)
+        )
+    | Parsing_service_js.Docblock_errors _ ->
+      (* Parsing_service_js.do_parse cannot create these. They are only created by another
+       * caller of do_parse. It would be nice to prove this fact via the type system. *)
+      failwith "Unexpectedly encountered docblock errors")
   | Parsing_service_js.(Parse_skip (Skip_non_flow_file | Skip_resource_file | Skip_package_json _))
     ->
     (* This happens when a non-source file is queried, such as a json file *)
@@ -102,13 +79,6 @@ let parse_contents ~options ~profiling contents filename =
         in
         (Some parse_artifacts, errors)
       | Skipped -> (None, Flow_error.ErrorSet.empty)
-      | Docblock_errors errs ->
-        let errs = Inference_utils.set_of_docblock_errors ~source_file:filename errs in
-        (None, errs)
-      | File_sig_error err ->
-        let err = Inference_utils.error_of_file_sig_error ~source_file:filename err in
-        let errs = Flow_error.ErrorSet.singleton err in
-        (None, errs)
   )
 
 let errors_of_file_artifacts ~options ~env ~loc_of_aloc ~filename ~file_artifacts =

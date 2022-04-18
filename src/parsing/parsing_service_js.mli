@@ -36,7 +36,6 @@ and parse_failure =
   | Uncaught_exception of Exception.t
   | Docblock_errors of docblock_error list
   | Parse_error of parse_error
-  | File_sig_error of File_sig.With_Loc.error
 
 and docblock_error = Loc.t * docblock_error_kind
 

@@ -7,7 +7,6 @@
 
 module Ast_utils = Flow_ast_utils
 module Ast = Flow_ast
-module Result = Base.Result
 open Flow_ast_visitor
 
 module Make
@@ -71,14 +70,13 @@ struct
   [@@deriving show]
 
   type tolerable_error =
+    | IndeterminateModuleType of L.t
     (* e.g. `module.exports.foo = 4` when not at the top level *)
     | BadExportPosition of L.t
     (* e.g. `foo(module)`, dangerous because `module` is aliased *)
     | BadExportContext of string (* offending identifier *) * L.t
     | SignatureVerificationError of L.t Signature_error.t
   [@@deriving show]
-
-  type error = IndeterminateModuleType of L.t
 
   type tolerable_t = t * tolerable_error list
 
@@ -173,37 +171,42 @@ struct
   let add_declare_module name m loc fsig =
     { fsig with declare_modules = SMap.add name (loc, m) fsig.declare_modules }
 
-  let add_require require msig =
+  let add_require require msig errs =
     let requires = require :: msig.requires in
-    Ok { msig with requires }
+    ({ msig with requires }, errs)
 
-  let add_es_export loc source { module_kind; requires } =
+  let add_es_export loc source { module_kind; requires } errs =
+    let requires =
+      match source with
+      | None -> requires
+      | Some source -> ExportFrom { source } :: requires
+    in
     match module_kind with
-    | CommonJS { mod_exp_loc = Some _ } -> Error (IndeterminateModuleType loc)
+    | CommonJS { mod_exp_loc = Some _ } ->
+      (* We still need to add requires so the dependency is recorded, because we
+       * continue checking the file and will try to find the resolved module. *)
+      let errs = IndeterminateModuleType loc :: errs in
+      ({ module_kind; requires }, errs)
     | CommonJS _
     | ES ->
-      let requires =
-        match source with
-        | None -> requires
-        | Some source -> ExportFrom { source } :: requires
-      in
-      Ok { module_kind = ES; requires }
+      ({ module_kind = ES; requires }, errs)
 
-  let set_cjs_exports mod_exp_loc msig =
+  let set_cjs_exports mod_exp_loc msig errs =
     match msig.module_kind with
     | CommonJS { mod_exp_loc = original_mod_exp_loc } ->
       let mod_exp_loc = Base.Option.first_some original_mod_exp_loc (Some mod_exp_loc) in
       let module_kind = CommonJS { mod_exp_loc } in
-      Ok { msig with module_kind }
-    | ES -> Error (IndeterminateModuleType mod_exp_loc)
+      ({ msig with module_kind }, errs)
+    | ES ->
+      let err = IndeterminateModuleType mod_exp_loc in
+      (msig, err :: errs)
 
   (* Subclass of the AST visitor class that calculates requires and exports. Initializes with the
      scope builder class.
   *)
   class requires_exports_calculator ~ast ~opts =
     object (this)
-      inherit
-        [(t * tolerable_error list, error) result, L.t] visitor ~init:(Ok (empty, [])) as super
+      inherit [tolerable_t, L.t] visitor ~init:(empty, []) as super
 
       val scope_info : Scope_api.info =
         Scope_builder.program ~with_types:true ~enable_enums:opts.enable_enums ast
@@ -223,19 +226,16 @@ struct
           visited_requires_with_bindings <- L.LSet.add loc visited_requires_with_bindings
 
       method private update_module_sig f =
-        match curr_declare_module with
-        | Some m ->
-          (match f m with
-          | Error e -> this#set_acc (Error e)
-          | Ok msig -> curr_declare_module <- Some msig)
-        | None ->
-          this#update_acc (function
-              | Error _ as acc -> acc
-              | Ok (fsig, errs) ->
-                (match f fsig.module_sig with
-                | Error e -> Error e
-                | Ok module_sig -> Ok ({ fsig with module_sig }, errs))
-              )
+        this#update_acc (fun (fsig, errs) ->
+            match curr_declare_module with
+            | Some msig ->
+              let (msig, errs) = f msig errs in
+              curr_declare_module <- Some msig;
+              (fsig, errs)
+            | None ->
+              let (module_sig, errs) = f fsig.module_sig errs in
+              ({ fsig with module_sig }, errs)
+        )
 
       method private add_require require = this#update_module_sig (add_require require)
 
@@ -244,7 +244,7 @@ struct
         let add =
           match (kind, source) with
           | (ExportValue, _) -> add_es_export loc source
-          | (ExportType, None) -> (fun msig -> Ok msig)
+          | (ExportType, None) -> (fun msig errs -> (msig, errs))
           | (ExportType, Some source) -> add_require (ExportFrom { source })
         in
         this#update_module_sig add
@@ -256,7 +256,7 @@ struct
         this#update_module_sig (set_cjs_exports mod_exp_loc)
 
       method private add_tolerable_error (err : tolerable_error) =
-        this#update_acc (Result.map ~f:(fun (fsig, errs) -> (fsig, err :: errs)))
+        this#update_acc (fun (fsig, errs) -> (fsig, err :: errs))
 
       method! expression (expr : (L.t, L.t) Ast.Expression.t) =
         let open Ast.Expression in
@@ -772,10 +772,7 @@ struct
           match curr_declare_module with
           | None -> failwith "lost curr_declare_module"
           | Some m ->
-            this#update_acc (function
-                | Error _ as acc -> acc
-                | Ok (fsig, errs) -> Ok (add_declare_module name m loc fsig, errs)
-                )
+            this#update_acc (fun (fsig, errs) -> (add_declare_module name m loc fsig, errs))
         end;
         curr_declare_module <- None;
         ret
@@ -816,15 +813,20 @@ struct
   let filter_irrelevant_errors ~module_kind tolerable_errors =
     match module_kind with
     | CommonJS _ -> tolerable_errors
-    | ES -> []
+    | ES ->
+      List.filter
+        (function
+          | BadExportPosition _
+          | BadExportContext _ ->
+            false
+          | _ -> true)
+        tolerable_errors
 
   let program ~ast ~opts =
     let walk = new requires_exports_calculator ~ast ~opts in
-    match walk#eval walk#program ast with
-    | Ok (exports, tolerable_errors) ->
-      let module_kind = exports.module_sig.module_kind in
-      Ok (exports, filter_irrelevant_errors ~module_kind tolerable_errors)
-    | Error e -> Error e
+    let (exports, tolerable_errors) = walk#eval walk#program ast in
+    let module_kind = exports.module_sig.module_kind in
+    (exports, filter_irrelevant_errors ~module_kind tolerable_errors)
 
   class mapper =
     object (this)
@@ -980,6 +982,12 @@ struct
 
       method tolerable_error (tolerable_error : tolerable_error) =
         match tolerable_error with
+        | IndeterminateModuleType loc ->
+          let loc' = this#loc loc in
+          if loc == loc' then
+            tolerable_error
+          else
+            IndeterminateModuleType loc'
         | BadExportPosition loc ->
           let loc' = this#loc loc in
           if loc == loc' then
@@ -1043,15 +1051,6 @@ struct
             end
           )
 
-      method error (error : error) =
-        match error with
-        | IndeterminateModuleType loc ->
-          let loc' = this#loc loc in
-          if loc == loc' then
-            error
-          else
-            IndeterminateModuleType loc'
-
       method loc (loc : L.t) = loc
     end
 end
@@ -1063,6 +1062,7 @@ let abstractify_tolerable_errors =
   let module WL = With_Loc in
   let module WA = With_ALoc in
   let abstractify_tolerable_error = function
+    | WL.IndeterminateModuleType loc -> WA.IndeterminateModuleType (ALoc.of_loc loc)
     | WL.BadExportPosition loc -> WA.BadExportPosition (ALoc.of_loc loc)
     | WL.BadExportContext (name, loc) -> WA.BadExportContext (name, ALoc.of_loc loc)
     | WL.SignatureVerificationError err ->

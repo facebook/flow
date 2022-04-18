@@ -34,7 +34,6 @@ and parse_failure =
   | Uncaught_exception of Exception.t
   | Docblock_errors of docblock_error list
   | Parse_error of parse_error
-  | File_sig_error of File_sig.With_Loc.error
 
 and docblock_error = Loc.t * docblock_error_kind
 
@@ -422,42 +421,40 @@ let do_parse ~parse_options ~info content file =
             relay_integration_module_prefix;
           }
         in
-        (match File_sig.With_Loc.program ~ast ~opts:file_sig_opts with
-        | Error e -> Parse_fail (File_sig_error e)
-        | Ok (file_sig, tolerable_errors) ->
-          let sig_opts =
-            {
-              Type_sig_parse.type_asserts;
-              suppress_types;
-              munge = not prevent_munge;
-              ignore_static_propTypes;
-              facebook_keyMirror;
-              facebook_fbt;
-              max_literal_len;
-              exact_by_default;
-              module_ref_prefix;
-              enable_enums;
-              enable_relay_integration;
-              relay_integration_module_prefix;
-            }
-          in
-          let (sig_errors, locs, type_sig) =
-            let strict = Docblock.is_strict info in
-            Type_sig_utils.parse_and_pack_module ~strict sig_opts (Some file) ast
-          in
-          let exports = Exports.of_module type_sig in
-          let tolerable_errors =
-            List.fold_left
-              (fun acc (_, err) ->
-                match err with
-                | Type_sig.SigError err ->
-                  let err = Signature_error.map (Type_sig_collections.Locs.get locs) err in
-                  File_sig.With_Loc.SignatureVerificationError err :: acc
-                | Type_sig.CheckError -> acc)
-              tolerable_errors
-              sig_errors
-          in
-          Parse_ok { ast; file_sig; locs; type_sig; tolerable_errors; parse_errors; exports })
+        let (file_sig, tolerable_errors) = File_sig.With_Loc.program ~ast ~opts:file_sig_opts in
+        let sig_opts =
+          {
+            Type_sig_parse.type_asserts;
+            suppress_types;
+            munge = not prevent_munge;
+            ignore_static_propTypes;
+            facebook_keyMirror;
+            facebook_fbt;
+            max_literal_len;
+            exact_by_default;
+            module_ref_prefix;
+            enable_enums;
+            enable_relay_integration;
+            relay_integration_module_prefix;
+          }
+        in
+        let (sig_errors, locs, type_sig) =
+          let strict = Docblock.is_strict info in
+          Type_sig_utils.parse_and_pack_module ~strict sig_opts (Some file) ast
+        in
+        let exports = Exports.of_module type_sig in
+        let tolerable_errors =
+          List.fold_left
+            (fun acc (_, err) ->
+              match err with
+              | Type_sig.SigError err ->
+                let err = Signature_error.map (Type_sig_collections.Locs.get locs) err in
+                File_sig.With_Loc.SignatureVerificationError err :: acc
+              | Type_sig.CheckError -> acc)
+            tolerable_errors
+            sig_errors
+        in
+        Parse_ok { ast; file_sig; locs; type_sig; tolerable_errors; parse_errors; exports }
   with
   | Parse_error.Error (e, _) -> Parse_fail (Parse_error e)
   | e ->

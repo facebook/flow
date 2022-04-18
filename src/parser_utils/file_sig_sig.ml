@@ -121,6 +121,7 @@ module type S = sig
   [@@deriving show]
 
   type tolerable_error =
+    | IndeterminateModuleType of L.t
     (* e.g. `module.exports.foo = 4` when not at the top level *)
     | BadExportPosition of L.t
     (* e.g. `foo(module)`, dangerous because `module` is aliased *)
@@ -128,15 +129,13 @@ module type S = sig
     | SignatureVerificationError of L.t Signature_error.t
   [@@deriving show]
 
-  type error = IndeterminateModuleType of L.t
-
   type tolerable_t = t * tolerable_error list
 
   val empty : t
 
   val default_opts : options
 
-  val program : ast:(L.t, L.t) Flow_ast.Program.t -> opts:options -> (tolerable_t, error) result
+  val program : ast:(L.t, L.t) Flow_ast.Program.t -> opts:options -> tolerable_t
 
   (* Use for debugging; not for exposing info to the end user *)
   val to_string : t -> string
@@ -148,8 +147,6 @@ module type S = sig
 
   class mapper :
     object
-      method error : error -> error
-
       method file_sig : t -> t
 
       method ident : L.t Flow_ast_utils.ident -> L.t Flow_ast_utils.ident

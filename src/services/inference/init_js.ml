@@ -128,8 +128,6 @@ let load_lib_files ~ccx ~options ~reader files =
                  Inference_utils.set_of_parse_error ~source_file:lib_file error
                | Parsing.Docblock_errors errs ->
                  Inference_utils.set_of_docblock_errors ~source_file:lib_file errs
-               | Parsing.File_sig_error error ->
-                 Inference_utils.set_of_file_sig_error ~source_file:lib_file error
              in
              let errors_acc = Flow_error.ErrorSet.union errors errors_acc in
              Lwt.return (exclude_syms, false, errors_acc, asts_acc)

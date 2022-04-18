@@ -10,15 +10,14 @@ open File_sig.With_Loc
 
 let visit ?parse_options ?(opts = default_opts) source =
   let (ast, _) = Parser_flow.program ~parse_options source in
-  match program ~ast ~opts with
-  | Ok (fsig, _) -> fsig
-  | Error _ -> assert_failure "Unexpected error"
+  fst (program ~ast ~opts)
 
 let visit_err ?parse_options ?(opts = default_opts) source =
   let (ast, _) = Parser_flow.program ~parse_options source in
   match program ~ast ~opts with
-  | Error e -> e
-  | Ok _ -> assert_failure "Unexpected success"
+  | (_, []) -> assert_failure "Unexpected success"
+  | (_, [e]) -> e
+  | _ -> assert_failure "Unexpected multiple errors"
 
 let substring_loc s loc =
   Loc.(
@@ -685,11 +684,13 @@ let tests =
            let source = "export default 0; module.exports = 0;" in
            match visit_err source with
            | IndeterminateModuleType loc -> assert_substring_equal ~ctxt "module.exports" source loc
+           | _ -> assert_failure "Unexpected error"
          );
          ( "err_indeterminate_export_after_clobber" >:: fun ctxt ->
            let source = "module.exports = 0; export default 0;" in
            match visit_err source with
            | IndeterminateModuleType loc ->
              assert_substring_equal ~ctxt "export default 0;" source loc
+           | _ -> assert_failure "Unexpected error"
          );
        ]

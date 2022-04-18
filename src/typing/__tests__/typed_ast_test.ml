@@ -82,9 +82,8 @@ let parse_content file content =
   let (ast, _parse_errors) =
     Parser_flow.program_file ~fail:false ~parse_options content (Some file)
   in
-  match File_sig.program ~ast ~opts:File_sig.default_opts with
-  | Ok (fsig, _) -> Ok (ast, fsig)
-  | Error e -> Error e
+  let (file_sig, _) = File_sig.program ~ast ~opts:File_sig.default_opts in
+  (ast, file_sig)
 
 (* copied from Type_inference_js *)
 (* TODO: consider whether require tvars are necessary, and if not, take this out *)
@@ -126,70 +125,70 @@ let add_require_tvars =
 let before_and_after_stmts file_name =
   let content = Sys_utils.cat file_name in
   let file_key = File_key.LibFile file_name in
-  match parse_content file_key content with
-  | Error e -> Error e
-  | Ok ((_, { Flow_ast.Program.statements = stmts; _ }), file_sig) ->
-    (* Loading the entire libdefs here would be overkill, but the typed_ast tests do use Object
-     * in a few tests. In order to avoid EBuiltinLookupFailed errors with an empty source location,
-     * we manually add "Object" -> Any into the builtins map. We use the UnresolvedName any type
-     * to avoid any "Any value used as type" errors that may otherwise appear *)
-    let master_cx = Context.empty_master_cx () in
-    let () =
-      let reason =
-        let loc = ALoc.none in
-        let desc = Reason.RCustom "Explicit any used in type_ast tests" in
-        Reason.mk_reason desc loc
-      in
-      Builtins.set_builtin
-        ~flow_t:(fun _ -> ())
-        master_cx.Context.builtins
-        (Reason.OrdinaryName "Object")
-        (Type.AnyT (reason, Type.AnyError (Some Type.UnresolvedName)))
+  let ((_, { Flow_ast.Program.statements = stmts; _ }), file_sig) =
+    parse_content file_key content
+  in
+  (* Loading the entire libdefs here would be overkill, but the typed_ast tests do use Object
+   * in a few tests. In order to avoid EBuiltinLookupFailed errors with an empty source location,
+   * we manually add "Object" -> Any into the builtins map. We use the UnresolvedName any type
+   * to avoid any "Any value used as type" errors that may otherwise appear *)
+  let master_cx = Context.empty_master_cx () in
+  let () =
+    let reason =
+      let loc = ALoc.none in
+      let desc = Reason.RCustom "Explicit any used in type_ast tests" in
+      Reason.mk_reason desc loc
     in
-    let cx =
-      let aloc_table = lazy (ALoc.empty_table file_key) in
-      let ccx = Context.(make_ccx master_cx) in
-      Context.make
-        ccx
-        metadata
-        file_key
-        aloc_table
-        (Reason.OrdinaryName Files.lib_module_ref)
-        Context.Checking
-    in
-    add_require_tvars cx file_sig;
-    let module_scope = Scope.fresh () in
-    Env.init_env cx module_scope;
-    let stmts = Base.List.map ~f:Ast_loc_utils.loc_to_aloc_mapper#statement stmts in
-    let t_stmts =
-      try
-        Abnormal.try_with_abnormal_exn
-          ~f:(fun _ ->
-            Statement.toplevel_decls cx stmts;
-            Statement.Toplevels.toplevels Statement.statement cx stmts)
-          ~on_abnormal_exn:(function
-            | (Abnormal.Stmts t_stmts, _) -> t_stmts
-            | (Abnormal.Stmt t_stmt, _) -> [t_stmt]
-            | (Abnormal.Expr (annot, t_expr), _) ->
-              [
-                ( annot,
-                  Flow_ast.Statement.Expression
-                    {
-                      Flow_ast.Statement.Expression.expression = t_expr;
-                      directive = None;
-                      comments = None;
-                    }
-                );
-              ])
-          ()
-      with
-      | e ->
-        let e = Exception.wrap e in
-        let message = Exception.get_ctor_string e in
-        let stack = Exception.get_backtrace_string e in
-        assert_failure (Utils_js.spf "Exception: %s\nStack:\n%s\n" message stack)
-    in
-    Ok (stmts, t_stmts)
+    Builtins.set_builtin
+      ~flow_t:(fun _ -> ())
+      master_cx.Context.builtins
+      (Reason.OrdinaryName "Object")
+      (Type.AnyT (reason, Type.AnyError (Some Type.UnresolvedName)))
+  in
+  let cx =
+    let aloc_table = lazy (ALoc.empty_table file_key) in
+    let ccx = Context.(make_ccx master_cx) in
+    Context.make
+      ccx
+      metadata
+      file_key
+      aloc_table
+      (Reason.OrdinaryName Files.lib_module_ref)
+      Context.Checking
+  in
+  add_require_tvars cx file_sig;
+  let module_scope = Scope.fresh () in
+  Env.init_env cx module_scope;
+  let stmts = Base.List.map ~f:Ast_loc_utils.loc_to_aloc_mapper#statement stmts in
+  let t_stmts =
+    try
+      Abnormal.try_with_abnormal_exn
+        ~f:(fun _ ->
+          Statement.toplevel_decls cx stmts;
+          Statement.Toplevels.toplevels Statement.statement cx stmts)
+        ~on_abnormal_exn:(function
+          | (Abnormal.Stmts t_stmts, _) -> t_stmts
+          | (Abnormal.Stmt t_stmt, _) -> [t_stmt]
+          | (Abnormal.Expr (annot, t_expr), _) ->
+            [
+              ( annot,
+                Flow_ast.Statement.Expression
+                  {
+                    Flow_ast.Statement.Expression.expression = t_expr;
+                    directive = None;
+                    comments = None;
+                  }
+              );
+            ])
+        ()
+    with
+    | e ->
+      let e = Exception.wrap e in
+      let message = Exception.get_ctor_string e in
+      let stack = Exception.get_backtrace_string e in
+      assert_failure (Utils_js.spf "Exception: %s\nStack:\n%s\n" message stack)
+  in
+  (stmts, t_stmts)
 
 class ['a, 'b] loc_none_mapper =
   object
@@ -303,9 +302,8 @@ let check_structural_equality relative_path file_name stmts1 stmts2 =
   assert_equal ~pp_diff ~msg stmts1 stmts2
 
 let test_case relative_path file_name _ =
-  match before_and_after_stmts file_name with
-  | Ok (s, s') -> check_structural_equality relative_path file_name s s'
-  | Error (File_sig.IndeterminateModuleType _) -> ()
+  let (s, s') = before_and_after_stmts file_name in
+  check_structural_equality relative_path file_name s s'
 
 (* This list includes files for which the produced Typed AST differs in structure
  * from the parsed AST. *)

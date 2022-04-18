@@ -1,4 +1,4 @@
 // @flow
 export default 0;
 module.exports = 0; // error
-(0: string); // no error b/c we skip check
+(0: string); // error

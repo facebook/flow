@@ -17,15 +17,6 @@ let error_of_parse_error source_file (loc, err) =
   |> Flow_error.concretize_error loc_of_aloc
   |> Flow_error.make_error_printable
 
-let error_of_file_sig_error source_file e =
-  File_sig.With_Loc.(
-    match e with
-    | IndeterminateModuleType loc -> Error_message.EIndeterminateModuleType (ALoc.of_loc loc)
-  )
-  |> Flow_error.error_of_msg ~trace_reasons:[] ~source_file
-  |> Flow_error.concretize_error loc_of_aloc
-  |> Flow_error.make_error_printable
-
 let parse_content file content =
   let parse_options =
     Some
@@ -58,10 +49,10 @@ let parse_content file content =
     in
     Error converted
   else
-    match File_sig.With_Loc.program ~ast ~opts:File_sig.With_Loc.default_opts with
-    | Error e ->
-      Error (Errors.ConcreteLocPrintableErrorSet.singleton (error_of_file_sig_error file e))
-    | Ok (fsig, _tolerable_errors) -> Ok (ast, fsig)
+    let (fsig, _tolerable_errors) =
+      File_sig.With_Loc.program ~ast ~opts:File_sig.With_Loc.default_opts
+    in
+    Ok (ast, fsig)
 
 let array_of_list f lst = Array.of_list (List.map f lst)
 

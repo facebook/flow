@@ -67,8 +67,6 @@ let collate_parse_results parse_results =
             Inference_utils.set_of_parse_error ~source_file:file err
           | Parsing_service_js.Docblock_errors errs ->
             Inference_utils.set_of_docblock_errors ~source_file:file errs
-          | Parsing_service_js.File_sig_error err ->
-            Inference_utils.set_of_file_sig_error ~source_file:file err
         in
         update_errset errors file errset)
       FilenameMap.empty
