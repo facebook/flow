@@ -414,11 +414,11 @@ end = struct
     | OpAssign { rhs; _ } -> depends_of_op_assign rhs
     | Function { fully_annotated; function_ } -> depends_of_fun fully_annotated function_
     | Class { fully_annotated; class_ } -> depends_of_class fully_annotated class_
-    | DeclaredClass decl -> depends_of_declared_class decl
+    | DeclaredClass (_, decl) -> depends_of_declared_class decl
     | TypeAlias (_, alias) -> depends_of_alias alias
     | OpaqueType (_, alias) -> depends_of_opaque alias
     | TypeParam tparam -> depends_of_tparam tparam
-    | Interface inter -> depends_of_interface inter
+    | Interface (_, inter) -> depends_of_interface inter
     | Enum _ ->
       (* Enums don't contain any code or type references, they're literal-like *) ALocMap.empty
     | Import _ -> (* same with all imports *) ALocMap.empty

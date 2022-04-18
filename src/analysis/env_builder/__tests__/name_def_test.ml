@@ -74,7 +74,7 @@ let string_of_source = function
          ~default:"<anonymous>"
          id
       )
-  | DeclaredClass { Ast.Statement.DeclareClass.id = (_, { Ast.Identifier.name; _ }); _ } ->
+  | DeclaredClass (_, { Ast.Statement.DeclareClass.id = (_, { Ast.Identifier.name; _ }); _ }) ->
     spf "declared class %s" name
   | Class { class_ = { Ast.Class.id; _ }; fully_annotated } ->
     spf

@@ -68,11 +68,11 @@ type def =
       fully_annotated: bool;
       class_: (ALoc.t, ALoc.t) Ast.Class.t;
     }
-  | DeclaredClass of (ALoc.t, ALoc.t) Ast.Statement.DeclareClass.t
+  | DeclaredClass of ALoc.t * (ALoc.t, ALoc.t) Ast.Statement.DeclareClass.t
   | TypeAlias of ALoc.t * (ALoc.t, ALoc.t) Ast.Statement.TypeAlias.t
   | OpaqueType of ALoc.t * (ALoc.t, ALoc.t) Ast.Statement.OpaqueType.t
   | TypeParam of (ALoc.t, ALoc.t) Ast.Type.TypeParam.t
-  | Interface of (ALoc.t, ALoc.t) Ast.Statement.Interface.t
+  | Interface of ALoc.t * (ALoc.t, ALoc.t) Ast.Statement.Interface.t
   | Enum of ALoc.t Ast.Statement.EnumDeclaration.body
   | Import of {
       import_kind: Ast.Statement.ImportDeclaration.import_kind;
@@ -330,7 +330,7 @@ class def_finder =
       this#add_binding
         id_loc
         (mk_reason (RClass (RIdentifier (OrdinaryName name))) loc)
-        (DeclaredClass decl);
+        (DeclaredClass (loc, decl));
       super#declare_class loc decl
 
     method! assignment loc (expr : ('loc, 'loc) Ast.Expression.Assignment.t) =
@@ -435,7 +435,7 @@ class def_finder =
     method! interface loc (interface : ('loc, 'loc) Ast.Statement.Interface.t) =
       let open Ast.Statement.Interface in
       let { id = (name_loc, _); _ } = interface in
-      this#add_binding name_loc (mk_reason RInterfaceType loc) (Interface interface);
+      this#add_binding name_loc (mk_reason RInterfaceType loc) (Interface (loc, interface));
       super#interface loc interface
 
     method! enum_declaration loc (enum : ('loc, 'loc) Ast.Statement.EnumDeclaration.t) =

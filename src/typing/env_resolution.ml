@@ -203,6 +203,18 @@ module Make (Env : Env_sig.S) (Statement : Statement_sig.S with module Env := En
         ~local_loc:id_loc
         ~local_name
 
+  let resolve_interface cx loc inter =
+    let cache = Context.node_cache cx in
+    let (t, ast) = Statement.interface cx loc inter in
+    Node_cache.set_interface cache loc (t, ast);
+    t
+
+  let resolve_declare_class cx loc class_ =
+    let cache = Context.node_cache cx in
+    let (t, ast) = Statement.declare_class cx loc class_ in
+    Node_cache.set_declared_class cache loc (t, ast);
+    t
+
   let resolve cx id_loc (def, def_reason) =
     let t =
       match def with
@@ -217,6 +229,8 @@ module Make (Env : Env_sig.S) (Statement : Statement_sig.S with module Env := En
       | OpaqueType (loc, opaque) -> resolve_opaque_type cx loc opaque
       | Import { import_kind; source; source_loc; import } ->
         resolve_import cx id_loc def_reason import_kind source source_loc import
+      | Interface (loc, inter) -> resolve_interface cx loc inter
+      | DeclaredClass (loc, class_) -> resolve_declare_class cx loc class_
       | _ -> Tvar.mk cx (mk_reason (RCustom "unhandled def") id_loc)
     in
     Debug_js.Verbose.print_if_verbose_lazy

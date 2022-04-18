@@ -627,37 +627,6 @@ struct
         { declarations; kind; comments }
       )
     in
-    let interface_helper cx loc (iface_sig, self) =
-      let def_reason = mk_reason (desc_of_t self) loc in
-      Class_type_sig.check_super cx def_reason iface_sig;
-      Class_type_sig.check_implements cx def_reason iface_sig;
-      Class_type_sig.check_methods cx def_reason iface_sig;
-      let (t_internal, t) = Class_type_sig.classtype ~check_polarity:false cx iface_sig in
-      Flow.unify cx self t_internal;
-      t
-    in
-    let interface cx loc decl =
-      let { Interface.id = (name_loc, { Ast.Identifier.name; comments = _ }); _ } = decl in
-      let reason = DescFormat.instance_reason (OrdinaryName name) name_loc in
-      let (iface_sig, iface_t, decl_ast) = Anno.mk_interface_sig cx reason decl in
-      let t = interface_helper cx loc (iface_sig, iface_t) in
-      Env.init_type cx name t name_loc;
-      decl_ast
-    in
-    let declare_class cx loc decl =
-      let { DeclareClass.id = (name_loc, { Ast.Identifier.name; comments = _ }); _ } = decl in
-      let reason = DescFormat.instance_reason (OrdinaryName name) name_loc in
-      let (class_sig, class_t, decl_ast) = Anno.mk_declare_class_sig cx reason decl in
-      let t = interface_helper cx loc (class_sig, class_t) in
-      let use_op =
-        Op
-          (AssignVar
-             { var = Some (mk_reason (RIdentifier (OrdinaryName name)) loc); init = reason_of_t t }
-          )
-      in
-      Env.init_var ~has_anno:false cx ~use_op (OrdinaryName name) t name_loc;
-      decl_ast
-    in
     let check cx b =
       Abnormal.catch_stmts_control_flow_exception (fun () ->
           toplevel_decls cx b.Block.body;
@@ -2027,9 +1996,39 @@ struct
       in
       Env.init_implicit_let kind cx ~use_op name ~has_anno:false class_t name_loc;
       (class_loc, ClassDeclaration c_ast)
-    | (loc, DeclareClass decl) -> (loc, DeclareClass (declare_class cx loc decl))
-    | (loc, DeclareInterface decl) -> (loc, DeclareInterface (interface cx loc decl))
-    | (loc, InterfaceDeclaration decl) -> (loc, InterfaceDeclaration (interface cx loc decl))
+    | ( loc,
+        DeclareClass
+          ( { Ast.Statement.DeclareClass.id = (name_loc, { Ast.Identifier.name; comments = _ }); _ }
+          as decl
+          )
+      ) ->
+      let (t, decl_ast) = declare_class cx loc decl in
+      let use_op =
+        Op
+          (AssignVar
+             { var = Some (mk_reason (RIdentifier (OrdinaryName name)) loc); init = reason_of_t t }
+          )
+      in
+      Env.init_var ~has_anno:false cx ~use_op (OrdinaryName name) t name_loc;
+      (loc, DeclareClass decl_ast)
+    | ( loc,
+        DeclareInterface
+          ( { Ast.Statement.Interface.id = (name_loc, { Ast.Identifier.name; comments = _ }); _ } as
+          decl
+          )
+      ) ->
+      let (t, decl_ast) = interface cx loc decl in
+      Env.init_type cx name t name_loc;
+      (loc, DeclareInterface decl_ast)
+    | ( loc,
+        InterfaceDeclaration
+          ( { Ast.Statement.Interface.id = (name_loc, { Ast.Identifier.name; comments = _ }); _ } as
+          decl
+          )
+      ) ->
+      let (t, decl_ast) = interface cx loc decl in
+      Env.init_type cx name t name_loc;
+      (loc, InterfaceDeclaration decl_ast)
     | (loc, DeclareModule { DeclareModule.id; body; kind; comments }) ->
       let (_, name) =
         match id with
@@ -2698,6 +2697,49 @@ struct
       (match export_kind with
       | Ast.Statement.ExportValue -> Import_export.export_star cx loc source_module_t
       | Ast.Statement.ExportType -> Import_export.export_type_star cx loc source_module_t)
+
+  and interface_helper cx loc (iface_sig, self) =
+    let def_reason = mk_reason (desc_of_t self) loc in
+    Class_type_sig.check_super cx def_reason iface_sig;
+    Class_type_sig.check_implements cx def_reason iface_sig;
+    Class_type_sig.check_methods cx def_reason iface_sig;
+    let (t_internal, t) = Class_type_sig.classtype ~check_polarity:false cx iface_sig in
+    Flow.unify cx self t_internal;
+    t
+
+  and interface cx loc decl =
+    let node_cache = Context.node_cache cx in
+    match Node_cache.get_interface node_cache loc with
+    | Some node ->
+      Debug_js.Verbose.print_if_verbose_lazy
+        cx
+        (lazy [spf "Interface cache hit at %s" (ALoc.debug_to_string loc)]);
+      node
+    | None ->
+      let { Ast.Statement.Interface.id = (name_loc, { Ast.Identifier.name; comments = _ }); _ } =
+        decl
+      in
+      let reason = DescFormat.instance_reason (OrdinaryName name) name_loc in
+      let (iface_sig, iface_t, decl_ast) = Anno.mk_interface_sig cx reason decl in
+      let t = interface_helper cx loc (iface_sig, iface_t) in
+      (t, decl_ast)
+
+  and declare_class cx loc decl =
+    let node_cache = Context.node_cache cx in
+    match Node_cache.get_declared_class node_cache loc with
+    | Some node ->
+      Debug_js.Verbose.print_if_verbose_lazy
+        cx
+        (lazy [spf "Declared class cache hit at %s" (ALoc.debug_to_string loc)]);
+      node
+    | None ->
+      let { Ast.Statement.DeclareClass.id = (name_loc, { Ast.Identifier.name; comments = _ }); _ } =
+        decl
+      in
+      let reason = DescFormat.instance_reason (OrdinaryName name) name_loc in
+      let (class_sig, class_t, decl_ast) = Anno.mk_declare_class_sig cx reason decl in
+      let t = interface_helper cx loc (class_sig, class_t) in
+      (t, decl_ast)
 
   and object_prop cx ~(object_hint : Type.t option) acc prop =
     let open Ast.Expression.Object in

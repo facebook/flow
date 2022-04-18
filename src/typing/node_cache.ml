@@ -14,6 +14,9 @@ type t = {
   mutable functions: (Type.t * (ALoc.t, ALoc.t * Type.t) Ast.Function.t) ALocMap.t;
   mutable aliases: (Type.t * (ALoc.t, ALoc.t * Type.t) Ast.Statement.TypeAlias.t) ALocMap.t;
   mutable opaques: (Type.t * (ALoc.t, ALoc.t * Type.t) Ast.Statement.OpaqueType.t) ALocMap.t;
+  mutable interfaces: (Type.t * (ALoc.t, ALoc.t * Type.t) Ast.Statement.Interface.t) ALocMap.t;
+  mutable declared_classes:
+    (Type.t * (ALoc.t, ALoc.t * Type.t) Ast.Statement.DeclareClass.t) ALocMap.t;
 }
 
 let empty =
@@ -23,6 +26,8 @@ let empty =
     functions = ALocMap.empty;
     aliases = ALocMap.empty;
     opaques = ALocMap.empty;
+    interfaces = ALocMap.empty;
+    declared_classes = ALocMap.empty;
   }
 
 let set_annotation cache ((loc, _) as anno) =
@@ -37,6 +42,11 @@ let set_alias cache loc alias = cache.aliases <- ALocMap.add loc alias cache.ali
 
 let set_opaque cache loc opaque = cache.opaques <- ALocMap.add loc opaque cache.opaques
 
+let set_interface cache loc inter = cache.interfaces <- ALocMap.add loc inter cache.interfaces
+
+let set_declared_class cache loc class_ =
+  cache.declared_classes <- ALocMap.add loc class_ cache.declared_classes
+
 let get_annotation cache loc = ALocMap.find_opt loc cache.annotations
 
 let get_expression cache loc = ALocMap.find_opt loc cache.expressions
@@ -46,3 +56,7 @@ let get_function cache loc = ALocMap.find_opt loc cache.functions
 let get_alias cache loc = ALocMap.find_opt loc cache.aliases
 
 let get_opaque cache loc = ALocMap.find_opt loc cache.opaques
+
+let get_interface cache loc = ALocMap.find_opt loc cache.interfaces
+
+let get_declared_class cache loc = ALocMap.find_opt loc cache.declared_classes

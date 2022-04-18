@@ -111,4 +111,16 @@ module type S = sig
     local_loc:ALoc.t ->
     local_name:string ->
     Type.t
+
+  val interface :
+    Context.t ->
+    ALoc.t ->
+    (ALoc.t, ALoc.t) Ast.Statement.Interface.t ->
+    Type.t * (ALoc.t, ALoc.t * Type.t) Ast.Statement.Interface.t
+
+  val declare_class :
+    Context.t ->
+    ALoc.t ->
+    (ALoc.t, ALoc.t) Ast.Statement.DeclareClass.t ->
+    Type.t * (ALoc.t, ALoc.t * Type.t) Ast.Statement.DeclareClass.t
 end
