@@ -3439,7 +3439,8 @@ module Make
             | Some refinement_key ->
               let reason = mk_reason (RProperty (Some (OrdinaryName prop_name))) ploc in
               let obj_reason = mk_reason (RefinementKey.reason_desc refinement_key) obj_loc in
-              Context.add_new_env_matching_props cx (prop_name, other_loc, obj_reason);
+              if RefinementKey.(refinement_key.lookup.projections) = [] then
+                Context.add_new_env_matching_props cx (prop_name, other_loc, obj_reason);
               let write_entries =
                 L.LMap.add
                   obj_loc
