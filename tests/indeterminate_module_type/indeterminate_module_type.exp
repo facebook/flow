@@ -1,0 +1,56 @@
+Error ---------------------------------------------------------------------------------------------- cjs_after_es.js:3:1
+
+Unable to determine module type (CommonJS vs ES) if both an export statement and `module.exports` are used in the same
+module! [module-type-conflict]
+
+   3| module.exports = 0; // error
+      ^^^^^^^^^^^^^^
+
+
+Error ----------------------------------------------------------------------------------------- es_decl_after_cjs.js:3:1
+
+Unable to determine module type (CommonJS vs ES) if both an export statement and `module.exports` are used in the same
+module! [module-type-conflict]
+
+   3| export const x = 0; // error
+      ^^^^^^^^^^^^^^^^^^^
+
+
+Error -------------------------------------------------------------------------------------- es_default_after_cjs.js:3:1
+
+Unable to determine module type (CommonJS vs ES) if both an export statement and `module.exports` are used in the same
+module! [module-type-conflict]
+
+   3| export default 0; // error
+      ^^^^^^^^^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------- es_ns_after_cjs.js:3:1
+
+Unable to determine module type (CommonJS vs ES) if both an export statement and `module.exports` are used in the same
+module! [module-type-conflict]
+
+   3| export * as ns from "./dependency"; // error
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error ----------------------------------------------------------------------------------------- es_spec_after_cjs.js:3:1
+
+Unable to determine module type (CommonJS vs ES) if both an export statement and `module.exports` are used in the same
+module! [module-type-conflict]
+
+   3| export {x} from "./dependency"; // error
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error ----------------------------------------------------------------------------------------- es_star_after_cjs.js:3:1
+
+Unable to determine module type (CommonJS vs ES) if both an export statement and `module.exports` are used in the same
+module! [module-type-conflict]
+
+   3| export * from "./dependency"; // error
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+
+Found 6 errors
