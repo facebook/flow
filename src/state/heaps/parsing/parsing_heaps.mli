@@ -144,6 +144,7 @@ module Reader_dispatcher : READER with type reader = Abstract_state_reader.t
 type worker_mutator = {
   add_parsed:
     File_key.t ->
+    file_addr option ->
     exports:Exports.t ->
     Xx.hash ->
     string option ->
@@ -153,7 +154,7 @@ type worker_mutator = {
     locs_tbl ->
     type_sig ->
     Modulename.Set.t;
-  add_unparsed: File_key.t -> Xx.hash -> string option -> Modulename.Set.t;
+  add_unparsed: File_key.t -> file_addr option -> Xx.hash -> string option -> Modulename.Set.t;
   clear_not_found: File_key.t -> Modulename.Set.t;
 }
 

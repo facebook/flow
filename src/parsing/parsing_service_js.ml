@@ -503,99 +503,120 @@ let reducer
     ~noflow
     exported_module
     acc
-    file : results =
-  let filename_string = File_key.to_string file in
-  match cat filename_string with
-  | exception _ ->
-    (* The file watcher does not distinguish between modified or deleted files,
-     * we distinguish by parsing. Either the wather notified us because the file
-     * was deleted, or because the file was modified and then the file was
-     * deleted before we got to this point.
+    file_key : results =
+  match Parsing_heaps.get_file_addr file_key with
+  | Some _ when SharedMem.is_init_transaction () ->
+    (* If we can find an existing entry during the initial transaction, we must
+     * have been asked to parse the same file twice. This can happen if we init
+     * from scratch and walking the file system finds the same file twice.
      *
-     * In either case, we update the file entity so that the latest data is
-     * empty, indicating no file. We also record these files so their shared
-     * hash table keys can be removed when the transaction commits. *)
-    let dirty_modules = worker_mutator.Parsing_heaps.clear_not_found file in
-    let not_found = FilenameSet.add file acc.not_found in
-    let dirty_modules = Modulename.Set.union dirty_modules acc.dirty_modules in
-    { acc with not_found; dirty_modules }
-  | content ->
-    let hash = hash_content content in
-    (* If skip_changed is true, then we're currently ensuring some files are parsed. That
-     * means we don't currently have the file's AST but we might have the file's hash in the
-     * non-oldified heap. What we want to avoid is parsing files which differ from the hash *)
-    if skip_changed && not (content_hash_matches_file_hash ~reader file hash) then
-      { acc with changed = FilenameSet.add file acc.changed }
-    else if skip_unchanged && content_hash_matches_old_file_hash ~reader file hash then
-      { acc with unchanged = FilenameSet.add file acc.unchanged }
-    else (
-      match parse_docblock ~max_tokens:max_header_tokens file content with
-      | ([], info) ->
-        let info =
-          if noflow file then
-            { info with Docblock.flow = Some Docblock.OptOut }
-          else
-            info
-        in
-        let module_name = exported_module file info in
-        begin
-          match do_parse ~parse_options ~info content file with
-          | Parse_ok { ast; file_sig; exports; locs; type_sig; tolerable_errors; parse_errors = _ }
-            ->
-            (* if parse_options.fail == true, then parse errors will hit Parse_fail below. otherwise,
-               ignore any parse errors we get here. *)
-            let file_sig = (file_sig, tolerable_errors) in
-            let dirty_modules =
-              worker_mutator.Parsing_heaps.add_parsed
-                file
-                ~exports
-                hash
-                module_name
-                info
-                ast
-                file_sig
-                locs
-                type_sig
-            in
-            let parsed = FilenameSet.add file acc.parsed in
-            let dirty_modules = Modulename.Set.union dirty_modules acc.dirty_modules in
-            { acc with parsed; dirty_modules }
-          | Parse_fail error ->
-            let dirty_modules = worker_mutator.Parsing_heaps.add_unparsed file hash module_name in
-            let failed = (file :: fst acc.failed, error :: snd acc.failed) in
-            let dirty_modules = Modulename.Set.union dirty_modules acc.dirty_modules in
-            { acc with failed; dirty_modules }
-          | Parse_skip (Skip_package_json result) ->
-            let error =
-              let file_str = File_key.to_string file in
-              match result with
-              | Ok pkg ->
-                Package_heaps.Package_heap_mutator.add_package_json file_str pkg;
-                None
-              | Error err ->
-                Package_heaps.Package_heap_mutator.add_error file_str;
-                Some err
-            in
-            let dirty_modules = worker_mutator.Parsing_heaps.add_unparsed file hash module_name in
-            let unparsed = FilenameSet.add file acc.unparsed in
-            let package_json = (file :: fst acc.package_json, error :: snd acc.package_json) in
-            let dirty_modules = Modulename.Set.union dirty_modules acc.dirty_modules in
-            { acc with unparsed; package_json; dirty_modules }
-          | Parse_skip Skip_non_flow_file
-          | Parse_skip Skip_resource_file ->
-            let dirty_modules = worker_mutator.Parsing_heaps.add_unparsed file hash module_name in
-            let unparsed = FilenameSet.add file acc.unparsed in
-            let dirty_modules = Modulename.Set.union dirty_modules acc.dirty_modules in
-            { acc with unparsed; dirty_modules }
-        end
-      | (docblock_errors, info) ->
-        let module_name = exported_module file info in
-        let dirty_modules = worker_mutator.Parsing_heaps.add_unparsed file hash module_name in
-        let error = Docblock_errors docblock_errors in
-        let failed = (file :: fst acc.failed, error :: snd acc.failed) in
-        let dirty_modules = Modulename.Set.union dirty_modules acc.dirty_modules in
-        { acc with failed; dirty_modules }
-    )
+     * Since we must have already parsed the file during this transaction, we
+     * can skip this entirely. *)
+    acc
+  | file_opt ->
+    let filename_string = File_key.to_string file_key in
+    (match cat filename_string with
+    | exception _ ->
+      (* The file watcher does not distinguish between modified or deleted files,
+       * we distinguish by parsing. Either the wather notified us because the file
+       * was deleted, or because the file was modified and then the file was
+       * deleted before we got to this point.
+       *
+       * In either case, we update the file entity so that the latest data is
+       * empty, indicating no file. We also record these files so their shared
+       * hash table keys can be removed when the transaction commits. *)
+      let dirty_modules = worker_mutator.Parsing_heaps.clear_not_found file_key in
+      let not_found = FilenameSet.add file_key acc.not_found in
+      let dirty_modules = Modulename.Set.union dirty_modules acc.dirty_modules in
+      { acc with not_found; dirty_modules }
+    | content ->
+      let hash = hash_content content in
+      (* If skip_changed is true, then we're currently ensuring some files are parsed. That
+       * means we don't currently have the file's AST but we might have the file's hash in the
+       * non-oldified heap. What we want to avoid is parsing files which differ from the hash *)
+      if skip_changed && not (content_hash_matches_file_hash ~reader file_key hash) then
+        { acc with changed = FilenameSet.add file_key acc.changed }
+      else if skip_unchanged && content_hash_matches_old_file_hash ~reader file_key hash then
+        { acc with unchanged = FilenameSet.add file_key acc.unchanged }
+      else (
+        match parse_docblock ~max_tokens:max_header_tokens file_key content with
+        | ([], info) ->
+          let info =
+            if noflow file_key then
+              { info with Docblock.flow = Some Docblock.OptOut }
+            else
+              info
+          in
+          let module_name = exported_module file_key info in
+          begin
+            match do_parse ~parse_options ~info content file_key with
+            | Parse_ok
+                { ast; file_sig; exports; locs; type_sig; tolerable_errors; parse_errors = _ } ->
+              (* if parse_options.fail == true, then parse errors will hit Parse_fail below. otherwise,
+                 ignore any parse errors we get here. *)
+              let file_sig = (file_sig, tolerable_errors) in
+              let dirty_modules =
+                worker_mutator.Parsing_heaps.add_parsed
+                  file_key
+                  file_opt
+                  ~exports
+                  hash
+                  module_name
+                  info
+                  ast
+                  file_sig
+                  locs
+                  type_sig
+              in
+              let parsed = FilenameSet.add file_key acc.parsed in
+              let dirty_modules = Modulename.Set.union dirty_modules acc.dirty_modules in
+              { acc with parsed; dirty_modules }
+            | Parse_fail error ->
+              let dirty_modules =
+                worker_mutator.Parsing_heaps.add_unparsed file_key file_opt hash module_name
+              in
+              let failed = (file_key :: fst acc.failed, error :: snd acc.failed) in
+              let dirty_modules = Modulename.Set.union dirty_modules acc.dirty_modules in
+              { acc with failed; dirty_modules }
+            | Parse_skip (Skip_package_json result) ->
+              let error =
+                let file_str = File_key.to_string file_key in
+                match result with
+                | Ok pkg ->
+                  Package_heaps.Package_heap_mutator.add_package_json file_str pkg;
+                  None
+                | Error err ->
+                  Package_heaps.Package_heap_mutator.add_error file_str;
+                  Some err
+              in
+              let dirty_modules =
+                worker_mutator.Parsing_heaps.add_unparsed file_key file_opt hash module_name
+              in
+              let unparsed = FilenameSet.add file_key acc.unparsed in
+              let package_json =
+                (file_key :: fst acc.package_json, error :: snd acc.package_json)
+              in
+              let dirty_modules = Modulename.Set.union dirty_modules acc.dirty_modules in
+              { acc with unparsed; package_json; dirty_modules }
+            | Parse_skip Skip_non_flow_file
+            | Parse_skip Skip_resource_file ->
+              let dirty_modules =
+                worker_mutator.Parsing_heaps.add_unparsed file_key file_opt hash module_name
+              in
+              let unparsed = FilenameSet.add file_key acc.unparsed in
+              let dirty_modules = Modulename.Set.union dirty_modules acc.dirty_modules in
+              { acc with unparsed; dirty_modules }
+          end
+        | (docblock_errors, info) ->
+          let module_name = exported_module file_key info in
+          let dirty_modules =
+            worker_mutator.Parsing_heaps.add_unparsed file_key file_opt hash module_name
+          in
+          let error = Docblock_errors docblock_errors in
+          let failed = (file_key :: fst acc.failed, error :: snd acc.failed) in
+          let dirty_modules = Modulename.Set.union dirty_modules acc.dirty_modules in
+          { acc with failed; dirty_modules }
+      ))
 
 (* merge is just memberwise union/concat of results *)
 let merge a b =
