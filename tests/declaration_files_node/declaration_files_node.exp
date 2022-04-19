@@ -160,5 +160,21 @@ Importing from an untyped module makes it `any` and is not safe! Did you mean to
        ^^^^^^^^^^^^^^^^^^^^^
 
 
+Error -------------------------------------------------------------------------------------------- test_relative.js:19:9
 
-Found 10 errors
+Cannot resolve module `./confusing_dir`. [cannot-resolve-module]
+
+   19| require('./confusing_dir'); // error: cannot-resolve-module
+               ^^^^^^^^^^^^^^^^^
+
+
+Error -------------------------------------------------------------------------------------------- test_relative.js:22:9
+
+Cannot resolve module `./confusing_dir_dot_flow`. [cannot-resolve-module]
+
+   22| require('./confusing_dir_dot_flow'); // error: cannot-resolve-module
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+
+Found 12 errors
