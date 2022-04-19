@@ -221,6 +221,26 @@ let entities_rollback_test _ctxt =
   compact ();
   assert_heap_size 0
 
+let slot_taken_test _ =
+  let foo = "foo" in
+  let bar = "bar" in
+  let key = "key" in
+  let size = (2 * header_size) + string_size foo + string_size bar in
+  alloc size (fun chunk ->
+      let foo = write_string chunk foo in
+      let bar = write_string chunk bar in
+      assert (foo = H1.add key foo);
+      (* add returns foo, because already taken *)
+      assert (foo = H1.add key bar);
+      (* add returns bar, because slot was freed via delete *)
+      H1.remove key;
+      assert (bar = H1.add key bar)
+  );
+  (* clean up *)
+  H1.remove key;
+  compact ();
+  assert_heap_size 0
+
 let tests =
   "heap_tests"
   >::: [
@@ -228,6 +248,7 @@ let tests =
          "entities" >:: entities_test;
          "entities_compact" >:: entities_compact_test;
          "entities_rollback" >:: entities_rollback_test;
+         "slot_taken" >:: slot_taken_test;
        ]
 
 let () =
