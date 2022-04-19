@@ -1711,20 +1711,17 @@ CAMLprim value hh_add(value key, value addr) {
  * is either free or points to the key.
  */
 /*****************************************************************************/
-static size_t find_slot(value key) {
+static size_t find_slot(value key, helt_t* elt) {
   size_t hashtbl_slots = info->hashtbl_slots;
   uint64_t hash = get_hash(key);
   size_t slot = hash & (hashtbl_slots - 1);
   size_t init_slot = slot;
   while (1) {
-    if (hashtbl[slot].hash == hash) {
-      return slot;
-    }
-    if (hashtbl[slot].hash == 0) {
+    *elt = hashtbl[slot];
+    if (elt->hash == hash || elt->hash == 0) {
       return slot;
     }
     slot = (slot + 1) & (hashtbl_slots - 1);
-
     if (slot == init_slot) {
       raise_hash_table_full();
     }
@@ -1741,8 +1738,9 @@ static size_t find_slot(value key) {
 CAMLprim value hh_mem(value key) {
   CAMLparam1(key);
   check_should_exit();
-  helt_t elt = hashtbl[find_slot(key)];
-  CAMLreturn(Val_bool(elt.hash == get_hash(key) && elt.addr != NULL_ADDR));
+  helt_t elt;
+  find_slot(key, &elt);
+  CAMLreturn(Val_bool(elt.hash != 0 && elt.addr != NULL_ADDR));
 }
 
 /*****************************************************************************/
@@ -1776,9 +1774,11 @@ CAMLprim value hh_get(value key) {
   CAMLparam1(key);
   check_should_exit();
 
-  size_t slot = find_slot(key);
-  assert(hashtbl[slot].hash == get_hash(key));
-  CAMLreturn(Val_long(hashtbl[slot].addr));
+  helt_t elt;
+  find_slot(key, &elt);
+  assert(elt.hash != 0);
+
+  CAMLreturn(Val_long(elt.addr));
 }
 
 /*****************************************************************************/
@@ -1800,27 +1800,28 @@ CAMLprim value hh_get_size(value addr_val) {
 /*****************************************************************************/
 CAMLprim value hh_move(value key1, value key2) {
   CAMLparam2(key1, key2);
-  size_t slot1 = find_slot(key1);
-  size_t slot2 = find_slot(key2);
+  helt_t elt1, elt2;
+  size_t slot1 = find_slot(key1, &elt1);
+  size_t slot2 = find_slot(key2, &elt2);
 
   assert_master();
-  assert(hashtbl[slot1].hash == get_hash(key1));
-  assert(hashtbl[slot2].addr == NULL_ADDR);
+  assert(elt1.hash != 0);
+  assert(elt2.addr == NULL_ADDR);
 
   // We are taking up a previously empty slot. Let's increment the counter.
   // hcounter_filled doesn't change, since slot1 becomes empty and slot2 becomes
   // filled.
-  if (hashtbl[slot2].hash == 0) {
+  if (elt2.hash == 0) {
     info->hcounter += 1;
   }
 
   // GC write barrier
   if (info->gc_phase == Phase_mark) {
-    mark_slice_darken(hashtbl[slot1].addr);
+    mark_slice_darken(elt1.addr);
   }
 
   hashtbl[slot2].hash = get_hash(key2);
-  hashtbl[slot2].addr = hashtbl[slot1].addr;
+  hashtbl[slot2].addr = elt1.addr;
   hashtbl[slot1].addr = NULL_ADDR;
   CAMLreturn(Val_unit);
 }
@@ -1832,15 +1833,16 @@ CAMLprim value hh_move(value key1, value key2) {
 /*****************************************************************************/
 CAMLprim value hh_remove(value key) {
   CAMLparam1(key);
-  size_t slot = find_slot(key);
+  helt_t elt;
+  size_t slot = find_slot(key, &elt);
 
   assert_master();
-  assert(hashtbl[slot].hash == get_hash(key));
-  assert(hashtbl[slot].addr != NULL_ADDR);
+  assert(elt.hash != 0);
+  assert(elt.addr != NULL_ADDR);
 
   // GC write barrier
   if (info->gc_phase == Phase_mark) {
-    mark_slice_darken(hashtbl[slot].addr);
+    mark_slice_darken(elt.addr);
   }
 
   hashtbl[slot].addr = NULL_ADDR;
