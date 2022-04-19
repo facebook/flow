@@ -1,7 +1,6 @@
 Error ------------------------------------------------------------------------------------------------- builtin.js:11:31
 
-Cannot assign `123` to `lengthTest3` because property `length` is missing in number [1] but exists in `IHasLength` [2].
-[prop-missing]
+Cannot assign `123` to `lengthTest3` because number [1] is incompatible with `IHasLength` [2]. [incompatible-type]
 
    builtin.js:11:31
    11| var lengthTest3: IHasLength = 123; // number doesn't have length
@@ -15,8 +14,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- builtin.js:12:31
 
-Cannot assign `true` to `lengthTest4` because property `length` is missing in boolean [1] but exists in
-`IHasLength` [2]. [prop-missing]
+Cannot assign `true` to `lengthTest4` because boolean [1] is incompatible with `IHasLength` [2]. [incompatible-type]
 
    builtin.js:12:31
    12| var lengthTest4: IHasLength = true; // bool doesn't have length

@@ -116,8 +116,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- all.js:27:13
 
-Cannot call `Promise.all` with `0` bound to `promises` because property `@@iterator` is missing in number [1] but exists
-in `$Iterable` [2]. [prop-missing]
+Cannot call `Promise.all` with `0` bound to `promises` because number [1] is incompatible with `$Iterable` [2].
+[incompatible-call]
 
    all.js:27:13
      27| Promise.all(0); // Error: expected array instead of number
@@ -145,8 +145,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- allSettled.js:7:20
 
-Cannot call `Promise.allSettled` with `0` bound to `promises` because property `@@iterator` is missing in number [1] but
-exists in `$Iterable` [2]. [prop-missing]
+Cannot call `Promise.allSettled` with `0` bound to `promises` because number [1] is incompatible with `$Iterable` [2].
+[incompatible-call]
 
    allSettled.js:7:20
       7| Promise.allSettled(0); // Error: expected $Iterable instead of number

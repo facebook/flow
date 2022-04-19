@@ -68,3 +68,7 @@ function* f2() {
 
 for (const x in E) { // Error
 }
+
+// Interface
+(E: interface {}); // Error
+(E: interface {A: E; B: E}); // Error

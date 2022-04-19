@@ -2302,8 +2302,8 @@ References:
 Error ------------------------------------------------------------------------------------------- stream/stream.js:86:22
 
 Cannot call `stream.Readable.from` with `101` bound to `iterable` because: [incompatible-call]
- - Either property `@@iterator` is missing in number [1] but exists in `$Iterable` [2].
- - Or property `@@asyncIterator` is missing in number [1] but exists in `$AsyncIterable` [3].
+ - Either number [1] is incompatible with `$Iterable` [2].
+ - Or number [1] is incompatible with `$AsyncIterable` [3].
 
    stream/stream.js:86:22
      86| stream.Readable.from(101); // error - TypeError [ERR_INVALID_ARG_TYPE]: The "iterable" argument must be an instance of Iterable. Received type number (101)

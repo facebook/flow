@@ -67,3 +67,5 @@ const bsa: B | S  = BS.A;
 
 declare var sb: S | B;
 (sb: string | boolean); // Error
+
+(S.A: interface {}); // Error
