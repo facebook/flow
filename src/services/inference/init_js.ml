@@ -131,7 +131,7 @@ let load_lib_files ~ccx ~options ~reader files =
              in
              let errors_acc = Flow_error.ErrorSet.union errors errors_acc in
              Lwt.return (exclude_syms, false, errors_acc, asts_acc)
-           | Lib_skip -> Lwt.return (exclude_syms, false, errors_acc, asts_acc))
+           | Lib_skip -> Lwt.return (exclude_syms, ok_acc, errors_acc, asts_acc))
          (NameUtils.Set.empty, true, Flow_error.ErrorSet.empty, [])
   in
   let builtin_exports =
