@@ -240,14 +240,14 @@ module Node = struct
 
   let path_if_exists =
     let path_exists ~file_options path =
-      file_exists path && (not (Files.is_ignored file_options path)) && not (dir_exists path)
+      file_exists path && (not (Files.is_ignored file_options path)) && not (Sys.is_directory path)
     in
     fun ~file_options resolution_acc path ->
       let path = resolve_symlinks path in
       let declaration_path = path ^ Files.flow_ext in
       if
         Files.is_flow_file ~options:file_options path
-        && (path_exists ~file_options declaration_path || path_exists ~file_options path)
+        && (path_exists ~file_options path || path_exists ~file_options declaration_path)
       then
         Some path
       else (
