@@ -1627,8 +1627,8 @@ CAMLprim value hh_add(value key, value addr) {
   elt.addr = Long_val(addr);
 
   size_t hashtbl_slots = info->hashtbl_slots;
-  unsigned int slot = elt.hash & (hashtbl_slots - 1);
-  unsigned int init_slot = slot;
+  size_t slot = elt.hash & (hashtbl_slots - 1);
+  size_t init_slot = slot;
 
   while (1) {
     uint64_t slot_hash = hashtbl[slot].hash;
@@ -1711,11 +1711,11 @@ CAMLprim value hh_add(value key, value addr) {
  * is either free or points to the key.
  */
 /*****************************************************************************/
-static unsigned int find_slot(value key) {
+static size_t find_slot(value key) {
   size_t hashtbl_slots = info->hashtbl_slots;
   uint64_t hash = get_hash(key);
-  unsigned int slot = hash & (hashtbl_slots - 1);
-  unsigned int init_slot = slot;
+  size_t slot = hash & (hashtbl_slots - 1);
+  size_t init_slot = slot;
   while (1) {
     if (hashtbl[slot].hash == hash) {
       return slot;
@@ -1776,7 +1776,7 @@ CAMLprim value hh_get(value key) {
   CAMLparam1(key);
   check_should_exit();
 
-  unsigned int slot = find_slot(key);
+  size_t slot = find_slot(key);
   assert(hashtbl[slot].hash == get_hash(key));
   CAMLreturn(Val_long(hashtbl[slot].addr));
 }
@@ -1800,8 +1800,8 @@ CAMLprim value hh_get_size(value addr_val) {
 /*****************************************************************************/
 CAMLprim value hh_move(value key1, value key2) {
   CAMLparam2(key1, key2);
-  unsigned int slot1 = find_slot(key1);
-  unsigned int slot2 = find_slot(key2);
+  size_t slot1 = find_slot(key1);
+  size_t slot2 = find_slot(key2);
 
   assert_master();
   assert(hashtbl[slot1].hash == get_hash(key1));
@@ -1832,7 +1832,7 @@ CAMLprim value hh_move(value key1, value key2) {
 /*****************************************************************************/
 CAMLprim value hh_remove(value key) {
   CAMLparam1(key);
-  unsigned int slot = find_slot(key);
+  size_t slot = find_slot(key);
 
   assert_master();
   assert(hashtbl[slot].hash == get_hash(key));
