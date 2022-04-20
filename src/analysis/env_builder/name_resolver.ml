@@ -196,6 +196,14 @@ module Make
 
     val unrefine_deeply : int -> t -> t
 
+    (* Replace the base write of the refinement with the new base.
+       If the write is not a refinement, replace the entire write with the base.
+
+       This is useful for attaching a refinement that is known to be associated with a write, but
+       is not attached due to syntactic difference.
+       e.g. refinements on obj.x should be attached to x in const {x} = obj *)
+    val replace_refinement_base_write : base:t -> t -> t
+
     val normalize_through_refinements : write_state -> WriteSet.t
 
     val writes_of_uninitialized : (int -> bool) -> t -> write_state list
@@ -325,6 +333,11 @@ module Make
       match t.write_state with
       | Refinement { refinement_id; val_t } when refinement_id = id -> val_t
       | _ -> t
+
+    let replace_refinement_base_write ~base t =
+      match t.write_state with
+      | Refinement { refinement_id; val_t = _ } -> refinement refinement_id base
+      | _ -> base
 
     let join = function
       | [] -> PHI []
@@ -1489,14 +1502,74 @@ module Make
          * reassignment errors, we should consider them to be lets *)
         this#pattern_identifier ~kind:Flow_ast.Statement.VariableDeclaration.Let ident
 
+      (* We want to translate object pattern destructing {a:{b:{c}}} = o into o.a.b.c,
+         so the use of refinement can be recorded as a write.
+         We use acc to keep track of the current parent expr *)
+      method private binding_pattern_track_object_destructuring ?kind ~acc expr =
+        let open Ast.Pattern in
+        let (_, patt) = expr in
+        (match patt with
+        | Object { Object.properties; annot; comments = _ } ->
+          Base.List.iter properties ~f:(fun prop ->
+              let open Ast.Pattern.Object in
+              match prop with
+              | RestElement prop -> ignore @@ this#pattern_object_rest_property ?kind prop
+              | Property ((_, { Property.key; pattern; default; shorthand = _ }) as prop) ->
+                (match key with
+                | Property.Identifier (loc, { Ast.Identifier.name = x; comments = _ })
+                | Property.Literal (loc, { Ast.Literal.value = Ast.Literal.String x; _ }) ->
+                  Base.Option.iter default ~f:(fun default -> ignore @@ this#expression default);
+                  let acc =
+                    let open Ast.Expression in
+                    let property =
+                      Member.PropertyIdentifier (loc, { Ast.Identifier.name = x; comments = None })
+                    in
+                    (loc, Member { Member._object = acc; property; comments = None })
+                  in
+                  (match pattern with
+                  | ( _,
+                      Identifier
+                        {
+                          Identifier.name = (loc, { Ast.Identifier.name = x; comments = _ });
+                          annot;
+                          optional = _;
+                        }
+                    ) ->
+                    ignore @@ this#expression acc;
+                    (* Leaf of the object pattern *)
+                    (match this#get_val_of_expression acc with
+                    | None -> ignore @@ this#pattern ?kind pattern
+                    | Some refined_v ->
+                      ignore @@ this#type_annotation_hint annot;
+                      this#bind_pattern_identifier_customized
+                        ?kind
+                        ~get_assigned_val:(fun base ->
+                          Val.replace_refinement_base_write ~base refined_v)
+                        loc
+                        x)
+                  | _ ->
+                    ignore @@ this#binding_pattern_track_object_destructuring ?kind ~acc pattern)
+                | _ -> ignore @@ this#pattern_object_property ?kind prop)
+          );
+          ignore @@ this#type_annotation_hint annot
+        | Array _
+        | Identifier _
+        | Expression _ ->
+          ignore @@ this#pattern ?kind expr);
+        expr
+
       method! pattern_identifier ?kind ident =
-        ignore kind;
         let (loc, { Flow_ast.Identifier.name = x; comments = _ }) = ident in
+        this#bind_pattern_identifier_customized ?kind loc x;
+        super#identifier ident
+
+      method private bind_pattern_identifier_customized ?kind ?(get_assigned_val = Base.Fn.id) loc x
+          =
         let reason = Reason.(mk_reason (RIdentifier (OrdinaryName x))) loc in
         let { val_ref; heap_refinements; kind = stored_binding_kind; def_loc; havoc = _ } =
           SMap.find x env_state.env
         in
-        (match kind with
+        match kind with
         (* Assignments to undeclared bindings that aren't part of declarations do not
          * initialize those bindings. *)
         | None when Val.is_undeclared_or_skipped !val_ref ->
@@ -1523,7 +1596,7 @@ module Make
                   else
                     Env_api.AssigningWrite reason
                 in
-                val_ref := Val.one reason;
+                val_ref := get_assigned_val (Val.one reason);
                 L.LMap.add loc write_entry env_state.write_entries
               ) else
                 (* All of the providers are aleady in the map. We don't want to overwrite them with
@@ -1538,8 +1611,7 @@ module Make
                     | _ -> x)
                   env_state.write_entries
             in
-            env_state <- { env_state with write_entries }));
-        super#identifier ident
+            env_state <- { env_state with write_entries })
 
       (* This method is called during every read of an identifier. We need to ensure that
        * if the identifier is refined that we record the refiner as the write that reaches
@@ -1784,7 +1856,7 @@ module Make
               | Some init ->
                 (* given `var x = e`, read e then write x *)
                 ignore @@ this#expression init;
-                ignore @@ this#variable_declarator_pattern ~kind id
+                ignore @@ this#binding_pattern_track_object_destructuring ~kind ~acc:init id
               | None ->
                 (* No rhs means no write occurs, but the variable moves from undeclared to
                  * uninitialized. *)

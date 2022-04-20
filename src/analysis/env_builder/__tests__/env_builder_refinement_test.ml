@@ -3647,6 +3647,100 @@ if (x.foo === 3) {
           {refinement = 4; writes = {refinement = 3; writes = projection at (3, 4) to (3, 9)}}
         }] |}]
 
+let%expect_test "heap_refinement_destrucure" =
+  print_ssa_test {|
+let x = {};
+if (x.foo === 3) {
+  const { foo } = x;
+  foo;
+}
+|};
+    [%expect {|
+      [
+        (3, 4) to (3, 5) => {
+          (2, 4) to (2, 5): (`x`)
+        };
+        (4, 10) to (4, 13) => {
+          {refinement = 3; writes = projection at (3, 4) to (3, 9)}
+        };
+        (4, 18) to (4, 19) => {
+          {refinement = SentinelR foo; writes = (2, 4) to (2, 5): (`x`)}
+        };
+        (5, 2) to (5, 5) => {
+          {refinement = 3; writes = (4, 10) to (4, 13): (`foo`)}
+        }] |}]
+
+let%expect_test "heap_refinement_from_assign_destrucure" =
+  print_ssa_test {|
+let x = {};
+x.foo = 3;
+const { foo } = x;
+foo;
+|};
+    [%expect {|
+      [
+        (3, 0) to (3, 1) => {
+          (2, 4) to (2, 5): (`x`)
+        };
+        (4, 8) to (4, 11) => {
+          (3, 0) to (3, 5): (some property)
+        };
+        (4, 16) to (4, 17) => {
+          (2, 4) to (2, 5): (`x`)
+        };
+        (5, 0) to (5, 3) => {
+          (4, 8) to (4, 11): (`foo`)
+        }]
+      |}]
+
+let%expect_test "heap_refinement_deep_destrucure" =
+  print_ssa_test {|
+let x = {};
+if (x.bar.baz.hello.world === 4) {
+  const { bar: { baz: { hello: {world: hi} } } } = x;
+  hi;
+}
+|};
+    [%expect {|
+      [
+        (3, 4) to (3, 5) => {
+          (2, 4) to (2, 5): (`x`)
+        };
+        (4, 24) to (4, 29) => {
+          {refinement = SentinelR world; writes = projection at (3, 4) to (3, 19)}
+        };
+        (4, 32) to (4, 37) => {
+          {refinement = 4; writes = projection at (3, 4) to (3, 25)}
+        };
+        (4, 51) to (4, 52) => {
+          (2, 4) to (2, 5): (`x`)
+        };
+        (5, 2) to (5, 4) => {
+          {refinement = 4; writes = (4, 39) to (4, 41): (`hi`)}
+        }] |}]
+
+let%expect_test "heap_refinement_from_assign_deep_destrucure" =
+  print_ssa_test {|
+let x = {};
+x.bar.baz.hello.world = 4;
+const { bar: { baz: { hello: {world: hi} } } } = x;
+hi;
+|};
+    [%expect {|
+      [
+        (3, 0) to (3, 1) => {
+          (2, 4) to (2, 5): (`x`)
+        };
+        (4, 30) to (4, 35) => {
+          (3, 0) to (3, 21): (some property)
+        };
+        (4, 49) to (4, 50) => {
+          (2, 4) to (2, 5): (`x`)
+        };
+        (5, 0) to (5, 2) => {
+          (4, 37) to (4, 39): (`hi`)
+        }] |}]
+
 let%expect_test "heap_refinement_merge_branches" =
   print_ssa_test {|
 declare var invariant: any;
