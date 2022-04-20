@@ -1370,7 +1370,7 @@ let is_not_comment =
     not (Base.List.exists ~f:(fun regexp -> Str.string_match regexp line 0) comment_regexps)
 
 let read filename =
-  let contents = Sys_utils.cat_no_fail filename in
+  let contents = Sys_utils.cat filename in
   let hash =
     let xx_state = Xx.init 0L in
     Xx.update xx_state contents;

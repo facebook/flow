@@ -71,8 +71,8 @@ let main base_flags flowconfig_flags options root () =
     | Ok (_, warnings) -> error warnings (* TODO: write warnings to stderr instead of exiting *)
     | Error err -> error [err]
   in
-  let out = Sys_utils.open_out_no_fail file in
+  let out = Stdlib.open_out file in
   FlowConfig.write config out;
-  Sys_utils.close_out_no_fail file out
+  Stdlib.close_out out
 
 let command = CommandSpec.command spec main
