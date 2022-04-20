@@ -53,8 +53,8 @@ type [2]. [incompatible-call]
                        ^^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/core.js:131:28
-   131|     static entries(object: interface {}): Array<[string, mixed]>;
+   <BUILTINS>/core.js:128:28
+   128|     static entries(object: interface {}): Array<[string, mixed]>;
                                    ^^^^^^^^^^^^ [2]
 
 
@@ -68,8 +68,8 @@ Cannot call method `entries` with `null` bound to `object` because null [1] is i
                        ^^^^ [1]
 
 References:
-   <BUILTINS>/core.js:131:28
-   131|     static entries(object: interface {}): Array<[string, mixed]>;
+   <BUILTINS>/core.js:128:28
+   128|     static entries(object: interface {}): Array<[string, mixed]>;
                                    ^^^^^^^^^^^^ [2]
 
 
@@ -83,8 +83,8 @@ Cannot call method `entries` with `1` bound to `object` because number [1] is in
                        ^ [1]
 
 References:
-   <BUILTINS>/core.js:131:28
-   131|     static entries(object: interface {}): Array<[string, mixed]>;
+   <BUILTINS>/core.js:128:28
+   128|     static entries(object: interface {}): Array<[string, mixed]>;
                                    ^^^^^^^^^^^^ [2]
 
 
@@ -98,8 +98,8 @@ Cannot call method `entries` with `true` bound to `object` because boolean [1] i
                        ^^^^ [1]
 
 References:
-   <BUILTINS>/core.js:131:28
-   131|     static entries(object: interface {}): Array<[string, mixed]>;
+   <BUILTINS>/core.js:128:28
+   128|     static entries(object: interface {}): Array<[string, mixed]>;
                                    ^^^^^^^^^^^^ [2]
 
 
@@ -733,8 +733,8 @@ type [2]. [incompatible-call]
                       ^^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/core.js:222:27
-   222|     static values(object: interface {}): Array<mixed>;
+   <BUILTINS>/core.js:219:27
+   219|     static values(object: interface {}): Array<mixed>;
                                   ^^^^^^^^^^^^ [2]
 
 
@@ -748,8 +748,8 @@ Cannot call method `values` with `null` bound to `object` because null [1] is in
                       ^^^^ [1]
 
 References:
-   <BUILTINS>/core.js:222:27
-   222|     static values(object: interface {}): Array<mixed>;
+   <BUILTINS>/core.js:219:27
+   219|     static values(object: interface {}): Array<mixed>;
                                   ^^^^^^^^^^^^ [2]
 
 
@@ -763,8 +763,8 @@ Cannot call method `values` with `1` bound to `object` because number [1] is inc
                       ^ [1]
 
 References:
-   <BUILTINS>/core.js:222:27
-   222|     static values(object: interface {}): Array<mixed>;
+   <BUILTINS>/core.js:219:27
+   219|     static values(object: interface {}): Array<mixed>;
                                   ^^^^^^^^^^^^ [2]
 
 
@@ -778,8 +778,8 @@ Cannot call method `values` with `true` bound to `object` because boolean [1] is
                       ^^^^ [1]
 
 References:
-   <BUILTINS>/core.js:222:27
-   222|     static values(object: interface {}): Array<mixed>;
+   <BUILTINS>/core.js:219:27
+   219|     static values(object: interface {}): Array<mixed>;
                                   ^^^^^^^^^^^^ [2]
 
 
