@@ -524,8 +524,8 @@ defined. [method-unbinding]
                                          ^^^^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/core.js:1552:5
-   1552|     constructor (message?: mixed): void;
+   <BUILTINS>/core.js:1549:5
+   1549|     constructor (message?: mixed): void;
              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 

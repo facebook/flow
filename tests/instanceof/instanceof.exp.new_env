@@ -119,8 +119,8 @@ Cannot get `x.p` because property `p` is missing in `Object` [1]. [prop-missing]
              ^
 
 References:
-   <BUILTINS>/core.js:95:15
-   95| declare class Object {
+   <BUILTINS>/core.js:92:15
+   92| declare class Object {
                      ^^^^^^ [1]
 
 
@@ -134,8 +134,8 @@ Cannot call `x` because a call signature declaring the expected parameter / retu
             ^
 
 References:
-   <BUILTINS>/core.js:353:15
-   353| declare class Function {
+   <BUILTINS>/core.js:350:15
+   350| declare class Function {
                       ^^^^^^^^ [1]
 
 
