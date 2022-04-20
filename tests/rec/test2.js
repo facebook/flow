@@ -13,7 +13,8 @@ class A<X> {
 }
 var a_ = new A;
 function foo0() {
-  a_ = a_.x; // terminate despite expanding types
+  // $FlowExpectedError in env-mode ssa
+  a_ = a_.x; // terminate despite expanding types. This is not an issue in constrained writes
 }
 
 class D<X> { }
