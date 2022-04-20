@@ -958,8 +958,10 @@ and dump_tvar_ (depth, tvars) cx id =
       try
         match Context.find_tvar cx id with
         | Goto g -> spf "%d, Goto %d" id g
-        | Root { constraints = Resolved (_, t) | FullyResolved (_, (lazy t)); _ } ->
+        | Root { constraints = Resolved (_, t); _ } ->
           spf "%d, Resolved %s" id (dump_t_ (depth - 1, stack) cx t)
+        | Root { constraints = FullyResolved (_, (lazy t)); _ } ->
+          spf "%d, FullyResolved %s" id (dump_t_ (depth - 1, stack) cx t)
         | Root { constraints = Unresolved { lower; upper; _ }; _ } ->
           if lower = TypeMap.empty && upper = UseTypeMap.empty then
             spf "%d" id
