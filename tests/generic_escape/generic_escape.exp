@@ -492,8 +492,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- func.js:44:9
 
-function [1] contains type variable `X` [2] which cannot escape from the scope in which it was defined [2] (try adding a
-type annotation to `a` [3]). [escaped-generic]
+Cannot assign function to `a` because function [1] contains type variable `X` [2] which cannot escape from the scope in
+which it was defined [2] (try adding a type annotation to `a` [3]). [escaped-generic]
 
    func.js:44:9
    44|     a = (x: X) => x;

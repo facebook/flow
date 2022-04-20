@@ -1375,9 +1375,7 @@ module Env : Env_sig.S = struct
         general0
       (* general case *)
       else
-        let tvar = create_union cx loc name specific1 specific2 in
-        Flow.flow cx (tvar, UseT (Op (Internal MergeEnv), general0));
-        tvar
+        create_union cx loc name specific1 specific2
     in
     (* propagate var state updates from child entries *)
     let merge_states orig child1 child2 =

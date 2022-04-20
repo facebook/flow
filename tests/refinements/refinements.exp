@@ -2689,20 +2689,6 @@ References:
                        ^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------------- not.js:5:5
-
-number [1] is incompatible with boolean [2]. [incompatible-type]
-
-   not.js:5:5
-   5|     x++; // should error for null, void and bool (false)
-          ^^^ [1]
-
-References:
-   not.js:3:18
-   3| function foo(x: ?bool) {
-                       ^^^^ [2]
-
-
 Error ------------------------------------------------------------------------------------------------------ not.js:11:5
 
 Cannot get `x[0]` because an index signature declaring the expected key / value type is missing in `Number` [1].
@@ -4981,7 +4967,4 @@ Cannot perform arithmetic operation because undefined [1] is not a number. [unsa
 
 
 
-Found 339 errors
-
-Only showing the most relevant union/intersection branches.
-To see all branches, re-run Flow with --show-all-branches
+Found 338 errors
