@@ -44,3 +44,9 @@ var tests = [
     (Object.keys(dict): Array<'123'>); // error: not supported yet
   },
 ];
+
+// Invalid values
+Object.keys(undefined); // ERROR
+Object.keys(null); // ERROR
+Object.keys(1); // ERROR
+Object.keys(true); // ERROR
