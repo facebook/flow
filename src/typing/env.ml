@@ -1115,10 +1115,21 @@ module Env : Env_sig.S = struct
 
   (* Unify declared type with another type. This is useful for allowing forward
      references in declared types to other types declared later in scope. *)
-  let unify_declared_type ?(lookup_mode = ForValue) cx name _loc t =
+  let unify_declared_type ?(lookup_mode = ForValue) ?(is_func = false) cx name loc t =
     Entry.(
+      (* If name_already_bound is true, then this is already a [name-already-bound]
+       * error. In that case we don't need to unify with the general type. *)
+      let name_already_bound v =
+        match v.Entry.kind with
+        | Let ((ClassNameBinding | FunctionBinding), _) -> v.value_assign_loc <> loc
+        | Let (DeclaredFunctionBinding _, _) when not is_func ->
+          (* Multiple declare functions followed by a function declaration is okay. *)
+          v.value_assign_loc <> loc
+        | _ -> false
+      in
       match get_current_env_entry name with
-      | Some (Value v) when lookup_mode = ForValue -> Flow.unify cx t (general_of_value v)
+      | Some (Value v) when lookup_mode = ForValue ->
+        if not (name_already_bound v) then Flow.unify cx t (general_of_value v)
       | Some entry when lookup_mode <> ForValue -> Flow.unify cx t (Entry.declared_type entry)
       | _ -> ()
     )

@@ -701,11 +701,11 @@ module New_env = struct
 
   let pseudo_init_declared_type _ _ _ = ()
 
-  let unify_declared_type ?(lookup_mode = ForValue) cx name loc t =
+  let unify_declared_type ?(lookup_mode = ForValue) ?(is_func = false) cx name loc t =
     match name with
     | InternalName _
     | InternalModuleName _ ->
-      Old_env.unify_declared_type ~lookup_mode cx name loc t
+      Old_env.unify_declared_type ~lookup_mode ~is_func cx name loc t
     | OrdinaryName _ -> unify_write_entry cx ~use_op:unknown_use t loc
 
   let unify_declared_fun_type cx name loc t =

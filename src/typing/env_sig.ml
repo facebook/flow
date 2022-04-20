@@ -182,7 +182,13 @@ module type S = sig
   val constraining_type : default:Type.t -> Context.t -> Reason.name -> ALoc.t -> Type.t
 
   val unify_declared_type :
-    ?lookup_mode:LookupMode.t -> Context.t -> Reason.name -> ALoc.t -> Type.t -> unit
+    ?lookup_mode:LookupMode.t ->
+    ?is_func:bool ->
+    Context.t ->
+    Reason.name ->
+    ALoc.t ->
+    Type.t ->
+    unit
 
   val unify_declared_fun_type : Context.t -> Reason.name -> ALoc.t -> Type.t -> unit
 

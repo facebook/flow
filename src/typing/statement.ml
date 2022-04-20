@@ -704,7 +704,9 @@ struct
         let (name_loc, { Ast.Identifier.name; comments = _ }) = id in
         let name = OrdinaryName name in
         let reason = func_reason ~async ~generator sig_loc in
-        let general = Tvar.mk_where cx reason (Env.unify_declared_type cx name name_loc) in
+        let general =
+          Tvar.mk_where cx reason (Env.unify_declared_type ~is_func:true cx name name_loc)
+        in
         let (fn_type, func_ast) = mk_function_declaration cx ~general reason func in
         (fn_type, id, (loc, FunctionDeclaration func_ast))
     in
