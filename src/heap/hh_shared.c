@@ -1614,8 +1614,8 @@ static void raise_hash_table_full(void) {
 /* Adds a key value to the hashtable. This code is perf sensitive, please
  * check the perf before modifying.
  *
- * Returns the number of bytes allocated into the shared heap, or a negative
- * number if nothing no new memory was allocated.
+ * Returns the address associated with this key in the hash table, which may not
+ * be the same as the address passed in by the caller.
  */
 /*****************************************************************************/
 CAMLprim value hh_add(value key, value addr) {
@@ -1631,69 +1631,49 @@ CAMLprim value hh_add(value key, value addr) {
   size_t init_slot = slot;
 
   while (1) {
-    uint64_t slot_hash = hashtbl[slot].hash;
+    helt_t old = hashtbl[slot];
 
-    if (slot_hash == elt.hash) {
-      // This value has already been been written to this slot, except that the
-      // value may have been deleted. Deleting a slot leaves the hash in place
-      // but replaces the addr field with NULL_ADDR. In this case, we can re-use
-      // the slot by writing the new address into.
+    if (old.hash == 0 || (old.hash == elt.hash && old.addr == NULL_ADDR)) {
+      // This slot is free. Either the slot has never been taken (hash == 0),
+      // or the slot was taken by this value, but then deleted (addr == NULL).
+      // In either case, we attempt to atomically take this slot.
       //
-      // Remember that only reads and writes can happen concurrently, so we
-      // don't need to worry about concurrent deletes.
-
-      if (hashtbl[slot].addr == NULL_ADDR) {
-        // Two threads may be racing to write this value, so try to grab the
-        // slot atomically.
-        addr_t old_addr = __sync_val_compare_and_swap(
-            &hashtbl[slot].addr, NULL_ADDR, elt.addr);
-
-        if (old_addr == NULL_ADDR) {
-          __sync_fetch_and_add(&info->hcounter_filled, 1);
-        } else {
-          // Another thread won the race, but since the slot hashes match, it
-          // wrote the value we were trying to write, so our work is done.
-          addr = Val_long(old_addr);
+      // Only reads and writes can happen concurrently, so we don't need to
+      // worry about concurrent deletes.
+      //
+      // Note that this is a 16-byte CAS, writing both the hash and address at
+      // the same time.
+      if (__atomic_compare_exchange_n(
+              /* ptr */ &hashtbl[slot].value,
+              /* expected */ &old.value,
+              /* desired */ elt.value,
+              /* weak */ 0,
+              /* success_memorder */ __ATOMIC_SEQ_CST,
+              /* failure_memorder */ __ATOMIC_SEQ_CST)) {
+        // We successfully grabbed the slot.
+        if (old.hash == 0) {
+          // We are the first to acquire the slot.
+          __atomic_fetch_add(&info->hcounter, 1, __ATOMIC_RELAXED);
         }
+        __atomic_fetch_add(&info->hcounter_filled, 1, __ATOMIC_RELAXED);
+        break;
       }
 
-      break;
+      // CAS failed, meaning another thread took the slot, and the new value has
+      // been loaded into `old`. We intentionally fall through here to pick up
+      // the `old.hash == elt.hash` check below before continuing to probe.
     }
 
-    if (slot_hash == 0) {
-      helt_t old;
-
-      // This slot is free, but two threads may be racing to write to this slot,
-      // so try to grab the slot atomically. Note that this is a 16-byte CAS
-      // writing both the hash and the address at the same time. We expect the
-      // slot to contain `0`. If that's the case, `success == true`; otherwise,
-      // whatever data was in the slot at the time of the CAS will be stored in
-      // `old`.
-      old.value = 0;
-      _Bool success = __atomic_compare_exchange(
-          /* ptr */ &hashtbl[slot].value,
-          /* expected */ &old.value,
-          /* desired */ &elt.value,
-          /* weak */ 0,
-          /* success_memorder */ __ATOMIC_SEQ_CST,
-          /* failure_memorder */ __ATOMIC_SEQ_CST);
-
-      if (success) {
-        // The slot was still empty when we tried to CAS, meaning we
-        // successfully grabbed the slot.
-        uint64_t size = __sync_fetch_and_add(&info->hcounter, 1);
-        __sync_fetch_and_add(&info->hcounter_filled, 1);
-        assert(size < hashtbl_slots); // sanity check
-        break;
-      }
-
-      if (old.hash == elt.hash) {
-        // The slot was non-zero, so we failed to grab the slot. However, the
-        // thread which won the race wrote the value we were trying to write,
-        // meaning out work is done.
-        addr = Val_long(old.addr);
-        break;
-      }
+    if (old.hash == elt.hash) {
+      // The slot already contains the value we were trying to write, either
+      // because the slot was taken when we initially read, or because we lost
+      // the CAS race to another thread.
+      //
+      // We return the address of the winning write. Callers can compare the
+      // return value with the address they tried to write to tell if they
+      // acquired the slot.
+      addr = Val_long(old.addr);
+      break;
     }
 
     slot = (slot + 1) & (hashtbl_slots - 1);
