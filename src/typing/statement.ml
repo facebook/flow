@@ -4196,6 +4196,8 @@ struct
             (AnyT.at (AnyError None) loc, Tast_utils.error_mapper#arg_list arguments)
         in
         let id_t = bogus_trust () |> MixedT.at callee_loc in
+        Env.havoc_heap_refinements ();
+        Env.havoc_local_refinements cx;
         Some
           ( ( (loc, lhs_t),
               call_ast

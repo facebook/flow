@@ -35,3 +35,14 @@ if (typeof z === 'number'){
   havocz();
   (z: number); //ok
 }
+
+// Calls on require should also havoc.
+if (typeof x === 'number' && typeof y === 'number') {
+    (x: number);
+    (x: empty); // error, just to show that x is not empty
+    (y: number);
+    require('./empty');
+    (x: number);
+    (x: empty); // error similarly
+    (y: number); // error b/c y was fully havoced
+}
