@@ -2609,7 +2609,7 @@ and main_handle_error (exn : Exception.t) (state : state) (event : event option)
               {
                 c_ienv;
                 c_about_to_exit_code =
-                  Some (FlowExit.Flowconfig_changed | FlowExit.Server_out_of_date);
+                  Some FlowExit.(Flowconfig_changed | Server_out_of_date | Lock_stolen);
                 _;
               }
               ) ->
