@@ -275,8 +275,13 @@ let prepare_create_file size file_key module_name =
     let haste_ent = write_entity chunk haste_info in
     let file_module = add_file_module_maybe chunk in
     let file = write_file chunk file_kind file_name parse_ent haste_ent file_module in
-    assert (file = FileHeap.add file_key file);
-    calc_dirty_modules file_key file haste_ent file_module
+    if file = FileHeap.add file_key file then
+      calc_dirty_modules file_key file haste_ent file_module
+    else
+      (* Two threads raced to add this file and the other thread won. We don't
+       * need to mark any files as dirty; the other thread will have done that
+       * for us. *)
+      MSet.empty
   in
   (size, write)
 
@@ -312,7 +317,8 @@ let prepare_update_file size file_key file parse_ent module_name =
  * state, a checked file entry will already exist without parse data and this
  * function will update the existing entry in place. Otherwise, we will create a
  * new entry and add it to the shared hash table. *)
-let add_checked_file file_key hash module_name docblock ast locs type_sig file_sig exports =
+let add_checked_file file_key file_opt hash module_name docblock ast locs type_sig file_sig exports
+    =
   let open Type_sig_collections in
   let serialize x = Marshal.to_string x [] in
   let ast = serialize (compactify_loc ast) in
@@ -332,7 +338,7 @@ let add_checked_file file_key hash module_name docblock ast locs type_sig file_s
     + file_sig_size
   in
   let unchanged_or_fresh_parse =
-    match FileHeap.get file_key with
+    match file_opt with
     | None -> Either.Right (prepare_create_file size file_key module_name)
     | Some file ->
       let parse_ent = get_parse file in
@@ -385,11 +391,11 @@ let add_checked_file file_key hash module_name docblock ast locs type_sig file_s
       dirty_modules
   )
 
-let add_unparsed_file file_key hash module_name =
+let add_unparsed_file file_key file_opt hash module_name =
   let open Heap in
   let size = (2 * header_size) + untyped_parse_size + int64_size in
   let (size, add_file_maybe) =
-    match FileHeap.get file_key with
+    match file_opt with
     | None -> prepare_create_file size file_key module_name
     | Some file ->
       let parse_ent = get_parse file in
@@ -686,13 +692,23 @@ end = struct
   let clear = ALocTableCache.clear
 end
 
-let add_parsed file ~exports hash module_name docblock ast file_sig locs type_sig =
+let add_parsed file_key file_opt ~exports hash module_name docblock ast file_sig locs type_sig =
   WorkerCancel.with_no_cancellations (fun () ->
-      add_checked_file file hash module_name docblock ast locs type_sig file_sig exports
+      add_checked_file
+        file_key
+        file_opt
+        hash
+        module_name
+        docblock
+        ast
+        locs
+        type_sig
+        file_sig
+        exports
   )
 
-let add_unparsed file hash module_name =
-  WorkerCancel.with_no_cancellations (fun () -> add_unparsed_file file hash module_name)
+let add_unparsed file_key file_opt hash module_name =
+  WorkerCancel.with_no_cancellations (fun () -> add_unparsed_file file_key file_opt hash module_name)
 
 let clear_not_found file_key = WorkerCancel.with_no_cancellations (fun () -> clear_file file_key)
 
@@ -939,6 +955,7 @@ end
 type worker_mutator = {
   add_parsed:
     File_key.t ->
+    file_addr option ->
     exports:Exports.t ->
     Xx.hash ->
     string option ->
@@ -948,7 +965,7 @@ type worker_mutator = {
     locs_tbl ->
     type_sig ->
     MSet.t;
-  add_unparsed: File_key.t -> Xx.hash -> string option -> MSet.t;
+  add_unparsed: File_key.t -> file_addr option -> Xx.hash -> string option -> MSet.t;
   clear_not_found: File_key.t -> MSet.t;
 }
 
@@ -1472,7 +1489,7 @@ module From_saved_state = struct
         calc_dirty_modules file_key file haste_ent file_module
     )
 
-  let add_unparsed = add_unparsed
+  let add_unparsed file_key = add_unparsed file_key None
 end
 
 let iter_resolved_requires f =
