@@ -194,13 +194,8 @@ let files_in_dir = ref SMap.empty
 (* called from Types_js.typecheck, so we rebuild every time *)
 let clear_filename_cache () = files_in_dir := SMap.empty
 
-(* case-sensitive dir_exists  *)
-let rec dir_exists dir =
-  try Sys.is_directory dir && (case_sensitive || file_exists dir) with
-  | _ -> false
-
 (* when system is case-insensitive, do our own file exists check *)
-and file_exists path =
+let rec file_exists path =
   (* case doesn't matter for "/", ".", "..." and these serve as a base-case for
    * case-insensitive filesystems *)
   let dir = Filename.dirname path in
@@ -217,7 +212,7 @@ and file_exists path =
       | Some files -> files
       | None ->
         let files =
-          if dir_exists dir then
+          if Disk.is_directory dir && file_exists dir then
             SSet.of_list (Array.to_list (Sys.readdir dir))
           else
             SSet.empty

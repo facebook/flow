@@ -2,6 +2,7 @@
   (name flow_service_inference_module)
   (wrapped false)
   (libraries
+    disk
     flow_common
     flow_common_audit
     flow_common_modulename
