@@ -309,11 +309,12 @@ module New_env = struct
       in
       let t =
         match val_id with
-        | Some id when lookup_mode = ForValue ->
-          (match Context.env_cache_find_opt cx id with
+        | Some id ->
+          let for_value = lookup_mode = ForValue in
+          (match Context.env_cache_find_opt cx ~for_value id with
           | None ->
             let t = Lazy.force t in
-            Context.add_env_cache_entry cx id t;
+            Context.add_env_cache_entry cx ~for_value id t;
             t
           | Some t -> t)
         | _ -> Lazy.force t

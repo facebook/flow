@@ -1072,5 +1072,13 @@ Cannot resolve name `unbound`. [cannot-resolve-name]
       ^^^^^^^
 
 
+Error ------------------------------------------------------------------------------------------------- unbound.js:10:11
 
-Found 77 errors
+Cannot resolve name `UnboundType`. [cannot-resolve-name]
+
+   10| (unbound: UnboundType); // Error
+                 ^^^^^^^^^^^
+
+
+
+Found 78 errors
