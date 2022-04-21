@@ -1164,7 +1164,7 @@ let y = undefined;
 
 let%expect_test "optional_chain_lit" =
   print_ssa_test {|let x = undefined;
-(x?.foo === 3) && x|};
+(x?.foo === 3) ? x : x|};
     [%expect{|
       [
         (1, 8) to (1, 17) => {
@@ -1173,13 +1173,34 @@ let%expect_test "optional_chain_lit" =
         (2, 1) to (2, 2) => {
           (1, 4) to (1, 5): (`x`)
         };
-        (2, 18) to (2, 19) => {
+        (2, 17) to (2, 18) => {
+          {refinement = And (And (Not (Maybe), PropExistsR (foo)), SentinelR foo); writes = (1, 4) to (1, 5): (`x`)}
+        };
+        (2, 21) to (2, 22) => {
+          {refinement = Or (Or (Not (Not (Maybe)), Not (PropExistsR (foo))), Not (SentinelR foo)); writes = (1, 4) to (1, 5): (`x`)}
+        }] |}]
+
+let%expect_test "optional_chain_not_lit" =
+  print_ssa_test {|let x = undefined;
+(x?.foo !== 3) ? x : x|};
+    [%expect{|
+      [
+        (1, 8) to (1, 17) => {
+          Global undefined
+        };
+        (2, 1) to (2, 2) => {
+          (1, 4) to (1, 5): (`x`)
+        };
+        (2, 17) to (2, 18) => {
+          {refinement = Or (Or (Not (Not (Maybe)), Not (PropExistsR (foo))), Not (SentinelR foo)); writes = (1, 4) to (1, 5): (`x`)}
+        };
+        (2, 21) to (2, 22) => {
           {refinement = And (And (Not (Maybe), PropExistsR (foo)), SentinelR foo); writes = (1, 4) to (1, 5): (`x`)}
         }] |}]
 
 let%expect_test "optional_chain_member_base" =
   print_ssa_test {|let x = undefined;
-(x.foo?.bar === 3) && x|};
+(x.foo?.bar === 3) ? x : x|};
     [%expect {|
       [
         (1, 8) to (1, 17) => {
@@ -1188,13 +1209,16 @@ let%expect_test "optional_chain_member_base" =
         (2, 1) to (2, 2) => {
           (1, 4) to (1, 5): (`x`)
         };
-        (2, 22) to (2, 23) => {
+        (2, 21) to (2, 22) => {
+          (1, 4) to (1, 5): (`x`)
+        };
+        (2, 25) to (2, 26) => {
           (1, 4) to (1, 5): (`x`)
         }] |}]
 
 let%expect_test "optional_chain_with_call" =
   print_ssa_test {|let x = undefined;
-(x?.foo().bar === 3) && x|};
+(x?.foo().bar === 3) ? x : x|};
     [%expect {|
       [
         (1, 8) to (1, 17) => {
@@ -1203,13 +1227,16 @@ let%expect_test "optional_chain_with_call" =
         (2, 1) to (2, 2) => {
           (1, 4) to (1, 5): (`x`)
         };
-        (2, 24) to (2, 25) => {
+        (2, 23) to (2, 24) => {
           {refinement = And (Not (Maybe), PropExistsR (foo)); writes = (1, 4) to (1, 5): (`x`)}
+        };
+        (2, 27) to (2, 28) => {
+          (1, 4) to (1, 5): (`x`)
         }] |}]
 
 let%expect_test "optional_multiple_chains" =
   print_ssa_test {|let x = undefined;
-(x?.foo?.bar.baz?.qux === 3) && x|};
+(x?.foo?.bar.baz?.qux === 3) ? x : x|};
     [%expect {|
       [
         (1, 8) to (1, 17) => {
@@ -1218,13 +1245,16 @@ let%expect_test "optional_multiple_chains" =
         (2, 1) to (2, 2) => {
           (1, 4) to (1, 5): (`x`)
         };
-        (2, 32) to (2, 33) => {
+        (2, 31) to (2, 32) => {
           {refinement = And (Not (Maybe), PropExistsR (foo)); writes = (1, 4) to (1, 5): (`x`)}
+        };
+        (2, 35) to (2, 36) => {
+          (1, 4) to (1, 5): (`x`)
         }] |}]
 
 let%expect_test "optional_base_call" =
   print_ssa_test {|let x = undefined;
-(x?.().foo?.bar.baz?.qux === 3) && x|};
+(x?.().foo?.bar.baz?.qux === 3) ? x : x|};
     [%expect {|
       [
         (1, 8) to (1, 17) => {
@@ -1233,8 +1263,11 @@ let%expect_test "optional_base_call" =
         (2, 1) to (2, 2) => {
           (1, 4) to (1, 5): (`x`)
         };
-        (2, 35) to (2, 36) => {
+        (2, 34) to (2, 35) => {
           {refinement = Not (Maybe); writes = (1, 4) to (1, 5): (`x`)}
+        };
+        (2, 38) to (2, 39) => {
+          (1, 4) to (1, 5): (`x`)
         }] |}]
 
 let%expect_test "sentinel_standalone" =

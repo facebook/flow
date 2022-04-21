@@ -3459,16 +3459,11 @@ module Make
         | _ -> ignore @@ this#optional_chain arg
 
       method literal_test ~strict ~sense loc expr refinement other =
-        let refis = this#maybe_sentinel ~sense ~strict loc expr other in
+        (* Negating if sense is false is handled by negate_new_refinements. *)
+        let refis = this#maybe_sentinel ~sense:true ~strict loc expr other in
         let refis =
           match RefinementKey.of_expression expr with
           | Some ({ RefinementKey.lookup; loc = _ } as key) when strict ->
-            let refinement =
-              if sense then
-                refinement
-              else
-                NotR refinement
-            in
             (match lookup with
             | { RefinementKey.base; projections = [] } ->
               let { val_ref = _; def_loc; _ } = SMap.find base env_state.env in
@@ -3480,7 +3475,8 @@ module Make
           | _ -> refis
         in
         ignore @@ this#optional_chain expr;
-        this#commit_refinement refis
+        this#commit_refinement refis;
+        if not sense then this#negate_new_refinements ()
 
       method maybe_sentinel ~sense ~strict loc expr (other_loc, _) =
         let open Flow_ast in
