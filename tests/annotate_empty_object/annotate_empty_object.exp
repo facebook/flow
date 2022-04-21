@@ -1,4 +1,4 @@
->>> test.js (#changes: 20)
+>>> test.js (#changes: 22)
 //@flow
 
 declare var key : string;
@@ -96,16 +96,52 @@ function bar(x) {
 
 bar(({}: { ["A" | "B" | "C"]: number })); // annot
 
+type LargeEnum = 'a' | 'b' | 'c' | 'e' | 'f' | 'g' | 'h' | 'i';
+function testLarge(xs: Array<LargeEnum>) {
+  const o: { [LargeEnum]: Array<LargeEnum> } = {}; // Annotate
+  xs.forEach(e => {
+    o[e] = xs;
+  });
+  return o;
+}
+
+function tooBig(xs: Array<'a' | 'b' | 'c' | 'e' | 'f' | 'g' | 'h' | 'i'>) {
+  const o = {}; // Skip - too big
+  xs.forEach(e => {
+    o[e] = xs;
+  });
+  return o;
+}
+
+function reduceLarge(xs: Array<LargeEnum>) {
+  // Annotate on the targ to reduce
+xs.reduce<{ [LargeEnum]: Array<LargeEnum> }>(
+  (acc, key) => {
+    acc[key] = xs;
+    return acc;
+  },
+  {},
+);
+}
+
+function reduceTooBig(xs: Array<'a' | 'b' | 'c' | 'e' | 'f' | 'g' | 'h' | 'i'>) {
+  // Skip - too big
+  xs.reduce(
+    (acc, key) => { acc[key] = 1; return acc },
+    {},
+  );
+}
+
 >>> Launching report...
 
 Stats:
   Files changed:                            1
-  Number of annotations added:             15
-  Total size of annotations:               55
+  Number of annotations added:             17
+  Total size of annotations:               63
 
 Errors:
   Missing annot./normalizer error:          0
-  Validation Error:                         0
+  Validation Error:                         3
   Import Error:
     Loc source none:                        0
     Parsing heaps get ast error:            0

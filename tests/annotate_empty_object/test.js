@@ -80,3 +80,36 @@ function bar(x) {
 }
 
 bar({}); // annot
+
+type LargeEnum = 'a' | 'b' | 'c' | 'e' | 'f' | 'g' | 'h' | 'i';
+function testLarge(xs: Array<LargeEnum>) {
+  const o = {}; // Annotate
+  xs.forEach(e => {
+    o[e] = xs;
+  });
+  return o;
+}
+
+function tooBig(xs: Array<'a' | 'b' | 'c' | 'e' | 'f' | 'g' | 'h' | 'i'>) {
+  const o = {}; // Skip - too big
+  xs.forEach(e => {
+    o[e] = xs;
+  });
+  return o;
+}
+
+function reduceLarge(xs: Array<LargeEnum>) {
+  // Annotate on the targ to reduce
+  xs.reduce(
+    (acc, key) => { acc[key] = xs; return acc },
+    {},
+  );
+}
+
+function reduceTooBig(xs: Array<'a' | 'b' | 'c' | 'e' | 'f' | 'g' | 'h' | 'i'>) {
+  // Skip - too big
+  xs.reduce(
+    (acc, key) => { acc[key] = 1; return acc },
+    {},
+  );
+}
