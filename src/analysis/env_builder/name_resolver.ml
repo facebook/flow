@@ -3524,9 +3524,7 @@ module Make
               in
               this#start_refinement refinement_key (L.LSet.singleton loc, refinement)
             | None -> LookupMap.empty)
-          | _ ->
-            ignore (this#expression expr : ('a, 'b) Ast.Expression.t);
-            LookupMap.empty
+          | _ -> LookupMap.empty
         in
         refis
 
@@ -3866,39 +3864,41 @@ module Make
           this#merge_self_refinement_scope negated_refinements
         | _ -> ignore @@ this#unary_expression loc unary
 
+      method private record_member_read (loc, expr) =
+        let open Ast.Expression in
+        match expr with
+        | OptionalMember _
+        | Member _ ->
+          (match this#get_val_of_expression (loc, expr) with
+          | None ->
+            (* In some cases, we may re-visit the same expression multiple times via different
+               environments--for example, visiting the discriminant of a switch statement. In
+               these cases, it's possible that there was a val for an expression in a previous
+               environment which is no longer available when seen through a subsequent. In order
+               to prevent old environment values from "leaking" through, we need to actively remove
+               values that may have previously existed but no longer do. *)
+            let values = L.LMap.remove loc env_state.values in
+            env_state <- { env_state with values }
+          | Some refined_v ->
+            (* We model a heap refinement as a separate const binding. We prefer this over using
+             * None so that we can report errors when using this value in a type position *)
+            let values =
+              L.LMap.add
+                loc
+                {
+                  def_loc = None;
+                  value = refined_v;
+                  binding_kind_opt = Some Bindings.Const;
+                  name = None;
+                }
+                env_state.values
+            in
+            env_state <- { env_state with values })
+        | _ -> ()
+
       method optional_chain (loc, expr) =
         let open Ast.Expression in
-        let () =
-          match expr with
-          | OptionalMember _
-          | Member _ ->
-            (match this#get_val_of_expression (loc, expr) with
-            | None ->
-              (* In some cases, we may re-visit the same expression multiple times via different
-                 environments--for example, visiting the discriminant of a switch statement. In
-                 these cases, it's possible that there was a val for an expression in a previous
-                 environment which is no longer available when seen through a subsequent. In order
-                 to prevent old environment values from "leaking" through, we need to actively remove
-                 values that may have previously existed but no longer do. *)
-              let values = L.LMap.remove loc env_state.values in
-              env_state <- { env_state with values }
-            | Some refined_v ->
-              (* We model a heap refinement as a separate const binding. We prefer this over using
-               * None so that we can report errors when using this value in a type position *)
-              let values =
-                L.LMap.add
-                  loc
-                  {
-                    def_loc = None;
-                    value = refined_v;
-                    binding_kind_opt = Some Bindings.Const;
-                    name = None;
-                  }
-                  env_state.values
-              in
-              env_state <- { env_state with values })
-          | _ -> ()
-        in
+        this#record_member_read (loc, expr);
         let () =
           match expr with
           | OptionalMember _ -> this#member_expression_refinement loc expr LookupMap.empty
@@ -3994,7 +3994,7 @@ module Make
             | None -> LookupMap.empty
             | Some key -> this#start_refinement key (L.LSet.singleton loc, TruthyR)
           in
-          ignore @@ this#expression expression;
+          ignore @@ this#record_member_read expression;
           this#member_expression_refinement loc expr refis;
           expression
         | Array _

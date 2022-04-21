@@ -42,3 +42,11 @@ declare var cc: P;
 if (cc.c) {
   cc?.c();
 }
+
+// Ensure refinements won't be invalidated before read.
+declare var dd: {foo: ?{f: () => number[]}};
+if (dd.foo != null && dd.foo.f()) {} // ok
+if (dd.foo != null && dd.foo.f()[0] === 3) {} // ok
+declare var ee: {foo: ?{f: ?() => number[]}};
+if (ee.foo != null && ee.foo.f?.()) {} // ok
+if (ee.foo != null && ee.foo.f?.()[0] === 3) {} // ok

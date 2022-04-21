@@ -1162,6 +1162,47 @@ let y = undefined;
           {refinement = SentinelR foo; writes = (1, 4) to (1, 5): (`x`)}
         }] |}]
 
+let%expect_test "refined_call_in_member_expressions" =
+  print_ssa_test {|let x = undefined;
+if (x.foo != null && x.foo.bar()) {}|};
+    [%expect {|
+      [
+        (1, 8) to (1, 17) => {
+          Global undefined
+        };
+        (2, 4) to (2, 5) => {
+          (1, 4) to (1, 5): (`x`)
+        };
+        (2, 21) to (2, 22) => {
+          (1, 4) to (1, 5): (`x`)
+        };
+        (2, 21) to (2, 26) => {
+          {refinement = Not (Maybe); writes = projection at (2, 4) to (2, 9)}
+        }]
+       |}]
+
+let%expect_test "refined_call_in_unrefinable_member_expressions" =
+  print_ssa_test {|let x = undefined;
+if (x.foo != null && x.foo.bar()[0] === BAZ) {}|};
+    [%expect {|
+      [
+        (1, 8) to (1, 17) => {
+          Global undefined
+        };
+        (2, 4) to (2, 5) => {
+          (1, 4) to (1, 5): (`x`)
+        };
+        (2, 21) to (2, 22) => {
+          (1, 4) to (1, 5): (`x`)
+        };
+        (2, 21) to (2, 26) => {
+          {refinement = Not (Maybe); writes = projection at (2, 4) to (2, 9)}
+        };
+        (2, 40) to (2, 43) => {
+          Global BAZ
+        }]
+       |}]
+
 let%expect_test "optional_chain_lit" =
   print_ssa_test {|let x = undefined;
 (x?.foo === 3) ? x : x|};
