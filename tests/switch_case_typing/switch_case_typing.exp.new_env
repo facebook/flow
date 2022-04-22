@@ -260,7 +260,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:77:8
 
-Cannot compare string [1] with property `type` of `o` [2] because: [incompatible-type]
+Cannot compare string [1] with property `type` of `DisjointUnion` [2] because: [incompatible-type]
  - Either string [1] is incompatible with string literal `foo` [3].
  - Or string [1] is incompatible with string literal `bar` [4].
  - Or string [1] is incompatible with string literal `baz` [5].
@@ -270,9 +270,9 @@ Cannot compare string [1] with property `type` of `o` [2] because: [incompatible
               ^^^^^ [1]
 
 References:
-   test.js:71:9
-   71| switch (o.type) {
-               ^ [2]
+   test.js:61:16
+   61| declare var o: DisjointUnion;
+                      ^^^^^^^^^^^^^ [2]
    test.js:60:30
    60| type DisjointUnion = { type: 'foo' } | { type: 'bar' } | { type: 'baz' }
                                     ^^^^^ [3]
@@ -303,7 +303,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:87:8
 
-Cannot compare number [1] with property `type` of `o` [2] because: [incompatible-type]
+Cannot compare number [1] with property `type` of `DisjointUnion` [2] because: [incompatible-type]
  - Either number [1] is incompatible with string literal `foo` [3].
  - Or number [1] is incompatible with string literal `bar` [4].
  - Or number [1] is incompatible with string literal `baz` [5].
@@ -313,9 +313,9 @@ Cannot compare number [1] with property `type` of `o` [2] because: [incompatible
               ^ [1]
 
 References:
-   test.js:82:9
-   82| switch (o.type) {
-               ^ [2]
+   test.js:61:16
+   61| declare var o: DisjointUnion;
+                      ^^^^^^^^^^^^^ [2]
    test.js:60:30
    60| type DisjointUnion = { type: 'foo' } | { type: 'bar' } | { type: 'baz' }
                                     ^^^^^ [3]
@@ -493,9 +493,27 @@ References:
                              ^^^^^^ [3]
 
 
+Error --------------------------------------------------------------------------------------------------- test.js:102:38
+
+Cannot compare number [1] with property `field` of `Obj` [2] because number [1] is incompatible with string [3].
+[incompatible-type]
+
+   test.js:102:38
+   102| if (obj.field === 1 && obj.field === 2) {} // error
+                                             ^ [1]
+
+References:
+   test.js:100:18
+   100| declare var obj: Obj;
+                         ^^^ [2]
+   test.js:99:22
+    99| type Obj = { field : string };
+                             ^^^^^^ [3]
+
+
 Error --------------------------------------------------------------------------------------------------- test.js:111:16
 
-Cannot compare string [1] with property `type` of `o` [2] because: [incompatible-type]
+Cannot compare string [1] with property `type` of `DisjointUnion` [2] because: [incompatible-type]
  - Either string [1] is incompatible with string literal `foo` [3].
  - Or string [1] is incompatible with string literal `bar` [4].
  - Or string [1] is incompatible with string literal `baz` [5].
@@ -508,9 +526,9 @@ References:
    test.js:108:10
    108|   "ERR": 'err',
                  ^^^^^ [1]
-   test.js:111:5
-   111| if (o.type === KeyObj.ERR) {} // error
-            ^ [2]
+   test.js:61:16
+    61| declare var o: DisjointUnion;
+                       ^^^^^^^^^^^^^ [2]
    test.js:60:30
     60| type DisjointUnion = { type: 'foo' } | { type: 'bar' } | { type: 'baz' }
                                      ^^^^^ [3]
@@ -524,7 +542,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:117:8
 
-Cannot compare string [1] with property `type` of `o` [2] because: [incompatible-type]
+Cannot compare string [1] with property `type` of `DisjointUnion` [2] because: [incompatible-type]
  - Either string [1] is incompatible with string literal `foo` [3].
  - Or string [1] is incompatible with string literal `bar` [4].
  - Or string [1] is incompatible with string literal `baz` [5].
@@ -537,9 +555,9 @@ References:
    test.js:108:10
    108|   "ERR": 'err',
                  ^^^^^ [1]
-   test.js:111:5
-   111| if (o.type === KeyObj.ERR) {} // error
-            ^ [2]
+   test.js:61:16
+    61| declare var o: DisjointUnion;
+                       ^^^^^^^^^^^^^ [2]
    test.js:60:30
     60| type DisjointUnion = { type: 'foo' } | { type: 'bar' } | { type: 'baz' }
                                      ^^^^^ [3]
@@ -552,4 +570,4 @@ References:
 
 
 
-Found 32 errors
+Found 33 errors

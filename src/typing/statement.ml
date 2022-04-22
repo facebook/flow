@@ -7167,7 +7167,6 @@ struct
             None
           | (true, Some ((name, projections) as refinement_key)) ->
             Env.record_expression_type_if_needed cx (aloc_of_reason (reason_of_t val_t)) val_t;
-            Env.record_expression_type_if_needed cx (aloc_of_reason (reason_of_t obj_t)) obj_t;
             let pred = LeftP (SentinelProp prop_name, val_t) in
             ( if projections = [] then
               let general_type = Env.query_var_non_specific cx name (fst expr) in

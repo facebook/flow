@@ -64,7 +64,7 @@ module type C = sig
 
   val add_new_env_literal_subtypes : t -> ALoc.t * Env_api.new_env_literal_check -> unit
 
-  val add_new_env_matching_props : t -> string * ALoc.t * Reason.reason -> unit
+  val add_new_env_matching_props : t -> string * ALoc.t * ALoc.t -> unit
 end
 
 module type F = sig
@@ -3506,9 +3506,15 @@ module Make
             (match RefinementKey.of_expression _object with
             | Some refinement_key ->
               let reason = mk_reason (RProperty (Some (OrdinaryName prop_name))) ploc in
+              ( if RefinementKey.(refinement_key.lookup.projections) = [] then
+                let { val_ref = _; def_loc; _ } =
+                  SMap.find RefinementKey.(refinement_key.lookup.base) env_state.env
+                in
+                Base.Option.iter def_loc ~f:(fun def_loc ->
+                    Context.add_new_env_matching_props cx (prop_name, other_loc, def_loc)
+                )
+              );
               let obj_reason = mk_reason (RefinementKey.reason_desc refinement_key) obj_loc in
-              if RefinementKey.(refinement_key.lookup.projections) = [] then
-                Context.add_new_env_matching_props cx (prop_name, other_loc, obj_reason);
               let write_entries =
                 L.LMap.add
                   obj_loc
