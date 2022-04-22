@@ -255,7 +255,7 @@ module Node = struct
           (raw_path, Base.Option.some_if is_flow decl_path)
       in
       if Base.Option.exists ~f:(path_exists ~file_options) path_to_check then
-        Some path
+        Some (Files.eponymous_module (Files.filename_from_string ~options:file_options path))
       else (
         record_path path resolution_acc;
         None
@@ -399,23 +399,14 @@ module Node = struct
           lazy (node_module ~options ~reader node_modules_containers f resolution_acc dir import_str);
         ]
 
-  let imported_module ~options ~reader node_modules_containers file ?resolution_acc import_str =
-    let candidates = module_name_candidates ~options import_str in
-    let rec choose_candidate = function
-      | [] -> None
-      | candidate :: candidates ->
-        let resolved =
-          resolve_import ~options ~reader node_modules_containers file ?resolution_acc candidate
-        in
-        (match resolved with
-        | None -> choose_candidate candidates
-        | Some _ as result -> result)
-    in
-    match choose_candidate candidates with
-    | Some str ->
-      let options = Options.file_options options in
-      Files.eponymous_module (Files.filename_from_string ~options str)
-    | None -> Modulename.String import_str
+  let imported_module ~options ~reader node_modules_containers file ?resolution_acc r =
+    match
+      List.find_map
+        (resolve_import ~options ~reader node_modules_containers file ?resolution_acc)
+        (module_name_candidates ~options r)
+    with
+    | Some m -> m
+    | None -> Modulename.String r
 
   (* in node, file names are module names, as guaranteed by
      our implementation of exported_name, so anything but a
@@ -485,47 +476,41 @@ module Haste : MODULE_SYSTEM = struct
         (* Lib files, resource files, etc don't have any fancy haste name *)
         None
 
-  let expanded_name ~reader r =
-    match Str.split_delim (Str.regexp_string "/") r with
-    | [] -> None
-    | package_name :: rest ->
-      Package_heaps.Reader_dispatcher.get_package_directory ~reader package_name
-      |> Base.Option.map ~f:(fun package -> Files.construct_path package rest)
+  let resolve_haste_module r =
+    match Parsing_heaps.get_haste_module r with
+    | Some _ -> Some (Modulename.String r)
+    | None -> None
 
-  (* similar to Node resolution, with possible special cases *)
-  let resolve_import ~options ~reader node_modules_containers f ?resolution_acc r =
-    let file = File_key.to_string f in
+  let resolve_haste_package ~options ~reader file ?resolution_acc r =
+    let (dir_opt, rest) =
+      match Str.split_delim (Str.regexp_string "/") r with
+      | [] -> (None, [])
+      | package :: rest ->
+        (Package_heaps.Reader_dispatcher.get_package_directory ~reader package, rest)
+    in
+    match dir_opt with
+    | None -> None
+    | Some package_dir ->
+      let file_dirname = Filename.dirname (File_key.to_string file) in
+      Files.construct_path package_dir rest
+      |> Node.resolve_relative ~options ~reader ?resolution_acc file_dirname
+
+  let resolve_import ~options ~reader node_modules_containers file ?resolution_acc r =
     lazy_seq
       [
-        lazy (Node.resolve_import ~options ~reader node_modules_containers f ?resolution_acc r);
-        lazy
-          (match expanded_name ~reader r with
-          | Some r ->
-            Node.resolve_relative ~options ~reader ?resolution_acc (Filename.dirname file) r
-          | None -> None);
+        lazy (resolve_haste_module r);
+        lazy (resolve_haste_package ~options ~reader file ?resolution_acc r);
+        lazy (Node.resolve_import ~options ~reader node_modules_containers file ?resolution_acc r);
       ]
 
-  let imported_module ~options ~reader node_modules_containers file ?resolution_acc imported_name =
-    let candidates = module_name_candidates ~options imported_name in
-    (*
-     * In Haste, we don't have an autoritative list of all valid module names
-     * until after all modules have been sweeped (because the module name is
-     * specified in the contents of the file). So, unlike the node module
-     * system, we can't run through the list of mapped module names and only
-     * choose the first one that is valid.
-     *
-     * Therefore, for the Haste module system, we simply always pick the first
-     * matching candidate (rather than the first *valid* matching candidate).
-     *)
-    let chosen_candidate = List.hd candidates in
-    let resolved =
-      resolve_import ~options ~reader node_modules_containers file ?resolution_acc chosen_candidate
-    in
-    match resolved with
-    | Some name ->
-      let options = Options.file_options options in
-      Files.eponymous_module (Files.filename_from_string ~options name)
-    | None -> Modulename.String chosen_candidate
+  let imported_module ~options ~reader node_modules_containers file ?resolution_acc r =
+    (* For historical reasons, the Haste module system always picks the first
+     * matching candidate, unlike the Node module system which picks the first
+     * "valid" matching candidate. *)
+    let r = List.hd (module_name_candidates ~options r) in
+    match resolve_import ~options ~reader node_modules_containers file ?resolution_acc r with
+    | Some m -> m
+    | None -> Modulename.String r
 
   (* in haste, many files may provide the same module. here we're also
      supporting the notion of mock modules - allowed duplicates used as
