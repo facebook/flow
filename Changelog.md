@@ -1,3 +1,10 @@
+### 0.176.3
+
+Notable bug fixes:
+* The Haste module resolver now chooses Haste modules before node_modules, to match what Metro does. That is, if you use `module.system=haste` and have both a `@providesModule foo` file (or use "haste paths" to derive the module name from its filename) and a `node_modules/foo` folder, `require('foo')` will now resolve to the Haste module, even when `node_modules/foo` is in that file's parent directories. This is also a significant perf improvement because resolving a Haste module is much cheaper than searching for node_modules.
+* Fix several bugs responsible for crashes
+* Fix bugs responsible for some LSP "server is stopped" errors
+
 ### 0.176.2
 
 Revert changes that are causing bugs in non-lazy mode.
