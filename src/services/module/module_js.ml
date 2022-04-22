@@ -271,29 +271,26 @@ module Node = struct
 
   let parse_main ~reader ~file_options resolution_acc package_filename file_exts =
     let%bind.Base.Option package_filename = Sys_utils.realpath package_filename in
-    if (not (file_exists package_filename)) || Files.is_ignored file_options package_filename then
-      None
-    else
-      let package =
-        match Package_heaps.Reader_dispatcher.get_package ~reader package_filename with
-        | Some (Ok package) -> package
-        | Some (Error ()) ->
-          (* invalid, but we already raised an error when building PackageHeap *)
-          Package_json.empty
-        | None -> Package_json.empty
-      in
-      match Package_json.main package with
-      | None -> None
-      | Some file ->
-        let dir = Filename.dirname package_filename in
-        let path = Files.normalize_path dir file in
-        let path_w_index = Filename.concat path "index" in
-        lazy_seq
-          [
-            lazy (path_if_exists ~file_options resolution_acc path);
-            lazy (path_if_exists_with_file_exts ~file_options resolution_acc path file_exts);
-            lazy (path_if_exists_with_file_exts ~file_options resolution_acc path_w_index file_exts);
-          ]
+    let package =
+      match Package_heaps.Reader_dispatcher.get_package ~reader package_filename with
+      | Some (Ok package) -> package
+      | Some (Error ()) ->
+        (* invalid, but we already raised an error when building PackageHeap *)
+        Package_json.empty
+      | None -> Package_json.empty
+    in
+    match Package_json.main package with
+    | None -> None
+    | Some file ->
+      let dir = Filename.dirname package_filename in
+      let path = Files.normalize_path dir file in
+      let path_w_index = Filename.concat path "index" in
+      lazy_seq
+        [
+          lazy (path_if_exists ~file_options resolution_acc path);
+          lazy (path_if_exists_with_file_exts ~file_options resolution_acc path file_exts);
+          lazy (path_if_exists_with_file_exts ~file_options resolution_acc path_w_index file_exts);
+        ]
 
   let resolve_relative ~options ~reader ?resolution_acc root_path rel_path =
     let file_options = Options.file_options options in
