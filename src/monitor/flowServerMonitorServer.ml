@@ -577,7 +577,8 @@ module KeepAliveLoop = LwtLoop.Make (struct
            in
            (* it's ok if the stream is already closed, we must be shutting down already *)
            ignore wrote;
-           PersistentConnection.flush_and_close conn
+           (* it's also ok if the flush fails because the socket is already closed *)
+           PersistentConnection.try_flush_and_close conn
        )
 
   let should_monitor_exit_with_signaled_server signal =
