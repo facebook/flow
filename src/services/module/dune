@@ -12,5 +12,5 @@
     flow_typing
     flow_package
   )
-  (preprocess (pps lwt_ppx))
+  (preprocess (pps lwt_ppx ppx_let))
 )
