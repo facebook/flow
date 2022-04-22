@@ -49,7 +49,6 @@ Valid values for COMMAND:
   start            Starts a Flow server
   status           (default) Shows current Flow errors by asking the Flow server
   stop             Stops a Flow server
-  suggest          Provides type annotation suggestions for a given program
   type-at-pos      Shows the type at a given file and position
   version          Print version information
 
