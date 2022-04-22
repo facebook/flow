@@ -36,6 +36,28 @@ module ImplicitInstantiationKit : Implicit_instantiation.KIT = Implicit_instanti
       )
 end)
 
+let create_cx_with_context_optimizer init_cx master_cx ~reducer ~f =
+  let file = Context.file init_cx in
+  let metadata = Context.metadata init_cx in
+  let aloc_table = Utils_js.FilenameMap.find file (Context.aloc_tables init_cx) in
+  let module_ref = Files.module_ref file in
+  let ccx = Context.make_ccx master_cx in
+  let res = f () in
+  Context.merge_into
+    ccx
+    {
+      Type.TypeContext.graph = reducer#get_reduced_graph;
+      trust_graph = reducer#get_reduced_trust_graph;
+      property_maps = reducer#get_reduced_property_maps;
+      call_props = reducer#get_reduced_call_props;
+      export_maps = reducer#get_reduced_export_maps;
+      evaluated = reducer#get_reduced_evaluated;
+    };
+  let cx =
+    Context.make ccx metadata file aloc_table (Reason.OrdinaryName module_ref) Context.PostInference
+  in
+  (cx, res)
+
 let detect_sketchy_null_checks cx master_cx =
   let add_error ~loc ~null_loc kind falsy_loc =
     Error_message.ESketchyNullLint { kind; loc; null_loc; falsy_loc } |> Flow_js.add_output cx
@@ -70,13 +92,7 @@ let detect_sketchy_null_checks cx master_cx =
     let open Loc_collections in
     let open ExistsCheck in
     let checks = Context.exists_checks cx in
-    if not @@ ALocMap.is_empty checks then (
-      let file = Context.file cx in
-      let metadata = Context.metadata cx in
-      let aloc_table = Utils_js.FilenameMap.find file (Context.aloc_tables cx) in
-      let module_ref = Files.module_ref file in
-      let ccx = Context.make_ccx master_cx in
-
+    if not @@ ALocMap.is_empty checks then
       let reducer =
         object
           inherit
@@ -101,26 +117,11 @@ let detect_sketchy_null_checks cx master_cx =
             | _ -> super#type_ cx pole t
         end
       in
-      let checks = ALocMap.map (Type.TypeSet.map (reducer#type_ cx Polarity.Neutral)) checks in
-      Context.merge_into
-        ccx
-        {
-          Type.TypeContext.graph = reducer#get_reduced_graph;
-          trust_graph = reducer#get_reduced_trust_graph;
-          property_maps = reducer#get_reduced_property_maps;
-          call_props = reducer#get_reduced_call_props;
-          export_maps = reducer#get_reduced_export_maps;
-          evaluated = reducer#get_reduced_evaluated;
-        };
 
-      let cx =
-        Context.make
-          ccx
-          metadata
-          file
-          aloc_table
-          (Reason.OrdinaryName module_ref)
-          Context.PostInference
+      let (cx, checks) =
+        create_cx_with_context_optimizer cx master_cx ~reducer ~f:(fun () ->
+            ALocMap.map (Type.TypeSet.map (reducer#type_ cx Polarity.Neutral)) checks
+        )
       in
 
       let rec make_checks seen cur_checks loc t =
@@ -191,7 +192,7 @@ let detect_sketchy_null_checks cx master_cx =
           Type.TypeSet.fold (fun t acc -> make_checks ISet.empty acc loc t) tset acc)
         checks
         ALocMap.empty
-    ) else
+    else
       ALocMap.empty
   in
 
@@ -465,12 +466,6 @@ let detect_literal_subtypes =
 let check_constrained_writes init_cx master_cx =
   let checks = Context.constrained_writes init_cx in
   if not @@ Base.List.is_empty checks then (
-    let file = Context.file init_cx in
-    let metadata = Context.metadata init_cx in
-    let aloc_table = Utils_js.FilenameMap.find file (Context.aloc_tables init_cx) in
-    let module_ref = Files.module_ref file in
-    let ccx = Context.make_ccx master_cx in
-
     let reducer =
       let mk_reason =
         let open Reason in
@@ -490,33 +485,15 @@ let check_constrained_writes init_cx master_cx =
           Type.EmptyT.make (mk_reason r) (Type.bogus_trust ())
       )
     in
-    let checks =
-      Base.List.map
-        ~f:(fun (t, u) ->
-          let t = reducer#type_ init_cx Polarity.Neutral t in
-          let u = reducer#use_type init_cx Polarity.Neutral u in
-          (t, u))
-        checks
-    in
-    Context.merge_into
-      ccx
-      {
-        Type.TypeContext.graph = reducer#get_reduced_graph;
-        trust_graph = reducer#get_reduced_trust_graph;
-        property_maps = reducer#get_reduced_property_maps;
-        call_props = reducer#get_reduced_call_props;
-        export_maps = reducer#get_reduced_export_maps;
-        evaluated = reducer#get_reduced_evaluated;
-      };
-
-    let cx =
-      Context.make
-        ccx
-        metadata
-        file
-        aloc_table
-        (Reason.OrdinaryName module_ref)
-        Context.PostInference
+    let (cx, checks) =
+      create_cx_with_context_optimizer init_cx master_cx ~reducer ~f:(fun () ->
+          Base.List.map
+            ~f:(fun (t, u) ->
+              let t = reducer#type_ init_cx Polarity.Neutral t in
+              let u = reducer#use_type init_cx Polarity.Neutral u in
+              (t, u))
+            checks
+      )
     in
     Base.List.iter ~f:(Flow_js.flow cx) checks;
 
