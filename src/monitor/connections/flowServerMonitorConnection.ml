@@ -67,7 +67,7 @@ module type CONNECTION = sig
 
   val close_immediately : t -> unit Lwt.t
 
-  val flush_and_close : t -> unit Lwt.t
+  val try_flush_and_close : t -> unit Lwt.t
 
   val is_closed : t -> bool
 
@@ -128,12 +128,22 @@ module Make (ConnectionProcessor : CONNECTION_PROCESSOR) :
       let%lwt _size = Marshal_tools_lwt.to_fd_with_preamble conn.out_fd msg in
       close_immediately conn
 
-  (* Write everything available in the stream and then close the connection *)
-  let flush_and_close conn =
+  (** Attempts to write everything available in the stream and then close the connection,
+      but it's ok if we can't write because the socket is already closed. *)
+  let try_flush_and_close conn =
     stop_everything conn;
-    close_stream conn;
     let%lwt () =
-      Lwt_list.iter_s (handle_command conn) (Lwt_stream.get_available conn.command_stream)
+      try%lwt
+        Lwt_list.iter_s (handle_command conn) (Lwt_stream.get_available conn.command_stream)
+      with
+      | Unix.Unix_error (Unix.EBADF, _, _)
+      | Unix.Unix_error (Unix.EPIPE, _, _) ->
+        (* connection already closed, ignore *)
+        Lwt.return_unit
+      | exn ->
+        let exn = Exception.wrap exn in
+        let%lwt () = conn.close () in
+        Exception.reraise exn
     in
     conn.close ()
 

@@ -77,7 +77,7 @@ let create_ephemeral_connection ~client_fd ~close =
   (* On exit, do our best to send all pending messages to the waiting client *)
   let close_on_exit =
     let%lwt _ = Lwt_condition.wait ExitSignal.signal in
-    EphemeralConnection.flush_and_close conn
+    EphemeralConnection.try_flush_and_close conn
   in
   (* Lwt.pick returns the first thread to finish and cancels the rest. *)
   Lwt.async (fun () -> Lwt.pick [close_on_exit; EphemeralConnection.wait_for_closed conn]);
@@ -131,7 +131,7 @@ let create_persistent_connection ~client_fd ~close ~lsp_init_params =
       );
     (* TODO: we don't need this anymore, just use ServerExit *)
     ignore (PersistentConnection.write ~msg:LspProt.(NotificationFromServer EOF) conn);
-    PersistentConnection.flush_and_close conn
+    PersistentConnection.try_flush_and_close conn
   in
   (* Lwt.pick returns the first thread to finish and cancels the rest. *)
   Lwt.async (fun () -> Lwt.pick [close_on_exit; PersistentConnection.wait_for_closed conn]);
