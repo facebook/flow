@@ -506,6 +506,7 @@ let get_lint_severities metadata strict_mode lint_severities =
  *)
 let post_merge_checks cx master_cx ast tast metadata file_sig =
   let results = [(cx, ast, tast)] in
+  check_constrained_writes cx master_cx;
   detect_sketchy_null_checks cx master_cx;
   detect_non_voidable_properties cx;
   check_implicit_instantiations cx master_cx;
@@ -516,8 +517,7 @@ let post_merge_checks cx master_cx ast tast metadata file_sig =
   detect_es6_import_export_errors cx metadata results;
   detect_escaped_generics results;
   detect_matching_props_violations cx;
-  detect_literal_subtypes cx;
-  check_constrained_writes cx master_cx
+  detect_literal_subtypes cx
 
 let optimize_builtins cx =
   let reducer =

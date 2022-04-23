@@ -88,3 +88,10 @@ function decl() {
   x = "hi";
   f = "hi";
 }
+
+function interference_post_inference_check() {
+  // A regression test to check that post inference checks do not interfere with each other.
+  let x = [];
+  x = [3];
+  x.length === 1 ? 1 : 2;
+}
