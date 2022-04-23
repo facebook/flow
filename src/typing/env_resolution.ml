@@ -215,6 +215,15 @@ module Make (Env : Env_sig.S) (Statement : Statement_sig.S with module Env := En
     Node_cache.set_declared_class cache loc (t, ast);
     t
 
+  let resolve_enum cx id_loc enum_reason enum =
+    if Context.enable_enums cx then
+      let enum_t = Statement.mk_enum cx ~enum_reason id_loc enum in
+      DefT (enum_reason, literal_trust (), EnumObjectT enum_t)
+    else (
+      Flow_js.add_output cx (Error_message.EEnumsNotEnabled id_loc);
+      AnyT.error enum_reason
+    )
+
   let resolve cx id_loc (def, def_reason) =
     let t =
       match def with
@@ -231,6 +240,7 @@ module Make (Env : Env_sig.S) (Statement : Statement_sig.S with module Env := En
         resolve_import cx id_loc def_reason import_kind source source_loc import
       | Interface (loc, inter) -> resolve_interface cx loc inter
       | DeclaredClass (loc, class_) -> resolve_declare_class cx loc class_
+      | Enum enum -> resolve_enum cx id_loc def_reason enum
       | _ -> Tvar.mk cx (mk_reason (RCustom "unhandled def") id_loc)
     in
     Debug_js.Verbose.print_if_verbose_lazy

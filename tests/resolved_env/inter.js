@@ -18,7 +18,7 @@ declare class C extends D {
 
 
 declare var a: A;
-(a.foo.w(): empty);
+(a.foo.w(): empty); // err
 
 var c = new C();
-(c.m().w(): empty);
+(c.m().w(): empty); // err

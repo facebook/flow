@@ -2,9 +2,9 @@
 
 var x = 42;
 x++;
-(++x: empty);
-(x: empty);
+(++x: empty); // err
+(x: empty); // err
 x += 42;
-(x: empty);
+(x: empty); // err
 x -= 42;
-(x: empty);
+(x: empty); // err

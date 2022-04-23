@@ -1920,7 +1920,7 @@ struct
       let reason = mk_reason (REnum name) name_loc in
       let t =
         if Context.enable_enums cx then (
-          let enum_t = mk_enum cx ~enum_reason:reason enum in
+          let enum_t = mk_enum cx ~enum_reason:reason name_loc body in
           let t = DefT (reason, literal_trust (), EnumObjectT enum_t) in
           Env.declare_implicit_const Scope.Entry.EnumNameBinding cx (OrdinaryName name) name_loc;
           let use_op =
@@ -9296,9 +9296,8 @@ struct
        * into the correct order. *)
       exhaustive_check
 
-  and mk_enum cx ~enum_reason enum =
+  and mk_enum cx ~enum_reason name_loc body =
     let open Ast.Statement.EnumDeclaration in
-    let { id = (name_loc, _); body; comments = _ } = enum in
     let defaulted_members =
       Base.List.fold
         ~init:SMap.empty
