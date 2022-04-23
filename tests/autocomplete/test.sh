@@ -128,3 +128,4 @@ queries_in_file autocomplete "indexed-access-optional-1.js" --lsp
 queries_in_file autocomplete "indexed-access-optional-2.js" --lsp
 queries_in_file autocomplete "typeof.js" --lsp
 queries_in_file autocomplete "typeof_2.js" --lsp
+queries_in_file autocomplete "recursive.js" --pretty

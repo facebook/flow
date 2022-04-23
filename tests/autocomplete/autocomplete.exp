@@ -11281,3 +11281,12 @@ Flags: --lsp
   }
 }
 
+recursive.js:11:6
+Flags: --pretty
+{
+  "result":[
+    {"name":"ab","type":"number"},
+    {"name":"ac","type":"React$AbstractComponent<V$1, any>"}
+  ]
+}
+
