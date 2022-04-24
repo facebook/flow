@@ -2519,3 +2519,14 @@ let expand_members ~include_proto_members ~idx_hook ~options ~genv scheme =
       t
   in
   result
+
+let debug_string_of_t cx t =
+  let typed_ast =
+    (ALoc.none, { Flow_ast.Program.statements = []; comments = None; all_comments = [] })
+  in
+  let module_sig = { File_sig.requires = []; module_kind = File_sig.ES } in
+  let file_sig = { File_sig.module_sig; declare_modules = SMap.empty } in
+  let genv = Ty_normalizer_env.mk_genv ~full_cx:cx ~file:(Context.file cx) ~file_sig ~typed_ast in
+  match from_type ~options:Ty_normalizer_env.default_options ~genv t with
+  | Error (e, _) -> Utils_js.spf "<Error %s>" (error_kind_to_string e)
+  | Ok elt -> Ty_printer.string_of_elt_single_line ~exact_by_default:true elt
