@@ -5915,10 +5915,6 @@ x.a;
         };
         (6, 0) to (6, 1) => {
           Global x
-        };
-        (6, 0) to (6, 3) => {
-          {refinement = Truthy; writes = projection at (2, 4) to (2, 7)},
-          {refinement = Not (Truthy); writes = projection at (2, 4) to (2, 7)}
         }] |}]
 
 let%expect_test "changeset_update" =
@@ -5983,8 +5979,7 @@ if(x && x.a) {
           {refinement = And (Truthy, PropExistsR (a)); writes = Global x}
         };
         (7, 2) to (7, 5) => {
-          {refinement = Truthy; writes = projection at (2, 8) to (2, 11)},
-          {refinement = Truthy; writes = {refinement = Truthy; writes = projection at (2, 8) to (2, 11)}}
+          {refinement = Truthy; writes = projection at (2, 8) to (2, 11)}
         }] |}]
 
 let%expect_test "optional_refi" =

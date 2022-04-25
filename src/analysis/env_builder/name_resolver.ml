@@ -217,6 +217,8 @@ module Make
     val is_undeclared_or_skipped : t -> bool
 
     val is_declared_function : t -> bool
+
+    val is_projection : t -> bool
   end = struct
     let curr_id = ref 0
 
@@ -274,6 +276,11 @@ module Make
     let is_declared_function t =
       match t.write_state with
       | DeclaredFunction _ -> true
+      | _ -> false
+
+    let is_projection t =
+      match t.write_state with
+      | Projection _ -> true
       | _ -> false
 
     let new_id () =
@@ -2034,22 +2041,22 @@ module Make
         | _ ->
           SMap.iter
             (fun name { val_ref; heap_refinements; _ } ->
-              let { Env.env_val = value1; heap_refinements = _; def_loc = _ } =
+              let { Env.env_val = value1; heap_refinements = heap_entries1; def_loc = _ } =
                 SMap.find name env1
               in
-              let { Env.env_val = value2; heap_refinements = _; def_loc = _ } =
+              let { Env.env_val = value2; heap_refinements = heap_entries2; def_loc = _ } =
                 SMap.find name env2
               in
               let {
                 Env.env_val = refined_value1;
-                heap_refinements = heap_refinements1;
+                heap_refinements = refined_heap_entries1;
                 def_loc = _;
               } =
                 SMap.find name refined_env1
               in
               let {
                 Env.env_val = refined_value2;
-                heap_refinements = heap_refinements2;
+                heap_refinements = refined_heap_entries2;
                 def_loc = _;
               } =
                 SMap.find name refined_env2
@@ -2058,7 +2065,23 @@ module Make
                * merge the two heap refinements, even though the underlying value
                * has changed. This is because the final object does indeed have
                * one of the two refinements at the merge *)
-              heap_refinements := this#merge_heap_refinements heap_refinements1 heap_refinements2;
+              heap_refinements :=
+                HeapRefinementMap.merge
+                  (fun key refined_heap_val1 refined_heap_val2 ->
+                    match (refined_heap_val1, refined_heap_val2) with
+                    | (Some refined_heap_val1, Some refined_heap_val2) ->
+                      let heap_val1 = HeapRefinementMap.find key heap_entries1 in
+                      let heap_val2 = HeapRefinementMap.find key heap_entries2 in
+                      if Val.id_of_val heap_val1 = Val.id_of_val heap_val2 then
+                        if Val.is_projection heap_val1 then
+                          None
+                        else
+                          Some heap_val1
+                      else
+                        Some (Val.merge refined_heap_val1 refined_heap_val2)
+                    | _ -> None)
+                  refined_heap_entries1
+                  refined_heap_entries2;
               if Val.id_of_val value1 = Val.id_of_val value2 then
                 val_ref := value1
               else
