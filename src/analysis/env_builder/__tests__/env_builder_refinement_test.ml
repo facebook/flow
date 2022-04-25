@@ -1501,6 +1501,7 @@ try {
         };
         (5, 2) to (5, 3) => {
           (1, 4) to (1, 5): (`x`),
+          (3, 24) to (3, 25): (`x`),
           {refinement = Not (Maybe); writes = (1, 4) to (1, 5): (`x`)}
         }] |}]
 
@@ -3163,7 +3164,8 @@ try {
           Global invariant
         };
         (8, 2) to (8, 3) => {
-          (1, 4) to (1, 5): (`x`)
+          (1, 4) to (1, 5): (`x`),
+          (5, 21) to (5, 22): (`x`)
         }] |}]
 
 let%expect_test "switch_empty" =
@@ -5547,8 +5549,7 @@ function bar(response) {
     } finally {
       payload = 3;
     }
-    // This line is dead
-    payload;
+    payload; // Dead
 }
 |};
     [%expect {|
@@ -5559,11 +5560,11 @@ function bar(response) {
         (7, 16) to (7, 21) => {
           Global Error
         };
-        (12, 4) to (12, 11) => {
+        (11, 4) to (11, 11) => {
           unreachable
         }] |}]
 
-let%expect_test "try_catch_throw_in_both_then_finally" =
+let%expect_test "try_throw_catch_finally" =
   print_ssa_test {|
 function bar(response) {
     var payload;
@@ -5587,8 +5588,127 @@ function bar(response) {
           (7, 6) to (7, 13): (`payload`)
         };
         (11, 4) to (11, 11) => {
+          (7, 6) to (7, 13): (`payload`)
+        }] |}]
+
+let%expect_test "try_catch_throw_finally" =
+  print_ssa_test {|
+function bar(response) {
+    let payload;
+    try {
+      payload = 3;
+    } catch (e) {
+      payload = 4;
+      throw new Error();
+    } finally {
+      payload;
+    }
+    payload; // = 3
+}
+|};
+    [%expect {|
+      [
+        (8, 16) to (8, 21) => {
+          Global Error
+        };
+        (10, 6) to (10, 13) => {
           (uninitialized),
           (7, 6) to (7, 13): (`payload`)
+        };
+        (12, 4) to (12, 11) => {
+          (5, 6) to (5, 13): (`payload`)
+        }] |}]
+
+let%expect_test "try_catch_finally_throw" =
+  print_ssa_test {|
+function bar(response) {
+    let payload;
+    try {
+      payload = 3;
+    } catch (e) {
+      payload = 4;
+    } finally {
+      payload = 5;
+      throw new Error();
+    }
+    payload; // Dead
+}
+|};
+    [%expect {|
+      [
+        (10, 16) to (10, 21) => {
+          Global Error
+        };
+        (12, 4) to (12, 11) => {
+          unreachable
+        }] |}]
+
+let%expect_test "try_throw_catch_throw_finally_throw" =
+  print_ssa_test {|
+function bar(response) {
+    let payload;
+    try {
+      payload = 3;
+      throw new Error()
+    } catch (e) {
+      payload = 4;
+      throw new Error()
+    } finally {
+      payload = 5;
+      throw new Error();
+    }
+    payload; // Dead
+}
+|};
+    [%expect {|
+      [
+        (6, 16) to (6, 21) => {
+          Global Error
+        };
+        (9, 16) to (9, 21) => {
+          Global Error
+        };
+        (12, 16) to (12, 21) => {
+          Global Error
+        };
+        (14, 4) to (14, 11) => {
+          unreachable
+        }] |}]
+
+let%expect_test "try_throw_catch_throw_finally" =
+  print_ssa_test {|
+function bar(response) {
+    let payload;
+    try {
+      try {
+        payload = 3;
+        throw new Error()
+      } catch (e) {
+        payload = 4;
+        throw new Error()
+      } finally {
+        payload = 5;
+      }
+      payload; // Dead
+    } catch (e) {
+      payload; // = 5 | uninitialized
+    }
+}
+|};
+    [%expect {|
+      [
+        (7, 18) to (7, 23) => {
+          Global Error
+        };
+        (10, 18) to (10, 23) => {
+          Global Error
+        };
+        (14, 6) to (14, 13) => {
+          unreachable
+        };
+        (16, 6) to (16, 13) => {
+          (uninitialized),
+          (12, 8) to (12, 15): (`payload`)
         }] |}]
 
 let%expect_test "exports_global" =

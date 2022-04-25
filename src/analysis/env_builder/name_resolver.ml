@@ -2599,38 +2599,6 @@ module Make
           has_default
         )
 
-      (****************************************)
-      (* [PRE] try { s1 } catch { s2 } [POST] *)
-      (****************************************)
-      (*    |                                 *)
-      (*    s1 ..~                            *)
-      (*    |    |                            *)
-      (*    |   s2                            *)
-      (*     \./                              *)
-      (*      |                               *)
-      (****************************************)
-      (* [PRE] s1 [ENV1]                      *)
-      (* [HAVOC] s2 [ENV2 ]                   *)
-      (* POST = ENV1 | ENV2                   *)
-      (****************************************)
-      (*******************************************************)
-      (* [PRE] try { s1 } catch { s2 } finally { s3 } [POST] *)
-      (*******************************************************)
-      (*    |                                                *)
-      (*    s1 ..~                                           *)
-      (*    |    |                                           *)
-      (*    |   s2 ..~                                       *)
-      (*     \./     |                                       *)
-      (*      |______|                                       *)
-      (*             |                                       *)
-      (*            s3                                       *)
-      (*             |                                       *)
-      (*******************************************************)
-      (* [PRE] s1 [ENV1]                                     *)
-      (* [HAVOC] s2 [ENV2 ]                                  *)
-      (* [HAVOC] s3 [ENV3 ]                                  *)
-      (* POST = ENV3                                         *)
-      (*******************************************************)
       method! try_catch _loc (stmt : (ALoc.t, ALoc.t) Ast.Statement.Try.t) =
         this#expecting_abrupt_completions (fun () ->
             let open Ast.Statement.Try in
@@ -2640,38 +2608,78 @@ module Make
               this#run_to_completion (fun () -> ignore @@ this#block loc block)
             in
             let try_exit_env = this#env in
-            this#merge_env try_entry_env try_exit_env;
-            let catch_entry_env = this#env in
-            let catch_completion_state_opt =
+            (* The catch entry env must take into account the fact that any line in the try may
+             * have thrown. We conservatively approximate this by assuming that the very first
+             * line may have thrown, so we merge the entrance env. The other possible states that
+             * can bring us to the catch are the envs at exceptions explicitly thrown in try, so
+             * we merge those in as well.
+             *)
+            this#merge_self_env try_entry_env;
+            (* Merge in all the throw envs *)
+            this#commit_abrupt_completion_matching AbruptCompletion.(mem [throw]) None;
+            let catch_completion_state =
               match handler with
               | Some (loc, clause) ->
                 this#run_to_completion (fun () -> ignore @@ this#catch_clause loc clause)
               | None ->
                 (* No catch is like having a catch that always re-throws the error from the
                  * try block.*)
-                Some AbruptCompletion.Throw
+                this#run_to_completion (fun () ->
+                    this#raise_abrupt_completion AbruptCompletion.Throw
+                )
             in
             let catch_exit_env = this#env in
-            this#merge_env try_exit_env catch_exit_env;
-            let try_catch_completion_states =
-              (try_completion_state, [catch_completion_state_opt])
-            in
             let completion_state =
-              this#run_to_completion (fun () ->
-                  this#merge_completion_states try_catch_completion_states
-              )
+              match (try_completion_state, catch_completion_state) with
+              | (Some AbruptCompletion.Throw, Some AbruptCompletion.Throw)
+              | (Some AbruptCompletion.Return, _) ->
+                try_completion_state
+              | (Some AbruptCompletion.Throw, Some AbruptCompletion.Return) ->
+                catch_completion_state
+              | _ -> None
             in
-            this#commit_abrupt_completion_matching AbruptCompletion.all completion_state;
-            begin
+            (* Finalizers must be checked twice under two environments. We need one to determine
+             * what the env should be after the try/catch/finally, which assumes that either try or
+             * catch did not throw. This assumption, however, is too optimistic, so checking the
+             * finally under this assumption would be unsound. To soundly check the finally, we make
+             * no assumptions about throws. In that case, the entry env here is a merge of the try
+             * start env and catch exit env, along with every abrupt completion env from both the
+             * try and the catch. *)
+            let finally_completion_state =
               match finalizer with
               | Some (_loc, block) ->
-                this#merge_env catch_entry_env catch_exit_env;
-                ignore @@ this#block loc block
+                (* First we check assuming that either try or catch does not throw so we can
+                 * compute the post-state. We check inside expecting_abrupt_completions so that
+                 * we do not pollute the abrupt completion states with envs from the this traversal
+                 * and we do not call commit_abrupt_completion_matching because we are specifically
+                 * trying to look at the case where we exit normally from the finally *)
+                this#expecting_abrupt_completions (fun () ->
+                    (match catch_completion_state with
+                    | None -> this#merge_env try_exit_env catch_exit_env
+                    | Some _ -> this#reset_env try_exit_env);
+                    ignore @@ this#run_to_completion (fun () -> ignore @@ this#block loc block)
+                );
+                let exit_env = this#env in
+                (* Now check assuming that we may throw anywhere in try or catch so that
+                 * we can conservatively check the finally case. The starting env here is modeled as
+                 * the merge of the try_entry_env with the catch_exit env, and we include all abrupt
+                 * completion envs *)
+                this#merge_env try_entry_env catch_exit_env;
+                this#commit_abrupt_completion_matching AbruptCompletion.all completion_state;
+                let completion_state =
+                  this#run_to_completion (fun () -> ignore @@ this#block loc block)
+                in
+                this#reset_env exit_env;
+                completion_state
               | None ->
-                (match catch_completion_state_opt with
+                (match catch_completion_state with
                 | None -> this#merge_env try_exit_env catch_exit_env
-                | Some _ -> this#reset_env try_exit_env)
-            end;
+                | Some _ -> this#reset_env try_exit_env);
+                None
+            in
+            (* If finally has some sort of abnormal completion then we re-raise it. If not, we
+             * consider the completion states from try/catch *)
+            this#from_completion finally_completion_state;
             this#from_completion completion_state
         );
         stmt
