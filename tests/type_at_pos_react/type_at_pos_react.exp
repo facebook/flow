@@ -5,6 +5,11 @@ lazy_ref.js:19:9,19:9
 react_component.js:3:9 = module "react" {
   declare var version: string;
   declare var useTransition: () => [boolean, (() => void) => void];
+  declare var useSyncExternalStore: <Snapshot>(
+    subscribe: (onStoreChange: () => void) => () => void,
+    getSnapshot: () => Snapshot,
+    getServerSnapshot?: () => Snapshot
+  ) => Snapshot;
   declare var useState: <S>(initialState: ((() => S) | S)) => [
     S,
     ((((S) => S) | S)) => void
@@ -27,11 +32,16 @@ react_component.js:3:9 = module "react" {
     create: () => MaybeCleanUpFn,
     inputs?: ?$ReadOnlyArray<mixed>
   ) => void;
+  declare var useInsertionEffect: (
+    create: () => MaybeCleanUpFn,
+    inputs?: ?$ReadOnlyArray<mixed>
+  ) => void;
   declare var useImperativeHandle: <T>(
     ref: ?({current: (T | null), ...} | ((inst: (T | null)) => mixed)),
     create: () => T,
     inputs: ?$ReadOnlyArray<mixed>
   ) => void;
+  declare var useId: () => string;
   declare var useEffect: (
     create: () => MaybeCleanUpFn,
     inputs?: ?$ReadOnlyArray<mixed>

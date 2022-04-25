@@ -1406,39 +1406,39 @@ Cannot call `React.useMutationEffect` because property `useMutationEffect` is mi
                 ^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:401:26
+   <BUILTINS>/react.js:413:26
                                  v
-   401|   declare export default {
-   402|     +DOM: typeof DOM,
-   403|     +PropTypes: typeof PropTypes,
-   404|     +version: typeof version,
-   405|     +checkPropTypes: typeof checkPropTypes,
-   406|     +memo: typeof memo,
-   407|     +lazy: typeof lazy,
-   408|     +createClass: typeof createClass,
-   409|     +createContext: typeof createContext,
-   410|     +createElement: typeof createElement,
-   411|     +cloneElement: typeof cloneElement,
-   412|     +createFactory: typeof createFactory,
-   413|     +createRef: typeof createRef,
-   414|     +forwardRef: typeof forwardRef,
-   415|     +isValidElement: typeof isValidElement,
+   413|   declare export default {
+   414|     +DOM: typeof DOM,
+   415|     +PropTypes: typeof PropTypes,
+   416|     +version: typeof version,
+   417|     +checkPropTypes: typeof checkPropTypes,
+   418|     +memo: typeof memo,
+   419|     +lazy: typeof lazy,
+   420|     +createClass: typeof createClass,
+   421|     +createContext: typeof createContext,
+   422|     +createElement: typeof createElement,
+   423|     +cloneElement: typeof cloneElement,
+   424|     +createFactory: typeof createFactory,
+   425|     +createRef: typeof createRef,
+   426|     +forwardRef: typeof forwardRef,
+   427|     +isValidElement: typeof isValidElement,
       :
-   423|     +Suspense: typeof Suspense,
-   424|     +useContext: typeof useContext,
-   425|     +useState: typeof useState,
-   426|     +useReducer: typeof useReducer,
-   427|     +useRef: typeof useRef,
-   428|     +useEffect: typeof useEffect,
-   429|     +useLayoutEffect: typeof useLayoutEffect,
-   430|     +useCallback: typeof useCallback,
-   431|     +useMemo: typeof useMemo,
-   432|     +useImperativeHandle: typeof useImperativeHandle,
-   433|     +useTransition: typeof useTransition,
-   434|     +useDeferredValue: typeof useDeferredValue,
-   435|     +startTransition: typeof startTransition,
-   436|     ...
-   437|   };
+   438|     +useReducer: typeof useReducer,
+   439|     +useRef: typeof useRef,
+   440|     +useEffect: typeof useEffect,
+   441|     +useLayoutEffect: typeof useLayoutEffect,
+   442|     +useCallback: typeof useCallback,
+   443|     +useMemo: typeof useMemo,
+   444|     +useImperativeHandle: typeof useImperativeHandle,
+   445|     +useTransition: typeof useTransition,
+   446|     +useDeferredValue: typeof useDeferredValue,
+   447|     +startTransition: typeof startTransition,
+   448|     +useId: typeof useId,
+   449|     +useInsertionEffect: typeof useInsertionEffect,
+   450|     +useSyncExternalStore: typeof useSyncExternalStore,
+   451|     ...
+   452|   };
           ^ [1]
 
 
@@ -1550,39 +1550,39 @@ Cannot call `React.useDebugValue` because property `useDebugValue` is missing in
                                      ^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:401:26
+   <BUILTINS>/react.js:413:26
                                  v
-   401|   declare export default {
-   402|     +DOM: typeof DOM,
-   403|     +PropTypes: typeof PropTypes,
-   404|     +version: typeof version,
-   405|     +checkPropTypes: typeof checkPropTypes,
-   406|     +memo: typeof memo,
-   407|     +lazy: typeof lazy,
-   408|     +createClass: typeof createClass,
-   409|     +createContext: typeof createContext,
-   410|     +createElement: typeof createElement,
-   411|     +cloneElement: typeof cloneElement,
-   412|     +createFactory: typeof createFactory,
-   413|     +createRef: typeof createRef,
-   414|     +forwardRef: typeof forwardRef,
-   415|     +isValidElement: typeof isValidElement,
+   413|   declare export default {
+   414|     +DOM: typeof DOM,
+   415|     +PropTypes: typeof PropTypes,
+   416|     +version: typeof version,
+   417|     +checkPropTypes: typeof checkPropTypes,
+   418|     +memo: typeof memo,
+   419|     +lazy: typeof lazy,
+   420|     +createClass: typeof createClass,
+   421|     +createContext: typeof createContext,
+   422|     +createElement: typeof createElement,
+   423|     +cloneElement: typeof cloneElement,
+   424|     +createFactory: typeof createFactory,
+   425|     +createRef: typeof createRef,
+   426|     +forwardRef: typeof forwardRef,
+   427|     +isValidElement: typeof isValidElement,
       :
-   423|     +Suspense: typeof Suspense,
-   424|     +useContext: typeof useContext,
-   425|     +useState: typeof useState,
-   426|     +useReducer: typeof useReducer,
-   427|     +useRef: typeof useRef,
-   428|     +useEffect: typeof useEffect,
-   429|     +useLayoutEffect: typeof useLayoutEffect,
-   430|     +useCallback: typeof useCallback,
-   431|     +useMemo: typeof useMemo,
-   432|     +useImperativeHandle: typeof useImperativeHandle,
-   433|     +useTransition: typeof useTransition,
-   434|     +useDeferredValue: typeof useDeferredValue,
-   435|     +startTransition: typeof startTransition,
-   436|     ...
-   437|   };
+   438|     +useReducer: typeof useReducer,
+   439|     +useRef: typeof useRef,
+   440|     +useEffect: typeof useEffect,
+   441|     +useLayoutEffect: typeof useLayoutEffect,
+   442|     +useCallback: typeof useCallback,
+   443|     +useMemo: typeof useMemo,
+   444|     +useImperativeHandle: typeof useImperativeHandle,
+   445|     +useTransition: typeof useTransition,
+   446|     +useDeferredValue: typeof useDeferredValue,
+   447|     +startTransition: typeof startTransition,
+   448|     +useId: typeof useId,
+   449|     +useInsertionEffect: typeof useInsertionEffect,
+   450|     +useSyncExternalStore: typeof useSyncExternalStore,
+   451|     ...
+   452|   };
           ^ [1]
 
 
@@ -1837,39 +1837,39 @@ Cannot call `React.useMutationEffect` because property `useMutationEffect` is mi
                 ^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:401:26
+   <BUILTINS>/react.js:413:26
                                  v
-   401|   declare export default {
-   402|     +DOM: typeof DOM,
-   403|     +PropTypes: typeof PropTypes,
-   404|     +version: typeof version,
-   405|     +checkPropTypes: typeof checkPropTypes,
-   406|     +memo: typeof memo,
-   407|     +lazy: typeof lazy,
-   408|     +createClass: typeof createClass,
-   409|     +createContext: typeof createContext,
-   410|     +createElement: typeof createElement,
-   411|     +cloneElement: typeof cloneElement,
-   412|     +createFactory: typeof createFactory,
-   413|     +createRef: typeof createRef,
-   414|     +forwardRef: typeof forwardRef,
-   415|     +isValidElement: typeof isValidElement,
+   413|   declare export default {
+   414|     +DOM: typeof DOM,
+   415|     +PropTypes: typeof PropTypes,
+   416|     +version: typeof version,
+   417|     +checkPropTypes: typeof checkPropTypes,
+   418|     +memo: typeof memo,
+   419|     +lazy: typeof lazy,
+   420|     +createClass: typeof createClass,
+   421|     +createContext: typeof createContext,
+   422|     +createElement: typeof createElement,
+   423|     +cloneElement: typeof cloneElement,
+   424|     +createFactory: typeof createFactory,
+   425|     +createRef: typeof createRef,
+   426|     +forwardRef: typeof forwardRef,
+   427|     +isValidElement: typeof isValidElement,
       :
-   423|     +Suspense: typeof Suspense,
-   424|     +useContext: typeof useContext,
-   425|     +useState: typeof useState,
-   426|     +useReducer: typeof useReducer,
-   427|     +useRef: typeof useRef,
-   428|     +useEffect: typeof useEffect,
-   429|     +useLayoutEffect: typeof useLayoutEffect,
-   430|     +useCallback: typeof useCallback,
-   431|     +useMemo: typeof useMemo,
-   432|     +useImperativeHandle: typeof useImperativeHandle,
-   433|     +useTransition: typeof useTransition,
-   434|     +useDeferredValue: typeof useDeferredValue,
-   435|     +startTransition: typeof startTransition,
-   436|     ...
-   437|   };
+   438|     +useReducer: typeof useReducer,
+   439|     +useRef: typeof useRef,
+   440|     +useEffect: typeof useEffect,
+   441|     +useLayoutEffect: typeof useLayoutEffect,
+   442|     +useCallback: typeof useCallback,
+   443|     +useMemo: typeof useMemo,
+   444|     +useImperativeHandle: typeof useImperativeHandle,
+   445|     +useTransition: typeof useTransition,
+   446|     +useDeferredValue: typeof useDeferredValue,
+   447|     +startTransition: typeof startTransition,
+   448|     +useId: typeof useId,
+   449|     +useInsertionEffect: typeof useInsertionEffect,
+   450|     +useSyncExternalStore: typeof useSyncExternalStore,
+   451|     ...
+   452|   };
           ^ [1]
 
 
@@ -1882,39 +1882,39 @@ Cannot call `React.useMutationEffect` because property `useMutationEffect` is mi
                 ^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:401:26
+   <BUILTINS>/react.js:413:26
                                  v
-   401|   declare export default {
-   402|     +DOM: typeof DOM,
-   403|     +PropTypes: typeof PropTypes,
-   404|     +version: typeof version,
-   405|     +checkPropTypes: typeof checkPropTypes,
-   406|     +memo: typeof memo,
-   407|     +lazy: typeof lazy,
-   408|     +createClass: typeof createClass,
-   409|     +createContext: typeof createContext,
-   410|     +createElement: typeof createElement,
-   411|     +cloneElement: typeof cloneElement,
-   412|     +createFactory: typeof createFactory,
-   413|     +createRef: typeof createRef,
-   414|     +forwardRef: typeof forwardRef,
-   415|     +isValidElement: typeof isValidElement,
+   413|   declare export default {
+   414|     +DOM: typeof DOM,
+   415|     +PropTypes: typeof PropTypes,
+   416|     +version: typeof version,
+   417|     +checkPropTypes: typeof checkPropTypes,
+   418|     +memo: typeof memo,
+   419|     +lazy: typeof lazy,
+   420|     +createClass: typeof createClass,
+   421|     +createContext: typeof createContext,
+   422|     +createElement: typeof createElement,
+   423|     +cloneElement: typeof cloneElement,
+   424|     +createFactory: typeof createFactory,
+   425|     +createRef: typeof createRef,
+   426|     +forwardRef: typeof forwardRef,
+   427|     +isValidElement: typeof isValidElement,
       :
-   423|     +Suspense: typeof Suspense,
-   424|     +useContext: typeof useContext,
-   425|     +useState: typeof useState,
-   426|     +useReducer: typeof useReducer,
-   427|     +useRef: typeof useRef,
-   428|     +useEffect: typeof useEffect,
-   429|     +useLayoutEffect: typeof useLayoutEffect,
-   430|     +useCallback: typeof useCallback,
-   431|     +useMemo: typeof useMemo,
-   432|     +useImperativeHandle: typeof useImperativeHandle,
-   433|     +useTransition: typeof useTransition,
-   434|     +useDeferredValue: typeof useDeferredValue,
-   435|     +startTransition: typeof startTransition,
-   436|     ...
-   437|   };
+   438|     +useReducer: typeof useReducer,
+   439|     +useRef: typeof useRef,
+   440|     +useEffect: typeof useEffect,
+   441|     +useLayoutEffect: typeof useLayoutEffect,
+   442|     +useCallback: typeof useCallback,
+   443|     +useMemo: typeof useMemo,
+   444|     +useImperativeHandle: typeof useImperativeHandle,
+   445|     +useTransition: typeof useTransition,
+   446|     +useDeferredValue: typeof useDeferredValue,
+   447|     +startTransition: typeof startTransition,
+   448|     +useId: typeof useId,
+   449|     +useInsertionEffect: typeof useInsertionEffect,
+   450|     +useSyncExternalStore: typeof useSyncExternalStore,
+   451|     ...
+   452|   };
           ^ [1]
 
 
@@ -1927,39 +1927,39 @@ Cannot call `React.useMutationEffect` because property `useMutationEffect` is mi
                 ^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:401:26
+   <BUILTINS>/react.js:413:26
                                  v
-   401|   declare export default {
-   402|     +DOM: typeof DOM,
-   403|     +PropTypes: typeof PropTypes,
-   404|     +version: typeof version,
-   405|     +checkPropTypes: typeof checkPropTypes,
-   406|     +memo: typeof memo,
-   407|     +lazy: typeof lazy,
-   408|     +createClass: typeof createClass,
-   409|     +createContext: typeof createContext,
-   410|     +createElement: typeof createElement,
-   411|     +cloneElement: typeof cloneElement,
-   412|     +createFactory: typeof createFactory,
-   413|     +createRef: typeof createRef,
-   414|     +forwardRef: typeof forwardRef,
-   415|     +isValidElement: typeof isValidElement,
+   413|   declare export default {
+   414|     +DOM: typeof DOM,
+   415|     +PropTypes: typeof PropTypes,
+   416|     +version: typeof version,
+   417|     +checkPropTypes: typeof checkPropTypes,
+   418|     +memo: typeof memo,
+   419|     +lazy: typeof lazy,
+   420|     +createClass: typeof createClass,
+   421|     +createContext: typeof createContext,
+   422|     +createElement: typeof createElement,
+   423|     +cloneElement: typeof cloneElement,
+   424|     +createFactory: typeof createFactory,
+   425|     +createRef: typeof createRef,
+   426|     +forwardRef: typeof forwardRef,
+   427|     +isValidElement: typeof isValidElement,
       :
-   423|     +Suspense: typeof Suspense,
-   424|     +useContext: typeof useContext,
-   425|     +useState: typeof useState,
-   426|     +useReducer: typeof useReducer,
-   427|     +useRef: typeof useRef,
-   428|     +useEffect: typeof useEffect,
-   429|     +useLayoutEffect: typeof useLayoutEffect,
-   430|     +useCallback: typeof useCallback,
-   431|     +useMemo: typeof useMemo,
-   432|     +useImperativeHandle: typeof useImperativeHandle,
-   433|     +useTransition: typeof useTransition,
-   434|     +useDeferredValue: typeof useDeferredValue,
-   435|     +startTransition: typeof startTransition,
-   436|     ...
-   437|   };
+   438|     +useReducer: typeof useReducer,
+   439|     +useRef: typeof useRef,
+   440|     +useEffect: typeof useEffect,
+   441|     +useLayoutEffect: typeof useLayoutEffect,
+   442|     +useCallback: typeof useCallback,
+   443|     +useMemo: typeof useMemo,
+   444|     +useImperativeHandle: typeof useImperativeHandle,
+   445|     +useTransition: typeof useTransition,
+   446|     +useDeferredValue: typeof useDeferredValue,
+   447|     +startTransition: typeof startTransition,
+   448|     +useId: typeof useId,
+   449|     +useInsertionEffect: typeof useInsertionEffect,
+   450|     +useSyncExternalStore: typeof useSyncExternalStore,
+   451|     ...
+   452|   };
           ^ [1]
 
 
@@ -1972,39 +1972,39 @@ Cannot call `React.useMutationEffect` because property `useMutationEffect` is mi
                 ^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:401:26
+   <BUILTINS>/react.js:413:26
                                  v
-   401|   declare export default {
-   402|     +DOM: typeof DOM,
-   403|     +PropTypes: typeof PropTypes,
-   404|     +version: typeof version,
-   405|     +checkPropTypes: typeof checkPropTypes,
-   406|     +memo: typeof memo,
-   407|     +lazy: typeof lazy,
-   408|     +createClass: typeof createClass,
-   409|     +createContext: typeof createContext,
-   410|     +createElement: typeof createElement,
-   411|     +cloneElement: typeof cloneElement,
-   412|     +createFactory: typeof createFactory,
-   413|     +createRef: typeof createRef,
-   414|     +forwardRef: typeof forwardRef,
-   415|     +isValidElement: typeof isValidElement,
+   413|   declare export default {
+   414|     +DOM: typeof DOM,
+   415|     +PropTypes: typeof PropTypes,
+   416|     +version: typeof version,
+   417|     +checkPropTypes: typeof checkPropTypes,
+   418|     +memo: typeof memo,
+   419|     +lazy: typeof lazy,
+   420|     +createClass: typeof createClass,
+   421|     +createContext: typeof createContext,
+   422|     +createElement: typeof createElement,
+   423|     +cloneElement: typeof cloneElement,
+   424|     +createFactory: typeof createFactory,
+   425|     +createRef: typeof createRef,
+   426|     +forwardRef: typeof forwardRef,
+   427|     +isValidElement: typeof isValidElement,
       :
-   423|     +Suspense: typeof Suspense,
-   424|     +useContext: typeof useContext,
-   425|     +useState: typeof useState,
-   426|     +useReducer: typeof useReducer,
-   427|     +useRef: typeof useRef,
-   428|     +useEffect: typeof useEffect,
-   429|     +useLayoutEffect: typeof useLayoutEffect,
-   430|     +useCallback: typeof useCallback,
-   431|     +useMemo: typeof useMemo,
-   432|     +useImperativeHandle: typeof useImperativeHandle,
-   433|     +useTransition: typeof useTransition,
-   434|     +useDeferredValue: typeof useDeferredValue,
-   435|     +startTransition: typeof startTransition,
-   436|     ...
-   437|   };
+   438|     +useReducer: typeof useReducer,
+   439|     +useRef: typeof useRef,
+   440|     +useEffect: typeof useEffect,
+   441|     +useLayoutEffect: typeof useLayoutEffect,
+   442|     +useCallback: typeof useCallback,
+   443|     +useMemo: typeof useMemo,
+   444|     +useImperativeHandle: typeof useImperativeHandle,
+   445|     +useTransition: typeof useTransition,
+   446|     +useDeferredValue: typeof useDeferredValue,
+   447|     +startTransition: typeof startTransition,
+   448|     +useId: typeof useId,
+   449|     +useInsertionEffect: typeof useInsertionEffect,
+   450|     +useSyncExternalStore: typeof useSyncExternalStore,
+   451|     ...
+   452|   };
           ^ [1]
 
 
@@ -2017,39 +2017,39 @@ Cannot call `React.useMutationEffect` because property `useMutationEffect` is mi
                 ^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:401:26
+   <BUILTINS>/react.js:413:26
                                  v
-   401|   declare export default {
-   402|     +DOM: typeof DOM,
-   403|     +PropTypes: typeof PropTypes,
-   404|     +version: typeof version,
-   405|     +checkPropTypes: typeof checkPropTypes,
-   406|     +memo: typeof memo,
-   407|     +lazy: typeof lazy,
-   408|     +createClass: typeof createClass,
-   409|     +createContext: typeof createContext,
-   410|     +createElement: typeof createElement,
-   411|     +cloneElement: typeof cloneElement,
-   412|     +createFactory: typeof createFactory,
-   413|     +createRef: typeof createRef,
-   414|     +forwardRef: typeof forwardRef,
-   415|     +isValidElement: typeof isValidElement,
+   413|   declare export default {
+   414|     +DOM: typeof DOM,
+   415|     +PropTypes: typeof PropTypes,
+   416|     +version: typeof version,
+   417|     +checkPropTypes: typeof checkPropTypes,
+   418|     +memo: typeof memo,
+   419|     +lazy: typeof lazy,
+   420|     +createClass: typeof createClass,
+   421|     +createContext: typeof createContext,
+   422|     +createElement: typeof createElement,
+   423|     +cloneElement: typeof cloneElement,
+   424|     +createFactory: typeof createFactory,
+   425|     +createRef: typeof createRef,
+   426|     +forwardRef: typeof forwardRef,
+   427|     +isValidElement: typeof isValidElement,
       :
-   423|     +Suspense: typeof Suspense,
-   424|     +useContext: typeof useContext,
-   425|     +useState: typeof useState,
-   426|     +useReducer: typeof useReducer,
-   427|     +useRef: typeof useRef,
-   428|     +useEffect: typeof useEffect,
-   429|     +useLayoutEffect: typeof useLayoutEffect,
-   430|     +useCallback: typeof useCallback,
-   431|     +useMemo: typeof useMemo,
-   432|     +useImperativeHandle: typeof useImperativeHandle,
-   433|     +useTransition: typeof useTransition,
-   434|     +useDeferredValue: typeof useDeferredValue,
-   435|     +startTransition: typeof startTransition,
-   436|     ...
-   437|   };
+   438|     +useReducer: typeof useReducer,
+   439|     +useRef: typeof useRef,
+   440|     +useEffect: typeof useEffect,
+   441|     +useLayoutEffect: typeof useLayoutEffect,
+   442|     +useCallback: typeof useCallback,
+   443|     +useMemo: typeof useMemo,
+   444|     +useImperativeHandle: typeof useImperativeHandle,
+   445|     +useTransition: typeof useTransition,
+   446|     +useDeferredValue: typeof useDeferredValue,
+   447|     +startTransition: typeof startTransition,
+   448|     +useId: typeof useId,
+   449|     +useInsertionEffect: typeof useInsertionEffect,
+   450|     +useSyncExternalStore: typeof useSyncExternalStore,
+   451|     ...
+   452|   };
           ^ [1]
 
 
@@ -2062,39 +2062,39 @@ Cannot call `React.useMutationEffect` because property `useMutationEffect` is mi
                 ^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:401:26
+   <BUILTINS>/react.js:413:26
                                  v
-   401|   declare export default {
-   402|     +DOM: typeof DOM,
-   403|     +PropTypes: typeof PropTypes,
-   404|     +version: typeof version,
-   405|     +checkPropTypes: typeof checkPropTypes,
-   406|     +memo: typeof memo,
-   407|     +lazy: typeof lazy,
-   408|     +createClass: typeof createClass,
-   409|     +createContext: typeof createContext,
-   410|     +createElement: typeof createElement,
-   411|     +cloneElement: typeof cloneElement,
-   412|     +createFactory: typeof createFactory,
-   413|     +createRef: typeof createRef,
-   414|     +forwardRef: typeof forwardRef,
-   415|     +isValidElement: typeof isValidElement,
+   413|   declare export default {
+   414|     +DOM: typeof DOM,
+   415|     +PropTypes: typeof PropTypes,
+   416|     +version: typeof version,
+   417|     +checkPropTypes: typeof checkPropTypes,
+   418|     +memo: typeof memo,
+   419|     +lazy: typeof lazy,
+   420|     +createClass: typeof createClass,
+   421|     +createContext: typeof createContext,
+   422|     +createElement: typeof createElement,
+   423|     +cloneElement: typeof cloneElement,
+   424|     +createFactory: typeof createFactory,
+   425|     +createRef: typeof createRef,
+   426|     +forwardRef: typeof forwardRef,
+   427|     +isValidElement: typeof isValidElement,
       :
-   423|     +Suspense: typeof Suspense,
-   424|     +useContext: typeof useContext,
-   425|     +useState: typeof useState,
-   426|     +useReducer: typeof useReducer,
-   427|     +useRef: typeof useRef,
-   428|     +useEffect: typeof useEffect,
-   429|     +useLayoutEffect: typeof useLayoutEffect,
-   430|     +useCallback: typeof useCallback,
-   431|     +useMemo: typeof useMemo,
-   432|     +useImperativeHandle: typeof useImperativeHandle,
-   433|     +useTransition: typeof useTransition,
-   434|     +useDeferredValue: typeof useDeferredValue,
-   435|     +startTransition: typeof startTransition,
-   436|     ...
-   437|   };
+   438|     +useReducer: typeof useReducer,
+   439|     +useRef: typeof useRef,
+   440|     +useEffect: typeof useEffect,
+   441|     +useLayoutEffect: typeof useLayoutEffect,
+   442|     +useCallback: typeof useCallback,
+   443|     +useMemo: typeof useMemo,
+   444|     +useImperativeHandle: typeof useImperativeHandle,
+   445|     +useTransition: typeof useTransition,
+   446|     +useDeferredValue: typeof useDeferredValue,
+   447|     +startTransition: typeof startTransition,
+   448|     +useId: typeof useId,
+   449|     +useInsertionEffect: typeof useInsertionEffect,
+   450|     +useSyncExternalStore: typeof useSyncExternalStore,
+   451|     ...
+   452|   };
           ^ [1]
 
 
@@ -2107,39 +2107,39 @@ Cannot call `React.useMutationEffect` because property `useMutationEffect` is mi
                 ^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:401:26
+   <BUILTINS>/react.js:413:26
                                  v
-   401|   declare export default {
-   402|     +DOM: typeof DOM,
-   403|     +PropTypes: typeof PropTypes,
-   404|     +version: typeof version,
-   405|     +checkPropTypes: typeof checkPropTypes,
-   406|     +memo: typeof memo,
-   407|     +lazy: typeof lazy,
-   408|     +createClass: typeof createClass,
-   409|     +createContext: typeof createContext,
-   410|     +createElement: typeof createElement,
-   411|     +cloneElement: typeof cloneElement,
-   412|     +createFactory: typeof createFactory,
-   413|     +createRef: typeof createRef,
-   414|     +forwardRef: typeof forwardRef,
-   415|     +isValidElement: typeof isValidElement,
+   413|   declare export default {
+   414|     +DOM: typeof DOM,
+   415|     +PropTypes: typeof PropTypes,
+   416|     +version: typeof version,
+   417|     +checkPropTypes: typeof checkPropTypes,
+   418|     +memo: typeof memo,
+   419|     +lazy: typeof lazy,
+   420|     +createClass: typeof createClass,
+   421|     +createContext: typeof createContext,
+   422|     +createElement: typeof createElement,
+   423|     +cloneElement: typeof cloneElement,
+   424|     +createFactory: typeof createFactory,
+   425|     +createRef: typeof createRef,
+   426|     +forwardRef: typeof forwardRef,
+   427|     +isValidElement: typeof isValidElement,
       :
-   423|     +Suspense: typeof Suspense,
-   424|     +useContext: typeof useContext,
-   425|     +useState: typeof useState,
-   426|     +useReducer: typeof useReducer,
-   427|     +useRef: typeof useRef,
-   428|     +useEffect: typeof useEffect,
-   429|     +useLayoutEffect: typeof useLayoutEffect,
-   430|     +useCallback: typeof useCallback,
-   431|     +useMemo: typeof useMemo,
-   432|     +useImperativeHandle: typeof useImperativeHandle,
-   433|     +useTransition: typeof useTransition,
-   434|     +useDeferredValue: typeof useDeferredValue,
-   435|     +startTransition: typeof startTransition,
-   436|     ...
-   437|   };
+   438|     +useReducer: typeof useReducer,
+   439|     +useRef: typeof useRef,
+   440|     +useEffect: typeof useEffect,
+   441|     +useLayoutEffect: typeof useLayoutEffect,
+   442|     +useCallback: typeof useCallback,
+   443|     +useMemo: typeof useMemo,
+   444|     +useImperativeHandle: typeof useImperativeHandle,
+   445|     +useTransition: typeof useTransition,
+   446|     +useDeferredValue: typeof useDeferredValue,
+   447|     +startTransition: typeof startTransition,
+   448|     +useId: typeof useId,
+   449|     +useInsertionEffect: typeof useInsertionEffect,
+   450|     +useSyncExternalStore: typeof useSyncExternalStore,
+   451|     ...
+   452|   };
           ^ [1]
 
 
@@ -2152,39 +2152,39 @@ Cannot call `React.useMutationEffect` because property `useMutationEffect` is mi
                 ^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:401:26
+   <BUILTINS>/react.js:413:26
                                  v
-   401|   declare export default {
-   402|     +DOM: typeof DOM,
-   403|     +PropTypes: typeof PropTypes,
-   404|     +version: typeof version,
-   405|     +checkPropTypes: typeof checkPropTypes,
-   406|     +memo: typeof memo,
-   407|     +lazy: typeof lazy,
-   408|     +createClass: typeof createClass,
-   409|     +createContext: typeof createContext,
-   410|     +createElement: typeof createElement,
-   411|     +cloneElement: typeof cloneElement,
-   412|     +createFactory: typeof createFactory,
-   413|     +createRef: typeof createRef,
-   414|     +forwardRef: typeof forwardRef,
-   415|     +isValidElement: typeof isValidElement,
+   413|   declare export default {
+   414|     +DOM: typeof DOM,
+   415|     +PropTypes: typeof PropTypes,
+   416|     +version: typeof version,
+   417|     +checkPropTypes: typeof checkPropTypes,
+   418|     +memo: typeof memo,
+   419|     +lazy: typeof lazy,
+   420|     +createClass: typeof createClass,
+   421|     +createContext: typeof createContext,
+   422|     +createElement: typeof createElement,
+   423|     +cloneElement: typeof cloneElement,
+   424|     +createFactory: typeof createFactory,
+   425|     +createRef: typeof createRef,
+   426|     +forwardRef: typeof forwardRef,
+   427|     +isValidElement: typeof isValidElement,
       :
-   423|     +Suspense: typeof Suspense,
-   424|     +useContext: typeof useContext,
-   425|     +useState: typeof useState,
-   426|     +useReducer: typeof useReducer,
-   427|     +useRef: typeof useRef,
-   428|     +useEffect: typeof useEffect,
-   429|     +useLayoutEffect: typeof useLayoutEffect,
-   430|     +useCallback: typeof useCallback,
-   431|     +useMemo: typeof useMemo,
-   432|     +useImperativeHandle: typeof useImperativeHandle,
-   433|     +useTransition: typeof useTransition,
-   434|     +useDeferredValue: typeof useDeferredValue,
-   435|     +startTransition: typeof startTransition,
-   436|     ...
-   437|   };
+   438|     +useReducer: typeof useReducer,
+   439|     +useRef: typeof useRef,
+   440|     +useEffect: typeof useEffect,
+   441|     +useLayoutEffect: typeof useLayoutEffect,
+   442|     +useCallback: typeof useCallback,
+   443|     +useMemo: typeof useMemo,
+   444|     +useImperativeHandle: typeof useImperativeHandle,
+   445|     +useTransition: typeof useTransition,
+   446|     +useDeferredValue: typeof useDeferredValue,
+   447|     +startTransition: typeof startTransition,
+   448|     +useId: typeof useId,
+   449|     +useInsertionEffect: typeof useInsertionEffect,
+   450|     +useSyncExternalStore: typeof useSyncExternalStore,
+   451|     ...
+   452|   };
           ^ [1]
 
 
@@ -2197,39 +2197,39 @@ Cannot call `React.useMutationEffect` because property `useMutationEffect` is mi
                 ^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:401:26
+   <BUILTINS>/react.js:413:26
                                  v
-   401|   declare export default {
-   402|     +DOM: typeof DOM,
-   403|     +PropTypes: typeof PropTypes,
-   404|     +version: typeof version,
-   405|     +checkPropTypes: typeof checkPropTypes,
-   406|     +memo: typeof memo,
-   407|     +lazy: typeof lazy,
-   408|     +createClass: typeof createClass,
-   409|     +createContext: typeof createContext,
-   410|     +createElement: typeof createElement,
-   411|     +cloneElement: typeof cloneElement,
-   412|     +createFactory: typeof createFactory,
-   413|     +createRef: typeof createRef,
-   414|     +forwardRef: typeof forwardRef,
-   415|     +isValidElement: typeof isValidElement,
+   413|   declare export default {
+   414|     +DOM: typeof DOM,
+   415|     +PropTypes: typeof PropTypes,
+   416|     +version: typeof version,
+   417|     +checkPropTypes: typeof checkPropTypes,
+   418|     +memo: typeof memo,
+   419|     +lazy: typeof lazy,
+   420|     +createClass: typeof createClass,
+   421|     +createContext: typeof createContext,
+   422|     +createElement: typeof createElement,
+   423|     +cloneElement: typeof cloneElement,
+   424|     +createFactory: typeof createFactory,
+   425|     +createRef: typeof createRef,
+   426|     +forwardRef: typeof forwardRef,
+   427|     +isValidElement: typeof isValidElement,
       :
-   423|     +Suspense: typeof Suspense,
-   424|     +useContext: typeof useContext,
-   425|     +useState: typeof useState,
-   426|     +useReducer: typeof useReducer,
-   427|     +useRef: typeof useRef,
-   428|     +useEffect: typeof useEffect,
-   429|     +useLayoutEffect: typeof useLayoutEffect,
-   430|     +useCallback: typeof useCallback,
-   431|     +useMemo: typeof useMemo,
-   432|     +useImperativeHandle: typeof useImperativeHandle,
-   433|     +useTransition: typeof useTransition,
-   434|     +useDeferredValue: typeof useDeferredValue,
-   435|     +startTransition: typeof startTransition,
-   436|     ...
-   437|   };
+   438|     +useReducer: typeof useReducer,
+   439|     +useRef: typeof useRef,
+   440|     +useEffect: typeof useEffect,
+   441|     +useLayoutEffect: typeof useLayoutEffect,
+   442|     +useCallback: typeof useCallback,
+   443|     +useMemo: typeof useMemo,
+   444|     +useImperativeHandle: typeof useImperativeHandle,
+   445|     +useTransition: typeof useTransition,
+   446|     +useDeferredValue: typeof useDeferredValue,
+   447|     +startTransition: typeof startTransition,
+   448|     +useId: typeof useId,
+   449|     +useInsertionEffect: typeof useInsertionEffect,
+   450|     +useSyncExternalStore: typeof useSyncExternalStore,
+   451|     ...
+   452|   };
           ^ [1]
 
 
