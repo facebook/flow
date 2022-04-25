@@ -288,6 +288,9 @@ module Make
     and debug_to_string get_refi { id; write_state } =
       string_of_int id ^ " " ^ debug_write_state get_refi write_state
 
+    (* Ensure we only produce one unique val for the same Loc *)
+    let val_one_cache : (Reason.t, t) Hashtbl.t = Hashtbl.create 0
+
     let is_global_undefined t =
       match t.write_state with
       | Global "undefined" -> true
@@ -384,10 +387,23 @@ module Make
       | Refinement { refinement_id; val_t = _ } -> refinement refinement_id base
       | _ -> base
 
-    let join = function
+    let join_write_states = function
       | [] -> PHI []
       | [t] -> t
       | ts -> PHI ts
+
+    let one reason =
+      match Hashtbl.find_opt val_one_cache reason with
+      | Some v -> v
+      | None ->
+        let v = mk_with_write_state @@ Loc reason in
+        Hashtbl.add val_one_cache reason v;
+        v
+
+    let join write_states =
+      match join_write_states write_states with
+      | Loc reason -> one reason
+      | write_state -> mk_with_write_state write_state
 
     module WriteSet = Flow_set.Make (struct
       type t = write_state
@@ -432,7 +448,7 @@ module Make
            expect (and have experimentally validated that) the cost of computing normal forms becomes
            smaller over time as terms remain close to their final normal forms. *)
         let vals = WriteSet.union (normalize t1.write_state) (normalize t2.write_state) in
-        mk_with_write_state @@ join (WriteSet.elements vals)
+        join (WriteSet.elements vals)
 
     let rec normalize_through_refinements (t : write_state) : WriteSet.t =
       match t with
@@ -467,9 +483,7 @@ module Make
 
     let global name = mk_with_write_state @@ Global name
 
-    let one reason = mk_with_write_state @@ Loc reason
-
-    let all locs = mk_with_write_state @@ join (Base.List.map ~f:(fun reason -> Loc reason) locs)
+    let all locs = join (Base.List.map ~f:(fun reason -> Loc reason) locs)
 
     let rec simplify_val t =
       let vals = normalize t.write_state in
