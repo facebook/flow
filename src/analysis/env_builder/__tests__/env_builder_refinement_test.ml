@@ -5085,6 +5085,9 @@ throw new Error();
         };
         (4, 0) to (4, 13) => {
           unreachable
+        };
+        (4, 1) to (4, 10) => {
+          unreachable
         }] |}]
 
 let%expect_test "custom_jsx_pragma" =
@@ -5160,6 +5163,9 @@ throw new Error();
           Global Error
         };
         (4, 0) to (4, 13) => {
+          unreachable
+        };
+        (4, 1) to (4, 10) => {
           unreachable
         }] |}]
 

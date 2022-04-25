@@ -4248,6 +4248,11 @@ module Make
         this#any_identifier loc name;
         super#identifier ident
 
+      method! jsx_element_name_identifier (ident : (ALoc.t, ALoc.t) Ast.JSX.Identifier.t) =
+        let (loc, { Ast.JSX.Identifier.name; comments = _ }) = ident in
+        this#any_identifier loc name;
+        super#jsx_identifier ident
+
       method private jsx_function_call loc =
         match Context.react_runtime cx with
         | Options.ReactRuntimeClassic -> this#any_identifier loc "React"
