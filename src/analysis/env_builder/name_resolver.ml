@@ -219,6 +219,8 @@ module Make
     val is_declared_function : t -> bool
 
     val is_projection : t -> bool
+
+    val debug_to_string : (int -> refinement) -> t -> string
   end = struct
     let curr_id = ref 0
 
@@ -249,6 +251,42 @@ module Make
       id: int;
       write_state: write_state;
     }
+
+    let rec debug_write_state get_refi = function
+      | Uninitialized _ -> "(uninitialized)"
+      | Undeclared _ -> "(undeclared)"
+      | DeclaredButSkipped _ -> "(declared but skipped)"
+      | UndeclaredClass { def; _ } ->
+        let loc = Reason.poly_loc_of_reason def in
+        Utils_js.spf
+          "(undeclared class) %s: (%s)"
+          (L.debug_to_string loc)
+          Reason.(desc_of_reason def |> string_of_desc)
+      | Projection l -> Utils_js.spf "projection at %s" (L.debug_to_string l)
+      | Loc reason ->
+        let loc = Reason.poly_loc_of_reason reason in
+        Utils_js.spf
+          "%s: (%s)"
+          (L.debug_to_string loc)
+          Reason.(desc_of_reason reason |> string_of_desc)
+      | Refinement { refinement_id; val_t } ->
+        let refinement_kind =
+          refinement_id |> get_refi |> snd |> Env_api.show_refinement_kind_without_locs
+        in
+        let write_str = debug_to_string get_refi val_t in
+        Utils_js.spf "{refinement = %s; write = %s}" refinement_kind write_str
+      | This -> "This"
+      | Super -> "Super"
+      | Arguments -> "Arguments"
+      | Global name -> "Global " ^ name
+      | Undefined _ -> "undefined"
+      | Number _ -> "number"
+      | DeclaredFunction l -> Utils_js.spf "declared function %s" (L.debug_to_string l)
+      | PHI ts ->
+        Utils_js.spf "[%s]" (ts |> List.map (debug_write_state get_refi) |> String.concat ",")
+
+    and debug_to_string get_refi { id; write_state } =
+      string_of_int id ^ " " ^ debug_write_state get_refi write_state
 
     let is_global_undefined t =
       match t.write_state with
@@ -890,6 +928,8 @@ module Make
     object (this)
       inherit
         Scope_builder.scope_builder ~flowmin_compatibility:false ~enable_enums ~with_types:true as super
+
+      method private debug_val = Val.debug_to_string this#refinement_of_id
 
       val invalidation_caches = Invalidation_api.mk_caches ()
 
