@@ -82,8 +82,6 @@ module Merge_context_mutator : sig
 
   val add_merge_on_diff : worker_mutator -> File_key.t Nel.t -> Xx.hash -> bool
 
-  val add_merge_on_exn : worker_mutator -> File_key.t Nel.t -> bool
-
   val revive_files : master_mutator -> Utils_js.FilenameSet.t -> unit
 end = struct
   type master_mutator = unit
@@ -134,13 +132,6 @@ end = struct
         )
     );
     diff
-
-  let add_merge_on_exn () component =
-    let leader_f = Nel.hd component in
-    WorkerCancel.with_no_cancellations (fun () ->
-        Nel.iter (fun f -> LeaderHeap.add f leader_f) component
-    );
-    true
 
   let revive_files () files =
     (* Every file in files should be in the oldified set *)

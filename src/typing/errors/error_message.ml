@@ -492,7 +492,6 @@ and internal_error =
   | InterfaceTypeSpread
   | DebugThrow
   | ParseJobException of Exception.t
-  | MergeJobException of Exception.t
   | CheckTimeout of float
   | CheckJobException of Exception.t
   | UnexpectedTypeapp of string
@@ -1549,7 +1548,6 @@ let string_of_internal_error = function
   | InterfaceTypeSpread -> "unexpected spread property in interface"
   | DebugThrow -> "debug throw"
   | ParseJobException exc -> "uncaught exception: " ^ Exception.to_string exc
-  | MergeJobException exc -> "uncaught exception: " ^ Exception.to_string exc
   | CheckTimeout s -> spf "check job timed out after %0.2f seconds" s
   | CheckJobException exc -> "uncaught exception: " ^ Exception.to_string exc
   | UnexpectedTypeapp s -> "unexpected typeapp: " ^ s

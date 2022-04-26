@@ -38,7 +38,5 @@ module Merge_context_mutator : sig
 
   val add_merge_on_diff : worker_mutator -> File_key.t Nel.t -> Xx.hash -> bool
 
-  val add_merge_on_exn : worker_mutator -> File_key.t Nel.t -> bool
-
   val revive_files : master_mutator -> Utils_js.FilenameSet.t -> unit
 end

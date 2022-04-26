@@ -295,18 +295,11 @@ let add_internal_error errors file (loc, internal_error) =
   update_errset errors file new_errors
 
 let update_merge_results acc component result =
-  let (suppressions, first_internal_error) = acc in
-  let suppressions =
-    Nel.fold_left (fun acc file -> Error_suppressions.remove file acc) suppressions component
-  in
   match result with
-  | Ok None -> acc
-  | Ok (Some (new_suppressions, _duration)) ->
-    let suppressions = Error_suppressions.update_suppressions suppressions new_suppressions in
-    (suppressions, first_internal_error)
-  | Error e ->
-    let first_internal_error = update_first_internal_error first_internal_error e in
-    (suppressions, first_internal_error)
+  | None -> acc
+  | Some (suppressions, _duration) ->
+    let acc = Nel.fold_left (fun acc file -> Error_suppressions.remove file acc) acc component in
+    Error_suppressions.update_suppressions acc suppressions
 
 let update_slow_files acc file check_time =
   if check_time > 1. then
@@ -364,20 +357,15 @@ let run_merge_service
           ~component_map
           ~recheck_set
       in
-      let (suppressions, first_internal_error) =
+      let suppressions =
         List.fold_left
           (fun acc (file, _diff, result) ->
             let component = FilenameMap.find file component_map in
             update_merge_results acc component result)
-          (suppressions, None)
+          suppressions
           results
       in
-      Lwt.return
-        ( suppressions,
-          skipped_count,
-          sig_new_or_changed,
-          Base.Option.map first_internal_error ~f:(spf "First merge internal error:\n%s")
-        )
+      Lwt.return (suppressions, skipped_count, sig_new_or_changed)
   )
 
 let mk_intermediate_result_callback
@@ -523,7 +511,7 @@ let merge
     calc_deps ~options ~profiling ~sig_dependency_graph ~components files_to_merge
   in
   Hh_logger.info "Merging";
-  let%lwt ((suppressions, skipped_count, sig_new_or_changed, first_internal_error), time_to_merge) =
+  let%lwt ((suppressions, skipped_count, sig_new_or_changed), time_to_merge) =
     let (master_mutator, worker_mutator) =
       Context_heaps.Merge_context_mutator.create
         transaction
@@ -580,8 +568,7 @@ let merge
       component_map
       None
   in
-  Lwt.return
-    (suppressions, skipped_count, sig_new_or_changed, top_cycle, time_to_merge, first_internal_error)
+  Lwt.return (suppressions, skipped_count, sig_new_or_changed, top_cycle, time_to_merge)
 
 module Check_files : sig
   val check_files :
@@ -1654,13 +1641,7 @@ end = struct
         (CheckedSet.all to_merge_or_check)
     in
     (* recheck *)
-    let%lwt ( updated_suppressions,
-              merge_skip_count,
-              sig_new_or_changed,
-              top_cycle,
-              time_to_merge,
-              merge_internal_error
-            ) =
+    let%lwt (updated_suppressions, merge_skip_count, sig_new_or_changed, top_cycle, time_to_merge) =
       let n = FilenameSet.cardinal all_dependent_files in
       if n > 0 then Hh_logger.info "recheck %d dependent files:" n;
       merge
@@ -1677,7 +1658,6 @@ end = struct
         ~deleted
         ~unparsed_set
     in
-    Base.Option.iter merge_internal_error ~f:(Hh_logger.error "%s");
 
     (* Merge_service.check_contents_cache contains type information for
      * dependencies. The set of files in sig_new_or_changed have meaningfully
@@ -1754,7 +1734,7 @@ end = struct
           estimates;
         },
         record_recheck_time,
-        Base.Option.first_some merge_internal_error check_internal_error
+        check_internal_error
       )
 
   (* We maintain the following invariant across rechecks: The set of `files` contains files that
@@ -2388,7 +2368,7 @@ let full_check ~profiling ~options ~workers ?focus_targets env =
           (CheckedSet.all to_merge_or_check)
       in
       let recheck_reasons = [LspProt.Full_init] in
-      let%lwt (updated_suppressions, _, sig_new_or_changed, _, _, merge_internal_error) =
+      let%lwt (updated_suppressions, _, sig_new_or_changed, _, _) =
         merge
           ~transaction
           ~reader
@@ -2403,7 +2383,6 @@ let full_check ~profiling ~options ~workers ?focus_targets env =
           ~deleted:FilenameSet.empty
           ~unparsed_set:FilenameSet.empty
       in
-      Base.Option.iter merge_internal_error ~f:(Hh_logger.error "%s");
 
       let%lwt (errors, coverage, _, _, _, _, check_internal_error) =
         Check_files.check_files
@@ -2424,10 +2403,9 @@ let full_check ~profiling ~options ~workers ?focus_targets env =
       in
       Base.Option.iter check_internal_error ~f:(Hh_logger.error "%s");
 
-      let first_internal_error = Base.Option.first_some merge_internal_error check_internal_error in
       let checked_files = to_merge_or_check in
       Hh_logger.info "Checked set: %s" (CheckedSet.debug_counts_to_string checked_files);
-      Lwt.return ({ env with ServerEnv.checked_files; errors; coverage }, first_internal_error)
+      Lwt.return ({ env with ServerEnv.checked_files; errors; coverage }, check_internal_error)
   )
 
 let debug_determine_what_to_recheck = Recheck.determine_what_to_recheck

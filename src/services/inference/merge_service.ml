@@ -34,14 +34,14 @@ type sig_opts_data = {
   sig_new_or_changed: FilenameSet.t;
 }
 
-type 'a merge_results = (File_key.t * bool * 'a unit_result) list * sig_opts_data
+type 'a merge_results = (File_key.t * bool * 'a) list * sig_opts_data
 
 type 'a merge_job =
   worker_mutator:Context_heaps.Merge_context_mutator.worker_mutator ->
   options:Options.t ->
   reader:Mutator_state_reader.t ->
   File_key.t Nel.t ->
-  bool * 'a unit_result
+  bool * 'a
 
 let sig_hash ~root =
   let open Type_sig_collections in
@@ -365,7 +365,7 @@ let merge_component ~worker_mutator ~options ~reader ((leader_f, _) as component
   let leader_addr = Parsing_heaps.get_file_addr_unsafe leader_f in
   if not (Parsing_heaps.Mutator_reader.is_typed_file ~reader leader_addr) then
     let diff = false in
-    (diff, Ok None)
+    (diff, None)
   else
     let hash =
       let root = Options.root options in
@@ -398,7 +398,7 @@ let merge_component ~worker_mutator ~options ~reader ((leader_f, _) as component
       Context_heaps.Merge_context_mutator.add_merge_on_diff worker_mutator component hash
     in
     let duration = Unix.gettimeofday () -. start_time in
-    (diff, Ok (Some (suppressions, duration)))
+    (diff, Some (suppressions, duration))
 
 let mk_check_file options ~reader () =
   let get_ast_unsafe file parse =
@@ -546,57 +546,12 @@ let with_async_logging_timer ~interval ~on_timer ~f =
   cancel_timer ();
   ret
 
-let merge_job ~worker_mutator ~reader ~job ~options merged elements =
-  List.fold_left
-    (fun merged -> function
-      | Merge_stream.Component ((leader, _) as component) ->
-        (* A component may have several files: there's always at least one, and
-           multiple files indicate a cycle. *)
-        let files =
-          component |> Nel.to_list |> Base.List.map ~f:File_key.to_string |> String.concat "\n\t"
-        in
-        (try
-           let (diff, result) = job ~worker_mutator ~options ~reader component in
-           (leader, diff, result) :: merged
-         with
-        | (SharedMem.Out_of_shared_memory | SharedMem.Heap_full | SharedMem.Hash_table_full) as exc
-          ->
-          raise exc
-        (* A catch all suppression is probably a bad idea... *)
-        | unwrapped_exc ->
-          let exc = Exception.wrap unwrapped_exc in
-          let exn_str = Printf.sprintf "%s: %s" files (Exception.to_string exc) in
-          (* Ensure heaps are in a good state before continuing. *)
-          let diff =
-            Context_heaps.Merge_context_mutator.add_merge_on_exn worker_mutator component
-          in
-
-          (* In dev mode, fail hard, but log and continue in prod. *)
-          if Build_mode.dev then
-            Exception.reraise exc
-          else
-            prerr_endlinef
-              "(%d) merge_job THROWS: [%d] %s\n"
-              (Unix.getpid ())
-              (Nel.length component)
-              exn_str;
-
-          (* An errored component is always changed. *)
-          let file_loc = Loc.{ none with source = Some leader } |> ALoc.of_loc in
-          (* We can't pattern match on the exception type once it's marshalled
-             back to the master process, so we pattern match on it here to create
-             an error result. *)
-          let result =
-            Error
-              Error_message.(
-                match unwrapped_exc with
-                | EDebugThrow loc -> (loc, DebugThrow)
-                | _ -> (file_loc, MergeJobException exc)
-              )
-          in
-          (leader, diff, result) :: merged))
-    merged
-    elements
+let merge_job ~worker_mutator ~reader ~options ~job =
+  let f acc (Merge_stream.Component ((leader, _) as component)) =
+    let (diff, result) = job ~worker_mutator ~options ~reader component in
+    (leader, diff, result) :: acc
+  in
+  List.fold_left f
 
 let merge_runner
     ~job
