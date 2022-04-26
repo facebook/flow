@@ -3225,16 +3225,20 @@ struct
     in
     (id_ast, init_ast)
 
-  and expression_or_spread cx =
+  and expression_or_spread cx ~has_hint e =
     let open Ast.Expression in
-    function
+    let hint loc =
+      if has_hint then
+        hint_of_loc_todo loc
+      else
+        None
+    in
+    match e with
     | Expression ((loc, _) as e) ->
-      let hint = hint_of_loc_todo loc in
-      let (((_, t), _) as e') = expression cx ~hint e in
+      let (((_, t), _) as e') = expression cx ~hint:(hint loc) e in
       (Arg t, Expression e')
     | Spread (loc, { SpreadElement.argument; comments }) ->
-      let hint = hint_of_loc_todo loc in
-      let (((_, t), _) as e') = expression cx ~hint argument in
+      let (((_, t), _) as e') = expression cx ~hint:(hint loc) argument in
       (SpreadArg t, Spread (loc, { SpreadElement.argument = e'; comments }))
 
   and array_elements cx ~array_hint undef_loc =
@@ -3370,7 +3374,7 @@ struct
       let (argts, arges) =
         match arguments with
         | Some arguments ->
-          let (argts, arges) = arg_list cx arguments in
+          let (argts, arges) = arg_list cx ~has_hint:false arguments in
           (argts, Some arges)
         | None -> ([], None)
       in
@@ -4175,7 +4179,7 @@ struct
               )
             )
           | (Some _, arguments) ->
-            ignore (arg_list cx arguments);
+            ignore (arg_list cx ~has_hint:false arguments);
             Flow.add_output
               cx
               Error_message.(
@@ -4189,7 +4193,7 @@ struct
               );
             (AnyT.at (AnyError None) loc, Tast_utils.error_mapper#arg_list arguments)
           | (None, arguments) ->
-            ignore (arg_list cx arguments);
+            ignore (arg_list cx ~has_hint:false arguments);
             let ignore_non_literals = Context.should_ignore_non_literal_requires cx in
             if not ignore_non_literals then
               Flow.add_output cx Error_message.(EUnsupportedSyntax (loc, RequireDynamicArgument));
@@ -4428,7 +4432,9 @@ struct
               )
             ) ->
             (* invariant(false, ...) is treated like a throw *)
-            let arguments = Base.List.map ~f:(Fn.compose snd (expression_or_spread cx)) arguments in
+            let arguments =
+              Base.List.map ~f:(Fn.compose snd (expression_or_spread cx ~has_hint:false)) arguments
+            in
             Env.reset_current_activation loc;
             Abnormal.save Abnormal.Throw;
             let lit_exp = expression cx ~hint:None lit_exp in
@@ -4455,7 +4461,9 @@ struct
                 { ArgList.arguments = Expression cond :: arguments; comments = args_comments }
               )
             ) ->
-            let arguments = Base.List.map ~f:(Fn.compose snd (expression_or_spread cx)) arguments in
+            let arguments =
+              Base.List.map ~f:(Fn.compose snd (expression_or_spread cx ~has_hint:false)) arguments
+            in
             let ((((_, cond_t), _) as cond), preds, _, xtypes) =
               predicates_of_condition ~cond:OtherTest cx cond
             in
@@ -5323,8 +5331,10 @@ struct
     Env.record_expression_type_if_needed cx loc t;
     result
 
-  and arg_list cx (args_loc, { Ast.Expression.ArgList.arguments; comments }) =
-    let (argts, arg_asts) = arguments |> Base.List.map ~f:(expression_or_spread cx) |> List.split in
+  and arg_list cx ?(has_hint = true) (args_loc, { Ast.Expression.ArgList.arguments; comments }) =
+    let (argts, arg_asts) =
+      arguments |> Base.List.map ~f:(expression_or_spread cx ~has_hint) |> List.split
+    in
     (argts, (args_loc, { Ast.Expression.ArgList.arguments = arg_asts; comments }))
 
   and subscript ~cond cx ex =
@@ -8208,7 +8218,7 @@ struct
         _
       ) ->
       let targs = snd (convert_call_targs cx Subst_name.Map.empty targs) in
-      let (_argts, args) = arg_list cx args in
+      let (_argts, args) = arg_list cx ~has_hint:false args in
       let arity =
         if m = "freeze" || m = "defineProperty" then
           1
@@ -8230,7 +8240,7 @@ struct
     (* TODO *)
     | _ ->
       let (targts, targ_asts) = convert_call_targs_opt cx targs in
-      let (argts, arg_asts) = arg_list cx args in
+      let (argts, arg_asts) = arg_list cx ~has_hint:false args in
       let reason = mk_reason (RMethodCall (Some m)) loc in
       let use_op =
         Op
