@@ -3563,6 +3563,7 @@ module Make
         if strict <> sense then this#negate_new_refinements ()
 
       method void_test ~sense ~strict ~check_for_bound_undefined loc expr other =
+        ignore @@ this#expression other;
         (* Negating if sense is true is handled by negate_new_refinements. *)
         let refis = this#maybe_sentinel ~sense:false ~strict loc expr other in
         let is_global_undefined () =
