@@ -113,6 +113,24 @@ module Make (Env : Env_sig.S) (Statement : Statement_sig.S with module Env := En
     in
     Statement.Func_stmt_sig.functiontype cx this_t func_sig
 
+  let resolve_inferred_class cx id_loc reason class_loc class_ =
+    let _cache = Context.node_cache cx in
+    let ((class_type, _) as _class_) =
+      (* This is intended to be the general type for the variable in the old environment, needed
+         for generic escape detection. We can do generic escape differently in the future and remove
+         this when we kill the old env. *)
+      let general = Tvar.mk cx reason in
+      Statement.mk_class cx class_loc ~name_loc:id_loc ~general reason class_
+    in
+    class_type
+
+  let resolve_annotated_class cx id_loc reason class_ =
+    let self = Tvar.mk cx reason in
+    let (class_sig, _) = Statement.mk_class_sig cx id_loc reason self class_ in
+    let (class_t_internal, class_t) = Statement.Class_stmt_sig.classtype cx class_sig in
+    Flow_js.unify cx self class_t_internal;
+    class_t
+
   let resolve_op_assign cx ~id_loc ~exp_loc id_reason op rhs =
     let open Ast.Expression in
     match op with
@@ -232,6 +250,10 @@ module Make (Env : Env_sig.S) (Statement : Statement_sig.S with module Env := En
         resolve_inferred_function cx id_loc def_reason function_
       | Function { function_; fully_annotated = true } ->
         resolve_annotated_function cx def_reason function_
+      | Class { class_; fully_annotated = false; class_loc } ->
+        resolve_inferred_class cx id_loc def_reason class_loc class_
+      | Class { class_; fully_annotated = true; class_loc = _ } ->
+        resolve_annotated_class cx id_loc def_reason class_
       | OpAssign { exp_loc; op; rhs } -> resolve_op_assign cx ~id_loc ~exp_loc def_reason op rhs
       | Update { exp_loc; op = _ } -> resolve_update cx ~id_loc ~exp_loc def_reason
       | TypeAlias (loc, alias) -> resolve_type_alias cx loc alias

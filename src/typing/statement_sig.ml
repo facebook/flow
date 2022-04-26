@@ -22,6 +22,8 @@ module type S = sig
 
   module Func_stmt_sig : Func_sig_intf.S with type func_params := Func_stmt_params.t
 
+  module Class_stmt_sig : Class_sig_intf.S
+
   val expression :
     ?cond:Type.cond_context ->
     Context.t ->
@@ -69,6 +71,23 @@ module type S = sig
     Type.t
 
   val arith_assign : Context.t -> ALoc.t -> Type.t -> Type.t -> Type.t
+
+  val mk_class :
+    Context.t ->
+    ALoc.t ->
+    name_loc:ALoc.t ->
+    general:Type.t ->
+    Reason.t ->
+    (ALoc.t, ALoc.t) Ast.Class.t ->
+    Type.t * (ALoc.t, ALoc.t * Type.t) Ast.Class.t
+
+  val mk_class_sig :
+    Context.t ->
+    ALoc.t ->
+    Reason.t ->
+    Type.t ->
+    (ALoc.t, ALoc.t) Ast.Class.t ->
+    Class_stmt_sig.t * (Type.t -> (ALoc.t, ALoc.t * Type.t) Ast.Class.t)
 
   val type_alias :
     Context.t ->

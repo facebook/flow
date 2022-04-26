@@ -210,6 +210,142 @@ References:
                  ^^^^^^ [2]
 
 
+Error ---------------------------------------------------------------------------------------------------- class.js:6:10
+
+Cannot cast `x` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+
+   class.js:6:10
+   6|         (x: empty);
+               ^
+
+References:
+   class.js:5:12
+   5|     foo(x: number): number {
+                 ^^^^^^ [1]
+   class.js:6:13
+   6|         (x: empty);
+                  ^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- class.js:13:2
+
+Cannot cast `a` to empty because `Annotated` [1] is incompatible with empty [2]. [incompatible-cast]
+
+   class.js:13:2
+   13| (a: empty);
+        ^
+
+References:
+   class.js:12:11
+   12| const a = new Annotated();
+                 ^^^^^^^^^^^^^^^ [1]
+   class.js:13:5
+   13| (a: empty);
+           ^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- class.js:15:2
+
+Cannot cast `b` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+
+   class.js:15:2
+   15| (b: empty);
+        ^
+
+References:
+   class.js:4:8
+    4|     x: number;
+              ^^^^^^ [1]
+   class.js:15:5
+   15| (b: empty);
+           ^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- class.js:17:2
+
+Cannot cast `c` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+
+   class.js:17:2
+   17| (c: empty);
+        ^
+
+References:
+   class.js:5:21
+    5|     foo(x: number): number {
+                           ^^^^^^ [1]
+   class.js:17:5
+   17| (c: empty);
+           ^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- class.js:22:10
+
+Cannot cast `x` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+
+   class.js:22:10
+   22|         (x: empty);
+                ^
+
+References:
+   class.js:21:12
+   21|     foo(x: number) {
+                  ^^^^^^ [1]
+   class.js:22:13
+   22|         (x: empty);
+                   ^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- class.js:29:2
+
+Cannot cast `a1` to empty because `Unannotated` [1] is incompatible with empty [2]. [incompatible-cast]
+
+   class.js:29:2
+   29| (a1: empty);
+        ^^
+
+References:
+   class.js:28:12
+   28| const a1 = new Unannotated();
+                  ^^^^^^^^^^^^^^^^^ [1]
+   class.js:29:6
+   29| (a1: empty);
+            ^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- class.js:31:2
+
+Cannot cast `b1` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+
+   class.js:31:2
+   31| (b1: empty);
+        ^^
+
+References:
+   class.js:20:9
+   20|     x = 42;
+               ^^ [1]
+   class.js:31:6
+   31| (b1: empty);
+            ^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- class.js:33:2
+
+Cannot cast `c1` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+
+   class.js:33:2
+   33| (c1: empty);
+        ^^
+
+References:
+   class.js:21:12
+   21|     foo(x: number) {
+                  ^^^^^^ [1]
+   class.js:33:6
+   33| (c1: empty);
+            ^^^^^ [2]
+
+
 Error ----------------------------------------------------------------------------------------------------- enum.js:7:12
 
 Cannot assign `10` to `y` because number [1] is incompatible with `W` [2]. [incompatible-type]
@@ -524,4 +660,4 @@ References:
 
 
 
-Found 32 errors
+Found 40 errors

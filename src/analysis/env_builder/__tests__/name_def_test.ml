@@ -76,7 +76,7 @@ let string_of_source = function
       )
   | DeclaredClass (_, { Ast.Statement.DeclareClass.id = (_, { Ast.Identifier.name; _ }); _ }) ->
     spf "declared class %s" name
-  | Class { class_ = { Ast.Class.id; _ }; fully_annotated } ->
+  | Class { class_ = { Ast.Class.id; _ }; fully_annotated; class_loc = _ } ->
     spf
       "class (annotated=%b) %s"
       fully_annotated

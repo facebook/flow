@@ -413,7 +413,7 @@ end = struct
     | Update _ -> depends_of_update ()
     | OpAssign { rhs; _ } -> depends_of_op_assign rhs
     | Function { fully_annotated; function_ } -> depends_of_fun fully_annotated function_
-    | Class { fully_annotated; class_ } -> depends_of_class fully_annotated class_
+    | Class { fully_annotated; class_; class_loc = _ } -> depends_of_class fully_annotated class_
     | DeclaredClass (_, decl) -> depends_of_declared_class decl
     | TypeAlias (_, alias) -> depends_of_alias alias
     | OpaqueType (_, alias) -> depends_of_opaque alias

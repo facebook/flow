@@ -67,6 +67,7 @@ type def =
   | Class of {
       fully_annotated: bool;
       class_: (ALoc.t, ALoc.t) Ast.Class.t;
+      class_loc: ALoc.t;
     }
   | DeclaredClass of ALoc.t * (ALoc.t, ALoc.t) Ast.Statement.DeclareClass.t
   | TypeAlias of ALoc.t * (ALoc.t, ALoc.t) Ast.Statement.TypeAlias.t
@@ -179,7 +180,7 @@ let func_is_annotated { Ast.Function.return; _ } =
 let def_of_function function_ =
   Function { fully_annotated = func_is_annotated function_; function_ }
 
-let def_of_class ({ Ast.Class.body = (_, { Ast.Class.Body.body; _ }); _ } as class_) =
+let def_of_class loc ({ Ast.Class.body = (_, { Ast.Class.Body.body; _ }); _ } as class_) =
   let open Ast.Class.Body in
   let fully_annotated =
     Base.List.for_all
@@ -218,7 +219,7 @@ let def_of_class ({ Ast.Class.body = (_, { Ast.Class.Body.body; _ }); _ } as cla
         | PrivateField (_, { Ast.Class.PrivateField.annot = Ast.Type.Missing _; _ }) -> false)
       body
   in
-  Class { fully_annotated; class_ }
+  Class { fully_annotated; class_; class_loc = loc }
 
 class def_finder =
   object (this)
@@ -302,10 +303,9 @@ class def_finder =
       begin
         match id with
         | Some (id_loc, { Ast.Identifier.name; _ }) ->
-          this#add_binding
-            id_loc
-            (mk_reason (RClass (RIdentifier (OrdinaryName name))) loc)
-            (def_of_class expr)
+          let name = OrdinaryName name in
+          let reason = mk_reason (RType name) id_loc in
+          this#add_binding id_loc reason (def_of_class loc expr)
         | None -> ()
       end;
       super#class_ loc expr
