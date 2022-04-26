@@ -3556,6 +3556,101 @@ if (x != null && y != null) {
           {refinement = Not (Maybe); writes = (4, 4) to (4, 5): (`y`)}
         }] |}]
 
+let%expect_test "provider_closure_havoc_1" =
+  print_ssa_test {|
+var x = null;
+function havoc() { x = 21 }
+
+if (typeof x === 'number') {
+  x;
+  havoc();
+  x;
+}
+|};
+    [%expect {|
+      [
+        (5, 11) to (5, 12) => {
+          (2, 4) to (2, 5): (`x`)
+        };
+        (6, 2) to (6, 3) => {
+          {refinement = number; writes = (2, 4) to (2, 5): (`x`)}
+        };
+        (7, 2) to (7, 7) => {
+          (3, 9) to (3, 14): (`havoc`)
+        };
+        (8, 2) to (8, 3) => {
+          (3, 19) to (3, 20): (`x`),
+          {refinement = number; writes = (2, 4) to (2, 5): (`x`)}
+        }]
+      |}]
+
+let%expect_test "provider_closure_havoc_2" =
+  print_ssa_test {|
+var y = null;
+function havoc() { y = 31 }
+function havoc2() { y = 42 } // a non provider write, so no special treatment.
+
+if (typeof y === 'number') {
+  y;
+  havoc();
+  y; // should be fully havoced
+}
+|};
+    [%expect {|
+      [
+        (6, 11) to (6, 12) => {
+          (2, 4) to (2, 5): (`y`)
+        };
+        (7, 2) to (7, 3) => {
+          {refinement = number; writes = (2, 4) to (2, 5): (`y`)}
+        };
+        (8, 2) to (8, 7) => {
+          (3, 9) to (3, 14): (`havoc`)
+        };
+        (9, 2) to (9, 3) => {
+          (2, 4) to (2, 5): (`y`),
+          (3, 19) to (3, 20): (`y`)
+        }]
+      |}]
+
+let%expect_test "provider_closure_havoc_3" =
+  print_ssa_test {|
+var z = null;
+function havocz() {
+  z = 42;
+}
+
+havocz();
+z;
+
+if (typeof z === 'number'){
+  havocz();
+  z;
+}
+|};
+    [%expect {|
+      [
+        (7, 0) to (7, 6) => {
+          (3, 9) to (3, 15): (`havocz`)
+        };
+        (8, 0) to (8, 1) => {
+          (2, 4) to (2, 5): (`z`),
+          (4, 2) to (4, 3): (`z`)
+        };
+        (10, 11) to (10, 12) => {
+          (2, 4) to (2, 5): (`z`),
+          (4, 2) to (4, 3): (`z`)
+        };
+        (11, 2) to (11, 8) => {
+          (3, 9) to (3, 15): (`havocz`)
+        };
+        (12, 2) to (12, 3) => {
+          (4, 2) to (4, 3): (`z`),
+          {refinement = number; writes = (2, 4) to (2, 5): (`z`),(4, 2) to (4, 3): (`z`)}
+        }]
+
+      |}]
+
 let%expect_test "predicate_function_outside_predicate_position" =
   print_ssa_test {|
 let x = null;

@@ -643,6 +643,7 @@ module Make
   type env_val = {
     val_ref: Val.t ref;
     havoc: Val.t;
+    writes_by_closure_provider_val: Val.t option;
     def_loc: ALoc.t option;
     heap_refinements: heap_refinement_map ref;
     kind: Bindings.kind;
@@ -823,6 +824,7 @@ module Make
              {
                val_ref = ref (Val.global name);
                havoc = Val.global name;
+               writes_by_closure_provider_val = None;
                def_loc = None;
                heap_refinements = ref HeapRefinementMap.empty;
                kind = Bindings.Var;
@@ -836,6 +838,7 @@ module Make
          {
            val_ref = ref Val.this;
            havoc = Val.this;
+           writes_by_closure_provider_val = None;
            def_loc = None;
            heap_refinements = ref HeapRefinementMap.empty;
            kind = Bindings.Var;
@@ -845,6 +848,7 @@ module Make
          {
            val_ref = ref Val.super;
            havoc = Val.super;
+           writes_by_closure_provider_val = None;
            def_loc = None;
            heap_refinements = ref HeapRefinementMap.empty;
            kind = Bindings.Var;
@@ -854,6 +858,7 @@ module Make
          {
            val_ref = ref Val.arguments;
            havoc = Val.arguments;
+           writes_by_closure_provider_val = None;
            def_loc = None;
            heap_refinements = ref HeapRefinementMap.empty;
            kind = Bindings.Var;
@@ -887,6 +892,7 @@ module Make
         {
           val_ref = ref (Val.global jsx_base_name);
           havoc = Val.global jsx_base_name;
+          writes_by_closure_provider_val = None;
           def_loc = None;
           heap_refinements = ref HeapRefinementMap.empty;
           kind = Bindings.Var;
@@ -1201,7 +1207,15 @@ module Make
           let { RefinementKey.base; projections } = lookup in
           match SMap.find_opt base env_state.env with
           | None -> None
-          | Some { val_ref; heap_refinements; havoc = _; def_loc = _; kind = _ } ->
+          | Some
+              {
+                val_ref;
+                heap_refinements;
+                writes_by_closure_provider_val = _;
+                havoc = _;
+                def_loc = _;
+                kind = _;
+              } ->
             (match projections with
             | [] ->
               let (res, val_) = f !val_ref in
@@ -1268,7 +1282,15 @@ module Make
 
       method havoc_env ~force_initialization ~all =
         SMap.iter
-          (fun _x { val_ref; havoc; def_loc; heap_refinements; kind = _ } ->
+          (fun _x
+               {
+                 val_ref;
+                 havoc;
+                 writes_by_closure_provider_val;
+                 def_loc;
+                 heap_refinements;
+                 kind = _;
+               } ->
             this#havoc_heap_refinements heap_refinements;
             let uninitialized_writes =
               lazy (Val.writes_of_uninitialized this#refinement_may_be_undefined !val_ref)
@@ -1280,6 +1302,12 @@ module Make
               else if val_is_undeclared_or_skipped then
                 !val_ref
               else
+                let havoc =
+                  match (all, writes_by_closure_provider_val) with
+                  | (false, Some writes_by_closure_provider_val) ->
+                    Val.merge !val_ref writes_by_closure_provider_val
+                  | _ -> havoc
+                in
                 Base.List.fold
                   ~init:havoc
                   ~f:(fun acc write -> Val.merge acc (Val.of_write write))
@@ -1345,6 +1373,7 @@ module Make
               {
                 val_ref = ref (Val.one reason);
                 havoc = Val.one reason;
+                writes_by_closure_provider_val = None;
                 def_loc = Some loc;
                 heap_refinements = ref HeapRefinementMap.empty;
                 kind;
@@ -1358,6 +1387,7 @@ module Make
               {
                 val_ref = ref (Val.one reason);
                 havoc = Val.one reason;
+                writes_by_closure_provider_val = None;
                 def_loc = Some loc;
                 heap_refinements = ref HeapRefinementMap.empty;
                 kind;
@@ -1375,6 +1405,7 @@ module Make
               {
                 val_ref = ref (Val.undeclared_class reason name);
                 havoc;
+                writes_by_closure_provider_val = None;
                 def_loc = Some loc;
                 heap_refinements = ref HeapRefinementMap.empty;
                 kind;
@@ -1392,6 +1423,7 @@ module Make
               {
                 val_ref = ref declared_function;
                 havoc = declared_function;
+                writes_by_closure_provider_val = None;
                 def_loc = Some loc;
                 heap_refinements = ref HeapRefinementMap.empty;
                 kind;
@@ -1402,6 +1434,7 @@ module Make
               {
                 val_ref = ref havoc;
                 havoc;
+                writes_by_closure_provider_val = None;
                 def_loc = Some loc;
                 heap_refinements = ref HeapRefinementMap.empty;
                 kind;
@@ -1421,6 +1454,31 @@ module Make
                 | _ -> Val.uninitialized loc
               in
               let (havoc, providers) = this#providers_of_def_loc loc in
+              let writes_by_closure =
+                Invalidation_api.written_by_closure prepass_info prepass_values loc
+              in
+              let all_writes_by_closure_are_providers =
+                L.LSet.for_all
+                  (Base.List.mem ~equal:ALoc.equal (Base.List.map ~f:poly_loc_of_reason providers))
+                  writes_by_closure
+              in
+              (* Special-cased havoc val of variables whose only closure writes are providers *)
+              let writes_by_closure_provider_val =
+                if all_writes_by_closure_are_providers then
+                  let writes_by_closure_providers =
+                    Base.List.filter providers ~f:(fun provider_reason ->
+                        L.LSet.mem (poly_loc_of_reason provider_reason) writes_by_closure
+                    )
+                  in
+                  if not @@ Base.List.is_empty writes_by_closure_providers then
+                    (* Now we know a variable needs to be widened at most by these writes
+                       by closure providers *)
+                    Some (Val.all writes_by_closure_providers)
+                  else
+                    None
+                else
+                  None
+              in
               let write_entries =
                 Base.List.fold
                   ~f:(fun acc r -> L.LMap.add (poly_loc_of_reason r) (Env_api.AssigningWrite r) acc)
@@ -1431,6 +1489,7 @@ module Make
               {
                 val_ref = ref initial_val;
                 havoc;
+                writes_by_closure_provider_val;
                 def_loc = Some loc;
                 heap_refinements = ref HeapRefinementMap.empty;
                 kind;
@@ -1627,7 +1686,14 @@ module Make
       method private bind_pattern_identifier_customized ?kind ?(get_assigned_val = Base.Fn.id) loc x
           =
         let reason = Reason.(mk_reason (RIdentifier (OrdinaryName x))) loc in
-        let { val_ref; heap_refinements; kind = stored_binding_kind; def_loc; havoc = _ } =
+        let {
+          val_ref;
+          heap_refinements;
+          kind = stored_binding_kind;
+          def_loc;
+          havoc = _;
+          writes_by_closure_provider_val = _;
+        } =
           SMap.find x env_state.env
         in
         match kind with
@@ -2183,7 +2249,14 @@ module Make
         List.iter
           (fun lookup ->
             let { RefinementKey.base; projections } = lookup in
-            let { val_ref; havoc; heap_refinements; def_loc = _; kind } =
+            let {
+              val_ref;
+              havoc;
+              writes_by_closure_provider_val = _;
+              heap_refinements;
+              def_loc = _;
+              kind;
+            } =
               SMap.find base env_state.env
             in
             (* If a var is changed then all the heap refinements on that var should
