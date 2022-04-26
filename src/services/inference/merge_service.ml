@@ -555,29 +555,9 @@ let merge_job ~worker_mutator ~reader ~job ~options merged elements =
         let files =
           component |> Nel.to_list |> Base.List.map ~f:File_key.to_string |> String.concat "\n\t"
         in
-        let merge_timeout = Options.merge_timeout options in
-        let interval = Base.Option.value_map ~f:(min 15.0) ~default:15.0 merge_timeout in
         (try
-           with_async_logging_timer
-             ~interval
-             ~on_timer:(fun run_time ->
-               Hh_logger.info
-                 "[%d] Slow MERGE (%f seconds so far): %s"
-                 (Unix.getpid ())
-                 run_time
-                 files;
-               Base.Option.iter merge_timeout ~f:(fun merge_timeout ->
-                   if run_time >= merge_timeout then
-                     raise (Error_message.EMergeTimeout (run_time, files))
-               ))
-             ~f:(fun () ->
-               let start_time = Unix.gettimeofday () in
-               (* prerr_endlinef "[%d] MERGE: %s" (Unix.getpid()) files; *)
-               let (diff, result) = job ~worker_mutator ~options ~reader component in
-               let merge_time = Unix.gettimeofday () -. start_time in
-               if Options.should_profile options && merge_time > 1.0 then
-                 Hh_logger.info "[%d] perf: merged %s in %f" (Unix.getpid ()) files merge_time;
-               (leader, diff, result) :: merged)
+           let (diff, result) = job ~worker_mutator ~options ~reader component in
+           (leader, diff, result) :: merged
          with
         | (SharedMem.Out_of_shared_memory | SharedMem.Heap_full | SharedMem.Hash_table_full) as exc
           ->
@@ -611,7 +591,6 @@ let merge_job ~worker_mutator ~reader ~job ~options merged elements =
               Error_message.(
                 match unwrapped_exc with
                 | EDebugThrow loc -> (loc, DebugThrow)
-                | EMergeTimeout (s, _) -> (file_loc, MergeTimeout s)
                 | _ -> (file_loc, MergeJobException exc)
               )
           in

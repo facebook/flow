@@ -11,8 +11,6 @@ open Utils_js
 
 exception EDebugThrow of ALoc.t
 
-exception EMergeTimeout of float * string
-
 exception ECheckTimeout of float * string
 
 type invalid_char_set =
@@ -494,7 +492,6 @@ and internal_error =
   | InterfaceTypeSpread
   | DebugThrow
   | ParseJobException of Exception.t
-  | MergeTimeout of float
   | MergeJobException of Exception.t
   | CheckTimeout of float
   | CheckJobException of Exception.t
@@ -1552,7 +1549,6 @@ let string_of_internal_error = function
   | InterfaceTypeSpread -> "unexpected spread property in interface"
   | DebugThrow -> "debug throw"
   | ParseJobException exc -> "uncaught exception: " ^ Exception.to_string exc
-  | MergeTimeout s -> spf "merge job timed out after %0.2f seconds" s
   | MergeJobException exc -> "uncaught exception: " ^ Exception.to_string exc
   | CheckTimeout s -> spf "check job timed out after %0.2f seconds" s
   | CheckJobException exc -> "uncaught exception: " ^ Exception.to_string exc

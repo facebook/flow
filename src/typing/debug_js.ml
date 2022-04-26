@@ -1173,7 +1173,6 @@ let dump_error_message =
     | InterfaceTypeSpread -> "InterfaceTypeSpread"
     | Error_message.DebugThrow -> "DebugThrow"
     | ParseJobException _ -> "ParseJobException"
-    | MergeTimeout _ -> "MergeTimeout"
     | MergeJobException _ -> "MergeJobException"
     | CheckTimeout _ -> "CheckTimeout"
     | CheckJobException _ -> "CheckJobException"
