@@ -35,6 +35,8 @@ val get_file_addr : File_key.t -> file_addr option
 
 val get_file_addr_unsafe : File_key.t -> file_addr
 
+val get_haste_module : string -> haste_module_addr option
+
 val get_haste_module_unsafe : string -> haste_module_addr
 
 val get_file_module_unsafe : File_key.t -> file_module_addr
