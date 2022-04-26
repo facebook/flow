@@ -575,13 +575,8 @@ let merge_job ~worker_mutator ~reader ~job ~options merged elements =
                (* prerr_endlinef "[%d] MERGE: %s" (Unix.getpid()) files; *)
                let (diff, result) = job ~worker_mutator ~options ~reader component in
                let merge_time = Unix.gettimeofday () -. start_time in
-               if Options.should_profile options then (
-                 let length = Nel.length component in
-                 let leader = File_key.to_string leader in
-                 Flow_server_profile.merge ~length ~merge_time ~leader;
-                 if merge_time > 1.0 then
-                   Hh_logger.info "[%d] perf: merged %s in %f" (Unix.getpid ()) files merge_time
-               );
+               if Options.should_profile options && merge_time > 1.0 then
+                 Hh_logger.info "[%d] perf: merged %s in %f" (Unix.getpid ()) files merge_time;
                (leader, diff, result) :: merged)
          with
         | (SharedMem.Out_of_shared_memory | SharedMem.Heap_full | SharedMem.Hash_table_full) as exc
