@@ -32,7 +32,7 @@ module type CONNECTION = sig
 
   val close_immediately : t -> unit Lwt.t
 
-  val flush_and_close : t -> unit Lwt.t
+  val try_flush_and_close : t -> unit Lwt.t
 
   val is_closed : t -> bool
 
