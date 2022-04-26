@@ -1075,13 +1075,18 @@ module NewAPI = struct
     chunk.next_addr <- addr_offset addr header_size;
     addr
 
-  (* Read a header from the heap. The low 2 bits of the header are reserved for
-   * GC and not used in OCaml. *)
+  (** Read a header from the heap. *)
   let read_header heap addr =
     let hd64 = buf_read_int64 heap addr in
     (* Double-check that the data looks like a header. All reachable headers
      * will have the lsb set. *)
-    assert (Int64.(logand hd64 1L = 1L));
+    if Int64.(logand hd64 1L <> 1L) then
+      Printf.ksprintf
+        failwith
+        "Failed to read header: %x contains %Lx which does not look like a header"
+        addr
+        hd64;
+    (* The low 2 bits of the header are reserved for GC and not used in OCaml. *)
     Int64.(to_int (shift_right_logical hd64 2))
 
   let obj_tag hd = hd land 0x3F
