@@ -14,8 +14,6 @@ struct
 
   let return = Lwt.return
 
-  let fail = Lwt.fail
-
   let ( >>= ) = Lwt.( >>= )
 
   let read fd ~buffer ~offset ~size = Lwt_unix.read fd buffer offset size
