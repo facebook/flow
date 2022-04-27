@@ -80,19 +80,19 @@ module Make
     let eval_this _cx (_, tast) = tast
   end
 
-  module Func_type_params_types = Func_params.Types.Make (Func_type_params_config_types)
+  module Func_type_params_types = Func_class_sig_types.Param.Make (Func_type_params_config_types)
   module Func_type_params =
     Func_params.Make (Func_type_params_config_types) (Func_type_params_config)
       (Func_type_params_types)
   module Func_type_sig_types =
-    Func_sig.Types.Make (Func_type_params_config_types) (Func_type_params_types)
+    Func_class_sig_types.Func.Make (Func_type_params_config_types) (Func_type_params_types)
   module Func_type_sig =
     Func_sig.Make (Env) (Abnormal) (Statement) (Func_type_params_config_types)
       (Func_type_params_config)
       (Func_type_params)
       (Func_type_sig_types)
   module Class_type_sig_types =
-    Class_sig.Types.Make (Func_type_params_config_types) (Func_type_params_types)
+    Func_class_sig_types.Class.Make (Func_type_params_config_types) (Func_type_params_types)
       (Func_type_sig_types)
   module Class_type_sig =
     Class_sig.Make (Env) (Abnormal) (Func_type_params_config_types) (Func_type_params_config)
@@ -1776,7 +1776,7 @@ module Make
       let reason = mk_annot_reason RFunctionType loc in
       ( {
           Func_type_sig.Types.reason;
-          kind = Func_sig.Ordinary;
+          kind = Func_class_sig_types.Func.Ordinary;
           tparams;
           tparams_map;
           fparams;

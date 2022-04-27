@@ -5,26 +5,8 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-module type Config_types = sig
-  type 'T ast
-
-  type 'T param_ast
-
-  type 'T rest_ast
-
-  type 'T this_ast
-
-  type param
-
-  type rest
-
-  type this_param
-
-  type pattern
-end
-
 module type Config = sig
-  module Types : Config_types
+  module Types : Func_class_sig_types.Config.S
 
   val param_type : Types.param -> Type.fun_param
 
@@ -45,29 +27,12 @@ module type Config = sig
   val eval_this : Context.t -> Types.this_param -> (ALoc.t * Type.t) Types.this_ast
 end
 
-module type S_T = sig
-  module Config : Config_types
-
-  type reconstruct =
-    (ALoc.t * Type.t) Config.param_ast list ->
-    (ALoc.t * Type.t) Config.rest_ast option ->
-    (ALoc.t * Type.t) Config.this_ast option ->
-    (ALoc.t * Type.t) Config.ast option
-
-  type t = {
-    params_rev: Config.param list;
-    rest: Config.rest option;
-    this_: Config.this_param option;
-    reconstruct: reconstruct;
-  }
-end
-
 module type S = sig
-  module Config_types : Config_types
+  module Config_types : Func_class_sig_types.Config.S
 
   module Config : Config with module Types := Config_types
 
-  module Types : S_T with module Config := Config_types
+  module Types : Func_class_sig_types.Param.S with module Config := Config_types
 
   val empty : Types.reconstruct -> Types.t
 

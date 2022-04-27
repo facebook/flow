@@ -5,87 +5,8 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-module type S_T = sig
-  module Config : Func_params_intf.Config_types
-
-  module Param : Func_params_intf.S_T with module Config := Config
-
-  module Func : Func_sig_intf.S_T with module Config := Config and module Param := Param
-
-  type func_sig = Func.t
-
-  type func_params_tast = (ALoc.t * Type.t) Config.ast
-
-  type set_asts =
-    func_params_tast option
-    * (ALoc.t, ALoc.t * Type.t) Flow_ast.Function.body option
-    * (ALoc.t, ALoc.t * Type.t) Flow_ast.Expression.t option ->
-    unit
-
-  type set_type = Type.t -> unit
-
-  type field =
-    | Annot of Type.t
-    | Infer of func_sig * set_asts
-
-  type field' = ALoc.t option * Polarity.t * field
-
-  type typeapp = ALoc.t * Type.t * Type.t list option
-
-  type extends =
-    | Explicit of typeapp
-    | Implicit of { null: bool }
-
-  type class_super = {
-    extends: extends;
-    mixins: typeapp list;
-    (* declare class only *)
-    implements: typeapp list;
-    this_tparam: Type.typeparam;
-    this_t: Type.t;
-  }
-
-  type interface_super = {
-    inline: bool;
-    extends: typeapp list;
-    callable: bool;
-  }
-
-  type super =
-    | Interface of interface_super
-    | Class of class_super
-
-  type func_info = ALoc.t option * func_sig * set_asts * set_type
-
-  type signature = {
-    reason: Reason.t;
-    fields: field' SMap.t;
-    private_fields: field' SMap.t;
-    proto_fields: field' SMap.t;
-    (* Multiple function signatures indicates an overloaded method. Note that
-       function signatures are stored in reverse definition order. *)
-    methods: func_info Nel.t SMap.t;
-    private_methods: func_info SMap.t;
-    getters: func_info SMap.t;
-    setters: func_info SMap.t;
-    calls: Type.t list;
-  }
-
-  type t = {
-    id: ALoc.id;
-    tparams: Type.typeparams;
-    tparams_map: Type.t Subst_name.Map.t;
-    super: super;
-    (* Multiple function signatures indicates an overloaded constructor. Note that
-       function signatures are stored in reverse definition order. *)
-    constructor: func_info list;
-    static: signature;
-    instance: signature;
-  }
-end
-
 module type S = sig
-  module Config_types : Func_params_intf.Config_types
+  module Config_types : Func_class_sig_types.Config.S
 
   module Config : Func_params_intf.Config with module Types := Config_types
 
@@ -99,7 +20,7 @@ module type S = sig
        and module Param := Param
 
   module Types :
-    S_T
+    Func_class_sig_types.Class.S
       with module Config := Config_types
        and module Param := Param.Types
        and module Func := Func.Types

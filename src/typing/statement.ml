@@ -324,8 +324,8 @@ struct
         )
 
   module Func_stmt_params_types :
-    Func_params.Types.S with module Config := Func_stmt_config_types.Types =
-    Func_params.Types.Make (Func_stmt_config_types.Types)
+    Func_class_sig_types.Param.S with module Config := Func_stmt_config_types.Types =
+    Func_class_sig_types.Param.Make (Func_stmt_config_types.Types)
 
   module Func_stmt_params :
     Func_params.S
@@ -335,10 +335,10 @@ struct
     Func_params.Make (Func_stmt_config_types.Types) (Func_stmt_config) (Func_stmt_params_types)
 
   module Func_stmt_sig_types :
-    Func_sig.S_T
+    Func_class_sig_types.Func.S
       with module Config := Func_stmt_config_types.Types
        and module Param := Func_stmt_params_types =
-    Func_sig.Types.Make (Func_stmt_config_types.Types) (Func_stmt_params_types)
+    Func_class_sig_types.Func.Make (Func_stmt_config_types.Types) (Func_stmt_params_types)
 
   module Func_stmt_sig :
     Func_sig.S
@@ -351,11 +351,11 @@ struct
       (Func_stmt_sig_types)
 
   module Class_stmt_sig_types :
-    Class_sig_intf.S_T
+    Func_class_sig_types.Class.S
       with module Config := Func_stmt_config_types.Types
        and module Param := Func_stmt_params_types
        and module Func := Func_stmt_sig_types =
-    Class_sig.Types.Make (Func_stmt_config_types.Types) (Func_stmt_params_types)
+    Func_class_sig_types.Class.Make (Func_stmt_config_types.Types) (Func_stmt_params_types)
       (Func_stmt_sig_types)
 
   module Class_stmt_sig :
@@ -8840,7 +8840,7 @@ struct
     let predicate_function_kind cx loc params =
       let open Error_message in
       let (_, { Ast.Function.Params.params; rest; this_ = _; comments = _ }) = params in
-      let kind = Func_sig.Predicate in
+      let kind = Func_class_sig_types.Func.Predicate in
       let kind =
         List.fold_left
           (fun kind (_, param) ->
@@ -8851,7 +8851,7 @@ struct
             | (ploc, Flow_ast.Pattern.Expression _) ->
               let reason = mk_reason RDestructuring ploc in
               Flow_js.add_output cx (EUnsupportedSyntax (loc, PredicateInvalidParameter reason));
-              Func_sig.Ordinary
+              Func_class_sig_types.Func.Ordinary
             | (_, Flow_ast.Pattern.Identifier _) -> kind)
           kind
           params
@@ -8861,12 +8861,13 @@ struct
         let desc = Reason.code_desc_of_pattern argument in
         let reason = mk_reason (RRestParameter (Some desc)) rloc in
         Flow_js.add_output cx (EUnsupportedSyntax (loc, PredicateInvalidParameter reason));
-        Func_sig.Ordinary
+        Func_class_sig_types.Func.Ordinary
       | None -> kind
     in
     let function_kind cx ~async ~generator ~predicate ~params =
       let open Func_sig in
       let open Ast.Type.Predicate in
+      let open Func_class_sig_types.Func in
       match (async, generator, predicate) with
       | (true, true, None) -> AsyncGenerator
       | (true, false, None) -> Async
@@ -9041,7 +9042,9 @@ struct
       let ret_reason = mk_reason RReturn (Func_sig.return_loc func) in
       let (return_annotated_or_inferred, return) =
         let has_nonvoid_return = might_have_nonvoid_return loc func in
-        let definitely_returns_void = kind = Func_sig.Ordinary && not has_nonvoid_return in
+        let definitely_returns_void =
+          kind = Func_class_sig_types.Func.Ordinary && not has_nonvoid_return
+        in
         Anno.mk_return_type_annotation cx tparams_map ret_reason ~definitely_returns_void return
       in
       let (return_annotated_or_inferred, predicate) =

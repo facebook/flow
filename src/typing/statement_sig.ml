@@ -21,7 +21,7 @@ module type S = sig
   module Func_stmt_config : Func_stmt_config_sig.S with module Types := Func_stmt_config_types.Types
 
   module Func_stmt_params_types :
-    Func_params_intf.S_T with module Config := Func_stmt_config_types.Types
+    Func_class_sig_types.Param.S with module Config := Func_stmt_config_types.Types
 
   module Func_stmt_params :
     Func_params.S
@@ -30,7 +30,7 @@ module type S = sig
        and module Types = Func_stmt_params_types
 
   module Func_stmt_sig_types :
-    Func_sig_intf.S_T
+    Func_class_sig_types.Func.S
       with module Config := Func_stmt_config_types.Types
        and module Param := Func_stmt_params_types
 
@@ -42,7 +42,7 @@ module type S = sig
        and module Types = Func_stmt_sig_types
 
   module Class_stmt_sig_types :
-    Class_sig_intf.S_T
+    Func_class_sig_types.Class.S
       with module Config := Func_stmt_config_types.Types
        and module Param := Func_stmt_params_types
        and module Func := Func_stmt_sig_types

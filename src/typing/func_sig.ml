@@ -13,40 +13,14 @@ open Type_hint
 open TypeUtil
 include Func_sig_intf
 
-module Types = struct
-  module type S = S_T
-
-  module Make
-      (Config : Func_params_intf.Config_types)
-      (Param : Func_params.Types.S with module Config := Config) =
-  struct
-    module Config = Config
-    module Param = Param
-
-    type func_params = Param.t
-
-    type func_params_tast = (ALoc.t * Type.t) Config.ast
-
-    type t = {
-      reason: reason;
-      kind: kind;
-      tparams: Type.typeparams;
-      tparams_map: Type.t Subst_name.Map.t;
-      fparams: func_params;
-      body: (ALoc.t, ALoc.t) Ast.Function.body option;
-      return_t: Type.annotated_or_inferred;
-    }
-  end
-end
-
 module Make
     (Env : Env_sig.S)
     (Abnormal : Abnormal_sig.S with module Env := Env)
     (Statement : Statement_sig.S with module Env := Env)
-    (CT : Func_params.Config_types)
+    (CT : Func_class_sig_types.Config.S)
     (C : Func_params.Config with module Types := CT)
     (F : Func_params.S with module Config_types := CT and module Config := C)
-    (T : Types.S with module Config := CT and module Param := F.Types) :
+    (T : Func_class_sig_types.Func.S with module Config := CT and module Param := F.Types) :
   S with module Config_types = CT and module Config = C and module Param = F and module Types = T =
 struct
   module Toplevels = Toplevels.DependencyToplevels (Env) (Abnormal)
@@ -54,6 +28,7 @@ struct
   module Types = T
   module Config = C
   module Param = F
+  open Func_class_sig_types.Func
 
   let this_param = F.this
 

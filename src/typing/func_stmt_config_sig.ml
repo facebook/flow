@@ -8,7 +8,7 @@
 module Ast = Flow_ast
 
 module type S = sig
-  module Types : Func_params_intf.Config_types
+  module Types : Func_class_sig_types.Config.S
 
   open Types
 

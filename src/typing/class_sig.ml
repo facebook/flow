@@ -11,100 +11,17 @@ open Reason
 open Utils_js
 include Class_sig_intf
 
-module Types = struct
-  module type S = S_T
-
-  module Make
-      (Config : Func_params_intf.Config_types)
-      (P : Func_params_intf.S_T with module Config := Config)
-      (F : Func_sig.Types.S with module Config := Config and module Param := P) :
-    S with module Config = Config and module Param = P and module Func = F = struct
-    module Config = Config
-    module Param = P
-    module Func = F
-
-    type func_sig = F.t
-
-    type func_params_tast = F.func_params_tast
-
-    type set_asts =
-      func_params_tast option
-      * (ALoc.t, ALoc.t * Type.t) Ast.Function.body option
-      * (ALoc.t, ALoc.t * Type.t) Ast.Expression.t option ->
-      unit
-
-    type set_type = Type.t -> unit
-
-    type field =
-      | Annot of Type.t
-      | Infer of func_sig * set_asts
-
-    type field' = ALoc.t option * Polarity.t * field
-
-    type typeapp = ALoc.t * Type.t * Type.t list option
-
-    type extends =
-      | Explicit of typeapp
-      | Implicit of { null: bool }
-
-    type class_super = {
-      extends: extends;
-      mixins: typeapp list;
-      (* declare class only *)
-      implements: typeapp list;
-      this_tparam: Type.typeparam;
-      this_t: Type.t;
-    }
-
-    type interface_super = {
-      inline: bool;
-      (* Anonymous interface, can appear anywhere inside a type *)
-      extends: typeapp list;
-      callable: bool;
-    }
-
-    type super =
-      | Interface of interface_super
-      | Class of class_super
-
-    type func_info = ALoc.t option * func_sig * set_asts * set_type
-
-    type signature = {
-      reason: reason;
-      fields: field' SMap.t;
-      private_fields: field' SMap.t;
-      proto_fields: field' SMap.t;
-      (* Multiple function signatures indicates an overloaded method. Note that
-         function signatures are stored in reverse definition order. *)
-      methods: func_info Nel.t SMap.t;
-      private_methods: func_info SMap.t;
-      getters: func_info SMap.t;
-      setters: func_info SMap.t;
-      calls: Type.t list;
-    }
-
-    type t = {
-      id: ALoc.id;
-      tparams: Type.typeparams;
-      tparams_map: Type.t Subst_name.Map.t;
-      super: super;
-      (* Multiple function signatures indicates an overloaded constructor. Note that
-         function signatures are stored in reverse definition order. *)
-      constructor: func_info list;
-      static: signature;
-      instance: signature;
-    }
-  end
-end
-
 module Make
     (Env : Env_sig.S)
     (Abnormal : Abnormal_sig.S with module Env := Env)
-    (CT : Func_params.Config_types)
+    (CT : Func_class_sig_types.Config.S)
     (C : Func_params.Config with module Types := CT)
     (P : Func_params.S with module Config_types := CT and module Config := C)
     (F : Func_sig_intf.S with module Config_types := CT and module Config := C and module Param := P)
-    (T : Types.S with module Config := CT and module Param := P.Types and module Func := F.Types) :
+    (T : Func_class_sig_types.Class.S
+           with module Config := CT
+            and module Param := P.Types
+            and module Func := F.Types) :
   S
     with module Config_types = CT
      and module Config = C

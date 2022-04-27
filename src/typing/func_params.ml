@@ -16,32 +16,10 @@
 
 include Func_params_intf
 
-module Types = struct
-  module type S = S_T
-
-  module Make (C : Config_types) : S with module Config = C = struct
-    module Config = C
-    open Config
-
-    type reconstruct =
-      (ALoc.t * Type.t) param_ast list ->
-      (ALoc.t * Type.t) rest_ast option ->
-      (ALoc.t * Type.t) this_ast option ->
-      (ALoc.t * Type.t) ast option
-
-    type t = {
-      params_rev: param list;
-      rest: rest option;
-      this_: this_param option;
-      reconstruct: reconstruct;
-    }
-  end
-end
-
 module Make
-    (CT : Config_types)
+    (CT : Func_class_sig_types.Config.S)
     (C : Config with module Types := CT)
-    (T : Types.S with module Config := CT) :
+    (T : Func_class_sig_types.Param.S with module Config := CT) :
   S with module Config_types = CT and module Config = C and module Types = T = struct
   module Config_types = CT
   module Config = C

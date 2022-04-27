@@ -5,43 +5,15 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-type kind =
-  | Ordinary
-  | Async
-  | Generator
-  | AsyncGenerator
-  | FieldInit of (ALoc.t, ALoc.t) Flow_ast.Expression.t
-  | Predicate
-  | Ctor
-
-module type S_T = sig
-  module Config : Func_params_intf.Config_types
-
-  module Param : Func_params.Types.S with module Config := Config
-
-  type func_params = Param.t
-
-  type func_params_tast = (ALoc.t * Type.t) Config.ast
-
-  type t = {
-    reason: Reason.t;
-    kind: kind;
-    tparams: Type.typeparams;
-    tparams_map: Type.t Subst_name.Map.t;
-    fparams: func_params;
-    body: (ALoc.t, ALoc.t) Flow_ast.Function.body option;
-    return_t: Type.annotated_or_inferred;
-  }
-end
-
 module type S = sig
-  module Config_types : Func_params.Config_types
+  module Config_types : Func_class_sig_types.Config.S
 
   module Config : Func_params_intf.Config with module Types := Config_types
 
   module Param : Func_params.S with module Config_types := Config_types and module Config := Config
 
-  module Types : S_T with module Config := Config_types and module Param := Param.Types
+  module Types :
+    Func_class_sig_types.Func.S with module Config := Config_types and module Param := Param.Types
 
   open Types
 
