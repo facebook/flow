@@ -7,15 +7,16 @@
  * @format
  */
 
-import React, {useState, useEffect, useRef} from 'react';
+import React, {useState, useEffect, useRef, type MixedElement} from 'react';
 import clsx from 'clsx';
 import * as LZString from 'lz-string';
 import styles from './TryFlow.module.css';
 import TryFlowEditor, {monaco} from './TryFlowEditor';
 import TryFlowResults from './TryFlowResults';
 import initFlow from './init-flow';
+import type {AsyncFlow} from './init-flow';
 
-function getASTJSON(flow, value) {
+function getASTJSON(flow: AsyncFlow, value: string) {
   const options = {
     esproposal_class_instance_fields: true,
     esproposal_class_static_fields: true,
@@ -28,7 +29,7 @@ function getASTJSON(flow, value) {
   return flow.parse(value, options).then(ast => JSON.stringify(ast, null, 2));
 }
 
-function asSeverity(severity) {
+function asSeverity(severity: string) {
   switch (severity) {
     case 'error':
       return monaco.MarkerSeverity.Error;
@@ -39,7 +40,11 @@ function asSeverity(severity) {
   }
 }
 
-function validateFlowCode(flow, model, callback) {
+function validateFlowCode(
+  flow: Promise<AsyncFlow>,
+  model,
+  callback: ($ReadOnlyArray<FlowJsError>, string) => void,
+) {
   Promise.resolve(flow)
     .then(flowProxy => flowProxy.checkContent('-', model.getValue()))
     .then(errors => {
@@ -69,7 +74,12 @@ function validateFlowCode(flow, model, callback) {
     });
 }
 
-export default function TryFlow({defaultFlowVersion, flowVersions}) {
+type Props = {defaultFlowVersion: string, flowVersions: $ReadOnlyArray<string>};
+
+export default function TryFlow({
+  defaultFlowVersion,
+  flowVersions,
+}: Props): MixedElement {
   const [flowVersion, setFlowVersion] = useState(defaultFlowVersion);
   const [loading, setLoading] = useState(true);
   const [supportsParse, setSupportParse] = useState(false);

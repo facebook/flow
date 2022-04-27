@@ -7,16 +7,21 @@
  * @format
  */
 
-import React, {useEffect, useState, useRef} from 'react';
+import React, {useState, useEffect, useRef, type MixedElement} from 'react';
 import clsx from 'clsx';
 import Highlight, {defaultProps} from 'prism-react-renderer';
 import copy from 'copy-text-to-clipboard';
-import {usePrismTheme} from '@docusaurus/theme-common/';
+import {usePrismTheme} from '@docusaurus/theme-common';
 import Translate, {translate} from '@docusaurus/Translate';
 import styles from './FlowCheckCodeBlock.module.css';
 import {useThemeConfig} from '@docusaurus/theme-common';
 
-export default function FlowCheckCodeBlock({children, metastring}) {
+type Props = {children: string, metastring: string};
+
+export default function FlowCheckCodeBlock({
+  children,
+  metastring,
+}: Props): MixedElement {
   const flowErrors = metastring ? metastring.split('\n') : [];
   const {prism} = useThemeConfig();
   const [showCopied, setShowCopied] = useState(false);

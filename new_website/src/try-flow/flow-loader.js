@@ -6,7 +6,10 @@
  */
 
 // defines window.requirejs
+// $FlowFixMe[cannot-resolve-module]
 import '../../../website/_webpack/js/require_2_3_3';
+
+declare function requirejs(pathList: $ReadOnlyArray<string>, resolve: (any) => void): void;
 
 const versionCache = {};
 
@@ -41,7 +44,7 @@ function get(url) {
   });
 }
 
-export function load(version) {
+export function load(version: string): Promise<FlowJs> {
   if (version in versionCache) {
     return Promise.resolve(versionCache[version]);
   }
@@ -80,6 +83,7 @@ export function load(version) {
         self.flow.initBuiltins([...libs, 'try-lib.js']);
       }
       versionCache[version] = self.flow;
+      // $FlowFixMe[cannot-resolve-name]
       return flow;
     })
     .catch(function(err) {

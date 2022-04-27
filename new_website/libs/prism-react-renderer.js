@@ -7,9 +7,6 @@
  * @format
  */
 
-module.exports = {
-  presets: [
-    require.resolve('@docusaurus/core/lib/babel/preset'),
-    require.resolve('@babel/preset-flow'),
-  ],
-};
+declare module 'prism-react-renderer' {
+  declare module.exports: any;
+}

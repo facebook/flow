@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import React from 'react';
+import * as React from 'react';
 import clsx from 'clsx';
 import Translate, {translate} from '@docusaurus/Translate';
 import Link from '@docusaurus/Link';
@@ -39,7 +39,7 @@ function useReadingTimePlural() {
   };
 }
 
-export default function BlogPostItem(props) {
+export default function BlogPostItem(props: any): React.MixedElement {
   const readingTimePlural = useReadingTimePlural();
   const {withBaseUrl} = useBaseUrlUtils();
   const {

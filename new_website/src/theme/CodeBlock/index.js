@@ -7,11 +7,11 @@
  * @format
  */
 
-import React from 'react';
+import * as React from 'react';
 import OriginalCodeBlock from '@theme-original/CodeBlock';
 import FlowCheckCodeBlock from '../../components/FlowCheckCodeBlock';
 
-export default function CodeBlock(props) {
+export default function CodeBlock(props: any): React.MixedElement {
   return props.className === 'language-flow' ? (
     <FlowCheckCodeBlock {...props} />
   ) : (

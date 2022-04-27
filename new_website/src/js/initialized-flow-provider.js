@@ -11,13 +11,17 @@ const {spawnSync} = require('child_process');
 
 const checkContents = input =>
   JSON.parse(
-    spawnSync('flow', ['check-contents', '--json'], {
-      input,
-      encoding: 'utf8',
-    }).stdout.toString(),
+    spawnSync(
+      'flow',
+      ['check-contents', '--json', '--flowconfig-name', '.flowconfig.snippets'],
+      {
+        input,
+        encoding: 'utf8',
+      },
+    ).stdout.toString(),
   );
 
-module.exports = function getFlowErrors(code) {
+module.exports = function getFlowErrors(code /*: string */) /*: string[] */ {
   return checkContents(code)
     .errors.flatMap(({message}) => message)
     .map(

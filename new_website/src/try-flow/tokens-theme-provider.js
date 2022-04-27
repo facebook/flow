@@ -11,6 +11,7 @@ import {INITIAL, Registry, parseRawGrammar} from 'vscode-textmate';
 import {createOnigScanner, createOnigString, loadWASM} from 'vscode-oniguruma';
 import flowGrammar from './flow-grammar.json';
 import flowRegexGrammar from './flow-regex-grammar.json';
+// $FlowFixMe[cannot-resolve-module]
 import THEME from '../../../website/_webpack/js/light_vs';
 import styles from './TryFlow.module.css';
 
@@ -19,6 +20,7 @@ const grammars = {
   'source.regexp.flow': flowRegexGrammar,
 };
 
+// $FlowFixMe[cannot-resolve-module]
 const registry = import('vscode-oniguruma/release/onig.wasm')
   .then(wasmModule => fetch(wasmModule.default))
   // manually convert to an ArrayBuffer because Jekyll 3.x doesn't
@@ -62,14 +64,14 @@ function generateTokensCSSForColorMap(colorMap) {
   return rules.join('\n');
 }
 
-export default function createTokensProvider(languageId) {
+export default function createTokensProvider(languageId: string): Promise<any> {
   return registry
     .then(registry =>
       registry.loadGrammarWithConfiguration('source.js', languageId, {}),
     )
     .then(grammar => {
       if (grammar == null) {
-        throw Error(`no grammar for ${scopeName}`);
+        throw Error(`no grammar for ${languageId}`);
       }
 
       return {

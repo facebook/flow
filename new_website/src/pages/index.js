@@ -7,7 +7,7 @@
  * @format
  */
 
-import React from 'react';
+import * as React from 'react';
 import clsx from 'clsx';
 import Layout from '@theme/Layout';
 import Link from '@docusaurus/Link';
@@ -15,10 +15,11 @@ import useDocusaurusContext from '@docusaurus/useDocusaurusContext';
 import useBaseUrl from '@docusaurus/useBaseUrl';
 import styles from './styles.module.css';
 
-export default function Home() {
+export default function Home(): React.MixedElement {
   const context = useDocusaurusContext();
   const {siteConfig = {}} = context;
   return (
+    // $FlowFixMe[prop-missing]
     <Layout title={siteConfig.title} description={siteConfig.description}>
       <header className={clsx(styles.feature, styles.featureHero)}>
         <div className="container">

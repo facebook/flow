@@ -9,8 +9,11 @@
 
 import {load} from './flow-loader';
 
+declare function postMessage(message: mixed): void;
+
 const versionCache = {};
 
+// $FlowFixMe[prop-missing]
 this.onmessage = function (e) {
   var data = e.data;
   switch (data.type) {

@@ -7,7 +7,7 @@
  * @format
  */
 
-import React from 'react';
+import * as React from 'react';
 import useDocusaurusContext from '@docusaurus/useDocusaurusContext';
 import Layout from '@theme/Layout';
 import Navbar from '@theme/Navbar';
@@ -17,12 +17,14 @@ import TryFlow from '../try-flow/TryFlow';
 const defaultFlowVersion = 'master';
 const flowVersions = ['master', 'v0.176.2'];
 
-export default function TryFlowPage() {
+export default function TryFlowPage(): React.MixedElement {
   const context = useDocusaurusContext();
   const {siteConfig = {}} = context;
   return (
     <Layout
+      // $FlowFixMe[prop-missing]
       title={siteConfig.title}
+      // $FlowFixMe[prop-missing]
       description={siteConfig.description}
       noFooter>
       <TryFlow

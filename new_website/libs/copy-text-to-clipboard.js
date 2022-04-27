@@ -7,9 +7,6 @@
  * @format
  */
 
-module.exports = {
-  presets: [
-    require.resolve('@docusaurus/core/lib/babel/preset'),
-    require.resolve('@babel/preset-flow'),
-  ],
-};
+declare module 'copy-text-to-clipboard' {
+  declare export default function copy(text: string): void;
+}

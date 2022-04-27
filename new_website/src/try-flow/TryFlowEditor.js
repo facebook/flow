@@ -7,13 +7,14 @@
  * @format
  */
 
-import React, {useEffect, useRef} from 'react';
+import React, {useEffect, useRef, type MixedElement} from 'react';
 import * as monaco from 'monaco-editor';
 import Editor, {loader} from '@monaco-editor/react';
 import * as LZString from 'lz-string';
 
 import createTokensProvider from './tokens-theme-provider';
 import flowLanguageConfiguration from './flow-configuration.json';
+import type {AsyncFlow} from './init-flow';
 
 function getHashedValue(hash) {
   if (hash[0] !== '#' || hash.length < 2) return null;
@@ -50,7 +51,17 @@ loader.config({monaco});
 
 export {monaco};
 
-export default function TryFlowEditor({editorRef, flowRef, onCodeChange}) {
+type Props = {
+  editorRef: {current: any},
+  flowRef: {current: Promise<AsyncFlow>},
+  onCodeChange: () => void,
+};
+
+export default function TryFlowEditor({
+  editorRef,
+  flowRef,
+  onCodeChange,
+}: Props): MixedElement {
   const providerRef = useRef();
 
   useEffect(() => {

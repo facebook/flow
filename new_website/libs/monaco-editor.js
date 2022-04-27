@@ -7,9 +7,10 @@
  * @format
  */
 
-module.exports = {
-  presets: [
-    require.resolve('@docusaurus/core/lib/babel/preset'),
-    require.resolve('@babel/preset-flow'),
-  ],
-};
+declare module 'monaco-editor' {
+  declare module.exports: any;
+}
+
+declare module '@monaco-editor/react' {
+  declare module.exports: any;
+}

@@ -7,26 +7,13 @@
  * @format
  */
 
-import React, {useState, useEffect, useRef} from 'react';
+import React, {useState, type MixedElement} from 'react';
 import clsx from 'clsx';
 import styles from './TryFlow.module.css';
 import TryFlowEditor from './TryFlowEditor';
 import initFlow from './init-flow';
 
-function getASTJSON(flow, value) {
-  const options = {
-    esproposal_class_instance_fields: true,
-    esproposal_class_static_fields: true,
-    esproposal_decorators: true,
-    esproposal_export_star_as: true,
-    esproposal_optional_chaining: true,
-    esproposal_nullish_coalescing: true,
-    types: true,
-  };
-  return flow.parse(value, options).then(ast => JSON.stringify(ast, null, 2));
-}
-
-function ErrorMessage({msg}) {
+function ErrorMessage({msg}: {msg: FlowJsErrorMessage}) {
   if (msg.loc && msg.context != null) {
     const basename = msg.loc.source.replace(/.*\//, '');
     const filename = basename !== '-' ? `${msg.loc.source}:` : '';
@@ -63,7 +50,7 @@ function ErrorMessage({msg}) {
   }
 }
 
-function ErrorMessageExtra({info}) {
+function ErrorMessageExtra({info}: {info: FlowJsErrorMessageInformation}) {
   return (
     <ul>
       <li>
@@ -80,6 +67,15 @@ function ErrorMessageExtra({info}) {
   );
 }
 
+type Props = {
+  flowVersion: string,
+  flowVersions: $ReadOnlyArray<string>,
+  changeFlowVersion: (SyntheticInputEvent<>) => void,
+  loading: boolean,
+  errors: $ReadOnlyArray<FlowJsError>,
+  ast: string,
+};
+
 export default function TryFlowResults({
   flowVersion,
   flowVersions,
@@ -87,7 +83,7 @@ export default function TryFlowResults({
   loading,
   errors,
   ast,
-}) {
+}: Props): MixedElement {
   const [activeToolbarTab, setActiveToolbarTab] = useState('errors');
 
   return (

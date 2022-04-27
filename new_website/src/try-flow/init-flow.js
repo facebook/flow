@@ -9,7 +9,11 @@
 
 import {load as initFlowLocally} from './flow-loader';
 
-class Deferred {
+class Deferred<T> {
+  promise: Promise<T>;
+  resolve: (Promise<T> | T) => void;
+  reject: any => void;
+
   constructor() {
     this.promise = new Promise((resolve, reject) => {
       this.resolve = resolve;
@@ -18,15 +22,21 @@ class Deferred {
   }
 }
 
-const workerRegistry = {};
+const workerRegistry: {[string]: Worker} = {};
 class FlowWorker {
-  constructor(version) {
+  _version: string;
+  _index: number;
+  _pending: {[number]: any};
+  _worker: Worker;
+
+  constructor(version: string) {
     this._version = version;
     this._pending = {};
     this._index = 0;
 
     const worker = (this._worker = new Worker(window.tryFlowWorker));
-    worker.onmessage = ({data}) => {
+    // $FlowFixMe[incompatible-type]
+    worker.onmessage = ({data}: {data: any}) => {
       if (data.id && this._pending[data.id]) {
         if (data.err) {
           this._pending[data.id].reject(data.err);
@@ -44,7 +54,7 @@ class FlowWorker {
     workerRegistry[version] = worker;
   }
 
-  send(data) {
+  send(data: mixed) {
     const id = ++this._index;
     const version = this._version;
     this._pending[id] = new Deferred();
@@ -53,13 +63,29 @@ class FlowWorker {
   }
 }
 
-function initFlowWorker(version) {
+function initFlowWorker(version: string) {
   const worker = new FlowWorker(version);
   return worker.send({type: 'init'}).then(() => worker);
 }
 
-class AsyncLocalFlow {
-  constructor(flow) {
+export interface AsyncFlow {
+  checkContent(
+    filename: string,
+    body: string,
+  ): Promise<$ReadOnlyArray<FlowJsError>>;
+  typeAtPos(
+    filename: string,
+    body: string,
+    line: number,
+    col: number,
+  ): Promise<string>;
+  supportsParse(): Promise<boolean>;
+  parse(body: string, options: FlowJsOptions): Promise<interface {}>;
+}
+
+class AsyncLocalFlow implements AsyncFlow {
+  _flow: FlowJs;
+  constructor(flow: FlowJs) {
     this._flow = flow;
   }
 
@@ -80,8 +106,10 @@ class AsyncLocalFlow {
   }
 }
 
-class AsyncWorkerFlow {
-  constructor(worker) {
+class AsyncWorkerFlow implements AsyncFlow {
+  _worker: FlowWorker;
+
+  constructor(worker: FlowWorker) {
     this._worker = worker;
   }
 
@@ -102,7 +130,7 @@ class AsyncWorkerFlow {
   }
 }
 
-export default function initFlow(version) {
+export default function initFlow(version: string): Promise<AsyncFlow> {
   const useWorker = localStorage.getItem('tryFlowUseWorker');
   if (useWorker === 'true') {
     return initFlowWorker(version).then(flow => new AsyncWorkerFlow(flow));

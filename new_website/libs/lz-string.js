@@ -7,9 +7,7 @@
  * @format
  */
 
-module.exports = {
-  presets: [
-    require.resolve('@docusaurus/core/lib/babel/preset'),
-    require.resolve('@babel/preset-flow'),
-  ],
-};
+declare module 'lz-string' {
+  declare export function decompressFromEncodedURIComponent(s: string): string;
+  declare export function compressToEncodedURIComponent(s: string): string;
+}

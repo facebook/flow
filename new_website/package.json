@@ -28,7 +28,9 @@
     "vscode-textmate": "^6.0.0"
   },
   "devDependencies": {
+    "@babel/preset-flow": "^7.16.7",
     "@docusaurus/remark-plugin-npm2yarn": "^2.0.0-beta.4",
+    "flow-typed": "^3.7.0",
     "raw-loader": "^4.0.2"
   },
   "browserslist": {
