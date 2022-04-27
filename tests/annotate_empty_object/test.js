@@ -18,7 +18,9 @@ a.key = 4;
 
 declare var arr : Array<string>;
 arr.reduce((acc, key) => { acc[key] = 4; return acc }, {}) // annot on the targ to reduce
-
+arr?.reduce((acc, key) => { acc[key] = 4; return acc }, {}) // annot on the targ to reduce w/ optional chaining
+declare var maybe: ?{a: Array<string>};
+maybe?.a.reduce((acc, key) => { acc[key] = 4; return acc }, {}) // annot on the targ to reduce w/ optional chaining
 
 function foo(x) {
     x[key] = 3;
