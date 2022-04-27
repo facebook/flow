@@ -55,8 +55,6 @@ module type READER = sig
 
   val return : 'a -> 'a result
 
-  val fail : exn -> 'a result
-
   val ( >>= ) : 'a result -> ('a -> 'b result) -> 'b result
 
   val read : fd -> buffer:bytes -> offset:int -> size:int -> int result

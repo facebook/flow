@@ -17,8 +17,6 @@ module Regular_reader :
 
   let return x = x
 
-  let fail exn = raise exn
-
   let ( >>= ) a f = f a
 
   let read fd ~buffer ~offset ~size = Unix.read fd buffer offset size

@@ -1660,8 +1660,9 @@ let rec connect_and_make_request flowconfig_name =
         if (not quiet) && Tty.spinner_used () then Tty.print_clear_line stderr;
         raise End_of_file
       | exn ->
+        let exn = Exception.wrap exn in
         if (not quiet) && Tty.spinner_used () then Tty.print_clear_line stderr;
-        raise exn
+        Exception.reraise exn
     in
     match response with
     | MonitorProt.Please_hold status ->

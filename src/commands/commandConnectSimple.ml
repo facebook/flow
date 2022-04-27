@@ -116,8 +116,9 @@ let get_handshake ~timeout sockaddr ic oc =
       raise e
     | e ->
       (* Other exceptions may indicate a bad connection, so let's close it *)
+      let exn = Exception.wrap e in
       close_connection sockaddr;
-      raise e
+      Exception.reraise exn
   )
 
 let verify_handshake ~client_handshake ~server_handshake sockaddr ic =
