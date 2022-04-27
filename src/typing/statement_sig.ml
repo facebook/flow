@@ -101,7 +101,8 @@ module type S = sig
 
   val mk_class_sig :
     Context.t ->
-    ALoc.t ->
+    name_loc:ALoc.t ->
+    class_loc:ALoc.t ->
     Reason.t ->
     Type.t ->
     (ALoc.t, ALoc.t) Ast.Class.t ->
