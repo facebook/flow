@@ -240,7 +240,13 @@ module Node = struct
     not [Some (path ^ ".flow")]! *)
   let path_if_exists =
     let path_exists ~file_options path =
-      file_exists path && (not (Files.is_ignored file_options path)) && not (Sys.is_directory path)
+      file_exists path
+      && (not (Files.is_ignored file_options path))
+      &&
+      try not (Sys.is_directory path) with
+      | Sys_error _ ->
+        (* happens when path doesn't exist. it may have disappeared on us *)
+        false
     in
     let is_flow_file ~file_options path = Files.is_flow_file ~options:file_options path in
     fun ~file_options resolution_acc raw_path ->
