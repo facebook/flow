@@ -90,7 +90,17 @@ let mapper ~preserve_literals ~max_type_size ~default_any (cctx : Codemod_contex
       let { callee; targs; arguments; comments } = expr in
       let open Member in
       match (callee, arguments, targs) with
-      | ( (_, Member { property = PropertyIdentifier (_, { Ast.Identifier.name = "reduce"; _ }); _ }),
+      | ( ( ( _,
+              Member { property = PropertyIdentifier (_, { Ast.Identifier.name = "reduce"; _ }); _ }
+            )
+          | ( _,
+              OptionalMember
+                {
+                  OptionalMember.member =
+                    { property = PropertyIdentifier (_, { Ast.Identifier.name = "reduce"; _ }); _ };
+                  optional = _;
+                }
+            ) ),
           (_, { ArgList.arguments = [_; Expression (loc, Object { Object.properties = []; _ })]; _ }),
           None
         ) ->

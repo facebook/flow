@@ -1,4 +1,4 @@
->>> test.js (#changes: 22)
+>>> test.js (#changes: 24)
 //@flow
 
 declare var key : string;
@@ -26,6 +26,22 @@ arr.reduce<{ [string]: number }>(
   {},
 ) // annot on the targ to reduce
 
+arr?.reduce<{ [string]: number }>(
+  (acc, key) => {
+    acc[key] = 4;
+    return acc;
+  },
+  {},
+) // annot on the targ to reduce w/ optional chaining
+
+declare var maybe: ?{a: Array<string>};
+maybe?.a.reduce<{ [string]: number }>(
+  (acc, key) => {
+    acc[key] = 4;
+    return acc;
+  },
+  {},
+) // annot on the targ to reduce w/ optional chaining
 
 
 function foo(x) {
@@ -136,8 +152,8 @@ function reduceTooBig(xs: Array<'a' | 'b' | 'c' | 'e' | 'f' | 'g' | 'h' | 'i'>) 
 
 Stats:
   Files changed:                            1
-  Number of annotations added:             17
-  Total size of annotations:               63
+  Number of annotations added:             19
+  Total size of annotations:               69
 
 Errors:
   Missing annot./normalizer error:          0
