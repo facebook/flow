@@ -28,7 +28,7 @@ let should_require_annot cx =
 
 let require_annot_on_pattern cx ~hint pattern_reason pattern =
   match hint with
-  | None when should_require_annot cx ->
+  | Type_hint.Hint_None when should_require_annot cx ->
     let open Ast.Pattern in
     (match pattern with
     | Object { Object.annot; _ } -> hint_missing_annotation cx pattern_reason annot

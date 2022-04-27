@@ -7,6 +7,7 @@
 
 open Name_def
 open Type
+open Type_hint
 open Reason
 open Loc_collections
 module Ast = Flow_ast
@@ -34,12 +35,12 @@ module Make (Env : Env_sig.S) (Statement : Statement_sig.S with module Env := En
       t
     | Root (Value exp) ->
       (* TODO: look up the annotation for the variable at loc and pass in *)
-      expression cx ~hint:None exp
+      expression cx ~hint:Hint_None exp
     | Root (Contextual _) -> Tvar.mk cx (mk_reason (RCustom "contextual variable") loc)
     | Root Catch -> AnyT.annot (mk_reason (RCustom "catch parameter") loc)
     | Root (For (kind, exp)) ->
       let reason = mk_reason (RCustom "for-in") loc (*TODO: loc should be loc of loop *) in
-      let right_t = expression cx ~hint:None ~cond:OtherTest exp in
+      let right_t = expression cx ~hint:Hint_None ~cond:OtherTest exp in
       begin
         match kind with
         | In ->
@@ -66,7 +67,7 @@ module Make (Env : Env_sig.S) (Statement : Statement_sig.S with module Env := En
           (* TODO: eveyrthing after a computed prop should be optional *)
           Type.ObjRest used_props
         | Name_def.Computed exp ->
-          let t = expression cx ~hint:None exp in
+          let t = expression cx ~hint:Hint_None exp in
           Type.Elem t
         | Name_def.Default _exp ->
           (* TODO: change the way default works to see exp as a source *)
@@ -86,7 +87,7 @@ module Make (Env : Env_sig.S) (Statement : Statement_sig.S with module Env := En
          for generic escape detection. We can do generic escape differently in the future and remove
          this when we kill the old env. *)
       let general = Tvar.mk cx reason in
-      Statement.mk_function cx ~hint:None ~needs_this_param:true ~general reason function_
+      Statement.mk_function cx ~hint:Hint_None ~needs_this_param:true ~general reason function_
     in
     Node_cache.set_function cache id_loc fn;
     fun_type
@@ -95,7 +96,7 @@ module Make (Env : Env_sig.S) (Statement : Statement_sig.S with module Env := En
     let (({ Statement.Func_stmt_sig.fparams; _ } as func_sig), _) =
       Statement.mk_func_sig
         cx
-        ~hint:None
+        ~func_hint:Hint_None
         ~needs_this_param:true
         Subst_name.Map.empty
         reason
@@ -140,7 +141,7 @@ module Make (Env : Env_sig.S) (Statement : Statement_sig.S with module Env := En
       let lhs_t =
         New_env.New_env.read_entry_exn ~lookup_mode:Env_sig.LookupMode.ForValue cx id_loc id_reason
       in
-      let rhs_t = expression cx ~hint:None rhs in
+      let rhs_t = expression cx ~hint:Hint_None rhs in
       Statement.plus_assign
         cx
         ~reason
@@ -163,7 +164,7 @@ module Make (Env : Env_sig.S) (Statement : Statement_sig.S with module Env := En
       let lhs_t =
         New_env.New_env.read_entry_exn ~lookup_mode:Env_sig.LookupMode.ForValue cx id_loc id_reason
       in
-      let rhs_t = expression cx ~hint:None rhs in
+      let rhs_t = expression cx ~hint:Hint_None rhs in
       Statement.arith_assign cx exp_loc lhs_t rhs_t
     | Assignment.NullishAssign
     | Assignment.AndAssign

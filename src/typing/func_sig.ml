@@ -9,6 +9,7 @@ module Ast = Flow_ast
 module Flow = Flow_js
 open Reason
 open Type
+open Type_hint
 open TypeUtil
 include Func_sig_intf
 
@@ -274,10 +275,10 @@ module Make
     let body_ast = reconstruct_body statements_ast in
     (* build return type for void funcs *)
     let init_ast =
-      let (return_t, return_annot) =
+      let (return_t, return_hint) =
         match return_t with
-        | Inferred t -> (t, None)
-        | Annotated t -> (t, Some t)
+        | Inferred t -> (t, Hint_None)
+        | Annotated t -> (t, Hint_t t)
       in
       if maybe_void then (
         let loc = loc_of_t return_t in
@@ -324,7 +325,7 @@ module Make
             let use_op = Frame (ImplicitTypeParam, use_op) in
             (use_op, t, None)
           | FieldInit e ->
-            let (((_, t), _) as ast) = Statement.expression ?cond:None cx ~hint:return_annot e in
+            let (((_, t), _) as ast) = Statement.expression ?cond:None cx ~hint:return_hint e in
             let body = mk_expression_reason e in
             let use_op = Op (InitField { op = reason_fn; body }) in
             (use_op, t, Some ast)

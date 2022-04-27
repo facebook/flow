@@ -9,6 +9,7 @@ module Ast = Flow_ast
 module Flow = Flow_js
 open Reason
 open Type
+open Type_hint
 
 module Make
     (Env : Env_sig.S)
@@ -134,7 +135,7 @@ module Make
 
   let eval_default cx = function
     | None -> None
-    | Some e -> Some (Statement.expression cx ~hint:None e)
+    | Some e -> Some (Statement.expression cx ~hint:Hint_None e)
 
   let eval_param cx (Param { t; loc; ploc; pattern; default; has_anno }) =
     match pattern with
