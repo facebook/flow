@@ -20,11 +20,9 @@ module Make
     (CT : Func_class_sig_types.Config.S)
     (C : Config with module Types := CT)
     (T : Func_class_sig_types.Param.S with module Config := CT) :
-  S with module Config_types = CT and module Config = C and module Types = T = struct
-  module Config_types = CT
-  module Config = C
+  S with module Config_types := CT and module Config := C and module Types = T = struct
   module Types = T
-  open Types
+  open T
 
   let empty reconstruct = { params_rev = []; rest = None; this_ = None; reconstruct }
 

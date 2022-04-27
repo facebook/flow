@@ -93,7 +93,7 @@ module Make (Env : Env_sig.S) (Statement : Statement_sig.S with module Env := En
     fun_type
 
   let resolve_annotated_function cx reason ({ Ast.Function.body; params; _ } as function_) =
-    let (({ Statement.Func_stmt_sig_types.fparams; _ } as func_sig), _) =
+    let (({ Func_class_sig_types.Func_stmt_sig_types.fparams; _ } as func_sig), _) =
       Statement.mk_func_sig
         cx
         ~func_hint:Hint_None

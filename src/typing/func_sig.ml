@@ -21,20 +21,17 @@ module Make
     (C : Func_params.Config with module Types := CT)
     (F : Func_params.S with module Config_types := CT and module Config := C)
     (T : Func_class_sig_types.Func.S with module Config := CT and module Param := F.Types) :
-  S with module Config_types = CT and module Config = C and module Param = F and module Types = T =
+  S with module Config_types := CT and module Config := C and module Param := F and module Types = T =
 struct
   module Toplevels = Toplevels.DependencyToplevels (Env) (Abnormal)
-  module Config_types = CT
   module Types = T
-  module Config = C
-  module Param = F
   open Func_class_sig_types.Func
 
   let this_param = F.this
 
   let default_constructor reason =
     {
-      Types.reason;
+      T.reason;
       kind = Ctor;
       tparams = None;
       tparams_map = Subst_name.Map.empty;
@@ -45,7 +42,7 @@ struct
 
   let field_initializer tparams_map reason expr return_annot_or_inferred =
     {
-      Types.reason;
+      T.reason;
       kind = FieldInit expr;
       tparams = None;
       tparams_map;
@@ -54,7 +51,7 @@ struct
       return_t = return_annot_or_inferred;
     }
 
-  let functiontype cx this_default { Types.reason; kind; tparams; fparams; return_t; _ } =
+  let functiontype cx this_default { T.reason; kind; tparams; fparams; return_t; _ } =
     let make_trust = Context.trust_constructor cx in
     let static =
       let proto = FunProtoT reason in
@@ -73,7 +70,7 @@ struct
     let t = DefT (reason, make_trust (), FunT (static, funtype)) in
     poly_type_of_tparams (Type.Poly.generate_id ()) tparams t
 
-  let methodtype this_default { Types.reason; tparams; fparams; return_t; _ } =
+  let methodtype this_default { T.reason; tparams; fparams; return_t; _ } =
     let params = F.value fparams in
     let (params_names, params_tlist) = List.split params in
     let rest_param = F.rest fparams in
@@ -98,16 +95,15 @@ struct
     in
     poly_type_of_tparams (Type.Poly.generate_id ()) tparams t
 
-  let gettertype ({ Types.return_t; _ } : Types.t) =
-    TypeUtil.type_t_of_annotated_or_inferred return_t
+  let gettertype ({ T.return_t; _ } : T.t) = TypeUtil.type_t_of_annotated_or_inferred return_t
 
-  let settertype { Types.fparams; _ } =
+  let settertype { T.fparams; _ } =
     match F.value fparams with
     | [(_, param_t)] -> param_t
     | _ -> failwith "Setter property with unexpected type"
 
   let toplevels cx this_recipe super x =
-    let { Types.reason = reason_fn; kind; tparams_map; fparams; body; return_t; _ } = x in
+    let { T.reason = reason_fn; kind; tparams_map; fparams; body; return_t; _ } = x in
     let loc =
       let open Ast.Function in
       match body with
@@ -354,7 +350,7 @@ struct
     *)
     (this_t, params_ast, body_ast, init_ast)
 
-  let to_ctor_sig f = { f with Types.kind = Ctor }
+  let to_ctor_sig f = { f with T.kind = Ctor }
 end
 
 let return_loc = function

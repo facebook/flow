@@ -6,6 +6,7 @@
  *)
 
 module Ast = Flow_ast
+open Func_class_sig_types
 
 module type S = sig
   module Env : Env_sig.S
@@ -20,19 +21,11 @@ module type S = sig
 
   module Func_stmt_config : Func_stmt_config_sig.S with module Types := Func_stmt_config_types.Types
 
-  module Func_stmt_params_types :
-    Func_class_sig_types.Param.S with module Config := Func_stmt_config_types.Types
-
   module Func_stmt_params :
     Func_params.S
       with module Config_types := Func_stmt_config_types.Types
        and module Config := Func_stmt_config
        and module Types = Func_stmt_params_types
-
-  module Func_stmt_sig_types :
-    Func_class_sig_types.Func.S
-      with module Config := Func_stmt_config_types.Types
-       and module Param := Func_stmt_params_types
 
   module Func_stmt_sig :
     Func_sig_intf.S
@@ -40,12 +33,6 @@ module type S = sig
       with module Config := Func_stmt_config
        and module Param := Func_stmt_params
        and module Types = Func_stmt_sig_types
-
-  module Class_stmt_sig_types :
-    Func_class_sig_types.Class.S
-      with module Config := Func_stmt_config_types.Types
-       and module Param := Func_stmt_params_types
-       and module Func := Func_stmt_sig_types
 
   module Class_stmt_sig :
     Class_sig_intf.S

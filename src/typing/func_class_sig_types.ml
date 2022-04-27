@@ -46,9 +46,8 @@ module Param = struct
     }
   end
 
-  module Make (C : Config.S) : S with module Config = C = struct
-    module Config = C
-    open Config
+  module Make (C : Config.S) : S with module Config := C = struct
+    open C
 
     type reconstruct =
       (ALoc.t * Type.t) param_ast list ->
@@ -96,10 +95,7 @@ module Func = struct
   end
 
   module Make (Config : Config.S) (Param : Param.S with module Config := Config) :
-    S with module Config = Config and module Param = Param = struct
-    module Config = Config
-    module Param = Param
-
+    S with module Config := Config and module Param := Param = struct
     type func_params = Param.t
 
     type func_params_tast = (ALoc.t * Type.t) Config.ast
@@ -200,11 +196,7 @@ module Class = struct
       (Config : Config.S)
       (P : Param.S with module Config := Config)
       (F : Func.S with module Config := Config and module Param := P) :
-    S with module Config = Config and module Param = P and module Func = F = struct
-    module Config = Config
-    module Param = P
-    module Func = F
-
+    S with module Config := Config and module Param := P and module Func := F = struct
     type func_sig = F.t
 
     type func_params_tast = F.func_params_tast
@@ -278,3 +270,19 @@ module Class = struct
     }
   end
 end
+
+module Func_stmt_params_types : Param.S with module Config := Func_stmt_config_types.Types =
+  Param.Make (Func_stmt_config_types.Types)
+
+module Func_stmt_sig_types :
+  Func.S
+    with module Config := Func_stmt_config_types.Types
+     and module Param := Func_stmt_params_types =
+  Func.Make (Func_stmt_config_types.Types) (Func_stmt_params_types)
+
+module Class_stmt_sig_types :
+  Class.S
+    with module Config := Func_stmt_config_types.Types
+     and module Param := Func_stmt_params_types
+     and module Func := Func_stmt_sig_types =
+  Class.Make (Func_stmt_config_types.Types) (Func_stmt_params_types) (Func_stmt_sig_types)

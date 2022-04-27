@@ -22,6 +22,7 @@ open Reason
 open Type
 open Type_hint
 open TypeUtil
+open Func_class_sig_types
 
 module Make
     (Env : Env_sig.S)
@@ -323,48 +324,13 @@ struct
         | _ -> ()
         )
 
-  module Func_stmt_params_types :
-    Func_class_sig_types.Param.S with module Config := Func_stmt_config_types.Types =
-    Func_class_sig_types.Param.Make (Func_stmt_config_types.Types)
-
-  module Func_stmt_params :
-    Func_params.S
-      with module Config_types := Func_stmt_config_types.Types
-       and module Config := Func_stmt_config
-       and module Types = Func_stmt_params_types =
+  module Func_stmt_params =
     Func_params.Make (Func_stmt_config_types.Types) (Func_stmt_config) (Func_stmt_params_types)
-
-  module Func_stmt_sig_types :
-    Func_class_sig_types.Func.S
-      with module Config := Func_stmt_config_types.Types
-       and module Param := Func_stmt_params_types =
-    Func_class_sig_types.Func.Make (Func_stmt_config_types.Types) (Func_stmt_params_types)
-
-  module Func_stmt_sig :
-    Func_sig.S
-      with module Config_types := Func_stmt_config_types.Types
-       and module Config := Func_stmt_config
-       and module Param := Func_stmt_params
-       and module Types = Func_stmt_sig_types =
+  module Func_stmt_sig =
     Func_sig.Make (Env) (Abnormal) (Statement) (Func_stmt_config_types.Types) (Func_stmt_config)
       (Func_stmt_params)
       (Func_stmt_sig_types)
-
-  module Class_stmt_sig_types :
-    Func_class_sig_types.Class.S
-      with module Config := Func_stmt_config_types.Types
-       and module Param := Func_stmt_params_types
-       and module Func := Func_stmt_sig_types =
-    Func_class_sig_types.Class.Make (Func_stmt_config_types.Types) (Func_stmt_params_types)
-      (Func_stmt_sig_types)
-
-  module Class_stmt_sig :
-    Class_sig_intf.S
-      with module Config_types := Func_stmt_config_types.Types
-      with module Config := Func_stmt_config
-       and module Param := Func_stmt_params
-       and module Func := Func_stmt_sig
-       and module Types = Class_stmt_sig_types =
+  module Class_stmt_sig =
     Class_sig.Make (Env) (Abnormal) (Func_stmt_config_types.Types) (Func_stmt_config)
       (Func_stmt_params)
       (Func_stmt_sig)
