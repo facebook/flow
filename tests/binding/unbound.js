@@ -10,3 +10,7 @@ function actuallyBound() {
 (unbound: UnboundType); // Error
 (unbound: UnboundType); // No error, only error once
 (unbound: UnboundType); // No error, only error once
+
+unboundFunction(); // Error
+unboundFunction(); // No error, only error once
+unboundFunction(); // No error, only error once

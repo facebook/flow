@@ -820,10 +820,11 @@ module Make
     SMap.empty
     |> SSet.fold
          (fun name acc ->
+           let global_val = Val.global name in
            let entry =
              {
-               val_ref = ref (Val.global name);
-               havoc = Val.global name;
+               val_ref = ref global_val;
+               havoc = global_val;
                writes_by_closure_provider_val = None;
                def_loc = None;
                heap_refinements = ref HeapRefinementMap.empty;
@@ -888,10 +889,11 @@ module Make
     | Some jsx_base_name ->
       (* We use a global here so that if the base name is never created locally
        * we first check the globals before emitting an error *)
+      let global_val = Val.global jsx_base_name in
       let entry =
         {
-          val_ref = ref (Val.global jsx_base_name);
-          havoc = Val.global jsx_base_name;
+          val_ref = ref global_val;
+          havoc = global_val;
           writes_by_closure_provider_val = None;
           def_loc = None;
           heap_refinements = ref HeapRefinementMap.empty;
