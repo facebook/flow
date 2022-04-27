@@ -100,6 +100,8 @@ val source : env -> File_key.t option
 
 val should_parse_types : env -> bool
 
+val get_unexpected_error : ?expected:string -> Token.t -> Parse_error.t
+
 (* mutators: *)
 val error_at : env -> Loc.t * Parse_error.t -> unit
 
@@ -250,6 +252,8 @@ module Eat : sig
 end
 
 module Expect : sig
+  val get_error : env -> Token.t -> Loc.t * Parse_error.t
+
   val error : env -> Token.t -> unit
 
   val token : env -> Token.t -> unit

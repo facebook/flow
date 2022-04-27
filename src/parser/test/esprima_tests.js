@@ -345,39 +345,6 @@ module.exports = {
           }
         },
         {
-          content: '({ set: s() { } })',
-          explanation: "Improved error message",
-          expected_differences: {
-            'root.errors.0.message': {
-              type: 'Wrong error message',
-              expected: 'Unexpected token {',
-              actual: 'Unexpected token `{`, expected the token `,`'
-            }
-          }
-        },
-        {
-          content: '({ set: s(a, b) { } })',
-          explanation: "Improved error message",
-          expected_differences: {
-            'root.errors.0.message': {
-              type: 'Wrong error message',
-              expected: 'Unexpected token {',
-              actual: 'Unexpected token `{`, expected the token `,`'
-            }
-          }
-        },
-        {
-          content: '({ get: g(d) { } })',
-          explanation: "Improved error message",
-          expected_differences: {
-            'root.errors.0.message': {
-              type: 'Wrong error message',
-              expected: 'Unexpected token {',
-              actual: 'Unexpected token `{`, expected the token `,`'
-            }
-          }
-        },
-        {
           content: '({ get i() { }, i: 42 })',
           explanation: 'Esprima-fb is wrong, ES6 allows duplicates',
           expected_differences: {
