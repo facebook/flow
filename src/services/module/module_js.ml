@@ -222,6 +222,8 @@ let rec file_exists path =
     in
     SSet.mem (Filename.basename path) files
 
+let resolve_symlinks path = Path.to_string (Path.make path)
+
 (*******************************)
 
 module Node = struct
@@ -231,13 +233,6 @@ module Node = struct
     | None -> ()
     | Some resolution_acc -> resolution_acc.paths <- SSet.add path resolution_acc.paths
 
-  (** [path_if_exists acc path] determines whether [path] (a) has an extension
-    Flow cares about, (b) exists, and (c) is not ignored. If [path] does not
-    exist, it checks whether [path ^ ".flow"] exists, is not ignored, etc.
-    Returns [Some path] if so; if not, adds [path] to [acc] and returns [None].
-
-    Note: if [path ^ ".flow"] exists and [path] does not, returns [Some path],
-    not [Some (path ^ ".flow")]! *)
   let path_if_exists =
     let path_exists ~file_options path =
       file_exists path
@@ -248,19 +243,13 @@ module Node = struct
         (* happens when path doesn't exist. it may have disappeared on us *)
         false
     in
-    let is_flow_file ~file_options path = Files.is_flow_file ~options:file_options path in
-    fun ~file_options resolution_acc raw_path ->
-      let (path, path_to_check) =
-        match Sys_utils.realpath raw_path with
-        | Some path ->
-          let is_flow = is_flow_file ~file_options path in
-          (path, Base.Option.some_if is_flow path)
-        | None ->
-          let decl_path = raw_path ^ Files.flow_ext in
-          let is_flow = is_flow_file ~file_options raw_path && Sys.file_exists decl_path in
-          (raw_path, Base.Option.some_if is_flow decl_path)
-      in
-      if Base.Option.exists ~f:(path_exists ~file_options) path_to_check then
+    fun ~file_options resolution_acc path ->
+      let path = resolve_symlinks path in
+      let declaration_path = path ^ Files.flow_ext in
+      if
+        Files.is_flow_file ~options:file_options path
+        && (path_exists ~file_options path || path_exists ~file_options declaration_path)
+      then
         Some (Files.eponymous_module (Files.filename_from_string ~options:file_options path))
       else (
         record_path path resolution_acc;
@@ -276,7 +265,7 @@ module Node = struct
       )
 
   let parse_main ~reader ~file_options resolution_acc package_filename file_exts =
-    let%bind.Base.Option package_filename = Sys_utils.realpath package_filename in
+    let package_filename = resolve_symlinks package_filename in
     let package =
       match Package_heaps.Reader_dispatcher.get_package ~reader package_filename with
       | Some (Ok package) -> package
