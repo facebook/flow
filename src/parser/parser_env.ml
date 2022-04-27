@@ -1103,6 +1103,10 @@ module Eat = struct
 end
 
 module Expect = struct
+  let get_error env t =
+    let expected = Token.explanation_of_token ~use_article:true t in
+    (Peek.loc env, get_unexpected_error ~expected (Peek.token env))
+
   let error env t =
     let expected = Token.explanation_of_token ~use_article:true t in
     error_unexpected ~expected env
