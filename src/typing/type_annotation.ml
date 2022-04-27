@@ -23,7 +23,7 @@ module Make
   open Env_sig.LookupMode
   module Env = Env
 
-  module Func_type_params = Func_params.Make (struct
+  module Func_type_params_config_types = struct
     type 'T ast = (ALoc.t, 'T) Ast.Type.Function.Params.t
 
     type 'T param_ast = (ALoc.t, 'T) Ast.Type.Function.Param.t
@@ -38,6 +38,10 @@ module Make
 
     type this_param = Type.t * (ALoc.t * Type.t) this_ast
 
+    type pattern = unit
+  end
+
+  module Func_type_params_config = struct
     let id_name (_, { Ast.Identifier.name; _ }) = name
 
     let param_type (t, (_, { Ast.Type.Function.Param.name; optional; _ })) =
@@ -74,10 +78,27 @@ module Make
     let eval_rest _cx (_, tast) = tast
 
     let eval_this _cx (_, tast) = tast
-  end)
+  end
 
-  module Func_type_sig = Func_sig.Make (Env) (Abnormal) (Statement) (Func_type_params)
-  module Class_type_sig = Class_sig.Make (Env) (Abnormal) (Func_type_sig)
+  module Func_type_params_types = Func_params.Types.Make (Func_type_params_config_types)
+  module Func_type_params =
+    Func_params.Make (Func_type_params_config_types) (Func_type_params_config)
+      (Func_type_params_types)
+  module Func_type_sig_types =
+    Func_sig.Types.Make (Func_type_params_config_types) (Func_type_params_types)
+  module Func_type_sig =
+    Func_sig.Make (Env) (Abnormal) (Statement) (Func_type_params_config_types)
+      (Func_type_params_config)
+      (Func_type_params)
+      (Func_type_sig_types)
+  module Class_type_sig_types =
+    Class_sig.Types.Make (Func_type_params_config_types) (Func_type_params_types)
+      (Func_type_sig_types)
+  module Class_type_sig =
+    Class_sig.Make (Env) (Abnormal) (Func_type_params_config_types) (Func_type_params_config)
+      (Func_type_params)
+      (Func_type_sig)
+      (Class_type_sig_types)
 
   (* AST helpers *)
 
@@ -1207,7 +1228,7 @@ module Make
               )
               properties
           in
-          Class_type_sig.Interface { Class_type_sig.inline = true; extends; callable }
+          Class_type_sig.Types.Interface { Class_type_sig.Types.inline = true; extends; callable }
         in
         (Class_type_sig.empty id reason None tparams_map super, extend_asts)
       in
@@ -1754,7 +1775,7 @@ module Make
       let (((_, return_t), _) as return_ast) = convert cx tparams_map func.return in
       let reason = mk_annot_reason RFunctionType loc in
       ( {
-          Func_type_sig.reason;
+          Func_type_sig.Types.reason;
           kind = Func_sig.Ordinary;
           tparams;
           tparams_map;
@@ -1932,203 +1953,193 @@ module Make
     (typeapp, (loc, { Ast.Type.Generic.id; targs; comments }))
 
   and add_interface_properties cx ~this tparams_map properties s =
-    Class_type_sig.(
-      let (x, rev_prop_asts) =
-        List.fold_left
-          Ast.Type.Object.(
-            fun (x, rev_prop_asts) -> function
-              | CallProperty (loc, { CallProperty.value; static; comments }) ->
-                let (t, value) = mk_function_type_annotation cx tparams_map value in
-                ( append_call ~static t x,
-                  CallProperty (loc, { CallProperty.value; static; comments }) :: rev_prop_asts
-                )
-              | Indexer (loc, { Indexer.static; _ }) as indexer_prop when mem_field ~static "$key" x
-                ->
-                Flow.add_output cx Error_message.(EUnsupportedSyntax (loc, MultipleIndexers));
-                (x, Tast_utils.error_mapper#object_type_property indexer_prop :: rev_prop_asts)
-              | Indexer (loc, indexer) ->
-                let { Indexer.key; value; static; variance; _ } = indexer in
-                let (((_, k), _) as key) = convert cx tparams_map key in
-                let (((_, v), _) as value) = convert cx tparams_map value in
-                let polarity = polarity variance in
-                ( add_indexer ~static polarity ~key:k ~value:v x,
-                  Indexer (loc, { indexer with Indexer.key; value }) :: rev_prop_asts
-                )
-              | Property
-                  ( loc,
-                    ( {
-                        Property.key;
-                        value;
-                        static;
-                        proto;
-                        optional;
-                        _method;
-                        variance;
-                        comments = _;
-                      } as prop
+    let open Class_type_sig in
+    let open Class_type_sig.Types in
+    let (x, rev_prop_asts) =
+      List.fold_left
+        Ast.Type.Object.(
+          fun (x, rev_prop_asts) -> function
+            | CallProperty (loc, { CallProperty.value; static; comments }) ->
+              let (t, value) = mk_function_type_annotation cx tparams_map value in
+              ( append_call ~static t x,
+                CallProperty (loc, { CallProperty.value; static; comments }) :: rev_prop_asts
+              )
+            | Indexer (loc, { Indexer.static; _ }) as indexer_prop when mem_field ~static "$key" x
+              ->
+              Flow.add_output cx Error_message.(EUnsupportedSyntax (loc, MultipleIndexers));
+              (x, Tast_utils.error_mapper#object_type_property indexer_prop :: rev_prop_asts)
+            | Indexer (loc, indexer) ->
+              let { Indexer.key; value; static; variance; _ } = indexer in
+              let (((_, k), _) as key) = convert cx tparams_map key in
+              let (((_, v), _) as value) = convert cx tparams_map value in
+              let polarity = polarity variance in
+              ( add_indexer ~static polarity ~key:k ~value:v x,
+                Indexer (loc, { indexer with Indexer.key; value }) :: rev_prop_asts
+              )
+            | Property
+                ( loc,
+                  ( { Property.key; value; static; proto; optional; _method; variance; comments = _ }
+                  as prop
+                  )
+                ) ->
+              if optional && _method then
+                Flow.add_output cx Error_message.(EInternal (loc, OptionalMethod));
+              let polarity = polarity variance in
+              let (x, prop) =
+                Ast.Expression.Object.(
+                  match (_method, key, value) with
+                  | (_, Property.Literal (loc, _), _)
+                  | (_, Property.PrivateName (loc, _), _)
+                  | (_, Property.Computed (loc, _), _) ->
+                    Flow.add_output
+                      cx
+                      (Error_message.EUnsupportedSyntax (loc, Error_message.IllegalName));
+                    (x, Tast_utils.error_mapper#object_property_type (loc, prop))
+                  | ( true,
+                      Property.Identifier
+                        (id_loc, ({ Ast.Identifier.name; comments = _ } as id_name)),
+                      Ast.Type.Object.Property.Init (func_loc, Ast.Type.Function func)
+                    ) ->
+                    let (fsig, func_ast) = mk_func_sig cx tparams_map loc func in
+                    let ft = Func_type_sig.methodtype this fsig in
+                    let append_method =
+                      match (static, name) with
+                      | (false, "constructor") -> append_constructor (Some id_loc)
+                      | _ -> append_method ~static name id_loc
+                    in
+                    ( append_method fsig x,
+                      Ast.Type.
+                        ( loc,
+                          {
+                            prop with
+                            Object.Property.key = Property.Identifier ((id_loc, ft), id_name);
+                            value = Object.Property.Init ((func_loc, ft), Function func_ast);
+                          }
+                        )
+                      
                     )
-                  ) ->
-                if optional && _method then
-                  Flow.add_output cx Error_message.(EInternal (loc, OptionalMethod));
-                let polarity = polarity variance in
-                let (x, prop) =
-                  Ast.Expression.Object.(
-                    match (_method, key, value) with
-                    | (_, Property.Literal (loc, _), _)
-                    | (_, Property.PrivateName (loc, _), _)
-                    | (_, Property.Computed (loc, _), _) ->
-                      Flow.add_output
-                        cx
-                        (Error_message.EUnsupportedSyntax (loc, Error_message.IllegalName));
-                      (x, Tast_utils.error_mapper#object_property_type (loc, prop))
-                    | ( true,
-                        Property.Identifier
-                          (id_loc, ({ Ast.Identifier.name; comments = _ } as id_name)),
-                        Ast.Type.Object.Property.Init (func_loc, Ast.Type.Function func)
-                      ) ->
-                      let (fsig, func_ast) = mk_func_sig cx tparams_map loc func in
-                      let ft = Func_type_sig.methodtype this fsig in
-                      let append_method =
-                        match (static, name) with
-                        | (false, "constructor") -> append_constructor (Some id_loc)
-                        | _ -> append_method ~static name id_loc
-                      in
-                      ( append_method fsig x,
-                        Ast.Type.
-                          ( loc,
-                            {
-                              prop with
-                              Object.Property.key = Property.Identifier ((id_loc, ft), id_name);
-                              value = Object.Property.Init ((func_loc, ft), Function func_ast);
-                            }
-                          )
-                        
-                      )
-                    | (true, Property.Identifier _, _) ->
-                      Flow.add_output cx Error_message.(EInternal (loc, MethodNotAFunction));
-                      (x, Tast_utils.error_mapper#object_property_type (loc, prop))
-                    | ( false,
-                        Property.Identifier
-                          (id_loc, ({ Ast.Identifier.name; comments = _ } as id_name)),
-                        Ast.Type.Object.Property.Init value
-                      ) ->
-                      let (((_, t), _) as value_ast) = convert cx tparams_map value in
-                      let t =
-                        if optional then
-                          TypeUtil.optional t
-                        else
-                          t
-                      in
-                      let add =
-                        if proto then
-                          add_proto_field
-                        else
-                          add_field ~static
-                      in
-                      ( add name id_loc polarity (Annot t) x,
-                        Ast.Type.
-                          ( loc,
-                            {
-                              prop with
-                              Object.Property.key = Property.Identifier ((id_loc, t), id_name);
-                              value = Object.Property.Init value_ast;
-                            }
-                          )
-                        
-                      )
-                    (* unsafe getter property *)
-                    | ( _,
-                        Property.Identifier
-                          (id_loc, ({ Ast.Identifier.name; comments = _ } as id_name)),
-                        Ast.Type.Object.Property.Get (get_loc, func)
-                      ) ->
-                      Flow_js.add_output cx (Error_message.EUnsafeGettersSetters loc);
-                      let (fsig, func_ast) = mk_func_sig cx tparams_map loc func in
-                      let prop_t =
-                        TypeUtil.type_t_of_annotated_or_inferred fsig.Func_type_sig.return_t
-                      in
-                      ( add_getter ~static name id_loc fsig x,
-                        Ast.Type.
-                          ( loc,
-                            {
-                              prop with
-                              Object.Property.key = Property.Identifier ((id_loc, prop_t), id_name);
-                              value = Object.Property.Get (get_loc, func_ast);
-                            }
-                          )
-                        
-                      )
-                    (* unsafe setter property *)
-                    | ( _,
-                        Property.Identifier
-                          (id_loc, ({ Ast.Identifier.name; comments = _ } as id_name)),
-                        Ast.Type.Object.Property.Set (set_loc, func)
-                      ) ->
-                      Flow_js.add_output cx (Error_message.EUnsafeGettersSetters loc);
-                      let (fsig, func_ast) = mk_func_sig cx tparams_map loc func in
-                      let prop_t =
-                        match fsig with
-                        | { Func_type_sig.tparams = None; fparams; _ } ->
-                          (match Func_type_params.value fparams with
-                          | [(_, t)] -> t
-                          | _ -> AnyT.at (AnyError None) id_loc)
-                        (* error case: report any ok *)
-                        | _ -> AnyT.at (AnyError None) id_loc
-                        (* error case: report any ok *)
-                      in
-                      ( add_setter ~static name id_loc fsig x,
-                        Ast.Type.
-                          ( loc,
-                            {
-                              prop with
-                              Object.Property.key = Property.Identifier ((id_loc, prop_t), id_name);
-                              value = Object.Property.Set (set_loc, func_ast);
-                            }
-                          )
-                        
-                      )
-                  )
-                in
-                (x, Ast.Type.Object.Property prop :: rev_prop_asts)
-              | InternalSlot (loc, slot) as prop ->
-                let {
-                  InternalSlot.id = (_, { Ast.Identifier.name; comments = _ });
-                  value;
-                  optional;
-                  static;
-                  _method;
-                  comments = _;
-                } =
-                  slot
-                in
-                if name = "call" then
-                  let (((_, t), _) as value) = convert cx tparams_map value in
-                  let t =
-                    if optional then
-                      TypeUtil.optional t
-                    else
-                      t
-                  in
-                  ( append_call ~static t x,
-                    InternalSlot (loc, { slot with InternalSlot.value }) :: rev_prop_asts
-                  )
-                else (
-                  Flow.add_output
-                    cx
-                    Error_message.(
-                      EUnsupportedSyntax (loc, UnsupportedInternalSlot { name; static })
-                    );
-                  (x, Tast_utils.error_mapper#object_type_property prop :: rev_prop_asts)
+                  | (true, Property.Identifier _, _) ->
+                    Flow.add_output cx Error_message.(EInternal (loc, MethodNotAFunction));
+                    (x, Tast_utils.error_mapper#object_property_type (loc, prop))
+                  | ( false,
+                      Property.Identifier
+                        (id_loc, ({ Ast.Identifier.name; comments = _ } as id_name)),
+                      Ast.Type.Object.Property.Init value
+                    ) ->
+                    let (((_, t), _) as value_ast) = convert cx tparams_map value in
+                    let t =
+                      if optional then
+                        TypeUtil.optional t
+                      else
+                        t
+                    in
+                    let add =
+                      if proto then
+                        add_proto_field
+                      else
+                        add_field ~static
+                    in
+                    ( add name id_loc polarity (Annot t) x,
+                      Ast.Type.
+                        ( loc,
+                          {
+                            prop with
+                            Object.Property.key = Property.Identifier ((id_loc, t), id_name);
+                            value = Object.Property.Init value_ast;
+                          }
+                        )
+                      
+                    )
+                  (* unsafe getter property *)
+                  | ( _,
+                      Property.Identifier
+                        (id_loc, ({ Ast.Identifier.name; comments = _ } as id_name)),
+                      Ast.Type.Object.Property.Get (get_loc, func)
+                    ) ->
+                    Flow_js.add_output cx (Error_message.EUnsafeGettersSetters loc);
+                    let (fsig, func_ast) = mk_func_sig cx tparams_map loc func in
+                    let prop_t =
+                      TypeUtil.type_t_of_annotated_or_inferred fsig.Func_type_sig.Types.return_t
+                    in
+                    ( add_getter ~static name id_loc fsig x,
+                      Ast.Type.
+                        ( loc,
+                          {
+                            prop with
+                            Object.Property.key = Property.Identifier ((id_loc, prop_t), id_name);
+                            value = Object.Property.Get (get_loc, func_ast);
+                          }
+                        )
+                      
+                    )
+                  (* unsafe setter property *)
+                  | ( _,
+                      Property.Identifier
+                        (id_loc, ({ Ast.Identifier.name; comments = _ } as id_name)),
+                      Ast.Type.Object.Property.Set (set_loc, func)
+                    ) ->
+                    Flow_js.add_output cx (Error_message.EUnsafeGettersSetters loc);
+                    let (fsig, func_ast) = mk_func_sig cx tparams_map loc func in
+                    let prop_t =
+                      match fsig with
+                      | { Func_type_sig.Types.tparams = None; fparams; _ } ->
+                        (match Func_type_params.value fparams with
+                        | [(_, t)] -> t
+                        | _ -> AnyT.at (AnyError None) id_loc)
+                      (* error case: report any ok *)
+                      | _ -> AnyT.at (AnyError None) id_loc
+                      (* error case: report any ok *)
+                    in
+                    ( add_setter ~static name id_loc fsig x,
+                      Ast.Type.
+                        ( loc,
+                          {
+                            prop with
+                            Object.Property.key = Property.Identifier ((id_loc, prop_t), id_name);
+                            value = Object.Property.Set (set_loc, func_ast);
+                          }
+                        )
+                      
+                    )
                 )
-              | SpreadProperty (loc, _) as prop ->
-                Flow.add_output cx Error_message.(EInternal (loc, InterfaceTypeSpread));
+              in
+              (x, Ast.Type.Object.Property prop :: rev_prop_asts)
+            | InternalSlot (loc, slot) as prop ->
+              let {
+                InternalSlot.id = (_, { Ast.Identifier.name; comments = _ });
+                value;
+                optional;
+                static;
+                _method;
+                comments = _;
+              } =
+                slot
+              in
+              if name = "call" then
+                let (((_, t), _) as value) = convert cx tparams_map value in
+                let t =
+                  if optional then
+                    TypeUtil.optional t
+                  else
+                    t
+                in
+                ( append_call ~static t x,
+                  InternalSlot (loc, { slot with InternalSlot.value }) :: rev_prop_asts
+                )
+              else (
+                Flow.add_output
+                  cx
+                  Error_message.(EUnsupportedSyntax (loc, UnsupportedInternalSlot { name; static }));
                 (x, Tast_utils.error_mapper#object_type_property prop :: rev_prop_asts)
-          )
-          (s, [])
-          properties
-      in
-      (x, List.rev rev_prop_asts)
-    )
+              )
+            | SpreadProperty (loc, _) as prop ->
+              Flow.add_output cx Error_message.(EInternal (loc, InterfaceTypeSpread));
+              (x, Tast_utils.error_mapper#object_type_property prop :: rev_prop_asts)
+        )
+        (s, [])
+        properties
+    in
+    (x, List.rev rev_prop_asts)
 
   and optional_indexed_access
       cx loc ~tparams_map { T.OptionalIndexedAccess.indexed_access; optional } =
@@ -2190,188 +2201,186 @@ module Make
       ((loc, c, Some ts), Some (targs_loc, { Ast.Type.TypeArgs.arguments = targs_ast; comments }))
 
   let mk_interface_sig cx reason decl =
-    Class_type_sig.(
+    let open Class_type_sig in
+    let open Class_type_sig.Types in
+    let {
+      Ast.Statement.Interface.id = (id_loc, id_name);
+      tparams;
+      body =
+        ( body_loc,
+          { Ast.Type.Object.properties; exact; inexact = _inexact; comments = object_comments }
+        );
+      extends;
+      comments;
+    } =
+      decl
+    in
+    let self = Tvar.mk cx reason in
+    let (tparams, tparams_map, tparams_ast) = mk_type_param_declarations cx tparams in
+    let (iface_sig, extends_ast) =
+      let id = Context.make_aloc_id cx id_loc in
+      let (extends, extends_ast) =
+        extends |> Base.List.map ~f:(mk_interface_super cx tparams_map) |> List.split
+      in
+      let super =
+        let callable =
+          List.exists
+            Ast.Type.Object.(
+              function
+              | CallProperty (_, { CallProperty.static; _ }) -> not static
+              | _ -> false
+            )
+            properties
+        in
+        Interface { inline = false; extends; callable }
+      in
+      (empty id reason tparams tparams_map super, extends_ast)
+    in
+    (* TODO: interfaces don't have a name field, or even statics *)
+    let iface_sig = add_name_field iface_sig in
+    let (iface_sig, properties) =
+      add_interface_properties
+        cx
+        tparams_map
+        properties
+        ~this:(implicit_mixed_this reason)
+        iface_sig
+    in
+    ( iface_sig,
+      self,
+      {
+        Ast.Statement.Interface.id = ((id_loc, self), id_name);
+        tparams = tparams_ast;
+        extends = extends_ast;
+        body =
+          ( body_loc,
+            { Ast.Type.Object.exact; properties; inexact = false; comments = object_comments }
+          );
+        comments;
+      }
+    )
+
+  let mk_declare_class_sig =
+    let open Class_type_sig in
+    let open Class_type_sig.Types in
+    let mk_mixins cx tparams_map (loc, { Ast.Type.Generic.id; targs; comments }) =
+      let name = qualified_name id in
+      let r = mk_annot_reason (RType (OrdinaryName name)) loc in
+      let (i, id) =
+        let lookup_mode = Env_sig.LookupMode.ForValue in
+        convert_qualification ~lookup_mode cx "mixins" id
+      in
+      let props_bag = Tvar.mk_where cx r (fun tvar -> Flow.flow cx (i, Type.MixinT (r, tvar))) in
+      let (t, targs) = mk_super cx tparams_map loc props_bag targs in
+      (t, (loc, { Ast.Type.Generic.id; targs; comments }))
+    in
+    let is_object_builtin_libdef (loc, { Ast.Identifier.name; comments = _ }) =
+      name = "Object"
+      &&
+      match ALoc.source loc with
+      | None -> false
+      | Some source -> File_key.is_lib_file source
+    in
+    fun cx reason decl ->
       let {
-        Ast.Statement.Interface.id = (id_loc, id_name);
+        Ast.Statement.DeclareClass.id = (id_loc, id_name) as ident;
         tparams;
         body =
           ( body_loc,
             { Ast.Type.Object.properties; exact; inexact = _inexact; comments = object_comments }
           );
         extends;
+        mixins;
+        implements;
         comments;
       } =
         decl
       in
       let self = Tvar.mk cx reason in
-      let (tparams, tparams_map, tparams_ast) = mk_type_param_declarations cx tparams in
-      let (iface_sig, extends_ast) =
+      let (tparams, tparams_map, tparam_asts) = mk_type_param_declarations cx tparams in
+      let (this_tparam, this_t) = mk_this self cx reason tparams in
+      let tparams_map_with_this = Subst_name.Map.add (Subst_name.Name "this") this_t tparams_map in
+      let (iface_sig, extends_ast, mixins_ast, implements_ast) =
         let id = Context.make_aloc_id cx id_loc in
         let (extends, extends_ast) =
-          extends |> Base.List.map ~f:(mk_interface_super cx tparams_map) |> List.split
+          match extends with
+          | Some (loc, { Ast.Type.Generic.id; targs; comments }) ->
+            let lookup_mode = Env_sig.LookupMode.ForValue in
+            let (i, id) = convert_qualification ~lookup_mode cx "mixins" id in
+            let (t, targs) = mk_super cx tparams_map_with_this loc i targs in
+            (Some t, Some (loc, { Ast.Type.Generic.id; targs; comments }))
+          | None -> (None, None)
+        in
+        let (mixins, mixins_ast) =
+          mixins |> Base.List.map ~f:(mk_mixins cx tparams_map_with_this) |> List.split
+        in
+        let (implements, implements_ast) =
+          let open Ast.Class.Implements in
+          match implements with
+          | None -> ([], None)
+          | Some (implements_loc, { interfaces; comments }) ->
+            let (implements, interfaces_ast) =
+              interfaces
+              |> Base.List.map ~f:(fun (loc, i) ->
+                     let { Interface.id = (id_loc, id_name_inner); targs } = i in
+                     let { Ast.Identifier.name; comments = _ } = id_name_inner in
+                     let c = Env.get_var ~lookup_mode:Env_sig.LookupMode.ForType cx name id_loc in
+                     let (typeapp, targs) =
+                       match targs with
+                       | None -> ((loc, c, None), None)
+                       | Some (targs_loc, { Ast.Type.TypeArgs.arguments = targs; comments }) ->
+                         let (ts, targs_ast) = convert_list cx tparams_map_with_this targs in
+                         ( (loc, c, Some ts),
+                           Some (targs_loc, { Ast.Type.TypeArgs.arguments = targs_ast; comments })
+                         )
+                     in
+                     (typeapp, (loc, { Interface.id = ((id_loc, c), id_name_inner); targs }))
+                 )
+              |> List.split
+            in
+            (implements, Some (implements_loc, { interfaces = interfaces_ast; comments }))
         in
         let super =
-          let callable =
-            List.exists
-              Ast.Type.Object.(
-                function
-                | CallProperty (_, { CallProperty.static; _ }) -> not static
-                | _ -> false
-              )
-              properties
+          let extends =
+            match extends with
+            | None -> Implicit { null = is_object_builtin_libdef ident }
+            | Some extends -> Explicit extends
           in
-          Interface { inline = false; extends; callable }
+          Class { Class_type_sig.Types.extends; mixins; implements; this_t; this_tparam }
         in
-        (empty id reason tparams tparams_map super, extends_ast)
+        (empty id reason tparams tparams_map super, extends_ast, mixins_ast, implements_ast)
       in
-      (* TODO: interfaces don't have a name field, or even statics *)
+      (* All classes have a static "name" property. *)
       let iface_sig = add_name_field iface_sig in
       let (iface_sig, properties) =
         add_interface_properties
           cx
-          tparams_map
+          tparams_map_with_this
           properties
-          ~this:(implicit_mixed_this reason)
+          ~this:(implicit_mixed_this (reason_of_t this_t))
           iface_sig
+      in
+      (* Add a default ctor if we don't have a ctor and won't inherit one from a super *)
+      let iface_sig =
+        if mem_constructor iface_sig || extends <> None || mixins <> [] then
+          iface_sig
+        else
+          let reason = replace_desc_reason RDefaultConstructor reason in
+          add_default_constructor reason iface_sig
       in
       ( iface_sig,
         self,
         {
-          Ast.Statement.Interface.id = ((id_loc, self), id_name);
-          tparams = tparams_ast;
-          extends = extends_ast;
+          Ast.Statement.DeclareClass.id = ((id_loc, self), id_name);
+          tparams = tparam_asts;
           body =
             ( body_loc,
-              { Ast.Type.Object.exact; properties; inexact = false; comments = object_comments }
+              { Ast.Type.Object.properties; exact; inexact = false; comments = object_comments }
             );
+          extends = extends_ast;
+          mixins = mixins_ast;
+          implements = implements_ast;
           comments;
         }
       )
-    )
-
-  let mk_declare_class_sig =
-    Class_type_sig.(
-      let mk_mixins cx tparams_map (loc, { Ast.Type.Generic.id; targs; comments }) =
-        let name = qualified_name id in
-        let r = mk_annot_reason (RType (OrdinaryName name)) loc in
-        let (i, id) =
-          let lookup_mode = Env_sig.LookupMode.ForValue in
-          convert_qualification ~lookup_mode cx "mixins" id
-        in
-        let props_bag = Tvar.mk_where cx r (fun tvar -> Flow.flow cx (i, Type.MixinT (r, tvar))) in
-        let (t, targs) = mk_super cx tparams_map loc props_bag targs in
-        (t, (loc, { Ast.Type.Generic.id; targs; comments }))
-      in
-      let is_object_builtin_libdef (loc, { Ast.Identifier.name; comments = _ }) =
-        name = "Object"
-        &&
-        match ALoc.source loc with
-        | None -> false
-        | Some source -> File_key.is_lib_file source
-      in
-      fun cx reason decl ->
-        let {
-          Ast.Statement.DeclareClass.id = (id_loc, id_name) as ident;
-          tparams;
-          body =
-            ( body_loc,
-              { Ast.Type.Object.properties; exact; inexact = _inexact; comments = object_comments }
-            );
-          extends;
-          mixins;
-          implements;
-          comments;
-        } =
-          decl
-        in
-        let self = Tvar.mk cx reason in
-        let (tparams, tparams_map, tparam_asts) = mk_type_param_declarations cx tparams in
-        let (this_tparam, this_t) = mk_this self cx reason tparams in
-        let tparams_map_with_this =
-          Subst_name.Map.add (Subst_name.Name "this") this_t tparams_map
-        in
-        let (iface_sig, extends_ast, mixins_ast, implements_ast) =
-          let id = Context.make_aloc_id cx id_loc in
-          let (extends, extends_ast) =
-            match extends with
-            | Some (loc, { Ast.Type.Generic.id; targs; comments }) ->
-              let lookup_mode = Env_sig.LookupMode.ForValue in
-              let (i, id) = convert_qualification ~lookup_mode cx "mixins" id in
-              let (t, targs) = mk_super cx tparams_map_with_this loc i targs in
-              (Some t, Some (loc, { Ast.Type.Generic.id; targs; comments }))
-            | None -> (None, None)
-          in
-          let (mixins, mixins_ast) =
-            mixins |> Base.List.map ~f:(mk_mixins cx tparams_map_with_this) |> List.split
-          in
-          let (implements, implements_ast) =
-            let open Ast.Class.Implements in
-            match implements with
-            | None -> ([], None)
-            | Some (implements_loc, { interfaces; comments }) ->
-              let (implements, interfaces_ast) =
-                interfaces
-                |> Base.List.map ~f:(fun (loc, i) ->
-                       let { Interface.id = (id_loc, id_name_inner); targs } = i in
-                       let { Ast.Identifier.name; comments = _ } = id_name_inner in
-                       let c = Env.get_var ~lookup_mode:Env_sig.LookupMode.ForType cx name id_loc in
-                       let (typeapp, targs) =
-                         match targs with
-                         | None -> ((loc, c, None), None)
-                         | Some (targs_loc, { Ast.Type.TypeArgs.arguments = targs; comments }) ->
-                           let (ts, targs_ast) = convert_list cx tparams_map_with_this targs in
-                           ( (loc, c, Some ts),
-                             Some (targs_loc, { Ast.Type.TypeArgs.arguments = targs_ast; comments })
-                           )
-                       in
-                       (typeapp, (loc, { Interface.id = ((id_loc, c), id_name_inner); targs }))
-                   )
-                |> List.split
-              in
-              (implements, Some (implements_loc, { interfaces = interfaces_ast; comments }))
-          in
-          let super =
-            let extends =
-              match extends with
-              | None -> Implicit { null = is_object_builtin_libdef ident }
-              | Some extends -> Explicit extends
-            in
-            Class { Class_type_sig.extends; mixins; implements; this_t; this_tparam }
-          in
-          (empty id reason tparams tparams_map super, extends_ast, mixins_ast, implements_ast)
-        in
-        (* All classes have a static "name" property. *)
-        let iface_sig = add_name_field iface_sig in
-        let (iface_sig, properties) =
-          add_interface_properties
-            cx
-            tparams_map_with_this
-            properties
-            ~this:(implicit_mixed_this (reason_of_t this_t))
-            iface_sig
-        in
-        (* Add a default ctor if we don't have a ctor and won't inherit one from a super *)
-        let iface_sig =
-          if mem_constructor iface_sig || extends <> None || mixins <> [] then
-            iface_sig
-          else
-            let reason = replace_desc_reason RDefaultConstructor reason in
-            add_default_constructor reason iface_sig
-        in
-        ( iface_sig,
-          self,
-          {
-            Ast.Statement.DeclareClass.id = ((id_loc, self), id_name);
-            tparams = tparam_asts;
-            body =
-              ( body_loc,
-                { Ast.Type.Object.properties; exact; inexact = false; comments = object_comments }
-              );
-            extends = extends_ast;
-            mixins = mixins_ast;
-            implements = implements_ast;
-            comments;
-          }
-        )
-    )
 end

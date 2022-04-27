@@ -94,13 +94,13 @@ module type S = sig
     Context.t ->
     Reason.t ->
     (ALoc.t, ALoc.t) Flow_ast.Statement.Interface.t ->
-    Class_type_sig.t * Type.t * (ALoc.t, ALoc.t * Type.t) Flow_ast.Statement.Interface.t
+    Class_type_sig.Types.t * Type.t * (ALoc.t, ALoc.t * Type.t) Flow_ast.Statement.Interface.t
 
   val mk_declare_class_sig :
     Context.t ->
     Reason.t ->
     (ALoc.t, ALoc.t) Flow_ast.Statement.DeclareClass.t ->
-    Class_type_sig.t * Type.t * (ALoc.t, ALoc.t * Type.t) Flow_ast.Statement.DeclareClass.t
+    Class_type_sig.Types.t * Type.t * (ALoc.t, ALoc.t * Type.t) Flow_ast.Statement.DeclareClass.t
 
   val polarity : 'a Flow_ast.Variance.t option -> Polarity.t
 

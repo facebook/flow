@@ -14,53 +14,10 @@ open Type_hint
 module Make
     (Env : Env_sig.S)
     (Destructuring : Destructuring_sig.S)
-    (Statement : Statement_sig.S with module Env := Env) : Func_stmt_config_sig.S = struct
-  type 'T ast = (ALoc.t, 'T) Ast.Function.Params.t
-
-  type 'T param_ast = (ALoc.t, 'T) Ast.Function.Param.t
-
-  type 'T rest_ast = (ALoc.t, 'T) Ast.Function.RestParam.t
-
-  type 'T this_ast = (ALoc.t, 'T) Ast.Function.ThisParam.t
-
-  type pattern =
-    | Id of (ALoc.t, ALoc.t * Type.t) Ast.Pattern.Identifier.t
-    | Object of {
-        annot: (ALoc.t, ALoc.t * Type.t) Ast.Type.annotation_or_hint;
-        properties: (ALoc.t, ALoc.t) Ast.Pattern.Object.property list;
-        comments: (ALoc.t, ALoc.t Ast.Comment.t list) Ast.Syntax.t option;
-      }
-    | Array of {
-        annot: (ALoc.t, ALoc.t * Type.t) Ast.Type.annotation_or_hint;
-        elements: (ALoc.t, ALoc.t) Ast.Pattern.Array.element list;
-        comments: (ALoc.t, ALoc.t Ast.Comment.t list) Ast.Syntax.t option;
-      }
-
-  type param =
-    | Param of {
-        t: Type.t;
-        loc: ALoc.t;
-        ploc: ALoc.t;
-        pattern: pattern;
-        default: (ALoc.t, ALoc.t) Ast.Expression.t option;
-        has_anno: bool;
-      }
-
-  type rest =
-    | Rest of {
-        t: Type.t;
-        loc: ALoc.t;
-        ploc: ALoc.t;
-        id: (ALoc.t, ALoc.t * Type.t) Ast.Pattern.Identifier.t;
-        has_anno: bool;
-      }
-
-  type this_param =
-    | This of {
-        t: Type.t;
-        loc: ALoc.t;
-        annot: (ALoc.t, ALoc.t * Type.t) Ast.Type.annotation;
-      }
+    (Statement : Statement_sig.S with module Env := Env) :
+  Func_stmt_config_sig.S with module Types = Func_stmt_config_types.Types = struct
+  module Types = Func_stmt_config_types.Types
+  open Types
 
   let param_type (Param { t; pattern; default; _ }) =
     match pattern with

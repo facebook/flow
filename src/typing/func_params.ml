@@ -16,33 +16,37 @@
 
 include Func_params_intf
 
-module Make (C : Config) = struct
-  type 'T ast = 'T C.ast
+module Types = struct
+  module type S = S_T
 
-  type 'T param_ast = 'T C.param_ast
+  module Make (C : Config_types) : S with module Config = C = struct
+    module Config = C
+    open Config
 
-  type 'T rest_ast = 'T C.rest_ast
+    type reconstruct =
+      (ALoc.t * Type.t) param_ast list ->
+      (ALoc.t * Type.t) rest_ast option ->
+      (ALoc.t * Type.t) this_ast option ->
+      (ALoc.t * Type.t) ast option
 
-  type 'T this_ast = 'T C.this_ast
+    type t = {
+      params_rev: param list;
+      rest: rest option;
+      this_: this_param option;
+      reconstruct: reconstruct;
+    }
+  end
+end
 
-  type param = C.param
-
-  type rest = C.rest
-
-  type this_param = C.this_param
-
-  type reconstruct =
-    (ALoc.t * Type.t) param_ast list ->
-    (ALoc.t * Type.t) rest_ast option ->
-    (ALoc.t * Type.t) this_ast option ->
-    (ALoc.t * Type.t) ast option
-
-  type t = {
-    params_rev: param list;
-    rest: rest option;
-    this_: this_param option;
-    reconstruct: reconstruct;
-  }
+module Make
+    (CT : Config_types)
+    (C : Config with module Types := CT)
+    (T : Types.S with module Config := CT) :
+  S with module Config_types = CT and module Config = C and module Types = T = struct
+  module Config_types = CT
+  module Config = C
+  module Types = T
+  open Types
 
   let empty reconstruct = { params_rev = []; rest = None; this_ = None; reconstruct }
 

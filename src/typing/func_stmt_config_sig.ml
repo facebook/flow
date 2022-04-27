@@ -8,52 +8,9 @@
 module Ast = Flow_ast
 
 module type S = sig
-  type 'T ast = (ALoc.t, 'T) Ast.Function.Params.t
+  module Types : Func_params_intf.Config_types
 
-  type 'T param_ast = (ALoc.t, 'T) Ast.Function.Param.t
-
-  type 'T rest_ast = (ALoc.t, 'T) Ast.Function.RestParam.t
-
-  type 'T this_ast = (ALoc.t, 'T) Ast.Function.ThisParam.t
-
-  type pattern =
-    | Id of (ALoc.t, ALoc.t * Type.t) Ast.Pattern.Identifier.t
-    | Object of {
-        annot: (ALoc.t, ALoc.t * Type.t) Ast.Type.annotation_or_hint;
-        properties: (ALoc.t, ALoc.t) Ast.Pattern.Object.property list;
-        comments: (ALoc.t, ALoc.t Ast.Comment.t list) Ast.Syntax.t option;
-      }
-    | Array of {
-        annot: (ALoc.t, ALoc.t * Type.t) Ast.Type.annotation_or_hint;
-        elements: (ALoc.t, ALoc.t) Ast.Pattern.Array.element list;
-        comments: (ALoc.t, ALoc.t Ast.Comment.t list) Ast.Syntax.t option;
-      }
-
-  type param =
-    | Param of {
-        t: Type.t;
-        loc: ALoc.t;
-        ploc: ALoc.t;
-        pattern: pattern;
-        default: (ALoc.t, ALoc.t) Ast.Expression.t option;
-        has_anno: bool;
-      }
-
-  type rest =
-    | Rest of {
-        t: Type.t;
-        loc: ALoc.t;
-        ploc: ALoc.t;
-        id: (ALoc.t, ALoc.t * Type.t) Ast.Pattern.Identifier.t;
-        has_anno: bool;
-      }
-
-  type this_param =
-    | This of {
-        t: Type.t;
-        loc: ALoc.t;
-        annot: (ALoc.t, ALoc.t * Type.t) Ast.Type.annotation;
-      }
+  open Types
 
   val param_type : param -> string option * Type.t
 
@@ -84,9 +41,9 @@ module type S = sig
     (ALoc.t, ALoc.t) Ast.Expression.t option ->
     (ALoc.t, ALoc.t * Type.t) Ast.Expression.t option
 
-  val eval_param : Context.t -> param -> ALoc.t * (ALoc.t, ALoc.t * Type.t) Ast.Function.Param.t'
+  val eval_param : Context.t -> param -> (ALoc.t * Type.t) param_ast
 
-  val eval_rest : Context.t -> rest -> ALoc.t * (ALoc.t, ALoc.t * Type.t) Ast.Function.RestParam.t'
+  val eval_rest : Context.t -> rest -> (ALoc.t * Type.t) rest_ast
 
-  val eval_this : 'a -> this_param -> ALoc.t * (ALoc.t, ALoc.t * Type.t) Ast.Function.ThisParam.t'
+  val eval_this : Context.t -> this_param -> (ALoc.t * Type.t) this_ast
 end

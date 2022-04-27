@@ -26,7 +26,7 @@ open TypeUtil
 module Make
     (Env : Env_sig.S)
     (Destructuring : Destructuring_sig.S)
-    (Func_stmt_config : Func_stmt_config_sig.S)
+    (Func_stmt_config : Func_stmt_config_sig.S with module Types := Func_stmt_config_types.Types)
     (Statement : Statement_sig.S with module Env := Env) : Statement_sig.S with module Env := Env =
 struct
   module Abnormal = Abnormal.Make (Env)
@@ -35,6 +35,7 @@ struct
   module Toplevels = Toplevels.DependencyToplevels (Env) (Abnormal)
   module Refinement = Refinement.Make (Env)
   module Import_export = Import_export.Make (Env)
+  module Func_stmt_config = Func_stmt_config
   open Env_sig.LookupMode
 
   (*************)
@@ -322,9 +323,52 @@ struct
         | _ -> ()
         )
 
-  module Func_stmt_params = Func_params.Make (Func_stmt_config)
-  module Func_stmt_sig = Func_sig.Make (Env) (Abnormal) (Statement) (Func_stmt_params)
-  module Class_stmt_sig = Class_sig.Make (Env) (Abnormal) (Func_stmt_sig)
+  module Func_stmt_params_types :
+    Func_params.Types.S with module Config := Func_stmt_config_types.Types =
+    Func_params.Types.Make (Func_stmt_config_types.Types)
+
+  module Func_stmt_params :
+    Func_params.S
+      with module Config_types := Func_stmt_config_types.Types
+       and module Config := Func_stmt_config
+       and module Types = Func_stmt_params_types =
+    Func_params.Make (Func_stmt_config_types.Types) (Func_stmt_config) (Func_stmt_params_types)
+
+  module Func_stmt_sig_types :
+    Func_sig.S_T
+      with module Config := Func_stmt_config_types.Types
+       and module Param := Func_stmt_params_types =
+    Func_sig.Types.Make (Func_stmt_config_types.Types) (Func_stmt_params_types)
+
+  module Func_stmt_sig :
+    Func_sig.S
+      with module Config_types := Func_stmt_config_types.Types
+       and module Config := Func_stmt_config
+       and module Param := Func_stmt_params
+       and module Types = Func_stmt_sig_types =
+    Func_sig.Make (Env) (Abnormal) (Statement) (Func_stmt_config_types.Types) (Func_stmt_config)
+      (Func_stmt_params)
+      (Func_stmt_sig_types)
+
+  module Class_stmt_sig_types :
+    Class_sig_intf.S_T
+      with module Config := Func_stmt_config_types.Types
+       and module Param := Func_stmt_params_types
+       and module Func := Func_stmt_sig_types =
+    Class_sig.Types.Make (Func_stmt_config_types.Types) (Func_stmt_params_types)
+      (Func_stmt_sig_types)
+
+  module Class_stmt_sig :
+    Class_sig_intf.S
+      with module Config_types := Func_stmt_config_types.Types
+      with module Config := Func_stmt_config
+       and module Param := Func_stmt_params
+       and module Func := Func_stmt_sig
+       and module Types = Class_stmt_sig_types =
+    Class_sig.Make (Env) (Abnormal) (Func_stmt_config_types.Types) (Func_stmt_config)
+      (Func_stmt_params)
+      (Func_stmt_sig)
+      (Class_stmt_sig_types)
 
   (* In positions where an annotation may be present or an annotation can be pushed down,
    * we should prefer the annotation over the pushed-down annotation. *)
@@ -8337,467 +8381,460 @@ struct
      "metaclass": thus, the static type is itself implemented as an instance
      type. *)
   and mk_class_sig =
-    Class_stmt_sig.(
-      (* Given information about a field, returns:
-         - Class_sig.field representation of this field
-         - typed AST of the field's type annotation
-         - a function which will return a typed AST of the field's initializer expression.
-           Function should only be called after Class_sig.toplevels has been called on a
-           Class_sig.t containing this field, as that is when the initializer expression
-           gets checked.
-      *)
-      let mk_field cx tparams_map reason annot init =
-        let (annot_or_inferred, annot_ast) = Anno.mk_type_annotation cx tparams_map reason annot in
-        let annot_t = type_t_of_annotated_or_inferred annot_or_inferred in
-        let (field, get_init) =
-          match init with
-          | Ast.Class.Property.Declared -> (Annot annot_t, Fn.const Ast.Class.Property.Declared)
-          | Ast.Class.Property.Uninitialized ->
-            (Annot annot_t, Fn.const Ast.Class.Property.Uninitialized)
-          | Ast.Class.Property.Initialized expr ->
-            let value_ref : (ALoc.t, ALoc.t * Type.t) Ast.Expression.t option ref = ref None in
-            ( Infer
-                ( Func_stmt_sig.field_initializer tparams_map reason expr annot_or_inferred,
-                  (fun (_, _, value_opt) -> value_ref := Some (Base.Option.value_exn value_opt))
-                ),
-              fun () ->
-                Ast.Class.Property.Initialized
-                  (Base.Option.value !value_ref ~default:(Tast_utils.error_mapper#expression expr))
+    let open Class_stmt_sig in
+    let open Class_stmt_sig_types in
+    (* Given information about a field, returns:
+       - Class_sig.field representation of this field
+       - typed AST of the field's type annotation
+       - a function which will return a typed AST of the field's initializer expression.
+         Function should only be called after Class_sig.toplevels has been called on a
+         Class_sig.t containing this field, as that is when the initializer expression
+         gets checked.
+    *)
+    let mk_field cx tparams_map reason annot init =
+      let (annot_or_inferred, annot_ast) = Anno.mk_type_annotation cx tparams_map reason annot in
+      let annot_t = type_t_of_annotated_or_inferred annot_or_inferred in
+      let (field, get_init) =
+        match init with
+        | Ast.Class.Property.Declared -> (Annot annot_t, Fn.const Ast.Class.Property.Declared)
+        | Ast.Class.Property.Uninitialized ->
+          (Annot annot_t, Fn.const Ast.Class.Property.Uninitialized)
+        | Ast.Class.Property.Initialized expr ->
+          let value_ref : (ALoc.t, ALoc.t * Type.t) Ast.Expression.t option ref = ref None in
+          ( Infer
+              ( Func_stmt_sig.field_initializer tparams_map reason expr annot_or_inferred,
+                (fun (_, _, value_opt) -> value_ref := Some (Base.Option.value_exn value_opt))
+              ),
+            fun () ->
+              Ast.Class.Property.Initialized
+                (Base.Option.value !value_ref ~default:(Tast_utils.error_mapper#expression expr))
+          )
+      in
+      (field, annot_t, annot_ast, get_init)
+    in
+    let mk_method = mk_func_sig ~func_hint:Hint_None ~needs_this_param:false in
+    let mk_extends cx tparams_map = function
+      | None -> (Implicit { null = false }, None)
+      | Some (loc, { Ast.Class.Extends.expr; targs; comments }) ->
+        let (((_, c), _) as expr) = expression cx ~hint:Hint_None expr in
+        let (t, targs) = Anno.mk_super cx tparams_map loc c targs in
+        (Explicit t, Some (loc, { Ast.Class.Extends.expr; targs; comments }))
+    in
+    fun cx name_loc reason self cls ->
+      let {
+        Ast.Class.id;
+        body = (body_loc, { Ast.Class.Body.body = elements; comments = body_comments });
+        tparams;
+        extends;
+        implements;
+        class_decorators;
+        comments;
+      } =
+        cls
+      in
+      let class_decorators_ast =
+        Base.List.map ~f:Tast_utils.error_mapper#class_decorator class_decorators
+      in
+      let (tparams, tparams_map, tparams_ast) = Anno.mk_type_param_declarations cx tparams in
+      let (this_tparam, this_t) = mk_this self cx reason tparams in
+      let tparams_map_with_this = Subst_name.Map.add (Subst_name.Name "this") this_t tparams_map in
+      let (class_sig, extends_ast, implements_ast) =
+        let id = Context.make_aloc_id cx name_loc in
+        let (extends, extends_ast) = mk_extends cx tparams_map_with_this extends in
+        let (implements, implements_ast) =
+          match implements with
+          | None -> ([], None)
+          | Some (implements_loc, { Ast.Class.Implements.interfaces; comments }) ->
+            let (implements, interfaces_ast) =
+              interfaces
+              |> Base.List.map ~f:(fun (loc, i) ->
+                     let {
+                       Ast.Class.Implements.Interface.id =
+                         (id_loc, ({ Ast.Identifier.name; comments = _ } as id));
+                       targs;
+                     } =
+                       i
+                     in
+                     let c = Env.get_var ~lookup_mode:Env_sig.LookupMode.ForType cx name id_loc in
+                     let (typeapp, targs) =
+                       match targs with
+                       | None -> ((loc, c, None), None)
+                       | Some (targs_loc, { Ast.Type.TypeArgs.arguments = targs; comments }) ->
+                         let (ts, targs_ast) = Anno.convert_list cx tparams_map_with_this targs in
+                         ( (loc, c, Some ts),
+                           Some (targs_loc, { Ast.Type.TypeArgs.arguments = targs_ast; comments })
+                         )
+                     in
+                     ( typeapp,
+                       (loc, { Ast.Class.Implements.Interface.id = ((id_loc, c), id); targs })
+                     )
+                 )
+              |> List.split
+            in
+            ( implements,
+              Some (implements_loc, { Ast.Class.Implements.interfaces = interfaces_ast; comments })
             )
         in
-        (field, annot_t, annot_ast, get_init)
+        let super =
+          Class { Class_stmt_sig_types.extends; mixins = []; implements; this_t; this_tparam }
+        in
+        (empty id reason tparams tparams_map super, extends_ast, implements_ast)
       in
-      let mk_method = mk_func_sig ~func_hint:Hint_None ~needs_this_param:false in
-      let mk_extends cx tparams_map = function
-        | None -> (Implicit { null = false }, None)
-        | Some (loc, { Ast.Class.Extends.expr; targs; comments }) ->
-          let (((_, c), _) as expr) = expression cx ~hint:Hint_None expr in
-          let (t, targs) = Anno.mk_super cx tparams_map loc c targs in
-          (Explicit t, Some (loc, { Ast.Class.Extends.expr; targs; comments }))
+      (* In case there is no constructor, pick up a default one. *)
+      let class_sig =
+        if extends <> None then
+          (* Subclass default constructors are technically of the form (...args) =>
+             { super(...args) }, but we can approximate that using flow's existing
+             inheritance machinery. *)
+          (* TODO: Does this distinction matter for the type checker? *)
+          class_sig
+        else
+          let reason = replace_desc_reason RDefaultConstructor reason in
+          add_default_constructor reason class_sig
       in
-      fun cx name_loc reason self cls ->
-        let {
-          Ast.Class.id;
-          body = (body_loc, { Ast.Class.Body.body = elements; comments = body_comments });
-          tparams;
-          extends;
-          implements;
-          class_decorators;
-          comments;
-        } =
-          cls
-        in
-        let class_decorators_ast =
-          Base.List.map ~f:Tast_utils.error_mapper#class_decorator class_decorators
-        in
-        let (tparams, tparams_map, tparams_ast) = Anno.mk_type_param_declarations cx tparams in
-        let (this_tparam, this_t) = mk_this self cx reason tparams in
-        let tparams_map_with_this =
-          Subst_name.Map.add (Subst_name.Name "this") this_t tparams_map
-        in
-        let (class_sig, extends_ast, implements_ast) =
-          let id = Context.make_aloc_id cx name_loc in
-          let (extends, extends_ast) = mk_extends cx tparams_map_with_this extends in
-          let (implements, implements_ast) =
-            match implements with
-            | None -> ([], None)
-            | Some (implements_loc, { Ast.Class.Implements.interfaces; comments }) ->
-              let (implements, interfaces_ast) =
-                interfaces
-                |> Base.List.map ~f:(fun (loc, i) ->
-                       let {
-                         Ast.Class.Implements.Interface.id =
-                           (id_loc, ({ Ast.Identifier.name; comments = _ } as id));
-                         targs;
-                       } =
-                         i
-                       in
-                       let c = Env.get_var ~lookup_mode:Env_sig.LookupMode.ForType cx name id_loc in
-                       let (typeapp, targs) =
-                         match targs with
-                         | None -> ((loc, c, None), None)
-                         | Some (targs_loc, { Ast.Type.TypeArgs.arguments = targs; comments }) ->
-                           let (ts, targs_ast) = Anno.convert_list cx tparams_map_with_this targs in
-                           ( (loc, c, Some ts),
-                             Some (targs_loc, { Ast.Type.TypeArgs.arguments = targs_ast; comments })
-                           )
-                       in
-                       ( typeapp,
-                         (loc, { Ast.Class.Implements.Interface.id = ((id_loc, c), id); targs })
-                       )
-                   )
-                |> List.split
-              in
-              ( implements,
-                Some (implements_loc, { Ast.Class.Implements.interfaces = interfaces_ast; comments })
-              )
-          in
-          let super =
-            Class { Class_stmt_sig.extends; mixins = []; implements; this_t; this_tparam }
-          in
-          (empty id reason tparams tparams_map super, extends_ast, implements_ast)
-        in
-        (* In case there is no constructor, pick up a default one. *)
-        let class_sig =
-          if extends <> None then
-            (* Subclass default constructors are technically of the form (...args) =>
-               { super(...args) }, but we can approximate that using flow's existing
-               inheritance machinery. *)
-            (* TODO: Does this distinction matter for the type checker? *)
-            class_sig
-          else
-            let reason = replace_desc_reason RDefaultConstructor reason in
-            add_default_constructor reason class_sig
-        in
-        (* All classes have a static "name" property. *)
-        let class_sig = add_name_field class_sig in
+      (* All classes have a static "name" property. *)
+      let class_sig = add_name_field class_sig in
 
-        let check_duplicate_name public_seen_names member_loc name ~static ~private_ kind =
-          if private_ then
-            (* duplicate private names are a parser error - so we don't need to check them *)
-            public_seen_names
-          else
-            let names_map =
-              if static then
-                public_seen_names.static_names
-              else
-                public_seen_names.instance_names
-            in
-            let names_map' =
-              match SMap.find_opt name names_map with
-              | Some seen ->
-                (match (kind, seen) with
-                | (Class_Member_Getter, Class_Member_Setter)
-                | (Class_Member_Setter, Class_Member_Getter) ->
-                  (* One getter and one setter are allowed as long as it's not used as a field
-                     We use the special type here to indicate we've seen both a getter and a
-                     setter for the name so that future getters/setters can have an error raised. *)
-                  SMap.add name Class_Member_GetterSetter names_map
-                | _ ->
-                  Flow.add_output
-                    cx
-                    Error_message.(EDuplicateClassMember { loc = member_loc; name; static });
-                  names_map)
-              | None -> SMap.add name kind names_map
-            in
+      let check_duplicate_name public_seen_names member_loc name ~static ~private_ kind =
+        if private_ then
+          (* duplicate private names are a parser error - so we don't need to check them *)
+          public_seen_names
+        else
+          let names_map =
             if static then
-              { public_seen_names with static_names = names_map' }
+              public_seen_names.static_names
             else
-              { public_seen_names with instance_names = names_map' }
-        in
+              public_seen_names.instance_names
+          in
+          let names_map' =
+            match SMap.find_opt name names_map with
+            | Some seen ->
+              (match (kind, seen) with
+              | (Class_Member_Getter, Class_Member_Setter)
+              | (Class_Member_Setter, Class_Member_Getter) ->
+                (* One getter and one setter are allowed as long as it's not used as a field
+                   We use the special type here to indicate we've seen both a getter and a
+                   setter for the name so that future getters/setters can have an error raised. *)
+                SMap.add name Class_Member_GetterSetter names_map
+              | _ ->
+                Flow.add_output
+                  cx
+                  Error_message.(EDuplicateClassMember { loc = member_loc; name; static });
+                names_map)
+            | None -> SMap.add name kind names_map
+          in
+          if static then
+            { public_seen_names with static_names = names_map' }
+          else
+            { public_seen_names with instance_names = names_map' }
+      in
 
-        (* NOTE: We used to mine field declarations from field assignments in a
-           constructor as a convenience, but it was not worth it: often, all that did
-           was exchange a complaint about a missing field for a complaint about a
-           missing annotation. Moreover, it caused fields declared in the super class
-           to be redeclared if they were assigned in the constructor. So we don't do
-           it. In the future, we could do it again, but only for private fields. *)
+      (* NOTE: We used to mine field declarations from field assignments in a
+         constructor as a convenience, but it was not worth it: often, all that did
+         was exchange a complaint about a missing field for a complaint about a
+         missing annotation. Moreover, it caused fields declared in the super class
+         to be redeclared if they were assigned in the constructor. So we don't do
+         it. In the future, we could do it again, but only for private fields. *)
 
-        (* NOTE: field initializer expressions and method bodies don't get checked
-           until Class_sig.toplevels is called on class_sig. For this reason rather
-           than returning a typed AST, we'll return a function which returns a typed
-           AST, and this function shouldn't be called until after Class_sig.toplevels
-           has been called.
+      (* NOTE: field initializer expressions and method bodies don't get checked
+         until Class_sig.toplevels is called on class_sig. For this reason rather
+         than returning a typed AST, we'll return a function which returns a typed
+         AST, and this function shouldn't be called until after Class_sig.toplevels
+         has been called.
 
-           If a field/method ever gets shadowed later in the class, then its
-           initializer/body (respectively) will not get checked, and the corresponding
-           nodes of the typed AST will be filled in with error nodes.
-        *)
-        let (class_sig, rev_elements, _) =
-          List.fold_left
-            (let open Ast.Class in
-            fun (c, rev_elements, public_seen_names) ->
-              let add_method_sig_and_element
-                  ~method_loc
-                  ~name
-                  ~id_loc
-                  ~func_loc
-                  ~func
-                  ~kind
-                  ~private_
-                  ~static
-                  ~decorators
-                  ~comments
-                  ~get_typed_method_key =
-                Type_inference_hooks_js.dispatch_class_member_decl_hook cx self static name id_loc;
-                let decorators =
-                  Base.List.map ~f:Tast_utils.error_mapper#class_decorator decorators
-                in
-                (match kind with
-                | Method.Get
-                | Method.Set ->
-                  Flow_js.add_output cx (Error_message.EUnsafeGettersSetters method_loc)
-                | _ -> ());
-                let reason =
-                  Ast.Function.(func_reason ~async:func.async ~generator:func.generator method_loc)
-                in
-                let (method_sig, reconstruct_func) =
-                  mk_method cx tparams_map_with_this reason func
-                in
-                (* The body of a class method doesn't get checked until Class_sig.toplevels
-                   is called on the class sig (in this case c). The order of how the methods
-                   were arranged in the class is lost by the time this happens, so rather
-                   than attempting to return a list of method bodies from the Class_sig.toplevels
-                   function, we have it place the function bodies into a list via side effects.
-                   We use a similar approach for method types *)
-                let params_ref : (ALoc.t, ALoc.t * Type.t) Ast.Function.Params.t option ref =
-                  ref None
-                in
-                let body_ref : (ALoc.t, ALoc.t * Type.t) Ast.Function.body option ref = ref None in
-                let set_asts (params_opt, body_opt, _) =
-                  params_ref := Some (Base.Option.value_exn params_opt);
-                  body_ref := Some (Base.Option.value_exn body_opt)
-                in
-                let func_t_ref : Type.t option ref = ref None in
-                let set_type t = func_t_ref := Some t in
-                let get_element () =
-                  let params =
-                    Base.Option.value
-                      !params_ref
-                      ~default:(Tast_utils.error_mapper#function_params func.Ast.Function.params)
-                  in
-                  let body =
-                    Base.Option.value
-                      !body_ref
-                      ~default:(Tast_utils.error_mapper#function_body func.Ast.Function.body)
-                  in
-                  let func_t =
-                    Base.Option.value
-                      !func_t_ref
-                      ~default:(EmptyT.at id_loc |> with_trust bogus_trust)
-                  in
-                  let func = reconstruct_func params body func_t in
-                  Body.Method
-                    ( (method_loc, func_t),
-                      {
-                        Method.key = get_typed_method_key func_t;
-                        value = (func_loc, func);
-                        kind;
-                        static;
-                        decorators;
-                        comments;
-                      }
-                    )
-                in
-                let (add, class_member_kind) =
-                  match kind with
-                  | Method.Constructor ->
-                    let add = add_constructor (Some id_loc) ~set_asts ~set_type in
-                    (add, None)
-                  | Method.Method ->
-                    let add =
-                      if private_ then
-                        add_private_method ~static name id_loc ~set_asts ~set_type
-                      else
-                        add_method ~static name id_loc ~set_asts ~set_type
-                    in
-                    (add, Some Class_Member_Method)
-                  | Method.Get ->
-                    let add = add_getter ~static name id_loc ~set_asts ~set_type in
-                    (add, Some Class_Member_Getter)
-                  | Method.Set ->
-                    let add = add_setter ~static name id_loc ~set_asts ~set_type in
-                    (add, Some Class_Member_Setter)
-                in
-                let public_seen_names' =
-                  match class_member_kind with
-                  | Some k -> check_duplicate_name public_seen_names id_loc name ~static ~private_ k
-                  | None -> public_seen_names
-                in
-                (add method_sig c, get_element :: rev_elements, public_seen_names')
+         If a field/method ever gets shadowed later in the class, then its
+         initializer/body (respectively) will not get checked, and the corresponding
+         nodes of the typed AST will be filled in with error nodes.
+      *)
+      let (class_sig, rev_elements, _) =
+        List.fold_left
+          (let open Ast.Class in
+          fun (c, rev_elements, public_seen_names) ->
+            let add_method_sig_and_element
+                ~method_loc
+                ~name
+                ~id_loc
+                ~func_loc
+                ~func
+                ~kind
+                ~private_
+                ~static
+                ~decorators
+                ~comments
+                ~get_typed_method_key =
+              Type_inference_hooks_js.dispatch_class_member_decl_hook cx self static name id_loc;
+              let decorators =
+                Base.List.map ~f:Tast_utils.error_mapper#class_decorator decorators
               in
-              function
-              (* instance and static methods *)
-              | Body.Property (_, { Property.key = Ast.Expression.Object.Property.PrivateName _; _ })
-                ->
-                failwith "Internal Error: Found non-private field with private name"
-              | Body.Method
-                  ( method_loc,
+              (match kind with
+              | Method.Get
+              | Method.Set ->
+                Flow_js.add_output cx (Error_message.EUnsafeGettersSetters method_loc)
+              | _ -> ());
+              let reason =
+                Ast.Function.(func_reason ~async:func.async ~generator:func.generator method_loc)
+              in
+              let (method_sig, reconstruct_func) = mk_method cx tparams_map_with_this reason func in
+              (* The body of a class method doesn't get checked until Class_sig.toplevels
+                 is called on the class sig (in this case c). The order of how the methods
+                 were arranged in the class is lost by the time this happens, so rather
+                 than attempting to return a list of method bodies from the Class_sig.toplevels
+                 function, we have it place the function bodies into a list via side effects.
+                 We use a similar approach for method types *)
+              let params_ref : (ALoc.t, ALoc.t * Type.t) Ast.Function.Params.t option ref =
+                ref None
+              in
+              let body_ref : (ALoc.t, ALoc.t * Type.t) Ast.Function.body option ref = ref None in
+              let set_asts (params_opt, body_opt, _) =
+                params_ref := Some (Base.Option.value_exn params_opt);
+                body_ref := Some (Base.Option.value_exn body_opt)
+              in
+              let func_t_ref : Type.t option ref = ref None in
+              let set_type t = func_t_ref := Some t in
+              let get_element () =
+                let params =
+                  Base.Option.value
+                    !params_ref
+                    ~default:(Tast_utils.error_mapper#function_params func.Ast.Function.params)
+                in
+                let body =
+                  Base.Option.value
+                    !body_ref
+                    ~default:(Tast_utils.error_mapper#function_body func.Ast.Function.body)
+                in
+                let func_t =
+                  Base.Option.value !func_t_ref ~default:(EmptyT.at id_loc |> with_trust bogus_trust)
+                in
+                let func = reconstruct_func params body func_t in
+                Body.Method
+                  ( (method_loc, func_t),
                     {
-                      Method.key =
-                        Ast.Expression.Object.Property.PrivateName
-                          (id_loc, ({ Ast.PrivateName.name; comments = _ } as id));
+                      Method.key = get_typed_method_key func_t;
                       value = (func_loc, func);
                       kind;
                       static;
                       decorators;
                       comments;
                     }
-                  ) ->
-                add_method_sig_and_element
-                  ~method_loc
-                  ~name
-                  ~id_loc
-                  ~func_loc
-                  ~func
-                  ~kind
-                  ~private_:true
-                  ~static
-                  ~decorators
-                  ~comments
-                  ~get_typed_method_key:(fun _ ->
-                    Ast.Expression.Object.Property.PrivateName (id_loc, id)
-                )
-              | Body.Method
-                  ( method_loc,
+                  )
+              in
+              let (add, class_member_kind) =
+                match kind with
+                | Method.Constructor ->
+                  let add = add_constructor (Some id_loc) ~set_asts ~set_type in
+                  (add, None)
+                | Method.Method ->
+                  let add =
+                    if private_ then
+                      add_private_method ~static name id_loc ~set_asts ~set_type
+                    else
+                      add_method ~static name id_loc ~set_asts ~set_type
+                  in
+                  (add, Some Class_Member_Method)
+                | Method.Get ->
+                  let add = add_getter ~static name id_loc ~set_asts ~set_type in
+                  (add, Some Class_Member_Getter)
+                | Method.Set ->
+                  let add = add_setter ~static name id_loc ~set_asts ~set_type in
+                  (add, Some Class_Member_Setter)
+              in
+              let public_seen_names' =
+                match class_member_kind with
+                | Some k -> check_duplicate_name public_seen_names id_loc name ~static ~private_ k
+                | None -> public_seen_names
+              in
+              (add method_sig c, get_element :: rev_elements, public_seen_names')
+            in
+            function
+            (* instance and static methods *)
+            | Body.Property (_, { Property.key = Ast.Expression.Object.Property.PrivateName _; _ })
+              ->
+              failwith "Internal Error: Found non-private field with private name"
+            | Body.Method
+                ( method_loc,
+                  {
+                    Method.key =
+                      Ast.Expression.Object.Property.PrivateName
+                        (id_loc, ({ Ast.PrivateName.name; comments = _ } as id));
+                    value = (func_loc, func);
+                    kind;
+                    static;
+                    decorators;
+                    comments;
+                  }
+                ) ->
+              add_method_sig_and_element
+                ~method_loc
+                ~name
+                ~id_loc
+                ~func_loc
+                ~func
+                ~kind
+                ~private_:true
+                ~static
+                ~decorators
+                ~comments
+                ~get_typed_method_key:(fun _ ->
+                  Ast.Expression.Object.Property.PrivateName (id_loc, id)
+              )
+            | Body.Method
+                ( method_loc,
+                  {
+                    Method.key =
+                      Ast.Expression.Object.Property.Identifier
+                        (id_loc, ({ Ast.Identifier.name; comments = _ } as id));
+                    value = (func_loc, func);
+                    kind;
+                    static;
+                    decorators;
+                    comments;
+                  }
+                ) ->
+              add_method_sig_and_element
+                ~method_loc
+                ~name
+                ~id_loc
+                ~func_loc
+                ~func
+                ~kind
+                ~private_:false
+                ~static
+                ~decorators
+                ~comments
+                ~get_typed_method_key:(fun func_t ->
+                  Ast.Expression.Object.Property.Identifier ((id_loc, func_t), id)
+              )
+            (* fields *)
+            | Body.PrivateField
+                ( loc,
+                  {
+                    PrivateField.key = (id_loc, { Ast.PrivateName.name; comments = _ }) as key;
+                    annot;
+                    value;
+                    static;
+                    variance;
+                    comments;
+                  }
+                ) ->
+              Type_inference_hooks_js.dispatch_class_member_decl_hook cx self static name id_loc;
+              let reason = mk_reason (RProperty (Some (OrdinaryName name))) loc in
+              let polarity = Anno.polarity variance in
+              let (field, annot_t, annot_ast, get_value) =
+                mk_field cx tparams_map_with_this reason annot value
+              in
+              let get_element () =
+                Body.PrivateField
+                  ( (loc, annot_t),
                     {
-                      Method.key =
-                        Ast.Expression.Object.Property.Identifier
-                          (id_loc, ({ Ast.Identifier.name; comments = _ } as id));
-                      value = (func_loc, func);
-                      kind;
-                      static;
-                      decorators;
-                      comments;
-                    }
-                  ) ->
-                add_method_sig_and_element
-                  ~method_loc
-                  ~name
-                  ~id_loc
-                  ~func_loc
-                  ~func
-                  ~kind
-                  ~private_:false
-                  ~static
-                  ~decorators
-                  ~comments
-                  ~get_typed_method_key:(fun func_t ->
-                    Ast.Expression.Object.Property.Identifier ((id_loc, func_t), id)
-                )
-              (* fields *)
-              | Body.PrivateField
-                  ( loc,
-                    {
-                      PrivateField.key = (id_loc, { Ast.PrivateName.name; comments = _ }) as key;
-                      annot;
-                      value;
+                      PrivateField.key;
+                      annot = annot_ast;
+                      value = get_value ();
                       static;
                       variance;
                       comments;
                     }
-                  ) ->
-                Type_inference_hooks_js.dispatch_class_member_decl_hook cx self static name id_loc;
-                let reason = mk_reason (RProperty (Some (OrdinaryName name))) loc in
-                let polarity = Anno.polarity variance in
-                let (field, annot_t, annot_ast, get_value) =
-                  mk_field cx tparams_map_with_this reason annot value
-                in
-                let get_element () =
-                  Body.PrivateField
-                    ( (loc, annot_t),
-                      {
-                        PrivateField.key;
-                        annot = annot_ast;
-                        value = get_value ();
-                        static;
-                        variance;
-                        comments;
-                      }
-                    )
-                in
-                let public_seen_names' =
-                  check_duplicate_name
-                    public_seen_names
-                    id_loc
-                    name
-                    ~static
-                    ~private_:true
-                    Class_Member_Field
-                in
-                ( add_private_field ~static name id_loc polarity field c,
-                  get_element :: rev_elements,
-                  public_seen_names'
-                )
-              | Body.Property
-                  ( loc,
+                  )
+              in
+              let public_seen_names' =
+                check_duplicate_name
+                  public_seen_names
+                  id_loc
+                  name
+                  ~static
+                  ~private_:true
+                  Class_Member_Field
+              in
+              ( add_private_field ~static name id_loc polarity field c,
+                get_element :: rev_elements,
+                public_seen_names'
+              )
+            | Body.Property
+                ( loc,
+                  {
+                    Property.key =
+                      Ast.Expression.Object.Property.Identifier
+                        (id_loc, ({ Ast.Identifier.name; comments = _ } as id));
+                    annot;
+                    value;
+                    static;
+                    variance;
+                    comments;
+                  }
+                ) ->
+              Type_inference_hooks_js.dispatch_class_member_decl_hook cx self static name id_loc;
+              let reason = mk_reason (RProperty (Some (OrdinaryName name))) loc in
+              let polarity = Anno.polarity variance in
+              let (field, annot_t, annot, get_value) =
+                mk_field cx tparams_map_with_this reason annot value
+              in
+              let get_element () =
+                Body.Property
+                  ( (loc, annot_t),
                     {
                       Property.key =
-                        Ast.Expression.Object.Property.Identifier
-                          (id_loc, ({ Ast.Identifier.name; comments = _ } as id));
+                        Ast.Expression.Object.Property.Identifier ((id_loc, annot_t), id);
                       annot;
-                      value;
+                      value = get_value ();
                       static;
                       variance;
                       comments;
                     }
-                  ) ->
-                Type_inference_hooks_js.dispatch_class_member_decl_hook cx self static name id_loc;
-                let reason = mk_reason (RProperty (Some (OrdinaryName name))) loc in
-                let polarity = Anno.polarity variance in
-                let (field, annot_t, annot, get_value) =
-                  mk_field cx tparams_map_with_this reason annot value
-                in
-                let get_element () =
-                  Body.Property
-                    ( (loc, annot_t),
-                      {
-                        Property.key =
-                          Ast.Expression.Object.Property.Identifier ((id_loc, annot_t), id);
-                        annot;
-                        value = get_value ();
-                        static;
-                        variance;
-                        comments;
-                      }
-                    )
-                in
-                let public_seen_names' =
-                  check_duplicate_name
-                    public_seen_names
-                    id_loc
-                    name
-                    ~static
-                    ~private_:false
-                    Class_Member_Field
-                in
-                ( add_field ~static name id_loc polarity field c,
-                  get_element :: rev_elements,
-                  public_seen_names'
-                )
-              (* literal LHS *)
-              | ( Body.Method (loc, { Method.key = Ast.Expression.Object.Property.Literal _; _ })
-                | Body.Property (loc, { Property.key = Ast.Expression.Object.Property.Literal _; _ })
-                  ) as elem ->
-                Flow.add_output cx Error_message.(EUnsupportedSyntax (loc, ClassPropertyLiteral));
-                ( c,
-                  (fun () -> Tast_utils.error_mapper#class_element elem) :: rev_elements,
+                  )
+              in
+              let public_seen_names' =
+                check_duplicate_name
                   public_seen_names
-                )
-              (* computed LHS *)
-              | ( Body.Method (loc, { Method.key = Ast.Expression.Object.Property.Computed _; _ })
-                | Body.Property
-                    (loc, { Property.key = Ast.Expression.Object.Property.Computed _; _ }) ) as elem
-                ->
-                Flow.add_output cx Error_message.(EUnsupportedSyntax (loc, ClassPropertyComputed));
-                ( c,
-                  (fun () -> Tast_utils.error_mapper#class_element elem) :: rev_elements,
-                  public_seen_names
-                )
-            )
-            (class_sig, [], empty_seen_names)
-            elements
-        in
-        let elements = List.rev rev_elements in
-        ( class_sig,
-          fun class_t ->
-            {
-              Ast.Class.id = Base.Option.map ~f:(fun (loc, name) -> ((loc, class_t), name)) id;
-              body =
-                ( body_loc,
-                  {
-                    Ast.Class.Body.body = Base.List.map ~f:(fun f -> f ()) elements;
-                    comments = body_comments;
-                  }
-                );
-              tparams = tparams_ast;
-              extends = extends_ast;
-              implements = implements_ast;
-              class_decorators = class_decorators_ast;
-              comments;
-            }
-        )
-    )
+                  id_loc
+                  name
+                  ~static
+                  ~private_:false
+                  Class_Member_Field
+              in
+              ( add_field ~static name id_loc polarity field c,
+                get_element :: rev_elements,
+                public_seen_names'
+              )
+            (* literal LHS *)
+            | ( Body.Method (loc, { Method.key = Ast.Expression.Object.Property.Literal _; _ })
+              | Body.Property (loc, { Property.key = Ast.Expression.Object.Property.Literal _; _ })
+                ) as elem ->
+              Flow.add_output cx Error_message.(EUnsupportedSyntax (loc, ClassPropertyLiteral));
+              ( c,
+                (fun () -> Tast_utils.error_mapper#class_element elem) :: rev_elements,
+                public_seen_names
+              )
+            (* computed LHS *)
+            | ( Body.Method (loc, { Method.key = Ast.Expression.Object.Property.Computed _; _ })
+              | Body.Property (loc, { Property.key = Ast.Expression.Object.Property.Computed _; _ })
+                ) as elem ->
+              Flow.add_output cx Error_message.(EUnsupportedSyntax (loc, ClassPropertyComputed));
+              ( c,
+                (fun () -> Tast_utils.error_mapper#class_element elem) :: rev_elements,
+                public_seen_names
+              )
+          )
+          (class_sig, [], empty_seen_names)
+          elements
+      in
+      let elements = List.rev rev_elements in
+      ( class_sig,
+        fun class_t ->
+          {
+            Ast.Class.id = Base.Option.map ~f:(fun (loc, name) -> ((loc, class_t), name)) id;
+            body =
+              ( body_loc,
+                {
+                  Ast.Class.Body.body = Base.List.map ~f:(fun f -> f ()) elements;
+                  comments = body_comments;
+                }
+              );
+            tparams = tparams_ast;
+            extends = extends_ast;
+            implements = implements_ast;
+            class_decorators = class_decorators_ast;
+            comments;
+          }
+      )
 
   and mk_func_sig =
     let predicate_function_kind cx loc params =
@@ -8862,25 +8899,26 @@ struct
           let (t, id) =
             id_param cx tparams_map id (fun name -> mk_reason (RParameter (Some name)) ploc)
           in
-          (t, Func_stmt_config.Id id)
+          (t, Func_stmt_config_types.Types.Id id)
         | Ast.Pattern.Object { Ast.Pattern.Object.annot; properties; comments } ->
           let reason = mk_reason RDestructuring ploc in
           let (annotated_or_inferred, annot) =
             Anno.mk_type_annotation cx tparams_map reason annot
           in
           let t = type_t_of_annotated_or_inferred annotated_or_inferred in
-          (t, Func_stmt_config.Object { annot; properties; comments })
+          (t, Func_stmt_config_types.Types.Object { annot; properties; comments })
         | Ast.Pattern.Array { Ast.Pattern.Array.annot; elements; comments } ->
           let reason = mk_reason RDestructuring ploc in
           let (annotated_or_inferred, annot) =
             Anno.mk_type_annotation cx tparams_map reason annot
           in
           let t = type_t_of_annotated_or_inferred annotated_or_inferred in
-          (t, Func_stmt_config.Array { annot; elements; comments })
+          (t, Func_stmt_config_types.Types.Array { annot; elements; comments })
         | Ast.Pattern.Expression _ -> failwith "unexpected expression pattern in param"
       in
       RequireAnnot.require_annot_on_pattern cx ~hint (reason_of_t t) patt;
-      Func_stmt_config.Param { t; loc; ploc; pattern; default; has_anno = has_param_anno }
+      Func_stmt_config_types.Types.Param
+        { t; loc; ploc; pattern; default; has_anno = has_param_anno }
     in
     let mk_rest cx ~hint tparams_map rest =
       let (loc, { Ast.Function.RestParam.argument = (ploc, patt); comments = _ }) = rest in
@@ -8895,7 +8933,7 @@ struct
           id_param cx tparams_map id (fun name -> mk_reason (RRestParameter (Some name)) ploc)
         in
         RequireAnnot.require_annot_on_pattern cx ~hint (reason_of_t t) patt;
-        Ok (Func_stmt_config.Rest { t; loc; ploc; id; has_anno = has_param_anno })
+        Ok (Func_stmt_config_types.Types.Rest { t; loc; ploc; id; has_anno = has_param_anno })
       | Ast.Pattern.Object _
       | Ast.Pattern.Array _
       | Ast.Pattern.Expression _ ->
@@ -8905,7 +8943,7 @@ struct
     let mk_this
         cx tparams_map (loc, { Ast.Function.ThisParam.annot = (annot_loc, annot); comments = _ }) =
       let (((_, t), _) as annot) = Anno.convert cx tparams_map annot in
-      Func_stmt_config.This { t; loc; annot = (annot_loc, annot) }
+      Func_stmt_config_types.Types.This { t; loc; annot = (annot_loc, annot) }
     in
     let require_this_annot cx func param_loc = function
       | None when Context.enforce_this_annotations cx ->
@@ -9071,7 +9109,7 @@ struct
       let return_t =
         mk_inference_target_with_annots ~hint:return_hint return_annotated_or_inferred
       in
-      ( { Func_stmt_sig.reason; kind; tparams; tparams_map; fparams; body; return_t },
+      ( { Func_stmt_sig_types.reason; kind; tparams; tparams_map; fparams; body; return_t },
         fun params body fun_type ->
           {
             func with

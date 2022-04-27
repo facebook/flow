@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-module type S = sig
+module type Config_types = sig
   type 'T ast
 
   type 'T param_ast
@@ -14,67 +14,74 @@ module type S = sig
 
   type 'T this_ast
 
-  type t
-
   type param
 
   type rest
 
   type this_param
 
-  type reconstruct =
-    (ALoc.t * Type.t) param_ast list ->
-    (ALoc.t * Type.t) rest_ast option ->
-    (ALoc.t * Type.t) this_ast option ->
-    (ALoc.t * Type.t) ast option
-
-  val empty : reconstruct -> t
-
-  val add_param : param -> t -> t
-
-  val add_rest : rest -> t -> t
-
-  val add_this : this_param -> t -> t
-
-  val value : t -> Type.fun_param list
-
-  val rest : t -> Type.fun_rest_param option
-
-  val this : t -> Type.t option
-
-  val eval : Context.t -> t -> (ALoc.t * Type.t) ast option
+  type pattern
 end
 
 module type Config = sig
-  type 'T ast
+  module Types : Config_types
 
-  type 'T param_ast
+  val param_type : Types.param -> Type.fun_param
 
-  type 'T rest_ast
+  val rest_type : Types.rest -> Type.fun_rest_param
 
-  type 'T this_ast
+  val this_type : Types.this_param -> Type.t
 
-  type param
+  val subst_param : Context.t -> Type.t Subst_name.Map.t -> Types.param -> Types.param
 
-  type rest
+  val subst_rest : Context.t -> Type.t Subst_name.Map.t -> Types.rest -> Types.rest
 
-  type this_param
+  val subst_this : Context.t -> Type.t Subst_name.Map.t -> Types.this_param -> Types.this_param
 
-  val param_type : param -> Type.fun_param
+  val eval_param : Context.t -> Types.param -> (ALoc.t * Type.t) Types.param_ast
 
-  val rest_type : rest -> Type.fun_rest_param
+  val eval_rest : Context.t -> Types.rest -> (ALoc.t * Type.t) Types.rest_ast
 
-  val this_type : this_param -> Type.t
+  val eval_this : Context.t -> Types.this_param -> (ALoc.t * Type.t) Types.this_ast
+end
 
-  val subst_param : Context.t -> Type.t Subst_name.Map.t -> param -> param
+module type S_T = sig
+  module Config : Config_types
 
-  val subst_rest : Context.t -> Type.t Subst_name.Map.t -> rest -> rest
+  type reconstruct =
+    (ALoc.t * Type.t) Config.param_ast list ->
+    (ALoc.t * Type.t) Config.rest_ast option ->
+    (ALoc.t * Type.t) Config.this_ast option ->
+    (ALoc.t * Type.t) Config.ast option
 
-  val subst_this : Context.t -> Type.t Subst_name.Map.t -> this_param -> this_param
+  type t = {
+    params_rev: Config.param list;
+    rest: Config.rest option;
+    this_: Config.this_param option;
+    reconstruct: reconstruct;
+  }
+end
 
-  val eval_param : Context.t -> param -> (ALoc.t * Type.t) param_ast
+module type S = sig
+  module Config_types : Config_types
 
-  val eval_rest : Context.t -> rest -> (ALoc.t * Type.t) rest_ast
+  module Config : Config with module Types := Config_types
 
-  val eval_this : Context.t -> this_param -> (ALoc.t * Type.t) this_ast
+  module Types : S_T with module Config := Config_types
+
+  val empty : Types.reconstruct -> Types.t
+
+  val add_param : Config_types.param -> Types.t -> Types.t
+
+  val add_rest : Config_types.rest -> Types.t -> Types.t
+
+  val add_this : Config_types.this_param -> Types.t -> Types.t
+
+  val value : Types.t -> Type.fun_param list
+
+  val rest : Types.t -> Type.fun_rest_param option
+
+  val this : Types.t -> Type.t option
+
+  val eval : Context.t -> Types.t -> (ALoc.t * Type.t) Config_types.ast option
 end

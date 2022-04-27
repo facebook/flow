@@ -14,10 +14,14 @@ type kind =
   | Predicate
   | Ctor
 
-module type S = sig
-  type func_params
+module type S_T = sig
+  module Config : Func_params_intf.Config_types
 
-  type func_params_tast
+  module Param : Func_params.Types.S with module Config := Config
+
+  type func_params = Param.t
+
+  type func_params_tast = (ALoc.t * Type.t) Config.ast
 
   type t = {
     reason: Reason.t;
@@ -28,6 +32,18 @@ module type S = sig
     body: (ALoc.t, ALoc.t) Flow_ast.Function.body option;
     return_t: Type.annotated_or_inferred;
   }
+end
+
+module type S = sig
+  module Config_types : Func_params.Config_types
+
+  module Config : Func_params_intf.Config with module Types := Config_types
+
+  module Param : Func_params.S with module Config_types := Config_types and module Config := Config
+
+  module Types : S_T with module Config := Config_types and module Param := Param.Types
+
+  open Types
 
   (** 1. Constructors *)
 

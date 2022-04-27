@@ -400,7 +400,8 @@ module Make_Inference (Env : Env_sig.S) = struct
 
   and Destructuring_ : Destructuring_sig.S = Destructuring.Make (Env) (Statement_)
 
-  and Func_stmt_config_ : Func_stmt_config_sig.S =
+  and Func_stmt_config_ :
+    (Func_stmt_config_sig.S with module Types := Func_stmt_config_types.Types) =
     Func_stmt_config.Make (Env) (Destructuring_) (Statement_)
 
   module Statement = Statement_

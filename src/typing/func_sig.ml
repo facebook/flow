@@ -13,33 +13,53 @@ open Type_hint
 open TypeUtil
 include Func_sig_intf
 
+module Types = struct
+  module type S = S_T
+
+  module Make
+      (Config : Func_params_intf.Config_types)
+      (Param : Func_params.Types.S with module Config := Config) =
+  struct
+    module Config = Config
+    module Param = Param
+
+    type func_params = Param.t
+
+    type func_params_tast = (ALoc.t * Type.t) Config.ast
+
+    type t = {
+      reason: reason;
+      kind: kind;
+      tparams: Type.typeparams;
+      tparams_map: Type.t Subst_name.Map.t;
+      fparams: func_params;
+      body: (ALoc.t, ALoc.t) Ast.Function.body option;
+      return_t: Type.annotated_or_inferred;
+    }
+  end
+end
+
 module Make
     (Env : Env_sig.S)
     (Abnormal : Abnormal_sig.S with module Env := Env)
     (Statement : Statement_sig.S with module Env := Env)
-    (F : Func_params.S) :
-  S with type func_params = F.t and type func_params_tast = (ALoc.t * Type.t) F.ast = struct
+    (CT : Func_params.Config_types)
+    (C : Func_params.Config with module Types := CT)
+    (F : Func_params.S with module Config_types := CT and module Config := C)
+    (T : Types.S with module Config := CT and module Param := F.Types) :
+  S with module Config_types = CT and module Config = C and module Param = F and module Types = T =
+struct
   module Toplevels = Toplevels.DependencyToplevels (Env) (Abnormal)
-
-  type func_params = F.t
-
-  type func_params_tast = (ALoc.t * Type.t) F.ast
-
-  type t = {
-    reason: reason;
-    kind: kind;
-    tparams: Type.typeparams;
-    tparams_map: Type.t Subst_name.Map.t;
-    fparams: func_params;
-    body: (ALoc.t, ALoc.t) Ast.Function.body option;
-    return_t: Type.annotated_or_inferred;
-  }
+  module Config_types = CT
+  module Types = T
+  module Config = C
+  module Param = F
 
   let this_param = F.this
 
   let default_constructor reason =
     {
-      reason;
+      Types.reason;
       kind = Ctor;
       tparams = None;
       tparams_map = Subst_name.Map.empty;
@@ -50,7 +70,7 @@ module Make
 
   let field_initializer tparams_map reason expr return_annot_or_inferred =
     {
-      reason;
+      Types.reason;
       kind = FieldInit expr;
       tparams = None;
       tparams_map;
@@ -59,7 +79,7 @@ module Make
       return_t = return_annot_or_inferred;
     }
 
-  let functiontype cx this_default { reason; kind; tparams; fparams; return_t; _ } =
+  let functiontype cx this_default { Types.reason; kind; tparams; fparams; return_t; _ } =
     let make_trust = Context.trust_constructor cx in
     let static =
       let proto = FunProtoT reason in
@@ -78,7 +98,7 @@ module Make
     let t = DefT (reason, make_trust (), FunT (static, funtype)) in
     poly_type_of_tparams (Type.Poly.generate_id ()) tparams t
 
-  let methodtype this_default { reason; tparams; fparams; return_t; _ } =
+  let methodtype this_default { Types.reason; tparams; fparams; return_t; _ } =
     let params = F.value fparams in
     let (params_names, params_tlist) = List.split params in
     let rest_param = F.rest fparams in
@@ -103,15 +123,16 @@ module Make
     in
     poly_type_of_tparams (Type.Poly.generate_id ()) tparams t
 
-  let gettertype ({ return_t; _ } : t) = TypeUtil.type_t_of_annotated_or_inferred return_t
+  let gettertype ({ Types.return_t; _ } : Types.t) =
+    TypeUtil.type_t_of_annotated_or_inferred return_t
 
-  let settertype { fparams; _ } =
+  let settertype { Types.fparams; _ } =
     match F.value fparams with
     | [(_, param_t)] -> param_t
     | _ -> failwith "Setter property with unexpected type"
 
   let toplevels cx this_recipe super x =
-    let { reason = reason_fn; kind; tparams_map; fparams; body; return_t; _ } = x in
+    let { Types.reason = reason_fn; kind; tparams_map; fparams; body; return_t; _ } = x in
     let loc =
       let open Ast.Function in
       match body with
@@ -351,14 +372,14 @@ module Make
     Env.update_env loc env;
 
     (* return a tuple of (function body AST option, field initializer AST option).
-       - the function body option is Some _ if the func sig's body was Some, and
-         None if the func sig's body was None.
-       - the field initializer is Some expr' if the func sig's kind was FieldInit expr,
+       - the function body option is Some _ if the Param sig's body was Some, and
+         None if the Param sig's body was None.
+       - the field initializer is Some expr' if the Param sig's kind was FieldInit expr,
          where expr' is the typed AST translation of expr.
     *)
     (this_t, params_ast, body_ast, init_ast)
 
-  let to_ctor_sig f = { f with kind = Ctor }
+  let to_ctor_sig f = { f with Types.kind = Ctor }
 end
 
 let return_loc = function

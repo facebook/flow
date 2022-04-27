@@ -18,11 +18,42 @@ module type S = sig
 
   module Anno : Type_annotation_sig.S with module Env := Env
 
-  module Func_stmt_params : Func_params_intf.S
+  module Func_stmt_config : Func_stmt_config_sig.S with module Types := Func_stmt_config_types.Types
 
-  module Func_stmt_sig : Func_sig_intf.S with type func_params := Func_stmt_params.t
+  module Func_stmt_params_types :
+    Func_params_intf.S_T with module Config := Func_stmt_config_types.Types
 
-  module Class_stmt_sig : Class_sig_intf.S
+  module Func_stmt_params :
+    Func_params.S
+      with module Config_types := Func_stmt_config_types.Types
+       and module Config := Func_stmt_config
+       and module Types = Func_stmt_params_types
+
+  module Func_stmt_sig_types :
+    Func_sig_intf.S_T
+      with module Config := Func_stmt_config_types.Types
+       and module Param := Func_stmt_params_types
+
+  module Func_stmt_sig :
+    Func_sig_intf.S
+      with module Config_types := Func_stmt_config_types.Types
+      with module Config := Func_stmt_config
+       and module Param := Func_stmt_params
+       and module Types = Func_stmt_sig_types
+
+  module Class_stmt_sig_types :
+    Class_sig_intf.S_T
+      with module Config := Func_stmt_config_types.Types
+       and module Param := Func_stmt_params_types
+       and module Func := Func_stmt_sig_types
+
+  module Class_stmt_sig :
+    Class_sig_intf.S
+      with module Config_types := Func_stmt_config_types.Types
+       and module Config := Func_stmt_config
+       and module Param := Func_stmt_params
+       and module Func := Func_stmt_sig
+       and module Types = Class_stmt_sig_types
 
   val expression :
     ?cond:Type.cond_context ->
@@ -54,7 +85,7 @@ module type S = sig
     Type.t Subst_name.Map.t ->
     Reason.reason ->
     (ALoc.t, ALoc.t) Ast.Function.t ->
-    Func_stmt_sig.t
+    Func_stmt_sig.Types.t
     * ((ALoc.t, ALoc.t * Type.t) Ast.Function.Params.t ->
       (ALoc.t, ALoc.t * Type.t) Ast.Function.body ->
       Type.t ->
@@ -87,7 +118,7 @@ module type S = sig
     Reason.t ->
     Type.t ->
     (ALoc.t, ALoc.t) Ast.Class.t ->
-    Class_stmt_sig.t * (Type.t -> (ALoc.t, ALoc.t * Type.t) Ast.Class.t)
+    Class_stmt_sig.Types.t * (Type.t -> (ALoc.t, ALoc.t * Type.t) Ast.Class.t)
 
   val type_alias :
     Context.t ->
