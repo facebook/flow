@@ -1,0 +1,11 @@
+No errors!
+Error ------------------------------------------------------------------------------------------------- dependent.js:5:7
+
+Unexpected identifier, expected the end of an expression statement (`;`)
+
+   5| parse error
+            ^^^^^
+
+
+
+Found 1 error

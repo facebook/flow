@@ -1271,10 +1271,26 @@ end = struct
       Module_js.clear_filename_cache ();
       commit_modules ~transaction ~options ~profiling ~workers ~duplicate_providers dirty_modules
     in
+
+    let unparsed_or_deleted = FilenameSet.union unparsed_set deleted in
+
     (* direct_dependent_files are unchanged files which directly depend on changed modules,
        or are new / changed files that are phantom dependents. *)
     let%lwt direct_dependent_files =
       Memory_utils.with_memory_timer_lwt ~options "DirectDependentFiles" profiling (fun () ->
+          if not (FilenameSet.disjoint old_parsed unparsed_or_deleted) then
+            (* unparsed/deleted files can't be direct dependents. a previously-parsed
+               file may be cached as a direct dependent of some other file. so if any
+               files are no longer parsed, we invalidate the cache to clear them out of
+               any other files' caches.
+
+               note: we could search the cache for entries containing these files. we
+               could also just deal with bogus entries downstream, like by ignoring
+               unparsed direct dependents in resolve_requires, but that's fragile.
+               really, the solution is to make calc_direct_dependents fast so we don't
+               need this cache. *)
+            DirectDependentFilesCache.clear ();
+
           DirectDependentFilesCache.with_cache
             ~cache_key:new_or_changed_or_deleted
             ~on_miss:
@@ -1311,8 +1327,8 @@ end = struct
               ~parsed
           in
           let old_dependency_info = env.ServerEnv.dependency_info in
-          let to_remove = FilenameSet.union unparsed_set deleted in
-          Lwt.return (Dependency_info.update old_dependency_info partial_dependency_graph to_remove)
+          Lwt.return
+            (Dependency_info.update old_dependency_info partial_dependency_graph unparsed_or_deleted)
       )
     in
     (* Here's how to update unparsed:
