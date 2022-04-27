@@ -1,3 +1,54 @@
+Error ------------------------------------------------------------------------------------------------------ any.js:12:6
+
+Cannot cast `a` to empty because `A` [1] is incompatible with empty [2]. [incompatible-cast]
+
+   any.js:12:6
+   12|     (a: empty); // error A ~> empty
+            ^
+
+References:
+   any.js:11:18
+   11| if (a instanceof A) {
+                        ^ [1]
+   any.js:12:9
+   12|     (a: empty); // error A ~> empty
+               ^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------------ any.js:15:6
+
+Cannot cast `a` to empty because `P` [1] is incompatible with empty [2]. [incompatible-cast]
+
+   any.js:15:6
+   15|     (a: empty); // error P ~> empty
+            ^
+
+References:
+   any.js:14:18
+   14| if (a instanceof P) {
+                        ^ [1]
+   any.js:15:9
+   15|     (a: empty); // error P ~> empty
+               ^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------------ any.js:16:6
+
+Cannot cast `a.n` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+
+   any.js:16:6
+   16|     (a.n: empty); // error number ~> empty
+            ^^^
+
+References:
+   any.js:5:6
+    5|   n: number;
+            ^^^^^^ [1]
+   any.js:16:11
+   16|     (a.n: empty); // error number ~> empty
+                 ^^^^^ [2]
+
+
 Error ---------------------------------------------------------------------------------------------- instanceof.js:17:34
 
 Cannot assign `'1337'` to `g.foo` because string [1] is incompatible with number [2]. [incompatible-type]
@@ -157,4 +208,4 @@ References:
 
 
 
-Found 12 errors
+Found 15 errors

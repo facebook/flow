@@ -7511,9 +7511,9 @@ struct
         trace
         ~use_op:unknown_use
         (reposition cx ~trace (aloc_of_reason r) a, OpenT result)
-    (* If we're refining mixed with instanceof A, then flow A to the result *)
+    (* If we're refining `mixed` or `any` with instanceof A, then flow A to the result *)
     | ( true,
-        DefT (_, _, MixedT _),
+        (DefT (_, _, MixedT _) | AnyT _),
         DefT (class_reason, _, ClassT (DefT (instance_reason, _, InstanceT _) as a))
       ) ->
       let desc = desc_of_reason instance_reason in
