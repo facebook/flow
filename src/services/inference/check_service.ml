@@ -197,7 +197,8 @@ let mk_check_file ~options ~reader ~cache () =
         | None -> unchecked_module_t cx mref))
   and sig_module_t cx file_key parse _loc =
     let create_file = dep_file file_key parse in
-    let file = Check_cache.find_or_create cache ~find_leader ~master_cx ~create_file file_key in
+    let leader = lazy (find_leader file_key parse |> Parsing_heaps.read_file_key) in
+    let file = Check_cache.find_or_create cache ~leader ~master_cx ~create_file file_key in
     let t = file.Type_sig_merge.exports in
     copy_into cx file.Type_sig_merge.cx t;
     t

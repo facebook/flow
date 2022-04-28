@@ -182,15 +182,13 @@ let merge_targets ~env ~options ~profiling ~get_dependent_files roots =
   Lwt.return (sig_dependency_graph, component_map, roots, to_check)
 
 let merge_job ~worker_mutator ~options ~reader component =
-  let leader = Nel.hd component in
-  let addr = Parsing_heaps.get_file_addr_unsafe leader in
   let diff =
-    if Parsing_heaps.Mutator_reader.is_typed_file ~reader addr then
+    match Parsing_heaps.Mutator_reader.typed_component ~reader component with
+    | None -> false
+    | Some component ->
       let root = Options.root options in
       let hash = Merge_service.sig_hash ~root ~reader component in
       Parsing_heaps.Merge_context_mutator.add_merge_on_diff worker_mutator component hash
-    else
-      false
   in
   (diff, Ok ())
 

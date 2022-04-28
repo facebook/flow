@@ -187,20 +187,19 @@ let unchecked_dependencies ~options ~reader file file_sig =
       require_loc_map
       Modulename.Set.empty
   in
-  let should_be_checked = Parsing_heaps.Reader.is_typed_file ~reader in
-  let has_been_checked f = Base.Option.is_some (Parsing_heaps.Reader.get_leader ~reader f) in
+  let unchecked_dependency m =
+    let ( let* ) = Option.bind in
+    let* file = Parsing_heaps.Reader.get_provider ~reader m in
+    let* parse = Parsing_heaps.Reader.get_typed_parse ~reader file in
+    match Parsing_heaps.Reader.get_leader ~reader parse with
+    | None -> Some (Parsing_heaps.read_file_key file)
+    | Some _ -> None
+  in
   Modulename.Set.fold
     (fun m acc ->
-      match Parsing_heaps.Reader.get_provider ~reader m with
-      | Some addr ->
-        let f = Parsing_heaps.read_file_key addr in
-        if should_be_checked addr && not (has_been_checked f) then
-          FilenameSet.add f acc
-        else
-          acc
-      | None ->
-        (* complain elsewhere about required module not found *)
-        acc)
+      match unchecked_dependency m with
+      | Some f -> FilenameSet.add f acc
+      | None -> acc)
     resolved_requires
     FilenameSet.empty
 

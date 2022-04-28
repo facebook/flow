@@ -39,15 +39,6 @@ module SigHashHeap =
       let description = "SigHash"
     end)
 
-module LeaderHeap =
-  SharedMem.NoCache
-    (File_key)
-    (struct
-      type t = File_key.t
-
-      let description = "Leader"
-    end)
-
 exception File_not_found of string
 
 exception File_not_parsed of string
@@ -94,6 +85,8 @@ type resolved_requires = {
   hash: Xx.hash;
 }
 [@@deriving show]
+
+type component_file = File_key.t * file_addr * [ `typed ] parse_addr
 
 let ( let* ) = Option.bind
 
@@ -384,13 +377,14 @@ let add_checked_file file_key file_opt hash module_name docblock ast locs type_s
       let exports = serialize exports in
       let (exports_size, write_exports) = prepare_write_exports exports in
       let size =
-        size + (4 * header_size) + typed_parse_size + int64_size + exports_size + entity_size
+        size + (5 * header_size) + (2 * entity_size) + typed_parse_size + int64_size + exports_size
       in
       let write chunk =
         let hash = write_int64 chunk hash in
         let exports = write_exports chunk in
         let resolved_requires = write_entity chunk None in
-        let parse = write_typed_parse chunk hash exports resolved_requires in
+        let leader = write_entity chunk None in
+        let parse = write_typed_parse chunk hash exports resolved_requires leader in
         let dirty_modules = add_file_maybe chunk (parse :> [ `typed | `untyped ] parse_addr) in
         (parse, dirty_modules)
       in
@@ -747,7 +741,7 @@ module type READER = sig
 
   val get_haste_name : reader:reader -> file_addr -> string option
 
-  val get_leader : reader:reader -> File_key.t -> File_key.t option
+  val get_leader : reader:reader -> [ `typed ] parse_addr -> file_addr option
 
   val has_ast : reader:reader -> File_key.t -> bool
 
@@ -775,7 +769,7 @@ module type READER = sig
   val get_resolved_requires_unsafe :
     reader:reader -> File_key.t -> [ `typed ] parse_addr -> resolved_requires
 
-  val get_leader_unsafe : reader:reader -> File_key.t -> File_key.t
+  val get_leader_unsafe : reader:reader -> File_key.t -> [ `typed ] parse_addr -> file_addr
 
   val get_ast_unsafe : reader:reader -> File_key.t -> (Loc.t, Loc.t) Flow_ast.Program.t
 
@@ -838,7 +832,7 @@ module Mutator_reader = struct
     let* info = get_haste_info ~reader file in
     Some (read_module_name info)
 
-  let get_leader ~reader:_ file = LeaderHeap.get file
+  let get_leader ~reader parse = read ~reader (Heap.get_leader parse)
 
   let get_old_parse ~reader file = read_old ~reader (Heap.get_parse file)
 
@@ -929,8 +923,8 @@ module Mutator_reader = struct
     | Some resolved_requires -> read_resolved_requires resolved_requires
     | None -> raise (Resolved_requires_not_found (File_key.to_string file))
 
-  let get_leader_unsafe ~reader file =
-    match get_leader ~reader file with
+  let get_leader_unsafe ~reader file parse =
+    match get_leader ~reader parse with
     | Some leader -> leader
     | None -> raise (Leader_not_found (File_key.to_string file))
 
@@ -980,6 +974,28 @@ module Mutator_reader = struct
     read_file_hash parse
 
   let loc_of_aloc = loc_of_aloc ~get_aloc_table_unsafe
+
+  (* We choose the head file as the leader, and the tail as followers. It is
+   * always OK to choose the head as leader, as explained below.
+   *
+   * Note that cycles cannot happen between untyped files. Why? Because files
+   * in cycles must have their dependencies recorded, yet dependencies are never
+   * recorded for untyped files.
+   *
+   * It follows that when the head is untyped, there are no other files! We
+   * don't have to worry that some other file may be typed when the head is
+   * untyped.
+   *
+   * It also follows when the head is typed, the tail must be typed too! *)
+  let typed_component ~reader (leader_key, rest) =
+    let leader = get_file_addr_unsafe leader_key in
+    let* leader_parse = get_typed_parse ~reader leader in
+    let component_file key =
+      let file = get_file_addr_unsafe key in
+      let parse = get_typed_parse_unsafe ~reader key file in
+      (key, file, parse)
+    in
+    Some ((leader_key, leader, leader_parse), List.map component_file rest)
 end
 
 (* For use by a worker process *)
@@ -1196,22 +1212,23 @@ module Merge_context_mutator = struct
   type worker_mutator = unit
 
   let oldify_merge_batch files =
-    WorkerCancel.with_no_cancellations (fun () ->
-        LeaderHeap.oldify_batch files;
-        SigHashHeap.oldify_batch files
-    )
+    WorkerCancel.with_no_cancellations (fun () -> SigHashHeap.oldify_batch files)
 
   let remove_old_merge_batch files =
-    WorkerCancel.with_no_cancellations (fun () ->
-        LeaderHeap.remove_old_batch files;
-        SigHashHeap.remove_old_batch files
-    )
+    WorkerCancel.with_no_cancellations (fun () -> SigHashHeap.remove_old_batch files)
 
   let revive_merge_batch files =
-    WorkerCancel.with_no_cancellations (fun () ->
-        LeaderHeap.revive_batch files;
-        SigHashHeap.revive_batch files
-    )
+    WorkerCancel.with_no_cancellations (fun () -> SigHashHeap.revive_batch files)
+
+  let rollback_leader file_key =
+    let open Heap in
+    let entity =
+      let* file = get_file_addr file_key in
+      let* parse = entity_read_latest (get_parse file) in
+      let* parse = coerce_typed parse in
+      Some (get_leader parse)
+    in
+    Option.iter entity_rollback entity
 
   let commit () =
     WorkerCancel.with_no_cancellations (fun () ->
@@ -1224,6 +1241,7 @@ module Merge_context_mutator = struct
   let rollback () =
     WorkerCancel.with_no_cancellations (fun () ->
         Hh_logger.debug "Rolling back context heaps";
+        FilenameSet.iter rollback_leader !merge_oldified_files;
         revive_merge_batch !merge_oldified_files;
         merge_oldified_files := FilenameSet.empty
     );
@@ -1239,22 +1257,23 @@ module Merge_context_mutator = struct
         ((), ())
     )
 
-  (* While merging, we must keep LeaderHeap and SigHashHeap in sync, sometimes
-   * creating new entries and sometimes reusing old entries. *)
+  let update_leaders leader_addr component =
+    let module Heap = SharedMem.NewAPI in
+    let f (_, _, parse) =
+      let leader_ent = Heap.get_leader parse in
+      Heap.entity_advance leader_ent (Some leader_addr)
+    in
+    Nel.iter f component
+
   let add_merge_on_diff () component xx =
-    let leader_f = Nel.hd component in
+    let (leader_f, leader_addr, _) = Nel.hd component in
     let diff =
       match SigHashHeap.get_old leader_f with
       | None -> true
       | Some xx_old -> xx <> xx_old
     in
-    WorkerCancel.with_no_cancellations (fun () ->
-        if diff then (
-          (* Ideally we'd assert that each file is a member of the oldified files too *)
-          Nel.iter (fun f -> LeaderHeap.add f leader_f) component;
-          SigHashHeap.add leader_f xx
-        )
-    );
+    update_leaders leader_addr component;
+    if diff then SigHashHeap.add leader_f xx;
     diff
 
   let revive_files () files =
@@ -1295,11 +1314,7 @@ module Reader = struct
     let* info = get_haste_info ~reader file in
     Some (read_module_name info)
 
-  let get_leader ~reader:_ file =
-    if FilenameSet.mem file !merge_oldified_files then
-      LeaderHeap.get_old file
-    else
-      LeaderHeap.get file
+  let get_leader ~reader parse = read ~reader (Heap.get_leader parse)
 
   let has_ast ~reader file =
     let parse_opt =
@@ -1377,8 +1392,8 @@ module Reader = struct
     | Some resolved_requires -> read_resolved_requires resolved_requires
     | None -> raise (Resolved_requires_not_found (File_key.to_string file))
 
-  let get_leader_unsafe ~reader file =
-    match get_leader ~reader file with
+  let get_leader_unsafe ~reader file parse =
+    match get_leader ~reader parse with
     | Some leader -> leader
     | None -> raise (Leader_not_found (File_key.to_string file))
 
@@ -1590,8 +1605,8 @@ module From_saved_state = struct
       prepare_write_resolved_requires resolved_requires
     in
     let size =
-      (9 * header_size)
-      + (3 * entity_size)
+      (10 * header_size)
+      + (4 * entity_size)
       + string_size file_name
       + typed_parse_size
       + file_size
@@ -1612,7 +1627,8 @@ module From_saved_state = struct
         let exports = write_exports chunk in
         let resolved_requires = write_resolved_requires chunk in
         let resolved_requires_ent = write_entity chunk (Some resolved_requires) in
-        let parse = write_typed_parse chunk hash exports resolved_requires_ent in
+        let leader_ent = write_entity chunk None in
+        let parse = write_typed_parse chunk hash exports resolved_requires_ent leader_ent in
         let parse_ent = write_entity chunk (Some (parse :> [ `typed | `untyped ] parse_addr)) in
         let file = write_file chunk file_kind file_name parse_ent haste_ent file_module in
         assert (file = FileHeap.add file_key file);

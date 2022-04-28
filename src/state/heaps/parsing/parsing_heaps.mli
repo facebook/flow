@@ -28,6 +28,8 @@ type resolved_requires = {
 }
 [@@deriving show]
 
+type component_file = File_key.t * file_addr * [ `typed ] parse_addr
+
 val mk_resolved_requires :
   resolved_modules:Modulename.t SMap.t -> phantom_dependencies:SSet.t -> resolved_requires
 
@@ -79,7 +81,7 @@ module type READER = sig
 
   val get_haste_name : reader:reader -> file_addr -> string option
 
-  val get_leader : reader:reader -> File_key.t -> File_key.t option
+  val get_leader : reader:reader -> [ `typed ] parse_addr -> file_addr option
 
   val has_ast : reader:reader -> File_key.t -> bool
 
@@ -107,7 +109,7 @@ module type READER = sig
   val get_resolved_requires_unsafe :
     reader:reader -> File_key.t -> [ `typed ] parse_addr -> resolved_requires
 
-  val get_leader_unsafe : reader:reader -> File_key.t -> File_key.t
+  val get_leader_unsafe : reader:reader -> File_key.t -> [ `typed ] parse_addr -> file_addr
 
   val get_ast_unsafe : reader:reader -> File_key.t -> (Loc.t, Loc.t) Flow_ast.Program.t
 
@@ -140,6 +142,8 @@ module Mutator_reader : sig
   val get_old_file_hash : reader:reader -> File_key.t -> Xx.hash option
 
   val get_old_exports : reader:reader -> File_key.t -> Exports.t option
+
+  val typed_component : reader:reader -> File_key.t Nel.t -> component_file Nel.t option
 end
 
 module Reader : READER with type reader = State_reader.t
@@ -201,7 +205,7 @@ module Merge_context_mutator : sig
 
   val create : Transaction.t -> Utils_js.FilenameSet.t -> master_mutator * worker_mutator
 
-  val add_merge_on_diff : worker_mutator -> File_key.t Nel.t -> Xx.hash -> bool
+  val add_merge_on_diff : worker_mutator -> component_file Nel.t -> Xx.hash -> bool
 
   val revive_files : master_mutator -> Utils_js.FilenameSet.t -> unit
 end

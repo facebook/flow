@@ -233,10 +233,7 @@ let sig_hash ~root =
   in
 
   (* Create a Type_sig_hash.file record for a file in the merged component. *)
-  let component_file ~reader component_rec component_map file_key =
-    let file_addr = Parsing_heaps.get_file_addr_unsafe file_key in
-    let parse = Parsing_heaps.Mutator_reader.get_typed_parse_unsafe ~reader file_key file_addr in
-
+  let component_file ~reader component_rec component_map (file_key, _, parse) =
     let buf = Heap.type_sig_buf (Option.get (Heap.get_type_sig parse)) in
 
     let dependencies =
@@ -323,7 +320,7 @@ let sig_hash ~root =
     let component = Array.of_list (Nel.to_list component) in
     let component_map =
       let acc = ref FilenameMap.empty in
-      Array.iteri (fun i file -> acc := FilenameMap.add file i !acc) component;
+      Array.iteri (fun i (file, _, _) -> acc := FilenameMap.add file i !acc) component;
       !acc
     in
 
@@ -347,26 +344,11 @@ let sig_hash ~root =
     !component_hash
 
 (* Entry point for merging a component *)
-let merge_component ~worker_mutator ~options ~reader ((leader_f, _) as component) =
+let merge_component ~worker_mutator ~options ~reader component =
   let start_time = Unix.gettimeofday () in
-
-  (* We choose the head file as the leader, and the tail as followers. It is
-   * always OK to choose the head as leader, as explained below.
-   *
-   * Note that cycles cannot happen between untyped files. Why? Because files
-   * in cycles must have their dependencies recorded, yet dependencies are never
-   * recorded for untyped files.
-   *
-   * It follows that when the head is untyped, there are no other files! We
-   * don't have to worry that some other file may be typed when the head is
-   * untyped.
-   *
-   * It also follows when the head is typed, the tail must be typed too! *)
-  let leader_addr = Parsing_heaps.get_file_addr_unsafe leader_f in
-  if not (Parsing_heaps.Mutator_reader.is_typed_file ~reader leader_addr) then
-    let diff = false in
-    (diff, None)
-  else
+  match Parsing_heaps.Mutator_reader.typed_component ~reader component with
+  | None -> (false, None)
+  | Some component ->
     let hash =
       let root = Options.root options in
       sig_hash ~root ~reader component
@@ -377,9 +359,7 @@ let merge_component ~worker_mutator ~options ~reader ((leader_f, _) as component
     let ccx = Context.(make_ccx (empty_master_cx ())) in
     let (cx, _) =
       Nel.map
-        (fun file ->
-          let addr = Parsing_heaps.get_file_addr_unsafe file in
-          let parse = Parsing_heaps.Mutator_reader.get_typed_parse_unsafe ~reader file addr in
+        (fun (file, _, parse) ->
           let docblock = Parsing_heaps.read_docblock_unsafe file parse in
           let metadata = Context.docblock_overrides docblock metadata in
           let lint_severities = Merge_js.get_lint_severities metadata strict_mode lint_severities in

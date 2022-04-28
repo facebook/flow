@@ -357,6 +357,7 @@ module NewAPI : sig
     heap_int64 addr ->
     exports addr ->
     resolved_requires entity addr ->
+    file entity addr ->
     [ `typed ] parse addr
 
   val is_typed : [> ] parse addr -> bool
@@ -378,6 +379,8 @@ module NewAPI : sig
   val get_exports : [ `typed ] parse addr -> exports addr
 
   val get_resolved_requires : [ `typed ] parse addr -> resolved_requires entity addr
+
+  val get_leader : [ `typed ] parse addr -> file entity addr
 
   val set_ast : [ `typed ] parse addr -> ast addr -> unit
 

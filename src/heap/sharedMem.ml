@@ -1433,14 +1433,14 @@ module NewAPI = struct
 
   let untyped_parse_size = 1 * addr_size
 
-  let typed_parse_size = 8 * addr_size
+  let typed_parse_size = 9 * addr_size
 
   let write_untyped_parse chunk hash =
     let addr = write_header chunk Untyped_tag untyped_parse_size in
     unsafe_write_addr chunk hash;
     addr
 
-  let write_typed_parse chunk hash exports resolved_requires =
+  let write_typed_parse chunk hash exports resolved_requires leader =
     let addr = write_header chunk Typed_tag typed_parse_size in
     unsafe_write_addr chunk hash;
     unsafe_write_addr chunk null_addr;
@@ -1450,6 +1450,7 @@ module NewAPI = struct
     unsafe_write_addr chunk null_addr;
     unsafe_write_addr chunk exports;
     unsafe_write_addr chunk resolved_requires;
+    unsafe_write_addr chunk leader;
     addr
 
   let is_typed parse =
@@ -1478,6 +1479,8 @@ module NewAPI = struct
 
   let resolved_requires_addr parse = addr_offset parse 8
 
+  let leader_addr parse = addr_offset parse 9
+
   let get_file_hash = get_generic file_hash_addr
 
   let get_ast = get_generic_opt ast_addr
@@ -1493,6 +1496,8 @@ module NewAPI = struct
   let get_exports = get_generic exports_addr
 
   let get_resolved_requires = get_generic resolved_requires_addr
+
+  let get_leader = get_generic leader_addr
 
   let set_ast = set_generic ast_addr
 
