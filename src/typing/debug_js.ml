@@ -1177,6 +1177,7 @@ let dump_error_message =
     | CheckJobException _ -> "CheckJobException"
     | UnexpectedTypeapp _ -> "UnexpectedTypeapp"
     | UnexpectedAnnotationInference _ -> "UnexpectedAnnotationInference"
+    | MissingEnvRead _ -> "MissingEnvRead"
   in
   let dump_upper_kind = function
     | IncompatibleGetPropT _ -> "IncompatibleGetPropT"

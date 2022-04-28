@@ -9,9 +9,10 @@ open Test_utils
 open Name_def
 open Utils_js
 open Loc_collections
+open Name_def_ordering
 module Ast = Flow_ast
 
-module Name_resolver = Name_resolver.Make_Test_With_Cx (struct
+module Context = struct
   type t = unit
 
   let enable_enums _cx = true
@@ -27,7 +28,10 @@ module Name_resolver = Name_resolver.Make_Test_With_Cx (struct
   let add_new_env_literal_subtypes _ _ = ()
 
   let add_new_env_matching_props _ _ = ()
-end)
+end
+
+module Name_resolver = Name_resolver.Make_Test_With_Cx (Context)
+module Name_def_ordering = Name_def_ordering.Make_Test_With_Cx (Context)
 
 let string_of_root = function
   | Contextual _ -> "contextual"
@@ -106,7 +110,6 @@ let print_values values =
   Printf.printf "[\n  %s\n]" (String.concat ";\n  " strlist)
 
 let print_order lst =
-  let open Name_def_ordering in
   let msg_of_elt elt =
     match elt with
     | Normal l
@@ -139,7 +142,7 @@ let print_order_test contents =
   let ast = parse_with_alocs contents in
   let (_, env) = Name_resolver.program_with_scope () ast in
   let inits = Name_def.find_defs ast in
-  let order = Name_def_ordering.build_ordering env inits in
+  let order = Name_def_ordering.build_ordering () env inits in
   print_order order
 
 (* TODO: ocamlformat mangles the ppx syntax. *)

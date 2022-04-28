@@ -16,6 +16,10 @@ let statement_error = ()
 open Reason
 open Hoister
 
+module type C = Dependency_sigs.C
+
+module type F = Dependency_sigs.F
+
 let is_call_to_invariant callee =
   match callee with
   | (_, Flow_ast.Expression.Identifier (_, { Flow_ast.Identifier.name = "invariant"; _ })) -> true
@@ -49,30 +53,6 @@ let extract_number_literal node =
 
 let error_todo = ()
 
-module type C = sig
-  type t
-
-  val enable_enums : t -> bool
-
-  val jsx : t -> Options.jsx_mode
-
-  val react_runtime : t -> Options.react_runtime
-
-  val enable_const_params : t -> bool
-
-  val env_mode : t -> Options.env_mode
-
-  val add_new_env_literal_subtypes : t -> ALoc.t * Env_api.new_env_literal_check -> unit
-
-  val add_new_env_matching_props : t -> string * ALoc.t * ALoc.t -> unit
-end
-
-module type F = sig
-  type cx
-
-  val add_output : cx -> ?trace:Type.trace -> ALoc.t Error_message.t' -> unit
-end
-
 module type S = sig
   module Env_api : Env_api.S with module L = Loc_sig.ALocS
 
@@ -101,9 +81,6 @@ module Make
     (Context : C)
     (FlowAPIUtils : F with type cx = Context.t) :
   S with module Env_api = Env_api and type cx = Context.t = struct
-  let _f = FlowAPIUtils.add_output
-  (* To make ocaml not complain, will be removed when FlowAPIUtils module is used *)
-
   module Scope_builder :
     Scope_builder_sig.S with module L = Loc_sig.ALocS and module Api = Scope_api =
     Scope_builder.Make (Loc_sig.ALocS) (Scope_api)
