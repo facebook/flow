@@ -2038,7 +2038,7 @@ struct
       Env.init_type cx name t name_loc;
       (loc, InterfaceDeclaration decl_ast)
     | (loc, DeclareModule { DeclareModule.id; body; kind; comments }) ->
-      let (_, name) =
+      let (id_loc, name) =
         match id with
         | DeclareModule.Identifier (id_loc, { Ast.Identifier.name = value; comments = _ })
         | DeclareModule.Literal (id_loc, { Ast.StringLiteral.value; _ }) ->
@@ -2135,7 +2135,7 @@ struct
           : (ALoc.t, ALoc.t * Type.t) Ast.Statement.t
           );
 
-      let t = Env.get_var_declared_type cx module_ref loc in
+      let t = Env.get_var_declared_type cx module_ref id_loc in
       Flow.flow_t cx (module_t, t);
 
       Context.pop_declare_module cx;
@@ -2153,7 +2153,9 @@ struct
           match default with
           | None -> Import_export.export_binding cx name id_loc Ast.Statement.ExportValue
           | Some default_loc ->
-            let t = Env.get_var_declared_type ~lookup_mode:Env_sig.LookupMode.ForType cx name loc in
+            let t =
+              Env.get_var_declared_type ~lookup_mode:Env_sig.LookupMode.ForType cx name id_loc
+            in
             Import_export.export cx (OrdinaryName "default") default_loc t
         in
         (* error-handling around calls to `statement` is omitted here because we
