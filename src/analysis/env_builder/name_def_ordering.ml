@@ -77,7 +77,8 @@ end = struct
         let write_locs =
           try Env_api.write_locs_of_read_loc env_values loc with
           | Not_found ->
-            failwith (Printf.sprintf "missing write locs for %s" (Reason.string_of_aloc loc))
+            (* TODO this should be an internal error about missing write locs *)
+            []
         in
         let writes = Base.List.concat_map ~f:(Env_api.writes_of_write_loc ~for_type) write_locs in
         let refinements =
