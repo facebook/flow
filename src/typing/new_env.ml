@@ -425,7 +425,15 @@ module New_env = struct
       Old_env.get_var_declared_type ~lookup_mode cx name loc
     | (OrdinaryName _, ForType) ->
       let env = Context.environment cx in
-      Base.Option.value_exn (Loc_env.find_write env loc)
+      begin
+        match Loc_env.find_write env loc with
+        | Some t -> t
+        | None ->
+          Flow_js_utils.add_output
+            cx
+            (Error_message.EInternal (loc, Error_message.MissingEnvWrite loc));
+          Type.(AnyT.at (AnyError None) loc)
+      end
     | (OrdinaryName _, _) ->
       let env = Context.environment cx in
       provider_type_for_def_loc env loc

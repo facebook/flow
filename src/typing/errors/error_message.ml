@@ -497,6 +497,7 @@ and internal_error =
   | UnexpectedTypeapp of string
   | UnexpectedAnnotationInference of string
   | MissingEnvRead of ALoc.t
+  | MissingEnvWrite of ALoc.t
 
 and 'loc unsupported_syntax =
   | AnnotationInsideDestructuring
@@ -1554,6 +1555,7 @@ let string_of_internal_error = function
   | UnexpectedTypeapp s -> "unexpected typeapp: " ^ s
   | UnexpectedAnnotationInference s -> "unexpected " ^ s ^ " in annotation inference"
   | MissingEnvRead l -> "missing env entry for read at " ^ ALoc.debug_to_string l
+  | MissingEnvWrite loc -> "expected env entry for write location" ^ ALoc.debug_to_string loc
 
 (* Friendly messages are created differently based on the specific error they come from, so
    we collect the ingredients here and pass them to make_error_printable *)
