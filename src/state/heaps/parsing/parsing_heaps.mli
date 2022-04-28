@@ -71,8 +71,6 @@ module type READER = sig
 
   val is_typed_file : reader:reader -> file_addr -> bool
 
-  val has_been_merged : reader:reader -> File_key.t -> bool
-
   val get_parse : reader:reader -> file_addr -> [ `typed | `untyped ] parse_addr option
 
   val get_typed_parse : reader:reader -> file_addr -> [ `typed ] parse_addr option

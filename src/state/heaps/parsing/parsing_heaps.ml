@@ -40,7 +40,7 @@ module SigHashHeap =
     end)
 
 module LeaderHeap =
-  SharedMem.WithCache
+  SharedMem.NoCache
     (File_key)
     (struct
       type t = File_key.t
@@ -739,8 +739,6 @@ module type READER = sig
 
   val is_typed_file : reader:reader -> file_addr -> bool
 
-  val has_been_merged : reader:reader -> File_key.t -> bool
-
   val get_parse : reader:reader -> file_addr -> [ `typed | `untyped ] parse_addr option
 
   val get_typed_parse : reader:reader -> file_addr -> [ `typed ] parse_addr option
@@ -827,8 +825,6 @@ module Mutator_reader = struct
     match read ~reader (Heap.get_parse file) with
     | Some parse -> Heap.is_typed parse
     | None -> false
-
-  let has_been_merged ~reader:_ file = LeaderHeap.mem file
 
   let get_parse ~reader file = read ~reader (Heap.get_parse file)
 
@@ -1287,12 +1283,6 @@ module Reader = struct
     | Some parse -> Heap.is_typed parse
     | None -> false
 
-  let has_been_merged ~reader:_ file =
-    if FilenameSet.mem file !merge_oldified_files then
-      LeaderHeap.mem_old file
-    else
-      LeaderHeap.mem file
-
   let get_parse ~reader file = read ~reader (Heap.get_parse file)
 
   let get_typed_parse ~reader file =
@@ -1455,11 +1445,6 @@ module Reader_dispatcher : READER with type reader = Abstract_state_reader.t = s
     match reader with
     | Mutator_state_reader reader -> Mutator_reader.is_typed_file ~reader
     | State_reader reader -> Reader.is_typed_file ~reader
-
-  let has_been_merged ~reader =
-    match reader with
-    | Mutator_state_reader reader -> Mutator_reader.has_been_merged ~reader
-    | State_reader reader -> Reader.has_been_merged ~reader
 
   let get_parse ~reader =
     match reader with
