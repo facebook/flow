@@ -15,11 +15,7 @@ module type READER = sig
   val find_master : reader:reader -> Context.master_context
 end
 
-module Mutator_reader : sig
-  include READER with type reader = Mutator_state_reader.t
-
-  val sig_hash_changed : reader:reader -> File_key.t -> bool
-end
+module Mutator_reader : READER with type reader = Mutator_state_reader.t
 
 module Reader : READER with type reader = State_reader.t
 

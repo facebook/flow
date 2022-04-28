@@ -164,11 +164,7 @@ let find_master ~reader:_ =
       | None -> raise (Key_not_found ("MasterContextHeap", "master context"))
     end
 
-module Mutator_reader : sig
-  include READER with type reader = Mutator_state_reader.t
-
-  val sig_hash_changed : reader:reader -> File_key.t -> bool
-end = struct
+module Mutator_reader = struct
   type reader = Mutator_state_reader.t
 
   let get_leader ~reader:_ file = LeaderHeap.get file
@@ -179,14 +175,6 @@ end = struct
     | None -> raise (Key_not_found ("LeaderHeap", File_key.to_string file))
 
   let find_master ~reader = find_master ~reader
-
-  let sig_hash_changed ~reader:_ f =
-    match SigHashHeap.get f with
-    | None -> false
-    | Some xx ->
-      (match SigHashHeap.get_old f with
-      | None -> true
-      | Some xx_old -> xx <> xx_old)
 end
 
 module Reader : READER with type reader = State_reader.t = struct
