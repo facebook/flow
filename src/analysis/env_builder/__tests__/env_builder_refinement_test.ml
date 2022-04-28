@@ -5714,6 +5714,7 @@ function bar(response) {
         };
         (10, 6) to (10, 13) => {
           (uninitialized),
+          (5, 6) to (5, 13): (`payload`),
           (7, 6) to (7, 13): (`payload`)
         };
         (12, 4) to (12, 11) => {

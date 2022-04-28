@@ -2772,8 +2772,8 @@ module Make
              * catch did not throw. This assumption, however, is too optimistic, so checking the
              * finally under this assumption would be unsound. To soundly check the finally, we make
              * no assumptions about throws. In that case, the entry env here is a merge of the try
-             * start env and catch exit env, along with every abrupt completion env from both the
-             * try and the catch. *)
+             * start env, try exit env, and catch exit env, along with every abrupt completion env
+             * from both the try and the catch. *)
             let finally_completion_state =
               match finalizer with
               | Some (_loc, block) ->
@@ -2793,7 +2793,8 @@ module Make
                  * we can conservatively check the finally case. The starting env here is modeled as
                  * the merge of the try_entry_env with the catch_exit env, and we include all abrupt
                  * completion envs *)
-                this#merge_env try_entry_env catch_exit_env;
+                this#merge_env try_entry_env try_exit_env;
+                this#merge_self_env catch_exit_env;
                 this#commit_abrupt_completion_matching AbruptCompletion.all completion_state;
                 let completion_state =
                   this#run_to_completion (fun () -> ignore @@ this#block loc block)
