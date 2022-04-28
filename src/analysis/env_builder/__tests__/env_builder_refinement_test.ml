@@ -6183,3 +6183,19 @@ x.a;
         (11, 0) to (11, 1) => {
           (2, 12) to (2, 13): (`x`)
         }] |}]
+
+let%expect_test "dead_code_inc" =
+  print_ssa_test {|
+function f() {
+    return;
+    x += y;
+}
+|};
+    [%expect {|
+      [
+        (4, 4) to (4, 5) => {
+          unreachable
+        };
+        (4, 9) to (4, 10) => {
+          unreachable
+        }] |}]

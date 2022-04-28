@@ -4345,6 +4345,17 @@ module Make
       method! pattern_identifier ?kind e =
         ignore kind;
         e
+
+      method! assignment loc (expr : (ALoc.t, ALoc.t) Ast.Expression.Assignment.t) =
+        let open Ast.Expression.Assignment in
+        let { operator; left; _ } = expr in
+        let () =
+          match (operator, left) with
+          | (Some _, (_, Ast.Pattern.Identifier { Ast.Pattern.Identifier.name; _ })) ->
+            ignore @@ this#identifier name
+          | _ -> ()
+        in
+        super#assignment loc expr
     end
 
   let program_with_scope cx program =
