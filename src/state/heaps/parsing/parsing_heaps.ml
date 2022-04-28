@@ -30,6 +30,24 @@ module HasteModuleHeap =
       type t = Heap.haste_module
     end)
 
+module SigHashHeap =
+  SharedMem.NoCache
+    (File_key)
+    (struct
+      type t = Xx.hash
+
+      let description = "SigHash"
+    end)
+
+module LeaderHeap =
+  SharedMem.WithCache
+    (File_key)
+    (struct
+      type t = File_key.t
+
+      let description = "Leader"
+    end)
+
 exception File_not_found of string
 
 exception File_not_parsed of string
@@ -51,6 +69,8 @@ exception Haste_module_not_found of string
 exception File_module_not_found of string
 
 exception Resolved_requires_not_found of string
+
+exception Leader_not_found of string
 
 type locs_tbl = Loc.t Type_sig_collections.Locs.t
 
@@ -719,6 +739,8 @@ module type READER = sig
 
   val is_typed_file : reader:reader -> file_addr -> bool
 
+  val has_been_merged : reader:reader -> File_key.t -> bool
+
   val get_parse : reader:reader -> file_addr -> [ `typed | `untyped ] parse_addr option
 
   val get_typed_parse : reader:reader -> file_addr -> [ `typed ] parse_addr option
@@ -726,6 +748,8 @@ module type READER = sig
   val get_haste_info : reader:reader -> file_addr -> haste_info_addr option
 
   val get_haste_name : reader:reader -> file_addr -> string option
+
+  val get_leader : reader:reader -> File_key.t -> File_key.t option
 
   val has_ast : reader:reader -> File_key.t -> bool
 
@@ -752,6 +776,8 @@ module type READER = sig
 
   val get_resolved_requires_unsafe :
     reader:reader -> File_key.t -> [ `typed ] parse_addr -> resolved_requires
+
+  val get_leader_unsafe : reader:reader -> File_key.t -> File_key.t
 
   val get_ast_unsafe : reader:reader -> File_key.t -> (Loc.t, Loc.t) Flow_ast.Program.t
 
@@ -802,6 +828,8 @@ module Mutator_reader = struct
     | Some parse -> Heap.is_typed parse
     | None -> false
 
+  let has_been_merged ~reader:_ file = LeaderHeap.mem file
+
   let get_parse ~reader file = read ~reader (Heap.get_parse file)
 
   let get_typed_parse ~reader file =
@@ -813,6 +841,8 @@ module Mutator_reader = struct
   let get_haste_name ~reader file =
     let* info = get_haste_info ~reader file in
     Some (read_module_name info)
+
+  let get_leader ~reader:_ file = LeaderHeap.get file
 
   let get_old_parse ~reader file = read_old ~reader (Heap.get_parse file)
 
@@ -902,6 +932,11 @@ module Mutator_reader = struct
     match read ~reader resolved_requires with
     | Some resolved_requires -> read_resolved_requires resolved_requires
     | None -> raise (Resolved_requires_not_found (File_key.to_string file))
+
+  let get_leader_unsafe ~reader file =
+    match get_leader ~reader file with
+    | Some leader -> leader
+    | None -> raise (Leader_not_found (File_key.to_string file))
 
   let get_ast_unsafe ~reader file =
     let addr = get_file_addr_unsafe file in
@@ -1157,6 +1192,84 @@ module Resolved_requires_mutator = struct
       true
 end
 
+let merge_oldified_files = ref FilenameSet.empty
+
+module Merge_context_mutator = struct
+  type master_mutator = unit
+
+  type worker_mutator = unit
+
+  let oldify_merge_batch files =
+    WorkerCancel.with_no_cancellations (fun () ->
+        LeaderHeap.oldify_batch files;
+        SigHashHeap.oldify_batch files
+    )
+
+  let remove_old_merge_batch files =
+    WorkerCancel.with_no_cancellations (fun () ->
+        LeaderHeap.remove_old_batch files;
+        SigHashHeap.remove_old_batch files
+    )
+
+  let revive_merge_batch files =
+    WorkerCancel.with_no_cancellations (fun () ->
+        LeaderHeap.revive_batch files;
+        SigHashHeap.revive_batch files
+    )
+
+  let commit () =
+    WorkerCancel.with_no_cancellations (fun () ->
+        Hh_logger.debug "Committing context heaps";
+        remove_old_merge_batch !merge_oldified_files;
+        merge_oldified_files := FilenameSet.empty
+    );
+    Lwt.return_unit
+
+  let rollback () =
+    WorkerCancel.with_no_cancellations (fun () ->
+        Hh_logger.debug "Rolling back context heaps";
+        revive_merge_batch !merge_oldified_files;
+        merge_oldified_files := FilenameSet.empty
+    );
+    Lwt.return_unit
+
+  let create transaction files =
+    WorkerCancel.with_no_cancellations (fun () ->
+        merge_oldified_files := files;
+
+        oldify_merge_batch files;
+        Transaction.add ~singleton:"Merge_context" ~commit ~rollback transaction;
+
+        ((), ())
+    )
+
+  (* While merging, we must keep LeaderHeap and SigHashHeap in sync, sometimes
+   * creating new entries and sometimes reusing old entries. *)
+  let add_merge_on_diff () component xx =
+    let leader_f = Nel.hd component in
+    let diff =
+      match SigHashHeap.get_old leader_f with
+      | None -> true
+      | Some xx_old -> xx <> xx_old
+    in
+    WorkerCancel.with_no_cancellations (fun () ->
+        if diff then (
+          (* Ideally we'd assert that each file is a member of the oldified files too *)
+          Nel.iter (fun f -> LeaderHeap.add f leader_f) component;
+          SigHashHeap.add leader_f xx
+        )
+    );
+    diff
+
+  let revive_files () files =
+    (* Every file in files should be in the oldified set *)
+    assert (FilenameSet.is_empty (FilenameSet.diff files !merge_oldified_files));
+    WorkerCancel.with_no_cancellations (fun () ->
+        merge_oldified_files := FilenameSet.diff !merge_oldified_files files;
+        revive_merge_batch files
+    )
+end
+
 (* This uses `entity_read_committed` and can be used by code outside of a
  * init/recheck, like commands, to see a consistent snapshot of type state even
  * in the middle of a recheck. *)
@@ -1174,6 +1287,12 @@ module Reader = struct
     | Some parse -> Heap.is_typed parse
     | None -> false
 
+  let has_been_merged ~reader:_ file =
+    if FilenameSet.mem file !merge_oldified_files then
+      LeaderHeap.mem_old file
+    else
+      LeaderHeap.mem file
+
   let get_parse ~reader file = read ~reader (Heap.get_parse file)
 
   let get_typed_parse ~reader file =
@@ -1185,6 +1304,12 @@ module Reader = struct
   let get_haste_name ~reader file =
     let* info = get_haste_info ~reader file in
     Some (read_module_name info)
+
+  let get_leader ~reader:_ file =
+    if FilenameSet.mem file !merge_oldified_files then
+      LeaderHeap.get_old file
+    else
+      LeaderHeap.get file
 
   let has_ast ~reader file =
     let parse_opt =
@@ -1262,6 +1387,11 @@ module Reader = struct
     | Some resolved_requires -> read_resolved_requires resolved_requires
     | None -> raise (Resolved_requires_not_found (File_key.to_string file))
 
+  let get_leader_unsafe ~reader file =
+    match get_leader ~reader file with
+    | Some leader -> leader
+    | None -> raise (Leader_not_found (File_key.to_string file))
+
   let get_ast_unsafe ~reader file =
     let addr = get_file_addr_unsafe file in
     let parse = get_typed_parse_unsafe ~reader file addr in
@@ -1326,6 +1456,11 @@ module Reader_dispatcher : READER with type reader = Abstract_state_reader.t = s
     | Mutator_state_reader reader -> Mutator_reader.is_typed_file ~reader
     | State_reader reader -> Reader.is_typed_file ~reader
 
+  let has_been_merged ~reader =
+    match reader with
+    | Mutator_state_reader reader -> Mutator_reader.has_been_merged ~reader
+    | State_reader reader -> Reader.has_been_merged ~reader
+
   let get_parse ~reader =
     match reader with
     | Mutator_state_reader reader -> Mutator_reader.get_parse ~reader
@@ -1345,6 +1480,11 @@ module Reader_dispatcher : READER with type reader = Abstract_state_reader.t = s
     match reader with
     | Mutator_state_reader reader -> Mutator_reader.get_haste_name ~reader
     | State_reader reader -> Reader.get_haste_name ~reader
+
+  let get_leader ~reader =
+    match reader with
+    | Mutator_state_reader reader -> Mutator_reader.get_leader ~reader
+    | State_reader reader -> Reader.get_leader ~reader
 
   let has_ast ~reader =
     match reader with
@@ -1405,6 +1545,11 @@ module Reader_dispatcher : READER with type reader = Abstract_state_reader.t = s
     match reader with
     | Mutator_state_reader reader -> Mutator_reader.get_resolved_requires_unsafe ~reader
     | State_reader reader -> Reader.get_resolved_requires_unsafe ~reader
+
+  let get_leader_unsafe ~reader =
+    match reader with
+    | Mutator_state_reader reader -> Mutator_reader.get_leader_unsafe ~reader
+    | State_reader reader -> Reader.get_leader_unsafe ~reader
 
   let get_ast_unsafe ~reader =
     match reader with

@@ -188,7 +188,7 @@ let unchecked_dependencies ~options ~reader file file_sig =
       Modulename.Set.empty
   in
   let should_be_checked = Parsing_heaps.Reader.is_typed_file ~reader in
-  let has_been_checked f = Base.Option.is_some (Context_heaps.Reader.get_leader ~reader f) in
+  let has_been_checked f = Base.Option.is_some (Parsing_heaps.Reader.get_leader ~reader f) in
   Modulename.Set.fold
     (fun m acc ->
       match Parsing_heaps.Reader.get_provider ~reader m with

@@ -199,7 +199,7 @@ let merge ~master_mutator stream =
     node.component
     |> Nel.to_list
     |> FilenameSet.of_list
-    |> Context_heaps.Merge_context_mutator.revive_files master_mutator
+    |> Parsing_heaps.Merge_context_mutator.revive_files master_mutator
   in
   let mark_new_or_changed node =
     stream.new_or_changed_files <-

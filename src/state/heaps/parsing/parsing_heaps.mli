@@ -71,6 +71,8 @@ module type READER = sig
 
   val is_typed_file : reader:reader -> file_addr -> bool
 
+  val has_been_merged : reader:reader -> File_key.t -> bool
+
   val get_parse : reader:reader -> file_addr -> [ `typed | `untyped ] parse_addr option
 
   val get_typed_parse : reader:reader -> file_addr -> [ `typed ] parse_addr option
@@ -78,6 +80,8 @@ module type READER = sig
   val get_haste_info : reader:reader -> file_addr -> haste_info_addr option
 
   val get_haste_name : reader:reader -> file_addr -> string option
+
+  val get_leader : reader:reader -> File_key.t -> File_key.t option
 
   val has_ast : reader:reader -> File_key.t -> bool
 
@@ -104,6 +108,8 @@ module type READER = sig
 
   val get_resolved_requires_unsafe :
     reader:reader -> File_key.t -> [ `typed ] parse_addr -> resolved_requires
+
+  val get_leader_unsafe : reader:reader -> File_key.t -> File_key.t
 
   val get_ast_unsafe : reader:reader -> File_key.t -> (Loc.t, Loc.t) Flow_ast.Program.t
 
@@ -188,6 +194,18 @@ module Resolved_requires_mutator : sig
   val create : Transaction.t -> Utils_js.FilenameSet.t -> t
 
   val add_resolved_requires : t -> file_addr -> [ `typed ] parse_addr -> resolved_requires -> bool
+end
+
+module Merge_context_mutator : sig
+  type master_mutator
+
+  type worker_mutator
+
+  val create : Transaction.t -> Utils_js.FilenameSet.t -> master_mutator * worker_mutator
+
+  val add_merge_on_diff : worker_mutator -> File_key.t Nel.t -> Xx.hash -> bool
+
+  val revive_files : master_mutator -> Utils_js.FilenameSet.t -> unit
 end
 
 module From_saved_state : sig

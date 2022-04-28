@@ -513,7 +513,7 @@ let merge
   Hh_logger.info "Merging";
   let%lwt ((suppressions, skipped_count, sig_new_or_changed), time_to_merge) =
     let (master_mutator, worker_mutator) =
-      Context_heaps.Merge_context_mutator.create
+      Parsing_heaps.Merge_context_mutator.create
         transaction
         (FilenameSet.union files_to_merge deleted |> FilenameSet.union unparsed_set)
     in

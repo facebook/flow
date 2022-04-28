@@ -26,7 +26,7 @@ val update_server_status : 'a t -> unit
 val next : 'a t -> unit -> element list Bucket.bucket
 
 val merge :
-  master_mutator:Context_heaps.Merge_context_mutator.master_mutator ->
+  master_mutator:Parsing_heaps.Merge_context_mutator.master_mutator ->
   'a t ->
   'a merge_result ->
   'a merge_result ->

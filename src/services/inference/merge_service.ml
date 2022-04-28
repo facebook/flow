@@ -37,7 +37,7 @@ type sig_opts_data = {
 type 'a merge_results = (File_key.t * bool * 'a) list * sig_opts_data
 
 type 'a merge_job =
-  worker_mutator:Context_heaps.Merge_context_mutator.worker_mutator ->
+  worker_mutator:Parsing_heaps.Merge_context_mutator.worker_mutator ->
   options:Options.t ->
   reader:Mutator_state_reader.t ->
   File_key.t Nel.t ->
@@ -395,7 +395,7 @@ let merge_component ~worker_mutator ~options ~reader ((leader_f, _) as component
     in
     let suppressions = Context.error_suppressions cx in
     let diff =
-      Context_heaps.Merge_context_mutator.add_merge_on_diff worker_mutator component hash
+      Parsing_heaps.Merge_context_mutator.add_merge_on_diff worker_mutator component hash
     in
     let duration = Unix.gettimeofday () -. start_time in
     (diff, Some (suppressions, duration))

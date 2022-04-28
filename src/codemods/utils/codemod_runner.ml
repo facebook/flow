@@ -188,7 +188,7 @@ let merge_job ~worker_mutator ~options ~reader component =
     if Parsing_heaps.Mutator_reader.is_typed_file ~reader addr then
       let root = Options.root options in
       let hash = Merge_service.sig_hash ~root ~reader component in
-      Context_heaps.Merge_context_mutator.add_merge_on_diff worker_mutator component hash
+      Parsing_heaps.Merge_context_mutator.add_merge_on_diff worker_mutator component hash
     else
       false
   in
@@ -286,7 +286,7 @@ module SimpleTypedRunner (C : SIMPLE_TYPED_RUNNER_CONFIG) : TYPED_RUNNER_CONFIG 
           merge_targets ~env ~options ~profiling ~get_dependent_files roots
         in
         let (master_mutator, worker_mutator) =
-          Context_heaps.Merge_context_mutator.create transaction files_to_merge
+          Parsing_heaps.Merge_context_mutator.create transaction files_to_merge
         in
         Hh_logger.info "Merging %d files" (FilenameSet.cardinal files_to_merge);
         let%lwt _ =
@@ -368,7 +368,7 @@ module TypedRunnerWithPrepass (C : TYPED_RUNNER_WITH_PREPASS_CONFIG) : TYPED_RUN
           merge_targets ~env ~options ~profiling ~get_dependent_files roots
         in
         let (master_mutator, worker_mutator) =
-          Context_heaps.Merge_context_mutator.create transaction files_to_merge
+          Parsing_heaps.Merge_context_mutator.create transaction files_to_merge
         in
         Hh_logger.info "Merging %d files" (FilenameSet.cardinal files_to_merge);
         let%lwt _ =
