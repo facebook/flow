@@ -173,7 +173,7 @@ let mk_check_file ~options ~reader ~cache () =
   let module Heap = SharedMem.NewAPI in
   let get_provider = Parsing_heaps.Reader_dispatcher.get_provider ~reader in
   let get_typed_parse = Parsing_heaps.Reader_dispatcher.get_typed_parse ~reader in
-  let find_leader = Context_heaps.Reader_dispatcher.find_leader ~reader in
+  let find_leader = Context_heaps.Reader_dispatcher.get_leader_unsafe ~reader in
   let get_resolved_requires_unsafe =
     Parsing_heaps.Reader_dispatcher.get_resolved_requires_unsafe ~reader
   in

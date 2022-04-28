@@ -8,9 +8,9 @@
 module type READER = sig
   type reader
 
-  val find_leader : reader:reader -> File_key.t -> File_key.t
+  val get_leader : reader:reader -> File_key.t -> File_key.t option
 
-  val find_leader_opt : reader:reader -> File_key.t -> File_key.t option
+  val get_leader_unsafe : reader:reader -> File_key.t -> File_key.t
 
   val find_master : reader:reader -> Context.master_context
 end
