@@ -31,7 +31,6 @@ module SSet = Flow_set.Make (String)
 type env = {
   fsenv: fsenv;
   fd: Unix.file_descr;
-  watchers: watcher_id list;
   mutable wpaths: SSet.t;
 }
 
@@ -62,15 +61,12 @@ let init roots =
   Unix.set_close_on_exec in_fd;
   Unix.set_close_on_exec out_fd;
   let fsenv = raw_init out_fd in
-  let watchers =
-    Base.List.filter_map roots ~f:(fun root ->
-        try Some (raw_add_watch fsenv root) with
-        | Unix.Unix_error (Unix.ENOENT, _, _) ->
-          prerr_endline ("Not watching root \"" ^ root ^ "\": file not found.");
-          None
-    )
-  in
-  { fsenv; fd = in_fd; watchers; wpaths = SSet.empty }
+  Base.List.iter roots ~f:(fun root ->
+      try ignore (raw_add_watch fsenv root) with
+      | Unix.Unix_error (Unix.ENOENT, _, _) ->
+        prerr_endline ("Not watching root \"" ^ root ^ "\": file not found.")
+  );
+  { fsenv; fd = in_fd; wpaths = SSet.empty }
 
 (** Faked add_watch, as for `fsnotify_darwin`. *)
 
