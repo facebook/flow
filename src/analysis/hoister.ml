@@ -195,6 +195,9 @@ class ['loc] hoister ~flowmin_compatibility ~enable_enums ~with_types =
 
     method! private add_let_binding ?kind entry = if lexical then super#add_let_binding ?kind entry
 
+    method! private add_function_binding entry =
+      if lexical || flowmin_compatibility then super#add_function_binding entry
+
     method! flowmin_compatibility_statement = this#base_statement
 
     method! nonlexical_statement stmt =
