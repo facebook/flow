@@ -71,10 +71,14 @@ let path_patt =
     let str = String.concat "" results in
     Str.regexp str
 
+let dir_sep =
+  if Sys.win32 then
+    Str.regexp "[/\\\\]"
+  else
+    Str.regexp_string Filename.dir_sep
+
 (* helper - eliminate noncanonical entries where possible.
    no other normalization is done *)
-let dir_sep = Str.regexp_string Filename.dir_sep
-
 let fixup_path p =
   let s = Path.to_string p in
   let is_normalized =
@@ -85,8 +89,18 @@ let fixup_path p =
   if is_normalized then
     p
   else
-    let abs = not (Filename.is_relative s) in
-    let entries = Str.split_delim dir_sep s in
+    let (root, entries) =
+      match Str.split_delim dir_sep s with
+      | "" :: entries when not Sys.win32 ->
+        (* "/foo" -> ("/", ["foo"]) *)
+        (Filename.dir_sep, entries)
+      | root :: entries when Sys.win32 && String.length root = 2 && root.[1] = ':' ->
+        (* "C:\\foo" -> ("C:\\", ["foo"]) *)
+        (root ^ Filename.dir_sep, entries)
+      | entries ->
+        (* relative *)
+        ("", entries)
+    in
     let rec loop revbase entries =
       match entries with
       | h :: t when h = Filename.current_dir_name -> loop revbase t
@@ -98,13 +112,7 @@ let fixup_path p =
       | [] -> List.rev revbase
     in
     let entries = loop [] entries in
-    let s = List.fold_left Filename.concat "" entries in
-    let s =
-      if abs then
-        Filename.dir_sep ^ s
-      else
-        s
-    in
+    let s = List.fold_left Filename.concat root entries in
     Path.make s
 
 (* adds `path` to the matcher, calculating the appropriate stem and pattern *)
