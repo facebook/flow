@@ -698,28 +698,39 @@ module Make
     jsx_base_name: string option;
   }
 
+  type pattern_write_kind =
+    | VarBinding
+    | LetBinding
+    | ConstBinding
+    | FunctionBinding
+    | AssignmentWrite
+
+  let variable_declaration_binding_kind_to_pattern_write_kind = function
+    | None -> AssignmentWrite
+    | Some Flow_ast.Statement.VariableDeclaration.Var -> VarBinding
+    | Some Flow_ast.Statement.VariableDeclaration.Let -> LetBinding
+    | Some Flow_ast.Statement.VariableDeclaration.Const -> ConstBinding
+
   let error_for_assignment_kind
-      cx name assignment_loc def_loc_opt stored_binding_kind pattern_binding_kind v =
+      cx name assignment_loc def_loc_opt stored_binding_kind pattern_write_kind v =
     match def_loc_opt with
     (* Identifiers with no binding can never reintroduce "cannot reassign binding" errors *)
     | None -> None
     | Some def_loc ->
-      (* Pattern kind is None or Some (Var | Const | Let). It is set to None when we hit a regular
-       * assignment, like x = 4, but set to Some x when we are in a declaration, like let x = 3, or
-       * class A {}. We use the pattern_binding_kind to decide if we should emit an error saying
+      (* We use the pattern_write_kind to decide if we should emit an error saying
        * "you cannot re-declare X" vs. "you cannot reassign const X" *)
-      (match (stored_binding_kind, pattern_binding_kind) with
-      | (Bindings.Const, None) ->
+      (match (stored_binding_kind, pattern_write_kind) with
+      | (Bindings.Const, AssignmentWrite) ->
         Some
           Error_message.(
             EBindingError (EConstReassigned, assignment_loc, OrdinaryName name, def_loc)
           )
-      | (Bindings.Parameter, None) when Context.enable_const_params cx ->
+      | (Bindings.Parameter, AssignmentWrite) when Context.enable_const_params cx ->
         Some
           Error_message.(
             EBindingError (EConstParamReassigned, assignment_loc, OrdinaryName name, def_loc)
           )
-      | (Bindings.Class, None) ->
+      | (Bindings.Class, AssignmentWrite) ->
         let def_reason = mk_reason (RIdentifier (OrdinaryName name)) def_loc in
         Some
           Error_message.(
@@ -730,7 +741,7 @@ module Make
                 binding_kind = Scope.Entry.ClassNameBinding;
               }
           )
-      | (Bindings.Function, None) ->
+      | (Bindings.Function, AssignmentWrite) ->
         let def_reason = mk_reason (RIdentifier (OrdinaryName name)) def_loc in
         Some
           Error_message.(
@@ -741,7 +752,7 @@ module Make
                 binding_kind = Scope.Entry.FunctionBinding;
               }
           )
-      | (Bindings.DeclaredFunction _, None) ->
+      | (Bindings.DeclaredFunction _, AssignmentWrite) ->
         let def_reason = mk_reason (RIdentifier (OrdinaryName name)) def_loc in
         Some
           Error_message.(
@@ -753,39 +764,39 @@ module Make
                 binding_kind = Scope.Entry.(DeclaredFunctionBinding { predicate = false });
               }
           )
-      | (Bindings.Var, Some Flow_ast.Statement.VariableDeclaration.(Let | Const)) ->
+      | (Bindings.Var, (LetBinding | ConstBinding | FunctionBinding)) ->
         Some
           Error_message.(
             EBindingError (ENameAlreadyBound, assignment_loc, OrdinaryName name, def_loc)
           )
-      | (Bindings.Const, Some _)
-      | (Bindings.Let, Some _)
-      | (Bindings.Class, Some _)
-      | (Bindings.Function, Some _)
-      | (Bindings.Type _, Some _)
+      | (Bindings.Const, (VarBinding | LetBinding | ConstBinding | FunctionBinding))
+      | (Bindings.Let, (VarBinding | LetBinding | ConstBinding | FunctionBinding))
+      | (Bindings.Class, (VarBinding | LetBinding | ConstBinding | FunctionBinding))
+      | (Bindings.Function, (VarBinding | LetBinding | ConstBinding | FunctionBinding))
+      | (Bindings.Type _, (VarBinding | LetBinding | ConstBinding | FunctionBinding))
         when not (Val.is_undeclared v) ->
         Some
           Error_message.(
             EBindingError (ENameAlreadyBound, assignment_loc, OrdinaryName name, def_loc)
           )
-      | (Bindings.Enum, None) ->
+      | (Bindings.Enum, AssignmentWrite) ->
         Some
           Error_message.(
             EBindingError (EEnumReassigned, assignment_loc, OrdinaryName name, def_loc)
           )
-      | (Bindings.Type { imported }, None) ->
+      | (Bindings.Type { imported }, AssignmentWrite) ->
         Some
           Error_message.(
             EBindingError
               (ETypeInValuePosition { imported; name }, assignment_loc, OrdinaryName name, def_loc)
           )
-      | (Bindings.Parameter, Some _) when Context.enable_const_params cx && not (Val.is_undeclared v)
-        ->
+      | (Bindings.Parameter, (VarBinding | LetBinding | ConstBinding | FunctionBinding))
+        when Context.enable_const_params cx && not (Val.is_undeclared v) ->
         Some
           Error_message.(
             EBindingError (ENameAlreadyBound, assignment_loc, OrdinaryName name, def_loc)
           )
-      | (Bindings.Parameter, Some Flow_ast.Statement.VariableDeclaration.(Let | Const))
+      | (Bindings.Parameter, (LetBinding | ConstBinding | FunctionBinding))
         when not (Val.is_undeclared v) ->
         Some
           Error_message.(
@@ -1597,9 +1608,10 @@ module Make
 
       method! function_identifier ident =
         (* The parent flow_ast_mapper treats functions as Vars, but in Flow
-         * (not JS, Flow) they behave more like hoisted lets. For the purpose of
-         * reassignment errors, we should consider them to be lets *)
-        this#pattern_identifier ~kind:Flow_ast.Statement.VariableDeclaration.Let ident
+         * (not JS, Flow) they have special behavior with functions. *)
+        let (loc, { Flow_ast.Identifier.name = x; comments = _ }) = ident in
+        this#bind_pattern_identifier_customized ~kind:FunctionBinding loc x;
+        super#identifier ident
 
       (* We want to translate object pattern destructing {a:{b:{c}}} = o into o.a.b.c,
          so the use of refinement can be recorded as a write.
@@ -1641,7 +1653,7 @@ module Make
                     | Some refined_v ->
                       ignore @@ this#type_annotation_hint annot;
                       this#bind_pattern_identifier_customized
-                        ?kind
+                        ~kind:(variable_declaration_binding_kind_to_pattern_write_kind kind)
                         ~get_assigned_val:(fun base ->
                           Val.replace_refinement_base_write ~base refined_v)
                         loc
@@ -1659,10 +1671,11 @@ module Make
 
       method! pattern_identifier ?kind ident =
         let (loc, { Flow_ast.Identifier.name = x; comments = _ }) = ident in
-        this#bind_pattern_identifier_customized ?kind loc x;
+        let kind = variable_declaration_binding_kind_to_pattern_write_kind kind in
+        this#bind_pattern_identifier_customized ~kind loc x;
         super#identifier ident
 
-      method private bind_pattern_identifier_customized ?kind ?(get_assigned_val = Base.Fn.id) loc x
+      method private bind_pattern_identifier_customized ~kind ?(get_assigned_val = Base.Fn.id) loc x
           =
         let reason = Reason.(mk_reason (RIdentifier (OrdinaryName x))) loc in
         let {
@@ -1678,7 +1691,7 @@ module Make
         match kind with
         (* Assignments to undeclared bindings that aren't part of declarations do not
          * initialize those bindings. *)
-        | None when Val.is_undeclared_or_skipped !val_ref ->
+        | AssignmentWrite when Val.is_undeclared_or_skipped !val_ref ->
           (match def_loc with
           | None -> failwith "Cannot have an undeclared or skipped binding without a def loc"
           | Some def_loc ->
@@ -1978,7 +1991,7 @@ module Make
                         loc
                         def_loc
                         stored_binding_kind
-                        (Some kind)
+                        (variable_declaration_binding_kind_to_pattern_write_kind (Some kind))
                         !val_ref
                       |> Base.Option.iter ~f:add_output
                     in
@@ -2934,7 +2947,7 @@ module Make
         match argument with
         | (_, Flow_ast.Expression.Identifier (id_loc, { Flow_ast.Identifier.name; _ })) ->
           let { kind; def_loc; val_ref; _ } = SMap.find name env_state.env in
-          (match error_for_assignment_kind cx name id_loc def_loc kind None !val_ref with
+          (match error_for_assignment_kind cx name id_loc def_loc kind AssignmentWrite !val_ref with
           | None ->
             val_ref := undefined;
             update_write_entries ~assigning:true
