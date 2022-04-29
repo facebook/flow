@@ -54,11 +54,8 @@ Cannot compute a type for function because its definition includes references to
 annotation to this definition [recursive-definition]
 
    a.js:26:1
-       v----------------
    26| function f_na() {
-   27|   return f_na();
-   28| }
-       ^
+       ^^^^^^^^^^^^^^^
 
 References:
    a.js:27:10
@@ -108,22 +105,16 @@ The following definitions recursively depend on each other, and Flow cannot comp
 Please add type annotations to these definitions [definition-cycle]
 
    a.js:38:1
-       v-------------
    38| function a() {
-   39|   return b()
-   40| }
-       ^ [1]
+       ^^^^^^^^^^^^ [1]
 
 References:
    a.js:39:10
    39|   return b()
                 ^ [2]
    a.js:42:1
-       v-------------
    42| function b() {
-   43|   return a()
-   44| }
-       ^ [3]
+       ^^^^^^^^^^^^ [3]
    a.js:43:10
    43|   return a()
                 ^ [4]

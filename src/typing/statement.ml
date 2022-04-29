@@ -6224,8 +6224,8 @@ struct
     in
     result_t
 
-  and arith_assign cx loc lhs_t rhs_t =
-    let reason = mk_reason (RCustom "(numop)=") loc in
+  and arith_assign cx reason lhs_t rhs_t =
+    let loc = aloc_of_reason reason in
     (* lhs = lhs (numop) rhs *)
     Flow.flow cx (lhs_t, AssertArithmeticOperandT reason);
     Flow.flow cx (rhs_t, AssertArithmeticOperandT reason);
@@ -6291,9 +6291,10 @@ struct
     | Assignment.BitXorAssign
     | Assignment.BitAndAssign ->
       (* lhs (numop)= rhs *)
+      let reason = mk_reason (RCustom "(numop)=") loc in
       let (((_, lhs_t), _) as lhs_ast) = assignment_lhs cx lhs in
       let (((_, rhs_t), _) as rhs_ast) = expression cx ~hint:Hint_None rhs in
-      let result_t = arith_assign cx loc lhs_t rhs_t in
+      let result_t = arith_assign cx reason lhs_t rhs_t in
       (* enforce state-based guards for binding update, e.g., const *)
       (match lhs with
       | ( _,

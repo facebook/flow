@@ -277,22 +277,22 @@ class def_finder =
 
     method! function_expression loc expr =
       let open Ast.Function in
-      let { id; async; generator; _ } = expr in
+      let { id; async; generator; sig_loc; _ } = expr in
       begin
         match id with
         | Some (id_loc, _) ->
-          this#add_binding id_loc (func_reason ~async ~generator loc) (def_of_function expr)
+          this#add_binding id_loc (func_reason ~async ~generator sig_loc) (def_of_function expr)
         | None -> ()
       end;
       super#function_expression loc expr
 
     method! function_declaration loc expr =
       let open Ast.Function in
-      let { id; async; generator; _ } = expr in
+      let { id; async; generator; sig_loc; _ } = expr in
       begin
         match id with
         | Some (id_loc, _) ->
-          this#add_binding id_loc (func_reason ~async ~generator loc) (def_of_function expr)
+          this#add_binding id_loc (func_reason ~async ~generator sig_loc) (def_of_function expr)
         | None -> ()
       end;
       super#function_expression loc expr

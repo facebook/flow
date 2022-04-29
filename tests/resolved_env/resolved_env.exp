@@ -385,7 +385,7 @@ annotation to this definition [recursive-definition]
 
    function.js:11:10
    11| var x = (function h() { (h(): empty); return 42 }); // err
-                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                ^^^^^^^^^^^^
 
 References:
    function.js:11:26

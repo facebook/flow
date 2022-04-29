@@ -88,7 +88,7 @@ module type S = sig
     Type.t ->
     Type.t
 
-  val arith_assign : Context.t -> ALoc.t -> Type.t -> Type.t -> Type.t
+  val arith_assign : Context.t -> Reason.reason -> Type.t -> Type.t -> Type.t
 
   val mk_class :
     Context.t ->
