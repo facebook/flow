@@ -199,6 +199,7 @@ module New_env = struct
         (* Instanceof refinements store the loc they check against, which is a read in the env *)
         let reason = mk_reason (RCustom "RHS of `instanceof` operator") loc in
         let t = read_entry_exn ~lookup_mode:ForValue cx loc reason in
+        let t = Flow_js.reposition cx loc t in
         Flow_js.flow cx (t, AssertInstanceofRHST reason);
         LeftP (InstanceofTest, t)
       | IsArrayR -> ArrP

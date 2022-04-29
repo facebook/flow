@@ -1132,9 +1132,9 @@ Cannot cast `x` to string because `C` [1] is incompatible with string [2]. [inco
             ^
 
 References:
-   refinements.js:3:7
-    3| class C {
-             ^ [1]
+   refinements.js:15:20
+   15|   if (x instanceof C) {
+                          ^ [1]
    refinements.js:18:9
    18|     (x: string); // nope
                ^^^^^^ [2]
