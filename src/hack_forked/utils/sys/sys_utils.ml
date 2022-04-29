@@ -5,7 +5,9 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-external realpath : string -> string option = "hh_realpath"
+let realpath p =
+  try Some (Unix.realpath p) with
+  | Unix.Unix_error _ -> None
 
 (** Option type intead of exception throwing. *)
 let get_env name =
