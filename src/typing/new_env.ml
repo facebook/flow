@@ -445,15 +445,21 @@ module New_env = struct
       Old_env.constraining_type ~default cx name loc
     | OrdinaryName _ ->
       let ({ Loc_env.var_info; _ } as env) = Context.environment cx in
-      let providers =
-        find_providers var_info loc |> Base.List.map ~f:(Loc_env.find_write env) |> Base.Option.all
-      in
-      (match providers with
-      | None
-      | Some [] ->
-        default
-      | Some [t] -> t
-      | Some (t1 :: t2 :: ts) -> UnionT (mk_reason (RCustom "providers") loc, UnionRep.make t1 t2 ts))
+      (match ALocMap.find_opt loc var_info.Env_api.env_entries with
+      | Some Env_api.NonAssigningWrite -> default
+      | _ ->
+        let providers =
+          find_providers var_info loc
+          |> Base.List.map ~f:(Loc_env.find_write env)
+          |> Base.Option.all
+        in
+        (match providers with
+        | None
+        | Some [] ->
+          default
+        | Some [t] -> t
+        | Some (t1 :: t2 :: ts) ->
+          UnionT (mk_reason (RCustom "providers") loc, UnionRep.make t1 t2 ts)))
 
   (*************)
   (*  Writing  *)
