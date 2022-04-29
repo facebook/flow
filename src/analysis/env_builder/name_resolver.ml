@@ -142,7 +142,7 @@ module Make
 
     val super : t
 
-    val arguments : t
+    val module_scoped : string -> t
 
     val global : string -> t
 
@@ -212,7 +212,7 @@ module Make
       | Projection of ALoc.t
       | This
       | Super
-      | Arguments
+      | ModuleScoped of string
       | Global of string
       | Loc of ALoc.t virtual_reason
       | PHI of write_state list
@@ -254,7 +254,7 @@ module Make
         Utils_js.spf "{refinement = %s; write = %s}" refinement_kind write_str
       | This -> "This"
       | Super -> "Super"
-      | Arguments -> "Arguments"
+      | ModuleScoped name -> "ModuleScoped " ^ name
       | Global name -> "Global " ^ name
       | Undefined _ -> "undefined"
       | Number _ -> "number"
@@ -400,7 +400,7 @@ module Make
       | Projection _
       | This
       | Super
-      | Arguments
+      | ModuleScoped _
       | Global _
       | Loc _
       | Refinement _ ->
@@ -440,7 +440,7 @@ module Make
       | Global _
       | This
       | Super
-      | Arguments
+      | ModuleScoped _
       | Loc _ ->
         WriteSet.singleton t
       | PHI ts ->
@@ -456,7 +456,7 @@ module Make
 
     let super = mk_with_write_state Super
 
-    let arguments = mk_with_write_state Arguments
+    let module_scoped name = mk_with_write_state @@ ModuleScoped name
 
     let global name = mk_with_write_state @@ Global name
 
@@ -492,7 +492,7 @@ module Make
               }
           | This -> Env_api.This
           | Super -> Env_api.Super
-          | Arguments -> Env_api.Arguments
+          | ModuleScoped name -> Env_api.ModuleScoped name
           | Global name -> Env_api.Global name
           | PHI _ -> failwith "A normalized value cannot be a PHI")
         (WriteSet.elements vals)
@@ -535,7 +535,7 @@ module Make
         | Loc _ -> []
         | This -> []
         | Super -> []
-        | Arguments -> []
+        | ModuleScoped _ -> []
         | Global _ -> []
         | Projection _ -> []
       in
@@ -809,6 +809,8 @@ module Make
           )
       | _ -> None)
 
+  let module_scoped_vars = ["eval"; "arguments"]
+
   let initialize_globals unbound_names =
     SMap.empty
     |> SSet.fold
@@ -847,16 +849,23 @@ module Make
            heap_refinements = ref HeapRefinementMap.empty;
            kind = Bindings.Var;
          }
-    |> SMap.add
-         "arguments"
-         {
-           val_ref = ref Val.arguments;
-           havoc = Val.arguments;
-           writes_by_closure_provider_val = None;
-           def_loc = None;
-           heap_refinements = ref HeapRefinementMap.empty;
-           kind = Bindings.Var;
-         }
+    |> fun init ->
+    Base.List.fold
+      ~init
+      ~f:(fun acc name ->
+        let module_scoped_val = Val.module_scoped name in
+        let entry =
+          {
+            val_ref = ref module_scoped_val;
+            havoc = module_scoped_val;
+            writes_by_closure_provider_val = None;
+            def_loc = None;
+            heap_refinements = ref HeapRefinementMap.empty;
+            kind = Bindings.Var;
+          }
+        in
+        SMap.add name entry acc)
+      module_scoped_vars
 
   (* Statement.ml tries to extract the name and traverse at the location of the
    * jsx element if it's an identifier, otherwise it just traverses the

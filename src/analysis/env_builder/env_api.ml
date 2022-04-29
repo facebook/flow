@@ -41,7 +41,7 @@ module type S = sig
       }
     | This
     | Super
-    | Arguments
+    | ModuleScoped of string
     | Global of string
     | Projection of L.t
     | Unreachable of L.t
@@ -196,7 +196,7 @@ module Make
       }
     | This
     | Super
-    | Arguments
+    | ModuleScoped of string
     | Global of string
     | Projection of L.t
     | Unreachable of L.t
@@ -318,7 +318,7 @@ module Make
     | Undeclared _ -> []
     | This -> []
     | Super -> []
-    | Arguments -> []
+    | ModuleScoped _ -> []
     | Global _ -> []
     | Projection _ -> []
     | Unreachable _ -> []
@@ -388,7 +388,7 @@ module Make
         Printf.sprintf "{refinement_id = %s; writes = %s}" refinement_id_str writes_str
       | This -> "this"
       | Super -> "super"
-      | Arguments -> "arguments"
+      | ModuleScoped name -> "ModuleScoped " ^ name
       | Global name -> "Global " ^ name
     in
     fun values ->

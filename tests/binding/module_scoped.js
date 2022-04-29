@@ -1,0 +1,4 @@
+// @flow
+
+arguments;
+eval("");

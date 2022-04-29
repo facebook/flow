@@ -297,7 +297,7 @@ module New_env = struct
                  Old_env.query_var ~lookup_mode cx (Reason.InternalName "this") loc
                | (Env_api.With_ALoc.Super, _) ->
                  Old_env.query_var ~lookup_mode cx (Reason.InternalName "super") loc
-               | (Env_api.With_ALoc.Arguments, _) -> Type.(AnyT.at AnnotatedAny loc)
+               | (Env_api.With_ALoc.ModuleScoped _, _) -> Type.(AnyT.at AnnotatedAny loc)
                | (Env_api.With_ALoc.Unreachable loc, _) ->
                  let reason = mk_reason (RCustom "unreachable value") loc in
                  EmptyT.make reason (Trust.bogus_trust ())
@@ -399,7 +399,7 @@ module New_env = struct
           | Env_api.With_ALoc.Projection _ -> true
           | Env_api.With_ALoc.This -> true
           | Env_api.With_ALoc.Super -> true
-          | Env_api.With_ALoc.Arguments -> true
+          | Env_api.With_ALoc.ModuleScoped _ -> true
           | Env_api.With_ALoc.Global _ -> false)
         states
       |> not
