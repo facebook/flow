@@ -779,6 +779,11 @@ module Make
           Error_message.(
             EBindingError (ENameAlreadyBound, assignment_loc, OrdinaryName name, def_loc)
           )
+      | (Bindings.DeclaredFunction _, (VarBinding | LetBinding | ConstBinding)) ->
+        Some
+          Error_message.(
+            EBindingError (ENameAlreadyBound, assignment_loc, OrdinaryName name, def_loc)
+          )
       | (Bindings.Enum, AssignmentWrite) ->
         Some
           Error_message.(

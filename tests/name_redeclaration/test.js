@@ -15,7 +15,7 @@ var f4 = 4; // error [name-already-bound]
 declare function f5(): void;
 declare function f5(): void;
 function f5(): void {};
-function f5(): void {};  // error [name-already-bound]
+function f5(): void {}; // TODO: error [name-already-bound]
 var f5 = 5; // error [name-already-bound]
 
 class c1 {}
