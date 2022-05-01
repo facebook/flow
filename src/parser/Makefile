@@ -14,7 +14,6 @@ NATIVE_OBJECT_FILES=\
 	src/hack_forked/utils/sys/gc_profiling.o\
 	src/hack_forked/utils/sys/getrusage.o\
 	src/hack_forked/utils/sys/nproc.o\
-	src/hack_forked/utils/sys/realpath.o\
 	src/hack_forked/utils/sys/sysinfo.o\
 	src/hack_forked/utils/sys/processor_info.o\
 	src/hack_forked/utils/sys/priorities.o
