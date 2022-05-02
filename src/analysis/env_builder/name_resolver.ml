@@ -1000,6 +1000,26 @@ module Make
 
       method write_entries : Env_api.env_entry L.LMap.t = env_state.write_entries
 
+      method private merge_vals_with_havoc ~havoc ~def_loc v1 v2 =
+        (* It's not safe to reset to havoc when one side can be uninitialized, because the havoc
+           val is built from providers which does not include the initial uninitialized state *)
+        let can_merge_with_havoc v_havoc v_other =
+          Val.id_of_val v_havoc = Val.id_of_val havoc
+          && Base.List.is_empty
+             @@ Val.writes_of_uninitialized this#refinement_may_be_undefined v_other
+        in
+        match def_loc with
+        | Some loc ->
+          (match Env_api.Provider_api.providers_of_def provider_info loc with
+          (* We only use havoc as the merge if the providers that generate the havoc val are
+             annotated. Only when the havoc val is annotated, we know for certain that it wouldn't
+             be widened in the branches we are merging together. *)
+          | Some (Find_providers.AnnotatedVar _, _)
+            when can_merge_with_havoc v1 v2 || can_merge_with_havoc v2 v1 ->
+            havoc
+          | _ -> Val.merge v1 v2)
+        | None -> Val.merge v1 v2
+
       method private new_id () =
         let new_id = env_state.curr_id in
         let curr_id = new_id + 1 in
@@ -1135,8 +1155,14 @@ module Make
                  heap_refinements = heap_entries_after_guard;
                  def_loc = _;
                }
-               { val_ref = after_loop; heap_refinements = heap_entries_after_loop; _ } ->
-            after_loop := Val.merge after_guard !after_loop;
+               {
+                 val_ref = after_loop;
+                 havoc;
+                 heap_refinements = heap_entries_after_loop;
+                 def_loc;
+                 _;
+               } ->
+            after_loop := this#merge_vals_with_havoc ~havoc ~def_loc after_guard !after_loop;
             heap_entries_after_loop :=
               merge_heap_refinements
                 ~heap_entries_after_loop:!heap_entries_after_loop
@@ -1148,12 +1174,12 @@ module Make
         (* NOTE: env might have more keys than env_state.env, since the environment it
            describes might be nested inside the current environment *)
         SMap.iter
-          (fun x { val_ref; heap_refinements = heap_refinements1; def_loc = def_loc_1; _ } ->
+          (fun x { val_ref; havoc; heap_refinements = heap_refinements1; def_loc = def_loc_1; _ } ->
             let { Env.env_val; heap_refinements = heap_refinements2; def_loc = def_loc_2 } =
               SMap.find x env
             in
             if def_loc_1 = def_loc_2 then (
-              val_ref := Val.merge !val_ref env_val;
+              val_ref := this#merge_vals_with_havoc ~havoc ~def_loc:def_loc_1 !val_ref env_val;
               heap_refinements1 := this#merge_heap_refinements !heap_refinements1 heap_refinements2
             ))
           env_state.env
@@ -1163,10 +1189,10 @@ module Make
         let env2 = SMap.values env2 in
         let env = SMap.values env_state.env in
         list_iter3
-          (fun { val_ref; heap_refinements; _ }
+          (fun { val_ref; havoc; heap_refinements; def_loc; _ }
                { Env.env_val = value1; heap_refinements = heap_refinements1; def_loc = _ }
                { Env.env_val = value2; heap_refinements = heap_refinements2; def_loc = _ } ->
-            val_ref := Val.merge value1 value2;
+            val_ref := this#merge_vals_with_havoc ~havoc ~def_loc value1 value2;
             heap_refinements := this#merge_heap_refinements heap_refinements1 heap_refinements2)
           env
           env1
@@ -1176,9 +1202,9 @@ module Make
         let other_env = SMap.values other_env in
         let env = SMap.values env_state.env in
         List.iter2
-          (fun { val_ref; heap_refinements; _ }
+          (fun { val_ref; havoc; heap_refinements; def_loc; _ }
                { Env.env_val = value; heap_refinements = new_heap_refinements; def_loc = _ } ->
-            val_ref := Val.merge !val_ref value;
+            val_ref := this#merge_vals_with_havoc ~havoc ~def_loc !val_ref value;
             heap_refinements := this#merge_heap_refinements !heap_refinements new_heap_refinements)
           env
           other_env
@@ -2214,7 +2240,7 @@ module Make
         | (Some _, None) -> this#reset_env refined_env2
         | _ ->
           SMap.iter
-            (fun name { val_ref; heap_refinements; _ } ->
+            (fun name { val_ref; heap_refinements; havoc; def_loc; _ } ->
               let { Env.env_val = value1; heap_refinements = heap_entries1; def_loc = _ } =
                 SMap.find name env1
               in
@@ -2259,7 +2285,7 @@ module Make
               if Val.id_of_val value1 = Val.id_of_val value2 then
                 val_ref := value1
               else
-                val_ref := Val.merge refined_value1 refined_value2)
+                val_ref := this#merge_vals_with_havoc ~havoc ~def_loc refined_value1 refined_value2)
             env_state.env
 
       method with_env_state f =

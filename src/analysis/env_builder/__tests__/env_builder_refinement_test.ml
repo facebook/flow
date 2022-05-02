@@ -1641,7 +1641,45 @@ x;|};
           (1, 4) to (1, 5): (`x`)
         }] |}]
 
-let%expect_test "if_no_else_statement_with_assignment" =
+let%expect_test "if_no_else_statement_with_assignment_simple" =
+  print_ssa_test {|let x = 0;
+if (true) {
+  x = null;
+}
+x;|};
+    [%expect {|
+      [
+        (5, 0) to (5, 1) => {
+          (1, 4) to (1, 5): (`x`),
+          (3, 2) to (3, 3): (`x`)
+        }] |}]
+
+let%expect_test "if_no_else_statement_with_assignment_simple_with_annotation" =
+  print_ssa_test {|let x: number = 0;
+if (true) {
+  x = null;
+}
+x;|};
+    [%expect {|
+      [
+        (5, 0) to (5, 1) => {
+          (1, 4) to (1, 5): (`x`)
+        }] |}]
+
+let%expect_test "if_no_else_statement_with_assignment_uninitialized_with_annotation" =
+  print_ssa_test {|let x: number;
+if (true) {
+  x = 1;
+}
+x;|};
+    [%expect {|
+      [
+        (5, 0) to (5, 1) => {
+          (uninitialized),
+          (3, 2) to (3, 3): (`x`)
+        }] |}]
+
+let%expect_test "if_no_else_statement_with_assignment_with_refinements" =
   print_ssa_test {|let x = undefined;
 if (x !== null) {
   x = null;

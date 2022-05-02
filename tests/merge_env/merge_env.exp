@@ -1,0 +1,74 @@
+Error ----------------------------------------------------------------------------------------------------- test.js:14:6
+
+Cannot cast `bar` to array type because possibly uninitialized variable [1] is incompatible with array type [2].
+[incompatible-cast]
+
+   test.js:14:6
+   14|     (bar: Array<boolean>); // error
+            ^^^
+
+References:
+   test.js:12:9
+   12|     let bar: Array<boolean>;
+               ^^^ [1]
+   test.js:14:11
+   14|     (bar: Array<boolean>); // error
+                 ^^^^^^^^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:35:6
+
+Cannot cast `bar` to array type because possibly uninitialized variable [1] is incompatible with array type [2].
+[incompatible-cast]
+
+   test.js:35:6
+   35|     (bar: Array<boolean>); // error
+            ^^^
+
+References:
+   test.js:30:9
+   30|     let bar: Array<boolean>;
+               ^^^ [1]
+   test.js:35:11
+   35|     (bar: Array<boolean>); // error
+                 ^^^^^^^^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:56:6
+
+Cannot cast `bar` to array type because possibly uninitialized variable [1] is incompatible with array type [2].
+[incompatible-cast]
+
+   test.js:56:6
+   56|     (bar: Array<boolean>); // error
+            ^^^
+
+References:
+   test.js:51:9
+   51|     let bar: Array<boolean>;
+               ^^^ [1]
+   test.js:56:11
+   56|     (bar: Array<boolean>); // error
+                 ^^^^^^^^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:76:6
+
+Cannot cast `bar` to array type because possibly uninitialized variable [1] is incompatible with array type [2].
+[incompatible-cast]
+
+   test.js:76:6
+   76|     (bar: Array<boolean>); // error
+            ^^^
+
+References:
+   test.js:72:9
+   72|     let bar: Array<boolean>;
+               ^^^ [1]
+   test.js:76:11
+   76|     (bar: Array<boolean>); // error
+                 ^^^^^^^^^^^^^^ [2]
+
+
+
+Found 4 errors
