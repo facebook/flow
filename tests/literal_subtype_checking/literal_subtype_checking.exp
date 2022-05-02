@@ -382,5 +382,61 @@ References:
                                    ^^^^^^^ [3]
 
 
+Error ---------------------------------------------------------------------------------------------------- test.js:74:14
 
-Found 24 errors
+boolean literal `false` [1] is incompatible with boolean literal `true` [2]. [incompatible-type]
+
+   test.js:74:14
+   74|   if (b1 === false) {} // error
+                    ^^^^^ [1]
+
+References:
+   test.js:72:43
+   72| function bool_literal_subtyping_check(b1: true, b2: false, b3: boolean) {
+                                                 ^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:76:14
+
+boolean literal `false` [1] is incompatible with boolean literal `true` [2]. [incompatible-type]
+
+   test.js:76:14
+   76|   if (b1 !== false) {} // error
+                    ^^^^^ [1]
+
+References:
+   test.js:72:43
+   72| function bool_literal_subtyping_check(b1: true, b2: false, b3: boolean) {
+                                                 ^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:78:14
+
+boolean literal `true` [1] is incompatible with boolean literal `false` [2]. [incompatible-type]
+
+   test.js:78:14
+   78|   if (b2 === true) {} // error
+                    ^^^^ [1]
+
+References:
+   test.js:72:53
+   72| function bool_literal_subtyping_check(b1: true, b2: false, b3: boolean) {
+                                                           ^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:80:14
+
+boolean literal `true` [1] is incompatible with boolean literal `false` [2]. [incompatible-type]
+
+   test.js:80:14
+   80|   if (b2 !== true) {} // error
+                    ^^^^ [1]
+
+References:
+   test.js:72:53
+   72| function bool_literal_subtyping_check(b1: true, b2: false, b3: boolean) {
+                                                           ^^^^^ [2]
+
+
+
+Found 28 errors

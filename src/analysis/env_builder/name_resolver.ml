@@ -948,10 +948,10 @@ module Make
           Context.add_new_env_literal_subtypes
             cx
             (refinee_loc, PostInferenceCheck.SingletonNum (loc, sense, num, raw))
-        | SingletonBoolR { loc; lit; sense } ->
+        | SingletonBoolR { loc; lit; sense = _ } ->
           Context.add_new_env_literal_subtypes
             cx
-            (refinee_loc, PostInferenceCheck.SingletonBool (loc, lit = sense))
+            (refinee_loc, PostInferenceCheck.SingletonBool (loc, lit))
         | SingletonStrR { loc; lit; sense } ->
           Context.add_new_env_literal_subtypes
             cx

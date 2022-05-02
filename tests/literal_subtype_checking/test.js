@@ -68,3 +68,20 @@ function unused_refinement_optional_chaining_test() {
   if (true && (false || nullableX === 1)) {} // Error
   if (true && (false || nullableO?.p === 1)) {} // Error
 }
+
+function bool_literal_subtyping_check(b1: true, b2: false, b3: boolean) {
+  if (b1 === true) {} // ok
+  if (b1 === false) {} // error
+  if (b1 !== true) {} // ok
+  if (b1 !== false) {} // error
+
+  if (b2 === true) {} // error
+  if (b2 === false) {} // ok
+  if (b2 !== true) {} // error
+  if (b2 !== false) {} // ok
+
+  if (b3 === true) {} // ok
+  if (b3 === false) {} // ok
+  if (b3 !== true) {} // ok
+  if (b3 !== false) {} // ok
+}
