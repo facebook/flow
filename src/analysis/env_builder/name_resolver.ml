@@ -1825,6 +1825,34 @@ module Make
         (* TODO: what identifiers does `<foo:bar />` read? *)
         super#jsx_element_name_namespaced ns
 
+      method! jsx_member_expression jsx_mem_expr =
+        let rec obj_to_expr = function
+          | Ast.JSX.MemberExpression.Identifier (id_loc, { Ast.JSX.Identifier.name; comments }) ->
+            (id_loc, Ast.Expression.Identifier (id_loc, { Ast.Identifier.name; comments }))
+          | Ast.JSX.MemberExpression.MemberExpression
+              ( loc,
+                {
+                  Ast.JSX.MemberExpression._object;
+                  property = (prop_loc, { Ast.JSX.Identifier.name; comments });
+                }
+              ) ->
+            ( loc,
+              Ast.Expression.Member
+                {
+                  Ast.Expression.Member._object = obj_to_expr _object;
+                  property =
+                    Ast.Expression.Member.PropertyIdentifier
+                      (prop_loc, { Ast.Identifier.name; comments });
+                  comments = None;
+                }
+            )
+        in
+        Ast.JSX.MemberExpression.MemberExpression jsx_mem_expr
+        |> obj_to_expr
+        |> this#expression
+        |> ignore;
+        jsx_mem_expr
+
       method havoc_heap_refinements_using_name ~private_ name =
         SMap.iter
           (fun _ { heap_refinements; _ } ->
