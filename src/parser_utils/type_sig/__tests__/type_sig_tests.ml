@@ -143,13 +143,23 @@ let pp_builtins
     fmt
     ( errs,
       locs,
-      { Packed_type_sig.Builtins.module_refs; local_defs; remote_refs; globals = _; modules }
+      {
+        Packed_type_sig.Builtins.module_refs;
+        local_defs;
+        remote_refs;
+        pattern_defs;
+        patterns;
+        globals = _;
+        modules;
+      }
     ) =
   let open Format in
   let pp_loc = mk_pp_loc locs in
   pp_module_refs fmt module_refs;
   pp_local_defs pp_loc fmt local_defs;
   pp_remote_refs pp_loc fmt remote_refs;
+  pp_pattern_defs pp_loc fmt pattern_defs;
+  pp_patterns pp_loc fmt patterns;
   SMap.iter
     (fun name m ->
       fprintf fmt "@.Builtin module %s:@." name;
@@ -4935,6 +4945,31 @@ let%expect_test "builtin_module_export_specifiers" =
                 ESModuleInfo {type_export_keys = [||];
                   type_stars = []; export_keys = [|"x"; "y"|];
                   stars = []; strict = true}} |}]
+
+let%expect_test "builtin_pattern" =
+  print_builtins [{|
+    const o = { p: 0 };
+    const {p} = o;
+  |}];
+  [%expect {|
+    Local defs:
+    0. Variable {id_loc = [1:6-7]; name = "o";
+         def =
+         (Value
+            ObjLit {loc = [1:10-18];
+              frozen = false; proto = None;
+              props =
+              { "p" ->
+                (ObjValueField ([1:12-13], (
+                   Value (NumberLit ([1:15-16], 0., "0"))), Polarity.Neutral)) }})}
+    1. Variable {id_loc = [2:7-8]; name = "p"; def = (Pattern 1)}
+
+    Pattern defs:
+    0. (Ref LocalRef {ref_loc = [2:12-13]; index = 0})
+
+    Patterns:
+    0. (PDef 0)
+    1. PropP {id_loc = [2:7-8]; name = "p"; def = 0} |}]
 
 let%expect_test "this_param_1" =
   print_sig {|

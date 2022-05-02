@@ -28,7 +28,7 @@ let parse_libs opts ordered_asts =
   (tbls, Scope.builtins_exn scope)
 
 let pack_builtins (tbls, (globals, modules)) =
-  let { Parse.locs; module_refs; local_defs; remote_refs; _ } = tbls in
+  let { Parse.locs; module_refs; local_defs; remote_refs; pattern_defs; patterns } = tbls in
   (* mark *)
   SMap.iter (fun _ b -> Mark.mark_binding b) globals;
   SMap.iter (fun _ m -> Mark.mark_builtin_module m) modules;
@@ -37,12 +37,16 @@ let pack_builtins (tbls, (globals, modules)) =
   let module_refs = Module_refs.Interned.compact module_refs in
   let local_defs = Local_defs.compact local_defs in
   let remote_refs = Remote_refs.compact remote_refs in
+  let pattern_defs = Pattern_defs.compact pattern_defs in
+  let patterns = Patterns.compact patterns in
   (* copy *)
   let cx = Pack.create_cx () in
   let locs = Locs.copy (fun x -> x) locs in
   let module_refs = Module_refs.copy (fun x -> x) module_refs in
   let local_defs = Local_defs.copy (Pack.pack_local_binding cx) local_defs in
   let remote_refs = Remote_refs.copy Pack.pack_remote_binding remote_refs in
+  let pattern_defs = Pattern_defs.copy (Pack.pack_parsed cx) pattern_defs in
+  let patterns = Patterns.copy Pack.pack_pattern patterns in
   let globals = SMap.map Pack.pack_builtin globals in
   let modules =
     SMap.map
@@ -53,7 +57,15 @@ let pack_builtins (tbls, (globals, modules)) =
   in
   ( cx.Pack.errs,
     locs,
-    { Packed_type_sig.Builtins.module_refs; local_defs; remote_refs; globals; modules }
+    {
+      Packed_type_sig.Builtins.module_refs;
+      local_defs;
+      remote_refs;
+      pattern_defs;
+      patterns;
+      globals;
+      modules;
+    }
   )
 
 (* Modules are parsed and packed separately, then merged component wise

@@ -21,8 +21,8 @@ module Export_sig = struct
     module_refs: string Type_sig_collections.Module_refs.t;
     local_defs: 'loc Type_sig_pack.packed_def Type_sig_collections.Local_defs.t;
     remote_refs: 'loc Type_sig_pack.remote_ref Type_sig_collections.Remote_refs.t;
-    pattern_defs: 'loc Type_sig_pack.packed Type_sig_collections.Pattern_defs.t option;
-    patterns: 'loc Type_sig_pack.pattern Type_sig_collections.Patterns.t option;
+    pattern_defs: 'loc Type_sig_pack.packed Type_sig_collections.Pattern_defs.t;
+    patterns: 'loc Type_sig_pack.pattern Type_sig_collections.Patterns.t;
   }
   [@@warning "-69"]
 
@@ -35,48 +35,23 @@ module Export_sig = struct
         pattern_defs;
         patterns;
       } =
-    {
-      module_kind = Some module_kind;
-      module_refs;
-      local_defs;
-      remote_refs;
-      pattern_defs = Some pattern_defs;
-      patterns = Some patterns;
-    }
+    { module_kind = Some module_kind; module_refs; local_defs; remote_refs; pattern_defs; patterns }
 
-  let of_builtins ~module_refs ~local_defs ~remote_refs =
-    {
-      module_kind = None;
-      module_refs;
-      local_defs;
-      remote_refs;
-      pattern_defs = None;
-      patterns = None;
-    }
+  let of_builtins ~module_refs ~local_defs ~remote_refs ~pattern_defs ~patterns =
+    { module_kind = None; module_refs; local_defs; remote_refs; pattern_defs; patterns }
 
-  let of_builtin_module ~module_refs ~local_defs ~remote_refs ~module_kind =
-    {
-      module_kind = Some module_kind;
-      module_refs;
-      local_defs;
-      remote_refs;
-      pattern_defs = None;
-      patterns = None;
-    }
+  let of_builtin_module ~module_refs ~local_defs ~remote_refs ~module_kind ~pattern_defs ~patterns =
+    { module_kind = Some module_kind; module_refs; local_defs; remote_refs; pattern_defs; patterns }
 end
 
 let local_def_of_index type_sig index =
   Type_sig_collections.Local_defs.get type_sig.Export_sig.local_defs index
 
 let pattern_of_index type_sig index =
-  match type_sig.Export_sig.patterns with
-  | Some patterns -> Type_sig_collections.Patterns.get patterns index
-  | None -> failwith "unexpected pattern in builtin module"
+  Type_sig_collections.Patterns.get type_sig.Export_sig.patterns index
 
 let pattern_def_of_index type_sig index =
-  match type_sig.Export_sig.pattern_defs with
-  | Some pattern_defs -> Type_sig_collections.Pattern_defs.get pattern_defs index
-  | None -> failwith "unexpected pattern_def in builtin module"
+  Type_sig_collections.Pattern_defs.get type_sig.Export_sig.pattern_defs index
 
 module Eval = struct
   open Type_sig
@@ -387,15 +362,31 @@ let of_sig export_sig : t =
 
 let of_module type_sig : t = type_sig |> Export_sig.of_module |> of_sig
 
-let of_builtins { Packed_type_sig.Builtins.modules; module_refs; local_defs; remote_refs; globals }
-    =
-  let global_sig = Export_sig.of_builtins ~module_refs ~local_defs ~remote_refs in
+let of_builtins
+    {
+      Packed_type_sig.Builtins.modules;
+      module_refs;
+      local_defs;
+      remote_refs;
+      pattern_defs;
+      patterns;
+      globals;
+    } =
+  let global_sig =
+    Export_sig.of_builtins ~module_refs ~local_defs ~remote_refs ~pattern_defs ~patterns
+  in
   []
   |> SMap.fold (add_global global_sig) globals
   |> SMap.fold
        (fun name { Packed_type_sig.Builtins.loc = _; module_kind } acc ->
          let export_sig =
-           Export_sig.of_builtin_module ~module_refs ~local_defs ~remote_refs ~module_kind
+           Export_sig.of_builtin_module
+             ~module_refs
+             ~local_defs
+             ~remote_refs
+             ~module_kind
+             ~pattern_defs
+             ~patterns
          in
          Module (name, of_sig export_sig) :: acc)
        modules
