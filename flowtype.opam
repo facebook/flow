@@ -9,10 +9,10 @@ doc: "https://flow.org/en/docs/getting-started/"
 bug-reports: "https://github.com/facebook/flow/issues"
 depends: [
   "ocaml" {>= "4.12.1"}
-  "base" {>= "v0.14.1"}
+  "base" {= "v0.14.1"}
   "base-unix"
   "base-bytes"
-  "core_kernel" {>= "v0.14.1"}
+  "core_kernel" {= "v0.14.1"}
   "dtoa" {>= "0.3.2"}
   "ocamlbuild" {build}
   "ocamlfind" {build}
