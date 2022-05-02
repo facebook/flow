@@ -59,6 +59,7 @@ let print_values refinement_of_id =
       Printf.sprintf "{refinement = %s; writes = %s}" refinement_str writes_str
     | This -> "This"
     | Super -> "Super"
+    | Exports -> "Exports"
     | ModuleScoped name -> "ModuleScoped " ^ name
     | Global name -> "Global " ^ name
     | Unreachable _ -> "unreachable"
@@ -5824,7 +5825,7 @@ exports.foo = 1;
     [%expect {|
       [
         (2, 0) to (2, 7) => {
-          Global exports
+          Exports
         }] |}]
 
 let%expect_test "import_havoc" =

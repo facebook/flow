@@ -142,6 +142,8 @@ module Make
 
     val super : t
 
+    val exports : t
+
     val module_scoped : string -> t
 
     val global : string -> t
@@ -212,6 +214,7 @@ module Make
       | Projection of ALoc.t
       | This
       | Super
+      | Exports
       | ModuleScoped of string
       | Global of string
       | Loc of ALoc.t virtual_reason
@@ -254,6 +257,7 @@ module Make
         Utils_js.spf "{refinement = %s; write = %s}" refinement_kind write_str
       | This -> "This"
       | Super -> "Super"
+      | Exports -> "Exports"
       | ModuleScoped name -> "ModuleScoped " ^ name
       | Global name -> "Global " ^ name
       | Undefined _ -> "undefined"
@@ -400,6 +404,7 @@ module Make
       | Projection _
       | This
       | Super
+      | Exports
       | ModuleScoped _
       | Global _
       | Loc _
@@ -440,6 +445,7 @@ module Make
       | Global _
       | This
       | Super
+      | Exports
       | ModuleScoped _
       | Loc _ ->
         WriteSet.singleton t
@@ -455,6 +461,8 @@ module Make
     let this = mk_with_write_state This
 
     let super = mk_with_write_state Super
+
+    let exports = mk_with_write_state @@ Exports
 
     let module_scoped name = mk_with_write_state @@ ModuleScoped name
 
@@ -492,6 +500,7 @@ module Make
               }
           | This -> Env_api.This
           | Super -> Env_api.Super
+          | Exports -> Env_api.Exports
           | ModuleScoped name -> Env_api.ModuleScoped name
           | Global name -> Env_api.Global name
           | PHI _ -> failwith "A normalized value cannot be a PHI")
@@ -535,6 +544,7 @@ module Make
         | Loc _ -> []
         | This -> []
         | Super -> []
+        | Exports -> []
         | ModuleScoped _ -> []
         | Global _ -> []
         | Projection _ -> []
@@ -844,6 +854,16 @@ module Make
          {
            val_ref = ref Val.super;
            havoc = Val.super;
+           writes_by_closure_provider_val = None;
+           def_loc = None;
+           heap_refinements = ref HeapRefinementMap.empty;
+           kind = Bindings.Var;
+         }
+    |> SMap.add
+         "exports"
+         {
+           val_ref = ref Val.exports;
+           havoc = Val.exports;
            writes_by_closure_provider_val = None;
            def_loc = None;
            heap_refinements = ref HeapRefinementMap.empty;

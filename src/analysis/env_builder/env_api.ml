@@ -41,6 +41,7 @@ module type S = sig
       }
     | This
     | Super
+    | Exports
     | ModuleScoped of string
     | Global of string
     | Projection of L.t
@@ -196,6 +197,7 @@ module Make
       }
     | This
     | Super
+    | Exports
     | ModuleScoped of string
     | Global of string
     | Projection of L.t
@@ -318,6 +320,7 @@ module Make
     | Undeclared _ -> []
     | This -> []
     | Super -> []
+    | Exports -> []
     | ModuleScoped _ -> []
     | Global _ -> []
     | Projection _ -> []
@@ -388,6 +391,7 @@ module Make
         Printf.sprintf "{refinement_id = %s; writes = %s}" refinement_id_str writes_str
       | This -> "this"
       | Super -> "super"
+      | Exports -> "exports"
       | ModuleScoped name -> "ModuleScoped " ^ name
       | Global name -> "Global " ^ name
     in

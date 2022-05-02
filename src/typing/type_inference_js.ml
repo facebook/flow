@@ -499,6 +499,13 @@ module Make (Env : Env_sig.S) : S = struct
       )
     in
     initialize_env ~lib:false cx aloc_ast module_scope;
+    Context.set_environment
+      cx
+      (Loc_env.initialize
+         (Context.environment cx)
+         (TypeUtil.loc_of_t local_exports_var)
+         (Type.Inferred local_exports_var)
+      );
 
     let file_loc = Loc.{ none with source = Some filename } |> ALoc.of_loc in
     let reason = Reason.mk_reason Reason.RExports file_loc in
