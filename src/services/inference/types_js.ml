@@ -2091,7 +2091,12 @@ let init_from_saved_state ~profiling ~workers ~saved_state ~updates options =
       let merge_errors = FilenameMap.empty in
       { ServerEnv.local_errors; duplicate_providers; merge_errors; warnings; suppressions }
     in
-    let dependency_info = Dependency_info.of_map dependency_graph in
+
+    let%lwt dependency_info =
+      Memory_utils.with_memory_timer_lwt ~options "RestoreDependencyInfo" profiling (fun () ->
+          Lwt.return (Dependency_info.of_map dependency_graph)
+      )
+    in
 
     Hh_logger.info "Indexing files";
     let%lwt exports =
