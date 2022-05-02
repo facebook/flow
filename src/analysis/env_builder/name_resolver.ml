@@ -1680,7 +1680,7 @@ module Make
                           optional = _;
                         }
                     ) ->
-                    ignore @@ this#expression acc;
+                    ignore @@ this#recursively_record_member_read acc;
                     (* Leaf of the object pattern *)
                     (match this#get_val_of_expression acc with
                     | None -> ignore @@ this#pattern ?kind pattern
@@ -4087,6 +4087,15 @@ module Make
             in
             env_state <- { env_state with values })
         | _ -> ()
+
+      method private recursively_record_member_read expr =
+        let open Ast.Expression in
+        (match expr with
+        | (_, OptionalMember { OptionalMember.member = { Member._object; _ }; _ })
+        | (_, Member { Member._object; _ }) ->
+          this#recursively_record_member_read _object
+        | _ -> ());
+        this#record_member_read expr
 
       method optional_chain (loc, expr) =
         let open Ast.Expression in
