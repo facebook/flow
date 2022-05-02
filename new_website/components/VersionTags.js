@@ -9,9 +9,9 @@
 
 'use strict';
 
-import React from 'react';
+import * as React from 'react';
 
-export function SinceVersion({version}) {
+export function SinceVersion({version}: {version: string}): React.MixedElement {
   return (
     <span class="version added" title={`Added in ${version}`}>
       &ge;{version}
@@ -19,7 +19,7 @@ export function SinceVersion({version}) {
   );
 }
 
-export function UntilVersion({version}) {
+export function UntilVersion({version}: {version: string}): React.MixedElement {
   return (
     <span class="version removed" title={`Removed after ${version}`}>
       &le;{version}

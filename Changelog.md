@@ -1,3 +1,81 @@
+### 0.176.3
+
+Notable bug fixes:
+* The Haste module resolver now chooses Haste modules before node_modules, to match what Metro does. That is, if you use `module.system=haste` and have both a `@providesModule foo` file (or use "haste paths" to derive the module name from its filename) and a `node_modules/foo` folder, `require('foo')` will now resolve to the Haste module, even when `node_modules/foo` is in that file's parent directories. This is also a significant perf improvement because resolving a Haste module is much cheaper than searching for node_modules.
+* Fix several bugs responsible for crashes
+* Fix bugs responsible for some LSP "server is stopped" errors
+
+### 0.176.2
+
+Revert changes that are causing bugs in non-lazy mode.
+
+### 0.176.1
+
+Fix crash when comparing abstract and concrete locations when simplifying normalized types.
+
+### 0.176.0
+
+Likely to cause new Flow errors:
+* Banned usage of `new` on functions. Move usages of this pattern to use ES6 classes instead. If the pattern exists in third-party code that cannot be changed directly, you can use a [declaration file](https://flow.org/en/docs/declarations/) to type the legacy pattern with a `declare class`.
+* Error on type annotations nested inside of destructuring - these were always invalid, we just ignored them before
+
+Notable changes:
+* Removed special support for `React.createClass` from Flow. It is now just typed as `any`. Migrate any components using it to class components or function components.
+* Added the `module.missing_module_generators` option, which can be used (multiple times) to specify `'regex' -> 'command'` pairs. When a module is missing, if its name matches one of the regexes, we will add a suggestion in the error message to run `command` to generate it (and resolve the error).
+* Fixed bugs responsible for some LSP "server is stopped" errors
+* Fixed a bug that could cause the server to become unresponsive on Windows
+
+### 0.175.1
+
+Bug fixes:
+* Fix an incremental bug which would sometimes cause Flow to choose the wrong provider for a haste module, most commonly when one of those providers is a .js.flow file.
+* Fix ability of `flow stop` to kill stuck servers
+* Fix rare crashes when processes exit unexpectedly
+
+### 0.175.0
+
+Notable changes:
+* Improve error messages when using a type as a value
+* Improve error messages in `for` loops
+* Correctly determine the scope of default expressions in function params
+* Add `FLOW_CONFIG_NAME` env as alternative to passing `--flowconfig-name`
+* Add `file_watcher.mergebase_with.{git,hg}` configs to support projects accessible via multiple VCSs (e.g. git mirrors of hg repositories)
+
+IDE integration:
+* Surface deprecated autocompletion results so they appear with a strikethrough in VS Code
+* Fix a bug where changing libdefs, package.json files or the .flowconfig multiple times will cause the IDE to report "server is stopped".
+* Fix a bug where the IDE is unable to start the server if it is downgraded
+* Improve suggestions when autocompleting keys in an object literal
+* Fix an exception when autocompleting a result that would add to an import to an existing `require()`
+
+flow-remove-types:
+* Fix handling of `this` param with trailing commas
+
+### 0.174.1
+
+Fix crash when Flow receives duplicate file deletion notifications introduced in v0.174.
+
+### 0.174.0
+
+Likely to cause new Flow errors:
+* Flow now detects sketchy null errors that arise via optional chaining, and which involve opaque types, type aliases, or generics.
+* Fixed an issue that caused us to previously miss some errors when the type involved was an intersection.
+
+New Features:
+* Access from a union of exact objects, on a property that is on one but not all of the objects, now results in the type of that property or `void`, instead of an error.
+* Add type checking support for logical assignment operators.
+
+Notable bug fixes:
+* Fix a crash when using the default file watcher (dfind) on Windows if an [include] directory doesn't exist.
+* Do not attempt to unify the type of a `declare` function that comes after a function declaration of the same name ([try-Flow](https://flow.org/try/#0GYVwdgxgLglg9mABACwBQEoBciDOUBOMYA5ogN6L4CmUI+SARA4gL4BQAJlRADYCG1RKEiwEKDNgBGcODwDcQA)).
+* Improve wording of class-extends errors ([try-Flow](https://flow.org/try/#0FAEwpgxgNghgTmABAN3og9gIwFYC5EDeAvgNzDQwDOliAIomAB4AuYAdiDVtoUUA)).
+* Don't report `this-in-exported-function` for functions with a `this` parameter.
+
+Misc:
+* Added `--list-files` flag to `status` and `check` commands. This will dump a list of files that contain errors instead of the error messages.
+* The default file watcher (dfind) now logs to a `.dfind_log` file alongside the `.log` and `.monitor_log` files.
+* Changed the way Flow computes coverage for type parameters with uncovered upper bounds. Previously, a type parameter was always considered covered when it appeared in a function signature, class declaration, or type alias, even if the type parameter's upper bound was `any`. With this change, such type parameters are now considered to be uncovered. This results in Flow now computing a lower coverage percentage on modules where this pattern is present or that import types from other modules that use this pattern.
+
 ### 0.173.0
 
 Likely to cause new Flow errors:

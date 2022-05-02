@@ -182,7 +182,13 @@ module type S = sig
   val constraining_type : default:Type.t -> Context.t -> Reason.name -> ALoc.t -> Type.t
 
   val unify_declared_type :
-    ?lookup_mode:LookupMode.t -> Context.t -> Reason.name -> ALoc.t -> Type.t -> unit
+    ?lookup_mode:LookupMode.t ->
+    ?is_func:bool ->
+    Context.t ->
+    Reason.name ->
+    ALoc.t ->
+    Type.t ->
+    unit
 
   val unify_declared_fun_type : Context.t -> Reason.name -> ALoc.t -> Type.t -> unit
 
@@ -201,6 +207,8 @@ module type S = sig
     ?desc:Reason.reason_desc ->
     ALoc.t ->
     Type.t
+
+  val query_var_non_specific : Context.t -> Reason.name -> ALoc.t -> Type.t
 
   val set_var : Context.t -> use_op:Type.use_op -> string -> Type.t -> ALoc.t -> unit
 
@@ -244,4 +252,6 @@ module type S = sig
     (Reason.name * Key.proj list) option ->
     (ALoc.t, ALoc.t) Flow_ast.Expression.t ->
     Type.t option
+
+  val valid_declaration_check : Context.t -> Reason.name -> ALoc.t -> unit
 end

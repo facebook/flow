@@ -11,8 +11,6 @@ open Utils_js
 
 exception EDebugThrow of ALoc.t
 
-exception EMergeTimeout of float * string
-
 exception ECheckTimeout of float * string
 
 type invalid_char_set =
@@ -111,6 +109,7 @@ and 'loc t' =
   | EBuiltinLookupFailed of {
       reason: 'loc virtual_reason;
       name: Reason.name option;
+      potential_generator: string option;
     }
   | EStrictLookupFailed of {
       reason_prop: 'loc virtual_reason;
@@ -192,6 +191,7 @@ and 'loc t' =
       valid: 'loc virtual_reason;
       use_op: 'loc virtual_use_op;
     }
+  | EInvalidConstructor of 'loc virtual_reason
   | EUnsupportedKeyInObjectType of 'loc
   | EPredAnnot of 'loc
   | ERefineAnnot of 'loc
@@ -206,7 +206,6 @@ and 'loc t' =
   | EMissingLocalAnnotation of 'loc virtual_reason
   | EBindingError of binding_error * 'loc * name * ALoc.t
   | ERecursionLimit of ('loc virtual_reason * 'loc virtual_reason)
-  | EModuleOutsideRoot of 'loc * string
   | EUninitializedInstanceProperty of 'loc * Lints.property_assignment_kind
   | EEnumsNotEnabled of 'loc
   | EUnsafeGetSet of 'loc
@@ -259,11 +258,6 @@ and 'loc t' =
       reason: 'loc virtual_reason;
       use_op: 'loc virtual_use_op;
       tool: React.SimplifyPropType.tool;
-    }
-  | EInvalidReactCreateClass of {
-      reason: 'loc virtual_reason;
-      use_op: 'loc virtual_use_op;
-      tool: React.CreateClass.tool;
     }
   | EReactElementFunArity of 'loc virtual_reason * string * int
   | EFunctionCallExtraArg of 'loc virtual_reason * 'loc virtual_reason * int * 'loc virtual_use_op
@@ -462,7 +456,10 @@ and exactness_error_kind =
 and binding_error =
   | ENameAlreadyBound
   | EReferencedBeforeDeclaration
-  | ETypeInValuePosition
+  | ETypeInValuePosition of {
+      imported: bool;
+      name: string;
+    }
   | ETypeAliasInValuePosition
   | EConstReassigned
   | EConstParamReassigned
@@ -477,7 +474,6 @@ and docblock_error =
   | InvalidJSXAttribute of string option
 
 and internal_error =
-  | PackageHeapNotFound of string
   | AbnormalControlFlow
   | MethodNotAFunction
   | OptionalMethod
@@ -495,14 +491,16 @@ and internal_error =
   | RestParameterNotIdentifierPattern
   | InterfaceTypeSpread
   | DebugThrow
-  | MergeTimeout of float
-  | MergeJobException of Exception.t
+  | ParseJobException of Exception.t
   | CheckTimeout of float
   | CheckJobException of Exception.t
   | UnexpectedTypeapp of string
   | UnexpectedAnnotationInference of string
+  | MissingEnvRead of ALoc.t
+  | MissingEnvWrite of ALoc.t
 
 and 'loc unsupported_syntax =
+  | AnnotationInsideDestructuring
   | ComprehensionExpression
   | GeneratorExpression
   | MetaPropertyExpression
@@ -512,7 +510,6 @@ and 'loc unsupported_syntax =
   | InvariantSpreadArgument
   | ClassPropertyLiteral
   | ClassPropertyComputed
-  | ReactCreateClassPropertyNonInit
   | RequireDynamicArgument
   | CatchParameterAnnotation
   | CatchParameterDeclaration
@@ -552,7 +549,6 @@ and 'loc upper_kind =
   | IncompatibleMethodT of 'loc * name option
   | IncompatibleCallT
   | IncompatibleMixedCallT
-  | IncompatibleConstructorT
   | IncompatibleGetElemT of 'loc
   | IncompatibleSetElemT of 'loc
   | IncompatibleCallElemT of 'loc
@@ -594,13 +590,13 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
     | IncompatibleSetElemT loc -> IncompatibleSetElemT (f loc)
     | IncompatibleCallElemT loc -> IncompatibleCallElemT (f loc)
     | ( IncompatibleGetPrivatePropT | IncompatibleSetPrivatePropT | IncompatibleCallT
-      | IncompatibleMixedCallT | IncompatibleConstructorT | IncompatibleElemTOfArrT
-      | IncompatibleObjAssignFromTSpread | IncompatibleObjAssignFromT | IncompatibleObjRestT
-      | IncompatibleObjSealT | IncompatibleArrRestT | IncompatibleSuperT | IncompatibleMixinT
-      | IncompatibleSpecializeT | IncompatibleThisSpecializeT | IncompatibleVarianceCheckT
-      | IncompatibleGetKeysT | IncompatibleGetValuesT | IncompatibleUnaryMinusT
-      | IncompatibleMapTypeTObject | IncompatibleTypeAppVarianceCheckT | IncompatibleGetStaticsT
-      | IncompatibleBindT | IncompatibleUnclassified _ ) as u ->
+      | IncompatibleMixedCallT | IncompatibleElemTOfArrT | IncompatibleObjAssignFromTSpread
+      | IncompatibleObjAssignFromT | IncompatibleObjRestT | IncompatibleObjSealT
+      | IncompatibleArrRestT | IncompatibleSuperT | IncompatibleMixinT | IncompatibleSpecializeT
+      | IncompatibleThisSpecializeT | IncompatibleVarianceCheckT | IncompatibleGetKeysT
+      | IncompatibleGetValuesT | IncompatibleUnaryMinusT | IncompatibleMapTypeTObject
+      | IncompatibleTypeAppVarianceCheckT | IncompatibleGetStaticsT | IncompatibleBindT
+      | IncompatibleUnclassified _ ) as u ->
       u
   in
   let map_unsupported_syntax = function
@@ -608,13 +604,14 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
     | ( ComprehensionExpression | GeneratorExpression | MetaPropertyExpression
       | ObjectPropertyLiteralNonString | ObjectPropertyGetSet | ObjectPropertyComputedGetSet
       | InvariantSpreadArgument | ClassPropertyLiteral | ClassPropertyComputed
-      | ReactCreateClassPropertyNonInit | RequireDynamicArgument | CatchParameterAnnotation
-      | CatchParameterDeclaration | DestructuringObjectPropertyLiteralNonString
-      | DestructuringExpressionPattern | PredicateDeclarationForImplementation
-      | PredicateDeclarationWithoutExpression | PredicateDeclarationAnonymousParameters
-      | PredicateInvalidBody | PredicateFunctionAbstractReturnType | PredicateVoidReturn
-      | MultipleIndexers | MultipleProtos | ExplicitCallAfterProto | ExplicitProtoAfterCall
-      | SpreadArgument | ImportDynamicArgument | IllegalName | UnsupportedInternalSlot _ ) as u ->
+      | RequireDynamicArgument | CatchParameterAnnotation | CatchParameterDeclaration
+      | DestructuringObjectPropertyLiteralNonString | DestructuringExpressionPattern
+      | PredicateDeclarationForImplementation | PredicateDeclarationWithoutExpression
+      | PredicateDeclarationAnonymousParameters | PredicateInvalidBody
+      | PredicateFunctionAbstractReturnType | PredicateVoidReturn | MultipleIndexers
+      | MultipleProtos | ExplicitCallAfterProto | ExplicitProtoAfterCall | SpreadArgument
+      | ImportDynamicArgument | IllegalName | UnsupportedInternalSlot _
+      | AnnotationInsideDestructuring ) as u ->
       u
   in
   function
@@ -679,8 +676,8 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
     EPropNotWritable { reason_prop = map_reason reason_prop; prop_name; use_op = map_use_op use_op }
   | EPropPolarityMismatch ((r1, r2), p, ps, op) ->
     EPropPolarityMismatch ((map_reason r1, map_reason r2), p, ps, map_use_op op)
-  | EBuiltinLookupFailed { reason; name } ->
-    EBuiltinLookupFailed { reason = map_reason reason; name }
+  | EBuiltinLookupFailed { reason; name; potential_generator } ->
+    EBuiltinLookupFailed { reason = map_reason reason; name; potential_generator }
   | EStrictLookupFailed { reason_prop; reason_obj; name; suggestion; use_op } ->
     EStrictLookupFailed
       {
@@ -726,6 +723,7 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
   | EInvalidCharSet { invalid = (ir, set); valid; use_op } ->
     EInvalidCharSet
       { invalid = (map_reason ir, set); valid = map_reason valid; use_op = map_use_op use_op }
+  | EInvalidConstructor r -> EInvalidConstructor (map_reason r)
   | EIncompatibleWithShape (l, u, use_op) ->
     EIncompatibleWithShape (map_reason l, map_reason u, map_use_op use_op)
   | EInvalidObjectKit { reason; reason_op; use_op } ->
@@ -746,8 +744,6 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
     EInvalidReactConfigType { reason = map_reason reason; use_op = map_use_op use_op }
   | EInvalidReactPropType { reason; use_op; tool } ->
     EInvalidReactPropType { reason = map_reason reason; use_op = map_use_op use_op; tool }
-  | EInvalidReactCreateClass { reason; use_op; tool } ->
-    EInvalidReactCreateClass { reason = map_reason reason; use_op = map_use_op use_op; tool }
   | EFunctionCallExtraArg (rl, ru, n, op) ->
     EFunctionCallExtraArg (map_reason rl, map_reason ru, n, map_use_op op)
   | EDebugPrint (r, s) -> EDebugPrint (map_reason r, s)
@@ -825,7 +821,6 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
   | EMissingLocalAnnotation r -> EMissingLocalAnnotation (map_reason r)
   | EBindingError (b, loc, s, scope) -> EBindingError (b, f loc, s, scope)
   | ERecursionLimit (r1, r2) -> ERecursionLimit (map_reason r1, map_reason r2)
-  | EModuleOutsideRoot (loc, s) -> EModuleOutsideRoot (f loc, s)
   | EUnsafeGetSet loc -> EUnsafeGetSet (f loc)
   | EUninitializedInstanceProperty (loc, e) -> EUninitializedInstanceProperty (f loc, e)
   | EEnumsNotEnabled loc -> EEnumsNotEnabled (f loc)
@@ -1102,8 +1097,6 @@ let util_use_op_of_msg nope util = function
     util use_op (fun use_op -> EInvalidReactConfigType { reason; use_op })
   | EInvalidReactPropType { reason; use_op; tool } ->
     util use_op (fun use_op -> EInvalidReactPropType { reason; use_op; tool })
-  | EInvalidReactCreateClass { reason; use_op; tool } ->
-    util use_op (fun use_op -> EInvalidReactCreateClass { reason; use_op; tool })
   | EFunctionCallExtraArg (rl, ru, n, op) ->
     util op (fun op -> EFunctionCallExtraArg (rl, ru, n, op))
   | ECannotSpreadInterface { spread_reason; interface_reason; use_op } ->
@@ -1178,7 +1171,6 @@ let util_use_op_of_msg nope util = function
   | EMissingLocalAnnotation _
   | EBindingError (_, _, _, _)
   | ERecursionLimit (_, _)
-  | EModuleOutsideRoot (_, _)
   | EUnsafeGetSet _
   | EUninitializedInstanceProperty _
   | EEnumsNotEnabled _
@@ -1202,6 +1194,7 @@ let util_use_op_of_msg nope util = function
   | EInstanceofRHS _
   | EObjectComputedPropertyAccess (_, _)
   | EObjectComputedPropertyAssign (_, _)
+  | EInvalidConstructor _
   | EInvalidLHSInAssignment _
   | EUnsupportedImplements _
   | EReactElementFunArity (_, _, _)
@@ -1321,6 +1314,7 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | EEnumNotIterable { reason; _ }
   | ERecursiveDefinition { reason; _ }
   | EDefinitionCycle ((reason, _), _)
+  | EInvalidConstructor reason
   | EInvalidDeclaration { declaration = reason; _ } ->
     Some (poly_loc_of_reason reason)
   | EExponentialSpread
@@ -1384,7 +1378,6 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | EEnumsNotEnabled loc
   | EUnsafeGetSet loc
   | EUninitializedInstanceProperty (loc, _)
-  | EModuleOutsideRoot (loc, _)
   | EUseArrayLiteral loc
   | EUnsupportedSyntax (loc, _)
   | EInternal (loc, _)
@@ -1441,7 +1434,6 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | ENotAReactComponent _
   | EInvalidReactConfigType _
   | EInvalidReactPropType _
-  | EInvalidReactCreateClass _
   | EIncompatibleWithUseOp _
   | ETrustIncompatibleWithUseOp _
   | EEnumIncompatible _
@@ -1540,7 +1532,6 @@ let enum_name_of_reason reason =
   | _ -> None
 
 let string_of_internal_error = function
-  | PackageHeapNotFound pkg -> spf "package %S was not found in the PackageHeap!" pkg
   | AbnormalControlFlow -> "abnormal control flow"
   | MethodNotAFunction -> "expected function type"
   | OptionalMethod -> "optional methods are not supported"
@@ -1558,12 +1549,13 @@ let string_of_internal_error = function
   | RestParameterNotIdentifierPattern -> "unexpected rest parameter, expected an identifier pattern"
   | InterfaceTypeSpread -> "unexpected spread property in interface"
   | DebugThrow -> "debug throw"
-  | MergeTimeout s -> spf "merge job timed out after %0.2f seconds" s
-  | MergeJobException exc -> "uncaught exception: " ^ Exception.to_string exc
+  | ParseJobException exc -> "uncaught exception: " ^ Exception.to_string exc
   | CheckTimeout s -> spf "check job timed out after %0.2f seconds" s
   | CheckJobException exc -> "uncaught exception: " ^ Exception.to_string exc
   | UnexpectedTypeapp s -> "unexpected typeapp: " ^ s
   | UnexpectedAnnotationInference s -> "unexpected " ^ s ^ " in annotation inference"
+  | MissingEnvRead l -> "missing env entry for read at " ^ ALoc.debug_to_string l
+  | MissingEnvWrite loc -> "expected env entry for write location" ^ ALoc.debug_to_string loc
 
 (* Friendly messages are created differently based on the specific error they come from, so
    we collect the ingredients here and pass them to make_error_printable *)
@@ -2009,11 +2001,22 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
       ]
     in
     Normal { features }
-  | EBuiltinLookupFailed { reason; name } ->
+  | EBuiltinLookupFailed { reason; name; potential_generator } ->
     let features =
       match name with
       | Some x when is_internal_module_name x ->
+        let potential_generator_features =
+          match potential_generator with
+          | Some generator ->
+            [
+              text " Try running the command ";
+              code generator;
+              text " to generate the missing module.";
+            ]
+          | None -> []
+        in
         [text "Cannot resolve module "; code (uninternal_name x); text "."]
+        @ potential_generator_features
       | None -> [text "Cannot resolve name "; desc reason; text "."]
       | Some x when is_internal_name x -> [text "Cannot resolve name "; desc reason; text "."]
       | Some x -> [text "Cannot resolve name "; code (display_string_of_name x); text "."]
@@ -2320,6 +2323,16 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
       | GeneratorExpression
       | MetaPropertyExpression ->
         [text "Not supported."]
+      | AnnotationInsideDestructuring ->
+        [
+          text "Annotations inside of destructuring are not supported. ";
+          text "Annotate the top-level pattern instead. ";
+          text "For example, instead of the invalid ";
+          code "const [a: number, b: string] = ...";
+          text " do ";
+          code "const [a, b]: [number, string] = ...";
+          text ".";
+        ]
       | ObjectPropertyLiteralNonString -> [text "Non-string literal property keys not supported."]
       | ObjectPropertyGetSet -> [text "Get/set properties not yet supported."]
       | ObjectPropertyComputedGetSet -> [text "Computed getters and setters are not yet supported."]
@@ -2327,8 +2340,6 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
         [text "Unsupported arguments in call to "; code "invariant"; text "."]
       | ClassPropertyLiteral -> [text "Literal properties not yet supported."]
       | ClassPropertyComputed -> [text "Computed property keys not supported."]
-      | ReactCreateClassPropertyNonInit ->
-        [text "Unsupported property specification in "; code "createClass"; text "."]
       | RequireDynamicArgument ->
         [text "The parameter passed to "; code "require"; text " must be a string literal."]
       | ImportDynamicArgument ->
@@ -2415,6 +2426,14 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
     (* We can call to_loc here because reaching this point requires that everything else
        in the error message is concretized already; making Scopes polymorphic is not a good idea *)
     let x = mk_reason desc (entry_loc |> ALoc.to_loc_exn) in
+    let type_as_value_msg x =
+      [
+        text "Cannot use type ";
+        ref x;
+        text " as a value. ";
+        text "Types are erased and don't exist at runtime.";
+      ]
+    in
     let features =
       match binding_error with
       | ENameAlreadyBound ->
@@ -2435,9 +2454,22 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
             text " because the declaration ";
             text "either comes later or was skipped.";
           ]
-      | ETypeInValuePosition
+      | ETypeInValuePosition { imported = true; name } ->
+        type_as_value_msg x
+        @ [
+            text " If the exported binding can also be used as a value, try importing it using ";
+            code (spf "import %s" name);
+            text " instead of ";
+            code (spf "import type %s" name);
+            text " and ";
+            code (spf "import {%s}" name);
+            text " instead of ";
+            code (spf "import type {%s}" name);
+            text ".";
+          ]
+      | ETypeInValuePosition { imported = false; name = _ }
       | ETypeAliasInValuePosition ->
-        [text "Cannot reference type "; ref x; text " from a value position."]
+        type_as_value_msg x
       | EConstReassigned
       | EConstParamReassigned ->
         [text "Cannot reassign constant "; ref x; text "."]
@@ -2446,29 +2478,6 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
     in
     Normal { features }
   | ERecursionLimit _ -> Normal { features = [text "*** Recursion limit exceeded ***"] }
-  | EModuleOutsideRoot (_, package_relative_to_root) ->
-    let features =
-      [
-        text "This module resolves to ";
-        code package_relative_to_root;
-        text " which ";
-        text "is outside both your root directory and all of the entries in the ";
-        code "[include]";
-        text " section of your ";
-        code ".flowconfig";
-        text ". ";
-        text "You should either add this directory to the ";
-        code "[include]";
-        text " ";
-        text "section of your ";
-        code ".flowconfig";
-        text ", move your ";
-        code ".flowconfig";
-        text " file higher in the project directory tree, or ";
-        text "move this package under your Flow root directory.";
-      ]
-    in
-    Normal { features }
   | EUnsafeGetSet _ ->
     let features =
       [
@@ -2858,24 +2867,6 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
         UseOp { loc = loc_of_reason reason; features = [ref reason; text (" " ^ msg)]; use_op }
       )
     )
-  | EInvalidReactCreateClass { reason; use_op; tool } ->
-    React.(
-      React.CreateClass.(
-        let is_not_prop_type = "is not a React propType" in
-        let msg =
-          match tool with
-          | Spec _ -> "is not an exact object"
-          | Mixins _ -> "is not a tuple"
-          | Statics _ -> "is not an object"
-          | PropTypes (_, ResolveObject) -> "is not an object"
-          | PropTypes (_, ResolveDict _) -> is_not_prop_type
-          | PropTypes (_, ResolveProp _) -> is_not_prop_type
-          | DefaultProps _ -> "is not an object"
-          | InitialState _ -> "is not an object or null"
-        in
-        UseOp { loc = loc_of_reason reason; features = [ref reason; text (" " ^ msg)]; use_op }
-      )
-    )
   | EReactElementFunArity (_, fn, n) ->
     let features =
       [
@@ -3215,6 +3206,18 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
       ]
     in
     Normal { features }
+  | EInvalidConstructor reason ->
+    Normal
+      {
+        features =
+          [
+            text "Cannot use ";
+            code "new";
+            text " on ";
+            ref reason;
+            text ". Only classes can be constructed.";
+          ];
+      }
   | EInvalidPrototype (_, reason) ->
     Normal
       {
@@ -3868,9 +3871,7 @@ let error_code_of_use_op use_op ~default =
   Base.Option.first_some (fold_use_op code_of_root code_of_frame use_op) (Some default)
 
 let error_code_of_upper_kind = function
-  | IncompatibleConstructorT
-  | IncompatibleCallT ->
-    Some NotAFunction
+  | IncompatibleCallT -> Some NotAFunction
   | IncompatibleObjAssignFromTSpread
   | IncompatibleArrRestT ->
     Some NotAnArray
@@ -3902,7 +3903,7 @@ let error_code_of_message err : error_code option =
       match binding_error with
       | ENameAlreadyBound -> Some NameAlreadyBound
       | EReferencedBeforeDeclaration -> Some ReferenceBeforeDeclaration
-      | ETypeInValuePosition
+      | ETypeInValuePosition _
       | ETypeAliasInValuePosition ->
         Some TypeAsValue
       | EConstReassigned
@@ -3991,11 +3992,11 @@ let error_code_of_message err : error_code option =
   (* We don't want these to be suppressible *)
   | EInternal (_, _) -> None
   | EInvalidCharSet _ -> Some InvalidCharsetTypeArg
+  | EInvalidConstructor _ -> Some InvalidConstructor
   | EInvalidLHSInAssignment _ -> Some InvalidLhs
   | EInvalidObjectKit _ -> Some NotAnObject
   | EInvalidPrototype _ -> Some NotAnObject
   | EInvalidReactConfigType _ -> Some InvalidReactConfig
-  | EInvalidReactCreateClass _ -> Some InvalidReactCreateClass
   | EInvalidReactPropType _ -> Some InvalidPropType
   | EInvalidTypeArgs (_, _) -> Some InvalidTypeArg
   | EInvalidTypeof _ -> Some IllegalTypeof
@@ -4010,7 +4011,6 @@ let error_code_of_message err : error_code option =
   | EMissingTypeArgs _ -> Some MissingTypeArg
   | EMixedImportAndRequire _ -> Some MixedImportAndRequire
   | EToplevelLibraryImport _ -> Some ToplevelLibraryImport
-  | EModuleOutsideRoot (_, _) -> Some InvalidModule
   | ENoDefaultExport (_, _, _) -> Some MissingExport
   | ENoNamedExport (_, _, _, _) -> Some MissingExport
   | ENonConstVarExport _ -> Some NonConstVarExport

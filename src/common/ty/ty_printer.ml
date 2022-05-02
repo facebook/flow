@@ -132,7 +132,7 @@ let layout_of_elt ~prefer_single_quotes ?(size = 5000) ?(with_comments = true) ~
     let name = identifier name in
     type_reference ~depth name targs
   and type_reference ~depth name targs =
-    let targs = option (type_args ~depth) targs in
+    let targs = option ~f:(type_args ~depth) targs in
     fuse [name; targs]
   and type_args ~depth targs =
     list ~wrap:(Atom "<", Atom ">") ~sep:(Atom ",") (counted_map (type_ ~depth) targs)
@@ -179,7 +179,7 @@ let layout_of_elt ~prefer_single_quotes ?(size = 5000) ?(with_comments = true) ~
     in
     fuse
       [
-        option (type_parameter ~depth) fun_type_params;
+        option ~f:(type_parameter ~depth) fun_type_params;
         list ~wrap:(Atom "(", Atom ")") ~sep:(Atom ",") ~trailing:false params;
         sep;
         pretty_space;
@@ -372,7 +372,7 @@ let layout_of_elt ~prefer_single_quotes ?(size = 5000) ?(with_comments = true) ~
       [
         variance_ tp_polarity;
         Atom tp_name;
-        option (type_annotation ~depth) tp_bound;
+        option ~f:(type_annotation ~depth) tp_bound;
         begin
           match tp_default with
           | Some t -> fuse [pretty_space; Atom "="; pretty_space; type_ ~depth t]
@@ -382,14 +382,15 @@ let layout_of_elt ~prefer_single_quotes ?(size = 5000) ?(with_comments = true) ~
   and type_annotation ~depth t = fuse [Atom ":"; pretty_space; type_ ~depth t] in
 
   let class_decl ~depth { sym_name = name; _ } typeParameters =
-    fuse [Atom "class"; space; identifier name; option (type_parameter ~depth) typeParameters]
+    fuse [Atom "class"; space; identifier name; option ~f:(type_parameter ~depth) typeParameters]
   in
   let interface_decl ~depth { sym_name = name; _ } typeParameters =
-    fuse [Atom "interface"; space; identifier name; option (type_parameter ~depth) typeParameters]
+    fuse
+      [Atom "interface"; space; identifier name; option ~f:(type_parameter ~depth) typeParameters]
   in
   let type_alias ~depth name tparams t_opt =
     let { sym_name = name; _ } = name in
-    let tparams = option (type_parameter ~depth) tparams in
+    let tparams = option ~f:(type_parameter ~depth) tparams in
     let body =
       match t_opt with
       | Some t -> fuse [pretty_space; Atom "="; pretty_space; type_ ~depth t]

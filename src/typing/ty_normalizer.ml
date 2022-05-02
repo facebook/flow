@@ -561,7 +561,7 @@ end = struct
       Recursive.with_cache (EvalKey id) ~f:(fun () ->
           let trace = Trace.dummy_trace in
           let (_, tout) = Flow_js.mk_type_destructor cx ~trace use_op reason t d id in
-          match Lookahead.peek env tout with
+          match Lookahead.peek ~env tout with
           | Lookahead.LowerBounds [t] -> cont ~env t
           | _ -> default ~env tout
       )
@@ -587,6 +587,7 @@ end = struct
       | RImportStarTypeOf name
       | RImportStar name ->
         return (symbol_from_reason env reason (Reason.OrdinaryName name))
+      | RType name -> return (symbol_from_reason env reason name)
       | desc ->
         let desc = Reason.show_virtual_reason_desc (fun _ _ -> ()) desc in
         let msg = "could not extract imported type alias name from reason: " ^ desc in
@@ -756,7 +757,7 @@ end = struct
       | OptionalT { reason = _; type_ = t; use_desc = _ } ->
         let%map t = type__ ~env t in
         Ty.mk_union ~from_bounds:false (Ty.Void, [t])
-      | DefT (_, _, FunT (static, _, f)) ->
+      | DefT (_, _, FunT (static, f)) ->
         let%map t = fun_ty ~env static f None in
         Ty.Fun t
       | DefT (r, _, ObjT o) ->
@@ -884,7 +885,7 @@ end = struct
 
     and any_t reason kind =
       match kind with
-      | T.AnnotatedAny ->
+      | T.(AnnotatedAny | CatchAny) ->
         let aloc = Reason.aloc_of_reason reason in
         Ty.Annotated aloc
       | T.AnyError kind -> Ty.AnyError (any_error_kind kind)
@@ -1224,7 +1225,7 @@ end = struct
       let open Type in
       match t with
       | ThisClassT (_, t, _, _) -> this_class_t ~env t
-      | DefT (_, _, FunT (static, _, f)) ->
+      | DefT (_, _, FunT (static, f)) ->
         let%bind (env, ps) = type_params_t ~env typeparams in
         let%map fun_t = fun_ty ~env static f ps in
         Ty.Fun fun_t
@@ -1430,11 +1431,6 @@ end = struct
         | DebugSleep -> return Ty.(mk_fun ~params:[(Some "seconds", Num None, non_opt_param)] Void)
         (* reactPropType: any (TODO) *)
         | ReactPropType _ -> return Ty.explicit_any
-        (* reactCreateClass: (spec: any) => ReactClass<any> *)
-        | ReactCreateClass ->
-          let params = [(Some "spec", Ty.explicit_any, non_opt_param)] in
-          let x = Ty.builtin_symbol (Reason.OrdinaryName "ReactClass") in
-          return (mk_fun ~params (generic_talias x (Some [Ty.explicit_any])))
         (*
          * 1. Component class:
          *    <T>(name: ReactClass<T>, config: T, children?: any) => React$Element<T>
@@ -1490,7 +1486,6 @@ end = struct
         | Compose false -> return (builtin_t (Reason.OrdinaryName "$Compose"))
         | Compose true -> return (builtin_t (Reason.OrdinaryName "$ComposeReverse"))
         | ReactPropType t -> react_prop_type ~env t
-        | ReactCreateClass -> return (builtin_t (Reason.OrdinaryName "React$CreateClass"))
         | ReactCreateElement -> return (builtin_t (Reason.OrdinaryName "React$CreateElement"))
         | ReactCloneElement -> return (builtin_t (Reason.OrdinaryName "React$CloneElement"))
         | ReactElementFactory t ->
@@ -1738,7 +1733,7 @@ end = struct
       | T.ReactConfigType default_props ->
         let%map default_props' = type__ ~env default_props in
         Ty.Utility (Ty.ReactConfigType (ty, default_props'))
-      | (T.RestType (T.Object.Rest.ReactConfigMerge _, _) | T.Bind _) as d ->
+      | T.RestType (T.Object.Rest.ReactConfigMerge _, _) as d ->
         terr ~kind:BadEvalT ~msg:(Debug_js.string_of_destructor d) None
 
     and latent_pred_t ~env id t =
@@ -2120,7 +2115,8 @@ end = struct
         |> from_imported_locs_map ~import_mode:Ty.TypeMode types
         |> from_imported_locs_map ~import_mode:Ty.TypeofMode typesof
       | ImportDynamic _
-      | Import0 _ ->
+      | Import0 _
+      | ExportFrom _ ->
         acc
 
     let extract_imported_idents requires =
@@ -2409,7 +2405,7 @@ end = struct
         Ty.mk_union ~from_bounds:false (Ty.Void, [Ty.Null; t])
       | IntersectionT (_, rep) -> app_intersection ~f:(type__ ~env ~proto ~imode) rep
       | UnionT (_, rep) -> app_union ~from_bounds:false ~f:(type__ ~env ~proto ~imode) rep
-      | DefT (_, _, FunT (static, _, _)) -> type__ ~env ~proto ~imode static
+      | DefT (_, _, FunT (static, _)) -> type__ ~env ~proto ~imode static
       | TypeAppT (r, use_op, t, ts) -> type_app_t ~env ~proto ~imode r use_op t ts
       | DefT (_, _, TypeT (_, t)) -> type__ ~env ~proto ~imode t
       | OptionalT { type_ = t; _ } ->
@@ -2523,3 +2519,14 @@ let expand_members ~include_proto_members ~idx_hook ~options ~genv scheme =
       t
   in
   result
+
+let debug_string_of_t cx t =
+  let typed_ast =
+    (ALoc.none, { Flow_ast.Program.statements = []; comments = None; all_comments = [] })
+  in
+  let module_sig = { File_sig.requires = []; module_kind = File_sig.ES } in
+  let file_sig = { File_sig.module_sig; declare_modules = SMap.empty } in
+  let genv = Ty_normalizer_env.mk_genv ~full_cx:cx ~file:(Context.file cx) ~file_sig ~typed_ast in
+  match from_type ~options:Ty_normalizer_env.default_options ~genv t with
+  | Error (e, _) -> Utils_js.spf "<Error %s>" (error_kind_to_string e)
+  | Ok elt -> Ty_printer.string_of_elt_single_line ~exact_by_default:true elt

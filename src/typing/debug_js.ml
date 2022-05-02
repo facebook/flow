@@ -41,7 +41,6 @@ let string_of_destructor = function
   | ElementType _ -> "ElementType"
   | OptionalIndexedAccessNonMaybeType _ -> "OptionalIndexedAccessNonMaybeType"
   | OptionalIndexedAccessResultType _ -> "OptionalIndexedAccessResultType"
-  | Bind _ -> "Bind"
   | ReadOnlyType -> "ReadOnly"
   | PartialType -> "PartialType"
   | SpreadType _ -> "Spread"
@@ -126,6 +125,7 @@ let rec dump_t_ (depth, tvars) cx t =
   in
   let string_of_any_source = function
     | AnnotatedAny -> "AnnotatedAny"
+    | CatchAny -> "CatchAny"
     | AnyError _ -> "Error"
     | Unsound _ -> "Unsound"
     | Untyped -> "Untyped"
@@ -156,7 +156,6 @@ let rec dump_t_ (depth, tvars) cx t =
     | ReactCreateElement -> "ReactCreateElement"
     | ReactCloneElement -> "ReactCloneElement"
     | ReactElementFactory _ -> "ReactElementFactory"
-    | ReactCreateClass -> "ReactCreateClass"
     | Idx -> "Idx"
     | TypeAssertIs -> "TypeAssert.is"
     | TypeAssertThrows -> "TypeAssert.throws"
@@ -196,7 +195,7 @@ let rec dump_t_ (depth, tvars) cx t =
           | Some b -> spf "%B" b
           | None -> "")
         t
-    | DefT (_, trust, FunT (_, _, { params; return_t; this_t; _ })) ->
+    | DefT (_, trust, FunT (_, { params; return_t; this_t; _ })) ->
       p
         ~trust:(Some trust)
         ~extra:
@@ -483,27 +482,6 @@ and dump_use_t_ (depth, tvars) cx t =
           | Shape tool -> spf "Shape (%s)" (resolve_object tool)
         )
       in
-      let create_class =
-        CreateClass.(
-          let tool = function
-            | Spec _ -> "Spec"
-            | Mixins _ -> "Mixins"
-            | Statics _ -> "Statics"
-            | PropTypes (_, tool) -> spf "PropTypes (%s)" (resolve_object tool)
-            | DefaultProps _ -> "DefaultProps"
-            | InitialState _ -> "InitialState"
-          in
-          let knot { this; static; state_t; default_t } =
-            spf
-              "{this = %s; static = %s; state = %s; default = %s}"
-              (kid this)
-              (kid static)
-              (kid state_t)
-              (kid default_t)
-          in
-          (fun t k -> spf "%s, %s" (tool t) (knot k))
-        )
-      in
       function
       | CreateElement0 (_, config, (children, children_spread), tout)
       | CreateElement (_, _, config, (children, children_spread), tout) ->
@@ -527,8 +505,6 @@ and dump_use_t_ (depth, tvars) cx t =
       | GetRef tout -> spf "GetRef (%s)" (kid tout)
       | SimplifyPropType (tool, tout) ->
         spf "SimplifyPropType (%s, %s)" (simplify_prop_type tool) (kid tout)
-      | CreateClass (tool, knot, tout) ->
-        spf "CreateClass (%s, %s)" (create_class tool knot) (kid tout)
     )
   in
   let slice { Object.reason = _; props; flags = { obj_kind; _ }; generics = _; interface = _ } =
@@ -707,7 +683,7 @@ and dump_use_t_ (depth, tvars) cx t =
     | AssertInstanceofRHST _ -> p t
     | AssertIterableT _ -> p t
     | BecomeT { reason = _; t = arg; empty_success = _ } -> p ~extra:(kid arg) t
-    | BindT (use_op, _, _, _) -> p t ~extra:(string_of_use_op use_op)
+    | BindT (use_op, _, _) -> p t ~extra:(string_of_use_op use_op)
     | CallElemT (_, _, _, _) -> p t
     | CallT (use_op, _, { call_args_tlist; call_tout = (call_r, call_tvar); call_this_t; _ }) ->
       p
@@ -758,7 +734,7 @@ and dump_use_t_ (depth, tvars) cx t =
     | GetKeysT _ -> p t
     | GetValuesT _ -> p t
     | MatchPropT (use_op, _, prop, (preason, ptvar))
-    | GetPropT (use_op, _, prop, (preason, ptvar)) ->
+    | GetPropT (use_op, _, _, prop, (preason, ptvar)) ->
       p
         ~extra:
           (spf
@@ -982,8 +958,10 @@ and dump_tvar_ (depth, tvars) cx id =
       try
         match Context.find_tvar cx id with
         | Goto g -> spf "%d, Goto %d" id g
-        | Root { constraints = Resolved (_, t) | FullyResolved (_, (lazy t)); _ } ->
+        | Root { constraints = Resolved (_, t); _ } ->
           spf "%d, Resolved %s" id (dump_t_ (depth - 1, stack) cx t)
+        | Root { constraints = FullyResolved (_, (lazy t)); _ } ->
+          spf "%d, FullyResolved %s" id (dump_t_ (depth - 1, stack) cx t)
         | Root { constraints = Unresolved { lower; upper; _ }; _ } ->
           if lower = TypeMap.empty && upper = UseTypeMap.empty then
             spf "%d" id
@@ -1177,7 +1155,6 @@ let dump_error_message =
   let open Error_message in
   let string_of_use_op = string_of_use_op_rec in
   let dump_internal_error = function
-    | PackageHeapNotFound _ -> "PackageHeapNotFound"
     | AbnormalControlFlow -> "AbnormalControlFlow"
     | MethodNotAFunction -> "MethodNotAFunction"
     | OptionalMethod -> "OptionalMethod"
@@ -1195,12 +1172,13 @@ let dump_error_message =
     | RestParameterNotIdentifierPattern -> "RestParameterNotIdentifierPattern"
     | InterfaceTypeSpread -> "InterfaceTypeSpread"
     | Error_message.DebugThrow -> "DebugThrow"
-    | MergeTimeout _ -> "MergeTimeout"
-    | MergeJobException _ -> "MergeJobException"
+    | ParseJobException _ -> "ParseJobException"
     | CheckTimeout _ -> "CheckTimeout"
     | CheckJobException _ -> "CheckJobException"
     | UnexpectedTypeapp _ -> "UnexpectedTypeapp"
     | UnexpectedAnnotationInference _ -> "UnexpectedAnnotationInference"
+    | MissingEnvRead _ -> "MissingEnvRead"
+    | MissingEnvWrite _ -> "MissingEnvWrite"
   in
   let dump_upper_kind = function
     | IncompatibleGetPropT _ -> "IncompatibleGetPropT"
@@ -1211,7 +1189,6 @@ let dump_error_message =
     | IncompatibleMethodT _ -> "IncompatibleMethodT"
     | IncompatibleCallT -> "IncompatibleCallT"
     | IncompatibleMixedCallT -> "IncompatibleMixedCallT"
-    | IncompatibleConstructorT -> "IncompatibleConstructorT"
     | IncompatibleGetElemT _ -> "IncompatibleGetElemT"
     | IncompatibleSetElemT _ -> "IncompatibleSetElemT"
     | IncompatibleCallElemT _ -> "IncompatibleCallElemT"
@@ -1354,12 +1331,15 @@ let dump_error_message =
         name
         (Polarity.string expected_polarity)
         (Polarity.string actual_polarity)
-    | EBuiltinLookupFailed { reason; name } ->
+    | EBuiltinLookupFailed { reason; name; potential_generator } ->
       spf
-        "EBuiltinLookupFailed { reason = %s; name = %S }"
+        "EBuiltinLookupFailed { reason = %s; name = %S; potential_generator = %s }"
         (dump_reason cx reason)
         (match name with
         | Some x -> spf "Some(%S)" (Reason.display_string_of_name x)
+        | None -> "None")
+        (match potential_generator with
+        | Some generator -> spf "Some(%s)" generator
         | None -> "None")
     | EStrictLookupFailed { reason_prop; reason_obj; name; suggestion; use_op } ->
       spf
@@ -1513,7 +1493,6 @@ let dump_error_message =
         (string_of_aloc entry_loc)
     | ERecursionLimit (reason1, reason2) ->
       spf "ERecursionLimit (%s, %s)" (dump_reason cx reason1) (dump_reason cx reason2)
-    | EModuleOutsideRoot (loc, name) -> spf "EModuleOutsideRoot (%s, %S)" (string_of_aloc loc) name
     | EUnsafeGetSet loc -> spf "EUnsafeGetSet (%s)" (string_of_aloc loc)
     | EUninitializedInstanceProperty (loc, err) ->
       spf
@@ -1597,11 +1576,6 @@ let dump_error_message =
     | EInvalidReactPropType { reason; use_op; tool = _ } ->
       spf
         "EInvalidReactPropType { reason = %s; use_op = %s; _ }"
-        (dump_reason cx reason)
-        (string_of_use_op use_op)
-    | EInvalidReactCreateClass { reason; use_op; tool = _ } ->
-      spf
-        "EInvalidReactCreateClass { reason = %s; use_op = %s; _ }"
         (dump_reason cx reason)
         (string_of_use_op use_op)
     | EReactElementFunArity (reason, _, _) ->
@@ -1691,6 +1665,7 @@ let dump_error_message =
         in
         spf "ESketchyNumberLint (%s) (%s)" kind_str (dump_reason cx reason)
       )
+    | EInvalidConstructor reason -> spf "EInvalidConstructor (%s)" (dump_reason cx reason)
     | EInvalidPrototype (loc, reason) ->
       spf "EInvalidPrototype (%s) (%s)" (string_of_aloc loc) (dump_reason cx reason)
     | EUnnecessaryOptionalChain (loc, _) -> spf "EUnnecessaryOptionalChain (%s)" (string_of_aloc loc)

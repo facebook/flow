@@ -16,6 +16,8 @@ module type COVER = sig
 
   val empty_errors : pattern_errors
 
+  val cons_error : Loc.t * Parse_error.t -> pattern_errors -> pattern_errors
+
   val rev_append_errors : pattern_errors -> pattern_errors -> pattern_errors
 
   val rev_errors : pattern_errors -> pattern_errors
@@ -47,6 +49,8 @@ module Cover (Parse : PARSER) : COVER = struct
     Parse.pattern_from_expr env expr
 
   let empty_errors = { if_patt = []; if_expr = [] }
+
+  let cons_error err { if_patt; if_expr } = { if_patt = err :: if_patt; if_expr = err :: if_expr }
 
   let rev_append_errors a b =
     { if_patt = List.rev_append a.if_patt b.if_patt; if_expr = List.rev_append a.if_expr b.if_expr }

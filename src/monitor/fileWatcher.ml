@@ -7,8 +7,6 @@
 
 module Logger = FlowServerMonitorLogger
 
-exception FileWatcherDied of Exception.t
-
 type exit_reason =
   | Watcher_stopped
   | Watcher_died
@@ -130,28 +128,47 @@ class dfind (monitor_options : FlowServerMonitorOptions.t) : watcher =
       | Some dfind -> dfind
 
     method start_init =
-      let file_options =
-        Options.file_options monitor_options.FlowServerMonitorOptions.server_options
-      in
+      let server_options = monitor_options.FlowServerMonitorOptions.server_options in
+      let file_options = Options.file_options server_options in
       watch_paths <- Files.watched_paths file_options;
-      let null_fd = Daemon.null_fd () in
-      let fds = (null_fd, null_fd, null_fd) in
+      let in_fd = Daemon.null_fd () in
+      let log_file =
+        let flowconfig_name = Options.flowconfig_name server_options in
+        let tmp_dir = Options.temp_dir server_options in
+        let root = Options.root server_options in
+        Server_files_js.dfind_log_file ~flowconfig_name ~tmp_dir root
+      in
+      let log_fd = Daemon.fd_of_path log_file in
+      let fds = (in_fd, log_fd, log_fd) in
       let dfind = DfindLibLwt.init fds ("flow_server_events", watch_paths) in
       dfind_instance <- Some dfind
 
     method wait_for_init ~timeout:_ =
-      let%lwt result = DfindLibLwt.wait_until_ready self#get_dfind in
-      let%lwt () =
-        let open FlowServerMonitorOptions in
-        if Options.lazy_mode monitor_options.server_options then (
-          let mergebase_with = monitor_options.file_watcher_mergebase_with in
-          let%lwt changes = changes_since_mergebase ~mergebase_with watch_paths in
-          files <- SSet.union files changes;
-          Lwt.return_unit
-        ) else
-          Lwt.return_unit
+      let%lwt result =
+        try%lwt
+          let%lwt result = DfindLibLwt.wait_until_ready self#get_dfind in
+          Lwt.return (Ok result)
+        with
+        | Sys_error msg when msg = "Broken pipe" ->
+          Lwt.return (Error "Failed to initialize dfind: broken pipe")
+        | End_of_file
+        | Unix.Unix_error (Unix.EPIPE, _, _) ->
+          Lwt.return (Error "Failed to initialize dfind: broken pipe")
       in
-      Lwt.return (Ok result)
+      match result with
+      | Ok result ->
+        let%lwt () =
+          let open FlowServerMonitorOptions in
+          if Options.lazy_mode monitor_options.server_options then (
+            let mergebase_with = monitor_options.file_watcher_mergebase_with in
+            let%lwt changes = changes_since_mergebase ~mergebase_with watch_paths in
+            files <- SSet.union files changes;
+            Lwt.return_unit
+          ) else
+            Lwt.return_unit
+        in
+        Lwt.return (Ok result)
+      | Error msg -> Lwt.return (Error msg)
 
     (* We don't want two threads to talk to dfind at the same time. And we don't want those two
      * threads to get the same file change events *)
@@ -165,12 +182,14 @@ class dfind (monitor_options : FlowServerMonitorOptions.t) : watcher =
             files <- SSet.union files new_files;
             Lwt.return_unit
           with
-          | Sys_error msg as e when msg = "Broken pipe" ->
-            let exn = Exception.wrap e in
-            raise (FileWatcherDied exn)
-          | (End_of_file | Unix.Unix_error (Unix.EPIPE, _, _)) as e ->
-            let exn = Exception.wrap e in
-            raise (FileWatcherDied exn)
+          (* ignore the dfind server dying. use waitpid to detect this instead *)
+          | Sys_error msg when msg = "Broken pipe" ->
+            Logger.debug "Connection to dfind broke";
+            Lwt.return_unit
+          | End_of_file
+          | Unix.Unix_error (Unix.EPIPE, _, _) ->
+            Logger.debug "Connection to dfind broke";
+            Lwt.return_unit
       )
 
     method get_and_clear_changed_files =

@@ -15,10 +15,6 @@ exception Writing_Preamble_Exception
 
 exception Writing_Payload_Exception
 
-exception Reading_Preamble_Exception
-
-exception Reading_Payload_Exception
-
 type remote_exception_data = {
   message: string;
   stack: string;
@@ -47,15 +43,11 @@ module type WRITER_READER = sig
 
   val return : 'a -> 'a result
 
-  val fail : exn -> 'a result
-
   val ( >>= ) : 'a result -> ('a -> 'b result) -> 'b result
 
   val write : ?timeout:Timeout.t -> fd -> buffer:bytes -> offset:int -> size:int -> int result
 
   val read : ?timeout:Timeout.t -> fd -> buffer:bytes -> offset:int -> size:int -> int result
-
-  val log : string -> unit
 end
 
 module MarshalToolsFunctor (WriterReader : WRITER_READER) : sig

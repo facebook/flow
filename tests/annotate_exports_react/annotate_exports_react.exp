@@ -1,15 +1,6 @@
 
 === Codemod annotate-exports ===
 
->>> ./createClass.js
-// @flow
-
-var React = require('react');
-
-const Comp: Class<React$Component<any, { ... }>> & { defaultProps: void, ... } = React.createClass(Object.freeze({}));
-
-module.exports = Comp;
-
 >>> ./element-component.js
 // @flow
 
@@ -94,11 +85,11 @@ module.exports = (): {|
 >>> Launching report...
 
 Stats:
-  Files changed:                            7
-  Number of annotations added:              9
-  Total size of annotations:               33
-  Number of sig. ver. errors:               9
-  Number of annotations required:           9
+  Files changed:                            6
+  Number of annotations added:              8
+  Total size of annotations:               26
+  Number of sig. ver. errors:               8
+  Number of annotations required:           8
   Number of annotations skipped:            0
 
 Errors:
@@ -121,15 +112,6 @@ Warnings:
 
 
 === Autofix exports ===
-
->>> ./createClass.js
-// @flow
-
-var React = require('react');
-
-const Comp: Class<React$Component<any, { ... }>> & { defaultProps: void, ... } = React.createClass(Object.freeze({}));
-
-module.exports = Comp;
 
 >>> ./element-component.js
 // @flow

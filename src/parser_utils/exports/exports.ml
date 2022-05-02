@@ -24,6 +24,7 @@ module Export_sig = struct
     pattern_defs: 'loc Type_sig_pack.packed Type_sig_collections.Pattern_defs.t option;
     patterns: 'loc Type_sig_pack.pattern Type_sig_collections.Patterns.t option;
   }
+  [@@warning "-69"]
 
   let of_module
       {

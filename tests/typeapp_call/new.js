@@ -16,10 +16,3 @@ c2.m2("");
 
 class NonPoly {}
 new NonPoly<string>; // error: expected polymorphic type
-
-function F<T>(x: T, y: T) {}
-new F<string>("foo", "bar"); // ok
-new F<string>("foo", 0); // error, number ~> string
-
-function NonPolyF() {}
-new NonPolyF<string>; // error: expected polymorphic type

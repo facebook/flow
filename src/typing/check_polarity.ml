@@ -88,9 +88,9 @@ module Kit (Flow : Flow_common.S) : Flow_common.CHECK_POLARITY = struct
       check_polarity_propmap cx ?trace tparams polarity own_props;
       check_polarity_propmap cx ?trace ~skip_ctor:true tparams polarity proto_props;
       Base.Option.iter call_t ~f:(check_polarity_call cx ?trace tparams polarity)
-    (* We can ignore the statics and prototype of function annotations, since
+    (* We can ignore the statics of function annotations, since
      * they will always be "uninteresting," never containing a GenericT. *)
-    | DefT (_, _, FunT (_static, _prototype, f)) ->
+    | DefT (_, _, FunT (_static, f)) ->
       let {
         (* Similarly, we can ignore this types, which can not be explicitly
          * provided, and thus will not contain a GenericT. *)

@@ -24,7 +24,7 @@ let rec mkdtemp ~skip_mocking ~retries =
 let mkdtemp ~skip_mocking = mkdtemp ~skip_mocking ~retries:30
 
 let with_tempdir ~skip_mocking g =
-  let dir = mkdtemp skip_mocking in
+  let dir = mkdtemp ~skip_mocking in
   let f () = g dir in
   Exception.protect ~f ~finally:(fun () -> Sys_utils.rm_dir_tree (Path.to_string dir) ~skip_mocking)
 

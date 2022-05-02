@@ -9,7 +9,9 @@
   (modules (:standard \ flow_version flow_lsp_conversions))
   (flags -w +a-4-6-29-35-44-48-50)
   (libraries
+    disk
     flow_common_lints
+    flow_common_modulename
     flow_common_span
     flow_common_utils
     flow_parser_utils_aloc

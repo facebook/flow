@@ -27,3 +27,6 @@ function more_tests() {
     invariant(a instanceof C)
   }
 }
+
+declare var obj: {};
+class D extends obj {}

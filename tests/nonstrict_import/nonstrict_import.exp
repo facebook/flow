@@ -14,12 +14,12 @@ Dependencies of a `@flow strict` module must also be `@flow strict`! [nonstrict-
               ^^^^^^
 
 
-Error --------------------------------------------------------------------------------------------------- imports.js:5:1
+Error -------------------------------------------------------------------------------------------------- imports.js:5:13
 
 Dependencies of a `@flow strict` module must also be `@flow strict`! [nonstrict-import]
 
    5| import * as All from './nonstrict_exports.js'; // Error
-      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                  ^^^
 
 
 Error --------------------------------------------------------------------------------------------------- imports.js:8:8

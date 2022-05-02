@@ -289,7 +289,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ rebinding.js:41:3
 
-Cannot reference type `A` [1] from a value position. [type-as-value]
+Cannot use type `A` [1] as a value. Types are erased and don't exist at runtime. [type-as-value]
 
    rebinding.js:41:3
    41|   A = 42;           // error: type alias ref'd from value pos
@@ -932,6 +932,22 @@ Cannot resolve name `b`. [cannot-resolve-name]
                           ^
 
 
+Error -------------------------------------------------------------------------------------------------- scope.js:129:21
+
+Cannot resolve name `selfRef`. [cannot-resolve-name]
+
+   129|     selfRef: typeof selfRef // Error: cannot resolve selfRef
+                            ^^^^^^^
+
+
+Error -------------------------------------------------------------------------------------------------- scope.js:133:15
+
+Cannot resolve name `forwardRef`. [cannot-resolve-name]
+
+   133|     x: typeof forwardRef, // Error: cannot resolve forwardRef
+                      ^^^^^^^^^^
+
+
 Error ----------------------------------------------------------------------------------------------------- tdz.js:25:11
 
 Cannot use variable `x` [1] because the declaration either comes later or was skipped. [reference-before-declaration]
@@ -1048,5 +1064,29 @@ References:
                      ^^^^^^ [2]
 
 
+Error --------------------------------------------------------------------------------------------------- unbound.js:3:1
 
-Found 74 errors
+Cannot resolve name `unbound`. [cannot-resolve-name]
+
+   3| unbound = 1; // Error
+      ^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------------- unbound.js:10:11
+
+Cannot resolve name `UnboundType`. [cannot-resolve-name]
+
+   10| (unbound: UnboundType); // Error
+                 ^^^^^^^^^^^
+
+
+Error -------------------------------------------------------------------------------------------------- unbound.js:14:1
+
+Cannot resolve name `unboundFunction`. [cannot-resolve-name]
+
+   14| unboundFunction(); // Error
+       ^^^^^^^^^^^^^^^
+
+
+
+Found 79 errors

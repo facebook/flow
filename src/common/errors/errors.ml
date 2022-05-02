@@ -303,11 +303,11 @@ module Friendly = struct
   let message_group_of_error =
     let message_of_frames frames acc_frames =
       let frames = Base.List.concat (List.rev (frames :: acc_frames)) in
-      Base.List.concat (Base.List.intersperse (List.rev frames) [text " of "])
+      Base.List.concat (Base.List.intersperse (List.rev frames) ~sep:[text " of "])
     in
     let message_of_explanations ~sep explanations acc_explanations =
       let explanations = Base.List.concat (List.rev (explanations :: acc_explanations)) in
-      Base.List.concat (Base.List.intersperse (List.rev explanations) [text "."; text sep])
+      Base.List.concat (Base.List.intersperse (List.rev explanations) ~sep:[text "."; text sep])
     in
     let rec flatten_speculation_branches
         ~show_all_branches ~hidden_branches ~high_score acc_frames acc_explanations acc = function
@@ -684,7 +684,7 @@ module Friendly = struct
     in
     fun message_group ->
       let acc = loop [] message_group in
-      Base.List.concat (Base.List.intersperse (List.rev acc) [text " "])
+      Base.List.concat (Base.List.intersperse (List.rev acc) ~sep:[text " "])
 
   (* Converts our friendly error to a classic error message. *)
   let to_classic error =
@@ -748,7 +748,7 @@ let mk_error
       trace,
       {
         loc;
-        root = Base.Option.map root (fun (root_loc, root_message) -> { root_loc; root_message });
+        root = Base.Option.map root ~f:(fun (root_loc, root_message) -> { root_loc; root_message });
         message = Normal { message; frames; explanations; code = error_code };
       }
     )
@@ -787,7 +787,7 @@ let mk_speculation_error
       trace,
       {
         loc;
-        root = Base.Option.map root (fun (root_loc, root_message) -> { root_loc; root_message });
+        root = Base.Option.map root ~f:(fun (root_loc, root_message) -> { root_loc; root_message });
         message = Speculation { frames; explanations; branches; code = error_code };
       }
     )
@@ -1202,6 +1202,7 @@ module Cli_output = struct
        convenient to keep the flags about errors co-located *)
     max_warnings: int option;
     one_line: bool;
+    list_files: bool;
     show_all_errors: bool;
     show_all_branches: bool;
     unicode: bool;
@@ -2488,7 +2489,7 @@ module Cli_output = struct
         let filename = file_of_source loc.source in
         let lines = read_lines_in_file loc filename stdin_file in
         let lines =
-          Base.Option.map lines (fun line_list ->
+          Base.Option.map lines ~f:(fun line_list ->
               (* Print every line by appending the line number and appropriate
                * gutter width. *)
               let (_, lines) =
@@ -2581,7 +2582,7 @@ module Cli_output = struct
         if not with_filename then
           lines
         else
-          Base.Option.map lines (fun lines ->
+          Base.Option.map lines ~f:(fun lines ->
               let space = String.make 3 ' ' in
               let filename = print_file_key ~strip_root loc.source in
               let filename =
@@ -2928,9 +2929,26 @@ module Cli_output = struct
       Base.Option.iter lazy_msg ~f:(Printf.fprintf out_channel "\n%s\n");
       ()
 
+  let list_files ~out_channel ~strip_root ~errors ~warnings =
+    let fold_files error acc =
+      match Loc.source (loc_of_printable_error error) with
+      | None -> acc
+      | Some File_key.Builtins -> acc
+      | Some file -> SSet.add (print_file_key ~strip_root (Some file)) acc
+    in
+    let files =
+      SSet.empty
+      |> ConcreteLocPrintableErrorSet.fold fold_files errors
+      |> ConcreteLocPrintableErrorSet.fold fold_files warnings
+    in
+    SSet.iter (Printf.fprintf out_channel "%s\n%!") files
+
   let print_errors
       ~out_channel ~flags ?(stdin_file = None) ~strip_root ~errors ~warnings ~lazy_msg () =
-    format_errors ~out_channel ~flags ~stdin_file ~strip_root ~errors ~warnings ~lazy_msg ()
+    if flags.list_files then
+      list_files ~out_channel ~strip_root ~errors ~warnings
+    else
+      format_errors ~out_channel ~flags ~stdin_file ~strip_root ~errors ~warnings ~lazy_msg ()
 end
 
 (* JSON output *)

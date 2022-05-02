@@ -1,2 +1,3 @@
-shell: test.sh
-file_watcher: dfind
+auto_start: false
+cmd: ls --all --explain --strip-root
+cwd: src

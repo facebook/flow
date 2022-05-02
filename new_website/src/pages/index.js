@@ -7,7 +7,7 @@
  * @format
  */
 
-import React from 'react';
+import * as React from 'react';
 import clsx from 'clsx';
 import Layout from '@theme/Layout';
 import Link from '@docusaurus/Link';
@@ -15,10 +15,11 @@ import useDocusaurusContext from '@docusaurus/useDocusaurusContext';
 import useBaseUrl from '@docusaurus/useBaseUrl';
 import styles from './styles.module.css';
 
-export default function Home() {
+export default function Home(): React.MixedElement {
   const context = useDocusaurusContext();
   const {siteConfig = {}} = context;
   return (
+    // $FlowFixMe[prop-missing]
     <Layout title={siteConfig.title} description={siteConfig.description}>
       <header className={clsx(styles.feature, styles.featureHero)}>
         <div className="container">
@@ -38,14 +39,14 @@ export default function Home() {
           <iframe
             className="gh-btn"
             src="https://ghbtns.com/github-btn.html?user=facebook&repo=flow&type=star&count=false&size=large"
-            frameborder="0"
+            frameBorder="0"
             scrolling="0"
             width="160px"
             height="30px"
             title="Star"></iframe>
           <div className={clsx(styles.featureHeroText)}>
             Current version:{' '}
-            <strong class="navbar-text">
+            <strong className="navbar-text">
               {/* TODO: add release */}
               <a href="">RELEASE_NAME</a>
             </strong>

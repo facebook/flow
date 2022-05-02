@@ -5,7 +5,7 @@ var x = 42;
 class A<X> {
   s: X;
   f() {
-    var y = 42;
+    var y: number = 42;
     x = this.s;
     y = this.s;
   }

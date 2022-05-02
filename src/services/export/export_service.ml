@@ -59,12 +59,14 @@ let add_imports_of_module ~source ~module_name exports index =
     ~init:index
     names
 
-let add_imports_of_checked_file file_key addr index =
+let add_imports_of_checked_file file_key parse haste_info index =
   let source = Export_index.File_key file_key in
-  let exports = Parsing_heaps.read_exports addr in
+  let exports = Parsing_heaps.read_exports parse in
   let module_name =
-    match Parsing_heaps.read_checked_module_name addr with
-    | Some name -> Modulename.String name
+    match haste_info with
+    | Some info ->
+      let name = Parsing_heaps.read_module_name info in
+      Modulename.String name
     | None -> Modulename.Filename (Files.chop_flow_ext file_key)
   in
   add_imports_of_module ~source ~module_name exports index
@@ -95,22 +97,29 @@ let index ~workers ~reader parsed : (Export_index.t * Export_index.t) Lwt.t =
         (* TODO: when a file changes, the below removes the file entirely and then adds
             back the new info, even though much or all of it is probably still the same.
            instead, diff the old and new exports and make minimal changes. *)
-        let to_remove =
-          (* get old exports so we can remove outdated entries *)
-          match Parsing_heaps.Mutator_reader.get_old_checked_file_addr ~reader file_key with
-          | Some addr -> add_imports_of_checked_file file_key addr to_remove
-          | None ->
-            (* if it wasn't checked before, there were no entries added *)
-            to_remove
-        in
-        let to_add =
-          match Parsing_heaps.Mutator_reader.get_checked_file_addr ~reader file_key with
-          | Some addr -> add_imports_of_checked_file file_key addr to_add
-          | None ->
-            (* TODO: handle unchecked module names, maybe still parse? *)
-            to_add
-        in
-        (to_add, to_remove)
+        (match Parsing_heaps.get_file_addr file_key with
+        | None -> (to_add, to_remove)
+        | Some file ->
+          let to_remove =
+            (* get old exports so we can remove outdated entries *)
+            match Parsing_heaps.Mutator_reader.get_old_typed_parse ~reader file with
+            | Some parse ->
+              let haste_info = Parsing_heaps.Mutator_reader.get_old_haste_info ~reader file in
+              add_imports_of_checked_file file_key parse haste_info to_remove
+            | None ->
+              (* if it wasn't checked before, there were no entries added *)
+              to_remove
+          in
+          let to_add =
+            match Parsing_heaps.Mutator_reader.get_typed_parse ~reader file with
+            | Some parse ->
+              let haste_info = Parsing_heaps.Mutator_reader.get_haste_info ~reader file in
+              add_imports_of_checked_file file_key parse haste_info to_add
+            | None ->
+              (* TODO: handle unchecked module names, maybe still parse? *)
+              to_add
+          in
+          (to_add, to_remove))
     in
     fun ~reader files ->
       let init = (Export_index.empty, Export_index.empty) in
@@ -120,7 +129,7 @@ let index ~workers ~reader parsed : (Export_index.t * Export_index.t) Lwt.t =
   in
 
   MonitorRPC.status_update
-    ServerStatus.(Indexing_progress { finished = 0; total = Some total_count });
+    ~event:ServerStatus.(Indexing_progress { finished = 0; total = Some total_count });
   let%lwt (to_add, to_remove, _count) =
     MultiWorkerLwt.call
       workers
@@ -129,7 +138,7 @@ let index ~workers ~reader parsed : (Export_index.t * Export_index.t) Lwt.t =
       ~merge:(fun (to_add, to_remove, count) (to_add_acc, to_remove_acc, finished) ->
         let finished = finished + count in
         MonitorRPC.status_update
-          ServerStatus.(Indexing_progress { total = Some total_count; finished });
+          ~event:ServerStatus.(Indexing_progress { total = Some total_count; finished });
         (to_add :: to_add_acc, to_remove :: to_remove_acc, finished))
       ~next:(MultiWorkerLwt.next workers parsed)
   in

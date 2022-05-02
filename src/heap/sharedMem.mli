@@ -18,9 +18,7 @@ type buf = (char, Bigarray.int8_unsigned_elt, Bigarray.c_layout) Bigarray.Array1
 (* Addresses are represented as integers, but are well-typed via a phantom
  * type parameter. The type checker will ensure that a `foo addr` is not
  * passed where a `bar addr` is expected. *)
-type 'k addr [@@immediate]
-
-type serialized_tag = Serialized_resolved_requires
+type +'k addr [@@immediate]
 
 exception Out_of_shared_memory
 
@@ -52,6 +50,8 @@ val init : config -> num_workers:int -> (handle, unit) result
 
 val commit_transaction : unit -> unit
 
+val is_init_transaction : unit -> bool
+
 module type Key = sig
   type t
 
@@ -64,10 +64,6 @@ module type Value = sig
   type t
 
   val description : string
-end
-
-module type SerializedTag = sig
-  val value : serialized_tag
 end
 
 module type AddrValue = sig
@@ -89,6 +85,8 @@ module type NoCache = sig
 
   val remove_old_batch : KeySet.t -> unit
 
+  val remove : key -> unit
+
   val remove_batch : KeySet.t -> unit
 
   val mem : key -> bool
@@ -100,12 +98,6 @@ module type NoCache = sig
   val oldify_batch : KeySet.t -> unit
 
   val revive_batch : KeySet.t -> unit
-end
-
-module type NoCacheTag = sig
-  include NoCache
-
-  val iter : (value -> unit) -> unit
 end
 
 module type DebugCacheType = sig
@@ -157,9 +149,6 @@ module WithCache (Key : Key) (Value : Value) :
 module NoCache (Key : Key) (Value : Value) :
   NoCache with type key = Key.t and type value = Value.t and module KeySet = Flow_set.Make(Key)
 
-module NoCacheTag (Key : Key) (Value : Value) (_ : SerializedTag) :
-  NoCacheTag with type key = Key.t and type value = Value.t and module KeySet = Flow_set.Make(Key)
-
 module NoCacheAddr (Key : Key) (Value : AddrValue) : sig
   include
     NoCache
@@ -210,9 +199,6 @@ module NewAPI : sig
    * array of addresses to string objects. *)
   type 'a addr_tbl
 
-  (* Phantom type tag for optional objects. *)
-  type 'a opt
-
   (* Phantom type tag for ASTs. *)
   type ast
 
@@ -234,13 +220,17 @@ module NewAPI : sig
 
   type exports
 
-  (* Phantom type tag for checked file objects. A checked file contains
-   * references to the filename, any local definitions, exports, etc. *)
-  type checked_file
+  type resolved_requires
 
-  type unparsed_file
+  type +'a parse
 
-  type dyn_file
+  type haste_info
+
+  type file
+
+  type haste_module
+
+  type file_module
 
   (* Before writing to the heap, we first calculate the required size (in words)
    * for all the heap objects we would like to write. We will pass this size
@@ -286,20 +276,6 @@ module NewAPI : sig
 
   val read_addr_tbl : ('k addr -> 'a) -> 'k addr_tbl addr -> 'a array
 
-  (* opt *)
-
-  val opt_size : ('a -> size) -> 'a option -> size
-
-  val write_opt : (chunk -> 'a -> 'k addr) -> chunk -> 'a option -> 'k opt addr
-
-  val read_opt : ('a addr -> 'b) -> 'a opt addr -> 'b option
-
-  val read_opt_exn : ('a addr -> 'b) -> 'a opt addr -> 'b
-
-  val is_none : 'a opt addr -> bool
-
-  val is_some : 'a opt addr -> bool
-
   (* entities *)
 
   val entity_size : int
@@ -308,9 +284,13 @@ module NewAPI : sig
 
   val entity_advance : 'k entity addr -> 'k addr option -> unit
 
-  val entity_read_committed : 'k entity addr -> 'k opt addr
+  val entity_read_committed : 'k entity addr -> 'k addr option
 
-  val entity_read_latest : 'k entity addr -> 'k opt addr
+  val entity_read_latest : 'k entity addr -> 'k addr option
+
+  val entity_rollback : _ entity addr -> unit
+
+  val entity_changed : _ entity addr -> bool
 
   (* ast *)
 
@@ -329,6 +309,14 @@ module NewAPI : sig
   val prepare_write_exports : string -> size * (chunk -> exports addr)
 
   val read_exports : exports addr -> string
+
+  (* resolved requires *)
+
+  val prepare_write_resolved_requires : string -> size * (chunk -> resolved_requires addr)
+
+  val read_resolved_requires : resolved_requires addr -> string
+
+  val iter_resolved_requires : (file addr -> resolved_requires addr -> unit) -> unit
 
   (* docblock *)
 
@@ -356,54 +344,126 @@ module NewAPI : sig
 
   val type_sig_buf : type_sig addr -> buf
 
-  (* checked file *)
+  (* parse data *)
 
-  val checked_file_size : size
+  val untyped_parse_size : size
 
-  val unparsed_file_size : size
+  val typed_parse_size : size
 
-  val write_checked_file :
-    chunk -> heap_int64 addr -> heap_string opt addr -> exports addr -> checked_file addr
+  val write_untyped_parse : chunk -> heap_int64 addr -> [ `untyped ] parse addr
 
-  val write_unparsed_file : chunk -> heap_int64 addr -> heap_string opt addr -> unparsed_file addr
+  val write_typed_parse :
+    chunk ->
+    heap_int64 addr ->
+    exports addr ->
+    resolved_requires entity addr ->
+    file entity addr ->
+    [ `typed ] parse addr
 
-  val dyn_checked_file : checked_file addr -> dyn_file addr
+  val is_typed : [> ] parse addr -> bool
 
-  val dyn_unparsed_file : unparsed_file addr -> dyn_file addr
+  val coerce_typed : [> ] parse addr -> [ `typed ] parse addr option
 
-  val is_checked_file : dyn_file addr -> bool
+  val get_file_hash : [> ] parse addr -> heap_int64 addr
 
-  val assert_checked_file : dyn_file addr -> checked_file addr
+  val get_ast : [ `typed ] parse addr -> ast addr option
 
-  val coerce_checked_file : dyn_file addr -> checked_file addr option
+  val get_docblock : [ `typed ] parse addr -> docblock addr option
 
-  val assert_unparsed_file : dyn_file addr -> unparsed_file addr
+  val get_aloc_table : [ `typed ] parse addr -> aloc_table addr option
 
-  val set_file_module_name : dyn_file addr -> heap_string opt addr -> unit
+  val get_type_sig : [ `typed ] parse addr -> type_sig addr option
 
-  val set_file_ast : checked_file addr -> ast addr -> unit
+  val get_file_sig : [ `typed ] parse addr -> file_sig addr option
 
-  val set_file_docblock : checked_file addr -> docblock addr -> unit
+  val get_exports : [ `typed ] parse addr -> exports addr
 
-  val set_file_aloc_table : checked_file addr -> aloc_table addr -> unit
+  val get_resolved_requires : [ `typed ] parse addr -> resolved_requires entity addr
 
-  val set_file_type_sig : checked_file addr -> type_sig addr -> unit
+  val get_leader : [ `typed ] parse addr -> file entity addr
 
-  val set_file_sig : checked_file addr -> file_sig addr -> unit
+  val set_ast : [ `typed ] parse addr -> ast addr -> unit
 
-  val get_file_hash : dyn_file addr -> heap_int64 addr
+  val set_docblock : [ `typed ] parse addr -> docblock addr -> unit
 
-  val get_file_module_name : dyn_file addr -> heap_string opt addr
+  val set_aloc_table : [ `typed ] parse addr -> aloc_table addr -> unit
 
-  val get_file_ast : checked_file addr -> ast opt addr
+  val set_type_sig : [ `typed ] parse addr -> type_sig addr -> unit
 
-  val get_file_docblock : checked_file addr -> docblock opt addr
+  val set_file_sig : [ `typed ] parse addr -> file_sig addr -> unit
 
-  val get_file_aloc_table : checked_file addr -> aloc_table opt addr
+  (* haste info *)
 
-  val get_file_type_sig : checked_file addr -> type_sig opt addr
+  val haste_info_size : size
 
-  val get_file_sig : checked_file addr -> file_sig opt addr
+  val write_haste_info : chunk -> haste_module addr -> haste_info addr
 
-  val get_file_exports : checked_file addr -> exports addr
+  val get_haste_module : haste_info addr -> haste_module addr
+
+  val haste_info_equal : haste_info addr -> haste_info addr -> bool
+
+  (* file data *)
+
+  type file_kind =
+    | Source_file
+    | Json_file
+    | Resource_file
+    | Lib_file
+
+  val file_size : size
+
+  val write_file :
+    chunk ->
+    file_kind ->
+    heap_string addr ->
+    [ `typed | `untyped ] parse entity addr ->
+    haste_info entity addr ->
+    file_module addr option ->
+    file addr
+
+  val get_file_kind : file addr -> file_kind
+
+  val get_file_name : file addr -> heap_string addr
+
+  val get_file_module : file addr -> file_module addr option
+
+  val get_haste_info : file addr -> haste_info entity addr
+
+  val get_parse : file addr -> [ `typed | `untyped ] parse entity addr
+
+  val files_equal : file addr -> file addr -> bool
+
+  val file_changed : file addr -> bool
+
+  (* haste module *)
+
+  val haste_module_size : size
+
+  val write_haste_module : chunk -> heap_string addr -> file entity addr -> haste_module addr
+
+  val haste_modules_equal : haste_module addr -> haste_module addr -> bool
+
+  val get_haste_name : haste_module addr -> heap_string addr
+
+  val get_haste_provider : haste_module addr -> file entity addr
+
+  val add_haste_provider : haste_module addr -> file addr -> haste_info addr -> unit
+
+  val get_haste_all_providers_exclusive : haste_module addr -> file addr list
+
+  val remove_haste_provider_exclusive : haste_module addr -> file addr -> unit
+
+  (* file module *)
+
+  val file_module_size : size
+
+  val write_file_module : chunk -> file entity addr -> file_module addr
+
+  val get_file_provider : file_module addr -> file entity addr
+
+  val add_file_provider : file_module addr -> file addr -> unit
+
+  val get_file_all_providers_exclusive : file_module addr -> file addr list
+
+  val remove_file_provider_exclusive : file_module addr -> file addr -> unit
 end

@@ -13,7 +13,9 @@ open Loc_collections
 module type S = sig
   include Env_sig.S
 
-  val resolve_env_entry : Context.t -> Type.t -> ALoc.t -> unit
+  val resolve_env_entry : use_op:use_op -> Context.t -> Type.t -> ALoc.t -> unit
+
+  val read_entry : for_type:bool -> Context.t -> ALoc.t -> reason -> Type.t
 end
 
 module New_env = struct
@@ -107,6 +109,8 @@ module New_env = struct
 
   let this_type_params = ref ALocMap.empty
 
+  let valid_declaration_check = Old_env.valid_declaration_check
+
   (************************)
   (* Helpers **************)
   (************************)
@@ -116,6 +120,9 @@ module New_env = struct
     match Loc_env.find_write env loc with
     | None -> ()
     | Some w ->
+      Debug_js.Verbose.print_if_verbose
+        cx
+        [spf "recording expression at location %s" (Reason.string_of_aloc loc)];
       Flow_js.unify cx ~use_op:unknown_use t w;
       let env' = Loc_env.update_reason env loc (TypeUtil.reason_of_t t) in
       Context.set_environment cx env'
@@ -135,7 +142,13 @@ module New_env = struct
   let is_def_loc_annotated { Env_api.providers; _ } loc =
     let providers = Env_api.Provider_api.providers_of_def providers loc in
     match providers with
-    | Some (Find_providers.AnnotatedVar, _) -> true
+    | Some (Find_providers.AnnotatedVar _, _) -> true
+    | _ -> false
+
+  let is_def_loc_predicate_function { Env_api.providers; _ } loc =
+    let providers = Env_api.Provider_api.providers_of_def providers loc in
+    match providers with
+    | Some (Find_providers.AnnotatedVar { predicate }, _) -> predicate
     | _ -> false
 
   let provider_type_for_def_loc ?(intersect = false) env def_loc =
@@ -146,7 +159,7 @@ module New_env = struct
       |> Base.Option.all
     in
     match providers with
-    | None -> assert_false (spf "Missing providers for %s" (ALoc.debug_to_string def_loc))
+    | None -> assert_false (spf "Missing providers for %s" (Reason.string_of_aloc def_loc))
     | Some [] -> MixedT.make (mk_reason (RCustom "no providers") def_loc) (Trust.bogus_trust ())
     | Some [t] -> t
     | Some (t1 :: t2 :: ts) when intersect ->
@@ -165,7 +178,12 @@ module New_env = struct
  *  may want to compute a more specific least upper bound for these writes.
  *)
   let phi cx reason ts =
-    Tvar.mk_where cx reason (fun tvar -> Base.List.iter ts ~f:(fun t -> Flow_js.flow_t cx (t, tvar)))
+    match ts with
+    | [t] -> t
+    | _ ->
+      Tvar.mk_where cx reason (fun tvar ->
+          Base.List.iter ts ~f:(fun t -> Flow_js.flow_t cx (t, tvar))
+      )
 
   let rec predicate_of_refinement cx =
     Env_api.Refi.(
@@ -180,7 +198,8 @@ module New_env = struct
       | InstanceOfR (loc, _) ->
         (* Instanceof refinements store the loc they check against, which is a read in the env *)
         let reason = mk_reason (RCustom "RHS of `instanceof` operator") loc in
-        let t = read_entry_exn ~for_type:false cx loc reason in
+        let t = read_entry_exn ~lookup_mode:ForValue cx loc reason in
+        let t = Flow_js.reposition cx loc t in
         Flow_js.flow cx (t, AssertInstanceofRHST reason);
         LeftP (InstanceofTest, t)
       | IsArrayR -> ArrP
@@ -200,7 +219,7 @@ module New_env = struct
       | LatentR { func = (func_loc, _); index } ->
         (* Latent refinements store the loc of the callee, which is a read in the env *)
         let reason = mk_reason (RCustom "Function call") func_loc in
-        let t = read_entry_exn ~for_type:false cx func_loc reason in
+        let t = read_entry_exn ~lookup_mode:ForValue cx func_loc reason in
         LatentP (t, index)
       | PropExistsR { propname; loc } ->
         PropExistsP (propname, mk_reason (RProperty (Some (OrdinaryName propname))) loc)
@@ -217,77 +236,107 @@ module New_env = struct
       ~default:t
       refi
 
-  and read_entry ~for_type cx loc reason =
+  and read_entry ~lookup_mode cx loc reason =
     let ({ Loc_env.var_info; _ } as env) = Context.environment cx in
-    let rec type_of_state states refi =
-      Base.List.map
-        ~f:(function
-          | Env_api.Undefined reason
-          | Env_api.Uninitialized reason ->
-            Type.(VoidT.make reason |> with_trust Trust.bogus_trust)
-          | Env_api.DeclaredFunction loc -> provider_type_for_def_loc ~intersect:true env loc
-          | Env_api.Undeclared (name, def_loc) ->
-            Flow_js.add_output
-              cx
-              Error_message.(
-                EBindingError (EReferencedBeforeDeclaration, loc, OrdinaryName name, def_loc)
-              );
-            Type.(AnyT.make (AnyError None) reason)
-          | Env_api.UndeclaredClass { name; def } when not for_type ->
-            let def_loc = aloc_of_reason def in
-            Flow_js.add_output
-              cx
-              Error_message.(
-                EBindingError (EReferencedBeforeDeclaration, loc, OrdinaryName name, def_loc)
-              );
-            Type.(AnyT.make (AnyError None) reason)
-          | Env_api.UndeclaredClass { def; _ } ->
-            Debug_js.Verbose.print_if_verbose
-              cx
-              [
-                spf
-                  "reading %s from location %s"
-                  (ALoc.debug_to_string loc)
-                  (Reason.aloc_of_reason def |> ALoc.debug_to_string);
-              ];
-            Base.Option.value_exn (Reason.aloc_of_reason def |> Loc_env.find_write env)
-          | Env_api.With_ALoc.Write reason ->
-            Debug_js.Verbose.print_if_verbose
-              cx
-              [
-                spf
-                  "reading %s from location %s"
-                  (ALoc.debug_to_string loc)
-                  (Reason.aloc_of_reason reason |> ALoc.debug_to_string);
-              ];
-            Base.Option.value_exn (Reason.aloc_of_reason reason |> Loc_env.find_write env)
-          | Env_api.With_ALoc.Refinement { refinement_id; writes } ->
-            find_refi var_info refinement_id |> Base.Option.some |> type_of_state writes
-          | Env_api.With_ALoc.Global name ->
-            Flow_js.get_builtin cx (Reason.OrdinaryName name) reason
-          | Env_api.With_ALoc.Unreachable loc ->
-            let reason = mk_reason (RCustom "unreachable value") loc in
-            EmptyT.make reason (Trust.bogus_trust ())
-          | Env_api.With_ALoc.Projection loc -> Base.Option.value_exn (Loc_env.find_write env loc))
-        states
-      |> phi cx reason
-      |> refine cx reason loc refi
+    let rec type_of_state states val_id refi =
+      let t =
+        lazy
+          (Base.List.map
+             ~f:(fun entry ->
+               match (entry, lookup_mode) with
+               | (Env_api.Undefined reason, _)
+               | (Env_api.Uninitialized reason, _) ->
+                 Type.(VoidT.make reason |> with_trust Trust.bogus_trust)
+               | (Env_api.Number reason, _) ->
+                 Type.(NumT.make reason |> with_trust Trust.bogus_trust)
+               | (Env_api.DeclaredFunction loc, _) ->
+                 provider_type_for_def_loc ~intersect:true env loc
+               | (Env_api.Undeclared (_name, def_loc), (ForType | ForTypeof)) ->
+                 Base.Option.value_exn (Loc_env.find_write env def_loc)
+               | (Env_api.Undeclared (name, def_loc), ForValue) ->
+                 Flow_js.add_output
+                   cx
+                   Error_message.(
+                     EBindingError (EReferencedBeforeDeclaration, loc, OrdinaryName name, def_loc)
+                   );
+                 Type.(AnyT.make (AnyError None) reason)
+               | (Env_api.UndeclaredClass { def; _ }, (ForType | ForTypeof)) ->
+                 Debug_js.Verbose.print_if_verbose
+                   cx
+                   [
+                     spf
+                       "reading %s from location %s"
+                       (Reason.string_of_aloc loc)
+                       (Reason.aloc_of_reason def |> Reason.string_of_aloc);
+                   ];
+                 Base.Option.value_exn (Reason.aloc_of_reason def |> Loc_env.find_write env)
+               | (Env_api.UndeclaredClass { name; def }, _) ->
+                 let def_loc = aloc_of_reason def in
+                 Flow_js.add_output
+                   cx
+                   Error_message.(
+                     EBindingError (EReferencedBeforeDeclaration, loc, OrdinaryName name, def_loc)
+                   );
+                 Type.(AnyT.make (AnyError None) reason)
+               | (Env_api.With_ALoc.Write reason, _) ->
+                 Debug_js.Verbose.print_if_verbose
+                   cx
+                   [
+                     spf
+                       "reading %s from location %s"
+                       (Reason.string_of_aloc loc)
+                       (Reason.aloc_of_reason reason |> Reason.string_of_aloc);
+                   ];
+                 Base.Option.value_exn (Reason.aloc_of_reason reason |> Loc_env.find_write env)
+               | (Env_api.With_ALoc.Refinement { refinement_id; writes; write_id }, _) ->
+                 find_refi var_info refinement_id
+                 |> Base.Option.some
+                 |> type_of_state writes write_id
+               | (Env_api.With_ALoc.Global name, _) ->
+                 Flow_js.get_builtin cx (Reason.OrdinaryName name) reason
+               | (Env_api.With_ALoc.This, _) ->
+                 Old_env.query_var ~lookup_mode cx (Reason.InternalName "this") loc
+               | (Env_api.With_ALoc.Super, _) ->
+                 Old_env.query_var ~lookup_mode cx (Reason.InternalName "super") loc
+               | (Env_api.With_ALoc.ModuleScoped _, _) -> Type.(AnyT.at AnnotatedAny loc)
+               | (Env_api.With_ALoc.Unreachable loc, _) ->
+                 let reason = mk_reason (RCustom "unreachable value") loc in
+                 EmptyT.make reason (Trust.bogus_trust ())
+               | (Env_api.With_ALoc.Projection loc, _) ->
+                 Base.Option.value_exn (Loc_env.find_write env loc))
+             states
+          |> phi cx reason
+          )
+      in
+      let t =
+        match val_id with
+        | Some id ->
+          let for_value = lookup_mode = ForValue in
+          (match Context.env_cache_find_opt cx ~for_value id with
+          | None ->
+            let t = Lazy.force t in
+            Context.add_env_cache_entry cx ~for_value id t;
+            t
+          | Some t -> t)
+        | _ -> Lazy.force t
+      in
+      t |> refine cx reason loc refi
     in
     match find_var_opt var_info loc with
     | Error loc -> Error loc
-    | Ok { Env_api.def_loc; write_locs; val_kind; name } ->
-      (match (val_kind, name, def_loc) with
-      | (Some Env_api.Type, Some name, Some def_loc) when not for_type ->
+    | Ok { Env_api.def_loc; write_locs; val_kind; name; id } ->
+      (match (val_kind, name, def_loc, lookup_mode) with
+      | (Some (Env_api.Type { imported }), Some name, Some def_loc, (ForValue | ForTypeof)) ->
         Flow_js.add_output
           cx
           (Error_message.EBindingError
-             (Error_message.ETypeInValuePosition, loc, OrdinaryName name, def_loc)
+             (Error_message.ETypeInValuePosition { imported; name }, loc, OrdinaryName name, def_loc)
           );
         Ok (AnyT.at (AnyError None) loc)
-      | _ -> Ok (type_of_state write_locs None))
+      | _ -> Ok (type_of_state write_locs id None))
 
-  and read_entry_exn ~for_type cx loc reason =
-    match read_entry ~for_type cx loc reason with
+  and read_entry_exn ~lookup_mode cx loc reason =
+    match read_entry ~lookup_mode cx loc reason with
     | Error loc -> failwith (Utils_js.spf "LocEnvEntryNotFound %s" (Reason.string_of_aloc loc))
     | Ok x -> x
 
@@ -301,20 +350,15 @@ module New_env = struct
 
   let get_refinement cx key loc =
     let reason = mk_reason (Key.reason_desc key) loc in
-    match read_entry ~for_type:false cx loc reason with
-    | Ok x -> Some x
+    match read_entry ~lookup_mode:ForValue cx loc reason with
+    | Ok x -> Some (Flow_js.reposition cx loc x)
     | Error _ -> None
 
   let get_var ?(lookup_mode = ForValue) cx name loc =
-    let for_type =
-      match lookup_mode with
-      | ForType -> true
-      | _ -> false
-    in
     ignore lookup_mode;
     let name = OrdinaryName name in
     get_this_type_param_if_necessary name loc ~otherwise:(fun () ->
-        read_entry_exn ~for_type cx loc (mk_reason (RIdentifier name) loc)
+        read_entry_exn ~lookup_mode cx loc (mk_reason (RIdentifier name) loc)
     )
 
   let query_var ?(lookup_mode = ForValue) cx name ?desc loc =
@@ -329,13 +373,10 @@ module New_env = struct
             | Some desc -> desc
             | None -> RIdentifier name
           in
-          let for_type =
-            match lookup_mode with
-            | ForType -> true
-            | _ -> false
-          in
-          read_entry_exn ~for_type cx loc (mk_reason desc loc)
+          read_entry_exn ~lookup_mode cx loc (mk_reason desc loc)
       )
+
+  let query_var_non_specific cx name loc = Tvar.mk cx (mk_reason (RIdentifier name) loc)
 
   let var_ref ?(lookup_mode = ForValue) cx ?desc name loc =
     let t = query_var ~lookup_mode cx name ?desc loc in
@@ -347,20 +388,26 @@ module New_env = struct
       Base.List.exists
         ~f:(function
           | Env_api.With_ALoc.Undefined _ -> true
+          | Env_api.With_ALoc.Number _ -> true
           | Env_api.With_ALoc.DeclaredFunction _ -> true
           | Env_api.With_ALoc.Uninitialized _ -> true
           | Env_api.With_ALoc.UndeclaredClass _ -> true
           | Env_api.With_ALoc.Write _ -> true
           | Env_api.With_ALoc.Unreachable _ -> true
           | Env_api.With_ALoc.Undeclared _ -> true
-          | Env_api.With_ALoc.Refinement { refinement_id = _; writes } -> local_def_exists writes
+          | Env_api.With_ALoc.Refinement { refinement_id = _; writes; write_id = _ } ->
+            local_def_exists writes
           | Env_api.With_ALoc.Projection _ -> true
+          | Env_api.With_ALoc.This -> true
+          | Env_api.With_ALoc.Super -> true
+          | Env_api.With_ALoc.ModuleScoped _ -> true
           | Env_api.With_ALoc.Global _ -> false)
         states
       |> not
     in
     match find_var_opt var_info loc with
-    | Ok { Env_api.def_loc = _; write_locs; val_kind = _; name = _ } -> local_def_exists write_locs
+    | Ok { Env_api.def_loc = _; write_locs; val_kind = _; name = _; id = _ } ->
+      local_def_exists write_locs
     | Error _ -> false
 
   let local_scope_entry_exists cx loc name = not (is_global_var cx name loc)
@@ -373,11 +420,22 @@ module New_env = struct
     | OrdinaryName _ -> (* TODO *) None
 
   let get_var_declared_type ?(lookup_mode = ForValue) cx name loc =
-    match name with
-    | InternalName _
-    | InternalModuleName _ ->
+    match (name, lookup_mode) with
+    | (InternalName _, _)
+    | (InternalModuleName _, _) ->
       Old_env.get_var_declared_type ~lookup_mode cx name loc
-    | OrdinaryName _ ->
+    | (OrdinaryName _, ForType) ->
+      let env = Context.environment cx in
+      begin
+        match Loc_env.find_write env loc with
+        | Some t -> t
+        | None ->
+          Flow_js_utils.add_output
+            cx
+            (Error_message.EInternal (loc, Error_message.MissingEnvWrite loc));
+          Type.(AnyT.at (AnyError None) loc)
+      end
+    | (OrdinaryName _, _) ->
       let env = Context.environment cx in
       provider_type_for_def_loc env loc
 
@@ -387,8 +445,22 @@ module New_env = struct
     | InternalModuleName _ ->
       Old_env.constraining_type ~default cx name loc
     | OrdinaryName _ ->
-      let env = Context.environment cx in
-      Base.Option.value ~default (Loc_env.find_write env loc)
+      let ({ Loc_env.var_info; _ } as env) = Context.environment cx in
+      (match ALocMap.find_opt loc var_info.Env_api.env_entries with
+      | Some Env_api.NonAssigningWrite -> default
+      | _ ->
+        let providers =
+          find_providers var_info loc
+          |> Base.List.map ~f:(Loc_env.find_write env)
+          |> Base.Option.all
+        in
+        (match providers with
+        | None
+        | Some [] ->
+          default
+        | Some [t] -> t
+        | Some (t1 :: t2 :: ts) ->
+          UnionT (mk_reason (RCustom "providers") loc, UnionRep.make t1 t2 ts)))
 
   (*************)
   (*  Writing  *)
@@ -396,48 +468,97 @@ module New_env = struct
 
   let set_expr cx _key loc ~refined ~original:_ =
     let env = Context.environment cx in
+    Debug_js.Verbose.print_if_verbose cx [spf "set expr at location %s" (Reason.string_of_aloc loc)];
     match Loc_env.find_write env loc with
     | None ->
       (* As below, this entry is empty if the refinement is never read from *)
       ()
     | Some w -> Flow_js.unify cx ~use_op:unknown_use refined w
 
-  let set_env_entry cx ~use_op t loc =
-    let ({ Loc_env.var_info; resolved; _ } as env) = Context.environment cx in
+  (* Unifies `t` with the entry in the loc_env's map. This allows it to be looked up for Write
+   * entries reported by the name_resolver as well as providers for the provider analysis *)
+  let unify_write_entry cx ~use_op t loc =
+    let ({ Loc_env.resolved; _ } as env) = Context.environment cx in
     if not (ALocSet.mem loc resolved) then begin
-      Debug_js.Verbose.print_if_verbose cx [spf "writing to location %s" (ALoc.debug_to_string loc)];
-      begin
-        match Loc_env.find_write env loc with
-        | None ->
-          (* If we don't see a spot for this write, it's because it's never read from. *)
-          ()
-        | Some w -> Flow_js.unify cx ~use_op t w
-      end;
-
-      (* We only perform a subtyping check if this is an assigning write. We call
-       * writes to immutable bindings non-assigning writes. For example:
-       * const x: number = 3;
-       * x = 'string';
-       *
-       * Since the x = 'string' doesn't actually assign a value to x, we should
-       * not perform a subtyping check and a second error saying string is incompatible
-       * with number. We should only emit an error saying that a const cannot be reassigned. *)
-      match ALocMap.find_opt loc var_info.Env_api.env_entries with
-      | Some Env_api.NonAssigningWrite -> ()
-      | _ ->
-        if not (is_provider cx loc) then
-          let general = provider_type_for_def_loc env loc in
-          if is_def_loc_annotated var_info loc then
-            Flow_js.flow cx (t, UseT (use_op, general))
-          else
-            Context.add_constrained_write cx (t, UseT (use_op, general))
+      Debug_js.Verbose.print_if_verbose
+        cx
+        [spf "writing to location %s" (Reason.string_of_aloc loc)];
+      match Loc_env.find_write env loc with
+      | None ->
+        (* If we don't see a spot for this write, it's because it's never read from. *)
+        ()
+      | Some w -> Flow_js.unify cx ~use_op w t
     end else
       Debug_js.Verbose.print_if_verbose
         cx
-        [spf "Location %s already fully resolved" (ALoc.debug_to_string loc)]
+        [spf "Location %s already fully resolved" (Reason.string_of_aloc loc)]
 
-  let resolve_env_entry cx t loc =
-    set_env_entry cx ~use_op:unknown_use t loc;
+  (* Subtypes the given type against the providers for a def loc. Should be used on assignments to
+   * non-import value bindings *)
+  let subtype_against_providers cx ~use_op ?potential_global_name t loc =
+    let ({ Loc_env.var_info = { Env_api.providers; scopes; _ } as var_info; _ } as env) =
+      Context.environment cx
+    in
+    (* We only perform a subtyping check if this is an assigning write. We call
+     * writes to immutable bindings non-assigning writes. For example:
+     * const x: number = 3;
+     * x = 'string';
+     *
+     * Since the x = 'string' doesn't actually assign a value to x, we should
+     * not perform a subtyping check and a second error saying string is incompatible
+     * with number. We should only emit an error saying that a const cannot be reassigned. *)
+    match ALocMap.find_opt loc var_info.Env_api.env_entries with
+    | Some Env_api.NonAssigningWrite -> ()
+    | Some (Env_api.GlobalWrite _) ->
+      if is_provider cx loc then
+        Base.Option.iter potential_global_name ~f:(fun name ->
+            let name = Reason.OrdinaryName name in
+            ignore @@ Flow_js.get_builtin cx name (mk_reason (RIdentifier name) loc)
+        )
+    | _ ->
+      if not (is_provider cx loc) then
+        let general = provider_type_for_def_loc env loc in
+        if is_def_loc_annotated var_info loc then
+          Flow_js.flow cx (t, UseT (use_op, general))
+        else
+          let use_op =
+            match Scope_api.With_ALoc.(def_of_use_opt scopes loc) with
+            | Some { Scope_api.With_ALoc.Def.locs = (declaration, _); actual_name = name; _ } ->
+              let provider_locs =
+                Base.Option.value_map
+                  ~f:snd
+                  ~default:[]
+                  (Env_api.Provider_api.providers_of_def providers loc)
+              in
+              Frame (ConstrainedAssignment { name; declaration; providers = provider_locs }, use_op)
+            | None -> use_op
+          in
+          Context.add_constrained_write cx (t, UseT (use_op, general))
+
+  let assign_env_value_entry cx ~use_op ?potential_global_name t loc =
+    unify_write_entry cx ~use_op t loc;
+    subtype_against_providers cx ~use_op ?potential_global_name t loc
+
+  (* Sanity check for predicate functions: If there are multiple declare function
+   * providers, make sure none of them have a predicate. *)
+  let check_predicate_declare_function cx ~predicate name loc =
+    let { Loc_env.var_info; _ } = Context.environment cx in
+    match Env_api.Provider_api.providers_of_def var_info.Env_api.providers loc with
+    (* This check is only relevant when there are multiple providers *)
+    | Some (_, def_reason :: _) ->
+      let def_loc = Reason.aloc_of_reason def_reason in
+      let def_loc_is_pred = is_def_loc_predicate_function var_info def_loc in
+      (* Raise an error for an overload (other than the first one) if:
+       * - The first overload is a predicate function (`def_loc_is_pred`), or
+       * - The current overload is a predicate function (`predicate`). *)
+      if def_loc <> loc && (predicate || def_loc_is_pred) then
+        Flow_js_utils.add_output
+          cx
+          (Error_message.EBindingError (Error_message.ENameAlreadyBound, loc, name, def_loc))
+    | _ -> ()
+
+  let resolve_env_entry ~use_op cx t loc =
+    unify_write_entry cx ~use_op t loc;
     let ({ Loc_env.resolved; _ } as env) = Context.environment cx in
     Context.set_environment cx { env with Loc_env.resolved = ALocSet.add loc resolved }
 
@@ -457,26 +578,37 @@ module New_env = struct
   (* init_entry is called on variable declarations (not assignments), and `t`
      is the RHS type. If the variable is annotated, we just need to check t against
      its type; but if it's not annotated, the RHS t becomes the variable's type. *)
-  let init_entry cx ~use_op ~has_anno t loc =
-    if has_anno then
+  let init_entry cx ~use_op ~has_anno:_ t loc =
+    let { Loc_env.var_info; _ } = Context.environment cx in
+    if is_def_loc_annotated var_info loc then
       subtype_entry cx ~use_op t loc
     else
-      set_env_entry cx ~use_op t loc
+      assign_env_value_entry cx ~use_op t loc
 
-  let set_var cx ~use_op _name t loc = set_env_entry cx ~use_op t loc
+  let set_var cx ~use_op name t loc =
+    assign_env_value_entry cx ~use_op ~potential_global_name:name t loc
 
-  let bind cx t loc = set_env_entry cx ~use_op:Type.unknown_use t loc
+  let bind cx t loc = unify_write_entry cx ~use_op:Type.unknown_use t loc
 
-  let bind_var ?state:_ cx _ t loc = bind cx (TypeUtil.type_t_of_annotated_or_inferred t) loc
+  let bind_var ?state:_ cx name t loc =
+    valid_declaration_check cx (OrdinaryName name) loc;
+    (* TODO: Vars can be bound multiple times and we need to make sure that the
+     * annots are all compatible with each other. For that reason, we subtype
+     * against providers when just binding a var *)
+    assign_env_value_entry cx ~use_op:unknown_use (TypeUtil.type_t_of_annotated_or_inferred t) loc
 
-  let bind_let ?state:_ cx _ t loc = bind cx (TypeUtil.type_t_of_annotated_or_inferred t) loc
+  let bind_let ?state:_ cx name t loc =
+    valid_declaration_check cx (OrdinaryName name) loc;
+    bind cx (TypeUtil.type_t_of_annotated_or_inferred t) loc
 
   let bind_implicit_let ?state kind cx name t loc =
     match name with
     | InternalName _
     | InternalModuleName _ ->
       Old_env.bind_implicit_let ?state kind cx name t loc
-    | OrdinaryName _ -> bind cx (TypeUtil.type_t_of_annotated_or_inferred t) loc
+    | OrdinaryName _ ->
+      valid_declaration_check cx name loc;
+      bind cx (TypeUtil.type_t_of_annotated_or_inferred t) loc
 
   let bind_fun ?state cx name t loc =
     match name with
@@ -504,7 +636,9 @@ module New_env = struct
     | InternalName _
     | InternalModuleName _ ->
       Old_env.bind_declare_fun cx ~predicate name t loc
-    | OrdinaryName _ -> bind cx t loc
+    | OrdinaryName _ ->
+      check_predicate_declare_function cx ~predicate name loc;
+      bind cx t loc
 
   let bind_type ?state:(_ = Scope.State.Declared) cx _name t loc = bind cx t loc
 
@@ -566,7 +700,7 @@ module New_env = struct
     | InternalName _
     | InternalModuleName _ ->
       Old_env.init_fun cx ~use_op name t loc
-    | OrdinaryName _ -> set_env_entry cx ~use_op t loc
+    | OrdinaryName _ -> assign_env_value_entry cx ~use_op t loc
 
   let init_const cx ~use_op name ~has_anno t loc =
     match name with
@@ -582,23 +716,23 @@ module New_env = struct
       Old_env.init_implicit_const kind cx ~use_op name ~has_anno t loc
     | OrdinaryName _ -> init_entry ~has_anno cx ~use_op t loc
 
-  let init_type cx _name t loc = set_env_entry cx ~use_op:unknown_use t loc
+  let init_type cx _name t loc = unify_write_entry cx ~use_op:unknown_use t loc
 
   let pseudo_init_declared_type _ _ _ = ()
 
-  let unify_declared_type ?(lookup_mode = ForValue) cx name loc t =
+  let unify_declared_type ?(lookup_mode = ForValue) ?(is_func = false) cx name loc t =
     match name with
     | InternalName _
     | InternalModuleName _ ->
-      Old_env.unify_declared_type ~lookup_mode cx name loc t
-    | OrdinaryName _ -> set_env_entry cx ~use_op:unknown_use t loc
+      Old_env.unify_declared_type ~lookup_mode ~is_func cx name loc t
+    | OrdinaryName _ -> unify_write_entry cx ~use_op:unknown_use t loc
 
   let unify_declared_fun_type cx name loc t =
     match name with
     | InternalName _
     | InternalModuleName _ ->
       Old_env.unify_declared_fun_type cx name loc t
-    | OrdinaryName _ -> set_env_entry cx ~use_op:unknown_use t loc
+    | OrdinaryName _ -> unify_write_entry cx ~use_op:unknown_use t loc
 
   (************************)
   (* Variable Declaration *)
@@ -610,7 +744,8 @@ module New_env = struct
     ALocMap.fold
       (fun loc env_entry env ->
         match env_entry with
-        | Env_api.AssigningWrite reason ->
+        | Env_api.AssigningWrite reason
+        | Env_api.GlobalWrite reason ->
           let t = Inferred (Tvar.mk cx reason) in
           (* Treat everything as inferred for now for the purposes of annotated vs inferred *)
           Loc_env.initialize env loc t
@@ -672,9 +807,9 @@ module New_env = struct
       | None -> RCustom "discriminant of switch"
       | Some refinement_key -> Key.reason_desc refinement_key
     in
-    match read_entry ~for_type:false cx switch_loc (mk_reason reason_desc switch_loc) with
+    match read_entry ~lookup_mode:ForValue cx switch_loc (mk_reason reason_desc switch_loc) with
     | Ok t -> Some t
     | Error _ -> None
 
-  let init_import ~lookup_mode:_ cx _name loc t = set_env_entry ~use_op:unknown_use cx t loc
+  let init_import ~lookup_mode:_ cx _name loc t = unify_write_entry ~use_op:unknown_use cx t loc
 end

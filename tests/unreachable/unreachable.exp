@@ -1,3 +1,19 @@
+Error ------------------------------------------------------------------------------------------ jsx_unreachable.js:3:19
+
+Cannot resolve module `react`. [cannot-resolve-module]
+
+   3| import React from 'react';
+                        ^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------- jsx_unreachable.js:9:3
+
+Unreachable code. [unreachable-code]
+
+   9|   <Component />;
+        ^^^^^^^^^^^^^^
+
+
 Error ------------------------------------------------------------------------------------------------ typecheck.js:4:10
 
 Cannot return `bar()` because number [1] is incompatible with string [2]. [incompatible-return]
@@ -30,6 +46,21 @@ References:
    typecheck.js:21:12
    21|     var y: string = n;    // error, n is number (EmptyT would work)
                   ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- typecheck.js:32:15
+
+Cannot call `expectNum` with empty string bound to `a` because string [1] is incompatible with number [2].
+[incompatible-call]
+
+   typecheck.js:32:15
+   32|     expectNum(""); // error
+                     ^^ [1]
+
+References:
+   typecheck.js:35:25
+   35|   function expectNum(a: number) { }
+                               ^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------- unreachable.js:5:19
@@ -74,4 +105,4 @@ Unreachable code. [unreachable-code]
 
 
 
-Found 6 errors
+Found 9 errors

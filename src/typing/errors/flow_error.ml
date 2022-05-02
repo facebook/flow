@@ -401,7 +401,7 @@ let rec make_error_printable ?(speculation = false) (error : Loc.t t) : Loc.t Er
               `Root (op, None, [text "Cannot initialize "; desc op; text " with "; desc body])
             | Op (Cast { lower; upper }) ->
               `Root (lower, None, [text "Cannot cast "; desc lower; text " to "; desc upper])
-            | Op (ClassExtendsCheck { extends; def; _ }) ->
+            | Op (ClassExtendsCheck { extends; def }) ->
               `Root (def, None, [text "Cannot extend "; ref extends; text " with "; desc def])
             | Op (ClassMethodDefinition { name; def }) ->
               `Root (def, None, [text "Cannot define "; ref def; text " on "; desc name])
@@ -704,7 +704,7 @@ let rec make_error_printable ?(speculation = false) (error : Loc.t t) : Loc.t Er
             (* If our current loc is inside our root_loc then use our current loc
              * since it is the smallest possible loc in our root_loc. *)
             let root_loc = loc_of_reason root_reason in
-            let root_specific_loc = Base.Option.map root_specific_reason loc_of_reason in
+            let root_specific_loc = Base.Option.map root_specific_reason ~f:loc_of_reason in
             let loc =
               if Loc.contains root_loc loc && Loc.compare root_loc loc <> 0 then
                 loc
@@ -719,7 +719,7 @@ let rec make_error_printable ?(speculation = false) (error : Loc.t t) : Loc.t Er
         fun (loc : Loc.t) (use_op : Loc.t virtual_use_op) ->
           let (root, loc, frames, explanations) = loop loc ([], [], []) use_op in
           let root =
-            Base.Option.map root (fun (root_loc, root_message) ->
+            Base.Option.map root ~f:(fun (root_loc, root_message) ->
                 (root_loc, root_message @ [text " because"])
             )
           in
@@ -1032,9 +1032,7 @@ let rec make_error_printable ?(speculation = false) (error : Loc.t t) : Loc.t Er
           use_loc
           use_op
           [text "the parameter types of an "; ref lower; text " are unknown"]
-      | IncompatibleCallT
-      | IncompatibleConstructorT ->
-        nope "is not a function"
+      | IncompatibleCallT -> nope "is not a function"
       | IncompatibleObjAssignFromTSpread
       | IncompatibleArrRestT ->
         nope "is not an array"

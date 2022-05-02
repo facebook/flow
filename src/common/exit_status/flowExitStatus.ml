@@ -6,79 +6,47 @@
  *)
 
 type t =
-  (* Signaled *)
-  | Interrupted
-  (* The generic 0 exit code *)
-  | No_error
-  (* Killed by Windows task manage *)
-  | Windows_killed_by_task_manager
-  (* There are flow errors *)
-  | Type_error
-  (* A command with a timeout timed out *)
-  | Out_of_time
-  (* Failed to kill a server *)
-  | Kill_error
-  (* The Flow server appears unused so it died out of sadness *)
-  | Unused_server
-  (* There is no server running and we were told not to start one *)
-  | No_server_running
-  (* Ran out of retries *)
-  | Out_of_retries
-  (* Invalid .flowconfig *)
-  | Invalid_flowconfig
-  (* Provided path is not a file as required *)
-  | Path_is_not_a_file
-  (* Different binaries being used together *)
-  | Build_id_mismatch
-  (* Generic "Bad Input" kind of error *)
-  | Input_error
-  (* Failed to acquire lock or lost lock *)
-  | Lock_stolen
-  (* Specific error for not being able to find a .flowconfig *)
-  | Could_not_find_flowconfig
-  (* Failed to extract flowlibs into temp dir *)
-  | Could_not_extract_flowlibs
-  (* Generic out-of-date error. This could be a version thing or maybe
-   * something changed and Flow can't handle it incrementally yet *)
+  | Interrupted  (** Signaled *)
+  | No_error  (** The generic 0 exit code *)
+  | Windows_killed_by_task_manager  (** Killed by Windows task manage *)
+  | Type_error  (** There are flow errors *)
+  | Out_of_time  (** A command with a timeout timed out *)
+  | Kill_error  (** Failed to kill a server *)
+  | Unused_server  (** The Flow server appears unused so it died out of sadness *)
+  | No_server_running  (** There is no server running and we were told not to start one *)
+  | Out_of_retries  (** Ran out of retries *)
+  | Invalid_flowconfig  (** Invalid .flowconfig *)
+  | Path_is_not_a_file  (** Provided path is not a file as required *)
+  | Build_id_mismatch  (** Different binaries being used together *)
+  | Input_error  (** Generic "Bad Input" kind of error *)
+  | Lock_stolen  (** Failed to acquire lock or lost lock *)
+  | Could_not_find_flowconfig  (** Specific error for not being able to find a .flowconfig *)
+  | Could_not_extract_flowlibs  (** Failed to extract flowlibs into temp dir *)
   | Server_out_of_date
-  (* When the shared memory is missing space (e.g. full /dev/shm) *)
-  | Out_of_shared_memory
-  (* The .flowconfig has changed and we're out of date *)
-  | Flowconfig_changed
-  (* Failed to parse the command line or misuse of command line arguments *)
+      (** Generic out-of-date error. This could be a version thing or maybe
+      something changed and Flow can't handle it incrementally yet *)
+  | Out_of_shared_memory  (** When the shared memory is missing space (e.g. full /dev/shm) *)
+  | Flowconfig_changed  (** The .flowconfig has changed and we're out of date *)
   | Commandline_usage_error
-  (* No input *)
-  | No_input
-  (* Failed to start a server *)
-  | Server_start_failed of Unix.process_status
-  (* Something went wrong with extracting the flowlib *)
-  | Missing_flowlib
-  (* Flow monitor had been instructed to exit when there were no more clients *)
-  | Autostop
-  (* Server exited because the monitor asked it to *)
-  | Killed_by_monitor
-  (* The saved state file is invalid and we're running with --saved-state-no-fallback *)
+      (** Failed to parse the command line or misuse of command line arguments *)
+  | No_input  (** No input *)
+  | Server_start_failed of Unix.process_status  (** Failed to start a server *)
+  | Missing_flowlib  (** Something went wrong with extracting the flowlib *)
+  | Autostop  (** Flow monitor had been instructed to exit when there were no more clients *)
+  | Killed_by_monitor  (** Server exited because the monitor asked it to *)
   | Invalid_saved_state
-  (* The server would like to restart, likely since re-init'ing is faster than a recheck *)
+      (** The saved state file is invalid and we're running with --saved-state-no-fallback *)
   | Restart
-  (* The hack code might throw this *)
-  | Socket_error
-  (* The hack code might throw this *)
-  | Dfind_died
-  (* A fatal error with Watchman *)
-  | Watchman_error
-  (* A fatal error with Watchman (TODO: dedupe with Watchman_error) *)
-  | Watchman_failed
-  (* Watchman restarted *)
-  | File_watcher_missed_changes
-  (* Shared memory hash table is full *)
-  | Hash_table_full
-  (* Shared memory heap is full *)
-  | Heap_full
-  (* EventLogger daemon ran out of restarts *)
-  | EventLogger_restart_out_of_retries
-  (* A generic something-else-went-wrong *)
-  | Unknown_error
+      (** The server would like to restart, likely since re-init'ing is faster than a recheck *)
+  | Socket_error  (** The hack code might throw this *)
+  | Dfind_died  (** The hack code might throw this *)
+  | Watchman_error  (** A fatal error with Watchman *)
+  | Watchman_failed  (** A fatal error with Watchman (TODO: dedupe with Watchman_error) *)
+  | File_watcher_missed_changes  (** Watchman restarted *)
+  | Hash_table_full  (** Shared memory hash table is full *)
+  | Heap_full  (** Shared memory heap is full *)
+  | EventLogger_restart_out_of_retries  (** EventLogger daemon ran out of restarts *)
+  | Unknown_error  (** A generic something-else-went-wrong *)
 
 (* Exit codes are part of Flow's API and thus changing exit codes is a
  * breaking change to Flow's API. Tools that call Flow may be watching for
@@ -109,14 +77,15 @@ let error_code = function
   | Server_out_of_date -> 13
   | Out_of_shared_memory -> 15
   | Flowconfig_changed -> 16
-  (* EX_USAGE -- command line usage error -- from glibc's sysexits.h *)
   | Path_is_not_a_file -> 17
   | Autostop -> 18
   | Killed_by_monitor -> 19
   | Invalid_saved_state -> 20
   | Restart -> 21
   | Could_not_extract_flowlibs -> 22
-  | Commandline_usage_error -> 64
+  | Commandline_usage_error ->
+    (* EX_USAGE -- command line usage error -- from glibc's sysexits.h *)
+    64
   | No_input -> 66
   | Server_start_failed _ -> 78
   | Missing_flowlib -> 97
@@ -130,7 +99,7 @@ let error_code = function
   | EventLogger_restart_out_of_retries -> 108
   | Unknown_error -> 110
 
-(* Return an error type given an error code *)
+(** Return an error type given an error code *)
 let error_type = function
   | -6 -> Interrupted
   | 0 -> No_error
@@ -157,8 +126,9 @@ let error_type = function
   | 22 -> Could_not_extract_flowlibs
   | 64 -> Commandline_usage_error
   | 66 -> No_input
-  (* The process status is made up *)
-  | 78 -> Server_start_failed (Unix.WEXITED (-1))
+  | 78 ->
+    (* The process status is made up *)
+    Server_start_failed (Unix.WEXITED (-1))
   | 97 -> Missing_flowlib
   | 98 -> Socket_error
   | 99 -> Dfind_died

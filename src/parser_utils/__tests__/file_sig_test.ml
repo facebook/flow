@@ -10,15 +10,14 @@ open File_sig.With_Loc
 
 let visit ?parse_options ?(opts = default_opts) source =
   let (ast, _) = Parser_flow.program ~parse_options source in
-  match program ~ast ~opts with
-  | Ok (fsig, _) -> fsig
-  | Error _ -> assert_failure "Unexpected error"
+  fst (program ~ast ~opts)
 
 let visit_err ?parse_options ?(opts = default_opts) source =
   let (ast, _) = Parser_flow.program ~parse_options source in
   match program ~ast ~opts with
-  | Error e -> e
-  | Ok _ -> assert_failure "Unexpected success"
+  | (_, []) -> assert_failure "Unexpected success"
+  | (_, [e]) -> e
+  | _ -> assert_failure "Unexpected multiple errors"
 
 let substring_loc s loc =
   Loc.(
@@ -32,10 +31,8 @@ let call_opt x = function
   | Some f -> f x
   | None -> ()
 
-let assert_es ?assert_named ?assert_star = function
-  | ES { named; star } ->
-    call_opt named assert_named;
-    call_opt star assert_star
+let assert_es = function
+  | ES -> ()
   | CommonJS _ -> assert_failure "Unexpected module kind"
 
 let assert_cjs ~source ?assert_export_loc = function
@@ -46,7 +43,7 @@ let assert_cjs ~source ?assert_export_loc = function
     in
     let offsets = Base.Option.map mod_exp_loc ~f:offset_pair_of_loc in
     call_opt offsets assert_export_loc
-  | ES _ -> assert_failure "Unexpected module kind"
+  | ES -> assert_failure "Unexpected module kind"
 
 let assert_some opt ~f =
   match opt with
@@ -497,185 +494,75 @@ let tests =
            let { module_sig = { module_kind; _ }; _ } = visit source in
            assert_cjs ~source module_kind ~assert_export_loc:(assert_equal ~ctxt (Some (0, 14)))
          );
-         ( "export_named_type" >:: fun ctxt ->
-           let source = "export type ty = string" in
-           let { module_sig = { type_exports_named; _ }; _ } = visit source in
-           let type_export = assert_singleton_assoc ~ctxt "ty" type_exports_named in
-           match type_export with
-           | (_, TypeExportNamed { loc; kind = NamedDeclaration }) ->
-             assert_substring_equal ~ctxt "type ty = string" source loc
-           | _ -> assert_failure "Unexpected type export"
-         );
-         ( "export_named_opaque_type" >:: fun ctxt ->
-           let source = "export opaque type ty = string" in
-           let { module_sig = { type_exports_named; _ }; _ } = visit source in
-           let type_export = assert_singleton_assoc ~ctxt "ty" type_exports_named in
-           match type_export with
-           | (_, TypeExportNamed { loc; kind = NamedDeclaration }) ->
-             assert_substring_equal ~ctxt "opaque type ty = string" source loc
-           | _ -> assert_failure "Unexpected type export"
-         );
-         ( "export_named_interface" >:: fun ctxt ->
-           let source = "export interface I {}" in
-           let { module_sig = { type_exports_named; _ }; _ } = visit source in
-           let type_export = assert_singleton_assoc ~ctxt "I" type_exports_named in
-           match type_export with
-           | (_, TypeExportNamed { loc; kind = NamedDeclaration }) ->
-             assert_substring_equal ~ctxt "interface I {}" source loc
-           | _ -> assert_failure "Unexpected type export"
-         );
-         ( "export_default_expr" >:: fun ctxt ->
+         ( "export_default_expr" >:: fun _ ->
            let source = "export default 0" in
            let { module_sig = { module_kind; _ }; _ } = visit source in
-           assert_es module_kind ~assert_named:(fun named ->
-               let export = assert_singleton_assoc ~ctxt "default" named in
-               match export with
-               | (_, ExportDefault { default_loc; local = None }) ->
-                 assert_substring_equal ~ctxt "default" source default_loc
-               | _ -> assert_failure "Unexpected export"
-           )
+           assert_es module_kind
          );
-         ( "export_default_anon_decl" >:: fun ctxt ->
+         ( "export_default_anon_decl" >:: fun _ ->
            let source = "export default function() {}" in
            let { module_sig = { module_kind; _ }; _ } = visit source in
-           assert_es module_kind ~assert_named:(fun named ->
-               let export = assert_singleton_assoc ~ctxt "default" named in
-               match export with
-               | (_, ExportDefault { default_loc; local = None }) ->
-                 assert_substring_equal ~ctxt "default" source default_loc
-               | _ -> assert_failure "Unexpected export"
-           )
+           assert_es module_kind
          );
-         ( "export_default_named_func" >:: fun ctxt ->
+         ( "export_default_named_func" >:: fun _ ->
            let source = "export default function foo() {}" in
            let { module_sig = { module_kind; _ }; _ } = visit source in
-           assert_es module_kind ~assert_named:(fun named ->
-               let export = assert_singleton_assoc ~ctxt "default" named in
-               match export with
-               | (_, ExportDefault { default_loc; local = Some (loc, "foo") }) ->
-                 assert_substring_equal ~ctxt "default" source default_loc;
-                 assert_substring_equal ~ctxt "foo" source loc
-               | _ -> assert_failure "Unexpected export"
-           )
+           assert_es module_kind
          );
-         ( "export_default_named_class" >:: fun ctxt ->
+         ( "export_default_named_class" >:: fun _ ->
            let source = "export default function C() {}" in
            let { module_sig = { module_kind; _ }; _ } = visit source in
-           assert_es module_kind ~assert_named:(fun named ->
-               let export = assert_singleton_assoc ~ctxt "default" named in
-               match export with
-               | (_, ExportDefault { default_loc; local = Some (loc, "C") }) ->
-                 assert_substring_equal ~ctxt "default" source default_loc;
-                 assert_substring_equal ~ctxt "C" source loc
-               | _ -> assert_failure "Unexpected export"
-           )
+           assert_es module_kind
          );
-         ( "export_named_func" >:: fun ctxt ->
+         ( "export_named_func" >:: fun _ ->
            let source = "export function foo() {}" in
            let { module_sig = { module_kind; _ }; _ } = visit source in
-           assert_es module_kind ~assert_named:(fun named ->
-               let export = assert_singleton_assoc ~ctxt "foo" named in
-               match export with
-               | (_, ExportNamed { loc; kind = NamedDeclaration }) ->
-                 assert_substring_equal ~ctxt "foo" source loc
-               | _ -> assert_failure "Unexpected export"
-           )
+           assert_es module_kind
          );
-         ( "export_named_class" >:: fun ctxt ->
+         ( "export_named_class" >:: fun _ ->
            let source = "export class C {}" in
            let { module_sig = { module_kind; _ }; _ } = visit source in
-           assert_es module_kind ~assert_named:(fun named ->
-               let export = assert_singleton_assoc ~ctxt "C" named in
-               match export with
-               | (_, ExportNamed { loc; kind = NamedDeclaration }) ->
-                 assert_substring_equal ~ctxt "C" source loc
-               | _ -> assert_failure "Unexpected export"
-           )
+           assert_es module_kind
          );
-         ( "export_named_vars" >:: fun ctxt ->
+         ( "export_named_vars" >:: fun _ ->
            let source = "export var x, y = 0, [a] = [], {p} = {}" in
            let { module_sig = { module_kind; _ }; _ } = visit source in
-           assert_es module_kind ~assert_named:(fun named ->
-               assert_equal ~ctxt 4 (List.length named);
-               let x_loc =
-                 match List.assoc "x" named with
-                 | (_, ExportNamed { loc; kind = NamedDeclaration }) -> loc
-                 | _ -> assert_failure "Unexpected export"
-               in
-               let y_loc =
-                 match List.assoc "y" named with
-                 | (_, ExportNamed { loc; kind = NamedDeclaration }) -> loc
-                 | _ -> assert_failure "Unexpected export"
-               in
-               let a_loc =
-                 match List.assoc "a" named with
-                 | (_, ExportNamed { loc; kind = NamedDeclaration }) -> loc
-                 | _ -> assert_failure "Unexpected export"
-               in
-               let p_loc =
-                 match List.assoc "p" named with
-                 | (_, ExportNamed { loc; kind = NamedDeclaration }) -> loc
-                 | _ -> assert_failure "Unexpected export"
-               in
-               assert_substring_equal ~ctxt "x" source x_loc;
-               assert_substring_equal ~ctxt "y" source y_loc;
-               assert_substring_equal ~ctxt "a" source a_loc;
-               assert_substring_equal ~ctxt "p" source p_loc
-           )
+           assert_es module_kind
          );
-         ( "export_named_specs" >:: fun ctxt ->
+         ( "export_named_specs" >:: fun _ ->
            let source = "export {x, y as z}" in
            let { module_sig = { module_kind; _ }; _ } = visit source in
-           assert_es module_kind ~assert_named:(fun named ->
-               assert_equal ~ctxt 2 (List.length named);
-               let x_loc =
-                 match List.assoc "x" named with
-                 | ( _,
-                     ExportNamed
-                       { loc; kind = NamedSpecifier { local = (x_loc, "x"); source = None } }
-                   )
-                   when x_loc = loc ->
-                   loc
-                 | _ -> assert_failure "Unexpected export"
-               in
-               let (y_loc, z_loc) =
-                 match List.assoc "z" named with
-                 | ( _,
-                     ExportNamed
-                       { loc; kind = NamedSpecifier { local = (y_loc, "y"); source = None } }
-                   ) ->
-                   (y_loc, loc)
-                 | _ -> assert_failure "Unexpected export"
-               in
-               assert_substring_equal ~ctxt "x" source x_loc;
-               assert_substring_equal ~ctxt "y" source y_loc;
-               assert_substring_equal ~ctxt "z" source z_loc
-           )
+           assert_es module_kind
          );
          ( "export_star" >:: fun ctxt ->
            let source = "export * from 'foo'" in
-           let { module_sig = { module_kind; _ }; _ } = visit source in
-           assert_es module_kind ~assert_star:(function
-               | [(_, ExportStar { star_loc; source = (source_loc, "foo") })] ->
-                 assert_substring_equal ~ctxt "*" source star_loc;
-                 assert_substring_equal ~ctxt "'foo'" source source_loc
-               | _ -> assert_failure "Unexpected export"
-               )
+           let { module_sig = { module_kind; requires }; _ } = visit source in
+           assert_es module_kind;
+           match requires with
+           | [ExportFrom { source = (source_loc, "foo") }] ->
+             assert_substring_equal ~ctxt "'foo'" source source_loc
+           | _ -> assert_failure "Unexpected requires"
+         );
+         ( "export_type_star" >:: fun ctxt ->
+           let source = "export type * from 'foo'" in
+           let { module_sig = { module_kind; requires }; _ } = visit source in
+           assert_cjs ~source module_kind;
+           match requires with
+           | [ExportFrom { source = (source_loc, "foo") }] ->
+             assert_substring_equal ~ctxt "'foo'" source source_loc
+           | _ -> assert_failure "Unexpected requires"
          );
          ( "export_ns" >:: fun ctxt ->
            let source = "export * as ns from 'foo'" in
            let parse_options =
              Parser_env.{ default_parse_options with esproposal_export_star_as = true }
            in
-           let { module_sig = { module_kind; _ }; _ } = visit ~parse_options source in
-           assert_es module_kind ~assert_named:(fun named ->
-               let export = assert_singleton_assoc ~ctxt "ns" named in
-               match export with
-               | (_, ExportNs { loc; source = (source_loc, "foo"); _ }) ->
-                 assert_substring_equal ~ctxt "ns" source loc;
-                 assert_substring_equal ~ctxt "'foo'" source source_loc
-               | _ -> assert_failure "Unexpected export"
-           )
+           let { module_sig = { module_kind; requires }; _ } = visit ~parse_options source in
+           assert_es module_kind;
+           match requires with
+           | [ExportFrom { source = (source_loc, "foo") }] ->
+             assert_substring_equal ~ctxt "'foo'" source source_loc
+           | _ -> assert_failure "Unexpected requires"
          );
          ( "declare_module.exports" >:: fun ctxt ->
            let source = "declare module.exports: ty" in
@@ -683,229 +570,127 @@ let tests =
            (* TODO use just the `module.exports` location *)
            assert_cjs ~source module_kind ~assert_export_loc:(assert_equal ~ctxt (Some (0, 26)))
          );
-         ( "declare_export_default" >:: fun ctxt ->
+         ( "declare_export_default" >:: fun _ ->
            let source = "declare export default string" in
            let { module_sig = { module_kind; _ }; _ } = visit source in
-           assert_es module_kind ~assert_named:(fun named ->
-               let export = assert_singleton_assoc ~ctxt "default" named in
-               match export with
-               | (_, ExportDefault { default_loc; local = None }) ->
-                 assert_substring_equal ~ctxt "default" source default_loc
-               | _ -> assert_failure "Unexpected export"
-           )
+           assert_es module_kind
          );
-         ( "declare_export_default_func" >:: fun ctxt ->
+         ( "declare_export_default_func" >:: fun _ ->
            let source = "declare export default function foo(): void" in
            let { module_sig = { module_kind; _ }; _ } = visit source in
-           assert_es module_kind ~assert_named:(fun named ->
-               let export = assert_singleton_assoc ~ctxt "default" named in
-               match export with
-               | (_, ExportDefault { default_loc; local = Some (loc, "foo") }) ->
-                 assert_substring_equal ~ctxt "default" source default_loc;
-                 assert_substring_equal ~ctxt "foo" source loc
-               | _ -> assert_failure "Unexpected export"
-           )
+           assert_es module_kind
          );
-         ( "declare_export_default_class" >:: fun ctxt ->
+         ( "declare_export_default_class" >:: fun _ ->
            let source = "declare export default class C {}" in
            let { module_sig = { module_kind; _ }; _ } = visit source in
-           assert_es module_kind ~assert_named:(fun named ->
-               let export = assert_singleton_assoc ~ctxt "default" named in
-               match export with
-               | (_, ExportDefault { default_loc; local = Some (loc, "C") }) ->
-                 assert_substring_equal ~ctxt "default" source default_loc;
-                 assert_substring_equal ~ctxt "C" source loc
-               | _ -> assert_failure "Unexpected export"
-           )
+           assert_es module_kind
          );
-         ( "declare_export_named_func" >:: fun ctxt ->
+         ( "declare_export_named_func" >:: fun _ ->
            let source = "declare export function foo(): void" in
            let { module_sig = { module_kind; _ }; _ } = visit source in
-           assert_es module_kind ~assert_named:(fun named ->
-               let export = assert_singleton_assoc ~ctxt "foo" named in
-               match export with
-               | (_, ExportNamed { loc; kind = NamedDeclaration }) ->
-                 assert_substring_equal ~ctxt "foo" source loc
-               | _ -> assert_failure "Unexpected export"
-           )
+           assert_es module_kind
          );
-         ( "declare_export_named_class" >:: fun ctxt ->
+         ( "declare_export_named_class" >:: fun _ ->
            let source = "declare export class C {}" in
            let { module_sig = { module_kind; _ }; _ } = visit source in
-           assert_es module_kind ~assert_named:(fun named ->
-               let export = assert_singleton_assoc ~ctxt "C" named in
-               match export with
-               | (_, ExportNamed { loc; kind = NamedDeclaration }) ->
-                 assert_substring_equal ~ctxt "C" source loc
-               | _ -> assert_failure "Unexpected export"
-           )
+           assert_es module_kind
          );
-         ( "declare_export_named_var" >:: fun ctxt ->
+         ( "declare_export_named_var" >:: fun _ ->
            let source = "declare export var foo: string" in
            let { module_sig = { module_kind; _ }; _ } = visit source in
-           assert_es module_kind ~assert_named:(fun named ->
-               let export = assert_singleton_assoc ~ctxt "foo" named in
-               match export with
-               | (_, ExportNamed { loc; kind = NamedDeclaration }) ->
-                 assert_substring_equal ~ctxt "foo" source loc
-               | _ -> assert_failure "Unexpected export"
-           )
+           assert_es module_kind
          );
-         ( "declare_export_named_specs" >:: fun ctxt ->
+         ( "declare_export_named_specs" >:: fun _ ->
            let source = "declare export {x, y as z}" in
            let { module_sig = { module_kind; _ }; _ } = visit source in
-           assert_es module_kind ~assert_named:(fun named ->
-               assert_equal ~ctxt 2 (List.length named);
-               let x_loc =
-                 match List.assoc "x" named with
-                 | ( _,
-                     ExportNamed
-                       { loc; kind = NamedSpecifier { local = (x_loc, "x"); source = None } }
-                   )
-                   when x_loc = loc ->
-                   loc
-                 | _ -> assert_failure "Unexpected export"
-               in
-               let (y_loc, z_loc) =
-                 match List.assoc "z" named with
-                 | ( _,
-                     ExportNamed
-                       { loc; kind = NamedSpecifier { local = (y_loc, "y"); source = None } }
-                   ) ->
-                   (y_loc, loc)
-                 | _ -> assert_failure "Unexpected export"
-               in
-               assert_substring_equal ~ctxt "x" source x_loc;
-               assert_substring_equal ~ctxt "y" source y_loc;
-               assert_substring_equal ~ctxt "z" source z_loc
-           )
+           assert_es module_kind
          );
          ( "declare_export_star" >:: fun ctxt ->
            let source = "declare export * from 'foo'" in
-           let { module_sig = { module_kind; _ }; _ } = visit source in
-           assert_es module_kind ~assert_star:(function
-               | [(_, ExportStar { star_loc; source = (source_loc, "foo") })] ->
-                 assert_substring_equal ~ctxt "*" source star_loc;
-                 assert_substring_equal ~ctxt "'foo'" source source_loc
-               | _ -> assert_failure "Unexpected export"
-               )
+           let { module_sig = { module_kind; requires }; _ } = visit source in
+           assert_es module_kind;
+           match requires with
+           | [ExportFrom { source = (source_loc, "foo") }] ->
+             assert_substring_equal ~ctxt "'foo'" source source_loc
+           | _ -> assert_failure "Unexpected requires"
          );
          ( "declare_export_ns" >:: fun ctxt ->
            let source = "declare export * as ns from 'foo'" in
            let parse_options =
              Parser_env.{ default_parse_options with esproposal_export_star_as = true }
            in
-           let { module_sig = { module_kind; _ }; _ } = visit ~parse_options source in
-           assert_es module_kind ~assert_named:(fun named ->
-               assert_equal ~ctxt 1 (List.length named);
-               let (loc, source_loc) =
-                 match List.assoc "ns" named with
-                 | (_, ExportNs { loc; source = (source_loc, "foo"); _ }) -> (loc, source_loc)
-                 | _ -> assert_failure "Unexpected export"
-               in
-               assert_substring_equal ~ctxt "ns" source loc;
-               assert_substring_equal ~ctxt "'foo'" source source_loc
-           )
+           let { module_sig = { module_kind; requires }; _ } = visit ~parse_options source in
+           assert_es module_kind;
+           match requires with
+           | [ExportFrom { source = (source_loc, "foo") }] ->
+             assert_substring_equal ~ctxt "'foo'" source source_loc
+           | _ -> assert_failure "Unexpected requires"
          );
          ( "declare_module" >:: fun ctxt ->
            let source = "declare module foo {}" in
            let { declare_modules; _ } = visit source in
            let modules = declare_modules in
            assert_equal ~ctxt 1 (SMap.cardinal modules);
-           let (loc, { requires; module_kind; type_exports_named; type_exports_star }) =
-             SMap.find "foo" modules
-           in
+           let (loc, { requires; module_kind }) = SMap.find "foo" modules in
            assert_substring_equal ~ctxt source source loc;
            assert_equal ~ctxt 0 (List.length requires);
-           assert_cjs ~source module_kind ~assert_export_loc:(assert_equal ~ctxt None);
-           assert_equal ~ctxt 0 (List.length type_exports_named);
-           assert_equal ~ctxt 0 (List.length type_exports_star)
+           assert_cjs ~source module_kind ~assert_export_loc:(assert_equal ~ctxt None)
          );
          ("declare_module_export_type" >:: function
           | ctxt ->
             let source = "declare module foo { declare export type bar = string }" in
             let { declare_modules; _ } = visit source in
             assert_equal ~ctxt 1 (SMap.cardinal declare_modules);
-            let (_, { type_exports_named; _ }) = SMap.find "foo" declare_modules in
-            assert_equal ~ctxt 1 (List.length type_exports_named);
-            let loc =
-              match List.assoc "bar" type_exports_named with
-              | (_, TypeExportNamed { loc; kind = NamedDeclaration }) -> loc
-              | _ -> assert_failure "Unexpected type export"
-            in
-            assert_substring_equal ~ctxt "bar" source loc
+            let (_, { module_kind; _ }) = SMap.find "foo" declare_modules in
+            assert_cjs ~source module_kind
          );
          ( "declare_module_export_default_expr" >:: fun ctxt ->
            let source = "declare module foo { declare export default ty }" in
            let { declare_modules; _ } = visit source in
            assert_equal ~ctxt 1 (SMap.cardinal declare_modules);
            let (_, { module_kind; _ }) = SMap.find "foo" declare_modules in
-           assert_es module_kind ~assert_named:(fun named ->
-               assert_equal ~ctxt 1 (List.length named);
-               match List.assoc "default" named with
-               | (_, ExportDefault { default_loc; local = None }) ->
-                 assert_substring_equal ~ctxt "default" source default_loc
-               | _ -> assert_failure "Unexpected export"
-           )
+           assert_es module_kind
          );
          ( "declare_module_export_default_decl" >:: fun ctxt ->
            let source = "declare module foo { declare export default function bar(): void }" in
            let { declare_modules; _ } = visit source in
            assert_equal ~ctxt 1 (SMap.cardinal declare_modules);
            let (_, { module_kind; _ }) = SMap.find "foo" declare_modules in
-           assert_es module_kind ~assert_named:(fun named ->
-               assert_equal ~ctxt 1 (List.length named);
-               match List.assoc "default" named with
-               | (_, ExportDefault { default_loc; local = Some (loc, "bar") }) ->
-                 assert_substring_equal ~ctxt "default" source default_loc;
-                 assert_substring_equal ~ctxt "bar" source loc
-               | _ -> assert_failure "Unexpected export"
-           )
+           assert_es module_kind
          );
          ( "declare_module_export_name_func" >:: fun ctxt ->
            let source = "declare module foo { declare export function bar(): void }" in
            let { declare_modules; _ } = visit source in
            assert_equal ~ctxt 1 (SMap.cardinal declare_modules);
            let (_, { module_kind; _ }) = SMap.find "foo" declare_modules in
-           assert_es module_kind ~assert_named:(fun named ->
-               assert_equal ~ctxt 1 (List.length named);
-               let loc =
-                 match List.assoc "bar" named with
-                 | (_, ExportNamed { loc; kind = NamedDeclaration }) -> loc
-                 | _ -> assert_failure "Unexpected export"
-               in
-               assert_substring_equal ~ctxt "bar" source loc
-           )
+           assert_es module_kind
          );
          ( "declare_module_export_star" >:: fun ctxt ->
            let source = "declare module foo { declare export * from 'bar' }" in
            let { declare_modules; _ } = visit source in
            assert_equal ~ctxt 1 (SMap.cardinal declare_modules);
            let (_, { module_kind; _ }) = SMap.find "foo" declare_modules in
-           assert_es module_kind ~assert_star:(function
-               | [(_, ExportStar { star_loc; source = (source_loc, "bar") })] ->
-                 assert_substring_equal ~ctxt "*" source star_loc;
-                 assert_substring_equal ~ctxt "'bar'" source source_loc
-               | _ -> assert_failure "Unexpected export"
-               )
+           assert_es module_kind
          );
          ( "declare_module_declare_module.export" >:: fun ctxt ->
            let source = "declare module foo { declare module.exports: ty }" in
            let { declare_modules; _ } = visit source in
            assert_equal ~ctxt 1 (SMap.cardinal declare_modules);
            let (_, { module_kind; _ }) = SMap.find "foo" declare_modules in
-           (* TODO use o0nly the location of `module.exports` *)
+           (* TODO use only the location of `module.exports` *)
            assert_cjs ~source module_kind ~assert_export_loc:(assert_equal ~ctxt (Some (21, 47)))
          );
          ( "err_indeterminate_clobber_after_export" >:: fun ctxt ->
            let source = "export default 0; module.exports = 0;" in
            match visit_err source with
            | IndeterminateModuleType loc -> assert_substring_equal ~ctxt "module.exports" source loc
+           | _ -> assert_failure "Unexpected error"
          );
          ( "err_indeterminate_export_after_clobber" >:: fun ctxt ->
            let source = "module.exports = 0; export default 0;" in
            match visit_err source with
            | IndeterminateModuleType loc ->
              assert_substring_equal ~ctxt "export default 0;" source loc
+           | _ -> assert_failure "Unexpected error"
          );
        ]

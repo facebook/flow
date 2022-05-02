@@ -11,6 +11,7 @@ module Ast = Flow_ast
 (* infer phase services *)
 
 module NameResolver = Name_resolver.Make_of_flow (Context) (Flow_js_utils)
+module NameDefOrdering = Name_def_ordering.Make (Context) (Flow_js_utils)
 
 let add_require_tvars =
   let add cx desc loc =
@@ -400,7 +401,8 @@ module Make_Inference (Env : Env_sig.S) = struct
 
   and Destructuring_ : Destructuring_sig.S = Destructuring.Make (Env) (Statement_)
 
-  and Func_stmt_config_ : Func_stmt_config_sig.S =
+  and Func_stmt_config_ :
+    (Func_stmt_config_sig.S with module Types := Func_stmt_config_types.Types) =
     Func_stmt_config.Make (Env) (Destructuring_) (Statement_)
 
   module Statement = Statement_
@@ -442,7 +444,7 @@ module Make (Env : Env_sig.S) : S = struct
     let (_abrupt_completion, info) = NameResolver.program_with_scope cx aloc_ast in
     let env = Loc_env.with_info info in
     let name_def_graph = Name_def.find_defs aloc_ast in
-    let components = Name_def_ordering.build_ordering info name_def_graph in
+    let components = NameDefOrdering.build_ordering cx info name_def_graph in
     if Context.cycle_errors cx then Base.List.iter ~f:(Cycles.handle_component cx) components;
     Context.set_environment cx env;
     Env.init_env ~exclude_syms cx module_scope;

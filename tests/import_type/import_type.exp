@@ -17,7 +17,9 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- import_type.js:14:5
 
-Cannot reference type `ClassFoo1` [1] from a value position. [type-as-value]
+Cannot use type `ClassFoo1` [1] as a value. Types are erased and don't exist at runtime. If the exported binding can
+also be used as a value, try importing it using `import ClassFoo1` instead of `import type ClassFoo1` and
+`import {ClassFoo1}` instead of `import type {ClassFoo1}`. [type-as-value]
 
    import_type.js:14:5
    14| new ClassFoo1(); // Error: ClassFoo1 is not a value-identifier
@@ -48,7 +50,9 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- import_type.js:25:5
 
-Cannot reference type `ClassFoo2` [1] from a value position. [type-as-value]
+Cannot use type `ClassFoo2` [1] as a value. Types are erased and don't exist at runtime. If the exported binding can
+also be used as a value, try importing it using `import ClassFoo2` instead of `import type ClassFoo2` and
+`import {ClassFoo2}` instead of `import type {ClassFoo2}`. [type-as-value]
 
    import_type.js:25:5
    25| new ClassFoo2(); // Error: ClassFoo2 is not a value-identifier
@@ -62,7 +66,9 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- import_type.js:34:5
 
-Cannot reference type `ClassFoo3T` [1] from a value position. [type-as-value]
+Cannot use type `ClassFoo3T` [1] as a value. Types are erased and don't exist at runtime. If the exported binding can
+also be used as a value, try importing it using `import ClassFoo3T` instead of `import type ClassFoo3T` and
+`import {ClassFoo3T}` instead of `import type {ClassFoo3T}`. [type-as-value]
 
    import_type.js:34:5
    34| new ClassFoo3T(); // Error: ClassFoo3 is not a value-identifier
@@ -93,7 +99,9 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- import_type.js:45:5
 
-Cannot reference type `ClassFoo4` [1] from a value position. [type-as-value]
+Cannot use type `ClassFoo4` [1] as a value. Types are erased and don't exist at runtime. If the exported binding can
+also be used as a value, try importing it using `import ClassFoo4` instead of `import type ClassFoo4` and
+`import {ClassFoo4}` instead of `import type {ClassFoo4}`. [type-as-value]
 
    import_type.js:45:5
    45| new ClassFoo4(); // Error: ClassFoo4 is not a value-identifier
@@ -107,7 +115,9 @@ References:
 
 Error --------------------------------------------------------------------------------------------- import_type.js:47:16
 
-Cannot reference type `ClassFoo5` [1] from a value position. [type-as-value]
+Cannot use type `ClassFoo5` [1] as a value. Types are erased and don't exist at runtime. If the exported binding can
+also be used as a value, try importing it using `import ClassFoo5` instead of `import type ClassFoo5` and
+`import {ClassFoo5}` instead of `import type {ClassFoo5}`. [type-as-value]
 
    import_type.js:47:16
    47| var d3: typeof ClassFoo5 = foo5Inst; // Error: Can't typeof a type alias
@@ -138,7 +148,9 @@ References:
 
 Error --------------------------------------------------------------------------------------------- import_type.js:57:16
 
-Cannot reference type `AliasFoo3` [1] from a value position. [type-as-value]
+Cannot use type `AliasFoo3` [1] as a value. Types are erased and don't exist at runtime. If the exported binding can
+also be used as a value, try importing it using `import AliasFoo3` instead of `import type AliasFoo3` and
+`import {AliasFoo3}` instead of `import type {AliasFoo3}`. [type-as-value]
 
    import_type.js:57:16
    57| var e3: typeof AliasFoo3 = givesAFoo3Obj(); // Error: Can't typeof a type alias
@@ -161,7 +173,9 @@ and classes. If you intended to import the type of a value use `import typeof` i
 
 Error ---------------------------------------------------------------------------------------------- import_type.js:81:3
 
-Cannot reference type `ClassFoo6` [1] from a value position. [type-as-value]
+Cannot use type `ClassFoo6` [1] as a value. Types are erased and don't exist at runtime. If the exported binding can
+also be used as a value, try importing it using `import ClassFoo6` instead of `import type ClassFoo6` and
+`import {ClassFoo6}` instead of `import type {ClassFoo6}`. [type-as-value]
 
    import_type.js:81:3
    81|   ClassFoo6; // Error: Not a value binding

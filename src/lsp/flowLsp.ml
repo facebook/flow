@@ -1388,7 +1388,7 @@ let do_rage flowconfig_name (state : server_state) : Rage.result =
       (* monitor log file isn't retained anywhere. But since flow lsp doesn't
            take a --monitor-log-file option, then we know where it must be. *)
       let monitor_log_file =
-        CommandUtils.monitor_log_file flowconfig_name tmp_dir start_env.CommandConnect.root
+        CommandUtils.monitor_log_file ~flowconfig_name ~tmp_dir start_env.CommandConnect.root
       in
       let items = add_file items server_log_file in
       let items = add_file items monitor_log_file in
@@ -1623,7 +1623,7 @@ let get_local_request_handler ienv (id, result) =
     Some (ienv, handler)
   | None -> None
 
-let try_connect flowconfig_name (env : disconnected_env) : server_state =
+let try_connect ~version_mismatch_strategy flowconfig_name (env : disconnected_env) : server_state =
   let flowconfig = read_flowconfig_from_disk flowconfig_name env.d_ienv.i_root in
   (* If the version in .flowconfig has changed under our feet then we mustn't
      connect. We'll terminate and trust the editor to relaunch an ok version. *)
@@ -1652,13 +1652,7 @@ let try_connect flowconfig_name (env : disconnected_env) : server_state =
           client_version = Flow_version.version;
           is_stop_request = false;
           server_should_hangup_if_still_initializing = true;
-          (* only exit if we'll restart it *)
-          version_mismatch_strategy =
-            ( if env.d_autostart then
-              Stop_server_if_older
-            else
-              SocketHandshake.Error_client
-            );
+          version_mismatch_strategy;
         },
         { client_type = Persistent { lsp_init_params = env.d_ienv.i_initialize_params } }
       )
@@ -1675,9 +1669,12 @@ let try_connect flowconfig_name (env : disconnected_env) : server_state =
   match conn with
   | Ok (ic, oc) ->
     let i_server_id = env.d_ienv.i_server_id + 1 in
+    (* this flag is set to false to prevent restart loops when the flowconfig changes.
+       once we successfully reconnect, it should be reset back to true (the default). *)
+    let i_can_autostart_after_version_mismatch = true in
     let new_env =
       {
-        c_ienv = { env.d_ienv with i_server_id };
+        c_ienv = { env.d_ienv with i_server_id; i_can_autostart_after_version_mismatch };
         c_conn = { ic; oc };
         c_server_status = (ServerStatus.initial_status, None);
         c_about_to_exit_code = None;
@@ -2272,7 +2269,24 @@ and main_handle_initialized_unsafe flowconfig_name (state : server_state) (event
     let cenv = show_connected_status cenv in
     Ok (Connected cenv, LogNotNeeded)
   | (Disconnected env, Tick) ->
-    let server_state = try_connect flowconfig_name env in
+    (* the flow binary may have changed since we (the lsp process) were started.
+       on our first attempt to connect, version_mismatch_strategy is set to
+       Always_stop_server: since we just spawned, we can assume that we are the
+       most up-to-date version of the binary. if we connect to an already-running
+       server and the version mismatches, always stop the server.
+
+       after that, if we ever get a version mismatch then the server must have
+       restarted more recently than we have, so _it_ is the most up-to-date binary
+       and we should exit.
+
+       note that if the initial case happens and we stop the already-running server,
+       try_connect doesn't immediately connect to it; we try again on the next tick
+       (you are here!). if we somehow mismatch again -- e.g. the flow binary was
+       updated immediately after the lsp was spawned, so our assumption that we were
+       the latest binary was false -- we'll exit. the chances of this race happening
+       repeatedly is virtually impossible. *)
+    let version_mismatch_strategy = SocketHandshake.Error_client in
+    let server_state = try_connect ~version_mismatch_strategy flowconfig_name env in
     Ok (server_state, LogNotNeeded)
   | (_, Server_message _) ->
     failwith
@@ -2364,8 +2378,14 @@ and main_handle_unsafe flowconfig_name (state : state) (event : event) :
         d_ienv
     in
 
+    (* there may be an already-running flow server that's running a binary that has since
+       changed on disk. since we (the lsp process) were just spawned, we are using the
+       more up-to-date binary, so if we're a different binary than the server, the server
+       should exit so we can restart a new one. *)
+    let version_mismatch_strategy = SocketHandshake.Always_stop_server in
+
     let env = { d_ienv; d_autostart = true; d_server_status = None } in
-    Ok (Initialized (try_connect flowconfig_name env), LogNeeded metadata)
+    Ok (Initialized (try_connect ~version_mismatch_strategy flowconfig_name env), LogNeeded metadata)
   | (_, Client_message (NotificationMessage InitializedNotification, _metadata)) ->
     Ok (state, LogNotNeeded)
   | (_, Client_message (NotificationMessage SetTraceNotification, _metadata))
@@ -2584,20 +2604,32 @@ and main_handle_error (exn : Exception.t) (state : state) (event : event option)
       Lsp_helpers.telemetry_error to_stdout report;
       let (d_autostart, d_ienv) =
         match state with
-        | Initialized (Connected { c_ienv; c_about_to_exit_code; _ })
-          when c_about_to_exit_code = Some FlowExit.Flowconfig_changed
-               || c_about_to_exit_code = Some FlowExit.Server_out_of_date ->
+        | Initialized
+            (Connected
+              {
+                c_ienv;
+                c_about_to_exit_code =
+                  Some FlowExit.(Flowconfig_changed | Server_out_of_date | Lock_stolen);
+                _;
+              }
+              ) ->
           (* we allow at most one autostart_after_version_mismatch per
              instance so as to avoid getting into version battles. *)
           let previous = c_ienv.i_can_autostart_after_version_mismatch in
           let d_ienv = { c_ienv with i_can_autostart_after_version_mismatch = false } in
           (previous, d_ienv)
+        | Initialized
+            (Connected
+              { c_ienv; c_about_to_exit_code = Some FlowExit.File_watcher_missed_changes; _ }
+              ) ->
+          (* TODO: we should fix the monitor to just handle this without exiting!
+             in the meantime, just restart the monitor, which will recrawl. *)
+          (true, c_ienv)
         | Initialized (Connected { c_ienv; _ }) -> (false, c_ienv)
         | Initialized (Disconnected { d_ienv; _ }) -> (false, d_ienv)
         | Pre_init _
         | Post_shutdown ->
           failwith "Unexpected server error in inapplicable state"
-        (* crash *)
       in
       let env = { d_ienv; d_autostart; d_server_status = None } in
       (match state with

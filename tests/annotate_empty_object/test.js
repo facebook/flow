@@ -18,7 +18,9 @@ a.key = 4;
 
 declare var arr : Array<string>;
 arr.reduce((acc, key) => { acc[key] = 4; return acc }, {}) // annot on the targ to reduce
-
+arr?.reduce((acc, key) => { acc[key] = 4; return acc }, {}) // annot on the targ to reduce w/ optional chaining
+declare var maybe: ?{a: Array<string>};
+maybe?.a.reduce((acc, key) => { acc[key] = 4; return acc }, {}) // annot on the targ to reduce w/ optional chaining
 
 function foo(x) {
     x[key] = 3;
@@ -80,3 +82,36 @@ function bar(x) {
 }
 
 bar({}); // annot
+
+type LargeEnum = 'a' | 'b' | 'c' | 'e' | 'f' | 'g' | 'h' | 'i';
+function testLarge(xs: Array<LargeEnum>) {
+  const o = {}; // Annotate
+  xs.forEach(e => {
+    o[e] = xs;
+  });
+  return o;
+}
+
+function tooBig(xs: Array<'a' | 'b' | 'c' | 'e' | 'f' | 'g' | 'h' | 'i'>) {
+  const o = {}; // Skip - too big
+  xs.forEach(e => {
+    o[e] = xs;
+  });
+  return o;
+}
+
+function reduceLarge(xs: Array<LargeEnum>) {
+  // Annotate on the targ to reduce
+  xs.reduce(
+    (acc, key) => { acc[key] = xs; return acc },
+    {},
+  );
+}
+
+function reduceTooBig(xs: Array<'a' | 'b' | 'c' | 'e' | 'f' | 'g' | 'h' | 'i'>) {
+  // Skip - too big
+  xs.reduce(
+    (acc, key) => { acc[key] = 1; return acc },
+    {},
+  );
+}

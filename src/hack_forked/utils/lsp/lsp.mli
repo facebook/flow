@@ -243,10 +243,17 @@ module CodeActionClientCapabilities : sig
   }
 end
 
+module CompletionItemTag : sig
+  type t = Deprecated [@value 1] [@@deriving enum]
+end
+
 module CompletionClientCapabilities : sig
+  type tagSupport = { valueSet: CompletionItemTag.t list }
+
   type completionItem = {
     snippetSupport: bool;
     preselectSupport: bool;
+    tagSupport: tagSupport;
     labelDetailsSupport: bool;
   }
 
@@ -695,6 +702,8 @@ module Completion : sig
     kind: completionItemKind option;  (** tells editor which icon to use *)
     detail: string option;  (** human-readable string like type/symbol info *)
     documentation: markedString list option;  (** human-readable doc-comment *)
+    (* extra annotations that tweak the rendering of a completion item. *)
+    tags: CompletionItemTag.t list option;
     preselect: bool;  (** select this item when showing *)
     sortText: string option;  (** used for sorting; if absent, uses label *)
     filterText: string option;  (** used for filtering; if absent, uses label *)

@@ -165,6 +165,7 @@ let default_mapper =
              kind;
              detail;
              documentation;
+             tags;
              preselect;
              sortText;
              filterText;
@@ -182,6 +183,7 @@ let default_mapper =
           kind;
           detail;
           documentation;
+          tags;
           preselect;
           sortText;
           filterText;

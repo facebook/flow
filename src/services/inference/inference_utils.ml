@@ -35,28 +35,24 @@ let error_of_parse_error ~source_file (loc, err) =
 let set_of_parse_error ~source_file =
   error_of_parse_error ~source_file %> Flow_error.ErrorSet.singleton
 
-let error_of_file_sig_error ~source_file err =
-  File_sig.With_Loc.(
-    let flow_err =
-      match err with
-      | IndeterminateModuleType loc -> Error_message.EIndeterminateModuleType (ALoc.of_loc loc)
-    in
-    Flow_error.error_of_msg ~trace_reasons:[] ~source_file flow_err
-  )
+let error_of_parse_exception ~source_file exn =
+  let file_loc = Loc.{ none with source = Some source_file } |> ALoc.of_loc in
+  Error_message.EInternal (file_loc, Error_message.ParseJobException exn)
+  |> Flow_error.error_of_msg ~trace_reasons:[] ~source_file
 
-let set_of_file_sig_error ~source_file =
-  error_of_file_sig_error ~source_file %> Flow_error.ErrorSet.singleton
+let set_of_parse_exception ~source_file =
+  error_of_parse_exception ~source_file %> Flow_error.ErrorSet.singleton
 
 let error_of_file_sig_tolerable_error ~source_file err =
-  File_sig.With_ALoc.(
-    let flow_err =
-      match err with
-      | BadExportPosition loc -> Error_message.EBadExportPosition loc
-      | BadExportContext (name, loc) -> Error_message.EBadExportContext (name, loc)
-      | SignatureVerificationError sve -> Error_message.ESignatureVerification sve
-    in
-    Flow_error.error_of_msg ~trace_reasons:[] ~source_file flow_err
-  )
+  let open File_sig.With_ALoc in
+  let flow_err =
+    match err with
+    | IndeterminateModuleType loc -> Error_message.EIndeterminateModuleType loc
+    | BadExportPosition loc -> Error_message.EBadExportPosition loc
+    | BadExportContext (name, loc) -> Error_message.EBadExportContext (name, loc)
+    | SignatureVerificationError sve -> Error_message.ESignatureVerification sve
+  in
+  Flow_error.error_of_msg ~trace_reasons:[] ~source_file flow_err
 
 let set_of_file_sig_tolerable_errors ~source_file =
   Base.List.map ~f:(error_of_file_sig_tolerable_error ~source_file) %> Flow_error.ErrorSet.of_list

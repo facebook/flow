@@ -705,10 +705,16 @@ References:
 
 Error ------------------------------------------------------------------------------------- ops_on_react_config.js:12:36
 
-`Props` [1] is not a polymorphic type. [incompatible-use]
+Cannot extend `x1` [1] with `T` because `Props` [2] is not inheritable. [incompatible-use]
 
+   ops_on_react_config.js:12:36
    12| export class x1 extends ((0: any): T) {}
-                                          ^ [1]
+                                          ^ [2]
+
+References:
+   ops_on_react_config.js:12:14
+   12| export class x1 extends ((0: any): T) {}
+                    ^^ [1]
 
 
 Error ------------------------------------------------------------------------------------- ops_on_react_config.js:15:19

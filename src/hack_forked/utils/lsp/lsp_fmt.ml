@@ -103,7 +103,7 @@ let parse_versionedTextDocumentIdentifier (json : json option) : VersionedTextDo
   VersionedTextDocumentIdentifier.
     {
       uri = Jget.string_exn json "uri" |> DocumentUri.of_string;
-      version = Jget.int_d json "version" 0;
+      version = Jget.int_d json "version" ~default:0;
     }
   
 
@@ -111,8 +111,8 @@ let parse_textDocumentItem (json : json option) : TextDocumentItem.t =
   TextDocumentItem.
     {
       uri = Jget.string_exn json "uri" |> DocumentUri.of_string;
-      languageId = Jget.string_d json "languageId" "";
-      version = Jget.int_d json "version" 0;
+      languageId = Jget.string_d json "languageId" ~default:"";
+      version = Jget.int_d json "version" ~default:0;
       text = Jget.string_exn json "text";
     }
   
@@ -190,17 +190,17 @@ let parse_command_name str =
 
 let parse_command (json : json option) : Command.t =
   let open Command in
-  let name = Jget.string_d json "command" "" in
+  let name = Jget.string_d json "command" ~default:"" in
   {
-    title = Jget.string_d json "title" "";
+    title = Jget.string_d json "title" ~default:"";
     command = parse_command_name name;
     arguments = Jget.array_d json "arguments" ~default:[] |> Base.List.filter_opt;
   }
 
 let parse_formattingOptions (json : json option) : DocumentFormatting.formattingOptions =
   {
-    DocumentFormatting.tabSize = Jget.int_d json "tabSize" 2;
-    insertSpaces = Jget.bool_d json "insertSpaces" true;
+    DocumentFormatting.tabSize = Jget.int_d json "tabSize" ~default:2;
+    insertSpaces = Jget.bool_d json "insertSpaces" ~default:true;
   }
 
 module SymbolKindFmt = struct
@@ -214,7 +214,7 @@ let print_symbolInformation (info : SymbolInformation.t) : json =
         ("name", Some (JSON_String info.name));
         ("kind", Some (SymbolKindFmt.to_json info.kind));
         ("location", Some (print_location info.location));
-        ("containerName", Base.Option.map info.containerName string_);
+        ("containerName", Base.Option.map info.containerName ~f:string_);
       ]
   )
 
@@ -538,9 +538,9 @@ let print_diagnostic (diagnostic : PublishDiagnostics.diagnostic) : json =
     Jprint.object_opt
       [
         ("range", Some (print_range diagnostic.range));
-        ("severity", Base.Option.map diagnostic.severity print_diagnosticSeverity);
+        ("severity", Base.Option.map diagnostic.severity ~f:print_diagnosticSeverity);
         ("code", print_diagnosticCode diagnostic.code);
-        ("source", Base.Option.map diagnostic.source string_);
+        ("source", Base.Option.map diagnostic.source ~f:string_);
         ("message", Some (JSON_String diagnostic.message));
         ( "relatedInformation",
           Some (JSON_Array (Base.List.map diagnostic.relatedInformation ~f:print_related))
@@ -808,16 +808,19 @@ let parse_completionItem (params : json option) : CompletionItemResolve.params =
     {
       label = Jget.string_exn params "label";
       labelDetails =
-        Base.Option.map (Jget.obj_opt params "labelDetails") CompletionItemLabelDetailsFmt.of_json;
-      kind = Base.Option.bind (Jget.int_opt params "kind") completionItemKind_of_enum;
+        Base.Option.map
+          (Jget.obj_opt params "labelDetails")
+          ~f:CompletionItemLabelDetailsFmt.of_json;
+      kind = Base.Option.bind (Jget.int_opt params "kind") ~f:completionItemKind_of_enum;
       detail = Jget.string_opt params "detail";
       documentation = None;
+      tags = None;
       preselect = Jget.bool_d params "preselect" ~default:false;
       sortText = Jget.string_opt params "sortText";
       filterText = Jget.string_opt params "filterText";
       insertText = Jget.string_opt params "insertText";
       insertTextFormat =
-        Base.Option.bind (Jget.int_opt params "insertTextFormat") insertTextFormat_of_enum;
+        Base.Option.bind (Jget.int_opt params "insertTextFormat") ~f:insertTextFormat_of_enum;
       textEdits;
       command;
       data = Jget.obj_opt params "data";
@@ -835,8 +838,8 @@ let print_completionItem ~key (item : Completion.completionItem) : json =
       [
         ("label", Some (JSON_String item.label));
         ("labelDetails", Base.Option.map item.labelDetails ~f:CompletionItemLabelDetailsFmt.to_json);
-        ("kind", Base.Option.map item.kind (fun x -> int_ @@ completionItemKind_to_enum x));
-        ("detail", Base.Option.map item.detail string_);
+        ("kind", Base.Option.map item.kind ~f:(fun x -> int_ @@ completionItemKind_to_enum x));
+        ("detail", Base.Option.map item.detail ~f:string_);
         ( "documentation",
           Base.Option.map item.documentation ~f:(fun doc ->
               JSON_Object
@@ -848,19 +851,24 @@ let print_completionItem ~key (item : Completion.completionItem) : json =
                 ]
           )
         );
+        ( "tags",
+          Base.Option.map item.tags ~f:(fun tags ->
+              JSON_Array (List.map (fun tag -> int_ @@ CompletionItemTag.to_enum tag) tags)
+          )
+        );
         ( "preselect",
           if item.preselect then
             Some (JSON_Bool true)
           else
             None
         );
-        ("sortText", Base.Option.map item.sortText string_);
-        ("filterText", Base.Option.map item.filterText string_);
-        ("insertText", Base.Option.map item.insertText string_);
+        ("sortText", Base.Option.map item.sortText ~f:string_);
+        ("filterText", Base.Option.map item.filterText ~f:string_);
+        ("insertText", Base.Option.map item.insertText ~f:string_);
         ( "insertTextFormat",
-          Base.Option.map item.insertTextFormat (fun x -> int_ @@ insertTextFormat_to_enum x)
+          Base.Option.map item.insertTextFormat ~f:(fun x -> int_ @@ insertTextFormat_to_enum x)
         );
-        ("textEdit", Base.Option.map (Base.List.hd item.textEdits) print_textEdit);
+        ("textEdit", Base.Option.map (Base.List.hd item.textEdits) ~f:print_textEdit);
         ( "additionalTextEdits",
           match Base.List.tl item.textEdits with
           | None
@@ -868,7 +876,7 @@ let print_completionItem ~key (item : Completion.completionItem) : json =
             None
           | Some l -> Some (JSON_Array (Base.List.map l ~f:print_textEdit))
         );
-        ("command", Base.Option.map item.command (print_command ~key));
+        ("command", Base.Option.map item.command ~f:(print_command ~key));
         ("data", item.data);
       ]
   )
@@ -1013,8 +1021,8 @@ let parse_findReferences (params : json option) : FindReferences.params =
     FindReferences.loc = parse_textDocumentPositionParams params;
     context =
       {
-        FindReferences.includeDeclaration = Jget.bool_d context "includeDeclaration" true;
-        includeIndirectReferences = Jget.bool_d context "includeIndirectReferences" false;
+        FindReferences.includeDeclaration = Jget.bool_d context "includeDeclaration" ~default:true;
+        includeIndirectReferences = Jget.bool_d context "includeIndirectReferences" ~default:false;
       };
   }
 
@@ -1153,10 +1161,22 @@ end
 module CompletionClientCapabilitiesFmt = struct
   open CompletionClientCapabilities
 
+  let tagSupport_of_json json =
+    {
+      valueSet =
+        Jget.array_d json "valueSet" ~default:[]
+        |> List.filter_map (function
+               | Some (JSON_Number num_string) ->
+                 num_string |> int_of_string_opt |> Base.Option.bind ~f:CompletionItemTag.of_enum
+               | _ -> None
+               );
+    }
+
   let completionItem_of_json json =
     {
       snippetSupport = Jget.bool_d json "snippetSupport" ~default:false;
       preselectSupport = Jget.bool_d json "preselectSupport" ~default:false;
+      tagSupport = Jget.obj_opt json "tagSupport" |> tagSupport_of_json;
       labelDetailsSupport = Jget.bool_d json "labelDetailsSupport" ~default:false;
     }
 

@@ -31,9 +31,9 @@ and parse_skip_reason =
 and parse_error = Loc.t * Parse_error.t
 
 and parse_failure =
+  | Uncaught_exception of Exception.t
   | Docblock_errors of docblock_error list
   | Parse_error of parse_error
-  | File_sig_error of File_sig.With_Loc.error
 
 and docblock_error = Loc.t * docblock_error_kind
 
@@ -60,6 +60,8 @@ type results = {
   not_found: FilenameSet.t;
   (* package.json files parsed *)
   package_json: File_key.t list * parse_error option list;
+  (* set of modules that need to be committed *)
+  dirty_modules: Modulename.Set.t;
 }
 
 let empty_result =
@@ -71,6 +73,7 @@ let empty_result =
     unchanged = FilenameSet.empty;
     not_found = FilenameSet.empty;
     package_json = ([], []);
+    dirty_modules = Modulename.Set.empty;
   }
 
 (**************************** internal *********************************)
@@ -418,50 +421,54 @@ let do_parse ~parse_options ~info content file =
             relay_integration_module_prefix;
           }
         in
-        (match File_sig.With_Loc.program ~ast ~opts:file_sig_opts with
-        | Error e -> Parse_fail (File_sig_error e)
-        | Ok (file_sig, tolerable_errors) ->
-          let sig_opts =
-            {
-              Type_sig_parse.type_asserts;
-              suppress_types;
-              munge = not prevent_munge;
-              ignore_static_propTypes;
-              facebook_keyMirror;
-              facebook_fbt;
-              max_literal_len;
-              exact_by_default;
-              module_ref_prefix;
-              enable_enums;
-              enable_relay_integration;
-              relay_integration_module_prefix;
-            }
-          in
-          let (sig_errors, locs, type_sig) =
-            let strict = Docblock.is_strict info in
-            Type_sig_utils.parse_and_pack_module ~strict sig_opts (Some file) ast
-          in
-          let exports = Exports.of_module type_sig in
-          let tolerable_errors =
-            List.fold_left
-              (fun acc (_, err) ->
-                match err with
-                | Type_sig.SigError err ->
-                  let err = Signature_error.map (Type_sig_collections.Locs.get locs) err in
-                  File_sig.With_Loc.SignatureVerificationError err :: acc
-                | Type_sig.CheckError -> acc)
-              tolerable_errors
-              sig_errors
-          in
-          Parse_ok { ast; file_sig; locs; type_sig; tolerable_errors; parse_errors; exports })
+        let (file_sig, tolerable_errors) = File_sig.With_Loc.program ~ast ~opts:file_sig_opts in
+        let sig_opts =
+          {
+            Type_sig_parse.type_asserts;
+            suppress_types;
+            munge = not prevent_munge;
+            ignore_static_propTypes;
+            facebook_keyMirror;
+            facebook_fbt;
+            max_literal_len;
+            exact_by_default;
+            module_ref_prefix;
+            enable_enums;
+            enable_relay_integration;
+            relay_integration_module_prefix;
+          }
+        in
+        let (sig_errors, locs, type_sig) =
+          let strict = Docblock.is_strict info in
+          Type_sig_utils.parse_and_pack_module ~strict sig_opts (Some file) ast
+        in
+        let exports = Exports.of_module type_sig in
+        let tolerable_errors =
+          List.fold_left
+            (fun acc (_, err) ->
+              match err with
+              | Type_sig.SigError err ->
+                let err = Signature_error.map (Type_sig_collections.Locs.get locs) err in
+                File_sig.With_Loc.SignatureVerificationError err :: acc
+              | Type_sig.CheckError -> acc)
+            tolerable_errors
+            sig_errors
+        in
+        Parse_ok { ast; file_sig; locs; type_sig; tolerable_errors; parse_errors; exports }
   with
   | Parse_error.Error (e, _) -> Parse_fail (Parse_error e)
   | e ->
     let e = Exception.wrap e in
-    let s = Exception.get_ctor_string e in
-    let loc = Loc.{ none with source = Some file } in
-    let err = (loc, Parse_error.Assertion s) in
-    Parse_fail (Parse_error err)
+    ( if FlowEventLogger.should_log () then
+      let e_str =
+        Printf.sprintf
+          "%s\nBacktrace: %s"
+          (Exception.get_ctor_string e)
+          (Exception.get_full_backtrace_string max_int e)
+      in
+      FlowEventLogger.parsing_exception e_str
+    );
+    Parse_fail (Uncaught_exception e)
 
 let hash_content content =
   let state = Xx.init 0L in
@@ -496,84 +503,120 @@ let reducer
     ~noflow
     exported_module
     acc
-    file : results =
-  let filename_string = File_key.to_string file in
-  match cat filename_string with
-  | exception _ ->
-    (* It turns out that sometimes files appear and disappear very quickly. Just
-     * because someone told us that this file exists and needs to be parsed, it
-     * doesn't mean it actually still exists. If anything goes wrong reading this
-     * file, let's skip it. We don't need to notify our caller, since they'll
-     * probably get the delete event anyway *)
-    { acc with not_found = FilenameSet.add file acc.not_found }
-  | content ->
-    let hash = hash_content content in
-    (* If skip_changed is true, then we're currently ensuring some files are parsed. That
-     * means we don't currently have the file's AST but we might have the file's hash in the
-     * non-oldified heap. What we want to avoid is parsing files which differ from the hash *)
-    if skip_changed && not (content_hash_matches_file_hash ~reader file hash) then
-      { acc with changed = FilenameSet.add file acc.changed }
-    else if skip_unchanged && content_hash_matches_old_file_hash ~reader file hash then
-      { acc with unchanged = FilenameSet.add file acc.unchanged }
-    else (
-      match parse_docblock ~max_tokens:max_header_tokens file content with
-      | ([], info) ->
-        let info =
-          if noflow file then
-            { info with Docblock.flow = Some Docblock.OptOut }
-          else
-            info
-        in
-        let module_name = exported_module file info in
-        begin
-          match do_parse ~parse_options ~info content file with
-          | Parse_ok { ast; file_sig; exports; locs; type_sig; tolerable_errors; parse_errors = _ }
-            ->
-            (* if parse_options.fail == true, then parse errors will hit Parse_fail below. otherwise,
-               ignore any parse errors we get here. *)
-            let file_sig = (file_sig, tolerable_errors) in
-            worker_mutator.Parsing_heaps.add_parsed
-              file
-              ~exports
-              hash
-              module_name
+    file_key : results =
+  match Parsing_heaps.get_file_addr file_key with
+  | Some _ when SharedMem.is_init_transaction () ->
+    (* If we can find an existing entry during the initial transaction, we must
+     * have been asked to parse the same file twice. This can happen if we init
+     * from scratch and walking the file system finds the same file twice.
+     *
+     * Since we must have already parsed the file during this transaction, we
+     * can skip this entirely. *)
+    acc
+  | file_opt ->
+    let filename_string = File_key.to_string file_key in
+    (match cat filename_string with
+    | exception _ ->
+      (* The file watcher does not distinguish between modified or deleted files,
+       * we distinguish by parsing. Either the wather notified us because the file
+       * was deleted, or because the file was modified and then the file was
+       * deleted before we got to this point.
+       *
+       * In either case, we update the file entity so that the latest data is
+       * empty, indicating no file. We also record these files so their shared
+       * hash table keys can be removed when the transaction commits. *)
+      let dirty_modules = worker_mutator.Parsing_heaps.clear_not_found file_key in
+      let not_found = FilenameSet.add file_key acc.not_found in
+      let dirty_modules = Modulename.Set.union dirty_modules acc.dirty_modules in
+      { acc with not_found; dirty_modules }
+    | content ->
+      let hash = hash_content content in
+      (* If skip_changed is true, then we're currently ensuring some files are parsed. That
+       * means we don't currently have the file's AST but we might have the file's hash in the
+       * non-oldified heap. What we want to avoid is parsing files which differ from the hash *)
+      if skip_changed && not (content_hash_matches_file_hash ~reader file_key hash) then
+        { acc with changed = FilenameSet.add file_key acc.changed }
+      else if skip_unchanged && content_hash_matches_old_file_hash ~reader file_key hash then
+        { acc with unchanged = FilenameSet.add file_key acc.unchanged }
+      else (
+        match parse_docblock ~max_tokens:max_header_tokens file_key content with
+        | ([], info) ->
+          let info =
+            if noflow file_key then
+              { info with Docblock.flow = Some Docblock.OptOut }
+            else
               info
-              ast
-              file_sig
-              locs
-              type_sig;
-            { acc with parsed = FilenameSet.add file acc.parsed }
-          | Parse_fail error ->
-            worker_mutator.Parsing_heaps.add_unparsed file hash module_name;
-            let failed = (file :: fst acc.failed, error :: snd acc.failed) in
-            { acc with failed }
-          | Parse_skip (Skip_package_json result) ->
-            let error =
-              let file_str = File_key.to_string file in
-              match result with
-              | Ok pkg ->
-                Package_heaps.Package_heap_mutator.add_package_json file_str pkg;
-                None
-              | Error err ->
-                Package_heaps.Package_heap_mutator.add_error file_str;
-                Some err
-            in
-            worker_mutator.Parsing_heaps.add_unparsed file hash module_name;
-            let unparsed = FilenameSet.add file acc.unparsed in
-            let package_json = (file :: fst acc.package_json, error :: snd acc.package_json) in
-            { acc with unparsed; package_json }
-          | Parse_skip Skip_non_flow_file
-          | Parse_skip Skip_resource_file ->
-            worker_mutator.Parsing_heaps.add_unparsed file hash module_name;
-            { acc with unparsed = FilenameSet.add file acc.unparsed }
-        end
-      | (docblock_errors, info) ->
-        let module_name = exported_module file info in
-        worker_mutator.Parsing_heaps.add_unparsed file hash module_name;
-        let error = Docblock_errors docblock_errors in
-        let failed = (file :: fst acc.failed, error :: snd acc.failed) in
-        { acc with failed }
-    )
+          in
+          let module_name = exported_module file_key info in
+          begin
+            match do_parse ~parse_options ~info content file_key with
+            | Parse_ok
+                { ast; file_sig; exports; locs; type_sig; tolerable_errors; parse_errors = _ } ->
+              (* if parse_options.fail == true, then parse errors will hit Parse_fail below. otherwise,
+                 ignore any parse errors we get here. *)
+              let file_sig = (file_sig, tolerable_errors) in
+              let dirty_modules =
+                worker_mutator.Parsing_heaps.add_parsed
+                  file_key
+                  file_opt
+                  ~exports
+                  hash
+                  module_name
+                  info
+                  ast
+                  file_sig
+                  locs
+                  type_sig
+              in
+              let parsed = FilenameSet.add file_key acc.parsed in
+              let dirty_modules = Modulename.Set.union dirty_modules acc.dirty_modules in
+              { acc with parsed; dirty_modules }
+            | Parse_fail error ->
+              let dirty_modules =
+                worker_mutator.Parsing_heaps.add_unparsed file_key file_opt hash module_name
+              in
+              let failed = (file_key :: fst acc.failed, error :: snd acc.failed) in
+              let dirty_modules = Modulename.Set.union dirty_modules acc.dirty_modules in
+              { acc with failed; dirty_modules }
+            | Parse_skip (Skip_package_json result) ->
+              let error =
+                let file_str = File_key.to_string file_key in
+                match result with
+                | Ok pkg ->
+                  Package_heaps.Package_heap_mutator.add_package_json file_str pkg;
+                  None
+                | Error err ->
+                  Package_heaps.Package_heap_mutator.add_error file_str;
+                  Some err
+              in
+              let dirty_modules =
+                worker_mutator.Parsing_heaps.add_unparsed file_key file_opt hash module_name
+              in
+              let unparsed = FilenameSet.add file_key acc.unparsed in
+              let package_json =
+                (file_key :: fst acc.package_json, error :: snd acc.package_json)
+              in
+              let dirty_modules = Modulename.Set.union dirty_modules acc.dirty_modules in
+              { acc with unparsed; package_json; dirty_modules }
+            | Parse_skip Skip_non_flow_file
+            | Parse_skip Skip_resource_file ->
+              let dirty_modules =
+                worker_mutator.Parsing_heaps.add_unparsed file_key file_opt hash module_name
+              in
+              let unparsed = FilenameSet.add file_key acc.unparsed in
+              let dirty_modules = Modulename.Set.union dirty_modules acc.dirty_modules in
+              { acc with unparsed; dirty_modules }
+          end
+        | (docblock_errors, info) ->
+          let module_name = exported_module file_key info in
+          let dirty_modules =
+            worker_mutator.Parsing_heaps.add_unparsed file_key file_opt hash module_name
+          in
+          let error = Docblock_errors docblock_errors in
+          let failed = (file_key :: fst acc.failed, error :: snd acc.failed) in
+          let dirty_modules = Modulename.Set.union dirty_modules acc.dirty_modules in
+          { acc with failed; dirty_modules }
+      ))
 
 (* merge is just memberwise union/concat of results *)
 let merge a b =
@@ -593,6 +636,7 @@ let merge a b =
        let (b1, b2) = b.package_json in
        (List.rev_append a1 b1, List.rev_append a2 b2)
       );
+    dirty_modules = Modulename.Set.union a.dirty_modules b.dirty_modules;
   }
 
 let opt_or_alternate opt alternate =
@@ -624,7 +668,7 @@ let get_defaults ~types_mode ~use_strict options =
 
 let progress_fn ~total ~start ~length:_ =
   let finished = start in
-  MonitorRPC.status_update ServerStatus.(Parsing_progress { total = Some total; finished })
+  MonitorRPC.status_update ~event:ServerStatus.(Parsing_progress { total = Some total; finished })
 
 let next_of_filename_set ?(with_progress = false) workers filenames =
   if with_progress then
@@ -712,8 +756,8 @@ let reparse
       workers
       next
   in
-  (* restore old parsing info for unchanged files *)
-  Parsing_heaps.Reparse_mutator.revive_files master_mutator results.unchanged;
+  Parsing_heaps.Reparse_mutator.record_unchanged master_mutator results.unchanged;
+  Parsing_heaps.Reparse_mutator.record_not_found master_mutator results.not_found;
   Lwt.return results
 
 let make_parse_options_internal
@@ -808,7 +852,7 @@ let ensure_parsed ~reader options workers files =
   let worker_mutator = Parsing_heaps.Parse_mutator.create () in
   let progress_fn ~total ~start ~length:_ =
     MonitorRPC.status_update
-      ServerStatus.(Parsing_progress { total = Some total; finished = start })
+      ~event:ServerStatus.(Parsing_progress { total = Some total; finished = start })
   in
   let%lwt files_missing_asts =
     MultiWorkerLwt.call
@@ -836,6 +880,7 @@ let ensure_parsed ~reader options workers files =
         unchanged = _;
         not_found;
         package_json = _;
+        dirty_modules = _;
       } =
     parse
       ~worker_mutator

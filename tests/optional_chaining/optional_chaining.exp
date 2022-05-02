@@ -1429,7 +1429,7 @@ Cannot assign `b.onClick !== null ? b.onClick?.() : 42` to `f` because undefined
 
    method_calls.js:20:37
    20| var f: empty = b.onClick !== null ? b.onClick?.() : 42;
-                                           ^^^^^^^^^^^^^
+                                           ^^^^^^^^^
 
 References:
    method_calls.js:19:27

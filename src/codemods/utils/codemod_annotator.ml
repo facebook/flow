@@ -51,7 +51,7 @@ module Queries = struct
 
   let used_names prog =
     let idents = ref SSet.empty in
-    let visitor = new ident_visitor idents in
+    let visitor = new ident_visitor ~init:idents in
     let _ = visitor#program prog in
     !idents
 end
@@ -144,15 +144,18 @@ module Make (Extra : BASE_STATS) = struct
   module Hardcoded_Ty_Fixes = Codemod_hardcoded_ty_fixes.Make (Extra)
 
   class virtual mapper
-    ~max_type_size
-    ~exact_by_default
-    ~lint_severities
-    ~suppress_types
-    ~imports_react
-    ~preserve_literals
-    ~generalize_maybe
+    (cctx : Codemod_context.Typed.t)
     ~default_any
-    (cctx : Codemod_context.Typed.t) =
+    ~generalize_maybe
+    ~lint_severities
+    ~max_type_size
+    ~preserve_literals
+    ~merge_arrays
+    ?(exact_by_default = Options.exact_by_default cctx.Codemod_context.Typed.options)
+    ?(suppress_types = Options.suppress_types cctx.Codemod_context.Typed.options)
+    ?(imports_react =
+      Insert_type_imports.ImportsHelper.imports_react cctx.Codemod_context.Typed.file_sig)
+    () =
     object (this)
       inherit [Acc.t, Loc.t] Flow_ast_visitor.visitor ~init:Acc.empty as super
 
@@ -183,6 +186,7 @@ module Make (Extra : BASE_STATS) = struct
               ~imports_react
               ~preserve_literals
               ~generalize_maybe
+              ~merge_arrays
               acc
               loc
               ty
@@ -219,6 +223,7 @@ module Make (Extra : BASE_STATS) = struct
               ~imports_react
               ~preserve_literals
               ~generalize_maybe
+              ~merge_arrays
               acc
               loc
               ty

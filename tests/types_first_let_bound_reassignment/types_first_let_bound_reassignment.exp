@@ -62,20 +62,6 @@ References:
                         ^^^ [1]
 
 
-Error ----------------------------------------------------------------------------------------------------- file.js:20:7
-
-Cannot assign `1` to `bak` because number [1] is incompatible with function type [2]. [incompatible-type]
-
-   file.js:20:7
-   20| bak = 1; // error in both modes
-             ^ [1]
-
-References:
-   file.js:19:21
-   19| declare function bak(): void;
-                           ^^^^^^^^ [2]
-
-
 Error ----------------------------------------------------------------------------------------------------- file.js:26:1
 
 Cannot reassign function binding `d` [1]. [cannot-reassign]
@@ -133,4 +119,4 @@ References:
 
 
 
-Found 10 errors
+Found 9 errors

@@ -234,4 +234,28 @@ var tests =
       (p : string); // ok
     }
   },
+
+  function() {
+    var x : {p:?string} = {p:null};
+    x.p = "xxx";
+    var {p} = x; // TODO: annot checked against type of x
+    (p : string); // ok
+  },
+
+  function() {
+    var o: { f: number, g: { h: number }} = { f: 1, g: { h: 1 } };
+    o.g.h = 2;
+    var { f, g: { h } } = o;
+    (h: 2); // ok
+  },
+
+  function() {
+    type Disjoint = {| type: "a", payload: number|} | {| type: "b", payload: string|};
+    const obj: {d: Disjoint} = (null: any);
+
+    if (obj.d.type === "a") {
+      let {d: {payload, type}} = obj;
+      (payload: number); // ok
+    }
+  },
 ];

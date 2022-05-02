@@ -52,6 +52,24 @@ var void_tests =
       var y : string = x.p.q;  // ok
     }
   },
+
+  // obj.p === undefined (sentinel)
+  function(o: { value: string, err: void } | { err: string }) {
+    if (o.err === undefined) {
+      (o.value: string);
+    } else {
+      (o.err: string);
+    }
+  },
+
+  // obj.p !== undefined (sentinel)
+  function(o: { value: string, err: void } | { err: string }) {
+    if (o.err !== undefined) {
+      (o.err: string);
+    } else {
+      (o.value: string);
+    }
+  }
 ];
 
 // this.p op void(...)

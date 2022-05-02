@@ -25,13 +25,13 @@ Importing from an untyped module makes it `any` and is not safe! Did you mean to
               ^^^^^^
 
 
-Error --------------------------------------------------------------------------------------------------- imports.js:5:1
+Error -------------------------------------------------------------------------------------------------- imports.js:5:13
 
 Importing from an untyped module makes it `any` and is not safe! Did you mean to add `// @flow` to the top of
 `./untyped_exports.js`? [untyped-import]
 
    5| import * as All from './untyped_exports.js'; //Error
-      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                  ^^^
 
 
 Error --------------------------------------------------------------------------------------------------- imports.js:8:8

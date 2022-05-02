@@ -10,7 +10,6 @@
     flow_server_env
     flow_server_files
     flow_service_saved_state_compression
-    flow_state_heaps_module
     flow_state_heaps_parsing
     flow_typing
     sys_utils ; hack
@@ -19,4 +18,3 @@
   )
   (preprocess (pps lwt_ppx))
 )
-

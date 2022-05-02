@@ -113,13 +113,13 @@ end = struct
   let get_context () =
     let entry = Unix.getenv "HH_SERVER_DAEMON" in
     if entry = "" then raise Not_found;
+    let file = Sys.getenv "HH_SERVER_DAEMON_PARAM" in
+    if file = "" then raise Not_found;
     let (in_handle, out_handle, param) =
       try
-        let file = Sys.getenv "HH_SERVER_DAEMON_PARAM" in
-        if file = "" then raise Not_found;
-        let ic = Sys_utils.open_in_bin_no_fail file in
+        let ic = Stdlib.open_in_bin file in
         let res = Marshal.from_channel ic in
-        Sys_utils.close_in_no_fail "Daemon.get_context" ic;
+        Stdlib.close_in ic;
         Sys.remove file;
         res
       with

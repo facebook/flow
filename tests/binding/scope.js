@@ -107,3 +107,38 @@ function default_param_2() {
     return x;
   }
 }
+
+/**
+ * TODO:
+ * The old env has the implementation-defined behavior that considers function parameter annotations
+ * to be in the outer scope of function parameters and bodies.
+ * This is confusing, and we should eventually fix it when the new-env rolls out.
+ */
+function function_type_annotation_scope() {
+  const x: string = "";
+  const y: number = 0;
+  const z: boolean = true;
+  // Function parameter annotations are in the parent scope of function parameters.
+  function f(x: number, y: boolean, z: string, a: typeof x, b: typeof y, c: typeof z) {
+    (a: string); // OK
+    (b: number); // OK
+    (c: boolean); // OK
+  }
+
+  function invalid_self_reference(
+    selfRef: typeof selfRef // Error: cannot resolve selfRef
+  ) {}
+
+  function invalid_forward_reference_typeof(
+    x: typeof forwardRef, // Error: cannot resolve forwardRef
+    forwardRef: number,
+  ) {}
+
+  function annotations_in_default(
+    x: number,
+    y: typeof x,
+    f = (z: typeof x) => { (z: number) }
+  ) {
+    (y: string);
+  }
+}

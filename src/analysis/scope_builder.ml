@@ -110,6 +110,39 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
       env :: parent_env
   end
 
+  class function_annot_collector_and_remover =
+    object (this)
+      inherit [(L.t, L.t) Ast.Type.annotation list, L.t] visitor ~init:[]
+
+      method! type_annotation_hint return =
+        let open Ast.Type in
+        match return with
+        | Available annot ->
+          acc <- annot :: acc;
+          Missing L.none
+        | Missing _ -> return
+
+      method! function_param param =
+        let open Ast.Function.Param in
+        let (loc, { argument; default }) = param in
+        let argument' = this#function_param_pattern argument in
+        (loc, { argument = argument'; default })
+
+      method! function_params params =
+        let open Ast.Function in
+        let (loc, { Params.params = params_list; rest; comments; this_ }) = params in
+        let params_list' = Flow_ast_mapper.map_list this#function_param params_list in
+        let rest' = Flow_ast_mapper.map_opt this#function_rest_param rest in
+        let this_' =
+          Base.Option.bind this_ ~f:(fun (_, { ThisParam.annot; comments = _ }) ->
+              acc <- annot :: acc;
+              None
+          )
+        in
+        let comments' = this#syntax_opt comments in
+        (loc, { Params.params = params_list'; rest = rest'; comments = comments'; this_ = this_' })
+    end
+
   class scope_builder ~flowmin_compatibility ~enable_enums ~with_types =
     object (this)
       inherit [Acc.t, L.t] visitor ~init:Acc.init as super
@@ -399,28 +432,75 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
 
       (* helper for function params and body *)
       method private lambda params predicate body =
-        (* function params and bindings within the function body share the same scope *)
-        let bindings =
-          let hoist = new hoister ~flowmin_compatibility ~enable_enums ~with_types in
-          run hoist#function_params params;
-          run hoist#function_body_any body;
-          hoist#acc
-        in
+        let open Ast.Function in
         let body_loc =
-          let open Ast.Function in
           match body with
           | BodyExpression (loc, _)
           | BodyBlock (loc, _) ->
             loc
         in
-        this#with_bindings
-          body_loc
-          bindings
-          (fun () ->
-            run this#function_params params;
-            run_opt this#predicate predicate;
-            run this#function_body_any body)
-          ()
+        (* The old env will first visit all param type annotations before visiting param names.
+           We need to separate them so that we can visit the annotation and names in different
+           scopes. *)
+        let params =
+          let visitor = new function_annot_collector_and_remover in
+          let params = visitor#function_params params in
+          visitor#acc
+          |> Base.List.rev
+          |> Base.List.iter ~f:(fun annot -> ignore @@ this#type_annotation annot);
+          params
+        in
+        (* We need to visit function param default expressions
+           without bindings inside the function body. *)
+        let (_, { Params.params = params_list; _ }) = params in
+        let has_default_parameters =
+          Base.List.exists params_list ~f:(fun (_, { Ast.Function.Param.default; argument = _ }) ->
+              Option.is_some default
+          )
+        in
+        (* We need to create a second scope when we have default parameters.
+           See https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Functions/Default_parameters#scope_effects
+        *)
+        if has_default_parameters then
+          let param_bindings =
+            let hoist = new hoister ~flowmin_compatibility ~enable_enums ~with_types in
+            run hoist#function_params params;
+            hoist#acc
+          in
+          let body_bindings =
+            let hoist = new hoister ~flowmin_compatibility ~enable_enums ~with_types in
+            run hoist#function_body_any body;
+            hoist#acc
+          in
+          this#with_bindings
+            ~lexical:true
+            body_loc
+            param_bindings
+            (fun () ->
+              run this#function_params params;
+              this#with_bindings
+                body_loc
+                body_bindings
+                (fun () ->
+                  run_opt this#predicate predicate;
+                  run this#function_body_any body)
+                ())
+            ()
+        else
+          let bindings =
+            let hoist = new hoister ~flowmin_compatibility ~enable_enums ~with_types in
+            run hoist#function_params params;
+            run hoist#function_body_any body;
+            hoist#acc
+          in
+          this#with_bindings
+            body_loc
+            bindings
+            (fun () ->
+              run this#function_params params;
+              run_opt this#predicate predicate;
+              run this#function_body_any body)
+            ()
 
       method! declare_module _loc m =
         let open Ast.Statement.DeclareModule in
@@ -446,7 +526,7 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
             hoist_op (fun () -> ignore @@ this#type_annotation_hint bound);
             ignore @@ this#variance_opt variance;
             hoist_op (fun () -> ignore @@ Base.Option.map ~f:this#type_ default);
-            let bindings = Bindings.(singleton (name, Bindings.Type)) in
+            let bindings = Bindings.(singleton (name, Bindings.Type { imported = false })) in
             this#with_bindings
               loc
               bindings

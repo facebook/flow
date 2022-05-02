@@ -9,76 +9,53 @@ module Ast = Flow_ast
 module Flow = Flow_js
 open Reason
 open Type
+open Type_hint
 open TypeUtil
 include Func_sig_intf
-
-(* We use this value to indicate places where values stored in the environment can have
- * an annotation with some more work *)
-let annotated_todo t = Inferred t
 
 module Make
     (Env : Env_sig.S)
     (Abnormal : Abnormal_sig.S with module Env := Env)
     (Statement : Statement_sig.S with module Env := Env)
-    (F : Func_params.S) =
+    (CT : Func_class_sig_types.Config.S)
+    (C : Func_params.Config with module Types := CT)
+    (F : Func_params.S with module Config_types := CT and module Config := C)
+    (T : Func_class_sig_types.Func.S with module Config := CT and module Param := F.Types) :
+  S with module Config_types := CT and module Config := C and module Param := F and module Types = T =
 struct
   module Toplevels = Toplevels.DependencyToplevels (Env) (Abnormal)
-
-  type func_params = F.t
-
-  type func_params_tast = (ALoc.t * Type.t) F.ast
-
-  type t = {
-    reason: reason;
-    kind: kind;
-    tparams: Type.typeparams;
-    tparams_map: Type.t Subst_name.Map.t;
-    fparams: func_params;
-    body: (ALoc.t, ALoc.t) Ast.Function.body option;
-    return_t: Type.annotated_or_inferred;
-    (* To be unified with the type of the function. *)
-    knot: Type.t;
-  }
+  module Types = T
+  open Func_class_sig_types.Func
 
   let this_param = F.this
 
   let default_constructor reason =
     {
-      reason;
+      T.reason;
       kind = Ctor;
       tparams = None;
       tparams_map = Subst_name.Map.empty;
       fparams = F.empty (fun _ _ _ -> None);
       body = None;
       return_t = Annotated (VoidT.why reason |> with_trust bogus_trust);
-      (* This can't be directly recursively called. In case this type is accidentally used downstream,
-       * stub it out with mixed. *)
-      knot = MixedT.why reason |> with_trust bogus_trust;
     }
 
   let field_initializer tparams_map reason expr return_annot_or_inferred =
     {
-      reason;
+      T.reason;
       kind = FieldInit expr;
       tparams = None;
       tparams_map;
       fparams = F.empty (fun _ _ _ -> None);
       body = None;
       return_t = return_annot_or_inferred;
-      (* This can't be recursively called. In case this type is accidentally used downstream, stub it
-       * out with mixed. *)
-      knot = MixedT.why reason |> with_trust bogus_trust;
     }
 
-  let functiontype cx this_default { reason; kind; tparams; fparams; return_t; knot; _ } =
+  let functiontype cx this_default { T.reason; kind; tparams; fparams; return_t; _ } =
     let make_trust = Context.trust_constructor cx in
     let static =
       let proto = FunProtoT reason in
       Obj_type.mk_unsealed cx reason ~proto
-    in
-    let prototype =
-      let reason = replace_desc_reason RPrototype reason in
-      Obj_type.mk_unsealed cx reason
     in
     let funtype =
       {
@@ -90,12 +67,10 @@ struct
         def_reason = reason;
       }
     in
-    let t = DefT (reason, make_trust (), FunT (static, prototype, funtype)) in
-    let t = poly_type_of_tparams (Type.Poly.generate_id ()) tparams t in
-    Flow.unify cx t knot;
-    t
+    let t = DefT (reason, make_trust (), FunT (static, funtype)) in
+    poly_type_of_tparams (Type.Poly.generate_id ()) tparams t
 
-  let methodtype this_default { reason; tparams; fparams; return_t; _ } =
+  let methodtype this_default { T.reason; tparams; fparams; return_t; _ } =
     let params = F.value fparams in
     let (params_names, params_tlist) = List.split params in
     let rest_param = F.rest fparams in
@@ -107,7 +82,6 @@ struct
           bogus_trust (),
           FunT
             ( dummy_static reason,
-              dummy_prototype,
               mk_boundfunctiontype
                 ~this:param_this_t
                 ~subtyping:(This_Method { unbound = false })
@@ -121,15 +95,15 @@ struct
     in
     poly_type_of_tparams (Type.Poly.generate_id ()) tparams t
 
-  let gettertype ({ return_t; _ } : t) = TypeUtil.type_t_of_annotated_or_inferred return_t
+  let gettertype ({ T.return_t; _ } : T.t) = TypeUtil.type_t_of_annotated_or_inferred return_t
 
-  let settertype { fparams; _ } =
+  let settertype { T.fparams; _ } =
     match F.value fparams with
     | [(_, param_t)] -> param_t
     | _ -> failwith "Setter property with unexpected type"
 
-  let toplevels id cx this_recipe super x =
-    let { reason = reason_fn; kind; tparams_map; fparams; body; return_t; knot; _ } = x in
+  let toplevels cx this_recipe super x =
+    let { T.reason = reason_fn; kind; tparams_map; fparams; body; return_t; _ } = x in
     let loc =
       let open Ast.Function in
       match body with
@@ -192,11 +166,6 @@ struct
 
     (* add param bindings *)
     let params_ast = F.eval cx fparams in
-    (* early-add our own name binding for recursive calls. *)
-    Base.Option.iter id ~f:(fun (loc, { Ast.Identifier.name; comments = _ }) ->
-        let entry = annotated_todo knot |> Scope.Entry.new_var ~loc ~provider:knot in
-        Scope.add_entry (OrdinaryName name) entry function_scope
-    );
 
     let (yield_t, next_t) =
       if kind = Generator || kind = AsyncGenerator then
@@ -298,10 +267,10 @@ struct
     let body_ast = reconstruct_body statements_ast in
     (* build return type for void funcs *)
     let init_ast =
-      let (return_t, return_annot) =
+      let (return_t, return_hint) =
         match return_t with
-        | Inferred t -> (t, None)
-        | Annotated t -> (t, Some t)
+        | Inferred t -> (t, Hint_None)
+        | Annotated t -> (t, Hint_t t)
       in
       if maybe_void then (
         let loc = loc_of_t return_t in
@@ -348,7 +317,7 @@ struct
             let use_op = Frame (ImplicitTypeParam, use_op) in
             (use_op, t, None)
           | FieldInit e ->
-            let (((_, t), _) as ast) = Statement.expression ?cond:None cx ~hint:return_annot e in
+            let (((_, t), _) as ast) = Statement.expression ?cond:None cx ~hint:return_hint e in
             let body = mk_expression_reason e in
             let use_op = Op (InitField { op = reason_fn; body }) in
             (use_op, t, Some ast)
@@ -374,14 +343,14 @@ struct
     Env.update_env loc env;
 
     (* return a tuple of (function body AST option, field initializer AST option).
-       - the function body option is Some _ if the func sig's body was Some, and
-         None if the func sig's body was None.
-       - the field initializer is Some expr' if the func sig's kind was FieldInit expr,
+       - the function body option is Some _ if the Param sig's body was Some, and
+         None if the Param sig's body was None.
+       - the field initializer is Some expr' if the Param sig's kind was FieldInit expr,
          where expr' is the typed AST translation of expr.
     *)
     (this_t, params_ast, body_ast, init_ast)
 
-  let to_ctor_sig f = { f with kind = Ctor }
+  let to_ctor_sig f = { f with T.kind = Ctor }
 end
 
 let return_loc = function

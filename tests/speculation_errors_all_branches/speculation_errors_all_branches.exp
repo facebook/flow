@@ -221,7 +221,7 @@ Error --------------------------------------------------------------------------
 
 Cannot call `e` because: [incompatible-call]
  - Either number [1] is incompatible with `X` [2].
- - Or property `p` is missing in number [1] but exists in interface type [3].
+ - Or number [1] is incompatible with interface type [3].
 
    intersection-function.js:42:1
    42| e(42);
@@ -314,7 +314,7 @@ References:
 Error ------------------------------------------------------------------------------------ intersection-function.js:51:1
 
 Cannot call `f` because: [incompatible-call]
- - Either property `p` is missing in number [1] but exists in interface type [2].
+ - Either number [1] is incompatible with interface type [2].
  - Or number [1] is incompatible with read-only array type [3].
  - Or number [1] is incompatible with tuple type [4].
 
@@ -972,7 +972,7 @@ Error --------------------------------------------------------------------------
 
 Cannot cast `42` to `E` because: [incompatible-cast]
  - Either number [1] is incompatible with `X` [2].
- - Or property `p` is missing in number [1] but exists in interface type [3].
+ - Or number [1] is incompatible with interface type [3].
 
    union.js:34:2
    34| (42: E);
@@ -1053,7 +1053,7 @@ References:
 Error ---------------------------------------------------------------------------------------------------- union.js:41:2
 
 Cannot cast `42` to `F` because: [incompatible-cast]
- - Either property `p` is missing in number [1] but exists in interface type [2].
+ - Either number [1] is incompatible with interface type [2].
  - Or number [1] is incompatible with read-only array type [3].
  - Or number [1] is incompatible with tuple type [4].
 

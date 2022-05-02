@@ -6,52 +6,28 @@
  *)
 
 module type S = sig
-  type func_sig
+  module Config_types : Func_class_sig_types.Config.S
 
-  type func_params_tast
+  module Config : Func_params_intf.Config with module Types := Config_types
 
-  type t
+  module Param :
+    Func_params_intf.S with module Config_types := Config_types and module Config := Config
 
-  type set_asts =
-    func_params_tast option
-    * (ALoc.t, ALoc.t * Type.t) Flow_ast.Function.body option
-    * (ALoc.t, ALoc.t * Type.t) Flow_ast.Expression.t option ->
-    unit
+  module Func :
+    Func_sig_intf.S
+      with module Config_types := Config_types
+       and module Config := Config
+       and module Param := Param
 
-  type set_type = Type.t -> unit
-
-  type field =
-    | Annot of Type.t
-    | Infer of func_sig * set_asts
-
-  type field' = ALoc.t option * Polarity.t * field
-
-  type typeapp = ALoc.t * Type.t * Type.t list option
-
-  type extends =
-    | Explicit of typeapp
-    | Implicit of { null: bool }
-
-  type class_super = {
-    extends: extends;
-    mixins: typeapp list;
-    (* declare class only *)
-    implements: typeapp list;
-    this_tparam: Type.typeparam;
-    this_t: Type.t;
-  }
-
-  type interface_super = {
-    inline: bool;
-    extends: typeapp list;
-    callable: bool;
-  }
-
-  type super =
-    | Interface of interface_super
-    | Class of class_super
+  module Types :
+    Func_class_sig_types.Class.S
+      with module Config := Config_types
+       and module Param := Param.Types
+       and module Func := Func.Types
 
   (** 1. Constructors **)
+
+  open Types
 
   (** Create signature with no elements. *)
   val empty : ALoc.id -> Reason.t -> Type.typeparams -> Type.t Subst_name.Map.t -> super -> t

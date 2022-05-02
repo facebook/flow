@@ -247,7 +247,7 @@ let parts_to_replace_t cx = function
   | DefT (_, _, ObjT { call_t = Some id; _ }) ->
     begin
       match Context.find_call cx id with
-      | DefT (_, _, FunT (_, _, ft)) ->
+      | DefT (_, _, FunT (_, ft)) ->
         let ts =
           List.fold_left
             (fun acc (_, t) ->
@@ -263,7 +263,7 @@ let parts_to_replace_t cx = function
         | _ -> ts)
       | _ -> []
     end
-  | DefT (_, _, FunT (_, _, ft)) ->
+  | DefT (_, _, FunT (_, ft)) ->
     let ts =
       List.fold_left
         (fun acc (_, t) ->
@@ -327,23 +327,21 @@ let replace_parts =
     | UseT (op, DefT (r1, t1, ObjT ({ call_t = Some id; _ } as o))) as u ->
       begin
         match Context.find_call cx id with
-        | DefT (r2, t2, FunT (static, proto, ft)) ->
+        | DefT (r2, t2, FunT (static, ft)) ->
           let (resolved, params) = replace_params [] (resolved, ft.params) in
           let (resolved, rest_param) = replace_rest_param (resolved, ft.rest_param) in
           assert (resolved = []);
           let id' =
-            Context.make_call_prop
-              cx
-              (DefT (r2, t2, FunT (static, proto, { ft with params; rest_param })))
+            Context.make_call_prop cx (DefT (r2, t2, FunT (static, { ft with params; rest_param })))
           in
           UseT (op, DefT (r1, t1, ObjT { o with call_t = Some id' }))
         | _ -> u
       end
-    | UseT (op, DefT (r, trust, FunT (t1, t2, ft))) ->
+    | UseT (op, DefT (r, trust, FunT (t1, ft))) ->
       let (resolved, params) = replace_params [] (resolved, ft.params) in
       let (resolved, rest_param) = replace_rest_param (resolved, ft.rest_param) in
       assert (resolved = []);
-      UseT (op, DefT (r, trust, FunT (t1, t2, { ft with params; rest_param })))
+      UseT (op, DefT (r, trust, FunT (t1, { ft with params; rest_param })))
     | CallT (op, r, callt) ->
       let (resolved, call_args_tlist) = replace_args [] (resolved, callt.call_args_tlist) in
       assert (resolved = []);
@@ -361,9 +359,9 @@ let error_message_kind_of_lower = function
     None
 
 let error_message_kind_of_upper = function
-  | GetPropT (_, _, Named (r, name), _) ->
+  | GetPropT (_, _, _, Named (r, name), _) ->
     Error_message.IncompatibleGetPropT (aloc_of_reason r, Some name)
-  | GetPropT (_, _, Computed t, _) -> Error_message.IncompatibleGetPropT (loc_of_t t, None)
+  | GetPropT (_, _, _, Computed t, _) -> Error_message.IncompatibleGetPropT (loc_of_t t, None)
   | GetPrivatePropT (_, _, _, _, _, _) -> Error_message.IncompatibleGetPrivatePropT
   | SetPropT (_, _, Named (r, name), _, _, _, _) ->
     Error_message.IncompatibleSetPropT (aloc_of_reason r, Some name)
@@ -376,7 +374,6 @@ let error_message_kind_of_upper = function
     Error_message.IncompatibleMethodT (aloc_of_reason r, Some name)
   | MethodT (_, _, _, Computed t, _, _) -> Error_message.IncompatibleMethodT (loc_of_t t, None)
   | CallT _ -> Error_message.IncompatibleCallT
-  | ConstructorT _ -> Error_message.IncompatibleConstructorT
   | GetElemT (_, _, t, _) -> Error_message.IncompatibleGetElemT (loc_of_t t)
   | SetElemT (_, _, t, _, _, _) -> Error_message.IncompatibleSetElemT (loc_of_t t)
   | CallElemT (_, _, t, _) -> Error_message.IncompatibleCallElemT (loc_of_t t)
@@ -388,6 +385,7 @@ let error_message_kind_of_upper = function
   | ArrRestT _ -> Error_message.IncompatibleArrRestT
   | SuperT _ -> Error_message.IncompatibleSuperT
   | MixinT _ -> Error_message.IncompatibleMixinT
+  | SpecializeT (Op (ClassExtendsCheck _), _, _, _, _, _) -> Error_message.IncompatibleSuperT
   | SpecializeT _ -> Error_message.IncompatibleSpecializeT
   | ConcretizeTypeAppsT _ -> Error_message.IncompatibleSpecializeT
   | ThisSpecializeT _ -> Error_message.IncompatibleThisSpecializeT
@@ -697,7 +695,14 @@ let instantiate_poly_param_upper_bounds cx typeparams =
 let lookup_builtin_strict cx x reason =
   let builtins = Context.builtins cx in
   Builtins.get_builtin builtins x ~on_missing:(fun () ->
-      add_output cx (Error_message.EBuiltinLookupFailed { reason; name = Some x });
+      let potential_generator =
+        Context.missing_module_generators cx
+        |> Base.List.find ~f:(fun (pattern, _) -> Str.string_match pattern (uninternal_name x) 0)
+        |> Base.Option.map ~f:snd
+      in
+      add_output
+        cx
+        (Error_message.EBuiltinLookupFailed { reason; name = Some x; potential_generator });
       AnyT.error_of_kind UnresolvedName reason
   )
 
@@ -1548,6 +1553,8 @@ module Access_prop_options = struct
     previously_seen_props: Type.Properties.Set.t;
     allow_method_access: bool;
     lookup_kind: Type.lookup_kind;
+    (* Same `id` as in `GetPropT` and `TestPropT`: it represents some syntactic access. *)
+    id: ident option;
   }
 end
 
@@ -1593,11 +1600,15 @@ module type Get_prop_helper_sig = sig
   val error_type : Reason.t -> r
 
   val cg_get_prop :
-    Context.t -> Type.trace -> Type.t -> use_op * reason * (Reason.t * Reason.name) -> r
+    Context.t ->
+    Type.trace ->
+    Type.t ->
+    use_op * reason * Type.ident option * (Reason.t * Reason.name) ->
+    r
 end
 
 module GetPropT_kit (F : Get_prop_helper_sig) = struct
-  let on_InstanceT cx trace ~l r super insttype use_op reason_op propref =
+  let on_InstanceT cx trace ~l ~id r super insttype use_op reason_op propref =
     match propref with
     | Named (_, OrdinaryName "constructor") ->
       F.return
@@ -1621,6 +1632,7 @@ module GetPropT_kit (F : Get_prop_helper_sig) = struct
           previously_seen_props = Properties.Set.of_list [insttype.own_props; insttype.proto_props];
           allow_method_access = false;
           lookup_kind;
+          id;
         }
       in
       (* Instance methods cannot be unbound *)
@@ -1634,7 +1646,7 @@ module GetPropT_kit (F : Get_prop_helper_sig) = struct
       F.error_type reason_op
 
   let on_EnumObjectT cx trace enum_reason trust enum access =
-    let (_, access_reason, (prop_reason, member_name)) = access in
+    let (_, access_reason, _, (prop_reason, member_name)) = access in
     let { members; _ } = enum in
     let error_invalid_access ~suggestion =
       let member_reason = replace_desc_reason (RIdentifier member_name) prop_reason in
@@ -1715,16 +1727,25 @@ module GetPropT_kit (F : Get_prop_helper_sig) = struct
       add_output cx ~trace msg;
       F.error_type ureason
 
-  let read_obj_prop cx trace ~use_op o propref reason_obj reason_op =
+  let read_obj_prop cx trace ~use_op o propref reason_obj reason_op lookup_info =
     let l = DefT (reason_obj, bogus_trust (), ObjT o) in
     match get_obj_prop cx trace o propref reason_op with
-    | Some (p, _target_kind) -> perform_read_prop_action cx trace use_op propref p reason_op
+    | Some (p, _target_kind) ->
+      Base.Option.iter ~f:(fun (id, _) -> Context.test_prop_hit cx id) lookup_info;
+      perform_read_prop_action cx trace use_op propref p reason_op
     | None ->
       (match propref with
-      | Named _ ->
+      | Named (reason_prop, name) ->
         let lookup_kind =
           if Obj_type.sealed_in_op reason_op o.flags.obj_kind then
-            Strict reason_obj
+            match lookup_info with
+            | Some (id, lookup_default_tout) when Obj_type.is_exact o.flags.obj_kind ->
+              let lookup_default =
+                let r = replace_desc_reason (RMissingProperty (Some name)) reason_op in
+                Some (DefT (r, bogus_trust (), VoidT), lookup_default_tout)
+              in
+              NonstrictReturning (lookup_default, Some (id, (reason_prop, reason_obj)))
+            | _ -> Strict reason_obj
           else
             ShadowRead (None, Nel.one o.props_tmap)
         in

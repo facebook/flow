@@ -167,18 +167,23 @@ References:
                           ^ [1]
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:89:7
+Error ----------------------------------------------------------------------------------------------------- test.js:95:8
 
-Cannot assign `"hi"` to `f` because string [1] is incompatible with function type [2]. [incompatible-type]
+Cannot assign array literal to `x` because number [1] is incompatible with unknown element type of empty array [2] in
+array element. All writes to `x` must be compatible with the type of its initializer [3]. Add an annotation to `x` [3]
+if a different type is desired. [incompatible-type]
 
-   test.js:89:7
-   89|   f = "hi";
-             ^^^^ [1]
+   test.js:95:8
+   95|   x = [3];
+              ^ [1]
 
 References:
-   test.js:86:21
-   86|   declare function f(): void;
-                           ^^^^^^^^ [2]
+   test.js:94:11
+   94|   let x = [];
+                 ^^ [2]
+   test.js:94:7
+   94|   let x = [];
+             ^ [3]
 
 
 Error ------------------------------------------------------------------------------------------- wiki_examples.js:23:13
@@ -261,8 +266,8 @@ References:
    wiki_examples.js:20:32
     20|   declare var OtherComponent: (OtherProps) => React.Node;
                                        ^^^^^^^^^^ [2]
-   <BUILTINS>/react.js:195:29
-   195| declare type React$Element<+ElementType: React$ElementType> = {|
+   <BUILTINS>/react.js:168:29
+   168| declare type React$Element<+ElementType: React$ElementType> = {|
                                     ^^^^^^^^^^^ [3]
    wiki_examples.js:16:7
     16|   let element = <Component {...props} />
@@ -286,8 +291,8 @@ References:
    wiki_examples.js:14:28
     14|   let Component = ({prop}: Props) => { return <>{prop}</> }
                                    ^^^^^ [2]
-   <BUILTINS>/react.js:195:29
-   195| declare type React$Element<+ElementType: React$ElementType> = {|
+   <BUILTINS>/react.js:168:29
+   168| declare type React$Element<+ElementType: React$ElementType> = {|
                                     ^^^^^^^^^^^ [3]
    wiki_examples.js:16:7
     16|   let element = <Component {...props} />
@@ -311,8 +316,8 @@ References:
    wiki_examples.js:14:47
     14|   let Component = ({prop}: Props) => { return <>{prop}</> }
                                                       ^^^^^^^^^^^ [2]
-   <BUILTINS>/react.js:195:29
-   195| declare type React$Element<+ElementType: React$ElementType> = {|
+   <BUILTINS>/react.js:168:29
+   168| declare type React$Element<+ElementType: React$ElementType> = {|
                                     ^^^^^^^^^^^ [3]
    wiki_examples.js:16:7
     16|   let element = <Component {...props} />
@@ -336,8 +341,8 @@ References:
    wiki_examples.js:14:47
     14|   let Component = ({prop}: Props) => { return <>{prop}</> }
                                                       ^^^^^^^^^^^ [2]
-   <BUILTINS>/react.js:195:29
-   195| declare type React$Element<+ElementType: React$ElementType> = {|
+   <BUILTINS>/react.js:168:29
+   168| declare type React$Element<+ElementType: React$ElementType> = {|
                                     ^^^^^^^^^^^ [3]
    wiki_examples.js:16:7
     16|   let element = <Component {...props} />
@@ -361,8 +366,8 @@ References:
    wiki_examples.js:14:47
     14|   let Component = ({prop}: Props) => { return <>{prop}</> }
                                                       ^^^^^^^^^^^ [2]
-   <BUILTINS>/react.js:195:29
-   195| declare type React$Element<+ElementType: React$ElementType> = {|
+   <BUILTINS>/react.js:168:29
+   168| declare type React$Element<+ElementType: React$ElementType> = {|
                                     ^^^^^^^^^^^ [3]
    wiki_examples.js:16:7
     16|   let element = <Component {...props} />
@@ -386,8 +391,8 @@ References:
    wiki_examples.js:14:47
     14|   let Component = ({prop}: Props) => { return <>{prop}</> }
                                                       ^^^^^^^^^^^ [2]
-   <BUILTINS>/react.js:195:29
-   195| declare type React$Element<+ElementType: React$ElementType> = {|
+   <BUILTINS>/react.js:168:29
+   168| declare type React$Element<+ElementType: React$ElementType> = {|
                                     ^^^^^^^^^^^ [3]
    wiki_examples.js:16:7
     16|   let element = <Component {...props} />
@@ -411,8 +416,8 @@ References:
    wiki_examples.js:14:47
     14|   let Component = ({prop}: Props) => { return <>{prop}</> }
                                                       ^^^^^^^^^^^ [2]
-   <BUILTINS>/react.js:195:29
-   195| declare type React$Element<+ElementType: React$ElementType> = {|
+   <BUILTINS>/react.js:168:29
+   168| declare type React$Element<+ElementType: React$ElementType> = {|
                                     ^^^^^^^^^^^ [3]
    wiki_examples.js:16:7
     16|   let element = <Component {...props} />
@@ -437,8 +442,8 @@ References:
    wiki_examples.js:14:47
     14|   let Component = ({prop}: Props) => { return <>{prop}</> }
                                                       ^^^^^^^^^^^ [2]
-   <BUILTINS>/react.js:195:29
-   195| declare type React$Element<+ElementType: React$ElementType> = {|
+   <BUILTINS>/react.js:168:29
+   168| declare type React$Element<+ElementType: React$ElementType> = {|
                                     ^^^^^^^^^^^ [3]
    wiki_examples.js:16:7
     16|   let element = <Component {...props} />

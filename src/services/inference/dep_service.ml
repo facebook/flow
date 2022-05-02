@@ -99,7 +99,7 @@ let calc_direct_dependents_job acc (root_files, root_modules) =
    * accumulator argument. We can exploit this to return a set from workers
    * while the server accumulates lists of sets. *)
   assert (acc = []);
-  let open Module_heaps in
+  let open Parsing_heaps in
   let root_files =
     List.fold_left
       (fun acc f ->
@@ -116,11 +116,11 @@ let calc_direct_dependents_job acc (root_files, root_modules) =
   in
   let root_modules = Modulename.Set.of_list root_modules in
   let dependents = ref FilenameSet.empty in
-  Module_heaps.iter_resolved_requires (fun { file_key; resolved_modules; phantom_dependents; _ } ->
-      if not (SSet.disjoint root_files phantom_dependents) then
-        dependents := FilenameSet.add file_key !dependents
+  Parsing_heaps.iter_resolved_requires (fun file { resolved_modules; phantom_dependencies; _ } ->
+      if not (SSet.disjoint root_files phantom_dependencies) then
+        dependents := FilenameSet.add (Parsing_heaps.read_file_key file) !dependents
       else if SMap.exists (fun _ m -> Modulename.Set.mem m root_modules) resolved_modules then
-        dependents := FilenameSet.add file_key !dependents
+        dependents := FilenameSet.add (Parsing_heaps.read_file_key file) !dependents
   );
   !dependents
 
@@ -157,29 +157,30 @@ let calc_direct_dependents workers ~candidates ~root_files ~root_modules =
    registered to provide r and the file is checked. Such a file must be merged
    before any file that requires module r, so this notion naturally gives rise
    to a dependency ordering among files for merging. *)
-let implementation_file ~reader ~audit m =
-  match Module_heaps.Mutator_reader.get_provider ~reader ~audit m with
-  | Some f when Parsing_heaps.(is_checked_file (Mutator_reader.get_file_addr_unsafe ~reader f)) ->
-    Some f
+let implementation_file ~reader m =
+  match Parsing_heaps.Mutator_reader.get_provider ~reader m with
+  | Some f when Parsing_heaps.Mutator_reader.is_typed_file ~reader f ->
+    Some (Parsing_heaps.read_file_key f)
   | _ -> None
 
-let file_dependencies ~audit ~reader file =
-  let file_addr = Parsing_heaps.Mutator_reader.get_checked_file_addr_unsafe reader file in
-  let file_sig = Parsing_heaps.read_file_sig_unsafe file file_addr in
+let file_dependencies ~reader file =
+  let file_addr = Parsing_heaps.get_file_addr_unsafe file in
+  let parse = Parsing_heaps.Mutator_reader.get_typed_parse_unsafe ~reader file file_addr in
+  let file_sig = Parsing_heaps.read_file_sig_unsafe file parse in
   let require_set = File_sig.With_Loc.(require_set file_sig.module_sig) in
   let sig_require_set =
     let module Heap = SharedMem.NewAPI in
     let module Bin = Type_sig_bin in
-    let buf = Heap.read_opt_exn Heap.type_sig_buf (Heap.get_file_type_sig file_addr) in
+    let buf = Heap.type_sig_buf (Option.get (Heap.get_type_sig parse)) in
     Bin.fold_tbl Bin.read_str SSet.add buf (Bin.module_refs buf) SSet.empty
   in
-  let { Module_heaps.resolved_modules; _ } =
-    Module_heaps.Mutator_reader.get_resolved_requires_unsafe ~reader ~audit file
+  let { Parsing_heaps.resolved_modules; _ } =
+    Parsing_heaps.Mutator_reader.get_resolved_requires_unsafe ~reader file parse
   in
   SSet.fold
     (fun mref (sig_files, all_files) ->
       let m = SMap.find mref resolved_modules in
-      match implementation_file ~reader m ~audit:Expensive.ok with
+      match implementation_file ~reader m with
       | Some f ->
         if SSet.mem mref sig_require_set then
           (FilenameSet.add f sig_files, FilenameSet.add f all_files)
@@ -197,7 +198,7 @@ let calc_partial_dependency_graph ~reader workers files ~parsed =
       workers
       ~job:
         (List.fold_left (fun dependency_info file ->
-             let dependencies = file_dependencies ~audit:Expensive.ok ~reader file in
+             let dependencies = file_dependencies ~reader file in
              FilenameMap.add file dependencies dependency_info
          )
         )

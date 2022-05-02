@@ -16,6 +16,10 @@ let statement_error = ()
 open Reason
 open Hoister
 
+module type C = Dependency_sigs.C
+
+module type F = Dependency_sigs.F
+
 let is_call_to_invariant callee =
   match callee with
   | (_, Flow_ast.Expression.Identifier (_, { Flow_ast.Identifier.name = "invariant"; _ })) -> true
@@ -49,30 +53,6 @@ let extract_number_literal node =
 
 let error_todo = ()
 
-module type C = sig
-  type t
-
-  val enable_enums : t -> bool
-
-  val jsx : t -> Options.jsx_mode
-
-  val react_runtime : t -> Options.react_runtime
-
-  val enable_const_params : t -> bool
-
-  val env_mode : t -> Options.env_mode
-
-  val add_new_env_literal_subtypes : t -> ALoc.t * Env_api.new_env_literal_check -> unit
-
-  val add_new_env_matching_props : t -> string * ALoc.t * ALoc.t -> unit
-end
-
-module type F = sig
-  type cx
-
-  val add_output : cx -> ?trace:Type.trace -> ALoc.t Error_message.t' -> unit
-end
-
 module type S = sig
   module Env_api : Env_api.S with module L = Loc_sig.ALocS
 
@@ -101,9 +81,6 @@ module Make
     (Context : C)
     (FlowAPIUtils : F with type cx = Context.t) :
   S with module Env_api = Env_api and type cx = Context.t = struct
-  let _f = FlowAPIUtils.add_output
-  (* To make ocaml not complain, will be removed when FlowAPIUtils module is used *)
-
   module Scope_builder :
     Scope_builder_sig.S with module L = Loc_sig.ALocS and module Api = Scope_api =
     Scope_builder.Make (Loc_sig.ALocS) (Scope_api)
@@ -131,10 +108,6 @@ module Make
     | SwitchTest
     | OtherTest
 
-  let merge_and ref1 ref2 = AND (ref1, ref2)
-
-  let merge_or ref1 ref2 = OR (ref1, ref2)
-
   (* For every read of a variable x, we are interested in tracking writes to x
      that can reach that read. Ultimately the writes are going to be represented
      as a list of locations, where each location corresponds to a "single static
@@ -159,9 +132,17 @@ module Make
 
     val undefined : L.t virtual_reason -> t
 
+    val number : L.t virtual_reason -> t
+
     val undeclared_class : L.t virtual_reason -> string -> t
 
     val merge : t -> t -> t
+
+    val this : t
+
+    val super : t
+
+    val module_scoped : string -> t
 
     val global : string -> t
 
@@ -175,11 +156,15 @@ module Make
 
     val id_of_val : t -> int
 
+    val base_id_of_val : t -> int
+
     val refinement : int -> t -> t
 
     val projection : ALoc.t -> t
 
     val undeclared : string -> ALoc.t -> t
+
+    val declared_but_skipped : string -> ALoc.t -> t
 
     val declared_function : ALoc.t -> t
 
@@ -188,26 +173,46 @@ module Make
 
     val unrefine_deeply : int -> t -> t
 
+    (* Replace the base write of the refinement with the new base.
+       If the write is not a refinement, replace the entire write with the base.
+
+       This is useful for attaching a refinement that is known to be associated with a write, but
+       is not attached due to syntactic difference.
+       e.g. refinements on obj.x should be attached to x in const {x} = obj *)
+    val replace_refinement_base_write : base:t -> t -> t
+
     val normalize_through_refinements : write_state -> WriteSet.t
 
     val writes_of_uninitialized : (int -> bool) -> t -> write_state list
 
     val is_global_undefined : t -> bool
 
+    val is_global : t -> bool
+
     val is_undeclared : t -> bool
 
+    val is_undeclared_or_skipped : t -> bool
+
     val is_declared_function : t -> bool
+
+    val is_projection : t -> bool
+
+    val debug_to_string : (int -> refinement) -> t -> string
   end = struct
     let curr_id = ref 0
 
     type write_state =
       | Uninitialized of ALoc.t
       | Undeclared of string * ALoc.t
+      | DeclaredButSkipped of string * ALoc.t
       | UndeclaredClass of {
           def: ALoc.t virtual_reason;
           name: string;
         }
       | Projection of ALoc.t
+      | This
+      | Super
+      | ModuleScoped of string
       | Global of string
       | Loc of ALoc.t virtual_reason
       | PHI of write_state list
@@ -216,6 +221,7 @@ module Make
           val_t: t;
         }
       | Undefined of ALoc.t virtual_reason
+      | Number of ALoc.t virtual_reason
       | DeclaredFunction of ALoc.t
 
     and t = {
@@ -223,9 +229,53 @@ module Make
       write_state: write_state;
     }
 
+    let rec debug_write_state get_refi = function
+      | Uninitialized _ -> "(uninitialized)"
+      | Undeclared _ -> "(undeclared)"
+      | DeclaredButSkipped _ -> "(declared but skipped)"
+      | UndeclaredClass { def; _ } ->
+        let loc = Reason.poly_loc_of_reason def in
+        Utils_js.spf
+          "(undeclared class) %s: (%s)"
+          (L.debug_to_string loc)
+          Reason.(desc_of_reason def |> string_of_desc)
+      | Projection l -> Utils_js.spf "projection at %s" (L.debug_to_string l)
+      | Loc reason ->
+        let loc = Reason.poly_loc_of_reason reason in
+        Utils_js.spf
+          "%s: (%s)"
+          (L.debug_to_string loc)
+          Reason.(desc_of_reason reason |> string_of_desc)
+      | Refinement { refinement_id; val_t } ->
+        let refinement_kind =
+          refinement_id |> get_refi |> snd |> Env_api.show_refinement_kind_without_locs
+        in
+        let write_str = debug_to_string get_refi val_t in
+        Utils_js.spf "{refinement = %s; write = %s}" refinement_kind write_str
+      | This -> "This"
+      | Super -> "Super"
+      | ModuleScoped name -> "ModuleScoped " ^ name
+      | Global name -> "Global " ^ name
+      | Undefined _ -> "undefined"
+      | Number _ -> "number"
+      | DeclaredFunction l -> Utils_js.spf "declared function %s" (L.debug_to_string l)
+      | PHI ts ->
+        Utils_js.spf "[%s]" (ts |> List.map (debug_write_state get_refi) |> String.concat ",")
+
+    and debug_to_string get_refi { id; write_state } =
+      string_of_int id ^ " " ^ debug_write_state get_refi write_state
+
+    (* Ensure we only produce one unique val for the same Loc *)
+    let val_one_cache : (Reason.t, t) Hashtbl.t = Hashtbl.create 0
+
     let is_global_undefined t =
       match t.write_state with
       | Global "undefined" -> true
+      | _ -> false
+
+    let is_global t =
+      match t.write_state with
+      | Global _ -> true
       | _ -> false
 
     let is_undeclared t =
@@ -234,9 +284,21 @@ module Make
       | UndeclaredClass _ -> true
       | _ -> false
 
+    let is_undeclared_or_skipped t =
+      match t.write_state with
+      | Undeclared _ -> true
+      | DeclaredButSkipped _ -> true
+      | UndeclaredClass _ -> true
+      | _ -> false
+
     let is_declared_function t =
       match t.write_state with
       | DeclaredFunction _ -> true
+      | _ -> false
+
+    let is_projection t =
+      match t.write_state with
+      | Projection _ -> true
       | _ -> false
 
     let new_id () =
@@ -256,6 +318,8 @@ module Make
 
     let undefined r = mk_with_write_state (Undefined r)
 
+    let number r = mk_with_write_state (Number r)
+
     let undeclared_class def name = mk_with_write_state (UndeclaredClass { def; name })
 
     let projection loc = mk_with_write_state @@ Projection loc
@@ -265,6 +329,8 @@ module Make
     let refinement refinement_id val_t = mk_with_write_state @@ Refinement { refinement_id; val_t }
 
     let undeclared name def_loc = mk_with_write_state @@ Undeclared (name, def_loc)
+
+    let declared_but_skipped name def_loc = mk_with_write_state @@ DeclaredButSkipped (name, def_loc)
 
     let rec unrefine_deeply_write_state id write_state =
       match write_state with
@@ -281,6 +347,11 @@ module Make
           PHI ts'
       | _ -> write_state
 
+    let rec base_id_of_val { id; write_state } =
+      match write_state with
+      | Refinement { refinement_id = _; val_t } -> base_id_of_val val_t
+      | _ -> id
+
     let unrefine_deeply id t = mk_with_write_state @@ unrefine_deeply_write_state id t.write_state
 
     let unrefine id t =
@@ -288,10 +359,28 @@ module Make
       | Refinement { refinement_id; val_t } when refinement_id = id -> val_t
       | _ -> t
 
-    let join = function
+    let replace_refinement_base_write ~base t =
+      match t.write_state with
+      | Refinement { refinement_id; val_t = _ } -> refinement refinement_id base
+      | _ -> base
+
+    let join_write_states = function
       | [] -> PHI []
       | [t] -> t
       | ts -> PHI ts
+
+    let one reason =
+      match Hashtbl.find_opt val_one_cache reason with
+      | Some v -> v
+      | None ->
+        let v = mk_with_write_state @@ Loc reason in
+        Hashtbl.add val_one_cache reason v;
+        v
+
+    let join write_states =
+      match join_write_states write_states with
+      | Loc reason -> one reason
+      | write_state -> mk_with_write_state write_state
 
     module WriteSet = Flow_set.Make (struct
       type t = write_state
@@ -303,10 +392,15 @@ module Make
       match t with
       | Uninitialized _
       | Undefined _
+      | Number _
       | DeclaredFunction _
       | Undeclared _
+      | DeclaredButSkipped _
       | UndeclaredClass _
       | Projection _
+      | This
+      | Super
+      | ModuleScoped _
       | Global _
       | Loc _
       | Refinement _ ->
@@ -331,17 +425,22 @@ module Make
            expect (and have experimentally validated that) the cost of computing normal forms becomes
            smaller over time as terms remain close to their final normal forms. *)
         let vals = WriteSet.union (normalize t1.write_state) (normalize t2.write_state) in
-        mk_with_write_state @@ join (WriteSet.elements vals)
+        join (WriteSet.elements vals)
 
     let rec normalize_through_refinements (t : write_state) : WriteSet.t =
       match t with
       | Uninitialized _
       | Undefined _
+      | Number _
       | DeclaredFunction _
       | Undeclared _
+      | DeclaredButSkipped _
       | UndeclaredClass _
       | Projection _
       | Global _
+      | This
+      | Super
+      | ModuleScoped _
       | Loc _ ->
         WriteSet.singleton t
       | PHI ts ->
@@ -353,11 +452,15 @@ module Make
           ts
       | Refinement { val_t; _ } -> normalize_through_refinements val_t.write_state
 
+    let this = mk_with_write_state This
+
+    let super = mk_with_write_state Super
+
+    let module_scoped name = mk_with_write_state @@ ModuleScoped name
+
     let global name = mk_with_write_state @@ Global name
 
-    let one reason = mk_with_write_state @@ Loc reason
-
-    let all locs = mk_with_write_state @@ join (Base.List.map ~f:(fun reason -> Loc reason) locs)
+    let all locs = join (Base.List.map ~f:(fun reason -> Loc reason) locs)
 
     let rec simplify_val t =
       let vals = normalize t.write_state in
@@ -366,14 +469,30 @@ module Make
           | Uninitialized l when WriteSet.cardinal vals <= 1 ->
             Env_api.Uninitialized (mk_reason RUninitialized l)
           | Undefined r -> Env_api.Undefined r
+          | Number r -> Env_api.Number r
           | DeclaredFunction l -> Env_api.DeclaredFunction l
-          | Undeclared (name, loc) -> Env_api.Undeclared (name, loc)
+          | Undeclared (name, loc)
+          | DeclaredButSkipped (name, loc) ->
+            Env_api.Undeclared (name, loc)
           | UndeclaredClass { def; name } -> Env_api.UndeclaredClass { def; name }
           | Uninitialized l -> Env_api.Uninitialized (mk_reason RPossiblyUninitialized l)
           | Projection loc -> Env_api.Projection loc
           | Loc r -> Env_api.Write r
           | Refinement { refinement_id; val_t } ->
-            Env_api.Refinement { writes = simplify_val val_t; refinement_id }
+            Env_api.Refinement
+              {
+                writes = simplify_val val_t;
+                refinement_id;
+                (* We delegate to the old env for this and super,
+                   so we shouldn't cache results about them. *)
+                write_id =
+                  (match val_t with
+                  | { id = _; write_state = This | Super } -> None
+                  | { id; write_state = _ } -> Some id);
+              }
+          | This -> Env_api.This
+          | Super -> Env_api.Super
+          | ModuleScoped name -> Env_api.ModuleScoped name
           | Global name -> Env_api.Global name
           | PHI _ -> failwith "A normalized value cannot be a PHI")
         (WriteSet.elements vals)
@@ -383,11 +502,16 @@ module Make
       let write_locs = simplify_val value in
       let val_kind =
         match binding_kind_opt with
-        | Some Bindings.Type -> Some Env_api.Type
+        | Some (Bindings.Type { imported }) -> Some (Env_api.Type { imported })
         | Some _ -> Some Env_api.Value
         | None -> None
       in
-      { Env_api.def_loc; write_locs; val_kind; name }
+      let id =
+        match value with
+        | { id = _; write_state = This | Super } -> None
+        | { id; write_state = _ } -> Some id
+      in
+      { Env_api.def_loc; write_locs; val_kind; name; id }
 
     let id_of_val { id; write_state = _ } = id
 
@@ -395,7 +519,9 @@ module Make
       let rec state_is_uninitialized v =
         match v with
         | Undeclared _ -> []
+        | DeclaredButSkipped _ -> []
         | Undefined _ -> []
+        | Number _ -> []
         | DeclaredFunction _ -> []
         | Uninitialized _ -> [v]
         | UndeclaredClass _ -> [v]
@@ -407,6 +533,9 @@ module Make
           else
             states
         | Loc _ -> []
+        | This -> []
+        | Super -> []
+        | ModuleScoped _ -> []
         | Global _ -> []
         | Projection _ -> []
       in
@@ -434,6 +563,7 @@ module Make
     type entry = {
       env_val: Val.t;
       heap_refinements: heap_refinement_map;
+      def_loc: ALoc.t option;
     }
 
     type t = entry SMap.t
@@ -490,14 +620,10 @@ module Make
   type env_val = {
     val_ref: Val.t ref;
     havoc: Val.t;
+    writes_by_closure_provider_val: Val.t option;
     def_loc: ALoc.t option;
     heap_refinements: heap_refinement_map ref;
     kind: Bindings.kind;
-  }
-
-  type latest_refinement = {
-    ssa_id: int;
-    refinement_id: int;
   }
 
   type read_entry = {
@@ -505,6 +631,30 @@ module Make
     binding_kind_opt: Bindings.kind option;
     value: Val.t;
     name: string option;
+  }
+
+  type refinement_id = int
+
+  (* Describes a set of vals that arise from refinements and which should be removed from
+     the environment after the refinement scope, e.g. `if (x.y) {}` *)
+  type changeset = Val.t LookupMap.t
+
+  type refinement_prop =
+    | Refinements of (RefinementKey.lookup * refinement_id) IMap.t * changeset
+    | Not of refinement_prop
+    | And of refinement_prop * refinement_prop
+    | Or of refinement_prop * refinement_prop
+
+  (* The `applied` and `changeset` elements of this record describe the refinements and
+     values that have presently been applied to the environment, when this is on the
+     latest_refinement stack (see below). The `total` describes the same changeset and
+     refinements, but in a propositional form that can be negated. We must maintain the invariant
+     that normalizing the `total` (using the normalize_total_refinements method below) produces the
+     applied and the changeset. *)
+  type refinement_maps = {
+    applied: (RefinementKey.lookup * refinement_id) IMap.t;
+    changeset: changeset;
+    total: refinement_prop option;
   }
 
   type name_resolver_state = {
@@ -518,7 +668,7 @@ module Make
     (* Maps refinement ids to refinements. This mapping contains _all_ the refinements reachable at
      * any point in the code. The latest_refinement maps keep track of which entries to read. *)
     refinement_heap: refinement_chain IMap.t;
-    latest_refinements: latest_refinement LookupMap.t list;
+    latest_refinements: refinement_maps list;
     env: env_val SMap.t;
     (* When an abrupt completion is raised, it falls through any subsequent
        straight-line code, until it reaches a merge point in the control-flow
@@ -548,28 +698,39 @@ module Make
     jsx_base_name: string option;
   }
 
+  type pattern_write_kind =
+    | VarBinding
+    | LetBinding
+    | ConstBinding
+    | FunctionBinding
+    | AssignmentWrite
+
+  let variable_declaration_binding_kind_to_pattern_write_kind = function
+    | None -> AssignmentWrite
+    | Some Flow_ast.Statement.VariableDeclaration.Var -> VarBinding
+    | Some Flow_ast.Statement.VariableDeclaration.Let -> LetBinding
+    | Some Flow_ast.Statement.VariableDeclaration.Const -> ConstBinding
+
   let error_for_assignment_kind
-      cx name assignment_loc def_loc_opt stored_binding_kind pattern_binding_kind v =
+      cx name assignment_loc def_loc_opt stored_binding_kind pattern_write_kind v =
     match def_loc_opt with
     (* Identifiers with no binding can never reintroduce "cannot reassign binding" errors *)
     | None -> None
     | Some def_loc ->
-      (* Pattern kind is None or Some (Var | Const | Let). It is set to None when we hit a regular
-       * assignment, like x = 4, but set to Some x when we are in a declaration, like let x = 3, or
-       * class A {}. We use the pattern_binding_kind to decide if we should emit an error saying
+      (* We use the pattern_write_kind to decide if we should emit an error saying
        * "you cannot re-declare X" vs. "you cannot reassign const X" *)
-      (match (stored_binding_kind, pattern_binding_kind) with
-      | (Bindings.Const, None) ->
+      (match (stored_binding_kind, pattern_write_kind) with
+      | (Bindings.Const, AssignmentWrite) ->
         Some
           Error_message.(
             EBindingError (EConstReassigned, assignment_loc, OrdinaryName name, def_loc)
           )
-      | (Bindings.Parameter, None) when Context.enable_const_params cx ->
+      | (Bindings.Parameter, AssignmentWrite) when Context.enable_const_params cx ->
         Some
           Error_message.(
             EBindingError (EConstParamReassigned, assignment_loc, OrdinaryName name, def_loc)
           )
-      | (Bindings.Class, None) ->
+      | (Bindings.Class, AssignmentWrite) ->
         let def_reason = mk_reason (RIdentifier (OrdinaryName name)) def_loc in
         Some
           Error_message.(
@@ -580,7 +741,7 @@ module Make
                 binding_kind = Scope.Entry.ClassNameBinding;
               }
           )
-      | (Bindings.Function, None) ->
+      | (Bindings.Function, AssignmentWrite) ->
         let def_reason = mk_reason (RIdentifier (OrdinaryName name)) def_loc in
         Some
           Error_message.(
@@ -591,7 +752,7 @@ module Make
                 binding_kind = Scope.Entry.FunctionBinding;
               }
           )
-      | (Bindings.DeclaredFunction, None) ->
+      | (Bindings.DeclaredFunction _, AssignmentWrite) ->
         let def_reason = mk_reason (RIdentifier (OrdinaryName name)) def_loc in
         Some
           Error_message.(
@@ -603,43 +764,108 @@ module Make
                 binding_kind = Scope.Entry.(DeclaredFunctionBinding { predicate = false });
               }
           )
-      | (Bindings.Var, Some Flow_ast.Statement.VariableDeclaration.(Let | Const)) ->
+      | (Bindings.Var, (LetBinding | ConstBinding | FunctionBinding)) ->
         Some
           Error_message.(
             EBindingError (ENameAlreadyBound, assignment_loc, OrdinaryName name, def_loc)
           )
-      | (Bindings.Const, Some _)
-      | (Bindings.Class, Some _)
-      | (Bindings.Function, Some _)
-      | (Bindings.Type, Some _)
+      | (Bindings.Const, (VarBinding | LetBinding | ConstBinding | FunctionBinding))
+      | (Bindings.Let, (VarBinding | LetBinding | ConstBinding | FunctionBinding))
+      | (Bindings.Class, (VarBinding | LetBinding | ConstBinding | FunctionBinding))
+      | (Bindings.Function, (VarBinding | LetBinding | ConstBinding | FunctionBinding))
+      | (Bindings.Type _, (VarBinding | LetBinding | ConstBinding | FunctionBinding))
         when not (Val.is_undeclared v) ->
         Some
           Error_message.(
             EBindingError (ENameAlreadyBound, assignment_loc, OrdinaryName name, def_loc)
           )
-      | (Bindings.Parameter, Some _) when Context.enable_const_params cx && not (Val.is_undeclared v)
-        ->
+      | (Bindings.DeclaredFunction _, (VarBinding | LetBinding | ConstBinding)) ->
+        Some
+          Error_message.(
+            EBindingError (ENameAlreadyBound, assignment_loc, OrdinaryName name, def_loc)
+          )
+      | (Bindings.Enum, AssignmentWrite) ->
+        Some
+          Error_message.(
+            EBindingError (EEnumReassigned, assignment_loc, OrdinaryName name, def_loc)
+          )
+      | (Bindings.Type { imported }, AssignmentWrite) ->
+        Some
+          Error_message.(
+            EBindingError
+              (ETypeInValuePosition { imported; name }, assignment_loc, OrdinaryName name, def_loc)
+          )
+      | (Bindings.Parameter, (VarBinding | LetBinding | ConstBinding | FunctionBinding))
+        when Context.enable_const_params cx && not (Val.is_undeclared v) ->
+        Some
+          Error_message.(
+            EBindingError (ENameAlreadyBound, assignment_loc, OrdinaryName name, def_loc)
+          )
+      | (Bindings.Parameter, (LetBinding | ConstBinding | FunctionBinding))
+        when not (Val.is_undeclared v) ->
         Some
           Error_message.(
             EBindingError (ENameAlreadyBound, assignment_loc, OrdinaryName name, def_loc)
           )
       | _ -> None)
 
+  let module_scoped_vars = ["eval"; "arguments"]
+
   let initialize_globals unbound_names =
-    SSet.fold
-      (fun name acc ->
+    SMap.empty
+    |> SSet.fold
+         (fun name acc ->
+           let global_val = Val.global name in
+           let entry =
+             {
+               val_ref = ref global_val;
+               havoc = global_val;
+               writes_by_closure_provider_val = None;
+               def_loc = None;
+               heap_refinements = ref HeapRefinementMap.empty;
+               kind = Bindings.Var;
+             }
+           in
+           SMap.add name entry acc)
+         unbound_names
+    (* this has to come later, since this can be thought to be unbound names in SSA builder when it's used as a type. *)
+    |> SMap.add
+         "this"
+         {
+           val_ref = ref Val.this;
+           havoc = Val.this;
+           writes_by_closure_provider_val = None;
+           def_loc = None;
+           heap_refinements = ref HeapRefinementMap.empty;
+           kind = Bindings.Var;
+         }
+    |> SMap.add
+         "super"
+         {
+           val_ref = ref Val.super;
+           havoc = Val.super;
+           writes_by_closure_provider_val = None;
+           def_loc = None;
+           heap_refinements = ref HeapRefinementMap.empty;
+           kind = Bindings.Var;
+         }
+    |> fun init ->
+    Base.List.fold
+      ~init
+      ~f:(fun acc name ->
+        let module_scoped_val = Val.module_scoped name in
         let entry =
           {
-            val_ref = ref (Val.global name);
-            havoc = Val.global name;
+            val_ref = ref module_scoped_val;
+            havoc = module_scoped_val;
+            writes_by_closure_provider_val = None;
             def_loc = None;
             heap_refinements = ref HeapRefinementMap.empty;
             kind = Bindings.Var;
           }
         in
         SMap.add name entry acc)
-      unbound_names
-      SMap.empty
+      module_scoped_vars
 
   (* Statement.ml tries to extract the name and traverse at the location of the
    * jsx element if it's an identifier, otherwise it just traverses the
@@ -665,16 +891,28 @@ module Make
     | Some jsx_base_name ->
       (* We use a global here so that if the base name is never created locally
        * we first check the globals before emitting an error *)
+      let global_val = Val.global jsx_base_name in
       let entry =
         {
-          val_ref = ref (Val.global jsx_base_name);
-          havoc = Val.global jsx_base_name;
+          val_ref = ref global_val;
+          havoc = global_val;
+          writes_by_closure_provider_val = None;
           def_loc = None;
           heap_refinements = ref HeapRefinementMap.empty;
           kind = Bindings.Var;
         }
       in
       (SMap.add jsx_base_name entry globals, Some jsx_base_name)
+
+  let conj_total t1 t2 =
+    match (t1, t2) with
+    | (Some t1, Some t2) -> Some (And (t1, t2))
+    | (Some t, _)
+    | (_, Some t) ->
+      Some t
+    | (None, None) -> None
+
+  let empty_refinements = { applied = IMap.empty; changeset = LookupMap.empty; total = None }
 
   class name_resolver cx (prepass_info, prepass_values, unbound_names) provider_info =
     let add_output =
@@ -710,12 +948,12 @@ module Make
       | _ -> (fun _ _ -> ())
     in
 
+    let enable_enums = Context.enable_enums cx in
     object (this)
       inherit
-        Scope_builder.scope_builder
-          ~flowmin_compatibility:false
-          ~enable_enums:(Context.enable_enums cx)
-          ~with_types:true as super
+        Scope_builder.scope_builder ~flowmin_compatibility:false ~enable_enums ~with_types:true as super
+
+      method private debug_val = Val.debug_to_string this#refinement_of_id
 
       val invalidation_caches = Invalidation_api.mk_caches ()
 
@@ -750,8 +988,8 @@ module Make
 
       method env : Env.t =
         SMap.map
-          (fun { val_ref; heap_refinements; _ } ->
-            { Env.env_val = !val_ref; heap_refinements = !heap_refinements })
+          (fun { val_ref; heap_refinements; def_loc; _ } ->
+            { Env.env_val = !val_ref; heap_refinements = !heap_refinements; def_loc })
           env_state.env
 
       (* We often want to merge the refinement scopes and writes of two environments with
@@ -764,24 +1002,36 @@ module Make
        * and successive refinement writes to model conjunctions, but it's not clear that that
        * approach is simpler than this one. *)
       method env_without_latest_refinements : Env.t =
-        let unrefine latest_refinements lookup_key v =
-          match LookupMap.find_opt lookup_key latest_refinements with
-          | None -> v
-          | Some { refinement_id; _ } -> Val.unrefine refinement_id v
+        let refinements_by_key { applied; _ } =
+          IMap.fold
+            (fun _ (lookup_key, refinement_id) ->
+              LookupMap.update lookup_key (function
+                  | Some map -> Some (ISet.add refinement_id map)
+                  | None -> Some (ISet.singleton refinement_id)
+                  ))
+            applied
+            LookupMap.empty
+        in
+        let unrefine refinements_by_key lookup_key v =
+          LookupMap.find_opt lookup_key refinements_by_key
+          |> Base.Option.value_map
+               ~f:(fun refinement_ids -> ISet.fold Val.unrefine refinement_ids v)
+               ~default:v
         in
         SMap.mapi
-          (fun name { val_ref; heap_refinements; _ } ->
+          (fun name { val_ref; heap_refinements; def_loc; _ } ->
             let head = List.hd env_state.latest_refinements in
+            let refinements_by_key = refinements_by_key head in
             let lookup_key = RefinementKey.lookup_of_name name in
-            let env_val = unrefine head lookup_key !val_ref in
+            let env_val = unrefine refinements_by_key lookup_key !val_ref in
             let unrefined_heap_refinements =
               HeapRefinementMap.mapi
                 (fun projections v ->
                   let lookup_key = RefinementKey.lookup_of_name_with_projections name projections in
-                  unrefine head lookup_key v)
+                  unrefine refinements_by_key lookup_key v)
                 !heap_refinements
             in
-            { Env.env_val; heap_refinements = unrefined_heap_refinements })
+            { Env.env_val; heap_refinements = unrefined_heap_refinements; def_loc })
           env_state.env
 
       method merge_heap_refinements =
@@ -860,7 +1110,11 @@ module Make
             heap_entries_after_loop
         in
         List.iter2
-          (fun { Env.env_val = after_guard; heap_refinements = heap_entries_after_guard }
+          (fun {
+                 Env.env_val = after_guard;
+                 heap_refinements = heap_entries_after_guard;
+                 def_loc = _;
+               }
                { val_ref = after_loop; heap_refinements = heap_entries_after_loop; _ } ->
             after_loop := Val.merge after_guard !after_loop;
             heap_entries_after_loop :=
@@ -874,10 +1128,14 @@ module Make
         (* NOTE: env might have more keys than env_state.env, since the environment it
            describes might be nested inside the current environment *)
         SMap.iter
-          (fun x { val_ref; heap_refinements = heap_refinements1; _ } ->
-            let { Env.env_val; heap_refinements = heap_refinements2 } = SMap.find x env in
-            val_ref := Val.merge !val_ref env_val;
-            heap_refinements1 := this#merge_heap_refinements !heap_refinements1 heap_refinements2)
+          (fun x { val_ref; heap_refinements = heap_refinements1; def_loc = def_loc_1; _ } ->
+            let { Env.env_val; heap_refinements = heap_refinements2; def_loc = def_loc_2 } =
+              SMap.find x env
+            in
+            if def_loc_1 = def_loc_2 then (
+              val_ref := Val.merge !val_ref env_val;
+              heap_refinements1 := this#merge_heap_refinements !heap_refinements1 heap_refinements2
+            ))
           env_state.env
 
       method merge_env (env1 : Env.t) (env2 : Env.t) : unit =
@@ -886,8 +1144,8 @@ module Make
         let env = SMap.values env_state.env in
         list_iter3
           (fun { val_ref; heap_refinements; _ }
-               { Env.env_val = value1; heap_refinements = heap_refinements1 }
-               { Env.env_val = value2; heap_refinements = heap_refinements2 } ->
+               { Env.env_val = value1; heap_refinements = heap_refinements1; def_loc = _ }
+               { Env.env_val = value2; heap_refinements = heap_refinements2; def_loc = _ } ->
             val_ref := Val.merge value1 value2;
             heap_refinements := this#merge_heap_refinements heap_refinements1 heap_refinements2)
           env
@@ -899,7 +1157,7 @@ module Make
         let env = SMap.values env_state.env in
         List.iter2
           (fun { val_ref; heap_refinements; _ }
-               { Env.env_val = value; heap_refinements = new_heap_refinements } ->
+               { Env.env_val = value; heap_refinements = new_heap_refinements; def_loc = _ } ->
             val_ref := Val.merge !val_ref value;
             heap_refinements := this#merge_heap_refinements !heap_refinements new_heap_refinements)
           env
@@ -910,7 +1168,7 @@ module Make
         let env = SMap.values env_state.env in
         List.iter2
           (fun { val_ref; heap_refinements; _ }
-               { Env.env_val; heap_refinements = old_heap_refinements } ->
+               { Env.env_val; heap_refinements = old_heap_refinements; def_loc = _ } ->
             val_ref := env_val;
             heap_refinements := old_heap_refinements)
           env
@@ -918,7 +1176,15 @@ module Make
 
       method empty_env : Env.t =
         SMap.map
-          (fun _ -> { Env.env_val = Val.empty (); heap_refinements = HeapRefinementMap.empty })
+          (fun _ ->
+            {
+              Env.env_val = Val.empty ();
+              heap_refinements = HeapRefinementMap.empty;
+              (* The empty env is always used as a reset value,
+                 and the reset_env method (see above) does not mutate def_loc at all.
+                 Therefore, the value of def_loc here does not matter. *)
+              def_loc = None;
+            })
           env_state.env
 
       (* This method applies a function over the value stored with a refinement key. It is
@@ -926,27 +1192,62 @@ module Make
        * key and finding the appropriate Val.t does not have to be repeated in
        * every method that needs to update an entry. The create_val_for_heap argument can
        * be used to specify what value to apply the function to if the heap entry
-       * does not yet exist. *)
-      method map_val_with_lookup lookup ?(create_val_for_heap = None) f =
-        let { RefinementKey.base; projections } = lookup in
-        match SMap.find_opt base env_state.env with
-        | None -> ()
-        | Some { val_ref; heap_refinements; havoc = _; def_loc = _; kind = _ } ->
-          (match projections with
-          | [] -> val_ref := f !val_ref
-          | _ ->
-            let new_heap_refinements =
-              HeapRefinementMap.update
-                projections
-                (function
-                  | None ->
-                    (match create_val_for_heap with
-                    | None -> None
-                    | Some default -> Some (f (default ())))
-                  | Some heap_val -> Some (f heap_val))
-                !heap_refinements
-            in
-            heap_refinements := new_heap_refinements)
+       * does not yet exist.
+
+       * In addition to updating the Val.t, if the callback Val.t updating function
+       * is called (i.e. if we find a value to update), we'll return any additional
+       * data that the function itself returns (as the first element of its return
+       * type tuple). In addition, if we end up creating a new val.t as part of a heap
+       * refinement, we'll return that val.t as well. In cases where this information
+       * isn't necessary, callers can call `map_val_with_lookup` below instead.
+       *)
+      method map_val_with_lookup_result
+          : 'r.
+            RefinementKey.lookup ->
+            ?create_val_for_heap:Val.t Lazy.t ->
+            (Val.t -> 'r * Val.t) ->
+            ('r * Val.t option) option =
+        fun lookup ?create_val_for_heap f ->
+          let { RefinementKey.base; projections } = lookup in
+          match SMap.find_opt base env_state.env with
+          | None -> None
+          | Some
+              {
+                val_ref;
+                heap_refinements;
+                writes_by_closure_provider_val = _;
+                havoc = _;
+                def_loc = _;
+                kind = _;
+              } ->
+            (match projections with
+            | [] ->
+              let (res, val_) = f !val_ref in
+              val_ref := val_;
+              Some (res, None)
+            | _ ->
+              let (res, new_heap_refinements) =
+                match
+                  (HeapRefinementMap.find_opt projections !heap_refinements, create_val_for_heap)
+                with
+                | (Some heap_val, _) ->
+                  let (res, val_) = f heap_val in
+                  (Some (res, None), HeapRefinementMap.add projections val_ !heap_refinements)
+                | (None, Some (lazy default)) ->
+                  let (res, val_) = f default in
+                  ( Some (res, Some default),
+                    HeapRefinementMap.add projections val_ !heap_refinements
+                  )
+                | (None, None) -> (None, !heap_refinements)
+              in
+              heap_refinements := new_heap_refinements;
+              res)
+
+      method map_val_with_lookup lookup ?create_val_for_heap f =
+        let (_ : (unit * Val.t option) option) =
+          this#map_val_with_lookup_result lookup ?create_val_for_heap (fun v -> ((), f v))
+        in
+        ()
 
       method get_val_of_expression expr =
         match RefinementKey.of_expression expr with
@@ -954,7 +1255,7 @@ module Make
         | Some { RefinementKey.loc = _; lookup = { RefinementKey.base; projections } } ->
           (match SMap.find_opt base this#env with
           | None -> None
-          | Some { Env.env_val; heap_refinements } ->
+          | Some { Env.env_val; heap_refinements; def_loc = _ } ->
             (match projections with
             | [] -> Some env_val
             | _ -> HeapRefinementMap.find_opt projections heap_refinements))
@@ -971,7 +1272,7 @@ module Make
           (fun index -> function
             | None -> ()
             | Some key ->
-              this#add_refinement
+              this#add_single_refinement
                 key
                 (L.LSet.singleton callee_loc, LatentR { func = callee; index = index + 1 }))
           refinement_keys_by_arg
@@ -985,18 +1286,32 @@ module Make
 
       method havoc_env ~force_initialization ~all =
         SMap.iter
-          (fun _x { val_ref; havoc; def_loc; heap_refinements; kind = _ } ->
+          (fun _x
+               {
+                 val_ref;
+                 havoc;
+                 writes_by_closure_provider_val;
+                 def_loc;
+                 heap_refinements;
+                 kind = _;
+               } ->
             this#havoc_heap_refinements heap_refinements;
             let uninitialized_writes =
               lazy (Val.writes_of_uninitialized this#refinement_may_be_undefined !val_ref)
             in
-            let val_is_undeclared = Val.is_undeclared !val_ref in
+            let val_is_undeclared_or_skipped = Val.is_undeclared_or_skipped !val_ref in
             let havoc_ref =
               if force_initialization then
                 havoc
-              else if val_is_undeclared then
+              else if val_is_undeclared_or_skipped then
                 !val_ref
               else
+                let havoc =
+                  match (all, writes_by_closure_provider_val) with
+                  | (false, Some writes_by_closure_provider_val) ->
+                    Val.merge !val_ref writes_by_closure_provider_val
+                  | _ -> havoc
+                in
                 Base.List.fold
                   ~init:havoc
                   ~f:(fun acc write -> Val.merge acc (Val.of_write write))
@@ -1011,7 +1326,9 @@ module Make
                    prepass_values
                    (Base.Option.value_exn def_loc (* checked against none above *))
               || force_initialization
-                 && (List.length (Lazy.force uninitialized_writes) > 0 || val_is_undeclared)
+                 && (List.length (Lazy.force uninitialized_writes) > 0
+                    || val_is_undeclared_or_skipped
+                    )
             then
               val_ref := havoc_ref)
           env_state.env
@@ -1051,7 +1368,7 @@ module Make
       method private mk_env =
         SMap.mapi (fun name (kind, (loc, _)) ->
             match kind with
-            | Bindings.Type ->
+            | Bindings.Type _ ->
               let reason = mk_reason (RType (OrdinaryName name)) loc in
               let write_entries =
                 L.LMap.add loc (Env_api.AssigningWrite reason) env_state.write_entries
@@ -1060,6 +1377,7 @@ module Make
               {
                 val_ref = ref (Val.one reason);
                 havoc = Val.one reason;
+                writes_by_closure_provider_val = None;
                 def_loc = Some loc;
                 heap_refinements = ref HeapRefinementMap.empty;
                 kind;
@@ -1073,6 +1391,7 @@ module Make
               {
                 val_ref = ref (Val.one reason);
                 havoc = Val.one reason;
+                writes_by_closure_provider_val = None;
                 def_loc = Some loc;
                 heap_refinements = ref HeapRefinementMap.empty;
                 kind;
@@ -1090,11 +1409,12 @@ module Make
               {
                 val_ref = ref (Val.undeclared_class reason name);
                 havoc;
+                writes_by_closure_provider_val = None;
                 def_loc = Some loc;
                 heap_refinements = ref HeapRefinementMap.empty;
                 kind;
               }
-            | Bindings.DeclaredFunction ->
+            | Bindings.DeclaredFunction _ ->
               let (_, providers) = this#providers_of_def_loc loc in
               let write_entries =
                 Base.List.fold
@@ -1107,6 +1427,18 @@ module Make
               {
                 val_ref = ref declared_function;
                 havoc = declared_function;
+                writes_by_closure_provider_val = None;
+                def_loc = Some loc;
+                heap_refinements = ref HeapRefinementMap.empty;
+                kind;
+              }
+            | Bindings.Import ->
+              let reason = mk_reason (RIdentifier (OrdinaryName name)) loc in
+              let havoc = Val.one reason in
+              {
+                val_ref = ref havoc;
+                havoc;
+                writes_by_closure_provider_val = None;
                 def_loc = Some loc;
                 heap_refinements = ref HeapRefinementMap.empty;
                 kind;
@@ -1126,6 +1458,31 @@ module Make
                 | _ -> Val.uninitialized loc
               in
               let (havoc, providers) = this#providers_of_def_loc loc in
+              let writes_by_closure =
+                Invalidation_api.written_by_closure prepass_info prepass_values loc
+              in
+              let all_writes_by_closure_are_providers =
+                L.LSet.for_all
+                  (Base.List.mem ~equal:ALoc.equal (Base.List.map ~f:poly_loc_of_reason providers))
+                  writes_by_closure
+              in
+              (* Special-cased havoc val of variables whose only closure writes are providers *)
+              let writes_by_closure_provider_val =
+                if all_writes_by_closure_are_providers then
+                  let writes_by_closure_providers =
+                    Base.List.filter providers ~f:(fun provider_reason ->
+                        L.LSet.mem (poly_loc_of_reason provider_reason) writes_by_closure
+                    )
+                  in
+                  if not @@ Base.List.is_empty writes_by_closure_providers then
+                    (* Now we know a variable needs to be widened at most by these writes
+                       by closure providers *)
+                    Some (Val.all writes_by_closure_providers)
+                  else
+                    None
+                else
+                  None
+              in
               let write_entries =
                 Base.List.fold
                   ~f:(fun acc r -> L.LMap.add (poly_loc_of_reason r) (Env_api.AssigningWrite r) acc)
@@ -1136,6 +1493,7 @@ module Make
               {
                 val_ref = ref initial_val;
                 havoc;
+                writes_by_closure_provider_val;
                 def_loc = Some loc;
                 heap_refinements = ref HeapRefinementMap.empty;
                 kind;
@@ -1237,27 +1595,119 @@ module Make
             raise (AbruptCompletion.Exn abrupt_completion)
           | _ -> ()
 
-      method! binding_type_identifier ident = super#identifier ident
+      method! binding_type_identifier ident =
+        let (loc, { Flow_ast.Identifier.name; comments = _ }) = ident in
+        let { kind; def_loc; _ } = SMap.find name env_state.env in
+        (match def_loc with
+        (* Identifiers with no binding can never reintroduce "cannot reassign binding" errors *)
+        | None -> ()
+        | Some def_loc ->
+          (match kind with
+          | Bindings.Type _ when not (ALoc.equal loc def_loc) ->
+            (* Types are already bind in hoister,
+               so we only check for rebind in different locations. *)
+            add_output
+              Error_message.(EBindingError (ENameAlreadyBound, loc, OrdinaryName name, def_loc))
+          | Bindings.Type _ -> ()
+          | Bindings.Var
+          | Bindings.Const
+          | Bindings.Let
+          | Bindings.Class
+          | Bindings.Function
+          | Bindings.Parameter ->
+            add_output
+              Error_message.(EBindingError (ENameAlreadyBound, loc, OrdinaryName name, def_loc))
+          | _ -> ()));
+        super#identifier ident
 
       method! function_identifier ident =
         (* The parent flow_ast_mapper treats functions as Vars, but in Flow
-         * (not JS, Flow) they behave more like hoisted lets. For the purpose of
-         * reassignment errors, we should consider them to be lets *)
-        this#pattern_identifier ~kind:Flow_ast.Statement.VariableDeclaration.Let ident
+         * (not JS, Flow) they have special behavior with functions. *)
+        let (loc, { Flow_ast.Identifier.name = x; comments = _ }) = ident in
+        this#bind_pattern_identifier_customized ~kind:FunctionBinding loc x;
+        super#identifier ident
+
+      (* We want to translate object pattern destructing {a:{b:{c}}} = o into o.a.b.c,
+         so the use of refinement can be recorded as a write.
+         We use acc to keep track of the current parent expr *)
+      method private binding_pattern_track_object_destructuring ?kind ~acc expr =
+        let open Ast.Pattern in
+        let (_, patt) = expr in
+        (match patt with
+        | Object { Object.properties; annot; comments = _ } ->
+          Base.List.iter properties ~f:(fun prop ->
+              let open Ast.Pattern.Object in
+              match prop with
+              | RestElement prop -> ignore @@ this#pattern_object_rest_property ?kind prop
+              | Property ((_, { Property.key; pattern; default; shorthand = _ }) as prop) ->
+                (match key with
+                | Property.Identifier (loc, { Ast.Identifier.name = x; comments = _ })
+                | Property.Literal (loc, { Ast.Literal.value = Ast.Literal.String x; _ }) ->
+                  Base.Option.iter default ~f:(fun default -> ignore @@ this#expression default);
+                  let acc =
+                    let open Ast.Expression in
+                    let property =
+                      Member.PropertyIdentifier (loc, { Ast.Identifier.name = x; comments = None })
+                    in
+                    (loc, Member { Member._object = acc; property; comments = None })
+                  in
+                  (match pattern with
+                  | ( _,
+                      Identifier
+                        {
+                          Identifier.name = (loc, { Ast.Identifier.name = x; comments = _ });
+                          annot;
+                          optional = _;
+                        }
+                    ) ->
+                    ignore @@ this#expression acc;
+                    (* Leaf of the object pattern *)
+                    (match this#get_val_of_expression acc with
+                    | None -> ignore @@ this#pattern ?kind pattern
+                    | Some refined_v ->
+                      ignore @@ this#type_annotation_hint annot;
+                      this#bind_pattern_identifier_customized
+                        ~kind:(variable_declaration_binding_kind_to_pattern_write_kind kind)
+                        ~get_assigned_val:(fun base ->
+                          Val.replace_refinement_base_write ~base refined_v)
+                        loc
+                        x)
+                  | _ ->
+                    ignore @@ this#binding_pattern_track_object_destructuring ?kind ~acc pattern)
+                | _ -> ignore @@ this#pattern_object_property ?kind prop)
+          );
+          ignore @@ this#type_annotation_hint annot
+        | Array _
+        | Identifier _
+        | Expression _ ->
+          ignore @@ this#pattern ?kind expr);
+        expr
 
       method! pattern_identifier ?kind ident =
-        ignore kind;
         let (loc, { Flow_ast.Identifier.name = x; comments = _ }) = ident in
+        let kind = variable_declaration_binding_kind_to_pattern_write_kind kind in
+        this#bind_pattern_identifier_customized ~kind loc x;
+        super#identifier ident
+
+      method private bind_pattern_identifier_customized ~kind ?(get_assigned_val = Base.Fn.id) loc x
+          =
         let reason = Reason.(mk_reason (RIdentifier (OrdinaryName x))) loc in
-        let { val_ref; heap_refinements; kind = stored_binding_kind; def_loc; havoc = _ } =
+        let {
+          val_ref;
+          heap_refinements;
+          kind = stored_binding_kind;
+          def_loc;
+          havoc = _;
+          writes_by_closure_provider_val = _;
+        } =
           SMap.find x env_state.env
         in
-        (match kind with
+        match kind with
         (* Assignments to undeclared bindings that aren't part of declarations do not
          * initialize those bindings. *)
-        | None when Val.is_undeclared !val_ref ->
+        | AssignmentWrite when Val.is_undeclared_or_skipped !val_ref ->
           (match def_loc with
-          | None -> failwith "Cannot have an undeclared binding without a def loc"
+          | None -> failwith "Cannot have an undeclared or skipped binding without a def loc"
           | Some def_loc ->
             add_output
               Error_message.(
@@ -1273,8 +1723,14 @@ module Make
             this#havoc_heap_refinements heap_refinements;
             let write_entries =
               if not (Val.is_declared_function !val_ref) then (
-                val_ref := Val.one reason;
-                L.LMap.add loc (Env_api.AssigningWrite reason) env_state.write_entries
+                let write_entry =
+                  if Val.is_global !val_ref then
+                    Env_api.GlobalWrite reason
+                  else
+                    Env_api.AssigningWrite reason
+                in
+                val_ref := get_assigned_val (Val.one reason);
+                L.LMap.add loc write_entry env_state.write_entries
               ) else
                 (* All of the providers are aleady in the map. We don't want to overwrite them with
                  * a non-assigning write. We _do_ want to enter regular function declarations as
@@ -1288,8 +1744,7 @@ module Make
                     | _ -> x)
                   env_state.write_entries
             in
-            env_state <- { env_state with write_entries }));
-        super#identifier ident
+            env_state <- { env_state with write_entries })
 
       (* This method is called during every read of an identifier. We need to ensure that
        * if the identifier is refined that we record the refiner as the write that reaches
@@ -1317,6 +1772,14 @@ module Make
             env_state.values
         in
         env_state <- { env_state with values }
+
+      method! this_expression loc this_ =
+        this#any_identifier loc "this";
+        this_
+
+      method! super_expression loc super_ =
+        this#any_identifier loc "super";
+        super_
 
       method! identifier (ident : (ALoc.t, ALoc.t) Ast.Identifier.t) =
         let (loc, { Ast.Identifier.name = x; comments = _ }) = ident in
@@ -1378,7 +1841,7 @@ module Make
           this#map_val_with_lookup
             lookup
             (fun _ -> assigned_val)
-            ~create_val_for_heap:(Some (fun () -> assigned_val));
+            ~create_val_for_heap:(lazy assigned_val);
           let write_entries =
             L.LMap.add lhs_loc (Env_api.AssigningWrite val_reason) env_state.write_entries
           in
@@ -1420,7 +1883,7 @@ module Make
       (* Order of evaluation matters *)
       method! assignment _loc (expr : (ALoc.t, ALoc.t) Ast.Expression.Assignment.t) =
         let open Ast.Expression.Assignment in
-        let { operator; left; right; comments = _ } = expr in
+        let { operator; left = (left_loc, _) as left; right; comments = _ } = expr in
         begin
           match operator with
           | None ->
@@ -1435,7 +1898,10 @@ module Make
                 (* given `o.x = e`, read o then read e *)
                 this#assign_expression ~update_entry:true e right
             end
-          | Some _ ->
+          | Some
+              ( PlusAssign | MinusAssign | MultAssign | ExpAssign | DivAssign | ModAssign
+              | LShiftAssign | RShiftAssign | RShift3Assign | BitOrAssign | BitXorAssign
+              | BitAndAssign ) ->
             let open Ast.Pattern in
             begin
               match left with
@@ -1449,6 +1915,59 @@ module Make
                 this#assign_expression ~update_entry:true e right
               | (_, (Object _ | Array _)) -> statement_error
             end
+          | Some ((OrAssign | AndAssign | NullishAssign) as operator) ->
+            let left_expr =
+              match left with
+              | (lhs_loc, Ast.Pattern.Identifier { Ast.Pattern.Identifier.name; _ }) ->
+                Some (lhs_loc, Ast.Expression.Identifier name)
+              | (lhs_loc, Ast.Pattern.Expression (_, Ast.Expression.Member mem)) ->
+                Some (lhs_loc, Ast.Expression.Member mem)
+              | _ -> None
+            in
+            this#push_refinement_scope empty_refinements;
+            (match left_expr with
+            | None -> statement_error
+            | Some left_expr ->
+              begin
+                match RefinementKey.of_expression left_expr with
+                | None -> ()
+                | Some refinement_key ->
+                  (* If we don't already have a projection val in the environment for this key, we need to create one and commit it. We can't create it
+                     via a refinement, because then it would be popped off as part of a changeset at the end of the refinement scope. *)
+                  this#add_projection refinement_key
+              end;
+              (* THe LHS is unconditionally evaluated, so we don't run-to-completion and catch the
+               * error here *)
+              (match operator with
+              | OrAssign
+              | AndAssign ->
+                ignore (this#expression_refinement left_expr)
+              | NullishAssign ->
+                ignore (this#expression left_expr);
+                this#add_refinement_to_expr left_expr (L.LSet.singleton left_loc, NotR MaybeR)
+              | _ -> ()));
+            let env1 = this#env_without_latest_refinements in
+            let env1_with_refinements = this#env in
+            (match operator with
+            | NullishAssign
+            | OrAssign ->
+              this#negate_new_refinements ()
+            | _ -> ());
+            (* The RHS is _only_ evaluated if the LHS fails its check. That means that patterns like
+               * x || invariant(false) should propagate the truthy refinement to the next line. We keep track
+               * of the completion state on the rhs to do that. If the LHS throws then the entire expression
+               * throws, so there's no need to catch the exception from the LHS *)
+            let rhs_completion_state =
+              this#run_to_completion (fun () -> ignore @@ this#expression right)
+            in
+            (match rhs_completion_state with
+            | Some AbruptCompletion.Throw ->
+              this#reset_env env1_with_refinements;
+              this#pop_refinement_scope_without_unrefining ()
+            | _ ->
+              this#pop_refinement_scope ();
+              this#merge_self_env env1);
+            ignore @@ this#assignment_pattern left
         end;
         expr
 
@@ -1470,13 +1989,26 @@ module Make
               | Some init ->
                 (* given `var x = e`, read e then write x *)
                 ignore @@ this#expression init;
-                ignore @@ this#variable_declarator_pattern ~kind id
+                ignore @@ this#binding_pattern_track_object_destructuring ~kind ~acc:init id
               | None ->
                 (* No rhs means no write occurs, but the variable moves from undeclared to
                  * uninitialized. *)
                 Flow_ast_utils.fold_bindings_of_pattern
                   (fun () (loc, { Flow_ast.Identifier.name; _ }) ->
-                    let { val_ref; _ } = SMap.find name env_state.env in
+                    let { val_ref; kind = stored_binding_kind; def_loc; _ } =
+                      SMap.find name env_state.env
+                    in
+                    let () =
+                      error_for_assignment_kind
+                        cx
+                        name
+                        loc
+                        def_loc
+                        stored_binding_kind
+                        (variable_declaration_binding_kind_to_pattern_write_kind (Some kind))
+                        !val_ref
+                      |> Base.Option.iter ~f:add_output
+                    in
                     if Val.is_undeclared !val_ref then val_ref := Val.uninitialized loc)
                   ()
                   id;
@@ -1501,8 +2033,18 @@ module Make
             ignore @@ this#expression argument;
             ignore @@ this#pattern_expression argument;
             let val_reason = mk_reason RSomeProperty loc in
-            let assigned_val = Val.one val_reason in
-            this#assign_member ~update_entry:true member loc assigned_val val_reason
+            let assigned_val = Val.number val_reason in
+            (* We explicitly write a number instead of using the location of the write to avoid
+             * location clashes between the read of the member and the write of the member. If
+             * we don't do this then expressions like o.x++ will attempt to unify the read of o.x
+             * with the write of o.x that happens in that update expression *)
+            (match RefinementKey.lookup_of_member member ~allow_optional:false with
+            | Some lookup ->
+              this#map_val_with_lookup
+                lookup
+                (fun _ -> assigned_val)
+                ~create_val_for_heap:(lazy assigned_val)
+            | _ -> ())
           | _ -> (* given 'o()++`, read o *) ignore @@ this#expression argument
         end;
         expr
@@ -1534,7 +2076,7 @@ module Make
       method! if_statement _loc stmt =
         let open Flow_ast.Statement.If in
         let { test; consequent; alternate; _ } = stmt in
-        this#push_refinement_scope LookupMap.empty;
+        this#push_refinement_scope empty_refinements;
         ignore @@ this#expression_refinement test;
         let test_refinements = this#peek_new_refinements () in
         let env0 = this#env_without_latest_refinements in
@@ -1576,7 +2118,7 @@ module Make
       method! conditional _loc (expr : (ALoc.t, ALoc.t) Flow_ast.Expression.Conditional.t) =
         let open Flow_ast.Expression.Conditional in
         let { test; consequent; alternate; comments = _ } = expr in
-        this#push_refinement_scope LookupMap.empty;
+        this#push_refinement_scope empty_refinements;
         ignore @@ this#expression_refinement test;
         let test_refinements = this#peek_new_refinements () in
         let env0 = this#env_without_latest_refinements in
@@ -1625,19 +2167,47 @@ module Make
         | _ ->
           SMap.iter
             (fun name { val_ref; heap_refinements; _ } ->
-              let { Env.env_val = value1; heap_refinements = _ } = SMap.find name env1 in
-              let { Env.env_val = value2; heap_refinements = _ } = SMap.find name env2 in
-              let { Env.env_val = refined_value1; heap_refinements = heap_refinements1 } =
+              let { Env.env_val = value1; heap_refinements = heap_entries1; def_loc = _ } =
+                SMap.find name env1
+              in
+              let { Env.env_val = value2; heap_refinements = heap_entries2; def_loc = _ } =
+                SMap.find name env2
+              in
+              let {
+                Env.env_val = refined_value1;
+                heap_refinements = refined_heap_entries1;
+                def_loc = _;
+              } =
                 SMap.find name refined_env1
               in
-              let { Env.env_val = refined_value2; heap_refinements = heap_refinements2 } =
+              let {
+                Env.env_val = refined_value2;
+                heap_refinements = refined_heap_entries2;
+                def_loc = _;
+              } =
                 SMap.find name refined_env2
               in
               (* If the same key exists on both versions of the object then we can
                * merge the two heap refinements, even though the underlying value
                * has changed. This is because the final object does indeed have
                * one of the two refinements at the merge *)
-              heap_refinements := this#merge_heap_refinements heap_refinements1 heap_refinements2;
+              heap_refinements :=
+                HeapRefinementMap.merge
+                  (fun key refined_heap_val1 refined_heap_val2 ->
+                    match (refined_heap_val1, refined_heap_val2) with
+                    | (Some refined_heap_val1, Some refined_heap_val2) ->
+                      let heap_val1 = HeapRefinementMap.find key heap_entries1 in
+                      let heap_val2 = HeapRefinementMap.find key heap_entries2 in
+                      if Val.id_of_val heap_val1 = Val.id_of_val heap_val2 then
+                        if Val.is_projection heap_val1 then
+                          None
+                        else
+                          Some heap_val1
+                      else
+                        Some (Val.merge refined_heap_val1 refined_heap_val2)
+                    | _ -> None)
+                  refined_heap_entries1
+                  refined_heap_entries2;
               if Val.id_of_val value1 = Val.id_of_val value2 then
                 val_ref := value1
               else
@@ -1667,8 +2237,10 @@ module Make
             scout ();
             let post_env = this#env in
             SMap.fold
-              (fun name { Env.env_val = env_val1; heap_refinements = _ } acc ->
-                let { Env.env_val = env_val2; heap_refinements = _ } = SMap.find name pre_env in
+              (fun name { Env.env_val = env_val1; heap_refinements = _; def_loc = _ } acc ->
+                let { Env.env_val = env_val2; heap_refinements = _; def_loc = _ } =
+                  SMap.find name pre_env
+                in
                 let normalized_val1 = Val.normalize_through_refinements env_val1.Val.write_state in
                 let normalized_val2 = Val.normalize_through_refinements env_val2.Val.write_state in
                 if Val.WriteSet.equal normalized_val1 normalized_val2 then
@@ -1683,7 +2255,14 @@ module Make
         List.iter
           (fun lookup ->
             let { RefinementKey.base; projections } = lookup in
-            let { val_ref; havoc; heap_refinements; def_loc = _; kind } =
+            let {
+              val_ref;
+              havoc;
+              writes_by_closure_provider_val = _;
+              heap_refinements;
+              def_loc = _;
+              kind;
+            } =
               SMap.find base env_state.env
             in
             (* If a var is changed then all the heap refinements on that var should
@@ -1692,7 +2271,12 @@ module Make
             match projections with
             | [] ->
               this#havoc_heap_refinements heap_refinements;
-              if kind <> Bindings.Const then val_ref := havoc
+              if kind <> Bindings.Const && not (Val.is_undeclared_or_skipped !val_ref) then
+                val_ref :=
+                  Base.List.fold
+                    ~init:havoc
+                    ~f:(fun acc write -> Val.merge acc (Val.of_write write))
+                    (Val.writes_of_uninitialized this#refinement_may_be_undefined !val_ref)
             | _ -> heap_refinements := HeapRefinementMap.remove projections !heap_refinements)
           changed_vars
 
@@ -1716,21 +2300,18 @@ module Make
        * We don't need to check for continues because they are handled before this point.
        * We don't check for throw/return because then we wouldn't proceed to the line
        * after the loop anyway. *)
-      method post_loop_refinements refinements =
+      method post_loop_refinements { total; _ } =
         if not AbruptCompletion.(mem (List.map fst env_state.abrupt_completion_envs) (break None))
         then
-          refinements
-          |> LookupMap.iter (fun lookup { refinement_id; ssa_id = _ } ->
-                 let new_refinement_id = this#new_id () in
-                 env_state <-
-                   {
-                     env_state with
-                     refinement_heap =
-                       IMap.add new_refinement_id (NOT refinement_id) env_state.refinement_heap;
-                   };
-                 let refine_val = Val.refinement new_refinement_id in
-                 this#map_val_with_lookup lookup refine_val
-             )
+          match total with
+          | None -> ()
+          | Some total ->
+            let (applied, _) = this#normalize_total_refinements (Not total) in
+            applied
+            |> IMap.iter (fun _ (lookup, refinement_id) ->
+                   let refine_val x = Val.refinement refinement_id x in
+                   this#map_val_with_lookup lookup refine_val
+               )
 
       (*
        * Unlike the ssa_builder, the name_resolver does not create REF unresolved
@@ -1785,7 +2366,7 @@ module Make
              * }
              * x; // Don't want x to be a PHI of x != null and x = 4.
              *)
-            this#push_refinement_scope LookupMap.empty;
+            this#push_refinement_scope empty_refinements;
             let (guard_refinements, env_after_test_no_refinements, loop_completion_state) =
               visit_guard_and_body ()
             in
@@ -1928,21 +2509,19 @@ module Make
         this#for_in_or_of_left_declaration left;
         left
 
-      method scoped_for_in_or_of_statement traverse_left right body =
-        (* This is only evaluated once and so does not need to be scouted
-         * You might be wondering why the lhs has to be scouted-- the LHS can be a pattern that
+      method scoped_for_in_or_of_statement traverse_left body =
+        (* You might be wondering why the lhs has to be scouted-- the LHS can be a pattern that
          * includes a default write with a variable that is written to inside the loop. It's
          * critical that we catch loops in the dependency graph with such variables, since the
          * ordering algorithm will not have a good place to ask for an annotation in that case.
          *)
-        ignore @@ this#expression right;
         let scout () =
           traverse_left ();
           ignore @@ this#run_to_completion (fun () -> ignore @@ this#statement body)
         in
         let visit_guard_and_body () =
-          traverse_left ();
           let env = this#env in
+          traverse_left ();
           let loop_completion_state =
             this#run_to_completion (fun () -> ignore @@ this#statement body)
           in
@@ -1961,15 +2540,51 @@ module Make
         let open Flow_ast.Statement.ForIn in
         let { left; right; body; each = _; comments = _ } = stmt in
         let traverse_left () = ignore (this#for_in_statement_lhs left) in
-        this#scoped_for_in_or_of_statement traverse_left right body;
+        this#push_refinement_scope empty_refinements;
+        ignore @@ this#expression_refinement right;
+        this#scoped_for_in_or_of_statement traverse_left body;
+        this#pop_refinement_scope ();
         stmt
 
       method! scoped_for_of_statement _loc stmt =
         let open Flow_ast.Statement.ForOf in
         let { left; right; body; await = _; comments = _ } = stmt in
+        (* This is only evaluated once and so does not need to be scouted *)
+        ignore @@ this#expression right;
         let traverse_left () = ignore (this#for_of_statement_lhs left) in
-        this#scoped_for_in_or_of_statement traverse_left right body;
+        this#scoped_for_in_or_of_statement traverse_left body;
         stmt
+
+      method! switch loc switch =
+        let open Flow_ast.Statement.Switch in
+        let incoming_env = this#env in
+        let { discriminant; cases; comments = _ } = switch in
+        let _ = this#expression discriminant in
+        let lexical_hoist = new lexical_hoister ~flowmin_compatibility:false ~enable_enums in
+        let cases_with_lexical_bindings =
+          Base.List.map cases ~f:(fun ((_, { Case.consequent; _ }) as case) ->
+              let bindings = lexical_hoist#acc |> Bindings.to_map in
+              let _ = lexical_hoist#statement_list consequent in
+              (case, bindings)
+          )
+        in
+        this#run
+          (fun () ->
+            ignore
+            @@ this#with_bindings
+                 ~lexical:true
+                 loc
+                 lexical_hoist#acc
+                 (this#switch_cases_with_lexical_bindings loc discriminant)
+                 cases_with_lexical_bindings)
+          ~finally:(fun () ->
+            let post_env = this#env in
+            (* After all refinements and potential shadowing inside switch,
+               we need to re-read the discriminant to restore it. *)
+            this#reset_env incoming_env;
+            ignore @@ this#expression switch.discriminant;
+            this#reset_env post_env);
+        switch
 
       (***********************************************************)
       (* [PRE] switch (e) { case e1: s1 ... case eN: sN } [POST] *)
@@ -1999,36 +2614,23 @@ module Make
       (*   [ENVi+1 | ENVi'] si+1 [ENVi+1']                       *)
       (* POST = ENVN | ENVN'                                     *)
       (***********************************************************)
-      method! switch_cases switch_loc discriminant cases =
+      method private switch_cases_with_lexical_bindings
+          switch_loc discriminant cases_with_lexical_bindings =
+        let incoming_env = this#env in
         this#expecting_abrupt_completions (fun () ->
-            let (env, case_completion_states, total_refinements, has_default) =
+            let (case_starting_env, case_completion_states, fallthrough_env, has_default) =
               List.fold_left
-                (fun acc stuff ->
-                  let (_loc, case) = stuff in
-                  this#env_switch_case discriminant acc case)
-                (this#empty_env, [], [], false)
-                cases
+                (fun acc ((loc, case), bindings) ->
+                  this#env_switch_case discriminant acc (loc, case, bindings))
+                (incoming_env, [], None, false)
+                cases_with_lexical_bindings
             in
-            (* Only merge the pre-env if the switch was non-exhaustive
-             * TODO: Each refinement that ends in a break will be reachable via
-             * the PHI node at the end of the switch. Should we get rid of these refinements?
-             *)
-            ( if has_default then
-              this#reset_env env
-            else
-              let negated_total_refinements = List.map this#negate_refinements total_refinements in
-              let conjuncted_negated_total_refinements =
-                this#conjunct_all_refinements negated_total_refinements
-              in
-              this#push_refinement_scope conjuncted_negated_total_refinements;
-              (* Statement.ml uses this to determine if the switch was exhaustive, so
-               * the name-resolver records the Val.t to be queried later, keyed by
-               * the location of the switch. We add this directly to the values map,
-               * since there is no risk of the switch loc clashing with an expression loc. *)
+            this#reset_env case_starting_env;
+            ( if not has_default then
               let discriminant_after_all_negated_refinements =
                 this#get_val_of_expression discriminant
               in
-              (match discriminant_after_all_negated_refinements with
+              match discriminant_after_all_negated_refinements with
               | Some discriminant ->
                 env_state <-
                   {
@@ -2044,11 +2646,19 @@ module Make
                         }
                         env_state.values;
                   }
-              | None -> ());
-
-              this#pop_refinement_scope ();
-              this#merge_self_env env
+              | None -> ()
             );
+
+            (match fallthrough_env with
+            (* If the switch has a default then it is exhaustive. Thus, the post-env can be
+             * determined by joining all of the breaks with the last fallthrough env. If there
+             * was no fallthrough env, then the we can use empty as the base. *)
+            | Some env when has_default -> this#reset_env env
+            | None when has_default -> this#reset_env this#empty_env
+            (* If the switch wasn't exhaustive then merge with the case_starting_env as a base. If
+             * the last case fell out then merge that in too. *)
+            | Some fallthrough -> this#merge_remote_env fallthrough
+            | _ -> ());
 
             (* In general, cases are non-exhaustive, but if it has a default case then it is! *)
             let completion_state =
@@ -2063,98 +2673,88 @@ module Make
               else
                 None
             in
+
             this#commit_abrupt_completion_matching
               AbruptCompletion.(mem [break None])
               completion_state
         );
-        cases
+        cases_with_lexical_bindings
 
       method private env_switch_case
           discriminant
-          (env, case_completion_states, total_refinements, has_default)
-          (case : (ALoc.t, ALoc.t) Ast.Statement.Switch.Case.t') =
+          (case_starting_env, case_completion_states, fallthrough_env, has_default)
+          (case_loc, case, lexical_bindings) =
         let open Ast.Statement.Switch.Case in
         let { test; consequent; comments = _ } = case in
-        let (has_default, total_refinements) =
+        this#reset_env case_starting_env;
+        (* Reset discriminant *)
+        this#push_refinement_scope empty_refinements;
+        let (has_default, latest_refinements, case_starting_env) =
           match test with
-          | None ->
-            (* In the default case we negate the refinements introduced by all the other cases and
-             * AND them together. Much of Flow's "exhaustiveness" checking relies on the final
-             * refinement generated here *)
-            let negated_total_refinements = List.map this#negate_refinements total_refinements in
-            let conjuncted_negated_total_refinements =
-              this#conjunct_all_refinements negated_total_refinements
-            in
-            this#push_refinement_scope conjuncted_negated_total_refinements;
-            (true, total_refinements)
+          | None -> (true, empty_refinements, this#env)
           | Some test ->
-            this#push_refinement_scope LookupMap.empty;
+            (* As a convention, locate refined versions of the discriminant on
+               case locations, in order to read them from the environment for
+               filtered TestProp checks. *)
+            begin
+              match discriminant with
+              | (_, Ast.Expression.Member { Ast.Expression.Member._object; _ }) ->
+                begin
+                  match this#get_val_of_expression _object with
+                  | None ->
+                    let values = L.LMap.remove case_loc env_state.values in
+                    env_state <- { env_state with values }
+                  | Some refined_v ->
+                    let values =
+                      L.LMap.add
+                        case_loc
+                        { def_loc = None; value = refined_v; binding_kind_opt = None; name = None }
+                        env_state.values
+                    in
+                    env_state <- { env_state with values }
+                end
+              | _ -> ()
+            end;
             ignore @@ this#expression test;
             let (loc, _) = test in
-            (* eq_test re-reads the discriminant. We don't want to actually update the writes that
-             * reach the discriminant read as we consider each case, so we restore the writes at the
-             * discriminant's location after calling eq_test *)
-            let (discriminant_loc, _) = discriminant in
-            let discriminant_read = L.LMap.find_opt discriminant_loc env_state.values in
             this#eq_test ~strict:true ~sense:true ~cond_context:SwitchTest loc discriminant test;
-            env_state <-
-              {
-                env_state with
-                values =
-                  L.LMap.update discriminant_loc (fun _ -> discriminant_read) env_state.values;
-              };
-            (has_default, this#peek_new_refinements () :: total_refinements)
+            (has_default, this#peek_new_refinements (), this#env_without_latest_refinements)
         in
-        (* The refinement scope for this case is a disjunction of the refinement scope left
-         * over from the previous case and the refinement introduced by this case. If the previous
-         * case ended in a break then the previous refinement scope left over is None.
-         *
-         * This disjunction is modeled entirely via PHI nodes. We take the env left over from the
-         * previous case and then merge it with the refined env0 we generated here.
-         *)
-        let env0 = this#env in
-        let env0_no_refinements = this#env_without_latest_refinements in
-        this#merge_env env0 env;
+        (match fallthrough_env with
+        | None -> ()
+        | Some fallthrough -> this#merge_self_env fallthrough);
+        let () =
+          lexical_bindings
+          |> SMap.iter (fun name (kind, (loc, _)) ->
+                 match kind with
+                 | Bindings.Let
+                 | Bindings.Const ->
+                   let { val_ref; heap_refinements; _ } = SMap.find name env_state.env in
+                   this#havoc_heap_refinements heap_refinements;
+                   val_ref := Val.declared_but_skipped name loc
+                 | _ -> ()
+             )
+        in
         let case_completion_state =
           this#run_to_completion (fun () -> ignore @@ this#statement_list consequent)
         in
-        let env' = this#env in
+        let fallthrough_env =
+          match case_completion_state with
+          | None -> Some this#env
+          | Some _ -> None
+        in
         this#pop_refinement_scope ();
-        this#reset_env env0_no_refinements;
-        (env', case_completion_state :: case_completion_states, total_refinements, has_default)
+        this#reset_env case_starting_env;
+        let negated_refinements = this#negate_refinements latest_refinements in
+        this#push_refinement_scope negated_refinements;
+        let case_starting_env = this#env in
+        this#pop_refinement_scope ();
+        ( case_starting_env,
+          case_completion_state :: case_completion_states,
+          fallthrough_env,
+          has_default
+        )
 
-      (****************************************)
-      (* [PRE] try { s1 } catch { s2 } [POST] *)
-      (****************************************)
-      (*    |                                 *)
-      (*    s1 ..~                            *)
-      (*    |    |                            *)
-      (*    |   s2                            *)
-      (*     \./                              *)
-      (*      |                               *)
-      (****************************************)
-      (* [PRE] s1 [ENV1]                      *)
-      (* [HAVOC] s2 [ENV2 ]                   *)
-      (* POST = ENV1 | ENV2                   *)
-      (****************************************)
-      (*******************************************************)
-      (* [PRE] try { s1 } catch { s2 } finally { s3 } [POST] *)
-      (*******************************************************)
-      (*    |                                                *)
-      (*    s1 ..~                                           *)
-      (*    |    |                                           *)
-      (*    |   s2 ..~                                       *)
-      (*     \./     |                                       *)
-      (*      |______|                                       *)
-      (*             |                                       *)
-      (*            s3                                       *)
-      (*             |                                       *)
-      (*******************************************************)
-      (* [PRE] s1 [ENV1]                                     *)
-      (* [HAVOC] s2 [ENV2 ]                                  *)
-      (* [HAVOC] s3 [ENV3 ]                                  *)
-      (* POST = ENV3                                         *)
-      (*******************************************************)
       method! try_catch _loc (stmt : (ALoc.t, ALoc.t) Ast.Statement.Try.t) =
         this#expecting_abrupt_completions (fun () ->
             let open Ast.Statement.Try in
@@ -2164,38 +2764,79 @@ module Make
               this#run_to_completion (fun () -> ignore @@ this#block loc block)
             in
             let try_exit_env = this#env in
-            this#merge_env try_entry_env try_exit_env;
-            let catch_entry_env = this#env in
-            let catch_completion_state_opt =
+            (* The catch entry env must take into account the fact that any line in the try may
+             * have thrown. We conservatively approximate this by assuming that the very first
+             * line may have thrown, so we merge the entrance env. The other possible states that
+             * can bring us to the catch are the envs at exceptions explicitly thrown in try, so
+             * we merge those in as well.
+             *)
+            this#merge_self_env try_entry_env;
+            (* Merge in all the throw envs *)
+            this#commit_abrupt_completion_matching AbruptCompletion.(mem [throw]) None;
+            let catch_completion_state =
               match handler with
               | Some (loc, clause) ->
                 this#run_to_completion (fun () -> ignore @@ this#catch_clause loc clause)
               | None ->
                 (* No catch is like having a catch that always re-throws the error from the
                  * try block.*)
-                Some AbruptCompletion.Throw
+                this#run_to_completion (fun () ->
+                    this#raise_abrupt_completion AbruptCompletion.Throw
+                )
             in
             let catch_exit_env = this#env in
-            this#merge_env try_exit_env catch_exit_env;
-            let try_catch_completion_states =
-              (try_completion_state, [catch_completion_state_opt])
-            in
             let completion_state =
-              this#run_to_completion (fun () ->
-                  this#merge_completion_states try_catch_completion_states
-              )
+              match (try_completion_state, catch_completion_state) with
+              | (Some AbruptCompletion.Throw, Some AbruptCompletion.Throw)
+              | (Some AbruptCompletion.Return, _) ->
+                try_completion_state
+              | (Some AbruptCompletion.Throw, Some AbruptCompletion.Return) ->
+                catch_completion_state
+              | _ -> None
             in
-            this#commit_abrupt_completion_matching AbruptCompletion.all completion_state;
-            begin
+            (* Finalizers must be checked twice under two environments. We need one to determine
+             * what the env should be after the try/catch/finally, which assumes that either try or
+             * catch did not throw. This assumption, however, is too optimistic, so checking the
+             * finally under this assumption would be unsound. To soundly check the finally, we make
+             * no assumptions about throws. In that case, the entry env here is a merge of the try
+             * start env, try exit env, and catch exit env, along with every abrupt completion env
+             * from both the try and the catch. *)
+            let finally_completion_state =
               match finalizer with
               | Some (_loc, block) ->
-                this#merge_env catch_entry_env catch_exit_env;
-                ignore @@ this#block loc block
+                (* First we check assuming that either try or catch does not throw so we can
+                 * compute the post-state. We check inside expecting_abrupt_completions so that
+                 * we do not pollute the abrupt completion states with envs from the this traversal
+                 * and we do not call commit_abrupt_completion_matching because we are specifically
+                 * trying to look at the case where we exit normally from the finally *)
+                this#expecting_abrupt_completions (fun () ->
+                    (match catch_completion_state with
+                    | None -> this#merge_env try_exit_env catch_exit_env
+                    | Some _ -> this#reset_env try_exit_env);
+                    ignore @@ this#run_to_completion (fun () -> ignore @@ this#block loc block)
+                );
+                let exit_env = this#env in
+                (* Now check assuming that we may throw anywhere in try or catch so that
+                 * we can conservatively check the finally case. The starting env here is modeled as
+                 * the merge of the try_entry_env with the catch_exit env, and we include all abrupt
+                 * completion envs *)
+                this#merge_env try_entry_env try_exit_env;
+                this#merge_self_env catch_exit_env;
+                this#commit_abrupt_completion_matching AbruptCompletion.all completion_state;
+                let completion_state =
+                  this#run_to_completion (fun () -> ignore @@ this#block loc block)
+                in
+                this#reset_env exit_env;
+                completion_state
               | None ->
-                (match catch_completion_state_opt with
+                (match catch_completion_state with
                 | None -> this#merge_env try_exit_env catch_exit_env
-                | Some _ -> this#reset_env try_exit_env)
-            end;
+                | Some _ -> this#reset_env try_exit_env);
+                None
+            in
+            (* If finally has some sort of abnormal completion then we re-raise it. If not, we
+             * consider the completion states from try/catch *)
+            this#from_completion finally_completion_state;
             this#from_completion completion_state
         );
         stmt
@@ -2215,6 +2856,34 @@ module Make
                   completion_state)
               ~finally:(fun () -> this#reset_env env)
         )
+
+      method! class_property loc prop =
+        let open Ast.Class.Property in
+        let { static; _ } = prop in
+        if static then
+          super#class_property loc prop
+        else
+          let env = this#env in
+          this#run
+            (fun () ->
+              this#havoc_uninitialized_env;
+              ignore @@ super#class_property loc prop)
+            ~finally:(fun () -> this#reset_env env);
+          prop
+
+      method! class_private_field loc field =
+        let open Ast.Class.PrivateField in
+        let { static; _ } = field in
+        if static then
+          super#class_private_field loc field
+        else
+          let env = this#env in
+          this#run
+            (fun () ->
+              this#havoc_uninitialized_env;
+              ignore @@ super#class_private_field loc field)
+            ~finally:(fun () -> this#reset_env env);
+          field
 
       method! declare_function loc expr =
         match Declare_function_utils.declare_function_to_function_declaration_simple loc expr with
@@ -2258,7 +2927,7 @@ module Make
                 }
               )
             ) ->
-            this#push_refinement_scope LookupMap.empty;
+            this#push_refinement_scope empty_refinements;
             ignore @@ this#expression_refinement cond;
             let _ = List.map this#expression_or_spread other_args in
             this#pop_refinement_scope_without_unrefining ()
@@ -2271,11 +2940,8 @@ module Make
           this#havoc_current_env ~all:false;
         expr
 
-      method! new_ _loc (expr : (ALoc.t, ALoc.t) Ast.Expression.New.t) =
-        let open Ast.Expression.New in
-        let { callee; targs = _; arguments; comments = _ } = expr in
-        ignore @@ this#expression callee;
-        ignore @@ Flow_ast_mapper.map_opt this#call_arguments arguments;
+      method! new_ loc (expr : (ALoc.t, ALoc.t) Ast.Expression.New.t) =
+        ignore @@ super#new_ loc expr;
         this#havoc_current_env ~all:false;
         expr
 
@@ -2293,9 +2959,9 @@ module Make
           env_state <- { env_state with write_entries }
         in
         match argument with
-        | (_, Flow_ast.Expression.Identifier (_, { Flow_ast.Identifier.name; _ })) ->
+        | (_, Flow_ast.Expression.Identifier (id_loc, { Flow_ast.Identifier.name; _ })) ->
           let { kind; def_loc; val_ref; _ } = SMap.find name env_state.env in
-          (match error_for_assignment_kind cx name loc def_loc kind None !val_ref with
+          (match error_for_assignment_kind cx name id_loc def_loc kind AssignmentWrite !val_ref with
           | None ->
             val_ref := undefined;
             update_write_entries ~assigning:true
@@ -2368,6 +3034,22 @@ module Make
             (function
               | (_, FunctionDeclaration _) -> true
               | (_, DeclareFunction _) -> true
+              | ( _,
+                  ExportDefaultDeclaration
+                    ExportDefaultDeclaration.
+                      { declaration = Declaration (_, FunctionDeclaration _); _ }
+                ) ->
+                true
+              | ( _,
+                  ExportNamedDeclaration
+                    ExportNamedDeclaration.{ declaration = Some (_, FunctionDeclaration _); _ }
+                ) ->
+                true
+              | ( _,
+                  DeclareExportDeclaration
+                    DeclareExportDeclaration.{ declaration = Some (Function _); _ }
+                ) ->
+                true
               | _ -> false)
             stmts
         in
@@ -2376,22 +3058,26 @@ module Make
 
       (* WHen the refinement scope we push is non-empty we want to make sure that the variables
        * that scope refines are given their new refinement writes in the environment *)
-      method private push_refinement_scope new_latest_refinements =
+      method private push_refinement_scope
+          ({ applied; changeset; total = _ } as new_latest_refinements) =
         env_state <-
           {
             env_state with
             latest_refinements = new_latest_refinements :: env_state.latest_refinements;
           };
-        new_latest_refinements
-        |> LookupMap.iter (fun lookup latest_refinement ->
-               let refine_val v =
-                 if Val.id_of_val v = latest_refinement.ssa_id then
-                   Val.refinement latest_refinement.refinement_id v
-                 else
-                   v
-               in
-               this#map_val_with_lookup lookup refine_val
-           )
+        IMap.iter
+          (fun ssa_id (lookup, refinement_id) ->
+            let refine_val v =
+              if Val.base_id_of_val v = ssa_id then
+                Val.refinement refinement_id v
+              else
+                v
+            in
+            let create_val_for_heap =
+              LookupMap.find_opt lookup changeset |> Base.Option.map ~f:Lazy.from_val
+            in
+            this#map_val_with_lookup lookup ?create_val_for_heap refine_val)
+          applied
 
       (* See pop_refinement_scope. The only difference here is that we unrefine values deeply
        * instead of just at the top level. The reason for this is that intermediate control-flow
@@ -2399,11 +3085,11 @@ module Make
        * escape the scope of the loop. You may find it instructive to change the calls to
        * just pop_refinement_scope to see the behavioral differences *)
       method private pop_refinement_scope_after_loop () =
-        let refinements = List.hd env_state.latest_refinements in
+        let { applied; _ } = List.hd env_state.latest_refinements in
         env_state <- { env_state with latest_refinements = List.tl env_state.latest_refinements };
-        refinements
-        |> LookupMap.iter (fun lookup latest_refinement ->
-               let unrefine_deeply = Val.unrefine_deeply latest_refinement.refinement_id in
+        applied
+        |> IMap.iter (fun _ (lookup, refinement_id) ->
+               let unrefine_deeply x = Val.unrefine_deeply refinement_id x in
                this#map_val_with_lookup lookup unrefine_deeply
            )
 
@@ -2421,35 +3107,40 @@ module Make
        * scope again that you would re-refine the unrefined variables, which is desirable in cases
        * where we juggle refinement scopes like we do for nullish coalescing *)
       method private pop_refinement_scope () =
-        let refinements = List.hd env_state.latest_refinements in
+        let { applied; changeset; _ } = List.hd env_state.latest_refinements in
         env_state <- { env_state with latest_refinements = List.tl env_state.latest_refinements };
-        refinements
-        |> LookupMap.iter (fun lookup latest_refinement ->
-               let unrefine = Val.unrefine latest_refinement.refinement_id in
+        changeset
+        |> LookupMap.iter (fun { RefinementKey.base; projections } v ->
+               match (projections, SMap.find_opt base env_state.env) with
+               | (_ :: _, Some { heap_refinements; _ })
+                 when Base.Option.value_map
+                        (HeapRefinementMap.find_opt projections !heap_refinements)
+                        ~f:(fun v' -> Val.base_id_of_val v' = Val.base_id_of_val v)
+                        ~default:false ->
+                 heap_refinements := HeapRefinementMap.remove projections !heap_refinements
+               | _ -> ()
+           );
+        applied
+        |> IMap.iter (fun _ (lookup, refinement_id) ->
+               let unrefine x = Val.unrefine refinement_id x in
                this#map_val_with_lookup lookup unrefine
            )
 
       method private peek_new_refinements () = List.hd env_state.latest_refinements
 
-      method private negate_refinements refinements =
-        LookupMap.map
-          (fun latest_refinement ->
-            let new_id = this#new_id () in
-            let new_ref = NOT latest_refinement.refinement_id in
-            env_state <-
-              { env_state with refinement_heap = IMap.add new_id new_ref env_state.refinement_heap };
-            { latest_refinement with refinement_id = new_id })
-          refinements
+      method private negate_refinements { applied = _; changeset = _; total } =
+        match total with
+        | None -> empty_refinements
+        | Some total ->
+          let negated = Not total in
+          let (applied, changeset) = this#normalize_total_refinements negated in
+          { applied; changeset; total = Some negated }
 
       method private conjunct_all_refinements refinement_scopes =
         match refinement_scopes with
-        | [] -> LookupMap.empty
+        | [] -> empty_refinements
         | [x] -> x
-        | _ ->
-          List.fold_left
-            (this#merge_two_refinement_scopes ~merge:merge_and)
-            LookupMap.empty
-            refinement_scopes
+        | _ -> List.fold_left (this#merge ~conjunction:true) empty_refinements refinement_scopes
 
       method private negate_new_refinements () =
         let head = List.hd env_state.latest_refinements in
@@ -2457,77 +3148,275 @@ module Make
         this#pop_refinement_scope ();
         this#push_refinement_scope new_latest_refinements
 
-      method private merge_self_refinement_scope new_refinements =
-        let head = List.hd env_state.latest_refinements in
-        let head' =
-          LookupMap.merge
-            (fun _ latest1 latest2 ->
-              match (latest1, latest2) with
-              | (_, None) -> latest1
-              | (_, Some _) -> latest2)
-            head
-            new_refinements
+      method private merge_self_refinement_scope { applied = _; changeset = _; total } =
+        let { applied = _; changeset = _; total = head_total } =
+          List.hd env_state.latest_refinements
         in
+        let merged = conj_total head_total total in
+        let (applied, changeset) =
+          Base.Option.value_map
+            ~f:this#normalize_total_refinements
+            ~default:(IMap.empty, LookupMap.empty)
+            merged
+        in
+        let refis = { applied; changeset; total = merged } in
         this#pop_refinement_scope ();
-        this#push_refinement_scope head'
+        this#push_refinement_scope refis
 
-      method private add_refinement (refinement_key : RefinementKey.t) refinement =
-        let refinement_id = this#new_id () in
+      method private normalize_total_refinements total =
+        let rec nnf total =
+          match total with
+          | Not (And (t1, t2)) -> Or (nnf (Not t1), nnf (Not t2))
+          | Not (Or (t1, t2)) -> And (nnf (Not t1), nnf (Not t2))
+          | Not (Not t) -> nnf t
+          | And (t1, t2) -> And (nnf t1, nnf t2)
+          | Or (t1, t2) -> Or (nnf t1, nnf t2)
+          | Refinements _
+          | Not (Refinements _) ->
+            total
+        in
+        let rec recur total =
+          match total with
+          | Refinements (r, c) -> (r, c)
+          | Not (Refinements (r, c)) ->
+            ( IMap.map
+                (fun (lookup, refinement_id) ->
+                  let new_refinement_id = this#new_id () in
+                  env_state <-
+                    {
+                      env_state with
+                      refinement_heap =
+                        IMap.add new_refinement_id (NOT refinement_id) env_state.refinement_heap;
+                    };
+                  (lookup, new_refinement_id))
+                r,
+              c
+            )
+          | Not _ -> failwith "Negations not resolved"
+          | And (t1, t2) ->
+            let (r1, c1) = recur t1 in
+            let (r2, c2) = recur t2 in
+            let r =
+              IMap.union
+                ~combine:(fun _ (lookup1, rid1) (lookup2, rid2) ->
+                  if lookup1 = lookup2 then begin
+                    let new_refinement_id = this#new_id () in
+                    env_state <-
+                      {
+                        env_state with
+                        refinement_heap =
+                          IMap.add new_refinement_id (AND (rid1, rid2)) env_state.refinement_heap;
+                      };
+                    Some (lookup1, new_refinement_id)
+                  end else
+                    None)
+                r1
+                r2
+            in
+            let c = LookupMap.union c1 c2 in
+            (r, c)
+          | Or (t1, t2) ->
+            let (r1, c1) = recur t1 in
+            let (r2, c2) = recur t2 in
+            let r =
+              IMap.merge
+                (fun _ r1 r2 ->
+                  match (r1, r2) with
+                  | (None, _)
+                  | (_, None) ->
+                    None
+                  | (Some (lookup1, rid1), Some (lookup2, rid2)) ->
+                    if lookup1 = lookup2 then begin
+                      let new_refinement_id = this#new_id () in
+                      env_state <-
+                        {
+                          env_state with
+                          refinement_heap =
+                            IMap.add new_refinement_id (OR (rid1, rid2)) env_state.refinement_heap;
+                        };
+                      Some (lookup1, new_refinement_id)
+                    end else
+                      None)
+                r1
+                r2
+            in
+            let c =
+              LookupMap.merge
+                (fun _ c1 c2 ->
+                  match (c1, c2) with
+                  | (None, _)
+                  | (_, None) ->
+                    None
+                  | (Some v1, Some v2) -> Some (Val.merge v1 v2))
+                c1
+                c2
+            in
+            (r, c)
+        in
+        let nnf = nnf total in
+        recur nnf
+
+      method private add_projection ({ RefinementKey.lookup; loc } as key) =
+        let create_val_for_heap =
+          lazy
+            (let reason = mk_reason (RefinementKey.reason_desc key) loc in
+             let write_entries =
+               L.LMap.add loc (Env_api.AssigningWrite reason) env_state.write_entries
+             in
+             env_state <- { env_state with write_entries };
+             Val.projection loc
+            )
+        in
+        this#map_val_with_lookup lookup ~create_val_for_heap (fun x -> x)
+
+      (* Commit a set of refinements, all of which are linked biconditionally. If these refinements are negated,
+         then the negation of each refinement should hold; separate calls to this function in the same
+         refinement scope produce separate maps that are connected with an AND--and if they are negated, will produce
+         an OR of negations of the maps.
+
+         To see how this works, consider two cases:
+
+          First,
+            if (x && y) { } else { }
+          In this case, we will call commit_refinement twice, each time with a Truthy refinement on either x or y.
+          Inside the then case, x and y are both Truthy, but within the else case, we'll end up with a proposition
+          like Or (x Falsey, y Falsey). This means that within the else case we don't actually know anything concrete
+          about x or y.
+
+          Compare that to
+            if {x.y} { } else { }
+          For this case, we will call commit_refinement only once, with a map that contains both the refinement x HasProp(y) and
+          x.y Truthy. When we negate this, because we only called commit_refinement once and therefore our refinement propositon
+          contains just a single set of refinements (not multiple ones conjuncted together), we'll end up with
+          x NotHasProp(y) and x.y Falsey--which is what we want.
+      *)
+      method private commit_refinement (refinements : (ALoc.t * refinement) LookupMap.t) =
+        let { applied; changeset = old_changeset; total } = List.hd env_state.latest_refinements in
+
+        let (applied, changeset, map) =
+          LookupMap.fold
+            (fun key (loc, refinement) (applied, changeset, map) ->
+              (* Prevent refinement on undeclared const/let.
+                 We should only error if the undeclared const/let is in the same activation scope
+                 as the current one. Although we have no information about the current scope, this
+                 is not a problem. We will force initialization for all bindings before we visit a
+                 lambda. *)
+              let should_not_refine =
+                let { RefinementKey.base; projections } = key in
+                if projections = [] then
+                  match SMap.find base env_state.env with
+                  | { val_ref; kind = Bindings.Const | Bindings.Let; def_loc = Some def_loc; _ }
+                    when Val.is_undeclared_or_skipped !val_ref ->
+                    refinement
+                    |> fst
+                    |> L.LSet.iter (fun loc ->
+                           add_output
+                             Error_message.(
+                               EBindingError
+                                 (EReferencedBeforeDeclaration, loc, OrdinaryName base, def_loc)
+                             )
+                       );
+                    true
+                  | _ -> false
+                else
+                  false
+              in
+              if should_not_refine then
+                (applied, changeset, map)
+              else
+                let add_refinements v =
+                  let ssa_id = Val.base_id_of_val v in
+                  let refinement_id = this#new_id () in
+                  env_state <-
+                    {
+                      env_state with
+                      refinement_heap =
+                        IMap.add refinement_id (BASE refinement) env_state.refinement_heap;
+                    };
+                  let latest_refinement_opt = IMap.find_opt ssa_id applied in
+                  let (final_refinement_id, unrefined_v) =
+                    match latest_refinement_opt with
+                    | Some (_, existing_refinement_id) ->
+                      let unrefined_v = Val.unrefine existing_refinement_id v in
+                      let new_refinement_id = this#new_id () in
+                      let new_chain = AND (existing_refinement_id, refinement_id) in
+                      env_state <-
+                        {
+                          env_state with
+                          refinement_heap =
+                            IMap.add new_refinement_id new_chain env_state.refinement_heap;
+                        };
+
+                      (new_refinement_id, unrefined_v)
+                    | None -> (refinement_id, v)
+                  in
+                  ( (ssa_id, refinement_id, final_refinement_id),
+                    Val.refinement final_refinement_id unrefined_v
+                  )
+                in
+                match
+                  this#map_val_with_lookup_result
+                    key
+                    ~create_val_for_heap:
+                      ( lazy
+                        (let reason =
+                           mk_reason
+                             (RefinementKey.reason_desc { RefinementKey.lookup = key; loc })
+                             loc
+                         in
+                         let write_entries =
+                           L.LMap.add loc (Env_api.AssigningWrite reason) env_state.write_entries
+                         in
+                         env_state <- { env_state with write_entries };
+                         Val.projection loc
+                        )
+                        )
+                    add_refinements
+                with
+                | Some ((ssa_id, base_refinement_id, final_refinement_id), change) ->
+                  ( IMap.add ssa_id (key, final_refinement_id) applied,
+                    Base.Option.value_map
+                      ~f:(fun change -> LookupMap.add key change changeset)
+                      ~default:changeset
+                      change,
+                    IMap.add ssa_id (key, base_refinement_id) map
+                  )
+                | None -> (applied, changeset, map))
+            refinements
+            (applied, LookupMap.empty, IMap.empty)
+        in
+
         env_state <-
           {
             env_state with
-            refinement_heap = IMap.add refinement_id (BASE refinement) env_state.refinement_heap;
-          };
-        let head = List.hd env_state.latest_refinements in
-        let { RefinementKey.loc; lookup } = refinement_key in
-        let latest_refinement_opt = LookupMap.find_opt lookup head in
-        let add_refinements v =
-          let ssa_id = Val.id_of_val v in
-          let (final_refinement, unrefined_v) =
-            match latest_refinement_opt with
-            | Some { ssa_id = existing_refinement_ssa_id; refinement_id = existing_refinement_id }
-              ->
-              let unrefined_v = Val.unrefine existing_refinement_id v in
-              let unrefined_id = Val.id_of_val unrefined_v in
-              if unrefined_id = existing_refinement_ssa_id then (
-                let new_refinement_id = this#new_id () in
-                let new_chain = AND (existing_refinement_id, refinement_id) in
-                env_state <-
-                  {
-                    env_state with
-                    refinement_heap = IMap.add new_refinement_id new_chain env_state.refinement_heap;
-                  };
+            latest_refinements =
+              {
+                applied;
+                changeset = LookupMap.union changeset old_changeset;
+                total = conj_total total (Some (Refinements (map, changeset)));
+              }
+              :: List.tl env_state.latest_refinements;
+          }
 
-                ({ ssa_id = unrefined_id; refinement_id = new_refinement_id }, unrefined_v)
-              ) else
-                ({ ssa_id; refinement_id }, unrefined_v)
-            | None -> ({ ssa_id; refinement_id }, v)
-          in
+      method add_single_refinement key refi = this#commit_refinement (this#start_refinement key refi)
 
-          let head' = LookupMap.add lookup final_refinement head in
-          env_state <-
-            { env_state with latest_refinements = head' :: List.tl env_state.latest_refinements };
+      method start_refinement { RefinementKey.loc; lookup } refi =
+        LookupMap.singleton lookup (loc, refi)
 
-          Val.refinement final_refinement.refinement_id unrefined_v
-        in
-        this#map_val_with_lookup
-          lookup
-          ~create_val_for_heap:
-            (Some
-               (fun () ->
-                 let reason = mk_reason (RefinementKey.reason_desc refinement_key) loc in
-                 let write_entries =
-                   L.LMap.add loc (Env_api.AssigningWrite reason) env_state.write_entries
-                 in
-                 env_state <- { env_state with write_entries };
-                 Val.projection loc)
-            )
-          add_refinements
+      method extend_refinement { RefinementKey.loc; lookup } refi refis =
+        LookupMap.union
+          ~combine:(fun _ (loc1, (locs1, refi1)) (loc2, (locs2, refi2)) ->
+            if loc1 <> loc2 then failwith "Loc mismatch";
+            Some (loc1, (L.LSet.union locs1 locs2, AndR (refi1, refi2))))
+          refis
+          (LookupMap.singleton lookup (loc, refi))
 
       method identifier_refinement ((loc, ident) as identifier) =
         ignore @@ this#identifier identifier;
         let { Flow_ast.Identifier.name; _ } = ident in
-        this#add_refinement (RefinementKey.of_name name loc) (L.LSet.singleton loc, TruthyR)
+        let { val_ref; _ } = SMap.find name env_state.env in
+        if not (Val.is_undeclared_or_skipped !val_ref) then
+          this#add_single_refinement (RefinementKey.of_name name loc) (L.LSet.singleton loc, TruthyR)
 
       method assignment_refinement loc assignment =
         ignore @@ this#assignment loc assignment;
@@ -2537,34 +3426,38 @@ module Make
             Flow_ast.Pattern.Identifier
               { Flow_ast.Pattern.Identifier.name = (_, { Flow_ast.Identifier.name; _ }); _ }
           ) ->
-          this#add_refinement (RefinementKey.of_name name id_loc) (L.LSet.singleton loc, TruthyR)
+          this#add_single_refinement
+            (RefinementKey.of_name name id_loc)
+            (L.LSet.singleton loc, TruthyR)
         | _ -> ()
 
-      method private merge_two_refinement_scopes ~merge refinements1 refinements2 =
-        LookupMap.merge
-          (fun _ ref1 ref2 ->
-            match (ref1, ref2) with
+      method private merge
+          ~conjunction
+          { applied = _; changeset = _; total = total1 }
+          { applied = _; changeset = _; total = total2 } =
+        let total =
+          if conjunction then
+            conj_total total1 total2
+          else
+            match (total1, total2) with
+            | (Some total1, Some total2) -> Some (Or (total1, total2))
+            | (Some total, _)
+            | (_, Some total) ->
+              Some total
             | (None, None) -> None
-            | (Some ref, None) -> Some ref
-            | (None, Some ref) -> Some ref
-            | (Some ref1, Some ref2) ->
-              let new_ref = merge ref1.refinement_id ref2.refinement_id in
-              let new_id = this#new_id () in
-              env_state <-
-                {
-                  env_state with
-                  refinement_heap = IMap.add new_id new_ref env_state.refinement_heap;
-                };
-              Some { ref1 with refinement_id = new_id })
-          refinements1
-          refinements2
+        in
+        let (applied, changeset) =
+          Base.Option.value_map
+            ~f:this#normalize_total_refinements
+            ~default:(IMap.empty, LookupMap.empty)
+            total
+        in
+        { applied; changeset; total }
 
       method private merge_refinement_scopes
-          ~merge
-          (lhs_latest_refinements : latest_refinement LookupMap.t)
-          (rhs_latest_refinements : latest_refinement LookupMap.t) =
+          ~conjunction lhs_latest_refinements rhs_latest_refinements =
         let new_latest_refinements =
-          this#merge_two_refinement_scopes ~merge lhs_latest_refinements rhs_latest_refinements
+          this#merge ~conjunction lhs_latest_refinements rhs_latest_refinements
         in
         this#merge_self_refinement_scope new_latest_refinements
 
@@ -2572,13 +3465,13 @@ module Make
       method add_refinement_to_expr expr refinement =
         match RefinementKey.of_expression expr with
         | None -> ()
-        | Some refinement_key -> this#add_refinement refinement_key refinement
+        | Some refinement_key -> this#add_single_refinement refinement_key refinement
 
       method logical_refinement expr =
         let { Flow_ast.Expression.Logical.operator; left = (loc, _) as left; right; comments = _ } =
           expr
         in
-        this#push_refinement_scope LookupMap.empty;
+        this#push_refinement_scope empty_refinements;
         (* The RHS is _only_ evaluated if the LHS fails its check. That means that patterns like
          * x || invariant(false) should propagate the truthy refinement to the next line. We keep track
          * of the completion state on the rhs to do that. If the LHS throws then the entire expression
@@ -2593,7 +3486,7 @@ module Make
             (match operator with
             | Flow_ast.Expression.Logical.Or -> this#negate_new_refinements ()
             | _ -> ());
-            this#push_refinement_scope LookupMap.empty;
+            this#push_refinement_scope empty_refinements;
             let rhs_completion_state =
               this#run_to_completion (fun () -> ignore @@ this#expression_refinement right)
             in
@@ -2622,29 +3515,29 @@ module Make
             let nullish = this#peek_new_refinements () in
             let env1 = this#env_without_latest_refinements in
             this#negate_new_refinements ();
-            this#push_refinement_scope LookupMap.empty;
+            this#push_refinement_scope empty_refinements;
             let rhs_completion_state =
               this#run_to_completion (fun () -> ignore (this#expression_refinement right))
             in
             let rhs_latest_refinements = this#peek_new_refinements () in
             this#pop_refinement_scope ();
             this#pop_refinement_scope ();
-            this#push_refinement_scope LookupMap.empty;
+            this#push_refinement_scope empty_refinements;
             this#add_refinement_to_expr left (L.LSet.singleton loc, TruthyR);
             let truthy_refinements = this#peek_new_refinements () in
             this#pop_refinement_scope ();
-            this#push_refinement_scope LookupMap.empty;
-            this#merge_refinement_scopes merge_and nullish truthy_refinements;
+            this#push_refinement_scope empty_refinements;
+            this#merge_refinement_scopes ~conjunction:true nullish truthy_refinements;
             let lhs_latest_refinements = this#peek_new_refinements () in
             this#pop_refinement_scope ();
             (lhs_latest_refinements, rhs_latest_refinements, env1, rhs_completion_state)
         in
-        let merge =
+        let conjunction =
           match operator with
           | Flow_ast.Expression.Logical.Or
           | Flow_ast.Expression.Logical.NullishCoalesce ->
-            merge_or
-          | Flow_ast.Expression.Logical.And -> merge_and
+            false
+          | Flow_ast.Expression.Logical.And -> true
         in
         match rhs_completion_state with
         | Some AbruptCompletion.Throw ->
@@ -2655,134 +3548,103 @@ module Make
           this#merge_self_env env2
         | _ ->
           this#merge_self_env env1;
-          this#merge_refinement_scopes merge lhs_latest_refinements rhs_latest_refinements
+          this#merge_refinement_scopes ~conjunction lhs_latest_refinements rhs_latest_refinements
 
       method null_test ~strict ~sense loc expr other =
-        ignore @@ this#expression expr;
-        let optional_chain_refinement =
-          this#maybe_sentinel_and_chain_refinement ~sense loc expr other
+        (* Negating if sense is false is handled by negate_new_refinements. *)
+        let refis = this#maybe_sentinel ~sense:true ~strict loc expr other in
+        let refis =
+          match RefinementKey.of_expression expr with
+          | None -> refis
+          | Some key ->
+            let refinement =
+              if strict then
+                NullR
+              else
+                NotR MaybeR
+            in
+            this#extend_refinement key (L.LSet.singleton loc, refinement) refis
         in
-        match RefinementKey.of_expression expr with
-        | None -> ()
-        | Some refinement_key ->
-          let refinement =
-            if strict then
-              NullR
-            else
-              MaybeR
-          in
-          let refinement =
-            if sense then
-              refinement
-            else
-              NotR refinement
-          in
-          this#add_refinement refinement_key (L.LSet.singleton loc, refinement);
-          (match optional_chain_refinement with
-          | Some refinement_key ->
-            (* Optional chaining with ==/=== null can be tricky. If the value before ? is
-             * null or undefined then the entire chain evaluates to undefined. That leaves us
-             * with these cases:
-             * a?.b === null THEN a non-maybe and a.b null ELSE a maybe or a.b non-null
-             * a?.b == null THEN no refinement ELSE a non maybe and a.b non-null
-             * TODO: figure out how to model the negation of an optional chain refinement without
-             * introducing a second mapping for the negation of refinements.
-             *)
-            if (strict && sense) || ((not sense) && not strict) then
-              this#add_refinement refinement_key (L.LSet.singleton loc, NotR MaybeR)
-          | None -> ())
+        ignore @@ this#optional_chain expr;
+        this#commit_refinement refis;
+        if strict <> sense then this#negate_new_refinements ()
 
       method void_test ~sense ~strict ~check_for_bound_undefined loc expr other =
-        ignore @@ this#expression expr;
-        let optional_chain_refinement =
-          this#maybe_sentinel_and_chain_refinement ~sense loc expr other
-        in
+        ignore @@ this#expression other;
+        (* Negating if sense is true is handled by negate_new_refinements. *)
+        let refis = this#maybe_sentinel ~sense:false ~strict loc expr other in
         let is_global_undefined () =
           match SMap.find_opt "undefined" env_state.env with
           | None -> false
           | Some { val_ref = v; _ } -> Val.is_global_undefined !v
         in
-        match RefinementKey.of_expression expr with
-        | None -> ()
-        | Some refinement_key ->
-          (* Only add the refinement if undefined is not re-bound *)
-          if (not check_for_bound_undefined) || is_global_undefined () then (
-            let refinement =
-              if strict then
-                UndefinedR
-              else
-                MaybeR
-            in
-            let refinement =
-              if sense then
-                refinement
-              else
-                NotR refinement
-            in
-            this#add_refinement refinement_key (L.LSet.singleton loc, refinement);
-            match optional_chain_refinement with
-            | None -> ()
-            | Some refinement_key ->
-              (* Optional chaining against void is also difficult... (see null_test)
-               * a?.b === undefined THEN a maybe or a.b is undefined ELSE a non-maybe and a.b not undefined
-               * a?.b == undefined THEN a maybe or a.b maybe ELSE a non-maybe and a.b not undefined
-               * TODO: we can't model this disjunction without heap refinements, so until then we
-               * won't add any refinements for the sense && strict and sense && not strict cases *)
-              if not sense then
-                this#add_refinement refinement_key (L.LSet.singleton loc, NotR MaybeR)
-          )
-
-      method default_optional_chain_refinement_handler ~sense loc expr other =
-        match this#maybe_sentinel_and_chain_refinement ~sense loc expr other with
-        | None -> ()
-        | Some name -> this#add_refinement name (L.LSet.singleton loc, NotR MaybeR)
+        if (not check_for_bound_undefined) || is_global_undefined () then begin
+          let refis =
+            match RefinementKey.of_expression expr with
+            | None -> refis
+            | Some key ->
+              let refinement =
+                if strict then
+                  NotR UndefinedR
+                else
+                  NotR MaybeR
+              in
+              this#extend_refinement key (L.LSet.singleton loc, refinement) refis
+          in
+          ignore @@ this#optional_chain expr;
+          this#commit_refinement refis;
+          if sense then this#negate_new_refinements ()
+        end else begin
+          ignore @@ this#optional_chain expr;
+          this#commit_refinement refis
+        end
 
       method typeof_test loc arg typename sense =
-        ignore @@ this#expression arg;
-        let refinement =
+        let (refinement, undef) =
           match typename with
-          | "boolean" -> Some (BoolR loc)
-          | "function" -> Some FunctionR
-          | "number" -> Some (NumberR loc)
-          | "object" -> Some ObjectR
-          | "string" -> Some (StringR loc)
-          | "symbol" -> Some (SymbolR loc)
-          | "undefined" -> Some UndefinedR
-          | _ -> None
+          | "boolean" -> (Some (BoolR loc), false)
+          | "function" -> (Some FunctionR, false)
+          | "number" -> (Some (NumberR loc), false)
+          | "object" -> (Some ObjectR, false)
+          | "string" -> (Some (StringR loc), false)
+          | "symbol" -> (Some (SymbolR loc), false)
+          | "undefined" -> (Some UndefinedR, true)
+          | _ -> (None, false)
         in
         match (refinement, RefinementKey.of_expression arg) with
         | (Some ref, Some refinement_key) ->
+          ignore @@ this#optional_chain arg;
           let refinement =
-            if sense then
+            if sense && not undef then
               ref
             else
               NotR ref
           in
-          this#add_refinement refinement_key (L.LSet.singleton loc, refinement)
-        | _ -> ()
+          this#add_single_refinement refinement_key (L.LSet.singleton loc, refinement);
+          if sense && undef then this#negate_new_refinements ()
+        | _ -> ignore @@ this#optional_chain arg
 
       method literal_test ~strict ~sense loc expr refinement other =
-        ignore @@ this#expression expr;
-        this#default_optional_chain_refinement_handler ~sense loc expr other;
-        match RefinementKey.of_expression expr with
-        | Some refinement_key when strict ->
-          let refinement =
-            if sense then
-              refinement
-            else
-              NotR refinement
-          in
-          (match refinement_key.RefinementKey.lookup with
-          | { RefinementKey.base; projections = [] } ->
-            let { val_ref = _; def_loc; _ } = SMap.find base env_state.env in
-            (match def_loc with
-            | None -> ()
-            | Some def_loc -> add_literal_subtype_test def_loc refinement)
-          | _ -> ());
-          this#add_refinement refinement_key (L.LSet.singleton loc, refinement)
-        | _ -> ()
+        (* Negating if sense is false is handled by negate_new_refinements. *)
+        let refis = this#maybe_sentinel ~sense:true ~strict loc expr other in
+        let refis =
+          match RefinementKey.of_expression expr with
+          | Some ({ RefinementKey.lookup; loc = _ } as key) when strict ->
+            (match lookup with
+            | { RefinementKey.base; projections = [] } ->
+              let { val_ref = _; def_loc; _ } = SMap.find base env_state.env in
+              (match def_loc with
+              | None -> ()
+              | Some def_loc -> add_literal_subtype_test def_loc refinement)
+            | _ -> ());
+            this#extend_refinement key (L.LSet.singleton loc, refinement) refis
+          | _ -> refis
+        in
+        ignore @@ this#optional_chain expr;
+        this#commit_refinement refis;
+        if not sense then this#negate_new_refinements ()
 
-      method maybe_sentinel_and_chain_refinement ~sense loc expr (other_loc, _) =
+      method maybe_sentinel ~sense ~strict loc expr (other_loc, _) =
         let open Flow_ast in
         let expr' =
           match expr with
@@ -2790,46 +3652,53 @@ module Make
             (loc, Expression.Member member)
           | _ -> expr
         in
-        (match expr' with
-        | ( _,
-            Expression.Member
-              {
-                Expression.Member._object = (obj_loc, _) as _object;
-                property =
-                  ( Expression.Member.PropertyIdentifier (ploc, { Identifier.name = prop_name; _ })
-                  | Expression.Member.PropertyExpression
-                      (ploc, Expression.Literal { Literal.value = Literal.String prop_name; _ }) );
-                _;
-              }
-          ) ->
-          let (_ : ('a, 'b) Ast.Expression.t) = this#expression _object in
-          (match RefinementKey.of_expression _object with
-          | Some refinement_key ->
-            let refinement = SentinelR (prop_name, other_loc) in
-            let reason = mk_reason (RProperty (Some (OrdinaryName prop_name))) ploc in
-            let obj_reason = mk_reason (RefinementKey.reason_desc refinement_key) obj_loc in
-            Context.add_new_env_matching_props cx (prop_name, other_loc, obj_loc);
-            let write_entries =
-              L.LMap.add
-                obj_loc
-                (Env_api.AssigningWrite obj_reason)
-                (L.LMap.add other_loc (Env_api.AssigningWrite reason) env_state.write_entries)
-            in
-            env_state <- { env_state with write_entries };
-            let refinement =
-              if sense then
-                refinement
-              else
-                NotR refinement
-            in
-            this#add_refinement refinement_key (L.LSet.singleton loc, refinement)
-          | None -> ())
-        | _ -> ignore (this#expression expr : ('a, 'b) Ast.Expression.t));
-        (* We return the refinement to the callers to handle specially. null_test and void_test have the
-         * most interesting behaviors *)
-        match RefinementKey.of_optional_chain expr with
-        | Some refinement_key -> Some refinement_key
-        | None -> None
+        let refis =
+          match (strict, expr') with
+          | ( true,
+              ( _,
+                Expression.Member
+                  {
+                    Expression.Member._object = (obj_loc, _) as _object;
+                    property =
+                      ( Expression.Member.PropertyIdentifier
+                          (ploc, { Identifier.name = prop_name; _ })
+                      | Expression.Member.PropertyExpression
+                          (ploc, Expression.Literal { Literal.value = Literal.String prop_name; _ })
+                        );
+                    _;
+                  }
+              )
+            ) ->
+            (match RefinementKey.of_expression _object with
+            | Some refinement_key ->
+              let reason = mk_reason (RProperty (Some (OrdinaryName prop_name))) ploc in
+              ( if RefinementKey.(refinement_key.lookup.projections) = [] then
+                let { val_ref = _; def_loc; _ } =
+                  SMap.find RefinementKey.(refinement_key.lookup.base) env_state.env
+                in
+                Base.Option.iter def_loc ~f:(fun def_loc ->
+                    Context.add_new_env_matching_props cx (prop_name, other_loc, def_loc)
+                )
+              );
+              let obj_reason = mk_reason (RefinementKey.reason_desc refinement_key) obj_loc in
+              let write_entries =
+                L.LMap.add
+                  obj_loc
+                  (Env_api.AssigningWrite obj_reason)
+                  (L.LMap.add other_loc (Env_api.AssigningWrite reason) env_state.write_entries)
+              in
+              env_state <- { env_state with write_entries };
+              let refinement =
+                if sense then
+                  SentinelR (prop_name, other_loc)
+                else
+                  NotR (SentinelR (prop_name, other_loc))
+              in
+              this#start_refinement refinement_key (L.LSet.singleton loc, refinement)
+            | None -> LookupMap.empty)
+          | _ -> LookupMap.empty
+        in
+        refis
 
       method eq_test ~strict ~sense ~cond_context loc left right =
         let open Flow_ast in
@@ -3002,28 +3871,52 @@ module Make
          * non-literal value we are comparing against may be null or undefined,
          * in which case we'd need to use the special case behavior. Since we can't
          * know at this point, we conservatively do not refine at all based on optional
-         * chains by ignoring the output of maybe_sentinel_and_chain_refinement.
+         * chains by ignoring the output of maybe_sentinel.
          *
          * NOTE: Switch statements do not introduce sentinel refinements *)
         | (((_, Expression.Member _) as expr), other) ->
           ignore @@ this#expression expr;
-          ignore @@ this#maybe_sentinel_and_chain_refinement ~sense loc expr other;
+          let refis = this#maybe_sentinel ~sense ~strict loc expr other in
+          this#commit_refinement refis;
           ignore @@ this#expression other
         | (other, ((_, Expression.Member _) as expr)) when not (cond_context = SwitchTest) ->
           ignore @@ this#expression other;
           ignore @@ this#expression expr;
-          ignore @@ this#maybe_sentinel_and_chain_refinement ~sense loc expr other
+          let refis = this#maybe_sentinel ~sense ~strict loc expr other in
+          this#commit_refinement refis
         | _ ->
           ignore @@ this#expression left;
           ignore @@ this#expression right
 
       method instance_test loc expr instance =
-        ignore @@ this#expression expr;
+        ignore @@ this#optional_chain expr;
         ignore @@ this#expression instance;
         match RefinementKey.of_expression expr with
         | None -> ()
         | Some refinement_key ->
-          this#add_refinement refinement_key (L.LSet.singleton loc, InstanceOfR instance)
+          let (instance_loc, _) = instance in
+          ( if not (L.LMap.mem instance_loc env_state.values) then
+            (* instance is not something the name_resolver can reason about.
+               However, we still need to has a read and write entry, so we can
+               record it in statement.ml and use it in new-env. *)
+            let reason = mk_reason (RefinementKey.reason_desc refinement_key) instance_loc in
+            let values =
+              L.LMap.add
+                instance_loc
+                {
+                  def_loc = None;
+                  value = Val.one reason;
+                  binding_kind_opt = Some Bindings.Const;
+                  name = None;
+                }
+                env_state.values
+            in
+            let write_entries =
+              L.LMap.add instance_loc (Env_api.AssigningWrite reason) env_state.write_entries
+            in
+            env_state <- { env_state with values; write_entries }
+          );
+          this#add_single_refinement refinement_key (L.LSet.singleton loc, InstanceOfR instance)
 
       method binary_refinement loc expr =
         let open Flow_ast.Expression.Binary in
@@ -3083,12 +3976,16 @@ module Make
            );
          comments = _;
         } ->
+          let refi =
+            match RefinementKey.of_expression arg with
+            | None -> LookupMap.empty
+            | Some refinement_key ->
+              this#start_refinement refinement_key (L.LSet.singleton loc, IsArrayR)
+          in
+
           ignore @@ this#expression callee;
-          ignore @@ this#expression arg;
-          (match RefinementKey.of_expression arg with
-          | None -> ()
-          | Some refinement_key ->
-            this#add_refinement refinement_key (L.LSet.singleton loc, IsArrayR))
+          ignore @@ this#optional_chain arg;
+          this#commit_refinement refi
         (* Latent refinements are only applied on function calls where the function call is an identifier *)
         | {
          Flow_ast.Expression.Call.callee = (_, Flow_ast.Expression.Identifier _) as callee;
@@ -3131,7 +4028,7 @@ module Make
           loc ({ Flow_ast.Expression.Unary.operator; argument; comments = _ } as unary) =
         match operator with
         | Flow_ast.Expression.Unary.Not ->
-          this#push_refinement_scope LookupMap.empty;
+          this#push_refinement_scope empty_refinements;
           ignore @@ this#expression_refinement argument;
           this#negate_new_refinements ();
           let negated_refinements = this#peek_new_refinements () in
@@ -3139,24 +4036,76 @@ module Make
           this#merge_self_refinement_scope negated_refinements
         | _ -> ignore @@ this#unary_expression loc unary
 
-      method member_expression_refinement loc expr =
-        (* Add a PropExists refinement to the object and a
-         * Truthy heap refinement to the access *)
-        (match RefinementKey.of_expression (loc, expr) with
-        | None -> ()
-        | Some refinement_key_access ->
-          this#add_refinement refinement_key_access (L.LSet.singleton loc, TruthyR));
+      method private record_member_read (loc, expr) =
+        let open Ast.Expression in
+        match expr with
+        | OptionalMember _
+        | Member _ ->
+          (match this#get_val_of_expression (loc, expr) with
+          | None ->
+            (* In some cases, we may re-visit the same expression multiple times via different
+               environments--for example, visiting the discriminant of a switch statement. In
+               these cases, it's possible that there was a val for an expression in a previous
+               environment which is no longer available when seen through a subsequent. In order
+               to prevent old environment values from "leaking" through, we need to actively remove
+               values that may have previously existed but no longer do. *)
+            let values = L.LMap.remove loc env_state.values in
+            env_state <- { env_state with values }
+          | Some refined_v ->
+            (* We model a heap refinement as a separate const binding. We prefer this over using
+             * None so that we can report errors when using this value in a type position *)
+            let values =
+              L.LMap.add
+                loc
+                {
+                  def_loc = None;
+                  value = refined_v;
+                  binding_kind_opt = Some Bindings.Const;
+                  name = None;
+                }
+                env_state.values
+            in
+            env_state <- { env_state with values })
+        | _ -> ()
+
+      method optional_chain (loc, expr) =
+        let open Ast.Expression in
+        this#record_member_read (loc, expr);
+        let () =
+          match expr with
+          | OptionalMember _ -> this#member_expression_refinement loc expr LookupMap.empty
+          | OptionalCall
+              { OptionalCall.call = { Call.callee; targs; arguments; comments = _ }; optional } ->
+            let refi =
+              match RefinementKey.of_expression callee with
+              | Some refinement_key_obj when optional ->
+                this#start_refinement refinement_key_obj (L.LSet.singleton loc, NotR MaybeR)
+              | _ -> LookupMap.empty
+            in
+
+            ignore @@ this#optional_chain callee;
+            this#commit_refinement refi;
+            let _targs' = Base.Option.map ~f:this#call_type_args targs in
+            let _arguments' = this#call_arguments arguments in
+            this#havoc_current_env ~all:false
+          | Member mem -> ignore @@ this#member loc mem
+          | Call call -> ignore @@ this#call loc call
+          | _ -> ignore @@ this#expression (loc, expr)
+        in
+        (loc, expr)
+
+      method member_expression_refinement loc expr refis =
         let open Flow_ast.Expression in
         let open Flow_ast.Expression.Member in
         let optional =
           match expr with
-          | OptionalMember _ -> true
+          | OptionalMember { Ast.Expression.OptionalMember.optional; _ } -> optional
           | _ -> false
         in
         match expr with
         | OptionalMember OptionalMember.{ member = { Member._object; property; _ }; _ }
         | Member Member.{ _object; property; _ } ->
-          ignore @@ this#expression _object;
+          ignore @@ this#optional_chain _object;
           let propname =
             match property with
             | PropertyIdentifier (_, { Flow_ast.Identifier.name; _ })
@@ -3166,16 +4115,24 @@ module Make
               Some name
             | _ -> None
           in
-          (match (RefinementKey.of_expression _object, propname) with
-          | (_, None)
-          | (None, _) ->
-            ()
-          | (Some refinement_key_obj, Some propname) ->
+          (match RefinementKey.of_expression _object with
+          | None -> ignore @@ this#member_property property
+          | Some refinement_key_obj ->
             if optional then
-              this#add_refinement refinement_key_obj (L.LSet.singleton loc, NotR MaybeR);
-            this#add_refinement
-              refinement_key_obj
-              (L.LSet.singleton loc, PropExistsR { propname; loc }))
+              this#add_single_refinement refinement_key_obj (L.LSet.singleton loc, NotR MaybeR);
+            ignore @@ this#member_property property;
+            let refis =
+              Base.Option.value_map
+                ~f:(fun propname ->
+                  this#extend_refinement
+                    refinement_key_obj
+                    (L.LSet.singleton loc, PropExistsR { propname; loc })
+                    refis)
+                ~default:refis
+                propname
+            in
+
+            this#commit_refinement refis)
         | _ ->
           failwith "member_expression_refinement can only be called on OptionalMember or Member"
 
@@ -3202,7 +4159,15 @@ module Make
           expression
         | Member _
         | OptionalMember _ ->
-          this#member_expression_refinement loc expr;
+          (* Add a PropExists refinement to the object and a
+           * Truthy heap refinement to the access *)
+          let refis =
+            match RefinementKey.of_expression (loc, expr) with
+            | None -> LookupMap.empty
+            | Some key -> this#start_refinement key (L.LSet.singleton loc, TruthyR)
+          in
+          ignore @@ this#record_member_read expression;
+          this#member_expression_refinement loc expr refis;
           expression
         | Array _
         | ArrowFunction _
@@ -3232,7 +4197,7 @@ module Make
       method! logical _loc (expr : (ALoc.t, ALoc.t) Flow_ast.Expression.Logical.t) =
         let open Flow_ast.Expression.Logical in
         let { operator; left = (loc, _) as left; right; comments = _ } = expr in
-        this#push_refinement_scope LookupMap.empty;
+        this#push_refinement_scope empty_refinements;
         (* THe LHS is unconditionally evaluated, so we don't run-to-completion and catch the
          * error here *)
         (match operator with
@@ -3288,26 +4253,14 @@ module Make
 
       method! expression expr =
         match expr with
-        | (loc, Flow_ast.Expression.Member _)
-        | (loc, Flow_ast.Expression.OptionalMember _) ->
-          (match this#get_val_of_expression expr with
-          | None -> ()
-          | Some refined_v ->
-            (* We model a heap refinement as a separate const binding. We prefer this over using
-             * None so that we can report errors when using this value in a type position *)
-            let values =
-              L.LMap.add
-                loc
-                {
-                  def_loc = None;
-                  value = refined_v;
-                  binding_kind_opt = Some Bindings.Const;
-                  name = None;
-                }
-                env_state.values
-            in
-            env_state <- { env_state with values });
-          super#expression expr
+        | (_, Flow_ast.Expression.Call _)
+        | (_, Flow_ast.Expression.OptionalCall _)
+        | (_, Flow_ast.Expression.Member _)
+        | (_, Flow_ast.Expression.OptionalMember _) ->
+          this#push_refinement_scope empty_refinements;
+          let res = this#optional_chain expr in
+          this#pop_refinement_scope ();
+          res
         | _ -> super#expression expr
 
       method! private hoist_annotations f =
@@ -3364,6 +4317,7 @@ module Make
                     write_locs = [Env_api.Unreachable loc];
                     val_kind = None;
                     name = Some name;
+                    id = None;
                   }
               | x -> x)
             values
@@ -3374,6 +4328,11 @@ module Make
         let (loc, { Flow_ast.Identifier.name; _ }) = ident in
         this#any_identifier loc name;
         super#identifier ident
+
+      method! jsx_element_name_identifier (ident : (ALoc.t, ALoc.t) Ast.JSX.Identifier.t) =
+        let (loc, { Ast.JSX.Identifier.name; comments = _ }) = ident in
+        this#any_identifier loc name;
+        super#jsx_identifier ident
 
       method private jsx_function_call loc =
         match Context.react_runtime cx with
@@ -3391,6 +4350,17 @@ module Make
       method! pattern_identifier ?kind e =
         ignore kind;
         e
+
+      method! assignment loc (expr : (ALoc.t, ALoc.t) Ast.Expression.Assignment.t) =
+        let open Ast.Expression.Assignment in
+        let { operator; left; _ } = expr in
+        let () =
+          match (operator, left) with
+          | (Some _, (_, Ast.Pattern.Identifier { Ast.Pattern.Identifier.name; _ })) ->
+            ignore @@ this#identifier name
+          | _ -> ()
+        in
+        super#assignment loc expr
     end
 
   let program_with_scope cx program =

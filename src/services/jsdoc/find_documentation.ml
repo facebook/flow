@@ -294,6 +294,13 @@ let documentation_of_jsdoc jsdoc =
         description :: unrecognized_tag_documentations)
       ~init:(Base.List.map ~f:documentation_of_unrecognized_tag (Jsdoc.unrecognized_tags jsdoc))
   in
+  let documentation_strings =
+    Base.Option.fold
+      (Jsdoc.deprecated jsdoc)
+      ~f:(fun acc description ->
+        documentation_of_unrecognized_tag ("deprecated", Some description) :: acc)
+      ~init:documentation_strings
+  in
   match documentation_strings with
   | [] -> None
   | _ -> Some (String.concat "\n\n" documentation_strings)

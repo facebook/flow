@@ -74,7 +74,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- typeof.js:73:15
 
-Cannot reference type `numberAlias` [1] from a value position. [type-as-value]
+Cannot use type `numberAlias` [1] as a value. Types are erased and don't exist at runtime. [type-as-value]
 
    typeof.js:73:15
    73| var f: typeof numberAlias = 42; // Error: 'typeof <<type-alias>>' makes no sense...
@@ -93,6 +93,40 @@ definition. To get the type of a non-class value, use `typeof`. [value-as-type]
 
    82|  var keys: $Keys<Map> = "A";  // Error: ineligible value used in type anno
                         ^^^
+
+
+Error --------------------------------------------------------------------------------------------------- typeof.js:91:2
+
+Cannot cast `g` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+
+   typeof.js:91:2
+   91| (g: string); // error
+        ^
+
+References:
+   typeof.js:88:16
+   88| declare var g: typeof h;
+                      ^^^^^^^^ [1]
+   typeof.js:91:5
+   91| (g: string); // error
+           ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- typeof.js:97:2
+
+Cannot cast `i.p` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+
+   typeof.js:97:2
+   97| (i.p: string); // error
+        ^^^
+
+References:
+   typeof.js:95:16
+   95| const j = { p: 1 };
+                      ^ [1]
+   typeof.js:97:7
+   97| (i.p: string); // error
+             ^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- union.js:9:2
@@ -115,4 +149,4 @@ References:
 
 
 
-Found 8 errors
+Found 10 errors

@@ -90,6 +90,25 @@ let main (module Runnable : Codemod_runner.RUNNABLE) codemod_flags () =
   let module M = Codemod_utils.MakeMain (Runnable) in
   M.main ~options ~write ~repeat ~log_level ~shared_mem_config roots
 
+let string_reporter (type a) (module Acc : Codemod_report.S with type t = a) : a Codemod_report.t =
+  {
+    Codemod_report.report = Codemod_report.StringReporter Acc.report;
+    combine = Acc.combine;
+    empty = Acc.empty;
+  }
+
+let common_annotate_flags prev =
+  let open CommandSpec.ArgSpec in
+  prev
+  |> flag
+       "--max-type-size"
+       (required ~default:100 int)
+       ~doc:"The maximum number of nodes allowed in a single type annotation (default: 100)"
+  |> flag
+       "--default-any"
+       no_arg
+       ~doc:"Adds 'any' to all locations where normalization or validation fails"
+
 (***********************)
 (* Codemod subcommands *)
 (***********************)
@@ -119,37 +138,23 @@ module Annotate_exports_command = struct
                "--preserve-literals"
                (required ~default:Literals.Never (enum preserve_string_literals_level))
                ~doc:""
-          |> flag
-               "--max-type-size"
-               (required ~default:100 int)
-               ~doc:"The maximum number of nodes allowed in a single type annotation (default: 100)"
-          |> flag
-               "--default-any"
-               no_arg
-               ~doc:"Adds 'any' to all locations where normalization or validation fails"
+          |> common_annotate_flags
         );
     }
 
   let main codemod_flags preserve_literals max_type_size default_any () =
-    let open Codemod_utils in
-    let open Insert_type_utils in
     let module Runner = Codemod_runner.MakeSimpleTypedRunner (struct
-      module Acc = Acc (Annotate_exports.SignatureVerificationErrorStats)
+      module Acc = Annotate_exports.Acc
 
       type accumulator = Acc.t
 
-      let reporter =
-        {
-          Codemod_report.report = Codemod_report.StringReporter Acc.report;
-          combine = Acc.combine;
-          empty = Acc.empty;
-        }
+      let reporter = string_reporter (module Acc)
 
       let check_options o = o
 
       let visit =
         let mapper = Annotate_exports.mapper ~preserve_literals ~max_type_size ~default_any in
-        Codemod_utils.make_visitor (Mapper mapper)
+        Codemod_utils.make_visitor (Codemod_utils.Mapper mapper)
     end) in
     main (module Runner) codemod_flags ()
 
@@ -180,14 +185,7 @@ module Annotate_escaped_generics = struct
                "--preserve-literals"
                (required ~default:Literals.Auto (enum preserve_string_literals_level))
                ~doc:""
-          |> flag
-               "--max-type-size"
-               (required ~default:100 int)
-               ~doc:"The maximum number of nodes allowed in a single type annotation (default: 100)"
-          |> flag
-               "--default-any"
-               no_arg
-               ~doc:"Adds 'any' to all locations where normalization or validation fails"
+          |> common_annotate_flags
         );
     }
 
@@ -228,14 +226,7 @@ module Annotate_lti_command = struct
                "--preserve-literals"
                (required ~default:Literals.Never (enum preserve_string_literals_level))
                ~doc:""
-          |> flag
-               "--max-type-size"
-               (required ~default:100 int)
-               ~doc:"The maximum number of nodes allowed in a single type annotation (default: 100)"
-          |> flag
-               "--default-any"
-               no_arg
-               ~doc:"Adds 'any' to all locations where normalization or validation fails"
+          |> common_annotate_flags
           |> flag
                "--add-this-params"
                no_arg
@@ -244,19 +235,12 @@ module Annotate_lti_command = struct
     }
 
   let main codemod_flags preserve_literals max_type_size default_any add_this_params () =
-    let open Codemod_utils in
-    let open Insert_type_utils in
     let module Runner = Codemod_runner.MakeSimpleTypedRunner (struct
-      module Acc = Acc (Annotate_lti.ErrorStats)
+      module Acc = Annotate_lti.Acc
 
       type accumulator = Acc.t
 
-      let reporter =
-        {
-          Codemod_report.report = Codemod_report.StringReporter Acc.report;
-          combine = Acc.combine;
-          empty = Acc.empty;
-        }
+      let reporter = string_reporter (module Acc)
 
       (* Match all files the codemod is run over *)
       let check_options o =
@@ -274,7 +258,7 @@ module Annotate_lti_command = struct
         let mapper =
           Annotate_lti.mapper ~preserve_literals ~max_type_size ~default_any ~add_this_params
         in
-        Codemod_utils.make_visitor (Mapper mapper)
+        Codemod_utils.make_visitor (Codemod_utils.Mapper mapper)
     end) in
     main (module Runner) codemod_flags ()
 
@@ -311,30 +295,21 @@ module Annotate_declarations_command = struct
                no_arg
                ~doc:"Generalize annotations containing null or void to maybe types"
           |> flag
-               "--max-type-size"
-               (required ~default:100 int)
-               ~doc:"The maximum number of nodes allowed in a single type annotation (default: 100)"
-          |> flag
-               "--default-any"
+               "--merge-array-elements"
                no_arg
-               ~doc:"Adds 'any' to all locations where normalization or validation fails"
+               ~doc:"combine arrays appearing in toplevel unions to a single array"
+          |> common_annotate_flags
         );
     }
 
-  let main codemod_flags preserve_literals generalize_maybe max_type_size default_any () =
-    let open Codemod_utils in
-    let open Insert_type_utils in
+  let main
+      codemod_flags preserve_literals generalize_maybe merge_arrays max_type_size default_any () =
     let module Runner = Codemod_runner.MakeSimpleTypedRunner (struct
-      module Acc = Acc (Annotate_declarations.ErrorStats)
+      module Acc = Annotate_declarations.Acc
 
       type accumulator = Acc.t
 
-      let reporter =
-        {
-          Codemod_report.report = Codemod_report.StringReporter Acc.report;
-          combine = Acc.combine;
-          empty = Acc.empty;
-        }
+      let reporter = string_reporter (module Acc)
 
       (* Match all files the codemod is run over *)
       let check_options o =
@@ -356,8 +331,9 @@ module Annotate_declarations_command = struct
             ~generalize_maybe
             ~max_type_size
             ~default_any
+            ~merge_arrays
         in
-        Codemod_utils.make_visitor (Mapper mapper)
+        Codemod_utils.make_visitor (Codemod_utils.Mapper mapper)
     end) in
     main (module Runner) codemod_flags ()
 
@@ -380,18 +356,12 @@ module Rename_redefinitions_command = struct
     }
 
   let main codemod_flags () =
-    let open Codemod_utils in
     let module Runner = Codemod_runner.MakeSimpleTypedRunner (struct
       module Acc = Rename_redefinitions.Acc
 
       type accumulator = Acc.t
 
-      let reporter =
-        {
-          Codemod_report.report = Codemod_report.StringReporter Acc.report;
-          combine = Acc.combine;
-          empty = Acc.empty;
-        }
+      let reporter = string_reporter (module Acc)
 
       (* Match all files the codemod is run over *)
       let check_options o =
@@ -403,7 +373,7 @@ module Rename_redefinitions_command = struct
 
       let visit =
         let mapper = Rename_redefinitions.mapper in
-        Codemod_utils.make_visitor (Mapper mapper)
+        Codemod_utils.make_visitor (Codemod_utils.Mapper mapper)
     end) in
     main (module Runner) codemod_flags ()
 
@@ -426,21 +396,14 @@ module KeyMirror_command = struct
     }
 
   let main codemod_flags () =
-    let open Codemod_utils in
-    let open Insert_type_utils in
     let module Runner = Codemod_runner.MakeUntypedRunner (struct
-      module Acc = UntypedAcc (Objmapi_to_keymirror.KeyMirrorStats)
+      module Acc = Objmapi_to_keymirror.Acc
 
       type accumulator = Acc.t
 
-      let reporter =
-        {
-          Codemod_report.report = Codemod_report.StringReporter Acc.report;
-          combine = Acc.combine;
-          empty = Acc.empty;
-        }
+      let reporter = string_reporter (module Acc)
 
-      let visit = Codemod_utils.make_visitor (Mapper Objmapi_to_keymirror.mapper)
+      let visit = Codemod_utils.make_visitor (Codemod_utils.Mapper Objmapi_to_keymirror.mapper)
     end) in
     main (module Runner) codemod_flags ()
 
@@ -471,36 +434,68 @@ module Annotate_empty_object_command = struct
                "--preserve-literals"
                (required ~default:Literals.Never (enum preserve_string_literals_level))
                ~doc:""
-          |> flag
-               "--max-type-size"
-               (required ~default:100 int)
-               ~doc:"The maximum number of nodes allowed in a single type annotation (default: 100)"
-          |> flag
-               "--default-any"
-               no_arg
-               ~doc:"Adds 'any' to all locations where normalization or validation fails"
+          |> common_annotate_flags
         );
     }
 
   let main codemod_flags preserve_literals max_type_size default_any () =
-    let open Codemod_utils in
-    let open Insert_type_utils in
     let module Runner = Codemod_runner.MakeSimpleTypedRunner (struct
-      module Acc = Acc (Annotate_empty_object.ErrorStats)
+      module Acc = Annotate_empty_object.Acc
 
       type accumulator = Acc.t
 
-      let reporter =
-        {
-          Codemod_report.report = Codemod_report.StringReporter Acc.report;
-          combine = Acc.combine;
-          empty = Acc.empty;
-        }
+      let reporter = string_reporter (module Acc)
 
       let check_options o = Options.{ o with opt_experimental_infer_indexers = true }
 
       let visit =
         let mapper = Annotate_empty_object.mapper ~preserve_literals ~max_type_size ~default_any in
+        Codemod_utils.make_visitor (Codemod_utils.Mapper mapper)
+    end) in
+    main (module Runner) codemod_flags ()
+
+  let command = CommandSpec.command spec main
+end
+
+module Annotate_use_state_command = struct
+  let doc = "Adds explicit type arguments to `useState`/`React.useState` calls"
+
+  let spec =
+    let module Literals = Codemod_hardcoded_ty_fixes.PreserveLiterals in
+    let preserve_string_literals_level =
+      Literals.[("always", Always); ("never", Never); ("auto", Auto)]
+    in
+    let name = "annotate-use-state" in
+    {
+      CommandSpec.name;
+      doc;
+      usage =
+        Printf.sprintf "Usage: %s codemod %s [OPTION]... [FILE]\n\n%s\n" name Utils_js.exe_name doc;
+      args =
+        CommandSpec.ArgSpec.(
+          empty
+          |> CommandUtils.codemod_flags
+          |> flag
+               "--preserve-literals"
+               (required ~default:Literals.Never (enum preserve_string_literals_level))
+               ~doc:""
+          |> common_annotate_flags
+        );
+    }
+
+  let main codemod_flags preserve_literals max_type_size default_any () =
+    let open Codemod_utils in
+    let module Runner = Codemod_runner.MakeSimpleTypedRunner (struct
+      module Acc = Annotate_use_state.Acc
+
+      type accumulator = Acc.t
+
+      let reporter = string_reporter (module Acc)
+
+      let check_options o = o
+
+      let visit =
+        let mapper = Annotate_use_state.mapper ~preserve_literals ~max_type_size ~default_any in
         Codemod_utils.make_visitor (Mapper mapper)
     end) in
     main (module Runner) codemod_flags ()
@@ -515,13 +510,14 @@ let command =
       ~name:"codemod"
       ~doc:"Runs large-scale codebase refactors"
       [
-        (Annotate_exports_command.spec.CommandSpec.name, Annotate_exports_command.command);
-        (Annotate_escaped_generics.spec.CommandSpec.name, Annotate_escaped_generics.command);
-        (Annotate_lti_command.spec.CommandSpec.name, Annotate_lti_command.command);
         (Annotate_declarations_command.spec.CommandSpec.name, Annotate_declarations_command.command);
-        (Rename_redefinitions_command.spec.CommandSpec.name, Rename_redefinitions_command.command);
-        (KeyMirror_command.spec.CommandSpec.name, KeyMirror_command.command);
         (Annotate_empty_object_command.spec.CommandSpec.name, Annotate_empty_object_command.command);
+        (Annotate_escaped_generics.spec.CommandSpec.name, Annotate_escaped_generics.command);
+        (Annotate_exports_command.spec.CommandSpec.name, Annotate_exports_command.command);
+        (Annotate_lti_command.spec.CommandSpec.name, Annotate_lti_command.command);
+        (Annotate_use_state_command.spec.CommandSpec.name, Annotate_use_state_command.command);
+        (KeyMirror_command.spec.CommandSpec.name, KeyMirror_command.command);
+        (Rename_redefinitions_command.spec.CommandSpec.name, Rename_redefinitions_command.command);
       ]
   in
   CommandSpec.command spec main

@@ -21,3 +21,16 @@ function test2() {
     var y: string = n;    // error, n is number (EmptyT would work)
   }
 }
+
+// regression test for analysis after abnormal control flow:
+// const like bindings must not become bot (EmptyT).
+function test3() {
+  bad();
+  return;
+
+  function bad() {
+    expectNum(""); // error
+  }
+
+  function expectNum(a: number) { }
+}

@@ -30,24 +30,6 @@ References:
              ^ [2]
 
 
-Error --------------------------------------------------------------------------------------------- declare_pred.js:20:1
-
-Cannot assign function to `h` because predicate encoded in return [1] is incompatible with predicate encoded in
-return [2]. [incompatible-type]
-
-   declare_pred.js:20:1
-   20| function h(x: number): bool %checks { return x === 1 }
-       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-References:
-   declare_pred.js:20:39
-   20| function h(x: number): bool %checks { return x === 1 }
-                                             ^^^^^^^^^^^^^^ [1]
-   declare_pred.js:21:37
-   21| declare function h(x: number): bool %checks (x === 0);
-                                           ^^^^^^^^^^^^^^^^^ [2]
-
-
 Error -------------------------------------------------------------------------------------------- declare_pred.js:21:18
 
 Cannot declare `h` [1] because the name is already bound. [name-already-bound]
@@ -104,19 +86,18 @@ References:
                         ^ [1]
 
 
-Error ------------------------------------------------------------------------------------------------------ err.js:3:24
+Error -------------------------------------------------------------------------------------------- declare_pred.js:37:18
 
-Cannot assign function to `f` because number [1] is incompatible with string [2] in the return value.
-[incompatible-type]
+Cannot declare `l` [1] because the name is already bound. [name-already-bound]
 
-   err.js:3:24
-   3| function f(x: number): number { return 42}
-                             ^^^^^^ [1]
+   declare_pred.js:37:18
+   37| declare function l(x: string): bool %checks (x === "A");
+                        ^
 
 References:
-   err.js:4:29
-   4| declare function f(number): string // error
-                                  ^^^^^^ [2]
+   declare_pred.js:36:18
+   36| declare function l(x: boolean): bool;
+                        ^ [1]
 
 
 Error ------------------------------------------------------------------------------------------------------ err.js:4:18
@@ -165,4 +146,4 @@ References:
 
 
 
-Found 11 errors
+Found 10 errors

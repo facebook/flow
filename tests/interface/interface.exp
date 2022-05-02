@@ -1,3 +1,21 @@
+Error ----------------------------------------------------------------------------------------------------- array.js:4:2
+
+Cannot cast `a` to interface type because number [1] is incompatible with boolean [2] in the return value of property
+`pop`. [incompatible-cast]
+
+   array.js:4:2
+   4| (a: interface {pop(): boolean}); // ERROR
+       ^
+
+References:
+   array.js:1:22
+   1| declare var a: Array<number>;
+                           ^^^^^^ [1]
+   array.js:4:23
+   4| (a: interface {pop(): boolean}); // ERROR
+                            ^^^^^^^ [2]
+
+
 Error ------------------------------------------------------------------------------------------------------ fun.js:5:19
 
 Cannot assign function to `f0` because number [1] is incompatible with undefined [2] in the return value.
@@ -11,6 +29,24 @@ References:
    fun.js:2:7
    2|   (): void;
             ^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------------ fun.js:11:2
+
+Cannot cast `f` to interface type because property `xxx` is missing in function [1] but exists in interface type [2].
+[prop-missing]
+
+   fun.js:11:2
+   11| (f: interface {xxx: boolean}); // ERROR
+        ^
+
+References:
+   fun.js:9:1
+    9| function f() {}
+       ^^^^^^^^^^^^ [1]
+   fun.js:11:5
+   11| (f: interface {xxx: boolean}); // ERROR
+           ^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------------- indexer.js:9:3
@@ -210,7 +246,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ interface.js:7:13
 
-Cannot reference type `I` [1] from a value position. [type-as-value]
+Cannot use type `I` [1] as a value. Types are erased and don't exist at runtime. [type-as-value]
 
    interface.js:7:13
    7| var i = new I(); // error
@@ -372,6 +408,24 @@ References:
                          ^^^^^^ [2]
 
 
+Error ---------------------------------------------------------------------------------------------------- string.js:4:2
+
+Cannot cast `s` to interface type because string [1] is incompatible with boolean [2] in the return value of property
+`charAt`. [incompatible-cast]
+
+   string.js:4:2
+      4| (s: interface {charAt(pos: number): boolean}); // ERROR
+          ^
+
+References:
+   <BUILTINS>/core.js:1090:26
+   1090|     charAt(pos: number): string;
+                                  ^^^^^^ [1]
+   string.js:4:37
+      4| (s: interface {charAt(pos: number): boolean}); // ERROR
+                                             ^^^^^^^ [2]
+
+
 Error ------------------------------------------------------------------------------------------------ subtyping.js:35:2
 
 Cannot cast `new A` to `J` because property `y` is missing in `A` [1] but exists in `J` [2]. [prop-missing]
@@ -443,6 +497,42 @@ References:
    subtyping.js:74:21
    74| interface N extends M {
                            ^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- symbol.js:4:2
+
+Cannot cast `s` to interface type because string [1] is incompatible with boolean [2] in property `description`.
+[incompatible-cast]
+
+   symbol.js:4:2
+     4| (s: interface {+description: boolean}); // ERROR
+         ^
+
+References:
+   <BUILTINS>/core.js:277:17
+   277|   +description: string | void;
+                        ^^^^^^ [1]
+   symbol.js:4:30
+     4| (s: interface {+description: boolean}); // ERROR
+                                     ^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- symbol.js:4:2
+
+Cannot cast `s` to interface type because undefined [1] is incompatible with boolean [2] in property `description`.
+[incompatible-cast]
+
+   symbol.js:4:2
+     4| (s: interface {+description: boolean}); // ERROR
+         ^
+
+References:
+   <BUILTINS>/core.js:277:26
+   277|   +description: string | void;
+                                 ^^^^ [1]
+   symbol.js:4:30
+     4| (s: interface {+description: boolean}); // ERROR
+                                     ^^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:6:17
@@ -687,50 +777,78 @@ References:
              ^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------------- top.js:3:3
+Error ------------------------------------------------------------------------------------------------------- top.js:3:2
 
 Cannot cast `x` to interface type because mixed [1] is incompatible with interface type [2]. [incompatible-cast]
 
-   top.js:3:3
-   3| ( x : interface {} ); // error
-        ^
+   top.js:3:2
+   3| (x: interface {}); // ERROR
+       ^
 
 References:
-   top.js:1:17
-   1| declare var x : mixed;
-                      ^^^^^ [1]
-   top.js:3:7
-   3| ( x : interface {} ); // error
-            ^^^^^^^^^^^^ [2]
+   top.js:1:16
+   1| declare var x: mixed;
+                     ^^^^^ [1]
+   top.js:3:5
+   3| (x: interface {}); // ERROR
+          ^^^^^^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------------- top.js:5:3
+Error ------------------------------------------------------------------------------------------------------- top.js:5:2
 
 Cannot cast `undefined` to interface type because undefined [1] is incompatible with interface type [2].
 [incompatible-cast]
 
-   top.js:5:3
-   5| ( undefined : interface {} ); // error
-        ^^^^^^^^^ [1]
+   top.js:5:2
+   5| (undefined: interface {}); // ERROR
+       ^^^^^^^^^ [1]
 
 References:
-   top.js:5:15
-   5| ( undefined : interface {} ); // error
-                    ^^^^^^^^^^^^ [2]
+   top.js:5:13
+   5| (undefined: interface {}); // ERROR
+                  ^^^^^^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------------- top.js:7:3
+Error ------------------------------------------------------------------------------------------------------- top.js:6:2
 
 Cannot cast `null` to interface type because null [1] is incompatible with interface type [2]. [incompatible-cast]
 
-   top.js:7:3
-   7| ( null : interface {} ); // error
-        ^^^^ [1]
+   top.js:6:2
+   6| (null: interface {}); // ERROR
+       ^^^^ [1]
 
 References:
-   top.js:7:10
-   7| ( null : interface {} ); // error
-               ^^^^^^^^^^^^ [2]
+   top.js:6:8
+   6| (null: interface {}); // ERROR
+             ^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------------- top.js:8:2
+
+Cannot cast `1` to interface type because number [1] is incompatible with interface type [2]. [incompatible-cast]
+
+   top.js:8:2
+   8| (1: interface {}); // ERROR
+       ^ [1]
+
+References:
+   top.js:8:5
+   8| (1: interface {}); // ERROR
+          ^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------------- top.js:9:2
+
+Cannot cast `true` to interface type because boolean [1] is incompatible with interface type [2]. [incompatible-cast]
+
+   top.js:9:2
+   9| (true: interface {}); // ERROR
+       ^^^^ [1]
+
+References:
+   top.js:9:8
+   9| (true: interface {}); // ERROR
+             ^^^^^^^^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------------------- utility.js:12:3
@@ -759,7 +877,7 @@ References:
 
 
 
-Found 49 errors
+Found 56 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

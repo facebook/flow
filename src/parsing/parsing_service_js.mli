@@ -33,9 +33,9 @@ and parse_skip_reason =
 and parse_error = Loc.t * Parse_error.t
 
 and parse_failure =
+  | Uncaught_exception of Exception.t
   | Docblock_errors of docblock_error list
   | Parse_error of parse_error
-  | File_sig_error of File_sig.With_Loc.error
 
 and docblock_error = Loc.t * docblock_error_kind
 
@@ -62,6 +62,8 @@ type results = {
   not_found: FilenameSet.t;
   (* package.json files parsed *)
   package_json: File_key.t list * parse_error option list;
+  (* set of modules that need to be committed *)
+  dirty_modules: Modulename.Set.t;
 }
 
 type parse_options = {

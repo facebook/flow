@@ -194,6 +194,9 @@ static int win32_getpagesize(void) {
 // represent offsets into the hash table itself.
 typedef uintnat addr_t;
 
+// A field is either an address or a tagged integer, distinguished by low bit.
+typedef uintnat field_t;
+
 typedef struct {
   /* Layout information, used by workers to create memory mappings. */
   size_t locals_bsize;
@@ -268,9 +271,9 @@ typedef struct {
 // +-------------------------------+--------------------------------+------+--+
 // |                               |                                |      |
 // |                               |                                |      * 0-1
-// GC |                               |                                | | |
-// * 2-7 tag |                               | |                               *
-// 31-1 decompress capacity (in words)
+// |                               |                                |        GC
+// |                               |                                * 2-7 tag
+// |                               * 31-1 decompress capacity (in words)
 // * 63-32 compressed size (in words)
 //
 // For GC, to distinguish headers from (word-aligned) pointers, the least bits
@@ -289,8 +292,8 @@ typedef uintnat hh_tag_t;
 
 // Keep these in sync with "tag" type definition in sharedMem.ml
 #define Entity_tag 0
-#define Heap_string_tag 4
-#define Serialized_tag 9
+#define Heap_string_tag 11
+#define Serialized_tag 16
 
 static _Bool should_scan(hh_tag_t tag) {
   // The zero tag represents "entities" which need to be handled specially.
@@ -1049,15 +1052,15 @@ static void mark_stack_reset(void) {
 // except we allocate white to avoid needing to sweep. Because we allocate
 // white and don't sweep these addresses, it's important that they are not
 // darkened.
-static inline void mark_slice_darken(addr_t addr) {
-  if (addr != NULL_ADDR && addr < gc_end) {
-    hh_header_t hd = Deref(addr);
+static inline void mark_slice_darken(field_t fld) {
+  if ((fld & 1) == 0 && fld != NULL_ADDR && fld < gc_end) {
+    hh_header_t hd = Deref(fld);
     if (Is_white(hd)) {
-      Deref(addr) = Black_hd(hd);
+      Deref(fld) = Black_hd(hd);
       if (mark_stack_ptr == mark_stack_end) {
         mark_stack_resize();
       }
-      *mark_stack_ptr++ = addr;
+      *mark_stack_ptr++ = fld;
     }
   }
 }
@@ -1279,12 +1282,11 @@ CAMLprim value hh_sweep_slice(value work_val) {
 // | X |<--| * |<--| * |
 // +---+   +---+   +---+
 static void gc_thread(addr_t p) {
-  if (Deref(p) == NULL_ADDR) {
-    return;
+  field_t q = Deref(p);
+  if ((q & 1) == 0 && q != NULL_ADDR) {
+    Deref(p) = Deref(q);
+    Deref(q) = p;
   }
-  uintnat q = Deref(p);
-  Deref(p) = Deref(q);
-  Deref(q) = p;
 }
 
 // See comment above `mark_entity`
@@ -1612,8 +1614,8 @@ static void raise_hash_table_full(void) {
 /* Adds a key value to the hashtable. This code is perf sensitive, please
  * check the perf before modifying.
  *
- * Returns the number of bytes allocated into the shared heap, or a negative
- * number if nothing no new memory was allocated.
+ * Returns the address associated with this key in the hash table, which may not
+ * be the same as the address passed in by the caller.
  */
 /*****************************************************************************/
 CAMLprim value hh_add(value key, value addr) {
@@ -1625,73 +1627,53 @@ CAMLprim value hh_add(value key, value addr) {
   elt.addr = Long_val(addr);
 
   size_t hashtbl_slots = info->hashtbl_slots;
-  unsigned int slot = elt.hash & (hashtbl_slots - 1);
-  unsigned int init_slot = slot;
+  size_t slot = elt.hash & (hashtbl_slots - 1);
+  size_t init_slot = slot;
 
   while (1) {
-    uint64_t slot_hash = hashtbl[slot].hash;
+    helt_t old = hashtbl[slot];
 
-    if (slot_hash == elt.hash) {
-      // This value has already been been written to this slot, except that the
-      // value may have been deleted. Deleting a slot leaves the hash in place
-      // but replaces the addr field with NULL_ADDR. In this case, we can re-use
-      // the slot by writing the new address into.
+    if (old.hash == 0 || (old.hash == elt.hash && old.addr == NULL_ADDR)) {
+      // This slot is free. Either the slot has never been taken (hash == 0),
+      // or the slot was taken by this value, but then deleted (addr == NULL).
+      // In either case, we attempt to atomically take this slot.
       //
-      // Remember that only reads and writes can happen concurrently, so we
-      // don't need to worry about concurrent deletes.
-
-      if (hashtbl[slot].addr == NULL_ADDR) {
-        // Two threads may be racing to write this value, so try to grab the
-        // slot atomically.
-        addr_t old_addr = __sync_val_compare_and_swap(
-            &hashtbl[slot].addr, NULL_ADDR, elt.addr);
-
-        if (old_addr == NULL_ADDR) {
-          __sync_fetch_and_add(&info->hcounter_filled, 1);
-        } else {
-          // Another thread won the race, but since the slot hashes match, it
-          // wrote the value we were trying to write, so our work is done.
-          addr = Val_long(old_addr);
+      // Only reads and writes can happen concurrently, so we don't need to
+      // worry about concurrent deletes.
+      //
+      // Note that this is a 16-byte CAS, writing both the hash and address at
+      // the same time.
+      if (__atomic_compare_exchange_n(
+              /* ptr */ &hashtbl[slot].value,
+              /* expected */ &old.value,
+              /* desired */ elt.value,
+              /* weak */ 0,
+              /* success_memorder */ __ATOMIC_SEQ_CST,
+              /* failure_memorder */ __ATOMIC_SEQ_CST)) {
+        // We successfully grabbed the slot.
+        if (old.hash == 0) {
+          // We are the first to acquire the slot.
+          __atomic_fetch_add(&info->hcounter, 1, __ATOMIC_RELAXED);
         }
+        __atomic_fetch_add(&info->hcounter_filled, 1, __ATOMIC_RELAXED);
+        break;
       }
 
-      break;
+      // CAS failed, meaning another thread took the slot, and the new value has
+      // been loaded into `old`. We intentionally fall through here to pick up
+      // the `old.hash == elt.hash` check below before continuing to probe.
     }
 
-    if (slot_hash == 0) {
-      helt_t old;
-
-      // This slot is free, but two threads may be racing to write to this slot,
-      // so try to grab the slot atomically. Note that this is a 16-byte CAS
-      // writing both the hash and the address at the same time. We expect the
-      // slot to contain `0`. If that's the case, `success == true`; otherwise,
-      // whatever data was in the slot at the time of the CAS will be stored in
-      // `old`.
-      old.value = 0;
-      _Bool success = __atomic_compare_exchange(
-          /* ptr */ &hashtbl[slot].value,
-          /* expected */ &old.value,
-          /* desired */ &elt.value,
-          /* weak */ 0,
-          /* success_memorder */ __ATOMIC_SEQ_CST,
-          /* failure_memorder */ __ATOMIC_SEQ_CST);
-
-      if (success) {
-        // The slot was still empty when we tried to CAS, meaning we
-        // successfully grabbed the slot.
-        uint64_t size = __sync_fetch_and_add(&info->hcounter, 1);
-        __sync_fetch_and_add(&info->hcounter_filled, 1);
-        assert(size < hashtbl_slots); // sanity check
-        break;
-      }
-
-      if (old.hash == elt.hash) {
-        // The slot was non-zero, so we failed to grab the slot. However, the
-        // thread which won the race wrote the value we were trying to write,
-        // meaning out work is done.
-        addr = Val_long(old.addr);
-        break;
-      }
+    if (old.hash == elt.hash) {
+      // The slot already contains the value we were trying to write, either
+      // because the slot was taken when we initially read, or because we lost
+      // the CAS race to another thread.
+      //
+      // We return the address of the winning write. Callers can compare the
+      // return value with the address they tried to write to tell if they
+      // acquired the slot.
+      addr = Val_long(old.addr);
+      break;
     }
 
     slot = (slot + 1) & (hashtbl_slots - 1);
@@ -1709,20 +1691,17 @@ CAMLprim value hh_add(value key, value addr) {
  * is either free or points to the key.
  */
 /*****************************************************************************/
-static unsigned int find_slot(value key) {
+static size_t find_slot(value key, helt_t* elt) {
   size_t hashtbl_slots = info->hashtbl_slots;
   uint64_t hash = get_hash(key);
-  unsigned int slot = hash & (hashtbl_slots - 1);
-  unsigned int init_slot = slot;
+  size_t slot = hash & (hashtbl_slots - 1);
+  size_t init_slot = slot;
   while (1) {
-    if (hashtbl[slot].hash == hash) {
-      return slot;
-    }
-    if (hashtbl[slot].hash == 0) {
+    *elt = hashtbl[slot];
+    if (elt->hash == hash || elt->hash == 0) {
       return slot;
     }
     slot = (slot + 1) & (hashtbl_slots - 1);
-
     if (slot == init_slot) {
       raise_hash_table_full();
     }
@@ -1739,8 +1718,9 @@ static unsigned int find_slot(value key) {
 CAMLprim value hh_mem(value key) {
   CAMLparam1(key);
   check_should_exit();
-  helt_t elt = hashtbl[find_slot(key)];
-  CAMLreturn(Val_bool(elt.hash == get_hash(key) && elt.addr != NULL_ADDR));
+  helt_t elt;
+  find_slot(key, &elt);
+  CAMLreturn(Val_bool(elt.hash != 0 && elt.addr != NULL_ADDR));
 }
 
 /*****************************************************************************/
@@ -1774,9 +1754,11 @@ CAMLprim value hh_get(value key) {
   CAMLparam1(key);
   check_should_exit();
 
-  unsigned int slot = find_slot(key);
-  assert(hashtbl[slot].hash == get_hash(key));
-  CAMLreturn(Val_long(hashtbl[slot].addr));
+  helt_t elt;
+  find_slot(key, &elt);
+  assert(elt.hash != 0);
+
+  CAMLreturn(Val_long(elt.addr));
 }
 
 /*****************************************************************************/
@@ -1798,27 +1780,28 @@ CAMLprim value hh_get_size(value addr_val) {
 /*****************************************************************************/
 CAMLprim value hh_move(value key1, value key2) {
   CAMLparam2(key1, key2);
-  unsigned int slot1 = find_slot(key1);
-  unsigned int slot2 = find_slot(key2);
+  helt_t elt1, elt2;
+  size_t slot1 = find_slot(key1, &elt1);
+  size_t slot2 = find_slot(key2, &elt2);
 
   assert_master();
-  assert(hashtbl[slot1].hash == get_hash(key1));
-  assert(hashtbl[slot2].addr == NULL_ADDR);
+  assert(elt1.hash != 0);
+  assert(elt2.addr == NULL_ADDR);
 
   // We are taking up a previously empty slot. Let's increment the counter.
   // hcounter_filled doesn't change, since slot1 becomes empty and slot2 becomes
   // filled.
-  if (hashtbl[slot2].hash == 0) {
+  if (elt2.hash == 0) {
     info->hcounter += 1;
   }
 
   // GC write barrier
   if (info->gc_phase == Phase_mark) {
-    mark_slice_darken(hashtbl[slot1].addr);
+    mark_slice_darken(elt1.addr);
   }
 
   hashtbl[slot2].hash = get_hash(key2);
-  hashtbl[slot2].addr = hashtbl[slot1].addr;
+  hashtbl[slot2].addr = elt1.addr;
   hashtbl[slot1].addr = NULL_ADDR;
   CAMLreturn(Val_unit);
 }
@@ -1830,15 +1813,16 @@ CAMLprim value hh_move(value key1, value key2) {
 /*****************************************************************************/
 CAMLprim value hh_remove(value key) {
   CAMLparam1(key);
-  unsigned int slot = find_slot(key);
+  helt_t elt;
+  size_t slot = find_slot(key, &elt);
 
   assert_master();
-  assert(hashtbl[slot].hash == get_hash(key));
-  assert(hashtbl[slot].addr != NULL_ADDR);
+  assert(elt.hash != 0);
+  assert(elt.addr != NULL_ADDR);
 
   // GC write barrier
   if (info->gc_phase == Phase_mark) {
-    mark_slice_darken(hashtbl[slot].addr);
+    mark_slice_darken(elt.addr);
   }
 
   hashtbl[slot].addr = NULL_ADDR;
@@ -1897,23 +1881,30 @@ CAMLprim value hh_read_string(value addr, value wsize) {
   CAMLreturn(s);
 }
 
-/* Iterates the shared hash table looking for heap values with a given tag. The
- * tag must correspond to a serialized OCaml value, which is deserialized and
- * passed to the callback function. */
-CAMLprim value hh_iter_serialized(value f, value filter_tag_val) {
-  CAMLparam2(f, filter_tag_val);
-  CAMLlocal1(x);
+/* Iterates the shared hash table. */
+CAMLprim value hh_iter(value f) {
+  CAMLparam1(f);
   intnat hashtbl_slots = info->hashtbl_slots;
   for (intnat i = 0; i < hashtbl_slots; i++) {
     addr_t addr = hashtbl[i].addr;
     if (addr != NULL_ADDR) {
-      hh_header_t hd = Deref(addr);
-      int tag = (hd >> 2) & 0x3F;
-      if (tag == Long_val(filter_tag_val)) {
-        x = hh_deserialize(Val_long(addr));
-        caml_callback(f, x);
-      }
+      caml_callback(f, Val_long(addr));
     }
   }
   CAMLreturn(Val_unit);
+}
+
+CAMLprim value hh_compare_exchange_weak(
+    value addr_val,
+    value expected_val,
+    value desired_val) {
+  uintnat* ptr = (uintnat*)Ptr_of_addr(Long_val(addr_val));
+  uintnat expected = Long_val(expected_val);
+  return Val_bool(__atomic_compare_exchange_n(
+      ptr,
+      &expected,
+      Long_val(desired_val),
+      1,
+      __ATOMIC_SEQ_CST,
+      __ATOMIC_SEQ_CST));
 }

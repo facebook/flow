@@ -94,6 +94,24 @@ var null_tests =
       var y : string | void = x.p.q;  // ok
     }
   },
+
+  // obj.p === null (sentinel)
+  function(o: { value: string, err: null } | { err: string }) {
+    if (o.err === null) {
+      (o.value: string);
+    } else {
+      (o.err: string);
+    }
+  },
+
+  // obj.p !== null (sentinel)
+  function(o: { value: string, err: null } | { err: string }) {
+    if (o.err !== null) {
+      (o.err: string);
+    } else {
+      (o.value: string);
+    }
+  }
 ];
 
 // this.p op null

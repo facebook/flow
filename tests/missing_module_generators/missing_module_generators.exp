@@ -1,0 +1,46 @@
+Error ------------------------------------------------------------------------------------------------------ test.js:1:9
+
+Cannot resolve module `XXX`. [cannot-resolve-module]
+
+   1| require('XXX'); // ERROR - no custom message
+              ^^^^^
+
+
+Error ------------------------------------------------------------------------------------------------------ test.js:3:9
+
+Cannot resolve module `XXX.foo`. Try running the command `make-foo` to generate the missing module.
+[cannot-resolve-module]
+
+   3| require('XXX.foo'); // ERROR - suggest `make-foo`
+              ^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------------------ test.js:5:9
+
+Cannot resolve module `XXX.bar`. Try running the command `build bar` to generate the missing module.
+[cannot-resolve-module]
+
+   5| require('XXX.bar'); // ERROR - suggest `build bar`
+              ^^^^^^^^^
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:8:20
+
+Cannot resolve module `XXX.foo`. Try running the command `make-foo` to generate the missing module.
+[cannot-resolve-module]
+
+   8| import type A from 'XXX.foo'; // ERROR - suggest `make-foo`
+                         ^^^^^^^^^
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:10:20
+
+Cannot resolve module `XXX.bar`. Try running the command `build bar` to generate the missing module.
+[cannot-resolve-module]
+
+   10| import type B from 'XXX.bar'; // ERROR - suggest `build bar`
+                          ^^^^^^^^^
+
+
+
+Found 5 errors

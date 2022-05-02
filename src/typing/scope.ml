@@ -225,7 +225,9 @@ module Entry = struct
   let havoc ?on_call name entry =
     match entry with
     | Type _ -> entry
-    | Value ({ kind = Const _; specific = Type.DefT (_, _, Type.EmptyT); _ } as v) ->
+    | Value ({ kind = Const _; specific = Type.DefT (_, _, Type.EmptyT); _ } as v)
+    | Value ({ kind = Let (_, ConstLike); specific = Type.DefT (_, _, Type.EmptyT); _ } as v)
+    | Value ({ kind = Var ConstLike; specific = Type.DefT (_, _, Type.EmptyT); _ } as v) ->
       (* cleared consts: see note on Env.reset_current_activation *)
       if Reason.is_internal_name name then
         entry
@@ -376,6 +378,9 @@ let remove_entry name scope = scope.entries <- NameUtils.Map.remove name scope.e
 (* get entry from scope, or None *)
 let get_entry name scope = NameUtils.Map.find_opt name scope.entries
 
+(* use passed f to iterate over all scope refis *)
+let iter_refis f scope = Key_map.iter f scope.refis
+
 (* use passed f to update all scope refis *)
 let update_refis f scope = scope.refis <- Key_map.mapi f scope.refis
 
@@ -406,9 +411,8 @@ let havoc_refis ?name ~private_ scope =
     | Some name -> scope.refis |> filter_refis_using_propname ~private_ name
     | None -> Key_map.empty)
 
-let havoc_all_refis ?name scope =
-  havoc_refis ?name ~private_:false scope;
-  havoc_refis ?name ~private_:true scope
+(* havoc a scope's refinements: clear all its refis *)
+let havoc_all_refis scope = scope.refis <- Key_map.empty
 
 (* havoc a scope:
    - clear all refinements

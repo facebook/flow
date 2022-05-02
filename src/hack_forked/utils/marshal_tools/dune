@@ -16,4 +16,5 @@
     marshal_tools
     lwt
     lwt.unix
-    lwt_log))
+    lwt_log)
+  (preprocess (pps lwt_ppx)))

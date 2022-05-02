@@ -17,7 +17,7 @@ BUILD_DIR=$(mktemp -d -t flow-bin-XXXXXXXXXX)
 trap 'rm -rf "$BUILD_DIR"' EXIT
 
 pushd "$BUILD_DIR"
-git clone "https://${FLOW_BOT_NAME}:${FLOW_BOT_TOKEN}@github.com/flowtype/flow-bin.git"
+git clone "https://${FLOW_BOT_NAME}:${FLOW_BOT_TOKEN}@github.com/flow/flow-bin.git"
 
 pushd flow-bin
 

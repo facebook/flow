@@ -43,6 +43,8 @@ let restore_context _ = ()
 
 let set_command _ = ()
 
+let set_eden _ = ()
+
 let set_from from = context := { from }
 
 let set_root _ = ()
@@ -204,3 +206,5 @@ let sharedmem_failed_memfd_init _ = ()
 let worker_exception _ = ()
 
 let dfind_ready _ _ = ()
+
+let parsing_exception _ = ()

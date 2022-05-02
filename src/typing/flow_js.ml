@@ -388,22 +388,16 @@ struct
 
   let rec unbind_this_method = function
     | DefT
-        ( r,
-          trust,
-          FunT (static, proto, ({ this_t = (this_t, This_Method { unbound = false }); _ } as ft))
-        ) ->
-      DefT
-        ( r,
-          trust,
-          FunT (static, proto, { ft with this_t = (this_t, This_Method { unbound = true }) })
-        )
+        (r, trust, FunT (static, ({ this_t = (this_t, This_Method { unbound = false }); _ } as ft)))
+      ->
+      DefT (r, trust, FunT (static, { ft with this_t = (this_t, This_Method { unbound = true }) }))
     | DefT (r, trust, PolyT { tparams_loc; tparams; t_out; id }) ->
       DefT (r, trust, PolyT { tparams_loc; tparams; t_out = unbind_this_method t_out; id })
     | IntersectionT (r, rep) -> IntersectionT (r, InterRep.map unbind_this_method rep)
     | t -> t
 
   let access_prop cx trace options reason_prop reason_op super x pmap action =
-    let { Access_prop_options.use_op; allow_method_access; _ } = options in
+    let { Access_prop_options.use_op; allow_method_access; id; _ } = options in
     match NameUtils.Map.find_opt x pmap with
     | Some p ->
       let p =
@@ -418,6 +412,7 @@ struct
           Method (r, unbind_this_method t)
         | _ -> p
       in
+      Base.Option.iter id ~f:(Context.test_prop_hit cx);
       let propref = Named (reason_prop, x) in
       perform_lookup_action cx trace propref p PropertyMapProperty reason_prop reason_op action
     | None -> lookup_prop cx trace options super reason_prop reason_op x action
@@ -469,8 +464,11 @@ struct
             }
         )
 
-    let cg_get_prop cx trace t (use_op, access_reason, (prop_reason, name)) v =
-      FlowJs.rec_flow cx trace (t, GetPropT (use_op, access_reason, Named (prop_reason, name), v))
+    let cg_get_prop cx trace t (use_op, access_reason, id, (prop_reason, name)) v =
+      FlowJs.rec_flow
+        cx
+        trace
+        (t, GetPropT (use_op, access_reason, id, Named (prop_reason, name), v))
   end
 
   module GetPropTKit = GetPropT_kit (Get_prop_helper)
@@ -1055,8 +1053,9 @@ struct
             )
           in
           rec_flow cx trace (DefT (idx_reason, trust, IdxWrapper repositioned_obj), u)
-        | (DefT (idx_reason, trust, IdxWrapper obj), GetPropT (use_op, reason_op, propname, t_out))
-          ->
+        | ( DefT (idx_reason, trust, IdxWrapper obj),
+            GetPropT (use_op, reason_op, _, propname, t_out)
+          ) ->
           let de_maybed_obj =
             Tvar.mk_where cx idx_reason (fun t ->
                 rec_flow cx trace (obj, IdxUnMaybeifyT (idx_reason, t))
@@ -1064,7 +1063,7 @@ struct
           in
           let prop_type =
             Tvar.mk_no_wrap_where cx reason_op (fun t ->
-                rec_flow cx trace (de_maybed_obj, GetPropT (use_op, reason_op, propname, t))
+                rec_flow cx trace (de_maybed_obj, GetPropT (use_op, reason_op, None, propname, t))
             )
           in
           rec_flow_t
@@ -1190,7 +1189,6 @@ struct
                 bogus_trust (),
                 FunT
                   ( dummy_static reason,
-                    mk_reason RPrototype fun_loc |> Unsoundness.function_proto_any,
                     {
                       this_t =
                         ( mk_reason RThis fun_loc |> MixedT.make |> with_trust bogus_trust,
@@ -1280,7 +1278,7 @@ struct
             match index with
             | OptionalIndexedAccessStrLitIndex name ->
               let reason_op = replace_desc_reason (RProperty (Some name)) reason in
-              GetPropT (use_op, reason, Named (reason_op, name), tout_tvar)
+              GetPropT (use_op, reason, None, Named (reason_op, name), tout_tvar)
             | OptionalIndexedAccessTypeIndex index_type ->
               GetElemT (use_op, reason, index_type, tout_tvar)
           in
@@ -1713,7 +1711,7 @@ struct
                 Flow_js_utils.keylist_of_props (Context.find_props cx props_tmap) reason_op
               in
               rec_flow cx trace (union_of_ts reason_op keylist, keys);
-              Base.Option.iter dict_t (fun { key; _ } ->
+              Base.Option.iter dict_t ~f:(fun { key; _ } ->
                   rec_flow cx trace (key, ToStringT (reason_op, keys))
               )
           end
@@ -1897,7 +1895,7 @@ struct
               in
               (match
                  UnionRep.quick_mem_enum
-                   (TypeUtil.quick_subtype (Context.trust_errors cx))
+                   ~quick_subtype:(TypeUtil.quick_subtype (Context.trust_errors cx))
                    (DefT (r, Trust.bogus_trust (), def))
                    rep
                with
@@ -1922,7 +1920,7 @@ struct
                     UnionRep.join_quick_mem_results
                       ( acc,
                         UnionRep.quick_mem_enum
-                          (TypeUtil.quick_subtype (Context.trust_errors cx))
+                          ~quick_subtype:(TypeUtil.quick_subtype (Context.trust_errors cx))
                           (DefT (r, Trust.bogus_trust (), def))
                           rep
                       ))
@@ -1996,15 +1994,28 @@ struct
                   method_accessible;
                 }
             )
+        (* Cases of an intersection need to produce errors on non-existent
+           properties instead of a default, so that other cases may be tried
+           instead and succeed. *)
+        | (IntersectionT _, GetPropT (use_op, reason, Some _, prop, tout))
         | (IntersectionT _, TestPropT (use_op, reason, _, prop, tout)) ->
-          rec_flow cx trace (l, GetPropT (use_op, reason, prop, tout))
+          rec_flow cx trace (l, GetPropT (use_op, reason, None, prop, tout))
         | ( IntersectionT _,
-            OptionalChainT ({ t_out = TestPropT (use_op, reason, _, prop, tout); _ } as opt_chain)
+            OptionalChainT
+              ( {
+                  t_out =
+                    ( TestPropT (use_op, reason, _, prop, tout)
+                    | GetPropT (use_op, reason, Some _, prop, tout) );
+                  _;
+                } as opt_chain
+              )
           ) ->
           rec_flow
             cx
             trace
-            (l, OptionalChainT { opt_chain with t_out = GetPropT (use_op, reason, prop, tout) })
+            ( l,
+              OptionalChainT { opt_chain with t_out = GetPropT (use_op, reason, None, prop, tout) }
+            )
         | (IntersectionT _, DestructuringT (reason, kind, selector, tout, id)) ->
           destruct cx ~trace reason kind l selector tout id
         (* extends **)
@@ -2449,7 +2460,7 @@ struct
            `params`) raise errors, but also propagate the unrefined types (as if the
            refinement never took place).
         *)
-        | ( DefT (lreason, _, FunT (_, _, { params; return_t; is_predicate = true; _ })),
+        | ( DefT (lreason, _, FunT (_, { params; return_t; is_predicate = true; _ })),
             CallLatentPredT (reason, sense, index, unrefined_t, fresh_t)
           ) ->
           (* TODO: for the moment we only support simple keys (empty projection)
@@ -2832,7 +2843,7 @@ struct
             trace
             (l, React_kit.component_class cx r ~get_builtin_typeapp props)
         (* Functions with rest params or that are predicates cannot be React components *)
-        | ( DefT (reason, _, FunT (_, _, { params; rest_param = None; is_predicate = false; _ })),
+        | ( DefT (reason, _, FunT (_, { params; rest_param = None; is_predicate = false; _ })),
             ReactPropsToOut (_, props)
           ) ->
           (* Contravariance *)
@@ -2840,10 +2851,7 @@ struct
           |> Base.Option.value_map ~f:snd ~default:(Obj_type.mk ~obj_kind:Exact cx reason)
           |> fun t -> rec_flow_t ~use_op:unknown_use cx trace (t, props)
         | ( DefT
-              ( reason,
-                _,
-                FunT (_, _, { params; return_t; rest_param = None; is_predicate = false; _ })
-              ),
+              (reason, _, FunT (_, { params; return_t; rest_param = None; is_predicate = false; _ })),
             ReactInToProps (reason_op, props)
           ) ->
           (* Contravariance *)
@@ -2864,7 +2872,7 @@ struct
           ) ->
           begin
             match Context.find_call cx id with
-            | ( DefT (_, _, FunT (_, _, { rest_param = None; is_predicate = false; _ }))
+            | ( DefT (_, _, FunT (_, { rest_param = None; is_predicate = false; _ }))
               | DefT (_, _, PolyT { t_out = DefT (_, _, FunT _); _ }) ) as fun_t ->
               (* Keep the object's reason for better error reporting *)
               rec_flow cx trace (Fn.const r |> Fn.flip mod_reason_of_t fun_t, u)
@@ -2882,8 +2890,7 @@ struct
         (***********************************************)
 
         (* FunT ~> CallT *)
-        | (DefT (reason_fundef, _, FunT (_, _, funtype)), CallT (use_op, reason_callsite, calltype))
-          ->
+        | (DefT (reason_fundef, _, FunT (_, funtype)), CallT (use_op, reason_callsite, calltype)) ->
           let { this_t = (o1, _); params = _; return_t = t1; _ } = funtype in
           let {
             call_this_t = o2;
@@ -2980,7 +2987,7 @@ struct
            A prop type is either a primitive or some complex type, which is a
            function that simplifies to a primitive prop type when called. *)
         | ( CustomFunT (_, ReactPropType (React.PropType.Primitive (false, t))),
-            GetPropT (_, reason_op, Named (_, OrdinaryName "isRequired"), tout)
+            GetPropT (_, reason_op, _, Named (_, OrdinaryName "isRequired"), tout)
           ) ->
           let prop_type = React.PropType.Primitive (true, t) in
           rec_flow_t
@@ -3021,43 +3028,6 @@ struct
         | (CustomFunT (reason, ReactPropType (React.PropType.Complex kind)), _)
           when function_like_op u ->
           rec_flow cx trace (get_builtin_prop_type cx ~trace reason kind, u)
-        | ( CustomFunT (_, ReactCreateClass),
-            CallT
-              (use_op, reason_op, { call_targs = None; call_args_tlist = arg1 :: _; call_tout; _ })
-          ) ->
-          let loc_op = aloc_of_reason reason_op in
-          let loc_tapp = def_aloc_of_reason (fst call_tout) in
-          let desc_tapp = desc_of_reason (fst call_tout) in
-          let spec = extract_non_spread cx ~trace arg1 in
-          let mk_tvar f = Tvar.mk cx (f reason_op) in
-          let knot =
-            {
-              React.CreateClass.this = mk_tvar (replace_desc_reason RThisType);
-              static = mk_tvar (replace_desc_reason RThisType);
-              state_t =
-                mk_tvar
-                  (update_desc_reason (fun d ->
-                       RTypeParam (Subst_name.Name "State", (d, loc_op), (desc_tapp, loc_tapp))
-                   )
-                  );
-              default_t =
-                mk_tvar
-                  (update_desc_reason (fun d ->
-                       RTypeParam (Subst_name.Name "Default", (d, loc_op), (desc_tapp, loc_tapp))
-                   )
-                  );
-            }
-          in
-          rec_flow
-            cx
-            trace
-            ( spec,
-              ReactKitT
-                ( use_op,
-                  reason_op,
-                  React.CreateClass (React.CreateClass.Spec [], knot, OpenT call_tout)
-                )
-            )
         | (_, ReactKitT (use_op, reason_op, tool)) -> ReactJs.run cx trace ~use_op reason_op l tool
         (* Facebookisms are special Facebook-specific functions that are not
            expressable with our current type syntax, so we've hacked in special
@@ -3144,7 +3114,7 @@ struct
         | (CustomFunT (reason, _), MethodT (use_op, call_r, lookup_r, propref, action, t_opt)) ->
           let method_type =
             Tvar.mk_no_wrap_where cx lookup_r (fun tout ->
-                let u = GetPropT (use_op, lookup_r, propref, tout) in
+                let u = GetPropT (use_op, lookup_r, None, propref, tout) in
                 rec_flow cx trace (FunProtoT reason, u)
             )
           in
@@ -3167,7 +3137,8 @@ struct
               let reason_prop = replace_desc_reason (RProperty prop_name) reason_op in
               let error_message =
                 if is_builtin_reason ALoc.source reason then
-                  Error_message.EBuiltinLookupFailed { reason = reason_prop; name = prop_name }
+                  Error_message.EBuiltinLookupFailed
+                    { reason = reason_prop; name = prop_name; potential_generator = None }
                 else
                   Error_message.EStrictLookupFailed
                     {
@@ -3303,46 +3274,6 @@ struct
           in
           (* return this *)
           rec_flow cx trace (ret, ObjTestT (annot_reason ~annot_loc reason_op, this, t))
-        (****************************************************************)
-        (* function types derive objects through explicit instantiation *)
-        (****************************************************************)
-        | ( DefT (lreason, _, FunT (_, proto, ({ this_t = (this, _); return_t = ret; _ } as ft))),
-            ConstructorT (use_op, reason_op, targs, args, t)
-          ) ->
-          (* TODO: closure *)
-          (* create new object **)
-          let reason_c = replace_desc_reason RNewObject reason_op in
-          let objtype =
-            let obj_kind = UnsealedInFile (ALoc.source (loc_of_t proto)) in
-            let flags = { default_flags with obj_kind } in
-            let call = None in
-            let pmap = Context.generate_property_map cx NameUtils.Map.empty in
-            mk_objecttype ~flags ~call pmap proto
-          in
-          let new_obj = DefT (reason_c, bogus_trust (), ObjT objtype) in
-          (* error if type arguments are provided to non-polymorphic constructor **)
-          Base.Option.iter targs ~f:(fun _ ->
-              add_output
-                cx
-                ~trace
-                Error_message.(
-                  ECallTypeArity
-                    {
-                      call_loc = aloc_of_reason reason_op;
-                      is_new = true;
-                      reason_arity = lreason;
-                      expected_arity = 0;
-                    }
-                )
-          );
-
-          (* call function with this = new_obj, params = args **)
-          rec_flow_t cx trace ~use_op:unknown_use (new_obj, this);
-          multiflow_call cx trace ~use_op reason_op args ft;
-
-          (* if ret is object-like, return ret; otherwise return new_obj **)
-          let reason_o = replace_desc_reason RConstructorReturn reason_op in
-          rec_flow cx trace (ret, ObjTestT (reason_o, new_obj, t))
         | (AnyT _, ConstructorT (use_op, reason_op, targs, args, t)) ->
           ignore targs;
 
@@ -3351,6 +3282,10 @@ struct
             (fun t -> rec_flow cx trace (t, UseT (use_op, AnyT.untyped reason_op)))
             args;
           rec_flow_t cx trace ~use_op:unknown_use (AnyT.untyped reason_op, t)
+        (* Only classes (and `any`) can be constructed. *)
+        | (_, ConstructorT (use_op, reason_op, _, _, t)) ->
+          add_output cx ~trace Error_message.(EInvalidConstructor (reason_of_t l));
+          rec_flow_t cx trace ~use_op (AnyT.error reason_op, t)
         (* Since we don't know the signature of a method on AnyT, assume every
            parameter is an AnyT. *)
         | ( AnyT _,
@@ -3503,6 +3438,7 @@ struct
               previously_seen_props =
                 Properties.Set.of_list [instance.own_props; instance.proto_props];
               lookup_kind;
+              id = None;
             }
           in
           set_prop cx ~mode ~wr_ctx trace options reason_prop reason_op l super x fields tin prop_t
@@ -3560,15 +3496,17 @@ struct
               previously_seen_props =
                 Properties.Set.of_list [instance.own_props; instance.proto_props];
               lookup_kind;
+              id = None;
             }
           in
           match_prop cx trace options reason_prop reason_op super x fields (OpenT prop_t)
         (*****************************)
         (* ... and their fields read *)
         (*****************************)
-        | (DefT (r, _, InstanceT (_, super, _, insttype)), GetPropT (use_op, reason_op, propref, t))
-          ->
-          GetPropTKit.on_InstanceT cx trace ~l r super insttype use_op reason_op propref t
+        | ( DefT (r, _, InstanceT (_, super, _, insttype)),
+            GetPropT (use_op, reason_op, id, propref, t)
+          ) ->
+          GetPropTKit.on_InstanceT cx trace ~l ~id r super insttype use_op reason_op propref t
         | ( DefT (reason_c, _, InstanceT (_, _, _, instance)),
             GetPrivatePropT (use_op, reason_op, prop_name, scopes, static, tout)
           ) ->
@@ -3610,6 +3548,7 @@ struct
                 Properties.Set.of_list [instance.own_props; instance.proto_props];
               use_op;
               lookup_kind;
+              id = None;
             }
           in
           read_prop cx trace options reason_prop reason_lookup l super x props (reason_lookup, tvar);
@@ -4008,12 +3947,23 @@ struct
         (*****************************)
         (* ... and their fields read *)
         (*****************************)
-        | (DefT (_, _, ObjT _), GetPropT (_, reason_op, Named (_, OrdinaryName "constructor"), tout))
-          ->
+        | ( DefT (_, _, ObjT _),
+            GetPropT (_, reason_op, _, Named (_, OrdinaryName "constructor"), tout)
+          ) ->
           rec_flow_t cx trace ~use_op:unknown_use (Unsoundness.why Constructor reason_op, OpenT tout)
-        | (DefT (reason_obj, _, ObjT o), GetPropT (use_op, reason_op, propref, tout)) ->
-          GetPropTKit.read_obj_prop cx trace ~use_op o propref reason_obj reason_op tout
-        | (AnyT _, GetPropT (_, reason_op, _, tout)) ->
+        | (DefT (reason_obj, _, ObjT o), GetPropT (use_op, reason_op, id, propref, tout)) ->
+          let lookup_info =
+            Base.Option.map id ~f:(fun id ->
+                let lookup_default_tout =
+                  Tvar.mk_where cx reason_op (fun tvar ->
+                      rec_flow_t ~use_op cx trace (tvar, OpenT tout)
+                  )
+                in
+                (id, lookup_default_tout)
+            )
+          in
+          GetPropTKit.read_obj_prop cx trace ~use_op o propref reason_obj reason_op lookup_info tout
+        | (AnyT _, GetPropT (_, reason_op, _, _, tout)) ->
           rec_flow_t cx trace ~use_op:unknown_use (AnyT.untyped reason_op, OpenT tout)
         (********************************)
         (* ... and their methods called *)
@@ -4025,7 +3975,16 @@ struct
           ) ->
           let t =
             Tvar.mk_no_wrap_where cx reason_lookup (fun tout ->
-                GetPropTKit.read_obj_prop cx trace ~use_op o propref reason_obj reason_lookup tout
+                GetPropTKit.read_obj_prop
+                  cx
+                  trace
+                  ~use_op
+                  o
+                  propref
+                  reason_obj
+                  reason_lookup
+                  None
+                  tout
             )
           in
           Base.Option.iter
@@ -4096,8 +4055,9 @@ struct
             array_elem_check ~write_action cx trace l use_op reason reason_tup arrtype
           in
           perform_elem_action cx trace ~use_op ~restrict_deletes:is_tuple reason arr value action
-        | (DefT (_, _, ArrT _), GetPropT (_, reason_op, Named (_, OrdinaryName "constructor"), tout))
-          ->
+        | ( DefT (_, _, ArrT _),
+            GetPropT (_, reason_op, _, Named (_, OrdinaryName "constructor"), tout)
+          ) ->
           rec_flow_t cx trace ~use_op:unknown_use (Unsoundness.why Constructor reason_op, OpenT tout)
         | (DefT (_, _, ArrT _), SetPropT (_, _, Named (_, OrdinaryName "constructor"), _, _, _, _))
         | (DefT (_, _, ArrT _), MethodT (_, _, _, Named (_, OrdinaryName "constructor"), _, _)) ->
@@ -4241,35 +4201,6 @@ struct
           rec_flow_t cx trace ~use_op:unknown_use (obj_key_mirror cx trust o reason_op, tout)
         | (DefT (_, trust, ObjT o), MapTypeT (_, reason_op, ObjectMapConst target, tout)) ->
           rec_flow_t cx trace ~use_op:unknown_use (obj_map_const cx trust o reason_op target, tout)
-        (***********************************************)
-        (* functions may have their prototypes written *)
-        (***********************************************)
-        | ( DefT (_, _, FunT (_, t, _)),
-            SetPropT (use_op, reason_op, Named (_, OrdinaryName "prototype"), _, _, tin, _)
-          ) ->
-          rec_flow
-            cx
-            trace
-            ( tin,
-              ObjAssignFromT
-                ( use_op,
-                  reason_op,
-                  t,
-                  AnyT.locationless Unsoundness.function_proto,
-                  default_obj_assign_kind
-                )
-            )
-        (*********************************)
-        (* ... and their prototypes read *)
-        (*********************************)
-        | (DefT (_, _, FunT (_, t, _)), GetPropT (_, _, Named (_, OrdinaryName "prototype"), tout))
-          ->
-          rec_flow_t cx trace ~use_op:unknown_use (t, OpenT tout)
-        | ( DefT (reason, _, ClassT instance),
-            GetPropT (_, _, Named (_, OrdinaryName "prototype"), tout)
-          ) ->
-          let instance = reposition cx ~trace (aloc_of_reason reason) instance in
-          rec_flow_t cx trace ~use_op:unknown_use (instance, OpenT tout)
         (***************************************************************)
         (* functions may be called by passing a receiver and arguments *)
         (***************************************************************)
@@ -4402,9 +4333,9 @@ struct
           let call_this_t = extract_non_spread cx ~trace first_arg in
           let call_targs = None in
           let funtype = { funtype with call_this_t; call_targs; call_args_tlist } in
-          rec_flow cx trace (func, BindT (use_op, reason_op, funtype, false))
-        | ( DefT (reason, _, FunT (_, _, ({ this_t = (o1, _); _ } as ft))),
-            BindT (use_op, reason_op, calltype, _)
+          rec_flow cx trace (func, BindT (use_op, reason_op, funtype))
+        | ( DefT (reason, _, FunT (_, ({ this_t = (o1, _); _ } as ft))),
+            BindT (use_op, reason_op, calltype)
           ) ->
           let {
             call_this_t = o2;
@@ -4427,7 +4358,7 @@ struct
           rec_flow cx trace (Context.find_call cx id, u)
         | (DefT (_, _, InstanceT (_, _, _, { inst_call_t = Some id; _ })), BindT _) ->
           rec_flow cx trace (Context.find_call cx id, u)
-        | (AnyT _, BindT (use_op, reason, calltype, _)) ->
+        | (AnyT _, BindT (use_op, reason, calltype)) ->
           let {
             call_this_t;
             call_targs = _;
@@ -4442,8 +4373,6 @@ struct
           call_args_iter
             (fun param_t -> rec_flow cx trace (AnyT.untyped reason, UseT (use_op, param_t)))
             call_args_tlist;
-          rec_flow_t cx trace ~use_op:unknown_use (l, OpenT call_tout)
-        | (_, BindT (_, _, { call_tout; _ }, true)) ->
           rec_flow_t cx trace ~use_op:unknown_use (l, OpenT call_tout)
         (***************************************************************)
         (* Enable structural subtyping for upperbounds like interfaces *)
@@ -4610,12 +4539,12 @@ struct
         (*********************)
         (* functions statics *)
         (*********************)
-        | ( DefT (reason, _, FunT (static, _, _)),
+        | ( DefT (reason, _, FunT (static, _)),
             MethodT (use_op, reason_call, reason_lookup, propref, action, prop_t)
           ) ->
           let method_type =
             Tvar.mk_no_wrap_where cx reason_lookup (fun tout ->
-                let u = GetPropT (use_op, reason_lookup, propref, tout) in
+                let u = GetPropT (use_op, reason_lookup, None, propref, tout) in
                 rec_flow cx trace (static, ReposLowerT (reason, false, u))
             )
           in
@@ -4623,8 +4552,16 @@ struct
             ~f:(fun prop_t -> rec_flow_t cx trace ~use_op:unknown_use (method_type, prop_t))
             prop_t;
           rec_flow cx trace (method_type, apply_method_action use_op reason_call l action)
-        | (DefT (reason, _, FunT (static, _, _)), _) when object_like_op u ->
+        | (DefT (reason, _, FunT (static, _)), _) when object_like_op u ->
           rec_flow cx trace (static, ReposLowerT (reason, false, u))
+        (*****************************************)
+        (* classes can have their prototype read *)
+        (*****************************************)
+        | ( DefT (reason, _, ClassT instance),
+            GetPropT (_, _, _, Named (_, OrdinaryName "prototype"), tout)
+          ) ->
+          let instance = reposition cx ~trace (aloc_of_reason reason) instance in
+          rec_flow_t cx trace ~use_op:unknown_use (instance, OpenT tout)
         (*****************)
         (* class statics *)
         (*****************)
@@ -4659,7 +4596,7 @@ struct
           rec_flow cx trace (instance, GetStaticsT statics);
           let method_type =
             Tvar.mk_no_wrap_where cx reason_lookup (fun tout ->
-                let u = GetPropT (use_op, reason_lookup, propref, tout) in
+                let u = GetPropT (use_op, reason_lookup, None, propref, tout) in
                 rec_flow cx trace (OpenT statics, ReposLowerT (reason, false, u))
             )
           in
@@ -4700,12 +4637,12 @@ struct
         (* enums *)
         (*********)
         | ( DefT (enum_reason, trust, EnumObjectT enum),
-            GetPropT (use_op, access_reason, Named (prop_reason, member_name), tout)
+            GetPropT (use_op, access_reason, _, Named (prop_reason, member_name), tout)
           ) ->
-          let access = (use_op, access_reason, (prop_reason, member_name)) in
+          let access = (use_op, access_reason, None, (prop_reason, member_name)) in
           GetPropTKit.on_EnumObjectT cx trace enum_reason trust enum access tout
         | (DefT (_, _, EnumObjectT _), TestPropT (_, reason, _, prop, tout)) ->
-          rec_flow cx trace (l, GetPropT (Op (GetProperty reason), reason, prop, tout))
+          rec_flow cx trace (l, GetPropT (Op (GetProperty reason), reason, None, prop, tout))
         | ( DefT (enum_reason, trust, EnumObjectT enum),
             MethodT (use_op, call_reason, lookup_reason, (Named _ as propref), action, prop_t)
           ) ->
@@ -4715,7 +4652,7 @@ struct
                   cx
                   trace
                   ( enum_proto cx trace ~reason:lookup_reason (enum_reason, trust, enum),
-                    GetPropT (use_op, lookup_reason, propref, tout)
+                    GetPropT (use_op, lookup_reason, None, propref, tout)
                   )
             )
           in
@@ -4865,14 +4802,14 @@ struct
            know what the type of the property would be, we set things up so that the
            result of the read cannot be used in any interesting way. *)
         (**************************************************************************)
-        | (DefT (_, _, NullT), TestPropT (use_op, reason_op, _, propref, tout)) ->
+        | (DefT (_, _, NullT), TestPropT (use_op, reason_op, id, propref, tout)) ->
           (* The wildcard TestPropT implementation forwards the lower bound to
              LookupT. This is unfortunate, because LookupT is designed to terminate
              (successfully) on NullT, but property accesses on null should be type
              errors. Ideally, we should prevent LookupT constraints from being
              syntax-driven, in order to preserve the delicate invariants that
              surround it. *)
-          rec_flow cx trace (l, GetPropT (use_op, reason_op, propref, tout))
+          rec_flow cx trace (l, GetPropT (use_op, reason_op, Some id, propref, tout))
         | ( DefT (r, trust, MixedT (Mixed_truthy | Mixed_non_maybe)),
             TestPropT (use_op, _, id, _, tout)
           ) ->
@@ -4957,7 +4894,10 @@ struct
             ( l,
               SetPropT (use_op, reason, Named (reason, OrdinaryName "$key"), Assign, Normal, i, None)
             );
-          rec_flow cx trace (l, GetPropT (use_op, reason, Named (reason, OrdinaryName "$value"), t))
+          rec_flow
+            cx
+            trace
+            (l, GetPropT (use_op, reason, None, Named (reason, OrdinaryName "$value"), t))
         | (DefT (_, _, InstanceT _), SetElemT (use_op, reason, i, mode, tin, tout)) ->
           rec_flow
             cx
@@ -5101,7 +5041,8 @@ struct
           ) ->
           let error_message =
             if is_builtin_reason ALoc.source reason then
-              Error_message.EBuiltinLookupFailed { reason = reason_prop; name = Some x }
+              Error_message.EBuiltinLookupFailed
+                { reason = reason_prop; name = Some x; potential_generator = None }
             else
               let use_op = Some (use_op_of_lookup_action action) in
               let suggestion =
@@ -5149,7 +5090,8 @@ struct
             let reason_prop = reason_of_t elem_t in
             let error_message =
               if is_builtin_reason ALoc.source reason then
-                Error_message.EBuiltinLookupFailed { reason = reason_prop; name = None }
+                Error_message.EBuiltinLookupFailed
+                  { reason = reason_prop; name = None; potential_generator = None }
               else
                 let use_op = Some (use_op_of_lookup_action action) in
                 Error_message.EStrictLookupFailed
@@ -5180,7 +5122,8 @@ struct
           | Some strict_reason ->
             let error_message =
               if is_builtin_reason ALoc.source reason then
-                Error_message.EBuiltinLookupFailed { reason = reason_prop; name = Some x }
+                Error_message.EBuiltinLookupFailed
+                  { reason = reason_prop; name = Some x; potential_generator = None }
               else
                 let use_op = Some (use_op_of_lookup_action action) in
                 let suggestion =
@@ -5382,7 +5325,7 @@ struct
         (* Tuple "length" access *)
         (*************************)
         | ( DefT (reason, trust, ArrT (TupleAT (_, ts))),
-            GetPropT (_, _, Named (_, OrdinaryName "length"), tout)
+            GetPropT (_, _, _, Named (_, OrdinaryName "length"), tout)
           ) ->
           GetPropTKit.on_array_length cx trace reason trust ts (reason_of_use_t u) tout
         | ( DefT (reason, _, ArrT ((TupleAT _ | ROArrayAT _) as arrtype)),
@@ -5439,7 +5382,7 @@ struct
         | (FunProtoCallT reason, MethodT (use_op, call_r, lookup_r, propref, action, t_opt)) ->
           let method_type =
             Tvar.mk_no_wrap_where cx lookup_r (fun tout ->
-                let u = GetPropT (use_op, lookup_r, propref, tout) in
+                let u = GetPropT (use_op, lookup_r, None, propref, tout) in
                 rec_flow cx trace (FunProtoT reason, u)
             )
           in
@@ -5796,12 +5739,12 @@ struct
         else
           wait_for_concrete_bound ()
       (* Support "new this.constructor ()" *)
-      | GetPropT (op, r, Named (x, OrdinaryName "constructor"), t_out) ->
+      | GetPropT (op, r, id, Named (x, OrdinaryName "constructor"), t_out) ->
         if is_concrete bound then
           match bound with
           | DefT (_, _, InstanceT _) ->
             narrow_generic_tvar
-              (fun t_out' -> GetPropT (op, r, Named (x, OrdinaryName "constructor"), t_out'))
+              (fun t_out' -> GetPropT (op, r, id, Named (x, OrdinaryName "constructor"), t_out'))
               t_out;
             true
           | _ -> false
@@ -5943,11 +5886,10 @@ struct
     | UseT (use_op, (OpaqueT _ as t)) ->
       if Context.any_propagation cx then rec_flow_t cx trace ~use_op (expand_any cx any t, t);
       true
-    | UseT (use_op, DefT (_, _, FunT (_, _, funtype))) ->
+    | UseT (use_op, DefT (_, _, FunT (_, funtype))) ->
       if Context.any_propagation cx then
         any_prop_to_function use_op funtype covariant_flow contravariant_flow;
       true
-    | ReactKitT (_, _, React.CreateClass (React.CreateClass.PropTypes _, _, _))
     | ReactKitT (_, _, React.SimplifyPropType _) ->
       (* Propagating through here causes exponential blowup. React PropTypes are deprecated
          anyways, so it is not unreasonable to just not trust them *)
@@ -6088,7 +6030,6 @@ struct
     | UseT (_, CustomFunT (_, ObjectGetPrototypeOf))
     | UseT (_, CustomFunT (_, ObjectSetPrototypeOf))
     | UseT (_, CustomFunT (_, Compose _))
-    | UseT (_, CustomFunT (_, ReactCreateClass))
     | UseT (_, CustomFunT (_, ReactCreateElement))
     | UseT (_, CustomFunT (_, ReactCloneElement))
     | UseT (_, CustomFunT (_, Idx))
@@ -6113,7 +6054,7 @@ struct
       if Context.any_propagation cx then rec_flow_t cx trace ~use_op (any, t)
     in
     match l with
-    | DefT (_, _, FunT (_, _, funtype)) ->
+    | DefT (_, _, FunT (_, funtype)) ->
       (* function types are contravariant in the arguments *)
       any_prop_to_function use_op funtype covariant_flow contravariant_flow;
       true
@@ -6176,7 +6117,6 @@ struct
     | CustomFunT (_, ObjectGetPrototypeOf)
     | CustomFunT (_, ObjectSetPrototypeOf)
     | CustomFunT (_, Compose _)
-    | CustomFunT (_, ReactCreateClass)
     | CustomFunT (_, ReactCreateElement)
     | CustomFunT (_, ReactCloneElement)
     | CustomFunT (_, Idx)
@@ -6449,7 +6389,8 @@ struct
              in
              let error_message =
                if is_builtin_reason ALoc.source lreason then
-                 Error_message.EBuiltinLookupFailed { reason = reason_prop; name = prop_name }
+                 Error_message.EBuiltinLookupFailed
+                   { reason = reason_prop; name = prop_name; potential_generator = None }
                else
                  Error_message.EStrictLookupFailed
                    {
@@ -6474,6 +6415,7 @@ struct
         allow_method_access = true;
         previously_seen_props = Properties.Set.empty;
         lookup_kind = NonstrictReturning (None, None);
+        id = None;
       }
     in
     lookup_prop cx trace options t reason_prop lreason x (SuperProp (use_op, p))
@@ -6552,10 +6494,8 @@ struct
                 ids = Some Properties.Set.empty;
               }
           in
-          (* We use GetPropT instead of a strict lookup because a strict lookup directly on
-           * an unsealed object would cause an error. *)
           let getprop_ub () =
-            GetPropT (unknown_use, reason, Named (reason, OrdinaryName x), tvar)
+            GetPropT (unknown_use, reason, Some id, Named (reason, OrdinaryName x), tvar)
           in
           if has_default then
             match curr_t with
@@ -6722,7 +6662,7 @@ struct
             FilterMaybeT (unknown_use, OpenT tout)
           | PropertyType { name; _ } ->
             let reason_op = replace_desc_reason (RProperty (Some name)) reason in
-            GetPropT (use_op, reason, Named (reason_op, name), tout)
+            GetPropT (use_op, reason, None, Named (reason_op, name), tout)
           | ElementType { index_type; _ } -> GetElemT (use_op, reason, index_type, tout)
           | OptionalIndexedAccessNonMaybeType { index } ->
             OptionalIndexedAccessT { use_op; reason; index; tout_tvar = tout }
@@ -6736,7 +6676,6 @@ struct
                 upper = UseT (unknown_use, OpenT tout);
                 id = Reason.mk_id ();
               }
-          | Bind t -> BindT (use_op, reason, mk_boundfunctioncalltype t None [] tout, true)
           | SpreadType (options, todo_rev, head_slice) ->
             Object.(
               Object.Spread.(
@@ -7103,7 +7042,7 @@ struct
   and elem_action_on_obj cx trace ~use_op ?on_named_prop l obj reason_op action =
     let propref = propref_for_elem_t ?on_named_prop l in
     match action with
-    | ReadElem t -> rec_flow cx trace (obj, GetPropT (use_op, reason_op, propref, t))
+    | ReadElem t -> rec_flow cx trace (obj, GetPropT (use_op, reason_op, None, propref, t))
     | WriteElem (tin, tout, mode) ->
       rec_flow cx trace (obj, SetPropT (use_op, reason_op, propref, mode, Normal, tin, None));
       Base.Option.iter ~f:(fun t -> rec_flow_t cx trace ~use_op:unknown_use (obj, t)) tout
@@ -7530,14 +7469,6 @@ struct
       let arrt = get_builtin_typeapp cx ~trace reason (OrdinaryName "Array") [elemt] in
       let pred = NotP (LeftP (InstanceofTest, right)) in
       rec_flow cx trace (arrt, PredicateT (pred, result))
-    (* An object is considered `instanceof` a function F when it is constructed
-       by F. Note that this is incomplete with respect to the runtime semantics,
-       where instanceof is transitive: if F.prototype `instanceof` G, then the
-       object is `instanceof` G. There is nothing fundamentally difficult in
-       modeling the complete semantics, but we haven't found a need to do it. **)
-    | (true, (DefT (_, _, ObjT { proto_t = proto2; _ }) as obj), DefT (_, _, FunT (_, proto1, _)))
-      when proto1 = proto2 ->
-      rec_flow_t cx trace ~use_op:unknown_use (obj, OpenT result)
     (* Suppose that we have an instance x of class C, and we check whether x is
        `instanceof` class A. To decide what the appropriate refinement for x
        should be, we need to decide whether C extends A, choosing either C or A
@@ -7580,9 +7511,9 @@ struct
         trace
         ~use_op:unknown_use
         (reposition cx ~trace (aloc_of_reason r) a, OpenT result)
-    (* If we're refining mixed with instanceof A, then flow A to the result *)
+    (* If we're refining `mixed` or `any` with instanceof A, then flow A to the result *)
     | ( true,
-        DefT (_, _, MixedT _),
+        (DefT (_, _, MixedT _) | AnyT _),
         DefT (class_reason, _, ClassT (DefT (instance_reason, _, InstanceT _) as a))
       ) ->
       let desc = desc_of_reason instance_reason in
@@ -7591,9 +7522,6 @@ struct
     (* Prune the type when any other `instanceof` check succeeds (since this is
        impossible). *)
     | (true, _, _) -> ()
-    | (false, DefT (_, _, ObjT { proto_t = proto2; _ }), DefT (_, _, FunT (_, proto1, _)))
-      when proto1 = proto2 ->
-      ()
     (* Like above, now suppose that we have an instance x of class C, and we
        check whether x is _not_ `instanceof` class A. To decide what the
        appropriate refinement for x should be, we need to decide whether C
@@ -8374,7 +8302,7 @@ struct
             lpmap
             upmap
           |> ignore
-        | (DefT (_, _, FunT (_, _, funtype1)), DefT (_, _, FunT (_, _, funtype2)))
+        | (DefT (_, _, FunT (_, funtype1)), DefT (_, _, FunT (_, funtype2)))
           when List.length funtype1.params = List.length funtype2.params ->
           rec_unify cx trace ~use_op (fst funtype1.this_t) (fst funtype2.this_t);
           List.iter2
@@ -8979,7 +8907,6 @@ struct
             bogus_trust (),
             FunT
               ( dummy_static bound_reason,
-                dummy_prototype,
                 mk_methodtype
                   (dummy_this (aloc_of_reason reason_op))
                   params_tlist

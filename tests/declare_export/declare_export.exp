@@ -275,16 +275,16 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- es6modules.js:70:5
 
-Cannot call `CJS_Clobb_Class_NS` because module `CommonJS_Clobbering_Class` [1] is not a function. [not-a-function]
+Cannot use `new` on module `CommonJS_Clobbering_Class` [1]. Only classes can be constructed. [invalid-constructor]
 
    es6modules.js:70:5
    70| new CJS_Clobb_Class_NS(); // Error: Namespace object isn't constructable
            ^^^^^^^^^^^^^^^^^^
 
 References:
-   es6modules.js:69:1
+   es6modules.js:69:13
    69| import * as CJS_Clobb_Class_NS from "CommonJS_Clobbering_Class";
-       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+                   ^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ---------------------------------------------------------------------------------------------- es6modules.js:71:37
@@ -297,9 +297,9 @@ Cannot call `CJS_Clobb_Class_NS.staticNumber3` because property `staticNumber3` 
                                            ^^^^^^^^^^^^^
 
 References:
-   es6modules.js:69:1
+   es6modules.js:69:13
    69| import * as CJS_Clobb_Class_NS from "CommonJS_Clobbering_Class";
-       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+                   ^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ---------------------------------------------------------------------------------------------- es6modules.js:73:18
@@ -389,9 +389,9 @@ Cannot get `CJS_Named.doesntExist` because property `doesntExist` is missing in 
                  ^^^^^^^^^^^
 
 References:
-   es6modules.js:89:1
+   es6modules.js:89:13
    89| import * as CJS_Named from "CommonJS_Named";
-       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+                   ^^^^^^^^^ [1]
 
 
 Error ---------------------------------------------------------------------------------------------- es6modules.js:96:18

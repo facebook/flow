@@ -110,8 +110,8 @@ let gen_import_statements file (symbols : Ty_symbol.symbol SymbolMap.t) =
 
     let module_name =
       let reader = State_reader.create () in
-      Parsing_heaps.Reader.get_file_addr_unsafe ~reader remote_source
-      |> Parsing_heaps.read_module_name
+      Parsing_heaps.get_file_addr_unsafe remote_source
+      |> Parsing_heaps.Reader.get_haste_name ~reader
     in
     (* Relativize module name *)
     let module_name =
@@ -160,20 +160,8 @@ let gen_import_statements file (symbols : Ty_symbol.symbol SymbolMap.t) =
 
 (* The mapper *)
 
-module UnitStats : Insert_type_utils.BASE_STATS with type t = unit = struct
-  type t = unit
-
-  let empty = ()
-
-  let combine _ _ = ()
-
-  let serialize _s = []
-
-  let report _s = []
-end
-
-module Accumulator = Insert_type_utils.Acc (UnitStats)
-module Unit_Codemod_annotator = Codemod_annotator.Make (UnitStats)
+module Accumulator = Insert_type_utils.Acc (Insert_type_utils.UnitStats)
+module Unit_Codemod_annotator = Codemod_annotator.Make (Insert_type_utils.UnitStats)
 
 let reporter =
   {
@@ -184,29 +172,10 @@ let reporter =
 
 type accumulator = Accumulator.t
 
-let mapper ~default_any ~preserve_literals ~max_type_size (ask : Codemod_context.Typed.t) =
-  let imports_react =
-    Insert_type_imports.ImportsHelper.imports_react ask.Codemod_context.Typed.file_sig
-  in
-  let options = ask.Codemod_context.Typed.options in
-  let exact_by_default = Options.exact_by_default options in
-  let metadata =
-    Context.docblock_overrides ask.Codemod_context.Typed.docblock ask.Codemod_context.Typed.metadata
-  in
-  let { Context.strict; strict_local; _ } = metadata in
-  let lint_severities =
-    if strict || strict_local then
-      StrictModeSettings.fold
-        (fun lint_kind lint_severities ->
-          LintSettings.set_value lint_kind (Severity.Err, None) lint_severities)
-        (Options.strict_mode options)
-        (Options.lint_severities options)
-    else
-      Options.lint_severities options
-  in
-  let suppress_types = Options.suppress_types options in
+let mapper ~default_any ~preserve_literals ~max_type_size (cctx : Codemod_context.Typed.t) =
+  let lint_severities = Codemod_context.Typed.lint_severities cctx in
   let escape_locs =
-    let cx = Codemod_context.Typed.context ask in
+    let cx = Codemod_context.Typed.context cctx in
     let errors = Context.errors cx in
     Flow_error.ErrorSet.fold
       (fun err locs ->
@@ -221,15 +190,14 @@ let mapper ~default_any ~preserve_literals ~max_type_size (ask : Codemod_context
   object (this)
     inherit
       Unit_Codemod_annotator.mapper
-        ~max_type_size
-        ~exact_by_default
-        ~lint_severities
-        ~suppress_types
-        ~imports_react
-        ~preserve_literals
+        cctx
         ~default_any
         ~generalize_maybe:false
-        ask as super
+        ~lint_severities
+        ~max_type_size
+        ~preserve_literals
+        ~merge_arrays:false
+        () as super
 
     val mutable remote_symbols_map = SymbolMap.empty
 
@@ -276,7 +244,7 @@ let mapper ~default_any ~preserve_literals ~max_type_size (ask : Codemod_context
         let aloc = ALoc.of_loc loc in
         if ALocSet.mem aloc escape_locs then
           let annot =
-            this#make_annotation annot_loc (Codemod_context.Typed.ty_at_loc norm_opts ask loc)
+            this#make_annotation annot_loc (Codemod_context.Typed.ty_at_loc norm_opts cctx loc)
           in
           super#binding_pattern ~kind (pat_loc, Identifier { id with annot })
         else
@@ -289,14 +257,14 @@ let mapper ~default_any ~preserve_literals ~max_type_size (ask : Codemod_context
       | Flow_ast.Type.Missing loc ->
         let aloc = ALoc.of_loc loc in
         if ALocSet.mem aloc escape_locs then
-          this#make_annotation loc (Codemod_context.Typed.ty_at_loc norm_opts ask loc)
+          this#make_annotation loc (Codemod_context.Typed.ty_at_loc norm_opts cctx loc)
         else
           annot
 
     method! program prog =
       remote_symbols_map <- SymbolMap.empty;
       let (loc, { Ast.Program.statements = stmts; comments; all_comments }) = super#program prog in
-      let { Codemod_context.Typed.file; _ } = ask in
+      let { Codemod_context.Typed.file; _ } = cctx in
       let import_stmts = gen_import_statements file remote_symbols_map in
       let stmts = this#add_statement_after_directive_and_type_imports stmts import_stmts in
       (loc, { Ast.Program.statements = stmts; comments; all_comments })

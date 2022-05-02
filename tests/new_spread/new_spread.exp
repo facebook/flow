@@ -949,6 +949,21 @@ References:
                       ^^ [1]
 
 
+Error ------------------------------------------------------------------------------------------------ type_mixed.js:9:2
+
+Cannot cast `o2.someProp` to empty because `void` (due to access of non-existent property `someProp`) [1] is
+incompatible with empty [2]. [incompatible-cast]
+
+   type_mixed.js:9:2
+   9| (o2.someProp: empty); // Error someProp does not exist
+       ^^^^^^^^^^^ [1]
+
+References:
+   type_mixed.js:9:15
+   9| (o2.someProp: empty); // Error someProp does not exist
+                    ^^^^^ [2]
+
+
 Error ------------------------------------------------------------------------------------------------ type_mixed.js:9:5
 
 Cannot get `o2.someProp` because property `someProp` is missing in `O2` [1]. [prop-missing]
@@ -1060,18 +1075,12 @@ References:
                ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- type_string.js:2:2
+Error ---------------------------------------------------------------------------------------------- type_string.js:1:15
 
-Cannot cast `"foo"` to `O1` because string [1] is incompatible with `O1` [2]. [incompatible-cast]
+string literal `foo` [1] is not an object. [not-an-object]
 
-   type_string.js:2:2
-   2| ("foo": O1); // Error
-       ^^^^^ [1]
-
-References:
-   type_string.js:2:9
-   2| ("foo": O1); // Error
-              ^^ [2]
+   1| type O1 = {..."foo"}; // Error
+                    ^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------------ type_union.js:9:2
@@ -1411,7 +1420,7 @@ References:
 
 
 
-Found 85 errors
+Found 86 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

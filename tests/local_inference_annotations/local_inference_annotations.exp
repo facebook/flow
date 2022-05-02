@@ -55,8 +55,8 @@ Property `@@iterator` is missing in function [1] but exists in `$Iterable` [2]. 
                 ^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/core.js:1653:11
-   1653| interface $Iterable<+Yield,+Return,-Next> {
+   <BUILTINS>/core.js:1650:11
+   1650| interface $Iterable<+Yield,+Return,-Next> {
                    ^^^^^^^^^ [2]
 
 
@@ -305,8 +305,8 @@ Property `@@iterator` is missing in function [1] but exists in `$Iterable` [2]. 
                           ^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/core.js:1653:11
-   1653| interface $Iterable<+Yield,+Return,-Next> {
+   <BUILTINS>/core.js:1650:11
+   1650| interface $Iterable<+Yield,+Return,-Next> {
                    ^^^^^^^^^ [2]
 
 
@@ -486,6 +486,22 @@ Missing an annotation on `x`. [missing-local-annot]
                       ^
 
 
+Error ----------------------------------------------------------------------------------- included/object_static.js:3:25
+
+Missing an annotation on `x`. [missing-local-annot]
+
+   3| Object.assign({}, { foo(x) {} });  // error missing annotation
+                              ^
+
+
+Error ----------------------------------------------------------------------------------- included/object_static.js:4:21
+
+Missing an annotation on `x`. [missing-local-annot]
+
+   4| Object.create({ foo(x) {} });  // error missing annotation
+                          ^
+
+
 Error ------------------------------------------------------------------------------------------ included/return.js:7:22
 
 Missing an annotation on `z`. [missing-local-annot]
@@ -591,4 +607,4 @@ Missing an annotation on `y`. [missing-local-annot]
 
 
 
-Found 71 errors
+Found 73 errors

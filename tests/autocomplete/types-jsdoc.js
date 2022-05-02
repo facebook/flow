@@ -1,6 +1,9 @@
 //@flow
 
-/** this is myFoo */
+/**
+ * this is myFoo.
+ * @deprecated
+ */
 type myFoo = number;
 /** this is myBar */
 type myBar<T> = ?T;

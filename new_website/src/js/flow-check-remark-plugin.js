@@ -26,7 +26,7 @@ const nodeForImport = {
     "import FlowCheckCodeBlock from '@site/src/components/FlowCheckCodeBlock';",
 };
 
-module.exports = () => {
+module.exports = () /*: any */ => {
   let transformed = false;
   let alreadyImported = false;
   const transformer = node => {

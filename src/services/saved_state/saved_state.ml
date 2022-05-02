@@ -8,7 +8,7 @@
 open Utils_js
 
 type denormalized_file_data = {
-  resolved_requires: Module_heaps.resolved_requires;
+  resolved_requires: Parsing_heaps.resolved_requires;
   exports: Exports.t;
   hash: Xx.hash;
 }
@@ -19,19 +19,6 @@ type normalized_file_data = denormalized_file_data
 type parsed_file_data = {
   module_name: string option;
   normalized_file_data: normalized_file_data;
-  (* Right now there is no guarantee that this is Some, for two reasons:
-   * - We allow saved state to be saved from a lazy server, meaning that it's possible that *no*
-   *   files will have been merged, and therefore none will have a sig hash.
-   * - We do not typecheck all parsed files, so even on a full init some files may have None here.
-   *
-   * The sig hashes drive optimizations, so whether or not they are included for any given file
-   * should not affect correctness.
-   *
-   * The landscape around merging and sig hashing will change dramatically with types-first 2.0, so
-   * I think that it makes sense to wait for it before deciding upon any stronger invariant to
-   * enforce here.
-   *)
-  sig_hash: Xx.hash option;
 }
 
 (* We also need to store the info for unparsed files *)
@@ -193,40 +180,39 @@ end = struct
     loop 0 saved_state_version_length
 
   let normalize_resolved_requires
-      ~normalizer { Module_heaps.file_key; resolved_modules; phantom_dependents; hash } =
-    let file_key = FileNormalizer.normalize_file_key normalizer file_key in
-    let phantom_dependents =
-      SSet.map (FileNormalizer.normalize_path normalizer) phantom_dependents
+      ~normalizer { Parsing_heaps.resolved_modules; phantom_dependencies; hash } =
+    let phantom_dependencies =
+      SSet.map (FileNormalizer.normalize_path normalizer) phantom_dependencies
     in
     let resolved_modules =
       SMap.map
         (modulename_map_fn ~f:(FileNormalizer.normalize_file_key normalizer))
         resolved_modules
     in
-    { Module_heaps.file_key; resolved_modules; phantom_dependents; hash }
+    { Parsing_heaps.resolved_modules; phantom_dependencies; hash }
 
   let normalize_file_data ~normalizer { resolved_requires; exports; hash } =
     let resolved_requires = normalize_resolved_requires ~normalizer resolved_requires in
     { resolved_requires; exports; hash }
 
-  let normalize_parsed_data ~normalizer { module_name; normalized_file_data; sig_hash } =
+  let normalize_parsed_data ~normalizer { module_name; normalized_file_data } =
     let normalized_file_data = normalize_file_data ~normalizer normalized_file_data in
-    { module_name; normalized_file_data; sig_hash }
+    { module_name; normalized_file_data }
 
   (* Collect all the data for a single parsed file *)
   let collect_normalized_data_for_parsed_file ~normalizer ~reader fn parsed_heaps =
-    let addr = Parsing_heaps.Reader.get_checked_file_addr_unsafe ~reader fn in
+    let addr = Parsing_heaps.get_file_addr_unsafe fn in
+    let parse = Parsing_heaps.Reader.get_typed_parse_unsafe ~reader fn addr in
+    let resolved_requires = Parsing_heaps.Reader.get_resolved_requires_unsafe fn ~reader parse in
     let file_data =
       {
-        module_name = Parsing_heaps.read_checked_module_name addr;
+        module_name = Parsing_heaps.Reader.get_haste_name ~reader addr;
         normalized_file_data =
           {
-            resolved_requires =
-              Module_heaps.Reader.get_resolved_requires_unsafe ~reader ~audit:Expensive.ok fn;
-            exports = Parsing_heaps.read_exports addr;
-            hash = Parsing_heaps.read_checked_file_hash addr;
+            resolved_requires;
+            exports = Parsing_heaps.read_exports parse;
+            hash = Parsing_heaps.read_file_hash parse;
           };
-        sig_hash = Context_heaps.Reader.sig_hash_opt ~reader fn;
       }
     in
     let relative_fn = FileNormalizer.normalize_file_key normalizer fn in
@@ -241,11 +227,12 @@ end = struct
 
   (* Collect all the data for a single unparsed file *)
   let collect_normalized_data_for_unparsed_file ~normalizer ~reader fn unparsed_heaps =
-    let addr = Parsing_heaps.Reader.get_unparsed_file_addr_unsafe ~reader fn in
+    let addr = Parsing_heaps.get_file_addr_unsafe fn in
+    let parse = Parsing_heaps.Reader.get_parse_unsafe ~reader fn addr in
     let relative_file_data =
       {
-        unparsed_module_name = Parsing_heaps.read_unparsed_module_name addr;
-        unparsed_hash = Parsing_heaps.read_unparsed_file_hash addr;
+        unparsed_module_name = Parsing_heaps.Reader.get_haste_name ~reader addr;
+        unparsed_hash = Parsing_heaps.read_file_hash parse;
       }
     in
     let relative_fn = FileNormalizer.normalize_file_key normalizer fn in
@@ -503,14 +490,13 @@ end = struct
       read_version fd (Bytes.create saved_state_version_length) 0 saved_state_version_length
 
   let denormalize_resolved_requires
-      ~root { Module_heaps.file_key; resolved_modules; phantom_dependents; hash = _ } =
+      ~root { Parsing_heaps.resolved_modules; phantom_dependencies; hash = _ } =
     (* We do our best to avoid reading the file system (which Path.make will do) *)
-    let phantom_dependents = SSet.map (Files.absolute_path root) phantom_dependents in
+    let phantom_dependencies = SSet.map (Files.absolute_path root) phantom_dependencies in
     let resolved_modules =
       SMap.map (modulename_map_fn ~f:(denormalize_file_key_nocache ~root)) resolved_modules
     in
-    let file_key = denormalize_file_key_nocache ~root file_key in
-    Module_heaps.mk_resolved_requires file_key ~resolved_modules ~phantom_dependents
+    Parsing_heaps.mk_resolved_requires ~resolved_modules ~phantom_dependencies
 
   (** Turns all the relative paths in a file's data back into absolute paths. *)
   let denormalize_file_data ~root { resolved_requires; exports; hash } =
@@ -519,7 +505,7 @@ end = struct
 
   let progress_fn real_total ~total:_ ~start ~length:_ =
     MonitorRPC.status_update
-      ServerStatus.(Load_saved_state_progress { total = Some real_total; finished = start })
+      ~event:ServerStatus.(Load_saved_state_progress { total = Some real_total; finished = start })
 
   (* Denormalize the data for all the parsed files. This is kind of slow :( *)
   let denormalize_parsed_heaps ~denormalizer parsed_heaps =
@@ -634,7 +620,7 @@ end = struct
     let filename = Path.to_string saved_state_filename in
     Hh_logger.info "Reading saved-state file at %S" filename;
 
-    MonitorRPC.status_update ServerStatus.Read_saved_state;
+    MonitorRPC.status_update ~event:ServerStatus.Read_saved_state;
 
     let%lwt fd =
       try%lwt Lwt_unix.openfile filename [Unix.O_RDONLY; Unix.O_NONBLOCK] 0o666 with

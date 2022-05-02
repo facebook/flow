@@ -98,6 +98,7 @@ let collect_error_flags
     include_warnings
     max_warnings
     one_line
+    list_files
     show_all_errors
     show_all_branches
     unicode
@@ -124,6 +125,7 @@ let collect_error_flags
       include_warnings;
       max_warnings;
       one_line;
+      list_files;
       show_all_errors;
       show_all_branches;
       unicode;
@@ -163,6 +165,7 @@ let error_flags prev =
          ~doc:"Display terminal output in color. never, always, auto (default: auto)"
     |> warning_flags
     |> flag "--one-line" no_arg ~doc:"Escapes newlines so that each error prints on one line"
+    |> flag "--list-files" no_arg ~doc:"List files with errors"
     |> flag
          "--show-all-errors"
          no_arg
@@ -1058,6 +1061,7 @@ let flowconfig_name_flag prev =
               "Set the name of the flow configuration file. (default: %s)"
               Server_files_js.default_flowconfig_name
            )
+         ~env:"FLOW_CONFIG_NAME"
   )
 
 let base_flags =
@@ -1355,8 +1359,8 @@ let make_options
     opt_lint_severities = lint_severities;
     opt_strict_mode = strict_mode;
     opt_merge_timeout;
+    opt_missing_module_generators = FlowConfig.missing_module_generators flowconfig;
     opt_saved_state_fetcher;
-    opt_saved_state_load_sighashes = FlowConfig.saved_state_load_sighashes flowconfig;
     opt_saved_state_force_recheck = saved_state_options_flags.saved_state_force_recheck;
     opt_saved_state_no_fallback = saved_state_options_flags.saved_state_no_fallback;
     opt_node_resolver_allow_root_relative = FlowConfig.node_resolver_allow_root_relative flowconfig;
@@ -1656,8 +1660,9 @@ let rec connect_and_make_request flowconfig_name =
         if (not quiet) && Tty.spinner_used () then Tty.print_clear_line stderr;
         raise End_of_file
       | exn ->
+        let exn = Exception.wrap exn in
         if (not quiet) && Tty.spinner_used () then Tty.print_clear_line stderr;
-        raise exn
+        Exception.reraise exn
     in
     match response with
     | MonitorProt.Please_hold status ->
@@ -1672,7 +1677,7 @@ let rec connect_and_make_request flowconfig_name =
             Some (FileWatcherStatus.string_of_status watcher_status)
         | (server_status, _) -> Some (ServerStatus.string_of_status ~use_emoji server_status)
       in
-      Base.Option.iter status_string (fun status_string ->
+      Base.Option.iter status_string ~f:(fun status_string ->
           if not quiet then eprintf_with_spinner "Please wait. %s" status_string
       );
 
@@ -1806,12 +1811,24 @@ let choose_file_watcher ~flowconfig ~lazy_mode ~file_watcher ~file_watcher_debug
         sync_timeout;
       }
 
-let choose_file_watcher_mergebase_with ~flowconfig mergebase_with =
-  match
-    Base.Option.first_some mergebase_with (FlowConfig.file_watcher_mergebase_with flowconfig)
-  with
+let choose_file_watcher_mergebase_with ~flowconfig vcs mergebase_with =
+  match mergebase_with with
   | Some x -> x
-  | None -> default_file_watcher_mergebase_with
+  | None ->
+    let mergebase_with =
+      match vcs with
+      | Some Vcs.Git -> FlowConfig.file_watcher_mergebase_with_git flowconfig
+      | Some Vcs.Hg -> FlowConfig.file_watcher_mergebase_with_hg flowconfig
+      | None -> None
+    in
+    let mergebase_with =
+      match mergebase_with with
+      | Some x -> Some x
+      | None -> FlowConfig.file_watcher_mergebase_with flowconfig
+    in
+    (match mergebase_with with
+    | Some x -> x
+    | None -> default_file_watcher_mergebase_with)
 
 let choose_file_watcher_timeout ~flowconfig cli_timeout =
   match Base.Option.first_some cli_timeout (FlowConfig.file_watcher_timeout flowconfig) with

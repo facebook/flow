@@ -43,11 +43,13 @@ let assert_heap_size wsize =
   let bsize = wsize * (Sys.word_size / 8) in
   assert (SharedMem.heap_size () = bsize)
 
-let assert_null_committed entity = assert (is_none (entity_read_committed entity))
+let assert_null_committed entity = assert (Option.is_none (entity_read_committed entity))
 
-let assert_committed f entity data = assert (data = read_opt_exn f (entity_read_committed entity))
+let assert_committed f entity data = assert (data = f (Option.get (entity_read_committed entity)))
 
-let assert_latest f entity data = assert (data = read_opt_exn f (entity_read_latest entity))
+let assert_latest f entity data = assert (data = f (Option.get (entity_read_latest entity)))
+
+let assert_latest_opt f entity data = assert (data = Option.map f (entity_read_latest entity))
 
 let collect_test _ctxt =
   let foo = "foo" in
@@ -180,12 +182,73 @@ let entities_compact_test _ctxt =
   compact ();
   assert_heap_size 0
 
+let entities_rollback_test _ctxt =
+  (* init *)
+  commit_transaction ();
+
+  let foo = "foo" in
+  let bar = "bar" in
+  let foo_size = header_size + string_size foo in
+  let bar_size = header_size + string_size bar in
+  let size = foo_size + bar_size + header_size + entity_size in
+  let (foo, bar, ent) =
+    alloc size (fun chunk ->
+        let foo = write_string chunk foo in
+        let bar = write_string chunk bar in
+        let ent = write_entity chunk (Some foo) in
+        (foo, bar, ent)
+    )
+  in
+  assert_latest Fun.id ent foo;
+
+  entity_rollback ent;
+  assert_latest_opt Fun.id ent None;
+
+  (* advance ent -> foo, commit *)
+  entity_advance ent (Some foo);
+  commit_transaction ();
+
+  (* rollback after commit: no change *)
+  entity_rollback ent;
+  assert_latest Fun.id ent foo;
+
+  (* advance ent -> bar, rollback *)
+  entity_advance ent (Some bar);
+  entity_rollback ent;
+  assert_latest Fun.id ent foo;
+
+  (* clean up *)
+  compact ();
+  assert_heap_size 0
+
+let slot_taken_test _ =
+  let foo = "foo" in
+  let bar = "bar" in
+  let key = "key" in
+  let size = (2 * header_size) + string_size foo + string_size bar in
+  alloc size (fun chunk ->
+      let foo = write_string chunk foo in
+      let bar = write_string chunk bar in
+      assert (foo = H1.add key foo);
+      (* add returns foo, because already taken *)
+      assert (foo = H1.add key bar);
+      (* add returns bar, because slot was freed via delete *)
+      H1.remove key;
+      assert (bar = H1.add key bar)
+  );
+  (* clean up *)
+  H1.remove key;
+  compact ();
+  assert_heap_size 0
+
 let tests =
   "heap_tests"
   >::: [
          "collect" >:: collect_test;
          "entities" >:: entities_test;
          "entities_compact" >:: entities_compact_test;
+         "entities_rollback" >:: entities_rollback_test;
+         "slot_taken" >:: slot_taken_test;
        ]
 
 let () =

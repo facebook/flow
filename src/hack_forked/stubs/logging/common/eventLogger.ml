@@ -12,7 +12,7 @@ type init_settings = {
   log_err: Unix.file_descr;
 }
 
-let init ?exit_on_parent_exit:_ ?log_pid:_ ?init_id:_ _ _ = ()
+let init ?log_pid:_ ?init_id:_ _ _ = ()
 
 let disable_logging () = ()
 

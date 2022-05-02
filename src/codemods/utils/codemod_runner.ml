@@ -182,15 +182,13 @@ let merge_targets ~env ~options ~profiling ~get_dependent_files roots =
   Lwt.return (sig_dependency_graph, component_map, roots, to_check)
 
 let merge_job ~worker_mutator ~options ~reader component =
-  let leader = Nel.hd component in
-  let addr = Parsing_heaps.Mutator_reader.get_file_addr_unsafe ~reader leader in
   let diff =
-    if Parsing_heaps.is_checked_file addr then
+    match Parsing_heaps.Mutator_reader.typed_component ~reader component with
+    | None -> false
+    | Some component ->
       let root = Options.root options in
       let hash = Merge_service.sig_hash ~root ~reader component in
-      Context_heaps.Merge_context_mutator.add_merge_on_diff worker_mutator component hash
-    else
-      false
+      Parsing_heaps.Merge_context_mutator.add_merge_on_diff worker_mutator component hash
   in
   (diff, Ok ())
 
@@ -286,7 +284,7 @@ module SimpleTypedRunner (C : SIMPLE_TYPED_RUNNER_CONFIG) : TYPED_RUNNER_CONFIG 
           merge_targets ~env ~options ~profiling ~get_dependent_files roots
         in
         let (master_mutator, worker_mutator) =
-          Context_heaps.Merge_context_mutator.create transaction files_to_merge
+          Parsing_heaps.Merge_context_mutator.create transaction files_to_merge
         in
         Hh_logger.info "Merging %d files" (FilenameSet.cardinal files_to_merge);
         let%lwt _ =
@@ -368,7 +366,7 @@ module TypedRunnerWithPrepass (C : TYPED_RUNNER_WITH_PREPASS_CONFIG) : TYPED_RUN
           merge_targets ~env ~options ~profiling ~get_dependent_files roots
         in
         let (master_mutator, worker_mutator) =
-          Context_heaps.Merge_context_mutator.create transaction files_to_merge
+          Parsing_heaps.Merge_context_mutator.create transaction files_to_merge
         in
         Hh_logger.info "Merging %d files" (FilenameSet.cardinal files_to_merge);
         let%lwt _ =
@@ -551,6 +549,7 @@ module UntypedRunner (C : UNTYPED_RUNNER_CONFIG) : STEP_RUNNER = struct
                   unchanged = _;
                   not_found = _;
                   package_json = _;
+                  dirty_modules = _;
                 } =
               Parsing_service_js.parse_with_defaults ~reader options workers next
             in

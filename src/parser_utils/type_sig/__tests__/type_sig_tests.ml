@@ -152,7 +152,7 @@ let pp_builtins
   pp_remote_refs pp_loc fmt remote_refs;
   SMap.iter
     (fun name m ->
-      Format.fprintf fmt "@.Builtin module %s:@." name;
+      fprintf fmt "@.Builtin module %s:@." name;
       pp_builtin_module pp_loc fmt m)
     modules;
   pp_errors pp_loc fmt errs

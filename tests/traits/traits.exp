@@ -51,7 +51,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test2.js:2:24
 
-Cannot reference type `I` [1] from a value position. [type-as-value]
+Cannot use type `I` [1] as a value. Types are erased and don't exist at runtime. [type-as-value]
 
    test2.js:2:24
    2| declare class C mixins I { }

@@ -30,23 +30,6 @@ Cannot assign function to `z.m` because property `m` is not writable. [cannot-wr
          ^
 
 
-Error ---------------------------------------------------------------------------------------------------- test2.js:4:15
-
-Cannot get `this.p` because property `p` is missing in object literal [1]. [prop-missing]
-
-   test2.js:4:15
-    4|   return this.p;
-                     ^
-
-References:
-   test2.js:12:9
-               v
-   12| var b = {
-   13|   f
-   14| }
-       ^ [1]
-
-
 Error ----------------------------------------------------------------------------------------------------- test3.js:4:8
 
 Cannot call `this.m` because property `m` is missing in global object [1]. [prop-missing]
@@ -90,4 +73,4 @@ References:
 
 
 
-Found 8 errors
+Found 7 errors

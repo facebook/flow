@@ -80,3 +80,19 @@ var f: typeof numberAlias = 42; // Error: 'typeof <<type-alias>>' makes no sense
 
  var Map = { "A": "this is A", "B": "this is B", "C": "this is C" };
  var keys: $Keys<Map> = "A";  // Error: ineligible value used in type anno
+
+////////////////////////////////////////
+// typeof <<variable declared later>> //
+////////////////////////////////////////
+
+declare var g: typeof h;
+const h = 1;
+
+(g: string); // error
+(g: number);
+
+declare var i: typeof j;
+const j = { p: 1 };
+
+(i.p: string); // error
+(i.p: number);

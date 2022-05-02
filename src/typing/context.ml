@@ -52,6 +52,7 @@ type metadata = {
   max_literal_length: int;
   max_trace_depth: int;
   max_workers: int;
+  missing_module_generators: (Str.regexp * string) list;
   react_runtime: Options.react_runtime;
   react_server_component_exts: SSet.t;
   recursion_limit: int;
@@ -180,9 +181,12 @@ type component_t = {
   mutable implicit_instantiation_checks: Implicit_instantiation_check.t list;
   mutable inferred_indexers: Type.dicttype list ALocMap.t;
   mutable constrained_writes: (Type.t * Type.use_t) list;
+  mutable env_value_cache: Type.t IMap.t;
+  mutable env_type_cache: Type.t IMap.t;
   (* map from annot tvar ids to nodes used during annotation processing *)
   mutable annot_graph: Type.AConstraint.node IMap.t;
 }
+[@@warning "-69"]
 
 type phase =
   | InitLib
@@ -207,6 +211,7 @@ type t = {
   trust_constructor: unit -> Trust.trust_rep;
   mutable declare_module_ref: Module_info.t option;
   mutable environment: Loc_env.t;
+  node_cache: Node_cache.t;
 }
 
 let metadata_of_options options =
@@ -244,6 +249,7 @@ let metadata_of_options options =
     max_literal_length = Options.max_literal_length options;
     max_trace_depth = Options.max_trace_depth options;
     max_workers = Options.max_workers options;
+    missing_module_generators = Options.missing_module_generators options;
     react_runtime = Options.react_runtime options;
     react_server_component_exts = Options.react_server_component_exts options;
     recursion_limit = Options.recursion_limit options;
@@ -321,6 +327,8 @@ let make_ccx master_cx =
     literal_subtypes = [];
     new_env_literal_subtypes = [];
     constrained_writes = [];
+    env_value_cache = IMap.empty;
+    env_type_cache = IMap.empty;
     errors = Flow_error.ErrorSet.empty;
     error_suppressions = Error_suppressions.empty;
     severity_cover = Utils_js.FilenameMap.empty;
@@ -359,6 +367,7 @@ let make ccx metadata file aloc_table module_ref phase =
     trust_constructor = Trust.literal_trust;
     declare_module_ref = None;
     environment = Loc_env.empty;
+    node_cache = Node_cache.empty;
   }
 
 let sig_cx cx = cx.ccx.sig_cx
@@ -544,6 +553,15 @@ let new_env_literal_subtypes cx = cx.ccx.new_env_literal_subtypes
 
 let constrained_writes cx = cx.ccx.constrained_writes
 
+let env_cache_find_opt cx ~for_value id =
+  let cache =
+    if for_value then
+      cx.ccx.env_value_cache
+    else
+      cx.ccx.env_type_cache
+  in
+  IMap.find_opt id cache
+
 let type_graph cx = cx.ccx.type_graph
 
 let matching_props cx = cx.ccx.matching_props
@@ -557,6 +575,8 @@ let type_asserts cx = cx.metadata.type_asserts
 let verbose cx = cx.metadata.verbose
 
 let max_workers cx = cx.metadata.max_workers
+
+let missing_module_generators cx = cx.metadata.missing_module_generators
 
 let jsx cx = cx.metadata.jsx
 
@@ -573,6 +593,8 @@ let inferred_indexers cx = cx.ccx.inferred_indexers
 let environment cx = cx.environment
 
 let any_propagation cx = cx.metadata.any_propagation
+
+let node_cache cx = cx.node_cache
 
 let automatic_require_default cx = cx.metadata.automatic_require_default
 
@@ -666,6 +688,12 @@ let add_new_env_literal_subtypes cx c =
   cx.ccx.new_env_literal_subtypes <- c :: cx.ccx.new_env_literal_subtypes
 
 let add_constrained_write cx c = cx.ccx.constrained_writes <- c :: cx.ccx.constrained_writes
+
+let add_env_cache_entry cx ~for_value id t =
+  if for_value then
+    cx.ccx.env_value_cache <- IMap.add id t cx.ccx.env_value_cache
+  else
+    cx.ccx.env_type_cache <- IMap.add id t cx.ccx.env_type_cache
 
 let add_voidable_check cx voidable_check =
   cx.ccx.voidable_checks <- voidable_check :: cx.ccx.voidable_checks

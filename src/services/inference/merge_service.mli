@@ -33,16 +33,17 @@ type sig_opts_data = {
   sig_new_or_changed: FilenameSet.t;
 }
 
-type 'a merge_results = (File_key.t * bool * 'a unit_result) list * sig_opts_data
+type 'a merge_results = (File_key.t * bool * 'a) list * sig_opts_data
 
 type 'a merge_job =
-  worker_mutator:Context_heaps.Merge_context_mutator.worker_mutator ->
+  worker_mutator:Parsing_heaps.Merge_context_mutator.worker_mutator ->
   options:Options.t ->
   reader:Mutator_state_reader.t ->
   File_key.t Nel.t ->
-  bool * 'a unit_result
+  bool * 'a
 
-val sig_hash : root:Path.t -> reader:Mutator_state_reader.t -> File_key.t Nel.t -> Xx.hash
+val sig_hash :
+  root:Path.t -> reader:Mutator_state_reader.t -> Parsing_heaps.component_file Nel.t -> Xx.hash
 
 val check_contents_cache : Check_cache.t
 
@@ -57,8 +58,8 @@ val check_contents_context :
 
 val merge_runner :
   job:'a merge_job ->
-  master_mutator:Context_heaps.Merge_context_mutator.master_mutator ->
-  worker_mutator:Context_heaps.Merge_context_mutator.worker_mutator ->
+  master_mutator:Parsing_heaps.Merge_context_mutator.master_mutator ->
+  worker_mutator:Parsing_heaps.Merge_context_mutator.worker_mutator ->
   reader:Mutator_state_reader.t ->
   options:Options.t ->
   workers:MultiWorkerLwt.worker list option ->
@@ -68,8 +69,8 @@ val merge_runner :
   'a merge_results Lwt.t
 
 val merge :
-  master_mutator:Context_heaps.Merge_context_mutator.master_mutator ->
-  worker_mutator:Context_heaps.Merge_context_mutator.worker_mutator ->
+  master_mutator:Parsing_heaps.Merge_context_mutator.master_mutator ->
+  worker_mutator:Parsing_heaps.Merge_context_mutator.worker_mutator ->
   reader:Mutator_state_reader.t ->
   options:Options.t ->
   workers:MultiWorkerLwt.worker list option ->
@@ -80,7 +81,7 @@ val merge :
 
 val mk_check :
   Options.t ->
-  reader:Module_heaps.Mutator_reader.reader ->
+  reader:Parsing_heaps.Mutator_reader.reader ->
   unit ->
   File_key.t ->
   check_result option unit_result

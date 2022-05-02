@@ -840,14 +840,14 @@ and Statement : sig
       | Identifier of ('M, 'T) Identifier.t
       | Literal of ('T * 'M StringLiteral.t)
 
-    and 'M module_kind =
-      | CommonJS of 'M
-      | ES of 'M
+    and module_kind =
+      | CommonJS
+      | ES
 
     and ('M, 'T) t = {
       id: ('M, 'T) id;
       body: 'M * ('M, 'T) Block.t;
-      kind: 'M module_kind;
+      kind: module_kind;
       comments: ('M, unit) Syntax.t option;
     }
     [@@deriving show]

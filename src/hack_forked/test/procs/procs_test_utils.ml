@@ -58,7 +58,7 @@ let run_interrupter limit =
         | _ ->
           let written = Unix.write_substring fd_out "!" 0 1 in
           assert (written = 1);
-          aux (Base.Option.map x (fun x -> x - 1))
+          aux (Base.Option.map x ~f:(fun x -> x - 1))
       in
       aux limit
     | pid -> pid

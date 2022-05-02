@@ -112,6 +112,10 @@ val file_watcher : config -> file_watcher option
 
 val file_watcher_mergebase_with : config -> string option
 
+val file_watcher_mergebase_with_git : config -> string option
+
+val file_watcher_mergebase_with_hg : config -> string option
+
 val file_watcher_timeout : config -> int option
 
 val format_bracket_spacing : config -> bool option
@@ -171,6 +175,8 @@ val max_workers : config -> int
 
 val merge_timeout : config -> int option
 
+val missing_module_generators : config -> (Str.regexp * string) list
+
 val module_file_exts : config -> string list
 
 val module_name_mappers : config -> (Str.regexp * string) list
@@ -216,8 +222,6 @@ val root_name : config -> string option
 val run_post_inference_implicit_instantiation : config -> bool
 
 val saved_state_fetcher : config -> Options.saved_state_fetcher
-
-val saved_state_load_sighashes : config -> bool
 
 val shm_hash_table_pow : config -> int
 

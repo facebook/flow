@@ -1,18 +1,21 @@
 //@flow
+
+declare function maybeNumber(): ?number;
+
 let foo = {
-  foo1: null,
-  foo2: null,
-  foo3: null,
-  foo4: null,
-  foo5: null,
-  foo6: null,
-  foo7: null,
-  foo8: null,
-  foo9: null,
-  foo10: null,
-  foo11: null,
-  foo12: null,
-  foo13: null,
+  foo1: maybeNumber(),
+  foo2: maybeNumber(),
+  foo3: maybeNumber(),
+  foo4: maybeNumber(),
+  foo5: maybeNumber(),
+  foo6: maybeNumber(),
+  foo7: maybeNumber(),
+  foo8: maybeNumber(),
+  foo9: maybeNumber(),
+  foo10: maybeNumber(),
+  foo11: maybeNumber(),
+  foo12: maybeNumber(),
+  foo13: maybeNumber(),
 };
 
 const f1 = () => {foo = {...foo, foo1: 3}};

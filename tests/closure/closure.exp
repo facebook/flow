@@ -8,9 +8,9 @@ Cannot call `takes_string` with `global_x` bound to `_` because number [1] is in
                     ^^^^^^^^
 
 References:
-   Closure.js:16:14
-   16|   global_x = 42;
-                    ^^ [1]
+   Closure.js:12:15
+   12| var global_x: number | string = 'hello';
+                     ^^^^^^ [1]
    Closure.js:7:26
     7| function takes_string(_: string) {}
                                 ^^^^^^ [2]
@@ -26,9 +26,9 @@ Cannot call `takes_string` with `global_x` bound to `_` because number [1] is in
                     ^^^^^^^^
 
 References:
-   Closure.js:16:14
-   16|   global_x = 42;
-                    ^^ [1]
+   Closure.js:12:15
+   12| var global_x: number | string = 'hello';
+                     ^^^^^^ [1]
    Closure.js:7:26
     7| function takes_string(_: string) {}
                                 ^^^^^^ [2]
@@ -44,9 +44,9 @@ Cannot call `takes_string` with `local_x` bound to `_` because number [1] is inc
                       ^^^^^^^
 
 References:
-   Closure.js:35:15
-   35|     local_x = 42;
-                     ^^ [1]
+   Closure.js:31:25
+   31|   var local_x: string | number = 'hello';
+                               ^^^^^^ [1]
    Closure.js:7:26
     7| function takes_string(_: string) {}
                                 ^^^^^^ [2]
@@ -62,9 +62,9 @@ Cannot call `takes_string` with `local_x` bound to `_` because number [1] is inc
                       ^^^^^^^
 
 References:
-   Closure.js:35:15
-   35|     local_x = 42;
-                     ^^ [1]
+   Closure.js:31:25
+   31|   var local_x: string | number = 'hello';
+                               ^^^^^^ [1]
    Closure.js:7:26
     7| function takes_string(_: string) {}
                                 ^^^^^^ [2]
@@ -80,9 +80,9 @@ Cannot call `takes_string` with `global_y` bound to `_` because number [1] is in
                     ^^^^^^^^
 
 References:
-   Closure.js:55:16
-   55|     global_y = 42;
-                      ^^ [1]
+   Closure.js:50:24
+   50| var global_y: string | number = 'hello';
+                              ^^^^^^ [1]
    Closure.js:7:26
     7| function takes_string(_: string) {}
                                 ^^^^^^ [2]
@@ -98,9 +98,9 @@ Cannot call `takes_string` with `global_y` bound to `_` because number [1] is in
                     ^^^^^^^^
 
 References:
-   Closure.js:55:16
-   55|     global_y = 42;
-                      ^^ [1]
+   Closure.js:50:24
+   50| var global_y: string | number = 'hello';
+                              ^^^^^^ [1]
    Closure.js:7:26
     7| function takes_string(_: string) {}
                                 ^^^^^^ [2]
@@ -116,9 +116,9 @@ Cannot call `takes_string` with `local_y` bound to `_` because number [1] is inc
                       ^^^^^^^
 
 References:
-   Closure.js:76:17
-   76|       local_y = 42;
-                       ^^ [1]
+   Closure.js:71:25
+   71|   var local_y: string | number = 'hello';
+                               ^^^^^^ [1]
    Closure.js:7:26
     7| function takes_string(_: string) {}
                                 ^^^^^^ [2]
@@ -134,9 +134,9 @@ Cannot call `takes_string` with `local_y` bound to `_` because number [1] is inc
                       ^^^^^^^
 
 References:
-   Closure.js:76:17
-   76|       local_y = 42;
-                       ^^ [1]
+   Closure.js:71:25
+   71|   var local_y: string | number = 'hello';
+                               ^^^^^^ [1]
    Closure.js:7:26
     7| function takes_string(_: string) {}
                                 ^^^^^^ [2]
@@ -151,9 +151,9 @@ Cannot cast `x` to string because number [1] is incompatible with string [2]. [i
           ^
 
 References:
-   Closure.js:91:9
-   91|     x = 10;
-               ^^ [1]
+   Closure.js:93:10
+   93|   var x: number | string = 'hello world';
+                ^^^^^^ [1]
    Closure.js:95:7
    95|   (x: string); // blame
              ^^^^^^ [2]
@@ -227,9 +227,9 @@ Cannot return `x` because string [1] is incompatible with number [2]. [incompati
                 ^
 
 References:
-   cond_havoc.js:8:22
-    8|   function f() { x = "" }
-                            ^^ [1]
+   cond_havoc.js:7:19
+    7|   var x: number | string = 0;
+                         ^^^^^^ [1]
    cond_havoc.js:6:28
     6| function example(b: bool): number {
                                   ^^^^^^ [2]
@@ -244,30 +244,13 @@ Cannot assign `var_x` to `y` because null or undefined [1] is incompatible with 
                                             ^^^^^
 
 References:
-   const.js:9:15
-    9| function g(x: ?number) {
-                     ^^^^^^^ [1]
-   const.js:20:29
-   20|     call_me = () => { var y:number = var_x; };  // error
-                                   ^^^^^^ [2]
-
-
-Error --------------------------------------------------------------------------------------------------- const.js:20:38
-
-Cannot assign `var_x` to `y` because null [1] is incompatible with number [2]. [incompatible-type]
-
-   const.js:20:38
-   20|     call_me = () => { var y:number = var_x; };  // error
-                                            ^^^^^
-
-References:
-   const.js:22:11
-   22|   var_x = null;
-                 ^^^^ [1]
+   const.js:17:14
+   17|   var var_x: ?number = x;
+                    ^^^^^^^ [1]
    const.js:20:29
    20|     call_me = () => { var y:number = var_x; };  // error
                                    ^^^^^^ [2]
 
 
 
-Found 16 errors
+Found 15 errors

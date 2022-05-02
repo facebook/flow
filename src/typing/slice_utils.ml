@@ -1007,7 +1007,7 @@ let intersect2
       props2
   in
   let dict =
-    Base.Option.merge dict1 dict2 (fun d1 d2 ->
+    Base.Option.merge dict1 dict2 ~f:(fun d1 d2 ->
         {
           dict_name = None;
           key = intersection d1.key d2.key;
@@ -1179,7 +1179,7 @@ let resolve
    * `const {x, ...y} = 3;` tries to get `x` from Number.
    * They don't make sense with $ReadOnly's semantics, since $ReadOnly doesn't model
    * copying/spreading an object. *)
-  | DefT (_, _, (StrT _ | NumT _ | BoolT _))
+  | DefT (_, _, BoolT _)
     when match tool with
          | ObjectWiden _
          | Spread _ ->

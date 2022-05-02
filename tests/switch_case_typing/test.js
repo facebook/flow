@@ -72,8 +72,10 @@ switch (o.type) {
   case 'foo':
   case 'bar':
   case 'baz':
+    (o.type: empty); // error
     break;
   case 'qux': // error
+    (o.type: empty); // error
     break;
 }
 

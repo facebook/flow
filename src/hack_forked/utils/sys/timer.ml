@@ -68,7 +68,7 @@ let rec get_next_timer ~exns =
             timer.callback ();
             exns
           with
-          | exn -> exn :: exns
+          | exn -> Exception.wrap exn :: exns
         in
         get_next_timer ~exns
       else
@@ -87,15 +87,13 @@ let schedule_non_recurring interval =
     ignore (setitimer ITIMER_REAL interval_timer)
   )
 
-external reraise : exn -> 'a = "%reraise"
-
 let rec ding_fries_are_done _ =
   let exns =
     try
       Base.Option.iter !current_timer ~f:(fun timer -> timer.callback ());
       []
     with
-    | exn -> [exn]
+    | exn -> [Exception.wrap exn]
   in
   current_timer := None;
   schedule ~exns ()
@@ -118,7 +116,7 @@ and schedule ?(exns = []) () =
   (* If we executed more than one callback this time and more than one callback threw an
    * exception, then we just arbitrarily choose one to throw. Oh well :/ *)
   match exns with
-  | exn :: _ -> reraise exn
+  | exn :: _ -> Exception.reraise exn
   | _ -> ()
 
 (* Will invoke callback () after interval seconds *)

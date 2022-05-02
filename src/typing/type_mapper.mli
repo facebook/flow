@@ -76,21 +76,6 @@ class virtual ['a] t_with_uses :
 
     method cont : Context.t -> 'a -> Type.cont -> Type.cont
 
-    method create_class_knot :
-      Context.t -> 'a -> Type.React.CreateClass.knot -> Type.React.CreateClass.knot
-
-    method create_class_spec :
-      Context.t -> 'a -> Type.React.CreateClass.spec -> Type.React.CreateClass.spec
-
-    method create_class_tool :
-      Context.t -> 'a -> Type.React.CreateClass.tool -> Type.React.CreateClass.tool
-
-    method default_props :
-      Context.t ->
-      'a ->
-      Type.React.CreateClass.default_props ->
-      Type.React.CreateClass.default_props
-
     method elem_action : Context.t -> 'a -> Type.elem_action -> Type.elem_action
 
     method fun_call_type : Context.t -> 'a -> Type.funcalltype -> Type.funcalltype
@@ -98,12 +83,6 @@ class virtual ['a] t_with_uses :
     method method_call_type : Context.t -> 'a -> Type.methodcalltype -> Type.methodcalltype
 
     method method_action : Context.t -> 'a -> Type.method_action -> Type.method_action
-
-    method initial_state :
-      Context.t ->
-      'a ->
-      Type.React.CreateClass.initial_state ->
-      Type.React.CreateClass.initial_state
 
     method intersection_preprocess_tool :
       Context.t -> 'a -> Type.intersection_preprocess_tool -> Type.intersection_preprocess_tool
@@ -150,22 +129,6 @@ class virtual ['a] t_with_uses :
     method spec : Context.t -> 'a -> Type.spec -> Type.spec
 
     method spread_resolve : Context.t -> 'a -> Type.spread_resolve -> Type.spread_resolve
-
-    method stack_head :
-      Context.t -> 'a -> Type.React.CreateClass.stack_head -> Type.React.CreateClass.stack_head
-
-    method stack_tail :
-      Context.t -> 'a -> Type.React.CreateClass.stack_tail -> Type.React.CreateClass.stack_tail
-
-    method stack_tail_elem :
-      Context.t ->
-      'a ->
-      Type.React.CreateClass.stack_head
-      * Type.t list
-      * Type.React.CreateClass.spec Type.React.CreateClass.maybe_known list ->
-      Type.React.CreateClass.stack_head
-      * Type.t list
-      * Type.React.CreateClass.spec Type.React.CreateClass.maybe_known list
 
     method unresolved_param : Context.t -> 'a -> Type.unresolved_param -> Type.unresolved_param
 

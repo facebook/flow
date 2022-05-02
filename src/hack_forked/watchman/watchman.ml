@@ -529,7 +529,7 @@ let blocking_read ~debug_logging ~conn:(reader, _) =
   match%lwt wait_read reader with
   | Error _ as err -> Lwt.return err
   | Ok () ->
-    (match%lwt read_line_with_timeout 40.0 reader with
+    (match%lwt read_line_with_timeout ~timeout:40.0 reader with
     | Error _ as err -> Lwt.return err
     | Ok response ->
       (match parse_response ~debug_logging response with

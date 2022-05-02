@@ -5,13 +5,13 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import React from 'react';
+import * as React from 'react';
 import clsx from 'clsx';
 import Layout from '@theme/Layout';
 import BlogSidebar from '@theme/BlogSidebar';
 import TOC from '@theme/TOC';
 
-function BlogLayout(props) {
+function BlogLayout(props: any): React.MixedElement {
   const {toc, children, ...layoutProps} = props;
   return (
     <Layout {...layoutProps}>

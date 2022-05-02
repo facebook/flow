@@ -9,7 +9,7 @@ module TypeScheme = Type.TypeScheme
 
 class member_searcher add_member =
   object (this)
-    inherit Typed_ast_utils.type_parameter_mapper
+    inherit Typed_ast_utils.type_parameter_mapper as super
 
     method! on_loc_annot x = x
 
@@ -22,7 +22,7 @@ class member_searcher add_member =
       | PropertyIdentifier ((aloc, _), Flow_ast.Identifier.{ name; _ }) ->
         this#annot_with_tparams (add_member ~type_ ~aloc ~name)
       | _ -> ());
-      member
+      super#member member
   end
 
 class type_reference_searcher add_reference =
@@ -51,7 +51,7 @@ let remove_dot_flow_suffix = function
   | module_ -> module_
 
 let module_of_module_ref ~resolved_requires ~root ~write_root module_ref =
-  SMap.find module_ref resolved_requires.Module_heaps.resolved_modules
+  SMap.find module_ref resolved_requires.Parsing_heaps.resolved_modules
   |> Module.of_modulename ~root ~write_root
 
 let loc_of_index ~loc_source ~reader (i : Type_sig_collections.Locs.index) : Loc.t =
@@ -180,7 +180,8 @@ let type_import_declarations ~root ~write_root ~reader ~resolved_requires ~file_
     types_info @ typesof_info @ typesof_ns_info
   | Require _
   | ImportDynamic _
-  | Import0 _ ->
+  | Import0 _
+  | ExportFrom _ ->
     [])
   |> Base.List.map ~f:(TypeImportDeclaration.to_json ~root ~write_root)
 
@@ -266,7 +267,8 @@ let import_declarations ~root ~write_root ~reader ~resolved_requires ~file_sig =
         let declaration = Declaration.{ loc; name } in
         return ImportDeclaration.{ import; declaration }))
   | ImportDynamic _
-  | Import0 _ ->
+  | Import0 _
+  | ExportFrom _ ->
     []
   | Import { source = (_, module_ref); named; ns; _ } ->
     let module_ = module_of_module_ref ~resolved_requires ~root ~write_root module_ref in
@@ -712,7 +714,10 @@ let make ~output_dir ~write_root =
       let root = Options.root options in
       let reader = State_reader.create () in
       let resolved_requires =
-        Module_heaps.Reader.get_resolved_requires_unsafe ~reader ~audit:Expensive.warn file
+        let open Parsing_heaps in
+        get_file_addr_unsafe file
+        |> Reader.get_typed_parse_unsafe ~reader file
+        |> Reader.get_resolved_requires_unsafe ~reader file
       in
       let scope_info =
         Scope_builder.program ~enable_enums:(Options.enums options) ~with_types:false ast

@@ -121,6 +121,7 @@ module Cli_output : sig
     include_warnings: bool;
     max_warnings: int option;
     one_line: bool;
+    list_files: bool;
     show_all_errors: bool;
     show_all_branches: bool;
     unicode: bool;

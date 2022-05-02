@@ -73,8 +73,7 @@ let drop_least_recently_used cache =
 (* Files in a cycle share the same component context, so if we are creating a
  * file in a cycle with an already cached file, its component context will
  * also be cached. *)
-let find_or_create_ccx cache ~find_leader ~master_cx file_key =
-  let leader = find_leader file_key in
+let find_or_create_ccx cache ~master_cx leader =
   match Hashtbl.find_opt cache.ccxs leader with
   | Some cached_ccx ->
     cached_ccx.refcount <- succ cached_ccx.refcount;
@@ -88,11 +87,11 @@ let find_or_create_ccx cache ~find_leader ~master_cx file_key =
 (* If a file for the given file key is already in the cache, we move it to the
  * front of the queue to indicate that it was recently used. Otherwise, we
  * add a newly created file at the front of the queue. *)
-let find_or_create cache ~find_leader ~master_cx ~create_file file_key =
+let find_or_create cache ~leader ~master_cx ~create_file file_key =
   match Cache.lookup_and_move_to_front cache.files file_key with
   | Some { file; _ } -> file
   | None ->
-    let cached_ccx = find_or_create_ccx cache ~find_leader ~master_cx file_key in
+    let cached_ccx = find_or_create_ccx cache ~master_cx (Lazy.force leader) in
     let file = create_file cached_ccx.ccx in
     if cache.size = cache.capacity then drop_least_recently_used cache;
     Cache.enqueue_front_exn cache.files file_key { file; cached_ccx };

@@ -171,13 +171,11 @@ let mk_check_file ~options ~reader ~cache () =
   let module Pack = Type_sig_pack in
   let module Bin = Type_sig_bin in
   let module Heap = SharedMem.NewAPI in
-  let audit = Expensive.ok in
-
-  let get_provider = Module_heaps.Reader_dispatcher.get_provider ~reader ~audit in
-  let get_file_addr_unsafe = Parsing_heaps.Reader_dispatcher.get_file_addr_unsafe ~reader in
-  let find_leader = Context_heaps.Reader_dispatcher.find_leader ~reader in
+  let get_provider = Parsing_heaps.Reader_dispatcher.get_provider ~reader in
+  let get_typed_parse = Parsing_heaps.Reader_dispatcher.get_typed_parse ~reader in
+  let find_leader = Parsing_heaps.Reader_dispatcher.get_leader_unsafe ~reader in
   let get_resolved_requires_unsafe =
-    Module_heaps.Reader_dispatcher.get_resolved_requires_unsafe ~reader ~audit
+    Parsing_heaps.Reader_dispatcher.get_resolved_requires_unsafe ~reader
   in
 
   let master_cx = Context_heaps.Reader_dispatcher.find_master ~reader in
@@ -190,14 +188,17 @@ let mk_check_file ~options ~reader ~cache () =
   let rec dep_module_t cx mref m =
     match get_provider m with
     | None -> unknown_module_t cx mref m
-    | Some (File_key.ResourceFile f) -> Merge.merge_resource_module_t cx f
-    | Some dep_file ->
-      (match Heap.coerce_checked_file (get_file_addr_unsafe dep_file) with
-      | Some dep_addr -> sig_module_t cx dep_file dep_addr
-      | None -> unchecked_module_t cx mref)
-  and sig_module_t cx file_key file_addr _loc =
-    let create_file = dep_file file_key file_addr in
-    let file = Check_cache.find_or_create cache ~find_leader ~master_cx ~create_file file_key in
+    | Some dep_addr ->
+      (match Parsing_heaps.read_file_key dep_addr with
+      | File_key.ResourceFile f -> Merge.merge_resource_module_t cx f
+      | dep_file ->
+        (match get_typed_parse dep_addr with
+        | Some parse -> sig_module_t cx dep_file parse
+        | None -> unchecked_module_t cx mref))
+  and sig_module_t cx file_key parse _loc =
+    let create_file = dep_file file_key parse in
+    let leader = lazy (find_leader file_key parse |> Parsing_heaps.read_file_key) in
+    let file = Check_cache.find_or_create cache ~leader ~master_cx ~create_file file_key in
     let t = file.Type_sig_merge.exports in
     copy_into cx file.Type_sig_merge.cx t;
     t
@@ -205,10 +206,10 @@ let mk_check_file ~options ~reader ~cache () =
    * convert signatures into types. This function reads the signature for a file
    * from shared memory and creates thunks (either lazy tvars or lazy types)
    * that resolve to types. *)
-  and dep_file file_key file_addr ccx =
+  and dep_file file_key parse ccx =
     let source = Some file_key in
 
-    let aloc_table = lazy (Parsing_heaps.read_aloc_table_unsafe file_key file_addr) in
+    let aloc_table = lazy (Parsing_heaps.read_aloc_table_unsafe file_key parse) in
 
     let aloc (loc : Locs.index) = ALoc.ALocRepresentationDoNotUse.make_keyed source (loc :> int) in
 
@@ -220,17 +221,17 @@ let mk_check_file ~options ~reader ~cache () =
       aloc loc |> ALoc.to_loc aloc_table |> ALoc.of_loc
     in
 
-    let buf = Heap.read_opt_exn Heap.type_sig_buf (Heap.get_file_type_sig file_addr) in
+    let buf = Heap.type_sig_buf (Option.get (Heap.get_type_sig parse)) in
 
     let cx =
-      let docblock = Parsing_heaps.read_docblock_unsafe file_key file_addr in
+      let docblock = Parsing_heaps.read_docblock_unsafe file_key parse in
       let metadata = Context.docblock_overrides docblock base_metadata in
       let module_ref = Reason.OrdinaryName (Files.module_ref file_key) in
       Context.make ccx metadata file_key aloc_table module_ref Context.Merging
     in
 
     let dependencies =
-      let { Module_heaps.resolved_modules; _ } = get_resolved_requires_unsafe file_key in
+      let { Parsing_heaps.resolved_modules; _ } = get_resolved_requires_unsafe file_key parse in
       let f buf pos =
         let mref = Bin.read_str buf pos in
         let m = SMap.find mref resolved_modules in

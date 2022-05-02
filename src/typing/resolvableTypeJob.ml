@@ -128,7 +128,7 @@ and collect_of_type ?log_unresolved cx acc = function
       | Some id -> Context.find_call cx id :: ts
     in
     collect_of_types ?log_unresolved cx acc ts
-  | DefT (_, _, FunT (_, _, { params; return_t; _ })) ->
+  | DefT (_, _, FunT (_, { params; return_t; _ })) ->
     let ts = List.fold_left (fun acc (_, t) -> t :: acc) [return_t] params in
     collect_of_types ?log_unresolved cx acc ts
   | DefT (_, _, ArrT (ArrayAT (elemt, tuple_types))) ->
@@ -235,7 +235,6 @@ and collect_of_destructor ?log_unresolved cx acc = function
   | OptionalIndexedAccessNonMaybeType { index = OptionalIndexedAccessTypeIndex index_type } ->
     collect_of_type ?log_unresolved cx acc index_type
   | OptionalIndexedAccessNonMaybeType { index = OptionalIndexedAccessStrLitIndex _ } -> acc
-  | Bind t -> collect_of_type ?log_unresolved cx acc t
   | ReadOnlyType -> acc
   | PartialType -> acc
   | SpreadType (_, ts, head_slice) ->
@@ -326,5 +325,5 @@ and collect_of_use ?log_unresolved cx acc = function
         fct.call_args_tlist
     in
     collect_of_types ?log_unresolved cx acc (arg_types @ [OpenT fct.call_tout])
-  | GetPropT (_, _, _, t_out) -> collect_of_type ?log_unresolved cx acc (OpenT t_out)
+  | GetPropT (_, _, _, _, t_out) -> collect_of_type ?log_unresolved cx acc (OpenT t_out)
   | _ -> acc

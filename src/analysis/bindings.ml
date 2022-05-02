@@ -11,7 +11,7 @@ type kind =
   | Var
   | Let
   | Const
-  | Type
+  | Type of { imported: bool }
   | Enum
   | Function
   | Class
@@ -19,7 +19,7 @@ type kind =
   | Parameter
   | CatchParameter
   | Import
-  | DeclaredFunction
+  | DeclaredFunction of { predicate: bool }
 [@@deriving show]
 
 type 'loc entry = ('loc, 'loc) Ast.Identifier.t * kind
@@ -62,14 +62,14 @@ let to_map t =
   SMap.map (fun (kind, locs) -> (kind, Nel.rev locs)) map
 
 let allow_forward_ref = function
-  | DeclaredFunction
+  | DeclaredFunction _
   | Var
   | Function ->
     true
   | _ -> false
 
 let allow_redeclaration = function
-  | DeclaredFunction
+  | DeclaredFunction _
   | Var
   | Parameter
   | Function ->

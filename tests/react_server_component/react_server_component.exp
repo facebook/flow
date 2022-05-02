@@ -125,11 +125,11 @@ References:
    test.hybrid.js:9:42
      9| declare var indexedObjectBad: {[string]: () => void};
                                                  ^^^^^^^^^^ [1]
-   <BUILTINS>/react.js:208:26
-   208| declare type React$Key = string | number;
+   <BUILTINS>/react.js:181:26
+   181| declare type React$Key = string | number;
                                  ^^^^^^ [2]
-   <BUILTINS>/react.js:208:35
-   208| declare type React$Key = string | number;
+   <BUILTINS>/react.js:181:35
+   181| declare type React$Key = string | number;
                                           ^^^^^^ [3]
 
 

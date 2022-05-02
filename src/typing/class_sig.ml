@@ -11,79 +11,29 @@ open Reason
 open Utils_js
 include Class_sig_intf
 
-module Make (Env : Env_sig.S) (Abnormal : Abnormal_sig.S with module Env := Env) (F : Func_sig.S) =
-struct
-  type func_sig = F.t
-
-  type func_params_tast = F.func_params_tast
-
-  type set_asts =
-    func_params_tast option
-    * (ALoc.t, ALoc.t * Type.t) Ast.Function.body option
-    * (ALoc.t, ALoc.t * Type.t) Ast.Expression.t option ->
-    unit
-
-  type set_type = Type.t -> unit
-
-  type field =
-    | Annot of Type.t
-    | Infer of func_sig * set_asts
-
-  type field' = ALoc.t option * Polarity.t * field
-
-  type typeapp = ALoc.t * Type.t * Type.t list option
-
-  type extends =
-    | Explicit of typeapp
-    | Implicit of { null: bool }
-
-  type class_super = {
-    extends: extends;
-    mixins: typeapp list;
-    (* declare class only *)
-    implements: typeapp list;
-    this_tparam: Type.typeparam;
-    this_t: Type.t;
-  }
-
-  type interface_super = {
-    inline: bool;
-    (* Anonymous interface, can appear anywhere inside a type *)
-    extends: typeapp list;
-    callable: bool;
-  }
-
-  type super =
-    | Interface of interface_super
-    | Class of class_super
-
-  type func_info = ALoc.t option * func_sig * set_asts * set_type
-
-  type signature = {
-    reason: reason;
-    fields: field' SMap.t;
-    private_fields: field' SMap.t;
-    proto_fields: field' SMap.t;
-    (* Multiple function signatures indicates an overloaded method. Note that
-       function signatures are stored in reverse definition order. *)
-    methods: func_info Nel.t SMap.t;
-    private_methods: func_info SMap.t;
-    getters: func_info SMap.t;
-    setters: func_info SMap.t;
-    calls: Type.t list;
-  }
-
-  type t = {
-    id: ALoc.id;
-    tparams: Type.typeparams;
-    tparams_map: Type.t Subst_name.Map.t;
-    super: super;
-    (* Multiple function signatures indicates an overloaded constructor. Note that
-       function signatures are stored in reverse definition order. *)
-    constructor: func_info list;
-    static: signature;
-    instance: signature;
-  }
+module Make
+    (Env : Env_sig.S)
+    (Abnormal : Abnormal_sig.S with module Env := Env)
+    (CT : Func_class_sig_types.Config.S)
+    (C : Func_params.Config with module Types := CT)
+    (P : Func_params.S with module Config_types := CT and module Config := C)
+    (F : Func_sig_intf.S with module Config_types := CT and module Config := C and module Param := P)
+    (T : Func_class_sig_types.Class.S
+           with module Config := CT
+            and module Param := P.Types
+            and module Func := F.Types) :
+  S
+    with module Config_types = CT
+     and module Config = C
+     and module Param = P
+     and module Func = F
+     and module Types = T = struct
+  module Config_types = CT
+  module Types = T
+  module Config = C
+  module Param = P
+  module Func = F
+  open Types
 
   let empty id reason tparams tparams_map super =
     let empty_sig reason =
@@ -388,16 +338,16 @@ struct
   let elements ~this ?constructor s super =
     (* To determine the default `this` parameter for a method without `this` annotation, we
        default to the instance/static `this` type *)
-    let this_default (x : F.t) =
-      match (x.F.body, super) with
+    let this_default (x : F.Types.t) =
+      match (x.F.Types.body, super) with
       (* We can use mixed for declared class methods here for two reasons:
          1) They can never be unbound
          2) They have no body
       *)
-      | (None, Class _) -> Type.implicit_mixed_this x.F.reason
+      | (None, Class _) -> Type.implicit_mixed_this x.F.Types.reason
       | (Some _, Class _) ->
         TypeUtil.mod_reason_of_t Reason.(update_desc_reason (fun desc -> RImplicitThis desc)) this
-      | (_, Interface _) -> x.F.reason |> Type.implicit_mixed_this
+      | (_, Interface _) -> x.F.Types.reason |> Type.implicit_mixed_this
     in
     let methods =
       (* If this is an overloaded method, create an intersection, attributed
@@ -491,12 +441,12 @@ struct
     in
     (initialized_fields, fields, methods, call)
 
-  let specialize cx targs c =
+  let specialize cx use_op targs c =
     let open Type in
     let open TypeUtil in
     let reason = reason_of_t c in
     Tvar.mk_where cx reason (fun tvar ->
-        Flow.flow cx (c, SpecializeT (unknown_use, reason, reason, None, targs, tvar))
+        Flow.flow cx (c, SpecializeT (use_op, reason, reason, None, targs, tvar))
     )
 
   let statictype cx static_proto x =
@@ -638,7 +588,10 @@ struct
           (* Eagerly specialize when there are no targs *)
           let c =
             if targs = None then
-              specialize cx targs c
+              let use_op =
+                Op (ClassExtendsCheck { def = reason_of_t c; extends = x.instance.reason })
+              in
+              specialize cx use_op targs c
             else
               c
           in
@@ -663,7 +616,7 @@ struct
             (* Eagerly specialize when there are no targs *)
             let c =
               if targs = None then
-                specialize cx targs c
+                specialize cx unknown_use targs c
               else
                 c
             in
@@ -721,7 +674,7 @@ struct
           let reason = mk_reason (RMethod (Some name)) id_loc in
           let use_op = Op (ClassMethodDefinition { def = reason; name = def_reason }) in
           Flow.flow cx (self, UseT (use_op, this_param)))
-        (F.this_param msig.F.fparams)
+        (F.this_param msig.F.Types.fparams)
     in
 
     with_sig
@@ -804,9 +757,7 @@ struct
       own;
 
     let (super, _) = supertype cx x in
-    let use_op =
-      Op (ClassExtendsCheck { def = def_reason; name = reason; extends = reason_of_t super })
-    in
+    let use_op = Op (ClassExtendsCheck { def = def_reason; extends = reason_of_t super }) in
     Flow.flow
       cx
       ( super,
@@ -870,7 +821,7 @@ struct
         let method_ this_recipe super ~set_asts f =
           let save_return = Abnormal.clear_saved Abnormal.Return in
           let save_throw = Abnormal.clear_saved Abnormal.Throw in
-          let (_, params_ast, body_ast, init_ast) = F.toplevels None cx this_recipe super f in
+          let (_, params_ast, body_ast, init_ast) = F.toplevels cx this_recipe super f in
           set_asts (params_ast, body_ast, init_ast);
           ignore (Abnormal.swap_saved Abnormal.Return save_return);
           ignore (Abnormal.swap_saved Abnormal.Throw save_throw)
@@ -881,6 +832,7 @@ struct
           | Infer (fsig, set_asts) -> method_ this_recipe super ~set_asts fsig
         in
         let (instance_this_default, static_this_default, super, static_super) =
+          let open Type in
           let super_reason = update_desc_reason (fun d -> RSuperOf d) x.instance.reason in
           match x.super with
           | Interface _ -> failwith "tried to evaluate toplevel of interface"
@@ -894,22 +846,26 @@ struct
                    expects a PolyT here. *)
                 let c =
                   if targs = None then
-                    specialize cx targs c
+                    let use_op =
+                      Op
+                        (ClassExtendsCheck
+                           { def = TypeUtil.reason_of_t c; extends = x.instance.reason }
+                        )
+                    in
+                    specialize cx use_op targs c
                   else
                     c
                 in
                 let t = TypeUtil.this_typeapp ~annot_loc c this_t targs in
                 (t, TypeUtil.class_type ~annot_loc t)
               | Implicit { null } ->
-                Type.
-                  ( ( if null then
-                      NullProtoT super_reason
-                    else
-                      ObjProtoT super_reason
-                    ),
-                    FunProtoT super_reason
-                  )
-                
+                ( ( if null then
+                    NullProtoT super_reason
+                  else
+                    ObjProtoT super_reason
+                  ),
+                  FunProtoT super_reason
+                )
             in
 
             (this_t, TypeUtil.class_type this_t, super, static_super)

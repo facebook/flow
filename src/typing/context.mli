@@ -73,6 +73,7 @@ type metadata = {
   max_literal_length: int;
   max_trace_depth: int;
   max_workers: int;
+  missing_module_generators: (Str.regexp * string) list;
   react_runtime: Options.react_runtime;
   react_server_component_exts: SSet.t;
   recursion_limit: int;
@@ -294,6 +295,8 @@ val verbose : t -> Verbose.t option
 
 val max_workers : t -> int
 
+val missing_module_generators : t -> (Str.regexp * string) list
+
 val jsx : t -> Options.jsx_mode
 
 val exists_checks : t -> Type.TypeSet.t ALocMap.t
@@ -307,6 +310,8 @@ val implicit_instantiation_checks : t -> Implicit_instantiation_check.t list
 val inferred_indexers : t -> Type.dicttype list ALocMap.t
 
 val environment : t -> Loc_env.t
+
+val node_cache : t -> Node_cache.t
 
 val pid_prefix : t -> string
 
@@ -412,6 +417,8 @@ val set_environment : t -> Loc_env.t -> unit
 
 val clear_master_shared : t -> master_context -> unit
 
+val add_env_cache_entry : t -> for_value:bool -> int -> Type.t -> unit
+
 (* Flow allows you test test if a property exists inside a conditional. However, we only wan to
  * allow this test if there's a chance that the property might exist. So `if (foo.bar)` should be
  *
@@ -503,6 +510,8 @@ val find_trust_constraints :
 val find_trust_graph : t -> Trust_constraint.ident -> Trust_constraint.constraints
 
 val find_trust_root : t -> Trust_constraint.ident -> Trust_constraint.ident * Trust_constraint.root
+
+val env_cache_find_opt : t -> for_value:bool -> int -> Type.t option
 
 val constraint_cache : t -> Type.FlowSet.t ref
 

@@ -571,50 +571,42 @@ module Statement
     )
 
   and switch =
+    let case ~seen_default env =
+      let leading = Peek.comments env in
+      let (test, trailing) =
+        match Peek.token env with
+        | T_DEFAULT ->
+          if seen_default then error env Parse_error.MultipleDefaultsInSwitch;
+          Expect.token env T_DEFAULT;
+          (None, Eat.trailing_comments env)
+        | _ ->
+          Expect.token env T_CASE;
+          (Some (Parse.expression env), [])
+      in
+      let seen_default = seen_default || test = None in
+      Expect.token env T_COLON;
+      let { trailing = line_end_trailing; _ } = statement_end_trailing_comments env in
+      let trailing = trailing @ line_end_trailing in
+      let term_fn = function
+        | T_RCURLY
+        | T_DEFAULT
+        | T_CASE ->
+          true
+        | _ -> false
+      in
+      let consequent = Parse.statement_list ~term_fn (env |> with_in_switch true) in
+      let comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing () in
+      let case = { Statement.Switch.Case.test; consequent; comments } in
+      (case, seen_default)
+    in
     let rec case_list env (seen_default, acc) =
       match Peek.token env with
       | T_EOF
       | T_RCURLY ->
         List.rev acc
       | _ ->
-        let start_loc = Peek.loc env in
-        let leading = Peek.comments env in
-        let (test, trailing) =
-          match Peek.token env with
-          | T_DEFAULT ->
-            if seen_default then error env Parse_error.MultipleDefaultsInSwitch;
-            Expect.token env T_DEFAULT;
-            (None, Eat.trailing_comments env)
-          | _ ->
-            Expect.token env T_CASE;
-            (Some (Parse.expression env), [])
-        in
-        let seen_default = seen_default || test = None in
-        let end_loc = Peek.loc env in
-        Expect.token env T_COLON;
-        let { trailing = line_end_trailing; _ } = statement_end_trailing_comments env in
-        let trailing = trailing @ line_end_trailing in
-        let term_fn = function
-          | T_RCURLY
-          | T_DEFAULT
-          | T_CASE ->
-            true
-          | _ -> false
-        in
-        let consequent = Parse.statement_list ~term_fn (env |> with_in_switch true) in
-        let end_loc =
-          match List.rev consequent with
-          | last_stmt :: _ -> fst last_stmt
-          | _ -> end_loc
-        in
-        let acc =
-          ( Loc.btwn start_loc end_loc,
-            Statement.Switch.Case.
-              { test; consequent; comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing () }
-            
-          )
-          :: acc
-        in
+        let (case_, seen_default) = with_loc_extra (case ~seen_default) env in
+        let acc = case_ :: acc in
         case_list env (seen_default, acc)
     in
     with_loc (fun env ->
@@ -1141,26 +1133,28 @@ module Statement
     let leading = leading @ Peek.comments env in
     Expect.token env T_FUNCTION;
     let id = id_remove_trailing env (Parse.identifier env) in
-    let start_sig_loc = Peek.loc env in
-    let tparams = type_params_remove_trailing env (Type.type_params env) in
-    let params = Type.function_param_list env in
-    Expect.token env T_COLON;
-    let return =
-      let return = Type._type env in
-      let has_predicate =
-        Eat.push_lex_mode env Lex_mode.TYPE;
-        let type_token = Peek.token env in
-        Eat.pop_lex_mode env;
-        type_token = T_CHECKS
-      in
-      if has_predicate then
-        type_remove_trailing env return
-      else
-        return
+    let annot =
+      with_loc
+        (fun env ->
+          let tparams = type_params_remove_trailing env (Type.type_params env) in
+          let params = Type.function_param_list env in
+          Expect.token env T_COLON;
+          let return =
+            let return = Type._type env in
+            let has_predicate =
+              Eat.push_lex_mode env Lex_mode.TYPE;
+              let type_token = Peek.token env in
+              Eat.pop_lex_mode env;
+              type_token = T_CHECKS
+            in
+            if has_predicate then
+              type_remove_trailing env return
+            else
+              return
+          in
+          Ast.Type.(Function { Function.params; return; tparams; comments = None }))
+        env
     in
-    let end_loc = fst return in
-    let loc = Loc.btwn start_sig_loc end_loc in
-    let annot = (loc, Ast.Type.(Function { Function.params; return; tparams; comments = None })) in
     let predicate = Type.predicate_opt env in
     let (trailing, annot, predicate) =
       match (semicolon env, predicate) with
@@ -1170,7 +1164,7 @@ module Statement
       | (Implicit { remove_trailing; _ }, Some pred) ->
         ([], annot, Some (remove_trailing pred (fun remover pred -> remover#predicate pred)))
     in
-    let annot = (loc, annot) in
+    let annot = (fst annot, annot) in
     Statement.DeclareFunction.
       { id; annot; predicate; comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing () }
     
@@ -1228,7 +1222,7 @@ module Statement
         (* TODO: This is a semantic analysis and shouldn't be in the parser *)
         let module_kind =
           let open Statement in
-          let (loc, stmt) = stmt in
+          let (_loc, stmt) = stmt in
           match (module_kind, stmt) with
           (*
            * The first time we see either a `declare export` or a
@@ -1238,17 +1232,17 @@ module Statement
            * exceptions to this rule because they are valid in both CommonJS
            * and ES modules (and thus do not indicate an intent for either).
            *)
-          | (None, DeclareModuleExports _) -> Some (DeclareModule.CommonJS loc)
+          | (None, DeclareModuleExports _) -> Some DeclareModule.CommonJS
           | (None, DeclareExportDeclaration { DeclareExportDeclaration.declaration; _ }) ->
             (match declaration with
             | Some (DeclareExportDeclaration.NamedType _)
             | Some (DeclareExportDeclaration.Interface _) ->
               module_kind
-            | _ -> Some (DeclareModule.ES loc))
+            | _ -> Some DeclareModule.ES)
           (*
            * There should never be more than one `declare module.exports`
            * statement *)
-          | (Some (DeclareModule.CommonJS _), DeclareModuleExports _) ->
+          | (Some DeclareModule.CommonJS, DeclareModuleExports _) ->
             error env Parse_error.DuplicateDeclareModuleExports;
             module_kind
           (*
@@ -1259,10 +1253,10 @@ module Statement
            * The 1 exception to this rule is that `export type/interface` are
            * both ok in CommonJS modules.
            *)
-          | (Some (DeclareModule.ES _), DeclareModuleExports _) ->
+          | (Some DeclareModule.ES, DeclareModuleExports _) ->
             error env Parse_error.AmbiguousDeclareModuleKind;
             module_kind
-          | ( Some (DeclareModule.CommonJS _),
+          | ( Some DeclareModule.CommonJS,
               DeclareExportDeclaration { DeclareExportDeclaration.declaration; _ }
             ) ->
             (match declaration with
@@ -1275,7 +1269,7 @@ module Statement
         in
         module_items env ~module_kind (stmt :: acc)
     in
-    let declare_module_ env start_loc leading =
+    let declare_module_ ~leading env =
       let id =
         match Peek.token env with
         | T_STRING str ->
@@ -1283,8 +1277,8 @@ module Statement
             (string_literal_remove_trailing env (string_literal env str))
         | _ -> Statement.DeclareModule.Identifier (id_remove_trailing env (Parse.identifier env))
       in
-      let (body_loc, ((module_kind, body), comments)) =
-        with_loc
+      let (body, module_kind) =
+        with_loc_extra
           (fun env ->
             let leading = Peek.comments env in
             Expect.token env T_LCURLY;
@@ -1297,32 +1291,31 @@ module Statement
             in
             Expect.token env T_RCURLY;
             let { trailing; _ } = statement_end_trailing_comments env in
-            ( (module_kind, body),
+            let comments =
               Flow_ast_utils.mk_comments_with_internal_opt ~leading ~trailing ~internal ()
-            ))
+            in
+            let body = { Statement.Block.body; comments } in
+            (body, module_kind))
           env
       in
-      let body = (body_loc, { Statement.Block.body; comments }) in
-      let loc = Loc.btwn start_loc body_loc in
       let kind =
         match module_kind with
         | Some k -> k
-        | None -> Statement.DeclareModule.CommonJS loc
+        | None -> Statement.DeclareModule.CommonJS
       in
       let comments = Flow_ast_utils.mk_comments_opt ~leading () in
-      (loc, Statement.(DeclareModule DeclareModule.{ id; body; kind; comments }))
+      Statement.(DeclareModule DeclareModule.{ id; body; kind; comments })
     in
-    fun ?(in_module = false) env ->
+    fun ~in_module env ->
       let start_loc = Peek.loc env in
       let leading = Peek.comments env in
       Expect.token env T_DECLARE;
       let leading = leading @ Peek.comments env in
       Expect.identifier env "module";
       if in_module || Peek.token env = T_PERIOD then
-        let (loc, exports) = with_loc (declare_module_exports ~leading) env in
-        (Loc.btwn start_loc loc, exports)
+        with_loc ~start_loc (declare_module_exports ~leading) env
       else
-        declare_module_ env start_loc leading
+        with_loc ~start_loc (declare_module_ ~leading) env
 
   and declare_module_exports ~leading env =
     let leading_period = Peek.comments env in
@@ -1465,7 +1458,6 @@ module Statement
   and export_declaration ~decorators =
     with_loc (fun env ->
         let env = env |> with_strict true |> with_in_export true in
-        let start_loc = Peek.loc env in
         let leading = Peek.comments env in
         Expect.token env T_EXPORT;
         match Peek.token env with
@@ -1474,9 +1466,7 @@ module Statement
           Statement.ExportDefaultDeclaration.(
             let leading = leading @ Peek.comments env in
             let (default, ()) = with_loc (fun env -> Expect.token env T_DEFAULT) env in
-            record_export
-              env
-              (Flow_ast_utils.ident_of_source (Loc.btwn start_loc (Peek.loc env), "default"));
+            record_export env (Flow_ast_utils.ident_of_source (default, "default"));
             let (declaration, trailing) =
               if Peek.is_function env then
                 (* export default [async] function [foo] (...) { ... } *)

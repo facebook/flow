@@ -15,7 +15,9 @@ References:
 
 Error -------------------------------------------------------------------------------------------- import_typeof.js:14:5
 
-Cannot reference type `ClassFoo1T` [1] from a value position. [type-as-value]
+Cannot use type `ClassFoo1T` [1] as a value. Types are erased and don't exist at runtime. If the exported binding can
+also be used as a value, try importing it using `import ClassFoo1T` instead of `import type ClassFoo1T` and
+`import {ClassFoo1T}` instead of `import type {ClassFoo1T}`. [type-as-value]
 
    import_typeof.js:14:5
    14| new ClassFoo1T(); // Error: ClassFoo1T is not bound to a value
@@ -44,7 +46,9 @@ References:
 
 Error -------------------------------------------------------------------------------------------- import_typeof.js:25:5
 
-Cannot reference type `ClassFoo2T` [1] from a value position. [type-as-value]
+Cannot use type `ClassFoo2T` [1] as a value. Types are erased and don't exist at runtime. If the exported binding can
+also be used as a value, try importing it using `import ClassFoo2T` instead of `import type ClassFoo2T` and
+`import {ClassFoo2T}` instead of `import type {ClassFoo2T}`. [type-as-value]
 
    import_typeof.js:25:5
    25| new ClassFoo2T(); // Error: ClassFoo2T is not bound to a value

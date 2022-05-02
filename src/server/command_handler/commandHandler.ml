@@ -183,7 +183,7 @@ let check_that_we_care_about_this_file =
       Ok ()
     else
       let (_, docblock) =
-        Parsing_service_js.(parse_docblock docblock_max_tokens file_key content)
+        Parsing_service_js.(parse_docblock ~max_tokens:docblock_max_tokens file_key content)
       in
       if Docblock.is_flow docblock then
         Ok ()
@@ -748,17 +748,17 @@ let get_cycle ~env fn types_only =
 
 let find_module ~options ~reader (moduleref, filename) =
   let file = File_key.SourceFile filename in
-  let loc = { Loc.none with Loc.source = Some file } in
   let module_name =
     Module_js.imported_module
       ~options
       ~reader:(Abstract_state_reader.State_reader reader)
       ~node_modules_containers:!Files.node_modules_containers
       file
-      (ALoc.of_loc loc)
       moduleref
   in
-  Module_heaps.Reader.get_provider ~reader ~audit:Expensive.warn module_name
+  match Parsing_heaps.Reader.get_provider ~reader module_name with
+  | Some addr -> Some (Parsing_heaps.read_file_key addr)
+  | None -> None
 
 let get_def ~options ~reader ~env ~profiling ~type_parse_artifacts_cache (file_input, line, col) =
   match of_file_input ~options ~env file_input with
@@ -808,20 +808,20 @@ let module_name_of_string ~options module_name_str =
 let get_imports ~options ~reader module_names =
   let add_to_results (map, non_flow) module_name_str =
     let module_name = module_name_of_string ~options module_name_str in
-    match Module_heaps.Reader.get_provider ~reader ~audit:Expensive.warn module_name with
-    | Some file ->
-      let addr = Parsing_heaps.Reader.get_file_addr_unsafe ~reader file in
+    match Parsing_heaps.Reader.get_provider ~reader module_name with
+    | Some addr ->
       (* We do not process all modules which are stored in our module
        * database. In case we do not process a module its requirements
        * are not kept track of. To avoid confusing results we notify the
        * client that these modules have not been processed.
        *)
-      (match Parsing_heaps.coerce_checked_file addr with
-      | Some addr ->
-        let { Module_heaps.resolved_modules; _ } =
-          Module_heaps.Reader.get_resolved_requires_unsafe ~reader ~audit:Expensive.warn file
+      (match Parsing_heaps.Reader.get_typed_parse ~reader addr with
+      | Some parse ->
+        let file = Parsing_heaps.read_file_key addr in
+        let { Parsing_heaps.resolved_modules; _ } =
+          Parsing_heaps.Reader.get_resolved_requires_unsafe ~reader file parse
         in
-        let fsig = Parsing_heaps.read_file_sig_unsafe file addr in
+        let fsig = Parsing_heaps.read_file_sig_unsafe file parse in
         let requires = File_sig.With_Loc.(require_loc_map fsig.module_sig) in
         let mlocs =
           SMap.fold
@@ -1704,6 +1704,7 @@ let handle_persistent_autocomplete_lsp
   let client_config = Persistent_connection.client_config client in
   let lsp_init_params = Persistent_connection.lsp_initialize_params client in
   let is_snippet_supported = Lsp_helpers.supports_snippets lsp_init_params in
+  let is_tags_supported = Lsp_helpers.supports_tags lsp_init_params in
   let is_preselect_supported = Lsp_helpers.supports_preselect lsp_init_params in
   let is_label_detail_supported =
     Lsp_helpers.supports_completion_item_label_details lsp_init_params
@@ -1746,6 +1747,7 @@ let handle_persistent_autocomplete_lsp
       Flow_lsp_conversions.flow_completions_to_lsp
         ?token
         ~is_snippet_supported
+        ~is_tags_supported
         ~is_preselect_supported
         ~is_label_detail_supported
         completions

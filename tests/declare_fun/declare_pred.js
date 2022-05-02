@@ -32,3 +32,7 @@ declare function j(x: string): bool %checks (x === "A");
 
 declare function k(x: string): bool %checks (x === "A");
 declare function k(x: number): bool;
+
+declare function l(x: boolean): bool;
+declare function l(x: string): bool %checks (x === "A");
+declare function l(x: number): bool;

@@ -41,7 +41,7 @@ let make_ progress_fn bucket_size jobs =
   fun () ->
     let bucket_size = min (Array.length jobs - !i) bucket_size in
     progress_fn ~start:!i ~length:bucket_size;
-    let result = Array.sub jobs !i bucket_size in
+    let result = Array.sub jobs ~pos:!i ~len:bucket_size in
     i := bucket_size + !i;
     Array.to_list result
 

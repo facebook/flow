@@ -51,6 +51,8 @@ val has_flow_ext : File_key.t -> bool
 
 val chop_flow_ext : File_key.t -> File_key.t
 
+val eponymous_module : File_key.t -> Modulename.t
+
 val is_json_file : string -> bool
 
 val is_flow_file : options:options -> string -> bool

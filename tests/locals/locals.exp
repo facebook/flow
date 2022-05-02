@@ -7,9 +7,9 @@ Cannot cast `b` to string because number [1] is incompatible with string [2]. [i
           ^
 
 References:
-   lex.js:8:11
-    8|       b = 0;
-                 ^ [1]
+   lex.js:3:10
+    3|   let b: number | string = "";
+                ^^^^^^ [1]
    lex.js:11:8
    11|   (b : string); // error: number ~> string
               ^^^^^^ [2]
@@ -41,9 +41,9 @@ Cannot cast `b` to string because number [1] is incompatible with string [2]. [i
           ^
 
 References:
-   lex.js:34:9
-   34|     b = 0;
-               ^ [1]
+   lex.js:31:19
+   31|   let b: string | number = "";
+                         ^^^^^^ [1]
    lex.js:37:8
    37|   (b : string); // error: number ~> string
               ^^^^^^ [2]
@@ -58,9 +58,9 @@ Cannot cast `b` to number because string [1] is incompatible with number [2]. [i
           ^
 
 References:
-   lex.js:45:9
-   45|     b = "";
-               ^^ [1]
+   lex.js:42:19
+   42|   let b: number | string = 0;
+                         ^^^^^^ [1]
    lex.js:48:8
    48|   (b : number); // error: string ~> number
               ^^^^^^ [2]
@@ -75,9 +75,9 @@ Cannot cast `b` to string because number [1] is incompatible with string [2]. [i
           ^
 
 References:
-   lex.js:56:9
-   56|     b = 0;
-               ^ [1]
+   lex.js:53:10
+   53|   let b: number | string = "";
+                ^^^^^^ [1]
    lex.js:59:8
    59|   (b : string); // error: number ~> string
               ^^^^^^ [2]
@@ -230,13 +230,13 @@ Error --------------------------------------------------------------------------
 Cannot return `x` because string [1] is incompatible with number [2]. [incompatible-return]
 
    locals.js:20:10
-   20|   return x;
+   20|   return x;  // error: string ~> number
                 ^
 
 References:
-   locals.js:18:13
-   18|     var x = ""; // error: string ~> number
-                   ^^ [1]
+   locals.js:16:19
+   16|   var x: number | string = 0;
+                         ^^^^^^ [1]
    locals.js:15:25
    15| function foo0(b: bool): number {
                                ^^^^^^ [2]

@@ -885,3 +885,24 @@ import-type.js:7:7 = {
   "start":7,
   "end":7
 }
+rtype-main.js:4:13 = {
+  "expanded_type":{
+    "kind":"Generic",
+    "typeArgs":[{"kind":"Top"}],
+    "type":{"provenance":{"kind":"Remote","loc":"rtype-c.js:3:15-19"},"name":"Value"},
+    "generic_kind":"type alias"
+  },
+  "type":"Value<mixed>",
+  "reasons":[],
+  "loc":{
+    "source":"rtype-main.js",
+    "type":"SourceFile",
+    "start":{"line":4,"column":13,"offset":62},
+    "end":{"line":4,"column":13,"offset":63}
+  },
+  "path":"rtype-main.js",
+  "line":4,
+  "endline":4,
+  "start":13,
+  "end":13
+}

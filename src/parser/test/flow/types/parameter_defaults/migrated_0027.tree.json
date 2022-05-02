@@ -6,7 +6,7 @@
     },
     {
       "loc":{"source":null,"start":{"line":1,"column":36},"end":{"line":1,"column":37}},
-      "message":"Unexpected token `}`"
+      "message":"Unexpected token `}`, expected a type"
     },
     {
       "loc":{"source":null,"start":{"line":1,"column":36},"end":{"line":1,"column":37}},
@@ -27,18 +27,19 @@
       "range":[0,36],
       "id":{
         "type":"Identifier",
-        "loc":{"source":null,"start":{"line":1,"column":17},"end":{"line":1,"column":37}},
-        "range":[17,37],
+        "loc":{"source":null,"start":{"line":1,"column":17},"end":{"line":1,"column":36}},
+        "range":[17,36],
         "name":"foo",
         "typeAnnotation":{
           "type":"TypeAnnotation",
-          "loc":{"source":null,"start":{"line":1,"column":20},"end":{"line":1,"column":37}},
-          "range":[20,37],
+          "loc":{"source":null,"start":{"line":1,"column":20},"end":{"line":1,"column":36}},
+          "range":[20,36],
           "typeAnnotation":{
             "type":"FunctionTypeAnnotation",
-            "loc":{"source":null,"start":{"line":1,"column":20},"end":{"line":1,"column":37}},
-            "range":[20,37],
+            "loc":{"source":null,"start":{"line":1,"column":20},"end":{"line":1,"column":36}},
+            "range":[20,36],
             "params":[],
+            "this":null,
             "returnType":{
               "type":"AnyTypeAnnotation",
               "loc":{"source":null,"start":{"line":1,"column":36},"end":{"line":1,"column":37}},

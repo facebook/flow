@@ -1,7 +1,7 @@
 (library
   (name flow_logging_stubs)
   (wrapped false)
-  (modules flowEventLogger flow_server_profile)
+  (modules flowEventLogger)
   (libraries
     lwt
   )

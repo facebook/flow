@@ -10,7 +10,7 @@
     },
     {
       "loc":{"source":null,"start":{"line":4,"column":0},"end":{"line":4,"column":0}},
-      "message":"Unexpected end of input"
+      "message":"Unexpected end of input, expected the token `,`"
     },
     {
       "loc":{"source":null,"start":{"line":4,"column":0},"end":{"line":4,"column":0}},
@@ -42,8 +42,8 @@
         "properties":[
           {
             "type":"ObjectTypeProperty",
-            "loc":{"source":null,"start":{"line":2,"column":2},"end":{"line":4,"column":0}},
-            "range":[20,31],
+            "loc":{"source":null,"start":{"line":2,"column":2},"end":{"line":3,"column":1}},
+            "range":[20,30],
             "key":{
               "type":"Identifier",
               "loc":{"source":null,"start":{"line":3,"column":0},"end":{"line":3,"column":1}},
@@ -54,8 +54,8 @@
             },
             "value":{
               "type":"AnyTypeAnnotation",
-              "loc":{"source":null,"start":{"line":4,"column":0},"end":{"line":4,"column":0}},
-              "range":[31,31]
+              "loc":{"source":null,"start":{"line":3,"column":0},"end":{"line":3,"column":1}},
+              "range":[29,30]
             },
             "method":false,
             "optional":false,

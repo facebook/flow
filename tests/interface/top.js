@@ -1,7 +1,9 @@
-declare var x : mixed;
+declare var x: mixed;
 
-( x : interface {} ); // error
+(x: interface {}); // ERROR
 
-( undefined : interface {} ); // error
+(undefined: interface {}); // ERROR
+(null: interface {}); // ERROR
 
-( null : interface {} ); // error
+(1: interface {}); // ERROR
+(true: interface {}); // ERROR

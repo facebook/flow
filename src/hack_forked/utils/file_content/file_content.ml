@@ -100,9 +100,9 @@ let offset_to_position (content : string) (offset : int) : position =
       let c = get_char content index in
       let clen = get_char_length c in
       if c = '\n' then
-        helper (line + 1) 1 (index + clen)
+        helper ~line:(line + 1) ~column:1 ~index:(index + clen)
       else
-        helper line (column + 1) (index + clen)
+        helper ~line ~column:(column + 1) ~index:(index + clen)
   in
   if offset > String.length content then
     raise (Failure (Printf.sprintf "Invalid offset: %d" offset))

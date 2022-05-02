@@ -116,9 +116,8 @@ class ['a] t =
         let { enum_id = _; members = _; representation_t; has_unknown_members = _ } = enum in
         let acc = self#type_ cx pole acc representation_t in
         acc
-      | FunT (static, prototype, funtype) ->
+      | FunT (static, funtype) ->
         let acc = self#type_ cx pole acc static in
-        let acc = self#type_ cx pole_TODO acc prototype in
         let acc = self#fun_type cx pole acc funtype in
         acc
       | ObjT objtype -> self#obj_type cx pole acc objtype
@@ -205,7 +204,6 @@ class ['a] t =
       | ElementType { index_type; _ } -> self#type_ cx pole_TODO acc index_type
       | OptionalIndexedAccessNonMaybeType { index = OptionalIndexedAccessTypeIndex index_type } ->
         self#type_ cx pole_TODO acc index_type
-      | Bind t -> self#type_ cx pole_TODO acc t
       | SpreadType (_, ts, head_slice) ->
         let acc = self#list (self#object_kit_spread_operand cx) acc ts in
         self#opt (self#object_kit_spread_operand_slice cx) acc head_slice
@@ -223,7 +221,6 @@ class ['a] t =
       | ObjectSetPrototypeOf
       | Compose _
       | ReactPropType _
-      | ReactCreateClass
       | ReactCreateElement
       | ReactCloneElement
       | Idx
@@ -238,7 +235,7 @@ class ['a] t =
     method use_type_ cx (acc : 'a) =
       function
       | UseT (_, t) -> self#type_ cx P.Negative acc t
-      | BindT (_, _, fn, _)
+      | BindT (_, _, fn)
       | CallT (_, _, fn) ->
         self#fun_call_type cx acc fn
       | MethodT (_, _, _, p, fn, prop_t) ->
@@ -256,7 +253,7 @@ class ['a] t =
         let acc = self#type_ cx pole_TODO acc t in
         let acc = self#opt (self#type_ cx pole_TODO) acc prop_t in
         acc
-      | GetPropT (_, _, p, t)
+      | GetPropT (_, _, _, p, t)
       | MatchPropT (_, _, p, t)
       | TestPropT (_, _, _, p, t) ->
         let acc = self#propref cx acc p in
@@ -496,12 +493,7 @@ class ['a] t =
               let acc = self#type_ cx pole_TODO acc t in
               acc
             )
-          )
-        | React.CreateClass (tool, knot, tout) ->
-          let acc = self#react_create_class_tool cx acc tool in
-          let acc = self#react_create_class_knot cx acc knot in
-          let acc = self#type_ cx pole_TODO acc tout in
-          acc)
+          ))
       | ObjKitT (_, _, resolve_tool, tool, tout) ->
         Object.(
           let acc =
@@ -1005,85 +997,6 @@ class ['a] t =
           let acc = self#namemap (self#prop cx pole_TODO) acc props in
           let acc = self#react_resolved_object cx acc o in
           acc
-      )
-
-    method private react_create_class_tool cx acc tool =
-      React.CreateClass.(
-        match tool with
-        | Spec tail -> self#react_create_class_stack_tail cx acc tail
-        | Mixins stack -> self#react_create_class_stack cx acc stack
-        | Statics stack -> self#react_create_class_stack cx acc stack
-        | PropTypes (stack, o) ->
-          let acc = self#react_create_class_stack cx acc stack in
-          let acc = self#react_resolve_object cx acc o in
-          acc
-        | DefaultProps (ts, dp) ->
-          let acc = List.fold_left (self#type_ cx pole_TODO) acc ts in
-          let acc = self#opt (self#maybe_known (self#react_resolved_object cx)) acc dp in
-          acc
-        | InitialState (ts, s) ->
-          let acc = List.fold_left (self#type_ cx pole_TODO) acc ts in
-          let acc =
-            self#opt (self#maybe_known (self#or_null (self#react_resolved_object cx))) acc s
-          in
-          acc
-      )
-
-    method private react_create_class_stack cx acc (head, tail) =
-      let acc = self#react_create_class_stack_head cx acc head in
-      let acc = self#react_create_class_stack_tail cx acc tail in
-      acc
-
-    method private react_create_class_stack_head cx acc (o, spec) =
-      let acc = self#react_resolved_object cx acc o in
-      let acc = self#react_create_class_spec cx acc spec in
-      acc
-
-    method private react_create_class_stack_tail cx acc =
-      List.fold_left
-        (fun acc (head, ts, specs) ->
-          let acc = self#react_create_class_stack_head cx acc head in
-          let acc = List.fold_left (self#type_ cx pole_TODO) acc ts in
-          let acc = List.fold_left (self#maybe_known (self#react_create_class_spec cx)) acc specs in
-          acc)
-        acc
-
-    method private react_create_class_spec cx acc spec =
-      React.CreateClass.(
-        let { obj; statics; prop_types; get_default_props; get_initial_state; _ } = spec in
-        let acc = self#react_resolved_object cx acc obj in
-        let acc = self#opt (self#maybe_known (self#react_resolved_object cx)) acc statics in
-        let acc = self#opt (self#maybe_known (self#react_resolved_object cx)) acc prop_types in
-        let acc = List.fold_left (self#type_ cx pole_TODO) acc get_default_props in
-        let acc = List.fold_left (self#type_ cx pole_TODO) acc get_initial_state in
-        acc
-      )
-
-    method private maybe_known
-        : 't. ('a -> 't -> 'a) -> 'a -> 't React.CreateClass.maybe_known -> 'a =
-      React.CreateClass.(
-        fun f acc x ->
-          match x with
-          | Known a -> f acc a
-          | Unknown _ -> acc
-      )
-
-    method private or_null : 't. ('a -> 't -> 'a) -> 'a -> 't React.CreateClass.or_null -> 'a =
-      React.CreateClass.(
-        fun f acc x ->
-          match x with
-          | NotNull a -> f acc a
-          | Null _ -> acc
-      )
-
-    method private react_create_class_knot cx acc knot =
-      React.CreateClass.(
-        let { this; static; state_t; default_t } = knot in
-        let acc = self#type_ cx pole_TODO acc this in
-        let acc = self#type_ cx pole_TODO acc static in
-        let acc = self#type_ cx pole_TODO acc state_t in
-        let acc = self#type_ cx pole_TODO acc default_t in
-        acc
       )
 
     method private list : 't. ('a -> 't -> 'a) -> 'a -> 't list -> 'a = List.fold_left

@@ -14,3 +14,9 @@ var CJS = require('./CJS.js');
 
 // flowlint-next-line untyped-import:error
 require('./not_flow');
+
+// should not resolve because we don't strip extensions from dirs
+require('./confusing_dir'); // error: cannot-resolve-module
+
+// should not resolve because we don't strip extensions from dirs
+require('./confusing_dir_dot_flow'); // error: cannot-resolve-module

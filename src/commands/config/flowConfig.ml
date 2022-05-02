@@ -69,6 +69,8 @@ module Opts = struct
     facebook_module_interop: bool;
     file_watcher: file_watcher option;
     file_watcher_mergebase_with: string option;
+    file_watcher_mergebase_with_git: string option;
+    file_watcher_mergebase_with_hg: string option;
     file_watcher_timeout: int option;
     format_bracket_spacing: bool option;  (** print spaces between brackets in object literals *)
     format_single_quotes: bool option;  (** prefer single-quoted strings *)
@@ -98,6 +100,7 @@ module Opts = struct
     max_seconds_for_check_per_worker: float;
     max_workers: int;
     merge_timeout: int option;
+    missing_module_generators: (Str.regexp * string) list;
     module_file_exts: string list;
     module_name_mappers: (Str.regexp * string) list;
     module_resource_exts: SSet.t;
@@ -120,7 +123,6 @@ module Opts = struct
     root_name: string option;
     run_post_inference_implicit_instantiation: bool;
     saved_state_fetcher: Options.saved_state_fetcher;
-    saved_state_load_sighashes: bool;
     shm_hash_table_pow: int;
     shm_heap_size: int;
     shm_log_level: int;
@@ -137,6 +139,7 @@ module Opts = struct
     watchman_survive_restarts: bool option;
     watchman_sync_timeout: int option;
   }
+  [@@warning "-69"]
 
   let warn_on_unknown_opts (raw_opts, config) : (t * warning list, error) result =
     (* If the user specified any options that aren't defined, issue a warning *)
@@ -195,6 +198,8 @@ module Opts = struct
       facebook_module_interop = false;
       file_watcher = None;
       file_watcher_mergebase_with = None;
+      file_watcher_mergebase_with_git = None;
+      file_watcher_mergebase_with_hg = None;
       file_watcher_timeout = None;
       format_bracket_spacing = None;
       format_single_quotes = None;
@@ -225,6 +230,7 @@ module Opts = struct
       max_seconds_for_check_per_worker = 5.0;
       max_workers = Sys_utils.nbr_procs;
       merge_timeout = Some 100;
+      missing_module_generators = [];
       module_file_exts;
       module_name_mappers = [];
       module_resource_exts;
@@ -247,7 +253,6 @@ module Opts = struct
       root_name = None;
       run_post_inference_implicit_instantiation = false;
       saved_state_fetcher = Options.Dummy_fetcher;
-      saved_state_load_sighashes = false;
       shm_hash_table_pow = 19;
       shm_heap_size = (* 25GB *) 1024 * 1024 * 1024 * 25;
       shm_log_level = 0;
@@ -546,6 +551,12 @@ module Opts = struct
   let file_watcher_mergebase_with_parser =
     string (fun opts v -> Ok { opts with file_watcher_mergebase_with = Some v })
 
+  let file_watcher_mergebase_with_git_parser =
+    string (fun opts v -> Ok { opts with file_watcher_mergebase_with_git = Some v })
+
+  let file_watcher_mergebase_with_hg_parser =
+    string (fun opts v -> Ok { opts with file_watcher_mergebase_with_hg = Some v })
+
   let format_bracket_spacing_parser =
     boolean (fun opts v -> Ok { opts with format_bracket_spacing = Some v })
 
@@ -607,6 +618,15 @@ module Opts = struct
         in
         Ok { opts with merge_timeout }
     )
+
+  let missing_module_generators_parser =
+    mapping
+      ~init:(fun opts -> { opts with missing_module_generators = [] })
+      ~multiple:true
+      (fun (pattern, generator) ->
+        optparse_regexp pattern >>= fun pattern -> Ok (pattern, generator))
+      (fun opts v ->
+        Ok { opts with missing_module_generators = v :: opts.missing_module_generators })
 
   let module_system_parser =
     enum [("node", Options.Node); ("haste", Options.Haste)] (fun opts v ->
@@ -846,6 +866,8 @@ module Opts = struct
       ("facebook.fbt", string (fun opts v -> Ok { opts with facebook_fbt = Some v }));
       ("file_watcher", file_watcher_parser);
       ("file_watcher.mergebase_with", file_watcher_mergebase_with_parser);
+      ("file_watcher.mergebase_with_git", file_watcher_mergebase_with_git_parser);
+      ("file_watcher.mergebase_with_hg", file_watcher_mergebase_with_hg_parser);
       ("file_watcher.watchman.defer_state", watchman_defer_states_parser);
       ("file_watcher.watchman.survive_restarts", watchman_survive_restarts_parser);
       ("file_watcher.watchman.sync_timeout", watchman_sync_timeout_parser);
@@ -870,6 +892,7 @@ module Opts = struct
       ("module.ignore_non_literal_requires", ignore_non_literal_requires_parser);
       ("module.name_mapper", name_mapper_parser);
       ("module.name_mapper.extension", name_mapper_extension_parser);
+      ("module.missing_module_generators", missing_module_generators_parser);
       ("module.system", module_system_parser);
       ("module.system.haste.module_ref_prefix", haste_module_ref_prefix_parser);
       ("module.system.haste.name_reducers", haste_name_reducers_parser);
@@ -893,9 +916,6 @@ module Opts = struct
       );
       ("relay_integration.module_prefix.includes", relay_integration_module_prefix_includes_parser);
       ("saved_state.fetcher", saved_state_fetcher_parser);
-      ( "saved_state.load_sighashes",
-        boolean (fun opts v -> Ok { opts with saved_state_load_sighashes = v })
-      );
       ("server.max_workers", uint (fun opts v -> Ok { opts with max_workers = v }));
       ("sharedmemory.hash_table_pow", shm_hash_table_pow_parser);
       ("sharedmemory.heap_size", uint (fun opts shm_heap_size -> Ok { opts with shm_heap_size }));
@@ -1350,7 +1370,7 @@ let is_not_comment =
     not (Base.List.exists ~f:(fun regexp -> Str.string_match regexp line 0) comment_regexps)
 
 let read filename =
-  let contents = Sys_utils.cat_no_fail filename in
+  let contents = Sys_utils.cat filename in
   let hash =
     let xx_state = Xx.init 0L in
     Xx.update xx_state contents;
@@ -1484,6 +1504,10 @@ let file_watcher c = c.options.Opts.file_watcher
 
 let file_watcher_mergebase_with c = c.options.Opts.file_watcher_mergebase_with
 
+let file_watcher_mergebase_with_git c = c.options.Opts.file_watcher_mergebase_with_git
+
+let file_watcher_mergebase_with_hg c = c.options.Opts.file_watcher_mergebase_with_hg
+
 let file_watcher_timeout c = c.options.Opts.file_watcher_timeout
 
 let format_bracket_spacing c = c.options.Opts.format_bracket_spacing
@@ -1543,6 +1567,8 @@ let max_workers c = c.options.Opts.max_workers
 
 let merge_timeout c = c.options.Opts.merge_timeout
 
+let missing_module_generators c = c.options.Opts.missing_module_generators
+
 let module_file_exts c = c.options.Opts.module_file_exts
 
 let module_name_mappers c = c.options.Opts.module_name_mappers
@@ -1590,8 +1616,6 @@ let run_post_inference_implicit_instantiation c =
   c.options.Opts.run_post_inference_implicit_instantiation
 
 let saved_state_fetcher c = c.options.Opts.saved_state_fetcher
-
-let saved_state_load_sighashes c = c.options.Opts.saved_state_load_sighashes
 
 let shm_hash_table_pow c = c.options.Opts.shm_hash_table_pow
 

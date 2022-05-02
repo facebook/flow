@@ -12,5 +12,4 @@
    nproc
    priorities
    processor_info
-   realpath
    sysinfo)))

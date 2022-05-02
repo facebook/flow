@@ -230,7 +230,8 @@ module Env : Env_sig.S = struct
         ALocMap.fold
           (fun loc env_entry env ->
             match env_entry with
-            | Env_api.AssigningWrite reason ->
+            | Env_api.AssigningWrite reason
+            | Env_api.GlobalWrite reason ->
               let t = Inferred (Tvar.mk cx reason) in
               (* Treat everything as inferred for now for the purposes of annotated vs inferred *)
               Loc_env.initialize env loc t
@@ -407,32 +408,35 @@ module Env : Env_sig.S = struct
 
   (* helpers *)
 
+  let valid_declaration_check cx name loc =
+    let { Loc_env.var_info = { Env_api.scopes = info; ssa_values = values; providers; _ }; _ } =
+      Context.environment cx
+    in
+    let error null_write =
+      let null_write =
+        Base.Option.map
+          ~f:(fun null_loc -> Error_message.{ null_loc; initialized = ALoc.equal loc null_loc })
+          null_write
+      in
+      Flow.add_output
+        cx
+        Error_message.(
+          EInvalidDeclaration { declaration = mk_reason (RIdentifier name) loc; null_write }
+        )
+    in
+    match Invalidation_api.declaration_validity info values providers loc with
+    | Invalidation_api.Valid -> ()
+    | Invalidation_api.NotWritten -> error None
+    | Invalidation_api.NullWritten null_loc -> error (Some null_loc)
+
   let promote_non_const cx name loc spec =
     if Reason.is_internal_name name then
       (None, spec)
     else
-      let { Loc_env.var_info = { Env_api.scopes = info; ssa_values = values; providers; _ }; _ } =
+      let { Loc_env.var_info = { Env_api.scopes = info; ssa_values = values; _ }; _ } =
         Context.environment cx
       in
-      begin
-        let error null_write =
-          let null_write =
-            Base.Option.map
-              ~f:(fun null_loc -> Error_message.{ null_loc; initialized = ALoc.equal loc null_loc })
-              null_write
-          in
-          Flow.add_output
-            cx
-            Error_message.(
-              EInvalidDeclaration { declaration = mk_reason (RIdentifier name) loc; null_write }
-            )
-        in
-        match Invalidation_api.declaration_validity info values providers loc with
-        | Invalidation_api.Valid -> ()
-        | Invalidation_api.NotWritten -> error None
-        | Invalidation_api.NullWritten null_loc -> error (Some null_loc)
-      end;
-
+      valid_declaration_check cx name loc;
       if spec <> Entry.ConstLike && Invalidation_api.is_const_like info values loc then
         (None, Entry.ConstLike)
       else if spec <> Entry.NotWrittenByClosure then
@@ -803,6 +807,7 @@ module Env : Env_sig.S = struct
               in
               Scope.add_entry name entry scope
             | _ ->
+              Utils_js.prerr_endlinef "already_bound-1";
               (* declare function shadows some other kind of binding *)
               already_bound_error cx name prev loc)
           )
@@ -1023,8 +1028,15 @@ module Env : Env_sig.S = struct
     let (scope, entry) = find_entry cx name ?desc loc in
     Entry.(
       match entry with
-      | Type _ when lookup_mode != ForType ->
-        let msg = Error_message.ETypeInValuePosition in
+      | Type { type_binding_kind; _ } when lookup_mode != ForType ->
+        let imported =
+          match type_binding_kind with
+          | ImportTypeBinding -> true
+          | TypeBinding -> false
+        in
+        let msg =
+          Error_message.ETypeInValuePosition { imported; name = display_string_of_name name }
+        in
         binding_error msg cx name entry loc;
         AnyT.at (AnyError None) (entry_loc entry)
       | Type t -> t.type_
@@ -1071,7 +1083,7 @@ module Env : Env_sig.S = struct
   (* query var's specific type *)
   let query_var ?(lookup_mode = ForValue) = read_entry ~lookup_mode ~specific:true
 
-  let query_var_non_specific ?(lookup_mode = ForValue) = read_entry ~lookup_mode ~specific:false
+  let query_var_non_specific = read_entry ~lookup_mode:ForValue ?desc:None ~specific:false
 
   let get_internal_var cx name loc = query_var cx (internal_name name) loc
 
@@ -1103,10 +1115,21 @@ module Env : Env_sig.S = struct
 
   (* Unify declared type with another type. This is useful for allowing forward
      references in declared types to other types declared later in scope. *)
-  let unify_declared_type ?(lookup_mode = ForValue) cx name _loc t =
+  let unify_declared_type ?(lookup_mode = ForValue) ?(is_func = false) cx name loc t =
     Entry.(
+      (* If name_already_bound is true, then this is already a [name-already-bound]
+       * error. In that case we don't need to unify with the general type. *)
+      let name_already_bound v =
+        match v.Entry.kind with
+        | Let ((ClassNameBinding | FunctionBinding), _) -> v.value_assign_loc <> loc
+        | Let (DeclaredFunctionBinding _, _) when not is_func ->
+          (* Multiple declare functions followed by a function declaration is okay. *)
+          v.value_assign_loc <> loc
+        | _ -> false
+      in
       match get_current_env_entry name with
-      | Some (Value v) when lookup_mode = ForValue -> Flow.unify cx t (general_of_value v)
+      | Some (Value v) when lookup_mode = ForValue ->
+        if not (name_already_bound v) then Flow.unify cx t (general_of_value v)
       | Some entry when lookup_mode <> ForValue -> Flow.unify cx t (Entry.declared_type entry)
       | _ -> ()
     )
@@ -1127,6 +1150,9 @@ module Env : Env_sig.S = struct
     fun cx name aloc t ->
       Entry.(
         match get_current_env_entry name with
+        | Some (Value { Entry.kind = Let (FunctionBinding, _); _ }) ->
+          (* This is already a 'name-already-bound' error. No need to unify types. *)
+          ()
         | Some (Value v) -> Flow.unify cx t (find_type aloc (general_of_value v))
         | _ -> ()
       )
@@ -1168,7 +1194,7 @@ module Env : Env_sig.S = struct
      We also ban such reassignments in non-exported functions and classes in order to
      allow their types to be eagerly resolved.
   *)
-  let check_let_bound_reassignment op cx name entry loc =
+  let has_illegal_let_bound_reassignment op cx name entry loc =
     let open Entry in
     match (op, entry) with
     | ( Changeset.Write,
@@ -1189,70 +1215,74 @@ module Env : Env_sig.S = struct
       let reason = mk_reason (RType name) value_declare_loc in
       Flow.add_output
         cx
-        Error_message.(EAssignConstLikeBinding { loc; definition = reason; binding_kind })
-    | _ -> ()
+        Error_message.(EAssignConstLikeBinding { loc; definition = reason; binding_kind });
+      true
+    | _ -> false
 
   (* helper: update let or var entry *)
   let update_var op cx ~use_op name specific loc =
     let (scope, entry) = find_entry cx name loc in
-    check_let_bound_reassignment op cx name entry loc;
-    Entry.(
-      match entry with
-      | Value ({ Entry.kind = Let _ as kind; value_state = State.Undeclared; _ } as v)
-        when (not (allow_forward_ref kind)) && same_activation scope ->
-        tdz_error cx name loc v;
-        None
-      | Value ({ Entry.kind = Let _ | Var _; closure_writes; general; _ } as v) ->
-        let change = (scope.id, name, op) in
-        Changeset.Global.change_var change;
-        begin
-          match (closure_writes, op) with
-          | (_, Changeset.Refine) -> ()
-          | (_, Changeset.Read) -> assert_false "read op during variable update"
-          | (Some (writes_by_closure, t, _), Changeset.Write) when ALocSet.mem loc writes_by_closure
-            ->
-            Flow.flow cx (specific, UseT (use_op, t))
-          | (_, Changeset.Write) -> Flow.flow cx (specific, UseT (use_op, Entry.general_of_value v))
-        end;
+    if has_illegal_let_bound_reassignment op cx name entry loc then
+      None
+    else
+      Entry.(
+        match entry with
+        | Value ({ Entry.kind = Let _ as kind; value_state = State.Undeclared; _ } as v)
+          when (not (allow_forward_ref kind)) && same_activation scope ->
+          tdz_error cx name loc v;
+          None
+        | Value ({ Entry.kind = Let _ | Var _; closure_writes; general; _ } as v) ->
+          let change = (scope.id, name, op) in
+          Changeset.Global.change_var change;
+          begin
+            match (closure_writes, op) with
+            | (_, Changeset.Refine) -> ()
+            | (_, Changeset.Read) -> assert_false "read op during variable update"
+            | (Some (writes_by_closure, t, _), Changeset.Write)
+              when ALocSet.mem loc writes_by_closure ->
+              Flow.flow cx (specific, UseT (use_op, t))
+            | (_, Changeset.Write) ->
+              Flow.flow cx (specific, UseT (use_op, Entry.general_of_value v))
+          end;
 
-        install_provider cx specific name loc;
+          install_provider cx specific name loc;
 
-        begin
-          match (general, op) with
-          | (Inferred _, Changeset.Write) -> constrain_by_provider cx ~use_op specific name loc
-          | _ -> ()
-        end;
+          begin
+            match (general, op) with
+            | (Inferred _, Changeset.Write) -> constrain_by_provider cx ~use_op specific name loc
+            | _ -> ()
+          end;
 
-        (* add updated entry *)
-        let update =
-          Entry.Value
-            { v with Entry.value_state = State.Initialized; specific; value_assign_loc = loc }
-        in
-        Scope.add_entry name update scope;
-        Some change
-      | Value { Entry.kind = Const ConstVarBinding; _ } ->
-        let msg = Error_message.EConstReassigned in
-        binding_error msg cx name entry loc;
-        None
-      | Value { Entry.kind = Const EnumNameBinding; _ } ->
-        let msg = Error_message.EEnumReassigned in
-        binding_error msg cx name entry loc;
-        None
-      | Value { Entry.kind = Const ConstImportBinding; _ } ->
-        let msg = Error_message.EImportReassigned in
-        binding_error msg cx name entry loc;
-        None
-      | Value { Entry.kind = Const ConstParamBinding; _ } ->
-        (* TODO: remove extra info when surface syntax is added *)
-        let msg = Error_message.EConstParamReassigned in
-        binding_error msg cx name entry loc;
-        None
-      | Type _ ->
-        let msg = Error_message.ETypeAliasInValuePosition in
-        binding_error msg cx name entry loc;
-        None
-      | Class _ -> assert_false "Internal error: update_var called on Class"
-    )
+          (* add updated entry *)
+          let update =
+            Entry.Value
+              { v with Entry.value_state = State.Initialized; specific; value_assign_loc = loc }
+          in
+          Scope.add_entry name update scope;
+          Some change
+        | Value { Entry.kind = Const ConstVarBinding; _ } ->
+          let msg = Error_message.EConstReassigned in
+          binding_error msg cx name entry loc;
+          None
+        | Value { Entry.kind = Const EnumNameBinding; _ } ->
+          let msg = Error_message.EEnumReassigned in
+          binding_error msg cx name entry loc;
+          None
+        | Value { Entry.kind = Const ConstImportBinding; _ } ->
+          let msg = Error_message.EImportReassigned in
+          binding_error msg cx name entry loc;
+          None
+        | Value { Entry.kind = Const ConstParamBinding; _ } ->
+          (* TODO: remove extra info when surface syntax is added *)
+          let msg = Error_message.EConstParamReassigned in
+          binding_error msg cx name entry loc;
+          None
+        | Type _ ->
+          let msg = Error_message.ETypeAliasInValuePosition in
+          binding_error msg cx name entry loc;
+          None
+        | Class _ -> assert_false "Internal error: update_var called on Class"
+      )
 
   (* update var by direct assignment *)
   let set_var cx ~use_op name t loc =
@@ -1356,9 +1386,7 @@ module Env : Env_sig.S = struct
         general0
       (* general case *)
       else
-        let tvar = create_union cx loc name specific1 specific2 in
-        Flow.flow cx (tvar, UseT (Op (Internal MergeEnv), general0));
-        tvar
+        create_union cx loc name specific1 specific2
     in
     (* propagate var state updates from child entries *)
     let merge_states orig child1 child2 =
@@ -1654,11 +1682,19 @@ module Env : Env_sig.S = struct
       Changeset.iter_type_updates havoc_entry havoc_refi
     )
 
-  (* Clear entries for heap refinement pseudovars in env.
-     If name is passed, clear only those refis that depend on it.
-     Real variables are left untouched.
-  *)
-  let havoc_heap_refinements () = iter_scopes Scope.havoc_all_refis
+  (* Clear all heap refinements (refis) in env.
+
+     Refinements on names bound directly in a scope are left
+     untouched; for those, see [havoc_local_refinements]. *)
+  let havoc_heap_refinements () =
+    iter_scopes (fun scope ->
+        if Changeset.Global.is_active () then
+          scope
+          |> Scope.iter_refis (fun key _ ->
+                 Changeset.Global.change_refi (scope.id, key, Changeset.Write)
+             );
+        Scope.havoc_all_refis scope
+    )
 
   let havoc_local_refinements ?(all = false) cx =
     iter_scopes (fun scope ->
@@ -1752,37 +1788,6 @@ module Env : Env_sig.S = struct
         Context.add_literal_subtypes cx (t, u)
       | _ -> ()
     in
-    let rec check_literal_subtypes ~general_type pred =
-      (* When refining a type against a literal, we want to be sure that that literal can actually
-         inhabit that type *)
-      match pred with
-      | SingletonBoolP (loc, b) ->
-        let reason = loc |> mk_reason (RBooleanLit b) in
-        let l = DefT (reason, bogus_trust (), BoolT (Some b)) in
-        let u = UseT (Op (Internal Refinement), general_type) in
-        Context.add_literal_subtypes cx (l, u)
-      | SingletonStrP (loc, b, str) ->
-        let reason = loc |> mk_reason (RStringLit (OrdinaryName str)) in
-        let l = DefT (reason, bogus_trust (), StrT (Literal (Some b, OrdinaryName str))) in
-        let u = UseT (Op (Internal Refinement), general_type) in
-        Context.add_literal_subtypes cx (l, u)
-      | SingletonNumP (loc, b, ((_, str) as num)) ->
-        let reason = loc |> mk_reason (RNumberLit str) in
-        let l = DefT (reason, bogus_trust (), NumT (Literal (Some b, num))) in
-        let u = UseT (Op (Internal Refinement), general_type) in
-        Context.add_literal_subtypes cx (l, u)
-      | LeftP (SentinelProp name, t) ->
-        let reason = TypeUtil.reason_of_t t in
-        (* Store any potential sentinel type. Later on, when the check is fired (in
-           merge_js.ml), we only focus on primitive literal types. *)
-        Context.add_matching_props cx (reason, name, t, general_type)
-      | NotP p -> check_literal_subtypes ~general_type p
-      | OrP (p1, p2)
-      | AndP (p1, p2) ->
-        check_literal_subtypes ~general_type p1;
-        check_literal_subtypes ~general_type p2
-      | _ -> ()
-    in
     let refine_type orig_type pred refined_type =
       Flow.flow cx (orig_type, PredicateT (pred, refined_type))
     in
@@ -1799,7 +1804,6 @@ module Env : Env_sig.S = struct
           | (_, Value v) ->
             let orig_type = query_var cx name loc in
             let general_type = query_var_non_specific cx name loc in
-            check_literal_subtypes ~general_type pred;
             let refi_type = mk_refi_type orig_type pred refi_reason in
             check_instanceof_subtypes ~general_type pred refi_type;
             let refine =

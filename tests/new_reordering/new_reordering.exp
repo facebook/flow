@@ -1,16 +1,11 @@
-Error -------------------------------------------------------------------------------------------------------- a.js:10:1
+Error -------------------------------------------------------------------------------------------------------- a.js:10:7
 
-Cannot compute a type for class `TimeOfDay_noanno` because its definition includes references to itself [1]. Please add
-a type annotation to this definition [recursive-definition]
+Cannot compute a type for `TimeOfDay_noanno` because its definition includes references to itself [1]. Please add a type
+annotation to this definition [recursive-definition]
 
-   a.js:10:1
-       v-----------------------
+   a.js:10:7
    10| class TimeOfDay_noanno {
-   11|   a(other: TimeOfDay_noanno) {
-   12|     return true
-   13|   }
-   14| }
-       ^
+             ^^^^^^^^^^^^^^^^
 
 References:
    a.js:11:12
@@ -18,21 +13,16 @@ References:
                   ^^^^^^^^^^^^^^^^ [1]
 
 
-Error -------------------------------------------------------------------------------------------------------- a.js:10:1
+Error -------------------------------------------------------------------------------------------------------- a.js:10:7
 
 The following definitions recursively depend on each other, and Flow cannot compute their types:
- - class `TimeOfDay_noanno` [1] depends on other definition [2]
+ - `TimeOfDay_noanno` [1] depends on other definition [2]
  - `other` [2] depends on other definition [3]
 Please add type annotations to these definitions [definition-cycle]
 
-   a.js:10:1
-       v-----------------------
+   a.js:10:7
    10| class TimeOfDay_noanno {
-   11|   a(other: TimeOfDay_noanno) {
-   12|     return true
-   13|   }
-   14| }
-       ^ [1]
+             ^^^^^^^^^^^^^^^^ [1]
 
 References:
    a.js:11:5
@@ -43,19 +33,14 @@ References:
                   ^^^^^^^^^^^^^^^^ [3]
 
 
-Error -------------------------------------------------------------------------------------------------------- a.js:16:1
+Error -------------------------------------------------------------------------------------------------------- a.js:16:7
 
-Cannot compute a type for class `TimeOfDay_noanno2` because its definition includes references to itself [1]. Please add
-a type annotation to this definition [recursive-definition]
+Cannot compute a type for `TimeOfDay_noanno2` because its definition includes references to itself [1]. Please add a
+type annotation to this definition [recursive-definition]
 
-   a.js:16:1
-       v------------------------
+   a.js:16:7
    16| class TimeOfDay_noanno2 {
-   17|   a() {
-   18|     return this.a();
-   19|   }
-   20| }
-       ^
+             ^^^^^^^^^^^^^^^^^
 
 References:
    a.js:18:12
@@ -69,11 +54,8 @@ Cannot compute a type for function because its definition includes references to
 annotation to this definition [recursive-definition]
 
    a.js:26:1
-       v----------------
    26| function f_na() {
-   27|   return f_na();
-   28| }
-       ^
+       ^^^^^^^^^^^^^^^
 
 References:
    a.js:27:10
@@ -104,22 +86,16 @@ The following definitions recursively depend on each other, and Flow cannot comp
 Please add type annotations to these definitions [definition-cycle]
 
    a.js:38:1
-       v-------------
    38| function a() {
-   39|   return b()
-   40| }
-       ^ [1]
+       ^^^^^^^^^^^^ [1]
 
 References:
    a.js:39:10
    39|   return b()
                 ^ [2]
    a.js:42:1
-       v-------------
    42| function b() {
-   43|   return a()
-   44| }
-       ^ [3]
+       ^^^^^^^^^^^^ [3]
    a.js:43:10
    43|   return a()
                 ^ [4]

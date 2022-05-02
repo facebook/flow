@@ -25,7 +25,7 @@ type buf = (char, Bigarray.int8_unsigned_elt, Bigarray.c_layout) Bigarray.Array1
 
 (* Phantom type parameter provides type-safety to callers of this API.
  * Internally, these are all just ints, so be careful! *)
-type _ addr = int
+type +'k addr = int
 
 (* The integer values corresponding to these tags are encoded in the low byte
  * of object headers. Any changes made here must be kept in sync with
@@ -33,22 +33,27 @@ type _ addr = int
 type tag =
   | Entity_tag (* 0 *)
   | Addr_tbl_tag
-  | Checked_file_tag
-  | Unparsed_file_tag
+  | Untyped_tag
+  | Typed_tag
+  | Haste_info_tag
+  | Source_file_tag
+  | Json_file_tag
+  | Resource_file_tag
+  | Lib_file_tag
+  | Haste_module_tag
+  | File_module_tag
   (* tags defined below this point are scanned for pointers *)
-  | String_tag (* 4 *)
+  | String_tag (* 11 *)
   | Int64_tag
   | Docblock_tag
   | ALoc_table_tag
   | Type_sig_tag
   (* tags defined above this point are serialized+compressed *)
-  | Serialized_tag (* 9 *)
+  | Serialized_tag (* 16 *)
   | Serialized_resolved_requires_tag
   | Serialized_ast_tag
   | Serialized_file_sig_tag
   | Serialized_exports_tag
-
-type serialized_tag = Serialized_resolved_requires
 
 let heap_ref : buf option ref = ref None
 
@@ -58,8 +63,8 @@ let tag_val : tag -> int = Obj.magic
 (* double-check integer values are consistent with hh_shared.c *)
 let () =
   assert (tag_val Entity_tag = 0);
-  assert (tag_val String_tag = 4);
-  assert (tag_val Serialized_tag = 9)
+  assert (tag_val String_tag = 11);
+  assert (tag_val Serialized_tag = 16)
 
 exception Out_of_shared_memory
 
@@ -164,6 +169,11 @@ external get_next_version : unit -> int = "hh_next_version" [@@noalloc]
  * and writers. *)
 external commit_transaction : unit -> unit = "hh_commit_transaction"
 
+(* Iterate the shared hash table. *)
+external hh_iter : (_ addr -> unit) -> unit = "hh_iter"
+
+let is_init_transaction () = get_next_version () == 0
+
 let on_compact = ref (fun _ _ -> ())
 
 let compact_helper () =
@@ -264,10 +274,6 @@ module type Value = sig
   type t
 
   val description : string
-end
-
-module type SerializedTag = sig
-  val value : serialized_tag
 end
 
 module type AddrValue = sig
@@ -411,6 +417,8 @@ module type NoCache = sig
 
   val remove_old_batch : KeySet.t -> unit
 
+  val remove : key -> unit
+
   val remove_batch : KeySet.t -> unit
 
   val mem : key -> bool
@@ -422,12 +430,6 @@ module type NoCache = sig
   val oldify_batch : KeySet.t -> unit
 
   val revive_batch : KeySet.t -> unit
-end
-
-module type NoCacheTag = sig
-  include NoCache
-
-  val iter : (value -> unit) -> unit
 end
 
 module type LocalCache = sig
@@ -462,11 +464,7 @@ end
 (* A functor returning an implementation of the S module without caching. *)
 (*****************************************************************************)
 
-module NoCacheInternal
-    (Key : Key)
-    (Value : Value) (Tag : sig
-      val tag : int
-    end) :
+module NoCache (Key : Key) (Value : Value) :
   NoCache with type key = Key.t and type value = Value.t and module KeySet = Flow_set.Make(Key) =
 struct
   module Tbl = HashtblSegment (Key)
@@ -483,7 +481,7 @@ struct
 
   external hh_get_size : _ addr -> int = "hh_get_size"
 
-  let hh_store x = WorkerCancel.with_worker_exit (fun () -> hh_store x Tag.tag)
+  let hh_store x = WorkerCancel.with_worker_exit (fun () -> hh_store x (tag_val Serialized_tag))
 
   let hh_deserialize x = WorkerCancel.with_worker_exit (fun () -> hh_deserialize x)
 
@@ -535,7 +533,9 @@ struct
     | None -> None
     | Some addr -> Some (deserialize addr)
 
-  let remove_batch keys = KeySet.iter Tbl.remove keys
+  let remove = Tbl.remove
+
+  let remove_batch keys = KeySet.iter remove keys
 
   let oldify = Tbl.oldify
 
@@ -544,29 +544,6 @@ struct
   let revive_batch keys = KeySet.iter Tbl.revive keys
 
   let remove_old_batch keys = KeySet.iter Tbl.remove_old keys
-end
-
-module NoCache (Key : Key) (Value : Value) =
-  NoCacheInternal (Key) (Value)
-    (struct
-      let tag = tag_val Serialized_tag
-    end)
-
-module NoCacheTag (Key : Key) (Value : Value) (Tag : SerializedTag) = struct
-  let tag =
-    (* Tag values here must match the corresponding values from NewAPI.tag *)
-    match Tag.value with
-    | Serialized_resolved_requires -> tag_val Serialized_resolved_requires_tag
-
-  include
-    NoCacheInternal (Key) (Value)
-      (struct
-        let tag = tag
-      end)
-
-  external hh_iter_serialized : ('a -> unit) -> int -> unit = "hh_iter_serialized"
-
-  let iter f = WorkerCancel.with_worker_exit (fun () -> hh_iter_serialized f tag)
 end
 
 module NoCacheAddr (Key : Key) (Value : AddrValue) = struct
@@ -587,7 +564,9 @@ module NoCacheAddr (Key : Key) (Value : AddrValue) = struct
 
   let get_old = Tbl.get_old
 
-  let remove_batch keys = KeySet.iter Tbl.remove keys
+  let remove = Tbl.remove
+
+  let remove_batch keys = KeySet.iter remove keys
 
   let oldify = Tbl.oldify
 
@@ -879,9 +858,11 @@ struct
     Direct.revive_batch keys;
     KeySet.iter Cache.remove keys
 
-  let remove_batch xs =
-    Direct.remove_batch xs;
-    KeySet.iter Cache.remove xs
+  let remove x =
+    Direct.remove x;
+    Cache.remove x
+
+  let remove_batch xs = KeySet.iter remove xs
 
   let () =
     invalidate_callback_list :=
@@ -909,8 +890,6 @@ module NewAPI = struct
 
   type 'a addr_tbl
 
-  type 'a opt
-
   type ast
 
   type docblock
@@ -923,11 +902,17 @@ module NewAPI = struct
 
   type exports
 
-  type checked_file
+  type resolved_requires
 
-  type unparsed_file
+  type +'a parse
 
-  type dyn_file
+  type haste_info
+
+  type file
+
+  type haste_module
+
+  type file_module
 
   type size = int
 
@@ -976,6 +961,9 @@ module NewAPI = struct
   external unsafe_write_string_at : _ addr -> string -> unit = "hh_write_string" [@@noalloc]
 
   external unsafe_write_bytes_at : _ addr -> bytes -> pos:int -> len:int -> unit = "hh_write_bytes"
+    [@@noalloc]
+
+  external compare_exchange_weak : _ addr -> int -> int -> bool = "hh_compare_exchange_weak"
     [@@noalloc]
 
   (** Addresses *)
@@ -1087,13 +1075,18 @@ module NewAPI = struct
     chunk.next_addr <- addr_offset addr header_size;
     addr
 
-  (* Read a header from the heap. The low 2 bits of the header are reserved for
-   * GC and not used in OCaml. *)
+  (** Read a header from the heap. *)
   let read_header heap addr =
     let hd64 = buf_read_int64 heap addr in
     (* Double-check that the data looks like a header. All reachable headers
      * will have the lsb set. *)
-    assert (Int64.(logand hd64 1L = 1L));
+    if Int64.(logand hd64 1L <> 1L) then
+      Printf.ksprintf
+        failwith
+        "Failed to read header: %x contains %Lx which does not look like a header"
+        addr
+        hd64;
+    (* The low 2 bits of the header are reserved for GC and not used in OCaml. *)
     Int64.(to_int (shift_right_logical hd64 2))
 
   let obj_tag hd = hd land 0x3F
@@ -1182,29 +1175,15 @@ module NewAPI = struct
 
   (** Optionals *)
 
-  let opt_size f = function
-    | None -> 0
-    | Some x -> f x
+  let opt_none = null_addr
 
-  let write_opt f chunk = function
-    | None -> null_addr
-    | Some x -> f chunk x
+  let is_none addr = addr == opt_none
 
-  let read_opt f addr =
-    if addr = null_addr then
+  let read_opt addr =
+    if is_none addr then
       None
     else
-      Some (f addr)
-
-  let read_opt_exn f addr =
-    if addr = null_addr then
-      invalid_arg "addr is null"
-    else
-      f addr
-
-  let is_none addr = addr == null_addr
-
-  let is_some addr = addr != null_addr
+      Some addr
 
   (** Entities
    *
@@ -1285,14 +1264,41 @@ module NewAPI = struct
     if !v >= next_version then v := lnot !v;
     let slot = !v land 1 in
     let data = addr_offset entity (header_size + slot) in
-    read_addr heap data
+    read_opt (read_addr heap data)
 
   let entity_read_latest entity =
     let heap = get_heap () in
     let entity_version = get_entity_version heap entity in
     let slot = entity_version land 1 in
     let data = addr_offset entity (header_size + slot) in
-    read_addr heap data
+    read_opt (read_addr heap data)
+
+  (* The next version is always an even number. Entities written to the
+   * transaction for the next version will have the entity version that is
+   * either equal or exactly 1 greater (see entity_advance).
+   *
+   * To roll back, we change the entity version to be less than the next version
+   * while also alternating the stamp. *)
+  let entity_rollback entity =
+    let heap = get_heap () in
+    let next_version = get_next_version () in
+    let entity_version = get_entity_version heap entity in
+    let diff =
+      if entity_version == next_version then
+        1
+      else if entity_version > next_version then
+        3
+      else
+        0
+    in
+    if diff > 0 then
+      let new_version = entity_version - diff in
+      buf_write_int64 heap (version_addr entity) (Int64.of_int new_version)
+
+  let entity_changed entity =
+    let version = get_next_version () in
+    let entity_version = get_entity_version (get_heap ()) entity in
+    entity_version >= version
 
   (** Compressed OCaml values
 
@@ -1408,99 +1414,376 @@ module NewAPI = struct
 
   let read_exports addr = read_compressed Serialized_exports_tag addr
 
-  (** Checked files *)
+  (** Resolved requires *)
 
-  let checked_file_size = 8 * addr_size
+  let prepare_write_resolved_requires resolved_requires =
+    prepare_write_compressed Serialized_resolved_requires_tag resolved_requires
 
-  let unparsed_file_size = 2 * addr_size
+  let read_resolved_requires addr = read_compressed Serialized_resolved_requires_tag addr
 
-  let write_checked_file chunk hash module_name exports =
-    let checked_file = write_header chunk Checked_file_tag checked_file_size in
+  (** Field utils *)
+
+  let set_generic offset base = unsafe_write_addr_at (get_heap ()) (offset base)
+
+  let get_generic offset base = read_addr (get_heap ()) (offset base)
+
+  let get_generic_opt offset base = read_opt (get_generic offset base)
+
+  (** Parse data *)
+
+  let untyped_parse_size = 1 * addr_size
+
+  let typed_parse_size = 9 * addr_size
+
+  let write_untyped_parse chunk hash =
+    let addr = write_header chunk Untyped_tag untyped_parse_size in
     unsafe_write_addr chunk hash;
-    unsafe_write_addr chunk module_name;
+    addr
+
+  let write_typed_parse chunk hash exports resolved_requires leader =
+    let addr = write_header chunk Typed_tag typed_parse_size in
+    unsafe_write_addr chunk hash;
     unsafe_write_addr chunk null_addr;
     unsafe_write_addr chunk null_addr;
     unsafe_write_addr chunk null_addr;
     unsafe_write_addr chunk null_addr;
     unsafe_write_addr chunk null_addr;
     unsafe_write_addr chunk exports;
-    checked_file
-
-  let write_unparsed_file chunk hash module_name =
-    let addr = write_header chunk Unparsed_file_tag unparsed_file_size in
-    unsafe_write_addr chunk hash;
-    unsafe_write_addr chunk module_name;
+    unsafe_write_addr chunk resolved_requires;
+    unsafe_write_addr chunk leader;
     addr
 
-  let dyn_checked_file = Obj.magic
+  let is_typed parse =
+    let hd = read_header (get_heap ()) parse in
+    obj_tag hd = tag_val Typed_tag
 
-  let dyn_unparsed_file = Obj.magic
-
-  let assert_checked_file addr =
-    let hd = read_header (get_heap ()) addr in
-    assert_tag hd Checked_file_tag;
-    addr
-
-  let is_checked_file addr =
-    let hd = read_header (get_heap ()) addr in
-    obj_tag hd = tag_val Checked_file_tag
-
-  let coerce_checked_file addr =
-    if is_checked_file addr then
-      Some addr
+  let coerce_typed parse =
+    if is_typed parse then
+      Some parse
     else
       None
 
-  let assert_unparsed_file addr =
-    let hd = read_header (get_heap ()) addr in
-    assert_tag hd Unparsed_file_tag;
+  let file_hash_addr parse = addr_offset parse 1
+
+  let ast_addr parse = addr_offset parse 2
+
+  let docblock_addr parse = addr_offset parse 3
+
+  let aloc_table_addr parse = addr_offset parse 4
+
+  let type_sig_addr parse = addr_offset parse 5
+
+  let file_sig_addr parse = addr_offset parse 6
+
+  let exports_addr parse = addr_offset parse 7
+
+  let resolved_requires_addr parse = addr_offset parse 8
+
+  let leader_addr parse = addr_offset parse 9
+
+  let get_file_hash = get_generic file_hash_addr
+
+  let get_ast = get_generic_opt ast_addr
+
+  let get_docblock = get_generic_opt docblock_addr
+
+  let get_aloc_table = get_generic_opt aloc_table_addr
+
+  let get_type_sig = get_generic_opt type_sig_addr
+
+  let get_file_sig = get_generic_opt file_sig_addr
+
+  let get_exports = get_generic exports_addr
+
+  let get_resolved_requires = get_generic resolved_requires_addr
+
+  let get_leader = get_generic leader_addr
+
+  let set_ast = set_generic ast_addr
+
+  let set_docblock = set_generic docblock_addr
+
+  let set_aloc_table = set_generic aloc_table_addr
+
+  let set_type_sig = set_generic type_sig_addr
+
+  let set_file_sig = set_generic file_sig_addr
+
+  (** Haste info *)
+
+  let haste_info_size = 2 * addr_size
+
+  let write_haste_info chunk haste_module =
+    let addr = write_header chunk Haste_info_tag haste_info_size in
+    unsafe_write_addr chunk haste_module;
+    unsafe_write_addr chunk null_addr (* next haste provider *);
     addr
 
-  let file_hash_addr file = addr_offset file 1
+  let haste_module_addr parse = addr_offset parse 1
 
-  let module_name_addr file = addr_offset file 2
+  let next_haste_provider_addr parse = addr_offset parse 2
 
-  let ast_addr file = addr_offset file 3
+  let get_haste_module = get_generic haste_module_addr
 
-  let docblock_addr file = addr_offset file 4
+  let haste_info_equal = Int.equal
 
-  let aloc_table_addr file = addr_offset file 5
+  (** File data *)
 
-  let type_sig_addr file = addr_offset file 6
+  type file_kind =
+    | Source_file
+    | Json_file
+    | Resource_file
+    | Lib_file
 
-  let file_sig_addr file = addr_offset file 7
+  let file_tag = function
+    | Source_file -> Source_file_tag
+    | Json_file -> Json_file_tag
+    | Resource_file -> Resource_file_tag
+    | Lib_file -> Lib_file_tag
 
-  let exports_addr file = addr_offset file 8
+  let file_size = 5 * addr_size
 
-  let set_file_generic offset file addr = unsafe_write_addr_at (get_heap ()) (offset file) addr
+  let write_file chunk kind file_name parse haste_info file_module =
+    let file_module = Option.value file_module ~default:opt_none in
+    let addr = write_header chunk (file_tag kind) file_size in
+    unsafe_write_addr chunk file_name;
+    unsafe_write_addr chunk parse;
+    unsafe_write_addr chunk haste_info;
+    unsafe_write_addr chunk file_module;
+    unsafe_write_addr chunk null_addr (* next file provider *);
+    addr
 
-  let set_file_module_name = set_file_generic module_name_addr
+  let file_name_addr file = addr_offset file 1
 
-  let set_file_ast = set_file_generic ast_addr
+  let parse_addr file = addr_offset file 2
 
-  let set_file_docblock = set_file_generic docblock_addr
+  let haste_info_addr file = addr_offset file 3
 
-  let set_file_aloc_table = set_file_generic aloc_table_addr
+  let file_module_addr file = addr_offset file 4
 
-  let set_file_type_sig = set_file_generic type_sig_addr
+  let next_file_provider_addr file = addr_offset file 5
 
-  let set_file_sig = set_file_generic file_sig_addr
+  let get_file_kind file =
+    let hd = read_header (get_heap ()) file in
+    let tag = obj_tag hd in
+    if tag = tag_val Source_file_tag then
+      Source_file
+    else if tag = tag_val Json_file_tag then
+      Json_file
+    else if tag = tag_val Resource_file_tag then
+      Resource_file
+    else if tag = tag_val Lib_file_tag then
+      Lib_file
+    else
+      failwith "get_file_kind: unexpected tag"
 
-  let get_file_generic offset file = read_addr (get_heap ()) (offset file)
+  let get_file_name = get_generic file_name_addr
 
-  let get_file_hash = get_file_generic file_hash_addr
+  let get_file_module = get_generic_opt file_module_addr
 
-  let get_file_module_name = get_file_generic module_name_addr
+  let get_haste_info = get_generic haste_info_addr
 
-  let get_file_ast = get_file_generic ast_addr
+  let get_parse = get_generic parse_addr
 
-  let get_file_docblock = get_file_generic docblock_addr
+  let files_equal = Int.equal
 
-  let get_file_aloc_table = get_file_generic aloc_table_addr
+  let file_changed file = entity_changed (get_parse file)
 
-  let get_file_type_sig = get_file_generic type_sig_addr
+  (** All providers *)
 
-  let get_file_sig = get_file_generic file_sig_addr
+  let add_provider head_addr next_addr file =
+    let heap = get_heap () in
+    let rec loop () =
+      let head = read_addr heap head_addr in
+      unsafe_write_addr_at heap next_addr head;
+      if not (compare_exchange_weak head_addr head file) then loop ()
+    in
+    loop ()
 
-  let get_file_exports = get_file_generic exports_addr
+  (** Haste modules *)
+
+  let haste_module_size = 3 * addr_size
+
+  let write_haste_module chunk name provider =
+    let addr = write_header chunk Haste_module_tag haste_module_size in
+    unsafe_write_addr chunk name;
+    unsafe_write_addr chunk provider;
+    unsafe_write_addr chunk null_addr (* all providers *);
+    addr
+
+  let haste_modules_equal = Int.equal
+
+  let haste_name_addr m = addr_offset m 1
+
+  let haste_provider_addr m = addr_offset m 2
+
+  let haste_all_providers_addr m = addr_offset m 3
+
+  let get_haste_name = get_generic haste_name_addr
+
+  let get_haste_provider = get_generic haste_provider_addr
+
+  let add_haste_provider m file provider =
+    let head_addr = haste_all_providers_addr m in
+    let next_addr = next_haste_provider_addr provider in
+    add_provider head_addr next_addr file
+
+  (* Iterate through linked list of providers, accumulating a list. While
+   * traversing, we also remove any files which are no longer providers.
+   *
+   * Deferred delete happens here because concurrent deletion from a linked
+   * list is complicated (but possible!) and we need to iterate over all
+   * providers anyway, so it's much more convenient to do it here.
+   *
+   * Deferred deletions _must_ be performed before a transaction commits. If a
+   * transaction is rolled back, changes to the all providers list need to be
+   * unwound. *)
+  let get_haste_all_providers_exclusive m =
+    let heap = get_heap () in
+    let rec loop acc node_addr node =
+      if is_none node then
+        acc
+      else
+        let haste_ent = get_haste_info node in
+        match entity_read_latest haste_ent with
+        | Some haste_info when m == get_generic haste_module_addr haste_info ->
+          (* `node` is a current provider of `m` *)
+          let next_addr = next_haste_provider_addr haste_info in
+          let next = read_addr heap next_addr in
+          loop (node :: acc) next_addr next
+        | _ ->
+          (* `node` no longer provides `m` -- perform deferred deletion.
+           * Invariant: `node` used to provide `m`, so the next item in this
+           * list comes from the committed haste info. *)
+          let old_haste_info = Option.get (entity_read_committed haste_ent) in
+          assert (m == get_generic haste_module_addr old_haste_info);
+          let next_addr = next_haste_provider_addr old_haste_info in
+          let next = read_addr heap next_addr in
+          unsafe_write_addr_at heap node_addr next;
+          loop acc node_addr next
+    in
+    let head_addr = haste_all_providers_addr m in
+    let head = read_addr heap head_addr in
+    loop [] head_addr head
+
+  (* In the case of a transaction rollback, we need to remove providers which
+   * were added during the transaction.
+   *
+   * This function also performs deferred deletion, since we might as well. It
+   * speeds up subsequent traversals.
+   *
+   * TODO: It is unfortunate that this function duplicates so much of the logic
+   * from `get_haste_all_providers` above. It would be nice to share more code,
+   * if possible.
+   *)
+  let remove_haste_provider_exclusive m file =
+    let heap = get_heap () in
+    let rec loop node_addr node =
+      if is_none node then
+        ()
+      else
+        let haste_ent = get_haste_info node in
+        match entity_read_latest haste_ent with
+        | Some haste_info when m == get_generic haste_module_addr haste_info ->
+          let next_addr = next_haste_provider_addr haste_info in
+          let next = read_addr heap next_addr in
+          if node == file then
+            unsafe_write_addr_at heap node_addr next
+          else
+            loop next_addr next
+        | _ ->
+          let old_haste_info = Option.get (entity_read_committed haste_ent) in
+          assert (m == get_generic haste_module_addr old_haste_info);
+          let next_addr = next_haste_provider_addr old_haste_info in
+          let next = read_addr heap next_addr in
+          unsafe_write_addr_at heap node_addr next;
+          loop node_addr next
+    in
+    let head_addr = haste_all_providers_addr m in
+    let head = read_addr heap head_addr in
+    loop head_addr head
+
+  (** File modules *)
+
+  let file_module_size = 2 * addr_size
+
+  let write_file_module chunk provider =
+    let addr = write_header chunk File_module_tag file_module_size in
+    unsafe_write_addr chunk provider;
+    unsafe_write_addr chunk null_addr (* all providers *);
+    addr
+
+  let file_provider_addr m = addr_offset m 1
+
+  let file_all_providers_addr m = addr_offset m 2
+
+  let get_file_provider = get_generic file_provider_addr
+
+  let add_file_provider m file =
+    let head_addr = file_all_providers_addr m in
+    let next_addr = next_file_provider_addr file in
+    add_provider head_addr next_addr file
+
+  (* Iterate through linked list of providers, accumulating a list. While
+   * traversing, we also remove any files which are no longer providers.
+   *
+   * See `get_haste_all_providers_exclusive` for more details about deferred
+   * deletion. *)
+  let get_file_all_providers_exclusive m =
+    let heap = get_heap () in
+    let rec loop acc node_addr node =
+      if is_none node then
+        acc
+      else
+        let next_addr = next_file_provider_addr node in
+        let next = read_addr heap next_addr in
+        match entity_read_latest (get_parse node) with
+        | Some _ ->
+          (* As long as `node` has some parse information, then the file exists
+           * and provides `m`. *)
+          loop (node :: acc) next_addr next
+        | None ->
+          (* `node` has no parse information, and thus does not exist and does
+           * not provide `m`. *)
+          unsafe_write_addr_at heap node_addr next;
+          loop acc node_addr next
+    in
+    let head_addr = file_all_providers_addr m in
+    let head = read_addr heap head_addr in
+    loop [] head_addr head
+
+  (* See `remove_haste_provider_exclusive` *)
+  let remove_file_provider_exclusive m file =
+    let heap = get_heap () in
+    let rec loop node_addr node =
+      if is_none node then
+        ()
+      else
+        let next_addr = next_file_provider_addr node in
+        let next = read_addr heap next_addr in
+        if node == file then
+          unsafe_write_addr_at heap node_addr next
+        else
+          loop next_addr next
+    in
+    let head_addr = file_all_providers_addr m in
+    let head = read_addr heap head_addr in
+    loop head_addr head
+
+  let iter_resolved_requires f =
+    let heap = get_heap () in
+    let f addr =
+      let hd = read_header heap addr in
+      if obj_tag hd = tag_val Source_file_tag then
+        match entity_read_latest (get_parse addr) with
+        | None -> ()
+        | Some parse ->
+          let hd = read_header heap parse in
+          if obj_tag hd = tag_val Typed_tag then (
+            match entity_read_latest (get_resolved_requires parse) with
+            | None -> ()
+            | Some resolved_requires -> f addr resolved_requires
+          )
+    in
+    hh_iter f
 end

@@ -1,2 +1,4 @@
 [options]
 experimental.env_mode=resolved
+experimental.cycle_errors=true
+enums=true

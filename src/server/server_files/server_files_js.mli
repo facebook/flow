@@ -11,6 +11,8 @@ val config_file : string -> Path.t -> string
 
 val log_file : flowconfig_name:string -> tmp_dir:string -> Path.t -> string
 
+val dfind_log_file : flowconfig_name:string -> tmp_dir:string -> Path.t -> string
+
 val monitor_log_file : flowconfig_name:string -> tmp_dir:string -> Path.t -> string
 
 val lock_file : flowconfig_name:string -> tmp_dir:string -> Path.t -> string

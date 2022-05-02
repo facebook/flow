@@ -1,11 +1,9 @@
 /* @flow */
 
-var React = require('react');
-var Foo = React.createClass({
-  propTypes: {
-    bar: React.PropTypes.string.isRequired,
-  },
-});
+const React = require('react');
+class Foo extends React.Component<{
+  bar: string,
+}> {}
 
-var props = {bar: 42};
-var blah = <Foo {...props} />; // error bar, number given string expected
+const props = {bar: 42};
+const blah = <Foo {...props} />; // error bar, number given string expected

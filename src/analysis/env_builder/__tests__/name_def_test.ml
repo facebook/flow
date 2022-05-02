@@ -9,9 +9,10 @@ open Test_utils
 open Name_def
 open Utils_js
 open Loc_collections
+open Name_def_ordering
 module Ast = Flow_ast
 
-module Name_resolver = Name_resolver.Make_Test_With_Cx (struct
+module Context = struct
   type t = unit
 
   let enable_enums _cx = true
@@ -27,7 +28,10 @@ module Name_resolver = Name_resolver.Make_Test_With_Cx (struct
   let add_new_env_literal_subtypes _ _ = ()
 
   let add_new_env_matching_props _ _ = ()
-end)
+end
+
+module Name_resolver = Name_resolver.Make_Test_With_Cx (Context)
+module Name_def_ordering = Name_def_ordering.Make_Test_With_Cx (Context)
 
 let string_of_root = function
   | Contextual _ -> "contextual"
@@ -56,18 +60,16 @@ let string_of_import_kind =
   | ImportType -> "type "
   | ImportValue -> ""
 
-let string_of_import =
-  let open Ast.Statement.ImportDeclaration in
-  function
-  | Named { kind; remote } ->
+let string_of_import = function
+  | Named { kind; remote; local = _; remote_loc = _ } ->
     spf "%s%s" (Base.Option.value_map ~f:string_of_import_kind ~default:"" kind) remote
   | Namespace -> "namespace"
-  | Default -> "default"
+  | Default _ -> "default"
 
 let string_of_source = function
-  | Binding (_, b) -> string_of_binding b
-  | Update (loc, _) -> spf "crement %s" (ALoc.debug_to_string loc)
-  | OpAssign (loc, _, _) -> spf "opassign %s" (ALoc.debug_to_string loc)
+  | Binding b -> string_of_binding b
+  | Update _ -> "[in/de]crement"
+  | OpAssign _ -> "opassign"
   | Function { function_ = { Ast.Function.id; _ }; _ } ->
     spf
       "fun %s"
@@ -76,9 +78,9 @@ let string_of_source = function
          ~default:"<anonymous>"
          id
       )
-  | DeclaredClass { Ast.Statement.DeclareClass.id = (_, { Ast.Identifier.name; _ }); _ } ->
+  | DeclaredClass (_, { Ast.Statement.DeclareClass.id = (_, { Ast.Identifier.name; _ }); _ }) ->
     spf "declared class %s" name
-  | Class { class_ = { Ast.Class.id; _ }; fully_annotated } ->
+  | Class { class_ = { Ast.Class.id; _ }; fully_annotated; class_loc = _ } ->
     spf
       "class (annotated=%b) %s"
       fully_annotated
@@ -87,14 +89,14 @@ let string_of_source = function
          ~default:"<anonymous>"
          id
       )
-  | TypeAlias { Ast.Statement.TypeAlias.right = (loc, _); _ } ->
+  | TypeAlias (_, { Ast.Statement.TypeAlias.right = (loc, _); _ }) ->
     spf "alias %s" (ALoc.debug_to_string loc)
-  | OpaqueType { Ast.Statement.OpaqueType.id = (loc, _); _ } ->
+  | OpaqueType (_, { Ast.Statement.OpaqueType.id = (loc, _); _ }) ->
     spf "opaque %s" (ALoc.debug_to_string loc)
   | TypeParam (loc, _) -> spf "tparam %s" (ALoc.debug_to_string loc)
   | Enum (loc, _) -> spf "enum %s" (ALoc.debug_to_string loc)
   | Interface _ -> "interface"
-  | Import { import_kind; source; import } ->
+  | Import { import_kind; source; import; source_loc = _ } ->
     spf "import %s%s from %s" (string_of_import_kind import_kind) (string_of_import import) source
 
 let print_values values =
@@ -108,7 +110,6 @@ let print_values values =
   Printf.printf "[\n  %s\n]" (String.concat ";\n  " strlist)
 
 let print_order lst =
-  let open Name_def_ordering in
   let msg_of_elt elt =
     match elt with
     | Normal l
@@ -141,7 +142,7 @@ let print_order_test contents =
   let ast = parse_with_alocs contents in
   let (_, env) = Name_resolver.program_with_scope () ast in
   let inits = Name_def.find_defs ast in
-  let order = Name_def_ordering.build_ordering env inits in
+  let order = Name_def_ordering.build_ordering () env inits in
   print_order order
 
 (* TODO: ocamlformat mangles the ppx syntax. *)

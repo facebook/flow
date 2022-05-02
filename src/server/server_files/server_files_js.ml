@@ -63,6 +63,8 @@ let max_root_part_len = 200
 
 let log_file = file_of_root ~max_root_part_len "log"
 
+let dfind_log_file = file_of_root ~max_root_part_len "dfind_log"
+
 let monitor_log_file = file_of_root ~max_root_part_len "monitor_log"
 
 let lock_file = file_of_root ~max_root_part_len "lock"

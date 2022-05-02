@@ -64,6 +64,7 @@ type error_code =
   | InvalidCharsetTypeArg
   | InvalidCompare
   | InvalidComputedProp
+  | InvalidConstructor
   | InvalidEnumAccess
   | InvalidExact
   | InvalidExhaustiveCheck
@@ -88,7 +89,6 @@ type error_code =
   | InvalidPropertyTypeArg
   | InvalidPropType
   | InvalidReactConfig
-  | InvalidReactCreateClass
   | InvalidRefineTypeArg
   | InvalidTrustedTypeArg
   | InvalidTupleArity
@@ -241,6 +241,7 @@ let string_of_code : error_code -> string = function
   | InvalidCharsetTypeArg -> "invalid-charset-type-arg"
   | InvalidCompare -> "invalid-compare"
   | InvalidComputedProp -> "invalid-computed-prop"
+  | InvalidConstructor -> "invalid-constructor"
   | InvalidEnumAccess -> "invalid-enum-access"
   | InvalidExact -> "invalid-exact"
   | InvalidExhaustiveCheck -> "invalid-exhaustive-check"
@@ -265,7 +266,6 @@ let string_of_code : error_code -> string = function
   | InvalidPropertyTypeArg -> "invalid-property-type-arg"
   | InvalidPropType -> "invalid-prop-type"
   | InvalidReactConfig -> "invalid-react-config"
-  | InvalidReactCreateClass -> "invalid-react-create-class"
   | InvalidRefineTypeArg -> "invalid-refine-type-arg"
   | InvalidTrustedTypeArg -> "invalid-trusted-type-arg"
   | InvalidTupleArity -> "invalid-tuple-arity"

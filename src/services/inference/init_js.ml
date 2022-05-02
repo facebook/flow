@@ -45,9 +45,9 @@ let parse_lib_file ~reader options file =
     in
     Lwt.return
       ( if is_ok results then
-        let ast = Parsing_heaps.Mutator_reader.get_ast_unsafe reader lib_file in
+        let ast = Parsing_heaps.Mutator_reader.get_ast_unsafe ~reader lib_file in
         let (file_sig, tolerable_errors) =
-          Parsing_heaps.Mutator_reader.get_tolerable_file_sig_unsafe reader lib_file
+          Parsing_heaps.Mutator_reader.get_tolerable_file_sig_unsafe ~reader lib_file
         in
         Lib_ok { ast; file_sig; tolerable_errors }
       else if is_fail results then
@@ -122,16 +122,16 @@ let load_lib_files ~ccx ~options ~reader files =
            | Lib_fail fail ->
              let errors =
                match fail with
+               | Parsing.Uncaught_exception exn ->
+                 Inference_utils.set_of_parse_exception ~source_file:lib_file exn
                | Parsing.Parse_error error ->
                  Inference_utils.set_of_parse_error ~source_file:lib_file error
                | Parsing.Docblock_errors errs ->
                  Inference_utils.set_of_docblock_errors ~source_file:lib_file errs
-               | Parsing.File_sig_error error ->
-                 Inference_utils.set_of_file_sig_error ~source_file:lib_file error
              in
              let errors_acc = Flow_error.ErrorSet.union errors errors_acc in
              Lwt.return (exclude_syms, false, errors_acc, asts_acc)
-           | Lib_skip -> Lwt.return (exclude_syms, false, errors_acc, asts_acc))
+           | Lib_skip -> Lwt.return (exclude_syms, ok_acc, errors_acc, asts_acc))
          (NameUtils.Set.empty, true, Flow_error.ErrorSet.empty, [])
   in
   let builtin_exports =

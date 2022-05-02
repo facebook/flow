@@ -1,3 +1,31 @@
+Error -------------------------------------------------------------------------------------------------- aliases.js:3:12
+
+Cannot assign `"hello world"` to `x` because string [1] is incompatible with number [2]. [incompatible-type]
+
+   aliases.js:3:12
+   3| var x: T = "hello world"; // err
+                 ^^^^^^^^^^^^^ [1]
+
+References:
+   aliases.js:3:8
+   3| var x: T = "hello world"; // err
+             ^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- aliases.js:7:12
+
+Cannot assign `"hello world"` to `x` because string [1] is incompatible with number [2]. [incompatible-type]
+
+   aliases.js:7:12
+   7| var x: A = "hello world"; // err
+                 ^^^^^^^^^^^^^ [1]
+
+References:
+   aliases.js:7:8
+   7| var x: A = "hello world"; // err
+             ^ [2]
+
+
 Error -------------------------------------------------------------------------------------------------- bindings.js:4:2
 
 Cannot cast `x` to string because number [1] is incompatible with string [2]. [incompatible-cast]
@@ -182,5 +210,454 @@ References:
                  ^^^^^^ [2]
 
 
+Error ---------------------------------------------------------------------------------------------------- class.js:6:10
 
-Found 11 errors
+Cannot cast `x` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+
+   class.js:6:10
+   6|         (x: empty);
+               ^
+
+References:
+   class.js:5:12
+   5|     foo(x: number): number {
+                 ^^^^^^ [1]
+   class.js:6:13
+   6|         (x: empty);
+                  ^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- class.js:13:2
+
+Cannot cast `a` to empty because `Annotated` [1] is incompatible with empty [2]. [incompatible-cast]
+
+   class.js:13:2
+   13| (a: empty);
+        ^
+
+References:
+   class.js:12:11
+   12| const a = new Annotated();
+                 ^^^^^^^^^^^^^^^ [1]
+   class.js:13:5
+   13| (a: empty);
+           ^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- class.js:15:2
+
+Cannot cast `b` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+
+   class.js:15:2
+   15| (b: empty);
+        ^
+
+References:
+   class.js:4:8
+    4|     x: number;
+              ^^^^^^ [1]
+   class.js:15:5
+   15| (b: empty);
+           ^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- class.js:17:2
+
+Cannot cast `c` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+
+   class.js:17:2
+   17| (c: empty);
+        ^
+
+References:
+   class.js:5:21
+    5|     foo(x: number): number {
+                           ^^^^^^ [1]
+   class.js:17:5
+   17| (c: empty);
+           ^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- class.js:22:10
+
+Cannot cast `x` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+
+   class.js:22:10
+   22|         (x: empty);
+                ^
+
+References:
+   class.js:21:12
+   21|     foo(x: number) {
+                  ^^^^^^ [1]
+   class.js:22:13
+   22|         (x: empty);
+                   ^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- class.js:29:2
+
+Cannot cast `a1` to empty because `Unannotated` [1] is incompatible with empty [2]. [incompatible-cast]
+
+   class.js:29:2
+   29| (a1: empty);
+        ^^
+
+References:
+   class.js:28:12
+   28| const a1 = new Unannotated();
+                  ^^^^^^^^^^^^^^^^^ [1]
+   class.js:29:6
+   29| (a1: empty);
+            ^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- class.js:31:2
+
+Cannot cast `b1` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+
+   class.js:31:2
+   31| (b1: empty);
+        ^^
+
+References:
+   class.js:20:9
+   20|     x = 42;
+               ^^ [1]
+   class.js:31:6
+   31| (b1: empty);
+            ^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- class.js:33:2
+
+Cannot cast `c1` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+
+   class.js:33:2
+   33| (c1: empty);
+        ^^
+
+References:
+   class.js:21:12
+   21|     foo(x: number) {
+                  ^^^^^^ [1]
+   class.js:33:6
+   33| (c1: empty);
+            ^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- enum.js:7:12
+
+Cannot assign `10` to `y` because number [1] is incompatible with `W` [2]. [incompatible-type]
+
+   enum.js:7:12
+   7| var y: W = 10; // err
+                 ^^ [1]
+
+References:
+   enum.js:7:8
+   7| var y: W = 10; // err
+             ^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------------ enum.js:8:8
+
+Cannot use `A` as a type. Enum members are not separate types. Only the enum itself, `W` [1], is a type.
+[enum-value-as-type]
+
+   enum.js:8:8
+   8| var z: W.A; // err
+             ^^^
+
+References:
+   enum.js:2:1
+      v-------
+   2| enum W {
+   3|   A, B
+   4| }
+      ^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------ function.js:11:10
+
+Cannot compute a type for function because its definition includes references to itself [1]. Please add a type
+annotation to this definition [recursive-definition]
+
+   function.js:11:10
+   11| var x = (function h() { (h(): empty); return 42 }); // err
+                ^^^^^^^^^^^^
+
+References:
+   function.js:11:26
+   11| var x = (function h() { (h(): empty); return 42 }); // err
+                                ^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------ function.js:11:26
+
+Cannot cast `h()` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+
+   function.js:11:26
+   11| var x = (function h() { (h(): empty); return 42 }); // err
+                                ^^^
+
+References:
+   function.js:11:46
+   11| var x = (function h() { (h(): empty); return 42 }); // err
+                                                    ^^ [1]
+   function.js:11:31
+   11| var x = (function h() { (h(): empty); return 42 }); // err
+                                     ^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- function.js:13:2
+
+Cannot cast `f()` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+
+   function.js:13:2
+   13| (f(): empty); // err
+        ^^^
+
+References:
+   function.js:8:12
+    8|     return 42;
+                  ^^ [1]
+   function.js:13:7
+   13| (f(): empty); // err
+             ^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- function.js:14:2
+
+Cannot cast `g()` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+
+   function.js:14:2
+   14| (g(): empty); // err
+        ^^^
+
+References:
+   function.js:8:12
+    8|     return 42;
+                  ^^ [1]
+   function.js:14:7
+   14| (g(): empty); // err
+             ^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ function.js:25:34
+
+Cannot cast `k()` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+
+   function.js:25:34
+   25| var y = (function k(): number { (k(): empty); return 42 }); // err
+                                        ^^^
+
+References:
+   function.js:25:24
+   25| var y = (function k(): number { (k(): empty); return 42 }); // err
+                              ^^^^^^ [1]
+   function.js:25:39
+   25| var y = (function k(): number { (k(): empty); return 42 }); // err
+                                             ^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- function.js:27:2
+
+Cannot cast `h()` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+
+   function.js:27:2
+   27| (h(): empty); // err
+        ^^^
+
+References:
+   function.js:17:15
+   17| function h(): number {
+                     ^^^^^^ [1]
+   function.js:27:7
+   27| (h(): empty); // err
+             ^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- function.js:28:2
+
+Cannot cast `i()` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+
+   function.js:28:2
+   28| (i(): empty); // err
+        ^^^
+
+References:
+   function.js:21:15
+   21| function i(): number {
+                     ^^^^^^ [1]
+   function.js:28:7
+   28| (i(): empty); // err
+             ^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- import.js:7:12
+
+Cannot assign `"a"` to `w` because string [1] is incompatible with number [2]. [incompatible-type]
+
+   import.js:7:12
+   7| var w: T = "a"; // err
+                 ^^^ [1]
+
+References:
+   import.js:7:8
+   7| var w: T = "a"; // err
+             ^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- import.js:8:2
+
+Cannot cast `y` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+
+   import.js:8:2
+   8| (y: empty); // err
+       ^
+
+References:
+   export.js:4:15
+   4| export var x: number = 42;
+                    ^^^^^^ [1]
+   import.js:8:5
+   8| (y: empty); // err
+          ^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- import.js:9:2
+
+Cannot cast `X` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+
+   import.js:9:2
+   9| (X: empty); // err
+       ^
+
+References:
+   export.js:6:16
+   6| export default 42;
+                     ^^ [1]
+   import.js:9:5
+   9| (X: empty); // err
+          ^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- import.js:10:2
+
+Cannot cast `Y.x` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+
+   import.js:10:2
+   10| (Y.x: empty); // err
+        ^^^
+
+References:
+   export.js:4:15
+    4| export var x: number = 42;
+                     ^^^^^^ [1]
+   import.js:10:7
+   10| (Y.x: empty); // err
+             ^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- inter.js:21:2
+
+Cannot cast `a.foo.w()` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+
+   inter.js:21:2
+   21| (a.foo.w(): empty); // err
+        ^^^^^^^^^
+
+References:
+   inter.js:12:10
+   12|     w(): number
+                ^^^^^^ [1]
+   inter.js:21:13
+   21| (a.foo.w(): empty); // err
+                   ^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- inter.js:24:2
+
+Cannot cast `c.m().w()` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+
+   inter.js:24:2
+   24| (c.m().w(): empty); // err
+        ^^^^^^^^^
+
+References:
+   inter.js:12:10
+   12|     w(): number
+                ^^^^^^ [1]
+   inter.js:24:13
+   24| (c.m().w(): empty); // err
+                   ^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- updates.js:5:2
+
+Cannot cast `++x` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+
+   updates.js:5:2
+   5| (++x: empty); // err
+       ^^^ [1]
+
+References:
+   updates.js:5:7
+   5| (++x: empty); // err
+            ^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- updates.js:6:2
+
+Cannot cast `x` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+
+   updates.js:6:2
+   6| (x: empty); // err
+       ^
+
+References:
+   updates.js:5:2
+   5| (++x: empty); // err
+       ^^^ [1]
+   updates.js:6:5
+   6| (x: empty); // err
+          ^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- updates.js:8:2
+
+Cannot cast `x` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+
+   updates.js:8:2
+   8| (x: empty); // err
+       ^
+
+References:
+   updates.js:7:1
+   7| x += 42;
+      ^^^^^^^ [1]
+   updates.js:8:5
+   8| (x: empty); // err
+          ^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- updates.js:10:2
+
+Cannot cast `x` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+
+   updates.js:10:2
+   10| (x: empty); // err
+        ^
+
+References:
+   updates.js:9:1
+    9| x -= 42;
+       ^^^^^^^ [1]
+   updates.js:10:5
+   10| (x: empty); // err
+           ^^^^^ [2]
+
+
+
+Found 40 errors

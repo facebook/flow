@@ -1,6 +1,6 @@
 Error ------------------------------------------------------------------------------------------ libs/parse_error.js:8:3
 
-Unexpected identifier
+Unexpected identifier, expected the token `,`
 
    8|   methodB: () => any
         ^^^^^^^

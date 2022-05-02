@@ -317,6 +317,18 @@ module type BASE_STATS = sig
   val report : t -> string list
 end
 
+module UnitStats : BASE_STATS with type t = unit = struct
+  type t = unit
+
+  let empty = ()
+
+  let combine _ _ = ()
+
+  let serialize _s = []
+
+  let report _s = []
+end
+
 module Stats (Extra : BASE_STATS) = struct
   type t = {
     number_of_annotations_added: int;

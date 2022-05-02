@@ -5,60 +5,27 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-open Utils_js
-
-val eponymous_module : File_key.t -> Modulename.t
-
 (* export and import functions for the module system *)
 val exported_module : options:Options.t -> File_key.t -> Docblock.t -> string option
 
-type resolution_acc = {
-  mutable paths: SSet.t;
-  mutable errors: Error_message.t list;
-}
+type resolution_acc = { mutable paths: SSet.t }
 
 val imported_module :
   options:Options.t ->
   reader:Abstract_state_reader.t ->
   node_modules_containers:SSet.t SMap.t ->
   File_key.t ->
-  ALoc.t ->
   ?resolution_acc:resolution_acc ->
   string ->
   Modulename.t
 
-(* add module records for given files;
-   returns the set of modules added
-*)
-val calc_new_modules :
-  MultiWorkerLwt.worker list option ->
-  all_providers_mutator:Module_hashtables.All_providers_mutator.t ->
-  reader:Mutator_state_reader.t ->
-  FilenameSet.t ->
-  (Modulename.t * File_key.t option) list Lwt.t
-
-(* remove module records being tracked for given files;
-   returns the set of modules removed
-*)
-val calc_old_modules :
-  MultiWorkerLwt.worker list option ->
-  all_providers_mutator:Module_hashtables.All_providers_mutator.t ->
-  options:Options.t ->
-  reader:Mutator_state_reader.t ->
-  FilenameSet.t ->
-  (Modulename.t * File_key.t option) list Lwt.t
-
-(* repick providers for old and new modules *)
+(* repick providers for dirty modules *)
 val commit_modules :
   transaction:Transaction.t ->
   workers:MultiWorkerLwt.worker list option ->
   options:Options.t ->
-  reader:Mutator_state_reader.t ->
-  is_init:bool ->
-  (* parsed / unparsed files *)
-  FilenameSet.t ->
   (* dirty modules *)
-  (Modulename.t * File_key.t option) list ->
+  Modulename.Set.t ->
   (* changed modules and duplicate providers *)
   (Modulename.Set.t * (File_key.t * File_key.t Nel.t) SMap.t) Lwt.t
 
@@ -66,12 +33,12 @@ val commit_modules :
 
 (* resolve and add requires from context to store *)
 val add_parsed_resolved_requires :
-  mutator:Module_heaps.Resolved_requires_mutator.t ->
+  mutator:Parsing_heaps.Resolved_requires_mutator.t ->
   reader:Mutator_state_reader.t ->
   options:Options.t ->
   node_modules_containers:SSet.t SMap.t ->
   File_key.t ->
-  bool * Flow_error.ErrorSet.t
+  bool
 
 val add_package : string -> (Package_json.t, 'a) result -> unit
 

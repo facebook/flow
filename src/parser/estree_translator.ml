@@ -258,8 +258,8 @@ with type t = Impl.t = struct
             ("body", block body);
             ( "kind",
               match kind with
-              | DeclareModule.CommonJS _ -> string "CommonJS"
-              | DeclareModule.ES _ -> string "ES"
+              | DeclareModule.CommonJS -> string "CommonJS"
+              | DeclareModule.ES -> string "ES"
             );
           ]
       | ( loc,

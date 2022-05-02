@@ -202,6 +202,7 @@ let rec members_of_ty : Ty.t -> Ty.t member_info NameUtils.Map.t * string list =
     (mems, errs)
   in
   function
+  | Mu (_, t) -> members_of_ty t
   | Obj { obj_props; _ } -> members_of_obj obj_props
   | Fun { fun_static; _ } -> members_of_ty fun_static
   | Union (from_bounds, t1, t2, ts) -> members_of_union ~from_bounds (t1, t2, ts)
@@ -220,7 +221,6 @@ let rec members_of_ty : Ty.t -> Ty.t member_info NameUtils.Map.t * string list =
   | TypeOf _
   | Utility _
   | IndexedAccess _
-  | Mu _
   | CharSet _ ->
     (NameUtils.Map.empty, [])
 

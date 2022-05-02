@@ -361,10 +361,17 @@ module Object
             let (value, errs) = parse_assignment_pattern ~key env in
             let prop = Init { key; value; shorthand = true } in
             (prop, errs)
-          | _ ->
+          | T_COLON ->
             let (value, errs) = parse_value env in
             let prop = Init { key; value; shorthand = false } in
             (prop, errs)
+          | _ ->
+            (* error. we recover by treating it as a shorthand property so as to not
+               consume any more tokens and make the error worse. we don't error here
+               because we'll expect a comma before the next token. *)
+            let value = parse_shorthand env key in
+            let prop = Init { key; value; shorthand = true } in
+            (prop, Pattern_cover.empty_errors)
       in
       fun env start_loc key async generator leading ->
         let (loc, (prop, errs)) =
@@ -464,12 +471,27 @@ module Object
             Some (Peek.loc env)
           | _ -> None
         in
-        (match Peek.token env with
-        | T_RCURLY
-        | T_EOF ->
-          ()
-        | _ -> Expect.token env T_COMMA);
         let errs = Pattern_cover.rev_append_errors new_errs errs in
+        let errs =
+          match Peek.token env with
+          | T_RCURLY
+          | T_EOF ->
+            errs
+          | T_COMMA ->
+            Eat.token env;
+            errs
+          | _ ->
+            (* we could use [Expect.error env T_COMMA], but we're in a weird
+               cover grammar situation where we're storing errors in
+               [Pattern_cover]. if we used [Expect.error], the errors would
+               end up out of order. *)
+            let err = Expect.get_error env T_COMMA in
+            (* if the unexpected token is a semicolon, consume it to aid
+               recovery. using a semicolon instead of a comma is a common
+               mistake. *)
+            let _ = Eat.maybe env T_SEMICOLON in
+            Pattern_cover.cons_error err errs
+        in
         properties env ~rest_trailing_comma (prop :: props, errs)
     in
     fun env ->

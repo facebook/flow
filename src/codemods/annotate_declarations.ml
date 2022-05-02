@@ -155,25 +155,14 @@ module Simplify = struct
 end
 
 let mapper
-    ~preserve_literals ~generalize_maybe ~max_type_size ~default_any (cctx : Codemod_context.Typed.t)
-    =
-  let { Codemod_context.Typed.file_sig; docblock; metadata; options; _ } = cctx in
-  let imports_react = Insert_type_imports.ImportsHelper.imports_react file_sig in
-  let metadata = Context.docblock_overrides docblock metadata in
-  let { Context.strict; strict_local; _ } = metadata in
-  let lint_severities =
-    if strict || strict_local then
-      StrictModeSettings.fold
-        (fun lint_kind lint_severities ->
-          LintSettings.set_value lint_kind (Severity.Err, None) lint_severities)
-        (Options.strict_mode options)
-        (Options.lint_severities options)
-    else
-      Options.lint_severities options
-  in
-  let suppress_types = Options.suppress_types options in
-  let exact_by_default = Options.exact_by_default options in
-  let flowfixme_ast = Builtins.flowfixme_ast ~lint_severities ~suppress_types ~exact_by_default in
+    ~preserve_literals
+    ~generalize_maybe
+    ~max_type_size
+    ~default_any
+    ~merge_arrays
+    (cctx : Codemod_context.Typed.t) =
+  let lint_severities = Codemod_context.Typed.lint_severities cctx in
+  let flowfixme_ast = Codemod_context.Typed.flowfixme_ast ~lint_severities cctx in
   let cx = Codemod_context.Typed.context cctx in
   let errors = Context.errors cx in
   let loc_error_set =
@@ -203,15 +192,14 @@ let mapper
   object (this)
     inherit
       Codemod_declaration_annotator.mapper
-        ~max_type_size
-        ~exact_by_default
-        ~lint_severities
-        ~suppress_types
-        ~imports_react
-        ~preserve_literals
-        ~generalize_maybe
+        cctx
         ~default_any
-        cctx as super
+        ~generalize_maybe
+        ~lint_severities
+        ~max_type_size
+        ~preserve_literals
+        ~merge_arrays
+        () as super
 
     val mutable renamable = ALocSet.empty
 

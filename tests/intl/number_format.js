@@ -28,7 +28,7 @@ Intl.NumberFormat([ 'en', 'en-GB' ], {
   minimumSignificantDigits: 1,
   maximumSignificantDigits: 21
 }) // correct
-
+const NumberFormat = Intl.NumberFormat;
 new NumberFormat().select() // incorrect
 new NumberFormat().format() // incorrect
 

@@ -41,7 +41,7 @@ function bar2(b) {
 }
 
 function qux(b) {
-    var z = 0;
+    var z: number | string = 0;
     while(b) {
         var y:number = z;
         if (b) { z = ""; continue; } // error: string !~> number

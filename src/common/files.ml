@@ -63,9 +63,10 @@ let chop_flow_ext file =
   else
     file
 
-let is_directory path =
-  try Sys.is_directory path with
-  | Sys_error _ -> false
+(* Every <file>.js can be imported by its path, so it effectively exports a
+   module by the name <file>.js. Every <file>.js.flow shadows the corresponding
+   <file>.js, so it effectively exports a module by the name <file>.js. *)
+let eponymous_module file = Modulename.Filename (chop_flow_ext file)
 
 let is_prefix prefix =
   let prefix_with_sep =
@@ -123,7 +124,7 @@ let is_node_module options path = List.mem (Filename.basename path) options.node
 
 let is_flow_file ~options =
   let is_valid_path = is_valid_path ~options in
-  (fun path -> is_valid_path path && not (is_directory path))
+  (fun path -> is_valid_path path && not (Disk.is_directory path))
 
 (* TODO: use Unix.realpath from OCaml 4.13+ *)
 let realpath_ path =

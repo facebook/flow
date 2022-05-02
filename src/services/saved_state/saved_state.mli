@@ -6,7 +6,7 @@
  *)
 
 type denormalized_file_data = {
-  resolved_requires: Module_heaps.resolved_requires;
+  resolved_requires: Parsing_heaps.resolved_requires;
   exports: Exports.t;
   hash: Xx.hash;
 }
@@ -16,7 +16,6 @@ type normalized_file_data
 type parsed_file_data = {
   module_name: string option;
   normalized_file_data: normalized_file_data;
-  sig_hash: Xx.hash option;
 }
 
 type unparsed_file_data = {

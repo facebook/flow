@@ -61,13 +61,13 @@ module type CONNECTION = sig
      * connection to reading from and writing to the fds *)
     ((unit -> unit) * t) Lwt.t
 
-  val write : msg:out_message -> t -> unit
+  val write : msg:out_message -> t -> bool
 
-  val write_and_close : msg:out_message -> t -> unit
+  val write_and_close : msg:out_message -> t -> bool
 
   val close_immediately : t -> unit Lwt.t
 
-  val flush_and_close : t -> unit Lwt.t
+  val try_flush_and_close : t -> unit Lwt.t
 
   val is_closed : t -> bool
 
@@ -91,7 +91,12 @@ module Make (ConnectionProcessor : CONNECTION_PROCESSOR) :
     wait_for_closed_thread: unit Lwt.t;
   }
 
-  let send_command conn command = conn.push_to_stream (Some command)
+  let send_command conn command =
+    try
+      conn.push_to_stream (Some command);
+      true
+    with
+    | Lwt_stream.Closed -> false
 
   let close_stream conn =
     try conn.push_to_stream None with
@@ -100,8 +105,9 @@ module Make (ConnectionProcessor : CONNECTION_PROCESSOR) :
   let write ~msg conn = send_command conn (Write msg)
 
   let write_and_close ~msg conn =
-    send_command conn (WriteAndClose msg);
-    close_stream conn
+    let result = send_command conn (WriteAndClose msg) in
+    close_stream conn;
+    result
 
   (* Doesn't actually close the file descriptors, but does stop all the loops and streams *)
   let stop_everything conn =
@@ -122,12 +128,22 @@ module Make (ConnectionProcessor : CONNECTION_PROCESSOR) :
       let%lwt _size = Marshal_tools_lwt.to_fd_with_preamble conn.out_fd msg in
       close_immediately conn
 
-  (* Write everything available in the stream and then close the connection *)
-  let flush_and_close conn =
+  (** Attempts to write everything available in the stream and then close the connection,
+      but it's ok if we can't write because the socket is already closed. *)
+  let try_flush_and_close conn =
     stop_everything conn;
-    close_stream conn;
     let%lwt () =
-      Lwt_list.iter_s (handle_command conn) (Lwt_stream.get_available conn.command_stream)
+      try%lwt
+        Lwt_list.iter_s (handle_command conn) (Lwt_stream.get_available conn.command_stream)
+      with
+      | Unix.Unix_error (Unix.EBADF, _, _)
+      | Unix.Unix_error (Unix.EPIPE, _, _) ->
+        (* connection already closed, ignore *)
+        Lwt.return_unit
+      | exn ->
+        let exn = Exception.wrap exn in
+        let%lwt () = conn.close () in
+        Exception.reraise exn
     in
     conn.close ()
 

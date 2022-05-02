@@ -10,6 +10,7 @@ module FreeVars = struct
     is_toplevel: bool;
     skip: ISet.t;
   }
+  [@@warning "-69"]
 
   let searcher =
     object
@@ -104,6 +105,27 @@ module Simplify = struct
   class comparator_base =
     object
       inherit [unit] Ty.comparator_ty as super
+
+      method! on_aloc _env loc1 loc2 =
+        (* This comparator uses [ALoc.quick_compare] instead of the default
+         * [ALoc.compare]. The latter may throw "Unable to compare a keyed
+         * location with a concrete one" exceptions, which, despite being rare,
+         * are typically hard to address. The tradeoff here is that we're giving
+         * up some completeness in the case where a concrete location is compared
+         * against an abstract one and the two locations correspond to the same
+         * source location. This case is exercised in tests/type_at_pos_comp_concr_loc_to_aloc.
+         * This test causes a type to be compared with itself through a cyclic
+         * dependency.
+         *
+         * NOTE: completeness can be recovered if the caller to the comparator
+         * transform all locations to concrete (or abstract) before running the
+         * comparison.
+         *)
+        let n = ALoc.quick_compare loc1 loc2 in
+        if n = 0 then
+          ()
+        else
+          raise (Ty.Difference n)
 
       method! on_symbol env name1 name2 =
         let open Ty_symbol in

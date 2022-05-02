@@ -2,6 +2,7 @@
 
 interface Foo {
   bar: string,
+  /** @deprecated */
   baz: string,
 }
 

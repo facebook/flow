@@ -9,8 +9,16 @@
       "message":"Unexpected token `{`, expected the token `:`"
     },
     {
+      "loc":{"source":null,"start":{"line":1,"column":29},"end":{"line":1,"column":30}},
+      "message":"Unexpected token `{`, expected the token `,`"
+    },
+    {
+      "loc":{"source":null,"start":{"line":1,"column":29},"end":{"line":1,"column":30}},
+      "message":"Unexpected token `{`, expected an identifier"
+    },
+    {
       "loc":{"source":null,"start":{"line":1,"column":30},"end":{"line":1,"column":31}},
-      "message":"Unexpected token `}`"
+      "message":"Unexpected token `}`, expected the token `:`"
     }
   ],
   "type":"Program",
@@ -38,8 +46,8 @@
         "properties":[
           {
             "type":"ObjectTypeProperty",
-            "loc":{"source":null,"start":{"line":1,"column":27},"end":{"line":1,"column":30}},
-            "range":[27,30],
+            "loc":{"source":null,"start":{"line":1,"column":27},"end":{"line":1,"column":28}},
+            "range":[27,28],
             "key":{
               "type":"Identifier",
               "loc":{"source":null,"start":{"line":1,"column":27},"end":{"line":1,"column":28}},
@@ -50,8 +58,32 @@
             },
             "value":{
               "type":"AnyTypeAnnotation",
-              "loc":{"source":null,"start":{"line":1,"column":30},"end":{"line":1,"column":31}},
-              "range":[30,31]
+              "loc":{"source":null,"start":{"line":1,"column":27},"end":{"line":1,"column":28}},
+              "range":[27,28]
+            },
+            "method":false,
+            "optional":false,
+            "static":false,
+            "proto":false,
+            "variance":null,
+            "kind":"init"
+          },
+          {
+            "type":"ObjectTypeProperty",
+            "loc":{"source":null,"start":{"line":1,"column":29},"end":{"line":1,"column":30}},
+            "range":[29,30],
+            "key":{
+              "type":"Identifier",
+              "loc":{"source":null,"start":{"line":1,"column":29},"end":{"line":1,"column":30}},
+              "range":[29,30],
+              "name":"",
+              "typeAnnotation":null,
+              "optional":false
+            },
+            "value":{
+              "type":"AnyTypeAnnotation",
+              "loc":{"source":null,"start":{"line":1,"column":29},"end":{"line":1,"column":30}},
+              "range":[29,30]
             },
             "method":false,
             "optional":false,

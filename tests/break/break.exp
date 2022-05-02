@@ -229,9 +229,9 @@ Cannot assign `z` to `y` because string [1] is incompatible with number [2]. [in
                               ^
 
 References:
-   break.js:47:22
-   47|         if (b) { z = ""; continue; } // error: string !~> number
-                            ^^ [1]
+   break.js:44:21
+   44|     var z: number | string = 0;
+                           ^^^^^^ [1]
    break.js:46:15
    46|         var y:number = z;
                      ^^^^^^ [2]
@@ -246,9 +246,9 @@ Cannot assign `z` to `w` because string [1] is incompatible with number [2]. [in
                           ^
 
 References:
-   break.js:47:22
-   47|         if (b) { z = ""; continue; } // error: string !~> number
-                            ^^ [1]
+   break.js:44:21
+   44|     var z: number | string = 0;
+                           ^^^^^^ [1]
    break.js:50:11
    50|     var w:number = z; // error: string !~> number
                  ^^^^^^ [2]

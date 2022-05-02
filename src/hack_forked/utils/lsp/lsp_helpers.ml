@@ -286,6 +286,11 @@ let supports_snippets (p : Lsp.Initialize.params) : bool =
   let open Lsp.CompletionClientCapabilities in
   p.client_capabilities.textDocument.completion.completionItem.snippetSupport
 
+let supports_tags (p : Lsp.Initialize.params) (tag : Lsp.CompletionItemTag.t) =
+  let open Lsp.Initialize in
+  let open Lsp.CompletionClientCapabilities in
+  List.mem tag p.client_capabilities.textDocument.completion.completionItem.tagSupport.valueSet
+
 let supports_preselect (p : Lsp.Initialize.params) : bool =
   let open Lsp.Initialize in
   let open Lsp.CompletionClientCapabilities in

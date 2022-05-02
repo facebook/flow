@@ -11,7 +11,7 @@ type kind =
   | Var
   | Let
   | Const
-  | Type
+  | Type of { imported: bool }
   | Enum
   | Function
   | Class
@@ -19,7 +19,7 @@ type kind =
   | Parameter
   | CatchParameter
   | Import
-  | DeclaredFunction
+  | DeclaredFunction of { predicate: bool }
 [@@deriving show]
 
 type 'loc t

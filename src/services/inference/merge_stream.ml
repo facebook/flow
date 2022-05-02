@@ -43,7 +43,6 @@ type node = {
   (* the number of leaders this node is currently blocking on *)
   mutable blocking: int;
   mutable recheck: bool;
-  has_old_state: bool;
   size: int;
 }
 
@@ -63,6 +62,7 @@ type 'a t = {
   mutable skipped_files: int;
   mutable new_or_changed_files: FilenameSet.t;
 }
+[@@warning "-69"]
 
 let add_ready node stream =
   assert (node.blocking = 0);
@@ -92,28 +92,18 @@ let bucket_size stream =
 
 let is_done stream = stream.blocked_components = 0
 
-let create ~num_workers ~reader ~sig_dependency_graph ~leader_map ~component_map ~recheck_leader_set
-    =
+let create ~num_workers ~sig_dependency_graph ~leader_map ~component_map ~recheck_leader_set =
   (* create node for each component *)
   let graph =
     FilenameMap.mapi
       (fun leader component ->
-        (* This runs after we have oldified the files to be merged, so we have to check if there
-         * is an old version of the state to get useful results. We check for the old leader state
-         * instead of sig context because new check mode does not store sig contexts, but both modes
-         * store leader information during merge. *)
-        let has_old_state = Context_heaps.Mutator_reader.leader_mem_old ~reader leader in
-        (* If this node has no old state, we need to force it to be merged. This can happen
-         * when we load sig hashes from the saved state. *)
-        let recheck = FilenameSet.mem leader recheck_leader_set || not has_old_state in
         {
           component;
           (* computed later *)
           dependents = FilenameMap.empty;
           (* computed later *)
           blocking = 0;
-          recheck;
-          has_old_state;
+          recheck = FilenameSet.mem leader recheck_leader_set;
           size = Nel.length component;
         })
       component_map
@@ -180,7 +170,7 @@ let update_server_status stream =
       Merging_progress { finished = stream.merged_files; total = Some stream.total_files }
     )
   in
-  MonitorRPC.status_update status
+  MonitorRPC.status_update ~event:status
 
 let next stream =
   let rec take acc n =
@@ -209,7 +199,7 @@ let merge ~master_mutator stream =
     node.component
     |> Nel.to_list
     |> FilenameSet.of_list
-    |> Context_heaps.Merge_context_mutator.revive_files master_mutator
+    |> Parsing_heaps.Merge_context_mutator.revive_files master_mutator
   in
   let mark_new_or_changed node =
     stream.new_or_changed_files <-
@@ -223,27 +213,9 @@ let merge ~master_mutator stream =
     stream.merged_components <- stream.merged_components + 1;
     stream.merged_files <- stream.merged_files + node.size;
     if diff then
-      (* If the new sighash is different from the old one, mark the component as new or changed.
-       * This gets used downstream to drive recheck opts for the check phase. *)
       mark_new_or_changed node
-    else if node.has_old_state then
-      (* If the new sighash is the same as the old one, AND there was previously a sig cx for
-       * this component, then revive it, since the newly computed sig cx was not written (see
-       * Context_heaps.add_merge_on_diff). *)
-      revive node
     else
-      (* Otherwise, there was no difference in sighash between the new and old, AND there was no
-       * old sig cx. This only happens when we load sighashes from the saved state, so we have the
-       * old sighash but not the old sig context. In this case, we write the new sig context (again,
-       * see Context_heaps.add_merge_on_diff), but if we called `revive` here it would get deleted,
-       * since there is no old one to revive.
-       *
-       * We also don't want to mark this as new or changed, since it's really neither. We leave it
-       * out of that set in order to allow recheck opts to fire in the check phase.
-       *
-       * This else branch could be omitted; it's just a vessel for this comment.
-       *)
-      ();
+      revive node;
     FilenameMap.iter (fun _ node -> unblock diff node) node.dependents
   and unblock diff node =
     (* dependent blocked on one less *)

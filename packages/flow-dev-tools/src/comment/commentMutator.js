@@ -154,7 +154,9 @@ function expandComment(
 }
 
 function findStartOfLine(contents: Buffer, startOffset: number): number {
-  let start = startOffset;
+  // if startOffset is already a newline, that's not the start of the line,
+  // it's the end of the line. so start from the character before.
+  let start = startOffset - 1;
   while (start >= 0 && !bufferCharAt(contents, start).match(newlineRegex)) {
     start--;
   }

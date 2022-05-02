@@ -216,12 +216,15 @@ let from_of_source ~options ~reader ~src_dir source =
   | Export_index.Global -> None
   | Export_index.Builtin from -> Some from
   | Export_index.File_key from ->
-    (match Parsing_heaps.Reader.get_file_addr ~reader from with
+    (match Parsing_heaps.get_file_addr from with
     | None -> None
     | Some addr ->
-      let module_name = Parsing_heaps.read_module_name addr in
-      let node_resolver_dirnames = Options.file_options options |> Files.node_resolver_dirnames in
-      path_of_modulename ~node_resolver_dirnames ~reader src_dir from module_name)
+      (match Parsing_heaps.Reader.get_parse ~reader addr with
+      | None -> None
+      | Some _ ->
+        let module_name = Parsing_heaps.Reader.get_haste_name ~reader addr in
+        let node_resolver_dirnames = Options.file_options options |> Files.node_resolver_dirnames in
+        path_of_modulename ~node_resolver_dirnames ~reader src_dir from module_name))
 
 let text_edits_of_import ~options ~reader ~src_dir ~ast kind name source =
   let from = from_of_source ~options ~reader ~src_dir source in
@@ -464,7 +467,8 @@ let code_actions_of_errors ~options ~reader ~env ~ast ~diagnostics ~errors ~only
           Flow_error.msg_of_error error
           |> Error_message.map_loc_of_error_message (Parsing_heaps.Reader.loc_of_aloc ~reader)
         with
-        | Error_message.EBuiltinLookupFailed { reason; name = Some name }
+        | Error_message.EBuiltinLookupFailed
+            { reason; name = Some name; potential_generator = None }
           when Options.autoimports options ->
           let error_loc = Reason.loc_of_reason reason in
           let actions =
@@ -692,7 +696,8 @@ let autofix_imports ~options ~env ~reader ~cx ~ast ~uri =
           Flow_error.msg_of_error error
           |> Error_message.map_loc_of_error_message (Parsing_heaps.Reader.loc_of_aloc ~reader)
         with
-        | Error_message.EBuiltinLookupFailed { reason; name = Some name }
+        | Error_message.EBuiltinLookupFailed
+            { reason; name = Some name; potential_generator = None }
           when Options.autoimports options ->
           let name = Reason.display_string_of_name name in
           let error_loc = Reason.loc_of_reason reason in

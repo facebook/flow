@@ -61,7 +61,8 @@ let mk_next ~intermediate_result_callback ~max_size ~workers ~files =
   let num_workers = max 1 (Base.Option.value_map workers ~default:1 ~f:List.length) in
   let status_update () =
     MonitorRPC.status_update
-      ServerStatus.(Checking_progress { total = Some total_count; finished = !finished_count })
+      ~event:
+        ServerStatus.(Checking_progress { total = Some total_count; finished = !finished_count })
   in
   let next () =
     let (remaining_files, remaining_count) = !todo in

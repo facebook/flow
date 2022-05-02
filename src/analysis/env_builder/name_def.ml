@@ -43,14 +43,23 @@ type import =
   | Named of {
       kind: Ast.Statement.ImportDeclaration.import_kind option;
       remote: string;
+      remote_loc: ALoc.t;
+      local: string;
     }
   | Namespace
-  | Default
+  | Default of string
 
 type def =
-  | Binding of ALoc.t * binding
-  | OpAssign of ALoc.t * Ast.Expression.Assignment.operator * (ALoc.t, ALoc.t) Ast.Expression.t
-  | Update of ALoc.t * Ast.Expression.Update.operator
+  | Binding of binding
+  | OpAssign of {
+      exp_loc: ALoc.t;
+      op: Ast.Expression.Assignment.operator;
+      rhs: (ALoc.t, ALoc.t) Ast.Expression.t;
+    }
+  | Update of {
+      exp_loc: ALoc.t;
+      op: Ast.Expression.Update.operator;
+    }
   | Function of {
       fully_annotated: bool;
       function_: (ALoc.t, ALoc.t) Ast.Function.t;
@@ -58,17 +67,19 @@ type def =
   | Class of {
       fully_annotated: bool;
       class_: (ALoc.t, ALoc.t) Ast.Class.t;
+      class_loc: ALoc.t;
     }
-  | DeclaredClass of (ALoc.t, ALoc.t) Ast.Statement.DeclareClass.t
-  | TypeAlias of (ALoc.t, ALoc.t) Ast.Statement.TypeAlias.t
-  | OpaqueType of (ALoc.t, ALoc.t) Ast.Statement.OpaqueType.t
+  | DeclaredClass of ALoc.t * (ALoc.t, ALoc.t) Ast.Statement.DeclareClass.t
+  | TypeAlias of ALoc.t * (ALoc.t, ALoc.t) Ast.Statement.TypeAlias.t
+  | OpaqueType of ALoc.t * (ALoc.t, ALoc.t) Ast.Statement.OpaqueType.t
   | TypeParam of (ALoc.t, ALoc.t) Ast.Type.TypeParam.t
-  | Interface of (ALoc.t, ALoc.t) Ast.Statement.Interface.t
+  | Interface of ALoc.t * (ALoc.t, ALoc.t) Ast.Statement.Interface.t
   | Enum of ALoc.t Ast.Statement.EnumDeclaration.body
   | Import of {
       import_kind: Ast.Statement.ImportDeclaration.import_kind;
       import: import;
       source: string;
+      source_loc: ALoc.t;
     }
 
 type map = (def * ALoc.t virtual_reason) ALocMap.t
@@ -115,7 +126,7 @@ module Destructure = struct
     | Property.Literal (_, _) -> (acc, xs, false)
 
   let identifier ~f acc (name_loc, { Ast.Identifier.name; _ }) =
-    f name_loc (mk_reason (RIdentifier (OrdinaryName name)) name_loc) (Binding (name_loc, acc))
+    f name_loc (mk_reason (RIdentifier (OrdinaryName name)) name_loc) (Binding acc)
 
   let rec pattern ~f acc (_, p) =
     match p with
@@ -169,7 +180,7 @@ let func_is_annotated { Ast.Function.return; _ } =
 let def_of_function function_ =
   Function { fully_annotated = func_is_annotated function_; function_ }
 
-let def_of_class ({ Ast.Class.body = (_, { Ast.Class.Body.body; _ }); _ } as class_) =
+let def_of_class loc ({ Ast.Class.body = (_, { Ast.Class.Body.body; _ }); _ } as class_) =
   let open Ast.Class.Body in
   let fully_annotated =
     Base.List.for_all
@@ -208,7 +219,7 @@ let def_of_class ({ Ast.Class.body = (_, { Ast.Class.Body.body; _ }); _ } as cla
         | PrivateField (_, { Ast.Class.PrivateField.annot = Ast.Type.Missing _; _ }) -> false)
       body
   in
-  Class { fully_annotated; class_ }
+  Class { fully_annotated; class_; class_loc = loc }
 
 class def_finder =
   object (this)
@@ -234,7 +245,7 @@ class def_finder =
       this#add_binding
         id_loc
         (mk_reason (RIdentifier (OrdinaryName name)) id_loc)
-        (Binding (id_loc, Root (Annotation annot)));
+        (Binding (Root (Annotation annot)));
       super#declare_variable loc decl
 
     method! function_param (param : ('loc, 'loc) Ast.Function.Param.t) =
@@ -264,16 +275,27 @@ class def_finder =
       Destructure.pattern ~f:this#add_binding (Root Catch) pat;
       super#catch_clause_pattern pat
 
-    method! function_ loc expr =
+    method! function_expression loc expr =
       let open Ast.Function in
-      let { id; async; generator; _ } = expr in
+      let { id; async; generator; sig_loc; _ } = expr in
       begin
         match id with
         | Some (id_loc, _) ->
-          this#add_binding id_loc (func_reason ~async ~generator loc) (def_of_function expr)
+          this#add_binding id_loc (func_reason ~async ~generator sig_loc) (def_of_function expr)
         | None -> ()
       end;
-      super#function_ loc expr
+      super#function_expression loc expr
+
+    method! function_declaration loc expr =
+      let open Ast.Function in
+      let { id; async; generator; sig_loc; _ } = expr in
+      begin
+        match id with
+        | Some (id_loc, _) ->
+          this#add_binding id_loc (func_reason ~async ~generator sig_loc) (def_of_function expr)
+        | None -> ()
+      end;
+      super#function_expression loc expr
 
     method! class_ loc expr =
       let open Ast.Class in
@@ -281,10 +303,9 @@ class def_finder =
       begin
         match id with
         | Some (id_loc, { Ast.Identifier.name; _ }) ->
-          this#add_binding
-            id_loc
-            (mk_reason (RClass (RIdentifier (OrdinaryName name))) loc)
-            (def_of_class expr)
+          let name = OrdinaryName name in
+          let reason = mk_reason (RType name) id_loc in
+          this#add_binding id_loc reason (def_of_class loc expr)
         | None -> ()
       end;
       super#class_ loc expr
@@ -300,7 +321,7 @@ class def_finder =
         this#add_binding
           id_loc
           (func_reason ~async:false ~generator:false loc)
-          (Binding (id_loc, Root (Annotation annot)));
+          (Binding (Root (Annotation annot)));
         super#declare_function loc decl
 
     method! declare_class loc (decl : ('loc, 'loc) Ast.Statement.DeclareClass.t) =
@@ -309,7 +330,7 @@ class def_finder =
       this#add_binding
         id_loc
         (mk_reason (RClass (RIdentifier (OrdinaryName name))) loc)
-        (DeclaredClass decl);
+        (DeclaredClass (loc, decl));
       super#declare_class loc decl
 
     method! assignment loc (expr : ('loc, 'loc) Ast.Expression.Assignment.t) =
@@ -325,7 +346,7 @@ class def_finder =
           this#add_binding
             id_loc
             (mk_reason (RIdentifier (OrdinaryName name)) id_loc)
-            (OpAssign (id_loc, operator, right))
+            (OpAssign { exp_loc = loc; op = operator; rhs = right })
         | _ -> ()
       in
       super#assignment loc expr
@@ -339,7 +360,7 @@ class def_finder =
           this#add_binding
             id_loc
             (mk_reason (RIdentifier (OrdinaryName name)) id_loc)
-            (Update (id_loc, operator))
+            (Update { exp_loc = loc; op = operator })
         | _ -> ()
       end;
       super#update_expression loc expr
@@ -396,13 +417,13 @@ class def_finder =
     method! type_alias loc (alias : ('loc, 'loc) Ast.Statement.TypeAlias.t) =
       let open Ast.Statement.TypeAlias in
       let { id = (id_loc, { Ast.Identifier.name; _ }); _ } = alias in
-      this#add_binding id_loc (mk_reason (RType (OrdinaryName name)) id_loc) (TypeAlias alias);
+      this#add_binding id_loc (mk_reason (RType (OrdinaryName name)) id_loc) (TypeAlias (loc, alias));
       super#type_alias loc alias
 
     method! opaque_type loc (otype : ('loc, 'loc) Ast.Statement.OpaqueType.t) =
       let open Ast.Statement.OpaqueType in
       let { id = (id_loc, { Ast.Identifier.name; _ }); _ } = otype in
-      this#add_binding id_loc (mk_reason (ROpaqueType name) id_loc) (OpaqueType otype);
+      this#add_binding id_loc (mk_reason (ROpaqueType name) id_loc) (OpaqueType (loc, otype));
       super#opaque_type loc otype
 
     method! type_param (tparam : ('loc, 'loc) Ast.Type.TypeParam.t) =
@@ -414,7 +435,7 @@ class def_finder =
     method! interface loc (interface : ('loc, 'loc) Ast.Statement.Interface.t) =
       let open Ast.Statement.Interface in
       let { id = (name_loc, _); _ } = interface in
-      this#add_binding name_loc (mk_reason RInterfaceType loc) (Interface interface);
+      this#add_binding name_loc (mk_reason RInterfaceType loc) (Interface (loc, interface));
       super#interface loc interface
 
     method! enum_declaration loc (enum : ('loc, 'loc) Ast.Statement.EnumDeclaration.t) =
@@ -427,7 +448,7 @@ class def_finder =
       let open Ast.Statement.ImportDeclaration in
       let {
         import_kind;
-        source = (_, { Ast.StringLiteral.value = source; _ });
+        source = (source_loc, { Ast.StringLiteral.value = source; _ });
         specifiers;
         default;
         comments = _;
@@ -447,28 +468,39 @@ class def_finder =
               in
               this#add_binding
                 id_loc
-                (mk_reason (RIdentifier (OrdinaryName name)) id_loc)
-                (Import { import_kind; source; import = Named { kind; remote } }))
+                (mk_reason (RNamedImportedType (source, name)) rem_id_loc)
+                (Import
+                   {
+                     import_kind;
+                     source;
+                     source_loc;
+                     import = Named { kind; remote; remote_loc = rem_id_loc; local = name };
+                   }
+                ))
             specifiers
         | Some (ImportNamespaceSpecifier (_, (id_loc, { Ast.Identifier.name; _ }))) ->
+          let import_reason =
+            let import_reason_desc =
+              match import_kind with
+              | ImportType -> RImportStarType name
+              | ImportTypeof -> RImportStarTypeOf name
+              | ImportValue -> RImportStar name
+            in
+            mk_reason import_reason_desc id_loc
+          in
           this#add_binding
             id_loc
-            (mk_reason (RIdentifier (OrdinaryName name)) loc)
-            (Import { import_kind; source; import = Namespace })
+            import_reason
+            (Import { import_kind; source; source_loc; import = Namespace })
         | None -> ()
       end;
       Base.Option.iter
         ~f:(fun (id_loc, { Ast.Identifier.name; _ }) ->
-          let desc =
-            match import_kind with
-            | ImportType -> RImportStarType name
-            | ImportTypeof -> RImportStarTypeOf name
-            | ImportValue -> RImportStar name
-          in
+          let import_reason = mk_reason (RDefaultImportedType (name, source)) id_loc in
           this#add_binding
             id_loc
-            (mk_reason desc id_loc)
-            (Import { import_kind; source; import = Default }))
+            import_reason
+            (Import { import_kind; source; source_loc; import = Default name }))
         default;
       super#import_declaration loc decl
   end

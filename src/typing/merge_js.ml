@@ -36,6 +36,28 @@ module ImplicitInstantiationKit : Implicit_instantiation.KIT = Implicit_instanti
       )
 end)
 
+let create_cx_with_context_optimizer init_cx master_cx ~reducer ~f =
+  let file = Context.file init_cx in
+  let metadata = Context.metadata init_cx in
+  let aloc_table = Utils_js.FilenameMap.find file (Context.aloc_tables init_cx) in
+  let module_ref = Files.module_ref file in
+  let ccx = Context.make_ccx master_cx in
+  let res = f () in
+  Context.merge_into
+    ccx
+    {
+      Type.TypeContext.graph = reducer#get_reduced_graph;
+      trust_graph = reducer#get_reduced_trust_graph;
+      property_maps = reducer#get_reduced_property_maps;
+      call_props = reducer#get_reduced_call_props;
+      export_maps = reducer#get_reduced_export_maps;
+      evaluated = reducer#get_reduced_evaluated;
+    };
+  let cx =
+    Context.make ccx metadata file aloc_table (Reason.OrdinaryName module_ref) Context.PostInference
+  in
+  (cx, res)
+
 let detect_sketchy_null_checks cx master_cx =
   let add_error ~loc ~null_loc kind falsy_loc =
     Error_message.ESketchyNullLint { kind; loc; null_loc; falsy_loc } |> Flow_js.add_output cx
@@ -70,13 +92,7 @@ let detect_sketchy_null_checks cx master_cx =
     let open Loc_collections in
     let open ExistsCheck in
     let checks = Context.exists_checks cx in
-    if not @@ ALocMap.is_empty checks then (
-      let file = Context.file cx in
-      let metadata = Context.metadata cx in
-      let aloc_table = Utils_js.FilenameMap.find file (Context.aloc_tables cx) in
-      let module_ref = Files.module_ref file in
-      let ccx = Context.make_ccx master_cx in
-
+    if not @@ ALocMap.is_empty checks then
       let reducer =
         object
           inherit
@@ -101,26 +117,11 @@ let detect_sketchy_null_checks cx master_cx =
             | _ -> super#type_ cx pole t
         end
       in
-      let checks = ALocMap.map (Type.TypeSet.map (reducer#type_ cx Polarity.Neutral)) checks in
-      Context.merge_into
-        ccx
-        {
-          Type.TypeContext.graph = reducer#get_reduced_graph;
-          trust_graph = reducer#get_reduced_trust_graph;
-          property_maps = reducer#get_reduced_property_maps;
-          call_props = reducer#get_reduced_call_props;
-          export_maps = reducer#get_reduced_export_maps;
-          evaluated = reducer#get_reduced_evaluated;
-        };
 
-      let cx =
-        Context.make
-          ccx
-          metadata
-          file
-          aloc_table
-          (Reason.OrdinaryName module_ref)
-          Context.PostInference
+      let (cx, checks) =
+        create_cx_with_context_optimizer cx master_cx ~reducer ~f:(fun () ->
+            ALocMap.map (Type.TypeSet.map (reducer#type_ cx Polarity.Neutral)) checks
+        )
       in
 
       let rec make_checks seen cur_checks loc t =
@@ -191,7 +192,7 @@ let detect_sketchy_null_checks cx master_cx =
           Type.TypeSet.fold (fun t acc -> make_checks ISet.empty acc loc t) tset acc)
         checks
         ALocMap.empty
-    ) else
+    else
       ALocMap.empty
   in
 
@@ -390,12 +391,9 @@ let detect_matching_props_violations cx =
     List.iter
       (fun (prop_name, other_loc, obj_loc) ->
         let env = Context.environment cx in
-        let other_t_opt = Loc_env.find_write env other_loc in
-        let obj_t_opt = Loc_env.find_write env obj_loc in
-        match (other_t_opt, obj_t_opt) with
-        | (Some other_t, Some obj_t) ->
-          step (TypeUtil.reason_of_t other_t, prop_name, other_t, obj_t)
-        | _ -> failwith "Missing typing information for matching props test.")
+        let other_t = Base.Option.value_exn (Loc_env.find_write env other_loc) in
+        let obj_t = New_env.New_env.provider_type_for_def_loc env obj_loc in
+        step (TypeUtil.reason_of_t other_t, prop_name, other_t, obj_t))
       matching_props
   | _ ->
     let matching_props = Context.matching_props cx in
@@ -404,14 +402,15 @@ let detect_matching_props_violations cx =
 let detect_literal_subtypes =
   let lb_visitor = new resolver_visitor in
   let ub_visitor =
+    let open Type in
+    let rec unwrap = function
+      | GenericT { bound; _ } -> unwrap bound
+      | t -> t
+    in
     object (_self)
       inherit resolver_visitor as super
 
-      method! type_ cx map_cx t =
-        let open Type in
-        match super#type_ cx map_cx t with
-        | GenericT { bound; _ } -> bound
-        | t -> t
+      method! type_ cx map_cx t = t |> super#type_ cx map_cx |> unwrap
     end
   in
   fun cx ->
@@ -453,12 +452,6 @@ let detect_literal_subtypes =
 let check_constrained_writes init_cx master_cx =
   let checks = Context.constrained_writes init_cx in
   if not @@ Base.List.is_empty checks then (
-    let file = Context.file init_cx in
-    let metadata = Context.metadata init_cx in
-    let aloc_table = Utils_js.FilenameMap.find file (Context.aloc_tables init_cx) in
-    let module_ref = Files.module_ref file in
-    let ccx = Context.make_ccx master_cx in
-
     let reducer =
       let mk_reason =
         let open Reason in
@@ -478,33 +471,15 @@ let check_constrained_writes init_cx master_cx =
           Type.EmptyT.make (mk_reason r) (Type.bogus_trust ())
       )
     in
-    let checks =
-      Base.List.map
-        ~f:(fun (t, u) ->
-          let t = reducer#type_ init_cx Polarity.Neutral t in
-          let u = reducer#use_type init_cx Polarity.Neutral u in
-          (t, u))
-        checks
-    in
-    Context.merge_into
-      ccx
-      {
-        Type.TypeContext.graph = reducer#get_reduced_graph;
-        trust_graph = reducer#get_reduced_trust_graph;
-        property_maps = reducer#get_reduced_property_maps;
-        call_props = reducer#get_reduced_call_props;
-        export_maps = reducer#get_reduced_export_maps;
-        evaluated = reducer#get_reduced_evaluated;
-      };
-
-    let cx =
-      Context.make
-        ccx
-        metadata
-        file
-        aloc_table
-        (Reason.OrdinaryName module_ref)
-        Context.PostInference
+    let (cx, checks) =
+      create_cx_with_context_optimizer init_cx master_cx ~reducer ~f:(fun () ->
+          Base.List.map
+            ~f:(fun (t, u) ->
+              let t = reducer#type_ init_cx Polarity.Neutral t in
+              let u = reducer#use_type init_cx Polarity.Neutral u in
+              (t, u))
+            checks
+      )
     in
     Base.List.iter ~f:(Flow_js.flow cx) checks;
 
@@ -531,6 +506,7 @@ let get_lint_severities metadata strict_mode lint_severities =
  *)
 let post_merge_checks cx master_cx ast tast metadata file_sig =
   let results = [(cx, ast, tast)] in
+  check_constrained_writes cx master_cx;
   detect_sketchy_null_checks cx master_cx;
   detect_non_voidable_properties cx;
   check_implicit_instantiations cx master_cx;
@@ -541,8 +517,7 @@ let post_merge_checks cx master_cx ast tast metadata file_sig =
   detect_es6_import_export_errors cx metadata results;
   detect_escaped_generics results;
   detect_matching_props_violations cx;
-  detect_literal_subtypes cx;
-  check_constrained_writes cx master_cx
+  detect_literal_subtypes cx
 
 let optimize_builtins cx =
   let reducer =
@@ -553,7 +528,9 @@ let optimize_builtins cx =
   let on_missing name t =
     let reason = TypeUtil.reason_of_t t in
     Flow_js.flow_t cx (Type.AnyT (reason, Type.AnyError (Some Type.UnresolvedName)), t);
-    Flow_js.add_output cx (Error_message.EBuiltinLookupFailed { reason; name = Some name })
+    Flow_js.add_output
+      cx
+      (Error_message.EBuiltinLookupFailed { reason; name = Some name; potential_generator = None })
   in
   Builtins.optimize_entries builtins ~on_missing ~optimize:(reducer#type_ cx Polarity.Neutral);
   Context.set_graph cx reducer#get_reduced_graph;

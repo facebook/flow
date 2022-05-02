@@ -64,7 +64,7 @@ and reason_of_use_t = function
   | AssertIterableT { reason; _ } -> reason
   | AssertImportIsValueT (reason, _) -> reason
   | BecomeT { reason; _ } -> reason
-  | BindT (_, reason, _, _) -> reason
+  | BindT (_, reason, _) -> reason
   | CallElemT (reason, _, _, _) -> reason
   | CallLatentPredT (reason, _, _, _, _) -> reason
   | CallOpenPredT (reason, _, _, _, _) -> reason
@@ -91,7 +91,7 @@ and reason_of_use_t = function
   | GetElemT (_, reason, _, _) -> reason
   | GetKeysT (reason, _) -> reason
   | GetValuesT (reason, _) -> reason
-  | GetPropT (_, reason, _, _) -> reason
+  | GetPropT (_, reason, _, _, _) -> reason
   | GetPrivatePropT (_, reason, _, _, _, _) -> reason
   | GetProtoT (reason, _) -> reason
   | GetStaticsT (reason, _) -> reason
@@ -231,7 +231,7 @@ and mod_reason_of_use_t f = function
     AssertIterableT { contents with reason = f reason }
   | AssertImportIsValueT (reason, name) -> AssertImportIsValueT (f reason, name)
   | BecomeT { reason; t; empty_success } -> BecomeT { reason = f reason; t; empty_success }
-  | BindT (use_op, reason, ft, pass) -> BindT (use_op, f reason, ft, pass)
+  | BindT (use_op, reason, ft) -> BindT (use_op, f reason, ft)
   | CallElemT (reason_call, reason_lookup, t, ft) -> CallElemT (f reason_call, reason_lookup, t, ft)
   | CallLatentPredT (reason, b, k, l, t) -> CallLatentPredT (f reason, b, k, l, t)
   | CallOpenPredT (reason, sense, key, l, t) -> CallOpenPredT (f reason, sense, key, l, t)
@@ -266,7 +266,7 @@ and mod_reason_of_use_t f = function
   | GetElemT (use_op, reason, it, et) -> GetElemT (use_op, f reason, it, et)
   | GetKeysT (reason, t) -> GetKeysT (f reason, t)
   | GetValuesT (reason, t) -> GetValuesT (f reason, t)
-  | GetPropT (use_op, reason, n, t) -> GetPropT (use_op, f reason, n, t)
+  | GetPropT (use_op, reason, id, n, t) -> GetPropT (use_op, f reason, id, n, t)
   | GetPrivatePropT (use_op, reason, name, bindings, static, t) ->
     GetPrivatePropT (use_op, f reason, name, bindings, static, t)
   | GetProtoT (reason, t) -> GetProtoT (f reason, t)
@@ -359,7 +359,7 @@ and mod_reason_of_opt_use_t f = function
     OptMethodT (op, f r1, r2, ref, action, prop_tout)
   | OptPrivateMethodT (op, r1, r2, props, cbs, static, action, prop_tout) ->
     OptPrivateMethodT (op, f r1, r2, props, cbs, static, action, prop_tout)
-  | OptGetPropT (use_op, reason, n) -> OptGetPropT (use_op, f reason, n)
+  | OptGetPropT (use_op, reason, id, n) -> OptGetPropT (use_op, f reason, id, n)
   | OptGetPrivatePropT (use_op, reason, name, bindings, static) ->
     OptGetPrivatePropT (use_op, f reason, name, bindings, static)
   | OptTestPropT (use_op, reason, id, n) -> OptTestPropT (use_op, f reason, id, n)
@@ -378,7 +378,7 @@ let rec util_use_op_of_use_t :
   in
   match u with
   | UseT (op, t) -> util op (fun op -> UseT (op, t))
-  | BindT (op, r, f, b) -> util op (fun op -> BindT (op, r, f, b))
+  | BindT (op, r, f) -> util op (fun op -> BindT (op, r, f))
   | CallT (op, r, f) -> util op (fun op -> CallT (op, r, f))
   | MethodT (op, r1, r2, p, f, tm) -> util op (fun op -> MethodT (op, r1, r2, p, f, tm))
   | PrivateMethodT (op, r1, r2, x, c, s, a, p) ->
@@ -386,7 +386,7 @@ let rec util_use_op_of_use_t :
   | SetPropT (op, r, p, m, w, t, tp) -> util op (fun op -> SetPropT (op, r, p, m, w, t, tp))
   | SetPrivatePropT (op, r, s, m, c, b, t, tp) ->
     util op (fun op -> SetPrivatePropT (op, r, s, m, c, b, t, tp))
-  | GetPropT (op, r, p, t) -> util op (fun op -> GetPropT (op, r, p, t))
+  | GetPropT (op, r, id, p, t) -> util op (fun op -> GetPropT (op, r, id, p, t))
   | TestPropT (op, r, id, p, t) -> util op (fun op -> TestPropT (op, r, id, p, t))
   | MatchPropT (op, r, p, t) -> util op (fun op -> MatchPropT (op, r, p, t))
   | GetPrivatePropT (op, r, s, c, b, t) -> util op (fun op -> GetPrivatePropT (op, r, s, c, b, t))
@@ -521,9 +521,8 @@ let rec mod_loc_of_virtual_use_op f =
     | AssignVar { var; init } ->
       AssignVar { var = Base.Option.map ~f:mod_reason var; init = mod_reason init }
     | Cast { lower; upper } -> Cast { lower = mod_reason lower; upper = mod_reason upper }
-    | ClassExtendsCheck { def; name; extends } ->
-      ClassExtendsCheck
-        { def = mod_reason def; name = mod_reason name; extends = mod_reason extends }
+    | ClassExtendsCheck { def; extends } ->
+      ClassExtendsCheck { def = mod_reason def; extends = mod_reason extends }
     | ClassMethodDefinition { def; name } ->
       ClassMethodDefinition { def = mod_reason def; name = mod_reason name }
     | ClassImplementsCheck { def; name; implements } ->

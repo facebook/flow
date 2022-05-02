@@ -12,6 +12,69 @@ References:
            ^ [2]
 
 
+Error ------------------------------------------------------------------------- annotations_inside_destructuring.js:4:11
+
+Annotations inside of destructuring are not supported. Annotate the top-level pattern instead. For example, instead of
+the invalid `const [a: number, b: string] = ...` do `const [a, b]: [number, string] = ...`. [unsupported-syntax]
+
+   4|   const [a: boolean, b: boolean] = x; // ERROR
+                ^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------- annotations_inside_destructuring.js:4:23
+
+Annotations inside of destructuring are not supported. Annotate the top-level pattern instead. For example, instead of
+the invalid `const [a: number, b: string] = ...` do `const [a, b]: [number, string] = ...`. [unsupported-syntax]
+
+   4|   const [a: boolean, b: boolean] = x; // ERROR
+                            ^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------- annotations_inside_destructuring.js:8:14
+
+Annotations inside of destructuring are not supported. Annotate the top-level pattern instead. For example, instead of
+the invalid `const [a: number, b: string] = ...` do `const [a, b]: [number, string] = ...`. [unsupported-syntax]
+
+   8|   const {a: a: boolean, b: b: boolean} = x; // ERROR
+                   ^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------- annotations_inside_destructuring.js:8:29
+
+Annotations inside of destructuring are not supported. Annotate the top-level pattern instead. For example, instead of
+the invalid `const [a: number, b: string] = ...` do `const [a, b]: [number, string] = ...`. [unsupported-syntax]
+
+   8|   const {a: a: boolean, b: b: boolean} = x; // ERROR
+                                  ^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------ annotations_inside_destructuring.js:14:16
+
+Annotations inside of destructuring are not supported. Annotate the top-level pattern instead. For example, instead of
+the invalid `const [a: number, b: string] = ...` do `const [a, b]: [number, string] = ...`. [unsupported-syntax]
+
+   14|   const [{a, b}: {a: boolean, b: boolean}] = x; // ERROR
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------ annotations_inside_destructuring.js:20:19
+
+Annotations inside of destructuring are not supported. Annotate the top-level pattern instead. For example, instead of
+the invalid `const [a: number, b: string] = ...` do `const [a, b]: [number, string] = ...`. [unsupported-syntax]
+
+   20|   const {k: [a, b]: [boolean, boolean]} = x; // ERROR
+                         ^^^^^^^^^^^^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------ annotations_inside_destructuring.js:26:15
+
+Annotations inside of destructuring are not supported. Annotate the top-level pattern instead. For example, instead of
+the invalid `const [a: number, b: string] = ...` do `const [a, b]: [number, string] = ...`. [unsupported-syntax]
+
+   26|   const [...xs: Array<number>] = x;
+                     ^^^^^^^^^^^^^^^
+
+
 Error ------------------------------------------------------------------------------------------------ array_rest.js:7:2
 
 Cannot cast `a` to undefined because number [1] is incompatible with undefined [2]. [incompatible-cast]
@@ -928,6 +991,21 @@ References:
                           ^^^^^^^^^^ [1]
 
 
+Error -------------------------------------------------------------------------------------------- destructuring.js:45:4
+
+Cannot cast `x.baz` to string because `void` (due to access of non-existent property `baz`) [1] is incompatible with
+string [2]. [incompatible-cast]
+
+   destructuring.js:45:4
+   45|   (x.baz: string); // error, baz doesn't exist
+          ^^^^^ [1]
+
+References:
+   destructuring.js:45:11
+   45|   (x.baz: string); // error, baz doesn't exist
+                 ^^^^^^ [2]
+
+
 Error -------------------------------------------------------------------------------------------- destructuring.js:45:6
 
 Cannot get `x.baz` because property `baz` (did you mean `bar`?) is missing in object literal [1]. [prop-missing]
@@ -940,6 +1018,21 @@ References:
    destructuring.js:43:11
    43|   var x = {foo: 'abc', bar: 123};
                  ^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error -------------------------------------------------------------------------------------------- destructuring.js:46:4
+
+Cannot cast `rest.baz` to string because `void` (due to access of non-existent property `baz`) [1] is incompatible with
+string [2]. [incompatible-cast]
+
+   destructuring.js:46:4
+   46|   (rest.baz: string); // error, rest is sealed
+          ^^^^^^^^ [1]
+
+References:
+   destructuring.js:46:14
+   46|   (rest.baz: string); // error, rest is sealed
+                    ^^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------------- destructuring.js:46:9
@@ -1137,18 +1230,22 @@ References:
                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error ----------------------------------------------------------------------------- destructuring_missing_props.js:26:47
+Error ------------------------------------------------------------------------------ destructuring_missing_props.js:28:4
 
-Property `regularProp` is missing in props [1]. [prop-missing]
+Cannot cast `regularProp` to number because `void` (due to access of non-existent property `regularProp`) [1] is
+incompatible with number [2]. [incompatible-cast]
 
-   destructuring_missing_props.js:26:47
-   26| function Component({defaultProps = "default", regularProp}) { // Error, missing regularProp
-                                                     ^^^^^^^^^^^
+   destructuring_missing_props.js:28:4
+   28|   (regularProp: number);
+          ^^^^^^^^^^^
 
 References:
-   destructuring_missing_props.js:33:12
-   33| const _b = <Component />;
-                  ^^^^^^^^^^^^^ [1]
+   destructuring_missing_props.js:26:47
+   26| function Component({defaultProps = "default", regularProp}) { // Error, missing regularProp
+                                                     ^^^^^^^^^^^ [1]
+   destructuring_missing_props.js:28:17
+   28|   (regularProp: number);
+                       ^^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------- destructuring_param.js:5:17
@@ -1247,4 +1344,4 @@ References:
 
 
 
-Found 81 errors
+Found 90 errors

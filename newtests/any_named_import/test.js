@@ -42,7 +42,7 @@ module.exports = (suite(({addFile, addFiles, addCode}) => [
                 ^^^ Cannot cast \`Any\` to number because module \`any\` [1] is incompatible with number [2]. [incompatible-cast]
             References:
               3: import * as Any from "any";
-                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+                             ^^^ [1]
               5: (Any: number);
                        ^^^^^^ [2]
         `,
@@ -84,7 +84,7 @@ module.exports = (suite(({addFile, addFiles, addCode}) => [
                 ^^^ Cannot cast \`obj\` to number because module \`object\` [1] is incompatible with number [2]. [incompatible-cast]
             References:
               3: import * as obj from "object";
-                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+                             ^^^ [1]
               5: (obj: number);
                        ^^^^^^ [2]
         `,

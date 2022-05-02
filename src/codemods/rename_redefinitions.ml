@@ -260,7 +260,7 @@ let mapper cctx =
   let cx = Codemod_context.Typed.context cctx in
   let { Loc_env.var_info = { Env_api.ssa_values; _ }; _ } = Context.environment cx in
   object (this)
-    inherit [Acc.t] Codemod_ast_mapper.mapper "Rename variables" Acc.empty as super
+    inherit [Acc.t] Codemod_ast_mapper.mapper "Rename variables" ~init:Acc.empty as super
 
     val mutable renaming_map = ALocMap.empty (* Not really mutable--set in method `program` *)
 

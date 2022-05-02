@@ -18,7 +18,3 @@ foo.apply(null, args); // error
 foo.bind(null, 1, 2); // error
 foo.bind(null, ...args); // error
 foo.bind(null, 1, 2, ...args); // error
-
-new foo(1, 2); // error
-new foo(...args); // error
-new foo(1, 2, ...args); // error

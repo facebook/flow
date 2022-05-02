@@ -24,6 +24,12 @@ $ yarn build
 
 This command generates static content into the `build` directory and can be served using any static contents hosting service.
 
+We generate Flow errors by running the `flow` in your path. On CI, we need to use the locally built Flow:
+
+```
+$ PATH="/path/to/flow-bin/:$PATH" yarn build
+```
+
 ### Deployment
 
 ```

@@ -82,7 +82,9 @@ let coverage ~cx ~typed_ast ~force ~trust file content =
       (* We can't just use the docblock that parse_contents returns because parse_contents modifies
        * it and we want the original docblock. Fortunately this is a pure function, and pretty fast,
        * so recomputing it isn't a problem. *)
-      let (_, docblock) = Parsing_service_js.(parse_docblock docblock_max_tokens file content) in
+      let (_, docblock) =
+        Parsing_service_js.(parse_docblock ~max_tokens:docblock_max_tokens file content)
+      in
       Docblock.is_flow docblock
   in
   Coverage.covered_types cx ~should_check ~check_trust:trust typed_ast

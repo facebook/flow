@@ -34,10 +34,6 @@ module type S = sig
   and module_sig = {
     requires: require list;
     module_kind: module_kind;
-    (* export type {A, B as C} [from x] *)
-    type_exports_named: (string * (L.t * type_export)) list;
-    (* export type * from "foo" *)
-    type_exports_star: (L.t * export_star) list;
   }
 
   (* We track information about dependencies for each unique module reference in a
@@ -101,6 +97,7 @@ module type S = sig
          * result: loc, X *)
         typesof_ns: L.t Flow_ast_utils.ident option;
       }
+    | ExportFrom of { source: L.t Flow_ast_utils.source }
 
   and imported_locs = {
     remote_loc: L.t;
@@ -120,58 +117,11 @@ module type S = sig
    * module-style export, we switch to ES. *)
   and module_kind =
     | CommonJS of { mod_exp_loc: L.t option }
-    | ES of {
-        (* map from exported name to export data *)
-        named: (string * (L.t * export)) list;
-        (* map from module reference to location of `export *` *)
-        star: (L.t * export_star) list;
-      }
-
-  and export =
-    | ExportDefault of {
-        (* location of the `default` keyword *)
-        default_loc: L.t;
-            (** NOTE: local = Some id if and only if id introduces a local binding **)
-        (* may have local name, e.g., `export default function foo {}` *)
-        local: L.t Flow_ast_utils.ident option;
-      }
-    | ExportNamed of {
-        (* loc of remote name *)
-        loc: L.t;
-        kind: named_export_kind;
-      }
-    | ExportNs of {
-        (* loc of remote name *)
-        loc: L.t;
-        star_loc: L.t;
-        (* module reference of exported namespace *)
-        source: L.t Flow_ast_utils.source;
-      }
-
-  and named_export_kind =
-    | NamedDeclaration
-    | NamedSpecifier of {
-        (* local name, e.g., `export {foo as bar}`, `export type {T as U}` *)
-        local: L.t Flow_ast_utils.ident;
-        (* module reference for re-exports, e.g., `export {foo} from 'bar'`,`export type {T} from 'bar'` *)
-        source: L.t Flow_ast_utils.source option;
-      }
-
-  and export_star =
-    | ExportStar of {
-        star_loc: L.t;
-        source: L.t Flow_ast_utils.source;
-      }
-
-  and type_export =
-    | TypeExportNamed of {
-        (* loc of remote name *)
-        loc: L.t;
-        kind: named_export_kind;
-      }
+    | ES
   [@@deriving show]
 
   type tolerable_error =
+    | IndeterminateModuleType of L.t
     (* e.g. `module.exports.foo = 4` when not at the top level *)
     | BadExportPosition of L.t
     (* e.g. `foo(module)`, dangerous because `module` is aliased *)
@@ -179,15 +129,13 @@ module type S = sig
     | SignatureVerificationError of L.t Signature_error.t
   [@@deriving show]
 
-  type error = IndeterminateModuleType of L.t
-
   type tolerable_t = t * tolerable_error list
 
   val empty : t
 
   val default_opts : options
 
-  val program : ast:(L.t, L.t) Flow_ast.Program.t -> opts:options -> (tolerable_t, error) result
+  val program : ast:(L.t, L.t) Flow_ast.Program.t -> opts:options -> tolerable_t
 
   (* Use for debugging; not for exposing info to the end user *)
   val to_string : t -> string
@@ -199,19 +147,11 @@ module type S = sig
 
   class mapper :
     object
-      method error : error -> error
-
-      method export : string * (L.t * export) -> string * (L.t * export)
-
-      method export_star : L.t * export_star -> L.t * export_star
-
       method file_sig : t -> t
 
       method ident : L.t Flow_ast_utils.ident -> L.t Flow_ast_utils.ident
 
       method source : L.t Flow_ast_utils.source -> L.t Flow_ast_utils.source
-
-      method named_export_kind : named_export_kind -> named_export_kind
 
       method imported_locs : imported_locs -> imported_locs
 
@@ -226,7 +166,5 @@ module type S = sig
       method require_bindings : require_bindings -> require_bindings
 
       method tolerable_error : tolerable_error -> tolerable_error
-
-      method type_export : string * (L.t * type_export) -> string * (L.t * type_export)
     end
 end
