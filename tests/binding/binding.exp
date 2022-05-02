@@ -1088,5 +1088,13 @@ Cannot resolve name `unboundFunction`. [cannot-resolve-name]
        ^^^^^^^^^^^^^^^
 
 
+Error -------------------------------------------------------------------------------------------------- unbound.js:19:5
 
-Found 79 errors
+Cannot resolve name `unboundFunction2`. [cannot-resolve-name]
+
+   19|     unboundFunction2(); // Error
+           ^^^^^^^^^^^^^^^^
+
+
+
+Found 80 errors

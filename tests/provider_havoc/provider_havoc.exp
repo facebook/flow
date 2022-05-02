@@ -270,14 +270,6 @@ References:
              ^^ [3]
 
 
-Error --------------------------------------------------------------------------------------- provider_edge_cases.js:8:1
-
-Cannot resolve name `f`. [cannot-resolve-name]
-
-   8| f = function() {
-      ^
-
-
 Error --------------------------------------------------------------------------------------- provider_edge_cases.js:9:3
 
 Cannot resolve name `f`. [cannot-resolve-name]
@@ -714,7 +706,7 @@ Unreachable code. [unreachable-code]
 
 
 
-Found 29 errors
+Found 28 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

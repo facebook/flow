@@ -417,6 +417,8 @@ val set_environment : t -> Loc_env.t -> unit
 
 val clear_master_shared : t -> master_context -> unit
 
+val add_global_value_cache_entry : t -> Reason.name -> Type.t -> unit
+
 val add_env_cache_entry : t -> for_value:bool -> int -> Type.t -> unit
 
 (* Flow allows you test test if a property exists inside a conditional. However, we only wan to
@@ -510,6 +512,8 @@ val find_trust_constraints :
 val find_trust_graph : t -> Trust_constraint.ident -> Trust_constraint.constraints
 
 val find_trust_root : t -> Trust_constraint.ident -> Trust_constraint.ident * Trust_constraint.root
+
+val global_value_cache_find_opt : t -> Reason.name -> Type.t option
 
 val env_cache_find_opt : t -> for_value:bool -> int -> Type.t option
 

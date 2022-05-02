@@ -35,6 +35,8 @@ module New_env = struct
      what interface to use.*)
   module Old_env = Env.Env
 
+  let get_global_value_type = Old_env.get_global_value_type
+
   let peek_env = Old_env.peek_env
 
   let merge_env = Old_env.merge_env
@@ -293,7 +295,7 @@ module New_env = struct
                  |> Base.Option.some
                  |> type_of_state writes write_id
                | (Env_api.With_ALoc.Global name, _) ->
-                 Flow_js.get_builtin cx (Reason.OrdinaryName name) reason
+                 get_global_value_type cx (Reason.OrdinaryName name) reason
                | (Env_api.With_ALoc.This, _) ->
                  Old_env.query_var ~lookup_mode cx (Reason.InternalName "this") loc
                | (Env_api.With_ALoc.Super, _) ->
@@ -513,7 +515,7 @@ module New_env = struct
       if is_provider cx loc then
         Base.Option.iter potential_global_name ~f:(fun name ->
             let name = Reason.OrdinaryName name in
-            ignore @@ Flow_js.get_builtin cx name (mk_reason (RIdentifier name) loc)
+            ignore @@ get_global_value_type cx name (mk_reason (RIdentifier name) loc)
         )
     | _ ->
       if not (is_provider cx loc) then

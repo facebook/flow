@@ -39,6 +39,8 @@ module type S = sig
 
   val in_predicate_scope : unit -> bool
 
+  val get_global_value_type : Context.t -> Reason.name -> Reason.t -> Type.t
+
   val find_entry :
     Context.t -> Reason.name -> ?desc:Reason.reason_desc -> ALoc.t -> Scope.t * Entry.t
 

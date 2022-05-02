@@ -181,6 +181,7 @@ type component_t = {
   mutable implicit_instantiation_checks: Implicit_instantiation_check.t list;
   mutable inferred_indexers: Type.dicttype list ALocMap.t;
   mutable constrained_writes: (Type.t * Type.use_t) list;
+  mutable global_value_cache: Type.t NameUtils.Map.t;
   mutable env_value_cache: Type.t IMap.t;
   mutable env_type_cache: Type.t IMap.t;
   (* map from annot tvar ids to nodes used during annotation processing *)
@@ -327,6 +328,7 @@ let make_ccx master_cx =
     literal_subtypes = [];
     new_env_literal_subtypes = [];
     constrained_writes = [];
+    global_value_cache = NameUtils.Map.empty;
     env_value_cache = IMap.empty;
     env_type_cache = IMap.empty;
     errors = Flow_error.ErrorSet.empty;
@@ -553,6 +555,8 @@ let new_env_literal_subtypes cx = cx.ccx.new_env_literal_subtypes
 
 let constrained_writes cx = cx.ccx.constrained_writes
 
+let global_value_cache_find_opt cx name = NameUtils.Map.find_opt name cx.ccx.global_value_cache
+
 let env_cache_find_opt cx ~for_value id =
   let cache =
     if for_value then
@@ -688,6 +692,9 @@ let add_new_env_literal_subtypes cx c =
   cx.ccx.new_env_literal_subtypes <- c :: cx.ccx.new_env_literal_subtypes
 
 let add_constrained_write cx c = cx.ccx.constrained_writes <- c :: cx.ccx.constrained_writes
+
+let add_global_value_cache_entry cx name t =
+  cx.ccx.global_value_cache <- NameUtils.Map.add name t cx.ccx.global_value_cache
 
 let add_env_cache_entry cx ~for_value id t =
   if for_value then

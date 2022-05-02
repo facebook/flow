@@ -14,3 +14,13 @@ function actuallyBound() {
 unboundFunction(); // Error
 unboundFunction(); // No error, only error once
 unboundFunction(); // No error, only error once
+
+if (true) {
+    unboundFunction2(); // Error
+}
+if (true) {
+    unboundFunction2(); // No error, only error once
+}
+if (true) {
+    unboundFunction2(); // No error, only error once
+}

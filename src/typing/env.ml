@@ -281,6 +281,14 @@ module Env : Env_sig.S = struct
 
   let global_lexicals = [internal_name "super"; internal_name "this"]
 
+  let get_global_value_type cx name reason =
+    match Context.global_value_cache_find_opt cx name with
+    | Some t -> t
+    | None ->
+      let t = Flow.get_builtin cx name reason in
+      Context.add_global_value_cache_entry cx name t;
+      t
+
   (* any names that haven't been resolved in upper scopes
      wind up here. after handling special names, we add a Var
      binding to the local scope, and register a lookup with
@@ -321,7 +329,7 @@ module Env : Env_sig.S = struct
           | None -> RIdentifier name
         in
         let reason = mk_reason desc loc in
-        Flow.get_builtin cx name reason
+        get_global_value_type cx name reason
     in
     let entry = Entry.new_var (Inferred t) ~loc ~provider:t ~state:State.Initialized in
     Scope.add_entry name entry global_scope;
