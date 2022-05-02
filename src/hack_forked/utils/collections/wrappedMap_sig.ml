@@ -50,4 +50,6 @@ module type S = sig
     Format.formatter ->
     'a t ->
     unit
+
+  val of_increasing_iterator_unchecked : (unit -> key * 'a) -> int -> 'a t
 end

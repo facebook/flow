@@ -75,6 +75,19 @@ let create l x d r =
   else
     Node { l; v = x; d; r; h }
 
+let rec of_increasing_iterator_unchecked f = function
+  | 0 -> Empty
+  | 1 ->
+    let (v, d) = f () in
+    Leaf { v; d }
+  | n ->
+    let lenl = n lsr 1 in
+    let lenr = n - lenl - 1 in
+    let l = of_increasing_iterator_unchecked f lenl in
+    let (v, d) = f () in
+    let r = of_increasing_iterator_unchecked f lenr in
+    Node { l; v; d; r; h = height l + 1 }
+
 (* The result can not be leaf *)
 let node l x d r =
   let hl = height l in
@@ -438,6 +451,8 @@ module type S = sig
   val map : ('a -> 'b) -> 'a t -> 'b t
 
   val mapi : (key -> 'a -> 'b) -> 'a t -> 'b t
+
+  val of_increasing_iterator_unchecked : (unit -> key * 'a) -> int -> 'a t
 end
 
 module Make (Ord : OrderedType) : S with type key = Ord.t = struct
@@ -826,6 +841,8 @@ module Make (Ord : OrderedType) : S with type key = Ord.t = struct
   let filter = filter
 
   let ordered_keys = keys
+
+  let of_increasing_iterator_unchecked = of_increasing_iterator_unchecked
 
   let ident_map_key ?combine f map =
     let (map_, changed) =

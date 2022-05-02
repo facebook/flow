@@ -96,6 +96,8 @@ module type S = sig
   val of_list : elt list -> t
 
   val make_pp : (Format.formatter -> elt -> unit) -> Format.formatter -> t -> unit
+
+  val of_increasing_iterator_unchecked : (unit -> elt) -> int -> t
 end
 
 type 'elt t0 =
@@ -185,6 +187,19 @@ let create l v r =
           hr + 1
         );
     }
+
+let rec of_increasing_iterator_unchecked f = function
+  | 0 -> Empty
+  | 1 ->
+    let v = f () in
+    Leaf v
+  | n ->
+    let lenl = n lsr 1 in
+    let lenr = n - lenl - 1 in
+    let l = of_increasing_iterator_unchecked f lenl in
+    let v = f () in
+    let r = of_increasing_iterator_unchecked f lenr in
+    Node { l; v; r; h = height l + 1 }
 
 (* Same as create, but performs one step of rebalancing if necessary.
    Assumes l and r balanced and | height l - height r | <= 3.
@@ -801,4 +816,6 @@ module Make (Ord : OrderedType) : S with type elt = Ord.t = struct
     | [] -> ()
     | _ -> Format.fprintf fmt " ");
     Format.fprintf fmt "@,}@]"
+
+  let of_increasing_iterator_unchecked = of_increasing_iterator_unchecked
 end
