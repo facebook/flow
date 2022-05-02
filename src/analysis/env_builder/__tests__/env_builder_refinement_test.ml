@@ -101,6 +101,28 @@ let print_ssa_test ?(custom_jsx = None) ?(react_runtime_automatic=false) content
   react_runtime := Options.ReactRuntimeClassic;
   jsx_mode := Options.Jsx_react
 
+let%expect_test "conj_refinement_empty" =
+  print_ssa_test {|
+function foo(e: Error) {
+  if (e instanceof Error && true) {}
+  else { e }
+}
+|};
+    [%expect {|
+      [
+        (2, 16) to (2, 21) => {
+          Global Error
+        };
+        (3, 6) to (3, 7) => {
+          (2, 13) to (2, 14): (`e`)
+        };
+        (3, 19) to (3, 24) => {
+          Global Error
+        };
+        (4, 9) to (4, 10) => {
+          (2, 13) to (2, 14): (`e`)
+        }] |}]
+
 let%expect_test "logical_expr" =
   print_ssa_test {|let x = null;
 let y = null;
@@ -171,7 +193,7 @@ let%expect_test "logical_nc_no_key" =
         (1, 4) to (1, 5): (`x`)
       };
       (2, 22) to (2, 23) => {
-        {refinement = Truthy; writes = (1, 4) to (1, 5): (`x`)}
+        (1, 4) to (1, 5): (`x`)
       }] |}]
 
 let%expect_test "logical_nested_right" =

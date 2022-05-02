@@ -3485,13 +3485,18 @@ module Make
           { applied = _; changeset = _; total = total2 } =
         let total =
           if conjunction then
-            conj_total total1 total2
+            match (total1, total2) with
+            | (Some total1, Some total2) -> Some (And (total1, total2))
+            | (Some total, _)
+            | (_, Some total) ->
+              Some (And (total, Refinements (IMap.empty, LookupMap.empty)))
+            | (None, None) -> None
           else
             match (total1, total2) with
             | (Some total1, Some total2) -> Some (Or (total1, total2))
             | (Some total, _)
             | (_, Some total) ->
-              Some total
+              Some (Or (total, Refinements (IMap.empty, LookupMap.empty)))
             | (None, None) -> None
         in
         let (applied, changeset) =
