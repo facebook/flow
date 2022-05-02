@@ -1,3 +1,31 @@
+### 0.177.0
+
+Likely to cause new Flow errors:
+* Fix a bug where refinements should be invalidated when going through multiple control flow branches (thanks @gnprice)
+* Make catch parameters explicitely `any` typed
+* Ban object spreads of numbers and strings
+* Fix a bug that makes Flow consider some function names to have the empty type
+* Numbers, booleans, and enums are no longer subtypes of the empty interface `interface {}`
+* Previously incorrectly missing errors might appear in expressions of the form `name === 'literal'` and `name.prop === 'literal'` complaining that `literal` is incompatible with the type of `name` or `name.prop`.
+* Update input type of Object.{values,entries} to be `interface {}` rather than `$NotNullOrVoid`; `number` and `boolean` inputs will now error
+
+New Features:
+* Add codemod to add explicit type arguments to `useState` when it is called with an empty object. Use with `flow codemod annotate-use-state`
+* Continue type checking files with indeterminate module types.
+
+Notable bug fixes:
+* Do not add further errors when we already errored on the illegal reassignment.
+* Flow now checks whether `literal` is a subtype of `expr` in `expr === literal`, regardless of whether `expr === literal` can be applied as a refinement
+* Fix a crash when deleting a file or saving a file with parse errors in certain circumstances
+* Fix a rare crash when files are deleted during rechecks
+* Fix a parser bug that allowed missing commas between object properties (regression in 0.175.0)
+
+Parser:
+* Improve error recovery when in the middle of adding a property to an object type literal
+
+Library Definitions:
+* Add NotificationEvent to service workers API
+
 ### 0.176.3
 
 Notable bug fixes:
