@@ -96,17 +96,22 @@ module Make
 
   let eval_param cx (Param { t; loc; ploc; pattern; default; has_anno }) =
     match pattern with
-    | Id id ->
+    | Id
+        ( { Ast.Pattern.Identifier.name = ((name_loc, _), { Ast.Identifier.name; _ }); optional; _ }
+        as id
+        ) ->
       let default = eval_default cx default in
       let () =
         match default with
         | None -> ()
-        | Some ((_, default_t), _) -> Flow.flow_t cx (default_t, t)
+        | Some ((_, default_t), _) ->
+          let reason = mk_reason (RIdentifier (OrdinaryName name)) name_loc in
+          let use_op =
+            Op (AssignVar { var = Some reason; init = TypeUtil.reason_of_t default_t })
+          in
+          Flow.flow cx (default_t, UseT (use_op, t))
       in
       let () =
-        let { Ast.Pattern.Identifier.name = ((loc, _), { Ast.Identifier.name; _ }); optional; _ } =
-          id
-        in
         let t =
           if optional && default = None then
             TypeUtil.optional t
@@ -119,7 +124,7 @@ module Make
           else
             Inferred t
         in
-        bind cx name t loc
+        bind cx name t name_loc
       in
       (loc, { Ast.Function.Param.argument = ((ploc, t), Ast.Pattern.Identifier id); default })
     | Object { annot; properties; comments } ->

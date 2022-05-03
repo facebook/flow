@@ -891,8 +891,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- scope.js:92:23
 
-Cannot assign function to `f` because number [1] is incompatible with string [2] in the return value.
-[incompatible-type]
+Cannot assign `f` to `x` because number [1] is incompatible with string [2] in the return value. [incompatible-type]
 
    scope.js:92:23
    92|     x: () => string = f // error: number ~> string

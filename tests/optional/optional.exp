@@ -1,6 +1,6 @@
 Error -------------------------------------------------------------------------------------------------- generic.js:1:22
 
-number [1] is incompatible with `T` [2]. [incompatible-type]
+Cannot assign number to `x` because number [1] is incompatible with `T` [2]. [incompatible-type]
 
    generic.js:1:22
    1| function x<T>(x: T = 0) {}
@@ -14,7 +14,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- generic.js:4:15
 
-number [1] is incompatible with `T` [2]. [incompatible-type]
+Cannot assign number to `x` because number [1] is incompatible with `T` [2]. [incompatible-type]
 
    generic.js:4:15
    4|   x<T>(x: T = 0) {}
