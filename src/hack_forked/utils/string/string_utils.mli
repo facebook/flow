@@ -11,18 +11,6 @@
    clean it up manually, and then delete this comment once the interface is in
    shape. *)
 
-exception Incorrect_format
-
-val string_before : string -> int -> string
-
-val string_after : string -> int -> string
-
-(** [substring_index needle haystack] returns the index of the first occurrence of
-    string [needle] in string [haystack]. If not found, returns [-1].
-
-    An implementation of the Knuth-Morris-Pratt (KMP) algorithm. *)
-val substring_index : string -> string -> int
-
 val is_substring : string -> string -> bool
 
 (** [lstrip s prefix] returns a copy of [s] with [prefix] removed from
@@ -34,8 +22,6 @@ val lstrip : string -> string -> string
     the end if [s] ends with [suffix], or [s] itself if not. Physical
     equality is maintained in the latter case. *)
 val rstrip : string -> string -> string
-
-val rpartition : string -> char -> string * string
 
 val truncate : int -> string -> string
 
@@ -55,23 +41,11 @@ val rindex_not_from_opt : string -> int -> string -> int option
     [str] that is not in [chars] if it exists, or [None] otherwise. *)
 val rindex_not_opt : string -> string -> int option
 
-val zero_code : int
-
-val nine_code : int
-
-val is_decimal_digit : char -> bool
-
 val is_lowercase_char : char -> bool
 
 val is_not_lowercase : string -> int -> int -> bool
 
 val fold_left : f:('a -> char -> 'a) -> acc:'a -> string -> 'a
-
-val split : char -> string -> string list
-
-val split2 : char -> string -> (string * string) option
-
-val split2_exn : char -> string -> string * string
 
 (** [replace_char needle replacement str] replaces all instances of the [needle]
     character in [str] with the [replacement] character *)

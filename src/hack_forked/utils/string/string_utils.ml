@@ -5,12 +5,6 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-exception Incorrect_format
-
-let string_before s n = String.sub s 0 n
-
-let string_after s n = String.sub s n (String.length s - n)
-
 (** [substring_index needle haystack] returns the index of the first occurrence of
     string [needle] in string [haystack]. If not found, returns [-1].
 
@@ -76,12 +70,6 @@ let rstrip s suffix =
   else
     s
 
-let rpartition s c =
-  let sep_idx = String.rindex s c in
-  let first = String.sub s 0 sep_idx in
-  let second = String.sub s (sep_idx + 1) (String.length s - sep_idx - 1) in
-  (first, second)
-
 (** If s is longer than length len, return a copy of s truncated to length len. *)
 let truncate len s =
   if String.length s <= len then
@@ -120,12 +108,6 @@ let rec rindex_not_from_opt str i chars =
     [str] that is not in [chars] if it exists, or [None] otherwise. *)
 let rindex_not_opt str chars = rindex_not_from_opt str (String.length str - 1) chars
 
-let (zero_code, nine_code) = (Char.code '0', Char.code '9')
-
-let is_decimal_digit chr =
-  let code = Char.code chr in
-  zero_code <= code && code <= nine_code
-
 let is_lowercase_char =
   let (a_code, z_code) = (Char.code 'a', Char.code 'z') in
   fun chr ->
@@ -147,19 +129,6 @@ let fold_left ~f ~acc str =
   let acc = ref acc in
   String.iter (fun c -> acc := f !acc c) str;
   !acc
-
-let split c = Str.split (Str.regexp @@ Char.escaped c)
-
-let split2 c s =
-  let parts = split c s in
-  match parts with
-  | [first; second] -> Some (first, second)
-  | _ -> None
-
-let split2_exn c s =
-  match split2 c s with
-  | Some s -> s
-  | None -> raise Incorrect_format
 
 (** [replace_char needle replacement str] replaces all instances of the [needle]
     character in [str] with the [replacement] character *)
