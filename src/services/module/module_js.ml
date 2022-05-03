@@ -412,7 +412,6 @@ end
 
 module Haste : MODULE_SYSTEM = struct
   let short_module_name_of = function
-    | File_key.Builtins -> assert false
     | File_key.LibFile file
     | File_key.SourceFile file
     | File_key.JsonFile file
@@ -422,7 +421,6 @@ module Haste : MODULE_SYSTEM = struct
   let is_mock =
     let mock_path = Str.regexp ".*/__mocks__/.*" in
     function
-    | File_key.Builtins -> false
     | File_key.LibFile file
     | File_key.SourceFile file
     | File_key.JsonFile file

@@ -936,7 +936,6 @@ let file_of_source source =
   | Some (File_key.JsonFile filename)
   | Some (File_key.ResourceFile filename) ->
     Some filename
-  | Some File_key.Builtins -> None
   | None -> None
 
 let loc_of_printable_error ((_, _, { Friendly.loc; _ }) : 'loc printable_error) = loc
@@ -1257,9 +1256,7 @@ module Cli_output = struct
           | (None, Some (File_key.JsonFile filename))
           | (None, Some (File_key.ResourceFile filename)) ->
             (filename, false)
-          | (None, Some File_key.Builtins)
-          | (None, None) ->
-            failwith "Should only have lib and source files at this point"
+          | (None, None) -> failwith "Should only have lib and source files at this point"
         in
         [comment_style s] @ see_another_file ~is_lib original_filename @ [default_style "\n"]
       | (Some code_lines, Some filename) ->
@@ -1415,9 +1412,7 @@ module Cli_output = struct
           | Some (JsonFile filename)
           | Some (ResourceFile filename) ->
             relative_path ~strip_root filename ^ pos
-          | Some Builtins
-          | None ->
-            ""
+          | None -> ""
         )
       )
     in
@@ -2073,9 +2068,7 @@ module Cli_output = struct
       | Some (JsonFile filename)
       | Some (ResourceFile filename) ->
         relative_path ~strip_root filename
-      | Some Builtins
-      | None ->
-        "(builtins)"
+      | None -> "(builtins)"
     )
 
   exception Oh_no_file_contents_have_changed
@@ -2933,7 +2926,6 @@ module Cli_output = struct
     let fold_files error acc =
       match Loc.source (loc_of_printable_error error) with
       | None -> acc
-      | Some File_key.Builtins -> acc
       | Some file -> SSet.add (print_file_key ~strip_root (Some file)) acc
     in
     let files =
@@ -3421,9 +3413,7 @@ module Vim_emacs_output = struct
   let string_of_loc ~strip_root loc =
     Loc.(
       match loc.source with
-      | None
-      | Some File_key.Builtins ->
-        ""
+      | None -> ""
       | Some file ->
         let file = Reason.string_of_source ~strip_root file in
         let line = loc.start.line in

@@ -460,7 +460,6 @@ end = struct
       | Some (JsonFile _)
       | Some (ResourceFile _) ->
         Ty.Local
-      | Some Builtins -> Ty.Builtin
       | None -> Ty.Local
     in
     let sym_anonymous = sym_name = OrdinaryName "<<anonymous class>>" in

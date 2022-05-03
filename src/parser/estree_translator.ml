@@ -51,7 +51,6 @@ with type t = Impl.t = struct
       | Some (File_key.JsonFile src)
       | Some (File_key.ResourceFile src) ->
         string src
-      | Some File_key.Builtins -> string "(global)"
       | None -> null
     in
     obj

@@ -108,9 +108,7 @@ let calc_direct_dependents_job acc (root_files, root_modules) =
         | File_key.JsonFile s
         | File_key.ResourceFile s ->
           SSet.add s acc
-        | File_key.LibFile _
-        | File_key.Builtins ->
-          acc)
+        | File_key.LibFile _ -> acc)
       SSet.empty
       root_files
   in

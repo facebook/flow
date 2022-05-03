@@ -353,7 +353,6 @@ let in_range loc range =
 let string_of_source ?(strip_root = None) =
   File_key.(
     function
-    | Builtins -> "(builtins)"
     | LibFile file ->
       begin
         match strip_root with
@@ -380,17 +379,13 @@ let string_of_source ?(strip_root = None) =
 let string_of_loc ?(strip_root = None) loc =
   Loc.(
     match loc.source with
-    | None
-    | Some File_key.Builtins ->
-      ""
+    | None -> ""
     | Some file -> spf "%s:%s" (string_of_source ~strip_root file) (Loc.to_string_no_source loc)
   )
 
 let string_of_aloc ?(strip_root = None) aloc =
   match ALoc.source aloc with
-  | None
-  | Some File_key.Builtins ->
-    ""
+  | None -> ""
   | Some file -> spf "%s:%s" (string_of_source ~strip_root file) (ALoc.to_string_no_source aloc)
 
 let json_of_source ?(strip_root = None) =
@@ -407,7 +402,6 @@ let json_source_type_of_source =
     | Some (File_key.SourceFile _) -> JSON_String "SourceFile"
     | Some (File_key.JsonFile _) -> JSON_String "JsonFile"
     | Some (File_key.ResourceFile _) -> JSON_String "ResourceFile"
-    | Some File_key.Builtins -> JSON_String "Builtins"
     | None -> JSON_Null
   )
 

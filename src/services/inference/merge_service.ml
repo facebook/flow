@@ -56,7 +56,6 @@ let sig_hash ~root =
       | File_key.JsonFile path
       | File_key.ResourceFile path ->
         Files.relative_path (Path.to_string root) path
-      | File_key.Builtins -> File_key.to_string file_key
     in
     Xx.hash file_string 0L
   in

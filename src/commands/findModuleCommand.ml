@@ -56,7 +56,6 @@ let main base_flags option_values json pretty root strip_root wait_for_recheck m
         Files.relative_path (Path.to_string root) file
       else
         file
-    | ServerProt.Response.FIND_MODULE (Some File_key.Builtins) -> "(global)"
     | ServerProt.Response.FIND_MODULE None -> "(unknown)"
     | response -> failwith_bad_response ~request ~response
   in

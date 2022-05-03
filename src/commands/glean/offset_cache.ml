@@ -25,7 +25,7 @@ let info_of_file_key = function
       let info = { offsets; ends_in_newline } in
       info_cache := SMap.add file info !info_cache;
       Some info)
-  | File_key.(ResourceFile _ | Builtins) -> None
+  | File_key.ResourceFile _ -> None
 
 open Base.Option.Let_syntax
 

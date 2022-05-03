@@ -120,7 +120,6 @@ let loc_decompactifier source =
 let decompactify_loc file ast = (loc_decompactifier (Some file))#program ast
 
 let file_kind_and_name = function
-  | File_key.Builtins -> invalid_arg "builtins"
   | File_key.SourceFile f -> (Heap.Source_file, f)
   | File_key.ResourceFile f -> (Heap.Resource_file, f)
   | File_key.JsonFile f -> (Heap.Json_file, f)

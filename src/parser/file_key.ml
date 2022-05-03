@@ -12,7 +12,6 @@ type t =
   (* A resource that might get required, like .css, .jpg, etc. We don't parse
      these, just check that they exist *)
   | ResourceFile of string
-  | Builtins
 [@@deriving show, eq]
 
 let to_string = function
@@ -21,7 +20,6 @@ let to_string = function
   | JsonFile x
   | ResourceFile x ->
     x
-  | Builtins -> "(global)"
 
 let to_path = function
   | LibFile x
@@ -29,18 +27,16 @@ let to_path = function
   | JsonFile x
   | ResourceFile x ->
     Ok x
-  | Builtins -> Error "File key refers to a builtin"
 
 let compare =
-  (* builtins, then libs, then source and json files at the same priority since
-     JSON files are basically source files. We don't actually read resource
-     files so they come last *)
+  (* libs, then source and json files at the same priority since JSON files are
+   * basically source files. We don't actually read resource files so they come
+   * last *)
   let order_of_filename = function
-    | Builtins -> 1
-    | LibFile _ -> 2
-    | SourceFile _ -> 3
-    | JsonFile _ -> 3
-    | ResourceFile _ -> 4
+    | LibFile _ -> 1
+    | SourceFile _ -> 2
+    | JsonFile _ -> 2
+    | ResourceFile _ -> 3
   in
   fun a b ->
     let k = order_of_filename a - order_of_filename b in
@@ -58,7 +54,6 @@ let compare_opt a b =
 
 let is_lib_file = function
   | LibFile _ -> true
-  | Builtins -> true
   | SourceFile _ -> false
   | JsonFile _ -> false
   | ResourceFile _ -> false
@@ -68,7 +63,6 @@ let map f = function
   | SourceFile filename -> SourceFile (f filename)
   | JsonFile filename -> JsonFile (f filename)
   | ResourceFile filename -> ResourceFile (f filename)
-  | Builtins -> Builtins
 
 let exists f = function
   | LibFile filename
@@ -76,7 +70,6 @@ let exists f = function
   | JsonFile filename
   | ResourceFile filename ->
     f filename
-  | Builtins -> false
 
 let check_suffix filename suffix = exists (fun fn -> Filename.check_suffix fn suffix) filename
 
