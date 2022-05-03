@@ -584,23 +584,27 @@ let (relative_path, absolute_path) =
     | (dir1 :: root, dir2 :: file) when dir1 = dir2 -> make_relative (root, file)
     | (root, file) -> List.fold_left (fun path _ -> Filename.parent_dir_name :: path) file root
   in
-  let make_relative root file =
-    (* This functions is only used for displaying error location or creating saved state.
-       We use '/' as file separator even on Windows. This simplify the test-suite script... *)
-    make_relative (split_path root, split_path file) |> String.concat "/"
+  let make_relative root =
+    let root_components = split_path root in
+    fun file ->
+      (* This functions is only used for displaying error location or creating saved state.
+         We use '/' as file separator even on Windows. This simplify the test-suite script... *)
+      make_relative (root_components, split_path file) |> String.concat "/"
   in
   let rec absolute_path = function
     | (_ :: root, dir2 :: file) when dir2 = Filename.parent_dir_name -> absolute_path (root, file)
     | (root, file) -> List.rev_append root file
   in
-  let absolute_path root file =
-    (* Let's avoid creating paths like "/path/to/foo/." *)
-    if file = Filename.current_dir_name || file = "" then
-      root
-    else
-      absolute_path (List.rev @@ split_path root, split_path file)
-      (* We may actually use these paths, so use the correct directory sep *)
-      |> String.concat Filename.dir_sep
+  let absolute_path root =
+    let root_components_rev = List.rev (split_path root) in
+    fun file ->
+      (* Let's avoid creating paths like "/path/to/foo/." *)
+      if file = Filename.current_dir_name || file = "" then
+        root
+      else
+        absolute_path (root_components_rev, split_path file)
+        (* We may actually use these paths, so use the correct directory sep *)
+        |> String.concat Filename.dir_sep
   in
   (make_relative, absolute_path)
 
