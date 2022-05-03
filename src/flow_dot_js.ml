@@ -68,19 +68,12 @@ let rec js_of_json = function
   | Hh_json.JSON_Bool value -> Js.Unsafe.inject (Js.bool value)
   | Hh_json.JSON_Null -> Js.Unsafe.inject Js.null
 
-let load_lib_files
-    ~ccx
-    ~metadata
-    files
-    save_parse_errors
-    save_infer_errors
-    save_suppressions
-    save_lint_suppressions =
+let load_lib_files ~ccx ~metadata files =
   (* iterate in reverse override order *)
-  let _ =
+  let (leader, _) =
     List.rev files
     |> List.fold_left
-         (fun exclude_syms file ->
+         (fun (leader, exclude_syms) file ->
            let lib_content = Sys_utils.cat file in
            let lib_file = File_key.LibFile file in
            match parse_content lib_file lib_content with
@@ -96,23 +89,12 @@ let load_lib_files
                  ~file_sig:(File_sig.abstractify_locs file_sig)
                  ~lint_severities:LintSettings.empty_severities
              in
-
-             let errors = Context.errors cx in
-             let suppressions = Context.error_suppressions cx in
-             let severity_cover = Context.severity_cover cx in
-
-             save_infer_errors lib_file errors;
-             save_suppressions lib_file suppressions;
-             save_lint_suppressions lib_file severity_cover;
-
              (* symbols loaded from this file are suppressed if found in later ones *)
-             NameUtils.Set.union exclude_syms (NameUtils.Set.of_list syms)
-           | Error parse_errors ->
-             save_parse_errors lib_file parse_errors;
-             exclude_syms)
-         NameUtils.Set.empty
+             (Some cx, NameUtils.Set.union exclude_syms (NameUtils.Set.of_list syms))
+           | Error _ -> (leader, exclude_syms))
+         (None, NameUtils.Set.empty)
   in
-  ()
+  leader
 
 let stub_docblock =
   {
@@ -187,33 +169,18 @@ let get_master_cx root =
 let init_builtins filenames =
   let root = Path.dummy_path in
   let ccx = Context.(make_ccx (empty_master_cx ())) in
-  let master_cx =
-    (* Lib files use only concrete locations, so this is not used. *)
-    let aloc_table = lazy (ALoc.empty_table File_key.Builtins) in
-    Context.make
-      ccx
-      (stub_metadata ~root ~checked:false)
-      File_key.Builtins
-      aloc_table
-      Context.Checking
-  in
-  let () =
+  let leader =
     let metadata = stub_metadata ~root ~checked:true in
-    load_lib_files
-      ~ccx
-      ~metadata
-      filenames
-      (fun _file _errs -> ())
-      (fun _file _errs -> ())
-      (fun _file _sups -> ())
-      (fun _file _lint -> ())
+    load_lib_files ~ccx ~metadata filenames
   in
-  Merge_js.optimize_builtins master_cx;
-  master_cx_ref :=
-    Some
-      ( root,
-        { Context.master_sig_cx = Context.sig_cx master_cx; builtins = Context.builtins master_cx }
-      )
+  let master_cx =
+    match leader with
+    | None -> Context.empty_master_cx ()
+    | Some cx ->
+      Merge_js.optimize_builtins cx;
+      { Context.master_sig_cx = Context.sig_cx cx; builtins = Context.builtins cx }
+  in
+  master_cx_ref := Some (root, master_cx)
 
 let infer_and_merge ~root filename ast file_sig =
   (* create cx *)
