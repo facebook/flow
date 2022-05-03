@@ -335,8 +335,7 @@ let update_check_results (acc, slow_files) (file, result) =
     ((errors, warnings, suppressions, coverage, first_internal_error), slow_files)
 
 let run_merge_service
-    ~master_mutator
-    ~worker_mutator
+    ~mutator
     ~reader
     ~options
     ~profiling
@@ -348,8 +347,7 @@ let run_merge_service
   Memory_utils.with_memory_timer_lwt ~options "Merge" profiling (fun () ->
       let%lwt (results, { Merge_service.skipped_count; sig_new_or_changed }) =
         Merge_service.merge
-          ~master_mutator
-          ~worker_mutator
+          ~mutator
           ~reader
           ~options
           ~workers
@@ -512,7 +510,7 @@ let merge
   in
   Hh_logger.info "Merging";
   let%lwt ((suppressions, skipped_count, sig_new_or_changed), time_to_merge) =
-    let (master_mutator, worker_mutator) =
+    let mutator =
       Parsing_heaps.Merge_context_mutator.create
         transaction
         (FilenameSet.union files_to_merge deleted |> FilenameSet.union unparsed_set)
@@ -520,8 +518,7 @@ let merge
     let merge_start_time = Unix.gettimeofday () in
     let%lwt result =
       run_merge_service
-        ~master_mutator
-        ~worker_mutator
+        ~mutator
         ~reader
         ~options
         ~profiling

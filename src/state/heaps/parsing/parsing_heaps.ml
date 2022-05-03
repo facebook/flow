@@ -30,15 +30,6 @@ module HasteModuleHeap =
       type t = Heap.haste_module
     end)
 
-module SigHashHeap =
-  SharedMem.NoCache
-    (File_key)
-    (struct
-      type t = Xx.hash
-
-      let description = "SigHash"
-    end)
-
 exception File_not_found of string
 
 exception File_not_parsed of string
@@ -377,14 +368,15 @@ let add_checked_file file_key file_opt hash module_name docblock ast locs type_s
       let exports = serialize exports in
       let (exports_size, write_exports) = prepare_write_exports exports in
       let size =
-        size + (5 * header_size) + (2 * entity_size) + typed_parse_size + int64_size + exports_size
+        size + (6 * header_size) + (3 * entity_size) + typed_parse_size + int64_size + exports_size
       in
       let write chunk =
         let hash = write_int64 chunk hash in
         let exports = write_exports chunk in
         let resolved_requires = write_entity chunk None in
         let leader = write_entity chunk None in
-        let parse = write_typed_parse chunk hash exports resolved_requires leader in
+        let sig_hash = write_entity chunk None in
+        let parse = write_typed_parse chunk hash exports resolved_requires leader sig_hash in
         let dirty_modules = add_file_maybe chunk (parse :> [ `typed | `untyped ] parse_addr) in
         (parse, dirty_modules)
       in
@@ -1204,85 +1196,78 @@ module Resolved_requires_mutator = struct
       true
 end
 
-let merge_oldified_files = ref FilenameSet.empty
-
 module Merge_context_mutator = struct
-  type master_mutator = unit
+  type t = unit
 
-  type worker_mutator = unit
-
-  let oldify_merge_batch files =
-    WorkerCancel.with_no_cancellations (fun () -> SigHashHeap.oldify_batch files)
-
-  let remove_old_merge_batch files =
-    WorkerCancel.with_no_cancellations (fun () -> SigHashHeap.remove_old_batch files)
-
-  let revive_merge_batch files =
-    WorkerCancel.with_no_cancellations (fun () -> SigHashHeap.revive_batch files)
+  let dirty_files = ref FilenameSet.empty
 
   let rollback_leader file_key =
     let open Heap in
-    let entity =
+    let parse =
       let* file = get_file_addr file_key in
       let* parse = entity_read_latest (get_parse file) in
-      let* parse = coerce_typed parse in
-      Some (get_leader parse)
+      coerce_typed parse
     in
-    Option.iter entity_rollback entity
+    match parse with
+    | None -> ()
+    | Some parse ->
+      entity_rollback (get_leader parse);
+      entity_rollback (get_sig_hash parse)
 
   let commit () =
-    WorkerCancel.with_no_cancellations (fun () ->
-        Hh_logger.debug "Committing context heaps";
-        remove_old_merge_batch !merge_oldified_files;
-        merge_oldified_files := FilenameSet.empty
-    );
+    dirty_files := FilenameSet.empty;
     Lwt.return_unit
 
   let rollback () =
+    Hh_logger.debug "Rolling back context heaps";
     WorkerCancel.with_no_cancellations (fun () ->
-        Hh_logger.debug "Rolling back context heaps";
-        FilenameSet.iter rollback_leader !merge_oldified_files;
-        revive_merge_batch !merge_oldified_files;
-        merge_oldified_files := FilenameSet.empty
+        FilenameSet.iter rollback_leader !dirty_files;
+        dirty_files := FilenameSet.empty
     );
     Lwt.return_unit
 
   let create transaction files =
-    WorkerCancel.with_no_cancellations (fun () ->
-        merge_oldified_files := files;
+    dirty_files := files;
+    Transaction.add ~singleton:"Merge_context" ~commit ~rollback transaction
 
-        oldify_merge_batch files;
-        Transaction.add ~singleton:"Merge_context" ~commit ~rollback transaction;
+  let update_leader x (_, _, parse) = Heap.entity_advance (Heap.get_leader parse) x
 
-        ((), ())
-    )
+  let update_sig_hash x (_, _, parse) = Heap.entity_advance (Heap.get_sig_hash parse) x
 
-  let update_leaders leader_addr component =
-    let module Heap = SharedMem.NewAPI in
-    let f (_, _, parse) =
-      let leader_ent = Heap.get_leader parse in
-      Heap.entity_advance leader_ent (Some leader_addr)
+  (* Similar to add_resolved_requires above, we want to detect when the sig_hash
+   * has changed, and there are two important cases to consider: (1) files which
+   * have changed and have a new sig_hash entity and (2) files which have not
+   * changed, but are merged because they are dependents of changed files. *)
+  let add_sig_hash file parse sig_hash =
+    let open Heap in
+    let old_sig_hash =
+      let* old_parse = entity_read_committed (get_parse file) in
+      let* old_parse = coerce_typed old_parse in
+      let old_ent = get_sig_hash old_parse in
+      let* addr = entity_read_latest old_ent in
+      Some (old_ent, addr, read_int64 addr)
     in
-    Nel.iter f component
+    let ent = get_sig_hash parse in
+    match old_sig_hash with
+    | Some (old_ent, old_addr, old_sig_hash) when Int64.equal old_sig_hash sig_hash ->
+      if ent == old_ent then
+        ()
+      else
+        entity_advance ent (Some old_addr);
+      false
+    | _ ->
+      alloc (header_size + int64_size) (fun chunk ->
+          let sig_hash = write_int64 chunk sig_hash in
+          entity_advance ent (Some sig_hash)
+      );
+      true
 
-  let add_merge_on_diff () component xx =
-    let (leader_f, leader_addr, _) = Nel.hd component in
-    let diff =
-      match SigHashHeap.get_old leader_f with
-      | None -> true
-      | Some xx_old -> xx <> xx_old
-    in
-    update_leaders leader_addr component;
-    if diff then SigHashHeap.add leader_f xx;
+  let add_merge_on_diff () component sig_hash =
+    let ((_, leader, leader_parse), rest) = component in
+    Nel.iter (update_leader (Some leader)) component;
+    let diff = add_sig_hash leader leader_parse sig_hash in
+    if diff then List.iter (update_sig_hash None) rest;
     diff
-
-  let revive_files () files =
-    (* Every file in files should be in the oldified set *)
-    assert (FilenameSet.is_empty (FilenameSet.diff files !merge_oldified_files));
-    WorkerCancel.with_no_cancellations (fun () ->
-        merge_oldified_files := FilenameSet.diff !merge_oldified_files files;
-        revive_merge_batch files
-    )
 end
 
 (* This uses `entity_read_committed` and can be used by code outside of a
@@ -1605,8 +1590,8 @@ module From_saved_state = struct
       prepare_write_resolved_requires resolved_requires
     in
     let size =
-      (10 * header_size)
-      + (4 * entity_size)
+      (11 * header_size)
+      + (5 * entity_size)
       + string_size file_name
       + typed_parse_size
       + file_size
@@ -1628,7 +1613,10 @@ module From_saved_state = struct
         let resolved_requires = write_resolved_requires chunk in
         let resolved_requires_ent = write_entity chunk (Some resolved_requires) in
         let leader_ent = write_entity chunk None in
-        let parse = write_typed_parse chunk hash exports resolved_requires_ent leader_ent in
+        let sig_hash_ent = write_entity chunk None in
+        let parse =
+          write_typed_parse chunk hash exports resolved_requires_ent leader_ent sig_hash_ent
+        in
         let parse_ent = write_entity chunk (Some (parse :> [ `typed | `untyped ] parse_addr)) in
         let file = write_file chunk file_kind file_name parse_ent haste_ent file_module in
         assert (file = FileHeap.add file_key file);

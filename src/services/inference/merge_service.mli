@@ -36,7 +36,7 @@ type sig_opts_data = {
 type 'a merge_results = (File_key.t * bool * 'a) list * sig_opts_data
 
 type 'a merge_job =
-  worker_mutator:Parsing_heaps.Merge_context_mutator.worker_mutator ->
+  mutator:Parsing_heaps.Merge_context_mutator.t ->
   options:Options.t ->
   reader:Mutator_state_reader.t ->
   File_key.t Nel.t ->
@@ -58,8 +58,7 @@ val check_contents_context :
 
 val merge_runner :
   job:'a merge_job ->
-  master_mutator:Parsing_heaps.Merge_context_mutator.master_mutator ->
-  worker_mutator:Parsing_heaps.Merge_context_mutator.worker_mutator ->
+  mutator:Parsing_heaps.Merge_context_mutator.t ->
   reader:Mutator_state_reader.t ->
   options:Options.t ->
   workers:MultiWorkerLwt.worker list option ->
@@ -69,8 +68,7 @@ val merge_runner :
   'a merge_results Lwt.t
 
 val merge :
-  master_mutator:Parsing_heaps.Merge_context_mutator.master_mutator ->
-  worker_mutator:Parsing_heaps.Merge_context_mutator.worker_mutator ->
+  mutator:Parsing_heaps.Merge_context_mutator.t ->
   reader:Mutator_state_reader.t ->
   options:Options.t ->
   workers:MultiWorkerLwt.worker list option ->

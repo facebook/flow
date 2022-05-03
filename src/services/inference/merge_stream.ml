@@ -190,17 +190,7 @@ let next stream =
         Bucket.Wait
     | components -> Bucket.Job components
 
-let merge ~master_mutator stream =
-  (* If a component is unchanged, either because we merged it and the sig hash
-   * was unchanged or because the component was skipped entirely, we need to
-   * revive the shared heap entires corresponding to the component. These heap
-   * entries were oldified before merge began. *)
-  let revive node =
-    node.component
-    |> Nel.to_list
-    |> FilenameSet.of_list
-    |> Parsing_heaps.Merge_context_mutator.revive_files master_mutator
-  in
+let merge stream =
   let mark_new_or_changed node =
     stream.new_or_changed_files <-
       node.component
@@ -212,10 +202,7 @@ let merge ~master_mutator stream =
   let rec push ~diff node =
     stream.merged_components <- stream.merged_components + 1;
     stream.merged_files <- stream.merged_files + node.size;
-    if diff then
-      mark_new_or_changed node
-    else
-      revive node;
+    if diff then mark_new_or_changed node;
     FilenameMap.iter (fun _ node -> unblock diff node) node.dependents
   and unblock diff node =
     (* dependent blocked on one less *)

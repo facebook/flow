@@ -181,14 +181,14 @@ let merge_targets ~env ~options ~profiling ~get_dependent_files roots =
   in
   Lwt.return (sig_dependency_graph, component_map, roots, to_check)
 
-let merge_job ~worker_mutator ~options ~reader component =
+let merge_job ~mutator ~options ~reader component =
   let diff =
     match Parsing_heaps.Mutator_reader.typed_component ~reader component with
     | None -> false
     | Some component ->
       let root = Options.root options in
       let hash = Merge_service.sig_hash ~root ~reader component in
-      Parsing_heaps.Merge_context_mutator.add_merge_on_diff worker_mutator component hash
+      Parsing_heaps.Merge_context_mutator.add_merge_on_diff mutator component hash
   in
   (diff, Ok ())
 
@@ -283,15 +283,12 @@ module SimpleTypedRunner (C : SIMPLE_TYPED_RUNNER_CONFIG) : TYPED_RUNNER_CONFIG 
           let get_dependent_files _ _ _ = Lwt.return (FilenameSet.empty, FilenameSet.empty) in
           merge_targets ~env ~options ~profiling ~get_dependent_files roots
         in
-        let (master_mutator, worker_mutator) =
-          Parsing_heaps.Merge_context_mutator.create transaction files_to_merge
-        in
+        let mutator = Parsing_heaps.Merge_context_mutator.create transaction files_to_merge in
         Hh_logger.info "Merging %d files" (FilenameSet.cardinal files_to_merge);
         let%lwt _ =
           Merge_service.merge_runner
             ~job:merge_job
-            ~master_mutator
-            ~worker_mutator
+            ~mutator
             ~reader
             ~options
             ~workers
@@ -365,15 +362,12 @@ module TypedRunnerWithPrepass (C : TYPED_RUNNER_WITH_PREPASS_CONFIG) : TYPED_RUN
           in
           merge_targets ~env ~options ~profiling ~get_dependent_files roots
         in
-        let (master_mutator, worker_mutator) =
-          Parsing_heaps.Merge_context_mutator.create transaction files_to_merge
-        in
+        let mutator = Parsing_heaps.Merge_context_mutator.create transaction files_to_merge in
         Hh_logger.info "Merging %d files" (FilenameSet.cardinal files_to_merge);
         let%lwt _ =
           Merge_service.merge_runner
             ~job:merge_job
-            ~master_mutator
-            ~worker_mutator
+            ~mutator
             ~reader
             ~options
             ~workers

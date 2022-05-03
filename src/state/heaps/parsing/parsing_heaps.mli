@@ -199,15 +199,11 @@ module Resolved_requires_mutator : sig
 end
 
 module Merge_context_mutator : sig
-  type master_mutator
+  type t
 
-  type worker_mutator
+  val create : Transaction.t -> Utils_js.FilenameSet.t -> t
 
-  val create : Transaction.t -> Utils_js.FilenameSet.t -> master_mutator * worker_mutator
-
-  val add_merge_on_diff : worker_mutator -> component_file Nel.t -> Xx.hash -> bool
-
-  val revive_files : master_mutator -> Utils_js.FilenameSet.t -> unit
+  val add_merge_on_diff : t -> component_file Nel.t -> Xx.hash -> bool
 end
 
 module From_saved_state : sig
