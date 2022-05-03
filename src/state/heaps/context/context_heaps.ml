@@ -9,9 +9,17 @@ open Utils_js
 
 (****************** shared context heap *********************)
 
+module Unit_key = struct
+  type t = unit
+
+  let to_string () = ""
+
+  let compare () () = 0
+end
+
 module MasterContextHeap =
   SharedMem.WithCache
-    (File_key)
+    (Unit_key)
     (struct
       type t = Context.master_context
 
@@ -26,7 +34,7 @@ let add_master ~audit master_cx =
       let master_context =
         { Context.master_sig_cx = Context.sig_cx master_cx; builtins = Context.builtins master_cx }
       in
-      (Expensive.wrap MasterContextHeap.add) ~audit File_key.Builtins master_context
+      (Expensive.wrap MasterContextHeap.add) ~audit () master_context
   )
 
 module Init_master_context_mutator : sig
@@ -46,7 +54,7 @@ let find_master ~reader:_ =
   | Some master_cx -> master_cx
   | None ->
     begin
-      match MasterContextHeap.get File_key.Builtins with
+      match MasterContextHeap.get () with
       | Some master_cx ->
         master_cx_ref := Some master_cx;
         master_cx
