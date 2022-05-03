@@ -15,14 +15,6 @@ let string_before s n = String.sub s 0 n
 
 let string_after s n = String.sub s n (String.length s - n)
 
-let string_ends_with long short =
-  try
-    let len = String.length short in
-    let long = String.sub long (String.length long - len) len in
-    long = short
-  with
-  | Invalid_argument _ -> false
-
 (** [substring_index needle haystack] returns the index of the first occurrence of
     string [needle] in string [haystack]. If not found, returns [-1].
 
@@ -82,7 +74,7 @@ let lstrip s prefix =
     the end if [s] ends with [suffix], or [s] itself if not. Physical
     equality is maintained in the latter case. *)
 let rstrip s suffix =
-  if string_ends_with s suffix then
+  if String.ends_with ~suffix s then
     let result_length = String.length s - String.length suffix in
     String.sub s 0 result_length
   else

@@ -420,7 +420,7 @@ module Opts = struct
       ~init:(fun opts -> { opts with module_file_exts = [] })
       ~multiple:true
       (fun opts v ->
-        if String_utils.string_ends_with v Files.flow_ext then
+        if String.ends_with ~suffix:Files.flow_ext v then
           Error
             ("Cannot use file extension '"
             ^ v

@@ -54,13 +54,13 @@ module Make (Flow : INPUT) : OUTPUT = struct
         let udesc =
           if not (String.starts_with ~prefix:"union:" rdesc) then
             spf "union: %s" tdesc
-          else if String_utils.string_ends_with rdesc "..." then
+          else if String.ends_with ~suffix:"..." rdesc then
             rdesc
-          else if String_utils.string_ends_with rdesc (tdesc ^ "(s)") then
+          else if String.ends_with ~suffix:(tdesc ^ "(s)") rdesc then
             rdesc
           else if String.length rdesc >= 256 then
             spf "%s | ..." rdesc
-          else if String_utils.string_ends_with rdesc tdesc then
+          else if String.ends_with ~suffix:tdesc rdesc then
             spf "%s(s)" rdesc
           else
             spf "%s | %s" rdesc tdesc

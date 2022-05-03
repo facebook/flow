@@ -441,7 +441,7 @@ let lstat path =
      '/' (or a '\', whatever) *)
   Unix.lstat
   @@
-  if Sys.win32 && String_utils.string_ends_with path Filename.dir_sep then
+  if Sys.win32 && String.ends_with ~suffix:Filename.dir_sep path then
     String.sub path 0 (String.length path - 1)
   else
     path

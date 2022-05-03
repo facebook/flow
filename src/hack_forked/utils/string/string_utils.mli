@@ -21,8 +21,6 @@ val string_before : string -> int -> string
 
 val string_after : string -> int -> string
 
-val string_ends_with : string -> string -> bool
-
 (** [substring_index needle haystack] returns the index of the first occurrence of
     string [needle] in string [haystack]. If not found, returns [-1].
 

@@ -682,7 +682,7 @@ let watch =
   let guess_missing_relative_paths terms watch_root failed_paths =
     let watch_root =
       let normalized = Sys_utils.normalize_filename_dir_sep watch_root in
-      if String_utils.string_ends_with normalized "/" then
+      if String.is_suffix ~suffix:"/" normalized then
         normalized
       else
         normalized ^ "/"

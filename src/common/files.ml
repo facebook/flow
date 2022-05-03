@@ -70,7 +70,7 @@ let eponymous_module file = Modulename.Filename (chop_flow_ext file)
 
 let is_prefix prefix =
   let prefix_with_sep =
-    if String_utils.string_ends_with prefix Filename.dir_sep then
+    if String.ends_with ~suffix:Filename.dir_sep prefix then
       prefix
     else
       prefix ^ Filename.dir_sep
@@ -360,8 +360,7 @@ let dir_filter_of_options (options : options) f =
        the current path isn't a prefix of it. *)
     Base.List.for_all
       ~f:(fun (pattern, _rx) ->
-        (not (String.starts_with ~prefix:"!" pattern))
-        && not (String_utils.string_ends_with pattern "$"))
+        (not (String.starts_with ~prefix:"!" pattern)) && not (String.ends_with ~suffix:"$" pattern))
       options.ignores
   in
   if can_prune then
