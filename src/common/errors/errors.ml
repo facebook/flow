@@ -848,7 +848,7 @@ let relative_lib_path ~strip_root filename =
   match strip_root with
   | Some root ->
     let root_str = Printf.sprintf "%s%s" (Path.to_string root) sep in
-    if String_utils.string_starts_with filename root_str then
+    if String.starts_with ~prefix:root_str filename then
       relative_path ~strip_root filename
     else
       Printf.sprintf "<BUILTINS>%s%s" sep (Filename.basename filename)

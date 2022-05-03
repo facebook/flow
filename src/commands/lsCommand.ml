@@ -82,7 +82,7 @@ let explain ~flowconfig_name ~root ~options ~libs raw_file =
     if SSet.mem file libs then
       (* This is a lib file *)
       let flowtyped_path = Files.get_flowtyped_path root in
-      if String_utils.string_starts_with file (Path.to_string flowtyped_path) then
+      if String.starts_with ~prefix:(Path.to_string flowtyped_path) file then
         ImplicitLib
       else
         ExplicitLib
@@ -90,7 +90,7 @@ let explain ~flowconfig_name ~root ~options ~libs raw_file =
       ConfigFile
     else if Files.is_ignored options file then
       ExplicitlyIgnored
-    else if String_utils.string_starts_with file root_str then
+    else if String.starts_with ~prefix:root_str file then
       ImplicitlyIncluded
     else if Files.is_included options file then
       ExplicitlyIncluded
@@ -141,7 +141,7 @@ let wanted ~root ~options libs file =
   Files.wanted ~options libs file
   &&
   let root_str = spf "%s%s" (Path.to_string root) Filename.dir_sep in
-  String_utils.string_starts_with file root_str || Files.is_included options file
+  String.starts_with ~prefix:root_str file || Files.is_included options file
 
 (* Directories will return a closure that returns every file under that
    directory. Individual files will return a closure that returns just that file
@@ -262,8 +262,7 @@ let main
     files_or_dirs = []
     || List.exists
          (fun file_or_dir ->
-           file_or_dir = config_file_relative
-           || String_utils.string_starts_with root_str file_or_dir)
+           file_or_dir = config_file_relative || String.starts_with ~prefix:file_or_dir root_str)
          files_or_dirs
   in
   let next_files =

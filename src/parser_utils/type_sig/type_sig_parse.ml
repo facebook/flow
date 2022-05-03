@@ -2352,7 +2352,7 @@ let setter_def opts scope tbls xs id_loc f =
 
 let string_literal opts tbls loc s =
   match opts.module_ref_prefix with
-  | Some prefix when String_utils.string_starts_with s prefix ->
+  | Some prefix when String.starts_with ~prefix s ->
     let name = String_utils.lstrip s prefix in
     let mref = push_module_ref tbls name in
     ModuleRef { loc; mref }

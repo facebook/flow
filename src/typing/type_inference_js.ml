@@ -130,7 +130,7 @@ let scan_for_lint_suppressions =
        whitespace, returns [None]. *)
     let prefix_length prefix str =
       let sl = String.length prefix in
-      if not (String_utils.string_starts_with str prefix) then
+      if not (String.starts_with ~prefix str) then
         None
       else if String.length str = sl then
         Some sl

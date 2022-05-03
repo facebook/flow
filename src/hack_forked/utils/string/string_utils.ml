@@ -15,13 +15,6 @@ let string_before s n = String.sub s 0 n
 
 let string_after s n = String.sub s n (String.length s - n)
 
-let string_starts_with long short =
-  try
-    let long = String.sub long 0 (String.length short) in
-    long = short
-  with
-  | Invalid_argument _ -> false
-
 let string_ends_with long short =
   try
     let len = String.length short in
@@ -79,7 +72,7 @@ let is_substring needle =
     the beginning if [s] begins with [prefix], or [s] itself if not.
     Physical equality is maintained in the latter case. *)
 let lstrip s prefix =
-  if string_starts_with s prefix then
+  if String.starts_with ~prefix s then
     let prefix_length = String.length prefix in
     String.sub s prefix_length (String.length s - prefix_length)
   else

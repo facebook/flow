@@ -10,16 +10,9 @@ module Ast = Flow_ast
 module String_utils = struct
   let spf = Printf.sprintf
 
-  let string_starts_with long short =
-    try
-      let long = String.sub long 0 (String.length short) in
-      long = short
-    with
-    | Invalid_argument _ -> false
-
   let strip_prefix prefix str =
-    let prefix_length = String.length prefix in
-    if string_starts_with str prefix then
+    if String.starts_with ~prefix str then
+      let prefix_length = String.length prefix in
       String.sub str prefix_length (String.length str - prefix_length)
     else
       str

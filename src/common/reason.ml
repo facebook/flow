@@ -359,7 +359,7 @@ let string_of_source ?(strip_root = None) =
         match strip_root with
         | Some root ->
           let root_str = spf "%s%s" (Path.to_string root) Filename.dir_sep in
-          if string_starts_with file root_str then
+          if String.starts_with ~prefix:root_str file then
             spf "[LIB] %s" (Files.relative_path root_str file)
           else
             spf "[LIB] %s" (Filename.basename file)

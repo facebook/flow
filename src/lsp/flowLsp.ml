@@ -392,7 +392,7 @@ let get_next_event
 let convert_to_client_uris =
   let server_message_mapper ~client_root ~server_root =
     let replace_prefix str =
-      if String_utils.string_starts_with str server_root then
+      if String.starts_with ~prefix:server_root str then
         let prefix_len = String.length server_root in
         let relative = String.sub str prefix_len (String.length str - prefix_len) in
         client_root ^ relative
@@ -1339,7 +1339,7 @@ let do_rage flowconfig_name (state : server_state) : Rage.result =
       { title = None; data } :: items
     in
     let add_pid (items : rageItem list) ((pid, reason) : int * string) : rageItem list =
-      if String_utils.string_starts_with reason "worker" then
+      if String.starts_with ~prefix:"worker" reason then
         items
       else
         let pid = string_of_int pid in

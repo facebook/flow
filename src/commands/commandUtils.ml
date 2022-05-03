@@ -17,12 +17,12 @@ let run_command command argv =
     Exit.(exit No_error)
   | CommandSpec.Failed_to_parse (arg_name, msg) ->
     let is_pretty_or_json_arg s =
-      String_utils.string_starts_with s "--pretty" || String_utils.string_starts_with s "--json"
+      String.starts_with ~prefix:"--pretty" s || String.starts_with ~prefix:"--json" s
     in
     begin
       match Base.List.find ~f:is_pretty_or_json_arg argv with
       | Some json_arg ->
-        let pretty = String_utils.string_starts_with json_arg "--pretty" in
+        let pretty = String.starts_with ~prefix:"--pretty" json_arg in
         Exit.set_json_mode ~pretty
       | None -> ()
     end;
@@ -587,7 +587,7 @@ let collect_flowconfig_flags
   main { ignores; includes; libs; raw_lint_severities; untyped; declarations }
 
 let remove_exclusion pattern =
-  if String_utils.string_starts_with pattern "!" then
+  if String.starts_with ~prefix:"!" pattern then
     String.sub pattern 1 (String.length pattern - 1)
   else
     pattern

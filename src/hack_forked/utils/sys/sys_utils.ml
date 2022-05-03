@@ -117,7 +117,7 @@ let rec collect_paths path_predicate path =
  *)
 let parse_path_list (paths : string list) : string list =
   Base.List.concat_map paths ~f:(fun path ->
-      if String_utils.string_starts_with path "@" then
+      if String.starts_with ~prefix:"@" path then
         let path = String_utils.lstrip path "@" in
         cat path |> split_lines
       else

@@ -5593,7 +5593,7 @@ struct
       | String s ->
         begin
           match Context.haste_module_ref_prefix cx with
-          | Some prefix when String_utils.string_starts_with s prefix ->
+          | Some prefix when String.starts_with ~prefix s ->
             let m = String_utils.lstrip s prefix in
             let t = Import_export.require cx (loc, m) loc in
             let reason = mk_reason (RCustom "module reference") loc in

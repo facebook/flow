@@ -75,7 +75,7 @@ let is_prefix prefix =
     else
       prefix ^ Filename.dir_sep
   in
-  (fun path -> path = prefix || String_utils.string_starts_with path prefix_with_sep)
+  (fun path -> path = prefix || String.starts_with ~prefix:prefix_with_sep path)
 
 let is_json_file filename = Utils_js.extension_of_filename filename = Some ".json"
 
@@ -360,7 +360,7 @@ let dir_filter_of_options (options : options) f =
        the current path isn't a prefix of it. *)
     Base.List.for_all
       ~f:(fun (pattern, _rx) ->
-        (not (String_utils.string_starts_with pattern "!"))
+        (not (String.starts_with ~prefix:"!" pattern))
         && not (String_utils.string_ends_with pattern "$"))
       options.ignores
   in
@@ -430,7 +430,7 @@ let init ?(flowlibs_only = false) (options : options) =
 let is_matching path pattern_list =
   List.fold_left
     (fun current (pattern, rx) ->
-      if String_utils.string_starts_with pattern "!" then
+      if String.starts_with ~prefix:"!" pattern then
         current && not (Str.string_match rx path 0)
       else
         current || Str.string_match rx path 0)
@@ -501,7 +501,7 @@ let make_next_files ~root ~all ~subdir ~options ~libs =
     match subdir with
     | None ->
       fun path ->
-        (String_utils.string_starts_with path root_str || is_included options path)
+        (String.starts_with ~prefix:root_str path || is_included options path)
         && realpath_filter path
     | Some subdir ->
       (* The subdir might contain symlinks outside of the subdir. To prevent
@@ -509,8 +509,8 @@ let make_next_files ~root ~all ~subdir ~options ~libs =
        * that the realpath starts with the subdir *)
       let subdir_str = Path.to_string subdir in
       fun path ->
-        String_utils.string_starts_with path subdir_str
-        && (String_utils.string_starts_with path root_str || is_included options path)
+        String.starts_with ~prefix:subdir_str path
+        && (String.starts_with ~prefix:root_str path || is_included options path)
         && realpath_filter path
   in
   let dir_filter = dir_filter_of_options options filter in

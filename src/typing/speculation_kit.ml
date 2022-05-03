@@ -52,7 +52,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
         let rdesc = string_of_desc (desc_of_reason ~unwrap:false reason) in
         let tdesc = string_of_desc (desc_of_reason ~unwrap:false (reason_of_t t)) in
         let udesc =
-          if not (String_utils.string_starts_with rdesc "union:") then
+          if not (String.starts_with ~prefix:"union:" rdesc) then
             spf "union: %s" tdesc
           else if String_utils.string_ends_with rdesc "..." then
             rdesc

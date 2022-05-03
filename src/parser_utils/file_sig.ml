@@ -746,7 +746,7 @@ struct
         | Some prefix ->
           begin
             match lit with
-            | String s when String_utils.string_starts_with s prefix ->
+            | String s when String.starts_with ~prefix s ->
               this#add_require
                 (Require
                    {

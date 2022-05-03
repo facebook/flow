@@ -31,7 +31,7 @@ let is_incompatible_package_json ~options ~reader =
   in
   fun ~want ~sroot ~file_options f ->
     if
-      (String_utils.string_starts_with f sroot || Files.is_included file_options f)
+      (String.starts_with ~prefix:sroot f || Files.is_included file_options f)
       && Filename.basename f = "package.json"
       && want f
     then
@@ -161,7 +161,7 @@ let filter_wanted_updates ~file_options ~sroot ~want updates =
       if
         is_flow_file f
         (* note: is_included may be expensive. check in-root match first. *)
-        && (String_utils.string_starts_with f sroot || Files.is_included file_options f)
+        && (String.starts_with ~prefix:sroot f || Files.is_included file_options f)
         && (* removes excluded and lib files. the latter are already filtered *)
         want f
       then

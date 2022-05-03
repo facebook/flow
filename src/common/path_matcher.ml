@@ -134,7 +134,7 @@ let add { stems; stem_map } path =
 
 (* filters a list of prefixes into only the prefixes with which f starts *)
 let find_prefixes f =
-  List.filter (fun prefix -> String_utils.string_starts_with f (Path.to_string prefix))
+  List.filter (fun prefix -> String.starts_with ~prefix:(Path.to_string prefix) f)
 
 (* find a match for f in a list of patterns, or none *)
 let rec match_patt f = function

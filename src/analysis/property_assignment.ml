@@ -349,7 +349,7 @@ let eval_property_assignment class_body =
   let combine_voidable_checks old new_ = Base.List.rev_append new_ old in
   let add_to_errors error errors prefixed_name =
     (* Check if it is private first since `this.` is a prefix of `this.#` *)
-    if String_utils.string_starts_with prefixed_name "this.#" then
+    if String.starts_with ~prefix:"this.#" prefixed_name then
       {
         errors with
         private_property_errors =
@@ -359,7 +359,7 @@ let eval_property_assignment class_body =
             [error]
             errors.private_property_errors;
       }
-    else if String_utils.string_starts_with prefixed_name "this." then
+    else if String.starts_with ~prefix:"this." prefixed_name then
       {
         errors with
         public_property_errors =

@@ -693,9 +693,8 @@ let watch =
     let (terms, failed_paths) =
       List.fold
         ~f:(fun (terms, failed_paths) path ->
-          let open String_utils in
-          if string_starts_with path watch_root then
-            let relative_path = lstrip path watch_root in
+          if String.is_prefix ~prefix:watch_root path then
+            let relative_path = String_utils.lstrip path watch_root in
             (prepend_relative_path_term ~relative_path ~terms, failed_paths)
           else
             (terms, path :: failed_paths))
