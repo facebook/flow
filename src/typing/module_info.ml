@@ -16,7 +16,6 @@
  *)
 
 type t = {
-  ref: Reason.name;
   mutable kind: kind;
   mutable type_named: Type.Exports.t;
   mutable type_star: (ALoc.t * Type.t) list;
@@ -29,8 +28,7 @@ and kind =
       star: (ALoc.t * Type.t) list;
     }
 
-let empty_cjs_module ref =
-  { ref; kind = CJS None; type_named = NameUtils.Map.empty; type_star = [] }
+let empty_cjs_module () = { kind = CJS None; type_named = NameUtils.Map.empty; type_star = [] }
 
 let export info name loc t =
   match info.kind with

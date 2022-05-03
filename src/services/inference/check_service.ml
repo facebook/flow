@@ -226,8 +226,7 @@ let mk_check_file ~options ~reader ~cache () =
     let cx =
       let docblock = Parsing_heaps.read_docblock_unsafe file_key parse in
       let metadata = Context.docblock_overrides docblock base_metadata in
-      let module_ref = Reason.OrdinaryName (Files.module_ref file_key) in
-      Context.make ccx metadata file_key aloc_table module_ref Context.Merging
+      Context.make ccx metadata file_key aloc_table Context.Merging
     in
 
     let dependencies =
@@ -396,8 +395,7 @@ let mk_check_file ~options ~reader ~cache () =
   fun file_key requires ast comments file_sig docblock aloc_table ->
     let ccx = Context.make_ccx master_cx in
     let metadata = Context.docblock_overrides docblock base_metadata in
-    let module_ref = Reason.OrdinaryName (Files.module_ref file_key) in
-    let cx = Context.make ccx metadata file_key aloc_table module_ref Context.Checking in
+    let cx = Context.make ccx metadata file_key aloc_table Context.Checking in
     ConsGen.set_dst_cx cx;
     let infer_ast =
       match Context.env_mode cx with

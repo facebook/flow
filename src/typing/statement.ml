@@ -2047,7 +2047,6 @@ struct
       let (body_loc, { Ast.Statement.Block.body = elements; comments = elements_comments }) =
         body
       in
-      let module_ref = Reason.internal_module_name name in
       let module_scope = Scope.fresh () in
       Scope.add_entry
         (Reason.internal_name "exports")
@@ -2061,7 +2060,7 @@ struct
 
       Env.push_var_scope module_scope;
       let excluded_symbols = Env.save_excluded_symbols () in
-      Context.push_declare_module cx (Module_info.empty_cjs_module module_ref);
+      Context.push_declare_module cx (Module_info.empty_cjs_module ());
 
       let (elements_ast, elements_abnormal) =
         Abnormal.catch_stmts_control_flow_exception (fun () ->
@@ -2135,7 +2134,7 @@ struct
           : (ALoc.t, ALoc.t * Type.t) Ast.Statement.t
           );
 
-      let t = Env.get_var_declared_type cx module_ref id_loc in
+      let t = Env.get_var_declared_type cx (Reason.internal_module_name name) id_loc in
       Flow.flow_t cx (module_t, t);
 
       Context.pop_declare_module cx;

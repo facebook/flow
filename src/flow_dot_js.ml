@@ -87,15 +87,7 @@ let load_lib_files
            | Ok (ast, file_sig) ->
              (* Lib files use only concrete locations, so this is not used. *)
              let aloc_table = lazy (ALoc.empty_table lib_file) in
-             let cx =
-               Context.make
-                 ccx
-                 metadata
-                 lib_file
-                 aloc_table
-                 (Reason.OrdinaryName Files.lib_module_ref)
-                 Context.Checking
-             in
+             let cx = Context.make ccx metadata lib_file aloc_table Context.Checking in
              let syms =
                Type_inference_js.infer_lib_file
                  cx
@@ -203,7 +195,6 @@ let init_builtins filenames =
       (stub_metadata ~root ~checked:false)
       File_key.Builtins
       aloc_table
-      (Reason.OrdinaryName Files.lib_module_ref)
       Context.Checking
   in
   let () =
@@ -231,8 +222,7 @@ let infer_and_merge ~root filename ast file_sig =
   let metadata = stub_metadata ~root ~checked:true in
   (* flow.js does not use abstract locations, so this is not used *)
   let aloc_table = lazy (ALoc.empty_table filename) in
-  let module_ref = Reason.OrdinaryName (Files.module_ref filename) in
-  let cx = Context.make ccx metadata filename aloc_table module_ref Context.Checking in
+  let cx = Context.make ccx metadata filename aloc_table Context.Checking in
   (* connect requires *)
   Type_inference_js.add_require_tvars cx file_sig;
   let connect_requires mref =

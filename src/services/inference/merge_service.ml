@@ -364,8 +364,7 @@ let merge_component ~mutator ~options ~reader component =
           let metadata = Context.docblock_overrides docblock metadata in
           let lint_severities = Merge_js.get_lint_severities metadata strict_mode lint_severities in
           let aloc_table = lazy (Parsing_heaps.read_aloc_table_unsafe file parse) in
-          let module_ref = Reason.OrdinaryName (Files.module_ref file) in
-          let cx = Context.make ccx metadata file aloc_table module_ref Context.Merging in
+          let cx = Context.make ccx metadata file aloc_table Context.Merging in
           let (_, { Flow_ast.Program.all_comments = comments; _ }) =
             Parsing_heaps.read_ast_unsafe file parse
           in

@@ -466,10 +466,8 @@ module Make (Env : Env_sig.S) : S = struct
       aloc_ast
     in
 
-    let module_ref = Context.module_ref cx in
-
     let reason_exports_module =
-      let desc = Reason.RModule module_ref in
+      let desc = Reason.(RModule (OrdinaryName (File_key.to_string filename))) in
       Loc.{ none with source = Some (Context.file cx) } |> ALoc.of_loc |> Reason.mk_reason desc
     in
     let local_exports_var = Tvar.mk cx reason_exports_module in

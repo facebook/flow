@@ -124,8 +124,7 @@ let dummy_context =
   let ccx = Context.make_ccx master_cx in
   let metadata = stub_metadata ~root ~checked:true in
   let aloc_table = lazy (ALoc.empty_table dummy_filename) in
-  let module_ref = Reason.OrdinaryName (Files.module_ref dummy_filename) in
-  Context.make ccx metadata dummy_filename aloc_table module_ref Context.Checking
+  Context.make ccx metadata dummy_filename aloc_table Context.Checking
 
 let typed_ast_of_ast ast =
   let (_, { Flow_ast.Program.all_comments = comments; _ }) = ast in

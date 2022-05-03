@@ -148,13 +148,7 @@ let before_and_after_stmts file_name =
   let cx =
     let aloc_table = lazy (ALoc.empty_table file_key) in
     let ccx = Context.(make_ccx master_cx) in
-    Context.make
-      ccx
-      metadata
-      file_key
-      aloc_table
-      (Reason.OrdinaryName Files.lib_module_ref)
-      Context.Checking
+    Context.make ccx metadata file_key aloc_table Context.Checking
   in
   add_require_tvars cx file_sig;
   let module_scope = Scope.fresh () in

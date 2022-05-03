@@ -321,17 +321,8 @@ module Make (Observer : OBSERVER) : KIT with type output = Observer.output = str
     let file = Context.file init_cx in
     let metadata = Context.metadata init_cx in
     let aloc_table = Utils_js.FilenameMap.find file (Context.aloc_tables init_cx) in
-    let module_ref = Files.module_ref file in
     let ccx = Context.make_ccx master_cx in
-    let cx =
-      Context.make
-        ccx
-        metadata
-        file
-        aloc_table
-        (Reason.OrdinaryName module_ref)
-        Context.PostInference
-    in
+    let cx = Context.make ccx metadata file aloc_table Context.PostInference in
     let reducer =
       new Context_optimizer.context_optimizer ~no_lowers:(fun _ -> Unsoundness.merged_any)
     in

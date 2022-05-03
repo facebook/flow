@@ -356,7 +356,7 @@ let make_ccx master_cx =
     annot_graph = IMap.empty;
   }
 
-let make ccx metadata file aloc_table module_ref phase =
+let make ccx metadata file aloc_table phase =
   ccx.aloc_tables <- Utils_js.FilenameMap.add file aloc_table ccx.aloc_tables;
   {
     ccx;
@@ -364,7 +364,7 @@ let make ccx metadata file aloc_table module_ref phase =
     phase;
     aloc_table;
     metadata;
-    module_info = Module_info.empty_cjs_module module_ref;
+    module_info = Module_info.empty_cjs_module ();
     require_map = ALocMap.empty;
     trust_constructor = Trust.literal_trust;
     declare_module_ref = None;
@@ -396,10 +396,6 @@ let module_info cx =
 let module_kind cx =
   let info = module_info cx in
   info.Module_info.kind
-
-let module_ref cx =
-  let info = module_info cx in
-  info.Module_info.ref
 
 (* accessors *)
 let current_phase cx = cx.phase

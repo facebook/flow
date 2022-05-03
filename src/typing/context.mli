@@ -136,7 +136,7 @@ val empty_master_cx : unit -> master_context
 
 val make_ccx : master_context -> component_t
 
-val make : component_t -> metadata -> File_key.t -> ALoc.table Lazy.t -> Reason.name -> phase -> t
+val make : component_t -> metadata -> File_key.t -> ALoc.table Lazy.t -> phase -> t
 
 val metadata_of_options : Options.t -> metadata
 
@@ -236,8 +236,6 @@ val max_trace_depth : t -> int
 val module_kind : t -> Module_info.kind
 
 val require_map : t -> Type.tvar ALocMap.t
-
-val module_ref : t -> Reason.name
 
 val property_maps : t -> Type.Properties.map
 

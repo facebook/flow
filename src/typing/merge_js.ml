@@ -40,7 +40,6 @@ let create_cx_with_context_optimizer init_cx master_cx ~reducer ~f =
   let file = Context.file init_cx in
   let metadata = Context.metadata init_cx in
   let aloc_table = Utils_js.FilenameMap.find file (Context.aloc_tables init_cx) in
-  let module_ref = Files.module_ref file in
   let ccx = Context.make_ccx master_cx in
   let res = f () in
   Context.merge_into
@@ -53,9 +52,7 @@ let create_cx_with_context_optimizer init_cx master_cx ~reducer ~f =
       export_maps = reducer#get_reduced_export_maps;
       evaluated = reducer#get_reduced_evaluated;
     };
-  let cx =
-    Context.make ccx metadata file aloc_table (Reason.OrdinaryName module_ref) Context.PostInference
-  in
+  let cx = Context.make ccx metadata file aloc_table Context.PostInference in
   (cx, res)
 
 let detect_sketchy_null_checks cx master_cx =

@@ -77,10 +77,6 @@ val get_all_watched_extensions : options -> SSet.t
 
 val init : ?flowlibs_only:bool -> options -> string list * SSet.t
 
-val module_ref : File_key.t -> string
-
-val lib_module_ref : string
-
 (* regexp for Filename constants *)
 val dir_sep : Str.regexp
 
