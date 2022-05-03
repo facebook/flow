@@ -1074,17 +1074,18 @@ module rec ConsGen : S = struct
     | (FunProtoT _, Annot_LookupT (reason_op, _, Named (_, x)))
       when Flow_js_utils.is_function_prototype x ->
       Flow_js_utils.lookup_builtin_strict cx (OrdinaryName "Function") reason_op
-    | ( (DefT (reason, _, NullT) | ObjProtoT reason | FunProtoT reason),
+    | ( (DefT (_, _, NullT) | ObjProtoT _ | FunProtoT _),
         Annot_LookupT (reason_op, use_op, (Named (reason_prop, x) as propref))
       ) ->
       let error_message =
-        if Reason.is_builtin_reason ALoc.source reason then
-          Error_message.EBuiltinLookupFailed
-            { reason = reason_prop; name = Some x; potential_generator = None }
-        else
-          let suggestion = None in
-          Error_message.EStrictLookupFailed
-            { reason_prop; reason_obj = reason_op; name = Some x; use_op = Some use_op; suggestion }
+        Error_message.EStrictLookupFailed
+          {
+            reason_prop;
+            reason_obj = reason_op;
+            name = Some x;
+            use_op = Some use_op;
+            suggestion = None;
+          }
       in
       Flow_js_utils.add_output cx error_message;
       let p = Field (None, AnyT.error_of_kind UnresolvedName reason_op, Polarity.Neutral) in

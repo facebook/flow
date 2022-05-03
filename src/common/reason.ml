@@ -885,11 +885,6 @@ let is_literal_object_reason r =
     true
   | _ -> false
 
-let builtin_reason desc =
-  { Loc.none with Loc.source = Some File_key.Builtins } |> ALoc.of_loc |> mk_reason desc
-
-let is_builtin_reason f r = r.loc |> f |> ( = ) (Some File_key.Builtins)
-
 let is_lib_reason r =
   r.loc |> ALoc.source |> Base.Option.value_map ~default:false ~f:File_key.is_lib_file
 

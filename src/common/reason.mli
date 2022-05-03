@@ -281,11 +281,6 @@ val is_array_reason : 'loc virtual_reason -> bool
 
 val is_literal_object_reason : 'loc virtual_reason -> bool
 
-val builtin_reason : reason_desc -> reason
-
-(* reason location preds *)
-val is_builtin_reason : ('loc -> File_key.t option) -> 'loc virtual_reason -> bool
-
 val is_lib_reason : reason -> bool
 
 val is_lib_reason_def : reason -> bool

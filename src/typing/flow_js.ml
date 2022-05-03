@@ -3136,18 +3136,14 @@ struct
             | _ ->
               let reason_prop = replace_desc_reason (RProperty prop_name) reason_op in
               let error_message =
-                if is_builtin_reason ALoc.source reason then
-                  Error_message.EBuiltinLookupFailed
-                    { reason = reason_prop; name = prop_name; potential_generator = None }
-                else
-                  Error_message.EStrictLookupFailed
-                    {
-                      reason_prop;
-                      reason_obj = reason;
-                      name = prop_name;
-                      use_op = Some use_op;
-                      suggestion = None;
-                    }
+                Error_message.EStrictLookupFailed
+                  {
+                    reason_prop;
+                    reason_obj = reason;
+                    name = prop_name;
+                    use_op = Some use_op;
+                    suggestion = None;
+                  }
               in
               add_output cx ~trace error_message;
               AnyT.error reason_op
@@ -5040,18 +5036,14 @@ struct
               }
           ) ->
           let error_message =
-            if is_builtin_reason ALoc.source reason then
-              Error_message.EBuiltinLookupFailed
-                { reason = reason_prop; name = Some x; potential_generator = None }
-            else
-              let use_op = Some (use_op_of_lookup_action action) in
-              let suggestion =
-                Base.Option.bind ids ~f:(fun ids ->
-                    prop_typo_suggestion cx (Properties.Set.elements ids) (display_string_of_name x)
-                )
-              in
-              Error_message.EStrictLookupFailed
-                { reason_prop; reason_obj = strict_reason; name = Some x; use_op; suggestion }
+            let use_op = Some (use_op_of_lookup_action action) in
+            let suggestion =
+              Base.Option.bind ids ~f:(fun ids ->
+                  prop_typo_suggestion cx (Properties.Set.elements ids) (display_string_of_name x)
+              )
+            in
+            Error_message.EStrictLookupFailed
+              { reason_prop; reason_obj = strict_reason; name = Some x; use_op; suggestion }
           in
           add_output cx ~trace error_message;
           let p = Field (None, AnyT.error_of_kind UnresolvedName reason_op, Polarity.Neutral) in
@@ -5089,19 +5081,9 @@ struct
           | _ ->
             let reason_prop = reason_of_t elem_t in
             let error_message =
-              if is_builtin_reason ALoc.source reason then
-                Error_message.EBuiltinLookupFailed
-                  { reason = reason_prop; name = None; potential_generator = None }
-              else
-                let use_op = Some (use_op_of_lookup_action action) in
-                Error_message.EStrictLookupFailed
-                  {
-                    reason_prop;
-                    reason_obj = strict_reason;
-                    name = None;
-                    use_op;
-                    suggestion = None;
-                  }
+              let use_op = Some (use_op_of_lookup_action action) in
+              Error_message.EStrictLookupFailed
+                { reason_prop; reason_obj = strict_reason; name = None; use_op; suggestion = None }
             in
             add_output cx ~trace error_message)
         | ( (DefT (reason, _, NullT) | ObjProtoT reason | FunProtoT reason),
@@ -5121,21 +5103,14 @@ struct
           | None -> ()
           | Some strict_reason ->
             let error_message =
-              if is_builtin_reason ALoc.source reason then
-                Error_message.EBuiltinLookupFailed
-                  { reason = reason_prop; name = Some x; potential_generator = None }
-              else
-                let use_op = Some (use_op_of_lookup_action action) in
-                let suggestion =
-                  Base.Option.bind ids ~f:(fun ids ->
-                      prop_typo_suggestion
-                        cx
-                        (Properties.Set.elements ids)
-                        (display_string_of_name x)
-                  )
-                in
-                Error_message.EStrictLookupFailed
-                  { reason_prop; reason_obj = strict_reason; name = Some x; use_op; suggestion }
+              let use_op = Some (use_op_of_lookup_action action) in
+              let suggestion =
+                Base.Option.bind ids ~f:(fun ids ->
+                    prop_typo_suggestion cx (Properties.Set.elements ids) (display_string_of_name x)
+                )
+              in
+              Error_message.EStrictLookupFailed
+                { reason_prop; reason_obj = strict_reason; name = Some x; use_op; suggestion }
             in
             add_output cx ~trace error_message);
 
@@ -6388,18 +6363,14 @@ struct
                  reason_struct
              in
              let error_message =
-               if is_builtin_reason ALoc.source lreason then
-                 Error_message.EBuiltinLookupFailed
-                   { reason = reason_prop; name = prop_name; potential_generator = None }
-               else
-                 Error_message.EStrictLookupFailed
-                   {
-                     reason_prop;
-                     reason_obj = lreason;
-                     name = prop_name;
-                     use_op = Some use_op;
-                     suggestion = None;
-                   }
+               Error_message.EStrictLookupFailed
+                 {
+                   reason_prop;
+                   reason_obj = lreason;
+                   name = prop_name;
+                   use_op = Some use_op;
+                   suggestion = None;
+                 }
              in
              add_output cx ~trace error_message
        )
