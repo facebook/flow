@@ -21,8 +21,8 @@ let test_escape_unescape_data =
     "tab\t";
     "carriage return\r";
     "backslash\\";
-    "magic char" ^ String.make 1 (Char.of_int_exn 8);
-    "magic_char_with_hexadecimal_digit" ^ String.make 1 (Char.of_int_exn 26);
+    "magic char" ^ String.of_char (Char.of_int_exn 8);
+    "magic_char_with_hexadecimal_digit" ^ String.of_char (Char.of_int_exn 26);
   ]
 
 let test_escape_unescape () =

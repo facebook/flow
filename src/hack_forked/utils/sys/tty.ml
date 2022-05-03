@@ -166,7 +166,7 @@ let read_choice message choices =
     Printf.printf
       "%s (%s)%!"
       message
-      (String.concat "|" (Base.List.map choices ~f:String_utils.string_of_char));
+      (String.concat "|" (Base.List.map choices ~f:Base.String.of_char));
     let choice = read_char () in
     print_newline ();
     if Base.List.mem ~equal:Char.equal choices choice then

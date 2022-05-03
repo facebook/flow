@@ -42,7 +42,7 @@ let decode s =
     if String.length hex <> 2 then failwith ("incorrect %-escape in " ^ s);
     let code = int_of_string ("0x" ^ hex) in
     if code < 32 || code > 127 then failwith ("only 7bit ascii allowed in " ^ s);
-    String.make 1 (Char.chr code)
+    Base.String.of_char (Char.chr code)
   in
   let s = Str.global_substitute percent_re subst s in
   if Sys.win32 then

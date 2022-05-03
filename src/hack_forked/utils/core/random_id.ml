@@ -16,7 +16,7 @@ let short_string_with_alphabet alphabet =
   let cs = ref [] in
   while !r > 0 do
     let c = alphabet.[!r mod String.length alphabet] in
-    cs := String.make 1 c :: !cs;
+    cs := Base.String.of_char c :: !cs;
     r := !r lsr 6
   done;
   String.concat "" !cs

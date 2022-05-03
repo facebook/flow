@@ -187,7 +187,7 @@ let scan_for_lint_suppressions =
     )
   in
   let split_delim_locational delim { loc; value } =
-    let delim_str = String.make 1 delim in
+    let delim_str = Base.String.of_char delim in
     let source = loc.Loc.source in
     let parts = String.split_on_char delim value in
     let (parts, _) =

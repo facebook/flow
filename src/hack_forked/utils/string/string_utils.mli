@@ -13,10 +13,6 @@
 
 exception Incorrect_format
 
-val soi : int -> string
-
-val string_of_char : char -> string
-
 val string_before : string -> int -> string
 
 val string_after : string -> int -> string

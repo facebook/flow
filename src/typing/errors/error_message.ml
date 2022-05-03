@@ -2265,8 +2265,9 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
       InvalidCharSetSet.fold
         (fun c acc ->
           match c with
-          | InvalidChar c -> [code (String.make 1 c); text " is not a member of the set"] :: acc
-          | DuplicateChar c -> [code (String.make 1 c); text " is duplicated"] :: acc)
+          | InvalidChar c ->
+            [code (Base.String.of_char c); text " is not a member of the set"] :: acc
+          | DuplicateChar c -> [code (Base.String.of_char c); text " is duplicated"] :: acc)
         invalid_chars
         []
       |> List.rev

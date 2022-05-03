@@ -7,10 +7,6 @@
 
 exception Incorrect_format
 
-let soi = string_of_int
-
-let string_of_char = String.make 1
-
 let string_before s n = String.sub s 0 n
 
 let string_after s n = String.sub s n (String.length s - n)
