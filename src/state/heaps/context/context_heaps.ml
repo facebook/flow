@@ -30,15 +30,12 @@ let master_cx_ref : Context.master_context option ref = ref None
 
 let add_master ~audit master_cx =
   WorkerCancel.with_no_cancellations (fun () ->
-      master_cx_ref := None;
-      let master_context =
-        { Context.master_sig_cx = Context.sig_cx master_cx; builtins = Context.builtins master_cx }
-      in
-      (Expensive.wrap MasterContextHeap.add) ~audit () master_context
+      master_cx_ref := Some master_cx;
+      (Expensive.wrap MasterContextHeap.add) ~audit () master_cx
   )
 
 module Init_master_context_mutator : sig
-  val add_master : (Context.t -> unit) Expensive.t
+  val add_master : (Context.master_context -> unit) Expensive.t
 end = struct
   let add_master ~audit cx = add_master ~audit cx
 end

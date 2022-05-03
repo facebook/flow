@@ -18,5 +18,5 @@ module Reader : READER with type reader = State_reader.t
 module Reader_dispatcher : READER with type reader = Abstract_state_reader.t
 
 module Init_master_context_mutator : sig
-  val add_master : (Context.t -> unit) Expensive.t
+  val add_master : (Context.master_context -> unit) Expensive.t
 end
