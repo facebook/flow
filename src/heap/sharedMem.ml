@@ -66,6 +66,14 @@ let () =
   assert (tag_val String_tag = 11);
   assert (tag_val Serialized_tag = 16)
 
+(* Addresses are relative to the hashtbl pointer, so the null address actually
+ * points to the hash field of the first hashtbl entry, which is never a
+ * meaningful address, so we can use it to represent "missing" or similar.
+ *
+ * Naturally, we need to be careful not to dereference the null addr! Any
+ * internal use of null should be hidden from callers of this module. *)
+let null_addr = 0
+
 exception Out_of_shared_memory
 
 exception Hash_table_full
@@ -308,13 +316,12 @@ module HashtblSegment (Key : Key) = struct
 
   let mem k = hh_mem (hash_of_key k)
 
-  let get_hash hash =
-    if hh_mem hash then
-      Some (hh_get hash)
-    else
+  let get k =
+    let addr = hh_get (hash_of_key k) in
+    if addr == null_addr then
       None
-
-  let get k = get_hash (hash_of_key k)
+    else
+      Some addr
 
   let remove k =
     let hash = hash_of_key k in
@@ -858,14 +865,6 @@ module NewAPI = struct
   (** Addresses *)
 
   let addr_size = 1
-
-  (* Addresses are relative to the hashtbl pointer, so the null address actually
-   * points to the hash field of the first hashtbl entry, which is never a
-   * meaningful address, so we can use it to represent "missing" or similar.
-   *
-   * Naturally, we need to be careful not to dereference the null addr! Any
-   * internal use of null should be hidden from callers of this module. *)
-  let null_addr = 0
 
   (* Write an address at a specified address in the heap. The caller must ensure
    * the given destination has already been allocated. *)

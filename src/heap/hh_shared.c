@@ -1756,9 +1756,8 @@ CAMLprim value hh_get(value key) {
 
   helt_t elt;
   find_slot(key, &elt);
-  assert(elt.hash != 0);
 
-  CAMLreturn(Val_long(elt.addr));
+  CAMLreturn(Val_long(elt.hash == 0 ? NULL_ADDR : elt.addr));
 }
 
 /*****************************************************************************/
