@@ -437,7 +437,7 @@ static addr_t gc_end = NULL_ADDR;
 
 // The marking phase treats the shared hash table as GC roots, but these are
 // marked incrementally. Because we might modify the hash table between mark
-// slices, we insert write barriers in hh_remove and hh_move.
+// slices, we insert a write barrier in hh_remove.
 static uintnat roots_ptr = 0;
 
 // Holds the current position of the sweep phase between slices.
@@ -974,9 +974,9 @@ CAMLprim value hh_check_should_exit(value unit) {
  *
  * For snapshot-at-the-beginning, we use a Yuasa style deletion barrier. If a
  * field is modified during collection, the "old" reference is added to the mark
- * stack. The only modifications that happen during a GC pass are hh_move and
- * hh_remove. These are both only called from the main server process, which
- * means we don't need to store the mark stack in shared memory.
+ * stack. The only modification that happens during a GC pass is hh_remove,
+ * which is only called from the main server process, meaning we don't need to
+ * store the mark stack in shared memory.
  *
  * The "allocate black" strategy is a bit non-standard. Because the shared heap
  * is a bump allocator, we don't actually use the black color for new
@@ -1769,41 +1769,6 @@ CAMLprim value hh_get_size(value addr_val) {
   heap_entry_t* entry = Entry_of_addr(Long_val(addr_val));
   size_t compressed_bsize = entry_compressed_bsize(entry);
   CAMLreturn(Val_long(compressed_bsize));
-}
-
-/*****************************************************************************/
-/* Moves the data associated to key1 to key2.
- * key1 must be present.
- * key2 must be free.
- * Only the master can perform this operation.
- */
-/*****************************************************************************/
-CAMLprim value hh_move(value key1, value key2) {
-  CAMLparam2(key1, key2);
-  helt_t elt1, elt2;
-  size_t slot1 = find_slot(key1, &elt1);
-  size_t slot2 = find_slot(key2, &elt2);
-
-  assert_master();
-  assert(elt1.hash != 0);
-  assert(elt2.addr == NULL_ADDR);
-
-  // We are taking up a previously empty slot. Let's increment the counter.
-  // hcounter_filled doesn't change, since slot1 becomes empty and slot2 becomes
-  // filled.
-  if (elt2.hash == 0) {
-    info->hcounter += 1;
-  }
-
-  // GC write barrier
-  if (info->gc_phase == Phase_mark) {
-    mark_slice_darken(elt1.addr);
-  }
-
-  hashtbl[slot2].hash = get_hash(key2);
-  hashtbl[slot2].addr = elt1.addr;
-  hashtbl[slot1].addr = NULL_ADDR;
-  CAMLreturn(Val_unit);
 }
 
 /*****************************************************************************/

@@ -81,23 +81,11 @@ module type NoCache = sig
 
   val get : key -> value option
 
-  val get_old : key -> value option
-
-  val remove_old_batch : KeySet.t -> unit
-
   val remove : key -> unit
 
   val remove_batch : KeySet.t -> unit
 
   val mem : key -> bool
-
-  val mem_old : key -> bool
-
-  val oldify : key -> unit
-
-  val oldify_batch : KeySet.t -> unit
-
-  val revive_batch : KeySet.t -> unit
 end
 
 module type DebugCacheType = sig

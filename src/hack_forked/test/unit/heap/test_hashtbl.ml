@@ -28,15 +28,7 @@ let get = TestHeap.get
 
 let mem = TestHeap.mem
 
-let mem_old = TestHeap.mem_old
-
-let oldify k = TestHeap.oldify_batch (SSet.singleton k)
-
-let revive k = TestHeap.revive_batch (SSet.singleton k)
-
 let remove k = TestHeap.remove_batch (SSet.singleton k)
-
-let remove_old k = TestHeap.remove_old_batch (SSet.singleton k)
 
 let expect_equals ~name value expected =
   expect
@@ -72,13 +64,6 @@ let expect_mem key =
 let expect_not_mem key =
   expect ~msg:(Printf.sprintf "Expected key '%s' to not be in hashtable" key) @@ not (mem key)
 
-let expect_mem_old key =
-  expect ~msg:(Printf.sprintf "Expected oldified key '%s' to be in hashtable" key) @@ mem_old key
-
-let expect_not_mem_old key =
-  expect ~msg:(Printf.sprintf "Expected oldified key '%s' to not be in hashtable" key)
-  @@ not (mem_old key)
-
 let expect_get key expected =
   let value = Base.Option.value_exn (get key) in
   expect
@@ -111,15 +96,9 @@ let test_ops () =
   expect_stats ~nonempty:1 ~used:1;
   expect_mem "0";
 
-  oldify "0";
-  expect_stats ~nonempty:2 ~used:1;
-  expect_not_mem "0";
-  expect_mem_old "0";
-
-  remove_old "0";
-  expect_stats ~nonempty:2 ~used:0;
-  expect_not_mem "0";
-  expect_not_mem_old "0"
+  remove "0";
+  expect_stats ~nonempty:1 ~used:0;
+  expect_not_mem "0"
 
 let test_hashtbl_full_hh_add () =
   expect_stats ~nonempty:0 ~used:0;
@@ -137,26 +116,6 @@ let test_hashtbl_full_hh_add () =
 
   try
     add "8" "";
-    expect ~msg:"Expected the hash table to be full" false
-  with
-  | SharedMem.Hash_table_full -> ()
-
-let test_hashtbl_full_hh_move () =
-  expect_stats ~nonempty:0 ~used:0;
-
-  add "0" "";
-  add "1" "";
-  add "2" "";
-  add "3" "";
-  add "4" "";
-  add "5" "";
-  add "7" "";
-  add "8" "";
-
-  expect_stats ~nonempty:8 ~used:8;
-
-  try
-    oldify "0";
     expect ~msg:"Expected the hash table to be full" false
   with
   | SharedMem.Hash_table_full -> ()
@@ -204,18 +163,7 @@ let test_reuse_slots () =
   add "1" "Foo";
   expect_mem "1";
   expect_get "1" "Foo";
-  expect_stats ~nonempty:1 ~used:1;
-
-  (* Oldifying will use a new slot for the old key *)
-  oldify "1";
-  expect_not_mem "1";
-  expect_mem_old "1";
-  expect_stats ~nonempty:2 ~used:1;
-
-  (* Reviving will reuse the original slot *)
-  revive "1";
-  expect_mem "1";
-  expect_stats ~nonempty:2 ~used:1
+  expect_stats ~nonempty:1 ~used:1
 
 (* Test basic garbage collection works *)
 let test_gc_collect () =
@@ -286,7 +234,6 @@ let tests () =
     [
       ("test_ops", test_ops);
       ("test_hashtbl_full_hh_add", test_hashtbl_full_hh_add);
-      ("test_hashtbl_full_hh_move", test_hashtbl_full_hh_move);
       ("test_no_overwrite", test_no_overwrite);
       ("test_reuse_slots", test_reuse_slots);
       ("test_gc_collect", test_gc_collect);

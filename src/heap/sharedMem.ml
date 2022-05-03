@@ -294,32 +294,19 @@ module HashtblSegment (Key : Key) = struct
 
   external hh_remove : hash -> unit = "hh_remove"
 
-  external hh_move : hash -> hash -> unit = "hh_move"
-
   let hh_add x y = WorkerCancel.with_worker_exit (fun () -> hh_add x y)
 
   let hh_mem x = WorkerCancel.with_worker_exit (fun () -> hh_mem x)
 
   let hh_get x = WorkerCancel.with_worker_exit (fun () -> hh_get x)
 
-  (* The hash table supports a kind of versioning, where a key can be "oldified"
-   * temporarily while a new value for the same key is written. The oldified key
-   * can then be revived or removed. We ensure that the new and old entries
-   * occupy distinct hash table slots by giving them distinct prefixes. *)
+  let hash_of_key =
+    let prefix = Prefix.make () in
+    (fun k -> Digest.string (Prefix.make_key prefix (Key.to_string k)))
 
-  let new_prefix = Prefix.make ()
+  let add k addr = hh_add (hash_of_key k) addr
 
-  let old_prefix = Prefix.make ()
-
-  let new_hash_of_key k = Digest.string (Prefix.make_key new_prefix (Key.to_string k))
-
-  let old_hash_of_key k = Digest.string (Prefix.make_key old_prefix (Key.to_string k))
-
-  let add k addr = hh_add (new_hash_of_key k) addr
-
-  let mem k = hh_mem (new_hash_of_key k)
-
-  let mem_old k = hh_mem (old_hash_of_key k)
+  let mem k = hh_mem (hash_of_key k)
 
   let get_hash hash =
     if hh_mem hash then
@@ -327,51 +314,11 @@ module HashtblSegment (Key : Key) = struct
     else
       None
 
-  let get k = get_hash (new_hash_of_key k)
-
-  let get_old k = get_hash (old_hash_of_key k)
+  let get k = get_hash (hash_of_key k)
 
   let remove k =
-    let new_hash = new_hash_of_key k in
-    if hh_mem new_hash then hh_remove new_hash
-
-  (* We oldify entries that might be changed by an operation, which involves
-   * moving the address of the current heap value from the "new" key to the
-   * "old" key. The operation might then write an updated value to the "new"
-   * key.
-   *
-   * This function is strange, though. Why, if a new entry does not exist, do we
-   * try to remove an extant old entry? Why should an old entry even exist at
-   * this point? I was not able to find a clear justification for this behavior
-   * from source control history... *)
-  let oldify k =
-    let new_hash = new_hash_of_key k in
-    let old_hash = old_hash_of_key k in
-    if hh_mem new_hash then
-      hh_move new_hash old_hash
-    else if hh_mem old_hash then
-      hh_remove old_hash
-
-  (* After an operation which first oldified some values, we might decide that
-   * the original values are still good enough. In this case we can move the old
-   * key back into the new slot.
-   *
-   * hh_move expects the destination slot to be empty, but the operation might
-   * have written a new value before deciding to roll back, so we first check
-   * and remove any new key first. *)
-  let revive k =
-    let new_hash = new_hash_of_key k in
-    let old_hash = old_hash_of_key k in
-    if hh_mem new_hash then hh_remove new_hash;
-    if hh_mem old_hash then hh_move old_hash new_hash
-
-  (* After an operation which first oldified some values, if we decide to commit
-   * those changes, we can remove the old key. Generally the hash table entry
-   * keeps the corresponding heap object alive, so removing this reference will
-   * allow the GC to clean up the old value in the heap. *)
-  let remove_old k =
-    let old_hash = old_hash_of_key k in
-    if hh_mem old_hash then hh_remove old_hash
+    let hash = hash_of_key k in
+    if hh_mem hash then hh_remove hash
 end
 
 (*****************************************************************************)
@@ -413,23 +360,11 @@ module type NoCache = sig
 
   val get : key -> value option
 
-  val get_old : key -> value option
-
-  val remove_old_batch : KeySet.t -> unit
-
   val remove : key -> unit
 
   val remove_batch : KeySet.t -> unit
 
   val mem : key -> bool
-
-  val mem_old : key -> bool
-
-  val oldify : key -> unit
-
-  val oldify_batch : KeySet.t -> unit
-
-  val revive_batch : KeySet.t -> unit
 end
 
 module type LocalCache = sig
@@ -516,8 +451,6 @@ struct
 
   let mem = Tbl.mem
 
-  let mem_old = Tbl.mem_old
-
   let deserialize addr =
     let value = hh_deserialize addr in
     if hh_log_level () > 0 then log_deserialize (hh_get_size addr) (Obj.repr value);
@@ -528,22 +461,9 @@ struct
     | None -> None
     | Some addr -> Some (deserialize addr)
 
-  let get_old key =
-    match Tbl.get_old key with
-    | None -> None
-    | Some addr -> Some (deserialize addr)
-
   let remove = Tbl.remove
 
   let remove_batch keys = KeySet.iter remove keys
-
-  let oldify = Tbl.oldify
-
-  let oldify_batch keys = KeySet.iter oldify keys
-
-  let revive_batch keys = KeySet.iter Tbl.revive keys
-
-  let remove_old_batch keys = KeySet.iter Tbl.remove_old keys
 end
 
 module NoCacheAddr (Key : Key) (Value : AddrValue) = struct
@@ -558,23 +478,11 @@ module NoCacheAddr (Key : Key) (Value : AddrValue) = struct
 
   let mem = Tbl.mem
 
-  let mem_old = Tbl.mem_old
-
   let get = Tbl.get
-
-  let get_old = Tbl.get_old
 
   let remove = Tbl.remove
 
   let remove_batch keys = KeySet.iter remove keys
-
-  let oldify = Tbl.oldify
-
-  let oldify_batch keys = KeySet.iter oldify keys
-
-  let revive_batch keys = KeySet.iter Tbl.revive keys
-
-  let remove_old_batch keys = KeySet.iter Tbl.remove_old keys
 end
 
 (*****************************************************************************)
@@ -836,27 +744,10 @@ struct
       if hh_log_level () > 0 then log_hit_rate ~hit:true;
       result
 
-  (* We don't cache old objects, they are not accessed often enough. *)
-  let get_old = Direct.get_old
-
-  let mem_old = Direct.mem_old
-
   let mem x =
     match get x with
     | None -> false
     | Some _ -> true
-
-  let oldify key =
-    Direct.oldify key;
-    Cache.remove key
-
-  let oldify_batch keys =
-    Direct.oldify_batch keys;
-    KeySet.iter Cache.remove keys
-
-  let revive_batch keys =
-    Direct.revive_batch keys;
-    KeySet.iter Cache.remove keys
 
   let remove x =
     Direct.remove x;
@@ -871,8 +762,6 @@ struct
         Cache.clear ()
       end
       :: !invalidate_callback_list
-
-  let remove_old_batch = Direct.remove_old_batch
 end
 
 module NewAPI = struct
