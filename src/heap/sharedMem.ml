@@ -323,9 +323,7 @@ module HashtblSegment (Key : Key) = struct
     else
       Some addr
 
-  let remove k =
-    let hash = hash_of_key k in
-    if hh_mem hash then hh_remove hash
+  let remove k = hh_remove (hash_of_key k)
 end
 
 (*****************************************************************************)

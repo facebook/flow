@@ -1777,20 +1777,19 @@ CAMLprim value hh_get_size(value addr_val) {
 /*****************************************************************************/
 CAMLprim value hh_remove(value key) {
   CAMLparam1(key);
+  assert_master();
+
   helt_t elt;
   size_t slot = find_slot(key, &elt);
-
-  assert_master();
-  assert(elt.hash != 0);
-  assert(elt.addr != NULL_ADDR);
-
-  // GC write barrier
-  if (info->gc_phase == Phase_mark) {
-    mark_slice_darken(elt.addr);
+  if (elt.hash != 0 && elt.addr != NULL_ADDR) {
+    // GC write barrier
+    if (info->gc_phase == Phase_mark) {
+      mark_slice_darken(elt.addr);
+    }
+    hashtbl[slot].addr = NULL_ADDR;
+    info->hcounter_filled -= 1;
   }
 
-  hashtbl[slot].addr = NULL_ADDR;
-  info->hcounter_filled -= 1;
   CAMLreturn(Val_unit);
 }
 
