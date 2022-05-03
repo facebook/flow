@@ -109,7 +109,7 @@ let test_jget_string () =
       results
       ^ Printf.sprintf "string_exn: str=%B num=%B nul=%B abs=%B non=%B\n" str num nul abs non
     in
-    let failed = String_utils.is_substring "false" results in
+    let failed = Base.String.is_substring ~substring:"false" results in
     if failed then Caml.Printf.eprintf "%s" results;
     not failed
   )
@@ -132,7 +132,7 @@ let test_jget_number () =
     let results =
       results ^ Printf.sprintf "float_opt: int=%B float=%B string=%B\n" fint ffloat fstring
     in
-    let failed = String_utils.is_substring "false" results in
+    let failed = Base.String.is_substring ~substring:"false" results in
     if failed then Caml.Printf.eprintf "%s" results;
     not failed
   )

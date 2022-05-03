@@ -11,8 +11,6 @@
    clean it up manually, and then delete this comment once the interface is in
    shape. *)
 
-val is_substring : string -> string -> bool
-
 (** [lstrip s prefix] returns a copy of [s] with [prefix] removed from
     the beginning if [s] begins with [prefix], or [s] itself if not.
     Physical equality is maintained in the latter case. *)

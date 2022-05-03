@@ -5,51 +5,6 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-(** [substring_index needle haystack] returns the index of the first occurrence of
-    string [needle] in string [haystack]. If not found, returns [-1].
-
-    An implementation of the Knuth-Morris-Pratt (KMP) algorithm. *)
-let substring_index needle =
-  (* see Wikipedia pseudocode *)
-  let needle_len = String.length needle in
-  if needle_len = 0 then raise (Invalid_argument needle);
-  let table = Array.make needle_len 0 in
-  table.(0) <- -1;
-  let pos = ref 2 and cnd = ref 0 in
-  while !pos < needle_len do
-    if needle.[!pos - 1] = needle.[!cnd] then (
-      table.(!pos) <- !cnd + 1;
-      incr pos;
-      incr cnd
-    ) else if !cnd > 0 then
-      cnd := table.(!cnd)
-    else (
-      table.(!pos) <- 0;
-      incr pos
-    )
-  done;
-  fun haystack ->
-    let len = String.length haystack in
-    let p = ref 0 in
-    let q = ref 0 in
-    while !p < len && !q < needle_len do
-      if haystack.[!p] = needle.[!q] then (
-        incr p;
-        incr q
-      ) else if !q = 0 then
-        incr p
-      else
-        q := table.(!q)
-    done;
-    if !q >= needle_len then
-      !p - needle_len
-    else
-      -1
-
-let is_substring needle =
-  let substring_index_memo = substring_index needle in
-  (fun haystack -> substring_index_memo haystack >= 0)
-
 (** [lstrip s prefix] returns a copy of [s] with [prefix] removed from
     the beginning if [s] begins with [prefix], or [s] itself if not.
     Physical equality is maintained in the latter case. *)
