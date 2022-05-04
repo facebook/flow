@@ -113,6 +113,24 @@ module New_env = struct
 
   let valid_declaration_check = Old_env.valid_declaration_check
 
+  (* We don't want the new-env to throw if we encounter some new case in the wild for which we did
+   * not adequately prepare. Instead, we return `any` in prod mode, but still crash in build mode.
+   *)
+  let with_debug_exn cx loc f =
+    try f () with
+    | exn ->
+      let exn = Exception.wrap exn in
+      if Build_mode.dev then
+        Exception.reraise exn
+      else (
+        Flow_js_utils.add_output
+          cx
+          (Error_message.EInternal (loc, Error_message.MissingEnvWrite loc));
+        AnyT.at (AnyError None) loc
+      )
+
+  let t_option_value_exn cx loc t = with_debug_exn cx loc (fun () -> Base.Option.value_exn t)
+
   (************************)
   (* Helpers **************)
   (************************)
@@ -216,7 +234,7 @@ module New_env = struct
       | SingletonNumR { loc; sense; lit } -> SingletonNumP (loc, sense, lit)
       | SentinelR (prop, loc) ->
         let env = Context.environment cx in
-        let other_t = Base.Option.value_exn (Loc_env.find_write env loc) in
+        let other_t = t_option_value_exn cx loc (Loc_env.find_write env loc) in
         LeftP (SentinelProp prop, other_t)
       | LatentR { func = (func_loc, _); index } ->
         (* Latent refinements store the loc of the callee, which is a read in the env *)
@@ -254,7 +272,7 @@ module New_env = struct
                | (Env_api.DeclaredFunction loc, _) ->
                  provider_type_for_def_loc ~intersect:true env loc
                | (Env_api.Undeclared (_name, def_loc), (ForType | ForTypeof)) ->
-                 Base.Option.value_exn (Loc_env.find_write env def_loc)
+                 t_option_value_exn cx def_loc (Loc_env.find_write env def_loc)
                | (Env_api.Undeclared (name, def_loc), ForValue) ->
                  Flow_js.add_output
                    cx
@@ -271,7 +289,8 @@ module New_env = struct
                        (Reason.string_of_aloc loc)
                        (Reason.aloc_of_reason def |> Reason.string_of_aloc);
                    ];
-                 Base.Option.value_exn (Reason.aloc_of_reason def |> Loc_env.find_write env)
+                 let loc = Reason.aloc_of_reason def in
+                 t_option_value_exn cx loc (Loc_env.find_write env loc)
                | (Env_api.UndeclaredClass { name; def }, _) ->
                  let def_loc = aloc_of_reason def in
                  Flow_js.add_output
@@ -289,7 +308,8 @@ module New_env = struct
                        (Reason.string_of_aloc loc)
                        (Reason.aloc_of_reason reason |> Reason.string_of_aloc);
                    ];
-                 Base.Option.value_exn (Reason.aloc_of_reason reason |> Loc_env.find_write env)
+                 let loc = Reason.aloc_of_reason reason in
+                 t_option_value_exn cx loc (Loc_env.find_write env loc)
                | (Env_api.With_ALoc.Refinement { refinement_id; writes; write_id }, _) ->
                  find_refi var_info refinement_id
                  |> Base.Option.some
@@ -302,13 +322,13 @@ module New_env = struct
                  Old_env.query_var ~lookup_mode cx (Reason.InternalName "super") loc
                | (Env_api.With_ALoc.Exports, _) ->
                  let file_loc = Loc.{ none with source = Some (Context.file cx) } |> ALoc.of_loc in
-                 Base.Option.value_exn (Loc_env.find_write env file_loc)
+                 t_option_value_exn cx file_loc (Loc_env.find_write env file_loc)
                | (Env_api.With_ALoc.ModuleScoped _, _) -> Type.(AnyT.at AnnotatedAny loc)
                | (Env_api.With_ALoc.Unreachable loc, _) ->
                  let reason = mk_reason (RCustom "unreachable value") loc in
                  EmptyT.make reason (Trust.bogus_trust ())
                | (Env_api.With_ALoc.Projection loc, _) ->
-                 Base.Option.value_exn (Loc_env.find_write env loc))
+                 t_option_value_exn cx loc (Loc_env.find_write env loc))
              states
           |> phi cx reason
           )
@@ -341,9 +361,11 @@ module New_env = struct
       | _ -> Ok (type_of_state write_locs id None))
 
   and read_entry_exn ~lookup_mode cx loc reason =
-    match read_entry ~lookup_mode cx loc reason with
-    | Error loc -> failwith (Utils_js.spf "LocEnvEntryNotFound %s" (Reason.string_of_aloc loc))
-    | Ok x -> x
+    with_debug_exn cx loc (fun () ->
+        match read_entry ~lookup_mode cx loc reason with
+        | Error loc -> failwith (Utils_js.spf "LocEnvEntryNotFound %s" (Reason.string_of_aloc loc))
+        | Ok x -> x
+    )
 
   let get_this_type_param_if_necessary ~otherwise name loc =
     if name = OrdinaryName "this" then
