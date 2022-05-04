@@ -275,5 +275,19 @@ var tests =
       (a: number); // ok
       (b: string); // ok
     }
+  },
+
+  function() {
+    const o: {p: string | null} = {p: null};
+    if (o.p != null || o.p != null) {
+      (o.p: string);
+    }
+  },
+
+  function() {
+    const o: {p: string | null} = {p: null};
+    if (o.p != null && o.p != null) {
+      (o.p: string);
+    }
   }
 ];

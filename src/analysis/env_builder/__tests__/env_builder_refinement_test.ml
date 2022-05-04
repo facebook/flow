@@ -4011,6 +4011,58 @@ x.foo; // 3 | 4
           {refinement = 4; writes = projection at (7, 12) to (7, 17)}
         }] |}]
 
+let%expect_test "heap_refinement_normalize_from_and" =
+  print_ssa_test {|
+let x = {};
+if (x.foo === 3 && x.foo === 3) {
+  x.foo; // 3
+}
+|};
+    [%expect {|
+      [
+        (3, 4) to (3, 5) => {
+          (2, 4) to (2, 5): (`x`)
+        };
+        (3, 19) to (3, 20) => {
+          {refinement = SentinelR foo; writes = (2, 4) to (2, 5): (`x`)}
+        };
+        (3, 19) to (3, 24) => {
+          {refinement = 3; writes = projection at (3, 4) to (3, 9)}
+        };
+        (4, 2) to (4, 3) => {
+          {refinement = And (SentinelR foo, SentinelR foo); writes = (2, 4) to (2, 5): (`x`)}
+        };
+        (4, 2) to (4, 7) => {
+          {refinement = And (3, 3); writes = projection at (3, 4) to (3, 9)}
+        }]
+       |}]
+
+let%expect_test "heap_refinement_normalize_from_or" =
+  print_ssa_test {|
+let x = {};
+if (x.foo === 3 || x.foo === 4) {
+  x.foo; // 3 | 4
+}
+|};
+    [%expect {|
+      [
+        (3, 4) to (3, 5) => {
+          (2, 4) to (2, 5): (`x`)
+        };
+        (3, 19) to (3, 20) => {
+          {refinement = Not (SentinelR foo); writes = (2, 4) to (2, 5): (`x`)}
+        };
+        (3, 19) to (3, 24) => {
+          {refinement = Not (3); writes = projection at (3, 4) to (3, 9)}
+        };
+        (4, 2) to (4, 3) => {
+          {refinement = Or (SentinelR foo, SentinelR foo); writes = (2, 4) to (2, 5): (`x`)}
+        };
+        (4, 2) to (4, 7) => {
+          {refinement = Or (3, 4); writes = projection at (3, 4) to (3, 9)}
+        }]
+       |}]
+
 let%expect_test "heap_refinement_one_branch" =
   print_ssa_test {|
 declare var invariant: any;

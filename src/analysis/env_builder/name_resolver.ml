@@ -645,8 +645,21 @@ module Make
 
   type refinement_id = int
 
-  (* Describes a set of vals that arise from refinements and which should be removed from
-     the environment after the refinement scope, e.g. `if (x.y) {}` *)
+  (* Describes a set of projections that arise from refinements and which should be restored to
+     the heap refinements after pushing refinement scope,
+     e.g.
+     ```
+     if (x.y) {
+       // Has changeset x.y
+     } else {
+       // During this#negate_new_refinements
+       //   1. Initially, heap refinement on x is removed during this#pop_refinement_scope.
+       //   2. During this#push_refinement_scope, the base heap_val is restored from changeset,
+       //      and the negation of refinement is added,
+       //      so we have {refinement=Not Truthy, write=x.y}.
+     }
+     ```
+  *)
   type changeset = Val.t LookupMap.t
 
   type refinement_prop =
@@ -1304,7 +1317,10 @@ module Make
           | Some { Env.env_val; heap_refinements; def_loc = _ } ->
             (match projections with
             | [] -> Some env_val
-            | _ -> HeapRefinementMap.find_opt projections heap_refinements))
+            | _ ->
+              heap_refinements
+              |> HeapRefinementMap.find_opt projections
+              |> Base.Option.filter ~f:(fun v -> not @@ Val.is_projection v)))
 
       (* Function calls may introduce refinements if the function called is a
        * predicate function. The EnvBuilder has no idea if a function is a
@@ -2006,8 +2022,8 @@ module Make
                 match RefinementKey.of_expression left_expr with
                 | None -> ()
                 | Some refinement_key ->
-                  (* If we don't already have a projection val in the environment for this key, we need to create one and commit it. We can't create it
-                     via a refinement, because then it would be popped off as part of a changeset at the end of the refinement scope. *)
+                  (* If we don't already have a projection val in the environment for this key, we need to create one and commit it.
+                     We need to use this special function, so that the projection won't be auto-removed. *)
                   this#add_projection refinement_key
               end;
               (* THe LHS is unconditionally evaluated, so we don't run-to-completion and catch the
@@ -3181,19 +3197,8 @@ module Make
        * scope again that you would re-refine the unrefined variables, which is desirable in cases
        * where we juggle refinement scopes like we do for nullish coalescing *)
       method private pop_refinement_scope () =
-        let { applied; changeset; _ } = List.hd env_state.latest_refinements in
+        let { applied; _ } = List.hd env_state.latest_refinements in
         env_state <- { env_state with latest_refinements = List.tl env_state.latest_refinements };
-        changeset
-        |> LookupMap.iter (fun { RefinementKey.base; projections } v ->
-               match (projections, SMap.find_opt base env_state.env) with
-               | (_ :: _, Some { heap_refinements; _ })
-                 when Base.Option.value_map
-                        (HeapRefinementMap.find_opt projections !heap_refinements)
-                        ~f:(fun v' -> Val.base_id_of_val v' = Val.base_id_of_val v)
-                        ~default:false ->
-                 heap_refinements := HeapRefinementMap.remove projections !heap_refinements
-               | _ -> ()
-           );
         applied
         |> IMap.iter (fun _ (lookup, refinement_id) ->
                let unrefine x = Val.unrefine refinement_id x in
@@ -3314,17 +3319,7 @@ module Make
                 r1
                 r2
             in
-            let c =
-              LookupMap.merge
-                (fun _ c1 c2 ->
-                  match (c1, c2) with
-                  | (None, _)
-                  | (_, None) ->
-                    None
-                  | (Some v1, Some v2) -> Some (Val.merge v1 v2))
-                c1
-                c2
-            in
+            let c = LookupMap.union c1 c2 in
             (r, c)
         in
         let nnf = nnf total in
@@ -3338,7 +3333,7 @@ module Make
                L.LMap.add loc (Env_api.AssigningWrite reason) env_state.write_entries
              in
              env_state <- { env_state with write_entries };
-             Val.projection loc
+             Val.one reason
             )
         in
         this#map_val_with_lookup lookup ~create_val_for_heap (fun x -> x)
