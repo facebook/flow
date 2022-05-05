@@ -11,7 +11,7 @@ include Sys
 module S = struct
   type t = string
 
-  let compare = Stdlib.compare
+  let compare = String.compare
 
   let to_string x = x
 end
@@ -22,7 +22,17 @@ let dummy_path : t = ""
 
 let cat = Sys_utils.cat
 
-let compare = Stdlib.compare
+(** [is_ancestor ~prefix path] determines if [prefix] is an ancestor directory of [path] *)
+let is_ancestor ~prefix path =
+  let prefix =
+    if String.ends_with prefix ~suffix:Filename.dir_sep then
+      prefix
+    else
+      prefix ^ Filename.dir_sep
+  in
+  String.starts_with ~prefix path
+
+let compare = String.compare
 
 let dirname = Filename.dirname
 

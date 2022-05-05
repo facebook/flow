@@ -459,7 +459,12 @@ let wanted ~options lib_fileset =
   let is_ignored_ = is_ignored options in
   (fun path -> (not (is_ignored_ path)) && not (SSet.mem path lib_fileset))
 
-let watched_paths options = Path_matcher.stems options.includes
+let watched_paths options =
+  Path_matcher.stems options.includes
+  |> Base.List.sort ~compare:Path.compare
+  |> Base.List.remove_consecutive_duplicates ~which_to_keep:`First ~equal:(fun stem prev_stem ->
+         Path.is_ancestor ~prefix:prev_stem stem
+     )
 
 (**
  * Creates a "next" function (see also: `get_all`) for finding the files in a
