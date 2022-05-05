@@ -66,12 +66,6 @@ val parse_didClose : Hh_json.json option -> Lsp.DidClose.params
 
 val parse_didSave : Hh_json.json option -> Lsp.DidSave.params
 
-val parse_didChange : Hh_json.json option -> Lsp.DidChange.params
-
-val parse_documentRename : Hh_json.json option -> Lsp.Rename.params
-
-val print_documentRename : Lsp.Rename.result -> Hh_json.json
-
 val print_diagnostics : Lsp.PublishDiagnostics.params -> Hh_json.json
 
 val print_logMessage : Lsp.MessageType.t -> string -> Hh_json.json
@@ -90,23 +84,9 @@ val parse_hover : Hh_json.json option -> Lsp.Hover.params
 
 val print_hover : Lsp.Hover.result -> Hh_json.json
 
-val parse_definition : Hh_json.json option -> Lsp.Definition.params
-
-val print_definition : Lsp.Definition.result -> Hh_json.json
-
 val parse_completionItem : Hh_json.json option -> Lsp.CompletionItemResolve.params
 
 val print_completionItem : key:string -> Lsp.Completion.completionItem -> Hh_json.json
-
-val parse_completion : Hh_json.json option -> Lsp.Completion.params
-
-val parse_workspaceSymbol : Hh_json.json option -> Lsp.WorkspaceSymbol.params
-
-val print_workspaceSymbol : Lsp.WorkspaceSymbol.result -> Hh_json.json
-
-val parse_documentSymbol : Hh_json.json option -> Lsp.DocumentSymbol.params
-
-val print_documentSymbol : Lsp.DocumentSymbol.result -> Hh_json.json
 
 val parse_findReferences : Hh_json.json option -> Lsp.FindReferences.params
 

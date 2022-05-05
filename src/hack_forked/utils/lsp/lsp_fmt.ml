@@ -332,26 +332,25 @@ let parse_didSave (params : json option) : DidSave.params =
     }
   
 
-(************************************************************************)
-(* textDocument/didChange notification                                  *)
-(************************************************************************)
+(** textDocument/didChange notification *)
+module DidChangeFmt = struct
+  open DidChange
 
-let parse_didChange (params : json option) : DidChange.params =
-  DidChange.(
-    let parse_textDocumentContentChangeEvent json =
-      {
-        range = Jget.obj_opt json "range" |> parse_range_opt;
-        rangeLength = Jget.int_opt json "rangeLength";
-        text = Jget.string_exn json "text";
-      }
-    in
+  let content_change_event_of_json json =
+    {
+      range = Jget.obj_opt json "range" |> parse_range_opt;
+      rangeLength = Jget.int_opt json "rangeLength";
+      text = Jget.string_exn json "text";
+    }
+
+  let params_of_json (params : json option) : params =
     {
       textDocument = Jget.obj_exn params "textDocument" |> parse_versionedTextDocumentIdentifier;
       contentChanges =
         Jget.array_d params "contentChanges" ~default:[]
-        |> Base.List.map ~f:parse_textDocumentContentChangeEvent;
+        |> Base.List.map ~f:content_change_event_of_json;
     }
-  )
+end
 
 module SelectionRangeFmt = struct
   open SelectionRange
@@ -372,10 +371,7 @@ module SelectionRangeFmt = struct
     JSON_Array ranges
 end
 
-(************************************************************************)
-(* textDocument/signatureHelp notification                              *)
-(************************************************************************)
-
+(** textDocument/signatureHelp notification *)
 module SignatureHelpFmt = struct
   open SignatureHelp
   open Hh_json
@@ -439,56 +435,53 @@ module SignatureHelpFmt = struct
     }
 end
 
-(************************************************************************)
-(* codeLens/resolve Request                                             *)
-(************************************************************************)
+(** codeLens/resolve Request *)
+module CodeLensResolveFmt = struct
+  open CodeLensResolve
 
-let parse_codeLensResolve (params : json option) : CodeLensResolve.params = parse_codeLens params
+  let params_of_json (params : json option) : params = parse_codeLens params
 
-let print_codeLensResolve ~key (r : CodeLensResolve.result) : json = print_codeLens ~key r
+  let json_of_result ~key (r : result) : json = print_codeLens ~key r
+end
 
-(************************************************************************)
-(* textDocument/rename Request                                          *)
-(************************************************************************)
+(** textDocument/rename Request *)
+module RenameFmt = struct
+  open Rename
 
-let parse_documentRename (params : json option) : Rename.params =
-  Rename.
+  let params_of_json (params : json option) : params =
     {
       textDocument = Jget.obj_exn params "textDocument" |> parse_textDocumentIdentifier;
       position = Jget.obj_exn params "position" |> parse_position;
       newName = Jget.string_exn params "newName";
     }
-  
 
-let print_documentRename : Rename.result -> json = print_workspaceEdit
+  let json_of_result : result -> json = print_workspaceEdit
+end
 
-(************************************************************************)
-(* textDocument/codeLens Request                                        *)
-(************************************************************************)
+(** textDocument/codeLens Request *)
+module DocumentCodeLensFmt = struct
+  open DocumentCodeLens
 
-let parse_documentCodeLens (params : json option) : DocumentCodeLens.params =
-  DocumentCodeLens.
+  let params_of_json (params : json option) : params =
     { textDocument = Jget.obj_exn params "textDocument" |> parse_textDocumentIdentifier }
-  
 
-let print_documentCodeLens ~key (r : DocumentCodeLens.result) : json =
-  JSON_Array (Base.List.map r ~f:(print_codeLens ~key))
+  let json_of_result ~key (r : result) : json = JSON_Array (Base.List.map r ~f:(print_codeLens ~key))
+end
 
-(************************************************************************)
-(* workspace/executeCommand Request                                     *)
-(************************************************************************)
+(** workspace/executeCommand Request *)
+module ExecuteCommandFmt = struct
+  open ExecuteCommand
 
-let parse_executeCommand (params : json option) : ExecuteCommand.params =
-  ExecuteCommand.
+  let params_of_json (params : json option) : params =
     {
       command = Jget.string_exn params "command" |> parse_command_name;
       arguments =
         Jget.array_opt params "arguments"
         |> Base.Option.map ~f:(Base.List.map ~f:(fun j -> Base.Option.value_exn j));
     }
-  
 
-let print_executeCommand (() : ExecuteCommand.result) : json = JSON_Null
+  let json_of_result (() : result) : json = JSON_Null
+end
 
 (** workspace/applyEdit server -> client request *)
 module ApplyWorkspaceEditFmt = struct
@@ -655,7 +648,7 @@ let print_codeAction ~key (c : CodeAction.t) : json =
         ("title", Some (JSON_String c.title));
         ("kind", Some (JSON_String (CodeActionKind.string_of_kind c.kind)));
         ("diagnostics", Some (print_diagnostic_list c.diagnostics));
-        ("edit", Base.Option.map edit ~f:print_documentRename);
+        ("edit", Base.Option.map edit ~f:RenameFmt.json_of_result);
         ("command", Base.Option.map command ~f:(print_command ~key));
       ]
   )
@@ -766,17 +759,15 @@ let print_hover (r : Hover.result) : json =
 (************************************************************************)
 (* textDocument/definition request                                      *)
 (************************************************************************)
+module DefinitionFmt = struct
+  open Definition
 
-let parse_definition (params : json option) : Definition.params =
-  parse_textDocumentPositionParams params
+  let params_of_json (params : json option) : params = parse_textDocumentPositionParams params
 
-let print_definition (r : Definition.result) : json =
-  JSON_Array (Base.List.map r ~f:print_definition_location)
+  let json_of_result (r : result) : json = JSON_Array (Base.List.map r ~f:print_definition_location)
+end
 
-(************************************************************************)
-(* completionItem/resolve request                                       *)
-(************************************************************************)
-
+(** completionItem/resolve request *)
 module CompletionItemLabelDetailsFmt = struct
   open CompletionItemLabelDetails
 
@@ -884,9 +875,10 @@ let print_completionItem ~key (item : Completion.completionItem) : json =
 (************************************************************************)
 (* textDocument/completion request                                      *)
 (************************************************************************)
+module CompletionFmt = struct
+  open Completion
 
-let parse_completion (params : json option) : Completion.params =
-  Lsp.Completion.(
+  let params_of_json (params : json option) : params =
     let context = Jget.obj_opt params "context" in
     {
       loc = parse_textDocumentPositionParams params;
@@ -899,21 +891,19 @@ let parse_completion (params : json option) : Completion.params =
               triggerKind =
                 Base.Option.value_exn
                   ~message:(Printf.sprintf "Unsupported trigger kind: %d" tk)
-                  (Lsp.Completion.completionTriggerKind_of_enum tk);
+                  (completionTriggerKind_of_enum tk);
               triggerCharacter = Jget.string_opt context "triggerCharacter";
             }
         | None -> None);
     }
-  )
 
-let print_completion ~key (r : Completion.result) : json =
-  Completion.(
+  let json_of_result ~key (r : result) : json =
     JSON_Object
       [
         ("isIncomplete", JSON_Bool r.isIncomplete);
         ("items", JSON_Array (Base.List.map r.items ~f:(print_completionItem ~key)));
       ]
-  )
+end
 
 (** workspace/configuration request *)
 module ConfigurationFmt = struct
@@ -959,27 +949,21 @@ module DidChangeConfigurationFmt = struct
     { settings }
 end
 
-(************************************************************************)
-(* workspace/symbol request                                             *)
-(************************************************************************)
+(** workspace/symbol request *)
+module WorkspaceSymbolFmt = struct
+  open WorkspaceSymbol
 
-let parse_workspaceSymbol (params : json option) : WorkspaceSymbol.params =
-  WorkspaceSymbol.{ query = Jget.string_exn params "query" }
+  let params_of_json (params : json option) : params = { query = Jget.string_exn params "query" }
 
-let print_workspaceSymbol (r : WorkspaceSymbol.result) : json =
-  JSON_Array (Base.List.map r ~f:print_symbolInformation)
+  let json_of_result (r : result) : json = JSON_Array (Base.List.map r ~f:print_symbolInformation)
+end
 
-(************************************************************************)
-(* textDocument/documentSymbol request                                  *)
-(************************************************************************)
-
-let parse_documentSymbol (params : json option) : DocumentSymbol.params =
-  DocumentSymbol.
-    { textDocument = Jget.obj_exn params "textDocument" |> parse_textDocumentIdentifier }
-  
-
+(** textDocument/documentSymbol request *)
 module DocumentSymbolFmt = struct
   open DocumentSymbol
+
+  let params_of_json (params : json option) : params =
+    { textDocument = Jget.obj_exn params "textDocument" |> parse_textDocumentIdentifier }
 
   let rec to_json t =
     let { name; detail; kind; deprecated; range; selectionRange; children } = t in
@@ -1004,12 +988,12 @@ module DocumentSymbolFmt = struct
             children
         );
       ]
-end
 
-let print_documentSymbol (r : DocumentSymbol.result) : json =
-  match r with
-  | `SymbolInformation xs -> JSON_Array (Base.List.map xs ~f:print_symbolInformation)
-  | `DocumentSymbol xs -> JSON_Array (Base.List.map xs ~f:DocumentSymbolFmt.to_json)
+  let json_of_result (r : result) : json =
+    match r with
+    | `SymbolInformation xs -> JSON_Array (Base.List.map xs ~f:print_symbolInformation)
+    | `DocumentSymbol xs -> JSON_Array (Base.List.map xs ~f:to_json)
+end
 
 (************************************************************************)
 (* textDocument/references request                                      *)
@@ -1676,15 +1660,15 @@ let parse_lsp_request (method_ : string) (params : json option) : lsp_request =
   match method_ with
   | "initialize" -> InitializeRequest (parse_initialize params)
   | "shutdown" -> ShutdownRequest
-  | "codeLens/resolve" -> CodeLensResolveRequest (parse_codeLensResolve params)
+  | "codeLens/resolve" -> CodeLensResolveRequest (CodeLensResolveFmt.params_of_json params)
   | "textDocument/hover" -> HoverRequest (parse_hover params)
   | "textDocument/codeAction" -> CodeActionRequest (parse_codeActionRequest params)
-  | "textDocument/completion" -> CompletionRequest (parse_completion params)
-  | "textDocument/definition" -> DefinitionRequest (parse_definition params)
-  | "workspace/symbol" -> WorkspaceSymbolRequest (parse_workspaceSymbol params)
-  | "textDocument/documentSymbol" -> DocumentSymbolRequest (parse_documentSymbol params)
+  | "textDocument/completion" -> CompletionRequest (CompletionFmt.params_of_json params)
+  | "textDocument/definition" -> DefinitionRequest (DefinitionFmt.params_of_json params)
+  | "workspace/symbol" -> WorkspaceSymbolRequest (WorkspaceSymbolFmt.params_of_json params)
+  | "textDocument/documentSymbol" -> DocumentSymbolRequest (DocumentSymbolFmt.params_of_json params)
   | "textDocument/references" -> FindReferencesRequest (parse_findReferences params)
-  | "textDocument/rename" -> RenameRequest (parse_documentRename params)
+  | "textDocument/rename" -> RenameRequest (RenameFmt.params_of_json params)
   | "textDocument/documentHighlight" -> DocumentHighlightRequest (parse_documentHighlight params)
   | "textDocument/typeCoverage" -> TypeCoverageRequest (parse_typeCoverage params)
   | "textDocument/formatting" -> DocumentFormattingRequest (parse_documentFormatting params)
@@ -1692,11 +1676,11 @@ let parse_lsp_request (method_ : string) (params : json option) : lsp_request =
     DocumentRangeFormattingRequest (parse_documentRangeFormatting params)
   | "textDocument/onTypeFormatting" ->
     DocumentOnTypeFormattingRequest (parse_documentOnTypeFormatting params)
-  | "textDocument/codeLens" -> DocumentCodeLensRequest (parse_documentCodeLens params)
+  | "textDocument/codeLens" -> DocumentCodeLensRequest (DocumentCodeLensFmt.params_of_json params)
   | "textDocument/selectionRange" -> SelectionRangeRequest (SelectionRangeFmt.params_of_json params)
   | "textDocument/signatureHelp" -> SignatureHelpRequest (SignatureHelpFmt.of_json params)
   | "telemetry/rage" -> RageRequest
-  | "workspace/executeCommand" -> ExecuteCommandRequest (parse_executeCommand params)
+  | "workspace/executeCommand" -> ExecuteCommandRequest (ExecuteCommandFmt.params_of_json params)
   | "workspace/configuration" -> ConfigurationRequest (ConfigurationFmt.params_of_json params)
   | "completionItem/resolve"
   | "window/showMessageRequest" (* server -> client, we should never receive this *)
@@ -1715,7 +1699,7 @@ let parse_lsp_notification (method_ : string) (params : json option) : lsp_notif
   | "textDocument/didOpen" -> DidOpenNotification (parse_didOpen params)
   | "textDocument/didClose" -> DidCloseNotification (parse_didClose params)
   | "textDocument/didSave" -> DidSaveNotification (parse_didSave params)
-  | "textDocument/didChange" -> DidChangeNotification (parse_didChange params)
+  | "textDocument/didChange" -> DidChangeNotification (DidChangeFmt.params_of_json params)
   | "workspace/didChangeConfiguration" ->
     DidChangeConfigurationNotification (DidChangeConfigurationFmt.params_of_json params)
   | "workspace/didChangeWatchedFiles" ->
@@ -1842,15 +1826,15 @@ let print_lsp_response ?include_error_stack_trace ~key (id : lsp_id) (result : l
     match result with
     | InitializeResult r -> print_initialize ~key r
     | ShutdownResult -> print_shutdown ()
-    | CodeLensResolveResult r -> print_codeLensResolve ~key r
+    | CodeLensResolveResult r -> CodeLensResolveFmt.json_of_result ~key r
     | HoverResult r -> print_hover r
     | CodeActionResult r -> print_codeActionResult ~key r
-    | CompletionResult r -> print_completion ~key r
+    | CompletionResult r -> CompletionFmt.json_of_result ~key r
     | ConfigurationResult r -> ConfigurationFmt.json_of_result r
-    | DefinitionResult r -> print_definition r
-    | TypeDefinitionResult r -> print_definition r
-    | WorkspaceSymbolResult r -> print_workspaceSymbol r
-    | DocumentSymbolResult r -> print_documentSymbol r
+    | DefinitionResult r -> DefinitionFmt.json_of_result r
+    | TypeDefinitionResult r -> DefinitionFmt.json_of_result r
+    | WorkspaceSymbolResult r -> WorkspaceSymbolFmt.json_of_result r
+    | DocumentSymbolResult r -> DocumentSymbolFmt.json_of_result r
     | FindReferencesResult r -> print_Locations r
     | GoToImplementationResult r -> print_Locations r
     | DocumentHighlightResult r -> print_documentHighlight r
@@ -1859,9 +1843,9 @@ let print_lsp_response ?include_error_stack_trace ~key (id : lsp_id) (result : l
     | DocumentRangeFormattingResult r -> print_documentRangeFormatting r
     | DocumentOnTypeFormattingResult r -> print_documentOnTypeFormatting r
     | RageResult r -> print_rage r
-    | RenameResult r -> print_documentRename r
-    | DocumentCodeLensResult r -> print_documentCodeLens ~key r
-    | ExecuteCommandResult r -> print_executeCommand r
+    | RenameResult r -> RenameFmt.json_of_result r
+    | DocumentCodeLensResult r -> DocumentCodeLensFmt.json_of_result ~key r
+    | ExecuteCommandResult r -> ExecuteCommandFmt.json_of_result r
     | ApplyWorkspaceEditResult r -> ApplyWorkspaceEditFmt.json_of_result r
     | SelectionRangeResult r -> SelectionRangeFmt.json_of_result r
     | SignatureHelpResult r -> SignatureHelpFmt.to_json r
