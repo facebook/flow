@@ -40,7 +40,7 @@ OCAMLBUILD_JOBS := 0
 
 ifeq ($(UNAME_S), Linux)
   EXTRA_LIBS += rt atomic
-  INOTIFY=src/hack_forked/third-party/inotify
+  INOTIFY=src/third-party/inotify
   INOTIFY_STUBS=$(INOTIFY)/inotify_stubs.c
   FSNOTIFY=src/hack_forked/fsnotify_linux
   FSNOTIFY_STUBS=
@@ -51,7 +51,7 @@ ifeq ($(UNAME_S), FreeBSD)
   EXTRA_INCLUDE_PATHS += /usr/local/include
   EXTRA_LIB_PATHS += /usr/local/lib
   EXTRA_LIBS += inotify
-  INOTIFY=src/hack_forked/third-party/inotify
+  INOTIFY=src/third-party/inotify
   INOTIFY_STUBS=$(INOTIFY)/inotify_stubs.c
   FSNOTIFY=src/hack_forked/fsnotify_linux
   FSNOTIFY_STUBS=
