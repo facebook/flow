@@ -246,8 +246,8 @@ let dead_env_from_alive env =
 (* JSON methods. *)
 (****************************************************************************)
 
-(* Projects down from the boolean error monad into booleans.
-  * Error states go to false, values are projected directly. *)
+(** Projects down from the boolean error monad into booleans.
+    Error states go to false, values are projected directly. *)
 let project_bool m =
   match m with
   | Ok (v, _) -> v

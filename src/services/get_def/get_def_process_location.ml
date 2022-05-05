@@ -5,20 +5,18 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-(* stops walking the tree *)
+(** stops walking the tree *)
 exception Found
 
-(*  This type is distinct from the one raised by the searcher because
-   it would never make sense for the searcher to raise LocNotFound *)
+(** This type is distinct from the one raised by the searcher because
+  it would never make sense for the searcher to raise LocNotFound *)
 type ('M, 'T) result =
   | OwnDef of 'M
   | Request of ('M, 'T) Get_def_request.t
   | LocNotFound
 
-(**
- * Determines if the given expression is a `require()` call, or a member expression
- * containing one, like `require('foo').bar`.
- *)
+(** Determines if the given expression is a [require()] call, or a member expression
+  containing one, like [require('foo').bar]. *)
 let rec is_require ~is_legit_require expr =
   let open Flow_ast.Expression in
   match expr with

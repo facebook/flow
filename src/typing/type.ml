@@ -3741,18 +3741,16 @@ let mk_methodcalltype targs args ?meth_generic_this ?(meth_strict_arity = true) 
     meth_strict_arity;
   }
 
-(* A bound function type is a method type whose `this` parameter has been
-   bound to some type. Currently, if the function's `this` parameter is not
-   explicitly annotated we model this unsoundly using `any`, but if it is
-   then we create a methodtype with a specific `this` type.  *)
-
+(** A bound function type is a method type whose `this` parameter has been
+  bound to some type. Currently, if the function's `this` parameter is not
+  explicitly annotated we model this unsoundly using `any`, but if it is
+  then we create a methodtype with a specific `this` type. *)
 let mk_boundfunctiontype ~this = mk_methodtype this
 
-(* A function type is a method type whose `this` parameter has been
-   bound to to the global object. Currently, if the function's `this` parameter is not
-   explicitly annotated we model this using `mixed`, but if it is
-   then we create a methodtype with a specific `this` type.  *)
-
+(** A function type is a method type whose `this` parameter has been
+  bound to to the global object. Currently, if the function's `this` parameter is not
+  explicitly annotated we model this using `mixed`, but if it is
+  then we create a methodtype with a specific `this` type. *)
 let mk_functiontype reason ?(this = global_this reason) = mk_methodtype this
 
 let mk_boundfunctioncalltype this targs args ?(call_strict_arity = true) tout =

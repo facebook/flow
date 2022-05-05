@@ -51,8 +51,8 @@ let calc_direct_dependencies dependency_graph files =
  *)
 let calc_all_dependencies dependency_graph files = closure dependency_graph Forward files
 
-(** `calc_direct_dependents graph files` will return the set of direct dependents of
-    `files`. This set includes `files`. *)
+(** [calc_direct_dependents graph files] will return the set of direct dependents of
+  [files]. This set includes [files]. *)
 let calc_direct_dependents dependency_graph files =
   FilenameSet.fold
     (fun file acc ->
@@ -62,18 +62,18 @@ let calc_direct_dependents dependency_graph files =
     files
     files
 
-(* `calc_all_dependents graph files` will return the set of direct and transitive dependents of
-   `files`. This set include `files`.
+(** [calc_all_dependents graph files] will return the set of direct and transitive dependents of
+  [files]. This set include [files].
 
-   A file is a dependent of `files` whenever its code depends on any file whose *signature*, in
-   turn, directly or transitively depends on `files`.  *)
+  A file is a dependent of [files] whenever its code depends on any file whose *signature*, in
+  turn, directly or transitively depends on [files]. *)
 let calc_all_dependents ~sig_dependency_graph ~implementation_dependency_graph files =
   let all_sig_dependents = closure sig_dependency_graph Backward files in
   let all_dependents = calc_direct_dependents implementation_dependency_graph all_sig_dependents in
   (all_sig_dependents, all_dependents)
 
-(* Returns a copy of the dependency graph with only those file -> dependency edges where file and
-   dependency are in files *)
+(** Returns a copy of the dependency graph with only those file -> dependency edges where file and
+  dependency are in files *)
 let filter_dependency_graph dependency_graph files =
   FilenameSet.fold
     (fun f ->

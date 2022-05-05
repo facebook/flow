@@ -1491,8 +1491,8 @@ let with_data ~(extra_data : Hh_json.json option) (metadata : LspProt.metadata) 
   let extra_data = metadata.extra_data @ keyvals_of_json extra_data in
   { metadata with extra_data }
 
-(* This is commonly called by persistent handlers when something goes wrong and we need to return
-  * an error response *)
+(** This is commonly called by persistent handlers when something goes wrong and we need to return
+  an error response *)
 let mk_lsp_error_response ~id ~reason ?stack metadata =
   let metadata = with_error ?stack ~reason metadata in
   let (_, reason, Utils.Callstack stack) = Base.Option.value_exn metadata.LspProt.error_info in

@@ -7785,39 +7785,36 @@ struct
       else
         op2
 
-  and flow_use_op cx op1 u =
-    mod_use_op_of_use_t (fun op2 -> pick_use_op cx op1 op2) u
-    (***********************)
-    (* bounds manipulation *)
-    (***********************)
+  and flow_use_op cx op1 u = mod_use_op_of_use_t (fun op2 -> pick_use_op cx op1 op2) u
 
-  (** The following general considerations apply when manipulating bounds.
+  (** Bounds Manipulation
+  
+    The following general considerations apply when manipulating bounds.
 
-      1. All type variables start out as roots, but some of them eventually become
-      goto nodes. As such, bounds of roots may contain goto nodes. However, we
-      never perform operations directly on goto nodes; instead, we perform those
-      operations on their roots. It is tempting to replace goto nodes proactively
-      with their roots to avoid this issue, but doing so may be expensive, whereas
-      the union-find data structure amortizes the cost of looking up roots.
+    1. All type variables start out as roots, but some of them eventually become
+    goto nodes. As such, bounds of roots may contain goto nodes. However, we
+    never perform operations directly on goto nodes; instead, we perform those
+    operations on their roots. It is tempting to replace goto nodes proactively
+    with their roots to avoid this issue, but doing so may be expensive, whereas
+    the union-find data structure amortizes the cost of looking up roots.
 
-      2. Another issue is that while the bounds of a type variable start out
-      empty, and in particular do not contain the type variable itself, eventually
-      other type variables in the bounds may be unified with the type variable. We
-      do not remove these type variables proactively, but instead filter them out
-      when considering the bounds. In the future we might consider amortizing the
-      cost of this filtering.
+    2. Another issue is that while the bounds of a type variable start out
+    empty, and in particular do not contain the type variable itself, eventually
+    other type variables in the bounds may be unified with the type variable. We
+    do not remove these type variables proactively, but instead filter them out
+    when considering the bounds. In the future we might consider amortizing the
+    cost of this filtering.
 
-      3. When roots are resolved, they act like the corresponding concrete
-      types. We maintain the invariant that whenever lower bounds or upper bounds
-      contain resolved roots, they also contain the corresponding concrete types.
+    3. When roots are resolved, they act like the corresponding concrete
+    types. We maintain the invariant that whenever lower bounds or upper bounds
+    contain resolved roots, they also contain the corresponding concrete types.
 
-      4. When roots are unresolved (they have lower bounds and upper bounds,
-      possibly consisting of concrete types as well as type variables), we
-      maintain the invarant that every lower bound has already been propagated to
-      every upper bound. We also maintain the invariant that the bounds are
-      transitively closed modulo equivalence: for every type variable in the
-      bounds, all the bounds of its root are also included.
-
+    4. When roots are unresolved (they have lower bounds and upper bounds,
+    possibly consisting of concrete types as well as type variables), we
+    maintain the invarant that every lower bound has already been propagated to
+    every upper bound. We also maintain the invariant that the bounds are
+    transitively closed modulo equivalence: for every type variable in the
+    bounds, all the bounds of its root are also included.
    **)
 
   (* for each l in ls: l => u *)
@@ -7855,14 +7852,13 @@ struct
   and add_lower l (trace, use_op) bounds =
     bounds.lower <- TypeMap.add l (trace, use_op) bounds.lower
 
-  (* Helper for functions that follow. *)
-  (* Given a map of bindings from tvars to traces, a tvar to skip, and an `each`
-     function taking a tvar and its associated trace, apply `each` to all
-     unresolved root constraints reached from the bound tvars, except those of
-     skip_tvar. (Typically skip_tvar is a tvar that will be processed separately,
-     so we don't want to redo that work. We also don't want to consider any tvar
-     that has already been resolved, because the resolved type will be processed
-     separately, too, as part of the bounds of skip_tvar. **)
+  (** Given a map of bindings from tvars to traces, a tvar to skip, and an `each`
+    function taking a tvar and its associated trace, apply `each` to all
+    unresolved root constraints reached from the bound tvars, except those of
+    skip_tvar. (Typically skip_tvar is a tvar that will be processed separately,
+    so we don't want to redo that work. We also don't want to consider any tvar
+    that has already been resolved, because the resolved type will be processed
+    separately, too, as part of the bounds of skip_tvar. **)
   and iter_with_filter cx bindings skip_id each =
     bindings
     |> IMap.iter (fun id trace ->
@@ -7870,13 +7866,12 @@ struct
            | (root_id, Unresolved bounds) when root_id <> skip_id -> each (root_id, bounds) trace
            | _ -> ()
        )
-    (* for each id in id1 + bounds1.lowertvars:
-       id.bounds.upper += t2
-    *)
-    (* When going through bounds1.lowertvars, filter out id1. **)
 
-  (** As an optimization, skip id1 when it will become either a resolved root or a
-      goto node (so that updating its bounds is unnecessary). **)
+  (** Given [edges_to_t (id1, bounds1) t2], for each [id] in [id1] + [bounds1.lowertvars],
+    [id.bounds.upper += t2]. When going through [bounds1.lowertvars], filter out [id1].
+
+    As an optimization, skip [id1] when it will become either a resolved root or a
+    goto node (so that updating its bounds is unnecessary). *)
   and edges_to_t cx trace ?(opt = false) (id1, bounds1) t2 =
     let max = Context.max_trace_depth cx in
     if not opt then add_upper cx t2 trace bounds1;
@@ -7884,13 +7879,12 @@ struct
         let t2 = flow_use_op cx use_op t2 in
         add_upper cx t2 (Trace.concat_trace ~max [trace_l; trace]) bounds
     )
-    (* for each id in id2 + bounds2.uppertvars:
-       id.bounds.lower += t1
-    *)
-    (* When going through bounds2.uppertvars, filter out id2. **)
 
-  (** As an optimization, skip id2 when it will become either a resolved root or a
-      goto node (so that updating its bounds is unnecessary). **)
+  (** Given [edges_from_t t1 (id2, bounds2)], for each [id] in [id2] + [bounds2.uppertvars],
+    [id.bounds.lower += t1]. When going through [bounds2.uppertvars], filter out [id2].
+
+    As an optimization, skip [id2] when it will become either a resolved root or a
+    goto node (so that updating its bounds is unnecessary). *)
   and edges_from_t cx trace ~new_use_op ?(opt = false) t1 (id2, bounds2) =
     let max = Context.max_trace_depth cx in
     if not opt then add_lower t1 (trace, new_use_op) bounds2;
@@ -7899,9 +7893,7 @@ struct
         add_lower t1 (Trace.concat_trace ~max [trace; trace_u], use_op) bounds
     )
 
-  (* for each id' in id + bounds.lowertvars:
-   *   id'.bounds.upper += us
-   *)
+  (** for each [id'] in [id] + [bounds.lowertvars], [id'.bounds.upper += us] *)
   and edges_to_ts ~new_use_op cx trace ?(opt = false) (id, bounds) us =
     let max = Context.max_trace_depth cx in
     us
@@ -7910,9 +7902,7 @@ struct
            edges_to_t cx (Trace.concat_trace ~max [trace; trace_u]) ~opt (id, bounds) u
        )
 
-  (* for each id' in id + bounds.uppertvars:
-   *   id'.bounds.lower += ls
-   *)
+  (** for each [id'] in [id] + [bounds.uppertvars], [id'.bounds.lower += ls] *)
   and edges_from_ts cx trace ~new_use_op ?(opt = false) ls (id, bounds) =
     let max = Context.max_trace_depth cx in
     ls
@@ -7920,13 +7910,13 @@ struct
            let new_use_op = pick_use_op cx use_op new_use_op in
            edges_from_t cx (Trace.concat_trace ~max [trace_l; trace]) ~new_use_op ~opt l (id, bounds)
        )
-    (* for each id in id1 + bounds1.lowertvars:
-     *   id.bounds.upper += t2
-     *   for each l in bounds1.lower: l => t2
-     *)
 
-  (** As an invariant, bounds1.lower should already contain id.bounds.lower for
-      each id in bounds1.lowertvars. **)
+  (** for each [id] in [id1] + [bounds1.lowertvars]:
+        id.bounds.upper += t2
+        for each l in bounds1.lower: l => t2
+
+    As an invariant, [bounds1.lower] should already contain [id.bounds.lower] for
+    each id in [bounds1.lowertvars]. *)
   and edges_and_flows_to_t cx trace ?(opt = false) (id1, bounds1) t2 =
     (* Skip iff edge exists as part of the speculation path to the current branch *)
     let skip =
@@ -7941,33 +7931,34 @@ struct
       edges_to_t cx trace ~opt (id1, bounds1) t2;
       flows_to_t cx trace bounds1.lower t2
     )
-    (* for each id in id2 + bounds2.uppertvars:
-     *   id.bounds.lower += t1
-     *   for each u in bounds2.upper: t1 => u
-     *)
 
-  (** As an invariant, bounds2.upper should already contain id.bounds.upper for
-      each id in bounds2.uppertvars. **)
+  (** for each [id] in [id2] + [bounds2.uppertvars]:
+        id.bounds.lower += t1
+        for each u in bounds2.upper: t1 => u
+
+    As an invariant, [bounds2.upper] should already contain [id.bounds.upper] for
+    each id in [bounds2.uppertvars]. *)
   and edges_and_flows_from_t cx trace ~new_use_op ?(opt = false) t1 (id2, bounds2) =
     if not (TypeMap.mem t1 bounds2.lower) then (
       edges_from_t cx trace ~new_use_op ~opt t1 (id2, bounds2);
       flows_from_t cx trace ~new_use_op t1 bounds2.upper
     )
 
-  (* bounds.uppertvars += id *)
+  (** bounds.uppertvars += id *)
   and add_uppertvar id trace use_op bounds =
     bounds.uppertvars <- IMap.add id (trace, use_op) bounds.uppertvars
 
-  (* bounds.lowertvars += id *)
+  (** bounds.lowertvars += id *)
   and add_lowertvar id trace use_op bounds =
     bounds.lowertvars <- IMap.add id (trace, use_op) bounds.lowertvars
-    (* for each id in id1 + bounds1.lowertvars:
-       id.bounds.uppertvars += id2
-    *)
-    (* When going through bounds1.lowertvars, filter out id1. **)
 
-  (** As an optimization, skip id1 when it will become either a resolved root or a
-      goto node (so that updating its bounds is unnecessary). **)
+  (** for each [id] in [id1] + [bounds1.lowertvars]:
+        id.bounds.uppertvars += id2
+
+    When going through [bounds1.lowertvars], filter out [id1].
+
+    As an optimization, skip id1 when it will become either a resolved root or a
+    goto node (so that updating its bounds is unnecessary). *)
   and edges_to_tvar cx trace ~new_use_op ?(opt = false) (id1, bounds1) id2 =
     let max = Context.max_trace_depth cx in
     if not opt then add_uppertvar id2 trace new_use_op bounds1;
@@ -7975,13 +7966,14 @@ struct
         let use_op = pick_use_op cx use_op new_use_op in
         add_uppertvar id2 (Trace.concat_trace ~max [trace_l; trace]) use_op bounds
     )
-    (* for each id in id2 + bounds2.uppertvars:
-       id.bounds.lowertvars += id1
-    *)
-    (* When going through bounds2.uppertvars, filter out id2. **)
 
-  (** As an optimization, skip id2 when it will become either a resolved root or a
-      goto node (so that updating its bounds is unnecessary). **)
+  (** for each id in id2 + bounds2.uppertvars:
+        id.bounds.lowertvars += id1
+
+    When going through bounds2.uppertvars, filter out id2.
+
+    As an optimization, skip id2 when it will become either a resolved root or a
+    goto node (so that updating its bounds is unnecessary). *)
   and edges_from_tvar cx trace ~new_use_op ?(opt = false) id1 (id2, bounds2) =
     let max = Context.max_trace_depth cx in
     if not opt then add_lowertvar id1 trace new_use_op bounds2;
@@ -7990,11 +7982,10 @@ struct
         add_lowertvar id1 (Trace.concat_trace ~max [trace; trace_u]) use_op bounds
     )
 
-  (* for each id in id1 + bounds1.lowertvars:
-   *   id.bounds.upper += bounds2.upper
-   *   id.bounds.uppertvars += id2
-   *   id.bounds.uppertvars += bounds2.uppertvars
-   *)
+  (** for each id in id1 + bounds1.lowertvars:
+        id.bounds.upper += bounds2.upper
+        id.bounds.uppertvars += id2
+        id.bounds.uppertvars += bounds2.uppertvars *)
   and add_upper_edges ~new_use_op cx trace ?(opt = false) (id1, bounds1) (id2, bounds2) =
     let max = Context.max_trace_depth cx in
     edges_to_ts ~new_use_op cx trace ~opt (id1, bounds1) bounds2.upper;
@@ -8005,11 +7996,10 @@ struct
         edges_to_tvar cx trace ~new_use_op ~opt (id1, bounds1) tvar
     )
 
-  (* for each id in id2 + bounds2.uppertvars:
-   *   id.bounds.lower += bounds1.lower
-   *   id.bounds.lowertvars += id1
-   *   id.bounds.lowertvars += bounds1.lowertvars
-   *)
+  (** for each id in id2 + bounds2.uppertvars:
+        id.bounds.lower += bounds1.lower
+        id.bounds.lowertvars += id1
+        id.bounds.lowertvars += bounds1.lowertvars *)
   and add_lower_edges cx trace ~new_use_op ?(opt = false) (id1, bounds1) (id2, bounds2) =
     let max = Context.max_trace_depth cx in
     edges_from_ts cx trace ~new_use_op ~opt bounds1.lower (id2, bounds2);
@@ -8025,11 +8015,11 @@ struct
   (***************)
   and unify_flip use_op = Frame (UnifyFlip, use_op)
 
-  (* Chain a root to another root. If both roots are unresolved, this amounts to
-     copying over the bounds of one root to another, and adding all the
-     connections necessary when two non-unifiers flow to each other. If one or
-     both of the roots are resolved, they effectively act like the corresponding
-     concrete types. *)
+  (** Chain a root to another root. If both roots are unresolved, this amounts to
+    copying over the bounds of one root to another, and adding all the
+    connections necessary when two non-unifiers flow to each other. If one or
+    both of the roots are resolved, they effectively act like the corresponding
+    concrete types. *)
   and goto cx trace ~use_op (id1, root1) (id2, root2) =
     match (root1.constraints, root2.constraints) with
     | (Unresolved bounds1, Unresolved bounds2) ->
@@ -8075,8 +8065,8 @@ struct
       Context.add_tvar cx id1 (Goto id2);
       rec_unify cx trace ~use_op t1 t2
 
-  (* Unify two type variables. This involves finding their roots, and making one
-     point to the other. Ranks are used to keep chains short. *)
+  (** Unify two type variables. This involves finding their roots, and making one
+    point to the other. Ranks are used to keep chains short. *)
   and merge_ids cx trace ~use_op id1 id2 =
     let ((id1, root1), (id2, root2)) = (Context.find_root cx id1, Context.find_root cx id2) in
     if id1 = id2 then
@@ -8090,8 +8080,8 @@ struct
       goto cx trace ~use_op (id1, root1) (id2, root2)
     )
 
-  (* Resolve a type variable to a type. This involves finding its root, and
-     resolving to that type. *)
+  (** Resolve a type variable to a type. This involves finding its root, and
+    resolving to that type. *)
   and resolve_id cx trace ~use_op ?(fully_resolved = false) id t =
     let (id, root) = Context.find_root cx id in
     match root.constraints with

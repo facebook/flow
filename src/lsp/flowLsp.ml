@@ -22,11 +22,11 @@ let lsp_exit_ok () = exit 0
 
 let lsp_exit_bad () = exit 1
 
-(* Given an ID that came from the server, we have to wrap it when we pass it
-   on to the client, to encode which instance of the server it came from.
-   That way, if a response comes back later from the client after the server
-   has died, we'll know to discard it. We wrap it as "serverid:#id" for
-   numeric ids, and "serverid:'id" for strings.  *)
+(** Given an ID that came from the server, we have to wrap it when we pass it
+  on to the client, to encode which instance of the server it came from.
+  That way, if a response comes back later from the client after the server
+  has died, we'll know to discard it. We wrap it as "serverid:#id" for
+  numeric ids, and "serverid:'id" for strings. *)
 type wrapped_id = {
   server_id: int;
   message_id: lsp_id;
