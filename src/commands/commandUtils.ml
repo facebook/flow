@@ -1311,6 +1311,8 @@ let make_options
     opt_max_literal_length = FlowConfig.max_literal_length flowconfig;
     opt_direct_dependent_files_fix;
     opt_enable_const_params = FlowConfig.enable_const_params flowconfig;
+    opt_enable_contextual_typing =
+      flowconfig |> FlowConfig.enable_contextual_typing |> Base.Option.value ~default:false;
     opt_enable_relay_integration = FlowConfig.relay_integration flowconfig;
     opt_enabled_rollouts = FlowConfig.enabled_rollouts flowconfig;
     opt_enforce_local_inference_annotations =
