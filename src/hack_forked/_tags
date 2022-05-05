@@ -12,7 +12,6 @@ true: package(unix),package(str),package(bigarray),package(ppx_deriving.std)
 <ppx>: -traverse
 <procs/*.ml*>: warn(-27)
 <server/serverInit.ml>: warn(-41-45)
-<third-party/avl/*.ml*>: warn(-27)
 <utils/*.ml*>: warn(-27)
 not <{dfind,find,heap,injection,socket,third-party,fsevents,fsnotify_darwin,fsnotify_linux,fsnotify_win,stubs}/**/*>: package(base), package(visitors.ppx), package(visitors.runtime), package(pcre), package(lwt), package(lwt.unix), package(lwt_ppx), package(lwt_log)
 <{utils,watchman,search,procs,globals}/**/*>: -package(pcre)

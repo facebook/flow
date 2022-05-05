@@ -107,8 +107,6 @@ and add_watch links env path =
 and add_fsnotify_watch env path = return (Fsnotify.add_watch env.fsnotify path)
 
 and add_new_file links env path =
-  let time = Time.get () in
-  env.files <- TimeFiles.add (time, path) env.files;
   env.new_files <- SSet.add path env.new_files;
   call (wrap Unix.lstat) path >>= fun ({ Unix.st_kind = kind; _ } as st) ->
   if ISet.mem st.Unix.st_ino links then
