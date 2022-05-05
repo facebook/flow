@@ -272,6 +272,10 @@ module Opts = struct
       watchman_sync_timeout = None;
     }
 
+  let cons_opt to_add = function
+    | Some prev -> Some (to_add :: prev)
+    | None -> Some [to_add]
+
   let parse_lines : line list -> (raw_options, error) result =
     let rec loop acc lines =
       acc >>= fun map ->
@@ -281,17 +285,7 @@ module Opts = struct
         if Str.string_match (Str.regexp "^\\([a-zA-Z0-9._]+\\)=\\(.*\\)$") line 0 then
           let key = Str.matched_group 1 line in
           let value = Str.matched_group 2 line in
-          let map =
-            SMap.add
-              key
-              ((line_num, value)
-               ::
-               (match SMap.find_opt key map with
-               | Some values -> values
-               | None -> [])
-              )
-              map
-          in
+          let map = SMap.update key (cons_opt (line_num, value)) map in
           loop (Ok map) rest
         else
           Error (line_num, "Unable to parse line.")
