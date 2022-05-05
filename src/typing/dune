@@ -76,6 +76,7 @@
     flow_typing_type
     worker_cancel ; hack
     xx
+    build_mode
   )
   (modules_without_implementation partition )
   (preprocess (pps ppx_let))
