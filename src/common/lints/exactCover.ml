@@ -103,7 +103,7 @@ let update_entry ((old_range, old_value) as original) new_range map_fun builder 
   let new_overlap = (overlap, map_fun old_value) in
   let new_remaining = Base.List.map ~f:(fun loc -> (loc, old_value)) remaining_ranges in
   let builder = builder |> remove original |> add new_overlap in
-  List.fold_left (Fn.flip add) builder new_remaining
+  List.fold_left (Fun.flip add) builder new_remaining
 
 (* Given a range over which to perform a modification, a modification function,
  * and a builder to work on, returns a builder modified by the modification

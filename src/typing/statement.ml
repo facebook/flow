@@ -3233,7 +3233,7 @@ struct
 
   and array_elements cx ~array_hint undef_loc =
     let open Ast.Expression.Array in
-    Fn.compose
+    Base.Fn.compose
       List.split
       (Base.List.map ~f:(function
           | Expression e ->
@@ -4437,7 +4437,9 @@ struct
             ) ->
             (* invariant(false, ...) is treated like a throw *)
             let arguments =
-              Base.List.map ~f:(Fn.compose snd (expression_or_spread cx ~hint:Hint_None)) arguments
+              Base.List.map
+                ~f:(Base.Fn.compose snd (expression_or_spread cx ~hint:Hint_None))
+                arguments
             in
             Env.reset_current_activation loc;
             Abnormal.save Abnormal.Throw;
@@ -4466,7 +4468,9 @@ struct
               )
             ) ->
             let arguments =
-              Base.List.map ~f:(Fn.compose snd (expression_or_spread cx ~hint:Hint_None)) arguments
+              Base.List.map
+                ~f:(Base.Fn.compose snd (expression_or_spread cx ~hint:Hint_None))
+                arguments
             in
             let ((((_, cond_t), _) as cond), preds, _, xtypes) =
               predicates_of_condition ~cond:OtherTest cx cond
@@ -4938,7 +4942,7 @@ struct
               ~test_hooks:noop
               ~get_opt_use
               ~refine:(fun () -> Refinement.get ~allow_optional:true cx (loc, e) loc)
-              ~get_reason:(Fn.const reason)
+              ~get_reason:(Fun.const reason)
           in
           let sentinel_refinement =
             Base.Option.value_map ~f:(fun f -> f obj_t) ~default:None sentinel_refine
@@ -4995,7 +4999,7 @@ struct
               ~refine:(fun () -> Refinement.get ~allow_optional:true cx (loc, e) loc)
               ~test_hooks
               ~get_opt_use:(fun _ _ _ -> opt_use)
-              ~get_reason:(Fn.const expr_reason)
+              ~get_reason:(Fun.const expr_reason)
           in
           let sentinel_refinement =
             Base.Option.value_map ~f:(fun f -> f obj_t) ~default:None sentinel_refine
@@ -5048,7 +5052,7 @@ struct
               ~refine:(fun () -> Refinement.get ~allow_optional:true cx (loc, e) loc)
               ~test_hooks
               ~get_opt_use:(fun _ _ _ -> opt_use)
-              ~get_reason:(Fn.const expr_reason)
+              ~get_reason:(Fun.const expr_reason)
           in
           let new_pred_list = exists_pred (loc, e') lhs_t in
           let preds = combine_preds preds new_pred_list in
@@ -5177,7 +5181,7 @@ struct
                   ~refine:(fun () ->
                     Refinement.get ~allow_optional:true cx (lookup_loc, callee_expr) lookup_loc)
                   ~refinement_action:handle_refined_callee
-                  ~get_reason:(Fn.const expr_reason)
+                  ~get_reason:(Fun.const expr_reason)
               in
               let prop_ast =
                 match property with
@@ -5248,7 +5252,7 @@ struct
                   ~test_hooks:noop
                   ~get_opt_use
                   ~refine:noop
-                  ~get_reason:(Fn.const expr_reason)
+                  ~get_reason:(Fun.const expr_reason)
               in
               ( filtered_out,
                 lookup_voided_out,
@@ -8372,9 +8376,9 @@ struct
       let annot_t = type_t_of_annotated_or_inferred annot_or_inferred in
       let (field, get_init) =
         match init with
-        | Ast.Class.Property.Declared -> (Annot annot_t, Fn.const Ast.Class.Property.Declared)
+        | Ast.Class.Property.Declared -> (Annot annot_t, Fun.const Ast.Class.Property.Declared)
         | Ast.Class.Property.Uninitialized ->
-          (Annot annot_t, Fn.const Ast.Class.Property.Uninitialized)
+          (Annot annot_t, Fun.const Ast.Class.Property.Uninitialized)
         | Ast.Class.Property.Initialized expr ->
           let value_ref : (ALoc.t, ALoc.t * Type.t) Ast.Expression.t option ref = ref None in
           ( Infer

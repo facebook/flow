@@ -679,28 +679,28 @@ module New_env = struct
     | InternalName _
     | InternalModuleName _ ->
       Old_env.declare_let cx name
-    | OrdinaryName _ -> Fn.const ()
+    | OrdinaryName _ -> Fun.const ()
 
   let declare_implicit_let kind cx name =
     match name with
     | InternalName _
     | InternalModuleName _ ->
       Old_env.declare_implicit_let kind cx name
-    | OrdinaryName _ -> Fn.const ()
+    | OrdinaryName _ -> Fun.const ()
 
   let declare_const cx name =
     match name with
     | InternalName _
     | InternalModuleName _ ->
       Old_env.declare_const cx name
-    | OrdinaryName _ -> Fn.const ()
+    | OrdinaryName _ -> Fun.const ()
 
   let declare_implicit_const kind cx name =
     match name with
     | InternalName _
     | InternalModuleName _ ->
       Old_env.declare_implicit_const kind cx name
-    | OrdinaryName _ -> Fn.const ()
+    | OrdinaryName _ -> Fun.const ()
 
   let init_var cx ~use_op name ~has_anno t loc =
     match name with

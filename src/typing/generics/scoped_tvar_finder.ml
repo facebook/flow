@@ -40,7 +40,7 @@ end = struct
     let class_tparams = get_class_tparams () in
     clear_class_tparams ();
     let tps = class_tparams @ tparams in
-    let res = Generic_scope.in_scope cx tps (Fn.compose f set_cx) in
+    let res = Generic_scope.in_scope cx tps (Base.Fn.compose f set_cx) in
     set_class_tparams class_tparams;
     res
 
@@ -55,7 +55,7 @@ end = struct
   let in_class_prop_scope cx set_cx f =
     let class_tparams = get_class_tparams () in
     clear_class_tparams ();
-    let res = Generic_scope.in_scope cx class_tparams (Fn.compose f set_cx) in
+    let res = Generic_scope.in_scope cx class_tparams (Base.Fn.compose f set_cx) in
     set_class_tparams class_tparams;
     res
 end

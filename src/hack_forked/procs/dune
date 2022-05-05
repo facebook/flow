@@ -4,8 +4,7 @@
   (modules
     bucket)
   (libraries
-    base
-    imported_core))
+    base))
 
 (library
   (name procs_procs)
@@ -14,7 +13,7 @@
     mem_profile
     worker
     workerController)
-  (preprocess (pps lwt_ppx))  
+  (preprocess (pps lwt_ppx))
   (libraries
     base
     flow_exit_status

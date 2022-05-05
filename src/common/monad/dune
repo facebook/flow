@@ -3,6 +3,5 @@
   (wrapped false)
   (libraries
     flow_common
-    imported_core
   )
 )

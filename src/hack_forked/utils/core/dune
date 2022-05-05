@@ -9,6 +9,6 @@
   (flags
    (:standard
     (:include config/build-timestamp-opt))))
- (libraries base string imported_core hh_json str unix)
+ (libraries base string hh_json str unix)
  (preprocess
   (pps lwt_ppx ppx_deriving.std ppx_deriving.enum)))

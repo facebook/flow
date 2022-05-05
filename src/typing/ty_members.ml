@@ -157,12 +157,12 @@ let rec members_of_ty : Ty.t -> Ty.t member_info NameUtils.Map.t * string list =
         match membership_behavior ty with
         | EmptyOrAny ->
           NameUtils.Map.map
-            (Fn.const { ty; from_proto = true; from_nullable = false; def_loc = None })
+            (Fun.const { ty; from_proto = true; from_nullable = false; def_loc = None })
             universe
         | Nullish ->
           NameUtils.Map.map
             (* Bot is the identity of type union *)
-            (Fn.const
+            (Fun.const
                { ty = Bot EmptyType; from_proto = true; from_nullable = true; def_loc = None }
             )
             universe

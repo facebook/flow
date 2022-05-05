@@ -21,7 +21,6 @@ NATIVE_OBJECT_FILES=\
 RUNNER_DEPS=\
 	src/heap\
 	src/hack_forked/injection/default_injector\
-	src/hack_forked/third-party/core\
 	src/hack_forked/utils/collections\
 	src/hack_forked/utils/core\
 	src/hack_forked/utils/disk\

@@ -57,7 +57,7 @@ struct
 
       method! statement ((loc, _) as stmt) =
         let stmt = super#statement stmt in
-        this#update_acc (LocSet.filter (Fn.compose not (Loc.contains (Convert.convert loc))));
+        this#update_acc (LocSet.filter (Base.Fn.compose not (Loc.contains (Convert.convert loc))));
         stmt
     end
 

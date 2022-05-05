@@ -465,7 +465,7 @@ module Env : Env_sig.S = struct
           |> Base.Option.value_map ~f:snd ~default:[]
           |> Base.List.map
                ~f:
-                 (Fn.compose
+                 (Base.Fn.compose
                     (fun loc -> Base.Option.map ~f:(fun t -> (loc, t)) (Loc_env.find_write env loc))
                     Reason.aloc_of_reason
                  )
@@ -552,7 +552,9 @@ module Env : Env_sig.S = struct
     in
     let fully_initialized = Provider_api.is_provider_state_fully_initialized provider_state in
     let providers =
-      Base.List.map ~f:(Fn.compose (Loc_env.find_write env) Reason.aloc_of_reason) provider_locs
+      Base.List.map
+        ~f:(Base.Fn.compose (Loc_env.find_write env) Reason.aloc_of_reason)
+        provider_locs
       |> Base.Option.all
     in
     let provider =

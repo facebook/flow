@@ -257,7 +257,7 @@ let declare_function_to_function_declaration_simple loc st =
   declare_function_to_function_declaration
     ~loc_of_tloc:(fun x -> x)
     ~copy_t:(fun _ x -> x)
-    ~add_output:(Fn.const ())
+    ~add_output:(Fun.const ())
     loc
     st
   |> Base.Option.map ~f:fst

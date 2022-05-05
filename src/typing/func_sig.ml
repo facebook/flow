@@ -216,7 +216,7 @@ struct
     let (statements, reconstruct_body) =
       let open Ast.Statement in
       match body with
-      | None -> ([], Fn.const None)
+      | None -> ([], Fun.const None)
       | Some (Ast.Function.BodyBlock (loc, { Block.body; comments })) ->
         (body, (fun body -> Some (Ast.Function.BodyBlock (loc, { Block.body; comments }))))
       | Some (Ast.Function.BodyExpression expr) ->

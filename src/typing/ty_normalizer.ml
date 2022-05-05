@@ -144,6 +144,7 @@ end = struct
   end
 
   include StateResult.Make (State)
+  open Let_syntax
 
   (* Monadic helper functions *)
   let mapM f xs = all (Base.List.map ~f xs)
@@ -166,12 +167,11 @@ end = struct
   let concat_fold_m f xs = mapM f xs >>| Base.List.concat
 
   let fresh_num =
-    State.(
-      let%bind st = get in
-      let n = st.counter in
-      let%map _ = put { st with counter = n + 1 } in
-      n
-    )
+    let open State in
+    let%bind st = get in
+    let n = st.counter in
+    let%map _ = put { st with counter = n + 1 } in
+    n
 
   let terr ~kind ?msg t =
     let t_str = Base.Option.map t ~f:(fun t -> spf "Raised on type: %s" (Type.string_of_ctor t)) in

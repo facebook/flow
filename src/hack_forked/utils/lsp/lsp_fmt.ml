@@ -522,7 +522,7 @@ end
 
 let print_diagnostic (diagnostic : PublishDiagnostics.diagnostic) : json =
   PublishDiagnostics.(
-    let print_diagnosticSeverity = Fn.compose int_ diagnosticSeverity_to_enum in
+    let print_diagnosticSeverity x = int_ (diagnosticSeverity_to_enum x) in
     let print_diagnosticCode = function
       | IntCode i -> Some (int_ i)
       | StringCode s -> Some (string_ s)

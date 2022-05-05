@@ -5,6 +5,5 @@
     flow_common_utils
     flow_version
     hh_json ; hack
-    imported_core ; hack
   )
 )

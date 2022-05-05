@@ -1642,7 +1642,7 @@ struct
           | (DefT (_, _, StrT (Literal (_, x))), _) when Context.has_prop cx mapr x -> ()
           (* If we have a dictionary, try that next *)
           | (_, Indexed { key = expected_key; _ }) ->
-            rec_flow_t ~use_op cx trace (mod_reason_of_t (Fn.const reason_op) key, expected_key)
+            rec_flow_t ~use_op cx trace (mod_reason_of_t (Fun.const reason_op) key, expected_key)
           | _ ->
             let (prop, suggestion) =
               match drop_generic key with
@@ -2875,7 +2875,7 @@ struct
             | ( DefT (_, _, FunT (_, { rest_param = None; is_predicate = false; _ }))
               | DefT (_, _, PolyT { t_out = DefT (_, _, FunT _); _ }) ) as fun_t ->
               (* Keep the object's reason for better error reporting *)
-              rec_flow cx trace (Fn.const r |> Fn.flip mod_reason_of_t fun_t, u)
+              rec_flow cx trace (Fun.const r |> Fun.flip mod_reason_of_t fun_t, u)
             | _ ->
               React.GetProps props
               |> React_kit.err_incompatible cx trace ~use_op:unknown_use ~add_output r

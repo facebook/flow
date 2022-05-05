@@ -368,7 +368,7 @@ module Kit (Flow : Flow_common.S) : REACT = struct
       let (t, f) =
         match t with
         | GenericT { bound; id; reason; name } ->
-          ( mod_reason_of_t (Fn.const reason) bound,
+          ( mod_reason_of_t (Fun.const reason) bound,
             (fun bound -> GenericT { bound; id; reason = reason_of_t bound; name })
           )
         | _ -> (t, (fun x -> x))
