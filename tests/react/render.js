@@ -13,7 +13,7 @@ class B extends React.Component<{}, void> {
 }
 
 <A />;
-// Error: `render` should return a `React$Node` which can't be undefined
+// OK
 
 <B />;
 // OK

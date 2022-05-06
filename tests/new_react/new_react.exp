@@ -21,8 +21,8 @@ Cannot use `React.Component` [1] with fewer than 1 type argument. [missing-type-
                         ^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:43:30
-   43| declare class React$Component<Props, State = void> {
+   <BUILTINS>/react.js:44:30
+   44| declare class React$Component<Props, State = void> {
                                     ^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
@@ -35,8 +35,8 @@ Cannot use `React.Component` [1] with fewer than 1 type argument. [missing-type-
                         ^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:43:30
-   43| declare class React$Component<Props, State = void> {
+   <BUILTINS>/react.js:44:30
+   44| declare class React$Component<Props, State = void> {
                                     ^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
@@ -53,8 +53,8 @@ References:
    classes.js:7:19
     7| class Foo extends React.Component<Props, State> {
                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/react.js:52:37
-   52|     partialState: ?$Shape<State> | ((State, Props) => ?$Shape<State>),
+   <BUILTINS>/react.js:53:37
+   53|     partialState: ?$Shape<State> | ((State, Props) => ?$Shape<State>),
                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
    classes.js:23:15
    23|   setState(o: { y_: string }): void { }
@@ -95,8 +95,8 @@ References:
    classes.js:7:19
     7| class Foo extends React.Component<Props, State> {
                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/react.js:52:19
-   52|     partialState: ?$Shape<State> | ((State, Props) => ?$Shape<State>),
+   <BUILTINS>/react.js:53:19
+   53|     partialState: ?$Shape<State> | ((State, Props) => ?$Shape<State>),
                          ^^^^^^^^^^^^^^ [3]
 
 
@@ -173,8 +173,8 @@ References:
    classes.js:39:15
     39| var foo: $jsx<number> = <Foo/>;
                       ^^^^^^ [1]
-   <BUILTINS>/react.js:161:5
-   161|   | string
+   <BUILTINS>/react.js:162:5
+   162|   | string
             ^^^^^^ [2]
 
 
@@ -349,8 +349,8 @@ Cannot get `this.state.x` because property `x` is missing in undefined [1]. [inc
                              ^
 
 References:
-   <BUILTINS>/react.js:43:46
-   43| declare class React$Component<Props, State = void> {
+   <BUILTINS>/react.js:44:46
+   44| declare class React$Component<Props, State = void> {
                                                     ^^^^ [1]
 
 
