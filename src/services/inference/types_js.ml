@@ -831,13 +831,12 @@ let files_to_infer ~options ~profiling ~dependency_info ~focus_targets ~parsed =
         Lwt.return to_infer
   )
 
-let restart_if_faster_than_recheck ~options ~env ~to_merge_or_check ~file_watcher_metadata =
+let restart_if_faster_than_recheck ~options ~env ~to_merge_or_check ~changed_mergebase =
   match Options.lazy_mode options with
   | false ->
     (* it's never faster to do a full init than a recheck *)
     Lwt.return_none
   | true ->
-    let { MonitorProt.changed_mergebase; missed_changes = _ } = file_watcher_metadata in
     (match changed_mergebase with
     | None ->
       (* Not tracking the mergebase, so we don't know one way or the other *)
@@ -899,14 +898,11 @@ let restart_if_faster_than_recheck ~options ~env ~to_merge_or_check ~file_watche
         "Estimating a recheck would take %.2fs and a restart would take %.2fs"
         time_to_recheck
         time_to_restart;
-      let%lwt () =
-        if time_to_restart < time_to_recheck then
-          let%lwt () = Recheck_stats.record_last_estimates ~options ~estimates in
-          Exit.(exit ~msg:"Restarting after a rebase to save time" Restart)
-        else
-          Lwt.return_unit
-      in
-      Lwt.return (Some estimates))
+      if time_to_restart < time_to_recheck then
+        let%lwt () = Recheck_stats.record_last_estimates ~options ~estimates in
+        Exit.(exit ~msg:"Restarting after a rebase to save time" Restart)
+      else
+        Lwt.return (Some estimates))
 
 type determine_what_to_recheck_result =
   | Determine_what_to_recheck_result of {
@@ -944,7 +940,7 @@ module Recheck : sig
     workers:MultiWorkerLwt.worker list option ->
     updates:CheckedSet.t ->
     files_to_force:CheckedSet.t ->
-    file_watcher_metadata:MonitorProt.file_watcher_metadata ->
+    changed_mergebase:bool option ->
     recheck_reasons:LspProt.recheck_reason list ->
     will_be_checked_files:CheckedSet.t ref ->
     env:ServerEnv.env ->
@@ -1592,7 +1588,7 @@ end = struct
       ~options
       ~workers
       ~will_be_checked_files
-      ~file_watcher_metadata
+      ~changed_mergebase
       ~intermediate_values
       ~recheck_reasons
       ~env =
@@ -1643,7 +1639,7 @@ end = struct
     will_be_checked_files := CheckedSet.union to_merge_or_check !will_be_checked_files;
 
     let%lwt estimates =
-      restart_if_faster_than_recheck ~options ~env ~to_merge_or_check ~file_watcher_metadata
+      restart_if_faster_than_recheck ~options ~env ~to_merge_or_check ~changed_mergebase
     in
     let%lwt () =
       ensure_parsed_or_trigger_recheck
@@ -1766,7 +1762,7 @@ end = struct
       ~workers
       ~updates
       ~files_to_force
-      ~file_watcher_metadata
+      ~changed_mergebase
       ~recheck_reasons
       ~will_be_checked_files
       ~env =
@@ -1801,7 +1797,7 @@ end = struct
       ~options
       ~workers
       ~will_be_checked_files
-      ~file_watcher_metadata
+      ~changed_mergebase
       ~intermediate_values
       ~recheck_reasons
       ~env
@@ -1844,7 +1840,7 @@ let recheck
     ~updates
     env
     ~files_to_force
-    ~file_watcher_metadata
+    ~changed_mergebase
     ~recheck_reasons
     ~will_be_checked_files =
   let%lwt (env, stats, record_recheck_time, first_internal_error) =
@@ -1859,7 +1855,7 @@ let recheck
               ~updates
               ~env
               ~files_to_force
-              ~file_watcher_metadata
+              ~changed_mergebase
               ~recheck_reasons
               ~will_be_checked_files
         )
@@ -1932,7 +1928,7 @@ let recheck
       ~slowest_file
       ~num_slow_files
       ~first_internal_error
-      ~scm_changed_mergebase:file_watcher_metadata.MonitorProt.changed_mergebase
+      ~scm_changed_mergebase:changed_mergebase
       ~profiling;
     record_recheck_time ()
   in
@@ -2142,7 +2138,7 @@ let init_from_saved_state ~profiling ~workers ~saved_state ~updates options =
               ~updates
               env
               ~files_to_force
-              ~file_watcher_metadata:MonitorProt.empty_file_watcher_metadata
+              ~changed_mergebase:None
               ~recheck_reasons
               ~will_be_checked_files:(ref files_to_force)
         )

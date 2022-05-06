@@ -29,7 +29,7 @@ val recheck :
   updates:CheckedSet.t ->
   ServerEnv.env ->
   files_to_force:CheckedSet.t ->
-  file_watcher_metadata:MonitorProt.file_watcher_metadata ->
+  changed_mergebase:bool option ->
   recheck_reasons:LspProt.recheck_reason list ->
   will_be_checked_files:CheckedSet.t ref ->
   ((profiling:Profiling_js.finished -> unit Lwt.t) * ServerStatus.summary_info * ServerEnv.env)

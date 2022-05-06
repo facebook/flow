@@ -88,7 +88,7 @@ let recheck
     genv
     env
     ?(files_to_force = CheckedSet.empty)
-    ~file_watcher_metadata
+    ~changed_mergebase
     ~recheck_reasons
     ~will_be_checked_files
     updates =
@@ -110,7 +110,7 @@ let recheck
             ~updates
             env
             ~files_to_force
-            ~file_watcher_metadata
+            ~changed_mergebase
             ~recheck_reasons
             ~will_be_checked_files
         in
@@ -203,7 +203,7 @@ let rec recheck_single ~recheck_count genv env =
     ServerMonitorListenerState.get_and_clear_recheck_workload ~process_updates ~get_forced
   in
   let {
-    ServerMonitorListenerState.metadata = file_watcher_metadata;
+    ServerMonitorListenerState.metadata = { MonitorProt.changed_mergebase; missed_changes };
     files_to_recheck;
     files_to_prioritize;
     files_to_force;
@@ -215,7 +215,7 @@ let rec recheck_single ~recheck_count genv env =
     CheckedSet.add ~focused:files_to_recheck ~dependencies:files_to_prioritize CheckedSet.empty
   in
   let files_to_recheck =
-    if file_watcher_metadata.MonitorProt.missed_changes then
+    if missed_changes then
       (* If the file watcher missed some changes, it's possible that previously-modified
          files have been reverted when it wasn't watching. Since previously-modified
          files are focused, we recheck all focused files. *)
@@ -252,7 +252,7 @@ let rec recheck_single ~recheck_count genv env =
             genv
             env
             ~files_to_force
-            ~file_watcher_metadata
+            ~changed_mergebase
             ~recheck_reasons
             ~will_be_checked_files
             files_to_recheck
