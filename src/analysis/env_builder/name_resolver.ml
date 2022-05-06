@@ -124,8 +124,6 @@ module Make
 
     and write_state
 
-    module WriteSet : Flow_set.S with type elt = write_state
-
     val empty : unit -> t
 
     val uninitialized : ALoc.t -> t
@@ -182,8 +180,6 @@ module Make
        is not attached due to syntactic difference.
        e.g. refinements on obj.x should be attached to x in const {x} = obj *)
     val replace_refinement_base_write : base:t -> t -> t
-
-    val normalize_through_refinements : write_state -> WriteSet.t
 
     val writes_of_uninitialized : (int -> bool) -> t -> write_state list
 
@@ -431,32 +427,6 @@ module Make
            smaller over time as terms remain close to their final normal forms. *)
         let vals = WriteSet.union (normalize t1.write_state) (normalize t2.write_state) in
         join (WriteSet.elements vals)
-
-    let rec normalize_through_refinements (t : write_state) : WriteSet.t =
-      match t with
-      | Uninitialized _
-      | Undefined _
-      | Number _
-      | DeclaredFunction _
-      | Undeclared _
-      | DeclaredButSkipped _
-      | UndeclaredClass _
-      | Projection _
-      | Global _
-      | This
-      | Super
-      | Exports
-      | ModuleScoped _
-      | Loc _ ->
-        WriteSet.singleton t
-      | PHI ts ->
-        List.fold_left
-          (fun vals' t ->
-            let vals = normalize t in
-            WriteSet.union vals' vals)
-          WriteSet.empty
-          ts
-      | Refinement { val_t; _ } -> normalize_through_refinements val_t.write_state
 
     let this = mk_with_write_state This
 
@@ -1103,85 +1073,6 @@ module Make
             | (Some v1, Some v2) -> Some (Val.merge v1 v2)
             | _ -> None
         )
-
-      (*
-       * See merge_heap_refinements for an explanation of our general strategy.
-       *
-       * The exception to that rule is when we're merging heap refinements after a loop.
-       *
-       * See the comment at env_loop for an explanation of how we havoc changed
-       * values in a loop before reading on.
-       *
-       * If we refine over a heap value x.foo in the loop guard then we have 2
-       * possible scenarios that affect the post-loop refinement:
-       * 1. x.foo changes in the loop
-       * 2. x.foo does not change in the loop
-       *
-       * If x.foo does not change in the loop then there will be an
-       * entry for x.foo in both the end-of-loop environment and the never-entered-loop
-       * environment. We merge those two states and then apply the negated loop guard
-       * in this case.
-       *
-       * while (x.foo === 3) {
-       * }
-       * x.foo; // x.foo did not change throughout the lifetime of the loop,
-       *        // so we can safely merge the pre-state and post-state and add the negated
-       *        // refinement. Both the pre- and post-states will have an entry for
-       *        // x.foo because both traverse the refinement
-       *
-       * If x.foo _does_ change then we're in a more interesting situation. In this
-       * case, it is possible for the end-of-loop environment to not contain a heap
-       * entry for x.foo, so merging it with the never-entered-loop environment would
-       * not add an entry for the heap refinement, and applying the negated refinement
-       * would have no effect. To fix this, we take advantage of the fact that if
-       * x.foo is changed then we havoc before analyzing the loop guard. That means
-       * that the access in the loop guard is a fine location to use for the projection
-       * at the base of the refinement. If we did not havoc, then we could end
-       * up in a situation where x.foo was already refined at the loop guard and we
-       * unsoundly carry that refinement into the post-loop state even though that refinement
-       * was invalidated by the loop body.
-       *
-       * while (x.foo === 3) {
-       *  f();
-       * } // The post state of the loop has no entry for x.foo because
-       *   // the call of f havocs the heap refinement.
-       * x.foo; // Since x.foo (and x) is havoced before looking at the guard,
-       *        // the x.foo projection in the guard is a "general" type for
-       *        // the x.foo projection, so we can use that location to grab
-       *        // the type we need to refine with the negation of the loop guard.
-       *)
-      method merge_loop_guard_env_after_loop env_after_guard_no_refinements =
-        let env_after_loop = env_state.env in
-        let merge_heap_refinements ~heap_entries_after_loop ~heap_entries_after_guard =
-          HeapRefinementMap.merge
-            (fun _ refinement1 refinement2 ->
-              match (refinement1, refinement2) with
-              | (Some v1, Some v2) -> Some (Val.merge v1 v2)
-              | (Some v, None) -> Some v (* Keep the projection from the guard! *)
-              | _ -> None)
-            heap_entries_after_guard
-            heap_entries_after_loop
-        in
-        List.iter2
-          (fun {
-                 Env.env_val = after_guard;
-                 heap_refinements = heap_entries_after_guard;
-                 def_loc = _;
-               }
-               {
-                 val_ref = after_loop;
-                 havoc;
-                 heap_refinements = heap_entries_after_loop;
-                 def_loc;
-                 _;
-               } ->
-            after_loop := this#merge_vals_with_havoc ~havoc ~def_loc after_guard !after_loop;
-            heap_entries_after_loop :=
-              merge_heap_refinements
-                ~heap_entries_after_loop:!heap_entries_after_loop
-                ~heap_entries_after_guard)
-          (SMap.values env_after_guard_no_refinements)
-          (SMap.values env_after_loop)
 
       method merge_remote_env (env : Env.t) : unit =
         (* NOTE: env might have more keys than env_state.env, since the environment it
@@ -2314,26 +2205,47 @@ module Make
         this#reset_env pre_env;
         result
 
-      (* Functions called inside scout_changed_vars are responsible for popping any refinement
+      (* Functions called inside scout_changed_refinement_keys are responsible for popping any refinement
        * scopes they may introduce
        *)
-      method scout_changed_vars ~scout =
+      method scout_changed_refinement_keys ~scout ~continues =
         (* Calling scout may have side effects, like adding new abrupt completions. We
          * need to be sure to restore the old abrupt completion envs after scouting,
          * because a scout should be followed-up by a run that revisits everything visited by
          * the scout. with_env_state will ensure that all mutable state is restored. *)
         this#with_env_state (fun () ->
             let pre_env = this#env in
-            scout ();
+            let completion_state = this#run_to_completion scout in
+            let _ =
+              this#run_to_completion (fun () ->
+                  this#commit_abrupt_completion_matching
+                    (AbruptCompletion.mem continues)
+                    completion_state
+              )
+            in
             let post_env = this#env in
             SMap.fold
-              (fun name { Env.env_val = env_val1; heap_refinements = _; def_loc = _ } acc ->
-                let { Env.env_val = env_val2; heap_refinements = _; def_loc = _ } =
+              (fun name
+                   { Env.env_val = env_val1; heap_refinements = heap_refinements1; def_loc = _ }
+                   acc ->
+                let { Env.env_val = env_val2; heap_refinements = heap_refinements2; def_loc = _ } =
                   SMap.find name pre_env
                 in
-                let normalized_val1 = Val.normalize_through_refinements env_val1.Val.write_state in
-                let normalized_val2 = Val.normalize_through_refinements env_val2.Val.write_state in
-                if Val.WriteSet.equal normalized_val1 normalized_val2 then
+                let acc =
+                  HeapRefinementMap.fold
+                    (fun k heap_refinement1 acc ->
+                      let heap_refinement2_opt = HeapRefinementMap.find_opt k heap_refinements2 in
+                      match heap_refinement2_opt with
+                      | None -> RefinementKey.{ base = name; projections = k } :: acc
+                      | Some heap_refinement2 ->
+                        if Val.id_of_val heap_refinement1 = Val.id_of_val heap_refinement2 then
+                          acc
+                        else
+                          RefinementKey.{ base = name; projections = k } :: acc)
+                    heap_refinements1
+                    acc
+                in
+                if Val.id_of_val env_val1 = Val.id_of_val env_val2 then
                   acc
                 else
                   RefinementKey.lookup_of_name name :: acc)
@@ -2341,7 +2253,7 @@ module Make
               []
         )
 
-      method havoc_changed_vars changed_vars =
+      method havoc_changed_refinement_keys changed_refinement_keys =
         List.iter
           (fun lookup ->
             let { RefinementKey.base; projections } = lookup in
@@ -2368,7 +2280,7 @@ module Make
                     ~f:(fun acc write -> Val.merge acc (Val.of_write write))
                     (Val.writes_of_uninitialized this#refinement_may_be_undefined !val_ref)
             | _ -> heap_refinements := HeapRefinementMap.remove projections !heap_refinements)
-          changed_vars
+          changed_refinement_keys
 
       method handle_continues loop_completion_state continues =
         this#run_to_completion (fun () ->
@@ -2390,18 +2302,23 @@ module Make
        * We don't need to check for continues because they are handled before this point.
        * We don't check for throw/return because then we wouldn't proceed to the line
        * after the loop anyway. *)
-      method post_loop_refinements { total; _ } =
+      method post_loop_refinements loop_starting_env guard =
         if not AbruptCompletion.(mem (List.map fst env_state.abrupt_completion_envs) (break None))
-        then
-          match total with
-          | None -> ()
-          | Some total ->
-            let (applied, _) = this#normalize_total_refinements (Not total) in
-            applied
-            |> IMap.iter (fun _ (lookup, refinement_id) ->
-                   let refine_val x = Val.refinement refinement_id x in
-                   this#map_val_with_lookup lookup refine_val
-               )
+        then (
+          this#push_refinement_scope empty_refinements;
+          ignore @@ this#expression_refinement guard;
+          this#negate_new_refinements ();
+          this#pop_refinement_scope_without_unrefining ();
+          let final_env = this#env in
+          this#reset_env loop_starting_env;
+          (* This may seem unnecessary, but we need to ensure that when we revisit the guard that
+           * the special writes we record for literal subtyping checks are present. This are only
+           * recorded in _refinement functions *)
+          this#push_refinement_scope empty_refinements;
+          ignore @@ this#expression_refinement guard;
+          this#pop_refinement_scope ();
+          this#reset_env final_env
+        )
 
       (*
        * Unlike the ssa_builder, the name_resolver does not create REF unresolved
@@ -2417,14 +2334,19 @@ module Make
        *
        * After visiting the body, we reset the state in the ssa environment,
        * havoc any vars that need to be havoced, and then visit the body again.
-       * After that we negate the refinements on the loop guard.
+       * After that we negate the refinements on the loop guard by revisiting the guard
+       * with the post-loop state and negating the refinement.
+       *
+       * This last part that revisits the guard will record writes that we don't want recorded. To
+       * restore the original state, we reset the environment to what it was when we originally
+       * visited the guard and then visit it again. You can see this in post_loop_refinements.
        *
        * Here's how each param should be used:
        * scout: Visit the guard and any updaters if applicable, then visit the body
+       * guard: An optional expression AST that is the predicate that is evaluated before
+       *   entering the loop body.
        * visit_guard_and_body: Visit the guard with a refinement scope, any updaters
-       *   if applicable, and then visit the body. Return a tuple of the guard
-       *   refinement scope, the env after the guard with no refinements, and the loop
-       *   completion state.
+       *   if applicable, and then visit the body. Return the loop completion state.
        * make_completion_states: given the loop completion state, give the list of
        *   possible completion states for the loop. For do while loops this is different
        *   than regular while loops, so those two implementations may be instructive.
@@ -2435,15 +2357,20 @@ module Make
        *   main passes.
        *)
       method env_loop
-          ~scout ~visit_guard_and_body ~make_completion_states ~auto_handle_continues ~continues =
+          ~guard
+          ~scout
+          ~visit_guard_and_body
+          ~make_completion_states
+          ~auto_handle_continues
+          ~continues =
         this#expecting_abrupt_completions (fun () ->
             (* Scout the body for changed vars *)
-            let changed_vars = this#scout_changed_vars ~scout in
+            let changed_refinement_keys = this#scout_changed_refinement_keys ~scout ~continues in
 
             (* We havoc the changed vars in order to prevent loops in the EnvBuilder writes-graph,
              * which would require a fix-point analysis that would not be compatible with
              * local type inference *)
-            this#havoc_changed_vars changed_vars;
+            this#havoc_changed_refinement_keys changed_refinement_keys;
 
             (* Now we push a refinement scope and visit the guard/body. At the end, we completely
              * get rid of refinements introduced by the guard, even if they occur in a PHI node, to
@@ -2457,9 +2384,7 @@ module Make
              * x; // Don't want x to be a PHI of x != null and x = 4.
              *)
             this#push_refinement_scope empty_refinements;
-            let (guard_refinements, env_after_test_no_refinements, loop_completion_state) =
-              visit_guard_and_body ()
-            in
+            let (loop_completion_state, env_after_guard_no_refinements) = visit_guard_and_body () in
             let loop_completion_state =
               if auto_handle_continues then
                 this#handle_continues loop_completion_state continues
@@ -2469,10 +2394,17 @@ module Make
             this#pop_refinement_scope_after_loop ();
 
             (* We either enter the loop body or we don't *)
-            (match env_after_test_no_refinements with
+            let loop_starting_env =
+              match env_after_guard_no_refinements with
+              | None -> this#env
+              | Some env ->
+                this#merge_self_env env;
+                env
+            in
+
+            (match guard with
             | None -> ()
-            | Some env -> this#merge_loop_guard_env_after_loop env);
-            this#post_loop_refinements guard_refinements;
+            | Some guard -> this#post_loop_refinements loop_starting_env guard);
 
             let completion_states = make_completion_states loop_completion_state in
             let completion_state =
@@ -2492,16 +2424,16 @@ module Make
         in
         let visit_guard_and_body () =
           ignore @@ this#expression_refinement test;
-          let guard_refinements = this#peek_new_refinements () in
-          let post_guard_no_refinements_env = this#env_without_latest_refinements in
+          let env = this#env_without_latest_refinements in
           let loop_completion_state =
             this#run_to_completion (fun () -> ignore @@ this#statement body)
           in
-          (guard_refinements, Some post_guard_no_refinements_env, loop_completion_state)
+          (loop_completion_state, Some env)
         in
         let make_completion_states loop_completion_state = (None, [loop_completion_state]) in
         let continues = AbruptCompletion.continue None :: env_state.possible_labeled_continues in
         this#env_loop
+          ~guard:(Some test)
           ~scout
           ~visit_guard_and_body
           ~make_completion_states
@@ -2530,10 +2462,11 @@ module Make
           (match loop_completion_state with
           | None -> ignore @@ this#expression_refinement test
           | Some _ -> ());
-          (this#peek_new_refinements (), None, loop_completion_state)
+          (loop_completion_state, None)
         in
         let make_completion_states loop_completion_state = (loop_completion_state, []) in
         this#env_loop
+          ~guard:(Some test)
           ~scout
           ~visit_guard_and_body
           ~make_completion_states
@@ -2559,8 +2492,7 @@ module Make
         let visit_guard_and_body () =
           ignore @@ Flow_ast_mapper.map_opt this#for_statement_init init;
           ignore @@ Flow_ast_mapper.map_opt this#expression_refinement test;
-          let guard_refinements = this#peek_new_refinements () in
-          let post_guard_no_refinements_env = this#env_without_latest_refinements in
+          let env = this#env_without_latest_refinements in
           let loop_completion_state =
             this#run_to_completion (fun () -> ignore @@ this#statement body)
           in
@@ -2568,10 +2500,11 @@ module Make
           (match loop_completion_state with
           | None -> ignore @@ Flow_ast_mapper.map_opt this#expression update
           | Some _ -> ());
-          (guard_refinements, Some post_guard_no_refinements_env, loop_completion_state)
+          (loop_completion_state, Some env)
         in
         let make_completion_states loop_completion_state = (None, [loop_completion_state]) in
         this#env_loop
+          ~guard:test
           ~scout
           ~visit_guard_and_body
           ~make_completion_states
@@ -2615,11 +2548,12 @@ module Make
           let loop_completion_state =
             this#run_to_completion (fun () -> ignore @@ this#statement body)
           in
-          (this#peek_new_refinements (), Some env, loop_completion_state)
+          (loop_completion_state, Some env)
         in
         let make_completion_states loop_completion_state = (None, [loop_completion_state]) in
         let continues = AbruptCompletion.continue None :: env_state.possible_labeled_continues in
         this#env_loop
+          ~guard:None
           ~scout
           ~visit_guard_and_body
           ~make_completion_states

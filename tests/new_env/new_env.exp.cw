@@ -169,23 +169,6 @@ References:
                  ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- loops.js:22:8
-
-Cannot cast `a` to string because null [1] is incompatible with string [2]. [incompatible-cast]
-
-   loops.js:22:8
-   22|       (a: string); // Error
-              ^
-
-References:
-   loops.js:16:25
-   16| declare var a: string | null;
-                               ^^^^ [1]
-   loops.js:22:11
-   22|       (a: string); // Error
-                 ^^^^^^ [2]
-
-
 Error ----------------------------------------------------------------------------------------------------- refi.js:24:4
 
 Cannot cast `y` to empty because number literal `42` [1] is incompatible with empty [2]. [incompatible-cast]
@@ -481,4 +464,4 @@ References:
 
 
 
-Found 29 errors
+Found 28 errors

@@ -879,6 +879,62 @@ References:
                       ^^^^^ [1]
 
 
+Error -------------------------------------------------------------------------------------------- invalidation.js:26:12
+
+Cannot call `v.f` because mixed [1] is not a function. [not-a-function]
+
+   invalidation.js:26:12
+   26|   return v.f(); // error: trying to still use the refinement.
+                  ^
+
+References:
+   invalidation.js:7:16
+    7| const v: { f?: mixed } = {};
+                      ^^^^^ [1]
+
+
+Error -------------------------------------------------------------------------------------------- invalidation.js:26:12
+
+Cannot call `v.f` because undefined [1] is not a function. [not-a-function]
+
+   invalidation.js:26:12
+   26|   return v.f(); // error: trying to still use the refinement.
+                  ^
+
+References:
+   invalidation.js:7:16
+    7| const v: { f?: mixed } = {};
+                      ^^^^^ [1]
+
+
+Error -------------------------------------------------------------------------------------------- invalidation.js:32:12
+
+Cannot call `v.f` because mixed [1] is not a function. [not-a-function]
+
+   invalidation.js:32:12
+   32|   return v.f(); // error: trying to still use the refinement.
+                  ^
+
+References:
+   invalidation.js:7:16
+    7| const v: { f?: mixed } = {};
+                      ^^^^^ [1]
+
+
+Error -------------------------------------------------------------------------------------------- invalidation.js:32:12
+
+Cannot call `v.f` because undefined [1] is not a function. [not-a-function]
+
+   invalidation.js:32:12
+   32|   return v.f(); // error: trying to still use the refinement.
+                  ^
+
+References:
+   invalidation.js:7:16
+    7| const v: { f?: mixed } = {};
+                      ^^^^^ [1]
+
+
 Error -------------------------------------------------------------------------------------------- invalidation.js:45:51
 
 Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
@@ -1201,6 +1257,20 @@ References:
                      ^^^^^^^^^^^^ [1]
 
 
+Error -------------------------------------------------------------------------------------------- invalidation.js:82:51
+
+Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
+
+   invalidation.js:82:51
+   82|   if (a.b) { while (p) f();                   a.b.c; } // error
+                                                         ^
+
+References:
+   invalidation.js:38:15
+   38| type A = {b?: {c: boolean}};
+                     ^^^^^^^^^^^^ [1]
+
+
 Error -------------------------------------------------------------------------------------------- invalidation.js:83:51
 
 Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
@@ -1243,6 +1313,34 @@ References:
                      ^^^^^^^^^^^^ [1]
 
 
+Error -------------------------------------------------------------------------------------------- invalidation.js:86:51
+
+Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
+
+   invalidation.js:86:51
+   86|   if (a.b) { for (; p;) f();                  a.b.c; } // error
+                                                         ^
+
+References:
+   invalidation.js:38:15
+   38| type A = {b?: {c: boolean}};
+                     ^^^^^^^^^^^^ [1]
+
+
+Error -------------------------------------------------------------------------------------------- invalidation.js:87:51
+
+Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
+
+   invalidation.js:87:51
+   87|   if (a.b) { for (; p; f());                  a.b.c; } // error
+                                                         ^
+
+References:
+   invalidation.js:38:15
+   38| type A = {b?: {c: boolean}};
+                     ^^^^^^^^^^^^ [1]
+
+
 Error -------------------------------------------------------------------------------------------- invalidation.js:88:51
 
 Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
@@ -1271,12 +1369,40 @@ References:
                      ^^^^^^^^^^^^ [1]
 
 
+Error -------------------------------------------------------------------------------------------- invalidation.js:90:51
+
+Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
+
+   invalidation.js:90:51
+   90|   if (a.b) { for (i1 in y) f();               a.b.c; } // error
+                                                         ^
+
+References:
+   invalidation.js:38:15
+   38| type A = {b?: {c: boolean}};
+                     ^^^^^^^^^^^^ [1]
+
+
 Error -------------------------------------------------------------------------------------------- invalidation.js:91:51
 
 Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
 
    invalidation.js:91:51
    91|   if (a.b) { for (i2 in ff());                a.b.c; } // error
+                                                         ^
+
+References:
+   invalidation.js:38:15
+   38| type A = {b?: {c: boolean}};
+                     ^^^^^^^^^^^^ [1]
+
+
+Error -------------------------------------------------------------------------------------------- invalidation.js:92:51
+
+Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
+
+   invalidation.js:92:51
+   92|   if (a.b) { for (i3 of y) f();               a.b.c; } // error
                                                          ^
 
 References:
@@ -1455,6 +1581,20 @@ Unreachable code. [unreachable-code]
                                                       ^^^^^^
 
 
+Error ------------------------------------------------------------------------------------------- invalidation.js:111:51
+
+Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
+
+   invalidation.js:111:51
+   111|   if (a.b) { for (; p;) { f(); continue; }    a.b.c; } // error
+                                                          ^
+
+References:
+   invalidation.js:38:15
+    38| type A = {b?: {c: boolean}};
+                      ^^^^^^^^^^^^ [1]
+
+
 Error ------------------------------------------------------------------------------------------- invalidation.js:112:51
 
 Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
@@ -1475,6 +1615,20 @@ Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatib
 
    invalidation.js:113:51
    113|   if (a.b) { for (; p;) { f(); return;   }    a.b.c; } // ideally ok, error acceptable
+                                                          ^
+
+References:
+   invalidation.js:38:15
+    38| type A = {b?: {c: boolean}};
+                      ^^^^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------- invalidation.js:114:51
+
+Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
+
+   invalidation.js:114:51
+   114|   if (a.b) { for (; p; f()) continue;         a.b.c; } // error
                                                           ^
 
 References:
@@ -1981,12 +2135,40 @@ References:
                       ^^^^^^^^^^^^ [1]
 
 
+Error ------------------------------------------------------------------------------------------- invalidation.js:170:56
+
+Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
+
+   invalidation.js:170:56
+   170|   if (a.b) { l: for (; p;) { f(); continue l; }    a.b.c; } // error
+                                                               ^
+
+References:
+   invalidation.js:38:15
+    38| type A = {b?: {c: boolean}};
+                      ^^^^^^^^^^^^ [1]
+
+
 Error ------------------------------------------------------------------------------------------- invalidation.js:171:56
 
 Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
 
    invalidation.js:171:56
    171|   if (a.b) { l: for (; p;) { f(); break l;    }    a.b.c; } // error
+                                                               ^
+
+References:
+   invalidation.js:38:15
+    38| type A = {b?: {c: boolean}};
+                      ^^^^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------- invalidation.js:172:56
+
+Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
+
+   invalidation.js:172:56
+   172|   if (a.b) { l: for (; p; f()) continue l;         a.b.c; } // error
                                                                ^
 
 References:
@@ -2527,6 +2709,20 @@ References:
                       ^^^^^^^^^^^^ [1]
 
 
+Error ------------------------------------------------------------------------------------------- invalidation.js:236:51
+
+Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
+
+   invalidation.js:236:51
+   236|   if (a.b) { while (p) x.b = y;               a.b.c; } // error
+                                                          ^
+
+References:
+   invalidation.js:38:15
+    38| type A = {b?: {c: boolean}};
+                      ^^^^^^^^^^^^ [1]
+
+
 Error ------------------------------------------------------------------------------------------- invalidation.js:237:51
 
 Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
@@ -2569,6 +2765,34 @@ References:
                       ^^^^^^^^^^^^ [1]
 
 
+Error ------------------------------------------------------------------------------------------- invalidation.js:240:51
+
+Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
+
+   invalidation.js:240:51
+   240|   if (a.b) { for (; p;) x.b = y;              a.b.c; } // error
+                                                          ^
+
+References:
+   invalidation.js:38:15
+    38| type A = {b?: {c: boolean}};
+                      ^^^^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------- invalidation.js:241:51
+
+Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
+
+   invalidation.js:241:51
+   241|   if (a.b) { for (; p; x.b = y);              a.b.c; } // error
+                                                          ^
+
+References:
+   invalidation.js:38:15
+    38| type A = {b?: {c: boolean}};
+                      ^^^^^^^^^^^^ [1]
+
+
 Error ------------------------------------------------------------------------------------------- invalidation.js:242:51
 
 Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
@@ -2597,12 +2821,40 @@ References:
                       ^^^^^^^^^^^^ [1]
 
 
+Error ------------------------------------------------------------------------------------------- invalidation.js:244:51
+
+Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
+
+   invalidation.js:244:51
+   244|   if (a.b) { for (i1 in y) x.b = y;           a.b.c; } // error
+                                                          ^
+
+References:
+   invalidation.js:38:15
+    38| type A = {b?: {c: boolean}};
+                      ^^^^^^^^^^^^ [1]
+
+
 Error ------------------------------------------------------------------------------------------- invalidation.js:245:51
 
 Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
 
    invalidation.js:245:51
    245|   if (a.b) { for (i2 in x.b = y);             a.b.c; } // error
+                                                          ^
+
+References:
+   invalidation.js:38:15
+    38| type A = {b?: {c: boolean}};
+                      ^^^^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------- invalidation.js:246:51
+
+Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
+
+   invalidation.js:246:51
+   246|   if (a.b) { for (i3 of y) x.b = y;           a.b.c; } // error
                                                           ^
 
 References:
@@ -5407,4 +5659,4 @@ Cannot perform arithmetic operation because undefined [1] is not a number. [unsa
 
 
 
-Found 369 errors
+Found 387 errors
