@@ -1260,8 +1260,6 @@ end = struct
     in
     MonitorRPC.status_update ~event:ServerStatus.Resolving_dependencies_progress;
     let%lwt (changed_modules, duplicate_providers) =
-      (* TODO remove after lookup overhaul *)
-      Module_js.clear_filename_cache ();
       commit_modules ~transaction ~options ~profiling ~workers ~duplicate_providers dirty_modules
     in
 
@@ -1288,12 +1286,7 @@ end = struct
             ~cache_key:new_or_changed_or_deleted
             ~on_miss:
               ( lazy
-                (Dep_service.calc_direct_dependents
-                   workers
-                   ~candidates:unchanged
-                   ~root_files:new_or_changed_or_deleted
-                   ~root_modules:changed_modules
-                )
+                (Dep_service.calc_direct_dependents workers ~candidates:unchanged ~changed_modules)
                 )
       )
     in

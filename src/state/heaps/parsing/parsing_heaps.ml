@@ -72,7 +72,7 @@ type provider_addr = Heap.file Heap.entity SharedMem.addr
 
 type resolved_requires = {
   resolved_modules: Modulename.t SMap.t;
-  phantom_dependencies: SSet.t;
+  phantom_dependencies: Modulename.Set.t;
   hash: Xx.hash;
 }
 [@@deriving show]
@@ -84,11 +84,13 @@ let ( let* ) = Option.bind
 let mk_resolved_requires ~resolved_modules ~phantom_dependencies =
   let state = Xx.init 0L in
   SMap.iter
-    (fun reference modulename ->
-      Xx.update state reference;
-      Xx.update state (Modulename.to_string modulename))
+    (fun mref mname ->
+      Xx.update state mref;
+      Xx.update state (Modulename.to_string mname))
     resolved_modules;
-  SSet.iter (Xx.update state) phantom_dependencies;
+  Modulename.Set.iter
+    (fun mname -> Xx.update state (Modulename.to_string mname))
+    phantom_dependencies;
   { resolved_modules; phantom_dependencies; hash = Xx.digest state }
 
 (* There's some redundancy in the visitors here, but an attempt to avoid repeated code led,
