@@ -1892,7 +1892,7 @@ module Make
         | None -> (None, None)
         | Some default ->
           let (t, default_ast) = mk_type cx tparams_map reason (Some default) in
-          Flow.flow_t cx (Flow.subst cx bounds_map t, Flow.subst cx bounds_map bound);
+          Flow.flow_t cx (t, bound);
           (Some t, default_ast)
       in
       let polarity = polarity variance in
