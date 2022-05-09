@@ -97,3 +97,29 @@ function not_refinement_or_val_rhs(x: Object) {
   const immutable = {Map: class Map {}}
   if (x instanceof immutable.Map) {(x: immutable.Map)}
 }
+
+function class_util() {
+  declare var x: mixed;
+
+  class B {}
+
+  declare var A: { B: Class<B>};
+
+  if (x instanceof A.B) {
+    (x: empty); //error
+    (x: B);
+  }
+}
+
+function class_util_chain() {
+  declare var x: mixed;
+
+  class B {}
+
+  declare var A: ?{ B: Class<B>};
+
+  if (x instanceof A?.B) { //error
+    (x: empty); //error
+    (x: B);
+  }
+}
