@@ -144,51 +144,68 @@ The right-hand side of an `instanceof` expression must be an object, but got mix
                                   ^^^^^ [1]
 
 
-Error ---------------------------------------------------------------------------------------------- instanceof.js:109:6
+Error ---------------------------------------------------------------------------------------------- instanceof.js:110:6
 
 Cannot cast `x` to empty because `B` [1] is incompatible with empty [2]. [incompatible-cast]
 
-   instanceof.js:109:6
-   109|     (x: empty); //error
+   instanceof.js:110:6
+   110|     (x: empty); //error
              ^
 
 References:
-   instanceof.js:104:9
-   104|   class B {}
-                ^ [1]
-   instanceof.js:109:9
-   109|     (x: empty); //error
+   instanceof.js:109:20
+   109|   if (x instanceof A.B) {
+                           ^^^ [1]
+   instanceof.js:110:9
+   110|     (x: empty); //error
                 ^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------- instanceof.js:121:20
-
-The right-hand side of an `instanceof` expression must be an object, but got null or undefined [1]. [invalid-in-rhs]
-
-   instanceof.js:121:20
-   121|   if (x instanceof A?.B) { //error
-                           ^
-
-References:
-   instanceof.js:119:18
-   119|   declare var A: ?{ B: Class<B>};
-                         ^^^^^^^^^^^^^^^ [1]
-
-
-Error ---------------------------------------------------------------------------------------------- instanceof.js:122:6
+Error ---------------------------------------------------------------------------------------------- instanceof.js:124:6
 
 Cannot cast `x` to empty because `B` [1] is incompatible with empty [2]. [incompatible-cast]
 
-   instanceof.js:122:6
-   122|     (x: empty); //error
+   instanceof.js:124:6
+   124|     (x: empty); //error
              ^
 
 References:
-   instanceof.js:117:9
-   117|   class B {}
+   instanceof.js:119:9
+   119|   class B {}
                 ^ [1]
-   instanceof.js:122:9
-   122|     (x: empty); //error
+   instanceof.js:124:9
+   124|     (x: empty); //error
+                ^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- instanceof.js:136:20
+
+The right-hand side of an `instanceof` expression must be an object, but got null or undefined [1]. [invalid-in-rhs]
+
+   instanceof.js:136:20
+   136|   if (x instanceof A?.B) { //error
+                           ^
+
+References:
+   instanceof.js:134:18
+   134|   declare var A: ?{ B: Class<B>};
+                         ^^^^^^^^^^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------- instanceof.js:137:6
+
+Cannot cast `x` to empty because `B` [1] is incompatible with empty [2]. [incompatible-cast]
+
+   instanceof.js:137:6
+   137|     (x: empty); //error
+             ^
+
+References:
+   instanceof.js:132:9
+   132|   class B {}
+                ^ [1]
+   instanceof.js:137:9
+   137|     (x: empty); //error
                 ^^^^^ [2]
 
 
@@ -256,4 +273,4 @@ References:
 
 
 
-Found 18 errors
+Found 19 errors

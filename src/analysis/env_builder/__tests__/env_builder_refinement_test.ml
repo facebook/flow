@@ -6313,3 +6313,21 @@ function f() {
         (4, 9) to (4, 10) => {
           unreachable
         }] |}]
+
+let%expect_test "instanceof_mem" =
+  print_ssa_test {|
+if (x instanceof A.B) {
+  x;
+}
+|};
+    [%expect {|
+      [
+        (2, 4) to (2, 5) => {
+          Global x
+        };
+        (2, 17) to (2, 18) => {
+          Global A
+        };
+        (3, 2) to (3, 3) => {
+          {refinement = instanceof; writes = Global x}
+        }] |}]
