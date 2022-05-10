@@ -5,6 +5,8 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
+[@@@warning "-3"]
+
 module Js = Js_of_ocaml.Js
 
 let () =
