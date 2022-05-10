@@ -31,15 +31,6 @@ function clist(n: number) {
   };
 }
 
-function foo(x) {
-  return x(x);
-}
-
-foo(x => x);
-
-type Foo = { n: typeof foo };
-function bar(x: Foo) {}
-
 // The following exhibits a use of the RemoveTopLevelTvarVisitor
 //
 // mu X . ((X | string) | string)

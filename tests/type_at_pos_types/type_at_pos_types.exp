@@ -975,78 +975,48 @@ recursive.js:23:12 = {
   "start":10,
   "end":14
 }
-recursive.js:38:2 = {
-  "type":"type V$2 = (x: V$2) => V$3; type V$3 = (x: V$2) => V$3; (x: (x: V$2) => V$3) => (x: V$2) => V$3",
-  "reasons":[],
-  "loc":{
-    "source":"recursive.js",
-    "type":"SourceFile",
-    "start":{"line":38,"column":1,"offset":562},
-    "end":{"line":38,"column":3,"offset":565}
-  },
-  "path":"recursive.js",
-  "line":38,
-  "endline":38,
-  "start":1,
-  "end":3
-}
-recursive.js:41:17 = {
-  "type":"type V$1 = (x: V$1) => V$2; type V$2 = (x: V$1) => V$2; type Foo = {n: (x: (x: V$1) => V$2) => (x: V$1) => V$2, ...}",
-  "reasons":[],
-  "loc":{
-    "source":"recursive.js",
-    "type":"SourceFile",
-    "start":{"line":41,"column":17,"offset":622},
-    "end":{"line":41,"column":19,"offset":625}
-  },
-  "path":"recursive.js",
-  "line":41,
-  "endline":41,
-  "start":17,
-  "end":19
-}
-recursive.js:58:1 = {
+recursive.js:49:1 = {
   "type":"string",
   "reasons":[],
   "loc":{
     "source":"recursive.js",
     "type":"SourceFile",
-    "start":{"line":58,"column":1,"offset":906},
-    "end":{"line":58,"column":1,"offset":907}
+    "start":{"line":49,"column":1,"offset":801},
+    "end":{"line":49,"column":1,"offset":802}
   },
   "path":"recursive.js",
-  "line":58,
-  "endline":58,
+  "line":49,
+  "endline":49,
   "start":1,
   "end":1
 }
-recursive.js:60:6 = {
+recursive.js:51:6 = {
   "type":"type CA<+T> = $ReadOnlyArray<CA<T>>",
   "reasons":[],
   "loc":{
     "source":"recursive.js",
     "type":"SourceFile",
-    "start":{"line":60,"column":6,"offset":915},
-    "end":{"line":60,"column":7,"offset":917}
+    "start":{"line":51,"column":6,"offset":810},
+    "end":{"line":51,"column":7,"offset":812}
   },
   "path":"recursive.js",
-  "line":60,
-  "endline":60,
+  "line":51,
+  "endline":51,
   "start":6,
   "end":7
 }
-recursive.js:60:31 = {
+recursive.js:51:31 = {
   "type":"type CA<+T> = $ReadOnlyArray<CA<T>>",
   "reasons":[],
   "loc":{
     "source":"recursive.js",
     "type":"SourceFile",
-    "start":{"line":60,"column":30,"offset":939},
-    "end":{"line":60,"column":31,"offset":941}
+    "start":{"line":51,"column":30,"offset":834},
+    "end":{"line":51,"column":31,"offset":836}
   },
   "path":"recursive.js",
-  "line":60,
-  "endline":60,
+  "line":51,
+  "endline":51,
   "start":30,
   "end":31
 }

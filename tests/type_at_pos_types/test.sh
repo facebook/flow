@@ -177,16 +177,12 @@ printf "recursive.js:13:12 = "
 assert_ok "$FLOW" type-at-pos recursive.js 13 12 --strip-root --pretty
 printf "recursive.js:23:12 = "
 assert_ok "$FLOW" type-at-pos recursive.js 23 12 --strip-root --pretty
-printf "recursive.js:38:2 = "
-assert_ok "$FLOW" type-at-pos recursive.js 38 2 --strip-root --pretty
-printf "recursive.js:41:17 = "
-assert_ok "$FLOW" type-at-pos recursive.js 41 17 --strip-root --pretty
-printf "recursive.js:58:1 = "
-assert_ok "$FLOW" type-at-pos recursive.js 58 1 --strip-root --pretty
-printf "recursive.js:60:6 = "
-assert_ok "$FLOW" type-at-pos recursive.js 60 6 --strip-root --pretty
-printf "recursive.js:60:31 = "
-assert_ok "$FLOW" type-at-pos recursive.js 60 31 --strip-root --pretty
+printf "recursive.js:49:1 = "
+assert_ok "$FLOW" type-at-pos recursive.js 49 1 --strip-root --pretty
+printf "recursive.js:51:6 = "
+assert_ok "$FLOW" type-at-pos recursive.js 51 6 --strip-root --pretty
+printf "recursive.js:51:31 = "
+assert_ok "$FLOW" type-at-pos recursive.js 51 31 --strip-root --pretty
 
 # subst.js
 printf "subst.js:13:7 = "
