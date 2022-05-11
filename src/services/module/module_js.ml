@@ -400,10 +400,13 @@ module Haste : MODULE_SYSTEM = struct
         (* Lib files, resource files, etc don't have any fancy haste name *)
         None
 
-  let resolve_haste_module r =
+  let resolve_haste_module ?phantom_acc r =
+    let mname = Modulename.String r in
     match Parsing_heaps.get_haste_module r with
-    | Some _ -> Some (Modulename.String r)
-    | None -> None
+    | Some _ -> Some mname
+    | None ->
+      record_phantom_dependency mname phantom_acc;
+      None
 
   let resolve_haste_package ~options ~reader file ?phantom_acc r =
     let (dir_opt, rest) =
@@ -422,7 +425,7 @@ module Haste : MODULE_SYSTEM = struct
   let resolve_import ~options ~reader node_modules_containers file ?phantom_acc r =
     lazy_seq
       [
-        lazy (resolve_haste_module r);
+        lazy (resolve_haste_module ?phantom_acc r);
         lazy (resolve_haste_package ~options ~reader file ?phantom_acc r);
         lazy (Node.resolve_import ~options ~reader node_modules_containers file ?phantom_acc r);
       ]
