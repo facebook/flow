@@ -4121,7 +4121,7 @@ while (x.foo === 3) {
   x.foo;
   break;
 }
-x.foo; // No heap refinement here from guard, but union of === 4 and projection
+x.foo;
 |};
     [%expect {|
       [
@@ -4146,10 +4146,6 @@ x.foo; // No heap refinement here from guard, but union of === 4 and projection
         (9, 0) to (9, 1) => {
           (3, 4) to (3, 5): (`x`),
           {refinement = SentinelR foo; writes = {refinement = SentinelR foo; writes = (3, 4) to (3, 5): (`x`)}}
-        };
-        (9, 0) to (9, 5) => {
-          projection at (4, 7) to (4, 12),
-          {refinement = 4; writes = {refinement = 3; writes = projection at (4, 7) to (4, 12)}}
         }] |}]
 
 let%expect_test "heap_refinement_while_loop_negated" =

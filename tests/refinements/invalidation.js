@@ -23,13 +23,13 @@ function coerce8777<A, B>(x: A): B {
 function coerce8778<A, B>(x: A): B {
   v.f = () => { throw null };  // Refine v.f.
   for (const i of [0]) store(x);  // Invalidate the refinement.
-  return v.f(); // TODO error: trying to still use the refinement.
+  return v.f(); // error: trying to still use the refinement.
 }
 
 function coerce8779<A, B>(x: A): B {
   v.f = () => { throw null };  // Refine v.f.
   for (let i = 0; i < 1; i++) store(x);  // Invalidate the refinement.
-  return v.f(); // TODO error: trying to still use the refinement.
+  return v.f(); // error: trying to still use the refinement.
 }
 
 
@@ -79,17 +79,17 @@ type A = {b?: {c: boolean}};
 
   // Loop constructs.
   let i1, i2, i3, i4, i5, i6, i7, i8, i9, i10, i11, i12, i13, i14, i15, i16;
-  if (a.b) { while (p) f();                   a.b.c; } // TODO error
+  if (a.b) { while (p) f();                   a.b.c; } // error
   if (a.b) { while (f());                     a.b.c; } // error
   if (a.b) { do f(); while (p);               a.b.c; } // error
   if (a.b) { do; while (f());                 a.b.c; } // error
-  if (a.b) { for (; p;) f();                  a.b.c; } // TODO error
-  if (a.b) { for (; p; f());                  a.b.c; } // TODO error
+  if (a.b) { for (; p;) f();                  a.b.c; } // error
+  if (a.b) { for (; p; f());                  a.b.c; } // error
   if (a.b) { for (; f(););                    a.b.c; } // error
   if (a.b) { for (f(); p;);                   a.b.c; } // error
-  if (a.b) { for (i1 in y) f();               a.b.c; } // TODO error
+  if (a.b) { for (i1 in y) f();               a.b.c; } // error
   if (a.b) { for (i2 in ff());                a.b.c; } // error
-  if (a.b) { for (i3 of y) f();               a.b.c; } // TODO error
+  if (a.b) { for (i3 of y) f();               a.b.c; } // error
   if (a.b) { for (i4 of ff());                a.b.c; } // error
 
   // Loop constructs with an abrupt completion / abnormal control flow.
@@ -108,10 +108,10 @@ type A = {b?: {c: boolean}};
   if (a.b) { do { break;    } while (f());    a.b.c; } // ideally ok, error acceptable
   if (a.b) { do { return;   } while (f());    a.b.c; } // error[unreachable-code]
   // … for…
-  if (a.b) { for (; p;) { f(); continue; }    a.b.c; } // TODO error
+  if (a.b) { for (; p;) { f(); continue; }    a.b.c; } // error
   if (a.b) { for (; p;) { f(); break;    }    a.b.c; } // error
   if (a.b) { for (; p;) { f(); return;   }    a.b.c; } // ideally ok, error acceptable
-  if (a.b) { for (; p; f()) continue;         a.b.c; } // TODO error
+  if (a.b) { for (; p; f()) continue;         a.b.c; } // error
   if (a.b) { for (; p; f()) break;            a.b.c; } // ideally ok, error acceptable
   if (a.b) { for (; p; f()) return;           a.b.c; } // ideally ok, error acceptable
   if (a.b) { for (; f();) continue;           a.b.c; } // error
@@ -169,7 +169,7 @@ type A = {b?: {c: boolean}};
   // … for…
   if (a.b) { l: for (; p;) { f(); continue l; }    a.b.c; } // error
   if (a.b) { l: for (; p;) { f(); break l;    }    a.b.c; } // error
-  if (a.b) { l: for (; p; f()) continue l;         a.b.c; } // TODO error
+  if (a.b) { l: for (; p; f()) continue l;         a.b.c; } // error
   if (a.b) { l: for (; p; f()) break l;            a.b.c; } // ideally ok, error acceptable
   if (a.b) { l: for (; f();) continue l;           a.b.c; } // error
   if (a.b) { l: for (; f();) break l;              a.b.c; } // error
@@ -233,17 +233,17 @@ declare var x: { b?: { ... } };
 
   // Loop constructs.
   let i1, i2, i3, i4;
-  if (a.b) { while (p) x.b = y;               a.b.c; } // TODO error
+  if (a.b) { while (p) x.b = y;               a.b.c; } // error
   if (a.b) { while (x.b = y);                 a.b.c; } // error
   if (a.b) { do x.b = y; while (p);           a.b.c; } // error
   if (a.b) { do; while (x.b = y);             a.b.c; } // error
-  if (a.b) { for (; p;) x.b = y;              a.b.c; } // TODO error
-  if (a.b) { for (; p; x.b = y);              a.b.c; } // TODO error
+  if (a.b) { for (; p;) x.b = y;              a.b.c; } // error
+  if (a.b) { for (; p; x.b = y);              a.b.c; } // error
   if (a.b) { for (; x.b = y;);                a.b.c; } // error
   if (a.b) { for (x.b = y; p;);               a.b.c; } // error
-  if (a.b) { for (i1 in y) x.b = y;           a.b.c; } // TODO error
+  if (a.b) { for (i1 in y) x.b = y;           a.b.c; } // error
   if (a.b) { for (i2 in x.b = y);             a.b.c; } // error
-  if (a.b) { for (i3 of y) x.b = y;           a.b.c; } // TODO error
+  if (a.b) { for (i3 of y) x.b = y;           a.b.c; } // error
   if (a.b) { for (i4 of x.b = y);             a.b.c; } // error
 
   // We'll skip running through the other variations in this version:
