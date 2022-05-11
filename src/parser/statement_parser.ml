@@ -1591,42 +1591,53 @@ module Statement
         (* not using Peek.is_function here because it would guard all of the
          * cases *)
         | T_ASYNC
-        | T_FUNCTION
-        | T_ENUM ->
-          Statement.ExportNamedDeclaration.(
-            let stmt = Parse.statement_list_item env ~decorators in
-            let names =
-              let open Statement in
-              match stmt with
-              | (_, VariableDeclaration { VariableDeclaration.declarations; _ }) ->
-                List.fold_left
-                  (fun names (_, declaration) ->
-                    let id = declaration.VariableDeclaration.Declarator.id in
-                    extract_pattern_binding_names names [id])
-                  []
-                  declarations
-              | (loc, ClassDeclaration { Class.id = Some id; _ })
-              | (loc, FunctionDeclaration { Function.id = Some id; _ })
-              | (loc, EnumDeclaration { EnumDeclaration.id; _ }) ->
-                [Flow_ast_utils.ident_of_source (loc, extract_ident_name id)]
-              | (loc, ClassDeclaration { Class.id = None; _ }) ->
-                error_at env (loc, Parse_error.ExportNamelessClass);
+        | T_FUNCTION ->
+          let stmt = Parse.statement_list_item env ~decorators in
+          let names =
+            let open Statement in
+            match stmt with
+            | (_, VariableDeclaration { VariableDeclaration.declarations; _ }) ->
+              List.fold_left
+                (fun names (_, declaration) ->
+                  let id = declaration.VariableDeclaration.Declarator.id in
+                  extract_pattern_binding_names names [id])
                 []
-              | (loc, FunctionDeclaration { Function.id = None; _ }) ->
-                error_at env (loc, Parse_error.ExportNamelessFunction);
-                []
-              | _ -> failwith "Internal Flow Error! Unexpected export statement declaration!"
-            in
-            List.iter (record_export env) names;
-            Statement.ExportNamedDeclaration
-              {
-                declaration = Some stmt;
-                specifiers = None;
-                source = None;
-                export_kind = Statement.ExportValue;
-                comments = Flow_ast_utils.mk_comments_opt ~leading ();
-              }
-          )
+                declarations
+            | (loc, ClassDeclaration { Class.id = Some id; _ })
+            | (loc, FunctionDeclaration { Function.id = Some id; _ }) ->
+              [Flow_ast_utils.ident_of_source (loc, extract_ident_name id)]
+            | (loc, ClassDeclaration { Class.id = None; _ }) ->
+              error_at env (loc, Parse_error.ExportNamelessClass);
+              []
+            | (loc, FunctionDeclaration { Function.id = None; _ }) ->
+              error_at env (loc, Parse_error.ExportNamelessFunction);
+              []
+            | _ -> failwith "Internal Flow Error! Unexpected export statement declaration!"
+          in
+          List.iter (record_export env) names;
+          Statement.ExportNamedDeclaration
+            {
+              Statement.ExportNamedDeclaration.declaration = Some stmt;
+              specifiers = None;
+              source = None;
+              export_kind = Statement.ExportValue;
+              comments = Flow_ast_utils.mk_comments_opt ~leading ();
+            }
+        | T_ENUM when (parse_options env).enums ->
+          let stmt = Parse.statement_list_item env ~decorators in
+          (match stmt with
+          | (loc, Statement.EnumDeclaration { Statement.EnumDeclaration.id; _ }) ->
+            let export = Flow_ast_utils.ident_of_source (loc, extract_ident_name id) in
+            record_export env export
+          | _ -> failwith "Internal Flow Error! Unexpected export statement declaration!");
+          Statement.ExportNamedDeclaration
+            {
+              Statement.ExportNamedDeclaration.declaration = Some stmt;
+              specifiers = None;
+              source = None;
+              export_kind = Statement.ExportValue;
+              comments = Flow_ast_utils.mk_comments_opt ~leading ();
+            }
         | T_MULT ->
           Statement.ExportNamedDeclaration.(
             let loc = Peek.loc env in
