@@ -843,8 +843,8 @@ let get_imports ~options ~reader module_names =
    * flow. *)
   List.fold_left add_to_results (SMap.empty, SSet.empty) module_names
 
-let save_state ~saved_state_filename ~genv ~env ~profiling =
-  let%lwt () = Saved_state.save ~saved_state_filename ~genv ~env ~profiling in
+let save_state ~saved_state_filename ~options ~env ~profiling =
+  let%lwt () = Saved_state.save ~saved_state_filename ~options ~profiling env in
   Lwt.return (Ok ())
 
 let handle_autocomplete ~trigger_character ~reader ~options ~profiling ~env ~input ~cursor ~imports
@@ -1006,9 +1006,9 @@ let handle_status ~reader ~options ~profiling ~env =
   let (status_response, lazy_stats) = get_status ~profiling ~reader ~options env in
   Lwt.return (env, ServerProt.Response.STATUS { status_response; lazy_stats }, None)
 
-let handle_save_state ~saved_state_filename ~genv ~profiling ~env =
+let handle_save_state ~saved_state_filename ~options ~profiling ~env =
   let%lwt result =
-    try_with_lwt (fun () -> save_state ~saved_state_filename ~genv ~env ~profiling)
+    try_with_lwt (fun () -> save_state ~saved_state_filename ~options ~env ~profiling)
   in
   Lwt.return (env, ServerProt.Response.SAVE_STATE result, None)
 
@@ -1269,7 +1269,7 @@ let get_ephemeral_handler genv command =
   | ServerProt.Request.SAVE_STATE { outfile } ->
     (* save-state can take awhile to run. Furthermore, you probably don't want to run this with out
      * of date data. So save-state is not parallelizable *)
-    Handle_nonparallelizable (handle_save_state ~saved_state_filename:outfile ~genv)
+    Handle_nonparallelizable (handle_save_state ~saved_state_filename:outfile ~options)
 
 let send_finished_status_update profiling cmd_str =
   let event =
