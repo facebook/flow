@@ -10,8 +10,7 @@ open Utils_js
 val calc_direct_dependents :
   MultiWorkerLwt.worker list option ->
   candidates:FilenameSet.t ->
-  root_files:FilenameSet.t ->
-  root_modules:Modulename.Set.t ->
+  changed_modules:Modulename.Set.t ->
   FilenameSet.t Lwt.t
 
 val calc_dependency_info :

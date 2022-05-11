@@ -182,7 +182,9 @@ end = struct
   let normalize_resolved_requires
       ~normalizer { Parsing_heaps.resolved_modules; phantom_dependencies; hash } =
     let phantom_dependencies =
-      SSet.map (FileNormalizer.normalize_path normalizer) phantom_dependencies
+      Modulename.Set.map
+        (modulename_map_fn ~f:(FileNormalizer.normalize_file_key normalizer))
+        phantom_dependencies
     in
     let resolved_modules =
       SMap.map
@@ -492,7 +494,11 @@ end = struct
   let denormalize_resolved_requires
       ~root { Parsing_heaps.resolved_modules; phantom_dependencies; hash = _ } =
     (* We do our best to avoid reading the file system (which Path.make will do) *)
-    let phantom_dependencies = SSet.map (Files.absolute_path root) phantom_dependencies in
+    let phantom_dependencies =
+      Modulename.Set.map
+        (modulename_map_fn ~f:(denormalize_file_key_nocache ~root))
+        phantom_dependencies
+    in
     let resolved_modules =
       SMap.map (modulename_map_fn ~f:(denormalize_file_key_nocache ~root)) resolved_modules
     in

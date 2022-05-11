@@ -8,14 +8,14 @@
 (* export and import functions for the module system *)
 val exported_module : options:Options.t -> File_key.t -> Docblock.t -> string option
 
-type resolution_acc = { mutable paths: SSet.t }
+type phantom_acc = Modulename.Set.t ref
 
 val imported_module :
   options:Options.t ->
   reader:Abstract_state_reader.t ->
   node_modules_containers:SSet.t SMap.t ->
   File_key.t ->
-  ?resolution_acc:resolution_acc ->
+  ?phantom_acc:phantom_acc ->
   string ->
   Modulename.t
 
@@ -63,7 +63,3 @@ type package_incompatible_return =
 
 val package_incompatible :
   reader:State_reader.t -> string -> (Package_json.t, _) result -> package_incompatible_return
-
-(***************************************************)
-
-val clear_filename_cache : unit -> unit
