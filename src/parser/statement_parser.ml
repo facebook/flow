@@ -9,7 +9,6 @@ module Ast = Flow_ast
 open Token
 open Parser_env
 open Flow_ast
-module SSet = Flow_set.Make (String)
 open Parser_common
 open Comment_attachment
 

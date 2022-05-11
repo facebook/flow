@@ -11,7 +11,6 @@ open Parser_common
 open Parser_env
 open Flow_ast
 open Comment_attachment
-module SSet = Flow_set.Make (String)
 
 module type DECLARATION = sig
   val async : env -> bool * Loc.t Comment.t list

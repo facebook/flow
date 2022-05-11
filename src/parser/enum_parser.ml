@@ -9,7 +9,6 @@ open Flow_ast
 open Parser_common
 open Parser_env
 open Token
-module SSet = Flow_set.Make (String)
 
 module Enum (Parse : Parser_common.PARSER) : sig
   val declaration : env -> (Loc.t, Loc.t) Statement.t
