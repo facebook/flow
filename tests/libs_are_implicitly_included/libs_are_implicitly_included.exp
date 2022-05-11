@@ -1,4 +1,3 @@
 ImplicitlyIncluded    a.js
-ImplicitlyIncluded    a.js
 ExplicitLib           ../lib.js
 ConfigFile            .flowconfig

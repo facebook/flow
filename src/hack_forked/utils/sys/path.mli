@@ -29,6 +29,8 @@ val file_exists : t -> bool
 
 val is_directory : t -> bool
 
+val is_ancestor : prefix:t -> t -> bool
+
 val compare : t -> t -> int
 
 val concat : t -> string -> t
