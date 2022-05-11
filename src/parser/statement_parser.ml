@@ -1566,15 +1566,12 @@ module Statement
           (* export interface I { ... } *)
           Statement.ExportNamedDeclaration.(
             if not (should_parse_types env) then error env Parse_error.UnexpectedTypeExport;
-            let interface = interface env in
-            (match interface with
-            | (loc, Statement.InterfaceDeclaration { Statement.Interface.id; _ }) ->
-              record_export env (Flow_ast_utils.ident_of_source (loc, extract_ident_name id))
-            | _ ->
-              failwith
-                ("Internal Flow Error! Parsed `export interface` into something "
-                ^ "other than an interface declaration!"
-                ));
+            let interface =
+              let (loc, iface) = with_loc (interface_helper ~leading:[]) env in
+              let { Statement.Interface.id; _ } = iface in
+              record_export env (Flow_ast_utils.ident_of_source (loc, extract_ident_name id));
+              (loc, Statement.InterfaceDeclaration iface)
+            in
             Statement.ExportNamedDeclaration
               {
                 declaration = Some interface;
