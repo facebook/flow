@@ -1,3 +1,23 @@
+### 0.178.0
+
+Likely to cause new Flow errors:
+* Improve type incompatibility error messages on default function parameters
+* Invalidate refinements on calls of `require`, since requiring a module can have side effects
+
+New Features:
+* Add types for React 18 hooks: `useId`, `useInsertionEffect` and `useSyncExternalStore`
+
+Notable bug fixes:
+* `x instanceof A` when `x` is typed as `any` refines it to `A` instead of `empty`
+* Fix an issue with `[include]` entries containing both globs and relative paths on Windows
+* Fix crash when declaring a destructured binding in a library definition
+* Fix missing autocomplete results for JSX component properties when the component's type is recursive
+* Fix analysis of unreachable += expressions
+* Fix incremental typechecking bug when adding files in Haste mode
+
+Parser:
+* Fix parser exception when parsing `export interface ...` or `export enum ...`
+
 ### 0.177.0
 
 Likely to cause new Flow errors:
