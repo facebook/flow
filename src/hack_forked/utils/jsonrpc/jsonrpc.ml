@@ -90,7 +90,7 @@ let parse_message ~(json : Hh_json.json) ~(timestamp : float) : message =
 (***************************************************************)
 
 type queue = {
-  daemon_in_fd: Unix.file_descr;
+  daemon_in_fd: Lwt_unix.file_descr;
   (* fd used by main process to read messages from queue *)
   messages: queue_message Queue.t;
 }
@@ -224,18 +224,16 @@ let make_queue () : queue =
       ()
   in
   let (ic, _) = handle.Daemon.channels in
-  { daemon_in_fd = Daemon.descr_of_in_channel ic; messages = Queue.create () }
+  let daemon_in_fd = Daemon.descr_of_in_channel ic |> Lwt_unix.of_unix_file_descr in
+  { daemon_in_fd; messages = Queue.create () }
 
-let get_read_fd (queue : queue) : Unix.file_descr = queue.daemon_in_fd
+let get_read_fd (queue : queue) : Unix.file_descr = Lwt_unix.unix_file_descr queue.daemon_in_fd
 
 (* Read a message into the queue, and return the just-read message. *)
 let read_single_message_into_queue_wait (message_queue : queue) : queue_message Lwt.t =
   let%lwt message =
     try%lwt
-      let%lwt message =
-        Marshal_tools_lwt.from_fd_with_preamble
-          (Lwt_unix.of_unix_file_descr message_queue.daemon_in_fd)
-      in
+      let%lwt message = Marshal_tools_lwt.from_fd_with_preamble message_queue.daemon_in_fd in
       Lwt.return message
     with
     | End_of_file as e ->
@@ -250,7 +248,7 @@ let read_single_message_into_queue_wait (message_queue : queue) : queue_message 
   Lwt.return message
 
 let rec read_messages_into_queue_no_wait (message_queue : queue) : unit Lwt.t =
-  let is_readable = Lwt_unix.readable (Lwt_unix.of_unix_file_descr message_queue.daemon_in_fd) in
+  let is_readable = Lwt_unix.readable message_queue.daemon_in_fd in
   let%lwt () =
     if is_readable then
       (* We're expecting this not to block because we just checked
@@ -271,7 +269,7 @@ let rec read_messages_into_queue_no_wait (message_queue : queue) : unit Lwt.t =
   Lwt.return_unit
 
 let has_message (queue : queue) : bool =
-  let is_readable = Lwt_unix.readable (Lwt_unix.of_unix_file_descr queue.daemon_in_fd) in
+  let is_readable = Lwt_unix.readable queue.daemon_in_fd in
   is_readable || not (Queue.is_empty queue.messages)
 
 let get_message (queue : queue) =
