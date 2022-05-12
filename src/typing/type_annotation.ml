@@ -1819,13 +1819,28 @@ module Make
   and mk_type_available_annotation cx tparams_map (loc, annot) =
     let node_cache = Context.node_cache cx in
     let (((_, t), _) as annot_ast) =
-      match Node_cache.get_annotation node_cache loc with
-      | Some (_, node) ->
+      match (Node_cache.get_annotation node_cache loc, annot) with
+      | ( _,
+          ( _,
+            Ast.Type.Generic
+              {
+                Ast.Type.Generic.id =
+                  Ast.Type.Generic.Identifier.Unqualified (_, { Ast.Identifier.name; comments = _ });
+                targs = _;
+                comments = _;
+              }
+          )
+        )
+        when Subst_name.Map.mem (Subst_name.Name name) tparams_map ->
+        (* If the type we're converting is in the tparams map, we prefer that over
+           the node cache *)
+        convert cx tparams_map annot
+      | (Some (_, node), _) ->
         Debug_js.Verbose.print_if_verbose_lazy
           cx
           (lazy [spf "Annotation cache hit at %s" (ALoc.debug_to_string loc)]);
         node
-      | None -> convert cx tparams_map annot
+      | (None, _) -> convert cx tparams_map annot
     in
     (t, (loc, annot_ast))
 
@@ -1860,10 +1875,11 @@ module Make
         Some (loc, { Ast.Type.TypeArgs.arguments = targs_ast; comments })
       )
 
-  (* take a list of AST type param declarations,
-     do semantic checking and create types for them. *)
-  and mk_type_param_declarations cx ?(tparams_map = Subst_name.Map.empty) tparams =
-    let add_type_param (tparams, tparams_map, bounds_map, rev_asts) (loc, type_param) =
+  and mk_type_param cx tparams_map (loc, type_param) =
+    let node_cache = Context.node_cache cx in
+    match Node_cache.get_tparam node_cache loc with
+    | Some x -> x
+    | None ->
       let {
         Ast.Type.TypeParam.name = (name_loc, { Ast.Identifier.name; comments = _ }) as id;
         bound;
@@ -1909,10 +1925,20 @@ module Make
           { Ast.Type.TypeParam.name = name_ast; bound = bound_ast; variance; default = default_ast }
         )
       in
+      (ast, tparam, t)
+
+  (* take a list of AST type param declarations,
+     do semantic checking and create types for them. *)
+  and mk_type_param_declarations cx ?(tparams_map = Subst_name.Map.empty) tparams =
+    let add_type_param (tparams, tparams_map, bounds_map, rev_asts) (loc, type_param) =
+      let (ast, ({ name; bound; _ } as tparam), t) =
+        mk_type_param cx tparams_map (loc, type_param)
+      in
+
       let tparams = tparam :: tparams in
       ( tparams,
-        Subst_name.Map.add (Subst_name.Name name) t tparams_map,
-        Subst_name.Map.add (Subst_name.Name name) (Flow.subst cx bounds_map bound) bounds_map,
+        Subst_name.Map.add name t tparams_map,
+        Subst_name.Map.add name (Flow.subst cx bounds_map bound) bounds_map,
         ast :: rev_asts
       )
     in

@@ -36,7 +36,7 @@ module Name_def_ordering = Name_def_ordering.Make_Test_With_Cx (Context)
 let string_of_root = function
   | Contextual _ -> "contextual"
   | Catch -> "catch"
-  | Annotation (loc, _) -> spf "annot %s" (ALoc.debug_to_string loc)
+  | Annotation (_, (loc, _)) -> spf "annot %s" (ALoc.debug_to_string loc)
   | Value (loc, _) -> spf "val %s" (ALoc.debug_to_string loc)
   | For (In, (loc, _)) -> spf "for in %s" (ALoc.debug_to_string loc)
   | For (Of _, (loc, _)) -> spf "for of %s" (ALoc.debug_to_string loc)

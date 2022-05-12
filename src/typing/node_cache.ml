@@ -21,6 +21,8 @@ type t = {
   mutable class_sigs:
     (Func_class_sig_types.Class_stmt_sig_types.t * (Type.t -> (ALoc.t, ALoc.t * Type.t) Ast.Class.t))
     ALocMap.t;
+  mutable tparams:
+    ((ALoc.t, ALoc.t * Type.t) Ast.Type.TypeParam.t * Type.typeparam * Type.t) ALocMap.t;
 }
 
 let empty =
@@ -34,6 +36,7 @@ let empty =
     declared_classes = ALocMap.empty;
     classes = ALocMap.empty;
     class_sigs = ALocMap.empty;
+    tparams = ALocMap.empty;
   }
 
 let set_annotation cache ((loc, _) as anno) =
@@ -57,6 +60,9 @@ let set_class cache loc class_ = cache.classes <- ALocMap.add loc class_ cache.c
 
 let set_class_sig cache loc class_ = cache.class_sigs <- ALocMap.add loc class_ cache.class_sigs
 
+let set_tparam cache (((loc, _), _, _) as param) =
+  cache.tparams <- ALocMap.add loc param cache.tparams
+
 let get_annotation cache loc = ALocMap.find_opt loc cache.annotations
 
 let get_expression cache loc = ALocMap.find_opt loc cache.expressions
@@ -74,3 +80,5 @@ let get_declared_class cache loc = ALocMap.find_opt loc cache.declared_classes
 let get_class cache loc = ALocMap.find_opt loc cache.classes
 
 let get_class_sig cache loc = ALocMap.find_opt loc cache.class_sigs
+
+let get_tparam cache loc = ALocMap.find_opt loc cache.tparams

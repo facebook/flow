@@ -15,7 +15,7 @@ type for_kind =
   | Of of { await: bool }
 
 type root =
-  | Annotation of (ALoc.t, ALoc.t) Ast.Type.annotation
+  | Annotation of ALocSet.t * (ALoc.t, ALoc.t) Ast.Type.annotation
   | Value of (ALoc.t, ALoc.t) Ast.Expression.t
   | Contextual of ALoc.t
   | Catch
@@ -63,6 +63,7 @@ type def =
   | Function of {
       fully_annotated: bool;
       function_: (ALoc.t, ALoc.t) Ast.Function.t;
+      tparams: ALocSet.t;
     }
   | Class of {
       fully_annotated: bool;
@@ -177,8 +178,8 @@ let func_is_annotated { Ast.Function.return; _ } =
   | Ast.Type.Missing _ -> false
   | Ast.Type.Available _ -> true
 
-let def_of_function function_ =
-  Function { fully_annotated = func_is_annotated function_; function_ }
+let def_of_function tparams function_ =
+  Function { fully_annotated = func_is_annotated function_; function_; tparams }
 
 let def_of_class loc ({ Ast.Class.body = (_, { Ast.Class.Body.body; _ }); _ } as class_) =
   let open Ast.Class.Body in
@@ -225,6 +226,10 @@ class def_finder =
   object (this)
     inherit [map, ALoc.t] Flow_ast_visitor.visitor ~init:ALocMap.empty as super
 
+    val mutable tparams : ALocSet.t = ALocSet.empty
+
+    method add_tparam loc = tparams <- ALocSet.add loc tparams
+
     method add_binding loc reason src = this#update_acc (ALocMap.add loc (src, reason))
 
     method! variable_declarator ~kind decl =
@@ -232,7 +237,7 @@ class def_finder =
       let (_, { id; init }) = decl in
       let source =
         match (Destructure.type_of_pattern id, init) with
-        | (Some annot, _) -> Some (Annotation annot)
+        | (Some annot, _) -> Some (Annotation (ALocSet.empty, annot))
         | (None, Some init) -> Some (Value init)
         | (None, None) -> None
       in
@@ -245,7 +250,7 @@ class def_finder =
       this#add_binding
         id_loc
         (mk_reason (RIdentifier (OrdinaryName name)) id_loc)
-        (Binding (Root (Annotation annot)));
+        (Binding (Root (Annotation (ALocSet.empty, annot))));
       super#declare_variable loc decl
 
     method! function_param (param : ('loc, 'loc) Ast.Function.Param.t) =
@@ -253,7 +258,7 @@ class def_finder =
       let (loc, { argument; default }) = param in
       let source =
         match Destructure.type_of_pattern argument with
-        | Some annot -> Annotation annot
+        | Some annot -> Annotation (tparams, annot)
         | None -> Contextual loc
       in
       let source = Destructure.pattern_default (Root source) default in
@@ -265,7 +270,7 @@ class def_finder =
       let (loc, { argument; _ }) = expr in
       let source =
         match Destructure.type_of_pattern argument with
-        | Some annot -> Annotation annot
+        | Some annot -> Annotation (tparams, annot)
         | None -> Contextual loc
       in
       Destructure.pattern ~f:this#add_binding (Root source) argument;
@@ -278,28 +283,45 @@ class def_finder =
     method! function_expression loc expr =
       let open Ast.Function in
       let { id; async; generator; sig_loc; _ } = expr in
+      let old_tparams = tparams in
+      tparams <- ALocSet.empty;
+      let res = super#function_expression loc expr in
       begin
         match id with
         | Some (id_loc, _) ->
-          this#add_binding id_loc (func_reason ~async ~generator sig_loc) (def_of_function expr)
+          this#add_binding
+            id_loc
+            (func_reason ~async ~generator sig_loc)
+            (def_of_function tparams expr)
         | None -> ()
       end;
-      super#function_expression loc expr
+      tparams <- old_tparams;
+      res
 
     method! function_declaration loc expr =
       let open Ast.Function in
       let { id; async; generator; sig_loc; _ } = expr in
+      let old_tparams = tparams in
+      tparams <- ALocSet.empty;
+      let res = super#function_declaration loc expr in
       begin
         match id with
         | Some (id_loc, _) ->
-          this#add_binding id_loc (func_reason ~async ~generator sig_loc) (def_of_function expr)
+          this#add_binding
+            id_loc
+            (func_reason ~async ~generator sig_loc)
+            (def_of_function tparams expr)
         | None -> ()
       end;
-      super#function_expression loc expr
+      tparams <- old_tparams;
+      res
 
     method! class_ loc expr =
       let open Ast.Class in
       let { id; _ } = expr in
+      let old_tparams = tparams in
+      tparams <- ALocSet.empty;
+      let res = super#class_ loc expr in
       begin
         match id with
         | Some (id_loc, { Ast.Identifier.name; _ }) ->
@@ -308,7 +330,8 @@ class def_finder =
           this#add_binding id_loc reason (def_of_class loc expr)
         | None -> ()
       end;
-      super#class_ loc expr
+      tparams <- old_tparams;
+      res
 
     method! declare_function loc (decl : ('loc, 'loc) Ast.Statement.DeclareFunction.t) =
       match Declare_function_utils.declare_function_to_function_declaration_simple loc decl with
@@ -321,7 +344,7 @@ class def_finder =
         this#add_binding
           id_loc
           (func_reason ~async:false ~generator:false loc)
-          (Binding (Root (Annotation annot)));
+          (Binding (Root (Annotation (ALocSet.empty, annot))));
         super#declare_function loc decl
 
     method! declare_class loc (decl : ('loc, 'loc) Ast.Statement.DeclareClass.t) =
@@ -380,7 +403,7 @@ class def_finder =
             ) ->
           let source =
             match Destructure.type_of_pattern id with
-            | Some annot -> Annotation annot
+            | Some annot -> Annotation (ALocSet.empty, annot)
             | None -> For (Of { await }, right)
           in
           Destructure.pattern ~f:this#add_binding (Root source) id
@@ -405,7 +428,7 @@ class def_finder =
             ) ->
           let source =
             match Destructure.type_of_pattern id with
-            | Some annot -> Annotation annot
+            | Some annot -> Annotation (ALocSet.empty, annot)
             | None -> For (In, right)
           in
           Destructure.pattern ~f:this#add_binding (Root source) id
@@ -430,6 +453,7 @@ class def_finder =
       let open Ast.Type.TypeParam in
       let (_, { name = (name_loc, { Ast.Identifier.name; _ }); _ }) = tparam in
       this#add_binding name_loc (mk_reason (RType (OrdinaryName name)) name_loc) (TypeParam tparam);
+      this#add_tparam name_loc;
       super#type_param tparam
 
     method! interface loc (interface : ('loc, 'loc) Ast.Statement.Interface.t) =

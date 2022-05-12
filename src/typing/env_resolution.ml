@@ -20,6 +20,15 @@ end
 module Make (Env : Env_sig.S) (Statement : Statement_sig.S with module Env := Env) : S = struct
   module Type_annotation = Statement.Anno
 
+  let mk_tparams_map cx tparams_locs =
+    let { Loc_env.tparams; _ } = Context.environment cx in
+    ALocSet.fold
+      (fun l acc ->
+        let (name, ty) = ALocMap.find l tparams in
+        Subst_name.Map.add name ty acc)
+      tparams_locs
+      Subst_name.Map.empty
+
   let expression cx ~hint ?cond exp =
     let cache = Context.node_cache cx in
     let (((_, t), _) as exp) = Statement.expression ~hint ?cond cx exp in
@@ -29,9 +38,10 @@ module Make (Env : Env_sig.S) (Statement : Statement_sig.S with module Env := En
   let rec resolve_binding cx reason loc b =
     let mk_use_op t = Op (AssignVar { var = Some reason; init = TypeUtil.reason_of_t t }) in
     match b with
-    | Root (Annotation anno) ->
+    | Root (Annotation (tparams_locs, anno)) ->
       let cache = Context.node_cache cx in
-      let (t, anno) = Type_annotation.mk_type_available_annotation cx Subst_name.Map.empty anno in
+      let tparams_map = mk_tparams_map cx tparams_locs in
+      let (t, anno) = Type_annotation.mk_type_available_annotation cx tparams_map anno in
       Node_cache.set_annotation cache anno;
       (t, mk_use_op t)
     | Root (Value exp) ->
@@ -102,13 +112,15 @@ module Make (Env : Env_sig.S) (Statement : Statement_sig.S with module Env := En
     Node_cache.set_function cache id_loc fn;
     (fun_type, unknown_use)
 
-  let resolve_annotated_function cx reason ({ Ast.Function.body; params; _ } as function_) =
+  let resolve_annotated_function
+      cx reason tparams_locs ({ Ast.Function.body; params; _ } as function_) =
+    let tparams_map = mk_tparams_map cx tparams_locs in
     let (({ Func_class_sig_types.Func_stmt_sig_types.fparams; _ } as func_sig), _) =
       Statement.mk_func_sig
         cx
         ~func_hint:Hint_None
         ~needs_this_param:true
-        Subst_name.Map.empty
+        tparams_map
         reason
         function_
     in
@@ -270,14 +282,25 @@ module Make (Env : Env_sig.S) (Statement : Statement_sig.S with module Env := En
       (AnyT.error enum_reason, unknown_use)
     )
 
+  let resolve_type_param cx id_loc tparam =
+    let cache = Context.node_cache cx in
+    let ((_, { name; _ }, t) as info) =
+      Type_annotation.mk_type_param cx Subst_name.Map.empty tparam
+    in
+    Node_cache.set_tparam cache info;
+    let ({ Loc_env.tparams; _ } as env) = Context.environment cx in
+    Context.set_environment cx { env with Loc_env.tparams = ALocMap.add id_loc (name, t) tparams };
+    let t = DefT (TypeUtil.reason_of_t t, bogus_trust (), TypeT (TypeParamKind, t)) in
+    (t, unknown_use)
+
   let resolve cx id_loc (def, def_reason) =
     let (t, use_op) =
       match def with
       | Binding b -> resolve_binding cx def_reason id_loc b
-      | Function { function_; fully_annotated = false } ->
+      | Function { function_; fully_annotated = false; tparams = _ } ->
         resolve_inferred_function cx id_loc def_reason function_
-      | Function { function_; fully_annotated = true } ->
-        resolve_annotated_function cx def_reason function_
+      | Function { function_; fully_annotated = true; tparams } ->
+        resolve_annotated_function cx def_reason tparams function_
       | Class { class_; fully_annotated = false; class_loc } ->
         resolve_inferred_class cx id_loc def_reason class_loc class_
       | Class { class_; fully_annotated = true; class_loc } ->
@@ -291,7 +314,7 @@ module Make (Env : Env_sig.S) (Statement : Statement_sig.S with module Env := En
       | Interface (loc, inter) -> resolve_interface cx loc inter
       | DeclaredClass (loc, class_) -> resolve_declare_class cx loc class_
       | Enum enum -> resolve_enum cx id_loc def_reason enum
-      | _ -> (Tvar.mk cx (mk_reason (RCustom "unhandled def") id_loc), unknown_use)
+      | TypeParam param -> resolve_type_param cx id_loc param
     in
     Debug_js.Verbose.print_if_verbose_lazy
       cx

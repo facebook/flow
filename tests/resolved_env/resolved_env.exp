@@ -594,6 +594,228 @@ References:
                    ^^^^^ [2]
 
 
+Error --------------------------------------------------------------------------------------------------- tparams.js:4:4
+
+Cannot cast `a` to empty because `A` [1] is incompatible with empty [2]. [incompatible-cast]
+
+   tparams.js:4:4
+   4|   (a: empty);
+         ^
+
+References:
+   tparams.js:3:23
+   3| function remove<A>(a: A, x): A {
+                            ^ [1]
+   tparams.js:4:7
+   4|   (a: empty);
+            ^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- tparams.js:5:4
+
+Cannot cast `42` to `A` because number [1] is incompatible with `A` [2]. [incompatible-cast]
+
+   tparams.js:5:4
+   5|   (42: A);
+         ^^ [1]
+
+References:
+   tparams.js:5:8
+   5|   (42: A);
+             ^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- tparams.js:9:18
+
+Cannot assign `remove<...>(...)` to `o` because number [1] is incompatible with empty [2]. [incompatible-type]
+
+   tparams.js:9:18
+   9| const o: empty = remove<number>(1, 42);
+                       ^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   tparams.js:9:25
+   9| const o: empty = remove<number>(1, 42);
+                              ^^^^^^ [1]
+   tparams.js:9:10
+   9| const o: empty = remove<number>(1, 42);
+               ^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- tparams.js:10:18
+
+Cannot assign `remove(...)` to `p` because number [1] is incompatible with empty [2]. [incompatible-type]
+
+   tparams.js:10:18
+   10| const p: empty = remove(1, 42);
+                        ^^^^^^^^^^^^^
+
+References:
+   tparams.js:10:25
+   10| const p: empty = remove(1, 42);
+                               ^ [1]
+   tparams.js:10:10
+   10| const p: empty = remove(1, 42);
+                ^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- tparams.js:13:4
+
+Cannot cast `a` to empty because `A` [1] is incompatible with empty [2]. [incompatible-cast]
+
+   tparams.js:13:4
+   13|   (a: empty);
+          ^
+
+References:
+   tparams.js:12:28
+   12| function remove_anno<A>(a: A): A {
+                                  ^ [1]
+   tparams.js:13:7
+   13|   (a: empty);
+             ^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- tparams.js:14:4
+
+Cannot cast `42` to `A` because number [1] is incompatible with `A` [2]. [incompatible-cast]
+
+   tparams.js:14:4
+   14|   (42: A);
+          ^^ [1]
+
+References:
+   tparams.js:14:8
+   14|   (42: A);
+              ^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- tparams.js:18:18
+
+Cannot assign `remove_anno<...>(...)` to `q` because number [1] is incompatible with empty [2]. [incompatible-type]
+
+   tparams.js:18:18
+   18| const q: empty = remove_anno<number>(1);
+                        ^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   tparams.js:18:30
+   18| const q: empty = remove_anno<number>(1);
+                                    ^^^^^^ [1]
+   tparams.js:18:10
+   18| const q: empty = remove_anno<number>(1);
+                ^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- tparams.js:19:18
+
+Cannot assign `remove_anno(...)` to `r` because number [1] is incompatible with empty [2]. [incompatible-type]
+
+   tparams.js:19:18
+   19| const r: empty = remove_anno(1);
+                        ^^^^^^^^^^^^^^
+
+References:
+   tparams.js:19:30
+   19| const r: empty = remove_anno(1);
+                                    ^ [1]
+   tparams.js:19:10
+   19| const r: empty = remove_anno(1);
+                ^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- tparams.js:21:38
+
+Cannot instantiate `$Rest` because `A` [1] is incompatible with `B` [2]. [incompatible-type]
+
+   tparams.js:21:38
+   21| function removex<A, B>(a: A): [$Rest<A, {p: B}>, B] {
+                                            ^ [1]
+
+References:
+   tparams.js:21:45
+   21| function removex<A, B>(a: A): [$Rest<A, {p: B}>, B] {
+                                                   ^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- tparams.js:22:10
+
+Property `p` is missing in `A` [1]. [incompatible-use]
+
+   tparams.js:22:10
+   22|   const {p, ...o} = a;
+                ^
+
+References:
+   tparams.js:21:27
+   21| function removex<A, B>(a: A): [$Rest<A, {p: B}>, B] {
+                                 ^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------- tparams.js:22:13
+
+`A` [1] is not an object. [not-an-object]
+
+   tparams.js:22:13
+   22|   const {p, ...o} = a;
+                   ^^^^
+
+References:
+   tparams.js:21:27
+   21| function removex<A, B>(a: A): [$Rest<A, {p: B}>, B] {
+                                 ^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------- tparams.js:22:16
+
+`A` [1] is not an object. [not-an-object]
+
+   tparams.js:22:16
+   22|   const {p, ...o} = a;
+                      ^
+
+References:
+   tparams.js:21:27
+   21| function removex<A, B>(a: A): [$Rest<A, {p: B}>, B] {
+                                 ^ [1]
+
+
+Error -------------------------------------------------------------------------------------------------- tparams.js:27:2
+
+Cannot cast `ox` to object type because property `p` is missing in object type [1] but exists in object literal [2].
+[prop-missing]
+
+   tparams.js:27:2
+   27| (ox: {|x: string|});
+        ^^
+
+References:
+   tparams.js:27:6
+   27| (ox: {|x: string|});
+            ^^^^^^^^^^^^^ [1]
+   tparams.js:26:26
+   26| const [ox, px] = removex({x: 'foo', p: 42});
+                                ^^^^^^^^^^^^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- tparams.js:27:2
+
+Cannot cast `ox` to object type because undefined [1] is incompatible with string [2] in property `x`.
+[incompatible-cast]
+
+   tparams.js:27:2
+   27| (ox: {|x: string|});
+        ^^
+
+References:
+   tparams.js:26:30
+   26| const [ox, px] = removex({x: 'foo', p: 42});
+                                    ^^^^^ [1]
+   tparams.js:27:11
+   27| (ox: {|x: string|});
+                 ^^^^^^ [2]
+
+
 Error --------------------------------------------------------------------------------------------------- updates.js:5:2
 
 Cannot cast `++x` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
@@ -660,4 +882,4 @@ References:
 
 
 
-Found 40 errors
+Found 54 errors

@@ -373,7 +373,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) = struct
           ALocMap.empty
       in
       let depends_of_root state = function
-        | Annotation anno -> depends_of_annotation anno state
+        | Annotation (_, anno) -> depends_of_annotation anno state
         | Value exp -> depends_of_expression exp state
         | For (_, exp) -> depends_of_expression exp state
         | Contextual _ -> state
@@ -439,7 +439,8 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) = struct
       | Binding binding -> depends_of_binding binding
       | Update _ -> depends_of_update ()
       | OpAssign { rhs; _ } -> depends_of_op_assign rhs
-      | Function { fully_annotated; function_ } -> depends_of_fun fully_annotated function_
+      | Function { fully_annotated; function_; tparams = _ } ->
+        depends_of_fun fully_annotated function_
       | Class { fully_annotated; class_; class_loc = _ } -> depends_of_class fully_annotated class_
       | DeclaredClass (_, decl) -> depends_of_declared_class decl
       | TypeAlias (_, alias) -> depends_of_alias alias
