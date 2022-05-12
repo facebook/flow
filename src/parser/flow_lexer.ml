@@ -1781,8 +1781,6 @@ let type_token env lexbuf =
   | '|' -> Token (env, T_BIT_OR)
   (* Intersection *)
   | '&' -> Token (env, T_BIT_AND)
-  (* typeof *)
-  | "typeof" -> Token (env, T_TYPEOF)
   (* Function type *)
   | "=>" -> Token (env, T_ARROW)
   (* Type alias *)
