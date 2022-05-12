@@ -173,6 +173,41 @@ let ascii_id_continue = [%sedlex.regexp? '$' | '_' | 'a' .. 'z' | 'A' .. 'Z' | '
 
 let js_id_continue =
   [%sedlex.regexp? '$' | '_' | 0x200C | 0x200D | id_continue | unicode_escape | codepoint_escape]
+(* Assuming that the first code point is already lexed 
+   return true means that the whole [lexbuf] is valid identifier
+*)
+let rec loop_id_continues lexbuf =
+  match%sedlex lexbuf with
+  | unicode_escape
+  | codepoint_escape ->
+    loop_id_continues lexbuf
+  | eof -> true
+  | any ->
+    (* TODO: Optimize later *)
+    let s = (Sedlexing.lexeme lexbuf).(0) in
+    if Js_id.is_valid_unicode_id s then
+      loop_id_continues lexbuf
+    else begin
+      Sedlexing.backoff lexbuf 1 ;
+      false
+    end
+  | _ -> assert false
+
+(* Assuming that the first code point is already lexed *)  
+let rec loop_jsx_id_continues lexbuf =
+  match%sedlex lexbuf with
+  | unicode_escape
+  | codepoint_escape ->
+    loop_jsx_id_continues lexbuf
+  | eof -> ()
+  | any ->
+    (* TODO: Optimize later *)
+    let s = (Sedlexing.lexeme lexbuf).(0) in
+    if s = Char.code '-' || Js_id.is_valid_unicode_id s then
+      loop_jsx_id_continues lexbuf
+    else
+      Sedlexing.backoff lexbuf 1 
+  | _ -> assert false
 
 let pos_at_offset env offset =
   { Loc.line = Lex_env.line env; column = offset - Lex_env.bol_offset env }
