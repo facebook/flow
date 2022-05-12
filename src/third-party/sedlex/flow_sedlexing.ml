@@ -270,3 +270,7 @@ let string_of_utf8 (lexbuf : int array) : string =
   let b = Bytes.create (len * 4) in
   let i = unsafe_string_of_utf8 lexbuf ~offset ~len b in
   Bytes.sub_string b 0 i
+
+let backoff lexbuf npos =
+  lexbuf.pos <- lexbuf.pos - npos  
+let rawbuffer lexbuf = lexbuf.buf  

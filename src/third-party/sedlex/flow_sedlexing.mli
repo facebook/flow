@@ -38,3 +38,9 @@ module Utf8 : sig
 end
 
 val string_of_utf8 : int array -> string
+
+(** Two APIs used when we want to do customize lexing 
+    instead of using the regex based engine
+*)
+val backoff : lexbuf -> int -> unit
+val rawbuffer : lexbuf -> int array
