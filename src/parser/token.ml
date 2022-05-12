@@ -142,7 +142,7 @@ type t =
   | T_ERROR of string
   | T_EOF
   (* JSX *)
-  | T_JSX_IDENTIFIER of { raw: string }
+  | T_JSX_IDENTIFIER of { raw: string ; loc : Loc.t}
   | T_JSX_TEXT of Loc.t * string * string (* loc, value, raw *)
   (* Type primitives *)
   | T_ANY_TYPE
@@ -459,7 +459,7 @@ let value_of_token = function
   (* Extra tokens *)
   | T_ERROR raw -> raw
   | T_EOF -> ""
-  | T_JSX_IDENTIFIER { raw } -> raw
+  | T_JSX_IDENTIFIER { raw ; _} -> raw
   | T_JSX_TEXT (_, _, raw) -> raw
   (* Type primitives *)
   | T_ANY_TYPE -> "any"

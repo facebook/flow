@@ -234,6 +234,8 @@ let loc_of_lexbuf env (lexbuf : Sedlexing.lexbuf) =
 
 let loc_of_token env lex_token =
   match lex_token with
+  | T_IDENTIFIER {loc; _}
+  | T_JSX_IDENTIFIER {loc; _}
   | T_STRING (loc, _, _, _) -> loc
   | T_JSX_TEXT (loc, _, _) -> loc
   | T_TEMPLATE_PART (loc, _, _) -> loc
@@ -1443,8 +1445,6 @@ let jsx_tag env lexbuf =
   | ':' -> Token (env, T_COLON)
   | '.' -> Token (env, T_PERIOD)
   | '=' -> Token (env, T_ASSIGN)
-  | (js_id_start, Star ('-' | js_id_continue)) ->
-    Token (env, T_JSX_IDENTIFIER { raw = lexeme lexbuf })
   | "'"
   | '"' ->
     let quote = lexeme lexbuf in
@@ -1465,6 +1465,21 @@ let jsx_tag env lexbuf =
     let raw = Buffer.contents raw in
     let loc = { Loc.source = Lex_env.source env; start; _end } in
     Token (env, T_JSX_TEXT (loc, value, raw))
+  | js_id_start ->
+    let start_offset = Sedlexing.lexeme_start lexbuf in
+    (* see #3837, we should fix it - the work could be done in decoding later - cold path*)
+    loop_jsx_id_continues lexbuf;
+    let end_offset = Sedlexing.lexeme_end lexbuf in
+    let raw = Array.sub (Sedlexing.rawbuffer lexbuf) start_offset (end_offset - start_offset) in
+    let loc = loc_of_offsets env start_offset end_offset in 
+    Token (env, T_JSX_IDENTIFIER { raw = Sedlexing.string_of_utf8 raw ; loc})
+  | (ascii_id_start, Star ('-' | ascii_id_continue)) ->
+    let loc = loc_of_lexbuf env lexbuf in 
+    Token (env, T_JSX_IDENTIFIER { raw = lexeme lexbuf; loc })
+    (* This is not necessary at this time, but we
+        play safe here, so that we can still add keywords in this tokenizer
+       otherwise it will be broken in the refactoring in the future
+    *)
   | any -> Token (env, T_ERROR (lexeme lexbuf))
   | _ -> failwith "unreachable jsx_tag"
 
