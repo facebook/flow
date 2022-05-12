@@ -1771,17 +1771,6 @@ let type_token env lexbuf =
   | "typeof" -> Token (env, T_TYPEOF)
   | "void" -> Token (env, T_VOID_TYPE)
   | "symbol" -> Token (env, T_SYMBOL_TYPE)
-  (* Identifiers *)
-  | (ascii_id_start, Star ascii_id_continue) ->
-    (* fast path *)
-    let loc = loc_of_lexbuf env lexbuf in
-    let raw = lexeme lexbuf in
-    Token (env, T_IDENTIFIER { loc; value = raw; raw })
-  | (js_id_start, Star js_id_continue) ->
-    let loc = loc_of_lexbuf env lexbuf in
-    let raw = lexeme lexbuf in
-    let (env, value) = decode_identifier env (Sedlexing.lexeme lexbuf) in
-    Token (env, T_IDENTIFIER { loc; value; raw })
   | "%checks" -> Token (env, T_CHECKS)
   (* Syntax *)
   | "[" -> Token (env, T_LBRACKET)
@@ -1823,6 +1812,31 @@ let type_token env lexbuf =
   (* Variance annotations *)
   | '+' -> Token (env, T_PLUS)
   | '-' -> Token (env, T_MINUS)
+  (* Identifiers *)
+  (* The order here is important, we need first use the [js_id_start] and 
+     latter [ascii_id_start ascii_id_continue*]
+     Then we can have all valid unicode covered.
+
+     The reverse order is wrong.
+     
+     | ascii_id_start, ascii_id_continue*
+     | js_id_start
+
+     a\lambda will not be lexed correctly in this case
+   *)
+  | js_id_start ->
+    let start_offset = Sedlexing.lexeme_start lexbuf in
+    loop_id_continues lexbuf |> ignore;
+    let end_offset = Sedlexing.lexeme_end lexbuf in
+    let loc = loc_of_offsets env start_offset end_offset in
+    let raw = Array.sub (Sedlexing.rawbuffer lexbuf) start_offset (end_offset - start_offset) in
+    let (env, value) = decode_identifier env raw in
+    Token (env, T_IDENTIFIER { loc; value; raw = Sedlexing.string_of_utf8 raw })
+  | (ascii_id_start, Star ascii_id_continue) ->
+    (* fast path *)
+    let loc = loc_of_lexbuf env lexbuf in
+    let raw = lexeme lexbuf in
+    Token (env, T_IDENTIFIER { loc; value = raw; raw })
   (* Others *)
   | eof ->
     let env =
