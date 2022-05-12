@@ -634,9 +634,6 @@ let token (env : Lex_env.t) lexbuf : result =
   | line_terminator_sequence ->
     let env = new_line env lexbuf in
     Continue env
-  | '\\' ->
-    let env = illegal env (loc_of_lexbuf env lexbuf) in
-    Continue env
   | Plus whitespace -> Continue env
   | "/*" ->
     let start_pos = start_pos_of_lexbuf env lexbuf in
@@ -980,6 +977,9 @@ let token (env : Lex_env.t) lexbuf : result =
   | "/" -> Token (env, T_DIV)
   | "@" -> Token (env, T_AT)
   | "#" -> Token (env, T_POUND)
+  | '\\' ->
+    let env = illegal env (loc_of_lexbuf env lexbuf) in
+    Continue env
   (* Others *)
   | eof ->
     let env =
