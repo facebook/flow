@@ -36,3 +36,5 @@ module Utf8 : sig
   val lexeme_to_buffer : lexbuf -> Buffer.t -> unit
   val lexeme_to_buffer2 : lexbuf -> Buffer.t -> Buffer.t -> unit
 end
+
+val string_of_utf8 : int array -> string

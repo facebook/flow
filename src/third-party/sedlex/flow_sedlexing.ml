@@ -263,3 +263,10 @@ module Utf8 = struct
     Buffer.add_subbytes buf1 b 0 i;
     Buffer.add_subbytes buf2 b 0 i
 end
+
+let string_of_utf8 (lexbuf : int array) : string = 
+  let offset = 0 in
+  let len = Array.length lexbuf in
+  let b = Bytes.create (len * 4) in
+  let i = unsafe_string_of_utf8 lexbuf ~offset ~len b in
+  Bytes.sub_string b 0 i
