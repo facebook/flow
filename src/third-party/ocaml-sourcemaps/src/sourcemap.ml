@@ -5,6 +5,8 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
+[@@@warning "-3"]
+
 module SMap = Map.Make(String)
 module SSet = Set.Make(String)
 

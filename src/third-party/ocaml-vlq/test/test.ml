@@ -5,6 +5,8 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
+[@@@warning "-3"]
+
 open OUnit2
 
 let cases = [

@@ -5,6 +5,8 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
+[@@@warning "-3"]
+
 (* VLQ (variable-length quantity) encoder
    https://en.wikipedia.org/wiki/Variable-length_quantity *)
 

@@ -5,6 +5,8 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
+[@@@warning "-3"]
+
 exception Unexpected_eof
 exception Invalid_base64 of char
 
