@@ -881,5 +881,74 @@ References:
            ^^^^^ [2]
 
 
+Error -------------------------------------------------------------------------------------------------- updates.js:18:9
 
-Found 54 errors
+Cannot assign &&= to `x` because number [1] is incompatible with boolean [2]. [incompatible-type]
+
+   updates.js:18:9
+   18|   x &&= 3; // Error: number not assignable to boolean
+               ^ [1]
+
+References:
+   updates.js:15:10
+   15|   let x: boolean = false;
+                ^^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- updates.js:19:9
+
+Cannot assign ||= to `y` because number [1] is incompatible with boolean [2]. [incompatible-type]
+
+   updates.js:19:9
+   19|   y ||= 3; // Error: number not assignable to boolean
+               ^ [1]
+
+References:
+   updates.js:16:10
+   16|   let y: boolean = false;
+                ^^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- updates.js:20:9
+
+Cannot assign ??= to `z` because number [1] is incompatible with boolean [2]. [incompatible-type]
+
+   updates.js:20:9
+   20|   z ??= 3; // Error: number not assignable to boolean
+               ^ [1]
+
+References:
+   updates.js:17:11
+   17|   let z: ?boolean = false;
+                 ^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- updates.js:40:29
+
+Cannot expect number as the return type of function because number [1] is incompatible with implicitly-returned
+undefined. [incompatible-return]
+
+   40|   function alwaysThrows1(): number { x ??= invariant(false); } // Error
+                                   ^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------- updates.js:41:29
+
+Cannot expect number as the return type of function because number [1] is incompatible with implicitly-returned
+undefined. [incompatible-return]
+
+   41|   function alwaysThrows2(): number { y &&= invariant(false); } // Error
+                                   ^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------- updates.js:42:29
+
+Cannot expect number as the return type of function because number [1] is incompatible with implicitly-returned
+undefined. [incompatible-return]
+
+   42|   function alwaysThrows3(): number { x ||= invariant(false); } // Error
+                                   ^^^^^^ [1]
+
+
+
+Found 60 errors

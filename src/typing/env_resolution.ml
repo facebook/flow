@@ -10,6 +10,7 @@ open Type
 open Type_hint
 open Reason
 open Loc_collections
+open Utils_js
 module Ast = Flow_ast
 
 module type S = sig
@@ -19,6 +20,7 @@ end
 
 module Make (Env : Env_sig.S) (Statement : Statement_sig.S with module Env := Env) : S = struct
   module Type_annotation = Statement.Anno
+  module Abnormal = Statement.Abnormal
 
   let mk_tparams_map cx tparams_locs =
     let { Loc_env.tparams; _ } = Context.environment cx in
@@ -200,10 +202,36 @@ module Make (Env : Env_sig.S) (Statement : Statement_sig.S with module Env := En
       let result_t = Statement.arith_assign cx reason lhs_t rhs_t in
       let use_op = Op (AssignVar { var = Some id_reason; init = reason }) in
       (result_t, use_op)
-    | Assignment.NullishAssign
     | Assignment.AndAssign
-    | Assignment.OrAssign ->
-      (Tvar.mk cx (mk_reason (RCustom "unhandled def") id_loc), unknown_use)
+    | Assignment.OrAssign
+    | Assignment.NullishAssign ->
+      let reason = mk_reason (RCustom (Flow_ast_utils.string_of_assignment_operator op)) exp_loc in
+      let lhs_t =
+        New_env.New_env.read_entry_exn ~lookup_mode:Env_sig.LookupMode.ForValue cx id_loc id_reason
+      in
+      let (((_, rhs_t), _), right_abnormal) =
+        Abnormal.catch_expr_control_flow_exception (fun () ->
+            Statement.expression cx ~hint:Hint_None rhs (* TODO hint *)
+        )
+      in
+      let rhs_t =
+        match right_abnormal with
+        | Some Abnormal.Throw -> EmptyT.at exp_loc |> with_trust bogus_trust
+        | None -> rhs_t
+        | Some _ -> assert_false "Unexpected abnormal control flow from within expression"
+      in
+      let result_t =
+        let ub t =
+          match op with
+          | Assignment.NullishAssign -> NullishCoalesceT (reason, rhs_t, t)
+          | Assignment.AndAssign -> AndT (reason, rhs_t, t)
+          | Assignment.OrAssign -> OrT (reason, rhs_t, t)
+          | _ -> assert_false "Bad conditional guard"
+        in
+        Tvar.mk_no_wrap_where cx reason (fun t -> Flow_js.flow cx (lhs_t, ub t))
+      in
+      let use_op = Op (AssignVar { var = Some id_reason; init = reason }) in
+      (result_t, use_op)
 
   let resolve_update cx ~id_loc ~exp_loc id_reason =
     let reason = mk_reason (RCustom "update") exp_loc in
