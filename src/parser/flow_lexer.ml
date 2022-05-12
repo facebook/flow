@@ -1903,5 +1903,7 @@ let token = wrap token
 
 let is_valid_identifier_name lexbuf =
   match%sedlex lexbuf with
-  | (js_id_start, Star js_id_continue, eof) -> true
+  | js_id_start ->
+    (* we need handle cases like \u1fa38 so that single code is not enough*)
+    loop_id_continues lexbuf
   | _ -> false
