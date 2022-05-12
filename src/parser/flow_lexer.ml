@@ -895,17 +895,6 @@ let token (env : Lex_env.t) lexbuf : result =
   | "while" -> Token (env, T_WHILE)
   | "with" -> Token (env, T_WITH)
   | "yield" -> Token (env, T_YIELD)
-  (* Identifiers *)
-  | (ascii_id_start, Star ascii_id_continue) ->
-    (* fast path *)
-    let loc = loc_of_lexbuf env lexbuf in
-    let raw = lexeme lexbuf in
-    Token (env, T_IDENTIFIER { loc; value = raw; raw })
-  | (js_id_start, Star js_id_continue) ->
-    let loc = loc_of_lexbuf env lexbuf in
-    let raw = lexeme lexbuf in
-    let (env, value) = decode_identifier env (Sedlexing.lexeme lexbuf) in
-    Token (env, T_IDENTIFIER { loc; value; raw })
   (* TODO: Use [Symbol.iterator] instead of @@iterator. *)
   | "@@iterator"
   | "@@asyncIterator" ->
@@ -977,9 +966,30 @@ let token (env : Lex_env.t) lexbuf : result =
   | "/" -> Token (env, T_DIV)
   | "@" -> Token (env, T_AT)
   | "#" -> Token (env, T_POUND)
+  (* To reason about its correctness:
+     1. all tokens are still matched
+     2. tokens like opaque, opaquex are matched correctly
+       the most fragile case is `opaquex` (matched with `opaque,x` instead)
+     3. \a is disallowed
+     4. a世界 recognized
+  *)
   | '\\' ->
     let env = illegal env (loc_of_lexbuf env lexbuf) in
     Continue env
+  | js_id_start ->
+    let start_offset = Sedlexing.lexeme_start lexbuf in
+    loop_id_continues lexbuf |> ignore;
+    let end_offset = Sedlexing.lexeme_end lexbuf in
+    let loc = loc_of_offsets env start_offset end_offset in
+    let raw = Array.sub (Sedlexing.rawbuffer lexbuf) start_offset (end_offset - start_offset) in
+    let (env, value) = decode_identifier env raw in
+    Token (env, T_IDENTIFIER { loc; value; raw = Sedlexing.string_of_utf8 raw })
+  (* Identifiers *)
+  | (ascii_id_start, Star ascii_id_continue) ->
+    (* fast path *)
+    let loc = loc_of_lexbuf env lexbuf in
+    let raw = lexeme lexbuf in
+    Token (env, T_IDENTIFIER { loc; value = raw; raw })
   (* Others *)
   | eof ->
     let env =
