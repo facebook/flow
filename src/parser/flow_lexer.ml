@@ -171,8 +171,7 @@ let ascii_id_start = [%sedlex.regexp? '$' | '_' | 'a' .. 'z' | 'A' .. 'Z']
 
 let ascii_id_continue = [%sedlex.regexp? '$' | '_' | 'a' .. 'z' | 'A' .. 'Z' | '0' .. '9']
 
-let js_id_continue =
-  [%sedlex.regexp? '$' | '_' | 0x200C | 0x200D | id_continue | unicode_escape | codepoint_escape]
+
 (* Assuming that the first code point is already lexed 
    return true means that the whole [lexbuf] is valid identifier
 *)
