@@ -1319,6 +1319,7 @@ and Expression : sig
   module OptionalCall : sig
     type ('M, 'T) t = {
       call: ('M, 'T) Call.t;
+      filtered_type: 'T;
       optional: bool;
     }
     [@@deriving show]
@@ -1341,6 +1342,7 @@ and Expression : sig
   module OptionalMember : sig
     type ('M, 'T) t = {
       member: ('M, 'T) Member.t;
+      filtered_type: 'T;
       optional: bool;
     }
     [@@deriving show]

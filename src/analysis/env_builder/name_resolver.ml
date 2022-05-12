@@ -4079,7 +4079,11 @@ module Make
           match expr with
           | OptionalMember _ -> this#member_expression_refinement loc expr LookupMap.empty
           | OptionalCall
-              { OptionalCall.call = { Call.callee; targs; arguments; comments = _ }; optional } ->
+              {
+                OptionalCall.call = { Call.callee; targs; arguments; comments = _ };
+                optional;
+                filtered_type = _;
+              } ->
             let refi =
               match RefinementKey.of_expression callee with
               | Some refinement_key_obj when optional ->

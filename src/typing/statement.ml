@@ -3992,36 +3992,44 @@ struct
   and optional_chain ~cond ~is_existence_check ?sentinel_refine cx ((loc, e) as ex) =
     let open Ast.Expression in
     let factor_out_optional (_, e) =
-      let (opt_state, e') =
+      let (opt_state, filtered_type_loc, e') =
         match e with
-        | OptionalCall { OptionalCall.call; optional } ->
+        | OptionalCall { OptionalCall.call; optional; filtered_type } ->
           let opt_state =
             if optional then
               NewChain
             else
               ContinueChain
           in
-          (opt_state, Call call)
-        | OptionalMember { OptionalMember.member; optional } ->
+          (opt_state, filtered_type, Call call)
+        | OptionalMember { OptionalMember.member; optional; filtered_type } ->
           let opt_state =
             if optional then
               NewChain
             else
               ContinueChain
           in
-          (opt_state, Member member)
-        | _ -> (NonOptional, e)
+          (opt_state, filtered_type, Member member)
+        | _ -> (NonOptional, loc, e)
       in
-      let call_ast call =
+      let call_ast call ty =
         match opt_state with
-        | NewChain -> OptionalCall { OptionalCall.call; optional = true }
-        | ContinueChain -> OptionalCall { OptionalCall.call; optional = false }
+        | NewChain ->
+          OptionalCall
+            { OptionalCall.call; optional = true; filtered_type = (filtered_type_loc, ty) }
+        | ContinueChain ->
+          OptionalCall
+            { OptionalCall.call; optional = false; filtered_type = (filtered_type_loc, ty) }
         | NonOptional -> Call call
       in
-      let member_ast member =
+      let member_ast member ty =
         match opt_state with
-        | NewChain -> OptionalMember { OptionalMember.member; optional = true }
-        | ContinueChain -> OptionalMember { OptionalMember.member; optional = false }
+        | NewChain ->
+          OptionalMember
+            { OptionalMember.member; optional = true; filtered_type = (filtered_type_loc, ty) }
+        | ContinueChain ->
+          OptionalMember
+            { OptionalMember.member; optional = false; filtered_type = (filtered_type_loc, ty) }
         | NonOptional -> Member member
       in
       (e', opt_state, call_ast, member_ast)
@@ -4215,6 +4223,7 @@ struct
                   arguments;
                   comments;
                 }
+                lhs_t
             ),
             None,
             None
@@ -4259,6 +4268,7 @@ struct
                   arguments;
                   comments;
                 }
+                lhs_t
             ),
             None,
             None
@@ -4335,6 +4345,7 @@ struct
                   arguments = arguments_ast;
                   comments;
                 }
+                lhs_t
             ),
             None,
             None
@@ -4382,6 +4393,7 @@ struct
                   arguments = arguments_ast;
                   comments;
                 }
+                lhs_t
             ),
             None,
             None
@@ -4501,7 +4513,7 @@ struct
             Tast_utils.error_mapper#arg_list arguments
         in
         let lhs_t = VoidT.at loc |> with_trust bogus_trust in
-        Some (((loc, lhs_t), call_ast { Call.callee; targs; arguments; comments }), None, None)
+        Some (((loc, lhs_t), call_ast { Call.callee; targs; arguments; comments } lhs_t), None, None)
       | Member
           {
             Member._object =
@@ -4528,6 +4540,7 @@ struct
                   property = Member.PropertyIdentifier ((ploc, lhs_t), exports_name);
                   comments;
                 }
+                lhs_t
             ),
             None,
             None
@@ -4559,6 +4572,7 @@ struct
                   property;
                   comments;
                 }
+                lhs_t
             ),
             None,
             None
@@ -4586,7 +4600,9 @@ struct
         let property = Member.PropertyIdentifier ((ploc, lhs_t), id) in
         let ast =
           ( (loc, lhs_t),
-            member_ast { Member._object = ((super_loc, super_t), Super super); property; comments }
+            member_ast
+              { Member._object = ((super_loc, super_t), Super super); property; comments }
+              lhs_t
           )
         in
         (* Even though there's no optional chaining for Super member accesses, we
@@ -4870,7 +4886,9 @@ struct
           match (e', opt_state) with
           | ( Call
                 ( {
-                    Call.callee = (callee_loc, OptionalMember { OptionalMember.member; optional });
+                    Call.callee =
+                      (callee_loc, OptionalMember { OptionalMember.member; optional; filtered_type })
+                      as orig_receiver;
                     targs = _;
                     arguments = _;
                     comments = _;
@@ -4878,7 +4896,10 @@ struct
                 ),
               (NewChain | ContinueChain)
             ) ->
-            let receiver_ast member = OptionalMember { OptionalMember.member; optional } in
+            let receiver_ast member ty =
+              OptionalMember
+                { OptionalMember.member; optional; filtered_type = (filtered_type, ty) }
+            in
             let member_opt =
               if optional then
                 (* In this case:
@@ -4906,11 +4927,18 @@ struct
                 ContinueChain
             in
             ( Call { call with Call.callee = (callee_loc, Member member) },
-              Some (member_opt, member, receiver_ast)
+              Some (member_opt, member, receiver_ast, orig_receiver)
             )
-          | (Call { Call.callee = (_, Member member); targs = _; arguments = _; comments = _ }, _)
-            ->
-            (e', Some (NonOptional, member, (fun member -> Member member)))
+          | ( Call
+                {
+                  Call.callee = (_, Member member) as orig_receiver;
+                  targs = _;
+                  arguments = _;
+                  comments = _;
+                },
+              _
+            ) ->
+            (e', Some (NonOptional, member, (fun member _ -> Member member), orig_receiver))
           | _ -> (e', None)
         in
         (match (e', method_receiver_and_state) with
@@ -4958,6 +4986,7 @@ struct
                   property = Member.PropertyExpression index;
                   comments;
                 }
+                filtered_out
             ),
             preds,
             sentinel_refinement
@@ -5011,7 +5040,9 @@ struct
           let property = Member.PropertyIdentifier ((ploc, lhs_t), id) in
           ( filtered_out,
             voided_out,
-            ((loc, lhs_t), member_ast { Member._object = object_ast; property; comments }),
+            ( (loc, lhs_t),
+              member_ast { Member._object = object_ast; property; comments } filtered_out
+            ),
             preds,
             sentinel_refinement
           )
@@ -5058,7 +5089,9 @@ struct
           let preds = combine_preds preds new_pred_list in
           ( filtered_out,
             voided_out,
-            ((loc, lhs_t), member_ast { Member._object = object_ast; property; comments }),
+            ( (loc, lhs_t),
+              member_ast { Member._object = object_ast; property; comments } filtered_out
+            ),
             preds,
             None
           )
@@ -5066,8 +5099,9 @@ struct
         | ( Call { Call.callee = (lookup_loc, callee_expr) as callee; targs; arguments; comments },
             Some
               ( member_opt,
-                ({ Member._object; property; comments = member_comments } as receiver),
-                receiver_ast
+                { Member._object; property; comments = member_comments },
+                receiver_ast,
+                orig_receiver
               )
           ) ->
           let (targts, targs) = convert_call_targs_opt cx targs in
@@ -5077,6 +5111,7 @@ struct
                 call_voided_out,
                 member_lhs_t,
                 prop_t,
+                obj_filtered_out,
                 object_ast,
                 property,
                 argument_asts
@@ -5092,7 +5127,7 @@ struct
                   (FunCallMethod
                      {
                        op = expr_reason;
-                       fn = mk_expression_reason (lookup_loc, receiver_ast receiver);
+                       fn = mk_expression_reason orig_receiver;
                        prop = reason_prop;
                        args = mk_initial_arguments_reason arguments;
                        local = true;
@@ -5168,7 +5203,14 @@ struct
                 let hint = decompose_hint (Decomp_MethodName propref) hint in
                 in_env preds (fun () -> arg_list cx ~hint arguments)
               in
-              let (filtered_out, lookup_voided_out, member_lhs_t, _, object_ast, argument_asts, _) =
+              let ( filtered_out,
+                    lookup_voided_out,
+                    member_lhs_t,
+                    obj_filtered_out,
+                    object_ast,
+                    argument_asts,
+                    _
+                  ) =
                 handle_chaining
                   member_opt
                   _object
@@ -5196,6 +5238,7 @@ struct
                 call_voided_out,
                 member_lhs_t,
                 prop_t,
+                obj_filtered_out,
                 object_ast,
                 prop_ast,
                 argument_asts
@@ -5237,7 +5280,7 @@ struct
               let ( filtered_out,
                     lookup_voided_out,
                     member_lhs_t,
-                    _,
+                    obj_filtered_out,
                     object_ast,
                     (argument_asts, expr_ast),
                     _
@@ -5259,6 +5302,7 @@ struct
                 call_voided_out,
                 member_lhs_t,
                 prop_t,
+                obj_filtered_out,
                 object_ast,
                 Member.PropertyExpression expr_ast,
                 argument_asts
@@ -5280,11 +5324,13 @@ struct
                     ( (lookup_loc, prop_t),
                       receiver_ast
                         { Member._object = object_ast; property; comments = member_comments }
+                        obj_filtered_out
                     );
                   targs;
                   arguments = argument_asts;
                   comments;
                 }
+                filtered_out
             ),
             None,
             None
@@ -5325,7 +5371,9 @@ struct
               ~get_opt_use
               ~get_reason
           in
-          let exp callee = call_ast { Call.callee; targs; arguments = argument_asts; comments } in
+          let exp callee =
+            call_ast { Call.callee; targs; arguments = argument_asts; comments } filtered_out
+          in
           (filtered_out, voided_out, ((loc, lhs_t), exp object_ast), None, None)
         | (This _, _)
         | (Identifier _, _)
@@ -5731,7 +5779,7 @@ struct
         Flow.flow cx (arg_val_t, AssertArithmeticOperandT reason);
         let make_op ~lhs ~prop = Op (UpdateProperty { lhs; prop }) in
         let lhs_prop_reason = mk_expression_reason argument in
-        let reconstruct_ast mem = Ast.Expression.Member mem in
+        let reconstruct_ast mem _ = Ast.Expression.Member mem in
         let arg_update_ast =
           assign_member
             cx
@@ -6033,7 +6081,7 @@ struct
         ((object_loc, module_t), Ast.Expression.Identifier ((id_loc, module_t), mod_name))
       in
       let property = Member.PropertyIdentifier ((ploc, t), name) in
-      ((lhs_loc, t), reconstruct_ast { Member._object; property; comments })
+      ((lhs_loc, t), reconstruct_ast { Member._object; property; comments } t)
     (* super.name = e *)
     | {
      Member._object = (super_loc, Super super);
@@ -6055,7 +6103,9 @@ struct
         );
       let property = Member.PropertyIdentifier ((prop_loc, prop_t), id) in
       ( (lhs_loc, prop_t),
-        reconstruct_ast { Member._object = ((super_loc, super_t), Super super); property; comments }
+        reconstruct_ast
+          { Member._object = ((super_loc, super_t), Super super); property; comments }
+          prop_t
       )
     (* _object.#name = e *)
     | {
@@ -6088,7 +6138,7 @@ struct
           post_assignment_havoc cx ~private_:true name (lhs_loc, lhs_expr) prop_t t;
           prop_t
       in
-      ((lhs_loc, prop_t), reconstruct_ast { Member._object; property; comments })
+      ((lhs_loc, prop_t), reconstruct_ast { Member._object; property; comments } prop_t)
     (* _object.name = e *)
     | {
      Member._object;
@@ -6133,7 +6183,7 @@ struct
           prop_t
       in
       let property = Member.PropertyIdentifier ((prop_loc, prop_t), id) in
-      ((lhs_loc, prop_t), reconstruct_ast { Member._object; property; comments })
+      ((lhs_loc, prop_t), reconstruct_ast { Member._object; property; comments } prop_t)
     (* _object[index] = e *)
     | { Member._object; property = Member.PropertyExpression ((iloc, _) as index); comments } ->
       let reason = mk_reason (RPropertyAssignment None) lhs_loc in
@@ -6154,7 +6204,7 @@ struct
          which clears refis *)
       Env.havoc_heap_refinements ();
       ( (lhs_loc, t),
-        reconstruct_ast { Member._object; property = Member.PropertyExpression index; comments }
+        reconstruct_ast { Member._object; property = Member.PropertyExpression index; comments } t
       )
 
   (* traverse simple assignment expressions (`lhs = rhs`) *)
@@ -6199,7 +6249,7 @@ struct
       | (lhs_loc, Ast.Pattern.Expression (pat_loc, Ast.Expression.Member mem)) ->
         let lhs_prop_reason = mk_pattern_reason lhs in
         let make_op ~lhs ~prop = Op (SetProperty { lhs; prop; value = mk_expression_reason rhs }) in
-        let reconstruct_ast mem = Ast.Expression.Member mem in
+        let reconstruct_ast mem _ = Ast.Expression.Member mem in
         let ((lhs_loc, t), lhs) =
           assign_member
             cx
@@ -6268,7 +6318,7 @@ struct
       | (lhs_loc, Ast.Pattern.Expression (_, Ast.Expression.Member mem)) ->
         let lhs_prop_reason = mk_pattern_reason lhs in
         let make_op ~lhs ~prop = Op (UpdateProperty { lhs; prop }) in
-        let reconstruct_ast mem = Ast.Expression.Member mem in
+        let reconstruct_ast mem _ = Ast.Expression.Member mem in
         ignore
         @@ assign_member
              cx
@@ -6317,7 +6367,7 @@ struct
       | (lhs_loc, Ast.Pattern.Expression (_, Ast.Expression.Member mem)) ->
         let lhs_prop_reason = mk_pattern_reason lhs in
         let make_op ~lhs ~prop = Op (UpdateProperty { lhs; prop }) in
-        let reconstruct_ast mem = Ast.Expression.Member mem in
+        let reconstruct_ast mem _ = Ast.Expression.Member mem in
         ignore
         @@ assign_member
              cx
@@ -6363,7 +6413,7 @@ struct
         | (lhs_loc, Ast.Pattern.Expression (_, Ast.Expression.Member mem)) ->
           let lhs_prop_reason = mk_pattern_reason lhs in
           let make_op ~lhs ~prop = Op (UpdateProperty { lhs; prop }) in
-          let reconstruct_ast mem = Ast.Expression.Member mem in
+          let reconstruct_ast mem _ = Ast.Expression.Member mem in
           ignore
           @@ assign_member
                cx
@@ -6468,7 +6518,7 @@ struct
     | Member mem ->
       let lhs_prop_reason = mk_expression_reason target in
       let make_op ~lhs ~prop = Op (DeleteProperty { lhs; prop }) in
-      let reconstruct_ast mem = Member mem in
+      let reconstruct_ast mem _ = Member mem in
       assign_member
         cx
         ~make_op
@@ -6479,10 +6529,13 @@ struct
         ~reconstruct_ast
         ~mode:Type.Delete
         mem
-    | OptionalMember { OptionalMember.member = mem; optional } ->
+    | OptionalMember { OptionalMember.member = mem; optional; filtered_type } ->
       let lhs_prop_reason = mk_expression_reason target in
       let make_op ~lhs ~prop = Op (DeleteProperty { lhs; prop }) in
-      let reconstruct_ast mem = OptionalMember { OptionalMember.member = mem; optional } in
+      let reconstruct_ast mem ty =
+        OptionalMember
+          { OptionalMember.member = mem; optional; filtered_type = (filtered_type, ty) }
+      in
       let opt_state =
         if optional then
           NewChain

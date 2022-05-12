@@ -580,6 +580,7 @@ with type t = Impl.t = struct
                 { Call.comments; arguments = (_, { ArgList.comments = args_comments; _ }); _ } as
                 call;
               optional;
+              filtered_type = _;
             }
         ) ->
         let comments =
@@ -594,8 +595,14 @@ with type t = Impl.t = struct
           (call_node_properties call @ [("optional", bool optional)])
       | (loc, Member ({ Member.comments; _ } as member)) ->
         node ?comments "MemberExpression" loc (member_node_properties member)
-      | (loc, OptionalMember { OptionalMember.member = { Member.comments; _ } as member; optional })
-        ->
+      | ( loc,
+          OptionalMember
+            {
+              OptionalMember.member = { Member.comments; _ } as member;
+              optional;
+              filtered_type = _;
+            }
+        ) ->
         node
           ?comments
           "OptionalMemberExpression"

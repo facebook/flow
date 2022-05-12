@@ -1042,8 +1042,12 @@ let rec code_desc_of_expression ~wrap (_, x) =
     in
     do_wrap ("new " ^ code_desc_of_expression ~wrap:true callee ^ targs ^ args)
   | Object _ -> "{...}"
-  | OptionalCall { OptionalCall.call = { Call.callee; targs; arguments; comments = _ }; optional }
-    ->
+  | OptionalCall
+      {
+        OptionalCall.call = { Call.callee; targs; arguments; comments = _ };
+        optional;
+        filtered_type = _;
+      } ->
     let targ_string =
       match targs with
       | None -> ""
@@ -1063,8 +1067,12 @@ let rec code_desc_of_expression ~wrap (_, x) =
       )
     ^ targ_string
     ^ arg_string
-  | OptionalMember { OptionalMember.member = { Member._object; property; comments = _ }; optional }
-    ->
+  | OptionalMember
+      {
+        OptionalMember.member = { Member._object; property; comments = _ };
+        optional;
+        filtered_type = _;
+      } ->
     let o = code_desc_of_expression ~wrap:true _object in
     let p = code_desc_of_property ~optional property in
     o ^ p

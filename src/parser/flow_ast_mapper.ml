@@ -306,7 +306,7 @@ class ['loc] mapper =
 
     method optional_call loc (expr : ('loc, 'loc) Ast.Expression.OptionalCall.t) =
       let open Ast.Expression.OptionalCall in
-      let { call; optional = _ } = expr in
+      let { call; optional = _; filtered_type = _ } = expr in
       let call' = this#call loc call in
       if call == call' then
         expr
@@ -2013,7 +2013,7 @@ class ['loc] mapper =
 
     method optional_member loc (expr : ('loc, 'loc) Ast.Expression.OptionalMember.t) =
       let open Ast.Expression.OptionalMember in
-      let { member; optional = _ } = expr in
+      let { member; optional = _; filtered_type = _ } = expr in
       let member' = this#member loc member in
       if member == member' then
         expr

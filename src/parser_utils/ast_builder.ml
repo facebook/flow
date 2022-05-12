@@ -458,7 +458,7 @@ module Expressions = struct
   let call ?(loc = Loc.none) ?args callee = (loc, Call (call_node ?args callee))
 
   let optional_call ?(loc = Loc.none) ~optional ?args callee =
-    (loc, OptionalCall { OptionalCall.call = call_node ?args callee; optional })
+    (loc, OptionalCall { OptionalCall.call = call_node ?args callee; optional; filtered_type = loc })
 
   let function_ ?(loc = Loc.none) ?(async = false) ?(generator = false) ?params ?id ?body () =
     let fn = Functions.make ~async ~generator ?params ~id ?body () in
@@ -559,7 +559,7 @@ module Expressions = struct
     member_expression (member_computed obj ~property:(literal (Literals.string str)))
 
   let optional_member_expression ?(loc = Loc.none) ~optional expr =
-    (loc, OptionalMember { OptionalMember.member = expr; optional })
+    (loc, OptionalMember { OptionalMember.member = expr; optional; filtered_type = loc })
 
   let new_ ?(loc = Loc.none) ?comments ?targs ?args callee =
     (loc, New { New.callee; targs; arguments = args; comments })

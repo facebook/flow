@@ -99,6 +99,7 @@ let mapper ~preserve_literals ~max_type_size ~default_any (cctx : Codemod_contex
                   OptionalMember.member =
                     { property = PropertyIdentifier (_, { Ast.Identifier.name = "reduce"; _ }); _ };
                   optional = _;
+                  filtered_type = _;
                 }
             ) ),
           (_, { ArgList.arguments = [_; Expression (loc, Object { Object.properties = []; _ })]; _ }),

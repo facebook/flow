@@ -749,7 +749,7 @@ module Expression
       let call =
         if optional || in_optional_chain then
           let open Expression in
-          OptionalCall { OptionalCall.call; optional }
+          OptionalCall { OptionalCall.call; optional; filtered_type = loc }
         else
           Expression.Call call
       in
@@ -976,7 +976,7 @@ module Expression
       let member =
         if in_optional_chain then
           let open Expression in
-          OptionalMember { OptionalMember.member; optional }
+          OptionalMember { OptionalMember.member; optional; filtered_type = loc }
         else
           Expression.Member member
       in
@@ -1014,7 +1014,7 @@ module Expression
       let member =
         if in_optional_chain then
           let open Expression in
-          OptionalMember { OptionalMember.member; optional }
+          OptionalMember { OptionalMember.member; optional; filtered_type = loc }
         else
           Expression.Member member
       in
