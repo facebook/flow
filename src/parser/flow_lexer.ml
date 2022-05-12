@@ -357,17 +357,14 @@ let mk_bignum_singleton kind raw =
   in
   T_BIGINT_SINGLETON_TYPE { kind; approx_value; raw }
 
+(* This is valid since the escapes are already tackled*)
+let assert_valid_unicode_in_identifier env loc code =
+  if Js_id.is_valid_unicode_id code then
+    env
+  else
+    lex_error env loc Parse_error.IllegalUnicodeEscape
+
 let decode_identifier =
-  let assert_valid_unicode_in_identifier env loc code =
-    let lexbuf = Sedlexing.from_int_array [| code |] in
-    match%sedlex lexbuf with
-    | js_id_start -> env
-    | js_id_continue -> env
-    | any
-    | eof ->
-      lex_error env loc Parse_error.IllegalUnicodeEscape
-    | _ -> failwith "unreachable assert_valid_unicode_in_identifier"
-  in
   let loc_and_sub_lexeme env offset lexbuf trim_start trim_end =
     let start_offset = offset + Sedlexing.lexeme_start lexbuf in
     let end_offset = offset + Sedlexing.lexeme_end lexbuf in
