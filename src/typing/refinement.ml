@@ -17,7 +17,7 @@ module Ast = Flow_ast
    lookups from an id base
 *)
 
-module Make (Env : Env_sig.S) = struct
+module Keys = struct
   let rec key ~allow_optional =
     let open Ast.Expression in
     function
@@ -85,6 +85,10 @@ module Make (Env : Env_sig.S) = struct
     | (_, Ast.Pattern.Expression _) ->
       (* non-member expression patterns are bogus *)
       None
+end
+
+module Make (Env : Env_sig.S) = struct
+  include Keys
 
   (* get type refinement for expression, if it exists *)
   let get ~allow_optional cx expr loc =

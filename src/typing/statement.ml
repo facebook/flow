@@ -4073,7 +4073,7 @@ struct
           )
       | (None, _) -> new_preds
     in
-    let exists_pred ((loc, _) as expr) lhs_t =
+    let exists_pred expr lhs_t =
       if is_existence_check then
         let pred =
           (* there is some cond when this expression is the top-level of a conditional,
@@ -4081,10 +4081,9 @@ struct
              that it has a truthy type (that's what the "ExistsP" predicate does). If we're
              deeper in the chain, then cond will be None, and we only care if the expression
              is null or undefined, not if it's false/0/"". *)
-          if Base.Option.is_some cond then (
-            Context.add_exists_check cx loc lhs_t;
+          if Base.Option.is_some cond then
             ExistsP
-          ) else
+          else
             NotP MaybeP
         in
         match Refinement.key ~allow_optional:true expr with
@@ -7819,7 +7818,6 @@ struct
     | (_, Assignment { Assignment.left = (loc, Ast.Pattern.Identifier id); _ }) ->
       let (((_, expr), _) as tast) = expression cx ~hint:Hint_None e in
       let id = id.Ast.Pattern.Identifier.name in
-      Context.add_exists_check cx loc expr;
       (match Refinement.key ~allow_optional:true (loc, Ast.Expression.Identifier id) with
       | Some name -> result tast name expr ExistsP true
       | None -> empty_result tast)
@@ -7975,10 +7973,9 @@ struct
       let ast = ((loc, t_out), ast') in
       (ast, not_map, map, xts)
     (* ids *)
-    | (loc, This _)
-    | (loc, Identifier _) ->
+    | (_, This _)
+    | (_, Identifier _) ->
       let (((_, t), _) as e) = condition ~cond cx e in
-      Context.add_exists_check cx loc t;
       (match Refinement.key ~allow_optional:true e with
       | Some name -> result e name t ExistsP true
       | None -> empty_result e)

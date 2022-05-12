@@ -523,13 +523,18 @@ module Make (Env : Env_sig.S) : S = struct
     let typed_statements = infer_core cx aloc_statements in
     scan_for_suppressions cx lint_severities comments;
 
-    ( prog_aloc,
-      {
-        Ast.Program.statements = typed_statements;
-        comments = aloc_comments;
-        all_comments = aloc_all_comments;
-      }
-    )
+    let program =
+      ( prog_aloc,
+        {
+          Ast.Program.statements = typed_statements;
+          comments = aloc_comments;
+          all_comments = aloc_all_comments;
+        }
+      )
+    in
+
+    Exists_marker.mark cx program;
+    program
 
   (* infer a parsed library file.
      processing is similar to an ordinary module, except that
