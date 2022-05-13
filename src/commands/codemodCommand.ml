@@ -410,6 +410,54 @@ module KeyMirror_command = struct
   let command = CommandSpec.command spec main
 end
 
+module Annotate_empty_array_command = struct
+  let doc =
+    "Annotates variable declarations initialized with empty arrays, which do not have an annotation."
+
+  let spec =
+    let module Literals = Codemod_hardcoded_ty_fixes.PreserveLiterals in
+    let preserve_string_literals_level =
+      Literals.[("always", Always); ("never", Never); ("auto", Auto)]
+    in
+    {
+      CommandSpec.name = "annotate-empty-array";
+      doc;
+      usage =
+        Printf.sprintf
+          "Usage: %s codemod annotate-empty-array [OPTION]... [FILE]\n\n%s\n"
+          Utils_js.exe_name
+          doc;
+      args =
+        CommandSpec.ArgSpec.(
+          empty
+          |> CommandUtils.codemod_flags
+          |> flag
+               "--preserve-literals"
+               (required ~default:Literals.Never (enum preserve_string_literals_level))
+               ~doc:""
+          |> common_annotate_flags
+        );
+    }
+
+  let main codemod_flags preserve_literals max_type_size default_any () =
+    let module Runner = Codemod_runner.MakeSimpleTypedRunner (struct
+      module Acc = Annotate_empty_object.Acc
+
+      type accumulator = Acc.t
+
+      let reporter = string_reporter (module Acc)
+
+      let check_options o = o
+
+      let visit =
+        let mapper = Annotate_empty_array.mapper ~preserve_literals ~max_type_size ~default_any in
+        Codemod_utils.make_visitor (Codemod_utils.Mapper mapper)
+    end) in
+    main (module Runner) codemod_flags ()
+
+  let command = CommandSpec.command spec main
+end
+
 module Annotate_empty_object_command = struct
   let doc = "Annotates empty objects."
 
@@ -511,6 +559,7 @@ let command =
       ~doc:"Runs large-scale codebase refactors"
       [
         (Annotate_declarations_command.spec.CommandSpec.name, Annotate_declarations_command.command);
+        (Annotate_empty_array_command.spec.CommandSpec.name, Annotate_empty_array_command.command);
         (Annotate_empty_object_command.spec.CommandSpec.name, Annotate_empty_object_command.command);
         (Annotate_escaped_generics.spec.CommandSpec.name, Annotate_escaped_generics.command);
         (Annotate_exports_command.spec.CommandSpec.name, Annotate_exports_command.command);

@@ -170,6 +170,23 @@ module Make (Extra : BASE_STATS) = struct
               ts
           in
 
+          (* Array<empty> or Array<any>, commonly from [], is never a useful type.
+             We should remove it from the union. *)
+          let ts =
+            let ts_without_array_empty =
+              List.filter
+                (function
+                  | Ty.Arr { Ty.arr_elt_t = Ty.Bot _; _ } -> false
+                  | Ty.Arr { Ty.arr_elt_t = Ty.Any _; _ } -> false
+                  | _ -> true)
+                ts
+            in
+            if Base.List.is_empty ts_without_array_empty then
+              ts
+            else
+              ts_without_array_empty
+          in
+
           (* React.Node | React.Element<'div'> becomes just React.Node *)
           let has_react_node =
             List.exists

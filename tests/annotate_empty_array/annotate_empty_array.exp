@@ -1,0 +1,67 @@
+>>> test.js (#changes: 7)
+//@flow
+
+declare var key : string;
+
+let x: Array<number> = []; // should annot
+x[0] = 3;
+
+let y: Array<number> = []; // should annot
+y.push(4);
+
+let z: Array<number> = []; // should annot
+z = [4, 5];
+
+declare var arr : Array<string>;
+
+let first: Array<number> = []; // annot
+let second = first;
+let third = true ? first : [];
+let fourth = third;
+fourth[0] = 3;
+
+let already_annotated : number[] = []; // should not change this
+
+let written_twice: Array<number | string> = []; // should be Array<number | string>
+written_twice[0] = 3;
+written_twice.push("foo");
+
+let written_thrice: Array<number | string> = []; // should be Array<number | string>
+written_thrice[0] = 3;
+written_thrice[1] = "foo";
+written_thrice.push("bar", 4);
+
+let z2 = []; // should not annotate
+
+let arr2 = ["A", "B", "C"];
+let x2: Array<string> = []; // should annot
+
+for (let k of arr2) {
+  x2[0] = k
+}
+
+>>> Launching report...
+
+Stats:
+  Files changed:                            1
+  Number of annotations added:              7
+  Total size of annotations:               21
+
+Errors:
+  Missing annot./normalizer error:          0
+  Validation Error:                         0
+  Import Error:
+    Loc source none:                        0
+    Parsing heaps get ast error:            0
+    Indeterminate module type:              0
+    No matching export:                     0
+  Serializer error:                         0
+  Unsupported error kind:                   0
+
+Warnings:
+  Skipping arrow function:                  0
+  Large type added:                         0
+  Location unhandled:                       0
+  Empty NoUpper:                            1
+  Empty SomeKnownUpper:                     0
+
