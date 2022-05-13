@@ -662,5 +662,39 @@ References:
                              ^^^^^^^^^ [2]
 
 
+Error ----------------------------------------------------------------------------------------------------- test.js:31:4
 
-Found 40 errors
+Cannot cast `a` to empty because string [1] is incompatible with empty [2]. [incompatible-cast]
+
+   test.js:31:4
+   31|   (a: empty); // ERROR
+          ^
+
+References:
+   test.js:27:37
+   27| function paramDefaultDestructuring({a, b}: {a?: string, b?: number} = {}) {
+                                           ^ [1]
+   test.js:31:7
+   31|   (a: empty); // ERROR
+             ^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:31:4
+
+Cannot cast `a` to empty because undefined [1] is incompatible with empty [2]. [incompatible-cast]
+
+   test.js:31:4
+   31|   (a: empty); // ERROR
+          ^
+
+References:
+   test.js:27:37
+   27| function paramDefaultDestructuring({a, b}: {a?: string, b?: number} = {}) {
+                                           ^ [1]
+   test.js:31:7
+   31|   (a: empty); // ERROR
+             ^^^^^ [2]
+
+
+
+Found 42 errors

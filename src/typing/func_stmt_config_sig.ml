@@ -38,6 +38,7 @@ module type S = sig
 
   val eval_default :
     Context.t ->
+    annot_t:Type.t option ->
     (ALoc.t, ALoc.t) Ast.Expression.t option ->
     (ALoc.t, ALoc.t * Type.t) Ast.Expression.t option
 

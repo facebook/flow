@@ -491,18 +491,19 @@ References:
              ^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------------------- defaults.js:43:3
+Error ------------------------------------------------------------------------------------------------- defaults.js:47:6
 
-Cannot assign `p` to `p` because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot assign object literal to object type because number [1] is incompatible with string [2] in property `p`.
+[incompatible-type]
 
-   defaults.js:43:3
-   43|   p = true // error: boolean ~> string
-         ^ [2]
-
-References:
    defaults.js:47:6
    47|   p: 0 // error: number ~> string
             ^ [1]
+
+References:
+   defaults.js:45:6
+   45|   p: string
+            ^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------- defaults.js:49:4
@@ -624,54 +625,47 @@ References:
                                     ^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------------------ defaults.js:75:24
+Error ------------------------------------------------------------------------------------------------ defaults.js:75:42
 
-Cannot assign `p` to `p` because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot assign object literal to object type because number [1] is incompatible with string [2] in property `p`.
+[incompatible-type]
 
-   defaults.js:75:24
-   75| function obj_prop_opt({p}:{p?:string}={p:0}) {}
-                              ^
-
-References:
    defaults.js:75:42
    75| function obj_prop_opt({p}:{p?:string}={p:0}) {}
                                                 ^ [1]
+
+References:
    defaults.js:75:31
    75| function obj_prop_opt({p}:{p?:string}={p:0}) {}
                                      ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------ defaults.js:76:26
+Error ------------------------------------------------------------------------------------------------ defaults.js:76:44
 
-Cannot assign `p` to `p` because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot assign object literal to object type because number [1] is incompatible with string [2] in property `p`.
+[incompatible-type]
 
-   defaults.js:76:26
-   76| function obj_prop_maybe({p}:{p:?string}={p:0}) {}
-                                ^
-
-References:
    defaults.js:76:44
    76| function obj_prop_maybe({p}:{p:?string}={p:0}) {}
                                                   ^ [1]
+
+References:
    defaults.js:76:33
    76| function obj_prop_maybe({p}:{p:?string}={p:0}) {}
                                        ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------ defaults.js:77:26
+Error ------------------------------------------------------------------------------------------------ defaults.js:77:50
 
-Cannot assign `p` to `p` because: [incompatible-type]
+Cannot assign object literal to object type because in property `p`: [incompatible-type]
  - Either boolean [1] is incompatible with number [2].
  - Or boolean [1] is incompatible with string [3].
 
-   defaults.js:77:26
-   77| function obj_prop_union({p}:{p:number|string}={p:true}) {}
-                                ^
-
-References:
    defaults.js:77:50
    77| function obj_prop_union({p}:{p:number|string}={p:true}) {}
                                                         ^^^^ [1]
+
+References:
    defaults.js:77:32
    77| function obj_prop_union({p}:{p:number|string}={p:true}) {}
                                       ^^^^^^ [2]
@@ -680,15 +674,15 @@ References:
                                              ^^^^^^ [3]
 
 
-Error ------------------------------------------------------------------------------------------------ defaults.js:80:27
+Error ------------------------------------------------------------------------------------------------ defaults.js:80:52
 
-Cannot assign `p` to `p` because: [incompatible-type]
- - Either boolean [1] is incompatible with number [2].
- - Or boolean [1] is incompatible with string [3].
+Cannot assign object literal to union type because: [incompatible-type]
+ - Either boolean [1] is incompatible with number [2] in property `p`.
+ - Or boolean [1] is incompatible with string [3] in property `p`.
 
-   defaults.js:80:27
+   defaults.js:80:52
    80| function obj_prop_union2({p}:{p:number}|{p:string}={p:true}) {}
-                                 ^
+                                                          ^^^^^^^^
 
 References:
    defaults.js:80:55

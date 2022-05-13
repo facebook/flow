@@ -90,9 +90,23 @@ module Make
     bind cx name t_bound name_loc;
     t
 
-  let eval_default cx = function
+  let eval_default cx ~annot_t = function
     | None -> None
-    | Some e -> Some (Statement.expression cx ~hint:Hint_None e)
+    | Some e ->
+      (match annot_t with
+      | Some annot_t ->
+        let ((default_loc, default_t), default_ast) =
+          Statement.expression cx ~hint:(Hint_t annot_t) e
+        in
+        let use_op =
+          Op
+            (AssignVar
+               { var = Some (TypeUtil.reason_of_t annot_t); init = TypeUtil.reason_of_t default_t }
+            )
+        in
+        Flow.flow cx (default_t, UseT (use_op, annot_t));
+        Some ((default_loc, annot_t), default_ast)
+      | None -> Some (Statement.expression cx ~hint:Hint_None e))
 
   let eval_param cx (Param { t; loc; ploc; pattern; default; has_anno }) =
     match pattern with
@@ -100,7 +114,7 @@ module Make
         ( { Ast.Pattern.Identifier.name = ((name_loc, _), { Ast.Identifier.name; _ }); optional; _ }
         as id
         ) ->
-      let default = eval_default cx default in
+      let default = eval_default cx ~annot_t:None default in
       let () =
         match default with
         | None -> ()
@@ -128,18 +142,15 @@ module Make
       in
       (loc, { Ast.Function.Param.argument = ((ploc, t), Ast.Pattern.Identifier id); default })
     | Object { annot; properties; comments } ->
-      let default = eval_default cx default in
+      let annot_t =
+        match annot with
+        | Ast.Type.Missing _ -> None
+        | Ast.Type.Available (_, ((_, annot_t), _)) -> Some annot_t
+      in
+      let default = eval_default cx ~annot_t default in
       let properties =
         let default = Base.Option.map default ~f:(fun ((_, t), _) -> Default.expr t) in
-        let init =
-          Destructuring.empty
-            ?default
-            t
-            ~annot:
-              (match annot with
-              | Ast.Type.Missing _ -> false
-              | Ast.Type.Available _ -> true)
-        in
+        let init = Destructuring.empty ?default t ~annot:(Base.Option.is_some annot_t) in
         let f = destruct cx ~has_anno in
         Destructuring.object_properties cx ~f init properties
       in
@@ -151,7 +162,7 @@ module Make
         }
       )
     | Array { annot; elements; comments } ->
-      let default = eval_default cx default in
+      let default = eval_default cx ~annot_t:None default in
       let elements =
         let default = Base.Option.map default ~f:(fun ((_, t), _) -> Default.expr t) in
         let init =

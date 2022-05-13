@@ -35,6 +35,7 @@ const _b = <Component />;
 class A {
   prop: boolean;
   // No err! prop will always be initialized to a boolean
-  constructor({prop = false}: {| prop: boolean |} = {}) {
+  constructor({prop = false}: {| prop?: boolean |} = {...null}) {
+    (prop: boolean); // OK
   }
 }
