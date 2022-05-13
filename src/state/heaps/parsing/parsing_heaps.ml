@@ -318,6 +318,12 @@ let prepare_update_file size file_key file parse_ent module_name =
   in
   (size, write)
 
+let prepare_write_typed_parse_ents size =
+  let open Heap in
+  let size = size + (3 * (header_size + entity_size)) in
+  let write chunk = (write_entity chunk None, write_entity chunk None, write_entity chunk None) in
+  (size, write)
+
 (* Write parsed data for checked file to shared memory. If we loaded from saved
  * state, a checked file entry will already exist without parse data and this
  * function will update the existing entry in place. Otherwise, we will create a
@@ -344,39 +350,44 @@ let add_checked_file file_key file_opt hash module_name docblock ast locs type_s
   in
   let unchanged_or_fresh_parse =
     match file_opt with
-    | None -> Either.Right (prepare_create_file size file_key module_name)
+    | None ->
+      let (size, write_parse_ents) = prepare_write_typed_parse_ents size in
+      let (size, add_file) = prepare_create_file size file_key module_name in
+      Either.Right (size, write_parse_ents, add_file)
     | Some file ->
       let parse_ent = get_parse file in
-      (* If we loaded from a saved state, we will have some existing data with a
-       * matching hash. In this case, we want to update the existing data with
-       * parse information. *)
-      let file_hash_unchanged parse =
-        let old_hash = read_int64 (get_file_hash parse) in
-        Int64.equal hash old_hash
+      let typed_parse =
+        let* parse = entity_read_latest parse_ent in
+        coerce_typed parse
       in
-      (match entity_read_latest parse_ent with
-      | Some existing_parse when file_hash_unchanged existing_parse ->
-        (* We know that file is typed (we are in add_checked_file) and the
-         * existing record's hash matches, so the file must have been typed
-         * before as well. *)
-        Either.Left (Option.get (coerce_typed existing_parse))
-      | _ -> Either.Right (prepare_update_file size file_key file parse_ent module_name))
+      (match typed_parse with
+      | None ->
+        let (size, write_parse_ents) = prepare_write_typed_parse_ents size in
+        let (size, update_file) = prepare_update_file size file_key file parse_ent module_name in
+        Either.Right (size, write_parse_ents, update_file)
+      | Some parse ->
+        let old_hash = read_int64 (get_file_hash parse) in
+        if Int64.equal hash old_hash then
+          (* If we loaded from a saved state, we will have some existing data with a
+           * matching hash. In this case, we want to update the existing data with
+           * parse information. *)
+          Either.Left parse
+        else
+          let (size, update_file) = prepare_update_file size file_key file parse_ent module_name in
+          let parse_ents _ = (get_resolved_requires parse, get_leader parse, get_sig_hash parse) in
+          Either.Right (size, parse_ents, update_file))
   in
   let (size, add_file_maybe) =
     match unchanged_or_fresh_parse with
     | Either.Left unchanged_parse -> (size, Fun.const (unchanged_parse, MSet.empty))
-    | Either.Right (size, add_file_maybe) ->
+    | Either.Right (size, write_parse_ents_maybe, add_file_maybe) ->
       let exports = serialize exports in
       let (exports_size, write_exports) = prepare_write_exports exports in
-      let size =
-        size + (6 * header_size) + (3 * entity_size) + typed_parse_size + int64_size + exports_size
-      in
+      let size = size + (3 * header_size) + typed_parse_size + int64_size + exports_size in
       let write chunk =
         let hash = write_int64 chunk hash in
         let exports = write_exports chunk in
-        let resolved_requires = write_entity chunk None in
-        let leader = write_entity chunk None in
-        let sig_hash = write_entity chunk None in
+        let (resolved_requires, leader, sig_hash) = write_parse_ents_maybe chunk in
         let parse = write_typed_parse chunk hash exports resolved_requires leader sig_hash in
         let dirty_modules = add_file_maybe chunk (parse :> [ `typed | `untyped ] parse_addr) in
         (parse, dirty_modules)
@@ -1151,43 +1162,17 @@ module Resolved_requires_mutator = struct
     dirty_files := files;
     Transaction.add ~commit ~rollback transaction
 
-  (* To detect whether resolved requires have changed, we load the old resolved
-   * requires for this file and compare hashes. There are two interesting cases:
-   *
-   * 1. If this file is unchanged, then we advance the resolved requires entity
-   *    of the latest parse. The "old" resolved requires is the latest version
-   *    before updating.
-   *
-   * 2. If the file is changed, then the "old" resolved requires is the latest
-   *    version of the *committed* parse, but we advance the resolved requires
-   *    entity of the *latest* parse, as with case (1).
-   *
-   * If the hashes are unchanged, then for case (1) we can do nothing, but for
-   * case (2) we need to advance the resolved requires entity of the latest
-   * parse, because fresh parses start out without resolved requires.
-   *)
-  let add_resolved_requires () file parse resolved_requires =
-    let module Heap = SharedMem.NewAPI in
-    let old_resolved_requires =
-      let* old_parse = Heap.entity_read_committed (Heap.get_parse file) in
-      let* old_parse = Heap.coerce_typed old_parse in
-      let old_ent = Heap.get_resolved_requires old_parse in
-      match Heap.entity_read_latest old_ent with
-      | Some addr ->
-        let { hash; _ } = read_resolved_requires addr in
-        Some (old_ent, hash, addr)
-      | None -> None
+  let add_resolved_requires () parse resolved_requires =
+    let ent = Heap.get_resolved_requires parse in
+    let old_hash =
+      let* addr = Heap.entity_read_latest ent in
+      let { hash; _ } = read_resolved_requires addr in
+      Some hash
     in
-    let open Heap in
-    let ent = get_resolved_requires parse in
-    match old_resolved_requires with
-    | Some (old_ent, hash, addr) when Int64.equal hash resolved_requires.hash ->
-      if ent == old_ent then
-        ()
-      else
-        entity_advance ent (Some addr);
-      false
+    match old_hash with
+    | Some old_hash when Int64.equal old_hash resolved_requires.hash -> false
     | _ ->
+      let open Heap in
       let resolved_requires = Marshal.to_string resolved_requires [] in
       let (size, write) = prepare_write_resolved_requires resolved_requires in
       alloc (header_size + size) (fun chunk ->
@@ -1235,27 +1220,15 @@ module Merge_context_mutator = struct
 
   let update_sig_hash x (_, _, parse) = Heap.entity_advance (Heap.get_sig_hash parse) x
 
-  (* Similar to add_resolved_requires above, we want to detect when the sig_hash
-   * has changed, and there are two important cases to consider: (1) files which
-   * have changed and have a new sig_hash entity and (2) files which have not
-   * changed, but are merged because they are dependents of changed files. *)
-  let add_sig_hash file parse sig_hash =
+  let add_sig_hash parse sig_hash =
     let open Heap in
-    let old_sig_hash =
-      let* old_parse = entity_read_committed (get_parse file) in
-      let* old_parse = coerce_typed old_parse in
-      let old_ent = get_sig_hash old_parse in
-      let* addr = entity_read_latest old_ent in
-      Some (old_ent, addr, read_int64 addr)
-    in
     let ent = get_sig_hash parse in
+    let old_sig_hash =
+      let* addr = entity_read_latest ent in
+      Some (read_int64 addr)
+    in
     match old_sig_hash with
-    | Some (old_ent, old_addr, old_sig_hash) when Int64.equal old_sig_hash sig_hash ->
-      if ent == old_ent then
-        ()
-      else
-        entity_advance ent (Some old_addr);
-      false
+    | Some old_sig_hash when Int64.equal old_sig_hash sig_hash -> false
     | _ ->
       alloc (header_size + int64_size) (fun chunk ->
           let sig_hash = write_int64 chunk sig_hash in
@@ -1266,7 +1239,7 @@ module Merge_context_mutator = struct
   let add_merge_on_diff () component sig_hash =
     let ((_, leader, leader_parse), rest) = component in
     Nel.iter (update_leader (Some leader)) component;
-    let diff = add_sig_hash leader leader_parse sig_hash in
+    let diff = add_sig_hash leader_parse sig_hash in
     if diff then List.iter (update_sig_hash None) rest;
     diff
 end

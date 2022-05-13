@@ -522,11 +522,7 @@ let add_parsed_resolved_requires ~mutator ~reader ~options ~node_modules_contain
     let reader = Abstract_state_reader.Mutator_state_reader reader in
     resolved_requires_of ~options ~reader node_modules_containers file require_loc
   in
-  Parsing_heaps.Resolved_requires_mutator.add_resolved_requires
-    mutator
-    file_addr
-    parse
-    resolved_requires
+  Parsing_heaps.Resolved_requires_mutator.add_resolved_requires mutator parse resolved_requires
 
 (* Repick providers for modules that are exported by new and changed files, or
    were provided by changed and deleted files.
