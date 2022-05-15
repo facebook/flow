@@ -3235,21 +3235,22 @@ struct
     let open Ast.Expression.Array in
     Base.Fn.compose
       List.split
-      (Base.List.map ~f:(function
-          | Expression e ->
-            let hint = decompose_hint Decomp_ArrElement array_hint in
-            let (((_, t), _) as e) = expression cx ~hint e in
-            (UnresolvedArg (t, None), Expression e)
-          | Hole loc ->
-            (UnresolvedArg (EmptyT.at undef_loc |> with_trust bogus_trust, None), Hole loc)
-          | Spread (loc, { Ast.Expression.SpreadElement.argument; comments }) ->
-            let hint = decompose_hint Decomp_ArrSpread array_hint in
-            let (((_, t), _) as argument) = expression cx ~hint argument in
-            ( UnresolvedSpreadArg t,
-              Spread (loc, { Ast.Expression.SpreadElement.argument; comments })
-            )
-          )
-          )
+      (Base.List.mapi ~f:(fun i e ->
+           match e with
+           | Expression e ->
+             let hint = decompose_hint (Decomp_ArrElement i) array_hint in
+             let (((_, t), _) as e) = expression cx ~hint e in
+             (UnresolvedArg (t, None), Expression e)
+           | Hole loc ->
+             (UnresolvedArg (EmptyT.at undef_loc |> with_trust bogus_trust, None), Hole loc)
+           | Spread (loc, { Ast.Expression.SpreadElement.argument; comments }) ->
+             let hint = decompose_hint (Decomp_ArrSpread i) array_hint in
+             let (((_, t), _) as argument) = expression cx ~hint argument in
+             ( UnresolvedSpreadArg t,
+               Spread (loc, { Ast.Expression.SpreadElement.argument; comments })
+             )
+       )
+      )
 
   (* can raise Abnormal.(Exn (Stmt _, _))
    * annot should become a Type.t option when we have the ability to

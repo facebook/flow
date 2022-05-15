@@ -208,6 +208,23 @@ let eval_hint_tests =
   [
     "hint_t_num" >:: mk_eval_hint_test ~expected:"number" "number" [];
     "hint_t_array" >:: mk_eval_hint_test ~expected:"Array<number>" "Array<number>" [];
+    "array_element_decomp_general"
+    >:: mk_eval_hint_test ~expected:"number" "number[]" [Decomp_ArrElement 2];
+    "array_element_decomp_specific"
+    >:: mk_eval_hint_test ~expected:"string" "[number, string]" [Decomp_ArrElement 1];
+    "array_element_decomp_specific_nonexistent"
+    >:: mk_eval_hint_test ~expected:"None" "[number, string]" [Decomp_ArrElement 2];
+    "array_spread_decomp_with_general"
+    >:: mk_eval_hint_test ~expected:"Array<number>" "number[]" [Decomp_ArrSpread 0];
+    "array_spread_decomp_with_tuple_full"
+    >:: mk_eval_hint_test ~expected:"[number, string]" "[number, string]" [Decomp_ArrSpread 0];
+    "array_spread_decomp_with_tuple_single"
+    >:: mk_eval_hint_test ~expected:"[string]" "[number, string]" [Decomp_ArrSpread 1];
+    "array_spread_decomp_with_tuple_part"
+    >:: mk_eval_hint_test
+          ~expected:"[string, number]"
+          "[number, string, number]"
+          [Decomp_ArrSpread 1];
     "fun_decomp_simple_return"
     >:: mk_eval_hint_test ~expected:"number" "(string, number) => number" [Decomp_FuncReturn];
     "fun_decomp_simple_on_first_argument_of_hint"

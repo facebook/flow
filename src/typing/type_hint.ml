@@ -24,9 +24,9 @@ type hint_decomposition =
   (* Hint on the argument spread `...e` becomes hint on `e` *)
   | Decomp_ArgSpread
   (* Hint on array literal `[e]` becomes hint on `e` *)
-  | Decomp_ArrElement
+  | Decomp_ArrElement of int
   (* Hint on array literal `[...e]` becomes hint on `e` *)
-  | Decomp_ArrSpread
+  | Decomp_ArrSpread of int
   (* Type of `o` in `o.m(..)` becomes the type of `o.m` *)
   | Decomp_MethodName of Type.propref
   (* Type of `o` in `o[e](..)` becomes the type of `o[e]` *)
@@ -66,8 +66,8 @@ let string_of_hint_unknown_kind = function
   | Decomp_ObjComputed -> "Decomp_ObjComputed"
   | Decomp_ObjSpread -> "Decomp_ObjSpread"
   | Decomp_ArgSpread -> "Decomp_ArgSpread"
-  | Decomp_ArrElement -> "Decomp_ArrElement"
-  | Decomp_ArrSpread -> "Decomp_ArrSpread"
+  | Decomp_ArrElement i -> Utils_js.spf "Decomp_ArrElement (%d)" i
+  | Decomp_ArrSpread i -> Utils_js.spf "Decomp_ArrSpread (%d)" i
   | Decomp_MethodName _ -> "Decomp_MethodName"
   | Decomp_MethodElem _ -> "Decomp_MethodElem"
   | Decomp_CallNew -> "Decomp_CallNew"
@@ -159,12 +159,38 @@ let type_of_hint_decomposition cx op t =
       | Decomp_ArgSpread ->
         (* TODO *)
         failwith "Not implemented"
-      | Decomp_ArrElement ->
-        (* TODO *)
-        failwith "Not implemented"
-      | Decomp_ArrSpread ->
-        (* TODO *)
-        failwith "Not implemented"
+      | Decomp_ArrElement i ->
+        let t =
+          Tvar.mk_no_wrap_where cx dummy_reason (fun element_t ->
+              let use_t =
+                DestructuringT
+                  ( dummy_reason,
+                    DestructAnnot,
+                    Elem
+                      (DefT
+                         ( dummy_reason,
+                           bogus_trust (),
+                           NumT (Literal (None, (float_of_int i, string_of_int i)))
+                         )
+                      ),
+                    element_t,
+                    Reason.mk_id ()
+                  )
+              in
+              Flow_js.flow cx (t, use_t)
+          )
+        in
+        annot true t
+      | Decomp_ArrSpread i ->
+        let t =
+          Tvar.mk_no_wrap_where cx dummy_reason (fun tout ->
+              let use_t =
+                DestructuringT (dummy_reason, DestructAnnot, ArrRest i, tout, Reason.mk_id ())
+              in
+              Flow_js.flow cx (t, use_t)
+          )
+        in
+        annot true t
       | Decomp_CallNew ->
         (* TODO *)
         failwith "Not implemented"

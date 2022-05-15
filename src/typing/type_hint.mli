@@ -10,8 +10,8 @@ type hint_decomposition =
   | Decomp_ObjComputed
   | Decomp_ObjSpread
   | Decomp_ArgSpread
-  | Decomp_ArrElement
-  | Decomp_ArrSpread
+  | Decomp_ArrElement of int
+  | Decomp_ArrSpread of int
   | Decomp_MethodName of Type.propref
   | Decomp_MethodElem of Type.t
   | Decomp_CallNew
