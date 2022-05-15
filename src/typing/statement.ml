@@ -9019,10 +9019,11 @@ struct
           ~init:fparams
           params
       in
+      let normal_params_length = List.length params in
       let fparams =
         Base.Option.fold
           ~f:(fun acc rest ->
-            let hint = decompose_hint Decomp_FuncRest func_hint in
+            let hint = decompose_hint (Decomp_FuncRest normal_params_length) func_hint in
             match mk_rest cx ~hint tparams_map rest with
             | Ok rest -> Func_stmt_params.add_rest rest acc
             | Error err ->

@@ -5,6 +5,9 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
+open Reason
+open Type
+
 (* In contextual typing we often need to perform decompositions on type hints before
  * we descend deeper into an expression during type checking. For example if an
  * object literal `{ f: (x) => x + 1 }` is checked with a hint `{ f: (number) => number }`
@@ -37,8 +40,8 @@ type hint_decomposition =
   (* Type of function becomes hint on the i-th argument *)
   | Decomp_FuncParam of int
   (* Type of function becomes hint on rest argument *)
-  | Decomp_FuncRest
-  (* Type of functoin becomes hint on return *)
+  | Decomp_FuncRest of int (* number of params before rest params *)
+  (* Type of function becomes hint on return *)
   | Decomp_FuncReturn
   (* Type of e1 in `e1 ?? e2` becomes hint on `e2` *)
   | Decomp_NullishCoalesce
@@ -71,7 +74,7 @@ let string_of_hint_unknown_kind = function
   | Decomp_CallSuper -> "Decomp_CallSuper"
   | Decomp_CallSuperMem _ -> "Decomp_CallSuperMem"
   | Decomp_FuncParam i -> Utils_js.spf "Decomp_FuncParam (%d)" i
-  | Decomp_FuncRest -> "Decomp_FuncRest"
+  | Decomp_FuncRest i -> Utils_js.spf "Decomp_FuncRest (%d)" i
   | Decomp_FuncReturn -> "Decomp_FuncReturn"
   | Decomp_NullishCoalesce -> "Decomp_NullishCoalesce"
   | Decomp_JsxProps -> "Decomp_JsxProps"
@@ -120,6 +123,8 @@ let is_fully_resolved =
     | exception Found_unresolved -> false
     | _ -> true
 
+let dummy_reason = locationless_reason (RCustom "type hint reason")
+
 let in_sandbox_cx cx f =
   let original_errors = Context.errors cx in
   let result = f () in
@@ -131,7 +136,24 @@ let in_sandbox_cx cx f =
     None
   )
 
-let type_of_hint_decomposition cx op _t =
+let fun_t ~params ~rest_param ~return_t =
+  DefT
+    ( dummy_reason,
+      bogus_trust (),
+      FunT
+        ( Unsoundness.dummy_static_any dummy_reason,
+          {
+            this_t = (Unsoundness.unresolved_any dummy_reason, This_Function);
+            params;
+            rest_param;
+            return_t;
+            is_predicate = false;
+            def_reason = dummy_reason;
+          }
+        )
+    )
+
+let type_of_hint_decomposition cx op t =
   in_sandbox_cx cx (fun () ->
       match op with
       | Decomp_ArgSpread ->
@@ -152,15 +174,54 @@ let type_of_hint_decomposition cx op _t =
       | Decomp_CallSuperMem _ ->
         (* TODO *)
         failwith "Not implemented"
-      | Decomp_FuncParam _ ->
-        (* TODO *)
-        failwith "Not implemented"
-      | Decomp_FuncRest ->
-        (* TODO *)
-        failwith "Not implemented"
+      | Decomp_FuncParam i ->
+        let t =
+          Tvar.mk_where cx dummy_reason (fun param_t ->
+              let params =
+                Base.Fn.apply_n_times
+                  ~n:i
+                  (Base.List.cons (None, Unsoundness.unresolved_any dummy_reason))
+                  [(None, param_t)]
+              in
+              let fun_t =
+                fun_t ~params ~rest_param:None ~return_t:(Unsoundness.unresolved_any dummy_reason)
+              in
+              Flow_js.flow_t cx (fun_t, t)
+          )
+        in
+        annot true t
+      | Decomp_FuncRest n ->
+        let t =
+          Tvar.mk_where cx dummy_reason (fun rest_t ->
+              let params =
+                Base.Fn.apply_n_times
+                  ~n
+                  (Base.List.cons (None, Unsoundness.unresolved_any dummy_reason))
+                  []
+              in
+              let fun_t =
+                fun_t
+                  ~params
+                  ~rest_param:(Some (None, ALoc.none, rest_t))
+                  ~return_t:(Unsoundness.unresolved_any dummy_reason)
+              in
+              Flow_js.flow_t cx (fun_t, t)
+          )
+        in
+        annot true t
       | Decomp_FuncReturn ->
-        (* TODO *)
-        failwith "Not implemented"
+        let t =
+          Tvar.mk_where cx dummy_reason (fun return_t ->
+              let fun_t =
+                fun_t
+                  ~params:[]
+                  ~rest_param:(Some (None, ALoc.none, Unsoundness.unresolved_any dummy_reason))
+                  ~return_t
+              in
+              Flow_js.flow_t cx (t, fun_t)
+          )
+        in
+        annot true t
       | Decomp_JsxProps ->
         (* TODO *)
         failwith "Not implemented"

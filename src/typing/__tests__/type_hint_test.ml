@@ -208,6 +208,31 @@ let eval_hint_tests =
   [
     "hint_t_num" >:: mk_eval_hint_test ~expected:"number" "number" [];
     "hint_t_array" >:: mk_eval_hint_test ~expected:"Array<number>" "Array<number>" [];
+    "fun_decomp_simple_return"
+    >:: mk_eval_hint_test ~expected:"number" "(string, number) => number" [Decomp_FuncReturn];
+    "fun_decomp_simple_on_first_argument_of_hint"
+    >:: mk_eval_hint_test ~expected:"string" "(string, number) => number" [Decomp_FuncParam 0];
+    "fun_decomp_simple_on_second_argument_of_hint"
+    >:: mk_eval_hint_test ~expected:"number" "(string, number) => number" [Decomp_FuncParam 1];
+    "fun_decomp_on_nonexistent_argument_of_hint"
+    >:: mk_eval_hint_test ~expected:"void" "() => number" [Decomp_FuncParam 0];
+    "fun_decomp_on_rest_arguments_of_hint"
+    >:: mk_eval_hint_test ~expected:"number" "(...number[]) => number" [Decomp_FuncParam 0];
+    "fun_decomp_rest_arguments_matching_number_of_normal_parameters"
+    >:: mk_eval_hint_test
+          ~expected:"Array<number>"
+          "(string, number, ...number[]) => number"
+          [Decomp_FuncRest 2];
+    "fun_decomp_rest_arguments_with_additional_normal_parameters"
+    >:: mk_eval_hint_test
+          ~expected:"Array<string>"
+          "(string, number, ...string[]) => number"
+          [Decomp_FuncRest 3];
+    "fun_decomp_rest_arguments_overlap_with_normal_parameters"
+    >:: mk_eval_hint_test
+          ~expected:"Array<(number | string)>"
+          "(string, number, ...string[]) => number"
+          [Decomp_FuncRest 1];
   ]
 
 let tests = "type_hint" >::: ["evaluate_hint" >::: eval_hint_tests]

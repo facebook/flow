@@ -18,7 +18,7 @@ type hint_decomposition =
   | Decomp_CallSuper
   | Decomp_CallSuperMem of string
   | Decomp_FuncParam of int
-  | Decomp_FuncRest
+  | Decomp_FuncRest of int
   | Decomp_FuncReturn
   | Decomp_NullishCoalesce
   | Decomp_JsxProps
