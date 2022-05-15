@@ -93,3 +93,122 @@ let decompose_hint decomp = function
   | Hint_t t -> Hint_Decomp (Nel.one decomp, t)
   | Hint_Decomp (decomps, t) -> Hint_Decomp (Nel.cons decomp decomps, t)
   | Hint_None -> Hint_None
+
+(* Temporary facilty to decide if a type is resolved *)
+exception Found_unresolved
+
+let is_fully_resolved =
+  let visitor =
+    object (this)
+      inherit [ISet.t] Type_visitor.t
+
+      method! tvar cx pole seen _ id =
+        let (id, constraints) = Context.find_constraints cx id in
+        if ISet.mem id seen then
+          seen
+        else
+          let open Type.Constraint in
+          let seen = ISet.add id seen in
+          match constraints with
+          | FullyResolved _ -> seen
+          | Resolved (_, t) -> this#type_ cx pole seen t
+          | Unresolved _ -> raise Found_unresolved
+    end
+  in
+  fun cx t ->
+    match visitor#type_ cx Polarity.Neutral ISet.empty t with
+    | exception Found_unresolved -> false
+    | _ -> true
+
+let in_sandbox_cx cx f =
+  let original_errors = Context.errors cx in
+  let result = f () in
+  let new_errors = Context.errors cx in
+  if Flow_error.ErrorSet.equal original_errors new_errors then
+    Some result
+  else (
+    Context.reset_errors cx original_errors;
+    None
+  )
+
+let type_of_hint_decomposition cx op _t =
+  in_sandbox_cx cx (fun () ->
+      match op with
+      | Decomp_ArgSpread ->
+        (* TODO *)
+        failwith "Not implemented"
+      | Decomp_ArrElement ->
+        (* TODO *)
+        failwith "Not implemented"
+      | Decomp_ArrSpread ->
+        (* TODO *)
+        failwith "Not implemented"
+      | Decomp_CallNew ->
+        (* TODO *)
+        failwith "Not implemented"
+      | Decomp_CallSuper ->
+        (* TODO *)
+        failwith "Not implemented"
+      | Decomp_CallSuperMem _ ->
+        (* TODO *)
+        failwith "Not implemented"
+      | Decomp_FuncParam _ ->
+        (* TODO *)
+        failwith "Not implemented"
+      | Decomp_FuncRest ->
+        (* TODO *)
+        failwith "Not implemented"
+      | Decomp_FuncReturn ->
+        (* TODO *)
+        failwith "Not implemented"
+      | Decomp_JsxProps ->
+        (* TODO *)
+        failwith "Not implemented"
+      | Decomp_JsxPropsSelect _ ->
+        (* TODO *)
+        failwith "Not implemented"
+      | Decomp_JsxPropsSpread ->
+        (* TODO *)
+        failwith "Not implemented"
+      | Decomp_JsxChildren ->
+        (* TODO *)
+        failwith "Not implemented"
+      | Decomp_JsxChildrenSpread ->
+        (* TODO *)
+        failwith "Not implemented"
+      | Decomp_MethodElem _ ->
+        (* TODO *)
+        failwith "Not implemented"
+      | Decomp_MethodName _ ->
+        (* TODO *)
+        failwith "Not implemented"
+      | Decomp_NullishCoalesce ->
+        (* TODO *)
+        failwith "Not implemented"
+      | Decomp_ObjProp _ ->
+        (* TODO *)
+        failwith "Not implemented"
+      | Decomp_ObjComputed ->
+        (* TODO *)
+        failwith "Not implemented"
+      | Decomp_ObjSpread ->
+        (* TODO *)
+        failwith "Not implemented"
+  )
+
+let rec evaluate_hint_ops cx t = function
+  | [] -> Some t
+  | op :: ops ->
+    (match type_of_hint_decomposition cx op t with
+    | Some t -> evaluate_hint_ops cx t ops
+    | None -> None)
+
+let evaluate_hint cx hint =
+  match hint with
+  | Hint_None -> None
+  | Hint_t t when is_fully_resolved cx t -> Some t
+  | Hint_Decomp (ops, t) when is_fully_resolved cx t ->
+    ops |> Nel.to_list |> List.rev |> evaluate_hint_ops cx t
+  | Hint_t _
+  | Hint_Decomp _ ->
+    None

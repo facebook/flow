@@ -338,6 +338,8 @@ val module_info : t -> Module_info.t
 (* mutators *)
 val add_error : t -> ALoc.t Flow_error.t -> unit
 
+val reset_errors : t -> Flow_error.ErrorSet.t -> unit
+
 val add_error_suppression : t -> Loc.t -> Suppression_comments.applicable_codes -> unit
 
 val add_severity_cover : t -> File_key.t -> ExactCover.lint_severity_cover -> unit

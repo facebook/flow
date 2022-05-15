@@ -51,6 +51,8 @@ module rec Parse : PARSER = struct
   module Pattern = Pattern_parser.Pattern (Parse) (Type)
   module JSX = Jsx_parser.JSX (Parse)
 
+  let annot = Type.annotation
+
   let identifier ?restricted_error env =
     (match Peek.token env with
     (* "let" is disallowed as an identifier in a few situations. 11.6.2.1
@@ -403,6 +405,10 @@ let program ?(fail = true) ?(token_sink = None) ?(parse_options = None) content 
 
 let program_file ?(fail = true) ?(token_sink = None) ?(parse_options = None) content filename =
   parse_program fail ~token_sink ~parse_options filename content
+
+let parse_annot ?(parse_options = None) filename content =
+  let env = init_env ~token_sink:None ~parse_options filename content in
+  do_parse env Parse.annot false
 
 let package_json_file =
   let parser env =

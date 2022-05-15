@@ -37,3 +37,5 @@ val string_of_hint_unknown_kind : hint_decomposition -> string
 val string_of_hint : on_hint:(Type.t -> string) -> hint -> string
 
 val decompose_hint : hint_decomposition -> hint -> hint
+
+val evaluate_hint : Context.t -> hint -> Type.t option

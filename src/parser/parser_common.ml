@@ -71,6 +71,8 @@ module type PARSER = sig
   val is_assignable_lhs : (Loc.t, Loc.t) Expression.t -> bool
 
   val number : env -> Token.number_type -> string -> float
+
+  val annot : env -> (Loc.t, Loc.t) Type.annotation
 end
 
 let identifier_name_raw env =

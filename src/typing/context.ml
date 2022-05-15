@@ -647,6 +647,8 @@ let copy_of_context cx = { cx with ccx = { cx.ccx with sig_cx = cx.ccx.sig_cx } 
 
 let add_error cx error = cx.ccx.errors <- Flow_error.ErrorSet.add error cx.ccx.errors
 
+let reset_errors cx errors = cx.ccx.errors <- errors
+
 let add_error_suppression cx loc codes =
   cx.ccx.error_suppressions <- Error_suppressions.add loc codes cx.ccx.error_suppressions
 
