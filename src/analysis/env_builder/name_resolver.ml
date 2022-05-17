@@ -4301,7 +4301,7 @@ module Make
    * but that assumes that the EnvBuilder is 100% correct. This approach lets us discriminate
    * between real dead code and issues with the EnvBuilder, which seems far better than
    * the alternative *)
-  class dead_code_marker cx env_values =
+  class dead_code_marker cx env_values write_entries =
     object (this)
       inherit
         Scope_builder.scope_builder
@@ -4311,7 +4311,11 @@ module Make
 
       val mutable values = env_values
 
+      val mutable write_entries = write_entries
+
       method values = values
+
+      method write_entries = write_entries
 
       method any_identifier loc name =
         values <-
@@ -4357,6 +4361,14 @@ module Make
 
       method! pattern_identifier ?kind e =
         ignore kind;
+        let (loc, _) = e in
+        write_entries <-
+          L.LMap.update
+            loc
+            (function
+              | None -> Some Env_api.NonAssigningWrite
+              | x -> x)
+            write_entries;
         e
 
       method! assignment loc (expr : (ALoc.t, ALoc.t) Ast.Expression.Assignment.t) =
@@ -4369,6 +4381,27 @@ module Make
           | _ -> ()
         in
         super#assignment loc expr
+
+      method! update_expression _ (expr : (ALoc.t, ALoc.t) Ast.Expression.Update.t) =
+        let open Ast.Expression.Update in
+        let { argument; operator = _; prefix = _; comments = _ } = expr in
+        (match argument with
+        | (_, Ast.Expression.Identifier x) ->
+          (* given `x++`, read x then write x *)
+          ignore @@ this#identifier x;
+          ignore @@ this#pattern_identifier x
+        | _ -> ignore @@ super#expression argument);
+        expr
+
+      method! variable_declarator
+          ~kind (decl : (ALoc.t, ALoc.t) Ast.Statement.VariableDeclaration.Declarator.t) =
+        let open Ast.Statement.VariableDeclaration.Declarator in
+        let (_, { id = _; init }) = decl in
+        match init with
+        | Some _ -> super#variable_declarator ~kind decl
+        (* When there is no init, we should avoid calls to pattern_identifier so that we won't
+           mark normal declaration without initialization as non-assigning writes. *)
+        | None -> decl
     end
 
   let program_with_scope cx program =
@@ -4399,14 +4432,14 @@ module Make
       )
     in
     (* Fill in dead code reads *)
-    let dead_code_marker = new dead_code_marker cx env_walk#values in
+    let dead_code_marker = new dead_code_marker cx env_walk#values env_walk#write_entries in
     let _ = dead_code_marker#program program in
     ( completion_state,
       {
         Env_api.scopes;
         ssa_values;
         env_values = dead_code_marker#values;
-        env_entries = env_walk#write_entries;
+        env_entries = dead_code_marker#write_entries;
         providers;
         refinement_of_id = env_walk#refinement_of_id;
       }

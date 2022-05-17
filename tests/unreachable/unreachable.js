@@ -25,3 +25,15 @@ function foo(x, y) {
 }
 
 foo(1, 2);
+
+// Regression tests for new-env crash.
+function unreachable_writes() {
+  () => {
+    return;
+    { let i = 0; i = 1; } // error: unreachable
+  };
+  () => {
+    return;
+    { let i = 0; i++; } // error: unreachable
+  };
+}
