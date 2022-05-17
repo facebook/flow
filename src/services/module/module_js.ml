@@ -172,6 +172,11 @@ module type MODULE_SYSTEM = sig
     Parsing_heaps.file_addr option * (File_key.t * File_key.t Nel.t) SMap.t
 end
 
+let is_relative_or_absolute r =
+  Str.string_match Files.current_dir_name r 0
+  || Str.string_match Files.parent_dir_name r 0
+  || Str.string_match Files.absolute_path_regexp r 0
+
 let resolve_symlinks path = Path.to_string (Path.make path)
 
 let record_phantom_dependency mname = function
@@ -249,7 +254,7 @@ module Node = struct
           );
       ]
 
-  let rec node_module ~options ~reader node_modules_containers file phantom_acc dir r =
+  let rec node_module ~options ~reader node_modules_containers file ?phantom_acc dir r =
     let file_options = Options.file_options options in
     lazy_seq
       [
@@ -283,46 +288,43 @@ module Node = struct
                ~reader
                node_modules_containers
                file
-               phantom_acc
+               ?phantom_acc
                (Filename.dirname dir)
                r
           );
       ]
 
-  let absolute r = Str.string_match Files.absolute_path_regexp r 0
-
-  let explicitly_relative r =
-    Str.string_match Files.current_dir_name r 0 || Str.string_match Files.parent_dir_name r 0
+  (* The flowconfig option `module.system.node.allow_root_relative` tells Flow
+   * to resolve requires like `require('foo/bar.js')` relative to the project
+   * root directory. This is something bundlers like Webpack can be configured
+   * to do. *)
+  let resolve_root_relative ~options ~reader ?phantom_acc import_str =
+    if Options.node_resolver_allow_root_relative options then
+      let dirnames = Options.node_resolver_root_relative_dirnames options in
+      let root = Options.root options |> Path.to_string in
+      let f dirname =
+        let root =
+          if dirname = "" then
+            root
+          else
+            Filename.concat root dirname
+        in
+        lazy (resolve_relative ~options ~reader ?phantom_acc root import_str)
+      in
+      lazy_seq (Base.List.map ~f dirnames)
+    else
+      None
 
   let resolve_import ~options ~reader node_modules_containers f ?phantom_acc import_str =
     let file = File_key.to_string f in
     let dir = Filename.dirname file in
-    let root_str = Options.root options |> Path.to_string in
-    if explicitly_relative import_str || absolute import_str then
+    if is_relative_or_absolute import_str then
       resolve_relative ~options ~reader ?phantom_acc dir import_str
     else
       lazy_seq
         [
-          lazy
-            ( if Options.node_resolver_allow_root_relative options then
-              lazy_seq
-                (Options.node_resolver_root_relative_dirnames options
-                |> Base.List.map ~f:(fun root_relative_dirname ->
-                       lazy
-                         (let root_str =
-                            if root_relative_dirname = "" then
-                              root_str
-                            else
-                              Filename.concat root_str root_relative_dirname
-                          in
-                          resolve_relative ~options ~reader ?phantom_acc root_str import_str
-                         )
-                   )
-                )
-            else
-              None
-            );
-          lazy (node_module ~options ~reader node_modules_containers f phantom_acc dir import_str);
+          lazy (resolve_root_relative ~options ~reader ?phantom_acc import_str);
+          lazy (node_module ~options ~reader node_modules_containers f ?phantom_acc dir import_str);
         ]
 
   let imported_module ~options ~reader node_modules_containers file ?phantom_acc r =
