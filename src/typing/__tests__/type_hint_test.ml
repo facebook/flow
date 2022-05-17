@@ -112,8 +112,10 @@ end = struct
     t
 end
 
-module LibDefLoader : sig
+module TypeLoader : sig
   val get_master_cx : unit -> Context.master_context
+
+  val get_type_of_last_expression : Context.t -> string -> Type.t
 end = struct
   let parse_content file content =
     let parse_options =
@@ -181,16 +183,75 @@ end = struct
       let master_cx = init_master_cx () in
       master_cx_ref := Some master_cx;
       master_cx
+
+  let get_typed_ast cx content =
+    let metadata = { metadata with Context.verbose = None } in
+    let (ast, file_sig) = parse_content dummy_filename content in
+    let file_sig = File_sig.abstractify_locs file_sig in
+    (* connect requires *)
+    Type_inference_js.add_require_tvars cx file_sig;
+    let connect_requires mref =
+      let module_name = Reason.internal_module_name mref in
+      Nel.iter (fun loc ->
+          let reason = Reason.(mk_reason (RCustom mref) loc) in
+          let module_t = Flow_js_utils.lookup_builtin_strict cx module_name reason in
+          let (_, require_id) = Context.find_require cx loc in
+          Flow_js.resolve_id cx require_id module_t
+      )
+    in
+    SMap.iter connect_requires File_sig.With_ALoc.(require_loc_map file_sig.module_sig);
+    let ast = Ast_loc_utils.loc_to_aloc_mapper#program ast in
+    let lint_severities =
+      Merge_js.get_lint_severities metadata StrictModeSettings.empty LintSettings.empty_severities
+    in
+    let typed_ast = Type_inference_js.infer_ast cx dummy_filename [] ast ~lint_severities in
+    Merge_js.post_merge_checks cx (get_master_cx ()) ast typed_ast metadata file_sig;
+    typed_ast
+
+  class resolver_visitor =
+    let no_lowers _cx r = Type.Unsoundness.merged_any r in
+    object (this)
+      inherit [ISet.t] Type_mapper.t_with_uses as super
+
+      method! type_ cx seen t =
+        let open Type in
+        match t with
+        | OpenT (r, id) ->
+          if ISet.mem id seen then
+            Type.Unsoundness.merged_any r
+          else
+            let seen = ISet.add id seen in
+            this#type_ cx seen (Flow_js_utils.merge_tvar ~no_lowers cx r id)
+        | _ -> super#type_ cx seen t
+
+      method tvar _cx _map_cx _r id = id
+
+      method eval_id _cx _map_cx id = id
+
+      method props _cx _map_cx id = id
+
+      method exports _cx _map_cx id = id
+
+      method call_prop _cx _map_cx id = id
+    end
+
+  let get_type_of_last_expression cx content =
+    let open Flow_ast in
+    let (_, { Program.statements; _ }) = get_typed_ast cx content in
+    match Base.List.last statements with
+    | Some (_, Statement.Expression { Statement.Expression.expression = ((_, t), _); _ }) ->
+      let resolver = new resolver_visitor in
+      resolver#type_ cx ISet.empty t
+    | _ -> failwith "Must have a last statement that's an expression"
 end
 
 let mk_cx () =
-  let master_cx = LibDefLoader.get_master_cx () in
+  let master_cx = TypeLoader.get_master_cx () in
   let aloc_table = lazy (ALoc.empty_table dummy_filename) in
   let ccx = Context.(make_ccx master_cx) in
   Context.make ccx metadata dummy_filename aloc_table Context.Checking
 
-let mk_hint cx base ops =
-  let base_t = TypeParser.parse cx base in
+let mk_hint base_t ops =
   ops
   |> Nel.of_list
   |> Base.Option.value_map ~default:(Hint_t base_t) ~f:(fun l -> Hint_Decomp (l, base_t))
@@ -198,7 +259,17 @@ let mk_hint cx base ops =
 let mk_eval_hint_test ~expected base ops ctxt =
   let cx = mk_cx () in
   let actual =
-    mk_hint cx base ops
+    mk_hint (TypeParser.parse cx base) ops
+    |> Type_hint.evaluate_hint cx
+    |> Base.Option.value_map ~default:"None" ~f:(Ty_normalizer.debug_string_of_t cx)
+  in
+  assert_equal ~ctxt ~printer:Base.Fn.id expected actual
+
+let mk_eval_hint_test_with_type_setup ~expected type_setup_code ops ctxt =
+  let cx = mk_cx () in
+  let base_t = TypeLoader.get_type_of_last_expression cx type_setup_code in
+  let actual =
+    mk_hint base_t ops
     |> Type_hint.evaluate_hint cx
     |> Base.Option.value_map ~default:"None" ~f:(Ty_normalizer.debug_string_of_t cx)
   in
@@ -307,6 +378,16 @@ let eval_hint_tests =
     >:: mk_eval_hint_test ~expected:"{+[string]: number}" "{+[string]: number}" [Decomp_ObjSpread];
     "obj_rest_from_dict_negative_polarity"
     >:: mk_eval_hint_test ~expected:"{-[string]: number}" "{-[string]: number}" [Decomp_ObjSpread];
+    "jsx_props_of_class_component"
+    >:: mk_eval_hint_test_with_type_setup
+          ~expected:"{bar: string, foo: number}"
+          "class MyComponent extends React$Component<{bar: string, foo: number}> {}; MyComponent"
+          [Decomp_JsxProps];
+    "jsx_props_of_function_component"
+    >:: mk_eval_hint_test
+          ~expected:"{bar: string, foo: number}"
+          "({bar: string, foo: number}) => number"
+          [Decomp_JsxProps];
   ]
 
 let tests = "type_hint" >::: ["evaluate_hint" >::: eval_hint_tests]

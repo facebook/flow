@@ -249,8 +249,14 @@ let type_of_hint_decomposition cx op t =
         in
         annot true t
       | Decomp_JsxProps ->
-        (* TODO *)
-        failwith "Not implemented"
+        let t =
+          Tvar.mk_no_wrap_where cx dummy_reason (fun props_t ->
+              Flow_js.flow
+                cx
+                (t, ReactKitT (unknown_use, dummy_reason, React.GetProps (OpenT props_t)))
+          )
+        in
+        annot true t
       | Decomp_JsxPropsSelect _ ->
         (* TODO *)
         failwith "Not implemented"
