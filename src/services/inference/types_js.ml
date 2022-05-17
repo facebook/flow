@@ -1939,7 +1939,7 @@ let recheck
 (* creates a closure that lists all files in the given root, returned in chunks *)
 let make_next_files ~libs ~file_options root =
   let make_next_raw =
-    Files.make_next_files ~root ~all:false ~subdir:None ~options:file_options ~libs
+    Files.make_next_files ~root ~all:false ~sort:false ~subdir:None ~options:file_options ~libs
   in
   let total = ref 0 in
   fun () ->

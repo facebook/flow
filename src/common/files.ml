@@ -206,7 +206,7 @@ let max_files = 1000
 
     If kind_of_path fails, then we only emit a warning if error_filter passes *)
 let make_next_files_and_symlinks
-    ~node_module_filter ~path_filter ~realpath_filter ~error_filter ~dir_filter paths =
+    ~node_module_filter ~path_filter ~realpath_filter ~error_filter ~dir_filter ~sort paths =
   let prefix_checkers = Base.List.map ~f:is_prefix paths in
   let rec process sz (acc, symlinks) files dir stack =
     if sz >= max_files then
@@ -252,7 +252,9 @@ let make_next_files_and_symlinks
               in
               process sz (acc, symlinks) files dir stack
             else
-              let dirfiles = Array.to_list @@ try_readdir path in
+              let dirfiles = try_readdir path in
+              if sort then Array.fast_sort String.compare dirfiles;
+              let dirfiles = Array.to_list dirfiles in
               process sz (acc, symlinks) dirfiles file (S_Dir (files, dir, stack))
           )
         | StatError msg ->
@@ -274,7 +276,7 @@ let make_next_files_and_symlinks
    and including any directories that are symlinked to even if they are outside
    of `paths`. *)
 let make_next_files_following_symlinks
-    ~node_module_filter ~path_filter ~realpath_filter ~error_filter ~dir_filter paths =
+    ~node_module_filter ~path_filter ~realpath_filter ~error_filter ~dir_filter ~sort paths =
   let paths = Base.List.map ~f:Path.to_string paths in
   let cb =
     ref
@@ -284,6 +286,7 @@ let make_next_files_following_symlinks
          ~realpath_filter
          ~error_filter
          ~dir_filter
+         ~sort
          paths
       )
   in
@@ -318,6 +321,7 @@ let make_next_files_following_symlinks
           ~realpath_filter
           ~error_filter
           ~dir_filter
+          ~sort
           paths;
       rec_cb ()
   in
@@ -409,12 +413,15 @@ let init ?(flowlibs_only = false) (options : options) =
         let lib_str = Path.to_string lib in
         (* TODO: better to parse json files, not ignore them *)
         let filter' path = (path = lib_str || filter path) && not (is_json_file path) in
+        (* we do want to sort, but use SSet.elements later, which sorts anyway *)
+        let sort = false in
         make_next_files_following_symlinks
           ~node_module_filter
           ~path_filter:filter'
           ~realpath_filter:filter'
           ~error_filter:(fun _ -> true)
           ~dir_filter
+          ~sort
           [lib]
       in
       libs |> Base.List.map ~f:(fun lib -> SSet.elements (get_all (get_next lib))) |> List.flatten
@@ -474,7 +481,7 @@ let watched_paths options =
  * If `all` is true, ignored files and libs are also returned.
  * If subdir is set, then we return the subset of files under subdir
  *)
-let make_next_files ~root ~all ~subdir ~options ~libs =
+let make_next_files ~root ~all ~sort ~subdir ~options ~libs =
   let node_module_filter = is_node_module options in
   let filter =
     if all then
@@ -519,6 +526,7 @@ let make_next_files ~root ~all ~subdir ~options ~libs =
     ~realpath_filter
     ~error_filter:filter
     ~dir_filter
+    ~sort
     starting_points
 
 let is_windows_root root =

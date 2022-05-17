@@ -95,6 +95,7 @@ val wanted : options:options -> SSet.t -> string -> bool
 val make_next_files :
   root:Path.t ->
   all:bool ->
+  sort:bool ->
   subdir:Path.t option ->
   options:options ->
   libs:SSet.t ->

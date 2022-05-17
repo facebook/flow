@@ -147,12 +147,12 @@ let wanted ~root ~options libs file =
    directory. Individual files will return a closure that returns just that file
 *)
 let get_ls_files ~root ~all ~options ~libs ~imaginary = function
-  | None -> Files.make_next_files ~root ~all ~subdir:None ~options ~libs
+  | None -> Files.make_next_files ~sort:true ~root ~all ~subdir:None ~options ~libs
   | Some dir
     when try Sys.is_directory dir with
          | _ -> false ->
     let subdir = Some (Path.make dir) in
-    Files.make_next_files ~root ~all ~subdir ~options ~libs
+    Files.make_next_files ~sort:true ~root ~all ~subdir ~options ~libs
   | Some file ->
     if (Sys.file_exists file || imaginary) && (all || wanted ~root ~options libs file) then
       let file = file |> Path.make |> Path.to_string in
