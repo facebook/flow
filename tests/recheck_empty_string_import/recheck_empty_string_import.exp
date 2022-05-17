@@ -1,0 +1,10 @@
+Error ------------------------------------------------------------------------------------------------------ test.js:2:8
+
+Cannot resolve module ``. [cannot-resolve-module]
+
+   2| import '';
+             ^^
+
+
+
+Found 1 error
