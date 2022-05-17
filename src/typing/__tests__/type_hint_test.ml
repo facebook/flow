@@ -112,86 +112,79 @@ end = struct
     t
 end
 
-let mk_cx () =
-  let master_cx = Context.empty_master_cx () in
-  let () =
-    let reason =
-      let loc = ALoc.none in
-      let desc = Reason.RCustom "Explicit any used in type_hint tests" in
-      Reason.mk_reason desc loc
+module LibDefLoader : sig
+  val get_master_cx : unit -> Context.master_context
+end = struct
+  let parse_content file content =
+    let parse_options =
+      Some
+        {
+          Parser_env.enums = true;
+          (*
+           * Always parse ES proposal syntax. The user-facing config option to
+           * ignore/warn/enable them is handled during inference so that a clean error
+           * can be surfaced (rather than a more cryptic parse error).
+           *)
+          esproposal_decorators = true;
+          esproposal_export_star_as = true;
+          types = true;
+          use_strict = false;
+        }
     in
-    (* Add builtins that will be used by tests. TODO: load real lib files. *)
-    Builtins.set_builtin
-      ~flow_t:(fun _ -> ())
-      master_cx.Context.builtins
-      (Reason.OrdinaryName "console")
-      (Type.AnyT (reason, Type.AnyError (Some Type.UnresolvedName)));
-    Builtins.set_builtin
-      ~flow_t:(fun _ -> ())
-      master_cx.Context.builtins
-      (Reason.OrdinaryName "Array")
-      (Type.AnyT (reason, Type.AnyError (Some Type.UnresolvedName)));
-    Builtins.set_builtin
-      ~flow_t:(fun _ -> ())
-      master_cx.Context.builtins
-      (Reason.OrdinaryName "Object")
-      (Type.AnyT (reason, Type.AnyError (Some Type.UnresolvedName)));
-    Builtins.set_builtin
-      ~flow_t:(fun _ -> ())
-      master_cx.Context.builtins
-      (Reason.OrdinaryName "Generator")
-      (Type.AnyT (reason, Type.AnyError (Some Type.UnresolvedName)));
-    Builtins.set_builtin
-      ~flow_t:(fun _ -> ())
-      master_cx.Context.builtins
-      (Reason.OrdinaryName "Promise")
-      (Type.AnyT (reason, Type.AnyError (Some Type.UnresolvedName)));
-    Builtins.set_builtin
-      ~flow_t:(fun _ -> ())
-      master_cx.Context.builtins
-      (Reason.OrdinaryName "String")
-      (Type.AnyT (reason, Type.AnyError (Some Type.UnresolvedName)));
-    Builtins.set_builtin
-      ~flow_t:(fun _ -> ())
-      master_cx.Context.builtins
-      (Reason.OrdinaryName "promise")
-      (Type.AnyT (reason, Type.AnyError (Some Type.UnresolvedName)));
-    Builtins.set_builtin
-      ~flow_t:(fun _ -> ())
-      master_cx.Context.builtins
-      (Reason.OrdinaryName "$await")
-      (Type.AnyT (reason, Type.AnyError (Some Type.UnresolvedName)));
-    Builtins.set_builtin
-      ~flow_t:(fun _ -> ())
-      master_cx.Context.builtins
-      (Reason.OrdinaryName "$Iterable")
-      (Type.AnyT (reason, Type.AnyError (Some Type.UnresolvedName)));
-    Builtins.set_builtin
-      ~flow_t:(fun _ -> ())
-      master_cx.Context.builtins
-      (Reason.OrdinaryName "$AsyncIterable")
-      (Type.AnyT (reason, Type.AnyError (Some Type.UnresolvedName)));
-    Builtins.set_builtin
-      ~flow_t:(fun _ -> ())
-      master_cx.Context.builtins
-      (Reason.OrdinaryName "React$Node")
-      (Type.AnyT (reason, Type.AnyError (Some Type.UnresolvedName)));
-    Builtins.set_builtin
-      ~flow_t:(fun _ -> ())
-      master_cx.Context.builtins
-      (Reason.OrdinaryName "React$Key")
-      (Type.AnyT (reason, Type.AnyError (Some Type.UnresolvedName)));
-    Builtins.set_builtin
-      ~flow_t:(fun _ -> ())
-      master_cx.Context.builtins
-      (Reason.OrdinaryName "React$Ref")
-      (Type.AnyT (reason, Type.AnyError (Some Type.UnresolvedName)));
-    Builtins.set_builtin
-      ~flow_t:(fun _ -> ())
-      master_cx.Context.builtins
-      (Reason.OrdinaryName "React$Element")
-      (Type.AnyT (reason, Type.AnyError (Some Type.UnresolvedName)))
-  in
+
+    let (ast, _) = Parser_flow.program_file ~fail:false ~parse_options content (Some file) in
+    let (fsig, _) = File_sig.With_Loc.program ~ast ~opts:File_sig.With_Loc.default_opts in
+    (ast, fsig)
+
+  (* No verbose mode during libdef init. *)
+  let metadata = { metadata with Context.verbose = None }
+
+  let load_lib_files ccx =
+    (* iterate in reverse override order *)
+    let (leader, _) =
+      Flowlib.contents_list ~no_flowlib:false
+      |> List.fold_left
+           (fun (_, exclude_syms) (filename, lib_content) ->
+             let lib_file = File_key.LibFile filename in
+             let (ast, file_sig) = parse_content lib_file lib_content in
+             (* Lib files use only concrete locations, so this is not used. *)
+             let aloc_table = lazy (ALoc.empty_table lib_file) in
+             let cx = Context.make ccx metadata lib_file aloc_table Context.Checking in
+             let syms =
+               Type_inference_js.infer_lib_file
+                 cx
+                 ast
+                 ~exclude_syms
+                 ~file_sig:(File_sig.abstractify_locs file_sig)
+                 ~lint_severities:LintSettings.empty_severities
+             in
+             (* symbols loaded from this file are suppressed if found in later ones *)
+             (Some cx, NameUtils.Set.union exclude_syms (NameUtils.Set.of_list syms)))
+           (None, NameUtils.Set.empty)
+    in
+    leader
+
+  let init_master_cx () =
+    let ccx = Context.(make_ccx (empty_master_cx ())) in
+    match load_lib_files ccx with
+    | None -> Context.empty_master_cx ()
+    | Some cx ->
+      Merge_js.optimize_builtins cx;
+      { Context.master_sig_cx = Context.sig_cx cx; builtins = Context.builtins cx }
+
+  let master_cx_ref = ref None
+
+  let get_master_cx () =
+    match !master_cx_ref with
+    | Some master_cx -> master_cx
+    | None ->
+      let master_cx = init_master_cx () in
+      master_cx_ref := Some master_cx;
+      master_cx
+end
+
+let mk_cx () =
+  let master_cx = LibDefLoader.get_master_cx () in
   let aloc_table = lazy (ALoc.empty_table dummy_filename) in
   let ccx = Context.(make_ccx master_cx) in
   Context.make ccx metadata dummy_filename aloc_table Context.Checking
@@ -293,8 +286,7 @@ let eval_hint_tests =
           "{bar: string} & {foo: number} & {[string]: string}"
           [Decomp_ObjProp "foo"];
     "obj_prop_from_prototype"
-    (* TODO: Load libdef for builtins to have more meaningful test results. *)
-    >:: mk_eval_hint_test ~expected:"empty" "string" [Decomp_ObjProp "length"];
+    >:: mk_eval_hint_test ~expected:"number" "string" [Decomp_ObjProp "length"];
     "obj_computed_from_record_neutral_polarity"
     >:: mk_eval_hint_test ~expected:"any (implicit)" "{foo: number}" [Decomp_ObjComputed];
     "obj_computed_from_dict_neutral_polarity"

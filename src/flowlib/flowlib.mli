@@ -5,6 +5,8 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
+val contents_list : no_flowlib:bool -> (string * string) list
+
 type libdir =
   | Flowlib of Path.t
   | Prelude of Path.t

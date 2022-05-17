@@ -17,6 +17,8 @@ let contents no_flowlib : (string * string) array =
   else
     [%flowlib_contents]
 
+let contents_list ~no_flowlib = contents no_flowlib |> Array.to_list
+
 type libdir =
   | Flowlib of Path.t
   | Prelude of Path.t
