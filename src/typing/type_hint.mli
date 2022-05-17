@@ -22,8 +22,6 @@ type hint_decomposition =
   | Decomp_FuncReturn
   | Decomp_NullishCoalesce
   | Decomp_JsxProps
-  | Decomp_JsxPropsSelect of string
-  | Decomp_JsxPropsSpread
   | Decomp_JsxChildren
   | Decomp_JsxChildrenSpread
 

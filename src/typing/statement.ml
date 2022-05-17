@@ -6819,7 +6819,7 @@ struct
                       }
                     )
                     ) ->
-                let hint = decompose_hint (Decomp_JsxPropsSelect aname) hint in
+                let hint = decompose_hint (Decomp_ObjProp aname) hint in
                 let (((_, t), _) as e) = expression cx ~hint (loc, e) in
                 ( t,
                   Some
@@ -6866,7 +6866,7 @@ struct
             (acc, atts)
           (* <element {...spread} /> *)
           | Opening.SpreadAttribute (spread_loc, { SpreadAttribute.argument; comments }) ->
-            let hint = decompose_hint Decomp_JsxPropsSpread hint in
+            let hint = decompose_hint Decomp_ObjSpread hint in
             let (((_, spread), _) as argument) = expression cx ~hint argument in
             let acc = ObjectExpressionAcc.add_spread spread acc in
             let att =

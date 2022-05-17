@@ -388,6 +388,16 @@ let eval_hint_tests =
           ~expected:"{bar: string, foo: number}"
           "({bar: string, foo: number}) => number"
           [Decomp_JsxProps];
+    "jsx_props_select"
+    >:: mk_eval_hint_test
+          ~expected:"number"
+          "({bar: string, foo: number}) => number"
+          [Decomp_ObjProp "foo"; Decomp_JsxProps];
+    "jsx_props_spread"
+    >:: mk_eval_hint_test
+          ~expected:"{bar: string, foo: number}"
+          "({bar: string, foo: number}) => number"
+          [Decomp_ObjSpread; Decomp_JsxProps];
   ]
 
 let tests = "type_hint" >::: ["evaluate_hint" >::: eval_hint_tests]
