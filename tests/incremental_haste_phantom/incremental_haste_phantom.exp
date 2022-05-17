@@ -41,4 +41,25 @@ References:
 
 Found 1 error
 
+Remove haste module "foo"
+Error ------------------------------------------------------------------------------------------------------ test.js:3:2
+
+Cannot cast `foo` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+
+   test.js:3:2
+   3| (foo: empty);
+       ^^^
+
+References:
+   node_modules/foo.js:2:18
+   2| module.exports = 0;
+                       ^ [1]
+   test.js:3:7
+   3| (foo: empty);
+            ^^^^^ [2]
+
+
+
+Found 1 error
+
 Done!
