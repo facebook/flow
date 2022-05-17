@@ -410,7 +410,7 @@ module Haste : MODULE_SYSTEM = struct
       record_phantom_dependency mname phantom_acc;
       None
 
-  let resolve_haste_package ~options ~reader file ?phantom_acc r =
+  let resolve_haste_package ~options ~reader file_dirname ?phantom_acc r =
     let (dir_opt, rest) =
       match Str.split_delim (Str.regexp_string "/") r with
       | [] -> (None, [])
@@ -420,17 +420,21 @@ module Haste : MODULE_SYSTEM = struct
     match dir_opt with
     | None -> None
     | Some package_dir ->
-      let file_dirname = Filename.dirname (File_key.to_string file) in
       Files.construct_path package_dir rest
       |> Node.resolve_relative ~options ~reader ?phantom_acc file_dirname
 
-  let resolve_import ~options ~reader node_modules_containers file ?phantom_acc r =
-    lazy_seq
-      [
-        lazy (resolve_haste_module ~reader ?phantom_acc r);
-        lazy (resolve_haste_package ~options ~reader file ?phantom_acc r);
-        lazy (Node.resolve_import ~options ~reader node_modules_containers file ?phantom_acc r);
-      ]
+  let resolve_import ~options ~reader node_modules_containers f ?phantom_acc r =
+    let file = File_key.to_string f in
+    let dir = Filename.dirname file in
+    if is_relative_or_absolute r then
+      Node.resolve_relative ~options ~reader ?phantom_acc dir r
+    else
+      lazy_seq
+        [
+          lazy (resolve_haste_module ~reader ?phantom_acc r);
+          lazy (resolve_haste_package ~options ~reader dir ?phantom_acc r);
+          lazy (Node.node_module ~options ~reader node_modules_containers file ?phantom_acc dir r);
+        ]
 
   let imported_module ~options ~reader node_modules_containers file ?phantom_acc r =
     (* For historical reasons, the Haste module system always picks the first
