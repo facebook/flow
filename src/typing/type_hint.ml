@@ -272,15 +272,47 @@ let type_of_hint_decomposition cx op t =
       | Decomp_NullishCoalesce ->
         (* TODO *)
         failwith "Not implemented"
-      | Decomp_ObjProp _ ->
-        (* TODO *)
-        failwith "Not implemented"
+      | Decomp_ObjProp name ->
+        let t =
+          Tvar.mk_no_wrap_where cx dummy_reason (fun tout ->
+              let use_t =
+                DestructuringT
+                  (dummy_reason, DestructAnnot, Prop (name, false), tout, Reason.mk_id ())
+              in
+              (* TODO:
+                 Be more lenient with union branches that failed to match.
+                 We should collect and return all successful branches in speculation. *)
+              Flow_js.flow cx (t, use_t)
+          )
+        in
+        annot true t
       | Decomp_ObjComputed ->
-        (* TODO *)
-        failwith "Not implemented"
+        let t =
+          Tvar.mk_no_wrap_where cx dummy_reason (fun element_t ->
+              let use_t =
+                DestructuringT
+                  ( dummy_reason,
+                    DestructAnnot,
+                    Elem (DefT (dummy_reason, bogus_trust (), StrT AnyLiteral)),
+                    element_t,
+                    Reason.mk_id ()
+                  )
+              in
+              Flow_js.flow cx (t, use_t)
+          )
+        in
+        annot true t
       | Decomp_ObjSpread ->
-        (* TODO *)
-        failwith "Not implemented"
+        let t =
+          Tvar.mk_no_wrap_where cx dummy_reason (fun tout ->
+              let use_t =
+                (* We assume the object spread is at the start of the object. *)
+                DestructuringT (dummy_reason, DestructAnnot, ObjRest [], tout, Reason.mk_id ())
+              in
+              Flow_js.flow cx (t, use_t)
+          )
+        in
+        annot true t
   )
 
 let rec evaluate_hint_ops cx t = function

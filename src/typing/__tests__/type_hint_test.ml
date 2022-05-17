@@ -106,6 +106,8 @@ end = struct
 
   let parse cx content =
     let (_, t_ast) = parse_type content in
+    (* The object type converter will peek the scope, so we need to have a non-empty scope list. *)
+    New_env.init_env cx (Scope.fresh ~var_scope_kind:Scope.Global ());
     let ((_, t), _) = Annot.convert cx Subst_name.Map.empty t_ast in
     t
 end
@@ -143,6 +145,11 @@ let mk_cx () =
       ~flow_t:(fun _ -> ())
       master_cx.Context.builtins
       (Reason.OrdinaryName "Promise")
+      (Type.AnyT (reason, Type.AnyError (Some Type.UnresolvedName)));
+    Builtins.set_builtin
+      ~flow_t:(fun _ -> ())
+      master_cx.Context.builtins
+      (Reason.OrdinaryName "String")
       (Type.AnyT (reason, Type.AnyError (Some Type.UnresolvedName)));
     Builtins.set_builtin
       ~flow_t:(fun _ -> ())
@@ -250,6 +257,64 @@ let eval_hint_tests =
           ~expected:"Array<(number | string)>"
           "(string, number, ...string[]) => number"
           [Decomp_FuncRest 1];
+    "obj_prop_from_record_neutral_polarity"
+    >:: mk_eval_hint_test ~expected:"number" "{foo: number}" [Decomp_ObjProp "foo"];
+    "obj_prop_from_record_positive_polarity"
+    >:: mk_eval_hint_test ~expected:"number" "{+foo: number}" [Decomp_ObjProp "foo"];
+    "obj_prop_from_record_positive_polarity_from_readonly"
+    >:: mk_eval_hint_test ~expected:"number" "$ReadOnly<{foo: number}>" [Decomp_ObjProp "foo"];
+    "obj_prop_from_record_negative_polarity"
+    >:: mk_eval_hint_test ~expected:"None" "{-foo: number}" [Decomp_ObjProp "foo"];
+    "obj_prop_from_dict_neutral_polarity"
+    >:: mk_eval_hint_test ~expected:"number" "{[string]: number}" [Decomp_ObjProp "foo"];
+    "obj_prop_from_dict_positive_polarity"
+    >:: mk_eval_hint_test ~expected:"number" "{+[string]: number}" [Decomp_ObjProp "foo"];
+    "obj_prop_from_dict_negative_polarity"
+    >:: mk_eval_hint_test ~expected:"None" "{-[string]: number}" [Decomp_ObjProp "foo"];
+    "obj_prop_union"
+    >:: mk_eval_hint_test
+          ~expected:"number | string"
+          "{foo: number} | {[string]: string}"
+          [Decomp_ObjProp "foo"];
+    "obj_prop_union_some_without_prop"
+    >:: mk_eval_hint_test
+          ~expected:"number | string | void"
+          "{foo: number} | {[string]: string} | {bar: string}"
+          [Decomp_ObjProp "foo"];
+    (* TODO: Be more lenient with union branches that failed to match. *)
+    "obj_prop_union_some_failed"
+    >:: mk_eval_hint_test
+          ~expected:"None"
+          "{foo: number} | {[string]: string} | number"
+          [Decomp_ObjProp "foo"];
+    "obj_prop_intersection"
+    >:: mk_eval_hint_test
+          ~expected:"number"
+          "{bar: string} & {foo: number} & {[string]: string}"
+          [Decomp_ObjProp "foo"];
+    "obj_prop_from_prototype"
+    (* TODO: Load libdef for builtins to have more meaningful test results. *)
+    >:: mk_eval_hint_test ~expected:"empty" "string" [Decomp_ObjProp "length"];
+    "obj_computed_from_record_neutral_polarity"
+    >:: mk_eval_hint_test ~expected:"any (implicit)" "{foo: number}" [Decomp_ObjComputed];
+    "obj_computed_from_dict_neutral_polarity"
+    >:: mk_eval_hint_test ~expected:"number" "{[string]: number}" [Decomp_ObjComputed];
+    "obj_computed_from_dict_positive_polarity"
+    >:: mk_eval_hint_test ~expected:"number" "{+[string]: number}" [Decomp_ObjComputed];
+    "obj_computed_from_dict_negative_polarity"
+    >:: mk_eval_hint_test ~expected:"None" "{-[string]: number}" [Decomp_ObjComputed];
+    "obj_rest_from_record_neutral_polarity"
+    >:: mk_eval_hint_test ~expected:"{foo: number}" "{foo: number}" [Decomp_ObjSpread];
+    "obj_rest_from_record_positive_polarity"
+    >:: mk_eval_hint_test ~expected:"{+foo: number}" "{+foo: number}" [Decomp_ObjSpread];
+    "obj_rest_from_record_negative_polarity"
+    >:: mk_eval_hint_test ~expected:"{-foo: number}" "{-foo: number}" [Decomp_ObjSpread];
+    "obj_rest_from_dict_neutral_polarity"
+    >:: mk_eval_hint_test ~expected:"{[string]: number}" "{[string]: number}" [Decomp_ObjSpread];
+    "obj_rest_from_dict_positive_polarity"
+    >:: mk_eval_hint_test ~expected:"{+[string]: number}" "{+[string]: number}" [Decomp_ObjSpread];
+    "obj_rest_from_dict_negative_polarity"
+    >:: mk_eval_hint_test ~expected:"{-[string]: number}" "{-[string]: number}" [Decomp_ObjSpread];
   ]
 
 let tests = "type_hint" >::: ["evaluate_hint" >::: eval_hint_tests]
