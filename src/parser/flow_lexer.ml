@@ -179,7 +179,8 @@ let ascii_id_continue = [%sedlex.regexp? '$' | '_' | 'a' .. 'z' | 'A' .. 'Z' | '
 let rec loop_id_continues lexbuf =
   match%sedlex lexbuf with
   | unicode_escape
-  | codepoint_escape ->
+  | codepoint_escape 
+  | ascii_id_continue ->
     loop_id_continues lexbuf
   | eof -> true
   | any ->
@@ -194,15 +195,17 @@ let rec loop_id_continues lexbuf =
   | _ -> assert false
 
 (* Assuming that the first code point is already lexed *)  
-let rec loop_jsx_id_continues lexbuf =
+let rec loop_jsx_id_continues lexbuf : unit =
   match%sedlex lexbuf with
+  | '-'
+  | ascii_id_continue 
   | unicode_escape
   | codepoint_escape ->
     loop_jsx_id_continues lexbuf
   | eof -> ()
   | any ->
     let s = Sedlexing.current_code_point lexbuf in
-    if s = Char.code '-' || Js_id.is_valid_unicode_id s then
+    if  Js_id.is_valid_unicode_id s then
       loop_jsx_id_continues lexbuf
     else
       Sedlexing.backoff lexbuf 1 
