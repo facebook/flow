@@ -1580,7 +1580,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       let open Ast.Expression.Object in
       let { properties; comments } = expr in
       let comments' = Base.Option.map ~f:this#syntax_with_internal comments in
-      let properties' = List.map this#object_property_or_spread_property properties in
+      let properties' = Base.List.map ~f:this#object_property_or_spread_property properties in
       { properties = properties'; comments = comments' }
 
     method object_property_or_spread_property (prop : ('M, 'T) Ast.Expression.Object.property)
