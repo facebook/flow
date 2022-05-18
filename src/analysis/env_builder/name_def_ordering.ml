@@ -147,8 +147,15 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) = struct
         (* In order to resolve a def containing a variable write, the
            write itself should first be resolved *)
         method! pattern_identifier ?kind:_ ((loc, _) as id) =
-          (* Ignore cases that don't have bindings in the environment, like `var x;` *)
-          if ALocMap.mem loc env_entries then this#add ~why:loc loc;
+          (* Ignore cases that don't have bindings in the environment, like `var x;`
+             and illegal or unreachable writes. *)
+          (match ALocMap.find_opt loc env_entries with
+          | Some (Env_api.AssigningWrite _)
+          | Some (Env_api.GlobalWrite _) ->
+            this#add ~why:loc loc
+          | Some Env_api.NonAssigningWrite
+          | None ->
+            ());
           id
 
         method! binding_type_identifier ((loc, _) as id) =

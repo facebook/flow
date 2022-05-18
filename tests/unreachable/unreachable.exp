@@ -104,5 +104,21 @@ Unreachable code. [unreachable-code]
                  ^
 
 
+Error ---------------------------------------------------------------------------------------------- unreachable.js:33:5
 
-Found 9 errors
+Unreachable code. [unreachable-code]
+
+   33|     { let i = 0; i = 1; } // error: unreachable
+           ^^^^^^^^^^^^^^^^^^^^^
+
+
+Error ---------------------------------------------------------------------------------------------- unreachable.js:37:5
+
+Unreachable code. [unreachable-code]
+
+   37|     { let i = 0; i++; } // error: unreachable
+           ^^^^^^^^^^^^^^^^^^^
+
+
+
+Found 11 errors
