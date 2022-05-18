@@ -673,7 +673,7 @@ and statement ?(pretty_semicolon = false) ~opts (root_stmt : (Loc.t, Loc.t) Ast.
                statement_with_test "with" (expression ~opts _object); statement_after_test ~opts body;
              ]
           )
-      | S.Switch { S.Switch.discriminant; cases; comments } ->
+      | S.Switch { S.Switch.discriminant; cases; comments; exhaustive_out = _ } ->
         let case_nodes =
           let rec helper acc =
             let open Comment_attachment in

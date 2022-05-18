@@ -623,6 +623,7 @@ module Statement
             Statement.Switch.discriminant;
             cases;
             comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing ();
+            exhaustive_out = fst discriminant;
           }
     )
 

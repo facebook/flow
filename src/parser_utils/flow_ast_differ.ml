@@ -2202,19 +2202,28 @@ let program
       (stmt1 : (Loc.t, Loc.t) Ast.Statement.Switch.t)
       (stmt2 : (Loc.t, Loc.t) Ast.Statement.Switch.t) : node change list option =
     let open Ast.Statement.Switch in
-    let { discriminant = discriminant1; cases = cases1; comments = comments1 } = stmt1 in
-    let { discriminant = discriminant2; cases = cases2; comments = comments2 } = stmt2 in
-    let discriminant =
-      Some
-        (diff_if_changed
-           (expression ~parent:(StatementParentOfExpression (loc, Ast.Statement.Switch stmt2)))
-           discriminant1
-           discriminant2
-        )
+    let { discriminant = discriminant1; cases = cases1; comments = comments1; exhaustive_out = ex1 }
+        =
+      stmt1
     in
-    let cases = diff_and_recurse_no_trivial switch_case cases1 cases2 in
-    let comments = syntax_opt loc comments1 comments2 in
-    join_diff_list [discriminant; cases; comments]
+    let { discriminant = discriminant2; cases = cases2; comments = comments2; exhaustive_out = ex2 }
+        =
+      stmt2
+    in
+    if ex1 != ex2 then
+      None
+    else
+      let discriminant =
+        Some
+          (diff_if_changed
+             (expression ~parent:(StatementParentOfExpression (loc, Ast.Statement.Switch stmt2)))
+             discriminant1
+             discriminant2
+          )
+      in
+      let cases = diff_and_recurse_no_trivial switch_case cases1 cases2 in
+      let comments = syntax_opt loc comments1 comments2 in
+      join_diff_list [discriminant; cases; comments]
   and switch_case
       ((loc, s1) : (Loc.t, Loc.t) Ast.Statement.Switch.Case.t)
       ((_, s2) : (Loc.t, Loc.t) Ast.Statement.Switch.Case.t) : node change list option =

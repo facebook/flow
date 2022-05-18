@@ -588,6 +588,7 @@ and Statement : sig
       discriminant: ('M, 'T) Expression.t;
       cases: ('M, 'T) Case.t list;
       comments: ('M, unit) Syntax.t option;
+      exhaustive_out: 'T;
     }
     [@@deriving show]
   end

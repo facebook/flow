@@ -159,7 +159,7 @@ with type t = Impl.t = struct
           [("object", expression _object); ("body", statement body)]
       | (loc, TypeAlias alias) -> type_alias (loc, alias)
       | (loc, OpaqueType opaque_t) -> opaque_type ~declare:false (loc, opaque_t)
-      | (loc, Switch { Switch.discriminant; cases; comments }) ->
+      | (loc, Switch { Switch.discriminant; cases; comments; exhaustive_out = _ }) ->
         node
           ?comments
           "SwitchStatement"

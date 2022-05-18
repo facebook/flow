@@ -2440,14 +2440,14 @@ class ['loc] mapper =
 
     method switch _loc (switch : ('loc, 'loc) Ast.Statement.Switch.t) =
       let open Ast.Statement.Switch in
-      let { discriminant; cases; comments } = switch in
+      let { discriminant; cases; comments; exhaustive_out } = switch in
       let discriminant' = this#expression discriminant in
       let cases' = map_list this#switch_case cases in
       let comments' = this#syntax_opt comments in
       if discriminant == discriminant' && cases == cases' && comments == comments' then
         switch
       else
-        { discriminant = discriminant'; cases = cases'; comments = comments' }
+        { discriminant = discriminant'; cases = cases'; comments = comments'; exhaustive_out }
 
     method switch_case (case : ('loc, 'loc) Ast.Statement.Switch.Case.t) =
       let open Ast.Statement.Switch.Case in

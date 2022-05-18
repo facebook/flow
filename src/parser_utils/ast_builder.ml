@@ -374,7 +374,7 @@ module Statements = struct
     expression ~loc ~directive:txt expr
 
   let switch ?(loc = Loc.none) ?comments discriminant cases =
-    (loc, Switch { Switch.discriminant; cases; comments })
+    (loc, Switch { Switch.discriminant; cases; comments; exhaustive_out = fst discriminant })
 
   let switch_case ?(loc = Loc.none) ?test ?comments consequent =
     (loc, { Switch.Case.test; consequent; comments })

@@ -925,7 +925,7 @@ struct
       | (_, OpaqueType _) -> (loc, OpaqueType opaque_type_ast)
       | _ -> assert false)
     (*******************************************************)
-    | (switch_loc, Switch { Switch.discriminant; cases; comments }) ->
+    | (switch_loc, Switch { Switch.discriminant; cases; comments; exhaustive_out }) ->
       (* typecheck discriminant *)
       let discriminant_ast = expression cx ~hint:Hint_None discriminant in
       let exhaustive_check_incomplete_out =
@@ -1187,7 +1187,13 @@ struct
             );
           let ast =
             ( switch_loc,
-              Switch { Switch.discriminant = discriminant_ast; cases = cases_ast; comments }
+              Switch
+                {
+                  Switch.discriminant = discriminant_ast;
+                  cases = cases_ast;
+                  comments;
+                  exhaustive_out = (exhaustive_out, exhaustive_check_incomplete_out);
+                }
             )
           in
           match uniform_switch_exit exits with

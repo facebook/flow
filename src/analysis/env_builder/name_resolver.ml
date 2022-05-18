@@ -2582,7 +2582,7 @@ module Make
       method! switch loc switch =
         let open Flow_ast.Statement.Switch in
         let incoming_env = this#env in
-        let { discriminant; cases; comments = _ } = switch in
+        let { discriminant; cases; comments = _; exhaustive_out = _ } = switch in
         let _ = this#expression discriminant in
         let lexical_hoist = new lexical_hoister ~flowmin_compatibility:false ~enable_enums in
         let cases_with_lexical_bindings =

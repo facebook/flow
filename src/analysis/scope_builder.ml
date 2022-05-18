@@ -338,7 +338,7 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
 
       method! switch loc (switch : ('loc, 'loc) Ast.Statement.Switch.t) =
         let open Ast.Statement.Switch in
-        let { discriminant; cases; comments = _ } = switch in
+        let { discriminant; cases; comments = _; exhaustive_out = _ } = switch in
         let _ = this#expression discriminant in
         let lexical_hoist = new lexical_hoister ~flowmin_compatibility ~enable_enums in
         let lexical_bindings =
