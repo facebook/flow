@@ -6564,17 +6564,27 @@ struct
 
   and collapse_children cx ~hint (children_loc, children) :
       Type.unresolved_param list * (ALoc.t * (ALoc.t, ALoc.t * Type.t) Ast.JSX.child list) =
+    let single_child =
+      match children with
+      | [_] -> true
+      | _ -> false
+    in
     let (unresolved_params, children') =
       children
-      |> List.fold_left
-           (fun (unres_params, children) child ->
+      |> Base.List.foldi ~init:([], []) ~f:(fun i (unres_params, children) child ->
+             let hint =
+               if single_child then
+                 hint
+               else
+                 decompose_hint (Decomp_ArrElement i) hint
+             in
              let (unres_param_opt, child) = jsx_body cx ~hint child in
              ( Base.Option.value_map unres_param_opt ~default:unres_params ~f:(fun x ->
                    x :: unres_params
                ),
                child :: children
-             ))
-           ([], [])
+             )
+         )
       |> map_pair List.rev List.rev
     in
     (unresolved_params, (children_loc, children'))
@@ -6876,7 +6886,7 @@ struct
     in
     let attributes = List.rev atts in
     let (unresolved_params, children) =
-      let hint = decompose_hint Decomp_JsxChildren hint in
+      let hint = decompose_hint (Decomp_ObjProp "children") hint in
       collapse_children cx ~hint children
     in
     let acc =

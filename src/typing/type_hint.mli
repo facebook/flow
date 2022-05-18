@@ -22,7 +22,6 @@ type hint_decomposition =
   | Decomp_FuncReturn
   | Decomp_NullishCoalesce
   | Decomp_JsxProps
-  | Decomp_JsxChildren
 
 type hint =
   | Hint_t of Type.t
