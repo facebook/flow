@@ -126,7 +126,7 @@ let rollback lexbuf =
   lexbuf.curr_line <- lexbuf.start_line
 
 let lexeme_start lexbuf = lexbuf.start_pos 
-
+let set_lexeme_start lexbuf pos = lexbuf.start_pos <- pos
 let lexeme_end lexbuf = lexbuf.pos 
 
 let loc lexbuf = (lexbuf.start_pos , lexbuf.pos )
@@ -276,4 +276,4 @@ let string_of_utf8 (lexbuf : int array) : string =
 
 let backoff lexbuf npos =
   lexbuf.pos <- lexbuf.pos - npos  
-let rawbuffer lexbuf = lexbuf.buf  
+let rawbuffer lexbuf = lexbuf.buf 

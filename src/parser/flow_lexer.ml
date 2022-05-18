@@ -1469,12 +1469,11 @@ let jsx_tag env lexbuf =
     let loc = { Loc.source = Lex_env.source env; start; _end } in
     Token (env, T_JSX_TEXT (loc, value, raw))
   | js_id_start ->
-      let old_lexeme_start = lexbuf.Sedlexing.start_pos in 
       let start_offset = Sedlexing.lexeme_start lexbuf in
       (* see #3837, we should fix it - the work could be done in decoding later - cold path*)
       loop_jsx_id_continues lexbuf;
       let end_offset = Sedlexing.lexeme_end lexbuf in
-      lexbuf.Sedlexing.start_pos <- old_lexeme_start ;
+      Sedlexing.set_lexeme_start lexbuf start_offset ;
       let raw =
         Array.sub
           (Sedlexing.rawbuffer lexbuf)
@@ -1483,13 +1482,6 @@ let jsx_tag env lexbuf =
       in
       let loc = loc_of_offsets env start_offset end_offset in
       Token (env, T_JSX_IDENTIFIER { raw = Sedlexing.string_of_utf8 raw; loc })
-      (* | (ascii_id_start, Star ('-' | ascii_id_continue)) ->
-         let loc = loc_of_lexbuf env lexbuf in
-         Token (env, T_JSX_IDENTIFIER { raw = lexeme lexbuf; loc }) *)
-      (* This is not necessary at this time, but we
-          play safe here, so that we can still add keywords in this tokenizer
-         otherwise it will be broken in the refactoring in the future
-      *)
   | any -> Token (env, T_ERROR (lexeme lexbuf))
   | _ -> failwith "unreachable jsx_tag"
 
@@ -1832,17 +1824,6 @@ let type_token env lexbuf =
   | '+' -> Token (env, T_PLUS)
   | '-' -> Token (env, T_MINUS)
   (* Identifiers *)
-  (* The order here is important, we need first use the [js_id_start] and 
-     latter [ascii_id_start ascii_id_continue*]
-     Then we can have all valid unicode covered.
-
-     The reverse order is wrong.
-     
-     | ascii_id_start, ascii_id_continue*
-     | js_id_start
-
-     a\lambda will not be lexed correctly in this case
-  *)
   | js_id_start -> (
       let old_lexeme_start = lexbuf.Sedlexing.start_pos in 
       let start_offset = Sedlexing.lexeme_start lexbuf in
@@ -1879,11 +1860,6 @@ let type_token env lexbuf =
           Token
             ( env,
               T_IDENTIFIER { loc; value; raw = Sedlexing.string_of_utf8 raw } ))
-  (* | (ascii_id_start, Star ascii_id_continue) ->
-     (* fast path *)
-     let loc = loc_of_lexbuf env lexbuf in
-     let raw = lexeme lexbuf in
-     Token (env, T_IDENTIFIER { loc; value = raw; raw }) *)
   (* Others *)
   | eof ->
     let env =

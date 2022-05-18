@@ -63,3 +63,4 @@ val string_of_utf8 : int array -> string
 val current_code_point : lexbuf -> int
 val backoff : lexbuf -> int -> unit
 val rawbuffer : lexbuf -> int array
+val set_lexeme_start : lexbuf -> int -> unit
