@@ -441,9 +441,11 @@ module Make (Env : Env_sig.S) : S = struct
       ()
 
   let initialize_env ~lib ?(exclude_syms = NameUtils.Set.empty) cx aloc_ast module_scope =
-    let (_abrupt_completion, info) = NameResolver.program_with_scope cx aloc_ast in
+    let (_abrupt_completion, ({ Env_api.env_entries; _ } as info)) =
+      NameResolver.program_with_scope cx aloc_ast
+    in
     let env = Loc_env.with_info info in
-    let name_def_graph = Name_def.find_defs aloc_ast in
+    let name_def_graph = Name_def.find_defs env_entries aloc_ast in
     let components = NameDefOrdering.build_ordering cx info name_def_graph in
     if Context.cycle_errors cx then Base.List.iter ~f:(Cycles.handle_component cx) components;
     Context.set_environment cx env;

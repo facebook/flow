@@ -68,6 +68,8 @@ let string_of_import = function
 
 let string_of_source = function
   | Binding b -> string_of_binding b
+  | ChainExpression _ -> spf "heap"
+  | RefiExpression _ -> spf "exp"
   | Update _ -> "[in/de]crement"
   | OpAssign _ -> "opassign"
   | Function { function_ = { Ast.Function.id; _ }; _ } ->
@@ -135,13 +137,17 @@ let print_order lst =
   print_string msg
 
 let print_init_test contents =
-  let inits = Name_def.find_defs (parse_with_alocs contents) in
+  let ast = parse_with_alocs contents in
+  let (_, { Name_resolver.Env_api.env_entries; _ }) = Name_resolver.program_with_scope () ast in
+  let inits = Name_def.find_defs env_entries ast in
   print_values inits
 
 let print_order_test contents =
   let ast = parse_with_alocs contents in
-  let (_, env) = Name_resolver.program_with_scope () ast in
-  let inits = Name_def.find_defs ast in
+  let (_, ({ Name_resolver.Env_api.env_entries; _ } as env)) =
+    Name_resolver.program_with_scope () ast
+  in
+  let inits = Name_def.find_defs env_entries ast in
   let order = Name_def_ordering.build_ordering () env inits in
   print_order order
 
@@ -609,7 +615,8 @@ if (x instanceof C) {
   |};
   [%expect {|
     (5, 12) to (5, 13) =>
-    illegal scc: (((2, 6) to (2, 7)); ((9, 2) to (9, 3))) |}]
+    illegal scc: (((2, 6) to (2, 7)); ((9, 2) to (9, 3))) =>
+    (8, 17) to (8, 18) |}]
 
 let%expect_test "refi_latent" =
   print_order_test {|
@@ -798,6 +805,15 @@ for (var [x,y]: T of foo) { }
       (2, 12) to (2, 13) => (annot (2, 14) to (2, 17))[1]
     ] |}]
 
+let%expect_test "heap_init" =
+  print_init_test {|
+if (x.y) { x.y }
+  |};
+  [%expect {|
+    [
+      (2, 4) to (2, 7) => heap
+    ] |}]
+
 let%expect_test "inc" =
   print_order_test {|
 let x;
@@ -862,7 +878,8 @@ import * as R from 'foo';
     (2, 15) to (2, 16) =>
     (8, 12) to (8, 13) =>
     (5, 4) to (5, 5) =>
-    (2, 9) to (2, 14) |}]
+    (2, 9) to (2, 14) =>
+    (4, 19) to (4, 22) |}]
 
 let%expect_test "this" =
   print_order_test {|

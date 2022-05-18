@@ -168,4 +168,17 @@ module type S = sig
     ALoc.t ->
     ALoc.t Ast.Statement.EnumDeclaration.body ->
     Type.enum_t
+
+  val optional_chain :
+    cond:Type.cond_context Base.Option.t ->
+    is_existence_check:bool ->
+    ?sentinel_refine:
+      (Type.t -> ((Reason.name * Key.proj list) * Type.t * Type.predicate * bool) option) ->
+    Context.t ->
+    (ALoc.t, ALoc.t) Ast.Expression.t ->
+    Type.t
+    * Type.t Base.Option.t
+    * (ALoc.t, ALoc.t * Type.t) Ast.Expression.t
+    * (Type.predicate Key_map.t * Type.predicate Key_map.t * Type.t Key_map.t) option
+    * ((Reason.name * Key.proj list) * Type.t * Type.predicate * bool) option
 end

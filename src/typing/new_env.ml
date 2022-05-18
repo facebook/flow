@@ -137,9 +137,11 @@ module New_env = struct
 
   let record_expression_type_if_needed cx loc t =
     let env = Context.environment cx in
-    match Loc_env.find_write env loc with
-    | None -> ()
-    | Some w ->
+    match (Loc_env.find_write env loc, Context.env_mode cx) with
+    | (_, Options.SSAEnv { resolved = true }) (* Fully resolved env doesn't need to write here *)
+    | (None, _) ->
+      ()
+    | (Some w, _) ->
       Debug_js.Verbose.print_if_verbose
         cx
         [spf "recording expression at location %s" (Reason.string_of_aloc loc)];
@@ -783,6 +785,7 @@ module New_env = struct
       (fun loc env_entry env ->
         match env_entry with
         | Env_api.AssigningWrite reason
+        | Env_api.RefinementWrite reason
         | Env_api.GlobalWrite reason ->
           let t = Inferred (Tvar.mk cx reason) in
           (* Treat everything as inferred for now for the purposes of annotated vs inferred *)

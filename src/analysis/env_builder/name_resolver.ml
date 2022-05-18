@@ -3693,7 +3693,7 @@ module Make
                 L.LMap.add
                   obj_loc
                   (Env_api.AssigningWrite obj_reason)
-                  (L.LMap.add other_loc (Env_api.AssigningWrite reason) env_state.write_entries)
+                  (L.LMap.add other_loc (Env_api.RefinementWrite reason) env_state.write_entries)
               in
               env_state <- { env_state with write_entries };
               let refinement =
@@ -3908,7 +3908,7 @@ module Make
              record it in statement.ml and use it in new-env. *)
           let reason = mk_reason (RefinementKey.reason_desc refinement_key) instance_loc in
           let write_entries =
-            L.LMap.add instance_loc (Env_api.AssigningWrite reason) env_state.write_entries
+            L.LMap.add instance_loc (Env_api.RefinementWrite reason) env_state.write_entries
           in
           env_state <- { env_state with write_entries };
           this#add_single_refinement refinement_key (L.LSet.singleton loc, InstanceOfR instance)

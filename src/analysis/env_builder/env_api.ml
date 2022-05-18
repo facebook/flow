@@ -125,6 +125,7 @@ module type S = sig
      * incompatibility of the write that is never performed. When the new_env finds a
      * NonAssigningWrite it will not subtype the given type against the providers. *)
     | AssigningWrite of L.t virtual_reason
+    | RefinementWrite of L.t virtual_reason
     | GlobalWrite of L.t virtual_reason
     | NonAssigningWrite
 
@@ -278,6 +279,7 @@ module Make
      * incompatibility of the write that is never performed. When the new_env finds a
      * NonAssigningWrite it will not subtype the given type against the providers. *)
     | AssigningWrite of L.t virtual_reason
+    | RefinementWrite of L.t virtual_reason
     | GlobalWrite of L.t virtual_reason
     | NonAssigningWrite
 

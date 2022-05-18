@@ -321,10 +321,19 @@ module Make (Env : Env_sig.S) (Statement : Statement_sig.S with module Env := En
     let t = DefT (TypeUtil.reason_of_t t, bogus_trust (), TypeT (TypeParamKind, t)) in
     (t, unknown_use)
 
+  let resolve_chain_expression cx exp =
+    let cache = Context.node_cache cx in
+    (* The cond and is_existence_check parameters are only used for old-env refinements, so they're irrelevant now *)
+    let (t, _, exp, _, _) = Statement.optional_chain ~cond:None ~is_existence_check:false cx exp in
+    Node_cache.set_expression cache exp;
+    (t, unknown_use)
+
   let resolve cx id_loc (def, def_reason) =
     let (t, use_op) =
       match def with
       | Binding b -> resolve_binding cx def_reason id_loc b
+      | ChainExpression e -> resolve_chain_expression cx e
+      | RefiExpression e -> (expression cx ~hint:Hint_None e, unknown_use)
       | Function { function_; fully_annotated = false; tparams = _ } ->
         resolve_inferred_function cx id_loc def_reason function_
       | Function { function_; fully_annotated = true; tparams } ->

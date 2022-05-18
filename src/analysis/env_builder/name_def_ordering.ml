@@ -150,8 +150,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) = struct
           (* Ignore cases that don't have bindings in the environment, like `var x;`
              and illegal or unreachable writes. *)
           (match ALocMap.find_opt loc env_entries with
-          | Some (Env_api.AssigningWrite _)
-          | Some (Env_api.GlobalWrite _) ->
+          | Some Env_api.(AssigningWrite _ | GlobalWrite _ | RefinementWrite _) ->
             this#add ~why:loc loc
           | Some Env_api.NonAssigningWrite
           | None ->
@@ -444,6 +443,9 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) = struct
       in
       function
       | Binding binding -> depends_of_binding binding
+      | RefiExpression exp
+      | ChainExpression exp ->
+        depends_of_expression exp ALocMap.empty
       | Update _ -> depends_of_update ()
       | OpAssign { rhs; _ } -> depends_of_op_assign rhs
       | Function { fully_annotated; function_; tparams = _ } ->
@@ -486,6 +488,8 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) = struct
       | Class { fully_annotated = true; _ }
       | DeclaredClass _ ->
         true
+      | RefiExpression _
+      | ChainExpression _
       | Update _
       | OpAssign _
       | Function { fully_annotated = false; _ }

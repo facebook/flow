@@ -51,6 +51,8 @@ type import =
 
 type def =
   | Binding of binding
+  | ChainExpression of (ALoc.t, ALoc.t) Ast.Expression.t
+  | RefiExpression of (ALoc.t, ALoc.t) Ast.Expression.t
   | OpAssign of {
       exp_loc: ALoc.t;
       op: Ast.Expression.Assignment.operator;
@@ -222,7 +224,7 @@ let def_of_class loc ({ Ast.Class.body = (_, { Ast.Class.Body.body; _ }); _ } as
   in
   Class { fully_annotated; class_; class_loc = loc }
 
-class def_finder =
+class def_finder env_entries =
   object (this)
     inherit [map, ALoc.t] Flow_ast_visitor.visitor ~init:ALocMap.empty as super
 
@@ -527,8 +529,34 @@ class def_finder =
             (Import { import_kind; source; source_loc; import = Default name }))
         default;
       super#import_declaration loc decl
+
+    method! member loc mem =
+      begin
+        match ALocMap.find_opt loc env_entries with
+        | Some (Env_api.AssigningWrite reason) ->
+          this#add_binding loc reason (ChainExpression (loc, Ast.Expression.Member mem))
+        | _ -> ()
+      end;
+      super#member loc mem
+
+    method! optional_member loc mem =
+      begin
+        match ALocMap.find_opt loc env_entries with
+        | Some (Env_api.AssigningWrite reason) ->
+          this#add_binding loc reason (ChainExpression (loc, Ast.Expression.OptionalMember mem))
+        | _ -> ()
+      end;
+      super#optional_member loc mem
+
+    method! expression ((loc, _) as exp) =
+      begin
+        match ALocMap.find_opt loc env_entries with
+        | Some (Env_api.RefinementWrite reason) -> this#add_binding loc reason (RefiExpression exp)
+        | _ -> ()
+      end;
+      super#expression exp
   end
 
-let find_defs ast =
-  let finder = new def_finder in
+let find_defs env_entries ast =
+  let finder = new def_finder env_entries in
   finder#eval finder#program ast
