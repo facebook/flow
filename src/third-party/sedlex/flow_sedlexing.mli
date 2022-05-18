@@ -8,11 +8,9 @@ exception InvalidCodepoint of int
 exception MalFormed
 type apos = int
 type lexbuf = {
-  mutable buf: int array;
+  buf: int array;
   (* Number of meaningful char in buffer *)
-  mutable len: int;
-  (* Position of the first char in buffer in the input stream *)
-  mutable offset: apos;
+  len: int;
   (* pos is the index in the buffer *)
   mutable pos: int;
   (* bol is the index in the input stream but not buffer *)

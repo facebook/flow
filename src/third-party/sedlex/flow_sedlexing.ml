@@ -13,12 +13,17 @@ exception MalFormed
 (* Absolute position from the beginning of the stream *)
 type apos = int
 
+(* critical states:
+  [pos] [curr_bol] [curr_line]
+  
+  [marked_pos] [marked_bol] [marked_line]
+  [start_pos] [start_bol] [start_line]
+  get reset whenever we get a new token
+*)
 type lexbuf = {
-  mutable buf: int array;
+  buf: int array;
   (* Number of meaningful char in buffer *)
-  mutable len: int;
-  (* Position of the first char in buffer in the input stream *)
-  mutable offset: apos;
+  len: int;
   (* pos is the index in the buffer *)
   mutable pos: int;
   (* bol is the index in the input stream but not buffer *)
@@ -34,13 +39,12 @@ type lexbuf = {
   mutable marked_line: int;
   mutable marked_val: int;
 }
-[@@warning "-69"]
+
 
 let lexbuf_clone (x : lexbuf) : lexbuf =
   {
     buf = x.buf;
     len = x.len;
-    offset = x.offset;
     pos = x.pos;
     curr_bol = x.curr_bol;
     curr_line = x.curr_line;
@@ -57,7 +61,6 @@ let empty_lexbuf =
   {
     buf = [||];
     len = 0;
-    offset = 0;
     pos = 0;
     curr_bol = 0;
     curr_line = 0;
@@ -79,7 +82,7 @@ let from_int_sub_array a len =
 
 let new_line lexbuf =
   if lexbuf.curr_line != 0 then lexbuf.curr_line <- lexbuf.curr_line + 1;
-  lexbuf.curr_bol <- lexbuf.pos + lexbuf.offset
+  lexbuf.curr_bol <- lexbuf.pos 
 
 let next lexbuf : Stdlib.Uchar.t option =
   if lexbuf.pos = lexbuf.len then
@@ -122,11 +125,11 @@ let rollback lexbuf =
   lexbuf.curr_bol <- lexbuf.start_bol;
   lexbuf.curr_line <- lexbuf.start_line
 
-let lexeme_start lexbuf = lexbuf.start_pos + lexbuf.offset
+let lexeme_start lexbuf = lexbuf.start_pos 
 
-let lexeme_end lexbuf = lexbuf.pos + lexbuf.offset
+let lexeme_end lexbuf = lexbuf.pos 
 
-let loc lexbuf = (lexbuf.start_pos + lexbuf.offset, lexbuf.pos + lexbuf.offset)
+let loc lexbuf = (lexbuf.start_pos , lexbuf.pos )
 
 let lexeme_length lexbuf = lexbuf.pos - lexbuf.start_pos
 
