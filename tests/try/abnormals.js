@@ -13,3 +13,12 @@ function foo() {
     }
   }
 }
+
+function bar() {
+  try {
+    return;
+  } catch {}
+
+  for (let i = 0; ; i++) { }
+}
+

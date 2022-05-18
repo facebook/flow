@@ -2812,7 +2812,7 @@ module Make
             let completion_state =
               match (try_completion_state, catch_completion_state) with
               | (Some AbruptCompletion.Throw, Some AbruptCompletion.Throw)
-              | (Some AbruptCompletion.Return, _) ->
+              | (Some AbruptCompletion.Return, Some _) ->
                 try_completion_state
               | (Some AbruptCompletion.Throw, Some AbruptCompletion.Return) ->
                 catch_completion_state
