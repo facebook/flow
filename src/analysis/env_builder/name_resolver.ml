@@ -2681,7 +2681,7 @@ module Make
             | None when has_default -> this#reset_env this#empty_env
             (* If the switch wasn't exhaustive then merge with the case_starting_env as a base. If
              * the last case fell out then merge that in too. *)
-            | Some fallthrough -> this#merge_remote_env fallthrough
+            | Some fallthrough -> this#merge_self_env fallthrough
             | _ -> ());
 
             (* In general, cases are non-exhaustive, but if it has a default case then it is! *)
