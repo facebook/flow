@@ -7,10 +7,11 @@
 
 [@@@warning "-39"] (* sedlex inserts some unnecessary `rec`s *)
 
-module Sedlexing = Flow_sedlexing
+
 open Token
 open Lex_env
 
+module Sedlexing = Flow_sedlexing
 let lexeme = Sedlexing.Utf8.lexeme
 
 let lexeme_to_buffer = Sedlexing.Utf8.lexeme_to_buffer
