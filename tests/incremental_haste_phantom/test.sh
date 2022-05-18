@@ -12,5 +12,9 @@ cp tmp/foo.js foo.js
 assert_ok "$FLOW" force-recheck --no-auto-start foo.js
 assert_errors "$FLOW" status --no-auto-start .
 
+printf "\nRemove haste module \"foo\"\n"
 rm foo.js
+assert_ok "$FLOW" force-recheck --no-auto-start foo.js
+assert_errors "$FLOW" status --no-auto-start .
+
 printf "\nDone!\n"
