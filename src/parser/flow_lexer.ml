@@ -842,59 +842,8 @@ let token (env : Lex_env.t) lexbuf : result =
   | wholenumber
   | floatnumber ->
     Token (env, T_NUMBER { kind = NORMAL; raw = lexeme lexbuf })
-  (* Keywords *)
-  | "async" -> Token (env, T_ASYNC)
-  | "await" -> Token (env, T_AWAIT)
-  | "break" -> Token (env, T_BREAK)
-  | "case" -> Token (env, T_CASE)
-  | "catch" -> Token (env, T_CATCH)
-  | "class" -> Token (env, T_CLASS)
-  | "const" -> Token (env, T_CONST)
-  | "continue" -> Token (env, T_CONTINUE)
-  | "debugger" -> Token (env, T_DEBUGGER)
-  | "declare" -> Token (env, T_DECLARE)
-  | "default" -> Token (env, T_DEFAULT)
-  | "delete" -> Token (env, T_DELETE)
-  | "do" -> Token (env, T_DO)
-  | "else" -> Token (env, T_ELSE)
-  | "enum" -> Token (env, T_ENUM)
-  | "export" -> Token (env, T_EXPORT)
-  | "extends" -> Token (env, T_EXTENDS)
-  | "false" -> Token (env, T_FALSE)
-  | "finally" -> Token (env, T_FINALLY)
-  | "for" -> Token (env, T_FOR)
-  | "function" -> Token (env, T_FUNCTION)
-  | "if" -> Token (env, T_IF)
-  | "implements" -> Token (env, T_IMPLEMENTS)
-  | "import" -> Token (env, T_IMPORT)
-  | "in" -> Token (env, T_IN)
-  | "instanceof" -> Token (env, T_INSTANCEOF)
-  | "interface" -> Token (env, T_INTERFACE)
-  | "let" -> Token (env, T_LET)
-  | "new" -> Token (env, T_NEW)
-  | "null" -> Token (env, T_NULL)
-  | "of" -> Token (env, T_OF)
-  | "opaque" -> Token (env, T_OPAQUE)
-  | "package" -> Token (env, T_PACKAGE)
-  | "private" -> Token (env, T_PRIVATE)
-  | "protected" -> Token (env, T_PROTECTED)
-  | "public" -> Token (env, T_PUBLIC)
-  | "return" -> Token (env, T_RETURN)
-  | "static" -> Token (env, T_STATIC)
-  | "super" -> Token (env, T_SUPER)
-  | "switch" -> Token (env, T_SWITCH)
-  | "this" -> Token (env, T_THIS)
-  | "throw" -> Token (env, T_THROW)
-  | "true" -> Token (env, T_TRUE)
-  | "try" -> Token (env, T_TRY)
-  | "type" -> Token (env, T_TYPE)
-  | "typeof" -> Token (env, T_TYPEOF)
-  | "var" -> Token (env, T_VAR)
-  | "void" -> Token (env, T_VOID)
-  | "while" -> Token (env, T_WHILE)
-  | "with" -> Token (env, T_WITH)
-  | "yield" -> Token (env, T_YIELD)
   (* TODO: Use [Symbol.iterator] instead of @@iterator. *)
+  (* `@` is not a valid unicode name *)  
   | "@@iterator"
   | "@@asyncIterator" ->
     let loc = loc_of_lexbuf env lexbuf in
@@ -975,21 +924,76 @@ let token (env : Lex_env.t) lexbuf : result =
   | '\\' ->
     let env = illegal env (loc_of_lexbuf env lexbuf) in
     Continue env
-  | js_id_start ->
-    let start_offset = Sedlexing.lexeme_start lexbuf in
-    loop_id_continues lexbuf |> ignore;
-    let end_offset = Sedlexing.lexeme_end lexbuf in
-    let loc = loc_of_offsets env start_offset end_offset in
-    let raw = Array.sub (Sedlexing.rawbuffer lexbuf) start_offset (end_offset - start_offset) in
-    let (env, value) = decode_identifier env raw in
-    Token (env, T_IDENTIFIER { loc; value; raw = Sedlexing.string_of_utf8 raw })
-  (* Identifiers *)
-  | (ascii_id_start, Star ascii_id_continue) ->
-    (* fast path *)
-    let loc = loc_of_lexbuf env lexbuf in
-    let raw = lexeme lexbuf in
-    Token (env, T_IDENTIFIER { loc; value = raw; raw })
-  (* Others *)
+  | js_id_start -> (
+      let old_lexeme_start = lexbuf.Sedlexing.start_pos in 
+      let start_offset = Sedlexing.lexeme_start lexbuf in
+      loop_id_continues lexbuf |> ignore;
+      let end_offset = Sedlexing.lexeme_end lexbuf in
+      let loc = loc_of_offsets env start_offset end_offset in
+      lexbuf.Sedlexing.start_pos <- old_lexeme_start ; 
+      let raw =
+        Array.sub
+          (Sedlexing.rawbuffer lexbuf)
+          start_offset
+          (end_offset - start_offset)
+      in
+      let nenv, value = decode_identifier env raw in
+      match value with
+      | "async" -> Token (env, T_ASYNC)
+      | "await" -> Token (env, T_AWAIT)
+      | "break" -> Token (env, T_BREAK)
+      | "case" -> Token (env, T_CASE)
+      | "catch" -> Token (env, T_CATCH)
+      | "class" -> Token (env, T_CLASS)
+      | "const" -> Token (env, T_CONST)
+      | "continue" -> Token (env, T_CONTINUE)
+      | "debugger" -> Token (env, T_DEBUGGER)
+      | "declare" -> Token (env, T_DECLARE)
+      | "default" -> Token (env, T_DEFAULT)
+      | "delete" -> Token (env, T_DELETE)
+      | "do" -> Token (env, T_DO)
+      | "else" -> Token (env, T_ELSE)
+      | "enum" -> Token (env, T_ENUM)
+      | "export" -> Token (env, T_EXPORT)
+      | "extends" -> Token (env, T_EXTENDS)
+      | "false" -> Token (env, T_FALSE)
+      | "finally" -> Token (env, T_FINALLY)
+      | "for" -> Token (env, T_FOR)
+      | "function" -> Token (env, T_FUNCTION)
+      | "if" -> Token (env, T_IF)
+      | "implements" -> Token (env, T_IMPLEMENTS)
+      | "import" -> Token (env, T_IMPORT)
+      | "in" -> Token (env, T_IN)
+      | "instanceof" -> Token (env, T_INSTANCEOF)
+      | "interface" -> Token (env, T_INTERFACE)
+      | "let" -> Token (env, T_LET)
+      | "new" -> Token (env, T_NEW)
+      | "null" -> Token (env, T_NULL)
+      | "of" -> Token (env, T_OF)
+      | "opaque" -> Token (env, T_OPAQUE)
+      | "package" -> Token (env, T_PACKAGE)
+      | "private" -> Token (env, T_PRIVATE)
+      | "protected" -> Token (env, T_PROTECTED)
+      | "public" -> Token (env, T_PUBLIC)
+      | "return" -> Token (env, T_RETURN)
+      | "static" -> Token (env, T_STATIC)
+      | "super" -> Token (env, T_SUPER)
+      | "switch" -> Token (env, T_SWITCH)
+      | "this" -> Token (env, T_THIS)
+      | "throw" -> Token (env, T_THROW)
+      | "true" -> Token (env, T_TRUE)
+      | "try" -> Token (env, T_TRY)
+      | "type" -> Token (env, T_TYPE)
+      | "typeof" -> Token (env, T_TYPEOF)
+      | "var" -> Token (env, T_VAR)
+      | "void" -> Token (env, T_VOID)
+      | "while" -> Token (env, T_WHILE)
+      | "with" -> Token (env, T_WITH)
+      | "yield" -> Token (env, T_YIELD)
+      | _ ->
+          Token
+            ( nenv,
+              T_IDENTIFIER { loc; value; raw = Sedlexing.string_of_utf8 raw } ))
   | eof ->
     let env =
       if is_in_comment_syntax env then
@@ -1463,20 +1467,27 @@ let jsx_tag env lexbuf =
     let loc = { Loc.source = Lex_env.source env; start; _end } in
     Token (env, T_JSX_TEXT (loc, value, raw))
   | js_id_start ->
-    let start_offset = Sedlexing.lexeme_start lexbuf in
-    (* see #3837, we should fix it - the work could be done in decoding later - cold path*)
-    loop_jsx_id_continues lexbuf;
-    let end_offset = Sedlexing.lexeme_end lexbuf in
-    let raw = Array.sub (Sedlexing.rawbuffer lexbuf) start_offset (end_offset - start_offset) in
-    let loc = loc_of_offsets env start_offset end_offset in 
-    Token (env, T_JSX_IDENTIFIER { raw = Sedlexing.string_of_utf8 raw ; loc})
-  | (ascii_id_start, Star ('-' | ascii_id_continue)) ->
-    let loc = loc_of_lexbuf env lexbuf in 
-    Token (env, T_JSX_IDENTIFIER { raw = lexeme lexbuf; loc })
-    (* This is not necessary at this time, but we
-        play safe here, so that we can still add keywords in this tokenizer
-       otherwise it will be broken in the refactoring in the future
-    *)
+      let old_lexeme_start = lexbuf.Sedlexing.start_pos in 
+      let start_offset = Sedlexing.lexeme_start lexbuf in
+      (* see #3837, we should fix it - the work could be done in decoding later - cold path*)
+      loop_jsx_id_continues lexbuf;
+      let end_offset = Sedlexing.lexeme_end lexbuf in
+      lexbuf.Sedlexing.start_pos <- old_lexeme_start ;
+      let raw =
+        Array.sub
+          (Sedlexing.rawbuffer lexbuf)
+          start_offset
+          (end_offset - start_offset)
+      in
+      let loc = loc_of_offsets env start_offset end_offset in
+      Token (env, T_JSX_IDENTIFIER { raw = Sedlexing.string_of_utf8 raw; loc })
+      (* | (ascii_id_start, Star ('-' | ascii_id_continue)) ->
+         let loc = loc_of_lexbuf env lexbuf in
+         Token (env, T_JSX_IDENTIFIER { raw = lexeme lexbuf; loc }) *)
+      (* This is not necessary at this time, but we
+          play safe here, so that we can still add keywords in this tokenizer
+         otherwise it will be broken in the refactoring in the future
+      *)
   | any -> Token (env, T_ERROR (lexeme lexbuf))
   | _ -> failwith "unreachable jsx_tag"
 
@@ -1776,23 +1787,7 @@ let type_token env lexbuf =
     let num = lexeme lexbuf in
     Token (env, mk_num_singleton NORMAL num)
   (* Keywords *)
-  | "any" -> Token (env, T_ANY_TYPE)
-  | "bool" -> Token (env, T_BOOLEAN_TYPE BOOL)
-  | "boolean" -> Token (env, T_BOOLEAN_TYPE BOOLEAN)
-  | "empty" -> Token (env, T_EMPTY_TYPE)
-  | "extends" -> Token (env, T_EXTENDS)
-  | "false" -> Token (env, T_FALSE)
-  | "interface" -> Token (env, T_INTERFACE)
-  | "mixed" -> Token (env, T_MIXED_TYPE)
-  | "null" -> Token (env, T_NULL)
-  | "number" -> Token (env, T_NUMBER_TYPE)
-  | "bigint" -> Token (env, T_BIGINT_TYPE)
-  | "static" -> Token (env, T_STATIC)
-  | "string" -> Token (env, T_STRING_TYPE)
-  | "true" -> Token (env, T_TRUE)
-  | "typeof" -> Token (env, T_TYPEOF)
-  | "void" -> Token (env, T_VOID_TYPE)
-  | "symbol" -> Token (env, T_SYMBOL_TYPE)
+  (* `%` is not a valid unicode name *)
   | "%checks" -> Token (env, T_CHECKS)
   (* Syntax *)
   | "[" -> Token (env, T_LBRACKET)
@@ -1845,20 +1840,48 @@ let type_token env lexbuf =
      | js_id_start
 
      a\lambda will not be lexed correctly in this case
-   *)
-  | js_id_start ->
-    let start_offset = Sedlexing.lexeme_start lexbuf in
-    loop_id_continues lexbuf |> ignore;
-    let end_offset = Sedlexing.lexeme_end lexbuf in
-    let loc = loc_of_offsets env start_offset end_offset in
-    let raw = Array.sub (Sedlexing.rawbuffer lexbuf) start_offset (end_offset - start_offset) in
-    let (env, value) = decode_identifier env raw in
-    Token (env, T_IDENTIFIER { loc; value; raw = Sedlexing.string_of_utf8 raw })
-  | (ascii_id_start, Star ascii_id_continue) ->
-    (* fast path *)
-    let loc = loc_of_lexbuf env lexbuf in
-    let raw = lexeme lexbuf in
-    Token (env, T_IDENTIFIER { loc; value = raw; raw })
+  *)
+  | js_id_start -> (
+      let old_lexeme_start = lexbuf.Sedlexing.start_pos in 
+      let start_offset = Sedlexing.lexeme_start lexbuf in
+      loop_id_continues lexbuf |> ignore;
+      let end_offset = Sedlexing.lexeme_end lexbuf in
+      let loc = loc_of_offsets env start_offset end_offset in
+      let raw =
+        Array.sub
+          (Sedlexing.rawbuffer lexbuf)
+          start_offset
+          (end_offset - start_offset)
+      in
+      lexbuf.Sedlexing.start_pos <- old_lexeme_start ;
+      let env, value = decode_identifier env raw in
+      match value with
+      | "any" -> Token (env, T_ANY_TYPE)
+      | "bool" -> Token (env, T_BOOLEAN_TYPE BOOL)
+      | "boolean" -> Token (env, T_BOOLEAN_TYPE BOOLEAN)
+      | "empty" -> Token (env, T_EMPTY_TYPE)
+      | "extends" -> Token (env, T_EXTENDS)
+      | "false" -> Token (env, T_FALSE)
+      | "interface" -> Token (env, T_INTERFACE)
+      | "mixed" -> Token (env, T_MIXED_TYPE)
+      | "null" -> Token (env, T_NULL)
+      | "number" -> Token (env, T_NUMBER_TYPE)
+      | "bigint" -> Token (env, T_BIGINT_TYPE)
+      | "static" -> Token (env, T_STATIC)
+      | "string" -> Token (env, T_STRING_TYPE)
+      | "true" -> Token (env, T_TRUE)
+      | "typeof" -> Token (env, T_TYPEOF)
+      | "void" -> Token (env, T_VOID_TYPE)
+      | "symbol" -> Token (env, T_SYMBOL_TYPE)
+      | _ ->
+          Token
+            ( env,
+              T_IDENTIFIER { loc; value; raw = Sedlexing.string_of_utf8 raw } ))
+  (* | (ascii_id_start, Star ascii_id_continue) ->
+     (* fast path *)
+     let loc = loc_of_lexbuf env lexbuf in
+     let raw = lexeme lexbuf in
+     Token (env, T_IDENTIFIER { loc; value = raw; raw }) *)
   (* Others *)
   | eof ->
     let env =
