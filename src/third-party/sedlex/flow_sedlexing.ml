@@ -276,4 +276,4 @@ let string_of_utf8 (lexbuf : int array) : string =
 
 let backoff lexbuf npos =
   lexbuf.pos <- lexbuf.pos - npos  
-let rawbuffer lexbuf = lexbuf.buf 
+

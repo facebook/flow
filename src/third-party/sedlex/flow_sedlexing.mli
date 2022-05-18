@@ -7,25 +7,7 @@
 exception InvalidCodepoint of int
 exception MalFormed
 type apos = int
-type lexbuf = {
-  buf: int array;
-  (* Number of meaningful char in buffer *)
-  len: int;
-  (* pos is the index in the buffer *)
-  mutable pos: int;
-  (* bol is the index in the input stream but not buffer *)
-  mutable curr_bol: int;
-  (* start from 1, if it is 0, we would not track postion info for you *)
-  mutable curr_line: int;
-  (* First char we need to keep visible *)
-  mutable start_pos: int;
-  mutable start_bol: int;
-  mutable start_line: int;
-  mutable marked_pos: int;
-  mutable marked_bol: int;
-  mutable marked_line: int;
-  mutable marked_val: int;
-}
+type lexbuf 
 val lexbuf_clone : lexbuf -> lexbuf
 
 val from_int_array : int array -> lexbuf
@@ -62,5 +44,4 @@ val string_of_utf8 : int array -> string
 *)
 val current_code_point : lexbuf -> int
 val backoff : lexbuf -> int -> unit
-val rawbuffer : lexbuf -> int array
 val set_lexeme_start : lexbuf -> int -> unit

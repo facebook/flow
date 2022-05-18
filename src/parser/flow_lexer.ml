@@ -927,18 +927,12 @@ let token (env : Lex_env.t) lexbuf : result =
     let env = illegal env (loc_of_lexbuf env lexbuf) in
     Continue env
   | js_id_start -> (
-      let old_lexeme_start = lexbuf.Sedlexing.start_pos in 
       let start_offset = Sedlexing.lexeme_start lexbuf in
       loop_id_continues lexbuf |> ignore;
       let end_offset = Sedlexing.lexeme_end lexbuf in
       let loc = loc_of_offsets env start_offset end_offset in
-      lexbuf.Sedlexing.start_pos <- old_lexeme_start ; 
-      let raw =
-        Array.sub
-          (Sedlexing.rawbuffer lexbuf)
-          start_offset
-          (end_offset - start_offset)
-      in
+      Sedlexing.set_lexeme_start lexbuf start_offset ; 
+      let raw = Sedlexing.lexeme lexbuf in 
       let nenv, value = decode_identifier env raw in
       match value with
       | "async" -> Token (env, T_ASYNC)
@@ -1474,12 +1468,7 @@ let jsx_tag env lexbuf =
       loop_jsx_id_continues lexbuf;
       let end_offset = Sedlexing.lexeme_end lexbuf in
       Sedlexing.set_lexeme_start lexbuf start_offset ;
-      let raw =
-        Array.sub
-          (Sedlexing.rawbuffer lexbuf)
-          start_offset
-          (end_offset - start_offset)
-      in
+      let raw = Sedlexing.lexeme lexbuf in 
       let loc = loc_of_offsets env start_offset end_offset in
       Token (env, T_JSX_IDENTIFIER { raw = Sedlexing.string_of_utf8 raw; loc })
   | any -> Token (env, T_ERROR (lexeme lexbuf))
@@ -1825,18 +1814,12 @@ let type_token env lexbuf =
   | '-' -> Token (env, T_MINUS)
   (* Identifiers *)
   | js_id_start -> (
-      let old_lexeme_start = lexbuf.Sedlexing.start_pos in 
       let start_offset = Sedlexing.lexeme_start lexbuf in
       loop_id_continues lexbuf |> ignore;
       let end_offset = Sedlexing.lexeme_end lexbuf in
       let loc = loc_of_offsets env start_offset end_offset in
-      let raw =
-        Array.sub
-          (Sedlexing.rawbuffer lexbuf)
-          start_offset
-          (end_offset - start_offset)
-      in
-      lexbuf.Sedlexing.start_pos <- old_lexeme_start ;
+      Sedlexing.set_lexeme_start lexbuf start_offset;
+      let raw = Sedlexing.lexeme lexbuf in      
       let env, value = decode_identifier env raw in
       match value with
       | "any" -> Token (env, T_ANY_TYPE)
