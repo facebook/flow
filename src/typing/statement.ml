@@ -6609,8 +6609,7 @@ struct
         let use_op = Op (GetProperty reason) in
         get_prop ~cond:None cx reason ~use_op react (reason, "Fragment")
     in
-    let hint = decompose_hint Decomp_JsxChildren (Hint_t fragment_t) in
-    let (unresolved_params, frag_children) = collapse_children cx ~hint frag_children in
+    let (unresolved_params, frag_children) = collapse_children cx ~hint:Hint_None frag_children in
     let locs = (expr_loc, frag_opening_element, children_loc) in
     let t =
       jsx_desugar
@@ -6658,8 +6657,7 @@ struct
           let attributes =
             Base.List.map ~f:Tast_utils.error_mapper#jsx_opening_attribute attributes
           in
-          let hint = decompose_hint Decomp_JsxChildren Hint_None in
-          let (_, children) = collapse_children cx ~hint children in
+          let (_, children) = collapse_children cx ~hint:Hint_None children in
           (t, name, attributes, children)
         else
           let reason =
@@ -7078,8 +7076,7 @@ struct
         )
       )
     | SpreadChild { SpreadChild.expression = expr; comments } ->
-      let hint = decompose_hint Decomp_JsxChildrenSpread hint in
-      let (((_, t), _) as e) = expression cx ~hint expr in
+      let (((_, t), _) as e) = expression cx ~hint:Hint_None expr in
       (Some (UnresolvedSpreadArg t), (loc, SpreadChild { SpreadChild.expression = e; comments }))
     | Text { Text.value; raw } ->
       let unresolved_param_opt =

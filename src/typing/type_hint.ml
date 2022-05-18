@@ -47,10 +47,8 @@ type hint_decomposition =
   | Decomp_NullishCoalesce
   (* Type of C in `<C [props]/>` becomes hint on `props` *)
   | Decomp_JsxProps
-  (* Type of C in <C>{e}</C> becomes hint on `e` *)
+  (* Type of properties of C in <C>{e}</C> becomes hint on `e` *)
   | Decomp_JsxChildren
-  (* Type of C in <C>{...e}</C> becomes hint on `e` *)
-  | Decomp_JsxChildrenSpread
 
 type hint =
   | Hint_t of Type.t
@@ -75,7 +73,6 @@ let string_of_hint_unknown_kind = function
   | Decomp_NullishCoalesce -> "Decomp_NullishCoalesce"
   | Decomp_JsxProps -> "Decomp_JsxProps"
   | Decomp_JsxChildren -> "Decomp_JsxChildren"
-  | Decomp_JsxChildrenSpread -> "Decomp_JsxChildrenSpread"
 
 let string_of_hint ~on_hint = function
   | Hint_t t -> Utils_js.spf "Hint_t (%s)" (on_hint t)
@@ -252,9 +249,6 @@ let type_of_hint_decomposition cx op t =
         in
         annot true t
       | Decomp_JsxChildren ->
-        (* TODO *)
-        failwith "Not implemented"
-      | Decomp_JsxChildrenSpread ->
         (* TODO *)
         failwith "Not implemented"
       | Decomp_MethodElem _ ->
