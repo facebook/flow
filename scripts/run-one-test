@@ -193,9 +193,9 @@ runtest() {
     name=${dir##*/}
     exp_file="${name}.exp"
     # Add appropriate extension to expected file
-    if [[ "$new_env" -eq 1 ]] && [ -f "${dir}/${exp_file}.new_env" ]; then
+    if [[ "$new_env" -eq 1 || "$resolved_env" -eq 1 ]] && [ -f "${dir}/${exp_file}.new_env" ]; then
       exp_file="${exp_file}.new_env"
-    elif [[ "$new_env" -eq 1 || "$constrained_writes" -eq 1 ]] \
+    elif [[ "$new_env" -eq 1 || "$constrained_writes" -eq 1 || "$resolved_env" -eq 1 ]] \
       && [ -f "${dir}/${exp_file}.cw" ];
     then
       exp_file="${exp_file}.cw"
@@ -389,6 +389,9 @@ runtest() {
         fi
         if [[ "$new_env" -eq 1 ]]; then
           env_flag="--env-mode ssa"
+        fi
+        if [[ "$resolved_env" -eq 1 ]]; then
+          env_flag="--env-mode resolved"
         fi
 
         # Helper function to generate saved state. If anything goes wrong, it
