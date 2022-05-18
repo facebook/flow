@@ -51,8 +51,13 @@ let remove_dot_flow_suffix = function
   | module_ -> module_
 
 let module_of_module_ref ~resolved_requires ~root ~write_root module_ref =
-  SMap.find module_ref resolved_requires.Parsing_heaps.resolved_modules
-  |> Module.of_modulename ~root ~write_root
+  match SMap.find module_ref resolved_requires.Parsing_heaps.resolved_modules with
+  | Ok m -> Module.of_modulename ~root ~write_root m
+  | Error name ->
+    (* TODO: We reach this codepath for requires that might resolve to builtin
+     * modules. During check we check the master context, which we can also do
+     * here. *)
+    Module.String name
 
 let loc_of_index ~loc_source ~reader (i : Type_sig_collections.Locs.index) : Loc.t =
   (i :> int)

@@ -748,7 +748,7 @@ let get_cycle ~env fn types_only =
 
 let find_module ~options ~reader (moduleref, filename) =
   let file = File_key.SourceFile filename in
-  let module_name =
+  let resolved_module =
     Module_js.imported_module
       ~options
       ~reader:(Abstract_state_reader.State_reader reader)
@@ -756,7 +756,16 @@ let find_module ~options ~reader (moduleref, filename) =
       file
       moduleref
   in
-  match Parsing_heaps.Reader.get_provider ~reader module_name with
+  let provider =
+    match resolved_module with
+    | Ok m -> Parsing_heaps.Reader.get_provider ~reader m
+    | Error _ ->
+      (* TODO: We reach this codepath for requires that might resolve to
+       * builtin modules. During check we check the master context, which we
+       * can also do here. *)
+      None
+  in
+  match provider with
   | Some addr -> Some (Parsing_heaps.read_file_key addr)
   | None -> None
 
@@ -826,8 +835,12 @@ let get_imports ~options ~reader module_names =
         let mlocs =
           SMap.fold
             (fun mref locs acc ->
-              let m = SMap.find mref resolved_modules in
-              Modulename.Map.add m locs acc)
+              let mname =
+                match SMap.find mref resolved_modules with
+                | Ok m -> m
+                | Error name -> Modulename.String name
+              in
+              Modulename.Map.add mname locs acc)
             requires
             Modulename.Map.empty
         in

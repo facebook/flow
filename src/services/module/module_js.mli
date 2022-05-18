@@ -17,7 +17,7 @@ val imported_module :
   File_key.t ->
   ?phantom_acc:phantom_acc ->
   string ->
-  Modulename.t
+  Parsing_heaps.resolved_module
 
 (* repick providers for dirty modules *)
 val commit_modules :

@@ -7,7 +7,7 @@
 
 type module_ref = string
 
-type require = module_ref * ALoc.t Nel.t * Modulename.t
+type require = module_ref * ALoc.t Nel.t * Parsing_heaps.resolved_module
 
 type check_file =
   File_key.t ->
@@ -185,16 +185,18 @@ let mk_check_file ~options ~reader ~cache () =
   (* Create a type representing the exports of a dependency. For checked
    * dependencies, we will create a "sig tvar" with a lazy thunk that evaluates
    * to a ModuleT type. *)
-  let rec dep_module_t cx mref m =
-    match get_provider m with
-    | None -> unknown_module_t cx mref m
-    | Some dep_addr ->
-      (match Parsing_heaps.read_file_key dep_addr with
-      | File_key.ResourceFile f -> Merge.merge_resource_module_t cx f
-      | dep_file ->
-        (match get_typed_parse dep_addr with
-        | Some parse -> sig_module_t cx dep_file parse
-        | None -> unchecked_module_t cx mref))
+  let rec dep_module_t cx mref = function
+    | Error m -> unknown_module_t cx mref (Modulename.String m)
+    | Ok m ->
+      (match get_provider m with
+      | None -> unknown_module_t cx mref m
+      | Some dep_addr ->
+        (match Parsing_heaps.read_file_key dep_addr with
+        | File_key.ResourceFile f -> Merge.merge_resource_module_t cx f
+        | dep_file ->
+          (match get_typed_parse dep_addr with
+          | Some parse -> sig_module_t cx dep_file parse
+          | None -> unchecked_module_t cx mref)))
   and sig_module_t cx file_key parse _loc =
     let create_file = dep_file file_key parse in
     let leader = lazy (find_leader file_key parse |> Parsing_heaps.read_file_key) in

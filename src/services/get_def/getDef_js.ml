@@ -117,22 +117,28 @@ let rec process_request ~options ~reader ~cx ~is_legit_require ~typed_ast :
     let module_t = Type.OpenT (Context.find_require cx source_loc) |> Members.resolve_type cx in
     (* function just so we don't do the work unless it's actually needed. *)
     let get_imported_file () =
+      let resolved_module =
+        Module_js.imported_module
+          ~options
+          ~reader:(Abstract_state_reader.State_reader reader)
+          ~node_modules_containers:!Files.node_modules_containers
+          (Context.file cx)
+          name
+      in
       let provider =
-        Parsing_heaps.Reader.get_provider
-          ~reader
-          (Module_js.imported_module
-             ~options
-             ~reader:(Abstract_state_reader.State_reader reader)
-             ~node_modules_containers:!Files.node_modules_containers
-             (Context.file cx)
-             name
-          )
+        match resolved_module with
+        | Ok m -> Parsing_heaps.Reader.get_provider ~reader m
+        | Error _ ->
+          (* TODO: We reach this codepath for requires that might resolve to
+           * builtin modules. During check we check the master context, which we
+           * can also do here. *)
+          None
       in
       match provider with
+      | None -> Error (spf "Failed to find imported file %s" name)
       | Some addr ->
         let file = Parsing_heaps.read_file_key addr in
         Ok Loc.{ none with source = Some file }
-      | None -> Error (spf "Failed to find imported file %s" name)
     in
     Type.(
       (match module_t with

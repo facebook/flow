@@ -70,12 +70,13 @@ type file_module_addr = Heap.file_module SharedMem.addr
 
 type provider_addr = Heap.file Heap.entity SharedMem.addr
 
+type resolved_module = (Modulename.t, string) Result.t
+
 type resolved_requires = {
-  resolved_modules: Modulename.t SMap.t;
+  resolved_modules: resolved_module SMap.t;
   phantom_dependencies: Modulename.Set.t;
   hash: Xx.hash;
 }
-[@@deriving show]
 
 type component_file = File_key.t * file_addr * [ `typed ] parse_addr
 
@@ -84,10 +85,16 @@ let ( let* ) = Option.bind
 let mk_resolved_requires ~resolved_modules ~phantom_dependencies =
   let state = Xx.init 0L in
   SMap.iter
-    (fun mref mname ->
+    (fun mref resolved_module ->
       Xx.update_int state (String.length mref);
       Xx.update state mref;
-      Xx.update state (Modulename.to_string mname))
+      match resolved_module with
+      | Ok mname ->
+        Xx.update_int state 0;
+        Xx.update state (Modulename.to_string mname)
+      | Error name ->
+        Xx.update_int state 1;
+        Xx.update state name)
     resolved_modules;
   Modulename.Set.iter
     (fun mname -> Xx.update state (Modulename.to_string mname))

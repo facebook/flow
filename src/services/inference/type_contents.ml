@@ -177,13 +177,12 @@ let unchecked_dependencies ~options ~reader file file_sig =
   let node_modules_containers = !Files.node_modules_containers in
   let resolved_requires =
     let require_loc_map = File_sig.With_Loc.(require_loc_map file_sig.module_sig) in
+    let reader = Abstract_state_reader.State_reader reader in
     SMap.fold
-      (fun r _locs resolved_rs ->
-        let resolved_r =
-          let reader = Abstract_state_reader.State_reader reader in
-          Module_js.imported_module ~options ~reader ~node_modules_containers file r
-        in
-        Modulename.Set.add resolved_r resolved_rs)
+      (fun r _locs acc ->
+        match Module_js.imported_module ~options ~reader ~node_modules_containers file r with
+        | Ok m -> Modulename.Set.add m acc
+        | Error _ -> acc)
       require_loc_map
       Modulename.Set.empty
   in
