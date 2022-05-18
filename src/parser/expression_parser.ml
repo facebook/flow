@@ -1565,7 +1565,7 @@ module Expression
     let filtered_flags = Buffer.create (String.length raw_flags) in
     String.iter
       (function
-        | ('g' | 'i' | 'm' | 's' | 'u' | 'y') as c -> Buffer.add_char filtered_flags c
+        | ('d' | 'g' | 'i' | 'm' | 's' | 'u' | 'y') as c -> Buffer.add_char filtered_flags c
         | _ -> ())
       raw_flags;
     let flags = Buffer.contents filtered_flags in
