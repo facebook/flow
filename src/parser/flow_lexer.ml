@@ -184,7 +184,7 @@ let rec loop_id_continues lexbuf =
   | eof -> true
   | any ->
     (* TODO: Optimize later *)
-    let s = (Sedlexing.lexeme lexbuf).(0) in
+    let s = Sedlexing.current_code_point lexbuf in
     if Js_id.is_valid_unicode_id s then
       loop_id_continues lexbuf
     else begin
@@ -201,8 +201,7 @@ let rec loop_jsx_id_continues lexbuf =
     loop_jsx_id_continues lexbuf
   | eof -> ()
   | any ->
-    (* TODO: Optimize later *)
-    let s = (Sedlexing.lexeme lexbuf).(0) in
+    let s = Sedlexing.current_code_point lexbuf in
     if s = Char.code '-' || Js_id.is_valid_unicode_id s then
       loop_jsx_id_continues lexbuf
     else

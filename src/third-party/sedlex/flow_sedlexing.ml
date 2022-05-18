@@ -15,7 +15,7 @@ type apos = int
 
 (* critical states:
   [pos] [curr_bol] [curr_line]
-  
+  The state of [curr_bol] and [curr_line] only changes when we hit a newline
   [marked_pos] [marked_bol] [marked_line]
   [start_pos] [start_bol] [start_line]
   get reset whenever we get a new token
@@ -137,7 +137,7 @@ let sub_lexeme lexbuf pos len = Array.sub lexbuf.buf (lexbuf.start_pos + pos) le
 
 let lexeme lexbuf = Array.sub lexbuf.buf lexbuf.start_pos (lexbuf.pos - lexbuf.start_pos)
 
-
+let current_code_point lexbuf = lexbuf.buf.(lexbuf.start_pos) 
 (* Decode UTF-8 encoded [s] into codepoints in [a], returning the length of the
  * decoded string.
  *

@@ -60,5 +60,6 @@ val string_of_utf8 : int array -> string
 (** Two APIs used when we want to do customize lexing 
     instead of using the regex based engine
 *)
+val current_code_point : lexbuf -> int
 val backoff : lexbuf -> int -> unit
 val rawbuffer : lexbuf -> int array
