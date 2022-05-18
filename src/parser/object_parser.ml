@@ -187,8 +187,7 @@ module Object
               env
           in
           let (body, strict) = Declaration.function_body env ~async ~generator ~expression:false in
-          let simple = Declaration.is_simple_function_params params in
-          Declaration.strict_post_check env ~strict ~simple None params;
+          Declaration.strict_post_check env ~strict None params;
           {
             Function.id = None;
             params;
@@ -283,8 +282,7 @@ module Object
             let (body, strict) =
               Declaration.function_body env ~async ~generator ~expression:false
             in
-            let simple = Declaration.is_simple_function_params params in
-            Declaration.strict_post_check env ~strict ~simple None params;
+            Declaration.strict_post_check env ~strict None params;
             {
               Function.id = None;
               params;
@@ -832,8 +830,7 @@ module Object
               let (body, strict) =
                 Declaration.function_body env ~async ~generator ~expression:false
               in
-              let simple = Declaration.is_simple_function_params params in
-              Declaration.strict_post_check env ~strict ~simple None params;
+              Declaration.strict_post_check env ~strict None params;
               {
                 Function.id = None;
                 params;

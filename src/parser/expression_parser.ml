@@ -1112,8 +1112,7 @@ module Expression
             env
         in
         let (body, strict) = Declaration.function_body env ~async ~generator ~expression:true in
-        let simple = Declaration.is_simple_function_params params in
-        Declaration.strict_post_check env ~strict ~simple id params;
+        Declaration.strict_post_check env ~strict id params;
         Expression.Function
           {
             Function.id;
@@ -1699,8 +1698,7 @@ module Expression
       (* Now we know for sure this is an arrow function *)
       let env = without_error_callback env in
       let (end_loc, (body, strict)) = with_loc (concise_function_body ~async) env in
-      let simple = Declaration.is_simple_function_params params in
-      Declaration.strict_post_check env ~strict ~simple None params;
+      Declaration.strict_post_check env ~strict None params;
       let loc = Loc.btwn start_loc end_loc in
       Cover_expr
         ( loc,

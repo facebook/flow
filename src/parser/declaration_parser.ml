@@ -24,12 +24,9 @@ module type DECLARATION = sig
   val function_body :
     env -> async:bool -> generator:bool -> expression:bool -> (Loc.t, Loc.t) Function.body * bool
 
-  val is_simple_function_params : (Loc.t, Loc.t) Ast.Function.Params.t -> bool
-
   val strict_post_check :
     env ->
     strict:bool ->
-    simple:bool ->
     (Loc.t, Loc.t) Identifier.t option ->
     (Loc.t, Loc.t) Ast.Function.Params.t ->
     unit
@@ -107,11 +104,19 @@ module Declaration (Parse : Parser_common.PARSER) (Type : Type_parser.TYPE) : DE
     in
     pattern
 
+  let is_simple_parameter_list =
+    let is_simple_param = function
+      | (_, { Ast.Function.Param.argument = (_, Pattern.Identifier _); default = None }) -> true
+      | _ -> false
+    in
+    fun (_, { Ast.Function.Params.params; rest; comments = _; this_ = _ }) ->
+      rest = None && List.for_all is_simple_param params
+
   (* Strict is true if we were already in strict mode or if we are newly in
-   * strict mode due to a directive in the function.
-   * Simple is the IsSimpleParameterList thing from the ES6 spec *)
-  let strict_post_check
-      env ~strict ~simple id (_, { Ast.Function.Params.params; rest; this_ = _; comments = _ }) =
+   * strict mode due to a directive in the function. *)
+  let strict_post_check env ~strict id params =
+    let simple = is_simple_parameter_list params in
+    let (_, { Ast.Function.Params.params; rest; this_ = _; comments = _ }) = params in
     if strict || not simple then (
       (* If we are doing this check due to strict mode than there are two
        * cases to consider. The first is when we were already in strict mode
@@ -289,14 +294,6 @@ module Declaration (Parse : Parser_common.PARSER) (Type : Type_parser.TYPE) : DE
     else
       (false, [])
 
-  let is_simple_function_params =
-    let is_simple_param = function
-      | (_, { Ast.Function.Param.argument = (_, Pattern.Identifier _); default = None }) -> true
-      | _ -> false
-    in
-    fun (_, { Ast.Function.Params.params; rest; comments = _; this_ = _ }) ->
-      rest = None && List.for_all is_simple_param params
-
   let _function =
     with_loc (fun env ->
         let (async, leading_async) = async env in
@@ -350,8 +347,7 @@ module Declaration (Parse : Parser_common.PARSER) (Type : Type_parser.TYPE) : DE
             env
         in
         let (body, strict) = function_body env ~async ~generator ~expression:false in
-        let simple = is_simple_function_params params in
-        strict_post_check env ~strict ~simple id params;
+        strict_post_check env ~strict id params;
         Statement.FunctionDeclaration
           {
             Function.id;
