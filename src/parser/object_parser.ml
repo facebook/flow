@@ -186,8 +186,10 @@ module Object
                 (tparams, params, return))
               env
           in
-          let (body, strict) = Declaration.function_body env ~async ~generator ~expression:false in
-          Declaration.strict_post_check env ~strict None params;
+          let (body, contains_use_strict) =
+            Declaration.function_body env ~async ~generator ~expression:false
+          in
+          Declaration.strict_post_check env ~contains_use_strict None params;
           {
             Function.id = None;
             params;
@@ -279,10 +281,10 @@ module Object
                   (tparams, params, return))
                 env
             in
-            let (body, strict) =
+            let (body, contains_use_strict) =
               Declaration.function_body env ~async ~generator ~expression:false
             in
-            Declaration.strict_post_check env ~strict None params;
+            Declaration.strict_post_check env ~contains_use_strict None params;
             {
               Function.id = None;
               params;
@@ -827,10 +829,10 @@ module Object
                     (tparams, params, return))
                   env
               in
-              let (body, strict) =
+              let (body, contains_use_strict) =
                 Declaration.function_body env ~async ~generator ~expression:false
               in
-              Declaration.strict_post_check env ~strict None params;
+              Declaration.strict_post_check env ~contains_use_strict None params;
               {
                 Function.id = None;
                 params;

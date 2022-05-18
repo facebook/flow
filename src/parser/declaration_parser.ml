@@ -26,7 +26,7 @@ module type DECLARATION = sig
 
   val strict_post_check :
     env ->
-    strict:bool ->
+    contains_use_strict:bool ->
     (Loc.t, Loc.t) Identifier.t option ->
     (Loc.t, Loc.t) Ast.Function.Params.t ->
     unit
@@ -112,9 +112,8 @@ module Declaration (Parse : Parser_common.PARSER) (Type : Type_parser.TYPE) : DE
     fun (_, { Ast.Function.Params.params; rest; comments = _; this_ = _ }) ->
       rest = None && List.for_all is_simple_param params
 
-  (* Strict is true if we were already in strict mode or if we are newly in
-   * strict mode due to a directive in the function. *)
-  let strict_post_check env ~strict id params =
+  let strict_post_check env ~contains_use_strict id params =
+    let strict = contains_use_strict || Parser_env.in_strict_mode env in
     let simple = is_simple_parameter_list params in
     let (_, { Ast.Function.Params.params; rest; this_ = _; comments = _ }) = params in
     if strict || not simple then (
@@ -244,8 +243,8 @@ module Declaration (Parse : Parser_common.PARSER) (Type : Type_parser.TYPE) : DE
 
   let function_body env ~async ~generator ~expression =
     let env = enter_function env ~async ~generator in
-    let (body_block, strict) = Parse.function_block_body env ~expression in
-    (Function.BodyBlock body_block, strict)
+    let (body_block, contains_use_strict) = Parse.function_block_body env ~expression in
+    (Function.BodyBlock body_block, contains_use_strict)
 
   let variance env is_async is_generator =
     let loc = Peek.loc env in
@@ -346,8 +345,8 @@ module Declaration (Parse : Parser_common.PARSER) (Type : Type_parser.TYPE) : DE
               (generator, tparams, id, params, return, predicate, leading))
             env
         in
-        let (body, strict) = function_body env ~async ~generator ~expression:false in
-        strict_post_check env ~strict id params;
+        let (body, contains_use_strict) = function_body env ~async ~generator ~expression:false in
+        strict_post_check env ~contains_use_strict id params;
         Statement.FunctionDeclaration
           {
             Function.id;

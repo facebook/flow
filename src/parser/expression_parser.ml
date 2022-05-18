@@ -1111,8 +1111,10 @@ module Expression
               (id, params, generator, predicate, return, tparams, leading))
             env
         in
-        let (body, strict) = Declaration.function_body env ~async ~generator ~expression:true in
-        Declaration.strict_post_check env ~strict id params;
+        let (body, contains_use_strict) =
+          Declaration.function_body env ~async ~generator ~expression:true
+        in
+        Declaration.strict_post_check env ~contains_use_strict id params;
         Expression.Function
           {
             Function.id;
@@ -1598,11 +1600,11 @@ module Expression
       let env = enter_function env ~async ~generator:false in
       match Peek.token env with
       | T_LCURLY ->
-        let (body_block, strict) = Parse.function_block_body env ~expression:true in
-        (Function.BodyBlock body_block, strict)
+        let (body_block, contains_use_strict) = Parse.function_block_body env ~expression:true in
+        (Function.BodyBlock body_block, contains_use_strict)
       | _ ->
         let expr = Parse.assignment env in
-        (Function.BodyExpression expr, in_strict_mode env)
+        (Function.BodyExpression expr, false)
     in
     fun env ->
       let env = env |> with_error_callback error_callback in
@@ -1697,8 +1699,8 @@ module Expression
 
       (* Now we know for sure this is an arrow function *)
       let env = without_error_callback env in
-      let (end_loc, (body, strict)) = with_loc (concise_function_body ~async) env in
-      Declaration.strict_post_check env ~strict None params;
+      let (end_loc, (body, contains_use_strict)) = with_loc (concise_function_body ~async) env in
+      Declaration.strict_post_check env ~contains_use_strict None params;
       let loc = Loc.btwn start_loc end_loc in
       Cover_expr
         ( loc,

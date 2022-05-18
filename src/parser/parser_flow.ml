@@ -105,10 +105,10 @@ module rec Parse : PARSER = struct
         if octal then strict_error_at env (loc, Parse_error.StrictOctalLiteral)
       | _ -> failwith ("Nooo: " ^ token_to_string token ^ "\n")
     in
-    let rec statement_list env term_fn item_fn (string_tokens, stmts) =
+    let rec statement_list env term_fn item_fn (string_tokens, stmts, contains_use_strict) =
       match Peek.token env with
-      | T_EOF -> (env, string_tokens, stmts)
-      | t when term_fn t -> (env, string_tokens, stmts)
+      | T_EOF -> (env, string_tokens, stmts, contains_use_strict)
+      | t when term_fn t -> (env, string_tokens, stmts, contains_use_strict)
       | T_STRING _ as string_token ->
         let possible_directive = item_fn env in
         let stmts = possible_directive :: stmts in
@@ -116,18 +116,26 @@ module rec Parse : PARSER = struct
         | (_, Ast.Statement.Expression { Ast.Statement.Expression.directive = Some raw; _ }) ->
           (* 14.1.1 says that it has to be "use strict" without any
              escapes, so "use\x20strict" is disallowed. *)
-          let strict = in_strict_mode env || raw = "use strict" in
+          let strict = raw = "use strict" in
+          let env =
+            if strict then
+              with_strict true env
+            else
+              env
+          in
           let string_tokens = string_token :: string_tokens in
-          statement_list (env |> with_strict strict) term_fn item_fn (string_tokens, stmts)
-        | _ -> (env, string_tokens, stmts))
-      | _ -> (env, string_tokens, stmts)
+          statement_list env term_fn item_fn (string_tokens, stmts, contains_use_strict || strict)
+        | _ -> (env, string_tokens, stmts, contains_use_strict))
+      | _ -> (env, string_tokens, stmts, contains_use_strict)
     in
     fun env term_fn item_fn ->
       let env = with_allow_directive true env in
-      let (env, string_tokens, stmts) = statement_list env term_fn item_fn ([], []) in
+      let (env, string_tokens, stmts, contains_use_strict) =
+        statement_list env term_fn item_fn ([], [], false)
+      in
       let env = with_allow_directive false env in
       List.iter (check env) (List.rev string_tokens);
-      (env, stmts)
+      (env, stmts, contains_use_strict)
 
   (* 15.2 *)
   and module_item env =
@@ -150,7 +158,7 @@ module rec Parse : PARSER = struct
     | _ -> statement_list_item env ~decorators
 
   and module_body_with_directives env term_fn =
-    let (env, directives) = directives env term_fn module_item in
+    let (env, directives, _contains_use_strict) = directives env term_fn module_item in
     let stmts = module_body ~term_fn env in
     (* Prepend the directives *)
     List.fold_left (fun acc stmt -> stmt :: acc) stmts directives
@@ -165,11 +173,11 @@ module rec Parse : PARSER = struct
     (fun ~term_fn env -> module_item_list env term_fn [])
 
   and statement_list_with_directives ~term_fn env =
-    let (env, directives) = directives env term_fn statement_list_item in
+    let (env, directives, contains_use_strict) = directives env term_fn statement_list_item in
     let stmts = statement_list ~term_fn env in
     (* Prepend the directives *)
     let stmts = List.fold_left (fun acc stmt -> stmt :: acc) stmts directives in
-    (stmts, in_strict_mode env)
+    (stmts, contains_use_strict)
 
   and statement_list =
     let rec statements env term_fn acc =
@@ -343,7 +351,7 @@ module rec Parse : PARSER = struct
         let leading = Peek.comments env in
         Expect.token env T_LCURLY;
         let term_fn t = t = T_RCURLY in
-        let (body, strict) = statement_list_with_directives ~term_fn env in
+        let (body, contains_use_strict) = statement_list_with_directives ~term_fn env in
         let internal =
           if body = [] then
             Peek.comments env
@@ -362,7 +370,7 @@ module rec Parse : PARSER = struct
         let comments =
           Flow_ast_utils.mk_comments_with_internal_opt ~leading ~trailing ~internal ()
         in
-        ({ Ast.Statement.Block.body; comments }, strict)
+        ({ Ast.Statement.Block.body; comments }, contains_use_strict)
     )
 
   and jsx_element_or_fragment = JSX.element_or_fragment
