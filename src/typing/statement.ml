@@ -3226,9 +3226,7 @@ struct
       let (((_, t), _) as e') = expression cx ~hint e in
       (Arg t, Expression e')
     | Spread (loc, { SpreadElement.argument; comments }) ->
-      let (((_, t), _) as e') =
-        expression cx ~hint:(decompose_hint Decomp_ArgSpread hint) argument
-      in
+      let (((_, t), _) as e') = expression cx ~hint argument in
       (SpreadArg t, Spread (loc, { SpreadElement.argument = e'; comments }))
 
   and array_elements cx ~array_hint undef_loc =

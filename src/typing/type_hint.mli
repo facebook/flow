@@ -9,7 +9,6 @@ type hint_decomposition =
   | Decomp_ObjProp of string
   | Decomp_ObjComputed
   | Decomp_ObjSpread
-  | Decomp_ArgSpread
   | Decomp_ArrElement of int
   | Decomp_ArrSpread of int
   | Decomp_MethodName of Type.propref

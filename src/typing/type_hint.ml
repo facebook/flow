@@ -21,8 +21,6 @@ type hint_decomposition =
   | Decomp_ObjComputed
   (* Hint on `{ ...e }` becomes hint on `e` *)
   | Decomp_ObjSpread
-  (* Hint on the argument spread `...e` becomes hint on `e` *)
-  | Decomp_ArgSpread
   (* Hint on array literal `[e]` becomes hint on `e` *)
   | Decomp_ArrElement of int
   (* Hint on array literal `[...e]` becomes hint on `e` *)
@@ -57,7 +55,6 @@ let string_of_hint_unknown_kind = function
   | Decomp_ObjProp _ -> "Decomp_ObjProp"
   | Decomp_ObjComputed -> "Decomp_ObjComputed"
   | Decomp_ObjSpread -> "Decomp_ObjSpread"
-  | Decomp_ArgSpread -> "Decomp_ArgSpread"
   | Decomp_ArrElement i -> Utils_js.spf "Decomp_ArrElement (%d)" i
   | Decomp_ArrSpread i -> Utils_js.spf "Decomp_ArrSpread (%d)" i
   | Decomp_MethodName _ -> "Decomp_MethodName"
@@ -144,9 +141,6 @@ let fun_t ~params ~rest_param ~return_t =
 let type_of_hint_decomposition cx op t =
   in_sandbox_cx cx (fun () ->
       match op with
-      | Decomp_ArgSpread ->
-        (* TODO *)
-        failwith "Not implemented"
       | Decomp_ArrElement i ->
         let t =
           Tvar.mk_no_wrap_where cx dummy_reason (fun element_t ->
