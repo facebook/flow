@@ -1599,8 +1599,8 @@ module Expression
       let env = enter_function env ~async ~generator:false in
       match Peek.token env with
       | T_LCURLY ->
-        let (loc, body, strict) = Parse.function_block_body env ~expression:true in
-        (Function.BodyBlock (loc, body), strict)
+        let (body_block, strict) = Parse.function_block_body env ~expression:true in
+        (Function.BodyBlock body_block, strict)
       | _ ->
         let expr = Parse.assignment env in
         (Function.BodyExpression expr, in_strict_mode env)

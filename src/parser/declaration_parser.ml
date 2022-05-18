@@ -239,8 +239,8 @@ module Declaration (Parse : Parser_common.PARSER) (Type : Type_parser.TYPE) : DE
 
   let function_body env ~async ~generator ~expression =
     let env = enter_function env ~async ~generator in
-    let (loc, block, strict) = Parse.function_block_body env ~expression in
-    (Function.BodyBlock (loc, block), strict)
+    let (body_block, strict) = Parse.function_block_body env ~expression in
+    (Function.BodyBlock body_block, strict)
 
   let variance env is_async is_generator =
     let loc = Peek.loc env in

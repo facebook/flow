@@ -338,34 +338,31 @@ module rec Parse : PARSER = struct
       }
     )
 
-  and function_block_body ~expression env =
-    let start_loc = Peek.loc env in
-    let leading = Peek.comments env in
-    Expect.token env T_LCURLY;
-    let term_fn t = t = T_RCURLY in
-    let (body, strict) = statement_list_with_directives ~term_fn env in
-    let end_loc = Peek.loc env in
-    let internal =
-      if body = [] then
-        Peek.comments env
-      else
-        []
-    in
-    Expect.token env T_RCURLY;
-    let trailing =
-      match (expression, Peek.token env) with
-      | (true, _)
-      | (_, (T_RCURLY | T_EOF)) ->
-        Eat.trailing_comments env
-      | _ when Peek.is_line_terminator env -> Eat.comments_until_next_line env
-      | _ -> []
-    in
-    ( Loc.btwn start_loc end_loc,
-      {
-        Ast.Statement.Block.body;
-        comments = Flow_ast_utils.mk_comments_with_internal_opt ~leading ~trailing ~internal ();
-      },
-      strict
+  and function_block_body ~expression =
+    with_loc_extra (fun env ->
+        let leading = Peek.comments env in
+        Expect.token env T_LCURLY;
+        let term_fn t = t = T_RCURLY in
+        let (body, strict) = statement_list_with_directives ~term_fn env in
+        let internal =
+          if body = [] then
+            Peek.comments env
+          else
+            []
+        in
+        Expect.token env T_RCURLY;
+        let trailing =
+          match (expression, Peek.token env) with
+          | (true, _)
+          | (_, (T_RCURLY | T_EOF)) ->
+            Eat.trailing_comments env
+          | _ when Peek.is_line_terminator env -> Eat.comments_until_next_line env
+          | _ -> []
+        in
+        let comments =
+          Flow_ast_utils.mk_comments_with_internal_opt ~leading ~trailing ~internal ()
+        in
+        ({ Ast.Statement.Block.body; comments }, strict)
     )
 
   and jsx_element_or_fragment = JSX.element_or_fragment
