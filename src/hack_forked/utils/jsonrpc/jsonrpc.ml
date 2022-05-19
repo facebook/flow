@@ -295,12 +295,6 @@ let get_message (queue : queue) =
 (* Output functions for respond+notify          *)
 (************************************************)
 
-let last_sent_ref : Hh_json.json option ref = ref None
-
-let clear_last_sent () : unit = last_sent_ref := None
-
-let last_sent () : Hh_json.json option = !last_sent_ref
-
 (* respond: sends either a Response or an Error message, according
    to whether the json has an error-code or not. *)
 let respond
@@ -329,7 +323,6 @@ let respond
         | None -> []
         )
     in
-    last_sent_ref := Some response;
     writer response
   )
 
@@ -346,7 +339,6 @@ let notify (writer : writer) ?(powered_by : string option) (method_ : string) (p
         | None -> []
         )
     in
-    last_sent_ref := Some message;
     writer message
   )
 

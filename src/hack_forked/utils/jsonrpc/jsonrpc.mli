@@ -63,9 +63,3 @@ val respond : writer -> ?powered_by:string -> message -> Hh_json.json -> unit
 val notify : writer -> ?powered_by:string -> string -> Hh_json.json -> unit
 
 val get_next_request_id : unit -> int
-
-(* For logging purposes, you can get a copy of which JsonRPC message was last    *)
-(* sent by this module - be it a response, notification, request or cancellation *)
-val last_sent : unit -> Hh_json.json option
-
-val clear_last_sent : unit -> unit
