@@ -60,6 +60,10 @@ let modulename_map_fn ~f = function
   | Modulename.Filename fn -> Modulename.Filename (f fn)
   | Modulename.String _ as module_name -> module_name
 
+let resolved_module_map_fn ~f = function
+  | Ok mname -> Ok (modulename_map_fn ~f mname)
+  | Error _ as err -> err
+
 let update_dependency_graph_filenames f graph =
   let update_set set = FilenameSet.map f set in
   let update_map update_value map =
@@ -188,7 +192,7 @@ end = struct
     in
     let resolved_modules =
       SMap.map
-        (modulename_map_fn ~f:(FileNormalizer.normalize_file_key normalizer))
+        (resolved_module_map_fn ~f:(FileNormalizer.normalize_file_key normalizer))
         resolved_modules
     in
     { Parsing_heaps.resolved_modules; phantom_dependencies; hash }
@@ -500,7 +504,7 @@ end = struct
         phantom_dependencies
     in
     let resolved_modules =
-      SMap.map (modulename_map_fn ~f:(denormalize_file_key_nocache ~root)) resolved_modules
+      SMap.map (resolved_module_map_fn ~f:(denormalize_file_key_nocache ~root)) resolved_modules
     in
     Parsing_heaps.mk_resolved_requires ~resolved_modules ~phantom_dependencies
 

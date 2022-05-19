@@ -216,19 +216,21 @@ let sig_hash ~root =
     Bin.read_module_kind cjs_module es_module buf (Bin.module_kind buf)
   in
 
-  let file_dependency ~reader component_rec component_map m =
-    match Parsing_heaps.Mutator_reader.get_provider ~reader m with
-    | None -> Unchecked
-    | Some addr ->
-      (match Parsing_heaps.read_file_key addr with
-      | File_key.ResourceFile f -> resource_dep f
-      | dep ->
-        (match Parsing_heaps.Mutator_reader.get_typed_parse ~reader addr with
-        | None -> Unchecked
-        | Some parse ->
-          (match FilenameMap.find_opt dep component_map with
-          | Some i -> Cyclic (lazy (Lazy.force component_rec).(i))
-          | None -> Acyclic (lazy (acyclic_dep dep parse)))))
+  let file_dependency ~reader component_rec component_map = function
+    | Error _ -> Unchecked
+    | Ok m ->
+      (match Parsing_heaps.Mutator_reader.get_provider ~reader m with
+      | None -> Unchecked
+      | Some addr ->
+        (match Parsing_heaps.read_file_key addr with
+        | File_key.ResourceFile f -> resource_dep f
+        | dep ->
+          (match Parsing_heaps.Mutator_reader.get_typed_parse ~reader addr with
+          | None -> Unchecked
+          | Some parse ->
+            (match FilenameMap.find_opt dep component_map with
+            | Some i -> Cyclic (lazy (Lazy.force component_rec).(i))
+            | None -> Acyclic (lazy (acyclic_dep dep parse))))))
   in
 
   (* Create a Type_sig_hash.file record for a file in the merged component. *)

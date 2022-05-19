@@ -156,7 +156,7 @@ module type MODULE_SYSTEM = sig
     File_key.t ->
     ?phantom_acc:phantom_acc ->
     string ->
-    Modulename.t
+    Parsing_heaps.resolved_module
 
   (* for a given module name, choose a provider from among a set of
      files with that exported name. also check for duplicates and
@@ -331,8 +331,8 @@ module Node = struct
         (resolve_import ~options ~reader node_modules_containers file ?phantom_acc)
         (module_name_candidates ~options r)
     with
-    | Some m -> m
-    | None -> Modulename.String r
+    | Some m -> Ok m
+    | None -> Error r
 
   (* in node, file names are module names, as guaranteed by
      our implementation of exported_name, so anything but a
@@ -436,8 +436,8 @@ module Haste : MODULE_SYSTEM = struct
      * "valid" matching candidate. *)
     let r = List.hd (module_name_candidates ~options r) in
     match resolve_import ~options ~reader node_modules_containers file ?phantom_acc r with
-    | Some m -> m
-    | None -> Modulename.String r
+    | Some m -> Ok m
+    | None -> Error r
 
   (* in haste, many files may provide the same module. here we're also
      supporting the notion of mock modules - allowed duplicates used as

@@ -21,17 +21,20 @@ type file_module_addr = SharedMem.NewAPI.file_module SharedMem.addr
 
 type provider_addr = SharedMem.NewAPI.file SharedMem.NewAPI.entity SharedMem.addr
 
+type resolved_module = (Modulename.t, string) Result.t
+
 type resolved_requires = {
-  resolved_modules: Modulename.t SMap.t;
+  resolved_modules: resolved_module SMap.t;
   phantom_dependencies: Modulename.Set.t;
   hash: Xx.hash;
 }
-[@@deriving show]
 
 type component_file = File_key.t * file_addr * [ `typed ] parse_addr
 
 val mk_resolved_requires :
-  resolved_modules:Modulename.t SMap.t -> phantom_dependencies:Modulename.Set.t -> resolved_requires
+  resolved_modules:resolved_module SMap.t ->
+  phantom_dependencies:Modulename.Set.t ->
+  resolved_requires
 
 val get_file_addr : File_key.t -> file_addr option
 

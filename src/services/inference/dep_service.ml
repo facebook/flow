@@ -104,7 +104,11 @@ let calc_direct_dependents_job acc changed_modules =
   let dependents = ref FilenameSet.empty in
   Parsing_heaps.iter_resolved_requires (fun file { resolved_modules; phantom_dependencies; _ } ->
       if
-        SMap.exists (fun _ m -> Modulename.Set.mem m changed_modules) resolved_modules
+        SMap.exists
+          (fun _ -> function
+            | Ok m -> Modulename.Set.mem m changed_modules
+            | _ -> false)
+          resolved_modules
         || Modulename.Set.exists
              (fun m -> Modulename.Set.mem m changed_modules)
              phantom_dependencies
@@ -142,11 +146,13 @@ let calc_direct_dependents workers ~candidates ~changed_modules =
    registered to provide r and the file is checked. Such a file must be merged
    before any file that requires module r, so this notion naturally gives rise
    to a dependency ordering among files for merging. *)
-let implementation_file ~reader m =
-  match Parsing_heaps.Mutator_reader.get_provider ~reader m with
-  | Some f when Parsing_heaps.Mutator_reader.is_typed_file ~reader f ->
-    Some (Parsing_heaps.read_file_key f)
-  | _ -> None
+let implementation_file ~reader = function
+  | Error _ -> None
+  | Ok m ->
+    (match Parsing_heaps.Mutator_reader.get_provider ~reader m with
+    | Some f when Parsing_heaps.Mutator_reader.is_typed_file ~reader f ->
+      Some (Parsing_heaps.read_file_key f)
+    | _ -> None)
 
 let file_dependencies ~reader file =
   let file_addr = Parsing_heaps.get_file_addr_unsafe file in
