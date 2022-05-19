@@ -8454,9 +8454,17 @@ struct
           in
           UseT (use_op, tout)
         in
+
         let (used_pairs, unused_arglist, unused_parlist) =
           multiflow_non_spreads cx ~use_op (n + 1) (tins, touts)
         in
+        (* We additionally record the type of the arg ~> parameter at the location of the parameter
+         * to power autofixes for missing parameter annotations *)
+        let par_def_loc =
+          let reason = reason_of_use_t tout in
+          def_aloc_of_reason reason
+        in
+        Context.add_call_arg_lower_bound cx par_def_loc tin;
         ((tin, tout) :: used_pairs, unused_arglist, unused_parlist)
     in
     fun cx ~trace ~use_op ~is_strict ~def_reason ~spread_arg ~rest_param reason_op (arglist, parlist)

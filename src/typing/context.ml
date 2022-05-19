@@ -7,6 +7,7 @@
 
 open Type.TypeContext
 module ALocMap = Loc_collections.ALocMap
+module ALocFuzzyMap = Loc_collections.ALocFuzzyMap
 
 exception Props_not_found of Type.Properties.id
 
@@ -187,6 +188,11 @@ type component_t = {
   mutable env_type_cache: Type.t IMap.t;
   (* map from annot tvar ids to nodes used during annotation processing *)
   mutable annot_graph: Type.AConstraint.node IMap.t;
+  (* Used to power an autofix that takes the lower bounds of a parameter and turn them into an
+   * annotation. This has to exist outside of the tvar graph because we will eventually not use
+   * unresolved tvars to represent unannotated parameters. We use an ALocFuzzyMap because we may
+   * compare keyed and concrete locations *)
+  mutable call_arg_lower_bounds: Type.t Nel.t ALocFuzzyMap.t;
 }
 [@@warning "-69"]
 
@@ -333,6 +339,7 @@ let make_ccx master_cx =
     global_value_cache = NameUtils.Map.empty;
     env_value_cache = IMap.empty;
     env_type_cache = IMap.empty;
+    call_arg_lower_bounds = ALocFuzzyMap.empty;
     errors = Flow_error.ErrorSet.empty;
     error_suppressions = Error_suppressions.empty;
     severity_cover = Utils_js.FilenameMap.empty;
@@ -566,6 +573,8 @@ let env_cache_find_opt cx ~for_value id =
   in
   IMap.find_opt id cache
 
+let call_arg_lower_bounds cx = cx.ccx.call_arg_lower_bounds
+
 let type_graph cx = cx.ccx.type_graph
 
 let matching_props cx = cx.ccx.matching_props
@@ -732,6 +741,15 @@ let add_inferred_indexer cx loc dict =
         | Some dicts -> Some (dict :: dicts)
         | None -> Some [dict])
       cx.ccx.inferred_indexers
+
+let add_call_arg_lower_bound cx loc t =
+  let call_arg_lower_bounds = cx.ccx.call_arg_lower_bounds in
+  let call_args =
+    match ALocFuzzyMap.find_opt loc call_arg_lower_bounds with
+    | None -> Nel.one t
+    | Some arg_ts -> Nel.cons t arg_ts
+  in
+  cx.ccx.call_arg_lower_bounds <- ALocFuzzyMap.add loc call_args call_arg_lower_bounds
 
 let set_all_unresolved cx all_unresolved = cx.ccx.all_unresolved <- all_unresolved
 

@@ -292,6 +292,8 @@ val new_env_literal_subtypes : t -> (ALoc.t * Env_api.new_env_literal_check) lis
 
 val constrained_writes : t -> (Type.t * Type.use_t) list
 
+val call_arg_lower_bounds : t -> Type.t Nel.t ALocFuzzyMap.t
+
 val verbose : t -> Verbose.t option
 
 val max_workers : t -> int
@@ -369,6 +371,8 @@ val add_literal_subtypes : t -> Type.t * Type.use_t -> unit
 val add_new_env_literal_subtypes : t -> ALoc.t * Env_api.new_env_literal_check -> unit
 
 val add_constrained_write : t -> Type.t * Type.use_t -> unit
+
+val add_call_arg_lower_bound : t -> ALoc.t -> Type.t -> unit
 
 val add_voidable_check : t -> voidable_check -> unit
 

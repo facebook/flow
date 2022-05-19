@@ -18,3 +18,13 @@ end
 
 module ALocIDSet = Flow_set.Make (ALocIDS)
 module ALocIDMap = Flow_map.Make (ALocIDS)
+
+module ALocFuzzy = struct
+  type t = ALoc.t
+
+  let compare = ALoc.quick_compare
+end
+
+(* For ALocMaps that may contain both keyed and concrete locations. We call it fuzzy because
+ * locations that are "equal" but represented differently would be considered unequal. *)
+module ALocFuzzyMap = Flow_map.Make (ALocFuzzy)
