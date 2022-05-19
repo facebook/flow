@@ -32,9 +32,23 @@ let do_parse_wrapper ~options filename contents =
   in
   let parse_result = Parsing_service_js.do_parse ~info:docblock ~parse_options contents filename in
   match parse_result with
-  | Parsing_service_js.Parse_ok { ast; file_sig; tolerable_errors; parse_errors; _ } ->
+  | Parsing_service_js.Parse_ok { ast; file_sig; tolerable_errors; _ } ->
     Parsed
-      (Parse_artifacts { docblock; docblock_errors; ast; file_sig; tolerable_errors; parse_errors })
+      (Parse_artifacts
+         { docblock; docblock_errors; ast; file_sig; tolerable_errors; parse_errors = [] }
+      )
+  | Parsing_service_js.Parse_recovered { ast; file_sig; tolerable_errors; parse_errors; _ } ->
+    Parsed
+      (Parse_artifacts
+         {
+           docblock;
+           docblock_errors;
+           ast;
+           file_sig;
+           tolerable_errors;
+           parse_errors = Nel.to_list parse_errors;
+         }
+      )
   | Parsing_service_js.Parse_fail fails ->
     (match fails with
     | Parsing_service_js.Uncaught_exception exn ->
