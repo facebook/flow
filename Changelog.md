@@ -1,3 +1,10 @@
+### 0.178.1
+
+Notable Bug Fixes:
+* [fix] Fix a crash during incremental recheck when an empty string import (`e.g. import ''`) is added.
+* [fix] Fix a stackoverflow caused by extremely large objects
+* [fix] Fix an incremental update issue where Flow would sometimes resolve requires to stale Haste modules which have no provider files
+
 ### 0.178.0
 
 Likely to cause new Flow errors:
