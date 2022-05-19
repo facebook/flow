@@ -7770,6 +7770,7 @@ struct
     | (loc, Binary { Binary.operator = Binary.Instanceof; left; right; comments }) ->
       let make_ast_and_pred left_ast bool =
         let (((rloc, right_t), _) as right_ast) = expression cx ~hint:Hint_None right in
+        Env.record_expression_type_if_needed cx rloc right_t;
         let reason_rhs = mk_reason (RCustom "RHS of `instanceof` operator") rloc in
         Flow.flow cx (right_t, AssertInstanceofRHST reason_rhs);
         ( ( (loc, bool),

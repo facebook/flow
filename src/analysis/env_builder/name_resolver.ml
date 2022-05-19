@@ -3903,27 +3903,14 @@ module Make
         | None -> ()
         | Some refinement_key ->
           let (instance_loc, _) = instance in
-          ( if not (L.LMap.mem instance_loc env_state.values) then
-            (* instance is not something the name_resolver can reason about.
-               However, we still need to has a read and write entry, so we can
-               record it in statement.ml and use it in new-env. *)
-            let reason = mk_reason (RefinementKey.reason_desc refinement_key) instance_loc in
-            let values =
-              L.LMap.add
-                instance_loc
-                {
-                  def_loc = None;
-                  value = Val.one reason;
-                  binding_kind_opt = Some Bindings.Const;
-                  name = None;
-                }
-                env_state.values
-            in
-            let write_entries =
-              L.LMap.add instance_loc (Env_api.AssigningWrite reason) env_state.write_entries
-            in
-            env_state <- { env_state with values; write_entries }
-          );
+          (* instance is not something the name_resolver can reason about.
+             However, we still need to has a read and write entry, so we can
+             record it in statement.ml and use it in new-env. *)
+          let reason = mk_reason (RefinementKey.reason_desc refinement_key) instance_loc in
+          let write_entries =
+            L.LMap.add instance_loc (Env_api.AssigningWrite reason) env_state.write_entries
+          in
+          env_state <- { env_state with write_entries };
           this#add_single_refinement refinement_key (L.LSet.singleton loc, InstanceOfR instance)
 
       method binary_refinement loc expr =

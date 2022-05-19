@@ -216,10 +216,15 @@ module New_env = struct
       | UndefinedR -> VoidP
       | MaybeR -> MaybeP
       | InstanceOfR (loc, _) ->
+        let env = Context.environment cx in
         (* Instanceof refinements store the loc they check against, which is a read in the env *)
         let reason = mk_reason (RCustom "RHS of `instanceof` operator") loc in
-        let t = read_entry_exn ~lookup_mode:ForValue cx loc reason in
-        let t = Flow_js.reposition cx loc t in
+        Debug_js.Verbose.print_if_verbose_lazy
+          cx
+          ( lazy
+            [spf "reading from location %s (in instanceof refinement)" (Reason.string_of_aloc loc)]
+            );
+        let t = t_option_value_exn cx loc (Loc_env.find_write env loc) in
         Flow_js.flow cx (t, AssertInstanceofRHST reason);
         LeftP (InstanceofTest, t)
       | IsArrayR -> ArrP
@@ -234,6 +239,11 @@ module New_env = struct
       | SingletonNumR { loc; sense; lit } -> SingletonNumP (loc, sense, lit)
       | SentinelR (prop, loc) ->
         let env = Context.environment cx in
+        Debug_js.Verbose.print_if_verbose_lazy
+          cx
+          ( lazy
+            [spf "reading from location %s (in sentinel refinement)" (Reason.string_of_aloc loc)]
+            );
         let other_t = t_option_value_exn cx loc (Loc_env.find_write env loc) in
         LeftP (SentinelProp prop, other_t)
       | LatentR { func = (func_loc, _); index } ->
