@@ -7423,18 +7423,12 @@ struct
        it at this stage instead of simply converting (ArrT, InstanceofP c)
        to (InstanceT(Array), InstanceofP c) because this allows c to be resolved
        first. *)
-    | ( true,
-        (DefT (reason, _, ArrT arrtype) as arr),
-        DefT (r, _, ClassT (DefT (_, _, InstanceT _) as a))
-      ) ->
+    | (true, (DefT (reason, _, ArrT arrtype) as arr), DefT (r, _, ClassT a)) ->
       let elemt = elemt_of_arrtype arrtype in
       let right = extends_type r arr a in
       let arrt = get_builtin_typeapp cx ~trace reason (OrdinaryName "Array") [elemt] in
       rec_flow cx trace (arrt, PredicateT (LeftP (InstanceofTest, right), result))
-    | ( false,
-        (DefT (reason, _, ArrT arrtype) as arr),
-        DefT (r, _, ClassT (DefT (_, _, InstanceT _) as a))
-      ) ->
+    | (false, (DefT (reason, _, ArrT arrtype) as arr), DefT (r, _, ClassT a)) ->
       let elemt = elemt_of_arrtype arrtype in
       let right = extends_type r arr a in
       let arrt = get_builtin_typeapp cx ~trace reason (OrdinaryName "Array") [elemt] in
@@ -7449,8 +7443,7 @@ struct
        class. (As a technical tool, we use Extends(_, _) to perform this
        recursion; it is also used elsewhere for running similar recursive
        subclass decisions.) **)
-    | (true, (DefT (_, _, InstanceT _) as c), DefT (r, _, ClassT (DefT (_, _, InstanceT _) as a)))
-      ->
+    | (true, (DefT (_, _, InstanceT _) as c), DefT (r, _, ClassT a)) ->
       predicate cx trace result (extends_type r c a) (RightP (InstanceofTest, c))
     (* If C is a subclass of A, then don't refine the type of x. Otherwise,
        refine the type of x to A. (In general, the type of x should be refined to
@@ -7483,11 +7476,8 @@ struct
         ~use_op:unknown_use
         (reposition cx ~trace (aloc_of_reason r) a, OpenT result)
     (* If we're refining `mixed` or `any` with instanceof A, then flow A to the result *)
-    | ( true,
-        (DefT (_, _, MixedT _) | AnyT _),
-        DefT (class_reason, _, ClassT (DefT (instance_reason, _, InstanceT _) as a))
-      ) ->
-      let desc = desc_of_reason instance_reason in
+    | (true, (DefT (_, _, MixedT _) | AnyT _), DefT (class_reason, _, ClassT a)) ->
+      let desc = reason_of_t a |> desc_of_reason in
       let loc = aloc_of_reason class_reason in
       rec_flow_t cx trace ~use_op:unknown_use (reposition cx ~trace ~desc loc a, OpenT result)
     (* Prune the type when any other `instanceof` check succeeds (since this is
@@ -7785,39 +7775,36 @@ struct
       else
         op2
 
-  and flow_use_op cx op1 u =
-    mod_use_op_of_use_t (fun op2 -> pick_use_op cx op1 op2) u
-    (***********************)
-    (* bounds manipulation *)
-    (***********************)
+  and flow_use_op cx op1 u = mod_use_op_of_use_t (fun op2 -> pick_use_op cx op1 op2) u
 
-  (** The following general considerations apply when manipulating bounds.
+  (** Bounds Manipulation
 
-      1. All type variables start out as roots, but some of them eventually become
-      goto nodes. As such, bounds of roots may contain goto nodes. However, we
-      never perform operations directly on goto nodes; instead, we perform those
-      operations on their roots. It is tempting to replace goto nodes proactively
-      with their roots to avoid this issue, but doing so may be expensive, whereas
-      the union-find data structure amortizes the cost of looking up roots.
+    The following general considerations apply when manipulating bounds.
 
-      2. Another issue is that while the bounds of a type variable start out
-      empty, and in particular do not contain the type variable itself, eventually
-      other type variables in the bounds may be unified with the type variable. We
-      do not remove these type variables proactively, but instead filter them out
-      when considering the bounds. In the future we might consider amortizing the
-      cost of this filtering.
+    1. All type variables start out as roots, but some of them eventually become
+    goto nodes. As such, bounds of roots may contain goto nodes. However, we
+    never perform operations directly on goto nodes; instead, we perform those
+    operations on their roots. It is tempting to replace goto nodes proactively
+    with their roots to avoid this issue, but doing so may be expensive, whereas
+    the union-find data structure amortizes the cost of looking up roots.
 
-      3. When roots are resolved, they act like the corresponding concrete
-      types. We maintain the invariant that whenever lower bounds or upper bounds
-      contain resolved roots, they also contain the corresponding concrete types.
+    2. Another issue is that while the bounds of a type variable start out
+    empty, and in particular do not contain the type variable itself, eventually
+    other type variables in the bounds may be unified with the type variable. We
+    do not remove these type variables proactively, but instead filter them out
+    when considering the bounds. In the future we might consider amortizing the
+    cost of this filtering.
 
-      4. When roots are unresolved (they have lower bounds and upper bounds,
-      possibly consisting of concrete types as well as type variables), we
-      maintain the invarant that every lower bound has already been propagated to
-      every upper bound. We also maintain the invariant that the bounds are
-      transitively closed modulo equivalence: for every type variable in the
-      bounds, all the bounds of its root are also included.
+    3. When roots are resolved, they act like the corresponding concrete
+    types. We maintain the invariant that whenever lower bounds or upper bounds
+    contain resolved roots, they also contain the corresponding concrete types.
 
+    4. When roots are unresolved (they have lower bounds and upper bounds,
+    possibly consisting of concrete types as well as type variables), we
+    maintain the invarant that every lower bound has already been propagated to
+    every upper bound. We also maintain the invariant that the bounds are
+    transitively closed modulo equivalence: for every type variable in the
+    bounds, all the bounds of its root are also included.
    **)
 
   (* for each l in ls: l => u *)
