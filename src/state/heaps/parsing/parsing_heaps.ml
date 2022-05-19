@@ -85,6 +85,7 @@ let mk_resolved_requires ~resolved_modules ~phantom_dependencies =
   let state = Xx.init 0L in
   SMap.iter
     (fun mref mname ->
+      Xx.update_int state (String.length mref);
       Xx.update state mref;
       Xx.update state (Modulename.to_string mname))
     resolved_modules;
