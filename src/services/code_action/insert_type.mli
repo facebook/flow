@@ -84,6 +84,19 @@ val insert_type :
   Loc.t ->
   (Loc.t, Loc.t) Flow_ast_mapper.Ast.Program.t
 
+val insert_type_t :
+  full_cx:Context.t ->
+  file_sig:File_sig.With_Loc.t ->
+  typed_ast:(ALoc.t, ALoc.t * Type.t) Flow_ast.Program.t ->
+  omit_targ_defaults:bool ->
+  strict:bool ->
+  ambiguity_strategy:Autofix_options.ambiguity_strategy ->
+  ?remote_converter:Insert_type_imports.ImportsHelper.remote_converter ->
+  (Loc.t, Loc.t) Flow_ast_mapper.Ast.Program.t ->
+  Loc.t ->
+  Type.t ->
+  (Loc.t, Loc.t) Flow_ast_mapper.Ast.Program.t
+
 val mk_diff :
   (Loc.t, Loc.t) Flow_ast.Program.t ->
   (Loc.t, Loc.t) Flow_ast.Program.t ->

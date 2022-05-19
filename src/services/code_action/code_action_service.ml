@@ -32,33 +32,48 @@ let layout_options options =
     }
   
 
+let autofix_insert_type_annotation_helper ~options ~ast ~diagnostics ~uri new_ast =
+  let open Lsp in
+  let diff = Insert_type.mk_diff ast new_ast in
+  let opts = layout_options options in
+  let edits =
+    Replacement_printer.mk_loc_patch_ast_differ ~opts diff
+    |> Flow_lsp_conversions.flow_loc_patch_to_lsp_edits
+  in
+  [
+    CodeAction.Action
+      {
+        CodeAction.title = "insert type annotation";
+        kind = CodeActionKind.quickfix;
+        (* Handing back the diagnostics we were given is a placeholder for
+           eventually generating the diagnostics for the errors we are fixing *)
+        diagnostics;
+        action = CodeAction.EditOnly WorkspaceEdit.{ changes = UriMap.singleton uri edits };
+      };
+  ]
+
 let autofix_exports_code_actions
     ~options ~full_cx ~ast ~file_sig ~tolerable_errors ~typed_ast ~diagnostics uri loc =
-  let open Lsp in
   let open Autofix_exports in
   let fixable_locs = set_of_fixable_signature_verification_locations tolerable_errors in
   if LocSet.mem loc fixable_locs then
-    match fix_signature_verification_error_at_loc ~full_cx ~file_sig ~typed_ast ast loc with
-    | new_ast ->
-      let diff = Insert_type.mk_diff ast new_ast in
-      let opts = layout_options options in
-      let edits =
-        Replacement_printer.mk_loc_patch_ast_differ ~opts diff
-        |> Flow_lsp_conversions.flow_loc_patch_to_lsp_edits
-      in
-      [
-        CodeAction.Action
-          {
-            CodeAction.title = "insert type annotation";
-            kind = CodeActionKind.quickfix;
-            (* Handing back the diagnostics we were given is a placeholder for
-               eventually generating the diagnostics for the errors we are fixing *)
-            diagnostics;
-            action = CodeAction.EditOnly WorkspaceEdit.{ changes = UriMap.singleton uri edits };
-          };
-      ]
+    fix_signature_verification_error_at_loc ~full_cx ~file_sig ~typed_ast ast loc
+    |> autofix_insert_type_annotation_helper ~options ~ast ~diagnostics ~uri
   else
     []
+
+let autofix_missing_func_param_types_code_actions
+    ~options ~full_cx ~ast ~file_sig ~tolerable_errors:_ ~typed_ast ~diagnostics uri loc =
+  let open Autofix_missing_local_param_annots in
+  let fixable_locs = map_of_fixable_missing_local_params full_cx in
+  let entry =
+    Base.List.find ~f:(fun (err_loc, _) -> Loc.contains err_loc loc) (LocMap.elements fixable_locs)
+  in
+  match entry with
+  | Some (_, type_t) ->
+    fix_missing_param_annot_at_loc ~cx:full_cx ~file_sig ~typed_ast ast loc type_t
+    |> autofix_insert_type_annotation_helper ~options ~ast ~diagnostics ~uri
+  | None -> []
 
 let refactor_extract_code_actions
     ~options
@@ -646,6 +661,16 @@ let code_actions_at_loc
         ~typed_ast
         ~reader
         ~only
+        uri
+        loc
+    @ autofix_missing_func_param_types_code_actions
+        ~options
+        ~full_cx:cx
+        ~ast
+        ~file_sig
+        ~tolerable_errors
+        ~typed_ast
+        ~diagnostics
         uri
         loc
   in
