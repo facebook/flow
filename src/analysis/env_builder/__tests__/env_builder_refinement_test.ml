@@ -6331,3 +6331,19 @@ if (x instanceof A.B) {
         (3, 2) to (3, 3) => {
           {refinement = instanceof; writes = Global x}
         }] |}]
+
+let%expect_test "instanceof_mem" =
+  print_ssa_test {|
+function test() {
+  try {
+    return;
+  } catch {}
+  for (let i = 0; ; i++) { }
+}
+
+|};
+    [%expect {|
+      [
+        (6, 20) to (6, 21) => {
+          (6, 11) to (6, 12): (`i`)
+        }] |}]
