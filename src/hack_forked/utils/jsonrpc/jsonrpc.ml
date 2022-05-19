@@ -269,8 +269,7 @@ let rec read_messages_into_queue_no_wait (message_queue : queue) : unit Lwt.t =
   Lwt.return_unit
 
 let has_message (queue : queue) : bool =
-  let is_readable = Lwt_unix.readable queue.daemon_in_fd in
-  is_readable || not (Queue.is_empty queue.messages)
+  (not (Queue.is_empty queue.messages)) || Lwt_unix.readable queue.daemon_in_fd
 
 let get_message (queue : queue) =
   (* Read one in a blocking manner to ensure that we have one. *)
