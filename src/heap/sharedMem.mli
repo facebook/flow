@@ -187,6 +187,10 @@ module NewAPI : sig
    * array of addresses to string objects. *)
   type 'a addr_tbl
 
+  type 'a sklist
+
+  type 'a sknode
+
   (* Phantom type tag for ASTs. *)
   type ast
 
@@ -263,6 +267,16 @@ module NewAPI : sig
     ('k addr -> 'a) -> 'k addr_tbl addr -> (int -> (int -> 'a) -> 'b) -> 'b
 
   val read_addr_tbl : ('k addr -> 'a) -> 'k addr_tbl addr -> 'a array
+
+  (* skip lists *)
+
+  val sklist_size : size
+
+  val write_sklist : chunk -> 'a sklist addr
+
+  val prepare_write_sknode : 'a addr -> size * (chunk -> 'a sknode addr)
+
+  val sklist_iter : ('a addr -> unit) -> 'a sklist addr -> unit
 
   (* entities *)
 
@@ -457,4 +471,12 @@ module NewAPI : sig
   val get_file_all_providers_exclusive : file_module addr -> file addr list
 
   val remove_file_provider_exclusive : file_module addr -> file addr -> unit
+
+  (* file sets *)
+
+  val file_set_add : file sklist addr -> file sknode addr -> bool
+
+  val file_set_remove : file sklist addr -> file addr -> bool
+
+  val file_set_mem : file sklist addr -> file addr -> bool
 end

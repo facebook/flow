@@ -42,14 +42,15 @@ type tag =
   | Lib_file_tag
   | Haste_module_tag
   | File_module_tag
+  | Sklist_tag
   (* tags defined below this point are scanned for pointers *)
-  | String_tag (* 11 *)
+  | String_tag (* 12 *)
   | Int64_tag
   | Docblock_tag
   | ALoc_table_tag
   | Type_sig_tag
   (* tags defined above this point are serialized+compressed *)
-  | Serialized_tag (* 16 *)
+  | Serialized_tag (* 17 *)
   | Serialized_resolved_requires_tag
   | Serialized_ast_tag
   | Serialized_file_sig_tag
@@ -63,8 +64,8 @@ let tag_val : tag -> int = Obj.magic
 (* double-check integer values are consistent with hh_shared.c *)
 let () =
   assert (tag_val Entity_tag = 0);
-  assert (tag_val String_tag = 11);
-  assert (tag_val Serialized_tag = 16)
+  assert (tag_val String_tag = 12);
+  assert (tag_val Serialized_tag = 17)
 
 (* Addresses are relative to the hashtbl pointer, so the null address actually
  * points to the hash field of the first hashtbl entry, which is never a
@@ -784,6 +785,10 @@ module NewAPI = struct
 
   type 'a addr_tbl
 
+  type 'a sklist
+
+  type 'a sknode
+
   type ast
 
   type docblock
@@ -810,9 +815,11 @@ module NewAPI = struct
 
   type size = int
 
-  let bsize_wsize bsize = bsize * Sys.word_size / 8
+  let bsize_wsize wsize = wsize * Sys.word_size / 8
 
   let addr_offset addr size = addr + bsize_wsize size
+
+  let i64 = Int64.of_int
 
   let get_heap () =
     match !heap_ref with
@@ -857,8 +864,20 @@ module NewAPI = struct
   external unsafe_write_bytes_at : _ addr -> bytes -> pos:int -> len:int -> unit = "hh_write_bytes"
     [@@noalloc]
 
-  external compare_exchange_weak : _ addr -> int -> int -> bool = "hh_compare_exchange_weak"
+  external load_acquire : _ addr -> (int64[@unboxed]) = "hh_load_acquire_byte" "hh_load_acquire"
     [@@noalloc]
+
+  external store_release : _ addr -> (int64[@unboxed]) -> unit
+    = "hh_store_release_byte" "hh_store_release"
+    [@@noalloc]
+
+  external compare_exchange : weak:bool -> _ addr -> (int64[@unboxed]) -> (int64[@unboxed]) -> bool
+    = "hh_compare_exchange_byte" "hh_compare_exchange"
+    [@@noalloc]
+
+  let compare_exchange_weak = compare_exchange ~weak:true
+
+  let compare_exchange_strong = compare_exchange ~weak:false
 
   (** Addresses *)
 
@@ -866,7 +885,7 @@ module NewAPI = struct
 
   (* Write an address at a specified address in the heap. The caller must ensure
    * the given destination has already been allocated. *)
-  let unsafe_write_addr_at heap dst addr = buf_write_int64 heap dst (Int64.of_int addr)
+  let unsafe_write_addr_at heap dst addr = buf_write_int64 heap dst (i64 addr)
 
   (* Write an address into the given chunk and advance the chunk address. This
    * write is not bounds checked; caller must ensure the given destination has
@@ -882,6 +901,25 @@ module NewAPI = struct
     assert (Int64.logand addr64 1L = 0L);
     Int64.to_int addr64
 
+  (** Tagged ints *)
+
+  let int_size = 1
+
+  let tagged_int i = Int64.(logor 1L (shift_left (of_int i) 1))
+
+  let untagged_int i64 = Int64.(to_int (shift_right i64 1))
+
+  let unsafe_write_tagged_int_at heap dst i = buf_write_int64 heap dst (tagged_int i)
+
+  let unsafe_write_tagged_int chunk i =
+    unsafe_write_tagged_int_at chunk.heap chunk.next_addr i;
+    chunk.next_addr <- addr_offset chunk.next_addr addr_size
+
+  let read_tagged_int heap addr =
+    let i64 = buf_read_int64 heap addr in
+    assert (Int64.logand i64 1L = 1L);
+    untagged_int i64
+
   (** Headers *)
 
   let header_size = 1
@@ -895,8 +933,8 @@ module NewAPI = struct
    * 0b01, or "white." See hh_shared.c for more about the GC. The size of the
    * object in words is stored in the remaining space. *)
   let unsafe_write_header_at heap dst tag obj_size =
-    let tag = Int64.of_int (tag_val tag) in
-    let obj_size = Int64.of_int obj_size in
+    let tag = i64 (tag_val tag) in
+    let obj_size = i64 obj_size in
     let ( lsl ) = Int64.shift_left in
     let ( lor ) = Int64.logor in
     let hd = (obj_size lsl 8) lor (tag lsl 2) lor 1L in
@@ -938,9 +976,9 @@ module NewAPI = struct
    * All this is somewhat academic, since we have bigger problems if we're
    * trying to store 2 gig entries. *)
   let unsafe_write_serialized_header_at heap dst tag obj_size decompress_capacity =
-    let tag = Int64.of_int (tag_val tag) in
-    let obj_size = Int64.of_int obj_size in
-    let decompress_capacity = Int64.of_int decompress_capacity in
+    let tag = i64 (tag_val tag) in
+    let obj_size = i64 obj_size in
+    let decompress_capacity = i64 decompress_capacity in
 
     (* Just in case the math above doesn't check out *)
     assert (obj_size < 0x10000000L);
@@ -1012,6 +1050,10 @@ module NewAPI = struct
 
   let read_string addr = read_string_generic String_tag addr 0
 
+  (* TODO: It would be more efficient to  compare the bytes directly in shared
+   * memory instead of copying into the OCaml heap. *)
+  let compare_string a b = String.compare (read_string a) (read_string b)
+
   (** Int64 *)
 
   let int64_size = 1
@@ -1071,6 +1113,299 @@ module NewAPI = struct
     else
       Some addr
 
+  (** Field utils *)
+
+  let set_generic offset base = unsafe_write_addr_at (get_heap ()) (offset base)
+
+  let get_generic offset base = read_addr (get_heap ()) (offset base)
+
+  let get_generic_opt offset base = read_opt (get_generic offset base)
+
+  let get_generic_int offset base = read_tagged_int (get_heap ()) (offset base)
+
+  (** Skip lists
+   *
+   * We can use skip lists to store sets of values supporting concurrent search,
+   * insertion, and deletion in log(n) time.
+   *
+   * Insertion and deletion operations are lock-free, search is wait-free.
+   *
+   * This is a "textbook" implementation taken from Herlihy et al's "The Art of
+   * Multiprocessor Programming" 2nd Edition, section 14.4. It builds on the
+   * implementation from the Multicore OCaml runtime. This implementation
+   * differs from those implementations in the following ways:
+   *
+   * 1) The `preds` array populated by `sklist_find` does not contain pointers
+   *    to the predecessor node itself, but pointers to predecessor node's
+   *    forward pointer at the given level.
+   * 2) There are no sentinel head/tail nodes. We don't need the head node due
+   *    to (1) since preds can contain contain pointers to the list object's
+   *    forward pointers. Instead of a tail node, we use NULL_ADDR to indicate
+   *    the end of a list.
+   * 3) We rely on sharedmem GC to reclaim space from deleted nodes
+   *
+   *)
+
+  (* To provide log(n) operations, we need enough levels depending on the
+   * expected number of elements in the set. Given p=1/4, capping the number of
+   * levels at 12 lets us store 16,777,216 (4^12) elements. *)
+  let sklist_num_levels = 12
+
+  (* Skip lists are probabilistic. Each node is created with a random height,
+   * given by this function. We take p=1/4, meaning that 3/4 of nodes will have
+   * height 1, 3/16 will have height 2, 3/64 will have height 3, and so on. *)
+  let sklist_random_level =
+    let num_rolls = sklist_num_levels - 1 in
+    (* Random.int only gives 30 bits of randomness and we use 2 bits per roll *)
+    assert (num_rolls <= 15);
+    let mask = (1 lsl (2 * num_rolls)) - 1 in
+    fun () ->
+      let r = ref (Random.bits () land mask) in
+      let l = ref 0 in
+      while !r land 3 == 3 do
+        (* two random bits will be set with probability 1/4 *)
+        incr l;
+        r := !r lsr 2
+      done;
+      !l
+
+  let sklist_size = int_size + (sklist_num_levels * addr_size)
+
+  (* The skip list stores a max search level, which is the highest level of any
+   * node in the set. We start searches at this level instead of the highest
+   * possible level as an optimization. *)
+  let write_sklist chunk =
+    let addr = write_header chunk Sklist_tag sklist_size in
+    unsafe_write_tagged_int chunk 0;
+    for i = 1 to sklist_num_levels do
+      unsafe_write_addr chunk null_addr
+    done;
+    addr
+
+  let prepare_write_sknode data =
+    let level = sklist_random_level () in
+    let size = (2 + level) * addr_size in
+    let write chunk =
+      let addr = write_header chunk Sklist_tag size in
+      unsafe_write_addr chunk data;
+      for i = 0 to level do
+        unsafe_write_addr chunk null_addr
+      done;
+      addr
+    in
+    (size, write)
+
+  let sklist_search_level_addr sklist = addr_offset sklist 1
+
+  let sklist_succ_addr level sklist = addr_offset sklist (2 + level)
+
+  let sklist_get_search_level = get_generic_int sklist_search_level_addr
+
+  let sknode_data_addr sknode = addr_offset sknode 1
+
+  let sknode_succ_addr = sklist_succ_addr
+
+  let sknode_get_data = get_generic sknode_data_addr
+
+  let sknode_max_level sknode =
+    let hd = read_header (get_heap ()) sknode in
+    obj_size hd - 2
+
+  let sklist_is_marked x = Int64.(equal 1L (logand x 1L))
+
+  let sklist_marked x = Int64.logor x 1L
+
+  let sklist_unmark x = Int64.(to_int (logand x (lognot 1L)))
+
+  (* Search the skip list, returning true if the a node with `data` is in the
+   * set.
+   *
+   * This function will physically delete any marked nodes by updating the
+   * node's predecessor's successor pointer to the node's successor.
+   *
+   * The caller-provided `preds` and `succs` arrays are populated with the
+   * target node's predecessors and successors at each level. These arrays are
+   * used to implement `sklist_add` and `sklist_remove`. *)
+  let sklist_find cmp sklist data preds succs =
+    let rec start () =
+      let top_level = sklist_num_levels - 1 in
+      let pred = sklist_succ_addr top_level sklist in
+      let curr = sklist_unmark (load_acquire pred) in
+      search top_level pred curr
+    and search level pred curr =
+      if curr == null_addr then
+        (* We are at the end of the list at this level. *)
+        down level pred curr
+      else
+        let succ_addr = sknode_succ_addr level curr in
+        let succ64 = load_acquire succ_addr in
+        let succ = sklist_unmark succ64 in
+        if sklist_is_marked succ64 then
+          (* `curr` is logically deleted. Try to physically remove `curr` from
+           * this level by updating `pred` to point directly to `succ`. *)
+          if compare_exchange_strong pred (i64 curr) (i64 succ) then
+            (* We successfully removed `curr`; `pred` now points to `succ`.
+             * Continue searching along this level. *)
+            search level pred succ
+          else
+            (* We failed to remove `curr`. Another thread has either logically
+             * deleted `pred`, inserted a new successor of `pred`, or inserted
+             * a new successor of `curr`. *)
+            start ()
+        else if cmp (sknode_get_data curr) data < 0 then
+          (* Continue searching across a level until we find a node with a value
+           * that is greater than or equal to the target value. *)
+          search level succ_addr succ
+        else
+          down level pred curr
+    and down level pred curr =
+      (* Record predecessor and successor of the target at this level. *)
+      preds.(level) <- pred;
+      succs.(level) <- curr;
+      if level > 0 then
+        let pred = addr_offset pred (-1) in
+        let curr = sklist_unmark (load_acquire pred) in
+        search (level - 1) pred curr
+      else
+        curr != null_addr && cmp (sknode_get_data curr) data = 0
+    in
+    start ()
+
+  let sklist_add cmp sklist sknode =
+    let preds = Array.make sklist_num_levels null_addr in
+    let succs = Array.make sklist_num_levels null_addr in
+    let data = sknode_get_data sknode in
+    let max_level = sknode_max_level sknode in
+    let rec loop () =
+      if sklist_find cmp sklist data preds succs then
+        (* A node with the target value already exists in the list. *)
+        false
+      else begin
+        (* Point `sknode` to its successors at each level. *)
+        for level = 0 to max_level do
+          store_release (sknode_succ_addr level sknode) (i64 succs.(level))
+        done;
+
+        (* Try to add `sknode` to the set by linking the bottom-level list. *)
+        if not (compare_exchange_strong preds.(0) (i64 succs.(0)) (i64 sknode)) then
+          (* We failed to insert `sknode`. Another thread has concurrently
+           * modified the set. *)
+          loop ()
+        else begin
+          (* We successfully added `sknode` to the set. Now we can link the node
+           * in at the higher levels. *)
+          for level = 1 to max_level do
+            while not (compare_exchange_strong preds.(level) (i64 succs.(level)) (i64 sknode)) do
+              (* The predecessor node has changed. We use `sklist_find` to
+               * re-populate the `preds` and `succs` arrays with their updated
+               * values and try again. *)
+              ignore (sklist_find cmp sklist data preds succs : bool)
+            done
+          done;
+
+          (* Update the search level in case the newly inserted node has a
+           * higher level than the current search level. *)
+          let search_level_addr = sklist_search_level_addr sklist in
+          let rec loop () =
+            let search_level64 = buf_read_int64 (get_heap ()) search_level_addr in
+            if
+              max_level > untagged_int search_level64
+              && not (compare_exchange_weak search_level_addr search_level64 (tagged_int max_level))
+            then
+              loop ()
+          in
+          loop ();
+          true
+        end
+      end
+    in
+    loop ()
+
+  let sklist_remove cmp sklist data =
+    let preds = Array.make sklist_num_levels null_addr in
+    let succs = Array.make sklist_num_levels null_addr in
+    if not (sklist_find cmp sklist data preds succs) then
+      (* A node with the target value does not exist. *)
+      false
+    else
+      let to_remove = succs.(0) in
+
+      (* Mark forward pointers at each level up to, but not including the
+       * bottom level. *)
+      let rec loop level =
+        if level > 0 then
+          let succ_addr = sknode_succ_addr level to_remove in
+          let succ64 = load_acquire succ_addr in
+          if
+            sklist_is_marked succ64
+            || compare_exchange_strong succ_addr succ64 (sklist_marked succ64)
+          then
+            loop (level - 1)
+          else
+            loop level
+      in
+      loop (sknode_max_level to_remove);
+
+      (* Mark bottom level to finish removing the node from the set. *)
+      let succ_addr = sknode_succ_addr 0 to_remove in
+      let rec loop () =
+        let succ = load_acquire succ_addr in
+        if sklist_is_marked succ then
+          (* Someone else beat us to it. *)
+          false
+        else if compare_exchange_strong succ_addr succ (sklist_marked succ) then
+          (* The node logically deleted. `sklist_find` will physically remove
+           * links to the target node. *)
+          let (_ : bool) = sklist_find cmp sklist data preds succs in
+          true
+        else
+          loop ()
+      in
+      loop ()
+
+  (* Like `sklist_find`, this function skips over marked nodes, but it does not
+   * try to physically remove them, making this function wait-free. *)
+  let sklist_mem cmp sklist data =
+    let rec search level pred curr =
+      if curr == null_addr then
+        down level pred curr
+      else
+        let succ_addr = sknode_succ_addr level curr in
+        let succ64 = load_acquire succ_addr in
+        let succ = sklist_unmark succ64 in
+        if sklist_is_marked succ64 then
+          search level pred succ
+        else if cmp (sknode_get_data curr) data < 0 then
+          search level succ_addr succ
+        else
+          down level pred curr
+    and down level pred curr =
+      if level > 0 then
+        let pred = addr_offset pred (-1) in
+        let curr = sklist_unmark (load_acquire pred) in
+        search (level - 1) pred curr
+      else
+        curr != null_addr && cmp (sknode_get_data curr) data = 0
+    in
+    let level = sklist_get_search_level sklist in
+    let pred = sklist_succ_addr level sklist in
+    let curr = sklist_unmark (load_acquire pred) in
+    search level pred curr
+
+  (* The bottom level list is a sorted linked list containing every element of
+   * the set. We iterate through the bottom level list, skipping over any marked
+   * nodes. *)
+  let sklist_iter f sklist =
+    let rec loop addr =
+      let node64 = load_acquire addr in
+      let node = sklist_unmark node64 in
+      if node != null_addr then (
+        if not (sklist_is_marked node64) then f (sknode_get_data node);
+        loop (sknode_succ_addr 0 node)
+      )
+    in
+    loop (sklist_succ_addr 0 sklist)
+
   (** Entities
    *
    * We often want to represent some entity, like a file, where we can write new
@@ -1106,7 +1441,7 @@ module NewAPI = struct
     unsafe_write_addr chunk null_addr;
     unsafe_write_addr chunk null_addr;
     let version = get_next_version () in
-    unsafe_write_int64 chunk (Int64.of_int version);
+    unsafe_write_int64 chunk (i64 version);
     let slot = version land 1 in
     write_entity_data chunk.heap addr slot data;
     addr
@@ -1138,7 +1473,7 @@ module NewAPI = struct
       else
         let slot = lnot entity_version land 1 in
         let new_version = version lor slot in
-        buf_write_int64 heap (version_addr entity) (Int64.of_int new_version);
+        buf_write_int64 heap (version_addr entity) (i64 new_version);
         slot
     in
     write_entity_data heap entity slot data
@@ -1179,7 +1514,7 @@ module NewAPI = struct
     in
     if diff > 0 then
       let new_version = entity_version - diff in
-      buf_write_int64 heap (version_addr entity) (Int64.of_int new_version)
+      buf_write_int64 heap (version_addr entity) (i64 new_version)
 
   let entity_changed entity =
     let version = get_next_version () in
@@ -1306,14 +1641,6 @@ module NewAPI = struct
     prepare_write_compressed Serialized_resolved_requires_tag resolved_requires
 
   let read_resolved_requires addr = read_compressed Serialized_resolved_requires_tag addr
-
-  (** Field utils *)
-
-  let set_generic offset base = unsafe_write_addr_at (get_heap ()) (offset base)
-
-  let get_generic offset base = read_addr (get_heap ()) (offset base)
-
-  let get_generic_opt offset base = read_opt (get_generic offset base)
 
   (** Parse data *)
 
@@ -1480,6 +1807,8 @@ module NewAPI = struct
 
   let file_changed file = entity_changed (get_parse file)
 
+  let compare_file_by_name a b = compare_string (get_file_name a) (get_file_name b)
+
   (** All providers *)
 
   let add_provider head_addr next_addr file =
@@ -1487,7 +1816,7 @@ module NewAPI = struct
     let rec loop () =
       let head = read_addr heap head_addr in
       unsafe_write_addr_at heap next_addr head;
-      if not (compare_exchange_weak head_addr head file) then loop ()
+      if not (compare_exchange_weak head_addr (i64 head) (i64 file)) then loop ()
     in
     loop ()
 
@@ -1677,4 +2006,12 @@ module NewAPI = struct
           )
     in
     hh_iter f
+
+  (** File set *)
+
+  let file_set_mem = sklist_mem compare_file_by_name
+
+  let file_set_add = sklist_add compare_file_by_name
+
+  let file_set_remove = sklist_remove compare_file_by_name
 end

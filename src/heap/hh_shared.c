@@ -292,8 +292,8 @@ typedef uintnat hh_tag_t;
 
 // Keep these in sync with "tag" type definition in sharedMem.ml
 #define Entity_tag 0
-#define Heap_string_tag 11
-#define Serialized_tag 16
+#define Heap_string_tag 12
+#define Serialized_tag 17
 
 static _Bool should_scan(hh_tag_t tag) {
   // The zero tag represents "entities" which need to be handled specially.
@@ -1859,17 +1859,45 @@ CAMLprim value hh_iter(value f) {
   CAMLreturn(Val_unit);
 }
 
-CAMLprim value hh_compare_exchange_weak(
+CAMLprim value hh_load_acquire(value addr_val) {
+  int64_t* ptr = (int64_t*)Ptr_of_addr(Long_val(addr_val));
+  return __atomic_load_n(ptr, __ATOMIC_ACQUIRE);
+}
+
+CAMLprim value hh_store_release(value addr_val, int64_t v) {
+  int64_t* ptr = (int64_t*)Ptr_of_addr(Long_val(addr_val));
+  __atomic_store_n(ptr, v, __ATOMIC_RELEASE);
+  return Val_unit;
+}
+
+CAMLprim value hh_compare_exchange(
+    value weak_val,
     value addr_val,
-    value expected_val,
-    value desired_val) {
-  uintnat* ptr = (uintnat*)Ptr_of_addr(Long_val(addr_val));
-  uintnat expected = Long_val(expected_val);
+    int64_t expected,
+    int64_t desired) {
+  int64_t* ptr = (int64_t*)Ptr_of_addr(Long_val(addr_val));
   return Val_bool(__atomic_compare_exchange_n(
       ptr,
       &expected,
-      Long_val(desired_val),
-      1,
+      desired,
+      Bool_val(weak_val),
       __ATOMIC_SEQ_CST,
       __ATOMIC_SEQ_CST));
+}
+
+CAMLprim value hh_load_acquire_byte(value addr_val) {
+  return caml_copy_int64(hh_load_acquire(addr_val));
+}
+
+CAMLprim value hh_store_release_byte(value addr_val, value v) {
+  return hh_store_release(addr_val, Int64_val(v));
+}
+
+CAMLprim value hh_compare_exchange_byte(
+    value weak_val,
+    value addr_val,
+    value expected_val,
+    value desired_val) {
+  return hh_compare_exchange(
+      weak_val, addr_val, Int64_val(expected_val), Int64_val(desired_val));
 }
