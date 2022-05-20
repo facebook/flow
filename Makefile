@@ -8,6 +8,7 @@
 EXTRA_INCLUDE_PATHS=
 EXTRA_LIB_PATHS=
 EXTRA_LIBS=
+INTERNAL_NATIVE_LIBS=
 INTERNAL_MODULES=\
 	src/hack_forked/stubs/logging/common\
 	src/stubs
@@ -258,7 +259,8 @@ NATIVE_FINDLIB_PACKAGES=\
 NATIVE_LIBRARIES=\
   stdc++\
   pthread\
-  $(EXTRA_LIBS)
+  $(EXTRA_LIBS)\
+  $(INTERNAL_NATIVE_LIBS)
 
 # On Windows, the linker (flexlink) handles -lfoo by searching for "libfoo",
 # then "libfoo.dll.a" (dynamic linking), then "libfoo.a". Since we don't want
