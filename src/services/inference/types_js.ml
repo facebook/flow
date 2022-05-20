@@ -2005,7 +2005,13 @@ let init_from_saved_state ~profiling ~workers ~saved_state ~updates options =
 
       (* Restore the FileHeap *)
       let ms =
-        Parsing_heaps.From_saved_state.add_parsed fn hash module_name exports resolved_requires
+        Parsing_heaps.From_saved_state.add_parsed
+          options
+          fn
+          hash
+          module_name
+          exports
+          resolved_requires
       in
 
       (FilenameSet.add fn fns, Modulename.Set.union ms dirty_modules)

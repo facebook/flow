@@ -484,14 +484,14 @@ let prepare_update_revdeps =
    * a dependent/provider in another step. One idea is to maintain a set of
    * dirty modules which is scanned on commit and deleted if possible. For now,
    * leaking these modules is not too bad. *)
-  let remove_old_dependent file (size_acc, write_acc) mname =
+  let remove_old_dependent (size_acc, write_acc) mname =
     let dependents =
       match mname with
       | Modulename.String name -> Heap.get_haste_dependents (get_haste_module_unsafe name)
       | Modulename.Filename key -> Heap.get_file_dependents (get_file_module_unsafe key)
     in
-    let write chunk =
-      write_acc chunk;
+    let write chunk file =
+      write_acc chunk file;
       assert (Heap.file_set_remove dependents file)
     in
     (size_acc, write)
@@ -499,7 +499,7 @@ let prepare_update_revdeps =
   (* Add `file` to the dependents of `mname`. It is possible that a module
    * object for `mname` does not exist (for phantom dependencies) so we create
    * the module if necessary. *)
-  let add_new_dependent file (size_acc, write_acc) mname =
+  let add_new_dependent (size_acc, write_acc) mname =
     let (module_size, get_dependents) =
       match mname with
       | Modulename.String name ->
@@ -517,27 +517,28 @@ let prepare_update_revdeps =
         in
         (size, (fun chunk -> Heap.get_file_dependents (m chunk)))
     in
-    let (sknode_size, write_sknode) = Heap.prepare_write_sknode file in
-    let write chunk =
-      write_acc chunk;
+    let (sknode_size, write_sknode) = Heap.prepare_write_sknode () in
+    let write chunk file =
+      write_acc chunk file;
       let dependents = get_dependents chunk in
-      let sknode = write_sknode chunk in
+      let sknode = write_sknode chunk file in
       assert (Heap.file_set_add dependents sknode)
     in
     (size_acc + module_size + Heap.header_size + sknode_size, write)
   in
-  fun options file old_resolved_requires new_resolved_requires ->
+  fun options old_resolved_requires new_resolved_requires ->
+    let init = (0, (fun _ _ -> ())) in
     if Options.incremental_revdeps options then
       let old_dependencies = all_dependencies old_resolved_requires in
       let new_dependencies = all_dependencies new_resolved_requires in
       partition_fold
         Modulename.compare
-        (remove_old_dependent file)
-        (add_new_dependent file)
-        (0, Fun.const ())
+        remove_old_dependent
+        add_new_dependent
+        init
         (old_dependencies, new_dependencies)
     else
-      (0, Fun.const ())
+      init
 
 (* Write parsed data for checked file to shared memory. If we loaded from saved
  * state, a checked file entry will already exist without parse data and this
@@ -640,11 +641,9 @@ let add_unparsed_file options file_key file_opt hash module_name =
         let* addr = entity_read_latest (get_resolved_requires parse) in
         Some (read_resolved_requires_caml addr)
       in
-      let (dep_size, update_revdeps) =
-        prepare_update_revdeps options file old_resolved_requires None
-      in
+      let (dep_size, update_revdeps) = prepare_update_revdeps options old_resolved_requires None in
       let update chunk =
-        update_revdeps chunk;
+        update_revdeps chunk file;
         update_file chunk
       in
       (size + dep_size, update)
@@ -674,8 +673,8 @@ let clear_file options file_key =
           let* addr = entity_read_latest (get_resolved_requires parse) in
           Some (read_resolved_requires_caml addr)
         in
-        let (size, update) = prepare_update_revdeps options file old_resolved_requires None in
-        alloc size update
+        let (size, update) = prepare_update_revdeps options old_resolved_requires None in
+        alloc size (fun chunk -> update chunk file)
       in
       entity_advance parse_ent None;
       let dirty_modules =
@@ -781,10 +780,8 @@ let rollback_file =
           let* addr = entity_read_latest (get_resolved_requires old_parse) in
           Some (read_resolved_requires_caml addr)
         in
-        let (size, update_revdeps) =
-          prepare_update_revdeps options file None old_resolved_requires
-        in
-        alloc size update_revdeps
+        let (size, update_revdeps) = prepare_update_revdeps options None old_resolved_requires in
+        alloc size (fun chunk -> update_revdeps chunk file)
       | _ -> ()
     in
     (* Remove new providers and process deferred deletions for old providers
@@ -1328,9 +1325,9 @@ module Resolved_requires_mutator = struct
           Some (read_resolved_requires_caml addr)
         in
         let (size, update_revdeps) =
-          prepare_update_revdeps options file new_resolved_requires old_resolved_requires
+          prepare_update_revdeps options new_resolved_requires old_resolved_requires
         in
-        alloc size update_revdeps;
+        alloc size (fun chunk -> update_revdeps chunk file);
         entity_rollback ent
       | _ -> ())
 
@@ -1358,7 +1355,7 @@ module Resolved_requires_mutator = struct
     | Some { hash; _ } when Int64.equal hash resolved_requires.hash -> false
     | _ ->
       let (update_size, update_revdeps) =
-        prepare_update_revdeps options file old_resolved_requires (Some resolved_requires)
+        prepare_update_revdeps options old_resolved_requires (Some resolved_requires)
       in
       let open Heap in
       let resolved_requires = Marshal.to_string resolved_requires [] in
@@ -1369,7 +1366,7 @@ module Resolved_requires_mutator = struct
           alloc
             (update_size + header_size + resolved_requires_size)
             (fun chunk ->
-              update_revdeps chunk;
+              update_revdeps chunk file;
               let resolved_requires = write_resolved_requires chunk in
               entity_advance ent (Some resolved_requires));
           true
@@ -1748,14 +1745,17 @@ module Reader_dispatcher : READER with type reader = Abstract_state_reader.t = s
 end
 
 module From_saved_state = struct
-  let add_parsed file_key hash module_name exports resolved_requires =
+  let add_parsed options file_key hash module_name exports resolved_requires =
     let (file_kind, file_name) = file_kind_and_name file_key in
     let exports = Marshal.to_string exports [] in
-    let resolved_requires = Marshal.to_string resolved_requires [] in
+    let resolved_requires_str = Marshal.to_string resolved_requires [] in
     let open Heap in
     let (exports_size, write_exports) = prepare_write_exports exports in
     let (resolved_requires_size, write_resolved_requires) =
-      prepare_write_resolved_requires resolved_requires
+      prepare_write_resolved_requires resolved_requires_str
+    in
+    let (revdeps_size, update_revdeps) =
+      prepare_update_revdeps options None (Some resolved_requires)
     in
     let size =
       (11 * header_size)
@@ -1766,6 +1766,7 @@ module From_saved_state = struct
       + int64_size
       + exports_size
       + resolved_requires_size
+      + revdeps_size
     in
     let (size, add_file_module_maybe) = prepare_add_file_module_maybe size file_key in
     let (size, write_new_haste_info_maybe) =
@@ -1788,6 +1789,7 @@ module From_saved_state = struct
         let parse_ent = write_entity chunk (Some (parse :> [ `typed | `untyped ] parse_addr)) in
         let file = write_file chunk file_kind file_name parse_ent haste_ent file_module in
         assert (file = FileHeap.add file_key file);
+        update_revdeps chunk file;
         calc_dirty_modules file_key file haste_ent file_module
     )
 
