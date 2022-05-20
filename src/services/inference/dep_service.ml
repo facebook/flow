@@ -138,6 +138,26 @@ let calc_direct_dependents workers ~candidates ~changed_modules =
     (* We are only interested in dependents which are also in `candidates` *)
     Lwt.return (FilenameSet.inter candidates dependents)
 
+let calc_incremental_dependents =
+  let job acc ms =
+    (* The MultiWorker API is weird. All jobs get the `neutral` value as their
+     * accumulator argument. We can exploit this to return a set from workers
+     * while the server accumulates lists of sets. *)
+    assert (acc = []);
+    let open Parsing_heaps in
+    let acc = ref FilenameSet.empty in
+    let iter_f file = acc := FilenameSet.add (read_file_key file) !acc in
+    let iter_m = iter_dependents iter_f in
+    List.iter iter_m ms;
+    !acc
+  in
+  fun workers ~candidates ~changed_modules ->
+    let next = MultiWorkerLwt.next workers (Modulename.Set.elements changed_modules) in
+    let%lwt dependent_sets = MultiWorkerLwt.call workers ~job ~merge:List.cons ~neutral:[] ~next in
+    let dependents = List.fold_left FilenameSet.union FilenameSet.empty dependent_sets in
+    (* We are only interested in dependents which are also in `candidates` *)
+    Lwt.return (FilenameSet.inter candidates dependents)
+
 (* Calculate module dependencies. Since this involves a lot of reading from
    shared memory, it is useful to parallelize this process (leading to big
    savings in init and recheck times). *)

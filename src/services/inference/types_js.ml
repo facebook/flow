@@ -142,10 +142,10 @@ end = struct
       Lazy.force on_miss
 end
 
-let clear_cache_if_resolved_requires_changed resolved_requires_changed =
+let clear_cache_if_resolved_requires_changed options resolved_requires_changed =
   if resolved_requires_changed then (
     Hh_logger.info "Resolved requires changed";
-    DirectDependentFilesCache.clear ()
+    if not (Options.incremental_revdeps options) then DirectDependentFilesCache.clear ()
   ) else
     Hh_logger.info "Resolved requires are unchanged"
 
@@ -174,7 +174,7 @@ let resolve_requires ~transaction ~reader ~options ~profiling ~workers ~parsed ~
           ~next:(MultiWorkerLwt.next workers parsed)
     )
   in
-  clear_cache_if_resolved_requires_changed resolved_requires_changed;
+  clear_cache_if_resolved_requires_changed options resolved_requires_changed;
   Lwt.return resolved_requires_changed
 
 let error_set_of_internal_error file (loc, internal_error) =
@@ -1269,25 +1269,29 @@ end = struct
        or are new / changed files that are phantom dependents. *)
     let%lwt direct_dependent_files =
       Memory_utils.with_memory_timer_lwt ~options "DirectDependentFiles" profiling (fun () ->
-          if not (FilenameSet.disjoint old_parsed unparsed_or_deleted) then
-            (* unparsed/deleted files can't be direct dependents. a previously-parsed
-               file may be cached as a direct dependent of some other file. so if any
-               files are no longer parsed, we invalidate the cache to clear them out of
-               any other files' caches.
+          if Options.incremental_revdeps options then
+            Dep_service.calc_incremental_dependents workers ~candidates:unchanged ~changed_modules
+          else (
+            if not (FilenameSet.disjoint old_parsed unparsed_or_deleted) then
+              (* unparsed/deleted files can't be direct dependents. a previously-parsed
+                 file may be cached as a direct dependent of some other file. so if any
+                 files are no longer parsed, we invalidate the cache to clear them out of
+                 any other files' caches.
 
-               note: we could search the cache for entries containing these files. we
-               could also just deal with bogus entries downstream, like by ignoring
-               unparsed direct dependents in resolve_requires, but that's fragile.
-               really, the solution is to make calc_direct_dependents fast so we don't
-               need this cache. *)
-            DirectDependentFilesCache.clear ();
+                 note: we could search the cache for entries containing these files. we
+                 could also just deal with bogus entries downstream, like by ignoring
+                 unparsed direct dependents in resolve_requires, but that's fragile.
+                 really, the solution is to make calc_direct_dependents fast so we don't
+                 need this cache. *)
+              DirectDependentFilesCache.clear ();
 
-          DirectDependentFilesCache.with_cache
-            ~cache_key:new_or_changed_or_deleted
-            ~on_miss:
-              ( lazy
-                (Dep_service.calc_direct_dependents workers ~candidates:unchanged ~changed_modules)
-                )
+            DirectDependentFilesCache.with_cache
+              ~cache_key:new_or_changed_or_deleted
+              ~on_miss:
+                ( lazy
+                  (Dep_service.calc_direct_dependents workers ~candidates:unchanged ~changed_modules)
+                  )
+          )
       )
     in
     Hh_logger.info "Re-resolving parsed and directly dependent files";

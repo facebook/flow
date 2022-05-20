@@ -13,6 +13,12 @@ val calc_direct_dependents :
   changed_modules:Modulename.Set.t ->
   FilenameSet.t Lwt.t
 
+val calc_incremental_dependents :
+  MultiWorkerLwt.worker list option ->
+  candidates:FilenameSet.t ->
+  changed_modules:Modulename.Set.t ->
+  FilenameSet.t Lwt.t
+
 val calc_dependency_info :
   reader:Mutator_state_reader.t ->
   MultiWorkerLwt.worker list option ->

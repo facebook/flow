@@ -164,6 +164,20 @@ let get_provider_ent = function
     let* file_module = get_file_module file_key in
     Some (Heap.get_file_provider file_module)
 
+let iter_dependents f mname =
+  let dependents =
+    match mname with
+    | Modulename.String name ->
+      let* haste_module = get_haste_module name in
+      Some (Heap.get_haste_dependents haste_module)
+    | Modulename.Filename file_key ->
+      let* file_module = get_file_module file_key in
+      Some (Heap.get_file_dependents file_module)
+  in
+  match dependents with
+  | None -> ()
+  | Some dependents -> Heap.sklist_iter f dependents
+
 let read_file_name file =
   let open Heap in
   get_file_name file |> read_string

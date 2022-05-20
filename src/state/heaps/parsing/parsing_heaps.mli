@@ -46,6 +46,8 @@ val get_haste_module_unsafe : string -> haste_module_addr
 
 val get_file_module_unsafe : File_key.t -> file_module_addr
 
+val iter_dependents : (file_addr -> unit) -> Modulename.t -> unit
+
 val read_file_name : file_addr -> string
 
 val read_file_key : file_addr -> File_key.t
