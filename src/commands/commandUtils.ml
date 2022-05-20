@@ -855,6 +855,7 @@ module Options_flags = struct
     verbose: Verbose.t option;
     wait_for_recheck: bool option;
     include_suppressions: bool;
+    incremental_revdeps: bool option;
   }
 end
 
@@ -916,7 +917,8 @@ let options_flags =
       abstract_locations
       include_suppressions
       trust_mode
-      env_mode =
+      env_mode
+      incremental_revdeps =
     (match merge_timeout with
     | Some timeout when timeout < 0 ->
       Exit.(exit ~msg:"--merge-timeout must be non-negative" Commandline_usage_error)
@@ -944,6 +946,7 @@ let options_flags =
         trust_mode;
         abstract_locations;
         include_suppressions;
+        incremental_revdeps;
       }
   in
   fun prev ->
@@ -1017,6 +1020,7 @@ let options_flags =
               )
            )
            ~doc:""
+      |> flag "--incremental-revdeps" (optional bool) ~doc:""
     )
 
 let saved_state_flags =
@@ -1345,6 +1349,10 @@ let make_options
       options_flags.include_warnings
       || options_flags.max_warnings <> None
       || FlowConfig.include_warnings flowconfig;
+    opt_incremental_revdeps =
+      Base.Option.value
+        options_flags.incremental_revdeps
+        ~default:(FlowConfig.incremental_revdeps flowconfig);
     opt_max_header_tokens = FlowConfig.max_header_tokens flowconfig;
     opt_haste_module_ref_prefix = FlowConfig.haste_module_ref_prefix flowconfig;
     opt_haste_name_reducers = FlowConfig.haste_name_reducers flowconfig;
