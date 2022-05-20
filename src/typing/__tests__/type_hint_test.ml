@@ -115,7 +115,7 @@ end
 module TypeLoader : sig
   val get_master_cx : unit -> Context.master_context
 
-  val get_type_of_last_expression : Context.t -> string -> Type.t
+  val get_type_of_last_expression : Context.t -> string -> Context.t * Type.t
 end = struct
   let parse_content file content =
     let parse_options =
@@ -204,44 +204,36 @@ end = struct
     let lint_severities =
       Merge_js.get_lint_severities metadata StrictModeSettings.empty LintSettings.empty_severities
     in
-    let typed_ast = Type_inference_js.infer_ast cx dummy_filename [] ast ~lint_severities in
-    Merge_js.post_merge_checks cx (get_master_cx ()) ast typed_ast metadata file_sig;
-    typed_ast
-
-  class resolver_visitor =
-    let no_lowers _cx r = Type.Unsoundness.merged_any r in
-    object (this)
-      inherit [ISet.t] Type_mapper.t_with_uses as super
-
-      method! type_ cx seen t =
-        let open Type in
-        match t with
-        | OpenT (r, id) ->
-          if ISet.mem id seen then
-            Type.Unsoundness.merged_any r
-          else
-            let seen = ISet.add id seen in
-            this#type_ cx seen (Flow_js_utils.merge_tvar ~no_lowers cx r id)
-        | _ -> super#type_ cx seen t
-
-      method tvar _cx _map_cx _r id = id
-
-      method eval_id _cx _map_cx id = id
-
-      method props _cx _map_cx id = id
-
-      method exports _cx _map_cx id = id
-
-      method call_prop _cx _map_cx id = id
-    end
+    Type_inference_js.infer_ast cx dummy_filename [] ast ~lint_severities
 
   let get_type_of_last_expression cx content =
-    let open Flow_ast in
-    let (_, { Program.statements; _ }) = get_typed_ast cx content in
+    let (_, { Flow_ast.Program.statements; _ }) = get_typed_ast cx content in
     match Base.List.last statements with
-    | Some (_, Statement.Expression { Statement.Expression.expression = ((_, t), _); _ }) ->
-      let resolver = new resolver_visitor in
-      resolver#type_ cx ISet.empty t
+    | Some
+        ( _,
+          Flow_ast.Statement.Expression
+            { Flow_ast.Statement.Expression.expression = ((_, t), _); _ }
+        ) ->
+      let reducer =
+        new Context_optimizer.context_optimizer ~no_lowers:(fun _ r -> Type.Unsoundness.merged_any r)
+      in
+      let file = Context.file cx in
+      let metadata = Context.metadata cx in
+      let aloc_table = Utils_js.FilenameMap.find file (Context.aloc_tables cx) in
+      let ccx = Context.make_ccx (get_master_cx ()) in
+      let t = reducer#type_ cx Polarity.Neutral t in
+      Context.merge_into
+        ccx
+        {
+          Type.TypeContext.graph = reducer#get_reduced_graph;
+          trust_graph = reducer#get_reduced_trust_graph;
+          property_maps = reducer#get_reduced_property_maps;
+          call_props = reducer#get_reduced_call_props;
+          export_maps = reducer#get_reduced_export_maps;
+          evaluated = reducer#get_reduced_evaluated;
+        };
+      let cx = Context.make ccx metadata file aloc_table Context.PostInference in
+      (cx, t)
     | _ -> failwith "Must have a last statement that's an expression"
 end
 
@@ -267,7 +259,7 @@ let mk_eval_hint_test ~expected base ops ctxt =
 
 let mk_eval_hint_test_with_type_setup ~expected type_setup_code ops ctxt =
   let cx = mk_cx () in
-  let base_t = TypeLoader.get_type_of_last_expression cx type_setup_code in
+  let (cx, base_t) = TypeLoader.get_type_of_last_expression cx type_setup_code in
   let actual =
     mk_hint base_t ops
     |> Type_hint.evaluate_hint cx
@@ -280,13 +272,13 @@ let eval_hint_tests =
     "hint_t_num" >:: mk_eval_hint_test ~expected:"number" "number" [];
     "hint_t_array" >:: mk_eval_hint_test ~expected:"Array<number>" "Array<number>" [];
     "array_element_decomp_general"
-    >:: mk_eval_hint_test ~expected:"number" "number[]" [Decomp_ArrElement 2];
+    >:: mk_eval_hint_test ~expected:"number" "Array<number>" [Decomp_ArrElement 2];
     "array_element_decomp_specific"
     >:: mk_eval_hint_test ~expected:"string" "[number, string]" [Decomp_ArrElement 1];
     "array_element_decomp_specific_nonexistent"
     >:: mk_eval_hint_test ~expected:"None" "[number, string]" [Decomp_ArrElement 2];
     "array_spread_decomp_with_general"
-    >:: mk_eval_hint_test ~expected:"Array<number>" "number[]" [Decomp_ArrSpread 0];
+    >:: mk_eval_hint_test ~expected:"Array<number>" "Array<number>" [Decomp_ArrSpread 0];
     "array_spread_decomp_with_tuple_full"
     >:: mk_eval_hint_test ~expected:"[number, string]" "[number, string]" [Decomp_ArrSpread 0];
     "array_spread_decomp_with_tuple_single"
@@ -305,21 +297,21 @@ let eval_hint_tests =
     "fun_decomp_on_nonexistent_argument_of_hint"
     >:: mk_eval_hint_test ~expected:"void" "() => number" [Decomp_FuncParam 0];
     "fun_decomp_on_rest_arguments_of_hint"
-    >:: mk_eval_hint_test ~expected:"number" "(...number[]) => number" [Decomp_FuncParam 0];
+    >:: mk_eval_hint_test ~expected:"number" "(...Array<number>) => number" [Decomp_FuncParam 0];
     "fun_decomp_rest_arguments_matching_number_of_normal_parameters"
     >:: mk_eval_hint_test
           ~expected:"Array<number>"
-          "(string, number, ...number[]) => number"
+          "(string, number, ...Array<number>) => number"
           [Decomp_FuncRest 2];
     "fun_decomp_rest_arguments_with_additional_normal_parameters"
     >:: mk_eval_hint_test
           ~expected:"Array<string>"
-          "(string, number, ...string[]) => number"
+          "(string, number, ...Array<string>) => number"
           [Decomp_FuncRest 3];
     "fun_decomp_rest_arguments_overlap_with_normal_parameters"
     >:: mk_eval_hint_test
           ~expected:"Array<(number | string)>"
-          "(string, number, ...string[]) => number"
+          "(string, number, ...Array<string>) => number"
           [Decomp_FuncRest 1];
     "obj_prop_from_record_neutral_polarity"
     >:: mk_eval_hint_test ~expected:"number" "{foo: number}" [Decomp_ObjProp "foo"];
