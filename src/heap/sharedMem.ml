@@ -1824,13 +1824,14 @@ module NewAPI = struct
 
   (** Haste modules *)
 
-  let haste_module_size = 3 * addr_size
+  let haste_module_size = 4 * addr_size
 
-  let write_haste_module chunk name provider =
+  let write_haste_module chunk name provider dependents =
     let addr = write_header chunk Haste_module_tag haste_module_size in
     unsafe_write_addr chunk name;
     unsafe_write_addr chunk provider;
     unsafe_write_addr chunk null_addr (* all providers *);
+    unsafe_write_addr chunk dependents;
     addr
 
   let haste_modules_equal = Int.equal
@@ -1841,9 +1842,13 @@ module NewAPI = struct
 
   let haste_all_providers_addr m = addr_offset m 3
 
+  let haste_dependents_addr m = addr_offset m 4
+
   let get_haste_name = get_generic haste_name_addr
 
   let get_haste_provider = get_generic haste_provider_addr
+
+  let get_haste_dependents = get_generic haste_dependents_addr
 
   let add_haste_provider m file provider =
     let head_addr = haste_all_providers_addr m in
@@ -1927,19 +1932,24 @@ module NewAPI = struct
 
   (** File modules *)
 
-  let file_module_size = 2 * addr_size
+  let file_module_size = 3 * addr_size
 
-  let write_file_module chunk provider =
+  let write_file_module chunk provider dependents =
     let addr = write_header chunk File_module_tag file_module_size in
     unsafe_write_addr chunk provider;
     unsafe_write_addr chunk null_addr (* all providers *);
+    unsafe_write_addr chunk dependents;
     addr
 
   let file_provider_addr m = addr_offset m 1
 
   let file_all_providers_addr m = addr_offset m 2
 
+  let file_dependents_addr m = addr_offset m 3
+
   let get_file_provider = get_generic file_provider_addr
+
+  let get_file_dependents = get_generic file_dependents_addr
 
   let add_file_provider m file =
     let head_addr = file_all_providers_addr m in

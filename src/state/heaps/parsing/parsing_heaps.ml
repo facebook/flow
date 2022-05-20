@@ -258,10 +258,11 @@ let prepare_add_file_module_maybe size file_key =
     | Some _ as addr -> (size, Fun.const addr)
     | None ->
       let open Heap in
-      let size = size + (2 * header_size) + file_module_size + entity_size in
+      let size = size + (3 * header_size) + file_module_size + entity_size + sklist_size in
       let write chunk =
         let provider = write_entity chunk None in
-        let m = write_file_module chunk provider in
+        let dependents = write_sklist chunk in
+        let m = write_file_module chunk provider dependents in
         Some (FileModuleHeap.add file_module_key m)
       in
       (size, write))
@@ -271,11 +272,14 @@ let prepare_add_haste_module_maybe size name =
   | Some addr -> (size, Fun.const addr)
   | None ->
     let open Heap in
-    let size = size + (3 * header_size) + haste_module_size + string_size name + entity_size in
+    let size =
+      size + (4 * header_size) + haste_module_size + string_size name + entity_size + sklist_size
+    in
     let write chunk =
       let heap_name = write_string chunk name in
       let provider = write_entity chunk None in
-      let m = write_haste_module chunk heap_name provider in
+      let dependents = write_sklist chunk in
+      let m = write_haste_module chunk heap_name provider dependents in
       HasteModuleHeap.add name m
     in
     (size, write)
