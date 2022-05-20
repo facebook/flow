@@ -7,7 +7,7 @@
 exception InvalidCodepoint of int
 exception MalFormed
 type apos = int
-type lexbuf 
+type lexbuf
 val lexbuf_clone : lexbuf -> lexbuf
 
 val from_int_array : int array -> lexbuf
@@ -15,7 +15,7 @@ val new_line : lexbuf -> unit
 val next : lexbuf -> Uchar.t option
 
 (**/**)
-val __private__next_int : lexbuf -> int 
+val __private__next_int : lexbuf -> int
 (**/**)
 
 val mark : lexbuf -> int -> unit
@@ -36,3 +36,12 @@ module Utf8 : sig
   val lexeme_to_buffer : lexbuf -> Buffer.t -> unit
   val lexeme_to_buffer2 : lexbuf -> Buffer.t -> Buffer.t -> unit
 end
+
+val string_of_utf8 : int array -> string
+
+(** Two APIs used when we want to do customize lexing
+    instead of using the regex based engine
+*)
+val current_code_point : lexbuf -> int
+val backoff : lexbuf -> int -> unit
+val set_lexeme_start : lexbuf -> int -> unit
