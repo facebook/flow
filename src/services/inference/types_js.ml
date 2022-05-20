@@ -151,7 +151,7 @@ let clear_cache_if_resolved_requires_changed resolved_requires_changed =
 
 let resolve_requires ~transaction ~reader ~options ~profiling ~workers ~parsed ~parsed_set =
   let node_modules_containers = !Files.node_modules_containers in
-  let mutator = Parsing_heaps.Resolved_requires_mutator.create transaction parsed_set in
+  let mutator = Parsing_heaps.Resolved_requires_mutator.create transaction options parsed_set in
   let%lwt resolved_requires_changed =
     Memory_utils.with_memory_timer_lwt ~options "ResolveRequires" profiling (fun () ->
         MultiWorkerLwt.call
@@ -2011,7 +2011,9 @@ let init_from_saved_state ~profiling ~workers ~saved_state ~updates options =
       let { Saved_state.unparsed_module_name; unparsed_hash } = unparsed_file_data in
 
       (* Restore the FileHeap *)
-      let ms = Parsing_heaps.From_saved_state.add_unparsed fn unparsed_hash unparsed_module_name in
+      let ms =
+        Parsing_heaps.From_saved_state.add_unparsed options fn unparsed_hash unparsed_module_name
+      in
 
       (FilenameSet.add fn fns, Modulename.Set.union ms dirty_modules)
     in
