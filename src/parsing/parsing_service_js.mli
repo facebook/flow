@@ -27,7 +27,7 @@ type result =
       tolerable_errors: File_sig.With_Loc.tolerable_error list;
       parse_errors: parse_error Nel.t;
     }
-  | Parse_fail of parse_failure
+  | Parse_exn of Exception.t
   | Parse_skip of parse_skip_reason
 
 and parse_skip_reason =
@@ -133,19 +133,10 @@ val parse_docblock :
 val parse_package_json_file :
   node_main_fields:string list -> string -> File_key.t -> (Package_json.t, parse_error) Result.t
 
-val parse_source_file :
-  fail:bool ->
-  types:bool ->
-  use_strict:bool ->
-  string ->
-  File_key.t ->
-  (Loc.t, Loc.t) Flow_ast.Program.t * parse_error list
-
 (* parse contents of a file *)
 val do_parse :
   parse_options:parse_options ->
   info:Docblock.t ->
-  fail:bool ->
   string ->
   (* contents of the file *)
   File_key.t ->

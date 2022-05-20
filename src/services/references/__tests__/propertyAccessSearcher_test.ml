@@ -31,12 +31,12 @@ let run ctxt expected name content =
       parse_node_main_fields = [];
     }
   in
-  let result = do_parse ~parse_options ~info ~fail:false content file in
+  let result = do_parse ~parse_options ~info content file in
   let ast =
     match result with
     | Parse_ok { ast; _ } -> ast
     | Parse_recovered { ast; _ } -> ast
-    | Parse_fail _ -> failwith "Parse unexpectedly failed"
+    | Parse_exn _ -> failwith "Parse unexpectedly failed"
     | Parse_skip _ -> failwith "Parse unexpectedly skipped"
   in
   let result = PropertyAccessSearcher.search name ast in

@@ -28,9 +28,7 @@ let do_parse_wrapper ~options filename contents =
     Parsing_service_js.parse_docblock ~max_tokens filename contents
   in
   let parse_options = Parsing_service_js.make_parse_options ~types_mode docblock options in
-  let parse_result =
-    Parsing_service_js.do_parse ~parse_options ~info:docblock ~fail:false contents filename
-  in
+  let parse_result = Parsing_service_js.do_parse ~parse_options ~info:docblock contents filename in
   match parse_result with
   | Parsing_service_js.Parse_ok { ast; file_sig; tolerable_errors; _ } ->
     Parsed
@@ -49,23 +47,9 @@ let do_parse_wrapper ~options filename contents =
            parse_errors = Nel.to_list parse_errors;
          }
       )
-  | Parsing_service_js.Parse_fail fails ->
-    (match fails with
-    | Parsing_service_js.Uncaught_exception exn ->
-      (* we have historically just blown up here, so we will continue to do so. *)
-      Exception.reraise exn
-    | Parsing_service_js.Parse_error (loc, err) ->
-      (* We pass `~fail:false` to `do_parse` above, so we should never reach this case. *)
-      failwith
-        (Utils_js.spf
-           "Unexpectedly encountered Parse_fail with parse error: %s at %s"
-           (Parse_error.PP.error err)
-           (Loc.debug_to_string loc)
-        )
-    | Parsing_service_js.Docblock_errors _ ->
-      (* Parsing_service_js.do_parse cannot create these. They are only created by another
-       * caller of do_parse. It would be nice to prove this fact via the type system. *)
-      failwith "Unexpectedly encountered docblock errors")
+  | Parsing_service_js.Parse_exn exn ->
+    (* we have historically just blown up here, so we will continue to do so. *)
+    Exception.reraise exn
   | Parsing_service_js.(Parse_skip (Skip_non_flow_file | Skip_resource_file | Skip_package_json _))
     ->
     (* This happens when a non-source file is queried, such as a json file *)

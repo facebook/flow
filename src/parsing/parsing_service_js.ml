@@ -25,7 +25,7 @@ type result =
       tolerable_errors: File_sig.With_Loc.tolerable_error list;
       parse_errors: parse_error Nel.t;
     }
-  | Parse_fail of parse_failure
+  | Parse_exn of Exception.t
   | Parse_skip of parse_skip_reason
 
 and parse_skip_reason =
@@ -107,7 +107,7 @@ type parse_options = {
   parse_node_main_fields: string list;
 }
 
-let parse_source_file ~fail ~types ~use_strict content file =
+let parse_source_file ~types ~use_strict content file =
   let parse_options =
     Some
       Parser_env.
@@ -126,9 +126,7 @@ let parse_source_file ~fail ~types ~use_strict content file =
       
   in
 
-  let (ast, parse_errors) = Parser_flow.program_file ~fail ~parse_options content (Some file) in
-  if fail then assert (parse_errors = []);
-  (ast, parse_errors)
+  Parser_flow.program_file ~fail:false ~parse_options content (Some file)
 
 let parse_package_json_file ~node_main_fields content file =
   let parse_options =
@@ -360,7 +358,7 @@ let types_checked types_mode info =
     | Some Docblock.OptInStrictLocal ->
       true)
 
-let do_parse ~parse_options ~info ~fail content file =
+let do_parse ~parse_options ~info content file =
   let {
     parse_types_mode = types_mode;
     parse_use_strict = use_strict;
@@ -395,8 +393,7 @@ let do_parse ~parse_options ~info ~fail content file =
       if not types_checked then
         Parse_skip Skip_non_flow_file
       else
-        (* NOTE: if ~fail:true, we'll never get parse errors here *)
-        let (ast, parse_errors) = parse_source_file ~fail ~types:true ~use_strict content file in
+        let (ast, parse_errors) = parse_source_file ~types:true ~use_strict content file in
         let prevent_munge = Docblock.preventMunge info || prevent_munge in
         (* NOTE: This is a temporary hack that makes the signature verifier ignore any static
            property named `propTypes` in any class. It should be killed with fire or replaced with
@@ -463,7 +460,6 @@ let do_parse ~parse_options ~info ~fail content file =
           in
           Parse_ok { ast; file_sig; locs; type_sig; tolerable_errors; exports }
   with
-  | Parse_error.Error (e, _) -> Parse_fail (Parse_error e)
   | e ->
     let e = Exception.wrap e in
     ( if FlowEventLogger.should_log () then
@@ -475,7 +471,7 @@ let do_parse ~parse_options ~info ~fail content file =
       in
       FlowEventLogger.parsing_exception e_str
     );
-    Parse_fail (Uncaught_exception e)
+    Parse_exn e
 
 let hash_content content =
   let state = Xx.init 0L in
@@ -564,7 +560,7 @@ let reducer
           in
           let module_name = exported_module file_key info in
           begin
-            match do_parse ~parse_options ~info ~fail:true content file_key with
+            match do_parse ~parse_options ~info content file_key with
             | Parse_ok { ast; file_sig; exports; locs; type_sig; tolerable_errors } ->
               (* if parse_options.fail == true, then parse errors will hit Parse_fail below. otherwise,
                  ignore any parse errors we get here. *)
@@ -586,10 +582,11 @@ let reducer
               let dirty_modules = Modulename.Set.union dirty_modules acc.dirty_modules in
               { acc with parsed; dirty_modules }
             | Parse_recovered { parse_errors = (error, _); _ } ->
-              (* since [do_parse ~fail:true], this should be unreachable *)
-              fold_failed acc worker_mutator file_key file_opt hash module_name (Parse_error error)
-            | Parse_fail error ->
-              fold_failed acc worker_mutator file_key file_opt hash module_name error
+              let failure = Parse_error error in
+              fold_failed acc worker_mutator file_key file_opt hash module_name failure
+            | Parse_exn exn ->
+              let failure = Uncaught_exception exn in
+              fold_failed acc worker_mutator file_key file_opt hash module_name failure
             | Parse_skip (Skip_package_json result) ->
               let error =
                 let file_str = File_key.to_string file_key in
