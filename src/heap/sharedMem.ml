@@ -1406,6 +1406,8 @@ module NewAPI = struct
     in
     loop (sklist_succ_addr 0 sklist)
 
+  let sklist_is_empty sklist = is_none (get_generic (sklist_succ_addr 0) sklist)
+
   (** Entities
    *
    * We often want to represent some entity, like a file, where we can write new
