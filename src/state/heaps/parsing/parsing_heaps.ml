@@ -164,6 +164,89 @@ let get_provider_ent = function
     let* file_module = get_file_module file_key in
     Some (Heap.get_file_provider file_module)
 
+let read_file_name file =
+  let open Heap in
+  get_file_name file |> read_string
+
+let read_file_key file =
+  let open Heap in
+  let fn = read_file_name file in
+  match get_file_kind file with
+  | Source_file -> File_key.SourceFile fn
+  | Json_file -> File_key.JsonFile fn
+  | Resource_file -> File_key.ResourceFile fn
+  | Lib_file -> File_key.LibFile fn
+
+let read_file_hash parse =
+  let open Heap in
+  get_file_hash parse |> read_int64
+
+let read_module_name info =
+  let open Heap in
+  get_haste_module info |> get_haste_name |> read_string
+
+let read_ast file_key parse =
+  let open Heap in
+  let deserialize x = Marshal.from_string x 0 in
+  get_ast parse |> Option.map (fun addr -> read_ast addr |> deserialize |> decompactify_loc file_key)
+
+let read_ast_unsafe file_key parse =
+  match read_ast file_key parse with
+  | Some ast -> ast
+  | None -> raise (Ast_not_found (File_key.to_string file_key))
+
+let read_docblock parse : Docblock.t option =
+  let open Heap in
+  let deserialize x = Marshal.from_string x 0 in
+  get_docblock parse |> Option.map (fun addr -> read_docblock addr |> deserialize)
+
+let read_docblock_unsafe file_key parse =
+  match read_docblock parse with
+  | Some docblock -> docblock
+  | None -> raise (Docblock_not_found (File_key.to_string file_key))
+
+let read_aloc_table file_key parse =
+  let open Heap in
+  let init = ALoc.ALocRepresentationDoNotUse.init_table file_key in
+  get_aloc_table parse
+  |> Option.map (fun addr -> read_aloc_table addr |> Packed_locs.unpack (Some file_key) init)
+
+let read_aloc_table_unsafe file_key parse =
+  match read_aloc_table file_key parse with
+  | Some aloc_table -> aloc_table
+  | None -> raise (ALoc_table_not_found (File_key.to_string file_key))
+
+let read_type_sig parse =
+  let open Heap in
+  get_type_sig parse |> Option.map (fun addr -> read_type_sig addr Type_sig_bin.read)
+
+let read_type_sig_unsafe file_key parse =
+  match read_type_sig parse with
+  | Some type_sig -> type_sig
+  | None -> raise (Type_sig_not_found (File_key.to_string file_key))
+
+let read_tolerable_file_sig parse : File_sig.With_Loc.tolerable_t option =
+  let open Heap in
+  let deserialize x = Marshal.from_string x 0 in
+  get_file_sig parse |> Option.map (fun addr -> read_file_sig addr |> deserialize)
+
+let read_file_sig parse = Option.map fst (read_tolerable_file_sig parse)
+
+let read_tolerable_file_sig_unsafe file_key parse =
+  match read_tolerable_file_sig parse with
+  | Some file_sig -> file_sig
+  | None -> raise (Requires_not_found (File_key.to_string file_key))
+
+let read_file_sig_unsafe file_key parse = fst (read_tolerable_file_sig_unsafe file_key parse)
+
+let read_exports parse : Exports.t =
+  let open Heap in
+  let deserialize x = Marshal.from_string x 0 in
+  get_exports parse |> read_exports |> deserialize
+
+let read_resolved_requires addr : resolved_requires =
+  Marshal.from_string (Heap.read_resolved_requires addr) 0
+
 let haste_modulename m = Modulename.String (Heap.read_string (Heap.get_haste_name m))
 
 let prepare_add_file_module_maybe size file_key =
@@ -570,89 +653,6 @@ let rollback_file =
     match FileHeap.get file_key with
     | None -> ()
     | Some file -> if file_changed file then rollback_file file
-
-let read_file_name file =
-  let open Heap in
-  get_file_name file |> read_string
-
-let read_file_key file =
-  let open Heap in
-  let fn = read_file_name file in
-  match get_file_kind file with
-  | Source_file -> File_key.SourceFile fn
-  | Json_file -> File_key.JsonFile fn
-  | Resource_file -> File_key.ResourceFile fn
-  | Lib_file -> File_key.LibFile fn
-
-let read_file_hash parse =
-  let open Heap in
-  get_file_hash parse |> read_int64
-
-let read_module_name info =
-  let open Heap in
-  get_haste_module info |> get_haste_name |> read_string
-
-let read_ast file_key parse =
-  let open Heap in
-  let deserialize x = Marshal.from_string x 0 in
-  get_ast parse |> Option.map (fun addr -> read_ast addr |> deserialize |> decompactify_loc file_key)
-
-let read_ast_unsafe file_key parse =
-  match read_ast file_key parse with
-  | Some ast -> ast
-  | None -> raise (Ast_not_found (File_key.to_string file_key))
-
-let read_docblock parse : Docblock.t option =
-  let open Heap in
-  let deserialize x = Marshal.from_string x 0 in
-  get_docblock parse |> Option.map (fun addr -> read_docblock addr |> deserialize)
-
-let read_docblock_unsafe file_key parse =
-  match read_docblock parse with
-  | Some docblock -> docblock
-  | None -> raise (Docblock_not_found (File_key.to_string file_key))
-
-let read_aloc_table file_key parse =
-  let open Heap in
-  let init = ALoc.ALocRepresentationDoNotUse.init_table file_key in
-  get_aloc_table parse
-  |> Option.map (fun addr -> read_aloc_table addr |> Packed_locs.unpack (Some file_key) init)
-
-let read_aloc_table_unsafe file_key parse =
-  match read_aloc_table file_key parse with
-  | Some aloc_table -> aloc_table
-  | None -> raise (ALoc_table_not_found (File_key.to_string file_key))
-
-let read_type_sig parse =
-  let open Heap in
-  get_type_sig parse |> Option.map (fun addr -> read_type_sig addr Type_sig_bin.read)
-
-let read_type_sig_unsafe file_key parse =
-  match read_type_sig parse with
-  | Some type_sig -> type_sig
-  | None -> raise (Type_sig_not_found (File_key.to_string file_key))
-
-let read_tolerable_file_sig parse : File_sig.With_Loc.tolerable_t option =
-  let open Heap in
-  let deserialize x = Marshal.from_string x 0 in
-  get_file_sig parse |> Option.map (fun addr -> read_file_sig addr |> deserialize)
-
-let read_file_sig parse = Option.map fst (read_tolerable_file_sig parse)
-
-let read_tolerable_file_sig_unsafe file_key parse =
-  match read_tolerable_file_sig parse with
-  | Some file_sig -> file_sig
-  | None -> raise (Requires_not_found (File_key.to_string file_key))
-
-let read_file_sig_unsafe file_key parse = fst (read_tolerable_file_sig_unsafe file_key parse)
-
-let read_exports parse : Exports.t =
-  let open Heap in
-  let deserialize x = Marshal.from_string x 0 in
-  get_exports parse |> read_exports |> deserialize
-
-let read_resolved_requires addr : resolved_requires =
-  Marshal.from_string (Heap.read_resolved_requires addr) 0
 
 module Reader_cache : sig
   val get_ast : File_key.t -> (Loc.t, Loc.t) Flow_ast.Program.t option
