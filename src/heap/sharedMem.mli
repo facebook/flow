@@ -278,6 +278,8 @@ module NewAPI : sig
 
   val sklist_iter : ('a addr -> unit) -> 'a sklist addr -> unit
 
+  val sklist_is_empty : 'a sklist addr -> bool
+
   (* entities *)
 
   val entity_size : int
