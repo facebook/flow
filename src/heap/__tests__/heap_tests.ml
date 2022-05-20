@@ -39,6 +39,13 @@ module Ent =
       type t = heap_string entity
     end)
 
+module Files =
+  NoCacheAddr
+    (StringKey)
+    (struct
+      type t = file
+    end)
+
 let assert_heap_size wsize =
   let bsize = wsize * (Sys.word_size / 8) in
   assert (SharedMem.heap_size () = bsize)
@@ -50,6 +57,141 @@ let assert_committed f entity data = assert (data = f (Option.get (entity_read_c
 let assert_latest f entity data = assert (data = f (Option.get (entity_read_latest entity)))
 
 let assert_latest_opt f entity data = assert (data = Option.map f (entity_read_latest entity))
+
+let skip_list_test workers _ctxt =
+  let num_workers = List.length workers in
+  let files_per_worker = 1000 in
+  let mk_filename par_id seq_id = Printf.sprintf "s%dp%d" seq_id par_id in
+
+  let file_set = alloc (header_size + sklist_size) write_sklist in
+
+  let create_files () par_id =
+    let filenames = Array.init files_per_worker (mk_filename par_id) in
+    let size =
+      let f acc fn = acc + (4 * header_size) + (2 * entity_size) + string_size fn + file_size in
+      Array.fold_left f 0 filenames
+    in
+    let add_file chunk key =
+      let filename = write_string chunk key in
+      let parse = write_entity chunk None in
+      let haste = write_entity chunk None in
+      let file = write_file chunk Source_file filename parse haste None in
+      assert (file == Files.add key file)
+    in
+    alloc size (fun chunk -> Array.iter (add_file chunk) filenames)
+  in
+
+  let add_files () par_id =
+    let files =
+      Array.init files_per_worker (fun i -> Option.get (Files.get (mk_filename par_id i)))
+    in
+
+    (* prepare for writing nodes *)
+    let size_acc = ref 0 in
+    let write_fns =
+      let f file =
+        let (size, write) = prepare_write_sknode file in
+        size_acc := header_size + size + !size_acc;
+        write
+      in
+      Array.map f files
+    in
+
+    (* create nodes and add to set *)
+    let f chunk file write =
+      let node = write chunk in
+      assert (file_set_add file_set node);
+      assert (file_set_mem file_set file)
+    in
+    alloc !size_acc (fun chunk -> Array.iter2 (f chunk) files write_fns)
+  in
+
+  let remove_files () par_id =
+    for i = 0 to files_per_worker - 1 do
+      let file = Option.get (Files.get (mk_filename par_id i)) in
+      assert (file_set_remove file_set file)
+    done
+  in
+
+  let setup_add_delete () par_id = if par_id mod 2 == 0 then add_files () par_id in
+
+  let add_delete m () par_id =
+    if par_id mod 2 == m then
+      remove_files () par_id
+    else
+      add_files () par_id
+  in
+
+  let teardown_add_delete () par_id = if par_id mod 2 == 0 then remove_files () par_id in
+
+  let run_par =
+    let merge () () = () in
+    let neutral = () in
+    let mk_next () =
+      let n = ref 0 in
+      fun () ->
+        let i = !n in
+        incr n;
+        if i < num_workers then
+          Bucket.Job i
+        else
+          Bucket.Done
+    in
+    (fun job -> MultiWorkerLwt.call (Some workers) ~job ~merge ~neutral ~next:(mk_next ()))
+  in
+
+  let check_list expected_size =
+    let prev = ref "" in
+    let count = ref 0 in
+    let f file =
+      let filename = read_string (get_file_name file) in
+      assert (!prev < filename);
+      prev := filename;
+      incr count
+    in
+    sklist_iter f file_set;
+    assert (!count = expected_size)
+  in
+
+  let rec fill_then_empty_loop n =
+    if n > 0 then (
+      Lwt.bind (run_par add_files) @@ fun () ->
+      check_list (num_workers * files_per_worker);
+      Lwt.bind (run_par remove_files) @@ fun () ->
+      check_list 0;
+      fill_then_empty_loop (n - 1)
+    ) else
+      Lwt.return_unit
+  in
+
+  let mixed_add_delete_loop n =
+    let rec loop n =
+      if n > 0 then
+        Lwt.bind (run_par (add_delete 0)) @@ fun () ->
+        Lwt.bind (run_par (add_delete 1)) @@ fun () -> loop (n - 1)
+      else
+        Lwt.return_unit
+    in
+    Lwt.bind (run_par setup_add_delete) @@ fun () ->
+    Lwt.bind (loop n) @@ fun () ->
+    Lwt.bind (run_par teardown_add_delete) @@ fun () ->
+    check_list 0;
+    Lwt.return_unit
+  in
+
+  Lwt_main.run
+    ( Lwt.bind (run_par create_files) @@ fun () ->
+      Lwt.bind (fill_then_empty_loop 10) @@ fun () -> mixed_add_delete_loop 10
+    );
+
+  (* Clean up *)
+  for w = 0 to num_workers - 1 do
+    for i = 0 to files_per_worker - 1 do
+      Files.remove (mk_filename w i)
+    done
+  done;
+  SharedMem.compact ();
+  assert_heap_size 0
 
 let collect_test _ctxt =
   let foo = "foo" in
@@ -241,7 +383,7 @@ let slot_taken_test _ =
   compact ();
   assert_heap_size 0
 
-let tests =
+let tests workers =
   "heap_tests"
   >::: [
          "collect" >:: collect_test;
@@ -249,9 +391,28 @@ let tests =
          "entities_compact" >:: entities_compact_test;
          "entities_rollback" >:: entities_rollback_test;
          "slot_taken" >:: slot_taken_test;
+         "skip_list" >:: skip_list_test workers;
        ]
 
 let () =
-  let config = { heap_size = 1024 * 1024 * 1024; hash_table_pow = 14; log_level = 0 } in
-  ignore (init ~num_workers:0 config : (handle, unit) result);
-  run_test_tt_main tests
+  Random.init 0;
+
+  let entry =
+    let restore () ~worker_id:_ = () in
+    WorkerController.register_entry_point ~restore
+  in
+  Daemon.check_entry_point ();
+
+  let num_workers = 4 in
+  let config = { heap_size = 10 * 1024 * 1024; hash_table_pow = 20; log_level = 0 } in
+  let heap_handle = Result.get_ok (init ~num_workers config) in
+  let workers =
+    MultiWorkerLwt.make
+      ~call_wrapper:None
+      ~saved_state:()
+      ~entry
+      ~nbr_procs:num_workers
+      ~gc_control:(Gc.get ())
+      ~heap_handle
+  in
+  run_test_tt_main (tests workers)
