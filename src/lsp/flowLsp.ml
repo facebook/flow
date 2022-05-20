@@ -2569,101 +2569,98 @@ and main_log_error ~(expected : bool) (msg : string) (stack : string) (event : e
   | false -> FlowEventLogger.persistent_unexpected_error ~request ~client_context ~error
 
 and main_handle_error (exn : Exception.t) (state : state) (event : event option) : state =
-  Marshal_tools.(
-    let stack = Exception.get_full_backtrace_string 500 exn in
-    match Exception.unwrap exn with
-    | Server_fatal_connection_exception _edata when state = Post_shutdown -> state
-    | Server_fatal_connection_exception edata ->
-      (* log the error *)
-      let stack = edata.stack ^ "---\n" ^ stack in
-      main_log_error ~expected:true ("[Server fatal] " ^ edata.message) stack event;
+  let stack = Exception.get_full_backtrace_string 500 exn in
+  match Exception.unwrap exn with
+  | Server_fatal_connection_exception _edata when state = Post_shutdown -> state
+  | Server_fatal_connection_exception { Marshal_tools.stack = remote_stack; message } ->
+    (* log the error *)
+    let stack = remote_stack ^ "---\n" ^ stack in
+    main_log_error ~expected:true ("[Server fatal] " ^ message) stack event;
 
-      (* report that we're disconnected to telemetry/connectionStatus *)
-      let state =
-        match state with
-        | Initialized (Connected env) ->
-          let i_isConnected =
-            Lsp_helpers.notify_connectionStatus
-              env.c_ienv.i_initialize_params
-              to_stdout
-              env.c_ienv.i_isConnected
-              false
-          in
-          let env = { env with c_ienv = { env.c_ienv with i_isConnected } } in
-          Initialized (Connected env)
-        | _ -> state
-      in
-      (* send the error report *)
-      let code =
-        match state with
-        | Initialized (Connected cenv) -> cenv.c_about_to_exit_code
-        | _ -> None
-      in
-      let code = Base.Option.value_map code ~f:FlowExit.to_string ~default:"" in
-      let report = Printf.sprintf "Server fatal exception: [%s] %s\n%s" code edata.message stack in
-      Lsp_helpers.telemetry_error to_stdout report;
-      let (d_autostart, d_ienv) =
-        match state with
-        | Initialized
-            (Connected
-              {
-                c_ienv;
-                c_about_to_exit_code =
-                  Some FlowExit.(Flowconfig_changed | Server_out_of_date | Lock_stolen);
-                _;
-              }
-              ) ->
-          (* we allow at most one autostart_after_version_mismatch per
-             instance so as to avoid getting into version battles. *)
-          let previous = c_ienv.i_can_autostart_after_version_mismatch in
-          let d_ienv = { c_ienv with i_can_autostart_after_version_mismatch = false } in
-          (previous, d_ienv)
-        | Initialized
-            (Connected
-              { c_ienv; c_about_to_exit_code = Some FlowExit.File_watcher_missed_changes; _ }
-              ) ->
-          (* TODO: we should fix the monitor to just handle this without exiting!
-             in the meantime, just restart the monitor, which will recrawl. *)
-          (true, c_ienv)
-        | Initialized (Connected { c_ienv; _ }) -> (false, c_ienv)
-        | Initialized (Disconnected { d_ienv; _ }) -> (false, d_ienv)
-        | Pre_init _
-        | Post_shutdown ->
-          failwith "Unexpected server error in inapplicable state"
-      in
-      let env = { d_ienv; d_autostart; d_server_status = None } in
-      (match state with
-      | Initialized server_state -> ignore (dismiss_tracks server_state)
+    (* report that we're disconnected to telemetry/connectionStatus *)
+    let state =
+      match state with
+      | Initialized (Connected env) ->
+        let i_isConnected =
+          Lsp_helpers.notify_connectionStatus
+            env.c_ienv.i_initialize_params
+            to_stdout
+            env.c_ienv.i_isConnected
+            false
+        in
+        let env = { env with c_ienv = { env.c_ienv with i_isConnected } } in
+        Initialized (Connected env)
+      | _ -> state
+    in
+    (* send the error report *)
+    let code =
+      match state with
+      | Initialized (Connected cenv) -> cenv.c_about_to_exit_code
+      | _ -> None
+    in
+    let code = Base.Option.value_map code ~f:FlowExit.to_string ~default:"" in
+    let report = Printf.sprintf "Server fatal exception: [%s] %s\n%s" code message stack in
+    Lsp_helpers.telemetry_error to_stdout report;
+    let (d_autostart, d_ienv) =
+      match state with
+      | Initialized
+          (Connected
+            {
+              c_ienv;
+              c_about_to_exit_code =
+                Some FlowExit.(Flowconfig_changed | Server_out_of_date | Lock_stolen);
+              _;
+            }
+            ) ->
+        (* we allow at most one autostart_after_version_mismatch per
+           instance so as to avoid getting into version battles. *)
+        let previous = c_ienv.i_can_autostart_after_version_mismatch in
+        let d_ienv = { c_ienv with i_can_autostart_after_version_mismatch = false } in
+        (previous, d_ienv)
+      | Initialized
+          (Connected { c_ienv; c_about_to_exit_code = Some FlowExit.File_watcher_missed_changes; _ })
+        ->
+        (* TODO: we should fix the monitor to just handle this without exiting!
+           in the meantime, just restart the monitor, which will recrawl. *)
+        (true, c_ienv)
+      | Initialized (Connected { c_ienv; _ }) -> (false, c_ienv)
+      | Initialized (Disconnected { d_ienv; _ }) -> (false, d_ienv)
       | Pre_init _
       | Post_shutdown ->
-        ());
-      let state = Initialized (Disconnected env) in
-      state
-    | Client_recoverable_connection_exception edata ->
-      let stack = edata.stack ^ "---\n" ^ stack in
-      main_log_error ~expected:true ("[Client recoverable] " ^ edata.message) stack event;
-      let report = Printf.sprintf "Client exception: %s\n%s" edata.message stack in
-      Lsp_helpers.telemetry_error to_stdout report;
-      state
-    | Client_fatal_connection_exception edata ->
-      let stack = edata.stack ^ "---\n" ^ stack in
-      main_log_error ~expected:true ("[Client fatal] " ^ edata.message) stack event;
-      Printf.eprintf "Client fatal exception: %s\n%s\n%!" edata.message stack;
-      lsp_exit_bad ()
-    | e ->
-      let e = Lsp_fmt.error_of_exn e in
-      main_log_error ~expected:true ("[FlowLSP] " ^ e.Error.message) stack event;
-      let text =
-        let code = Error.code_to_enum e.Error.code in
-        Printf.sprintf "FlowLSP exception %s [%i]\n%s" e.Error.message code stack
-      in
-      let () =
-        match event with
-        | Some (Client_message (RequestMessage (id, _request), _metadata)) ->
-          let key = command_key_of_state state in
-          let json = Lsp_fmt.print_lsp_response ~key id (ErrorResult (e, stack)) in
-          to_stdout json
-        | _ -> Lsp_helpers.telemetry_error to_stdout text
-      in
-      state
-  )
+        failwith "Unexpected server error in inapplicable state"
+    in
+    let env = { d_ienv; d_autostart; d_server_status = None } in
+    (match state with
+    | Initialized server_state -> ignore (dismiss_tracks server_state)
+    | Pre_init _
+    | Post_shutdown ->
+      ());
+    let state = Initialized (Disconnected env) in
+    state
+  | Client_recoverable_connection_exception { Marshal_tools.stack = remote_stack; message } ->
+    let stack = remote_stack ^ "---\n" ^ stack in
+    main_log_error ~expected:true ("[Client recoverable] " ^ message) stack event;
+    let report = Printf.sprintf "Client exception: %s\n%s" message stack in
+    Lsp_helpers.telemetry_error to_stdout report;
+    state
+  | Client_fatal_connection_exception { Marshal_tools.stack = remote_stack; message } ->
+    let stack = remote_stack ^ "---\n" ^ stack in
+    main_log_error ~expected:true ("[Client fatal] " ^ message) stack event;
+    Printf.eprintf "Client fatal exception: %s\n%s\n%!" message stack;
+    lsp_exit_bad ()
+  | e ->
+    let e = Lsp_fmt.error_of_exn e in
+    main_log_error ~expected:true ("[FlowLSP] " ^ e.Error.message) stack event;
+    let text =
+      let code = Error.code_to_enum e.Error.code in
+      Printf.sprintf "FlowLSP exception %s [%i]\n%s" e.Error.message code stack
+    in
+    let () =
+      match event with
+      | Some (Client_message (RequestMessage (id, _request), _metadata)) ->
+        let key = command_key_of_state state in
+        let json = Lsp_fmt.print_lsp_response ~key id (ErrorResult (e, stack)) in
+        to_stdout json
+      | _ -> Lsp_helpers.telemetry_error to_stdout text
+    in
+    state
