@@ -249,6 +249,29 @@ let read_resolved_requires addr : resolved_requires =
 
 let haste_modulename m = Modulename.String (Heap.read_string (Heap.get_haste_name m))
 
+let prepare_add_file_module key =
+  let open Heap in
+  let size = (3 * header_size) + file_module_size + entity_size + sklist_size in
+  let write chunk =
+    let provider = write_entity chunk None in
+    let dependents = write_sklist chunk in
+    let m = write_file_module chunk provider dependents in
+    FileModuleHeap.add key m
+  in
+  (size, write)
+
+let prepare_add_haste_module name =
+  let open Heap in
+  let size = (4 * header_size) + haste_module_size + string_size name + entity_size + sklist_size in
+  let write chunk =
+    let heap_name = write_string chunk name in
+    let provider = write_entity chunk None in
+    let dependents = write_sklist chunk in
+    let m = write_haste_module chunk heap_name provider dependents in
+    HasteModuleHeap.add name m
+  in
+  (size, write)
+
 let prepare_add_file_module_maybe size file_key =
   match file_key with
   | File_key.LibFile _ -> (size, Fun.const None)
@@ -257,32 +280,15 @@ let prepare_add_file_module_maybe size file_key =
     (match FileModuleHeap.get file_module_key with
     | Some _ as addr -> (size, Fun.const addr)
     | None ->
-      let open Heap in
-      let size = size + (3 * header_size) + file_module_size + entity_size + sklist_size in
-      let write chunk =
-        let provider = write_entity chunk None in
-        let dependents = write_sklist chunk in
-        let m = write_file_module chunk provider dependents in
-        Some (FileModuleHeap.add file_module_key m)
-      in
-      (size, write))
+      let (module_size, write) = prepare_add_file_module file_module_key in
+      (size + module_size, (fun chunk -> Some (write chunk))))
 
 let prepare_add_haste_module_maybe size name =
   match HasteModuleHeap.get name with
   | Some addr -> (size, Fun.const addr)
   | None ->
-    let open Heap in
-    let size =
-      size + (4 * header_size) + haste_module_size + string_size name + entity_size + sklist_size
-    in
-    let write chunk =
-      let heap_name = write_string chunk name in
-      let provider = write_entity chunk None in
-      let dependents = write_sklist chunk in
-      let m = write_haste_module chunk heap_name provider dependents in
-      HasteModuleHeap.add name m
-    in
-    (size, write)
+    let (module_size, write) = prepare_add_haste_module name in
+    (size + module_size, write)
 
 let prepare_write_new_haste_info_maybe size old_haste_info = function
   | None -> (size, Fun.const None)
@@ -419,6 +425,106 @@ let prepare_write_typed_parse_ents size =
   let write chunk = (write_entity chunk None, write_entity chunk None, write_entity chunk None) in
   (size, write)
 
+(* Given a file, it's old resolved requires, and new resolved requires, compute
+ * the changes necessary to update the reverse dependency graph. *)
+let prepare_update_revdeps =
+  (* Combine successfully resolved modules and phantom modules into a sorted list *)
+  let all_dependencies = function
+    | None -> []
+    | Some { resolved_modules; phantom_dependencies; _ } ->
+      let xs =
+        let f _ m acc =
+          match m with
+          | Ok m -> MSet.add m acc
+          | Error _ -> acc
+        in
+        MSet.elements (SMap.fold f resolved_modules MSet.empty)
+      in
+      let ys = MSet.elements phantom_dependencies in
+      Base.List.merge xs ys ~compare:Modulename.compare
+  in
+  (* Partition two sorted lists. Elements in both `xs` and `ys` are skipped.
+   * Otherwise, elements in `xs` are passed to `f` while elements in `ys` are
+   * passed to `g`.
+   *
+   * We will use this to separate removed dependencies from added dependencies,
+   * so we can remove dependents in the former case and add dependents in the
+   * latter. *)
+  let rec partition_fold cmp f g acc = function
+    | ([], []) -> acc
+    | (xs, []) -> List.fold_left f acc xs
+    | ([], ys) -> List.fold_left g acc ys
+    | (x :: xs, y :: ys) ->
+      let k = cmp x y in
+      if k = 0 then
+        partition_fold cmp f g acc (xs, ys)
+      else if k < 0 then
+        partition_fold cmp f g (f acc x) (xs, y :: ys)
+      else
+        partition_fold cmp f g (g acc y) (x :: xs, ys)
+  in
+  (* Remove `file` from the dependents of `mname`.
+   *
+   * TODO: Clean up modules which have no dependents and no providers. This is a
+   * bit tricky because we might remove the last dependent in one step, then add
+   * a dependent/provider in another step. One idea is to maintain a set of
+   * dirty modules which is scanned on commit and deleted if possible. For now,
+   * leaking these modules is not too bad. *)
+  let remove_old_dependent file (size_acc, write_acc) mname =
+    let dependents =
+      match mname with
+      | Modulename.String name -> Heap.get_haste_dependents (get_haste_module_unsafe name)
+      | Modulename.Filename key -> Heap.get_file_dependents (get_file_module_unsafe key)
+    in
+    let write chunk =
+      write_acc chunk;
+      assert (Heap.file_set_remove dependents file)
+    in
+    (size_acc, write)
+  in
+  (* Add `file` to the dependents of `mname`. It is possible that a module
+   * object for `mname` does not exist (for phantom dependencies) so we create
+   * the module if necessary. *)
+  let add_new_dependent file (size_acc, write_acc) mname =
+    let (module_size, get_dependents) =
+      match mname with
+      | Modulename.String name ->
+        let (size, m) =
+          match get_haste_module name with
+          | Some m -> (0, Fun.const m)
+          | None -> prepare_add_haste_module name
+        in
+        (size, (fun chunk -> Heap.get_haste_dependents (m chunk)))
+      | Modulename.Filename key ->
+        let (size, m) =
+          match get_file_module key with
+          | Some m -> (0, Fun.const m)
+          | None -> prepare_add_file_module key
+        in
+        (size, (fun chunk -> Heap.get_file_dependents (m chunk)))
+    in
+    let (sknode_size, write_sknode) = Heap.prepare_write_sknode file in
+    let write chunk =
+      write_acc chunk;
+      let dependents = get_dependents chunk in
+      let sknode = write_sknode chunk in
+      assert (Heap.file_set_add dependents sknode)
+    in
+    (size_acc + module_size + Heap.header_size + sknode_size, write)
+  in
+  fun options file old_resolved_requires new_resolved_requires ->
+    if Options.incremental_revdeps options then
+      let old_dependencies = all_dependencies old_resolved_requires in
+      let new_dependencies = all_dependencies new_resolved_requires in
+      partition_fold
+        Modulename.compare
+        (remove_old_dependent file)
+        (add_new_dependent file)
+        (0, Fun.const ())
+        (old_dependencies, new_dependencies)
+    else
+      (0, Fun.const ())
+
 (* Write parsed data for checked file to shared memory. If we loaded from saved
  * state, a checked file entry will already exist without parse data and this
  * function will update the existing entry in place. Otherwise, we will create a
@@ -504,7 +610,8 @@ let add_checked_file file_key file_opt hash module_name docblock ast locs type_s
       dirty_modules
   )
 
-let add_unparsed_file file_key file_opt hash module_name =
+let add_unparsed_file options file_key file_opt hash module_name =
+  let read_resolved_requires_caml = read_resolved_requires in
   let open Heap in
   let size = (2 * header_size) + untyped_parse_size + int64_size in
   let (size, add_file_maybe) =
@@ -512,7 +619,21 @@ let add_unparsed_file file_key file_opt hash module_name =
     | None -> prepare_create_file size file_key module_name
     | Some file ->
       let parse_ent = get_parse file in
-      prepare_update_file size file_key file parse_ent module_name
+      let (size, update_file) = prepare_update_file size file_key file parse_ent module_name in
+      let old_resolved_requires =
+        let* parse = entity_read_latest parse_ent in
+        let* parse = coerce_typed parse in
+        let* addr = entity_read_latest (get_resolved_requires parse) in
+        Some (read_resolved_requires_caml addr)
+      in
+      let (dep_size, update_revdeps) =
+        prepare_update_revdeps options file old_resolved_requires None
+      in
+      let update chunk =
+        update_revdeps chunk;
+        update_file chunk
+      in
+      (size + dep_size, update)
   in
   alloc size (fun chunk ->
       let hash = write_int64 chunk hash in
@@ -523,7 +644,8 @@ let add_unparsed_file file_key file_opt hash module_name =
 (* If this file used to exist, but no longer does, then it was deleted. Record
  * the deletion by clearing parse information. Deletion might also require
  * re-picking module providers, so we return dirty modules. *)
-let clear_file file_key =
+let clear_file options file_key =
+  let read_resolved_requires_caml = read_resolved_requires in
   let open Heap in
   match FileHeap.get file_key with
   | None -> MSet.empty
@@ -531,7 +653,16 @@ let clear_file file_key =
     let parse_ent = get_parse file in
     (match entity_read_latest parse_ent with
     | None -> MSet.empty
-    | Some _ ->
+    | Some parse ->
+      let () =
+        let old_resolved_requires =
+          let* parse = coerce_typed parse in
+          let* addr = entity_read_latest (get_resolved_requires parse) in
+          Some (read_resolved_requires_caml addr)
+        in
+        let (size, update) = prepare_update_revdeps options file old_resolved_requires None in
+        alloc size update
+      in
       entity_advance parse_ent None;
       let dirty_modules =
         match get_file_module file with
@@ -603,17 +734,18 @@ let clear_file file_key =
  * stores the committed provider.
  *)
 let rollback_file =
+  let read_resolved_requires_caml = read_resolved_requires in
   let open Heap in
   let get_haste_module_info info = (get_haste_module info, info) in
-  let rollback_file file =
+  let rollback_file options file =
     let parse_ent = get_parse file in
-    let (old_file_module, new_file_module) =
+    let (old_file_module, new_file_module, old_typed_parse, new_typed_parse) =
       match (entity_read_committed parse_ent, entity_read_latest parse_ent) with
-      | (None, None)
-      | (Some _, Some _) ->
-        (None, None)
-      | (None, Some _) -> (None, get_file_module file)
-      | (Some _, None) -> (get_file_module file, None)
+      | (None, None) -> (None, None, None, None)
+      | (Some old_parse, Some new_parse) ->
+        (None, None, coerce_typed old_parse, coerce_typed new_parse)
+      | (None, Some new_parse) -> (None, get_file_module file, None, coerce_typed new_parse)
+      | (Some old_parse, None) -> (get_file_module file, None, coerce_typed old_parse, None)
     in
     let haste_ent = get_haste_info file in
     let (old_haste_module, new_haste_module) =
@@ -623,6 +755,23 @@ let rollback_file =
         (Option.map get_haste_module_info old_info, Option.map get_haste_module new_info)
       else
         (None, None)
+    in
+    (* Roll back changes to reverse dependency graph. During parse, the only
+     * changes we make are when a checked file is deleted or becomes unparsed.
+     * Any other changes to the dependency graph happen when resolving requires,
+     * and are rolled back as part of that step. *)
+    let () =
+      match (old_typed_parse, new_typed_parse) with
+      | (Some old_parse, None) ->
+        let old_resolved_requires =
+          let* addr = entity_read_latest (get_resolved_requires old_parse) in
+          Some (read_resolved_requires_caml addr)
+        in
+        let (size, update_revdeps) =
+          prepare_update_revdeps options file None old_resolved_requires
+        in
+        alloc size update_revdeps
+      | _ -> ()
     in
     (* Remove new providers and process deferred deletions for old providers
      * before rolling back this file's parse and haste entities. *)
@@ -653,10 +802,10 @@ let rollback_file =
     old_file_module |> Option.iter (fun m -> add_file_provider m file);
     old_haste_module |> Option.iter (fun (m, info) -> add_haste_provider m file info)
   in
-  fun file_key ->
+  fun options file_key ->
     match FileHeap.get file_key with
     | None -> ()
-    | Some file -> if file_changed file then rollback_file file
+    | Some file -> if file_changed file then rollback_file options file
 
 module Reader_cache : sig
   val get_ast : File_key.t -> (Loc.t, Loc.t) Flow_ast.Program.t option
@@ -1034,12 +1183,12 @@ type worker_mutator = {
 
 (* Parsing is pretty easy - there is no before state and no chance of rollbacks, so we don't
  * need to worry about a transaction *)
-module Parse_mutator : sig
-  val create : unit -> worker_mutator
-end = struct
+module Parse_mutator = struct
   let clear_not_found = Fun.const MSet.empty
 
-  let create () = { add_parsed; add_unparsed; clear_not_found }
+  let create options =
+    let add_unparsed = add_unparsed options in
+    { add_parsed; add_unparsed; clear_not_found }
 end
 
 (* Reparsing is more complicated than parsing, since we need to worry about transactions.
@@ -1058,15 +1207,7 @@ end
  * recheck, schedule a minimal recheck to unblock the IDE request, then
  * re-start the original recheck.
  *)
-module Reparse_mutator : sig
-  type master_mutator (* Used by the master process *)
-
-  val create : Transaction.t -> FilenameSet.t -> master_mutator * worker_mutator
-
-  val record_unchanged : master_mutator -> FilenameSet.t -> unit
-
-  val record_not_found : master_mutator -> FilenameSet.t -> unit
-end = struct
+module Reparse_mutator = struct
   type master_mutator = unit
 
   (* We can conservatively invalidate caches for all `files`, but we can be a
@@ -1078,13 +1219,13 @@ end = struct
    * table, so sharedmem GC can collect them. *)
   let not_found_files = ref FilenameSet.empty
 
-  let rollback_changed () = FilenameSet.iter rollback_file !changed_files
+  let rollback_changed options = FilenameSet.iter (rollback_file options) !changed_files
 
   let reset_refs () =
     changed_files := FilenameSet.empty;
     not_found_files := FilenameSet.empty
 
-  let create transaction files =
+  let create transaction options files =
     changed_files := files;
 
     let commit () =
@@ -1102,13 +1243,17 @@ end = struct
       WorkerCancel.with_no_cancellations (fun () ->
           Hh_logger.debug "Rolling back parsing heaps";
           Mutator_cache.clear ();
-          rollback_changed ();
+          rollback_changed options;
           reset_refs ()
       );
       Lwt.return_unit
     in
 
     Transaction.add ~singleton:"Reparse" ~commit ~rollback transaction;
+
+    let add_unparsed = add_unparsed options in
+
+    let clear_not_found = clear_not_found options in
 
     ((), { add_parsed; add_unparsed; clear_not_found })
 
@@ -1120,9 +1265,9 @@ end
 module Commit_modules_mutator = struct
   type t = unit
 
-  let no_providers = ref MSet.empty
+  let to_remove = ref MSet.empty
 
-  let reset_refs () = no_providers := MSet.empty
+  let reset_refs () = to_remove := MSet.empty
 
   let remove_module = function
     | Modulename.String name -> HasteModuleHeap.remove name
@@ -1130,7 +1275,7 @@ module Commit_modules_mutator = struct
 
   let commit () =
     WorkerCancel.with_no_cancellations (fun () ->
-        MSet.iter remove_module !no_providers;
+        MSet.iter remove_module !to_remove;
         reset_refs ()
     );
     Lwt.return_unit
@@ -1141,57 +1286,80 @@ module Commit_modules_mutator = struct
 
   let create transaction = Transaction.add ~singleton:"Commit_modules" ~commit ~rollback transaction
 
-  let record_no_providers () modules = no_providers := modules
+  let remove_modules_on_commit () modules = to_remove := modules
 end
 
 module Resolved_requires_mutator = struct
-  type t = unit
+  type t = Options.t
 
-  let dirty_files = ref FilenameSet.empty
+  let rollback_resolved_requires options file_key =
+    let read_resolved_requires_caml = read_resolved_requires in
+    let open Heap in
+    match get_file_addr file_key with
+    | None -> ()
+    | Some file ->
+      let resolved_requires_ent =
+        let* parse = entity_read_latest (get_parse file) in
+        let* parse = coerce_typed parse in
+        Some (get_resolved_requires parse)
+      in
+      (match resolved_requires_ent with
+      | Some ent when entity_changed ent ->
+        let old_resolved_requires =
+          let* addr = entity_read_committed ent in
+          Some (read_resolved_requires_caml addr)
+        in
+        let new_resolved_requires =
+          let* addr = entity_read_latest ent in
+          Some (read_resolved_requires_caml addr)
+        in
+        let (size, update_revdeps) =
+          prepare_update_revdeps options file new_resolved_requires old_resolved_requires
+        in
+        alloc size update_revdeps;
+        entity_rollback ent
+      | _ -> ())
 
-  let rollback_resolved_requires file_key =
-    let open SharedMem.NewAPI in
-    let entity =
-      let* file = get_file_addr file_key in
-      let* parse = entity_read_latest (get_parse file) in
-      let* parse = coerce_typed parse in
-      Some (get_resolved_requires parse)
+  let create transaction options files =
+    let commit () = Lwt.return_unit in
+
+    let rollback () =
+      WorkerCancel.with_no_cancellations (fun () ->
+          FilenameSet.iter (rollback_resolved_requires options) files
+      );
+      Lwt.return_unit
     in
-    Option.iter entity_rollback entity
 
-  let commit () =
-    dirty_files := FilenameSet.empty;
-    Lwt.return_unit
+    Transaction.add ~commit ~rollback transaction;
 
-  let rollback () =
-    WorkerCancel.with_no_cancellations (fun () ->
-        FilenameSet.iter rollback_resolved_requires !dirty_files
-    );
-    dirty_files := FilenameSet.empty;
-    Lwt.return_unit
+    options
 
-  let create transaction files =
-    dirty_files := files;
-    Transaction.add ~commit ~rollback transaction
-
-  let add_resolved_requires () parse resolved_requires =
+  let add_resolved_requires options file parse resolved_requires =
     let ent = Heap.get_resolved_requires parse in
-    let old_hash =
+    let old_resolved_requires =
       let* addr = Heap.entity_read_latest ent in
-      let { hash; _ } = read_resolved_requires addr in
-      Some hash
+      Some (read_resolved_requires addr)
     in
-    match old_hash with
-    | Some old_hash when Int64.equal old_hash resolved_requires.hash -> false
+    match old_resolved_requires with
+    | Some { hash; _ } when Int64.equal hash resolved_requires.hash -> false
     | _ ->
+      let (update_size, update_revdeps) =
+        prepare_update_revdeps options file old_resolved_requires (Some resolved_requires)
+      in
       let open Heap in
       let resolved_requires = Marshal.to_string resolved_requires [] in
-      let (size, write) = prepare_write_resolved_requires resolved_requires in
-      alloc (header_size + size) (fun chunk ->
-          let resolved_requires = write chunk in
-          entity_advance ent (Some resolved_requires)
-      );
-      true
+      let (resolved_requires_size, write_resolved_requires) =
+        prepare_write_resolved_requires resolved_requires
+      in
+      WorkerCancel.with_no_cancellations (fun () ->
+          alloc
+            (update_size + header_size + resolved_requires_size)
+            (fun chunk ->
+              update_revdeps chunk;
+              let resolved_requires = write_resolved_requires chunk in
+              entity_advance ent (Some resolved_requires));
+          true
+      )
 end
 
 module Merge_context_mutator = struct
@@ -1609,7 +1777,7 @@ module From_saved_state = struct
         calc_dirty_modules file_key file haste_ent file_module
     )
 
-  let add_unparsed file_key = add_unparsed file_key None
+  let add_unparsed options file_key = add_unparsed options file_key None
 end
 
 let iter_resolved_requires f =
