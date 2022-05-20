@@ -41,8 +41,6 @@ type hint_decomposition =
   | Decomp_FuncRest of int (* number of params before rest params *)
   (* Type of function becomes hint on return *)
   | Decomp_FuncReturn
-  (* Type of e1 in `e1 ?? e2` becomes hint on `e2` *)
-  | Decomp_NullishCoalesce
   (* Type of C in `<C [props]/>` becomes hint on `props` *)
   | Decomp_JsxProps
 
@@ -65,7 +63,6 @@ let string_of_hint_unknown_kind = function
   | Decomp_FuncParam i -> Utils_js.spf "Decomp_FuncParam (%d)" i
   | Decomp_FuncRest i -> Utils_js.spf "Decomp_FuncRest (%d)" i
   | Decomp_FuncReturn -> "Decomp_FuncReturn"
-  | Decomp_NullishCoalesce -> "Decomp_NullishCoalesce"
   | Decomp_JsxProps -> "Decomp_JsxProps"
 
 let string_of_hint ~on_hint = function
@@ -245,9 +242,6 @@ let type_of_hint_decomposition cx op t =
         (* TODO *)
         failwith "Not implemented"
       | Decomp_MethodName _ ->
-        (* TODO *)
-        failwith "Not implemented"
-      | Decomp_NullishCoalesce ->
         (* TODO *)
         failwith "Not implemented"
       | Decomp_ObjProp name ->

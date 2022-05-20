@@ -5965,9 +5965,7 @@ struct
     | NullishCoalesce ->
       let (((_, t1), _) as left) = expression cx ~hint:Hint_None left in
       let ((((_, t2), _) as right), right_abnormal) =
-        Abnormal.catch_expr_control_flow_exception (fun () ->
-            expression cx ~hint:(decompose_hint Decomp_NullishCoalesce (Hint_t t1)) right
-        )
+        Abnormal.catch_expr_control_flow_exception (fun () -> expression cx ~hint:(Hint_t t1) right)
       in
       let t2 =
         match right_abnormal with
