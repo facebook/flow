@@ -446,13 +446,16 @@ module NewAPI : sig
 
   val haste_module_size : size
 
-  val write_haste_module : chunk -> heap_string addr -> file entity addr -> haste_module addr
+  val write_haste_module :
+    chunk -> heap_string addr -> file entity addr -> file sklist addr -> haste_module addr
 
   val haste_modules_equal : haste_module addr -> haste_module addr -> bool
 
   val get_haste_name : haste_module addr -> heap_string addr
 
   val get_haste_provider : haste_module addr -> file entity addr
+
+  val get_haste_dependents : haste_module addr -> file sklist addr
 
   val add_haste_provider : haste_module addr -> file addr -> haste_info addr -> unit
 
@@ -464,9 +467,11 @@ module NewAPI : sig
 
   val file_module_size : size
 
-  val write_file_module : chunk -> file entity addr -> file_module addr
+  val write_file_module : chunk -> file entity addr -> file sklist addr -> file_module addr
 
   val get_file_provider : file_module addr -> file entity addr
+
+  val get_file_dependents : file_module addr -> file sklist addr
 
   val add_file_provider : file_module addr -> file addr -> unit
 
