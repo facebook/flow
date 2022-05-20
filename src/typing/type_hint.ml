@@ -83,7 +83,7 @@ let decompose_hint decomp = function
   | Hint_None -> Hint_None
 
 (* Temporary facilty to decide if a type is resolved *)
-exception Found_unresolved
+exception Found_unresolved of int
 
 let is_fully_resolved =
   let visitor =
@@ -100,12 +100,14 @@ let is_fully_resolved =
           match constraints with
           | FullyResolved _ -> seen
           | Resolved (_, t) -> this#type_ cx pole seen t
-          | Unresolved _ -> raise Found_unresolved
+          | Unresolved _ -> raise (Found_unresolved id)
     end
   in
   fun cx t ->
     match visitor#type_ cx Polarity.Neutral ISet.empty t with
-    | exception Found_unresolved -> false
+    | exception Found_unresolved id ->
+      Debug_js.Verbose.print_if_verbose cx [Utils_js.spf "Unresolved tvar: %d" id];
+      false
     | _ -> true
 
 let dummy_reason = locationless_reason (RCustom "type hint reason")
