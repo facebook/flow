@@ -17,8 +17,13 @@ type result =
       locs: Parsing_heaps.locs_tbl;
       type_sig: Parsing_heaps.type_sig;
       tolerable_errors: File_sig.With_Loc.tolerable_error list;
-      parse_errors: parse_error list;
       exports: Exports.t;
+    }
+  | Parse_recovered of {
+      ast: (Loc.t, Loc.t) Flow_ast.Program.t;
+      file_sig: File_sig.With_Loc.t;
+      tolerable_errors: File_sig.With_Loc.tolerable_error list;
+      parse_errors: parse_error Nel.t;
     }
   | Parse_fail of parse_failure
   | Parse_skip of parse_skip_reason
@@ -422,39 +427,43 @@ let do_parse ~parse_options ~info content file =
           }
         in
         let (file_sig, tolerable_errors) = File_sig.With_Loc.program ~ast ~opts:file_sig_opts in
-        let sig_opts =
-          {
-            Type_sig_parse.type_asserts;
-            suppress_types;
-            munge = not prevent_munge;
-            ignore_static_propTypes;
-            facebook_keyMirror;
-            facebook_fbt;
-            max_literal_len;
-            exact_by_default;
-            module_ref_prefix;
-            enable_enums;
-            enable_relay_integration;
-            relay_integration_module_prefix;
-          }
-        in
-        let (sig_errors, locs, type_sig) =
-          let strict = Docblock.is_strict info in
-          Type_sig_utils.parse_and_pack_module ~strict sig_opts (Some file) ast
-        in
-        let exports = Exports.of_module type_sig in
-        let tolerable_errors =
-          List.fold_left
-            (fun acc (_, err) ->
-              match err with
-              | Type_sig.SigError err ->
-                let err = Signature_error.map (Type_sig_collections.Locs.get locs) err in
-                File_sig.With_Loc.SignatureVerificationError err :: acc
-              | Type_sig.CheckError -> acc)
-            tolerable_errors
-            sig_errors
-        in
-        Parse_ok { ast; file_sig; locs; type_sig; tolerable_errors; parse_errors; exports }
+        if not (Base.List.is_empty parse_errors) then
+          Parse_recovered
+            { ast; file_sig; tolerable_errors; parse_errors = Nel.of_list_exn parse_errors }
+        else
+          let sig_opts =
+            {
+              Type_sig_parse.type_asserts;
+              suppress_types;
+              munge = not prevent_munge;
+              ignore_static_propTypes;
+              facebook_keyMirror;
+              facebook_fbt;
+              max_literal_len;
+              exact_by_default;
+              module_ref_prefix;
+              enable_enums;
+              enable_relay_integration;
+              relay_integration_module_prefix;
+            }
+          in
+          let (sig_errors, locs, type_sig) =
+            let strict = Docblock.is_strict info in
+            Type_sig_utils.parse_and_pack_module ~strict sig_opts (Some file) ast
+          in
+          let exports = Exports.of_module type_sig in
+          let tolerable_errors =
+            List.fold_left
+              (fun acc (_, err) ->
+                match err with
+                | Type_sig.SigError err ->
+                  let err = Signature_error.map (Type_sig_collections.Locs.get locs) err in
+                  File_sig.With_Loc.SignatureVerificationError err :: acc
+                | Type_sig.CheckError -> acc)
+              tolerable_errors
+              sig_errors
+          in
+          Parse_ok { ast; file_sig; locs; type_sig; tolerable_errors; exports }
   with
   | Parse_error.Error (e, _) -> Parse_fail (Parse_error e)
   | e ->
@@ -490,6 +499,14 @@ let does_content_match_file_hash ~reader file content =
   match Parsing_heaps.Reader.get_file_hash ~reader file with
   | None -> false
   | Some hash -> hash = content_hash
+
+let fold_failed acc worker_mutator file_key file_opt hash module_name error =
+  let dirty_modules =
+    worker_mutator.Parsing_heaps.add_unparsed file_key file_opt hash module_name
+  in
+  let failed = (file_key :: fst acc.failed, error :: snd acc.failed) in
+  let dirty_modules = Modulename.Set.union dirty_modules acc.dirty_modules in
+  { acc with failed; dirty_modules }
 
 (* parse file, store AST to shared heap on success.
  * Add success/error info to passed accumulator. *)
@@ -550,8 +567,7 @@ let reducer
           let module_name = exported_module file_key info in
           begin
             match do_parse ~parse_options ~info content file_key with
-            | Parse_ok
-                { ast; file_sig; exports; locs; type_sig; tolerable_errors; parse_errors = _ } ->
+            | Parse_ok { ast; file_sig; exports; locs; type_sig; tolerable_errors } ->
               (* if parse_options.fail == true, then parse errors will hit Parse_fail below. otherwise,
                  ignore any parse errors we get here. *)
               let file_sig = (file_sig, tolerable_errors) in
@@ -571,13 +587,10 @@ let reducer
               let parsed = FilenameSet.add file_key acc.parsed in
               let dirty_modules = Modulename.Set.union dirty_modules acc.dirty_modules in
               { acc with parsed; dirty_modules }
+            | Parse_recovered { parse_errors = (error, _); _ } ->
+              fold_failed acc worker_mutator file_key file_opt hash module_name (Parse_error error)
             | Parse_fail error ->
-              let dirty_modules =
-                worker_mutator.Parsing_heaps.add_unparsed file_key file_opt hash module_name
-              in
-              let failed = (file_key :: fst acc.failed, error :: snd acc.failed) in
-              let dirty_modules = Modulename.Set.union dirty_modules acc.dirty_modules in
-              { acc with failed; dirty_modules }
+              fold_failed acc worker_mutator file_key file_opt hash module_name error
             | Parse_skip (Skip_package_json result) ->
               let error =
                 let file_str = File_key.to_string file_key in

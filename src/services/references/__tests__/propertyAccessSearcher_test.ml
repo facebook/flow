@@ -36,6 +36,7 @@ let run ctxt expected name content =
   let ast =
     match result with
     | Parse_ok { ast; _ } -> ast
+    | Parse_recovered { ast; _ } -> ast
     | Parse_fail _ -> failwith "Parse unexpectedly failed"
     | Parse_skip _ -> failwith "Parse unexpectedly skipped"
   in

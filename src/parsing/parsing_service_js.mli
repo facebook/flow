@@ -19,8 +19,13 @@ type result =
       locs: Parsing_heaps.locs_tbl;
       type_sig: Parsing_heaps.type_sig;
       tolerable_errors: File_sig.With_Loc.tolerable_error list;
-      parse_errors: parse_error list;
       exports: Exports.t;
+    }
+  | Parse_recovered of {
+      ast: (Loc.t, Loc.t) Flow_ast.Program.t;
+      file_sig: File_sig.With_Loc.t;
+      tolerable_errors: File_sig.With_Loc.tolerable_error list;
+      parse_errors: parse_error Nel.t;
     }
   | Parse_fail of parse_failure
   | Parse_skip of parse_skip_reason
