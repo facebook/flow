@@ -1470,6 +1470,8 @@ static void raise_heap_full(void) {
 /*****************************************************************************/
 
 static addr_t hh_alloc(size_t wsize) {
+  if (wsize == 0)
+    return info->heap;
   size_t slot_size = Bsize_wsize(wsize);
   addr_t addr = __sync_fetch_and_add(&info->heap, slot_size);
   if (addr + slot_size > info->heap_max) {
