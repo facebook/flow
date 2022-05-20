@@ -1182,10 +1182,10 @@ module NewAPI = struct
     done;
     addr
 
-  let prepare_write_sknode data =
+  let prepare_write_sknode () =
     let level = sklist_random_level () in
     let size = (2 + level) * addr_size in
-    let write chunk =
+    let write chunk data =
       let addr = write_header chunk Sklist_tag size in
       unsafe_write_addr chunk data;
       for i = 0 to level do

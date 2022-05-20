@@ -214,7 +214,13 @@ end
 
 module From_saved_state : sig
   val add_parsed :
-    File_key.t -> Xx.hash -> string option -> Exports.t -> resolved_requires -> Modulename.Set.t
+    Options.t ->
+    File_key.t ->
+    Xx.hash ->
+    string option ->
+    Exports.t ->
+    resolved_requires ->
+    Modulename.Set.t
 
   val add_unparsed : Options.t -> File_key.t -> Xx.hash -> string option -> Modulename.Set.t
 end

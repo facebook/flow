@@ -274,7 +274,7 @@ module NewAPI : sig
 
   val write_sklist : chunk -> 'a sklist addr
 
-  val prepare_write_sknode : 'a addr -> size * (chunk -> 'a sknode addr)
+  val prepare_write_sknode : unit -> size * (chunk -> 'a addr -> 'a sknode addr)
 
   val sklist_iter : ('a addr -> unit) -> 'a sklist addr -> unit
 
