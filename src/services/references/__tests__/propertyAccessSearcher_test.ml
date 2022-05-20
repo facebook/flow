@@ -13,7 +13,6 @@ let run ctxt expected name content =
   let (_docblock_errors, info) = parse_docblock ~max_tokens:docblock_max_tokens file content in
   let parse_options =
     {
-      parse_fail = false;
       parse_types_mode = TypesAllowed;
       parse_use_strict = true;
       parse_prevent_munge = false;
@@ -32,7 +31,7 @@ let run ctxt expected name content =
       parse_node_main_fields = [];
     }
   in
-  let result = do_parse ~parse_options ~info content file in
+  let result = do_parse ~parse_options ~info ~fail:false content file in
   let ast =
     match result with
     | Parse_ok { ast; _ } -> ast

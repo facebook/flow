@@ -27,10 +27,10 @@ let do_parse_wrapper ~options filename contents =
   let (docblock_errors, docblock) =
     Parsing_service_js.parse_docblock ~max_tokens filename contents
   in
-  let parse_options =
-    Parsing_service_js.make_parse_options ~fail:false ~types_mode docblock options
+  let parse_options = Parsing_service_js.make_parse_options ~types_mode docblock options in
+  let parse_result =
+    Parsing_service_js.do_parse ~parse_options ~info:docblock ~fail:false contents filename
   in
-  let parse_result = Parsing_service_js.do_parse ~info:docblock ~parse_options contents filename in
   match parse_result with
   | Parsing_service_js.Parse_ok { ast; file_sig; tolerable_errors; _ } ->
     Parsed

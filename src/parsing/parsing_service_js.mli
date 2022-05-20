@@ -72,7 +72,6 @@ type results = {
 }
 
 type parse_options = {
-  parse_fail: bool;
   parse_types_mode: types_mode;
   parse_use_strict: bool;
   parse_prevent_munge: bool;
@@ -91,12 +90,7 @@ type parse_options = {
 }
 
 val make_parse_options :
-  ?fail:bool ->
-  ?types_mode:types_mode ->
-  ?use_strict:bool ->
-  Docblock.t ->
-  Options.t ->
-  parse_options
+  ?types_mode:types_mode -> ?use_strict:bool -> Docblock.t -> Options.t -> parse_options
 
 val docblock_max_tokens : int
 
@@ -151,6 +145,7 @@ val parse_source_file :
 val do_parse :
   parse_options:parse_options ->
   info:Docblock.t ->
+  fail:bool ->
   string ->
   (* contents of the file *)
   File_key.t ->

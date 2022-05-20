@@ -90,7 +90,6 @@ type types_mode =
   | TypesForbiddenByDefault
 
 type parse_options = {
-  parse_fail: bool;
   parse_types_mode: types_mode;
   parse_use_strict: bool;
   parse_prevent_munge: bool;
@@ -361,9 +360,8 @@ let types_checked types_mode info =
     | Some Docblock.OptInStrictLocal ->
       true)
 
-let do_parse ~parse_options ~info content file =
+let do_parse ~parse_options ~info ~fail content file =
   let {
-    parse_fail = fail;
     parse_types_mode = types_mode;
     parse_use_strict = use_strict;
     parse_prevent_munge = prevent_munge;
@@ -566,7 +564,7 @@ let reducer
           in
           let module_name = exported_module file_key info in
           begin
-            match do_parse ~parse_options ~info content file_key with
+            match do_parse ~parse_options ~info ~fail:true content file_key with
             | Parse_ok { ast; file_sig; exports; locs; type_sig; tolerable_errors } ->
               (* if parse_options.fail == true, then parse errors will hit Parse_fail below. otherwise,
                  ignore any parse errors we get here. *)
@@ -588,6 +586,7 @@ let reducer
               let dirty_modules = Modulename.Set.union dirty_modules acc.dirty_modules in
               { acc with parsed; dirty_modules }
             | Parse_recovered { parse_errors = (error, _); _ } ->
+              (* since [do_parse ~fail:true], this should be unreachable *)
               fold_failed acc worker_mutator file_key file_opt hash module_name (Parse_error error)
             | Parse_fail error ->
               fold_failed acc worker_mutator file_key file_opt hash module_name error
@@ -773,8 +772,7 @@ let reparse
   Parsing_heaps.Reparse_mutator.record_not_found master_mutator results.not_found;
   Lwt.return results
 
-let make_parse_options_internal
-    ?(fail = true) ?(types_mode = TypesAllowed) ?use_strict ~docblock options =
+let make_parse_options_internal ?(types_mode = TypesAllowed) ?use_strict ~docblock options =
   let use_strict =
     match use_strict with
     | Some use_strict -> use_strict
@@ -789,7 +787,6 @@ let make_parse_options_internal
     | None -> default
   in
   {
-    parse_fail = fail;
     parse_types_mode = types_mode;
     parse_use_strict = use_strict;
     parse_prevent_munge = prevent_munge;
@@ -808,16 +805,14 @@ let make_parse_options_internal
     parse_node_main_fields = Options.node_main_fields options;
   }
 
-let make_parse_options ?fail ?types_mode ?use_strict docblock options =
-  make_parse_options_internal ?fail ?types_mode ?use_strict ~docblock:(Some docblock) options
+let make_parse_options ?types_mode ?use_strict docblock options =
+  make_parse_options_internal ?types_mode ?use_strict ~docblock:(Some docblock) options
 
 let parse_with_defaults ?types_mode ?use_strict ~reader options workers next =
   let (types_mode, use_strict, profile, max_header_tokens, noflow) =
     get_defaults ~types_mode ~use_strict options
   in
-  let parse_options =
-    make_parse_options_internal ~fail:true ~use_strict ~types_mode ~docblock:None options
-  in
+  let parse_options = make_parse_options_internal ~use_strict ~types_mode ~docblock:None options in
   let exported_module = Module_js.exported_module ~options in
   (* This isn't a recheck, so there shouldn't be any unchanged *)
   let worker_mutator = Parsing_heaps.Parse_mutator.create () in
