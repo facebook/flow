@@ -90,6 +90,7 @@ module Opts = struct
     haste_use_name_reducers: bool;
     ignore_non_literal_requires: bool;
     include_warnings: bool;
+    incremental_revdeps: bool;
     lazy_mode: lazy_mode option;
     local_inference_annotation_dirs: string list;
     log_file: Path.t option;
@@ -221,6 +222,7 @@ module Opts = struct
       haste_use_name_reducers = false;
       ignore_non_literal_requires = false;
       include_warnings = false;
+      incremental_revdeps = false;
       lazy_mode = None;
       local_inference_annotation_dirs = [];
       log_file = None;
@@ -401,6 +403,8 @@ module Opts = struct
         else
           Error "New check mode can no longer be disabled."
     )
+
+  let incremental_revdeps_parser = boolean (fun opts v -> Ok { opts with incremental_revdeps = v })
 
   let max_files_checked_per_worker_parser =
     uint (fun opts v -> Ok { opts with max_files_checked_per_worker = v })
@@ -851,6 +855,7 @@ module Opts = struct
       ("experimental.local_inference_annotation_dirs", local_inference_annotation_dirs);
       ("experimental.module.automatic_require_default", automatic_require_default_parser);
       ("experimental.new_check", new_check_parser);
+      ("experimental.incremental_revdeps", incremental_revdeps_parser);
       ("experimental.react.server_component_ext", react_server_component_exts_parser);
       ("experimental.refactor", boolean (fun opts v -> Ok { opts with refactor = Some v }));
       ( "experimental.run_post_inference_implicit_instantiation",
@@ -1542,6 +1547,8 @@ let haste_use_name_reducers c = c.options.Opts.haste_use_name_reducers
 let ignore_non_literal_requires c = c.options.Opts.ignore_non_literal_requires
 
 let include_warnings c = c.options.Opts.include_warnings
+
+let incremental_revdeps c = c.options.Opts.incremental_revdeps
 
 let lazy_mode c = c.options.Opts.lazy_mode
 

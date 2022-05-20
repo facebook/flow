@@ -28,6 +28,8 @@ show_help() {
   echo "        test using resolved environment"
   echo "    -w"
   echo "        test using constrained writes"
+  echo "    -i"
+  echo "        test using incremental reverse dependencies"
   echo "    -r"
   echo "        re-record failing tests to update expected output"
   echo "    -q"
@@ -54,8 +56,9 @@ new_env=0
 resolved_env=0
 check_only=0
 constrained_writes=0
-export saved_state filter check_only new_env resolved_env constrained_writes
-while getopts "b:d:f:celqwxrst:vh?" opt; do
+incremental_revdeps=0
+export saved_state filter check_only new_env resolved_env constrained_writes incremental_revdeps
+while getopts "b:d:f:celqwxirst:vh?" opt; do
   case "$opt" in
   b)
     FLOW="$OPTARG"
@@ -86,6 +89,9 @@ while getopts "b:d:f:celqwxrst:vh?" opt; do
     ;;
   w)
     constrained_writes=1
+    ;;
+  i)
+    incremental_revdeps=1
     ;;
   r)
     record=1

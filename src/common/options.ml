@@ -106,6 +106,7 @@ type t = {
   opt_ignore_non_literal_requires: bool;
   opt_include_suppressions: bool;
   opt_include_warnings: bool;
+  opt_incremental_revdeps: bool;
   opt_lazy_mode: bool;
   opt_lint_severities: Severity.severity LintSettings.t;
   opt_local_inference_annotation_dirs: string list;
@@ -226,6 +227,8 @@ let haste_paths_includes opts = opts.opt_haste_paths_includes
 let haste_use_name_reducers opts = opts.opt_haste_use_name_reducers
 
 let include_suppressions opts = opts.opt_include_suppressions
+
+let incremental_revdeps opts = opts.opt_incremental_revdeps
 
 let is_debug_mode opts = opts.opt_debug
 

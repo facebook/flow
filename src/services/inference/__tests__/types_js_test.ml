@@ -73,6 +73,7 @@ let dummy_options_flags =
     wait_for_recheck = None;
     env_mode = Some (Options.ClassicEnv []);
     include_suppressions = false;
+    incremental_revdeps = None;
   }
 
 let dummy_saved_state_flags =
