@@ -1463,125 +1463,121 @@ module Statement
         match Peek.token env with
         | T_DEFAULT ->
           (* export default ... *)
-          Statement.ExportDefaultDeclaration.(
-            let leading = leading @ Peek.comments env in
-            let (default, ()) = with_loc (fun env -> Expect.token env T_DEFAULT) env in
-            record_export env (Flow_ast_utils.ident_of_source (default, "default"));
-            let env = with_in_export_default true env in
-            let (declaration, trailing) =
-              if Peek.is_function env then
-                (* export default [async] function [foo] (...) { ... } *)
-                let fn = Declaration._function env in
-                (Declaration fn, [])
-              else if Peek.is_class env then
-                (* export default class foo { ... } *)
-                let _class = Object.class_declaration env decorators in
-                (Declaration _class, [])
-              else if Peek.token env = T_ENUM then
-                (* export default enum foo { ... } *)
-                (Declaration (Declaration.enum_declaration env), [])
-              else
-                (* export default [assignment expression]; *)
-                let expr = Parse.assignment env in
-                let (expr, trailing) =
-                  match semicolon env with
-                  | Explicit trailing -> (expr, trailing)
-                  | Implicit { remove_trailing; _ } ->
-                    (remove_trailing expr (fun remover expr -> remover#expression expr), [])
-                in
-                (Expression expr, trailing)
-            in
-            Statement.ExportDefaultDeclaration
-              {
-                default;
-                declaration;
-                comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing ();
-              }
-          )
+          let open Statement.ExportDefaultDeclaration in
+          let leading = leading @ Peek.comments env in
+          let (default, ()) = with_loc (fun env -> Expect.token env T_DEFAULT) env in
+          record_export env (Flow_ast_utils.ident_of_source (default, "default"));
+          let env = with_in_export_default true env in
+          let (declaration, trailing) =
+            if Peek.is_function env then
+              (* export default [async] function [foo] (...) { ... } *)
+              let fn = Declaration._function env in
+              (Declaration fn, [])
+            else if Peek.is_class env then
+              (* export default class foo { ... } *)
+              let _class = Object.class_declaration env decorators in
+              (Declaration _class, [])
+            else if Peek.token env = T_ENUM then
+              (* export default enum foo { ... } *)
+              (Declaration (Declaration.enum_declaration env), [])
+            else
+              (* export default [assignment expression]; *)
+              let expr = Parse.assignment env in
+              let (expr, trailing) =
+                match semicolon env with
+                | Explicit trailing -> (expr, trailing)
+                | Implicit { remove_trailing; _ } ->
+                  (remove_trailing expr (fun remover expr -> remover#expression expr), [])
+              in
+              (Expression expr, trailing)
+          in
+          Statement.ExportDefaultDeclaration
+            {
+              default;
+              declaration;
+              comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing ();
+            }
         | T_TYPE when Peek.ith_token ~i:1 env <> T_LCURLY ->
           (* export type ... *)
-          Statement.ExportNamedDeclaration.(
-            if not (should_parse_types env) then error env Parse_error.UnexpectedTypeExport;
-            (match Peek.ith_token ~i:1 env with
-            | T_MULT ->
-              Expect.token env T_TYPE;
-              let specifier_loc = Peek.loc env in
-              Expect.token env T_MULT;
-              let (source, trailing) = export_source_and_semicolon env in
-              Statement.ExportNamedDeclaration
-                {
-                  declaration = None;
-                  specifiers = Some (ExportBatchSpecifier (specifier_loc, None));
-                  source = Some source;
-                  export_kind = Statement.ExportType;
-                  comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing ();
-                }
-            | T_ENUM ->
-              error env Parse_error.EnumInvalidExport;
-              Expect.token env T_TYPE;
-              Statement.ExportNamedDeclaration
-                {
-                  declaration = None;
-                  specifiers = None;
-                  source = None;
-                  export_kind = Statement.ExportType;
-                  comments = Flow_ast_utils.mk_comments_opt ~leading ();
-                }
-            | _ ->
-              let (loc, type_alias) = with_loc (type_alias_helper ~leading:[]) env in
-              record_export
-                env
-                (Flow_ast_utils.ident_of_source
-                   (loc, extract_ident_name type_alias.Statement.TypeAlias.id)
-                );
-              let type_alias = (loc, Statement.TypeAlias type_alias) in
-              Statement.ExportNamedDeclaration
-                {
-                  declaration = Some type_alias;
-                  specifiers = None;
-                  source = None;
-                  export_kind = Statement.ExportType;
-                  comments = Flow_ast_utils.mk_comments_opt ~leading ();
-                })
-          )
-        | T_OPAQUE ->
-          (* export opaque type ... *)
-          Statement.ExportNamedDeclaration.(
-            let (loc, opaque_t) = with_loc (opaque_type_helper ~leading:[]) env in
+          let open Statement.ExportNamedDeclaration in
+          if not (should_parse_types env) then error env Parse_error.UnexpectedTypeExport;
+          (match Peek.ith_token ~i:1 env with
+          | T_MULT ->
+            Expect.token env T_TYPE;
+            let specifier_loc = Peek.loc env in
+            Expect.token env T_MULT;
+            let (source, trailing) = export_source_and_semicolon env in
+            Statement.ExportNamedDeclaration
+              {
+                declaration = None;
+                specifiers = Some (ExportBatchSpecifier (specifier_loc, None));
+                source = Some source;
+                export_kind = Statement.ExportType;
+                comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing ();
+              }
+          | T_ENUM ->
+            error env Parse_error.EnumInvalidExport;
+            Expect.token env T_TYPE;
+            Statement.ExportNamedDeclaration
+              {
+                declaration = None;
+                specifiers = None;
+                source = None;
+                export_kind = Statement.ExportType;
+                comments = Flow_ast_utils.mk_comments_opt ~leading ();
+              }
+          | _ ->
+            let (loc, type_alias) = with_loc (type_alias_helper ~leading:[]) env in
             record_export
               env
               (Flow_ast_utils.ident_of_source
-                 (loc, extract_ident_name opaque_t.Statement.OpaqueType.id)
+                 (loc, extract_ident_name type_alias.Statement.TypeAlias.id)
               );
-            let opaque_t = (loc, Statement.OpaqueType opaque_t) in
+            let type_alias = (loc, Statement.TypeAlias type_alias) in
             Statement.ExportNamedDeclaration
               {
-                declaration = Some opaque_t;
+                declaration = Some type_alias;
                 specifiers = None;
                 source = None;
                 export_kind = Statement.ExportType;
                 comments = Flow_ast_utils.mk_comments_opt ~leading ();
-              }
-          )
+              })
+        | T_OPAQUE ->
+          (* export opaque type ... *)
+          let open Statement.ExportNamedDeclaration in
+          let (loc, opaque_t) = with_loc (opaque_type_helper ~leading:[]) env in
+          record_export
+            env
+            (Flow_ast_utils.ident_of_source
+               (loc, extract_ident_name opaque_t.Statement.OpaqueType.id)
+            );
+          let opaque_t = (loc, Statement.OpaqueType opaque_t) in
+          Statement.ExportNamedDeclaration
+            {
+              declaration = Some opaque_t;
+              specifiers = None;
+              source = None;
+              export_kind = Statement.ExportType;
+              comments = Flow_ast_utils.mk_comments_opt ~leading ();
+            }
         | T_INTERFACE ->
           (* export interface I { ... } *)
-          Statement.ExportNamedDeclaration.(
-            if not (should_parse_types env) then error env Parse_error.UnexpectedTypeExport;
-            let interface =
-              let (loc, iface) = with_loc (interface_helper ~leading:[]) env in
-              let { Statement.Interface.id; _ } = iface in
-              record_export env (Flow_ast_utils.ident_of_source (loc, extract_ident_name id));
-              (loc, Statement.InterfaceDeclaration iface)
-            in
-            Statement.ExportNamedDeclaration
-              {
-                declaration = Some interface;
-                specifiers = None;
-                source = None;
-                export_kind = Statement.ExportType;
-                comments = Flow_ast_utils.mk_comments_opt ~leading ();
-              }
-          )
+          let open Statement.ExportNamedDeclaration in
+          if not (should_parse_types env) then error env Parse_error.UnexpectedTypeExport;
+          let interface =
+            let (loc, iface) = with_loc (interface_helper ~leading:[]) env in
+            let { Statement.Interface.id; _ } = iface in
+            record_export env (Flow_ast_utils.ident_of_source (loc, extract_ident_name id));
+            (loc, Statement.InterfaceDeclaration iface)
+          in
+          Statement.ExportNamedDeclaration
+            {
+              declaration = Some interface;
+              specifiers = None;
+              source = None;
+              export_kind = Statement.ExportType;
+              comments = Flow_ast_utils.mk_comments_opt ~leading ();
+            }
         | T_LET
         | T_CONST
         | T_VAR
@@ -1634,68 +1630,66 @@ module Statement
               comments = Flow_ast_utils.mk_comments_opt ~leading ();
             }
         | T_MULT ->
-          Statement.ExportNamedDeclaration.(
-            let loc = Peek.loc env in
-            Expect.token env T_MULT;
-            let local_name =
-              let parse_export_star_as = (parse_options env).esproposal_export_star_as in
-              match Peek.token env with
-              | T_IDENTIFIER { raw = "as"; _ } ->
-                Eat.token env;
-                if parse_export_star_as then
-                  Some (Parse.identifier env)
-                else (
-                  error env Parse_error.UnexpectedTypeDeclaration;
-                  None
-                )
-              | _ -> None
-            in
-            let specifiers = Some (ExportBatchSpecifier (loc, local_name)) in
-            let (source, trailing) = export_source_and_semicolon env in
-            Statement.ExportNamedDeclaration
-              {
-                declaration = None;
-                specifiers;
-                source = Some source;
-                export_kind = Statement.ExportValue;
-                comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing ();
-              }
-          )
+          let open Statement.ExportNamedDeclaration in
+          let loc = Peek.loc env in
+          Expect.token env T_MULT;
+          let local_name =
+            let parse_export_star_as = (parse_options env).esproposal_export_star_as in
+            match Peek.token env with
+            | T_IDENTIFIER { raw = "as"; _ } ->
+              Eat.token env;
+              if parse_export_star_as then
+                Some (Parse.identifier env)
+              else (
+                error env Parse_error.UnexpectedTypeDeclaration;
+                None
+              )
+            | _ -> None
+          in
+          let specifiers = Some (ExportBatchSpecifier (loc, local_name)) in
+          let (source, trailing) = export_source_and_semicolon env in
+          Statement.ExportNamedDeclaration
+            {
+              declaration = None;
+              specifiers;
+              source = Some source;
+              export_kind = Statement.ExportValue;
+              comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing ();
+            }
         | _ ->
-          Statement.ExportNamedDeclaration.(
-            let export_kind =
-              match Peek.token env with
-              | T_TYPE ->
-                Eat.token env;
-                Statement.ExportType
-              | _ -> Statement.ExportValue
-            in
-            Expect.token env T_LCURLY;
-            let specifiers = export_specifiers env [] in
-            Expect.token env T_RCURLY;
-            let (source, trailing) =
-              match Peek.token env with
-              | T_IDENTIFIER { raw = "from"; _ } ->
-                let (source, trailing) = export_source_and_semicolon env in
-                (Some source, trailing)
-              | _ ->
-                assert_export_specifier_identifiers env specifiers;
-                let trailing =
-                  match semicolon env with
-                  | Explicit trailing -> trailing
-                  | Implicit { trailing; _ } -> trailing
-                in
-                (None, trailing)
-            in
-            Statement.ExportNamedDeclaration
-              {
-                declaration = None;
-                specifiers = Some (ExportSpecifiers specifiers);
-                source;
-                export_kind;
-                comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing ();
-              }
-          )
+          let open Statement.ExportNamedDeclaration in
+          let export_kind =
+            match Peek.token env with
+            | T_TYPE ->
+              Eat.token env;
+              Statement.ExportType
+            | _ -> Statement.ExportValue
+          in
+          Expect.token env T_LCURLY;
+          let specifiers = export_specifiers env [] in
+          Expect.token env T_RCURLY;
+          let (source, trailing) =
+            match Peek.token env with
+            | T_IDENTIFIER { raw = "from"; _ } ->
+              let (source, trailing) = export_source_and_semicolon env in
+              (Some source, trailing)
+            | _ ->
+              assert_export_specifier_identifiers env specifiers;
+              let trailing =
+                match semicolon env with
+                | Explicit trailing -> trailing
+                | Implicit { trailing; _ } -> trailing
+              in
+              (None, trailing)
+          in
+          Statement.ExportNamedDeclaration
+            {
+              declaration = None;
+              specifiers = Some (ExportSpecifiers specifiers);
+              source;
+              export_kind;
+              comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing ();
+            }
     )
 
   and declare_export_declaration ?(allow_export_type = false) =
