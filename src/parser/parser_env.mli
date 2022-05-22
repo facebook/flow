@@ -62,6 +62,8 @@ val last_token : env -> Token.t option
 
 val in_export : env -> bool
 
+val in_export_default : env -> bool
+
 val labels : env -> SSet.t
 
 val comments : env -> Loc.t Flow_ast.Comment.t list
@@ -110,6 +112,8 @@ val error : env -> Parse_error.t -> unit
 val error_unexpected : ?expected:string -> env -> unit
 
 val error_on_decorators : env -> (Loc.t * 'a) list -> unit
+
+val error_nameless_declaration : env -> string -> unit
 
 val strict_error : env -> Parse_error.t -> unit
 
@@ -160,6 +164,8 @@ val with_no_new : bool -> env -> env
 val with_in_switch : bool -> env -> env
 
 val with_in_export : bool -> env -> env
+
+val with_in_export_default : bool -> env -> env
 
 val with_no_call : bool -> env -> env
 

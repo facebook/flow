@@ -3,63 +3,31 @@
     {
       "loc":{"source":null,"start":{"line":1,"column":38},"end":{"line":1,"column":39}},
       "message":"Unexpected token `(`, expected an identifier"
-    },
-    {
-      "loc":{"source":null,"start":{"line":1,"column":39},"end":{"line":1,"column":40}},
-      "message":"Unexpected token `)`, expected the token `(`"
-    },
-    {
-      "loc":{"source":null,"start":{"line":1,"column":44},"end":{"line":1,"column":45}},
-      "message":"Unexpected token `;`, expected the token `,`"
-    },
-    {
-      "loc":{"source":null,"start":{"line":1,"column":46},"end":{"line":1,"column":47}},
-      "message":"Unexpected token `}`, expected an identifier"
-    },
-    {
-      "loc":{"source":null,"start":{"line":2,"column":0},"end":{"line":2,"column":0}},
-      "message":"Unexpected end of input, expected the token `,`"
-    },
-    {
-      "loc":{"source":null,"start":{"line":2,"column":0},"end":{"line":2,"column":0}},
-      "message":"Rest parameter must be final parameter of an argument list"
-    },
-    {
-      "loc":{"source":null,"start":{"line":2,"column":0},"end":{"line":2,"column":0}},
-      "message":"Unexpected end of input, expected the token `)`"
-    },
-    {
-      "loc":{"source":null,"start":{"line":2,"column":0},"end":{"line":2,"column":0}},
-      "message":"Unexpected end of input, expected the token `{`"
-    },
-    {
-      "loc":{"source":null,"start":{"line":2,"column":0},"end":{"line":2,"column":0}},
-      "message":"Unexpected end of input, expected the token `}`"
     }
   ],
   "type":"Program",
-  "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":2,"column":0}},
-  "range":[0,48],
+  "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":1,"column":47}},
+  "range":[0,47],
   "body":[
     {
       "type":"ExportDefaultDeclaration",
-      "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":2,"column":0}},
-      "range":[0,48],
+      "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":1,"column":47}},
+      "range":[0,47],
       "declaration":{
         "type":"FunctionDeclaration",
-        "loc":{"source":null,"start":{"line":1,"column":15},"end":{"line":2,"column":0}},
-        "range":[15,48],
+        "loc":{"source":null,"start":{"line":1,"column":15},"end":{"line":1,"column":47}},
+        "range":[15,47],
         "id":null,
         "params":[],
         "body":{
           "type":"BlockStatement",
-          "loc":{"source":null,"start":{"line":1,"column":27},"end":{"line":2,"column":0}},
-          "range":[27,48],
+          "loc":{"source":null,"start":{"line":1,"column":27},"end":{"line":1,"column":47}},
+          "range":[27,47],
           "body":[
             {
               "type":"FunctionDeclaration",
-              "loc":{"source":null,"start":{"line":1,"column":29},"end":{"line":2,"column":0}},
-              "range":[29,48],
+              "loc":{"source":null,"start":{"line":1,"column":29},"end":{"line":1,"column":44}},
+              "range":[29,44],
               "id":{
                 "type":"Identifier",
                 "loc":{"source":null,"start":{"line":1,"column":38},"end":{"line":1,"column":39}},
@@ -68,27 +36,11 @@
                 "typeAnnotation":null,
                 "optional":false
               },
-              "params":[
-                {
-                  "type":"ObjectPattern",
-                  "loc":{"source":null,"start":{"line":1,"column":41},"end":{"line":1,"column":44}},
-                  "range":[41,44],
-                  "properties":[],
-                  "typeAnnotation":null
-                },
-                {
-                  "type":"Identifier",
-                  "loc":{"source":null,"start":{"line":1,"column":46},"end":{"line":1,"column":47}},
-                  "range":[46,47],
-                  "name":"",
-                  "typeAnnotation":null,
-                  "optional":false
-                }
-              ],
+              "params":[],
               "body":{
                 "type":"BlockStatement",
-                "loc":{"source":null,"start":{"line":2,"column":0},"end":{"line":2,"column":0}},
-                "range":[48,48],
+                "loc":{"source":null,"start":{"line":1,"column":41},"end":{"line":1,"column":44}},
+                "range":[41,44],
                 "body":[]
               },
               "async":false,
@@ -97,6 +49,11 @@
               "expression":false,
               "returnType":null,
               "typeParameters":null
+            },
+            {
+              "type":"EmptyStatement",
+              "loc":{"source":null,"start":{"line":1,"column":44},"end":{"line":1,"column":45}},
+              "range":[44,45]
             }
           ]
         },

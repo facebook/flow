@@ -1,8 +1,8 @@
 {
   "errors":[
     {
-      "loc":{"source":null,"start":{"line":1,"column":7},"end":{"line":1,"column":15}},
-      "message":"When exporting a class as a named export, you must specify a class name. Did you mean `export default class ...`?"
+      "loc":{"source":null,"start":{"line":1,"column":13},"end":{"line":1,"column":14}},
+      "message":"Unexpected token `{`, expected an identifier. When exporting a class as a named export, you must specify a class name. Did you mean `export default class ...`?"
     }
   ],
   "type":"Program",
@@ -17,15 +17,22 @@
         "type":"ClassDeclaration",
         "loc":{"source":null,"start":{"line":1,"column":7},"end":{"line":1,"column":15}},
         "range":[7,15],
-        "id":null,
+        "id":{
+          "type":"Identifier",
+          "loc":{"source":null,"start":{"line":1,"column":13},"end":{"line":1,"column":14}},
+          "range":[13,14],
+          "name":"",
+          "typeAnnotation":null,
+          "optional":false
+        },
         "body":{
           "type":"ClassBody",
           "loc":{"source":null,"start":{"line":1,"column":13},"end":{"line":1,"column":15}},
           "range":[13,15],
           "body":[]
         },
-        "superClass":null,
         "typeParameters":null,
+        "superClass":null,
         "superTypeParameters":null,
         "implements":[],
         "decorators":[]

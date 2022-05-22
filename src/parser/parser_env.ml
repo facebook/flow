@@ -153,6 +153,7 @@ type env = {
   last_lex_result: Lex_result.t option ref;
   in_strict_mode: bool;
   in_export: bool;
+  in_export_default: bool;
   in_loop: bool;
   in_switch: bool;
   in_formal_parameters: bool;
@@ -206,6 +207,7 @@ let init_env ?(token_sink = None) ?(parse_options = None) source content =
     last_lex_result = ref None;
     in_strict_mode = parse_options.use_strict;
     in_export = false;
+    in_export_default = false;
     in_loop = false;
     in_switch = false;
     in_formal_parameters = false;
@@ -236,6 +238,8 @@ let in_strict_mode env = env.in_strict_mode
 let lex_mode env = List.hd !(env.lex_mode_stack)
 
 let in_export env = env.in_export
+
+let in_export_default env = env.in_export_default
 
 let comments env = !(env.comments)
 
@@ -432,6 +436,12 @@ let with_in_export in_export env =
   else
     { env with in_export }
 
+let with_in_export_default in_export_default env =
+  if in_export_default = env.in_export_default then
+    env
+  else
+    { env with in_export_default }
+
 let with_no_call no_call env =
   if no_call = env.no_call then
     env
@@ -465,6 +475,7 @@ let enter_function env ~async ~generator =
     in_loop = false;
     in_switch = false;
     in_export = false;
+    in_export_default = false;
     labels = SSet.empty;
     allow_await = async;
     allow_yield = generator;
@@ -961,6 +972,19 @@ let error_unexpected ?expected env =
 
 let error_on_decorators env =
   List.iter (fun decorator -> error_at env (fst decorator, Parse_error.UnsupportedDecorator))
+
+let error_nameless_declaration env kind =
+  let expected =
+    if in_export env then
+      Printf.sprintf
+        "an identifier. When exporting a %s as a named export, you must specify a %s name. Did you mean `export default %s ...`?"
+        kind
+        kind
+        kind
+    else
+      "an identifier"
+  in
+  error_unexpected ~expected env
 
 let strict_error env e = if in_strict_mode env then error env e
 

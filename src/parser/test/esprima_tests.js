@@ -659,50 +659,6 @@ module.exports = {
           }
         },
         {
-          content: 'function null() { }',
-          explanation: "Improved error message",
-          expected_differences: {
-            'root.errors.0.message': {
-              type: 'Wrong error message',
-              expected: 'Unexpected token null',
-              actual: 'Unexpected token `null`'
-            }
-          }
-        },
-        {
-          content: 'function true() { }',
-          explanation: "Improved error message",
-          expected_differences: {
-            'root.errors.0.message': {
-              type: 'Wrong error message',
-              expected: 'Unexpected token true',
-              actual: 'Unexpected token `true`'
-            }
-          }
-        },
-        {
-          content: 'function false() { }',
-          explanation: "Improved error message",
-          expected_differences: {
-            'root.errors.0.message': {
-              type: 'Wrong error message',
-              expected: 'Unexpected token false',
-              actual: 'Unexpected token `false`'
-            }
-          }
-        },
-        {
-          content: 'function if() { }',
-          explanation: "Improved error message",
-          expected_differences: {
-            'root.errors.0.message': {
-              type: 'Wrong error message',
-              expected: 'Unexpected token if',
-              actual: 'Unexpected token `if`'
-            }
-          }
-        },
-        {
           content: 'a b;',
           explanation: "Improved error message",
           expected_differences: {
@@ -2950,28 +2906,6 @@ module.exports = {
         'export default class A {};',
         */
       ]
-    },
-    'Invalid Exports': {
-      'options': { sourceType: "module" },
-      'tests': [
-        /* Esprima doesn't parse nameless exported classes yet
-        'export class {}',
-        */
-        {
-          content: 'export function {}',
-          explanation: "Improved error message",
-          expected_differences: {
-            'root.errors.0.message': {
-              type: 'Wrong error message',
-              expected: 'Unexpected token {',
-              actual: 'Unexpected token `{`, expected an identifier'
-            }
-          }
-        },
-        /* Esprima parses default exports wrong
-        'export default class A {}',
-        */
-      ],
     },
     'Import': {
       'options': { sourceType: "module" },

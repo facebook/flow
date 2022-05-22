@@ -304,7 +304,7 @@ module Declaration (Parse : Parser_common.PARSER) (Type : Type_parser.TYPE) : DE
               let (generator, leading_generator) = generator env in
               let leading = List.concat [leading_async; leading_function; leading_generator] in
               let (tparams, id) =
-                match (in_export env, Peek.token env) with
+                match (in_export_default env, Peek.token env) with
                 | (true, T_LPAREN) -> (None, None)
                 | (true, T_LESS_THAN) ->
                   let tparams = type_params_remove_trailing env (Type.type_params env) in
@@ -322,9 +322,15 @@ module Declaration (Parse : Parser_common.PARSER) (Type : Type_parser.TYPE) : DE
                   (tparams, id)
                 | _ ->
                   let id =
-                    id_remove_trailing
-                      env
-                      (Parse.identifier ~restricted_error:Parse_error.StrictFunctionName env)
+                    if Peek.is_identifier env then
+                      id_remove_trailing
+                        env
+                        (Parse.identifier ~restricted_error:Parse_error.StrictFunctionName env)
+                    else (
+                      (* don't consume the identifier here like Parse.identifier does. *)
+                      error_nameless_declaration env "function";
+                      (Peek.loc env, { Identifier.name = ""; comments = None })
+                    )
                   in
                   let tparams = type_params_remove_trailing env (Type.type_params env) in
                   (tparams, Some id)

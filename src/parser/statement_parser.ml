@@ -1467,6 +1467,7 @@ module Statement
             let leading = leading @ Peek.comments env in
             let (default, ()) = with_loc (fun env -> Expect.token env T_DEFAULT) env in
             record_export env (Flow_ast_utils.ident_of_source (default, "default"));
+            let env = with_in_export_default true env in
             let (declaration, trailing) =
               if Peek.is_function env then
                 (* export default [async] function [foo] (...) { ... } *)
@@ -1606,12 +1607,6 @@ module Statement
             | (loc, ClassDeclaration { Class.id = Some id; _ })
             | (loc, FunctionDeclaration { Function.id = Some id; _ }) ->
               [Flow_ast_utils.ident_of_source (loc, extract_ident_name id)]
-            | (loc, ClassDeclaration { Class.id = None; _ }) ->
-              error_at env (loc, Parse_error.ExportNamelessClass);
-              []
-            | (loc, FunctionDeclaration { Function.id = None; _ }) ->
-              error_at env (loc, Parse_error.ExportNamelessFunction);
-              []
             | _ -> failwith "Internal Flow Error! Unexpected export statement declaration!"
           in
           List.iter (record_export env) names;
@@ -1717,6 +1712,7 @@ module Statement
             (* declare export default ... *)
             let leading = leading @ Peek.comments env in
             let (default, ()) = with_loc (fun env -> Expect.token env T_DEFAULT) env in
+            let env = with_in_export_default true env in
             let (declaration, trailing) =
               match Peek.token env with
               | T_FUNCTION ->

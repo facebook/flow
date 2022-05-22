@@ -120,8 +120,6 @@ type t =
   | DeclareExportInterface
   | UnexpectedExportStarAs
   | DuplicateExport of string
-  | ExportNamelessClass
-  | ExportNamelessFunction
   | UnsupportedDecorator
   | MissingTypeParamDefault
   | DuplicateDeclareModuleExports
@@ -371,10 +369,6 @@ module PP = struct
     | UnexpectedExportStarAs ->
       "`export * as` is an early-stage proposal and is not enabled by default. To enable support in the parser, use the `esproposal_export_star_as` option"
     | DuplicateExport export -> Printf.sprintf "Duplicate export for `%s`" export
-    | ExportNamelessClass ->
-      "When exporting a class as a named export, you must specify a class name. Did you mean `export default class ...`?"
-    | ExportNamelessFunction ->
-      "When exporting a function as a named export, you must specify a function name. Did you mean `export default function ...`?"
     | UnsupportedDecorator -> "Found a decorator in an unsupported position."
     | MissingTypeParamDefault ->
       "Type parameter declaration needs a default, since a preceding type parameter declaration has a default."

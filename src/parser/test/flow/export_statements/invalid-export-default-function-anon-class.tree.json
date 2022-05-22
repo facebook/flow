@@ -3,43 +3,31 @@
     {
       "loc":{"source":null,"start":{"line":1,"column":35},"end":{"line":1,"column":36}},
       "message":"Unexpected token `{`, expected an identifier"
-    },
-    {
-      "loc":{"source":null,"start":{"line":1,"column":37},"end":{"line":1,"column":38}},
-      "message":"Unexpected token `}`, expected the token `{`"
-    },
-    {
-      "loc":{"source":null,"start":{"line":1,"column":40},"end":{"line":1,"column":41}},
-      "message":"Unexpected token `}`, expected the start of a statement"
-    },
-    {
-      "loc":{"source":null,"start":{"line":2,"column":0},"end":{"line":2,"column":0}},
-      "message":"Unexpected end of input, expected the start of a statement"
     }
   ],
   "type":"Program",
-  "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":2,"column":0}},
-  "range":[0,42],
+  "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":1,"column":41}},
+  "range":[0,41],
   "body":[
     {
       "type":"ExportDefaultDeclaration",
-      "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":1,"column":38}},
-      "range":[0,38],
+      "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":1,"column":41}},
+      "range":[0,41],
       "declaration":{
         "type":"FunctionDeclaration",
-        "loc":{"source":null,"start":{"line":1,"column":15},"end":{"line":1,"column":38}},
-        "range":[15,38],
+        "loc":{"source":null,"start":{"line":1,"column":15},"end":{"line":1,"column":41}},
+        "range":[15,41],
         "id":null,
         "params":[],
         "body":{
           "type":"BlockStatement",
-          "loc":{"source":null,"start":{"line":1,"column":27},"end":{"line":1,"column":38}},
-          "range":[27,38],
+          "loc":{"source":null,"start":{"line":1,"column":27},"end":{"line":1,"column":41}},
+          "range":[27,41],
           "body":[
             {
               "type":"ClassDeclaration",
-              "loc":{"source":null,"start":{"line":1,"column":29},"end":{"line":1,"column":36}},
-              "range":[29,36],
+              "loc":{"source":null,"start":{"line":1,"column":29},"end":{"line":1,"column":38}},
+              "range":[29,38],
               "id":{
                 "type":"Identifier",
                 "loc":{"source":null,"start":{"line":1,"column":35},"end":{"line":1,"column":36}},
@@ -50,8 +38,8 @@
               },
               "body":{
                 "type":"ClassBody",
-                "loc":{"source":null,"start":{"line":1,"column":37},"end":{"line":1,"column":36}},
-                "range":[37,36],
+                "loc":{"source":null,"start":{"line":1,"column":35},"end":{"line":1,"column":38}},
+                "range":[35,38],
                 "body":[]
               },
               "typeParameters":null,
@@ -59,6 +47,11 @@
               "superTypeParameters":null,
               "implements":[],
               "decorators":[]
+            },
+            {
+              "type":"EmptyStatement",
+              "loc":{"source":null,"start":{"line":1,"column":38},"end":{"line":1,"column":39}},
+              "range":[38,39]
             }
           ]
         },
@@ -70,16 +63,6 @@
         "typeParameters":null
       },
       "exportKind":"value"
-    },
-    {
-      "type":"EmptyStatement",
-      "loc":{"source":null,"start":{"line":1,"column":38},"end":{"line":1,"column":39}},
-      "range":[38,39]
-    },
-    {
-      "type":"EmptyStatement",
-      "loc":{"source":null,"start":{"line":2,"column":0},"end":{"line":2,"column":0}},
-      "range":[42,42]
     }
   ],
   "comments":[]

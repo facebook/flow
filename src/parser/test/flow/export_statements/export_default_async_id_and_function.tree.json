@@ -3,35 +3,11 @@
     {
       "loc":{"source":null,"start":{"line":2,"column":8},"end":{"line":2,"column":9}},
       "message":"Unexpected token `(`, expected an identifier"
-    },
-    {
-      "loc":{"source":null,"start":{"line":2,"column":9},"end":{"line":2,"column":10}},
-      "message":"Unexpected token `)`, expected the token `(`"
-    },
-    {
-      "loc":{"source":null,"start":{"line":3,"column":0},"end":{"line":3,"column":0}},
-      "message":"Unexpected end of input, expected the token `,`"
-    },
-    {
-      "loc":{"source":null,"start":{"line":3,"column":0},"end":{"line":3,"column":0}},
-      "message":"Rest parameter must be final parameter of an argument list"
-    },
-    {
-      "loc":{"source":null,"start":{"line":3,"column":0},"end":{"line":3,"column":0}},
-      "message":"Unexpected end of input, expected the token `)`"
-    },
-    {
-      "loc":{"source":null,"start":{"line":3,"column":0},"end":{"line":3,"column":0}},
-      "message":"Unexpected end of input, expected the token `{`"
-    },
-    {
-      "loc":{"source":null,"start":{"line":3,"column":0},"end":{"line":3,"column":0}},
-      "message":"Unexpected end of input, expected the token `}`"
     }
   ],
   "type":"Program",
-  "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":3,"column":0}},
-  "range":[0,35],
+  "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":2,"column":13}},
+  "range":[0,34],
   "body":[
     {
       "type":"ExportDefaultDeclaration",
@@ -49,8 +25,8 @@
     },
     {
       "type":"FunctionDeclaration",
-      "loc":{"source":null,"start":{"line":2,"column":0},"end":{"line":3,"column":0}},
-      "range":[21,35],
+      "loc":{"source":null,"start":{"line":2,"column":0},"end":{"line":2,"column":13}},
+      "range":[21,34],
       "id":{
         "type":"Identifier",
         "loc":{"source":null,"start":{"line":2,"column":8},"end":{"line":2,"column":9}},
@@ -59,19 +35,11 @@
         "typeAnnotation":null,
         "optional":false
       },
-      "params":[
-        {
-          "type":"ObjectPattern",
-          "loc":{"source":null,"start":{"line":2,"column":11},"end":{"line":2,"column":13}},
-          "range":[32,34],
-          "properties":[],
-          "typeAnnotation":null
-        }
-      ],
+      "params":[],
       "body":{
         "type":"BlockStatement",
-        "loc":{"source":null,"start":{"line":3,"column":0},"end":{"line":3,"column":0}},
-        "range":[35,35],
+        "loc":{"source":null,"start":{"line":2,"column":11},"end":{"line":2,"column":13}},
+        "range":[32,34],
         "body":[]
       },
       "async":false,

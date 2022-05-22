@@ -1051,11 +1051,17 @@ module Object
       let tmp_env = env |> with_no_let true in
       match (optional_id, Peek.token tmp_env) with
       | (true, (T_EXTENDS | T_IMPLEMENTS | T_LESS_THAN | T_LCURLY)) -> None
-      | _ ->
+      | _ when Peek.is_identifier env ->
         let id = Parse.identifier tmp_env in
         let { remove_trailing; _ } = trailing_and_remover env in
         let id = remove_trailing id (fun remover id -> remover#identifier id) in
         Some id
+      | _ ->
+        (* error, but don't consume a token like Parse.identifier does. this helps
+           with recovery, and the parser won't get stuck because we consumed the
+           `class` token above. *)
+        error_nameless_declaration env "class";
+        Some (Peek.loc env, { Identifier.name = ""; comments = None })
     in
     let tparams =
       match Type.type_params env with
@@ -1072,7 +1078,7 @@ module Object
   let class_declaration env decorators =
     with_loc
       (fun env ->
-        let optional_id = in_export env in
+        let optional_id = in_export_default env in
         Ast.Statement.ClassDeclaration (_class env ~decorators ~optional_id ~expression:false))
       env
 
