@@ -6,3 +6,4 @@ flow_parser.js
 perf_test
 pfff_test
 node_modules/
+!test/esprima/**/*.diff
