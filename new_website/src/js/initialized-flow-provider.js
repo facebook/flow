@@ -7,23 +7,28 @@
  * @format
  */
 
-const {spawnSync} = require('child_process');
+const {spawn} = require('child_process');
 
-const checkContents = input =>
-  JSON.parse(
-    spawnSync(
-      'flow',
-      ['check-contents', '--json', '--flowconfig-name', '.flowconfig.snippets'],
-      {
-        input,
-        encoding: 'utf8',
-      },
-    ).stdout.toString(),
-  );
+async function checkContents(input /*: string */) {
+  const flowProcess = spawn('flow', [
+    'check-contents',
+    '--json',
+    '--flowconfig-name',
+    '.flowconfig.snippets',
+  ]);
+  flowProcess.stdin.end(input, 'utf8');
+  let json = '';
+  for await (const data of flowProcess.stdout) {
+    json += data.toString();
+  }
+  return JSON.parse(json);
+}
 
-module.exports = function getFlowErrors(code /*: string */) /*: string[] */ {
-  return checkContents(code)
-    .errors.flatMap(({message}) => message)
+module.exports = async function getFlowErrors(
+  code /*: string */,
+) /*: Promise<Array<string>> */ {
+  return (await checkContents(code)).errors
+    .flatMap(({message}) => message)
     .map(
       ({loc, descr}) =>
         `${loc.start.line}:${loc.start.column}-${loc.end.line}:${loc.end.column}: ${descr}`,

@@ -9,11 +9,11 @@
 
 const getFlowErrors = require('./initialized-flow-provider');
 
-const transformNode = node => [
+const transformNode = async node => [
   {
     type: 'code',
     lang: 'flow',
-    meta: getFlowErrors(node.value).join('\n'),
+    meta: (await getFlowErrors(node.value)).join('\n'),
     value: node.value,
   },
 ];
@@ -29,7 +29,7 @@ const nodeForImport = {
 module.exports = () /*: any */ => {
   let transformed = false;
   let alreadyImported = false;
-  const transformer = node => {
+  const transformer = async node => {
     if (
       node.type === 'import' &&
       node.value.includes('@site/src/components/FlowCheckCodeBlock')
@@ -43,7 +43,7 @@ module.exports = () /*: any */ => {
     if (Array.isArray(node.children)) {
       let index = 0;
       while (index < node.children.length) {
-        const result = transformer(node.children[index]);
+        const result = await transformer(node.children[index]);
         if (result) {
           node.children.splice(index, 1, ...result);
           index += result.length;
