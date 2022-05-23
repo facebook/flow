@@ -10,6 +10,7 @@
 
 const path = require('path');
 const fs = require('fs');
+// $FlowExpectedError[cannot-resolve-module]
 const Runner = require('jscodeshift/src/Runner');
 const os = require('os');
 

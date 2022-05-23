@@ -1,1 +1,0 @@
-function create(): ReactClass<any> {}

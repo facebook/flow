@@ -24,24 +24,7 @@ import type {Upgrade} from './Types';
 const VERSION_UPGRADES: Array<{|
   version: string,
   upgrades: Array<Upgrade>,
-|}> = [
-  // We started writing and distributing upgrades with `flow-upgrade` after Flow
-  // version 0.52.0. We assume that you have valid Flow 0.52.0 code and are not
-  // backporting any previous automated upgrades.
-
-  {
-    version: '0.53.0',
-    upgrades: [
-      require('./upgrades/0.53.0/ReactComponentExplicitTypeArgs'),
-      require('./upgrades/0.53.0/ReactComponentSimplifyTypeArgs'),
-      require('./upgrades/0.53.0/ReactUtilityTypes'),
-    ],
-  },
-  {
-    version: '0.84.0',
-    upgrades: [require('./upgrades/0.84.0/ExplicitInexactObjectSyntax')],
-  },
-];
+|}> = [];
 
 /**
  * Decides all of the upgrades that will need to be run when moving from one

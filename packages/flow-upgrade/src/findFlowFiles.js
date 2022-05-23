@@ -9,6 +9,7 @@
  */
 
 const path = require('path');
+// $FlowExpectedError[cannot-resolve-module]
 const fs = require('graceful-fs');
 
 /**
