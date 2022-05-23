@@ -1,6 +1,7 @@
 [ignore]
 <PROJECT_ROOT>/.docusaurus/.*
 <PROJECT_ROOT>/static/.*
+<PROJECT_ROOT>/build/.*
 <PROJECT_ROOT>/babel.config.js
 <PROJECT_ROOT>/docusaurus.config.js
 .*/node_modules/.*

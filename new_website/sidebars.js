@@ -86,11 +86,7 @@ module.exports = {
       label: 'Library Definitions',
       items: ['libdefs/index', 'libdefs/creation'],
     },
-    {
-      type: 'category',
-      label: 'Error Suppressions',
-      items: ['errors/index'],
-    },
+    'errors/index',
     {
       type: 'category',
       label: 'React',

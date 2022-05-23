@@ -2,6 +2,7 @@
 title: "Strict Checking of Function Call Arity"
 short-title: "Strict Function Call Arity"
 author: "Gabe Levi"
+hide_table_of_contents: true
 ---
 
 One of Flow's original goals was to be able to understand idiomatic JavaScript.

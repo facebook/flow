@@ -2,6 +2,7 @@
 title: "Windows Support is Here!"
 short-title: "Windows Support"
 author: "Gabe Levi"
+hide_table_of_contents: true
 ---
 
 We are excited to announce that Flow is now officially available on 64-bit

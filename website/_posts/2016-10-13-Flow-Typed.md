@@ -2,6 +2,7 @@
 title: "Introducing Flow-Typed"
 short-title: "Introducing Flow-Typed"
 author: "Jeff Morrison"
+hide_table_of_contents: true
 ---
 
 Having high-quality and community-driven library definitions (“libdefs”) are

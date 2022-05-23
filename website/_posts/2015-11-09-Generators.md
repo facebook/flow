@@ -2,6 +2,7 @@
 title: Typing Generators with Flow
 short-title: Generators
 author: Sam Goldman
+hide_table_of_contents: true
 ---
 
 Flow 0.14.0 included support for generator functions. Generator functions provide a unique ability to JavaScript programs: the ability to suspend and resume execution. This kind of control paves the way for async/await, an [upcoming feature](https://github.com/tc39/ecmascript-asyncawait) already supported by Flow.

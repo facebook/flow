@@ -2,6 +2,7 @@
 title: "Property Variance and Other Upcoming Changes"
 short-title: "Property Variance"
 author: "Sam Goldman"
+hide_table_of_contents: true
 ---
 
 The next release of Flow, 0.34, will include a few important changes to object

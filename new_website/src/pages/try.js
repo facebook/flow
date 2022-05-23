@@ -8,10 +8,12 @@
  */
 
 import * as React from 'react';
+import BrowserOnly from '@docusaurus/BrowserOnly';
 import useDocusaurusContext from '@docusaurus/useDocusaurusContext';
 import Layout from '@theme/Layout';
 import Navbar from '@theme/Navbar';
-import TryFlow from '../try-flow/TryFlow';
+
+const TryFlow = React.lazy(() => import('../try-flow/TryFlow'));
 
 // TODO: read from process.env as build time constants.
 const defaultFlowVersion = 'master';
@@ -27,10 +29,16 @@ export default function TryFlowPage(): React.MixedElement {
       // $FlowFixMe[prop-missing]
       description={siteConfig.description}
       noFooter>
-      <TryFlow
-        defaultFlowVersion={defaultFlowVersion}
-        flowVersions={flowVersions}
-      />
+      <BrowserOnly>
+        {() => (
+          <React.Suspense fallback={<div>Loading...</div>}>
+            <TryFlow
+              defaultFlowVersion={defaultFlowVersion}
+              flowVersions={flowVersions}
+            />
+          </React.Suspense>
+        )}
+      </BrowserOnly>
     </Layout>
   );
 }

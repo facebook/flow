@@ -7,6 +7,12 @@
  * @format
  */
 
+declare module '@docusaurus/BrowserOnly' {
+  declare export default function BrowserOnly({
+    children: () => React$Node,
+  }): React$Node;
+}
+
 declare module '@docusaurus/core' {
   declare module.exports: any;
 }
