@@ -71,10 +71,15 @@ end = struct
     cases: case SMap.t;
   }
 
+  type fix = {
+    path: string list;
+    json: Hh_json.json;
+  }
+
   type case_result =
     | Case_ok
     | Case_skipped of string option (* reason *)
-    | Case_error of string list
+    | Case_error of (string * fix option) list
 
   let empty_case =
     {
@@ -279,7 +284,7 @@ end = struct
       (path : path_part list)
       (actual : Hh_json.json)
       (expected : (Loc.t, Loc.t) Ast.Expression.t)
-      (errors : string list) : string list =
+      (errors : (string * fix option) list) : (string * fix option) list =
     let open Ast.Expression in
     match (actual, expected) with
     | (JSON_Object aprops, (_, Object { Object.properties = eprops; comments = _ })) ->
@@ -293,7 +298,7 @@ end = struct
       let e_len = List.length eitems in
       if e_len <> a_len then
         let path = string_of_path path in
-        let err = spf "%s: Expected %d elements, got %d." path e_len a_len in
+        let err = (spf "%s: Expected %d elements, got %d." path e_len a_len, None) in
         err :: errors
       else
         let (_, diffs) =
@@ -303,7 +308,7 @@ end = struct
               let acc =
                 match expected with
                 | Array.Expression expr -> test_tree path actual expr acc
-                | _ -> spf "%s: invalid JSON" (string_of_path path) :: acc
+                | _ -> (spf "%s: invalid JSON" (string_of_path path), None) :: acc
               in
               (i + 1, acc))
             (0, errors)
@@ -316,7 +321,7 @@ end = struct
       ) ->
       if actual <> expected then
         let path = string_of_path path in
-        spf "%s: Expected %b, got %b." path expected actual :: errors
+        (spf "%s: Expected %b, got %b." path expected actual, None) :: errors
       else
         errors
     | ( JSON_Number actual,
@@ -324,7 +329,7 @@ end = struct
       ) ->
       if actual <> expected then
         let path = string_of_path path in
-        spf "%s: Expected %s, got %s." path expected actual :: errors
+        (spf "%s: Expected %s, got %s." path expected actual, None) :: errors
       else
         errors
     | ( JSON_Number actual,
@@ -343,7 +348,7 @@ end = struct
       let expected = "-" ^ expected in
       if actual <> expected then
         let path = string_of_path path in
-        spf "%s: Expected %s, got %s." path expected actual :: errors
+        (spf "%s: Expected %s, got %s." path expected actual, None) :: errors
       else
         errors
     | ( JSON_String actual,
@@ -351,7 +356,7 @@ end = struct
       ) ->
       if not (string_value_matches expected actual) then
         let path = string_of_path path in
-        spf "%s: Expected %S, got %S." path expected actual :: errors
+        (spf "%s: Expected %S, got %S." path expected actual, None) :: errors
       else
         errors
     | (JSON_Null, (_, Literal { Ast.Literal.value = Ast.Literal.Null; raw = _; comments = _ })) ->
@@ -359,7 +364,7 @@ end = struct
     | (_, _) ->
       let path = string_of_path path in
       let act_type = string_of_json_type actual in
-      spf "%s: Types do not match, got %s" path act_type :: errors
+      (spf "%s: Types do not match, got %s" path act_type, None) :: errors
 
   and test_actual_prop path expected_map name value acc =
     if SMap.mem name expected_map then
@@ -375,14 +380,14 @@ end = struct
       acc
     else
       let path = string_of_path path in
-      spf "%s: Unexpected key %S" path name :: acc
+      (spf "%s: Unexpected key %S" path name, None) :: acc
 
   and test_expected_prop path actual_map name _ acc =
     if SMap.mem name actual_map || expected_different_property path (Some name) None then
       acc
     else
       let path = string_of_path path in
-      spf "%s: Missing key %S" path name :: acc
+      (spf "%s: Missing key %S" path name, None) :: acc
 
   let prop_name_and_value =
     let open Ast.Expression in
@@ -529,7 +534,7 @@ end = struct
     match case.source with
     | None ->
       if List.length case.skipped = 0 && case.diff = Same then
-        Case_error ["No source"]
+        Case_error [("No source", None)]
       else
         Case_skipped None
     | Some content ->
@@ -560,8 +565,8 @@ end = struct
                 (Parse_error.PP.error err)
                 tree
             in
-            Case_error [str]
-          | (None, []) -> Case_error ["Unable to parse .tree.json: unknown error"]
+            Case_error [(str, None)]
+          | (None, []) -> Case_error [("Unable to parse .tree.json: unknown error", None)]
           | (Some expected, []) ->
             let expected =
               match diff with
@@ -578,13 +583,13 @@ end = struct
             begin
               match (errors, todo) with
               | ([], None) -> Case_ok
-              | ([], Some _) -> Case_error ["Skipped test passes"]
+              | ([], Some _) -> Case_error [("Skipped test passes", None)]
               | (_, Some reason) -> Case_skipped (Some reason)
               | (_, None) -> Case_error errors
             end)
         | Some (Tokens _) -> (* TODO *) Case_skipped None
         | Some (Failure _) -> (* TODO *) Case_skipped None
-        | None -> Case_error ["Nothing to do"]
+        | None -> Case_error [("Nothing to do", None)]
       end
 
   type test_results = {
@@ -622,8 +627,46 @@ end = struct
       let oc = open_out filename in
       output_string oc (Hh_json.json_to_multiline json);
       output_char oc '\n';
-      close_out oc
-    | _ -> ()
+      close_out oc;
+      true
+    | _ -> false
+
+  let write_diff path test_name case_name case errs =
+    let ( / ) a b = a ^ Filename.dir_sep ^ b in
+    match case.expected with
+    | Some (Failure _) ->
+      let filename = path / test_name / (case_name ^ ".diff") in
+      let props =
+        Base.List.filter_map
+          ~f:(fun (_, fix) ->
+            match fix with
+            | Some { path = name :: _; json } ->
+              (* failures are flat objects so we don't need to handle
+                 deep paths. *)
+              Some (name, json)
+            | _ -> None)
+          errs
+      in
+      if not (Base.List.is_empty props) then (
+        let json = JSON_Object props in
+        let oc = open_out filename in
+        output_string oc (Hh_json.json_to_multiline json);
+        output_char oc '\n';
+        close_out oc;
+        true
+      ) else
+        false
+    | _ ->
+      (* TODO: handle writing other kinds of diffs *)
+      false
+
+  let write_skip path test_name case_name reason =
+    let ( / ) a b = a ^ Filename.dir_sep ^ b in
+    let filename = path / test_name / (case_name ^ ".skip") in
+    let oc = open_out filename in
+    output_string oc reason;
+    output_char oc '\n';
+    close_out oc
 
   type verbose_mode =
     | Quiet
@@ -634,11 +677,18 @@ end = struct
     let verbose_ref = ref Normal in
     let record_ref = ref false in
     let path_ref = ref None in
+    let diff_ref = ref false in
+    let skip_ref = ref None in
     let speclist =
       [
         ("-q", Arg.Unit (fun () -> verbose_ref := Quiet), "Enables quiet mode");
         ("-v", Arg.Unit (fun () -> verbose_ref := Verbose), "Enables verbose mode");
         ("-r", Arg.Set record_ref, "Re-record failing expected trees");
+        ("-d", Arg.Set diff_ref, "Write diffs for failing tests");
+        ( "-s",
+          Arg.String (fun reason -> skip_ref := Some reason),
+          "Write skip files for unfixable tests"
+        );
       ]
     in
     let usage_msg = "Runs flow parser on esprima tests. Options available:" in
@@ -653,6 +703,8 @@ end = struct
     let quiet = !verbose_ref = Quiet in
     let verbose = !verbose_ref = Verbose in
     let record = !record_ref in
+    let diff = !diff_ref in
+    let skip = !skip_ref in
     let tests = tests_of_path path in
     let results =
       List.fold_left
@@ -693,9 +745,15 @@ end = struct
                     [
                       (C.Normal C.Red, "[\xE2\x9C\x97] FAIL"); (C.Normal C.Default, spf ": %s\n" key);
                     ];
-                  List.iter (fun err -> print [(C.Normal C.Default, spf "    %s\n" err)]) errs;
+                  List.iter (fun (err, _) -> print [(C.Normal C.Default, spf "    %s\n" err)]) errs;
                   flush stdout;
-                  if record then record_tree path test_name key case;
+                  let fixed = record && record_tree path test_name key case in
+                  let fixed = fixed || (diff && write_diff path test_name key case errs) in
+                  ( if not fixed then
+                    match skip with
+                    | Some skip_reason -> write_skip path test_name key skip_reason
+                    | None -> ()
+                  );
                   ({ results with failed = results.failed + 1 }, true)
                 | exception exn ->
                   let exn = Exception.wrap exn in
