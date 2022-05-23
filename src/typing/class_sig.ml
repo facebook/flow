@@ -903,22 +903,6 @@ module Make
         |> with_sig ~static:false (fun s ->
                (* process constructor *)
                begin
-                 (* When in a derived constructor, leave this and super undeclared, the
-                    same way let-scoped variables are stored in the environment before
-                    their declaration. Once we see a super() call, the bindings are
-                    treated as declared and initialized. This protects against using
-                    `this` before it is allocated by the superclass. *)
-                 let derived_ctor =
-                   match x.super with
-                   | Class { extends = Explicit _; _ } -> true
-                   | _ -> false
-                 in
-                 let new_entry t =
-                   if derived_ctor then
-                     new_entry t ~state:Scope.State.Undeclared
-                   else
-                     new_entry t
-                 in
                  (* This parameters are banned in constructors *)
                  let (this, super) =
                    (new_entry (Inferred instance_this_default), new_entry (Inferred super))

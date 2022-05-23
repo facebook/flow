@@ -28,6 +28,24 @@ References:
 
 Error --------------------------------------------------------------------------------------------- constructor.js:36:10
 
+Cannot call `leak` with `this` bound to `f` because `this` [1] cannot escape from its class [1] (try adding a type
+annotation to `f` [2]). [escaped-generic]
+
+   constructor.js:36:10
+   36|     leak(this); // error (no super call yet)
+                ^^^^
+
+References:
+   constructor.js:33:7
+   33| class F extends A {
+             ^ [1]
+   constructor.js:29:15
+   29| function leak(f) {
+                     ^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- constructor.js:36:10
+
 Must call `super` before accessing this [1] in a derived constructor. [reference-before-declaration]
 
    constructor.js:36:10
@@ -52,6 +70,24 @@ References:
    constructor.js:43:17
    43| class G extends A {
                        ^ [1]
+
+
+Error --------------------------------------------------------------------------------------------- constructor.js:69:11
+
+Cannot call `super` with `this` bound to `leaked_this` because `this` [1] cannot escape from its class [1] (try adding a
+type annotation to `leaked_this` [2]). [escaped-generic]
+
+   constructor.js:69:11
+   69|     super(this); // error (no super call yet)
+                 ^^^^
+
+References:
+   constructor.js:67:7
+   67| class I extends I_ {
+             ^ [1]
+   constructor.js:62:15
+   62|   constructor(leaked_this) {
+                     ^^^^^^^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------- constructor.js:69:11
@@ -120,13 +156,16 @@ References:
              ^ [1]
 
 
-Error ---------------------------------------------------------------------------------------- multi-call-error.js:10:13
+Error ------------------------------------------------------------------------------------------ multi-call-error.js:9:9
 
 Cannot declare super [1] because the name is already bound. [name-already-bound]
 
-   multi-call-error.js:10:13
+   multi-call-error.js:9:9
+               v-----
+    9|         super(
    10|             super(0)
-                   ^^^^^^^^
+   11|         );
+               ^
 
 References:
    multi-call-error.js:7:17
@@ -211,4 +250,4 @@ References:
 
 
 
-Found 14 errors
+Found 16 errors

@@ -4357,14 +4357,11 @@ struct
       | Call { Call.callee = (super_loc, Super super) as callee; targs; arguments; comments } ->
         let (targts, targs) = convert_call_targs_opt cx targs in
         let reason = mk_reason (RFunctionCall RSuper) loc in
-        define_internal cx reason "super";
         let super_t = super_ cx super_loc in
         let (argts, arguments_ast) =
           let hint = decompose_hint Decomp_CallSuper (Hint_t super_t) in
           arg_list cx ~hint arguments
         in
-        (* switch back env entries for this and super from undefined *)
-        define_internal cx reason "this";
 
         let meth_generic_this = this_ cx loc { This.comments = None } in
         let super_reason = reason_of_t super_t in
@@ -9198,14 +9195,6 @@ struct
     ignore (Abnormal.swap_saved Abnormal.Throw save_throw);
     let fun_type = Func_stmt_sig.functiontype cx this_t func_sig in
     (fun_type, reconstruct_func (Base.Option.value_exn params_ast) (Base.Option.value_exn body_ast))
-
-  (* Switch back to the declared type for an internal name. *)
-  and define_internal cx reason x =
-    let ix = internal_name x in
-    let loc = aloc_of_reason reason in
-    Env.declare_let cx ix loc;
-    let t = Env.get_var_declared_type cx ix loc in
-    Env.init_let cx ~use_op:unknown_use ix ~has_anno:false t loc
 
   (* Process a function declaration, returning a (polymorphic) function type. *)
   and mk_function_declaration cx ~general reason func =
