@@ -113,10 +113,12 @@ module rec Parse : PARSER = struct
         let possible_directive = item_fn env in
         let stmts = possible_directive :: stmts in
         (match possible_directive with
-        | (_, Ast.Statement.Expression { Ast.Statement.Expression.directive = Some raw; _ }) ->
+        | (loc, Ast.Statement.Expression { Ast.Statement.Expression.directive = Some raw; _ }) ->
           (* 14.1.1 says that it has to be "use strict" without any
              escapes, so "use\x20strict" is disallowed. *)
           let strict = raw = "use strict" in
+          if strict && not (has_simple_parameters env) then
+            error_at env (loc, Parse_error.StrictParamNotSimple);
           let env =
             if strict then
               with_strict true env

@@ -85,6 +85,7 @@ type t =
   | StrictVarName
   | StrictParamName
   | StrictParamDupe
+  | StrictParamNotSimple
   | StrictFunctionName
   | StrictOctalLiteral
   | StrictNonOctalLiteral
@@ -313,6 +314,8 @@ module PP = struct
     | StrictVarName -> "Variable name may not be eval or arguments in strict mode"
     | StrictParamName -> "Parameter name eval or arguments is not allowed in strict mode"
     | StrictParamDupe -> "Strict mode function may not have duplicate parameter names"
+    | StrictParamNotSimple ->
+      "Illegal \"use strict\" directive in function with non-simple parameter list"
     | StrictFunctionName -> "Function name may not be eval or arguments in strict mode"
     | StrictOctalLiteral -> "Octal literals are not allowed in strict mode."
     | StrictNonOctalLiteral -> "Number literals with leading zeros are not allowed in strict mode."

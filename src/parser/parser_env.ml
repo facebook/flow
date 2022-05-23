@@ -166,6 +166,7 @@ type env = {
   allow_yield: bool;
   allow_await: bool;
   allow_directive: bool;
+  has_simple_parameters: bool;
   allow_super: allowed_super;
   error_callback: (env -> Parse_error.t -> unit) option;
   lex_mode_stack: Lex_mode.t list ref;
@@ -205,6 +206,7 @@ let init_env ?(token_sink = None) ?(parse_options = None) source content =
     labels = SSet.empty;
     exports = ref SSet.empty;
     last_lex_result = ref None;
+    has_simple_parameters = true;
     in_strict_mode = parse_options.use_strict;
     in_export = false;
     in_export_default = false;
@@ -260,6 +262,8 @@ let allow_await env = env.allow_await
 let allow_directive env = env.allow_directive
 
 let allow_super env = env.allow_super
+
+let has_simple_parameters env = env.has_simple_parameters
 
 let no_in env = env.no_in
 
@@ -467,10 +471,11 @@ let without_error_callback env = { env with error_callback = None }
 
 let add_label env label = { env with labels = SSet.add label env.labels }
 
-let enter_function env ~async ~generator =
+let enter_function env ~async ~generator ~simple_params =
   {
     env with
     in_formal_parameters = false;
+    has_simple_parameters = simple_params;
     in_function = true;
     in_loop = false;
     in_switch = false;

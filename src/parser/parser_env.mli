@@ -84,6 +84,8 @@ val allow_directive : env -> bool
 
 val allow_super : env -> allowed_super
 
+val has_simple_parameters : env -> bool
+
 val no_in : env -> bool
 
 val no_call : env -> bool
@@ -175,7 +177,7 @@ val without_error_callback : env -> env
 
 val add_label : env -> string -> env
 
-val enter_function : env -> async:bool -> generator:bool -> env
+val enter_function : env -> async:bool -> generator:bool -> simple_params:bool -> env
 
 val is_reserved : string -> bool
 

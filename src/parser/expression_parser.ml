@@ -1111,8 +1111,9 @@ module Expression
               (id, params, generator, predicate, return, tparams, leading))
             env
         in
+        let simple_params = is_simple_parameter_list params in
         let (body, contains_use_strict) =
-          Declaration.function_body env ~async ~generator ~expression:true
+          Declaration.function_body env ~async ~generator ~expression:true ~simple_params
         in
         Declaration.strict_post_check env ~contains_use_strict id params;
         Expression.Function
@@ -1595,9 +1596,7 @@ module Expression
         | _ -> raise Try.Rollback
       )
     in
-    let concise_function_body env ~async =
-      (* arrow functions can't be generators *)
-      let env = enter_function env ~async ~generator:false in
+    let concise_function_body env =
       match Peek.token env with
       | T_LCURLY ->
         let (body_block, contains_use_strict) = Parse.function_block_body env ~expression:true in
@@ -1692,6 +1691,7 @@ module Expression
           (loc, { params with Ast.Function.Params.this_ = None })
         | _ -> params
       in
+      let simple_params = is_simple_parameter_list params in
 
       if Peek.is_line_terminator env && Peek.token env = T_ARROW then
         error env Parse_error.NewlineBeforeArrow;
@@ -1699,7 +1699,9 @@ module Expression
 
       (* Now we know for sure this is an arrow function *)
       let env = without_error_callback env in
-      let (end_loc, (body, contains_use_strict)) = with_loc (concise_function_body ~async) env in
+      (* arrow functions can't be generators *)
+      let env = enter_function env ~async ~generator:false ~simple_params in
+      let (end_loc, (body, contains_use_strict)) = with_loc concise_function_body env in
       Declaration.strict_post_check env ~contains_use_strict None params;
       let loc = Loc.btwn start_loc end_loc in
       Cover_expr

@@ -958,27 +958,11 @@ language/export/escaped-default.js (strict mode)
   Missing parse error
 language/export/escaped-default.js (default)
   Missing parse error
-language/expressions/arrow-function/array-destructuring-param-strict-body.js (strict mode)
-  Missing parse error
-language/expressions/arrow-function/array-destructuring-param-strict-body.js (default)
-  Missing parse error
 language/expressions/arrow-function/dstr/syntax-error-ident-ref-let-escaped.js (strict mode)
-  Missing parse error
-language/expressions/arrow-function/object-destructuring-param-strict-body.js (strict mode)
-  Missing parse error
-language/expressions/arrow-function/object-destructuring-param-strict-body.js (default)
   Missing parse error
 language/expressions/arrow-function/params-duplicate.js (default)
   Missing parse error
-language/expressions/arrow-function/rest-param-strict-body.js (strict mode)
-  Missing parse error
-language/expressions/arrow-function/rest-param-strict-body.js (default)
-  Missing parse error
 language/expressions/arrow-function/syntax/early-errors/arrowparameters-cover-no-duplicates.js (default)
-  Missing parse error
-language/expressions/arrow-function/syntax/early-errors/use-strict-with-non-simple-param.js (strict mode)
-  Missing parse error
-language/expressions/arrow-function/syntax/early-errors/use-strict-with-non-simple-param.js (default)
   Missing parse error
 language/expressions/assignment/dstr/syntax-error-ident-ref-let-escaped.js (strict mode)
   Missing parse error
@@ -993,10 +977,6 @@ language/expressions/assignmenttargettype/direct-asyncarrowfunction-1.js (defaul
 language/expressions/assignmenttargettype/parenthesized-primaryexpression-objectliteral.js (strict mode)
   Missing parse error
 language/expressions/assignmenttargettype/parenthesized-primaryexpression-objectliteral.js (default)
-  Missing parse error
-language/expressions/async-arrow-function/array-destructuring-param-strict-body.js (strict mode)
-  Missing parse error
-language/expressions/async-arrow-function/array-destructuring-param-strict-body.js (default)
   Missing parse error
 language/expressions/async-arrow-function/await-as-param-ident-nested-arrow-parameter-position.js (strict mode)
   Missing parse error
@@ -1013,10 +993,6 @@ language/expressions/async-arrow-function/await-as-param-nested-arrow-parameter-
 language/expressions/async-arrow-function/await-as-param-rest-nested-arrow-parameter-position.js (strict mode)
   Missing parse error
 language/expressions/async-arrow-function/await-as-param-rest-nested-arrow-parameter-position.js (default)
-  Missing parse error
-language/expressions/async-arrow-function/early-errors-arrow-NSPL-with-USD.js (strict mode)
-  Missing parse error
-language/expressions/async-arrow-function/early-errors-arrow-NSPL-with-USD.js (default)
   Missing parse error
 language/expressions/async-arrow-function/early-errors-arrow-await-in-formals-default.js (strict mode)
   Missing parse error
@@ -1036,18 +1012,6 @@ language/expressions/async-arrow-function/escaped-async.js (strict mode)
   Missing parse error
 language/expressions/async-arrow-function/escaped-async.js (default)
   Missing parse error
-language/expressions/async-arrow-function/object-destructuring-param-strict-body.js (strict mode)
-  Missing parse error
-language/expressions/async-arrow-function/object-destructuring-param-strict-body.js (default)
-  Missing parse error
-language/expressions/async-arrow-function/rest-param-strict-body.js (strict mode)
-  Missing parse error
-language/expressions/async-arrow-function/rest-param-strict-body.js (default)
-  Missing parse error
-language/expressions/async-function/early-errors-expression-NSPL-with-USD.js (strict mode)
-  Missing parse error
-language/expressions/async-function/early-errors-expression-NSPL-with-USD.js (default)
-  Missing parse error
 language/expressions/async-function/early-errors-expression-formals-body-duplicate.js (strict mode)
   Missing parse error
 language/expressions/async-function/early-errors-expression-formals-body-duplicate.js (default)
@@ -1055,38 +1019,6 @@ language/expressions/async-function/early-errors-expression-formals-body-duplica
 language/expressions/async-function/escaped-async.js (strict mode)
   Missing parse error
 language/expressions/async-function/escaped-async.js (default)
-  Missing parse error
-language/expressions/async-function/named-array-destructuring-param-strict-body.js (strict mode)
-  Missing parse error
-language/expressions/async-function/named-array-destructuring-param-strict-body.js (default)
-  Missing parse error
-language/expressions/async-function/named-object-destructuring-param-strict-body.js (strict mode)
-  Missing parse error
-language/expressions/async-function/named-object-destructuring-param-strict-body.js (default)
-  Missing parse error
-language/expressions/async-function/named-rest-param-strict-body.js (strict mode)
-  Missing parse error
-language/expressions/async-function/named-rest-param-strict-body.js (default)
-  Missing parse error
-language/expressions/async-function/nameless-array-destructuring-param-strict-body.js (strict mode)
-  Missing parse error
-language/expressions/async-function/nameless-array-destructuring-param-strict-body.js (default)
-  Missing parse error
-language/expressions/async-function/nameless-object-destructuring-param-strict-body.js (strict mode)
-  Missing parse error
-language/expressions/async-function/nameless-object-destructuring-param-strict-body.js (default)
-  Missing parse error
-language/expressions/async-function/nameless-rest-param-strict-body.js (strict mode)
-  Missing parse error
-language/expressions/async-function/nameless-rest-param-strict-body.js (default)
-  Missing parse error
-language/expressions/async-generator/array-destructuring-param-strict-body.js (strict mode)
-  Missing parse error
-language/expressions/async-generator/array-destructuring-param-strict-body.js (default)
-  Missing parse error
-language/expressions/async-generator/early-errors-expression-NSPL-with-USD.js (strict mode)
-  Missing parse error
-language/expressions/async-generator/early-errors-expression-NSPL-with-USD.js (default)
   Missing parse error
 language/expressions/async-generator/early-errors-expression-formals-body-duplicate-const.js (strict mode)
   Missing parse error
@@ -1103,74 +1035,6 @@ language/expressions/async-generator/early-errors-expression-formals-contains-aw
 language/expressions/async-generator/escaped-async.js (strict mode)
   Missing parse error
 language/expressions/async-generator/escaped-async.js (default)
-  Missing parse error
-language/expressions/async-generator/named-array-destructuring-param-strict-body.js (strict mode)
-  Missing parse error
-language/expressions/async-generator/named-array-destructuring-param-strict-body.js (default)
-  Missing parse error
-language/expressions/async-generator/named-object-destructuring-param-strict-body.js (strict mode)
-  Missing parse error
-language/expressions/async-generator/named-object-destructuring-param-strict-body.js (default)
-  Missing parse error
-language/expressions/async-generator/named-rest-param-strict-body.js (strict mode)
-  Missing parse error
-language/expressions/async-generator/named-rest-param-strict-body.js (default)
-  Missing parse error
-language/expressions/async-generator/object-destructuring-param-strict-body.js (strict mode)
-  Missing parse error
-language/expressions/async-generator/object-destructuring-param-strict-body.js (default)
-  Missing parse error
-language/expressions/async-generator/rest-param-strict-body.js (strict mode)
-  Missing parse error
-language/expressions/async-generator/rest-param-strict-body.js (default)
-  Missing parse error
-language/expressions/class/async-gen-method-static/array-destructuring-param-strict-body.js (strict mode)
-  Missing parse error
-language/expressions/class/async-gen-method-static/array-destructuring-param-strict-body.js (default)
-  Missing parse error
-language/expressions/class/async-gen-method-static/object-destructuring-param-strict-body.js (strict mode)
-  Missing parse error
-language/expressions/class/async-gen-method-static/object-destructuring-param-strict-body.js (default)
-  Missing parse error
-language/expressions/class/async-gen-method-static/rest-param-strict-body.js (strict mode)
-  Missing parse error
-language/expressions/class/async-gen-method-static/rest-param-strict-body.js (default)
-  Missing parse error
-language/expressions/class/async-gen-method/array-destructuring-param-strict-body.js (strict mode)
-  Missing parse error
-language/expressions/class/async-gen-method/array-destructuring-param-strict-body.js (default)
-  Missing parse error
-language/expressions/class/async-gen-method/object-destructuring-param-strict-body.js (strict mode)
-  Missing parse error
-language/expressions/class/async-gen-method/object-destructuring-param-strict-body.js (default)
-  Missing parse error
-language/expressions/class/async-gen-method/rest-param-strict-body.js (strict mode)
-  Missing parse error
-language/expressions/class/async-gen-method/rest-param-strict-body.js (default)
-  Missing parse error
-language/expressions/class/async-method-static/array-destructuring-param-strict-body.js (strict mode)
-  Missing parse error
-language/expressions/class/async-method-static/array-destructuring-param-strict-body.js (default)
-  Missing parse error
-language/expressions/class/async-method-static/object-destructuring-param-strict-body.js (strict mode)
-  Missing parse error
-language/expressions/class/async-method-static/object-destructuring-param-strict-body.js (default)
-  Missing parse error
-language/expressions/class/async-method-static/rest-param-strict-body.js (strict mode)
-  Missing parse error
-language/expressions/class/async-method-static/rest-param-strict-body.js (default)
-  Missing parse error
-language/expressions/class/async-method/array-destructuring-param-strict-body.js (strict mode)
-  Missing parse error
-language/expressions/class/async-method/array-destructuring-param-strict-body.js (default)
-  Missing parse error
-language/expressions/class/async-method/object-destructuring-param-strict-body.js (strict mode)
-  Missing parse error
-language/expressions/class/async-method/object-destructuring-param-strict-body.js (default)
-  Missing parse error
-language/expressions/class/async-method/rest-param-strict-body.js (strict mode)
-  Missing parse error
-language/expressions/class/async-method/rest-param-strict-body.js (default)
   Missing parse error
 language/expressions/class/class-name-ident-await-escaped-module.js (strict mode)
   Missing parse error
@@ -1387,54 +1251,6 @@ language/expressions/class/elements/ternary-init-err-contains-arguments.js (defa
 language/expressions/class/elements/typeof-init-err-contains-arguments.js (strict mode)
   Missing parse error
 language/expressions/class/elements/typeof-init-err-contains-arguments.js (default)
-  Missing parse error
-language/expressions/class/gen-method-static/array-destructuring-param-strict-body.js (strict mode)
-  Missing parse error
-language/expressions/class/gen-method-static/array-destructuring-param-strict-body.js (default)
-  Missing parse error
-language/expressions/class/gen-method-static/object-destructuring-param-strict-body.js (strict mode)
-  Missing parse error
-language/expressions/class/gen-method-static/object-destructuring-param-strict-body.js (default)
-  Missing parse error
-language/expressions/class/gen-method-static/rest-param-strict-body.js (strict mode)
-  Missing parse error
-language/expressions/class/gen-method-static/rest-param-strict-body.js (default)
-  Missing parse error
-language/expressions/class/gen-method/array-destructuring-param-strict-body.js (strict mode)
-  Missing parse error
-language/expressions/class/gen-method/array-destructuring-param-strict-body.js (default)
-  Missing parse error
-language/expressions/class/gen-method/object-destructuring-param-strict-body.js (strict mode)
-  Missing parse error
-language/expressions/class/gen-method/object-destructuring-param-strict-body.js (default)
-  Missing parse error
-language/expressions/class/gen-method/rest-param-strict-body.js (strict mode)
-  Missing parse error
-language/expressions/class/gen-method/rest-param-strict-body.js (default)
-  Missing parse error
-language/expressions/class/method-static/array-destructuring-param-strict-body.js (strict mode)
-  Missing parse error
-language/expressions/class/method-static/array-destructuring-param-strict-body.js (default)
-  Missing parse error
-language/expressions/class/method-static/object-destructuring-param-strict-body.js (strict mode)
-  Missing parse error
-language/expressions/class/method-static/object-destructuring-param-strict-body.js (default)
-  Missing parse error
-language/expressions/class/method-static/rest-param-strict-body.js (strict mode)
-  Missing parse error
-language/expressions/class/method-static/rest-param-strict-body.js (default)
-  Missing parse error
-language/expressions/class/method/array-destructuring-param-strict-body.js (strict mode)
-  Missing parse error
-language/expressions/class/method/array-destructuring-param-strict-body.js (default)
-  Missing parse error
-language/expressions/class/method/object-destructuring-param-strict-body.js (strict mode)
-  Missing parse error
-language/expressions/class/method/object-destructuring-param-strict-body.js (default)
-  Missing parse error
-language/expressions/class/method/rest-param-strict-body.js (strict mode)
-  Missing parse error
-language/expressions/class/method/rest-param-strict-body.js (default)
   Missing parse error
 language/expressions/class/static-init-await-reference.js (strict mode)
   Unexpected token `{`, expected an identifier at (18, 9) to (18, 10)
@@ -1682,18 +1498,6 @@ language/expressions/dynamic-import/trailing-comma-reject.js (strict mode)
   Unexpected token `,`, expected the token `)` at (18, 48) to (18, 49)
 language/expressions/dynamic-import/trailing-comma-reject.js (default)
   Unexpected token `,`, expected the token `)` at (18, 48) to (18, 49)
-language/expressions/function/array-destructuring-param-strict-body.js (strict mode)
-  Missing parse error
-language/expressions/function/array-destructuring-param-strict-body.js (default)
-  Missing parse error
-language/expressions/function/object-destructuring-param-strict-body.js (strict mode)
-  Missing parse error
-language/expressions/function/object-destructuring-param-strict-body.js (default)
-  Missing parse error
-language/expressions/function/rest-param-strict-body.js (strict mode)
-  Missing parse error
-language/expressions/function/rest-param-strict-body.js (default)
-  Missing parse error
 language/expressions/function/static-init-await-binding.js (strict mode)
   Unexpected token `{`, expected an identifier at (15, 9) to (15, 10)
 language/expressions/function/static-init-await-binding.js (default)
@@ -1702,22 +1506,6 @@ language/expressions/function/static-init-await-reference.js (strict mode)
   Unexpected token `{`, expected an identifier at (18, 9) to (18, 10)
 language/expressions/function/static-init-await-reference.js (default)
   Unexpected token `{`, expected an identifier at (18, 9) to (18, 10)
-language/expressions/function/use-strict-with-non-simple-param.js (strict mode)
-  Missing parse error
-language/expressions/function/use-strict-with-non-simple-param.js (default)
-  Missing parse error
-language/expressions/generators/array-destructuring-param-strict-body.js (strict mode)
-  Missing parse error
-language/expressions/generators/array-destructuring-param-strict-body.js (default)
-  Missing parse error
-language/expressions/generators/object-destructuring-param-strict-body.js (strict mode)
-  Missing parse error
-language/expressions/generators/object-destructuring-param-strict-body.js (default)
-  Missing parse error
-language/expressions/generators/rest-param-strict-body.js (strict mode)
-  Missing parse error
-language/expressions/generators/rest-param-strict-body.js (default)
-  Missing parse error
 language/expressions/generators/static-init-await-binding.js (strict mode)
   Unexpected token `{`, expected an identifier at (15, 9) to (15, 10)
 language/expressions/generators/static-init-await-binding.js (default)
@@ -1726,10 +1514,6 @@ language/expressions/generators/static-init-await-reference.js (strict mode)
   Unexpected token `{`, expected an identifier at (18, 9) to (18, 10)
 language/expressions/generators/static-init-await-reference.js (default)
   Unexpected token `{`, expected an identifier at (18, 9) to (18, 10)
-language/expressions/generators/use-strict-with-non-simple-param.js (strict mode)
-  Missing parse error
-language/expressions/generators/use-strict-with-non-simple-param.js (default)
-  Missing parse error
 language/expressions/import.meta/import-meta-is-an-ordinary-object.js (strict mode)
   Unexpected token `import` at (37, 8) to (37, 14)
 language/expressions/import.meta/import-meta-is-an-ordinary-object.js (default)
@@ -1820,43 +1604,15 @@ language/expressions/object/literal-property-name-bigint.js (strict mode)
   Unexpected bigint, expected an identifier at (31, 10) to (31, 29)
 language/expressions/object/literal-property-name-bigint.js (default)
   Unexpected bigint, expected an identifier at (31, 10) to (31, 29)
-language/expressions/object/method-definition/async-gen-meth-array-destructuring-param-strict-body.js (strict mode)
-  Missing parse error
-language/expressions/object/method-definition/async-gen-meth-array-destructuring-param-strict-body.js (default)
-  Missing parse error
 language/expressions/object/method-definition/async-gen-meth-escaped-async.js (strict mode)
   Missing parse error
 language/expressions/object/method-definition/async-gen-meth-escaped-async.js (default)
-  Missing parse error
-language/expressions/object/method-definition/async-gen-meth-object-destructuring-param-strict-body.js (strict mode)
-  Missing parse error
-language/expressions/object/method-definition/async-gen-meth-object-destructuring-param-strict-body.js (default)
-  Missing parse error
-language/expressions/object/method-definition/async-gen-meth-rest-param-strict-body.js (strict mode)
-  Missing parse error
-language/expressions/object/method-definition/async-gen-meth-rest-param-strict-body.js (default)
-  Missing parse error
-language/expressions/object/method-definition/async-meth-array-destructuring-param-strict-body.js (strict mode)
-  Missing parse error
-language/expressions/object/method-definition/async-meth-array-destructuring-param-strict-body.js (default)
   Missing parse error
 language/expressions/object/method-definition/async-meth-escaped-async.js (strict mode)
   Missing parse error
 language/expressions/object/method-definition/async-meth-escaped-async.js (default)
   Missing parse error
-language/expressions/object/method-definition/async-meth-object-destructuring-param-strict-body.js (strict mode)
-  Missing parse error
-language/expressions/object/method-definition/async-meth-object-destructuring-param-strict-body.js (default)
-  Missing parse error
-language/expressions/object/method-definition/async-meth-rest-param-strict-body.js (strict mode)
-  Missing parse error
-language/expressions/object/method-definition/async-meth-rest-param-strict-body.js (default)
-  Missing parse error
 language/expressions/object/method-definition/early-errors-object-async-method-duplicate-parameters.js (default)
-  Missing parse error
-language/expressions/object/method-definition/early-errors-object-method-NSPL-with-USD.js (strict mode)
-  Missing parse error
-language/expressions/object/method-definition/early-errors-object-method-NSPL-with-USD.js (default)
   Missing parse error
 language/expressions/object/method-definition/early-errors-object-method-await-in-formals-default.js (strict mode)
   Missing parse error
@@ -1868,18 +1624,6 @@ language/expressions/object/method-definition/early-errors-object-method-await-i
   Missing parse error
 language/expressions/object/method-definition/early-errors-object-method-duplicate-parameters.js (default)
   Missing parse error
-language/expressions/object/method-definition/gen-meth-array-destructuring-param-strict-body.js (strict mode)
-  Missing parse error
-language/expressions/object/method-definition/gen-meth-array-destructuring-param-strict-body.js (default)
-  Missing parse error
-language/expressions/object/method-definition/gen-meth-object-destructuring-param-strict-body.js (strict mode)
-  Missing parse error
-language/expressions/object/method-definition/gen-meth-object-destructuring-param-strict-body.js (default)
-  Missing parse error
-language/expressions/object/method-definition/gen-meth-rest-param-strict-body.js (strict mode)
-  Missing parse error
-language/expressions/object/method-definition/gen-meth-rest-param-strict-body.js (default)
-  Missing parse error
 language/expressions/object/method-definition/generator-param-redecl-const.js (strict mode)
   Missing parse error
 language/expressions/object/method-definition/generator-param-redecl-const.js (default)
@@ -1888,29 +1632,9 @@ language/expressions/object/method-definition/generator-param-redecl-let.js (str
   Missing parse error
 language/expressions/object/method-definition/generator-param-redecl-let.js (default)
   Missing parse error
-language/expressions/object/method-definition/generator-use-strict-with-non-simple-param.js (strict mode)
-  Missing parse error
-language/expressions/object/method-definition/generator-use-strict-with-non-simple-param.js (default)
-  Missing parse error
-language/expressions/object/method-definition/meth-array-destructuring-param-strict-body.js (strict mode)
-  Missing parse error
-language/expressions/object/method-definition/meth-array-destructuring-param-strict-body.js (default)
-  Missing parse error
-language/expressions/object/method-definition/meth-object-destructuring-param-strict-body.js (strict mode)
-  Missing parse error
-language/expressions/object/method-definition/meth-object-destructuring-param-strict-body.js (default)
-  Missing parse error
-language/expressions/object/method-definition/meth-rest-param-strict-body.js (strict mode)
-  Missing parse error
-language/expressions/object/method-definition/meth-rest-param-strict-body.js (default)
-  Missing parse error
 language/expressions/object/method-definition/name-param-redecl.js (strict mode)
   Missing parse error
 language/expressions/object/method-definition/name-param-redecl.js (default)
-  Missing parse error
-language/expressions/object/method-definition/setter-use-strict-with-non-simple-param.js (strict mode)
-  Missing parse error
-language/expressions/object/method-definition/setter-use-strict-with-non-simple-param.js (default)
   Missing parse error
 language/expressions/object/method-definition/static-init-await-binding-accessor.js (strict mode)
   Unexpected token `{`, expected an identifier at (15, 9) to (15, 10)
@@ -1936,10 +1660,6 @@ language/expressions/object/method-definition/static-init-await-reference-normal
   Unexpected token `{`, expected an identifier at (18, 9) to (18, 10)
 language/expressions/object/method-definition/static-init-await-reference-normal.js (default)
   Unexpected token `{`, expected an identifier at (18, 9) to (18, 10)
-language/expressions/object/method-definition/use-strict-with-non-simple-param.js (strict mode)
-  Missing parse error
-language/expressions/object/method-definition/use-strict-with-non-simple-param.js (default)
-  Missing parse error
 language/expressions/optional-chaining/call-expression.js (strict mode)
   An optional chain may not be used in a `new` expression. at (31, 39) to (31, 41)
 language/expressions/optional-chaining/call-expression.js (default)
@@ -3406,14 +3126,6 @@ language/reserved-words/await-module.js (strict mode)
   Missing parse error
 language/reserved-words/await-module.js (default)
   Missing parse error
-language/statements/async-function/array-destructuring-param-strict-body.js (strict mode)
-  Missing parse error
-language/statements/async-function/array-destructuring-param-strict-body.js (default)
-  Missing parse error
-language/statements/async-function/early-errors-declaration-NSPL-with-USD.js (strict mode)
-  Missing parse error
-language/statements/async-function/early-errors-declaration-NSPL-with-USD.js (default)
-  Missing parse error
 language/statements/async-function/early-errors-declaration-formals-body-duplicate.js (strict mode)
   Missing parse error
 language/statements/async-function/early-errors-declaration-formals-body-duplicate.js (default)
@@ -3422,29 +3134,9 @@ language/statements/async-function/escaped-async.js (strict mode)
   Missing parse error
 language/statements/async-function/escaped-async.js (default)
   Missing parse error
-language/statements/async-function/object-destructuring-param-strict-body.js (strict mode)
-  Missing parse error
-language/statements/async-function/object-destructuring-param-strict-body.js (default)
-  Missing parse error
-language/statements/async-function/rest-param-strict-body.js (strict mode)
-  Missing parse error
-language/statements/async-function/rest-param-strict-body.js (default)
-  Missing parse error
-language/statements/async-generator/array-destructuring-param-strict-body.js (strict mode)
-  Missing parse error
-language/statements/async-generator/array-destructuring-param-strict-body.js (default)
-  Missing parse error
 language/statements/async-generator/escaped-async.js (strict mode)
   Missing parse error
 language/statements/async-generator/escaped-async.js (default)
-  Missing parse error
-language/statements/async-generator/object-destructuring-param-strict-body.js (strict mode)
-  Missing parse error
-language/statements/async-generator/object-destructuring-param-strict-body.js (default)
-  Missing parse error
-language/statements/async-generator/rest-param-strict-body.js (strict mode)
-  Missing parse error
-language/statements/async-generator/rest-param-strict-body.js (default)
   Missing parse error
 language/statements/block/labeled-continue.js (strict mode)
   Missing parse error
@@ -3454,57 +3146,9 @@ language/statements/class/async-gen-meth-escaped-async.js (strict mode)
   Missing parse error
 language/statements/class/async-gen-meth-escaped-async.js (default)
   Missing parse error
-language/statements/class/async-gen-method-static/array-destructuring-param-strict-body.js (strict mode)
-  Missing parse error
-language/statements/class/async-gen-method-static/array-destructuring-param-strict-body.js (default)
-  Missing parse error
-language/statements/class/async-gen-method-static/object-destructuring-param-strict-body.js (strict mode)
-  Missing parse error
-language/statements/class/async-gen-method-static/object-destructuring-param-strict-body.js (default)
-  Missing parse error
-language/statements/class/async-gen-method-static/rest-param-strict-body.js (strict mode)
-  Missing parse error
-language/statements/class/async-gen-method-static/rest-param-strict-body.js (default)
-  Missing parse error
-language/statements/class/async-gen-method/array-destructuring-param-strict-body.js (strict mode)
-  Missing parse error
-language/statements/class/async-gen-method/array-destructuring-param-strict-body.js (default)
-  Missing parse error
-language/statements/class/async-gen-method/object-destructuring-param-strict-body.js (strict mode)
-  Missing parse error
-language/statements/class/async-gen-method/object-destructuring-param-strict-body.js (default)
-  Missing parse error
-language/statements/class/async-gen-method/rest-param-strict-body.js (strict mode)
-  Missing parse error
-language/statements/class/async-gen-method/rest-param-strict-body.js (default)
-  Missing parse error
 language/statements/class/async-meth-escaped-async.js (strict mode)
   Missing parse error
 language/statements/class/async-meth-escaped-async.js (default)
-  Missing parse error
-language/statements/class/async-method-static/array-destructuring-param-strict-body.js (strict mode)
-  Missing parse error
-language/statements/class/async-method-static/array-destructuring-param-strict-body.js (default)
-  Missing parse error
-language/statements/class/async-method-static/object-destructuring-param-strict-body.js (strict mode)
-  Missing parse error
-language/statements/class/async-method-static/object-destructuring-param-strict-body.js (default)
-  Missing parse error
-language/statements/class/async-method-static/rest-param-strict-body.js (strict mode)
-  Missing parse error
-language/statements/class/async-method-static/rest-param-strict-body.js (default)
-  Missing parse error
-language/statements/class/async-method/array-destructuring-param-strict-body.js (strict mode)
-  Missing parse error
-language/statements/class/async-method/array-destructuring-param-strict-body.js (default)
-  Missing parse error
-language/statements/class/async-method/object-destructuring-param-strict-body.js (strict mode)
-  Missing parse error
-language/statements/class/async-method/object-destructuring-param-strict-body.js (default)
-  Missing parse error
-language/statements/class/async-method/rest-param-strict-body.js (strict mode)
-  Missing parse error
-language/statements/class/async-method/rest-param-strict-body.js (default)
   Missing parse error
 language/statements/class/class-name-ident-await-escaped-module.js (strict mode)
   Missing parse error
@@ -3530,10 +3174,6 @@ language/statements/class/cpn-class-decl-fields-methods-computed-property-name-f
   Unexpected number, expected the token `]` at (40, 9) to (40, 10)
 language/statements/class/cpn-class-decl-fields-methods-computed-property-name-from-await-expression.js (default)
   Unexpected number, expected the token `]` at (40, 9) to (40, 10)
-language/statements/class/definition/early-errors-class-method-NSPL-with-USD.js (strict mode)
-  Missing parse error
-language/statements/class/definition/early-errors-class-method-NSPL-with-USD.js (default)
-  Missing parse error
 language/statements/class/definition/early-errors-class-method-await-in-formals-default.js (strict mode)
   Missing parse error
 language/statements/class/definition/early-errors-class-method-await-in-formals-default.js (default)
@@ -3734,54 +3374,6 @@ language/statements/class/elements/typeof-init-err-contains-arguments.js (strict
   Missing parse error
 language/statements/class/elements/typeof-init-err-contains-arguments.js (default)
   Missing parse error
-language/statements/class/gen-method-static/array-destructuring-param-strict-body.js (strict mode)
-  Missing parse error
-language/statements/class/gen-method-static/array-destructuring-param-strict-body.js (default)
-  Missing parse error
-language/statements/class/gen-method-static/object-destructuring-param-strict-body.js (strict mode)
-  Missing parse error
-language/statements/class/gen-method-static/object-destructuring-param-strict-body.js (default)
-  Missing parse error
-language/statements/class/gen-method-static/rest-param-strict-body.js (strict mode)
-  Missing parse error
-language/statements/class/gen-method-static/rest-param-strict-body.js (default)
-  Missing parse error
-language/statements/class/gen-method/array-destructuring-param-strict-body.js (strict mode)
-  Missing parse error
-language/statements/class/gen-method/array-destructuring-param-strict-body.js (default)
-  Missing parse error
-language/statements/class/gen-method/object-destructuring-param-strict-body.js (strict mode)
-  Missing parse error
-language/statements/class/gen-method/object-destructuring-param-strict-body.js (default)
-  Missing parse error
-language/statements/class/gen-method/rest-param-strict-body.js (strict mode)
-  Missing parse error
-language/statements/class/gen-method/rest-param-strict-body.js (default)
-  Missing parse error
-language/statements/class/method-static/array-destructuring-param-strict-body.js (strict mode)
-  Missing parse error
-language/statements/class/method-static/array-destructuring-param-strict-body.js (default)
-  Missing parse error
-language/statements/class/method-static/object-destructuring-param-strict-body.js (strict mode)
-  Missing parse error
-language/statements/class/method-static/object-destructuring-param-strict-body.js (default)
-  Missing parse error
-language/statements/class/method-static/rest-param-strict-body.js (strict mode)
-  Missing parse error
-language/statements/class/method-static/rest-param-strict-body.js (default)
-  Missing parse error
-language/statements/class/method/array-destructuring-param-strict-body.js (strict mode)
-  Missing parse error
-language/statements/class/method/array-destructuring-param-strict-body.js (default)
-  Missing parse error
-language/statements/class/method/object-destructuring-param-strict-body.js (strict mode)
-  Missing parse error
-language/statements/class/method/object-destructuring-param-strict-body.js (default)
-  Missing parse error
-language/statements/class/method/rest-param-strict-body.js (strict mode)
-  Missing parse error
-language/statements/class/method/rest-param-strict-body.js (default)
-  Missing parse error
 language/statements/class/private-non-static-getter-static-setter-early-error.js (strict mode)
   Missing parse error
 language/statements/class/private-non-static-getter-static-setter-early-error.js (default)
@@ -3934,42 +3526,10 @@ language/statements/for/head-let-bound-names-in-stmt.js (default)
   Missing parse error
 language/statements/for/head-lhs-let.js (default)
   Unexpected token `=`, expected an identifier at (25, 4) to (25, 5)
-language/statements/function/array-destructuring-param-strict-body.js (strict mode)
-  Missing parse error
-language/statements/function/array-destructuring-param-strict-body.js (default)
-  Missing parse error
-language/statements/function/object-destructuring-param-strict-body.js (strict mode)
-  Missing parse error
-language/statements/function/object-destructuring-param-strict-body.js (default)
-  Missing parse error
-language/statements/function/rest-param-strict-body.js (strict mode)
-  Missing parse error
-language/statements/function/rest-param-strict-body.js (default)
-  Missing parse error
 language/statements/function/static-init-await-binding-valid.js (strict mode)
   Unexpected token `{`, expected an identifier at (15, 9) to (15, 10)
 language/statements/function/static-init-await-binding-valid.js (default)
   Unexpected token `{`, expected an identifier at (15, 9) to (15, 10)
-language/statements/function/use-strict-with-non-simple-param.js (strict mode)
-  Missing parse error
-language/statements/function/use-strict-with-non-simple-param.js (default)
-  Missing parse error
-language/statements/generators/array-destructuring-param-strict-body.js (strict mode)
-  Missing parse error
-language/statements/generators/array-destructuring-param-strict-body.js (default)
-  Missing parse error
-language/statements/generators/object-destructuring-param-strict-body.js (strict mode)
-  Missing parse error
-language/statements/generators/object-destructuring-param-strict-body.js (default)
-  Missing parse error
-language/statements/generators/rest-param-strict-body.js (strict mode)
-  Missing parse error
-language/statements/generators/rest-param-strict-body.js (default)
-  Missing parse error
-language/statements/generators/use-strict-with-non-simple-param.js (strict mode)
-  Missing parse error
-language/statements/generators/use-strict-with-non-simple-param.js (default)
-  Missing parse error
 language/statements/labeled/continue.js (strict mode)
   Missing parse error
 language/statements/labeled/continue.js (default)
@@ -4268,8 +3828,8 @@ language/statements/variable/static-init-await-binding-valid.js (default)
   Unexpected token `{`, expected an identifier at (15, 9) to (15, 10)
 
 === Summary ===
-Passed:  84397 (97.53%)
-Failed:  2132 (2.46%)
+Passed:  84617 (97.79%)
+Failed:  1912 (2.21%)
 Errored: 2 (0.00%)
 
 Features:
@@ -4278,8 +3838,8 @@ Features:
   Symbol: 2593/2603 (99.62%)
   arbitrary-module-namespace-names: 20/32 (62.50%)
   arrow-function: 1477/1496 (98.73%)
-  async-functions: 1184/1292 (91.64%)
-  async-iteration: 9552/9728 (98.19%)
+  async-functions: 1202/1292 (93.03%)
+  async-iteration: 9608/9728 (98.77%)
   class: 8981/9241 (97.19%)
   class-fields-private: 1945/2001 (97.20%)
   class-fields-private-in: 16/38 (42.11%)
@@ -4294,7 +3854,7 @@ Features:
   destructuring-binding: 13135/13137 (99.98%)
   dynamic-import: 997/1128 (88.39%)
   export-star-as-namespace-from-module: 32/38 (84.21%)
-  generators: 7900/8030 (98.38%)
+  generators: 7948/8030 (98.98%)
   globalThis: 127/145 (87.59%)
   import-assertions: 12/169 (7.10%)
   import.meta: 36/46 (78.26%)
@@ -4306,5 +3866,4 @@ Features:
   optional-chaining: 106/112 (94.64%)
   regexp-named-groups: 92/200 (46.00%)
   regexp-unicode-property-escapes: 828/1112 (74.46%)
-  rest-parameters: 0/192 (0.00%)
   top-level-await: 64/506 (12.65%)

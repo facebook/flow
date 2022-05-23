@@ -184,6 +184,16 @@ let private_identifier env =
     error_at env (loc, Parse_error.WhitespaceInPrivateName);
   (loc, { PrivateName.name; comments })
 
+(** The operation IsSimpleParamterList
+    https://tc39.es/ecma262/#sec-static-semantics-issimpleparameterlist *)
+let is_simple_parameter_list =
+  let is_simple_param = function
+    | (_, { Flow_ast.Function.Param.argument = (_, Pattern.Identifier _); default = None }) -> true
+    | _ -> false
+  in
+  fun (_, { Flow_ast.Function.Params.params; rest; comments = _; this_ = _ }) ->
+    rest = None && List.for_all is_simple_param params
+
 (**
  * The abstract operation IsLabelledFunction
  *

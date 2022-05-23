@@ -186,8 +186,9 @@ module Object
                 (tparams, params, return))
               env
           in
+          let simple_params = is_simple_parameter_list params in
           let (body, contains_use_strict) =
-            Declaration.function_body env ~async ~generator ~expression:false
+            Declaration.function_body env ~async ~generator ~expression:false ~simple_params
           in
           Declaration.strict_post_check env ~contains_use_strict None params;
           {
@@ -281,8 +282,9 @@ module Object
                   (tparams, params, return))
                 env
             in
+            let simple_params = is_simple_parameter_list params in
             let (body, contains_use_strict) =
-              Declaration.function_body env ~async ~generator ~expression:false
+              Declaration.function_body env ~async ~generator ~expression:false ~simple_params
             in
             Declaration.strict_post_check env ~contains_use_strict None params;
             {
@@ -829,8 +831,9 @@ module Object
                     (tparams, params, return))
                   env
               in
+              let simple_params = is_simple_parameter_list params in
               let (body, contains_use_strict) =
-                Declaration.function_body env ~async ~generator ~expression:false
+                Declaration.function_body env ~async ~generator ~expression:false ~simple_params
               in
               Declaration.strict_post_check env ~contains_use_strict None params;
               {
