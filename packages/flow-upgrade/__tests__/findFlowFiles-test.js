@@ -12,7 +12,7 @@ jest.mock('fs');
 jest.mock('fs/promises');
 
 import {vol} from 'memfs';
-import findFlowFiles from '../src/findFlowFiles';
+import {findFlowFiles} from '../src/findFlowFiles';
 
 const FLOW_DOCBLOCK = `\
 /**

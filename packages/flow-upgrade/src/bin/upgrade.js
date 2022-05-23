@@ -9,16 +9,22 @@
  * @flow
  */
 
-import type {CliOptions} from './Types';
+import type {CliOptions} from '../Types';
 
 import chalk from 'chalk';
 import fs from 'fs-extra';
 import yargsImport from 'yargs/yargs';
-import upgrade from './upgrade';
+import upgrade from '../upgrade';
 
-export default async function main(args: $ReadOnlyArray<string>) {
+async function main(args: $ReadOnlyArray<string>) {
   const yargs = yargsImport(args)
     .usage('Usage: flow-upgrade <current version> <target version>')
+    .positional('current version', {
+      describe: 'Your current flow version',
+    })
+    .positional('target version', {
+      describe: 'The flow version you are upgrading to',
+    })
     .options({
       all: {
         type: 'boolean',
@@ -27,6 +33,7 @@ export default async function main(args: $ReadOnlyArray<string>) {
       prettierrc: {
         type: 'string',
         describe: 'The path to a `.prettierrc` file for formatting the output.',
+        requiresArg: true,
       },
       silent: {
         type: 'boolean',
@@ -69,6 +76,4 @@ export default async function main(args: $ReadOnlyArray<string>) {
   }
 }
 
-if (require.main === module) {
-  void main(process.argv.slice(2));
-}
+void main(process.argv.slice(2));

@@ -8,7 +8,7 @@
  * @flow
  */
 
-import type {CliOptions, Codemod} from '../Types';
+import type {CliOptions, Codemod} from './Types';
 
 import fs from 'fs-extra';
 import {transform} from 'hermes-transform';

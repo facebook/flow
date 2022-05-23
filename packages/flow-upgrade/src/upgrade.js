@@ -15,8 +15,8 @@ import chalk from 'chalk';
 import ora from 'ora';
 import Confirm from 'prompt-confirm';
 import Styled from './Styled';
-import findFlowFiles from './findFlowFiles';
-import runCodemods from './codemods/runCodemods';
+import {findFlowFilesWithSpinner} from './findFlowFiles';
+import runCodemods from './runCodemods';
 import {VERSION_UPGRADES} from './upgrades';
 
 /**
@@ -93,32 +93,10 @@ directories, in __flowtests__ directories, or files ending in -flowtest.js.
 `.slice(1);
     log(message);
   }
-  // Create a new spinner.
-  const spinner = ora({
-    text: chalk.italic.cyan('Finding all the Flow files to be upgraded...'),
-    color: 'cyan',
-    isSilent: options.silent,
-  });
-  // Start the spinner.
-  spinner.start();
+
   // Find all of the Flow files in the directory we are upgrading.
-  const filePaths = await (() => {
-    try {
-      return findFlowFiles({
-        rootDirectory: directory,
-        includeNonAtFlow: options.all,
-      });
-    } catch (error) {
-      // Stop the spinner if we get an error.
-      spinner.stop();
-      throw error;
-    }
-  })();
-  // Stop the spinner.
-  spinner.stop();
-  // Log the number of Flow files that we found.
-  log(`Found ${chalk.bold.cyan(filePaths.length)} Flow files.`);
-  log();
+  const filePaths = await findFlowFilesWithSpinner(directory, options);
+
   // Make sure the user knows that they should review their information before
   // proceeding.
   log(

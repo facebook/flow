@@ -12,6 +12,8 @@ import type {CliOptions} from './Types';
 
 import path from 'path';
 import fs from 'fs-extra';
+import ora from 'ora';
+import chalk from 'chalk';
 
 /**
  * How many bytes we should look at for the Flow pragma.
@@ -22,7 +24,7 @@ const PRAGMA_BYTES = 5000;
  * Finds all of the Flow files in the provided directory as efficiently as
  * possible.
  */
-export default async function findFlowFiles({
+export async function findFlowFiles({
   includeNonAtFlow,
   rootDirectory,
 }: {
@@ -120,4 +122,44 @@ export default async function findFlowFiles({
     // Close the file.
     await fs.close(file);
   }
+}
+
+export async function findFlowFilesWithSpinner(
+  rootDirectory: string,
+  options: CliOptions,
+): Promise<$ReadOnlyArray<string>> {
+  // Create a new spinner.
+  const spinner = ora({
+    text: chalk.italic.cyan('Finding all the Flow files to be upgraded...'),
+    color: 'cyan',
+    isSilent: options.silent,
+  });
+
+  // Start the spinner.
+  spinner.start();
+
+  // Find all of the Flow files in the directory we are upgrading.
+  const filePaths = await (() => {
+    try {
+      return findFlowFiles({
+        rootDirectory,
+        includeNonAtFlow: options.all,
+      });
+    } catch (error) {
+      // Stop the spinner if we get an error.
+      spinner.stop();
+      throw error;
+    }
+  })();
+
+  // Stop the spinner.
+  spinner.stop();
+
+  // Log the number of Flow files that we found.
+  if (!options.silent) {
+    console.log(`Found ${chalk.bold.cyan(filePaths.length)} Flow files.`);
+    console.log();
+  }
+
+  return filePaths;
 }

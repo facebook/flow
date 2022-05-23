@@ -9,7 +9,10 @@
   "files": [
     "dist"
   ],
-  "bin": "./dist/index.js",
+  "bin": {
+    "flow-upgrade": "./dist/bin/index.js",
+    "flow-codemod": "./dist/bin/runSpecificCodemod.js"
+  },
   "scripts": {
     "build": "rm -rf dist && babel src --out-dir dist --ignore '**/__tests__'",
     "test": "jest --watch",
