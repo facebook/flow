@@ -412,6 +412,36 @@ end = struct
       )
       haystack
 
+  let test_failure ~expected ~actual ~diff =
+    let open Hh_json_helpers in
+    let expected = Some expected in
+    let actual = Some actual in
+    let expected_message =
+      match Jget.string_opt diff "message" with
+      | Some message -> message
+      | None -> Jget.string_exn expected "message"
+    in
+    let expected_message =
+      if Str.string_match expected_error_regex expected_message 0 then
+        Str.matched_group 1 expected_message
+      else
+        expected_message
+    in
+    match Jget.array_opt actual "errors" with
+    | Some []
+    | None ->
+      [("Expected errors but Flow didn't error", None)]
+    | Some (first_error :: _) ->
+      let actual_message = Jget.string_exn first_error "message" in
+      let errs = [] in
+      (* TODO: also check line and column *)
+      if not (String.equal expected_message actual_message) then
+        let err = Printf.sprintf "Expected message %S, got %S" expected_message actual_message in
+        let fix = Some { path = ["message"]; json = JSON_String actual_message } in
+        (err, fix) :: errs
+      else
+        errs
+
   let rec apply_diff diff expected =
     let open Ast.Expression in
     match diff with
@@ -588,7 +618,28 @@ end = struct
               | (_, None) -> Case_error errors
             end)
         | Some (Tokens _) -> (* TODO *) Case_skipped None
-        | Some (Failure _) -> (* TODO *) Case_skipped None
+        | Some (Failure contents) ->
+          let json =
+            try Ok (Hh_json.json_of_string contents) with
+            | Syntax_error err -> Error err
+          in
+          let diff =
+            match diff with
+            | Some str ->
+              (try Ok (Some (Hh_json.json_of_string str)) with
+              | Syntax_error err -> Error err)
+            | None -> Ok None
+          in
+          (match (json, diff) with
+          | (Ok expected, Ok diff) ->
+            let errors = test_failure ~expected ~actual ~diff in
+            (match (errors, todo) with
+            | ([], None) -> Case_ok
+            | ([], Some _) -> Case_error [("Skipped test passes", None)]
+            | (_, Some reason) -> Case_skipped (Some reason)
+            | (_, None) -> Case_error errors)
+          | (Error err, _) -> Case_error [(err, None)]
+          | (_, Error err) -> Case_error [("Invalid .diff: " ^ err, None)])
         | None -> Case_error [("Nothing to do", None)]
       end
 
