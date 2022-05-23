@@ -3959,7 +3959,8 @@ struct
             )
           in
           GetPropTKit.read_obj_prop cx trace ~use_op o propref reason_obj reason_op lookup_info tout
-        | (AnyT _, GetPropT (_, reason_op, _, _, tout)) ->
+        | (AnyT _, GetPropT (_, reason_op, id, _, tout)) ->
+          Base.Option.iter id ~f:(Context.test_prop_hit cx);
           rec_flow_t cx trace ~use_op:unknown_use (AnyT.untyped reason_op, OpenT tout)
         (********************************)
         (* ... and their methods called *)
