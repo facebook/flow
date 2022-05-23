@@ -49,6 +49,7 @@ let spec =
              (enum [("js", File_js); ("json", File_json)])
              ~doc:"Type of input file (js or json)"
         |> flag "--strict" no_arg ~doc:"Parse in strict mode"
+        |> flag "--no-enums" no_arg ~doc:"Disable enum support"
         |> flag
              "--include-comments"
              (required
@@ -94,6 +95,7 @@ let main
     pattern
     file_type_opt
     use_strict
+    no_enums
     include_comments
     include_locs
     offset_style
@@ -150,7 +152,7 @@ let main
           Some
             Parser_env.
               {
-                enums = true;
+                enums = not no_enums;
                 esproposal_decorators = true;
                 esproposal_export_star_as = true;
                 types = true;
