@@ -9,27 +9,66 @@
  * @flow
  */
 
-const chalk = require('chalk');
-const upgrade = require('./upgrade');
+import type {CliOptions} from './Types';
 
-const yargs = require('yargs/yargs')(process.argv.slice(2))
-  .usage('Usage: flow-upgrade <current version> <target version>')
-  .boolean(['all'])
-  .describe('all', 'Include all files, not just those with the @flow pragma')
-  .demandCommand(2)
-  .help('help').argv;
+import chalk from 'chalk';
+import fs from 'fs-extra';
+import yargsImport from 'yargs/yargs';
+import upgrade from './upgrade';
 
-const options = {
-  all: !!yargs.all,
-};
+export default async function main(args: $ReadOnlyArray<string>) {
+  const yargs = yargsImport(args)
+    .usage('Usage: flow-upgrade <current version> <target version>')
+    .options({
+      all: {
+        type: 'boolean',
+        describe: 'Include all files, not just those with the @flow pragma',
+      },
+      prettierrc: {
+        type: 'string',
+        describe: 'The path to a `.prettierrc` file for formatting the output.',
+      },
+      silent: {
+        type: 'boolean',
+        describe: 'Disable console log output.',
+      },
+      yes: {
+        type: 'boolean',
+        describe: 'Answer yes to all prompts.',
+      },
+    })
+    .demandCommand(2)
+    .help('help').argv;
 
-// For now we are asking for the version numbers out of convenience. When we add
-// upgrades for future versions we will need to check `.flowconfig` or
-// `flow-bin` for the current version and allow the new version to be
-// configurable. (But still default to the latest version.)
-const fromVersion = yargs._[0];
-const toVersion = yargs._[1];
+  const prettierOptions = await (() => {
+    if (!yargs.prettierrc) {
+      return {};
+    }
 
-upgrade(process.cwd(), fromVersion, toVersion, options).catch(error => {
-  console.error(chalk.red(error ? error.stack || error : error));
-});
+    return fs.readJSON(yargs.prettierrc);
+  })();
+
+  const options: CliOptions = {
+    all: !!yargs.all,
+    prettierOptions,
+    silent: !!yargs.silent,
+    yes: !!yargs.yes,
+  };
+
+  // For now we are asking for the version numbers out of convenience. When we add
+  // upgrades for future versions we will need to check `.flowconfig` or
+  // `flow-bin` for the current version and allow the new version to be
+  // configurable. (But still default to the latest version.)
+  const fromVersion = yargs._[0];
+  const toVersion = yargs._[1];
+
+  try {
+    await upgrade(process.cwd(), fromVersion, toVersion, options);
+  } catch (error) {
+    console.error(chalk.red(error ? error.stack || error : error));
+  }
+}
+
+if (require.main === module) {
+  void main(process.argv.slice(2));
+}

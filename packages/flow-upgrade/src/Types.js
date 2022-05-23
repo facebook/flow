@@ -8,11 +8,34 @@
  * @flow
  */
 
-export type Upgrade = CodemodUpgrade;
+import type {TransformVisitor} from 'hermes-transform';
 
-export type CodemodUpgrade = {|
-  +kind: 'codemod',
-  +title: string,
-  +description: string,
-  +transformPath: string,
-|};
+export type CliOptions = $ReadOnly<{
+  all: boolean,
+  prettierOptions: $ReadOnly<{...}>,
+  silent: boolean,
+  yes: boolean,
+}>;
+
+export type Codemod = $ReadOnly<{
+  kind: 'codemod',
+  title: string,
+  description: string,
+  transform: TransformVisitor,
+}>;
+
+export function codemod(config: {
+  title: string,
+  description: string,
+  transform: TransformVisitor,
+}): Codemod {
+  return {
+    ...config,
+    kind: 'codemod',
+  };
+}
+
+export type Upgrade = $ReadOnly<{
+  version: string,
+  upgrades: $ReadOnlyArray<Codemod>,
+}>;

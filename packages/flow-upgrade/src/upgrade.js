@@ -8,34 +8,31 @@
  * @flow
  */
 
-const semver = require('semver');
-const chalk = require('chalk');
-const ora = require('ora');
-const Confirm = require('prompt-confirm');
-const Styled = require('./Styled');
-const findFlowFiles = require('./findFlowFiles');
+import type {CliOptions, Upgrade} from './Types';
 
-import type {Upgrade} from './Types';
-
-/**
- * Holds all of the upgrades that need to be run to upgrade to each version from
- * the last version of Flow.
- */
-const VERSION_UPGRADES: Array<{|
-  version: string,
-  upgrades: Array<Upgrade>,
-|}> = [];
+import semver from 'semver';
+import chalk from 'chalk';
+import ora from 'ora';
+import Confirm from 'prompt-confirm';
+import Styled from './Styled';
+import findFlowFiles from './findFlowFiles';
+import runCodemods from './codemods/runCodemods';
+import {VERSION_UPGRADES} from './upgrades';
 
 /**
  * Decides all of the upgrades that will need to be run when moving from one
  * version to another and runs them asynchronously.
  */
-module.exports = async function upgrade(
+export default async function upgrade(
   directory: string,
   currentVersion: string,
   nextVersion: string,
-  options: {+all: boolean},
+  options: CliOptions,
 ): Promise<void> {
+  const log: (...messages: $ReadOnlyArray<string>) => void = options.silent
+    ? () => {}
+    : (...messages) => console.log(...messages);
+
   const allUpgrades = [];
   // Collect all of the upgrades we will need to run.
   for (let i = 0; i < VERSION_UPGRADES.length; i++) {
@@ -51,9 +48,9 @@ module.exports = async function upgrade(
       upgrades.forEach(upgrade => allUpgrades.push(upgrade));
     }
   }
-  console.log();
-  console.log(Styled.sectionHeader('flow-upgrade'));
-  console.log();
+  log();
+  log(Styled.sectionHeader('flow-upgrade'));
+  log();
   {
     const titleStyled = chalk.bold('flow-upgrade');
     // Log the initial intro message for our user.
@@ -94,49 +91,56 @@ Today we will be upgrading all JavaScript files using Flow in: ${chalk.bold.mage
 Excluding any JavaScript files in node_modules directories, in flow-typed
 directories, in __flowtests__ directories, or files ending in -flowtest.js.
 `.slice(1);
-    console.log(message);
+    log(message);
   }
   // Create a new spinner.
   const spinner = ora({
     text: chalk.italic.cyan('Finding all the Flow files to be upgraded...'),
     color: 'cyan',
+    isSilent: options.silent,
   });
   // Start the spinner.
   spinner.start();
   // Find all of the Flow files in the directory we are upgrading.
-  let filePaths;
-  try {
-    filePaths = await findFlowFiles(directory, options);
-  } catch (error) {
-    // Stop the spinner if we get an error.
-    spinner.stop();
-    throw error;
-  }
+  const filePaths = await (() => {
+    try {
+      return findFlowFiles({
+        rootDirectory: directory,
+        includeNonAtFlow: options.all,
+      });
+    } catch (error) {
+      // Stop the spinner if we get an error.
+      spinner.stop();
+      throw error;
+    }
+  })();
   // Stop the spinner.
   spinner.stop();
   // Log the number of Flow files that we found.
-  console.log(`Found ${chalk.bold.cyan(filePaths.length)} Flow files.`);
-  console.log();
+  log(`Found ${chalk.bold.cyan(filePaths.length)} Flow files.`);
+  log();
   // Make sure the user knows that they should review their information before
   // proceeding.
-  console.log(
+  log(
     chalk.bold.red(
       'Please review this information to make sure that it is correct before proceeding.',
     ),
   );
-  console.log();
+  log();
   // Ask the user for confirmation.
-  const answer = await new Confirm('Are you ready to begin the upgrade?').run();
+  const answer =
+    options.yes ||
+    (await new Confirm('Are you ready to begin the upgrade?').run());
   // If the user did not let us continue then log a new line and do not
   // continue.
   if (!answer) {
-    console.log();
+    log();
     return;
   }
   // Run through all of our upgrades.
   while (allUpgrades.length) {
     // Put some space between us and the last upgrade.
-    console.log();
+    log();
     // Get the next upgrade.
     const upgrade = allUpgrades.shift();
     switch (upgrade.kind) {
@@ -149,39 +153,35 @@ directories, in __flowtests__ directories, or files ending in -flowtest.js.
           codemods.push(allUpgrades.shift());
         }
         // Tell the user what we are about to do.
-        console.log(Styled.sectionHeader('Codemods'));
-        console.log();
-        console.log('We are now going to run the following codemods:');
-        console.log();
-        console.log(
+        log(Styled.sectionHeader('Codemods'));
+        log();
+        log('We are now going to run the following codemods:');
+        log();
+        log(
           codemods
             .map((u, i) => Styled.upgradeTitle(u.title, i + 1))
             .join('\n'),
         );
-        console.log();
-        console.log(
+        log();
+        log(
           'Following is a short description of each codemod listed above so ' +
             'that you know\nhow your code is being upgraded.',
         );
-        console.log();
-        console.log(Styled.divider());
-        console.log();
+        log();
+        log(Styled.divider());
+        log();
         codemods.forEach((u, i) => {
-          console.log(Styled.upgradeTitle(u.title, i + 1));
-          console.log();
-          console.log(u.description);
-          console.log();
-          console.log(Styled.divider());
-          console.log();
+          log(Styled.upgradeTitle(u.title, i + 1));
+          log();
+          log(u.description);
+          log();
+          log(Styled.divider());
+          log();
         });
-        console.log(`Running ${chalk.bold.cyan(codemods.length)} codemods...`);
-        console.log();
+        log(`Running ${chalk.bold.cyan(codemods.length)} codemods...`);
+        log();
         // Run all of our codemods.
-        const runCodemods = require('./codemods/runCodemods');
-        await runCodemods(
-          codemods.map(({transformPath}) => transformPath),
-          filePaths,
-        );
+        await runCodemods(codemods, filePaths, options);
         break;
       }
       // Throw an error for all other kinds of upgrades.
@@ -189,4 +189,4 @@ directories, in __flowtests__ directories, or files ending in -flowtest.js.
         throw new Error(`Unexpected upgrade kind: '${upgrade.kind}'`);
     }
   }
-};
+}
