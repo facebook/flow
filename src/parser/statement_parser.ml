@@ -417,21 +417,19 @@ module Statement
             (Some (For_expression expr), [])
         in
         match Peek.token env with
-        (* If `async` is true, this must be a for-await-of loop. *)
-        | t when t = T_OF || async ->
+        | T_OF ->
+          (* This is a for of loop *)
           let left =
-            let open Statement in
             match init with
             | Some (For_declaration decl) ->
               assert_can_be_forin_or_forof env Parse_error.InvalidLHSInForOf decl;
-              ForOf.LeftDeclaration decl
+              Statement.ForOf.LeftDeclaration decl
             | Some (For_expression expr) ->
               (* #sec-for-in-and-for-of-statements-static-semantics-early-errors *)
               let patt = Pattern_cover.as_pattern ~err:Parse_error.InvalidLHSInForOf env expr in
-              ForOf.LeftPattern patt
+              Statement.ForOf.LeftPattern patt
             | None -> assert false
           in
-          (* This is a for of loop *)
           Expect.token env T_OF;
           let right = Parse.assignment env in
           Expect.token env T_RPAREN;
@@ -439,6 +437,7 @@ module Statement
           assert_not_labelled_function env body;
           Statement.ForOf { Statement.ForOf.left; right; body; await = async; comments }
         | T_IN ->
+          (* This is a for in loop *)
           let left =
             match init with
             | Some (For_declaration decl) ->
@@ -450,8 +449,12 @@ module Statement
               Statement.ForIn.LeftPattern patt
             | None -> assert false
           in
-          (* This is a for in loop *)
-          Expect.token env T_IN;
+          if async then
+            (* If `async` is true, this should have been a for-await-of loop, but we
+               recover by trying to parse like a for-in loop. *)
+            Expect.token env T_OF
+          else
+            Expect.token env T_IN;
           let right = Parse.expression env in
           Expect.token env T_RPAREN;
           let body = Parse.statement (env |> with_in_loop true) in
@@ -460,7 +463,12 @@ module Statement
         | _ ->
           (* This is a for loop *)
           errs |> List.iter (error_at env);
-          Expect.token env T_SEMICOLON;
+          if async then
+            (* If `async` is true, this should have been a for-await-of loop, but we
+               recover by trying to parse like a normal loop. *)
+            Expect.token env T_OF
+          else
+            Expect.token env T_SEMICOLON;
           let init =
             match init with
             | Some (For_declaration decl) -> Some (Statement.For.InitDeclaration decl)

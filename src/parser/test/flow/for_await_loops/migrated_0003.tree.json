@@ -1,24 +1,8 @@
 {
   "errors":[
     {
-      "loc":{"source":null,"start":{"line":1,"column":25},"end":{"line":1,"column":34}},
-      "message":"Invalid left-hand side in for-of"
-    },
-    {
       "loc":{"source":null,"start":{"line":1,"column":34},"end":{"line":1,"column":35}},
       "message":"Unexpected token `;`, expected the token `of`"
-    },
-    {
-      "loc":{"source":null,"start":{"line":1,"column":41},"end":{"line":1,"column":42}},
-      "message":"Unexpected token `;`, expected the token `)`"
-    },
-    {
-      "loc":{"source":null,"start":{"line":1,"column":46},"end":{"line":1,"column":47}},
-      "message":"Unexpected token `)`, expected the end of an expression statement (`;`)"
-    },
-    {
-      "loc":{"source":null,"start":{"line":1,"column":46},"end":{"line":1,"column":47}},
-      "message":"Unexpected token `)`, expected the start of a statement"
     }
   ],
   "type":"Program",
@@ -41,10 +25,10 @@
           "range":[12,52],
           "body":[
             {
-              "type":"ForOfStatement",
-              "loc":{"source":null,"start":{"line":1,"column":14},"end":{"line":1,"column":46}},
-              "range":[14,46],
-              "left":{
+              "type":"ForStatement",
+              "loc":{"source":null,"start":{"line":1,"column":14},"end":{"line":1,"column":50}},
+              "range":[14,50],
+              "init":{
                 "type":"VariableDeclaration",
                 "loc":{"source":null,"start":{"line":1,"column":25},"end":{"line":1,"column":34}},
                 "range":[25,34],
@@ -72,7 +56,7 @@
                 ],
                 "kind":"let"
               },
-              "right":{
+              "test":{
                 "type":"BinaryExpression",
                 "loc":{"source":null,"start":{"line":1,"column":36},"end":{"line":1,"column":41}},
                 "range":[36,41],
@@ -94,34 +78,27 @@
                   "optional":false
                 }
               },
-              "body":{
-                "type":"ExpressionStatement",
+              "update":{
+                "type":"UpdateExpression",
                 "loc":{"source":null,"start":{"line":1,"column":43},"end":{"line":1,"column":46}},
                 "range":[43,46],
-                "expression":{
-                  "type":"UpdateExpression",
-                  "loc":{"source":null,"start":{"line":1,"column":43},"end":{"line":1,"column":46}},
-                  "range":[43,46],
-                  "operator":"++",
-                  "argument":{
-                    "type":"Identifier",
-                    "loc":{"source":null,"start":{"line":1,"column":43},"end":{"line":1,"column":44}},
-                    "range":[43,44],
-                    "name":"i",
-                    "typeAnnotation":null,
-                    "optional":false
-                  },
-                  "prefix":false
+                "operator":"++",
+                "argument":{
+                  "type":"Identifier",
+                  "loc":{"source":null,"start":{"line":1,"column":43},"end":{"line":1,"column":44}},
+                  "range":[43,44],
+                  "name":"i",
+                  "typeAnnotation":null,
+                  "optional":false
                 },
-                "directive":null
+                "prefix":false
               },
-              "await":true
-            },
-            {
-              "type":"BlockStatement",
-              "loc":{"source":null,"start":{"line":1,"column":48},"end":{"line":1,"column":50}},
-              "range":[48,50],
-              "body":[]
+              "body":{
+                "type":"BlockStatement",
+                "loc":{"source":null,"start":{"line":1,"column":48},"end":{"line":1,"column":50}},
+                "range":[48,50],
+                "body":[]
+              }
             }
           ]
         },
