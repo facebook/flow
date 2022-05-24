@@ -101,3 +101,11 @@ declare var c: ?C;
   (prop: number | void); // OK
   (prop: number); // ERROR
 }
+
+// any
+declare var a: ?any;
+{
+  const {x} = a ?? {}; // OK
+  const {y} = a || {}; // OK
+  const {z} = a ? a : {}; // OK
+}
