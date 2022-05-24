@@ -48,6 +48,8 @@ module type S = sig
            (L.t, L.t) Flow_ast.Statement.Switch.Case.t list
 
          method private lambda :
+           is_arrow:bool ->
+           fun_loc:L.t ->
            (L.t, L.t) Flow_ast.Function.Params.t ->
            (L.t, L.t) Flow_ast.Type.Predicate.t option ->
            (L.t, L.t) Flow_ast.Function.body ->

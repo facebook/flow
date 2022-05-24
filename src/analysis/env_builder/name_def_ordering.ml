@@ -448,7 +448,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) = struct
         depends_of_expression exp ALocMap.empty
       | Update _ -> depends_of_update ()
       | OpAssign { rhs; _ } -> depends_of_op_assign rhs
-      | Function { fully_annotated; function_; tparams = _ } ->
+      | Function { fully_annotated; function_; function_loc = _; tparams = _ } ->
         depends_of_fun fully_annotated function_
       | Class { fully_annotated; class_; class_loc = _ } -> depends_of_class fully_annotated class_
       | DeclaredClass (_, decl) -> depends_of_declared_class decl

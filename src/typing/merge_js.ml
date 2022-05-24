@@ -388,7 +388,7 @@ let detect_matching_props_violations cx =
     List.iter
       (fun (prop_name, other_loc, obj_loc) ->
         let env = Context.environment cx in
-        let other_t = Base.Option.value_exn (Loc_env.find_write env other_loc) in
+        let other_t = Base.Option.value_exn (Loc_env.find_ordinary_write env other_loc) in
         let obj_t = New_env.New_env.provider_type_for_def_loc env obj_loc in
         step (TypeUtil.reason_of_t other_t, prop_name, other_t, obj_t))
       matching_props

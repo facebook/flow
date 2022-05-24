@@ -13,6 +13,12 @@ type new_env_literal_check =
   | SingletonBool of ALoc.t * bool
   | SingletonStr of ALoc.t * bool * string
 
+type def_loc_type =
+  | OrdinaryNameLoc
+  | ThisLoc
+  | SuperLoc
+[@@deriving show]
+
 module type S = sig
   module L : Loc_sig.S
 
@@ -39,8 +45,8 @@ module type S = sig
         writes: write_locs;
         write_id: int option;
       }
-    | This
-    | Super
+    | This of L.t Reason.virtual_reason
+    | Super of L.t Reason.virtual_reason
     | Exports
     | ModuleScoped of string
     | Global of string
@@ -134,6 +140,8 @@ module type S = sig
     ssa_values: Ssa_api.values;
     env_values: values;
     env_entries: env_entry L.LMap.t;
+    this_env_entries: env_entry L.LMap.t;
+    super_env_entries: env_entry L.LMap.t;
     providers: Provider_api.info;
     refinement_of_id: int -> Refi.refinement;
   }
@@ -196,8 +204,8 @@ module Make
         writes: write_locs;
         write_id: int option;
       }
-    | This
-    | Super
+    | This of L.t Reason.virtual_reason
+    | Super of L.t Reason.virtual_reason
     | Exports
     | ModuleScoped of string
     | Global of string
@@ -288,6 +296,8 @@ module Make
     ssa_values: Ssa_api.values;
     env_values: values;
     env_entries: env_entry L.LMap.t;
+    this_env_entries: env_entry L.LMap.t;
+    super_env_entries: env_entry L.LMap.t;
     providers: Provider_api.info;
     refinement_of_id: int -> refinement;
   }
@@ -298,6 +308,8 @@ module Make
       ssa_values = L.LMap.empty;
       env_values = L.LMap.empty;
       env_entries = L.LMap.empty;
+      this_env_entries = L.LMap.empty;
+      super_env_entries = L.LMap.empty;
       providers = Provider_api.empty;
       refinement_of_id = (fun _ -> failwith "Empty env info");
     }
@@ -320,8 +332,8 @@ module Make
     | Write r -> [Reason.poly_loc_of_reason r]
     | Uninitialized _ -> []
     | Undeclared _ -> []
-    | This -> []
-    | Super -> []
+    | This _ -> []
+    | Super _ -> []
     | Exports -> []
     | ModuleScoped _ -> []
     | Global _ -> []
@@ -391,8 +403,18 @@ module Make
         let refinement_id_str = string_of_int refinement_id in
         let writes_str = String.concat "," (List.map print_write_loc writes) in
         Printf.sprintf "{refinement_id = %s; writes = %s}" refinement_id_str writes_str
-      | This -> "this"
-      | Super -> "super"
+      | This reason ->
+        let loc = Reason.poly_loc_of_reason reason in
+        Utils_js.spf
+          "this(%s): (%s)"
+          (L.debug_to_string loc)
+          Reason.(desc_of_reason reason |> string_of_desc)
+      | Super reason ->
+        let loc = Reason.poly_loc_of_reason reason in
+        Utils_js.spf
+          "super(%s): (%s)"
+          (L.debug_to_string loc)
+          Reason.(desc_of_reason reason |> string_of_desc)
       | Exports -> "exports"
       | ModuleScoped name -> "ModuleScoped " ^ name
       | Global name -> "Global " ^ name

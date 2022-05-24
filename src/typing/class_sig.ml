@@ -810,26 +810,18 @@ module Make
   let toplevels cx ~private_property_map ~instance_this_type ~static_this_type x =
     let open Type in
     Env.in_lex_scope (fun () ->
-        let new_entry ?(state = Scope.State.Initialized) t =
-          Scope.Entry.new_let
-            ~loc:(TypeUtil.loc_of_t (TypeUtil.type_t_of_annotated_or_inferred t))
-            ~state
-            ~provider:(TypeUtil.type_t_of_annotated_or_inferred t)
-            t
-        in
-
-        let method_ this_recipe super ~set_asts f =
+        let method_ this_recipe super ~set_asts loc f =
           let save_return = Abnormal.clear_saved Abnormal.Return in
           let save_throw = Abnormal.clear_saved Abnormal.Throw in
-          let (_, params_ast, body_ast, init_ast) = F.toplevels cx this_recipe super f in
+          let (_, params_ast, body_ast, init_ast) = F.toplevels cx this_recipe (Some super) loc f in
           set_asts (params_ast, body_ast, init_ast);
           ignore (Abnormal.swap_saved Abnormal.Return save_return);
           ignore (Abnormal.swap_saved Abnormal.Throw save_throw)
         in
-        let field this_recipe super _name (_, _, value) =
+        let field this_recipe super _name (loc, _, value) =
           match value with
           | Annot _ -> ()
-          | Infer (fsig, set_asts) -> method_ this_recipe super ~set_asts fsig
+          | Infer (fsig, set_asts) -> method_ this_recipe super ~set_asts loc fsig
         in
         let (instance_this_default, static_this_default, super, static_super) =
           let open Type in
@@ -873,8 +865,7 @@ module Make
 
         let this_recipe default fparams =
           let t = F.this_param fparams |> TypeUtil.annotated_or_inferred_of_option ~default in
-          let this = new_entry t in
-          (TypeUtil.type_t_of_annotated_or_inferred t, this)
+          (TypeUtil.type_t_of_annotated_or_inferred t, Some t)
         in
         let instance_this_recipe = this_recipe instance_this_default in
         let static_this_recipe = this_recipe static_this_default in
@@ -891,12 +882,12 @@ module Make
         x
         |> with_sig ~static:true (fun s ->
                (* process static methods and fields *)
-               let super = new_entry (Inferred static_super) in
                iter_methods
-                 (fun (_loc, f, set_asts, _) -> method_ static_this_recipe super ~set_asts f)
+                 (fun (loc, f, set_asts, _) ->
+                   method_ static_this_recipe static_super ~set_asts loc f)
                  s;
-               SMap.iter (field static_this_recipe super) s.fields;
-               SMap.iter (field static_this_recipe super) s.private_fields
+               SMap.iter (field static_this_recipe static_super) s.fields;
+               SMap.iter (field static_this_recipe static_super) s.private_fields
            );
 
         x
@@ -904,20 +895,18 @@ module Make
                (* process constructor *)
                begin
                  (* This parameters are banned in constructors *)
-                 let (this, super) =
-                   (new_entry (Inferred instance_this_default), new_entry (Inferred super))
-                 in
+                 let (this, super) = (Some (Inferred instance_this_default), super) in
                  let this_recipe _ = (instance_this_default, this) in
                  x.constructor
-                 |> List.iter (fun (_, fsig, set_asts, _) ->
-                        method_ this_recipe super ~set_asts fsig
+                 |> List.iter (fun (loc, fsig, set_asts, _) ->
+                        method_ this_recipe super ~set_asts loc fsig
                     )
                end;
 
                (* process instance methods and fields *)
-               let super = new_entry (Inferred super) in
                iter_methods
-                 (fun (_, msig, set_asts, _) -> method_ instance_this_recipe super ~set_asts msig)
+                 (fun (loc, msig, set_asts, _) ->
+                   method_ instance_this_recipe super ~set_asts loc msig)
                  s;
                SMap.iter (field instance_this_recipe super) s.fields;
                SMap.iter (field instance_this_recipe super) s.private_fields;

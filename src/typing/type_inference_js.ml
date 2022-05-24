@@ -503,6 +503,7 @@ module Make (Env : Env_sig.S) : S = struct
       cx
       (Loc_env.initialize
          (Context.environment cx)
+         Env_api.OrdinaryNameLoc
          (TypeUtil.loc_of_t local_exports_var)
          (Type.Inferred local_exports_var)
       );

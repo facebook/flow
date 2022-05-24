@@ -102,7 +102,7 @@ struct
     | [(_, param_t)] -> param_t
     | _ -> failwith "Setter property with unexpected type"
 
-  let toplevels cx this_recipe super x =
+  let toplevels cx this_recipe super func_loc x =
     let { T.reason = reason_fn; kind; tparams_map; fparams; body; return_t; _ } = x in
     let loc =
       let open Ast.Function in
@@ -141,8 +141,35 @@ struct
      * `this` in default parameter values it refers to the function scope and
      * `super` should resolve to the method's [[HomeObject]]
      *)
-    Scope.add_entry (internal_name "this") this function_scope;
-    Scope.add_entry (internal_name "super") super function_scope;
+    if Env.new_env then
+      Base.Option.iter func_loc ~f:(fun loc ->
+          Base.Option.iter this ~f:(fun this ->
+              Env.bind_this cx (TypeUtil.type_t_of_annotated_or_inferred this) loc
+          );
+          Base.Option.iter super ~f:(fun super -> Env.bind_super cx super loc)
+      )
+    else (
+      Base.Option.iter this ~f:(fun t ->
+          let entry =
+            Scope.Entry.new_let
+              ~loc:(TypeUtil.loc_of_t (TypeUtil.type_t_of_annotated_or_inferred t))
+              ~state:Scope.State.Initialized
+              ~provider:(TypeUtil.type_t_of_annotated_or_inferred t)
+              t
+          in
+          Scope.add_entry (internal_name "this") entry function_scope
+      );
+      Base.Option.iter super ~f:(fun t ->
+          let entry =
+            Scope.Entry.new_let
+              ~loc:(TypeUtil.loc_of_t t)
+              ~state:Scope.State.Initialized
+              ~provider:t
+              (Inferred t)
+          in
+          Scope.add_entry (internal_name "super") entry function_scope
+      )
+    );
 
     (* bind type params *)
     Subst_name.Map.iter

@@ -64,6 +64,7 @@ type def =
     }
   | Function of {
       fully_annotated: bool;
+      function_loc: ALoc.t;
       function_: (ALoc.t, ALoc.t) Ast.Function.t;
       tparams: ALocSet.t;
     }
@@ -180,8 +181,8 @@ let func_is_annotated { Ast.Function.return; _ } =
   | Ast.Type.Missing _ -> false
   | Ast.Type.Available _ -> true
 
-let def_of_function tparams function_ =
-  Function { fully_annotated = func_is_annotated function_; function_; tparams }
+let def_of_function tparams function_loc function_ =
+  Function { fully_annotated = func_is_annotated function_; function_loc; function_; tparams }
 
 let def_of_class loc ({ Ast.Class.body = (_, { Ast.Class.Body.body; _ }); _ } as class_) =
   let open Ast.Class.Body in
@@ -294,7 +295,7 @@ class def_finder env_entries =
           this#add_binding
             id_loc
             (func_reason ~async ~generator sig_loc)
-            (def_of_function tparams expr)
+            (def_of_function tparams loc expr)
         | None -> ()
       end;
       tparams <- old_tparams;
@@ -312,7 +313,7 @@ class def_finder env_entries =
           this#add_binding
             id_loc
             (func_reason ~async ~generator sig_loc)
-            (def_of_function tparams expr)
+            (def_of_function tparams loc expr)
         | None -> ()
       end;
       tparams <- old_tparams;

@@ -57,8 +57,8 @@ let print_values refinement_of_id =
       let refinement_str = show_refinement_kind_without_locs (snd refinement) in
       let writes_str = String.concat "," (List.map print_value writes) in
       Printf.sprintf "{refinement = %s; writes = %s}" refinement_str writes_str
-    | This -> "This"
-    | Super -> "Super"
+    | This _ -> "This"
+    | Super _ -> "Super"
     | Exports -> "Exports"
     | ModuleScoped name -> "ModuleScoped " ^ name
     | Global name -> "Global " ^ name

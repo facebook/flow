@@ -102,14 +102,21 @@ module Make (Env : Env_sig.S) (Statement : Statement_sig.S with module Env := En
         use_op
       )
 
-  let resolve_inferred_function cx id_loc reason function_ =
+  let resolve_inferred_function cx id_loc reason function_loc function_ =
     let cache = Context.node_cache cx in
     let ((fun_type, _) as fn) =
       (* TODO: This is intended to be the general type for the variable in the old environment, needed
          for generic escape detection. We can do generic escape differently in the future and remove
          this when we kill the old env. *)
       let general = Tvar.mk cx reason in
-      Statement.mk_function cx ~hint:Hint_None ~needs_this_param:true ~general reason function_
+      Statement.mk_function
+        cx
+        ~hint:Hint_None
+        ~needs_this_param:true
+        ~general
+        reason
+        function_loc
+        function_
     in
     Node_cache.set_function cache id_loc fn;
     (fun_type, unknown_use)
@@ -334,9 +341,9 @@ module Make (Env : Env_sig.S) (Statement : Statement_sig.S with module Env := En
       | Binding b -> resolve_binding cx def_reason id_loc b
       | ChainExpression e -> resolve_chain_expression cx e
       | RefiExpression e -> (expression cx ~hint:Hint_None e, unknown_use)
-      | Function { function_; fully_annotated = false; tparams = _ } ->
-        resolve_inferred_function cx id_loc def_reason function_
-      | Function { function_; fully_annotated = true; tparams } ->
+      | Function { function_; fully_annotated = false; function_loc; tparams = _ } ->
+        resolve_inferred_function cx id_loc def_reason function_loc function_
+      | Function { function_; fully_annotated = true; function_loc = _; tparams } ->
         resolve_annotated_function cx def_reason tparams function_
       | Class { class_; fully_annotated = false; class_loc } ->
         resolve_inferred_class cx id_loc def_reason class_loc class_

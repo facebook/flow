@@ -46,9 +46,11 @@ module type S = sig
 
   val toplevels :
     Context.t ->
-    (func_params -> Type.t * Scope.Entry.t) ->
+    (func_params -> Type.t * Type.annotated_or_inferred option) ->
     (* this recipe *)
-    Scope.Entry.t ->
+    Type.t option ->
+    ALoc.t option ->
+    (* this and super def_loc *)
     t ->
     Type.t (* this *)
     * func_params_tast option

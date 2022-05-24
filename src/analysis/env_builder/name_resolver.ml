@@ -136,9 +136,9 @@ module Make
 
     val merge : t -> t -> t
 
-    val this : t
+    val this : ALoc.t virtual_reason -> t
 
-    val super : t
+    val super : ALoc.t virtual_reason -> t
 
     val exports : t
 
@@ -208,8 +208,8 @@ module Make
           name: string;
         }
       | Projection of ALoc.t
-      | This
-      | Super
+      | This of ALoc.t virtual_reason
+      | Super of ALoc.t virtual_reason
       | Exports
       | ModuleScoped of string
       | Global of string
@@ -251,8 +251,8 @@ module Make
         in
         let write_str = debug_to_string get_refi val_t in
         Utils_js.spf "{refinement = %s; write = %s}" refinement_kind write_str
-      | This -> "This"
-      | Super -> "Super"
+      | This _ -> "This"
+      | Super _ -> "Super"
       | Exports -> "Exports"
       | ModuleScoped name -> "ModuleScoped " ^ name
       | Global name -> "Global " ^ name
@@ -398,8 +398,8 @@ module Make
       | DeclaredButSkipped _
       | UndeclaredClass _
       | Projection _
-      | This
-      | Super
+      | This _
+      | Super _
       | Exports
       | ModuleScoped _
       | Global _
@@ -428,9 +428,9 @@ module Make
         let vals = WriteSet.union (normalize t1.write_state) (normalize t2.write_state) in
         join (WriteSet.elements vals)
 
-    let this = mk_with_write_state This
+    let this reason = mk_with_write_state @@ This reason
 
-    let super = mk_with_write_state Super
+    let super reason = mk_with_write_state @@ Super reason
 
     let exports = mk_with_write_state @@ Exports
 
@@ -455,21 +455,12 @@ module Make
           | UndeclaredClass { def; name } -> Env_api.UndeclaredClass { def; name }
           | Uninitialized l -> Env_api.Uninitialized (mk_reason RPossiblyUninitialized l)
           | Projection loc -> Env_api.Projection loc
+          | This r -> Env_api.This r
+          | Super r -> Env_api.Super r
           | Loc r -> Env_api.Write r
           | Refinement { refinement_id; val_t } ->
             Env_api.Refinement
-              {
-                writes = simplify_val val_t;
-                refinement_id;
-                (* We delegate to the old env for this and super,
-                   so we shouldn't cache results about them. *)
-                write_id =
-                  (match val_t with
-                  | { id = _; write_state = This | Super } -> None
-                  | { id; write_state = _ } -> Some id);
-              }
-          | This -> Env_api.This
-          | Super -> Env_api.Super
+              { writes = simplify_val val_t; refinement_id; write_id = Some val_t.id }
           | Exports -> Env_api.Exports
           | ModuleScoped name -> Env_api.ModuleScoped name
           | Global name -> Env_api.Global name
@@ -485,12 +476,7 @@ module Make
         | Some _ -> Some Env_api.Value
         | None -> None
       in
-      let id =
-        match value with
-        | { id = _; write_state = This | Super } -> None
-        | { id; write_state = _ } -> Some id
-      in
-      { Env_api.def_loc; write_locs; val_kind; name; id }
+      { Env_api.def_loc; write_locs; val_kind; name; id = Some value.id }
 
     let id_of_val { id; write_state = _ } = id
 
@@ -512,8 +498,8 @@ module Make
           else
             states
         | Loc _ -> []
-        | This -> []
-        | Super -> []
+        | This _ -> []
+        | Super _ -> []
         | Exports -> []
         | ModuleScoped _ -> []
         | Global _ -> []
@@ -783,6 +769,8 @@ module Make
     (* We also maintain a list of all write locations, for use in populating the env with
        types. *)
     write_entries: Env_api.env_entry Loc_sig.ALocS.LMap.t;
+    this_write_entries: Env_api.env_entry Loc_sig.ALocS.LMap.t;
+    super_write_entries: Env_api.env_entry Loc_sig.ALocS.LMap.t;
     curr_id: int;
     (* Maps refinement ids to refinements. This mapping contains _all_ the refinements reachable at
      * any point in the code. The latest_refinement maps keep track of which entries to read. *)
@@ -948,26 +936,30 @@ module Make
            SMap.add name entry acc)
          unbound_names
     (* this has to come later, since this can be thought to be unbound names in SSA builder when it's used as a type. *)
-    |> SMap.add
-         "this"
-         {
-           val_ref = ref Val.this;
-           havoc = Val.this;
-           writes_by_closure_provider_val = None;
-           def_loc = None;
-           heap_refinements = ref HeapRefinementMap.empty;
-           kind = Bindings.Var;
-         }
-    |> SMap.add
-         "super"
-         {
-           val_ref = ref Val.super;
-           havoc = Val.super;
-           writes_by_closure_provider_val = None;
-           def_loc = None;
-           heap_refinements = ref HeapRefinementMap.empty;
-           kind = Bindings.Var;
-         }
+    |> (let v = ALoc.none |> mk_reason (RIdentifier (internal_name "this")) |> Val.this in
+        SMap.add
+          "this"
+          {
+            val_ref = ref v;
+            havoc = v;
+            writes_by_closure_provider_val = None;
+            def_loc = None;
+            heap_refinements = ref HeapRefinementMap.empty;
+            kind = Bindings.Var;
+          }
+       )
+    |> (let v = ALoc.none |> mk_reason (RIdentifier (internal_name "super")) |> Val.super in
+        SMap.add
+          "super"
+          {
+            val_ref = ref v;
+            havoc = v;
+            writes_by_closure_provider_val = None;
+            def_loc = None;
+            heap_refinements = ref HeapRefinementMap.empty;
+            kind = Bindings.Var;
+          }
+       )
     |> SMap.add
          "exports"
          {
@@ -1091,6 +1083,16 @@ module Make
         {
           values = L.LMap.empty;
           write_entries = L.LMap.empty;
+          this_write_entries =
+            L.LMap.empty
+            |> L.LMap.add
+                 ALoc.none
+                 (Env_api.AssigningWrite (mk_reason (RIdentifier (internal_name "this")) ALoc.none));
+          super_write_entries =
+            L.LMap.empty
+            |> L.LMap.add
+                 ALoc.none
+                 (Env_api.AssigningWrite (mk_reason (RIdentifier (internal_name "super")) ALoc.none));
           curr_id = 0;
           refinement_heap = IMap.empty;
           latest_refinements = [];
@@ -1108,6 +1110,10 @@ module Make
           env_state.values
 
       method write_entries : Env_api.env_entry L.LMap.t = env_state.write_entries
+
+      method this_write_entries : Env_api.env_entry L.LMap.t = env_state.this_write_entries
+
+      method super_write_entries : Env_api.env_entry L.LMap.t = env_state.super_write_entries
 
       method private merge_vals_with_havoc ~havoc ~def_loc v1 v2 =
         (* It's not safe to reset to havoc when one side can be uninitialized, because the havoc
@@ -1523,52 +1529,81 @@ module Make
                 kind;
               }
             | _ ->
-              let initial_val =
-                match kind with
-                (* let/const/enum all introduce errors if you try to access or assign them
-                 * before syntactically encountering the declaration. All other bindings
-                 * do not, so we don't set them to be undeclared *)
-                | Bindings.Let
-                | Bindings.Const
-                | Bindings.Enum
-                | Bindings.Parameter
-                | Bindings.Function ->
-                  Val.undeclared name loc
-                | _ -> Val.uninitialized loc
-              in
-              let (havoc, providers) = this#providers_of_def_loc loc in
-              let writes_by_closure =
-                Invalidation_api.written_by_closure prepass_info prepass_values loc
-              in
-              let all_writes_by_closure_are_providers =
-                L.LSet.for_all
-                  (Base.List.mem ~equal:ALoc.equal (Base.List.map ~f:poly_loc_of_reason providers))
-                  writes_by_closure
-              in
-              (* Special-cased havoc val of variables whose only closure writes are providers *)
-              let writes_by_closure_provider_val =
-                if all_writes_by_closure_are_providers then
-                  let writes_by_closure_providers =
-                    Base.List.filter providers ~f:(fun provider_reason ->
-                        L.LSet.mem (poly_loc_of_reason provider_reason) writes_by_closure
-                    )
+              let (initial_val, havoc, writes_by_closure_provider_val) =
+                match name with
+                | "this" ->
+                  let reason = mk_reason (RIdentifier (internal_name "this")) loc in
+                  env_state <-
+                    {
+                      env_state with
+                      this_write_entries =
+                        L.LMap.add loc (Env_api.AssigningWrite reason) env_state.this_write_entries;
+                    };
+                  let v = Val.this reason in
+                  (v, v, None)
+                | "super" ->
+                  let reason = mk_reason (RIdentifier (internal_name "super")) loc in
+                  env_state <-
+                    {
+                      env_state with
+                      super_write_entries =
+                        L.LMap.add loc (Env_api.AssigningWrite reason) env_state.super_write_entries;
+                    };
+                  let v = Val.super reason in
+                  (v, v, None)
+                | _ ->
+                  let initial_val =
+                    match kind with
+                    (* let/const/enum all introduce errors if you try to access or assign them
+                     * before syntactically encountering the declaration. All other bindings
+                     * do not, so we don't set them to be undeclared *)
+                    | Bindings.Let
+                    | Bindings.Const
+                    | Bindings.Enum
+                    | Bindings.Parameter
+                    | Bindings.Function ->
+                      Val.undeclared name loc
+                    | _ -> Val.uninitialized loc
                   in
-                  if not @@ Base.List.is_empty writes_by_closure_providers then
-                    (* Now we know a variable needs to be widened at most by these writes
-                       by closure providers *)
-                    Some (Val.all writes_by_closure_providers)
-                  else
-                    None
-                else
-                  None
+                  let (havoc, providers) = this#providers_of_def_loc loc in
+                  let writes_by_closure =
+                    Invalidation_api.written_by_closure prepass_info prepass_values loc
+                  in
+                  let all_writes_by_closure_are_providers =
+                    L.LSet.for_all
+                      (Base.List.mem
+                         ~equal:ALoc.equal
+                         (Base.List.map ~f:poly_loc_of_reason providers)
+                      )
+                      writes_by_closure
+                  in
+                  (* Special-cased havoc val of variables whose only closure writes are providers *)
+                  let writes_by_closure_provider_val =
+                    if all_writes_by_closure_are_providers then
+                      let writes_by_closure_providers =
+                        Base.List.filter providers ~f:(fun provider_reason ->
+                            L.LSet.mem (poly_loc_of_reason provider_reason) writes_by_closure
+                        )
+                      in
+                      if not @@ Base.List.is_empty writes_by_closure_providers then
+                        (* Now we know a variable needs to be widened at most by these writes
+                           by closure providers *)
+                        Some (Val.all writes_by_closure_providers)
+                      else
+                        None
+                    else
+                      None
+                  in
+                  let write_entries =
+                    Base.List.fold
+                      ~f:(fun acc r ->
+                        L.LMap.add (poly_loc_of_reason r) (Env_api.AssigningWrite r) acc)
+                      ~init:env_state.write_entries
+                      providers
+                  in
+                  env_state <- { env_state with write_entries };
+                  (initial_val, havoc, writes_by_closure_provider_val)
               in
-              let write_entries =
-                Base.List.fold
-                  ~f:(fun acc r -> L.LMap.add (poly_loc_of_reason r) (Env_api.AssigningWrite r) acc)
-                  ~init:env_state.write_entries
-                  providers
-              in
-              env_state <- { env_state with write_entries };
               {
                 val_ref = ref initial_val;
                 havoc;
@@ -2992,18 +3027,37 @@ module Make
         stmt
 
       (* We also havoc state when entering functions and exiting calls. *)
-      method! lambda params predicate body =
+      method! lambda ~is_arrow ~fun_loc params predicate body =
         this#expecting_abrupt_completions (fun () ->
             let env = this#env in
             this#run
               (fun () ->
                 this#havoc_uninitialized_env;
-                let completion_state =
-                  this#run_to_completion (fun () -> super#lambda params predicate body)
-                in
-                this#commit_abrupt_completion_matching
-                  AbruptCompletion.(mem [return; throw])
-                  completion_state)
+                if is_arrow then
+                  (* Arrow functions should read this and super from upper scopes. *)
+                  let completion_state =
+                    this#run_to_completion (fun () ->
+                        super#lambda ~is_arrow ~fun_loc params predicate body
+                    )
+                  in
+                  this#commit_abrupt_completion_matching
+                    AbruptCompletion.(mem [return; throw])
+                    completion_state
+                else
+                  let id name = (fun_loc, { Ast.Identifier.name; comments = None }) in
+                  let completion_state =
+                    let bindings =
+                      Bindings.(empty |> add (id "this", Const) |> add (id "super", Const))
+                    in
+                    this#run_to_completion
+                      (this#with_bindings fun_loc bindings (fun () ->
+                           super#lambda ~is_arrow ~fun_loc params predicate body
+                       )
+                      )
+                  in
+                  this#commit_abrupt_completion_matching
+                    AbruptCompletion.(mem [return; throw])
+                    completion_state)
               ~finally:(fun () -> this#reset_env env)
         )
 
@@ -3011,32 +3065,63 @@ module Make
         SuperCallInDerivedCtorChecker.check cx loc cls;
         super#class_ loc cls
 
+      method private object_key_loc =
+        let open Ast.Expression.Object.Property in
+        function
+        | Literal (l, _) -> l
+        | Identifier (l, _) -> l
+        | PrivateName (l, _) -> l
+        | Computed (l, _) -> l
+
+      method! class_method _loc meth =
+        let { Ast.Class.Method.key; value = (_, f); decorators; _ } = meth in
+        ignore @@ this#object_key key;
+        (* Use the method key loc as the loc of the function. *)
+        ignore @@ this#function_expression_or_method (this#object_key_loc key) f;
+        Base.List.iter ~f:(fun d -> ignore @@ this#class_decorator d) decorators;
+        meth
+
       method! class_property loc prop =
         let open Ast.Class.Property in
-        let { static; _ } = prop in
-        if static then
-          super#class_property loc prop
-        else
-          let env = this#env in
-          this#run
-            (fun () ->
-              this#havoc_uninitialized_env;
-              ignore @@ super#class_property loc prop)
-            ~finally:(fun () -> this#reset_env env);
+        let { key; static; _ } = prop in
+        let id_loc = this#object_key_loc key in
+        let id name = (id_loc, { Ast.Identifier.name; comments = None }) in
+        let bindings = Bindings.(empty |> add (id "this", Const) |> add (id "super", Const)) in
+        this#with_bindings
+          loc
+          bindings
+          (fun prop ->
+            if static then
+              super#class_property loc prop
+            else
+              let env = this#env in
+              this#run
+                (fun () ->
+                  this#havoc_uninitialized_env;
+                  ignore @@ super#class_property loc prop)
+                ~finally:(fun () -> this#reset_env env);
+              prop)
           prop
 
       method! class_private_field loc field =
         let open Ast.Class.PrivateField in
-        let { static; _ } = field in
-        if static then
-          super#class_private_field loc field
-        else
-          let env = this#env in
-          this#run
-            (fun () ->
-              this#havoc_uninitialized_env;
-              ignore @@ super#class_private_field loc field)
-            ~finally:(fun () -> this#reset_env env);
+        let { key = (id_loc, _); static; _ } = field in
+        let id name = (id_loc, { Ast.Identifier.name; comments = None }) in
+        let bindings = Bindings.(empty |> add (id "this", Const) |> add (id "super", Const)) in
+        this#with_bindings
+          loc
+          bindings
+          (fun field ->
+            if static then
+              super#class_private_field loc field
+            else
+              let env = this#env in
+              this#run
+                (fun () ->
+                  this#havoc_uninitialized_env;
+                  ignore @@ super#class_private_field loc field)
+                ~finally:(fun () -> this#reset_env env);
+              field)
           field
 
       method! declare_function loc expr =
@@ -3769,6 +3854,11 @@ module Make
           match RefinementKey.of_expression expr with
           | Some ({ RefinementKey.lookup; loc = _ } as key) when strict ->
             (match lookup with
+            | { RefinementKey.base = "this" | "super"; projections = [] } ->
+              (* This preserves the old env behavior that it does not perform literal subtyping check
+                 against this and super.
+                 TODO: error on this in the new-env. *)
+              ()
             | { RefinementKey.base; projections = [] } ->
               let { val_ref = _; def_loc; _ } = SMap.find base env_state.env in
               (match def_loc with
@@ -4464,6 +4554,14 @@ module Make
               | x -> x)
             values
 
+      method! this_expression loc this_ =
+        this#any_identifier loc "this";
+        this_
+
+      method! super_expression loc super_ =
+        this#any_identifier loc "super";
+        super_
+
       method! binding_type_identifier ident = super#identifier ident
 
       method! identifier (ident : (ALoc.t, ALoc.t) Ast.Identifier.t) =
@@ -4570,6 +4668,8 @@ module Make
         ssa_values;
         env_values = dead_code_marker#values;
         env_entries = dead_code_marker#write_entries;
+        this_env_entries = env_walk#this_write_entries;
+        super_env_entries = env_walk#super_write_entries;
         providers;
         refinement_of_id = env_walk#refinement_of_id;
       }

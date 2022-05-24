@@ -79,6 +79,10 @@ module type S = sig
   val bind_let :
     ?state:State.t -> Context.t -> string -> Type.annotated_or_inferred -> ALoc.t -> unit
 
+  val bind_this : Context.t -> Type.t -> ALoc.t -> unit
+
+  val bind_super : Context.t -> Type.t -> ALoc.t -> unit
+
   val bind_implicit_let :
     ?state:State.t ->
     Entry.let_binding_kind ->

@@ -227,18 +227,22 @@ module Env : Env_sig.S = struct
     begin
       if Context.env_option_enabled cx Options.ConstrainWrites then
         let ({ Loc_env.var_info; _ } as env) = Context.environment cx in
-        ALocMap.fold
-          (fun loc env_entry env ->
-            match env_entry with
-            | Env_api.AssigningWrite reason
-            | Env_api.RefinementWrite reason
-            | Env_api.GlobalWrite reason ->
-              let t = Inferred (Tvar.mk cx reason) in
-              (* Treat everything as inferred for now for the purposes of annotated vs inferred *)
-              Loc_env.initialize env loc t
-            | Env_api.NonAssigningWrite -> env)
-          var_info.Env_api.env_entries
-          env
+        let initialize_entries def_loc_type =
+          ALocMap.fold (fun loc env_entry env ->
+              match env_entry with
+              | Env_api.AssigningWrite reason
+              | Env_api.RefinementWrite reason
+              | Env_api.GlobalWrite reason ->
+                let t = Inferred (Tvar.mk cx reason) in
+                (* Treat everything as inferred for now for the purposes of annotated vs inferred *)
+                Loc_env.initialize env def_loc_type loc t
+              | Env_api.NonAssigningWrite -> env
+          )
+        in
+        env
+        |> initialize_entries Env_api.OrdinaryNameLoc var_info.Env_api.env_entries
+        |> initialize_entries Env_api.ThisLoc var_info.Env_api.this_env_entries
+        |> initialize_entries Env_api.SuperLoc var_info.Env_api.super_env_entries
         |> Context.set_environment cx
     end;
 
@@ -467,7 +471,8 @@ module Env : Env_sig.S = struct
           |> Base.List.map
                ~f:
                  (Base.Fn.compose
-                    (fun loc -> Base.Option.map ~f:(fun t -> (loc, t)) (Loc_env.find_write env loc))
+                    (fun loc ->
+                      Base.Option.map ~f:(fun t -> (loc, t)) (Loc_env.find_ordinary_write env loc))
                     Reason.aloc_of_reason
                  )
           |> Base.Option.all
@@ -540,7 +545,7 @@ module Env : Env_sig.S = struct
     | OrdinaryName _name when Context.env_option_enabled cx Options.ConstrainWrites ->
       let ({ Loc_env.var_info = { Env_api.providers; _ }; _ } as env) = Context.environment cx in
       if Env_api.Provider_api.is_provider providers loc then
-        let t' = Loc_env.find_write env loc in
+        let t' = Loc_env.find_ordinary_write env loc in
         Base.Option.iter ~f:(fun t' -> Flow_js.flow_t cx (t, t')) t'
     | _ -> ()
 
@@ -554,7 +559,7 @@ module Env : Env_sig.S = struct
     let fully_initialized = Provider_api.is_provider_state_fully_initialized provider_state in
     let providers =
       Base.List.map
-        ~f:(Base.Fn.compose (Loc_env.find_write env) Reason.aloc_of_reason)
+        ~f:(Base.Fn.compose (Loc_env.find_ordinary_write env) Reason.aloc_of_reason)
         provider_locs
       |> Base.Option.all
     in
@@ -723,6 +728,10 @@ module Env : Env_sig.S = struct
       (OrdinaryName name)
       (Entry.new_let t ~loc ~state ~spec ?closure_writes ~provider)
       loc
+
+  let bind_this _ _ _ = ()
+
+  let bind_super _ _ _ = ()
 
   (* bind implicit let entry *)
   let bind_implicit_let ?(state = State.Undeclared) kind cx name t loc =

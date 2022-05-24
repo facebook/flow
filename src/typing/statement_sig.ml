@@ -62,6 +62,7 @@ module type S = sig
     needs_this_param:bool ->
     general:Type.t ->
     Reason.reason ->
+    ALoc.t ->
     (ALoc.t, ALoc.t) Ast.Function.t ->
     Type.t * (ALoc.t, ALoc.t * Type.t) Ast.Function.t
 

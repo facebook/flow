@@ -431,7 +431,7 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
         this#with_bindings ~lexical:true loc lexical_bindings (super#catch_clause loc) clause
 
       (* helper for function params and body *)
-      method private lambda params predicate body =
+      method private lambda ~is_arrow:_ ~fun_loc:_ params predicate body =
         let open Ast.Function in
         let body_loc =
           match body with
@@ -571,7 +571,7 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
             ~hoist_op:this#hoist_annotations
             tparams
             ~in_tparam_scope:(fun () ->
-              this#lambda params predicate body;
+              this#lambda ~is_arrow:false ~fun_loc:loc params predicate body;
               if with_types then
                 this#hoist_annotations (fun () -> ignore @@ this#type_annotation_hint return)
           )
@@ -581,7 +581,7 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
 
       (* Almost the same as function_declaration, except that the name of the
          function expression is locally in scope. *)
-      method! function_ loc (expr : (L.t, L.t) Ast.Function.t) =
+      method private function_expression_without_name ~is_arrow loc expr =
         let skip_scope =
           flowmin_compatibility
           &&
@@ -617,12 +617,18 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
               run_opt this#function_identifier id;
               (* This function is not hoisted, so we just traverse the signature *)
               this#scoped_type_params tparams ~in_tparam_scope:(fun () ->
-                  this#lambda params predicate body;
+                  this#lambda ~is_arrow ~fun_loc:loc params predicate body;
                   if with_types then ignore @@ this#type_annotation_hint return
               ))
             ()
         );
         expr
+
+      method! function_ loc (expr : (L.t, L.t) Ast.Function.t) =
+        this#function_expression_without_name ~is_arrow:false loc expr
+
+      method! arrow_function loc (expr : (L.t, L.t) Ast.Function.t) =
+        this#function_expression_without_name ~is_arrow:true loc expr
 
       method! declare_function loc expr =
         match Declare_function_utils.declare_function_to_function_declaration_simple loc expr with
