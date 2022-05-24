@@ -1561,7 +1561,9 @@ module Expression
         let trailing = Eat.trailing_comments env in
         let raw = "/" ^ pattern ^ "/" ^ flags in
         (raw, pattern, flags, trailing)
-      | _ -> assert false
+      | _ ->
+        error_unexpected ~expected:"a regular expression" env;
+        ("", "", "", [])
     in
     Eat.pop_lex_mode env;
     let filtered_flags = Buffer.create (String.length raw_flags) in
