@@ -26,11 +26,16 @@ async function checkContents(input /*: string */) {
 
 module.exports = async function getFlowErrors(
   code /*: string */,
-) /*: Promise<Array<string>> */ {
-  return (await checkContents(code)).errors
-    .flatMap(({message}) => message)
-    .map(
-      ({loc, descr}) =>
-        `${loc.start.line}:${loc.start.column}-${loc.end.line}:${loc.end.column}: ${descr}`,
-    );
+) /*: Promise<string> */ {
+  return JSON.stringify(
+    (await checkContents(code)).errors
+      .flatMap(({message}) => message)
+      .map(({loc, descr}) => ({
+        startLine: loc.start.line,
+        startColumn: loc.start.column,
+        endLine: loc.end.line,
+        endColumn: loc.end.column,
+        description: descr,
+      })),
+  );
 };

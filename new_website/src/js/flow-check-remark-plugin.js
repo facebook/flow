@@ -13,7 +13,7 @@ const transformNode = async node => [
   {
     type: 'code',
     lang: 'flow',
-    meta: (await getFlowErrors(node.value)).join('\n'),
+    meta: await getFlowErrors(node.value),
     value: node.value,
   },
 ];

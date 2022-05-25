@@ -16,13 +16,37 @@ import Translate, {translate} from '@docusaurus/Translate';
 import styles from './FlowCheckCodeBlock.module.css';
 import {useThemeConfig} from '@docusaurus/theme-common';
 
+type FlowError = {
+  startLine: number,
+  startColumn: number,
+  endLine: number,
+  endColumn: number,
+  description: number,
+};
+
+function getErrorsUnderlineRangesOnLine(
+  errors: Array<FlowError>,
+  line: number,
+  lineWidth: number,
+): Array<{start: number, end: number}> {
+  return errors
+    .map(error => {
+      if (!(error.startLine <= line && line <= error.endLine)) return null;
+      const range = {start: error.startColumn - 1, end: error.endColumn};
+      if (error.startLine < line) range.start = 1;
+      if (line < error.endLine) range.end = lineWidth;
+      return range;
+    })
+    .filter(Boolean);
+}
+
 type Props = {children: string, metastring: string};
 
 export default function FlowCheckCodeBlock({
   children,
   metastring,
 }: Props): MixedElement {
-  const flowErrors = metastring ? metastring.split('\n') : [];
+  const flowErrors: Array<FlowError> = JSON.parse(metastring || '[]');
   const {prism} = useThemeConfig();
   const [showCopied, setShowCopied] = useState(false);
   const [mounted, setMounted] = useState(false);
@@ -46,6 +70,7 @@ export default function FlowCheckCodeBlock({
 
   const language = 'jsx';
   const code = content.replace(/\n$/, '');
+  const lineWidths = code.split('\n').map(line => line.length);
 
   const handleCopyCode = () => {
     copy(code);
@@ -90,6 +115,25 @@ export default function FlowCheckCodeBlock({
                         {line.map((token, key) => (
                           <span key={key} {...getTokenProps({token, key})} />
                         ))}
+                        {getErrorsUnderlineRangesOnLine(
+                          flowErrors,
+                          i + 1,
+                          lineWidths[i],
+                        ).map((error, key) => (
+                          <div
+                            key={key}
+                            className={styles.flowErrorUnderlineContainer}>
+                            <span
+                              className={styles.flowErrorUnderlineLeftPadding}>
+                              {' '.repeat(error.start)}
+                            </span>
+                            <span
+                              key={key}
+                              className={styles.flowErrorUnderline}>
+                              {' '.repeat(error.end - error.start)}
+                            </span>
+                          </div>
+                        ))}
                       </span>
                     </span>
                   );
@@ -124,9 +168,17 @@ export default function FlowCheckCodeBlock({
 
             {flowErrors.length > 0 && (
               <pre className={styles.flowErrors}>
-                {flowErrors.map((error, index) => (
-                  <div key={index}>{error}</div>
-                ))}
+                {flowErrors.map(
+                  (
+                    {startLine, startColumn, endLine, endColumn, description},
+                    index,
+                  ) => (
+                    <div
+                      key={
+                        index
+                      }>{`${startLine}:${startColumn}-${endLine}:${endColumn}: ${description}`}</div>
+                  ),
+                )}
               </pre>
             )}
           </div>

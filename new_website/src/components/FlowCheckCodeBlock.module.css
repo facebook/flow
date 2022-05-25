@@ -80,6 +80,7 @@
 
 .codeBlockLineContent {
   display: table-cell;
+  position: relative;
 }
 
 .flowErrors {
@@ -90,4 +91,23 @@
   padding: 0.5rem 1rem;
   background-color: #d5382f;
   color: white;
+}
+
+.flowErrorUnderlineContainer {
+  position: absolute;
+  bottom: 0;
+  height: 0;
+  line-height: 0;
+}
+
+.flowErrorUnderlineLeftPadding {
+  display: inline-block;
+}
+
+.flowErrorUnderline {
+  display: inline-block;
+  border-bottom: 2px dotted #d5382f;
+  line-height: 2px;
+  user-select: none;
+  cursor: help;
 }
