@@ -65,6 +65,8 @@ let metadata =
 
 let dummy_filename = File_key.SourceFile ""
 
+let dummy_loc = Loc.mk_loc ~source:dummy_filename (0, 0) (0, 0) |> ALoc.of_loc
+
 let dummy_reason = locationless_reason (RCustom "dummy_reason")
 
 (**************************)
@@ -260,7 +262,7 @@ let mk_eval_hint_test ~expected base ops ctxt =
   let cx = mk_cx () in
   let actual =
     mk_hint (TypeParser.parse cx base) ops
-    |> Type_hint.evaluate_hint cx
+    |> Type_hint.evaluate_hint cx dummy_loc
     |> Base.Option.value_map ~default:"None" ~f:(Ty_normalizer.debug_string_of_t cx)
   in
   assert_equal ~ctxt ~printer:Base.Fn.id expected actual
@@ -270,7 +272,7 @@ let mk_eval_hint_test_with_type_setup ~expected type_setup_code ops ctxt =
   let (cx, base_t) = TypeLoader.get_type_of_last_expression cx type_setup_code in
   let actual =
     mk_hint base_t ops
-    |> Type_hint.evaluate_hint cx
+    |> Type_hint.evaluate_hint cx dummy_loc
     |> Base.Option.value_map ~default:"None" ~f:(Ty_normalizer.debug_string_of_t cx)
   in
   assert_equal ~ctxt ~printer:Base.Fn.id expected actual

@@ -5,4 +5,4 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-val evaluate_hint : Context.t -> Type.t Hint_api.hint -> Type.t option
+val evaluate_hint : Context.t -> ALoc.t -> Type.t Hint_api.hint -> Type.t option

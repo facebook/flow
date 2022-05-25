@@ -37,8 +37,6 @@ let is_fully_resolved =
       false
     | _ -> true
 
-let dummy_reason = locationless_reason (RCustom "type hint reason")
-
 let in_sandbox_cx cx f =
   let original_errors = Context.errors cx in
   let result = f () in
@@ -50,24 +48,27 @@ let in_sandbox_cx cx f =
     None
   )
 
-let fun_t ~params ~rest_param ~return_t =
-  DefT
-    ( dummy_reason,
-      bogus_trust (),
-      FunT
-        ( Unsoundness.dummy_static_any dummy_reason,
-          {
-            this_t = (Unsoundness.unresolved_any dummy_reason, This_Function);
-            params;
-            rest_param;
-            return_t;
-            is_predicate = false;
-            def_reason = dummy_reason;
-          }
-        )
-    )
+let type_of_hint_decomposition cx op loc t =
+  let dummy_reason = mk_reason (RCustom "type hint reason") loc in
 
-let type_of_hint_decomposition cx op t =
+  let fun_t ~params ~rest_param ~return_t =
+    DefT
+      ( dummy_reason,
+        bogus_trust (),
+        FunT
+          ( Unsoundness.dummy_static_any dummy_reason,
+            {
+              this_t = (Unsoundness.unresolved_any dummy_reason, This_Function);
+              params;
+              rest_param;
+              return_t;
+              is_predicate = false;
+              def_reason = dummy_reason;
+            }
+          )
+      )
+  in
+
   in_sandbox_cx cx (fun () ->
       match op with
       | Decomp_ArrElement i ->
@@ -217,19 +218,19 @@ let type_of_hint_decomposition cx op t =
         annot true t
   )
 
-let rec evaluate_hint_ops cx t = function
+let rec evaluate_hint_ops cx loc t = function
   | [] -> Some t
   | op :: ops ->
-    (match type_of_hint_decomposition cx op t with
-    | Some t -> evaluate_hint_ops cx t ops
+    (match type_of_hint_decomposition cx op loc t with
+    | Some t -> evaluate_hint_ops cx loc t ops
     | None -> None)
 
-let evaluate_hint cx hint =
+let evaluate_hint cx loc hint =
   match hint with
   | Hint_None -> None
   | Hint_t t when is_fully_resolved cx t -> Some t
   | Hint_Decomp (ops, t) when is_fully_resolved cx t ->
-    ops |> Nel.to_list |> List.rev |> evaluate_hint_ops cx t
+    ops |> Nel.to_list |> List.rev |> evaluate_hint_ops cx loc t
   | Hint_t _
   | Hint_Decomp _ ->
     None
