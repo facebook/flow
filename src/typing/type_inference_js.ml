@@ -440,7 +440,8 @@ module Make (Env : Env_sig.S) : S = struct
         | _ -> failwith "Flow bug: Statement.toplevels threw with non-stmts payload")
       ()
 
-  let initialize_env ~lib ?(exclude_syms = NameUtils.Set.empty) cx aloc_ast module_scope =
+  let initialize_env
+      ~lib ?(exclude_syms = NameUtils.Set.empty) ?local_exports_var cx aloc_ast module_scope =
     let (_abrupt_completion, ({ Env_api.env_entries; _ } as info)) =
       NameResolver.program_with_scope cx aloc_ast
     in
@@ -448,6 +449,15 @@ module Make (Env : Env_sig.S) : S = struct
     let name_def_graph = Name_def.find_defs env_entries aloc_ast in
     let components = NameDefOrdering.build_ordering cx info name_def_graph in
     if Context.cycle_errors cx then Base.List.iter ~f:(Cycles.handle_component cx) components;
+    let env =
+      Base.Option.value_map ~default:env local_exports_var ~f:(fun local_exports_var ->
+          Loc_env.initialize
+            env
+            Env_api.OrdinaryNameLoc
+            (TypeUtil.loc_of_t local_exports_var)
+            (Type.Inferred local_exports_var)
+      )
+    in
     Context.set_environment cx env;
     Env.init_env ~exclude_syms cx module_scope;
     if (not lib) && Context.resolved_env cx then
@@ -498,15 +508,7 @@ module Make (Env : Env_sig.S) : S = struct
         scope
       )
     in
-    initialize_env ~lib:false cx aloc_ast module_scope;
-    Context.set_environment
-      cx
-      (Loc_env.initialize
-         (Context.environment cx)
-         Env_api.OrdinaryNameLoc
-         (TypeUtil.loc_of_t local_exports_var)
-         (Type.Inferred local_exports_var)
-      );
+    initialize_env ~lib:false ~local_exports_var cx aloc_ast module_scope;
 
     let file_loc = Loc.{ none with source = Some filename } |> ALoc.of_loc in
     let reason = Reason.mk_reason Reason.RExports file_loc in
