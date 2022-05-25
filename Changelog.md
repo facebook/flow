@@ -1,3 +1,19 @@
+### 0.179.0
+
+Likely to cause new Flow errors:
+* Improve the type checking of function parameters that use destructuring, have an annotation, and also have a default value.
+
+Notable bug fixes:
+* Fix IDE services in the presence of certain types of parse errors.
+* Fix crash when encountering an unexpected `\/`. This could have broken IDE integrations while typing.
+* Fix crash with invalid for-await loops.
+
+Parser:
+*  Add parser support for ES2022 `d` RegExp flag (see [RegExp Match Indices]((https://github.com/tc39/proposal-regexp-match-indices))).
+
+Library Definitions:
+* Add void to the React$Node type.
+
 ### 0.178.1
 
 Notable Bug Fixes:
