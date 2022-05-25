@@ -20,8 +20,8 @@ module Flow = Flow_js
 open Utils_js
 open Reason
 open Type
-open Type_hint
 open TypeUtil
+open Hint_api
 open Func_class_sig_types
 
 module Make

@@ -7,7 +7,7 @@
 
 open OUnit2
 open Reason
-open Type_hint
+open Hint_api
 
 let metadata =
   {

@@ -18,7 +18,7 @@ module Ast = Flow_ast
 module Tast_utils = Typed_ast_utils
 open Reason
 open Type
-open Type_hint
+open Hint_api
 open TypeUtil
 
 module Make (Env : Env_sig.S) (Statement : Statement_sig.S with module Env := Env) :

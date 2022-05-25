@@ -7,7 +7,7 @@
 
 open Name_def
 open Type
-open Type_hint
+open Hint_api
 open Reason
 open Loc_collections
 open Utils_js

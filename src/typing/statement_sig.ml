@@ -45,7 +45,7 @@ module type S = sig
   val expression :
     ?cond:Type.cond_context ->
     Context.t ->
-    hint:Type_hint.hint ->
+    hint:Type.t Hint_api.hint ->
     (ALoc.t, ALoc.t) Flow_ast.Expression.t ->
     (ALoc.t, ALoc.t * Type.t) Flow_ast.Expression.t
 
@@ -58,7 +58,7 @@ module type S = sig
 
   val mk_function :
     Context.t ->
-    hint:Type_hint.hint ->
+    hint:Type.t Hint_api.hint ->
     needs_this_param:bool ->
     general:Type.t ->
     Reason.reason ->
@@ -68,7 +68,7 @@ module type S = sig
 
   val mk_func_sig :
     Context.t ->
-    func_hint:Type_hint.hint ->
+    func_hint:Type.t Hint_api.hint ->
     needs_this_param:bool ->
     Type.t Subst_name.Map.t ->
     Reason.reason ->

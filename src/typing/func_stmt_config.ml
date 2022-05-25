@@ -9,7 +9,7 @@ module Ast = Flow_ast
 module Flow = Flow_js
 open Reason
 open Type
-open Type_hint
+open Hint_api
 
 module Make
     (Env : Env_sig.S)
