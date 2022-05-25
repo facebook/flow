@@ -5200,8 +5200,7 @@ struct
                 )
               in
               let eval_args ~hint preds =
-                let propref = Named (reason_prop, OrdinaryName name) in
-                let hint = decompose_hint (Decomp_MethodName propref) hint in
+                let hint = decompose_hint (Decomp_MethodName name) hint in
                 in_env preds (fun () -> arg_list cx ~hint arguments)
               in
               let ( filtered_out,
@@ -5272,7 +5271,7 @@ struct
               let eval_args_and_expr ~hint preds =
                 in_env preds (fun () ->
                     let (((_, elem_t), _) as expr) = expression cx ~hint:Hint_None expr in
-                    let hint = decompose_hint (Decomp_MethodElem elem_t) hint in
+                    let hint = decompose_hint Decomp_MethodElem hint in
                     let (argts, arguments_ast) = arg_list cx ~hint arguments in
                     ((argts, elem_t), (arguments_ast, expr))
                 )

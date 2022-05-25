@@ -11,8 +11,8 @@ type hint_decomposition =
   | Decomp_ObjSpread
   | Decomp_ArrElement of int
   | Decomp_ArrSpread of int
-  | Decomp_MethodName of Type.propref
-  | Decomp_MethodElem of Type.t
+  | Decomp_MethodName of string
+  | Decomp_MethodElem
   | Decomp_CallNew
   | Decomp_CallSuper
   | Decomp_CallSuperMem of string

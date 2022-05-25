@@ -26,9 +26,9 @@ type hint_decomposition =
   (* Hint on array literal `[...e]` becomes hint on `e` *)
   | Decomp_ArrSpread of int
   (* Type of `o` in `o.m(..)` becomes the type of `o.m` *)
-  | Decomp_MethodName of Type.propref
+  | Decomp_MethodName of string
   (* Type of `o` in `o[e](..)` becomes the type of `o[e]` *)
-  | Decomp_MethodElem of Type.t
+  | Decomp_MethodElem
   (* Type of `C` in `new C(..)` becomes the type of the constructor of C *)
   | Decomp_CallNew
   (* Type of the super-class becomes the type of the super constructor *)
@@ -56,7 +56,7 @@ let string_of_hint_unknown_kind = function
   | Decomp_ArrElement i -> Utils_js.spf "Decomp_ArrElement (%d)" i
   | Decomp_ArrSpread i -> Utils_js.spf "Decomp_ArrSpread (%d)" i
   | Decomp_MethodName _ -> "Decomp_MethodName"
-  | Decomp_MethodElem _ -> "Decomp_MethodElem"
+  | Decomp_MethodElem -> "Decomp_MethodElem"
   | Decomp_CallNew -> "Decomp_CallNew"
   | Decomp_CallSuper -> "Decomp_CallSuper"
   | Decomp_CallSuperMem _ -> "Decomp_CallSuperMem"
@@ -238,7 +238,7 @@ let type_of_hint_decomposition cx op t =
           )
         in
         annot true t
-      | Decomp_MethodElem _ ->
+      | Decomp_MethodElem ->
         (* TODO *)
         failwith "Not implemented"
       | Decomp_MethodName _ ->
