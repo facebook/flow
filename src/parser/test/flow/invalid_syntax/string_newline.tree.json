@@ -28,7 +28,7 @@
         "value":"foo\n",
         "raw":"\"foo\n"
       },
-      "directive":"foo"
+      "directive":null
     },
     {
       "type":"ExpressionStatement",

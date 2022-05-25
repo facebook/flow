@@ -861,7 +861,13 @@ module Statement
           if allow_directive env then
             match expression with
             | (_, Ast.Expression.Literal { Ast.Literal.value = Ast.Literal.String _; raw; _ }) ->
-              Some (String.sub raw 1 (String.length raw - 2))
+              (* the parser may recover from errors and generate unclosed strings, where
+                 the opening quote should be reliable but the closing one might not exist.
+                 be defensive. *)
+              if String.length raw > 1 && raw.[0] = raw.[String.length raw - 1] then
+                Some (String.sub raw 1 (String.length raw - 2))
+              else
+                None
             | _ -> None
           else
             None
