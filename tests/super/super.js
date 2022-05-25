@@ -20,3 +20,13 @@ class B extends A {
     return super.g;
   }
 }
+
+class ExtendedByAssignSuper {
+  x: number;
+}
+
+class AssignSuper extends ExtendedByAssignSuper {
+  test() {
+    super.x = 1;
+  }
+}

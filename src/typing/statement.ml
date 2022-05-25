@@ -6089,7 +6089,7 @@ struct
     } ->
       let reason = mk_reason (RPropertyAssignment (Some name)) lhs_loc in
       let prop_reason = mk_reason (RProperty (Some (OrdinaryName name))) prop_loc in
-      let super_t = super_ cx lhs_loc in
+      let super_t = super_ cx super_loc in
       let prop_t = Tvar.mk cx prop_reason in
       let use_op =
         make_op ~lhs:reason ~prop:(mk_reason (desc_of_reason lhs_prop_reason) prop_loc)
