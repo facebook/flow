@@ -529,11 +529,12 @@ module New_env = struct
   let set_expr cx _key loc ~refined ~original:_ =
     let env = Context.environment cx in
     Debug_js.Verbose.print_if_verbose cx [spf "set expr at location %s" (Reason.string_of_aloc loc)];
-    match Loc_env.find_ordinary_write env loc with
-    | None ->
+    match (Loc_env.find_ordinary_write env loc, Context.env_mode cx) with
+    | (_, Options.SSAEnv { resolved = true }) (* Fully resolved env doesn't need to write here *)
+    | (None, _) ->
       (* As below, this entry is empty if the refinement is never read from *)
       ()
-    | Some w -> Flow_js.unify cx ~use_op:unknown_use refined w
+    | (Some w, _) -> Flow_js.unify cx ~use_op:unknown_use refined w
 
   let env_entries_of_def_loc_type var_info = function
     | Env_api.OrdinaryNameLoc -> var_info.Env_api.env_entries
