@@ -236,6 +236,14 @@ class def_finder env_entries providers =
 
     method add_binding loc reason src = this#update_acc (ALocMap.add loc (src, reason))
 
+    method private in_new_tparams_env : 'a. (unit -> 'a) -> 'a =
+      fun f ->
+        let old_tparams = tparams in
+        tparams <- ALocSet.empty;
+        let result = f () in
+        tparams <- old_tparams;
+        result
+
     method! variable_declarator ~kind decl =
       let open Ast.Statement.VariableDeclaration.Declarator in
       let (_, { id; init }) = decl in
@@ -289,19 +297,16 @@ class def_finder env_entries providers =
     method private visit_function_expr ~func_hint loc expr =
       let open Ast.Function in
       let { id; async; generator; sig_loc; _ } = expr in
-      let old_tparams = tparams in
-      tparams <- ALocSet.empty;
-      this#visit_function ~func_hint expr;
-      begin
-        match id with
-        | Some (id_loc, _) ->
-          this#add_binding
-            id_loc
-            (func_reason ~async ~generator sig_loc)
-            (def_of_function tparams loc expr)
-        | None -> ()
-      end;
-      tparams <- old_tparams
+      this#in_new_tparams_env (fun () ->
+          this#visit_function ~func_hint expr;
+          match id with
+          | Some (id_loc, _) ->
+            this#add_binding
+              id_loc
+              (func_reason ~async ~generator sig_loc)
+              (def_of_function tparams loc expr)
+          | None -> ()
+      )
 
     method! function_expression loc expr =
       this#visit_function_expr ~func_hint:Hint_None loc expr;
@@ -310,23 +315,22 @@ class def_finder env_entries providers =
     method! function_declaration loc expr =
       let open Ast.Function in
       let { id; async; generator; sig_loc; _ } = expr in
-      let old_tparams = tparams in
-      tparams <- ALocSet.empty;
-      this#visit_function ~func_hint:Hint_None expr;
-      begin
-        match id with
-        | Some (id_loc, _) ->
-          this#add_binding
-            id_loc
-            (func_reason ~async ~generator sig_loc)
-            (def_of_function tparams loc expr)
-        | None -> ()
-      end;
-      tparams <- old_tparams;
+      this#in_new_tparams_env (fun () ->
+          this#visit_function ~func_hint:Hint_None expr;
+          match id with
+          | Some (id_loc, _) ->
+            this#add_binding
+              id_loc
+              (func_reason ~async ~generator sig_loc)
+              (def_of_function tparams loc expr)
+          | None -> ()
+      );
       expr
 
+    method! function_type loc ft = this#in_new_tparams_env (fun () -> super#function_type loc ft)
+
     method! function_ _ expr =
-      this#visit_function ~func_hint:Hint_None expr;
+      this#in_new_tparams_env (fun () -> this#visit_function ~func_hint:Hint_None expr);
       expr
 
     method private visit_function ~func_hint expr =
@@ -369,19 +373,18 @@ class def_finder env_entries providers =
     method! class_ loc expr =
       let open Ast.Class in
       let { id; _ } = expr in
-      let old_tparams = tparams in
-      tparams <- ALocSet.empty;
-      let res = super#class_ loc expr in
-      begin
-        match id with
-        | Some (id_loc, { Ast.Identifier.name; _ }) ->
-          let name = OrdinaryName name in
-          let reason = mk_reason (RType name) id_loc in
-          this#add_binding id_loc reason (def_of_class loc expr)
-        | None -> ()
-      end;
-      tparams <- old_tparams;
-      res
+      this#in_new_tparams_env (fun () ->
+          let res = super#class_ loc expr in
+          begin
+            match id with
+            | Some (id_loc, { Ast.Identifier.name; _ }) ->
+              let name = OrdinaryName name in
+              let reason = mk_reason (RType name) id_loc in
+              this#add_binding id_loc reason (def_of_class loc expr)
+            | None -> ()
+          end;
+          res
+      )
 
     method! declare_function loc (decl : ('loc, 'loc) Ast.Statement.DeclareFunction.t) =
       match Declare_function_utils.declare_function_to_function_declaration_simple loc decl with
@@ -510,13 +513,13 @@ class def_finder env_entries providers =
       let open Ast.Statement.TypeAlias in
       let { id = (id_loc, { Ast.Identifier.name; _ }); _ } = alias in
       this#add_binding id_loc (mk_reason (RType (OrdinaryName name)) id_loc) (TypeAlias (loc, alias));
-      super#type_alias loc alias
+      this#in_new_tparams_env (fun () -> super#type_alias loc alias)
 
     method! opaque_type loc (otype : ('loc, 'loc) Ast.Statement.OpaqueType.t) =
       let open Ast.Statement.OpaqueType in
       let { id = (id_loc, { Ast.Identifier.name; _ }); _ } = otype in
       this#add_binding id_loc (mk_reason (ROpaqueType name) id_loc) (OpaqueType (loc, otype));
-      super#opaque_type loc otype
+      this#in_new_tparams_env (fun () -> super#opaque_type loc otype)
 
     method! type_param (tparam : ('loc, 'loc) Ast.Type.TypeParam.t) =
       let open Ast.Type.TypeParam in
@@ -529,7 +532,7 @@ class def_finder env_entries providers =
       let open Ast.Statement.Interface in
       let { id = (name_loc, _); _ } = interface in
       this#add_binding name_loc (mk_reason RInterfaceType loc) (Interface (loc, interface));
-      super#interface loc interface
+      this#in_new_tparams_env (fun () -> super#interface loc interface)
 
     method! enum_declaration loc (enum : ('loc, 'loc) Ast.Statement.EnumDeclaration.t) =
       let open Ast.Statement.EnumDeclaration in
@@ -748,7 +751,8 @@ class def_finder env_entries providers =
       end;
       match expr with
       | Ast.Expression.Array expr -> this#visit_array_expression ~array_hint:hint expr
-      | Ast.Expression.ArrowFunction x -> this#visit_function ~func_hint:hint x
+      | Ast.Expression.ArrowFunction x ->
+        this#in_new_tparams_env (fun () -> this#visit_function ~func_hint:hint x)
       | Ast.Expression.Function x -> this#visit_function_expr ~func_hint:hint loc x
       | Ast.Expression.Object expr -> this#visit_object_expression ~object_hint:hint expr
       | Ast.Expression.Assignment _
