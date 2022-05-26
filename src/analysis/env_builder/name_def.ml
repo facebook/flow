@@ -256,7 +256,9 @@ class def_finder env_entries =
         (Binding (Root (Annotation (ALocSet.empty, annot))));
       super#declare_variable loc decl
 
-    method! function_param (param : ('loc, 'loc) Ast.Function.Param.t) =
+    method! function_param _ = failwith "Should be visited by visit_function_param"
+
+    method private visit_function_param (param : ('loc, 'loc) Ast.Function.Param.t) =
       let open Ast.Function.Param in
       let (loc, { argument; default }) = param in
       let source =
@@ -266,29 +268,31 @@ class def_finder env_entries =
       in
       let source = Destructure.pattern_default (Root source) default in
       Destructure.pattern ~f:this#add_binding source argument;
-      super#function_param param
+      ignore @@ super#function_param param
 
-    method! function_rest_param (expr : ('loc, 'loc) Ast.Function.RestParam.t) =
+    method! function_rest_param _ = failwith "Should be visited by visit_function_rest_param"
+
+    method private visit_function_rest_param (expr : ('loc, 'loc) Ast.Function.RestParam.t) =
       let open Ast.Function.RestParam in
-      let (loc, { argument; _ }) = expr in
+      let (loc, { argument; comments = _ }) = expr in
       let source =
         match Destructure.type_of_pattern argument with
         | Some annot -> Annotation (tparams, annot)
         | None -> Contextual loc
       in
       Destructure.pattern ~f:this#add_binding (Root source) argument;
-      super#function_rest_param expr
+      ignore @@ super#function_rest_param expr
 
     method! catch_clause_pattern pat =
       Destructure.pattern ~f:this#add_binding (Root Catch) pat;
       super#catch_clause_pattern pat
 
-    method! function_expression loc expr =
+    method private visit_function_expr loc expr =
       let open Ast.Function in
       let { id; async; generator; sig_loc; _ } = expr in
       let old_tparams = tparams in
       tparams <- ALocSet.empty;
-      let res = super#function_expression loc expr in
+      this#visit_function expr;
       begin
         match id with
         | Some (id_loc, _) ->
@@ -298,15 +302,18 @@ class def_finder env_entries =
             (def_of_function tparams loc expr)
         | None -> ()
       end;
-      tparams <- old_tparams;
-      res
+      tparams <- old_tparams
+
+    method! function_expression loc expr =
+      this#visit_function_expr loc expr;
+      expr
 
     method! function_declaration loc expr =
       let open Ast.Function in
       let { id; async; generator; sig_loc; _ } = expr in
       let old_tparams = tparams in
       tparams <- ALocSet.empty;
-      let res = super#function_declaration loc expr in
+      this#visit_function expr;
       begin
         match id with
         | Some (id_loc, _) ->
@@ -317,7 +324,40 @@ class def_finder env_entries =
         | None -> ()
       end;
       tparams <- old_tparams;
-      res
+      expr
+
+    method! function_ _ expr =
+      this#visit_function expr;
+      expr
+
+    method private visit_function expr =
+      let open Ast.Function in
+      let {
+        id = _;
+        params = (_, { Params.params = params_list; rest; comments = _; this_ = _ });
+        body;
+        async = _;
+        generator = _;
+        predicate;
+        return;
+        tparams = fun_tparams;
+        sig_loc = _;
+        comments = _;
+      } =
+        expr
+      in
+      Base.Option.iter ~f:(fun tparams -> ignore @@ this#type_params tparams) fun_tparams;
+      Base.List.iter ~f:this#visit_function_param params_list;
+      Base.Option.iter ~f:this#visit_function_rest_param rest;
+      ignore @@ this#type_annotation_hint return;
+      (match body with
+      | Ast.Function.BodyBlock (loc, block) -> ignore @@ this#block loc block
+      | Ast.Function.BodyExpression expr -> this#visit_expression expr);
+      Base.Option.iter predicate ~f:(fun (_, { Ast.Type.Predicate.kind; comments = _ }) ->
+          match kind with
+          | Ast.Type.Predicate.Inferred -> ()
+          | Ast.Type.Predicate.Declared expr -> this#visit_expression expr
+      )
 
     method! class_ loc expr =
       let open Ast.Class in
@@ -549,13 +589,100 @@ class def_finder env_entries =
       end;
       super#optional_member loc mem
 
-    method! expression ((loc, _) as exp) =
+    method! expression expr =
+      this#visit_expression expr;
+      expr
+
+    method private visit_expression ((loc, expr) as exp) =
       begin
         match ALocMap.find_opt loc env_entries with
         | Some (Env_api.RefinementWrite reason) -> this#add_binding loc reason (RefiExpression exp)
         | _ -> ()
       end;
-      super#expression exp
+      match expr with
+      | Ast.Expression.Array expr -> this#visit_array_expression expr
+      | Ast.Expression.ArrowFunction x -> this#visit_function x
+      | Ast.Expression.Function x -> this#visit_function_expr loc x
+      | Ast.Expression.Object expr -> this#visit_object_expression expr
+      | Ast.Expression.Assignment _
+      | Ast.Expression.Binary _
+      | Ast.Expression.Call _
+      | Ast.Expression.Class _
+      | Ast.Expression.Comprehension _
+      | Ast.Expression.Conditional _
+      | Ast.Expression.Generator _
+      | Ast.Expression.Identifier _
+      | Ast.Expression.Import _
+      | Ast.Expression.JSXElement _
+      | Ast.Expression.JSXFragment _
+      | Ast.Expression.Literal _
+      | Ast.Expression.Logical _
+      | Ast.Expression.Member _
+      | Ast.Expression.MetaProperty _
+      | Ast.Expression.New _
+      | Ast.Expression.OptionalCall _
+      | Ast.Expression.OptionalMember _
+      | Ast.Expression.Sequence _
+      | Ast.Expression.Super _
+      | Ast.Expression.TaggedTemplate _
+      | Ast.Expression.TemplateLiteral _
+      | Ast.Expression.This _
+      | Ast.Expression.TypeCast _
+      | Ast.Expression.Unary _
+      | Ast.Expression.Update _
+      | Ast.Expression.Yield _ ->
+        ignore @@ super#expression exp
+
+    method! array _ _ = failwith "Should be visited by visit_array_expression"
+
+    method private visit_array_expression expr =
+      let { Ast.Expression.Array.elements; comments = _ } = expr in
+      Base.List.iter elements ~f:(fun element ->
+          match element with
+          | Ast.Expression.Array.Expression expr -> this#visit_expression expr
+          | Ast.Expression.Array.Spread (_, spread) ->
+            this#visit_expression spread.Ast.Expression.SpreadElement.argument
+          | Ast.Expression.Array.Hole _ -> ()
+      )
+
+    method! object_ _ _ = failwith "Should be visited by visit_object_expression"
+
+    method private visit_object_expression expr =
+      let open Ast.Expression.Object in
+      let { properties; comments = _ } = expr in
+      let visit_object_key = function
+        | Ast.Expression.Object.Property.Literal _ -> ()
+        | Ast.Expression.Object.Property.Identifier _ -> ()
+        | Ast.Expression.Object.Property.PrivateName _ -> ()
+        | Ast.Expression.Object.Property.Computed computed ->
+          let (_, { Ast.ComputedKey.expression; comments = _ }) = computed in
+          this#visit_expression expression
+      in
+      Base.List.iter properties ~f:(fun prop ->
+          match prop with
+          | Property p ->
+            let open Ast.Expression.Object.Property in
+            (match p with
+            | (_, Init { key; value; shorthand = _ }) ->
+              visit_object_key key;
+              this#visit_expression value;
+              ()
+            | (loc, Method { key; value = (_, fn) }) ->
+              visit_object_key key;
+              this#visit_function_expr loc fn;
+              ()
+            | (loc, Get { key; value = (_, fn); comments = _ }) ->
+              visit_object_key key;
+              this#visit_function_expr loc fn;
+              ()
+            | (loc, Set { key; value = (_, fn); comments = _ }) ->
+              visit_object_key key;
+              this#visit_function_expr loc fn;
+              ())
+          | SpreadProperty s ->
+            let (_, { Ast.Expression.Object.SpreadProperty.argument; comments = _ }) = s in
+            this#visit_expression argument
+      )
   end
 
 let find_defs env_entries ast =
