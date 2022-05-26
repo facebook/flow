@@ -234,8 +234,8 @@ let make ~call_wrapper ~saved_state ~entry ~nbr_procs ~gc_control ~heap_handle =
   !made_workers
 
 (** Sends a request to call `f x` on `worker` *)
-let send worker worker_pid outfd (f : 'a -> 'b) (x : 'a) : unit Lwt.t =
-  let outfd_lwt = Lwt_unix.of_unix_file_descr ~blocking:false ~set_flags:true outfd in
+let send worker worker_pid outfd_lwt (f : 'a -> 'b) (x : 'a) : unit Lwt.t =
+  let outfd = Lwt_unix.unix_file_descr outfd_lwt in
   let request = wrap_request worker f x in
   try%lwt
     (* Wait in an lwt-friendly manner for the worker to be writable (should be instant) *)
@@ -272,8 +272,8 @@ let send worker worker_pid outfd (f : 'a -> 'b) (x : 'a) : unit Lwt.t =
     | exception Unix.Unix_error (Unix.ECHILD, _, _) ->
       raise (Worker_failed_to_send_job (Worker_already_exited None)))
 
-let read (type result) worker_pid infd : (result * Measure.record_data) Lwt.t =
-  let infd_lwt = Lwt_unix.of_unix_file_descr ~blocking:false ~set_flags:true infd in
+let read (type result) worker_pid infd_lwt : (result * Measure.record_data) Lwt.t =
+  let infd = Lwt_unix.unix_file_descr infd_lwt in
   try%lwt
     (* Wait in an lwt-friendly manner for the worker to finish the job *)
     let%lwt () = Lwt_unix.wait_read infd_lwt in
@@ -337,8 +337,8 @@ let call w (f : 'a -> 'b) (x : 'a) : 'b Lwt.t =
 
   (* Spawn the worker, if not prespawned. *)
   let ({ Daemon.pid = worker_pid; channels = (inc, outc) } as h) = spawn w in
-  let infd = Daemon.descr_of_in_channel inc in
-  let outfd = Daemon.descr_of_out_channel outc in
+  let infd = Lwt_unix.of_unix_file_descr (Daemon.descr_of_in_channel inc) in
+  let outfd = Lwt_unix.of_unix_file_descr (Daemon.descr_of_out_channel outc) in
   try%lwt
     let%lwt () = send w worker_pid outfd f x in
     let%lwt (res, measure_data) = read worker_pid infd in

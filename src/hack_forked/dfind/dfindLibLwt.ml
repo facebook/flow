@@ -11,11 +11,9 @@ type t = {
   daemon_handle: (DfindServer.msg, unit) Daemon.handle;
 }
 
-let descr_of_in_channel ic =
-  Lwt_unix.of_unix_file_descr ~blocking:false ~set_flags:true (Daemon.descr_of_in_channel ic)
+let descr_of_in_channel ic = Lwt_unix.of_unix_file_descr (Daemon.descr_of_in_channel ic)
 
-let descr_of_out_channel oc =
-  Lwt_unix.of_unix_file_descr ~blocking:false ~set_flags:true (Daemon.descr_of_out_channel oc)
+let descr_of_out_channel oc = Lwt_unix.of_unix_file_descr (Daemon.descr_of_out_channel oc)
 
 let init log_fds (scuba_table, roots) =
   let name = Printf.sprintf "file watching process for server %d" (Unix.getpid ()) in

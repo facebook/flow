@@ -147,7 +147,7 @@ let internal_start ~is_daemon ?waiting_fd monitor_options =
       match waiting_fd with
       | None -> Lwt.return_unit
       | Some fd ->
-        let fd = Lwt_unix.of_unix_file_descr ~blocking:false ~set_flags:true fd in
+        let fd = Lwt_unix.of_unix_file_descr fd in
         handle_waiting_start_command fd
     in
     (* Don't start the server until we've set up the threads to handle the waiting channel *)
@@ -165,7 +165,7 @@ let internal_start ~is_daemon ?waiting_fd monitor_options =
     Lwt.async (fun () ->
         try%lwt
           SocketAcceptor.run
-            (Lwt_unix.of_unix_file_descr ~blocking:false ~set_flags:true monitor_socket_fd)
+            (Lwt_unix.of_unix_file_descr monitor_socket_fd)
             ~autostop:monitor_options.FlowServerMonitorOptions.autostop
         with
         | exn ->
@@ -173,19 +173,13 @@ let internal_start ~is_daemon ?waiting_fd monitor_options =
           fallback_error_handler "Uncaught exception in SocketAcceptor thread" exn
     );
     Lwt.async (fun () ->
-        try%lwt
-          SocketAcceptor.run_legacy
-            (Lwt_unix.of_unix_file_descr ~blocking:false ~set_flags:true legacy2_socket_fd)
-        with
+        try%lwt SocketAcceptor.run_legacy (Lwt_unix.of_unix_file_descr legacy2_socket_fd) with
         | exn ->
           let exn = Exception.wrap exn in
           fallback_error_handler "Uncaught exception in SocketAcceptor legacy thread" exn
     );
     Lwt.async (fun () ->
-        try%lwt
-          SocketAcceptor.run_legacy
-            (Lwt_unix.of_unix_file_descr ~blocking:false ~set_flags:true legacy1_socket_fd)
-        with
+        try%lwt SocketAcceptor.run_legacy (Lwt_unix.of_unix_file_descr legacy1_socket_fd) with
         | exn ->
           let exn = Exception.wrap exn in
           fallback_error_handler "Uncaught exception in SocketAcceptor legacy thread" exn

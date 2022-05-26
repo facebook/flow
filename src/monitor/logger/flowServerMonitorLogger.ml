@@ -83,9 +83,7 @@ let init_logger log_fd =
   let min_level_stderr = Hh_logger.Level.min_level_stderr () |> lwt_level_of_hh_logger_level in
   let min_level = Hh_logger.Level.min_level () |> lwt_level_of_hh_logger_level in
   let template = "$(date).$(milliseconds) [$(level)] $(message)" in
-  let log_fd =
-    Base.Option.map log_fd ~f:(Lwt_unix.of_unix_file_descr ~blocking:false ~set_flags:true)
-  in
+  let log_fd = Base.Option.map log_fd ~f:Lwt_unix.of_unix_file_descr in
   Lwt.async (fun () -> WriteLoop.run log_fd);
 
   (* Format the messages and write the to the log and stderr *)
