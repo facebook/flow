@@ -138,16 +138,18 @@ let print_order lst =
 
 let print_init_test contents =
   let ast = parse_with_alocs contents in
-  let (_, { Name_resolver.Env_api.env_entries; _ }) = Name_resolver.program_with_scope () ast in
-  let inits = Name_def.find_defs env_entries ast in
+  let (_, { Name_resolver.Env_api.env_entries; providers; _ }) =
+    Name_resolver.program_with_scope () ast
+  in
+  let inits = Name_def.find_defs env_entries providers ast in
   print_values inits
 
 let print_order_test contents =
   let ast = parse_with_alocs contents in
-  let (_, ({ Name_resolver.Env_api.env_entries; _ } as env)) =
+  let (_, ({ Name_resolver.Env_api.env_entries; providers; _ } as env)) =
     Name_resolver.program_with_scope () ast
   in
-  let inits = Name_def.find_defs env_entries ast in
+  let inits = Name_def.find_defs env_entries providers ast in
   let order = Name_def_ordering.build_ordering () env inits in
   print_order order
 

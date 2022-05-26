@@ -6,6 +6,7 @@
  *)
 
 module Ast = Flow_ast
+open Hint_api
 open Reason
 open Flow_ast_mapper
 open Loc_collections
@@ -17,7 +18,7 @@ type for_kind =
 type root =
   | Annotation of ALocSet.t * (ALoc.t, ALoc.t) Ast.Type.annotation
   | Value of (ALoc.t, ALoc.t) Ast.Expression.t
-  | Contextual of ALoc.t
+  | Contextual of ALoc.t * root hint
   | Catch
   | For of for_kind * (ALoc.t, ALoc.t) Ast.Expression.t
 
@@ -225,7 +226,7 @@ let def_of_class loc ({ Ast.Class.body = (_, { Ast.Class.Body.body; _ }); _ } as
   in
   Class { fully_annotated; class_; class_loc = loc }
 
-class def_finder env_entries =
+class def_finder env_entries providers =
   object (this)
     inherit [map, ALoc.t] Flow_ast_visitor.visitor ~init:ALocMap.empty as super
 
@@ -258,27 +259,25 @@ class def_finder env_entries =
 
     method! function_param _ = failwith "Should be visited by visit_function_param"
 
-    method private visit_function_param (param : ('loc, 'loc) Ast.Function.Param.t) =
+    method private visit_function_param ~hint (param : ('loc, 'loc) Ast.Function.Param.t) =
       let open Ast.Function.Param in
       let (loc, { argument; default }) = param in
       let source =
         match Destructure.type_of_pattern argument with
         | Some annot -> Annotation (tparams, annot)
-        | None -> Contextual loc
+        | None -> Contextual (loc, hint)
       in
       let source = Destructure.pattern_default (Root source) default in
       Destructure.pattern ~f:this#add_binding source argument;
       ignore @@ super#function_param param
 
-    method! function_rest_param _ = failwith "Should be visited by visit_function_rest_param"
-
-    method private visit_function_rest_param (expr : ('loc, 'loc) Ast.Function.RestParam.t) =
+    method private visit_function_rest_param ~hint (expr : ('loc, 'loc) Ast.Function.RestParam.t) =
       let open Ast.Function.RestParam in
       let (loc, { argument; comments = _ }) = expr in
       let source =
         match Destructure.type_of_pattern argument with
         | Some annot -> Annotation (tparams, annot)
-        | None -> Contextual loc
+        | None -> Contextual (loc, hint)
       in
       Destructure.pattern ~f:this#add_binding (Root source) argument;
       ignore @@ super#function_rest_param expr
@@ -287,12 +286,12 @@ class def_finder env_entries =
       Destructure.pattern ~f:this#add_binding (Root Catch) pat;
       super#catch_clause_pattern pat
 
-    method private visit_function_expr loc expr =
+    method private visit_function_expr ~func_hint loc expr =
       let open Ast.Function in
       let { id; async; generator; sig_loc; _ } = expr in
       let old_tparams = tparams in
       tparams <- ALocSet.empty;
-      this#visit_function expr;
+      this#visit_function ~func_hint expr;
       begin
         match id with
         | Some (id_loc, _) ->
@@ -305,7 +304,7 @@ class def_finder env_entries =
       tparams <- old_tparams
 
     method! function_expression loc expr =
-      this#visit_function_expr loc expr;
+      this#visit_function_expr ~func_hint:Hint_None loc expr;
       expr
 
     method! function_declaration loc expr =
@@ -313,7 +312,7 @@ class def_finder env_entries =
       let { id; async; generator; sig_loc; _ } = expr in
       let old_tparams = tparams in
       tparams <- ALocSet.empty;
-      this#visit_function expr;
+      this#visit_function ~func_hint:Hint_None expr;
       begin
         match id with
         | Some (id_loc, _) ->
@@ -327,10 +326,10 @@ class def_finder env_entries =
       expr
 
     method! function_ _ expr =
-      this#visit_function expr;
+      this#visit_function ~func_hint:Hint_None expr;
       expr
 
-    method private visit_function expr =
+    method private visit_function ~func_hint expr =
       let open Ast.Function in
       let {
         id = _;
@@ -346,17 +345,25 @@ class def_finder env_entries =
       } =
         expr
       in
-      Base.Option.iter ~f:(fun tparams -> ignore @@ this#type_params tparams) fun_tparams;
-      Base.List.iter ~f:this#visit_function_param params_list;
-      Base.Option.iter ~f:this#visit_function_rest_param rest;
+      Base.Option.iter fun_tparams ~f:(fun tparams -> ignore @@ this#type_params tparams);
+      Base.List.iteri
+        ~f:(fun i ->
+          this#visit_function_param ~hint:(decompose_hint (Decomp_FuncParam i) func_hint))
+        params_list;
+      Base.Option.iter
+        ~f:
+          (this#visit_function_rest_param
+             ~hint:(decompose_hint (Decomp_FuncRest (List.length params_list)) func_hint)
+          )
+        rest;
       ignore @@ this#type_annotation_hint return;
       (match body with
       | Ast.Function.BodyBlock (loc, block) -> ignore @@ this#block loc block
-      | Ast.Function.BodyExpression expr -> this#visit_expression expr);
+      | Ast.Function.BodyExpression expr -> this#visit_expression ~hint:Hint_None expr);
       Base.Option.iter predicate ~f:(fun (_, { Ast.Type.Predicate.kind; comments = _ }) ->
           match kind with
           | Ast.Type.Predicate.Inferred -> ()
-          | Ast.Type.Predicate.Declared expr -> this#visit_expression expr
+          | Ast.Type.Predicate.Declared expr -> this#visit_expression ~hint:Hint_None expr
       )
 
     method! class_ loc expr =
@@ -401,7 +408,7 @@ class def_finder env_entries =
 
     method! assignment loc (expr : ('loc, 'loc) Ast.Expression.Assignment.t) =
       let open Ast.Expression.Assignment in
-      let { operator; left = (_, lhs_node) as left; right; comments = _ } = expr in
+      let { operator; left = (lhs_loc, lhs_node) as left; right; comments = _ } = expr in
       let () =
         match (operator, lhs_node) with
         | (None, _) -> Destructure.pattern ~f:this#add_binding (Root (Value right)) left
@@ -415,7 +422,26 @@ class def_finder env_entries =
             (OpAssign { exp_loc = loc; op = operator; rhs = right })
         | _ -> ()
       in
-      super#assignment loc expr
+      ignore @@ this#pattern left;
+      let is_provider =
+        Flow_ast_utils.fold_bindings_of_pattern
+          (fun acc (loc, _) -> acc || Env_api.Provider_api.is_provider providers loc)
+          false
+          left
+      in
+      let hint =
+        if is_provider then
+          Hint_None
+        else
+          match lhs_node with
+          | Ast.Pattern.Identifier { Ast.Pattern.Identifier.name; _ } ->
+            Hint_t (Value (lhs_loc, Ast.Expression.Identifier name))
+          | _ ->
+            (* TODO create a hint based on the lhs pattern *)
+            Hint_None
+      in
+      this#visit_expression ~hint right;
+      expr
 
     method! update_expression loc (expr : (ALoc.t, ALoc.t) Ast.Expression.Update.t) =
       let open Ast.Expression.Update in
@@ -571,6 +597,28 @@ class def_finder env_entries =
         default;
       super#import_declaration loc decl
 
+    method! call _ expr =
+      let open Ast.Expression.Call in
+      let {
+        callee;
+        targs;
+        arguments = (_, { Ast.Expression.ArgList.arguments; comments = _ });
+        comments = _;
+      } =
+        expr
+      in
+      this#visit_expression ~hint:Hint_None callee;
+      Base.Option.iter targs ~f:(fun targs -> ignore @@ this#call_type_args targs);
+      let call_argumemts_hint = Hint_t (Value callee) in
+      Base.List.iteri arguments ~f:(fun i arg ->
+          let hint = decompose_hint (Decomp_FuncParam i) call_argumemts_hint in
+          match arg with
+          | Ast.Expression.Expression expr -> this#visit_expression ~hint expr
+          | Ast.Expression.Spread (_, spread) ->
+            this#visit_expression ~hint spread.Ast.Expression.SpreadElement.argument
+      );
+      expr
+
     method! member loc mem =
       begin
         match ALocMap.find_opt loc env_entries with
@@ -589,21 +637,120 @@ class def_finder env_entries =
       end;
       super#optional_member loc mem
 
-    method! expression expr =
-      this#visit_expression expr;
+    method! type_cast _ expr =
+      let open Ast.Expression.TypeCast in
+      let { expression; annot; comments = _ } = expr in
+      this#visit_expression ~hint:(Hint_t (Annotation (ALocSet.empty, annot))) expression;
+      ignore @@ this#type_annotation annot;
       expr
 
-    method private visit_expression ((loc, expr) as exp) =
+    method! jsx_element _ expr =
+      let open Ast.JSX in
+      let {
+        opening_element =
+          (_, { Opening.name = opening_name; self_closing = _; attributes = opening_attributes });
+        closing_element = _;
+        children;
+        comments = _;
+      } =
+        expr
+      in
+      let hint =
+        match opening_name with
+        | Ast.JSX.Identifier (loc, { Ast.JSX.Identifier.name; comments }) ->
+          Hint_t (Value (loc, Ast.Expression.Identifier (loc, { Ast.Identifier.name; comments })))
+        | Ast.JSX.NamespacedName _ -> Hint_None
+        | Ast.JSX.MemberExpression member ->
+          let rec jsx_title_member_to_expression member =
+            let (mloc, member) = member in
+            let _object =
+              match member.Ast.JSX.MemberExpression._object with
+              | Ast.JSX.MemberExpression.MemberExpression member ->
+                jsx_title_member_to_expression member
+              | Ast.JSX.MemberExpression.Identifier
+                  (loc, { Ast.JSX.Identifier.name = "this"; comments }) ->
+                (loc, Ast.Expression.This { Ast.Expression.This.comments })
+              | Ast.JSX.MemberExpression.Identifier (loc, { Ast.JSX.Identifier.name; comments }) ->
+                (loc, Ast.Expression.Identifier (loc, { Ast.Identifier.name; comments }))
+            in
+            let property =
+              let open Ast.JSX.MemberExpression in
+              let (loc, { Ast.JSX.Identifier.name; comments }) = member.property in
+              (loc, { Ast.Identifier.name; comments })
+            in
+            ( mloc,
+              Ast.Expression.Member
+                {
+                  Ast.Expression.Member._object;
+                  property = Ast.Expression.Member.PropertyIdentifier property;
+                  comments = None;
+                }
+            )
+          in
+          Hint_t (Value (jsx_title_member_to_expression member))
+      in
+      Base.List.iter opening_attributes ~f:(function
+          | Opening.Attribute (_, { Attribute.name; value }) ->
+            let hint =
+              match name with
+              | Ast.JSX.Attribute.Identifier (_, { Ast.JSX.Identifier.name; comments = _ }) ->
+                decompose_hint (Decomp_ObjProp name) hint
+              | Ast.JSX.Attribute.NamespacedName _ -> Hint_None
+            in
+            Base.Option.iter value ~f:(fun value ->
+                match value with
+                | Attribute.Literal _ -> ()
+                | Attribute.ExpressionContainer (_, expr) -> this#visit_jsx_expression ~hint expr
+            )
+          | Opening.SpreadAttribute (_, { SpreadAttribute.argument; comments = _ }) ->
+            this#visit_expression ~hint:(decompose_hint Decomp_ObjSpread hint) argument
+          );
+      this#visit_jsx_children ~hint:(decompose_hint (Decomp_ObjProp "children") hint) children;
+      expr
+
+    method private visit_jsx_expression ~hint expr =
+      let open Ast.JSX.ExpressionContainer in
+      let { expression; comments = _ } = expr in
+      match expression with
+      | Expression expr -> this#visit_expression ~hint expr
+      | EmptyExpression -> ()
+
+    method private visit_jsx_children ~hint (_, children) =
+      let single_child =
+        match children with
+        | [_] -> true
+        | _ -> false
+      in
+      Base.List.iteri children ~f:(fun i (loc, child) ->
+          let hint =
+            if single_child then
+              hint
+            else
+              decompose_hint (Decomp_ArrElement i) hint
+          in
+          match child with
+          | Ast.JSX.Element elem -> ignore @@ this#jsx_element loc elem
+          | Ast.JSX.Fragment frag -> ignore @@ this#jsx_fragment loc frag
+          | Ast.JSX.ExpressionContainer expr -> this#visit_jsx_expression ~hint expr
+          | Ast.JSX.SpreadChild _ -> () (* Unsupported syntax *)
+          | Ast.JSX.Text _ -> ()
+      )
+
+    method! expression expr =
+      this#visit_expression ~hint:Hint_None expr;
+      expr
+
+    method private visit_expression ~hint ((loc, expr) as exp) =
       begin
         match ALocMap.find_opt loc env_entries with
         | Some (Env_api.RefinementWrite reason) -> this#add_binding loc reason (RefiExpression exp)
         | _ -> ()
       end;
       match expr with
-      | Ast.Expression.Array expr -> this#visit_array_expression expr
-      | Ast.Expression.ArrowFunction x -> this#visit_function x
-      | Ast.Expression.Function x -> this#visit_function_expr loc x
-      | Ast.Expression.Object expr -> this#visit_object_expression expr
+      | Ast.Expression.Array expr -> this#visit_array_expression ~array_hint:hint expr
+      | Ast.Expression.ArrowFunction x -> this#visit_function ~func_hint:hint x
+      | Ast.Expression.Function x -> this#visit_function_expr ~func_hint:hint loc x
+      | Ast.Expression.Object expr -> this#visit_object_expression ~object_hint:hint expr
       | Ast.Expression.Assignment _
       | Ast.Expression.Binary _
       | Ast.Expression.Call _
@@ -635,28 +782,36 @@ class def_finder env_entries =
 
     method! array _ _ = failwith "Should be visited by visit_array_expression"
 
-    method private visit_array_expression expr =
+    method private visit_array_expression ~array_hint expr =
       let { Ast.Expression.Array.elements; comments = _ } = expr in
-      Base.List.iter elements ~f:(fun element ->
+      Base.List.iteri elements ~f:(fun i element ->
           match element with
-          | Ast.Expression.Array.Expression expr -> this#visit_expression expr
+          | Ast.Expression.Array.Expression expr ->
+            this#visit_expression ~hint:(decompose_hint (Decomp_ArrElement i) array_hint) expr
           | Ast.Expression.Array.Spread (_, spread) ->
-            this#visit_expression spread.Ast.Expression.SpreadElement.argument
+            this#visit_expression
+              ~hint:(decompose_hint (Decomp_ArrSpread i) array_hint)
+              spread.Ast.Expression.SpreadElement.argument
           | Ast.Expression.Array.Hole _ -> ()
       )
 
     method! object_ _ _ = failwith "Should be visited by visit_object_expression"
 
-    method private visit_object_expression expr =
+    method private visit_object_expression ~object_hint expr =
       let open Ast.Expression.Object in
       let { properties; comments = _ } = expr in
-      let visit_object_key = function
-        | Ast.Expression.Object.Property.Literal _ -> ()
-        | Ast.Expression.Object.Property.Identifier _ -> ()
-        | Ast.Expression.Object.Property.PrivateName _ -> ()
+      let visit_object_key_and_compute_hint = function
+        | Ast.Expression.Object.Property.Literal
+            (_, { Ast.Literal.value = Ast.Literal.String name; _ }) ->
+          decompose_hint (Decomp_ObjProp name) object_hint
+        | Ast.Expression.Object.Property.Literal _ -> Hint_None
+        | Ast.Expression.Object.Property.Identifier (_, { Ast.Identifier.name; comments = _ }) ->
+          decompose_hint (Decomp_ObjProp name) object_hint
+        | Ast.Expression.Object.Property.PrivateName _ -> Hint_None (* Illegal syntax *)
         | Ast.Expression.Object.Property.Computed computed ->
           let (_, { Ast.ComputedKey.expression; comments = _ }) = computed in
-          this#visit_expression expression
+          this#visit_expression ~hint:Hint_None expression;
+          Hint_None
       in
       Base.List.iter properties ~f:(fun prop ->
           match prop with
@@ -664,27 +819,27 @@ class def_finder env_entries =
             let open Ast.Expression.Object.Property in
             (match p with
             | (_, Init { key; value; shorthand = _ }) ->
-              visit_object_key key;
-              this#visit_expression value;
+              let hint = visit_object_key_and_compute_hint key in
+              this#visit_expression ~hint value;
               ()
             | (loc, Method { key; value = (_, fn) }) ->
-              visit_object_key key;
-              this#visit_function_expr loc fn;
+              let func_hint = visit_object_key_and_compute_hint key in
+              this#visit_function_expr ~func_hint loc fn;
               ()
             | (loc, Get { key; value = (_, fn); comments = _ }) ->
-              visit_object_key key;
-              this#visit_function_expr loc fn;
+              let func_hint = visit_object_key_and_compute_hint key in
+              this#visit_function_expr ~func_hint loc fn;
               ()
             | (loc, Set { key; value = (_, fn); comments = _ }) ->
-              visit_object_key key;
-              this#visit_function_expr loc fn;
+              let func_hint = visit_object_key_and_compute_hint key in
+              this#visit_function_expr ~func_hint loc fn;
               ())
           | SpreadProperty s ->
             let (_, { Ast.Expression.Object.SpreadProperty.argument; comments = _ }) = s in
-            this#visit_expression argument
+            this#visit_expression ~hint:(decompose_hint Decomp_ObjSpread object_hint) argument
       )
   end
 
-let find_defs env_entries ast =
-  let finder = new def_finder env_entries in
+let find_defs env_entries providers ast =
+  let finder = new def_finder env_entries providers in
   finder#eval finder#program ast
