@@ -1,3 +1,4 @@
 [options]
-all=true
+experimental.env_mode=resolved
+experimental.cycle_errors=true
 experimental.contextual_typing=true

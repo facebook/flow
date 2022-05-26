@@ -51,8 +51,23 @@ module Make (Env : Env_sig.S) (Statement : Statement_sig.S with module Env := En
       let t = expression cx ~hint:Hint_None exp in
       let use_op = Op (AssignVar { var = Some reason; init = mk_expression_reason exp }) in
       (t, use_op)
-    | Root (Contextual _) ->
-      let t = Tvar.mk cx (mk_reason (RCustom "contextual variable") loc) in
+    | Root (Contextual (param_loc, hint)) ->
+      let reason = mk_reason (RCustom "contextual variable") loc in
+      let t =
+        if Context.enable_contextual_typing cx then
+          let hint =
+            match hint with
+            | Hint_t root -> Hint_t (resolve_binding cx reason loc (Root root) |> fst)
+            | Hint_Decomp (ops, root) ->
+              Hint_Decomp (ops, resolve_binding cx reason loc (Root root) |> fst)
+            | Hint_None -> Hint_None
+          in
+          match Type_hint.evaluate_hint cx param_loc hint with
+          | None -> Tvar.mk cx reason
+          | Some t -> TypeUtil.mod_reason_of_t (Base.Fn.const reason) t
+        else
+          Tvar.mk cx reason
+      in
       (t, mk_use_op t)
     | Root Catch ->
       let t = AnyT.annot (mk_reason (RCustom "catch parameter") loc) in
