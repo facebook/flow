@@ -1593,7 +1593,7 @@ let get_file_from_filename_or_stdin ~cmd path = function
     else
       File_input.FileName (expand_path filename)
   | None ->
-    let contents = Sys_utils.read_stdin_to_string () in
+    let contents = Sys_utils.read_all stdin in
     let filename =
       match path with
       | Some ""

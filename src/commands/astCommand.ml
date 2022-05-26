@@ -81,7 +81,7 @@ type ast_result_type =
 
 let get_file path = function
   | Some filename -> File_input.FileName (CommandUtils.expand_path filename)
-  | None -> File_input.FileContent (path, Sys_utils.read_stdin_to_string ())
+  | None -> File_input.FileContent (path, Sys_utils.read_all stdin)
 
 module Token_translator = Token_translator.Translate (Json_of_estree)
 
