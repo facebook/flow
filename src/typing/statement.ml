@@ -9244,11 +9244,7 @@ struct
            However, the default behavior of `this` still depends on how it
            was created, so we must provide the recipe based on where `function_decl`
            is invoked. *)
-        let t =
-          match Func_stmt_params.this fparams with
-          | Some t -> Inferred t
-          | None -> Annotated default
-        in
+        let t = Func_stmt_params.this fparams |> annotated_or_inferred_of_option ~default in
         (type_t_of_annotated_or_inferred t, Some t)
       in
       let (fun_type, reconstruct_ast) =
