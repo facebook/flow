@@ -13,6 +13,8 @@
 
 let statement_error = ()
 
+let maybe_exhaustively_checked = "<maybe_exhaustively_checked>"
+
 open Reason
 open Hoister
 
@@ -999,6 +1001,19 @@ module Make
 
   let initial_env cx unbound_names =
     let globals = initialize_globals unbound_names in
+    let globals =
+      let exhaustive_entry =
+        {
+          val_ref = ref (Val.undeclared maybe_exhaustively_checked L.none);
+          havoc = Val.undeclared maybe_exhaustively_checked L.none;
+          writes_by_closure_provider_val = None;
+          def_loc = None;
+          heap_refinements = ref HeapRefinementMap.empty;
+          kind = Bindings.Internal;
+        }
+      in
+      SMap.add maybe_exhaustively_checked exhaustive_entry globals
+    in
     (* We need to make sure that the base name for jsx is always in scope.
      * statement.ml is going to read these identifiers at jsx calls, even if
      * they haven't been declared locally. *)
@@ -1371,51 +1386,52 @@ module Make
 
       method havoc_env ~force_initialization ~all =
         SMap.iter
-          (fun _x
-               {
-                 val_ref;
-                 havoc;
-                 writes_by_closure_provider_val;
-                 def_loc;
-                 heap_refinements;
-                 kind = _;
-               } ->
-            this#havoc_heap_refinements heap_refinements;
-            let uninitialized_writes =
-              lazy (Val.writes_of_uninitialized this#refinement_may_be_undefined !val_ref)
-            in
-            let val_is_undeclared_or_skipped = Val.is_undeclared_or_skipped !val_ref in
-            let havoc_ref =
-              if force_initialization then
-                havoc
-              else if val_is_undeclared_or_skipped then
-                !val_ref
-              else
-                let havoc =
-                  match (all, writes_by_closure_provider_val) with
-                  | (false, Some writes_by_closure_provider_val) ->
-                    Val.merge !val_ref writes_by_closure_provider_val
-                  | _ -> havoc
-                in
-                Base.List.fold
-                  ~init:havoc
-                  ~f:(fun acc write -> Val.merge acc (Val.of_write write))
-                  (Lazy.force uninitialized_writes)
-            in
-            if
-              Base.Option.is_none def_loc
-              || Invalidation_api.should_invalidate
-                   ~all
-                   invalidation_caches
-                   prepass_info
-                   prepass_values
-                   (Base.Option.value_exn def_loc (* checked against none above *))
-              || force_initialization
-                 && (List.length (Lazy.force uninitialized_writes) > 0
-                    || val_is_undeclared_or_skipped
-                    )
-            then
-              val_ref := havoc_ref)
+          (fun _x -> function
+            | { kind = Bindings.Internal; _ } -> ()
+            | {
+                val_ref;
+                havoc;
+                writes_by_closure_provider_val;
+                def_loc;
+                heap_refinements;
+                kind = _;
+              } ->
+              this#havoc_heap_refinements heap_refinements;
+              let uninitialized_writes =
+                lazy (Val.writes_of_uninitialized this#refinement_may_be_undefined !val_ref)
+              in
+              let val_is_undeclared_or_skipped = Val.is_undeclared_or_skipped !val_ref in
+              let havoc_ref =
+                if force_initialization then
+                  havoc
+                else if val_is_undeclared_or_skipped then
+                  !val_ref
+                else
+                  let havoc =
+                    match (all, writes_by_closure_provider_val) with
+                    | (false, Some writes_by_closure_provider_val) ->
+                      Val.merge !val_ref writes_by_closure_provider_val
+                    | _ -> havoc
+                  in
+                  Base.List.fold
+                    ~init:havoc
+                    ~f:(fun acc write -> Val.merge acc (Val.of_write write))
+                    (Lazy.force uninitialized_writes)
+              in
+              if
+                Base.Option.is_none def_loc
+                || Invalidation_api.should_invalidate
+                     ~all
+                     invalidation_caches
+                     prepass_info
+                     prepass_values
+                     (Base.Option.value_exn def_loc (* checked against none above *))
+                || force_initialization
+                   && (List.length (Lazy.force uninitialized_writes) > 0
+                      || val_is_undeclared_or_skipped
+                      )
+              then
+                val_ref := havoc_ref)
           env_state.env
 
       method havoc_current_env ~all = this#havoc_env ~all ~force_initialization:false
@@ -1525,6 +1541,15 @@ module Make
                 havoc;
                 writes_by_closure_provider_val = None;
                 def_loc = Some loc;
+                heap_refinements = ref HeapRefinementMap.empty;
+                kind;
+              }
+            | Bindings.Internal ->
+              {
+                val_ref = ref (Val.undeclared name loc);
+                havoc = Val.undeclared name loc;
+                writes_by_closure_provider_val = None;
+                def_loc = None;
                 heap_refinements = ref HeapRefinementMap.empty;
                 kind;
               }
@@ -2740,10 +2765,15 @@ module Make
         this#scoped_for_in_or_of_statement traverse_left body;
         stmt
 
+      method private switch_completeness loc =
+        let reason = Reason.(mk_reason (RCustom "switch") loc) in
+        let { val_ref; _ } = SMap.find maybe_exhaustively_checked env_state.env in
+        val_ref := Val.one reason
+
       method! switch loc switch =
         let open Flow_ast.Statement.Switch in
         let incoming_env = this#env in
-        let { discriminant; cases; comments = _; exhaustive_out = _ } = switch in
+        let { discriminant; cases; comments = _; exhaustive_out } = switch in
         let _ = this#expression discriminant in
         let lexical_hoist = new lexical_hoister ~flowmin_compatibility:false ~enable_enums in
         let cases_with_lexical_bindings =
@@ -2760,7 +2790,7 @@ module Make
                  ~lexical:true
                  loc
                  lexical_hoist#acc
-                 (this#switch_cases_with_lexical_bindings loc discriminant)
+                 (this#switch_cases_with_lexical_bindings loc exhaustive_out discriminant)
                  cases_with_lexical_bindings)
           ~finally:(fun () ->
             let post_env = this#env in
@@ -2800,7 +2830,7 @@ module Make
       (* POST = ENVN | ENVN'                                     *)
       (***********************************************************)
       method private switch_cases_with_lexical_bindings
-          switch_loc discriminant cases_with_lexical_bindings =
+          switch_loc exhaustive_out discriminant cases_with_lexical_bindings =
         let incoming_env = this#env in
         this#expecting_abrupt_completions (fun () ->
             let (case_starting_env, case_completion_states, fallthrough_env, has_default) =
@@ -2842,8 +2872,10 @@ module Make
             | None when has_default -> this#reset_env this#empty_env
             (* If the switch wasn't exhaustive then merge with the case_starting_env as a base. If
              * the last case fell out then merge that in too. *)
-            | Some fallthrough -> this#merge_self_env fallthrough
-            | _ -> ());
+            | Some fallthrough ->
+              this#switch_completeness exhaustive_out;
+              this#merge_self_env fallthrough
+            | None -> this#switch_completeness exhaustive_out);
 
             (* In general, cases are non-exhaustive, but if it has a default case then it is! *)
             let completion_state =
@@ -3033,31 +3065,63 @@ module Make
             this#run
               (fun () ->
                 this#havoc_uninitialized_env;
-                if is_arrow then
-                  (* Arrow functions should read this and super from upper scopes. *)
-                  let completion_state =
-                    this#run_to_completion (fun () ->
-                        super#lambda ~is_arrow ~fun_loc params predicate body
-                    )
-                  in
-                  this#commit_abrupt_completion_matching
-                    AbruptCompletion.(mem [return; throw])
-                    completion_state
-                else
-                  let id name = (fun_loc, { Ast.Identifier.name; comments = None }) in
-                  let completion_state =
-                    let bindings =
-                      Bindings.(empty |> add (id "this", Const) |> add (id "super", Const))
-                    in
-                    this#run_to_completion
-                      (this#with_bindings fun_loc bindings (fun () ->
-                           super#lambda ~is_arrow ~fun_loc params predicate body
-                       )
-                      )
-                  in
-                  this#commit_abrupt_completion_matching
-                    AbruptCompletion.(mem [return; throw])
-                    completion_state)
+                let completion_state =
+                  this#run_to_completion (fun () ->
+                      let loc =
+                        let open Ast.Function in
+                        match body with
+                        | BodyBlock (loc, _)
+                        | BodyExpression (loc, _) ->
+                          loc
+                      in
+                      let bindings =
+                        Bindings.(
+                          singleton
+                            ( ( loc,
+                                {
+                                  Ast.Identifier.name = maybe_exhaustively_checked;
+                                  comments = None;
+                                }
+                              ),
+                              Internal
+                            )
+                        )
+                      in
+                      let bindings =
+                        if not is_arrow then
+                          let id name = (fun_loc, { Ast.Identifier.name; comments = None }) in
+                          Bindings.(bindings |> add (id "this", Const) |> add (id "super", Const))
+                        else
+                          bindings
+                      in
+                      this#with_bindings
+                        fun_loc
+                        bindings
+                        (fun () ->
+                          (* If the function exits via abnormal control flow, and *)
+                          Context.add_exhaustive_check cx loc ([], false);
+                          super#lambda ~is_arrow ~fun_loc params predicate body;
+                          let { val_ref; _ } = SMap.find maybe_exhaustively_checked env_state.env in
+                          let { Env_api.write_locs; _ } = Val.simplify None None None !val_ref in
+                          let (locs, undeclared) =
+                            Base.List.fold
+                              ~init:([], false)
+                              ~f:
+                                (fun (locs, undeclared) -> function
+                                  | Env_api.Undeclared _ -> (locs, true)
+                                  | Env_api.Write r ->
+                                    (Reason.poly_loc_of_reason r :: locs, undeclared)
+                                  | _ ->
+                                    failwith "Unexpected env state for maybe_exhaustively_checked")
+                              write_locs
+                          in
+                          Context.add_exhaustive_check cx loc (locs, undeclared))
+                        ()
+                  )
+                in
+                this#commit_abrupt_completion_matching
+                  AbruptCompletion.(mem [return; throw])
+                  completion_state)
               ~finally:(fun () -> this#reset_env env)
         )
 
@@ -4630,6 +4694,20 @@ module Make
         (* When there is no init, we should avoid calls to pattern_identifier so that we won't
            mark normal declaration without initialization as non-assigning writes. *)
         | None -> decl
+
+      method! lambda ~is_arrow ~fun_loc params predicate body =
+        let loc =
+          let open Ast.Function in
+          match body with
+          | BodyBlock (loc, _)
+          | BodyExpression (loc, _) ->
+            loc
+        in
+        begin
+          try ignore (Context.exhaustive_check cx loc : _ * _) with
+          | Not_found -> Context.add_exhaustive_check cx loc ([], false)
+        end;
+        super#lambda ~is_arrow ~fun_loc params predicate body
     end
 
   let program_with_scope cx program =

@@ -28,6 +28,10 @@ module Context = struct
   let add_new_env_literal_subtypes _ _ = ()
 
   let add_new_env_matching_props _ _ = ()
+
+  let add_exhaustive_check _ _ _ = ()
+
+  let exhaustive_check _ _ = ([], false)
 end
 
 module Name_resolver = Name_resolver.Make_Test_With_Cx (Context)

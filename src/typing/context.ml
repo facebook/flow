@@ -193,6 +193,7 @@ type component_t = {
    * unresolved tvars to represent unannotated parameters. We use an ALocFuzzyMap because we may
    * compare keyed and concrete locations *)
   mutable call_arg_lower_bounds: Type.t Nel.t ALocFuzzyMap.t;
+  mutable exhaustive_checks: (ALoc.t list * bool) ALocMap.t;
 }
 [@@warning "-69"]
 
@@ -363,6 +364,7 @@ let make_ccx master_cx =
     spread_cache = Hashtbl.create 0;
     speculation_state = ref [];
     annot_graph = IMap.empty;
+    exhaustive_checks = ALocMap.empty;
   }
 
 let make ccx metadata file aloc_table phase =
@@ -653,6 +655,9 @@ let pid_prefix cx =
 let copy_of_context cx = { cx with ccx = { cx.ccx with sig_cx = cx.ccx.sig_cx } }
 
 (* mutators *)
+
+let add_exhaustive_check cx loc x =
+  cx.ccx.exhaustive_checks <- ALocMap.add loc x cx.ccx.exhaustive_checks
 
 let add_error cx error = cx.ccx.errors <- Flow_error.ErrorSet.add error cx.ccx.errors
 
@@ -1017,6 +1022,8 @@ let eval_repos_cache cx = cx.ccx.eval_repos_cache
 let fix_cache cx = cx.ccx.fix_cache
 
 let spread_cache cx = cx.ccx.spread_cache
+
+let exhaustive_check cx loc = ALocMap.find loc cx.ccx.exhaustive_checks
 
 let speculation_state cx = cx.ccx.speculation_state
 

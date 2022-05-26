@@ -13,6 +13,20 @@ open Hint_api
 open TypeUtil
 include Func_sig_intf
 
+class exhaustiveness_finder cx t locs =
+  object
+    inherit
+      [ALoc.t, ALoc.t * Type.t, ALoc.t, ALoc.t * Type.t] Flow_polymorphic_ast_mapper.mapper as super
+
+    method on_type_annot x = x
+
+    method on_loc_annot x = x
+
+    method! switch ({ Ast.Statement.Switch.exhaustive_out = (loc, ex_t); _ } as switch) =
+      if Base.List.mem ~equal:ALoc.equal locs loc then Flow.flow_t cx (ex_t, t);
+      super#switch switch
+  end
+
 module Make
     (Env : Env_sig.S)
     (Abnormal : Abnormal_sig.S with module Env := Env)
@@ -104,17 +118,17 @@ struct
 
   let toplevels cx this_recipe super func_loc x =
     let { T.reason = reason_fn; kind; tparams_map; fparams; body; return_t; _ } = x in
-    let loc =
+    let body_loc =
       let open Ast.Function in
       match body with
       | Some (BodyBlock (loc, _)) -> loc
       | Some (BodyExpression (loc, _)) -> loc
       | None -> ALoc.none
     in
-    let reason = mk_reason RFunctionBody loc in
+    let reason = mk_reason RFunctionBody body_loc in
     let env = Env.peek_env () in
     let new_env = Env.clone_env env in
-    Env.update_env loc new_env;
+    Env.update_env body_loc new_env;
     Env.havoc_all ();
 
     (* create and prepopulate function scope *)
@@ -355,19 +369,47 @@ struct
             let use_op = Op (FunImplicitReturn { fn = reason_fn; upper = reason_of_t return_t }) in
             (use_op, t, None)
         in
-        Flow.flow
-          cx
-          ( Env.get_internal_var cx "maybe_exhaustively_checked" loc,
-            FunImplicitVoidReturnT
-              { use_op; reason = reason_of_t return_t; return = return_t; void_t }
-          );
+
+        let maybe_exhaustively_checked =
+          if Env.new_env then
+            match body with
+            | None ->
+              Flow.flow cx (void_t, UseT (use_op, return_t));
+              None
+            | Some _ ->
+              let (exhaustive, undeclared) = Context.exhaustive_check cx body_loc in
+              Some
+                (Tvar.mk_where
+                   cx
+                   (replace_desc_reason (RCustom "maybe_exhaustively_checked") reason_fn)
+                   (fun t ->
+                     if Base.List.length exhaustive > 0 then
+                       ignore
+                         ( (new exhaustiveness_finder cx t exhaustive)#statement_list statements_ast
+                           : _ list
+                           );
+                     if undeclared then Flow.flow_t cx (VoidT.at body_loc (bogus_trust ()), t)
+                 )
+                )
+          else
+            Some (Env.get_internal_var cx "maybe_exhaustively_checked" loc)
+        in
+        Base.Option.iter
+          ~f:(fun maybe_exhaustively_checked ->
+            Flow.flow
+              cx
+              ( maybe_exhaustively_checked,
+                FunImplicitVoidReturnT
+                  { use_op; reason = reason_of_t return_t; return = return_t; void_t }
+              ))
+          maybe_exhaustively_checked;
         init_ast
       ) else
         None
     in
     Env.pop_var_scope ();
 
-    Env.update_env loc env;
+    Env.update_env body_loc env;
 
     (* return a tuple of (function body AST option, field initializer AST option).
        - the function body option is Some _ if the Param sig's body was Some, and

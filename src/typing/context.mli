@@ -338,6 +338,8 @@ val pop_declare_module : t -> unit
 val module_info : t -> Module_info.t
 
 (* mutators *)
+val add_exhaustive_check : t -> ALoc.t -> ALoc.t list * bool -> unit
+
 val add_error : t -> ALoc.t Flow_error.t -> unit
 
 val reset_errors : t -> Flow_error.ErrorSet.t -> unit
@@ -540,6 +542,8 @@ val eval_repos_cache : t -> (Type.t * Type.defer_use_t * Type.Eval.id, Type.t) H
 val fix_cache : t -> (bool * Type.t, Type.t) Hashtbl.t
 
 val spread_cache : t -> Spread_cache.t
+
+val exhaustive_check : t -> ALoc.t -> ALoc.t list * bool
 
 val speculation_state : t -> Speculation_state.t
 
