@@ -30,19 +30,17 @@ end = struct
 
   let null = Js.Unsafe.inject Js.null
 
-  let regexp loc pattern flags =
+  let regexp _loc pattern flags =
     let regexp =
       try
         Js.Unsafe.new_obj (Js.Unsafe.pure_js_expr "RegExp") [| string pattern; string flags |]
       with
       | _ ->
-        translation_errors := (loc, Parse_error.InvalidRegExp) :: !translation_errors;
-
-        (* Invalid RegExp. We already validated the flags, but we've been
-         * too lazy to write a JS regexp parser in Ocaml, so we didn't know
-         * the pattern was invalid. We'll recover with an empty pattern.
-         *)
-        Js.Unsafe.new_obj (Js.Unsafe.pure_js_expr "RegExp") [| string ""; string flags |]
+        (* We don't implement regexp validation other than checking the flags. The regex
+           might be invalid, or the runtime might not support certain flags like y or u
+           or d, which prevents instantiating a native RegExp object. Return `null` instead
+           per https://github.com/estree/estree/blob/master/es5.md#regexpliteral *)
+        Js.null
     in
     Js.Unsafe.inject regexp
 end
