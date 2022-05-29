@@ -104,6 +104,11 @@ let dummy_context =
     Builtins.set_builtin
       ~flow_t:(fun _ -> ())
       master_cx.Context.builtins
+      (Reason.OrdinaryName "AsyncGenerator")
+      (Type.AnyT (reason, Type.AnyError (Some Type.UnresolvedName)));
+    Builtins.set_builtin
+      ~flow_t:(fun _ -> ())
+      master_cx.Context.builtins
       (Reason.OrdinaryName "Promise")
       (Type.AnyT (reason, Type.AnyError (Some Type.UnresolvedName)));
     Builtins.set_builtin
@@ -120,6 +125,11 @@ let dummy_context =
       ~flow_t:(fun _ -> ())
       master_cx.Context.builtins
       (Reason.OrdinaryName "$AsyncIterable")
+      (Type.AnyT (reason, Type.AnyError (Some Type.UnresolvedName)));
+    Builtins.set_builtin
+      ~flow_t:(fun _ -> ())
+      master_cx.Context.builtins
+      (Reason.OrdinaryName "$Iterable")
       (Type.AnyT (reason, Type.AnyError (Some Type.UnresolvedName)))
   in
   let ccx = Context.make_ccx master_cx in

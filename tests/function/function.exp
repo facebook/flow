@@ -41,6 +41,28 @@ Property `length` is missing in `Generator` [1] but exists in `$ArrayLike` [2]. 
                         ^^^^^
 
 References:
+   <BUILTINS>/core.js:1655:11
+   1655| interface Generator<+Yield,+Return,-Next> {
+                   ^^^^^^^^^ [1]
+   <BUILTINS>/core.js:1062:22
+                              v----------
+   1062| type $ArrayLike<T> = interface {
+   1063|   +[indexer: number]: T;
+   1064|   @@iterator(): Iterator<T>;
+   1065|   length: number;
+   1066| }
+         ^ [2]
+
+
+Error ---------------------------------------------------------------------------------------- apply-array-like.js:21:16
+
+Property `length` is missing in `Generator` [1] but exists in `$ArrayLike` [2]. [prop-missing]
+
+   apply-array-like.js:21:16
+     21| test.apply([], gen()); // error: iterable ~> array-like
+                        ^^^^^
+
+References:
    apply-array-like.js:16:17
      16| function * gen() {
                          ^ [1]
@@ -897,4 +919,4 @@ References:
 
 
 
-Found 59 errors
+Found 60 errors
