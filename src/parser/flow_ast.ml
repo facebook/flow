@@ -597,6 +597,7 @@ and Statement : sig
     type ('M, 'T) t = {
       argument: ('M, 'T) Expression.t option;
       comments: ('M, unit) Syntax.t option;
+      return_out: 'T;
     }
     [@@deriving show]
   end
@@ -1354,6 +1355,7 @@ and Expression : sig
       argument: ('M, 'T) Expression.t option;
       comments: ('M, unit) Syntax.t option;
       delegate: bool;
+      result_out: 'T;
     }
     [@@deriving show]
   end

@@ -68,7 +68,7 @@ class marker cx =
 
     method! return (stmt : (_, _) Ast.Statement.Return.t) =
       let open Ast.Statement.Return in
-      let { argument; comments = _ } = stmt in
+      let { argument; comments = _; return_out = _ } = stmt in
       let _argument' = Base.Option.map ~f:(this#base_expression predicate) argument in
       stmt
 

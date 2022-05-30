@@ -165,7 +165,7 @@ with type t = Impl.t = struct
           "SwitchStatement"
           loc
           [("discriminant", expression discriminant); ("cases", array_of_list case cases)]
-      | (loc, Return { Return.argument; comments }) ->
+      | (loc, Return { Return.argument; comments; return_out = _ }) ->
         node ?comments "ReturnStatement" loc [("argument", option expression argument)]
       | (loc, Throw { Throw.argument; comments }) ->
         node ?comments "ThrowStatement" loc [("argument", expression argument)]
@@ -608,7 +608,7 @@ with type t = Impl.t = struct
           "OptionalMemberExpression"
           loc
           (member_node_properties member @ [("optional", bool optional)])
-      | (loc, Yield { Yield.argument; delegate; comments }) ->
+      | (loc, Yield { Yield.argument; delegate; comments; result_out = _ }) ->
         node
           ?comments
           "YieldExpression"

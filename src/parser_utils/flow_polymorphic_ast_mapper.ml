@@ -1816,10 +1816,11 @@ class virtual ['M, 'T, 'N, 'U] mapper =
 
     method return (stmt : ('M, 'T) Ast.Statement.Return.t) : ('N, 'U) Ast.Statement.Return.t =
       let open Ast.Statement.Return in
-      let { argument; comments } = stmt in
-      let argument' = Option.map ~f:this#expression argument in
-      let comments' = Option.map ~f:this#syntax comments in
-      { argument = argument'; comments = comments' }
+      let { argument; comments; return_out } = stmt in
+      let return_out' = this#on_type_annot return_out in
+      let argument' = Base.Option.map ~f:this#expression argument in
+      let comments' = Base.Option.map ~f:this#syntax comments in
+      { argument = argument'; comments = comments'; return_out = return_out' }
 
     method sequence (expr : ('M, 'T) Ast.Expression.Sequence.t) : ('N, 'U) Ast.Expression.Sequence.t
         =
@@ -2004,8 +2005,9 @@ class virtual ['M, 'T, 'N, 'U] mapper =
 
     method yield (expr : ('M, 'T) Ast.Expression.Yield.t) : ('N, 'U) Ast.Expression.Yield.t =
       let open Ast.Expression.Yield in
-      let { argument; delegate; comments } = expr in
-      let argument' = Option.map ~f:this#expression argument in
-      let comments' = Option.map ~f:this#syntax comments in
-      { argument = argument'; delegate; comments = comments' }
+      let { argument; delegate; comments; result_out } = expr in
+      let argument' = Base.Option.map ~f:this#expression argument in
+      let comments' = Base.Option.map ~f:this#syntax comments in
+      let result_out' = this#on_type_annot result_out in
+      { argument = argument'; delegate; comments = comments'; result_out = result_out' }
   end

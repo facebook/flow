@@ -395,6 +395,21 @@
     "loc":{
       "source":"test.js",
       "type":"SourceFile",
+      "start":{"line":8,"column":3,"offset":117},
+      "end":{"line":8,"column":11,"offset":126}
+    },
+    "path":"test.js",
+    "line":8,
+    "endline":8,
+    "start":3,
+    "end":11
+  },
+  {
+    "type":"empty",
+    "reasons":[],
+    "loc":{
+      "source":"test.js",
+      "type":"SourceFile",
       "start":{"line":8,"column":10,"offset":124},
       "end":{"line":8,"column":10,"offset":125}
     },
@@ -780,6 +795,21 @@
     "end":23
   },
   {
+    "type":"any | void | string",
+    "reasons":[],
+    "loc":{
+      "source":"test.js",
+      "type":"SourceFile",
+      "start":{"line":14,"column":27,"offset":255},
+      "end":{"line":14,"column":52,"offset":281}
+    },
+    "path":"test.js",
+    "line":14,
+    "endline":14,
+    "start":27,
+    "end":52
+  },
+  {
     "type":"(val: ?(any | string)) => (any | void | string)",
     "reasons":[],
     "loc":{
@@ -960,6 +990,21 @@
     "end":23
   },
   {
+    "type":"any | void | string",
+    "reasons":[],
+    "loc":{
+      "source":"test.js",
+      "type":"SourceFile",
+      "start":{"line":15,"column":27,"offset":310},
+      "end":{"line":15,"column":52,"offset":336}
+    },
+    "path":"test.js",
+    "line":15,
+    "endline":15,
+    "start":27,
+    "end":52
+  },
+  {
     "type":"(val: ?(any | string)) => (any | void | string)",
     "reasons":[],
     "loc":{
@@ -1125,6 +1170,21 @@
     "end":23
   },
   {
+    "type":"any | void | string",
+    "reasons":[],
+    "loc":{
+      "source":"test.js",
+      "type":"SourceFile",
+      "start":{"line":16,"column":27,"offset":365},
+      "end":{"line":16,"column":52,"offset":391}
+    },
+    "path":"test.js",
+    "line":16,
+    "endline":16,
+    "start":27,
+    "end":52
+  },
+  {
     "type":"(val: ?(any | string)) => (any | void | string)",
     "reasons":[],
     "loc":{
@@ -1288,6 +1348,21 @@
     "endline":17,
     "start":24,
     "end":23
+  },
+  {
+    "type":"any | void | string",
+    "reasons":[],
+    "loc":{
+      "source":"test.js",
+      "type":"SourceFile",
+      "start":{"line":17,"column":27,"offset":420},
+      "end":{"line":17,"column":52,"offset":446}
+    },
+    "path":"test.js",
+    "line":17,
+    "endline":17,
+    "start":27,
+    "end":52
   },
   {
     "type":"(val: ?(any | string)) => (any | void | string)",

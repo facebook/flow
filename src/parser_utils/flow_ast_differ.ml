@@ -2158,17 +2158,20 @@ let program
       (stmt1 : (Loc.t, Loc.t) Ast.Statement.Return.t)
       (stmt2 : (Loc.t, Loc.t) Ast.Statement.Return.t) : node change list option =
     let open Ast.Statement.Return in
-    let { argument = argument1; comments = comments1 } = stmt1 in
-    let { argument = argument2; comments = comments2 } = stmt2 in
-    let comments = syntax_opt loc comments1 comments2 in
-    join_diff_list
-      [
-        comments;
-        diff_if_changed_nonopt_fn
-          (expression ~parent:(StatementParentOfExpression (loc, Ast.Statement.Return stmt2)))
-          argument1
-          argument2;
-      ]
+    let { argument = argument1; comments = comments1; return_out = ro1 } = stmt1 in
+    let { argument = argument2; comments = comments2; return_out = ro2 } = stmt2 in
+    if ro1 != ro2 then
+      None
+    else
+      let comments = syntax_opt loc comments1 comments2 in
+      join_diff_list
+        [
+          comments;
+          diff_if_changed_nonopt_fn
+            (expression ~parent:(StatementParentOfExpression (loc, Ast.Statement.Return stmt2)))
+            argument1
+            argument2;
+        ]
   and throw_statement
       loc
       (stmt1 : (Loc.t, Loc.t) Ast.Statement.Throw.t)

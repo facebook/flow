@@ -1201,7 +1201,7 @@ struct
           | Some abnormal -> Abnormal.throw_stmt_control_flow_exception ast abnormal
       )
     (*******************************************************)
-    | (loc, Return { Return.argument; comments }) ->
+    | (loc, Return { Return.argument; comments; return_out }) ->
       let reason = mk_reason (RCustom "return") loc in
       let ret = Env.get_internal_var cx "return" loc in
       let (t, argument_ast) =
@@ -1290,7 +1290,7 @@ struct
       Env.reset_current_activation loc;
       Abnormal.save Abnormal.Return;
       Abnormal.throw_stmt_control_flow_exception
-        (loc, Return { Return.argument = argument_ast; comments })
+        (loc, Return { Return.argument = argument_ast; comments; return_out = (return_out, t) })
         Abnormal.Return
     | (loc, Throw { Throw.argument; comments }) ->
       let argument_ast = expression cx ~hint:Hint_None argument in
@@ -3813,7 +3813,7 @@ struct
         let (class_t, c) = mk_class cx class_loc ~name_loc ~general:tvar reason c in
         Flow.flow_t cx (class_t, tvar);
         ((class_loc, class_t), Class c))
-    | Yield { Yield.argument; delegate = false; comments } ->
+    | Yield { Yield.argument; delegate = false; comments; result_out } ->
       let yield = Env.get_internal_var cx "yield" loc in
       let (t, argument_ast) =
         match argument with
@@ -3837,9 +3837,15 @@ struct
       in
       Flow.flow cx (t, UseT (use_op, yield));
       ( (loc, Env.get_next cx loc),
-        Yield { Yield.argument = argument_ast; delegate = false; comments }
+        Yield
+          {
+            Yield.argument = argument_ast;
+            delegate = false;
+            comments;
+            result_out = (result_out, t);
+          }
       )
-    | Yield { Yield.argument; delegate = true; comments } ->
+    | Yield { Yield.argument; delegate = true; comments; result_out } ->
       let reason = mk_reason (RCustom "yield* delegate") loc in
       let yield = Env.get_internal_var cx "yield" loc in
       let next = Env.get_next cx loc in
@@ -3878,7 +3884,15 @@ struct
       in
       Flow.flow cx (t, AssertIterableT { use_op; reason = iterable_reason; async; targs });
 
-      ((loc, ret), Yield { Yield.argument = argument_ast; delegate = true; comments })
+      ( (loc, ret),
+        Yield
+          {
+            Yield.argument = argument_ast;
+            delegate = true;
+            comments;
+            result_out = (result_out, yield);
+          }
+      )
     (* TODO *)
     | Comprehension _ ->
       Flow.add_output cx Error_message.(EUnsupportedSyntax (loc, ComprehensionExpression));

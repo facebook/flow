@@ -340,9 +340,13 @@ struct
       | Some (Ast.Function.BodyBlock (loc, { Block.body; comments })) ->
         (body, (fun body -> Some (Ast.Function.BodyBlock (loc, { Block.body; comments }))))
       | Some (Ast.Function.BodyExpression expr) ->
-        ( [(fst expr, Return { Return.argument = Some expr; comments = None })],
+        ( [
+            ( fst expr,
+              Return { Return.argument = Some expr; comments = None; return_out = fst expr }
+            );
+          ],
           (function
-          | [(_, Return { Return.argument = Some expr; comments = _ })]
+          | [(_, Return { Return.argument = Some expr; comments = _; return_out = _ })]
           | [(_, Expression { Expression.expression = expr; _ })] ->
             Some (Ast.Function.BodyExpression expr)
           | _ -> failwith "expected return body")
@@ -356,7 +360,7 @@ struct
       | Predicate ->
         begin
           match statements with
-          | [(_, Return { Return.argument = Some _; comments = _ })] -> ()
+          | [(_, Return { Return.argument = Some _; comments = _; return_out = _ })] -> ()
           | _ ->
             let loc = aloc_of_reason reason in
             Flow_js.add_output cx Error_message.(EUnsupportedSyntax (loc, PredicateInvalidBody))

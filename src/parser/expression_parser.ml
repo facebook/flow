@@ -218,7 +218,9 @@ module Expression
       (fun env ->
         if in_formal_parameters env then error env Parse_error.YieldInFormalParameters;
         let leading = Peek.comments env in
+        let start_loc = Peek.loc env in
         Expect.token env T_YIELD;
+        let end_loc = Peek.loc env in
         let (argument, delegate) =
           if Peek.is_implicit_semicolon env then
             (None, false)
@@ -251,7 +253,12 @@ module Expression
         let open Expression in
         Yield
           Yield.
-            { argument; delegate; comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing () }
+            {
+              argument;
+              delegate;
+              comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing ();
+              result_out = Loc.btwn start_loc end_loc;
+            }
           )
       env
 

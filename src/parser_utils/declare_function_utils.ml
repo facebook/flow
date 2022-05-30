@@ -110,7 +110,11 @@ let declare_function_to_function_declaration
                   [
                     ( loc,
                       Flow_ast.Statement.Return
-                        { Flow_ast.Statement.Return.argument = Some e; comments = None }
+                        {
+                          Flow_ast.Statement.Return.argument = Some e;
+                          comments = None;
+                          return_out = loc;
+                        }
                     );
                   ];
                 comments = None;
@@ -159,7 +163,11 @@ let declare_function_to_function_declaration
                               [
                                 ( _,
                                   Flow_ast.Statement.Return
-                                    { Flow_ast.Statement.Return.argument = Some e; comments = _ }
+                                    {
+                                      Flow_ast.Statement.Return.argument = Some e;
+                                      comments = _;
+                                      return_out = _;
+                                    }
                                 );
                               ];
                             comments = _;

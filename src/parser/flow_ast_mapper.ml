@@ -2383,13 +2383,13 @@ class ['loc] mapper =
 
     method return _loc (stmt : ('loc, 'loc) Ast.Statement.Return.t) =
       let open Ast.Statement.Return in
-      let { argument; comments } = stmt in
+      let { argument; comments; return_out } = stmt in
       let argument' = map_opt this#expression argument in
       let comments' = this#syntax_opt comments in
       if argument == argument' && comments == comments' then
         stmt
       else
-        { argument = argument'; comments = comments' }
+        { argument = argument'; comments = comments'; return_out }
 
     method sequence _loc (expr : ('loc, 'loc) Ast.Expression.Sequence.t) =
       let open Ast.Expression.Sequence in
@@ -2615,13 +2615,13 @@ class ['loc] mapper =
 
     method yield _loc (expr : ('loc, 'loc) Ast.Expression.Yield.t) =
       let open Ast.Expression.Yield in
-      let { argument; delegate; comments } = expr in
+      let { argument; delegate; comments; result_out } = expr in
       let argument' = map_opt this#expression argument in
       let comments' = this#syntax_opt comments in
       if comments == comments' && argument == argument' then
         expr
       else
-        { argument = argument'; delegate; comments = comments' }
+        { argument = argument'; delegate; comments = comments'; result_out }
   end
 
 let fold_program (mappers : 'a mapper list) ast =

@@ -2892,7 +2892,8 @@ and function_def =
       | F.BodyBlock
           ( _,
             {
-              S.Block.body = [(loc, S.Return { S.Return.argument = Some expr; comments = _ })];
+              S.Block.body =
+                [(loc, S.Return { S.Return.argument = Some expr; comments = _; return_out = _ })];
               comments = _;
             }
           )

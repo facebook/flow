@@ -367,7 +367,8 @@ module Statements = struct
 
   let if_alternate ?(loc = Loc.none) ?comments body = (loc, { If.Alternate.body; comments })
 
-  let return ?(loc = Loc.none) ?comments expr = (loc, Return { Return.argument = expr; comments })
+  let return ?(loc = Loc.none) ?comments expr =
+    (loc, Return { Return.argument = expr; comments; return_out = loc })
 
   let directive ?(loc = Loc.none) txt =
     let expr = (loc, Ast.Expression.Literal (Literals.string txt)) in

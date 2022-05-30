@@ -703,7 +703,7 @@ and statement ?(pretty_semicolon = false) ~opts (root_stmt : (Loc.t, Loc.t) Ast.
                statement_with_test "switch" (expression ~opts discriminant); pretty_space; cases_node;
              ]
           )
-      | S.Return { S.Return.argument; comments } ->
+      | S.Return { S.Return.argument; comments; return_out = _ } ->
         let s_return = Atom "return" in
         layout_node_with_comments_opt loc comments
         @@ with_semicolon
@@ -1209,7 +1209,7 @@ and expression ?(ctxt = normal_context) ~opts (root_expr : (Loc.t, Loc.t) Ast.Ex
              fuse [expression ~ctxt ~opts argument; s_operator]
           )
       | E.Class class_ -> class_base ~opts loc class_
-      | E.Yield { E.Yield.argument; delegate; comments } ->
+      | E.Yield { E.Yield.argument; delegate; comments; result_out = _ } ->
         layout_node_with_comments_opt loc comments
         @@ fuse
              [

@@ -549,6 +549,7 @@ module Statement
     with_loc (fun env ->
         if not (in_function env) then error env Parse_error.IllegalReturn;
         let leading = Peek.comments env in
+        let start_loc = Peek.loc env in
         Expect.token env T_RETURN;
         let trailing =
           if Peek.token env = T_SEMICOLON then
@@ -562,6 +563,7 @@ module Statement
           else
             Some (Parse.expression env)
         in
+        let return_out = Loc.btwn start_loc (Peek.loc env) in
         let (trailing, argument) =
           match (semicolon env, argument) with
           | (Explicit comments, _)
@@ -573,6 +575,7 @@ module Statement
         Statement.Return
           {
             Statement.Return.argument;
+            return_out;
             comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing ();
           }
     )
