@@ -900,4 +900,8 @@ module New_env = struct
 
   let init_import ~lookup_mode:_ cx _name loc t =
     unify_write_entry ~use_op:unknown_use cx t Env_api.OrdinaryNameLoc loc
+
+  let get_next cx loc =
+    let name = InternalName "next" in
+    read_entry_exn ~lookup_mode:ForValue cx loc (mk_reason (RIdentifier name) loc)
 end

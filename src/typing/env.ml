@@ -1878,4 +1878,6 @@ module Env : Env_sig.S = struct
       refinement_key_opt
       |> Base.Option.bind ~f:get_current_env_refi
       |> Base.Option.map ~f:(fun refi -> refi.Scope.refined)
+
+  let get_next cx loc = get_internal_var cx "next" loc
 end

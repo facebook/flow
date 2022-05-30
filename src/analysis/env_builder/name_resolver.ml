@@ -13,7 +13,9 @@
 
 let statement_error = ()
 
-let maybe_exhaustively_checked = "<maybe_exhaustively_checked>"
+let maybe_exhaustively_checked_var_name = "<maybe_exhaustively_checked>"
+
+let next_var_name = "<next>"
 
 open Reason
 open Hoister
@@ -1004,15 +1006,15 @@ module Make
     let globals =
       let exhaustive_entry =
         {
-          val_ref = ref (Val.undeclared maybe_exhaustively_checked L.none);
-          havoc = Val.undeclared maybe_exhaustively_checked L.none;
+          val_ref = ref (Val.undeclared maybe_exhaustively_checked_var_name L.none);
+          havoc = Val.undeclared maybe_exhaustively_checked_var_name L.none;
           writes_by_closure_provider_val = None;
           def_loc = None;
           heap_refinements = ref HeapRefinementMap.empty;
           kind = Bindings.Internal;
         }
       in
-      SMap.add maybe_exhaustively_checked exhaustive_entry globals
+      SMap.add maybe_exhaustively_checked_var_name exhaustive_entry globals
     in
     (* We need to make sure that the base name for jsx is always in scope.
      * statement.ml is going to read these identifiers at jsx calls, even if
@@ -1550,6 +1552,20 @@ module Make
                 havoc = Val.undeclared name loc;
                 writes_by_closure_provider_val = None;
                 def_loc = None;
+                heap_refinements = ref HeapRefinementMap.empty;
+                kind;
+              }
+            | Bindings.GeneratorNext ->
+              let reason = mk_reason (RCustom "next") loc in
+              let write_entries =
+                L.LMap.add loc (Env_api.AssigningWrite reason) env_state.write_entries
+              in
+              env_state <- { env_state with write_entries };
+              {
+                val_ref = ref (Val.one reason);
+                havoc = Val.one reason;
+                writes_by_closure_provider_val = None;
+                def_loc = Some loc;
                 heap_refinements = ref HeapRefinementMap.empty;
                 kind;
               }
@@ -2767,7 +2783,7 @@ module Make
 
       method private switch_completeness loc =
         let reason = Reason.(mk_reason (RCustom "switch") loc) in
-        let { val_ref; _ } = SMap.find maybe_exhaustively_checked env_state.env in
+        let { val_ref; _ } = SMap.find maybe_exhaustively_checked_var_name env_state.env in
         val_ref := Val.one reason
 
       method! switch loc switch =
@@ -3059,7 +3075,7 @@ module Make
         stmt
 
       (* We also havoc state when entering functions and exiting calls. *)
-      method! lambda ~is_arrow ~fun_loc params predicate body =
+      method! lambda ~is_arrow ~fun_loc ~generator_return_loc params predicate body =
         this#expecting_abrupt_completions (fun () ->
             let env = this#env in
             this#run
@@ -3079,7 +3095,7 @@ module Make
                           singleton
                             ( ( loc,
                                 {
-                                  Ast.Identifier.name = maybe_exhaustively_checked;
+                                  Ast.Identifier.name = maybe_exhaustively_checked_var_name;
                                   comments = None;
                                 }
                               ),
@@ -3094,14 +3110,38 @@ module Make
                         else
                           bindings
                       in
+                      let bindings =
+                        Base.Option.value_map
+                          ~f:(fun return_loc ->
+                            Bindings.(
+                              add
+                                ( ( return_loc,
+                                    { Ast.Identifier.name = next_var_name; comments = None }
+                                  ),
+                                  GeneratorNext
+                                )
+                                bindings
+                            ))
+                          ~default:bindings
+                          generator_return_loc
+                      in
                       this#with_bindings
                         fun_loc
                         bindings
                         (fun () ->
-                          (* If the function exits via abnormal control flow, and *)
                           Context.add_exhaustive_check cx loc ([], false);
-                          super#lambda ~is_arrow ~fun_loc params predicate body;
-                          let { val_ref; _ } = SMap.find maybe_exhaustively_checked env_state.env in
+
+                          super#lambda
+                            ~is_arrow
+                            ~fun_loc
+                            ~generator_return_loc
+                            params
+                            predicate
+                            body;
+
+                          let { val_ref; _ } =
+                            SMap.find maybe_exhaustively_checked_var_name env_state.env
+                          in
                           let { Env_api.write_locs; _ } = Val.simplify None None None !val_ref in
                           let (locs, undeclared) =
                             Base.List.fold
@@ -3112,7 +3152,8 @@ module Make
                                   | Env_api.Write r ->
                                     (Reason.poly_loc_of_reason r :: locs, undeclared)
                                   | _ ->
-                                    failwith "Unexpected env state for maybe_exhaustively_checked")
+                                    failwith
+                                      "Unexpected env state for maybe_exhaustively_checked_var_name")
                               write_locs
                           in
                           Context.add_exhaustive_check cx loc (locs, undeclared))
@@ -3287,6 +3328,7 @@ module Make
         expr
 
       method! yield loc (expr : ('loc, 'loc) Ast.Expression.Yield.t) =
+        this#any_identifier loc next_var_name;
         ignore @@ super#yield loc expr;
         this#havoc_current_env ~all:true;
         expr
@@ -4695,7 +4737,11 @@ module Make
            mark normal declaration without initialization as non-assigning writes. *)
         | None -> decl
 
-      method! lambda ~is_arrow ~fun_loc params predicate body =
+      method! yield loc yield =
+        this#any_identifier loc next_var_name;
+        super#yield loc yield
+
+      method! lambda ~is_arrow ~fun_loc ~generator_return_loc params predicate body =
         let loc =
           let open Ast.Function in
           match body with
@@ -4703,11 +4749,20 @@ module Make
           | BodyExpression (loc, _) ->
             loc
         in
+        Base.Option.iter generator_return_loc ~f:(fun return_loc ->
+            write_entries <-
+              L.LMap.update
+                return_loc
+                (function
+                  | None -> Some Env_api.NonAssigningWrite
+                  | x -> x)
+                write_entries
+        );
         begin
           try ignore (Context.exhaustive_check cx loc : _ * _) with
           | Not_found -> Context.add_exhaustive_check cx loc ([], false)
         end;
-        super#lambda ~is_arrow ~fun_loc params predicate body
+        super#lambda ~is_arrow ~fun_loc ~generator_return_loc params predicate body
     end
 
   let program_with_scope cx program =

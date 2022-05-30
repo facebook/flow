@@ -6351,3 +6351,15 @@ function test() {
         (6, 20) to (6, 21) => {
           (6, 11) to (6, 12): (`i`)
         }] |}]
+
+let%expect_test "gen_next" =
+  print_ssa_test {|
+function *f() {
+  yield;
+}
+|};
+    [%expect {|
+      [
+        (3, 2) to (3, 7) => {
+          (2, 13) to (2, 13): (next)
+        }] |}]

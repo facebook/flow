@@ -431,7 +431,7 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
         this#with_bindings ~lexical:true loc lexical_bindings (super#catch_clause loc) clause
 
       (* helper for function params and body *)
-      method private lambda ~is_arrow:_ ~fun_loc:_ params predicate body =
+      method private lambda ~is_arrow:_ ~fun_loc:_ ~generator_return_loc:_ params predicate body =
         let open Ast.Function in
         let body_loc =
           match body with
@@ -559,7 +559,7 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
             return;
             tparams;
             async = _;
-            generator = _;
+            generator;
             predicate;
             sig_loc = _;
             comments = _;
@@ -567,11 +567,16 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
             expr
           in
           run_opt this#function_identifier id;
+          let generator_return_loc =
+            match (generator, return) with
+            | (false, _) -> None
+            | (true, (Ast.Type.Available (loc, _) | Ast.Type.Missing loc)) -> Some loc
+          in
           this#scoped_type_params
             ~hoist_op:this#hoist_annotations
             tparams
             ~in_tparam_scope:(fun () ->
-              this#lambda ~is_arrow:false ~fun_loc:loc params predicate body;
+              this#lambda ~is_arrow:false ~fun_loc:loc ~generator_return_loc params predicate body;
               if with_types then
                 this#hoist_annotations (fun () -> ignore @@ this#type_annotation_hint return)
           )
@@ -597,7 +602,7 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
             return;
             tparams;
             async = _;
-            generator = _;
+            generator;
             predicate;
             sig_loc = _;
             comments = _;
@@ -609,6 +614,11 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
             | Some name -> Bindings.(singleton (name, Bindings.Function))
             | None -> Bindings.empty
           in
+          let generator_return_loc =
+            match (generator, return) with
+            | (false, _) -> None
+            | (true, (Ast.Type.Available (loc, _) | Ast.Type.Missing loc)) -> Some loc
+          in
           this#with_bindings
             loc
             ~lexical:true
@@ -617,7 +627,7 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
               run_opt this#function_identifier id;
               (* This function is not hoisted, so we just traverse the signature *)
               this#scoped_type_params tparams ~in_tparam_scope:(fun () ->
-                  this#lambda ~is_arrow ~fun_loc:loc params predicate body;
+                  this#lambda ~is_arrow ~fun_loc:loc ~generator_return_loc params predicate body;
                   if with_types then ignore @@ this#type_annotation_hint return
               ))
             ()

@@ -3836,13 +3836,13 @@ struct
           )
       in
       Flow.flow cx (t, UseT (use_op, yield));
-      ( (loc, Env.get_internal_var cx "next" loc),
+      ( (loc, Env.get_next cx loc),
         Yield { Yield.argument = argument_ast; delegate = false; comments }
       )
     | Yield { Yield.argument; delegate = true; comments } ->
       let reason = mk_reason (RCustom "yield* delegate") loc in
-      let next = Env.get_internal_var cx "next" loc in
       let yield = Env.get_internal_var cx "yield" loc in
+      let next = Env.get_next cx loc in
       let (t, argument_ast) =
         match argument with
         | Some expr ->
@@ -8916,14 +8916,14 @@ struct
         Func_class_sig_types.Func.Ordinary
       | None -> kind
     in
-    let function_kind cx ~async ~generator ~predicate ~params =
+    let function_kind cx ~async ~generator ~predicate ~params ~ret_loc =
       let open Func_sig in
       let open Ast.Type.Predicate in
       let open Func_class_sig_types.Func in
       match (async, generator, predicate) with
-      | (true, true, None) -> AsyncGenerator
+      | (true, true, None) -> AsyncGenerator { return_loc = ret_loc }
       | (true, false, None) -> Async
-      | (false, true, None) -> Generator
+      | (false, true, None) -> Generator { return_loc = ret_loc }
       | (false, false, None) -> Ordinary
       | (false, false, Some (loc, { kind = Ast.Type.Predicate.Inferred | Declared _; comments = _ }))
         ->
@@ -9084,7 +9084,13 @@ struct
         func
       in
       let loc = aloc_of_reason reason in
-      let kind = function_kind cx ~async ~generator ~predicate ~params in
+      let ret_loc =
+        match return with
+        | Ast.Type.Available (loc, _)
+        | Ast.Type.Missing loc ->
+          loc
+      in
+      let kind = function_kind cx ~async ~generator ~predicate ~params ~ret_loc in
       let (tparams, tparams_map, tparams_ast) =
         Anno.mk_type_param_declarations cx ~tparams_map tparams
       in

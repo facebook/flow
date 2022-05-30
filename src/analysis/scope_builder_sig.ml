@@ -50,6 +50,7 @@ module type S = sig
          method private lambda :
            is_arrow:bool ->
            fun_loc:L.t ->
+           generator_return_loc:L.t option ->
            (L.t, L.t) Flow_ast.Function.Params.t ->
            (L.t, L.t) Flow_ast.Type.Predicate.t option ->
            (L.t, L.t) Flow_ast.Function.body ->

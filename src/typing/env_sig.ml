@@ -260,4 +260,6 @@ module type S = sig
     Type.t option
 
   val valid_declaration_check : Context.t -> Reason.name -> ALoc.t -> unit
+
+  val get_next : Context.t -> ALoc.t -> Type.t
 end

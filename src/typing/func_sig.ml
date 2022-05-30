@@ -140,8 +140,8 @@ struct
           Scope.Ordinary
         | Predicate -> Scope.Predicate
         | Async -> Scope.Async
-        | Generator -> Scope.Generator
-        | AsyncGenerator -> Scope.AsyncGenerator
+        | Generator _ -> Scope.Generator
+        | AsyncGenerator _ -> Scope.AsyncGenerator
         | Ctor -> Scope.Ctor
       in
       Scope.fresh ~var_scope_kind ()
@@ -210,7 +210,7 @@ struct
 
     let (yield_t, next_t) =
       match kind with
-      | Generator ->
+      | Generator { return_loc } ->
         let yield_t =
           Tvar.mk_where cx (replace_desc_reason (RCustom "yield") reason) (fun yield ->
               let t =
@@ -249,8 +249,9 @@ struct
               Flow.flow_t cx (t, type_t_of_annotated_or_inferred return_t)
           )
         in
+        Env.record_expression_type_if_needed cx return_loc next_t;
         (yield_t, next_t)
-      | AsyncGenerator ->
+      | AsyncGenerator { return_loc } ->
         let yield_t =
           Tvar.mk_where cx (replace_desc_reason (RCustom "yield") reason) (fun yield ->
               let t =
@@ -289,6 +290,7 @@ struct
               Flow.flow_t cx (t, type_t_of_annotated_or_inferred return_t)
           )
         in
+        Env.record_expression_type_if_needed cx return_loc next_t;
         (yield_t, next_t)
       | _ ->
         ( DefT
@@ -408,7 +410,7 @@ struct
             let use_op = Op (FunImplicitReturn { fn = reason_fn; upper = reason_of_t return_t }) in
             let use_op = Frame (ImplicitTypeParam, use_op) in
             (use_op, t, None)
-          | Generator ->
+          | Generator _ ->
             let reason = mk_annot_reason (RType (OrdinaryName "Generator")) loc in
             let void_t = VoidT.at loc |> with_trust bogus_trust in
             let t =
@@ -421,7 +423,7 @@ struct
             let use_op = Op (FunImplicitReturn { fn = reason_fn; upper = reason_of_t return_t }) in
             let use_op = Frame (ImplicitTypeParam, use_op) in
             (use_op, t, None)
-          | AsyncGenerator ->
+          | AsyncGenerator _ ->
             let reason = mk_annot_reason (RType (OrdinaryName "AsyncGenerator")) loc in
             let void_t = VoidT.at loc |> with_trust bogus_trust in
             let t =

@@ -21,6 +21,7 @@ type kind =
   | Import
   | DeclaredFunction of { predicate: bool }
   | Internal
+  | GeneratorNext
 [@@deriving show]
 
 type 'loc entry = ('loc, 'loc) Ast.Identifier.t * kind

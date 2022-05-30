@@ -68,8 +68,8 @@ module Func = struct
   type kind =
     | Ordinary
     | Async
-    | Generator
-    | AsyncGenerator
+    | Generator of { return_loc: ALoc.t }
+    | AsyncGenerator of { return_loc: ALoc.t }
     | FieldInit of (ALoc.t, ALoc.t) Flow_ast.Expression.t
     | Predicate
     | Ctor
