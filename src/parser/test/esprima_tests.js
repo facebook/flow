@@ -76,7 +76,6 @@ module.exports = {
         '0x3in[]',
         '"Hello\nWorld"',
         'x\\',
-        'var x = /(s/g',
         '/',
         '/test',
         '/test\n/',
