@@ -328,17 +328,45 @@ module New_env = struct
                  |> type_of_state writes write_id
                | (Env_api.With_ALoc.Global name, _) ->
                  get_global_value_type cx (Reason.OrdinaryName name) reason
-               | (Env_api.With_ALoc.This reason, _) ->
+               | (Env_api.With_ALoc.FunctionOrGlobalThis reason, _) ->
                  Debug_js.Verbose.print_if_verbose
                    cx
                    [
                      spf
-                       "reading this(%s) from location %s"
+                       "reading function or global this(%s) from location %s"
                        (Reason.string_of_aloc loc)
                        (Reason.aloc_of_reason reason |> Reason.string_of_aloc);
                    ];
                  Base.Option.value_exn
-                   (Reason.aloc_of_reason reason |> Loc_env.find_write env Env_api.ThisLoc)
+                   (Reason.aloc_of_reason reason
+                   |> Loc_env.find_write env Env_api.FunctionOrGlobalThisLoc
+                   )
+               | (Env_api.With_ALoc.ClassInstanceThis reason, _) ->
+                 Debug_js.Verbose.print_if_verbose
+                   cx
+                   [
+                     spf
+                       "reading instance this(%s) from location %s"
+                       (Reason.string_of_aloc loc)
+                       (Reason.aloc_of_reason reason |> Reason.string_of_aloc);
+                   ];
+                 Base.Option.value_exn
+                   (Reason.aloc_of_reason reason
+                   |> Loc_env.find_write env Env_api.ClassInstanceThisLoc
+                   )
+               | (Env_api.With_ALoc.ClassStaticThis reason, _) ->
+                 Debug_js.Verbose.print_if_verbose
+                   cx
+                   [
+                     spf
+                       "reading static this(%s) from location %s"
+                       (Reason.string_of_aloc loc)
+                       (Reason.aloc_of_reason reason |> Reason.string_of_aloc);
+                   ];
+                 Base.Option.value_exn
+                   (Reason.aloc_of_reason reason
+                   |> Loc_env.find_write env Env_api.ClassStaticThisLoc
+                   )
                | (Env_api.With_ALoc.ClassInstanceSuper reason, _) ->
                  Debug_js.Verbose.print_if_verbose
                    cx
@@ -472,7 +500,9 @@ module New_env = struct
           | Env_api.With_ALoc.Refinement { refinement_id = _; writes; write_id = _ } ->
             local_def_exists writes
           | Env_api.With_ALoc.Projection _ -> true
-          | Env_api.With_ALoc.This _ -> true
+          | Env_api.With_ALoc.FunctionOrGlobalThis _ -> true
+          | Env_api.With_ALoc.ClassInstanceThis _ -> true
+          | Env_api.With_ALoc.ClassStaticThis _ -> true
           | Env_api.With_ALoc.ClassInstanceSuper _ -> true
           | Env_api.With_ALoc.ClassStaticSuper _ -> true
           | Env_api.With_ALoc.Exports -> true
@@ -554,7 +584,9 @@ module New_env = struct
 
   let env_entries_of_def_loc_type var_info = function
     | Env_api.OrdinaryNameLoc -> var_info.Env_api.env_entries
-    | Env_api.ThisLoc -> var_info.Env_api.this_env_entries
+    | Env_api.FunctionOrGlobalThisLoc -> var_info.Env_api.function_or_global_this_env_entries
+    | Env_api.ClassInstanceThisLoc -> var_info.Env_api.class_instance_this_env_entries
+    | Env_api.ClassStaticThisLoc -> var_info.Env_api.class_static_this_env_entries
     | Env_api.ClassInstanceSuperLoc -> var_info.Env_api.class_instance_super_env_entries
     | Env_api.ClassStaticSuperLoc -> var_info.Env_api.class_static_super_env_entries
 
@@ -686,7 +718,14 @@ module New_env = struct
     valid_declaration_check cx (OrdinaryName name) loc;
     bind cx (TypeUtil.type_t_of_annotated_or_inferred t) loc
 
-  let bind_this cx t loc = unify_write_entry cx ~use_op:Type.unknown_use t Env_api.ThisLoc loc
+  let bind_function_or_global_this cx t loc =
+    unify_write_entry cx ~use_op:Type.unknown_use t Env_api.FunctionOrGlobalThisLoc loc
+
+  let bind_class_instance_this cx t loc =
+    unify_write_entry cx ~use_op:Type.unknown_use t Env_api.ClassInstanceThisLoc loc
+
+  let bind_class_static_this cx t loc =
+    unify_write_entry cx ~use_op:Type.unknown_use t Env_api.ClassStaticThisLoc loc
 
   let bind_class_instance_super cx t loc =
     unify_write_entry cx ~use_op:Type.unknown_use t Env_api.ClassInstanceSuperLoc loc
@@ -850,7 +889,15 @@ module New_env = struct
     let env =
       env
       |> initialize_entries Env_api.OrdinaryNameLoc var_info.Env_api.env_entries
-      |> initialize_entries Env_api.ThisLoc var_info.Env_api.this_env_entries
+      |> initialize_entries
+           Env_api.FunctionOrGlobalThisLoc
+           var_info.Env_api.function_or_global_this_env_entries
+      |> initialize_entries
+           Env_api.ClassInstanceThisLoc
+           var_info.Env_api.class_instance_this_env_entries
+      |> initialize_entries
+           Env_api.ClassStaticThisLoc
+           var_info.Env_api.class_static_this_env_entries
       |> initialize_entries
            Env_api.ClassInstanceSuperLoc
            var_info.Env_api.class_instance_super_env_entries
@@ -860,7 +907,9 @@ module New_env = struct
     in
     let initialize_this () =
       let t = ObjProtoT (mk_reason (RCustom "global object") ALoc.none) in
-      let w = Base.Option.value_exn (Loc_env.find_write env Env_api.ThisLoc ALoc.none) in
+      let w =
+        Base.Option.value_exn (Loc_env.find_write env Env_api.FunctionOrGlobalThisLoc ALoc.none)
+      in
       Flow_js.unify cx ~use_op:unknown_use w t
     in
     initialize_this ();

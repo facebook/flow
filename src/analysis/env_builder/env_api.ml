@@ -15,7 +15,9 @@ type new_env_literal_check =
 
 type def_loc_type =
   | OrdinaryNameLoc
-  | ThisLoc
+  | FunctionOrGlobalThisLoc
+  | ClassInstanceThisLoc
+  | ClassStaticThisLoc
   | ClassInstanceSuperLoc
   | ClassStaticSuperLoc
 [@@deriving show]
@@ -46,7 +48,9 @@ module type S = sig
         writes: write_locs;
         write_id: int option;
       }
-    | This of L.t Reason.virtual_reason
+    | FunctionOrGlobalThis of L.t Reason.virtual_reason
+    | ClassInstanceThis of L.t Reason.virtual_reason
+    | ClassStaticThis of L.t Reason.virtual_reason
     | ClassInstanceSuper of L.t Reason.virtual_reason
     | ClassStaticSuper of L.t Reason.virtual_reason
     | Exports
@@ -142,7 +146,9 @@ module type S = sig
     ssa_values: Ssa_api.values;
     env_values: values;
     env_entries: env_entry L.LMap.t;
-    this_env_entries: env_entry L.LMap.t;
+    function_or_global_this_env_entries: env_entry L.LMap.t;
+    class_instance_this_env_entries: env_entry L.LMap.t;
+    class_static_this_env_entries: env_entry L.LMap.t;
     class_instance_super_env_entries: env_entry L.LMap.t;
     class_static_super_env_entries: env_entry L.LMap.t;
     providers: Provider_api.info;
@@ -207,7 +213,9 @@ module Make
         writes: write_locs;
         write_id: int option;
       }
-    | This of L.t Reason.virtual_reason
+    | FunctionOrGlobalThis of L.t Reason.virtual_reason
+    | ClassInstanceThis of L.t Reason.virtual_reason
+    | ClassStaticThis of L.t Reason.virtual_reason
     | ClassInstanceSuper of L.t Reason.virtual_reason
     | ClassStaticSuper of L.t Reason.virtual_reason
     | Exports
@@ -300,7 +308,9 @@ module Make
     ssa_values: Ssa_api.values;
     env_values: values;
     env_entries: env_entry L.LMap.t;
-    this_env_entries: env_entry L.LMap.t;
+    function_or_global_this_env_entries: env_entry L.LMap.t;
+    class_instance_this_env_entries: env_entry L.LMap.t;
+    class_static_this_env_entries: env_entry L.LMap.t;
     class_instance_super_env_entries: env_entry L.LMap.t;
     class_static_super_env_entries: env_entry L.LMap.t;
     providers: Provider_api.info;
@@ -313,7 +323,9 @@ module Make
       ssa_values = L.LMap.empty;
       env_values = L.LMap.empty;
       env_entries = L.LMap.empty;
-      this_env_entries = L.LMap.empty;
+      function_or_global_this_env_entries = L.LMap.empty;
+      class_instance_this_env_entries = L.LMap.empty;
+      class_static_this_env_entries = L.LMap.empty;
       class_instance_super_env_entries = L.LMap.empty;
       class_static_super_env_entries = L.LMap.empty;
       providers = Provider_api.empty;
@@ -338,7 +350,9 @@ module Make
     | Write r -> [Reason.poly_loc_of_reason r]
     | Uninitialized _ -> []
     | Undeclared _ -> []
-    | This _ -> []
+    | FunctionOrGlobalThis _ -> []
+    | ClassInstanceThis _ -> []
+    | ClassStaticThis _ -> []
     | ClassInstanceSuper _ -> []
     | ClassStaticSuper _ -> []
     | Exports -> []
@@ -410,7 +424,9 @@ module Make
         let refinement_id_str = string_of_int refinement_id in
         let writes_str = String.concat "," (List.map print_write_loc writes) in
         Printf.sprintf "{refinement_id = %s; writes = %s}" refinement_id_str writes_str
-      | This reason ->
+      | FunctionOrGlobalThis reason
+      | ClassInstanceThis reason
+      | ClassStaticThis reason ->
         let loc = Reason.poly_loc_of_reason reason in
         Utils_js.spf
           "this(%s): (%s)"

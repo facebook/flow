@@ -872,6 +872,8 @@ module Make
           (fields_to_prop_map cx x.static.private_fields)
           (methods_to_prop_map ~cx ~this_default:instance_this_type x.instance.private_methods)
           (methods_to_prop_map ~cx ~this_default:static_this_type x.static.private_methods);
+        Env.bind_class_instance_this cx instance_this_default class_loc;
+        Env.bind_class_static_this cx static_this_default class_loc;
         Env.bind_class_instance_super cx super class_loc;
         Env.bind_class_static_super cx static_super class_loc;
 

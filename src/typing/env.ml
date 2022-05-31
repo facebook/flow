@@ -241,7 +241,15 @@ module Env : Env_sig.S = struct
         in
         env
         |> initialize_entries Env_api.OrdinaryNameLoc var_info.Env_api.env_entries
-        |> initialize_entries Env_api.ThisLoc var_info.Env_api.this_env_entries
+        |> initialize_entries
+             Env_api.FunctionOrGlobalThisLoc
+             var_info.Env_api.function_or_global_this_env_entries
+        |> initialize_entries
+             Env_api.ClassInstanceThisLoc
+             var_info.Env_api.class_instance_this_env_entries
+        |> initialize_entries
+             Env_api.ClassStaticThisLoc
+             var_info.Env_api.class_static_this_env_entries
         |> initialize_entries
              Env_api.ClassInstanceSuperLoc
              var_info.Env_api.class_instance_super_env_entries
@@ -734,7 +742,11 @@ module Env : Env_sig.S = struct
       (Entry.new_let t ~loc ~state ~spec ?closure_writes ~provider)
       loc
 
-  let bind_this _ _ _ = ()
+  let bind_function_or_global_this _ _ _ = ()
+
+  let bind_class_instance_this _ _ _ = ()
+
+  let bind_class_static_this _ _ _ = ()
 
   let bind_class_instance_super _ _ _ = ()
 

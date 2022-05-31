@@ -16,7 +16,9 @@ open Loc_collections
 type t = {
   types: Type.annotated_or_inferred ALocMap.t;
   tparams: (Subst_name.t * Type.t) ALocMap.t;
-  this_types: Type.annotated_or_inferred ALocMap.t;
+  function_or_global_this_types: Type.annotated_or_inferred ALocMap.t;
+  class_instance_this_types: Type.annotated_or_inferred ALocMap.t;
+  class_static_this_types: Type.annotated_or_inferred ALocMap.t;
   class_instance_super_types: Type.annotated_or_inferred ALocMap.t;
   class_static_super_types: Type.annotated_or_inferred ALocMap.t;
   resolved: ALocSet.t;
@@ -24,10 +26,24 @@ type t = {
 }
 
 let update_types
-    ~update ({ types; this_types; class_instance_super_types; class_static_super_types; _ } as info)
-    = function
+    ~update
+    ( {
+        types;
+        function_or_global_this_types;
+        class_instance_this_types;
+        class_static_this_types;
+        class_instance_super_types;
+        class_static_super_types;
+        _;
+      } as info
+    ) = function
   | Env_api.OrdinaryNameLoc -> { info with types = update types }
-  | Env_api.ThisLoc -> { info with this_types = update this_types }
+  | Env_api.FunctionOrGlobalThisLoc ->
+    { info with function_or_global_this_types = update function_or_global_this_types }
+  | Env_api.ClassInstanceThisLoc ->
+    { info with class_instance_this_types = update class_instance_this_types }
+  | Env_api.ClassStaticThisLoc ->
+    { info with class_static_this_types = update class_static_this_types }
   | Env_api.ClassInstanceSuperLoc ->
     { info with class_instance_super_types = update class_instance_super_types }
   | Env_api.ClassStaticSuperLoc ->
@@ -56,12 +72,23 @@ let update_reason ({ types; _ } as info) loc reason =
   { info with types }
 
 let find_write
-    { types; this_types; class_instance_super_types; class_static_super_types; _ } def_loc_kind loc
-    =
+    {
+      types;
+      function_or_global_this_types;
+      class_instance_this_types;
+      class_static_this_types;
+      class_instance_super_types;
+      class_static_super_types;
+      _;
+    }
+    def_loc_kind
+    loc =
   let types =
     match def_loc_kind with
     | Env_api.OrdinaryNameLoc -> types
-    | Env_api.ThisLoc -> this_types
+    | Env_api.FunctionOrGlobalThisLoc -> function_or_global_this_types
+    | Env_api.ClassInstanceThisLoc -> class_instance_this_types
+    | Env_api.ClassStaticThisLoc -> class_static_this_types
     | Env_api.ClassInstanceSuperLoc -> class_instance_super_types
     | Env_api.ClassStaticSuperLoc -> class_static_super_types
   in
@@ -72,7 +99,9 @@ let find_ordinary_write env loc = find_write env Env_api.OrdinaryNameLoc loc
 let empty =
   {
     types = ALocMap.empty;
-    this_types = ALocMap.empty;
+    function_or_global_this_types = ALocMap.empty;
+    class_instance_this_types = ALocMap.empty;
+    class_static_this_types = ALocMap.empty;
     class_instance_super_types = ALocMap.empty;
     class_static_super_types = ALocMap.empty;
     var_info = Env_api.empty;
