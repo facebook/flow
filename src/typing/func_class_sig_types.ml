@@ -74,6 +74,11 @@ module Func = struct
     | Predicate
     | Ctor
 
+  type default_this_type =
+    | ParentScopeThis
+    | ClassThis of ALoc.t option * Type.t
+    | FunctionThis of ALoc.t * Type.t
+
   module type S = sig
     module Config : Config.S
 

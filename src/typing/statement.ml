@@ -9201,14 +9201,14 @@ struct
      signature consisting of type parameters, parameter types, parameter names,
      and return type, check the body against that signature by adding `this`
      and super` to the environment, and return the signature. *)
-  and function_decl cx ~func_hint ~needs_this_param reason fun_loc func this_recipe super =
+  and function_decl cx ~func_hint ~needs_this_param reason func default_this super =
     let (func_sig, reconstruct_func) =
       mk_func_sig cx ~func_hint ~needs_this_param Subst_name.Map.empty reason func
     in
     let save_return = Abnormal.clear_saved Abnormal.Return in
     let save_throw = Abnormal.clear_saved Abnormal.Throw in
     let (this_t, params_ast, body_ast, _) =
-      Func_stmt_sig.toplevels cx this_recipe super fun_loc func_sig
+      Func_stmt_sig.toplevels cx default_this super func_sig
     in
     let this_t =
       match this_t with
@@ -9251,24 +9251,15 @@ struct
       (* The default behavior of `this` still depends on how it
          was created, so we must provide the recipe based on where `function_decl`
          is invoked. *)
-      let this_recipe fparams =
-        let default =
-          if
-            Signature_utils.This_finder.found_this_in_body_or_params
-              func.Ast.Function.body
-              func.Ast.Function.params
-          then
-            Tvar.mk cx (mk_reason RThis loc)
-          else
-            Type.implicit_mixed_this reason
-        in
-        (* If `this` is a bound type variable, we cannot create the type here, and
-           instead must wait until `check_with_generics` to instantiate the type.
-           However, the default behavior of `this` still depends on how it
-           was created, so we must provide the recipe based on where `function_decl`
-           is invoked. *)
-        let t = Func_stmt_params.this fparams |> annotated_or_inferred_of_option ~default in
-        (type_t_of_annotated_or_inferred t, t)
+      let default_this =
+        if
+          Signature_utils.This_finder.found_this_in_body_or_params
+            func.Ast.Function.body
+            func.Ast.Function.params
+        then
+          Tvar.mk cx (mk_reason RThis loc)
+        else
+          Type.implicit_mixed_this reason
       in
       let (fun_type, reconstruct_ast) =
         function_decl
@@ -9276,9 +9267,8 @@ struct
           ~needs_this_param
           ~func_hint:hint
           reason
-          (Some fun_loc)
           func
-          (Some this_recipe)
+          (Func_class_sig_types.Func.FunctionThis (fun_loc, default_this))
           None
       in
       (fun_type, reconstruct_ast general)
@@ -9289,9 +9279,9 @@ struct
        function_decl has already done the necessary checking of `this` in
        the body of the function. Now we want to avoid re-binding `this` to
        objects through which the function may be called. *)
-    let this_recipe = None in
+    let default_this = Func_class_sig_types.Func.ParentScopeThis in
     let (fun_type, reconstruct_ast) =
-      function_decl cx ~needs_this_param:false ~func_hint reason None func this_recipe None
+      function_decl cx ~needs_this_param:false ~func_hint reason func default_this None
     in
     (fun_type, reconstruct_ast fun_type)
 

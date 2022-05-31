@@ -116,7 +116,7 @@ struct
     | [(_, param_t)] -> param_t
     | _ -> failwith "Setter property with unexpected type"
 
-  let toplevels cx this_recipe super func_loc x =
+  let toplevels cx default_this super x =
     let { T.reason = reason_fn; kind; tparams_map; fparams; body; return_t; _ } = x in
     let body_loc =
       let open Ast.Function in
@@ -149,46 +149,52 @@ struct
     (* push the scope early so default exprs can reference earlier params *)
     Env.push_var_scope function_scope;
 
-    let (this_t, this) =
-      match this_recipe with
-      | None -> (None, None)
-      | Some f ->
-        let (this_t, this) = f fparams in
-        (Some this_t, Some this)
+    let this_t =
+      if Env.new_env then (
+        match default_this with
+        | Func_class_sig_types.Func.ParentScopeThis -> None
+        (* This case correspond to the default constructors that do not appear in the source. *)
+        | Func_class_sig_types.Func.ClassThis (None, _) -> None
+        | Func_class_sig_types.Func.ClassThis (Some func_loc, default)
+        | Func_class_sig_types.Func.FunctionThis (func_loc, default) ->
+          let this = this_param fparams |> Base.Option.value ~default in
+          Env.bind_this cx this func_loc;
+          Some this
+      ) else
+        (* add `this` and `super` before looking at parameter bindings as when using
+         * `this` in default parameter values it refers to the function scope and
+         * `super` should resolve to the method's [[HomeObject]]
+         *)
+        let (this_t, this) =
+          match default_this with
+          | Func_class_sig_types.Func.ParentScopeThis -> (None, None)
+          | Func_class_sig_types.Func.ClassThis (_, default)
+          | Func_class_sig_types.Func.FunctionThis (_, default) ->
+            let this = this_param fparams |> annotated_or_inferred_of_option ~default in
+            (Some (type_t_of_annotated_or_inferred this), Some this)
+        in
+        Base.Option.iter this ~f:(fun t ->
+            let entry =
+              Scope.Entry.new_let
+                ~loc:(TypeUtil.loc_of_t (TypeUtil.type_t_of_annotated_or_inferred t))
+                ~state:Scope.State.Initialized
+                ~provider:(TypeUtil.type_t_of_annotated_or_inferred t)
+                t
+            in
+            Scope.add_entry (internal_name "this") entry function_scope
+        );
+        Base.Option.iter super ~f:(fun t ->
+            let entry =
+              Scope.Entry.new_let
+                ~loc:(TypeUtil.loc_of_t t)
+                ~state:Scope.State.Initialized
+                ~provider:t
+                (Inferred t)
+            in
+            Scope.add_entry (internal_name "super") entry function_scope
+        );
+        this_t
     in
-
-    (* add `this` and `super` before looking at parameter bindings as when using
-     * `this` in default parameter values it refers to the function scope and
-     * `super` should resolve to the method's [[HomeObject]]
-     *)
-    if Env.new_env then
-      Base.Option.iter func_loc ~f:(fun loc ->
-          Base.Option.iter this ~f:(fun this ->
-              Env.bind_this cx (TypeUtil.type_t_of_annotated_or_inferred this) loc
-          )
-      )
-    else (
-      Base.Option.iter this ~f:(fun t ->
-          let entry =
-            Scope.Entry.new_let
-              ~loc:(TypeUtil.loc_of_t (TypeUtil.type_t_of_annotated_or_inferred t))
-              ~state:Scope.State.Initialized
-              ~provider:(TypeUtil.type_t_of_annotated_or_inferred t)
-              t
-          in
-          Scope.add_entry (internal_name "this") entry function_scope
-      );
-      Base.Option.iter super ~f:(fun t ->
-          let entry =
-            Scope.Entry.new_let
-              ~loc:(TypeUtil.loc_of_t t)
-              ~state:Scope.State.Initialized
-              ~provider:t
-              (Inferred t)
-          in
-          Scope.add_entry (internal_name "super") entry function_scope
-      )
-    );
 
     (* bind type params *)
     Subst_name.Map.iter

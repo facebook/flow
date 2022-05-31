@@ -46,11 +46,10 @@ module type S = sig
 
   val toplevels :
     Context.t ->
-    (func_params -> Type.t * Type.annotated_or_inferred) option ->
-    (* this recipe *)
+    Func_class_sig_types.Func.default_this_type ->
+    (* default this *)
     Type.t option ->
-    ALoc.t option ->
-    (* this and super def_loc *)
+    (* super *)
     t ->
     Type.t option
     (* this *)
