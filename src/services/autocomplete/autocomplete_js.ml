@@ -171,7 +171,7 @@ class process_request_searcher (from_trigger_character : bool) (cursor : Loc.t) 
       let {
         member = { _object = ((obj_loc, obj_type), _) as obj; property; comments };
         optional;
-        filtered_type;
+        filtered_out;
       } =
         expr
       in
@@ -215,7 +215,7 @@ class process_request_searcher (from_trigger_character : bool) (cursor : Loc.t) 
       end;
       (* the reason we don't simply call `super#optional_member` is because that would
        * call `this#member`, which would be redundant *)
-      { member = { _object = this#expression obj; property; comments }; optional; filtered_type }
+      { member = { _object = this#expression obj; property; comments }; optional; filtered_out }
 
     method! pattern ?kind pat =
       let open Flow_ast.Pattern in

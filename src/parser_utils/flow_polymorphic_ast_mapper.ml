@@ -204,10 +204,10 @@ class virtual ['M, 'T, 'N, 'U] mapper =
     method optional_call annot (expr : ('M, 'T) Ast.Expression.OptionalCall.t)
         : ('N, 'U) Ast.Expression.OptionalCall.t =
       let open Ast.Expression.OptionalCall in
-      let { call; optional; filtered_type } = expr in
+      let { call; optional; filtered_out } = expr in
       let call' = this#call annot call in
-      let filtered_type' = this#on_type_annot filtered_type in
-      { call = call'; optional; filtered_type = filtered_type' }
+      let filtered_out' = this#on_type_annot filtered_out in
+      { call = call'; optional; filtered_out = filtered_out' }
 
     method call_type_args (pi : ('M, 'T) Ast.Expression.CallTypeArgs.t)
         : ('N, 'U) Ast.Expression.CallTypeArgs.t =
@@ -1538,10 +1538,10 @@ class virtual ['M, 'T, 'N, 'U] mapper =
     method optional_member (expr : ('M, 'T) Ast.Expression.OptionalMember.t)
         : ('N, 'U) Ast.Expression.OptionalMember.t =
       let open Ast.Expression.OptionalMember in
-      let { member; optional; filtered_type } = expr in
+      let { member; optional; filtered_out } = expr in
       let member' = this#member member in
-      let filtered_type' = this#on_type_annot filtered_type in
-      { member = member'; optional; filtered_type = filtered_type' }
+      let filtered_out' = this#on_type_annot filtered_out in
+      { member = member'; optional; filtered_out = filtered_out' }
 
     method member_property (expr : ('M, 'T) Ast.Expression.Member.property)
         : ('N, 'U) Ast.Expression.Member.property =

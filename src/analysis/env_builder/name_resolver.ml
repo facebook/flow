@@ -4408,7 +4408,7 @@ module Make
               {
                 OptionalCall.call = { Call.callee; targs; arguments; comments = _ };
                 optional;
-                filtered_type = _;
+                filtered_out = _;
               } ->
             let refi =
               match RefinementKey.of_expression callee with

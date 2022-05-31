@@ -1046,7 +1046,7 @@ let rec code_desc_of_expression ~wrap (_, x) =
       {
         OptionalCall.call = { Call.callee; targs; arguments; comments = _ };
         optional;
-        filtered_type = _;
+        filtered_out = _;
       } ->
     let targ_string =
       match targs with
@@ -1071,7 +1071,7 @@ let rec code_desc_of_expression ~wrap (_, x) =
       {
         OptionalMember.member = { Member._object; property; comments = _ };
         optional;
-        filtered_type = _;
+        filtered_out = _;
       } ->
     let o = code_desc_of_expression ~wrap:true _object in
     let p = code_desc_of_property ~optional property in

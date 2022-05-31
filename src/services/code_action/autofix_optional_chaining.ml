@@ -19,7 +19,7 @@ class mapper target =
       let open Flow_ast.Expression in
       match e with
       | (loc, Member m) when this#is_target loc ->
-        (loc, OptionalMember { OptionalMember.member = m; optional = true; filtered_type = loc })
+        (loc, OptionalMember { OptionalMember.member = m; optional = true; filtered_out = loc })
       | _ -> super#expression e
   end
 

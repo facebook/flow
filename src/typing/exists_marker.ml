@@ -44,7 +44,7 @@ class marker cx =
               OptionalMember
                 { OptionalMember.member = { Member.property = Member.PropertyExpression _; _ }; _ }
             )
-          | (_, OptionalMember { OptionalMember.filtered_type = (loc, ty); _ })
+          | (_, OptionalMember { OptionalMember.filtered_out = (loc, ty); _ })
           | ((loc, ty), Member _)
           | ((_, ty), Assignment { Assignment.left = ((loc, _), Ast.Pattern.Identifier _); _ }) ->
             Context.add_exists_check cx loc ty

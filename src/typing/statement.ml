@@ -4012,44 +4012,43 @@ struct
   and optional_chain ~cond ~is_existence_check ?sentinel_refine cx ((loc, e) as ex) =
     let open Ast.Expression in
     let factor_out_optional (_, e) =
-      let (opt_state, filtered_type_loc, e') =
+      let (opt_state, filtered_out_loc, e') =
         match e with
-        | OptionalCall { OptionalCall.call; optional; filtered_type } ->
+        | OptionalCall { OptionalCall.call; optional; filtered_out } ->
           let opt_state =
             if optional then
               NewChain
             else
               ContinueChain
           in
-          (opt_state, filtered_type, Call call)
-        | OptionalMember { OptionalMember.member; optional; filtered_type } ->
+          (opt_state, filtered_out, Call call)
+        | OptionalMember { OptionalMember.member; optional; filtered_out } ->
           let opt_state =
             if optional then
               NewChain
             else
               ContinueChain
           in
-          (opt_state, filtered_type, Member member)
+          (opt_state, filtered_out, Member member)
         | _ -> (NonOptional, loc, e)
       in
       let call_ast call ty =
         match opt_state with
         | NewChain ->
-          OptionalCall
-            { OptionalCall.call; optional = true; filtered_type = (filtered_type_loc, ty) }
+          OptionalCall { OptionalCall.call; optional = true; filtered_out = (filtered_out_loc, ty) }
         | ContinueChain ->
           OptionalCall
-            { OptionalCall.call; optional = false; filtered_type = (filtered_type_loc, ty) }
+            { OptionalCall.call; optional = false; filtered_out = (filtered_out_loc, ty) }
         | NonOptional -> Call call
       in
       let member_ast member ty =
         match opt_state with
         | NewChain ->
           OptionalMember
-            { OptionalMember.member; optional = true; filtered_type = (filtered_type_loc, ty) }
+            { OptionalMember.member; optional = true; filtered_out = (filtered_out_loc, ty) }
         | ContinueChain ->
           OptionalMember
-            { OptionalMember.member; optional = false; filtered_type = (filtered_type_loc, ty) }
+            { OptionalMember.member; optional = false; filtered_out = (filtered_out_loc, ty) }
         | NonOptional -> Member member
       in
       (e', opt_state, call_ast, member_ast)
@@ -4902,7 +4901,7 @@ struct
           | ( Call
                 ( {
                     Call.callee =
-                      (callee_loc, OptionalMember { OptionalMember.member; optional; filtered_type })
+                      (callee_loc, OptionalMember { OptionalMember.member; optional; filtered_out })
                       as orig_receiver;
                     targs = _;
                     arguments = _;
@@ -4912,8 +4911,7 @@ struct
               (NewChain | ContinueChain)
             ) ->
             let receiver_ast member ty =
-              OptionalMember
-                { OptionalMember.member; optional; filtered_type = (filtered_type, ty) }
+              OptionalMember { OptionalMember.member; optional; filtered_out = (filtered_out, ty) }
             in
             let member_opt =
               if optional then
@@ -6541,12 +6539,11 @@ struct
         ~reconstruct_ast
         ~mode:Type.Delete
         mem
-    | OptionalMember { OptionalMember.member = mem; optional; filtered_type } ->
+    | OptionalMember { OptionalMember.member = mem; optional; filtered_out } ->
       let lhs_prop_reason = mk_expression_reason target in
       let make_op ~lhs ~prop = Op (DeleteProperty { lhs; prop }) in
       let reconstruct_ast mem ty =
-        OptionalMember
-          { OptionalMember.member = mem; optional; filtered_type = (filtered_type, ty) }
+        OptionalMember { OptionalMember.member = mem; optional; filtered_out = (filtered_out, ty) }
       in
       let opt_state =
         if optional then

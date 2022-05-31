@@ -1082,7 +1082,7 @@ and expression ?(ctxt = normal_context) ~opts (root_expr : (Loc.t, Loc.t) Ast.Ex
                end;
              ]
       | E.Call c -> call ~precedence ~ctxt ~opts c loc
-      | E.OptionalCall { E.OptionalCall.call = c; optional; filtered_type = _ } ->
+      | E.OptionalCall { E.OptionalCall.call = c; optional; filtered_out = _ } ->
         call ~optional ~precedence ~ctxt ~opts c loc
       | E.Conditional { E.Conditional.test; consequent; alternate; comments } ->
         let test_layout =
@@ -1137,7 +1137,7 @@ and expression ?(ctxt = normal_context) ~opts (root_expr : (Loc.t, Loc.t) Ast.Ex
         layout_node_with_comments_opt loc comments
         @@ Group [left; pretty_space; operator; Indent (fuse [right_separator; right])]
       | E.Member m -> member ~precedence ~ctxt ~opts m loc
-      | E.OptionalMember { E.OptionalMember.member = m; optional; filtered_type = _ } ->
+      | E.OptionalMember { E.OptionalMember.member = m; optional; filtered_out = _ } ->
         member ~optional ~precedence ~ctxt ~opts m loc
       | E.New { E.New.callee; targs; arguments; comments } ->
         let callee_layout =
