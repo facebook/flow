@@ -9210,6 +9210,11 @@ struct
     let (this_t, params_ast, body_ast, _) =
       Func_stmt_sig.toplevels cx this_recipe super fun_loc func_sig
     in
+    let this_t =
+      match this_t with
+      | Some t -> t
+      | None -> dummy_this (aloc_of_reason reason)
+    in
     ignore (Abnormal.swap_saved Abnormal.Return save_return);
     ignore (Abnormal.swap_saved Abnormal.Throw save_throw);
     let fun_type = Func_stmt_sig.functiontype cx this_t func_sig in
@@ -9263,7 +9268,7 @@ struct
            was created, so we must provide the recipe based on where `function_decl`
            is invoked. *)
         let t = Func_stmt_params.this fparams |> annotated_or_inferred_of_option ~default in
-        (type_t_of_annotated_or_inferred t, Some t)
+        (type_t_of_annotated_or_inferred t, t)
       in
       let (fun_type, reconstruct_ast) =
         function_decl
@@ -9273,21 +9278,18 @@ struct
           reason
           (Some fun_loc)
           func
-          this_recipe
+          (Some this_recipe)
           None
       in
       (fun_type, reconstruct_ast general)
 
   (* Process an arrow function, returning a (polymorphic) function type. *)
   and mk_arrow cx ~func_hint reason func =
-    let loc = aloc_of_reason reason in
-    let this_recipe _ =
-      (* Do not expose the type of `this` in the function's type. This call to
-         function_decl has already done the necessary checking of `this` in
-         the body of the function. Now we want to avoid re-binding `this` to
-         objects through which the function may be called. *)
-      (dummy_this loc, None)
-    in
+    (* Do not expose the type of `this` in the function's type. This call to
+       function_decl has already done the necessary checking of `this` in
+       the body of the function. Now we want to avoid re-binding `this` to
+       objects through which the function may be called. *)
+    let this_recipe = None in
     let (fun_type, reconstruct_ast) =
       function_decl cx ~needs_this_param:false ~func_hint reason None func this_recipe None
     in

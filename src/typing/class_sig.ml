@@ -813,7 +813,9 @@ module Make
         let method_ this_recipe super ~set_asts loc f =
           let save_return = Abnormal.clear_saved Abnormal.Return in
           let save_throw = Abnormal.clear_saved Abnormal.Throw in
-          let (_, params_ast, body_ast, init_ast) = F.toplevels cx this_recipe (Some super) loc f in
+          let (_, params_ast, body_ast, init_ast) =
+            F.toplevels cx (Some this_recipe) (Some super) loc f
+          in
           set_asts (params_ast, body_ast, init_ast);
           ignore (Abnormal.swap_saved Abnormal.Return save_return);
           ignore (Abnormal.swap_saved Abnormal.Throw save_throw)
@@ -865,7 +867,7 @@ module Make
 
         let this_recipe default fparams =
           let t = F.this_param fparams |> TypeUtil.annotated_or_inferred_of_option ~default in
-          (TypeUtil.type_t_of_annotated_or_inferred t, Some t)
+          (TypeUtil.type_t_of_annotated_or_inferred t, t)
         in
         let instance_this_recipe = this_recipe instance_this_default in
         let static_this_recipe = this_recipe static_this_default in
@@ -897,7 +899,7 @@ module Make
                (* process constructor *)
                begin
                  (* This parameters are banned in constructors *)
-                 let (this, super) = (Some (Inferred instance_this_default), super) in
+                 let (this, super) = (Inferred instance_this_default, super) in
                  let this_recipe _ = (instance_this_default, this) in
                  x.constructor
                  |> List.iter (fun (loc, fsig, set_asts, _) ->

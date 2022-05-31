@@ -46,13 +46,14 @@ module type S = sig
 
   val toplevels :
     Context.t ->
-    (func_params -> Type.t * Type.annotated_or_inferred option) ->
+    (func_params -> Type.t * Type.annotated_or_inferred) option ->
     (* this recipe *)
     Type.t option ->
     ALoc.t option ->
     (* this and super def_loc *)
     t ->
-    Type.t (* this *)
+    Type.t option
+    (* this *)
     * func_params_tast option
     * (ALoc.t, ALoc.t * Type.t) Flow_ast.Function.body option
     * (ALoc.t, ALoc.t * Type.t) Flow_ast.Expression.t option

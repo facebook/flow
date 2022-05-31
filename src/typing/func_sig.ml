@@ -149,7 +149,13 @@ struct
     (* push the scope early so default exprs can reference earlier params *)
     Env.push_var_scope function_scope;
 
-    let (this_t, this) = this_recipe fparams in
+    let (this_t, this) =
+      match this_recipe with
+      | None -> (None, None)
+      | Some f ->
+        let (this_t, this) = f fparams in
+        (Some this_t, Some this)
+    in
 
     (* add `this` and `super` before looking at parameter bindings as when using
      * `this` in default parameter values it refers to the function scope and
