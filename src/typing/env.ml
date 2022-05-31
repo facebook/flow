@@ -242,7 +242,12 @@ module Env : Env_sig.S = struct
         env
         |> initialize_entries Env_api.OrdinaryNameLoc var_info.Env_api.env_entries
         |> initialize_entries Env_api.ThisLoc var_info.Env_api.this_env_entries
-        |> initialize_entries Env_api.SuperLoc var_info.Env_api.super_env_entries
+        |> initialize_entries
+             Env_api.ClassInstanceSuperLoc
+             var_info.Env_api.class_instance_super_env_entries
+        |> initialize_entries
+             Env_api.ClassStaticSuperLoc
+             var_info.Env_api.class_static_super_env_entries
         |> Context.set_environment cx
     end;
 
@@ -731,7 +736,9 @@ module Env : Env_sig.S = struct
 
   let bind_this _ _ _ = ()
 
-  let bind_super _ _ _ = ()
+  let bind_class_instance_super _ _ _ = ()
+
+  let bind_class_static_super _ _ _ = ()
 
   (* bind implicit let entry *)
   let bind_implicit_let ?(state = State.Undeclared) kind cx name t loc =

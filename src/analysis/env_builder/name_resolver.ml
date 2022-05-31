@@ -142,7 +142,9 @@ module Make
 
     val this : ALoc.t virtual_reason -> t
 
-    val super : ALoc.t virtual_reason -> t
+    val class_instance_super : ALoc.t virtual_reason -> t
+
+    val class_static_super : ALoc.t virtual_reason -> t
 
     val exports : t
 
@@ -213,7 +215,8 @@ module Make
         }
       | Projection of ALoc.t
       | This of ALoc.t virtual_reason
-      | Super of ALoc.t virtual_reason
+      | ClassInstanceSuper of ALoc.t virtual_reason
+      | ClassStaticSuper of ALoc.t virtual_reason
       | Exports
       | ModuleScoped of string
       | Global of string
@@ -256,7 +259,8 @@ module Make
         let write_str = debug_to_string get_refi val_t in
         Utils_js.spf "{refinement = %s; write = %s}" refinement_kind write_str
       | This _ -> "This"
-      | Super _ -> "Super"
+      | ClassInstanceSuper _ -> "Super(instance)"
+      | ClassStaticSuper _ -> "Super(static)"
       | Exports -> "Exports"
       | ModuleScoped name -> "ModuleScoped " ^ name
       | Global name -> "Global " ^ name
@@ -403,7 +407,8 @@ module Make
       | UndeclaredClass _
       | Projection _
       | This _
-      | Super _
+      | ClassInstanceSuper _
+      | ClassStaticSuper _
       | Exports
       | ModuleScoped _
       | Global _
@@ -434,7 +439,9 @@ module Make
 
     let this reason = mk_with_write_state @@ This reason
 
-    let super reason = mk_with_write_state @@ Super reason
+    let class_instance_super reason = mk_with_write_state @@ ClassInstanceSuper reason
+
+    let class_static_super reason = mk_with_write_state @@ ClassStaticSuper reason
 
     let exports = mk_with_write_state @@ Exports
 
@@ -460,7 +467,8 @@ module Make
           | Uninitialized l -> Env_api.Uninitialized (mk_reason RPossiblyUninitialized l)
           | Projection loc -> Env_api.Projection loc
           | This r -> Env_api.This r
-          | Super r -> Env_api.Super r
+          | ClassInstanceSuper r -> Env_api.ClassInstanceSuper r
+          | ClassStaticSuper r -> Env_api.ClassStaticSuper r
           | Loc r -> Env_api.Write r
           | Refinement { refinement_id; val_t } ->
             Env_api.Refinement
@@ -503,7 +511,8 @@ module Make
             states
         | Loc _ -> []
         | This _ -> []
-        | Super _ -> []
+        | ClassInstanceSuper _ -> []
+        | ClassStaticSuper _ -> []
         | Exports -> []
         | ModuleScoped _ -> []
         | Global _ -> []
@@ -774,7 +783,8 @@ module Make
        types. *)
     write_entries: Env_api.env_entry Loc_sig.ALocS.LMap.t;
     this_write_entries: Env_api.env_entry Loc_sig.ALocS.LMap.t;
-    super_write_entries: Env_api.env_entry Loc_sig.ALocS.LMap.t;
+    class_instance_super_write_entries: Env_api.env_entry Loc_sig.ALocS.LMap.t;
+    class_static_super_write_entries: Env_api.env_entry Loc_sig.ALocS.LMap.t;
     curr_id: int;
     (* Maps refinement ids to refinements. This mapping contains _all_ the refinements reachable at
      * any point in the code. The latest_refinement maps keep track of which entries to read. *)
@@ -952,18 +962,6 @@ module Make
             kind = Bindings.Var;
           }
        )
-    |> (let v = ALoc.none |> mk_reason (RIdentifier (internal_name "super")) |> Val.super in
-        SMap.add
-          "super"
-          {
-            val_ref = ref v;
-            havoc = v;
-            writes_by_closure_provider_val = None;
-            def_loc = None;
-            heap_refinements = ref HeapRefinementMap.empty;
-            kind = Bindings.Var;
-          }
-       )
     |> SMap.add
          "exports"
          {
@@ -1105,11 +1103,8 @@ module Make
             |> L.LMap.add
                  ALoc.none
                  (Env_api.AssigningWrite (mk_reason (RIdentifier (internal_name "this")) ALoc.none));
-          super_write_entries =
-            L.LMap.empty
-            |> L.LMap.add
-                 ALoc.none
-                 (Env_api.AssigningWrite (mk_reason (RIdentifier (internal_name "super")) ALoc.none));
+          class_instance_super_write_entries = L.LMap.empty;
+          class_static_super_write_entries = L.LMap.empty;
           curr_id = 0;
           refinement_heap = IMap.empty;
           latest_refinements = [];
@@ -1130,7 +1125,11 @@ module Make
 
       method this_write_entries : Env_api.env_entry L.LMap.t = env_state.this_write_entries
 
-      method super_write_entries : Env_api.env_entry L.LMap.t = env_state.super_write_entries
+      method class_instance_super_write_entries : Env_api.env_entry L.LMap.t =
+        env_state.class_instance_super_write_entries
+
+      method class_static_super_write_entries : Env_api.env_entry L.LMap.t =
+        env_state.class_static_super_write_entries
 
       method private merge_vals_with_havoc ~havoc ~def_loc v1 v2 =
         (* It's not safe to reset to havoc when one side can be uninitialized, because the havoc
@@ -1468,7 +1467,7 @@ module Make
           providers
         )
 
-      method private mk_env =
+      method private mk_env ~class_statics =
         SMap.mapi (fun name (kind, (loc, _)) ->
             match kind with
             | Bindings.Type _ ->
@@ -1584,13 +1583,31 @@ module Make
                   (v, v, None)
                 | "super" ->
                   let reason = mk_reason (RIdentifier (internal_name "super")) loc in
-                  env_state <-
-                    {
-                      env_state with
-                      super_write_entries =
-                        L.LMap.add loc (Env_api.AssigningWrite reason) env_state.super_write_entries;
-                    };
-                  let v = Val.super reason in
+                  let v =
+                    if class_statics then (
+                      env_state <-
+                        {
+                          env_state with
+                          class_static_super_write_entries =
+                            L.LMap.add
+                              loc
+                              (Env_api.AssigningWrite reason)
+                              env_state.class_static_super_write_entries;
+                        };
+                      Val.class_static_super reason
+                    ) else (
+                      env_state <-
+                        {
+                          env_state with
+                          class_instance_super_write_entries =
+                            L.LMap.add
+                              loc
+                              (Env_api.AssigningWrite reason)
+                              env_state.class_instance_super_write_entries;
+                        };
+                      Val.class_instance_super reason
+                    )
+                  in
                   (v, v, None)
                 | _ ->
                   let initial_val =
@@ -1655,23 +1672,34 @@ module Make
               }
         )
 
-      method private push_env bindings =
+      method private push_env ~class_statics bindings =
         let old_env = env_state.env in
         let bindings = Bindings.to_map bindings in
-        let env = SMap.fold SMap.add (this#mk_env bindings) old_env in
+        let env = SMap.fold SMap.add (this#mk_env ~class_statics bindings) old_env in
         env_state <- { env_state with env };
         (bindings, old_env)
 
       method private pop_env (_, old_env) = env_state <- { env_state with env = old_env }
 
-      method! with_bindings
-          : 'a. ?lexical:bool -> ALoc.t -> ALoc.t Bindings.t -> ('a -> 'a) -> 'a -> 'a =
-        fun ?lexical loc bindings visit node ->
-          let saved_state = this#push_env bindings in
+      method private with_scoped_bindings
+          : 'a.
+            ?lexical:bool ->
+            ?class_statics:bool ->
+            ALoc.t ->
+            ALoc.t Bindings.t ->
+            ('a -> 'a) ->
+            'a ->
+            'a =
+        fun ?lexical ?(class_statics = false) loc bindings visit node ->
+          let saved_state = this#push_env ~class_statics bindings in
           this#run
             (fun () -> ignore @@ super#with_bindings ?lexical loc bindings visit node)
             ~finally:(fun () -> this#pop_env saved_state);
           node
+
+      method! with_bindings
+          : 'a. ?lexical:bool -> ALoc.t -> ALoc.t Bindings.t -> ('a -> 'a) -> 'a -> 'a =
+        this#with_scoped_bindings ~class_statics:false
 
       (* Run some computation, catching any abrupt completions; do some final work,
          and then re-raise any abrupt completions that were caught. *)
@@ -3106,7 +3134,7 @@ module Make
                       let bindings =
                         if not is_arrow then
                           let id name = (fun_loc, { Ast.Identifier.name; comments = None }) in
-                          Bindings.(bindings |> add (id "this", Const) |> add (id "super", Const))
+                          Bindings.(add (id "this", Const) bindings)
                         else
                           bindings
                       in
@@ -3167,8 +3195,48 @@ module Make
         )
 
       method! class_ loc cls =
+        let open Ast.Class in
         SuperCallInDerivedCtorChecker.check cx loc cls;
-        super#class_ loc cls
+        (* Give class body the location of the entire class,
+           so class body visitor can use it as the def loc of super. *)
+        ignore @@ super#class_ loc { cls with body = (loc, snd cls.body) };
+        cls
+
+      method! class_body cls_body =
+        let open Ast.Class.Body in
+        let (loc, { body; comments }) = cls_body in
+        let (static_body, instance_body) =
+          let (static_body, instance_body) =
+            Base.List.partition_tf body ~f:(function
+                | Ast.Class.Body.Method (_, { Ast.Class.Method.static; _ })
+                | Ast.Class.Body.Property (_, { Ast.Class.Property.static; _ })
+                | Ast.Class.Body.PrivateField (_, { Ast.Class.PrivateField.static; _ })
+                -> static
+                )
+          in
+          ( (loc, { Ast.Class.Body.body = static_body; comments }),
+            (loc, { Ast.Class.Body.body = instance_body; comments })
+          )
+        in
+        let super_binding =
+          Bindings.singleton
+            ((loc, { Ast.Identifier.name = "super"; comments = None }), Bindings.Const)
+        in
+        ignore
+        @@ this#with_scoped_bindings
+             ~class_statics:false
+             loc
+             super_binding
+             super#class_body
+             instance_body;
+        ignore
+        @@ this#with_scoped_bindings
+             ~class_statics:true
+             loc
+             super_binding
+             super#class_body
+             static_body;
+        cls_body
 
       method private object_key_loc =
         let open Ast.Expression.Object.Property in
@@ -3190,8 +3258,10 @@ module Make
         let open Ast.Class.Property in
         let { key; static; _ } = prop in
         let id_loc = this#object_key_loc key in
-        let id name = (id_loc, { Ast.Identifier.name; comments = None }) in
-        let bindings = Bindings.(empty |> add (id "this", Const) |> add (id "super", Const)) in
+        let bindings =
+          Bindings.singleton
+            ((id_loc, { Ast.Identifier.name = "this"; comments = None }), Bindings.Const)
+        in
         this#with_bindings
           loc
           bindings
@@ -3211,8 +3281,10 @@ module Make
       method! class_private_field loc field =
         let open Ast.Class.PrivateField in
         let { key = (id_loc, _); static; _ } = field in
-        let id name = (id_loc, { Ast.Identifier.name; comments = None }) in
-        let bindings = Bindings.(empty |> add (id "this", Const) |> add (id "super", Const)) in
+        let bindings =
+          Bindings.singleton
+            ((id_loc, { Ast.Identifier.name = "this"; comments = None }), Bindings.Const)
+        in
         this#with_bindings
           loc
           bindings
@@ -4802,7 +4874,8 @@ module Make
         env_values = dead_code_marker#values;
         env_entries = dead_code_marker#write_entries;
         this_env_entries = env_walk#this_write_entries;
-        super_env_entries = env_walk#super_write_entries;
+        class_instance_super_env_entries = env_walk#class_instance_super_write_entries;
+        class_static_super_env_entries = env_walk#class_static_super_write_entries;
         providers;
         refinement_of_id = env_walk#refinement_of_id;
       }

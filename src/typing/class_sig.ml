@@ -807,7 +807,7 @@ module Make
     (poly t_inner, poly t_outer)
 
   (* Processes the bodies of instance and static class members. *)
-  let toplevels cx ~private_property_map ~instance_this_type ~static_this_type x =
+  let toplevels cx ~private_property_map ~instance_this_type ~static_this_type class_loc x =
     let open Type in
     Env.in_lex_scope (fun () ->
         let method_ this_recipe super ~set_asts loc f =
@@ -878,6 +878,8 @@ module Make
           (fields_to_prop_map cx x.static.private_fields)
           (methods_to_prop_map ~cx ~this_default:instance_this_type x.instance.private_methods)
           (methods_to_prop_map ~cx ~this_default:static_this_type x.static.private_methods);
+        Env.bind_class_instance_super cx super class_loc;
+        Env.bind_class_static_super cx static_super class_loc;
 
         x
         |> with_sig ~static:true (fun s ->

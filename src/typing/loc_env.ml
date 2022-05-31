@@ -17,15 +17,21 @@ type t = {
   types: Type.annotated_or_inferred ALocMap.t;
   tparams: (Subst_name.t * Type.t) ALocMap.t;
   this_types: Type.annotated_or_inferred ALocMap.t;
-  super_types: Type.annotated_or_inferred ALocMap.t;
+  class_instance_super_types: Type.annotated_or_inferred ALocMap.t;
+  class_static_super_types: Type.annotated_or_inferred ALocMap.t;
   resolved: ALocSet.t;
   var_info: Env_api.env_info;
 }
 
-let update_types ~update ({ types; this_types; super_types; _ } as info) = function
+let update_types
+    ~update ({ types; this_types; class_instance_super_types; class_static_super_types; _ } as info)
+    = function
   | Env_api.OrdinaryNameLoc -> { info with types = update types }
   | Env_api.ThisLoc -> { info with this_types = update this_types }
-  | Env_api.SuperLoc -> { info with super_types = update super_types }
+  | Env_api.ClassInstanceSuperLoc ->
+    { info with class_instance_super_types = update class_instance_super_types }
+  | Env_api.ClassStaticSuperLoc ->
+    { info with class_static_super_types = update class_static_super_types }
 
 let initialize info def_loc_kind loc t =
   let update =
@@ -49,12 +55,15 @@ let update_reason ({ types; _ } as info) loc reason =
   in
   { info with types }
 
-let find_write { types; this_types; super_types; _ } def_loc_kind loc =
+let find_write
+    { types; this_types; class_instance_super_types; class_static_super_types; _ } def_loc_kind loc
+    =
   let types =
     match def_loc_kind with
     | Env_api.OrdinaryNameLoc -> types
     | Env_api.ThisLoc -> this_types
-    | Env_api.SuperLoc -> super_types
+    | Env_api.ClassInstanceSuperLoc -> class_instance_super_types
+    | Env_api.ClassStaticSuperLoc -> class_static_super_types
   in
   ALocMap.find_opt loc types |> Base.Option.map ~f:TypeUtil.type_t_of_annotated_or_inferred
 
@@ -64,7 +73,8 @@ let empty =
   {
     types = ALocMap.empty;
     this_types = ALocMap.empty;
-    super_types = ALocMap.empty;
+    class_instance_super_types = ALocMap.empty;
+    class_static_super_types = ALocMap.empty;
     var_info = Env_api.empty;
     resolved = ALocSet.empty;
     tparams = ALocMap.empty;

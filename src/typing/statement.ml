@@ -8405,6 +8405,7 @@ struct
       if this_in_class || not (Class_stmt_sig.This.is_bound_to_empty class_sig) then
         Class_stmt_sig.toplevels
           cx
+          class_loc
           class_sig
           ~private_property_map
           ~instance_this_type

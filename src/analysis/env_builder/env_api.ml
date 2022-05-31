@@ -16,7 +16,8 @@ type new_env_literal_check =
 type def_loc_type =
   | OrdinaryNameLoc
   | ThisLoc
-  | SuperLoc
+  | ClassInstanceSuperLoc
+  | ClassStaticSuperLoc
 [@@deriving show]
 
 module type S = sig
@@ -46,7 +47,8 @@ module type S = sig
         write_id: int option;
       }
     | This of L.t Reason.virtual_reason
-    | Super of L.t Reason.virtual_reason
+    | ClassInstanceSuper of L.t Reason.virtual_reason
+    | ClassStaticSuper of L.t Reason.virtual_reason
     | Exports
     | ModuleScoped of string
     | Global of string
@@ -141,7 +143,8 @@ module type S = sig
     env_values: values;
     env_entries: env_entry L.LMap.t;
     this_env_entries: env_entry L.LMap.t;
-    super_env_entries: env_entry L.LMap.t;
+    class_instance_super_env_entries: env_entry L.LMap.t;
+    class_static_super_env_entries: env_entry L.LMap.t;
     providers: Provider_api.info;
     refinement_of_id: int -> Refi.refinement;
   }
@@ -205,7 +208,8 @@ module Make
         write_id: int option;
       }
     | This of L.t Reason.virtual_reason
-    | Super of L.t Reason.virtual_reason
+    | ClassInstanceSuper of L.t Reason.virtual_reason
+    | ClassStaticSuper of L.t Reason.virtual_reason
     | Exports
     | ModuleScoped of string
     | Global of string
@@ -297,7 +301,8 @@ module Make
     env_values: values;
     env_entries: env_entry L.LMap.t;
     this_env_entries: env_entry L.LMap.t;
-    super_env_entries: env_entry L.LMap.t;
+    class_instance_super_env_entries: env_entry L.LMap.t;
+    class_static_super_env_entries: env_entry L.LMap.t;
     providers: Provider_api.info;
     refinement_of_id: int -> refinement;
   }
@@ -309,7 +314,8 @@ module Make
       env_values = L.LMap.empty;
       env_entries = L.LMap.empty;
       this_env_entries = L.LMap.empty;
-      super_env_entries = L.LMap.empty;
+      class_instance_super_env_entries = L.LMap.empty;
+      class_static_super_env_entries = L.LMap.empty;
       providers = Provider_api.empty;
       refinement_of_id = (fun _ -> failwith "Empty env info");
     }
@@ -333,7 +339,8 @@ module Make
     | Uninitialized _ -> []
     | Undeclared _ -> []
     | This _ -> []
-    | Super _ -> []
+    | ClassInstanceSuper _ -> []
+    | ClassStaticSuper _ -> []
     | Exports -> []
     | ModuleScoped _ -> []
     | Global _ -> []
@@ -409,10 +416,16 @@ module Make
           "this(%s): (%s)"
           (L.debug_to_string loc)
           Reason.(desc_of_reason reason |> string_of_desc)
-      | Super reason ->
+      | ClassInstanceSuper reason ->
         let loc = Reason.poly_loc_of_reason reason in
         Utils_js.spf
-          "super(%s): (%s)"
+          "super(instance, %s): (%s)"
+          (L.debug_to_string loc)
+          Reason.(desc_of_reason reason |> string_of_desc)
+      | ClassStaticSuper reason ->
+        let loc = Reason.poly_loc_of_reason reason in
+        Utils_js.spf
+          "super(static, %s): (%s)"
           (L.debug_to_string loc)
           Reason.(desc_of_reason reason |> string_of_desc)
       | Exports -> "exports"

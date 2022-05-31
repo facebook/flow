@@ -339,17 +339,32 @@ module New_env = struct
                    ];
                  Base.Option.value_exn
                    (Reason.aloc_of_reason reason |> Loc_env.find_write env Env_api.ThisLoc)
-               | (Env_api.With_ALoc.Super reason, _) ->
+               | (Env_api.With_ALoc.ClassInstanceSuper reason, _) ->
                  Debug_js.Verbose.print_if_verbose
                    cx
                    [
                      spf
-                       "reading super(%s) from location %s"
+                       "reading instance super(%s) from location %s"
                        (Reason.string_of_aloc loc)
                        (Reason.aloc_of_reason reason |> Reason.string_of_aloc);
                    ];
                  Base.Option.value_exn
-                   (Reason.aloc_of_reason reason |> Loc_env.find_write env Env_api.SuperLoc)
+                   (Reason.aloc_of_reason reason
+                   |> Loc_env.find_write env Env_api.ClassInstanceSuperLoc
+                   )
+               | (Env_api.With_ALoc.ClassStaticSuper reason, _) ->
+                 Debug_js.Verbose.print_if_verbose
+                   cx
+                   [
+                     spf
+                       "reading static super(%s) from location %s"
+                       (Reason.string_of_aloc loc)
+                       (Reason.aloc_of_reason reason |> Reason.string_of_aloc);
+                   ];
+                 Base.Option.value_exn
+                   (Reason.aloc_of_reason reason
+                   |> Loc_env.find_write env Env_api.ClassStaticSuperLoc
+                   )
                | (Env_api.With_ALoc.Exports, _) ->
                  let file_loc = Loc.{ none with source = Some (Context.file cx) } |> ALoc.of_loc in
                  t_option_value_exn cx file_loc (Loc_env.find_ordinary_write env file_loc)
@@ -458,7 +473,8 @@ module New_env = struct
             local_def_exists writes
           | Env_api.With_ALoc.Projection _ -> true
           | Env_api.With_ALoc.This _ -> true
-          | Env_api.With_ALoc.Super _ -> true
+          | Env_api.With_ALoc.ClassInstanceSuper _ -> true
+          | Env_api.With_ALoc.ClassStaticSuper _ -> true
           | Env_api.With_ALoc.Exports -> true
           | Env_api.With_ALoc.ModuleScoped _ -> true
           | Env_api.With_ALoc.Global _ -> false)
@@ -539,7 +555,8 @@ module New_env = struct
   let env_entries_of_def_loc_type var_info = function
     | Env_api.OrdinaryNameLoc -> var_info.Env_api.env_entries
     | Env_api.ThisLoc -> var_info.Env_api.this_env_entries
-    | Env_api.SuperLoc -> var_info.Env_api.super_env_entries
+    | Env_api.ClassInstanceSuperLoc -> var_info.Env_api.class_instance_super_env_entries
+    | Env_api.ClassStaticSuperLoc -> var_info.Env_api.class_static_super_env_entries
 
   (* Unifies `t` with the entry in the loc_env's map. This allows it to be looked up for Write
    * entries reported by the name_resolver as well as providers for the provider analysis *)
@@ -671,7 +688,11 @@ module New_env = struct
 
   let bind_this cx t loc = unify_write_entry cx ~use_op:Type.unknown_use t Env_api.ThisLoc loc
 
-  let bind_super cx t loc = unify_write_entry cx ~use_op:Type.unknown_use t Env_api.SuperLoc loc
+  let bind_class_instance_super cx t loc =
+    unify_write_entry cx ~use_op:Type.unknown_use t Env_api.ClassInstanceSuperLoc loc
+
+  let bind_class_static_super cx t loc =
+    unify_write_entry cx ~use_op:Type.unknown_use t Env_api.ClassStaticSuperLoc loc
 
   let bind_implicit_let ?state kind cx name t loc =
     match name with
@@ -830,15 +851,19 @@ module New_env = struct
       env
       |> initialize_entries Env_api.OrdinaryNameLoc var_info.Env_api.env_entries
       |> initialize_entries Env_api.ThisLoc var_info.Env_api.this_env_entries
-      |> initialize_entries Env_api.SuperLoc var_info.Env_api.super_env_entries
+      |> initialize_entries
+           Env_api.ClassInstanceSuperLoc
+           var_info.Env_api.class_instance_super_env_entries
+      |> initialize_entries
+           Env_api.ClassStaticSuperLoc
+           var_info.Env_api.class_static_super_env_entries
     in
-    let initialize_this_super def_loc_type =
+    let initialize_this () =
       let t = ObjProtoT (mk_reason (RCustom "global object") ALoc.none) in
-      let w = Base.Option.value_exn (Loc_env.find_write env def_loc_type ALoc.none) in
+      let w = Base.Option.value_exn (Loc_env.find_write env Env_api.ThisLoc ALoc.none) in
       Flow_js.unify cx ~use_op:unknown_use w t
     in
-    initialize_this_super Env_api.ThisLoc;
-    initialize_this_super Env_api.SuperLoc;
+    initialize_this ();
     Context.set_environment cx env
 
   let find_entry cx name ?desc loc =

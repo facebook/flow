@@ -62,7 +62,8 @@ let print_values refinement_of_id =
       let writes_str = String.concat "," (List.map print_value writes) in
       Printf.sprintf "{refinement = %s; writes = %s}" refinement_str writes_str
     | This _ -> "This"
-    | Super _ -> "Super"
+    | ClassInstanceSuper _ -> "Super(instance)"
+    | ClassStaticSuper _ -> "Super(static)"
     | Exports -> "Exports"
     | ModuleScoped name -> "ModuleScoped " ^ name
     | Global name -> "Global " ^ name
@@ -3850,6 +3851,44 @@ if (this.foo === 3) {
         };
         (3, 2) to (3, 10) => {
           {refinement = 3; writes = projection at (2, 4) to (2, 12)}
+        }]
+     |}]
+
+let%expect_test "heap_refinement_super" =
+  print_ssa_test {|
+class A {
+  static foo() {
+    if (super.baz === 3) {
+      super.baz;
+    }
+  }
+  bar() {
+    if (super.baz === 3) {
+      super.baz;
+    }
+  }
+}
+
+|};
+    [%expect {|
+      [
+        (4, 8) to (4, 13) => {
+          Super(static)
+        };
+        (5, 6) to (5, 11) => {
+          {refinement = SentinelR baz; writes = Super(static)}
+        };
+        (5, 6) to (5, 15) => {
+          {refinement = 3; writes = projection at (4, 8) to (4, 17)}
+        };
+        (9, 8) to (9, 13) => {
+          Super(instance)
+        };
+        (10, 6) to (10, 11) => {
+          {refinement = SentinelR baz; writes = Super(instance)}
+        };
+        (10, 6) to (10, 15) => {
+          {refinement = 3; writes = projection at (9, 8) to (9, 17)}
         }]
      |}]
 

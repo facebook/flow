@@ -159,8 +159,7 @@ struct
       Base.Option.iter func_loc ~f:(fun loc ->
           Base.Option.iter this ~f:(fun this ->
               Env.bind_this cx (TypeUtil.type_t_of_annotated_or_inferred this) loc
-          );
-          Base.Option.iter super ~f:(fun super -> Env.bind_super cx super loc)
+          )
       )
     else (
       Base.Option.iter this ~f:(fun t ->

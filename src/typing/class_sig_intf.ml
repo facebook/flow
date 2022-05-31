@@ -163,6 +163,7 @@ module type S = sig
     private_property_map:Type.Properties.id ->
     instance_this_type:Type.t ->
     static_this_type:Type.t ->
+    ALoc.t ->
     t ->
     unit
 

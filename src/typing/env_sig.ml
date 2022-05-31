@@ -81,7 +81,9 @@ module type S = sig
 
   val bind_this : Context.t -> Type.t -> ALoc.t -> unit
 
-  val bind_super : Context.t -> Type.t -> ALoc.t -> unit
+  val bind_class_instance_super : Context.t -> Type.t -> ALoc.t -> unit
+
+  val bind_class_static_super : Context.t -> Type.t -> ALoc.t -> unit
 
   val bind_implicit_let :
     ?state:State.t ->
