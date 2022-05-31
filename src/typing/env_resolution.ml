@@ -45,21 +45,24 @@ module Make (Env : Env_sig.S) (Statement : Statement_sig.S with module Env := En
       let tparams_map = mk_tparams_map cx tparams_locs in
       let (t, anno) = Type_annotation.mk_type_available_annotation cx tparams_map anno in
       Node_cache.set_annotation cache anno;
-      (t, mk_use_op t)
+      (t, mk_use_op t, true)
     | Root (Value exp) ->
       (* TODO: look up the annotation for the variable at loc and pass in *)
       let t = expression cx ~hint:Hint_None exp in
       let use_op = Op (AssignVar { var = Some reason; init = mk_expression_reason exp }) in
-      (t, use_op)
+      (t, use_op, true)
     | Root (Contextual (param_loc, hint)) ->
       let reason = mk_reason (RCustom "contextual variable") loc in
       let t =
         if Context.enable_contextual_typing cx then
           let hint =
             match hint with
-            | Hint_t root -> Hint_t (resolve_binding cx reason loc (Root root) |> fst)
+            | Hint_t root ->
+              let (t, _, _) = resolve_binding cx reason loc (Root root) in
+              Hint_t t
             | Hint_Decomp (ops, root) ->
-              Hint_Decomp (ops, resolve_binding cx reason loc (Root root) |> fst)
+              let (t, _, _) = resolve_binding cx reason loc (Root root) in
+              Hint_Decomp (ops, t)
             | Hint_None -> Hint_None
           in
           match Type_hint.evaluate_hint cx param_loc hint with
@@ -68,10 +71,10 @@ module Make (Env : Env_sig.S) (Statement : Statement_sig.S with module Env := En
         else
           Tvar.mk cx reason
       in
-      (t, mk_use_op t)
+      (t, mk_use_op t, Context.enable_contextual_typing cx)
     | Root Catch ->
       let t = AnyT.annot (mk_reason (RCustom "catch parameter") loc) in
-      (t, mk_use_op t)
+      (t, mk_use_op t, true)
     | Root (For (kind, exp)) ->
       let reason = mk_reason (RCustom "for-in") loc (*TODO: loc should be loc of loop *) in
       let right_t = expression cx ~hint:Hint_None ~cond:OtherTest exp in
@@ -82,9 +85,9 @@ module Make (Env : Env_sig.S) (Statement : Statement_sig.S with module Env := En
           StrT.at loc |> with_trust bogus_trust
         | Of { await } -> Statement.for_of_elemt cx right_t reason await
       in
-      (t, mk_use_op t)
+      (t, mk_use_op t, true)
     | Select (sel, b) ->
-      let (t, use_op) = resolve_binding cx reason loc b in
+      let (t, use_op, resolved) = resolve_binding cx reason loc b in
       let selector =
         match sel with
         | Name_def.Elem n ->
@@ -114,7 +117,8 @@ module Make (Env : Env_sig.S) (Statement : Statement_sig.S with module Env := En
               cx
               (t, DestructuringT (reason, DestructInfer, selector, tout, Reason.mk_id ()))
         ),
-        use_op
+        use_op,
+        resolved
       )
 
   let resolve_inferred_function cx id_loc reason function_loc function_ =
@@ -351,29 +355,31 @@ module Make (Env : Env_sig.S) (Statement : Statement_sig.S with module Env := En
     (t, unknown_use)
 
   let resolve cx id_loc (def, def_reason) =
-    let (t, use_op) =
+    let (t, use_op, resolved) =
+      let as_resolved (t, use_op) = (t, use_op, true) in
       match def with
       | Binding b -> resolve_binding cx def_reason id_loc b
-      | ChainExpression e -> resolve_chain_expression cx e
-      | RefiExpression e -> (expression cx ~hint:Hint_None e, unknown_use)
+      | ChainExpression e -> as_resolved @@ resolve_chain_expression cx e
+      | RefiExpression e -> (expression cx ~hint:Hint_None e, unknown_use, true)
       | Function { function_; fully_annotated = false; function_loc; tparams = _ } ->
-        resolve_inferred_function cx id_loc def_reason function_loc function_
+        as_resolved @@ resolve_inferred_function cx id_loc def_reason function_loc function_
       | Function { function_; fully_annotated = true; function_loc = _; tparams } ->
-        resolve_annotated_function cx def_reason tparams function_
+        as_resolved @@ resolve_annotated_function cx def_reason tparams function_
       | Class { class_; fully_annotated = false; class_loc } ->
-        resolve_inferred_class cx id_loc def_reason class_loc class_
+        as_resolved @@ resolve_inferred_class cx id_loc def_reason class_loc class_
       | Class { class_; fully_annotated = true; class_loc } ->
-        resolve_annotated_class cx id_loc def_reason class_loc class_
-      | OpAssign { exp_loc; op; rhs } -> resolve_op_assign cx ~id_loc ~exp_loc def_reason op rhs
-      | Update { exp_loc; op = _ } -> resolve_update cx ~id_loc ~exp_loc def_reason
-      | TypeAlias (loc, alias) -> resolve_type_alias cx loc alias
-      | OpaqueType (loc, opaque) -> resolve_opaque_type cx loc opaque
+        as_resolved @@ resolve_annotated_class cx id_loc def_reason class_loc class_
+      | OpAssign { exp_loc; op; rhs } ->
+        as_resolved @@ resolve_op_assign cx ~id_loc ~exp_loc def_reason op rhs
+      | Update { exp_loc; op = _ } -> as_resolved @@ resolve_update cx ~id_loc ~exp_loc def_reason
+      | TypeAlias (loc, alias) -> as_resolved @@ resolve_type_alias cx loc alias
+      | OpaqueType (loc, opaque) -> as_resolved @@ resolve_opaque_type cx loc opaque
       | Import { import_kind; source; source_loc; import } ->
-        resolve_import cx id_loc def_reason import_kind source source_loc import
-      | Interface (loc, inter) -> resolve_interface cx loc inter
-      | DeclaredClass (loc, class_) -> resolve_declare_class cx loc class_
-      | Enum enum -> resolve_enum cx id_loc def_reason enum
-      | TypeParam param -> resolve_type_param cx id_loc param
+        as_resolved @@ resolve_import cx id_loc def_reason import_kind source source_loc import
+      | Interface (loc, inter) -> as_resolved @@ resolve_interface cx loc inter
+      | DeclaredClass (loc, class_) -> as_resolved @@ resolve_declare_class cx loc class_
+      | Enum enum -> as_resolved @@ resolve_enum cx id_loc def_reason enum
+      | TypeParam param -> as_resolved @@ resolve_type_param cx id_loc param
     in
     Debug_js.Verbose.print_if_verbose_lazy
       cx
@@ -385,7 +391,7 @@ module Make (Env : Env_sig.S) (Statement : Statement_sig.S with module Env := En
             (Debug_js.dump_t cx t);
         ]
         );
-    New_env.New_env.resolve_env_entry ~use_op cx t id_loc
+    New_env.New_env.resolve_env_entry ~use_op ~resolved cx t id_loc
 
   let resolve_component cx graph component =
     let open Name_def_ordering in
