@@ -60,3 +60,6 @@ val unimplemented_mapper :
   (ALoc.t, ALoc.t, ALoc.t, ALoc.t * Type.t) Flow_polymorphic_ast_mapper.mapper
 
 val unchecked_mapper : (ALoc.t, ALoc.t, ALoc.t, ALoc.t * Type.t) Flow_polymorphic_ast_mapper.mapper
+
+val untyped_ast_mapper :
+  (ALoc.t, ALoc.t * Type.t, ALoc.t, ALoc.t) Flow_polymorphic_ast_mapper.mapper

@@ -13,8 +13,8 @@ open Hint_api
 open TypeUtil
 include Func_sig_intf
 
-class exhaustiveness_finder cx t locs =
-  object
+class func_scope_visitor cx ~return_t ~yield_t ~next_t kind exhaust =
+  object (this)
     inherit
       [ALoc.t, ALoc.t * Type.t, ALoc.t, ALoc.t * Type.t] Flow_polymorphic_ast_mapper.mapper as super
 
@@ -22,9 +22,101 @@ class exhaustiveness_finder cx t locs =
 
     method on_loc_annot x = x
 
-    method! switch ({ Ast.Statement.Switch.exhaustive_out = (loc, ex_t); _ } as switch) =
-      if Base.List.mem ~equal:ALoc.equal locs loc then Flow.flow_t cx (ex_t, t);
+    method! function_ fn = fn
+
+    method! switch ({ Ast.Statement.Switch.exhaustive_out = (loc, t); _ } as switch) =
+      Base.Option.iter exhaust ~f:(fun (exhaustive_t, exhaust_locs, _) ->
+          if Base.List.mem ~equal:ALoc.equal exhaust_locs loc then Flow.flow_t cx (t, exhaustive_t)
+      );
       super#switch switch
+
+    method! yield ({ Ast.Expression.Yield.result_out = (_, t); argument; delegate; _ } as yield) =
+      let use_op =
+        if delegate then
+          unknown_use
+        else
+          Op
+            (GeneratorYield
+               {
+                 value =
+                   Base.Option.value_map argument ~default:(reason_of_t t) ~f:(fun expr ->
+                       mk_expression_reason (Typed_ast_utils.untyped_ast_mapper#expression expr)
+                   );
+               }
+            )
+      in
+      Flow.flow cx (t, UseT (use_op, yield_t));
+      super#yield yield
+
+    (* Override statement so that we have the loc for return *)
+    method! statement (loc, stmt) =
+      begin
+        match stmt with
+        | Ast.Statement.Return return -> this#custom_return loc return
+        | _ -> ()
+      end;
+      super#statement (loc, stmt)
+
+    method custom_return loc { Ast.Statement.Return.return_out = (_, t); argument; _ } =
+      let open Func_class_sig_types.Func in
+      let t =
+        match kind with
+        | Async ->
+          (* Convert the return expression's type T to Promise<T>. If the
+             * expression type is itself a Promise<T>, ensure we still return
+             * a Promise<T> via Promise.resolve. *)
+          let reason = mk_reason (RCustom "async return") loc in
+          let t' =
+            Flow.get_builtin_typeapp
+              cx
+              reason
+              (OrdinaryName "Promise")
+              [
+                Tvar.mk_where cx reason (fun tvar ->
+                    let funt = Flow.get_builtin cx (OrdinaryName "$await") reason in
+                    let callt = mk_functioncalltype reason None [Arg t] (open_tvar tvar) in
+                    let reason = repos_reason (aloc_of_reason (reason_of_t t)) reason in
+                    Flow.flow cx (funt, CallT (unknown_use, reason, callt))
+                );
+              ]
+          in
+          Flow.reposition cx ~desc:(desc_of_t t) loc t'
+        | Generator _ ->
+          (* Convert the return expression's type R to Generator<Y,R,N>, where
+           * Y and R are internals, installed earlier. *)
+          let reason = mk_reason (RCustom "generator return") loc in
+          let t' =
+            Flow.get_builtin_typeapp
+              cx
+              reason
+              (OrdinaryName "Generator")
+              [yield_t; Tvar.mk_where cx reason (fun tvar -> Flow.flow_t cx (t, tvar)); next_t]
+          in
+          Flow.reposition cx ~desc:(desc_of_t t) loc t'
+        | AsyncGenerator _ ->
+          let reason = mk_reason (RCustom "async generator return") loc in
+          let t' =
+            Flow.get_builtin_typeapp
+              cx
+              reason
+              (OrdinaryName "AsyncGenerator")
+              [yield_t; Tvar.mk_where cx reason (fun tvar -> Flow.flow_t cx (t, tvar)); next_t]
+          in
+          Flow.reposition cx ~desc:(desc_of_t t) loc t'
+        | _ -> t
+      in
+      let use_op =
+        Op
+          (FunReturnStatement
+             {
+               value =
+                 Base.Option.value_map argument ~default:(reason_of_t t) ~f:(fun expr ->
+                     mk_expression_reason (Typed_ast_utils.untyped_ast_mapper#expression expr)
+                 );
+             }
+          )
+      in
+      Flow.flow cx (t, UseT (use_op, return_t))
   end
 
 module Make
@@ -408,14 +500,14 @@ struct
       )
     in
     let body_ast = reconstruct_body statements_ast in
+    let (return_t, return_hint) =
+      match return_t with
+      | Inferred t -> (t, Hint_None)
+      | Annotated t -> (t, Hint_t t)
+    in
     (* build return type for void funcs *)
-    let init_ast =
-      let (return_t, return_hint) =
-        match return_t with
-        | Inferred t -> (t, Hint_None)
-        | Annotated t -> (t, Hint_t t)
-      in
-      if maybe_void then (
+    let (init_ast, exhaust) =
+      if maybe_void then
         let loc = loc_of_t return_t in
         (* Some branches add an ImplicitTypeParam frame to force our flow_use_op
          * algorithm to pick use_ops outside the provided loc. *)
@@ -472,7 +564,7 @@ struct
             (use_op, t, None)
         in
 
-        let maybe_exhaustively_checked =
+        let exhaust =
           if Env.new_env then
             match body with
             | None ->
@@ -481,34 +573,38 @@ struct
             | Some _ ->
               let (exhaustive, undeclared) = Context.exhaustive_check cx body_loc in
               Some
-                (Tvar.mk_where
-                   cx
-                   (replace_desc_reason (RCustom "maybe_exhaustively_checked") reason_fn)
-                   (fun t ->
-                     if Base.List.length exhaustive > 0 then
-                       ignore
-                         ( (new exhaustiveness_finder cx t exhaustive)#statement_list statements_ast
-                           : _ list
-                           );
-                     if undeclared then Flow.flow_t cx (VoidT.at body_loc (bogus_trust ()), t)
-                 )
+                ( Tvar.mk_where
+                    cx
+                    (replace_desc_reason (RCustom "maybe_exhaustively_checked") reason_fn)
+                    (fun t ->
+                      if undeclared then Flow.flow_t cx (VoidT.at body_loc (bogus_trust ()), t)
+                  ),
+                  exhaustive,
+                  FunImplicitVoidReturnT
+                    { use_op; reason = reason_of_t return_t; return = return_t; void_t }
                 )
           else
-            Some (Env.get_internal_var cx "maybe_exhaustively_checked" loc)
-        in
-        Base.Option.iter
-          ~f:(fun maybe_exhaustively_checked ->
-            Flow.flow
-              cx
-              ( maybe_exhaustively_checked,
+            Some
+              ( Env.get_internal_var cx "maybe_exhaustively_checked" loc,
+                [],
                 FunImplicitVoidReturnT
                   { use_op; reason = reason_of_t return_t; return = return_t; void_t }
-              ))
-          maybe_exhaustively_checked;
-        init_ast
-      ) else
-        None
+              )
+        in
+        (init_ast, exhaust)
+      else
+        (None, None)
     in
+
+    let (_ : _ list) =
+      (new func_scope_visitor cx ~return_t ~yield_t ~next_t kind exhaust)#statement_list
+        statements_ast
+    in
+
+    Base.Option.iter exhaust ~f:(fun (maybe_exhaustively_checked, _, implicit_return) ->
+        Flow.flow cx (maybe_exhaustively_checked, implicit_return)
+    );
+
     Env.pop_var_scope ();
 
     Env.update_env body_loc env;

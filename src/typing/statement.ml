@@ -1203,7 +1203,6 @@ struct
     (*******************************************************)
     | (loc, Return { Return.argument; comments; return_out }) ->
       let reason = mk_reason (RCustom "return") loc in
-      let ret = Env.get_internal_var cx "return" loc in
       let (t, argument_ast) =
         match argument with
         | None -> (VoidT.at loc |> with_trust literal_trust, None)
@@ -1223,70 +1222,6 @@ struct
             let (((_, t), _) as ast) = expression cx ~hint expr in
             (t, Some ast)
       in
-      let t =
-        match Env.var_scope_kind () with
-        | Scope.Async ->
-          (* Convert the return expression's type T to Promise<T>. If the
-           * expression type is itself a Promise<T>, ensure we still return
-           * a Promise<T> via Promise.resolve. *)
-          let reason = mk_reason (RCustom "async return") loc in
-          let t' =
-            Flow.get_builtin_typeapp
-              cx
-              reason
-              (OrdinaryName "Promise")
-              [
-                Tvar.mk_where cx reason (fun tvar ->
-                    let funt = Flow.get_builtin cx (OrdinaryName "$await") reason in
-                    let callt = mk_functioncalltype reason None [Arg t] (open_tvar tvar) in
-                    let reason = repos_reason (aloc_of_reason (reason_of_t t)) reason in
-                    Flow.flow cx (funt, CallT (unknown_use, reason, callt))
-                );
-              ]
-          in
-          Flow.reposition cx ~desc:(desc_of_t t) loc t'
-        | Scope.Generator ->
-          (* Convert the return expression's type R to Generator<Y,R,N>, where
-           * Y and R are internals, installed earlier. *)
-          let reason = mk_reason (RCustom "generator return") loc in
-          let t' =
-            Flow.get_builtin_typeapp
-              cx
-              reason
-              (OrdinaryName "Generator")
-              [
-                Env.get_internal_var cx "yield" loc;
-                Tvar.mk_where cx reason (fun tvar -> Flow.flow_t cx (t, tvar));
-                Env.get_internal_var cx "next" loc;
-              ]
-          in
-          Flow.reposition cx ~desc:(desc_of_t t) loc t'
-        | Scope.AsyncGenerator ->
-          let reason = mk_reason (RCustom "async generator return") loc in
-          let t' =
-            Flow.get_builtin_typeapp
-              cx
-              reason
-              (OrdinaryName "AsyncGenerator")
-              [
-                Env.get_internal_var cx "yield" loc;
-                Tvar.mk_where cx reason (fun tvar -> Flow.flow_t cx (t, tvar));
-                Env.get_internal_var cx "next" loc;
-              ]
-          in
-          Flow.reposition cx ~desc:(desc_of_t t) loc t'
-        | _ -> t
-      in
-      let use_op =
-        Op
-          (FunReturnStatement
-             {
-               value =
-                 Base.Option.value_map argument ~default:(reason_of_t t) ~f:mk_expression_reason;
-             }
-          )
-      in
-      Flow.flow cx (t, UseT (use_op, ret));
       Env.reset_current_activation loc;
       Abnormal.save Abnormal.Return;
       Abnormal.throw_stmt_control_flow_exception
@@ -3814,7 +3749,6 @@ struct
         Flow.flow_t cx (class_t, tvar);
         ((class_loc, class_t), Class c))
     | Yield { Yield.argument; delegate = false; comments; result_out } ->
-      let yield = Env.get_internal_var cx "yield" loc in
       let (t, argument_ast) =
         match argument with
         | Some expr ->
@@ -3824,18 +3758,6 @@ struct
       in
       Env.havoc_heap_refinements ();
       Env.havoc_local_refinements ~all:true cx;
-      let use_op =
-        Op
-          (GeneratorYield
-             {
-               value =
-                 (match argument with
-                 | Some expr -> mk_expression_reason expr
-                 | None -> reason_of_t t);
-             }
-          )
-      in
-      Flow.flow cx (t, UseT (use_op, yield));
       ( (loc, Env.get_next cx loc),
         Yield
           {
@@ -3847,7 +3769,6 @@ struct
       )
     | Yield { Yield.argument; delegate = true; comments; result_out } ->
       let reason = mk_reason (RCustom "yield* delegate") loc in
-      let yield = Env.get_internal_var cx "yield" loc in
       let next = Env.get_next cx loc in
       let (t, argument_ast) =
         match argument with
@@ -3862,6 +3783,7 @@ struct
           reason
       in
       let ret = Tvar.mk cx ret_reason in
+      let yield = Tvar.mk cx reason in
       (* widen yield with the element type of the delegated-to iterable *)
       let targs = [yield; ret; next] in
       let (async, iterable_reason) =

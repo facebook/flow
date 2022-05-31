@@ -307,3 +307,12 @@ let unchecked_mapper =
 
     method on_type_annot loc = (loc, Type.(AnyT.at (Unsound Unchecked)) loc)
   end
+
+let untyped_ast_mapper =
+  object
+    inherit [ALoc.t, ALoc.t * Type.t, ALoc.t, ALoc.t] Flow_polymorphic_ast_mapper.mapper
+
+    method on_loc_annot loc = loc
+
+    method on_type_annot (loc, _) = loc
+  end
