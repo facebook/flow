@@ -15,7 +15,10 @@ module Ast = Flow_ast
 
 module type S = sig
   val resolve_component :
-    Context.t -> (Name_def.def * reason) ALocMap.t -> Name_def_ordering.result -> unit
+    Context.t ->
+    (Name_def.def * Name_def.scope_kind * reason) ALocMap.t ->
+    Name_def_ordering.result ->
+    unit
 end
 
 module Make (Env : Env_sig.S) (Statement : Statement_sig.S with module Env := Env) : S = struct
@@ -398,7 +401,18 @@ module Make (Env : Env_sig.S) (Statement : Statement_sig.S with module Env := En
       in
       (next_t, unknown_use)
 
-  let resolve cx id_loc (def, def_reason) =
+  let convert_scope_kind = function
+    | Name_def.Ordinary -> Scope.Ordinary
+    | Name_def.Ctor -> Scope.Ctor
+    | Name_def.Async -> Scope.Async
+    | Name_def.AsyncGenerator -> Scope.AsyncGenerator
+    | Name_def.Generator -> Scope.Generator
+    | Name_def.Module -> Scope.Module
+    | Name_def.Predicate -> Scope.Predicate
+
+  let resolve cx id_loc (def, def_scope_kind, def_reason) =
+    let env = Context.environment cx in
+    Context.set_environment cx { env with Loc_env.scope_kind = convert_scope_kind def_scope_kind };
     let (t, use_op, resolved) =
       let as_resolved (t, use_op) = (t, use_op, true) in
       match def with

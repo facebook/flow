@@ -11,6 +11,15 @@ open Reason
 open Flow_ast_mapper
 open Loc_collections
 
+type scope_kind =
+  | Ordinary (* function or module *)
+  | Async (* async function *)
+  | Generator (* generator function *)
+  | AsyncGenerator (* async generator function *)
+  | Module (* module scope *)
+  | Predicate (* predicate function *)
+  | Ctor
+
 type for_kind =
   | In
   | Of of { await: bool }
@@ -94,7 +103,7 @@ type def =
     }
   | GeneratorNext of generator_annot option
 
-type map = (def * ALoc.t virtual_reason) ALocMap.t
+type map = (def * scope_kind * ALoc.t virtual_reason) ALocMap.t
 
 module Destructure = struct
   open Ast.Pattern
@@ -233,15 +242,41 @@ let def_of_class loc ({ Ast.Class.body = (_, { Ast.Class.Body.body; _ }); _ } as
   in
   Class { fully_annotated; class_; class_loc = loc }
 
-class def_finder env_entries providers =
+let func_scope_kind ?key { Ast.Function.async; generator; predicate; _ } =
+  match (async, generator, predicate, key) with
+  | ( false,
+      false,
+      None,
+      Some
+        (Ast.Expression.Object.Property.Identifier (_, { Ast.Identifier.name = "constructor"; _ }))
+    ) ->
+    Ctor
+  | (true, true, None, _) -> AsyncGenerator
+  | (true, false, None, _) -> Async
+  | (false, true, None, _) -> Generator
+  | (false, false, Some _, _) -> Predicate
+  | (false, false, None, _) -> Ordinary
+  | _ -> (* Invalid, default to ordinary and hopefully error elsewhere *) Ordinary
+
+class def_finder env_entries providers toplevel_scope =
   object (this)
     inherit [map, ALoc.t] Flow_ast_visitor.visitor ~init:ALocMap.empty as super
 
     val mutable tparams : ALocSet.t = ALocSet.empty
 
+    val mutable scope_kind : scope_kind = toplevel_scope
+
     method add_tparam loc = tparams <- ALocSet.add loc tparams
 
-    method add_binding loc reason src = this#update_acc (ALocMap.add loc (src, reason))
+    method add_binding loc reason src = this#update_acc (ALocMap.add loc (src, scope_kind, reason))
+
+    method private in_scope : 'a 'b. ('a -> 'b) -> scope_kind -> 'a -> 'b =
+      fun f scope' node ->
+        let scope0 = scope_kind in
+        scope_kind <- scope';
+        let res = f node in
+        scope_kind <- scope0;
+        res
 
     method private in_new_tparams_env : 'a. (unit -> 'a) -> 'a =
       fun f ->
@@ -303,8 +338,9 @@ class def_finder env_entries providers =
 
     method private visit_function_expr ~func_hint loc expr =
       let { Ast.Function.id; async; generator; sig_loc; _ } = expr in
+      let scope_kind = func_scope_kind expr in
       this#in_new_tparams_env (fun () ->
-          this#visit_function ~func_hint expr;
+          this#visit_function ~scope_kind ~func_hint expr;
           match id with
           | Some (id_loc, _) ->
             this#add_binding
@@ -320,8 +356,9 @@ class def_finder env_entries providers =
 
     method! function_declaration loc expr =
       let { Ast.Function.id; async; generator; sig_loc; _ } = expr in
+      let scope_kind = func_scope_kind expr in
       this#in_new_tparams_env (fun () ->
-          this#visit_function ~func_hint:Hint_None expr;
+          this#visit_function ~func_hint:Hint_None ~scope_kind expr;
           match id with
           | Some (id_loc, _) ->
             this#add_binding
@@ -335,70 +372,75 @@ class def_finder env_entries providers =
     method! function_type loc ft = this#in_new_tparams_env (fun () -> super#function_type loc ft)
 
     method! function_ _ expr =
-      this#in_new_tparams_env (fun () -> this#visit_function ~func_hint:Hint_None expr);
+      let scope_kind = func_scope_kind expr in
+      this#in_new_tparams_env (fun () -> this#visit_function ~scope_kind ~func_hint:Hint_None expr);
       expr
 
-    method private visit_function ~func_hint expr =
-      let {
-        Ast.Function.id = _;
-        params = (_, { Ast.Function.Params.params = params_list; rest; comments = _; this_ = _ });
-        body;
-        async;
-        generator;
-        predicate;
-        return;
-        tparams = fun_tparams;
-        sig_loc = _;
-        comments = _;
-      } =
-        expr
-      in
-      Base.Option.iter fun_tparams ~f:(fun tparams -> ignore @@ this#type_params tparams);
-      Base.List.iteri
-        ~f:(fun i ->
-          this#visit_function_param ~hint:(decompose_hint (Decomp_FuncParam i) func_hint))
-        params_list;
-      Base.Option.iter
-        ~f:
-          (this#visit_function_rest_param
-             ~hint:(decompose_hint (Decomp_FuncRest (List.length params_list)) func_hint)
-          )
-        rest;
-      ignore @@ this#type_annotation_hint return;
+    method private visit_function ~scope_kind ~func_hint expr =
+      this#in_scope
+        (fun () ->
+          let {
+            Ast.Function.id = _;
+            params = (_, { Ast.Function.Params.params = params_list; rest; comments = _; this_ = _ });
+            body;
+            async;
+            generator;
+            predicate;
+            return;
+            tparams = fun_tparams;
+            sig_loc = _;
+            comments = _;
+          } =
+            expr
+          in
+          Base.Option.iter fun_tparams ~f:(fun tparams -> ignore @@ this#type_params tparams);
+          Base.List.iteri
+            ~f:(fun i ->
+              this#visit_function_param ~hint:(decompose_hint (Decomp_FuncParam i) func_hint))
+            params_list;
+          Base.Option.iter
+            ~f:
+              (this#visit_function_rest_param
+                 ~hint:(decompose_hint (Decomp_FuncRest (List.length params_list)) func_hint)
+              )
+            rest;
+          ignore @@ this#type_annotation_hint return;
 
-      let body_loc =
-        match body with
-        | Ast.Function.BodyBlock (loc, block) ->
-          ignore @@ this#block loc block;
-          loc
-        | Ast.Function.BodyExpression ((loc, _) as expr) ->
-          this#visit_expression ~hint:Hint_None expr;
-          loc
-      in
-
-      begin
-        if generator then
-          let (loc, gen) =
-            match return with
-            | Ast.Type.Missing loc -> (loc, None)
-            | Ast.Type.Available ((loc, _) as return_annot) ->
-              (loc, Some { tparams; return_annot; async })
+          let body_loc =
+            match body with
+            | Ast.Function.BodyBlock (loc, block) ->
+              ignore @@ this#block loc block;
+              loc
+            | Ast.Function.BodyExpression ((loc, _) as expr) ->
+              this#visit_expression ~hint:Hint_None expr;
+              loc
           in
 
-          this#add_binding loc (mk_reason (RCustom "next") body_loc) (GeneratorNext gen)
-      end;
+          begin
+            if generator then
+              let (loc, gen) =
+                match return with
+                | Ast.Type.Missing loc -> (loc, None)
+                | Ast.Type.Available ((loc, _) as return_annot) ->
+                  (loc, Some { tparams; return_annot; async })
+              in
 
-      Base.Option.iter predicate ~f:(fun (_, { Ast.Type.Predicate.kind; comments = _ }) ->
-          match kind with
-          | Ast.Type.Predicate.Inferred -> ()
-          | Ast.Type.Predicate.Declared expr -> this#visit_expression ~hint:Hint_None expr
-      )
+              this#add_binding loc (mk_reason (RCustom "next") body_loc) (GeneratorNext gen)
+          end;
+
+          Base.Option.iter predicate ~f:(fun (_, { Ast.Type.Predicate.kind; comments = _ }) ->
+              match kind with
+              | Ast.Type.Predicate.Inferred -> ()
+              | Ast.Type.Predicate.Declared expr -> this#visit_expression ~hint:Hint_None expr
+          ))
+        scope_kind
+        ()
 
     method! class_ loc expr =
       let open Ast.Class in
       let { id; _ } = expr in
       this#in_new_tparams_env (fun () ->
-          let res = super#class_ loc expr in
+          let res = this#in_scope (super#class_ loc) Ordinary expr in
           begin
             match id with
             | Some (id_loc, { Ast.Identifier.name; _ }) ->
@@ -409,6 +451,15 @@ class def_finder env_entries providers =
           end;
           res
       )
+
+    method! class_method _loc (meth : ('loc, 'loc) Ast.Class.Method.t') =
+      let open Ast.Class.Method in
+      let { kind = _; key; value = (_, value); static = _; decorators; comments = _ } = meth in
+      let _ = this#object_key key in
+      let scope_kind = func_scope_kind ~key value in
+      let () = this#visit_function ~scope_kind ~func_hint:Hint_None value in
+      let (_ : _ list) = map_list this#class_decorator decorators in
+      meth
 
     method! declare_function loc (decl : ('loc, 'loc) Ast.Statement.DeclareFunction.t) =
       match Declare_function_utils.declare_function_to_function_declaration_simple loc decl with
@@ -787,7 +838,8 @@ class def_finder env_entries providers =
       match expr with
       | Ast.Expression.Array expr -> this#visit_array_expression ~array_hint:hint expr
       | Ast.Expression.ArrowFunction x ->
-        this#in_new_tparams_env (fun () -> this#visit_function ~func_hint:hint x)
+        let scope_kind = func_scope_kind x in
+        this#in_new_tparams_env (fun () -> this#visit_function ~func_hint:hint ~scope_kind x)
       | Ast.Expression.Function x -> this#visit_function_expr ~func_hint:hint loc x
       | Ast.Expression.Object expr -> this#visit_object_expression ~object_hint:hint expr
       | Ast.Expression.Assignment _
@@ -880,5 +932,5 @@ class def_finder env_entries providers =
   end
 
 let find_defs env_entries providers ast =
-  let finder = new def_finder env_entries providers in
+  let finder = new def_finder env_entries providers Module in
   finder#eval finder#program ast

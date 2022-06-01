@@ -460,8 +460,12 @@ module Make (Env : Env_sig.S) : S = struct
     in
     Context.set_environment cx env;
     Env.init_env ~exclude_syms cx module_scope;
-    if (not lib) && Context.resolved_env cx then
-      Base.List.iter ~f:(Env_resolution.resolve_component cx name_def_graph) components
+    if (not lib) && Context.resolved_env cx then begin
+      let { Loc_env.scope_kind; _ } = Context.environment cx in
+      Base.List.iter ~f:(Env_resolution.resolve_component cx name_def_graph) components;
+      let env = Context.environment cx in
+      Context.set_environment cx { env with Loc_env.scope_kind }
+    end
 
   (* build module graph *)
   (* Lint suppressions are handled iff lint_severities is Some. *)

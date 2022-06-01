@@ -110,7 +110,7 @@ let print_values values =
   let kvlist = ALocMap.bindings values in
   let strlist =
     Base.List.map
-      ~f:(fun (def_loc, (init, _)) ->
+      ~f:(fun (def_loc, (init, _, _)) ->
         Printf.sprintf "%s => %s" (ALoc.debug_to_string def_loc) (string_of_source init))
       kvlist
   in

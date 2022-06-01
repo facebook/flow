@@ -508,7 +508,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) = struct
         false
   end
 
-  let dependencies cx env loc (def, _) acc =
+  let dependencies cx env loc (def, _, _) acc =
     let depends = FindDependencies.depends cx env loc def in
     ALocMap.add loc depends acc
 
@@ -539,7 +539,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) = struct
     in
     let result_of_scc (fst, rest) =
       let element_of_loc loc =
-        let (def, reason) = ALocMap.find loc map in
+        let (def, _, reason) = ALocMap.find loc map in
         if ALocSet.mem loc (ALocMap.find loc order_graph) then
           if FindDependencies.recursively_resolvable def then
             Resolvable loc
@@ -557,7 +557,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) = struct
         if
           Base.List.for_all
             ~f:(fun m ->
-              let (def, _) = ALocMap.find m map in
+              let (def, _, _) = ALocMap.find m map in
               FindDependencies.recursively_resolvable def)
             (fst :: rest)
         then
@@ -566,7 +566,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) = struct
           let elements =
             Nel.map
               (fun loc ->
-                let (_, reason) = ALocMap.find loc map in
+                let (_, _, reason) = ALocMap.find loc map in
                 let depends = ALocMap.find loc graph in
                 let edges =
                   ALocMap.fold
