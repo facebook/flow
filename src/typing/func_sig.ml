@@ -479,6 +479,17 @@ struct
       | _ -> ()
     );
 
+    let (return_t, return_hint) =
+      match (return_t, kind) with
+      | (Inferred t, _) -> (t, Hint_None)
+      | (Annotated t, (Async | Generator _ | AsyncGenerator _)) ->
+        (t, Hint_t (MixedT.why (reason_of_t t) (bogus_trust ()))) (* T122105974 *)
+      | (Annotated t, _) -> (t, Hint_t t)
+    in
+
+    let ({ Loc_env.return_hint = prev_return_hint; _ } as loc_env) = Context.environment cx in
+    Context.set_environment cx { loc_env with Loc_env.return_hint };
+
     (* decl/type visit pre-pass *)
     Statement.toplevel_decls cx statements;
 
@@ -488,6 +499,10 @@ struct
           Toplevels.toplevels Statement.statement cx statements
       )
     in
+
+    let loc_env = Context.environment cx in
+    Context.set_environment cx { loc_env with Loc_env.return_hint = prev_return_hint };
+
     let maybe_void =
       Abnormal.(
         match statements_abnormal with
@@ -500,11 +515,6 @@ struct
       )
     in
     let body_ast = reconstruct_body statements_ast in
-    let (return_t, return_hint) =
-      match return_t with
-      | Inferred t -> (t, Hint_None)
-      | Annotated t -> (t, Hint_t t)
-    in
     (* build return type for void funcs *)
     let (init_ast, exhaust) =
       if maybe_void then

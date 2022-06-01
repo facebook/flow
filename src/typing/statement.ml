@@ -1214,11 +1214,7 @@ struct
             let pred_reason = update_desc_reason (fun desc -> RPredicateOf desc) reason in
             (OpenPredT { reason = pred_reason; base_t = t; m_pos = p_map; m_neg = n_map }, Some ast)
           else
-            let hint =
-              match Env.get_var_annotation cx (internal_name "return") loc with
-              | Some t -> Hint_t t
-              | None -> Hint_None
-            in
+            let hint = (Context.environment cx).Loc_env.return_hint in
             let (((_, t), _) as ast) = expression cx ~hint expr in
             (t, Some ast)
       in

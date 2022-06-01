@@ -21,6 +21,7 @@ type t = {
   class_static_this_types: Type.annotated_or_inferred ALocMap.t;
   class_instance_super_types: Type.annotated_or_inferred ALocMap.t;
   class_static_super_types: Type.annotated_or_inferred ALocMap.t;
+  return_hint: Type.t Hint_api.hint;
   resolved: ALocSet.t;
   var_info: Env_api.env_info;
 }
@@ -107,6 +108,7 @@ let empty =
     var_info = Env_api.empty;
     resolved = ALocSet.empty;
     tparams = ALocMap.empty;
+    return_hint = Hint_api.Hint_None;
   }
 
 let with_info var_info = { empty with var_info }
