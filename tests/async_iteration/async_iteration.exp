@@ -1,18 +1,22 @@
-Error ------------------------------------------------------------------------------------------- delegate_yield.js:3:19
+Error ------------------------------------------------------------------------------------------- delegate_yield.js:7:22
 
-Cannot assign `yield` to `x` because number [1] is incompatible with undefined [2]. [incompatible-type]
+Cannot call `delegate_next().next` with `0` bound to `value` because number [1] is incompatible with undefined (default
+`next` of unannotated generator function) [2]. [incompatible-call]
 
-   delegate_yield.js:3:19
-   3|     var x: void = yield; // error: number ~> void
-                        ^^^^^
+   delegate_yield.js:7:22
+   7| delegate_next().next(0); // err number ~> void
+                           ^ [1]
 
 References:
-   delegate_yield.js:7:22
-   7| delegate_next().next(0);
-                           ^ [1]
-   delegate_yield.js:3:12
-   3|     var x: void = yield; // error: number ~> void
-                 ^^^^ [2]
+   delegate_yield.js:1:33
+                                      v
+   1| async function *delegate_next() {
+   2|   async function *inner() {
+   3|     var x: void = yield; // ok, unannotated defaults to void
+   4|   }
+   5|   yield *inner();
+   6| }
+      ^ [2]
 
 
 Error ------------------------------------------------------------------------------------------- delegate_yield.js:17:6

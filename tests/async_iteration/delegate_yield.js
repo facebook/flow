@@ -1,10 +1,10 @@
 async function *delegate_next() {
   async function *inner() {
-    var x: void = yield; // error: number ~> void
+    var x: void = yield; // ok, unannotated defaults to void
   }
   yield *inner();
 }
-delegate_next().next(0);
+delegate_next().next(0); // err number ~> void
 
 async function *delegate_yield() {
   async function *inner() {

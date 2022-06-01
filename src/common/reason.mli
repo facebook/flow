@@ -195,6 +195,7 @@ type 'loc virtual_reason_desc =
   | RUnionBranching of 'loc virtual_reason_desc * int
   | RUninitialized
   | RPossiblyUninitialized
+  | RUnannotatedNext
 
 and reason_desc_function =
   | RAsync

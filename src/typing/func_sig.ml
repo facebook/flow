@@ -321,85 +321,54 @@ struct
 
     let (yield_t, next_t) =
       match kind with
-      | Generator { return_loc } ->
-        let yield_t =
-          Tvar.mk_where cx (replace_desc_reason (RCustom "yield") reason) (fun yield ->
-              let t =
-                Flow.get_builtin_typeapp
-                  cx
-                  reason
-                  (OrdinaryName "$Iterable")
-                  [yield; Tvar.mk cx reason; Tvar.mk cx reason]
-              in
-              let t =
-                Flow.reposition
-                  cx
-                  ~desc:(desc_of_t t)
-                  (type_t_of_annotated_or_inferred return_t |> reason_of_t |> aloc_of_reason)
-                  t
-              in
-              Flow.flow_t cx (type_t_of_annotated_or_inferred return_t, t)
-          )
-        in
-        let next_t =
-          Tvar.mk_where cx (replace_desc_reason (RCustom "next") reason) (fun next ->
-              let t =
-                Flow.get_builtin_typeapp
-                  cx
-                  reason
-                  (OrdinaryName "Generator")
-                  [yield_t; Tvar.mk cx reason; next]
-              in
-              let t =
-                Flow.reposition
-                  cx
-                  ~desc:(desc_of_t t)
-                  (type_t_of_annotated_or_inferred return_t |> reason_of_t |> aloc_of_reason)
-                  t
-              in
-              Flow.flow_t cx (t, type_t_of_annotated_or_inferred return_t)
-          )
-        in
-        Env.record_expression_type_if_needed cx return_loc next_t;
-        (yield_t, next_t)
+      | Generator { return_loc }
       | AsyncGenerator { return_loc } ->
-        let yield_t =
-          Tvar.mk_where cx (replace_desc_reason (RCustom "yield") reason) (fun yield ->
-              let t =
-                Flow.get_builtin_typeapp
-                  cx
-                  reason
-                  (OrdinaryName "$AsyncIterable")
-                  [yield; Tvar.mk cx reason; Tvar.mk cx reason]
-              in
-              let t =
-                Flow.reposition
-                  cx
-                  ~desc:(desc_of_t t)
-                  (type_t_of_annotated_or_inferred return_t |> reason_of_t |> aloc_of_reason)
-                  t
-              in
-              Flow.flow_t cx (type_t_of_annotated_or_inferred return_t, t)
-          )
-        in
+        let yield_t = Tvar.mk cx (replace_desc_reason (RCustom "yield") reason) in
         let next_t =
-          Tvar.mk_where cx (replace_desc_reason (RCustom "next") reason) (fun next ->
-              let t =
-                Flow.get_builtin_typeapp
-                  cx
-                  reason
-                  (OrdinaryName "AsyncGenerator")
-                  [yield_t; Tvar.mk cx reason; next]
-              in
-              let t =
-                Flow.reposition
-                  cx
-                  ~desc:(desc_of_t t)
-                  (type_t_of_annotated_or_inferred return_t |> reason_of_t |> aloc_of_reason)
-                  t
-              in
-              Flow.flow_t cx (t, type_t_of_annotated_or_inferred return_t)
-          )
+          match return_t with
+          | Annotated _ -> Tvar.mk cx (replace_desc_reason (RCustom "next") reason)
+          | Inferred _ ->
+            VoidT.make (replace_desc_reason RUnannotatedNext reason) |> with_trust bogus_trust
+        in
+        let (iterable, generator) =
+          match kind with
+          | Generator _ -> ("$Iterable", "Generator")
+          | AsyncGenerator _ -> ("$AsyncIterable", "AsyncGenerator")
+          | _ -> failwith "Bad kind"
+        in
+        let () =
+          let t =
+            Flow.get_builtin_typeapp
+              cx
+              reason
+              (OrdinaryName iterable)
+              [yield_t; Tvar.mk cx reason; Tvar.mk cx reason]
+          in
+          let t =
+            Flow.reposition
+              cx
+              ~desc:(desc_of_t t)
+              (type_t_of_annotated_or_inferred return_t |> reason_of_t |> aloc_of_reason)
+              t
+          in
+          Flow.flow_t cx (type_t_of_annotated_or_inferred return_t, t)
+        in
+        let () =
+          let t =
+            Flow.get_builtin_typeapp
+              cx
+              reason
+              (OrdinaryName generator)
+              [yield_t; Tvar.mk cx reason; next_t]
+          in
+          let t =
+            Flow.reposition
+              cx
+              ~desc:(desc_of_t t)
+              (type_t_of_annotated_or_inferred return_t |> reason_of_t |> aloc_of_reason)
+              t
+          in
+          Flow.flow_t cx (t, type_t_of_annotated_or_inferred return_t)
         in
         Env.record_expression_type_if_needed cx return_loc next_t;
         (yield_t, next_t)

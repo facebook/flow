@@ -236,6 +236,7 @@ type 'loc virtual_reason_desc =
   | RUnionBranching of 'loc virtual_reason_desc * int
   | RUninitialized
   | RPossiblyUninitialized
+  | RUnannotatedNext
 [@@deriving eq, show]
 
 and reason_desc_function =
@@ -255,7 +256,7 @@ let rec map_desc_locs f = function
     | RROArrayType | RTupleType | RTupleElement | RTupleLength _ | RTupleOutOfBoundsAccess
     | RFunction _ | RFunctionType | RFunctionBody | RFunctionCallType | RFunctionUnusedArgument
     | RJSXFunctionCall _ | RJSXIdentifier _ | RJSXElementProps _ | RJSXElement _ | RJSXText | RFbt
-    | RUninitialized | RPossiblyUninitialized ) as r ->
+    | RUninitialized | RPossiblyUninitialized | RUnannotatedNext ) as r ->
     r
   | RFunctionCall desc -> RFunctionCall (map_desc_locs f desc)
   | RUnknownUnspecifiedProperty desc -> RUnknownUnspecifiedProperty (map_desc_locs f desc)
@@ -731,6 +732,7 @@ let rec string_of_desc = function
   | RUnionBranching (desc, _) -> string_of_desc desc
   | RUninitialized -> "uninitialized variable"
   | RPossiblyUninitialized -> "possibly uninitialized variable"
+  | RUnannotatedNext -> "undefined (default `next` of unannotated generator function)"
 
 let string_of_reason ?(strip_root = None) r =
   let spos = string_of_aloc ~strip_root (aloc_of_reason r) in
@@ -1489,7 +1491,8 @@ let classification_of_reason r =
   | RTrusted _
   | RPrivate _
   | REnum _
-  | REnumRepresentation _ ->
+  | REnumRepresentation _
+  | RUnannotatedNext ->
     `Unclassified
 
 let is_nullish_reason r = classification_of_reason r = `Nullish

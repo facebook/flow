@@ -25,7 +25,7 @@ class GeneratorExamples {
   }
 
   *infer_stmt() {
-    var x: boolean = yield 0; // error: number ~> boolean
+    var x: boolean = yield 0; // error: void ~> boolean
     return "";
   }
 
@@ -34,7 +34,7 @@ class GeneratorExamples {
     if (typeof x === "number") {
     } else if (typeof x === "boolean") {
     } else {
-      (x : string) // ok, sherlock
+      (x : string) // nope
     }
   }
 
@@ -44,8 +44,8 @@ class GeneratorExamples {
     yield true;
   }
 
-  *delegate_next_generator() {
-    function *inner() {
+  *delegate_next_generator(): Generator<mixed, mixed, string> {
+    function *inner(): Generator<mixed, mixed, string> {
       var x: number = yield; // error: string ~> number
     }
     yield *inner();
@@ -68,15 +68,15 @@ class GeneratorExamples {
   }
 
   // only generators can make use of a value passed to next
-  *delegate_next_iterable(xs: Array<number>) {
+  *delegate_next_iterable(xs: Array<number>): Generator<number, void, string> {
     yield *xs;
   }
 
-  *delegate_yield_iterable(xs: Array<number>) {
+  *delegate_yield_iterable(xs: Array<number>): Generator<number, void, void> {
     yield *xs;
   }
 
-  *delegate_return_iterable(xs: Array<number>) {
+  *delegate_return_iterable(xs: Array<number>): Generator<number, void, void>  {
     var x: void = yield *xs // ok: Iterator has no yield value
   }
 
@@ -97,16 +97,16 @@ var examples = new GeneratorExamples();
 
 for (var x of examples.infer_stmt()) { (x : string) } // error: number ~> string
 
-var infer_stmt_next = examples.infer_stmt().next(0).value; // error: number ~> boolean
+var infer_stmt_next = examples.infer_stmt().next(0).value; // error: number ~> void
 if (typeof infer_stmt_next === "undefined") {
 } else if (typeof infer_stmt_next === "number") {
 } else {
   (infer_stmt_next : boolean) // error: string ~> boolean
 }
 
-examples.widen_next().next(0)
-examples.widen_next().next("")
-examples.widen_next().next(true)
+examples.widen_next().next(0) // err number -> void
+examples.widen_next().next("") // err number -> void
+examples.widen_next().next(true) // err number -> void
 
 for (var x0 of examples.widen_yield()) {
   if (typeof x0 === "number") {
