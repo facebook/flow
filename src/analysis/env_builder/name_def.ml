@@ -439,6 +439,17 @@ class def_finder env_entries providers =
           match lhs_node with
           | Ast.Pattern.Identifier { Ast.Pattern.Identifier.name; _ } ->
             Hint_t (Value (lhs_loc, Ast.Expression.Identifier name))
+          | Ast.Pattern.Expression
+              (_, Ast.Expression.Member { Ast.Expression.Member._object; property; comments = _ })
+            ->
+            (match property with
+            | Ast.Expression.Member.PropertyIdentifier (_, { Ast.Identifier.name; comments = _ }) ->
+              decompose_hint (Decomp_ObjProp name) (Hint_t (Value _object))
+            | Ast.Expression.Member.PropertyPrivateName _ ->
+              (* TODO create a hint based on the current class. *)
+              Hint_None
+            | Ast.Expression.Member.PropertyExpression _ ->
+              decompose_hint Decomp_ObjComputed (Hint_t (Value _object)))
           | _ ->
             (* TODO create a hint based on the lhs pattern *)
             Hint_None
