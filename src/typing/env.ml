@@ -85,15 +85,8 @@ module Env : Env_sig.S = struct
   (* return the current scope *)
   let peek_scope () = List.hd !scopes
 
-  let in_toplevel_scope () = Scope.is_toplevel (peek_scope ())
-
-  let in_global_scope () = Scope.is_global (peek_scope ())
-
   (* return current scope stack *)
   let peek_env () = !scopes
-
-  let string_of_env cx env =
-    spf "[ %s ]" (String.concat ";\n" (Base.List.map ~f:(Debug_js.string_of_scope cx) env))
 
   (* return the value of f applied to topmost var scope in a scope list *)
   let rec top_var_scope = function
@@ -105,6 +98,13 @@ module Env : Env_sig.S = struct
 
   (* get top var scope of current env *)
   let peek_var_scope () = top_var_scope (peek_env ())
+
+  let in_toplevel_scope () = Scope.is_toplevel (peek_var_scope ())
+
+  let in_global_scope () = Scope.is_global (peek_var_scope ())
+
+  let string_of_env cx env =
+    spf "[ %s ]" (String.concat ";\n" (Base.List.map ~f:(Debug_js.string_of_scope cx) env))
 
   (* use the passed f to iterate over all scopes *)
   let iter_scopes f = List.iter f !scopes
