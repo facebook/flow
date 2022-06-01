@@ -35,7 +35,7 @@ module Make
   module Func = F
   open Types
 
-  let empty id reason tparams tparams_map super =
+  let empty id class_loc reason tparams tparams_map super =
     let empty_sig reason =
       {
         reason;
@@ -55,7 +55,7 @@ module Make
       empty_sig reason
     in
     let instance = empty_sig reason in
-    { id; tparams; tparams_map; super; constructor; static; instance }
+    { id; class_loc; tparams; tparams_map; super; constructor; static; instance }
 
   let structural x =
     match x.super with
@@ -806,9 +806,22 @@ module Make
     let poly t = poly_type_of_tparams (Type.Poly.generate_id ()) x.tparams t in
     (poly t_inner, poly t_outer)
 
+  let mk_class_binding cx x =
+    let instance_this_type = this_or_mixed_of_t ~static:false x in
+    let static_this_type = this_or_mixed_of_t ~static:true x in
+    {
+      Type.class_binding_id = x.id;
+      class_private_fields = fields_to_prop_map cx x.instance.private_fields;
+      class_private_static_fields = fields_to_prop_map cx x.static.private_fields;
+      class_private_methods =
+        methods_to_prop_map ~cx ~this_default:instance_this_type x.instance.private_methods;
+      class_private_static_methods =
+        methods_to_prop_map ~cx ~this_default:static_this_type x.static.private_methods;
+    }
+
   (* Processes the bodies of instance and static class members. *)
-  let toplevels cx ~private_property_map ~instance_this_type ~static_this_type class_loc x =
-    Env.in_lex_scope (fun () ->
+  let toplevels cx x =
+    Env.in_class_scope cx x.class_loc (fun () ->
         let method_ default_this super ~set_asts loc f =
           let save_return = Abnormal.clear_saved Abnormal.Return in
           let save_throw = Abnormal.clear_saved Abnormal.Throw in
@@ -865,17 +878,11 @@ module Make
         in
 
         (* Bind private fields and methods to the environment *)
-        Env.bind_class
-          cx
-          x.id
-          private_property_map
-          (fields_to_prop_map cx x.static.private_fields)
-          (methods_to_prop_map ~cx ~this_default:instance_this_type x.instance.private_methods)
-          (methods_to_prop_map ~cx ~this_default:static_this_type x.static.private_methods);
-        Env.bind_class_instance_this cx instance_this_default class_loc;
-        Env.bind_class_static_this cx static_this_default class_loc;
-        Env.bind_class_instance_super cx super class_loc;
-        Env.bind_class_static_super cx static_super class_loc;
+        Env.bind_class cx (mk_class_binding cx x);
+        Env.bind_class_instance_this cx instance_this_default x.class_loc;
+        Env.bind_class_static_this cx static_this_default x.class_loc;
+        Env.bind_class_instance_super cx super x.class_loc;
+        Env.bind_class_static_super cx static_super x.class_loc;
 
         x
         |> with_sig ~static:true (fun s ->

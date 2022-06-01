@@ -71,7 +71,9 @@ module New_env = struct
 
   let get_internal_var = Old_env.get_internal_var
 
-  let get_class_entries = Old_env.get_class_entries
+  let get_class_entries cx =
+    let { Loc_env.class_stack; class_bindings; _ } = Context.environment cx in
+    Base.List.map ~f:(fun l -> ALocMap.find l class_bindings) class_stack
 
   let bind_class = Old_env.bind_class
 
@@ -88,6 +90,14 @@ module New_env = struct
     old
 
   let in_lex_scope = Old_env.in_lex_scope
+
+  let in_class_scope cx loc f =
+    let ({ Loc_env.class_stack; _ } as env) = Context.environment cx in
+    Context.set_environment cx { env with Loc_env.class_stack = loc :: class_stack };
+    let res = in_lex_scope f in
+    let env = Context.environment cx in
+    Context.set_environment cx { env with Loc_env.class_stack };
+    res
 
   let pop_var_scope cx kind =
     Old_env.pop_var_scope cx kind;

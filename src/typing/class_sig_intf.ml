@@ -30,7 +30,8 @@ module type S = sig
   open Types
 
   (** Create signature with no elements. *)
-  val empty : ALoc.id -> Reason.t -> Type.typeparams -> Type.t Subst_name.Map.t -> super -> t
+  val empty :
+    ALoc.id -> ALoc.t -> Reason.t -> Type.typeparams -> Type.t Subst_name.Map.t -> super -> t
 
   (** Add constructor to signature.
 
@@ -74,6 +75,8 @@ module type S = sig
 
   (* Access private fields of signature *)
   val private_fields_of_signature : static:bool -> t -> field' SMap.t
+
+  val mk_class_binding : Context.t -> t -> Type.class_binding
 
   (** Add method to signature.
 
@@ -158,14 +161,7 @@ module type S = sig
   val check_methods : Context.t -> Reason.reason -> t -> unit
 
   (** Evaluate the class body. *)
-  val toplevels :
-    Context.t ->
-    private_property_map:Type.Properties.id ->
-    instance_this_type:Type.t ->
-    static_this_type:Type.t ->
-    ALoc.t ->
-    t ->
-    unit
+  val toplevels : Context.t -> t -> unit
 
   (** 1. Type Conversion *)
 

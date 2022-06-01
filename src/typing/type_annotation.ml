@@ -1230,7 +1230,7 @@ module Make
           in
           Class_type_sig.Types.Interface { Class_type_sig.Types.inline = true; extends; callable }
         in
-        (Class_type_sig.empty id reason None tparams_map super, extend_asts)
+        (Class_type_sig.empty id loc reason None tparams_map super, extend_asts)
       in
       let (iface_sig, property_asts) =
         add_interface_properties
@@ -2226,7 +2226,7 @@ module Make
       let (ts, targs_ast) = convert_list cx tparams_map targs in
       ((loc, c, Some ts), Some (targs_loc, { Ast.Type.TypeArgs.arguments = targs_ast; comments }))
 
-  let mk_interface_sig cx reason decl =
+  let mk_interface_sig cx intf_loc reason decl =
     let open Class_type_sig in
     let open Class_type_sig.Types in
     let {
@@ -2260,7 +2260,7 @@ module Make
         in
         Interface { inline = false; extends; callable }
       in
-      (empty id reason tparams tparams_map super, extends_ast)
+      (empty id intf_loc reason tparams tparams_map super, extends_ast)
     in
     (* TODO: interfaces don't have a name field, or even statics *)
     let iface_sig = add_name_field iface_sig in
@@ -2307,7 +2307,7 @@ module Make
       | None -> false
       | Some source -> File_key.is_lib_file source
     in
-    fun cx reason decl ->
+    fun cx class_loc reason decl ->
       let {
         Ast.Statement.DeclareClass.id = (id_loc, id_name) as ident;
         tparams;
@@ -2374,7 +2374,11 @@ module Make
           in
           Class { Class_type_sig.Types.extends; mixins; implements; this_t; this_tparam }
         in
-        (empty id reason tparams tparams_map super, extends_ast, mixins_ast, implements_ast)
+        ( empty id class_loc reason tparams tparams_map super,
+          extends_ast,
+          mixins_ast,
+          implements_ast
+        )
       in
       (* All classes have a static "name" property. *)
       let iface_sig = add_name_field iface_sig in

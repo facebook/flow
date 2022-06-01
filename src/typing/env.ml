@@ -201,6 +201,8 @@ module Env : Env_sig.S = struct
     pop_lex_scope ();
     result
 
+  let in_class_scope _ _ = in_lex_scope
+
   (* depth of current env *)
   let env_depth () = List.length !scopes
 
@@ -381,7 +383,7 @@ module Env : Env_sig.S = struct
     in
     loop !scopes
 
-  let get_class_entries () =
+  let get_class_entries _ =
     let rec loop class_bindings = function
       | [] -> assert_false "empty scope list"
       | scope :: scopes ->
@@ -694,24 +696,7 @@ module Env : Env_sig.S = struct
     if not (is_excluded name) then loop !scopes
 
   (* bind class entry *)
-  let bind_class
-      cx
-      class_id
-      class_private_fields
-      class_private_static_fields
-      class_private_methods
-      class_private_static_methods =
-    bind_entry
-      cx
-      (internal_name "class")
-      (Entry.new_class
-         class_id
-         class_private_fields
-         class_private_static_fields
-         class_private_methods
-         class_private_static_methods
-      )
-      ALoc.none
+  let bind_class cx x = bind_entry cx (internal_name "class") (Entry.Class x) ALoc.none
 
   (* bind var entry *)
   let bind_var_to_name ?(state = State.Declared) cx name t loc =

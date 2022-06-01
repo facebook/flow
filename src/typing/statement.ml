@@ -2666,7 +2666,7 @@ struct
         decl
       in
       let reason = DescFormat.instance_reason (OrdinaryName name) name_loc in
-      let (iface_sig, iface_t, decl_ast) = Anno.mk_interface_sig cx reason decl in
+      let (iface_sig, iface_t, decl_ast) = Anno.mk_interface_sig cx loc reason decl in
       let t = interface_helper cx loc (iface_sig, iface_t) in
       (t, decl_ast)
 
@@ -2683,7 +2683,7 @@ struct
         decl
       in
       let reason = DescFormat.instance_reason (OrdinaryName name) name_loc in
-      let (class_sig, class_t, decl_ast) = Anno.mk_declare_class_sig cx reason decl in
+      let (class_sig, class_t, decl_ast) = Anno.mk_declare_class_sig cx loc reason decl in
       let t = interface_helper cx loc (class_sig, class_t) in
       (t, decl_ast)
 
@@ -4990,7 +4990,7 @@ struct
           ) ->
           let expr_reason = mk_reason (RPrivateProperty name) loc in
           let use_op = Op (GetProperty (mk_expression_reason ex)) in
-          let opt_use = get_private_field_opt_use expr_reason ~use_op name in
+          let opt_use = get_private_field_opt_use cx expr_reason ~use_op name in
           let test_hooks obj_t =
             if Type_inference_hooks_js.dispatch_member_hook cx name ploc obj_t then
               Some (inference_hook_tvar cx ploc)
@@ -5468,7 +5468,7 @@ struct
       | _ -> OptCallM app
     in
     if private_ then
-      let class_entries = Env.get_class_entries () in
+      let class_entries = Env.get_class_entries cx in
       OptPrivateMethodT
         (use_op, reason, reason_expr, name, class_entries, false, action, Some prop_t)
     else
@@ -6051,7 +6051,7 @@ struct
         else
           let reason = mk_reason (RPropertyAssignment (Some name)) lhs_loc in
           (* flow type to object property itself *)
-          let class_entries = Env.get_class_entries () in
+          let class_entries = Env.get_class_entries cx in
           let prop_reason = mk_reason (RPrivateProperty name) prop_loc in
           let prop_t = Tvar.mk cx prop_reason in
           let use_op =
@@ -7954,8 +7954,8 @@ struct
   and condition cx ~cond e : (ALoc.t, ALoc.t * Type.t) Ast.Expression.t =
     expression ~cond ~hint:Hint_None cx e
 
-  and get_private_field_opt_use reason ~use_op name =
-    let class_entries = Env.get_class_entries () in
+  and get_private_field_opt_use cx reason ~use_op name =
+    let class_entries = Env.get_class_entries cx in
     OptGetPrivatePropT (use_op, reason, name, class_entries, false)
 
   (* Property lookups become non-strict when processing conditional expressions
@@ -8307,8 +8307,6 @@ struct
       let this_in_class = Class_stmt_sig.This.in_class c in
       let self = Tvar.mk cx reason in
       let (class_sig, class_ast_f) = mk_class_sig cx ~name_loc ~class_loc reason self c in
-      let instance_this_type = Class_stmt_sig.this_or_mixed_of_t ~static:false class_sig in
-      let static_this_type = Class_stmt_sig.this_or_mixed_of_t ~static:true class_sig in
       let public_property_map =
         Class_stmt_sig.fields_to_prop_map cx
         @@ Class_stmt_sig.public_fields_of_signature ~static:false class_sig
@@ -8321,13 +8319,7 @@ struct
       Class_stmt_sig.check_implements cx def_reason class_sig;
       Class_stmt_sig.check_methods cx def_reason class_sig;
       if this_in_class || not (Class_stmt_sig.This.is_bound_to_empty class_sig) then
-        Class_stmt_sig.toplevels
-          cx
-          class_loc
-          class_sig
-          ~private_property_map
-          ~instance_this_type
-          ~static_this_type;
+        Class_stmt_sig.toplevels cx class_sig;
 
       let class_body = Ast.Class.((snd c.body).Body.body) in
       Context.add_voidable_check
@@ -8455,7 +8447,7 @@ struct
           let super =
             Class { Class_stmt_sig_types.extends; mixins = []; implements; this_t; this_tparam }
           in
-          (empty id reason tparams tparams_map super, extends_ast, implements_ast)
+          (empty id class_loc reason tparams tparams_map super, extends_ast, implements_ast)
         in
         (* In case there is no constructor, pick up a default one. *)
         let class_sig =
@@ -8798,6 +8790,17 @@ struct
             (class_sig, [], empty_seen_names)
             elements
         in
+        let ({ Loc_env.class_bindings; _ } as env) = Context.environment cx in
+        Context.set_environment
+          cx
+          {
+            env with
+            Loc_env.class_bindings =
+              Loc_collections.ALocMap.add
+                class_loc
+                (Class_stmt_sig.mk_class_binding cx class_sig)
+                class_bindings;
+          };
         let elements = List.rev rev_elements in
         ( class_sig,
           fun class_t ->

@@ -186,6 +186,7 @@ module Class = struct
 
     type t = {
       id: ALoc.id;
+      class_loc: ALoc.t;
       tparams: Type.typeparams;
       tparams_map: Type.t Subst_name.Map.t;
       super: super;
@@ -264,6 +265,7 @@ module Class = struct
 
     type t = {
       id: ALoc.id;
+      class_loc: ALoc.t;
       tparams: Type.typeparams;
       tparams_map: Type.t Subst_name.Map.t;
       super: super;

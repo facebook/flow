@@ -21,6 +21,8 @@ type t = {
   class_static_this_types: Type.annotated_or_inferred ALocMap.t;
   class_instance_super_types: Type.annotated_or_inferred ALocMap.t;
   class_static_super_types: Type.annotated_or_inferred ALocMap.t;
+  class_bindings: Type.class_binding ALocMap.t;
+  class_stack: ALoc.t list;
   return_hint: Type.t Hint_api.hint;
   scope_kind: Scope.var_scope_kind;
   resolved: ALocSet.t;
@@ -110,6 +112,8 @@ let empty scope_kind =
     resolved = ALocSet.empty;
     tparams = ALocMap.empty;
     return_hint = Hint_api.Hint_None;
+    class_bindings = ALocMap.empty;
+    class_stack = [];
     scope_kind;
   }
 

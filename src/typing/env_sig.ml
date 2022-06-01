@@ -48,6 +48,8 @@ module type S = sig
 
   val in_lex_scope : (unit -> 'a) -> 'a
 
+  val in_class_scope : Context.t -> ALoc.t -> (unit -> 'a) -> 'a
+
   val env_depth : unit -> int
 
   val trunc_env : int -> unit
@@ -62,14 +64,7 @@ module type S = sig
 
   (***)
 
-  val bind_class :
-    Context.t ->
-    ALoc.id ->
-    Type.Properties.id ->
-    Type.Properties.id ->
-    Type.Properties.id ->
-    Type.Properties.id ->
-    unit
+  val bind_class : Context.t -> Type.class_binding -> unit
 
   val bind_var :
     ?state:State.t -> Context.t -> string -> Type.annotated_or_inferred -> ALoc.t -> unit
@@ -178,7 +173,7 @@ module type S = sig
 
   val get_current_env_refi : Key.t -> Scope.refi_binding option
 
-  val get_class_entries : unit -> Type.class_binding list
+  val get_class_entries : Context.t -> Type.class_binding list
 
   val get_var : ?lookup_mode:LookupMode.t -> Context.t -> string -> ALoc.t -> Type.t
 
