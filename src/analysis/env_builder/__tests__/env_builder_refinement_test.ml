@@ -6191,9 +6191,6 @@ x.a;
         (3, 4) to (3, 5) => {
           {refinement = PropExistsR (a); writes = Global x}
         };
-        (3, 4) to (3, 7) => {
-          {refinement = Truthy; writes = projection at (2, 4) to (2, 7)}
-        };
         (4, 0) to (4, 1) => {
           Global x
         };

@@ -2096,14 +2096,15 @@ module Make
        * It havocs other heap refinements depending on the name of the member and then adds
        * a write to the heap refinement entry for that member expression *)
       method assign_expression ~update_entry lhs rhs =
-        ignore @@ this#pattern_expression lhs;
-        ignore @@ this#expression rhs;
         match lhs with
         | (loc, Flow_ast.Expression.Member member) ->
+          (* Use super member to visit sub-expressions to avoid record a read of the member. *)
+          ignore @@ super#member loc member;
+          ignore @@ this#expression rhs;
           let reason = mk_reason RSomeProperty loc in
           let assigned_val = Val.one reason in
           this#assign_member ~update_entry member loc assigned_val reason
-        | _ -> ()
+        | _ -> statement_error
 
       method assign_member ~update_entry lhs_member lhs_loc assigned_val val_reason =
         this#post_assignment_heap_refinement_havoc lhs_member;
@@ -2189,6 +2190,7 @@ module Make
                 ignore @@ this#assignment_pattern left
               | (_, Expression e) ->
                 (* given `o.x += e`, read o then read e *)
+                ignore @@ this#pattern_expression e;
                 this#assign_expression ~update_entry:true e right
               | (_, (Object _ | Array _)) -> statement_error
             end
