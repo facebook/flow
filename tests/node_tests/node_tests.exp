@@ -1570,8 +1570,8 @@ Cannot call `inspector.open` with `'8080'` bound to `port` because string [1] is
                         ^^^^^^ [1]
 
 References:
-   <BUILTINS>/node.js:2930:12
-   2930|     port?: number,
+   <BUILTINS>/node.js:3093:12
+   3093|     port?: number,
                     ^^^^^^ [2]
 
 
@@ -1585,8 +1585,8 @@ Cannot call `inspector.open` with `127001` bound to `host` because number [1] is
                               ^^^^^^ [1]
 
 References:
-   <BUILTINS>/node.js:2931:12
-   2931|     host?: string,
+   <BUILTINS>/node.js:3094:12
+   3094|     host?: string,
                     ^^^^^^ [2]
 
 
@@ -1600,8 +1600,8 @@ Cannot call `inspector.open` with `1000` bound to `wait` because number [1] is i
                                                   ^^^^ [1]
 
 References:
-   <BUILTINS>/node.js:2932:12
-   2932|     wait?: boolean
+   <BUILTINS>/node.js:3095:12
+   3095|     wait?: boolean
                     ^^^^^^^ [2]
 
 
@@ -1614,8 +1614,8 @@ Cannot cast `inspector.open()` to string because undefined [1] is incompatible w
           ^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/node.js:2933:6
-   2933|   ): void;
+   <BUILTINS>/node.js:3096:6
+   3096|   ): void;
               ^^^^ [1]
    inspector/inspector.js:16:21
      16| (inspector.open() : string); // error
@@ -1631,8 +1631,8 @@ Cannot cast `inspector.close()` to string because undefined [1] is incompatible 
           ^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/node.js:2935:29
-   2935|   declare function close(): void;
+   <BUILTINS>/node.js:3098:29
+   3098|   declare function close(): void;
                                      ^^^^ [1]
    inspector/inspector.js:24:22
      24| (inspector.close() : string); // error
@@ -1648,8 +1648,8 @@ Cannot cast `inspector.url()` to number because string [1] is incompatible with 
           ^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/node.js:2936:28
-   2936|   declare function url() : string | void;
+   <BUILTINS>/node.js:3099:28
+   3099|   declare function url() : string | void;
                                     ^^^^^^ [1]
    inspector/inspector.js:36:20
      36| (inspector.url() : number); // error
@@ -1665,8 +1665,8 @@ Cannot cast `inspector.url()` to number because undefined [1] is incompatible wi
           ^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/node.js:2936:37
-   2936|   declare function url() : string | void;
+   <BUILTINS>/node.js:3099:37
+   3099|   declare function url() : string | void;
                                              ^^^^ [1]
    inspector/inspector.js:36:20
      36| (inspector.url() : number); // error
@@ -1683,8 +1683,8 @@ Cannot cast `inspector.waitForDebugger()` to number because undefined [1] is inc
           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/node.js:2938:39
-   2938|   declare function waitForDebugger(): void;
+   <BUILTINS>/node.js:3101:39
+   3101|   declare function waitForDebugger(): void;
                                                ^^^^ [1]
    inspector/inspector.js:44:32
      44| (inspector.waitForDebugger() : number); // error
@@ -1700,32 +1700,32 @@ Cannot call `inspector.connect` because property `connect` is missing in module 
                     ^^^^^^^
 
 References:
-   <BUILTINS>/node.js:2928:1
+   <BUILTINS>/node.js:3091:1
          v---------------------------
-   2928| declare module 'inspector' {
-   2929|   declare function open(
-   2930|     port?: number,
-   2931|     host?: string,
-   2932|     wait?: boolean
-   2933|   ): void;
-   2934|
-   2935|   declare function close(): void;
-   2936|   declare function url() : string | void;
-   2937|   declare var console: Object;
-   2938|   declare function waitForDebugger(): void;
-   2939|
-   2940|   declare class Session extends events$EventEmitter {
-   2941|     constructor(): void;
-   2942|     connect(): void;
-   2943|     connectToMainThread(): void;
-   2944|     disconnect(): void;
-   2945|     post(
-   2946|       method: string,
-   2947|       params?: Object,
-   2948|       callback?: Function
-   2949|     ): void;
-   2950|   }
-   2951| }
+   3091| declare module 'inspector' {
+   3092|   declare function open(
+   3093|     port?: number,
+   3094|     host?: string,
+   3095|     wait?: boolean
+   3096|   ): void;
+   3097|
+   3098|   declare function close(): void;
+   3099|   declare function url() : string | void;
+   3100|   declare var console: Object;
+   3101|   declare function waitForDebugger(): void;
+   3102|
+   3103|   declare class Session extends events$EventEmitter {
+   3104|     constructor(): void;
+   3105|     connect(): void;
+   3106|     connectToMainThread(): void;
+   3107|     disconnect(): void;
+   3108|     post(
+   3109|       method: string,
+   3110|       params?: Object,
+   3111|       callback?: Function
+   3112|     ): void;
+   3113|   }
+   3114| }
          ^ [1]
 
 
@@ -1739,32 +1739,32 @@ Cannot call `inspector.connectToMainThread` because property `connectToMainThrea
                     ^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/node.js:2928:1
+   <BUILTINS>/node.js:3091:1
          v---------------------------
-   2928| declare module 'inspector' {
-   2929|   declare function open(
-   2930|     port?: number,
-   2931|     host?: string,
-   2932|     wait?: boolean
-   2933|   ): void;
-   2934|
-   2935|   declare function close(): void;
-   2936|   declare function url() : string | void;
-   2937|   declare var console: Object;
-   2938|   declare function waitForDebugger(): void;
-   2939|
-   2940|   declare class Session extends events$EventEmitter {
-   2941|     constructor(): void;
-   2942|     connect(): void;
-   2943|     connectToMainThread(): void;
-   2944|     disconnect(): void;
-   2945|     post(
-   2946|       method: string,
-   2947|       params?: Object,
-   2948|       callback?: Function
-   2949|     ): void;
-   2950|   }
-   2951| }
+   3091| declare module 'inspector' {
+   3092|   declare function open(
+   3093|     port?: number,
+   3094|     host?: string,
+   3095|     wait?: boolean
+   3096|   ): void;
+   3097|
+   3098|   declare function close(): void;
+   3099|   declare function url() : string | void;
+   3100|   declare var console: Object;
+   3101|   declare function waitForDebugger(): void;
+   3102|
+   3103|   declare class Session extends events$EventEmitter {
+   3104|     constructor(): void;
+   3105|     connect(): void;
+   3106|     connectToMainThread(): void;
+   3107|     disconnect(): void;
+   3108|     post(
+   3109|       method: string,
+   3110|       params?: Object,
+   3111|       callback?: Function
+   3112|     ): void;
+   3113|   }
+   3114| }
          ^ [1]
 
 
@@ -1777,32 +1777,32 @@ Cannot call `inspector.disconnect` because property `disconnect` is missing in m
                     ^^^^^^^^^^
 
 References:
-   <BUILTINS>/node.js:2928:1
+   <BUILTINS>/node.js:3091:1
          v---------------------------
-   2928| declare module 'inspector' {
-   2929|   declare function open(
-   2930|     port?: number,
-   2931|     host?: string,
-   2932|     wait?: boolean
-   2933|   ): void;
-   2934|
-   2935|   declare function close(): void;
-   2936|   declare function url() : string | void;
-   2937|   declare var console: Object;
-   2938|   declare function waitForDebugger(): void;
-   2939|
-   2940|   declare class Session extends events$EventEmitter {
-   2941|     constructor(): void;
-   2942|     connect(): void;
-   2943|     connectToMainThread(): void;
-   2944|     disconnect(): void;
-   2945|     post(
-   2946|       method: string,
-   2947|       params?: Object,
-   2948|       callback?: Function
-   2949|     ): void;
-   2950|   }
-   2951| }
+   3091| declare module 'inspector' {
+   3092|   declare function open(
+   3093|     port?: number,
+   3094|     host?: string,
+   3095|     wait?: boolean
+   3096|   ): void;
+   3097|
+   3098|   declare function close(): void;
+   3099|   declare function url() : string | void;
+   3100|   declare var console: Object;
+   3101|   declare function waitForDebugger(): void;
+   3102|
+   3103|   declare class Session extends events$EventEmitter {
+   3104|     constructor(): void;
+   3105|     connect(): void;
+   3106|     connectToMainThread(): void;
+   3107|     disconnect(): void;
+   3108|     post(
+   3109|       method: string,
+   3110|       params?: Object,
+   3111|       callback?: Function
+   3112|     ): void;
+   3113|   }
+   3114| }
          ^ [1]
 
 
@@ -1815,13 +1815,13 @@ Cannot call `session.post` because function [1] requires another argument. [inco
                  ^^^^
 
 References:
-   <BUILTINS>/node.js:2945:5
+   <BUILTINS>/node.js:3108:5
              v----
-   2945|     post(
-   2946|       method: string,
-   2947|       params?: Object,
-   2948|       callback?: Function
-   2949|     ): void;
+   3108|     post(
+   3109|       method: string,
+   3110|       params?: Object,
+   3111|       callback?: Function
+   3112|     ): void;
              ------^ [1]
 
 
@@ -1834,13 +1834,13 @@ Cannot call `session.post` because function [1] requires another argument. [inco
                   ^^^^
 
 References:
-   <BUILTINS>/node.js:2945:5
+   <BUILTINS>/node.js:3108:5
              v----
-   2945|     post(
-   2946|       method: string,
-   2947|       params?: Object,
-   2948|       callback?: Function
-   2949|     ): void;
+   3108|     post(
+   3109|       method: string,
+   3110|       params?: Object,
+   3111|       callback?: Function
+   3112|     ): void;
              ------^ [1]
 
 
@@ -1853,8 +1853,8 @@ Cannot cast `session.post()` to string because undefined [1] is incompatible wit
           ^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/node.js:2949:8
-   2949|     ): void;
+   <BUILTINS>/node.js:3112:8
+   3112|     ): void;
                 ^^^^ [1]
    inspector/inspector.js:90:19
      90| (session.post() : string); // error
@@ -1937,26 +1937,26 @@ References:
    process/emitWarning.js:10:1
      10| process.emitWarning(); // error
          ^^^^^^^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/node.js:2974:24
-   2974|   emitWarning(warning: string | Error): void;
+   <BUILTINS>/node.js:3137:24
+   3137|   emitWarning(warning: string | Error): void;
                                 ^^^^^^ [2]
-   <BUILTINS>/node.js:2974:33
-   2974|   emitWarning(warning: string | Error): void;
+   <BUILTINS>/node.js:3137:33
+   3137|   emitWarning(warning: string | Error): void;
                                          ^^^^^ [3]
-   <BUILTINS>/node.js:2975:3
-   2975|   emitWarning(warning: string, typeOrCtor: string | (...empty) => mixed): void;
+   <BUILTINS>/node.js:3138:3
+   3138|   emitWarning(warning: string, typeOrCtor: string | (...empty) => mixed): void;
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
-   <BUILTINS>/node.js:2976:3
-   2976|   emitWarning(warning: string, type: string, codeOrCtor: string | (...empty) => mixed): void;
+   <BUILTINS>/node.js:3139:3
+   3139|   emitWarning(warning: string, type: string, codeOrCtor: string | (...empty) => mixed): void;
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [5]
-   <BUILTINS>/node.js:2977:3
+   <BUILTINS>/node.js:3140:3
            v-----------
-   2977|   emitWarning(
-   2978|     warning: string,
-   2979|     type: string,
-   2980|     code: string,
-   2981|     ctor?: (...empty) => mixed
-   2982|   ): void;
+   3140|   emitWarning(
+   3141|     warning: string,
+   3142|     type: string,
+   3143|     code: string,
+   3144|     ctor?: (...empty) => mixed
+   3145|   ): void;
            ------^ [6]
 
 
@@ -1975,14 +1975,14 @@ References:
    process/emitWarning.js:11:21
      11| process.emitWarning(42); // error
                              ^^ [1]
-   <BUILTINS>/node.js:2975:24
-   2975|   emitWarning(warning: string, typeOrCtor: string | (...empty) => mixed): void;
+   <BUILTINS>/node.js:3138:24
+   3138|   emitWarning(warning: string, typeOrCtor: string | (...empty) => mixed): void;
                                 ^^^^^^ [2]
-   <BUILTINS>/node.js:2976:24
-   2976|   emitWarning(warning: string, type: string, codeOrCtor: string | (...empty) => mixed): void;
+   <BUILTINS>/node.js:3139:24
+   3139|   emitWarning(warning: string, type: string, codeOrCtor: string | (...empty) => mixed): void;
                                 ^^^^^^ [3]
-   <BUILTINS>/node.js:2978:14
-   2978|     warning: string,
+   <BUILTINS>/node.js:3141:14
+   3141|     warning: string,
                       ^^^^^^ [4]
 
 
@@ -2000,11 +2000,11 @@ References:
    process/emitWarning.js:12:29
      12| process.emitWarning("blah", 42); // error
                                      ^^ [1]
-   <BUILTINS>/node.js:2976:38
-   2976|   emitWarning(warning: string, type: string, codeOrCtor: string | (...empty) => mixed): void;
+   <BUILTINS>/node.js:3139:38
+   3139|   emitWarning(warning: string, type: string, codeOrCtor: string | (...empty) => mixed): void;
                                               ^^^^^^ [2]
-   <BUILTINS>/node.js:2979:11
-   2979|     type: string,
+   <BUILTINS>/node.js:3142:11
+   3142|     type: string,
                    ^^^^^^ [3]
 
 
@@ -2020,8 +2020,8 @@ References:
    process/emitWarning.js:13:37
      13| process.emitWarning("blah", "blah", 42); // error
                                              ^^ [1]
-   <BUILTINS>/node.js:2980:11
-   2980|     code: string,
+   <BUILTINS>/node.js:3143:11
+   3143|     code: string,
                    ^^^^^^ [2]
 
 
@@ -2035,8 +2035,8 @@ Cannot cast `process.emitWarning(...)` to string because undefined [1] is incomp
           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/node.js:2974:41
-   2974|   emitWarning(warning: string | Error): void;
+   <BUILTINS>/node.js:3137:41
+   3137|   emitWarning(warning: string | Error): void;
                                                  ^^^^ [1]
    process/emitWarning.js:14:31
      14| (process.emitWarning("blah"): string); // error
@@ -2101,8 +2101,8 @@ References:
    process/nextTick.js:27:3
      27|   (a: string, b: number, c: boolean) => {} // Error: too few arguments
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/node.js:3003:21
-   3003|   nextTick: <T>(cb: (...T) => mixed, ...T) => void;
+   <BUILTINS>/node.js:3166:21
+   3166|   nextTick: <T>(cb: (...T) => mixed, ...T) => void;
                              ^^^^^^^^^^^^^^^ [2]
 
 
@@ -2116,8 +2116,8 @@ Cannot cast `process.allowedNodeEnvironmentFlags` to string because `Set` [1] is
           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/node.js:2963:32
-   2963|   allowedNodeEnvironmentFlags: Set<string>;
+   <BUILTINS>/node.js:3126:32
+   3126|   allowedNodeEnvironmentFlags: Set<string>;
                                         ^^^^^^^^^^^ [1]
    process/process.js:5:39
       5| (process.allowedNodeEnvironmentFlags: string); // error
