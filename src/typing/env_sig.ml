@@ -21,9 +21,9 @@ module type S = sig
 
   val new_env : bool
 
-  val in_toplevel_scope : unit -> bool
+  val in_toplevel_scope : Context.t -> bool
 
-  val in_global_scope : unit -> bool
+  val in_global_scope : Context.t -> bool
 
   val peek_env : unit -> t
 
@@ -31,22 +31,20 @@ module type S = sig
 
   val string_of_env : Context.t -> t -> string
 
-  val var_scope_kind : unit -> Scope.var_scope_kind
+  val var_scope_kind : Context.t -> Scope.var_scope_kind
 
-  val in_async_scope : unit -> bool
+  val in_async_scope : Context.t -> bool
 
-  val in_generator_scope : unit -> bool
-
-  val in_predicate_scope : unit -> bool
+  val in_predicate_scope : Context.t -> bool
 
   val get_global_value_type : Context.t -> Reason.name -> Reason.t -> Type.t
 
   val find_entry :
     Context.t -> Reason.name -> ?desc:Reason.reason_desc -> ALoc.t -> Scope.t * Entry.t
 
-  val push_var_scope : Scope.t -> unit
+  val push_var_scope : Context.t -> Scope.t -> Scope.var_scope_kind
 
-  val pop_var_scope : unit -> unit
+  val pop_var_scope : Context.t -> Scope.var_scope_kind -> unit
 
   val in_lex_scope : (unit -> 'a) -> 'a
 

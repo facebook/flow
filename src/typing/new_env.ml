@@ -81,25 +81,41 @@ module New_env = struct
 
   let env_depth = Old_env.env_depth
 
+  let set_scope_kind cx k =
+    let env = Context.environment cx in
+    let old = env.Loc_env.scope_kind in
+    Context.set_environment cx { env with Loc_env.scope_kind = k };
+    old
+
   let in_lex_scope = Old_env.in_lex_scope
 
-  let pop_var_scope = Old_env.pop_var_scope
+  let pop_var_scope cx kind =
+    Old_env.pop_var_scope cx kind;
+    let (_ : Scope.var_scope_kind) = set_scope_kind cx kind in
+    ()
 
-  let push_var_scope = Old_env.push_var_scope
+  let push_var_scope cx scope =
+    let kind =
+      match scope.Scope.kind with
+      | Scope.VarScope kind -> kind
+      | _ -> Utils_js.assert_false "push_var_scope on non-var scope"
+    in
+    let (_ : Scope.var_scope_kind) = Old_env.push_var_scope cx scope in
+    set_scope_kind cx kind
 
-  let in_predicate_scope = Old_env.in_predicate_scope
+  let is_var_kind cx k = (Context.environment cx).Loc_env.scope_kind = k
 
-  let in_generator_scope = Old_env.in_generator_scope
+  let in_predicate_scope cx = is_var_kind cx Scope.Predicate
 
-  let in_async_scope = Old_env.in_async_scope
+  let in_async_scope cx = is_var_kind cx Scope.Async || is_var_kind cx Scope.AsyncGenerator
 
-  let var_scope_kind = Old_env.var_scope_kind
+  let var_scope_kind cx = (Context.environment cx).Loc_env.scope_kind
 
   let string_of_env = Old_env.string_of_env
 
-  let in_global_scope = Old_env.in_global_scope
+  let in_global_scope cx = is_var_kind cx Scope.Global
 
-  let in_toplevel_scope = Old_env.in_toplevel_scope
+  let in_toplevel_scope cx = is_var_kind cx Scope.Module
 
   let is_provider = Old_env.is_provider
 
@@ -914,6 +930,12 @@ module New_env = struct
       Flow_js.unify cx ~use_op:unknown_use w t
     in
     initialize_this ();
+    let kind =
+      match scope.Scope.kind with
+      | Scope.VarScope kind -> kind
+      | _ -> failwith "Unexpected lexical scope"
+    in
+    let env = { env with Loc_env.scope_kind = kind } in
     Context.set_environment cx env
 
   let find_entry cx name ?desc loc =

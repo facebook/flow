@@ -379,7 +379,7 @@ let make ccx metadata file aloc_table phase =
     require_map = ALocMap.empty;
     trust_constructor = Trust.literal_trust;
     declare_module_ref = None;
-    environment = Loc_env.empty;
+    environment = Loc_env.empty Scope.Global;
     node_cache = Node_cache.empty;
   }
 

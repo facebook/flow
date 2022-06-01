@@ -239,7 +239,7 @@ struct
       Scope.fresh ~var_scope_kind ()
     in
     (* push the scope early so default exprs can reference earlier params *)
-    Env.push_var_scope function_scope;
+    let prev_scope_kind = Env.push_var_scope cx function_scope in
 
     let this_t =
       if Env.new_env then (
@@ -615,7 +615,7 @@ struct
         Flow.flow cx (maybe_exhaustively_checked, implicit_return)
     );
 
-    Env.pop_var_scope ();
+    Env.pop_var_scope cx prev_scope_kind;
 
     Env.update_env body_loc env;
 

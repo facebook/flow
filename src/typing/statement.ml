@@ -561,7 +561,7 @@ struct
         | ImportDeclaration.ImportTypeof -> true
         | ImportDeclaration.ImportValue -> false
       in
-      let is_global_lib_scope = File_key.is_lib_file (Context.file cx) && Env.in_global_scope () in
+      let is_global_lib_scope = File_key.is_lib_file (Context.file cx) && Env.in_global_scope cx in
       if is_global_lib_scope then
         Flow_js.add_output cx Error_message.(EToplevelLibraryImport decl_loc);
       let bind_import local_name (loc : ALoc.t) isType =
@@ -1207,7 +1207,7 @@ struct
         match argument with
         | None -> (VoidT.at loc |> with_trust literal_trust, None)
         | Some expr ->
-          if Env.in_predicate_scope () then
+          if Env.in_predicate_scope cx then
             let ((((_, t), _) as ast), p_map, n_map, _) =
               predicates_of_condition ~cond:OtherTest cx expr
             in
@@ -1995,7 +1995,7 @@ struct
         )
         module_scope;
 
-      Env.push_var_scope module_scope;
+      let prev_scope_kind = Env.push_var_scope cx module_scope in
       let excluded_symbols = Env.save_excluded_symbols () in
       Context.push_declare_module cx (Module_info.empty_cjs_module ());
 
@@ -2075,7 +2075,7 @@ struct
       Flow.flow_t cx (module_t, t);
 
       Context.pop_declare_module cx;
-      Env.pop_var_scope ();
+      Env.pop_var_scope cx prev_scope_kind;
       Env.restore_excluded_symbols excluded_symbols;
 
       ast
@@ -3561,7 +3561,7 @@ struct
           mk_function_expression cx ~hint reason ~needs_this_param:true ~general:tvar loc func
         | Some (name_loc, { Ast.Identifier.name; comments = _ }) ->
           let scope = Scope.fresh () in
-          Env.push_var_scope scope;
+          let prev_scope_kind = Env.push_var_scope cx scope in
           let name = OrdinaryName name in
           Env.bind_fun cx name tvar name_loc;
           let (t, func) =
@@ -3571,7 +3571,7 @@ struct
             Op (AssignVar { var = Some (mk_reason (RIdentifier name) loc); init = reason_of_t t })
           in
           Env.init_fun cx ~use_op name t name_loc;
-          Env.pop_var_scope ();
+          Env.pop_var_scope cx prev_scope_kind;
           (t, func)
       in
       Flow.flow_t cx (t, tvar);
@@ -3715,7 +3715,7 @@ struct
           in
           add_entry (OrdinaryName name) entry scope
         );
-        Env.push_var_scope scope;
+        let prev_scope_kind = Env.push_var_scope cx scope in
         let (class_t, c) = mk_class cx class_loc ~name_loc ~general:tvar reason c in
         (* mk_class above ensures that the function name in the inline declaration
            has the same type as its references inside the class.
@@ -3737,7 +3737,7 @@ struct
           in
           Env.init_implicit_let kind cx ~use_op name ~has_anno:false class_t name_loc
         );
-        Env.pop_var_scope ();
+        Env.pop_var_scope cx prev_scope_kind;
         Flow.flow_t cx (class_t, tvar);
         ((class_loc, class_t), Class c)
       | None ->
@@ -3783,7 +3783,7 @@ struct
       (* widen yield with the element type of the delegated-to iterable *)
       let targs = [yield; ret; next] in
       let (async, iterable_reason) =
-        if Env.in_async_scope () then
+        if Env.in_async_scope cx then
           (true, mk_reason (RCustom "async iteration expected on AsyncIterable") loc)
         else
           (false, mk_reason (RCustom "iteration expected on Iterable") loc)
@@ -6074,7 +6074,7 @@ struct
      comments;
     } ->
       let wr_ctx =
-        match (_object, Env.var_scope_kind ()) with
+        match (_object, Env.var_scope_kind cx) with
         | ((_, This _), Scope.Ctor) -> ThisInCtor
         | _ -> Normal
       in

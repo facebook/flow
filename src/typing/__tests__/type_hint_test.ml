@@ -115,7 +115,7 @@ end = struct
         cx
         (ALoc.none, { Flow_ast.Program.statements = []; comments = None; all_comments = [] })
     in
-    let env = Loc_env.with_info info in
+    let env = Loc_env.with_info Scope.Global info in
     Context.set_environment cx env;
     New_env.init_env cx (Scope.fresh ~var_scope_kind:Scope.Global ());
     let ((_, t), _) = Annot.convert cx Subst_name.Map.empty t_ast in

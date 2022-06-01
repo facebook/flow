@@ -99,9 +99,9 @@ module Env : Env_sig.S = struct
   (* get top var scope of current env *)
   let peek_var_scope () = top_var_scope (peek_env ())
 
-  let in_toplevel_scope () = Scope.is_toplevel (peek_var_scope ())
+  let in_toplevel_scope _ = Scope.is_toplevel (peek_var_scope ())
 
-  let in_global_scope () = Scope.is_global (peek_var_scope ())
+  let in_global_scope _ = Scope.is_global (peek_var_scope ())
 
   let string_of_env cx env =
     spf "[ %s ]" (String.concat ";\n" (Base.List.map ~f:(Debug_js.string_of_scope cx) env))
@@ -126,7 +126,7 @@ module Env : Env_sig.S = struct
   (* clone the given scope stack (snapshots entry maps) *)
   let clone_env scopes = Base.List.map ~f:Scope.clone scopes
 
-  let var_scope_kind () =
+  let var_scope_kind _ =
     let scope = peek_var_scope () in
     match scope.kind with
     | VarScope k -> k
@@ -138,21 +138,14 @@ module Env : Env_sig.S = struct
     | VarScope func_kind -> func_kind = k
     | _ -> false
 
-  let in_async_scope () =
+  let in_async_scope _ =
     match var_scope_kind () with
     | Async
     | AsyncGenerator ->
       true
     | _ -> false
 
-  let in_generator_scope () =
-    match var_scope_kind () with
-    | Generator
-    | AsyncGenerator ->
-      true
-    | _ -> false
-
-  let in_predicate_scope () = is_func_kind Predicate (peek_var_scope ())
+  let in_predicate_scope _ = is_func_kind Predicate (peek_var_scope ())
 
   (* whole env *)
 
@@ -164,18 +157,20 @@ module Env : Env_sig.S = struct
   (* push a new var scope into the environment.
      current env state is stored to cx under scope id *)
   (* TODO maintain changelist here too *)
-  let push_var_scope scope =
+  let push_var_scope _ scope =
     (match scope.kind with
     | VarScope _ -> ()
     | _ -> assert_false "push_var_scope on non-var scope");
     scopes := scope :: !scopes;
-    Changeset.Global.push ()
+    Changeset.Global.push ();
+    (* below is ignored, only needed for matching types used by the new env *)
+    Ordinary
 
   (* --- *)
 
   (* pop a var scope from the environment.
      note: may require popping accumulated lex scopes *)
-  let pop_var_scope () =
+  let pop_var_scope _ _ =
     match !scopes with
     | { kind = VarScope _; _ } :: tail_scopes ->
       scopes := tail_scopes;
@@ -262,8 +257,9 @@ module Env : Env_sig.S = struct
     set_exclude_symbols exclude_syms;
     havoc_current_activation ();
     let global_scope = Scope.fresh ~var_scope_kind:Global () in
-    push_var_scope global_scope;
-    push_var_scope module_scope
+    let (_ : Scope.var_scope_kind) = push_var_scope cx global_scope in
+    let (_ : Scope.var_scope_kind) = push_var_scope cx module_scope in
+    ()
 
   let save_excluded_symbols () =
     let ex = !exclude_symbols in

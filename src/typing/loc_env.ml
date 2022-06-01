@@ -22,6 +22,7 @@ type t = {
   class_instance_super_types: Type.annotated_or_inferred ALocMap.t;
   class_static_super_types: Type.annotated_or_inferred ALocMap.t;
   return_hint: Type.t Hint_api.hint;
+  scope_kind: Scope.var_scope_kind;
   resolved: ALocSet.t;
   var_info: Env_api.env_info;
 }
@@ -97,7 +98,7 @@ let find_write
 
 let find_ordinary_write env loc = find_write env Env_api.OrdinaryNameLoc loc
 
-let empty =
+let empty scope_kind =
   {
     types = ALocMap.empty;
     function_or_global_this_types = ALocMap.empty;
@@ -109,6 +110,9 @@ let empty =
     resolved = ALocSet.empty;
     tparams = ALocMap.empty;
     return_hint = Hint_api.Hint_None;
+    scope_kind;
   }
 
-let with_info var_info = { empty with var_info }
+let with_info scope_kind var_info =
+  let env = empty scope_kind in
+  { env with var_info }

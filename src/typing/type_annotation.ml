@@ -165,7 +165,7 @@ module Make
     )
 
   let mk_eval_id cx loc =
-    if Env.in_toplevel_scope () then
+    if Env.in_toplevel_scope cx then
       Context.make_aloc_id cx loc |> Eval.id_of_aloc_id
     else
       Eval.generate_id ()
@@ -1420,7 +1420,7 @@ module Make
     end in
     let mk_object cx loc ~src_loc ~exact call dict pmap proto =
       let pmap =
-        if src_loc && Env.in_toplevel_scope () then
+        if src_loc && Env.in_toplevel_scope cx then
           Context.make_source_property_map cx pmap loc
         else
           Context.generate_property_map cx pmap
