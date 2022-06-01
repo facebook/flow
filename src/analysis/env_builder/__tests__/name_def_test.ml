@@ -102,6 +102,7 @@ let string_of_source = function
   | TypeParam (loc, _) -> spf "tparam %s" (ALoc.debug_to_string loc)
   | Enum (loc, _) -> spf "enum %s" (ALoc.debug_to_string loc)
   | Interface _ -> "interface"
+  | GeneratorNext _ -> "next"
   | Import { import_kind; source; import; source_loc = _ } ->
     spf "import %s%s from %s" (string_of_import_kind import_kind) (string_of_import import) source
 

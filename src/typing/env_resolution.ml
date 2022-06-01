@@ -354,6 +354,50 @@ module Make (Env : Env_sig.S) (Statement : Statement_sig.S with module Env := En
     Node_cache.set_expression cache exp;
     (t, unknown_use)
 
+  let resolve_generator_next cx reason gen =
+    let open TypeUtil in
+    match gen with
+    | None ->
+      ( VoidT.make (replace_desc_reason RUnannotatedNext reason) |> with_trust bogus_trust,
+        unknown_use
+      )
+    | Some { tparams; return_annot; async } ->
+      let return_t =
+        let cache = Context.node_cache cx in
+        let tparams_map = mk_tparams_map cx tparams in
+        let (t, anno) = Type_annotation.mk_type_available_annotation cx tparams_map return_annot in
+        Node_cache.set_annotation cache anno;
+        t
+      in
+      let gen_name =
+        OrdinaryName
+          ( if async then
+            "AsyncGenerator"
+          else
+            "Generator"
+          )
+      in
+      let next_t =
+        Tvar.mk_where cx reason (fun next ->
+            let t =
+              Flow_js.get_builtin_typeapp
+                cx
+                reason
+                gen_name
+                [
+                  Tvar.mk cx (replace_desc_reason (RCustom "unused yield") reason);
+                  Tvar.mk cx (replace_desc_reason (RCustom "unused return") reason);
+                  next;
+                ]
+            in
+            let t =
+              Flow_js.reposition cx ~desc:(desc_of_t t) (reason_of_t return_t |> aloc_of_reason) t
+            in
+            Flow_js.flow_t cx (t, return_t)
+        )
+      in
+      (next_t, unknown_use)
+
   let resolve cx id_loc (def, def_reason) =
     let (t, use_op, resolved) =
       let as_resolved (t, use_op) = (t, use_op, true) in
@@ -380,6 +424,7 @@ module Make (Env : Env_sig.S) (Statement : Statement_sig.S with module Env := En
       | DeclaredClass (loc, class_) -> as_resolved @@ resolve_declare_class cx loc class_
       | Enum enum -> as_resolved @@ resolve_enum cx id_loc def_reason enum
       | TypeParam param -> as_resolved @@ resolve_type_param cx id_loc param
+      | GeneratorNext gen -> as_resolved @@ resolve_generator_next cx def_reason gen
     in
     Debug_js.Verbose.print_if_verbose_lazy
       cx

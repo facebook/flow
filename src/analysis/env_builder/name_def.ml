@@ -50,6 +50,12 @@ type import =
   | Namespace
   | Default of string
 
+type generator_annot = {
+  tparams: ALocSet.t;
+  return_annot: (ALoc.t, ALoc.t) Ast.Type.annotation;
+  async: bool;
+}
+
 type def =
   | Binding of binding
   | ChainExpression of (ALoc.t, ALoc.t) Ast.Expression.t
@@ -86,6 +92,7 @@ type def =
       source: string;
       source_loc: ALoc.t;
     }
+  | GeneratorNext of generator_annot option
 
 type map = (def * ALoc.t virtual_reason) ALocMap.t
 
@@ -295,8 +302,7 @@ class def_finder env_entries providers =
       super#catch_clause_pattern pat
 
     method private visit_function_expr ~func_hint loc expr =
-      let open Ast.Function in
-      let { id; async; generator; sig_loc; _ } = expr in
+      let { Ast.Function.id; async; generator; sig_loc; _ } = expr in
       this#in_new_tparams_env (fun () ->
           this#visit_function ~func_hint expr;
           match id with
@@ -313,8 +319,7 @@ class def_finder env_entries providers =
       expr
 
     method! function_declaration loc expr =
-      let open Ast.Function in
-      let { id; async; generator; sig_loc; _ } = expr in
+      let { Ast.Function.id; async; generator; sig_loc; _ } = expr in
       this#in_new_tparams_env (fun () ->
           this#visit_function ~func_hint:Hint_None expr;
           match id with
@@ -334,13 +339,12 @@ class def_finder env_entries providers =
       expr
 
     method private visit_function ~func_hint expr =
-      let open Ast.Function in
       let {
-        id = _;
-        params = (_, { Params.params = params_list; rest; comments = _; this_ = _ });
+        Ast.Function.id = _;
+        params = (_, { Ast.Function.Params.params = params_list; rest; comments = _; this_ = _ });
         body;
-        async = _;
-        generator = _;
+        async;
+        generator;
         predicate;
         return;
         tparams = fun_tparams;
@@ -361,9 +365,29 @@ class def_finder env_entries providers =
           )
         rest;
       ignore @@ this#type_annotation_hint return;
-      (match body with
-      | Ast.Function.BodyBlock (loc, block) -> ignore @@ this#block loc block
-      | Ast.Function.BodyExpression expr -> this#visit_expression ~hint:Hint_None expr);
+
+      let body_loc =
+        match body with
+        | Ast.Function.BodyBlock (loc, block) ->
+          ignore @@ this#block loc block;
+          loc
+        | Ast.Function.BodyExpression ((loc, _) as expr) ->
+          this#visit_expression ~hint:Hint_None expr;
+          loc
+      in
+
+      begin
+        if generator then
+          let (loc, gen) =
+            match return with
+            | Ast.Type.Missing loc -> (loc, None)
+            | Ast.Type.Available ((loc, _) as return_annot) ->
+              (loc, Some { tparams; return_annot; async })
+          in
+
+          this#add_binding loc (mk_reason (RCustom "next") body_loc) (GeneratorNext gen)
+      end;
+
       Base.Option.iter predicate ~f:(fun (_, { Ast.Type.Predicate.kind; comments = _ }) ->
           match kind with
           | Ast.Type.Predicate.Inferred -> ()

@@ -144,6 +144,13 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) = struct
           Base.List.iter ~f:(this#add ~why:loc) writes;
           id
 
+        (* In order to resolve a def containing a variable read, the writes that the
+           Name_resolver determines reach the variable must be resolved *)
+        method! yield loc yield =
+          let writes = this#find_writes ~for_type:false loc in
+          Base.List.iter ~f:(this#add ~why:loc) writes;
+          super#yield loc yield
+
         (* In order to resolve a def containing a variable write, the
            write itself should first be resolved *)
         method! pattern_identifier ?kind:_ ((loc, _) as id) =
@@ -188,8 +195,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) = struct
 
         (* For classes/functions that are known to be fully annotated, we skip property bodies *)
         method function_def ~fully_annotated (expr : ('loc, 'loc) Ast.Function.t) =
-          let open Ast.Function in
-          let { params; body; predicate; return; tparams; _ } = expr in
+          let { Ast.Function.params; body; predicate; return; tparams; _ } = expr in
           let open Flow_ast_mapper in
           let _ = this#function_params params in
           let _ =
@@ -456,6 +462,8 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) = struct
       | OpaqueType (_, alias) -> depends_of_opaque alias
       | TypeParam tparam -> depends_of_tparam tparam
       | Interface (_, inter) -> depends_of_interface inter
+      | GeneratorNext (Some { return_annot; _ }) -> depends_of_annotation return_annot ALocMap.empty
+      | GeneratorNext None -> ALocMap.empty
       | Enum _ ->
         (* Enums don't contain any code or type references, they're literal-like *) ALocMap.empty
       | Import _ -> (* same with all imports *) ALocMap.empty
@@ -472,6 +480,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) = struct
       in
       function
       | Binding bind -> bind_loop bind
+      | GeneratorNext _
       | TypeAlias _
       | OpaqueType _
       | TypeParam _
