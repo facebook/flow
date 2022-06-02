@@ -97,7 +97,7 @@ module type S = sig
 
   val make_pp : (Format.formatter -> elt -> unit) -> Format.formatter -> t -> unit
 
-  val of_increasing_iterator_unchecked : (unit -> elt) -> int -> t
+  val of_array_unchecked : 'a array -> ('a -> elt) -> t
 end
 
 type 'elt t0 =
@@ -188,23 +188,29 @@ let create l v r =
         );
     }
 
-let rec of_increasing_iterator_unchecked f = function
-  | 0 -> Empty
-  | 1 ->
-    let v = f () in
-    Leaf v
-  | n ->
-    let lenl = n lsr 1 in
-    let lenr = n - lenl - 1 in
-    let l = of_increasing_iterator_unchecked f lenl in
-    let v = f () in
-    let r = of_increasing_iterator_unchecked f lenr in
-    Node { l; v; r; h = height l + 1 }
 
 (* Same as create, but performs one step of rebalancing if necessary.
    Assumes l and r balanced and | height l - height r | <= 3.
    Inline expansion of create for better speed in the most frequent case
    where no rebalancing is required. *)
+external (.!()) : 'a array -> int -> 'a = "%array_unsafe_get"
+
+let rec of_array_unchecked_aux arr off n f : _ t0=
+  match n with 
+  | 0 -> Empty
+  | 1 -> 
+    let v = f arr.!(off) in 
+    Leaf v
+  | _ -> (* n >= 2*)  
+    let lenl = n lsr 1 in
+    let lenr = n - lenl - 1 in
+    let l = of_array_unchecked_aux arr off lenl f in
+    let v = f arr.!(off + lenl) in
+    let r = of_array_unchecked_aux arr (off + lenl + 1) lenr f in
+    Node { l; v;  r; h = height l + 1 }
+let of_array_unchecked arr f =
+  let len = Array.length arr in 
+  of_array_unchecked_aux arr 0 len f 
 
 let bal l v r =
   let hl = height l in
@@ -817,5 +823,6 @@ module Make (Ord : OrderedType) : S with type elt = Ord.t = struct
     | _ -> Format.fprintf fmt " ");
     Format.fprintf fmt "@,}@]"
 
-  let of_increasing_iterator_unchecked = of_increasing_iterator_unchecked
+
+  let of_array_unchecked = of_array_unchecked
 end

@@ -22,7 +22,7 @@
  *
  * When storing, we convert balanced trees to arrays, ensuring that the arrays
  * are sorted with respect to the keys. During load, we can use the unsafe API
- * `of_increasing_iterator_unchecked` to efficiently build maps.
+ * `of_array_unchecked` to efficiently build maps.
  *
  * ## Balanced trees sorted by absolute path
  *
@@ -417,37 +417,19 @@ module Load = struct
     | Haste_module name -> Modulename.String name
     | File_module key -> Modulename.Filename (load_key env key)
 
-  let load_resolved_module env = function
-    | Ok m -> Ok (load_module env m)
-    | Error _ as err -> err
-
-  let load_resolved_modules env resolved_modules =
-    let i = ref 0 in
-    let f () =
-      let (mref, m) = resolved_modules.(!i) in
-      incr i;
-      (mref, load_resolved_module env m)
-    in
-    SMap.of_increasing_iterator_unchecked f (Array.length resolved_modules)
-
-  let load_phantom_dependencies env phantom_dependencies =
-    let i = ref 0 in
-    let f () =
-      let path = load_module env phantom_dependencies.(!i) in
-      incr i;
-      path
-    in
-    MSet.of_increasing_iterator_unchecked f (Array.length phantom_dependencies)
 
   let load_parse options dirty_modules env parsed =
-    let i = ref 0 in
-    let f () =
-      let (file_key, hash, haste_name, parse) = parsed.(!i) in
-      incr i;
-      let { exports; resolved_modules; phantom_dependencies } = parse in
+    FSet.of_array_unchecked parsed (fun (file_key, hash, haste_name, {exports; resolved_modules; phantom_dependencies}) ->
       let file_key = load_key env file_key in
-      let resolved_modules = load_resolved_modules env resolved_modules in
-      let phantom_dependencies = load_phantom_dependencies env phantom_dependencies in
+      let resolved_modules : (Modulename.t, string) result SMap.t =  
+        SMap.of_array_unchecked resolved_modules 
+           (fun (mref, m)  -> 
+            match m with 
+            | Error _ as err -> (mref,err)
+            | Ok m -> (mref, Ok (load_module env m : Modulename.t))) 
+      in 
+      let phantom_dependencies = 
+        MSet.of_array_unchecked phantom_dependencies (fun m -> load_module env m) in
       let resolved_requires =
         Parsing_heaps.mk_resolved_requires ~resolved_modules ~phantom_dependencies
       in
@@ -462,20 +444,15 @@ module Load = struct
       in
       dirty_modules := MSet.union ms !dirty_modules;
       file_key
-    in
-    FSet.of_increasing_iterator_unchecked f (Array.length parsed)
+   )
 
   let load_unparsed options dirty_modules env unparsed =
-    let i = ref 0 in
-    let f () =
-      let (file_key, hash, haste_name) = unparsed.(!i) in
-      incr i;
+    FSet.of_array_unchecked unparsed (fun (file_key, hash, haste_name) ->
       let file_key = load_key env file_key in
       let ms = Parsing_heaps.From_saved_state.add_unparsed options file_key hash haste_name in
       dirty_modules := MSet.union ms !dirty_modules;
       file_key
-    in
-    FSet.of_increasing_iterator_unchecked f (Array.length unparsed)
+    )
 
   let load_errs env errs =
     let map_err =
@@ -487,42 +464,22 @@ module Load = struct
       in
       Flow_error.map_loc_of_error f
     in
-    let i = ref 0 in
-    let f () =
-      let err = map_err errs.(!i) in
-      incr i;
-      err
-    in
-    Flow_error.ErrorSet.of_increasing_iterator_unchecked f (Array.length errs)
+    Flow_error.ErrorSet.of_array_unchecked errs map_err
 
-  let load_file_errs env file_errs =
-    let i = ref 0 in
-    let f () =
-      let (file_key, errs) = file_errs.(!i) in
-      incr i;
-      (load_key env file_key, load_errs env errs)
-    in
-    FMap.of_increasing_iterator_unchecked f (Array.length file_errs)
-
+  let load_file_errs env file_errs =    
+    FMap.of_array_unchecked file_errs (fun (file_key,errs) -> 
+      load_key env file_key, load_errs env errs
+  )
+  
   let load_deps env deps =
-    let i = ref 0 in
-    let f () =
-      let key = load_key env deps.(!i) in
-      incr i;
-      key
-    in
-    FSet.of_increasing_iterator_unchecked f (Array.length deps)
+    FSet.of_array_unchecked deps (fun dep -> load_key env dep)
 
   let load_dependency_info env graph =
-    let i = ref 0 in
-    let f () =
-      let (file_key, sig_deps, impl_deps) = graph.(!i) in
-      incr i;
-      let sig_deps = load_deps env sig_deps in
-      let impl_deps = load_deps env impl_deps in
-      (load_key env file_key, (sig_deps, impl_deps))
-    in
-    FMap.of_increasing_iterator_unchecked f (Array.length graph) |> Dependency_info.of_map
+      FMap.of_array_unchecked graph (fun (file_key, sig_deps, impl_deps) -> 
+        let sig_deps = load_deps env sig_deps in
+        let impl_deps = load_deps env impl_deps in
+        (load_key env file_key, (sig_deps, impl_deps))
+        )|> Dependency_info.of_map
 
   let load_saved_state ~options ~profiling saved_state =
     let root = Path.to_string (Options.root options) in
@@ -577,15 +534,9 @@ module Load = struct
     let ordered_non_flowlib_libs = List.rev_map (load_path env) rev_non_flowlib_libs in
 
     let node_modules_containers =
-      let i = ref 0 in
-      let f () =
-        let (container, node_modules) = node_modules_containers.(!i) in
-        incr i;
-        (load_path env container, node_modules)
-      in
-      SMap.of_increasing_iterator_unchecked f (Array.length node_modules_containers)
+      SMap.of_array_unchecked node_modules_containers (fun (container, node_modules) ->
+        (load_path env container, node_modules))
     in
-
     let%lwt dependency_info =
       Profiling_js.with_timer_lwt profiling ~timer:"LoadDependencyInfo" ~f:(fun () ->
           Lwt.return (load_dependency_info env dependency_graph)
