@@ -39,9 +39,9 @@ module Hash_key = struct
   let hash (x : t) = 
     match x with 
     | File_key.LibFile x
-    | SourceFile x
-    | JsonFile x
-    | ResourceFile x -> string_hash x
+    | File_key.SourceFile x
+    | File_key.JsonFile x
+    | File_key.ResourceFile x -> string_hash x
 end
 module FilenameGraph = Graph.Make (FilenameSet) (FilenameMap) (Hash_key)
 
