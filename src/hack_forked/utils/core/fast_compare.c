@@ -20,6 +20,7 @@
  */
 
 #include <caml/mlvalues.h>
+#include <caml/hash.h>
 #include <string.h>
 #define CAML_NAME_SPACE
 #define INIT_SIZE 8
@@ -228,4 +229,21 @@ CAMLprim value caml_fast_generic_compare(value v1, value v2) {
     return res;
   }
   return EQUAL;
+}
+
+#define FINAL_MIX(h) \
+  h ^= h >> 16; \
+  h *= 0x85ebca6b; \
+  h ^= h >> 13; \
+  h *= 0xc2b2ae35; \
+  h ^= h >> 16;
+
+  
+// Not needed when we upgrade to 4.14
+CAMLprim value caml_string_fast_hash(value string)
+{
+  uint32_t h = 0;
+  h = caml_hash_mix_string (h, string);
+  FINAL_MIX(h);
+  return Val_int(h & 0x3FFFFFFFU);
 }

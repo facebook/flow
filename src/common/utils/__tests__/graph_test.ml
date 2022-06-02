@@ -6,7 +6,13 @@
  *)
 
 open OUnit2
-module StringGraph = Graph.Make (SSet) (SMap)
+
+module String = struct 
+  include String
+  let hash = Hashtbl.hash
+end
+
+module StringGraph = Graph.Make (SSet) (SMap) (String)
 
 let smap_equal = SMap.equal SSet.equal
 

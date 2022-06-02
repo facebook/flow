@@ -32,7 +32,18 @@ module FilenameMap = struct
   let show pp_data x = Format.asprintf "%a" (pp pp_data) x
 end
 
-module FilenameGraph = Graph.Make (FilenameSet) (FilenameMap)
+external string_hash : string -> int = "caml_string_fast_hash" [@@noalloc]
+module Hash_key = struct 
+  type t = File_key.t 
+  let equal = File_key.equal
+  let hash (x : t) = 
+    match x with 
+    | File_key.LibFile x
+    | SourceFile x
+    | JsonFile x
+    | ResourceFile x -> string_hash x
+end
+module FilenameGraph = Graph.Make (FilenameSet) (FilenameMap) (Hash_key)
 
 let debug_string_of_filename_set set =
   set
