@@ -16,7 +16,7 @@
 #include <caml/mlvalues.h>
 
 #include <lz4.h>
-
+#include <lz4hc.h>
 CAMLprim value marshal_and_compress_stub(value data) {
   CAMLparam1(data);
   CAMLlocal2(result, compressed_data);
@@ -41,11 +41,12 @@ CAMLprim value marshal_and_compress_stub(value data) {
 
   size_t max_compression_size = LZ4_compressBound(uncompressed_size);
   char* compressed_value = caml_stat_alloc(max_compression_size);
-  size_t compressed_size = LZ4_compress_default(
+  size_t compressed_size = LZ4_compress_HC(
       marshaled_value,
       compressed_value,
       uncompressed_size,
-      max_compression_size);
+      max_compression_size,
+      LZ4HC_CLEVEL_DEFAULT);
   if (compressed_size == 0) {
     caml_failwith("LZ4 failed to compress");
   }
