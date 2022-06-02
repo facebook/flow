@@ -51,6 +51,7 @@ let main (module Runnable : Codemod_runner.RUNNABLE) codemod_flags () =
     exit 64 (* EX_USAGE *)
   );
   let flowconfig_name = base_flags.CommandUtils.Base_flags.flowconfig_name in
+  (* Invariant: root is applied [realpath] to make it absolute *)
   let root =
     match root with
     | None -> CommandUtils.guess_root flowconfig_name (Some (List.hd filenames))
