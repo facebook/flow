@@ -395,13 +395,37 @@ module Load = struct
     fun fd ->
       read_version fd (Bytes.create saved_state_version_length) 0 saved_state_version_length
 
+  let is_unix = Sys.os_type = "Unix"    
+
+  let [@inline] is_implicit n len =
+  match len with
+  | 0 -> true
+  | _ -> 
+    let c = String.unsafe_get n 0 in 
+    c <> '/' && c <> '.'
+  let hack_path_load root curpath  path_len =
+      let l1 = String.length root  in
+      let s = Bytes.create (l1 + path_len + 1) in
+      String.unsafe_blit root 0 s 0 l1;
+      Bytes.unsafe_set s l1  '/';
+      String.unsafe_blit curpath 0 s (l1 + 1) path_len;
+      Bytes.unsafe_to_string s
+      
+
+
   let mk_env root =
     let absolute_path = Files.absolute_path root in
     fun path ->
       match path.absolute with
       | Some absolute_path -> absolute_path
       | None ->
-        let abs_path = absolute_path path.relative in
+        let relative = path.relative in 
+        let path_len = String.length relative in 
+        let abs_path =
+          if is_unix && is_implicit relative path_len then 
+            hack_path_load root relative path_len
+        else   
+          absolute_path relative in
         path.absolute <- Some abs_path;
         abs_path
 
