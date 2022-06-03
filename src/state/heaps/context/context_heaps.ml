@@ -26,11 +26,8 @@ module MasterContextHeap =
       let description = "MasterContext"
     end)
 
-let master_cx_ref : Context.master_context option ref = ref None
-
 let add_master ~audit master_cx =
   WorkerCancel.with_no_cancellations (fun () ->
-      master_cx_ref := Some master_cx;
       (Expensive.wrap MasterContextHeap.add) ~audit () master_cx
   )
 
@@ -47,16 +44,9 @@ module type READER = sig
 end
 
 let find_master ~reader:_ =
-  match !master_cx_ref with
+  match MasterContextHeap.get () with
   | Some master_cx -> master_cx
-  | None ->
-    begin
-      match MasterContextHeap.get () with
-      | Some master_cx ->
-        master_cx_ref := Some master_cx;
-        master_cx
-      | None -> raise (Key_not_found ("MasterContextHeap", "master context"))
-    end
+  | None -> raise (Key_not_found ("MasterContextHeap", "master context"))
 
 module Mutator_reader = struct
   type reader = Mutator_state_reader.t
