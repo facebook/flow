@@ -466,14 +466,12 @@ module Annotate_empty_object_command = struct
     let preserve_string_literals_level =
       Literals.[("always", Always); ("never", Never); ("auto", Auto)]
     in
+    let name = "annotate-empty-object" in
     {
-      CommandSpec.name = "annotate-empty-object-experimental";
+      CommandSpec.name;
       doc;
       usage =
-        Printf.sprintf
-          "Usage: %s codemod annotate-empty-object-experimental [OPTION]... [FILE]\n\n%s\n"
-          Utils_js.exe_name
-          doc;
+        Printf.sprintf "Usage: %s codemod %s [OPTION]... [FILE]\n\n%s\n" Utils_js.exe_name name doc;
       args =
         CommandSpec.ArgSpec.(
           empty

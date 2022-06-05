@@ -1,1 +1,1 @@
-cmd: codemod annotate-empty-object-experimental --strip-root --quiet --max-type-size 10 ./
+cmd: codemod annotate-empty-object --strip-root --quiet --max-type-size 10 ./

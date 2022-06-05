@@ -89,6 +89,7 @@ let mapper ~preserve_literals ~max_type_size ~default_any (cctx : Codemod_contex
       let open Call in
       let { callee; targs; arguments; comments } = expr in
       let open Member in
+      (* Matching `foo.reduce(_, {})`, with no type arg on `.reduce` *)
       match (callee, arguments, targs) with
       | ( ( ( _,
               Member { property = PropertyIdentifier (_, { Ast.Identifier.name = "reduce"; _ }); _ }
@@ -139,6 +140,7 @@ let mapper ~preserve_literals ~max_type_size ~default_any (cctx : Codemod_contex
     method! expression expr =
       let open Ast.Expression in
       match expr with
+      (* Matching expression `{}` *)
       | (loc, Object { Object.properties = []; _ }) ->
         let ty_result =
           Codemod_annotator.get_validated_ty
@@ -175,44 +177,43 @@ let mapper ~preserve_literals ~max_type_size ~default_any (cctx : Codemod_contex
     method! variable_declarator ~kind decl =
       let open Ast.Statement.VariableDeclaration.Declarator in
       let (loc, { id; init }) = decl in
-      match init with
-      | Some (oloc, Ast.Expression.Object Ast.Expression.Object.{ properties = []; comments = _ })
-        ->
-        let id =
-          match id with
-          | ( ploc,
-              Ast.Pattern.Identifier
-                Ast.Pattern.Identifier.{ annot = Ast.Type.Missing _ as annot; name; optional }
-            ) ->
-            let ty_result =
-              Codemod_annotator.get_validated_ty
-                cctx
-                ~preserve_literals
-                ~max_type_size:max_intermediate_type_size
-                ploc
-            in
-            (match ty_result with
-            | Ok (Ty.Obj ty) ->
-              let ty_obj = this#unsealed_annot oloc ty in
-              (match ty_obj.Ty.obj_kind with
-              | Ty.IndexedObj _ ->
-                let ty_obj = { ty_obj with Ty.obj_props = [] } in
-                (match Codemod_annotator.validate_ty cctx ~max_type_size (Ty.Obj ty_obj) with
-                | Ok ty ->
-                  let annot' = this#get_annot ploc (Ok ty) annot in
-                  ( ploc,
-                    Ast.Pattern.Identifier Ast.Pattern.Identifier.{ annot = annot'; name; optional }
-                  )
-                | Error errs ->
-                  this#report_errors loc errs;
-                  id)
-              | _ -> id)
-            | Ok _ -> id
+      (* Matching `const x = {};`, with no annotation *)
+      match (id, init) with
+      | ( ( ploc,
+            Ast.Pattern.Identifier
+              Ast.Pattern.Identifier.{ annot = Ast.Type.Missing _ as annot; name; optional }
+          ),
+          Some (oloc, Ast.Expression.Object Ast.Expression.Object.{ properties = []; comments = _ })
+        ) ->
+        let ty_result =
+          Codemod_annotator.get_validated_ty
+            cctx
+            ~preserve_literals
+            ~max_type_size:max_intermediate_type_size
+            ploc
+        in
+        (match ty_result with
+        | Ok (Ty.Obj ty) ->
+          let ty_obj = this#unsealed_annot oloc ty in
+          (match ty_obj.Ty.obj_kind with
+          | Ty.IndexedObj _ ->
+            let ty_obj = { ty_obj with Ty.obj_props = [] } in
+            (match Codemod_annotator.validate_ty cctx ~max_type_size (Ty.Obj ty_obj) with
+            | Ok ty ->
+              let annot' = this#get_annot ploc (Ok ty) annot in
+              let id =
+                ( ploc,
+                  Ast.Pattern.Identifier Ast.Pattern.Identifier.{ annot = annot'; name; optional }
+                )
+              in
+              (loc, { id; init })
             | Error errs ->
               this#report_errors loc errs;
-              id)
-          | _ -> id
-        in
-        (loc, { id; init })
+              super#variable_declarator ~kind decl)
+          | _ -> decl)
+        | Ok _ -> decl
+        | Error errs ->
+          this#report_errors loc errs;
+          super#variable_declarator ~kind decl)
       | _ -> super#variable_declarator ~kind decl
   end

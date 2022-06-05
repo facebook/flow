@@ -1,4 +1,4 @@
->>> test.js (#changes: 24)
+>>> indexers.js (#changes: 24)
 //@flow
 
 declare var key : string;
@@ -157,7 +157,7 @@ Stats:
 
 Errors:
   Missing annot./normalizer error:          0
-  Validation Error:                         3
+  Validation Error:                         4
   Import Error:
     Loc source none:                        0
     Parsing heaps get ast error:            0
