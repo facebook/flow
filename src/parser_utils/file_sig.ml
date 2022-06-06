@@ -440,7 +440,9 @@ struct
                 | ImportNamespaceSpecifier (_, (loc, { Ast.Identifier.name = local; comments = _ }))
                   ->
                   (match import_kind with
-                  | ImportType -> failwith "import type * is a parse error"
+                  | ImportType ->
+                    (* this is a parse error. ignore it. *)
+                    ()
                   | ImportTypeof -> set_ns local loc typesof_ns
                   | ImportValue -> set_ns local loc ns)
                 | ImportNamedSpecifiers named_specifiers ->
