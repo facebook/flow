@@ -1404,36 +1404,6 @@ module Statement
         []
       )
 
-  and extract_pattern_binding_names =
-    let rec fold acc =
-      let open Pattern in
-      function
-      | (_, Object { Object.properties; _ }) ->
-        List.fold_left
-          (fun acc prop ->
-            match prop with
-            | Object.Property (_, { Object.Property.pattern; _ })
-            | Object.RestElement (_, { RestElement.argument = pattern; comments = _ }) ->
-              fold acc pattern)
-          acc
-          properties
-      | (_, Array { Array.elements; _ }) ->
-        List.fold_left
-          (fun acc elem ->
-            match elem with
-            | Array.Element (_, { Array.Element.argument = pattern; default = _ })
-            | Array.RestElement (_, { RestElement.argument = pattern; comments = _ }) ->
-              fold acc pattern
-            | Array.Hole _ -> acc)
-          acc
-          elements
-      | (_, Identifier { Pattern.Identifier.name; _ }) -> name :: acc
-      | (_, Expression _) -> failwith "Parser error: No such thing as an expression pattern!"
-    in
-    List.fold_left fold
-
-  and extract_ident_name (_, { Identifier.name; comments = _ }) = name
-
   and export_specifiers ?(preceding_comma = true) env specifiers =
     match Peek.token env with
     | T_EOF
@@ -1449,12 +1419,8 @@ module Statement
               match Peek.token env with
               | T_IDENTIFIER { raw = "as"; _ } ->
                 Eat.token env;
-                let exported = identifier_name env in
-                record_export env exported;
-                Some exported
-              | _ ->
-                record_export env local;
-                None
+                Some (identifier_name env)
+              | _ -> None
             in
             { Statement.ExportNamedDeclaration.ExportSpecifier.local; exported })
           env
@@ -1483,7 +1449,6 @@ module Statement
           let open Statement.ExportDefaultDeclaration in
           let leading = leading @ Peek.comments env in
           let (default, ()) = with_loc (fun env -> Expect.token env T_DEFAULT) env in
-          record_export env (Flow_ast_utils.ident_of_source (default, "default"));
           let env = with_in_export_default true env in
           let (declaration, trailing) =
             if Peek.is_function env then
@@ -1545,11 +1510,6 @@ module Statement
               }
           | _ ->
             let (loc, type_alias) = with_loc (type_alias_helper ~leading:[]) env in
-            record_export
-              env
-              (Flow_ast_utils.ident_of_source
-                 (loc, extract_ident_name type_alias.Statement.TypeAlias.id)
-              );
             let type_alias = (loc, Statement.TypeAlias type_alias) in
             Statement.ExportNamedDeclaration
               {
@@ -1563,11 +1523,6 @@ module Statement
           (* export opaque type ... *)
           let open Statement.ExportNamedDeclaration in
           let (loc, opaque_t) = with_loc (opaque_type_helper ~leading:[]) env in
-          record_export
-            env
-            (Flow_ast_utils.ident_of_source
-               (loc, extract_ident_name opaque_t.Statement.OpaqueType.id)
-            );
           let opaque_t = (loc, Statement.OpaqueType opaque_t) in
           Statement.ExportNamedDeclaration
             {
@@ -1583,8 +1538,6 @@ module Statement
           if not (should_parse_types env) then error env Parse_error.UnexpectedTypeExport;
           let interface =
             let (loc, iface) = with_loc (interface_helper ~leading:[]) env in
-            let { Statement.Interface.id; _ } = iface in
-            record_export env (Flow_ast_utils.ident_of_source (loc, extract_ident_name id));
             (loc, Statement.InterfaceDeclaration iface)
           in
           Statement.ExportNamedDeclaration
@@ -1607,22 +1560,6 @@ module Statement
         | T_ASYNC
         | T_FUNCTION ->
           let stmt = Parse.statement_list_item env ~decorators in
-          let names =
-            let open Statement in
-            match stmt with
-            | (_, VariableDeclaration { VariableDeclaration.declarations; _ }) ->
-              List.fold_left
-                (fun names (_, declaration) ->
-                  let id = declaration.VariableDeclaration.Declarator.id in
-                  extract_pattern_binding_names names [id])
-                []
-                declarations
-            | (loc, ClassDeclaration { Class.id = Some id; _ })
-            | (loc, FunctionDeclaration { Function.id = Some id; _ }) ->
-              [Flow_ast_utils.ident_of_source (loc, extract_ident_name id)]
-            | _ -> failwith "Internal Flow Error! Unexpected export statement declaration!"
-          in
-          List.iter (record_export env) names;
           Statement.ExportNamedDeclaration
             {
               Statement.ExportNamedDeclaration.declaration = Some stmt;
@@ -1633,11 +1570,6 @@ module Statement
             }
         | T_ENUM when (parse_options env).enums ->
           let stmt = Parse.statement_list_item env ~decorators in
-          (match stmt with
-          | (loc, Statement.EnumDeclaration { Statement.EnumDeclaration.id; _ }) ->
-            let export = Flow_ast_utils.ident_of_source (loc, extract_ident_name id) in
-            record_export env export
-          | _ -> failwith "Internal Flow Error! Unexpected export statement declaration!");
           Statement.ExportNamedDeclaration
             {
               Statement.ExportNamedDeclaration.declaration = Some stmt;
