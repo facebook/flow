@@ -1657,7 +1657,7 @@ and nominal_type opts scope tbls xs loc name = function
 
 and generic_id =
   let rec finish tbls tyname = function
-    | [] -> tyname
+    | [] -> Ok tyname
     | (loc, id_loc, name) :: chain ->
       let id_loc = push_loc tbls id_loc in
       let tyname = Qualified { loc; id_loc; name; qualification = tyname } in
@@ -1673,17 +1673,20 @@ and generic_id =
       generic_id scope tbls xs chain qualification
     | G.Identifier.Unqualified id ->
       let (ref_loc, { Ast.Identifier.name; comments = _ }) = id in
-      (* Type params in scope should be handled before generic_id. *)
-      assert (not (SSet.mem name xs));
       let ref_loc = push_loc tbls ref_loc in
-      let tyname = Unqualified (Ref { ref_loc; name; scope; resolved = None }) in
-      finish tbls tyname chain
+      (* Type params in scope should be handled before generic_id. *)
+      if SSet.mem name xs then
+        Error ref_loc
+      else
+        let tyname = Unqualified (Ref { ref_loc; name; scope; resolved = None }) in
+        finish tbls tyname chain
 
 and generic opts scope tbls xs loc g =
   let module G = T.Generic in
   let { G.id; targs; comments = _ } = g in
-  let tyname = generic_id scope tbls xs [] id in
-  nominal_type opts scope tbls xs loc tyname targs
+  match generic_id scope tbls xs [] id with
+  | Ok tyname -> nominal_type opts scope tbls xs loc tyname targs
+  | Error loc -> Err (loc, CheckError)
 
 and maybe_special_generic opts scope tbls xs loc g =
   let module G = T.Generic in
@@ -1692,8 +1695,9 @@ and maybe_special_generic opts scope tbls xs loc g =
   | G.Identifier.Qualified (qloc, { G.Identifier.qualification; id }) ->
     let (id_loc, { Ast.Identifier.name; comments = _ }) = id in
     let qloc = push_loc tbls qloc in
-    let tyname = generic_id scope tbls xs [(qloc, id_loc, name)] qualification in
-    nominal_type opts scope tbls xs loc tyname targs
+    (match generic_id scope tbls xs [(qloc, id_loc, name)] qualification with
+    | Ok tyname -> nominal_type opts scope tbls xs loc tyname targs
+    | Error loc -> Err (loc, CheckError))
   | G.Identifier.Unqualified (ref_loc, { Ast.Identifier.name; comments = _ }) ->
     let ref_loc = push_loc tbls ref_loc in
     maybe_special_unqualified_generic opts scope tbls xs loc targs ref_loc name

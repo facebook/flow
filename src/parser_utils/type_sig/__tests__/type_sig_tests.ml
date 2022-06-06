@@ -1553,6 +1553,29 @@ let%expect_test "qualified_references" =
     1. ImportType {id_loc = [2:12-14]; name = "M2"; index = 0; remote = "default"}
   |}]
 
+let%expect_test "invalid_qualified_references" =
+  print_sig {|
+    export type T<U> = U.V;
+  |};
+  [%expect {|
+    CJSModule {type_exports = [|(ExportTypeBinding 0)|];
+      exports = None;
+      info = CJSModuleInfo {type_export_keys = [|"T"|]; type_stars = []; strict = true}}
+
+    Local defs:
+    0. TypeAlias {id_loc = [1:12-13];
+         name = "T";
+         tparams =
+         (Poly ([1:13-16],
+            TParam {name_loc = [1:14-15];
+              name = "U"; polarity = Polarity.Neutral;
+              bound = None; default = None},
+            []));
+         body = (Err [1:19-20])}
+
+    Errors:
+    ([1:19-20], CheckError) |}]
+
 let%expect_test "hoisted_requires" =
   print_sig {|
     const M = require('./hoisted_requires_helper');
