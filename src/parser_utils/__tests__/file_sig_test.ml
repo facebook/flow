@@ -9,11 +9,15 @@ open OUnit2
 open File_sig.With_Loc
 
 let visit ?parse_options ?(opts = default_opts) source =
-  let (ast, _) = Parser_flow.program ~parse_options source in
+  (* allow parse errors. we still need file sigs on invalid ASTs in Type_contents. *)
+  let fail = false in
+  let (ast, _) = Parser_flow.program ~fail ~parse_options source in
   fst (program ~ast ~opts)
 
 let visit_err ?parse_options ?(opts = default_opts) source =
-  let (ast, _) = Parser_flow.program ~parse_options source in
+  (* allow parse errors; we still need file sigs on invalid ASTs in Type_contents. *)
+  let fail = false in
+  let (ast, _) = Parser_flow.program ~fail ~parse_options source in
   match program ~ast ~opts with
   | (_, []) -> assert_failure "Unexpected success"
   | (_, [e]) -> e
@@ -436,6 +440,15 @@ let tests =
            match requires with
            | [Import { source = (_, "foo"); typesof_ns = Some (loc, "Foo"); _ }] ->
              assert_substring_equal ~ctxt "Foo" source loc
+           | _ -> assert_failure "Unexpected requires"
+         );
+         ( "es_import_type_ns" >:: fun ctxt ->
+           let source = "import type * as Foo from 'foo'" in
+           let { module_sig = { requires; _ }; _ } = visit source in
+           match requires with
+           | [Import { source = (_, "foo"); ns; typesof_ns; _ }] ->
+             assert_equal ~ctxt None ns;
+             assert_equal ~ctxt None typesof_ns
            | _ -> assert_failure "Unexpected requires"
          );
          ( "cjs_default" >:: fun ctxt ->
