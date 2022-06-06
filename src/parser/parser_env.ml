@@ -149,7 +149,6 @@ type env = {
   errors: (Loc.t * Parse_error.t) list ref;
   comments: Loc.t Comment.t list ref;
   labels: SSet.t;
-  exports: SSet.t ref;
   last_lex_result: Lex_result.t option ref;
   in_strict_mode: bool;
   in_export: bool;
@@ -204,7 +203,6 @@ let init_env ?(token_sink = None) ?(parse_options = None) source content =
     errors = ref errors;
     comments = ref [];
     labels = SSet.empty;
-    exports = ref SSet.empty;
     last_lex_result = ref None;
     has_simple_parameters = true;
     in_strict_mode = parse_options.use_strict;
@@ -289,17 +287,6 @@ let error_at env (loc, e) =
   match env.error_callback with
   | None -> ()
   | Some callback -> callback env e
-
-let record_export env (loc, { Identifier.name = export_name; comments = _ }) =
-  if export_name = "" then
-    ()
-  else
-    (* empty identifiers signify an error, don't export it *)
-    let exports = !(env.exports) in
-    if SSet.mem export_name exports then
-      error_at env (loc, Parse_error.DuplicateExport export_name)
-    else
-      env.exports := SSet.add export_name !(env.exports)
 
 (* Since private fields out of scope are a parse error, we keep track of the declared and used
  * private fields.

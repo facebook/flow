@@ -125,8 +125,6 @@ val function_as_statement_error_at : env -> Loc.t -> unit
 
 val error_list : env -> (Loc.t * Parse_error.t) list -> unit
 
-val record_export : env -> (Loc.t, Loc.t) Flow_ast.Identifier.t -> unit
-
 val enter_class : env -> unit
 
 val exit_class : env -> unit
