@@ -20,6 +20,8 @@ type scope_kind =
   | Predicate (* predicate function *)
   | Ctor
 
+type class_stack = ALoc.t list
+
 type for_kind =
   | In
   | Of of { await: bool }
@@ -103,7 +105,7 @@ type def =
     }
   | GeneratorNext of generator_annot option
 
-type map = (def * scope_kind * ALoc.t virtual_reason) ALocMap.t
+type map = (def * scope_kind * class_stack * ALoc.t virtual_reason) ALocMap.t
 
 module Destructure = struct
   open Ast.Pattern
@@ -266,9 +268,12 @@ class def_finder env_entries providers toplevel_scope =
 
     val mutable scope_kind : scope_kind = toplevel_scope
 
+    val mutable class_stack : class_stack = []
+
     method add_tparam loc = tparams <- ALocSet.add loc tparams
 
-    method add_binding loc reason src = this#update_acc (ALocMap.add loc (src, scope_kind, reason))
+    method add_binding loc reason src =
+      this#update_acc (ALocMap.add loc (src, scope_kind, class_stack, reason))
 
     method private in_scope : 'a 'b. ('a -> 'b) -> scope_kind -> 'a -> 'b =
       fun f scope' node ->
@@ -440,7 +445,10 @@ class def_finder env_entries providers toplevel_scope =
       let open Ast.Class in
       let { id; _ } = expr in
       this#in_new_tparams_env (fun () ->
+          let old_stack = class_stack in
+          class_stack <- loc :: class_stack;
           let res = this#in_scope (super#class_ loc) Ordinary expr in
+          class_stack <- old_stack;
           begin
             match id with
             | Some (id_loc, { Ast.Identifier.name; _ }) ->

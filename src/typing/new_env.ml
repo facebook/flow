@@ -73,7 +73,12 @@ module New_env = struct
 
   let get_class_entries cx =
     let { Loc_env.class_stack; class_bindings; _ } = Context.environment cx in
-    Base.List.map ~f:(fun l -> ALocMap.find l class_bindings) class_stack
+    Base.List.fold
+      ~f:(fun lst l ->
+        ALocMap.find_opt l class_bindings
+        |> Base.Option.value_map ~f:(fun c -> c :: lst) ~default:lst)
+      ~init:[]
+      class_stack
 
   let bind_class = Old_env.bind_class
 
