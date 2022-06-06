@@ -1,6 +1,10 @@
 {
   "errors":[
     {
+      "loc":{"source":null,"start":{"line":1,"column":7},"end":{"line":1,"column":12}},
+      "message":"Unexpected token `async`, expected a declaration, statement or export specifiers"
+    },
+    {
       "loc":{"source":null,"start":{"line":1,"column":13},"end":{"line":1,"column":16}},
       "message":"Unexpected identifier, expected the end of an expression statement (`;`)"
     },
@@ -10,30 +14,22 @@
     }
   ],
   "type":"Program",
-  "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":1,"column":21}},
-  "range":[0,21],
+  "loc":{"source":null,"start":{"line":1,"column":7},"end":{"line":1,"column":21}},
+  "range":[7,21],
   "body":[
     {
-      "type":"ExportNamedDeclaration",
-      "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":1,"column":12}},
-      "range":[0,12],
-      "declaration":{
-        "type":"ExpressionStatement",
+      "type":"ExpressionStatement",
+      "loc":{"source":null,"start":{"line":1,"column":7},"end":{"line":1,"column":12}},
+      "range":[7,12],
+      "expression":{
+        "type":"Identifier",
         "loc":{"source":null,"start":{"line":1,"column":7},"end":{"line":1,"column":12}},
         "range":[7,12],
-        "expression":{
-          "type":"Identifier",
-          "loc":{"source":null,"start":{"line":1,"column":7},"end":{"line":1,"column":12}},
-          "range":[7,12],
-          "name":"async",
-          "typeAnnotation":null,
-          "optional":false
-        },
-        "directive":null
+        "name":"async",
+        "typeAnnotation":null,
+        "optional":false
       },
-      "specifiers":[],
-      "source":null,
-      "exportKind":"value"
+      "directive":null
     },
     {
       "type":"ExpressionStatement",

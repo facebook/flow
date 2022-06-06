@@ -1564,17 +1564,38 @@ module Statement
               comments = Flow_ast_utils.mk_comments_opt ~leading ();
             })
         env
+    | _ when Peek.is_class env ->
+      with_loc
+        ~start_loc
+        (fun env ->
+          let stmt = Object.class_declaration env decorators in
+          Statement.ExportNamedDeclaration
+            {
+              Statement.ExportNamedDeclaration.declaration = Some stmt;
+              specifiers = None;
+              source = None;
+              export_kind = Statement.ExportValue;
+              comments = Flow_ast_utils.mk_comments_opt ~leading ();
+            })
+        env
+    | _ when Peek.is_function env ->
+      with_loc
+        ~start_loc
+        (fun env ->
+          error_on_decorators env decorators;
+          let stmt = Declaration._function env in
+          Statement.ExportNamedDeclaration
+            {
+              Statement.ExportNamedDeclaration.declaration = Some stmt;
+              specifiers = None;
+              source = None;
+              export_kind = Statement.ExportValue;
+              comments = Flow_ast_utils.mk_comments_opt ~leading ();
+            })
+        env
     | T_LET
     | T_CONST
-    | T_VAR
-    (* not using Peek.is_class here because it would guard all of the
-     * cases *)
-    | T_AT
-    | T_CLASS
-    (* not using Peek.is_function here because it would guard all of the
-     * cases *)
-    | T_ASYNC
-    | T_FUNCTION ->
+    | T_VAR ->
       with_loc
         ~start_loc
         (fun env ->
