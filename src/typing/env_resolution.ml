@@ -42,12 +42,16 @@ module Make (Env : Env_sig.S) (Statement : Statement_sig.S with module Env := En
 
   let rec resolve_binding cx reason loc b =
     let mk_use_op t = Op (AssignVar { var = Some reason; init = TypeUtil.reason_of_t t }) in
-    match b with
-    | Root (Annotation (tparams_locs, anno)) ->
+    let resolve_annotation tparams_locs anno =
       let cache = Context.node_cache cx in
       let tparams_map = mk_tparams_map cx tparams_locs in
       let (t, anno) = Type_annotation.mk_type_available_annotation cx tparams_map anno in
       Node_cache.set_annotation cache anno;
+      t
+    in
+    match b with
+    | Root (Annotation (tparams_locs, anno)) ->
+      let t = resolve_annotation tparams_locs anno in
       (t, mk_use_op t, true)
     | Root (Value exp) ->
       (* TODO: look up the annotation for the variable at loc and pass in *)
@@ -58,14 +62,14 @@ module Make (Env : Env_sig.S) (Statement : Statement_sig.S with module Env := En
       let reason = mk_reason (RCustom "contextual variable") loc in
       let t =
         if Context.enable_contextual_typing cx then
+          let resolve_hint = function
+            | AnnotationHint (tparams_locs, anno) -> resolve_annotation tparams_locs anno
+            | ValueHint exp -> expression cx ~hint:Hint_None exp
+          in
           let hint =
             match hint with
-            | Hint_t root ->
-              let (t, _, _) = resolve_binding cx reason loc (Root root) in
-              Hint_t t
-            | Hint_Decomp (ops, root) ->
-              let (t, _, _) = resolve_binding cx reason loc (Root root) in
-              Hint_Decomp (ops, t)
+            | Hint_t hint_node -> Hint_t (resolve_hint hint_node)
+            | Hint_Decomp (ops, hint_node) -> Hint_Decomp (ops, resolve_hint hint_node)
             | Hint_None -> Hint_None
           in
           match Type_hint.evaluate_hint cx param_loc hint with

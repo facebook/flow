@@ -26,10 +26,14 @@ type for_kind =
   | In
   | Of of { await: bool }
 
+type hint_node =
+  | AnnotationHint of ALocSet.t * (ALoc.t, ALoc.t) Ast.Type.annotation
+  | ValueHint of (ALoc.t, ALoc.t) Ast.Expression.t
+
 type root =
   | Annotation of ALocSet.t * (ALoc.t, ALoc.t) Ast.Type.annotation
   | Value of (ALoc.t, ALoc.t) Ast.Expression.t
-  | Contextual of ALoc.t * root hint
+  | Contextual of ALoc.t * hint_node hint
   | Catch
   | For of for_kind * (ALoc.t, ALoc.t) Ast.Expression.t
 
@@ -521,18 +525,18 @@ class def_finder env_entries providers toplevel_scope =
         else
           match lhs_node with
           | Ast.Pattern.Identifier { Ast.Pattern.Identifier.name; _ } ->
-            Hint_t (Value (lhs_loc, Ast.Expression.Identifier name))
+            Hint_t (ValueHint (lhs_loc, Ast.Expression.Identifier name))
           | Ast.Pattern.Expression
               (_, Ast.Expression.Member { Ast.Expression.Member._object; property; comments = _ })
             ->
             (match property with
             | Ast.Expression.Member.PropertyIdentifier (_, { Ast.Identifier.name; comments = _ }) ->
-              decompose_hint (Decomp_ObjProp name) (Hint_t (Value _object))
+              decompose_hint (Decomp_ObjProp name) (Hint_t (ValueHint _object))
             | Ast.Expression.Member.PropertyPrivateName _ ->
               (* TODO create a hint based on the current class. *)
               Hint_None
             | Ast.Expression.Member.PropertyExpression _ ->
-              decompose_hint Decomp_ObjComputed (Hint_t (Value _object)))
+              decompose_hint Decomp_ObjComputed (Hint_t (ValueHint _object)))
           | _ ->
             (* TODO create a hint based on the lhs pattern *)
             Hint_None
@@ -706,7 +710,7 @@ class def_finder env_entries providers toplevel_scope =
       in
       this#visit_expression ~hint:Hint_None callee;
       Base.Option.iter targs ~f:(fun targs -> ignore @@ this#call_type_args targs);
-      let call_argumemts_hint = Hint_t (Value callee) in
+      let call_argumemts_hint = Hint_t (ValueHint callee) in
       Base.List.iteri arguments ~f:(fun i arg ->
           let hint = decompose_hint (Decomp_FuncParam i) call_argumemts_hint in
           match arg with
@@ -737,7 +741,7 @@ class def_finder env_entries providers toplevel_scope =
     method! type_cast _ expr =
       let open Ast.Expression.TypeCast in
       let { expression; annot; comments = _ } = expr in
-      this#visit_expression ~hint:(Hint_t (Annotation (ALocSet.empty, annot))) expression;
+      this#visit_expression ~hint:(Hint_t (AnnotationHint (ALocSet.empty, annot))) expression;
       ignore @@ this#type_annotation annot;
       expr
 
@@ -755,7 +759,8 @@ class def_finder env_entries providers toplevel_scope =
       let hint =
         match opening_name with
         | Ast.JSX.Identifier (loc, { Ast.JSX.Identifier.name; comments }) ->
-          Hint_t (Value (loc, Ast.Expression.Identifier (loc, { Ast.Identifier.name; comments })))
+          Hint_t
+            (ValueHint (loc, Ast.Expression.Identifier (loc, { Ast.Identifier.name; comments })))
         | Ast.JSX.NamespacedName _ -> Hint_None
         | Ast.JSX.MemberExpression member ->
           let rec jsx_title_member_to_expression member =
@@ -784,7 +789,7 @@ class def_finder env_entries providers toplevel_scope =
                 }
             )
           in
-          Hint_t (Value (jsx_title_member_to_expression member))
+          Hint_t (ValueHint (jsx_title_member_to_expression member))
       in
       Base.List.iter opening_attributes ~f:(function
           | Opening.Attribute (_, { Attribute.name; value }) ->
