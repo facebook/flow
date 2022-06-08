@@ -390,6 +390,16 @@ function f(): typeof x {
   [%expect {|
     illegal scc: (((2, 4) to (2, 5)); ((3, 9) to (3, 10))) |}]
 
+let%expect_test "function_param_contextual" =
+  print_order_test {|
+var x = 1;
+x = (a) => a;
+  |};
+  [%expect {|
+    (2, 4) to (2, 5) =>
+    (3, 5) to (3, 6) =>
+    (3, 0) to (3, 1) |}]
+
 let%expect_test "deps1" =
   print_order_test {|
 type T = number;

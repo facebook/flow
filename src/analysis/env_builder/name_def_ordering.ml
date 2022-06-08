@@ -384,11 +384,21 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) = struct
             ())
           ALocMap.empty
       in
+      let depends_of_hint_node state = function
+        | AnnotationHint (_, anno) -> depends_of_annotation anno state
+        | ValueHint exp_nodes ->
+          Nel.fold_left (fun state e -> depends_of_expression e state) state exp_nodes
+      in
       let depends_of_root state = function
         | Annotation (_, anno) -> depends_of_annotation anno state
         | Value exp -> depends_of_expression exp state
         | For (_, exp) -> depends_of_expression exp state
-        | Contextual _ -> state
+        | Contextual (_, hint) ->
+          (match hint with
+          | Hint_api.Hint_None -> state
+          | Hint_api.Hint_t hint_node
+          | Hint_api.Hint_Decomp (_, hint_node) ->
+            depends_of_hint_node state hint_node)
         | Catch -> state
       in
       let depends_of_selector state = function
