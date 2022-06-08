@@ -64,7 +64,12 @@ module Make (Env : Env_sig.S) (Statement : Statement_sig.S with module Env := En
         if Context.enable_contextual_typing cx then
           let resolve_hint = function
             | AnnotationHint (tparams_locs, anno) -> resolve_annotation tparams_locs anno
-            | ValueHint exp -> expression cx ~hint:Hint_None exp
+            | ValueHint (exp, []) -> expression cx ~hint:Hint_None exp
+            | ValueHint (e1, e2 :: rest) ->
+              let t1 = expression cx ~hint:Hint_None e1 in
+              let t2 = expression cx ~hint:Hint_None e2 in
+              let ts = Base.List.map ~f:(expression cx ~hint:Hint_None) rest in
+              UnionT (mk_reason (RCustom "providers") loc, UnionRep.make t1 t2 ts)
           in
           let hint =
             match hint with
