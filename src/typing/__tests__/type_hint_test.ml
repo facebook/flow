@@ -323,6 +323,28 @@ let eval_hint_tests =
           ~expected:"Array<(number | string)>"
           "(string, number, ...Array<string>) => number"
           [Decomp_FuncRest 1];
+    (*
+      When we try to extract the hint for the annotated parameter in
+      ```
+      declare function f<T>(T): void;
+      f((a) => ...);
+      ```
+      It should fail because we cannot destruct a type parameter without any bounds.
+    *)
+    "fun_decomp_cannot_decomp_no_bound_type_parameter"
+    >:: mk_eval_hint_test ~expected:"None" "<T>(T) => void" [Decomp_FuncParam 0; Decomp_FuncParam 0];
+    (*
+      When we try to extract the hint for the lambda in
+      ```
+      declare function f<T>(T => void) => void;
+      f((a) => {});
+      ```
+      In Pierce's algorithm, this is the case when the lambda must be fully annotated. However, we
+      can still choose to assign the lambda parameter a type by using the most conservative type we
+      can: mixed. If the users want something more precise, they will have to annotate.
+    *)
+    "fun_decomp_unsolved_type_parameter"
+    >:: mk_eval_hint_test ~expected:"(mixed) => void" "<T>(T => void) => void" [Decomp_FuncParam 0];
     "obj_prop_from_record_neutral_polarity"
     >:: mk_eval_hint_test ~expected:"number" "{foo: number}" [Decomp_ObjProp "foo"];
     "obj_prop_from_record_positive_polarity"
