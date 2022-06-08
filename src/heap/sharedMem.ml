@@ -83,6 +83,8 @@ exception Heap_full
 
 exception Failed_memfd_init of Unix.error
 
+exception Invalid_header of int (* addr *) * int64 (* header *)
+
 let () =
   Callback.register_exception "out_of_shared_memory" Out_of_shared_memory;
   Callback.register_exception "hash_table_full" Hash_table_full;
@@ -1004,12 +1006,7 @@ module NewAPI = struct
     let hd64 = buf_read_int64 heap addr in
     (* Double-check that the data looks like a header. All reachable headers
      * will have the lsb set. *)
-    if Int64.(logand hd64 1L <> 1L) then
-      Printf.ksprintf
-        failwith
-        "Failed to read header: %x contains %Lx which does not look like a header"
-        addr
-        hd64;
+    if Int64.(logand hd64 1L <> 1L) then raise (Invalid_header (addr, hd64));
     (* The low 2 bits of the header are reserved for GC and not used in OCaml. *)
     Int64.(to_int (shift_right_logical hd64 2))
 

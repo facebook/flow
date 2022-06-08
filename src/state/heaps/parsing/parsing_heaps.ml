@@ -1797,6 +1797,23 @@ module From_saved_state = struct
 end
 
 let iter_resolved_requires f =
-  SharedMem.NewAPI.iter_resolved_requires (fun file resolved_requires ->
-      f file (read_resolved_requires resolved_requires)
+  SharedMem.NewAPI.iter_resolved_requires (fun file resolved_requires_addr ->
+      let resolved_requires =
+        try read_resolved_requires resolved_requires_addr with
+        | SharedMem.Invalid_header (addr, header) as exn ->
+          let exn =
+            Exception.wrap exn ~f:(fun _ ->
+                let msg =
+                  Printf.sprintf
+                    "Failed to resolve requires for %s: %x contains %Lx which does not look like a header"
+                    (read_file_name file)
+                    addr
+                    header
+                in
+                Failure msg
+            )
+          in
+          Exception.reraise exn
+      in
+      f file resolved_requires
   )
