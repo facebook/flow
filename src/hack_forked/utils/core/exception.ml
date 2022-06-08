@@ -24,8 +24,13 @@ type t = {
  *    Exception.reraise e
  *)
 
-let wrap exn =
+let wrap ?f exn =
   let backtrace = Printexc.get_raw_backtrace () in
+  let exn =
+    match f with
+    | Some f -> f exn
+    | None -> exn
+  in
   { exn; backtrace }
 
 (* The inverse of `wrap`, returns the wrapped `exn`. You might use this to pattern

@@ -7,7 +7,7 @@
 
 type t
 
-val wrap : exn -> t
+val wrap : ?f:(exn -> exn) -> exn -> t
 
 val wrap_unraised : ?frames:int -> exn -> t
 
