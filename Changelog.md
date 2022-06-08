@@ -1,3 +1,29 @@
+### 0.180.0
+
+Likely to cause new Flow errors:
+* Generator functions without return type annotations now default the type of the `next` parameter to `void`. If a non-void `next` type is desired for a function, it will have to be annotated.
+* When `experimental.enforce_local_inference_annotations` is enabled, Flow now requires annotations on functions returned from async or generator functions.
+* Return statements that return objects no longer widen the object type to match the return annotation, if present. This may lead to additional errors, which can be addressed by adding annotations onto variables that are returned.
+
+New Features:
+* Optimize initialization from saved state.
+* When `experimental.enforce_local_inference_annotations` is enabled, Flow now has a code action to auto-annotate parameters of functions that have `missing-local-annot` errors.
+
+Notable bug fixes:
+* Fix broken IDE services when the file contains certain invalid type annotations, `import type * ...`, `export async ...` statements or nameless named exports.
+* Fix some potential deadlocks on Windows.
+
+Misc:
+* Add `--no-enums` flag to `flow ast`.
+
+Parser:
+* Fix a runtime exception when parsing regexes via the JS version of the parser.
+* Fix crash when the input is a lone quote.
+* Fix missing syntax errors when functions with non-simple params contain `"use strict"`
+
+Library Definitions:
+* Add type signature for `Navigator.canShare()`.
+
 ### 0.179.0
 
 Likely to cause new Flow errors:
