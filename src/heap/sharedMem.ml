@@ -83,6 +83,8 @@ exception Heap_full
 
 exception Failed_memfd_init of Unix.error
 
+exception Invalid_address of int (* addr *) * int64 (* address *)
+
 exception Invalid_header of int (* addr *) * int64 (* header *)
 
 let () =
@@ -90,6 +92,25 @@ let () =
   Callback.register_exception "hash_table_full" Hash_table_full;
   Callback.register_exception "heap_full" Heap_full;
   Callback.register_exception "failed_memfd_init" (Failed_memfd_init Unix.EINVAL)
+
+let () =
+  Exception.register_printer (function
+      | Invalid_address (addr, addr64) ->
+        Some
+          (Printf.sprintf
+             "SharedMem.Invalid_address: %x contains %Lx which does not look like an address"
+             addr
+             addr64
+          )
+      | Invalid_header (addr, header) ->
+        Some
+          (Printf.sprintf
+             "SharedMem.Invalid_header: %x contains %Lx which does not look like a header"
+             addr
+             header
+          )
+      | _ -> None
+      )
 
 (*****************************************************************************)
 (* Initializes the shared memory. Must be called before forking. *)
@@ -900,7 +921,7 @@ module NewAPI = struct
   let read_addr heap addr =
     let addr64 = buf_read_int64 heap addr in
     (* double-check that the data looks like an address *)
-    assert (Int64.logand addr64 1L = 0L);
+    if Int64.(logand addr64 1L <> 0L) then raise (Invalid_address (addr, addr64));
     Int64.to_int addr64
 
   (** Tagged ints *)

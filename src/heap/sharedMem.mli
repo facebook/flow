@@ -26,6 +26,8 @@ exception Hash_table_full
 
 exception Heap_full
 
+exception Invalid_address of int * int64
+
 exception Invalid_header of int * int64
 
 val connect : handle -> worker_id:int -> unit
