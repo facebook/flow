@@ -346,7 +346,9 @@ jobs:
           - opam-cache-{{ arch }}-{{ checksum "C:/tmp/flow/opamcachebreaker" }}
       - run:
           name: Init opam
-          command: .\scripts\windows\init_opam.ps1
+          shell: C:/tools/cygwin/bin/bash.exe -leo pipefail
+          command: |
+            opam init default 'https://github.com/fdopen/opam-repository-mingw.git#opam2' --bare --disable-sandboxing --no-setup
       - opam_windows/create_switch
       - save_cache:
           key: opam-cache-{{ arch }}-{{ checksum "C:/tmp/flow/opamcachebreaker" }}
