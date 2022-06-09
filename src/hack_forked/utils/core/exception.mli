@@ -7,7 +7,7 @@
 
 type t
 
-val wrap : ?f:(exn -> exn) -> exn -> t
+val wrap : exn -> t
 
 val wrap_unraised : ?frames:int -> exn -> t
 
@@ -28,6 +28,8 @@ val get_current_callstack_string : int -> string
 val print_full_backtrace : out_channel -> int -> t -> unit
 
 val get_full_backtrace_string : int -> t -> string
+
+val register_printer : (exn -> string option) -> unit
 
 val record_backtrace : bool -> unit
 

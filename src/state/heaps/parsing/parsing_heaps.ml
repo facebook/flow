@@ -54,6 +54,26 @@ exception Resolved_requires_not_found of string
 
 exception Leader_not_found of string
 
+exception Failed_to_read_haste_info of string (* filename *) * Exception.t
+
+exception Failed_to_read_resolve_requires of string (* filename *) * Exception.t
+
+let () =
+  let printf exn format =
+    Printf.sprintf
+      "%( %s %): %s\n%s"
+      format
+      (Exception.get_ctor_string exn)
+      (Exception.get_backtrace_string exn)
+  in
+  Exception.register_printer (function
+      | Failed_to_read_haste_info (file, exn) ->
+        Some (printf exn "Failed to read haste info for %s" file)
+      | Failed_to_read_resolve_requires (file, exn) ->
+        Some (printf exn "Failed to read resolve requires for %s" file)
+      | _ -> None
+      )
+
 type locs_tbl = Loc.t Type_sig_collections.Locs.t
 
 type type_sig = Type_sig_collections.Locs.index Packed_type_sig.Module.t
@@ -309,8 +329,13 @@ let prepare_write_new_haste_info_maybe size old_haste_info = function
   | Some name ->
     let open Heap in
     let haste_module_unchanged old_info =
-      let old_name = read_string (get_haste_name (get_haste_module old_info)) in
-      String.equal name old_name
+      try
+        let old_name = read_string (get_haste_name (get_haste_module old_info)) in
+        String.equal name old_name
+      with
+      | exn ->
+        let exn = Exception.wrap exn in
+        raise (Failed_to_read_haste_info (name, exn))
     in
     (match old_haste_info with
     | Some old_info when haste_module_unchanged old_info -> (size, Fun.const old_haste_info)
@@ -353,6 +378,14 @@ let calc_dirty_modules file_key file haste_ent new_file_module =
        * but the module is still dirty because `file` changed. (see TODO) *)
       (None, None, new_info)
   in
+
+  let get_haste_module info =
+    try get_haste_module info with
+    | exn ->
+      let exn = Exception.wrap exn in
+      raise (Failed_to_read_haste_info (File_key.to_string file_key, exn))
+  in
+
   let dirty_modules =
     match old_haste_info with
     | None -> MSet.empty
@@ -1800,20 +1833,10 @@ let iter_resolved_requires f =
   SharedMem.NewAPI.iter_resolved_requires (fun file resolved_requires_addr ->
       let resolved_requires =
         try read_resolved_requires resolved_requires_addr with
-        | SharedMem.Invalid_header (addr, header) as exn ->
-          let exn =
-            Exception.wrap exn ~f:(fun _ ->
-                let msg =
-                  Printf.sprintf
-                    "Failed to resolve requires for %s: %x contains %Lx which does not look like a header"
-                    (read_file_name file)
-                    addr
-                    header
-                in
-                Failure msg
-            )
-          in
-          Exception.reraise exn
+        | exn ->
+          let exn = Exception.wrap exn in
+          let filename = read_file_name file in
+          raise (Failed_to_read_resolve_requires (filename, exn))
       in
       f file resolved_requires
   )
