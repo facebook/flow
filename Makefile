@@ -19,15 +19,17 @@ INTERNAL_FLAGS=
 ifeq ($(OS), Windows_NT)
   UNAME_S=Windows
   UNAME_M=
-  SWITCH=ocaml-variants.4.13.1+mingw64c
+  SWITCH=ocaml-variants.4.14.0+mingw64c
   CC:=x86_64-w64-mingw32-gcc
   CXX:=x86_64-w64-mingw32-g++
   AR:=x86_64-w64-mingw32-gcc-ar
 else
   UNAME_S=$(shell uname -s)
   UNAME_M=$(shell uname -m)
-  SWITCH=ocaml-base-compiler.4.13.1
+  SWITCH=ocaml-base-compiler.4.14.0
 endif
+
+JS_OF_OCAML_VERSION=4.0.0
 
 # Default to `ocamlbuild -j 0` (unlimited parallelism), but you can limit it
 # with `make OCAMLBUILD_JOBS=1`
@@ -362,6 +364,10 @@ all-homebrew:
 deps:
 	[ -d _opam ] || opam switch create . $(SWITCH) --deps-only --yes
 
+.PHONY: deps-js
+deps-js:
+	opam install js_of_ocaml.$(JS_OF_OCAML_VERSION)
+
 clean:
 	if command -v ocamlbuild >/dev/null; then ocamlbuild -clean; fi
 	rm -rf _build
@@ -585,3 +591,6 @@ doc: flow.docdir/index.html
 
 print-switch:
 	@echo $(SWITCH)
+
+print-jsoo-version:
+	@echo $(JS_OF_OCAML_VERSION)
