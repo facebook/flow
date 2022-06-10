@@ -98,6 +98,8 @@ module type S = sig
   val make_pp : (Format.formatter -> elt -> unit) -> Format.formatter -> t -> unit
 
   val of_increasing_iterator_unchecked : (unit -> elt) -> int -> t
+
+  val find_first_opt : (elt -> bool) -> t -> elt option
 end
 
 type 'elt t0 =
@@ -818,4 +820,30 @@ module Make (Ord : OrderedType) : S with type elt = Ord.t = struct
     Format.fprintf fmt "@,}@]"
 
   let of_increasing_iterator_unchecked = of_increasing_iterator_unchecked
+
+  let rec find_first_opt_aux v0 f = function
+    | Empty -> Some v0
+    | Leaf v ->
+      if f v then
+        Some v
+      else
+        Some v0
+    | Node { l; v; r; _ } ->
+      if f v then
+        find_first_opt_aux v f l
+      else
+        find_first_opt_aux v0 f r
+
+  let rec find_first_opt f = function
+    | Empty -> None
+    | Leaf v ->
+      if f v then
+        Some v
+      else
+        None
+    | Node { l; v; r; _ } ->
+      if f v then
+        find_first_opt_aux v f l
+      else
+        find_first_opt f r
 end

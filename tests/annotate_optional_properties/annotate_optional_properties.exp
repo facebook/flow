@@ -1,0 +1,88 @@
+>>> test.js (#changes: 7)
+// @flow
+
+let x: { foo?: number, ... } = {}; // add annot
+x.foo = 3;
+
+let y: { foo?: string, ... } = {}; // add annot
+if (x) {
+  y.foo = "";
+}
+
+let z: { bar?: string, foo?: number, ... } = {}; // add annot
+z.foo = 3;
+if (x) {
+  z.bar = "";
+}
+
+let q: {| bar?: string, foo: number |} = {foo : 3}; // add annot
+if (x) {
+  q.bar = "";
+}
+
+let s = {foo : 3}; // should not annot, error is suppressed
+if (x) {
+  // $FlowFixMe[prop-missing]
+  s.bar = "";
+}
+
+let d: { foo?: string | number, ... } = {} // should only annot foo once
+if (x) {
+  d.foo = 3;
+} else {
+  d.foo = "";
+}
+
+let e: { foo?: string, ... } = {};  // should only annot foo once
+if (x) {
+  e.foo = "";
+} else {
+  e.foo = "";
+}
+
+let f: { a?: void, ... } = {};
+let field : string = f.a;
+
+const obj =
+    (() => {
+      const o = {
+        foo: {}, // {bar? : number, baz? : string}}
+      };
+      if (x) {
+        o.foo.bar = 3;
+      }
+      return o;
+    })();
+
+obj.foo.baz = "";
+
+(obj : {foo : {bar : number, baz : string}});
+
+let annot : {x : number} = {}; // don't annot
+
+>>> Launching report...
+
+Stats:
+  Files changed:                            1
+  Number of annotations added:              7
+  Total size of annotations:               20
+  Number of errors:                        12
+
+Errors:
+  Missing annot./normalizer error:          0
+  Validation Error:                         0
+  Import Error:
+    Loc source none:                        0
+    Parsing heaps get ast error:            0
+    Indeterminate module type:              0
+    No matching export:                     0
+  Serializer error:                         0
+  Unsupported error kind:                   0
+
+Warnings:
+  Skipping arrow function:                  0
+  Large type added:                         0
+  Location unhandled:                       0
+  Empty NoUpper:                            0
+  Empty SomeKnownUpper:                     0
+
