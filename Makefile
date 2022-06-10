@@ -582,3 +582,6 @@ flow.docdir/index.html: flow.odocl
 doc: flow.docdir/index.html
 
 -include facebook/Makefile
+
+print-switch:
+	@echo $(SWITCH)
