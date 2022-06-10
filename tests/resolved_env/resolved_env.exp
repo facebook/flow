@@ -384,12 +384,9 @@ Cannot use `A` as a type. Enum members are not separate types. Only the enum its
              ^^^
 
 References:
-   enum.js:2:1
-      v-------
+   enum.js:2:6
    2| enum W {
-   3|   A, B
-   4| }
-      ^ [1]
+           ^ [1]
 
 
 Error ------------------------------------------------------------------------------------------------ function.js:11:10

@@ -641,7 +641,7 @@ class def_finder env_entries providers toplevel_scope =
     method! enum_declaration loc (enum : ('loc, 'loc) Ast.Statement.EnumDeclaration.t) =
       let open Ast.Statement.EnumDeclaration in
       let { id = (name_loc, { Ast.Identifier.name; _ }); body; _ } = enum in
-      this#add_binding name_loc (mk_reason (REnum name) loc) (Enum body);
+      this#add_binding name_loc (mk_reason (REnum name) name_loc) (Enum body);
       super#enum_declaration loc enum
 
     method! import_declaration loc (decl : ('loc, 'loc) Ast.Statement.ImportDeclaration.t) =
