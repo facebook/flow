@@ -5,6 +5,7 @@
 # LICENSE file in the root directory of this source tree.
 
 make print-switch
+make print-jsoo-version
 opam --version
 gcc -dumpfullversion -dumpversion
 cat flowtype.opam
