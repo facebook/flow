@@ -25,16 +25,6 @@ orbs:
           - run:
               name: Install opam
               command: .\scripts\windows\install_opam.ps1
-      create_switch:
-        steps:
-          - run:
-              name: Create opam switch
-              shell: C:/tools/cygwin/bin/bash.exe -leo pipefail
-              environment:
-                PATH: /usr/local/bin:/usr/bin:/cygdrive/c/Windows/system32:/cygdrive/c/Windows:/cygdrive/c/Windows/System32/Wbem:/cygdrive/c/Windows/System32/WindowsPowerShell/v1.0
-              command: |
-                cd /cygdrive/c/Users/circleci/project
-                [ -d _opam ] || opam switch create . ocaml-variants.4.13.1+mingw64c --deps-only --yes
 
 executors:
   linux-opam:
@@ -59,7 +49,6 @@ executors:
       xcode: "12.1.0"
     environment:
       <<: *opam_env
-      OPAM_VERSION: 2.0.5
       MACOSX_DEPLOYMENT_TARGET: 10.13
     working_directory: ~/flow
   curl:
@@ -83,7 +72,7 @@ commands:
           command: |
             if ! [ -x "$(command -v opam)" ]; then
               TMP=${TMPDIR:-/tmp}
-              curl -sL -o "$TMP/opam" "https://github.com/ocaml/opam/releases/download/$OPAM_VERSION/opam-$OPAM_VERSION-x86_64-macos"
+              curl -sL -o "$TMP/opam" "https://github.com/ocaml/opam/releases/download/2.0.10/opam-2.0.10-x86_64-macos"
               install -m 755 "$TMP/opam" "/usr/local/bin/opam"
               rm -f "$TMP/opam"
             fi
@@ -93,7 +82,7 @@ commands:
       - run:
           name: Create cache breaker
           command: |
-            .circleci/make_opam_cachebreaker.sh 4.09.1 > .circleci/opamcachebreaker
+            .circleci/make_opam_cachebreaker.sh > .circleci/opamcachebreaker
 
   restore-opam-cache:
     steps:
@@ -234,7 +223,7 @@ jobs:
       - run:
           name: Create cache breaker
           command: |
-            docker exec -it $CONTAINER_ID /bin/bash -c 'cd flow && .circleci/make_opam_cachebreaker.sh 4.09.1 > .circleci/opamcachebreaker'
+            docker exec -it $CONTAINER_ID /bin/bash -c 'cd flow && .circleci/make_opam_cachebreaker.sh > .circleci/opamcachebreaker'
       - restore-opam-cache
       - run:
           name: Init opam
@@ -338,8 +327,8 @@ jobs:
           shell: C:/tools/cygwin/bin/bash.exe -leo pipefail
           command: |
             cd /cygdrive/c/Users/circleci/project
-            /usr/local/bin/opam --version > /cygdrive/c/tmp/flow/opamcachebreaker
-            echo "ocaml-4.13.1" >> /cygdrive/c/tmp/flow/opamcachebreaker
+            /usr/bin/make print-switch > /cygdrive/c/tmp/flow/opamcachebreaker
+            /usr/local/bin/opam --version >> /cygdrive/c/tmp/flow/opamcachebreaker
             /usr/bin/cat flowtype.opam >> /cygdrive/c/tmp/flow/opamcachebreaker
             /usr/bin/cat flow_parser.opam >> /cygdrive/c/tmp/flow/opamcachebreaker
             /usr/bin/cat .circleci/config.yml >> /cygdrive/c/tmp/flow/opamcachebreaker
@@ -351,7 +340,14 @@ jobs:
           shell: C:/tools/cygwin/bin/bash.exe -leo pipefail
           command: |
             opam init default 'https://github.com/fdopen/opam-repository-mingw.git#opam2' --bare --disable-sandboxing --no-setup
-      - opam_windows/create_switch
+      - run:
+          name: Create opam switch
+          shell: C:/tools/cygwin/bin/bash.exe -leo pipefail
+          environment:
+            PATH: /usr/local/bin:/usr/bin:/cygdrive/c/Windows/system32:/cygdrive/c/Windows:/cygdrive/c/Windows/System32/Wbem:/cygdrive/c/Windows/System32/WindowsPowerShell/v1.0
+          command: |
+             cd /cygdrive/c/Users/circleci/project
+             make deps
       - save_cache:
           key: opam-cache-{{ arch }}-{{ checksum "C:/tmp/flow/opamcachebreaker" }}
           paths:
