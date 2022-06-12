@@ -70,3 +70,7 @@ function foo(a: [1,2,3], b: [4,5,6]): [1,2,3,4,5,6] {
 function bar(a: [1,2,3], b: [4,5,6]): [1,2,3,1,2,3] {
   return [...a, ...a];
 }
+
+let emp = [];
+emp.push(42);
+([...emp]: Array<string>); // error

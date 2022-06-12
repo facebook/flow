@@ -8637,15 +8637,19 @@ struct
              | ResolvedSpreadArg (_, arrtype, generic) ->
                begin
                  match arrtype with
+                 | ArrayAT (_, None)
+                 | ArrayAT (_, Some []) ->
+                   (* The latter case corresponds to the empty array literal. If
+                    * we folded over the empty tuple_types list, then this would
+                    * cause an empty result. *)
+                   param :: acc
                  | ArrayAT (_, Some tuple_types)
                  | TupleAT (_, tuple_types) ->
                    Base.List.fold_left
                      ~f:(fun acc elem -> ResolvedArg (elem, generic) :: acc)
                      ~init:acc
                      tuple_types
-                 | ArrayAT (_, None)
-                 | ROArrayAT _ ->
-                   param :: acc
+                 | ROArrayAT _ -> param :: acc
                end
              | ResolvedAnySpreadArg _
              | ResolvedArg _ ->

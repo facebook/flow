@@ -126,5 +126,23 @@ References:
                 ^^^^^^^^^ [2]
 
 
+Error --------------------------------------------------------------------------------------------------- spread.js:76:2
 
-Found 8 errors
+Cannot cast array literal to array type because number [1] is incompatible with string [2] in array element.
+[incompatible-cast]
+
+   spread.js:76:2
+   76| ([...emp]: Array<string>); // error
+        ^^^^^^^^
+
+References:
+   spread.js:75:10
+   75| emp.push(42);
+                ^^ [1]
+   spread.js:76:18
+   76| ([...emp]: Array<string>); // error
+                        ^^^^^^ [2]
+
+
+
+Found 9 errors
