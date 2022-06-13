@@ -361,10 +361,17 @@ module Make (Env : Env_sig.S) (Statement : Statement_sig.S with module Env := En
     let t = DefT (TypeUtil.reason_of_t t, bogus_trust (), TypeT (TypeParamKind, t)) in
     (t, unknown_use)
 
-  let resolve_chain_expression cx exp =
+  let resolve_chain_expression cx ~cond exp =
     let cache = Context.node_cache cx in
-    (* The cond and is_existence_check parameters are only used for old-env refinements, so they're irrelevant now *)
-    let (t, _, exp, _, _) = Statement.optional_chain ~cond:None ~is_existence_check:false cx exp in
+    let cond =
+      match cond with
+      | NonConditionalContext -> None
+      | OtherConditionalTest -> Some OtherTest
+      | SwitchConditionalTest { case_test_reason; switch_discriminant_reason } ->
+        Some (SwitchTest { case_test_reason; switch_discriminant_reason })
+    in
+    (* The is_existence_check parameters is only used for old-env refinements, so it's irrelevant now. *)
+    let (t, _, exp, _, _) = Statement.optional_chain ~cond ~is_existence_check:false cx exp in
     Node_cache.set_expression cache exp;
     (t, unknown_use)
 
@@ -430,7 +437,7 @@ module Make (Env : Env_sig.S) (Statement : Statement_sig.S with module Env := En
       let as_resolved (t, use_op) = (t, use_op, true) in
       match def with
       | Binding b -> resolve_binding cx def_reason id_loc b
-      | ChainExpression e -> as_resolved @@ resolve_chain_expression cx e
+      | ChainExpression (cond, e) -> as_resolved @@ resolve_chain_expression cx ~cond e
       | RefiExpression e -> (expression cx ~hint:Hint_None e, unknown_use, true)
       | Function { function_; fully_annotated = false; function_loc; tparams = _ } ->
         as_resolved @@ resolve_inferred_function cx id_loc def_reason function_loc function_

@@ -11,6 +11,14 @@ open Reason
 open Flow_ast_mapper
 open Loc_collections
 
+type cond_context =
+  | NonConditionalContext
+  | SwitchConditionalTest of {
+      case_test_reason: reason;
+      switch_discriminant_reason: reason;
+    }
+  | OtherConditionalTest
+
 type scope_kind =
   | Ordinary (* function or module *)
   | Async (* async function *)
@@ -74,7 +82,7 @@ type generator_annot = {
 
 type def =
   | Binding of binding
-  | ChainExpression of (ALoc.t, ALoc.t) Ast.Expression.t
+  | ChainExpression of cond_context * (ALoc.t, ALoc.t) Ast.Expression.t
   | RefiExpression of (ALoc.t, ALoc.t) Ast.Expression.t
   | MemberAssign of {
       member_loc: ALoc.t;
@@ -430,7 +438,7 @@ class def_finder env_entries providers toplevel_scope =
               ignore @@ this#block loc block;
               loc
             | Ast.Function.BodyExpression ((loc, _) as expr) ->
-              this#visit_expression ~hint:Hint_None expr;
+              this#visit_expression ~hint:Hint_None ~cond:NonConditionalContext expr;
               loc
           in
 
@@ -449,7 +457,8 @@ class def_finder env_entries providers toplevel_scope =
           Base.Option.iter predicate ~f:(fun (_, { Ast.Type.Predicate.kind; comments = _ }) ->
               match kind with
               | Ast.Type.Predicate.Inferred -> ()
-              | Ast.Type.Predicate.Declared expr -> this#visit_expression ~hint:Hint_None expr
+              | Ast.Type.Predicate.Declared expr ->
+                this#visit_expression ~hint:Hint_None ~cond:NonConditionalContext expr
           ))
         scope_kind
         ()
@@ -528,7 +537,14 @@ class def_finder env_entries providers toplevel_scope =
             (OpAssign { exp_loc = loc; lhs = left; op = operator; rhs = right })
         | (Some operator, Ast.Pattern.Expression ((def_loc, _) as e)) ->
           (* In op_assign, the LHS will also be read. *)
-          ignore @@ this#expression e;
+          let cond =
+            match operator with
+            | AndAssign
+            | OrAssign ->
+              OtherConditionalTest
+            | _ -> NonConditionalContext
+          in
+          this#visit_expression ~cond ~hint:Hint_None e;
           this#add_binding
             def_loc
             (mk_pattern_reason left)
@@ -569,7 +585,7 @@ class def_finder env_entries providers toplevel_scope =
             (* TODO create a hint based on the lhs pattern *)
             Hint_None
       in
-      this#visit_expression ~hint right;
+      this#visit_expression ~hint ~cond:NonConditionalContext right;
       expr
 
     method! update_expression loc (expr : (ALoc.t, ALoc.t) Ast.Expression.Update.t) =
@@ -639,6 +655,39 @@ class def_finder env_entries providers toplevel_scope =
         | LeftPattern pat -> Destructure.pattern ~f:this#add_binding (Root (For (In, right))) pat
       end;
       super#for_in_statement loc stuff
+
+    method! for_statement _ (stmt : ('loc, 'loc) Ast.Statement.For.t) =
+      let open Ast.Statement.For in
+      let { init; test; update; body; comments = _ } = stmt in
+      Base.Option.iter init ~f:(fun init -> ignore @@ this#for_statement_init init);
+      Base.Option.iter test ~f:(this#visit_expression ~hint:Hint_None ~cond:OtherConditionalTest);
+      Base.Option.iter update ~f:(this#visit_expression ~hint:Hint_None ~cond:OtherConditionalTest);
+      ignore @@ this#statement body;
+      stmt
+
+    method! while_ _loc (stmt : ('loc, 'loc) Ast.Statement.While.t) =
+      let open Ast.Statement.While in
+      let { test; body; comments = _ } = stmt in
+      this#visit_expression ~hint:Hint_None ~cond:OtherConditionalTest test;
+      ignore @@ this#statement body;
+      stmt
+
+    method! do_while _loc (stmt : ('loc, 'loc) Ast.Statement.DoWhile.t) =
+      let open Ast.Statement.DoWhile in
+      let { body; test; comments = _ } = stmt in
+      ignore @@ this#statement body;
+      this#visit_expression ~hint:Hint_None ~cond:OtherConditionalTest test;
+      stmt
+
+    method! if_statement _ (stmt : ('loc, 'loc) Ast.Statement.If.t) =
+      let open Ast.Statement.If in
+      let { test; consequent; alternate; comments = _ } = stmt in
+      this#visit_expression ~hint:Hint_None ~cond:OtherConditionalTest test;
+      ignore @@ this#if_consequent_statement ~has_else:(alternate <> None) consequent;
+      Base.Option.iter alternate ~f:(fun (loc, alternate) ->
+          ignore @@ this#if_alternate_statement loc alternate
+      );
+      stmt
 
     method! type_alias loc (alias : ('loc, 'loc) Ast.Statement.TypeAlias.t) =
       let open Ast.Statement.TypeAlias in
@@ -741,41 +790,68 @@ class def_finder env_entries providers toplevel_scope =
       } =
         expr
       in
-      this#visit_expression ~hint:Hint_None callee;
+      this#visit_expression ~hint:Hint_None ~cond:NonConditionalContext callee;
       Base.Option.iter targs ~f:(fun targs -> ignore @@ this#call_type_args targs);
       let call_argumemts_hint = Hint_t (ValueHint (Nel.one callee)) in
       Base.List.iteri arguments ~f:(fun i arg ->
           let hint = decompose_hint (Decomp_FuncParam i) call_argumemts_hint in
           match arg with
-          | Ast.Expression.Expression expr -> this#visit_expression ~hint expr
+          | Ast.Expression.Expression expr ->
+            this#visit_expression ~hint ~cond:NonConditionalContext expr
           | Ast.Expression.Spread (_, spread) ->
-            this#visit_expression ~hint spread.Ast.Expression.SpreadElement.argument
+            this#visit_expression
+              ~hint
+              ~cond:NonConditionalContext
+              spread.Ast.Expression.SpreadElement.argument
       );
       expr
 
-    method! member loc mem =
-      begin
-        match ALocMap.find_opt loc env_entries with
-        | Some (Env_api.AssigningWrite reason) ->
-          this#add_binding loc reason (ChainExpression (loc, Ast.Expression.Member mem))
-        | _ -> ()
-      end;
-      super#member loc mem
+    method! member _ _ = failwith "Should be visited by visit_member_expression"
 
-    method! optional_member loc mem =
+    method private visit_member_expression ~cond loc mem =
       begin
         match ALocMap.find_opt loc env_entries with
         | Some (Env_api.AssigningWrite reason) ->
-          this#add_binding loc reason (ChainExpression (loc, Ast.Expression.OptionalMember mem))
+          this#add_binding loc reason (ChainExpression (cond, (loc, Ast.Expression.Member mem)))
         | _ -> ()
       end;
-      super#optional_member loc mem
+      ignore @@ super#member loc mem
+
+    method! optional_member _ _ = failwith "Should be visited by visit_optional_member_expression"
+
+    method private visit_optional_member_expression ~cond loc mem =
+      begin
+        match ALocMap.find_opt loc env_entries with
+        | Some (Env_api.AssigningWrite reason) ->
+          this#add_binding
+            loc
+            reason
+            (ChainExpression (cond, (loc, Ast.Expression.OptionalMember mem)))
+        | _ -> ()
+      end;
+      let open Ast.Expression.OptionalMember in
+      let { member; optional = _; filtered_out = _ } = mem in
+      ignore @@ super#member loc member
 
     method! type_cast _ expr =
       let open Ast.Expression.TypeCast in
       let { expression; annot; comments = _ } = expr in
-      this#visit_expression ~hint:(Hint_t (AnnotationHint (ALocSet.empty, annot))) expression;
+      this#visit_expression
+        ~hint:(Hint_t (AnnotationHint (ALocSet.empty, annot)))
+        ~cond:NonConditionalContext
+        expression;
       ignore @@ this#type_annotation annot;
+      expr
+
+    method! unary_expression _ expr =
+      let open Flow_ast.Expression.Unary in
+      let { argument; operator; comments = _ } = expr in
+      let cond =
+        match operator with
+        | Not -> OtherConditionalTest
+        | _ -> NonConditionalContext
+      in
+      this#visit_expression ~hint:Hint_None ~cond argument;
       expr
 
     method! jsx_element _ expr =
@@ -840,7 +916,10 @@ class def_finder env_entries providers toplevel_scope =
                 | Attribute.ExpressionContainer (_, expr) -> this#visit_jsx_expression ~hint expr
             )
           | Opening.SpreadAttribute (_, { SpreadAttribute.argument; comments = _ }) ->
-            this#visit_expression ~hint:(decompose_hint Decomp_ObjSpread hint) argument
+            this#visit_expression
+              ~hint:(decompose_hint Decomp_ObjSpread hint)
+              ~cond:NonConditionalContext
+              argument
           );
       this#visit_jsx_children ~hint:(decompose_hint (Decomp_ObjProp "children") hint) children;
       expr
@@ -849,7 +928,7 @@ class def_finder env_entries providers toplevel_scope =
       let open Ast.JSX.ExpressionContainer in
       let { expression; comments = _ } = expr in
       match expression with
-      | Expression expr -> this#visit_expression ~hint expr
+      | Expression expr -> this#visit_expression ~hint ~cond:NonConditionalContext expr
       | EmptyExpression -> ()
 
     method private visit_jsx_children ~hint (_, children) =
@@ -874,10 +953,10 @@ class def_finder env_entries providers toplevel_scope =
       )
 
     method! expression expr =
-      this#visit_expression ~hint:Hint_None expr;
+      this#visit_expression ~hint:Hint_None ~cond:NonConditionalContext expr;
       expr
 
-    method private visit_expression ~hint ((loc, expr) as exp) =
+    method private visit_expression ~hint ~cond ((loc, expr) as exp) =
       begin
         match ALocMap.find_opt loc env_entries with
         | Some (Env_api.RefinementWrite reason) -> this#add_binding loc reason (RefiExpression exp)
@@ -890,8 +969,11 @@ class def_finder env_entries providers toplevel_scope =
         this#in_new_tparams_env (fun () -> this#visit_function ~func_hint:hint ~scope_kind x)
       | Ast.Expression.Function x -> this#visit_function_expr ~func_hint:hint loc x
       | Ast.Expression.Object expr -> this#visit_object_expression ~object_hint:hint expr
+      | Ast.Expression.Member m -> this#visit_member_expression ~cond loc m
+      | Ast.Expression.OptionalMember m -> this#visit_optional_member_expression ~cond loc m
+      | Ast.Expression.Binary expr -> this#visit_binary_expression ~cond expr
+      | Ast.Expression.Logical expr -> this#visit_logical_expression ~cond expr
       | Ast.Expression.Assignment _
-      | Ast.Expression.Binary _
       | Ast.Expression.Call _
       | Ast.Expression.Class _
       | Ast.Expression.Comprehension _
@@ -902,12 +984,9 @@ class def_finder env_entries providers toplevel_scope =
       | Ast.Expression.JSXElement _
       | Ast.Expression.JSXFragment _
       | Ast.Expression.Literal _
-      | Ast.Expression.Logical _
-      | Ast.Expression.Member _
       | Ast.Expression.MetaProperty _
       | Ast.Expression.New _
       | Ast.Expression.OptionalCall _
-      | Ast.Expression.OptionalMember _
       | Ast.Expression.Sequence _
       | Ast.Expression.Super _
       | Ast.Expression.TaggedTemplate _
@@ -926,13 +1005,57 @@ class def_finder env_entries providers toplevel_scope =
       Base.List.iteri elements ~f:(fun i element ->
           match element with
           | Ast.Expression.Array.Expression expr ->
-            this#visit_expression ~hint:(decompose_hint (Decomp_ArrElement i) array_hint) expr
+            this#visit_expression
+              ~hint:(decompose_hint (Decomp_ArrElement i) array_hint)
+              ~cond:NonConditionalContext
+              expr
           | Ast.Expression.Array.Spread (_, spread) ->
             this#visit_expression
               ~hint:(decompose_hint (Decomp_ArrSpread i) array_hint)
+              ~cond:NonConditionalContext
               spread.Ast.Expression.SpreadElement.argument
           | Ast.Expression.Array.Hole _ -> ()
       )
+
+    method! conditional _ expr =
+      let open Ast.Expression.Conditional in
+      let { test; consequent; alternate; comments = _ } = expr in
+      this#visit_expression ~hint:Hint_None ~cond:OtherConditionalTest test;
+      this#visit_expression ~hint:Hint_None ~cond:NonConditionalContext consequent;
+      this#visit_expression ~hint:Hint_None ~cond:NonConditionalContext alternate;
+      expr
+
+    method! binary _ _ = failwith "Should be visited by visit_binary_expression"
+
+    method private visit_binary_expression ~cond expr =
+      let open Ast.Expression.Binary in
+      let { operator; left; right; comments = _ } = expr in
+      let cond =
+        match operator with
+        | Equal
+        | NotEqual
+        | StrictEqual
+        | StrictNotEqual ->
+          cond
+        | _ -> NonConditionalContext
+      in
+      this#visit_expression ~hint:Hint_None ~cond left;
+      this#visit_expression ~hint:Hint_None ~cond right
+
+    method! logical _ _ = failwith "Should be visited by visit_logical_expression"
+
+    method private visit_logical_expression ~cond expr =
+      let open Ast.Expression.Logical in
+      let { operator; left; right; comments = _ } = expr in
+      let left_cond =
+        match operator with
+        | And
+        | Or ->
+          OtherConditionalTest
+        | _ -> cond
+      in
+      this#visit_expression ~hint:Hint_None ~cond:left_cond left;
+      this#visit_expression ~hint:Hint_None ~cond right
 
     method! object_ _ _ = failwith "Should be visited by visit_object_expression"
 
@@ -949,7 +1072,7 @@ class def_finder env_entries providers toplevel_scope =
         | Ast.Expression.Object.Property.PrivateName _ -> Hint_None (* Illegal syntax *)
         | Ast.Expression.Object.Property.Computed computed ->
           let (_, { Ast.ComputedKey.expression; comments = _ }) = computed in
-          this#visit_expression ~hint:Hint_None expression;
+          this#visit_expression ~hint:Hint_None ~cond:NonConditionalContext expression;
           Hint_None
       in
       Base.List.iter properties ~f:(fun prop ->
@@ -959,7 +1082,7 @@ class def_finder env_entries providers toplevel_scope =
             (match p with
             | (_, Init { key; value; shorthand = _ }) ->
               let hint = visit_object_key_and_compute_hint key in
-              this#visit_expression ~hint value;
+              this#visit_expression ~hint ~cond:NonConditionalContext value;
               ()
             | (loc, Method { key; value = (_, fn) }) ->
               let func_hint = visit_object_key_and_compute_hint key in
@@ -975,7 +1098,10 @@ class def_finder env_entries providers toplevel_scope =
               ())
           | SpreadProperty s ->
             let (_, { Ast.Expression.Object.SpreadProperty.argument; comments = _ }) = s in
-            this#visit_expression ~hint:(decompose_hint Decomp_ObjSpread object_hint) argument
+            this#visit_expression
+              ~hint:(decompose_hint Decomp_ObjSpread object_hint)
+              ~cond:NonConditionalContext
+              argument
       )
   end
 

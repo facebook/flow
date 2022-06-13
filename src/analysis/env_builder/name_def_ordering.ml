@@ -478,7 +478,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) = struct
       function
       | Binding binding -> depends_of_binding binding
       | RefiExpression exp
-      | ChainExpression exp ->
+      | ChainExpression (_, exp) ->
         depends_of_expression exp ALocMap.empty
       | Update { lhs_member; _ } -> depends_of_update lhs_member
       | MemberAssign { member_loc; member; rhs; _ } ->
