@@ -463,6 +463,13 @@ module Make (Env : Env_sig.S) (Statement : Statement_sig.S with module Env := En
       | TypeParam param -> as_resolved @@ resolve_type_param cx id_loc param
       | GeneratorNext gen -> as_resolved @@ resolve_generator_next cx def_reason gen
     in
+    let update_reason =
+      match def with
+      | ChainExpression _
+      | RefiExpression _ ->
+        true
+      | _ -> false
+    in
     Debug_js.Verbose.print_if_verbose_lazy
       cx
       ( lazy
@@ -473,7 +480,7 @@ module Make (Env : Env_sig.S) (Statement : Statement_sig.S with module Env := En
             (Debug_js.dump_t cx t);
         ]
         );
-    New_env.New_env.resolve_env_entry ~use_op ~resolved cx t id_loc
+    New_env.New_env.resolve_env_entry ~use_op ~resolved ~update_reason cx t id_loc
 
   let resolve_component cx graph component =
     let open Name_def_ordering in

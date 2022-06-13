@@ -13,7 +13,8 @@ open Loc_collections
 module type S = sig
   include Env_sig.S
 
-  val resolve_env_entry : use_op:use_op -> resolved:bool -> Context.t -> Type.t -> ALoc.t -> unit
+  val resolve_env_entry :
+    use_op:use_op -> resolved:bool -> update_reason:bool -> Context.t -> Type.t -> ALoc.t -> unit
 
   val read_entry : for_type:bool -> Context.t -> ALoc.t -> reason -> Type.t
 end
@@ -709,8 +710,16 @@ module New_env = struct
           (Error_message.EBindingError (Error_message.ENameAlreadyBound, loc, name, def_loc))
     | _ -> ()
 
-  let resolve_env_entry ~use_op ~resolved cx t loc =
+  let resolve_env_entry ~use_op ~resolved ~update_reason cx t loc =
     unify_write_entry cx ~use_op t Env_api.OrdinaryNameLoc loc;
+    let env = Context.environment cx in
+    let env =
+      if update_reason then
+        Loc_env.update_reason env loc (TypeUtil.reason_of_t t)
+      else
+        env
+    in
+    Context.set_environment cx env;
     if resolved then
       let ({ Loc_env.resolved; _ } as env) = Context.environment cx in
       Context.set_environment cx { env with Loc_env.resolved = ALocSet.add loc resolved }
