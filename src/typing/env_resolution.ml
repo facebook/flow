@@ -272,11 +272,7 @@ module Make (Env : Env_sig.S) (Statement : Statement_sig.S with module Env := En
       match lhs_member with
       | None ->
         let id_t =
-          New_env.New_env.read_entry_exn
-            ~lookup_mode:Env_sig.LookupMode.ForValue
-            cx
-            id_loc
-            id_reason
+          New_env.New_env.ref_entry_exn ~lookup_mode:Env_sig.LookupMode.ForValue cx id_loc id_reason
         in
         Flow_js.flow cx (id_t, AssertArithmeticOperandT reason);
         Op (AssignVar { var = Some id_reason; init = TypeUtil.reason_of_t id_t })

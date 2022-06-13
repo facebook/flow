@@ -471,6 +471,10 @@ module New_env = struct
         | Ok x -> x
     )
 
+  let ref_entry_exn ~lookup_mode cx loc reason =
+    let t = read_entry_exn ~lookup_mode cx loc reason in
+    Flow_js.reposition cx loc t
+
   let get_this_type_param_if_necessary ~otherwise name loc =
     if name = OrdinaryName "this" then
       match ALocMap.find_opt loc !this_type_params with
