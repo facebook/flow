@@ -75,6 +75,7 @@ let string_of_source = function
   | ChainExpression _ -> spf "heap"
   | RefiExpression _ -> spf "exp"
   | Update _ -> "[in/de]crement"
+  | MemberAssign _ -> "member_assign"
   | OpAssign _ -> "opassign"
   | Function { function_ = { Ast.Function.id; _ }; _ } ->
     spf
@@ -897,6 +898,30 @@ import * as R from 'foo';
     (5, 4) to (5, 5) =>
     (2, 9) to (2, 14) =>
     (4, 19) to (4, 22) |}]
+
+let%expect_test "object_prop_assign" =
+  print_order_test {|
+function test(obj) {
+  obj.prop = 1;
+}
+  |};
+  [%expect {|
+    (2, 14) to (2, 17) =>
+    (2, 9) to (2, 13) =>
+    (3, 2) to (3, 10) |}]
+
+let%expect_test "array_index_assign" =
+  print_order_test {|
+function test(arr, i) {
+  arr[i++] = 1;
+}
+  |};
+  [%expect {|
+    (2, 14) to (2, 17) =>
+    (2, 19) to (2, 20) =>
+    (2, 9) to (2, 13) =>
+    (3, 2) to (3, 10) =>
+    (3, 6) to (3, 7) |}]
 
 let%expect_test "this" =
   print_order_test {|

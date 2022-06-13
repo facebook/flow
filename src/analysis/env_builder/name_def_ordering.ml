@@ -411,31 +411,34 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) = struct
         | ArrRest _ ->
           state
       in
-      let depends_of_lhs id_loc =
+      let depends_of_lhs id_loc lhs_member_expression =
         (* When looking at a binding def, like `x = y`, in order to resolve this def we need
              to have resolved the providers for `x`, as well as the type of `y`, in order to check
              the type of `y` against `x`. So in addition to exploring the RHS, we also add the providers
              for `x` to the set of dependencies. *)
-        if not @@ Provider_api.is_provider providers id_loc then
-          let (_, providers) =
-            Base.Option.value_exn (Provider_api.providers_of_def providers id_loc)
-          in
-          Base.List.fold
-            ~init:ALocMap.empty
-            ~f:(fun acc r ->
-              let key = Reason.poly_loc_of_reason r in
-              ALocMap.update
-                key
-                (function
-                  | None -> Some (Nel.one id_loc)
-                  | Some locs -> Some (Nel.cons id_loc locs))
-                acc)
-            providers
-        else
-          ALocMap.empty
+        match lhs_member_expression with
+        | None ->
+          if not @@ Provider_api.is_provider providers id_loc then
+            let (_, providers) =
+              Base.Option.value_exn (Provider_api.providers_of_def providers id_loc)
+            in
+            Base.List.fold
+              ~init:ALocMap.empty
+              ~f:(fun acc r ->
+                let key = Reason.poly_loc_of_reason r in
+                ALocMap.update
+                  key
+                  (function
+                    | None -> Some (Nel.one id_loc)
+                    | Some locs -> Some (Nel.cons id_loc locs))
+                  acc)
+              providers
+          else
+            ALocMap.empty
+        | Some e -> depends_of_expression e ALocMap.empty
       in
       let depends_of_binding bind =
-        let state = depends_of_lhs id_loc in
+        let state = depends_of_lhs id_loc None in
         let rec rhs_loop bind state =
           match bind with
           | Root root -> depends_of_root state root
@@ -445,16 +448,31 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) = struct
         in
         rhs_loop bind state
       in
-      let depends_of_update () =
-        let state = depends_of_lhs id_loc in
-        let visitor = new use_visitor cx env state in
-        let writes = visitor#find_writes ~for_type:false id_loc in
-        Base.List.iter ~f:(visitor#add ~why:id_loc) writes;
-        visitor#acc
+      let depends_of_update lhs =
+        let state = depends_of_lhs id_loc lhs in
+        match lhs with
+        | Some _ -> (* assigning to member *) state
+        | None ->
+          (* assigning to identifier *)
+          let visitor = new use_visitor cx env state in
+          let writes = visitor#find_writes ~for_type:false id_loc in
+          Base.List.iter ~f:(visitor#add ~why:id_loc) writes;
+          visitor#acc
       in
-      let depends_of_op_assign rhs =
+      let depends_of_op_assign lhs rhs =
+        let lhs =
+          match lhs with
+          | (_, Ast.Pattern.Expression e) -> Some e
+          | _ -> None
+        in
         (* reusing depends_of_update, since the LHS of an op-assign is handled identically to an update *)
-        let state = depends_of_update () in
+        let state = depends_of_update lhs in
+        depends_of_expression rhs state
+      in
+      let depends_of_member_assign member_loc member rhs =
+        let state =
+          depends_of_node (fun visitor -> ignore @@ visitor#member member_loc member) ALocMap.empty
+        in
         depends_of_expression rhs state
       in
       function
@@ -462,8 +480,10 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) = struct
       | RefiExpression exp
       | ChainExpression exp ->
         depends_of_expression exp ALocMap.empty
-      | Update _ -> depends_of_update ()
-      | OpAssign { rhs; _ } -> depends_of_op_assign rhs
+      | Update { lhs_member; _ } -> depends_of_update lhs_member
+      | MemberAssign { member_loc; member; rhs; _ } ->
+        depends_of_member_assign member_loc member rhs
+      | OpAssign { lhs; rhs; _ } -> depends_of_op_assign lhs rhs
       | Function { fully_annotated; function_; function_loc = _; tparams = _ } ->
         depends_of_fun fully_annotated function_
       | Class { fully_annotated; class_; class_loc = _ } -> depends_of_class fully_annotated class_
@@ -510,6 +530,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) = struct
       | RefiExpression _
       | ChainExpression _
       | Update _
+      | MemberAssign _
       | OpAssign _
       | Function { fully_annotated = false; _ }
       | Enum _

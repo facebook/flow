@@ -80,6 +80,9 @@ module type S = sig
       (ALoc.t, ALoc.t * Type.t) Ast.Function.t
       )
 
+  val assignment_lhs :
+    Context.t -> (ALoc.t, ALoc.t) Ast.Pattern.t -> (ALoc.t, ALoc.t * Type.t) Ast.Pattern.t
+
   val plus_assign :
     Context.t ->
     reason:Reason.reason ->

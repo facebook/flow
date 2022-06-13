@@ -199,15 +199,13 @@ module Make (Env : Env_sig.S) (Statement : Statement_sig.S with module Env := En
     Flow_js.unify cx self class_t_internal;
     (class_t, unknown_use)
 
-  let resolve_op_assign cx ~id_loc ~exp_loc id_reason op rhs =
+  let resolve_op_assign cx ~exp_loc id_reason lhs op rhs =
     let open Ast.Expression in
     match op with
     | Assignment.PlusAssign ->
       (* lhs += rhs *)
       let reason = mk_reason (RCustom "+=") exp_loc in
-      let lhs_t =
-        New_env.New_env.read_entry_exn ~lookup_mode:Env_sig.LookupMode.ForValue cx id_loc id_reason
-      in
+      let ((_, lhs_t), _) = Statement.assignment_lhs cx lhs in
       let rhs_t = expression cx ~hint:Hint_None rhs in
       let result_t =
         Statement.plus_assign
@@ -233,9 +231,7 @@ module Make (Env : Env_sig.S) (Statement : Statement_sig.S with module Env := En
     | Assignment.BitAndAssign ->
       (* lhs (numop)= rhs *)
       let reason = mk_reason (RCustom "(numop)=") exp_loc in
-      let lhs_t =
-        New_env.New_env.read_entry_exn ~lookup_mode:Env_sig.LookupMode.ForValue cx id_loc id_reason
-      in
+      let ((_, lhs_t), _) = Statement.assignment_lhs cx lhs in
       let rhs_t = expression cx ~hint:Hint_None rhs in
       let result_t = Statement.arith_assign cx reason lhs_t rhs_t in
       let use_op = Op (AssignVar { var = Some id_reason; init = reason }) in
@@ -244,9 +240,7 @@ module Make (Env : Env_sig.S) (Statement : Statement_sig.S with module Env := En
     | Assignment.OrAssign
     | Assignment.NullishAssign ->
       let reason = mk_reason (RCustom (Flow_ast_utils.string_of_assignment_operator op)) exp_loc in
-      let lhs_t =
-        New_env.New_env.read_entry_exn ~lookup_mode:Env_sig.LookupMode.ForValue cx id_loc id_reason
-      in
+      let ((_, lhs_t), _) = Statement.assignment_lhs cx lhs in
       let (((_, rhs_t), _), right_abnormal) =
         Abnormal.catch_expr_control_flow_exception (fun () ->
             Statement.expression cx ~hint:Hint_None rhs (* TODO hint *)
@@ -271,15 +265,27 @@ module Make (Env : Env_sig.S) (Statement : Statement_sig.S with module Env := En
       let use_op = Op (AssignVar { var = Some id_reason; init = reason }) in
       (result_t, use_op)
 
-  let resolve_update cx ~id_loc ~exp_loc id_reason =
+  let resolve_update cx ~id_loc ~lhs_member ~exp_loc id_reason =
     let reason = mk_reason (RCustom "update") exp_loc in
-    let id_t =
-      New_env.New_env.read_entry_exn ~lookup_mode:Env_sig.LookupMode.ForValue cx id_loc id_reason
+    let result_t = NumT.at exp_loc |> with_trust literal_trust in
+    let use_op =
+      match lhs_member with
+      | None ->
+        let id_t =
+          New_env.New_env.read_entry_exn
+            ~lookup_mode:Env_sig.LookupMode.ForValue
+            cx
+            id_loc
+            id_reason
+        in
+        Flow_js.flow cx (id_t, AssertArithmeticOperandT reason);
+        Op (AssignVar { var = Some id_reason; init = TypeUtil.reason_of_t id_t })
+      | Some argument ->
+        let arg_val_t = expression cx ~hint:Hint_None argument in
+        Flow_js.flow cx (arg_val_t, AssertArithmeticOperandT reason);
+        unknown_use
     in
-    Flow_js.flow cx (id_t, AssertArithmeticOperandT reason);
-    let t = NumT.at exp_loc |> with_trust literal_trust in
-    let use_op = Op (AssignVar { var = Some id_reason; init = TypeUtil.reason_of_t id_t }) in
-    (t, use_op)
+    (result_t, use_op)
 
   let resolve_type_alias cx loc alias =
     let cache = Context.node_cache cx in
@@ -438,9 +444,12 @@ module Make (Env : Env_sig.S) (Statement : Statement_sig.S with module Env := En
         as_resolved @@ resolve_inferred_class cx id_loc def_reason class_loc class_
       | Class { class_; fully_annotated = true; class_loc } ->
         as_resolved @@ resolve_annotated_class cx id_loc def_reason class_loc class_
-      | OpAssign { exp_loc; op; rhs } ->
-        as_resolved @@ resolve_op_assign cx ~id_loc ~exp_loc def_reason op rhs
-      | Update { exp_loc; op = _ } -> as_resolved @@ resolve_update cx ~id_loc ~exp_loc def_reason
+      | MemberAssign { member_loc = _; member = _; rhs } ->
+        (expression cx ~hint:Hint_None rhs, unknown_use, true)
+      | OpAssign { exp_loc; lhs; op; rhs } ->
+        as_resolved @@ resolve_op_assign cx ~exp_loc def_reason lhs op rhs
+      | Update { exp_loc; lhs_member; op = _ } ->
+        as_resolved @@ resolve_update cx ~id_loc ~exp_loc ~lhs_member def_reason
       | TypeAlias (loc, alias) -> as_resolved @@ resolve_type_alias cx loc alias
       | OpaqueType (loc, opaque) -> as_resolved @@ resolve_opaque_type cx loc opaque
       | Import { import_kind; source; source_loc; import } ->

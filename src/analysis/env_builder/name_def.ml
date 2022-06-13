@@ -75,13 +75,20 @@ type def =
   | Binding of binding
   | ChainExpression of (ALoc.t, ALoc.t) Ast.Expression.t
   | RefiExpression of (ALoc.t, ALoc.t) Ast.Expression.t
+  | MemberAssign of {
+      member_loc: ALoc.t;
+      member: (ALoc.t, ALoc.t) Ast.Expression.Member.t;
+      rhs: (ALoc.t, ALoc.t) Ast.Expression.t;
+    }
   | OpAssign of {
       exp_loc: ALoc.t;
+      lhs: (ALoc.t, ALoc.t) Ast.Pattern.t;
       op: Ast.Expression.Assignment.operator;
       rhs: (ALoc.t, ALoc.t) Ast.Expression.t;
     }
   | Update of {
       exp_loc: ALoc.t;
+      lhs_member: (ALoc.t, ALoc.t) Ast.Expression.t option;
       op: Ast.Expression.Update.operator;
     }
   | Function of {
@@ -501,6 +508,13 @@ class def_finder env_entries providers toplevel_scope =
       let { operator; left = (_, lhs_node) as left; right; comments = _ } = expr in
       let () =
         match (operator, lhs_node) with
+        | (None, Ast.Pattern.Expression (member_loc, Ast.Expression.Member member)) ->
+          (* Use super member to visit sub-expressions to avoid record a read of the member. *)
+          ignore @@ super#member member_loc member;
+          this#add_binding
+            member_loc
+            (mk_pattern_reason left)
+            (MemberAssign { member_loc; member; rhs = right })
         | (None, _) -> Destructure.pattern ~f:this#add_binding (Root (Value right)) left
         | ( Some operator,
             Ast.Pattern.Identifier
@@ -509,10 +523,16 @@ class def_finder env_entries providers toplevel_scope =
           this#add_binding
             id_loc
             (mk_reason (RIdentifier (OrdinaryName name)) id_loc)
-            (OpAssign { exp_loc = loc; op = operator; rhs = right })
+            (OpAssign { exp_loc = loc; lhs = left; op = operator; rhs = right })
+        | (Some operator, Ast.Pattern.Expression ((def_loc, _) as e)) ->
+          (* In op_assign, the LHS will also be read. *)
+          ignore @@ this#expression e;
+          this#add_binding
+            def_loc
+            (mk_pattern_reason left)
+            (OpAssign { exp_loc = loc; lhs = left; op = operator; rhs = right })
         | _ -> ()
       in
-      ignore @@ this#pattern left;
       let is_provider =
         Flow_ast_utils.fold_bindings_of_pattern
           (fun acc (loc, _) -> acc || Env_api.Provider_api.is_provider providers loc)
@@ -559,7 +579,12 @@ class def_finder env_entries providers toplevel_scope =
           this#add_binding
             id_loc
             (mk_reason (RIdentifier (OrdinaryName name)) id_loc)
-            (Update { exp_loc = loc; op = operator })
+            (Update { exp_loc = loc; lhs_member = None; op = operator })
+        | (def_loc, Ast.Expression.Member _) ->
+          this#add_binding
+            def_loc
+            (mk_expression_reason argument)
+            (Update { exp_loc = loc; lhs_member = Some argument; op = operator })
         | _ -> ()
       end;
       super#update_expression loc expr
