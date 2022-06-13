@@ -18,8 +18,6 @@ module type S = sig
 
   val find_providers : (L.t, L.t) Flow_ast.Program.t -> info
 
-  val print_full_env : info -> string
-
   val providers_of_def :
     info -> L.t -> (Find_providers.state * L.t Reason.virtual_reason list) option
 
@@ -103,8 +101,6 @@ module Make (L : Loc_sig.S) : S with module L = L = struct
       all_providers_of_writes = all_providers_of_writes all_entries;
       raw_env = env;
     }
-
-  let print_full_env { raw_env; _ } = print_full_env raw_env
 end
 
 module LocProviders = Make (Loc_sig.LocS)

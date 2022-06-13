@@ -46,8 +46,6 @@ module FindProviders (L : Loc_sig.S) : sig
   val all_entries : env -> EntrySet.t
 
   val get_providers_for_toplevel_var : string -> env -> L.LSet.t option
-
-  val print_full_env : env -> string
 end = struct
   module Id : sig
     type t
@@ -137,22 +135,6 @@ end = struct
     let compare { entry_id = id1; _ } { entry_id = id2; _ } = Id.compare id1 id2
   end)
 
-  (* This records, per variable and per scope, the locations of providers for that variable within the scope or any child scopes.
-      The exact_locs field records the precise location of the variable being provided, while relative_locs records the location of
-      the statement *within the current scope* in which the provider lives. For example, in a program like
-
-      function f() {
-        if (condition) { var x = 42 };
-      }
-
-     The lexical scope for `f` will contain a `local_providers` for `x`, which contains an `exact_locs` pointing to the actual VariableDeclaration
-     node, and a `relative_locs` pointing to the IfStatement.
-  *)
-  type local_providers = {
-    exact_locs: L.LSet.t;
-    relative_locs: L.LSet.t;
-  }
-
   (* Individual lexical scope. Entries are variables "native" to this scope,
      children are the child scopes keyed by their locations, and local_providers
      are as described above *)
@@ -160,7 +142,6 @@ end = struct
     kind: kind;
     entries: intermediate_entry SMap.t;
     children: scope L.LMap.t;
-    providers: local_providers SMap.t;
   }
 
   type env = scope Nel.t
@@ -343,29 +324,6 @@ end = struct
   let get_entry var default_binding entries =
     SMap.find_opt var entries |> Option.value ~default:(empty_entry var default_binding)
 
-  let empty_provider_info = { exact_locs = L.LSet.empty; relative_locs = L.LSet.empty }
-
-  let get_provider_info var providers =
-    SMap.find_opt var providers |> Base.Option.value ~default:empty_provider_info
-
-  let update_provider_info var loc (({ providers; _ } as hd), tl) =
-    let { exact_locs; relative_locs } = get_provider_info var providers in
-    let providers =
-      SMap.add
-        var
-        { exact_locs = L.LSet.add loc exact_locs; relative_locs = L.LSet.add loc relative_locs }
-        providers
-    in
-    ({ hd with providers }, tl)
-
-  let join_providers prov1 prov2 =
-    if prov1 == prov2 then
-      prov1
-    else
-      match (prov1, prov2) with
-      | ({ exact_locs = pl1; relative_locs = cl1 }, { exact_locs = pl2; relative_locs = cl2 }) ->
-        { exact_locs = L.LSet.union pl1 pl2; relative_locs = L.LSet.union cl1 cl2 }
-
   let join_envs env1 env2 =
     let join_entries entry1 entry2 =
       if entry1 == entry2 then
@@ -430,16 +388,14 @@ end = struct
         scope1
       else
         match (scope1, scope2) with
-        | ( { kind = kind1; entries = entries1; children = children1; providers = providers1 },
-            { kind = kind2; entries = entries2; children = children2; providers = providers2 }
+        | ( { kind = kind1; entries = entries1; children = children1 },
+            { kind = kind2; entries = entries2; children = children2 }
           ) ->
           assert (kind1 = kind2);
           {
             kind = kind1;
             entries =
               SMap.union ~combine:(fun _ e1 e2 -> Some (join_entries e1 e2)) entries1 entries2;
-            providers =
-              SMap.union ~combine:(fun _ p1 p2 -> Some (join_providers p1 p2)) providers1 providers2;
             children =
               L.LMap.union ~combine:(fun _ c1 c2 -> Some (join_scopes c1 c2)) children1 children2;
           }
@@ -454,26 +410,8 @@ end = struct
 
   let exit_lex_child loc env =
     match env with
-    | ( ({ providers = pchild; entries; _ } as child),
-        ({ children; providers = pparent; _ } as parent) :: rest
-      ) ->
-      (* For all variables that aren't native to the child scope, update the parent scope's
-         provider_info with whatever providing information the child scope contains,
-         coarsening the relative_locs to point at the child scope as a whole. *)
-      let pchild_promoted =
-        SMap.filter (fun k _ -> not (SMap.mem k entries)) pchild
-        |> SMap.map (fun { relative_locs = _; exact_locs } ->
-               { relative_locs = L.LSet.singleton loc; exact_locs }
-           )
-      in
-      ( {
-          parent with
-          children = L.LMap.add loc child children;
-          providers =
-            SMap.union ~combine:(fun _ p1 p2 -> Some (join_providers p1 p2)) pparent pchild_promoted;
-        },
-        rest
-      )
+    | (child, ({ children; _ } as parent) :: rest) ->
+      ({ parent with children = L.LMap.add loc child children }, rest)
     | (_, []) -> env_invariant_violated "Popping to empty stack"
 
   (* Root visitor. Uses the `enter_lex_child` function parameter to manipulate the environment when it dives into a scope,
@@ -698,8 +636,7 @@ end = struct
 
   (****** pass 1 *******)
 
-  let new_scope ~kind =
-    { kind; entries = SMap.empty; children = L.LMap.empty; providers = SMap.empty }
+  let new_scope ~kind = { kind; entries = SMap.empty; children = L.LMap.empty }
 
   let empty_env = (new_scope ~kind:Var, [])
 
@@ -734,7 +671,7 @@ end = struct
           get_entry var binding_kind entries
         in
         let declare_locs = L.LSet.add loc declare_locs in
-        let (new_state, state, provider_locs) =
+        let (state, provider_locs) =
           match (binding_kind, stored_binding_kind) with
           | ( Bindings.DeclaredFunction { predicate = p1 },
               Bindings.DeclaredFunction { predicate = p2 }
@@ -743,26 +680,17 @@ end = struct
              * make it clear that certain providers are meant to be intersected and others
              * are meant to be unioned. *)
             let predicate = p1 || p2 in
-            ( Some (Annotated { predicate }),
-              Annotated { predicate },
-              L.LMap.add loc (Annotation { predicate }) provider_locs
-            )
-          | (_, Bindings.DeclaredFunction _) -> (None, cur_state, provider_locs)
+            (Annotated { predicate }, L.LMap.add loc (Annotation { predicate }) provider_locs)
+          | (_, Bindings.DeclaredFunction _) -> (cur_state, provider_locs)
           | _ ->
             let new_state = extended_state_opt ~state:cur_state ~write_state in
             Base.Option.value_map
-              ~f:(fun state -> (new_state, state, L.LMap.add loc write_state provider_locs))
-              ~default:(new_state, cur_state, provider_locs)
+              ~f:(fun state -> (state, L.LMap.add loc write_state provider_locs))
+              ~default:(cur_state, provider_locs)
               new_state
         in
         let entries = SMap.add var { entry with declare_locs; state; provider_locs } entries in
         let env = reconstruct_env entries in
-        let env =
-          if Base.Option.is_some new_state then
-            update_provider_info var loc env
-          else
-            env
-        in
         this#set_acc (env, cx)
 
       method! declare_variable _loc (decl : ('loc, 'loc) Ast.Statement.DeclareVariable.t) =
@@ -1032,12 +960,6 @@ end = struct
             extended_state
         in
         let env = reconstruct_env { entry with state; provider_locs; def_locs } in
-        let env =
-          if Base.Option.is_some extended_state then
-            update_provider_info var loc env
-          else
-            env
-        in
         this#set_acc (env, cx)
 
       method! assignment
@@ -1131,55 +1053,4 @@ end = struct
   let get_providers_for_toplevel_var var ({ entries; _ }, _) =
     let entry = SMap.find_opt var entries in
     Base.Option.map ~f:(fun entry -> (simplify_providers entry).provider_locs) entry
-
-  let print_full_env env =
-    let rec ptabs count =
-      if count = 0 then
-        ""
-      else
-        spf " %s" (ptabs (count - 1))
-    in
-    let rec print_rec label tabs { providers; entries = _; children; _ } =
-      let msg = spf "%s%s:\n" (ptabs tabs) label in
-      let tabs = tabs + 1 in
-      let t = ptabs tabs in
-      let msg =
-        spf
-          "%s%sproviders: \n%s\n"
-          msg
-          t
-          (SMap.bindings providers
-          |> Base.List.map ~f:(fun (k, { relative_locs; exact_locs }) ->
-                 spf
-                   "%s %s:\n%s  relative: (%s)\n%s  exact: (%s)"
-                   t
-                   k
-                   t
-                   (L.LSet.elements relative_locs
-                   |> Base.List.map ~f:(L.debug_to_string ~include_source:false)
-                   |> String.concat "), ("
-                   )
-                   t
-                   (L.LSet.elements exact_locs
-                   |> Base.List.map ~f:(L.debug_to_string ~include_source:false)
-                   |> String.concat "), ("
-                   )
-             )
-          |> String.concat "\n"
-          )
-      in
-      spf
-        "%s%schildren:\n%s"
-        msg
-        t
-        (L.LMap.bindings children
-        |> Base.List.map ~f:(fun (loc, scope) ->
-               print_rec (L.debug_to_string ~include_source:false loc) (tabs + 1) scope
-           )
-        |> String.concat "\n"
-        )
-    in
-    match env with
-    | (top, []) -> print_rec "toplevel" 0 top
-    | _ -> env_invariant_violated "Final environment has depth =/= 1"
 end
