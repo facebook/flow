@@ -228,13 +228,25 @@ module Annotate_lti_command = struct
                ~doc:""
           |> common_annotate_flags
           |> flag
-               "--add-this-params"
+               "--skip-normal-params"
                no_arg
-               ~doc:"Adds a 'this' parameter and type annotations to functions where necessary"
+               ~doc:
+                 "Skips adding function parameter type annotations (except for 'this' annotations) even if necessary"
+          |> flag
+               "--skip-this-params"
+               no_arg
+               ~doc:"Skips adding 'this' parameter type annotations to functions even if necessary"
         );
     }
 
-  let main codemod_flags preserve_literals max_type_size default_any add_this_params () =
+  let main
+      codemod_flags
+      preserve_literals
+      max_type_size
+      default_any
+      skip_normal_params
+      skip_this_params
+      () =
     let module Runner = Codemod_runner.MakeSimpleTypedRunner (struct
       module Acc = Annotate_lti.Acc
 
@@ -256,7 +268,12 @@ module Annotate_lti_command = struct
 
       let visit =
         let mapper =
-          Annotate_lti.mapper ~preserve_literals ~max_type_size ~default_any ~add_this_params
+          Annotate_lti.mapper
+            ~preserve_literals
+            ~max_type_size
+            ~default_any
+            ~skip_normal_params
+            ~skip_this_params
         in
         Codemod_utils.make_visitor (Codemod_utils.Mapper mapper)
     end) in

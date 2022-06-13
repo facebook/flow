@@ -167,8 +167,12 @@ module Hardcoded_Ty_Fixes = Codemod_hardcoded_ty_fixes.Make (ErrorStats)
 module Acc = Insert_type_utils.Acc (ErrorStats)
 
 let mapper
-    ~preserve_literals ~max_type_size ~default_any ~add_this_params (cctx : Codemod_context.Typed.t)
-    =
+    ~preserve_literals
+    ~max_type_size
+    ~default_any
+    ~skip_normal_params
+    ~skip_this_params
+    (cctx : Codemod_context.Typed.t) =
   let lint_severities = Codemod_context.Typed.lint_severities cctx in
   let flowfixme_ast = Codemod_context.Typed.flowfixme_ast ~lint_severities cctx in
   object (this)
@@ -209,7 +213,7 @@ let mapper
       Codemod_annotator.validate_ty cctx ~max_type_size ty
 
     method! function_param_pattern ((ploc, patt) : ('loc, 'loc) Ast.Pattern.t) =
-      if LMap.mem ploc loc_error_map then (
+      if (not skip_normal_params) && LMap.mem ploc loc_error_map then (
         let ty_result =
           Codemod_annotator.get_ty cctx ~preserve_literals ploc
           >>| Normalize_union.normalize
@@ -255,7 +259,7 @@ let mapper
 
       let (ploc, _) = params in
       let with_this_param =
-        if add_this_params && this#needs_this_annot ploc then
+        if (not skip_this_params) && this#needs_this_annot ploc then
           let this_locs = find_this_locs expr in
           if not (LSet.is_empty this_locs) then
             let ty_result =
