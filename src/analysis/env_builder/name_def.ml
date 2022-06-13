@@ -116,7 +116,7 @@ type def =
   | OpaqueType of ALoc.t * (ALoc.t, ALoc.t) Ast.Statement.OpaqueType.t
   | TypeParam of (ALoc.t, ALoc.t) Ast.Type.TypeParam.t
   | Interface of ALoc.t * (ALoc.t, ALoc.t) Ast.Statement.Interface.t
-  | Enum of ALoc.t Ast.Statement.EnumDeclaration.body
+  | Enum of ALoc.t * ALoc.t Ast.Statement.EnumDeclaration.body
   | Import of {
       import_kind: Ast.Statement.ImportDeclaration.import_kind;
       import: import;
@@ -717,7 +717,7 @@ class def_finder env_entries providers toplevel_scope =
     method! enum_declaration loc (enum : ('loc, 'loc) Ast.Statement.EnumDeclaration.t) =
       let open Ast.Statement.EnumDeclaration in
       let { id = (name_loc, { Ast.Identifier.name; _ }); body; _ } = enum in
-      this#add_binding name_loc (mk_reason (REnum name) name_loc) (Enum body);
+      this#add_binding name_loc (mk_reason (REnum name) name_loc) (Enum (loc, body));
       super#enum_declaration loc enum
 
     method! import_declaration loc (decl : ('loc, 'loc) Ast.Statement.ImportDeclaration.t) =

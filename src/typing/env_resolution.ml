@@ -341,12 +341,12 @@ module Make (Env : Env_sig.S) (Statement : Statement_sig.S with module Env := En
     Node_cache.set_declared_class cache loc (t, ast);
     (t, unknown_use)
 
-  let resolve_enum cx id_loc enum_reason enum =
+  let resolve_enum cx id_loc enum_reason enum_loc enum =
     if Context.enable_enums cx then
       let enum_t = Statement.mk_enum cx ~enum_reason id_loc enum in
       (DefT (enum_reason, literal_trust (), EnumObjectT enum_t), unknown_use)
     else (
-      Flow_js.add_output cx (Error_message.EEnumsNotEnabled id_loc);
+      Flow_js.add_output cx (Error_message.EEnumsNotEnabled enum_loc);
       (AnyT.error enum_reason, unknown_use)
     )
 
@@ -459,7 +459,7 @@ module Make (Env : Env_sig.S) (Statement : Statement_sig.S with module Env := En
         as_resolved @@ resolve_import cx id_loc def_reason import_kind source source_loc import
       | Interface (loc, inter) -> as_resolved @@ resolve_interface cx loc inter
       | DeclaredClass (loc, class_) -> as_resolved @@ resolve_declare_class cx loc class_
-      | Enum enum -> as_resolved @@ resolve_enum cx id_loc def_reason enum
+      | Enum (enum_loc, enum) -> as_resolved @@ resolve_enum cx id_loc def_reason enum_loc enum
       | TypeParam param -> as_resolved @@ resolve_type_param cx id_loc param
       | GeneratorNext gen -> as_resolved @@ resolve_generator_next cx def_reason gen
     in
