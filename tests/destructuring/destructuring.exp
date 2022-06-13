@@ -177,13 +177,13 @@ References:
            ^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- array_rest.js:12:6
+Error ----------------------------------------------------------------------------------------------- array_rest.js:12:9
 
 number [1] is not an array. [not-an-array]
 
-   array_rest.js:12:6
+   array_rest.js:12:9
    12| let [...e] = 0;
-            ^^^^
+               ^
 
 References:
    array_rest.js:12:14
@@ -583,13 +583,13 @@ References:
                                      ^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------------------ defaults.js:62:24
+Error ------------------------------------------------------------------------------------------------ defaults.js:62:27
 
 number [1] is not an object. [not-an-object]
 
-   defaults.js:62:24
+   defaults.js:62:27
    62| function obj_rest_err({...o}=0) {} // error: expected object instead of number
-                              ^^^^
+                                 ^
 
 References:
    defaults.js:62:30
@@ -611,13 +611,13 @@ References:
                                  ^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------------------ defaults.js:64:24
+Error ------------------------------------------------------------------------------------------------ defaults.js:64:27
 
 null [1] is not an array. [not-an-array]
 
-   defaults.js:64:24
+   defaults.js:64:27
    64| function arr_rest_err([...a]=null) {} // error: expected array instead of null
-                              ^^^^
+                                 ^
 
 References:
    defaults.js:64:30
@@ -871,9 +871,9 @@ Cannot assign array literal to `c` because rest of array pattern [1] is incompat
                      ^^^^^^^^^^^^
 
 References:
-   destructuring.js:20:7
+   destructuring.js:20:10
    20| [a,,b,...c] = [0,1,true,3];
-             ^^^^ [1]
+                ^ [1]
    destructuring.js:3:15
     3| declare var c:string;
                      ^^^^^^ [2]
@@ -889,9 +889,9 @@ Cannot assign `z` to `o` because property `x` is missing in rest of object patte
                                            ^
 
 References:
-   destructuring.js:22:18
+   destructuring.js:22:21
    22| function bar({x, ...z}) {
-                        ^^^^ [1]
+                           ^ [1]
    destructuring.js:23:11
    23|     var o:{x: string; y: number;} = z;
                  ^^^^^^^^^^^^^^^^^^^^^^^ [2]
@@ -1039,9 +1039,9 @@ Cannot get `rest.baz` because property `baz` (did you mean `bar`?) is missing in
                ^^^
 
 References:
-   destructuring.js:44:13
+   destructuring.js:44:16
    44|   var {foo, ...rest} = x;
-                   ^^^^^^^ [1]
+                      ^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------- destructuring.js:64:23
@@ -1273,9 +1273,9 @@ Cannot assign `0` to `o1_rest.x` because property `x` is missing in rest of obje
               ^
 
 References:
-   object_rest.js:3:9
+   object_rest.js:3:12
    3| var {p, ...o1_rest} = o1;
-              ^^^^^^^^^^ [1]
+                 ^^^^^^^ [1]
 
 
 Error ---------------------------------------------------------------------------------------------- object_rest.js:11:9
@@ -1287,9 +1287,9 @@ Cannot assign `0` to `o2_rest.x` because property `x` is missing in rest of obje
                ^
 
 References:
-   object_rest.js:9:9
+   object_rest.js:9:12
     9| var {p, ...o2_rest} = o2;
-               ^^^^^^^^^^ [1]
+                  ^^^^^^^ [1]
 
 
 Error ---------------------------------------------------------------------------------------------- object_rest.js:16:9
@@ -1301,9 +1301,9 @@ Cannot assign `0` to `o3_rest.x` because property `x` is missing in rest of obje
                ^
 
 References:
-   object_rest.js:14:9
+   object_rest.js:14:12
    14| var {p, ...o3_rest} = o3;
-               ^^^^^^^^^^ [1]
+                  ^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------------ string_lit.js:2:2

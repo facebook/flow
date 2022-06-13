@@ -41,6 +41,7 @@ type selector =
   | Elem of int
   | Prop of {
       prop: string;
+      prop_loc: ALoc.t;
       has_default: bool;
     }
   | Computed of (ALoc.t, ALoc.t) Ast.Expression.t
@@ -138,7 +139,8 @@ module Destructure = struct
 
   let array_rest_element acc i = Select (ArrRest i, acc)
 
-  let object_named_property acc x ~has_default = Select (Prop { prop = x; has_default }, acc)
+  let object_named_property acc prop_loc x ~has_default =
+    Select (Prop { prop = x; prop_loc; has_default }, acc)
 
   let object_computed_property acc e = Select (Computed e, acc)
 
@@ -148,11 +150,11 @@ module Destructure = struct
   let object_property acc xs key ~has_default =
     let open Ast.Pattern.Object in
     match key with
-    | Property.Identifier (_, { Ast.Identifier.name = x; comments = _ }) ->
-      let acc = object_named_property acc x ~has_default in
+    | Property.Identifier (loc, { Ast.Identifier.name = x; comments = _ }) ->
+      let acc = object_named_property acc loc x ~has_default in
       (acc, x :: xs, false)
-    | Property.Literal (_, { Ast.Literal.value = Ast.Literal.String x; _ }) ->
-      let acc = object_named_property acc x ~has_default in
+    | Property.Literal (loc, { Ast.Literal.value = Ast.Literal.String x; _ }) ->
+      let acc = object_named_property acc loc x ~has_default in
       (acc, x :: xs, false)
     | Property.Computed (_, { Ast.ComputedKey.expression; comments = _ }) ->
       let acc = object_computed_property acc expression in

@@ -148,9 +148,9 @@ Cannot cast `rest2.p` to string because number [1] is incompatible with string [
         ^^^^^^^
 
 References:
-   bindings.js:13:33
-   13| var {w, ...rest2} = { w: 42, p: 100 };
-                                       ^^^ [1]
+   bindings.js:15:14
+   15| (rest2: { p: number });
+                    ^^^^^^ [1]
    bindings.js:16:11
    16| (rest2.p: string); //err
                  ^^^^^^ [2]
@@ -960,20 +960,6 @@ References:
                                  ^ [1]
 
 
-Error ------------------------------------------------------------------------------------------------- tparams.js:22:13
-
-`A` [1] is not an object. [not-an-object]
-
-   tparams.js:22:13
-   22|   const {p, ...o} = a;
-                   ^^^^
-
-References:
-   tparams.js:21:27
-   21| function removex<A, B>(a: A): [$Rest<A, {p: B}>, B] {
-                                 ^ [1]
-
-
 Error ------------------------------------------------------------------------------------------------- tparams.js:22:16
 
 `A` [1] is not an object. [not-an-object]
@@ -1159,4 +1145,4 @@ undefined. [incompatible-return]
 
 
 
-Found 78 errors
+Found 77 errors

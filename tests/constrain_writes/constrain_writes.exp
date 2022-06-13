@@ -103,9 +103,9 @@ Cannot assign `x` to `a` because rest of object pattern [1] is incompatible with
                       ^
 
 References:
-   test.js:40:8
+   test.js:40:11
    40|   var {...a} = x; // no post-check here
-              ^^^^ [1]
+                 ^ [1]
    test.js:39:11
    39|   var a : string;
                  ^^^^^^ [2]

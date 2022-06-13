@@ -315,8 +315,8 @@ module Make (Env : Env_sig.S) (Statement : Statement_sig.S with module Env := En
         let (acc, d) = pattern_default cx acc d in
         let p = pattern cx ~f acc p in
         Element (loc, { Element.argument = p; default = d })
-      | RestElement (loc, { Ast.Pattern.RestElement.argument = p; comments }) ->
-        let acc = array_rest_element cx acc i loc in
+      | RestElement (loc, { Ast.Pattern.RestElement.argument = (arg_loc, _) as p; comments }) ->
+        let acc = array_rest_element cx acc i arg_loc in
         let p = pattern cx ~f acc p in
         RestElement (loc, { Ast.Pattern.RestElement.argument = p; comments })
     )
@@ -331,8 +331,8 @@ module Make (Env : Env_sig.S) (Statement : Statement_sig.S with module Env := En
         let (acc, d) = pattern_default cx acc d in
         let p = pattern cx ~f acc p in
         (xs, Property (loc, { Property.key; pattern = p; default = d; shorthand }))
-      | RestElement (loc, { Ast.Pattern.RestElement.argument = p; comments }) ->
-        let acc = object_rest_property cx acc xs loc in
+      | RestElement (loc, { Ast.Pattern.RestElement.argument = (arg_loc, _) as p; comments }) ->
+        let acc = object_rest_property cx acc xs arg_loc in
         let p = pattern cx ~f acc p in
         (xs, RestElement (loc, { Ast.Pattern.RestElement.argument = p; comments }))
     in

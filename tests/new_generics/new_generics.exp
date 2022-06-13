@@ -1184,9 +1184,9 @@ type [2]. [prop-missing]
           ^^^^
 
 References:
-   rest.js:9:11
+   rest.js:9:14
     9|   var {x, ...rest} = o;
-                 ^^^^^^^ [1]
+                    ^^^^ [1]
    rest.js:10:10
    10|   (rest: {...X, ...Y}); //no, because x is missing
                 ^^^^^^^^^^^^ [2]
@@ -1202,9 +1202,9 @@ Cannot cast `rest` to object type because rest of object pattern [1] is incompat
           ^^^^
 
 References:
-   rest.js:9:11
+   rest.js:9:14
     9|   var {x, ...rest} = o;
-                 ^^^^^^^ [1]
+                    ^^^^ [1]
    rest.js:12:10
    12|   (rest: {...X}); // no, because X's props could have been overwritten
                 ^^^^^^ [2]

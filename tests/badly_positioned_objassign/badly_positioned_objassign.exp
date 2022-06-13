@@ -25,9 +25,9 @@ Cannot assign `x` to `a` because rest of object pattern [1] is incompatible with
                    ^
 
 References:
-   test3.js:5:6
+   test3.js:5:9
    5| var {...a} = x;
-           ^^^^ [1]
+              ^ [1]
    test3.js:4:9
    4| var a : string;
               ^^^^^^ [2]

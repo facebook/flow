@@ -1426,13 +1426,13 @@ References:
                                ^ [1]
 
 
-Error --------------------------------------------------------------------------------------------- type_generic.js:2:13
+Error --------------------------------------------------------------------------------------------- type_generic.js:2:16
 
 `A` [1] is not an object. [not-an-object]
 
-   type_generic.js:2:13
+   type_generic.js:2:16
    2|   const {p, ...o} = a;
-                  ^^^^
+                     ^
 
 References:
    type_generic.js:1:26

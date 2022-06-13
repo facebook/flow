@@ -100,7 +100,7 @@ module Make (Env : Env_sig.S) (Statement : Statement_sig.S with module Env := En
       (t, mk_use_op t, true)
     | Select (sel, b) ->
       let (t, use_op, resolved) = resolve_binding cx reason loc b in
-      let selector =
+      let (selector, reason) =
         match sel with
         | Name_def.Elem n ->
           let key =
@@ -110,20 +110,20 @@ module Make (Env : Env_sig.S) (Statement : Statement_sig.S with module Env := En
                 NumT (Literal (None, (float n, string_of_int n)))
               )
           in
-          Type.Elem key
-        | Name_def.Prop { prop; has_default } -> Type.Prop (prop, has_default)
-        | Name_def.ArrRest n -> Type.ArrRest n
+          (Type.Elem key, mk_reason (RCustom (Utils_js.spf "element %d" n)) loc)
+        | Name_def.Prop { prop; prop_loc; has_default } ->
+          (Type.Prop (prop, has_default), mk_reason (RProperty (Some (OrdinaryName prop))) prop_loc)
+        | Name_def.ArrRest n -> (Type.ArrRest n, mk_reason RArrayPatternRestProp loc)
         | Name_def.ObjRest { used_props; after_computed = _ } ->
           (* TODO: eveyrthing after a computed prop should be optional *)
-          Type.ObjRest used_props
+          (Type.ObjRest used_props, mk_reason RObjectPatternRestProp loc)
         | Name_def.Computed exp ->
           let t = expression cx ~hint:Hint_None exp in
-          Type.Elem t
+          (Type.Elem t, mk_reason (RProperty None) loc)
         | Name_def.Default _exp ->
           (* TODO: change the way default works to see exp as a source *)
-          Type.Default
+          (Type.Default, mk_reason (RCustom "destructured var") loc)
       in
-      let reason = mk_reason (RCustom "destructured var") loc in
       ( Tvar.mk_no_wrap_where cx reason (fun tout ->
             Flow_js.flow
               cx
