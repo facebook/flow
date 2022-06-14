@@ -50,8 +50,14 @@ module Make (Env : Env_sig.S) (Statement : Statement_sig.S with module Env := En
       t
     in
     match b with
-    | Root (Annotation (tparams_locs, anno)) ->
-      let t = resolve_annotation tparams_locs anno in
+    | Root (Annotation { tparams_locs; optional; annot }) ->
+      let t = resolve_annotation tparams_locs annot in
+      let t =
+        if optional then
+          TypeUtil.optional t
+        else
+          t
+      in
       (t, mk_use_op t, true)
     | Root (Value exp) ->
       (* TODO: look up the annotation for the variable at loc and pass in *)

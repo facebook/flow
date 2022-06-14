@@ -39,7 +39,11 @@ type hint_node =
   | ValueHint of (ALoc.t, ALoc.t) Ast.Expression.t Nel.t
 
 type root =
-  | Annotation of ALocSet.t * (ALoc.t, ALoc.t) Ast.Type.annotation
+  | Annotation of {
+      tparams_locs: ALocSet.t;
+      optional: bool;
+      annot: (ALoc.t, ALoc.t) Ast.Type.annotation;
+    }
   | Value of (ALoc.t, ALoc.t) Ast.Expression.t
   | Contextual of ALoc.t * hint_node hint
   | Catch
@@ -317,7 +321,8 @@ class def_finder env_entries providers toplevel_scope =
       let (_, { id; init }) = decl in
       let source =
         match (Destructure.type_of_pattern id, init) with
-        | (Some annot, _) -> Some (Annotation (ALocSet.empty, annot))
+        | (Some annot, _) ->
+          Some (Annotation { tparams_locs = ALocSet.empty; optional = false; annot })
         | (None, Some init) -> Some (Value init)
         | (None, None) -> None
       in
@@ -330,7 +335,7 @@ class def_finder env_entries providers toplevel_scope =
       this#add_binding
         id_loc
         (mk_reason (RIdentifier (OrdinaryName name)) id_loc)
-        (Binding (Root (Annotation (ALocSet.empty, annot))));
+        (Binding (Root (Annotation { tparams_locs = ALocSet.empty; optional = false; annot })));
       super#declare_variable loc decl
 
     method! function_param _ = failwith "Should be visited by visit_function_param"
@@ -338,9 +343,14 @@ class def_finder env_entries providers toplevel_scope =
     method private visit_function_param ~hint (param : ('loc, 'loc) Ast.Function.Param.t) =
       let open Ast.Function.Param in
       let (loc, { argument; default }) = param in
+      let optional =
+        match argument with
+        | (_, Ast.Pattern.Identifier { Ast.Pattern.Identifier.optional; _ }) -> optional
+        | _ -> false
+      in
       let source =
         match Destructure.type_of_pattern argument with
-        | Some annot -> Annotation (tparams, annot)
+        | Some annot -> Annotation { tparams_locs = tparams; optional; annot }
         | None -> Contextual (loc, hint)
       in
       let source = Destructure.pattern_default (Root source) default in
@@ -352,7 +362,7 @@ class def_finder env_entries providers toplevel_scope =
       let (loc, { argument; comments = _ }) = expr in
       let source =
         match Destructure.type_of_pattern argument with
-        | Some annot -> Annotation (tparams, annot)
+        | Some annot -> Annotation { tparams_locs = tparams; optional = false; annot }
         | None -> Contextual (loc, hint)
       in
       Destructure.pattern ~f:this#add_binding (Root source) argument;
@@ -502,7 +512,7 @@ class def_finder env_entries providers toplevel_scope =
         this#add_binding
           id_loc
           (func_reason ~async:false ~generator:false loc)
-          (Binding (Root (Annotation (ALocSet.empty, annot))));
+          (Binding (Root (Annotation { tparams_locs = ALocSet.empty; optional = false; annot })));
         super#declare_function loc decl
 
     method! declare_class loc (decl : ('loc, 'loc) Ast.Statement.DeclareClass.t) =
@@ -622,7 +632,7 @@ class def_finder env_entries providers toplevel_scope =
             ) ->
           let source =
             match Destructure.type_of_pattern id with
-            | Some annot -> Annotation (ALocSet.empty, annot)
+            | Some annot -> Annotation { tparams_locs = ALocSet.empty; optional = false; annot }
             | None -> For (Of { await }, right)
           in
           Destructure.pattern ~f:this#add_binding (Root source) id
@@ -647,7 +657,7 @@ class def_finder env_entries providers toplevel_scope =
             ) ->
           let source =
             match Destructure.type_of_pattern id with
-            | Some annot -> Annotation (ALocSet.empty, annot)
+            | Some annot -> Annotation { tparams_locs = ALocSet.empty; optional = false; annot }
             | None -> For (In, right)
           in
           Destructure.pattern ~f:this#add_binding (Root source) id

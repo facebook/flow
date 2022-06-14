@@ -390,7 +390,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) = struct
           Nel.fold_left (fun state e -> depends_of_expression e state) state exp_nodes
       in
       let depends_of_root state = function
-        | Annotation (_, anno) -> depends_of_annotation anno state
+        | Annotation { annot; _ } -> depends_of_annotation annot state
         | Value exp -> depends_of_expression exp state
         | For (_, exp) -> depends_of_expression exp state
         | Contextual (_, hint) ->
