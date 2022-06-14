@@ -360,8 +360,8 @@ class ['loc] mapper =
       let open Ast.Class in
       let { id; body; tparams; extends; implements; class_decorators; comments } = cls in
       let id' = map_opt this#class_identifier id in
-      let body' = this#class_body body in
       let tparams' = map_opt this#type_params tparams in
+      let body' = this#class_body body in
       let extends' = map_opt (map_loc this#class_extends) extends in
       let implements' = map_opt this#class_implements implements in
       let class_decorators' = map_list this#class_decorator class_decorators in
@@ -1049,11 +1049,11 @@ class ['loc] mapper =
       } =
         ft
       in
+      let tparams' = map_opt this#type_params tparams in
       let this_' = map_opt this#function_this_param_type this_ in
       let ps' = map_list this#function_param_type ps in
       let rpo' = map_opt this#function_rest_param_type rpo in
       let return' = this#type_ return in
-      let tparams' = map_opt this#type_params tparams in
       let func_comments' = this#syntax_opt func_comments in
       let params_comments' = this#syntax_opt params_comments in
       if
@@ -1494,11 +1494,11 @@ class ['loc] mapper =
         expr
       in
       let ident' = map_opt this#function_identifier ident in
+      let tparams' = map_opt this#type_params tparams in
       let params' = this#function_params params in
       let return' = this#type_annotation_hint return in
       let body' = this#function_body_any body in
       let predicate' = map_opt this#predicate predicate in
-      let tparams' = map_opt this#type_params tparams in
       let comments' = this#syntax_opt comments in
       if
         ident == ident'
