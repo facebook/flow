@@ -999,6 +999,17 @@ module Make
            heap_refinements = ref HeapRefinementMap.empty;
            kind = Bindings.Var;
          }
+    |> SMap.add
+         "module"
+         {
+           val_ref = ref (Val.global "module");
+           havoc = Val.global "module";
+           writes_by_closure_provider_val = None;
+           def_loc = None;
+           heap_refinements =
+             ref (HeapRefinementMap.singleton [RefinementKey.Prop "exports"] Val.exports);
+           kind = Bindings.Var;
+         }
     |> fun init ->
     Base.List.fold
       ~init

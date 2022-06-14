@@ -4457,7 +4457,7 @@ struct
                 (ploc, ({ Ast.Identifier.name = "exports"; comments = _ } as exports_name));
             comments;
           }
-        when not (Env.local_scope_entry_exists cx id_loc "module") ->
+        when (not (Env.local_scope_entry_exists cx id_loc "module")) && not Env.new_env ->
         let lhs_t = Import_export.get_module_exports cx loc in
         let module_reason = mk_reason (RCustom "module") object_loc in
         let module_t = MixedT.why module_reason |> with_trust bogus_trust in
@@ -6001,7 +6001,7 @@ struct
        Member.PropertyIdentifier (ploc, ({ Ast.Identifier.name = "exports"; comments = _ } as name));
      comments;
     }
-      when not (Env.local_scope_entry_exists cx id_loc "module") ->
+      when (not (Env.local_scope_entry_exists cx id_loc "module")) && not Env.new_env ->
       Import_export.cjs_clobber cx lhs_loc t;
       let module_reason = mk_reason (RCustom "module") object_loc in
       let module_t = MixedT.why module_reason |> with_trust bogus_trust in
@@ -6110,8 +6110,21 @@ struct
           post_assignment_havoc cx ~private_:false name (lhs_loc, lhs_expr) prop_t t;
           prop_t
       in
-      let property = Member.PropertyIdentifier ((prop_loc, prop_t), id) in
-      ((lhs_loc, prop_t), reconstruct_ast { Member._object; property; comments } prop_t)
+      let lhs_t =
+        match (_object, name) with
+        | ( ( _,
+              Ast.Expression.Identifier
+                ((id_loc, _), { Ast.Identifier.name = "module"; comments = _ })
+            ),
+            "exports"
+          )
+          when (not (Env.local_scope_entry_exists cx id_loc "module")) && Env.new_env ->
+          (* module.exports has type `any` in theory, but shouldnt be treated as uncovered *)
+          t
+        | _ -> prop_t
+      in
+      let property = Member.PropertyIdentifier ((prop_loc, lhs_t), id) in
+      ((lhs_loc, lhs_t), reconstruct_ast { Member._object; property; comments } prop_t)
     (* _object[index] = e *)
     | { Member._object; property = Member.PropertyExpression ((iloc, _) as index); comments } ->
       let reason = mk_reason (RPropertyAssignment None) lhs_loc in

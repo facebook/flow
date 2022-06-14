@@ -20,7 +20,7 @@ addsAPropToExports(module); // ERROR
 
 function h() {
   exports.foo; // ERROR
-  module.exports.foo; // ERROR
+  module.exports.foo;
   exports['foo'] = 42; // ERROR
   exports.foo = 5; // ERROR
 }

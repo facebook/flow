@@ -1,3 +1,12 @@
+Error -------------------------------------------------------------------------------------- <BUILTINS>/prelude.js:79:21
+
+Please write this object type as explicitly exact (use `{|` and `|}` instead of `{` and `}`) or as explicitly inexact
+(add `...` to the end of the list of properties). [ambiguous-object-type]
+
+   79| declare var module: { exports: any }
+                           ^^^^^^^^^^^^^^^^
+
+
 Error ----------------------------------------------------------------------------------------------------- test.js:3:10
 
 Please write this object type as explicitly exact (use `{|` and `|}` instead of `{` and `}`) or as explicitly inexact
@@ -38,4 +47,4 @@ References:
 
 
 
-Found 3 errors
+Found 4 errors

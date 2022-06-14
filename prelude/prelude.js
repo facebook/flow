@@ -75,3 +75,5 @@ type AsyncIterable<+T> = $AsyncIterable<T,void,void>;
 declare function $asyncIterator<T>(p: AsyncIterable<T>): T;
 
 declare opaque type $Flow$ModuleRef<+T>;
+
+declare var module: { exports: any }

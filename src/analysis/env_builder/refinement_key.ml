@@ -10,9 +10,12 @@ open Utils_js
 module type REFINEMENT_KEY = sig
   module L : Loc_sig.S
 
-  type proj
+  type proj =
+    | Prop of string
+    | Elem of lookup
+    | PrivateField of string
 
-  type lookup = {
+  and lookup = {
     base: string;
     projections: proj list;
   }
