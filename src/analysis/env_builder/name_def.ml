@@ -34,13 +34,16 @@ type for_kind =
   | In
   | Of of { await: bool }
 
+(* A map from location of tparam to name. *)
+type tparams_map = string ALocMap.t
+
 type hint_node =
-  | AnnotationHint of ALocSet.t * (ALoc.t, ALoc.t) Ast.Type.annotation
+  | AnnotationHint of tparams_map * (ALoc.t, ALoc.t) Ast.Type.annotation
   | ValueHint of (ALoc.t, ALoc.t) Ast.Expression.t Nel.t
 
 type root =
   | Annotation of {
-      tparams_locs: ALocSet.t;
+      tparams_map: tparams_map;
       optional: bool;
       annot: (ALoc.t, ALoc.t) Ast.Type.annotation;
     }
@@ -79,7 +82,7 @@ type import =
   | Default of string
 
 type generator_annot = {
-  tparams: ALocSet.t;
+  tparams_map: tparams_map;
   return_annot: (ALoc.t, ALoc.t) Ast.Type.annotation;
   async: bool;
 }
@@ -108,7 +111,7 @@ type def =
       fully_annotated: bool;
       function_loc: ALoc.t;
       function_: (ALoc.t, ALoc.t) Ast.Function.t;
-      tparams: ALocSet.t;
+      tparams_map: tparams_map;
     }
   | Class of {
       fully_annotated: bool;
@@ -118,7 +121,7 @@ type def =
   | DeclaredClass of ALoc.t * (ALoc.t, ALoc.t) Ast.Statement.DeclareClass.t
   | TypeAlias of ALoc.t * (ALoc.t, ALoc.t) Ast.Statement.TypeAlias.t
   | OpaqueType of ALoc.t * (ALoc.t, ALoc.t) Ast.Statement.OpaqueType.t
-  | TypeParam of (ALoc.t, ALoc.t) Ast.Type.TypeParam.t
+  | TypeParam of tparams_map * (ALoc.t, ALoc.t) Ast.Type.TypeParam.t
   | Interface of ALoc.t * (ALoc.t, ALoc.t) Ast.Statement.Interface.t
   | Enum of ALoc.t * ALoc.t Ast.Statement.EnumDeclaration.body
   | Import of {
@@ -225,8 +228,8 @@ let func_is_annotated { Ast.Function.return; _ } =
   | Ast.Type.Missing _ -> false
   | Ast.Type.Available _ -> true
 
-let def_of_function tparams function_loc function_ =
-  Function { fully_annotated = func_is_annotated function_; function_loc; function_; tparams }
+let def_of_function tparams_map function_loc function_ =
+  Function { fully_annotated = func_is_annotated function_; function_loc; function_; tparams_map }
 
 let def_of_class loc ({ Ast.Class.body = (_, { Ast.Class.Body.body; _ }); _ } as class_) =
   let open Ast.Class.Body in
@@ -289,13 +292,13 @@ class def_finder env_entries providers toplevel_scope =
   object (this)
     inherit [map, ALoc.t] Flow_ast_visitor.visitor ~init:ALocMap.empty as super
 
-    val mutable tparams : ALocSet.t = ALocSet.empty
+    val mutable tparams : tparams_map = ALocMap.empty
 
     val mutable scope_kind : scope_kind = toplevel_scope
 
     val mutable class_stack : class_stack = []
 
-    method add_tparam loc = tparams <- ALocSet.add loc tparams
+    method add_tparam loc name = tparams <- ALocMap.add loc name tparams
 
     method add_binding loc reason src =
       this#update_acc (ALocMap.add loc (src, scope_kind, class_stack, reason))
@@ -311,7 +314,7 @@ class def_finder env_entries providers toplevel_scope =
     method private in_new_tparams_env : 'a. (unit -> 'a) -> 'a =
       fun f ->
         let old_tparams = tparams in
-        tparams <- ALocSet.empty;
+        tparams <- ALocMap.empty;
         let result = f () in
         tparams <- old_tparams;
         result
@@ -322,7 +325,7 @@ class def_finder env_entries providers toplevel_scope =
       let source =
         match (Destructure.type_of_pattern id, init) with
         | (Some annot, _) ->
-          Some (Annotation { tparams_locs = ALocSet.empty; optional = false; annot })
+          Some (Annotation { tparams_map = ALocMap.empty; optional = false; annot })
         | (None, Some init) -> Some (Value init)
         | (None, None) -> None
       in
@@ -335,7 +338,7 @@ class def_finder env_entries providers toplevel_scope =
       this#add_binding
         id_loc
         (mk_reason (RIdentifier (OrdinaryName name)) id_loc)
-        (Binding (Root (Annotation { tparams_locs = ALocSet.empty; optional = false; annot })));
+        (Binding (Root (Annotation { tparams_map = ALocMap.empty; optional = false; annot })));
       super#declare_variable loc decl
 
     method! function_param _ = failwith "Should be visited by visit_function_param"
@@ -350,7 +353,7 @@ class def_finder env_entries providers toplevel_scope =
       in
       let source =
         match Destructure.type_of_pattern argument with
-        | Some annot -> Annotation { tparams_locs = tparams; optional; annot }
+        | Some annot -> Annotation { tparams_map = tparams; optional; annot }
         | None -> Contextual (loc, hint)
       in
       let source = Destructure.pattern_default (Root source) default in
@@ -362,7 +365,7 @@ class def_finder env_entries providers toplevel_scope =
       let (loc, { argument; comments = _ }) = expr in
       let source =
         match Destructure.type_of_pattern argument with
-        | Some annot -> Annotation { tparams_locs = tparams; optional = false; annot }
+        | Some annot -> Annotation { tparams_map = tparams; optional = false; annot }
         | None -> Contextual (loc, hint)
       in
       Destructure.pattern ~f:this#add_binding (Root source) argument;
@@ -458,7 +461,7 @@ class def_finder env_entries providers toplevel_scope =
                 match return with
                 | Ast.Type.Missing loc -> (loc, None)
                 | Ast.Type.Available ((loc, _) as return_annot) ->
-                  (loc, Some { tparams; return_annot; async })
+                  (loc, Some { tparams_map = tparams; return_annot; async })
               in
 
               this#add_binding loc (mk_reason (RCustom "next") body_loc) (GeneratorNext gen)
@@ -512,7 +515,7 @@ class def_finder env_entries providers toplevel_scope =
         this#add_binding
           id_loc
           (func_reason ~async:false ~generator:false loc)
-          (Binding (Root (Annotation { tparams_locs = ALocSet.empty; optional = false; annot })));
+          (Binding (Root (Annotation { tparams_map = ALocMap.empty; optional = false; annot })));
         super#declare_function loc decl
 
     method! declare_class loc (decl : ('loc, 'loc) Ast.Statement.DeclareClass.t) =
@@ -632,7 +635,7 @@ class def_finder env_entries providers toplevel_scope =
             ) ->
           let source =
             match Destructure.type_of_pattern id with
-            | Some annot -> Annotation { tparams_locs = ALocSet.empty; optional = false; annot }
+            | Some annot -> Annotation { tparams_map = ALocMap.empty; optional = false; annot }
             | None -> For (Of { await }, right)
           in
           Destructure.pattern ~f:this#add_binding (Root source) id
@@ -657,7 +660,7 @@ class def_finder env_entries providers toplevel_scope =
             ) ->
           let source =
             match Destructure.type_of_pattern id with
-            | Some annot -> Annotation { tparams_locs = ALocSet.empty; optional = false; annot }
+            | Some annot -> Annotation { tparams_map = ALocMap.empty; optional = false; annot }
             | None -> For (In, right)
           in
           Destructure.pattern ~f:this#add_binding (Root source) id
@@ -714,8 +717,11 @@ class def_finder env_entries providers toplevel_scope =
     method! type_param (tparam : ('loc, 'loc) Ast.Type.TypeParam.t) =
       let open Ast.Type.TypeParam in
       let (_, { name = (name_loc, { Ast.Identifier.name; _ }); _ }) = tparam in
-      this#add_binding name_loc (mk_reason (RType (OrdinaryName name)) name_loc) (TypeParam tparam);
-      this#add_tparam name_loc;
+      this#add_binding
+        name_loc
+        (mk_reason (RType (OrdinaryName name)) name_loc)
+        (TypeParam (tparams, tparam));
+      this#add_tparam name_loc name;
       super#type_param tparam
 
     method! interface loc (interface : ('loc, 'loc) Ast.Statement.Interface.t) =
@@ -847,7 +853,7 @@ class def_finder env_entries providers toplevel_scope =
       let open Ast.Expression.TypeCast in
       let { expression; annot; comments = _ } = expr in
       this#visit_expression
-        ~hint:(Hint_t (AnnotationHint (ALocSet.empty, annot)))
+        ~hint:(Hint_t (AnnotationHint (ALocMap.empty, annot)))
         ~cond:NonConditionalContext
         expression;
       ignore @@ this#type_annotation annot;

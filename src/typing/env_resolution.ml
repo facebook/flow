@@ -25,13 +25,26 @@ module Make (Env : Env_sig.S) (Statement : Statement_sig.S with module Env := En
   module Type_annotation = Statement.Anno
   module Abnormal = Statement.Abnormal
 
-  let mk_tparams_map cx tparams_locs =
+  let mk_type_param cx id_loc tparams_map tparam =
+    let ((_, { name; _ }, t) as info) = Type_annotation.mk_type_param cx tparams_map tparam in
+    let cache = Context.node_cache cx in
+    Node_cache.set_tparam cache info;
+    let ({ Loc_env.tparams; _ } as env) = Context.environment cx in
+    Context.set_environment cx { env with Loc_env.tparams = ALocMap.add id_loc (name, t) tparams };
+    (name, t)
+
+  let mk_tparams_map cx tparams_map =
     let { Loc_env.tparams; _ } = Context.environment cx in
-    ALocSet.fold
-      (fun l acc ->
-        let (name, ty) = ALocMap.find l tparams in
-        Subst_name.Map.add name ty acc)
-      tparams_locs
+    ALocMap.fold
+      (fun l name subst_map ->
+        let (name, ty) =
+          Base.Option.value
+            (ALocMap.find_opt l tparams)
+            ~default:
+              (Subst_name.Name name, AnyT.annot (mk_reason (RIdentifier (OrdinaryName name)) l))
+        in
+        Subst_name.Map.add name ty subst_map)
+      tparams_map
       Subst_name.Map.empty
 
   let expression cx ~hint ?cond exp =
@@ -42,16 +55,16 @@ module Make (Env : Env_sig.S) (Statement : Statement_sig.S with module Env := En
 
   let rec resolve_binding cx reason loc b =
     let mk_use_op t = Op (AssignVar { var = Some reason; init = TypeUtil.reason_of_t t }) in
-    let resolve_annotation tparams_locs anno =
+    let resolve_annotation tparams_map anno =
       let cache = Context.node_cache cx in
-      let tparams_map = mk_tparams_map cx tparams_locs in
+      let tparams_map = mk_tparams_map cx tparams_map in
       let (t, anno) = Type_annotation.mk_type_available_annotation cx tparams_map anno in
       Node_cache.set_annotation cache anno;
       t
     in
     match b with
-    | Root (Annotation { tparams_locs; optional; annot }) ->
-      let t = resolve_annotation tparams_locs annot in
+    | Root (Annotation { tparams_map; optional; annot }) ->
+      let t = resolve_annotation tparams_map annot in
       let t =
         if optional then
           TypeUtil.optional t
@@ -159,8 +172,8 @@ module Make (Env : Env_sig.S) (Statement : Statement_sig.S with module Env := En
     (fun_type, unknown_use)
 
   let resolve_annotated_function
-      cx reason tparams_locs ({ Ast.Function.body; params; _ } as function_) =
-    let tparams_map = mk_tparams_map cx tparams_locs in
+      cx reason tparams_map ({ Ast.Function.body; params; _ } as function_) =
+    let tparams_map = mk_tparams_map cx tparams_map in
     let (({ Func_class_sig_types.Func_stmt_sig_types.fparams; _ } as func_sig), _) =
       Statement.mk_func_sig
         cx
@@ -356,14 +369,9 @@ module Make (Env : Env_sig.S) (Statement : Statement_sig.S with module Env := En
       (AnyT.error enum_reason, unknown_use)
     )
 
-  let resolve_type_param cx id_loc tparam =
-    let cache = Context.node_cache cx in
-    let ((_, { name; _ }, t) as info) =
-      Type_annotation.mk_type_param cx Subst_name.Map.empty tparam
-    in
-    Node_cache.set_tparam cache info;
-    let ({ Loc_env.tparams; _ } as env) = Context.environment cx in
-    Context.set_environment cx { env with Loc_env.tparams = ALocMap.add id_loc (name, t) tparams };
+  let resolve_type_param cx id_loc tparams_locs tparam =
+    let tparams_map = mk_tparams_map cx tparams_locs in
+    let (_, t) = mk_type_param cx id_loc tparams_map tparam in
     let t = DefT (TypeUtil.reason_of_t t, bogus_trust (), TypeT (TypeParamKind, t)) in
     (t, unknown_use)
 
@@ -388,10 +396,10 @@ module Make (Env : Env_sig.S) (Statement : Statement_sig.S with module Env := En
       ( VoidT.make (replace_desc_reason RUnannotatedNext reason) |> with_trust bogus_trust,
         unknown_use
       )
-    | Some { tparams; return_annot; async } ->
+    | Some { tparams_map; return_annot; async } ->
       let return_t =
         let cache = Context.node_cache cx in
-        let tparams_map = mk_tparams_map cx tparams in
+        let tparams_map = mk_tparams_map cx tparams_map in
         let (t, anno) = Type_annotation.mk_type_available_annotation cx tparams_map return_annot in
         Node_cache.set_annotation cache anno;
         t
@@ -445,10 +453,10 @@ module Make (Env : Env_sig.S) (Statement : Statement_sig.S with module Env := En
       | Binding b -> resolve_binding cx def_reason id_loc b
       | ChainExpression (cond, e) -> as_resolved @@ resolve_chain_expression cx ~cond e
       | RefiExpression e -> (expression cx ~hint:Hint_None e, unknown_use, true)
-      | Function { function_; fully_annotated = false; function_loc; tparams = _ } ->
+      | Function { function_; fully_annotated = false; function_loc; tparams_map = _ } ->
         as_resolved @@ resolve_inferred_function cx id_loc def_reason function_loc function_
-      | Function { function_; fully_annotated = true; function_loc = _; tparams } ->
-        as_resolved @@ resolve_annotated_function cx def_reason tparams function_
+      | Function { function_; fully_annotated = true; function_loc = _; tparams_map } ->
+        as_resolved @@ resolve_annotated_function cx def_reason tparams_map function_
       | Class { class_; fully_annotated = false; class_loc } ->
         as_resolved @@ resolve_inferred_class cx id_loc def_reason class_loc class_
       | Class { class_; fully_annotated = true; class_loc } ->
@@ -466,7 +474,8 @@ module Make (Env : Env_sig.S) (Statement : Statement_sig.S with module Env := En
       | Interface (loc, inter) -> as_resolved @@ resolve_interface cx loc inter
       | DeclaredClass (loc, class_) -> as_resolved @@ resolve_declare_class cx loc class_
       | Enum (enum_loc, enum) -> as_resolved @@ resolve_enum cx id_loc def_reason enum_loc enum
-      | TypeParam param -> as_resolved @@ resolve_type_param cx id_loc param
+      | TypeParam (tparams_locs, param) ->
+        as_resolved @@ resolve_type_param cx id_loc tparams_locs param
       | GeneratorNext gen -> as_resolved @@ resolve_generator_next cx def_reason gen
     in
     let update_reason =

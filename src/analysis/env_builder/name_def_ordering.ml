@@ -277,18 +277,25 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) = struct
         let node_visit () = mk_visit visitor in
         visitor#eval node_visit ()
       in
+      let depends_of_tparams_map tparams_map =
+        depends_of_node (fun visitor ->
+            ALocMap.iter (fun loc _ -> visitor#add ~why:loc loc) tparams_map
+        )
+      in
       (* depends_of_annotation and of_expression take the `state` parameter from
          `depends_of_node` above as an additional currried parameter. *)
-      let depends_of_annotation anno =
-        depends_of_node (fun visitor -> ignore @@ visitor#type_annotation anno)
+      let depends_of_annotation tparams_map anno state =
+        state
+        |> depends_of_tparams_map tparams_map
+        |> depends_of_node (fun visitor -> ignore @@ visitor#type_annotation anno)
       in
       let depends_of_expression expr =
         depends_of_node (fun visitor -> ignore @@ visitor#expression expr)
       in
-      let depends_of_fun fully_annotated function_ =
+      let depends_of_fun fully_annotated tparams_map function_ =
         depends_of_node
           (fun visitor -> visitor#function_def ~fully_annotated function_)
-          ALocMap.empty
+          (depends_of_tparams_map tparams_map ALocMap.empty)
       in
       let depends_of_class
           fully_annotated
@@ -364,7 +371,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) = struct
             ())
           ALocMap.empty
       in
-      let depends_of_tparam (_, { Ast.Type.TypeParam.bound; variance; default; _ }) =
+      let depends_of_tparam tparams_map (_, { Ast.Type.TypeParam.bound; variance; default; _ }) =
         depends_of_node
           (fun visitor ->
             let open Flow_ast_mapper in
@@ -372,7 +379,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) = struct
             let _ = visitor#variance_opt variance in
             let _ = map_opt visitor#type_ default in
             ())
-          ALocMap.empty
+          (depends_of_tparams_map tparams_map ALocMap.empty)
       in
       let depends_of_interface { Ast.Statement.Interface.tparams; extends; body; _ } =
         depends_of_node
@@ -385,12 +392,12 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) = struct
           ALocMap.empty
       in
       let depends_of_hint_node state = function
-        | AnnotationHint (_, anno) -> depends_of_annotation anno state
+        | AnnotationHint (tparams_map, anno) -> depends_of_annotation tparams_map anno state
         | ValueHint exp_nodes ->
           Nel.fold_left (fun state e -> depends_of_expression e state) state exp_nodes
       in
       let depends_of_root state = function
-        | Annotation { annot; _ } -> depends_of_annotation annot state
+        | Annotation { annot; tparams_map; _ } -> depends_of_annotation tparams_map annot state
         | Value exp -> depends_of_expression exp state
         | For (_, exp) -> depends_of_expression exp state
         | Contextual (_, hint) ->
@@ -484,15 +491,16 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) = struct
       | MemberAssign { member_loc; member; rhs; _ } ->
         depends_of_member_assign member_loc member rhs
       | OpAssign { lhs; rhs; _ } -> depends_of_op_assign lhs rhs
-      | Function { fully_annotated; function_; function_loc = _; tparams = _ } ->
-        depends_of_fun fully_annotated function_
+      | Function { fully_annotated; function_; function_loc = _; tparams_map } ->
+        depends_of_fun fully_annotated tparams_map function_
       | Class { fully_annotated; class_; class_loc = _ } -> depends_of_class fully_annotated class_
       | DeclaredClass (_, decl) -> depends_of_declared_class decl
       | TypeAlias (_, alias) -> depends_of_alias alias
       | OpaqueType (_, alias) -> depends_of_opaque alias
-      | TypeParam tparam -> depends_of_tparam tparam
+      | TypeParam (tparams_map, tparam) -> depends_of_tparam tparams_map tparam
       | Interface (_, inter) -> depends_of_interface inter
-      | GeneratorNext (Some { return_annot; _ }) -> depends_of_annotation return_annot ALocMap.empty
+      | GeneratorNext (Some { return_annot; tparams_map; _ }) ->
+        depends_of_annotation tparams_map return_annot ALocMap.empty
       | GeneratorNext None -> ALocMap.empty
       | Enum _ ->
         (* Enums don't contain any code or type references, they're literal-like *) ALocMap.empty

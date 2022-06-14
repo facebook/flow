@@ -100,7 +100,7 @@ let string_of_source = function
     spf "alias %s" (ALoc.debug_to_string loc)
   | OpaqueType (_, { Ast.Statement.OpaqueType.id = (loc, _); _ }) ->
     spf "opaque %s" (ALoc.debug_to_string loc)
-  | TypeParam (loc, _) -> spf "tparam %s" (ALoc.debug_to_string loc)
+  | TypeParam (_, (loc, _)) -> spf "tparam %s" (ALoc.debug_to_string loc)
   | Enum (loc, _) -> spf "enum %s" (ALoc.debug_to_string loc)
   | Interface _ -> "interface"
   | GeneratorNext _ -> "next"
@@ -881,6 +881,17 @@ class JSResourceReference<+T> {
     (4, 27) to (4, 28) =>
     legal scc: (((4, 6) to (4, 25)); ((7, 4) to (7, 12)); ((6, 4) to (6, 11)); ((5, 17) to (5, 18))) =>
     (2, 5) to (2, 12) |}]
+
+let%expect_test "type_params_dep" =
+  print_order_test {|
+function foo<A, B: A, C = A>() {}
+  |};
+  [%expect {|
+    (2, 13) to (2, 14) =>
+    (2, 16) to (2, 17) =>
+    (2, 22) to (2, 23) =>
+    (2, 9) to (2, 12)
+   |}]
 
 let%expect_test "refi" =
   print_order_test {|
