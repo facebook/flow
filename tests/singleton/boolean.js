@@ -4,15 +4,15 @@ function veryOptimistic(isThisAwesome: true): boolean {
   return isThisAwesome;
 }
 
-var x : boolean = veryOptimistic(true);
-var y : boolean = veryOptimistic(false); // error
+var x1 : boolean = veryOptimistic(true);
+var y1 : boolean = veryOptimistic(false); // error
 
 function veryPessimistic(isThisAwesome: true): boolean {
   return !isThisAwesome; // test bool conversion
 }
 
-var x : boolean = veryPessimistic(true);
-var y : boolean = veryPessimistic(false); // error
+var x2 : boolean = veryPessimistic(true);
+var y2 : boolean = veryPessimistic(false); // error
 
 type MyOwnBooleanLOL = true | false
 

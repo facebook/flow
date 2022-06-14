@@ -61,7 +61,7 @@ function f6() {
     var x:number = 0;
   } catch (e) {
     might_throw();
-    var x:number = 0;
+    x = 0;
   } finally {
     var y:number = x; // error
   }
@@ -73,7 +73,7 @@ function f7() {
     var x:number = 0;
   } catch (e) {
     might_throw();  // ...but if so, suffix is not reached
-    var x:number = 0;
+    x = 0;
   }
   var y:number = x;
 }

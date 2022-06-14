@@ -35,6 +35,6 @@ class D {
   }
 }
 
-declare var m: Function;
+declare var m2: Function;
 const x = "";
-if (m.bind(this)(x)) { }
+if (m2.bind(this)(x)) { }

@@ -8,7 +8,7 @@ class D<T> {
   x:T;
   m<S>(z:S,u:T,v):S {
     this.x = u;
-    v.u = u; 
+    v.u = u;
     return z;
   }
 }
@@ -39,5 +39,5 @@ h1.foo(["..."]);
 var h2:F<Array<Array<Array<number>>>> = h1;
 
 var obj : Object<string, string> = {} // error, arity 0
-var fn : Function<string> = function() { return 'foo'; } // error, arity 0
-var fn : function<string> = function() { return 'foo'; } // error, arity 0
+var fn1 : Function<string> = function() { return 'foo'; } // error, arity 0
+var fn2 : function<string> = function() { return 'foo'; } // error, arity 0

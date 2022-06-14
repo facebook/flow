@@ -1273,9 +1273,9 @@ Cannot assign `0` to `o1_rest.x` because property `x` is missing in rest of obje
               ^
 
 References:
-   object_rest.js:3:12
-   3| var {p, ...o1_rest} = o1;
-                 ^^^^^^^ [1]
+   object_rest.js:3:15
+   3| var {p:p1, ...o1_rest} = o1;
+                    ^^^^^^^ [1]
 
 
 Error ---------------------------------------------------------------------------------------------- object_rest.js:11:9
@@ -1287,9 +1287,9 @@ Cannot assign `0` to `o2_rest.x` because property `x` is missing in rest of obje
                ^
 
 References:
-   object_rest.js:9:12
-    9| var {p, ...o2_rest} = o2;
-                  ^^^^^^^ [1]
+   object_rest.js:9:15
+    9| var {p:p2, ...o2_rest} = o2;
+                     ^^^^^^^ [1]
 
 
 Error ---------------------------------------------------------------------------------------------- object_rest.js:16:9
@@ -1301,9 +1301,9 @@ Cannot assign `0` to `o3_rest.x` because property `x` is missing in rest of obje
                ^
 
 References:
-   object_rest.js:14:12
-   14| var {p, ...o3_rest} = o3;
-                  ^^^^^^^ [1]
+   object_rest.js:14:15
+   14| var {p:p3, ...o3_rest} = o3;
+                     ^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------------ string_lit.js:2:2

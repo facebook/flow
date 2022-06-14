@@ -15,8 +15,8 @@ type B3 = {...A3, [number]: string};
 
 type A4 = { p: string };
 type B4 = {...A4, p?: string};
-declare var x: {p?: string}
-(x: B4); // Ok for the same reason as above, except for optional props
+declare var x2: {p?: string}
+(x2: B4); // Ok for the same reason as above, except for optional props
 
 // Ensuring we still error in these cases when the RHS is a spread
 // is handled by all_cases.js

@@ -1,11 +1,11 @@
-Error ----------------------------------------------------------------------------------------------------- iter.js:7:15
+Error ----------------------------------------------------------------------------------------------------- iter.js:7:17
 
 Cannot iterate using a `for...in` statement because array literal [1] is not an object, null, or undefined.
 [invalid-in-rhs]
 
-   iter.js:7:15
-   7| for (var k in a) {
-                    ^
+   iter.js:7:17
+   7| for (const k in a) {
+                      ^
 
 References:
    iter.js:1:9
@@ -22,19 +22,19 @@ Cannot get `a[k]` because string [1] is not an array index. [incompatible-use]
               ^^^^
 
 References:
-   iter.js:7:10
-   7| for (var k in a) {
-               ^ [1]
+   iter.js:7:12
+   7| for (const k in a) {
+                 ^ [1]
 
 
-Error ---------------------------------------------------------------------------------------------------- iter.js:22:20
+Error ---------------------------------------------------------------------------------------------------- iter.js:22:22
 
 Cannot iterate using a `for...in` statement because array literal [1] is not an object, null, or undefined.
 [invalid-in-rhs]
 
-   iter.js:22:20
-   22| for (var n in (d = a)) {
-                          ^
+   iter.js:22:22
+   22| for (const n in (d = a)) {
+                            ^
 
 References:
    iter.js:1:9
@@ -51,9 +51,9 @@ Cannot get `d[n]` because string [1] is not an array index. [incompatible-use]
                ^^^^
 
 References:
-   iter.js:22:10
-   22| for (var n in (d = a)) {
-                ^ [1]
+   iter.js:22:12
+   22| for (const n in (d = a)) {
+                  ^ [1]
 
 
 

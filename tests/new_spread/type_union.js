@@ -17,7 +17,7 @@ declare var x1: {...Union1, ...Union2}; // Error, indexer on right
 declare var x5: {...Union1, ...{}} // Error, spreading {} overwrites indexer
 (x5: {});
 
-var y = {}; // unsealed
+y = {}; // unsealed
 
 type UnsealedInUnion = Union1 | Union2 | typeof y;
 declare var x2: {...UnsealedInUnion}; // Error, unsealed

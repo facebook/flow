@@ -4,34 +4,34 @@ function foo(x) { }
 for (var i=0;i<3;i++) {
     foo(a[i]);
 }
-for (var k in a) {
+for (const k in a) {
     foo(a[k]); // k is a string, which shouldn't be used for array access
 }
 
 var b = (null : ?{[key: string]: string});
-for (var j in b) {
+for (const j in b) {
     foo(b[j]);
 }
 
 var c;
-for (var m in (c = b)) {
+for (const m in (c = b)) {
     foo(c[m]);
 }
 
 var d;
-for (var n in (d = a)) {
+for (const n in (d = a)) {
     foo(d[n]); // d is a string, which shouldn't be used for array access
 }
 
-for (var x in undefined) {
-    foo(x); // unreachable
+for (const x1 in undefined) {
+    foo(x1); // unreachable
 }
 
-for (var x in null) {
-    foo(x); // unreachable
+for (const x2 in null) {
+    foo(x2); // unreachable
 }
 
-for (var y in this) {
+for (const y in this) {
     // regression test to make sure `in this` doesn't fatal. it's currently
     // allowed, even though we can't actually enumerate all the keys on `this`.
 }

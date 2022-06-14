@@ -27,10 +27,10 @@ el = form['query']
 el.className // invalid
 if (el) el.className // valid
 
-for (var field of form) {
+for (const field of form) {
   field.className // valid
 }
 
-for (var field of form.elements) {
+for (const field of form.elements) {
   field.className // valid
 }

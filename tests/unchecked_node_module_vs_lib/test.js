@@ -15,7 +15,7 @@ var b: boolean = buffer.INSPECT_MAX_BYTES; // error, number ~/> boolean
 // so we should pick up its boolean redefinition of DEFAULT_ENCODING
 //
 var crypto = require("crypto");
-var b: boolean = crypto.DEFAULT_ENCODING; // no error, we've overridden
+var b2: boolean = crypto.DEFAULT_ENCODING; // no error, we've overridden
 
 // names that are explicit paths shouldn't fall back to lib defs
 //

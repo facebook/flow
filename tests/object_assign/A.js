@@ -25,9 +25,9 @@ var A = {
   Good: Good, // assert_ground scrubs out `this` type of `foo`
 };
 
-var good: number = A.Good.foo(); // string ~> number
+var good_: number = A.Good.foo(); // string ~> number
 
 var f = A.Bad.foo; // Property access is fine
 var bad_: number = f(); // error: string ~> number
 
-var bad: number = A.Bad.foo(); // error: string, number (but `this` types are compatible)
+var bad__: number = A.Bad.foo(); // error: string, number (but `this` types are compatible)

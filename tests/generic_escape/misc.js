@@ -149,14 +149,14 @@ function f10({...x}) {
   }
 }
 
-for (var xe of [(42: any)]) {
+for (const xe of [(42: any)]) {
   let {...x} = xe;
   function f<X>(y: X) {
     x = y;
   }
 }
 
-for (var xe of [(42: any)]) {
+for (const xe of [(42: any)]) {
   let {x: y} = xe;
   function f<X>(z: X) {
     y = z;

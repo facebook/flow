@@ -25,8 +25,8 @@ function baz(x: boolean) {
 
 function bliffl(x: boolean) {
   var arr = [1, 2, 3];
-  loop1: for (var elem of arr) {
-    loop2: for (var elem of arr) {
+  loop1: for (const elem of arr) {
+    loop2: for (const elem of arr) {
       break loop1;
     }
     console.log('this is still reachable');

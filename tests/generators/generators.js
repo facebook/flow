@@ -96,7 +96,7 @@ delegate_next_iterable([]).next(""); // error: Iterator has no next value
 function *delegate_yield_iterable(xs: Array<number>) {
   yield *xs;
 }
-for (var x of delegate_yield_iterable([])) {
+for (const x of delegate_yield_iterable([])) {
   (x : string) // error: number ~> string
 }
 

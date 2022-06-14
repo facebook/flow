@@ -46,7 +46,7 @@ Cannot assign `u` to `v.u` because type variable `T` [1] cannot escape from the 
 adding a type annotation to `o` [3]). [escaped-generic]
 
    generics.js:11:11
-   11|     v.u = u; 
+   11|     v.u = u;
                  ^
 
 References:
@@ -158,20 +158,20 @@ Cannot apply type because it is not a polymorphic type. [nonpolymorphic-type-app
                  ^^^^^^^^^^^^^^^^^^^^^^
 
 
-Error ------------------------------------------------------------------------------------------------ generics.js:42:10
+Error ------------------------------------------------------------------------------------------------ generics.js:42:11
 
 Cannot apply type because it is not a polymorphic type. [nonpolymorphic-type-app]
 
-   42| var fn : Function<string> = function() { return 'foo'; } // error, arity 0
-                ^^^^^^^^^^^^^^^^
+   42| var fn1 : Function<string> = function() { return 'foo'; } // error, arity 0
+                 ^^^^^^^^^^^^^^^^
 
 
-Error ------------------------------------------------------------------------------------------------ generics.js:43:10
+Error ------------------------------------------------------------------------------------------------ generics.js:43:11
 
 Cannot apply type because it is not a polymorphic type. [nonpolymorphic-type-app]
 
-   43| var fn : function<string> = function() { return 'foo'; } // error, arity 0
-                ^^^^^^^^^^^^^^^^
+   43| var fn2 : function<string> = function() { return 'foo'; } // error, arity 0
+                 ^^^^^^^^^^^^^^^^
 
 
 

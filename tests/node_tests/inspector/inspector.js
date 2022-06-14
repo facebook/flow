@@ -59,7 +59,7 @@ session.on('foo', () => {});
 
 /* Session.connectToMainThread */
 
-var session = new inspector.Session();
+session = new inspector.Session();
 
 session.connectToMainThread();
 
@@ -69,7 +69,7 @@ session.connectToMainThread();
 
 /* Session.disconnect */
 
-var session = new inspector.Session();
+session = new inspector.Session();
 
 session.disconnect();
 
