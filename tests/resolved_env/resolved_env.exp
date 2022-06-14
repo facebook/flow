@@ -1010,6 +1010,28 @@ References:
                  ^^^^^^ [2]
 
 
+Error ------------------------------------------------------------------------------------------------- tparams.js:43:11
+
+Cannot resolve name `A`. [cannot-resolve-name]
+
+   43|     m2<B: A>() {} // Error: Cannot resolve name `A`.
+                 ^
+
+
+Error ------------------------------------------------------------------------------------------------- tparams.js:46:41
+
+Cannot cast `42` to `X` because number [1] is incompatible with `X` [2]. [incompatible-cast]
+
+   tparams.js:46:41
+   46|   function tparam_in_default<X>(x: X = (42: X)) { } // Error: cannot cast 42 to X
+                                               ^^ [1]
+
+References:
+   tparams.js:46:45
+   46|   function tparam_in_default<X>(x: X = (42: X)) { } // Error: cannot cast 42 to X
+                                                   ^ [2]
+
+
 Error --------------------------------------------------------------------------------------------------- updates.js:5:2
 
 Cannot cast `++x` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
@@ -1145,4 +1167,4 @@ undefined. [incompatible-return]
 
 
 
-Found 77 errors
+Found 79 errors

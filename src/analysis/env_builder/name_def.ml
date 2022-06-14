@@ -311,10 +311,10 @@ class def_finder env_entries providers toplevel_scope =
         scope_kind <- scope0;
         res
 
-    method private in_new_tparams_env : 'a. (unit -> 'a) -> 'a =
-      fun f ->
+    method private in_new_tparams_env : 'a. ?keep:bool -> (unit -> 'a) -> 'a =
+      fun ?(keep = false) f ->
         let old_tparams = tparams in
-        tparams <- ALocMap.empty;
+        if not keep then tparams <- ALocMap.empty;
         let result = f () in
         tparams <- old_tparams;
         result
@@ -408,7 +408,8 @@ class def_finder env_entries providers toplevel_scope =
       );
       expr
 
-    method! function_type loc ft = this#in_new_tparams_env (fun () -> super#function_type loc ft)
+    method! function_type loc ft =
+      this#in_new_tparams_env ~keep:true (fun () -> super#function_type loc ft)
 
     method! function_ _ expr =
       let scope_kind = func_scope_kind expr in
@@ -500,7 +501,11 @@ class def_finder env_entries providers toplevel_scope =
       let { kind = _; key; value = (_, value); static = _; decorators; comments = _ } = meth in
       let _ = this#object_key key in
       let scope_kind = func_scope_kind ~key value in
-      let () = this#visit_function ~scope_kind ~func_hint:Hint_None value in
+      let () =
+        this#in_new_tparams_env ~keep:true (fun () ->
+            this#visit_function ~scope_kind ~func_hint:Hint_None value
+        )
+      in
       let (_ : _ list) = map_list this#class_decorator decorators in
       meth
 
