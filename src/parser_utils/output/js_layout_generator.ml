@@ -2397,6 +2397,8 @@ and list_with_newlines
         match (prev_loc, node) with
         (* empty line, don't add anything *)
         | (_, Empty) when skip_empty -> acc
+        (* Location is empty, default to no line break *)
+        | (Some loc, node) when loc = Loc.none -> fuse [node; sep] :: acc
         (* Lines are offset by more than one, let's add a line break. *)
         | (Some { Loc._end; _ }, node) when _end.line + 1 < loc.start.line ->
           fuse [pretty_hardline; node; sep] :: acc

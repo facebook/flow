@@ -129,20 +129,12 @@ function f(this: {| x: number |}) {
 }
 f.call({x: 1});
 
-function withArg(
-  this: {| x: number |},
-  
-  y: number,
-) {
+function withArg(this: {| x: number |}, y: number) {
   return this.x + y;
 }
 withArg.call({x: 1}, 1);
 
-function withUnannotatedArg(
-  this: {| x: number |},
-  
-  y: number,
-) {
+function withUnannotatedArg(this: {| x: number |}, y: number) {
   return this.x + y;
 }
 withUnannotatedArg.call({x: 1}, 1);
@@ -160,11 +152,7 @@ function unusedMethod(this: interface { x1: any }) {
 }
 
 let object = {
-  fn: function(
-  this: {| fn: (y: number) => number, x: number |},
-  
-  y: number,
-) {
+  fn: function(this: {| fn: (y: number) => number, x: number |}, y: number) {
   return this.x + y;
 },
   x: 1,
