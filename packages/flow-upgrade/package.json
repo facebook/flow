@@ -30,9 +30,9 @@
   "dependencies": {
     "chalk": "^2.0.1",
     "fs-extra": "10.1.0",
-    "hermes-estree": "0.7.0",
-    "hermes-parser": "0.7.0",
-    "hermes-transform": "0.7.0",
+    "hermes-estree": "0.8.0",
+    "hermes-parser": "0.8.0",
+    "hermes-transform": "0.8.0",
     "klaw-sync": "^6.0.0",
     "ora": "^5.4.1",
     "prompt-confirm": "^1.2.0",

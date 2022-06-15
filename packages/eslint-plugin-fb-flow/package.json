@@ -17,7 +17,7 @@
   },
   "devDependencies": {
     "eslint": "^7.30.0",
-    "hermes-eslint": "^0.4.8",
+    "hermes-eslint": "0.8.0",
     "jest": "^27.0.6"
   },
   "engines": {
