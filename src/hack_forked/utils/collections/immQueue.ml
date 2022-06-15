@@ -11,8 +11,6 @@ type 'a t = {
   length: int;
 }
 
-exception Empty
-
 let empty = { incoming = []; outgoing = []; length = 0 }
 
 let length t = t.length
@@ -37,11 +35,6 @@ let peek t =
   match t.outgoing with
   | [] -> (None, t)
   | hd :: _ -> (Some hd, t)
-
-let pop_unsafe t =
-  match pop t with
-  | (Some x, t) -> (x, t)
-  | (None, _) -> raise Empty
 
 let exists t ~f = List.exists f t.outgoing || List.exists f t.incoming
 

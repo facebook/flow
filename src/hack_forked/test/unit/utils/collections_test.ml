@@ -33,6 +33,12 @@ let test_WrappedMap_union () =
   in
   true
 
+let assert_queue f queue expected =
+  match f queue with
+  | (Some x, queue) when x = expected -> queue
+  | (Some _, _) -> failwith "wrong value"
+  | (None, _) -> failwith "empty"
+
 let test_ImmQueue () =
   let queue = ImmQueue.empty in
   if not (ImmQueue.is_empty queue) then failwith "not empty";
@@ -43,47 +49,30 @@ let test_ImmQueue () =
   let queue = ImmQueue.push queue 5 in
   if ImmQueue.length queue <> 2 then failwith "wrong length";
   let queue = ImmQueue.push queue 6 in
-  let (x, queue) = ImmQueue.peek queue in
-  (match x with
-  | Some 4 -> ()
-  | _ -> failwith "wrong value");
-  let (x, queue) = ImmQueue.pop queue in
-  (match x with
-  | Some 4 -> ()
-  | _ -> failwith "wrong value");
-  let (x, queue) = ImmQueue.pop_unsafe queue in
-  if x <> 5 then failwith "wrong value";
-  let (x, queue) = ImmQueue.pop_unsafe queue in
-  if x <> 6 then failwith "wrong value";
-  let did_throw =
-    try
-      ignore (ImmQueue.pop_unsafe queue);
-      false
-    with
-    | ImmQueue.Empty -> true
-  in
-  if not did_throw then failwith "expected an exception";
+  let queue = assert_queue ImmQueue.peek queue 4 in
+  let queue = assert_queue ImmQueue.pop queue 4 in
+  let queue = assert_queue ImmQueue.pop queue 5 in
+  let queue = assert_queue ImmQueue.pop queue 6 in
   let (x, _) = ImmQueue.pop queue in
-  match x with
+  (match x with
   | Some _ -> failwith "expected none"
-  | None ->
-    ();
+  | None -> ());
 
-    let queue = ImmQueue.push (ImmQueue.push (ImmQueue.push ImmQueue.empty 1) 2) 3 in
-    let (_, queue) = ImmQueue.pop queue in
-    let queue = ImmQueue.push (ImmQueue.push queue 4) 5 in
-    let acc = ref [] in
-    ImmQueue.iter queue ~f:(fun i -> acc := !acc @ [i]);
-    if !acc <> [2; 3; 4; 5] then failwith "expected 2345 iter order";
-    if ImmQueue.to_list queue <> [2; 3; 4; 5] then failwith "expected 2345 list";
+  let queue = ImmQueue.push (ImmQueue.push (ImmQueue.push ImmQueue.empty 1) 2) 3 in
+  let (_, queue) = ImmQueue.pop queue in
+  let queue = ImmQueue.push (ImmQueue.push queue 4) 5 in
+  let acc = ref [] in
+  ImmQueue.iter queue ~f:(fun i -> acc := !acc @ [i]);
+  if !acc <> [2; 3; 4; 5] then failwith "expected 2345 iter order";
+  if ImmQueue.to_list queue <> [2; 3; 4; 5] then failwith "expected 2345 list";
 
-    let queue2 = ImmQueue.from_list [6; 7; 8] in
-    let (_, queue2) = ImmQueue.pop queue2 in
-    let queue2 = ImmQueue.push (ImmQueue.push queue2 9) 0 in
-    let queue3 = ImmQueue.concat [queue; queue2] in
-    if ImmQueue.to_list queue3 <> [2; 3; 4; 5; 7; 8; 9; 0] then failwith "expected 23457890 cat";
+  let queue2 = ImmQueue.from_list [6; 7; 8] in
+  let (_, queue2) = ImmQueue.pop queue2 in
+  let queue2 = ImmQueue.push (ImmQueue.push queue2 9) 0 in
+  let queue3 = ImmQueue.concat [queue; queue2] in
+  if ImmQueue.to_list queue3 <> [2; 3; 4; 5; 7; 8; 9; 0] then failwith "expected 23457890 cat";
 
-    true
+  true
 
 let tests = [("test_WrappedMap_union", test_WrappedMap_union); ("test_ImmQueue", test_ImmQueue)]
 

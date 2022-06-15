@@ -12,8 +12,6 @@
 
 type 'a t
 
-exception Empty
-
 val empty : 'a t
 
 val push : 'a t -> 'a -> 'a t
@@ -21,9 +19,6 @@ val push : 'a t -> 'a -> 'a t
 val pop : 'a t -> 'a option * 'a t
 
 val peek : 'a t -> 'a option * 'a t
-
-(* Raises Empty if the queue is empty *)
-val pop_unsafe : 'a t -> 'a * 'a t
 
 val is_empty : 'a t -> bool
 
