@@ -59,7 +59,9 @@ val wait_for_updates_for_recheck :
 
 val pop_next_workload : unit -> WorkloadStream.workload option
 
-val wait_and_pop_parallelizable_workload : unit -> WorkloadStream.parallelizable_workload Lwt.t
+val pop_next_parallelizable_workload : unit -> WorkloadStream.parallelizable_workload option
+
+val wait_for_parallelizable_workload : unit -> unit Lwt.t
 
 val update_env : ServerEnv.env -> ServerEnv.env
 

@@ -88,11 +88,7 @@ let push_files_to_resync_after_file_watcher_restart ?metadata ~reason changed_si
 
 let pop_next_workload () = WorkloadStream.pop workload_stream
 
-let rec wait_and_pop_parallelizable_workload () =
-  let%lwt () = WorkloadStream.wait_for_parallelizable_workload workload_stream in
-  match WorkloadStream.pop_parallelizable workload_stream with
-  | Some workload -> Lwt.return workload
-  | None -> wait_and_pop_parallelizable_workload ()
+let pop_next_parallelizable_workload () = WorkloadStream.pop_parallelizable workload_stream
 
 let update_env env =
   Lwt_stream.get_available env_update_stream |> List.fold_left (fun env f -> f env) env
@@ -310,6 +306,9 @@ let wait_for stream =
   (* [is_empty] blocks until there is something to read or an explicit [None] (end of stream) *)
   let%lwt _ = Lwt_stream.is_empty stream in
   Lwt.return_unit
+
+let wait_for_parallelizable_workload () =
+  WorkloadStream.wait_for_parallelizable_workload workload_stream
 
 let rec wait_for_updates_for_recheck ~process_updates ~get_forced ~priority =
   let%lwt () = wait_for recheck_stream in

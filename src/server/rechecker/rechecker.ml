@@ -25,24 +25,31 @@ module Parallelizable_workload_loop = LwtLoop.Make (struct
     (* Lwt.pick waits until one of these two promises is resolved (returns or fails). Then it
      * cancels the other one and returns/fails.
      *
-     * Normally, the wait_and_pop_parallelizable_workload thread will finish first. Then Lwt.pick
+     * Normally, the wait_for_parallelizable_workload thread will finish first. Then Lwt.pick
      * will cancel the `let%lwt () = ... in raise Lwt.Canceled` thread. The `wait_for_cancel` thread
      * is NOT cancelable so that will stay unresolved.
      *
      * Eventually, wait_for_cancel will resolve. Then we'll cancel the
-     * wait_and_pop_parallelizable_workload thread throw Lwt.Canceled *)
-    let%lwt workload =
+     * wait_for_parallelizable_workload thread throw Lwt.Canceled *)
+    let%lwt () =
       Lwt.pick
         [
-          ServerMonitorListenerState.wait_and_pop_parallelizable_workload ();
+          ServerMonitorListenerState.wait_for_parallelizable_workload ();
           (let%lwt () = wait_for_cancel in
            raise Lwt.Canceled
           );
         ]
     in
-    (* We have a workload! Let's run it! *)
-    Hh_logger.info "Running a parallel workload";
-    let%lwt () = workload env in
+    let%lwt () =
+      match ServerMonitorListenerState.pop_next_parallelizable_workload () with
+      | Some workload ->
+        (* We have a workload! Let's run it! *)
+        Hh_logger.info "Running a parallel workload";
+        workload env
+      | None ->
+        (* this should never happen... we just waited for one! *)
+        Lwt.return_unit
+    in
     Lwt.return (wait_for_cancel, env)
 
   let catch _ exn = Exception.reraise exn
