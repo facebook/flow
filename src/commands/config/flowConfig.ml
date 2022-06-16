@@ -55,7 +55,7 @@ module Opts = struct
     direct_dependent_files_fix: bool option;
     disable_live_non_parse_errors: bool option;
     emoji: bool option;
-    enable_const_params: bool;
+    enable_const_params: bool option;
     enable_contextual_typing: bool option;
     enforce_local_inference_annotations: bool;
     enforce_strict_call_arity: bool;
@@ -186,7 +186,7 @@ module Opts = struct
       direct_dependent_files_fix = None;
       disable_live_non_parse_errors = None;
       emoji = None;
-      enable_const_params = false;
+      enable_const_params = None;
       enable_contextual_typing = None;
       enforce_local_inference_annotations = false;
       enforce_strict_call_arity = true;
@@ -839,7 +839,9 @@ module Opts = struct
       ("exact_by_default", boolean (fun opts v -> Ok { opts with exact_by_default = v }));
       ("exact_empty_objects", boolean (fun opts v -> Ok { opts with exact_empty_objects = Some v }));
       ("experimental.abstract_locations", abstract_locations_parser);
-      ("experimental.const_params", boolean (fun opts v -> Ok { opts with enable_const_params = v }));
+      ( "experimental.const_params",
+        boolean (fun opts v -> Ok { opts with enable_const_params = Some v })
+      );
       ( "experimental.contextual_typing",
         boolean (fun opts v -> Ok { opts with enable_contextual_typing = Some v })
       );

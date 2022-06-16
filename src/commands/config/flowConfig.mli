@@ -84,7 +84,7 @@ val disable_live_non_parse_errors : config -> bool option
 
 val emoji : config -> bool option
 
-val enable_const_params : config -> bool
+val enable_const_params : config -> bool option
 
 val enable_contextual_typing : config -> bool option
 
