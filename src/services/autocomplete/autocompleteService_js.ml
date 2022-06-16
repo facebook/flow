@@ -152,8 +152,12 @@ let detail_of_ty_decl ~exact_by_default d =
   let type_ = Ty_printer.string_of_decl_single_line ~with_comments:false ~exact_by_default d in
   (* decls aren't function signatures, so cli_detail and lsp_detail are the same *)
   let cli_detail = type_ in
-  let lsp_detail = type_ in
-  (cli_detail, Some lsp_detail)
+  let lsp_detail =
+    match d with
+    | Ty.ClassDecl _ -> None
+    | _ -> Some type_
+  in
+  (cli_detail, lsp_detail)
 
 let autocomplete_create_result
     ?insert_text
