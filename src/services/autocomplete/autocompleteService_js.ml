@@ -13,13 +13,12 @@ let loc_of_aloc = Parsing_heaps.Reader.loc_of_aloc
 let max_autoimport_suggestions = 100
 
 let default_autoimport_options =
-  Fuzzy_path.
-    {
-      default_options with
-      max_results = max_autoimport_suggestions;
-      num_threads = Base.Int.max 1 (Sys_utils.nbr_procs - 2);
-    }
-  
+  let open Fuzzy_path in
+  {
+    default_options with
+    max_results = max_autoimport_suggestions;
+    num_threads = Base.Int.max 1 (Sys_utils.nbr_procs - 2);
+  }
 
 let autocomplete_suffix = "AUTO332"
 
@@ -252,19 +251,17 @@ let autocomplete_create_result_elt
       d
 
 let ty_normalizer_options =
-  Ty_normalizer_env.
-    {
-      expand_internal_types = true;
-      flag_shadowed_type_params = true;
-      preserve_inferred_literal_types = false;
-      evaluate_type_destructors = true;
-      optimize_types = true;
-      omit_targ_defaults = false;
-      merge_bot_and_any_kinds = true;
-      verbose_normalizer = false;
-      max_depth = Some 50;
-    }
-  
+  {
+    Ty_normalizer_env.expand_internal_types = true;
+    flag_shadowed_type_params = true;
+    preserve_inferred_literal_types = false;
+    evaluate_type_destructors = true;
+    optimize_types = true;
+    omit_targ_defaults = false;
+    merge_bot_and_any_kinds = true;
+    verbose_normalizer = false;
+    max_depth = Some 50;
+  }
 
 type ac_result = {
   result: ServerProt.Response.Completion.t;
