@@ -24,8 +24,6 @@
    * from the FD avoiding Ocaml channels entirely.
  *)
 
-exception Invalid_Int_Size_Exception
-
 exception Payload_Size_Too_Large_Exception
 
 exception Malformed_Preamble_Exception
@@ -45,19 +43,6 @@ type remote_exception_data = {
   message: string;
   stack: string;
 }
-
-type error =
-  | Rpc_absent of Exception.t
-  | Rpc_disconnected of Exception.t
-  | Rpc_malformed of string * Utils.callstack
-  | Rpc_remote_panic of remote_exception_data
-
-let error_to_verbose_string (err : error) : string =
-  match err with
-  | Rpc_absent e -> "Absent: " ^ Exception.to_string e
-  | Rpc_disconnected e -> "Disconnected: " ^ Exception.to_string e
-  | Rpc_malformed (s, Utils.Callstack stack) -> Printf.sprintf "Malformed: %s\n%s" s stack
-  | Rpc_remote_panic { message; stack } -> Printf.sprintf "Remote panic: %s\n%s" message stack
 
 module type WRITER_READER = sig
   type 'a result
