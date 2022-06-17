@@ -215,18 +215,41 @@ type autocomplete_service_result =
   | AcEmpty of string
   | AcFatalError of string
 
+let jsdoc_of_def_loc ~reader ~typed_ast def_loc =
+  loc_of_aloc ~reader def_loc
+  |> Find_documentation.jsdoc_of_getdef_loc ~current_ast:typed_ast ~reader
+
+let jsdoc_of_member ~reader ~typed_ast info =
+  Base.Option.bind info.Ty_members.def_loc ~f:(jsdoc_of_def_loc ~reader ~typed_ast)
+
+let jsdoc_of_loc ~options ~reader ~cx ~file_sig ~typed_ast loc =
+  let open GetDef_js.Get_def_result in
+  match GetDef_js.get_def ~options ~reader ~cx ~file_sig ~typed_ast loc with
+  | Def getdef_loc
+  | Partial (getdef_loc, _) ->
+    Find_documentation.jsdoc_of_getdef_loc ~current_ast:typed_ast ~reader getdef_loc
+  | Bad_loc
+  | Def_error _ ->
+    None
+
 let documentation_and_tags_of_jsdoc jsdoc =
-  ( Find_documentation.documentation_of_jsdoc jsdoc,
-    jsdoc |> Jsdoc.deprecated |> Base.Option.map ~f:(fun _ -> [Lsp.CompletionItemTag.Deprecated])
-  )
+  let docs = Find_documentation.documentation_of_jsdoc jsdoc in
+  let tags =
+    Base.Option.map (Jsdoc.deprecated jsdoc) ~f:(fun _ -> [Lsp.CompletionItemTag.Deprecated])
+  in
+  (docs, tags)
 
 let documentation_and_tags_of_member ~reader ~typed_ast info =
-  match info.Ty_members.def_loc with
-  | None -> (None, None)
-  | Some loc ->
-    loc_of_aloc ~reader loc
-    |> Find_documentation.jsdoc_of_getdef_loc ~current_ast:typed_ast ~reader
-    |> Base.Option.value_map ~default:(None, None) ~f:documentation_and_tags_of_jsdoc
+  jsdoc_of_member ~reader ~typed_ast info
+  |> Base.Option.value_map ~default:(None, None) ~f:documentation_and_tags_of_jsdoc
+
+let documentation_and_tags_of_loc ~options ~reader ~cx ~file_sig ~typed_ast loc =
+  jsdoc_of_loc ~options ~reader ~cx ~file_sig ~typed_ast loc
+  |> Base.Option.value_map ~default:(None, None) ~f:documentation_and_tags_of_jsdoc
+
+let documentation_and_tags_of_def_loc ~reader ~typed_ast def_loc =
+  jsdoc_of_def_loc ~reader ~typed_ast def_loc
+  |> Base.Option.value_map ~default:(None, None) ~f:documentation_and_tags_of_jsdoc
 
 let members_of_type
     ~reader
@@ -302,17 +325,6 @@ let collect_types ~reader locs typed_ast =
   let collector = new type_collector reader locs in
   Stdlib.ignore (collector#program typed_ast);
   collector#collected_types
-
-let documentation_and_tags_of_loc ~options ~reader ~cx ~file_sig ~typed_ast loc =
-  let open GetDef_js.Get_def_result in
-  match GetDef_js.get_def ~options ~reader ~cx ~file_sig ~typed_ast loc with
-  | Def getdef_loc
-  | Partial (getdef_loc, _) ->
-    Find_documentation.jsdoc_of_getdef_loc ~current_ast:typed_ast ~reader getdef_loc
-    |> Base.Option.value_map ~default:(None, None) ~f:documentation_and_tags_of_jsdoc
-  | Bad_loc
-  | Def_error _ ->
-    (None, None)
 
 let local_value_identifiers
     ~options ~reader ~cx ~genv ~ac_loc ~file_sig ~ast ~typed_ast ~tparams_rev =
@@ -1375,10 +1387,8 @@ let autocomplete_qualified_type ~reader ~cx ~ac_loc ~file_sig ~typed_ast ~tparam
       ~genv:(Ty_normalizer_env.mk_genv ~full_cx:cx ~file:(Context.file cx) ~typed_ast ~file_sig)
       qtype_scheme
   in
-  let documentation_and_tags_of_module_member def_loc =
-    match loc_of_aloc ~reader def_loc |> Find_documentation.jsdoc_of_getdef_loc ~reader with
-    | None -> (None, None)
-    | Some jsdoc -> documentation_and_tags_of_jsdoc jsdoc
+  let documentation_and_tags_of_module_member =
+    documentation_and_tags_of_def_loc ~reader ~typed_ast
   in
   let (items, errors_to_log) =
     match module_ty_res with
