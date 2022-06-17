@@ -44,28 +44,14 @@ let spec =
   }
 
 (* legacy editor integrations inserted the "AUTO332" token themselves. modern ones give us the
-   cursor location. this function finds the first occurrence of "AUTO332" and returns the
-   contents with the token removed, along with the (line, column) cursor position. *)
+   cursor location. this function converts the legacy input to the modern input. *)
 let extract_cursor input =
   let contents = File_input.content_of_file_input_unsafe input in
-  let regexp = Str.regexp_string AutocompleteService_js.autocomplete_suffix in
-  try
-    let offset = Str.search_forward regexp contents 0 in
-    let cursor = Line.position_of_offset contents offset in
-    let contents =
-      let prefix = String.sub contents 0 offset in
-      let suffix =
-        String.sub
-          contents
-          (offset + AutocompleteService_js.suffix_len)
-          (String.length contents - (offset + 7))
-      in
-      prefix ^ suffix
-    in
+  match Autocomplete_sigil.extract_cursor contents with
+  | None -> (input, None)
+  | Some (contents, cursor) ->
     let input = File_input.(FileContent (path_of_file_input input, contents)) in
     (input, Some cursor)
-  with
-  | Not_found -> (input, None)
 
 let file_input_from_stdin filename =
   get_file_from_filename_or_stdin ~cmd:CommandSpec.(spec.name) filename None

@@ -7,6 +7,6 @@
 
 open OUnit2
 
-let tests = "autocomplete" >::: ["autocompleteService_js" >::: AutocompleteService_js_tests.tests]
+let tests = "autocomplete" >::: ["autocomplete_sigil" >::: Autocomplete_sigil_tests.tests]
 
 let () = run_test_tt_main tests
