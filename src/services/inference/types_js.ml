@@ -1636,7 +1636,10 @@ end = struct
     will_be_checked_files := CheckedSet.union to_merge_or_check !will_be_checked_files;
 
     let%lwt estimates =
-      restart_if_faster_than_recheck ~options ~env ~to_merge_or_check ~changed_mergebase
+      if Options.estimate_recheck_time options then
+        restart_if_faster_than_recheck ~options ~env ~to_merge_or_check ~changed_mergebase
+      else
+        Lwt.return_none
     in
     let%lwt () =
       ensure_parsed_or_trigger_recheck

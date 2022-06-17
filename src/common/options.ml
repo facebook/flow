@@ -87,6 +87,7 @@ type t = {
   opt_enums: bool;
   opt_env_mode: env_mode;
   opt_env_mode_constrain_write_dirs: string list;
+  opt_estimate_recheck_time: bool;
   opt_exact_by_default: bool;
   opt_exact_empty_objects: bool;
   opt_experimental_infer_indexers: bool;
@@ -191,6 +192,8 @@ let enums opts = opts.opt_enums
 let env_mode opts = opts.opt_env_mode
 
 let env_mode_constrain_write_dirs opts = opts.opt_env_mode_constrain_write_dirs
+
+let estimate_recheck_time opts = opts.opt_estimate_recheck_time
 
 let exact_by_default opts = opts.opt_exact_by_default
 

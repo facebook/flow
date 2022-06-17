@@ -856,6 +856,7 @@ module Options_flags = struct
     wait_for_recheck: bool option;
     include_suppressions: bool;
     incremental_revdeps: bool option;
+    estimate_recheck_time: bool option;
   }
 end
 
@@ -918,7 +919,8 @@ let options_flags =
       include_suppressions
       trust_mode
       env_mode
-      incremental_revdeps =
+      incremental_revdeps
+      estimate_recheck_time =
     (match merge_timeout with
     | Some timeout when timeout < 0 ->
       Exit.(exit ~msg:"--merge-timeout must be non-negative" Commandline_usage_error)
@@ -947,6 +949,7 @@ let options_flags =
         abstract_locations;
         include_suppressions;
         incremental_revdeps;
+        estimate_recheck_time;
       }
   in
   fun prev ->
@@ -1021,6 +1024,9 @@ let options_flags =
            )
            ~doc:""
       |> flag "--incremental-revdeps" (optional bool) ~doc:""
+      (* restarting to save time is a hack and should be removed. this should
+         not be part of our public API, so not included in the docs. *)
+      |> flag "--estimate-recheck-time" (optional bool) ~doc:"" ~env:"FLOW_ESTIMATE_RECHECK_TIME"
     )
 
 let saved_state_flags =
@@ -1339,6 +1345,11 @@ let make_options
       Base.List.map
         ~f:(fun s -> Files.expand_project_root_token ~root s)
         (FlowConfig.env_mode_constrain_write_dirs flowconfig);
+    opt_estimate_recheck_time =
+      Base.Option.first_some
+        options_flags.estimate_recheck_time
+        (FlowConfig.estimate_recheck_time flowconfig)
+      |> Base.Option.value ~default:true;
     opt_exact_by_default = FlowConfig.exact_by_default flowconfig;
     opt_exact_empty_objects =
       Base.Option.value (FlowConfig.exact_empty_objects flowconfig) ~default:false;

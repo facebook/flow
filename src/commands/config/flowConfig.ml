@@ -63,6 +63,7 @@ module Opts = struct
     enums: bool;
     env_mode: Options.env_mode;
     env_mode_constrain_write_dirs: string list;
+    estimate_recheck_time: bool option;
     exact_by_default: bool;
     exact_empty_objects: bool option;
     facebook_fbs: string option;
@@ -194,6 +195,7 @@ module Opts = struct
       enums = false;
       env_mode = Options.ClassicEnv [];
       env_mode_constrain_write_dirs = [];
+      estimate_recheck_time = None;
       exact_by_default = false;
       exact_empty_objects = None;
       facebook_fbs = None;
@@ -540,6 +542,9 @@ module Opts = struct
   let enforce_strict_call_arity_parser =
     boolean (fun opts v -> Ok { opts with enforce_strict_call_arity = v })
 
+  let estimate_recheck_time_parser =
+    boolean (fun opts v -> Ok { opts with estimate_recheck_time = Some v })
+
   let facebook_module_interop_parser =
     boolean (fun opts v -> Ok { opts with facebook_module_interop = v })
 
@@ -836,6 +841,7 @@ module Opts = struct
       ("babel_loose_array_spread", babel_loose_array_spread_parser);
       ("emoji", boolean (fun opts v -> Ok { opts with emoji = Some v }));
       ("enums", boolean (fun opts v -> Ok { opts with enums = v }));
+      ("estimate_recheck_time", estimate_recheck_time_parser);
       ("exact_by_default", boolean (fun opts v -> Ok { opts with exact_by_default = v }));
       ("exact_empty_objects", boolean (fun opts v -> Ok { opts with exact_empty_objects = Some v }));
       ("experimental.abstract_locations", abstract_locations_parser);
@@ -1497,6 +1503,8 @@ let enums c = c.options.Opts.enums
 let env_mode c = c.options.Opts.env_mode
 
 let env_mode_constrain_write_dirs c = c.options.Opts.env_mode_constrain_write_dirs
+
+let estimate_recheck_time c = c.options.Opts.estimate_recheck_time
 
 let exact_by_default c = c.options.Opts.exact_by_default
 
