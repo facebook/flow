@@ -103,7 +103,7 @@ MyClass.constant = 42
 MyClass.prototype.function_property = func_we_use_everywhere
 ```
 
-Flow also supports using the [class properties syntax](https://tc39.github.io/proposal-class-public-fields/).
+Flow also supports using the [class properties syntax](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Classes#field_declarations).
 
 ```js flow-check
 class MyClass {
