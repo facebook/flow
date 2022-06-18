@@ -143,6 +143,7 @@ type t = {
   opt_saved_state_fetcher: saved_state_fetcher;
   opt_saved_state_force_recheck: bool;
   opt_saved_state_no_fallback: bool;
+  opt_saved_state_skip_version_check: bool;
   opt_statement_reorder_checking: statement_order_mode;
   opt_strict_es6_import_export: bool;
   opt_strict_es6_import_export_excludes: string list;
@@ -304,6 +305,8 @@ let saved_state_fetcher opts = opts.opt_saved_state_fetcher
 let saved_state_force_recheck opts = opts.opt_saved_state_force_recheck
 
 let saved_state_no_fallback opts = opts.opt_saved_state_no_fallback
+
+let saved_state_skip_version_check opts = opts.opt_saved_state_skip_version_check
 
 let should_ignore_non_literal_requires opts = opts.opt_ignore_non_literal_requires
 

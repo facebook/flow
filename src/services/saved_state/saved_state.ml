@@ -368,32 +368,45 @@ module Load = struct
   let verify_version =
     (* Flow_build_id should always be 16 bytes *)
     let rec read_version fd buf offset len =
-      if len > 0 then (
-        let%lwt bytes_read = Lwt_unix.read fd buf offset len in
-        if bytes_read = 0 then (
-          Hh_logger.error
-            "Invalid saved state version header. It should be %d bytes but only read %d bytes"
-            saved_state_version_length
-            (saved_state_version_length - len);
-          raise (Invalid_saved_state Bad_header)
-        );
-        let offset = offset + bytes_read in
-        let len = len - bytes_read in
+      let%lwt bytes_read = Lwt_unix.read fd buf offset len in
+      if bytes_read = 0 then (
+        Hh_logger.error
+          "Invalid saved state version header. It should be %d bytes but only read %d bytes"
+          saved_state_version_length
+          (saved_state_version_length - len);
+        raise (Invalid_saved_state Bad_header)
+      );
+      let offset = offset + bytes_read in
+      let len = len - bytes_read in
+      if len > 0 then
         read_version fd buf offset len
-      ) else
-        let result = Bytes.to_string buf in
-        let flow_build_id = saved_state_version () in
-        if result <> flow_build_id then (
-          Hh_logger.error
-            "Saved-state file failed version check. Expected version %S but got %S"
-            flow_build_id
-            result;
-          raise (Invalid_saved_state Build_mismatch)
-        ) else
-          Lwt.return_unit
+      else
+        Lwt.return (Bytes.to_string buf)
     in
-    fun fd ->
-      read_version fd (Bytes.create saved_state_version_length) 0 saved_state_version_length
+    let assert_version result =
+      let flow_build_id = saved_state_version () in
+      if result <> flow_build_id then (
+        Hh_logger.error
+          "Saved-state file failed version check. Expected version %S but got %S"
+          flow_build_id
+          result;
+        raise (Invalid_saved_state Build_mismatch)
+      ) else
+        ()
+    in
+    fun options fd ->
+      let%lwt version =
+        read_version fd (Bytes.create saved_state_version_length) 0 saved_state_version_length
+      in
+      if Options.saved_state_skip_version_check options then
+        (* This is really unsafe! Saved state is marshal'd OCaml data and it's
+           easy to introduce serialization differences that would lead to
+           segfaults. This is only for debugging.
+
+           We still have to read the version because it consumes from the fd. *)
+        Lwt.return_unit
+      else
+        Lwt.return (assert_version version)
 
   let mk_env root =
     let absolute_path = Files.absolute_path root in
@@ -621,7 +634,7 @@ module Load = struct
         Hh_logger.error "Failed to open %S\n%s" filename (Exception.to_string exn);
         raise (Invalid_saved_state File_does_not_exist)
     in
-    let%lwt () = verify_version fd in
+    let%lwt () = verify_version options fd in
     let%lwt (compressed : Saved_state_compression.compressed) =
       Profiling_js.with_timer_lwt profiling ~timer:"Read" ~f:(fun () ->
           try%lwt Marshal_tools_lwt.from_fd_with_preamble fd with

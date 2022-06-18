@@ -865,6 +865,7 @@ module Saved_state_flags = struct
     saved_state_fetcher: Options.saved_state_fetcher option;
     saved_state_force_recheck: bool;
     saved_state_no_fallback: bool;
+    saved_state_skip_version_check: bool;
   }
 end
 
@@ -1031,9 +1032,18 @@ let options_flags =
 
 let saved_state_flags =
   let collect_saved_state_flags
-      main saved_state_fetcher saved_state_force_recheck saved_state_no_fallback =
+      main
+      saved_state_fetcher
+      saved_state_force_recheck
+      saved_state_no_fallback
+      saved_state_skip_version_check =
     main
-      { Saved_state_flags.saved_state_fetcher; saved_state_force_recheck; saved_state_no_fallback }
+      {
+        Saved_state_flags.saved_state_fetcher;
+        saved_state_force_recheck;
+        saved_state_no_fallback;
+        saved_state_skip_version_check;
+      }
   in
   fun prev ->
     CommandSpec.ArgSpec.(
@@ -1058,6 +1068,14 @@ let saved_state_flags =
            no_arg
            ~doc:
              "If saved state fails to load, exit (normally fallback is to initialize from scratch)"
+      (* This is really unsafe! Saved state is marshal'd OCaml data and it's
+         easy to introduce serialization differences that would lead to
+         segfaults. This is only for debugging. *)
+      |> flag
+           "--saved-state-skip-version-check-DO_NOT_USE_OR_YOU_WILL_BE_FIRED"
+           no_arg
+           ~doc:""
+           ~env:"FLOW_SAVED_STATE_SKIP_VERSION_CHECK_DO_NOT_USE_OR_YOU_WILL_BE_FIRED"
     )
 
 let flowconfig_name_flag prev =
@@ -1385,6 +1403,7 @@ let make_options
     opt_saved_state_fetcher;
     opt_saved_state_force_recheck = saved_state_options_flags.saved_state_force_recheck;
     opt_saved_state_no_fallback = saved_state_options_flags.saved_state_no_fallback;
+    opt_saved_state_skip_version_check = saved_state_options_flags.saved_state_skip_version_check;
     opt_node_resolver_allow_root_relative = FlowConfig.node_resolver_allow_root_relative flowconfig;
     opt_node_resolver_root_relative_dirnames =
       FlowConfig.node_resolver_root_relative_dirnames flowconfig;
