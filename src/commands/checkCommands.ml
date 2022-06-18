@@ -143,6 +143,7 @@ module CheckCommand = struct
             saved_state_fetcher = Some Options.Dummy_fetcher;
             saved_state_force_recheck = false;
             saved_state_no_fallback = false;
+            saved_state_skip_version_check = false;
           }
         
       in
