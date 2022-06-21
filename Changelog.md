@@ -1,3 +1,8 @@
+### 0.180.1
+
+Notable bug fixes:
+Reverted changes that cause Flow to generate a corrupted saved-state when libdef changes.
+
 ### 0.180.0
 
 Likely to cause new Flow errors:
