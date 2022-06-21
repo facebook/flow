@@ -1978,23 +1978,86 @@ let mk_init_env
 let init_from_saved_state ~profiling ~workers ~saved_state ~updates options =
   let%lwt (env, libs_ok) =
     with_transaction @@ fun transaction reader ->
+    let file_options = Options.file_options options in
+    (* We don't want to walk the file system for the checked in files. But we still need to find the
+     * flowlibs *)
+    let (ordered_flowlib_libs, _) = Files.init ~flowlibs_only:true file_options in
     let {
-      Saved_state.parsed;
-      unparsed;
-      package_json_files;
+      Saved_state.flowconfig_hash = _;
+      parsed_heaps;
+      unparsed_heaps;
+      package_heaps;
       ordered_non_flowlib_libs;
-      node_modules_containers;
-      dependency_info;
       local_errors;
       warnings;
-      dirty_modules;
+      node_modules_containers;
+      dependency_graph;
     } =
       saved_state
     in
-
+    let root = Options.root options |> Path.to_string in
     Files.node_modules_containers := node_modules_containers;
+    (* Restore PackageHeap and the ReversePackageHeap *)
+    FilenameMap.iter (fun fn -> Module_js.add_package (File_key.to_string fn)) package_heaps;
 
+    let restore_parsed (fns, dirty_modules) (fn, parsed_file_data) =
+      let { Saved_state.module_name; normalized_file_data } = parsed_file_data in
+      let { Saved_state.hash; exports; resolved_requires } =
+        Saved_state.denormalize_file_data ~root normalized_file_data
+      in
+
+      (* Restore the FileHeap *)
+      let ms =
+        Parsing_heaps.From_saved_state.add_parsed
+          options
+          fn
+          hash
+          module_name
+          exports
+          resolved_requires
+      in
+
+      (FilenameSet.add fn fns, Modulename.Set.union ms dirty_modules)
+    in
+
+    let restore_unparsed (fns, dirty_modules) (fn, unparsed_file_data) =
+      let { Saved_state.unparsed_module_name; unparsed_hash } = unparsed_file_data in
+
+      (* Restore the FileHeap *)
+      let ms =
+        Parsing_heaps.From_saved_state.add_unparsed options fn unparsed_hash unparsed_module_name
+      in
+
+      (FilenameSet.add fn fns, Modulename.Set.union ms dirty_modules)
+    in
+
+    Hh_logger.info "Restoring heaps";
+    let%lwt (parsed, unparsed, dirty_modules) =
+      Memory_utils.with_memory_timer_lwt ~options "RestoreHeaps" profiling (fun () ->
+          let neutral = (FilenameSet.empty, Modulename.Set.empty) in
+          let merge (a1, a2) (b1, b2) = (FilenameSet.union a1 b1, Modulename.Set.union a2 b2) in
+          let%lwt (parsed, dirty_modules_parsed) =
+            MultiWorkerLwt.call
+              workers
+              ~job:(List.fold_left restore_parsed)
+              ~merge
+              ~neutral
+              ~next:(MultiWorkerLwt.next workers parsed_heaps)
+          in
+          let%lwt (unparsed, dirty_modules_unparsed) =
+            MultiWorkerLwt.call
+              workers
+              ~job:(List.fold_left restore_unparsed)
+              ~merge
+              ~neutral
+              ~next:(MultiWorkerLwt.next workers unparsed_heaps)
+          in
+          let dirty_modules = Modulename.Set.union dirty_modules_parsed dirty_modules_unparsed in
+          Lwt.return (parsed, unparsed, dirty_modules)
+      )
+    in
     Hh_logger.info "Loading libraries";
+
     (* We actually parse and typecheck the libraries, even though we're loading from saved state.
      * We'd need to check them anyway, as soon as any file is checked, since we don't track
      * dependents for libraries. And we don't really support incrementally checking libraries
@@ -2006,19 +2069,16 @@ let init_from_saved_state ~profiling ~workers ~saved_state ~updates options =
      * 1. The builtin libraries are merged first
      * 2. The non-builtin libraries are merged in the same order as before
      *)
-    let ordered_libs =
-      let file_options = Options.file_options options in
-      let (ordered_flowlib_libs, _) = Files.init ~flowlibs_only:true file_options in
-      List.rev_append (List.rev ordered_flowlib_libs) ordered_non_flowlib_libs
-    in
+    let ordered_libs = List.rev_append (List.rev ordered_flowlib_libs) ordered_non_flowlib_libs in
     let libs = SSet.of_list ordered_libs in
     let%lwt (libs_ok, local_errors, warnings, suppressions, lib_exports) =
       let suppressions = Error_suppressions.empty in
       init_libs ~options ~profiling ~local_errors ~warnings ~suppressions ~reader ordered_libs
     in
-
     Hh_logger.info "Resolving dependencies";
     MonitorRPC.status_update ~event:ServerStatus.Resolving_dependencies_progress;
+
+    (* This will restore InfoHeap, NameHeap, & all_providers hashtable *)
     let%lwt (_changed_modules, duplicate_providers) =
       commit_modules
         ~transaction
@@ -2028,10 +2088,15 @@ let init_from_saved_state ~profiling ~workers ~saved_state ~updates options =
         ~duplicate_providers:SMap.empty
         dirty_modules
     in
-
     let errors =
       let merge_errors = FilenameMap.empty in
       { ServerEnv.local_errors; duplicate_providers; merge_errors; warnings; suppressions }
+    in
+
+    let%lwt dependency_info =
+      Memory_utils.with_memory_timer_lwt ~options "RestoreDependencyInfo" profiling (fun () ->
+          Lwt.return (Dependency_info.of_map dependency_graph)
+      )
     in
 
     Hh_logger.info "Indexing files";
@@ -2045,7 +2110,7 @@ let init_from_saved_state ~profiling ~workers ~saved_state ~updates options =
       mk_init_env
         ~files:parsed
         ~unparsed
-        ~package_json_files
+        ~package_json_files:(FilenameMap.keys package_heaps)
         ~dependency_info
         ~ordered_libs
         ~libs
@@ -2219,7 +2284,7 @@ let exit_if_no_fallback ?msg options =
   if Options.saved_state_no_fallback options then Exit.(exit ?msg Invalid_saved_state)
 
 (* Does a best-effort job to load a saved state. If it fails, returns None *)
-let load_saved_state ~profiling options =
+let load_saved_state ~profiling ~workers options =
   let%lwt (fetch_profiling, fetch_result) =
     match Options.saved_state_fetcher options with
     | Options.Dummy_fetcher -> Saved_state_dummy_fetcher.fetch ~options
@@ -2238,7 +2303,9 @@ let load_saved_state ~profiling options =
   | Saved_state_fetcher.Saved_state { saved_state_filename; changed_files } ->
     let changed_files_count = SSet.cardinal changed_files in
     (try%lwt
-       let%lwt (load_profiling, saved_state) = Saved_state.load ~saved_state_filename ~options in
+       let%lwt (load_profiling, saved_state) =
+         Saved_state.load ~workers ~saved_state_filename ~options
+       in
        Profiling_js.merge ~from:load_profiling ~into:profiling;
 
        let updates =
@@ -2276,7 +2343,7 @@ let load_saved_state ~profiling options =
 let init ~profiling ~workers options =
   let start_time = Unix.gettimeofday () in
   let%lwt (env, libs_ok) =
-    match%lwt load_saved_state ~profiling options with
+    match%lwt load_saved_state ~profiling ~workers options with
     | None ->
       (* Either there is no saved state or we failed to load it for some reason *)
       init_from_scratch ~profiling ~workers options
