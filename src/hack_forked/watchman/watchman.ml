@@ -918,7 +918,33 @@ let get_mergebase_and_changes =
     else
       Lwt.return (Ok None)
 
-let force_update_clockspec clock env = env.clockspec <- clock
+let recover_from_restart ~prev_mergebase env =
+  (* on restart, reconnect to a fresh env. *)
+  let%lwt dead_env = close_channel_on_instance env in
+  match%lwt re_init_dead_env dead_env with
+  | Ok env ->
+    (match%lwt get_mergebase_and_changes env with
+    | Error _ as err -> Lwt.return err
+    | Ok None ->
+      (* asking source control what changed while watchman was restarting was
+         not supported, so we can't recover. note: this should virtually never
+         happen: it means that Watchman previously supported SCM queries, but
+         no longer does when we reconnect. *)
+      Lwt.return (Error Restarted)
+    | Ok (Some { mergebase; changes; clock = _ }) ->
+      if String.equal mergebase prev_mergebase then
+        (* the mergebase didn't change, so no upstream files changed. we can
+           recover by rechecking `changes` (the files currently changed
+           locally) plus all of the files that were previously changed locally,
+           which are tracked separately. *)
+        Lwt.return (Ok (env, changes))
+      else
+        (* if the mergebase changed, `changes` is missing all of the files
+           that changed between the two mergebase revisions (it only contains
+           files changed on top of the new mergebase). we could query for
+           these changes, but it's left for future work. *)
+        Lwt.return (Error Restarted))
+  | Error _ as err -> Lwt.return err
 
 module Testing = struct
   type nonrec error_kind = error_kind
