@@ -1078,6 +1078,40 @@ References:
             [3]
 
 
+Error ----------------------------------------------------------------------------------------------------- pred.js:3:10
+
+Type variable `X` [1] cannot escape from the scope in which it was defined [2]. [escaped-generic]
+
+   pred.js:3:10
+   3|   return x;
+               ^
+
+References:
+   pred.js:2:19
+   2| function f3<X>(x: X): mixed %checks {
+                        ^ [1]
+   pred.js:2:13
+   2| function f3<X>(x: X): mixed %checks {
+                  ^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- pred.js:6:10
+
+Type variable `X` [1] cannot escape from the scope in which it was defined [2]. [escaped-generic]
+
+   pred.js:6:10
+   6|   return x;
+               ^
+
+References:
+   pred.js:5:19
+   5| function f4<X>(x: X): %checks {
+                        ^ [1]
+   pred.js:5:13
+   5| function f4<X>(x: X): %checks {
+                  ^ [2]
+
+
 Error ----------------------------------------------------------------------------------------------------- pred.js:9:44
 
 Type variable `X` [1] cannot escape from the scope in which it was defined [2]. [escaped-generic]
@@ -1132,7 +1166,7 @@ References:
 
 
 
-Found 58 errors
+Found 60 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches
