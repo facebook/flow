@@ -1013,8 +1013,13 @@ let rec regexp_class env buf lexbuf =
   | ']' ->
     Buffer.add_char buf ']';
     env
+  | line_terminator_sequence ->
+    let loc = loc_of_lexbuf env lexbuf in
+    let env = lex_error env loc Parse_error.UnterminatedRegExp in
+    let env = new_line env lexbuf in
+    env
   (* match multi-char substrings that don't contain the start chars of the above patterns *)
-  | Plus (Compl (eof | '\\' | ']'))
+  | Plus (Compl (eof | '\\' | ']' | line_terminator_sequence_start))
   | any ->
     let str = lexeme lexbuf in
     Buffer.add_string buf str;
