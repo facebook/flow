@@ -246,7 +246,6 @@ function for_in_post_init1() {
 // local use of annotated var in for-of is ok
 function for_of_scoped_init() {
   for (var x of [1, 2, 3]) {
-    var x:number = 0;
     var y:number = x;
   }
 }
@@ -254,15 +253,11 @@ function for_of_scoped_init() {
 // ...but use before while gives undefined
 function for_in_pre_init2() {
   var y:number = x; // error
-  for (var x of [1, 2, 3]) {
-    var x:number = 0;
-  }
+  for (var x of [1, 2, 3]) {}
 }
 
 // ...and after
 function for_in_post_init2() {
-  for (var x of [1, 2, 3]) {
-    var x:number = 0;
-  }
+  for (var x of [1, 2, 3]) {}
   var y:number = x; // error
 }

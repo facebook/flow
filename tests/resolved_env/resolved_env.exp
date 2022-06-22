@@ -1,29 +1,29 @@
-Error -------------------------------------------------------------------------------------------------- aliases.js:3:12
+Error -------------------------------------------------------------------------------------------------- aliases.js:3:14
 
 Cannot assign `"hello world"` to `x` because string [1] is incompatible with number [2]. [incompatible-type]
 
-   aliases.js:3:12
-   3| var x: T = "hello world"; // err
-                 ^^^^^^^^^^^^^ [1]
+   aliases.js:3:14
+   3| const x: T = "hello world"; // err
+                   ^^^^^^^^^^^^^ [1]
 
 References:
-   aliases.js:3:8
-   3| var x: T = "hello world"; // err
-             ^ [2]
+   aliases.js:3:10
+   3| const x: T = "hello world"; // err
+               ^ [2]
 
 
-Error -------------------------------------------------------------------------------------------------- aliases.js:7:12
+Error --------------------------------------------------------------------------------------------------- aliases.js:7:7
 
-Cannot assign `"hello world"` to `x` because string [1] is incompatible with number [2]. [incompatible-type]
+Cannot declare `x` [1] because the name is already bound. [name-already-bound]
 
-   aliases.js:7:12
-   7| var x: A = "hello world"; // err
-                 ^^^^^^^^^^^^^ [1]
+   aliases.js:7:7
+   7| const x: A = "hello world"; // err
+            ^
 
 References:
-   aliases.js:7:8
-   7| var x: A = "hello world"; // err
-             ^ [2]
+   aliases.js:3:7
+   3| const x: T = "hello world"; // err
+            ^ [1]
 
 
 Error ---------------------------------------------------------------------------------------------------- async.js:4:27

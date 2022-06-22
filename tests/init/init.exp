@@ -348,38 +348,38 @@ References:
                 ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- hoisted2.js:256:18
+Error ----------------------------------------------------------------------------------------------- hoisted2.js:255:18
 
 Cannot assign `x` to `y` because uninitialized variable [1] is incompatible with number [2]. [incompatible-type]
 
-   hoisted2.js:256:18
-   256|   var y:number = x; // error
+   hoisted2.js:255:18
+   255|   var y:number = x; // error
                          ^
 
 References:
-   hoisted2.js:257:12
-   257|   for (var x of [1, 2, 3]) {
+   hoisted2.js:256:12
+   256|   for (var x of [1, 2, 3]) {}
                    ^ [1]
-   hoisted2.js:256:9
-   256|   var y:number = x; // error
+   hoisted2.js:255:9
+   255|   var y:number = x; // error
                 ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- hoisted2.js:267:18
+Error ----------------------------------------------------------------------------------------------- hoisted2.js:262:18
 
 Cannot assign `x` to `y` because possibly uninitialized variable [1] is incompatible with number [2].
 [incompatible-type]
 
-   hoisted2.js:267:18
-   267|   var y:number = x; // error
+   hoisted2.js:262:18
+   262|   var y:number = x; // error
                          ^
 
 References:
-   hoisted2.js:264:12
-   264|   for (var x of [1, 2, 3]) {
+   hoisted2.js:261:12
+   261|   for (var x of [1, 2, 3]) {}
                    ^ [1]
-   hoisted2.js:267:9
-   267|   var y:number = x; // error
+   hoisted2.js:262:9
+   262|   var y:number = x; // error
                 ^^^^^^ [2]
 
 

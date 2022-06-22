@@ -17,7 +17,7 @@ foo = (i: number) => {
 // Also make sure that the following doesn't loop
 
 declare var o: empty;
-var { x: o } = o;
+({ x: o } = o);
 
 // this also must not loop
 

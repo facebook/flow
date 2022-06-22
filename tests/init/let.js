@@ -105,7 +105,7 @@ function do_while_post_init(b) {
 // for-in leaves it possibly uninitialized
 function for_in_post_init() {
   var x:number;
-  for (var p in {}) {
+  for (let p in {}) {
     x = 0;
   }
   var y:number = x; // error
@@ -114,7 +114,7 @@ function for_in_post_init() {
 // for-of leaves it possibly uninitialized
 function for_of_post_init() {
   var x:number;
-  for (var x of []) {
+  for (let p of []) {
     x = 0;
   }
   var y:number = x; // error
