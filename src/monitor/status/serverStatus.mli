@@ -29,6 +29,7 @@ type deadline = float
 type event =
   | Ready
   | Init_start
+  | Fetch_saved_state_delay of string
   | Read_saved_state
   | Load_saved_state_progress of progress
   | Parsing_progress of progress
