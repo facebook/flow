@@ -68,7 +68,7 @@ module Make (Env : Env_sig.S) (Statement : Statement_sig.S with module Env := En
       t
     in
     match b with
-    | Root (Annotation { tparams_map; optional; annot }) ->
+    | Root (Annotation { tparams_map; optional; is_assignment; annot }) ->
       let t = resolve_annotation tparams_map annot in
       let t =
         if optional then
@@ -76,7 +76,13 @@ module Make (Env : Env_sig.S) (Statement : Statement_sig.S with module Env := En
         else
           t
       in
-      (t, mk_use_op t, true)
+      let use_op =
+        if is_assignment then
+          mk_use_op t
+        else
+          unknown_use
+      in
+      (t, use_op, true)
     | Root (Value exp) ->
       (* TODO: look up the annotation for the variable at loc and pass in *)
       let t = expression cx ~hint:Hint_None exp in

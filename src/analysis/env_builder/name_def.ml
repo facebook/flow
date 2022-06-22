@@ -45,6 +45,7 @@ type root =
   | Annotation of {
       tparams_map: tparams_map;
       optional: bool;
+      is_assignment: bool;
       annot: (ALoc.t, ALoc.t) Ast.Type.annotation;
     }
   | Value of (ALoc.t, ALoc.t) Ast.Expression.t
@@ -345,7 +346,10 @@ class def_finder env_entries providers toplevel_scope =
       let source =
         match (Destructure.type_of_pattern id, init) with
         | (Some annot, _) ->
-          Some (Annotation { tparams_map = ALocMap.empty; optional = false; annot })
+          Some
+            (Annotation
+               { tparams_map = ALocMap.empty; optional = false; is_assignment = true; annot }
+            )
         | (None, Some init) -> Some (Value init)
         | (None, None) -> None
       in
@@ -358,7 +362,13 @@ class def_finder env_entries providers toplevel_scope =
       this#add_binding
         id_loc
         (mk_reason (RIdentifier (OrdinaryName name)) id_loc)
-        (Binding (Root (Annotation { tparams_map = ALocMap.empty; optional = false; annot })));
+        (Binding
+           (Root
+              (Annotation
+                 { tparams_map = ALocMap.empty; optional = false; is_assignment = true; annot }
+              )
+           )
+        );
       super#declare_variable loc decl
 
     method! function_param _ = failwith "Should be visited by visit_function_param"
@@ -373,7 +383,7 @@ class def_finder env_entries providers toplevel_scope =
       in
       let source =
         match Destructure.type_of_pattern argument with
-        | Some annot -> Annotation { tparams_map = tparams; optional; annot }
+        | Some annot -> Annotation { tparams_map = tparams; optional; is_assignment = false; annot }
         | None -> Contextual (loc, hint)
       in
       let source = Destructure.pattern_default (Root source) default in
@@ -385,7 +395,8 @@ class def_finder env_entries providers toplevel_scope =
       let (loc, { argument; comments = _ }) = expr in
       let source =
         match Destructure.type_of_pattern argument with
-        | Some annot -> Annotation { tparams_map = tparams; optional = false; annot }
+        | Some annot ->
+          Annotation { tparams_map = tparams; optional = false; is_assignment = false; annot }
         | None -> Contextual (loc, hint)
       in
       Destructure.pattern ~f:this#add_binding (Root source) argument;
@@ -566,7 +577,13 @@ class def_finder env_entries providers toplevel_scope =
         this#add_binding
           id_loc
           (func_reason ~async:false ~generator:false loc)
-          (Binding (Root (Annotation { tparams_map = ALocMap.empty; optional = false; annot })));
+          (Binding
+             (Root
+                (Annotation
+                   { tparams_map = ALocMap.empty; optional = false; is_assignment = false; annot }
+                )
+             )
+          );
         super#declare_function loc decl
 
     method! declare_class loc (decl : ('loc, 'loc) Ast.Statement.DeclareClass.t) =
@@ -686,7 +703,9 @@ class def_finder env_entries providers toplevel_scope =
             ) ->
           let source =
             match Destructure.type_of_pattern id with
-            | Some annot -> Annotation { tparams_map = ALocMap.empty; optional = false; annot }
+            | Some annot ->
+              Annotation
+                { tparams_map = ALocMap.empty; optional = false; is_assignment = true; annot }
             | None -> For (Of { await }, right)
           in
           Destructure.pattern ~f:this#add_binding (Root source) id
@@ -711,7 +730,9 @@ class def_finder env_entries providers toplevel_scope =
             ) ->
           let source =
             match Destructure.type_of_pattern id with
-            | Some annot -> Annotation { tparams_map = ALocMap.empty; optional = false; annot }
+            | Some annot ->
+              Annotation
+                { tparams_map = ALocMap.empty; optional = false; is_assignment = true; annot }
             | None -> For (In, right)
           in
           Destructure.pattern ~f:this#add_binding (Root source) id
