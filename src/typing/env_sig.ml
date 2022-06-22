@@ -111,6 +111,8 @@ module type S = sig
 
   val bind_this_tparam : state:State.t -> Context.t -> Type.t -> ALoc.t -> unit
 
+  val bind_class_self_type : Context.t -> ALoc.t -> Type.t -> Type.t -> unit
+
   val bind_import_type : Context.t -> string -> Type.t -> ALoc.t -> unit
 
   val bind_declare_var : Context.t -> Reason.name -> Type.t -> ALoc.t -> unit
@@ -261,4 +263,6 @@ module type S = sig
   val valid_declaration_check : Context.t -> Reason.name -> ALoc.t -> unit
 
   val get_next : Context.t -> ALoc.t -> Type.t
+
+  val init_class_self_type : Context.t -> ALoc.t -> Reason.reason -> Type.t
 end

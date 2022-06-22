@@ -8318,7 +8318,7 @@ struct
     | None ->
       let def_reason = repos_reason class_loc reason in
       let this_in_class = Class_stmt_sig.This.in_class c in
-      let self = Tvar.mk cx reason in
+      let self = Env.init_class_self_type cx class_loc reason in
       let (class_sig, class_ast_f) = mk_class_sig cx ~name_loc ~class_loc reason self c in
       let public_property_map =
         Class_stmt_sig.fields_to_prop_map cx
@@ -8343,7 +8343,7 @@ struct
           errors = Property_assignment.eval_property_assignment class_body;
         };
       let (class_t_internal, class_t) = Class_stmt_sig.classtype cx class_sig in
-      Flow.unify cx self class_t_internal;
+      Env.bind_class_self_type cx class_loc self class_t_internal;
       (class_t, class_ast_f general)
 
   (* Process a class definition, returning a (polymorphic) class type. A class

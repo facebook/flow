@@ -3276,6 +3276,17 @@ module Make
       method! class_ loc cls =
         let open Ast.Class in
         SuperCallInDerivedCtorChecker.check cx loc cls;
+        let () =
+          let reason =
+            match cls.id with
+            | Some (name_loc, { Ast.Identifier.name; comments = _ }) ->
+              mk_reason (RType (OrdinaryName name)) name_loc
+            | None -> mk_reason (RType (InternalName "*default*")) loc
+          in
+          let write = Env_api.AssigningWrite reason in
+          let write_entries = L.LMap.add loc write env_state.write_entries in
+          env_state <- { env_state with write_entries }
+        in
         (* Give class body the location of the entire class,
            so class body visitor can use it as the def loc of super. *)
         ignore @@ super#class_ loc { cls with body = (loc, snd cls.body) };

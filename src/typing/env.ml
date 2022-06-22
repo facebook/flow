@@ -766,6 +766,8 @@ module Env : Env_sig.S = struct
 
   let bind_this_tparam ~state cx t loc = bind_type ~state cx "this" t loc
 
+  let bind_class_self_type cx _class_loc self class_t_internal = Flow.unify cx self class_t_internal
+
   let bind_import_type cx name t loc =
     bind_entry cx (OrdinaryName name) (Entry.new_import_type t ~loc) loc
 
@@ -1880,4 +1882,6 @@ module Env : Env_sig.S = struct
       |> Base.Option.map ~f:(fun refi -> refi.Scope.refined)
 
   let get_next cx loc = get_internal_var cx "next" loc
+
+  let init_class_self_type cx _loc reason = Tvar.mk cx reason
 end

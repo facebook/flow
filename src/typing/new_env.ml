@@ -823,6 +823,9 @@ module New_env = struct
 
   let bind_this_tparam ~state:_ _cx t loc = this_type_params := ALocMap.add loc t !this_type_params
 
+  let bind_class_self_type cx class_loc _self class_t_internal =
+    bind_type cx "<class self type>" class_t_internal class_loc
+
   let declare_let cx name =
     match name with
     | InternalName _
@@ -1029,4 +1032,8 @@ module New_env = struct
   let get_next cx loc =
     let name = InternalName "next" in
     read_entry_exn ~lookup_mode:ForValue cx loc (mk_reason (RIdentifier name) loc)
+
+  let init_class_self_type cx loc _reason =
+    let env = Context.environment cx in
+    Base.Option.value_exn (Loc_env.find_ordinary_write env loc)
 end
