@@ -224,16 +224,20 @@ module Destructure = struct
     (fun ~f acc ps -> loop ~f acc [] false ps)
 end
 
-let func_params_are_fully_annotated (_, { Ast.Function.Params.params; rest; _ }) =
+let func_params_are_fully_annotated
+    ((_, { Ast.Function.Params.params; rest; this_; _ }) as all_params) body =
   let is_annotated p = p |> Destructure.type_of_pattern |> Base.Option.is_some in
   Base.List.for_all params ~f:(fun (_, { Ast.Function.Param.argument; _ }) -> is_annotated argument)
   && Base.Option.value_map rest ~default:true ~f:(fun (_, { Ast.Function.RestParam.argument; _ }) ->
          is_annotated argument
      )
+  && ((not @@ Signature_utils.This_finder.found_this_in_body_or_params body all_params)
+     || Base.Option.is_some this_
+     )
 
-let func_is_synthesizable_from_annotation { Ast.Function.params; return; predicate; _ } =
+let func_is_synthesizable_from_annotation { Ast.Function.params; return; predicate; body; _ } =
   match (return, predicate) with
-  | (Ast.Type.Available _, None) -> func_params_are_fully_annotated params
+  | (Ast.Type.Available _, None) -> func_params_are_fully_annotated params body
   | (Ast.Type.Missing _, _)
   | (Ast.Type.Available _, Some _) ->
     false
