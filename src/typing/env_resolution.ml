@@ -558,7 +558,12 @@ module Make (Env : Env_sig.S) (Statement : Statement_sig.S with module Env := En
       | Name_def_ordering.Normal loc
       | Resolvable loc
       | Illegal { loc; _ } ->
-        resolve cx loc (ALocMap.find loc graph)
+        Statement.Abnormal.try_with_abnormal_exn
+          ~f:(fun () -> resolve cx loc (ALocMap.find loc graph))
+            (* When there is an unhandled exception, it means that the initialization of the env slot
+               won't be completed and will never be written in the new-env, so it's OK to do nothing. *)
+          ~on_abnormal_exn:(fun _ -> ())
+          ()
     in
     match component with
     | Singleton elt -> resolve_element elt
