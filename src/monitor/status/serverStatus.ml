@@ -36,6 +36,7 @@ type deadline = float
 type event =
   | Ready  (** The server is free *)
   | Init_start  (** The server is starting to initialize *)
+  | Fetch_saved_state_delay of string  (** Fetching the saved state is taking a long time *)
   | Read_saved_state
   | Load_saved_state_progress of progress
   | Parsing_progress of progress
@@ -54,6 +55,7 @@ type event =
 
 type typecheck_status =
   | Starting_typecheck  (** A typecheck's initial state *)
+  | Fetching_saved_state of string  (** Fetching saved state, when it is taking a while *)
   | Reading_saved_state
   | Loading_saved_state of progress
   | Parsing of progress
@@ -99,6 +101,7 @@ type emoji =
   | Ghost
   | Open_book
   | Panda_face
+  | Parachute
   | Recycling_symbol
   | Sleeping_face
   | Smiling_face_with_mouth_open
@@ -116,6 +119,7 @@ let string_of_emoji = function
   | Ghost -> "\xF0\x9F\x91\xBB"
   | Open_book -> "\xF0\x9F\x93\x96"
   | Panda_face -> "\xF0\x9F\x90\xBC"
+  | Parachute -> "\xF0\x9F\xAA\x82"
   | Recycling_symbol -> "\xE2\x99\xBB"
   | Sleeping_face -> "\xF0\x9F\x98\xB4"
   | Smiling_face_with_mouth_open -> "\xF0\x9F\x98\x83"
@@ -150,6 +154,7 @@ let render_emoji ~use_emoji ?(pad = After) emoji =
 let string_of_event = function
   | Ready -> "Ready"
   | Init_start -> "Init_start"
+  | Fetch_saved_state_delay message -> spf "Fetch_saved_state_delay %s" message
   | Read_saved_state -> "Read_saved_state"
   | Load_saved_state_progress progress ->
     spf "Load_saved_state_progress %s" (string_of_progress progress)
@@ -171,6 +176,8 @@ let string_of_event = function
     progressive for those that don't. *)
 let string_of_typecheck_status ~use_emoji = function
   | Starting_typecheck -> spf "%sstarting up" (render_emoji ~use_emoji Sleeping_face)
+  | Fetching_saved_state message ->
+    spf "%sfetching saved state: %s" (render_emoji ~use_emoji Parachute) message
   | Reading_saved_state -> spf "%sreading saved state" (render_emoji ~use_emoji Closed_book)
   | Loading_saved_state progress ->
     spf "%sloading saved state %s" (render_emoji ~use_emoji Open_book) (string_of_progress progress)
@@ -245,6 +252,8 @@ let update ~event ~status =
   | (Init_start, _) -> Typechecking (Initializing, Starting_typecheck)
   | (Recheck_start, _) -> Typechecking (Rechecking, Starting_typecheck)
   | (Handling_request_start, _) -> Typechecking (Handling_request, Starting_typecheck)
+  | (Fetch_saved_state_delay message, Typechecking (mode, _)) ->
+    Typechecking (mode, Fetching_saved_state message)
   | (Read_saved_state, Typechecking (mode, _)) -> Typechecking (mode, Reading_saved_state)
   | (Load_saved_state_progress progress, Typechecking (mode, _)) ->
     Typechecking (mode, Loading_saved_state progress)
@@ -306,6 +315,7 @@ let is_significant_transition old_status new_status =
         false
       (* But changing typechecking status always is significant *)
       | (_, Starting_typecheck)
+      | (_, Fetching_saved_state _)
       | (_, Reading_saved_state)
       | (_, Loading_saved_state _)
       | (_, Parsing _)
