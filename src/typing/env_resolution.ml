@@ -498,9 +498,11 @@ module Make (Env : Env_sig.S) (Statement : Statement_sig.S with module Env := En
       | Binding b -> resolve_binding cx def_reason id_loc b
       | ChainExpression (cond, e) -> as_resolved @@ resolve_chain_expression cx ~cond e
       | RefiExpression e -> (expression cx ~hint:Hint_None e, unknown_use, true)
-      | Function { function_; fully_annotated = false; function_loc; tparams_map = _ } ->
+      | Function { function_; synthesizable_from_annotation = false; function_loc; tparams_map = _ }
+        ->
         as_resolved @@ resolve_inferred_function cx id_loc def_reason function_loc function_
-      | Function { function_; fully_annotated = true; function_loc = _; tparams_map } ->
+      | Function { function_; synthesizable_from_annotation = true; function_loc = _; tparams_map }
+        ->
         as_resolved @@ resolve_annotated_function cx def_reason tparams_map function_
       | Class { class_; fully_annotated = false; class_loc } ->
         as_resolved @@ resolve_inferred_class cx id_loc def_reason class_loc class_

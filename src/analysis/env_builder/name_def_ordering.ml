@@ -491,8 +491,8 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) = struct
       | MemberAssign { member_loc; member; rhs; _ } ->
         depends_of_member_assign member_loc member rhs
       | OpAssign { lhs; rhs; _ } -> depends_of_op_assign lhs rhs
-      | Function { fully_annotated; function_; function_loc = _; tparams_map } ->
-        depends_of_fun fully_annotated tparams_map function_
+      | Function { synthesizable_from_annotation; function_; function_loc = _; tparams_map } ->
+        depends_of_fun synthesizable_from_annotation tparams_map function_
       | Class { fully_annotated; class_; class_loc = _ } -> depends_of_class fully_annotated class_
       | DeclaredClass (_, decl) -> depends_of_declared_class decl
       | TypeAlias (_, alias) -> depends_of_alias alias
@@ -524,7 +524,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) = struct
       | OpaqueType _
       | TypeParam _
       | ThisTypeParam _
-      | Function { fully_annotated = true; _ }
+      | Function { synthesizable_from_annotation = true; _ }
       | Interface _
       (* Imports are academic here since they can't be in a cycle anyways, since they depend on nothing *)
       | Import { import_kind = Ast.Statement.ImportDeclaration.(ImportType | ImportTypeof); _ }
@@ -542,7 +542,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) = struct
       | Update _
       | MemberAssign _
       | OpAssign _
-      | Function { fully_annotated = false; _ }
+      | Function { synthesizable_from_annotation = false; _ }
       | Enum _
       | Import _
       | Class { fully_annotated = false; _ } ->

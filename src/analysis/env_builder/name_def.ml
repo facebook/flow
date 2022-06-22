@@ -108,7 +108,7 @@ type def =
       op: Ast.Expression.Update.operator;
     }
   | Function of {
-      fully_annotated: bool;
+      synthesizable_from_annotation: bool;
       function_loc: ALoc.t;
       function_: (ALoc.t, ALoc.t) Ast.Function.t;
       tparams_map: tparams_map;
@@ -224,13 +224,28 @@ module Destructure = struct
     (fun ~f acc ps -> loop ~f acc [] false ps)
 end
 
-let func_is_annotated { Ast.Function.return; _ } =
-  match return with
-  | Ast.Type.Missing _ -> false
-  | Ast.Type.Available _ -> true
+let func_params_are_fully_annotated (_, { Ast.Function.Params.params; rest; _ }) =
+  let is_annotated p = p |> Destructure.type_of_pattern |> Base.Option.is_some in
+  Base.List.for_all params ~f:(fun (_, { Ast.Function.Param.argument; _ }) -> is_annotated argument)
+  && Base.Option.value_map rest ~default:true ~f:(fun (_, { Ast.Function.RestParam.argument; _ }) ->
+         is_annotated argument
+     )
+
+let func_is_synthesizable_from_annotation { Ast.Function.params; return; predicate; _ } =
+  match (return, predicate) with
+  | (Ast.Type.Available _, None) -> func_params_are_fully_annotated params
+  | (Ast.Type.Missing _, _)
+  | (Ast.Type.Available _, Some _) ->
+    false
 
 let def_of_function tparams_map function_loc function_ =
-  Function { fully_annotated = func_is_annotated function_; function_loc; function_; tparams_map }
+  Function
+    {
+      synthesizable_from_annotation = func_is_synthesizable_from_annotation function_;
+      function_loc;
+      function_;
+      tparams_map;
+    }
 
 let def_of_class loc ({ Ast.Class.body = (_, { Ast.Class.Body.body; _ }); _ } as class_) =
   let open Ast.Class.Body in
@@ -255,7 +270,7 @@ let def_of_class loc ({ Ast.Class.body = (_, { Ast.Class.Body.body; _ }); _ } as
                 _;
               }
             ) ->
-          func_is_annotated value
+          func_is_synthesizable_from_annotation value
         | Method _ -> false
         | Property
             ( _,
