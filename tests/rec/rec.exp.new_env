@@ -419,14 +419,9 @@ Cannot extend `InstrumentedContainer` [1] with `container` because uninitialized
                                                           ^^^^^^^^^
 
 References:
-   this_subst.js:3:17
-                      v----------------------------------------------
+   this_subst.js:3:23
    3| var container = class InstrumentedContainer extends container {
-   4|   foo() {
-   5|     return this.props;
-   6|   }
-   7| };
-      ^ [1]
+                            ^^^^^^^^^^^^^^^^^^^^^ [1]
    this_subst.js:3:5
    3| var container = class InstrumentedContainer extends container {
           ^^^^^^^^^ [2]

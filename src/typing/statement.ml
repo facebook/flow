@@ -3701,7 +3701,7 @@ struct
         | Some (name_loc, { Ast.Identifier.name; comments = _ }) -> (name_loc, name)
         | None -> (class_loc, "<<anonymous class>>")
       in
-      let reason = mk_reason (RIdentifier (OrdinaryName name)) class_loc in
+      let reason = mk_reason (RIdentifier (OrdinaryName name)) name_loc in
       let tvar = Tvar.mk cx reason in
       (match c.Ast.Class.id with
       | Some _ ->

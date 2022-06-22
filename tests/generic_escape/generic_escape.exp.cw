@@ -618,17 +618,9 @@ Cannot return `e` because: [incompatible-return]
                   ^
 
 References:
-   misc.js:12:9
-               v--------
+   misc.js:12:15
    12| var c = class e {
-   13|   f<X>(x: X, escape: boolean): X | Class<this> {
-   14|     if (escape) {
-   15|       e = x;
-   16|     }
-   17|     return e;
-   18|   }
-   19| };
-       ^ [1]
+                     ^ [1]
    misc.js:13:32
    13|   f<X>(x: X, escape: boolean): X | Class<this> {
                                       ^ [2]

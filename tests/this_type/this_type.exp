@@ -7,14 +7,9 @@ Cannot assign `123` to `this.x` because property `x` is missing in `Thing` [1]. 
                ^
 
 References:
-   class_expr.js:4:15
-                    v------------
+   class_expr.js:4:21
    4| const Thing = class Thing {
-   5|   zark() {
-   6|     this.x = 123; // error: property not found (must be declared)
-   7|   }
-   8| };
-      ^ [1]
+                          ^^^^^ [1]
 
 
 Error ---------------------------------------------------------------------------------------------------- contra.js:4:9
