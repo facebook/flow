@@ -26,11 +26,15 @@ module Make (Env : Env_sig.S) (Statement : Statement_sig.S with module Env := En
   module Abnormal = Statement.Abnormal
 
   let mk_type_param cx id_loc tparams_map tparam =
-    let ((_, { name; _ }, t) as info) = Type_annotation.mk_type_param cx tparams_map tparam in
+    let ((_, ({ name; _ } as tparam), t) as info) =
+      Type_annotation.mk_type_param cx tparams_map tparam
+    in
     let cache = Context.node_cache cx in
     Node_cache.set_tparam cache info;
     let ({ Loc_env.tparams; _ } as env) = Context.environment cx in
-    Context.set_environment cx { env with Loc_env.tparams = ALocMap.add id_loc (name, t) tparams };
+    Context.set_environment
+      cx
+      { env with Loc_env.tparams = ALocMap.add id_loc (name, tparam, t) tparams };
     (name, t)
 
   let mk_tparams_map cx tparams_map =
@@ -38,8 +42,9 @@ module Make (Env : Env_sig.S) (Statement : Statement_sig.S with module Env := En
     ALocMap.fold
       (fun l name subst_map ->
         let (name, ty) =
-          Base.Option.value
+          Base.Option.value_map
             (ALocMap.find_opt l tparams)
+            ~f:(fun (name, _, ty) -> (name, ty))
             ~default:
               (Subst_name.Name name, AnyT.annot (mk_reason (RIdentifier (OrdinaryName name)) l))
         in
@@ -375,6 +380,46 @@ module Make (Env : Env_sig.S) (Statement : Statement_sig.S with module Env := En
     let t = DefT (TypeUtil.reason_of_t t, bogus_trust (), TypeT (TypeParamKind, t)) in
     (t, unknown_use)
 
+  let resolve_this_type_param cx class_loc reason class_tparam_loc tparams_locs =
+    let ({ Loc_env.tparams; _ } as env) = Context.environment cx in
+    let class_t = Base.Option.value_exn (Loc_env.find_ordinary_write env class_loc) in
+    let (this_param, this_t) =
+      let class_tparams =
+        Base.Option.map class_tparam_loc ~f:(fun tparams_loc ->
+            ( tparams_loc,
+              tparams_locs
+              |> ALocMap.elements
+              |> Base.List.map ~f:(fun (l, name) ->
+                     match ALocMap.find_opt l tparams with
+                     | Some (_, tparam, _) -> tparam
+                     | None ->
+                       {
+                         Type.reason;
+                         name = Subst_name.Name name;
+                         bound =
+                           MixedT.make (mk_reason (RIdentifier (OrdinaryName name)) l)
+                           |> with_trust bogus_trust;
+                         polarity = Polarity.Neutral;
+                         default = None;
+                         is_this = false;
+                       }
+                 )
+              |> Nel.of_list_exn
+            )
+        )
+      in
+      Statement.Class_stmt_sig.mk_this class_t cx reason class_tparams
+    in
+    Context.set_environment
+      cx
+      {
+        env with
+        Loc_env.tparams = ALocMap.add class_loc (Subst_name.Name "this", this_param, this_t) tparams;
+      };
+    (* class_t will only be resolved after type checking the entire class. *)
+    let resolved = false in
+    (class_t, unknown_use, resolved)
+
   let resolve_chain_expression cx ~cond exp =
     let cache = Context.node_cache cx in
     let cond =
@@ -476,6 +521,8 @@ module Make (Env : Env_sig.S) (Statement : Statement_sig.S with module Env := En
       | Enum (enum_loc, enum) -> as_resolved @@ resolve_enum cx id_loc def_reason enum_loc enum
       | TypeParam (tparams_locs, param) ->
         as_resolved @@ resolve_type_param cx id_loc tparams_locs param
+      | ThisTypeParam (tparams_locs, class_tparam_loc) ->
+        resolve_this_type_param cx id_loc def_reason class_tparam_loc tparams_locs
       | GeneratorNext gen -> as_resolved @@ resolve_generator_next cx def_reason gen
     in
     let update_reason =

@@ -15,7 +15,7 @@ open Loc_collections
 
 type t = {
   types: Type.annotated_or_inferred ALocMap.t;
-  tparams: (Subst_name.t * Type.t) ALocMap.t;
+  tparams: (Subst_name.t * Type.typeparam * Type.t) ALocMap.t;
   function_or_global_this_types: Type.annotated_or_inferred ALocMap.t;
   class_instance_this_types: Type.annotated_or_inferred ALocMap.t;
   class_static_this_types: Type.annotated_or_inferred ALocMap.t;

@@ -122,6 +122,7 @@ type def =
   | TypeAlias of ALoc.t * (ALoc.t, ALoc.t) Ast.Statement.TypeAlias.t
   | OpaqueType of ALoc.t * (ALoc.t, ALoc.t) Ast.Statement.OpaqueType.t
   | TypeParam of tparams_map * (ALoc.t, ALoc.t) Ast.Type.TypeParam.t
+  | ThisTypeParam of tparams_map * ALoc.t option
   | Interface of ALoc.t * (ALoc.t, ALoc.t) Ast.Statement.Interface.t
   | Enum of ALoc.t * ALoc.t Ast.Statement.EnumDeclaration.body
   | Import of {
@@ -479,11 +480,37 @@ class def_finder env_entries providers toplevel_scope =
 
     method! class_ loc expr =
       let open Ast.Class in
-      let { id; _ } = expr in
+      let { id; body; tparams = class_tparams; extends; implements; class_decorators; comments = _ }
+          =
+        expr
+      in
       this#in_new_tparams_env (fun () ->
           let old_stack = class_stack in
           class_stack <- loc :: class_stack;
-          let res = this#in_scope (super#class_ loc) Ordinary expr in
+          this#in_scope
+            (fun () ->
+              Flow_ast_visitor.run_opt this#class_identifier id;
+              Flow_ast_visitor.run_opt this#type_params class_tparams;
+              let () =
+                let reason =
+                  match id with
+                  | Some (name_loc, { Ast.Identifier.name; comments = _ }) ->
+                    mk_reason (RType (OrdinaryName name)) name_loc
+                  | None -> mk_reason (RType (InternalName "*default*")) loc
+                in
+                this#add_binding
+                  loc
+                  reason
+                  (ThisTypeParam (tparams, Base.Option.map ~f:fst class_tparams));
+                this#add_tparam loc "this"
+              in
+              ignore @@ this#class_body body;
+              Flow_ast_visitor.run_opt (Flow_ast_mapper.map_loc this#class_extends) extends;
+              Flow_ast_visitor.run_opt this#class_implements implements;
+              Flow_ast_visitor.run_list this#class_decorator class_decorators;
+              ())
+            Ordinary
+            ();
           class_stack <- old_stack;
           begin
             match id with
@@ -493,7 +520,7 @@ class def_finder env_entries providers toplevel_scope =
               this#add_binding id_loc reason (def_of_class loc expr)
             | None -> ()
           end;
-          res
+          expr
       )
 
     method! class_method _loc (meth : ('loc, 'loc) Ast.Class.Method.t') =
