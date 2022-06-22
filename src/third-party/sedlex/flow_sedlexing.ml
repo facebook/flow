@@ -152,33 +152,42 @@ let unsafe_utf8_of_string (s : string) slen (a : int array) : int =
     let spos_code = s.![!spos] in
     (match spos_code with
     | '\000' .. '\127' as c ->
+      (* U+0000 - U+007F: 0xxxxxxx *)
       a.!(!apos) <- Char.code c;
       incr spos
     | '\192' .. '\223' as c ->
+      (* U+0080 - U+07FF: 110xxxxx 10xxxxxx *)
       let n1 = Char.code c in
       let n2 = Char.code s.![!spos + 1] in
       if n2 lsr 6 != 0b10 then raise MalFormed;
       a.!(!apos) <- ((n1 land 0x1f) lsl 6) lor (n2 land 0x3f);
       spos := !spos + 2
     | '\224' .. '\239' as c ->
+      (* U+0800 - U+FFFF: 1110xxxx 10xxxxxx 10xxxxxx
+         U+D800 - U+DFFF are reserved for surrogate halves (RFC 3629) *)
       let n1 = Char.code c in
       let n2 = Char.code s.![!spos + 1] in
       let n3 = Char.code s.![!spos + 2] in
       let p = ((n1 land 0x0f) lsl 12) lor ((n2 land 0x3f) lsl 6) lor (n3 land 0x3f) in
-      if (n2 lsr 6 != 0b10 || n3 lsr 6 != 0b10) || (p >= 0xd800 && p <= 0xdf00) then raise MalFormed;
+      if (n2 lsr 6 != 0b10 || n3 lsr 6 != 0b10) || (p >= 0xd800 && p <= 0xdfff) then raise MalFormed;
       a.!(!apos) <- p;
       spos := !spos + 3
     | '\240' .. '\247' as c ->
+      (* U+10000 - U+1FFFFF: 11110xxx 10xxxxxx 10xxxxxx 10xxxxxx
+         > U+10FFFF are invalid (RFC 3629) *)
       let n1 = Char.code c in
       let n2 = Char.code s.![!spos + 1] in
       let n3 = Char.code s.![!spos + 2] in
       let n4 = Char.code s.![!spos + 3] in
       if n2 lsr 6 != 0b10 || n3 lsr 6 != 0b10 || n4 lsr 6 != 0b10 then raise MalFormed;
-      a.!(!apos) <-
+      let p =
         ((n1 land 0x07) lsl 18)
         lor ((n2 land 0x3f) lsl 12)
         lor ((n3 land 0x3f) lsl 6)
-        lor (n4 land 0x3f);
+        lor (n4 land 0x3f)
+      in
+      if p > 0x10ffff then raise MalFormed;
+      a.!(!apos) <- p;
       spos := !spos + 4
     | _ -> raise MalFormed);
     incr apos
@@ -276,4 +285,3 @@ let string_of_utf8 (lexbuf : int array) : string =
 
 let backoff lexbuf npos =
   lexbuf.pos <- lexbuf.pos - npos
-
