@@ -4884,6 +4884,30 @@ module Make
       method! jsx_fragment loc expr =
         this#jsx_function_call loc;
         super#jsx_fragment loc expr
+
+      method! declare_module loc ({ Ast.Statement.DeclareModule.id; _ } as m) =
+        let (name_loc, name) =
+          match id with
+          | Ast.Statement.DeclareModule.Identifier (loc, { Ast.Identifier.name; _ }) -> (loc, name)
+          | Ast.Statement.DeclareModule.Literal (loc, { Ast.StringLiteral.value; _ }) -> (loc, value)
+        in
+        let reason = mk_reason (RModule (OrdinaryName name)) name_loc in
+        let write_entries =
+          L.LMap.add name_loc (Env_api.AssigningWrite reason) env_state.write_entries
+        in
+        let values =
+          L.LMap.add
+            name_loc
+            {
+              def_loc = Some name_loc;
+              value = Val.one reason;
+              binding_kind_opt = None;
+              name = Some name;
+            }
+            env_state.values
+        in
+        env_state <- { env_state with values; write_entries };
+        super#declare_module loc m
     end
 
   (* The EnvBuilder does not traverse dead code, but statement.ml does. Dead code

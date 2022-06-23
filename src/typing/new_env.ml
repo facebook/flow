@@ -516,6 +516,7 @@ module New_env = struct
   let query_var ?(lookup_mode = ForValue) cx name ?desc loc =
     match name with
     | OrdinaryName _
+    | InternalModuleName _
     | InternalName "this"
     | InternalName "super" ->
       get_this_type_param_if_necessary name loc ~otherwise:(fun () ->
@@ -526,9 +527,7 @@ module New_env = struct
           in
           read_entry_exn ~lookup_mode cx loc (mk_reason desc loc)
       )
-    | InternalName _
-    | InternalModuleName _ ->
-      Old_env.query_var ~lookup_mode cx name ?desc loc
+    | InternalName _ -> Old_env.query_var ~lookup_mode cx name ?desc loc
 
   let query_var_non_specific cx name loc = Tvar.mk cx (mk_reason (RIdentifier name) loc)
 
@@ -573,17 +572,15 @@ module New_env = struct
 
   let get_var_annotation cx name loc =
     match name with
-    | InternalName _
+    | InternalName _ -> Old_env.get_var_annotation cx name loc
+    | OrdinaryName _
     | InternalModuleName _ ->
-      Old_env.get_var_annotation cx name loc
-    | OrdinaryName _ -> (* TODO *) None
+      None
 
   let get_var_declared_type ?(lookup_mode = ForValue) cx name loc =
     match (name, lookup_mode) with
-    | (InternalName _, _)
-    | (InternalModuleName _, _) ->
-      Old_env.get_var_declared_type ~lookup_mode cx name loc
-    | (OrdinaryName _, ForType) ->
+    | (InternalName _, _) -> Old_env.get_var_declared_type ~lookup_mode cx name loc
+    | ((OrdinaryName _ | InternalModuleName _), ForType) ->
       let env = Context.environment cx in
       begin
         match Loc_env.find_ordinary_write env loc with
@@ -594,16 +591,15 @@ module New_env = struct
             (Error_message.EInternal (loc, Error_message.MissingEnvWrite loc));
           Type.(AnyT.at (AnyError None) loc)
       end
-    | (OrdinaryName _, _) ->
+    | ((OrdinaryName _ | InternalModuleName _), _) ->
       let env = Context.environment cx in
       provider_type_for_def_loc env loc
 
   let constraining_type ~default cx name loc =
     match name with
-    | InternalName _
+    | InternalName _ -> Old_env.constraining_type ~default cx name loc
+    | OrdinaryName _
     | InternalModuleName _ ->
-      Old_env.constraining_type ~default cx name loc
-    | OrdinaryName _ ->
       let ({ Loc_env.var_info; _ } as env) = Context.environment cx in
       (match ALocMap.find_opt loc var_info.Env_api.env_entries with
       | Some Env_api.NonAssigningWrite -> default
@@ -810,19 +806,18 @@ module New_env = struct
 
   let bind_implicit_let ?state kind cx name t loc =
     match name with
-    | InternalName _
+    | InternalName _ -> Old_env.bind_implicit_let ?state kind cx name t loc
+    | OrdinaryName _
     | InternalModuleName _ ->
-      Old_env.bind_implicit_let ?state kind cx name t loc
-    | OrdinaryName _ ->
       valid_declaration_check cx name loc;
       bind cx (TypeUtil.type_t_of_annotated_or_inferred t) loc
 
   let bind_fun ?state cx name t loc =
     match name with
-    | InternalName _
+    | InternalName _ -> Old_env.bind_fun ?state cx name t loc
+    | OrdinaryName _
     | InternalModuleName _ ->
-      Old_env.bind_fun ?state cx name t loc
-    | OrdinaryName _ -> bind cx t loc
+      bind cx t loc
 
   let bind_implicit_const ?state:_ _ cx _ t loc =
     bind cx (TypeUtil.type_t_of_annotated_or_inferred t) loc
@@ -833,17 +828,16 @@ module New_env = struct
 
   let bind_declare_var cx name t loc =
     match name with
-    | InternalName _
+    | InternalName _ -> Old_env.bind_declare_var cx name t loc
+    | OrdinaryName _
     | InternalModuleName _ ->
-      Old_env.bind_declare_var cx name t loc
-    | OrdinaryName _ -> bind cx t loc
+      bind cx t loc
 
   let bind_declare_fun cx ~predicate name t loc =
     match name with
-    | InternalName _
+    | InternalName _ -> Old_env.bind_declare_fun cx ~predicate name t loc
+    | OrdinaryName _
     | InternalModuleName _ ->
-      Old_env.bind_declare_fun cx ~predicate name t loc
-    | OrdinaryName _ ->
       check_predicate_declare_function cx ~predicate name loc;
       bind cx t loc
 
@@ -858,73 +852,73 @@ module New_env = struct
 
   let declare_let cx name =
     match name with
-    | InternalName _
+    | InternalName _ -> Old_env.declare_let cx name
+    | OrdinaryName _
     | InternalModuleName _ ->
-      Old_env.declare_let cx name
-    | OrdinaryName _ -> Fun.const ()
+      Fun.const ()
 
   let declare_implicit_let kind cx name =
     match name with
-    | InternalName _
+    | InternalName _ -> Old_env.declare_implicit_let kind cx name
+    | OrdinaryName _
     | InternalModuleName _ ->
-      Old_env.declare_implicit_let kind cx name
-    | OrdinaryName _ -> Fun.const ()
+      Fun.const ()
 
   let declare_const cx name =
     match name with
-    | InternalName _
+    | InternalName _ -> Old_env.declare_const cx name
+    | OrdinaryName _
     | InternalModuleName _ ->
-      Old_env.declare_const cx name
-    | OrdinaryName _ -> Fun.const ()
+      Fun.const ()
 
   let declare_implicit_const kind cx name =
     match name with
-    | InternalName _
+    | InternalName _ -> Old_env.declare_implicit_const kind cx name
+    | OrdinaryName _
     | InternalModuleName _ ->
-      Old_env.declare_implicit_const kind cx name
-    | OrdinaryName _ -> Fun.const ()
+      Fun.const ()
 
   let init_var cx ~use_op name ~has_anno t loc =
     match name with
-    | InternalName _
+    | InternalName _ -> Old_env.init_var cx ~use_op name ~has_anno t loc
+    | OrdinaryName _
     | InternalModuleName _ ->
-      Old_env.init_var cx ~use_op name ~has_anno t loc
-    | OrdinaryName _ -> init_entry ~has_anno cx ~use_op t loc
+      init_entry ~has_anno cx ~use_op t loc
 
   let init_let cx ~use_op name ~has_anno t loc =
     match name with
-    | InternalName _
+    | InternalName _ -> Old_env.init_let cx ~use_op name ~has_anno t loc
+    | OrdinaryName _
     | InternalModuleName _ ->
-      Old_env.init_let cx ~use_op name ~has_anno t loc
-    | OrdinaryName _ -> init_entry ~has_anno cx ~use_op t loc
+      init_entry ~has_anno cx ~use_op t loc
 
   let init_implicit_let kind cx ~use_op name ~has_anno t loc =
     match name with
-    | InternalName _
+    | InternalName _ -> Old_env.init_implicit_let kind cx ~use_op name ~has_anno t loc
+    | OrdinaryName _
     | InternalModuleName _ ->
-      Old_env.init_implicit_let kind cx ~use_op name ~has_anno t loc
-    | OrdinaryName _ -> init_entry ~has_anno cx ~use_op t loc
+      init_entry ~has_anno cx ~use_op t loc
 
   let init_fun cx ~use_op name t loc =
     match name with
-    | InternalName _
+    | InternalName _ -> Old_env.init_fun cx ~use_op name t loc
+    | OrdinaryName _
     | InternalModuleName _ ->
-      Old_env.init_fun cx ~use_op name t loc
-    | OrdinaryName _ -> assign_env_value_entry cx ~use_op t loc
+      assign_env_value_entry cx ~use_op t loc
 
   let init_const cx ~use_op name ~has_anno t loc =
     match name with
-    | InternalName _
+    | InternalName _ -> Old_env.init_const cx ~use_op name ~has_anno t loc
+    | OrdinaryName _
     | InternalModuleName _ ->
-      Old_env.init_const cx ~use_op name ~has_anno t loc
-    | OrdinaryName _ -> init_entry ~has_anno cx ~use_op t loc
+      init_entry ~has_anno cx ~use_op t loc
 
   let init_implicit_const kind cx ~use_op name ~has_anno t loc =
     match name with
-    | InternalName _
+    | InternalName _ -> Old_env.init_implicit_const kind cx ~use_op name ~has_anno t loc
+    | OrdinaryName _
     | InternalModuleName _ ->
-      Old_env.init_implicit_const kind cx ~use_op name ~has_anno t loc
-    | OrdinaryName _ -> init_entry ~has_anno cx ~use_op t loc
+      init_entry ~has_anno cx ~use_op t loc
 
   let init_type cx _name t loc =
     unify_write_entry cx ~use_op:unknown_use t Env_api.OrdinaryNameLoc loc
@@ -933,17 +927,17 @@ module New_env = struct
 
   let unify_declared_type ?(lookup_mode = ForValue) ?(is_func = false) cx name loc t =
     match name with
-    | InternalName _
+    | InternalName _ -> Old_env.unify_declared_type ~lookup_mode ~is_func cx name loc t
+    | OrdinaryName _
     | InternalModuleName _ ->
-      Old_env.unify_declared_type ~lookup_mode ~is_func cx name loc t
-    | OrdinaryName _ -> unify_write_entry cx ~use_op:unknown_use t Env_api.OrdinaryNameLoc loc
+      unify_write_entry cx ~use_op:unknown_use t Env_api.OrdinaryNameLoc loc
 
   let unify_declared_fun_type cx name loc t =
     match name with
-    | InternalName _
+    | InternalName _ -> Old_env.unify_declared_fun_type cx name loc t
+    | OrdinaryName _
     | InternalModuleName _ ->
-      Old_env.unify_declared_fun_type cx name loc t
-    | OrdinaryName _ -> unify_write_entry cx ~use_op:unknown_use t Env_api.OrdinaryNameLoc loc
+      unify_write_entry cx ~use_op:unknown_use t Env_api.OrdinaryNameLoc loc
 
   (************************)
   (* Variable Declaration *)
@@ -1032,9 +1026,9 @@ module New_env = struct
 
   let find_entry cx name ?desc loc =
     match name with
-    | InternalName _
-    | InternalModuleName _ ->
-      Old_env.find_entry cx name ?desc loc
+    | InternalName _ -> Old_env.find_entry cx name ?desc loc
+    | InternalModuleName name ->
+      assert_false (spf "Looking up an internal module name entry %s in new environment" name)
     | OrdinaryName name ->
       assert_false (spf "Looking up an ordinary name entry %s in new environment" name)
 

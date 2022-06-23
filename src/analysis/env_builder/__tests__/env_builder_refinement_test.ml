@@ -6443,3 +6443,13 @@ function f() {
           (3, 0) to (3, 1): (`x`),
           (empty array) (2, 4) to (2, 5): (`x`)
         }] |}]
+
+let%expect_test "decmod" =
+  print_ssa_test {|
+declare module F { }
+|};
+    [%expect {|
+      [
+        (2, 15) to (2, 16) => {
+          (2, 15) to (2, 16): (module `F`)
+        }] |}]
