@@ -426,12 +426,12 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) = struct
         match lhs_member_expression with
         | None ->
           if not @@ Provider_api.is_provider providers id_loc then
-            let (_, providers) =
+            let { Provider_api.providers; _ } =
               Base.Option.value_exn (Provider_api.providers_of_def providers id_loc)
             in
             Base.List.fold
               ~init:ALocMap.empty
-              ~f:(fun acc r ->
+              ~f:(fun acc { Provider_api.reason = r; _ } ->
                 let key = Reason.poly_loc_of_reason r in
                 ALocMap.update
                   key

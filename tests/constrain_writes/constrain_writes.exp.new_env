@@ -167,25 +167,6 @@ References:
                           ^ [1]
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:95:8
-
-Cannot assign array literal to `x` because number [1] is incompatible with unknown element type of empty array [2] in
-array element. All writes to `x` must be compatible with the type of its initializer [3]. Add an annotation to `x` [3]
-if a different type is desired. [incompatible-type]
-
-   test.js:95:8
-   95|   x = [3];
-              ^ [1]
-
-References:
-   test.js:94:11
-   94|   let x = [];
-                 ^^ [2]
-   test.js:94:7
-   94|   let x = [];
-             ^ [3]
-
-
 Error ------------------------------------------------------------------------------------------- wiki_examples.js:23:13
 
 Cannot assign `'Our new pr...'` to `product` because string [1] is incompatible with number [2]. All writes to `product`
@@ -588,7 +569,7 @@ References:
 
 
 
-Found 28 errors
+Found 27 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

@@ -645,8 +645,8 @@ class def_finder env_entries providers toplevel_scope =
           match lhs_node with
           | Ast.Pattern.Identifier { Ast.Pattern.Identifier.name; _ } ->
             Env_api.Provider_api.providers_of_def providers loc
-            |> Base.Option.value_map ~f:snd ~default:[]
-            |> Base.List.map ~f:(fun reason ->
+            |> Base.Option.value_map ~f:(fun x -> x.Env_api.Provider_api.providers) ~default:[]
+            |> Base.List.map ~f:(fun { Env_api.Provider_api.reason; _ } ->
                    (Reason.aloc_of_reason reason, Ast.Expression.Identifier name)
                )
             |> Nel.of_list

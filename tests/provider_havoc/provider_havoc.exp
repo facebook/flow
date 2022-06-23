@@ -42,63 +42,6 @@ References:
              ^^ [3]
 
 
-Error --------------------------------------------------------------------------------------------------- empty.js:19:10
-
-Cannot assign array literal to `arr` because number [1] is incompatible with unknown element type of empty array [2] in
-array element. All writes to `arr` must be compatible with the type of its initializer [3]. Add an annotation to
-`arr` [3] if a different type is desired. [incompatible-type]
-
-   empty.js:19:10
-   19|   arr = [1,2,3]; // error
-                ^ [1]
-
-References:
-   empty.js:18:13
-   18|   let arr = [];
-                   ^^ [2]
-   empty.js:18:7
-   18|   let arr = [];
-             ^^^ [3]
-
-
-Error --------------------------------------------------------------------------------------------------- empty.js:19:12
-
-Cannot assign array literal to `arr` because number [1] is incompatible with unknown element type of empty array [2] in
-array element. All writes to `arr` must be compatible with the type of its initializer [3]. Add an annotation to
-`arr` [3] if a different type is desired. [incompatible-type]
-
-   empty.js:19:12
-   19|   arr = [1,2,3]; // error
-                  ^ [1]
-
-References:
-   empty.js:18:13
-   18|   let arr = [];
-                   ^^ [2]
-   empty.js:18:7
-   18|   let arr = [];
-             ^^^ [3]
-
-
-Error --------------------------------------------------------------------------------------------------- empty.js:19:14
-
-Cannot assign array literal to `arr` because number [1] is incompatible with unknown element type of empty array [2] in
-array element. All writes to `arr` must be compatible with the type of its initializer [3]. Add an annotation to
-`arr` [3] if a different type is desired. [incompatible-type]
-
-   empty.js:19:14
-   19|   arr = [1,2,3]; // error
-                    ^ [1]
-
-References:
-   empty.js:18:13
-   18|   let arr = [];
-                   ^^ [2]
-   empty.js:18:7
-   18|   let arr = [];
-             ^^^ [3]
-
-
 Error --------------------------------------------------------------------------------------------------- empty.js:32:11
 
 Cannot assign function to `fn` because parameter `y` of unknown type [1] is incompatible with number [2] (consider
@@ -706,7 +649,7 @@ Unreachable code. [unreachable-code]
 
 
 
-Found 28 errors
+Found 25 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

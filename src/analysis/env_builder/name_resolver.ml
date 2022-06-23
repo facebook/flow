@@ -1192,7 +1192,7 @@ module Make
           (* We only use havoc as the merge if the providers that generate the havoc val are
              annotated. Only when the havoc val is annotated, we know for certain that it wouldn't
              be widened in the branches we are merging together. *)
-          | Some (Find_providers.AnnotatedVar _, _)
+          | Some { Env_api.Provider_api.state = Find_providers.AnnotatedVar _; _ }
             when can_merge_with_havoc v1 v2 || can_merge_with_havoc v2 v1 ->
             havoc
           | _ -> Val.merge v1 v2)
@@ -1503,8 +1503,9 @@ module Make
         let providers =
           Base.Option.value_map
             ~default:[]
-            ~f:snd
+            ~f:(fun { Provider_api.providers; _ } -> providers)
             (Provider_api.providers_of_def provider_info def_loc)
+          |> Base.List.map ~f:(fun { Provider_api.reason; _ } -> reason)
         in
         ( ( if Base.List.is_empty providers then
             Val.uninitialized def_loc

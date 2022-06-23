@@ -15,8 +15,14 @@ type state =
       predicate: bool; (* true iff this annotation corresponds to a predicate function (%checks) *)
     }
   | InitializedVar
+  | ArrayInitializedVar
+  | EmptyArrayInitializedVar
   | NullInitializedVar
   | UninitializedVar
+
+type write_kind =
+  | EmptyArray
+  | Ordinary
 
 module FindProviders (L : Loc_sig.S) : sig
   module Id : sig
@@ -33,7 +39,12 @@ module FindProviders (L : Loc_sig.S) : sig
     binding_kind: Bindings.kind;
   }
 
-  type entry = (L.LSet.t, state) base_entry
+  type providers = {
+    writes: write_kind L.LMap.t;
+    array_writes: L.LSet.t;
+  }
+
+  type entry = (providers, state) base_entry
 
   type env
 
@@ -45,7 +56,7 @@ module FindProviders (L : Loc_sig.S) : sig
 
   val all_entries : env -> EntrySet.t
 
-  val get_providers_for_toplevel_var : string -> env -> L.LSet.t option
+  val get_providers_for_toplevel_var : string -> env -> write_kind L.LMap.t option
 end = struct
   module Id : sig
     type t
@@ -83,6 +94,8 @@ end = struct
     | Initialized of int * int option
     (* For variables that have, so far, only been initialized to null, this records the depth of the assignment *)
     | NullInitialized of int
+    | EmptyArrInitialized
+    | ArrInitialized of int
     | Uninitialized
 
   (* This describes a single assingment/initialization of a var (rather than the var's state as a whole). ints are
@@ -90,7 +103,10 @@ end = struct
   type write_state =
     | Annotation of { predicate: bool }
     | Value of int
+    | ArrayValue of int
     | Null of int
+    | EmptyArr
+    | ArrWrite of int
     | Nothing
 
   type kind =
@@ -127,7 +143,12 @@ end = struct
 
   type intermediate_entry = (write_state L.LMap.t, intermediate_state) base_entry
 
-  type entry = (L.LSet.t, state) base_entry
+  type providers = {
+    writes: write_kind L.LMap.t;
+    array_writes: L.LSet.t;
+  }
+
+  type entry = (providers, state) base_entry
 
   module EntrySet = Flow_set.Make (struct
     type t = entry
@@ -153,6 +174,16 @@ end = struct
       Annotated { predicate = p1 || p2 }
     | (Annotated { predicate }, _) -> Annotated { predicate }
     | (_, Annotated { predicate }) -> Annotated { predicate }
+    | (Uninitialized, other)
+    | (other, Uninitialized) ->
+      other
+    | (ArrInitialized n, ArrInitialized m) -> ArrInitialized (min m n)
+    | (ArrInitialized n, EmptyArrInitialized)
+    | (EmptyArrInitialized, ArrInitialized n) ->
+      ArrInitialized n
+    | (other, (EmptyArrInitialized | ArrInitialized _))
+    | ((EmptyArrInitialized | ArrInitialized _), other) ->
+      other
     | (Initialized (n, i), Initialized (m, j)) ->
       let p = min n m in
       let k =
@@ -172,14 +203,7 @@ end = struct
         Initialized (n, Some k)
       else
         Initialized (n, None)
-    | (Initialized (n, i), _)
-    | (_, Initialized (n, i)) ->
-      Initialized (n, i)
     | (NullInitialized n, NullInitialized m) -> NullInitialized (min n m)
-    | (NullInitialized n, _)
-    | (_, NullInitialized n) ->
-      NullInitialized n
-    | (Uninitialized, Uninitialized) -> Uninitialized
 
   (* This function decides if an incoming write to a variable can possibly be a provider.
      If this function returns None, then the incoming write described by `write_state` cannot
@@ -208,15 +232,25 @@ end = struct
        var x; x = null provider is null
        *)
       Some (NullInitialized d)
-    | (Uninitialized, Value d) ->
+    | (Uninitialized, (Value d | ArrayValue d)) ->
       (*
        var x; x = 42 provider is 42
        *)
       Some (Initialized (d, None))
-    | (NullInitialized n, Value d) when n <= d ->
+    | (Uninitialized, EmptyArr) ->
+      (*
+       var x; var x = [], [] provider
+       *)
+      Some EmptyArrInitialized
+    | (Uninitialized, ArrWrite _) ->
+      (*
+       var x; x.push(42) no provider
+       *)
+      None
+    | (NullInitialized n, (Value d | ArrayValue d)) when n <= d ->
       (* var x = null; x = 42; provider is null and 42*)
       Some (Initialized (d, Some n))
-    | (NullInitialized _, Value d) ->
+    | (NullInitialized _, (Value d | ArrayValue d)) ->
       (* var x; (function() { x = null }); x = 42; provider is 42 *)
       Some (Initialized (d, None))
     | (NullInitialized n, Null d) when n <= d ->
@@ -225,6 +259,16 @@ end = struct
     | (NullInitialized _, Null d) ->
       (* var x; (function() { x = null }); x = null, provider is second null *)
       Some (NullInitialized d)
+    | (NullInitialized _, EmptyArr) ->
+      (*
+       var x = null; var x = [], [] provider
+       *)
+      Some EmptyArrInitialized
+    | (NullInitialized _, ArrWrite _) ->
+      (*
+       var x = null; x.push(42), null provider
+       *)
+      None
     | (Initialized (_, Some m), Null d) when m <= d ->
       (* var x = null; x = 42; x = null, providers are first null and 42 *)
       None
@@ -237,16 +281,28 @@ end = struct
     | (Initialized (n, None), Null d) ->
       (* var x; (function () { x = 42; }); x = null, provider is 42 and null *)
       Some (Initialized (n, Some d))
-    | (Initialized (n, _), Value d) when n <= d ->
+    | (Initialized (n, _), (Value d | ArrayValue d)) when n <= d ->
       (* var x = 42; x = "a", provider is 42 *)
       None
-    | (Initialized (_, Some m), Value d) when m <= d ->
+    | (Initialized (_, Some m), (Value d | ArrayValue d)) when m <= d ->
       (* var x = null; (function () { x = 42; }); x = "a", provider is null and "a" *)
       Some (Initialized (d, Some m))
-    | (Initialized (_, _), Value d) ->
+    | (Initialized (_, _), (Value d | ArrayValue d)) ->
       (* var x; (function () { x = null; x = 42; }); x = "a", provider is "a" *)
       (* var x; (function () { x = 42; }); x = "a", provider is "a" *)
       Some (Initialized (d, None))
+    | (Initialized _, EmptyArr) -> None
+    | (Initialized (_, _), ArrWrite _) -> None
+    | (EmptyArrInitialized, (Null _ | EmptyArr)) -> None
+    | (EmptyArrInitialized, Value _) -> None
+    | (EmptyArrInitialized, ArrayValue n) -> Some (ArrInitialized n)
+    | (EmptyArrInitialized, ArrWrite n) -> Some (ArrInitialized n)
+    | (ArrInitialized _, (Null _ | EmptyArr)) -> None
+    | (ArrInitialized _, Value _) -> None
+    | (ArrInitialized n, ArrayValue d) when n <= d -> None
+    | (ArrInitialized _, ArrayValue d) -> Some (ArrInitialized d)
+    | (ArrInitialized n, ArrWrite d) when n <= d -> None
+    | (ArrInitialized _, ArrWrite d) -> Some (ArrInitialized d)
 
   (**** Functions for manipulating environments ****)
   let empty_entry name binding_kind =
@@ -318,8 +374,18 @@ end = struct
       | hd :: tl -> loop var_scopes_off tl (hd :: rev_head)
       | [] -> env_invariant_violated "Unreachable"
     in
-
     loop 0 (Nel.to_list env) []
+
+  let state_of_var var env =
+    let rec loop env =
+      match env with
+      | { entries; _ } :: _ when SMap.mem var entries -> Some (SMap.find var entries).state
+      | [{ kind = Var; _ }] -> None
+      | [{ kind = Lex; _ }] -> env_invariant_violated "Root environment should always be Var"
+      | _ :: tl -> loop tl
+      | [] -> env_invariant_violated "Unreachable"
+    in
+    loop (Nel.to_list env)
 
   let get_entry var default_binding entries =
     SMap.find_opt var entries |> Option.value ~default:(empty_entry var default_binding)
@@ -720,6 +786,8 @@ end = struct
           match (init, annot) with
           | (_, Some (Ast.Type.Available _)) -> Annotation { predicate = false }
           | (None, _) -> Nothing
+          | (Some (_, Ast.Expression.Array { Ast.Expression.Array.elements = []; _ }), _) ->
+            EmptyArr
           | (Some (_, Ast.Expression.Literal { Ast.Literal.value = Ast.Literal.Null; _ }), _) ->
             Null 0
           | _ -> Value 0
@@ -924,7 +992,7 @@ end = struct
   let enter_existing_lex_child _ loc (({ children; _ }, _) as env) =
     Nel.cons (L.LMap.find loc children) env
 
-  type find_providers_cx = { null_assign: bool }
+  type find_providers_cx = { mk_state: int -> write_state }
 
   (* This visitor finds variable assignments that are not declarations and adds them to the providers for that variable
      if appropriate. *)
@@ -933,24 +1001,19 @@ end = struct
       inherit
         [find_providers_cx] finder
           ~env
-          ~cx:{ null_assign = false }
+          ~cx:{ mk_state = (fun n -> Value n) }
           ~enter_lex_child:enter_existing_lex_child as super
 
       (* Add a new variable provider to the scope, which is not a declaration. *)
       method add_provider var loc =
-        let (env, ({ null_assign } as cx)) = this#acc in
+        let (env, ({ mk_state } as cx)) = this#acc in
         let ( ({ state = cur_state; provider_locs; def_locs; _ } as entry),
               var_scopes_off,
               reconstruct_env
             ) =
           find_entry_for_existing_variable var env
         in
-        let write_state =
-          if null_assign then
-            Null var_scopes_off
-          else
-            Value var_scopes_off
-        in
+        let write_state = mk_state var_scopes_off in
         let extended_state = extended_state_opt ~state:cur_state ~write_state in
         let def_locs = L.LSet.add loc def_locs in
         let (state, provider_locs) =
@@ -964,15 +1027,14 @@ end = struct
 
       method! assignment
           _loc ({ Ast.Expression.Assignment.operator = _; left; right; comments; _ } as expr) =
-        let null_assign =
+        let mk_state n =
           match right with
-          | (_, Ast.Expression.Literal { Ast.Literal.value = Ast.Literal.Null; _ }) -> true
-          | _ -> false
+          | (_, Ast.Expression.Literal { Ast.Literal.value = Ast.Literal.Null; _ }) -> Null n
+          | (_, Ast.Expression.Array { Ast.Expression.Array.elements = _ :: _; _ }) -> ArrayValue n
+          | _ -> Value n
         in
         let _left' =
-          this#in_context
-            ~mod_cx:(fun _cx -> { null_assign })
-            (fun () -> this#assignment_pattern left)
+          this#in_context ~mod_cx:(fun _cx -> { mk_state }) (fun () -> this#assignment_pattern left)
         in
         let _right' = this#expression right in
         let _comments' = this#syntax_opt comments in
@@ -995,6 +1057,70 @@ end = struct
           this#add_provider name loc;
           expr
         | _ -> super#unary_expression loc expr
+
+      method! expression expr =
+        let open Ast.Expression.Member in
+        let open Ast.Expression.Assignment in
+        let open Ast.Expression.Call in
+        begin
+          match expr with
+          | ( _,
+              Ast.Expression.Call
+                {
+                  callee =
+                    ( _,
+                      Ast.Expression.Member
+                        {
+                          _object = (_, Ast.Expression.Identifier (_, { Ast.Identifier.name; _ }));
+                          property = PropertyIdentifier (_, { Ast.Identifier.name = "push"; _ });
+                          _;
+                        }
+                    );
+                  targs = None;
+                  arguments =
+                    ( _,
+                      {
+                        Ast.Expression.ArgList.arguments = [Ast.Expression.Expression (arg_loc, _)];
+                        _;
+                      }
+                    );
+                  _;
+                }
+            )
+          | ( _,
+              Ast.Expression.Assignment
+                {
+                  operator = None;
+                  left =
+                    ( _,
+                      Ast.Pattern.Expression
+                        ( _,
+                          Ast.Expression.Member
+                            {
+                              _object =
+                                (_, Ast.Expression.Identifier (_, { Ast.Identifier.name; _ }));
+                              property = PropertyExpression _;
+                              _;
+                            }
+                        )
+                    );
+                  right = (arg_loc, _);
+                  _;
+                }
+            ) ->
+            let state = state_of_var name env in
+            begin
+              match state with
+              | Some (EmptyArrInitialized | ArrInitialized _) ->
+                let mk_state n = ArrWrite n in
+                this#in_context
+                  ~mod_cx:(fun _cx -> { mk_state })
+                  (fun () -> this#add_provider name arg_loc)
+              | _ -> ()
+            end
+          | _ -> ()
+        end;
+        super#expression expr
     end
 
   let find_provider_statements env { Ast.Program.statements; _ } =
@@ -1012,24 +1138,45 @@ end = struct
       L.LMap.fold
         (fun loc write_state acc ->
           match (write_state, state) with
-          | (Annotation _, Annotated _) -> L.LSet.add loc acc
+          | (Annotation _, Annotated _) -> { acc with writes = L.LMap.add loc Ordinary acc.writes }
           | (Annotation _, _) -> assert_false "Invariant violated"
           | (Null n, (NullInitialized m | Initialized (_, Some m)))
-          | (Value n, Initialized (m, _)) ->
+          | ((ArrayValue n | Value n), Initialized (m, _)) ->
             if n = m then
-              L.LSet.add loc acc
+              { acc with writes = L.LMap.add loc Ordinary acc.writes }
             else if n < m then
               assert_false "Invariant violated"
             else
               acc
-          | (Nothing, _) -> assert_false "Invariant violated"
+          | (ArrayValue n, ArrInitialized m) ->
+            if n = m then
+              { acc with writes = L.LMap.add loc Ordinary acc.writes }
+            else if n < m then
+              assert_false "Invariant violated"
+            else
+              acc
+          | (ArrWrite n, ArrInitialized m) ->
+            if n = m then
+              { acc with array_writes = L.LSet.add loc acc.array_writes }
+            else if n < m then
+              assert_false "Invariant violated"
+            else
+              acc
+          | (EmptyArr, (EmptyArrInitialized | ArrInitialized _)) ->
+            { acc with writes = L.LMap.add loc EmptyArray acc.writes }
+          | (Nothing, _)
+          | (ArrWrite _, Initialized _)
+          | (Value _, ArrInitialized _) ->
+            assert_false "Invariant violated"
           | _ -> acc)
         provider_locs
-        L.LSet.empty
+        { writes = L.LMap.empty; array_writes = L.LSet.empty }
     in
     let state =
       match state with
       | Annotated { predicate } -> AnnotatedVar { predicate }
+      | ArrInitialized _ -> ArrayInitializedVar
+      | EmptyArrInitialized -> EmptyArrayInitializedVar
       | Initialized _ -> InitializedVar
       | NullInitialized _ -> NullInitializedVar
       | Uninitialized -> UninitializedVar
@@ -1052,5 +1199,5 @@ end = struct
 
   let get_providers_for_toplevel_var var ({ entries; _ }, _) =
     let entry = SMap.find_opt var entries in
-    Base.Option.map ~f:(fun entry -> (simplify_providers entry).provider_locs) entry
+    Base.Option.map ~f:(fun entry -> (simplify_providers entry).provider_locs.writes) entry
 end

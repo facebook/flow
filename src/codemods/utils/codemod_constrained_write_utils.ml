@@ -64,8 +64,8 @@ let is_extractable_assignment cx relevant_declarations =
       in
       let is_provider =
         Provider_api.providers_of_def providers loc
-        |> Base.Option.value_map ~default:false ~f:(fun (_, providers) ->
-               Base.List.exists providers ~f:(fun r ->
+        |> Base.Option.value_map ~default:false ~f:(fun { Provider_api.providers; _ } ->
+               Base.List.exists providers ~f:(fun { Provider_api.reason = r; _ } ->
                    Reason.poly_loc_of_reason r |> ALoc.concretize_equal tables loc
                )
            )

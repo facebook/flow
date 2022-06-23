@@ -190,19 +190,20 @@ module New_env = struct
 
   let find_providers { Env_api.providers; _ } loc =
     Env_api.Provider_api.providers_of_def providers loc
-    |> Base.Option.value_map ~f:snd ~default:[]
-    |> Base.List.map ~f:Reason.aloc_of_reason
+    |> Base.Option.value_map ~f:(fun { Env_api.Provider_api.providers; _ } -> providers) ~default:[]
+    |> Base.List.map ~f:(fun { Env_api.Provider_api.reason; _ } -> Reason.aloc_of_reason reason)
 
   let is_def_loc_annotated { Env_api.providers; _ } loc =
     let providers = Env_api.Provider_api.providers_of_def providers loc in
     match providers with
-    | Some (Find_providers.AnnotatedVar _, _) -> true
+    | Some { Env_api.Provider_api.state = Find_providers.AnnotatedVar _; _ } -> true
     | _ -> false
 
   let is_def_loc_predicate_function { Env_api.providers; _ } loc =
     let providers = Env_api.Provider_api.providers_of_def providers loc in
     match providers with
-    | Some (Find_providers.AnnotatedVar { predicate }, _) -> predicate
+    | Some { Env_api.Provider_api.state = Find_providers.AnnotatedVar { predicate }; _ } ->
+      predicate
     | _ -> false
 
   let provider_type_for_def_loc ?(intersect = false) env def_loc =
@@ -679,11 +680,22 @@ module New_env = struct
             | Some { Scope_api.With_ALoc.Def.locs = (declaration, _); actual_name = name; _ } ->
               let provider_locs =
                 Base.Option.value_map
-                  ~f:snd
+                  ~f:(fun { Env_api.Provider_api.providers; _ } -> providers)
                   ~default:[]
                   (Env_api.Provider_api.providers_of_def providers loc)
               in
-              Frame (ConstrainedAssignment { name; declaration; providers = provider_locs }, use_op)
+              Frame
+                ( ConstrainedAssignment
+                    {
+                      name;
+                      declaration;
+                      providers =
+                        Base.List.map
+                          ~f:(fun { Env_api.Provider_api.reason; _ } -> reason)
+                          provider_locs;
+                    },
+                  use_op
+                )
             | None -> use_op
           in
           Context.add_constrained_write cx (t, UseT (use_op, general))
@@ -698,7 +710,9 @@ module New_env = struct
     let { Loc_env.var_info; _ } = Context.environment cx in
     match Env_api.Provider_api.providers_of_def var_info.Env_api.providers loc with
     (* This check is only relevant when there are multiple providers *)
-    | Some (_, def_reason :: _) ->
+    | Some
+        { Env_api.Provider_api.providers = { Env_api.Provider_api.reason = def_reason; _ } :: _; _ }
+      ->
       let def_loc = Reason.aloc_of_reason def_reason in
       let def_loc_is_pred = is_def_loc_predicate_function var_info def_loc in
       (* Raise an error for an overload (other than the first one) if:

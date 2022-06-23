@@ -51,15 +51,18 @@ struct
   let declaration_validity info values providers loc =
     match Provider_api.providers_of_def providers loc with
     | None -> Valid
-    | Some (provider_state, _ :: _)
+    | Some { Provider_api.state = provider_state; providers = _ :: _; _ }
       when Provider_api.is_provider_state_fully_initialized provider_state ->
       Valid
-    | Some (_, providers) ->
+    | Some { Provider_api.providers; _ } ->
       (try
          let null_providers =
            (* Since this variable is not fully initialized, if there are any providers then
               they must be null providers *)
-           Base.List.map ~f:Reason.poly_loc_of_reason providers |> L.LSet.of_list
+           Base.List.map
+             ~f:(fun { Provider_api.reason; _ } -> Reason.poly_loc_of_reason reason)
+             providers
+           |> L.LSet.of_list
          in
          let uses = Scope_api.uses_of_use info loc in
          let reads_exist =

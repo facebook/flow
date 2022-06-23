@@ -478,14 +478,13 @@ module Env : Env_sig.S = struct
         let ({ Loc_env.var_info = { Env_api.providers; _ }; _ } as env) = Context.environment cx in
         let providers =
           Env_api.Provider_api.providers_of_def providers loc
-          |> Base.Option.value_map ~f:snd ~default:[]
-          |> Base.List.map
-               ~f:
-                 (Base.Fn.compose
-                    (fun loc ->
-                      Base.Option.map ~f:(fun t -> (loc, t)) (Loc_env.find_ordinary_write env loc))
-                    Reason.aloc_of_reason
-                 )
+          |> Base.Option.value_map
+               ~f:(fun { Env_api.Provider_api.providers; _ } -> providers)
+               ~default:[]
+          |> Base.List.map ~f:(fun { Env_api.Provider_api.reason; _ } ->
+                 let loc = Reason.aloc_of_reason reason in
+                 Base.Option.map ~f:(fun t -> (loc, t)) (Loc_env.find_ordinary_write env loc)
+             )
           |> Base.Option.all
         in
         match providers with
@@ -563,15 +562,17 @@ module Env : Env_sig.S = struct
   let get_provider cx name loc =
     let ({ Loc_env.var_info = { Env_api.providers; _ }; _ } as env) = Context.environment cx in
     let (provider_state, provider_locs) =
-      Base.Option.value
+      Base.Option.value_map
+        ~f:(fun { Env_api.Provider_api.state; providers; _ } -> (state, providers))
         ~default:(Find_providers.UninitializedVar, [])
         (Env_api.Provider_api.providers_of_def providers loc)
     in
     let fully_initialized = Provider_api.is_provider_state_fully_initialized provider_state in
     let providers =
       Base.List.map
-        ~f:(Base.Fn.compose (Loc_env.find_ordinary_write env) Reason.aloc_of_reason)
+        ~f:(fun { Env_api.Provider_api.reason; _ } -> Reason.aloc_of_reason reason)
         provider_locs
+      |> Base.List.map ~f:(Loc_env.find_ordinary_write env)
       |> Base.Option.all
     in
     let provider =
@@ -603,7 +604,14 @@ module Env : Env_sig.S = struct
                 let use_op =
                   Frame
                     ( ConstrainedAssignment
-                        { name = ord_name; declaration; providers = provider_locs },
+                        {
+                          name = ord_name;
+                          declaration;
+                          providers =
+                            Base.List.map
+                              ~f:(fun { Env_api.Provider_api.reason; _ } -> reason)
+                              provider_locs;
+                        },
                       use_op
                     )
                 in

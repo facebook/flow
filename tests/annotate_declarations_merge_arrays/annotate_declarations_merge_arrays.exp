@@ -16,7 +16,7 @@ Stats:
   Number of annotations added:              1
   Total size of annotations:                5
   Number of vars with write errors:         1
-  Number of possibly renamable vars:        2
+  Number of possibly renamable vars:        1
 
 Errors:
   Missing annot./normalizer error:          0
