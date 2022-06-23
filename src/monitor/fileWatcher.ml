@@ -284,6 +284,19 @@ end = struct
     else
       Lwt.return (Ok None)
 
+  let recover_from_restart env =
+    match env.mergebase with
+    | Some prev_mergebase ->
+      (match%lwt Watchman.recover_from_restart ~prev_mergebase env.instance with
+      | Ok result -> Lwt.return (Some result)
+      | Error Watchman.Dead
+      | Error Watchman.Restarted ->
+        Lwt.return None)
+    | None ->
+      (* if we don't know the previous mergebase, we can't ask if anything
+         changed while watchman was restarting, so we can't recover. *)
+      Lwt.return None
+
   module WatchmanListenLoop = LwtLoop.Make (struct
     module J = Hh_json_helpers.AdhocJsonHelpers
 
@@ -326,18 +339,13 @@ end = struct
         mergebase changes, we restart. *)
     let handle_restart env =
       StatusStream.file_watcher_deferred "Watchman restart";
-      match%lwt get_mergebase_and_changes env with
-      | Ok mergebase_and_changes ->
-        (match (mergebase_and_changes, env.mergebase) with
-        | (Some { Watchman.clock; mergebase; changes }, Some old_mergebase)
-          when mergebase = old_mergebase ->
-          Logger.info "Watchman restarted, but the mergebase didn't change.";
-          Watchman.force_update_clockspec clock env.instance;
-          env.metadata <- { env.metadata with MonitorProt.missed_changes = true };
-          StatusStream.file_watcher_ready ();
-          Lwt.return (Some (env.instance, Watchman.Files_changed changes))
-        | _ -> Lwt.return None)
-      | Error _ -> Lwt.return None
+      match%lwt recover_from_restart env with
+      | Some (instance, changes) ->
+        Logger.info "Watchman restarted, but the mergebase didn't change.";
+        env.metadata <- { env.metadata with MonitorProt.missed_changes = true };
+        StatusStream.file_watcher_ready ();
+        Lwt.return (Some (instance, Watchman.Files_changed changes))
+      | None -> Lwt.return None
 
     let main env =
       let%lwt (instance, pushed_changes) =
