@@ -37,6 +37,10 @@ module type S = sig
 
   type write_loc =
     | Write of L.t Reason.virtual_reason
+    | EmptyArray of {
+        reason: L.t Reason.virtual_reason;
+        arr_providers: L.LSet.t;
+      }
     | Uninitialized of L.t Reason.virtual_reason
     | Undeclared of string * L.t
     | UndeclaredClass of {
@@ -140,6 +144,7 @@ module type S = sig
     | RefinementWrite of L.t virtual_reason
     | GlobalWrite of L.t virtual_reason
     | NonAssigningWrite
+    | EmptyArrayWrite of L.t virtual_reason * L.LSet.t
 
   type env_info = {
     scopes: Scope_api.info;
@@ -151,6 +156,7 @@ module type S = sig
     class_static_this_env_entries: env_entry L.LMap.t;
     class_instance_super_env_entries: env_entry L.LMap.t;
     class_static_super_env_entries: env_entry L.LMap.t;
+    array_provider_entries: L.t virtual_reason L.LMap.t;
     providers: Provider_api.info;
     refinement_of_id: int -> Refi.refinement;
   }
@@ -202,6 +208,10 @@ module Make
 
   type write_loc =
     | Write of L.t Reason.virtual_reason
+    | EmptyArray of {
+        reason: L.t Reason.virtual_reason;
+        arr_providers: L.LSet.t;
+      }
     | Uninitialized of L.t Reason.virtual_reason
     | Undeclared of string * L.t
     | UndeclaredClass of {
@@ -302,6 +312,7 @@ module Make
     | RefinementWrite of L.t virtual_reason
     | GlobalWrite of L.t virtual_reason
     | NonAssigningWrite
+    | EmptyArrayWrite of L.t virtual_reason * L.LSet.t
 
   type env_info = {
     scopes: Scope_api.info;
@@ -313,6 +324,7 @@ module Make
     class_static_this_env_entries: env_entry L.LMap.t;
     class_instance_super_env_entries: env_entry L.LMap.t;
     class_static_super_env_entries: env_entry L.LMap.t;
+    array_provider_entries: L.t virtual_reason L.LMap.t;
     providers: Provider_api.info;
     refinement_of_id: int -> refinement;
   }
@@ -328,6 +340,7 @@ module Make
       class_static_this_env_entries = L.LMap.empty;
       class_instance_super_env_entries = L.LMap.empty;
       class_static_super_env_entries = L.LMap.empty;
+      array_provider_entries = L.LMap.empty;
       providers = Provider_api.empty;
       refinement_of_id = (fun _ -> failwith "Empty env info");
     }
@@ -348,6 +361,7 @@ module Make
     | UndeclaredClass { def; _ } when for_type -> [Reason.poly_loc_of_reason def]
     | UndeclaredClass _ -> []
     | Write r -> [Reason.poly_loc_of_reason r]
+    | EmptyArray { reason; _ } -> [Reason.poly_loc_of_reason reason]
     | Uninitialized _ -> []
     | Undeclared _ -> []
     | FunctionOrGlobalThis _ -> []
@@ -418,6 +432,12 @@ module Make
         let loc = Reason.poly_loc_of_reason reason in
         Utils_js.spf
           "%s: (%s)"
+          (L.debug_to_string loc)
+          Reason.(desc_of_reason reason |> string_of_desc)
+      | EmptyArray { reason; _ } ->
+        let loc = Reason.poly_loc_of_reason reason in
+        Utils_js.spf
+          "(empty array) %s: (%s)"
           (L.debug_to_string loc)
           Reason.(desc_of_reason reason |> string_of_desc)
       | Refinement { refinement_id; writes; write_id = _ } ->

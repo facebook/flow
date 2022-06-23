@@ -344,15 +344,18 @@ module New_env = struct
                      EBindingError (EReferencedBeforeDeclaration, loc, OrdinaryName name, def_loc)
                    );
                  Type.(AnyT.make (AnyError None) reason)
+               | (Env_api.With_ALoc.EmptyArray { reason; arr_providers = _ }, _)
                | (Env_api.With_ALoc.Write reason, _) ->
-                 Debug_js.Verbose.print_if_verbose
+                 Debug_js.Verbose.print_if_verbose_lazy
                    cx
-                   [
-                     spf
-                       "reading %s from location %s"
-                       (Reason.string_of_aloc loc)
-                       (Reason.aloc_of_reason reason |> Reason.string_of_aloc);
-                   ];
+                   ( lazy
+                     [
+                       spf
+                         "reading %s from location %s"
+                         (Reason.string_of_aloc loc)
+                         (Reason.aloc_of_reason reason |> Reason.string_of_aloc);
+                     ]
+                     );
                  let loc = Reason.aloc_of_reason reason in
                  t_option_value_exn cx loc (Loc_env.find_ordinary_write env loc)
                | (Env_api.With_ALoc.Refinement { refinement_id; writes; write_id }, _) ->
@@ -531,6 +534,7 @@ module New_env = struct
           | Env_api.With_ALoc.DeclaredFunction _ -> true
           | Env_api.With_ALoc.Uninitialized _ -> true
           | Env_api.With_ALoc.UndeclaredClass _ -> true
+          | Env_api.With_ALoc.EmptyArray _ -> true
           | Env_api.With_ALoc.Write _ -> true
           | Env_api.With_ALoc.Unreachable _ -> true
           | Env_api.With_ALoc.Undeclared _ -> true
@@ -941,6 +945,7 @@ module New_env = struct
           match env_entry with
           | Env_api.AssigningWrite reason
           | Env_api.RefinementWrite reason
+          | Env_api.EmptyArrayWrite (reason, _)
           | Env_api.GlobalWrite reason ->
             let t = Inferred (Tvar.mk cx reason) in
             (* Treat everything as inferred for now for the purposes of annotated vs inferred *)

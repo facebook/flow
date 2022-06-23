@@ -157,7 +157,8 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) = struct
           (* Ignore cases that don't have bindings in the environment, like `var x;`
              and illegal or unreachable writes. *)
           (match ALocMap.find_opt loc env_entries with
-          | Some Env_api.(AssigningWrite _ | GlobalWrite _ | RefinementWrite _) ->
+          | Some Env_api.(AssigningWrite _ | GlobalWrite _ | RefinementWrite _ | EmptyArrayWrite _)
+            ->
             this#add ~why:loc loc
           | Some Env_api.NonAssigningWrite
           | None ->

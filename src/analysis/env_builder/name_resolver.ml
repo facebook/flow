@@ -140,6 +140,8 @@ module Make
 
     val merge : t -> t -> t
 
+    val empty_array : L.t virtual_reason -> L.LSet.t -> t
+
     val function_or_global_this : ALoc.t virtual_reason -> t
 
     val class_instance_this : ALoc.t virtual_reason -> t
@@ -158,7 +160,7 @@ module Make
 
     val one : ALoc.t virtual_reason -> t
 
-    val all : ALoc.t virtual_reason list -> t
+    val providers : Provider_api.provider list -> t
 
     val of_write : write_state -> t
 
@@ -227,6 +229,10 @@ module Make
       | ModuleScoped of string
       | Global of string
       | Loc of ALoc.t virtual_reason
+      | EmptyArray of {
+          reason: ALoc.t virtual_reason;
+          arr_providers: L.LSet.t;
+        }
       | PHI of write_state list
       | Refinement of {
           refinement_id: int;
@@ -256,6 +262,12 @@ module Make
         let loc = Reason.poly_loc_of_reason reason in
         Utils_js.spf
           "%s: (%s)"
+          (L.debug_to_string loc)
+          Reason.(desc_of_reason reason |> string_of_desc)
+      | EmptyArray { reason; _ } ->
+        let loc = Reason.poly_loc_of_reason reason in
+        Utils_js.spf
+          "(empty array) %s: (%s)"
           (L.debug_to_string loc)
           Reason.(desc_of_reason reason |> string_of_desc)
       | Refinement { refinement_id; val_t } ->
@@ -333,6 +345,8 @@ module Make
     let uninitialized r = mk_with_write_state (Uninitialized r)
 
     let undefined r = mk_with_write_state (Undefined r)
+
+    let empty_array reason arr_providers = mk_with_write_state (EmptyArray { reason; arr_providers })
 
     let number r = mk_with_write_state (Number r)
 
@@ -423,6 +437,7 @@ module Make
       | ModuleScoped _
       | Global _
       | Loc _
+      | EmptyArray _
       | Refinement _ ->
         WriteSet.singleton t
       | PHI ts ->
@@ -463,7 +478,17 @@ module Make
 
     let global name = mk_with_write_state @@ Global name
 
-    let all locs = join (Base.List.map ~f:(fun reason -> Loc reason) locs)
+    let providers locs =
+      join
+        ((Base.List.map ~f:(fun { Provider_api.reason; empty_array_writes } ->
+              Base.Option.value_map
+                ~f:(fun arr_providers -> EmptyArray { reason; arr_providers })
+                ~default:(Loc reason)
+                empty_array_writes
+          )
+         )
+           locs
+        )
 
     let rec simplify_val t =
       let vals = normalize t.write_state in
@@ -486,6 +511,7 @@ module Make
           | ClassInstanceSuper r -> Env_api.ClassInstanceSuper r
           | ClassStaticSuper r -> Env_api.ClassStaticSuper r
           | Loc r -> Env_api.Write r
+          | EmptyArray { reason; arr_providers } -> Env_api.EmptyArray { reason; arr_providers }
           | Refinement { refinement_id; val_t } ->
             Env_api.Refinement
               { writes = simplify_val val_t; refinement_id; write_id = Some val_t.id }
@@ -526,6 +552,7 @@ module Make
           else
             states
         | Loc _ -> []
+        | EmptyArray _ -> []
         | FunctionOrGlobalThis _ -> []
         | ClassInstanceThis _ -> []
         | ClassStaticThis _ -> []
@@ -805,6 +832,7 @@ module Make
     class_static_this_write_entries: Env_api.env_entry Loc_sig.ALocS.LMap.t;
     class_instance_super_write_entries: Env_api.env_entry Loc_sig.ALocS.LMap.t;
     class_static_super_write_entries: Env_api.env_entry Loc_sig.ALocS.LMap.t;
+    array_provider_entries: reason Loc_sig.ALocS.LMap.t;
     curr_id: int;
     (* Maps refinement ids to refinements. This mapping contains _all_ the refinements reachable at
      * any point in the code. The latest_refinement maps keep track of which entries to read. *)
@@ -1145,6 +1173,7 @@ module Make
           class_static_this_write_entries = L.LMap.empty;
           class_instance_super_write_entries = L.LMap.empty;
           class_static_super_write_entries = L.LMap.empty;
+          array_provider_entries = L.LMap.empty;
           curr_id = 0;
           refinement_heap = IMap.empty;
           latest_refinements = [];
@@ -1177,6 +1206,8 @@ module Make
 
       method class_static_super_write_entries : Env_api.env_entry L.LMap.t =
         env_state.class_static_super_write_entries
+
+      method array_provider_entries : reason L.LMap.t = env_state.array_provider_entries
 
       method private merge_vals_with_havoc ~havoc ~def_loc v1 v2 =
         (* It's not safe to reset to havoc when one side can be uninitialized, because the havoc
@@ -1505,12 +1536,11 @@ module Make
             ~default:[]
             ~f:(fun { Provider_api.providers; _ } -> providers)
             (Provider_api.providers_of_def provider_info def_loc)
-          |> Base.List.map ~f:(fun { Provider_api.reason; _ } -> reason)
         in
         ( ( if Base.List.is_empty providers then
             Val.uninitialized def_loc
           else
-            Val.all providers
+            Val.providers providers
           ),
           providers
         )
@@ -1550,7 +1580,8 @@ module Make
               let (havoc, providers) = this#providers_of_def_loc loc in
               let write_entries =
                 Base.List.fold
-                  ~f:(fun acc r -> L.LMap.add (poly_loc_of_reason r) (Env_api.AssigningWrite r) acc)
+                  ~f:(fun acc { Provider_api.reason = r; _ } ->
+                    L.LMap.add (poly_loc_of_reason r) (Env_api.AssigningWrite r) acc)
                   ~init:env_state.write_entries
                   providers
               in
@@ -1568,7 +1599,8 @@ module Make
               let (_, providers) = this#providers_of_def_loc loc in
               let write_entries =
                 Base.List.fold
-                  ~f:(fun acc r -> L.LMap.add (poly_loc_of_reason r) (Env_api.AssigningWrite r) acc)
+                  ~f:(fun acc { Provider_api.reason = r; _ } ->
+                    L.LMap.add (poly_loc_of_reason r) (Env_api.AssigningWrite r) acc)
                   ~init:env_state.write_entries
                   providers
               in
@@ -1709,7 +1741,10 @@ module Make
                     L.LSet.for_all
                       (Base.List.mem
                          ~equal:ALoc.equal
-                         (Base.List.map ~f:poly_loc_of_reason providers)
+                         (Base.List.map
+                            ~f:(fun { Provider_api.reason; _ } -> poly_loc_of_reason reason)
+                            providers
+                         )
                       )
                       writes_by_closure
                   in
@@ -1717,14 +1752,14 @@ module Make
                   let writes_by_closure_provider_val =
                     if all_writes_by_closure_are_providers then
                       let writes_by_closure_providers =
-                        Base.List.filter providers ~f:(fun provider_reason ->
-                            L.LSet.mem (poly_loc_of_reason provider_reason) writes_by_closure
+                        Base.List.filter providers ~f:(fun { Provider_api.reason; _ } ->
+                            L.LSet.mem (poly_loc_of_reason reason) writes_by_closure
                         )
                       in
                       if not @@ Base.List.is_empty writes_by_closure_providers then
                         (* Now we know a variable needs to be widened at most by these writes
                            by closure providers *)
-                        Some (Val.all writes_by_closure_providers)
+                        Some (Val.providers writes_by_closure_providers)
                       else
                         None
                     else
@@ -1732,7 +1767,7 @@ module Make
                   in
                   let write_entries =
                     Base.List.fold
-                      ~f:(fun acc r ->
+                      ~f:(fun acc { Provider_api.reason = r; _ } ->
                         L.LMap.add (poly_loc_of_reason r) (Env_api.AssigningWrite r) acc)
                       ~init:env_state.write_entries
                       providers
@@ -1929,8 +1964,8 @@ module Make
                       ignore @@ this#type_annotation_hint annot;
                       this#bind_pattern_identifier_customized
                         ~kind:(variable_declaration_binding_kind_to_pattern_write_kind kind)
-                        ~get_assigned_val:(fun base ->
-                          Val.replace_refinement_base_write ~base refined_v)
+                        ~get_assigned_val:(fun reason ->
+                          Val.replace_refinement_base_write ~base:(Val.one reason) refined_v)
                         loc
                         x)
                   | _ ->
@@ -1950,8 +1985,7 @@ module Make
         this#bind_pattern_identifier_customized ~kind loc x;
         super#identifier ident
 
-      method private bind_pattern_identifier_customized ~kind ?(get_assigned_val = Base.Fn.id) loc x
-          =
+      method private bind_pattern_identifier_customized ~kind ?(get_assigned_val = Val.one) loc x =
         let reason = Reason.(mk_reason (RIdentifier (OrdinaryName x))) loc in
         let {
           val_ref;
@@ -1990,7 +2024,7 @@ module Make
                   else
                     Env_api.AssigningWrite reason
                 in
-                val_ref := get_assigned_val (Val.one reason);
+                val_ref := get_assigned_val reason;
                 L.LMap.add loc write_entry env_state.write_entries
               ) else
                 (* All of the providers are aleady in the map. We don't want to overwrite them with
@@ -2276,12 +2310,76 @@ module Make
               | Array { Ast.Pattern.Array.annot; _ } )
             ) ->
             begin
-              match init with
-              | Some init ->
+              match (init, id) with
+              | ( Some (_, Ast.Expression.Array { Ast.Expression.Array.elements = []; _ }),
+                  ( _,
+                    Identifier
+                      {
+                        Ast.Pattern.Identifier.annot = Ast.Type.Missing _;
+                        name = (name_loc, { Ast.Identifier.name = x; _ });
+                        _;
+                      }
+                  )
+                ) ->
+                let kind = variable_declaration_binding_kind_to_pattern_write_kind (Some kind) in
+                let reason = Reason.(mk_reason (RIdentifier (OrdinaryName x))) name_loc in
+                let (assigned_val, write_kind) =
+                  Base.Option.value_map
+                    ~f:(fun { Env_api.Provider_api.array_providers; _ } ->
+                      ( Val.empty_array reason array_providers,
+                        Env_api.EmptyArrayWrite (reason, array_providers)
+                      ))
+                    ~default:(Val.one reason, Env_api.AssigningWrite reason)
+                    (Env_api.Provider_api.providers_of_def provider_info name_loc)
+                in
+
+                let {
+                  val_ref;
+                  heap_refinements;
+                  kind = stored_binding_kind;
+                  def_loc;
+                  havoc = _;
+                  writes_by_closure_provider_val = _;
+                } =
+                  SMap.find x env_state.env
+                in
+
+                (match
+                   error_for_assignment_kind cx x name_loc def_loc stored_binding_kind kind !val_ref
+                 with
+                | Some err ->
+                  add_output err;
+                  let write_entries =
+                    L.LMap.add name_loc Env_api.NonAssigningWrite env_state.write_entries
+                  in
+                  env_state <- { env_state with write_entries }
+                | _ ->
+                  this#havoc_heap_refinements heap_refinements;
+                  let write_entries =
+                    if not (Val.is_declared_function !val_ref) then (
+                      val_ref := assigned_val;
+                      (* Unlike with a typical write, we don't want to create a write_entry here,
+                         because the type should be computed from the array providers. *)
+                      L.LMap.add name_loc write_kind env_state.write_entries
+                    ) else
+                      (* All of the providers are aleady in the map. We don't want to overwrite them with
+                       * a non-assigning write. We _do_ want to enter regular function declarations as
+                       * non-assigning writes so that they are not checked against the providers in
+                       * New_env.set_env_entry *)
+                      L.LMap.update
+                        name_loc
+                        (fun x ->
+                          match x with
+                          | None -> Some Env_api.NonAssigningWrite
+                          | _ -> x)
+                        env_state.write_entries
+                  in
+                  env_state <- { env_state with write_entries })
+              | (Some init, _) ->
                 (* given `var x = e`, read e then write x *)
                 ignore @@ this#expression init;
                 ignore @@ this#binding_pattern_track_object_destructuring ~kind ~acc:init id
-              | None ->
+              | (None, _) ->
                 (* No rhs means no write occurs, but the variable moves from undeclared to
                  * uninitialized. *)
                 Flow_ast_utils.fold_bindings_of_pattern
@@ -4629,6 +4727,7 @@ module Make
           failwith "member_expression_refinement can only be called on OptionalMember or Member"
 
       method expression_refinement ((loc, expr) as expression) =
+        this#handle_array_providers expression;
         let open Flow_ast.Expression in
         match expr with
         | Identifier ident ->
@@ -4743,7 +4842,17 @@ module Make
         let chain = IMap.find id env_state.refinement_heap in
         this#chain_to_refinement chain
 
+      method private handle_array_providers ((loc, _) as exp) =
+        if Provider_api.is_array_provider provider_info loc then
+          let reason = Reason.mk_expression_reason exp in
+          env_state <-
+            {
+              env_state with
+              array_provider_entries = L.LMap.add loc reason env_state.array_provider_entries;
+            }
+
       method! expression expr =
+        this#handle_array_providers expr;
         match expr with
         | (_, Flow_ast.Expression.Call _)
         | (_, Flow_ast.Expression.OptionalCall _)
@@ -4964,6 +5073,7 @@ module Make
         class_static_this_env_entries = env_walk#class_static_this_write_entries;
         class_instance_super_env_entries = env_walk#class_instance_super_write_entries;
         class_static_super_env_entries = env_walk#class_static_super_write_entries;
+        array_provider_entries = env_walk#array_provider_entries;
         providers;
         refinement_of_id = env_walk#refinement_of_id;
       }

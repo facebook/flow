@@ -56,6 +56,12 @@ let print_values refinement_of_id =
         "%s: (%s)"
         (L.debug_to_string loc)
         Reason.(desc_of_reason reason |> string_of_desc)
+    | EmptyArray { reason; _ } ->
+      let loc = Reason.poly_loc_of_reason reason in
+      Utils_js.spf
+        "(empty array) %s: (%s)"
+        (L.debug_to_string loc)
+        Reason.(desc_of_reason reason |> string_of_desc)
     | Refinement { refinement_id; writes; write_id = _ } ->
       let refinement = refinement_of_id refinement_id in
       let refinement_str = show_refinement_kind_without_locs (snd refinement) in
@@ -6400,4 +6406,40 @@ function *f() {
       [
         (3, 2) to (3, 7) => {
           (2, 13) to (2, 13): (next)
+        }] |}]
+
+let%expect_test "emp_array" =
+  print_ssa_test {|
+var x = [];
+x;
+function f() {
+  x;
+}
+|};
+    [%expect {|
+      [
+        (3, 0) to (3, 1) => {
+          (empty array) (2, 4) to (2, 5): (`x`)
+        };
+        (5, 2) to (5, 3) => {
+          (empty array) (2, 4) to (2, 5): (`x`)
+        }] |}]
+
+let%expect_test "emp_array2" =
+  print_ssa_test {|
+var x = [];
+x = [10];
+x;
+function f() {
+  x;
+}
+|};
+    [%expect {|
+      [
+        (4, 0) to (4, 1) => {
+          (3, 0) to (3, 1): (`x`)
+        };
+        (6, 2) to (6, 3) => {
+          (3, 0) to (3, 1): (`x`),
+          (empty array) (2, 4) to (2, 5): (`x`)
         }] |}]

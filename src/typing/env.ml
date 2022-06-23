@@ -229,6 +229,7 @@ module Env : Env_sig.S = struct
               match env_entry with
               | Env_api.AssigningWrite reason
               | Env_api.RefinementWrite reason
+              | Env_api.EmptyArrayWrite (reason, _)
               | Env_api.GlobalWrite reason ->
                 let t = Inferred (Tvar.mk cx reason) in
                 (* Treat everything as inferred for now for the purposes of annotated vs inferred *)
