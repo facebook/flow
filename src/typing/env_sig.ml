@@ -253,6 +253,8 @@ module type S = sig
 
   val record_expression_type_if_needed : Context.t -> ALoc.t -> Type.t -> unit
 
+  val record_array_provider_if_needed : Context.t -> ALoc.t -> Type.t -> unit
+
   val discriminant_after_negated_cases :
     Context.t ->
     ALoc.t ->

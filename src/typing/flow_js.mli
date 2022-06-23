@@ -25,6 +25,8 @@ val flow_p :
   Type.property * Type.property ->
   unit
 
+val flow_use_op : Context.t -> Type.use_op -> Type.use_t -> Type.use_t
+
 val reposition :
   Context.t ->
   ?trace:Type.trace ->

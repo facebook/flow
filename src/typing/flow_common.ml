@@ -72,6 +72,8 @@ module type BASE = sig
     Type.ident ->
     Type.t ->
     unit
+
+  val flow_use_op : Context.t -> Type.use_op -> Type.use_t -> Type.use_t
 end
 
 module type CHECK_POLARITY = sig

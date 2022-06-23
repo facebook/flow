@@ -472,10 +472,29 @@ let check_constrained_writes init_cx master_cx =
       create_cx_with_context_optimizer init_cx master_cx ~reducer ~f:(fun () ->
           Base.List.map
             ~f:(fun (t, u) ->
-              let t = reducer#type_ init_cx Polarity.Neutral t in
+              let open Type in
+              let open Constraint in
               let u = reducer#use_type init_cx Polarity.Neutral u in
-              (t, u))
+              match t with
+              | OpenT (_, id) ->
+                let (_, constraints) = Context.find_constraints init_cx id in
+                begin
+                  match constraints with
+                  | Unresolved { lower; _ } ->
+                    TypeMap.bindings lower
+                    |> Base.List.map ~f:(fun (t, (_, use_op)) ->
+                           let t = reducer#type_ init_cx Polarity.Neutral t in
+                           (t, Flow_js.flow_use_op init_cx use_op u)
+                       )
+                  | _ ->
+                    let t = reducer#type_ init_cx Polarity.Neutral t in
+                    [(t, u)]
+                end
+              | _ ->
+                let t = reducer#type_ init_cx Polarity.Neutral t in
+                [(t, u)])
             checks
+          |> List.flatten
       )
     in
     Base.List.iter ~f:(Flow_js.flow cx) checks;

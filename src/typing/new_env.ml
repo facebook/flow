@@ -174,12 +174,24 @@ module New_env = struct
     | (None, _) ->
       ()
     | (Some w, _) ->
-      Debug_js.Verbose.print_if_verbose
+      Debug_js.Verbose.print_if_verbose_lazy
         cx
-        [spf "recording expression at location %s" (Reason.string_of_aloc loc)];
+        (lazy [spf "recording expression at location %s" (Reason.string_of_aloc loc)]);
       Flow_js.unify cx ~use_op:unknown_use t w;
       let env' = Loc_env.update_reason env loc (TypeUtil.reason_of_t t) in
       Context.set_environment cx env'
+
+  let record_array_provider_if_needed cx loc t =
+    let env = Context.environment cx in
+    match (Loc_env.find_array_provider env loc, Context.env_mode cx) with
+    | (_, Options.SSAEnv { resolved = true }) (* Fully resolved env doesn't need to write here *)
+    | (None, _) ->
+      ()
+    | (Some w, _) ->
+      Debug_js.Verbose.print_if_verbose_lazy
+        cx
+        (lazy [spf "recording array provider at location %s" (Reason.string_of_aloc loc)]);
+      Flow_js.unify cx ~use_op:unknown_use t w
 
   let find_var_opt { Env_api.env_values; _ } loc =
     match ALocMap.find_opt loc env_values with
@@ -945,16 +957,46 @@ module New_env = struct
           match env_entry with
           | Env_api.AssigningWrite reason
           | Env_api.RefinementWrite reason
-          | Env_api.EmptyArrayWrite (reason, _)
           | Env_api.GlobalWrite reason ->
             let t = Inferred (Tvar.mk cx reason) in
             (* Treat everything as inferred for now for the purposes of annotated vs inferred *)
             Loc_env.initialize env def_loc_type loc t
+          | Env_api.EmptyArrayWrite (reason, arr_providers) ->
+            let (elem_t, elems, reason) =
+              let element_reason = mk_reason Reason.unknown_elem_empty_array_desc loc in
+              if ALocSet.cardinal arr_providers > 0 then (
+                let ts =
+                  ALocSet.elements arr_providers
+                  |> Base.List.map ~f:(fun loc ->
+                         t_option_value_exn cx loc (Loc_env.find_array_provider env loc)
+                     )
+                in
+                let constrain_t =
+                  Tvar.mk_where cx element_reason (fun tvar ->
+                      Base.List.iter ~f:(fun t -> Flow_js.flow_t cx (t, tvar)) ts
+                  )
+                in
+                let elem_t =
+                  Tvar.mk_where cx element_reason (fun tvar -> Flow_js.flow_t cx (constrain_t, tvar))
+                in
+                Context.add_constrained_write cx (elem_t, UseT (unknown_use, constrain_t));
+                (elem_t, None, reason)
+              ) else
+                (Tvar.mk cx element_reason, Some [], replace_desc_reason REmptyArrayLit reason)
+            in
+            let t = DefT (reason, bogus_trust (), ArrT (ArrayAT (elem_t, elems))) in
+            (* Treat everything as inferred for now for the purposes of annotated vs inferred *)
+            Loc_env.initialize env def_loc_type loc (Inferred t)
           | Env_api.NonAssigningWrite -> env
       )
     in
     let env =
       env
+      |> ALocMap.fold
+           (fun loc reason env ->
+             let t = Tvar.mk cx reason in
+             Loc_env.initialize_array_provider env loc t)
+           var_info.Env_api.array_provider_entries
       |> initialize_entries Env_api.OrdinaryNameLoc var_info.Env_api.env_entries
       |> initialize_entries
            Env_api.FunctionOrGlobalThisLoc

@@ -1,3 +1,94 @@
+Error ------------------------------------------------------------------------------------------- constrain_array.js:5:2
+
+Cannot cast `x[0]` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+
+   constrain_array.js:5:2
+   5| (x[0]: empty); /// error from num and str
+       ^^^^
+
+References:
+   constrain_array.js:4:8
+   4| x.push(42);
+             ^^ [1]
+   constrain_array.js:5:8
+   5| (x[0]: empty); /// error from num and str
+             ^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------- constrain_array.js:5:2
+
+Cannot cast `x[0]` to empty because string [1] is incompatible with empty [2]. [incompatible-cast]
+
+   constrain_array.js:5:2
+   5| (x[0]: empty); /// error from num and str
+       ^^^^
+
+References:
+   constrain_array.js:6:8
+   6| x.push('a'); // error
+             ^^^ [1]
+   constrain_array.js:5:8
+   5| (x[0]: empty); /// error from num and str
+             ^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------- constrain_array.js:8:5
+
+Cannot assign `100` to `x` because number [1] is incompatible with empty array literal [2]. All writes to `x` must be
+compatible with the type of its initializer [3]. Add an annotation to `x` [3] if a different type is desired.
+[incompatible-type]
+
+   constrain_array.js:8:5
+   8| x = 100; // error
+          ^^^ [1]
+
+References:
+   constrain_array.js:3:9
+   3| var x = []
+              ^^ [2]
+   constrain_array.js:3:5
+   3| var x = []
+          ^ [3]
+
+
+Error ------------------------------------------------------------------------------------------ constrain_array.js:11:5
+
+Cannot assign `100` to `y` because number [1] is incompatible with empty array literal [2]. All writes to `y` must be
+compatible with the type of its initializer [3]. Add an annotation to `y` [3] if a different type is desired.
+[incompatible-type]
+
+   constrain_array.js:11:5
+   11| y = 100; // error
+           ^^^ [1]
+
+References:
+   constrain_array.js:10:9
+   10| var y = []
+               ^^ [2]
+   constrain_array.js:10:5
+   10| var y = []
+           ^ [3]
+
+
+Error ----------------------------------------------------------------------------------------- constrain_array.js:14:21
+
+Cannot assign array literal to `z` because number [1] is incompatible with string [2] in array element. All writes to
+`z` must be compatible with the type of its initializer [3]. Add an annotation to `z` [3] if a different type is
+desired. [incompatible-type]
+
+   constrain_array.js:14:21
+   14| function f() { z = [1] } // error, selected str
+                           ^ [1]
+
+References:
+   constrain_array.js:15:8
+   15| z.push('a');
+              ^^^ [2]
+   constrain_array.js:13:5
+   13| var z = []
+           ^ [3]
+
+
 Error --------------------------------------------------------------------------------------------------- globals.js:4:2
 
 Cannot cast `x` to empty because undefined [1] is incompatible with empty [2]. [incompatible-cast]
@@ -13,6 +104,24 @@ References:
    globals.js:4:5
    4| (x: empty);
           ^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- globals.js:5:13
+
+Cannot call `Promise` because function [1] requires another argument. [incompatible-call]
+
+   globals.js:5:13
+      5| var y = new Promise();
+                     ^^^^^^^
+
+References:
+   <BUILTINS>/core.js:1810:5
+             v----------------------
+   1810|     constructor(callback: (
+   1811|       resolve: (result: Promise<R> | R) => void,
+   1812|       reject: (error: any) => void
+   1813|     ) => mixed): void;
+             ----------------^ [1]
 
 
 Error --------------------------------------------------------------------------------------------------- globals.js:6:2
@@ -464,4 +573,4 @@ References:
 
 
 
-Found 28 errors
+Found 34 errors

@@ -3198,7 +3198,10 @@ struct
         cx
         (lazy [spf "Expression cache hit at %s" (ALoc.debug_to_string loc)]);
       node
-    | None -> expression_ ~cond ~hint cx loc e
+    | None ->
+      let (((_, t), _) as exp) = expression_ ~cond ~hint cx loc e in
+      Env.record_array_provider_if_needed cx loc t;
+      exp
 
   and this_ cx loc this =
     let open Ast.Expression in
