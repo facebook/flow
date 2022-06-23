@@ -1,3 +1,18 @@
+### 0.181.0
+
+Notable bug fixes:
+* Fix unsound spreading of empty array literals ([example](https://flow.org/try/#0G4QwTgBCELwQ2gXQNwCgQDoAOBXAzgBYAUAjAJRqiQBGAXBAIJhggCeAPHgC5gCWAdgHMAfLAQYJIFBAD0MiIQD2OADYATCAFNmisEA))
+* Fix a race condition that could cause individual requests from the IDE to hang indefinitely
+* Improve ability to recover from Watchman restarting
+
+Parser:
+* Fix parsing of invalid UTF-8 to raise the correct "Malformed unicode" parse error
+* Fix line numbers when regex character classes contain an (invalid) newline, which could've led to a crash
+
+Library Definitions:
+* Add AudioContext constructor options
+* Update Node's `v8` module
+
 ### 0.180.1
 
 Notable bug fixes:
