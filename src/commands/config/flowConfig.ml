@@ -6,8 +6,7 @@
  *)
 
 open Utils_js
-
-let ( >>= ) = Base.Result.( >>= )
+open Base.Result.Let_syntax
 
 type line = int * string
 
@@ -282,7 +281,7 @@ module Opts = struct
 
   let parse_lines : line list -> (raw_options, error) result =
     let rec loop acc lines =
-      acc >>= fun map ->
+      let%bind map = acc in
       match lines with
       | [] -> Ok map
       | (line_num, line) :: rest ->
@@ -317,15 +316,14 @@ module Opts = struct
       match values with
       | [] -> Ok config
       | (line_num, value_str) :: rest ->
-        let value =
+        let%bind value =
           optparser value_str
           |> Base.Result.map_error ~f:(fun msg -> (line_num, Failed_to_parse_value msg))
         in
-        let config =
-          value >>= fun value ->
+        let%bind config =
           setter config value |> Base.Result.map_error ~f:(fun msg -> (line_num, Failed_to_set msg))
         in
-        config >>= loop optparser setter rest
+        loop optparser setter rest config
     in
     fun (optparser : string -> ('a, string) result)
         ?init
@@ -389,7 +387,11 @@ module Opts = struct
           Ok v
     )
 
-  let mapping fn = opt (fun str -> optparse_mapping str >>= fn)
+  let mapping fn =
+    opt (fun str ->
+        let%bind v = optparse_mapping str in
+        fn v
+    )
 
   let optparse_json str =
     try Ok (Hh_json.json_of_string str) with
@@ -441,7 +443,9 @@ module Opts = struct
     mapping
       ~init:(fun opts -> { opts with haste_name_reducers = [] })
       ~multiple:true
-      (fun (pattern, template) -> optparse_regexp pattern >>= fun pattern -> Ok (pattern, template))
+      (fun (pattern, template) ->
+        let%bind pattern = optparse_regexp pattern in
+        Ok (pattern, template))
       (fun opts v -> Ok { opts with haste_name_reducers = v :: opts.haste_name_reducers })
 
   let haste_paths_excludes_parser =
@@ -455,7 +459,6 @@ module Opts = struct
     let multiple = true in
     let parse opts json =
       let open Hh_json in
-      let open Base.Result.Let_syntax in
       let%bind (method_name, threshold_time_ms_str, limit_json, rate_str) =
         match json with
         | JSON_Array [JSON_String a; JSON_Number b; c; JSON_Number d] -> Ok (a, b, c, d)
@@ -629,7 +632,8 @@ module Opts = struct
       ~init:(fun opts -> { opts with missing_module_generators = [] })
       ~multiple:true
       (fun (pattern, generator) ->
-        optparse_regexp pattern >>= fun pattern -> Ok (pattern, generator))
+        let%bind pattern = optparse_regexp pattern in
+        Ok (pattern, generator))
       (fun opts v ->
         Ok { opts with missing_module_generators = v :: opts.missing_module_generators })
 
@@ -641,7 +645,9 @@ module Opts = struct
   let name_mapper_parser =
     mapping
       ~multiple:true
-      (fun (pattern, template) -> optparse_regexp pattern >>= fun pattern -> Ok (pattern, template))
+      (fun (pattern, template) ->
+        let%bind pattern = optparse_regexp pattern in
+        Ok (pattern, template))
       (fun opts v ->
         let module_name_mappers = v :: opts.module_name_mappers in
         Ok { opts with module_name_mappers })
@@ -650,7 +656,7 @@ module Opts = struct
     mapping
       ~multiple:true
       (fun (file_ext, template) ->
-        optparse_regexp ("^\\(.*\\)\\." ^ Str.quote file_ext ^ "$") >>= fun pattern ->
+        let%bind pattern = optparse_regexp ("^\\(.*\\)\\." ^ Str.quote file_ext ^ "$") in
         Ok (pattern, template))
       (fun opts v ->
         let module_name_mappers = v :: opts.module_name_mappers in
@@ -955,7 +961,7 @@ module Opts = struct
     let rec loop
         (acc : (raw_options * t, error) result)
         (parsers : (string * (raw_values -> t -> (t, opt_error) result)) list) =
-      acc >>= fun (raw_opts, config) ->
+      let%bind (raw_opts, config) = acc in
       match parsers with
       | [] -> Ok (raw_opts, config)
       | (key, f) :: rest ->
@@ -963,15 +969,18 @@ module Opts = struct
           match SMap.find_opt key raw_opts with
           | None -> Ok (raw_opts, config)
           | Some values ->
-            f values config |> Base.Result.map_error ~f:(error_of_opt_error key) >>= fun config ->
+            let%bind config =
+              f values config |> Base.Result.map_error ~f:(error_of_opt_error key)
+            in
             let new_raw_opts = SMap.remove key raw_opts in
             Ok (new_raw_opts, config)
         in
         loop acc rest
     in
     fun (init : t) (lines : line list) : (t * warning list, error) result ->
-      parse_lines lines >>= fun raw_options ->
-      loop (Ok (raw_options, init)) parsers >>= warn_on_unknown_opts
+      let%bind raw_options = parse_lines lines in
+      let%bind options = loop (Ok (raw_options, init)) parsers in
+      warn_on_unknown_opts options
 end
 
 type rollout = {
@@ -1101,7 +1110,7 @@ let empty_config =
 let group_into_sections : line list -> (section list, error) result =
   let is_section_header = Str.regexp "^\\[\\(.*\\)\\]$" in
   let rec loop acc lines =
-    acc >>= fun (seen, sections, (section_name, section_lines)) ->
+    let%bind (seen, sections, (section_name, section_lines)) = acc in
     match lines with
     | [] ->
       let section = (section_name, Base.List.rev section_lines) in
@@ -1155,7 +1164,7 @@ let parse_declarations lines config =
   Ok ({ config with declarations }, [])
 
 let parse_options lines config : (config * warning list, error) result =
-  Opts.parse config.options lines >>= fun (options, warnings) ->
+  let%bind (options, warnings) = Opts.parse config.options lines in
   Ok ({ config with options }, warnings)
 
 let parse_version lines config =
@@ -1179,12 +1188,13 @@ let parse_version lines config =
 
 let parse_lints lines config : (config * warning list, error) result =
   let lines = trim_labeled_lines lines in
-  LintSettings.of_lines config.lint_severities lines >>= fun (lint_severities, warnings) ->
+  let%bind (lint_severities, warnings) = LintSettings.of_lines config.lint_severities lines in
   Ok ({ config with lint_severities }, warnings)
 
 let parse_strict lines config =
   let lines = trim_labeled_lines lines in
-  StrictModeSettings.of_lines lines >>= fun strict_mode -> Ok ({ config with strict_mode }, [])
+  let%bind strict_mode = StrictModeSettings.of_lines lines in
+  Ok ({ config with strict_mode }, [])
 
 (* Basically fold_left but with early exit when f returns an Error *)
 let rec fold_left_stop_on_error
@@ -1192,7 +1202,9 @@ let rec fold_left_stop_on_error
     ('acc, 'error) result =
   match l with
   | [] -> Ok acc
-  | elem :: rest -> f acc elem >>= fun acc -> fold_left_stop_on_error rest ~acc ~f
+  | elem :: rest ->
+    let%bind acc = f acc elem in
+    fold_left_stop_on_error rest ~acc ~f
 
 (* Rollouts are based on randomness, but we want it to be stable from run to run. So we seed our
  * pseudo random number generator with
@@ -1224,75 +1236,82 @@ let calculate_pct rollout_name =
 let parse_rollouts config lines =
   Base.Option.value_map lines ~default:(Ok config) ~f:(fun lines ->
       let lines = trim_labeled_lines lines in
-      fold_left_stop_on_error lines ~acc:SMap.empty ~f:(fun rollouts (line_num, line) ->
-          (* A rollout's name is can only contain [a-zA-Z0-9._] *)
-          if Str.string_match (Str.regexp "^\\([a-zA-Z0-9._]+\\)=\\(.*\\)$") line 0 then
-            let rollout_name = Str.matched_group 1 line in
-            let rollout_values_raw = Str.matched_group 2 line in
-            let my_pct = calculate_pct rollout_name in
-            fold_left_stop_on_error
-              (* Groups are delimited with commas *)
-              Str.(split (regexp ",") rollout_values_raw)
-              ~acc:(None, SSet.empty, 0)
-              ~f:(fun (enabled_group, disabled_groups, pct_total) raw_group ->
-                let raw_group = String.trim raw_group in
-                (* A rollout group has the for "X% label", where label can only contain
-                 * [a-zA-Z0-9._] *)
-                if Str.string_match (Str.regexp "^\\([0-9]+\\)% \\([a-zA-Z0-9._]+\\)$") raw_group 0
-                then
-                  let group_pct = Str.matched_group 1 raw_group |> int_of_string in
-                  let group_name = Str.matched_group 2 raw_group in
-                  if enabled_group = Some group_name || SSet.mem group_name disabled_groups then
-                    Error
-                      ( line_num,
-                        spf
-                          "Groups must have unique names. There is more than one %S group"
-                          group_name
-                      )
-                  else
-                    let (enabled_group, disabled_groups) =
-                      match enabled_group with
-                      | None when my_pct < group_pct + pct_total ->
-                        (* This is the first group that passes my_pct, so we enable it *)
-                        (Some group_name, disabled_groups)
-                      | _ ->
-                        (* Either we've already chosen the enabled group or we haven't passed my_pct *)
-                        (enabled_group, SSet.add group_name disabled_groups)
-                    in
-                    Ok (enabled_group, disabled_groups, pct_total + group_pct)
-                else
+      let%bind rollouts =
+        fold_left_stop_on_error lines ~acc:SMap.empty ~f:(fun rollouts (line_num, line) ->
+            (* A rollout's name is can only contain [a-zA-Z0-9._] *)
+            if Str.string_match (Str.regexp "^\\([a-zA-Z0-9._]+\\)=\\(.*\\)$") line 0 then
+              let rollout_name = Str.matched_group 1 line in
+              let rollout_values_raw = Str.matched_group 2 line in
+              let my_pct = calculate_pct rollout_name in
+              let%bind (enabled_group, disabled_groups, pct_total) =
+                fold_left_stop_on_error
+                  (* Groups are delimited with commas *)
+                  Str.(split (regexp ",") rollout_values_raw)
+                  ~acc:(None, SSet.empty, 0)
+                  ~f:(fun (enabled_group, disabled_groups, pct_total) raw_group ->
+                    let raw_group = String.trim raw_group in
+                    (* A rollout group has the for "X% label", where label can only contain
+                     * [a-zA-Z0-9._] *)
+                    if
+                      Str.string_match
+                        (Str.regexp "^\\([0-9]+\\)% \\([a-zA-Z0-9._]+\\)$")
+                        raw_group
+                        0
+                    then
+                      let group_pct = Str.matched_group 1 raw_group |> int_of_string in
+                      let group_name = Str.matched_group 2 raw_group in
+                      if enabled_group = Some group_name || SSet.mem group_name disabled_groups then
+                        Error
+                          ( line_num,
+                            spf
+                              "Groups must have unique names. There is more than one %S group"
+                              group_name
+                          )
+                      else
+                        let (enabled_group, disabled_groups) =
+                          match enabled_group with
+                          | None when my_pct < group_pct + pct_total ->
+                            (* This is the first group that passes my_pct, so we enable it *)
+                            (Some group_name, disabled_groups)
+                          | _ ->
+                            (* Either we've already chosen the enabled group or we haven't passed my_pct *)
+                            (enabled_group, SSet.add group_name disabled_groups)
+                        in
+                        Ok (enabled_group, disabled_groups, pct_total + group_pct)
+                    else
+                      Error
+                        ( line_num,
+                          "Malformed rollout group. A group should be a percentage and an identifier, "
+                          ^ "like `50% on`"
+                        ))
+              in
+              if pct_total = 100 then
+                if SMap.mem rollout_name rollouts then
                   Error
                     ( line_num,
-                      "Malformed rollout group. A group should be a percentage and an identifier, "
-                      ^ "like `50% on`"
-                    ))
-            >>= fun (enabled_group, disabled_groups, pct_total) ->
-            if pct_total = 100 then
-              if SMap.mem rollout_name rollouts then
+                      spf
+                        "Rollouts must have unique names. There already is a %S rollout"
+                        rollout_name
+                    )
+                else
+                  match enabled_group with
+                  | None -> Error (line_num, "Invariant violation: failed to choose a group")
+                  | Some enabled_group ->
+                    Ok (SMap.add rollout_name { enabled_group; disabled_groups } rollouts)
+              else
                 Error
                   ( line_num,
-                    spf
-                      "Rollouts must have unique names. There already is a %S rollout"
-                      rollout_name
+                    spf "Rollout groups must sum to 100%%. %S sums to %d%%" rollout_name pct_total
                   )
-              else
-                match enabled_group with
-                | None -> Error (line_num, "Invariant violation: failed to choose a group")
-                | Some enabled_group ->
-                  Ok (SMap.add rollout_name { enabled_group; disabled_groups } rollouts)
             else
               Error
                 ( line_num,
-                  spf "Rollout groups must sum to 100%%. %S sums to %d%%" rollout_name pct_total
+                  "Malformed rollout. A rollout should be an identifier followed by a list of groups, "
+                  ^ "like `myRollout=10% on, 50% off`"
                 )
-          else
-            Error
-              ( line_num,
-                "Malformed rollout. A rollout should be an identifier followed by a list of groups, "
-                ^ "like `myRollout=10% on, 50% off`"
-              )
-      )
-      >>= fun rollouts -> Ok { config with rollouts }
+        )
+      in
+      Ok { config with rollouts }
   )
 
 let parse_section config ((section_ln, section), lines) : (config * warning list, error) result =
@@ -1320,27 +1339,31 @@ let parse =
   let filter_sections_by_rollout sections config =
     (* The rollout prefix looks like `(rollout_name=group_name)` *)
     let rollout_regex = Str.regexp "^(\\([a-zA-Z0-9._]+\\)=\\([a-zA-Z0-9._]+\\))\\(.*\\)$" in
-    fold_left_stop_on_error sections ~acc:[] ~f:(fun acc (section_name, lines) ->
-        fold_left_stop_on_error lines ~acc:[] ~f:(fun acc (line_num, line) ->
-            if Str.string_match rollout_regex line 0 then
-              let rollout_name = Str.matched_group 1 line in
-              let group_name = Str.matched_group 2 line in
-              let line = Str.matched_group 3 line in
-              match SMap.find_opt rollout_name config.rollouts with
-              | None -> Error (line_num, spf "Unknown rollout %S" rollout_name)
-              | Some { enabled_group; disabled_groups } ->
-                if enabled_group = group_name then
-                  Ok ((line_num, line) :: acc)
-                else if SSet.mem group_name disabled_groups then
-                  Ok acc
+    let%bind sections =
+      fold_left_stop_on_error sections ~acc:[] ~f:(fun acc (section_name, lines) ->
+          let%bind lines =
+            fold_left_stop_on_error lines ~acc:[] ~f:(fun acc (line_num, line) ->
+                if Str.string_match rollout_regex line 0 then
+                  let rollout_name = Str.matched_group 1 line in
+                  let group_name = Str.matched_group 2 line in
+                  let line = Str.matched_group 3 line in
+                  match SMap.find_opt rollout_name config.rollouts with
+                  | None -> Error (line_num, spf "Unknown rollout %S" rollout_name)
+                  | Some { enabled_group; disabled_groups } ->
+                    if enabled_group = group_name then
+                      Ok ((line_num, line) :: acc)
+                    else if SSet.mem group_name disabled_groups then
+                      Ok acc
+                    else
+                      Error (line_num, spf "Unknown group %S in rollout %S" group_name rollout_name)
                 else
-                  Error (line_num, spf "Unknown group %S in rollout %S" group_name rollout_name)
-            else
-              Ok ((line_num, line) :: acc)
-        )
-        >>= fun lines -> Ok ((section_name, Base.List.rev lines) :: acc)
-    )
-    >>= fun sections -> Ok (config, Base.List.rev sections)
+                  Ok ((line_num, line) :: acc)
+            )
+          in
+          Ok ((section_name, Base.List.rev lines) :: acc)
+      )
+    in
+    Ok (config, Base.List.rev sections)
   in
   let process_rollouts config sections =
     let rollout_section_lines = ref None in
@@ -1352,19 +1375,21 @@ let parse =
           | _ -> true
           )
     in
-    parse_rollouts config !rollout_section_lines >>= filter_sections_by_rollout sections
+    let%bind config = parse_rollouts config !rollout_section_lines in
+    filter_sections_by_rollout sections config
   in
   let rec loop acc sections =
-    acc >>= fun (config, warn_acc) ->
+    let%bind (config, warn_acc) = acc in
     match sections with
     | [] -> Ok (config, Base.List.rev warn_acc)
     | section :: rest ->
-      parse_section config section >>= fun (config, warnings) ->
+      let%bind (config, warnings) = parse_section config section in
       let acc = Ok (config, Base.List.rev_append warnings warn_acc) in
       loop acc rest
   in
   fun config lines ->
-    group_into_sections lines >>= process_rollouts config >>= fun (config, sections) ->
+    let%bind sections = group_into_sections lines in
+    let%bind (config, sections) = process_rollouts config sections in
     loop (Ok (config, [])) sections
 
 let is_not_comment =
@@ -1400,9 +1425,9 @@ let init ~ignores ~untyped ~declarations ~includes ~libs ~options ~lints =
   let ( >>= )
       (acc : (config * warning list, error) result)
       (fn : config -> (config * warning list, error) result) =
-    let ( >>= ) = Base.Result.( >>= ) in
-    acc >>= fun (config, warn_acc) ->
-    fn config >>= fun (config, warnings) -> Ok (config, Base.List.rev_append warnings warn_acc)
+    let%bind (config, warn_acc) = acc in
+    let%bind (config, warnings) = fn config in
+    Ok (config, Base.List.rev_append warnings warn_acc)
   in
   let ignores_lines = Base.List.map ~f:(fun s -> (1, s)) ignores in
   let untyped_lines = Base.List.map ~f:(fun s -> (1, s)) untyped in
