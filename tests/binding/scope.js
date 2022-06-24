@@ -3,7 +3,7 @@ function block_scope() {
   var b: number = 0;
   {
     let a = ""; // ok: local to block
-    var b = ""; // error: string ~> number
+    var b = ""; // error: banned redeclaration
   }
 }
 
@@ -13,7 +13,7 @@ function switch_scope(x: string) {
   switch (x) {
     case "foo":
       let a = ""; // ok: local to switch
-      var b = ""; // error: string ~> number
+      var b = ""; // error: banned redeclaration
       break;
     case "bar":
       let a = ""; // error: a already bound in switch
@@ -63,7 +63,7 @@ function for_scope_let() {
 
 function for_scope_var() {
   var a: number = 0;
-  for (var a = "" /* error: string ~> number */;;) {}
+  for (var a = "" /* error: banned redeclaration */ ;;) {}
 }
 
 function for_in_scope_let(o: Object) {
@@ -73,7 +73,7 @@ function for_in_scope_let(o: Object) {
 
 function for_in_scope_var(o: Object) {
   var a: number = 0;
-  for (var a /* error: string ~> number */ in o) {}
+  for (var a /* error: banned redeclaration */ in o) {}
 }
 
 function for_of_scope_let(xs: string[]) {
@@ -83,7 +83,7 @@ function for_of_scope_let(xs: string[]) {
 
 function for_of_scope_var(xs: string[]) {
   var a: number = 0;
-  for (var a /* error: string ~> number */ of xs) {}
+  for (var a /* error: banned redeclaration */ of xs) {}
 }
 
 function default_param_1() {

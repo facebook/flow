@@ -151,7 +151,7 @@ function var_const() {
 
 function var_var() {
   var A = 0;
-  var A = 0;       // OK
+  var A = 0;       // error: banned redeclaration
 }
 
 // function x *

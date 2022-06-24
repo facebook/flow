@@ -455,6 +455,7 @@ and exactness_error_kind =
 
 and binding_error =
   | ENameAlreadyBound
+  | EVarRedeclaration
   | EReferencedBeforeDeclaration
   | ETypeInValuePosition of {
       imported: bool;
@@ -2439,6 +2440,8 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
       match binding_error with
       | ENameAlreadyBound ->
         [text "Cannot declare "; ref x; text " because the name is already bound."]
+      | EVarRedeclaration ->
+        [text "Cannot declare "; ref x; text " because var redeclaration is not supported."]
       | EReferencedBeforeDeclaration ->
         if desc = RThis || desc = RSuper then
           [
@@ -3903,6 +3906,7 @@ let error_code_of_message err : error_code option =
     begin
       match binding_error with
       | ENameAlreadyBound -> Some NameAlreadyBound
+      | EVarRedeclaration -> Some NameAlreadyBound
       | EReferencedBeforeDeclaration -> Some ReferenceBeforeDeclaration
       | ETypeInValuePosition _
       | ETypeAliasInValuePosition ->

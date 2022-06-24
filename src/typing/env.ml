@@ -699,9 +699,16 @@ module Env : Env_sig.S = struct
           (match scope.kind with
           (* specifically a var scope allows some shadowing *)
           | VarScope _ ->
+            let is_var_redeclaration = function
+              | (Entry.Var _, Entry.Var _) -> Entry.entry_loc prev <> loc
+              | _ -> false
+            in
             Entry.(
               (match (entry, prev) with
-              (* good shadowing leaves existing entry, unifies with new *)
+              | (Value e, Value p)
+                when is_var_redeclaration (Entry.kind_of_value e, Entry.kind_of_value p) ->
+                (* We ban var redeclaration on top of other JS illegal rebinding rules. *)
+                binding_error Error_message.EVarRedeclaration cx name prev loc
               | (Value e, Value p)
                 when can_shadow cx name prev loc (Entry.kind_of_value e, Entry.kind_of_value p) ->
                 (* TODO currently we don't step on specific. shouldn't we? *)

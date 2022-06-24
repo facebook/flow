@@ -62,6 +62,9 @@ let print_values refinement_of_id =
         "(empty array) %s: (%s)"
         (L.debug_to_string loc)
         Reason.(desc_of_reason reason |> string_of_desc)
+    | IllegalWrite reason ->
+      let loc = Reason.poly_loc_of_reason reason in
+      Utils_js.spf "illegal write at %s" (L.debug_to_string loc)
     | Refinement { refinement_id; writes; write_id = _ } ->
       let refinement = refinement_of_id refinement_id in
       let refinement_str = show_refinement_kind_without_locs (snd refinement) in

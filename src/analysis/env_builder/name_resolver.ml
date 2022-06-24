@@ -162,6 +162,8 @@ module Make
 
     val providers : Provider_api.provider list -> t
 
+    val illegal_write : ALoc.t virtual_reason -> t
+
     val of_write : write_state -> t
 
     val simplify : ALoc.t option -> Bindings.kind option -> string option -> t -> Env_api.read
@@ -233,6 +235,7 @@ module Make
           reason: ALoc.t virtual_reason;
           arr_providers: L.LSet.t;
         }
+      | IllegalWrite of ALoc.t virtual_reason
       | PHI of write_state list
       | Refinement of {
           refinement_id: int;
@@ -270,6 +273,9 @@ module Make
           "(empty array) %s: (%s)"
           (L.debug_to_string loc)
           Reason.(desc_of_reason reason |> string_of_desc)
+      | IllegalWrite reason ->
+        let loc = Reason.poly_loc_of_reason reason in
+        Utils_js.spf "illegal write at %s" (L.debug_to_string loc)
       | Refinement { refinement_id; val_t } ->
         let refinement_kind =
           refinement_id |> get_refi |> snd |> Env_api.show_refinement_kind_without_locs
@@ -407,6 +413,8 @@ module Make
         Hashtbl.add val_one_cache reason v;
         v
 
+    let illegal_write reason = mk_with_write_state @@ IllegalWrite reason
+
     let join write_states =
       match join_write_states write_states with
       | Loc reason -> one reason
@@ -438,6 +446,7 @@ module Make
       | Global _
       | Loc _
       | EmptyArray _
+      | IllegalWrite _
       | Refinement _ ->
         WriteSet.singleton t
       | PHI ts ->
@@ -512,6 +521,7 @@ module Make
           | ClassStaticSuper r -> Env_api.ClassStaticSuper r
           | Loc r -> Env_api.Write r
           | EmptyArray { reason; arr_providers } -> Env_api.EmptyArray { reason; arr_providers }
+          | IllegalWrite r -> Env_api.IllegalWrite r
           | Refinement { refinement_id; val_t } ->
             Env_api.Refinement
               { writes = simplify_val val_t; refinement_id; write_id = Some val_t.id }
@@ -553,6 +563,7 @@ module Make
             states
         | Loc _ -> []
         | EmptyArray _ -> []
+        | IllegalWrite _ -> []
         | FunctionOrGlobalThis _ -> []
         | ClassInstanceThis _ -> []
         | ClassStaticThis _ -> []
@@ -942,6 +953,12 @@ module Make
         Some
           Error_message.(
             EBindingError (ENameAlreadyBound, assignment_loc, OrdinaryName name, def_loc)
+          )
+      | (Bindings.Var, VarBinding) when assignment_loc <> def_loc ->
+        (* We ban var redeclaration on top of other JS illegal rebinding rules. *)
+        Some
+          Error_message.(
+            EBindingError (EVarRedeclaration, assignment_loc, OrdinaryName name, def_loc)
           )
       | (Bindings.Const, (VarBinding | LetBinding | ConstBinding | FunctionBinding))
       | (Bindings.Let, (VarBinding | LetBinding | ConstBinding | FunctionBinding))
@@ -2013,6 +2030,12 @@ module Make
           | Some err ->
             add_output err;
             let write_entries = L.LMap.add loc Env_api.NonAssigningWrite env_state.write_entries in
+            (* Give unsupported var redeclaration a write to avoid spurious errors like use of
+               possibly undefined variable. Essentially, we are treating var redeclaration as a
+               assignment with an any-typed value. *)
+            (match (stored_binding_kind, kind) with
+            | (Bindings.Var, VarBinding) -> val_ref := Val.illegal_write reason
+            | _ -> ());
             env_state <- { env_state with write_entries }
           | _ ->
             this#havoc_heap_refinements heap_refinements;

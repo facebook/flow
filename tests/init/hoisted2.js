@@ -55,7 +55,7 @@ function if_post_init1(b) {
   if (b) {
     var x:number = 0;
   } else {
-    var x:number = 1;
+    var x:number = 1; // error: banned redeclaration
   }
   var y:number = x;
 }

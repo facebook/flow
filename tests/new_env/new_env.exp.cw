@@ -203,6 +203,20 @@ Variable `w` [1] is never initialized, annotated, or assigned to. [invalid-decla
 
 Error ----------------------------------------------------------------------------------------------- initialize.js:26:7
 
+Cannot declare `w` [1] because var redeclaration is not supported. [name-already-bound]
+
+   initialize.js:26:7
+   26|   var w;
+             ^
+
+References:
+   initialize.js:24:7
+   24|   var w ;
+             ^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------- initialize.js:26:7
+
 Variable `w` [1] is never initialized, annotated, or assigned to. [invalid-declaration]
 
    26|   var w;
@@ -573,4 +587,4 @@ References:
 
 
 
-Found 34 errors
+Found 35 errors

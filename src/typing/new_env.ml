@@ -222,17 +222,29 @@ module New_env = struct
     let { Loc_env.var_info; _ } = env in
     let providers =
       find_providers var_info def_loc
-      |> Base.List.map ~f:(Loc_env.find_ordinary_write env)
-      |> Base.Option.all
+      |> Base.List.filter_map ~f:(fun loc ->
+             match Loc_env.find_ordinary_write env loc with
+             | Some w -> Some w
+             | None ->
+               (match ALocMap.find_opt loc var_info.Env_api.env_entries with
+               | None
+               | Some Env_api.NonAssigningWrite ->
+                 None
+               | _ ->
+                 assert_false
+                   (spf
+                      "Missing provider write at %s for %s"
+                      (Reason.string_of_aloc loc)
+                      (Reason.string_of_aloc def_loc)
+                   ))
+         )
     in
     match providers with
-    | None -> assert_false (spf "Missing providers for %s" (Reason.string_of_aloc def_loc))
-    | Some [] -> MixedT.make (mk_reason (RCustom "no providers") def_loc) (Trust.bogus_trust ())
-    | Some [t] -> t
-    | Some (t1 :: t2 :: ts) when intersect ->
+    | [] -> MixedT.make (mk_reason (RCustom "no providers") def_loc) (Trust.bogus_trust ())
+    | [t] -> t
+    | t1 :: t2 :: ts when intersect ->
       IntersectionT (mk_reason (RCustom "providers") def_loc, InterRep.make t1 t2 ts)
-    | Some (t1 :: t2 :: ts) ->
-      UnionT (mk_reason (RCustom "providers") def_loc, UnionRep.make t1 t2 ts)
+    | t1 :: t2 :: ts -> UnionT (mk_reason (RCustom "providers") def_loc, UnionRep.make t1 t2 ts)
 
   (*************)
   (*  Reading  *)
@@ -370,6 +382,18 @@ module New_env = struct
                      );
                  let loc = Reason.aloc_of_reason reason in
                  t_option_value_exn cx loc (Loc_env.find_ordinary_write env loc)
+               | (Env_api.With_ALoc.IllegalWrite reason, _) ->
+                 Debug_js.Verbose.print_if_verbose_lazy
+                   cx
+                   ( lazy
+                     [
+                       spf
+                         "reading %s from illegal write location %s"
+                         (Reason.string_of_aloc loc)
+                         (Reason.aloc_of_reason reason |> Reason.string_of_aloc);
+                     ]
+                     );
+                 Type.(AnyT.make (AnyError None) reason)
                | (Env_api.With_ALoc.Refinement { refinement_id; writes; write_id }, _) ->
                  find_refi var_info refinement_id
                  |> Base.Option.some
@@ -547,6 +571,7 @@ module New_env = struct
           | Env_api.With_ALoc.UndeclaredClass _ -> true
           | Env_api.With_ALoc.EmptyArray _ -> true
           | Env_api.With_ALoc.Write _ -> true
+          | Env_api.With_ALoc.IllegalWrite _ -> true
           | Env_api.With_ALoc.Unreachable _ -> true
           | Env_api.With_ALoc.Undeclared _ -> true
           | Env_api.With_ALoc.Refinement { refinement_id = _; writes; write_id = _ } ->

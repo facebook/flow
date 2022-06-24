@@ -137,6 +137,20 @@ References:
                ^^^^^^ [2]
 
 
+Error ------------------------------------------------------------------------------------------------- hoisted2.js:58:9
+
+Cannot declare `x` [1] because var redeclaration is not supported. [name-already-bound]
+
+   hoisted2.js:58:9
+   58|     var x:number = 1; // error: banned redeclaration
+               ^
+
+References:
+   hoisted2.js:56:9
+   56|     var x:number = 0;
+               ^ [1]
+
+
 Error ------------------------------------------------------------------------------------------------ hoisted2.js:69:18
 
 Cannot assign `x` to `y` because possibly uninitialized variable [1] is incompatible with number [2].
@@ -519,4 +533,4 @@ References:
 
 
 
-Found 31 errors
+Found 32 errors

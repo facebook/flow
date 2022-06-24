@@ -581,6 +581,20 @@ References:
               ^ [1]
 
 
+Error ----------------------------------------------------------------------------------------------- rebinding.js:154:7
+
+Cannot declare `A` [1] because var redeclaration is not supported. [name-already-bound]
+
+   rebinding.js:154:7
+   154|   var A = 0;       // error: banned redeclaration
+              ^
+
+References:
+   rebinding.js:153:7
+   153|   var A = 0;
+              ^ [1]
+
+
 Error ---------------------------------------------------------------------------------------------- rebinding.js:161:12
 
 Cannot declare `a` [1] because the name is already bound. [name-already-bound]
@@ -693,12 +707,26 @@ References:
                                             ^ [1]
 
 
+Error ----------------------------------------------------------------------------------------------------- scope.js:6:9
+
+Cannot declare `b` [1] because var redeclaration is not supported. [name-already-bound]
+
+   scope.js:6:9
+   6|     var b = ""; // error: banned redeclaration
+              ^
+
+References:
+   scope.js:3:7
+   3|   var b: number = 0;
+            ^ [1]
+
+
 Error ---------------------------------------------------------------------------------------------------- scope.js:6:13
 
 Cannot assign empty string to `b` because string [1] is incompatible with number [2]. [incompatible-type]
 
    scope.js:6:13
-   6|     var b = ""; // error: string ~> number
+   6|     var b = ""; // error: banned redeclaration
                   ^^ [1]
 
 References:
@@ -707,12 +735,26 @@ References:
                ^^^^^^ [2]
 
 
+Error --------------------------------------------------------------------------------------------------- scope.js:16:11
+
+Cannot declare `b` [1] because var redeclaration is not supported. [name-already-bound]
+
+   scope.js:16:11
+   16|       var b = ""; // error: banned redeclaration
+                 ^
+
+References:
+   scope.js:12:7
+   12|   var b: number = 0;
+             ^ [1]
+
+
 Error --------------------------------------------------------------------------------------------------- scope.js:16:15
 
 Cannot assign empty string to `b` because string [1] is incompatible with number [2]. [incompatible-type]
 
    scope.js:16:15
-   16|       var b = ""; // error: string ~> number
+   16|       var b = ""; // error: banned redeclaration
                      ^^ [1]
 
 References:
@@ -799,12 +841,26 @@ Cannot resolve name `a`. [cannot-resolve-name]
          ^
 
 
+Error --------------------------------------------------------------------------------------------------- scope.js:66:12
+
+Cannot declare `a` [1] because var redeclaration is not supported. [name-already-bound]
+
+   scope.js:66:12
+   66|   for (var a = "" /* error: banned redeclaration */ ;;) {}
+                  ^
+
+References:
+   scope.js:65:7
+   65|   var a: number = 0;
+             ^ [1]
+
+
 Error --------------------------------------------------------------------------------------------------- scope.js:66:16
 
 Cannot assign empty string to `a` because string [1] is incompatible with number [2]. [incompatible-type]
 
    scope.js:66:16
-   66|   for (var a = "" /* error: string ~> number */;;) {}
+   66|   for (var a = "" /* error: banned redeclaration */ ;;) {}
                       ^^ [1]
 
 References:
@@ -818,7 +874,7 @@ Error --------------------------------------------------------------------------
 string [1] is incompatible with number [2]. [incompatible-type]
 
    scope.js:66:16
-   66|   for (var a = "" /* error: string ~> number */;;) {}
+   66|   for (var a = "" /* error: banned redeclaration */ ;;) {}
                       ^^ [1]
 
 References:
@@ -832,7 +888,7 @@ Error --------------------------------------------------------------------------
 Cannot assign string to `a` because string [1] is incompatible with number [2]. [incompatible-type]
 
    scope.js:76:12
-   76|   for (var a /* error: string ~> number */ in o) {}
+   76|   for (var a /* error: banned redeclaration */ in o) {}
                   ^ [1]
 
 References:
@@ -843,10 +899,24 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- scope.js:76:12
 
+Cannot declare `a` [1] because var redeclaration is not supported. [name-already-bound]
+
+   scope.js:76:12
+   76|   for (var a /* error: banned redeclaration */ in o) {}
+                  ^
+
+References:
+   scope.js:75:7
+   75|   var a: number = 0;
+             ^ [1]
+
+
+Error --------------------------------------------------------------------------------------------------- scope.js:76:12
+
 string [1] is incompatible with number [2]. [incompatible-type]
 
    scope.js:76:12
-   76|   for (var a /* error: string ~> number */ in o) {}
+   76|   for (var a /* error: banned redeclaration */ in o) {}
                   ^ [1]
 
 References:
@@ -855,13 +925,27 @@ References:
                 ^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- scope.js:86:47
+Error --------------------------------------------------------------------------------------------------- scope.js:86:12
+
+Cannot declare `a` [1] because var redeclaration is not supported. [name-already-bound]
+
+   scope.js:86:12
+   86|   for (var a /* error: banned redeclaration */ of xs) {}
+                  ^
+
+References:
+   scope.js:85:7
+   85|   var a: number = 0;
+             ^ [1]
+
+
+Error --------------------------------------------------------------------------------------------------- scope.js:86:51
 
 Cannot assign `a` to `a` because string [1] is incompatible with number [2]. [incompatible-type]
 
-   scope.js:86:47
-   86|   for (var a /* error: string ~> number */ of xs) {}
-                                                     ^^
+   scope.js:86:51
+   86|   for (var a /* error: banned redeclaration */ of xs) {}
+                                                         ^^
 
 References:
    scope.js:84:31
@@ -872,13 +956,13 @@ References:
                 ^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- scope.js:86:47
+Error --------------------------------------------------------------------------------------------------- scope.js:86:51
 
 string [1] is incompatible with number [2]. [incompatible-type]
 
-   scope.js:86:47
-   86|   for (var a /* error: string ~> number */ of xs) {}
-                                                     ^^
+   scope.js:86:51
+   86|   for (var a /* error: banned redeclaration */ of xs) {}
+                                                         ^^
 
 References:
    scope.js:84:31
@@ -1096,4 +1180,4 @@ Cannot resolve name `unboundFunction2`. [cannot-resolve-name]
 
 
 
-Found 80 errors
+Found 86 errors

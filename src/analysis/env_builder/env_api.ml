@@ -41,6 +41,7 @@ module type S = sig
         reason: L.t Reason.virtual_reason;
         arr_providers: L.LSet.t;
       }
+    | IllegalWrite of L.t Reason.virtual_reason
     | Uninitialized of L.t Reason.virtual_reason
     | Undeclared of string * L.t
     | UndeclaredClass of {
@@ -212,6 +213,7 @@ module Make
         reason: L.t Reason.virtual_reason;
         arr_providers: L.LSet.t;
       }
+    | IllegalWrite of L.t Reason.virtual_reason
     | Uninitialized of L.t Reason.virtual_reason
     | Undeclared of string * L.t
     | UndeclaredClass of {
@@ -362,6 +364,7 @@ module Make
     | UndeclaredClass _ -> []
     | Write r -> [Reason.poly_loc_of_reason r]
     | EmptyArray { reason; _ } -> [Reason.poly_loc_of_reason reason]
+    | IllegalWrite r -> [Reason.poly_loc_of_reason r]
     | Uninitialized _ -> []
     | Undeclared _ -> []
     | FunctionOrGlobalThis _ -> []
@@ -440,6 +443,9 @@ module Make
           "(empty array) %s: (%s)"
           (L.debug_to_string loc)
           Reason.(desc_of_reason reason |> string_of_desc)
+      | IllegalWrite reason ->
+        let loc = Reason.poly_loc_of_reason reason in
+        Utils_js.spf "illegal write at %s" (L.debug_to_string loc)
       | Refinement { refinement_id; writes; write_id = _ } ->
         let refinement_id_str = string_of_int refinement_id in
         let writes_str = String.concat "," (List.map print_write_loc writes) in
