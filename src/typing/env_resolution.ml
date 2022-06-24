@@ -129,39 +129,56 @@ module Make (Env : Env_sig.S) (Statement : Statement_sig.S with module Env := En
       in
       (t, mk_use_op t, true)
     | Select (sel, b) ->
-      let (t, use_op, resolved) = resolve_binding cx reason loc b in
-      let (selector, reason) =
+      let refined_type =
         match sel with
-        | Name_def.Elem n ->
-          let key =
-            DefT
-              ( mk_reason RNumber loc,
-                bogus_trust (),
-                NumT (Literal (None, (float n, string_of_int n)))
-              )
-          in
-          (Type.Elem key, mk_reason (RCustom (Utils_js.spf "element %d" n)) loc)
-        | Name_def.Prop { prop; prop_loc; has_default } ->
-          (Type.Prop (prop, has_default), mk_reason (RProperty (Some (OrdinaryName prop))) prop_loc)
-        | Name_def.ArrRest n -> (Type.ArrRest n, mk_reason RArrayPatternRestProp loc)
-        | Name_def.ObjRest { used_props; after_computed = _ } ->
-          (* TODO: eveyrthing after a computed prop should be optional *)
-          (Type.ObjRest used_props, mk_reason RObjectPatternRestProp loc)
-        | Name_def.Computed exp ->
-          let t = expression cx ~hint:Hint_None exp in
-          (Type.Elem t, mk_reason (RProperty None) loc)
-        | Name_def.Default _exp ->
-          (* TODO: change the way default works to see exp as a source *)
-          (Type.Default, mk_reason (RCustom "destructured var") loc)
+        | Name_def.Prop { prop; prop_loc; _ } ->
+          (* The key is used to generate a reason for read,
+             and only the last prop in the chain matters. *)
+          let key = (internal_name "_", [Key.Prop prop]) in
+          New_env.New_env.get_refinement cx key prop_loc
+        | _ -> None
       in
-      ( Tvar.mk_no_wrap_where cx reason (fun tout ->
-            Flow_js.flow
-              cx
-              (t, DestructuringT (reason, DestructInfer, selector, tout, Reason.mk_id ()))
-        ),
-        use_op,
-        resolved
-      )
+      (match refined_type with
+      | Some t ->
+        (* When we can get a refined value on a destructured property,
+           we must be in an assignment position and the type must have been resolved. *)
+        (t, mk_use_op t, true)
+      | None ->
+        let (t, use_op, resolved) = resolve_binding cx reason loc b in
+        let (selector, reason) =
+          match sel with
+          | Name_def.Elem n ->
+            let key =
+              DefT
+                ( mk_reason RNumber loc,
+                  bogus_trust (),
+                  NumT (Literal (None, (float n, string_of_int n)))
+                )
+            in
+            (Type.Elem key, mk_reason (RCustom (Utils_js.spf "element %d" n)) loc)
+          | Name_def.Prop { prop; prop_loc; has_default } ->
+            ( Type.Prop (prop, has_default),
+              mk_reason (RProperty (Some (OrdinaryName prop))) prop_loc
+            )
+          | Name_def.ArrRest n -> (Type.ArrRest n, mk_reason RArrayPatternRestProp loc)
+          | Name_def.ObjRest { used_props; after_computed = _ } ->
+            (* TODO: eveyrthing after a computed prop should be optional *)
+            (Type.ObjRest used_props, mk_reason RObjectPatternRestProp loc)
+          | Name_def.Computed exp ->
+            let t = expression cx ~hint:Hint_None exp in
+            (Type.Elem t, mk_reason (RProperty None) loc)
+          | Name_def.Default _exp ->
+            (* TODO: change the way default works to see exp as a source *)
+            (Type.Default, mk_reason (RCustom "destructured var") loc)
+        in
+        ( Tvar.mk_no_wrap_where cx reason (fun tout ->
+              Flow_js.flow
+                cx
+                (t, DestructuringT (reason, DestructInfer, selector, tout, Reason.mk_id ()))
+          ),
+          use_op,
+          resolved
+        ))
 
   let resolve_inferred_function cx id_loc reason function_loc function_ =
     let cache = Context.node_cache cx in
