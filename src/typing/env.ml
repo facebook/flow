@@ -223,7 +223,9 @@ module Env : Env_sig.S = struct
   let init_env ?(exclude_syms = NameUtils.Set.empty) cx module_scope =
     begin
       if Context.env_option_enabled cx Options.ConstrainWrites then
-        let ({ Loc_env.var_info; _ } as env) = Context.environment cx in
+        let ({ Loc_env.var_info = { Env_api.providers; _ } as var_info; _ } as env) =
+          Context.environment cx
+        in
         let initialize_entries def_loc_type =
           ALocMap.fold (fun loc env_entry env ->
               match env_entry with
@@ -234,7 +236,15 @@ module Env : Env_sig.S = struct
                 let t = Inferred (Tvar.mk cx reason) in
                 (* Treat everything as inferred for now for the purposes of annotated vs inferred *)
                 Loc_env.initialize env def_loc_type loc t
-              | Env_api.NonAssigningWrite -> env
+              | Env_api.NonAssigningWrite ->
+                if Env_api.Provider_api.is_provider providers loc then
+                  (* If an illegal write is considered as a provider, we still need to give it a
+                     slot to prevent crashing in code that queries provider types. *)
+                  let reason = mk_reason (RCustom "non-assigning provider") loc in
+                  let t = Inferred (AnyT.error reason) in
+                  Loc_env.initialize env def_loc_type loc t
+                else
+                  env
           )
         in
         env

@@ -12,16 +12,10 @@ References:
             ^ [1]
 
 
-Error ----------------------------------------------------------------------------------- crash_regression_test.js:11:12
+Error ------------------------------------------------------------------------------------ crash_regression_test.js:10:7
 
 Cannot declare `y` [1] because the name is already bound. [name-already-bound]
 
-   crash_regression_test.js:11:12
-   11|   function y() {} // Error
-                  ^
-
-References:
-   crash_regression_test.js:10:7
    10|   let y = 0;
              ^ [1]
 

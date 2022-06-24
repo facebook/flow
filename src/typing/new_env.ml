@@ -981,7 +981,15 @@ module New_env = struct
             let t = DefT (reason, bogus_trust (), ArrT (ArrayAT (elem_t, elems))) in
             (* Treat everything as inferred for now for the purposes of annotated vs inferred *)
             Loc_env.initialize env def_loc_type loc (Inferred t)
-          | Env_api.NonAssigningWrite -> env
+          | Env_api.NonAssigningWrite ->
+            if is_provider cx loc then
+              (* If an illegal write is considered as a provider, we still need to give it a
+                 slot to prevent crashing in code that queries provider types. *)
+              let reason = mk_reason (RCustom "non-assigning provider") loc in
+              let t = Inferred (AnyT.error reason) in
+              Loc_env.initialize env def_loc_type loc t
+            else
+              env
       )
     in
     let env =
