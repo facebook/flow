@@ -309,6 +309,8 @@ let func_scope_kind ?key { Ast.Function.async; generator; predicate; _ } =
   | (false, false, None, _) -> Ordinary
   | _ -> (* Invalid, default to ordinary and hopefully error elsewhere *) Ordinary
 
+module Eq_test = Eq_test.Make (Scope_api.With_ALoc) (Ssa_api.With_ALoc) (Env_api.With_ALoc)
+
 class def_finder env_entries providers toplevel_scope =
   object (this)
     inherit [map, ALoc.t] Flow_ast_visitor.visitor ~init:ALocMap.empty as super
@@ -1118,17 +1120,44 @@ class def_finder env_entries providers toplevel_scope =
     method private visit_binary_expression ~cond expr =
       let open Ast.Expression.Binary in
       let { operator; left; right; comments = _ } = expr in
-      let cond =
-        match operator with
-        | Equal
-        | NotEqual
-        | StrictEqual
-        | StrictNotEqual ->
-          cond
-        | _ -> NonConditionalContext
-      in
-      this#visit_expression ~hint:Hint_None ~cond left;
-      this#visit_expression ~hint:Hint_None ~cond right
+      match (operator, cond) with
+      | ( (Equal | NotEqual | StrictEqual | StrictNotEqual),
+          (SwitchConditionalTest _ | OtherConditionalTest)
+        ) ->
+        Eq_test.visit_eq_test
+          ~on_type_of_test:(fun _ expr value _ _ ->
+            this#visit_expression ~hint:Hint_None ~cond expr;
+            ignore @@ this#expression value)
+          ~on_literal_test:(fun ~strict:_ ~sense:_ _ expr _ value ->
+            this#visit_expression ~hint:Hint_None ~cond expr;
+            ignore @@ this#expression value)
+          ~on_null_test:(fun ~sense:_ ~strict:_ _ expr value ->
+            this#visit_expression ~hint:Hint_None ~cond expr;
+            ignore @@ this#expression value)
+          ~on_void_test:(fun ~sense:_ ~strict:_ ~check_for_bound_undefined:_ _ expr value ->
+            this#visit_expression ~hint:Hint_None ~cond expr;
+            ignore @@ this#expression value)
+          ~on_member_eq_other:(fun expr value ->
+            this#visit_expression ~hint:Hint_None ~cond expr;
+            ignore @@ this#expression value)
+          ~on_other_eq_member:(fun value expr ->
+            this#visit_expression ~hint:Hint_None ~cond expr;
+            ignore @@ this#expression value)
+          ~is_switch_cond_context:
+            (match cond with
+            | SwitchConditionalTest _ -> false
+            | _ -> true)
+          ~strict:false
+          ~sense:false
+          ~on_other_eq_test:(fun left right ->
+            ignore @@ this#expression left;
+            ignore @@ this#expression right)
+          ALoc.none
+          left
+          right
+      | _ ->
+        ignore @@ this#expression left;
+        ignore @@ this#expression right
 
     method! logical _ _ = failwith "Should be visited by visit_logical_expression"
 

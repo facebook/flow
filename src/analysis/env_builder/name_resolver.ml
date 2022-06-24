@@ -97,6 +97,7 @@ module Make
   module Invalidation_api =
     Invalidation_api.Make (Loc_sig.ALocS) (Scope_api) (Ssa_api) (Provider_api)
   module Env_api = Env_api
+  module Eq_test = Eq_test.Make (Scope_api) (Ssa_api) (Env_api)
   open Scope_builder
   open Env_api.Refi
 
@@ -4158,7 +4159,7 @@ module Make
           this#merge_self_env env1;
           this#merge_refinement_scopes ~conjunction lhs_latest_refinements rhs_latest_refinements
 
-      method null_test ~strict ~sense loc expr other =
+      method null_test ~sense ~strict loc expr other =
         (* Negating if sense is false is handled by negate_new_refinements. *)
         let refis = this#maybe_sentinel ~sense:true ~strict loc expr other in
         let refis =
@@ -4207,7 +4208,7 @@ module Make
           this#commit_refinement refis
         end
 
-      method typeof_test loc arg typename sense =
+      method typeof_test loc arg _value typename sense =
         let (refinement, undef) =
           match typename with
           | "boolean" -> (Some (BoolR loc), false)
@@ -4314,192 +4315,39 @@ module Make
         refis
 
       method eq_test ~strict ~sense ~cond_context loc left right =
-        let open Flow_ast in
-        match (left, right) with
-        (* typeof expr ==/=== string *)
-        | ( ( _,
-              Expression.Unary
-                { Expression.Unary.operator = Expression.Unary.Typeof; argument; comments = _ }
-            ),
-            (_, Expression.Literal { Literal.value = Literal.String s; _ })
-          )
-        | ( (_, Expression.Literal { Literal.value = Literal.String s; _ }),
-            ( _,
-              Expression.Unary
-                { Expression.Unary.operator = Expression.Unary.Typeof; argument; comments = _ }
-            )
-          )
-        | ( ( _,
-              Expression.Unary
-                { Expression.Unary.operator = Expression.Unary.Typeof; argument; comments = _ }
-            ),
-            ( _,
-              Expression.TemplateLiteral
-                {
-                  Expression.TemplateLiteral.quasis =
-                    [
-                      ( _,
-                        {
-                          Expression.TemplateLiteral.Element.value =
-                            { Expression.TemplateLiteral.Element.cooked = s; _ };
-                          _;
-                        }
-                      );
-                    ];
-                  expressions = [];
-                  comments = _;
-                }
-            )
-          )
-        | ( ( _,
-              Expression.TemplateLiteral
-                {
-                  Expression.TemplateLiteral.quasis =
-                    [
-                      ( _,
-                        {
-                          Expression.TemplateLiteral.Element.value =
-                            { Expression.TemplateLiteral.Element.cooked = s; _ };
-                          _;
-                        }
-                      );
-                    ];
-                  expressions = [];
-                  comments = _;
-                }
-            ),
-            ( _,
-              Expression.Unary
-                { Expression.Unary.operator = Expression.Unary.Typeof; argument; comments = _ }
-            )
-          ) ->
-          this#typeof_test loc argument s sense
-        (* bool equality *)
-        | (((lit_loc, Expression.Literal { Literal.value = Literal.Boolean lit; _ }) as other), expr)
-        | (expr, ((lit_loc, Expression.Literal { Literal.value = Literal.Boolean lit; _ }) as other))
-          ->
-          this#literal_test
-            ~strict
-            ~sense
-            loc
-            expr
-            (SingletonBoolR { loc = lit_loc; sense; lit })
-            other
-        (* string equality *)
-        | (((lit_loc, Expression.Literal { Literal.value = Literal.String lit; _ }) as other), expr)
-        | (expr, ((lit_loc, Expression.Literal { Literal.value = Literal.String lit; _ }) as other))
-        | ( expr,
-            ( ( lit_loc,
-                Expression.TemplateLiteral
-                  {
-                    Expression.TemplateLiteral.quasis =
-                      [
-                        ( _,
-                          {
-                            Expression.TemplateLiteral.Element.value =
-                              { Expression.TemplateLiteral.Element.cooked = lit; _ };
-                            _;
-                          }
-                        );
-                      ];
-                    _;
-                  }
-              ) as other
-            )
-          )
-        | ( ( ( lit_loc,
-                Expression.TemplateLiteral
-                  {
-                    Expression.TemplateLiteral.quasis =
-                      [
-                        ( _,
-                          {
-                            Expression.TemplateLiteral.Element.value =
-                              { Expression.TemplateLiteral.Element.cooked = lit; _ };
-                            _;
-                          }
-                        );
-                      ];
-                    _;
-                  }
-              ) as other
-            ),
-            expr
-          ) ->
-          this#literal_test
-            ~strict
-            ~sense
-            loc
-            expr
-            (SingletonStrR { loc = lit_loc; sense; lit })
-            other
-        (* number equality *)
-        | (((lit_loc, number_literal) as other), expr) when is_number_literal number_literal ->
-          let raw = extract_number_literal number_literal in
-          this#literal_test
-            ~strict
-            ~sense
-            loc
-            expr
-            (SingletonNumR { loc = lit_loc; sense; lit = raw })
-            other
-        | (expr, ((lit_loc, number_literal) as other)) when is_number_literal number_literal ->
-          let raw = extract_number_literal number_literal in
-          this#literal_test
-            ~strict
-            ~sense
-            loc
-            expr
-            (SingletonNumR { loc = lit_loc; sense; lit = raw })
-            other
-        (* expr op null *)
-        | (((_, Expression.Literal { Literal.value = Literal.Null; _ }) as other), expr)
-        | (expr, ((_, Expression.Literal { Literal.value = Literal.Null; _ }) as other)) ->
-          this#null_test ~sense ~strict loc expr other
-        (* expr op undefined *)
-        | ( ( ( _,
-                Expression.Identifier (_, { Flow_ast.Identifier.name = "undefined"; comments = _ })
-              ) as undefined
-            ),
-            expr
-          )
-        | ( expr,
-            ( ( _,
-                Expression.Identifier (_, { Flow_ast.Identifier.name = "undefined"; comments = _ })
-              ) as undefined
-            )
-          ) ->
-          ignore @@ this#expression undefined;
-          this#void_test ~sense ~strict ~check_for_bound_undefined:true loc expr undefined
-        (* expr op void(...) *)
-        | ( ((_, Expression.Unary { Expression.Unary.operator = Expression.Unary.Void; _ }) as other),
-            expr
-          )
-        | ( expr,
-            ((_, Expression.Unary { Expression.Unary.operator = Expression.Unary.Void; _ }) as other)
-          ) ->
-          this#void_test ~sense ~strict ~check_for_bound_undefined:false loc expr other
-        (* Member expressions compared against non-literals that include
-         * an optional chain cannot refine like we do in literal cases. The
-         * non-literal value we are comparing against may be null or undefined,
-         * in which case we'd need to use the special case behavior. Since we can't
-         * know at this point, we conservatively do not refine at all based on optional
-         * chains by ignoring the output of maybe_sentinel.
-         *
-         * NOTE: Switch statements do not introduce sentinel refinements *)
-        | (((_, Expression.Member _) as expr), other) ->
-          ignore @@ this#expression expr;
-          let refis = this#maybe_sentinel ~sense ~strict loc expr other in
-          this#commit_refinement refis;
-          ignore @@ this#expression other
-        | (other, ((_, Expression.Member _) as expr)) when not (cond_context = SwitchTest) ->
-          ignore @@ this#expression other;
-          ignore @@ this#expression expr;
-          let refis = this#maybe_sentinel ~sense ~strict loc expr other in
-          this#commit_refinement refis
-        | _ ->
-          ignore @@ this#expression left;
-          ignore @@ this#expression right
+        Eq_test.visit_eq_test
+          ~on_type_of_test:this#typeof_test
+          ~on_literal_test:this#literal_test
+          ~on_null_test:this#null_test
+          ~on_void_test:
+            this#void_test
+            (* Member expressions compared against non-literals that include
+               * an optional chain cannot refine like we do in literal cases. The
+               * non-literal value we are comparing against may be null or undefined,
+               * in which case we'd need to use the special case behavior. Since we can't
+               * know at this point, we conservatively do not refine at all based on optional
+               * chains by ignoring the output of maybe_sentinel.
+               *
+               * NOTE: Switch statements do not introduce sentinel refinements *)
+          ~on_member_eq_other:(fun expr other ->
+            ignore @@ this#expression expr;
+            let refis = this#maybe_sentinel ~sense ~strict loc expr other in
+            this#commit_refinement refis;
+            ignore @@ this#expression other)
+          ~on_other_eq_member:(fun other expr ->
+            ignore @@ this#expression other;
+            ignore @@ this#expression expr;
+            let refis = this#maybe_sentinel ~sense ~strict loc expr other in
+            this#commit_refinement refis)
+          ~is_switch_cond_context:(cond_context = SwitchTest)
+          ~on_other_eq_test:(fun left right ->
+            ignore @@ this#expression left;
+            ignore @@ this#expression right)
+          ~strict
+          ~sense
+          loc
+          left
+          right
 
       method instance_test loc expr instance =
         ignore @@ this#optional_chain expr;
