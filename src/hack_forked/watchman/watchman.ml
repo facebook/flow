@@ -356,6 +356,10 @@ let supports_scm_queries caps vcs =
   | Some Vcs.Git -> Set.mem Scm_git caps
   | None -> false
 
+let subscription_name settings =
+  let pretty_pid = Unix.getpid () |> Sys_utils.pid_of_handle in
+  Printf.sprintf "%s.%d" settings.subscription_prefix pretty_pid
+
 (****************************************************************************)
 (* I/O stuff *)
 (****************************************************************************)
@@ -751,7 +755,7 @@ let re_init ?prior_clockspec settings =
   get_capabilities ~debug_logging ~conn () >>= fun capabilities ->
   watch ~debug_logging ~conn settings.roots >>= fun watch ->
   get_clockspec ~debug_logging ~conn ~watch prior_clockspec >>= fun clockspec ->
-  let subscription = Printf.sprintf "%s.%d" settings.subscription_prefix (Unix.getpid ()) in
+  let subscription = subscription_name settings in
   let vcs = Vcs.find (Path.make watch.watch_root) in
   let should_track_mergebase = supports_scm_queries capabilities vcs in
   let env = { settings; conn; watch; clockspec; subscription; should_track_mergebase } in
