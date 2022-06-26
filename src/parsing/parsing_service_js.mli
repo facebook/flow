@@ -150,4 +150,4 @@ val next_of_filename_set :
   FilenameSet.t ->
   File_key.t list Bucket.next
 
-val does_content_match_file_hash : reader:State_reader.t -> File_key.t -> string -> bool
+val does_content_match_file_hash : reader:Abstract_state_reader.t -> File_key.t -> string -> bool

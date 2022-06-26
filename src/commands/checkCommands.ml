@@ -144,6 +144,7 @@ module CheckCommand = struct
             saved_state_force_recheck = false;
             saved_state_no_fallback = false;
             saved_state_skip_version_check = false;
+            saved_state_verify = false;
           }
         
       in

@@ -133,7 +133,9 @@ let did_content_change ~reader filename =
   let file = File_key.LibFile filename in
   match Sys_utils.cat_or_failed filename with
   | None -> true (* Failed to read lib file *)
-  | Some content -> not (Parsing_service_js.does_content_match_file_hash ~reader file content)
+  | Some content ->
+    let reader = Abstract_state_reader.State_reader reader in
+    not (Parsing_service_js.does_content_match_file_hash ~reader file content)
 
 let check_for_lib_changes ~reader ~all_libs ~root ~skip_incompatible updates =
   let flow_typed_path = Path.to_string (Files.get_flowtyped_path root) in
