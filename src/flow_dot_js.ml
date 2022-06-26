@@ -383,7 +383,12 @@ let () =
   Js.Unsafe.set
     exports
     "registerFile"
-    (Js.wrap_callback (fun name content -> Sys_js.create_file ~name ~content))
+    (Js.wrap_callback (fun name content ->
+         let name = Js.to_string name in
+         let content = Js.to_string content in
+         Sys_js.create_file ~name ~content
+     )
+    )
 
 let () = Js.Unsafe.set exports "initBuiltins" (Js.wrap_callback init_builtins_js)
 
