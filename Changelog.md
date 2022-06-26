@@ -1,3 +1,8 @@
+### 0.181.1
+
+Notable bug fixes:
+* The JS build for try-flow is now fixed. It's recently broken since the 0.181.0 release.
+
 ### 0.181.0
 
 Notable bug fixes:
