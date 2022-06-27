@@ -194,7 +194,9 @@ runtest() {
     name=${dir##*/}
     exp_file="${name}.exp"
     # Add appropriate extension to expected file
-    if [[ "$new_env" -eq 1 || "$resolved_env" -eq 1 ]] && [ -f "${dir}/${exp_file}.new_env" ]; then
+    if [[ "$resolved_env" -eq 1 ]] && [ -f "${dir}/${exp_file}.resolved_env" ]; then
+      exp_file="${exp_file}.resolved_env"
+    elif [[ "$new_env" -eq 1 || "$resolved_env" -eq 1 ]] && [ -f "${dir}/${exp_file}.new_env" ]; then
       exp_file="${exp_file}.new_env"
     elif [[ "$new_env" -eq 1 || "$constrained_writes" -eq 1 || "$resolved_env" -eq 1 ]] \
       && [ -f "${dir}/${exp_file}.cw" ];
