@@ -14,3 +14,8 @@ function hh_sysinfo_totalram() {
 function hh_is_rosetta() {
   return false;
 }
+
+//Provides: pid_of_handle const
+function pid_of_handle(pid) {
+  return pid;
+}

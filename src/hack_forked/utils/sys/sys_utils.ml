@@ -419,7 +419,28 @@ let nbr_procs = nproc ()
 
 external set_priorities : cpu_priority:int -> io_priority:int -> unit = "hh_set_priorities"
 
+(** There are a bunch of functions that you expect to return a pid,
+  like Unix.getpid() and Unix.create_process(). However, on
+  Windows, instead of returning the process ID, they return a
+  process handle.
+
+  Process handles act like pointers to a process. You can have
+  more than one handle that points to a single process (unlike
+  pids, where there is a single pid for a process).
+
+  This isn't a problem normally, since functons like Unix.waitpid()
+  will take the process handle on Windows. But if you want to print
+  or log the pid, then you need to dereference the handle and get
+  the pid. And that's what this function does. *)
 external pid_of_handle : int -> int = "pid_of_handle"
+
+(** Returns the actual process identifier on all platforms.
+
+  [Unix.getpid ()] on Windows returns the process handle, not the process identifier.
+  The handle is what you need for the other APIs that take a "pid", but the actual
+  process identifier is unique across processes and what shows up in Task Manager.
+  Use [get_pretty_pid] when showing the PID to the user, logging, etc. *)
+let get_pretty_pid () = Unix.getpid () |> pid_of_handle
 
 external handle_of_pid_for_termination : int -> int = "handle_of_pid_for_termination"
 

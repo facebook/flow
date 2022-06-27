@@ -225,10 +225,10 @@ let make ~call_wrapper ~saved_state ~entry ~nbr_procs ~gc_control ~heap_handle =
     handle
   in
   let made_workers = ref [] in
-  let pid = Unix.getpid () in
+  let pretty_pid = Sys_utils.get_pretty_pid () in
   for n = 1 to nbr_procs do
     let (controller_fd, child_fd) = setup_controller_fd () in
-    let name = Printf.sprintf "worker process %d/%d for server %d" n nbr_procs pid in
+    let name = Printf.sprintf "worker process %d/%d for server %d" n nbr_procs pretty_pid in
     made_workers := make_one ?call_wrapper controller_fd (spawn n name child_fd) n :: !made_workers
   done;
   !made_workers

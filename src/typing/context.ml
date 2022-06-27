@@ -644,11 +644,13 @@ let resolved_env cx =
   | SSAEnv { resolved } -> resolved
   | ClassicEnv _ -> false
 
-let pid_prefix cx =
-  if max_workers cx > 0 then
-    Printf.sprintf "[%d] " (Unix.getpid ())
-  else
-    ""
+let pid_prefix =
+  let pid = lazy (Sys_utils.get_pretty_pid ()) in
+  fun cx ->
+    if max_workers cx > 0 then
+      Printf.sprintf "[%d] " (Lazy.force pid)
+    else
+      ""
 
 (* Create a shallow copy of this context, so that mutations to the sig_cx's
  * fields will not affect the copy. *)

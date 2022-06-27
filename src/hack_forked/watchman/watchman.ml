@@ -357,7 +357,7 @@ let supports_scm_queries caps vcs =
   | None -> false
 
 let subscription_name settings =
-  let pretty_pid = Unix.getpid () |> Sys_utils.pid_of_handle in
+  let pretty_pid = Sys_utils.get_pretty_pid () in
   Printf.sprintf "%s.%d" settings.subscription_prefix pretty_pid
 
 (****************************************************************************)

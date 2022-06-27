@@ -16,7 +16,8 @@ let descr_of_in_channel ic = Lwt_unix.of_unix_file_descr (Daemon.descr_of_in_cha
 let descr_of_out_channel oc = Lwt_unix.of_unix_file_descr (Daemon.descr_of_out_channel oc)
 
 let init log_fds (scuba_table, roots) =
-  let name = Printf.sprintf "file watching process for server %d" (Unix.getpid ()) in
+  let pretty_pid = Sys_utils.get_pretty_pid () in
+  let name = Printf.sprintf "file watching process for server %d" pretty_pid in
   let ({ Daemon.channels = (ic, oc); _ } as daemon_handle) =
     Daemon.spawn ~name log_fds DfindServer.entry_point (scuba_table, roots)
   in
