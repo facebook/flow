@@ -74,9 +74,27 @@ Cannot cast `a.foo` to number because undefined [1] is incompatible with number 
         ^^^^^
 
 References:
-   type_widening.js:17:23
-   17| type AllOpt = { foo?: number, bar?: number, baz?: number, qux?: number };
-                             ^^^^^^ [1]
+   type_widening.js:8:13
+    8|   x = {foo: 3};
+                   ^ [1]
+   type_widening.js:27:9
+   27| (a.foo: number); // Error, foo does not appear in all branches
+               ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- type_widening.js:27:2
+
+Cannot cast `a.foo` to number because possibly missing property `foo` in object literal [1] is incompatible with
+number [2]. [incompatible-cast]
+
+   type_widening.js:27:2
+   27| (a.foo: number); // Error, foo does not appear in all branches
+        ^^^^^
+
+References:
+   type_widening.js:19:23
+   19| const a = spreadExact(x);
+                             ^ [1]
    type_widening.js:27:9
    27| (a.foo: number); // Error, foo does not appear in all branches
                ^^^^^^ [2]
@@ -84,16 +102,32 @@ References:
 
 Error -------------------------------------------------------------------------------------------- type_widening.js:28:2
 
-Cannot cast `a.bar` to number because undefined [1] is incompatible with number [2]. [incompatible-cast]
+Cannot cast `a.bar` to number because possibly missing property `bar` in object literal [1] is incompatible with
+number [2]. [incompatible-cast]
 
    type_widening.js:28:2
    28| (a.bar: number); // Error, bar does not appear in all branches
         ^^^^^
 
 References:
-   type_widening.js:17:37
-   17| type AllOpt = { foo?: number, bar?: number, baz?: number, qux?: number };
-                                           ^^^^^^ [1]
+   type_widening.js:19:23
+   19| const a = spreadExact(x);
+                             ^ [1]
+   type_widening.js:28:9
+   28| (a.bar: number); // Error, bar does not appear in all branches
+               ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- type_widening.js:28:2
+
+Cannot cast `a.bar` to number because `void` (due to access of non-existent property `bar`) [1] is incompatible with
+number [2]. [incompatible-cast]
+
+   type_widening.js:28:2
+   28| (a.bar: number); // Error, bar does not appear in all branches
+        ^^^^^ [1]
+
+References:
    type_widening.js:28:9
    28| (a.bar: number); // Error, bar does not appear in all branches
                ^^^^^^ [2]
@@ -101,16 +135,32 @@ References:
 
 Error -------------------------------------------------------------------------------------------- type_widening.js:29:2
 
-Cannot cast `a.baz` to number because undefined [1] is incompatible with number [2]. [incompatible-cast]
+Cannot cast `a.baz` to number because possibly missing property `baz` in object literal [1] is incompatible with
+number [2]. [incompatible-cast]
 
    type_widening.js:29:2
    29| (a.baz: number); // Error, baz does not appear in all branches
         ^^^^^
 
 References:
-   type_widening.js:17:51
-   17| type AllOpt = { foo?: number, bar?: number, baz?: number, qux?: number };
-                                                         ^^^^^^ [1]
+   type_widening.js:19:23
+   19| const a = spreadExact(x);
+                             ^ [1]
+   type_widening.js:29:9
+   29| (a.baz: number); // Error, baz does not appear in all branches
+               ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- type_widening.js:29:2
+
+Cannot cast `a.baz` to number because `void` (due to access of non-existent property `baz`) [1] is incompatible with
+number [2]. [incompatible-cast]
+
+   type_widening.js:29:2
+   29| (a.baz: number); // Error, baz does not appear in all branches
+        ^^^^^ [1]
+
+References:
    type_widening.js:29:9
    29| (a.baz: number); // Error, baz does not appear in all branches
                ^^^^^^ [2]
@@ -118,16 +168,32 @@ References:
 
 Error -------------------------------------------------------------------------------------------- type_widening.js:30:2
 
-Cannot cast `a.qux` to number because undefined [1] is incompatible with number [2]. [incompatible-cast]
+Cannot cast `a.qux` to number because possibly missing property `qux` in object literal [1] is incompatible with
+number [2]. [incompatible-cast]
 
    type_widening.js:30:2
    30| (a.qux: number); // Error, qux does not appear in all branches
         ^^^^^
 
 References:
-   type_widening.js:17:65
-   17| type AllOpt = { foo?: number, bar?: number, baz?: number, qux?: number };
-                                                                       ^^^^^^ [1]
+   type_widening.js:19:23
+   19| const a = spreadExact(x);
+                             ^ [1]
+   type_widening.js:30:9
+   30| (a.qux: number); // Error, qux does not appear in all branches
+               ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- type_widening.js:30:2
+
+Cannot cast `a.qux` to number because `void` (due to access of non-existent property `qux`) [1] is incompatible with
+number [2]. [incompatible-cast]
+
+   type_widening.js:30:2
+   30| (a.qux: number); // Error, qux does not appear in all branches
+        ^^^^^ [1]
+
+References:
    type_widening.js:30:9
    30| (a.qux: number); // Error, qux does not appear in all branches
                ^^^^^^ [2]
@@ -142,9 +208,9 @@ Cannot cast `b.foo` to number because undefined [1] is incompatible with number 
         ^^^^^
 
 References:
-   type_widening.js:17:23
-   17| type AllOpt = { foo?: number, bar?: number, baz?: number, qux?: number };
-                             ^^^^^^ [1]
+   type_widening.js:17:24
+   17| type AllOpt = { +foo?: number, +bar?: number, +baz?: number, +qux?: number, ... };
+                              ^^^^^^ [1]
    type_widening.js:54:9
    54| (b.foo: number); // Error, foo does not appear in all branches
                ^^^^^^ [2]
@@ -159,9 +225,9 @@ Cannot cast `b.bar` to number because undefined [1] is incompatible with number 
         ^^^^^
 
 References:
-   type_widening.js:17:37
-   17| type AllOpt = { foo?: number, bar?: number, baz?: number, qux?: number };
-                                           ^^^^^^ [1]
+   type_widening.js:17:39
+   17| type AllOpt = { +foo?: number, +bar?: number, +baz?: number, +qux?: number, ... };
+                                             ^^^^^^ [1]
    type_widening.js:55:9
    55| (b.bar: number); // Error, bar does not appear in all branches
                ^^^^^^ [2]
@@ -176,9 +242,9 @@ Cannot cast `b.baz` to number because undefined [1] is incompatible with number 
         ^^^^^
 
 References:
-   type_widening.js:17:51
-   17| type AllOpt = { foo?: number, bar?: number, baz?: number, qux?: number };
-                                                         ^^^^^^ [1]
+   type_widening.js:17:54
+   17| type AllOpt = { +foo?: number, +bar?: number, +baz?: number, +qux?: number, ... };
+                                                            ^^^^^^ [1]
    type_widening.js:56:9
    56| (b.baz: number); // Error, baz does not appear in all branches
                ^^^^^^ [2]
@@ -193,9 +259,9 @@ Cannot cast `b.qux` to number because undefined [1] is incompatible with number 
         ^^^^^
 
 References:
-   type_widening.js:17:65
-   17| type AllOpt = { foo?: number, bar?: number, baz?: number, qux?: number };
-                                                                       ^^^^^^ [1]
+   type_widening.js:17:69
+   17| type AllOpt = { +foo?: number, +bar?: number, +baz?: number, +qux?: number, ... };
+                                                                           ^^^^^^ [1]
    type_widening.js:57:9
    57| (b.qux: number); // Error, qux does not appear in all branches
                ^^^^^^ [2]
@@ -740,4 +806,4 @@ References:
 
 
 
-Found 45 errors
+Found 49 errors

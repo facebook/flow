@@ -1,7 +1,7 @@
 //@flow
 
 function spread<T>(x: T): { ...T, ...{||} } { return (null: any)}
-
+declare function spreadExact<T>(x: T): {| ...T, ...{||} |};
 let x;
 
 if (true) {
@@ -14,16 +14,16 @@ if (true) {
   x = {foo: 3, bar: 3}
 }
 
-type AllOpt = { foo?: number, bar?: number, baz?: number, qux?: number };
+type AllOpt = { +foo?: number, +bar?: number, +baz?: number, +qux?: number, ... };
 
-(x: AllOpt );
-
-const a = spread(x);
+const a = spreadExact(x);
 
 if (a.bar != null) {} // bar appears in one of the branches
 if (a.baz != null) {} // baz appears in one of the branches 
 if (a.foo != null) {} // foo appears in one of the branches
 if (a.qux != null) {} // qux appears in one of the branches
+
+
 (a.foo: number); // Error, foo does not appear in all branches
 (a.bar: number); // Error, bar does not appear in all branches
 (a.baz: number); // Error, baz does not appear in all branches
@@ -43,9 +43,9 @@ if (true) {
   y = {foo: 3};
 }
 
-(y: AllOpt)
+(y: AllOpt);
 
-const b = spread(y);
+const b = spreadExact(y);
 
 if (b.bar != null) {} // bar appears in one of the branches
 if (b.baz != null) {} // baz appears in one of the branches 
