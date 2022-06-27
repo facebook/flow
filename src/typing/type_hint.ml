@@ -229,6 +229,7 @@ let evaluate_hint cx loc hint =
   match hint with
   | Hint_None -> None
   | Hint_t t when is_fully_resolved cx t -> Some t
+  | Hint_Placeholder -> Some (AnyT.annot (mk_reason (RCustom "placeholder hint") ALoc.none))
   | Hint_Decomp (ops, t) when is_fully_resolved cx t ->
     ops |> Nel.to_list |> List.rev |> evaluate_hint_ops cx loc t
   | Hint_t _

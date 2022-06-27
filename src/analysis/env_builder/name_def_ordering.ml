@@ -404,6 +404,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) = struct
         | Contextual (_, hint) ->
           (match hint with
           | Hint_api.Hint_None -> state
+          | Hint_api.Hint_Placeholder -> state
           | Hint_api.Hint_t hint_node
           | Hint_api.Hint_Decomp (_, hint_node) ->
             depends_of_hint_node state hint_node)

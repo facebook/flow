@@ -24,6 +24,7 @@ type hint_decomposition =
 type 't hint =
   | Hint_t of 't
   | Hint_Decomp of hint_decomposition Nel.t * 't
+  | Hint_Placeholder
   | Hint_None
 
 val string_of_hint_unknown_kind : hint_decomposition -> string

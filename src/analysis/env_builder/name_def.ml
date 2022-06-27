@@ -49,7 +49,7 @@ type root =
       annot: (ALoc.t, ALoc.t) Ast.Type.annotation;
     }
   | Value of (ALoc.t, ALoc.t) Ast.Expression.t
-  | Contextual of ALoc.t * hint_node hint
+  | Contextual of Reason.reason * hint_node hint
   | Catch
   | For of for_kind * (ALoc.t, ALoc.t) Ast.Expression.t
 
@@ -386,7 +386,17 @@ class def_finder env_entries providers toplevel_scope =
       let source =
         match Destructure.type_of_pattern argument with
         | Some annot -> Annotation { tparams_map = tparams; optional; is_assignment = false; annot }
-        | None -> Contextual (loc, hint)
+        | None ->
+          let reason =
+            match argument with
+            | ( _,
+                Ast.Pattern.Identifier
+                  { Ast.Pattern.Identifier.name = (_, { Ast.Identifier.name; _ }); _ }
+              ) ->
+              mk_reason (RParameter (Some name)) loc
+            | _ -> mk_reason RDestructuring loc
+          in
+          Contextual (reason, hint)
       in
       let source = Destructure.pattern_default (Root source) default in
       Destructure.pattern ~f:this#add_binding source argument;
@@ -399,7 +409,20 @@ class def_finder env_entries providers toplevel_scope =
         match Destructure.type_of_pattern argument with
         | Some annot ->
           Annotation { tparams_map = tparams; optional = false; is_assignment = false; annot }
-        | None -> Contextual (loc, hint)
+        | None ->
+          let reason =
+            match argument with
+            | ( _,
+                Ast.Pattern.Identifier
+                  { Ast.Pattern.Identifier.name = (_, { Ast.Identifier.name; _ }); _ }
+              ) ->
+              mk_reason (RRestParameter (Some name)) loc
+            | _ ->
+              (* TODO: This should be a parse error, but we only produce an internal
+                 error in statement.ml. *)
+              mk_reason (RCustom "contextual variable") loc
+          in
+          Contextual (reason, hint)
       in
       Destructure.pattern ~f:this#add_binding (Root source) argument;
       ignore @@ super#function_rest_param expr

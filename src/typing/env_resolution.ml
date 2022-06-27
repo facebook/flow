@@ -25,6 +25,16 @@ module Make (Env : Env_sig.S) (Statement : Statement_sig.S with module Env := En
   module Type_annotation = Statement.Anno
   module Abnormal = Statement.Abnormal
 
+  (* Hints are not being used to power type checking currently. Instead, we only use their existence
+     to determine whether we should emit missing-local-annot errors. The check will already be done
+     in statement.ml, so it's safe to always pass down the hint to avoid spurious
+     missing-local-annot errors.
+
+     Once contextual typing is done, the existence of hint detection will be moved here and then
+     we can replace all hints passed in env_resolution to be Hint_None.
+  *)
+  let dummy_hint = Hint_Placeholder
+
   let mk_type_param cx id_loc tparams_map tparam =
     let ((_, ({ name; _ } as tparam), t) as info) =
       Type_annotation.mk_type_param cx tparams_map tparam
@@ -85,16 +95,22 @@ module Make (Env : Env_sig.S) (Statement : Statement_sig.S with module Env := En
       (t, use_op, true)
     | Root (Value exp) ->
       (* TODO: look up the annotation for the variable at loc and pass in *)
-      let t = expression cx ~hint:Hint_None exp in
+      let t = expression cx ~hint:dummy_hint exp in
       let use_op = Op (AssignVar { var = Some reason; init = mk_expression_reason exp }) in
       (t, use_op, true)
-    | Root (Contextual (param_loc, hint)) ->
-      let reason = mk_reason (RCustom "contextual variable") loc in
+    | Root (Contextual (reason, hint)) ->
+      let param_loc = Reason.poly_loc_of_reason reason in
+      let () =
+        match hint with
+        | Hint_api.Hint_None when RequireAnnot.should_require_annot cx ->
+          RequireAnnot.add_missing_annotation_error cx reason
+        | _ -> ()
+      in
       let t =
         if Context.enable_contextual_typing cx then
           let resolve_hint = function
             | AnnotationHint (tparams_locs, anno) -> resolve_annotation tparams_locs anno
-            | ValueHint (exp, []) -> expression cx ~hint:Hint_None exp
+            | ValueHint (exp, []) -> expression cx ~hint:dummy_hint exp
             | ValueHint (e1, e2 :: rest) ->
               let t1 = expression cx ~hint:Hint_None e1 in
               let t2 = expression cx ~hint:Hint_None e2 in
@@ -105,6 +121,7 @@ module Make (Env : Env_sig.S) (Statement : Statement_sig.S with module Env := En
             match hint with
             | Hint_t hint_node -> Hint_t (resolve_hint hint_node)
             | Hint_Decomp (ops, hint_node) -> Hint_Decomp (ops, resolve_hint hint_node)
+            | Hint_Placeholder -> Hint_Placeholder
             | Hint_None -> Hint_None
           in
           match Type_hint.evaluate_hint cx param_loc hint with
@@ -119,7 +136,7 @@ module Make (Env : Env_sig.S) (Statement : Statement_sig.S with module Env := En
       (t, mk_use_op t, true)
     | Root (For (kind, exp)) ->
       let reason = mk_reason (RCustom "for-in") loc (*TODO: loc should be loc of loop *) in
-      let right_t = expression cx ~hint:Hint_None ~cond:OtherTest exp in
+      let right_t = expression cx ~hint:dummy_hint ~cond:OtherTest exp in
       let t =
         match kind with
         | In ->
@@ -165,7 +182,7 @@ module Make (Env : Env_sig.S) (Statement : Statement_sig.S with module Env := En
             (* TODO: eveyrthing after a computed prop should be optional *)
             (Type.ObjRest used_props, mk_reason RObjectPatternRestProp loc)
           | Name_def.Computed exp ->
-            let t = expression cx ~hint:Hint_None exp in
+            let t = expression cx ~hint:dummy_hint exp in
             (Type.Elem t, mk_reason (RProperty None) loc)
           | Name_def.Default _exp ->
             (* TODO: change the way default works to see exp as a source *)
@@ -189,7 +206,7 @@ module Make (Env : Env_sig.S) (Statement : Statement_sig.S with module Env := En
       let general = Tvar.mk cx reason in
       Statement.mk_function
         cx
-        ~hint:Hint_None
+        ~hint:dummy_hint
         ~needs_this_param:true
         ~general
         reason
@@ -205,7 +222,7 @@ module Make (Env : Env_sig.S) (Statement : Statement_sig.S with module Env := En
     let (({ Func_class_sig_types.Func_stmt_sig_types.fparams; _ } as func_sig), _) =
       Statement.mk_func_sig
         cx
-        ~func_hint:Hint_None
+        ~func_hint:dummy_hint
         ~needs_this_param:true
         tparams_map
         reason
@@ -253,7 +270,7 @@ module Make (Env : Env_sig.S) (Statement : Statement_sig.S with module Env := En
       (* lhs += rhs *)
       let reason = mk_reason (RCustom "+=") exp_loc in
       let ((_, lhs_t), _) = Statement.assignment_lhs cx lhs in
-      let rhs_t = expression cx ~hint:Hint_None rhs in
+      let rhs_t = expression cx ~hint:dummy_hint rhs in
       let result_t =
         Statement.plus_assign
           cx
@@ -279,7 +296,7 @@ module Make (Env : Env_sig.S) (Statement : Statement_sig.S with module Env := En
       (* lhs (numop)= rhs *)
       let reason = mk_reason (RCustom "(numop)=") exp_loc in
       let ((_, lhs_t), _) = Statement.assignment_lhs cx lhs in
-      let rhs_t = expression cx ~hint:Hint_None rhs in
+      let rhs_t = expression cx ~hint:dummy_hint rhs in
       let result_t = Statement.arith_assign cx reason lhs_t rhs_t in
       let use_op = Op (AssignVar { var = Some id_reason; init = reason }) in
       (result_t, use_op)
@@ -290,7 +307,7 @@ module Make (Env : Env_sig.S) (Statement : Statement_sig.S with module Env := En
       let ((_, lhs_t), _) = Statement.assignment_lhs cx lhs in
       let (((_, rhs_t), _), right_abnormal) =
         Abnormal.catch_expr_control_flow_exception (fun () ->
-            Statement.expression cx ~hint:Hint_None rhs (* TODO hint *)
+            Statement.expression cx ~hint:dummy_hint rhs (* TODO hint *)
         )
       in
       let rhs_t =
@@ -324,7 +341,7 @@ module Make (Env : Env_sig.S) (Statement : Statement_sig.S with module Env := En
         Flow_js.flow cx (id_t, AssertArithmeticOperandT reason);
         Op (AssignVar { var = Some id_reason; init = TypeUtil.reason_of_t id_t })
       | Some argument ->
-        let arg_val_t = expression cx ~hint:Hint_None argument in
+        let arg_val_t = expression cx ~hint:dummy_hint argument in
         Flow_js.flow cx (arg_val_t, AssertArithmeticOperandT reason);
         unknown_use
     in
@@ -532,7 +549,7 @@ module Make (Env : Env_sig.S) (Statement : Statement_sig.S with module Env := En
       | Class { class_; fully_annotated = true; class_loc } ->
         as_resolved @@ resolve_annotated_class cx id_loc def_reason class_loc class_
       | MemberAssign { member_loc = _; member = _; rhs } ->
-        (expression cx ~hint:Hint_None rhs, unknown_use, true)
+        (expression cx ~hint:dummy_hint rhs, unknown_use, true)
       | OpAssign { exp_loc; lhs; op; rhs } ->
         as_resolved @@ resolve_op_assign cx ~exp_loc def_reason lhs op rhs
       | Update { exp_loc; lhs_member; op = _ } ->
