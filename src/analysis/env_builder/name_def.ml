@@ -321,6 +321,8 @@ class def_finder env_entries providers toplevel_scope =
 
     val mutable class_stack : class_stack = []
 
+    val mutable return_hint_stack : hint_node hint list = []
+
     method add_tparam loc name = tparams <- ALocMap.add loc name tparams
 
     method add_binding loc reason src =
@@ -345,18 +347,24 @@ class def_finder env_entries providers toplevel_scope =
     method! variable_declarator ~kind decl =
       let open Ast.Statement.VariableDeclaration.Declarator in
       let (_, { id; init }) = decl in
-      let source =
+      let (source, hint) =
         match (Destructure.type_of_pattern id, init) with
         | (Some annot, _) ->
-          Some
-            (Annotation
-               { tparams_map = ALocMap.empty; optional = false; is_assignment = true; annot }
-            )
-        | (None, Some init) -> Some (Value init)
-        | (None, None) -> None
+          ( Some
+              (Annotation
+                 { tparams_map = ALocMap.empty; optional = false; is_assignment = true; annot }
+              ),
+            Hint_t (AnnotationHint (ALocMap.empty, annot))
+          )
+        | (None, Some init) -> (Some (Value init), Hint_None)
+        | (None, None) -> (None, Hint_None)
       in
       Base.Option.iter ~f:(fun acc -> Destructure.pattern ~f:this#add_binding (Root acc) id) source;
-      super#variable_declarator ~kind decl
+      ignore @@ this#variable_declarator_pattern ~kind id;
+      Base.Option.iter init ~f:(fun init ->
+          this#visit_expression ~hint ~cond:NonConditionalContext init
+      );
+      decl
 
     method! declare_variable loc (decl : ('loc, 'loc) Ast.Statement.DeclareVariable.t) =
       let open Ast.Statement.DeclareVariable in
@@ -502,15 +510,23 @@ class def_finder env_entries providers toplevel_scope =
             rest;
           ignore @@ this#type_annotation_hint return;
 
+          let return_hint =
+            match return with
+            | Ast.Type.Available annot -> Hint_t (AnnotationHint (ALocMap.empty, annot))
+            | Ast.Type.Missing _ -> decompose_hint Decomp_FuncReturn func_hint
+          in
+          let old_stack = return_hint_stack in
+          return_hint_stack <- return_hint :: return_hint_stack;
           let body_loc =
             match body with
             | Ast.Function.BodyBlock (loc, block) ->
               ignore @@ this#block loc block;
               loc
             | Ast.Function.BodyExpression ((loc, _) as expr) ->
-              this#visit_expression ~hint:Hint_None ~cond:NonConditionalContext expr;
+              this#visit_expression ~hint:return_hint ~cond:NonConditionalContext expr;
               loc
           in
+          return_hint_stack <- old_stack;
 
           begin
             if generator then
@@ -578,6 +594,41 @@ class def_finder env_entries providers toplevel_scope =
           expr
       )
 
+    method! class_property _loc (prop : ('loc, 'loc) Ast.Class.Property.t') =
+      let open Ast.Class.Property in
+      let { key; value; annot; static = _; variance; comments = _ } = prop in
+      ignore @@ this#object_key key;
+      ignore @@ this#type_annotation_hint annot;
+      let hint =
+        match annot with
+        | Ast.Type.Available annot -> Hint_t (AnnotationHint (ALocMap.empty, annot))
+        | Ast.Type.Missing _ -> Hint_None
+      in
+      this#visit_class_property_value ~hint value;
+      ignore @@ this#variance_opt variance;
+      prop
+
+    method! class_private_field _loc (prop : ('loc, 'loc) Ast.Class.PrivateField.t') =
+      let open Ast.Class.PrivateField in
+      let { key; value; annot; static = _; variance; comments = _ } = prop in
+      ignore @@ this#private_name key;
+      ignore @@ this#type_annotation_hint annot;
+      let hint =
+        match annot with
+        | Ast.Type.Available annot -> Hint_t (AnnotationHint (ALocMap.empty, annot))
+        | Ast.Type.Missing _ -> Hint_None
+      in
+      this#visit_class_property_value ~hint value;
+      ignore @@ this#variance_opt variance;
+      prop
+
+    method private visit_class_property_value ~hint value =
+      let open Ast.Class.Property in
+      match value with
+      | Declared -> ()
+      | Uninitialized -> ()
+      | Initialized x -> this#visit_expression ~cond:NonConditionalContext ~hint x
+
     method! class_method _loc (meth : ('loc, 'loc) Ast.Class.Method.t') =
       let open Ast.Class.Method in
       let { kind = _; key; value = (_, value); static = _; decorators; comments = _ } = meth in
@@ -622,7 +673,7 @@ class def_finder env_entries providers toplevel_scope =
 
     method! assignment loc (expr : ('loc, 'loc) Ast.Expression.Assignment.t) =
       let open Ast.Expression.Assignment in
-      let { operator; left = (_, lhs_node) as left; right; comments = _ } = expr in
+      let { operator; left = (lhs_loc, lhs_node) as left; right; comments = _ } = expr in
       let () =
         match (operator, lhs_node) with
         | (None, Ast.Pattern.Expression (member_loc, Ast.Expression.Member member)) ->
@@ -689,7 +740,7 @@ class def_finder env_entries providers toplevel_scope =
               decompose_hint Decomp_ObjComputed (Hint_t (ValueHint (Nel.one _object))))
           | _ ->
             (* TODO create a hint based on the lhs pattern *)
-            Hint_None
+            Hint_t (AnnotationHint (ALocMap.empty, (lhs_loc, (lhs_loc, Ast.Type.Any None))))
       in
       this#visit_expression ~hint ~cond:NonConditionalContext right;
       expr
@@ -712,6 +763,17 @@ class def_finder env_entries providers toplevel_scope =
         | _ -> ()
       end;
       super#update_expression loc expr
+
+    method! return _loc (stmt : ('loc, 'loc) Ast.Statement.Return.t) =
+      let open Ast.Statement.Return in
+      let { argument; comments = _; return_out = _ } = stmt in
+      Base.Option.iter argument ~f:(fun argument ->
+          this#visit_expression
+            ~hint:(Base.Option.value ~default:Hint_None (Base.List.hd return_hint_stack))
+            ~cond:NonConditionalContext
+            argument
+      );
+      stmt
 
     method! for_of_statement loc (stuff : ('loc, 'loc) Ast.Statement.ForOf.t) =
       let open Ast.Statement.ForOf in
@@ -917,6 +979,32 @@ class def_finder env_entries providers toplevel_scope =
               ~cond:NonConditionalContext
               spread.Ast.Expression.SpreadElement.argument
       );
+      expr
+
+    method! new_ _ expr =
+      let open Ast.Expression.New in
+      let { callee; targs; arguments; comments = _ } = expr in
+      this#visit_expression ~hint:Hint_None ~cond:NonConditionalContext callee;
+      Base.Option.iter targs ~f:(fun targs -> ignore @@ this#call_type_args targs);
+      let call_argumemts_hint =
+        decompose_hint Decomp_CallNew (Hint_t (ValueHint (Nel.one callee)))
+      in
+      arguments
+      |> Base.Option.value_map
+           ~default:[]
+           ~f:(fun (_, { Ast.Expression.ArgList.arguments; comments = _ }) -> arguments
+         )
+      |> Base.List.iteri ~f:(fun i arg ->
+             let hint = decompose_hint (Decomp_FuncParam i) call_argumemts_hint in
+             match arg with
+             | Ast.Expression.Expression expr ->
+               this#visit_expression ~hint ~cond:NonConditionalContext expr
+             | Ast.Expression.Spread (_, spread) ->
+               this#visit_expression
+                 ~hint
+                 ~cond:NonConditionalContext
+                 spread.Ast.Expression.SpreadElement.argument
+         );
       expr
 
     method! member _ _ = failwith "Should be visited by visit_member_expression"
@@ -1187,15 +1275,14 @@ class def_finder env_entries providers toplevel_scope =
     method private visit_logical_expression ~cond expr =
       let open Ast.Expression.Logical in
       let { operator; left; right; comments = _ } = expr in
-      let left_cond =
+      let (left_cond, right_hint) =
         match operator with
-        | And
-        | Or ->
-          OtherConditionalTest
-        | _ -> cond
+        | And -> (OtherConditionalTest, Hint_None)
+        | Or -> (OtherConditionalTest, Hint_t (ValueHint (Nel.one left)))
+        | NullishCoalesce -> (cond, Hint_t (ValueHint (Nel.one left)))
       in
       this#visit_expression ~hint:Hint_None ~cond:left_cond left;
-      this#visit_expression ~hint:Hint_None ~cond right
+      this#visit_expression ~hint:right_hint ~cond right
 
     method! object_ _ _ = failwith "Should be visited by visit_object_expression"
 
@@ -1213,7 +1300,7 @@ class def_finder env_entries providers toplevel_scope =
         | Ast.Expression.Object.Property.Computed computed ->
           let (_, { Ast.ComputedKey.expression; comments = _ }) = computed in
           this#visit_expression ~hint:Hint_None ~cond:NonConditionalContext expression;
-          Hint_None
+          decompose_hint Decomp_ObjComputed object_hint
       in
       Base.List.iter properties ~f:(fun prop ->
           match prop with

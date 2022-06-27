@@ -19,3 +19,15 @@ f((x) => 3, (x: number) => 3) || []; // no annot
 
 const h: ?(number => number) = null;
 h ?? ((x) => 3); // no annot
+
+class Base {
+  constructor(f: (number) => number) {}
+}
+
+new Base(x => 3); // no annot
+
+class Extending extends Base {
+  constructor() {
+    super((x) => 3); // no annot
+  }
+}
