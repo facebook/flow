@@ -25,7 +25,7 @@ type t = {
     ((ALoc.t, ALoc.t * Type.t) Ast.Type.TypeParam.t * Type.typeparam * Type.t) ALocMap.t;
 }
 
-let empty =
+let mk_empty () =
   {
     annotations = ALocMap.empty;
     expressions = ALocMap.empty;

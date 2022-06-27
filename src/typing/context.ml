@@ -380,7 +380,7 @@ let make ccx metadata file aloc_table phase =
     trust_constructor = Trust.literal_trust;
     declare_module_ref = None;
     environment = Loc_env.empty Scope.Global;
-    node_cache = Node_cache.empty;
+    node_cache = Node_cache.mk_empty ();
   }
 
 let sig_cx cx = cx.ccx.sig_cx
