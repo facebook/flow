@@ -7,6 +7,8 @@
 
 val default_flowconfig_name : string
 
+val default_temp_dir : string
+
 val config_file : string -> Path.t -> string
 
 val log_file : flowconfig_name:string -> tmp_dir:string -> Path.t -> string

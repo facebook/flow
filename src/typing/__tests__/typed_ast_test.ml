@@ -204,10 +204,9 @@ class aloc_mapper =
   end
 
 let diff_dir =
-  let tmp_dir = FlowConfig.temp_dir FlowConfig.empty_config in
   Random.self_init ();
   let extension = Printf.sprintf "typed_ast_test_%d" (Random.int 0x3FFFFFFF) in
-  Filename.concat tmp_dir extension
+  Filename.concat Server_files_js.default_temp_dir extension
 
 let system_diff ~f prefix =
   let dump_stmts filename stmts =

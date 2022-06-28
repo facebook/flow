@@ -7,6 +7,8 @@
 
 let default_flowconfig_name = ".flowconfig"
 
+let default_temp_dir = Filename.concat Sys_utils.temp_dir_name "flow"
+
 let add_dir_sep dir =
   Filename.(
     if check_suffix dir dir_sep then

@@ -40,11 +40,7 @@ let main base_flags temp_dir quiet root () =
     read_config_or_exit ~enforce_warnings:false (Server_files_js.config_file flowconfig_name root)
   in
   let root_s = Path.to_string root in
-  let tmp_dir =
-    match temp_dir with
-    | Some x -> x
-    | None -> FlowConfig.temp_dir config
-  in
+  let tmp_dir = get_temp_dir temp_dir config in
   let tmp_dir = Path.to_string (Path.make tmp_dir) in
   if not quiet then prerr_endlinef "Trying to connect to server for `%s`" (Path.to_string root);
   let client_handshake =

@@ -23,8 +23,6 @@ type error = int * string
 
 type config_result = (config * warning list, error) result
 
-val default_temp_dir : string
-
 val get : ?allow_cache:bool -> string -> config_result
 
 val get_hash : ?allow_cache:bool -> string -> Xx.hash
@@ -177,7 +175,7 @@ val max_rss_bytes_for_check_per_worker : config -> int
 
 val max_seconds_for_check_per_worker : config -> float
 
-val max_workers : config -> int
+val max_workers : config -> int option
 
 val merge_timeout : config -> int option
 
@@ -245,7 +243,7 @@ val strict_mode : config -> StrictModeSettings.t
 
 val suppress_types : config -> SSet.t
 
-val temp_dir : config -> string
+val temp_dir : config -> string option
 
 val traces : config -> int
 

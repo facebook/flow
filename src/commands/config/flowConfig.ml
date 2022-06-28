@@ -26,8 +26,6 @@ type lazy_mode =
   | Non_lazy
   | Watchman_DEPRECATED  (** lazy_mode=watchman is deprecated, but implies file_watcher=Watchman *)
 
-let default_temp_dir = Filename.concat Sys_utils.temp_dir_name "flow"
-
 let map_add map (key, value) = SMap.add key value map
 
 module Opts = struct
@@ -100,7 +98,7 @@ module Opts = struct
     max_literal_length: int;
     max_rss_bytes_for_check_per_worker: int;
     max_seconds_for_check_per_worker: float;
-    max_workers: int;
+    max_workers: int option;
     merge_timeout: int option;
     missing_module_generators: (Str.regexp * string) list;
     module_file_exts: string list;
@@ -132,7 +130,7 @@ module Opts = struct
     strict_es6_import_export: bool;
     strict_es6_import_export_excludes: string list;
     suppress_types: SSet.t;
-    temp_dir: string;
+    temp_dir: string option;
     traces: int;
     trust_mode: Options.trust_mode;
     type_asserts: bool;
@@ -233,7 +231,7 @@ module Opts = struct
       max_literal_length = 100;
       max_rss_bytes_for_check_per_worker = (* 200MB *) 200 * 1024 * 1024;
       max_seconds_for_check_per_worker = 5.0;
-      max_workers = Sys_utils.nbr_procs;
+      max_workers = None;
       merge_timeout = Some 100;
       missing_module_generators = [];
       module_file_exts;
@@ -265,7 +263,7 @@ module Opts = struct
       strict_es6_import_export = false;
       strict_es6_import_export_excludes = [];
       suppress_types = SSet.empty |> SSet.add "$FlowFixMe";
-      temp_dir = default_temp_dir;
+      temp_dir = None;
       traces = 0;
       trust_mode = Options.NoTrust;
       type_asserts = false;
@@ -926,12 +924,12 @@ module Opts = struct
       );
       ("relay_integration.module_prefix.includes", relay_integration_module_prefix_includes_parser);
       ("saved_state.fetcher", saved_state_fetcher_parser);
-      ("server.max_workers", uint (fun opts v -> Ok { opts with max_workers = v }));
+      ("server.max_workers", uint (fun opts v -> Ok { opts with max_workers = Some v }));
       ("sharedmemory.hash_table_pow", shm_hash_table_pow_parser);
       ("sharedmemory.heap_size", uint (fun opts shm_heap_size -> Ok { opts with shm_heap_size }));
       ("sharedmemory.log_level", uint (fun opts shm_log_level -> Ok { opts with shm_log_level }));
       ("suppress_type", suppress_types_parser);
-      ("temp_dir", string (fun opts v -> Ok { opts with temp_dir = v }));
+      ("temp_dir", string (fun opts v -> Ok { opts with temp_dir = Some v }));
       ("traces", uint (fun opts v -> Ok { opts with traces = v }));
       ("trust_mode", trust_mode_parser);
       ("types_first.max_files_checked_per_worker", max_files_checked_per_worker_parser);
@@ -1029,7 +1027,7 @@ end = struct
           pp_opt o "module.system" (module_system options.module_system);
         if options.all <> default_options.all then
           pp_opt o "all" (string_of_bool (Base.Option.value options.all ~default:false));
-        if options.temp_dir <> default_options.temp_dir then pp_opt o "temp_dir" options.temp_dir;
+        Base.Option.iter options.temp_dir ~f:(pp_opt o "temp_dir");
         if options.include_warnings <> default_options.include_warnings then
           pp_opt o "include_warnings" (string_of_bool options.include_warnings)
       )

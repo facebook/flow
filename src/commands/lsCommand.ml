@@ -118,7 +118,6 @@ let rec iter_get_next ~f get_next =
     iter_get_next ~f get_next
 
 let make_options ~flowconfig ~root ~ignore_flag ~include_flag ~untyped_flag ~declaration_flag =
-  let temp_dir = Path.make (FlowConfig.temp_dir flowconfig) in
   let includes = CommandUtils.list_of_string_arg include_flag in
   let ignores = CommandUtils.list_of_string_arg ignore_flag in
   let untyped = CommandUtils.list_of_string_arg untyped_flag in
@@ -128,7 +127,7 @@ let make_options ~flowconfig ~root ~ignore_flag ~include_flag ~untyped_flag ~dec
     flowconfig
     ~root
     ~no_flowlib:true
-    ~temp_dir
+    ~temp_dir:(CommandUtils.get_temp_dir None flowconfig |> Path.make)
     ~ignores
     ~includes
     ~libs

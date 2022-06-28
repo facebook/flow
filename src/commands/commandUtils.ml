@@ -1242,6 +1242,10 @@ let no_cgroup_flag =
            ~doc:"Don't automatically run this command in a cgroup (if cgroups are available)"
     )
 
+let get_temp_dir cli_value flowconfig =
+  Base.Option.first_some cli_value (FlowConfig.temp_dir flowconfig)
+  |> Base.Option.value ~default:Server_files_js.default_temp_dir
+
 let make_options
     ~flowconfig_name
     ~flowconfig_hash
@@ -1252,11 +1256,7 @@ let make_options
     ~saved_state_options_flags =
   let open Options_flags in
   let open Saved_state_flags in
-  let temp_dir =
-    options_flags.Options_flags.temp_dir
-    |> Base.Option.value ~default:(FlowConfig.temp_dir flowconfig)
-    |> Path.make
-  in
+  let temp_dir = Path.make (get_temp_dir options_flags.Options_flags.temp_dir flowconfig) in
   let file_options =
     let no_flowlib = options_flags.no_flowlib in
     let { includes; ignores; libs; raw_lint_severities = _; untyped; declarations } =
@@ -1344,7 +1344,8 @@ let make_options
     opt_node_main_fields = FlowConfig.node_main_fields flowconfig;
     opt_temp_dir;
     opt_max_workers =
-      Base.Option.value options_flags.max_workers ~default:(FlowConfig.max_workers flowconfig)
+      Base.Option.first_some options_flags.max_workers (FlowConfig.max_workers flowconfig)
+      |> Base.Option.value ~default:Sys_utils.nbr_procs
       |> min Sys_utils.nbr_procs;
     opt_suppress_types = FlowConfig.suppress_types flowconfig;
     opt_max_literal_length = FlowConfig.max_literal_length flowconfig;
@@ -1473,12 +1474,7 @@ let make_options
 
 let make_env flowconfig flowconfig_name connect_flags root =
   let normalize dir = Path.(dir |> make |> to_string) in
-  let tmp_dir =
-    Base.Option.value_map
-      ~f:normalize
-      ~default:(FlowConfig.temp_dir flowconfig)
-      connect_flags.temp_dir
-  in
+  let tmp_dir = get_temp_dir connect_flags.temp_dir flowconfig |> normalize in
   let log_file = Path.to_string (server_log_file ~flowconfig_name ~tmp_dir root flowconfig) in
   let retries = connect_flags.retries in
   let expiry =
