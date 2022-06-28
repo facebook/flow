@@ -75,6 +75,7 @@ let dummy_options_flags =
     include_suppressions = false;
     incremental_revdeps = None;
     estimate_recheck_time = None;
+    distributed = false;
   }
 
 let dummy_saved_state_flags =

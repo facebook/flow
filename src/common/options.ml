@@ -157,6 +157,7 @@ type t = {
   opt_type_asserts: bool;
   opt_verbose: Verbose.t option;
   opt_wait_for_recheck: bool;
+  opt_distributed: bool;
 }
 
 let abstract_locations opts = opts.opt_abstract_locations
@@ -340,3 +341,5 @@ let type_asserts opts = opts.opt_type_asserts
 let verbose opts = opts.opt_verbose
 
 let wait_for_recheck opts = opts.opt_wait_for_recheck
+
+let distributed opts = opts.opt_distributed

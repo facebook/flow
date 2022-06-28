@@ -857,6 +857,7 @@ module Options_flags = struct
     include_suppressions: bool;
     incremental_revdeps: bool option;
     estimate_recheck_time: bool option;
+    distributed: bool;
   }
 end
 
@@ -922,7 +923,8 @@ let options_flags =
       trust_mode
       env_mode
       incremental_revdeps
-      estimate_recheck_time =
+      estimate_recheck_time
+      distributed =
     (match merge_timeout with
     | Some timeout when timeout < 0 ->
       Exit.(exit ~msg:"--merge-timeout must be non-negative" Commandline_usage_error)
@@ -952,6 +954,7 @@ let options_flags =
         include_suppressions;
         incremental_revdeps;
         estimate_recheck_time;
+        distributed;
       }
   in
   fun prev ->
@@ -1029,6 +1032,7 @@ let options_flags =
       (* restarting to save time is a hack and should be removed. this should
          not be part of our public API, so not included in the docs. *)
       |> flag "--estimate-recheck-time" (optional bool) ~doc:"" ~env:"FLOW_ESTIMATE_RECHECK_TIME"
+      |> flag "--distributed" no_arg ~doc:""
     )
 
 let saved_state_flags =
@@ -1417,6 +1421,7 @@ let make_options
       FlowConfig.node_resolver_root_relative_dirnames flowconfig;
     opt_abstract_locations;
     opt_include_suppressions = options_flags.include_suppressions;
+    opt_distributed = options_flags.distributed;
     opt_trust_mode =
       Base.Option.value options_flags.trust_mode ~default:(FlowConfig.trust_mode flowconfig);
     opt_react_runtime = FlowConfig.react_runtime flowconfig;
