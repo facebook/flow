@@ -483,8 +483,9 @@ and dump_use_t_ (depth, tvars) cx t =
         )
       in
       function
-      | CreateElement0 (_, config, (children, children_spread), tout)
-      | CreateElement (_, _, config, (children, children_spread), tout) ->
+      | CreateElement0 { clone = _; config; children = (children, children_spread); tout }
+      | CreateElement
+          { clone = _; component = _; config; children = (children, children_spread); tout } ->
         p
           ~extra:
             (spf

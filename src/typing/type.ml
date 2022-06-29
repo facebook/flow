@@ -2553,9 +2553,19 @@ and React : sig
   end
 
   type tool =
-    | CreateElement0 of bool * TypeTerm.t * (TypeTerm.t list * TypeTerm.t option) * TypeTerm.t_out
-    | CreateElement of
-        bool * TypeTerm.t * TypeTerm.t * (TypeTerm.t list * TypeTerm.t option) * TypeTerm.t_out
+    | CreateElement0 of {
+        clone: bool;
+        config: TypeTerm.t;
+        children: TypeTerm.t list * TypeTerm.t option;
+        tout: TypeTerm.t_out;
+      }
+    | CreateElement of {
+        clone: bool;
+        component: TypeTerm.t;
+        config: TypeTerm.t;
+        children: TypeTerm.t list * TypeTerm.t option;
+        tout: TypeTerm.t_out;
+      }
     | ConfigCheck of TypeTerm.t
     | GetProps of TypeTerm.t_out
     | GetConfig of TypeTerm.t_out

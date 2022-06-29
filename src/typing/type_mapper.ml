@@ -1929,7 +1929,7 @@ class virtual ['a] t_with_uses =
     method react_tool cx map_cx t =
       React.(
         match t with
-        | CreateElement0 (clone, config, (children, children_spread), tout) ->
+        | CreateElement0 { clone; config; children = (children, children_spread); tout } ->
           let config' = self#type_ cx map_cx config in
           let children' = ListUtils.ident_map (self#type_ cx map_cx) children in
           let children_spread' = OptionUtils.ident_map (self#type_ cx map_cx) children_spread in
@@ -1942,8 +1942,10 @@ class virtual ['a] t_with_uses =
           then
             t
           else
-            CreateElement0 (clone, config', (children', children_spread'), tout')
-        | CreateElement (clone, component, config, (children, children_spread), tout) ->
+            CreateElement0
+              { clone; config = config'; children = (children', children_spread'); tout = tout' }
+        | CreateElement { clone; component; config; children = (children, children_spread); tout }
+          ->
           let component' = self#type_ cx map_cx component in
           let config' = self#type_ cx map_cx config in
           let children' = ListUtils.ident_map (self#type_ cx map_cx) children in
@@ -1958,7 +1960,14 @@ class virtual ['a] t_with_uses =
           then
             t
           else
-            CreateElement (clone, component', config', (children', children_spread'), tout')
+            CreateElement
+              {
+                clone;
+                component = component';
+                config = config';
+                children = (children', children_spread');
+                tout = tout';
+              }
         | ConfigCheck config ->
           let config' = self#type_ cx map_cx config in
           if config' == config then

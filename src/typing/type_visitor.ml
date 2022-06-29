@@ -457,13 +457,15 @@ class ['a] t =
         | React.GetConfigType (default_props, t) ->
           let acc = self#type_ cx pole_TODO acc default_props in
           self#type_ cx pole_TODO acc t
-        | React.CreateElement0 (_, config, (children, children_spread), tout) ->
+        | React.CreateElement0 { clone = _; config; children = (children, children_spread); tout }
+          ->
           let acc = self#type_ cx pole_TODO acc config in
           let acc = List.fold_left (self#type_ cx pole_TODO) acc children in
           let acc = self#opt (self#type_ cx pole_TODO) acc children_spread in
           let acc = self#type_ cx pole_TODO acc tout in
           acc
-        | React.CreateElement (_, component, config, (children, children_spread), tout) ->
+        | React.CreateElement
+            { clone = _; component; config; children = (children, children_spread); tout } ->
           let acc = self#type_ cx pole_TODO acc component in
           let acc = self#type_ cx pole_TODO acc config in
           let acc = List.fold_left (self#type_ cx pole_TODO) acc children in

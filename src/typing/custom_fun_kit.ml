@@ -147,7 +147,11 @@ module Kit (Flow : Flow_common.S) = struct
           cx
           trace
           ( component,
-            ReactKitT (use_op, reason_op, React.CreateElement0 (false, config, ([], None), tout))
+            ReactKitT
+              ( use_op,
+                reason_op,
+                React.CreateElement0 { clone = false; config; children = ([], None); tout }
+              )
           )
       (* React.createElement(component, config, ...children) *)
       | component :: config :: children ->
@@ -156,7 +160,11 @@ module Kit (Flow : Flow_common.S) = struct
           trace
           ( component,
             ReactKitT
-              (use_op, reason_op, React.CreateElement0 (false, config, (children, spread_arg), tout))
+              ( use_op,
+                reason_op,
+                React.CreateElement0
+                  { clone = false; config; children = (children, spread_arg); tout }
+              )
           )
       (* React.createElement() *)
       | _ ->
@@ -200,7 +208,11 @@ module Kit (Flow : Flow_common.S) = struct
           trace
           ( component,
             ReactKitT
-              (use_op, reason_op, React.CreateElement0 (true, config, (children, spread_arg), tout))
+              ( use_op,
+                reason_op,
+                React.CreateElement0
+                  { clone = true; config; children = (children, spread_arg); tout }
+              )
           )
       (* React.cloneElement() *)
       | _ ->
@@ -218,7 +230,11 @@ module Kit (Flow : Flow_common.S) = struct
           cx
           trace
           ( component,
-            ReactKitT (use_op, reason_op, React.CreateElement0 (false, config, ([], None), tout))
+            ReactKitT
+              ( use_op,
+                reason_op,
+                React.CreateElement0 { clone = false; config; children = ([], None); tout }
+              )
           )
       (* React.createFactory(component)(config, ...children) *)
       | config :: children ->
@@ -227,7 +243,11 @@ module Kit (Flow : Flow_common.S) = struct
           trace
           ( component,
             ReactKitT
-              (use_op, reason_op, React.CreateElement0 (false, config, (children, spread_arg), tout))
+              ( use_op,
+                reason_op,
+                React.CreateElement0
+                  { clone = false; config; children = (children, spread_arg); tout }
+              )
           ))
     | ObjectAssign
     | ObjectGetPrototypeOf
