@@ -327,18 +327,17 @@ let get_changes_since_mergebase_query env =
   in
   request_json ~extra_kv Query env
 
-let subscribe env =
-  let states = "hg.update" :: env.settings.defer_states in
-  let (since, mode) =
+let subscribe_query env =
+  let since = ("since", Hh_json.JSON_String env.clockspec) in
+  let empty_on_fresh_instance = ("empty_on_fresh_instance", Hh_json.JSON_Bool true) in
+  let mode =
+    let states = "hg.update" :: env.settings.defer_states in
     match env.settings.subscribe_mode with
-    | All_changes -> (Hh_json.JSON_String env.clockspec, [])
-    | Defer_changes -> (Hh_json.JSON_String env.clockspec, [("defer", J.strlist states)])
-    | Drop_changes -> (Hh_json.JSON_String env.clockspec, [("drop", J.strlist states)])
+    | All_changes -> []
+    | Defer_changes -> [("defer", J.strlist states)]
+    | Drop_changes -> [("drop", J.strlist states)]
   in
-  request_json
-    ~extra_kv:(([("since", since)] @ mode) @ [("empty_on_fresh_instance", Hh_json.JSON_Bool true)])
-    Subscribe
-    env
+  request_json ~extra_kv:(since :: empty_on_fresh_instance :: mode) Subscribe env
 
 (** We filter all responses from get_changes through this. This is to detect
    * Watchman server crashes.
@@ -759,7 +758,7 @@ let re_init ?prior_clockspec settings =
   let vcs = Vcs.find (Path.make watch.watch_root) in
   let should_track_mergebase = supports_scm_queries capabilities vcs in
   let env = { settings; conn; watch; clockspec; subscription; should_track_mergebase } in
-  request ~debug_logging ~conn (subscribe env) >>= fun response ->
+  request ~debug_logging ~conn (subscribe_query env) >>= fun response ->
   ignore response;
   Lwt.return (Ok env)
 
