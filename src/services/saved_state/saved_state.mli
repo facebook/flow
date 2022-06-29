@@ -33,7 +33,6 @@ type saved_state_data = {
   package_heaps: (Package_json.t, unit) result Utils_js.FilenameMap.t;
   ordered_non_flowlib_libs: string list;
   local_errors: Flow_error.ErrorSet.t Utils_js.FilenameMap.t;
-  warnings: Flow_error.ErrorSet.t Utils_js.FilenameMap.t;
   node_modules_containers: SSet.t SMap.t;
   dependency_graph: saved_state_dependency_graph;
 }

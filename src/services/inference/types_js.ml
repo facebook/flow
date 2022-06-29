@@ -2011,7 +2011,6 @@ let init_from_saved_state ~profiling ~workers ~saved_state ~updates options =
       package_heaps;
       ordered_non_flowlib_libs;
       local_errors;
-      warnings;
       node_modules_containers;
       dependency_graph;
     } =
@@ -2119,6 +2118,7 @@ let init_from_saved_state ~profiling ~workers ~saved_state ~updates options =
     let libs = SSet.of_list ordered_libs in
     let%lwt (libs_ok, local_errors, warnings, suppressions, lib_exports) =
       let suppressions = Error_suppressions.empty in
+      let warnings = FilenameMap.empty in
       init_libs ~options ~profiling ~local_errors ~warnings ~suppressions ~reader ordered_libs
     in
     Hh_logger.info "Resolving dependencies";
