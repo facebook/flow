@@ -2805,6 +2805,24 @@ struct
                 instantiate_poly cx trace ~use_op ~reason_op ~reason_tapp (tparams_loc, ids, t)
               in
               rec_flow cx trace (t_, u)
+            | ReactKitT
+                (use_op, reason_op, React.CreateElement ({ targs = Some targs; _ } as payload)) ->
+              let t_ =
+                instantiate_poly_call_or_new
+                  cx
+                  trace
+                  (tparams_loc, ids, t)
+                  targs
+                  ~use_op
+                  ~reason_op
+                  ~reason_tapp
+              in
+              rec_flow
+                cx
+                trace
+                ( t_,
+                  ReactKitT (use_op, reason_op, React.CreateElement { payload with targs = None })
+                )
             | _ ->
               let use_op =
                 match use_op_of_use_t u with
