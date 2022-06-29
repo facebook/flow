@@ -37,8 +37,14 @@ module.exports = (suite(
                   insertTextFormat: 1,
                   textEdit: {
                     range: {
-                      start: {line: 10, character: 15},
-                      end: {line: 10, character: 15},
+                      start: {
+                        line: 10,
+                        character: 15,
+                      },
+                      end: {
+                        line: 10,
+                        character: 15,
+                      },
                     },
                     newText: 'a',
                   },
@@ -48,7 +54,11 @@ module.exports = (suite(
                     arguments: [
                       'textDocument/completion',
                       'local value identifier',
-                      {token: 'AUTO332', completion: 'a'},
+                      {
+                        token: 'AUTO332',
+                        index: 0,
+                        completion: 'a',
+                      },
                     ],
                   },
                 },
@@ -56,12 +66,18 @@ module.exports = (suite(
                   label: 'b',
                   kind: 6,
                   detail: 'string',
-                  sortText: '00000000000000000000',
+                  sortText: '00000000000000000001',
                   insertTextFormat: 1,
                   textEdit: {
                     range: {
-                      start: {line: 10, character: 15},
-                      end: {line: 10, character: 15},
+                      start: {
+                        line: 10,
+                        character: 15,
+                      },
+                      end: {
+                        line: 10,
+                        character: 15,
+                      },
                     },
                     newText: 'b',
                   },
@@ -71,7 +87,11 @@ module.exports = (suite(
                     arguments: [
                       'textDocument/completion',
                       'local value identifier',
-                      {token: 'AUTO332', completion: 'b'},
+                      {
+                        token: 'AUTO332',
+                        index: 1,
+                        completion: 'b',
+                      },
                     ],
                   },
                 },
@@ -84,12 +104,18 @@ module.exports = (suite(
                     value:
                       "Docblock for 'fred'\n\n**@return** {number} Docblock for return",
                   },
-                  sortText: '00000000000000000000',
+                  sortText: '00000000000000000002',
                   insertTextFormat: 1,
                   textEdit: {
                     range: {
-                      start: {line: 10, character: 15},
-                      end: {line: 10, character: 15},
+                      start: {
+                        line: 10,
+                        character: 15,
+                      },
+                      end: {
+                        line: 10,
+                        character: 15,
+                      },
                     },
                     newText: 'fred',
                   },
@@ -99,30 +125,11 @@ module.exports = (suite(
                     arguments: [
                       'textDocument/completion',
                       'local value identifier',
-                      {token: 'AUTO332', completion: 'fred'},
-                    ],
-                  },
-                },
-                {
-                  label: 'x',
-                  kind: 6,
-                  detail: 'number',
-                  sortText: '00000000000000000000',
-                  insertTextFormat: 1,
-                  textEdit: {
-                    range: {
-                      start: {line: 10, character: 15},
-                      end: {line: 10, character: 15},
-                    },
-                    newText: 'x',
-                  },
-                  command: {
-                    title: '',
-                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
-                    arguments: [
-                      'textDocument/completion',
-                      'local value identifier',
-                      {token: 'AUTO332', completion: 'x'},
+                      {
+                        token: 'AUTO332',
+                        index: 2,
+                        completion: 'fred',
+                      },
                     ],
                   },
                 },
@@ -130,12 +137,18 @@ module.exports = (suite(
                   label: 'this',
                   kind: 6,
                   detail: 'this',
-                  sortText: '00000000000000000000',
+                  sortText: '00000000000000000003',
                   insertTextFormat: 1,
                   textEdit: {
                     range: {
-                      start: {line: 10, character: 15},
-                      end: {line: 10, character: 15},
+                      start: {
+                        line: 10,
+                        character: 15,
+                      },
+                      end: {
+                        line: 10,
+                        character: 15,
+                      },
                     },
                     newText: 'this',
                   },
@@ -145,7 +158,44 @@ module.exports = (suite(
                     arguments: [
                       'textDocument/completion',
                       'this',
-                      {token: 'AUTO332', completion: 'this'},
+                      {
+                        token: 'AUTO332',
+                        index: 3,
+                        completion: 'this',
+                      },
+                    ],
+                  },
+                },
+                {
+                  label: 'x',
+                  kind: 6,
+                  detail: 'number',
+                  sortText: '00000000000000000004',
+                  insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {
+                        line: 10,
+                        character: 15,
+                      },
+                      end: {
+                        line: 10,
+                        character: 15,
+                      },
+                    },
+                    newText: 'x',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'local value identifier',
+                      {
+                        token: 'AUTO332',
+                        index: 4,
+                        completion: 'x',
+                      },
                     ],
                   },
                 },
@@ -153,7 +203,11 @@ module.exports = (suite(
             },
           },
         ],
-        ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
+        [
+          'textDocument/publishDiagnostics',
+          'window/showStatus',
+          '$/cancelRequest',
+        ],
       ),
     ]),
     test('textDocument/completion', [
@@ -178,8 +232,14 @@ module.exports = (suite(
                   insertTextFormat: 1,
                   textEdit: {
                     range: {
-                      start: {line: 13, character: 15},
-                      end: {line: 13, character: 15},
+                      start: {
+                        line: 13,
+                        character: 15,
+                      },
+                      end: {
+                        line: 13,
+                        character: 15,
+                      },
                     },
                     newText: 'aClass',
                   },
@@ -189,7 +249,11 @@ module.exports = (suite(
                     arguments: [
                       'textDocument/completion',
                       'local value identifier',
-                      {token: 'AUTO332', completion: 'aClass'},
+                      {
+                        token: 'AUTO332',
+                        index: 0,
+                        completion: 'aClass',
+                      },
                     ],
                   },
                 },
@@ -197,12 +261,18 @@ module.exports = (suite(
                   label: 'aFunction',
                   kind: 3,
                   detail: '() => null',
-                  sortText: '00000000000000000000',
+                  sortText: '00000000000000000001',
                   insertTextFormat: 1,
                   textEdit: {
                     range: {
-                      start: {line: 13, character: 15},
-                      end: {line: 13, character: 15},
+                      start: {
+                        line: 13,
+                        character: 15,
+                      },
+                      end: {
+                        line: 13,
+                        character: 15,
+                      },
                     },
                     newText: 'aFunction',
                   },
@@ -212,7 +282,11 @@ module.exports = (suite(
                     arguments: [
                       'textDocument/completion',
                       'local value identifier',
-                      {token: 'AUTO332', completion: 'aFunction'},
+                      {
+                        token: 'AUTO332',
+                        index: 1,
+                        completion: 'aFunction',
+                      },
                     ],
                   },
                 },
@@ -220,12 +294,18 @@ module.exports = (suite(
                   label: 'aNumber',
                   kind: 6,
                   detail: 'number',
-                  sortText: '00000000000000000000',
+                  sortText: '00000000000000000002',
                   insertTextFormat: 1,
                   textEdit: {
                     range: {
-                      start: {line: 13, character: 15},
-                      end: {line: 13, character: 15},
+                      start: {
+                        line: 13,
+                        character: 15,
+                      },
+                      end: {
+                        line: 13,
+                        character: 15,
+                      },
                     },
                     newText: 'aNumber',
                   },
@@ -235,7 +315,11 @@ module.exports = (suite(
                     arguments: [
                       'textDocument/completion',
                       'local value identifier',
-                      {token: 'AUTO332', completion: 'aNumber'},
+                      {
+                        token: 'AUTO332',
+                        index: 2,
+                        completion: 'aNumber',
+                      },
                     ],
                   },
                 },
@@ -243,12 +327,18 @@ module.exports = (suite(
                   label: 'foo',
                   kind: 3,
                   detail: '() => void',
-                  sortText: '00000000000000000000',
+                  sortText: '00000000000000000003',
                   insertTextFormat: 1,
                   textEdit: {
                     range: {
-                      start: {line: 13, character: 15},
-                      end: {line: 13, character: 15},
+                      start: {
+                        line: 13,
+                        character: 15,
+                      },
+                      end: {
+                        line: 13,
+                        character: 15,
+                      },
                     },
                     newText: 'foo',
                   },
@@ -258,30 +348,11 @@ module.exports = (suite(
                     arguments: [
                       'textDocument/completion',
                       'local value identifier',
-                      {token: 'AUTO332', completion: 'foo'},
-                    ],
-                  },
-                },
-                {
-                  label: 'x',
-                  kind: 6,
-                  detail: 'number',
-                  sortText: '00000000000000000000',
-                  insertTextFormat: 1,
-                  textEdit: {
-                    range: {
-                      start: {line: 13, character: 15},
-                      end: {line: 13, character: 15},
-                    },
-                    newText: 'x',
-                  },
-                  command: {
-                    title: '',
-                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
-                    arguments: [
-                      'textDocument/completion',
-                      'local value identifier',
-                      {token: 'AUTO332', completion: 'x'},
+                      {
+                        token: 'AUTO332',
+                        index: 3,
+                        completion: 'foo',
+                      },
                     ],
                   },
                 },
@@ -289,12 +360,18 @@ module.exports = (suite(
                   label: 'this',
                   kind: 6,
                   detail: 'this',
-                  sortText: '00000000000000000000',
+                  sortText: '00000000000000000004',
                   insertTextFormat: 1,
                   textEdit: {
                     range: {
-                      start: {line: 13, character: 15},
-                      end: {line: 13, character: 15},
+                      start: {
+                        line: 13,
+                        character: 15,
+                      },
+                      end: {
+                        line: 13,
+                        character: 15,
+                      },
                     },
                     newText: 'this',
                   },
@@ -304,7 +381,44 @@ module.exports = (suite(
                     arguments: [
                       'textDocument/completion',
                       'this',
-                      {token: 'AUTO332', completion: 'this'},
+                      {
+                        token: 'AUTO332',
+                        index: 4,
+                        completion: 'this',
+                      },
+                    ],
+                  },
+                },
+                {
+                  label: 'x',
+                  kind: 6,
+                  detail: 'number',
+                  sortText: '00000000000000000005',
+                  insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {
+                        line: 13,
+                        character: 15,
+                      },
+                      end: {
+                        line: 13,
+                        character: 15,
+                      },
+                    },
+                    newText: 'x',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'local value identifier',
+                      {
+                        token: 'AUTO332',
+                        index: 5,
+                        completion: 'x',
+                      },
                     ],
                   },
                 },
@@ -312,7 +426,11 @@ module.exports = (suite(
             },
           },
         ],
-        ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
+        [
+          'textDocument/publishDiagnostics',
+          'window/showStatus',
+          '$/cancelRequest',
+        ],
       ),
     ]),
     test('textDocument/completion', [
@@ -370,6 +488,7 @@ module.exports = (suite(
                       'local value identifier',
                       {
                         token: 'AUTO332',
+                        index: 0,
                         completion: 'aFunction',
                       },
                     ],
@@ -379,7 +498,7 @@ module.exports = (suite(
                   label: 'foo',
                   kind: 3,
                   detail: '() => void',
-                  sortText: '00000000000000000000',
+                  sortText: '00000000000000000001',
                   insertTextFormat: 1,
                   textEdit: {
                     range: {
@@ -402,39 +521,8 @@ module.exports = (suite(
                       'local value identifier',
                       {
                         token: 'AUTO332',
+                        index: 1,
                         completion: 'foo',
-                      },
-                    ],
-                  },
-                },
-                {
-                  label: 'x',
-                  kind: 6,
-                  detail: 'number',
-                  sortText: '00000000000000000000',
-                  insertTextFormat: 1,
-                  textEdit: {
-                    range: {
-                      start: {
-                        line: 9,
-                        character: 15,
-                      },
-                      end: {
-                        line: 9,
-                        character: 15,
-                      },
-                    },
-                    newText: 'x',
-                  },
-                  command: {
-                    title: '',
-                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
-                    arguments: [
-                      'textDocument/completion',
-                      'local value identifier',
-                      {
-                        token: 'AUTO332',
-                        completion: 'x',
                       },
                     ],
                   },
@@ -443,7 +531,7 @@ module.exports = (suite(
                   label: 'this',
                   kind: 6,
                   detail: 'this',
-                  sortText: '00000000000000000000',
+                  sortText: '00000000000000000002',
                   insertTextFormat: 1,
                   textEdit: {
                     range: {
@@ -466,7 +554,41 @@ module.exports = (suite(
                       'this',
                       {
                         token: 'AUTO332',
+                        index: 2,
                         completion: 'this',
+                      },
+                    ],
+                  },
+                },
+                {
+                  label: 'x',
+                  kind: 6,
+                  detail: 'number',
+                  sortText: '00000000000000000003',
+                  insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {
+                        line: 9,
+                        character: 15,
+                      },
+                      end: {
+                        line: 9,
+                        character: 15,
+                      },
+                    },
+                    newText: 'x',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'local value identifier',
+                      {
+                        token: 'AUTO332',
+                        index: 3,
+                        completion: 'x',
                       },
                     ],
                   },
@@ -475,7 +597,11 @@ module.exports = (suite(
             },
           },
         ],
-        ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
+        [
+          'textDocument/publishDiagnostics',
+          'window/showStatus',
+          '$/cancelRequest',
+        ],
       ),
     ]),
     test('textDocument/completion triggered by space in jsx', [
@@ -500,8 +626,14 @@ module.exports = (suite(
                   insertTextFormat: 1,
                   textEdit: {
                     range: {
-                      start: {line: 12, character: 4},
-                      end: {line: 12, character: 4},
+                      start: {
+                        line: 12,
+                        character: 4,
+                      },
+                      end: {
+                        line: 12,
+                        character: 4,
+                      },
                     },
                     newText: 'a=',
                   },
@@ -511,7 +643,11 @@ module.exports = (suite(
                     arguments: [
                       'textDocument/completion',
                       'jsx attribute',
-                      {token: 'AUTO332', completion: 'a'},
+                      {
+                        token: 'AUTO332',
+                        index: 0,
+                        completion: 'a',
+                      },
                     ],
                   },
                 },
@@ -519,7 +655,11 @@ module.exports = (suite(
             },
           },
         ],
-        ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
+        [
+          'textDocument/publishDiagnostics',
+          'window/showStatus',
+          '$/cancelRequest',
+        ],
       ),
     ]),
     test('textDocument/completion triggered by space outside of jsx', [
@@ -564,8 +704,14 @@ module.exports = (suite(
                   insertTextFormat: 1,
                   textEdit: {
                     range: {
-                      start: {line: 11, character: 1},
-                      end: {line: 11, character: 1},
+                      start: {
+                        line: 11,
+                        character: 1,
+                      },
+                      end: {
+                        line: 11,
+                        character: 1,
+                      },
                     },
                     newText: 'C',
                   },
@@ -575,7 +721,11 @@ module.exports = (suite(
                     arguments: [
                       'textDocument/completion',
                       'local value identifier',
-                      {token: 'AUTO332', completion: 'C'},
+                      {
+                        token: 'AUTO332',
+                        index: 0,
+                        completion: 'C',
+                      },
                     ],
                   },
                 },
@@ -583,12 +733,18 @@ module.exports = (suite(
                   label: 'D',
                   kind: 3,
                   detail: '(props: Props) => void',
-                  sortText: '00000000000000000000',
+                  sortText: '00000000000000000001',
                   insertTextFormat: 1,
                   textEdit: {
                     range: {
-                      start: {line: 11, character: 1},
-                      end: {line: 11, character: 1},
+                      start: {
+                        line: 11,
+                        character: 1,
+                      },
+                      end: {
+                        line: 11,
+                        character: 1,
+                      },
                     },
                     newText: 'D',
                   },
@@ -598,7 +754,11 @@ module.exports = (suite(
                     arguments: [
                       'textDocument/completion',
                       'local value identifier',
-                      {token: 'AUTO332', completion: 'D'},
+                      {
+                        token: 'AUTO332',
+                        index: 1,
+                        completion: 'D',
+                      },
                     ],
                   },
                 },
@@ -606,12 +766,18 @@ module.exports = (suite(
                   label: 'React',
                   kind: 9,
                   detail: 'module React',
-                  sortText: '00000000000000000000',
+                  sortText: '00000000000000000002',
                   insertTextFormat: 1,
                   textEdit: {
                     range: {
-                      start: {line: 11, character: 1},
-                      end: {line: 11, character: 1},
+                      start: {
+                        line: 11,
+                        character: 1,
+                      },
+                      end: {
+                        line: 11,
+                        character: 1,
+                      },
                     },
                     newText: 'React',
                   },
@@ -621,7 +787,11 @@ module.exports = (suite(
                     arguments: [
                       'textDocument/completion',
                       'local value identifier',
-                      {token: 'AUTO332', completion: 'React'},
+                      {
+                        token: 'AUTO332',
+                        index: 2,
+                        completion: 'React',
+                      },
                     ],
                   },
                 },
@@ -629,7 +799,11 @@ module.exports = (suite(
             },
           },
         ],
-        ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
+        [
+          'textDocument/publishDiagnostics',
+          'window/showStatus',
+          '$/cancelRequest',
+        ],
       ),
     ]),
     test('textDocument/completion invoked in jsx', [
@@ -654,8 +828,14 @@ module.exports = (suite(
                   insertTextFormat: 1,
                   textEdit: {
                     range: {
-                      start: {line: 12, character: 4},
-                      end: {line: 12, character: 4},
+                      start: {
+                        line: 12,
+                        character: 4,
+                      },
+                      end: {
+                        line: 12,
+                        character: 4,
+                      },
                     },
                     newText: 'a=',
                   },
@@ -665,7 +845,11 @@ module.exports = (suite(
                     arguments: [
                       'textDocument/completion',
                       'jsx attribute',
-                      {token: 'AUTO332', completion: 'a'},
+                      {
+                        token: 'AUTO332',
+                        index: 0,
+                        completion: 'a',
+                      },
                     ],
                   },
                 },
@@ -673,7 +857,11 @@ module.exports = (suite(
             },
           },
         ],
-        ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
+        [
+          'textDocument/publishDiagnostics',
+          'window/showStatus',
+          '$/cancelRequest',
+        ],
       ),
     ]),
     test(
@@ -700,8 +888,14 @@ module.exports = (suite(
                     insertTextFormat: 1,
                     textEdit: {
                       range: {
-                        start: {line: 13, character: 4},
-                        end: {line: 13, character: 4},
+                        start: {
+                          line: 13,
+                          character: 4,
+                        },
+                        end: {
+                          line: 13,
+                          character: 4,
+                        },
                       },
                       newText: 'a=',
                     },
@@ -711,7 +905,11 @@ module.exports = (suite(
                       arguments: [
                         'textDocument/completion',
                         'jsx attribute',
-                        {token: 'AUTO332', completion: 'a'},
+                        {
+                          token: 'AUTO332',
+                          index: 0,
+                          completion: 'a',
+                        },
                       ],
                     },
                   },
@@ -721,7 +919,8 @@ module.exports = (suite(
           ],
           [
             'textDocument/publishDiagnostics',
-            ...lspIgnoreStatusAndCancellation,
+            'window/showStatus',
+            '$/cancelRequest',
           ],
         ),
       ],
@@ -748,8 +947,14 @@ module.exports = (suite(
                   insertTextFormat: 1,
                   textEdit: {
                     range: {
-                      start: {line: 13, character: 4},
-                      end: {line: 13, character: 4},
+                      start: {
+                        line: 13,
+                        character: 4,
+                      },
+                      end: {
+                        line: 13,
+                        character: 4,
+                      },
                     },
                     newText: 'a=',
                   },
@@ -759,7 +964,11 @@ module.exports = (suite(
                     arguments: [
                       'textDocument/completion',
                       'jsx attribute',
-                      {token: 'AUTO332', completion: 'a'},
+                      {
+                        token: 'AUTO332',
+                        index: 0,
+                        completion: 'a',
+                      },
                     ],
                   },
                 },
@@ -767,7 +976,11 @@ module.exports = (suite(
             },
           },
         ],
-        ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
+        [
+          'textDocument/publishDiagnostics',
+          'window/showStatus',
+          '$/cancelRequest',
+        ],
       ),
     ]),
     test('textDocument/completion triggered by dot in jsx', [
@@ -785,38 +998,6 @@ module.exports = (suite(
               isIncomplete: false,
               items: [
                 {
-                  label: 'apply',
-                  kind: 3,
-                  detail: '(thisArg: any, argArray?: any) => any',
-                  sortText: '00000000000000000001',
-                  insertTextFormat: 1,
-                  textEdit: {
-                    range: {
-                      start: {
-                        line: 14,
-                        character: 3,
-                      },
-                      end: {
-                        line: 14,
-                        character: 3,
-                      },
-                    },
-                    newText: 'apply',
-                  },
-                  command: {
-                    title: '',
-                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
-                    arguments: [
-                      'textDocument/completion',
-                      'member',
-                      {
-                        token: 'AUTO332',
-                        completion: 'apply',
-                      },
-                    ],
-                  },
-                },
-                {
                   label: 'arguments',
                   kind: 6,
                   detail: 'any',
@@ -843,71 +1024,8 @@ module.exports = (suite(
                       'member',
                       {
                         token: 'AUTO332',
+                        index: 0,
                         completion: 'arguments',
-                      },
-                    ],
-                  },
-                },
-                {
-                  label: 'bind',
-                  kind: 3,
-                  detail: '(thisArg: any, ...argArray: Array<any>) => any',
-                  sortText: '00000000000000000001',
-                  insertTextFormat: 1,
-                  textEdit: {
-                    range: {
-                      start: {
-                        line: 14,
-                        character: 3,
-                      },
-                      end: {
-                        line: 14,
-                        character: 3,
-                      },
-                    },
-                    newText: 'bind',
-                  },
-                  command: {
-                    title: '',
-                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
-                    arguments: [
-                      'textDocument/completion',
-                      'member',
-                      {
-                        token: 'AUTO332',
-                        completion: 'bind',
-                      },
-                    ],
-                  },
-                },
-                {
-                  label: 'call',
-                  kind: 3,
-                  detail: '(thisArg: any, ...argArray: Array<any>) => any',
-                  sortText: '00000000000000000001',
-                  insertTextFormat: 1,
-                  textEdit: {
-                    range: {
-                      start: {
-                        line: 14,
-                        character: 3,
-                      },
-                      end: {
-                        line: 14,
-                        character: 3,
-                      },
-                    },
-                    newText: 'call',
-                  },
-                  command: {
-                    title: '',
-                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
-                    arguments: [
-                      'textDocument/completion',
-                      'member',
-                      {
-                        token: 'AUTO332',
-                        completion: 'call',
                       },
                     ],
                   },
@@ -916,7 +1034,7 @@ module.exports = (suite(
                   label: 'caller',
                   kind: 13,
                   detail: 'any | null',
-                  sortText: '00000000000000000000',
+                  sortText: '00000000000000000001',
                   insertTextFormat: 1,
                   textEdit: {
                     range: {
@@ -939,6 +1057,7 @@ module.exports = (suite(
                       'member',
                       {
                         token: 'AUTO332',
+                        index: 1,
                         completion: 'caller',
                       },
                     ],
@@ -948,7 +1067,7 @@ module.exports = (suite(
                   label: 'childContextTypes',
                   kind: 6,
                   detail: 'any',
-                  sortText: '00000000000000000000',
+                  sortText: '00000000000000000002',
                   insertTextFormat: 1,
                   textEdit: {
                     range: {
@@ -971,6 +1090,7 @@ module.exports = (suite(
                       'member',
                       {
                         token: 'AUTO332',
+                        index: 2,
                         completion: 'childContextTypes',
                       },
                     ],
@@ -980,7 +1100,7 @@ module.exports = (suite(
                   label: 'contextTypes',
                   kind: 6,
                   detail: 'any',
-                  sortText: '00000000000000000000',
+                  sortText: '00000000000000000003',
                   insertTextFormat: 1,
                   textEdit: {
                     range: {
@@ -1003,6 +1123,7 @@ module.exports = (suite(
                       'member',
                       {
                         token: 'AUTO332',
+                        index: 3,
                         completion: 'contextTypes',
                       },
                     ],
@@ -1012,7 +1133,7 @@ module.exports = (suite(
                   label: 'displayName',
                   kind: 13,
                   detail: '(?string) | void',
-                  sortText: '00000000000000000000',
+                  sortText: '00000000000000000004',
                   insertTextFormat: 1,
                   textEdit: {
                     range: {
@@ -1035,81 +1156,8 @@ module.exports = (suite(
                       'member',
                       {
                         token: 'AUTO332',
+                        index: 4,
                         completion: 'displayName',
-                      },
-                    ],
-                  },
-                },
-                {
-                  label: 'hasOwnProperty',
-                  kind: 3,
-                  detail: '(prop: mixed) => boolean',
-                  documentation: {
-                    kind: 'markdown',
-                    value:
-                      'Determines whether an object has a property with the specified name.',
-                  },
-                  sortText: '00000000000000000001',
-                  insertTextFormat: 1,
-                  textEdit: {
-                    range: {
-                      start: {
-                        line: 14,
-                        character: 3,
-                      },
-                      end: {
-                        line: 14,
-                        character: 3,
-                      },
-                    },
-                    newText: 'hasOwnProperty',
-                  },
-                  command: {
-                    title: '',
-                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
-                    arguments: [
-                      'textDocument/completion',
-                      'member',
-                      {
-                        token: 'AUTO332',
-                        completion: 'hasOwnProperty',
-                      },
-                    ],
-                  },
-                },
-                {
-                  label: 'isPrototypeOf',
-                  kind: 3,
-                  detail: '(o: mixed) => boolean',
-                  documentation: {
-                    kind: 'markdown',
-                    value:
-                      "Determines whether an object exists in another object's prototype chain.",
-                  },
-                  sortText: '00000000000000000001',
-                  insertTextFormat: 1,
-                  textEdit: {
-                    range: {
-                      start: {
-                        line: 14,
-                        character: 3,
-                      },
-                      end: {
-                        line: 14,
-                        character: 3,
-                      },
-                    },
-                    newText: 'isPrototypeOf',
-                  },
-                  command: {
-                    title: '',
-                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
-                    arguments: [
-                      'textDocument/completion',
-                      'member',
-                      {
-                        token: 'AUTO332',
-                        completion: 'isPrototypeOf',
                       },
                     ],
                   },
@@ -1118,7 +1166,7 @@ module.exports = (suite(
                   label: 'length',
                   kind: 6,
                   detail: 'number',
-                  sortText: '00000000000000000000',
+                  sortText: '00000000000000000005',
                   insertTextFormat: 1,
                   textEdit: {
                     range: {
@@ -1141,6 +1189,7 @@ module.exports = (suite(
                       'member',
                       {
                         token: 'AUTO332',
+                        index: 5,
                         completion: 'length',
                       },
                     ],
@@ -1155,7 +1204,7 @@ module.exports = (suite(
                     value:
                       'Returns the name of the function. Function names are read-only and can not be changed.',
                   },
-                  sortText: '00000000000000000000',
+                  sortText: '00000000000000000006',
                   insertTextFormat: 1,
                   textEdit: {
                     range: {
@@ -1178,6 +1227,7 @@ module.exports = (suite(
                       'member',
                       {
                         token: 'AUTO332',
+                        index: 6,
                         completion: 'name',
                       },
                     ],
@@ -1187,7 +1237,7 @@ module.exports = (suite(
                   label: 'propTypes',
                   kind: 6,
                   detail: 'any',
-                  sortText: '00000000000000000000',
+                  sortText: '00000000000000000007',
                   insertTextFormat: 1,
                   textEdit: {
                     range: {
@@ -1210,7 +1260,183 @@ module.exports = (suite(
                       'member',
                       {
                         token: 'AUTO332',
+                        index: 7,
                         completion: 'propTypes',
+                      },
+                    ],
+                  },
+                },
+                {
+                  label: 'apply',
+                  kind: 3,
+                  detail: '(thisArg: any, argArray?: any) => any',
+                  sortText: '00000000000000000008',
+                  insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {
+                        line: 14,
+                        character: 3,
+                      },
+                      end: {
+                        line: 14,
+                        character: 3,
+                      },
+                    },
+                    newText: 'apply',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'member',
+                      {
+                        token: 'AUTO332',
+                        index: 8,
+                        completion: 'apply',
+                      },
+                    ],
+                  },
+                },
+                {
+                  label: 'bind',
+                  kind: 3,
+                  detail: '(thisArg: any, ...argArray: Array<any>) => any',
+                  sortText: '00000000000000000009',
+                  insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {
+                        line: 14,
+                        character: 3,
+                      },
+                      end: {
+                        line: 14,
+                        character: 3,
+                      },
+                    },
+                    newText: 'bind',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'member',
+                      {
+                        token: 'AUTO332',
+                        index: 9,
+                        completion: 'bind',
+                      },
+                    ],
+                  },
+                },
+                {
+                  label: 'call',
+                  kind: 3,
+                  detail: '(thisArg: any, ...argArray: Array<any>) => any',
+                  sortText: '00000000000000000010',
+                  insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {
+                        line: 14,
+                        character: 3,
+                      },
+                      end: {
+                        line: 14,
+                        character: 3,
+                      },
+                    },
+                    newText: 'call',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'member',
+                      {
+                        token: 'AUTO332',
+                        index: 10,
+                        completion: 'call',
+                      },
+                    ],
+                  },
+                },
+                {
+                  label: 'hasOwnProperty',
+                  kind: 3,
+                  detail: '(prop: mixed) => boolean',
+                  documentation: {
+                    kind: 'markdown',
+                    value:
+                      'Determines whether an object has a property with the specified name.',
+                  },
+                  sortText: '00000000000000000011',
+                  insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {
+                        line: 14,
+                        character: 3,
+                      },
+                      end: {
+                        line: 14,
+                        character: 3,
+                      },
+                    },
+                    newText: 'hasOwnProperty',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'member',
+                      {
+                        token: 'AUTO332',
+                        index: 11,
+                        completion: 'hasOwnProperty',
+                      },
+                    ],
+                  },
+                },
+                {
+                  label: 'isPrototypeOf',
+                  kind: 3,
+                  detail: '(o: mixed) => boolean',
+                  documentation: {
+                    kind: 'markdown',
+                    value:
+                      "Determines whether an object exists in another object's prototype chain.",
+                  },
+                  sortText: '00000000000000000012',
+                  insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {
+                        line: 14,
+                        character: 3,
+                      },
+                      end: {
+                        line: 14,
+                        character: 3,
+                      },
+                    },
+                    newText: 'isPrototypeOf',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'member',
+                      {
+                        token: 'AUTO332',
+                        index: 12,
+                        completion: 'isPrototypeOf',
                       },
                     ],
                   },
@@ -1224,7 +1450,7 @@ module.exports = (suite(
                     value:
                       'Determines whether a specified property is enumerable.',
                   },
-                  sortText: '00000000000000000001',
+                  sortText: '00000000000000000013',
                   insertTextFormat: 1,
                   textEdit: {
                     range: {
@@ -1247,6 +1473,7 @@ module.exports = (suite(
                       'member',
                       {
                         token: 'AUTO332',
+                        index: 13,
                         completion: 'propertyIsEnumerable',
                       },
                     ],
@@ -1261,7 +1488,7 @@ module.exports = (suite(
                     value:
                       'Returns a date converted to a string using the current locale.',
                   },
-                  sortText: '00000000000000000001',
+                  sortText: '00000000000000000014',
                   insertTextFormat: 1,
                   textEdit: {
                     range: {
@@ -1284,6 +1511,7 @@ module.exports = (suite(
                       'member',
                       {
                         token: 'AUTO332',
+                        index: 14,
                         completion: 'toLocaleString',
                       },
                     ],
@@ -1297,7 +1525,7 @@ module.exports = (suite(
                     kind: 'markdown',
                     value: 'Returns a string representation of a function.',
                   },
-                  sortText: '00000000000000000001',
+                  sortText: '00000000000000000015',
                   insertTextFormat: 1,
                   textEdit: {
                     range: {
@@ -1320,6 +1548,7 @@ module.exports = (suite(
                       'member',
                       {
                         token: 'AUTO332',
+                        index: 15,
                         completion: 'toString',
                       },
                     ],
@@ -1334,7 +1563,7 @@ module.exports = (suite(
                     value:
                       'Returns the primitive value of the specified object.',
                   },
-                  sortText: '00000000000000000001',
+                  sortText: '00000000000000000016',
                   insertTextFormat: 1,
                   textEdit: {
                     range: {
@@ -1357,6 +1586,7 @@ module.exports = (suite(
                       'member',
                       {
                         token: 'AUTO332',
+                        index: 16,
                         completion: 'valueOf',
                       },
                     ],
@@ -1366,7 +1596,11 @@ module.exports = (suite(
             },
           },
         ],
-        ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
+        [
+          'textDocument/publishDiagnostics',
+          'window/showStatus',
+          '$/cancelRequest',
+        ],
       ),
     ]),
     test('textDocument/completion triggered by dot outside jsx', [
@@ -1384,38 +1618,6 @@ module.exports = (suite(
               isIncomplete: false,
               items: [
                 {
-                  label: 'apply',
-                  kind: 3,
-                  detail: '(thisArg: any, argArray?: any) => any',
-                  sortText: '00000000000000000001',
-                  insertTextFormat: 1,
-                  textEdit: {
-                    range: {
-                      start: {
-                        line: 15,
-                        character: 2,
-                      },
-                      end: {
-                        line: 15,
-                        character: 2,
-                      },
-                    },
-                    newText: 'apply',
-                  },
-                  command: {
-                    title: '',
-                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
-                    arguments: [
-                      'textDocument/completion',
-                      'member',
-                      {
-                        token: 'AUTO332',
-                        completion: 'apply',
-                      },
-                    ],
-                  },
-                },
-                {
                   label: 'arguments',
                   kind: 6,
                   detail: 'any',
@@ -1442,71 +1644,8 @@ module.exports = (suite(
                       'member',
                       {
                         token: 'AUTO332',
+                        index: 0,
                         completion: 'arguments',
-                      },
-                    ],
-                  },
-                },
-                {
-                  label: 'bind',
-                  kind: 3,
-                  detail: '(thisArg: any, ...argArray: Array<any>) => any',
-                  sortText: '00000000000000000001',
-                  insertTextFormat: 1,
-                  textEdit: {
-                    range: {
-                      start: {
-                        line: 15,
-                        character: 2,
-                      },
-                      end: {
-                        line: 15,
-                        character: 2,
-                      },
-                    },
-                    newText: 'bind',
-                  },
-                  command: {
-                    title: '',
-                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
-                    arguments: [
-                      'textDocument/completion',
-                      'member',
-                      {
-                        token: 'AUTO332',
-                        completion: 'bind',
-                      },
-                    ],
-                  },
-                },
-                {
-                  label: 'call',
-                  kind: 3,
-                  detail: '(thisArg: any, ...argArray: Array<any>) => any',
-                  sortText: '00000000000000000001',
-                  insertTextFormat: 1,
-                  textEdit: {
-                    range: {
-                      start: {
-                        line: 15,
-                        character: 2,
-                      },
-                      end: {
-                        line: 15,
-                        character: 2,
-                      },
-                    },
-                    newText: 'call',
-                  },
-                  command: {
-                    title: '',
-                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
-                    arguments: [
-                      'textDocument/completion',
-                      'member',
-                      {
-                        token: 'AUTO332',
-                        completion: 'call',
                       },
                     ],
                   },
@@ -1515,7 +1654,7 @@ module.exports = (suite(
                   label: 'caller',
                   kind: 13,
                   detail: 'any | null',
-                  sortText: '00000000000000000000',
+                  sortText: '00000000000000000001',
                   insertTextFormat: 1,
                   textEdit: {
                     range: {
@@ -1538,6 +1677,7 @@ module.exports = (suite(
                       'member',
                       {
                         token: 'AUTO332',
+                        index: 1,
                         completion: 'caller',
                       },
                     ],
@@ -1547,7 +1687,7 @@ module.exports = (suite(
                   label: 'childContextTypes',
                   kind: 6,
                   detail: 'any',
-                  sortText: '00000000000000000000',
+                  sortText: '00000000000000000002',
                   insertTextFormat: 1,
                   textEdit: {
                     range: {
@@ -1570,6 +1710,7 @@ module.exports = (suite(
                       'member',
                       {
                         token: 'AUTO332',
+                        index: 2,
                         completion: 'childContextTypes',
                       },
                     ],
@@ -1579,7 +1720,7 @@ module.exports = (suite(
                   label: 'contextTypes',
                   kind: 6,
                   detail: 'any',
-                  sortText: '00000000000000000000',
+                  sortText: '00000000000000000003',
                   insertTextFormat: 1,
                   textEdit: {
                     range: {
@@ -1602,6 +1743,7 @@ module.exports = (suite(
                       'member',
                       {
                         token: 'AUTO332',
+                        index: 3,
                         completion: 'contextTypes',
                       },
                     ],
@@ -1611,7 +1753,7 @@ module.exports = (suite(
                   label: 'displayName',
                   kind: 13,
                   detail: '(?string) | void',
-                  sortText: '00000000000000000000',
+                  sortText: '00000000000000000004',
                   insertTextFormat: 1,
                   textEdit: {
                     range: {
@@ -1634,81 +1776,8 @@ module.exports = (suite(
                       'member',
                       {
                         token: 'AUTO332',
+                        index: 4,
                         completion: 'displayName',
-                      },
-                    ],
-                  },
-                },
-                {
-                  label: 'hasOwnProperty',
-                  kind: 3,
-                  detail: '(prop: mixed) => boolean',
-                  documentation: {
-                    kind: 'markdown',
-                    value:
-                      'Determines whether an object has a property with the specified name.',
-                  },
-                  sortText: '00000000000000000001',
-                  insertTextFormat: 1,
-                  textEdit: {
-                    range: {
-                      start: {
-                        line: 15,
-                        character: 2,
-                      },
-                      end: {
-                        line: 15,
-                        character: 2,
-                      },
-                    },
-                    newText: 'hasOwnProperty',
-                  },
-                  command: {
-                    title: '',
-                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
-                    arguments: [
-                      'textDocument/completion',
-                      'member',
-                      {
-                        token: 'AUTO332',
-                        completion: 'hasOwnProperty',
-                      },
-                    ],
-                  },
-                },
-                {
-                  label: 'isPrototypeOf',
-                  kind: 3,
-                  detail: '(o: mixed) => boolean',
-                  documentation: {
-                    kind: 'markdown',
-                    value:
-                      "Determines whether an object exists in another object's prototype chain.",
-                  },
-                  sortText: '00000000000000000001',
-                  insertTextFormat: 1,
-                  textEdit: {
-                    range: {
-                      start: {
-                        line: 15,
-                        character: 2,
-                      },
-                      end: {
-                        line: 15,
-                        character: 2,
-                      },
-                    },
-                    newText: 'isPrototypeOf',
-                  },
-                  command: {
-                    title: '',
-                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
-                    arguments: [
-                      'textDocument/completion',
-                      'member',
-                      {
-                        token: 'AUTO332',
-                        completion: 'isPrototypeOf',
                       },
                     ],
                   },
@@ -1717,7 +1786,7 @@ module.exports = (suite(
                   label: 'length',
                   kind: 6,
                   detail: 'number',
-                  sortText: '00000000000000000000',
+                  sortText: '00000000000000000005',
                   insertTextFormat: 1,
                   textEdit: {
                     range: {
@@ -1740,6 +1809,7 @@ module.exports = (suite(
                       'member',
                       {
                         token: 'AUTO332',
+                        index: 5,
                         completion: 'length',
                       },
                     ],
@@ -1754,7 +1824,7 @@ module.exports = (suite(
                     value:
                       'Returns the name of the function. Function names are read-only and can not be changed.',
                   },
-                  sortText: '00000000000000000000',
+                  sortText: '00000000000000000006',
                   insertTextFormat: 1,
                   textEdit: {
                     range: {
@@ -1777,6 +1847,7 @@ module.exports = (suite(
                       'member',
                       {
                         token: 'AUTO332',
+                        index: 6,
                         completion: 'name',
                       },
                     ],
@@ -1786,7 +1857,7 @@ module.exports = (suite(
                   label: 'propTypes',
                   kind: 6,
                   detail: 'any',
-                  sortText: '00000000000000000000',
+                  sortText: '00000000000000000007',
                   insertTextFormat: 1,
                   textEdit: {
                     range: {
@@ -1809,7 +1880,183 @@ module.exports = (suite(
                       'member',
                       {
                         token: 'AUTO332',
+                        index: 7,
                         completion: 'propTypes',
+                      },
+                    ],
+                  },
+                },
+                {
+                  label: 'apply',
+                  kind: 3,
+                  detail: '(thisArg: any, argArray?: any) => any',
+                  sortText: '00000000000000000008',
+                  insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {
+                        line: 15,
+                        character: 2,
+                      },
+                      end: {
+                        line: 15,
+                        character: 2,
+                      },
+                    },
+                    newText: 'apply',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'member',
+                      {
+                        token: 'AUTO332',
+                        index: 8,
+                        completion: 'apply',
+                      },
+                    ],
+                  },
+                },
+                {
+                  label: 'bind',
+                  kind: 3,
+                  detail: '(thisArg: any, ...argArray: Array<any>) => any',
+                  sortText: '00000000000000000009',
+                  insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {
+                        line: 15,
+                        character: 2,
+                      },
+                      end: {
+                        line: 15,
+                        character: 2,
+                      },
+                    },
+                    newText: 'bind',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'member',
+                      {
+                        token: 'AUTO332',
+                        index: 9,
+                        completion: 'bind',
+                      },
+                    ],
+                  },
+                },
+                {
+                  label: 'call',
+                  kind: 3,
+                  detail: '(thisArg: any, ...argArray: Array<any>) => any',
+                  sortText: '00000000000000000010',
+                  insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {
+                        line: 15,
+                        character: 2,
+                      },
+                      end: {
+                        line: 15,
+                        character: 2,
+                      },
+                    },
+                    newText: 'call',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'member',
+                      {
+                        token: 'AUTO332',
+                        index: 10,
+                        completion: 'call',
+                      },
+                    ],
+                  },
+                },
+                {
+                  label: 'hasOwnProperty',
+                  kind: 3,
+                  detail: '(prop: mixed) => boolean',
+                  documentation: {
+                    kind: 'markdown',
+                    value:
+                      'Determines whether an object has a property with the specified name.',
+                  },
+                  sortText: '00000000000000000011',
+                  insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {
+                        line: 15,
+                        character: 2,
+                      },
+                      end: {
+                        line: 15,
+                        character: 2,
+                      },
+                    },
+                    newText: 'hasOwnProperty',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'member',
+                      {
+                        token: 'AUTO332',
+                        index: 11,
+                        completion: 'hasOwnProperty',
+                      },
+                    ],
+                  },
+                },
+                {
+                  label: 'isPrototypeOf',
+                  kind: 3,
+                  detail: '(o: mixed) => boolean',
+                  documentation: {
+                    kind: 'markdown',
+                    value:
+                      "Determines whether an object exists in another object's prototype chain.",
+                  },
+                  sortText: '00000000000000000012',
+                  insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {
+                        line: 15,
+                        character: 2,
+                      },
+                      end: {
+                        line: 15,
+                        character: 2,
+                      },
+                    },
+                    newText: 'isPrototypeOf',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'member',
+                      {
+                        token: 'AUTO332',
+                        index: 12,
+                        completion: 'isPrototypeOf',
                       },
                     ],
                   },
@@ -1823,7 +2070,7 @@ module.exports = (suite(
                     value:
                       'Determines whether a specified property is enumerable.',
                   },
-                  sortText: '00000000000000000001',
+                  sortText: '00000000000000000013',
                   insertTextFormat: 1,
                   textEdit: {
                     range: {
@@ -1846,6 +2093,7 @@ module.exports = (suite(
                       'member',
                       {
                         token: 'AUTO332',
+                        index: 13,
                         completion: 'propertyIsEnumerable',
                       },
                     ],
@@ -1860,7 +2108,7 @@ module.exports = (suite(
                     value:
                       'Returns a date converted to a string using the current locale.',
                   },
-                  sortText: '00000000000000000001',
+                  sortText: '00000000000000000014',
                   insertTextFormat: 1,
                   textEdit: {
                     range: {
@@ -1883,6 +2131,7 @@ module.exports = (suite(
                       'member',
                       {
                         token: 'AUTO332',
+                        index: 14,
                         completion: 'toLocaleString',
                       },
                     ],
@@ -1896,7 +2145,7 @@ module.exports = (suite(
                     kind: 'markdown',
                     value: 'Returns a string representation of a function.',
                   },
-                  sortText: '00000000000000000001',
+                  sortText: '00000000000000000015',
                   insertTextFormat: 1,
                   textEdit: {
                     range: {
@@ -1919,6 +2168,7 @@ module.exports = (suite(
                       'member',
                       {
                         token: 'AUTO332',
+                        index: 15,
                         completion: 'toString',
                       },
                     ],
@@ -1933,7 +2183,7 @@ module.exports = (suite(
                     value:
                       'Returns the primitive value of the specified object.',
                   },
-                  sortText: '00000000000000000001',
+                  sortText: '00000000000000000016',
                   insertTextFormat: 1,
                   textEdit: {
                     range: {
@@ -1956,6 +2206,7 @@ module.exports = (suite(
                       'member',
                       {
                         token: 'AUTO332',
+                        index: 16,
                         completion: 'valueOf',
                       },
                     ],
@@ -1965,7 +2216,11 @@ module.exports = (suite(
             },
           },
         ],
-        ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
+        [
+          'textDocument/publishDiagnostics',
+          'window/showStatus',
+          '$/cancelRequest',
+        ],
       ),
     ]),
     test('textDocument/completion in an unqualified type annotation', [
@@ -1985,1126 +2240,6 @@ module.exports = (suite(
             result: {
               isIncomplete: false,
               items: [
-                {
-                  label: 'any',
-                  kind: 6,
-                  detail: 'any',
-                  sortText: '00000000000000000000',
-                  insertTextFormat: 1,
-                  textEdit: {
-                    range: {
-                      start: {
-                        line: 27,
-                        character: 18,
-                      },
-                      end: {
-                        line: 27,
-                        character: 18,
-                      },
-                    },
-                    newText: 'any',
-                  },
-                  command: {
-                    title: '',
-                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
-                    arguments: [
-                      'textDocument/completion',
-                      'builtin type',
-                      {
-                        token: 'AUTO332',
-                        completion: 'any',
-                      },
-                    ],
-                  },
-                },
-                {
-                  label: 'boolean',
-                  kind: 6,
-                  detail: 'boolean',
-                  sortText: '00000000000000000000',
-                  insertTextFormat: 1,
-                  textEdit: {
-                    range: {
-                      start: {
-                        line: 27,
-                        character: 18,
-                      },
-                      end: {
-                        line: 27,
-                        character: 18,
-                      },
-                    },
-                    newText: 'boolean',
-                  },
-                  command: {
-                    title: '',
-                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
-                    arguments: [
-                      'textDocument/completion',
-                      'builtin type',
-                      {
-                        token: 'AUTO332',
-                        completion: 'boolean',
-                      },
-                    ],
-                  },
-                },
-                {
-                  label: 'empty',
-                  kind: 6,
-                  detail: 'empty',
-                  sortText: '00000000000000000000',
-                  insertTextFormat: 1,
-                  textEdit: {
-                    range: {
-                      start: {
-                        line: 27,
-                        character: 18,
-                      },
-                      end: {
-                        line: 27,
-                        character: 18,
-                      },
-                    },
-                    newText: 'empty',
-                  },
-                  command: {
-                    title: '',
-                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
-                    arguments: [
-                      'textDocument/completion',
-                      'builtin type',
-                      {
-                        token: 'AUTO332',
-                        completion: 'empty',
-                      },
-                    ],
-                  },
-                },
-                {
-                  label: 'false',
-                  kind: 6,
-                  detail: 'false',
-                  sortText: '00000000000000000000',
-                  insertTextFormat: 1,
-                  textEdit: {
-                    range: {
-                      start: {
-                        line: 27,
-                        character: 18,
-                      },
-                      end: {
-                        line: 27,
-                        character: 18,
-                      },
-                    },
-                    newText: 'false',
-                  },
-                  command: {
-                    title: '',
-                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
-                    arguments: [
-                      'textDocument/completion',
-                      'builtin type',
-                      {
-                        token: 'AUTO332',
-                        completion: 'false',
-                      },
-                    ],
-                  },
-                },
-                {
-                  label: 'mixed',
-                  kind: 6,
-                  detail: 'mixed',
-                  sortText: '00000000000000000000',
-                  insertTextFormat: 1,
-                  textEdit: {
-                    range: {
-                      start: {
-                        line: 27,
-                        character: 18,
-                      },
-                      end: {
-                        line: 27,
-                        character: 18,
-                      },
-                    },
-                    newText: 'mixed',
-                  },
-                  command: {
-                    title: '',
-                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
-                    arguments: [
-                      'textDocument/completion',
-                      'builtin type',
-                      {
-                        token: 'AUTO332',
-                        completion: 'mixed',
-                      },
-                    ],
-                  },
-                },
-                {
-                  label: 'null',
-                  kind: 6,
-                  detail: 'null',
-                  sortText: '00000000000000000000',
-                  insertTextFormat: 1,
-                  textEdit: {
-                    range: {
-                      start: {
-                        line: 27,
-                        character: 18,
-                      },
-                      end: {
-                        line: 27,
-                        character: 18,
-                      },
-                    },
-                    newText: 'null',
-                  },
-                  command: {
-                    title: '',
-                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
-                    arguments: [
-                      'textDocument/completion',
-                      'builtin type',
-                      {
-                        token: 'AUTO332',
-                        completion: 'null',
-                      },
-                    ],
-                  },
-                },
-                {
-                  label: 'number',
-                  kind: 6,
-                  detail: 'number',
-                  sortText: '00000000000000000000',
-                  insertTextFormat: 1,
-                  textEdit: {
-                    range: {
-                      start: {
-                        line: 27,
-                        character: 18,
-                      },
-                      end: {
-                        line: 27,
-                        character: 18,
-                      },
-                    },
-                    newText: 'number',
-                  },
-                  command: {
-                    title: '',
-                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
-                    arguments: [
-                      'textDocument/completion',
-                      'builtin type',
-                      {
-                        token: 'AUTO332',
-                        completion: 'number',
-                      },
-                    ],
-                  },
-                },
-                {
-                  label: 'bigint',
-                  kind: 6,
-                  detail: 'bigint',
-                  sortText: '00000000000000000000',
-                  insertTextFormat: 1,
-                  textEdit: {
-                    range: {
-                      start: {
-                        line: 27,
-                        character: 18,
-                      },
-                      end: {
-                        line: 27,
-                        character: 18,
-                      },
-                    },
-                    newText: 'bigint',
-                  },
-                  command: {
-                    title: '',
-                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
-                    arguments: [
-                      'textDocument/completion',
-                      'builtin type',
-                      {
-                        token: 'AUTO332',
-                        completion: 'bigint',
-                      },
-                    ],
-                  },
-                },
-                {
-                  label: 'string',
-                  kind: 6,
-                  detail: 'string',
-                  sortText: '00000000000000000000',
-                  insertTextFormat: 1,
-                  textEdit: {
-                    range: {
-                      start: {
-                        line: 27,
-                        character: 18,
-                      },
-                      end: {
-                        line: 27,
-                        character: 18,
-                      },
-                    },
-                    newText: 'string',
-                  },
-                  command: {
-                    title: '',
-                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
-                    arguments: [
-                      'textDocument/completion',
-                      'builtin type',
-                      {
-                        token: 'AUTO332',
-                        completion: 'string',
-                      },
-                    ],
-                  },
-                },
-                {
-                  label: 'true',
-                  kind: 6,
-                  detail: 'true',
-                  sortText: '00000000000000000000',
-                  insertTextFormat: 1,
-                  textEdit: {
-                    range: {
-                      start: {
-                        line: 27,
-                        character: 18,
-                      },
-                      end: {
-                        line: 27,
-                        character: 18,
-                      },
-                    },
-                    newText: 'true',
-                  },
-                  command: {
-                    title: '',
-                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
-                    arguments: [
-                      'textDocument/completion',
-                      'builtin type',
-                      {
-                        token: 'AUTO332',
-                        completion: 'true',
-                      },
-                    ],
-                  },
-                },
-                {
-                  label: 'void',
-                  kind: 6,
-                  detail: 'void',
-                  sortText: '00000000000000000000',
-                  insertTextFormat: 1,
-                  textEdit: {
-                    range: {
-                      start: {
-                        line: 27,
-                        character: 18,
-                      },
-                      end: {
-                        line: 27,
-                        character: 18,
-                      },
-                    },
-                    newText: 'void',
-                  },
-                  command: {
-                    title: '',
-                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
-                    arguments: [
-                      'textDocument/completion',
-                      'builtin type',
-                      {
-                        token: 'AUTO332',
-                        completion: 'void',
-                      },
-                    ],
-                  },
-                },
-                {
-                  label: 'symbol',
-                  kind: 6,
-                  detail: 'symbol',
-                  sortText: '00000000000000000000',
-                  insertTextFormat: 1,
-                  textEdit: {
-                    range: {
-                      start: {
-                        line: 27,
-                        character: 18,
-                      },
-                      end: {
-                        line: 27,
-                        character: 18,
-                      },
-                    },
-                    newText: 'symbol',
-                  },
-                  command: {
-                    title: '',
-                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
-                    arguments: [
-                      'textDocument/completion',
-                      'builtin type',
-                      {
-                        token: 'AUTO332',
-                        completion: 'symbol',
-                      },
-                    ],
-                  },
-                },
-                {
-                  label: 'Class',
-                  kind: 3,
-                  detail: 'Class',
-                  sortText: '00000000000000000102',
-                  insertTextFormat: 1,
-                  textEdit: {
-                    range: {
-                      start: {
-                        line: 27,
-                        character: 18,
-                      },
-                      end: {
-                        line: 27,
-                        character: 18,
-                      },
-                    },
-                    newText: 'Class',
-                  },
-                  command: {
-                    title: '',
-                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
-                    arguments: [
-                      'textDocument/completion',
-                      'builtin type',
-                      {
-                        token: 'AUTO332',
-                        completion: 'Class',
-                      },
-                    ],
-                  },
-                },
-                {
-                  label: '$Call',
-                  kind: 3,
-                  detail: '$Call',
-                  sortText: '00000000000000000102',
-                  insertTextFormat: 1,
-                  textEdit: {
-                    range: {
-                      start: {
-                        line: 27,
-                        character: 18,
-                      },
-                      end: {
-                        line: 27,
-                        character: 18,
-                      },
-                    },
-                    newText: '$Call',
-                  },
-                  command: {
-                    title: '',
-                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
-                    arguments: [
-                      'textDocument/completion',
-                      'builtin type',
-                      {
-                        token: 'AUTO332',
-                        completion: '$Call',
-                      },
-                    ],
-                  },
-                },
-                {
-                  label: '$CharSet',
-                  kind: 3,
-                  detail: '$CharSet',
-                  sortText: '00000000000000000102',
-                  insertTextFormat: 1,
-                  textEdit: {
-                    range: {
-                      start: {
-                        line: 27,
-                        character: 18,
-                      },
-                      end: {
-                        line: 27,
-                        character: 18,
-                      },
-                    },
-                    newText: '$CharSet',
-                  },
-                  command: {
-                    title: '',
-                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
-                    arguments: [
-                      'textDocument/completion',
-                      'builtin type',
-                      {
-                        token: 'AUTO332',
-                        completion: '$CharSet',
-                      },
-                    ],
-                  },
-                },
-                {
-                  label: '$Diff',
-                  kind: 3,
-                  detail: '$Diff',
-                  sortText: '00000000000000000102',
-                  insertTextFormat: 1,
-                  textEdit: {
-                    range: {
-                      start: {
-                        line: 27,
-                        character: 18,
-                      },
-                      end: {
-                        line: 27,
-                        character: 18,
-                      },
-                    },
-                    newText: '$Diff',
-                  },
-                  command: {
-                    title: '',
-                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
-                    arguments: [
-                      'textDocument/completion',
-                      'builtin type',
-                      {
-                        token: 'AUTO332',
-                        completion: '$Diff',
-                      },
-                    ],
-                  },
-                },
-                {
-                  label: '$ElementType',
-                  kind: 3,
-                  detail: '$ElementType',
-                  sortText: '00000000000000000102',
-                  insertTextFormat: 1,
-                  textEdit: {
-                    range: {
-                      start: {
-                        line: 27,
-                        character: 18,
-                      },
-                      end: {
-                        line: 27,
-                        character: 18,
-                      },
-                    },
-                    newText: '$ElementType',
-                  },
-                  command: {
-                    title: '',
-                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
-                    arguments: [
-                      'textDocument/completion',
-                      'builtin type',
-                      {
-                        token: 'AUTO332',
-                        completion: '$ElementType',
-                      },
-                    ],
-                  },
-                },
-                {
-                  label: '$Exact',
-                  kind: 3,
-                  detail: '$Exact',
-                  sortText: '00000000000000000102',
-                  insertTextFormat: 1,
-                  textEdit: {
-                    range: {
-                      start: {
-                        line: 27,
-                        character: 18,
-                      },
-                      end: {
-                        line: 27,
-                        character: 18,
-                      },
-                    },
-                    newText: '$Exact',
-                  },
-                  command: {
-                    title: '',
-                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
-                    arguments: [
-                      'textDocument/completion',
-                      'builtin type',
-                      {
-                        token: 'AUTO332',
-                        completion: '$Exact',
-                      },
-                    ],
-                  },
-                },
-                {
-                  label: '$Exports',
-                  kind: 3,
-                  detail: '$Exports',
-                  sortText: '00000000000000000102',
-                  insertTextFormat: 1,
-                  textEdit: {
-                    range: {
-                      start: {
-                        line: 27,
-                        character: 18,
-                      },
-                      end: {
-                        line: 27,
-                        character: 18,
-                      },
-                    },
-                    newText: '$Exports',
-                  },
-                  command: {
-                    title: '',
-                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
-                    arguments: [
-                      'textDocument/completion',
-                      'builtin type',
-                      {
-                        token: 'AUTO332',
-                        completion: '$Exports',
-                      },
-                    ],
-                  },
-                },
-                {
-                  label: '$KeyMirror',
-                  kind: 3,
-                  detail: '$KeyMirror',
-                  sortText: '00000000000000000102',
-                  insertTextFormat: 1,
-                  textEdit: {
-                    range: {
-                      start: {
-                        line: 27,
-                        character: 18,
-                      },
-                      end: {
-                        line: 27,
-                        character: 18,
-                      },
-                    },
-                    newText: '$KeyMirror',
-                  },
-                  command: {
-                    title: '',
-                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
-                    arguments: [
-                      'textDocument/completion',
-                      'builtin type',
-                      {
-                        token: 'AUTO332',
-                        completion: '$KeyMirror',
-                      },
-                    ],
-                  },
-                },
-                {
-                  label: '$Keys',
-                  kind: 3,
-                  detail: '$Keys',
-                  sortText: '00000000000000000102',
-                  insertTextFormat: 1,
-                  textEdit: {
-                    range: {
-                      start: {
-                        line: 27,
-                        character: 18,
-                      },
-                      end: {
-                        line: 27,
-                        character: 18,
-                      },
-                    },
-                    newText: '$Keys',
-                  },
-                  command: {
-                    title: '',
-                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
-                    arguments: [
-                      'textDocument/completion',
-                      'builtin type',
-                      {
-                        token: 'AUTO332',
-                        completion: '$Keys',
-                      },
-                    ],
-                  },
-                },
-                {
-                  label: '$NonMaybeType',
-                  kind: 3,
-                  detail: '$NonMaybeType',
-                  sortText: '00000000000000000102',
-                  insertTextFormat: 1,
-                  textEdit: {
-                    range: {
-                      start: {
-                        line: 27,
-                        character: 18,
-                      },
-                      end: {
-                        line: 27,
-                        character: 18,
-                      },
-                    },
-                    newText: '$NonMaybeType',
-                  },
-                  command: {
-                    title: '',
-                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
-                    arguments: [
-                      'textDocument/completion',
-                      'builtin type',
-                      {
-                        token: 'AUTO332',
-                        completion: '$NonMaybeType',
-                      },
-                    ],
-                  },
-                },
-                {
-                  label: '$ObjMap',
-                  kind: 3,
-                  detail: '$ObjMap',
-                  sortText: '00000000000000000102',
-                  insertTextFormat: 1,
-                  textEdit: {
-                    range: {
-                      start: {
-                        line: 27,
-                        character: 18,
-                      },
-                      end: {
-                        line: 27,
-                        character: 18,
-                      },
-                    },
-                    newText: '$ObjMap',
-                  },
-                  command: {
-                    title: '',
-                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
-                    arguments: [
-                      'textDocument/completion',
-                      'builtin type',
-                      {
-                        token: 'AUTO332',
-                        completion: '$ObjMap',
-                      },
-                    ],
-                  },
-                },
-                {
-                  label: '$ObjMapi',
-                  kind: 3,
-                  detail: '$ObjMapi',
-                  sortText: '00000000000000000102',
-                  insertTextFormat: 1,
-                  textEdit: {
-                    range: {
-                      start: {
-                        line: 27,
-                        character: 18,
-                      },
-                      end: {
-                        line: 27,
-                        character: 18,
-                      },
-                    },
-                    newText: '$ObjMapi',
-                  },
-                  command: {
-                    title: '',
-                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
-                    arguments: [
-                      'textDocument/completion',
-                      'builtin type',
-                      {
-                        token: 'AUTO332',
-                        completion: '$ObjMapi',
-                      },
-                    ],
-                  },
-                },
-                {
-                  label: '$PropertyType',
-                  kind: 3,
-                  detail: '$PropertyType',
-                  sortText: '00000000000000000102',
-                  insertTextFormat: 1,
-                  textEdit: {
-                    range: {
-                      start: {
-                        line: 27,
-                        character: 18,
-                      },
-                      end: {
-                        line: 27,
-                        character: 18,
-                      },
-                    },
-                    newText: '$PropertyType',
-                  },
-                  command: {
-                    title: '',
-                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
-                    arguments: [
-                      'textDocument/completion',
-                      'builtin type',
-                      {
-                        token: 'AUTO332',
-                        completion: '$PropertyType',
-                      },
-                    ],
-                  },
-                },
-                {
-                  label: '$ReadOnly',
-                  kind: 3,
-                  detail: '$ReadOnly',
-                  sortText: '00000000000000000102',
-                  insertTextFormat: 1,
-                  textEdit: {
-                    range: {
-                      start: {
-                        line: 27,
-                        character: 18,
-                      },
-                      end: {
-                        line: 27,
-                        character: 18,
-                      },
-                    },
-                    newText: '$ReadOnly',
-                  },
-                  command: {
-                    title: '',
-                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
-                    arguments: [
-                      'textDocument/completion',
-                      'builtin type',
-                      {
-                        token: 'AUTO332',
-                        completion: '$ReadOnly',
-                      },
-                    ],
-                  },
-                },
-                {
-                  label: '$Rest',
-                  kind: 3,
-                  detail: '$Rest',
-                  sortText: '00000000000000000102',
-                  insertTextFormat: 1,
-                  textEdit: {
-                    range: {
-                      start: {
-                        line: 27,
-                        character: 18,
-                      },
-                      end: {
-                        line: 27,
-                        character: 18,
-                      },
-                    },
-                    newText: '$Rest',
-                  },
-                  command: {
-                    title: '',
-                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
-                    arguments: [
-                      'textDocument/completion',
-                      'builtin type',
-                      {
-                        token: 'AUTO332',
-                        completion: '$Rest',
-                      },
-                    ],
-                  },
-                },
-                {
-                  label: '$Shape',
-                  kind: 3,
-                  detail: '$Shape',
-                  sortText: '00000000000000000102',
-                  insertTextFormat: 1,
-                  textEdit: {
-                    range: {
-                      start: {
-                        line: 27,
-                        character: 18,
-                      },
-                      end: {
-                        line: 27,
-                        character: 18,
-                      },
-                    },
-                    newText: '$Shape',
-                  },
-                  command: {
-                    title: '',
-                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
-                    arguments: [
-                      'textDocument/completion',
-                      'builtin type',
-                      {
-                        token: 'AUTO332',
-                        completion: '$Shape',
-                      },
-                    ],
-                  },
-                },
-                {
-                  label: '$TupleMap',
-                  kind: 3,
-                  detail: '$TupleMap',
-                  sortText: '00000000000000000102',
-                  insertTextFormat: 1,
-                  textEdit: {
-                    range: {
-                      start: {
-                        line: 27,
-                        character: 18,
-                      },
-                      end: {
-                        line: 27,
-                        character: 18,
-                      },
-                    },
-                    newText: '$TupleMap',
-                  },
-                  command: {
-                    title: '',
-                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
-                    arguments: [
-                      'textDocument/completion',
-                      'builtin type',
-                      {
-                        token: 'AUTO332',
-                        completion: '$TupleMap',
-                      },
-                    ],
-                  },
-                },
-                {
-                  label: '$Values',
-                  kind: 3,
-                  detail: '$Values',
-                  sortText: '00000000000000000102',
-                  insertTextFormat: 1,
-                  textEdit: {
-                    range: {
-                      start: {
-                        line: 27,
-                        character: 18,
-                      },
-                      end: {
-                        line: 27,
-                        character: 18,
-                      },
-                    },
-                    newText: '$Values',
-                  },
-                  command: {
-                    title: '',
-                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
-                    arguments: [
-                      'textDocument/completion',
-                      'builtin type',
-                      {
-                        token: 'AUTO332',
-                        completion: '$Values',
-                      },
-                    ],
-                  },
-                },
-                {
-                  label: 'Typaram',
-                  kind: 25,
-                  detail: 'Typaram',
-                  sortText: '00000000000000000000',
-                  insertTextFormat: 1,
-                  textEdit: {
-                    range: {
-                      start: {
-                        line: 27,
-                        character: 18,
-                      },
-                      end: {
-                        line: 27,
-                        character: 18,
-                      },
-                    },
-                    newText: 'Typaram',
-                  },
-                  command: {
-                    title: '',
-                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
-                    arguments: [
-                      'textDocument/completion',
-                      'unqualified type parameter',
-                      {
-                        token: 'AUTO332',
-                        completion: 'Typaram',
-                      },
-                    ],
-                  },
-                },
-                {
-                  label: 'Typesafe',
-                  kind: 8,
-                  detail: 'interface Typesafety',
-                  sortText: '00000000000000000000',
-                  insertTextFormat: 1,
-                  textEdit: {
-                    range: {
-                      start: {
-                        line: 27,
-                        character: 18,
-                      },
-                      end: {
-                        line: 27,
-                        character: 18,
-                      },
-                    },
-                    newText: 'Typesafe',
-                  },
-                  command: {
-                    title: '',
-                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
-                    arguments: [
-                      'textDocument/completion',
-                      'unqualified type: local type identifier',
-                      {
-                        token: 'AUTO332',
-                        completion: 'Typesafe',
-                      },
-                    ],
-                  },
-                },
-                {
-                  label: 'Typhoon',
-                  kind: 13,
-                  detail: 'type Typhoon = string',
-                  sortText: '00000000000000000000',
-                  insertTextFormat: 1,
-                  textEdit: {
-                    range: {
-                      start: {
-                        line: 27,
-                        character: 18,
-                      },
-                      end: {
-                        line: 27,
-                        character: 18,
-                      },
-                    },
-                    newText: 'Typhoon',
-                  },
-                  command: {
-                    title: '',
-                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
-                    arguments: [
-                      'textDocument/completion',
-                      'unqualified type: local type identifier',
-                      {
-                        token: 'AUTO332',
-                        completion: 'Typhoon',
-                      },
-                    ],
-                  },
-                },
-                {
-                  label: 'Typnotism',
-                  kind: 13,
-                  detail: 'type Typnotism = number',
-                  sortText: '00000000000000000000',
-                  insertTextFormat: 1,
-                  textEdit: {
-                    range: {
-                      start: {
-                        line: 27,
-                        character: 18,
-                      },
-                      end: {
-                        line: 27,
-                        character: 18,
-                      },
-                    },
-                    newText: 'Typnotism',
-                  },
-                  command: {
-                    title: '',
-                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
-                    arguments: [
-                      'textDocument/completion',
-                      'unqualified type: local type identifier',
-                      {
-                        token: 'AUTO332',
-                        completion: 'Typnotism',
-                      },
-                    ],
-                  },
-                },
-                {
-                  label: 'Tyrant',
-                  kind: 13,
-                  detail: 'type Tyrant = string',
-                  sortText: '00000000000000000000',
-                  insertTextFormat: 1,
-                  textEdit: {
-                    range: {
-                      start: {
-                        line: 27,
-                        character: 18,
-                      },
-                      end: {
-                        line: 27,
-                        character: 18,
-                      },
-                    },
-                    newText: 'Tyrant',
-                  },
-                  command: {
-                    title: '',
-                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
-                    arguments: [
-                      'textDocument/completion',
-                      'unqualified type: local type identifier',
-                      {
-                        token: 'AUTO332',
-                        completion: 'Tyrant',
-                      },
-                    ],
-                  },
-                },
                 {
                   label: 'Tympanic',
                   kind: 13,
@@ -3132,16 +2267,17 @@ module.exports = (suite(
                       'unqualified type: local type identifier',
                       {
                         token: 'AUTO332',
+                        index: 0,
                         completion: 'Tympanic',
                       },
                     ],
                   },
                 },
                 {
-                  label: 'Typeset',
-                  kind: 8,
-                  detail: 'interface Typeset',
-                  sortText: '00000000000000000000',
+                  label: 'Typaram',
+                  kind: 25,
+                  detail: 'Typaram',
+                  sortText: '00000000000000000001',
                   insertTextFormat: 1,
                   textEdit: {
                     range: {
@@ -3154,17 +2290,18 @@ module.exports = (suite(
                         character: 18,
                       },
                     },
-                    newText: 'Typeset',
+                    newText: 'Typaram',
                   },
                   command: {
                     title: '',
                     command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
                     arguments: [
                       'textDocument/completion',
-                      'unqualified type: local type identifier',
+                      'unqualified type parameter',
                       {
                         token: 'AUTO332',
-                        completion: 'Typeset',
+                        index: 1,
+                        completion: 'Typaram',
                       },
                     ],
                   },
@@ -3173,7 +2310,7 @@ module.exports = (suite(
                   label: 'Types',
                   kind: 9,
                   detail: 'module Types',
-                  sortText: '00000000000000000000',
+                  sortText: '00000000000000000002',
                   insertTextFormat: 1,
                   textEdit: {
                     range: {
@@ -3196,7 +2333,74 @@ module.exports = (suite(
                       'unqualified type -> qualified type',
                       {
                         token: 'AUTO332',
+                        index: 2,
                         completion: 'Types',
+                      },
+                    ],
+                  },
+                },
+                {
+                  label: 'Typesafe',
+                  kind: 8,
+                  detail: 'interface Typesafety',
+                  sortText: '00000000000000000003',
+                  insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {
+                        line: 27,
+                        character: 18,
+                      },
+                      end: {
+                        line: 27,
+                        character: 18,
+                      },
+                    },
+                    newText: 'Typesafe',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'unqualified type: local type identifier',
+                      {
+                        token: 'AUTO332',
+                        index: 3,
+                        completion: 'Typesafe',
+                      },
+                    ],
+                  },
+                },
+                {
+                  label: 'Typeset',
+                  kind: 8,
+                  detail: 'interface Typeset',
+                  sortText: '00000000000000000004',
+                  insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {
+                        line: 27,
+                        character: 18,
+                      },
+                      end: {
+                        line: 27,
+                        character: 18,
+                      },
+                    },
+                    newText: 'Typeset',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'unqualified type: local type identifier',
+                      {
+                        token: 'AUTO332',
+                        index: 4,
+                        completion: 'Typeset',
                       },
                     ],
                   },
@@ -3205,7 +2409,7 @@ module.exports = (suite(
                   label: 'Typewriter',
                   kind: 7,
                   detail: 'class Typewriter',
-                  sortText: '00000000000000000000',
+                  sortText: '00000000000000000005',
                   insertTextFormat: 1,
                   textEdit: {
                     range: {
@@ -3228,7 +2432,74 @@ module.exports = (suite(
                       'unqualified type: class or enum',
                       {
                         token: 'AUTO332',
+                        index: 5,
                         completion: 'Typewriter',
+                      },
+                    ],
+                  },
+                },
+                {
+                  label: 'Typhoon',
+                  kind: 13,
+                  detail: 'type Typhoon = string',
+                  sortText: '00000000000000000006',
+                  insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {
+                        line: 27,
+                        character: 18,
+                      },
+                      end: {
+                        line: 27,
+                        character: 18,
+                      },
+                    },
+                    newText: 'Typhoon',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'unqualified type: local type identifier',
+                      {
+                        token: 'AUTO332',
+                        index: 6,
+                        completion: 'Typhoon',
+                      },
+                    ],
+                  },
+                },
+                {
+                  label: 'Typnotism',
+                  kind: 13,
+                  detail: 'type Typnotism = number',
+                  sortText: '00000000000000000007',
+                  insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {
+                        line: 27,
+                        character: 18,
+                      },
+                      end: {
+                        line: 27,
+                        character: 18,
+                      },
+                    },
+                    newText: 'Typnotism',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'unqualified type: local type identifier',
+                      {
+                        token: 'AUTO332',
+                        index: 7,
+                        completion: 'Typnotism',
                       },
                     ],
                   },
@@ -3237,7 +2508,7 @@ module.exports = (suite(
                   label: 'Typography',
                   kind: 7,
                   detail: 'class Typewriter',
-                  sortText: '00000000000000000000',
+                  sortText: '00000000000000000008',
                   insertTextFormat: 1,
                   textEdit: {
                     range: {
@@ -3260,6 +2531,7 @@ module.exports = (suite(
                       'unqualified type: class or enum',
                       {
                         token: 'AUTO332',
+                        index: 8,
                         completion: 'Typography',
                       },
                     ],
@@ -3269,7 +2541,7 @@ module.exports = (suite(
                   label: 'Typologies',
                   kind: 9,
                   detail: 'module Typologies',
-                  sortText: '00000000000000000000',
+                  sortText: '00000000000000000009',
                   insertTextFormat: 1,
                   textEdit: {
                     range: {
@@ -3292,7 +2564,1031 @@ module.exports = (suite(
                       'unqualified type -> qualified type',
                       {
                         token: 'AUTO332',
+                        index: 9,
                         completion: 'Typologies',
+                      },
+                    ],
+                  },
+                },
+                {
+                  label: 'Tyrant',
+                  kind: 13,
+                  detail: 'type Tyrant = string',
+                  sortText: '00000000000000000010',
+                  insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {
+                        line: 27,
+                        character: 18,
+                      },
+                      end: {
+                        line: 27,
+                        character: 18,
+                      },
+                    },
+                    newText: 'Tyrant',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'unqualified type: local type identifier',
+                      {
+                        token: 'AUTO332',
+                        index: 10,
+                        completion: 'Tyrant',
+                      },
+                    ],
+                  },
+                },
+                {
+                  label: 'any',
+                  kind: 6,
+                  detail: 'any',
+                  sortText: '00000000000000000011',
+                  insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {
+                        line: 27,
+                        character: 18,
+                      },
+                      end: {
+                        line: 27,
+                        character: 18,
+                      },
+                    },
+                    newText: 'any',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'builtin type',
+                      {
+                        token: 'AUTO332',
+                        index: 11,
+                        completion: 'any',
+                      },
+                    ],
+                  },
+                },
+                {
+                  label: 'bigint',
+                  kind: 6,
+                  detail: 'bigint',
+                  sortText: '00000000000000000012',
+                  insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {
+                        line: 27,
+                        character: 18,
+                      },
+                      end: {
+                        line: 27,
+                        character: 18,
+                      },
+                    },
+                    newText: 'bigint',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'builtin type',
+                      {
+                        token: 'AUTO332',
+                        index: 12,
+                        completion: 'bigint',
+                      },
+                    ],
+                  },
+                },
+                {
+                  label: 'boolean',
+                  kind: 6,
+                  detail: 'boolean',
+                  sortText: '00000000000000000013',
+                  insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {
+                        line: 27,
+                        character: 18,
+                      },
+                      end: {
+                        line: 27,
+                        character: 18,
+                      },
+                    },
+                    newText: 'boolean',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'builtin type',
+                      {
+                        token: 'AUTO332',
+                        index: 13,
+                        completion: 'boolean',
+                      },
+                    ],
+                  },
+                },
+                {
+                  label: 'empty',
+                  kind: 6,
+                  detail: 'empty',
+                  sortText: '00000000000000000014',
+                  insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {
+                        line: 27,
+                        character: 18,
+                      },
+                      end: {
+                        line: 27,
+                        character: 18,
+                      },
+                    },
+                    newText: 'empty',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'builtin type',
+                      {
+                        token: 'AUTO332',
+                        index: 14,
+                        completion: 'empty',
+                      },
+                    ],
+                  },
+                },
+                {
+                  label: 'false',
+                  kind: 6,
+                  detail: 'false',
+                  sortText: '00000000000000000015',
+                  insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {
+                        line: 27,
+                        character: 18,
+                      },
+                      end: {
+                        line: 27,
+                        character: 18,
+                      },
+                    },
+                    newText: 'false',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'builtin type',
+                      {
+                        token: 'AUTO332',
+                        index: 15,
+                        completion: 'false',
+                      },
+                    ],
+                  },
+                },
+                {
+                  label: 'mixed',
+                  kind: 6,
+                  detail: 'mixed',
+                  sortText: '00000000000000000016',
+                  insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {
+                        line: 27,
+                        character: 18,
+                      },
+                      end: {
+                        line: 27,
+                        character: 18,
+                      },
+                    },
+                    newText: 'mixed',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'builtin type',
+                      {
+                        token: 'AUTO332',
+                        index: 16,
+                        completion: 'mixed',
+                      },
+                    ],
+                  },
+                },
+                {
+                  label: 'null',
+                  kind: 6,
+                  detail: 'null',
+                  sortText: '00000000000000000017',
+                  insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {
+                        line: 27,
+                        character: 18,
+                      },
+                      end: {
+                        line: 27,
+                        character: 18,
+                      },
+                    },
+                    newText: 'null',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'builtin type',
+                      {
+                        token: 'AUTO332',
+                        index: 17,
+                        completion: 'null',
+                      },
+                    ],
+                  },
+                },
+                {
+                  label: 'number',
+                  kind: 6,
+                  detail: 'number',
+                  sortText: '00000000000000000018',
+                  insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {
+                        line: 27,
+                        character: 18,
+                      },
+                      end: {
+                        line: 27,
+                        character: 18,
+                      },
+                    },
+                    newText: 'number',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'builtin type',
+                      {
+                        token: 'AUTO332',
+                        index: 18,
+                        completion: 'number',
+                      },
+                    ],
+                  },
+                },
+                {
+                  label: 'string',
+                  kind: 6,
+                  detail: 'string',
+                  sortText: '00000000000000000019',
+                  insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {
+                        line: 27,
+                        character: 18,
+                      },
+                      end: {
+                        line: 27,
+                        character: 18,
+                      },
+                    },
+                    newText: 'string',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'builtin type',
+                      {
+                        token: 'AUTO332',
+                        index: 19,
+                        completion: 'string',
+                      },
+                    ],
+                  },
+                },
+                {
+                  label: 'symbol',
+                  kind: 6,
+                  detail: 'symbol',
+                  sortText: '00000000000000000020',
+                  insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {
+                        line: 27,
+                        character: 18,
+                      },
+                      end: {
+                        line: 27,
+                        character: 18,
+                      },
+                    },
+                    newText: 'symbol',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'builtin type',
+                      {
+                        token: 'AUTO332',
+                        index: 20,
+                        completion: 'symbol',
+                      },
+                    ],
+                  },
+                },
+                {
+                  label: 'true',
+                  kind: 6,
+                  detail: 'true',
+                  sortText: '00000000000000000021',
+                  insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {
+                        line: 27,
+                        character: 18,
+                      },
+                      end: {
+                        line: 27,
+                        character: 18,
+                      },
+                    },
+                    newText: 'true',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'builtin type',
+                      {
+                        token: 'AUTO332',
+                        index: 21,
+                        completion: 'true',
+                      },
+                    ],
+                  },
+                },
+                {
+                  label: 'void',
+                  kind: 6,
+                  detail: 'void',
+                  sortText: '00000000000000000022',
+                  insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {
+                        line: 27,
+                        character: 18,
+                      },
+                      end: {
+                        line: 27,
+                        character: 18,
+                      },
+                    },
+                    newText: 'void',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'builtin type',
+                      {
+                        token: 'AUTO332',
+                        index: 22,
+                        completion: 'void',
+                      },
+                    ],
+                  },
+                },
+                {
+                  label: '$Call',
+                  kind: 3,
+                  detail: '$Call',
+                  sortText: '00000000000000000023',
+                  insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {
+                        line: 27,
+                        character: 18,
+                      },
+                      end: {
+                        line: 27,
+                        character: 18,
+                      },
+                    },
+                    newText: '$Call',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'builtin type',
+                      {
+                        token: 'AUTO332',
+                        index: 23,
+                        completion: '$Call',
+                      },
+                    ],
+                  },
+                },
+                {
+                  label: '$CharSet',
+                  kind: 3,
+                  detail: '$CharSet',
+                  sortText: '00000000000000000024',
+                  insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {
+                        line: 27,
+                        character: 18,
+                      },
+                      end: {
+                        line: 27,
+                        character: 18,
+                      },
+                    },
+                    newText: '$CharSet',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'builtin type',
+                      {
+                        token: 'AUTO332',
+                        index: 24,
+                        completion: '$CharSet',
+                      },
+                    ],
+                  },
+                },
+                {
+                  label: '$Diff',
+                  kind: 3,
+                  detail: '$Diff',
+                  sortText: '00000000000000000025',
+                  insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {
+                        line: 27,
+                        character: 18,
+                      },
+                      end: {
+                        line: 27,
+                        character: 18,
+                      },
+                    },
+                    newText: '$Diff',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'builtin type',
+                      {
+                        token: 'AUTO332',
+                        index: 25,
+                        completion: '$Diff',
+                      },
+                    ],
+                  },
+                },
+                {
+                  label: '$ElementType',
+                  kind: 3,
+                  detail: '$ElementType',
+                  sortText: '00000000000000000026',
+                  insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {
+                        line: 27,
+                        character: 18,
+                      },
+                      end: {
+                        line: 27,
+                        character: 18,
+                      },
+                    },
+                    newText: '$ElementType',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'builtin type',
+                      {
+                        token: 'AUTO332',
+                        index: 26,
+                        completion: '$ElementType',
+                      },
+                    ],
+                  },
+                },
+                {
+                  label: '$Exact',
+                  kind: 3,
+                  detail: '$Exact',
+                  sortText: '00000000000000000027',
+                  insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {
+                        line: 27,
+                        character: 18,
+                      },
+                      end: {
+                        line: 27,
+                        character: 18,
+                      },
+                    },
+                    newText: '$Exact',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'builtin type',
+                      {
+                        token: 'AUTO332',
+                        index: 27,
+                        completion: '$Exact',
+                      },
+                    ],
+                  },
+                },
+                {
+                  label: '$Exports',
+                  kind: 3,
+                  detail: '$Exports',
+                  sortText: '00000000000000000028',
+                  insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {
+                        line: 27,
+                        character: 18,
+                      },
+                      end: {
+                        line: 27,
+                        character: 18,
+                      },
+                    },
+                    newText: '$Exports',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'builtin type',
+                      {
+                        token: 'AUTO332',
+                        index: 28,
+                        completion: '$Exports',
+                      },
+                    ],
+                  },
+                },
+                {
+                  label: '$KeyMirror',
+                  kind: 3,
+                  detail: '$KeyMirror',
+                  sortText: '00000000000000000029',
+                  insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {
+                        line: 27,
+                        character: 18,
+                      },
+                      end: {
+                        line: 27,
+                        character: 18,
+                      },
+                    },
+                    newText: '$KeyMirror',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'builtin type',
+                      {
+                        token: 'AUTO332',
+                        index: 29,
+                        completion: '$KeyMirror',
+                      },
+                    ],
+                  },
+                },
+                {
+                  label: '$Keys',
+                  kind: 3,
+                  detail: '$Keys',
+                  sortText: '00000000000000000030',
+                  insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {
+                        line: 27,
+                        character: 18,
+                      },
+                      end: {
+                        line: 27,
+                        character: 18,
+                      },
+                    },
+                    newText: '$Keys',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'builtin type',
+                      {
+                        token: 'AUTO332',
+                        index: 30,
+                        completion: '$Keys',
+                      },
+                    ],
+                  },
+                },
+                {
+                  label: '$NonMaybeType',
+                  kind: 3,
+                  detail: '$NonMaybeType',
+                  sortText: '00000000000000000031',
+                  insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {
+                        line: 27,
+                        character: 18,
+                      },
+                      end: {
+                        line: 27,
+                        character: 18,
+                      },
+                    },
+                    newText: '$NonMaybeType',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'builtin type',
+                      {
+                        token: 'AUTO332',
+                        index: 31,
+                        completion: '$NonMaybeType',
+                      },
+                    ],
+                  },
+                },
+                {
+                  label: '$ObjMap',
+                  kind: 3,
+                  detail: '$ObjMap',
+                  sortText: '00000000000000000032',
+                  insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {
+                        line: 27,
+                        character: 18,
+                      },
+                      end: {
+                        line: 27,
+                        character: 18,
+                      },
+                    },
+                    newText: '$ObjMap',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'builtin type',
+                      {
+                        token: 'AUTO332',
+                        index: 32,
+                        completion: '$ObjMap',
+                      },
+                    ],
+                  },
+                },
+                {
+                  label: '$ObjMapi',
+                  kind: 3,
+                  detail: '$ObjMapi',
+                  sortText: '00000000000000000033',
+                  insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {
+                        line: 27,
+                        character: 18,
+                      },
+                      end: {
+                        line: 27,
+                        character: 18,
+                      },
+                    },
+                    newText: '$ObjMapi',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'builtin type',
+                      {
+                        token: 'AUTO332',
+                        index: 33,
+                        completion: '$ObjMapi',
+                      },
+                    ],
+                  },
+                },
+                {
+                  label: '$PropertyType',
+                  kind: 3,
+                  detail: '$PropertyType',
+                  sortText: '00000000000000000034',
+                  insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {
+                        line: 27,
+                        character: 18,
+                      },
+                      end: {
+                        line: 27,
+                        character: 18,
+                      },
+                    },
+                    newText: '$PropertyType',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'builtin type',
+                      {
+                        token: 'AUTO332',
+                        index: 34,
+                        completion: '$PropertyType',
+                      },
+                    ],
+                  },
+                },
+                {
+                  label: '$ReadOnly',
+                  kind: 3,
+                  detail: '$ReadOnly',
+                  sortText: '00000000000000000035',
+                  insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {
+                        line: 27,
+                        character: 18,
+                      },
+                      end: {
+                        line: 27,
+                        character: 18,
+                      },
+                    },
+                    newText: '$ReadOnly',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'builtin type',
+                      {
+                        token: 'AUTO332',
+                        index: 35,
+                        completion: '$ReadOnly',
+                      },
+                    ],
+                  },
+                },
+                {
+                  label: '$Rest',
+                  kind: 3,
+                  detail: '$Rest',
+                  sortText: '00000000000000000036',
+                  insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {
+                        line: 27,
+                        character: 18,
+                      },
+                      end: {
+                        line: 27,
+                        character: 18,
+                      },
+                    },
+                    newText: '$Rest',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'builtin type',
+                      {
+                        token: 'AUTO332',
+                        index: 36,
+                        completion: '$Rest',
+                      },
+                    ],
+                  },
+                },
+                {
+                  label: '$Shape',
+                  kind: 3,
+                  detail: '$Shape',
+                  sortText: '00000000000000000037',
+                  insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {
+                        line: 27,
+                        character: 18,
+                      },
+                      end: {
+                        line: 27,
+                        character: 18,
+                      },
+                    },
+                    newText: '$Shape',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'builtin type',
+                      {
+                        token: 'AUTO332',
+                        index: 37,
+                        completion: '$Shape',
+                      },
+                    ],
+                  },
+                },
+                {
+                  label: '$TupleMap',
+                  kind: 3,
+                  detail: '$TupleMap',
+                  sortText: '00000000000000000038',
+                  insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {
+                        line: 27,
+                        character: 18,
+                      },
+                      end: {
+                        line: 27,
+                        character: 18,
+                      },
+                    },
+                    newText: '$TupleMap',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'builtin type',
+                      {
+                        token: 'AUTO332',
+                        index: 38,
+                        completion: '$TupleMap',
+                      },
+                    ],
+                  },
+                },
+                {
+                  label: '$Values',
+                  kind: 3,
+                  detail: '$Values',
+                  sortText: '00000000000000000039',
+                  insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {
+                        line: 27,
+                        character: 18,
+                      },
+                      end: {
+                        line: 27,
+                        character: 18,
+                      },
+                    },
+                    newText: '$Values',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'builtin type',
+                      {
+                        token: 'AUTO332',
+                        index: 39,
+                        completion: '$Values',
+                      },
+                    ],
+                  },
+                },
+                {
+                  label: 'Class',
+                  kind: 3,
+                  detail: 'Class',
+                  sortText: '00000000000000000040',
+                  insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {
+                        line: 27,
+                        character: 18,
+                      },
+                      end: {
+                        line: 27,
+                        character: 18,
+                      },
+                    },
+                    newText: 'Class',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'builtin type',
+                      {
+                        token: 'AUTO332',
+                        index: 40,
+                        completion: 'Class',
                       },
                     ],
                   },
@@ -3330,8 +3626,14 @@ module.exports = (suite(
                   insertTextFormat: 1,
                   textEdit: {
                     range: {
-                      start: {line: 9, character: 3},
-                      end: {line: 9, character: 4},
+                      start: {
+                        line: 9,
+                        character: 3,
+                      },
+                      end: {
+                        line: 9,
+                        character: 4,
+                      },
                     },
                     newText: 'aaaa',
                   },
@@ -3341,7 +3643,11 @@ module.exports = (suite(
                     arguments: [
                       'textDocument/completion',
                       'jsx attribute',
-                      {token: 'aAUTO332', completion: 'aaaa'},
+                      {
+                        token: 'aAUTO332',
+                        index: 0,
+                        completion: 'aaaa',
+                      },
                     ],
                   },
                 },
@@ -3349,12 +3655,18 @@ module.exports = (suite(
                   label: 'aaab',
                   kind: 6,
                   detail: 'number',
-                  sortText: '00000000000000000000',
+                  sortText: '00000000000000000001',
                   insertTextFormat: 1,
                   textEdit: {
                     range: {
-                      start: {line: 9, character: 3},
-                      end: {line: 9, character: 4},
+                      start: {
+                        line: 9,
+                        character: 3,
+                      },
+                      end: {
+                        line: 9,
+                        character: 4,
+                      },
                     },
                     newText: 'aaab',
                   },
@@ -3364,7 +3676,11 @@ module.exports = (suite(
                     arguments: [
                       'textDocument/completion',
                       'jsx attribute',
-                      {token: 'aAUTO332', completion: 'aaab'},
+                      {
+                        token: 'aAUTO332',
+                        index: 1,
+                        completion: 'aaab',
+                      },
                     ],
                   },
                 },
@@ -3372,7 +3688,11 @@ module.exports = (suite(
             },
           },
         ],
-        ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
+        [
+          'textDocument/publishDiagnostics',
+          'window/showStatus',
+          '$/cancelRequest',
+        ],
       ),
     ]),
     test('textDocument/completion triggered by `[` - expression', [
@@ -3416,6 +3736,7 @@ module.exports = (suite(
                       'bracket syntax member',
                       {
                         token: 'AUTO332',
+                        index: 0,
                         completion: '"a"',
                       },
                     ],
@@ -3425,7 +3746,7 @@ module.exports = (suite(
                   label: '"b"',
                   kind: 6,
                   detail: 'string',
-                  sortText: '00000000000000000000',
+                  sortText: '00000000000000000001',
                   insertTextFormat: 1,
                   textEdit: {
                     range: {
@@ -3448,228 +3769,8 @@ module.exports = (suite(
                       'bracket syntax member',
                       {
                         token: 'AUTO332',
+                        index: 1,
                         completion: '"b"',
-                      },
-                    ],
-                  },
-                },
-                {
-                  label: '"hasOwnProperty"',
-                  kind: 3,
-                  detail: '(prop: mixed) => boolean',
-                  documentation: {
-                    kind: 'markdown',
-                    value:
-                      'Determines whether an object has a property with the specified name.',
-                  },
-                  sortText: '00000000000000000001',
-                  insertTextFormat: 1,
-                  textEdit: {
-                    range: {
-                      start: {
-                        line: 12,
-                        character: 12,
-                      },
-                      end: {
-                        line: 12,
-                        character: 12,
-                      },
-                    },
-                    newText: '"hasOwnProperty"',
-                  },
-                  command: {
-                    title: '',
-                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
-                    arguments: [
-                      'textDocument/completion',
-                      'bracket syntax member',
-                      {
-                        token: 'AUTO332',
-                        completion: '"hasOwnProperty"',
-                      },
-                    ],
-                  },
-                },
-                {
-                  label: '"isPrototypeOf"',
-                  kind: 3,
-                  detail: '(o: mixed) => boolean',
-                  documentation: {
-                    kind: 'markdown',
-                    value:
-                      "Determines whether an object exists in another object's prototype chain.",
-                  },
-                  sortText: '00000000000000000001',
-                  insertTextFormat: 1,
-                  textEdit: {
-                    range: {
-                      start: {
-                        line: 12,
-                        character: 12,
-                      },
-                      end: {
-                        line: 12,
-                        character: 12,
-                      },
-                    },
-                    newText: '"isPrototypeOf"',
-                  },
-                  command: {
-                    title: '',
-                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
-                    arguments: [
-                      'textDocument/completion',
-                      'bracket syntax member',
-                      {
-                        token: 'AUTO332',
-                        completion: '"isPrototypeOf"',
-                      },
-                    ],
-                  },
-                },
-                {
-                  label: '"propertyIsEnumerable"',
-                  kind: 3,
-                  detail: '(prop: mixed) => boolean',
-                  documentation: {
-                    kind: 'markdown',
-                    value:
-                      'Determines whether a specified property is enumerable.',
-                  },
-                  sortText: '00000000000000000001',
-                  insertTextFormat: 1,
-                  textEdit: {
-                    range: {
-                      start: {
-                        line: 12,
-                        character: 12,
-                      },
-                      end: {
-                        line: 12,
-                        character: 12,
-                      },
-                    },
-                    newText: '"propertyIsEnumerable"',
-                  },
-                  command: {
-                    title: '',
-                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
-                    arguments: [
-                      'textDocument/completion',
-                      'bracket syntax member',
-                      {
-                        token: 'AUTO332',
-                        completion: '"propertyIsEnumerable"',
-                      },
-                    ],
-                  },
-                },
-                {
-                  label: '"toLocaleString"',
-                  kind: 3,
-                  detail: '() => string',
-                  documentation: {
-                    kind: 'markdown',
-                    value:
-                      'Returns a date converted to a string using the current locale.',
-                  },
-                  sortText: '00000000000000000001',
-                  insertTextFormat: 1,
-                  textEdit: {
-                    range: {
-                      start: {
-                        line: 12,
-                        character: 12,
-                      },
-                      end: {
-                        line: 12,
-                        character: 12,
-                      },
-                    },
-                    newText: '"toLocaleString"',
-                  },
-                  command: {
-                    title: '',
-                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
-                    arguments: [
-                      'textDocument/completion',
-                      'bracket syntax member',
-                      {
-                        token: 'AUTO332',
-                        completion: '"toLocaleString"',
-                      },
-                    ],
-                  },
-                },
-                {
-                  label: '"toString"',
-                  kind: 3,
-                  detail: '() => string',
-                  documentation: {
-                    kind: 'markdown',
-                    value: 'Returns a string representation of an object.',
-                  },
-                  sortText: '00000000000000000001',
-                  insertTextFormat: 1,
-                  textEdit: {
-                    range: {
-                      start: {
-                        line: 12,
-                        character: 12,
-                      },
-                      end: {
-                        line: 12,
-                        character: 12,
-                      },
-                    },
-                    newText: '"toString"',
-                  },
-                  command: {
-                    title: '',
-                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
-                    arguments: [
-                      'textDocument/completion',
-                      'bracket syntax member',
-                      {
-                        token: 'AUTO332',
-                        completion: '"toString"',
-                      },
-                    ],
-                  },
-                },
-                {
-                  label: '"valueOf"',
-                  kind: 3,
-                  detail: '() => mixed',
-                  documentation: {
-                    kind: 'markdown',
-                    value:
-                      'Returns the primitive value of the specified object.',
-                  },
-                  sortText: '00000000000000000001',
-                  insertTextFormat: 1,
-                  textEdit: {
-                    range: {
-                      start: {
-                        line: 12,
-                        character: 12,
-                      },
-                      end: {
-                        line: 12,
-                        character: 12,
-                      },
-                    },
-                    newText: '"valueOf"',
-                  },
-                  command: {
-                    title: '',
-                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
-                    arguments: [
-                      'textDocument/completion',
-                      'bracket syntax member',
-                      {
-                        token: 'AUTO332',
-                        completion: '"valueOf"',
                       },
                     ],
                   },
@@ -3678,7 +3779,7 @@ module.exports = (suite(
                   label: 'a',
                   kind: 6,
                   detail: 'empty',
-                  sortText: '00000000000000000000',
+                  sortText: '00000000000000000002',
                   insertTextFormat: 1,
                   textEdit: {
                     range: {
@@ -3701,6 +3802,7 @@ module.exports = (suite(
                       'local value identifier',
                       {
                         token: 'AUTO332',
+                        index: 2,
                         completion: 'a',
                       },
                     ],
@@ -3710,7 +3812,7 @@ module.exports = (suite(
                   label: 'o',
                   kind: 6,
                   detail: '{|a: number, b: string|}',
-                  sortText: '00000000000000000000',
+                  sortText: '00000000000000000003',
                   insertTextFormat: 1,
                   textEdit: {
                     range: {
@@ -3733,7 +3835,235 @@ module.exports = (suite(
                       'local value identifier',
                       {
                         token: 'AUTO332',
+                        index: 3,
                         completion: 'o',
+                      },
+                    ],
+                  },
+                },
+                {
+                  label: '"hasOwnProperty"',
+                  kind: 3,
+                  detail: '(prop: mixed) => boolean',
+                  documentation: {
+                    kind: 'markdown',
+                    value:
+                      'Determines whether an object has a property with the specified name.',
+                  },
+                  sortText: '00000000000000000004',
+                  insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {
+                        line: 12,
+                        character: 12,
+                      },
+                      end: {
+                        line: 12,
+                        character: 12,
+                      },
+                    },
+                    newText: '"hasOwnProperty"',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'bracket syntax member',
+                      {
+                        token: 'AUTO332',
+                        index: 4,
+                        completion: '"hasOwnProperty"',
+                      },
+                    ],
+                  },
+                },
+                {
+                  label: '"isPrototypeOf"',
+                  kind: 3,
+                  detail: '(o: mixed) => boolean',
+                  documentation: {
+                    kind: 'markdown',
+                    value:
+                      "Determines whether an object exists in another object's prototype chain.",
+                  },
+                  sortText: '00000000000000000005',
+                  insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {
+                        line: 12,
+                        character: 12,
+                      },
+                      end: {
+                        line: 12,
+                        character: 12,
+                      },
+                    },
+                    newText: '"isPrototypeOf"',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'bracket syntax member',
+                      {
+                        token: 'AUTO332',
+                        index: 5,
+                        completion: '"isPrototypeOf"',
+                      },
+                    ],
+                  },
+                },
+                {
+                  label: '"propertyIsEnumerable"',
+                  kind: 3,
+                  detail: '(prop: mixed) => boolean',
+                  documentation: {
+                    kind: 'markdown',
+                    value:
+                      'Determines whether a specified property is enumerable.',
+                  },
+                  sortText: '00000000000000000006',
+                  insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {
+                        line: 12,
+                        character: 12,
+                      },
+                      end: {
+                        line: 12,
+                        character: 12,
+                      },
+                    },
+                    newText: '"propertyIsEnumerable"',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'bracket syntax member',
+                      {
+                        token: 'AUTO332',
+                        index: 6,
+                        completion: '"propertyIsEnumerable"',
+                      },
+                    ],
+                  },
+                },
+                {
+                  label: '"toLocaleString"',
+                  kind: 3,
+                  detail: '() => string',
+                  documentation: {
+                    kind: 'markdown',
+                    value:
+                      'Returns a date converted to a string using the current locale.',
+                  },
+                  sortText: '00000000000000000007',
+                  insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {
+                        line: 12,
+                        character: 12,
+                      },
+                      end: {
+                        line: 12,
+                        character: 12,
+                      },
+                    },
+                    newText: '"toLocaleString"',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'bracket syntax member',
+                      {
+                        token: 'AUTO332',
+                        index: 7,
+                        completion: '"toLocaleString"',
+                      },
+                    ],
+                  },
+                },
+                {
+                  label: '"toString"',
+                  kind: 3,
+                  detail: '() => string',
+                  documentation: {
+                    kind: 'markdown',
+                    value: 'Returns a string representation of an object.',
+                  },
+                  sortText: '00000000000000000008',
+                  insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {
+                        line: 12,
+                        character: 12,
+                      },
+                      end: {
+                        line: 12,
+                        character: 12,
+                      },
+                    },
+                    newText: '"toString"',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'bracket syntax member',
+                      {
+                        token: 'AUTO332',
+                        index: 8,
+                        completion: '"toString"',
+                      },
+                    ],
+                  },
+                },
+                {
+                  label: '"valueOf"',
+                  kind: 3,
+                  detail: '() => mixed',
+                  documentation: {
+                    kind: 'markdown',
+                    value:
+                      'Returns the primitive value of the specified object.',
+                  },
+                  sortText: '00000000000000000009',
+                  insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {
+                        line: 12,
+                        character: 12,
+                      },
+                      end: {
+                        line: 12,
+                        character: 12,
+                      },
+                    },
+                    newText: '"valueOf"',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'bracket syntax member',
+                      {
+                        token: 'AUTO332',
+                        index: 9,
+                        completion: '"valueOf"',
                       },
                     ],
                   },
@@ -3742,7 +4072,11 @@ module.exports = (suite(
             },
           },
         ],
-        ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
+        [
+          'textDocument/publishDiagnostics',
+          'window/showStatus',
+          '$/cancelRequest',
+        ],
       ),
     ]),
     test('textDocument/completion triggered by `[` - type (indexed access)', [
@@ -3786,6 +4120,7 @@ module.exports = (suite(
                       'bracket syntax member',
                       {
                         token: 'AUTO332',
+                        index: 0,
                         completion: '"bar"',
                       },
                     ],
@@ -3795,7 +4130,7 @@ module.exports = (suite(
                   label: '"foo"',
                   kind: 6,
                   detail: 'boolean',
-                  sortText: '00000000000000000000',
+                  sortText: '00000000000000000001',
                   insertTextFormat: 1,
                   textEdit: {
                     range: {
@@ -3818,999 +4153,8 @@ module.exports = (suite(
                       'bracket syntax member',
                       {
                         token: 'AUTO332',
+                        index: 1,
                         completion: '"foo"',
-                      },
-                    ],
-                  },
-                },
-                {
-                  label: 'any',
-                  kind: 6,
-                  detail: 'any',
-                  sortText: '00000000000000000000',
-                  insertTextFormat: 1,
-                  textEdit: {
-                    range: {
-                      start: {
-                        line: 14,
-                        character: 11,
-                      },
-                      end: {
-                        line: 14,
-                        character: 11,
-                      },
-                    },
-                    newText: 'any',
-                  },
-                  command: {
-                    title: '',
-                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
-                    arguments: [
-                      'textDocument/completion',
-                      'builtin type',
-                      {
-                        token: 'AUTO332',
-                        completion: 'any',
-                      },
-                    ],
-                  },
-                },
-                {
-                  label: 'boolean',
-                  kind: 6,
-                  detail: 'boolean',
-                  sortText: '00000000000000000000',
-                  insertTextFormat: 1,
-                  textEdit: {
-                    range: {
-                      start: {
-                        line: 14,
-                        character: 11,
-                      },
-                      end: {
-                        line: 14,
-                        character: 11,
-                      },
-                    },
-                    newText: 'boolean',
-                  },
-                  command: {
-                    title: '',
-                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
-                    arguments: [
-                      'textDocument/completion',
-                      'builtin type',
-                      {
-                        token: 'AUTO332',
-                        completion: 'boolean',
-                      },
-                    ],
-                  },
-                },
-                {
-                  label: 'empty',
-                  kind: 6,
-                  detail: 'empty',
-                  sortText: '00000000000000000000',
-                  insertTextFormat: 1,
-                  textEdit: {
-                    range: {
-                      start: {
-                        line: 14,
-                        character: 11,
-                      },
-                      end: {
-                        line: 14,
-                        character: 11,
-                      },
-                    },
-                    newText: 'empty',
-                  },
-                  command: {
-                    title: '',
-                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
-                    arguments: [
-                      'textDocument/completion',
-                      'builtin type',
-                      {
-                        token: 'AUTO332',
-                        completion: 'empty',
-                      },
-                    ],
-                  },
-                },
-                {
-                  label: 'false',
-                  kind: 6,
-                  detail: 'false',
-                  sortText: '00000000000000000000',
-                  insertTextFormat: 1,
-                  textEdit: {
-                    range: {
-                      start: {
-                        line: 14,
-                        character: 11,
-                      },
-                      end: {
-                        line: 14,
-                        character: 11,
-                      },
-                    },
-                    newText: 'false',
-                  },
-                  command: {
-                    title: '',
-                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
-                    arguments: [
-                      'textDocument/completion',
-                      'builtin type',
-                      {
-                        token: 'AUTO332',
-                        completion: 'false',
-                      },
-                    ],
-                  },
-                },
-                {
-                  label: 'mixed',
-                  kind: 6,
-                  detail: 'mixed',
-                  sortText: '00000000000000000000',
-                  insertTextFormat: 1,
-                  textEdit: {
-                    range: {
-                      start: {
-                        line: 14,
-                        character: 11,
-                      },
-                      end: {
-                        line: 14,
-                        character: 11,
-                      },
-                    },
-                    newText: 'mixed',
-                  },
-                  command: {
-                    title: '',
-                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
-                    arguments: [
-                      'textDocument/completion',
-                      'builtin type',
-                      {
-                        token: 'AUTO332',
-                        completion: 'mixed',
-                      },
-                    ],
-                  },
-                },
-                {
-                  label: 'null',
-                  kind: 6,
-                  detail: 'null',
-                  sortText: '00000000000000000000',
-                  insertTextFormat: 1,
-                  textEdit: {
-                    range: {
-                      start: {
-                        line: 14,
-                        character: 11,
-                      },
-                      end: {
-                        line: 14,
-                        character: 11,
-                      },
-                    },
-                    newText: 'null',
-                  },
-                  command: {
-                    title: '',
-                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
-                    arguments: [
-                      'textDocument/completion',
-                      'builtin type',
-                      {
-                        token: 'AUTO332',
-                        completion: 'null',
-                      },
-                    ],
-                  },
-                },
-                {
-                  label: 'number',
-                  kind: 6,
-                  detail: 'number',
-                  sortText: '00000000000000000000',
-                  insertTextFormat: 1,
-                  textEdit: {
-                    range: {
-                      start: {
-                        line: 14,
-                        character: 11,
-                      },
-                      end: {
-                        line: 14,
-                        character: 11,
-                      },
-                    },
-                    newText: 'number',
-                  },
-                  command: {
-                    title: '',
-                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
-                    arguments: [
-                      'textDocument/completion',
-                      'builtin type',
-                      {
-                        token: 'AUTO332',
-                        completion: 'number',
-                      },
-                    ],
-                  },
-                },
-                {
-                  label: 'bigint',
-                  kind: 6,
-                  detail: 'bigint',
-                  sortText: '00000000000000000000',
-                  insertTextFormat: 1,
-                  textEdit: {
-                    range: {
-                      start: {
-                        line: 14,
-                        character: 11,
-                      },
-                      end: {
-                        line: 14,
-                        character: 11,
-                      },
-                    },
-                    newText: 'bigint',
-                  },
-                  command: {
-                    title: '',
-                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
-                    arguments: [
-                      'textDocument/completion',
-                      'builtin type',
-                      {
-                        token: 'AUTO332',
-                        completion: 'bigint',
-                      },
-                    ],
-                  },
-                },
-                {
-                  label: 'string',
-                  kind: 6,
-                  detail: 'string',
-                  sortText: '00000000000000000000',
-                  insertTextFormat: 1,
-                  textEdit: {
-                    range: {
-                      start: {
-                        line: 14,
-                        character: 11,
-                      },
-                      end: {
-                        line: 14,
-                        character: 11,
-                      },
-                    },
-                    newText: 'string',
-                  },
-                  command: {
-                    title: '',
-                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
-                    arguments: [
-                      'textDocument/completion',
-                      'builtin type',
-                      {
-                        token: 'AUTO332',
-                        completion: 'string',
-                      },
-                    ],
-                  },
-                },
-                {
-                  label: 'true',
-                  kind: 6,
-                  detail: 'true',
-                  sortText: '00000000000000000000',
-                  insertTextFormat: 1,
-                  textEdit: {
-                    range: {
-                      start: {
-                        line: 14,
-                        character: 11,
-                      },
-                      end: {
-                        line: 14,
-                        character: 11,
-                      },
-                    },
-                    newText: 'true',
-                  },
-                  command: {
-                    title: '',
-                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
-                    arguments: [
-                      'textDocument/completion',
-                      'builtin type',
-                      {
-                        token: 'AUTO332',
-                        completion: 'true',
-                      },
-                    ],
-                  },
-                },
-                {
-                  label: 'void',
-                  kind: 6,
-                  detail: 'void',
-                  sortText: '00000000000000000000',
-                  insertTextFormat: 1,
-                  textEdit: {
-                    range: {
-                      start: {
-                        line: 14,
-                        character: 11,
-                      },
-                      end: {
-                        line: 14,
-                        character: 11,
-                      },
-                    },
-                    newText: 'void',
-                  },
-                  command: {
-                    title: '',
-                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
-                    arguments: [
-                      'textDocument/completion',
-                      'builtin type',
-                      {
-                        token: 'AUTO332',
-                        completion: 'void',
-                      },
-                    ],
-                  },
-                },
-                {
-                  label: 'symbol',
-                  kind: 6,
-                  detail: 'symbol',
-                  sortText: '00000000000000000000',
-                  insertTextFormat: 1,
-                  textEdit: {
-                    range: {
-                      start: {
-                        line: 14,
-                        character: 11,
-                      },
-                      end: {
-                        line: 14,
-                        character: 11,
-                      },
-                    },
-                    newText: 'symbol',
-                  },
-                  command: {
-                    title: '',
-                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
-                    arguments: [
-                      'textDocument/completion',
-                      'builtin type',
-                      {
-                        token: 'AUTO332',
-                        completion: 'symbol',
-                      },
-                    ],
-                  },
-                },
-                {
-                  label: 'Class',
-                  kind: 3,
-                  detail: 'Class',
-                  sortText: '00000000000000000102',
-                  insertTextFormat: 1,
-                  textEdit: {
-                    range: {
-                      start: {
-                        line: 14,
-                        character: 11,
-                      },
-                      end: {
-                        line: 14,
-                        character: 11,
-                      },
-                    },
-                    newText: 'Class',
-                  },
-                  command: {
-                    title: '',
-                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
-                    arguments: [
-                      'textDocument/completion',
-                      'builtin type',
-                      {
-                        token: 'AUTO332',
-                        completion: 'Class',
-                      },
-                    ],
-                  },
-                },
-                {
-                  label: '$Call',
-                  kind: 3,
-                  detail: '$Call',
-                  sortText: '00000000000000000102',
-                  insertTextFormat: 1,
-                  textEdit: {
-                    range: {
-                      start: {
-                        line: 14,
-                        character: 11,
-                      },
-                      end: {
-                        line: 14,
-                        character: 11,
-                      },
-                    },
-                    newText: '$Call',
-                  },
-                  command: {
-                    title: '',
-                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
-                    arguments: [
-                      'textDocument/completion',
-                      'builtin type',
-                      {
-                        token: 'AUTO332',
-                        completion: '$Call',
-                      },
-                    ],
-                  },
-                },
-                {
-                  label: '$CharSet',
-                  kind: 3,
-                  detail: '$CharSet',
-                  sortText: '00000000000000000102',
-                  insertTextFormat: 1,
-                  textEdit: {
-                    range: {
-                      start: {
-                        line: 14,
-                        character: 11,
-                      },
-                      end: {
-                        line: 14,
-                        character: 11,
-                      },
-                    },
-                    newText: '$CharSet',
-                  },
-                  command: {
-                    title: '',
-                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
-                    arguments: [
-                      'textDocument/completion',
-                      'builtin type',
-                      {
-                        token: 'AUTO332',
-                        completion: '$CharSet',
-                      },
-                    ],
-                  },
-                },
-                {
-                  label: '$Diff',
-                  kind: 3,
-                  detail: '$Diff',
-                  sortText: '00000000000000000102',
-                  insertTextFormat: 1,
-                  textEdit: {
-                    range: {
-                      start: {
-                        line: 14,
-                        character: 11,
-                      },
-                      end: {
-                        line: 14,
-                        character: 11,
-                      },
-                    },
-                    newText: '$Diff',
-                  },
-                  command: {
-                    title: '',
-                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
-                    arguments: [
-                      'textDocument/completion',
-                      'builtin type',
-                      {
-                        token: 'AUTO332',
-                        completion: '$Diff',
-                      },
-                    ],
-                  },
-                },
-                {
-                  label: '$ElementType',
-                  kind: 3,
-                  detail: '$ElementType',
-                  sortText: '00000000000000000102',
-                  insertTextFormat: 1,
-                  textEdit: {
-                    range: {
-                      start: {
-                        line: 14,
-                        character: 11,
-                      },
-                      end: {
-                        line: 14,
-                        character: 11,
-                      },
-                    },
-                    newText: '$ElementType',
-                  },
-                  command: {
-                    title: '',
-                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
-                    arguments: [
-                      'textDocument/completion',
-                      'builtin type',
-                      {
-                        token: 'AUTO332',
-                        completion: '$ElementType',
-                      },
-                    ],
-                  },
-                },
-                {
-                  label: '$Exact',
-                  kind: 3,
-                  detail: '$Exact',
-                  sortText: '00000000000000000102',
-                  insertTextFormat: 1,
-                  textEdit: {
-                    range: {
-                      start: {
-                        line: 14,
-                        character: 11,
-                      },
-                      end: {
-                        line: 14,
-                        character: 11,
-                      },
-                    },
-                    newText: '$Exact',
-                  },
-                  command: {
-                    title: '',
-                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
-                    arguments: [
-                      'textDocument/completion',
-                      'builtin type',
-                      {
-                        token: 'AUTO332',
-                        completion: '$Exact',
-                      },
-                    ],
-                  },
-                },
-                {
-                  label: '$Exports',
-                  kind: 3,
-                  detail: '$Exports',
-                  sortText: '00000000000000000102',
-                  insertTextFormat: 1,
-                  textEdit: {
-                    range: {
-                      start: {
-                        line: 14,
-                        character: 11,
-                      },
-                      end: {
-                        line: 14,
-                        character: 11,
-                      },
-                    },
-                    newText: '$Exports',
-                  },
-                  command: {
-                    title: '',
-                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
-                    arguments: [
-                      'textDocument/completion',
-                      'builtin type',
-                      {
-                        token: 'AUTO332',
-                        completion: '$Exports',
-                      },
-                    ],
-                  },
-                },
-                {
-                  label: '$KeyMirror',
-                  kind: 3,
-                  detail: '$KeyMirror',
-                  sortText: '00000000000000000102',
-                  insertTextFormat: 1,
-                  textEdit: {
-                    range: {
-                      start: {
-                        line: 14,
-                        character: 11,
-                      },
-                      end: {
-                        line: 14,
-                        character: 11,
-                      },
-                    },
-                    newText: '$KeyMirror',
-                  },
-                  command: {
-                    title: '',
-                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
-                    arguments: [
-                      'textDocument/completion',
-                      'builtin type',
-                      {
-                        token: 'AUTO332',
-                        completion: '$KeyMirror',
-                      },
-                    ],
-                  },
-                },
-                {
-                  label: '$Keys',
-                  kind: 3,
-                  detail: '$Keys',
-                  sortText: '00000000000000000102',
-                  insertTextFormat: 1,
-                  textEdit: {
-                    range: {
-                      start: {
-                        line: 14,
-                        character: 11,
-                      },
-                      end: {
-                        line: 14,
-                        character: 11,
-                      },
-                    },
-                    newText: '$Keys',
-                  },
-                  command: {
-                    title: '',
-                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
-                    arguments: [
-                      'textDocument/completion',
-                      'builtin type',
-                      {
-                        token: 'AUTO332',
-                        completion: '$Keys',
-                      },
-                    ],
-                  },
-                },
-                {
-                  label: '$NonMaybeType',
-                  kind: 3,
-                  detail: '$NonMaybeType',
-                  sortText: '00000000000000000102',
-                  insertTextFormat: 1,
-                  textEdit: {
-                    range: {
-                      start: {
-                        line: 14,
-                        character: 11,
-                      },
-                      end: {
-                        line: 14,
-                        character: 11,
-                      },
-                    },
-                    newText: '$NonMaybeType',
-                  },
-                  command: {
-                    title: '',
-                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
-                    arguments: [
-                      'textDocument/completion',
-                      'builtin type',
-                      {
-                        token: 'AUTO332',
-                        completion: '$NonMaybeType',
-                      },
-                    ],
-                  },
-                },
-                {
-                  label: '$ObjMap',
-                  kind: 3,
-                  detail: '$ObjMap',
-                  sortText: '00000000000000000102',
-                  insertTextFormat: 1,
-                  textEdit: {
-                    range: {
-                      start: {
-                        line: 14,
-                        character: 11,
-                      },
-                      end: {
-                        line: 14,
-                        character: 11,
-                      },
-                    },
-                    newText: '$ObjMap',
-                  },
-                  command: {
-                    title: '',
-                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
-                    arguments: [
-                      'textDocument/completion',
-                      'builtin type',
-                      {
-                        token: 'AUTO332',
-                        completion: '$ObjMap',
-                      },
-                    ],
-                  },
-                },
-                {
-                  label: '$ObjMapi',
-                  kind: 3,
-                  detail: '$ObjMapi',
-                  sortText: '00000000000000000102',
-                  insertTextFormat: 1,
-                  textEdit: {
-                    range: {
-                      start: {
-                        line: 14,
-                        character: 11,
-                      },
-                      end: {
-                        line: 14,
-                        character: 11,
-                      },
-                    },
-                    newText: '$ObjMapi',
-                  },
-                  command: {
-                    title: '',
-                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
-                    arguments: [
-                      'textDocument/completion',
-                      'builtin type',
-                      {
-                        token: 'AUTO332',
-                        completion: '$ObjMapi',
-                      },
-                    ],
-                  },
-                },
-                {
-                  label: '$PropertyType',
-                  kind: 3,
-                  detail: '$PropertyType',
-                  sortText: '00000000000000000102',
-                  insertTextFormat: 1,
-                  textEdit: {
-                    range: {
-                      start: {
-                        line: 14,
-                        character: 11,
-                      },
-                      end: {
-                        line: 14,
-                        character: 11,
-                      },
-                    },
-                    newText: '$PropertyType',
-                  },
-                  command: {
-                    title: '',
-                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
-                    arguments: [
-                      'textDocument/completion',
-                      'builtin type',
-                      {
-                        token: 'AUTO332',
-                        completion: '$PropertyType',
-                      },
-                    ],
-                  },
-                },
-                {
-                  label: '$ReadOnly',
-                  kind: 3,
-                  detail: '$ReadOnly',
-                  sortText: '00000000000000000102',
-                  insertTextFormat: 1,
-                  textEdit: {
-                    range: {
-                      start: {
-                        line: 14,
-                        character: 11,
-                      },
-                      end: {
-                        line: 14,
-                        character: 11,
-                      },
-                    },
-                    newText: '$ReadOnly',
-                  },
-                  command: {
-                    title: '',
-                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
-                    arguments: [
-                      'textDocument/completion',
-                      'builtin type',
-                      {
-                        token: 'AUTO332',
-                        completion: '$ReadOnly',
-                      },
-                    ],
-                  },
-                },
-                {
-                  label: '$Rest',
-                  kind: 3,
-                  detail: '$Rest',
-                  sortText: '00000000000000000102',
-                  insertTextFormat: 1,
-                  textEdit: {
-                    range: {
-                      start: {
-                        line: 14,
-                        character: 11,
-                      },
-                      end: {
-                        line: 14,
-                        character: 11,
-                      },
-                    },
-                    newText: '$Rest',
-                  },
-                  command: {
-                    title: '',
-                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
-                    arguments: [
-                      'textDocument/completion',
-                      'builtin type',
-                      {
-                        token: 'AUTO332',
-                        completion: '$Rest',
-                      },
-                    ],
-                  },
-                },
-                {
-                  label: '$Shape',
-                  kind: 3,
-                  detail: '$Shape',
-                  sortText: '00000000000000000102',
-                  insertTextFormat: 1,
-                  textEdit: {
-                    range: {
-                      start: {
-                        line: 14,
-                        character: 11,
-                      },
-                      end: {
-                        line: 14,
-                        character: 11,
-                      },
-                    },
-                    newText: '$Shape',
-                  },
-                  command: {
-                    title: '',
-                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
-                    arguments: [
-                      'textDocument/completion',
-                      'builtin type',
-                      {
-                        token: 'AUTO332',
-                        completion: '$Shape',
-                      },
-                    ],
-                  },
-                },
-                {
-                  label: '$TupleMap',
-                  kind: 3,
-                  detail: '$TupleMap',
-                  sortText: '00000000000000000102',
-                  insertTextFormat: 1,
-                  textEdit: {
-                    range: {
-                      start: {
-                        line: 14,
-                        character: 11,
-                      },
-                      end: {
-                        line: 14,
-                        character: 11,
-                      },
-                    },
-                    newText: '$TupleMap',
-                  },
-                  command: {
-                    title: '',
-                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
-                    arguments: [
-                      'textDocument/completion',
-                      'builtin type',
-                      {
-                        token: 'AUTO332',
-                        completion: '$TupleMap',
-                      },
-                    ],
-                  },
-                },
-                {
-                  label: '$Values',
-                  kind: 3,
-                  detail: '$Values',
-                  sortText: '00000000000000000102',
-                  insertTextFormat: 1,
-                  textEdit: {
-                    range: {
-                      start: {
-                        line: 14,
-                        character: 11,
-                      },
-                      end: {
-                        line: 14,
-                        character: 11,
-                      },
-                    },
-                    newText: '$Values',
-                  },
-                  command: {
-                    title: '',
-                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
-                    arguments: [
-                      'textDocument/completion',
-                      'builtin type',
-                      {
-                        token: 'AUTO332',
-                        completion: '$Values',
-                      },
-                    ],
-                  },
-                },
-                {
-                  label: 'T',
-                  kind: 13,
-                  detail: 'type T = {|bar: string, foo: boolean|}',
-                  sortText: '00000000000000000000',
-                  insertTextFormat: 1,
-                  textEdit: {
-                    range: {
-                      start: {
-                        line: 14,
-                        character: 11,
-                      },
-                      end: {
-                        line: 14,
-                        character: 11,
-                      },
-                    },
-                    newText: 'T',
-                  },
-                  command: {
-                    title: '',
-                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
-                    arguments: [
-                      'textDocument/completion',
-                      'unqualified type: local type identifier',
-                      {
-                        token: 'AUTO332',
-                        completion: 'T',
                       },
                     ],
                   },
@@ -4819,7 +4163,7 @@ module.exports = (suite(
                   label: 'B',
                   kind: 13,
                   detail: 'type B = empty',
-                  sortText: '00000000000000000000',
+                  sortText: '00000000000000000002',
                   insertTextFormat: 1,
                   textEdit: {
                     range: {
@@ -4842,7 +4186,1031 @@ module.exports = (suite(
                       'unqualified type: local type identifier',
                       {
                         token: 'AUTO332',
+                        index: 2,
                         completion: 'B',
+                      },
+                    ],
+                  },
+                },
+                {
+                  label: 'T',
+                  kind: 13,
+                  detail: 'type T = {|bar: string, foo: boolean|}',
+                  sortText: '00000000000000000003',
+                  insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {
+                        line: 14,
+                        character: 11,
+                      },
+                      end: {
+                        line: 14,
+                        character: 11,
+                      },
+                    },
+                    newText: 'T',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'unqualified type: local type identifier',
+                      {
+                        token: 'AUTO332',
+                        index: 3,
+                        completion: 'T',
+                      },
+                    ],
+                  },
+                },
+                {
+                  label: 'any',
+                  kind: 6,
+                  detail: 'any',
+                  sortText: '00000000000000000004',
+                  insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {
+                        line: 14,
+                        character: 11,
+                      },
+                      end: {
+                        line: 14,
+                        character: 11,
+                      },
+                    },
+                    newText: 'any',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'builtin type',
+                      {
+                        token: 'AUTO332',
+                        index: 4,
+                        completion: 'any',
+                      },
+                    ],
+                  },
+                },
+                {
+                  label: 'bigint',
+                  kind: 6,
+                  detail: 'bigint',
+                  sortText: '00000000000000000005',
+                  insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {
+                        line: 14,
+                        character: 11,
+                      },
+                      end: {
+                        line: 14,
+                        character: 11,
+                      },
+                    },
+                    newText: 'bigint',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'builtin type',
+                      {
+                        token: 'AUTO332',
+                        index: 5,
+                        completion: 'bigint',
+                      },
+                    ],
+                  },
+                },
+                {
+                  label: 'boolean',
+                  kind: 6,
+                  detail: 'boolean',
+                  sortText: '00000000000000000006',
+                  insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {
+                        line: 14,
+                        character: 11,
+                      },
+                      end: {
+                        line: 14,
+                        character: 11,
+                      },
+                    },
+                    newText: 'boolean',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'builtin type',
+                      {
+                        token: 'AUTO332',
+                        index: 6,
+                        completion: 'boolean',
+                      },
+                    ],
+                  },
+                },
+                {
+                  label: 'empty',
+                  kind: 6,
+                  detail: 'empty',
+                  sortText: '00000000000000000007',
+                  insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {
+                        line: 14,
+                        character: 11,
+                      },
+                      end: {
+                        line: 14,
+                        character: 11,
+                      },
+                    },
+                    newText: 'empty',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'builtin type',
+                      {
+                        token: 'AUTO332',
+                        index: 7,
+                        completion: 'empty',
+                      },
+                    ],
+                  },
+                },
+                {
+                  label: 'false',
+                  kind: 6,
+                  detail: 'false',
+                  sortText: '00000000000000000008',
+                  insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {
+                        line: 14,
+                        character: 11,
+                      },
+                      end: {
+                        line: 14,
+                        character: 11,
+                      },
+                    },
+                    newText: 'false',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'builtin type',
+                      {
+                        token: 'AUTO332',
+                        index: 8,
+                        completion: 'false',
+                      },
+                    ],
+                  },
+                },
+                {
+                  label: 'mixed',
+                  kind: 6,
+                  detail: 'mixed',
+                  sortText: '00000000000000000009',
+                  insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {
+                        line: 14,
+                        character: 11,
+                      },
+                      end: {
+                        line: 14,
+                        character: 11,
+                      },
+                    },
+                    newText: 'mixed',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'builtin type',
+                      {
+                        token: 'AUTO332',
+                        index: 9,
+                        completion: 'mixed',
+                      },
+                    ],
+                  },
+                },
+                {
+                  label: 'null',
+                  kind: 6,
+                  detail: 'null',
+                  sortText: '00000000000000000010',
+                  insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {
+                        line: 14,
+                        character: 11,
+                      },
+                      end: {
+                        line: 14,
+                        character: 11,
+                      },
+                    },
+                    newText: 'null',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'builtin type',
+                      {
+                        token: 'AUTO332',
+                        index: 10,
+                        completion: 'null',
+                      },
+                    ],
+                  },
+                },
+                {
+                  label: 'number',
+                  kind: 6,
+                  detail: 'number',
+                  sortText: '00000000000000000011',
+                  insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {
+                        line: 14,
+                        character: 11,
+                      },
+                      end: {
+                        line: 14,
+                        character: 11,
+                      },
+                    },
+                    newText: 'number',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'builtin type',
+                      {
+                        token: 'AUTO332',
+                        index: 11,
+                        completion: 'number',
+                      },
+                    ],
+                  },
+                },
+                {
+                  label: 'string',
+                  kind: 6,
+                  detail: 'string',
+                  sortText: '00000000000000000012',
+                  insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {
+                        line: 14,
+                        character: 11,
+                      },
+                      end: {
+                        line: 14,
+                        character: 11,
+                      },
+                    },
+                    newText: 'string',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'builtin type',
+                      {
+                        token: 'AUTO332',
+                        index: 12,
+                        completion: 'string',
+                      },
+                    ],
+                  },
+                },
+                {
+                  label: 'symbol',
+                  kind: 6,
+                  detail: 'symbol',
+                  sortText: '00000000000000000013',
+                  insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {
+                        line: 14,
+                        character: 11,
+                      },
+                      end: {
+                        line: 14,
+                        character: 11,
+                      },
+                    },
+                    newText: 'symbol',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'builtin type',
+                      {
+                        token: 'AUTO332',
+                        index: 13,
+                        completion: 'symbol',
+                      },
+                    ],
+                  },
+                },
+                {
+                  label: 'true',
+                  kind: 6,
+                  detail: 'true',
+                  sortText: '00000000000000000014',
+                  insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {
+                        line: 14,
+                        character: 11,
+                      },
+                      end: {
+                        line: 14,
+                        character: 11,
+                      },
+                    },
+                    newText: 'true',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'builtin type',
+                      {
+                        token: 'AUTO332',
+                        index: 14,
+                        completion: 'true',
+                      },
+                    ],
+                  },
+                },
+                {
+                  label: 'void',
+                  kind: 6,
+                  detail: 'void',
+                  sortText: '00000000000000000015',
+                  insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {
+                        line: 14,
+                        character: 11,
+                      },
+                      end: {
+                        line: 14,
+                        character: 11,
+                      },
+                    },
+                    newText: 'void',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'builtin type',
+                      {
+                        token: 'AUTO332',
+                        index: 15,
+                        completion: 'void',
+                      },
+                    ],
+                  },
+                },
+                {
+                  label: '$Call',
+                  kind: 3,
+                  detail: '$Call',
+                  sortText: '00000000000000000016',
+                  insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {
+                        line: 14,
+                        character: 11,
+                      },
+                      end: {
+                        line: 14,
+                        character: 11,
+                      },
+                    },
+                    newText: '$Call',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'builtin type',
+                      {
+                        token: 'AUTO332',
+                        index: 16,
+                        completion: '$Call',
+                      },
+                    ],
+                  },
+                },
+                {
+                  label: '$CharSet',
+                  kind: 3,
+                  detail: '$CharSet',
+                  sortText: '00000000000000000017',
+                  insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {
+                        line: 14,
+                        character: 11,
+                      },
+                      end: {
+                        line: 14,
+                        character: 11,
+                      },
+                    },
+                    newText: '$CharSet',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'builtin type',
+                      {
+                        token: 'AUTO332',
+                        index: 17,
+                        completion: '$CharSet',
+                      },
+                    ],
+                  },
+                },
+                {
+                  label: '$Diff',
+                  kind: 3,
+                  detail: '$Diff',
+                  sortText: '00000000000000000018',
+                  insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {
+                        line: 14,
+                        character: 11,
+                      },
+                      end: {
+                        line: 14,
+                        character: 11,
+                      },
+                    },
+                    newText: '$Diff',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'builtin type',
+                      {
+                        token: 'AUTO332',
+                        index: 18,
+                        completion: '$Diff',
+                      },
+                    ],
+                  },
+                },
+                {
+                  label: '$ElementType',
+                  kind: 3,
+                  detail: '$ElementType',
+                  sortText: '00000000000000000019',
+                  insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {
+                        line: 14,
+                        character: 11,
+                      },
+                      end: {
+                        line: 14,
+                        character: 11,
+                      },
+                    },
+                    newText: '$ElementType',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'builtin type',
+                      {
+                        token: 'AUTO332',
+                        index: 19,
+                        completion: '$ElementType',
+                      },
+                    ],
+                  },
+                },
+                {
+                  label: '$Exact',
+                  kind: 3,
+                  detail: '$Exact',
+                  sortText: '00000000000000000020',
+                  insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {
+                        line: 14,
+                        character: 11,
+                      },
+                      end: {
+                        line: 14,
+                        character: 11,
+                      },
+                    },
+                    newText: '$Exact',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'builtin type',
+                      {
+                        token: 'AUTO332',
+                        index: 20,
+                        completion: '$Exact',
+                      },
+                    ],
+                  },
+                },
+                {
+                  label: '$Exports',
+                  kind: 3,
+                  detail: '$Exports',
+                  sortText: '00000000000000000021',
+                  insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {
+                        line: 14,
+                        character: 11,
+                      },
+                      end: {
+                        line: 14,
+                        character: 11,
+                      },
+                    },
+                    newText: '$Exports',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'builtin type',
+                      {
+                        token: 'AUTO332',
+                        index: 21,
+                        completion: '$Exports',
+                      },
+                    ],
+                  },
+                },
+                {
+                  label: '$KeyMirror',
+                  kind: 3,
+                  detail: '$KeyMirror',
+                  sortText: '00000000000000000022',
+                  insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {
+                        line: 14,
+                        character: 11,
+                      },
+                      end: {
+                        line: 14,
+                        character: 11,
+                      },
+                    },
+                    newText: '$KeyMirror',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'builtin type',
+                      {
+                        token: 'AUTO332',
+                        index: 22,
+                        completion: '$KeyMirror',
+                      },
+                    ],
+                  },
+                },
+                {
+                  label: '$Keys',
+                  kind: 3,
+                  detail: '$Keys',
+                  sortText: '00000000000000000023',
+                  insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {
+                        line: 14,
+                        character: 11,
+                      },
+                      end: {
+                        line: 14,
+                        character: 11,
+                      },
+                    },
+                    newText: '$Keys',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'builtin type',
+                      {
+                        token: 'AUTO332',
+                        index: 23,
+                        completion: '$Keys',
+                      },
+                    ],
+                  },
+                },
+                {
+                  label: '$NonMaybeType',
+                  kind: 3,
+                  detail: '$NonMaybeType',
+                  sortText: '00000000000000000024',
+                  insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {
+                        line: 14,
+                        character: 11,
+                      },
+                      end: {
+                        line: 14,
+                        character: 11,
+                      },
+                    },
+                    newText: '$NonMaybeType',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'builtin type',
+                      {
+                        token: 'AUTO332',
+                        index: 24,
+                        completion: '$NonMaybeType',
+                      },
+                    ],
+                  },
+                },
+                {
+                  label: '$ObjMap',
+                  kind: 3,
+                  detail: '$ObjMap',
+                  sortText: '00000000000000000025',
+                  insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {
+                        line: 14,
+                        character: 11,
+                      },
+                      end: {
+                        line: 14,
+                        character: 11,
+                      },
+                    },
+                    newText: '$ObjMap',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'builtin type',
+                      {
+                        token: 'AUTO332',
+                        index: 25,
+                        completion: '$ObjMap',
+                      },
+                    ],
+                  },
+                },
+                {
+                  label: '$ObjMapi',
+                  kind: 3,
+                  detail: '$ObjMapi',
+                  sortText: '00000000000000000026',
+                  insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {
+                        line: 14,
+                        character: 11,
+                      },
+                      end: {
+                        line: 14,
+                        character: 11,
+                      },
+                    },
+                    newText: '$ObjMapi',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'builtin type',
+                      {
+                        token: 'AUTO332',
+                        index: 26,
+                        completion: '$ObjMapi',
+                      },
+                    ],
+                  },
+                },
+                {
+                  label: '$PropertyType',
+                  kind: 3,
+                  detail: '$PropertyType',
+                  sortText: '00000000000000000027',
+                  insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {
+                        line: 14,
+                        character: 11,
+                      },
+                      end: {
+                        line: 14,
+                        character: 11,
+                      },
+                    },
+                    newText: '$PropertyType',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'builtin type',
+                      {
+                        token: 'AUTO332',
+                        index: 27,
+                        completion: '$PropertyType',
+                      },
+                    ],
+                  },
+                },
+                {
+                  label: '$ReadOnly',
+                  kind: 3,
+                  detail: '$ReadOnly',
+                  sortText: '00000000000000000028',
+                  insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {
+                        line: 14,
+                        character: 11,
+                      },
+                      end: {
+                        line: 14,
+                        character: 11,
+                      },
+                    },
+                    newText: '$ReadOnly',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'builtin type',
+                      {
+                        token: 'AUTO332',
+                        index: 28,
+                        completion: '$ReadOnly',
+                      },
+                    ],
+                  },
+                },
+                {
+                  label: '$Rest',
+                  kind: 3,
+                  detail: '$Rest',
+                  sortText: '00000000000000000029',
+                  insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {
+                        line: 14,
+                        character: 11,
+                      },
+                      end: {
+                        line: 14,
+                        character: 11,
+                      },
+                    },
+                    newText: '$Rest',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'builtin type',
+                      {
+                        token: 'AUTO332',
+                        index: 29,
+                        completion: '$Rest',
+                      },
+                    ],
+                  },
+                },
+                {
+                  label: '$Shape',
+                  kind: 3,
+                  detail: '$Shape',
+                  sortText: '00000000000000000030',
+                  insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {
+                        line: 14,
+                        character: 11,
+                      },
+                      end: {
+                        line: 14,
+                        character: 11,
+                      },
+                    },
+                    newText: '$Shape',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'builtin type',
+                      {
+                        token: 'AUTO332',
+                        index: 30,
+                        completion: '$Shape',
+                      },
+                    ],
+                  },
+                },
+                {
+                  label: '$TupleMap',
+                  kind: 3,
+                  detail: '$TupleMap',
+                  sortText: '00000000000000000031',
+                  insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {
+                        line: 14,
+                        character: 11,
+                      },
+                      end: {
+                        line: 14,
+                        character: 11,
+                      },
+                    },
+                    newText: '$TupleMap',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'builtin type',
+                      {
+                        token: 'AUTO332',
+                        index: 31,
+                        completion: '$TupleMap',
+                      },
+                    ],
+                  },
+                },
+                {
+                  label: '$Values',
+                  kind: 3,
+                  detail: '$Values',
+                  sortText: '00000000000000000032',
+                  insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {
+                        line: 14,
+                        character: 11,
+                      },
+                      end: {
+                        line: 14,
+                        character: 11,
+                      },
+                    },
+                    newText: '$Values',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'builtin type',
+                      {
+                        token: 'AUTO332',
+                        index: 32,
+                        completion: '$Values',
+                      },
+                    ],
+                  },
+                },
+                {
+                  label: 'Class',
+                  kind: 3,
+                  detail: 'Class',
+                  sortText: '00000000000000000033',
+                  insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {
+                        line: 14,
+                        character: 11,
+                      },
+                      end: {
+                        line: 14,
+                        character: 11,
+                      },
+                    },
+                    newText: 'Class',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'builtin type',
+                      {
+                        token: 'AUTO332',
+                        index: 33,
+                        completion: 'Class',
                       },
                     ],
                   },

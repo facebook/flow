@@ -90,6 +90,7 @@ let flow_completion_item_to_lsp
     ~(is_tags_supported : Lsp.CompletionItemTag.t -> bool)
     ~(is_preselect_supported : bool)
     ~(is_label_detail_supported : bool)
+    ~index
     (item : ServerProt.Response.Completion.completion_item) : Lsp.Completion.completionItem =
   let open ServerProt.Response.Completion in
   let detail =
@@ -128,6 +129,7 @@ let flow_completion_item_to_lsp
                       | None -> JSON_Null
                       | Some token -> JSON_String token
                     );
+                    ("index", JSON_Number (string_of_int index));
                     ("completion", JSON_String item.name);
                   ];
               ]
@@ -170,16 +172,34 @@ let flow_completions_to_lsp
     ~(is_label_detail_supported : bool)
     (completions : ServerProt.Response.Completion.t) : Lsp.Completion.result =
   let { ServerProt.Response.Completion.items; is_incomplete } = completions in
+  let open ServerProt.Response.Completion in
   let items =
-    Base.List.map
-      ~f:
-        (flow_completion_item_to_lsp
-           ?token
-           ~is_snippet_supported
-           ~is_tags_supported
-           ~is_preselect_supported
-           ~is_label_detail_supported
-        )
+    Base.List.sort
+      ~compare:(fun a b ->
+        let rankCompare =
+          match (a.sort_text, b.sort_text) with
+          | (Some a, Some b) -> String.compare a b
+          | (Some _, None) -> -1
+          | (None, Some _) -> 1
+          | (None, None) -> 0
+        in
+        if rankCompare = 0 then
+          String.compare a.name b.name
+        else
+          rankCompare)
+      items
+  in
+  let items =
+    Base.List.mapi
+      ~f:(fun index item ->
+        flow_completion_item_to_lsp
+          ?token
+          ~is_snippet_supported
+          ~is_tags_supported
+          ~is_preselect_supported
+          ~is_label_detail_supported
+          ~index
+          { item with sort_text = Option.some (Printf.sprintf "%020u" index) })
       items
   in
   { Lsp.Completion.isIncomplete = is_incomplete; items }
