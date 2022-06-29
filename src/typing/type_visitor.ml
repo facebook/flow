@@ -465,12 +465,13 @@ class ['a] t =
           let acc = self#type_ cx pole_TODO acc tout in
           acc
         | React.CreateElement
-            { clone = _; component; config; children = (children, children_spread); tout } ->
+            { clone = _; component; config; children = (children, children_spread); tout; targs } ->
           let acc = self#type_ cx pole_TODO acc component in
           let acc = self#type_ cx pole_TODO acc config in
           let acc = List.fold_left (self#type_ cx pole_TODO) acc children in
           let acc = self#opt (self#type_ cx pole_TODO) acc children_spread in
           let acc = self#type_ cx pole_TODO acc tout in
+          let acc = self#opt (List.fold_left (self#targ cx pole_TODO)) acc targs in
           acc
         | React.ConfigCheck config -> self#type_ cx pole_TODO acc config
         | React.SimplifyPropType (tool, t) ->

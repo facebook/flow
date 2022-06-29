@@ -1944,19 +1944,21 @@ class virtual ['a] t_with_uses =
           else
             CreateElement0
               { clone; config = config'; children = (children', children_spread'); tout = tout' }
-        | CreateElement { clone; component; config; children = (children, children_spread); tout }
-          ->
+        | CreateElement
+            { clone; component; config; children = (children, children_spread); tout; targs } ->
           let component' = self#type_ cx map_cx component in
           let config' = self#type_ cx map_cx config in
           let children' = ListUtils.ident_map (self#type_ cx map_cx) children in
           let children_spread' = OptionUtils.ident_map (self#type_ cx map_cx) children_spread in
           let tout' = self#type_ cx map_cx tout in
+          let targs' = OptionUtils.ident_map (ListUtils.ident_map (self#targ cx map_cx)) targs in
           if
             component' == component
             && config' == config
             && children' == children
             && children_spread' == children_spread
             && tout' == tout
+            && targs' == targs
           then
             t
           else
@@ -1967,6 +1969,7 @@ class virtual ['a] t_with_uses =
                 config = config';
                 children = (children', children_spread');
                 tout = tout';
+                targs = targs';
               }
         | ConfigCheck config ->
           let config' = self#type_ cx map_cx config in

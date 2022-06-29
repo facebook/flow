@@ -1463,7 +1463,9 @@ struct
               rec_flow cx trace (right, UseT (unknown_use, OpenT u))))
         | (_, ReactKitT (use_op, reason_op, React.CreateElement0 { clone; config; children; tout }))
           ->
-          let tool = React.CreateElement { clone; component = l; config; children; tout } in
+          let tool =
+            React.CreateElement { clone; component = l; config; children; tout; targs = None }
+          in
           rec_flow cx trace (l, ReactKitT (use_op, reason_op, tool))
         (*********************)
         (* type applications *)

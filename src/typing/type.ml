@@ -2565,6 +2565,11 @@ and React : sig
         config: TypeTerm.t;
         children: TypeTerm.t list * TypeTerm.t option;
         tout: TypeTerm.t_out;
+        (* There is currently no way to specify this syntactically, which is why it is omitted
+         * from CreateElement0. This field is used by Pierce's algorithm to track what bounds the implicitly
+         * instantiated type variables would eventually get. It is likely that we will need to add
+         * syntax support for explicit type arguments on React component instantiations *)
+        targs: TypeTerm.targ list option;
       }
     | ConfigCheck of TypeTerm.t
     | GetProps of TypeTerm.t_out
