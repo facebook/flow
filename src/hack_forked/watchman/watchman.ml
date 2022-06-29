@@ -343,7 +343,7 @@ let subscribe_query env =
    * Watchman server crashes.
    *
    * See also Watchman docs on "since" query parameter. *)
-let is_fresh_instance obj =
+let is_fresh_instance_response obj =
   Hh_json.Access.(return obj >>= get_bool "is_fresh_instance" |> project_bool)
 
 let supports_scm_queries caps vcs =
@@ -567,15 +567,18 @@ let get_capabilities ~debug_logging ?conn () =
     Lwt.return (Ok set)
   | Error _ as err -> Lwt.return err
 
-(* When we re-init our connection to Watchman, we use the old clockspec to get all the changes
- * since our last response. However, if Watchman has restarted and the old clockspec pre-dates
- * the new Watchman, then we may miss updates.
- *
- * Unfortunately, the response to "subscribe" doesn't have the "is_fresh_instance" field. So
- * we'll instead send a small "query" request. It should always return 0 files, but it should
- * tell us whether the Watchman service has restarted since clockspec.
- *)
-let has_watchman_restarted_since ~debug_logging ~conn ~watch_root ~clockspec =
+(** When we re-init our connection to Watchman, we use the old clockspec to get
+  all the changes since our last response. If Watchman missed changes since the
+  old clockspec, it is considered to be a "fresh instance".
+
+  This can happen if Watchman restarted, or if there were so many changes that
+  Watchman's underlying file watchers (FSEvents, Eden, etc) overflow.
+
+  Unfortunately, the response to "subscribe" doesn't have the "is_fresh_instance"
+  field. So we'll instead send a small "query" request. It should always return
+  0 files, but it should tell us whether Watchman has missed changes since
+  [clockspec]. *)
+let is_fresh_instance_since ?conn ~debug_logging ~watch_root clockspec =
   let hard_to_match_name = "irrelevant.potato" in
   let query =
     Hh_json.(
@@ -596,7 +599,7 @@ let has_watchman_restarted_since ~debug_logging ~conn ~watch_root ~clockspec =
         ]
     )
   in
-  match%lwt request ~debug_logging ~conn query with
+  match%lwt request ~debug_logging ?conn query with
   | Ok response ->
     (match Hh_json_helpers.Jget.bool_opt (Some response) "is_fresh_instance" with
     | Some has_restarted -> Lwt.return (Ok has_restarted)
@@ -611,14 +614,6 @@ let has_watchman_restarted_since ~debug_logging ~conn ~watch_root ~clockspec =
        missed updates. *)
     Lwt.return (Ok true)
   | Error _ as err -> Lwt.return err
-
-let has_watchman_restarted dead_env =
-  with_watchman_conn (fun conn ->
-      let debug_logging = dead_env.prior_settings.debug_logging in
-      let clockspec = dead_env.prior_clockspec in
-      let watch_root = dead_env.prior_watch_root in
-      has_watchman_restarted_since ~debug_logging ~conn ~watch_root ~clockspec
-  )
 
 let prepend_relative_path_term ~relative_path ~terms =
   match terms with
@@ -791,6 +786,9 @@ let extract_file_names env json =
      )
   |> SSet.of_list
 
+(** Reconnects to Watchman after a disconnect. Normally, [allow_fresh_instance]
+  should be [false], meaning that we error if the Watchman process we reconnect
+  to is a "fresh instance" (see [is_fresh_instance_since]). *)
 let re_init_dead_env =
   let on_retry attempt dead_env =
     let backoff = backoff_delay attempt in
@@ -798,14 +796,29 @@ let re_init_dead_env =
     let%lwt () = Lwt_unix.sleep backoff in
     Lwt.return (Ok dead_env)
   in
-  let re_init_dead_env_once dead_env =
+  (* if [allow_fresh_instance] is [false], then we only want to reconnect
+     if Watchman did not miss any changes (is NOT a "fresh instance"). but
+     sometimes we can handle missed changes, and so we can opt into
+     reconnecting even when it might be a fresh instance. *)
+  let can_re_init ~allow_fresh_instance dead_env =
+    if allow_fresh_instance then
+      Lwt.return (Ok true)
+    else
+      let debug_logging = dead_env.prior_settings.debug_logging in
+      let clockspec = dead_env.prior_clockspec in
+      let watch_root = dead_env.prior_watch_root in
+      match%lwt is_fresh_instance_since ~debug_logging ~watch_root clockspec with
+      | Ok missed_changes -> Lwt.return (Ok (not missed_changes))
+      | Error _ as err -> Lwt.return err
+  in
+  let re_init_dead_env_once ~allow_fresh_instance dead_env =
     let () = Hh_logger.log "Attemping to reestablish watchman subscription" in
     (* Give watchman 2 minutes to start up, plus sync_timeout (in milliseconds!) to sync.
        TODO: use `file_watcher.timeout` config instead (careful, it's in seconds) *)
     let timeout = Option.value ~default:0 dead_env.prior_settings.sync_timeout + 120000 in
     try%lwt
       Lwt_unix.with_timeout (Float.of_int timeout /. 1000.) @@ fun () ->
-      match%lwt has_watchman_restarted dead_env with
+      match%lwt can_re_init ~allow_fresh_instance dead_env with
       | Ok false -> re_init ~prior_clockspec:dead_env.prior_clockspec dead_env.prior_settings
       | Ok true -> Lwt.return (Error Fresh_instance)
       | Error _ as err -> Lwt.return err
@@ -813,9 +826,13 @@ let re_init_dead_env =
     | Lwt_unix.Timeout ->
       Lwt.return (Error (Socket_unavailable { msg = spf "Timed out after %ds" timeout }))
   in
-  fun dead_env ->
+  fun ~allow_fresh_instance dead_env ->
     match%lwt
-      with_retry ~max_attempts:max_reinit_attempts ~on_retry re_init_dead_env_once dead_env
+      with_retry
+        ~max_attempts:max_reinit_attempts
+        ~on_retry
+        (re_init_dead_env_once ~allow_fresh_instance)
+        dead_env
     with
     | Ok env ->
       Hh_logger.log "Watchman connection reestablished.";
@@ -867,7 +884,7 @@ let transform_asynchronous_get_changes_response env data =
   match make_mergebase_changed_response env data with
   | Some (env, response) -> Ok (env, response)
   | None ->
-    if is_fresh_instance data then
+    if is_fresh_instance_response data then
       Error Fresh_instance
     else if subscription_is_cancelled data then
       Error Subscription_canceled
@@ -884,7 +901,7 @@ let transform_asynchronous_get_changes_response env data =
 let get_changes =
   let on_retry _attempt env =
     let%lwt dead_env = close_channel_on_instance env in
-    re_init_dead_env dead_env
+    re_init_dead_env ~allow_fresh_instance:false dead_env
   in
   let wait_for_changes env =
     let debug_logging = env.settings.debug_logging in
@@ -924,7 +941,7 @@ let get_mergebase_and_changes =
 let recover_from_restart ~prev_mergebase env =
   (* on restart, reconnect to a fresh env. *)
   let%lwt dead_env = close_channel_on_instance env in
-  match%lwt re_init_dead_env dead_env with
+  match%lwt re_init_dead_env ~allow_fresh_instance:true dead_env with
   | Ok env ->
     (match%lwt get_mergebase_and_changes env with
     | Error _ as err -> Lwt.return err
