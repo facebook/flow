@@ -1,3 +1,11 @@
+### 0.181.2
+
+* Fix the rendering of classes in autocomplete results
+* Fix the ordering of class methods in autocomplete results
+* Improve ability to recover from Watchman restarting (the fix in 0.181.0 was incomplete)
+* Fix a bug where warnings would be incorrectly reported when using saved state, and could cause a crash.
+* Add `--saved-state-verify` flag to check that a saved state matches what is expected to be on disk.
+
 ### 0.181.1
 
 Notable bug fixes:
