@@ -57,6 +57,8 @@ module.exports = (suite(
                       {
                         token: 'AUTO332',
                         index: 0,
+                        session_requests: 1,
+                        typed_length: 0,
                         completion: 'a',
                       },
                     ],
@@ -90,6 +92,8 @@ module.exports = (suite(
                       {
                         token: 'AUTO332',
                         index: 1,
+                        session_requests: 1,
+                        typed_length: 0,
                         completion: 'b',
                       },
                     ],
@@ -128,6 +132,8 @@ module.exports = (suite(
                       {
                         token: 'AUTO332',
                         index: 2,
+                        session_requests: 1,
+                        typed_length: 0,
                         completion: 'fred',
                       },
                     ],
@@ -161,6 +167,8 @@ module.exports = (suite(
                       {
                         token: 'AUTO332',
                         index: 3,
+                        session_requests: 1,
+                        typed_length: 0,
                         completion: 'this',
                       },
                     ],
@@ -194,6 +202,8 @@ module.exports = (suite(
                       {
                         token: 'AUTO332',
                         index: 4,
+                        session_requests: 1,
+                        typed_length: 0,
                         completion: 'x',
                       },
                     ],
@@ -252,6 +262,8 @@ module.exports = (suite(
                       {
                         token: 'AUTO332',
                         index: 0,
+                        session_requests: 1,
+                        typed_length: 0,
                         completion: 'aClass',
                       },
                     ],
@@ -285,6 +297,8 @@ module.exports = (suite(
                       {
                         token: 'AUTO332',
                         index: 1,
+                        session_requests: 1,
+                        typed_length: 0,
                         completion: 'aFunction',
                       },
                     ],
@@ -318,6 +332,8 @@ module.exports = (suite(
                       {
                         token: 'AUTO332',
                         index: 2,
+                        session_requests: 1,
+                        typed_length: 0,
                         completion: 'aNumber',
                       },
                     ],
@@ -351,6 +367,8 @@ module.exports = (suite(
                       {
                         token: 'AUTO332',
                         index: 3,
+                        session_requests: 1,
+                        typed_length: 0,
                         completion: 'foo',
                       },
                     ],
@@ -384,6 +402,8 @@ module.exports = (suite(
                       {
                         token: 'AUTO332',
                         index: 4,
+                        session_requests: 1,
+                        typed_length: 0,
                         completion: 'this',
                       },
                     ],
@@ -417,6 +437,8 @@ module.exports = (suite(
                       {
                         token: 'AUTO332',
                         index: 5,
+                        session_requests: 1,
+                        typed_length: 0,
                         completion: 'x',
                       },
                     ],
@@ -489,6 +511,8 @@ module.exports = (suite(
                       {
                         token: 'AUTO332',
                         index: 0,
+                        session_requests: 1,
+                        typed_length: 0,
                         completion: 'aFunction',
                       },
                     ],
@@ -522,6 +546,8 @@ module.exports = (suite(
                       {
                         token: 'AUTO332',
                         index: 1,
+                        session_requests: 1,
+                        typed_length: 0,
                         completion: 'foo',
                       },
                     ],
@@ -555,6 +581,8 @@ module.exports = (suite(
                       {
                         token: 'AUTO332',
                         index: 2,
+                        session_requests: 1,
+                        typed_length: 0,
                         completion: 'this',
                       },
                     ],
@@ -588,6 +616,8 @@ module.exports = (suite(
                       {
                         token: 'AUTO332',
                         index: 3,
+                        session_requests: 1,
+                        typed_length: 0,
                         completion: 'x',
                       },
                     ],
@@ -646,6 +676,8 @@ module.exports = (suite(
                       {
                         token: 'AUTO332',
                         index: 0,
+                        session_requests: 1,
+                        typed_length: 0,
                         completion: 'a',
                       },
                     ],
@@ -724,6 +756,8 @@ module.exports = (suite(
                       {
                         token: 'AUTO332',
                         index: 0,
+                        session_requests: 1,
+                        typed_length: 0,
                         completion: 'C',
                       },
                     ],
@@ -757,6 +791,8 @@ module.exports = (suite(
                       {
                         token: 'AUTO332',
                         index: 1,
+                        session_requests: 1,
+                        typed_length: 0,
                         completion: 'D',
                       },
                     ],
@@ -790,6 +826,8 @@ module.exports = (suite(
                       {
                         token: 'AUTO332',
                         index: 2,
+                        session_requests: 1,
+                        typed_length: 0,
                         completion: 'React',
                       },
                     ],
@@ -848,6 +886,8 @@ module.exports = (suite(
                       {
                         token: 'AUTO332',
                         index: 0,
+                        session_requests: 1,
+                        typed_length: 0,
                         completion: 'a',
                       },
                     ],
@@ -908,6 +948,8 @@ module.exports = (suite(
                         {
                           token: 'AUTO332',
                           index: 0,
+                          session_requests: 1,
+                          typed_length: 0,
                           completion: 'a',
                         },
                       ],
@@ -967,6 +1009,8 @@ module.exports = (suite(
                       {
                         token: 'AUTO332',
                         index: 0,
+                        session_requests: 1,
+                        typed_length: 0,
                         completion: 'a',
                       },
                     ],
@@ -1025,6 +1069,8 @@ module.exports = (suite(
                       {
                         token: 'AUTO332',
                         index: 0,
+                        session_requests: 1,
+                        typed_length: 0,
                         completion: 'arguments',
                       },
                     ],
@@ -1058,6 +1104,8 @@ module.exports = (suite(
                       {
                         token: 'AUTO332',
                         index: 1,
+                        session_requests: 1,
+                        typed_length: 0,
                         completion: 'caller',
                       },
                     ],
@@ -1091,6 +1139,8 @@ module.exports = (suite(
                       {
                         token: 'AUTO332',
                         index: 2,
+                        session_requests: 1,
+                        typed_length: 0,
                         completion: 'childContextTypes',
                       },
                     ],
@@ -1124,6 +1174,8 @@ module.exports = (suite(
                       {
                         token: 'AUTO332',
                         index: 3,
+                        session_requests: 1,
+                        typed_length: 0,
                         completion: 'contextTypes',
                       },
                     ],
@@ -1157,6 +1209,8 @@ module.exports = (suite(
                       {
                         token: 'AUTO332',
                         index: 4,
+                        session_requests: 1,
+                        typed_length: 0,
                         completion: 'displayName',
                       },
                     ],
@@ -1190,6 +1244,8 @@ module.exports = (suite(
                       {
                         token: 'AUTO332',
                         index: 5,
+                        session_requests: 1,
+                        typed_length: 0,
                         completion: 'length',
                       },
                     ],
@@ -1228,6 +1284,8 @@ module.exports = (suite(
                       {
                         token: 'AUTO332',
                         index: 6,
+                        session_requests: 1,
+                        typed_length: 0,
                         completion: 'name',
                       },
                     ],
@@ -1261,6 +1319,8 @@ module.exports = (suite(
                       {
                         token: 'AUTO332',
                         index: 7,
+                        session_requests: 1,
+                        typed_length: 0,
                         completion: 'propTypes',
                       },
                     ],
@@ -1294,6 +1354,8 @@ module.exports = (suite(
                       {
                         token: 'AUTO332',
                         index: 8,
+                        session_requests: 1,
+                        typed_length: 0,
                         completion: 'apply',
                       },
                     ],
@@ -1327,6 +1389,8 @@ module.exports = (suite(
                       {
                         token: 'AUTO332',
                         index: 9,
+                        session_requests: 1,
+                        typed_length: 0,
                         completion: 'bind',
                       },
                     ],
@@ -1360,6 +1424,8 @@ module.exports = (suite(
                       {
                         token: 'AUTO332',
                         index: 10,
+                        session_requests: 1,
+                        typed_length: 0,
                         completion: 'call',
                       },
                     ],
@@ -1398,6 +1464,8 @@ module.exports = (suite(
                       {
                         token: 'AUTO332',
                         index: 11,
+                        session_requests: 1,
+                        typed_length: 0,
                         completion: 'hasOwnProperty',
                       },
                     ],
@@ -1436,6 +1504,8 @@ module.exports = (suite(
                       {
                         token: 'AUTO332',
                         index: 12,
+                        session_requests: 1,
+                        typed_length: 0,
                         completion: 'isPrototypeOf',
                       },
                     ],
@@ -1474,6 +1544,8 @@ module.exports = (suite(
                       {
                         token: 'AUTO332',
                         index: 13,
+                        session_requests: 1,
+                        typed_length: 0,
                         completion: 'propertyIsEnumerable',
                       },
                     ],
@@ -1512,6 +1584,8 @@ module.exports = (suite(
                       {
                         token: 'AUTO332',
                         index: 14,
+                        session_requests: 1,
+                        typed_length: 0,
                         completion: 'toLocaleString',
                       },
                     ],
@@ -1549,6 +1623,8 @@ module.exports = (suite(
                       {
                         token: 'AUTO332',
                         index: 15,
+                        session_requests: 1,
+                        typed_length: 0,
                         completion: 'toString',
                       },
                     ],
@@ -1587,6 +1663,8 @@ module.exports = (suite(
                       {
                         token: 'AUTO332',
                         index: 16,
+                        session_requests: 1,
+                        typed_length: 0,
                         completion: 'valueOf',
                       },
                     ],
@@ -1645,6 +1723,8 @@ module.exports = (suite(
                       {
                         token: 'AUTO332',
                         index: 0,
+                        session_requests: 1,
+                        typed_length: 0,
                         completion: 'arguments',
                       },
                     ],
@@ -1678,6 +1758,8 @@ module.exports = (suite(
                       {
                         token: 'AUTO332',
                         index: 1,
+                        session_requests: 1,
+                        typed_length: 0,
                         completion: 'caller',
                       },
                     ],
@@ -1711,6 +1793,8 @@ module.exports = (suite(
                       {
                         token: 'AUTO332',
                         index: 2,
+                        session_requests: 1,
+                        typed_length: 0,
                         completion: 'childContextTypes',
                       },
                     ],
@@ -1744,6 +1828,8 @@ module.exports = (suite(
                       {
                         token: 'AUTO332',
                         index: 3,
+                        session_requests: 1,
+                        typed_length: 0,
                         completion: 'contextTypes',
                       },
                     ],
@@ -1777,6 +1863,8 @@ module.exports = (suite(
                       {
                         token: 'AUTO332',
                         index: 4,
+                        session_requests: 1,
+                        typed_length: 0,
                         completion: 'displayName',
                       },
                     ],
@@ -1810,6 +1898,8 @@ module.exports = (suite(
                       {
                         token: 'AUTO332',
                         index: 5,
+                        session_requests: 1,
+                        typed_length: 0,
                         completion: 'length',
                       },
                     ],
@@ -1848,6 +1938,8 @@ module.exports = (suite(
                       {
                         token: 'AUTO332',
                         index: 6,
+                        session_requests: 1,
+                        typed_length: 0,
                         completion: 'name',
                       },
                     ],
@@ -1881,6 +1973,8 @@ module.exports = (suite(
                       {
                         token: 'AUTO332',
                         index: 7,
+                        session_requests: 1,
+                        typed_length: 0,
                         completion: 'propTypes',
                       },
                     ],
@@ -1914,6 +2008,8 @@ module.exports = (suite(
                       {
                         token: 'AUTO332',
                         index: 8,
+                        session_requests: 1,
+                        typed_length: 0,
                         completion: 'apply',
                       },
                     ],
@@ -1947,6 +2043,8 @@ module.exports = (suite(
                       {
                         token: 'AUTO332',
                         index: 9,
+                        session_requests: 1,
+                        typed_length: 0,
                         completion: 'bind',
                       },
                     ],
@@ -1980,6 +2078,8 @@ module.exports = (suite(
                       {
                         token: 'AUTO332',
                         index: 10,
+                        session_requests: 1,
+                        typed_length: 0,
                         completion: 'call',
                       },
                     ],
@@ -2018,6 +2118,8 @@ module.exports = (suite(
                       {
                         token: 'AUTO332',
                         index: 11,
+                        session_requests: 1,
+                        typed_length: 0,
                         completion: 'hasOwnProperty',
                       },
                     ],
@@ -2056,6 +2158,8 @@ module.exports = (suite(
                       {
                         token: 'AUTO332',
                         index: 12,
+                        session_requests: 1,
+                        typed_length: 0,
                         completion: 'isPrototypeOf',
                       },
                     ],
@@ -2094,6 +2198,8 @@ module.exports = (suite(
                       {
                         token: 'AUTO332',
                         index: 13,
+                        session_requests: 1,
+                        typed_length: 0,
                         completion: 'propertyIsEnumerable',
                       },
                     ],
@@ -2132,6 +2238,8 @@ module.exports = (suite(
                       {
                         token: 'AUTO332',
                         index: 14,
+                        session_requests: 1,
+                        typed_length: 0,
                         completion: 'toLocaleString',
                       },
                     ],
@@ -2169,6 +2277,8 @@ module.exports = (suite(
                       {
                         token: 'AUTO332',
                         index: 15,
+                        session_requests: 1,
+                        typed_length: 0,
                         completion: 'toString',
                       },
                     ],
@@ -2207,6 +2317,8 @@ module.exports = (suite(
                       {
                         token: 'AUTO332',
                         index: 16,
+                        session_requests: 1,
+                        typed_length: 0,
                         completion: 'valueOf',
                       },
                     ],
@@ -2268,6 +2380,8 @@ module.exports = (suite(
                       {
                         token: 'AUTO332',
                         index: 0,
+                        session_requests: 1,
+                        typed_length: 0,
                         completion: 'Tympanic',
                       },
                     ],
@@ -2301,6 +2415,8 @@ module.exports = (suite(
                       {
                         token: 'AUTO332',
                         index: 1,
+                        session_requests: 1,
+                        typed_length: 0,
                         completion: 'Typaram',
                       },
                     ],
@@ -2334,6 +2450,8 @@ module.exports = (suite(
                       {
                         token: 'AUTO332',
                         index: 2,
+                        session_requests: 1,
+                        typed_length: 0,
                         completion: 'Types',
                       },
                     ],
@@ -2367,6 +2485,8 @@ module.exports = (suite(
                       {
                         token: 'AUTO332',
                         index: 3,
+                        session_requests: 1,
+                        typed_length: 0,
                         completion: 'Typesafe',
                       },
                     ],
@@ -2400,6 +2520,8 @@ module.exports = (suite(
                       {
                         token: 'AUTO332',
                         index: 4,
+                        session_requests: 1,
+                        typed_length: 0,
                         completion: 'Typeset',
                       },
                     ],
@@ -2433,6 +2555,8 @@ module.exports = (suite(
                       {
                         token: 'AUTO332',
                         index: 5,
+                        session_requests: 1,
+                        typed_length: 0,
                         completion: 'Typewriter',
                       },
                     ],
@@ -2466,6 +2590,8 @@ module.exports = (suite(
                       {
                         token: 'AUTO332',
                         index: 6,
+                        session_requests: 1,
+                        typed_length: 0,
                         completion: 'Typhoon',
                       },
                     ],
@@ -2499,6 +2625,8 @@ module.exports = (suite(
                       {
                         token: 'AUTO332',
                         index: 7,
+                        session_requests: 1,
+                        typed_length: 0,
                         completion: 'Typnotism',
                       },
                     ],
@@ -2532,6 +2660,8 @@ module.exports = (suite(
                       {
                         token: 'AUTO332',
                         index: 8,
+                        session_requests: 1,
+                        typed_length: 0,
                         completion: 'Typography',
                       },
                     ],
@@ -2565,6 +2695,8 @@ module.exports = (suite(
                       {
                         token: 'AUTO332',
                         index: 9,
+                        session_requests: 1,
+                        typed_length: 0,
                         completion: 'Typologies',
                       },
                     ],
@@ -2598,6 +2730,8 @@ module.exports = (suite(
                       {
                         token: 'AUTO332',
                         index: 10,
+                        session_requests: 1,
+                        typed_length: 0,
                         completion: 'Tyrant',
                       },
                     ],
@@ -2631,6 +2765,8 @@ module.exports = (suite(
                       {
                         token: 'AUTO332',
                         index: 11,
+                        session_requests: 1,
+                        typed_length: 0,
                         completion: 'any',
                       },
                     ],
@@ -2664,6 +2800,8 @@ module.exports = (suite(
                       {
                         token: 'AUTO332',
                         index: 12,
+                        session_requests: 1,
+                        typed_length: 0,
                         completion: 'bigint',
                       },
                     ],
@@ -2697,6 +2835,8 @@ module.exports = (suite(
                       {
                         token: 'AUTO332',
                         index: 13,
+                        session_requests: 1,
+                        typed_length: 0,
                         completion: 'boolean',
                       },
                     ],
@@ -2730,6 +2870,8 @@ module.exports = (suite(
                       {
                         token: 'AUTO332',
                         index: 14,
+                        session_requests: 1,
+                        typed_length: 0,
                         completion: 'empty',
                       },
                     ],
@@ -2763,6 +2905,8 @@ module.exports = (suite(
                       {
                         token: 'AUTO332',
                         index: 15,
+                        session_requests: 1,
+                        typed_length: 0,
                         completion: 'false',
                       },
                     ],
@@ -2796,6 +2940,8 @@ module.exports = (suite(
                       {
                         token: 'AUTO332',
                         index: 16,
+                        session_requests: 1,
+                        typed_length: 0,
                         completion: 'mixed',
                       },
                     ],
@@ -2829,6 +2975,8 @@ module.exports = (suite(
                       {
                         token: 'AUTO332',
                         index: 17,
+                        session_requests: 1,
+                        typed_length: 0,
                         completion: 'null',
                       },
                     ],
@@ -2862,6 +3010,8 @@ module.exports = (suite(
                       {
                         token: 'AUTO332',
                         index: 18,
+                        session_requests: 1,
+                        typed_length: 0,
                         completion: 'number',
                       },
                     ],
@@ -2895,6 +3045,8 @@ module.exports = (suite(
                       {
                         token: 'AUTO332',
                         index: 19,
+                        session_requests: 1,
+                        typed_length: 0,
                         completion: 'string',
                       },
                     ],
@@ -2928,6 +3080,8 @@ module.exports = (suite(
                       {
                         token: 'AUTO332',
                         index: 20,
+                        session_requests: 1,
+                        typed_length: 0,
                         completion: 'symbol',
                       },
                     ],
@@ -2961,6 +3115,8 @@ module.exports = (suite(
                       {
                         token: 'AUTO332',
                         index: 21,
+                        session_requests: 1,
+                        typed_length: 0,
                         completion: 'true',
                       },
                     ],
@@ -2994,6 +3150,8 @@ module.exports = (suite(
                       {
                         token: 'AUTO332',
                         index: 22,
+                        session_requests: 1,
+                        typed_length: 0,
                         completion: 'void',
                       },
                     ],
@@ -3027,6 +3185,8 @@ module.exports = (suite(
                       {
                         token: 'AUTO332',
                         index: 23,
+                        session_requests: 1,
+                        typed_length: 0,
                         completion: '$Call',
                       },
                     ],
@@ -3060,6 +3220,8 @@ module.exports = (suite(
                       {
                         token: 'AUTO332',
                         index: 24,
+                        session_requests: 1,
+                        typed_length: 0,
                         completion: '$CharSet',
                       },
                     ],
@@ -3093,6 +3255,8 @@ module.exports = (suite(
                       {
                         token: 'AUTO332',
                         index: 25,
+                        session_requests: 1,
+                        typed_length: 0,
                         completion: '$Diff',
                       },
                     ],
@@ -3126,6 +3290,8 @@ module.exports = (suite(
                       {
                         token: 'AUTO332',
                         index: 26,
+                        session_requests: 1,
+                        typed_length: 0,
                         completion: '$ElementType',
                       },
                     ],
@@ -3159,6 +3325,8 @@ module.exports = (suite(
                       {
                         token: 'AUTO332',
                         index: 27,
+                        session_requests: 1,
+                        typed_length: 0,
                         completion: '$Exact',
                       },
                     ],
@@ -3192,6 +3360,8 @@ module.exports = (suite(
                       {
                         token: 'AUTO332',
                         index: 28,
+                        session_requests: 1,
+                        typed_length: 0,
                         completion: '$Exports',
                       },
                     ],
@@ -3225,6 +3395,8 @@ module.exports = (suite(
                       {
                         token: 'AUTO332',
                         index: 29,
+                        session_requests: 1,
+                        typed_length: 0,
                         completion: '$KeyMirror',
                       },
                     ],
@@ -3258,6 +3430,8 @@ module.exports = (suite(
                       {
                         token: 'AUTO332',
                         index: 30,
+                        session_requests: 1,
+                        typed_length: 0,
                         completion: '$Keys',
                       },
                     ],
@@ -3291,6 +3465,8 @@ module.exports = (suite(
                       {
                         token: 'AUTO332',
                         index: 31,
+                        session_requests: 1,
+                        typed_length: 0,
                         completion: '$NonMaybeType',
                       },
                     ],
@@ -3324,6 +3500,8 @@ module.exports = (suite(
                       {
                         token: 'AUTO332',
                         index: 32,
+                        session_requests: 1,
+                        typed_length: 0,
                         completion: '$ObjMap',
                       },
                     ],
@@ -3357,6 +3535,8 @@ module.exports = (suite(
                       {
                         token: 'AUTO332',
                         index: 33,
+                        session_requests: 1,
+                        typed_length: 0,
                         completion: '$ObjMapi',
                       },
                     ],
@@ -3390,6 +3570,8 @@ module.exports = (suite(
                       {
                         token: 'AUTO332',
                         index: 34,
+                        session_requests: 1,
+                        typed_length: 0,
                         completion: '$PropertyType',
                       },
                     ],
@@ -3423,6 +3605,8 @@ module.exports = (suite(
                       {
                         token: 'AUTO332',
                         index: 35,
+                        session_requests: 1,
+                        typed_length: 0,
                         completion: '$ReadOnly',
                       },
                     ],
@@ -3456,6 +3640,8 @@ module.exports = (suite(
                       {
                         token: 'AUTO332',
                         index: 36,
+                        session_requests: 1,
+                        typed_length: 0,
                         completion: '$Rest',
                       },
                     ],
@@ -3489,6 +3675,8 @@ module.exports = (suite(
                       {
                         token: 'AUTO332',
                         index: 37,
+                        session_requests: 1,
+                        typed_length: 0,
                         completion: '$Shape',
                       },
                     ],
@@ -3522,6 +3710,8 @@ module.exports = (suite(
                       {
                         token: 'AUTO332',
                         index: 38,
+                        session_requests: 1,
+                        typed_length: 0,
                         completion: '$TupleMap',
                       },
                     ],
@@ -3555,6 +3745,8 @@ module.exports = (suite(
                       {
                         token: 'AUTO332',
                         index: 39,
+                        session_requests: 1,
+                        typed_length: 0,
                         completion: '$Values',
                       },
                     ],
@@ -3588,6 +3780,8 @@ module.exports = (suite(
                       {
                         token: 'AUTO332',
                         index: 40,
+                        session_requests: 1,
+                        typed_length: 0,
                         completion: 'Class',
                       },
                     ],
@@ -3646,6 +3840,8 @@ module.exports = (suite(
                       {
                         token: 'aAUTO332',
                         index: 0,
+                        session_requests: 1,
+                        typed_length: 1,
                         completion: 'aaaa',
                       },
                     ],
@@ -3679,6 +3875,8 @@ module.exports = (suite(
                       {
                         token: 'aAUTO332',
                         index: 1,
+                        session_requests: 1,
+                        typed_length: 1,
                         completion: 'aaab',
                       },
                     ],
@@ -3737,6 +3935,8 @@ module.exports = (suite(
                       {
                         token: 'AUTO332',
                         index: 0,
+                        session_requests: 1,
+                        typed_length: 0,
                         completion: '"a"',
                       },
                     ],
@@ -3770,6 +3970,8 @@ module.exports = (suite(
                       {
                         token: 'AUTO332',
                         index: 1,
+                        session_requests: 1,
+                        typed_length: 0,
                         completion: '"b"',
                       },
                     ],
@@ -3803,6 +4005,8 @@ module.exports = (suite(
                       {
                         token: 'AUTO332',
                         index: 2,
+                        session_requests: 1,
+                        typed_length: 0,
                         completion: 'a',
                       },
                     ],
@@ -3836,6 +4040,8 @@ module.exports = (suite(
                       {
                         token: 'AUTO332',
                         index: 3,
+                        session_requests: 1,
+                        typed_length: 0,
                         completion: 'o',
                       },
                     ],
@@ -3874,6 +4080,8 @@ module.exports = (suite(
                       {
                         token: 'AUTO332',
                         index: 4,
+                        session_requests: 1,
+                        typed_length: 0,
                         completion: '"hasOwnProperty"',
                       },
                     ],
@@ -3912,6 +4120,8 @@ module.exports = (suite(
                       {
                         token: 'AUTO332',
                         index: 5,
+                        session_requests: 1,
+                        typed_length: 0,
                         completion: '"isPrototypeOf"',
                       },
                     ],
@@ -3950,6 +4160,8 @@ module.exports = (suite(
                       {
                         token: 'AUTO332',
                         index: 6,
+                        session_requests: 1,
+                        typed_length: 0,
                         completion: '"propertyIsEnumerable"',
                       },
                     ],
@@ -3988,6 +4200,8 @@ module.exports = (suite(
                       {
                         token: 'AUTO332',
                         index: 7,
+                        session_requests: 1,
+                        typed_length: 0,
                         completion: '"toLocaleString"',
                       },
                     ],
@@ -4025,6 +4239,8 @@ module.exports = (suite(
                       {
                         token: 'AUTO332',
                         index: 8,
+                        session_requests: 1,
+                        typed_length: 0,
                         completion: '"toString"',
                       },
                     ],
@@ -4063,6 +4279,8 @@ module.exports = (suite(
                       {
                         token: 'AUTO332',
                         index: 9,
+                        session_requests: 1,
+                        typed_length: 0,
                         completion: '"valueOf"',
                       },
                     ],
@@ -4121,6 +4339,8 @@ module.exports = (suite(
                       {
                         token: 'AUTO332',
                         index: 0,
+                        session_requests: 1,
+                        typed_length: 0,
                         completion: '"bar"',
                       },
                     ],
@@ -4154,6 +4374,8 @@ module.exports = (suite(
                       {
                         token: 'AUTO332',
                         index: 1,
+                        session_requests: 1,
+                        typed_length: 0,
                         completion: '"foo"',
                       },
                     ],
@@ -4187,6 +4409,8 @@ module.exports = (suite(
                       {
                         token: 'AUTO332',
                         index: 2,
+                        session_requests: 1,
+                        typed_length: 0,
                         completion: 'B',
                       },
                     ],
@@ -4220,6 +4444,8 @@ module.exports = (suite(
                       {
                         token: 'AUTO332',
                         index: 3,
+                        session_requests: 1,
+                        typed_length: 0,
                         completion: 'T',
                       },
                     ],
@@ -4253,6 +4479,8 @@ module.exports = (suite(
                       {
                         token: 'AUTO332',
                         index: 4,
+                        session_requests: 1,
+                        typed_length: 0,
                         completion: 'any',
                       },
                     ],
@@ -4286,6 +4514,8 @@ module.exports = (suite(
                       {
                         token: 'AUTO332',
                         index: 5,
+                        session_requests: 1,
+                        typed_length: 0,
                         completion: 'bigint',
                       },
                     ],
@@ -4319,6 +4549,8 @@ module.exports = (suite(
                       {
                         token: 'AUTO332',
                         index: 6,
+                        session_requests: 1,
+                        typed_length: 0,
                         completion: 'boolean',
                       },
                     ],
@@ -4352,6 +4584,8 @@ module.exports = (suite(
                       {
                         token: 'AUTO332',
                         index: 7,
+                        session_requests: 1,
+                        typed_length: 0,
                         completion: 'empty',
                       },
                     ],
@@ -4385,6 +4619,8 @@ module.exports = (suite(
                       {
                         token: 'AUTO332',
                         index: 8,
+                        session_requests: 1,
+                        typed_length: 0,
                         completion: 'false',
                       },
                     ],
@@ -4418,6 +4654,8 @@ module.exports = (suite(
                       {
                         token: 'AUTO332',
                         index: 9,
+                        session_requests: 1,
+                        typed_length: 0,
                         completion: 'mixed',
                       },
                     ],
@@ -4451,6 +4689,8 @@ module.exports = (suite(
                       {
                         token: 'AUTO332',
                         index: 10,
+                        session_requests: 1,
+                        typed_length: 0,
                         completion: 'null',
                       },
                     ],
@@ -4484,6 +4724,8 @@ module.exports = (suite(
                       {
                         token: 'AUTO332',
                         index: 11,
+                        session_requests: 1,
+                        typed_length: 0,
                         completion: 'number',
                       },
                     ],
@@ -4517,6 +4759,8 @@ module.exports = (suite(
                       {
                         token: 'AUTO332',
                         index: 12,
+                        session_requests: 1,
+                        typed_length: 0,
                         completion: 'string',
                       },
                     ],
@@ -4550,6 +4794,8 @@ module.exports = (suite(
                       {
                         token: 'AUTO332',
                         index: 13,
+                        session_requests: 1,
+                        typed_length: 0,
                         completion: 'symbol',
                       },
                     ],
@@ -4583,6 +4829,8 @@ module.exports = (suite(
                       {
                         token: 'AUTO332',
                         index: 14,
+                        session_requests: 1,
+                        typed_length: 0,
                         completion: 'true',
                       },
                     ],
@@ -4616,6 +4864,8 @@ module.exports = (suite(
                       {
                         token: 'AUTO332',
                         index: 15,
+                        session_requests: 1,
+                        typed_length: 0,
                         completion: 'void',
                       },
                     ],
@@ -4649,6 +4899,8 @@ module.exports = (suite(
                       {
                         token: 'AUTO332',
                         index: 16,
+                        session_requests: 1,
+                        typed_length: 0,
                         completion: '$Call',
                       },
                     ],
@@ -4682,6 +4934,8 @@ module.exports = (suite(
                       {
                         token: 'AUTO332',
                         index: 17,
+                        session_requests: 1,
+                        typed_length: 0,
                         completion: '$CharSet',
                       },
                     ],
@@ -4715,6 +4969,8 @@ module.exports = (suite(
                       {
                         token: 'AUTO332',
                         index: 18,
+                        session_requests: 1,
+                        typed_length: 0,
                         completion: '$Diff',
                       },
                     ],
@@ -4748,6 +5004,8 @@ module.exports = (suite(
                       {
                         token: 'AUTO332',
                         index: 19,
+                        session_requests: 1,
+                        typed_length: 0,
                         completion: '$ElementType',
                       },
                     ],
@@ -4781,6 +5039,8 @@ module.exports = (suite(
                       {
                         token: 'AUTO332',
                         index: 20,
+                        session_requests: 1,
+                        typed_length: 0,
                         completion: '$Exact',
                       },
                     ],
@@ -4814,6 +5074,8 @@ module.exports = (suite(
                       {
                         token: 'AUTO332',
                         index: 21,
+                        session_requests: 1,
+                        typed_length: 0,
                         completion: '$Exports',
                       },
                     ],
@@ -4847,6 +5109,8 @@ module.exports = (suite(
                       {
                         token: 'AUTO332',
                         index: 22,
+                        session_requests: 1,
+                        typed_length: 0,
                         completion: '$KeyMirror',
                       },
                     ],
@@ -4880,6 +5144,8 @@ module.exports = (suite(
                       {
                         token: 'AUTO332',
                         index: 23,
+                        session_requests: 1,
+                        typed_length: 0,
                         completion: '$Keys',
                       },
                     ],
@@ -4913,6 +5179,8 @@ module.exports = (suite(
                       {
                         token: 'AUTO332',
                         index: 24,
+                        session_requests: 1,
+                        typed_length: 0,
                         completion: '$NonMaybeType',
                       },
                     ],
@@ -4946,6 +5214,8 @@ module.exports = (suite(
                       {
                         token: 'AUTO332',
                         index: 25,
+                        session_requests: 1,
+                        typed_length: 0,
                         completion: '$ObjMap',
                       },
                     ],
@@ -4979,6 +5249,8 @@ module.exports = (suite(
                       {
                         token: 'AUTO332',
                         index: 26,
+                        session_requests: 1,
+                        typed_length: 0,
                         completion: '$ObjMapi',
                       },
                     ],
@@ -5012,6 +5284,8 @@ module.exports = (suite(
                       {
                         token: 'AUTO332',
                         index: 27,
+                        session_requests: 1,
+                        typed_length: 0,
                         completion: '$PropertyType',
                       },
                     ],
@@ -5045,6 +5319,8 @@ module.exports = (suite(
                       {
                         token: 'AUTO332',
                         index: 28,
+                        session_requests: 1,
+                        typed_length: 0,
                         completion: '$ReadOnly',
                       },
                     ],
@@ -5078,6 +5354,8 @@ module.exports = (suite(
                       {
                         token: 'AUTO332',
                         index: 29,
+                        session_requests: 1,
+                        typed_length: 0,
                         completion: '$Rest',
                       },
                     ],
@@ -5111,6 +5389,8 @@ module.exports = (suite(
                       {
                         token: 'AUTO332',
                         index: 30,
+                        session_requests: 1,
+                        typed_length: 0,
                         completion: '$Shape',
                       },
                     ],
@@ -5144,6 +5424,8 @@ module.exports = (suite(
                       {
                         token: 'AUTO332',
                         index: 31,
+                        session_requests: 1,
+                        typed_length: 0,
                         completion: '$TupleMap',
                       },
                     ],
@@ -5177,6 +5459,8 @@ module.exports = (suite(
                       {
                         token: 'AUTO332',
                         index: 32,
+                        session_requests: 1,
+                        typed_length: 0,
                         completion: '$Values',
                       },
                     ],
@@ -5210,6 +5494,8 @@ module.exports = (suite(
                       {
                         token: 'AUTO332',
                         index: 33,
+                        session_requests: 1,
+                        typed_length: 0,
                         completion: 'Class',
                       },
                     ],

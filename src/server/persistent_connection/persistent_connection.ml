@@ -23,6 +23,8 @@ type single_client = {
     (Types_js_types.file_artifacts, Flow_error.ErrorSet.t) result FilenameCache.t;
   mutable client_config: Client_config.t;
   mutable outstanding_handlers: unit Lsp.lsp_handler Lsp.IdMap.t;
+  mutable token_loc: int * int * File_key.t option;
+  mutable autocomplete_session_length: int;
 }
 
 type t = Prot.client_id list
@@ -104,6 +106,8 @@ let add_client client_id lsp_initialize_params =
       type_parse_artifacts_cache = FilenameCache.make ~max_size:cache_max_size;
       client_config = { Client_config.suggest_autoimports = true };
       outstanding_handlers = Lsp.IdMap.empty;
+      token_loc = (-1, -1, None);
+      autocomplete_session_length = 0;
     }
   in
   active_clients := IMap.add client_id new_client !active_clients;
@@ -259,3 +263,12 @@ let pop_outstanding_handler client id =
     client.outstanding_handlers <- Lsp.IdMap.remove id client.outstanding_handlers;
     Some handler
   | None -> None
+
+let autocomplete_session client token_loc =
+  if token_loc = client.token_loc then
+    client.autocomplete_session_length <- client.autocomplete_session_length + 1
+  else (
+    client.token_loc <- token_loc;
+    client.autocomplete_session_length <- 1
+  );
+  client.autocomplete_session_length

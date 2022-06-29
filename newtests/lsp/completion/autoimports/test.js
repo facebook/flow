@@ -75,6 +75,8 @@ module.exports = (suite(
                       {
                         token: 'fAUTO332',
                         index: 0,
+                        session_requests: 1,
+                        typed_length: 1,
                         completion: 'Foo',
                       },
                     ],
@@ -123,6 +125,8 @@ module.exports = (suite(
                       {
                         token: 'fAUTO332',
                         index: 1,
+                        session_requests: 1,
+                        typed_length: 1,
                         completion: 'foo',
                       },
                     ],
@@ -171,6 +175,8 @@ module.exports = (suite(
                       {
                         token: 'fAUTO332',
                         index: 2,
+                        session_requests: 1,
+                        typed_length: 1,
                         completion: 'foo',
                       },
                     ],
@@ -219,6 +225,8 @@ module.exports = (suite(
                       {
                         token: 'fAUTO332',
                         index: 3,
+                        session_requests: 1,
+                        typed_length: 1,
                         completion: 'foo',
                       },
                     ],
@@ -267,6 +275,8 @@ module.exports = (suite(
                       {
                         token: 'fAUTO332',
                         index: 4,
+                        session_requests: 1,
+                        typed_length: 1,
                         completion: 'foobar',
                       },
                     ],
@@ -300,6 +310,8 @@ module.exports = (suite(
                       {
                         token: 'fAUTO332',
                         index: 5,
+                        session_requests: 1,
+                        typed_length: 1,
                         completion: 'Function',
                       },
                     ],
@@ -333,6 +345,8 @@ module.exports = (suite(
                       {
                         token: 'fAUTO332',
                         index: 6,
+                        session_requests: 1,
+                        typed_length: 1,
                         completion: 'far',
                       },
                     ],
@@ -366,6 +380,8 @@ module.exports = (suite(
                       {
                         token: 'fAUTO332',
                         index: 7,
+                        session_requests: 1,
+                        typed_length: 1,
                         completion: 'undefined',
                       },
                     ],
@@ -441,6 +457,8 @@ module.exports = (suite(
                       {
                         token: 'FAUTO332',
                         index: 0,
+                        session_requests: 1,
+                        typed_length: 1,
                         completion: 'Foo',
                       },
                     ],
@@ -489,6 +507,8 @@ module.exports = (suite(
                       {
                         token: 'FAUTO332',
                         index: 1,
+                        session_requests: 1,
+                        typed_length: 1,
                         completion: 'Function',
                       },
                     ],
@@ -537,6 +557,8 @@ module.exports = (suite(
                       {
                         token: 'FAUTO332',
                         index: 2,
+                        session_requests: 1,
+                        typed_length: 1,
                         completion: 'undefined',
                       },
                     ],
@@ -612,6 +634,8 @@ module.exports = (suite(
                       {
                         token: 'nulAUTO332l',
                         index: 0,
+                        session_requests: 1,
+                        typed_length: 3,
                         completion: 'not_null',
                       },
                     ],
@@ -673,6 +697,8 @@ module.exports = (suite(
                       {
                         token: 'foobarAUTO332',
                         index: 0,
+                        session_requests: 1,
+                        typed_length: 6,
                         completion: 'foobar',
                       },
                     ],
@@ -748,6 +774,8 @@ module.exports = (suite(
                       {
                         token: 'AllAUTO332',
                         index: 0,
+                        session_requests: 1,
+                        typed_length: 3,
                         completion: 'AllTheThings',
                       },
                     ],
@@ -797,6 +825,8 @@ module.exports = (suite(
                       {
                         token: 'AllAUTO332',
                         index: 1,
+                        session_requests: 1,
+                        typed_length: 3,
                         completion: 'AllTheThings',
                       },
                     ],
@@ -846,6 +876,8 @@ module.exports = (suite(
                       {
                         token: 'AllAUTO332',
                         index: 2,
+                        session_requests: 1,
+                        typed_length: 3,
                         completion: 'AllTheThings',
                       },
                     ],
@@ -921,6 +953,8 @@ module.exports = (suite(
                       {
                         token: 'xyAUTO332',
                         index: 0,
+                        session_requests: 1,
+                        typed_length: 2,
                         completion: 'xyz',
                       },
                     ],
