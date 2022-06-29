@@ -504,6 +504,7 @@ do-test:
 	bin/flow$(EXE) check packages/flow-dev-tools
 	${MAKE} do-test-tool
 	./tool test
+	node src/__tests__/flow_dot_js_smoke_test.js $(realpath bin/flow.js)
 
 do-test-tool:
 	FLOW_BIN=../../bin/flow$(EXE) ${YARN} --cwd packages/flow-dev-tools test
@@ -511,10 +512,10 @@ do-test-tool:
 test-tool: bin/flow$(EXE)
 	${MAKE} do-test-tool
 
-test: bin/flow$(EXE)
+test: bin/flow$(EXE) bin/flow.js
 	${MAKE} do-test
 
-js: _build/scripts/ppx_gen_flowlibs.exe $(LIBFUZZY_PATH_DEP) $(BUILT_OBJECT_FILES) $(COPIED_FLOWLIB) $(COPIED_PRELUDE)
+bin/flow.js: _build/scripts/ppx_gen_flowlibs.exe $(LIBFUZZY_PATH_DEP) $(BUILT_OBJECT_FILES) $(COPIED_FLOWLIB) $(COPIED_PRELUDE)
 	mkdir -p bin
 	$(OCB) \
 		-pkg js_of_ocaml \
@@ -540,6 +541,8 @@ js: _build/scripts/ppx_gen_flowlibs.exe $(LIBFUZZY_PATH_DEP) $(BUILT_OBJECT_FILE
 		cat _build/js_of_ocaml.err 1>&2; \
 		exit 1; \
 	fi
+
+js: bin/flow.js
 
 dist/flow/flow$(EXE): build-flow
 	mkdir -p $(@D)
