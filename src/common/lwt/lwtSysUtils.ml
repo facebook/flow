@@ -50,11 +50,37 @@ let prepare_args cmd args =
      instead, when we pass "". *)
   ("", Array.of_list (cmd :: args))
 
+(** At least as of Lwt 5.5.0, [Lwt_process.with_process_full] tries to close
+  the process even when [f] fails, and can raise an EBADF that swallows
+  whatever the original exception was. https://github.com/ocsigen/lwt/issues/956
+
+  Instead, we will swallow exceptions from [close] and use our [Exception] to
+  reraise the original exception. We also use ppx_lwt instead of [Lwt.finalize]
+  to improve backtraces. *)
+let with_process_full ?timeout ?env ?cwd cmd f =
+  let process = Lwt_process.open_process_full ?timeout ?env ?cwd cmd in
+  let ignore_close process =
+    try%lwt
+      let%lwt _ = process#close in
+      Lwt.return_unit
+    with
+    | Unix.Unix_error (Unix.EBADF, _, _) -> Lwt.return_unit
+  in
+  let%lwt result =
+    try%lwt f process with
+    | e ->
+      let exn = Exception.wrap e in
+      let%lwt () = ignore_close process in
+      Exception.reraise exn
+  in
+  let%lwt () = ignore_close process in
+  Lwt.return result
+
 let exec ?env ?cwd cmd args =
-  Lwt_process.with_process_full ?env ?cwd (prepare_args cmd args) command_result_of_process
+  with_process_full ?env ?cwd (prepare_args cmd args) command_result_of_process
 
 let exec_with_timeout ~timeout cmd args =
-  Lwt_process.with_process_full (prepare_args cmd args) (fun process ->
+  with_process_full (prepare_args cmd args) (fun process ->
       let timeout_msg =
         Printf.sprintf "Timed out while running `%s` after %.3f seconds" cmd timeout
       in
