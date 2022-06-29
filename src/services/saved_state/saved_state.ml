@@ -51,7 +51,6 @@ type saved_state_data = {
    *    for the other members of env.errors which are filled in during typechecking
    *)
   local_errors: Flow_error.ErrorSet.t Utils_js.FilenameMap.t;
-  warnings: Flow_error.ErrorSet.t Utils_js.FilenameMap.t;
   node_modules_containers: SSet.t SMap.t;
   dependency_graph: saved_state_dependency_graph;
 }
@@ -299,15 +298,6 @@ end = struct
         env.ServerEnv.errors.ServerEnv.local_errors
         FilenameMap.empty
     in
-    let warnings =
-      FilenameMap.fold
-        (fun fn warning_set acc ->
-          let normalized_fn = FileNormalizer.normalize_file_key normalizer fn in
-          let normalized_error_set = normalize_error_set ~normalizer warning_set in
-          FilenameMap.add normalized_fn normalized_error_set acc)
-        env.ServerEnv.errors.ServerEnv.warnings
-        FilenameMap.empty
-    in
     let node_modules_containers =
       SMap.fold
         (fun key value acc -> SMap.add (FileNormalizer.normalize_path normalizer key) value acc)
@@ -349,7 +339,6 @@ end = struct
         package_heaps;
         ordered_non_flowlib_libs;
         local_errors;
-        warnings;
         node_modules_containers;
         dependency_graph;
       }
@@ -566,7 +555,6 @@ end = struct
       package_heaps;
       ordered_non_flowlib_libs;
       local_errors;
-      warnings;
       node_modules_containers;
       dependency_graph;
     } =
@@ -609,15 +597,6 @@ end = struct
         local_errors
         FilenameMap.empty
     in
-    let warnings =
-      FilenameMap.fold
-        (fun normalized_fn normalized_warning_set acc ->
-          let fn = FileDenormalizer.denormalize_file_key denormalizer normalized_fn in
-          let warning_set = denormalize_error_set ~denormalizer normalized_warning_set in
-          FilenameMap.add fn warning_set acc)
-        warnings
-        FilenameMap.empty
-    in
     let node_modules_containers =
       SMap.fold
         (fun key value acc ->
@@ -634,7 +613,6 @@ end = struct
         package_heaps;
         ordered_non_flowlib_libs;
         local_errors;
-        warnings;
         node_modules_containers;
         dependency_graph;
       }

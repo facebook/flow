@@ -1,0 +1,54 @@
+Should not find any warnings because of lazy mode:
+No errors!
+
+The Flow server is currently in lazy mode and is only checking 0/2 files.
+To learn more, visit flow.org/en/docs/lang/lazy-modes
+
+Should not find any warnings even when including warnings:
+No errors!
+
+The Flow server is currently in lazy mode and is only checking 0/2 files.
+To learn more, visit flow.org/en/docs/lang/lazy-modes
+
+Focusing test.sh should find the warnings
+Warning ---------------------------------------------------------------------------------------------------- test.js:5:5
+
+Sketchy null check on string [1] which is potentially an empty string. Perhaps you meant to check for null or
+undefined [2]? [sketchy-null-string]
+
+   test.js:5:5
+   5| if (foo) { // sketchy null string (cross-module)
+          ^^^
+
+References:
+   dep.js:3:19
+   3| export const foo: string | void = undefined;
+                        ^^^^^^ [1]
+   dep.js:3:28
+   3| export const foo: string | void = undefined;
+                                 ^^^^ [2]
+
+
+Warning ---------------------------------------------------------------------------------------------------- test.js:9:5
+
+Sketchy null check on string [1] which is potentially an empty string. Perhaps you meant to check for null or
+undefined [2]? [sketchy-null-string]
+
+   test.js:9:5
+   9| if (bar) { // sketchy null string (local)
+          ^^^
+
+References:
+   test.js:8:12
+   8| const bar: string | void = undefined;
+                 ^^^^^^ [1]
+   test.js:8:21
+   8| const bar: string | void = undefined;
+                          ^^^^ [2]
+
+
+
+Found 2 warnings
+
+The Flow server is currently in lazy mode and is only checking 2/2 files.
+To learn more, visit flow.org/en/docs/lang/lazy-modes
