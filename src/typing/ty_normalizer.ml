@@ -2248,15 +2248,13 @@ end = struct
         ~imode:IMInstance
         (Flow_js.get_builtin (Env.get_cx env) (OrdinaryName builtin) r)
 
-    and member_expand_object ~env super inst =
+    and member_expand_object ~env ~proto super inst =
       let { T.own_props; proto_props; _ } = inst in
       let%bind own_ty_props = TypeConverter.convert_obj_props_t ~env own_props None in
-      let%bind proto_ty_props =
-        TypeConverter.convert_obj_props_t ~env ~proto:true proto_props None
-      in
+      let%bind proto_ty_props = TypeConverter.convert_obj_props_t ~env ~proto proto_props None in
       let%map obj_props =
         if include_proto_members then
-          let%map super_ty = type__ ~env ~proto:true ~imode:IMInstance super in
+          let%map super_ty = type__ ~env ~proto ~imode:IMInstance super in
           Ty.SpreadProp super_ty :: own_ty_props @ proto_ty_props
         else
           return (own_ty_props @ proto_ty_props)
@@ -2314,7 +2312,7 @@ end = struct
       let t = Flow_js.get_builtin_type (Env.get_cx env) reason (OrdinaryName builtin) in
       type__ ~env ~proto:true ~imode:IMUnset t
 
-    and instance_t ~env ~imode r static super inst =
+    and instance_t ~env ~proto ~imode r static super inst =
       let { T.inst_kind; _ } = inst in
       let desc = desc_of_reason ~unwrap:false r in
       match (inst_kind, desc, imode) with
@@ -2322,7 +2320,7 @@ end = struct
       | (T.ClassKind, _, IMStatic) -> type__ ~env ~proto:false ~imode static
       | (T.ClassKind, _, (IMUnset | IMInstance))
       | (T.InterfaceKind _, _, _) ->
-        member_expand_object ~env super inst
+        member_expand_object ~env ~proto super inst
 
     and latent_pred_t ~env ~proto ~imode id t =
       let cx = Env.get_cx env in
@@ -2393,7 +2391,7 @@ end = struct
       | DefT (r, _, ArrT a) -> arr_t ~env r a
       | DefT (r, tr, EnumObjectT e) -> enum_t ~env r tr e
       | DefT (r, _, InstanceT (static, super, _, inst)) ->
-        instance_t ~env ~imode r static super inst
+        instance_t ~env ~proto ~imode r static super inst
       | ThisClassT (_, t, _, _) -> this_class_t ~env ~proto ~imode t
       | DefT (_, _, PolyT { tparams; t_out; _ }) ->
         let tparams_rev = List.rev (Nel.to_list tparams) @ env.Env.tparams_rev in

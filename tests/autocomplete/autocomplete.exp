@@ -4396,7 +4396,7 @@ Flags: --lsp
   "kind":3,
   "detail":"() => void",
   "documentation":{"kind":"markdown","value":"this is an instance method"},
-  "sortText":"00000000000000000001",
+  "sortText":"00000000000000000000",
   "insertTextFormat":1,
   "textEdit":{
     "range":{"start":{"line":4,"character":12},"end":{"line":4,"character":12}},
