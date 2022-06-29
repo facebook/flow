@@ -261,7 +261,7 @@ let autocomplete ~trigger_character ~reader ~options ~env ~profiling ~input ~cur
     in
     let (contents, broader_context) =
       let (line, column) = cursor in
-      AutocompleteService_js.add_autocomplete_token contents line column
+      Autocomplete_sigil.add contents line column
     in
     Autocomplete_js.autocomplete_set_hooks ~cursor:cursor_loc;
     let file_artifacts_result =

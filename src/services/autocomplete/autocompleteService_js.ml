@@ -21,68 +21,6 @@ let default_autoimport_options =
     }
   
 
-let autocomplete_suffix = "AUTO332"
-
-let suffix_len = String.length autocomplete_suffix
-
-let add_autocomplete_token contents line column =
-  let line = line - 1 in
-  let contents_with_token =
-    Line.transform_nth contents line (fun line_str ->
-        let length = String.length line_str in
-        if length >= column then
-          let start = String.sub line_str 0 column in
-          let end_ = String.sub line_str column (length - column) in
-          start ^ autocomplete_suffix ^ end_
-        else
-          line_str
-    )
-  in
-  let f (_, x, _) = x in
-  let default = "" in
-  ( contents_with_token,
-    Base.Option.value_map ~f ~default (Line.split_nth contents_with_token (line - 1))
-    ^ Base.Option.value_map ~f ~default (Line.split_nth contents_with_token line)
-    ^ Base.Option.value_map ~f ~default (Line.split_nth contents_with_token (line + 1))
-  )
-
-(**
- * the autocomplete token inserts `suffix_len` characters, which are included
- * in `ac_loc` returned by `Autocomplete_js`. They need to be removed before
- * showing `ac_loc` to the client.
- * Sometimes `ac_loc` ends on a different line than it starts.
- * This happens mostly in two situations:
- * with unclosed string literals: {|
- *   foo["
- *        ^
- * |}
- * and with unclosed bracket-syntax members:
- *   foo[
- *       ^
- * In these situations, the code is malformed so the parser usually doesn't
- * realize to close the AST node until a future line, so the `ac_loc` we get
- * can end on a later line than it started.
- * In these situations, moving the end position backwards by suffix_len can
- * result in an end position with an invalid (negative) column number.
- * It's also invalid for a completionItem's textEdit to have a target range
- * that spans multiple lines.
- * So when `ac_loc` ends on a different line than it starts, we just replace
- * the end position with the start position. *)
-let remove_autocomplete_token_from_loc loc =
-  let open Loc in
-  if loc.start.line = loc._end.line then
-    { loc with _end = { loc._end with column = loc._end.column - suffix_len } }
-  else
-    { loc with _end = loc.start }
-
-let remove_autocomplete_token =
-  let regexp = Str.regexp_string autocomplete_suffix in
-  fun str ->
-    match Str.bounded_split_delim regexp str 2 with
-    | [] -> ("", "")
-    | [str] -> (str, "")
-    | before :: after :: _ -> (before, after)
-
 let lsp_completion_of_type =
   let open Ty in
   function
@@ -611,7 +549,7 @@ let autocomplete_id
     ~type_ =
   (* TODO: filter to results that match `token` *)
   let open ServerProt.Response.Completion in
-  let ac_loc = loc_of_aloc ~reader ac_loc |> remove_autocomplete_token_from_loc in
+  let ac_loc = loc_of_aloc ~reader ac_loc |> Autocomplete_sigil.remove_from_loc in
   let exact_by_default = Context.exact_by_default cx in
   let genv = Ty_normalizer_env.mk_genv ~full_cx:cx ~file:(Context.file cx) ~typed_ast ~file_sig in
   let upper_bound = upper_bound_t_of_t ~cx type_ in
@@ -702,7 +640,7 @@ let autocomplete_id
   in
   let (items_rev, is_incomplete) =
     if imports then
-      let (before, _after) = remove_autocomplete_token token in
+      let (before, _after) = Autocomplete_sigil.remove token in
       if before = "" then
         (* for empty autocomplete requests (hitting ctrl-space without typing anything),
            don't include any autoimport results, but do set `is_incomplete` so that
@@ -971,7 +909,7 @@ let local_type_identifiers ~typed_ast ~cx ~file_sig =
 let autocomplete_unqualified_type
     ~env ~options ~reader ~cx ~imports ~tparams_rev ~file_sig ~ac_loc ~ast ~typed_ast ~token =
   (* TODO: filter to results that match `token` *)
-  let ac_loc = loc_of_aloc ~reader ac_loc |> remove_autocomplete_token_from_loc in
+  let ac_loc = loc_of_aloc ~reader ac_loc |> Autocomplete_sigil.remove_from_loc in
   let exact_by_default = Context.exact_by_default cx in
   let items_rev =
     []
@@ -1070,7 +1008,7 @@ let autocomplete_unqualified_type
         set
       in
       let { Export_search.results = auto_imports; is_incomplete } =
-        let (before, _after) = remove_autocomplete_token token in
+        let (before, _after) = Autocomplete_sigil.remove token in
         Export_search.search_types ~options:default_autoimport_options before env.ServerEnv.exports
       in
       let items_rev =
@@ -1108,7 +1046,7 @@ let autocomplete_member
     ~member_loc
     ~is_type_annotation =
   let ac_loc =
-    let ac_loc = loc_of_aloc ~reader ac_aloc |> remove_autocomplete_token_from_loc in
+    let ac_loc = loc_of_aloc ~reader ac_aloc |> Autocomplete_sigil.remove_from_loc in
     (* If the token is a string literal, then the end of the token may be inaccurate
      * due to parse errors. See tests/autocomplete/bracket_syntax_3.js for example. *)
     match token.[0] with
@@ -1164,7 +1102,7 @@ let autocomplete_member
              let name_is_valid_identifier = Parser_flow.string_is_valid_identifier_name name in
              let edit_loc_of_member_loc member_loc =
                if Loc.(member_loc.start.line = member_loc._end.line) then
-                 remove_autocomplete_token_from_loc member_loc
+                 Autocomplete_sigil.remove_from_loc member_loc
                else
                  Loc.{ member_loc with _end = member_loc.start }
              in
@@ -1237,7 +1175,7 @@ let autocomplete_member
                  ?tags
                  ~exact_by_default
                  ~log_info:"start optional chain"
-                 (opt_chain_name, remove_autocomplete_token_from_loc member_loc)
+                 (opt_chain_name, Autocomplete_sigil.remove_from_loc member_loc)
                  opt_chain_ty
          )
     in
@@ -1404,7 +1342,7 @@ let autocomplete_jsx_attribute
       props_object
       ~tparams_rev
   in
-  let ac_loc = loc_of_aloc ~reader ac_loc |> remove_autocomplete_token_from_loc in
+  let ac_loc = loc_of_aloc ~reader ac_loc |> Autocomplete_sigil.remove_from_loc in
   match mems_result with
   | Error err -> AcFatalError err
   | Ok (mems, errors_to_log, _) ->
@@ -1431,7 +1369,7 @@ let autocomplete_jsx_attribute
     AcResult { result; errors_to_log }
 
 let autocomplete_qualified_type ~reader ~cx ~ac_loc ~file_sig ~typed_ast ~tparams_rev ~qtype =
-  let ac_loc = loc_of_aloc ~reader ac_loc |> remove_autocomplete_token_from_loc in
+  let ac_loc = loc_of_aloc ~reader ac_loc |> Autocomplete_sigil.remove_from_loc in
   let qtype_scheme = Type.TypeScheme.{ tparams_rev; type_ = qtype } in
   let exact_by_default = Context.exact_by_default cx in
   let module_ty_res =
@@ -1473,7 +1411,7 @@ let autocomplete_object_key
     ac_aloc
     ~tparams_rev =
   let ac_loc =
-    let ac_loc = loc_of_aloc ~reader ac_aloc |> remove_autocomplete_token_from_loc in
+    let ac_loc = loc_of_aloc ~reader ac_aloc |> Autocomplete_sigil.remove_from_loc in
     (* If the token is a string literal, then the end of the token may be inaccurate
      * due to parse errors. See tests/autocomplete/bracket_syntax_3.js for example. *)
     match token.[0] with
@@ -1605,7 +1543,7 @@ let autocomplete_get_results
             ~tparams_rev
         )
       | Ac_literal { lit_type } ->
-        let ac_loc = loc_of_aloc ~reader ac_loc |> remove_autocomplete_token_from_loc in
+        let ac_loc = loc_of_aloc ~reader ac_loc |> Autocomplete_sigil.remove_from_loc in
         let genv =
           Ty_normalizer_env.mk_genv ~full_cx:cx ~file:(Context.file cx) ~typed_ast ~file_sig
         in
