@@ -2093,7 +2093,6 @@ Flags: --lsp
 }
 {
   "label":"Typewriter",
-  "labelDetails":{"detail":"class Typewriter"},
   "kind":7,
   "detail":"class Typewriter",
   "sortText":"00000000000000000000",
@@ -2114,7 +2113,6 @@ Flags: --lsp
 }
 {
   "label":"Typography",
-  "labelDetails":{"detail":"class Typewriter"},
   "kind":7,
   "detail":"class Typewriter",
   "sortText":"00000000000000000000",
@@ -3404,7 +3402,6 @@ jsdoc.js:18:4
 Flags: --lsp
 {
   "label":"Bar",
-  "labelDetails":{"detail":"class Bar"},
   "kind":7,
   "detail":"class Bar",
   "documentation":{"kind":"markdown","value":"the class Bar"},
@@ -6200,7 +6197,6 @@ Flags: --lsp
 }
 {
   "label":"ExportClass",
-  "labelDetails":{"detail":"class ExportClass"},
   "kind":7,
   "detail":"class ExportClass",
   "documentation":{"kind":"markdown","value":"this is ExportClass"},
@@ -6288,7 +6284,6 @@ Flags: --lsp
 }
 {
   "label":"myClass",
-  "labelDetails":{"detail":"class myClass"},
   "kind":7,
   "detail":"class myClass",
   "documentation":{"kind":"markdown","value":"this is myClass"},
@@ -6357,7 +6352,6 @@ Flags: --lsp
 }
 {
   "label":"ExportClass",
-  "labelDetails":{"detail":"class ExportClass"},
   "kind":7,
   "detail":"class ExportClass",
   "documentation":{"kind":"markdown","value":"this is ExportClass"},
