@@ -603,6 +603,7 @@ let collect_rage ~profiling ~options ~reader ~env ~files =
                 match Sys_utils.cat_or_failed file with
                 | None -> "ERROR! FAILED TO READ"
                 | Some content ->
+                  let reader = Abstract_state_reader.State_reader reader in
                   if Parsing_service_js.does_content_match_file_hash ~reader file_key content then
                     "OK"
                   else

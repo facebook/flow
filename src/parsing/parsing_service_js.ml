@@ -490,7 +490,7 @@ let content_hash_matches_old_file_hash ~reader file content_hash =
 
 let does_content_match_file_hash ~reader file content =
   let content_hash = hash_content content in
-  match Parsing_heaps.Reader.get_file_hash ~reader file with
+  match Parsing_heaps.Reader_dispatcher.get_file_hash ~reader file with
   | None -> false
   | Some hash -> hash = content_hash
 

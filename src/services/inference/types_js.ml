@@ -1975,6 +1975,28 @@ let mk_init_env
     exports;
   }
 
+(** Verify that the hash in shared memory matches what's on disk.
+  Used to verify saved state. *)
+let verify_hash ~reader file_key =
+  let filename_string = File_key.to_string file_key in
+  match Sys_utils.cat filename_string with
+  | exception _ -> false
+  | content -> Parsing_service_js.does_content_match_file_hash ~reader file_key content
+
+let assert_valid_hashes updates invalid_hashes =
+  let invalid_hashes =
+    (* remove updated files *)
+    Base.List.filter ~f:(fun file -> not (CheckedSet.mem file updates)) invalid_hashes
+  in
+  if Base.List.is_empty invalid_hashes then
+    Hh_logger.info "Saved state verification succeeded"
+  else (
+    Printf.eprintf
+      "The following files do not match their hashes in saved state:\n%s\n%!"
+      (invalid_hashes |> Base.List.map ~f:File_key.to_string |> String.concat "\n");
+    Exit.(exit ~msg:"Saved state verification failed" Invalid_saved_state)
+  )
+
 let init_from_saved_state ~profiling ~workers ~saved_state ~updates options =
   let%lwt (env, libs_ok) =
     with_transaction @@ fun transaction reader ->
@@ -1999,7 +2021,11 @@ let init_from_saved_state ~profiling ~workers ~saved_state ~updates options =
     (* Restore PackageHeap and the ReversePackageHeap *)
     FilenameMap.iter (fun fn -> Module_js.add_package (File_key.to_string fn)) package_heaps;
 
-    let restore_parsed (fns, dirty_modules) (fn, parsed_file_data) =
+    (* Verifies that the data in saved state matches what's really on disk *)
+    let verify = Options.saved_state_verify options in
+    let abstract_reader = Abstract_state_reader.Mutator_state_reader reader in
+
+    let restore_parsed (fns, dirty_modules, invalid_hashes) (fn, parsed_file_data) =
       let { Saved_state.module_name; normalized_file_data } = parsed_file_data in
       let { Saved_state.hash; exports; resolved_requires } =
         Saved_state.denormalize_file_data ~root normalized_file_data
@@ -2016,10 +2042,17 @@ let init_from_saved_state ~profiling ~workers ~saved_state ~updates options =
           resolved_requires
       in
 
-      (FilenameSet.add fn fns, Modulename.Set.union ms dirty_modules)
+      let invalid_hashes =
+        if verify && not (verify_hash ~reader:abstract_reader fn) then
+          fn :: invalid_hashes
+        else
+          invalid_hashes
+      in
+
+      (FilenameSet.add fn fns, Modulename.Set.union ms dirty_modules, invalid_hashes)
     in
 
-    let restore_unparsed (fns, dirty_modules) (fn, unparsed_file_data) =
+    let restore_unparsed (fns, dirty_modules, invalid_hashes) (fn, unparsed_file_data) =
       let { Saved_state.unparsed_module_name; unparsed_hash } = unparsed_file_data in
 
       (* Restore the FileHeap *)
@@ -2027,15 +2060,24 @@ let init_from_saved_state ~profiling ~workers ~saved_state ~updates options =
         Parsing_heaps.From_saved_state.add_unparsed options fn unparsed_hash unparsed_module_name
       in
 
-      (FilenameSet.add fn fns, Modulename.Set.union ms dirty_modules)
+      let invalid_hashes =
+        if verify && not (verify_hash ~reader:abstract_reader fn) then
+          fn :: invalid_hashes
+        else
+          invalid_hashes
+      in
+
+      (FilenameSet.add fn fns, Modulename.Set.union ms dirty_modules, invalid_hashes)
     in
 
     Hh_logger.info "Restoring heaps";
-    let%lwt (parsed, unparsed, dirty_modules) =
+    let%lwt (parsed, unparsed, dirty_modules, invalid_hashes) =
       Memory_utils.with_memory_timer_lwt ~options "RestoreHeaps" profiling (fun () ->
-          let neutral = (FilenameSet.empty, Modulename.Set.empty) in
-          let merge (a1, a2) (b1, b2) = (FilenameSet.union a1 b1, Modulename.Set.union a2 b2) in
-          let%lwt (parsed, dirty_modules_parsed) =
+          let neutral = (FilenameSet.empty, Modulename.Set.empty, []) in
+          let merge (a1, a2, a3) (b1, b2, b3) =
+            (FilenameSet.union a1 b1, Modulename.Set.union a2 b2, Base.List.rev_append a3 b3)
+          in
+          let%lwt (parsed, dirty_modules_parsed, invalid_parsed_hashes) =
             MultiWorkerLwt.call
               workers
               ~job:(List.fold_left restore_parsed)
@@ -2043,7 +2085,7 @@ let init_from_saved_state ~profiling ~workers ~saved_state ~updates options =
               ~neutral
               ~next:(MultiWorkerLwt.next workers parsed_heaps)
           in
-          let%lwt (unparsed, dirty_modules_unparsed) =
+          let%lwt (unparsed, dirty_modules_unparsed, invalid_unparsed_hashes) =
             MultiWorkerLwt.call
               workers
               ~job:(List.fold_left restore_unparsed)
@@ -2052,9 +2094,13 @@ let init_from_saved_state ~profiling ~workers ~saved_state ~updates options =
               ~next:(MultiWorkerLwt.next workers unparsed_heaps)
           in
           let dirty_modules = Modulename.Set.union dirty_modules_parsed dirty_modules_unparsed in
-          Lwt.return (parsed, unparsed, dirty_modules)
+          let invalid_hashes = Base.List.rev_append invalid_unparsed_hashes invalid_parsed_hashes in
+          Lwt.return (parsed, unparsed, dirty_modules, invalid_hashes)
       )
     in
+
+    if verify then assert_valid_hashes updates invalid_hashes;
+
     Hh_logger.info "Loading libraries";
 
     (* We actually parse and typecheck the libraries, even though we're loading from saved state.
