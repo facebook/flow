@@ -86,6 +86,8 @@ let flow_signature_help_to_lsp
 
 let flow_completion_item_to_lsp
     ?token
+    ?autocomplete_session_length
+    ?typed_len
     ~is_snippet_supported:(_ : bool)
     ~(is_tags_supported : Lsp.CompletionItemTag.t -> bool)
     ~(is_preselect_supported : bool)
@@ -130,6 +132,17 @@ let flow_completion_item_to_lsp
                       | Some token -> JSON_String token
                     );
                     ("index", JSON_Number (string_of_int index));
+                    ( "session_requests",
+                      match autocomplete_session_length with
+                      | None -> JSON_Null
+                      | Some autocomplete_session_length ->
+                        JSON_Number (string_of_int autocomplete_session_length)
+                    );
+                    ( "typed_length",
+                      match typed_len with
+                      | None -> JSON_Null
+                      | Some typed_length -> JSON_Number (string_of_int typed_length)
+                    );
                     ("completion", JSON_String item.name);
                   ];
               ]
@@ -166,6 +179,8 @@ let flow_completion_item_to_lsp
 
 let flow_completions_to_lsp
     ?token
+    ?autocomplete_session_length
+    ?typed_len
     ~(is_snippet_supported : bool)
     ~(is_tags_supported : Lsp.CompletionItemTag.t -> bool)
     ~(is_preselect_supported : bool)
@@ -194,6 +209,8 @@ let flow_completions_to_lsp
       ~f:(fun index item ->
         flow_completion_item_to_lsp
           ?token
+          ?autocomplete_session_length
+          ?typed_len
           ~is_snippet_supported
           ~is_tags_supported
           ~is_preselect_supported

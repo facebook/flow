@@ -1512,9 +1512,13 @@ let autocomplete_get_results
   match process_location ~trigger_character ~cursor ~typed_ast with
   | None ->
     let result = { ServerProt.Response.Completion.items = []; is_incomplete = false } in
-    (None, ("None", AcResult { result; errors_to_log = ["Autocomplete token not found in AST"] }))
+    ( None,
+      None,
+      ("None", AcResult { result; errors_to_log = ["Autocomplete token not found in AST"] })
+    )
   | Some { tparams_rev; ac_loc; token; autocomplete_type } ->
     ( Some token,
+      Some ac_loc,
       (match autocomplete_type with
       | Ac_binding -> ("Empty", AcEmpty "Binding")
       | Ac_ignored -> ("Empty", AcEmpty "Ignored")

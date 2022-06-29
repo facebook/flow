@@ -251,7 +251,9 @@ let autocomplete ~trigger_character ~reader ~options ~env ~profiling ~input ~cur
   match of_file_input ~options ~env input with
   | Error (Failed e) -> (Error e, None)
   | Error (Skipped reason) ->
-    let response = (None, { ServerProt.Response.Completion.items = []; is_incomplete = false }) in
+    let response =
+      (None, { ServerProt.Response.Completion.items = []; is_incomplete = false }, None)
+    in
     let extra_data = json_of_skipped reason in
     (Ok response, extra_data)
   | Ok (filename, contents) ->
@@ -295,7 +297,7 @@ let autocomplete ~trigger_character ~reader ~options ~env ~profiling ~input ~cur
         ) ->
       Profiling_js.with_timer profiling ~timer:"GetResults" ~f:(fun () ->
           let open AutocompleteService_js in
-          let (token_opt, (ac_type_string, results_res)) =
+          let (token_opt, ac_loc, (ac_type_string, results_res)) =
             autocomplete_get_results
               ~env
               ~options
@@ -338,7 +340,7 @@ let autocomplete ~trigger_character ~reader ~options ~env ~profiling ~input ~cur
                     Base.Option.is_some documentation
                 )
               in
-              ( Ok (token_opt, result),
+              ( Ok (token_opt, result, ac_loc),
                 ("result", JSON_String result_string)
                 ::
                 ("count", JSON_Number (items |> List.length |> string_of_int))
@@ -349,7 +351,11 @@ let autocomplete ~trigger_character ~reader ~options ~env ~profiling ~input ~cur
                 :: json_props_to_log
               )
             | AcEmpty reason ->
-              ( Ok (token_opt, { ServerProt.Response.Completion.items = []; is_incomplete = false }),
+              ( Ok
+                  ( token_opt,
+                    { ServerProt.Response.Completion.items = []; is_incomplete = false },
+                    ac_loc
+                  ),
                 ("result", JSON_String "SUCCESS")
                 ::
                 ("count", JSON_Number "0")
@@ -868,7 +874,12 @@ let handle_autocomplete ~trigger_character ~reader ~options ~profiling ~env ~inp
         autocomplete ~trigger_character ~reader ~options ~env ~profiling ~input ~cursor ~imports
     )
   in
-  let result = Base.Result.map result ~f:snd in
+  let result =
+    Base.Result.map result ~f:(fun x ->
+        match x with
+        | (_, b, _) -> b
+    )
+  in
   Lwt.return (ServerProt.Response.AUTOCOMPLETE result, json_data)
 
 let handle_autofix_exports ~options ~input ~profiling ~env:_ =
@@ -1756,10 +1767,41 @@ let handle_persistent_autocomplete_lsp
   in
   let metadata = with_data ~extra_data metadata in
   match result with
-  | Ok (token, completions) ->
+  | Ok (token, completions, ac_loc) ->
+    let token_loc =
+      match ac_loc with
+      | None -> None
+      | Some ac_loc -> Some (Parsing_heaps.Reader.loc_of_aloc ~reader ac_loc)
+    in
+    let file_key =
+      match token_loc with
+      | None -> None
+      | Some token_loc -> token_loc.Loc.source
+    in
+    let (token_line, token_char) =
+      match token_loc with
+      | None -> (None, None)
+      | Some token_loc -> (Some token_loc.Loc.start.Loc.line, Some token_loc.Loc.start.Loc.column)
+    in
+    let autocomplete_session_length =
+      match (token_line, token_char, file_key) with
+      | (None, _, _)
+      | (_, None, _)
+      | (_, _, None) ->
+        None
+      | (Some token_line, Some token_char, file_key) ->
+        Some (Persistent_connection.autocomplete_session client (token_line, token_char, file_key))
+    in
+    let typed_len =
+      match token_char with
+      | None -> None
+      | Some token_char -> Some (char - token_char)
+    in
     let result =
       Flow_lsp_conversions.flow_completions_to_lsp
         ?token
+        ?autocomplete_session_length
+        ?typed_len
         ~is_snippet_supported
         ~is_tags_supported
         ~is_preselect_supported

@@ -499,7 +499,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "member",
-      {"token":null,"index":0,"completion":"baz"}
+      {
+        "token":null,
+        "index":0,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"baz"
+      }
     ]
   }
 }
@@ -522,7 +528,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "member",
-      {"token":null,"index":1,"completion":"baz_DEPRECATED"}
+      {
+        "token":null,
+        "index":1,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"baz_DEPRECATED"
+      }
     ]
   }
 }
@@ -547,7 +559,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "member",
-      {"token":null,"index":2,"completion":"hasOwnProperty"}
+      {
+        "token":null,
+        "index":2,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"hasOwnProperty"
+      }
     ]
   }
 }
@@ -572,7 +590,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "member",
-      {"token":null,"index":3,"completion":"isPrototypeOf"}
+      {
+        "token":null,
+        "index":3,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"isPrototypeOf"
+      }
     ]
   }
 }
@@ -597,7 +621,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "member",
-      {"token":null,"index":4,"completion":"propertyIsEnumerable"}
+      {
+        "token":null,
+        "index":4,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"propertyIsEnumerable"
+      }
     ]
   }
 }
@@ -622,7 +652,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "member",
-      {"token":null,"index":5,"completion":"toLocaleString"}
+      {
+        "token":null,
+        "index":5,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"toLocaleString"
+      }
     ]
   }
 }
@@ -644,7 +680,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "member",
-      {"token":null,"index":6,"completion":"toString"}
+      {
+        "token":null,
+        "index":6,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"toString"
+      }
     ]
   }
 }
@@ -669,7 +711,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "member",
-      {"token":null,"index":7,"completion":"valueOf"}
+      {
+        "token":null,
+        "index":7,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"valueOf"
+      }
     ]
   }
 }
@@ -714,7 +762,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "member",
-      {"token":null,"index":0,"completion":"bar"}
+      {
+        "token":null,
+        "index":0,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"bar"
+      }
     ]
   }
 }
@@ -737,7 +791,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "member",
-      {"token":null,"index":1,"completion":"baz"}
+      {
+        "token":null,
+        "index":1,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"baz"
+      }
     ]
   }
 }
@@ -762,7 +822,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "member",
-      {"token":null,"index":2,"completion":"hasOwnProperty"}
+      {
+        "token":null,
+        "index":2,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"hasOwnProperty"
+      }
     ]
   }
 }
@@ -787,7 +853,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "member",
-      {"token":null,"index":3,"completion":"isPrototypeOf"}
+      {
+        "token":null,
+        "index":3,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"isPrototypeOf"
+      }
     ]
   }
 }
@@ -812,7 +884,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "member",
-      {"token":null,"index":4,"completion":"propertyIsEnumerable"}
+      {
+        "token":null,
+        "index":4,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"propertyIsEnumerable"
+      }
     ]
   }
 }
@@ -837,7 +915,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "member",
-      {"token":null,"index":5,"completion":"toLocaleString"}
+      {
+        "token":null,
+        "index":5,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"toLocaleString"
+      }
     ]
   }
 }
@@ -859,7 +943,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "member",
-      {"token":null,"index":6,"completion":"toString"}
+      {
+        "token":null,
+        "index":6,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"toString"
+      }
     ]
   }
 }
@@ -884,7 +974,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "member",
-      {"token":null,"index":7,"completion":"valueOf"}
+      {
+        "token":null,
+        "index":7,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"valueOf"
+      }
     ]
   }
 }
@@ -1441,7 +1537,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "builtin type",
-      {"token":null,"index":0,"completion":"any"}
+      {
+        "token":null,
+        "index":0,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"any"
+      }
     ]
   }
 }
@@ -1461,7 +1563,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "builtin type",
-      {"token":null,"index":1,"completion":"boolean"}
+      {
+        "token":null,
+        "index":1,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"boolean"
+      }
     ]
   }
 }
@@ -1481,7 +1589,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "builtin type",
-      {"token":null,"index":2,"completion":"empty"}
+      {
+        "token":null,
+        "index":2,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"empty"
+      }
     ]
   }
 }
@@ -1501,7 +1615,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "builtin type",
-      {"token":null,"index":3,"completion":"false"}
+      {
+        "token":null,
+        "index":3,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"false"
+      }
     ]
   }
 }
@@ -1521,7 +1641,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "builtin type",
-      {"token":null,"index":4,"completion":"mixed"}
+      {
+        "token":null,
+        "index":4,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"mixed"
+      }
     ]
   }
 }
@@ -1541,7 +1667,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "builtin type",
-      {"token":null,"index":5,"completion":"null"}
+      {
+        "token":null,
+        "index":5,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"null"
+      }
     ]
   }
 }
@@ -1561,7 +1693,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "builtin type",
-      {"token":null,"index":6,"completion":"number"}
+      {
+        "token":null,
+        "index":6,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"number"
+      }
     ]
   }
 }
@@ -1581,7 +1719,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "builtin type",
-      {"token":null,"index":7,"completion":"bigint"}
+      {
+        "token":null,
+        "index":7,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"bigint"
+      }
     ]
   }
 }
@@ -1601,7 +1745,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "builtin type",
-      {"token":null,"index":8,"completion":"string"}
+      {
+        "token":null,
+        "index":8,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"string"
+      }
     ]
   }
 }
@@ -1621,7 +1771,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "builtin type",
-      {"token":null,"index":9,"completion":"true"}
+      {
+        "token":null,
+        "index":9,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"true"
+      }
     ]
   }
 }
@@ -1641,7 +1797,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "builtin type",
-      {"token":null,"index":10,"completion":"void"}
+      {
+        "token":null,
+        "index":10,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"void"
+      }
     ]
   }
 }
@@ -1661,7 +1823,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "builtin type",
-      {"token":null,"index":11,"completion":"symbol"}
+      {
+        "token":null,
+        "index":11,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"symbol"
+      }
     ]
   }
 }
@@ -1681,7 +1849,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "builtin type",
-      {"token":null,"index":12,"completion":"Class"}
+      {
+        "token":null,
+        "index":12,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"Class"
+      }
     ]
   }
 }
@@ -1701,7 +1875,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "builtin type",
-      {"token":null,"index":13,"completion":"$Call"}
+      {
+        "token":null,
+        "index":13,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"$Call"
+      }
     ]
   }
 }
@@ -1721,7 +1901,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "builtin type",
-      {"token":null,"index":14,"completion":"$CharSet"}
+      {
+        "token":null,
+        "index":14,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"$CharSet"
+      }
     ]
   }
 }
@@ -1741,7 +1927,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "builtin type",
-      {"token":null,"index":15,"completion":"$Diff"}
+      {
+        "token":null,
+        "index":15,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"$Diff"
+      }
     ]
   }
 }
@@ -1761,7 +1953,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "builtin type",
-      {"token":null,"index":16,"completion":"$ElementType"}
+      {
+        "token":null,
+        "index":16,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"$ElementType"
+      }
     ]
   }
 }
@@ -1781,7 +1979,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "builtin type",
-      {"token":null,"index":17,"completion":"$Exact"}
+      {
+        "token":null,
+        "index":17,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"$Exact"
+      }
     ]
   }
 }
@@ -1801,7 +2005,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "builtin type",
-      {"token":null,"index":18,"completion":"$Exports"}
+      {
+        "token":null,
+        "index":18,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"$Exports"
+      }
     ]
   }
 }
@@ -1821,7 +2031,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "builtin type",
-      {"token":null,"index":19,"completion":"$KeyMirror"}
+      {
+        "token":null,
+        "index":19,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"$KeyMirror"
+      }
     ]
   }
 }
@@ -1841,7 +2057,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "builtin type",
-      {"token":null,"index":20,"completion":"$Keys"}
+      {
+        "token":null,
+        "index":20,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"$Keys"
+      }
     ]
   }
 }
@@ -1861,7 +2083,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "builtin type",
-      {"token":null,"index":21,"completion":"$NonMaybeType"}
+      {
+        "token":null,
+        "index":21,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"$NonMaybeType"
+      }
     ]
   }
 }
@@ -1881,7 +2109,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "builtin type",
-      {"token":null,"index":22,"completion":"$ObjMap"}
+      {
+        "token":null,
+        "index":22,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"$ObjMap"
+      }
     ]
   }
 }
@@ -1901,7 +2135,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "builtin type",
-      {"token":null,"index":23,"completion":"$ObjMapi"}
+      {
+        "token":null,
+        "index":23,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"$ObjMapi"
+      }
     ]
   }
 }
@@ -1921,7 +2161,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "builtin type",
-      {"token":null,"index":24,"completion":"$PropertyType"}
+      {
+        "token":null,
+        "index":24,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"$PropertyType"
+      }
     ]
   }
 }
@@ -1941,7 +2187,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "builtin type",
-      {"token":null,"index":25,"completion":"$ReadOnly"}
+      {
+        "token":null,
+        "index":25,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"$ReadOnly"
+      }
     ]
   }
 }
@@ -1961,7 +2213,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "builtin type",
-      {"token":null,"index":26,"completion":"$Rest"}
+      {
+        "token":null,
+        "index":26,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"$Rest"
+      }
     ]
   }
 }
@@ -1981,7 +2239,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "builtin type",
-      {"token":null,"index":27,"completion":"$Shape"}
+      {
+        "token":null,
+        "index":27,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"$Shape"
+      }
     ]
   }
 }
@@ -2001,7 +2265,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "builtin type",
-      {"token":null,"index":28,"completion":"$TupleMap"}
+      {
+        "token":null,
+        "index":28,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"$TupleMap"
+      }
     ]
   }
 }
@@ -2021,7 +2291,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "builtin type",
-      {"token":null,"index":29,"completion":"$Values"}
+      {
+        "token":null,
+        "index":29,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"$Values"
+      }
     ]
   }
 }
@@ -2041,7 +2317,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "unqualified type parameter",
-      {"token":null,"index":30,"completion":"Typaram"}
+      {
+        "token":null,
+        "index":30,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"Typaram"
+      }
     ]
   }
 }
@@ -2062,7 +2344,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "unqualified type: local type identifier",
-      {"token":null,"index":31,"completion":"Typesafe"}
+      {
+        "token":null,
+        "index":31,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"Typesafe"
+      }
     ]
   }
 }
@@ -2083,7 +2371,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "unqualified type: local type identifier",
-      {"token":null,"index":32,"completion":"Typhoon"}
+      {
+        "token":null,
+        "index":32,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"Typhoon"
+      }
     ]
   }
 }
@@ -2104,7 +2398,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "unqualified type: local type identifier",
-      {"token":null,"index":33,"completion":"Typnotism"}
+      {
+        "token":null,
+        "index":33,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"Typnotism"
+      }
     ]
   }
 }
@@ -2125,7 +2425,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "unqualified type: local type identifier",
-      {"token":null,"index":34,"completion":"Tyrant"}
+      {
+        "token":null,
+        "index":34,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"Tyrant"
+      }
     ]
   }
 }
@@ -2146,7 +2452,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "unqualified type: local type identifier",
-      {"token":null,"index":35,"completion":"Tympanic"}
+      {
+        "token":null,
+        "index":35,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"Tympanic"
+      }
     ]
   }
 }
@@ -2167,7 +2479,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "unqualified type: local type identifier",
-      {"token":null,"index":36,"completion":"Typeset"}
+      {
+        "token":null,
+        "index":36,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"Typeset"
+      }
     ]
   }
 }
@@ -2187,7 +2505,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "unqualified type -> qualified type",
-      {"token":null,"index":37,"completion":"Types"}
+      {
+        "token":null,
+        "index":37,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"Types"
+      }
     ]
   }
 }
@@ -2207,7 +2531,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "unqualified type: class or enum",
-      {"token":null,"index":38,"completion":"Typewriter"}
+      {
+        "token":null,
+        "index":38,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"Typewriter"
+      }
     ]
   }
 }
@@ -2227,7 +2557,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "unqualified type: class or enum",
-      {"token":null,"index":39,"completion":"Typography"}
+      {
+        "token":null,
+        "index":39,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"Typography"
+      }
     ]
   }
 }
@@ -2247,7 +2583,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "unqualified type -> qualified type",
-      {"token":null,"index":40,"completion":"Typologies"}
+      {
+        "token":null,
+        "index":40,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"Typologies"
+      }
     ]
   }
 }
@@ -2436,7 +2778,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "member",
-      {"token":null,"index":0,"completion":"hasOwnProperty"}
+      {
+        "token":null,
+        "index":0,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"hasOwnProperty"
+      }
     ]
   }
 }
@@ -2461,7 +2809,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "member",
-      {"token":null,"index":1,"completion":"isPrototypeOf"}
+      {
+        "token":null,
+        "index":1,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"isPrototypeOf"
+      }
     ]
   }
 }
@@ -2486,7 +2840,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "member",
-      {"token":null,"index":2,"completion":"propertyIsEnumerable"}
+      {
+        "token":null,
+        "index":2,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"propertyIsEnumerable"
+      }
     ]
   }
 }
@@ -2511,7 +2871,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "member",
-      {"token":null,"index":3,"completion":"toLocaleString"}
+      {
+        "token":null,
+        "index":3,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"toLocaleString"
+      }
     ]
   }
 }
@@ -2532,7 +2898,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "member",
-      {"token":null,"index":4,"completion":"toString"}
+      {
+        "token":null,
+        "index":4,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"toString"
+      }
     ]
   }
 }
@@ -2557,7 +2929,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "member",
-      {"token":null,"index":5,"completion":"valueOf"}
+      {
+        "token":null,
+        "index":5,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"valueOf"
+      }
     ]
   }
 }
@@ -2585,7 +2963,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "member",
-      {"token":null,"index":0,"completion":"hasOwnProperty"}
+      {
+        "token":null,
+        "index":0,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"hasOwnProperty"
+      }
     ]
   }
 }
@@ -2610,7 +2994,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "member",
-      {"token":null,"index":1,"completion":"isPrototypeOf"}
+      {
+        "token":null,
+        "index":1,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"isPrototypeOf"
+      }
     ]
   }
 }
@@ -2635,7 +3025,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "member",
-      {"token":null,"index":2,"completion":"propertyIsEnumerable"}
+      {
+        "token":null,
+        "index":2,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"propertyIsEnumerable"
+      }
     ]
   }
 }
@@ -2660,7 +3056,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "member",
-      {"token":null,"index":3,"completion":"toLocaleString"}
+      {
+        "token":null,
+        "index":3,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"toLocaleString"
+      }
     ]
   }
 }
@@ -2682,7 +3084,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "member",
-      {"token":null,"index":4,"completion":"toString"}
+      {
+        "token":null,
+        "index":4,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"toString"
+      }
     ]
   }
 }
@@ -2707,7 +3115,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "member",
-      {"token":null,"index":5,"completion":"valueOf"}
+      {
+        "token":null,
+        "index":5,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"valueOf"
+      }
     ]
   }
 }
@@ -2735,7 +3149,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "member",
-      {"token":null,"index":0,"completion":"hasOwnProperty"}
+      {
+        "token":null,
+        "index":0,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"hasOwnProperty"
+      }
     ]
   }
 }
@@ -2760,7 +3180,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "member",
-      {"token":null,"index":1,"completion":"isPrototypeOf"}
+      {
+        "token":null,
+        "index":1,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"isPrototypeOf"
+      }
     ]
   }
 }
@@ -2785,7 +3211,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "member",
-      {"token":null,"index":2,"completion":"propertyIsEnumerable"}
+      {
+        "token":null,
+        "index":2,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"propertyIsEnumerable"
+      }
     ]
   }
 }
@@ -2810,7 +3242,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "member",
-      {"token":null,"index":3,"completion":"toLocaleString"}
+      {
+        "token":null,
+        "index":3,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"toLocaleString"
+      }
     ]
   }
 }
@@ -2832,7 +3270,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "member",
-      {"token":null,"index":4,"completion":"toString"}
+      {
+        "token":null,
+        "index":4,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"toString"
+      }
     ]
   }
 }
@@ -2857,7 +3301,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "member",
-      {"token":null,"index":5,"completion":"valueOf"}
+      {
+        "token":null,
+        "index":5,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"valueOf"
+      }
     ]
   }
 }
@@ -2895,7 +3345,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "start optional chain",
-      {"token":null,"index":0,"completion":"?.foo"}
+      {
+        "token":null,
+        "index":0,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"?.foo"
+      }
     ]
   }
 }
@@ -2920,7 +3376,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "start optional chain",
-      {"token":null,"index":1,"completion":"?.hasOwnProperty"}
+      {
+        "token":null,
+        "index":1,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"?.hasOwnProperty"
+      }
     ]
   }
 }
@@ -2945,7 +3407,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "start optional chain",
-      {"token":null,"index":2,"completion":"?.isPrototypeOf"}
+      {
+        "token":null,
+        "index":2,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"?.isPrototypeOf"
+      }
     ]
   }
 }
@@ -2970,7 +3438,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "start optional chain",
-      {"token":null,"index":3,"completion":"?.propertyIsEnumerable"}
+      {
+        "token":null,
+        "index":3,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"?.propertyIsEnumerable"
+      }
     ]
   }
 }
@@ -2995,7 +3469,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "start optional chain",
-      {"token":null,"index":4,"completion":"?.toLocaleString"}
+      {
+        "token":null,
+        "index":4,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"?.toLocaleString"
+      }
     ]
   }
 }
@@ -3017,7 +3497,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "start optional chain",
-      {"token":null,"index":5,"completion":"?.toString"}
+      {
+        "token":null,
+        "index":5,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"?.toString"
+      }
     ]
   }
 }
@@ -3042,7 +3528,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "start optional chain",
-      {"token":null,"index":6,"completion":"?.valueOf"}
+      {
+        "token":null,
+        "index":6,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"?.valueOf"
+      }
     ]
   }
 }
@@ -3066,7 +3558,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "start optional chain",
-      {"token":null,"index":0,"completion":"?.bar"}
+      {
+        "token":null,
+        "index":0,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"?.bar"
+      }
     ]
   }
 }
@@ -3087,7 +3585,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "member",
-      {"token":null,"index":1,"completion":"foo"}
+      {
+        "token":null,
+        "index":1,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"foo"
+      }
     ]
   }
 }
@@ -3112,7 +3616,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "member",
-      {"token":null,"index":2,"completion":"hasOwnProperty"}
+      {
+        "token":null,
+        "index":2,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"hasOwnProperty"
+      }
     ]
   }
 }
@@ -3137,7 +3647,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "member",
-      {"token":null,"index":3,"completion":"isPrototypeOf"}
+      {
+        "token":null,
+        "index":3,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"isPrototypeOf"
+      }
     ]
   }
 }
@@ -3162,7 +3678,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "member",
-      {"token":null,"index":4,"completion":"propertyIsEnumerable"}
+      {
+        "token":null,
+        "index":4,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"propertyIsEnumerable"
+      }
     ]
   }
 }
@@ -3187,7 +3709,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "member",
-      {"token":null,"index":5,"completion":"toLocaleString"}
+      {
+        "token":null,
+        "index":5,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"toLocaleString"
+      }
     ]
   }
 }
@@ -3209,7 +3737,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "member",
-      {"token":null,"index":6,"completion":"toString"}
+      {
+        "token":null,
+        "index":6,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"toString"
+      }
     ]
   }
 }
@@ -3234,7 +3768,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "member",
-      {"token":null,"index":7,"completion":"valueOf"}
+      {
+        "token":null,
+        "index":7,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"valueOf"
+      }
     ]
   }
 }
@@ -3258,7 +3798,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "start optional chain",
-      {"token":null,"index":0,"completion":"?.foo"}
+      {
+        "token":null,
+        "index":0,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"?.foo"
+      }
     ]
   }
 }
@@ -3283,7 +3829,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "member",
-      {"token":null,"index":1,"completion":"hasOwnProperty"}
+      {
+        "token":null,
+        "index":1,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"hasOwnProperty"
+      }
     ]
   }
 }
@@ -3308,7 +3860,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "member",
-      {"token":null,"index":2,"completion":"isPrototypeOf"}
+      {
+        "token":null,
+        "index":2,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"isPrototypeOf"
+      }
     ]
   }
 }
@@ -3333,7 +3891,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "member",
-      {"token":null,"index":3,"completion":"propertyIsEnumerable"}
+      {
+        "token":null,
+        "index":3,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"propertyIsEnumerable"
+      }
     ]
   }
 }
@@ -3358,7 +3922,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "member",
-      {"token":null,"index":4,"completion":"toLocaleString"}
+      {
+        "token":null,
+        "index":4,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"toLocaleString"
+      }
     ]
   }
 }
@@ -3380,7 +3950,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "member",
-      {"token":null,"index":5,"completion":"toString"}
+      {
+        "token":null,
+        "index":5,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"toString"
+      }
     ]
   }
 }
@@ -3405,7 +3981,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "member",
-      {"token":null,"index":6,"completion":"valueOf"}
+      {
+        "token":null,
+        "index":6,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"valueOf"
+      }
     ]
   }
 }
@@ -3431,7 +4013,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "member",
-      {"token":null,"index":0,"completion":"Bar"}
+      {
+        "token":null,
+        "index":0,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"Bar"
+      }
     ]
   }
 }
@@ -3452,7 +4040,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "member",
-      {"token":null,"index":1,"completion":"Foo"}
+      {
+        "token":null,
+        "index":1,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"Foo"
+      }
     ]
   }
 }
@@ -3473,7 +4067,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "member",
-      {"token":null,"index":2,"completion":"cast"}
+      {
+        "token":null,
+        "index":2,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"cast"
+      }
     ]
   }
 }
@@ -3494,7 +4094,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "member",
-      {"token":null,"index":3,"completion":"getName"}
+      {
+        "token":null,
+        "index":3,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"getName"
+      }
     ]
   }
 }
@@ -3515,7 +4121,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "member",
-      {"token":null,"index":4,"completion":"isValid"}
+      {
+        "token":null,
+        "index":4,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"isValid"
+      }
     ]
   }
 }
@@ -3536,7 +4148,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "member",
-      {"token":null,"index":5,"completion":"members"}
+      {
+        "token":null,
+        "index":5,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"members"
+      }
     ]
   }
 }
@@ -3585,7 +4203,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "local value identifier",
-      {"token":null,"index":0,"completion":"Bar"}
+      {
+        "token":null,
+        "index":0,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"Bar"
+      }
     ]
   }
 }
@@ -3607,7 +4231,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "local value identifier",
-      {"token":null,"index":1,"completion":"BooleanEnum"}
+      {
+        "token":null,
+        "index":1,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"BooleanEnum"
+      }
     ]
   }
 }
@@ -3629,7 +4259,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "local value identifier",
-      {"token":null,"index":2,"completion":"DefaultedStringEnum"}
+      {
+        "token":null,
+        "index":2,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"DefaultedStringEnum"
+      }
     ]
   }
 }
@@ -3651,7 +4287,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "local value identifier",
-      {"token":null,"index":3,"completion":"InitializedStringEnum"}
+      {
+        "token":null,
+        "index":3,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"InitializedStringEnum"
+      }
     ]
   }
 }
@@ -3673,7 +4315,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "local value identifier",
-      {"token":null,"index":4,"completion":"NumberEnum"}
+      {
+        "token":null,
+        "index":4,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"NumberEnum"
+      }
     ]
   }
 }
@@ -3695,7 +4343,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "local value identifier",
-      {"token":null,"index":5,"completion":"SymbolEnum"}
+      {
+        "token":null,
+        "index":5,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"SymbolEnum"
+      }
     ]
   }
 }
@@ -3717,7 +4371,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "local value identifier",
-      {"token":null,"index":6,"completion":"baz"}
+      {
+        "token":null,
+        "index":6,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"baz"
+      }
     ]
   }
 }
@@ -3739,7 +4399,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "local value identifier",
-      {"token":null,"index":7,"completion":"foo"}
+      {
+        "token":null,
+        "index":7,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"foo"
+      }
     ]
   }
 }
@@ -3764,7 +4430,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "local value identifier",
-      {"token":null,"index":8,"completion":"qux"}
+      {
+        "token":null,
+        "index":8,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"qux"
+      }
     ]
   }
 }
@@ -3787,7 +4459,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "local value identifier",
-      {"token":null,"index":9,"completion":"x"}
+      {
+        "token":null,
+        "index":9,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"x"
+      }
     ]
   }
 }
@@ -3809,7 +4487,17 @@ Flags: --lsp
   "command":{
     "title":"",
     "command":"log:<PLACEHOLDER_PROJECT_URL>",
-    "arguments":["textDocument/completion","member",{"token":null,"index":0,"completion":"a"}]
+    "arguments":[
+      "textDocument/completion",
+      "member",
+      {
+        "token":null,
+        "index":0,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"a"
+      }
+    ]
   }
 }
 {
@@ -3827,7 +4515,17 @@ Flags: --lsp
   "command":{
     "title":"",
     "command":"log:<PLACEHOLDER_PROJECT_URL>",
-    "arguments":["textDocument/completion","member",{"token":null,"index":1,"completion":"b"}]
+    "arguments":[
+      "textDocument/completion",
+      "member",
+      {
+        "token":null,
+        "index":1,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"b"
+      }
+    ]
   }
 }
 {
@@ -3845,7 +4543,17 @@ Flags: --lsp
   "command":{
     "title":"",
     "command":"log:<PLACEHOLDER_PROJECT_URL>",
-    "arguments":["textDocument/completion","member",{"token":null,"index":2,"completion":"c"}]
+    "arguments":[
+      "textDocument/completion",
+      "member",
+      {
+        "token":null,
+        "index":2,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"c"
+      }
+    ]
   }
 }
 {
@@ -3863,7 +4571,17 @@ Flags: --lsp
   "command":{
     "title":"",
     "command":"log:<PLACEHOLDER_PROJECT_URL>",
-    "arguments":["textDocument/completion","member",{"token":null,"index":3,"completion":"d"}]
+    "arguments":[
+      "textDocument/completion",
+      "member",
+      {
+        "token":null,
+        "index":3,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"d"
+      }
+    ]
   }
 }
 {
@@ -3880,7 +4598,17 @@ Flags: --lsp
   "command":{
     "title":"",
     "command":"log:<PLACEHOLDER_PROJECT_URL>",
-    "arguments":["textDocument/completion","member",{"token":null,"index":4,"completion":"e"}]
+    "arguments":[
+      "textDocument/completion",
+      "member",
+      {
+        "token":null,
+        "index":4,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"e"
+      }
+    ]
   }
 }
 {
@@ -3898,7 +4626,17 @@ Flags: --lsp
   "command":{
     "title":"",
     "command":"log:<PLACEHOLDER_PROJECT_URL>",
-    "arguments":["textDocument/completion","member",{"token":null,"index":5,"completion":"f"}]
+    "arguments":[
+      "textDocument/completion",
+      "member",
+      {
+        "token":null,
+        "index":5,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"f"
+      }
+    ]
   }
 }
 {
@@ -3916,7 +4654,17 @@ Flags: --lsp
   "command":{
     "title":"",
     "command":"log:<PLACEHOLDER_PROJECT_URL>",
-    "arguments":["textDocument/completion","member",{"token":null,"index":6,"completion":"g"}]
+    "arguments":[
+      "textDocument/completion",
+      "member",
+      {
+        "token":null,
+        "index":6,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"g"
+      }
+    ]
   }
 }
 {
@@ -3937,7 +4685,17 @@ Flags: --lsp
   "command":{
     "title":"",
     "command":"log:<PLACEHOLDER_PROJECT_URL>",
-    "arguments":["textDocument/completion","member",{"token":null,"index":7,"completion":"h"}]
+    "arguments":[
+      "textDocument/completion",
+      "member",
+      {
+        "token":null,
+        "index":7,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"h"
+      }
+    ]
   }
 }
 {
@@ -3961,7 +4719,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "member",
-      {"token":null,"index":8,"completion":"hasOwnProperty"}
+      {
+        "token":null,
+        "index":8,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"hasOwnProperty"
+      }
     ]
   }
 }
@@ -3986,7 +4750,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "member",
-      {"token":null,"index":9,"completion":"isPrototypeOf"}
+      {
+        "token":null,
+        "index":9,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"isPrototypeOf"
+      }
     ]
   }
 }
@@ -4011,7 +4781,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "member",
-      {"token":null,"index":10,"completion":"propertyIsEnumerable"}
+      {
+        "token":null,
+        "index":10,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"propertyIsEnumerable"
+      }
     ]
   }
 }
@@ -4036,7 +4812,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "member",
-      {"token":null,"index":11,"completion":"toLocaleString"}
+      {
+        "token":null,
+        "index":11,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"toLocaleString"
+      }
     ]
   }
 }
@@ -4058,7 +4840,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "member",
-      {"token":null,"index":12,"completion":"toString"}
+      {
+        "token":null,
+        "index":12,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"toString"
+      }
     ]
   }
 }
@@ -4083,7 +4871,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "member",
-      {"token":null,"index":13,"completion":"valueOf"}
+      {
+        "token":null,
+        "index":13,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"valueOf"
+      }
     ]
   }
 }
@@ -4108,7 +4902,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "jsx attribute",
-      {"token":null,"index":0,"completion":"bar"}
+      {
+        "token":null,
+        "index":0,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"bar"
+      }
     ]
   }
 }
@@ -4130,7 +4930,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "jsx attribute",
-      {"token":null,"index":1,"completion":"baz"}
+      {
+        "token":null,
+        "index":1,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"baz"
+      }
     ]
   }
 }
@@ -4152,7 +4958,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "jsx attribute",
-      {"token":null,"index":2,"completion":"foo"}
+      {
+        "token":null,
+        "index":2,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"foo"
+      }
     ]
   }
 }
@@ -4174,7 +4986,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "jsx attribute",
-      {"token":null,"index":3,"completion":"qux"}
+      {
+        "token":null,
+        "index":3,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"qux"
+      }
     ]
   }
 }
@@ -4199,7 +5017,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "jsx attribute",
-      {"token":null,"index":0,"completion":"bar"}
+      {
+        "token":null,
+        "index":0,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"bar"
+      }
     ]
   }
 }
@@ -4221,7 +5045,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "jsx attribute",
-      {"token":null,"index":1,"completion":"baz"}
+      {
+        "token":null,
+        "index":1,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"baz"
+      }
     ]
   }
 }
@@ -4243,7 +5073,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "jsx attribute",
-      {"token":null,"index":2,"completion":"foo"}
+      {
+        "token":null,
+        "index":2,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"foo"
+      }
     ]
   }
 }
@@ -4265,7 +5101,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "jsx attribute",
-      {"token":null,"index":3,"completion":"qux"}
+      {
+        "token":null,
+        "index":3,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"qux"
+      }
     ]
   }
 }
@@ -4289,7 +5131,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "member",
-      {"token":null,"index":0,"completion":"apply"}
+      {
+        "token":null,
+        "index":0,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"apply"
+      }
     ]
   }
 }
@@ -4310,7 +5158,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "member",
-      {"token":null,"index":1,"completion":"arguments"}
+      {
+        "token":null,
+        "index":1,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"arguments"
+      }
     ]
   }
 }
@@ -4331,7 +5185,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "member",
-      {"token":null,"index":2,"completion":"bind"}
+      {
+        "token":null,
+        "index":2,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"bind"
+      }
     ]
   }
 }
@@ -4352,7 +5212,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "member",
-      {"token":null,"index":3,"completion":"call"}
+      {
+        "token":null,
+        "index":3,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"call"
+      }
     ]
   }
 }
@@ -4373,7 +5239,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "member",
-      {"token":null,"index":4,"completion":"caller"}
+      {
+        "token":null,
+        "index":4,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"caller"
+      }
     ]
   }
 }
@@ -4398,7 +5270,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "member",
-      {"token":null,"index":5,"completion":"hasOwnProperty"}
+      {
+        "token":null,
+        "index":5,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"hasOwnProperty"
+      }
     ]
   }
 }
@@ -4423,7 +5301,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "member",
-      {"token":null,"index":6,"completion":"isPrototypeOf"}
+      {
+        "token":null,
+        "index":6,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"isPrototypeOf"
+      }
     ]
   }
 }
@@ -4444,7 +5328,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "member",
-      {"token":null,"index":7,"completion":"length"}
+      {
+        "token":null,
+        "index":7,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"length"
+      }
     ]
   }
 }
@@ -4469,7 +5359,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "member",
-      {"token":null,"index":8,"completion":"name"}
+      {
+        "token":null,
+        "index":8,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"name"
+      }
     ]
   }
 }
@@ -4494,7 +5390,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "member",
-      {"token":null,"index":9,"completion":"propertyIsEnumerable"}
+      {
+        "token":null,
+        "index":9,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"propertyIsEnumerable"
+      }
     ]
   }
 }
@@ -4516,7 +5418,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "member",
-      {"token":null,"index":10,"completion":"staticMethod"}
+      {
+        "token":null,
+        "index":10,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"staticMethod"
+      }
     ]
   }
 }
@@ -4538,7 +5446,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "member",
-      {"token":null,"index":11,"completion":"staticProp"}
+      {
+        "token":null,
+        "index":11,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"staticProp"
+      }
     ]
   }
 }
@@ -4563,7 +5477,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "member",
-      {"token":null,"index":12,"completion":"toLocaleString"}
+      {
+        "token":null,
+        "index":12,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"toLocaleString"
+      }
     ]
   }
 }
@@ -4585,7 +5505,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "member",
-      {"token":null,"index":13,"completion":"toString"}
+      {
+        "token":null,
+        "index":13,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"toString"
+      }
     ]
   }
 }
@@ -4610,7 +5536,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "member",
-      {"token":null,"index":14,"completion":"valueOf"}
+      {
+        "token":null,
+        "index":14,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"valueOf"
+      }
     ]
   }
 }
@@ -4638,7 +5570,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "member",
-      {"token":null,"index":0,"completion":"hasOwnProperty"}
+      {
+        "token":null,
+        "index":0,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"hasOwnProperty"
+      }
     ]
   }
 }
@@ -4660,7 +5598,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "member",
-      {"token":null,"index":1,"completion":"instanceMethod"}
+      {
+        "token":null,
+        "index":1,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"instanceMethod"
+      }
     ]
   }
 }
@@ -4682,7 +5626,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "member",
-      {"token":null,"index":2,"completion":"instanceProp"}
+      {
+        "token":null,
+        "index":2,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"instanceProp"
+      }
     ]
   }
 }
@@ -4707,7 +5657,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "member",
-      {"token":null,"index":3,"completion":"isPrototypeOf"}
+      {
+        "token":null,
+        "index":3,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"isPrototypeOf"
+      }
     ]
   }
 }
@@ -4732,7 +5688,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "member",
-      {"token":null,"index":4,"completion":"propertyIsEnumerable"}
+      {
+        "token":null,
+        "index":4,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"propertyIsEnumerable"
+      }
     ]
   }
 }
@@ -4757,7 +5719,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "member",
-      {"token":null,"index":5,"completion":"toLocaleString"}
+      {
+        "token":null,
+        "index":5,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"toLocaleString"
+      }
     ]
   }
 }
@@ -4779,7 +5747,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "member",
-      {"token":null,"index":6,"completion":"toString"}
+      {
+        "token":null,
+        "index":6,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"toString"
+      }
     ]
   }
 }
@@ -4804,7 +5778,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "member",
-      {"token":null,"index":7,"completion":"valueOf"}
+      {
+        "token":null,
+        "index":7,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"valueOf"
+      }
     ]
   }
 }
@@ -4826,7 +5806,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "member",
-      {"token":null,"index":8,"completion":"varianceProp"}
+      {
+        "token":null,
+        "index":8,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"varianceProp"
+      }
     ]
   }
 }
@@ -4851,7 +5837,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "member",
-      {"token":null,"index":0,"completion":"bar"}
+      {
+        "token":null,
+        "index":0,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"bar"
+      }
     ]
   }
 }
@@ -4873,7 +5865,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "member",
-      {"token":null,"index":1,"completion":"baz"}
+      {
+        "token":null,
+        "index":1,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"baz"
+      }
     ]
   }
 }
@@ -4895,7 +5893,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "member",
-      {"token":null,"index":2,"completion":"foo"}
+      {
+        "token":null,
+        "index":2,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"foo"
+      }
     ]
   }
 }
@@ -4920,7 +5924,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "member",
-      {"token":null,"index":3,"completion":"hasOwnProperty"}
+      {
+        "token":null,
+        "index":3,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"hasOwnProperty"
+      }
     ]
   }
 }
@@ -4945,7 +5955,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "member",
-      {"token":null,"index":4,"completion":"isPrototypeOf"}
+      {
+        "token":null,
+        "index":4,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"isPrototypeOf"
+      }
     ]
   }
 }
@@ -4970,7 +5986,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "member",
-      {"token":null,"index":5,"completion":"propertyIsEnumerable"}
+      {
+        "token":null,
+        "index":5,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"propertyIsEnumerable"
+      }
     ]
   }
 }
@@ -4992,7 +6014,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "member",
-      {"token":null,"index":6,"completion":"qux"}
+      {
+        "token":null,
+        "index":6,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"qux"
+      }
     ]
   }
 }
@@ -5017,7 +6045,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "member",
-      {"token":null,"index":7,"completion":"toLocaleString"}
+      {
+        "token":null,
+        "index":7,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"toLocaleString"
+      }
     ]
   }
 }
@@ -5039,7 +6073,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "member",
-      {"token":null,"index":8,"completion":"toString"}
+      {
+        "token":null,
+        "index":8,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"toString"
+      }
     ]
   }
 }
@@ -5064,7 +6104,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "member",
-      {"token":null,"index":9,"completion":"valueOf"}
+      {
+        "token":null,
+        "index":9,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"valueOf"
+      }
     ]
   }
 }
@@ -5089,7 +6135,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "start optional chain",
-      {"token":null,"index":0,"completion":"?.bar"}
+      {
+        "token":null,
+        "index":0,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"?.bar"
+      }
     ]
   }
 }
@@ -5111,7 +6163,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "start optional chain",
-      {"token":null,"index":1,"completion":"?.baz"}
+      {
+        "token":null,
+        "index":1,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"?.baz"
+      }
     ]
   }
 }
@@ -5133,7 +6191,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "start optional chain",
-      {"token":null,"index":2,"completion":"?.foo"}
+      {
+        "token":null,
+        "index":2,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"?.foo"
+      }
     ]
   }
 }
@@ -5158,7 +6222,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "start optional chain",
-      {"token":null,"index":3,"completion":"?.hasOwnProperty"}
+      {
+        "token":null,
+        "index":3,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"?.hasOwnProperty"
+      }
     ]
   }
 }
@@ -5183,7 +6253,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "start optional chain",
-      {"token":null,"index":4,"completion":"?.isPrototypeOf"}
+      {
+        "token":null,
+        "index":4,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"?.isPrototypeOf"
+      }
     ]
   }
 }
@@ -5208,7 +6284,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "start optional chain",
-      {"token":null,"index":5,"completion":"?.propertyIsEnumerable"}
+      {
+        "token":null,
+        "index":5,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"?.propertyIsEnumerable"
+      }
     ]
   }
 }
@@ -5230,7 +6312,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "start optional chain",
-      {"token":null,"index":6,"completion":"?.qux"}
+      {
+        "token":null,
+        "index":6,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"?.qux"
+      }
     ]
   }
 }
@@ -5255,7 +6343,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "start optional chain",
-      {"token":null,"index":7,"completion":"?.toLocaleString"}
+      {
+        "token":null,
+        "index":7,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"?.toLocaleString"
+      }
     ]
   }
 }
@@ -5277,7 +6371,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "start optional chain",
-      {"token":null,"index":8,"completion":"?.toString"}
+      {
+        "token":null,
+        "index":8,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"?.toString"
+      }
     ]
   }
 }
@@ -5302,7 +6402,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "start optional chain",
-      {"token":null,"index":9,"completion":"?.valueOf"}
+      {
+        "token":null,
+        "index":9,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"?.valueOf"
+      }
     ]
   }
 }
@@ -5327,7 +6433,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "member",
-      {"token":null,"index":0,"completion":"Member1"}
+      {
+        "token":null,
+        "index":0,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"Member1"
+      }
     ]
   }
 }
@@ -5349,7 +6461,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "member",
-      {"token":null,"index":1,"completion":"Member2"}
+      {
+        "token":null,
+        "index":1,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"Member2"
+      }
     ]
   }
 }
@@ -5370,7 +6488,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "member",
-      {"token":null,"index":2,"completion":"cast"}
+      {
+        "token":null,
+        "index":2,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"cast"
+      }
     ]
   }
 }
@@ -5391,7 +6515,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "member",
-      {"token":null,"index":3,"completion":"getName"}
+      {
+        "token":null,
+        "index":3,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"getName"
+      }
     ]
   }
 }
@@ -5412,7 +6542,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "member",
-      {"token":null,"index":4,"completion":"isValid"}
+      {
+        "token":null,
+        "index":4,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"isValid"
+      }
     ]
   }
 }
@@ -5433,7 +6569,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "member",
-      {"token":null,"index":5,"completion":"members"}
+      {
+        "token":null,
+        "index":5,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"members"
+      }
     ]
   }
 }
@@ -5458,7 +6600,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "member",
-      {"token":null,"index":0,"completion":"Member1"}
+      {
+        "token":null,
+        "index":0,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"Member1"
+      }
     ]
   }
 }
@@ -5480,7 +6628,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "member",
-      {"token":null,"index":1,"completion":"Member2"}
+      {
+        "token":null,
+        "index":1,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"Member2"
+      }
     ]
   }
 }
@@ -5501,7 +6655,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "member",
-      {"token":null,"index":2,"completion":"cast"}
+      {
+        "token":null,
+        "index":2,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"cast"
+      }
     ]
   }
 }
@@ -5522,7 +6682,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "member",
-      {"token":null,"index":3,"completion":"getName"}
+      {
+        "token":null,
+        "index":3,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"getName"
+      }
     ]
   }
 }
@@ -5543,7 +6709,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "member",
-      {"token":null,"index":4,"completion":"isValid"}
+      {
+        "token":null,
+        "index":4,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"isValid"
+      }
     ]
   }
 }
@@ -5564,7 +6736,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "member",
-      {"token":null,"index":5,"completion":"members"}
+      {
+        "token":null,
+        "index":5,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"members"
+      }
     ]
   }
 }
@@ -5589,7 +6767,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "member",
-      {"token":null,"index":0,"completion":"Member1"}
+      {
+        "token":null,
+        "index":0,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"Member1"
+      }
     ]
   }
 }
@@ -5611,7 +6795,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "member",
-      {"token":null,"index":1,"completion":"Member2"}
+      {
+        "token":null,
+        "index":1,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"Member2"
+      }
     ]
   }
 }
@@ -5632,7 +6822,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "member",
-      {"token":null,"index":2,"completion":"cast"}
+      {
+        "token":null,
+        "index":2,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"cast"
+      }
     ]
   }
 }
@@ -5653,7 +6849,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "member",
-      {"token":null,"index":3,"completion":"getName"}
+      {
+        "token":null,
+        "index":3,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"getName"
+      }
     ]
   }
 }
@@ -5674,7 +6876,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "member",
-      {"token":null,"index":4,"completion":"isValid"}
+      {
+        "token":null,
+        "index":4,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"isValid"
+      }
     ]
   }
 }
@@ -5695,7 +6903,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "member",
-      {"token":null,"index":5,"completion":"members"}
+      {
+        "token":null,
+        "index":5,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"members"
+      }
     ]
   }
 }
@@ -5720,7 +6934,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "member",
-      {"token":null,"index":0,"completion":"Member1"}
+      {
+        "token":null,
+        "index":0,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"Member1"
+      }
     ]
   }
 }
@@ -5742,7 +6962,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "member",
-      {"token":null,"index":1,"completion":"Member2"}
+      {
+        "token":null,
+        "index":1,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"Member2"
+      }
     ]
   }
 }
@@ -5763,7 +6989,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "member",
-      {"token":null,"index":2,"completion":"cast"}
+      {
+        "token":null,
+        "index":2,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"cast"
+      }
     ]
   }
 }
@@ -5784,7 +7016,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "member",
-      {"token":null,"index":3,"completion":"getName"}
+      {
+        "token":null,
+        "index":3,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"getName"
+      }
     ]
   }
 }
@@ -5805,7 +7043,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "member",
-      {"token":null,"index":4,"completion":"isValid"}
+      {
+        "token":null,
+        "index":4,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"isValid"
+      }
     ]
   }
 }
@@ -5826,7 +7070,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "member",
-      {"token":null,"index":5,"completion":"members"}
+      {
+        "token":null,
+        "index":5,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"members"
+      }
     ]
   }
 }
@@ -5851,7 +7101,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "member",
-      {"token":null,"index":0,"completion":"Member1"}
+      {
+        "token":null,
+        "index":0,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"Member1"
+      }
     ]
   }
 }
@@ -5873,7 +7129,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "member",
-      {"token":null,"index":1,"completion":"Member2"}
+      {
+        "token":null,
+        "index":1,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"Member2"
+      }
     ]
   }
 }
@@ -5894,7 +7156,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "member",
-      {"token":null,"index":2,"completion":"cast"}
+      {
+        "token":null,
+        "index":2,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"cast"
+      }
     ]
   }
 }
@@ -5915,7 +7183,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "member",
-      {"token":null,"index":3,"completion":"getName"}
+      {
+        "token":null,
+        "index":3,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"getName"
+      }
     ]
   }
 }
@@ -5936,7 +7210,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "member",
-      {"token":null,"index":4,"completion":"isValid"}
+      {
+        "token":null,
+        "index":4,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"isValid"
+      }
     ]
   }
 }
@@ -5957,7 +7237,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "member",
-      {"token":null,"index":5,"completion":"members"}
+      {
+        "token":null,
+        "index":5,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"members"
+      }
     ]
   }
 }
@@ -5980,7 +7266,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "builtin type",
-      {"token":null,"index":0,"completion":"any"}
+      {
+        "token":null,
+        "index":0,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"any"
+      }
     ]
   }
 }
@@ -6000,7 +7292,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "builtin type",
-      {"token":null,"index":1,"completion":"boolean"}
+      {
+        "token":null,
+        "index":1,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"boolean"
+      }
     ]
   }
 }
@@ -6020,7 +7318,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "builtin type",
-      {"token":null,"index":2,"completion":"empty"}
+      {
+        "token":null,
+        "index":2,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"empty"
+      }
     ]
   }
 }
@@ -6040,7 +7344,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "builtin type",
-      {"token":null,"index":3,"completion":"false"}
+      {
+        "token":null,
+        "index":3,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"false"
+      }
     ]
   }
 }
@@ -6060,7 +7370,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "builtin type",
-      {"token":null,"index":4,"completion":"mixed"}
+      {
+        "token":null,
+        "index":4,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"mixed"
+      }
     ]
   }
 }
@@ -6080,7 +7396,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "builtin type",
-      {"token":null,"index":5,"completion":"null"}
+      {
+        "token":null,
+        "index":5,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"null"
+      }
     ]
   }
 }
@@ -6100,7 +7422,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "builtin type",
-      {"token":null,"index":6,"completion":"number"}
+      {
+        "token":null,
+        "index":6,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"number"
+      }
     ]
   }
 }
@@ -6120,7 +7448,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "builtin type",
-      {"token":null,"index":7,"completion":"bigint"}
+      {
+        "token":null,
+        "index":7,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"bigint"
+      }
     ]
   }
 }
@@ -6140,7 +7474,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "builtin type",
-      {"token":null,"index":8,"completion":"string"}
+      {
+        "token":null,
+        "index":8,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"string"
+      }
     ]
   }
 }
@@ -6160,7 +7500,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "builtin type",
-      {"token":null,"index":9,"completion":"true"}
+      {
+        "token":null,
+        "index":9,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"true"
+      }
     ]
   }
 }
@@ -6180,7 +7526,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "builtin type",
-      {"token":null,"index":10,"completion":"void"}
+      {
+        "token":null,
+        "index":10,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"void"
+      }
     ]
   }
 }
@@ -6200,7 +7552,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "builtin type",
-      {"token":null,"index":11,"completion":"symbol"}
+      {
+        "token":null,
+        "index":11,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"symbol"
+      }
     ]
   }
 }
@@ -6220,7 +7578,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "builtin type",
-      {"token":null,"index":12,"completion":"Class"}
+      {
+        "token":null,
+        "index":12,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"Class"
+      }
     ]
   }
 }
@@ -6240,7 +7604,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "builtin type",
-      {"token":null,"index":13,"completion":"$Call"}
+      {
+        "token":null,
+        "index":13,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"$Call"
+      }
     ]
   }
 }
@@ -6260,7 +7630,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "builtin type",
-      {"token":null,"index":14,"completion":"$CharSet"}
+      {
+        "token":null,
+        "index":14,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"$CharSet"
+      }
     ]
   }
 }
@@ -6280,7 +7656,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "builtin type",
-      {"token":null,"index":15,"completion":"$Diff"}
+      {
+        "token":null,
+        "index":15,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"$Diff"
+      }
     ]
   }
 }
@@ -6300,7 +7682,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "builtin type",
-      {"token":null,"index":16,"completion":"$ElementType"}
+      {
+        "token":null,
+        "index":16,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"$ElementType"
+      }
     ]
   }
 }
@@ -6320,7 +7708,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "builtin type",
-      {"token":null,"index":17,"completion":"$Exact"}
+      {
+        "token":null,
+        "index":17,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"$Exact"
+      }
     ]
   }
 }
@@ -6340,7 +7734,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "builtin type",
-      {"token":null,"index":18,"completion":"$Exports"}
+      {
+        "token":null,
+        "index":18,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"$Exports"
+      }
     ]
   }
 }
@@ -6360,7 +7760,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "builtin type",
-      {"token":null,"index":19,"completion":"$KeyMirror"}
+      {
+        "token":null,
+        "index":19,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"$KeyMirror"
+      }
     ]
   }
 }
@@ -6380,7 +7786,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "builtin type",
-      {"token":null,"index":20,"completion":"$Keys"}
+      {
+        "token":null,
+        "index":20,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"$Keys"
+      }
     ]
   }
 }
@@ -6400,7 +7812,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "builtin type",
-      {"token":null,"index":21,"completion":"$NonMaybeType"}
+      {
+        "token":null,
+        "index":21,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"$NonMaybeType"
+      }
     ]
   }
 }
@@ -6420,7 +7838,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "builtin type",
-      {"token":null,"index":22,"completion":"$ObjMap"}
+      {
+        "token":null,
+        "index":22,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"$ObjMap"
+      }
     ]
   }
 }
@@ -6440,7 +7864,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "builtin type",
-      {"token":null,"index":23,"completion":"$ObjMapi"}
+      {
+        "token":null,
+        "index":23,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"$ObjMapi"
+      }
     ]
   }
 }
@@ -6460,7 +7890,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "builtin type",
-      {"token":null,"index":24,"completion":"$PropertyType"}
+      {
+        "token":null,
+        "index":24,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"$PropertyType"
+      }
     ]
   }
 }
@@ -6480,7 +7916,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "builtin type",
-      {"token":null,"index":25,"completion":"$ReadOnly"}
+      {
+        "token":null,
+        "index":25,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"$ReadOnly"
+      }
     ]
   }
 }
@@ -6500,7 +7942,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "builtin type",
-      {"token":null,"index":26,"completion":"$Rest"}
+      {
+        "token":null,
+        "index":26,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"$Rest"
+      }
     ]
   }
 }
@@ -6520,7 +7968,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "builtin type",
-      {"token":null,"index":27,"completion":"$Shape"}
+      {
+        "token":null,
+        "index":27,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"$Shape"
+      }
     ]
   }
 }
@@ -6540,7 +7994,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "builtin type",
-      {"token":null,"index":28,"completion":"$TupleMap"}
+      {
+        "token":null,
+        "index":28,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"$TupleMap"
+      }
     ]
   }
 }
@@ -6560,7 +8020,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "builtin type",
-      {"token":null,"index":29,"completion":"$Values"}
+      {
+        "token":null,
+        "index":29,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"$Values"
+      }
     ]
   }
 }
@@ -6583,7 +8049,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "unqualified type: local type identifier",
-      {"token":null,"index":30,"completion":"myFoo"}
+      {
+        "token":null,
+        "index":30,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"myFoo"
+      }
     ]
   }
 }
@@ -6605,7 +8077,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "unqualified type: local type identifier",
-      {"token":null,"index":31,"completion":"myBar"}
+      {
+        "token":null,
+        "index":31,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"myBar"
+      }
     ]
   }
 }
@@ -6627,7 +8105,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "unqualified type: local type identifier",
-      {"token":null,"index":32,"completion":"myInterface"}
+      {
+        "token":null,
+        "index":32,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"myInterface"
+      }
     ]
   }
 }
@@ -6653,7 +8137,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "unqualified type: local type identifier",
-      {"token":null,"index":33,"completion":"ExportFoo"}
+      {
+        "token":null,
+        "index":33,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"ExportFoo"
+      }
     ]
   }
 }
@@ -6675,7 +8165,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "unqualified type: local type identifier",
-      {"token":null,"index":34,"completion":"ExportBar"}
+      {
+        "token":null,
+        "index":34,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"ExportBar"
+      }
     ]
   }
 }
@@ -6696,7 +8192,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "unqualified type: local type identifier",
-      {"token":null,"index":35,"completion":"ExportClass"}
+      {
+        "token":null,
+        "index":35,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"ExportClass"
+      }
     ]
   }
 }
@@ -6718,7 +8220,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "unqualified type: local type identifier",
-      {"token":null,"index":36,"completion":"ExportInterface"}
+      {
+        "token":null,
+        "index":36,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"ExportInterface"
+      }
     ]
   }
 }
@@ -6740,7 +8248,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "unqualified type: local type identifier",
-      {"token":null,"index":37,"completion":"ExportEnum"}
+      {
+        "token":null,
+        "index":37,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"ExportEnum"
+      }
     ]
   }
 }
@@ -6762,7 +8276,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "unqualified type: local type identifier",
-      {"token":null,"index":38,"completion":"exportValue"}
+      {
+        "token":null,
+        "index":38,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"exportValue"
+      }
     ]
   }
 }
@@ -6783,7 +8303,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "unqualified type: class or enum",
-      {"token":null,"index":39,"completion":"myClass"}
+      {
+        "token":null,
+        "index":39,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"myClass"
+      }
     ]
   }
 }
@@ -6805,7 +8331,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "unqualified type: class or enum",
-      {"token":null,"index":40,"completion":"myEnum"}
+      {
+        "token":null,
+        "index":40,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"myEnum"
+      }
     ]
   }
 }
@@ -6830,7 +8362,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "qualified type alias",
-      {"token":null,"index":0,"completion":"ExportBar"}
+      {
+        "token":null,
+        "index":0,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"ExportBar"
+      }
     ]
   }
 }
@@ -6851,7 +8389,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "qualified class",
-      {"token":null,"index":1,"completion":"ExportClass"}
+      {
+        "token":null,
+        "index":1,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"ExportClass"
+      }
     ]
   }
 }
@@ -6873,7 +8417,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "qualified enum",
-      {"token":null,"index":2,"completion":"ExportEnum"}
+      {
+        "token":null,
+        "index":2,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"ExportEnum"
+      }
     ]
   }
 }
@@ -6899,7 +8449,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "qualified type alias",
-      {"token":null,"index":3,"completion":"ExportFoo"}
+      {
+        "token":null,
+        "index":3,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"ExportFoo"
+      }
     ]
   }
 }
@@ -6921,7 +8477,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "qualified interface",
-      {"token":null,"index":4,"completion":"ExportInterface"}
+      {
+        "token":null,
+        "index":4,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"ExportInterface"
+      }
     ]
   }
 }
@@ -6945,7 +8507,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "bracket syntax member",
-      {"token":null,"index":0,"completion":"'bar'"}
+      {
+        "token":null,
+        "index":0,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"'bar'"
+      }
     ]
   }
 }
@@ -6968,7 +8536,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "bracket syntax member",
-      {"token":null,"index":1,"completion":"'foo'"}
+      {
+        "token":null,
+        "index":1,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"'foo'"
+      }
     ]
   }
 }
@@ -6993,7 +8567,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "bracket syntax member",
-      {"token":null,"index":2,"completion":"'hasOwnProperty'"}
+      {
+        "token":null,
+        "index":2,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"'hasOwnProperty'"
+      }
     ]
   }
 }
@@ -7018,7 +8598,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "bracket syntax member",
-      {"token":null,"index":3,"completion":"'isPrototypeOf'"}
+      {
+        "token":null,
+        "index":3,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"'isPrototypeOf'"
+      }
     ]
   }
 }
@@ -7043,7 +8629,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "bracket syntax member",
-      {"token":null,"index":4,"completion":"'propertyIsEnumerable'"}
+      {
+        "token":null,
+        "index":4,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"'propertyIsEnumerable'"
+      }
     ]
   }
 }
@@ -7068,7 +8660,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "bracket syntax member",
-      {"token":null,"index":5,"completion":"'toLocaleString'"}
+      {
+        "token":null,
+        "index":5,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"'toLocaleString'"
+      }
     ]
   }
 }
@@ -7090,7 +8688,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "bracket syntax member",
-      {"token":null,"index":6,"completion":"'toString'"}
+      {
+        "token":null,
+        "index":6,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"'toString'"
+      }
     ]
   }
 }
@@ -7115,7 +8719,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "bracket syntax member",
-      {"token":null,"index":7,"completion":"'valueOf'"}
+      {
+        "token":null,
+        "index":7,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"'valueOf'"
+      }
     ]
   }
 }
@@ -7136,7 +8746,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "local value identifier",
-      {"token":null,"index":8,"completion":"obj"}
+      {
+        "token":null,
+        "index":8,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"obj"
+      }
     ]
   }
 }
@@ -7160,7 +8776,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "bracket syntax member",
-      {"token":null,"index":0,"completion":"'bar'"}
+      {
+        "token":null,
+        "index":0,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"'bar'"
+      }
     ]
   }
 }
@@ -7181,7 +8803,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "bracket syntax member",
-      {"token":null,"index":1,"completion":"'foo'"}
+      {
+        "token":null,
+        "index":1,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"'foo'"
+      }
     ]
   }
 }
@@ -7206,7 +8834,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "bracket syntax member",
-      {"token":null,"index":2,"completion":"'hasOwnProperty'"}
+      {
+        "token":null,
+        "index":2,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"'hasOwnProperty'"
+      }
     ]
   }
 }
@@ -7231,7 +8865,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "bracket syntax member",
-      {"token":null,"index":3,"completion":"'isPrototypeOf'"}
+      {
+        "token":null,
+        "index":3,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"'isPrototypeOf'"
+      }
     ]
   }
 }
@@ -7256,7 +8896,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "bracket syntax member",
-      {"token":null,"index":4,"completion":"'propertyIsEnumerable'"}
+      {
+        "token":null,
+        "index":4,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"'propertyIsEnumerable'"
+      }
     ]
   }
 }
@@ -7281,7 +8927,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "bracket syntax member",
-      {"token":null,"index":5,"completion":"'toLocaleString'"}
+      {
+        "token":null,
+        "index":5,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"'toLocaleString'"
+      }
     ]
   }
 }
@@ -7303,7 +8955,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "bracket syntax member",
-      {"token":null,"index":6,"completion":"'toString'"}
+      {
+        "token":null,
+        "index":6,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"'toString'"
+      }
     ]
   }
 }
@@ -7328,7 +8986,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "bracket syntax member",
-      {"token":null,"index":7,"completion":"'valueOf'"}
+      {
+        "token":null,
+        "index":7,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"'valueOf'"
+      }
     ]
   }
 }
@@ -7349,7 +9013,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "local value identifier",
-      {"token":null,"index":8,"completion":"obj"}
+      {
+        "token":null,
+        "index":8,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"obj"
+      }
     ]
   }
 }
@@ -7370,7 +9040,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "local value identifier",
-      {"token":null,"index":9,"completion":"x"}
+      {
+        "token":null,
+        "index":9,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"x"
+      }
     ]
   }
 }
@@ -7394,7 +9070,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "bracket syntax member",
-      {"token":null,"index":0,"completion":"'bar'"}
+      {
+        "token":null,
+        "index":0,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"'bar'"
+      }
     ]
   }
 }
@@ -7415,7 +9097,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "bracket syntax member",
-      {"token":null,"index":1,"completion":"'foo'"}
+      {
+        "token":null,
+        "index":1,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"'foo'"
+      }
     ]
   }
 }
@@ -7440,7 +9128,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "bracket syntax member",
-      {"token":null,"index":2,"completion":"'hasOwnProperty'"}
+      {
+        "token":null,
+        "index":2,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"'hasOwnProperty'"
+      }
     ]
   }
 }
@@ -7465,7 +9159,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "bracket syntax member",
-      {"token":null,"index":3,"completion":"'isPrototypeOf'"}
+      {
+        "token":null,
+        "index":3,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"'isPrototypeOf'"
+      }
     ]
   }
 }
@@ -7490,7 +9190,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "bracket syntax member",
-      {"token":null,"index":4,"completion":"'propertyIsEnumerable'"}
+      {
+        "token":null,
+        "index":4,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"'propertyIsEnumerable'"
+      }
     ]
   }
 }
@@ -7515,7 +9221,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "bracket syntax member",
-      {"token":null,"index":5,"completion":"'toLocaleString'"}
+      {
+        "token":null,
+        "index":5,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"'toLocaleString'"
+      }
     ]
   }
 }
@@ -7537,7 +9249,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "bracket syntax member",
-      {"token":null,"index":6,"completion":"'toString'"}
+      {
+        "token":null,
+        "index":6,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"'toString'"
+      }
     ]
   }
 }
@@ -7562,7 +9280,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "bracket syntax member",
-      {"token":null,"index":7,"completion":"'valueOf'"}
+      {
+        "token":null,
+        "index":7,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"'valueOf'"
+      }
     ]
   }
 }
@@ -7583,7 +9307,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "local value identifier",
-      {"token":null,"index":8,"completion":"obj"}
+      {
+        "token":null,
+        "index":8,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"obj"
+      }
     ]
   }
 }
@@ -7604,7 +9334,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "local value identifier",
-      {"token":null,"index":9,"completion":"x"}
+      {
+        "token":null,
+        "index":9,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"x"
+      }
     ]
   }
 }
@@ -7628,7 +9364,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "bracket syntax member",
-      {"token":null,"index":0,"completion":"'bar'"}
+      {
+        "token":null,
+        "index":0,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"'bar'"
+      }
     ]
   }
 }
@@ -7649,7 +9391,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "bracket syntax member",
-      {"token":null,"index":1,"completion":"'foo'"}
+      {
+        "token":null,
+        "index":1,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"'foo'"
+      }
     ]
   }
 }
@@ -7674,7 +9422,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "bracket syntax member",
-      {"token":null,"index":2,"completion":"'hasOwnProperty'"}
+      {
+        "token":null,
+        "index":2,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"'hasOwnProperty'"
+      }
     ]
   }
 }
@@ -7699,7 +9453,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "bracket syntax member",
-      {"token":null,"index":3,"completion":"'isPrototypeOf'"}
+      {
+        "token":null,
+        "index":3,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"'isPrototypeOf'"
+      }
     ]
   }
 }
@@ -7724,7 +9484,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "bracket syntax member",
-      {"token":null,"index":4,"completion":"'propertyIsEnumerable'"}
+      {
+        "token":null,
+        "index":4,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"'propertyIsEnumerable'"
+      }
     ]
   }
 }
@@ -7749,7 +9515,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "bracket syntax member",
-      {"token":null,"index":5,"completion":"'toLocaleString'"}
+      {
+        "token":null,
+        "index":5,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"'toLocaleString'"
+      }
     ]
   }
 }
@@ -7771,7 +9543,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "bracket syntax member",
-      {"token":null,"index":6,"completion":"'toString'"}
+      {
+        "token":null,
+        "index":6,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"'toString'"
+      }
     ]
   }
 }
@@ -7796,7 +9574,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "bracket syntax member",
-      {"token":null,"index":7,"completion":"'valueOf'"}
+      {
+        "token":null,
+        "index":7,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"'valueOf'"
+      }
     ]
   }
 }
@@ -7817,7 +9601,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "local value identifier",
-      {"token":null,"index":8,"completion":"obj"}
+      {
+        "token":null,
+        "index":8,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"obj"
+      }
     ]
   }
 }
@@ -7838,7 +9628,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "local value identifier",
-      {"token":null,"index":9,"completion":"x"}
+      {
+        "token":null,
+        "index":9,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"x"
+      }
     ]
   }
 }
@@ -7862,7 +9658,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "local value identifier",
-      {"token":null,"index":0,"completion":"obj"}
+      {
+        "token":null,
+        "index":0,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"obj"
+      }
     ]
   }
 }
@@ -7883,7 +9685,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "local value identifier",
-      {"token":null,"index":1,"completion":"x"}
+      {
+        "token":null,
+        "index":1,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"x"
+      }
     ]
   }
 }
@@ -7907,7 +9715,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "start optional chain",
-      {"token":null,"index":0,"completion":"?.['bar']"}
+      {
+        "token":null,
+        "index":0,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"?.['bar']"
+      }
     ]
   }
 }
@@ -7928,7 +9742,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "start optional chain",
-      {"token":null,"index":1,"completion":"?.['foo']"}
+      {
+        "token":null,
+        "index":1,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"?.['foo']"
+      }
     ]
   }
 }
@@ -7953,7 +9773,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "start optional chain",
-      {"token":null,"index":2,"completion":"?.['hasOwnProperty']"}
+      {
+        "token":null,
+        "index":2,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"?.['hasOwnProperty']"
+      }
     ]
   }
 }
@@ -7978,7 +9804,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "start optional chain",
-      {"token":null,"index":3,"completion":"?.['isPrototypeOf']"}
+      {
+        "token":null,
+        "index":3,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"?.['isPrototypeOf']"
+      }
     ]
   }
 }
@@ -8003,7 +9835,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "start optional chain",
-      {"token":null,"index":4,"completion":"?.['propertyIsEnumerable']"}
+      {
+        "token":null,
+        "index":4,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"?.['propertyIsEnumerable']"
+      }
     ]
   }
 }
@@ -8028,7 +9866,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "start optional chain",
-      {"token":null,"index":5,"completion":"?.['toLocaleString']"}
+      {
+        "token":null,
+        "index":5,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"?.['toLocaleString']"
+      }
     ]
   }
 }
@@ -8050,7 +9894,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "start optional chain",
-      {"token":null,"index":6,"completion":"?.['toString']"}
+      {
+        "token":null,
+        "index":6,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"?.['toString']"
+      }
     ]
   }
 }
@@ -8075,7 +9925,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "start optional chain",
-      {"token":null,"index":7,"completion":"?.['valueOf']"}
+      {
+        "token":null,
+        "index":7,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"?.['valueOf']"
+      }
     ]
   }
 }
@@ -8096,7 +9952,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "local value identifier",
-      {"token":null,"index":8,"completion":"obj"}
+      {
+        "token":null,
+        "index":8,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"obj"
+      }
     ]
   }
 }
@@ -8117,7 +9979,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "local value identifier",
-      {"token":null,"index":9,"completion":"x"}
+      {
+        "token":null,
+        "index":9,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"x"
+      }
     ]
   }
 }
@@ -8141,7 +10009,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "bracket syntax member",
-      {"token":null,"index":0,"completion":"Symbol.iterator"}
+      {
+        "token":null,
+        "index":0,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"Symbol.iterator"
+      }
     ]
   }
 }
@@ -8166,7 +10040,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "bracket syntax member",
-      {"token":null,"index":1,"completion":"'hasOwnProperty'"}
+      {
+        "token":null,
+        "index":1,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"'hasOwnProperty'"
+      }
     ]
   }
 }
@@ -8191,7 +10071,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "bracket syntax member",
-      {"token":null,"index":2,"completion":"'isPrototypeOf'"}
+      {
+        "token":null,
+        "index":2,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"'isPrototypeOf'"
+      }
     ]
   }
 }
@@ -8216,7 +10102,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "bracket syntax member",
-      {"token":null,"index":3,"completion":"'propertyIsEnumerable'"}
+      {
+        "token":null,
+        "index":3,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"'propertyIsEnumerable'"
+      }
     ]
   }
 }
@@ -8241,7 +10133,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "bracket syntax member",
-      {"token":null,"index":4,"completion":"'toLocaleString'"}
+      {
+        "token":null,
+        "index":4,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"'toLocaleString'"
+      }
     ]
   }
 }
@@ -8263,7 +10161,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "bracket syntax member",
-      {"token":null,"index":5,"completion":"'toString'"}
+      {
+        "token":null,
+        "index":5,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"'toString'"
+      }
     ]
   }
 }
@@ -8288,7 +10192,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "bracket syntax member",
-      {"token":null,"index":6,"completion":"'valueOf'"}
+      {
+        "token":null,
+        "index":6,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"'valueOf'"
+      }
     ]
   }
 }
@@ -8309,7 +10219,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "local value identifier",
-      {"token":null,"index":7,"completion":"bar"}
+      {
+        "token":null,
+        "index":7,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"bar"
+      }
     ]
   }
 }
@@ -8330,7 +10246,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "local value identifier",
-      {"token":null,"index":8,"completion":"foo"}
+      {
+        "token":null,
+        "index":8,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"foo"
+      }
     ]
   }
 }
@@ -8354,7 +10276,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "bracket syntax member",
-      {"token":null,"index":0,"completion":"Symbol.asyncIterator"}
+      {
+        "token":null,
+        "index":0,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"Symbol.asyncIterator"
+      }
     ]
   }
 }
@@ -8379,7 +10307,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "bracket syntax member",
-      {"token":null,"index":1,"completion":"'hasOwnProperty'"}
+      {
+        "token":null,
+        "index":1,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"'hasOwnProperty'"
+      }
     ]
   }
 }
@@ -8404,7 +10338,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "bracket syntax member",
-      {"token":null,"index":2,"completion":"'isPrototypeOf'"}
+      {
+        "token":null,
+        "index":2,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"'isPrototypeOf'"
+      }
     ]
   }
 }
@@ -8429,7 +10369,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "bracket syntax member",
-      {"token":null,"index":3,"completion":"'propertyIsEnumerable'"}
+      {
+        "token":null,
+        "index":3,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"'propertyIsEnumerable'"
+      }
     ]
   }
 }
@@ -8454,7 +10400,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "bracket syntax member",
-      {"token":null,"index":4,"completion":"'toLocaleString'"}
+      {
+        "token":null,
+        "index":4,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"'toLocaleString'"
+      }
     ]
   }
 }
@@ -8476,7 +10428,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "bracket syntax member",
-      {"token":null,"index":5,"completion":"'toString'"}
+      {
+        "token":null,
+        "index":5,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"'toString'"
+      }
     ]
   }
 }
@@ -8501,7 +10459,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "bracket syntax member",
-      {"token":null,"index":6,"completion":"'valueOf'"}
+      {
+        "token":null,
+        "index":6,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"'valueOf'"
+      }
     ]
   }
 }
@@ -8522,7 +10486,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "local value identifier",
-      {"token":null,"index":7,"completion":"bar"}
+      {
+        "token":null,
+        "index":7,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"bar"
+      }
     ]
   }
 }
@@ -8543,7 +10513,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "local value identifier",
-      {"token":null,"index":8,"completion":"foo"}
+      {
+        "token":null,
+        "index":8,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"foo"
+      }
     ]
   }
 }
@@ -8567,7 +10543,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "member",
-      {"token":null,"index":0,"completion":"foo"}
+      {
+        "token":null,
+        "index":0,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"foo"
+      }
     ]
   }
 }
@@ -8588,7 +10570,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "dot-member switched to bracket-syntax member",
-      {"token":null,"index":1,"completion":"['foo.bar.baz']"}
+      {
+        "token":null,
+        "index":1,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"['foo.bar.baz']"
+      }
     ]
   }
 }
@@ -8613,7 +10601,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "member",
-      {"token":null,"index":2,"completion":"hasOwnProperty"}
+      {
+        "token":null,
+        "index":2,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"hasOwnProperty"
+      }
     ]
   }
 }
@@ -8638,7 +10632,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "member",
-      {"token":null,"index":3,"completion":"isPrototypeOf"}
+      {
+        "token":null,
+        "index":3,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"isPrototypeOf"
+      }
     ]
   }
 }
@@ -8663,7 +10663,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "member",
-      {"token":null,"index":4,"completion":"propertyIsEnumerable"}
+      {
+        "token":null,
+        "index":4,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"propertyIsEnumerable"
+      }
     ]
   }
 }
@@ -8688,7 +10694,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "member",
-      {"token":null,"index":5,"completion":"toLocaleString"}
+      {
+        "token":null,
+        "index":5,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"toLocaleString"
+      }
     ]
   }
 }
@@ -8710,7 +10722,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "member",
-      {"token":null,"index":6,"completion":"toString"}
+      {
+        "token":null,
+        "index":6,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"toString"
+      }
     ]
   }
 }
@@ -8735,7 +10753,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "member",
-      {"token":null,"index":7,"completion":"valueOf"}
+      {
+        "token":null,
+        "index":7,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"valueOf"
+      }
     ]
   }
 }
@@ -8759,7 +10783,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "start optional chain",
-      {"token":null,"index":0,"completion":"?.foo"}
+      {
+        "token":null,
+        "index":0,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"?.foo"
+      }
     ]
   }
 }
@@ -8780,7 +10810,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "start optional chain",
-      {"token":null,"index":1,"completion":"?.['foo.bar.baz']"}
+      {
+        "token":null,
+        "index":1,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"?.['foo.bar.baz']"
+      }
     ]
   }
 }
@@ -8805,7 +10841,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "start optional chain",
-      {"token":null,"index":2,"completion":"?.hasOwnProperty"}
+      {
+        "token":null,
+        "index":2,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"?.hasOwnProperty"
+      }
     ]
   }
 }
@@ -8830,7 +10872,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "start optional chain",
-      {"token":null,"index":3,"completion":"?.isPrototypeOf"}
+      {
+        "token":null,
+        "index":3,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"?.isPrototypeOf"
+      }
     ]
   }
 }
@@ -8855,7 +10903,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "start optional chain",
-      {"token":null,"index":4,"completion":"?.propertyIsEnumerable"}
+      {
+        "token":null,
+        "index":4,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"?.propertyIsEnumerable"
+      }
     ]
   }
 }
@@ -8880,7 +10934,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "start optional chain",
-      {"token":null,"index":5,"completion":"?.toLocaleString"}
+      {
+        "token":null,
+        "index":5,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"?.toLocaleString"
+      }
     ]
   }
 }
@@ -8902,7 +10962,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "start optional chain",
-      {"token":null,"index":6,"completion":"?.toString"}
+      {
+        "token":null,
+        "index":6,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"?.toString"
+      }
     ]
   }
 }
@@ -8927,7 +10993,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "start optional chain",
-      {"token":null,"index":7,"completion":"?.valueOf"}
+      {
+        "token":null,
+        "index":7,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"?.valueOf"
+      }
     ]
   }
 }
@@ -8951,7 +11023,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "local value identifier",
-      {"token":null,"index":0,"completion":"f"}
+      {
+        "token":null,
+        "index":0,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"f"
+      }
     ]
   }
 }
@@ -9043,7 +11121,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "bracket syntax member",
-      {"token":null,"index":0,"completion":"'bar'"}
+      {
+        "token":null,
+        "index":0,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"'bar'"
+      }
     ]
   }
 }
@@ -9066,7 +11150,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "bracket syntax member",
-      {"token":null,"index":1,"completion":"'foo'"}
+      {
+        "token":null,
+        "index":1,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"'foo'"
+      }
     ]
   }
 }
@@ -9086,7 +11176,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "builtin type",
-      {"token":null,"index":2,"completion":"any"}
+      {
+        "token":null,
+        "index":2,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"any"
+      }
     ]
   }
 }
@@ -9106,7 +11202,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "builtin type",
-      {"token":null,"index":3,"completion":"boolean"}
+      {
+        "token":null,
+        "index":3,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"boolean"
+      }
     ]
   }
 }
@@ -9126,7 +11228,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "builtin type",
-      {"token":null,"index":4,"completion":"empty"}
+      {
+        "token":null,
+        "index":4,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"empty"
+      }
     ]
   }
 }
@@ -9146,7 +11254,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "builtin type",
-      {"token":null,"index":5,"completion":"false"}
+      {
+        "token":null,
+        "index":5,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"false"
+      }
     ]
   }
 }
@@ -9166,7 +11280,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "builtin type",
-      {"token":null,"index":6,"completion":"mixed"}
+      {
+        "token":null,
+        "index":6,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"mixed"
+      }
     ]
   }
 }
@@ -9186,7 +11306,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "builtin type",
-      {"token":null,"index":7,"completion":"null"}
+      {
+        "token":null,
+        "index":7,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"null"
+      }
     ]
   }
 }
@@ -9206,7 +11332,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "builtin type",
-      {"token":null,"index":8,"completion":"number"}
+      {
+        "token":null,
+        "index":8,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"number"
+      }
     ]
   }
 }
@@ -9226,7 +11358,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "builtin type",
-      {"token":null,"index":9,"completion":"bigint"}
+      {
+        "token":null,
+        "index":9,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"bigint"
+      }
     ]
   }
 }
@@ -9246,7 +11384,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "builtin type",
-      {"token":null,"index":10,"completion":"string"}
+      {
+        "token":null,
+        "index":10,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"string"
+      }
     ]
   }
 }
@@ -9266,7 +11410,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "builtin type",
-      {"token":null,"index":11,"completion":"true"}
+      {
+        "token":null,
+        "index":11,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"true"
+      }
     ]
   }
 }
@@ -9286,7 +11436,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "builtin type",
-      {"token":null,"index":12,"completion":"void"}
+      {
+        "token":null,
+        "index":12,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"void"
+      }
     ]
   }
 }
@@ -9306,7 +11462,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "builtin type",
-      {"token":null,"index":13,"completion":"symbol"}
+      {
+        "token":null,
+        "index":13,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"symbol"
+      }
     ]
   }
 }
@@ -9326,7 +11488,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "builtin type",
-      {"token":null,"index":14,"completion":"Class"}
+      {
+        "token":null,
+        "index":14,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"Class"
+      }
     ]
   }
 }
@@ -9346,7 +11514,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "builtin type",
-      {"token":null,"index":15,"completion":"$Call"}
+      {
+        "token":null,
+        "index":15,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"$Call"
+      }
     ]
   }
 }
@@ -9366,7 +11540,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "builtin type",
-      {"token":null,"index":16,"completion":"$CharSet"}
+      {
+        "token":null,
+        "index":16,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"$CharSet"
+      }
     ]
   }
 }
@@ -9386,7 +11566,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "builtin type",
-      {"token":null,"index":17,"completion":"$Diff"}
+      {
+        "token":null,
+        "index":17,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"$Diff"
+      }
     ]
   }
 }
@@ -9406,7 +11592,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "builtin type",
-      {"token":null,"index":18,"completion":"$ElementType"}
+      {
+        "token":null,
+        "index":18,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"$ElementType"
+      }
     ]
   }
 }
@@ -9426,7 +11618,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "builtin type",
-      {"token":null,"index":19,"completion":"$Exact"}
+      {
+        "token":null,
+        "index":19,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"$Exact"
+      }
     ]
   }
 }
@@ -9446,7 +11644,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "builtin type",
-      {"token":null,"index":20,"completion":"$Exports"}
+      {
+        "token":null,
+        "index":20,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"$Exports"
+      }
     ]
   }
 }
@@ -9466,7 +11670,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "builtin type",
-      {"token":null,"index":21,"completion":"$KeyMirror"}
+      {
+        "token":null,
+        "index":21,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"$KeyMirror"
+      }
     ]
   }
 }
@@ -9486,7 +11696,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "builtin type",
-      {"token":null,"index":22,"completion":"$Keys"}
+      {
+        "token":null,
+        "index":22,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"$Keys"
+      }
     ]
   }
 }
@@ -9506,7 +11722,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "builtin type",
-      {"token":null,"index":23,"completion":"$NonMaybeType"}
+      {
+        "token":null,
+        "index":23,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"$NonMaybeType"
+      }
     ]
   }
 }
@@ -9526,7 +11748,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "builtin type",
-      {"token":null,"index":24,"completion":"$ObjMap"}
+      {
+        "token":null,
+        "index":24,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"$ObjMap"
+      }
     ]
   }
 }
@@ -9546,7 +11774,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "builtin type",
-      {"token":null,"index":25,"completion":"$ObjMapi"}
+      {
+        "token":null,
+        "index":25,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"$ObjMapi"
+      }
     ]
   }
 }
@@ -9566,7 +11800,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "builtin type",
-      {"token":null,"index":26,"completion":"$PropertyType"}
+      {
+        "token":null,
+        "index":26,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"$PropertyType"
+      }
     ]
   }
 }
@@ -9586,7 +11826,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "builtin type",
-      {"token":null,"index":27,"completion":"$ReadOnly"}
+      {
+        "token":null,
+        "index":27,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"$ReadOnly"
+      }
     ]
   }
 }
@@ -9606,7 +11852,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "builtin type",
-      {"token":null,"index":28,"completion":"$Rest"}
+      {
+        "token":null,
+        "index":28,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"$Rest"
+      }
     ]
   }
 }
@@ -9626,7 +11878,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "builtin type",
-      {"token":null,"index":29,"completion":"$Shape"}
+      {
+        "token":null,
+        "index":29,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"$Shape"
+      }
     ]
   }
 }
@@ -9646,7 +11904,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "builtin type",
-      {"token":null,"index":30,"completion":"$TupleMap"}
+      {
+        "token":null,
+        "index":30,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"$TupleMap"
+      }
     ]
   }
 }
@@ -9666,7 +11930,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "builtin type",
-      {"token":null,"index":31,"completion":"$Values"}
+      {
+        "token":null,
+        "index":31,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"$Values"
+      }
     ]
   }
 }
@@ -9689,7 +11959,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "unqualified type: local type identifier",
-      {"token":null,"index":32,"completion":"K"}
+      {
+        "token":null,
+        "index":32,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"K"
+      }
     ]
   }
 }
@@ -9710,7 +11986,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "unqualified type: local type identifier",
-      {"token":null,"index":33,"completion":"O"}
+      {
+        "token":null,
+        "index":33,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"O"
+      }
     ]
   }
 }
@@ -9731,7 +12013,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "unqualified type: local type identifier",
-      {"token":null,"index":34,"completion":"T"}
+      {
+        "token":null,
+        "index":34,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"T"
+      }
     ]
   }
 }
@@ -9755,7 +12043,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "bracket syntax member",
-      {"token":null,"index":0,"completion":"'bar'"}
+      {
+        "token":null,
+        "index":0,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"'bar'"
+      }
     ]
   }
 }
@@ -9776,7 +12070,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "bracket syntax member",
-      {"token":null,"index":1,"completion":"'foo'"}
+      {
+        "token":null,
+        "index":1,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"'foo'"
+      }
     ]
   }
 }
@@ -9796,7 +12096,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "builtin type",
-      {"token":null,"index":2,"completion":"any"}
+      {
+        "token":null,
+        "index":2,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"any"
+      }
     ]
   }
 }
@@ -9816,7 +12122,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "builtin type",
-      {"token":null,"index":3,"completion":"boolean"}
+      {
+        "token":null,
+        "index":3,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"boolean"
+      }
     ]
   }
 }
@@ -9836,7 +12148,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "builtin type",
-      {"token":null,"index":4,"completion":"empty"}
+      {
+        "token":null,
+        "index":4,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"empty"
+      }
     ]
   }
 }
@@ -9856,7 +12174,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "builtin type",
-      {"token":null,"index":5,"completion":"false"}
+      {
+        "token":null,
+        "index":5,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"false"
+      }
     ]
   }
 }
@@ -9876,7 +12200,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "builtin type",
-      {"token":null,"index":6,"completion":"mixed"}
+      {
+        "token":null,
+        "index":6,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"mixed"
+      }
     ]
   }
 }
@@ -9896,7 +12226,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "builtin type",
-      {"token":null,"index":7,"completion":"null"}
+      {
+        "token":null,
+        "index":7,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"null"
+      }
     ]
   }
 }
@@ -9916,7 +12252,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "builtin type",
-      {"token":null,"index":8,"completion":"number"}
+      {
+        "token":null,
+        "index":8,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"number"
+      }
     ]
   }
 }
@@ -9936,7 +12278,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "builtin type",
-      {"token":null,"index":9,"completion":"bigint"}
+      {
+        "token":null,
+        "index":9,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"bigint"
+      }
     ]
   }
 }
@@ -9956,7 +12304,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "builtin type",
-      {"token":null,"index":10,"completion":"string"}
+      {
+        "token":null,
+        "index":10,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"string"
+      }
     ]
   }
 }
@@ -9976,7 +12330,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "builtin type",
-      {"token":null,"index":11,"completion":"true"}
+      {
+        "token":null,
+        "index":11,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"true"
+      }
     ]
   }
 }
@@ -9996,7 +12356,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "builtin type",
-      {"token":null,"index":12,"completion":"void"}
+      {
+        "token":null,
+        "index":12,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"void"
+      }
     ]
   }
 }
@@ -10016,7 +12382,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "builtin type",
-      {"token":null,"index":13,"completion":"symbol"}
+      {
+        "token":null,
+        "index":13,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"symbol"
+      }
     ]
   }
 }
@@ -10036,7 +12408,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "builtin type",
-      {"token":null,"index":14,"completion":"Class"}
+      {
+        "token":null,
+        "index":14,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"Class"
+      }
     ]
   }
 }
@@ -10056,7 +12434,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "builtin type",
-      {"token":null,"index":15,"completion":"$Call"}
+      {
+        "token":null,
+        "index":15,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"$Call"
+      }
     ]
   }
 }
@@ -10076,7 +12460,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "builtin type",
-      {"token":null,"index":16,"completion":"$CharSet"}
+      {
+        "token":null,
+        "index":16,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"$CharSet"
+      }
     ]
   }
 }
@@ -10096,7 +12486,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "builtin type",
-      {"token":null,"index":17,"completion":"$Diff"}
+      {
+        "token":null,
+        "index":17,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"$Diff"
+      }
     ]
   }
 }
@@ -10116,7 +12512,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "builtin type",
-      {"token":null,"index":18,"completion":"$ElementType"}
+      {
+        "token":null,
+        "index":18,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"$ElementType"
+      }
     ]
   }
 }
@@ -10136,7 +12538,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "builtin type",
-      {"token":null,"index":19,"completion":"$Exact"}
+      {
+        "token":null,
+        "index":19,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"$Exact"
+      }
     ]
   }
 }
@@ -10156,7 +12564,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "builtin type",
-      {"token":null,"index":20,"completion":"$Exports"}
+      {
+        "token":null,
+        "index":20,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"$Exports"
+      }
     ]
   }
 }
@@ -10176,7 +12590,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "builtin type",
-      {"token":null,"index":21,"completion":"$KeyMirror"}
+      {
+        "token":null,
+        "index":21,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"$KeyMirror"
+      }
     ]
   }
 }
@@ -10196,7 +12616,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "builtin type",
-      {"token":null,"index":22,"completion":"$Keys"}
+      {
+        "token":null,
+        "index":22,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"$Keys"
+      }
     ]
   }
 }
@@ -10216,7 +12642,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "builtin type",
-      {"token":null,"index":23,"completion":"$NonMaybeType"}
+      {
+        "token":null,
+        "index":23,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"$NonMaybeType"
+      }
     ]
   }
 }
@@ -10236,7 +12668,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "builtin type",
-      {"token":null,"index":24,"completion":"$ObjMap"}
+      {
+        "token":null,
+        "index":24,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"$ObjMap"
+      }
     ]
   }
 }
@@ -10256,7 +12694,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "builtin type",
-      {"token":null,"index":25,"completion":"$ObjMapi"}
+      {
+        "token":null,
+        "index":25,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"$ObjMapi"
+      }
     ]
   }
 }
@@ -10276,7 +12720,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "builtin type",
-      {"token":null,"index":26,"completion":"$PropertyType"}
+      {
+        "token":null,
+        "index":26,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"$PropertyType"
+      }
     ]
   }
 }
@@ -10296,7 +12746,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "builtin type",
-      {"token":null,"index":27,"completion":"$ReadOnly"}
+      {
+        "token":null,
+        "index":27,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"$ReadOnly"
+      }
     ]
   }
 }
@@ -10316,7 +12772,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "builtin type",
-      {"token":null,"index":28,"completion":"$Rest"}
+      {
+        "token":null,
+        "index":28,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"$Rest"
+      }
     ]
   }
 }
@@ -10336,7 +12798,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "builtin type",
-      {"token":null,"index":29,"completion":"$Shape"}
+      {
+        "token":null,
+        "index":29,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"$Shape"
+      }
     ]
   }
 }
@@ -10356,7 +12824,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "builtin type",
-      {"token":null,"index":30,"completion":"$TupleMap"}
+      {
+        "token":null,
+        "index":30,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"$TupleMap"
+      }
     ]
   }
 }
@@ -10376,7 +12850,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "builtin type",
-      {"token":null,"index":31,"completion":"$Values"}
+      {
+        "token":null,
+        "index":31,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"$Values"
+      }
     ]
   }
 }
@@ -10397,7 +12877,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "unqualified type: local type identifier",
-      {"token":null,"index":32,"completion":"O"}
+      {
+        "token":null,
+        "index":32,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"O"
+      }
     ]
   }
 }
@@ -10418,7 +12904,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "unqualified type: local type identifier",
-      {"token":null,"index":33,"completion":"T"}
+      {
+        "token":null,
+        "index":33,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"T"
+      }
     ]
   }
 }
@@ -10442,7 +12934,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "bracket syntax member",
-      {"token":null,"index":0,"completion":"'bar'"}
+      {
+        "token":null,
+        "index":0,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"'bar'"
+      }
     ]
   }
 }
@@ -10463,7 +12961,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "bracket syntax member",
-      {"token":null,"index":1,"completion":"'foo'"}
+      {
+        "token":null,
+        "index":1,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"'foo'"
+      }
     ]
   }
 }
@@ -10483,7 +12987,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "builtin type",
-      {"token":null,"index":2,"completion":"any"}
+      {
+        "token":null,
+        "index":2,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"any"
+      }
     ]
   }
 }
@@ -10503,7 +13013,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "builtin type",
-      {"token":null,"index":3,"completion":"boolean"}
+      {
+        "token":null,
+        "index":3,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"boolean"
+      }
     ]
   }
 }
@@ -10523,7 +13039,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "builtin type",
-      {"token":null,"index":4,"completion":"empty"}
+      {
+        "token":null,
+        "index":4,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"empty"
+      }
     ]
   }
 }
@@ -10543,7 +13065,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "builtin type",
-      {"token":null,"index":5,"completion":"false"}
+      {
+        "token":null,
+        "index":5,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"false"
+      }
     ]
   }
 }
@@ -10563,7 +13091,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "builtin type",
-      {"token":null,"index":6,"completion":"mixed"}
+      {
+        "token":null,
+        "index":6,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"mixed"
+      }
     ]
   }
 }
@@ -10583,7 +13117,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "builtin type",
-      {"token":null,"index":7,"completion":"null"}
+      {
+        "token":null,
+        "index":7,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"null"
+      }
     ]
   }
 }
@@ -10603,7 +13143,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "builtin type",
-      {"token":null,"index":8,"completion":"number"}
+      {
+        "token":null,
+        "index":8,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"number"
+      }
     ]
   }
 }
@@ -10623,7 +13169,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "builtin type",
-      {"token":null,"index":9,"completion":"bigint"}
+      {
+        "token":null,
+        "index":9,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"bigint"
+      }
     ]
   }
 }
@@ -10643,7 +13195,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "builtin type",
-      {"token":null,"index":10,"completion":"string"}
+      {
+        "token":null,
+        "index":10,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"string"
+      }
     ]
   }
 }
@@ -10663,7 +13221,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "builtin type",
-      {"token":null,"index":11,"completion":"true"}
+      {
+        "token":null,
+        "index":11,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"true"
+      }
     ]
   }
 }
@@ -10683,7 +13247,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "builtin type",
-      {"token":null,"index":12,"completion":"void"}
+      {
+        "token":null,
+        "index":12,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"void"
+      }
     ]
   }
 }
@@ -10703,7 +13273,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "builtin type",
-      {"token":null,"index":13,"completion":"symbol"}
+      {
+        "token":null,
+        "index":13,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"symbol"
+      }
     ]
   }
 }
@@ -10723,7 +13299,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "builtin type",
-      {"token":null,"index":14,"completion":"Class"}
+      {
+        "token":null,
+        "index":14,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"Class"
+      }
     ]
   }
 }
@@ -10743,7 +13325,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "builtin type",
-      {"token":null,"index":15,"completion":"$Call"}
+      {
+        "token":null,
+        "index":15,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"$Call"
+      }
     ]
   }
 }
@@ -10763,7 +13351,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "builtin type",
-      {"token":null,"index":16,"completion":"$CharSet"}
+      {
+        "token":null,
+        "index":16,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"$CharSet"
+      }
     ]
   }
 }
@@ -10783,7 +13377,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "builtin type",
-      {"token":null,"index":17,"completion":"$Diff"}
+      {
+        "token":null,
+        "index":17,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"$Diff"
+      }
     ]
   }
 }
@@ -10803,7 +13403,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "builtin type",
-      {"token":null,"index":18,"completion":"$ElementType"}
+      {
+        "token":null,
+        "index":18,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"$ElementType"
+      }
     ]
   }
 }
@@ -10823,7 +13429,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "builtin type",
-      {"token":null,"index":19,"completion":"$Exact"}
+      {
+        "token":null,
+        "index":19,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"$Exact"
+      }
     ]
   }
 }
@@ -10843,7 +13455,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "builtin type",
-      {"token":null,"index":20,"completion":"$Exports"}
+      {
+        "token":null,
+        "index":20,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"$Exports"
+      }
     ]
   }
 }
@@ -10863,7 +13481,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "builtin type",
-      {"token":null,"index":21,"completion":"$KeyMirror"}
+      {
+        "token":null,
+        "index":21,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"$KeyMirror"
+      }
     ]
   }
 }
@@ -10883,7 +13507,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "builtin type",
-      {"token":null,"index":22,"completion":"$Keys"}
+      {
+        "token":null,
+        "index":22,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"$Keys"
+      }
     ]
   }
 }
@@ -10903,7 +13533,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "builtin type",
-      {"token":null,"index":23,"completion":"$NonMaybeType"}
+      {
+        "token":null,
+        "index":23,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"$NonMaybeType"
+      }
     ]
   }
 }
@@ -10923,7 +13559,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "builtin type",
-      {"token":null,"index":24,"completion":"$ObjMap"}
+      {
+        "token":null,
+        "index":24,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"$ObjMap"
+      }
     ]
   }
 }
@@ -10943,7 +13585,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "builtin type",
-      {"token":null,"index":25,"completion":"$ObjMapi"}
+      {
+        "token":null,
+        "index":25,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"$ObjMapi"
+      }
     ]
   }
 }
@@ -10963,7 +13611,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "builtin type",
-      {"token":null,"index":26,"completion":"$PropertyType"}
+      {
+        "token":null,
+        "index":26,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"$PropertyType"
+      }
     ]
   }
 }
@@ -10983,7 +13637,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "builtin type",
-      {"token":null,"index":27,"completion":"$ReadOnly"}
+      {
+        "token":null,
+        "index":27,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"$ReadOnly"
+      }
     ]
   }
 }
@@ -11003,7 +13663,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "builtin type",
-      {"token":null,"index":28,"completion":"$Rest"}
+      {
+        "token":null,
+        "index":28,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"$Rest"
+      }
     ]
   }
 }
@@ -11023,7 +13689,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "builtin type",
-      {"token":null,"index":29,"completion":"$Shape"}
+      {
+        "token":null,
+        "index":29,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"$Shape"
+      }
     ]
   }
 }
@@ -11043,7 +13715,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "builtin type",
-      {"token":null,"index":30,"completion":"$TupleMap"}
+      {
+        "token":null,
+        "index":30,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"$TupleMap"
+      }
     ]
   }
 }
@@ -11063,7 +13741,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "builtin type",
-      {"token":null,"index":31,"completion":"$Values"}
+      {
+        "token":null,
+        "index":31,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"$Values"
+      }
     ]
   }
 }
@@ -11084,7 +13768,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "unqualified type: local type identifier",
-      {"token":null,"index":32,"completion":"K"}
+      {
+        "token":null,
+        "index":32,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"K"
+      }
     ]
   }
 }
@@ -11105,7 +13795,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "unqualified type: local type identifier",
-      {"token":null,"index":33,"completion":"O"}
+      {
+        "token":null,
+        "index":33,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"O"
+      }
     ]
   }
 }
@@ -11126,7 +13822,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "unqualified type: local type identifier",
-      {"token":null,"index":34,"completion":"T"}
+      {
+        "token":null,
+        "index":34,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"T"
+      }
     ]
   }
 }
@@ -11150,7 +13852,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "bracket syntax member",
-      {"token":null,"index":0,"completion":"'bar'"}
+      {
+        "token":null,
+        "index":0,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"'bar'"
+      }
     ]
   }
 }
@@ -11171,7 +13879,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "bracket syntax member",
-      {"token":null,"index":1,"completion":"'foo'"}
+      {
+        "token":null,
+        "index":1,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"'foo'"
+      }
     ]
   }
 }
@@ -11191,7 +13905,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "builtin type",
-      {"token":null,"index":2,"completion":"any"}
+      {
+        "token":null,
+        "index":2,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"any"
+      }
     ]
   }
 }
@@ -11211,7 +13931,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "builtin type",
-      {"token":null,"index":3,"completion":"boolean"}
+      {
+        "token":null,
+        "index":3,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"boolean"
+      }
     ]
   }
 }
@@ -11231,7 +13957,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "builtin type",
-      {"token":null,"index":4,"completion":"empty"}
+      {
+        "token":null,
+        "index":4,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"empty"
+      }
     ]
   }
 }
@@ -11251,7 +13983,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "builtin type",
-      {"token":null,"index":5,"completion":"false"}
+      {
+        "token":null,
+        "index":5,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"false"
+      }
     ]
   }
 }
@@ -11271,7 +14009,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "builtin type",
-      {"token":null,"index":6,"completion":"mixed"}
+      {
+        "token":null,
+        "index":6,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"mixed"
+      }
     ]
   }
 }
@@ -11291,7 +14035,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "builtin type",
-      {"token":null,"index":7,"completion":"null"}
+      {
+        "token":null,
+        "index":7,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"null"
+      }
     ]
   }
 }
@@ -11311,7 +14061,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "builtin type",
-      {"token":null,"index":8,"completion":"number"}
+      {
+        "token":null,
+        "index":8,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"number"
+      }
     ]
   }
 }
@@ -11331,7 +14087,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "builtin type",
-      {"token":null,"index":9,"completion":"bigint"}
+      {
+        "token":null,
+        "index":9,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"bigint"
+      }
     ]
   }
 }
@@ -11351,7 +14113,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "builtin type",
-      {"token":null,"index":10,"completion":"string"}
+      {
+        "token":null,
+        "index":10,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"string"
+      }
     ]
   }
 }
@@ -11371,7 +14139,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "builtin type",
-      {"token":null,"index":11,"completion":"true"}
+      {
+        "token":null,
+        "index":11,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"true"
+      }
     ]
   }
 }
@@ -11391,7 +14165,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "builtin type",
-      {"token":null,"index":12,"completion":"void"}
+      {
+        "token":null,
+        "index":12,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"void"
+      }
     ]
   }
 }
@@ -11411,7 +14191,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "builtin type",
-      {"token":null,"index":13,"completion":"symbol"}
+      {
+        "token":null,
+        "index":13,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"symbol"
+      }
     ]
   }
 }
@@ -11431,7 +14217,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "builtin type",
-      {"token":null,"index":14,"completion":"Class"}
+      {
+        "token":null,
+        "index":14,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"Class"
+      }
     ]
   }
 }
@@ -11451,7 +14243,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "builtin type",
-      {"token":null,"index":15,"completion":"$Call"}
+      {
+        "token":null,
+        "index":15,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"$Call"
+      }
     ]
   }
 }
@@ -11471,7 +14269,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "builtin type",
-      {"token":null,"index":16,"completion":"$CharSet"}
+      {
+        "token":null,
+        "index":16,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"$CharSet"
+      }
     ]
   }
 }
@@ -11491,7 +14295,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "builtin type",
-      {"token":null,"index":17,"completion":"$Diff"}
+      {
+        "token":null,
+        "index":17,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"$Diff"
+      }
     ]
   }
 }
@@ -11511,7 +14321,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "builtin type",
-      {"token":null,"index":18,"completion":"$ElementType"}
+      {
+        "token":null,
+        "index":18,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"$ElementType"
+      }
     ]
   }
 }
@@ -11531,7 +14347,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "builtin type",
-      {"token":null,"index":19,"completion":"$Exact"}
+      {
+        "token":null,
+        "index":19,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"$Exact"
+      }
     ]
   }
 }
@@ -11551,7 +14373,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "builtin type",
-      {"token":null,"index":20,"completion":"$Exports"}
+      {
+        "token":null,
+        "index":20,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"$Exports"
+      }
     ]
   }
 }
@@ -11571,7 +14399,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "builtin type",
-      {"token":null,"index":21,"completion":"$KeyMirror"}
+      {
+        "token":null,
+        "index":21,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"$KeyMirror"
+      }
     ]
   }
 }
@@ -11591,7 +14425,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "builtin type",
-      {"token":null,"index":22,"completion":"$Keys"}
+      {
+        "token":null,
+        "index":22,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"$Keys"
+      }
     ]
   }
 }
@@ -11611,7 +14451,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "builtin type",
-      {"token":null,"index":23,"completion":"$NonMaybeType"}
+      {
+        "token":null,
+        "index":23,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"$NonMaybeType"
+      }
     ]
   }
 }
@@ -11631,7 +14477,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "builtin type",
-      {"token":null,"index":24,"completion":"$ObjMap"}
+      {
+        "token":null,
+        "index":24,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"$ObjMap"
+      }
     ]
   }
 }
@@ -11651,7 +14503,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "builtin type",
-      {"token":null,"index":25,"completion":"$ObjMapi"}
+      {
+        "token":null,
+        "index":25,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"$ObjMapi"
+      }
     ]
   }
 }
@@ -11671,7 +14529,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "builtin type",
-      {"token":null,"index":26,"completion":"$PropertyType"}
+      {
+        "token":null,
+        "index":26,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"$PropertyType"
+      }
     ]
   }
 }
@@ -11691,7 +14555,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "builtin type",
-      {"token":null,"index":27,"completion":"$ReadOnly"}
+      {
+        "token":null,
+        "index":27,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"$ReadOnly"
+      }
     ]
   }
 }
@@ -11711,7 +14581,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "builtin type",
-      {"token":null,"index":28,"completion":"$Rest"}
+      {
+        "token":null,
+        "index":28,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"$Rest"
+      }
     ]
   }
 }
@@ -11731,7 +14607,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "builtin type",
-      {"token":null,"index":29,"completion":"$Shape"}
+      {
+        "token":null,
+        "index":29,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"$Shape"
+      }
     ]
   }
 }
@@ -11751,7 +14633,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "builtin type",
-      {"token":null,"index":30,"completion":"$TupleMap"}
+      {
+        "token":null,
+        "index":30,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"$TupleMap"
+      }
     ]
   }
 }
@@ -11771,7 +14659,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "builtin type",
-      {"token":null,"index":31,"completion":"$Values"}
+      {
+        "token":null,
+        "index":31,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"$Values"
+      }
     ]
   }
 }
@@ -11792,7 +14686,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "unqualified type: local type identifier",
-      {"token":null,"index":32,"completion":"O"}
+      {
+        "token":null,
+        "index":32,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"O"
+      }
     ]
   }
 }
@@ -11813,7 +14713,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "unqualified type: local type identifier",
-      {"token":null,"index":33,"completion":"T"}
+      {
+        "token":null,
+        "index":33,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"T"
+      }
     ]
   }
 }
@@ -11837,7 +14743,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "local value identifier",
-      {"token":null,"index":0,"completion":"abb"}
+      {
+        "token":null,
+        "index":0,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"abb"
+      }
     ]
   }
 }
@@ -11858,7 +14770,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "local value identifier",
-      {"token":null,"index":1,"completion":"c"}
+      {
+        "token":null,
+        "index":1,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"c"
+      }
     ]
   }
 }
@@ -11879,7 +14797,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "local value identifier",
-      {"token":null,"index":2,"completion":"foo"}
+      {
+        "token":null,
+        "index":2,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"foo"
+      }
     ]
   }
 }
@@ -11896,7 +14820,17 @@ Flags: --lsp
   "command":{
     "title":"",
     "command":"log:<PLACEHOLDER_PROJECT_URL>",
-    "arguments":["textDocument/completion","this",{"token":null,"index":3,"completion":"this"}]
+    "arguments":[
+      "textDocument/completion",
+      "this",
+      {
+        "token":null,
+        "index":3,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"this"
+      }
+    ]
   }
 }
 
@@ -11916,7 +14850,17 @@ Flags: --lsp
   "command":{
     "title":"",
     "command":"log:<PLACEHOLDER_PROJECT_URL>",
-    "arguments":["textDocument/completion","member",{"token":null,"index":0,"completion":"b"}]
+    "arguments":[
+      "textDocument/completion",
+      "member",
+      {
+        "token":null,
+        "index":0,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"b"
+      }
+    ]
   }
 }
 {
@@ -11940,7 +14884,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "member",
-      {"token":null,"index":1,"completion":"hasOwnProperty"}
+      {
+        "token":null,
+        "index":1,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"hasOwnProperty"
+      }
     ]
   }
 }
@@ -11965,7 +14915,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "member",
-      {"token":null,"index":2,"completion":"isPrototypeOf"}
+      {
+        "token":null,
+        "index":2,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"isPrototypeOf"
+      }
     ]
   }
 }
@@ -11990,7 +14946,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "member",
-      {"token":null,"index":3,"completion":"propertyIsEnumerable"}
+      {
+        "token":null,
+        "index":3,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"propertyIsEnumerable"
+      }
     ]
   }
 }
@@ -12015,7 +14977,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "member",
-      {"token":null,"index":4,"completion":"toLocaleString"}
+      {
+        "token":null,
+        "index":4,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"toLocaleString"
+      }
     ]
   }
 }
@@ -12037,7 +15005,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "member",
-      {"token":null,"index":5,"completion":"toString"}
+      {
+        "token":null,
+        "index":5,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"toString"
+      }
     ]
   }
 }
@@ -12062,7 +15036,13 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "member",
-      {"token":null,"index":6,"completion":"valueOf"}
+      {
+        "token":null,
+        "index":6,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"valueOf"
+      }
     ]
   }
 }
