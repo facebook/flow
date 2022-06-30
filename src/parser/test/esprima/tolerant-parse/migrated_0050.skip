@@ -1,0 +1,1 @@
+Esprima skips over the invalid backslash and consumes the escaped g flag. We bail out of the regex flags and treat the g like a new expression statement.

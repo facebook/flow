@@ -1,0 +1,8 @@
+{
+  "errors":[
+    {
+      "loc":{"source":null,"start":{"line":1,"column":22},"end":{"line":1,"column":23}},
+      "message":"Unexpected token ILLEGAL"
+    }
+  ]
+}

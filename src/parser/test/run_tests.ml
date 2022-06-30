@@ -138,6 +138,54 @@ end = struct
         props
     )
 
+  (** .source.js files look like `var source = 'X'`. the esprima runner evals this
+      and runs the test on the value of `source`. For example, to test invalid Unicode,
+      the invalid codepoints are validly encoded into the string; when eval'd, the
+      result is invalid, but the test file itself is valid UTF8. *)
+  let eval_source content =
+    let open Flow_ast in
+    match Parser_flow.program_file ~fail:false content None with
+    | ( ( _,
+          {
+            Program.statements =
+              [
+                ( _,
+                  Statement.VariableDeclaration
+                    {
+                      Statement.VariableDeclaration.declarations =
+                        [
+                          ( _,
+                            {
+                              Statement.VariableDeclaration.Declarator.id =
+                                ( _,
+                                  Pattern.Identifier
+                                    {
+                                      Pattern.Identifier.name =
+                                        (_, { Identifier.name = "source"; _ });
+                                      _;
+                                    }
+                                );
+                              init =
+                                Some
+                                  ( _,
+                                    Expression.Literal { Literal.value = Literal.String source; _ }
+                                  );
+                            }
+                          );
+                        ];
+                      kind = Statement.VariableDeclaration.Var;
+                      _;
+                    }
+                );
+              ];
+            _;
+          }
+        ),
+        []
+      ) ->
+      Some source
+    | _ -> None
+
   let tests_of_path path =
     let relativize = strip_prefix path in
     File_utils.fold_files
@@ -159,7 +207,12 @@ end = struct
                 | "js" when Filename.check_suffix case_name ".source" ->
                   let case_name = Filename.chop_suffix case_name ".source" in
                   let case = find_case case_name test.cases in
-                  let case = { case with skipped = file :: case.skipped } in
+                  let case =
+                    let content = Sys_utils.cat file in
+                    match eval_source content with
+                    | Some source -> { case with source = Some source }
+                    | None -> { case with skipped = file :: case.skipped }
+                  in
                   SMap.add case_name case test.cases
                 | "js" ->
                   let case = find_case case_name test.cases in
