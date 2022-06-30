@@ -5,4 +5,6 @@
 # LICENSE file in the root directory of this source tree.
 
 "$FLOW" stop
-assert_ok "$FLOW" start --distributed
+"$FLOW" start --wait --distributed
+assert_ok "$FLOW" status --no-auto-start
+"$FLOW" stop

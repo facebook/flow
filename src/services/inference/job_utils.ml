@@ -49,7 +49,12 @@ let job ~post_check ~reader ~options acc files =
     | Ok { ProcFS.rss_total; _ } -> Some rss_total
     | Error _ -> None
   in
-  let check = Merge_service.mk_check options ~reader () in
+  let check =
+    if Options.distributed options then
+      Merge_service.mk_distributed_check options ~reader ()
+    else
+      Merge_service.mk_check options ~reader ()
+  in
   job_helper ~check ~post_check ~options ~start_time ~start_rss acc files
 
 (** A stateful (next, merge) pair. This lets us re-queue unfinished files which are returned

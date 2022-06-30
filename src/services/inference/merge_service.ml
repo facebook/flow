@@ -632,3 +632,5 @@ let mk_check options ~reader () =
           | ECheckTimeout (s, _) -> (file_loc, CheckTimeout s)
           | _ -> (file_loc, CheckJobException exc)
         )
+
+let mk_distributed_check _options ~reader:_ () _ = Ok None
