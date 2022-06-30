@@ -666,9 +666,9 @@ module New_env = struct
 
   (* Unifies `t` with the entry in the loc_env's map. This allows it to be looked up for Write
    * entries reported by the name_resolver as well as providers for the provider analysis *)
-  let unify_write_entry cx ~use_op t def_loc_type loc =
+  let unify_write_entry cx ?(allow_unify_resolved = false) ~use_op t def_loc_type loc =
     let ({ Loc_env.resolved; _ } as env) = Context.environment cx in
-    if not (ALocSet.mem loc resolved) then begin
+    if allow_unify_resolved || not (ALocSet.mem loc resolved) then begin
       Debug_js.Verbose.print_if_verbose
         cx
         [
@@ -955,7 +955,13 @@ module New_env = struct
     | InternalName _ -> Old_env.unify_declared_type ~lookup_mode ~is_func cx name loc t
     | OrdinaryName _
     | InternalModuleName _ ->
-      unify_write_entry cx ~use_op:unknown_use t Env_api.OrdinaryNameLoc loc
+      unify_write_entry
+        cx
+        ~allow_unify_resolved:true
+        ~use_op:unknown_use
+        t
+        Env_api.OrdinaryNameLoc
+        loc
 
   let unify_declared_fun_type cx name loc t =
     match name with
