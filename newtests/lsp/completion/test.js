@@ -14,6 +14,7 @@ module.exports = (suite(
     lspInitializeParams,
     lspRequestAndWaitUntilResponse,
     addFile,
+    lspNotification,
     lspIgnoreStatusAndCancellation,
   }) => [
     test('textDocument/completion', [
@@ -205,6 +206,1850 @@ module.exports = (suite(
                         session_requests: 1,
                         typed_length: 0,
                         completion: 'x',
+                      },
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+        ],
+        [
+          'textDocument/publishDiagnostics',
+          'window/showStatus',
+          '$/cancelRequest',
+        ],
+      ),
+    ]),
+    test('textDocument/completion', [
+      addFile('completion-metrics.js'),
+      addFile('completion_metrics_collision.js'),
+      lspStartAndConnect(),
+      lspNotification('textDocument/didOpen', {
+        textDocument: {
+          uri: '<PLACEHOLDER_PROJECT_URL>/completion-metrics.js',
+          languageId: 'flow',
+          version: 1,
+          text: `// @flow
+declare class A{
+  test: string;
+}
+
+const b = new A();
+b.
+`,
+        },
+      }).verifyAllLSPMessagesInStep(
+        [],
+        ['window/showStatus', 'textDocument/publishDiagnostics'],
+      ),
+      lspRequestAndWaitUntilResponse('textDocument/completion', {
+        textDocument: {uri: '<PLACEHOLDER_PROJECT_URL>/completion-metrics.js'},
+        position: {line: 6, character: 2},
+      }).verifyAllLSPMessagesInStep(
+        [
+          {
+            method: 'textDocument/completion',
+            result: {
+              isIncomplete: false,
+              items: [
+                {
+                  label: 'test',
+                  kind: 6,
+                  detail: 'string',
+                  sortText: '00000000000000000000',
+                  insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {
+                        line: 6,
+                        character: 2,
+                      },
+                      end: {
+                        line: 6,
+                        character: 2,
+                      },
+                    },
+                    newText: 'test',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'member',
+                      {
+                        token: 'AUTO332',
+                        index: 0,
+                        session_requests: 1,
+                        typed_length: 0,
+                        completion: 'test',
+                      },
+                    ],
+                  },
+                },
+                {
+                  label: 'hasOwnProperty',
+                  kind: 3,
+                  detail: '(prop: mixed) => boolean',
+                  documentation: {
+                    kind: 'markdown',
+                    value:
+                      'Determines whether an object has a property with the specified name.',
+                  },
+                  sortText: '00000000000000000001',
+                  insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {
+                        line: 6,
+                        character: 2,
+                      },
+                      end: {
+                        line: 6,
+                        character: 2,
+                      },
+                    },
+                    newText: 'hasOwnProperty',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'member',
+                      {
+                        token: 'AUTO332',
+                        index: 1,
+                        session_requests: 1,
+                        typed_length: 0,
+                        completion: 'hasOwnProperty',
+                      },
+                    ],
+                  },
+                },
+                {
+                  label: 'isPrototypeOf',
+                  kind: 3,
+                  detail: '(o: mixed) => boolean',
+                  documentation: {
+                    kind: 'markdown',
+                    value:
+                      "Determines whether an object exists in another object's prototype chain.",
+                  },
+                  sortText: '00000000000000000002',
+                  insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {
+                        line: 6,
+                        character: 2,
+                      },
+                      end: {
+                        line: 6,
+                        character: 2,
+                      },
+                    },
+                    newText: 'isPrototypeOf',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'member',
+                      {
+                        token: 'AUTO332',
+                        index: 2,
+                        session_requests: 1,
+                        typed_length: 0,
+                        completion: 'isPrototypeOf',
+                      },
+                    ],
+                  },
+                },
+                {
+                  label: 'propertyIsEnumerable',
+                  kind: 3,
+                  detail: '(prop: mixed) => boolean',
+                  documentation: {
+                    kind: 'markdown',
+                    value:
+                      'Determines whether a specified property is enumerable.',
+                  },
+                  sortText: '00000000000000000003',
+                  insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {
+                        line: 6,
+                        character: 2,
+                      },
+                      end: {
+                        line: 6,
+                        character: 2,
+                      },
+                    },
+                    newText: 'propertyIsEnumerable',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'member',
+                      {
+                        token: 'AUTO332',
+                        index: 3,
+                        session_requests: 1,
+                        typed_length: 0,
+                        completion: 'propertyIsEnumerable',
+                      },
+                    ],
+                  },
+                },
+                {
+                  label: 'toLocaleString',
+                  kind: 3,
+                  detail: '() => string',
+                  documentation: {
+                    kind: 'markdown',
+                    value:
+                      'Returns a date converted to a string using the current locale.',
+                  },
+                  sortText: '00000000000000000004',
+                  insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {
+                        line: 6,
+                        character: 2,
+                      },
+                      end: {
+                        line: 6,
+                        character: 2,
+                      },
+                    },
+                    newText: 'toLocaleString',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'member',
+                      {
+                        token: 'AUTO332',
+                        index: 4,
+                        session_requests: 1,
+                        typed_length: 0,
+                        completion: 'toLocaleString',
+                      },
+                    ],
+                  },
+                },
+                {
+                  label: 'toString',
+                  kind: 3,
+                  detail: '() => string',
+                  documentation: {
+                    kind: 'markdown',
+                    value: 'Returns a string representation of an object.',
+                  },
+                  sortText: '00000000000000000005',
+                  insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {
+                        line: 6,
+                        character: 2,
+                      },
+                      end: {
+                        line: 6,
+                        character: 2,
+                      },
+                    },
+                    newText: 'toString',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'member',
+                      {
+                        token: 'AUTO332',
+                        index: 5,
+                        session_requests: 1,
+                        typed_length: 0,
+                        completion: 'toString',
+                      },
+                    ],
+                  },
+                },
+                {
+                  label: 'valueOf',
+                  kind: 3,
+                  detail: '() => mixed',
+                  documentation: {
+                    kind: 'markdown',
+                    value:
+                      'Returns the primitive value of the specified object.',
+                  },
+                  sortText: '00000000000000000006',
+                  insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {
+                        line: 6,
+                        character: 2,
+                      },
+                      end: {
+                        line: 6,
+                        character: 2,
+                      },
+                    },
+                    newText: 'valueOf',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'member',
+                      {
+                        token: 'AUTO332',
+                        index: 6,
+                        session_requests: 1,
+                        typed_length: 0,
+                        completion: 'valueOf',
+                      },
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+        ],
+        [
+          'textDocument/publishDiagnostics',
+          'window/showStatus',
+          '$/cancelRequest',
+        ],
+      ),
+      lspNotification('textDocument/didChange', {
+        textDocument: {
+          uri: '<PLACEHOLDER_PROJECT_URL>/completion-metrics.js',
+          version: 2,
+        },
+        contentChanges: [
+          {
+            range: {
+              start: {
+                line: 6,
+                character: 2,
+              },
+              end: {
+                line: 6,
+                character: 2,
+              },
+            },
+            rangeLength: 0,
+            text: 't',
+          },
+        ],
+      }).verifyAllLSPMessagesInStep(
+        [],
+        [
+          'textDocument/publishDiagnostics',
+          'window/showStatus',
+          '$/cancelRequest',
+        ],
+      ),
+      lspRequestAndWaitUntilResponse('textDocument/completion', {
+        textDocument: {uri: '<PLACEHOLDER_PROJECT_URL>/completion-metrics.js'},
+        position: {line: 6, character: 3},
+      }).verifyAllLSPMessagesInStep(
+        [
+          {
+            method: 'textDocument/completion',
+            result: {
+              isIncomplete: false,
+              items: [
+                {
+                  label: 'test',
+                  kind: 6,
+                  detail: 'string',
+                  sortText: '00000000000000000000',
+                  insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {
+                        line: 6,
+                        character: 2,
+                      },
+                      end: {
+                        line: 6,
+                        character: 3,
+                      },
+                    },
+                    newText: 'test',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'member',
+                      {
+                        token: 'tAUTO332',
+                        index: 0,
+                        session_requests: 2,
+                        typed_length: 1,
+                        completion: 'test',
+                      },
+                    ],
+                  },
+                },
+                {
+                  label: 'hasOwnProperty',
+                  kind: 3,
+                  detail: '(prop: mixed) => boolean',
+                  documentation: {
+                    kind: 'markdown',
+                    value:
+                      'Determines whether an object has a property with the specified name.',
+                  },
+                  sortText: '00000000000000000001',
+                  insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {
+                        line: 6,
+                        character: 2,
+                      },
+                      end: {
+                        line: 6,
+                        character: 3,
+                      },
+                    },
+                    newText: 'hasOwnProperty',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'member',
+                      {
+                        token: 'tAUTO332',
+                        index: 1,
+                        session_requests: 2,
+                        typed_length: 1,
+                        completion: 'hasOwnProperty',
+                      },
+                    ],
+                  },
+                },
+                {
+                  label: 'isPrototypeOf',
+                  kind: 3,
+                  detail: '(o: mixed) => boolean',
+                  documentation: {
+                    kind: 'markdown',
+                    value:
+                      "Determines whether an object exists in another object's prototype chain.",
+                  },
+                  sortText: '00000000000000000002',
+                  insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {
+                        line: 6,
+                        character: 2,
+                      },
+                      end: {
+                        line: 6,
+                        character: 3,
+                      },
+                    },
+                    newText: 'isPrototypeOf',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'member',
+                      {
+                        token: 'tAUTO332',
+                        index: 2,
+                        session_requests: 2,
+                        typed_length: 1,
+                        completion: 'isPrototypeOf',
+                      },
+                    ],
+                  },
+                },
+                {
+                  label: 'propertyIsEnumerable',
+                  kind: 3,
+                  detail: '(prop: mixed) => boolean',
+                  documentation: {
+                    kind: 'markdown',
+                    value:
+                      'Determines whether a specified property is enumerable.',
+                  },
+                  sortText: '00000000000000000003',
+                  insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {
+                        line: 6,
+                        character: 2,
+                      },
+                      end: {
+                        line: 6,
+                        character: 3,
+                      },
+                    },
+                    newText: 'propertyIsEnumerable',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'member',
+                      {
+                        token: 'tAUTO332',
+                        index: 3,
+                        session_requests: 2,
+                        typed_length: 1,
+                        completion: 'propertyIsEnumerable',
+                      },
+                    ],
+                  },
+                },
+                {
+                  label: 'toLocaleString',
+                  kind: 3,
+                  detail: '() => string',
+                  documentation: {
+                    kind: 'markdown',
+                    value:
+                      'Returns a date converted to a string using the current locale.',
+                  },
+                  sortText: '00000000000000000004',
+                  insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {
+                        line: 6,
+                        character: 2,
+                      },
+                      end: {
+                        line: 6,
+                        character: 3,
+                      },
+                    },
+                    newText: 'toLocaleString',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'member',
+                      {
+                        token: 'tAUTO332',
+                        index: 4,
+                        session_requests: 2,
+                        typed_length: 1,
+                        completion: 'toLocaleString',
+                      },
+                    ],
+                  },
+                },
+                {
+                  label: 'toString',
+                  kind: 3,
+                  detail: '() => string',
+                  documentation: {
+                    kind: 'markdown',
+                    value: 'Returns a string representation of an object.',
+                  },
+                  sortText: '00000000000000000005',
+                  insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {
+                        line: 6,
+                        character: 2,
+                      },
+                      end: {
+                        line: 6,
+                        character: 3,
+                      },
+                    },
+                    newText: 'toString',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'member',
+                      {
+                        token: 'tAUTO332',
+                        index: 5,
+                        session_requests: 2,
+                        typed_length: 1,
+                        completion: 'toString',
+                      },
+                    ],
+                  },
+                },
+                {
+                  label: 'valueOf',
+                  kind: 3,
+                  detail: '() => mixed',
+                  documentation: {
+                    kind: 'markdown',
+                    value:
+                      'Returns the primitive value of the specified object.',
+                  },
+                  sortText: '00000000000000000006',
+                  insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {
+                        line: 6,
+                        character: 2,
+                      },
+                      end: {
+                        line: 6,
+                        character: 3,
+                      },
+                    },
+                    newText: 'valueOf',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'member',
+                      {
+                        token: 'tAUTO332',
+                        index: 6,
+                        session_requests: 2,
+                        typed_length: 1,
+                        completion: 'valueOf',
+                      },
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+        ],
+        [
+          'textDocument/publishDiagnostics',
+          'window/showStatus',
+          '$/cancelRequest',
+        ],
+      ),
+      lspNotification('textDocument/didChange', {
+        textDocument: {
+          uri: '<PLACEHOLDER_PROJECT_URL>/completion-metrics.js',
+          version: 3,
+        },
+        contentChanges: [
+          {
+            text: `// @flow
+declare class A{
+  test: string;
+}
+
+const b = new A();
+
+b.te
+`,
+          },
+        ],
+      }).verifyAllLSPMessagesInStep(
+        [],
+        [
+          'textDocument/publishDiagnostics',
+          'window/showStatus',
+          '$/cancelRequest',
+        ],
+      ),
+      lspRequestAndWaitUntilResponse('textDocument/completion', {
+        textDocument: {uri: '<PLACEHOLDER_PROJECT_URL>/completion-metrics.js'},
+        position: {line: 7, character: 2},
+      }).verifyAllLSPMessagesInStep(
+        [
+          {
+            method: 'textDocument/completion',
+            result: {
+              isIncomplete: false,
+              items: [
+                {
+                  label: 'test',
+                  kind: 6,
+                  detail: 'string',
+                  sortText: '00000000000000000000',
+                  insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {
+                        line: 7,
+                        character: 2,
+                      },
+                      end: {
+                        line: 7,
+                        character: 4,
+                      },
+                    },
+                    newText: 'test',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'member',
+                      {
+                        token: 'AUTO332te',
+                        index: 0,
+                        session_requests: 1,
+                        typed_length: 0,
+                        completion: 'test',
+                      },
+                    ],
+                  },
+                },
+                {
+                  label: 'hasOwnProperty',
+                  kind: 3,
+                  detail: '(prop: mixed) => boolean',
+                  documentation: {
+                    kind: 'markdown',
+                    value:
+                      'Determines whether an object has a property with the specified name.',
+                  },
+                  sortText: '00000000000000000001',
+                  insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {
+                        line: 7,
+                        character: 2,
+                      },
+                      end: {
+                        line: 7,
+                        character: 4,
+                      },
+                    },
+                    newText: 'hasOwnProperty',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'member',
+                      {
+                        token: 'AUTO332te',
+                        index: 1,
+                        session_requests: 1,
+                        typed_length: 0,
+                        completion: 'hasOwnProperty',
+                      },
+                    ],
+                  },
+                },
+                {
+                  label: 'isPrototypeOf',
+                  kind: 3,
+                  detail: '(o: mixed) => boolean',
+                  documentation: {
+                    kind: 'markdown',
+                    value:
+                      "Determines whether an object exists in another object's prototype chain.",
+                  },
+                  sortText: '00000000000000000002',
+                  insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {
+                        line: 7,
+                        character: 2,
+                      },
+                      end: {
+                        line: 7,
+                        character: 4,
+                      },
+                    },
+                    newText: 'isPrototypeOf',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'member',
+                      {
+                        token: 'AUTO332te',
+                        index: 2,
+                        session_requests: 1,
+                        typed_length: 0,
+                        completion: 'isPrototypeOf',
+                      },
+                    ],
+                  },
+                },
+                {
+                  label: 'propertyIsEnumerable',
+                  kind: 3,
+                  detail: '(prop: mixed) => boolean',
+                  documentation: {
+                    kind: 'markdown',
+                    value:
+                      'Determines whether a specified property is enumerable.',
+                  },
+                  sortText: '00000000000000000003',
+                  insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {
+                        line: 7,
+                        character: 2,
+                      },
+                      end: {
+                        line: 7,
+                        character: 4,
+                      },
+                    },
+                    newText: 'propertyIsEnumerable',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'member',
+                      {
+                        token: 'AUTO332te',
+                        index: 3,
+                        session_requests: 1,
+                        typed_length: 0,
+                        completion: 'propertyIsEnumerable',
+                      },
+                    ],
+                  },
+                },
+                {
+                  label: 'toLocaleString',
+                  kind: 3,
+                  detail: '() => string',
+                  documentation: {
+                    kind: 'markdown',
+                    value:
+                      'Returns a date converted to a string using the current locale.',
+                  },
+                  sortText: '00000000000000000004',
+                  insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {
+                        line: 7,
+                        character: 2,
+                      },
+                      end: {
+                        line: 7,
+                        character: 4,
+                      },
+                    },
+                    newText: 'toLocaleString',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'member',
+                      {
+                        token: 'AUTO332te',
+                        index: 4,
+                        session_requests: 1,
+                        typed_length: 0,
+                        completion: 'toLocaleString',
+                      },
+                    ],
+                  },
+                },
+                {
+                  label: 'toString',
+                  kind: 3,
+                  detail: '() => string',
+                  documentation: {
+                    kind: 'markdown',
+                    value: 'Returns a string representation of an object.',
+                  },
+                  sortText: '00000000000000000005',
+                  insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {
+                        line: 7,
+                        character: 2,
+                      },
+                      end: {
+                        line: 7,
+                        character: 4,
+                      },
+                    },
+                    newText: 'toString',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'member',
+                      {
+                        token: 'AUTO332te',
+                        index: 5,
+                        session_requests: 1,
+                        typed_length: 0,
+                        completion: 'toString',
+                      },
+                    ],
+                  },
+                },
+                {
+                  label: 'valueOf',
+                  kind: 3,
+                  detail: '() => mixed',
+                  documentation: {
+                    kind: 'markdown',
+                    value:
+                      'Returns the primitive value of the specified object.',
+                  },
+                  sortText: '00000000000000000006',
+                  insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {
+                        line: 7,
+                        character: 2,
+                      },
+                      end: {
+                        line: 7,
+                        character: 4,
+                      },
+                    },
+                    newText: 'valueOf',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'member',
+                      {
+                        token: 'AUTO332te',
+                        index: 6,
+                        session_requests: 1,
+                        typed_length: 0,
+                        completion: 'valueOf',
+                      },
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+        ],
+        [
+          'textDocument/publishDiagnostics',
+          'window/showStatus',
+          '$/cancelRequest',
+        ],
+      ),
+      lspRequestAndWaitUntilResponse('textDocument/completion', {
+        textDocument: {uri: '<PLACEHOLDER_PROJECT_URL>/completion-metrics.js'},
+        position: {line: 7, character: 3},
+      }).verifyAllLSPMessagesInStep(
+        [
+          {
+            method: 'textDocument/completion',
+            result: {
+              isIncomplete: false,
+              items: [
+                {
+                  label: 'test',
+                  kind: 6,
+                  detail: 'string',
+                  sortText: '00000000000000000000',
+                  insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {
+                        line: 7,
+                        character: 2,
+                      },
+                      end: {
+                        line: 7,
+                        character: 4,
+                      },
+                    },
+                    newText: 'test',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'member',
+                      {
+                        token: 'tAUTO332e',
+                        index: 0,
+                        session_requests: 2,
+                        typed_length: 1,
+                        completion: 'test',
+                      },
+                    ],
+                  },
+                },
+                {
+                  label: 'hasOwnProperty',
+                  kind: 3,
+                  detail: '(prop: mixed) => boolean',
+                  documentation: {
+                    kind: 'markdown',
+                    value:
+                      'Determines whether an object has a property with the specified name.',
+                  },
+                  sortText: '00000000000000000001',
+                  insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {
+                        line: 7,
+                        character: 2,
+                      },
+                      end: {
+                        line: 7,
+                        character: 4,
+                      },
+                    },
+                    newText: 'hasOwnProperty',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'member',
+                      {
+                        token: 'tAUTO332e',
+                        index: 1,
+                        session_requests: 2,
+                        typed_length: 1,
+                        completion: 'hasOwnProperty',
+                      },
+                    ],
+                  },
+                },
+                {
+                  label: 'isPrototypeOf',
+                  kind: 3,
+                  detail: '(o: mixed) => boolean',
+                  documentation: {
+                    kind: 'markdown',
+                    value:
+                      "Determines whether an object exists in another object's prototype chain.",
+                  },
+                  sortText: '00000000000000000002',
+                  insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {
+                        line: 7,
+                        character: 2,
+                      },
+                      end: {
+                        line: 7,
+                        character: 4,
+                      },
+                    },
+                    newText: 'isPrototypeOf',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'member',
+                      {
+                        token: 'tAUTO332e',
+                        index: 2,
+                        session_requests: 2,
+                        typed_length: 1,
+                        completion: 'isPrototypeOf',
+                      },
+                    ],
+                  },
+                },
+                {
+                  label: 'propertyIsEnumerable',
+                  kind: 3,
+                  detail: '(prop: mixed) => boolean',
+                  documentation: {
+                    kind: 'markdown',
+                    value:
+                      'Determines whether a specified property is enumerable.',
+                  },
+                  sortText: '00000000000000000003',
+                  insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {
+                        line: 7,
+                        character: 2,
+                      },
+                      end: {
+                        line: 7,
+                        character: 4,
+                      },
+                    },
+                    newText: 'propertyIsEnumerable',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'member',
+                      {
+                        token: 'tAUTO332e',
+                        index: 3,
+                        session_requests: 2,
+                        typed_length: 1,
+                        completion: 'propertyIsEnumerable',
+                      },
+                    ],
+                  },
+                },
+                {
+                  label: 'toLocaleString',
+                  kind: 3,
+                  detail: '() => string',
+                  documentation: {
+                    kind: 'markdown',
+                    value:
+                      'Returns a date converted to a string using the current locale.',
+                  },
+                  sortText: '00000000000000000004',
+                  insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {
+                        line: 7,
+                        character: 2,
+                      },
+                      end: {
+                        line: 7,
+                        character: 4,
+                      },
+                    },
+                    newText: 'toLocaleString',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'member',
+                      {
+                        token: 'tAUTO332e',
+                        index: 4,
+                        session_requests: 2,
+                        typed_length: 1,
+                        completion: 'toLocaleString',
+                      },
+                    ],
+                  },
+                },
+                {
+                  label: 'toString',
+                  kind: 3,
+                  detail: '() => string',
+                  documentation: {
+                    kind: 'markdown',
+                    value: 'Returns a string representation of an object.',
+                  },
+                  sortText: '00000000000000000005',
+                  insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {
+                        line: 7,
+                        character: 2,
+                      },
+                      end: {
+                        line: 7,
+                        character: 4,
+                      },
+                    },
+                    newText: 'toString',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'member',
+                      {
+                        token: 'tAUTO332e',
+                        index: 5,
+                        session_requests: 2,
+                        typed_length: 1,
+                        completion: 'toString',
+                      },
+                    ],
+                  },
+                },
+                {
+                  label: 'valueOf',
+                  kind: 3,
+                  detail: '() => mixed',
+                  documentation: {
+                    kind: 'markdown',
+                    value:
+                      'Returns the primitive value of the specified object.',
+                  },
+                  sortText: '00000000000000000006',
+                  insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {
+                        line: 7,
+                        character: 2,
+                      },
+                      end: {
+                        line: 7,
+                        character: 4,
+                      },
+                    },
+                    newText: 'valueOf',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'member',
+                      {
+                        token: 'tAUTO332e',
+                        index: 6,
+                        session_requests: 2,
+                        typed_length: 1,
+                        completion: 'valueOf',
+                      },
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+        ],
+        [
+          'textDocument/publishDiagnostics',
+          'window/showStatus',
+          '$/cancelRequest',
+        ],
+      ),
+      lspRequestAndWaitUntilResponse('textDocument/completion', {
+        textDocument: {uri: '<PLACEHOLDER_PROJECT_URL>/completion-metrics.js'},
+        position: {line: 7, character: 4},
+      }).verifyAllLSPMessagesInStep(
+        [
+          {
+            method: 'textDocument/completion',
+            result: {
+              isIncomplete: false,
+              items: [
+                {
+                  label: 'test',
+                  kind: 6,
+                  detail: 'string',
+                  sortText: '00000000000000000000',
+                  insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {
+                        line: 7,
+                        character: 2,
+                      },
+                      end: {
+                        line: 7,
+                        character: 4,
+                      },
+                    },
+                    newText: 'test',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'member',
+                      {
+                        token: 'teAUTO332',
+                        index: 0,
+                        session_requests: 3,
+                        typed_length: 2,
+                        completion: 'test',
+                      },
+                    ],
+                  },
+                },
+                {
+                  label: 'hasOwnProperty',
+                  kind: 3,
+                  detail: '(prop: mixed) => boolean',
+                  documentation: {
+                    kind: 'markdown',
+                    value:
+                      'Determines whether an object has a property with the specified name.',
+                  },
+                  sortText: '00000000000000000001',
+                  insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {
+                        line: 7,
+                        character: 2,
+                      },
+                      end: {
+                        line: 7,
+                        character: 4,
+                      },
+                    },
+                    newText: 'hasOwnProperty',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'member',
+                      {
+                        token: 'teAUTO332',
+                        index: 1,
+                        session_requests: 3,
+                        typed_length: 2,
+                        completion: 'hasOwnProperty',
+                      },
+                    ],
+                  },
+                },
+                {
+                  label: 'isPrototypeOf',
+                  kind: 3,
+                  detail: '(o: mixed) => boolean',
+                  documentation: {
+                    kind: 'markdown',
+                    value:
+                      "Determines whether an object exists in another object's prototype chain.",
+                  },
+                  sortText: '00000000000000000002',
+                  insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {
+                        line: 7,
+                        character: 2,
+                      },
+                      end: {
+                        line: 7,
+                        character: 4,
+                      },
+                    },
+                    newText: 'isPrototypeOf',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'member',
+                      {
+                        token: 'teAUTO332',
+                        index: 2,
+                        session_requests: 3,
+                        typed_length: 2,
+                        completion: 'isPrototypeOf',
+                      },
+                    ],
+                  },
+                },
+                {
+                  label: 'propertyIsEnumerable',
+                  kind: 3,
+                  detail: '(prop: mixed) => boolean',
+                  documentation: {
+                    kind: 'markdown',
+                    value:
+                      'Determines whether a specified property is enumerable.',
+                  },
+                  sortText: '00000000000000000003',
+                  insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {
+                        line: 7,
+                        character: 2,
+                      },
+                      end: {
+                        line: 7,
+                        character: 4,
+                      },
+                    },
+                    newText: 'propertyIsEnumerable',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'member',
+                      {
+                        token: 'teAUTO332',
+                        index: 3,
+                        session_requests: 3,
+                        typed_length: 2,
+                        completion: 'propertyIsEnumerable',
+                      },
+                    ],
+                  },
+                },
+                {
+                  label: 'toLocaleString',
+                  kind: 3,
+                  detail: '() => string',
+                  documentation: {
+                    kind: 'markdown',
+                    value:
+                      'Returns a date converted to a string using the current locale.',
+                  },
+                  sortText: '00000000000000000004',
+                  insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {
+                        line: 7,
+                        character: 2,
+                      },
+                      end: {
+                        line: 7,
+                        character: 4,
+                      },
+                    },
+                    newText: 'toLocaleString',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'member',
+                      {
+                        token: 'teAUTO332',
+                        index: 4,
+                        session_requests: 3,
+                        typed_length: 2,
+                        completion: 'toLocaleString',
+                      },
+                    ],
+                  },
+                },
+                {
+                  label: 'toString',
+                  kind: 3,
+                  detail: '() => string',
+                  documentation: {
+                    kind: 'markdown',
+                    value: 'Returns a string representation of an object.',
+                  },
+                  sortText: '00000000000000000005',
+                  insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {
+                        line: 7,
+                        character: 2,
+                      },
+                      end: {
+                        line: 7,
+                        character: 4,
+                      },
+                    },
+                    newText: 'toString',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'member',
+                      {
+                        token: 'teAUTO332',
+                        index: 5,
+                        session_requests: 3,
+                        typed_length: 2,
+                        completion: 'toString',
+                      },
+                    ],
+                  },
+                },
+                {
+                  label: 'valueOf',
+                  kind: 3,
+                  detail: '() => mixed',
+                  documentation: {
+                    kind: 'markdown',
+                    value:
+                      'Returns the primitive value of the specified object.',
+                  },
+                  sortText: '00000000000000000006',
+                  insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {
+                        line: 7,
+                        character: 2,
+                      },
+                      end: {
+                        line: 7,
+                        character: 4,
+                      },
+                    },
+                    newText: 'valueOf',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'member',
+                      {
+                        token: 'teAUTO332',
+                        index: 6,
+                        session_requests: 3,
+                        typed_length: 2,
+                        completion: 'valueOf',
+                      },
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+        ],
+        [
+          'textDocument/publishDiagnostics',
+          'window/showStatus',
+          '$/cancelRequest',
+        ],
+      ),
+      lspRequestAndWaitUntilResponse('textDocument/completion', {
+        textDocument: {
+          uri: '<PLACEHOLDER_PROJECT_URL>/completion_metrics_collision.js',
+        },
+        position: {line: 7, character: 4},
+      }).verifyAllLSPMessagesInStep(
+        [
+          {
+            method: 'textDocument/completion',
+            result: {
+              isIncomplete: false,
+              items: [
+                {
+                  label: 'test',
+                  kind: 6,
+                  detail: 'string',
+                  sortText: '00000000000000000000',
+                  insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {
+                        line: 7,
+                        character: 2,
+                      },
+                      end: {
+                        line: 7,
+                        character: 4,
+                      },
+                    },
+                    newText: 'test',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'member',
+                      {
+                        token: 'teAUTO332',
+                        index: 0,
+                        session_requests: 1,
+                        typed_length: 2,
+                        completion: 'test',
+                      },
+                    ],
+                  },
+                },
+                {
+                  label: 'hasOwnProperty',
+                  kind: 3,
+                  detail: '(prop: mixed) => boolean',
+                  documentation: {
+                    kind: 'markdown',
+                    value:
+                      'Determines whether an object has a property with the specified name.',
+                  },
+                  sortText: '00000000000000000001',
+                  insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {
+                        line: 7,
+                        character: 2,
+                      },
+                      end: {
+                        line: 7,
+                        character: 4,
+                      },
+                    },
+                    newText: 'hasOwnProperty',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'member',
+                      {
+                        token: 'teAUTO332',
+                        index: 1,
+                        session_requests: 1,
+                        typed_length: 2,
+                        completion: 'hasOwnProperty',
+                      },
+                    ],
+                  },
+                },
+                {
+                  label: 'isPrototypeOf',
+                  kind: 3,
+                  detail: '(o: mixed) => boolean',
+                  documentation: {
+                    kind: 'markdown',
+                    value:
+                      "Determines whether an object exists in another object's prototype chain.",
+                  },
+                  sortText: '00000000000000000002',
+                  insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {
+                        line: 7,
+                        character: 2,
+                      },
+                      end: {
+                        line: 7,
+                        character: 4,
+                      },
+                    },
+                    newText: 'isPrototypeOf',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'member',
+                      {
+                        token: 'teAUTO332',
+                        index: 2,
+                        session_requests: 1,
+                        typed_length: 2,
+                        completion: 'isPrototypeOf',
+                      },
+                    ],
+                  },
+                },
+                {
+                  label: 'propertyIsEnumerable',
+                  kind: 3,
+                  detail: '(prop: mixed) => boolean',
+                  documentation: {
+                    kind: 'markdown',
+                    value:
+                      'Determines whether a specified property is enumerable.',
+                  },
+                  sortText: '00000000000000000003',
+                  insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {
+                        line: 7,
+                        character: 2,
+                      },
+                      end: {
+                        line: 7,
+                        character: 4,
+                      },
+                    },
+                    newText: 'propertyIsEnumerable',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'member',
+                      {
+                        token: 'teAUTO332',
+                        index: 3,
+                        session_requests: 1,
+                        typed_length: 2,
+                        completion: 'propertyIsEnumerable',
+                      },
+                    ],
+                  },
+                },
+                {
+                  label: 'toLocaleString',
+                  kind: 3,
+                  detail: '() => string',
+                  documentation: {
+                    kind: 'markdown',
+                    value:
+                      'Returns a date converted to a string using the current locale.',
+                  },
+                  sortText: '00000000000000000004',
+                  insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {
+                        line: 7,
+                        character: 2,
+                      },
+                      end: {
+                        line: 7,
+                        character: 4,
+                      },
+                    },
+                    newText: 'toLocaleString',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'member',
+                      {
+                        token: 'teAUTO332',
+                        index: 4,
+                        session_requests: 1,
+                        typed_length: 2,
+                        completion: 'toLocaleString',
+                      },
+                    ],
+                  },
+                },
+                {
+                  label: 'toString',
+                  kind: 3,
+                  detail: '() => string',
+                  documentation: {
+                    kind: 'markdown',
+                    value: 'Returns a string representation of an object.',
+                  },
+                  sortText: '00000000000000000005',
+                  insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {
+                        line: 7,
+                        character: 2,
+                      },
+                      end: {
+                        line: 7,
+                        character: 4,
+                      },
+                    },
+                    newText: 'toString',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'member',
+                      {
+                        token: 'teAUTO332',
+                        index: 5,
+                        session_requests: 1,
+                        typed_length: 2,
+                        completion: 'toString',
+                      },
+                    ],
+                  },
+                },
+                {
+                  label: 'valueOf',
+                  kind: 3,
+                  detail: '() => mixed',
+                  documentation: {
+                    kind: 'markdown',
+                    value:
+                      'Returns the primitive value of the specified object.',
+                  },
+                  sortText: '00000000000000000006',
+                  insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {
+                        line: 7,
+                        character: 2,
+                      },
+                      end: {
+                        line: 7,
+                        character: 4,
+                      },
+                    },
+                    newText: 'valueOf',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'member',
+                      {
+                        token: 'teAUTO332',
+                        index: 6,
+                        session_requests: 1,
+                        typed_length: 2,
+                        completion: 'valueOf',
                       },
                     ],
                   },
