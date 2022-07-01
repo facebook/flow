@@ -26,7 +26,7 @@
 )
 
 (library
-  (name flow_saved_state_stubs)
+  (name flow_saved_state_fb_fetcher_stubs)
   (wrapped false)
   (modules saved_state_fb_fetcher)
   (libraries

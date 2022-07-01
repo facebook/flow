@@ -10,6 +10,7 @@
     flow_parser
     flow_parsing
     flow_procs
+    flow_saved_state_fb_fetcher
     flow_server_env
     flow_server_files
     flow_server_monitor_listener_state

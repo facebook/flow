@@ -6,7 +6,6 @@
     flow_common_profiling
     flow_config
     flow_parser_utils
-    flow_saved_state_stubs
     flow_server_env
     flow_server_files
     flow_service_saved_state_compression
