@@ -120,9 +120,9 @@ Cannot assign `42` to `p` because number [1] is incompatible with string [2]. [i
              ^^ [1]
 
 References:
-   test.js:44:8
-   44|   var {p}: T = {p: "foo"};
-              ^ [2]
+   test.js:46:16
+   46|   type T = {p: string};
+                      ^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:79:7

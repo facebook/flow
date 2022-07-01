@@ -3108,22 +3108,6 @@ struct
             let reason = mk_reason (RIdentifier (OrdinaryName name)) name_loc in
             declare_var cx (OrdinaryName name) name_loc;
 
-            (* The bindings introduced by destructuring an annotation should themselves behave
-             * like annotations. That is, subsequent writes to this binding should be compatible
-             * with the relevant part of the annotation. *)
-            let t =
-              if has_anno then
-                AnnotT
-                  ( reason,
-                    Tvar.mk_where cx reason (fun t' ->
-                        Flow.flow cx (t, BecomeT { reason; t = t'; empty_success = true })
-                    ),
-                    false
-                  )
-              else
-                t
-            in
-
             (* If this is a variable declaration without a type annotation
                constraining writes, we need the type of the identifier to be the
                general type of the variable in order to detect if a generic escapes

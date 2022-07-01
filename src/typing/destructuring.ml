@@ -251,7 +251,13 @@ module Make (Env : Env_sig.S) (Statement : Statement_sig.S with module Env := En
        * contain inferred parts. For example, a class's instance type where one of
        * the fields is unannotated. *)
       if annot then
-        Flow_js.mk_typeof_annotation cx reason current
+        AnnotT
+          ( reason,
+            Tvar.mk_where cx reason (fun t' ->
+                Flow_js.flow cx (current, BecomeT { reason; t = t'; empty_success = true })
+            ),
+            false
+          )
       else
         current
     in

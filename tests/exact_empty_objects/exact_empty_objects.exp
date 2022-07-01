@@ -671,9 +671,9 @@ Cannot cast `a` to empty because string [1] is incompatible with empty [2]. [inc
           ^
 
 References:
-   test.js:27:37
+   test.js:27:49
    27| function paramDefaultDestructuring({a, b}: {a?: string, b?: number} = {}) {
-                                           ^ [1]
+                                                       ^^^^^^ [1]
    test.js:31:7
    31|   (a: empty); // ERROR
              ^^^^^ [2]
@@ -688,9 +688,9 @@ Cannot cast `a` to empty because undefined [1] is incompatible with empty [2]. [
           ^
 
 References:
-   test.js:27:37
+   test.js:27:49
    27| function paramDefaultDestructuring({a, b}: {a?: string, b?: number} = {}) {
-                                           ^ [1]
+                                                       ^^^^^^ [1]
    test.js:31:7
    31|   (a: empty); // ERROR
              ^^^^^ [2]

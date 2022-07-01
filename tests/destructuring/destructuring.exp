@@ -7,9 +7,9 @@ Cannot assign `42` to `p` because number [1] is incompatible with string [2]. [i
           ^^ [1]
 
 References:
-   annot.js:2:6
-   2| var {p}: T = {p: "foo"};
-           ^ [2]
+   annot.js:4:14
+   4| type T = {p: string};
+                   ^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------- annotations_inside_destructuring.js:4:11
@@ -217,9 +217,9 @@ Cannot assign `null` to `p` because null [1] is incompatible with number [2]. [i
              ^^^^ [1]
 
 References:
-   bad_annot.js:28:3
-   28|   p // weird: string ~/~> number. C#p is inferred, with both number and string inflows
-         ^ [2]
+   bad_annot.js:20:16
+   20|       this.p = 0;
+                      ^ [2]
 
 
 Error -------------------------------------------------------------------------------------------------- computed.js:2:2
@@ -483,12 +483,15 @@ Cannot assign `p` to `p` because boolean [1] is incompatible with string [2]. [i
 
    defaults.js:43:3
    43|   p = true // error: boolean ~> string
-         ^ [2]
+         ^
 
 References:
    defaults.js:43:7
    43|   p = true // error: boolean ~> string
              ^^^^ [1]
+   defaults.js:45:6
+   45|   p: string
+            ^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------- defaults.js:47:6
@@ -515,9 +518,9 @@ Cannot cast `p` to undefined because string [1] is incompatible with undefined [
           ^
 
 References:
-   defaults.js:43:3
-   43|   p = true // error: boolean ~> string
-         ^ [1]
+   defaults.js:45:6
+   45|   p: string
+            ^^^^^^ [1]
    defaults.js:49:6
    49|   (p:void); // error: string ~> void
             ^^^^ [2]
@@ -532,9 +535,9 @@ Cannot assign boolean to `p` because boolean [1] is incompatible with string [2]
              ^^^^ [1]
 
 References:
-   defaults.js:53:3
-   53|   p = true // error: boolean ~> string
-         ^ [2]
+   defaults.js:55:6
+   55|   p: string
+            ^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------- defaults.js:57:6
@@ -561,9 +564,9 @@ Cannot cast `p` to undefined because string [1] is incompatible with undefined [
         ^
 
 References:
-   defaults.js:53:3
-   53|   p = true // error: boolean ~> string
-         ^ [1]
+   defaults.js:55:6
+   55|   p: string
+            ^^^^^^ [1]
    defaults.js:59:4
    59| (p:void); // error: string ~> void
           ^^^^ [2]
