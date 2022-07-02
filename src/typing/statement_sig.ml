@@ -15,7 +15,7 @@ module type S = sig
 
   module Import_export : module type of Import_export.Make (Env)
 
-  module Toplevels : module type of Toplevels.LexicalToplevels (Env) (Abnormal)
+  module Toplevels : module type of Toplevels.Make (Env) (Abnormal)
 
   module Anno : Type_annotation_sig.S with module Env := Env
 

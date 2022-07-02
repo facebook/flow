@@ -10,31 +10,10 @@
 module Ast = Flow_ast
 module Flow = Flow_js
 
-module type Ordering = sig
-  type t
-
-  type loc
-
-  val make : Context.t -> (loc, loc) Ast.Statement.t list -> t
-
-  val compare : t -> (loc, loc) Ast.Statement.t -> (loc, loc) Ast.Statement.t -> int
-end
-
-module Toplevels
-    (Order : Ordering with type loc = ALoc.t)
-    (Env : Env_sig.S)
-    (Abnormal : Abnormal_sig.S with module Env := Env) =
-struct
+module Make (Env : Env_sig.S) (Abnormal : Abnormal_sig.S with module Env := Env) = struct
   let toplevels statement cx stmts =
-    let ordering = Order.make cx stmts in
-    (* Enumerate and sort statements using the order specified *)
-    let stmts =
-      Base.List.mapi stmts ~f:(fun i s -> (i, s))
-      |> Base.List.sort ~compare:(fun a b -> Order.compare ordering (snd a) (snd b))
-    in
-    (* Check the statement in the new order, but also find the first
-       statement that causes abnormal control flow in the *original*
-       ordering *)
+    let stmts = Base.List.mapi stmts ~f:(fun i s -> (i, s)) in
+    (* Find the first statement that causes abnormal control flow in the *original* ordering *)
     let (rev_acc, abnormal) =
       Base.List.fold
         ~init:([], None)
@@ -57,12 +36,7 @@ struct
             ((i, stmt) :: acc, acc_abnormal))
         stmts
     in
-    (* Undo the reordering of the now-checked statements *)
-    let stmts =
-      List.rev rev_acc
-      |> Base.List.sort ~compare:(fun a b -> Stdlib.compare (fst a) (fst b))
-      |> Base.List.map ~f:snd
-    in
+    let stmts = Base.List.rev_map rev_acc ~f:snd in
     (* If there was any abnormal control flow, add errors on any statements that are
        lexically after the place where abnormal control was raised *)
     match abnormal with
@@ -90,15 +64,3 @@ struct
       Abnormal.throw_stmts_control_flow_exception stmts abnormal
     | None -> stmts
 end
-
-module LexicalOrdering : Ordering with type loc = ALoc.t and type t = unit = struct
-  type t = unit
-
-  type loc = ALoc.t
-
-  let make _ _ = ()
-
-  let compare _ (l1, _) (l2, _) = Loc.compare (ALoc.to_loc_exn l1) (ALoc.to_loc_exn l2)
-end
-
-module LexicalToplevels = Toplevels (LexicalOrdering)

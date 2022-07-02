@@ -129,7 +129,7 @@ module Make
     (T : Func_class_sig_types.Func.S with module Config := CT and module Param := F.Types) :
   S with module Config_types := CT and module Config := C and module Param := F and module Types = T =
 struct
-  module Toplevels = Toplevels.LexicalToplevels (Env) (Abnormal)
+  module Toplevels = Toplevels.Make (Env) (Abnormal)
   module Types = T
   open Func_class_sig_types.Func
 
