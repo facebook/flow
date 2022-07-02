@@ -33,7 +33,7 @@ struct
   module Abnormal = Abnormal.Make (Env)
   module Anno = Type_annotation.Make (Env) (Abnormal) (Statement)
   module Class_type_sig = Anno.Class_type_sig
-  module Toplevels = Toplevels.DependencyToplevels (Env) (Abnormal)
+  module Toplevels = Toplevels.LexicalToplevels (Env) (Abnormal)
   module Refinement = Refinement.Make (Env)
   module Import_export = Import_export.Make (Env)
   module Func_stmt_config = Func_stmt_config

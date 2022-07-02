@@ -1,2 +1,0 @@
-[options]
-experimental.statement_reorder_checking=dependency

@@ -63,7 +63,6 @@ type metadata = {
   relay_integration_module_prefix_includes: Str.regexp list;
   root: Path.t;
   run_post_inference_implicit_instantiation: bool;
-  statement_reorder_checking: Options.statement_order_mode;
   strict_es6_import_export: bool;
   strict_es6_import_export_excludes: string list;
   strip_root: bool;
@@ -270,7 +269,6 @@ let metadata_of_options options =
     root = Options.root options;
     run_post_inference_implicit_instantiation =
       Options.run_post_inference_implicit_instantiation options;
-    statement_reorder_checking = Options.statement_reorder_checking options;
     strict_es6_import_export = Options.strict_es6_import_export options;
     strict_es6_import_export_excludes = Options.strict_es6_import_export_excludes options;
     strip_root = Options.should_strip_root options;
@@ -465,8 +463,6 @@ let local_inference_annotation_dirs cx = cx.metadata.local_inference_annotation_
 let enforce_this_annotations cx = cx.metadata.enforce_this_annotations
 
 let experimental_infer_indexers cx = cx.metadata.experimental_infer_indexers
-
-let statement_reorder_checking cx = cx.metadata.statement_reorder_checking
 
 let cycle_errors cx = cx.metadata.cycle_errors
 

@@ -233,8 +233,6 @@ val shm_heap_size : config -> int
 
 val shm_log_level : config -> int
 
-val statement_reorder_checking : config -> Options.statement_order_mode
-
 val strict_es6_import_export : config -> bool
 
 val strict_es6_import_export_excludes : config -> string list

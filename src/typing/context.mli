@@ -83,7 +83,6 @@ type metadata = {
   relay_integration_module_prefix_includes: Str.regexp list;
   root: Path.t;
   run_post_inference_implicit_instantiation: bool;
-  statement_reorder_checking: Options.statement_order_mode;
   strict_es6_import_export: bool;
   strict_es6_import_export_excludes: string list;
   strip_root: bool;
@@ -195,8 +194,6 @@ val local_inference_annotation_dirs : t -> string list
 val enforce_this_annotations : t -> bool
 
 val experimental_infer_indexers : t -> bool
-
-val statement_reorder_checking : t -> Options.statement_order_mode
 
 val cycle_errors : t -> bool
 

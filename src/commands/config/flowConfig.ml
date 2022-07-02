@@ -126,7 +126,6 @@ module Opts = struct
     shm_hash_table_pow: int;
     shm_heap_size: int;
     shm_log_level: int;
-    statement_reorder_checking: Options.statement_order_mode;
     strict_es6_import_export: bool;
     strict_es6_import_export_excludes: string list;
     suppress_types: SSet.t;
@@ -259,7 +258,6 @@ module Opts = struct
       shm_hash_table_pow = 19;
       shm_heap_size = (* 25GB *) 1024 * 1024 * 1024 * 25;
       shm_log_level = 0;
-      statement_reorder_checking = Options.Lexical;
       strict_es6_import_export = false;
       strict_es6_import_export_excludes = [];
       suppress_types = SSet.empty |> SSet.add "$FlowFixMe";
@@ -503,16 +501,6 @@ module Opts = struct
 
   let enforce_this_annotations =
     boolean (fun opts v -> Ok { opts with enforce_this_annotations = v })
-
-  let statement_reorder_checking_parser =
-    enum
-      [
-        ("lexical", Options.Lexical);
-        ("dependency", Options.Dependency);
-        ("lexical_with_dependency_validation", Options.LexicalWithDependencyValidation);
-      ]
-      (fun opts v -> Ok { opts with statement_reorder_checking = v }
-    )
 
   let post_inference_implicit_instantiation_parser =
     boolean (fun opts v -> Ok { opts with run_post_inference_implicit_instantiation = v })
@@ -865,7 +853,6 @@ module Opts = struct
       ( "experimental.run_post_inference_implicit_instantiation",
         post_inference_implicit_instantiation_parser
       );
-      ("experimental.statement_reorder_checking", statement_reorder_checking_parser);
       ("experimental.strict_call_arity", enforce_strict_call_arity_parser);
       ("experimental.strict_es6_import_export", strict_es6_import_export_parser);
       ("experimental.strict_es6_import_export.excludes", strict_es6_import_export_excludes_parser);
@@ -1636,8 +1623,6 @@ let shm_hash_table_pow c = c.options.Opts.shm_hash_table_pow
 let shm_heap_size c = c.options.Opts.shm_heap_size
 
 let shm_log_level c = c.options.Opts.shm_log_level
-
-let statement_reorder_checking c = c.options.Opts.statement_reorder_checking
 
 let strict_es6_import_export c = c.options.Opts.strict_es6_import_export
 
