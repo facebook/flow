@@ -302,10 +302,8 @@ let test_case relative_path file_name _ =
  * from the parsed AST. *)
 let blocklist = SSet.of_list ["invariant_reachability/index.js"; "return/implicit_void.js"]
 
-let tests =
-  let relative_test_dir = "flow/tests" in
-  let root = Base.Option.value_exn (Sys_utils.realpath relative_test_dir) in
-  let files = CommandUtils.expand_file_list [relative_test_dir] in
+let tests root =
+  let files = CommandUtils.expand_file_list [root] in
   let tests =
     let slash_regex = Str.regexp_string "/" in
     SSet.fold
@@ -317,7 +315,7 @@ let tests =
           let test_name =
             relative_path |> Str.global_replace slash_regex "_" |> Filename.chop_extension
           in
-          (test_name >:: test_case relative_path (relative_test_dir ^ "/" ^ relative_path)) :: acc)
+          (test_name >:: test_case relative_path (root ^ "/" ^ relative_path)) :: acc)
       files
       []
   in
@@ -327,4 +325,24 @@ let _handle =
   let one_gig = 1024 * 1024 * 1024 in
   SharedMem.(init ~num_workers:0 { heap_size = 5 * one_gig; hash_table_pow = 19; log_level = 0 })
 
-let () = run_test_tt_main tests
+let tests_dir = OUnitConf.make_string "dir" "tests" "Path to tests/ dir"
+
+let () =
+  (* args copied from OUnitCore *)
+  let only_test = ref [] in
+  let list_test = ref false in
+  let extra_specs =
+    [
+      ( "-only-test",
+        Arg.String (fun str -> only_test := str :: !only_test),
+        "path Run only the selected tests."
+      );
+      ("-list-test", Arg.Set list_test, " List tests DERP");
+    ]
+  in
+  let conf = !OUnitCore.run_test_tt_main_conf extra_specs in
+  (* reset Arg so run_test_tt_main can generate its own conf *)
+  Arg.current := 0;
+  let relative_test_dir = tests_dir conf in
+  let root = Base.Option.value_exn (Sys_utils.realpath relative_test_dir) in
+  run_test_tt_main (tests root)
