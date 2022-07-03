@@ -9,3 +9,5 @@
   )
   (preprocess (pps visitors.ppx ppx_deriving.show ppx_let))
 )
+
+(dirs (:standard __tests__))

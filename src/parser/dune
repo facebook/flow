@@ -1,6 +1,6 @@
 (library
  (name flow_parser)
- (wrapped false) 
+ (wrapped false)
  (modules
   (:standard \ flow_parser_js flow_parser_dot_js))
  (libraries base sedlex wtf8 flow_sedlexing collections)
@@ -12,3 +12,5 @@
  (modes js)
  (modules flow_parser_js flow_parser_dot_js)
  (libraries flow_parser js_of_ocaml))
+
+(dirs (:standard __tests__))

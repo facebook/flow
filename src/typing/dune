@@ -81,3 +81,5 @@
   (modules_without_implementation partition )
   (preprocess (pps ppx_let))
 )
+
+(dirs (:standard __tests__))

@@ -1,0 +1,4 @@
+(test
+  (name lwt_tests)
+  (libraries ounit2 flow_common_lwt)
+  (preprocess (pps lwt_ppx)))

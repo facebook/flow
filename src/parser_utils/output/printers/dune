@@ -16,3 +16,5 @@
     flow_server_utils
   )
 )
+
+(dirs (:standard __tests__))

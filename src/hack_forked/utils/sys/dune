@@ -13,3 +13,5 @@
    priorities
    processor_info
    sysinfo)))
+
+(dirs (:standard __tests__))

@@ -8,3 +8,5 @@
     flow_parser
     flow_parser_utils
     flow_third_party_sourcemaps))
+
+(dirs (:standard __tests__))

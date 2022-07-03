@@ -23,4 +23,4 @@
     (<> %{system} "macosx")
     (<> %{system} "cygwin")
     (<> %{system} "mingw64")))
-  (action (with-stdout-to %{target} (echo "(-Wl,-static-libstdc++ -lstdc++ -lpthread)"))))
+  (action (with-stdout-to %{target} (echo "(-static-libstdc++ -lstdc++ -lpthread)"))))

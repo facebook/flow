@@ -9,3 +9,5 @@
     sys_utils ; hack
     lwt)
   (preprocess (pps lwt_ppx ppx_deriving.std)))
+
+(dirs (:standard __tests__))

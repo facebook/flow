@@ -1,0 +1,6 @@
+(test
+  (name find_refs_tests)
+  (libraries
+    ounit2
+    flow_server_find_refs
+    test_injector_config))

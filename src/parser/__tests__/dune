@@ -1,0 +1,7 @@
+(test
+  (name parser_tests)
+  (libraries
+    ounit2
+    flow_parser
+    flow_parser_utils
+    test_injector_config))

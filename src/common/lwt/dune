@@ -9,3 +9,5 @@
   )
   (preprocess (pps lwt_ppx))
 )
+
+(dirs (:standard __tests__))

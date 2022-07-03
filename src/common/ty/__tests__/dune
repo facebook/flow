@@ -1,0 +1,6 @@
+(test
+  (name ty_tests)
+  (libraries
+    ounit2
+    flow_typing_ty
+    test_injector_config))

@@ -10,12 +10,12 @@
  (c_library_flags (:include heap_libc_flags.txt))
  (preprocess
   (pps ppx_deriving.std visitors.ppx))
- (libraries utils_core))
+ (libraries lz4 utils_core))
 
 (rule
   (target heap_libc_flags.txt)
   (enabled_if (= %{system} "linux"))
-  (action (with-stdout-to %{target} (echo "(-latomic)"))))
+  (action (with-stdout-to %{target} (echo "(-lrt -latomic)"))))
 
 (rule
   (target heap_libc_flags.txt)

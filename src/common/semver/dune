@@ -5,3 +5,5 @@
 
 (ocamlyacc semver_parser)
 (ocamllex semver_lexer)
+
+(dirs (:standard __tests__))
