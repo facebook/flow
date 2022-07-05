@@ -388,14 +388,6 @@ build-flow-debug: _build/scripts/ppx_gen_flowlibs.exe $(LIBFUZZY_PATH_DEP) $(BUI
 	mkdir -p bin
 	cp _build/src/flow.d.byte bin/flow$(EXE)
 
-testgen: build-flow
-	$(OCB) $(INTERNAL_FLAGS) $(INCLUDE_OPTS) -tag thread $(NATIVE_FINDLIB_OPTS) \
-	 	-lflags "$(LINKER_FLAGS)" \
-		$(RELEASE_TAGS) \
-		testgen/flowtestgen.native
-	mkdir -p bin
-	cp _build/testgen/flowtestgen.native bin/flowtestgen$(EXE)
-
 %.h: $(subst _build/,,$@)
 	mkdir -p $(dir $@)
 	cp $(subst _build/,,$@) $@
