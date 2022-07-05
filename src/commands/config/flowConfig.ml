@@ -1350,7 +1350,7 @@ let parse config lines =
   in
   Ok (config, Base.List.rev warn_acc)
 
-let is_not_comment =
+let is_meaningful_line =
   let comment_regexps =
     [
       Str.regexp_string "#";
@@ -1362,7 +1362,8 @@ let is_not_comment =
     ]
   in
   fun (_, line) ->
-    not (Base.List.exists ~f:(fun regexp -> Str.string_match regexp line 0) comment_regexps)
+    String.length line > 0
+    && not (Base.List.exists ~f:(fun regexp -> Str.string_match regexp line 0) comment_regexps)
 
 let read filename =
   let contents = Sys_utils.cat filename in
@@ -1373,9 +1374,9 @@ let read filename =
   in
   let lines =
     contents
-    |> Sys_utils.split_lines
-    |> Base.List.mapi ~f:(fun i line -> (i + 1, String.trim line))
-    |> Base.List.filter ~f:is_not_comment
+    |> Base.String.split_lines
+    |> Base.List.rev_mapi ~f:(fun i line -> (i + 1, String.trim line))
+    |> Base.List.rev_filter ~f:is_meaningful_line
   in
   (lines, hash)
 

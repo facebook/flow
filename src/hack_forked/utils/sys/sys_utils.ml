@@ -54,10 +54,6 @@ let cat_or_failed file =
   | Failure _ ->
     None
 
-let nl_regexp = Str.regexp "[\r\n]"
-
-let split_lines = Str.split nl_regexp
-
 let exec_read cmd =
   let ic = Unix.open_process_in cmd in
   let result = input_line ic in
