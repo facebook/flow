@@ -826,17 +826,16 @@ let debug_string_of_edit ((start, end_), text) = Printf.sprintf "((%d, %d), %s)"
 
 let debug_string_of_edits = Base.List.map ~f:debug_string_of_edit %> String.concat ", "
 
-let debug_print_string_script script =
-  let print_string_result (i, chg) =
-    match chg with
-    | Replace (ol, ne) -> print_endline (Utils_js.spf "Replace %s with %s at %d" ol ne i)
-    | Insert { items = ins; _ } ->
-      print_endline (Utils_js.spf "Insert %s at %d" (String.concat ", " ins) i)
-    | Delete d -> print_endline (Utils_js.spf "Delete %s at %d" d i)
-  in
+let debug_string_of_change (i, chg) =
+  match chg with
+  | Replace (ol, ne) -> Printf.sprintf "Replace %s with %s at %d" ol ne i
+  | Insert { items = ins; _ } -> Printf.sprintf "Insert %s at %d" (String.concat ", " ins) i
+  | Delete d -> Printf.sprintf "Delete %s at %d" d i
+
+let debug_string_of_script script =
   match script with
-  | None -> print_endline "no script"
-  | Some sc -> List.iter print_string_result sc
+  | None -> "no script"
+  | Some sc -> Base.List.map ~f:debug_string_of_change sc |> String.concat "\n"
 
 let mk_insert ~sep ?(leading_sep = false) items =
   Insert { items; separator = sep; leading_separator = leading_sep }
@@ -849,34 +848,62 @@ let apply_edits source edits =
   in
   List.fold_left apply_edit source (List.rev edits)
 
-let print_debug_info source edits_trivial edits_standard =
-  print_endline (spf "Trivial edits: %s" (debug_string_of_edits edits_trivial));
-  print_endline (spf "Standard edits: %s" (debug_string_of_edits edits_standard));
-  print_endline (spf "Trivial applied: %s" (apply_edits source edits_trivial));
-  print_endline (spf "Standard applied: %s" (apply_edits source edits_standard))
-
 let assert_edits_equal ctxt ~edits ~source ~expected ~mapper =
   let edits_trivial = edits_of_source Trivial source mapper in
   let edits_standard = edits_of_source Standard source mapper in
-  print_debug_info source edits_trivial edits_standard;
-  assert_equal ~ctxt edits edits_trivial;
-  assert_equal ~ctxt edits edits_standard;
-  assert_equal ~ctxt expected (apply_edits source edits_trivial);
-  assert_equal ~ctxt expected (apply_edits source edits_standard)
+  assert_equal ~ctxt ~printer:debug_string_of_edits ~msg:"Trivial edits" edits edits_trivial;
+  assert_equal ~ctxt ~printer:debug_string_of_edits ~msg:"Standard edits" edits edits_standard;
+  assert_equal
+    ~ctxt
+    ~printer:(fun s -> s)
+    ~msg:"Trivial applied"
+    expected
+    (apply_edits source edits_trivial);
+  assert_equal
+    ~ctxt
+    ~printer:(fun s -> s)
+    ~msg:"Standard applied"
+    expected
+    (apply_edits source edits_standard)
 
 let assert_edits_differ
     ctxt ~edits_trivial ~edits_standard ~source ~trivial_expected ~standard_expected ~mapper =
   let edits_trivial' = edits_of_source Trivial source mapper in
   let edits_standard' = edits_of_source Standard source mapper in
-  assert_equal ~ctxt edits_trivial edits_trivial';
-  assert_equal ~ctxt edits_standard edits_standard';
-  assert_equal ~ctxt trivial_expected (apply_edits source edits_trivial');
-  assert_equal ~ctxt standard_expected (apply_edits source edits_standard')
+  assert_equal
+    ~ctxt
+    ~printer:debug_string_of_edits
+    ~msg:"Trivial edits"
+    edits_trivial
+    edits_trivial';
+  assert_equal
+    ~ctxt
+    ~printer:debug_string_of_edits
+    ~msg:"Standard edits"
+    edits_standard
+    edits_standard';
+  assert_equal
+    ~ctxt
+    ~printer:(fun s -> s)
+    ~msg:"Trivial applied"
+    trivial_expected
+    (apply_edits source edits_trivial');
+  assert_equal
+    ~ctxt
+    ~printer:(fun s -> s)
+    ~msg:"Standard applied"
+    standard_expected
+    (apply_edits source edits_standard')
 
 let assert_edits_equal_standard_only ctxt ~edits ~source ~expected ~mapper =
   let edits_standard = edits_of_source Standard source mapper in
-  assert_equal ~ctxt edits edits_standard;
-  assert_equal ~ctxt expected (apply_edits source edits_standard)
+  assert_equal ~ctxt ~printer:debug_string_of_edits ~msg:"Standard edits" edits edits_standard;
+  assert_equal
+    ~ctxt
+    ~printer:(fun s -> s)
+    ~msg:"Standard applied"
+    expected
+    (apply_edits source edits_standard)
 
 let tests =
   "ast_differ"
@@ -2049,8 +2076,7 @@ let tests =
              ]
            in
            let script = list_diff Standard old_list new_list in
-           debug_print_string_script script;
-           assert_equal ~ctxt (Some edits) script
+           assert_equal ~ctxt ~printer:debug_string_of_script (Some edits) script
          );
          ( "list_diff_simple5" >:: fun ctxt ->
            let a = "a" in

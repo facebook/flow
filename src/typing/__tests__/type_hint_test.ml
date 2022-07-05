@@ -246,10 +246,16 @@ end = struct
     | _ -> failwith "Must have a last statement that's an expression"
 end
 
-let mk_cx () =
+let mk_cx ~verbose () =
   let master_cx = TypeLoader.get_master_cx () in
   let aloc_table = lazy (ALoc.empty_table dummy_filename) in
   let ccx = Context.(make_ccx master_cx) in
+  let metadata =
+    if verbose then
+      metadata
+    else
+      { metadata with Context.verbose = None }
+  in
   Context.make ccx metadata dummy_filename aloc_table Context.Checking
 
 let mk_hint base_t ops =
@@ -258,22 +264,24 @@ let mk_hint base_t ops =
   |> Base.Option.value_map ~default:(Hint_t base_t) ~f:(fun l -> Hint_Decomp (l, base_t))
 
 let mk_eval_hint_test ~expected base ops ctxt =
-  let cx = mk_cx () in
+  let cx = mk_cx ~verbose:false () in
   let actual =
     mk_hint (TypeParser.parse cx base) ops
     |> Type_hint.evaluate_hint cx dummy_loc
     |> Base.Option.value_map ~default:"None" ~f:(Ty_normalizer.debug_string_of_t cx)
   in
+  (* DEBUGGING TIP: set [~verbose:true] above to print traces *)
   assert_equal ~ctxt ~printer:Base.Fn.id expected actual
 
 let mk_eval_hint_test_with_type_setup ~expected type_setup_code ops ctxt =
-  let cx = mk_cx () in
+  let cx = mk_cx ~verbose:false () in
   let (cx, base_t) = TypeLoader.get_type_of_last_expression cx type_setup_code in
   let actual =
     mk_hint base_t ops
     |> Type_hint.evaluate_hint cx dummy_loc
     |> Base.Option.value_map ~default:"None" ~f:(Ty_normalizer.debug_string_of_t cx)
   in
+  (* DEBUGGING TIP: set [~verbose:true] above to print traces *)
   assert_equal ~ctxt ~printer:Base.Fn.id expected actual
 
 let eval_hint_tests =
