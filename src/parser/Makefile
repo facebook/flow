@@ -10,9 +10,7 @@ REL_DIR=src/parser
 OCB = ocamlbuild -use-ocamlfind -I src/third-party/sedlex -I src/hack_forked/utils/collections
 
 NATIVE_OBJECT_FILES=\
-	src/hack_forked/utils/sys/files.o\
 	src/hack_forked/utils/sys/gc_profiling.o\
-	src/hack_forked/utils/sys/getrusage.o\
 	src/hack_forked/utils/sys/nproc.o\
 	src/hack_forked/utils/sys/sysinfo.o\
 	src/hack_forked/utils/sys/processor_info.o\

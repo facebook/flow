@@ -58,13 +58,6 @@ let nl_regexp = Str.regexp "[\r\n]"
 
 let split_lines = Str.split nl_regexp
 
-(** Returns true if substring occurs somewhere inside str. *)
-let string_contains str substring =
-  (* regexp_string matches only this string and nothing else. *)
-  let re = Str.regexp_string substring in
-  try Str.search_forward re str 0 >= 0 with
-  | Not_found -> false
-
 let exec_read cmd =
   let ic = Unix.open_process_in cmd in
   let result = input_line ic in
@@ -86,54 +79,11 @@ let exec_read_lines ?(reverse = false) cmd =
   else
     !result
 
-(**
- * Collects paths that satisfy a predicate, recursively traversing directories.
- *)
-let rec collect_paths path_predicate path =
-  if Sys.is_directory path then
-    path
-    |> Sys.readdir
-    |> Array.to_list
-    |> Base.List.map ~f:(Filename.concat path)
-    |> Base.List.concat_map ~f:(collect_paths path_predicate)
-  else if path_predicate path then
-    [path]
-  else
-    []
-
-(**
- * Sometimes the user wants to pass a list of paths on the command-line.
- * However, we have enough files in the codebase that sometimes that list
- * exceeds the maximum number of arguments that can be passed on the
- * command-line. To work around this, we can use the convention that some Unix
- * tools use: a `@` before a path name represents a file that should be read
- * to get the necessary information (in this case, containing a list of files,
- * one per line).
- *)
-let parse_path_list (paths : string list) : string list =
-  Base.List.concat_map paths ~f:(fun path ->
-      if String.starts_with ~prefix:"@" path then
-        let path = String_utils.lstrip path "@" in
-        cat path |> split_lines
-      else
-        [path]
-  )
-  |> Base.List.map ~f:(fun path ->
-         match realpath path with
-         | Some path -> path
-         | None -> failwith (Printf.sprintf "Invalid path: %s" path)
-     )
-
 let rm_dir_tree ?(skip_mocking = false) =
   if skip_mocking then
     RealDisk.rm_dir_tree
   else
     Disk.rm_dir_tree
-
-let restart () =
-  let cmd = Sys.argv.(0) in
-  let argv = Sys.argv in
-  Unix.execv cmd argv
 
 let with_umask umask f =
   if Sys.win32 then
@@ -266,31 +216,6 @@ let read_file file =
 
 let write_file ~file s = Disk.write_file ~file ~contents:s
 
-let append_file ~file s =
-  let chan = open_out_gen [Open_wronly; Open_append; Open_creat] 0o666 file in
-  output_string chan s;
-  close_out chan
-
-let write_strings_to_file ~file (ss : string list) =
-  let chan = open_out_gen [Open_wronly; Open_creat] 0o666 file in
-  Base.List.iter ~f:(output_string chan) ss;
-  close_out chan
-
-(* could be in control section too *)
-
-let filemtime file = (Unix.stat file).Unix.st_mtime
-
-external lutimes : string -> unit = "hh_lutimes"
-
-let try_touch ~follow_symlinks file =
-  try
-    if follow_symlinks then
-      Unix.utimes file 0.0 0.0
-    else
-      lutimes file
-  with
-  | _ -> ()
-
 let mkdir_p ?(skip_mocking = false) =
   if skip_mocking then
     RealDisk.mkdir_p
@@ -305,32 +230,6 @@ let mkdir_no_fail dir =
       try Unix.mkdir dir 0o777 with
       | Unix.Unix_error (Unix.EEXIST, _, _) -> ()
   )
-
-let unlink_no_fail fn =
-  try Unix.unlink fn with
-  | Unix.Unix_error (Unix.ENOENT, _, _) -> ()
-
-let readlink_no_fail fn =
-  if Sys.win32 && Sys.file_exists fn then
-    cat fn
-  else
-    try Unix.readlink fn with
-    | _ -> fn
-
-let splitext filename =
-  let root = Filename.chop_extension filename in
-  let root_length = String.length root in
-  (* -1 because the extension includes the period, e.g. ".foo" *)
-  let ext_length = String.length filename - root_length - 1 in
-  let ext = String.sub filename (root_length + 1) ext_length in
-  (root, ext)
-
-let is_test_mode () =
-  try
-    ignore @@ Sys.getenv "HH_TEST_MODE";
-    true
-  with
-  | _ -> false
 
 let sleep ~seconds = ignore @@ Unix.select [] [] [] seconds
 
@@ -347,34 +246,6 @@ let symlink =
      *)
     fun source dest ->
   Unix.symlink source dest
-
-(* Creates a symlink at <dir>/<linkname.ext> to
- * <dir>/<pluralized ext>/<linkname>-<timestamp>.<ext> *)
-let make_link_of_timestamped linkname =
-  Unix.(
-    let dir = Filename.dirname linkname in
-    mkdir_no_fail dir;
-    let base = Filename.basename linkname in
-    let (base, ext) = splitext base in
-    let dir = Filename.concat dir (Printf.sprintf "%ss" ext) in
-    mkdir_no_fail dir;
-    let tm = localtime (time ()) in
-    let year = tm.tm_year + 1900 in
-    let time_str =
-      Printf.sprintf
-        "%d-%02d-%02d-%02d-%02d-%02d"
-        year
-        (tm.tm_mon + 1)
-        tm.tm_mday
-        tm.tm_hour
-        tm.tm_min
-        tm.tm_sec
-    in
-    let filename = Filename.concat dir (Printf.sprintf "%s-%s.%s" base time_str ext) in
-    unlink_no_fail linkname;
-    symlink filename linkname;
-    filename
-  )
 
 let setsid =
   (* Not implemented on Windows. Let's just return the pid *)
@@ -562,40 +433,6 @@ let find_oom_in_dmesg_output pid name lines =
 let check_dmesg_for_oom pid name =
   let dmesg = exec_read_lines ~reverse:true "dmesg" in
   find_oom_in_dmesg_output pid name dmesg
-
-(* Be careful modifying the rusage type! Like other types that interact with C, the order matters!
- * If you change things here you must update hh_getrusage too! *)
-type rusage = {
-  ru_maxrss: int;
-  (* maximum resident set size *)
-  ru_ixrss: int;
-  (* integral shared memory size *)
-  ru_idrss: int;
-  (* integral unshared data size *)
-  ru_isrss: int;
-  (* integral unshared stack size *)
-  ru_minflt: int;
-  (* page reclaims (soft page faults) *)
-  ru_majflt: int;
-  (* page faults (hard page faults) *)
-  ru_nswap: int;
-  (* swaps *)
-  ru_inblock: int;
-  (* block input operations *)
-  ru_oublock: int;
-  (* block output operations *)
-  ru_msgsnd: int;
-  (* IPC messages sent *)
-  ru_msgrcv: int;
-  (* IPC messages received *)
-  ru_nsignals: int;
-  (* signals received *)
-  ru_nvcsw: int;
-  (* voluntary context switches *)
-  ru_nivcsw: int; (* involuntary context switches *)
-}
-
-external getrusage : unit -> rusage = "hh_getrusage"
 
 external start_gc_profiling : unit -> unit = "hh_start_gc_profiling" [@@noalloc]
 

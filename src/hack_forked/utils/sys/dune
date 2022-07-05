@@ -5,9 +5,7 @@
  (foreign_stubs
   (language c)
   (names
-   files
    gc_profiling
-   getrusage
    handle_stubs
    nproc
    priorities

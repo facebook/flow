@@ -33,8 +33,6 @@ end
 (** Directory for "/" *)
 let root = Hashtbl.create 10
 
-let mtimes = Hashtbl.create 10
-
 (** We avoid using Unix.getcwd () in TestDisk because:
   *   1) Getting global state from this clean test environment is gross
   *   2) Because of 1, CWD should actually be tracked inside this virtual FS.
@@ -184,8 +182,3 @@ let rename old target =
       Hashtbl.replace target_parent (Filename.basename target) old_file;
       Hashtbl.remove old_parent (Filename.basename old)
     | (_, _) -> failwith "Not sure what to do here"
-
-let filemtime (file : string) : float =
-  match Hashtbl.find_opt mtimes file with
-  | None -> 0.0
-  | Some mtime -> mtime
