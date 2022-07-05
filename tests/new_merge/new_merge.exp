@@ -406,20 +406,20 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- main.js:85:2
 
-Cannot cast `y19` to object type because undefined [1] is incompatible with number [2] in property `a`.
-[incompatible-cast]
+Cannot cast `y19` to object type because property `a` is missing in object literal [1] but exists in object type [2].
+[prop-missing]
 
    main.js:85:2
    85| (y19: { a: number }); // error undefined ~> number
         ^^^
 
 References:
-   main.js:84:13
-   84| (y19: { a?: number }); // okay
-                   ^^^^^^ [1]
-   main.js:85:12
+   spread.js:10:18
+   10| export const y = { ...t };
+                        ^^^^^^^^ [1]
+   main.js:85:7
    85| (y19: { a: number }); // error undefined ~> number
-                  ^^^^^^ [2]
+             ^^^^^^^^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- main.js:89:2

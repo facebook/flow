@@ -71,9 +71,9 @@ Cannot cast `b1.z` to string because number [1] is incompatible with string [2].
         ^^^^
 
 References:
-   test1.js:11:23
-   11| export type B = {| z: number, ...A |}
-                             ^^^^^^ [1]
+   test1.js:6:16
+    6| const b = { z: 0, ...a };
+                      ^ [1]
    driver.js:12:8
    12| (b1.z: string); // Error, z may not exist, number ~> string
               ^^^^^^ [2]
@@ -88,9 +88,9 @@ Cannot cast `b2.x` to string because number [1] is incompatible with string [2].
         ^^^^
 
 References:
-   test2.js:8:16
-    8| type A = {| x: number |}
-                      ^^^^^^ [1]
+   test2.js:3:16
+    3| const a = { x: 0 };
+                      ^ [1]
    driver.js:15:8
    15| (b2.x: string); // Error number ~> string
               ^^^^^^ [2]
@@ -105,9 +105,9 @@ Cannot cast `b2.z` to string because number [1] is incompatible with string [2].
         ^^^^
 
 References:
-   test2.js:9:23
-    9| export type B = {| z: number, ...A |}
-                             ^^^^^^ [1]
+   test2.js:4:16
+    4| const b = { z: 0, ...a };
+                      ^ [1]
    driver.js:16:8
    16| (b2.z: string); // Error number ~> string
               ^^^^^^ [2]

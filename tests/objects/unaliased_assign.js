@@ -17,11 +17,11 @@ var glob: { x: string } = { x: "hey" };
 function assign_then_alias() {
   var obj: { x: string | number };
   obj = { x: "hey" };
-  glob = obj;    // error: subsequent assignment might make glob.x a number
+  glob = obj;   // ok
 }
 
 function assign_then_widen() {
   var obj: { x: string | number };
   obj = { x: "hey" };
-  obj.x = 10;  // ok, by lvalue's given type
+  obj.x = 10;  // error
 }

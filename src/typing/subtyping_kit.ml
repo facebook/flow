@@ -254,13 +254,12 @@ module Make (Flow : INPUT) : OUTPUT = struct
         in
         match (Context.get_prop cx lflds s, ldict) with
         | (Some lp, _) ->
-          if lit then (
-            (* prop from unaliased LB: check <:, then make exact *)
-            (match (Property.read_t lp, Property.read_t up) with
+          if lit then
+            (* prop from unaliased LB: check <: *)
+            match (Property.read_t lp, Property.read_t up) with
             | (Some lt, Some ut) -> rec_flow cx trace (lt, UseT (use_op, ut))
-            | _ -> ());
-            speculative_object_write cx lflds s up
-          ) else
+            | _ -> ()
+          else
             (* prop from aliased LB *)
             rec_flow_p cx ~trace ~use_op lreason ureason propref (lp, up)
         | (None, Some { key; value; dict_polarity; _ }) when not (is_dictionary_exempt s) ->
@@ -287,12 +286,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
         | _ ->
           (* property doesn't exist in inflowing type *)
           (match up with
-          | Field (_, OptionalT _, _) when lit ->
-            (* if property is marked optional or otherwise has a maybe type,
-               and if inflowing type is a literal (i.e., it is not an
-               annotation), then we add it to the inflowing type as
-               an optional property *)
-            speculative_object_write cx lflds s up
+          | Field (_, OptionalT _, _) when lit -> ()
           | Field (_, OptionalT _, Polarity.Positive)
             when Obj_type.is_exact_or_sealed ureason lflags.obj_kind ->
             rec_flow

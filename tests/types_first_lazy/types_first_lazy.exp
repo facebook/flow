@@ -88,8 +88,59 @@ References:
             ^^^^^^ [2]
 
 
+Error ----------------------------------------------------------------------------------------------------- test.js:12:2
 
-Found 5 errors
+Cannot cast `o` to `O` because number [1] is incompatible with string [2] in property `y.x`. [incompatible-cast]
+
+   test.js:12:2
+   12| (o: O); // error: number (property x) <~/~> string
+        ^
+
+References:
+   import-value3.js:5:6
+    5|   x: 0,
+            ^ [1]
+   import-type4.js:6:6
+    6|   x: string;
+            ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:13:2
+
+Cannot cast `o.y` to `O` because number [1] is incompatible with string [2] in property `x`. [incompatible-cast]
+
+   test.js:13:2
+   13| (o.y: O); // error: number (property x) <~/~> string
+        ^^^
+
+References:
+   import-value3.js:5:6
+    5|   x: 0,
+            ^ [1]
+   import-type5.js:6:6
+    6|   x: string;
+            ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:13:2
+
+Cannot cast `o.y` to `O` because number [1] is incompatible with string [2] in property `y.x`. [incompatible-cast]
+
+   test.js:13:2
+   13| (o.y: O); // error: number (property x) <~/~> string
+        ^^^
+
+References:
+   import-value3.js:5:6
+    5|   x: 0,
+            ^ [1]
+   import-type4.js:6:6
+    6|   x: string;
+            ^^^^^^ [2]
+
+
+
+Found 8 errors
 
 The Flow server is currently in lazy mode and is only checking 9/11 files.
 To learn more, visit flow.org/en/docs/lang/lazy-modes

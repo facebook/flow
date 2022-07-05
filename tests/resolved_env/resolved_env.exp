@@ -148,9 +148,9 @@ Cannot cast `rest2.p` to string because number [1] is incompatible with string [
         ^^^^^^^
 
 References:
-   bindings.js:15:14
-   15| (rest2: { p: number });
-                    ^^^^^^ [1]
+   bindings.js:13:33
+   13| var {w, ...rest2} = { w: 42, p: 100 };
+                                       ^^^ [1]
    bindings.js:16:11
    16| (rest2.p: string); //err
                  ^^^^^^ [2]
