@@ -6,7 +6,7 @@
  *)
 
 let hh_logger_level_of_env env =
-  match Sys_utils.get_env env with
+  match Sys.getenv_opt env with
   | Some "off" -> Some Hh_logger.Level.Off
   | Some "fatal" -> Some Hh_logger.Level.Fatal
   | Some "error" -> Some Hh_logger.Level.Error

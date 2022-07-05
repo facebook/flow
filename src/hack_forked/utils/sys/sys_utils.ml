@@ -9,11 +9,6 @@ let realpath p =
   try Some (Unix.realpath p) with
   | Unix.Unix_error _ -> None
 
-(** Option type intead of exception throwing. *)
-let get_env name =
-  try Some (Sys.getenv name) with
-  | Not_found -> None
-
 let getenv_home () =
   let home_var =
     if Sys.win32 then
@@ -21,12 +16,12 @@ let getenv_home () =
     else
       "HOME"
   in
-  get_env home_var
+  Sys.getenv_opt home_var
 
 let getenv_term () =
   let term_var = "TERM" in
   (* This variable does not exist on windows. *)
-  get_env term_var
+  Sys.getenv_opt term_var
 
 let path_sep =
   if Sys.win32 then
@@ -49,7 +44,7 @@ let temp_dir_name =
 let getenv_path () =
   let path_var = "PATH" in
   (* Same variable on windows *)
-  get_env path_var
+  Sys.getenv_opt path_var
 
 let cat = Disk.cat
 
