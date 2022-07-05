@@ -1931,12 +1931,12 @@ References:
             ^ [1]
 
 
-Error -------------------------------------------------------------------------------------------------- methods.js:32:3
+Error -------------------------------------------------------------------------------------------------- methods.js:28:3
 
 Cannot get `E.nonExistent` because property `nonExistent` is missing in `$EnumProto` [1]. [prop-missing]
 
-   methods.js:32:3
-     32| E.nonExistent; // Error
+   methods.js:28:3
+     28| E.nonExistent; // Error
            ^^^^^^^^^^^
 
 References:
@@ -1952,12 +1952,12 @@ References:
          -^ [1]
 
 
-Error -------------------------------------------------------------------------------------------------- methods.js:35:3
+Error -------------------------------------------------------------------------------------------------- methods.js:31:3
 
 Cannot call `E.nonExistent` because property `nonExistent` is missing in `$EnumProto` [1]. [prop-missing]
 
-   methods.js:35:3
-     35| E.nonExistent(); // Error
+   methods.js:31:3
+     31| E.nonExistent(); // Error
            ^^^^^^^^^^^
 
 References:
@@ -1973,12 +1973,12 @@ References:
          -^ [1]
 
 
-Error -------------------------------------------------------------------------------------------------- methods.js:38:3
+Error -------------------------------------------------------------------------------------------------- methods.js:34:3
 
 An index signature declaring the expected key / value type is missing in enum `E` [1]. [incompatible-use]
 
-   methods.js:38:3
-   38| E['members'](); // Error
+   methods.js:34:3
+   34| E['members'](); // Error
          ^^^^^^^^^
 
 References:
@@ -1987,12 +1987,12 @@ References:
             ^ [1]
 
 
-Error -------------------------------------------------------------------------------------------------- methods.js:41:3
+Error -------------------------------------------------------------------------------------------------- methods.js:37:3
 
 Cannot call `E.A` because property `A` is missing in `$EnumProto` [1]. [prop-missing]
 
-   methods.js:41:3
-     41| E.A(); // Error
+   methods.js:37:3
+     37| E.A(); // Error
            ^
 
 References:
@@ -2008,12 +2008,12 @@ References:
          -^ [1]
 
 
-Error -------------------------------------------------------------------------------------------------- methods.js:44:3
+Error -------------------------------------------------------------------------------------------------- methods.js:40:3
 
 Cannot call `E.toString` because property `toString` is missing in `$EnumProto` [1]. [prop-missing]
 
-   methods.js:44:3
-     44| E.toString(); // Error
+   methods.js:40:3
+     40| E.toString(); // Error
            ^^^^^^^^
 
 References:
@@ -2029,37 +2029,37 @@ References:
          -^ [1]
 
 
-Error -------------------------------------------------------------------------------------------------- methods.js:47:2
+Error -------------------------------------------------------------------------------------------------- methods.js:43:2
 
 Cannot cast `E.getName(...)` to boolean because string [1] is incompatible with boolean [2]. [incompatible-cast]
 
-   methods.js:47:2
-     47| (E.getName(E.B): boolean); // Error - wrong type
+   methods.js:43:2
+     43| (E.getName(E.B): boolean); // Error - wrong type
           ^^^^^^^^^^^^^^
 
 References:
    <BUILTINS>/core.js:2465:45
    2465|   getName(this: TEnumObject, input: TEnum): string,
                                                      ^^^^^^ [1]
-   methods.js:47:18
-     47| (E.getName(E.B): boolean); // Error - wrong type
+   methods.js:43:18
+     43| (E.getName(E.B): boolean); // Error - wrong type
                           ^^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------------- methods.js:53:1
+Error -------------------------------------------------------------------------------------------------- methods.js:49:1
 
 Cannot call `o.cast` because object literal [1] is incompatible with enum `E` [2]. [incompatible-call]
 
-   methods.js:53:1
-   53| o.cast('x'); // Error
+   methods.js:49:1
+   49| o.cast('x'); // Error
        ^
 
 References:
-   methods.js:50:11
+   methods.js:46:11
                  v
-   50| const o = {
-   51|   cast: E.cast,
-   52| };
+   46| const o = {
+   47|   cast: E.cast,
+   48| };
        ^ [1]
    methods.js:3:6
     3| enum E {
