@@ -6,3 +6,5 @@
     flow_parser_utils)
  (preprocess
   (pps ppx_let ppx_deriving.std)))
+
+(dirs (:standard __tests__))

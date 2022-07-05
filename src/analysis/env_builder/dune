@@ -7,3 +7,5 @@
     flow_typing_errors)
  (preprocess
   (pps ppx_deriving.std)))
+
+(dirs (:standard __tests__))
