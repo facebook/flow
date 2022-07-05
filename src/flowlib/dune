@@ -4,6 +4,6 @@
   (libraries
     sys_utils
   )
-  (preprocess (pps ppx_gen_flowlibs -- -flowlib ../../lib/ -prelude ../../prelude/))
-  (preprocessor_deps (source_tree lib/) (source_tree prelude/))
+  (preprocess (pps ppx_gen_flowlibs -- -flowlib %{project_root}/lib -prelude %{project_root}/prelude))
+  (preprocessor_deps (source_tree %{project_root}/lib) (source_tree %{project_root}/prelude))
 )
