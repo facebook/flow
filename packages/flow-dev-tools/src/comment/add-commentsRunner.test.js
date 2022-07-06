@@ -34,7 +34,11 @@ test('addCommentsToCode', async () => {
     await addCommentsToCode(
       '',
       null,
-      `function foo() {}`,
+      `function foo() {}
+function bar<a>(): b {}
+(function <a>(): b {});
+(<a>(): b => {});
+`,
       [
         {
           loc: {
@@ -45,10 +49,48 @@ test('addCommentsToCode', async () => {
           lints: new Set(),
           error_codes: ['code1'],
         },
+        {
+          loc: {
+            start: {line: 2, column: 16, offset: 34},
+            end: {line: 2, column: 17, offset: 35},
+          },
+          isError: true,
+          lints: new Set(),
+          error_codes: ['code2'],
+        },
+        {
+          loc: {
+            start: {line: 3, column: 14, offset: 56},
+            end: {line: 3, column: 15, offset: 57},
+          },
+          isError: true,
+          lints: new Set(),
+          error_codes: ['code3'],
+        },
+        {
+          loc: {
+            start: {line: 4, column: 5, offset: 71},
+            end: {line: 4, column: 6, offset: 72},
+          },
+          isError: true,
+          lints: new Set(),
+          error_codes: ['code4'],
+        },
       ],
       flowBinPath,
     ),
-  ).toEqual(['// $FlowFixMe[code1]\nfunction foo() {}', 1]);
+  ).toEqual([
+    `// $FlowFixMe[code1]
+function foo() {}
+// $FlowFixMe[code2]
+function bar<a>(): b {}
+// $FlowFixMe[code3]
+(function <a>(): b {});
+// $FlowFixMe[code4]
+(<a>(): b => {});
+`,
+    4,
+  ]);
 });
 
 const longComment =

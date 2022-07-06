@@ -115,7 +115,9 @@ function errorLocMatchesAstLoc(errorLoc: FlowLoc, ast: Object): boolean {
   // can match on the params themselves but for cases where the function has no
   // params we need to check if the error could be pointing to the params location.
   if (
-    (ast.type === 'FunctionDeclaration' || ast.type === 'FunctionExpression') &&
+    (ast.type === 'FunctionDeclaration' ||
+      ast.type === 'FunctionExpression' ||
+      ast.type === 'ArrowFunctionExpression') &&
     ast.params.length === 0
   ) {
     // Find the locations closest to the params to ensure we don't unnecessarily
@@ -127,9 +129,8 @@ function errorLocMatchesAstLoc(errorLoc: FlowLoc, ast: Object): boolean {
         ? afterPosition(ast.id.loc.end)
         : ast.loc.start;
     const endLoc =
-      ast.returnType != null
-        ? beforePosition(ast.returnType.loc.start)
-        : beforePosition(ast.body.loc.start);
+      ast.returnType != null ? ast.returnType.loc.start : ast.body.loc.start;
+
     if (
       beforeOrEqual(startLoc, errorLoc.start) &&
       beforeOrEqual(errorLoc.end, endLoc)
