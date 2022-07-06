@@ -63,21 +63,6 @@ let assert_false s =
     );
   failwith s
 
-let __DEBUG__ ?(s = "") f =
-  try f () with
-  | _ -> assert_false s
-
-let call_succeeds try_function function_input =
-  try
-    try_function function_input;
-    true
-  with
-  (* print failwith <msg> command's exception message *)
-  | Failure msg ->
-    prerr_endline msg;
-    false
-  | _ -> false
-
 let map_pair f g (a, b) = (f a, g b)
 
 let map_fst f (a, b) = (f a, b)
@@ -101,13 +86,6 @@ let rec iter2opt f = function
     f None (Some y);
     iter2opt f ([], ys)
   | ([], []) -> ()
-
-let rec toFixpoint f x =
-  let x' = f x in
-  if x = x' then
-    x
-  else
-    toFixpoint f x'
 
 let uncurry f (x, y) = f x y
 
@@ -292,39 +270,8 @@ let ( %>>| ) (result : ('ok, 'err) result) (f : 'ok -> 'a Lwt.t) : ('a, 'err) re
     let%lwt new_x = f x in
     Lwt.return (Ok new_x)
 
-let bind2 ~f x y = Base.Result.bind x ~f:(fun x -> Base.Result.bind y ~f:(f x))
-
-let map2 ~f x y = Base.Result.bind x ~f:(fun x -> Base.Result.map y ~f:(f x))
-
 let debug_print_current_stack_trace () =
   Hh_logger.info "Current backtrace:\n%s" (Exception.get_current_callstack_string 200)
-
-(* Pass through a result; logging if it is an Error. Includes the provided string context, which is
- * computed lazily under the assumption that the error case is the uncommon case *)
-let log_when_error (context : string Lazy.t) (result : ('a, string) result) : ('a, string) result =
-  begin
-    match result with
-    | Ok _ -> ()
-    | Error msg ->
-      let (lazy context) = context in
-      Hh_logger.error "Error (%s): %s" context msg
-  end;
-  result
-
-(* Prints and then returns a value. Makes it easy to log an expression without pulling it out into a
- * separate variable. e.g:
- * `match some_complex_expression with ...`
- * could become:
- * `match some_complex_expression |> id_print "some info" printer with ...`
- *)
-
-let id_print context f x =
-  Hh_logger.info "%s: %s" context (f x);
-  x
-
-let debug_string_of_result string_of_val = function
-  | Ok x -> Printf.sprintf "Ok (%s)" (string_of_val x)
-  | Error err -> Printf.sprintf "Error (%s)" err
 
 let get_next_power_of_two x =
   let rec f y =
@@ -334,27 +281,6 @@ let get_next_power_of_two x =
       f (y * 2)
   in
   f 1
-
-(* Simple utility to log the amount of time an operation takes.
- *
- * Usage:
- * Given some expression `foo bar baz` whose evaluation you want to time, transform it to
- * `debug_time "some_identifying_string" (lazy (foo bar baz))`
- *)
-let debug_time name x =
-  let start_time = Unix.gettimeofday () in
-  let (lazy result) = x in
-  let end_time = Unix.gettimeofday () in
-  Hh_logger.info "Completed %s in %.3f" name (end_time -. start_time);
-  result
-
-(* Same as above, but displays the time taken for the resulting `Lwt.t` to yield a result *)
-let debug_time_lwt name x =
-  let start_time = Unix.gettimeofday () in
-  let%lwt result = Lazy.force x in
-  let end_time = Unix.gettimeofday () in
-  Hh_logger.info "Completed %s in %.3f" name (end_time -. start_time);
-  Lwt.return result
 
 module BoolMap = Flow_map.Make (struct
   type t = bool
