@@ -83,6 +83,10 @@ Flags: --pretty
       "name":"replace",
       "type":"(searchValue: (string | RegExp), replaceValue: (string | ((substring: string, ...args: Array<any>) => string))) => string"
     },
+    {
+      "name":"replaceAll",
+      "type":"(searchValue: (string | RegExp), replaceValue: (string | ((substring: string, ...args: Array<any>) => string))) => string"
+    },
     {"name":"search","type":"(regexp: (string | RegExp)) => number"},
     {"name":"slice","type":"(start?: number, end?: number) => string"},
     {
@@ -429,6 +433,10 @@ Flags: --pretty
     {"name":"repeat","type":"(count: number) => string"},
     {
       "name":"replace",
+      "type":"(searchValue: (string | RegExp), replaceValue: (string | ((substring: string, ...args: Array<any>) => string))) => string"
+    },
+    {
+      "name":"replaceAll",
       "type":"(searchValue: (string | RegExp), replaceValue: (string | ((substring: string, ...args: Array<any>) => string))) => string"
     },
     {"name":"search","type":"(regexp: (string | RegExp)) => number"},

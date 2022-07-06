@@ -41,8 +41,8 @@ Property `length` is missing in `Generator` [1] but exists in `$ArrayLike` [2]. 
                         ^^^^^
 
 References:
-   <BUILTINS>/core.js:1655:11
-   1655| interface Generator<+Yield,+Return,-Next> {
+   <BUILTINS>/core.js:1661:11
+   1661| interface Generator<+Yield,+Return,-Next> {
                    ^^^^^^^^^ [1]
    <BUILTINS>/core.js:1062:22
                               v----------

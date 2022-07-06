@@ -229,6 +229,10 @@ module.exports = (suite(({addFile, flowCmd}) => [
                "type": "(searchValue: (string | RegExp), replaceValue: (string | ((substring: string, ...args: Array<any>) => string))) => string"
              },
              {
+               "name": "replaceAll",
+               "type": "(searchValue: (string | RegExp), replaceValue: (string | ((substring: string, ...args: Array<any>) => string))) => string"
+             },
+             {
                "name": "search",
                "type": "(regexp: (string | RegExp)) => number"
              },
