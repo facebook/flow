@@ -29,6 +29,26 @@ test('addCommentsToCode', async () => {
       flowBinPath,
     ),
   ).toEqual([testOutput, 8]);
+
+  expect(
+    await addCommentsToCode(
+      '',
+      null,
+      `function foo() {}`,
+      [
+        {
+          loc: {
+            start: {line: 1, column: 13, offset: 13},
+            end: {line: 1, column: 14, offset: 14},
+          },
+          isError: true,
+          lints: new Set(),
+          error_codes: ['code1'],
+        },
+      ],
+      flowBinPath,
+    ),
+  ).toEqual(['// $FlowFixMe[code1]\nfunction foo() {}', 1]);
 });
 
 const longComment =

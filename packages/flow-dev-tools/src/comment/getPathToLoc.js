@@ -69,24 +69,38 @@ class Path {
   }
 }
 
+type Position = {line: number, column: number};
+
 // Returns true if position a comes before or is equal to position b
-function beforeOrEqual(
-  a: {line: number, column: number},
-  b: {line: number, column: number},
-): boolean {
+function beforeOrEqual(a: Position, b: Position): boolean {
   if (a.line === b.line) {
     return a.column <= b.column;
   }
   return a.line <= b.line;
 }
 
+function beforePosition(position: Position): Position {
+  return {
+    line: position.line,
+    column: position.column - 1,
+  };
+}
+
+function afterPosition(position: Position): Position {
+  return {
+    line: position.line,
+    column: position.column + 1,
+  };
+}
+
 /**
- * For non-JSXText nodes, returns true IFF the ast location falls within the
- * error loc. For JSXText nodes, also returns true if the error loc falls within
- * the ast loc, as JSXText errors may point to only a portion of a JSXText node.
+ * Check if a AST node location falls within the error loc.
  */
 function errorLocMatchesAstLoc(errorLoc: FlowLoc, ast: Object): boolean {
   const astLoc = ast.loc;
+
+  // For JSXText nodes return true if the error loc falls within the ast
+  // loc, as JSXText errors may point to only a portion of a JSXText node.
   if (
     ast.type === 'JSXText' &&
     beforeOrEqual(astLoc.start, errorLoc.start) &&
@@ -95,12 +109,37 @@ function errorLocMatchesAstLoc(errorLoc: FlowLoc, ast: Object): boolean {
     return true;
   }
 
-  const errorLocFixedStart = {
-    line: errorLoc.start.line,
-    column: errorLoc.start.column - 1,
-  };
+  // The Flow OCaml AST has a node which represents the params, estree does
+  // not have the equivalent node, this means Flow can produce error locations
+  // which cannot be matched from JS. Typically this is not a problem since you
+  // can match on the params themselves but for cases where the function has no
+  // params we need to check if the error could be pointing to the params location.
+  if (
+    (ast.type === 'FunctionDeclaration' || ast.type === 'FunctionExpression') &&
+    ast.params.length === 0
+  ) {
+    // Find the locations closest to the params to ensure we don't unnecessarily
+    // match nodes.
+    const startLoc =
+      ast.typeParameters != null
+        ? afterPosition(ast.typeParameters.loc.end)
+        : ast.id != null
+        ? afterPosition(ast.id.loc.end)
+        : ast.loc.start;
+    const endLoc =
+      ast.returnType != null
+        ? beforePosition(ast.returnType.loc.start)
+        : beforePosition(ast.body.loc.start);
+    if (
+      beforeOrEqual(startLoc, errorLoc.start) &&
+      beforeOrEqual(errorLoc.end, endLoc)
+    ) {
+      return true;
+    }
+  }
+
   return (
-    beforeOrEqual(errorLocFixedStart, astLoc.start) &&
+    beforeOrEqual(beforePosition(errorLoc.start), astLoc.start) &&
     beforeOrEqual(astLoc.end, errorLoc.end)
   );
 }
