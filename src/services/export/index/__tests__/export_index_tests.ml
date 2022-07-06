@@ -53,23 +53,32 @@ let find_tests =
 
       assert_exports ~ctxt expected actual
     );
-    ( "builtins_before_sources_before_globals" >:: fun ctxt ->
+    ( "compare_export" >:: fun ctxt ->
       let file_a = file_source "path/to/a.js" in
+      let file_b = file_source "path/to/b.js" in
+      let file_foo = file_source "path/to/foo.js" in
       let builtin_z = declare_module "z" in
 
-      (* builtins come first, even if their names are lexographically last *)
+      (* defaults before named before namespace, then
+         globals before builtins before source files *)
       let expected =
         [
           (builtin_z, Export_index.Default);
-          (file_a, Export_index.Default);
+          (file_foo, Export_index.Default);
           (global, Export_index.Named);
+          (file_a, Export_index.Named);
+          (file_b, Export_index.Named);
+          (file_foo, Export_index.Namespace);
         ]
       in
 
       let index =
         Export_index.empty
-        |> Export_index.add "foo" file_a Export_index.Default
         |> Export_index.add "foo" builtin_z Export_index.Default
+        |> Export_index.add "foo" file_a Export_index.Named
+        |> Export_index.add "foo" file_b Export_index.Named
+        |> Export_index.add "foo" file_foo Export_index.Default
+        |> Export_index.add "foo" file_foo Export_index.Namespace
         |> Export_index.add "foo" global Export_index.Named
       in
 

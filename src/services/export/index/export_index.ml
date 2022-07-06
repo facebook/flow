@@ -33,29 +33,53 @@ let compare_file_key a b =
   else
     String.compare a b
 
-(** Custom ordering where [declare module] comes first, followed by source files,
-    followed by globals.
+(** Custom ordering where globals come first, followed by [declare module],
+    followed by source files.
 
-    When importing, builtins are more commonly used and so are more
-    likely to be what you want than a source file that shadows the name. Globals
-    are unlikely to be what you want and come last.
+    Exports are sorted by both source and kind. After sorting by kind (defaults
+    before named before namespace), we then want globals first, followed by
+    declared modules (builtins). In this way, if there is a module named `Map`
+    with a default export, it'll be suggested before the builtin `Map`, but
+    some other module with a named `Map` export will be suggested after. This
+    is so that named exports from random modules don't shadow common globals,
+    but you can still shadow the builtins with an entire module (e.g. a Promise
+    polyfill defined by the `Promise` module).
 
     TODO: this is a very coarse ranking. We could do much better. For example, we
     could track how commonly used each export is. For example, the `Promise` global
     is probably far more common than any source file exporting the same name. *)
 let compare_source a b =
   match (a, b) with
+  (* globals first *)
+  | (Global, Global) -> 0
+  | (Global, _) -> -1
+  | (_, Global) -> 1
+  (* builtins second *)
   | (Builtin a, Builtin b) -> String.compare a b
-  (* builtins first *)
   | (Builtin _, _) -> -1
   | (_, Builtin _) -> 1
-  | (Global, Global) -> 0
-  (* globals last *)
-  | (Global, _) -> 1
-  | (_, Global) -> -1
+  (* user modules last *)
   | (File_key a, File_key b) -> compare_file_key a b
 
-type export = source * kind [@@deriving show, ord]
+type export = source * kind [@@deriving show]
+
+(** Order by kind and then by source.
+
+  1. Default exports from declared modules (builtins)
+  2. Default exports from user modules
+  3. Named exports from globals (e.g. `declare class Image`)
+  4. Named exports from declared modules
+  5. Named exports from user modules
+  6. Same for types
+  7. Namespaces of declared modules
+  8. Namespaces of user modules
+ *)
+let compare_export (a_source, a_kind) (b_source, b_kind) =
+  let k = compare_kind a_kind b_kind in
+  if k = 0 then
+    compare_source a_source b_source
+  else
+    k
 
 module ExportSet = struct
   include Flow_set.Make (struct
