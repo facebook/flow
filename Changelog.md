@@ -1,3 +1,16 @@
+### 0.182.0
+
+Likely to cause new Flow errors:
+* `var` re-declarations are now banned. You should use `let` or `const` instead.
+* Flow will now emit escaped-generic errors when the return type of a generic predicate function contains type parameters defined by the function.
+
+Notable bug fixes:
+* Improve ordering of autoimport suggestions, so that globals are suggested above named imports.
+
+Misc:
+* Errors related to class expressions might have new locations.
+
+
 ### 0.181.2
 
 * Fix the rendering of classes in autocomplete results
