@@ -44,17 +44,16 @@ let main base_flags temp_dir quiet root () =
   let tmp_dir = Path.to_string (Path.make tmp_dir) in
   if not quiet then prerr_endlinef "Trying to connect to server for `%s`" (Path.to_string root);
   let client_handshake =
-    SocketHandshake.
-      ( {
-          client_build_id = build_revision;
-          client_version = Flow_version.version;
-          is_stop_request = true;
-          server_should_hangup_if_still_initializing = false;
-          version_mismatch_strategy = Always_stop_server;
-        },
-        { client_type = Ephemeral }
-      )
-    
+    let open SocketHandshake in
+    ( {
+        client_build_id = build_revision;
+        client_version = Flow_version.version;
+        is_stop_request = true;
+        server_should_hangup_if_still_initializing = false;
+        version_mismatch_strategy = Always_stop_server;
+      },
+      { client_type = Ephemeral }
+    )
   in
 
   CommandConnectSimple.(

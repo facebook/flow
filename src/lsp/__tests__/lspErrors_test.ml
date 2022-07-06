@@ -17,19 +17,17 @@ let mk_clear_error uri = { uri; kind = "<FAKE ERROR>"; msg = "Errors cleared for
 
 (* Build a mock lsp diagnostic *)
 let mk_diagnostic { uri = _; kind; msg } =
-  Lsp.(
-    PublishDiagnostics.
-      {
-        range = { start = { line = 10; character = 20 }; end_ = { line = 10; character = 30 } };
-        severity = Some Lsp.PublishDiagnostics.Error;
-        code = StringCode kind;
-        source = Some "Flow";
-        message = msg;
-        relatedInformation = [];
-        relatedLocations = [];
-      }
-    
-  )
+  let open Lsp in
+  let open PublishDiagnostics in
+  {
+    range = { start = { line = 10; character = 20 }; end_ = { line = 10; character = 30 } };
+    severity = Some Lsp.PublishDiagnostics.Error;
+    code = StringCode kind;
+    source = Some "Flow";
+    message = msg;
+    relatedInformation = [];
+    relatedLocations = [];
+  }
 
 (* Take the json output and convert it back into a list of errors *)
 let error_list_of_json_response json =

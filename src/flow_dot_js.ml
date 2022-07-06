@@ -19,21 +19,20 @@ let error_of_parse_error source_file (loc, err) =
 
 let parse_content file content =
   let parse_options =
+    let open Parser_env in
     Some
-      Parser_env.
-        {
-          enums = true;
-          (*
-           * Always parse ES proposal syntax. The user-facing config option to
-           * ignore/warn/enable them is handled during inference so that a clean error
-           * can be surfaced (rather than a more cryptic parse error).
-           *)
-          esproposal_decorators = true;
-          esproposal_export_star_as = true;
-          types = true;
-          use_strict = false;
-        }
-      
+      {
+        enums = true;
+        (*
+         * Always parse ES proposal syntax. The user-facing config option to
+         * ignore/warn/enable them is handled during inference so that a clean error
+         * can be surfaced (rather than a more cryptic parse error).
+         *)
+        esproposal_decorators = true;
+        esproposal_export_star_as = true;
+        types = true;
+        use_strict = false;
+      }
   in
 
   let (ast, parse_errors) =

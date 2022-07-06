@@ -690,15 +690,13 @@ let do_initialize flowconfig params : Initialize.result =
       CodeActionBool false
   in
   let textDocumentSync =
-    TextDocumentSyncOptions.
-      {
-        openClose = true;
-        change = TextDocumentSyncKind.IncrementalSync;
-        willSave = false;
-        willSaveWaitUntil = false;
-        save = Some { includeText = false };
-      }
-    
+    {
+      TextDocumentSyncOptions.openClose = true;
+      change = TextDocumentSyncKind.IncrementalSync;
+      willSave = false;
+      willSaveWaitUntil = false;
+      save = Some { TextDocumentSyncOptions.includeText = false };
+    }
   in
 
   let server_snippetTextEdit = Lsp_helpers.supports_experimental_snippet_text_edit params in
@@ -1068,15 +1066,13 @@ let parse_and_cache (state : server_state) (uri : Lsp.DocumentUri.t) :
     let flowconfig = get_flowconfig state in
     let use_strict = FlowConfig.modules_are_use_strict flowconfig in
     Some
-      Parser_env.
-        {
-          enums = true;
-          esproposal_decorators = true;
-          esproposal_export_star_as = true;
-          types = true;
-          use_strict;
-        }
-      
+      {
+        Parser_env.enums = true;
+        esproposal_decorators = true;
+        esproposal_export_star_as = true;
+        types = true;
+        use_strict;
+      }
   in
 
   let parse file =
@@ -1646,17 +1642,16 @@ let try_connect ~version_mismatch_strategy flowconfig_name (env : disconnected_e
     CommandUtils.make_env flowconfig flowconfig_name i_connect_params i_root
   in
   let client_handshake =
-    SocketHandshake.
-      ( {
-          client_build_id = build_revision;
-          client_version = Flow_version.version;
-          is_stop_request = false;
-          server_should_hangup_if_still_initializing = true;
-          version_mismatch_strategy;
-        },
-        { client_type = Persistent { lsp_init_params = env.d_ienv.i_initialize_params } }
-      )
-    
+    let open SocketHandshake in
+    ( {
+        client_build_id = build_revision;
+        client_version = Flow_version.version;
+        is_stop_request = false;
+        server_should_hangup_if_still_initializing = true;
+        version_mismatch_strategy;
+      },
+      { client_type = Persistent { lsp_init_params = env.d_ienv.i_initialize_params } }
+    )
   in
 
   let conn =
@@ -2062,12 +2057,11 @@ and main_handle_initialized_unsafe flowconfig_name (state : server_state) (event
     ) ->
     (* The Flow server hit an uncaught exception while processing request *)
     let metadata =
-      LspProt.
-        {
-          metadata with
-          error_info = Some (UnexpectedError, exception_constructor, Utils.Callstack stack);
-        }
-      
+      let open LspProt in
+      {
+        metadata with
+        error_info = Some (UnexpectedError, exception_constructor, Utils.Callstack stack);
+      }
     in
 
     let outgoing =
@@ -2075,15 +2069,13 @@ and main_handle_initialized_unsafe flowconfig_name (state : server_state) (event
       | LspProt.LspToServer (RequestMessage (id, _)) ->
         (* We need to tell the client that this request hit an unexpected error *)
         let e =
-          Lsp.Error.
-            {
-              code = UnknownErrorCode;
-              message =
-                "Flow encountered an unexpected error while handling this request. "
-                ^ "See the Flow logs for more details.";
-              data = None;
-            }
-          
+          {
+            Lsp.Error.code = Lsp.Error.UnknownErrorCode;
+            message =
+              "Flow encountered an unexpected error while handling this request. "
+              ^ "See the Flow logs for more details.";
+            data = None;
+          }
         in
 
         Some (ResponseMessage (id, ErrorResult (e, stack)))

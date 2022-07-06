@@ -13,15 +13,13 @@ open OUnit2
 
 let parse_options =
   Some
-    Parser_env.
-      {
-        enums = true;
-        esproposal_decorators = true;
-        esproposal_export_star_as = true;
-        types = true;
-        use_strict = false;
-      }
-    
+    {
+      Parser_env.enums = true;
+      esproposal_decorators = true;
+      esproposal_export_star_as = true;
+      types = true;
+      use_strict = false;
+    }
 
 class useless_mapper =
   object (this)
@@ -277,13 +275,11 @@ class useless_mapper =
               ( loc',
                 Ast_builder.number_literal
                   ~comments:
-                    Ast.Syntax.
-                      {
-                        leading = [];
-                        trailing = [Ast_builder.Comments.line " a comment"];
-                        internal = ();
-                      }
-                    
+                    {
+                      Ast.Syntax.leading = [];
+                      trailing = [Ast_builder.Comments.line " a comment"];
+                      internal = ();
+                    }
                   1.0
                   raw
               );
@@ -672,29 +668,28 @@ class insert_import_and_annot_mapper =
       let (loc, { Ast.Program.statements = stmts; comments; all_comments }) = super#program prog in
       let import num =
         let imp = Printf.sprintf "new_import%d" num in
-        Ast.Statement.
-          ( Loc.none,
-            ImportDeclaration
-              {
-                ImportDeclaration.import_kind = ImportDeclaration.ImportType;
-                source = (Loc.none, { Ast.StringLiteral.value = imp; raw = imp; comments = None });
-                default = None;
-                specifiers =
-                  Some
-                    ImportDeclaration.(
-                      ImportNamedSpecifiers
-                        [
-                          {
-                            kind = None;
-                            local = Some (Flow_ast_utils.ident_of_source (Loc.none, "here"));
-                            remote = Flow_ast_utils.ident_of_source (Loc.none, "there");
-                          };
-                        ]
-                    );
-                comments = None;
-              }
-          )
-        
+        let open Ast.Statement in
+        ( Loc.none,
+          ImportDeclaration
+            {
+              ImportDeclaration.import_kind = ImportDeclaration.ImportType;
+              source = (Loc.none, { Ast.StringLiteral.value = imp; raw = imp; comments = None });
+              default = None;
+              specifiers =
+                Some
+                  ImportDeclaration.(
+                    ImportNamedSpecifiers
+                      [
+                        {
+                          kind = None;
+                          local = Some (Flow_ast_utils.ident_of_source (Loc.none, "here"));
+                          remote = Flow_ast_utils.ident_of_source (Loc.none, "there");
+                        };
+                      ]
+                  );
+              comments = None;
+            }
+        )
       in
 
       ( loc,
@@ -757,20 +752,18 @@ class add_comment_mapper =
     inherit [Loc.t] Flow_ast_mapper.mapper
 
     method! identifier (loc, i) =
-      Flow_ast.Syntax.
-        ( loc,
-          {
-            i with
-            Flow_ast.Identifier.comments =
-              Some
-                {
-                  leading = [Ast_builder.Comments.block "hello"];
-                  trailing = [Ast_builder.Comments.block "bye"];
-                  internal = ();
-                };
-          }
-        )
-      
+      ( loc,
+        {
+          i with
+          Flow_ast.Identifier.comments =
+            Some
+              {
+                Flow_ast.Syntax.leading = [Ast_builder.Comments.block "hello"];
+                trailing = [Ast_builder.Comments.block "bye"];
+                internal = ();
+              };
+        }
+      )
   end
 
 class true_to_false_mapper =

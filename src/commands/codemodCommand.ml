@@ -256,15 +256,14 @@ module Annotate_lti_command = struct
 
       (* Match all files the codemod is run over *)
       let check_options o =
-        Options.
-          {
-            o with
-            opt_any_propagation = false;
-            opt_enforce_local_inference_annotations = true;
-            opt_enforce_this_annotations = true;
-            opt_local_inference_annotation_dirs = [];
-          }
-        
+        let open Options in
+        {
+          o with
+          opt_any_propagation = false;
+          opt_enforce_local_inference_annotations = true;
+          opt_enforce_this_annotations = true;
+          opt_local_inference_annotation_dirs = [];
+        }
 
       let visit =
         let mapper =

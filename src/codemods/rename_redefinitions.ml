@@ -275,13 +275,11 @@ let mapper cctx =
         let ast' = super#program ast in
         ( if ast != ast' then
           let extra =
-            Stats.
-              {
-                num_total_errors = num_errors;
-                num_renamed_vars = ALocMap.cardinal map;
-                num_name_collisions = collisions;
-              }
-            
+            {
+              Stats.num_total_errors = num_errors;
+              num_renamed_vars = ALocMap.cardinal map;
+              num_name_collisions = collisions;
+            }
           in
 
           this#update_acc (fun acc ->

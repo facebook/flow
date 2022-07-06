@@ -17,13 +17,11 @@ module L = Layout_builder
 let opts = Js_layout_generator.default_opts
 
 let make_loc start_line end_line =
-  Loc.
-    {
-      source = None;
-      start = { line = start_line; column = 0 };
-      _end = { line = end_line; column = 0 };
-    }
-  
+  {
+    Loc.source = None;
+    start = { Loc.line = start_line; column = 0 };
+    _end = { Loc.line = end_line; column = 0 };
+  }
 
 let tests =
   [

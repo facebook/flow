@@ -83,12 +83,10 @@ let parse_range_exn (json : json option) : range =
   }
 
 let parse_location (j : json option) : Location.t =
-  Location.
-    {
-      uri = Jget.string_exn j "uri" |> DocumentUri.of_string;
-      range = Jget.obj_exn j "range" |> parse_range_exn;
-    }
-  
+  {
+    Location.uri = Jget.string_exn j "uri" |> DocumentUri.of_string;
+    range = Jget.obj_exn j "range" |> parse_range_exn;
+  }
 
 let parse_range_opt (json : json option) : range option =
   if json = None then
@@ -100,22 +98,18 @@ let parse_textDocumentIdentifier (json : json option) : TextDocumentIdentifier.t
   TextDocumentIdentifier.{ uri = Jget.string_exn json "uri" |> DocumentUri.of_string }
 
 let parse_versionedTextDocumentIdentifier (json : json option) : VersionedTextDocumentIdentifier.t =
-  VersionedTextDocumentIdentifier.
-    {
-      uri = Jget.string_exn json "uri" |> DocumentUri.of_string;
-      version = Jget.int_d json "version" ~default:0;
-    }
-  
+  {
+    VersionedTextDocumentIdentifier.uri = Jget.string_exn json "uri" |> DocumentUri.of_string;
+    version = Jget.int_d json "version" ~default:0;
+  }
 
 let parse_textDocumentItem (json : json option) : TextDocumentItem.t =
-  TextDocumentItem.
-    {
-      uri = Jget.string_exn json "uri" |> DocumentUri.of_string;
-      languageId = Jget.string_d json "languageId" ~default:"";
-      version = Jget.int_d json "version" ~default:0;
-      text = Jget.string_exn json "text";
-    }
-  
+  {
+    TextDocumentItem.uri = Jget.string_exn json "uri" |> DocumentUri.of_string;
+    languageId = Jget.string_d json "languageId" ~default:"";
+    version = Jget.int_d json "version" ~default:0;
+    text = Jget.string_exn json "text";
+  }
 
 let print_textDocumentItem (item : TextDocumentItem.t) : json =
   TextDocumentItem.(
@@ -135,12 +129,11 @@ let print_markedItem (item : markedString) : json =
     JSON_Object [("language", JSON_String language); ("value", JSON_String value)]
 
 let parse_textDocumentPositionParams (params : json option) : TextDocumentPositionParams.t =
-  TextDocumentPositionParams.
-    {
-      textDocument = Jget.obj_exn params "textDocument" |> parse_textDocumentIdentifier;
-      position = Jget.obj_exn params "position" |> parse_position;
-    }
-  
+  {
+    TextDocumentPositionParams.textDocument =
+      Jget.obj_exn params "textDocument" |> parse_textDocumentIdentifier;
+    position = Jget.obj_exn params "position" |> parse_position;
+  }
 
 let parse_textEdit (params : json option) : TextEdit.t option =
   match params with
@@ -219,13 +212,11 @@ let print_symbolInformation (info : SymbolInformation.t) : json =
   )
 
 let parse_codeLens (json : json option) : CodeLens.t =
-  CodeLens.
-    {
-      range = Jget.obj_exn json "range" |> parse_range_exn;
-      command = Jget.obj_exn json "command" |> parse_command;
-      data = Jget.obj_exn json "data";
-    }
-  
+  {
+    CodeLens.range = Jget.obj_exn json "range" |> parse_range_exn;
+    command = Jget.obj_exn json "command" |> parse_command;
+    data = Jget.obj_exn json "data";
+  }
 
 let print_codeLens ~key (codeLens : CodeLens.t) : json =
   CodeLens.(
@@ -325,12 +316,10 @@ let parse_didClose (params : json option) : DidClose.params =
 (************************************************************************)
 
 let parse_didSave (params : json option) : DidSave.params =
-  DidSave.
-    {
-      textDocument = Jget.obj_exn params "textDocument" |> parse_textDocumentIdentifier;
-      text = Jget.string_opt params "text";
-    }
-  
+  {
+    DidSave.textDocument = Jget.obj_exn params "textDocument" |> parse_textDocumentIdentifier;
+    text = Jget.string_opt params "text";
+  }
 
 (** textDocument/didChange notification *)
 module DidChangeFmt = struct

@@ -507,18 +507,16 @@ module rec ConsGen : S = struct
     | (EvalT (t, TypeDestructorT (use_op, reason, SpreadType (target, todo_rev, head_slice)), _), _)
       ->
       let state =
-        Object.(
-          Spread.
-            {
-              todo_rev;
-              acc = Base.Option.value_map ~f:(fun x -> [InlineSlice x]) ~default:[] head_slice;
-              spread_id = Reason.mk_id ();
-              union_reason = None;
-              curr_resolve_idx = 0;
-            }
-          
-        )
+        {
+          Object.Spread.todo_rev;
+          acc =
+            Base.Option.value_map ~f:(fun x -> [Object.Spread.InlineSlice x]) ~default:[] head_slice;
+          spread_id = Reason.mk_id ();
+          union_reason = None;
+          curr_resolve_idx = 0;
+        }
       in
+
       let t = object_spread cx use_op reason target state t in
       elab_t cx t op
     | (EvalT (t, TypeDestructorT (use_op, reason, RestType (options, r)), _), _) ->

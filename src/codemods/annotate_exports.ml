@@ -221,9 +221,11 @@ let mapper ~preserve_literals ~max_type_size ~default_any (cctx : Codemod_contex
           let (loc, _) = e in
           ( loc,
             Ast.Expression.TypeCast
-              Ast.Expression.TypeCast.
-                { expression = e; annot = (Loc.none, flowfixme_ast); comments = None }
-              
+              {
+                Ast.Expression.TypeCast.expression = e;
+                annot = (Loc.none, flowfixme_ast);
+                comments = None;
+              }
           )
         in
         this#opt_annotate ~f ~error ~expr:(Some expr) loc type_entry expr

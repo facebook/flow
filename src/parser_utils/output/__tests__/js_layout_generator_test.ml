@@ -2570,14 +2570,12 @@ let tests =
                     (I.identifier "E")
                     (symbol_body
                        ~comments:
-                         Flow_ast.Syntax.
-                           {
-                             leading = [];
-                             trailing = [];
-                             internal =
-                               [Ast_builder.Comments.line ~on_newline:true " internal comment"];
-                           }
-                         
+                         {
+                           Flow_ast.Syntax.leading = [];
+                           trailing = [];
+                           internal =
+                             [Ast_builder.Comments.line ~on_newline:true " internal comment"];
+                         }
                        [defaulted_member (I.identifier "A"); defaulted_member (I.identifier "B")]
                     )
              in

@@ -971,13 +971,11 @@ module Expression
       let trailing = Eat.trailing_comments env in
       let loc = Loc.btwn start_loc last_loc in
       let member =
-        Expression.Member.
-          {
-            _object = as_expression env left;
-            property = PropertyExpression expr;
-            comments = Flow_ast_utils.mk_comments_opt ~trailing ();
-          }
-        
+        {
+          Expression.Member._object = as_expression env left;
+          property = Expression.Member.PropertyExpression expr;
+          comments = Flow_ast_utils.mk_comments_opt ~trailing ();
+        }
       in
 
       let member =
@@ -1352,9 +1350,13 @@ module Expression
       Expect.token env (T_TEMPLATE_PART part);
       let (end_loc, quasis, expressions) =
         let head =
-          Ast.Expression.TemplateLiteral.
-            (start_loc, { Element.value = { Element.cooked; raw }; tail = is_tail })
-          
+          ( start_loc,
+            {
+              Ast.Expression.TemplateLiteral.Element.value =
+                { Ast.Expression.TemplateLiteral.Element.cooked; raw };
+              tail = is_tail;
+            }
+          )
         in
 
         if is_tail then
@@ -1365,9 +1367,11 @@ module Expression
       let trailing = Eat.trailing_comments env in
       let loc = Loc.btwn start_loc end_loc in
       ( loc,
-        Expression.TemplateLiteral.
-          { quasis; expressions; comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing () }
-        
+        {
+          Expression.TemplateLiteral.quasis;
+          expressions;
+          comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing ();
+        }
       )
 
   and tagged_template env start_loc tag part =

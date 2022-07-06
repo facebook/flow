@@ -150,15 +150,13 @@ let main
            TODO: make these CLI flags *)
         let parse_options =
           Some
-            Parser_env.
-              {
-                enums = not no_enums;
-                esproposal_decorators = true;
-                esproposal_export_star_as = true;
-                types = true;
-                use_strict;
-              }
-            
+            {
+              Parser_env.enums = not no_enums;
+              esproposal_decorators = true;
+              esproposal_export_star_as = true;
+              types = true;
+              use_strict;
+            }
         in
 
         let filename = File_input.path_of_file_input file in

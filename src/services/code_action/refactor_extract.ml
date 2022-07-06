@@ -220,29 +220,28 @@ let create_extracted_function_call
           Statements.const_declaration ~loc:extracted_statements_loc declarations
     | _ ->
       let pattern =
-        Flow_ast.Pattern.
-          ( Loc.none,
-            Object
-              {
-                Object.properties =
-                  returned_variables
-                  |> List.map (fun (def, _) ->
-                         Object.Property
-                           ( Loc.none,
-                             {
-                               Object.Property.key =
-                                 Object.Property.Identifier (Identifiers.identifier def);
-                               pattern = Patterns.identifier def;
-                               default = None;
-                               shorthand = true;
-                             }
-                           )
-                     );
-                annot = Flow_ast.Type.Missing Loc.none;
-                comments = None;
-              }
-          )
-        
+        let open Flow_ast.Pattern in
+        ( Loc.none,
+          Object
+            {
+              Object.properties =
+                returned_variables
+                |> List.map (fun (def, _) ->
+                       Object.Property
+                         ( Loc.none,
+                           {
+                             Object.Property.key =
+                               Object.Property.Identifier (Identifiers.identifier def);
+                             pattern = Patterns.identifier def;
+                             default = None;
+                             shorthand = true;
+                           }
+                         )
+                   );
+              annot = Flow_ast.Type.Missing Loc.none;
+              comments = None;
+            }
+        )
       in
 
       if has_vars_with_shadowed_local_reassignments then

@@ -905,9 +905,13 @@ module Statement
       | Implicit { remove_trailing; _ } ->
         ([], remove_trailing right (fun remover right -> remover#type_ right))
     in
-    Statement.TypeAlias.
-      { id; tparams; right; comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing () }
-    
+
+    {
+      Statement.TypeAlias.id;
+      tparams;
+      right;
+      comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing ();
+    }
 
   and declare_type_alias env =
     with_loc
@@ -1001,15 +1005,14 @@ module Statement
       | (Implicit { remove_trailing; _ }, None, None, None) ->
         ([], remove_trailing id (fun remover id -> remover#identifier id), None, None, None)
     in
-    Statement.OpaqueType.
-      {
-        id;
-        tparams;
-        impltype;
-        supertype;
-        comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing ();
-      }
-    
+
+    {
+      Statement.OpaqueType.id;
+      tparams;
+      impltype;
+      supertype;
+      comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing ();
+    }
 
   and declare_opaque_type env =
     with_loc
@@ -1050,9 +1053,14 @@ module Statement
     let body =
       remove_trailing body (fun remover (loc, body) -> (loc, remover#object_type loc body))
     in
-    Statement.Interface.
-      { id; tparams; body; extends; comments = Flow_ast_utils.mk_comments_opt ~leading () }
-    
+
+    {
+      Statement.Interface.id;
+      tparams;
+      body;
+      extends;
+      comments = Flow_ast_utils.mk_comments_opt ~leading ();
+    }
 
   and declare_interface env =
     with_loc
@@ -1182,9 +1190,13 @@ module Statement
         ([], annot, Some (remove_trailing pred (fun remover pred -> remover#predicate pred)))
     in
     let annot = (fst annot, annot) in
-    Statement.DeclareFunction.
-      { id; annot; predicate; comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing () }
-    
+
+    {
+      Statement.DeclareFunction.id;
+      annot;
+      predicate;
+      comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing ();
+    }
 
   and declare_function_statement env =
     with_loc
@@ -1215,9 +1227,12 @@ module Statement
       | Implicit { remove_trailing; _ } ->
         ([], name, remove_trailing annot (fun remover annot -> remover#type_annotation annot))
     in
-    Statement.DeclareVariable.
-      { id = name; annot; comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing () }
-    
+
+    {
+      Statement.DeclareVariable.id = name;
+      annot;
+      comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing ();
+    }
 
   and declare_var_statement env =
     with_loc

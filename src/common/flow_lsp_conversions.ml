@@ -23,13 +23,11 @@ let lsp_position_to_flow_position p =
   Loc.{ line; column }
 
 let lsp_range_to_flow_loc ?source (range : Lsp.range) =
-  Lsp.
-    {
-      Loc.source;
-      start = lsp_position_to_flow_position range.start;
-      _end = lsp_position_to_flow_position range.end_;
-    }
-  
+  {
+    Loc.source;
+    start = lsp_position_to_flow_position range.Lsp.start;
+    _end = lsp_position_to_flow_position range.Lsp.end_;
+  }
 
 let loc_to_lsp_range (loc : Loc.t) : Lsp.range =
   Loc.(
@@ -114,41 +112,40 @@ let flow_completion_item_to_lsp
   let documentation = Base.Option.map item.documentation ~f:(fun doc -> [Lsp.MarkedString doc]) in
   let tags = Base.Option.map item.tags ~f:(List.filter is_tags_supported) in
   let command =
+    let open Lsp.Command in
     Some
-      Lsp.Command.
-        {
-          title = "";
-          command = Command "log";
-          arguments =
-            Hh_json.
-              [
-                JSON_String "textDocument/completion";
-                JSON_String item.log_info;
-                JSON_Object
-                  [
-                    ( "token",
-                      match token with
-                      | None -> JSON_Null
-                      | Some token -> JSON_String token
-                    );
-                    ("index", JSON_Number (string_of_int index));
-                    ( "session_requests",
-                      match autocomplete_session_length with
-                      | None -> JSON_Null
-                      | Some autocomplete_session_length ->
-                        JSON_Number (string_of_int autocomplete_session_length)
-                    );
-                    ( "typed_length",
-                      match typed_len with
-                      | None -> JSON_Null
-                      | Some typed_length -> JSON_Number (string_of_int typed_length)
-                    );
-                    ("completion", JSON_String item.name);
-                  ];
-              ]
-            ;
-        }
-      
+      {
+        title = "";
+        command = Command "log";
+        arguments =
+          Hh_json.
+            [
+              JSON_String "textDocument/completion";
+              JSON_String item.log_info;
+              JSON_Object
+                [
+                  ( "token",
+                    match token with
+                    | None -> JSON_Null
+                    | Some token -> JSON_String token
+                  );
+                  ("index", JSON_Number (string_of_int index));
+                  ( "session_requests",
+                    match autocomplete_session_length with
+                    | None -> JSON_Null
+                    | Some autocomplete_session_length ->
+                      JSON_Number (string_of_int autocomplete_session_length)
+                  );
+                  ( "typed_length",
+                    match typed_len with
+                    | None -> JSON_Null
+                    | Some typed_length -> JSON_Number (string_of_int typed_length)
+                  );
+                  ("completion", JSON_String item.name);
+                ];
+            ]
+          ;
+      }
   in
 
   let labelDetails =

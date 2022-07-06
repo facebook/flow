@@ -1824,13 +1824,12 @@ with type t = Impl.t = struct
         | JSX.ExpressionContainer.Expression expr -> expression expr
         | JSX.ExpressionContainer.EmptyExpression ->
           let empty_loc =
-            Loc.
-              {
-                loc with
-                start = { loc.start with column = loc.start.column + 1 };
-                _end = { loc._end with column = loc._end.column - 1 };
-              }
-            
+            let open Loc in
+            {
+              loc with
+              start = { loc.start with column = loc.start.column + 1 };
+              _end = { loc._end with column = loc._end.column - 1 };
+            }
           in
 
           node "JSXEmptyExpression" empty_loc []

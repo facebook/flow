@@ -2033,16 +2033,15 @@ module Make
                       | (false, "constructor") -> append_constructor (Some id_loc)
                       | _ -> append_method ~static name id_loc
                     in
+                    let open Ast.Type in
                     ( append_method fsig x,
-                      Ast.Type.
-                        ( loc,
-                          {
-                            prop with
-                            Object.Property.key = Property.Identifier ((id_loc, ft), id_name);
-                            value = Object.Property.Init ((func_loc, ft), Function func_ast);
-                          }
-                        )
-                      
+                      ( loc,
+                        {
+                          prop with
+                          Object.Property.key = Property.Identifier ((id_loc, ft), id_name);
+                          value = Object.Property.Init ((func_loc, ft), Function func_ast);
+                        }
+                      )
                     )
                   | (true, Property.Identifier _, _) ->
                     Flow.add_output cx Error_message.(EInternal (loc, MethodNotAFunction));
@@ -2065,16 +2064,15 @@ module Make
                       else
                         add_field ~static
                     in
+                    let open Ast.Type in
                     ( add name id_loc polarity (Annot t) x,
-                      Ast.Type.
-                        ( loc,
-                          {
-                            prop with
-                            Object.Property.key = Property.Identifier ((id_loc, t), id_name);
-                            value = Object.Property.Init value_ast;
-                          }
-                        )
-                      
+                      ( loc,
+                        {
+                          prop with
+                          Object.Property.key = Property.Identifier ((id_loc, t), id_name);
+                          value = Object.Property.Init value_ast;
+                        }
+                      )
                     )
                   (* unsafe getter property *)
                   | ( _,
@@ -2087,16 +2085,15 @@ module Make
                     let prop_t =
                       TypeUtil.type_t_of_annotated_or_inferred fsig.Func_type_sig.Types.return_t
                     in
+                    let open Ast.Type in
                     ( add_getter ~static name id_loc fsig x,
-                      Ast.Type.
-                        ( loc,
-                          {
-                            prop with
-                            Object.Property.key = Property.Identifier ((id_loc, prop_t), id_name);
-                            value = Object.Property.Get (get_loc, func_ast);
-                          }
-                        )
-                      
+                      ( loc,
+                        {
+                          prop with
+                          Object.Property.key = Property.Identifier ((id_loc, prop_t), id_name);
+                          value = Object.Property.Get (get_loc, func_ast);
+                        }
+                      )
                     )
                   (* unsafe setter property *)
                   | ( _,
@@ -2116,16 +2113,15 @@ module Make
                       | _ -> AnyT.at (AnyError None) id_loc
                       (* error case: report any ok *)
                     in
+                    let open Ast.Type in
                     ( add_setter ~static name id_loc fsig x,
-                      Ast.Type.
-                        ( loc,
-                          {
-                            prop with
-                            Object.Property.key = Property.Identifier ((id_loc, prop_t), id_name);
-                            value = Object.Property.Set (set_loc, func_ast);
-                          }
-                        )
-                      
+                      ( loc,
+                        {
+                          prop with
+                          Object.Property.key = Property.Identifier ((id_loc, prop_t), id_name);
+                          value = Object.Property.Set (set_loc, func_ast);
+                        }
+                      )
                     )
                 )
               in

@@ -130,30 +130,29 @@ let gen_import_statements file (symbols : Ty_symbol.symbol SymbolMap.t) =
     let local_name =
       Flow_ast_utils.ident_of_source (dummy_loc, Reason.display_string_of_name local_name)
     in
-    Ast.Statement.
-      ( dummy_loc,
-        ImportDeclaration
-          {
-            ImportDeclaration.import_kind = ImportDeclaration.ImportType;
-            source =
-              ( dummy_loc,
-                {
-                  Ast.StringLiteral.value = module_name;
-                  raw = raw_from_string module_name;
-                  comments = None;
-                }
+    let open Ast.Statement in
+    ( dummy_loc,
+      ImportDeclaration
+        {
+          ImportDeclaration.import_kind = ImportDeclaration.ImportType;
+          source =
+            ( dummy_loc,
+              {
+                Ast.StringLiteral.value = module_name;
+                raw = raw_from_string module_name;
+                comments = None;
+              }
+            );
+          default = None;
+          specifiers =
+            Some
+              ImportDeclaration.(
+                ImportNamedSpecifiers
+                  [{ kind = None; local = Some local_name; remote = remote_name }]
               );
-            default = None;
-            specifiers =
-              Some
-                ImportDeclaration.(
-                  ImportNamedSpecifiers
-                    [{ kind = None; local = Some local_name; remote = remote_name }]
-                );
-            comments = None;
-          }
-      )
-    
+          comments = None;
+        }
+    )
   in
 
   SymbolMap.fold (fun remote local acc -> gen_import_statement remote local :: acc) symbols []

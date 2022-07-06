@@ -14,24 +14,20 @@ open OUnit2
 let mk_line_comment text =
   let open Flow_ast in
   Some
-    Syntax.
-      {
-        leading = [((), Comment.{ text; kind = Line; on_newline = false })];
-        trailing = [];
-        internal = ();
-      }
-    
+    {
+      Syntax.leading = [((), Comment.{ text; kind = Line; on_newline = false })];
+      trailing = [];
+      internal = ();
+    }
 
 let mk_block_comment text =
   let open Flow_ast in
   Some
-    Syntax.
-      {
-        leading = [((), Comment.{ text; kind = Block; on_newline = false })];
-        trailing = [];
-        internal = ();
-      }
-    
+    {
+      Syntax.leading = [((), Comment.{ text; kind = Block; on_newline = false })];
+      trailing = [];
+      internal = ();
+    }
 
 let mk_block_comments ~leading ~trailing =
   let open Flow_ast in

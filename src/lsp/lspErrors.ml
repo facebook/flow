@@ -104,18 +104,17 @@ let limit_errors errors =
       let discard_count = List.length discard in
       let message = Printf.sprintf "[Only showing %i/%i diagnostics]" cap (cap + discard_count) in
       let diagnostic =
-        PublishDiagnostics.
-          {
-            (* the following range displays fine in all editors, regardless of contents *)
-            range = { start = { line = 0; character = 0 }; end_ = { line = 0; character = 0 } };
-            severity = Some PublishDiagnostics.Information;
-            code = NoCode;
-            source = Some "Flow";
-            message;
-            relatedInformation = [];
-            relatedLocations = [];
-          }
-        
+        {
+          (* the following range displays fine in all editors, regardless of contents *)
+          PublishDiagnostics.range =
+            { start = { line = 0; character = 0 }; end_ = { line = 0; character = 0 } };
+          severity = Some PublishDiagnostics.Information;
+          code = PublishDiagnostics.NoCode;
+          source = Some "Flow";
+          message;
+          relatedInformation = [];
+          relatedLocations = [];
+        }
       in
 
       diagnostic :: retain

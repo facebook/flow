@@ -128,31 +128,31 @@ let save_averages ~options ?estimates new_averages =
              estimated_files_to_init;
            }
          ->
-        Hh_json.
-          [
-            ( estimates_key,
-              JSON_Object
-                [
-                  ( estimated_time_to_recheck_key,
-                    JSON_Number (Dtoa.ecma_string_of_float estimated_time_to_recheck)
-                  );
-                  ( estimated_time_to_restart_key,
-                    JSON_Number (Dtoa.ecma_string_of_float estimated_time_to_restart)
-                  );
-                  ( estimated_time_to_init_key,
-                    JSON_Number (Dtoa.ecma_string_of_float estimated_time_to_init)
-                  );
-                  ( estimated_time_per_file_key,
-                    JSON_Number (Dtoa.ecma_string_of_float estimated_time_per_file)
-                  );
-                  ( estimated_files_to_recheck_key,
-                    JSON_Number (string_of_int estimated_files_to_recheck)
-                  );
-                  (estimated_files_to_init_key, JSON_Number (string_of_int estimated_files_to_init));
-                ]
-            );
-          ]
-        
+        [
+          ( estimates_key,
+            Hh_json.JSON_Object
+              [
+                ( estimated_time_to_recheck_key,
+                  Hh_json.JSON_Number (Dtoa.ecma_string_of_float estimated_time_to_recheck)
+                );
+                ( estimated_time_to_restart_key,
+                  Hh_json.JSON_Number (Dtoa.ecma_string_of_float estimated_time_to_restart)
+                );
+                ( estimated_time_to_init_key,
+                  Hh_json.JSON_Number (Dtoa.ecma_string_of_float estimated_time_to_init)
+                );
+                ( estimated_time_per_file_key,
+                  Hh_json.JSON_Number (Dtoa.ecma_string_of_float estimated_time_per_file)
+                );
+                ( estimated_files_to_recheck_key,
+                  Hh_json.JSON_Number (string_of_int estimated_files_to_recheck)
+                );
+                ( estimated_files_to_init_key,
+                  Hh_json.JSON_Number (string_of_int estimated_files_to_init)
+                );
+              ]
+          );
+        ]
     )
   in
   let json_str =

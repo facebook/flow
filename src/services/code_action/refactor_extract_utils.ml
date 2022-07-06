@@ -494,14 +494,13 @@ module RefactorProgramMappers = struct
       method! program program =
         let (program_loc, program_body) = program in
         if Loc.equal program_loc target_body_loc then
+          let open Flow_ast.Program in
           ( program_loc,
-            Flow_ast.Program.
-              {
-                program_body with
-                statements =
-                  super#statement_list program_body.statements @ [function_declaration_statement];
-              }
-            
+            {
+              program_body with
+              statements =
+                super#statement_list program_body.statements @ [function_declaration_statement];
+            }
           )
         else
           super#program program

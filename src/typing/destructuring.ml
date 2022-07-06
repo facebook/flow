@@ -71,22 +71,20 @@ module Make (Env : Env_sig.S) (Statement : Statement_sig.S with module Env := En
           ( loc,
             let open Ast.Expression in
             Member
-              Member.
-                {
-                  _object = init;
-                  property =
-                    PropertyExpression
-                      ( loc,
-                        Ast.Expression.Literal
-                          {
-                            Ast.Literal.value = Ast.Literal.Number (float i);
-                            raw = string_of_int i;
-                            comments = None;
-                          }
-                      );
-                  comments = None;
-                }
-              
+              {
+                Member._object = init;
+                property =
+                  Member.PropertyExpression
+                    ( loc,
+                      Ast.Expression.Literal
+                        {
+                          Ast.Literal.value = Ast.Literal.Number (float i);
+                          raw = string_of_int i;
+                          comments = None;
+                        }
+                    );
+                comments = None;
+              }
           )
       )
     in
@@ -116,13 +114,11 @@ module Make (Env : Env_sig.S) (Statement : Statement_sig.S with module Env := En
           ( loc,
             let open Ast.Expression in
             Member
-              Member.
-                {
-                  _object = init;
-                  property = PropertyIdentifier (loc, { Ast.Identifier.name = x; comments });
-                  comments = None;
-                }
-              
+              {
+                Member._object = init;
+                property = Member.PropertyIdentifier (loc, { Ast.Identifier.name = x; comments });
+                comments = None;
+              }
           )
       )
     in

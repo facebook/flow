@@ -137,28 +137,27 @@ module Patterns = struct
     (Loc.none, Array { Array.elements; annot = Ast.Type.Missing Loc.none; comments = None })
 
   let object_ str =
-    Object.
-      ( Loc.none,
-        Object
-          {
-            properties =
-              [
-                Property
-                  ( Loc.none,
-                    {
-                      Property.key =
-                        Property.Identifier (Flow_ast_utils.ident_of_source (Loc.none, str));
-                      pattern = identifier str;
-                      default = None;
-                      shorthand = true;
-                    }
-                  );
-              ];
-            annot = Ast.Type.Missing Loc.none;
-            comments = None;
-          }
-      )
-    
+    let open Object in
+    ( Loc.none,
+      Object
+        {
+          properties =
+            [
+              Property
+                ( Loc.none,
+                  {
+                    Property.key =
+                      Property.Identifier (Flow_ast_utils.ident_of_source (Loc.none, str));
+                    pattern = identifier str;
+                    default = None;
+                    shorthand = true;
+                  }
+                );
+            ];
+          annot = Ast.Type.Missing Loc.none;
+          comments = None;
+        }
+    )
 end
 
 module Functions = struct
@@ -615,15 +614,13 @@ let mk_program ?(loc = Loc.none) ?(comments = None) ?(all_comments = []) stmts =
 let ast_of_string ~parser str =
   let parse_options =
     Some
-      Parser_env.
-        {
-          enums = true;
-          esproposal_decorators = true;
-          esproposal_export_star_as = true;
-          types = true;
-          use_strict = false;
-        }
-      
+      {
+        Parser_env.enums = true;
+        esproposal_decorators = true;
+        esproposal_export_star_as = true;
+        types = true;
+        use_strict = false;
+      }
   in
 
   let env = Parser_env.init_env ~token_sink:None ~parse_options None str in

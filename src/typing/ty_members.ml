@@ -231,19 +231,17 @@ type ty_members = {
 }
 
 let ty_normalizer_options =
-  Ty_normalizer_env.
-    {
-      expand_internal_types = true;
-      flag_shadowed_type_params = true;
-      preserve_inferred_literal_types = false;
-      evaluate_type_destructors = false;
-      optimize_types = true;
-      omit_targ_defaults = false;
-      merge_bot_and_any_kinds = true;
-      verbose_normalizer = false;
-      max_depth = Some 50;
-    }
-  
+  {
+    Ty_normalizer_env.expand_internal_types = true;
+    flag_shadowed_type_params = true;
+    preserve_inferred_literal_types = false;
+    evaluate_type_destructors = false;
+    optimize_types = true;
+    omit_targ_defaults = false;
+    merge_bot_and_any_kinds = true;
+    verbose_normalizer = false;
+    max_depth = Some 50;
+  }
 
 let extract ~include_proto_members ~cx ~typed_ast ~file_sig scheme =
   let genv = Ty_normalizer_env.mk_genv ~full_cx:cx ~file:(Context.file cx) ~typed_ast ~file_sig in

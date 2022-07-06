@@ -110,20 +110,18 @@ type parse_options = {
 let parse_source_file ~types ~use_strict content file =
   let parse_options =
     Some
-      Parser_env.
-        {
-          (*
-           * Always parse ES proposal syntax. The user-facing config option to
-           * ignore/warn/enable them is handled during inference so that a clean error
-           * can be surfaced (rather than a more cryptic parse error).
-           *)
-          enums = true;
-          esproposal_decorators = true;
-          esproposal_export_star_as = true;
-          types;
-          use_strict;
-        }
-      
+      {
+        (*
+         * Always parse ES proposal syntax. The user-facing config option to
+         * ignore/warn/enable them is handled during inference so that a clean error
+         * can be surfaced (rather than a more cryptic parse error).
+         *)
+        Parser_env.enums = true;
+        esproposal_decorators = true;
+        esproposal_export_star_as = true;
+        types;
+        use_strict;
+      }
   in
 
   Parser_flow.program_file ~fail:false ~parse_options content (Some file)
@@ -131,15 +129,13 @@ let parse_source_file ~types ~use_strict content file =
 let parse_package_json_file ~node_main_fields content file =
   let parse_options =
     Some
-      Parser_env.
-        {
-          enums = false;
-          esproposal_decorators = false;
-          esproposal_export_star_as = false;
-          types = true;
-          use_strict = false;
-        }
-      
+      {
+        Parser_env.enums = false;
+        esproposal_decorators = false;
+        esproposal_export_star_as = false;
+        types = true;
+        use_strict = false;
+      }
   in
 
   match Parser_flow.package_json_file ~parse_options content (Some file) with

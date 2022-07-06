@@ -136,17 +136,15 @@ module CheckCommand = struct
       let lazy_mode = Some FlowConfig.Non_lazy in
       (* Saved state doesn't make sense for `flow check`, so disable it. *)
       let saved_state_options_flags =
-        CommandUtils.Saved_state_flags.
-          {
-            (* None would mean we would just use the value in the .flowconfig, if available.
-             * Instead, let's override that and turn off saved state entirely. *)
-            saved_state_fetcher = Some Options.Dummy_fetcher;
-            saved_state_force_recheck = false;
-            saved_state_no_fallback = false;
-            saved_state_skip_version_check = false;
-            saved_state_verify = false;
-          }
-        
+        {
+          (* None would mean we would just use the value in the .flowconfig, if available.
+           * Instead, let's override that and turn off saved state entirely. *)
+          CommandUtils.Saved_state_flags.saved_state_fetcher = Some Options.Dummy_fetcher;
+          saved_state_force_recheck = false;
+          saved_state_no_fallback = false;
+          saved_state_skip_version_check = false;
+          saved_state_verify = false;
+        }
       in
 
       make_options

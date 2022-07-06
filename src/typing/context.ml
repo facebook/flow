@@ -729,9 +729,11 @@ let add_implicit_instantiation_call cx lhs poly_t use_op reason funcalltype =
 let add_implicit_instantiation_ctor cx lhs poly_t use_op reason_op args =
   if cx.metadata.run_post_inference_implicit_instantiation then
     let check =
-      Implicit_instantiation_check.
-        { lhs; poly_t; operation = (use_op, reason_op, Constructor args) }
-      
+      {
+        Implicit_instantiation_check.lhs;
+        poly_t;
+        operation = (use_op, reason_op, Implicit_instantiation_check.Constructor args);
+      }
     in
 
     cx.ccx.implicit_instantiation_checks <- check :: cx.ccx.implicit_instantiation_checks

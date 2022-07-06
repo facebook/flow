@@ -109,23 +109,21 @@ module FixCodemod (Opts : FIX_CODEMOD_OPTIONS) = struct
 end
 
 let spec =
-  CommandSpec.
-    {
-      name = "fix";
-      doc = "Apply all known error fixes";
-      usage = Printf.sprintf "%s fix [OPTION]... [FILE]\n" CommandUtils.exe_name;
-      args =
-        (ArgSpec.empty
-        |> CommandUtils.codemod_flags
-        |> ArgSpec.(
-             flag
-               "--error-codes"
-               (list_of string)
-               ~doc:"Codes of errors to fix. If omitted, all fixable errors will be fixed."
-           )
-        );
-    }
-  
+  {
+    CommandSpec.name = "fix";
+    doc = "Apply all known error fixes";
+    usage = Printf.sprintf "%s fix [OPTION]... [FILE]\n" CommandUtils.exe_name;
+    args =
+      (CommandSpec.ArgSpec.empty
+      |> CommandUtils.codemod_flags
+      |> CommandSpec.ArgSpec.(
+           flag
+             "--error-codes"
+             (list_of string)
+             ~doc:"Codes of errors to fix. If omitted, all fixable errors will be fixed."
+         )
+      );
+  }
 
 let main (CommandUtils.Codemod_params ({ anon; _ } as codemod_params)) error_codes () =
   let komodo_flags =

@@ -24,13 +24,12 @@ let include_organize_imports_actions only =
   include_code_action ~only Lsp.CodeActionKind.source_organize_imports
 
 let layout_options options =
-  Js_layout_generator.
-    {
-      default_opts with
-      bracket_spacing = Options.format_bracket_spacing options;
-      single_quotes = Options.format_single_quotes options;
-    }
-  
+  let open Js_layout_generator in
+  {
+    default_opts with
+    bracket_spacing = Options.format_bracket_spacing options;
+    single_quotes = Options.format_single_quotes options;
+  }
 
 let autofix_insert_type_annotation_helper ~options ~ast ~diagnostics ~uri new_ast =
   let open Lsp in
