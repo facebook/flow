@@ -16,6 +16,9 @@ module type S = sig
   val resolve_env_entry :
     use_op:use_op -> resolved:bool -> update_reason:bool -> Context.t -> Type.t -> ALoc.t -> unit
 
+  val unify_write_entry :
+    Context.t -> use_op:use_op -> Type.t -> Env_api.def_loc_type -> ALoc.t -> unit
+
   val read_entry : for_type:bool -> Context.t -> ALoc.t -> reason -> Type.t
 end
 
@@ -180,18 +183,6 @@ module New_env = struct
       Flow_js.unify cx ~use_op:unknown_use t w;
       let env' = Loc_env.update_reason env loc (TypeUtil.reason_of_t t) in
       Context.set_environment cx env'
-
-  let record_array_provider_if_needed cx loc t =
-    let env = Context.environment cx in
-    match (Loc_env.find_array_provider env loc, Context.env_mode cx) with
-    | (_, Options.SSAEnv { resolved = true }) (* Fully resolved env doesn't need to write here *)
-    | (None, _) ->
-      ()
-    | (Some w, _) ->
-      Debug_js.Verbose.print_if_verbose_lazy
-        cx
-        (lazy [spf "recording array provider at location %s" (Reason.string_of_aloc loc)]);
-      Flow_js.unify cx ~use_op:unknown_use t w
 
   let find_var_opt { Env_api.env_values; _ } loc =
     match ALocMap.find_opt loc env_values with
@@ -656,14 +647,6 @@ module New_env = struct
       ()
     | (Some w, _) -> Flow_js.unify cx ~use_op:unknown_use refined w
 
-  let env_entries_of_def_loc_type var_info = function
-    | Env_api.OrdinaryNameLoc -> var_info.Env_api.env_entries
-    | Env_api.FunctionOrGlobalThisLoc -> var_info.Env_api.function_or_global_this_env_entries
-    | Env_api.ClassInstanceThisLoc -> var_info.Env_api.class_instance_this_env_entries
-    | Env_api.ClassStaticThisLoc -> var_info.Env_api.class_static_this_env_entries
-    | Env_api.ClassInstanceSuperLoc -> var_info.Env_api.class_instance_super_env_entries
-    | Env_api.ClassStaticSuperLoc -> var_info.Env_api.class_static_super_env_entries
-
   (* Unifies `t` with the entry in the loc_env's map. This allows it to be looked up for Write
    * entries reported by the name_resolver as well as providers for the provider analysis *)
   let unify_write_entry cx ?(allow_unify_resolved = false) ~use_op t def_loc_type loc =
@@ -993,7 +976,7 @@ module New_env = struct
                 let ts =
                   ALocSet.elements arr_providers
                   |> Base.List.map ~f:(fun loc ->
-                         t_option_value_exn cx loc (Loc_env.find_array_provider env loc)
+                         t_option_value_exn cx loc (Loc_env.find_ordinary_write env loc)
                      )
                 in
                 let constrain_t =
@@ -1027,8 +1010,8 @@ module New_env = struct
       env
       |> ALocMap.fold
            (fun loc reason env ->
-             let t = Tvar.mk cx reason in
-             Loc_env.initialize_array_provider env loc t)
+             let t = Inferred (Tvar.mk cx reason) in
+             Loc_env.initialize env Env_api.OrdinaryNameLoc loc t)
            var_info.Env_api.array_provider_entries
       |> initialize_entries Env_api.OrdinaryNameLoc var_info.Env_api.env_entries
       |> initialize_entries

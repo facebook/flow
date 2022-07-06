@@ -3184,7 +3184,9 @@ struct
       node
     | None ->
       let (((_, t), _) as exp) = expression_ ~cond ~hint cx loc e in
-      Env.record_array_provider_if_needed cx loc t;
+      let { Loc_env.var_info = { Env_api.providers; _ }; _ } = Context.environment cx in
+      if Provider_api.is_array_provider providers loc then
+        Env.record_expression_type_if_needed cx loc t;
       exp
 
   and this_ cx loc this =

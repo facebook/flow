@@ -1897,8 +1897,6 @@ module Env : Env_sig.S = struct
 
   let record_expression_type_if_needed _ _ _ = ()
 
-  let record_array_provider_if_needed _ _ _ = ()
-
   let discriminant_after_negated_cases cx _switch_loc refinement_key_opt discriminant =
     match discriminant with
     | (loc, Flow_ast.Expression.Identifier (_, { Flow_ast.Identifier.name; _ })) ->

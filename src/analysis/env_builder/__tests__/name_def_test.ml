@@ -966,3 +966,22 @@ class C {
   [%expect {|
     (2, 0) to (4, 1) =>
     legal scc: (((2, 6) to (2, 7)); ((3, 4) to (3, 5))) |}]
+
+let%expect_test "arr" =
+  print_order_test {|
+var x = []
+function w() {
+  var z = x;
+}
+function g() {
+  x = 42;
+}
+x.push(42);
+  |};
+  [%expect {|
+    (2, 4) to (2, 5) =>
+    (9, 7) to (9, 9) =>
+    (4, 6) to (4, 7) =>
+    (3, 9) to (3, 10) =>
+    (7, 2) to (7, 3) =>
+    (6, 9) to (6, 10) |}]

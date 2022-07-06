@@ -21,7 +21,6 @@ type t = {
   class_static_this_types: Type.annotated_or_inferred ALocMap.t;
   class_instance_super_types: Type.annotated_or_inferred ALocMap.t;
   class_static_super_types: Type.annotated_or_inferred ALocMap.t;
-  array_provider_types: Type.t ALocMap.t;
   class_bindings: Type.class_binding ALocMap.t;
   class_stack: ALoc.t list;
   return_hint: Type.t Hint_api.hint;
@@ -63,18 +62,6 @@ let initialize info def_loc_kind loc t =
   in
   update_types ~update info def_loc_kind
 
-let initialize_array_provider info loc t =
-  {
-    info with
-    array_provider_types =
-      ALocMap.update
-        loc
-        (function
-          | Some _ -> failwith (Utils_js.spf "%s already initialized" (Reason.string_of_aloc loc))
-          | None -> Some t)
-        info.array_provider_types;
-  }
-
 let update_reason ({ types; _ } as info) loc reason =
   let f _ = reason in
   let types =
@@ -113,8 +100,6 @@ let find_write
 
 let find_ordinary_write env loc = find_write env Env_api.OrdinaryNameLoc loc
 
-let find_array_provider env loc = ALocMap.find_opt loc env.array_provider_types
-
 let empty scope_kind =
   {
     types = ALocMap.empty;
@@ -123,7 +108,6 @@ let empty scope_kind =
     class_static_this_types = ALocMap.empty;
     class_instance_super_types = ALocMap.empty;
     class_static_super_types = ALocMap.empty;
-    array_provider_types = ALocMap.empty;
     var_info = Env_api.empty;
     resolved = ALocSet.empty;
     tparams = ALocMap.empty;

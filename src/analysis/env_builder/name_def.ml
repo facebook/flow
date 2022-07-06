@@ -1163,6 +1163,11 @@ class def_finder env_entries providers toplevel_scope =
         | Some (Env_api.RefinementWrite reason) -> this#add_binding loc reason (RefiExpression exp)
         | _ -> ()
       end;
+      begin
+        if Provider_api.is_array_provider providers loc then
+          let reason = Reason.mk_expression_reason exp in
+          this#add_binding loc reason (RefiExpression exp)
+      end;
       match expr with
       | Ast.Expression.Array expr -> this#visit_array_expression ~array_hint:hint expr
       | Ast.Expression.ArrowFunction x ->

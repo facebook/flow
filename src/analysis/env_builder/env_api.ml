@@ -157,7 +157,7 @@ module type S = sig
     class_static_this_env_entries: env_entry L.LMap.t;
     class_instance_super_env_entries: env_entry L.LMap.t;
     class_static_super_env_entries: env_entry L.LMap.t;
-    array_provider_entries: L.t virtual_reason L.LMap.t;
+    array_provider_entries: reason L.LMap.t;
     providers: Provider_api.info;
     refinement_of_id: int -> Refi.refinement;
   }
@@ -326,7 +326,7 @@ module Make
     class_static_this_env_entries: env_entry L.LMap.t;
     class_instance_super_env_entries: env_entry L.LMap.t;
     class_static_super_env_entries: env_entry L.LMap.t;
-    array_provider_entries: L.t virtual_reason L.LMap.t;
+    array_provider_entries: reason L.LMap.t;
     providers: Provider_api.info;
     refinement_of_id: int -> refinement;
   }
@@ -363,7 +363,8 @@ module Make
     | UndeclaredClass { def; _ } when for_type -> [Reason.poly_loc_of_reason def]
     | UndeclaredClass _ -> []
     | Write r -> [Reason.poly_loc_of_reason r]
-    | EmptyArray { reason; _ } -> [Reason.poly_loc_of_reason reason]
+    | EmptyArray { reason; arr_providers } ->
+      Reason.poly_loc_of_reason reason :: L.LSet.elements arr_providers
     | IllegalWrite r -> [Reason.poly_loc_of_reason r]
     | Uninitialized _ -> []
     | Undeclared _ -> []

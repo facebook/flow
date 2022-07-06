@@ -31,13 +31,13 @@ Error --------------------------------------------------------------------------
 Cannot yield `42` because number [1] is incompatible with `$AsyncIterable` [2]. [incompatible-type]
 
    async.js:4:27
-    4|     var x = await (yield* 42);
-                                 ^^ [1]
+      4|     var x = await (yield* 42);
+                                   ^^ [1]
 
 References:
-   <BUILTINS>/prelude.js:65:11
-   65| interface $AsyncIterable<+Yield,+Return,-Next> {
-                 ^^^^^^^^^^^^^^ [2]
+   <BUILTINS>/core.js:1672:11
+   1672| interface $AsyncIterable<+Yield,+Return,-Next> {
+                   ^^^^^^^^^^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------------------- bindings.js:4:2
@@ -358,6 +358,37 @@ References:
    class.js:33:6
    33| (c1: empty);
             ^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- emp_arr.js:9:2
+
+Cannot cast `x` to array type because string [1] is incompatible with number [2] in array element. [incompatible-cast]
+
+   emp_arr.js:9:2
+   9| (x: Array<number>);
+       ^
+
+References:
+   emp_arr.js:4:12
+   4|     x.push('a')
+                 ^^^ [1]
+   emp_arr.js:9:11
+   9| (x: Array<number>);
+                ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- emp_arr.js:9:11
+
+number [1] is incompatible with string [2]. [incompatible-type]
+
+   emp_arr.js:9:11
+   9| (x: Array<number>);
+                ^^^^^^ [1]
+
+References:
+   emp_arr.js:4:12
+   4|     x.push('a')
+                 ^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- enum.js:7:12
@@ -1167,4 +1198,4 @@ undefined. [incompatible-return]
 
 
 
-Found 79 errors
+Found 81 errors
