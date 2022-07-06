@@ -232,7 +232,6 @@ NATIVE_C_FILES=\
   src/hack_forked/utils/sys/gc_profiling.c\
   src/hack_forked/utils/sys/handle_stubs.c\
   src/hack_forked/utils/sys/nproc.c\
-  src/hack_forked/utils/sys/priorities.c\
   src/hack_forked/utils/sys/processor_info.c\
   src/hack_forked/utils/sys/sysinfo.c\
   src/parser_utils/type_sig/type_sig_bin_stubs.c\

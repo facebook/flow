@@ -8,7 +8,6 @@
    gc_profiling
    handle_stubs
    nproc
-   priorities
    processor_info
    sysinfo)))
 

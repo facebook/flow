@@ -279,8 +279,6 @@ let total_ram = get_total_ram ()
 
 let nbr_procs = nproc ()
 
-external set_priorities : cpu_priority:int -> io_priority:int -> unit = "hh_set_priorities"
-
 (** There are a bunch of functions that you expect to return a pid,
   like Unix.getpid() and Unix.create_process(). However, on
   Windows, instead of returning the process ID, they return a
