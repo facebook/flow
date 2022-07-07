@@ -357,8 +357,7 @@ module Expression
       let env' = env |> with_no_in false in
       let consequent = assignment env' in
       Expect.token env T_COLON;
-      let (end_loc, alternate) = with_loc assignment env in
-      let loc = Loc.btwn start_loc end_loc in
+      let (loc, alternate) = with_loc ~start_loc assignment env in
       Cover_expr
         ( loc,
           let open Expression in
@@ -545,7 +544,7 @@ module Expression
     | _ -> None
 
   and unary_cover env =
-    let begin_loc = Peek.loc env in
+    let start_loc = Peek.loc env in
     let leading = Peek.comments env in
     let op = peek_unary_op env in
     match op with
@@ -561,14 +560,13 @@ module Expression
       | None -> postfix_cover env
       | Some operator ->
         Eat.token env;
-        let (end_loc, argument) = with_loc unary env in
+        let (loc, argument) = with_loc ~start_loc unary env in
         if not (is_lhs argument) then error_at env (fst argument, Parse_error.InvalidLHSInAssignment);
         (match argument with
         | (_, Expression.Identifier (_, { Identifier.name; comments = _ })) when is_restricted name
           ->
           strict_error env Parse_error.StrictLHSPrefix
         | _ -> ());
-        let loc = Loc.btwn begin_loc end_loc in
         Cover_expr
           ( loc,
             Expression.(
@@ -583,8 +581,7 @@ module Expression
           ))
     | Some operator ->
       Eat.token env;
-      let (end_loc, argument) = with_loc unary env in
-      let loc = Loc.btwn begin_loc end_loc in
+      let (loc, argument) = with_loc ~start_loc unary env in
       let open Expression in
       (match (operator, argument) with
       | (Unary.Delete, (_, Identifier _)) -> strict_error_at env (loc, Parse_error.StrictDelete)
