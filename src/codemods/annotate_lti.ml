@@ -172,6 +172,7 @@ let mapper
     ~default_any
     ~skip_normal_params
     ~skip_this_params
+    ~skip_class_properties
     (cctx : Codemod_context.Typed.t) =
   let lint_severities = Codemod_context.Typed.lint_severities cctx in
   let flowfixme_ast = Codemod_context.Typed.flowfixme_ast ~lint_severities cctx in
@@ -211,6 +212,32 @@ let mapper
       in
       this#set_acc acc';
       Codemod_annotator.validate_ty cctx ~max_type_size ty
+
+    method private class_property_annot annot init =
+      match (annot, init) with
+      | (Ast.Type.Missing ploc, (Ast.Class.Property.Declared | Ast.Class.Property.Uninitialized))
+        when not skip_class_properties ->
+        let ty_result =
+          Codemod_annotator.get_ty cctx ~preserve_literals ploc
+          >>| Normalize_union.normalize
+          >>= this#fix_and_validate ploc
+        in
+        this#get_annot ploc ty_result annot
+      | _ -> annot
+
+    method! class_property loc prop =
+      let open Ast.Class.Property in
+      let prop = super#class_property loc prop in
+      let { annot; value; _ } = prop in
+      let annot = this#class_property_annot annot value in
+      { prop with annot }
+
+    method! class_private_field loc prop =
+      let open Ast.Class.PrivateField in
+      let prop = super#class_private_field loc prop in
+      let { annot; value; _ } = prop in
+      let annot = this#class_property_annot annot value in
+      { prop with annot }
 
     method! function_param_pattern ((ploc, patt) : ('loc, 'loc) Ast.Pattern.t) =
       if (not skip_normal_params) && LMap.mem ploc loc_error_map then (

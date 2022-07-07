@@ -236,6 +236,11 @@ module Annotate_lti_command = struct
                "--skip-this-params"
                no_arg
                ~doc:"Skips adding 'this' parameter type annotations to functions even if necessary"
+          |> flag
+               "--skip-class-properties"
+               no_arg
+               ~doc:
+                 "Skips adding type annotations to class properties without initializers even if necessary"
         );
     }
 
@@ -246,6 +251,7 @@ module Annotate_lti_command = struct
       default_any
       skip_normal_params
       skip_this_params
+      skip_class_properties
       () =
     let module Runner = Codemod_runner.MakeSimpleTypedRunner (struct
       module Acc = Annotate_lti.Acc
@@ -273,6 +279,7 @@ module Annotate_lti_command = struct
             ~default_any
             ~skip_normal_params
             ~skip_this_params
+            ~skip_class_properties
         in
         Codemod_utils.make_visitor (Codemod_utils.Mapper mapper)
     end) in

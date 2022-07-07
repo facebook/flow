@@ -16,12 +16,16 @@ const callback = (e: number) => e + 1;
 [1, 2, 3].map(e => e + 1);
 
 
->>> class.js (#changes: 2)
+>>> class.js (#changes: 4)
 // @flow
 
 class A {
+  foo: A;
+  declare bar: A;
 
   aMethod(x: number) {
+    this.foo = new A();
+    this.bar = new A();
     return x + 1;
   }
 
@@ -31,8 +35,6 @@ class A {
 const a = new A();
 a.aMethod(2);
 a.arrow(true);
-
-
 
 >>> function.js (#changes: 13)
 // @flow
@@ -184,8 +186,8 @@ let arrow = () => { return this; }
 
 Stats:
   Files changed:                            5
-  Number of annotations added:             24
-  Total size of annotations:               32
+  Number of annotations added:             26
+  Total size of annotations:               34
   Number of LTI errors:                    33
 
 Errors:
