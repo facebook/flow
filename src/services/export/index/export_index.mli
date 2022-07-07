@@ -18,12 +18,12 @@ and source =
 
 and export = source * kind [@@deriving show, ord]
 
-module ExportSet : sig
-  include Flow_set.S with type elt = export
+module ExportMap : sig
+  include WrappedMap.S with type key = export
 
-  val pp : Format.formatter -> t -> unit
+  val pp : (Format.formatter -> 'a -> unit) -> Format.formatter -> 'a t -> unit
 
-  val show : t -> string
+  val show : (Format.formatter -> 'a -> unit) -> 'a t -> string
 end
 
 type t [@@deriving show]
@@ -38,15 +38,15 @@ val merge : t -> t -> t
     also returns a list of keys that no longer are exported by any file. *)
 val subtract : t -> t -> t * string list
 
-val find : string -> t -> ExportSet.t
+val find : string -> t -> int ExportMap.t
 
 val find_seq : string -> t -> export Seq.t
 
-val fold_names : f:('acc -> string -> ExportSet.t -> 'acc) -> init:'acc -> t -> 'acc
+val fold_names : f:('acc -> string -> int ExportMap.t -> 'acc) -> init:'acc -> t -> 'acc
 
 val fold : f:('acc -> string -> export -> 'acc) -> init:'acc -> t -> 'acc
 
-val map : f:(export -> export) -> t -> t
+val map : f:('a -> 'b) -> 'a ExportMap.t SMap.t -> 'b ExportMap.t SMap.t
 
 val keys : t -> string list
 

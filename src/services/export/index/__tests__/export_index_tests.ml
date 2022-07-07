@@ -18,7 +18,7 @@ let declare_module name = Export_index.Builtin name
 let assert_exports =
   let printer = [%show: Export_index.export list] in
   fun ~ctxt expected actual ->
-    let actual = Export_index.ExportSet.elements actual in
+    let actual = Export_index.ExportMap.keys actual in
     assert_equal ~ctxt ~printer expected actual
 
 let find_tests =

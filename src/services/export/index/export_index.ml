@@ -81,67 +81,68 @@ let compare_export (a_source, a_kind) (b_source, b_kind) =
   else
     k
 
-module ExportSet = struct
-  include Flow_set.Make (struct
+module ExportMap = struct
+  include WrappedMap.Make (struct
     type t = export
 
     let compare = compare_export
   end)
 
-  let pp fmt x =
-    Format.fprintf fmt "@[<hv 2>{";
-    let elements = elements x in
-    (match elements with
-    | [] -> ()
-    | _ -> Format.fprintf fmt " ");
-    ignore
-      (List.fold_left
-         (fun sep elt ->
-           if sep then Format.fprintf fmt ";@ ";
-           pp_export fmt elt;
-           true)
-         false
-         elements
-      );
-    (match elements with
-    | [] -> ()
-    | _ -> Format.fprintf fmt " ");
-    Format.fprintf fmt "}@]"
+  let pp : (Format.formatter -> 'a -> unit) -> Format.formatter -> 'a t -> unit =
+   (fun pp_data -> make_pp pp_export pp_data)
 
-  let show x = Format.asprintf "%a" pp x
+  let show pp_data x = Format.asprintf "%a" (pp pp_data) x
 end
 
-type t = ExportSet.t SMap.t [@@deriving show]
+type t = int ExportMap.t SMap.t [@@deriving show]
 
 let empty = SMap.empty
 
 let add : string -> source -> kind -> t -> t =
+  let add_export = function
+    | None -> Some 1
+    | Some count -> Some (count + 1)
+  in
   let add_file file_key kind = function
-    | None -> Some (ExportSet.singleton (file_key, kind))
-    | Some exports -> Some (ExportSet.add (file_key, kind) exports)
+    | None -> Some (ExportMap.singleton (file_key, kind) 1)
+    | Some exports -> Some (ExportMap.update (file_key, kind) add_export exports)
   in
   (fun name file_key kind t -> SMap.update name (add_file file_key kind) t)
 
-let merge x y = SMap.union ~combine:(fun _key a b -> Some (ExportSet.union a b)) x y
+let merge x y =
+  SMap.union
+    ~combine:(fun _key a b -> Some (ExportMap.union ~combine:(fun _key a b -> Some (a + b)) a b))
+    x
+    y
 
 let fold_names ~f ~init t = SMap.fold (fun name exports acc -> f acc name exports) t init
 
 let fold ~f ~init t =
   fold_names
-    ~f:(fun acc name exports -> ExportSet.fold (fun export acc -> f acc name export) exports acc)
+    ~f:(fun acc name exports ->
+      ExportMap.fold (fun export _num acc -> f acc name export) exports acc)
     ~init
     t
 
-let map ~f t = SMap.map (ExportSet.map f) t
+let map ~f t = SMap.map (ExportMap.map f) t
 
 let subtract old_t t =
   let (t, dead_names) =
     SMap.fold
       (fun name files_to_remove (t, dead_names) ->
+        let diff a b =
+          ExportMap.filter
+            (fun key _value ->
+              if ExportMap.exists (fun b_key _value -> b_key = key) b then
+                false
+              else
+                true)
+            a
+        in
         match SMap.find_opt name t with
         | Some files ->
-          let updated = ExportSet.diff files files_to_remove in
-          if ExportSet.is_empty updated then
+          let updated = diff files files_to_remove in
+          if ExportMap.is_empty updated then
             (SMap.remove name t, name :: dead_names)
           else
             (SMap.add name updated t, dead_names)
@@ -155,11 +156,11 @@ let subtract old_t t =
 let find name (t : t) =
   match SMap.find_opt name t with
   | Some exports -> exports
-  | None -> ExportSet.empty
+  | None -> ExportMap.empty
 
 let find_seq name t =
   match SMap.find_opt name t with
-  | Some t -> ExportSet.to_seq t
+  | Some t -> List.to_seq (ExportMap.keys t)
   | None -> Seq.empty
 
 (** [keys t] returns all of the exported names from every file in [t] *)

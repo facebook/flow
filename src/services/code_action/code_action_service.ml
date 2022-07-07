@@ -275,9 +275,9 @@ let preferred_import ~ast ~exports name loc =
     else
       Export_search.get_values name exports
   in
-  if Export_index.ExportSet.cardinal files = 1 then
+  if Export_index.ExportMap.cardinal files = 1 then
     (* there must be exactly 1 result to autofix it *)
-    Some (Export_index.ExportSet.choose files)
+    Some (fst (Export_index.ExportMap.choose files))
   else
     None
 
@@ -289,7 +289,7 @@ let suggest_imports ~options ~reader ~ast ~diagnostics ~exports ~name uri loc =
     else
       Export_search.get_values name exports
   in
-  if Export_index.ExportSet.is_empty files then
+  if Export_index.ExportMap.is_empty files then
     []
   else
     let src_dir = Lsp_helpers.lsp_uri_to_path uri |> Filename.dirname |> Base.Option.return in
@@ -302,8 +302,8 @@ let suggest_imports ~options ~reader ~ast ~diagnostics ~exports ~name uri loc =
       )
     in
     let rev_actions =
-      Export_index.ExportSet.fold
-        (fun (source, export_kind) acc ->
+      Export_index.ExportMap.fold
+        (fun (source, export_kind) _num acc ->
           match text_edits_of_import ~options ~reader ~src_dir ~ast export_kind name source with
           | None -> acc
           | Some { edits; title; from = _ } ->

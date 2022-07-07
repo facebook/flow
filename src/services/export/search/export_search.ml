@@ -34,8 +34,8 @@ type candidates = {
 }
 
 let kinds_of_exports (has_value, has_type) exports =
-  Export_index.ExportSet.fold
-    (fun (_file, kind) (has_value, has_type) ->
+  Export_index.ExportMap.fold
+    (fun (_file, kind) _num (has_value, has_type) ->
       match kind with
       | Export_index.Default -> (true, has_type)
       | Export_index.Named -> (true, has_type)
@@ -152,11 +152,11 @@ let get name { index; value_matcher = _; type_matcher = _ } = Export_index.find 
 
 let get_values name t =
   get name t
-  |> Export_index.ExportSet.filter (fun (_file_key, kind) -> Export_index.kind_is_value kind)
+  |> Export_index.ExportMap.filter (fun (_file_key, kind) _num -> Export_index.kind_is_value kind)
 
 let get_types name t =
   get name t
-  |> Export_index.ExportSet.filter (fun (_file_key, kind) -> Export_index.kind_is_type kind)
+  |> Export_index.ExportMap.filter (fun (_file_key, kind) _num -> Export_index.kind_is_type kind)
 
 let pp fmt { index; _ } = Export_index.pp fmt index
 
