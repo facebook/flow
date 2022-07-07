@@ -10,22 +10,24 @@ open Reason
 open Loc_collections
 open Name_def
 open Dependency_sigs
+module EnvMap = Env_api.EnvMap
+module EnvSet = Flow_set.Make (Env_api.EnvKey)
 
 module Tarjan =
   Tarjan.Make
     (struct
-      include ALoc
+      include Env_api.EnvKey
 
-      let to_string l = debug_to_string l
+      let to_string (_, l) = ALoc.debug_to_string l
     end)
-    (ALocMap)
-    (ALocSet)
+    (EnvMap)
+    (EnvSet)
 
 type element =
-  | Normal of ALoc.t
-  | Resolvable of ALoc.t
+  | Normal of Env_api.EnvKey.t
+  | Resolvable of Env_api.EnvKey.t
   | Illegal of {
-      loc: ALoc.t;
+      loc: Env_api.EnvKey.t;
       reason: ALoc.t virtual_reason;
       recursion: ALoc.t Nel.t;
     }
@@ -37,7 +39,7 @@ type result =
 
 module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) = struct
   module FindDependencies : sig
-    val depends : Context.t -> Env_api.env_info -> ALoc.t -> Name_def.def -> ALoc.t Nel.t ALocMap.t
+    val depends : Context.t -> Env_api.env_info -> ALoc.t -> Name_def.def -> ALoc.t Nel.t EnvMap.t
 
     val recursively_resolvable : Name_def.def -> bool
   end = struct
@@ -71,7 +73,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) = struct
        in a def to determine which variables appear *)
     class use_visitor cx ({ Env_api.env_values; env_entries; _ } as env) init =
       object (this)
-        inherit [ALoc.t Nel.t ALocMap.t, ALoc.t] Flow_ast_visitor.visitor ~init as super
+        inherit [ALoc.t Nel.t EnvMap.t, ALoc.t] Flow_ast_visitor.visitor ~init as super
 
         val mutable this_ = None
 
@@ -81,7 +83,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) = struct
 
         method add ~why t =
           this#update_acc (fun uses ->
-              ALocMap.update
+              EnvMap.update
                 t
                 (function
                   | None -> Some (Nel.one why)
@@ -156,10 +158,9 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) = struct
         method! pattern_identifier ?kind:_ ((loc, _) as id) =
           (* Ignore cases that don't have bindings in the environment, like `var x;`
              and illegal or unreachable writes. *)
-          (match ALocMap.find_opt loc env_entries with
-          | Some Env_api.(AssigningWrite _ | GlobalWrite _ | RefinementWrite _ | EmptyArrayWrite _)
-            ->
-            this#add ~why:loc loc
+          (match EnvMap.find_opt (Env_api.OrdinaryNameLoc, loc) env_entries with
+          | Some Env_api.(AssigningWrite _ | GlobalWrite _ | EmptyArrayWrite _) ->
+            this#add ~why:loc (Env_api.OrdinaryNameLoc, loc)
           | Some Env_api.NonAssigningWrite
           | None ->
             ());
@@ -168,11 +169,13 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) = struct
         method! binding_type_identifier ((loc, _) as id) =
           (* Unconditional, unlike the above, because all binding type identifiers should
              exist in the environment. *)
-          this#add ~why:loc loc;
+          this#add ~why:loc (Env_api.OrdinaryNameLoc, loc);
           id
 
         method! this_expression loc this_ =
-          Base.Option.iter ~f:(fun this_loc -> this#add ~why:loc this_loc) this#this_;
+          Base.Option.iter
+            ~f:(fun this_loc -> this#add ~why:loc (Env_api.OrdinaryNameLoc, this_loc))
+            this#this_;
           super#this_expression loc this_
 
         (* Skip names in function parameter types (e.g. declared functions) *)
@@ -272,7 +275,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) = struct
     (* For all the possible defs, explore the def's structure with the class above
        to find what variables have to be resolved before this def itself can be resolved *)
     let depends cx ({ Env_api.providers; _ } as env) id_loc =
-      let visitor = new use_visitor cx env ALocMap.empty in
+      let visitor = new use_visitor cx env EnvMap.empty in
       let depends_of_node mk_visit state =
         visitor#set_acc state;
         let node_visit () = mk_visit visitor in
@@ -280,7 +283,9 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) = struct
       in
       let depends_of_tparams_map tparams_map =
         depends_of_node (fun visitor ->
-            ALocMap.iter (fun loc _ -> visitor#add ~why:loc loc) tparams_map
+            ALocMap.iter
+              (fun loc _ -> visitor#add ~why:loc (Env_api.OrdinaryNameLoc, loc))
+              tparams_map
         )
       in
       (* depends_of_annotation and of_expression take the `state` parameter from
@@ -296,7 +301,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) = struct
       let depends_of_fun fully_annotated tparams_map function_ =
         depends_of_node
           (fun visitor -> visitor#function_def ~fully_annotated function_)
-          (depends_of_tparams_map tparams_map ALocMap.empty)
+          (depends_of_tparams_map tparams_map EnvMap.empty)
       in
       let depends_of_class
           fully_annotated
@@ -330,7 +335,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) = struct
             let _ = map_list visitor#class_decorator class_decorators in
             let _ = map_opt visitor#type_params tparams in
             ())
-          ALocMap.empty
+          EnvMap.empty
       in
       let depends_of_declared_class
           {
@@ -351,7 +356,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) = struct
             let _ = map_list (map_loc visitor#generic_type) mixins in
             let _ = map_opt visitor#class_implements implements in
             ())
-          ALocMap.empty
+          EnvMap.empty
       in
       let depends_of_alias { Ast.Statement.TypeAlias.tparams; right; _ } =
         depends_of_node
@@ -360,7 +365,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) = struct
             let _ = map_opt visitor#type_params tparams in
             let _ = visitor#type_ right in
             ())
-          ALocMap.empty
+          EnvMap.empty
       in
       let depends_of_opaque { Ast.Statement.OpaqueType.tparams; impltype; supertype; _ } =
         depends_of_node
@@ -370,7 +375,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) = struct
             let _ = map_opt visitor#type_ impltype in
             let _ = map_opt visitor#type_ supertype in
             ())
-          ALocMap.empty
+          EnvMap.empty
       in
       let depends_of_tparam tparams_map (_, { Ast.Type.TypeParam.bound; variance; default; _ }) =
         depends_of_node
@@ -380,7 +385,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) = struct
             let _ = visitor#variance_opt variance in
             let _ = map_opt visitor#type_ default in
             ())
-          (depends_of_tparams_map tparams_map ALocMap.empty)
+          (depends_of_tparams_map tparams_map EnvMap.empty)
       in
       let depends_of_interface { Ast.Statement.Interface.tparams; extends; body; _ } =
         depends_of_node
@@ -390,7 +395,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) = struct
             let _ = map_list (map_loc visitor#generic_type) extends in
             let _ = map_loc visitor#object_type body in
             ())
-          ALocMap.empty
+          EnvMap.empty
       in
       let depends_of_hint_node state = function
         | AnnotationHint (tparams_map, anno) -> depends_of_annotation tparams_map anno state
@@ -432,19 +437,19 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) = struct
               Base.Option.value_exn (Provider_api.providers_of_def providers id_loc)
             in
             Base.List.fold
-              ~init:ALocMap.empty
+              ~init:EnvMap.empty
               ~f:(fun acc { Provider_api.reason = r; _ } ->
                 let key = Reason.poly_loc_of_reason r in
-                ALocMap.update
-                  key
+                EnvMap.update
+                  (Env_api.OrdinaryNameLoc, key)
                   (function
                     | None -> Some (Nel.one id_loc)
                     | Some locs -> Some (Nel.cons id_loc locs))
                   acc)
               providers
           else
-            ALocMap.empty
-        | Some e -> depends_of_expression e ALocMap.empty
+            EnvMap.empty
+        | Some e -> depends_of_expression e EnvMap.empty
       in
       let depends_of_binding bind =
         let state = depends_of_lhs id_loc None in
@@ -480,7 +485,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) = struct
       in
       let depends_of_member_assign member_loc member rhs =
         let state =
-          depends_of_node (fun visitor -> ignore @@ visitor#member member_loc member) ALocMap.empty
+          depends_of_node (fun visitor -> ignore @@ visitor#member member_loc member) EnvMap.empty
         in
         depends_of_expression rhs state
       in
@@ -488,7 +493,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) = struct
       | Binding binding -> depends_of_binding binding
       | RefiExpression exp
       | ChainExpression (_, exp) ->
-        depends_of_expression exp ALocMap.empty
+        depends_of_expression exp EnvMap.empty
       | Update { lhs_member; _ } -> depends_of_update lhs_member
       | MemberAssign { member_loc; member; rhs; _ } ->
         depends_of_member_assign member_loc member rhs
@@ -500,14 +505,14 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) = struct
       | TypeAlias (_, alias) -> depends_of_alias alias
       | OpaqueType (_, alias) -> depends_of_opaque alias
       | TypeParam (tparams_map, tparam) -> depends_of_tparam tparams_map tparam
-      | ThisTypeParam (tparams_map, _) -> depends_of_tparams_map tparams_map ALocMap.empty
+      | ThisTypeParam (tparams_map, _) -> depends_of_tparams_map tparams_map EnvMap.empty
       | Interface (_, inter) -> depends_of_interface inter
       | GeneratorNext (Some { return_annot; tparams_map; _ }) ->
-        depends_of_annotation tparams_map return_annot ALocMap.empty
-      | GeneratorNext None -> ALocMap.empty
+        depends_of_annotation tparams_map return_annot EnvMap.empty
+      | GeneratorNext None -> EnvMap.empty
       | Enum _ ->
-        (* Enums don't contain any code or type references, they're literal-like *) ALocMap.empty
-      | Import _ -> (* same with all imports *) ALocMap.empty
+        (* Enums don't contain any code or type references, they're literal-like *) EnvMap.empty
+      | Import _ -> (* same with all imports *) EnvMap.empty
 
     (* Is the variable defined by this def able to be recursively depended on, e.g. created as a 0->1 tvar before being
        resolved? *)
@@ -551,47 +556,57 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) = struct
         false
   end
 
-  let dependencies cx env loc (def, _, _, _) acc =
+  let dependencies cx env (kind, loc) (def, _, _, _) acc =
     let depends = FindDependencies.depends cx env loc def in
-    ALocMap.add loc depends acc
+    EnvMap.update
+      (kind, loc)
+      (function
+        | None -> Some depends
+        | Some _ ->
+          failwith
+            (Utils_js.spf
+               "Duplicate name defs for the same location %s"
+               (ALoc.debug_to_string ~include_source:true loc)
+            ))
+      acc
 
-  let build_graph cx env map = ALocMap.fold (dependencies cx env) map ALocMap.empty
+  let build_graph cx env map = EnvMap.fold (dependencies cx env) map EnvMap.empty
 
   let build_ordering cx env map =
     let graph = build_graph cx env map in
-    let order_graph = ALocMap.map (fun deps -> ALocMap.keys deps |> ALocSet.of_list) graph in
-    let roots = ALocMap.keys order_graph |> ALocSet.of_list in
+    let order_graph = EnvMap.map (fun deps -> EnvMap.keys deps |> EnvSet.of_list) graph in
+    let roots = EnvMap.keys order_graph |> EnvSet.of_list in
     let sort =
       try Tarjan.topsort ~roots order_graph |> List.rev with
       | Not_found ->
         let all =
-          ALocMap.values order_graph
-          |> List.map ALocSet.elements
+          EnvMap.values order_graph
+          |> List.map EnvSet.elements
           |> List.flatten
-          |> ALocSet.of_list
-          |> ALocSet.elements
-          |> Base.List.map ~f:(ALoc.debug_to_string ~include_source:false)
+          |> EnvSet.of_list
+          |> EnvSet.elements
+          |> Base.List.map ~f:(fun (_, l) -> ALoc.debug_to_string ~include_source:false l)
           |> String.concat ","
         in
         let roots =
-          ALocSet.elements roots
-          |> Base.List.map ~f:(ALoc.debug_to_string ~include_source:true)
+          EnvSet.elements roots
+          |> Base.List.map ~f:(fun (_, l) -> ALoc.debug_to_string ~include_source:true l)
           |> String.concat ","
         in
         failwith (Printf.sprintf "roots: %s\n\nall: %s" roots all)
     in
     let result_of_scc (fst, rest) =
-      let element_of_loc loc =
-        let (def, _, _, reason) = ALocMap.find loc map in
-        if ALocSet.mem loc (ALocMap.find loc order_graph) then
+      let element_of_loc (kind, loc) =
+        let (def, _, _, reason) = EnvMap.find (kind, loc) map in
+        if EnvSet.mem (kind, loc) (EnvMap.find (kind, loc) order_graph) then
           if FindDependencies.recursively_resolvable def then
-            Resolvable loc
+            Resolvable (kind, loc)
           else
-            let depends = ALocMap.find loc graph in
-            let recursion = ALocMap.find loc depends in
-            Illegal { loc; reason; recursion }
+            let depends = EnvMap.find (kind, loc) graph in
+            let recursion = EnvMap.find (kind, loc) depends in
+            Illegal { loc = (kind, loc); reason; recursion }
         else
-          Normal loc
+          Normal (kind, loc)
       in
       match rest with
       | [] -> Singleton (element_of_loc fst)
@@ -600,7 +615,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) = struct
         if
           Base.List.for_all
             ~f:(fun m ->
-              let (def, _, _, _) = ALocMap.find m map in
+              let (def, _, _, _) = EnvMap.find m map in
               FindDependencies.recursively_resolvable def)
             (fst :: rest)
         then
@@ -608,13 +623,19 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) = struct
         else
           let elements =
             Nel.map
-              (fun loc ->
-                let (_, _, _, reason) = ALocMap.find loc map in
-                let depends = ALocMap.find loc graph in
+              (fun (kind, loc) ->
+                let (_, _, _, reason) = EnvMap.find (kind, loc) map in
+                let depends = EnvMap.find (kind, loc) graph in
                 let edges =
-                  ALocMap.fold
+                  EnvMap.fold
                     (fun k v acc ->
-                      if k != loc && Nel.mem ~equal:ALoc.equal k component then
+                      if
+                        k != (kind, loc)
+                        && Nel.mem
+                             ~equal:(fun k1 k2 -> Env_api.EnvKey.compare k1 k2 = 0)
+                             k
+                             component
+                      then
                         Nel.to_list v @ acc
                       else
                         acc)
@@ -622,7 +643,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) = struct
                     []
                   |> Nel.of_list_exn
                 in
-                (element_of_loc loc, reason, edges))
+                (element_of_loc (kind, loc), reason, edges))
               component
           in
           IllegalSCC elements

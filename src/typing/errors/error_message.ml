@@ -3803,7 +3803,7 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
       Nel.map
         (fun (reason, (hd, tl)) ->
           let tl_dep =
-            Base.List.map ~f:(fun loc -> [text ", "; ref (mk_reason (RCustom "") loc)]) tl
+            Base.List.map ~f:(fun loc -> [text ","; ref (mk_reason (RCustom "") loc)]) tl
             |> List.flatten
           in
           [
@@ -3811,10 +3811,9 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
             ref reason;
             text " depends on ";
             ref (mk_reason (RCustom "other definition") hd);
-            text "\n";
           ]
           @ tl_dep
-          @ [])
+          @ [text "\n"])
         dependencies
       |> Nel.to_list
       |> List.flatten

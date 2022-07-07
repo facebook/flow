@@ -16,7 +16,7 @@ References:
 Error -------------------------------------------------------------------------------------------------------- a.js:10:7
 
 The following definitions recursively depend on each other, and Flow cannot compute their types:
- - `TimeOfDay_noanno` [1] depends on other definition [2]
+ - `TimeOfDay_noanno` [1] depends on other definition [2], [3]
  - `other` [2] depends on other definition [3]
 Please add type annotations to these definitions [definition-cycle]
 

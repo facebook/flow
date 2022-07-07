@@ -8,9 +8,9 @@
 open Test_utils
 open Name_def
 open Utils_js
-open Loc_collections
 open Name_def_ordering
 module Ast = Flow_ast
+module EnvMap = Env_api.EnvMap
 
 module Context = struct
   type t = unit
@@ -109,10 +109,10 @@ let string_of_source = function
     spf "import %s%s from %s" (string_of_import_kind import_kind) (string_of_import import) source
 
 let print_values values =
-  let kvlist = ALocMap.bindings values in
+  let kvlist = EnvMap.bindings values in
   let strlist =
     Base.List.map
-      ~f:(fun (def_loc, (init, _, _, _)) ->
+      ~f:(fun ((_, def_loc), (init, _, _, _)) ->
         Printf.sprintf "%s => %s" (ALoc.debug_to_string def_loc) (string_of_source init))
       kvlist
   in
@@ -121,10 +121,11 @@ let print_values values =
 let print_order lst =
   let msg_of_elt elt =
     match elt with
-    | Normal l
-    | Resolvable l ->
+    | Normal (_, l)
+    | Resolvable (_, l) ->
       ALoc.debug_to_string l
-    | Illegal { loc; _ } -> Printf.sprintf "illegal self-cycle (%s)" (ALoc.debug_to_string loc)
+    | Illegal { loc = (_, loc); _ } ->
+      Printf.sprintf "illegal self-cycle (%s)" (ALoc.debug_to_string loc)
   in
   let msg =
     Base.List.map

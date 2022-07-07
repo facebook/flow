@@ -226,44 +226,25 @@ module Env : Env_sig.S = struct
         let ({ Loc_env.var_info = { Env_api.providers; _ } as var_info; _ } as env) =
           Context.environment cx
         in
-        let initialize_entries def_loc_type =
-          ALocMap.fold (fun loc env_entry env ->
-              match env_entry with
-              | Env_api.AssigningWrite reason
-              | Env_api.RefinementWrite reason
-              | Env_api.EmptyArrayWrite (reason, _)
-              | Env_api.GlobalWrite reason ->
-                let t = Inferred (Tvar.mk cx reason) in
-                (* Treat everything as inferred for now for the purposes of annotated vs inferred *)
+        Env_api.EnvMap.fold
+          (fun (def_loc_type, loc) env_entry env ->
+            match env_entry with
+            | Env_api.AssigningWrite reason
+            | Env_api.EmptyArrayWrite (reason, _)
+            | Env_api.GlobalWrite reason ->
+              let t = Tvar.mk cx reason in
+              Loc_env.initialize env def_loc_type loc t
+            | Env_api.NonAssigningWrite ->
+              if Env_api.Provider_api.is_provider providers loc then
+                (* If an illegal write is considered as a provider, we still need to give it a
+                   slot to prevent crashing in code that queries provider types. *)
+                let reason = mk_reason (RCustom "non-assigning provider") loc in
+                let t = AnyT.error reason in
                 Loc_env.initialize env def_loc_type loc t
-              | Env_api.NonAssigningWrite ->
-                if Env_api.Provider_api.is_provider providers loc then
-                  (* If an illegal write is considered as a provider, we still need to give it a
-                     slot to prevent crashing in code that queries provider types. *)
-                  let reason = mk_reason (RCustom "non-assigning provider") loc in
-                  let t = Inferred (AnyT.error reason) in
-                  Loc_env.initialize env def_loc_type loc t
-                else
-                  env
-          )
-        in
-        env
-        |> initialize_entries Env_api.OrdinaryNameLoc var_info.Env_api.env_entries
-        |> initialize_entries
-             Env_api.FunctionOrGlobalThisLoc
-             var_info.Env_api.function_or_global_this_env_entries
-        |> initialize_entries
-             Env_api.ClassInstanceThisLoc
-             var_info.Env_api.class_instance_this_env_entries
-        |> initialize_entries
-             Env_api.ClassStaticThisLoc
-             var_info.Env_api.class_static_this_env_entries
-        |> initialize_entries
-             Env_api.ClassInstanceSuperLoc
-             var_info.Env_api.class_instance_super_env_entries
-        |> initialize_entries
-             Env_api.ClassStaticSuperLoc
-             var_info.Env_api.class_static_super_env_entries
+              else
+                env)
+          var_info.Env_api.env_entries
+          env
         |> Context.set_environment cx
     end;
 
@@ -1895,7 +1876,7 @@ module Env : Env_sig.S = struct
 
   let new_env = false
 
-  let record_expression_type_if_needed _ _ _ = ()
+  let record_expression_type_if_needed _ _ _ _ = ()
 
   let discriminant_after_negated_cases cx _switch_loc refinement_key_opt discriminant =
     match discriminant with

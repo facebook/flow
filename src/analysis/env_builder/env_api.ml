@@ -8,20 +8,6 @@
 open Reason
 module Ast = Flow_ast
 
-type new_env_literal_check =
-  | SingletonNum of ALoc.t * bool * float * string
-  | SingletonBool of ALoc.t * bool
-  | SingletonStr of ALoc.t * bool * string
-
-type def_loc_type =
-  | OrdinaryNameLoc
-  | FunctionOrGlobalThisLoc
-  | ClassInstanceThisLoc
-  | ClassStaticThisLoc
-  | ClassInstanceSuperLoc
-  | ClassStaticSuperLoc
-[@@deriving show]
-
 module type S = sig
   module L : Loc_sig.S
 
@@ -31,7 +17,35 @@ module type S = sig
 
   module Provider_api : Provider_api.S with module L = L
 
-  module ReasonSet : Flow_set.S with type elt = L.t virtual_reason
+  type def_loc_type =
+    | OrdinaryNameLoc
+    | ExpressionLoc
+    | ArrayProviderLoc
+    | FunctionOrGlobalThisLoc
+    | ClassInstanceThisLoc
+    | ClassStaticThisLoc
+    | ClassInstanceSuperLoc
+    | ClassStaticSuperLoc
+  [@@deriving show]
+
+  module EnvKey : Flow_map.OrderedType with type t = def_loc_type * L.t
+
+  module EnvMap : sig
+    include WrappedMap.S with type key = EnvKey.t
+
+    val add_ordinary : L.t -> 'a -> 'a t -> 'a t
+
+    val find_ordinary : L.t -> 'a t -> 'a
+
+    val find_opt_ordinary : L.t -> 'a t -> 'a option
+
+    val update_ordinary : L.t -> ('a option -> 'a option) -> 'a t -> 'a t
+  end
+
+  type new_env_literal_check =
+    | SingletonNum of ALoc.t * bool * float * string
+    | SingletonBool of ALoc.t * bool
+    | SingletonStr of ALoc.t * bool * string
 
   type read_loc = L.t
 
@@ -142,7 +156,6 @@ module type S = sig
      * incompatibility of the write that is never performed. When the new_env finds a
      * NonAssigningWrite it will not subtype the given type against the providers. *)
     | AssigningWrite of L.t virtual_reason
-    | RefinementWrite of L.t virtual_reason
     | GlobalWrite of L.t virtual_reason
     | NonAssigningWrite
     | EmptyArrayWrite of L.t virtual_reason * L.LSet.t
@@ -151,13 +164,7 @@ module type S = sig
     scopes: Scope_api.info;
     ssa_values: Ssa_api.values;
     env_values: values;
-    env_entries: env_entry L.LMap.t;
-    function_or_global_this_env_entries: env_entry L.LMap.t;
-    class_instance_this_env_entries: env_entry L.LMap.t;
-    class_static_this_env_entries: env_entry L.LMap.t;
-    class_instance_super_env_entries: env_entry L.LMap.t;
-    class_static_super_env_entries: env_entry L.LMap.t;
-    array_provider_entries: reason L.LMap.t;
+    env_entries: env_entry EnvMap.t;
     providers: Provider_api.info;
     refinement_of_id: int -> Refi.refinement;
   }
@@ -166,7 +173,7 @@ module type S = sig
 
   val write_locs_of_read_loc : values -> read_loc -> write_locs
 
-  val writes_of_write_loc : for_type:bool -> write_loc -> L.t list
+  val writes_of_write_loc : for_type:bool -> write_loc -> EnvKey.t list
 
   val refinements_of_write_loc : env_info -> write_loc -> refinement_kind list
 
@@ -199,11 +206,43 @@ module Make
   module Scope_builder : Scope_builder_sig.S with module L = L and module Api = Scope_api =
     Scope_builder.Make (L) (Scope_api)
 
-  module ReasonSet = Flow_set.Make (struct
-    type t = L.t virtual_reason
+  type new_env_literal_check =
+    | SingletonNum of ALoc.t * bool * float * string
+    | SingletonBool of ALoc.t * bool
+    | SingletonStr of ALoc.t * bool * string
 
-    let compare = Stdlib.compare
-  end)
+  type def_loc_type =
+    | OrdinaryNameLoc
+    | ExpressionLoc
+    | ArrayProviderLoc
+    | FunctionOrGlobalThisLoc
+    | ClassInstanceThisLoc
+    | ClassStaticThisLoc
+    | ClassInstanceSuperLoc
+    | ClassStaticSuperLoc
+  [@@deriving show]
+
+  module EnvKey = struct
+    type t = def_loc_type * L.t
+
+    let compare (t1, l1) (t2, l2) =
+      if t1 = t2 then
+        L.compare l1 l2
+      else
+        Stdlib.compare t1 t2
+  end
+
+  module EnvMap = struct
+    include WrappedMap.Make (EnvKey)
+
+    let add_ordinary l = add (OrdinaryNameLoc, l)
+
+    let find_ordinary l = find (OrdinaryNameLoc, l)
+
+    let find_opt_ordinary l = find_opt (OrdinaryNameLoc, l)
+
+    let update_ordinary l = update (OrdinaryNameLoc, l)
+  end
 
   type read_loc = L.t
 
@@ -311,7 +350,6 @@ module Make
      * incompatibility of the write that is never performed. When the new_env finds a
      * NonAssigningWrite it will not subtype the given type against the providers. *)
     | AssigningWrite of L.t virtual_reason
-    | RefinementWrite of L.t virtual_reason
     | GlobalWrite of L.t virtual_reason
     | NonAssigningWrite
     | EmptyArrayWrite of L.t virtual_reason * L.LSet.t
@@ -320,13 +358,7 @@ module Make
     scopes: Scope_api.info;
     ssa_values: Ssa_api.values;
     env_values: values;
-    env_entries: env_entry L.LMap.t;
-    function_or_global_this_env_entries: env_entry L.LMap.t;
-    class_instance_this_env_entries: env_entry L.LMap.t;
-    class_static_this_env_entries: env_entry L.LMap.t;
-    class_instance_super_env_entries: env_entry L.LMap.t;
-    class_static_super_env_entries: env_entry L.LMap.t;
-    array_provider_entries: reason L.LMap.t;
+    env_entries: env_entry EnvMap.t;
     providers: Provider_api.info;
     refinement_of_id: int -> refinement;
   }
@@ -336,13 +368,7 @@ module Make
       scopes = Scope_builder.Acc.init;
       ssa_values = L.LMap.empty;
       env_values = L.LMap.empty;
-      env_entries = L.LMap.empty;
-      function_or_global_this_env_entries = L.LMap.empty;
-      class_instance_this_env_entries = L.LMap.empty;
-      class_static_this_env_entries = L.LMap.empty;
-      class_instance_super_env_entries = L.LMap.empty;
-      class_static_super_env_entries = L.LMap.empty;
-      array_provider_entries = L.LMap.empty;
+      env_entries = EnvMap.empty;
       providers = Provider_api.empty;
       refinement_of_id = (fun _ -> failwith "Empty env info");
     }
@@ -360,12 +386,13 @@ module Make
     match write_loc with
     | Refinement { refinement_id = _; write_id = _; writes } ->
       writes |> List.map (writes_of_write_loc ~for_type) |> List.flatten
-    | UndeclaredClass { def; _ } when for_type -> [Reason.poly_loc_of_reason def]
+    | UndeclaredClass { def; _ } when for_type -> [(OrdinaryNameLoc, Reason.poly_loc_of_reason def)]
     | UndeclaredClass _ -> []
-    | Write r -> [Reason.poly_loc_of_reason r]
+    | Write r -> [(OrdinaryNameLoc, Reason.poly_loc_of_reason r)]
     | EmptyArray { reason; arr_providers } ->
-      Reason.poly_loc_of_reason reason :: L.LSet.elements arr_providers
-    | IllegalWrite r -> [Reason.poly_loc_of_reason r]
+      (OrdinaryNameLoc, Reason.poly_loc_of_reason reason)
+      :: Base.List.map ~f:(fun l -> (ArrayProviderLoc, l)) (L.LSet.elements arr_providers)
+    | IllegalWrite r -> [(OrdinaryNameLoc, Reason.poly_loc_of_reason r)]
     | Uninitialized _ -> []
     | Undeclared _ -> []
     | FunctionOrGlobalThis _ -> []
@@ -378,9 +405,9 @@ module Make
     | Global _ -> []
     | Projection _ -> []
     | Unreachable _ -> []
-    | Undefined r -> [Reason.poly_loc_of_reason r]
-    | Number r -> [Reason.poly_loc_of_reason r]
-    | DeclaredFunction l -> [l]
+    | Undefined r -> [(OrdinaryNameLoc, Reason.poly_loc_of_reason r)]
+    | Number r -> [(OrdinaryNameLoc, Reason.poly_loc_of_reason r)]
+    | DeclaredFunction l -> [(OrdinaryNameLoc, l)]
 
   let rec refinements_of_write_loc ({ refinement_of_id; _ } as env) write_loc =
     match write_loc with
@@ -395,7 +422,7 @@ module Make
       |> Base.Option.value_map
            ~default:[]
            ~f:(fun { write_locs; def_loc = _; val_kind = _; name = _; id = _ } ->
-             List.map (writes_of_write_loc ~for_type) write_locs
+             List.map (fun l -> writes_of_write_loc ~for_type l |> List.map snd) write_locs
          )
       |> List.flatten
       |> L.LSet.of_list

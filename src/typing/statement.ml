@@ -3186,7 +3186,7 @@ struct
       let (((_, t), _) as exp) = expression_ ~cond ~hint cx loc e in
       let { Loc_env.var_info = { Env_api.providers; _ }; _ } = Context.environment cx in
       if Provider_api.is_array_provider providers loc then
-        Env.record_expression_type_if_needed cx loc t;
+        Env.record_expression_type_if_needed cx Env_api.ArrayProviderLoc loc t;
       exp
 
   and this_ cx loc this =
@@ -5310,7 +5310,7 @@ struct
           (t, None, res, None, None))
     in
     let (t, _, ((loc, _), _), _, _) = result in
-    Env.record_expression_type_if_needed cx loc t;
+    Env.record_expression_type_if_needed cx Env_api.OrdinaryNameLoc loc t;
     result
 
   and arg_list cx ~hint (args_loc, { Ast.Expression.ArgList.arguments; comments }) =
@@ -5763,7 +5763,7 @@ struct
     | Instanceof ->
       let left = expression cx ~hint:Hint_None left in
       let (((right_loc, right_t), _) as right) = expression cx ~hint:Hint_None right in
-      Env.record_expression_type_if_needed cx right_loc right_t;
+      Env.record_expression_type_if_needed cx Env_api.ExpressionLoc right_loc right_t;
       let reason_rhs = mk_reason (RCustom "RHS of `instanceof` operator") right_loc in
       Flow.flow cx (right_t, AssertInstanceofRHST reason_rhs);
       (BoolT.at loc |> with_trust literal_trust, { operator; left; right; comments })
@@ -7214,7 +7214,11 @@ struct
           | (_, None) ->
             None
           | (true, Some ((name, projections) as refinement_key)) ->
-            Env.record_expression_type_if_needed cx (aloc_of_reason (reason_of_t val_t)) val_t;
+            Env.record_expression_type_if_needed
+              cx
+              Env_api.ExpressionLoc
+              (aloc_of_reason (reason_of_t val_t))
+              val_t;
             let pred = LeftP (SentinelProp prop_name, val_t) in
             ( if projections = [] then
               let general_type = Env.query_var_non_specific cx name (fst expr) in
@@ -7762,7 +7766,7 @@ struct
     | (loc, Binary { Binary.operator = Binary.Instanceof; left; right; comments }) ->
       let make_ast_and_pred left_ast bool =
         let (((rloc, right_t), _) as right_ast) = expression cx ~hint:Hint_None right in
-        Env.record_expression_type_if_needed cx rloc right_t;
+        Env.record_expression_type_if_needed cx Env_api.ExpressionLoc rloc right_t;
         let reason_rhs = mk_reason (RCustom "RHS of `instanceof` operator") rloc in
         Flow.flow cx (right_t, AssertInstanceofRHST reason_rhs);
         ( ( (loc, bool),

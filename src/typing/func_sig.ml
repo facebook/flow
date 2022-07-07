@@ -370,7 +370,7 @@ struct
           in
           Flow.flow_t cx (t, type_t_of_annotated_or_inferred return_t)
         in
-        Env.record_expression_type_if_needed cx return_loc next_t;
+        Env.record_expression_type_if_needed cx Env_api.OrdinaryNameLoc return_loc next_t;
         (yield_t, next_t)
       | _ ->
         ( DefT

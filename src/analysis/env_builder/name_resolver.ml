@@ -98,6 +98,7 @@ module Make
     Invalidation_api.Make (Loc_sig.ALocS) (Scope_api) (Ssa_api) (Provider_api)
   module Env_api = Env_api
   module Eq_test = Eq_test.Make (Scope_api) (Ssa_api) (Env_api)
+  module EnvMap = Env_api.EnvMap
   open Scope_builder
   open Env_api.Refi
 
@@ -183,7 +184,7 @@ module Make
 
     val declared_function : ALoc.t -> t
 
-    (* unwraps a RefinementWrite into just the underlying write *)
+    (* unwraps a Refinement into just the underlying write *)
     val unrefine : int -> t -> t
 
     val unrefine_deeply : int -> t -> t
@@ -838,13 +839,7 @@ module Make
     values: read_entry L.LMap.t;
     (* We also maintain a list of all write locations, for use in populating the env with
        types. *)
-    write_entries: Env_api.env_entry Loc_sig.ALocS.LMap.t;
-    function_or_global_this_write_entries: Env_api.env_entry Loc_sig.ALocS.LMap.t;
-    class_instance_this_write_entries: Env_api.env_entry Loc_sig.ALocS.LMap.t;
-    class_static_this_write_entries: Env_api.env_entry Loc_sig.ALocS.LMap.t;
-    class_instance_super_write_entries: Env_api.env_entry Loc_sig.ALocS.LMap.t;
-    class_static_super_write_entries: Env_api.env_entry Loc_sig.ALocS.LMap.t;
-    array_provider_entries: reason Loc_sig.ALocS.LMap.t;
+    write_entries: Env_api.env_entry EnvMap.t;
     curr_id: int;
     (* Maps refinement ids to refinements. This mapping contains _all_ the refinements reachable at
      * any point in the code. The latest_refinement maps keep track of which entries to read. *)
@@ -1181,17 +1176,11 @@ module Make
         let (env, jsx_base_name) = initial_env cx unbound_names in
         {
           values = L.LMap.empty;
-          write_entries = L.LMap.empty;
-          function_or_global_this_write_entries =
-            L.LMap.empty
-            |> L.LMap.add
-                 ALoc.none
+          write_entries =
+            EnvMap.empty
+            |> EnvMap.add
+                 (Env_api.FunctionOrGlobalThisLoc, ALoc.none)
                  (Env_api.AssigningWrite (mk_reason (RIdentifier (internal_name "this")) ALoc.none));
-          class_instance_this_write_entries = L.LMap.empty;
-          class_static_this_write_entries = L.LMap.empty;
-          class_instance_super_write_entries = L.LMap.empty;
-          class_static_super_write_entries = L.LMap.empty;
-          array_provider_entries = L.LMap.empty;
           curr_id = 0;
           refinement_heap = IMap.empty;
           latest_refinements = [];
@@ -1208,24 +1197,7 @@ module Make
             Val.simplify def_loc binding_kind_opt name value)
           env_state.values
 
-      method write_entries : Env_api.env_entry L.LMap.t = env_state.write_entries
-
-      method function_or_global_this_write_entries : Env_api.env_entry L.LMap.t =
-        env_state.function_or_global_this_write_entries
-
-      method class_instance_this_write_entries : Env_api.env_entry L.LMap.t =
-        env_state.class_instance_this_write_entries
-
-      method class_static_this_write_entries : Env_api.env_entry L.LMap.t =
-        env_state.class_static_this_write_entries
-
-      method class_instance_super_write_entries : Env_api.env_entry L.LMap.t =
-        env_state.class_instance_super_write_entries
-
-      method class_static_super_write_entries : Env_api.env_entry L.LMap.t =
-        env_state.class_static_super_write_entries
-
-      method array_provider_entries : reason L.LMap.t = env_state.array_provider_entries
+      method write_entries : Env_api.env_entry EnvMap.t = env_state.write_entries
 
       method private merge_vals_with_havoc ~havoc ~def_loc v1 v2 =
         (* It's not safe to reset to havoc when one side can be uninitialized, because the havoc
@@ -1569,7 +1541,7 @@ module Make
             | Bindings.Type _ ->
               let reason = mk_reason (RType (OrdinaryName name)) loc in
               let write_entries =
-                L.LMap.add loc (Env_api.AssigningWrite reason) env_state.write_entries
+                EnvMap.add_ordinary loc (Env_api.AssigningWrite reason) env_state.write_entries
               in
               env_state <- { env_state with write_entries };
               {
@@ -1583,7 +1555,7 @@ module Make
             | Bindings.DeclaredClass ->
               let reason = mk_reason (RIdentifier (OrdinaryName name)) loc in
               let write_entries =
-                L.LMap.add loc (Env_api.AssigningWrite reason) env_state.write_entries
+                EnvMap.add_ordinary loc (Env_api.AssigningWrite reason) env_state.write_entries
               in
               env_state <- { env_state with write_entries };
               {
@@ -1599,7 +1571,7 @@ module Make
               let write_entries =
                 Base.List.fold
                   ~f:(fun acc { Provider_api.reason = r; _ } ->
-                    L.LMap.add (poly_loc_of_reason r) (Env_api.AssigningWrite r) acc)
+                    EnvMap.add_ordinary (poly_loc_of_reason r) (Env_api.AssigningWrite r) acc)
                   ~init:env_state.write_entries
                   providers
               in
@@ -1618,7 +1590,7 @@ module Make
               let write_entries =
                 Base.List.fold
                   ~f:(fun acc { Provider_api.reason = r; _ } ->
-                    L.LMap.add (poly_loc_of_reason r) (Env_api.AssigningWrite r) acc)
+                    EnvMap.add_ordinary (poly_loc_of_reason r) (Env_api.AssigningWrite r) acc)
                   ~init:env_state.write_entries
                   providers
               in
@@ -1655,7 +1627,7 @@ module Make
             | Bindings.GeneratorNext ->
               let reason = mk_reason (RCustom "next") loc in
               let write_entries =
-                L.LMap.add loc (Env_api.AssigningWrite reason) env_state.write_entries
+                EnvMap.add_ordinary loc (Env_api.AssigningWrite reason) env_state.write_entries
               in
               env_state <- { env_state with write_entries };
               {
@@ -1677,33 +1649,33 @@ module Make
                       env_state <-
                         {
                           env_state with
-                          function_or_global_this_write_entries =
-                            L.LMap.add
-                              loc
+                          write_entries =
+                            EnvMap.add
+                              (Env_api.FunctionOrGlobalThisLoc, loc)
                               (Env_api.AssigningWrite reason)
-                              env_state.function_or_global_this_write_entries;
+                              env_state.write_entries;
                         };
                       Val.function_or_global_this reason
                     | ClassStaticEnv ->
                       env_state <-
                         {
                           env_state with
-                          class_static_this_write_entries =
-                            L.LMap.add
-                              loc
+                          write_entries =
+                            EnvMap.add
+                              (Env_api.ClassStaticThisLoc, loc)
                               (Env_api.AssigningWrite reason)
-                              env_state.class_static_this_write_entries;
+                              env_state.write_entries;
                         };
                       Val.class_static_this reason
                     | ClassInstanceEnv ->
                       env_state <-
                         {
                           env_state with
-                          class_instance_this_write_entries =
-                            L.LMap.add
-                              loc
+                          write_entries =
+                            EnvMap.add
+                              (Env_api.ClassInstanceThisLoc, loc)
                               (Env_api.AssigningWrite reason)
-                              env_state.class_instance_this_write_entries;
+                              env_state.write_entries;
                         };
                       Val.class_instance_this reason
                   in
@@ -1717,22 +1689,22 @@ module Make
                       env_state <-
                         {
                           env_state with
-                          class_static_super_write_entries =
-                            L.LMap.add
-                              loc
+                          write_entries =
+                            EnvMap.add
+                              (Env_api.ClassStaticSuperLoc, loc)
                               (Env_api.AssigningWrite reason)
-                              env_state.class_static_super_write_entries;
+                              env_state.write_entries;
                         };
                       Val.class_static_super reason
                     | ClassInstanceEnv ->
                       env_state <-
                         {
                           env_state with
-                          class_instance_super_write_entries =
-                            L.LMap.add
-                              loc
+                          write_entries =
+                            EnvMap.add
+                              (Env_api.ClassInstanceSuperLoc, loc)
                               (Env_api.AssigningWrite reason)
-                              env_state.class_instance_super_write_entries;
+                              env_state.write_entries;
                         };
                       Val.class_instance_super reason
                   in
@@ -1786,7 +1758,7 @@ module Make
                   let write_entries =
                     Base.List.fold
                       ~f:(fun acc { Provider_api.reason = r; _ } ->
-                        L.LMap.add (poly_loc_of_reason r) (Env_api.AssigningWrite r) acc)
+                        EnvMap.add_ordinary (poly_loc_of_reason r) (Env_api.AssigningWrite r) acc)
                       ~init:env_state.write_entries
                       providers
                   in
@@ -2030,7 +2002,9 @@ module Make
           (match error_for_assignment_kind cx x loc def_loc stored_binding_kind kind !val_ref with
           | Some err ->
             add_output err;
-            let write_entries = L.LMap.add loc Env_api.NonAssigningWrite env_state.write_entries in
+            let write_entries =
+              EnvMap.add_ordinary loc Env_api.NonAssigningWrite env_state.write_entries
+            in
             (* Give unsupported var redeclaration a write to avoid spurious errors like use of
                possibly undefined variable. Essentially, we are treating var redeclaration as a
                assignment with an any-typed value. *)
@@ -2049,13 +2023,13 @@ module Make
                     Env_api.AssigningWrite reason
                 in
                 val_ref := get_assigned_val reason;
-                L.LMap.add loc write_entry env_state.write_entries
+                EnvMap.add_ordinary loc write_entry env_state.write_entries
               ) else
                 (* All of the providers are aleady in the map. We don't want to overwrite them with
                  * a non-assigning write. We _do_ want to enter regular function declarations as
                  * non-assigning writes so that they are not checked against the providers in
                 * New_env.set_env_entry *)
-                L.LMap.update
+                EnvMap.update_ordinary
                   loc
                   (fun x ->
                     match x with
@@ -2191,7 +2165,7 @@ module Make
             (fun _ -> assigned_val)
             ~create_val_for_heap:(lazy assigned_val);
           let write_entries =
-            L.LMap.add lhs_loc (Env_api.AssigningWrite val_reason) env_state.write_entries
+            EnvMap.add_ordinary lhs_loc (Env_api.AssigningWrite val_reason) env_state.write_entries
           in
           env_state <- { env_state with write_entries }
         | _ -> ()
@@ -2374,7 +2348,7 @@ module Make
                 | Some err ->
                   add_output err;
                   let write_entries =
-                    L.LMap.add name_loc Env_api.NonAssigningWrite env_state.write_entries
+                    EnvMap.add_ordinary name_loc Env_api.NonAssigningWrite env_state.write_entries
                   in
                   env_state <- { env_state with write_entries }
                 | _ ->
@@ -2384,13 +2358,13 @@ module Make
                       val_ref := assigned_val;
                       (* Unlike with a typical write, we don't want to create a write_entry here,
                          because the type should be computed from the array providers. *)
-                      L.LMap.add name_loc write_kind env_state.write_entries
+                      EnvMap.add_ordinary name_loc write_kind env_state.write_entries
                     ) else
                       (* All of the providers are aleady in the map. We don't want to overwrite them with
                        * a non-assigning write. We _do_ want to enter regular function declarations as
                        * non-assigning writes so that they are not checked against the providers in
                        * New_env.set_env_entry *)
-                      L.LMap.update
+                      EnvMap.update_ordinary
                         name_loc
                         (fun x ->
                           match x with
@@ -3407,7 +3381,7 @@ module Make
             | None -> mk_reason (RType (InternalName "*default*")) loc
           in
           let write = Env_api.AssigningWrite reason in
-          let write_entries = L.LMap.add loc write env_state.write_entries in
+          let write_entries = EnvMap.add_ordinary loc write env_state.write_entries in
           env_state <- { env_state with write_entries }
         in
         (* Give class body the location of the entire class,
@@ -3579,7 +3553,7 @@ module Make
             else
               Env_api.NonAssigningWrite
           in
-          let write_entries = L.LMap.add (fst argument) write env_state.write_entries in
+          let write_entries = EnvMap.add_ordinary (fst argument) write env_state.write_entries in
           env_state <- { env_state with write_entries }
         in
         match argument with
@@ -3865,7 +3839,7 @@ module Make
           lazy
             (let reason = mk_reason (RefinementKey.reason_desc key) loc in
              let write_entries =
-               L.LMap.add loc (Env_api.AssigningWrite reason) env_state.write_entries
+               EnvMap.add_ordinary loc (Env_api.AssigningWrite reason) env_state.write_entries
              in
              env_state <- { env_state with write_entries };
              Val.one reason
@@ -3969,7 +3943,10 @@ module Make
                              loc
                          in
                          let write_entries =
-                           L.LMap.add loc (Env_api.AssigningWrite reason) env_state.write_entries
+                           EnvMap.add_ordinary
+                             loc
+                             (Env_api.AssigningWrite reason)
+                             env_state.write_entries
                          in
                          env_state <- { env_state with write_entries };
                          Val.projection loc
@@ -4296,10 +4273,14 @@ module Make
               );
               let obj_reason = mk_reason (RefinementKey.reason_desc refinement_key) obj_loc in
               let write_entries =
-                L.LMap.add
+                EnvMap.add_ordinary
                   obj_loc
                   (Env_api.AssigningWrite obj_reason)
-                  (L.LMap.add other_loc (Env_api.RefinementWrite reason) env_state.write_entries)
+                  (EnvMap.add
+                     (Env_api.ExpressionLoc, other_loc)
+                     (Env_api.AssigningWrite reason)
+                     env_state.write_entries
+                  )
               in
               env_state <- { env_state with write_entries };
               let refinement =
@@ -4361,7 +4342,10 @@ module Make
              record it in statement.ml and use it in new-env. *)
           let reason = mk_reason (RefinementKey.reason_desc refinement_key) instance_loc in
           let write_entries =
-            L.LMap.add instance_loc (Env_api.RefinementWrite reason) env_state.write_entries
+            EnvMap.add
+              (Env_api.ExpressionLoc, instance_loc)
+              (Env_api.AssigningWrite reason)
+              env_state.write_entries
           in
           env_state <- { env_state with write_entries };
           this#add_single_refinement refinement_key (L.LSet.singleton loc, InstanceOfR instance)
@@ -4719,7 +4703,11 @@ module Make
           env_state <-
             {
               env_state with
-              array_provider_entries = L.LMap.add loc reason env_state.array_provider_entries;
+              write_entries =
+                EnvMap.add
+                  (Env_api.ArrayProviderLoc, loc)
+                  (Env_api.AssigningWrite reason)
+                  env_state.write_entries;
             }
 
       method! expression expr =
@@ -4764,7 +4752,7 @@ module Make
         in
         let reason = mk_reason (RModule (OrdinaryName name)) name_loc in
         let write_entries =
-          L.LMap.add name_loc (Env_api.AssigningWrite reason) env_state.write_entries
+          EnvMap.add_ordinary name_loc (Env_api.AssigningWrite reason) env_state.write_entries
         in
         let values =
           L.LMap.add
@@ -4859,7 +4847,7 @@ module Make
         ignore kind;
         let (loc, _) = e in
         write_entries <-
-          L.LMap.update
+          EnvMap.update_ordinary
             loc
             (function
               | None -> Some Env_api.NonAssigningWrite
@@ -4913,7 +4901,7 @@ module Make
         in
         Base.Option.iter generator_return_loc ~f:(fun return_loc ->
             write_entries <-
-              L.LMap.update
+              EnvMap.update_ordinary
                 return_loc
                 (function
                   | None -> Some Env_api.NonAssigningWrite
@@ -4963,12 +4951,6 @@ module Make
         ssa_values;
         env_values = dead_code_marker#values;
         env_entries = dead_code_marker#write_entries;
-        function_or_global_this_env_entries = env_walk#function_or_global_this_write_entries;
-        class_instance_this_env_entries = env_walk#class_instance_this_write_entries;
-        class_static_this_env_entries = env_walk#class_static_this_write_entries;
-        class_instance_super_env_entries = env_walk#class_instance_super_write_entries;
-        class_static_super_env_entries = env_walk#class_static_super_write_entries;
-        array_provider_entries = env_walk#array_provider_entries;
         providers;
         refinement_of_id = env_walk#refinement_of_id;
       }

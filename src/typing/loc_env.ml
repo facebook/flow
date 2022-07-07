@@ -12,15 +12,11 @@
  **)
 
 open Loc_collections
+module EnvMap = Env_api.EnvMap
 
 type t = {
-  types: Type.annotated_or_inferred ALocMap.t;
+  types: Type.t EnvMap.t;
   tparams: (Subst_name.t * Type.typeparam * Type.t) ALocMap.t;
-  function_or_global_this_types: Type.annotated_or_inferred ALocMap.t;
-  class_instance_this_types: Type.annotated_or_inferred ALocMap.t;
-  class_static_this_types: Type.annotated_or_inferred ALocMap.t;
-  class_instance_super_types: Type.annotated_or_inferred ALocMap.t;
-  class_static_super_types: Type.annotated_or_inferred ALocMap.t;
   class_bindings: Type.class_binding ALocMap.t;
   class_stack: ALoc.t list;
   return_hint: Type.t Hint_api.hint;
@@ -29,85 +25,36 @@ type t = {
   var_info: Env_api.env_info;
 }
 
-let update_types
-    ~update
-    ( {
-        types;
-        function_or_global_this_types;
-        class_instance_this_types;
-        class_static_this_types;
-        class_instance_super_types;
-        class_static_super_types;
-        _;
-      } as info
-    ) = function
-  | Env_api.OrdinaryNameLoc -> { info with types = update types }
-  | Env_api.FunctionOrGlobalThisLoc ->
-    { info with function_or_global_this_types = update function_or_global_this_types }
-  | Env_api.ClassInstanceThisLoc ->
-    { info with class_instance_this_types = update class_instance_this_types }
-  | Env_api.ClassStaticThisLoc ->
-    { info with class_static_this_types = update class_static_this_types }
-  | Env_api.ClassInstanceSuperLoc ->
-    { info with class_instance_super_types = update class_instance_super_types }
-  | Env_api.ClassStaticSuperLoc ->
-    { info with class_static_super_types = update class_static_super_types }
-
 let initialize info def_loc_kind loc t =
-  let update =
-    ALocMap.update loc (function
+  let types =
+    EnvMap.update
+      (def_loc_kind, loc)
+      (function
         | Some _ -> failwith (Utils_js.spf "%s already initialized" (Reason.string_of_aloc loc))
-        | None -> Some t
-        )
+        | None -> Some t)
+      info.types
   in
-  update_types ~update info def_loc_kind
+  { info with types }
 
-let update_reason ({ types; _ } as info) loc reason =
+let update_reason ({ types; _ } as info) def_loc_kind loc reason =
   let f _ = reason in
   let types =
-    ALocMap.update
-      loc
+    EnvMap.update
+      (def_loc_kind, loc)
       (function
-        | Some (Type.Annotated t) -> Some (Type.Annotated (TypeUtil.mod_reason_of_t f t))
-        | Some (Type.Inferred t) -> Some (Type.Inferred (TypeUtil.mod_reason_of_t f t))
+        | Some t -> Some (TypeUtil.mod_reason_of_t f t)
         | None -> failwith "Cannot update reason on non-existent entry")
       types
   in
   { info with types }
 
-let find_write
-    {
-      types;
-      function_or_global_this_types;
-      class_instance_this_types;
-      class_static_this_types;
-      class_instance_super_types;
-      class_static_super_types;
-      _;
-    }
-    def_loc_kind
-    loc =
-  let types =
-    match def_loc_kind with
-    | Env_api.OrdinaryNameLoc -> types
-    | Env_api.FunctionOrGlobalThisLoc -> function_or_global_this_types
-    | Env_api.ClassInstanceThisLoc -> class_instance_this_types
-    | Env_api.ClassStaticThisLoc -> class_static_this_types
-    | Env_api.ClassInstanceSuperLoc -> class_instance_super_types
-    | Env_api.ClassStaticSuperLoc -> class_static_super_types
-  in
-  ALocMap.find_opt loc types |> Base.Option.map ~f:TypeUtil.type_t_of_annotated_or_inferred
+let find_write { types; _ } def_loc_kind loc = EnvMap.find_opt (def_loc_kind, loc) types
 
 let find_ordinary_write env loc = find_write env Env_api.OrdinaryNameLoc loc
 
 let empty scope_kind =
   {
-    types = ALocMap.empty;
-    function_or_global_this_types = ALocMap.empty;
-    class_instance_this_types = ALocMap.empty;
-    class_static_this_types = ALocMap.empty;
-    class_instance_super_types = ALocMap.empty;
-    class_static_super_types = ALocMap.empty;
+    types = EnvMap.empty;
     var_info = Env_api.empty;
     resolved = ALocSet.empty;
     tparams = ALocMap.empty;

@@ -455,7 +455,7 @@ module Make (Env : Env_sig.S) : S = struct
             env
             Env_api.OrdinaryNameLoc
             (TypeUtil.loc_of_t local_exports_var)
-            (Type.Inferred local_exports_var)
+            local_exports_var
       )
     in
     Context.set_environment cx env;

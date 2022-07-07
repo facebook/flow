@@ -10,6 +10,7 @@ open Hint_api
 open Reason
 open Flow_ast_mapper
 open Loc_collections
+module EnvMap = Env_api.EnvMap
 
 type cond_context =
   | NonConditionalContext
@@ -134,7 +135,7 @@ type def =
     }
   | GeneratorNext of generator_annot option
 
-type map = (def * scope_kind * class_stack * ALoc.t virtual_reason) ALocMap.t
+type map = (def * scope_kind * class_stack * ALoc.t virtual_reason) EnvMap.t
 
 module Destructure = struct
   open Ast.Pattern
@@ -313,7 +314,7 @@ module Eq_test = Eq_test.Make (Scope_api.With_ALoc) (Ssa_api.With_ALoc) (Env_api
 
 class def_finder env_entries providers toplevel_scope =
   object (this)
-    inherit [map, ALoc.t] Flow_ast_visitor.visitor ~init:ALocMap.empty as super
+    inherit [map, ALoc.t] Flow_ast_visitor.visitor ~init:EnvMap.empty as super
 
     val mutable tparams : tparams_map = ALocMap.empty
 
@@ -325,8 +326,10 @@ class def_finder env_entries providers toplevel_scope =
 
     method add_tparam loc name = tparams <- ALocMap.add loc name tparams
 
-    method add_binding loc reason src =
-      this#update_acc (ALocMap.add loc (src, scope_kind, class_stack, reason))
+    method add_binding kind_and_loc reason src =
+      this#update_acc (EnvMap.add kind_and_loc (src, scope_kind, class_stack, reason))
+
+    method add_ordinary_binding loc = this#add_binding (Env_api.OrdinaryNameLoc, loc)
 
     method private in_scope : 'a 'b. ('a -> 'b) -> scope_kind -> 'a -> 'b =
       fun f scope' node ->
@@ -359,7 +362,9 @@ class def_finder env_entries providers toplevel_scope =
         | (None, Some init) -> (Some (Value init), Hint_None)
         | (None, None) -> (None, Hint_None)
       in
-      Base.Option.iter ~f:(fun acc -> Destructure.pattern ~f:this#add_binding (Root acc) id) source;
+      Base.Option.iter
+        ~f:(fun acc -> Destructure.pattern ~f:this#add_ordinary_binding (Root acc) id)
+        source;
       ignore @@ this#variable_declarator_pattern ~kind id;
       Base.Option.iter init ~f:(fun init ->
           this#visit_expression ~hint ~cond:NonConditionalContext init
@@ -369,7 +374,7 @@ class def_finder env_entries providers toplevel_scope =
     method! declare_variable loc (decl : ('loc, 'loc) Ast.Statement.DeclareVariable.t) =
       let open Ast.Statement.DeclareVariable in
       let { id = (id_loc, { Ast.Identifier.name; _ }); annot; comments = _ } = decl in
-      this#add_binding
+      this#add_ordinary_binding
         id_loc
         (mk_reason (RIdentifier (OrdinaryName name)) id_loc)
         (Binding
@@ -407,7 +412,7 @@ class def_finder env_entries providers toplevel_scope =
           Contextual (reason, hint)
       in
       let source = Destructure.pattern_default (Root source) default in
-      Destructure.pattern ~f:this#add_binding source argument;
+      Destructure.pattern ~f:this#add_ordinary_binding source argument;
       ignore @@ super#function_param param
 
     method private visit_function_rest_param ~hint (expr : ('loc, 'loc) Ast.Function.RestParam.t) =
@@ -432,11 +437,11 @@ class def_finder env_entries providers toplevel_scope =
           in
           Contextual (reason, hint)
       in
-      Destructure.pattern ~f:this#add_binding (Root source) argument;
+      Destructure.pattern ~f:this#add_ordinary_binding (Root source) argument;
       ignore @@ super#function_rest_param expr
 
     method! catch_clause_pattern pat =
-      Destructure.pattern ~f:this#add_binding (Root Catch) pat;
+      Destructure.pattern ~f:this#add_ordinary_binding (Root Catch) pat;
       super#catch_clause_pattern pat
 
     method private visit_function_expr ~func_hint loc expr =
@@ -446,7 +451,7 @@ class def_finder env_entries providers toplevel_scope =
           this#visit_function ~scope_kind ~func_hint expr;
           match id with
           | Some (id_loc, _) ->
-            this#add_binding
+            this#add_ordinary_binding
               id_loc
               (func_reason ~async ~generator sig_loc)
               (def_of_function tparams loc expr)
@@ -464,7 +469,7 @@ class def_finder env_entries providers toplevel_scope =
           this#visit_function ~func_hint:Hint_None ~scope_kind expr;
           match id with
           | Some (id_loc, _) ->
-            this#add_binding
+            this#add_ordinary_binding
               id_loc
               (func_reason ~async ~generator sig_loc)
               (def_of_function tparams loc expr)
@@ -537,7 +542,7 @@ class def_finder env_entries providers toplevel_scope =
                   (loc, Some { tparams_map = tparams; return_annot; async })
               in
 
-              this#add_binding loc (mk_reason (RCustom "next") body_loc) (GeneratorNext gen)
+              this#add_ordinary_binding loc (mk_reason (RCustom "next") body_loc) (GeneratorNext gen)
           end;
 
           Base.Option.iter predicate ~f:(fun (_, { Ast.Type.Predicate.kind; comments = _ }) ->
@@ -569,7 +574,7 @@ class def_finder env_entries providers toplevel_scope =
                     mk_reason (RType (OrdinaryName name)) name_loc
                   | None -> mk_reason (RType (InternalName "*default*")) loc
                 in
-                this#add_binding
+                this#add_ordinary_binding
                   loc
                   reason
                   (ThisTypeParam (tparams, Base.Option.map ~f:fst class_tparams));
@@ -588,7 +593,7 @@ class def_finder env_entries providers toplevel_scope =
             | Some (id_loc, { Ast.Identifier.name; _ }) ->
               let name = OrdinaryName name in
               let reason = mk_reason (RType name) id_loc in
-              this#add_binding id_loc reason (def_of_class loc expr)
+              this#add_ordinary_binding id_loc reason (def_of_class loc expr)
             | None -> ()
           end;
           expr
@@ -650,7 +655,7 @@ class def_finder env_entries providers toplevel_scope =
       | None ->
         let open Ast.Statement.DeclareFunction in
         let { id = (id_loc, _); annot; predicate = _; comments = _ } = decl in
-        this#add_binding
+        this#add_ordinary_binding
           id_loc
           (func_reason ~async:false ~generator:false loc)
           (Binding
@@ -665,7 +670,7 @@ class def_finder env_entries providers toplevel_scope =
     method! declare_class loc (decl : ('loc, 'loc) Ast.Statement.DeclareClass.t) =
       let open Ast.Statement.DeclareClass in
       let { id = (id_loc, { Ast.Identifier.name; _ }); _ } = decl in
-      this#add_binding
+      this#add_ordinary_binding
         id_loc
         (mk_reason (RClass (RIdentifier (OrdinaryName name))) loc)
         (DeclaredClass (loc, decl));
@@ -679,16 +684,16 @@ class def_finder env_entries providers toplevel_scope =
         | (None, Ast.Pattern.Expression (member_loc, Ast.Expression.Member member)) ->
           (* Use super member to visit sub-expressions to avoid record a read of the member. *)
           ignore @@ super#member member_loc member;
-          this#add_binding
+          this#add_ordinary_binding
             member_loc
             (mk_pattern_reason left)
             (MemberAssign { member_loc; member; rhs = right })
-        | (None, _) -> Destructure.pattern ~f:this#add_binding (Root (Value right)) left
+        | (None, _) -> Destructure.pattern ~f:this#add_ordinary_binding (Root (Value right)) left
         | ( Some operator,
             Ast.Pattern.Identifier
               { Ast.Pattern.Identifier.name = (id_loc, { Ast.Identifier.name; _ }); _ }
           ) ->
-          this#add_binding
+          this#add_ordinary_binding
             id_loc
             (mk_reason (RIdentifier (OrdinaryName name)) id_loc)
             (OpAssign { exp_loc = loc; lhs = left; op = operator; rhs = right })
@@ -702,7 +707,7 @@ class def_finder env_entries providers toplevel_scope =
             | _ -> NonConditionalContext
           in
           this#visit_expression ~cond ~hint:Hint_None e;
-          this#add_binding
+          this#add_ordinary_binding
             def_loc
             (mk_pattern_reason left)
             (OpAssign { exp_loc = loc; lhs = left; op = operator; rhs = right })
@@ -751,12 +756,12 @@ class def_finder env_entries providers toplevel_scope =
       begin
         match argument with
         | (_, Ast.Expression.Identifier (id_loc, { Ast.Identifier.name; _ })) ->
-          this#add_binding
+          this#add_ordinary_binding
             id_loc
             (mk_reason (RIdentifier (OrdinaryName name)) id_loc)
             (Update { exp_loc = loc; lhs_member = None; op = operator })
         | (def_loc, Ast.Expression.Member _) ->
-          this#add_binding
+          this#add_ordinary_binding
             def_loc
             (mk_expression_reason argument)
             (Update { exp_loc = loc; lhs_member = Some argument; op = operator })
@@ -795,10 +800,10 @@ class def_finder env_entries providers toplevel_scope =
                 { tparams_map = ALocMap.empty; optional = false; is_assignment = true; annot }
             | None -> For (Of { await }, right)
           in
-          Destructure.pattern ~f:this#add_binding (Root source) id
+          Destructure.pattern ~f:this#add_ordinary_binding (Root source) id
         | LeftDeclaration _ -> failwith "Invalid AST structure"
         | LeftPattern pat ->
-          Destructure.pattern ~f:this#add_binding (Root (For (Of { await }, right))) pat
+          Destructure.pattern ~f:this#add_ordinary_binding (Root (For (Of { await }, right))) pat
       end;
       super#for_of_statement loc stuff
 
@@ -822,9 +827,10 @@ class def_finder env_entries providers toplevel_scope =
                 { tparams_map = ALocMap.empty; optional = false; is_assignment = true; annot }
             | None -> For (In, right)
           in
-          Destructure.pattern ~f:this#add_binding (Root source) id
+          Destructure.pattern ~f:this#add_ordinary_binding (Root source) id
         | LeftDeclaration _ -> failwith "Invalid AST structure"
-        | LeftPattern pat -> Destructure.pattern ~f:this#add_binding (Root (For (In, right))) pat
+        | LeftPattern pat ->
+          Destructure.pattern ~f:this#add_ordinary_binding (Root (For (In, right))) pat
       end;
       super#for_in_statement loc stuff
 
@@ -864,19 +870,25 @@ class def_finder env_entries providers toplevel_scope =
     method! type_alias loc (alias : ('loc, 'loc) Ast.Statement.TypeAlias.t) =
       let open Ast.Statement.TypeAlias in
       let { id = (id_loc, { Ast.Identifier.name; _ }); _ } = alias in
-      this#add_binding id_loc (mk_reason (RType (OrdinaryName name)) id_loc) (TypeAlias (loc, alias));
+      this#add_ordinary_binding
+        id_loc
+        (mk_reason (RType (OrdinaryName name)) id_loc)
+        (TypeAlias (loc, alias));
       this#in_new_tparams_env (fun () -> super#type_alias loc alias)
 
     method! opaque_type loc (otype : ('loc, 'loc) Ast.Statement.OpaqueType.t) =
       let open Ast.Statement.OpaqueType in
       let { id = (id_loc, { Ast.Identifier.name; _ }); _ } = otype in
-      this#add_binding id_loc (mk_reason (ROpaqueType name) id_loc) (OpaqueType (loc, otype));
+      this#add_ordinary_binding
+        id_loc
+        (mk_reason (ROpaqueType name) id_loc)
+        (OpaqueType (loc, otype));
       this#in_new_tparams_env (fun () -> super#opaque_type loc otype)
 
     method! type_param (tparam : ('loc, 'loc) Ast.Type.TypeParam.t) =
       let open Ast.Type.TypeParam in
       let (_, { name = (name_loc, { Ast.Identifier.name; _ }); _ }) = tparam in
-      this#add_binding
+      this#add_ordinary_binding
         name_loc
         (mk_reason (RType (OrdinaryName name)) name_loc)
         (TypeParam (tparams, tparam));
@@ -886,13 +898,13 @@ class def_finder env_entries providers toplevel_scope =
     method! interface loc (interface : ('loc, 'loc) Ast.Statement.Interface.t) =
       let open Ast.Statement.Interface in
       let { id = (name_loc, _); _ } = interface in
-      this#add_binding name_loc (mk_reason RInterfaceType loc) (Interface (loc, interface));
+      this#add_ordinary_binding name_loc (mk_reason RInterfaceType loc) (Interface (loc, interface));
       this#in_new_tparams_env (fun () -> super#interface loc interface)
 
     method! enum_declaration loc (enum : ('loc, 'loc) Ast.Statement.EnumDeclaration.t) =
       let open Ast.Statement.EnumDeclaration in
       let { id = (name_loc, { Ast.Identifier.name; _ }); body; _ } = enum in
-      this#add_binding name_loc (mk_reason (REnum name) name_loc) (Enum (loc, body));
+      this#add_ordinary_binding name_loc (mk_reason (REnum name) name_loc) (Enum (loc, body));
       super#enum_declaration loc enum
 
     method! import_declaration loc (decl : ('loc, 'loc) Ast.Statement.ImportDeclaration.t) =
@@ -917,7 +929,7 @@ class def_finder env_entries providers toplevel_scope =
                   ~default:(rem_id_loc, remote)
                   local
               in
-              this#add_binding
+              this#add_ordinary_binding
                 id_loc
                 (mk_reason (RNamedImportedType (source, name)) rem_id_loc)
                 (Import
@@ -939,7 +951,7 @@ class def_finder env_entries providers toplevel_scope =
             in
             mk_reason import_reason_desc id_loc
           in
-          this#add_binding
+          this#add_ordinary_binding
             id_loc
             import_reason
             (Import { import_kind; source; source_loc; import = Namespace })
@@ -948,7 +960,7 @@ class def_finder env_entries providers toplevel_scope =
       Base.Option.iter
         ~f:(fun (id_loc, { Ast.Identifier.name; _ }) ->
           let import_reason = mk_reason (RDefaultImportedType (name, source)) id_loc in
-          this#add_binding
+          this#add_ordinary_binding
             id_loc
             import_reason
             (Import { import_kind; source; source_loc; import = Default name }))
@@ -1011,9 +1023,12 @@ class def_finder env_entries providers toplevel_scope =
 
     method private visit_member_expression ~cond loc mem =
       begin
-        match ALocMap.find_opt loc env_entries with
+        match EnvMap.find_opt_ordinary loc env_entries with
         | Some (Env_api.AssigningWrite reason) ->
-          this#add_binding loc reason (ChainExpression (cond, (loc, Ast.Expression.Member mem)))
+          this#add_ordinary_binding
+            loc
+            reason
+            (ChainExpression (cond, (loc, Ast.Expression.Member mem)))
         | _ -> ()
       end;
       ignore @@ super#member loc mem
@@ -1022,9 +1037,9 @@ class def_finder env_entries providers toplevel_scope =
 
     method private visit_optional_member_expression ~cond loc mem =
       begin
-        match ALocMap.find_opt loc env_entries with
+        match EnvMap.find_opt_ordinary loc env_entries with
         | Some (Env_api.AssigningWrite reason) ->
-          this#add_binding
+          this#add_ordinary_binding
             loc
             reason
             (ChainExpression (cond, (loc, Ast.Expression.OptionalMember mem)))
@@ -1159,14 +1174,16 @@ class def_finder env_entries providers toplevel_scope =
 
     method private visit_expression ~hint ~cond ((loc, expr) as exp) =
       begin
-        match ALocMap.find_opt loc env_entries with
-        | Some (Env_api.RefinementWrite reason) -> this#add_binding loc reason (RefiExpression exp)
+        match EnvMap.find_opt (Env_api.ExpressionLoc, loc) env_entries with
+        | Some (Env_api.AssigningWrite reason) ->
+          this#add_binding (Env_api.ExpressionLoc, loc) reason (RefiExpression exp)
         | _ -> ()
       end;
       begin
-        if Provider_api.is_array_provider providers loc then
-          let reason = Reason.mk_expression_reason exp in
-          this#add_binding loc reason (RefiExpression exp)
+        match EnvMap.find_opt (Env_api.ArrayProviderLoc, loc) env_entries with
+        | Some (Env_api.AssigningWrite reason) ->
+          this#add_binding (Env_api.ArrayProviderLoc, loc) reason (RefiExpression exp)
+        | _ -> ()
       end;
       match expr with
       | Ast.Expression.Array expr -> this#visit_array_expression ~array_hint:hint expr

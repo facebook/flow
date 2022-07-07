@@ -9,12 +9,20 @@ open Utils_js
 open Type
 open Reason
 open Loc_collections
+module EnvMap = Env_api.EnvMap
 
 module type S = sig
   include Env_sig.S
 
   val resolve_env_entry :
-    use_op:use_op -> resolved:bool -> update_reason:bool -> Context.t -> Type.t -> ALoc.t -> unit
+    use_op:use_op ->
+    resolved:bool ->
+    update_reason:bool ->
+    Context.t ->
+    Type.t ->
+    Env_api.def_loc_type ->
+    ALoc.t ->
+    unit
 
   val unify_write_entry :
     Context.t -> use_op:use_op -> Type.t -> Env_api.def_loc_type -> ALoc.t -> unit
@@ -170,9 +178,9 @@ module New_env = struct
   (* Helpers **************)
   (************************)
 
-  let record_expression_type_if_needed cx loc t =
+  let record_expression_type_if_needed cx kind loc t =
     let env = Context.environment cx in
-    match (Loc_env.find_ordinary_write env loc, Context.env_mode cx) with
+    match (Loc_env.find_write env kind loc, Context.env_mode cx) with
     | (_, Options.SSAEnv { resolved = true }) (* Fully resolved env doesn't need to write here *)
     | (None, _) ->
       ()
@@ -181,8 +189,13 @@ module New_env = struct
         cx
         (lazy [spf "recording expression at location %s" (Reason.string_of_aloc loc)]);
       Flow_js.unify cx ~use_op:unknown_use t w;
-      let env' = Loc_env.update_reason env loc (TypeUtil.reason_of_t t) in
-      Context.set_environment cx env'
+      begin
+        match kind with
+        | Env_api.(OrdinaryNameLoc | ExpressionLoc) ->
+          let env' = Loc_env.update_reason env kind loc (TypeUtil.reason_of_t t) in
+          Context.set_environment cx env'
+        | _ -> ()
+      end
 
   let find_var_opt { Env_api.env_values; _ } loc =
     match ALocMap.find_opt loc env_values with
@@ -217,7 +230,7 @@ module New_env = struct
              match Loc_env.find_ordinary_write env loc with
              | Some w -> Some w
              | None ->
-               (match ALocMap.find_opt loc var_info.Env_api.env_entries with
+               (match EnvMap.find_opt_ordinary loc var_info.Env_api.env_entries with
                | None
                | Some Env_api.NonAssigningWrite ->
                  None
@@ -274,7 +287,7 @@ module New_env = struct
           ( lazy
             [spf "reading from location %s (in instanceof refinement)" (Reason.string_of_aloc loc)]
             );
-        let t = t_option_value_exn cx loc (Loc_env.find_ordinary_write env loc) in
+        let t = t_option_value_exn cx loc (Loc_env.find_write env Env_api.ExpressionLoc loc) in
         Flow_js.flow cx (t, AssertInstanceofRHST reason);
         LeftP (InstanceofTest, t)
       | IsArrayR -> ArrP
@@ -294,7 +307,9 @@ module New_env = struct
           ( lazy
             [spf "reading from location %s (in sentinel refinement)" (Reason.string_of_aloc loc)]
             );
-        let other_t = t_option_value_exn cx loc (Loc_env.find_ordinary_write env loc) in
+        let other_t =
+          t_option_value_exn cx loc (Loc_env.find_write env Env_api.ExpressionLoc loc)
+        in
         LeftP (SentinelProp prop, other_t)
       | LatentR { func = (func_loc, _); index } ->
         (* Latent refinements store the loc of the callee, which is a read in the env *)
@@ -617,7 +632,7 @@ module New_env = struct
     | OrdinaryName _
     | InternalModuleName _ ->
       let ({ Loc_env.var_info; _ } as env) = Context.environment cx in
-      (match ALocMap.find_opt loc var_info.Env_api.env_entries with
+      (match EnvMap.find_opt_ordinary loc var_info.Env_api.env_entries with
       | Some Env_api.NonAssigningWrite -> default
       | _ ->
         let providers =
@@ -681,7 +696,7 @@ module New_env = struct
      * Since the x = 'string' doesn't actually assign a value to x, we should
      * not perform a subtyping check and a second error saying string is incompatible
      * with number. We should only emit an error saying that a const cannot be reassigned. *)
-    match ALocMap.find_opt loc var_info.Env_api.env_entries with
+    match EnvMap.find_opt_ordinary loc var_info.Env_api.env_entries with
     | Some Env_api.NonAssigningWrite -> ()
     | Some (Env_api.GlobalWrite _) ->
       if is_provider cx loc then
@@ -744,17 +759,17 @@ module New_env = struct
           (Error_message.EBindingError (Error_message.ENameAlreadyBound, loc, name, def_loc))
     | _ -> ()
 
-  let resolve_env_entry ~use_op ~resolved ~update_reason cx t loc =
-    unify_write_entry cx ~use_op t Env_api.OrdinaryNameLoc loc;
+  let resolve_env_entry ~use_op ~resolved ~update_reason cx t kind loc =
+    unify_write_entry cx ~use_op t kind loc;
     let env = Context.environment cx in
     let env =
       if update_reason then
-        Loc_env.update_reason env loc (TypeUtil.reason_of_t t)
+        Loc_env.update_reason env kind loc (TypeUtil.reason_of_t t)
       else
         env
     in
     Context.set_environment cx env;
-    if resolved then
+    if resolved && kind = Env_api.OrdinaryNameLoc then
       let ({ Loc_env.resolved; _ } as env) = Context.environment cx in
       Context.set_environment cx { env with Loc_env.resolved = ALocSet.add loc resolved }
 
@@ -766,7 +781,7 @@ module New_env = struct
        * binding being looked up here is one that caused a redeclaration
        * error *)
       assert (
-        ALocMap.find_opt loc env.Loc_env.var_info.Env_api.env_entries
+        EnvMap.find_opt_ordinary loc env.Loc_env.var_info.Env_api.env_entries
         = Some Env_api.NonAssigningWrite
       )
     | Some w -> Flow_js.flow cx (t, UseT (use_op, w))
@@ -960,75 +975,64 @@ module New_env = struct
   let init_env ?exclude_syms cx scope =
     Old_env.init_env ?exclude_syms cx scope;
     let ({ Loc_env.var_info; _ } as env) = Context.environment cx in
-    let initialize_entries def_loc_type =
-      ALocMap.fold (fun loc env_entry env ->
-          match env_entry with
-          | Env_api.AssigningWrite reason
-          | Env_api.RefinementWrite reason
-          | Env_api.GlobalWrite reason ->
-            let t = Inferred (Tvar.mk cx reason) in
-            (* Treat everything as inferred for now for the purposes of annotated vs inferred *)
-            Loc_env.initialize env def_loc_type loc t
-          | Env_api.EmptyArrayWrite (reason, arr_providers) ->
-            let (elem_t, elems, reason) =
-              let element_reason = mk_reason Reason.unknown_elem_empty_array_desc loc in
-              if ALocSet.cardinal arr_providers > 0 then (
-                let ts =
-                  ALocSet.elements arr_providers
-                  |> Base.List.map ~f:(fun loc ->
-                         t_option_value_exn cx loc (Loc_env.find_ordinary_write env loc)
-                     )
-                in
-                let constrain_t =
-                  Tvar.mk_where cx element_reason (fun tvar ->
-                      Base.List.iter ~f:(fun t -> Flow_js.flow_t cx (t, tvar)) ts
-                  )
-                in
-                let elem_t =
-                  Tvar.mk_where cx element_reason (fun tvar -> Flow_js.flow_t cx (constrain_t, tvar))
-                in
-                Context.add_constrained_write cx (elem_t, UseT (unknown_use, constrain_t));
-                (elem_t, None, reason)
-              ) else
-                (Tvar.mk cx element_reason, Some [], replace_desc_reason REmptyArrayLit reason)
+    let initialize_entry def_loc_type loc env_entry env =
+      match env_entry with
+      | Env_api.AssigningWrite reason
+      | Env_api.GlobalWrite reason ->
+        let t = Tvar.mk cx reason in
+        Loc_env.initialize env def_loc_type loc t
+      | Env_api.EmptyArrayWrite (reason, arr_providers) ->
+        let (elem_t, elems, reason) =
+          let element_reason = mk_reason Reason.unknown_elem_empty_array_desc loc in
+          if ALocSet.cardinal arr_providers > 0 then (
+            let ts =
+              ALocSet.elements arr_providers
+              |> Base.List.map ~f:(fun loc ->
+                     t_option_value_exn cx loc (Loc_env.find_write env Env_api.ArrayProviderLoc loc)
+                 )
             in
-            let t = DefT (reason, bogus_trust (), ArrT (ArrayAT (elem_t, elems))) in
-            (* Treat everything as inferred for now for the purposes of annotated vs inferred *)
-            Loc_env.initialize env def_loc_type loc (Inferred t)
-          | Env_api.NonAssigningWrite ->
-            if is_provider cx loc then
-              (* If an illegal write is considered as a provider, we still need to give it a
-                 slot to prevent crashing in code that queries provider types. *)
-              let reason = mk_reason (RCustom "non-assigning provider") loc in
-              let t = Inferred (AnyT.error reason) in
-              Loc_env.initialize env def_loc_type loc t
-            else
-              env
-      )
+            let constrain_t =
+              Tvar.mk_where cx element_reason (fun tvar ->
+                  Base.List.iter ~f:(fun t -> Flow_js.flow_t cx (t, tvar)) ts
+              )
+            in
+            let elem_t =
+              Tvar.mk_where cx element_reason (fun tvar -> Flow_js.flow_t cx (constrain_t, tvar))
+            in
+            Context.add_constrained_write cx (elem_t, UseT (unknown_use, constrain_t));
+            (elem_t, None, reason)
+          ) else
+            (Tvar.mk cx element_reason, Some [], replace_desc_reason REmptyArrayLit reason)
+        in
+        let t = DefT (reason, bogus_trust (), ArrT (ArrayAT (elem_t, elems))) in
+        (* Treat everything as inferred for now for the purposes of annotated vs inferred *)
+        Loc_env.initialize env def_loc_type loc t
+      | Env_api.NonAssigningWrite ->
+        if is_provider cx loc then
+          (* If an illegal write is considered as a provider, we still need to give it a
+             slot to prevent crashing in code that queries provider types. *)
+          let reason = mk_reason (RCustom "non-assigning provider") loc in
+          let t = AnyT.error reason in
+          Loc_env.initialize env def_loc_type loc t
+        else
+          env
     in
+
     let env =
-      env
-      |> ALocMap.fold
-           (fun loc reason env ->
-             let t = Inferred (Tvar.mk cx reason) in
-             Loc_env.initialize env Env_api.OrdinaryNameLoc loc t)
-           var_info.Env_api.array_provider_entries
-      |> initialize_entries Env_api.OrdinaryNameLoc var_info.Env_api.env_entries
-      |> initialize_entries
-           Env_api.FunctionOrGlobalThisLoc
-           var_info.Env_api.function_or_global_this_env_entries
-      |> initialize_entries
-           Env_api.ClassInstanceThisLoc
-           var_info.Env_api.class_instance_this_env_entries
-      |> initialize_entries
-           Env_api.ClassStaticThisLoc
-           var_info.Env_api.class_static_this_env_entries
-      |> initialize_entries
-           Env_api.ClassInstanceSuperLoc
-           var_info.Env_api.class_instance_super_env_entries
-      |> initialize_entries
-           Env_api.ClassStaticSuperLoc
-           var_info.Env_api.class_static_super_env_entries
+      EnvMap.fold
+        (fun (def_loc_type, loc) env_entry env ->
+          (* Array providers must be initialized first *)
+          match def_loc_type with
+          | Env_api.ArrayProviderLoc -> initialize_entry def_loc_type loc env_entry env
+          | _ -> env)
+        var_info.Env_api.env_entries
+        env
+      |> EnvMap.fold
+           (fun (def_loc_type, loc) env_entry env ->
+             match def_loc_type with
+             | Env_api.ArrayProviderLoc -> env
+             | _ -> initialize_entry def_loc_type loc env_entry env)
+           var_info.Env_api.env_entries
     in
     let initialize_this () =
       let t = ObjProtoT (mk_reason (RCustom "global object") ALoc.none) in

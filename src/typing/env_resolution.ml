@@ -12,11 +12,12 @@ open Reason
 open Loc_collections
 open Utils_js
 module Ast = Flow_ast
+module EnvMap = Env_api.EnvMap
 
 module type S = sig
   val resolve_component :
     Context.t ->
-    (Name_def.def * Name_def.scope_kind * Name_def.class_stack * reason) ALocMap.t ->
+    (Name_def.def * Name_def.scope_kind * Name_def.class_stack * reason) EnvMap.t ->
     Name_def_ordering.result ->
     unit
 end
@@ -527,7 +528,7 @@ module Make (Env : Env_sig.S) (Statement : Statement_sig.S with module Env := En
     | Name_def.Module -> Scope.Module
     | Name_def.Predicate -> Scope.Predicate
 
-  let resolve cx id_loc (def, def_scope_kind, class_stack, def_reason) =
+  let resolve cx (def_kind, id_loc) (def, def_scope_kind, class_stack, def_reason) =
     let env = Context.environment cx in
     Context.set_environment
       cx
@@ -584,16 +585,16 @@ module Make (Env : Env_sig.S) (Statement : Statement_sig.S with module Env := En
             (Debug_js.dump_t cx t);
         ]
         );
-    New_env.New_env.resolve_env_entry ~use_op ~resolved ~update_reason cx t id_loc
+    New_env.New_env.resolve_env_entry ~use_op ~resolved ~update_reason cx t def_kind id_loc
 
   let resolve_component cx graph component =
     let open Name_def_ordering in
     let resolve_element = function
-      | Name_def_ordering.Normal loc
-      | Resolvable loc
-      | Illegal { loc; _ } ->
+      | Name_def_ordering.Normal (kind, loc)
+      | Resolvable (kind, loc)
+      | Illegal { loc = (kind, loc); _ } ->
         Statement.Abnormal.try_with_abnormal_exn
-          ~f:(fun () -> resolve cx loc (ALocMap.find loc graph))
+          ~f:(fun () -> resolve cx (kind, loc) (EnvMap.find (kind, loc) graph))
             (* When there is an unhandled exception, it means that the initialization of the env slot
                won't be completed and will never be written in the new-env, so it's OK to do nothing. *)
           ~on_abnormal_exn:(fun _ -> ())
