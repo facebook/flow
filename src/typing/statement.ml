@@ -295,6 +295,10 @@ struct
       method! class_ _ x = x
 
       method! function_declaration _ x = x
+
+      method! function_expression _ x = x
+
+      method! arrow_function _ x = x
     end
 
   let might_have_nonvoid_return loc function_ast =
