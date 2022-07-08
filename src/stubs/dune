@@ -35,7 +35,7 @@
 )
 
 (library
-  (name flow_extra_commands)
+  (name flow_extra_commands_stubs)
   (wrapped false)
   (modules extra_commands)
 )

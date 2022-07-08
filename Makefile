@@ -90,6 +90,7 @@ MODULES=\
   src/codemods/utils\
   src/commands\
   src/commands/config\
+  src/commands/extra\
   src/commands/glean\
   src/commands/options\
   src/common\
