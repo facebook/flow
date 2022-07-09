@@ -14,3 +14,12 @@ class A {
 
   annotatedMethod(param: any): any {}
 }
+
+class B {
+  a; // error
+  declare b; // error
+  c = 1; // ok
+  d: number; // ok
+  declare e: number; // ok
+  f: number = 1; // ok
+}

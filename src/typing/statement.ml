@@ -8379,6 +8379,11 @@ struct
                 (Base.Option.value !value_ref ~default:(Tast_utils.error_mapper#expression expr))
           )
       in
+      (match (init, annot_or_inferred) with
+      | ((Ast.Class.Property.Declared | Ast.Class.Property.Uninitialized), Inferred _)
+        when RequireAnnot.should_require_annot cx ->
+        RequireAnnot.add_missing_annotation_error cx reason
+      | _ -> ());
       (field, annot_t, annot_ast, get_init)
     in
     let mk_method = mk_func_sig ~func_hint:Hint_None ~needs_this_param:false in

@@ -135,6 +135,22 @@ Missing an annotation on `x`. [missing-local-annot]
                      ^
 
 
+Error ------------------------------------------------------------------------------------------- included/class.js:19:3
+
+Missing an annotation on property `a`. [missing-local-annot]
+
+   19|   a; // error
+         ^^
+
+
+Error ------------------------------------------------------------------------------------------- included/class.js:20:3
+
+Missing an annotation on property `b`. [missing-local-annot]
+
+   20|   declare b; // error
+         ^^^^^^^^^^
+
+
 Error -------------------------------------------------------------------------------- included/class_expression.js:3:10
 
 Missing an annotation on `param`. [missing-local-annot]
@@ -736,4 +752,4 @@ Missing an annotation on `y`. [missing-local-annot]
 
 
 
-Found 79 errors
+Found 81 errors

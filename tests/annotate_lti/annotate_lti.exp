@@ -188,7 +188,7 @@ Stats:
   Files changed:                            5
   Number of annotations added:             26
   Total size of annotations:               34
-  Number of LTI errors:                    33
+  Number of LTI errors:                    35
 
 Errors:
   Missing annot./normalizer error:          0
@@ -204,7 +204,7 @@ Errors:
 Warnings:
   Skipping arrow function:                  0
   Large type added:                         0
-  Location unhandled:                       8
+  Location unhandled:                      10
   Empty NoUpper:                            2
   Empty SomeKnownUpper:                    18
 
