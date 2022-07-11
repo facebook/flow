@@ -228,101 +228,101 @@ References:
        --------^ [4]
 
 
-Error --------------------------------------------------------------------------------------------------- arity3.js:3:46
+Error --------------------------------------------------------------------------------------------------- arity3.js:8:46
 
 Cannot instantiate `$TupleMap` because `$TupleMap` [1] expects the provided function type to take only one argument, the
 value type number [2], but function type [3] takes more than one argument. See
 https://flow.org/en/docs/types/utilities/#toc-tuplemap for documentation. [invalid-tuple-map]
 
-   arity3.js:3:46
-    3| function g<T: $ReadOnlyArray<number>>(o: T): $TupleMap<T, typeof makeEditedColumn> {
-                                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   arity3.js:8:46
+   8| function g<T: $ReadOnlyArray<number>>(o: T): $TupleMap<T, typeof makeEditedColumn> {
+                                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 References:
-   arity3.js:3:30
-    3| function g<T: $ReadOnlyArray<number>>(o: T): $TupleMap<T, typeof makeEditedColumn> {
-                                    ^^^^^^ [2]
-   arity3.js:21:34
-                                        v
-   21| declare function makeEditedColumn(
-   22|   a: number,
-   23|   b: string,
-   24| ): number;
-       --------^ [3]
+   arity3.js:8:30
+   8| function g<T: $ReadOnlyArray<number>>(o: T): $TupleMap<T, typeof makeEditedColumn> {
+                                   ^^^^^^ [2]
+   arity3.js:3:34
+                                       v
+   3| declare function makeEditedColumn(
+   4|   a: number,
+   5|   b: string,
+   6| ): number;
+      --------^ [3]
 
 
-Error --------------------------------------------------------------------------------------------------- arity3.js:8:10
+Error -------------------------------------------------------------------------------------------------- arity3.js:13:10
 
 Cannot call `g` because `$TupleMap` [1] expects the provided function type to take only one argument, the value type
 number [2], but function type [3] takes more than one argument. See
 https://flow.org/en/docs/types/utilities/#toc-tuplemap for documentation. [incompatible-call]
 
-   arity3.js:8:10
-    8|   return g(o);
+   arity3.js:13:10
+   13|   return g(o);
                 ^
 
 References:
-   arity3.js:3:46
-    3| function g<T: $ReadOnlyArray<number>>(o: T): $TupleMap<T, typeof makeEditedColumn> {
+   arity3.js:8:46
+    8| function g<T: $ReadOnlyArray<number>>(o: T): $TupleMap<T, typeof makeEditedColumn> {
                                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   arity3.js:3:30
-    3| function g<T: $ReadOnlyArray<number>>(o: T): $TupleMap<T, typeof makeEditedColumn> {
-                                    ^^^^^^ [2]
-   arity3.js:21:34
-                                        v
-   21| declare function makeEditedColumn(
-   22|   a: number,
-   23|   b: string,
-   24| ): number;
-       --------^ [3]
-
-
-Error -------------------------------------------------------------------------------------------------- arity3.js:12:10
-
-Cannot call `g` because `$TupleMap` [1] expects the provided function type to take only one argument, the value type
-number [2], but function type [3] takes more than one argument. See
-https://flow.org/en/docs/types/utilities/#toc-tuplemap for documentation. [incompatible-call]
-
-   arity3.js:12:10
-   12|   return g<Columns>(o);
-                ^
-
-References:
-   arity3.js:3:46
-    3| function g<T: $ReadOnlyArray<number>>(o: T): $TupleMap<T, typeof makeEditedColumn> {
-                                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   arity3.js:19:22
-   19| type Columns = Array<number>;
+   arity3.js:24:22
+   24| type Columns = Array<number>;
                             ^^^^^^ [2]
-   arity3.js:21:34
+   arity3.js:3:34
                                         v
-   21| declare function makeEditedColumn(
-   22|   a: number,
-   23|   b: string,
-   24| ): number;
+    3| declare function makeEditedColumn(
+    4|   a: number,
+    5|   b: string,
+    6| ): number;
        --------^ [3]
 
 
-Error -------------------------------------------------------------------------------------------------- arity3.js:15:25
+Error -------------------------------------------------------------------------------------------------- arity3.js:17:10
+
+Cannot call `g` because `$TupleMap` [1] expects the provided function type to take only one argument, the value type
+number [2], but function type [3] takes more than one argument. See
+https://flow.org/en/docs/types/utilities/#toc-tuplemap for documentation. [incompatible-call]
+
+   arity3.js:17:10
+   17|   return g<Columns>(o);
+                ^
+
+References:
+   arity3.js:8:46
+    8| function g<T: $ReadOnlyArray<number>>(o: T): $TupleMap<T, typeof makeEditedColumn> {
+                                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   arity3.js:24:22
+   24| type Columns = Array<number>;
+                            ^^^^^^ [2]
+   arity3.js:3:34
+                                        v
+    3| declare function makeEditedColumn(
+    4|   a: number,
+    5|   b: string,
+    6| ): number;
+       --------^ [3]
+
+
+Error -------------------------------------------------------------------------------------------------- arity3.js:20:25
 
 Cannot instantiate `$TupleMap` because `$TupleMap` [1] expects the provided function type to take only one argument, the
 value type number [2], but function type [3] takes more than one argument. See
 https://flow.org/en/docs/types/utilities/#toc-tuplemap for documentation. [invalid-tuple-map]
 
-   arity3.js:15:25
-   15| function h(o: Columns): $TupleMap<Columns, typeof makeEditedColumn> {
+   arity3.js:20:25
+   20| function h(o: Columns): $TupleMap<Columns, typeof makeEditedColumn> {
                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 References:
-   arity3.js:19:22
-   19| type Columns = Array<number>;
+   arity3.js:24:22
+   24| type Columns = Array<number>;
                             ^^^^^^ [2]
-   arity3.js:21:34
+   arity3.js:3:34
                                         v
-   21| declare function makeEditedColumn(
-   22|   a: number,
-   23|   b: string,
-   24| ): number;
+    3| declare function makeEditedColumn(
+    4|   a: number,
+    5|   b: string,
+    6| ): number;
        --------^ [3]
 
 

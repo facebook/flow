@@ -1,5 +1,10 @@
 // @flow
 
+declare function makeEditedColumn(
+  a: number,
+  b: string,
+): number;
+
 function g<T: $ReadOnlyArray<number>>(o: T): $TupleMap<T, typeof makeEditedColumn> {
   return o;
 }
@@ -17,8 +22,3 @@ function h(o: Columns): $TupleMap<Columns, typeof makeEditedColumn> {
 }
 
 type Columns = Array<number>;
-
-declare function makeEditedColumn(
-  a: number,
-  b: string,
-): number;
