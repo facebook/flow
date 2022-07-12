@@ -133,7 +133,7 @@ module.exports = (suite(({ addFile, addFiles, addCode }) => [
         `
           test.js:4
             4:       type InvalidOctalLegacy = 016432n;
-                                               ^^^^^^^ Unexpected token ILLEGAL
+                                               ^^^^^^ Octal literals are not allowed in strict mode.
         `,
       )
   ]),
@@ -145,7 +145,7 @@ module.exports = (suite(({ addFile, addFiles, addCode }) => [
         `
           test.js:4
             4:       type InvalidNegOctalLegacy = -016432n;
-                                                  ^^^^^^^^ Unexpected token ILLEGAL
+                                                  ^^^^^^^ Octal literals are not allowed in strict mode.
         `,
       )
   ]),

@@ -332,10 +332,10 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
           }
       )
     | T_NUMBER_SINGLETON_TYPE { kind; value; raw } ->
+      if kind = LEGACY_OCTAL then strict_error env Parse_error.StrictOctalLiteral;
       let leading = Peek.comments env in
       Expect.token env (T_NUMBER_SINGLETON_TYPE { kind; value; raw });
       let trailing = Eat.trailing_comments env in
-      if kind = LEGACY_OCTAL then strict_error env Parse_error.StrictOctalLiteral;
       ( loc,
         Type.NumberLiteral
           {
