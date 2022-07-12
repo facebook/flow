@@ -3,6 +3,7 @@
  (wrapped false)
  (libraries
   flow_type_sig
+  flow_file_sig
   flow_parser_utils
   cycle_hash
   dtoa
