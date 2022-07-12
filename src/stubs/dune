@@ -47,3 +47,9 @@
   (libraries
     flow_parser)
 )
+
+(library
+  (name flow_remote_execution_stubs)
+  (wrapped false)
+  (modules remote_execution)
+)

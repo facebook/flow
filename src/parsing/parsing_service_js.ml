@@ -105,6 +105,7 @@ type parse_options = {
   parse_relay_integration_module_prefix: string option;
   parse_relay_integration_module_prefix_includes: Str.regexp list;
   parse_node_main_fields: string list;
+  parse_distributed: bool;
 }
 
 let parse_source_file ~types ~use_strict content file =
@@ -371,6 +372,7 @@ let do_parse ~parse_options ~info content file =
     parse_relay_integration_module_prefix = relay_integration_module_prefix;
     parse_relay_integration_module_prefix_includes = relay_integration_module_prefix_includes;
     parse_node_main_fields = node_main_fields;
+    parse_distributed = distributed;
   } =
     parse_options
   in
@@ -454,6 +456,7 @@ let do_parse ~parse_options ~info content file =
               tolerable_errors
               sig_errors
           in
+          if distributed then Remote_execution.upload_blob type_sig;
           Parse_ok { ast; file_sig; locs; type_sig; tolerable_errors; exports }
   with
   | e ->
@@ -798,6 +801,7 @@ let make_parse_options_internal ?(types_mode = TypesAllowed) ?use_strict ~docblo
     parse_relay_integration_module_prefix_includes =
       Options.relay_integration_module_prefix_includes options;
     parse_node_main_fields = Options.node_main_fields options;
+    parse_distributed = Options.distributed options;
   }
 
 let make_parse_options ?types_mode ?use_strict docblock options =

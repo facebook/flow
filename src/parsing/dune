@@ -11,6 +11,7 @@
     flow_state_readers
     xx
     flow_package
+    flow_remote_execution
   )
   (preprocess (pps lwt_ppx))
 )

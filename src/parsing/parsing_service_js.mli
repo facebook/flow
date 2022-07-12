@@ -87,6 +87,7 @@ type parse_options = {
   parse_relay_integration_module_prefix: string option;
   parse_relay_integration_module_prefix_includes: Str.regexp list;
   parse_node_main_fields: string list;
+  parse_distributed: bool;
 }
 
 val make_parse_options :
