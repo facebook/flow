@@ -67,15 +67,41 @@ let fallback_error_handler msg exn =
   Logger.fatal_s ~exn "%s. Exiting" msg;
   Exit.(exit ~msg Unknown_error)
 
+let log_monitor_options monitor_options =
+  let {
+    FlowServerMonitorOptions.argv;
+    autostop;
+    file_watcher_mergebase_with;
+    file_watcher_timeout;
+    file_watcher;
+    no_restart;
+    server_options;
+    shared_mem_config;
+    (* don't need to log our own filename *)
+    log_file = _;
+    server_log_file = _;
+  } =
+    monitor_options
+  in
+  Logger.info "argv=%s" (argv |> Array.to_list |> String.concat " ");
+  Logger.info "autostop=%b" autostop;
+  Logger.info "file_watcher=%s" (FlowServerMonitorOptions.string_of_file_watcher file_watcher);
+  Base.Option.iter ~f:(Logger.info "file_watcher_timeout=%.0f") file_watcher_timeout;
+  Logger.info "file_watcher_mergebase_with=%s" file_watcher_mergebase_with;
+  Logger.info "no_restart=%b" no_restart;
+  Logger.info "shm_heap_size=%d" shared_mem_config.SharedMem.heap_size;
+  Logger.info "shm_hash_table_pow=%d" shared_mem_config.SharedMem.hash_table_pow;
+
+  (* rollouts affect the flowconfig, and the monitor uses the flowconfig, so
+     log the rollouts in the monitor log. *)
+  SMap.iter (Logger.info "Rollout %S set to %S") (Options.enabled_rollouts server_options)
+
 (* This is the common entry point for both daemonize and start. *)
 let internal_start ~is_daemon ?waiting_fd monitor_options =
-  let { FlowServerMonitorOptions.server_options; argv; _ } = monitor_options in
+  let { FlowServerMonitorOptions.server_options; file_watcher; log_file; _ } = monitor_options in
   let root = Options.root server_options in
   let () =
-    let file_watcher =
-      let open FlowServerMonitorOptions in
-      string_of_file_watcher monitor_options.file_watcher
-    in
+    let file_watcher = FlowServerMonitorOptions.string_of_file_watcher file_watcher in
     let vcs =
       match Vcs.find root with
       | None -> "none"
@@ -101,7 +127,6 @@ let internal_start ~is_daemon ?waiting_fd monitor_options =
    * `flow server` wants to output to both stderr and the log, so we initialize Logger with this fd
    *)
   let log_fd =
-    let log_file = monitor_options.FlowServerMonitorOptions.log_file in
     let fd = Server_daemon.open_log_file log_file in
     if is_daemon then (
       Unix.dup2 fd Unix.stderr;
@@ -137,10 +162,7 @@ let internal_start ~is_daemon ?waiting_fd monitor_options =
     );
 
     Logger.init_logger log_fd;
-    Logger.info "argv=%s" (argv |> Array.to_list |> String.concat " ");
-    LoggingUtils.dump_server_options
-      ~server_options:monitor_options.FlowServerMonitorOptions.server_options
-      ~log:(Logger.info "%s");
+    log_monitor_options monitor_options;
 
     (* If there is a waiting fd, start up a thread that will message it *)
     let handle_waiting_start_command =

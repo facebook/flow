@@ -620,15 +620,6 @@ let collect_rage ~profiling ~options ~reader ~env ~files =
         ("file hash check", Buffer.contents buf) :: items
     )
   in
-  let items =
-    let buf = Buffer.create 127 in
-    let log str =
-      Buffer.add_string buf str;
-      Buffer.add_char buf '\n'
-    in
-    LoggingUtils.dump_server_options ~server_options:options ~log;
-    ("server_options", Buffer.contents buf) :: items
-  in
   items
 
 let dump_types ~options ~profiling ~evaluate_type_destructors file_input =

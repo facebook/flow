@@ -69,7 +69,7 @@ let (set_server_options, dump_server_options) =
       ~log_file
   in
   let dump_server_options ~server_options ~log =
-    let (lazy_mode, abstract_locations, max_workers, enabled_rollouts, debug, log_saving, log_file)
+    let (lazy_mode, abstract_locations, max_workers, enabled_rollouts, debug, log_saving, _log_file)
         =
       format server_options
     in
@@ -93,7 +93,6 @@ let (set_server_options, dump_server_options) =
              rate
           ))
       log_saving;
-    log (Printf.sprintf "log_file=%s" log_file);
     SMap.iter (fun r g -> log (Printf.sprintf "Rollout %S set to %S" r g)) enabled_rollouts
   in
   (set_server_options, dump_server_options)
