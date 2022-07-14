@@ -223,6 +223,14 @@ let mapper
           >>= this#fix_and_validate ploc
         in
         this#get_annot ploc ty_result annot
+      | (Ast.Type.Missing ploc, Ast.Class.Property.Initialized _)
+        when (not skip_class_properties) && LMap.mem ploc loc_error_map ->
+        let ty_result =
+          Codemod_annotator.get_ty cctx ~preserve_literals ploc
+          >>| Normalize_union.normalize
+          >>= this#fix_and_validate ploc
+        in
+        this#get_annot ploc ty_result annot
       | _ -> annot
 
     method! class_property loc prop =
@@ -281,8 +289,19 @@ let mapper
 
     method! function_ loc (expr : ('loc, 'loc) Ast.Function.t) =
       let open Ast.Function in
-      let { params; _ } = expr in
+      let { params; return; _ } = expr in
       let annotated_params = this#function_params params in
+      let return =
+        match return with
+        | Ast.Type.Missing rloc when LMap.mem rloc loc_error_map ->
+          let ty_result =
+            Codemod_annotator.get_ty cctx ~preserve_literals rloc
+            >>| Normalize_union.normalize
+            >>= this#fix_and_validate rloc
+          in
+          this#get_annot rloc ty_result return
+        | _ -> return
+      in
 
       let (ploc, _) = params in
       let with_this_param =
@@ -334,9 +353,9 @@ let mapper
       in
 
       if with_this_param == params then
-        super#function_ loc expr
+        super#function_ loc { expr with return }
       else
-        super#function_ loc { expr with params = with_this_param }
+        super#function_ loc { expr with return; params = with_this_param }
 
     method! program prog =
       let errors = Context.errors @@ Codemod_context.Typed.context cctx in
