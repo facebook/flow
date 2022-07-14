@@ -99,6 +99,7 @@ type parse_options = {
   parse_suppress_types: SSet.t;
   parse_max_literal_len: int;
   parse_exact_by_default: bool;
+  parse_exact_empty_objects: bool;
   parse_enable_enums: bool;
   parse_enable_relay_integration: bool;
   parse_relay_integration_excludes: Str.regexp list;
@@ -366,6 +367,7 @@ let do_parse ~parse_options ~info content file =
     parse_suppress_types = suppress_types;
     parse_max_literal_len = max_literal_len;
     parse_exact_by_default = exact_by_default;
+    parse_exact_empty_objects = exact_empty_objects;
     parse_enable_enums = enable_enums;
     parse_enable_relay_integration = enable_relay_integration;
     parse_relay_integration_excludes = relay_integration_excludes;
@@ -434,6 +436,7 @@ let do_parse ~parse_options ~info content file =
               facebook_fbt;
               max_literal_len;
               exact_by_default;
+              exact_empty_objects;
               module_ref_prefix;
               enable_enums;
               enable_relay_integration;
@@ -794,6 +797,7 @@ let make_parse_options_internal ?(types_mode = TypesAllowed) ?use_strict ~docblo
     parse_suppress_types = Options.suppress_types options;
     parse_max_literal_len = Options.max_literal_length options;
     parse_exact_by_default = Options.exact_by_default options;
+    parse_exact_empty_objects = Options.exact_empty_objects options;
     parse_enable_enums = Options.enums options;
     parse_enable_relay_integration = Options.enable_relay_integration options;
     parse_relay_integration_excludes = Options.relay_integration_excludes options;

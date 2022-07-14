@@ -189,6 +189,7 @@ let sig_options
     ?facebook_fbt
     ?(max_literal_len = 100)
     ?(exact_by_default = false)
+    ?(exact_empty_objects = false)
     ?module_ref_prefix
     ?(enable_enums = true)
     ?(enable_relay_integration = false)
@@ -203,6 +204,7 @@ let sig_options
     facebook_fbt;
     max_literal_len;
     exact_by_default;
+    exact_empty_objects;
     module_ref_prefix;
     enable_enums;
     enable_relay_integration;
@@ -219,6 +221,7 @@ let print_sig
     ?facebook_fbt
     ?facebook_keyMirror
     ?exact_by_default
+    ?exact_empty_objects
     ?max_literal_len
     ?module_ref_prefix
     ?enable_enums
@@ -233,6 +236,7 @@ let print_sig
       ?facebook_fbt
       ?facebook_keyMirror
       ?exact_by_default
+      ?exact_empty_objects
       ?max_literal_len
       ?module_ref_prefix
       ?enable_enums

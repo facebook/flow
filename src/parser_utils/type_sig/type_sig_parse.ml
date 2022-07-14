@@ -31,6 +31,7 @@ type options = {
   facebook_fbt: string option;
   max_literal_len: int;
   exact_by_default: bool;
+  exact_empty_objects: bool;
   module_ref_prefix: string option;
   enable_enums: bool;
   enable_relay_integration: bool;
@@ -2549,7 +2550,7 @@ let rec expression opts scope tbls (loc, expr) =
   | E.TypeCast { E.TypeCast.expression = _; annot = (_, t); comments = _ } ->
     annot opts scope tbls SSet.empty t
   | E.Object { E.Object.properties; comments = _ } ->
-    if properties = [] then
+    if properties = [] && not opts.exact_empty_objects then
       Err (loc, SigError (Signature_error.EmptyObject loc))
     else
       object_literal opts scope tbls loc ~frozen:false properties
