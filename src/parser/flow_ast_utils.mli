@@ -24,6 +24,8 @@ val partition_directives :
   (Loc.t, Loc.t) Flow_ast.Statement.t list ->
   (Loc.t, Loc.t) Flow_ast.Statement.t list * (Loc.t, Loc.t) Flow_ast.Statement.t list
 
+val is_call_to_invariant : ('a, 'b) Flow_ast.Expression.t -> bool
+
 val negate_number_literal : float * string -> float * string
 
 val loc_of_expression : ('a, 'a) Flow_ast.Expression.t -> 'a

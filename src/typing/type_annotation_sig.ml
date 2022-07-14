@@ -59,7 +59,8 @@ module type S = sig
     Context.t ->
     Type.t Subst_name.Map.t ->
     Reason.t ->
-    definitely_returns_void:bool ->
+    void_return:bool ->
+    async:bool ->
     (ALoc.t, ALoc.t) Flow_ast.Type.annotation_or_hint ->
     Type.annotated_or_inferred * (ALoc.t, ALoc.t * Type.t) Flow_ast.Type.annotation_or_hint
 

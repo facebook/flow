@@ -24,11 +24,6 @@ module type C = Dependency_sigs.C
 
 module type F = Dependency_sigs.F
 
-let is_call_to_invariant callee =
-  match callee with
-  | (_, Flow_ast.Expression.Identifier (_, { Flow_ast.Identifier.name = "invariant"; _ })) -> true
-  | _ -> false
-
 let is_number_literal node =
   let open Flow_ast in
   match node with
@@ -3497,7 +3492,7 @@ module Make
 
         let open Ast.Expression.Call in
         let { callee; targs; arguments; _ } = expr in
-        if is_call_to_invariant callee then
+        if Flow_ast_utils.is_call_to_invariant callee then
           match (targs, arguments) with
           (* invariant() and invariant(false, ...) are treated like throw *)
           | (None, (_, { Ast.Expression.ArgList.arguments = []; comments = _ })) ->
@@ -4424,7 +4419,7 @@ module Make
          arguments;
          _;
         }
-          when not (is_call_to_invariant callee) ->
+          when not (Flow_ast_utils.is_call_to_invariant callee) ->
           (* This case handles predicate functions. We ensure that this
            * is not a call to invariant and that the callee is an identifier.
            * The only other criterion that must be met for this call to produce
