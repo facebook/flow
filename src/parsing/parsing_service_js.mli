@@ -82,6 +82,7 @@ type parse_options = {
   parse_suppress_types: SSet.t;
   parse_max_literal_len: int;
   parse_exact_by_default: bool;
+  parse_exact_empty_objects: bool;
   parse_enable_enums: bool;
   parse_enable_relay_integration: bool;
   parse_relay_integration_excludes: Str.regexp list;

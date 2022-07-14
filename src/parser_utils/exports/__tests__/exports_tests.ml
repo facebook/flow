@@ -57,6 +57,7 @@ let sig_opts =
     facebook_fbt = None;
     max_literal_len = 100;
     exact_by_default = true;
+    exact_empty_objects = true;
     module_ref_prefix = None;
     enable_enums = true;
     enable_relay_integration = false;
