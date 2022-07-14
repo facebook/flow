@@ -78,6 +78,11 @@ let negate_number_literal (value, raw) =
   in
   (~-.value, raw)
 
+let is_call_to_invariant callee =
+  match callee with
+  | (_, Expression.Identifier (_, { Identifier.name = "invariant"; _ })) -> true
+  | _ -> false
+
 let loc_of_statement = fst
 
 let loc_of_expression = fst

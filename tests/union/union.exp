@@ -46,6 +46,23 @@ References:
                       ^^^^^^ [2]
 
 
+Error ----------------------------------------------------------------------------------------------- issue-7322.js:23:2
+
+Cannot cast `x.returnNoArg()` to number because undefined [1] is incompatible with number [2]. [incompatible-cast]
+
+   issue-7322.js:23:2
+   23| (x.returnNoArg(): number);
+        ^^^^^^^^^^^^^^^
+
+References:
+   issue-7322.js:5:16
+    5|   returnNoArg() {
+                      ^ [1]
+   issue-7322.js:23:19
+   23| (x.returnNoArg(): number);
+                         ^^^^^^ [2]
+
+
 Error ----------------------------------------------------------------------------------------------------- union.js:2:5
 
 Cannot call `bar` with `0` bound to `x` because number [1] is incompatible with string [2]. [incompatible-call]
@@ -92,7 +109,7 @@ References:
 
 
 
-Found 6 errors
+Found 7 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

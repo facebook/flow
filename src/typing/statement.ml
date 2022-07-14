@@ -225,11 +225,6 @@ struct
     | Property.Computed _ ->
       assert_false "precondition not met"
 
-  let is_call_to_invariant callee =
-    match callee with
-    | (_, Ast.Expression.Identifier (_, { Ast.Identifier.name = "invariant"; _ })) -> true
-    | _ -> false
-
   let convert_call_targs =
     let open Ast.Expression.CallTypeArg in
     let rec loop ts tasts cx tparams_map = function
@@ -262,48 +257,6 @@ struct
     | Some (loc, args) ->
       let (targts, targs_ast) = convert_call_targs cx Subst_name.Map.empty args in
       (Some targts, Some (loc, targs_ast))
-
-  class return_finder =
-    object (this)
-      inherit [bool, ALoc.t] Flow_ast_visitor.visitor ~init:false as super
-
-      method! return _ node =
-        (* TODO we could pass over `return;` since it's definitely returning `undefined`. It will likely
-         * reposition existing errors from the `return;` to the location of the type annotation. *)
-        this#set_acc true;
-        node
-
-      method! call _loc expr =
-        if is_call_to_invariant Ast.Expression.Call.(expr.callee) then this#set_acc true;
-        expr
-
-      method! throw _loc stmt =
-        this#set_acc true;
-        stmt
-
-      method! function_body_any body =
-        begin
-          match body with
-          (* If it's a body expression, some value is implicitly returned *)
-          | Flow_ast.Function.BodyExpression _ -> this#set_acc true
-          | _ -> ()
-        end;
-        super#function_body_any body
-
-      (* Any returns in these constructs would be for nested function definitions, so we short-circuit
-     *)
-      method! class_ _ x = x
-
-      method! function_declaration _ x = x
-
-      method! function_expression _ x = x
-
-      method! arrow_function _ x = x
-    end
-
-  let might_have_nonvoid_return loc function_ast =
-    let finder = new return_finder in
-    finder#eval (finder#function_ loc) function_ast
 
   module ALoc_this_finder = This_finder.Make (Loc_collections.ALocSet)
 
@@ -4325,7 +4278,8 @@ struct
           )
       (******************************************)
       (* See ~/www/static_upstream/core/ *)
-      | Call { Call.callee; targs; arguments; comments } when is_call_to_invariant callee ->
+      | Call { Call.callee; targs; arguments; comments }
+        when Flow_ast_utils.is_call_to_invariant callee ->
         (* TODO: require *)
         let (((_, callee_t), _) as callee) = expression cx ~hint:Hint_None callee in
         let targs =
@@ -7938,7 +7892,7 @@ struct
         | Spread _ -> true
         | _ -> false
       in
-      if List.exists is_spread arguments || is_call_to_invariant callee then
+      if List.exists is_spread arguments || Flow_ast_utils.is_call_to_invariant callee then
         empty_result (expression cx ~hint:Hint_None e)
       else
         let (fun_t, keys, arg_ts, ret_t, call_ast) = predicated_call_expression cx loc call in
@@ -9048,11 +9002,17 @@ struct
       let body = Some body in
       let ret_reason = mk_reason RReturn (Func_sig.return_loc func) in
       let (return_annotated_or_inferred, return) =
-        let has_nonvoid_return = might_have_nonvoid_return loc func in
-        let definitely_returns_void =
-          kind = Func_class_sig_types.Func.Ordinary && not has_nonvoid_return
+        let open Func_class_sig_types.Func in
+        let has_nonvoid_return =
+          Nonvoid_return.might_have_nonvoid_return loc func || (kind <> Ordinary && kind <> Async)
         in
-        Anno.mk_return_type_annotation cx tparams_map ret_reason ~definitely_returns_void return
+        Anno.mk_return_type_annotation
+          cx
+          tparams_map
+          ret_reason
+          ~void_return:(not has_nonvoid_return)
+          ~async:(kind = Async)
+          return
       in
       let (return_annotated_or_inferred, predicate) =
         let open Ast.Type.Predicate in

@@ -1807,10 +1807,17 @@ module Make
       let (t, ast_annot) = mk_type_available_annotation cx tparams_map annot in
       (Annotated t, T.Available ast_annot)
 
-  and mk_return_type_annotation cx tparams_map reason ~definitely_returns_void annot =
+  and mk_return_type_annotation cx tparams_map reason ~void_return ~async annot =
     match annot with
-    | T.Missing loc when definitely_returns_void ->
-      let t = VoidT.why reason |> with_trust literal_trust in
+    | T.Missing loc when void_return ->
+      let void_t = VoidT.why reason |> with_trust literal_trust in
+      let t =
+        if async then
+          let reason = mk_annot_reason (RType (OrdinaryName "Promise")) (aloc_of_reason reason) in
+          Flow.get_builtin_typeapp cx reason (OrdinaryName "Promise") [void_t]
+        else
+          void_t
+      in
       (Inferred t, T.Missing (loc, t))
     (* TODO we could probably take the same shortcut for functions with an explicit `void` annotation
        and no explicit returns *)
