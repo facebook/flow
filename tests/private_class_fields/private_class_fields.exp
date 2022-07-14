@@ -191,7 +191,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- test.js:107:16
 
-Cannot initialize property `s` with `0` because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot initialize property `#s` with `0` because number [1] is incompatible with string [2]. [incompatible-type]
 
    test.js:107:16
    107|   #s: string = 0; // Error, number ~> string
@@ -205,7 +205,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- test.js:112:24
 
-Cannot initialize property `ss` with `0` because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot initialize property `#ss` with `0` because number [1] is incompatible with string [2]. [incompatible-type]
 
    test.js:112:24
    112|   static #ss: string = 0; // Error, number ~> string

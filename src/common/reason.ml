@@ -131,7 +131,6 @@ type 'loc virtual_reason_desc =
   | RDefaultConstructor
   | RConstructorCall of 'loc virtual_reason_desc
   | RReturn
-  | RImplicitReturn of 'loc virtual_reason_desc
   | RRegExp
   | RSuper
   | RNoSuper
@@ -280,7 +279,6 @@ let rec map_desc_locs f = function
     r
   | REnumRepresentation desc -> REnumRepresentation (map_desc_locs f desc)
   | RConstructorCall desc -> RConstructorCall (map_desc_locs f desc)
-  | RImplicitReturn desc -> RImplicitReturn (map_desc_locs f desc)
   | RTypeAlias (s, None, d) -> RTypeAlias (s, None, map_desc_locs f d)
   | RTypeAlias (s, Some b, d) -> RTypeAlias (s, Some (f b), map_desc_locs f d)
   | RTypeParam (s, (d1, l1), (d2, l2)) ->
@@ -612,7 +610,6 @@ let rec string_of_desc = function
   | RConstructorCall (RClass d) -> string_of_desc d
   | RConstructorCall d -> spf "new %s" (string_of_desc d)
   | RReturn -> "return"
-  | RImplicitReturn desc -> spf "implicitly-returned %s" (string_of_desc desc)
   | RRegExp -> "regexp"
   | RSuper -> "super"
   | RNoSuper -> "empty super object"
@@ -1396,7 +1393,6 @@ let classification_of_reason r =
   | RDefaultConstructor
   | RConstructorCall _
   | RReturn
-  | RImplicitReturn _
   | RSuper
   | RNoSuper
   | RDummyPrototype

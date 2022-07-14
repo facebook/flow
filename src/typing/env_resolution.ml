@@ -545,9 +545,9 @@ module Make (Env : Env_sig.S) (Statement : Statement_sig.S with module Env := En
       | Function { function_; synthesizable_from_annotation = true; function_loc = _; tparams_map }
         ->
         as_resolved @@ resolve_annotated_function cx def_reason tparams_map function_
-      | Class { class_; fully_annotated = false; class_loc } ->
+      | Class { class_; missing_annotations = _ :: _; class_loc } ->
         as_resolved @@ resolve_inferred_class cx id_loc def_reason class_loc class_
-      | Class { class_; fully_annotated = true; class_loc } ->
+      | Class { class_; missing_annotations = []; class_loc } ->
         as_resolved @@ resolve_annotated_class cx id_loc def_reason class_loc class_
       | MemberAssign { member_loc = _; member = _; rhs } ->
         (expression cx ~hint:dummy_hint rhs, unknown_use, true)

@@ -116,7 +116,7 @@ type def =
       tparams_map: tparams_map;
     }
   | Class of {
-      fully_annotated: bool;
+      missing_annotations: reason list;
       class_: (ALoc.t, ALoc.t) Ast.Class.t;
       class_loc: ALoc.t;
     }
@@ -226,28 +226,64 @@ module Destructure = struct
     (fun ~f acc ps -> loop ~f acc [] false ps)
 end
 
-let func_params_are_fully_annotated
-    ((_, { Ast.Function.Params.params; rest; this_; _ }) as all_params) body =
+let func_params_missing_annotations
+    ~allow_this ((param_loc, { Ast.Function.Params.params; rest; this_; _ }) as all_params) body =
   let is_annotated p = p |> Destructure.type_of_pattern |> Base.Option.is_some in
-  Base.List.for_all params ~f:(fun (_, { Ast.Function.Param.argument; _ }) -> is_annotated argument)
-  && Base.Option.value_map rest ~default:true ~f:(fun (_, { Ast.Function.RestParam.argument; _ }) ->
-         is_annotated argument
-     )
-  && ((not @@ Signature_utils.This_finder.found_this_in_body_or_params body all_params)
-     || Base.Option.is_some this_
-     )
+  let params =
+    Base.List.concat_map params ~f:(fun (_, { Ast.Function.Param.argument; _ }) ->
+        if is_annotated argument then
+          []
+        else
+          Flow_ast_utils.fold_bindings_of_pattern
+            (fun acc (loc, { Ast.Identifier.name; _ }) ->
+              mk_reason (RParameter (Some name)) loc :: acc)
+            []
+            argument
+    )
+  in
+  let rest =
+    Base.Option.value_map rest ~default:[] ~f:(fun (_, { Ast.Function.RestParam.argument; _ }) ->
+        if is_annotated argument then
+          []
+        else
+          Flow_ast_utils.fold_bindings_of_pattern
+            (fun acc (loc, { Ast.Identifier.name; _ }) ->
+              mk_reason (RRestParameter (Some name)) loc :: acc)
+            []
+            argument
+    )
+  in
+  let this_ =
+    if
+      allow_this
+      || (not @@ Signature_utils.This_finder.found_this_in_body_or_params body all_params)
+      || Base.Option.is_some this_
+    then
+      []
+    else
+      [mk_reason (RImplicitThis (RFunction RNormal)) param_loc]
+  in
+  params @ rest @ this_
 
-let func_is_synthesizable_from_annotation { Ast.Function.params; return; predicate; body; _ } =
-  match (return, predicate) with
-  | (Ast.Type.Available _, None) -> func_params_are_fully_annotated params body
-  | (Ast.Type.Missing _, _)
-  | (Ast.Type.Available _, Some _) ->
-    false
+let func_missing_annotations ~allow_this ({ Ast.Function.return; generator; params; body; _ } as f)
+    =
+  let params = func_params_missing_annotations ~allow_this params body in
+  match return with
+  | Ast.Type.Available _ -> params
+  | Ast.Type.Missing loc ->
+    if (not (Nonvoid_return.might_have_nonvoid_return ALoc.none f)) && not generator then
+      params
+    else
+      mk_reason RReturn loc :: params
+
+let func_is_synthesizable_from_annotation ~allow_this ({ Ast.Function.predicate; _ } as f) =
+  Base.Option.is_none predicate && Base.List.is_empty (func_missing_annotations ~allow_this f)
 
 let def_of_function tparams_map function_loc function_ =
   Function
     {
-      synthesizable_from_annotation = func_is_synthesizable_from_annotation function_;
+      synthesizable_from_annotation =
+        func_is_synthesizable_from_annotation ~allow_this:false function_;
       function_loc;
       function_;
       tparams_map;
@@ -255,8 +291,8 @@ let def_of_function tparams_map function_loc function_ =
 
 let def_of_class loc ({ Ast.Class.body = (_, { Ast.Class.Body.body; _ }); _ } as class_) =
   let open Ast.Class.Body in
-  let fully_annotated =
-    Base.List.for_all
+  let missing_annotations =
+    Base.List.concat_map
       ~f:(function
         | Method
             ( _,
@@ -267,7 +303,7 @@ let def_of_class loc ({ Ast.Class.body = (_, { Ast.Class.Body.body; _ }); _ } as
                 _;
               }
             ) ->
-          true
+          []
         | Method
             ( _,
               {
@@ -276,8 +312,8 @@ let def_of_class loc ({ Ast.Class.body = (_, { Ast.Class.Body.body; _ }); _ } as
                 _;
               }
             ) ->
-          func_is_synthesizable_from_annotation value
-        | Method _ -> false
+          func_missing_annotations ~allow_this:true value
+        | Method (loc, _) -> [mk_reason (RMethod None) loc]
         | Property
             ( _,
               {
@@ -286,13 +322,76 @@ let def_of_class loc ({ Ast.Class.body = (_, { Ast.Class.Body.body; _ }); _ } as
                 _;
               }
             ) ->
-          true
-        | Property _ -> false
-        | PrivateField (_, { Ast.Class.PrivateField.annot = Ast.Type.Available _; _ }) -> true
-        | PrivateField (_, { Ast.Class.PrivateField.annot = Ast.Type.Missing _; _ }) -> false)
+          []
+        | Property
+            ( _,
+              {
+                Ast.Class.Property.key = Ast.Expression.Object.Property.Identifier _;
+                annot = Ast.Type.Missing _;
+                value =
+                  Ast.Class.Property.Initialized
+                    (_, (Ast.Expression.Function fn | Ast.Expression.ArrowFunction fn));
+                _;
+              }
+            ) ->
+          func_missing_annotations ~allow_this:true fn
+        | Property
+            ( _,
+              {
+                Ast.Class.Property.key = Ast.Expression.Object.Property.Identifier _;
+                annot = Ast.Type.Missing _;
+                value = Ast.Class.Property.Initialized (_, Ast.Expression.Literal _);
+                _;
+              }
+            ) ->
+          []
+        | Property
+            ( _,
+              {
+                Ast.Class.Property.key =
+                  Ast.Expression.Object.Property.Identifier (_, { Ast.Identifier.name; _ });
+                annot = Ast.Type.Missing loc;
+                value = Ast.Class.Property.Initialized _;
+                _;
+              }
+            )
+        | Property
+            ( loc,
+              {
+                Ast.Class.Property.key =
+                  Ast.Expression.Object.Property.Identifier (_, { Ast.Identifier.name; _ });
+                annot = Ast.Type.Missing _;
+                value = Ast.Class.Property.(Uninitialized | Declared);
+                _;
+              }
+            ) ->
+          (* To correspond with other local inference annotation locations,
+             point at the annot if it's initialized and the whole property if it's not *)
+          [mk_reason (RProperty (Some (OrdinaryName name))) loc]
+        | Property (loc, _) -> [mk_reason (RProperty None) loc]
+        | PrivateField (_, { Ast.Class.PrivateField.annot = Ast.Type.Available _; _ }) -> []
+        | PrivateField
+            ( _,
+              {
+                Ast.Class.PrivateField.key = (_, { Ast.PrivateName.name; _ });
+                annot = Ast.Type.Missing loc;
+                value = Ast.Class.Property.Initialized _;
+                _;
+              }
+            )
+        | PrivateField
+            ( loc,
+              {
+                Ast.Class.PrivateField.key = (_, { Ast.PrivateName.name; _ });
+                annot = Ast.Type.Missing _;
+                value = Ast.Class.Property.(Uninitialized | Declared);
+                _;
+              }
+            ) ->
+          [mk_reason (RPrivateProperty name) loc])
       body
   in
-  Class { fully_annotated; class_; class_loc = loc }
+  Class { missing_annotations; class_; class_loc = loc }
 
 let func_scope_kind ?key { Ast.Function.async; generator; predicate; _ } =
   match (async, generator, predicate, key) with
