@@ -18,6 +18,7 @@ type result =
       type_sig: Parsing_heaps.type_sig;
       tolerable_errors: File_sig.With_Loc.tolerable_error list;
       exports: Exports.t;
+      imports: Imports.t;
     }
   | Parse_recovered of {
       ast: (Loc.t, Loc.t) Flow_ast.Program.t;
@@ -445,6 +446,7 @@ let do_parse ~parse_options ~info content file =
             Type_sig_utils.parse_and_pack_module ~strict sig_opts (Some file) ast
           in
           let exports = Exports.of_module type_sig in
+          let imports = Imports.of_file_sig file_sig in
           let tolerable_errors =
             List.fold_left
               (fun acc (_, err) ->
@@ -457,7 +459,7 @@ let do_parse ~parse_options ~info content file =
               sig_errors
           in
           if distributed then Remote_execution.upload_blob type_sig;
-          Parse_ok { ast; file_sig; locs; type_sig; tolerable_errors; exports }
+          Parse_ok { ast; file_sig; locs; type_sig; tolerable_errors; exports; imports }
   with
   | e ->
     let e = Exception.wrap e in
@@ -560,7 +562,7 @@ let reducer
           let module_name = exported_module file_key info in
           begin
             match do_parse ~parse_options ~info content file_key with
-            | Parse_ok { ast; file_sig; exports; locs; type_sig; tolerable_errors } ->
+            | Parse_ok { ast; file_sig; exports; imports; locs; type_sig; tolerable_errors } ->
               (* if parse_options.fail == true, then parse errors will hit Parse_fail below. otherwise,
                  ignore any parse errors we get here. *)
               let file_sig = (file_sig, tolerable_errors) in
@@ -569,6 +571,7 @@ let reducer
                   file_key
                   file_opt
                   ~exports
+                  ~imports
                   hash
                   module_name
                   info

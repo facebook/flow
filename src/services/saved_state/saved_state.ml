@@ -11,6 +11,7 @@ type denormalized_file_data = {
   resolved_requires: Parsing_heaps.resolved_requires;
   exports: Exports.t;
   hash: Xx.hash;
+  imports: Imports.t;
 }
 
 type normalized_file_data = denormalized_file_data
@@ -196,9 +197,9 @@ end = struct
     in
     { Parsing_heaps.resolved_modules; phantom_dependencies; hash }
 
-  let normalize_file_data ~normalizer { resolved_requires; exports; hash } =
+  let normalize_file_data ~normalizer { resolved_requires; exports; hash; imports } =
     let resolved_requires = normalize_resolved_requires ~normalizer resolved_requires in
-    { resolved_requires; exports; hash }
+    { resolved_requires; exports; hash; imports }
 
   let normalize_parsed_data ~normalizer { module_name; normalized_file_data } =
     let normalized_file_data = normalize_file_data ~normalizer normalized_file_data in
@@ -208,7 +209,7 @@ end = struct
   let collect_normalized_data_for_parsed_file ~normalizer ~reader fn parsed_heaps =
     let addr = Parsing_heaps.get_file_addr_unsafe fn in
     let parse = Parsing_heaps.Reader.get_typed_parse_unsafe ~reader fn addr in
-    let _imports = Imports.of_file_sig (Parsing_heaps.read_file_sig_unsafe fn parse) in
+    let imports = Parsing_heaps.read_imports parse in
     let resolved_requires = Parsing_heaps.Reader.get_resolved_requires_unsafe fn ~reader parse in
     let file_data =
       {
@@ -218,6 +219,7 @@ end = struct
             resolved_requires;
             exports = Parsing_heaps.read_exports parse;
             hash = Parsing_heaps.read_file_hash parse;
+            imports;
           };
       }
     in
@@ -512,9 +514,9 @@ end = struct
     Parsing_heaps.mk_resolved_requires ~resolved_modules ~phantom_dependencies
 
   (** Turns all the relative paths in a file's data back into absolute paths. *)
-  let denormalize_file_data ~root { resolved_requires; exports; hash } =
+  let denormalize_file_data ~root { resolved_requires; exports; hash; imports } =
     let resolved_requires = denormalize_resolved_requires ~root resolved_requires in
-    { resolved_requires; exports; hash }
+    { resolved_requires; exports; hash; imports }
 
   let progress_fn real_total ~total:_ ~start ~length:_ =
     MonitorRPC.status_update

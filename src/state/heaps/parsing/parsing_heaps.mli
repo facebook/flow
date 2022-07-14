@@ -71,6 +71,8 @@ val read_file_sig_unsafe : File_key.t -> [ `typed ] parse_addr -> File_sig.With_
 
 val read_exports : [ `typed ] parse_addr -> Exports.t
 
+val read_imports : [ `typed ] parse_addr -> Imports.t
+
 module type READER = sig
   type reader
 
@@ -98,6 +100,8 @@ module type READER = sig
 
   val get_exports : reader:reader -> File_key.t -> Exports.t option
 
+  val get_imports : reader:reader -> File_key.t -> Imports.t option
+
   val get_tolerable_file_sig : reader:reader -> File_key.t -> File_sig.With_Loc.tolerable_t option
 
   val get_file_sig : reader:reader -> File_key.t -> File_sig.With_Loc.t option
@@ -124,6 +128,8 @@ module type READER = sig
 
   val get_exports_unsafe : reader:reader -> File_key.t -> Exports.t
 
+  val get_imports_unsafe : reader:reader -> File_key.t -> Imports.t
+
   val get_tolerable_file_sig_unsafe : reader:reader -> File_key.t -> File_sig.With_Loc.tolerable_t
 
   val get_file_sig_unsafe : reader:reader -> File_key.t -> File_sig.With_Loc.t
@@ -148,6 +154,8 @@ module Mutator_reader : sig
 
   val get_old_exports : reader:reader -> File_key.t -> Exports.t option
 
+  val get_old_imports : reader:reader -> File_key.t -> Imports.t option
+
   val typed_component : reader:reader -> File_key.t Nel.t -> component_file Nel.t option
 end
 
@@ -161,6 +169,7 @@ type worker_mutator = {
     File_key.t ->
     file_addr option ->
     exports:Exports.t ->
+    imports:Imports.t ->
     Xx.hash ->
     string option ->
     Docblock.t ->
@@ -220,6 +229,7 @@ module From_saved_state : sig
     string option ->
     Exports.t ->
     resolved_requires ->
+    Imports.t ->
     Modulename.Set.t
 
   val add_unparsed : Options.t -> File_key.t -> Xx.hash -> string option -> Modulename.Set.t

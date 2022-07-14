@@ -218,6 +218,8 @@ module NewAPI : sig
 
   type resolved_requires
 
+  type imports
+
   type +'a parse
 
   type haste_info
@@ -326,6 +328,12 @@ module NewAPI : sig
 
   val iter_resolved_requires : (file addr -> resolved_requires addr -> unit) -> unit
 
+  (* imports *)
+
+  val prepare_write_imports : string -> size * (chunk -> imports addr)
+
+  val read_imports : imports addr -> string
+
   (* docblock *)
 
   val docblock_size : string -> size
@@ -365,6 +373,7 @@ module NewAPI : sig
     heap_int64 addr ->
     exports addr ->
     resolved_requires entity addr ->
+    imports addr ->
     file entity addr ->
     heap_int64 entity addr ->
     [ `typed ] parse addr
@@ -388,6 +397,8 @@ module NewAPI : sig
   val get_exports : [ `typed ] parse addr -> exports addr
 
   val get_resolved_requires : [ `typed ] parse addr -> resolved_requires entity addr
+
+  val get_imports : [ `typed ] parse addr -> imports addr
 
   val get_leader : [ `typed ] parse addr -> file entity addr
 

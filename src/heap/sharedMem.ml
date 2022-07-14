@@ -55,6 +55,7 @@ type tag =
   | Serialized_ast_tag
   | Serialized_file_sig_tag
   | Serialized_exports_tag
+  | Serialized_imports_tag
 
 let heap_ref : buf option ref = ref None
 
@@ -825,6 +826,8 @@ module NewAPI = struct
   type exports
 
   type resolved_requires
+
+  type imports
 
   type +'a parse
 
@@ -1662,18 +1665,24 @@ module NewAPI = struct
 
   let read_resolved_requires addr = read_compressed Serialized_resolved_requires_tag addr
 
+  (** Imports *)
+
+  let prepare_write_imports imports = prepare_write_compressed Serialized_imports_tag imports
+
+  let read_imports addr = read_compressed Serialized_imports_tag addr
+
   (** Parse data *)
 
   let untyped_parse_size = 1 * addr_size
 
-  let typed_parse_size = 10 * addr_size
+  let typed_parse_size = 11 * addr_size
 
   let write_untyped_parse chunk hash =
     let addr = write_header chunk Untyped_tag untyped_parse_size in
     unsafe_write_addr chunk hash;
     addr
 
-  let write_typed_parse chunk hash exports resolved_requires leader sig_hash =
+  let write_typed_parse chunk hash exports resolved_requires imports leader sig_hash =
     let addr = write_header chunk Typed_tag typed_parse_size in
     unsafe_write_addr chunk hash;
     unsafe_write_addr chunk null_addr;
@@ -1683,6 +1692,7 @@ module NewAPI = struct
     unsafe_write_addr chunk null_addr;
     unsafe_write_addr chunk exports;
     unsafe_write_addr chunk resolved_requires;
+    unsafe_write_addr chunk imports;
     unsafe_write_addr chunk leader;
     unsafe_write_addr chunk sig_hash;
     addr
@@ -1713,9 +1723,11 @@ module NewAPI = struct
 
   let resolved_requires_addr parse = addr_offset parse 8
 
-  let leader_addr parse = addr_offset parse 9
+  let imports_addr parse = addr_offset parse 9
 
-  let sig_hash_addr parse = addr_offset parse 10
+  let leader_addr parse = addr_offset parse 10
+
+  let sig_hash_addr parse = addr_offset parse 11
 
   let get_file_hash = get_generic file_hash_addr
 
@@ -1730,6 +1742,8 @@ module NewAPI = struct
   let get_file_sig = get_generic_opt file_sig_addr
 
   let get_exports = get_generic exports_addr
+
+  let get_imports = get_generic imports_addr
 
   let get_resolved_requires = get_generic resolved_requires_addr
 

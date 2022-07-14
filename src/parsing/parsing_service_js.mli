@@ -20,6 +20,7 @@ type result =
       type_sig: Parsing_heaps.type_sig;
       tolerable_errors: File_sig.With_Loc.tolerable_error list;
       exports: Exports.t;
+      imports: Imports.t;
     }
   | Parse_recovered of {
       ast: (Loc.t, Loc.t) Flow_ast.Program.t;
