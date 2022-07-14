@@ -82,6 +82,7 @@ type t = {
   opt_enable_relay_integration: bool;
   opt_enabled_rollouts: string SMap.t;
   opt_enforce_local_inference_annotations: bool;
+  opt_enforce_class_annotations: bool;
   opt_enforce_strict_call_arity: bool;
   opt_enforce_this_annotations: bool;
   opt_enums: bool;
@@ -184,6 +185,8 @@ let enable_relay_integration opts = opts.opt_enable_relay_integration
 let enabled_rollouts opts = opts.opt_enabled_rollouts
 
 let enforce_local_inference_annotations opts = opts.opt_enforce_local_inference_annotations
+
+let enforce_class_annotations opts = opts.opt_enforce_class_annotations
 
 let enforce_strict_call_arity opts = opts.opt_enforce_strict_call_arity
 

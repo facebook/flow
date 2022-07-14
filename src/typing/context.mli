@@ -58,6 +58,7 @@ type metadata = {
   enable_enums: bool;
   enable_relay_integration: bool;
   enforce_local_inference_annotations: bool;
+  enforce_class_annotations: bool;
   enforce_strict_call_arity: bool;
   enforce_this_annotations: bool;
   env_mode: Options.env_mode;
@@ -188,6 +189,8 @@ val exact_by_default : t -> bool
 val exact_empty_objects : t -> bool
 
 val enforce_local_inference_annotations : t -> bool
+
+val enforce_class_annotations : t -> bool
 
 val local_inference_annotation_dirs : t -> string list
 
