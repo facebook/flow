@@ -373,31 +373,27 @@ let sorted_insertion_point =
      whether `import` should be inserted `Above` it, in which case we're done,
      or somewhere `Below`. If `Below`, we keep going until we go "too far"
      or run out of imports. *)
-  let rec helper acc import imports =
-    match imports with
-    | [] -> acc
+  let rec helper best import = function
+    | [] -> best
     | current :: rest ->
-      let sorted =
-        match rest with
-        | [] -> true
-        | next :: _ -> compare_imports current next <= 0
-      in
-      if sorted then
-        let acc =
-          match acc with
-          | None
-          | Some (_, Below _) ->
-            Some (fst current, relative_placement import current)
-          | Some (_, Above _)
-          | Some (_, Replace) ->
-            acc
-        in
-        helper acc import rest
-      else
-        (* imports are not sorted, so give up *)
-        None
+      let placement = relative_placement import current in
+      (match placement with
+      | Above { skip_line = true } ->
+        (match best with
+        | Some _ -> best
+        | None -> Some (fst current, placement))
+      | Above { skip_line = false }
+      | Replace ->
+        Some (fst current, placement)
+      | Below _ ->
+        let best = Some (fst current, placement) in
+        helper best import rest)
   in
-  (fun import imports -> helper None import imports)
+  fun import imports ->
+    if Base.List.is_sorted ~compare:compare_imports imports then
+      helper None import imports
+    else
+      None
 
 let rec last_loc = function
   | [] -> failwith "empty list"
