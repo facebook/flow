@@ -55,6 +55,7 @@ module Opts = struct
     enable_const_params: bool option;
     enable_contextual_typing: bool option;
     enforce_local_inference_annotations: bool;
+    enforce_class_annotations: bool;
     enforce_strict_call_arity: bool;
     enforce_this_annotations: bool;
     enums: bool;
@@ -186,6 +187,7 @@ module Opts = struct
       enable_const_params = None;
       enable_contextual_typing = None;
       enforce_local_inference_annotations = false;
+      enforce_class_annotations = false;
       enforce_strict_call_arity = true;
       enforce_this_annotations = false;
       enums = false;
@@ -483,6 +485,15 @@ module Opts = struct
 
   let enforce_local_inference_annotations =
     boolean (fun opts v -> Ok { opts with enforce_local_inference_annotations = v })
+
+  let enforce_class_annotations =
+    boolean (fun opts v ->
+        if opts.enforce_local_inference_annotations || not v then
+          Ok { opts with enforce_class_annotations = v }
+        else
+          Error
+            "Option \"enforce_local_inference_annotations\" must be set to true to set \"enforce_class_annotations\" to true."
+    )
 
   let local_inference_annotation_dirs =
     string
@@ -839,6 +850,7 @@ module Opts = struct
       ("experimental.direct_dependent_files_fix", direct_dependent_files_fix_parser);
       ("experimental.disable_live_non_parse_errors", disable_live_non_parse_errors_parser);
       ("experimental.enforce_local_inference_annotations", enforce_local_inference_annotations);
+      ("experimental.enforce_class_annotations", enforce_class_annotations);
       ("experimental.enforce_this_annotations", enforce_this_annotations);
       ("experimental.enums", boolean (fun opts v -> Ok { opts with enums = v }));
       ("experimental.env_mode", env_mode_parser);
@@ -1477,6 +1489,8 @@ let enable_contextual_typing c = c.options.Opts.enable_contextual_typing
 let enable_const_params c = c.options.Opts.enable_const_params
 
 let enforce_local_inference_annotations c = c.options.Opts.enforce_local_inference_annotations
+
+let enforce_class_annotations c = c.options.Opts.enforce_class_annotations
 
 let enforce_strict_call_arity c = c.options.Opts.enforce_strict_call_arity
 

@@ -123,6 +123,7 @@ let stub_metadata ~root ~checked =
     enable_enums = true;
     enable_relay_integration = false;
     enforce_local_inference_annotations = false;
+    enforce_class_annotations = false;
     enforce_strict_call_arity = true;
     enforce_this_annotations = false;
     env_mode = Options.ClassicEnv [];

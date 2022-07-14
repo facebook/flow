@@ -88,6 +88,8 @@ val enable_contextual_typing : config -> bool option
 
 val enforce_local_inference_annotations : config -> bool
 
+val enforce_class_annotations : config -> bool
+
 val enforce_strict_call_arity : config -> bool
 
 val enforce_this_annotations : config -> bool
