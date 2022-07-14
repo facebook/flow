@@ -28,36 +28,36 @@ let of_file_sig (file_sig : File_sig.With_Loc.t) =
       match require with
       | Import require ->
         let source = snd require.source in
-        let named =
+        let acc =
           SMap.fold
             (fun export _elem acc -> { export; kind = Named; unresolved_source = source } :: acc)
             require.named
-            []
+            acc
         in
-        let types =
+        let acc =
           SMap.fold
             (fun export _elem acc ->
               { export; kind = NamedType; unresolved_source = source } :: acc)
             require.types
-            []
+            acc
         in
-        let ns =
+        let acc =
           match require.ns with
-          | Some ns -> [{ export = snd ns; kind = Namespace; unresolved_source = source }]
-          | None -> []
+          | Some ns -> { export = snd ns; kind = Namespace; unresolved_source = source } :: acc
+          | None -> acc
         in
         if
-          List.length named = 0
-          && List.length types = 0
-          && List.length ns = 0
+          SMap.is_empty require.named
+          && SMap.is_empty require.types
+          && Option.is_none require.ns
           (*TODO: Can possibly include TypesOf and TypesofNs*)
           && SMap.is_empty require.typesof
           && Option.is_none require.typesof_ns
         then
           { export = ""; kind = Default; unresolved_source = source } :: acc
         else
-          acc @ named @ types @ ns
+          acc
       (* TODO: Require, ImportDynamic, etc. *)
-      | _ -> [])
+      | _ -> acc)
     []
     requires
