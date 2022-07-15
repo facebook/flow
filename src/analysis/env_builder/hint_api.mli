@@ -15,7 +15,6 @@ type hint_decomposition =
   | Decomp_MethodElem
   | Decomp_CallNew
   | Decomp_CallSuper
-  | Decomp_CallSuperMem of string
   | Decomp_FuncParam of int
   | Decomp_FuncRest of int
   | Decomp_FuncReturn

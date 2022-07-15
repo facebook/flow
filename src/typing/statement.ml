@@ -4177,7 +4177,7 @@ struct
         let super_t = super_ cx super_loc in
         let meth_generic_this = Tvar.mk cx reason in
         let (targts, targs) = convert_call_targs_opt cx targs in
-        let hint = decompose_hint (Decomp_CallSuperMem name) (Hint_t super_t) in
+        let hint = decompose_hint (Decomp_MethodName name) (Hint_t super_t) in
         let (argts, arguments_ast) = arg_list cx ~hint arguments in
         Type_inference_hooks_js.dispatch_call_hook cx name ploc super_t;
         let prop_t = Tvar.mk cx reason_prop in

@@ -30,8 +30,6 @@ type hint_decomposition =
   | Decomp_CallNew
   (* Type of the super-class becomes the type of the super constructor *)
   | Decomp_CallSuper
-  (* Type of the super-class becomes the type of the method in the super class *)
-  | Decomp_CallSuperMem of string
   (* Type of function becomes hint on the i-th argument *)
   | Decomp_FuncParam of int
   (* Type of function becomes hint on rest argument *)
@@ -59,7 +57,6 @@ let string_of_hint_unknown_kind = function
   | Decomp_MethodElem -> "Decomp_MethodElem"
   | Decomp_CallNew -> "Decomp_CallNew"
   | Decomp_CallSuper -> "Decomp_CallSuper"
-  | Decomp_CallSuperMem _ -> "Decomp_CallSuperMem"
   | Decomp_FuncParam i -> Utils_js.spf "Decomp_FuncParam (%d)" i
   | Decomp_FuncRest i -> Utils_js.spf "Decomp_FuncRest (%d)" i
   | Decomp_FuncReturn -> "Decomp_FuncReturn"

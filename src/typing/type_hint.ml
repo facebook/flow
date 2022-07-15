@@ -109,9 +109,6 @@ let type_of_hint_decomposition cx op loc t =
       | Decomp_CallSuper ->
         (* TODO *)
         failwith "Not implemented"
-      | Decomp_CallSuperMem _ ->
-        (* TODO *)
-        failwith "Not implemented"
       | Decomp_FuncParam i ->
         let t =
           Tvar.mk_where cx dummy_reason (fun param_t ->
