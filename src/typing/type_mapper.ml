@@ -818,7 +818,7 @@ class virtual ['a] t_with_uses =
       | MethodT (op, r1, r2, prop, action, prop_t) ->
         let prop' = self#prop_ref cx map_cx prop in
         let action' = self#method_action cx map_cx action in
-        let prop_t' = OptionUtils.ident_map (self#type_ cx map_cx) prop_t in
+        let prop_t' = self#type_ cx map_cx prop_t in
         if prop' == prop && action' == action && prop_t' == prop_t then
           t
         else
@@ -1549,7 +1549,7 @@ class virtual ['a] t_with_uses =
           OptCallT (op, r, funcall')
       | OptMethodT (op, r1, r2, propref, opt_action, tout) ->
         let opt_action' = self#opt_method_action cx map_cx opt_action in
-        let tout' = OptionUtils.ident_map (self#type_ cx map_cx) tout in
+        let tout' = self#type_ cx map_cx tout in
         let propref' = self#prop_ref cx map_cx propref in
         if propref == propref' && opt_action == opt_action' && tout == tout' then
           t

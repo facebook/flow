@@ -4205,7 +4205,7 @@ struct
                       reason_lookup,
                       Named (reason_prop, OrdinaryName name),
                       CallM funtype,
-                      Some prop_t
+                      prop_t
                     )
                 )
           )
@@ -4242,6 +4242,7 @@ struct
         in
 
         let super_reason = reason_of_t super_t in
+        let prop_t = Tvar.mk cx (reason_of_t super_t) in
         let lhs_t =
           Tvar.mk_no_wrap_where cx reason (fun t ->
               let funtype = mk_methodcalltype targts argts t in
@@ -4259,7 +4260,7 @@ struct
               in
               Flow.flow
                 cx
-                (super_t, MethodT (use_op, reason, super_reason, propref, CallM funtype, None))
+                (super_t, MethodT (use_op, reason, super_reason, propref, CallM funtype, prop_t))
           )
         in
         Some
@@ -5419,7 +5420,7 @@ struct
       OptPrivateMethodT
         (use_op, reason, reason_expr, name, class_entries, false, action, Some prop_t)
     else
-      OptMethodT (use_op, reason, reason_expr, propref, action, Some prop_t)
+      OptMethodT (use_op, reason, reason_expr, propref, action, prop_t)
 
   (* returns (type of method itself, type returned from method) *)
   and method_call
@@ -5460,9 +5461,7 @@ struct
             let reason_expr = mk_reason (RProperty (Some (OrdinaryName name))) expr_loc in
             let app = mk_methodcalltype targts argts t ~meth_strict_arity:call_strict_arity in
             let propref = Named (reason_prop, OrdinaryName name) in
-            Flow.flow
-              cx
-              (obj_t, MethodT (use_op, reason, reason_expr, propref, CallM app, Some prop_t))
+            Flow.flow cx (obj_t, MethodT (use_op, reason, reason_expr, propref, CallM app, prop_t))
         )
       )
 
@@ -6859,6 +6858,7 @@ struct
             )
         in
         let react = Env.var_ref ~lookup_mode:ForValue cx (OrdinaryName "React") loc_element in
+        let prop_t = Tvar.mk cx reason_createElement in
         Flow.flow
           cx
           ( react,
@@ -6873,7 +6873,7 @@ struct
                      ([Arg component_t; Arg props] @ Base.List.map ~f:(fun c -> Arg c) children)
                      tvar
                   ),
-                None
+                prop_t
               )
           ));
       OpenT tvar
