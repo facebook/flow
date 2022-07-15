@@ -195,8 +195,7 @@ let merge_job ~mutator ~options ~reader component =
 (* The processing step in Types-First needs to happen right after the check phase.
    We have already merged any necessary dependencies, so now we only check the
    target files for processing. *)
-let post_check ~visit ~iteration ~reader ~options ~metadata file check_result =
-  match check_result with
+let post_check ~visit ~iteration ~reader ~options ~metadata file = function
   | (Ok None | Error _) as result -> result
   | Ok (Some ((full_cx, type_sig, file_sig, typed_ast), _)) ->
     let reader = Abstract_state_reader.Mutator_state_reader reader in
@@ -220,6 +219,10 @@ let post_check ~visit ~iteration ~reader ~options ~metadata file check_result =
     in
     let result = visit ~options ast ccx in
     Ok (Some ((), result))
+
+let mk_check ~visit ~iteration ~reader ~options ~metadata () =
+  let check = Merge_service.mk_check options ~reader () in
+  (fun file -> check file |> post_check ~visit ~iteration ~reader ~options ~metadata file)
 
 let mk_next ~options ~workers roots =
   Job_utils.mk_next
@@ -301,15 +304,9 @@ module SimpleTypedRunner (C : SIMPLE_TYPED_RUNNER_CONFIG) : TYPED_RUNNER_CONFIG 
         let options = C.check_options options in
         let (next, merge) = mk_next ~options ~workers roots in
         let metadata = Context.metadata_of_options options in
-        let post_check = post_check ~visit:C.visit ~iteration ~reader ~options ~metadata in
-        let%lwt result =
-          MultiWorkerLwt.call
-            workers
-            ~job:(Job_utils.job ~post_check ~reader ~options)
-            ~neutral:[]
-            ~merge
-            ~next
-        in
+        let mk_check () = mk_check ~visit:C.visit ~iteration ~reader ~options ~metadata () in
+        let job = Job_utils.mk_job ~mk_check ~options () in
+        let%lwt result = MultiWorkerLwt.call workers ~job ~neutral:[] ~merge ~next in
         Hh_logger.info "Done";
         Lwt.return result
     )
@@ -394,15 +391,9 @@ module TypedRunnerWithPrepass (C : TYPED_RUNNER_WITH_PREPASS_CONFIG) : TYPED_RUN
         Hh_logger.info "Checking+Codemodding %d files" (FilenameSet.cardinal roots);
         let (next, merge) = mk_next ~options ~workers roots in
         let metadata = Context.metadata_of_options options in
-        let post_check = post_check ~visit:C.visit ~iteration ~reader ~options ~metadata in
-        let%lwt result =
-          MultiWorkerLwt.call
-            workers
-            ~job:(Job_utils.job ~post_check ~reader ~options)
-            ~neutral:[]
-            ~merge
-            ~next
-        in
+        let mk_check () = mk_check ~visit:C.visit ~iteration ~reader ~options ~metadata () in
+        let job = Job_utils.mk_job ~mk_check ~options () in
+        let%lwt result = MultiWorkerLwt.call workers ~job ~neutral:[] ~merge ~next in
         Hh_logger.info "Checking+Codemodding Done";
         Lwt.return result
     )

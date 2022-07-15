@@ -20,7 +20,7 @@ let out_of_memory ~options ~start_rss =
 (** Check as many files as it can before it hits the timeout. The timeout is soft,
   so the file which exceeds the timeout won't be canceled. We expect most buckets
   to not hit the timeout *)
-let rec job_helper ~check ~post_check ~options ~start_time ~start_rss acc = function
+let rec job_helper ~check ~options ~start_time ~start_rss acc = function
   | [] -> (acc, [])
   | unfinished_files when out_of_time ~options ~start_time ->
     Hh_logger.debug
@@ -36,26 +36,21 @@ let rec job_helper ~check ~post_check ~options ~start_time ~start_rss acc = func
     (acc, unfinished_files)
   | file :: rest ->
     let result =
-      match check file |> post_check file with
+      match check file with
       | Ok (Some (_, acc)) -> Ok (Some acc)
       | (Ok None | Error _) as result -> result
     in
-    job_helper ~check ~post_check ~options ~start_time ~start_rss ((file, result) :: acc) rest
+    job_helper ~check ~options ~start_time ~start_rss ((file, result) :: acc) rest
 
-let job ~post_check ~reader ~options acc files =
+let mk_job ~mk_check ~options () acc files =
   let start_time = Unix.gettimeofday () in
   let start_rss =
     match ProcFS.status_for_pid (Unix.getpid ()) with
     | Ok { ProcFS.rss_total; _ } -> Some rss_total
     | Error _ -> None
   in
-  let check =
-    if Options.distributed options then
-      Merge_service.mk_distributed_check options ~reader ()
-    else
-      Merge_service.mk_check options ~reader ()
-  in
-  job_helper ~check ~post_check ~options ~start_time ~start_rss acc files
+  let check = mk_check () in
+  job_helper ~check ~options ~start_time ~start_rss acc files
 
 (** A stateful (next, merge) pair. This lets us re-queue unfinished files which are returned
   when a bucket times out *)
