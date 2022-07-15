@@ -170,6 +170,27 @@ let add_import_tests =
       |} in
       assert_import ~ctxt expected binding from contents );
 
+    ( "import_named_below_existing_between_sections" >:: fun ctxt ->
+      let binding = Autofix_imports.Named [named_binding "xyz"] in
+      let from = "./xyz" in
+      let contents = {|
+        import { foo } from "./relative";
+
+        import { bar } from "module";
+
+        foo
+      |} in
+      let expected = {|
+        import { foo } from "./relative";
+
+        import { xyz } from "./xyz";
+
+        import { bar } from "module";
+
+        foo
+      |} in
+      assert_import ~ctxt expected binding from contents);
+
     ( "import_named_sorted_existing" >:: fun ctxt ->
       let binding = Autofix_imports.Named [named_binding "baz"] in
       let from = "./baz" in
