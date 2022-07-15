@@ -1,0 +1,58 @@
+Error ----------------------------------------------------------------------------------------------------- class.js:5:8
+
+Missing an annotation on property `prop2`. [missing-local-annot]
+
+   5|   prop2 = 10 + 30; // err
+             
+
+
+Error ----------------------------------------------------------------------------------------------------- class.js:6:3
+
+Missing an annotation on property `prop3`. [missing-local-annot]
+
+   6|   prop3; // err
+        ^^^^^^
+
+
+Error ---------------------------------------------------------------------------------------------------- class.js:8:22
+
+Missing an annotation on return. [missing-local-annot]
+
+   8|   prop5 = (x: number) => 42; // err return
+                           
+
+
+Error ---------------------------------------------------------------------------------------------------- class.js:9:31
+
+Missing an annotation on return. [missing-local-annot]
+
+   9|   prop6 = function (x: number) { return 42 } // err return
+                                    
+
+
+Error --------------------------------------------------------------------------------------------------- class.js:12:12
+
+Missing an annotation on return. [missing-local-annot]
+
+   12|   method2() { return 42; } // err return
+                  
+
+
+Error ---------------------------------------------------------------------------------------------------- class.js:15:9
+
+Missing an annotation on property `#priv1`. [missing-local-annot]
+
+   15|   #priv1 = 10 + 20; // err
+               
+
+
+Error ---------------------------------------------------------------------------------------------------- class.js:16:3
+
+Missing an annotation on property `#priv2`. [missing-local-annot]
+
+   16|   #priv2; // err
+         ^^^^^^^
+
+
+
+Found 7 errors

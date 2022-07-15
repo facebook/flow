@@ -95,7 +95,6 @@ type 'loc virtual_reason_desc =
   | RDefaultConstructor
   | RConstructorCall of 'loc virtual_reason_desc
   | RReturn
-  | RImplicitReturn of 'loc virtual_reason_desc
   | RRegExp
   | RSuper
   | RNoSuper

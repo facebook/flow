@@ -304,7 +304,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) = struct
           (depends_of_tparams_map tparams_map EnvMap.empty)
       in
       let depends_of_class
-          fully_annotated
+          missing_annotations
           {
             Ast.Class.id = ident;
             body;
@@ -324,7 +324,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) = struct
               | None -> ()
             end;
             let _ =
-              if fully_annotated then
+              if Base.List.is_empty missing_annotations then
                 visitor#class_body_annotated body
               else
                 visitor#class_body body
@@ -500,7 +500,8 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) = struct
       | OpAssign { lhs; rhs; _ } -> depends_of_op_assign lhs rhs
       | Function { synthesizable_from_annotation; function_; function_loc = _; tparams_map } ->
         depends_of_fun synthesizable_from_annotation tparams_map function_
-      | Class { fully_annotated; class_; class_loc = _ } -> depends_of_class fully_annotated class_
+      | Class { missing_annotations; class_; class_loc = _ } ->
+        depends_of_class missing_annotations class_
       | DeclaredClass (_, decl) -> depends_of_declared_class decl
       | TypeAlias (_, alias) -> depends_of_alias alias
       | OpaqueType (_, alias) -> depends_of_opaque alias
@@ -541,7 +542,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) = struct
               Named { kind = Some Ast.Statement.ImportDeclaration.(ImportType | ImportTypeof); _ };
             _;
           }
-      | Class { fully_annotated = true; _ }
+      | Class { missing_annotations = []; _ }
       | DeclaredClass _ ->
         true
       | RefiExpression _
@@ -552,7 +553,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) = struct
       | Function { synthesizable_from_annotation = false; _ }
       | Enum _
       | Import _
-      | Class { fully_annotated = false; _ } ->
+      | Class { missing_annotations = _ :: _; _ } ->
         false
   end
 

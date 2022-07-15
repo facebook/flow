@@ -87,10 +87,10 @@ let string_of_source = function
       )
   | DeclaredClass (_, { Ast.Statement.DeclareClass.id = (_, { Ast.Identifier.name; _ }); _ }) ->
     spf "declared class %s" name
-  | Class { class_ = { Ast.Class.id; _ }; fully_annotated; class_loc = _ } ->
+  | Class { class_ = { Ast.Class.id; _ }; missing_annotations; class_loc = _ } ->
     spf
       "class (annotated=%b) %s"
-      fully_annotated
+      (Base.List.is_empty missing_annotations)
       (Base.Option.value_map
          ~f:(fun (_, { Ast.Identifier.name; _ }) -> name)
          ~default:"<anonymous>"
@@ -358,6 +358,7 @@ type T = number;
 let x: T;
 function f() {
   x = x;
+  return 42;
 }
   |};
   [%expect {|
@@ -409,6 +410,7 @@ type T = number;
 let x: T;
 function f() {
   x = x;
+  return 42;
 }
   |};
   [%expect {|
@@ -427,6 +429,7 @@ function nested() {
   x = y;
   y = z;
   z = x;
+  return 42;
 }
   |};
   [%expect {|
@@ -448,7 +451,7 @@ function f() {
 let%expect_test "deps3" =
   print_order_test {|
 function invalidate_x() {
-  x = null;
+  x = null; return x;
 }
 
 var x = null;
@@ -497,7 +500,7 @@ let%expect_test "class_def" =
   print_init_test {|
 let x;
 class C {
-  foo() { x = 42; }
+  foo() { x = 42; return 42 }
 }
 x = 10;
   |};
@@ -527,7 +530,7 @@ let%expect_test "class1" =
   print_order_test {|
 let x;
 class C {
-  foo() { x = 42; }
+  foo() { x = 42; return 42; }
 }
 x = 10;
   |};
@@ -580,7 +583,7 @@ class D extends C {
 let%expect_test "enum" =
   print_order_test {|
 function havoced() {
-  var x: E = E.Foo
+  var x: E = E.Foo; return 42;
 }
 enum E {
   Foo
@@ -633,7 +636,7 @@ import F, {type G, typeof H, J } from 'x';
 let%expect_test "refi_instanceof" =
   print_order_test {|
 class C {
-  foo() { y }
+  foo() { return y; }
 }
 declare var x: mixed;
 var y;
@@ -849,7 +852,7 @@ let%expect_test "inc" =
 let x;
 var y;
 function f() {
-  y = x;
+  y = x; return 42;
 }
 x++;
   |};
@@ -863,10 +866,10 @@ let%expect_test "opassign" =
 let x;
 var y;
 function f() {
-  y = x;
+  y = x; return 42;
 }
 function h() {
-  x += y;
+  x += y; return 42;
 }
   |};
   [%expect {|
@@ -972,10 +975,10 @@ let%expect_test "arr" =
   print_order_test {|
 var x = []
 function w() {
-  var z = x;
+  var z = x; return 42;
 }
 function g() {
-  x = 42;
+  x = 42; return 42;
 }
 x.push(42);
   |};
