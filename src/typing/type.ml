@@ -460,10 +460,9 @@ module rec TypeTerm : sig
     (* operations on runtime values, such as functions, objects, and arrays *)
     | BindT of use_op * reason * funcalltype
     | CallT of use_op * reason * funcalltype
-    (* The last position is an optional type that probes into the type of the
-       method called. This will be primarily used for type-table bookkeeping. *)
-    | MethodT of
-        use_op * (* call *) reason * (* lookup *) reason * propref * method_action * t option
+    (* The last element is the type of the method called, primarily used for
+       populating the typed AST. *)
+    | MethodT of use_op * (* call *) reason * (* lookup *) reason * propref * method_action * t
     (* Similar to above, but stores information necessary to resolve a private method. *)
     | PrivateMethodT of
         use_op
@@ -892,7 +891,7 @@ module rec TypeTerm : sig
   and opt_use_t =
     | OptCallT of use_op * reason * opt_funcalltype
     | OptMethodT of
-        use_op * (* call *) reason * (* lookup *) reason * propref * opt_method_action * t option
+        use_op * (* call *) reason * (* lookup *) reason * propref * opt_method_action * t
     | OptPrivateMethodT of
         use_op
         * (* call *) reason

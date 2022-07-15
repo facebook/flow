@@ -3127,20 +3127,19 @@ struct
             args
             (ResolveSpreadsToCustomFunCall (mk_id (), kind, OpenT tout))
         | ( CustomFunT (_, (ObjectAssign | ObjectGetPrototypeOf | ObjectSetPrototypeOf)),
-            MethodT (use_op, reason_call, _, Named (_, OrdinaryName "call"), action, _)
+            MethodT (use_op, reason_call, _, Named (_, OrdinaryName "call"), action, prop_t)
           ) ->
+          rec_flow_t cx trace ~use_op:unknown_use (l, prop_t);
           rec_flow cx trace (l, apply_method_action use_op reason_call l action)
         (* Custom functions are still functions, so they have all the prototype properties *)
-        | (CustomFunT (reason, _), MethodT (use_op, call_r, lookup_r, propref, action, t_opt)) ->
+        | (CustomFunT (reason, _), MethodT (use_op, call_r, lookup_r, propref, action, prop_t)) ->
           let method_type =
             Tvar.mk_no_wrap_where cx lookup_r (fun tout ->
                 let u = GetPropT (use_op, lookup_r, None, propref, tout) in
                 rec_flow cx trace (FunProtoT reason, u)
             )
           in
-          Base.Option.iter
-            ~f:(fun prop_t -> rec_flow_t cx trace ~use_op:unknown_use (method_type, prop_t))
-            t_opt;
+          rec_flow_t cx trace ~use_op:unknown_use (method_type, prop_t);
           rec_flow cx trace (method_type, apply_method_action use_op call_r l action)
         | (CustomFunT (r, _), _) when function_like_op u -> rec_flow cx trace (FunProtoT r, u)
         (****************************************)
@@ -3276,6 +3275,7 @@ struct
                     }
                 )
           );
+          let prop_t = Tvar.mk cx reason_o in
 
           (* call this.constructor(args) *)
           let ret =
@@ -3285,7 +3285,7 @@ struct
                 rec_flow
                   cx
                   trace
-                  (this, MethodT (use_op, reason_op, reason_o, propref, CallM funtype, None))
+                  (this, MethodT (use_op, reason_op, reason_o, propref, CallM funtype, prop_t))
             )
           in
           (* return this *)
@@ -3309,15 +3309,11 @@ struct
           ) ->
           let any = AnyT.untyped reason_op in
           call_args_iter (fun t -> rec_flow cx trace (t, UseT (use_op, any))) meth_args_tlist;
-          Base.Option.iter
-            ~f:(fun prop_t -> rec_flow_t cx trace ~use_op:unknown_use (any, prop_t))
-            prop_t;
+          rec_flow_t cx trace ~use_op:unknown_use (any, prop_t);
           rec_flow_t cx trace ~use_op:unknown_use (any, OpenT meth_tout)
         | (AnyT _, MethodT (use_op, reason_op, _, _, (ChainM _ as chain), prop_t)) ->
           let any = AnyT.untyped reason_op in
-          Base.Option.iter
-            ~f:(fun prop_t -> rec_flow_t cx trace ~use_op:unknown_use (any, prop_t))
-            prop_t;
+          rec_flow_t cx trace ~use_op:unknown_use (any, prop_t);
           rec_flow cx trace (any, apply_method_action use_op reason_op l chain)
         (*************************)
         (* statics can be read   *)
@@ -3568,9 +3564,7 @@ struct
             }
           in
           read_prop cx trace options reason_prop reason_lookup l super x props (reason_lookup, tvar);
-          Base.Option.iter
-            ~f:(fun prop_t -> rec_flow_t cx ~use_op:unknown_use trace (funt, prop_t))
-            prop_t;
+          rec_flow_t cx ~use_op:unknown_use trace (funt, prop_t);
 
           (* suppress ops while calling the function. if `funt` is a `FunT`, then
              `CallT` will set its own ops during the call. if `funt` is something
@@ -3610,57 +3604,57 @@ struct
             ~scopes
             ~static
             ~tout:(reason_lookup, tvar);
-          Base.Option.iter
-            ~f:(fun prop_t -> rec_flow_t cx ~use_op:unknown_use trace (funt, prop_t))
-            prop_t;
+          Base.Option.iter ~f:(fun t -> rec_flow_t cx ~use_op:unknown_use trace (funt, t)) prop_t;
           rec_flow cx trace (funt, apply_method_action use_op reason_op l method_action)
-        | (DefT (_, _, InstanceT _), MethodT (_, reason_call, _, Computed _, _, _)) ->
+        | (DefT (_, _, InstanceT _), MethodT (_, reason_call, _, Computed _, _, prop_t)) ->
           (* Instances don't have proper dictionary support. All computed accesses
              are converted to named property access to `$key` and `$value` during
              element resolution in ElemT. *)
           let loc = aloc_of_reason reason_call in
-          add_output cx ~trace Error_message.(EInternal (loc, InstanceLookupComputed))
-        (* In traditional type systems, object types are not extensible.  E.g., an
-              object {x: 0, y: ""} has type {x: number; y: string}. While it is
-              possible to narrow the object's type to hide some of its properties (aka
-              width subtyping), extending its type to model new properties is
-              impossible. This is not without reason: all object types would then be
-              equatable via subtyping, thereby making them unsound.
+          add_output cx ~trace Error_message.(EInternal (loc, InstanceLookupComputed));
+          rec_flow_t cx ~use_op:unknown_use trace (AnyT.untyped reason_call, prop_t)
+        (*
+           In traditional type systems, object types are not extensible.  E.g., an
+           object {x: 0, y: ""} has type {x: number; y: string}. While it is
+           possible to narrow the object's type to hide some of its properties (aka
+           width subtyping), extending its type to model new properties is
+           impossible. This is not without reason: all object types would then be
+           equatable via subtyping, thereby making them unsound.
 
-              In JavaScript, on the other hand, objects can grow dynamically, and
-              doing so is a common idiom during initialization (i.e., before they
-              become available for general use). Objects that typically grow
-              dynamically include not only object literals, but also prototypes,
-              export objects, and so on. Thus, it is important to model this idiom.
+           In JavaScript, on the other hand, objects can grow dynamically, and
+           doing so is a common idiom during initialization (i.e., before they
+           become available for general use). Objects that typically grow
+           dynamically include not only object literals, but also prototypes,
+           export objects, and so on. Thus, it is important to model this idiom.
 
-              To balance utility and soundness, Flow's object types are extensible by
-              default, but become sealed as soon as they are subject to width
-              subtyping. However, implementing this simple idea needs a lot of care.
+           To balance utility and soundness, Flow's object types are extensible by
+           default, but become sealed as soon as they are subject to width
+           subtyping. However, implementing this simple idea needs a lot of care.
 
-              To ensure that aliases have the same underlying type, object types are
-              represented indirectly as pointers to records (rather than directly as
-              records). And to ensure that typing is independent of the order in which
-              fragments of code are analyzed, new property types can be added on gets
-              as well as sets (and due to indirection, the new property types become
-              immediately available to aliases).
+           To ensure that aliases have the same underlying type, object types are
+           represented indirectly as pointers to records (rather than directly as
+           records). And to ensure that typing is independent of the order in which
+           fragments of code are analyzed, new property types can be added on gets
+           as well as sets (and due to indirection, the new property types become
+           immediately available to aliases).
 
-              Looking up properties of an object, e.g. for the purposes of copying,
-              when it is not fully initialized is prone to races, and requires careful
-              manual reasoning about escape to avoid surprising results.
+           Looking up properties of an object, e.g. for the purposes of copying,
+           when it is not fully initialized is prone to races, and requires careful
+           manual reasoning about escape to avoid surprising results.
 
-              Prototypes cause further complications. In JavaScript, objects inherit
-              properties of their prototypes, and may override those properties. (This
-              is similar to subclasses inheriting and overriding methods of
-              superclasses.) At the same time, prototypes are extensible just as much
-              as the objects they derive are. In other words, we want to maintain the
-              invariant that an object's type is a subtype of its prototype's type,
-              while letting them be extensible by default. This invariant is achieved
-              by constraints that unify a property's type if and when that property
-              exists both on the object and its prototype.
+           Prototypes cause further complications. In JavaScript, objects inherit
+           properties of their prototypes, and may override those properties. (This
+           is similar to subclasses inheriting and overriding methods of
+           superclasses.) At the same time, prototypes are extensible just as much
+           as the objects they derive are. In other words, we want to maintain the
+           invariant that an object's type is a subtype of its prototype's type,
+           while letting them be extensible by default. This invariant is achieved
+           by constraints that unify a property's type if and when that property
+           exists both on the object and its prototype.
 
-              Here's some example code with type calculations in comments. (We use the
-              symbol >=> to denote a flow between a pair of types. The direction of
-              flow roughly matches the pattern 'rvalue' >=> 'lvalue'.)
+           Here's some example code with type calculations in comments. (We use the
+           symbol >=> to denote a flow between a pair of types. The direction of
+           flow roughly matches the pattern 'rvalue' >=> 'lvalue'.)
 
               var o = {}; // o:T, UseT |-> {}
               o.x = 4; // UseT |-> {x:X}, number >=> X
@@ -3672,7 +3666,7 @@ struct
               F.prototype.m = function() { this.y = 4; } // P |-> {m:M}, ... >=> M
               f.m(); // O |-> {y:Y}&P, number >=> Y
 
-           **)
+        *)
         (**********************************************************************)
         (* objects can be assigned, i.e., their properties can be set in bulk *)
         (**********************************************************************)
@@ -3985,8 +3979,10 @@ struct
         (********************************)
         (* ... and their methods called *)
         (********************************)
-        | (DefT (_, _, ObjT _), MethodT (_, _, _, Named (_, OrdinaryName "constructor"), _, _)) ->
-          ()
+        | ( DefT (_, _, ObjT _),
+            MethodT (_, reason_call, _, Named (_, OrdinaryName "constructor"), _, prop_t)
+          ) ->
+          rec_flow_t cx ~use_op:unknown_use trace (AnyT.untyped reason_call, prop_t)
         | ( DefT (reason_obj, _, ObjT o),
             MethodT (use_op, reason_call, reason_lookup, propref, action, prop_t)
           ) ->
@@ -4004,9 +4000,7 @@ struct
                   tout
             )
           in
-          Base.Option.iter
-            ~f:(fun prop_t -> rec_flow_t cx trace ~use_op:unknown_use (t, prop_t))
-            prop_t;
+          rec_flow_t cx trace ~use_op:unknown_use (t, prop_t);
           rec_flow cx trace (t, apply_method_action use_op reason_call l action)
         (******************************************)
         (* strings may have their characters read *)
@@ -4077,8 +4071,12 @@ struct
           ) ->
           rec_flow_t cx trace ~use_op:unknown_use (Unsoundness.why Constructor reason_op, OpenT tout)
         | (DefT (_, _, ArrT _), SetPropT (_, _, Named (_, OrdinaryName "constructor"), _, _, _, _))
-        | (DefT (_, _, ArrT _), MethodT (_, _, _, Named (_, OrdinaryName "constructor"), _, _)) ->
+          ->
           ()
+        | ( DefT (_, _, ArrT _),
+            MethodT (_, reason_call, _, Named (_, OrdinaryName "constructor"), _, prop_t)
+          ) ->
+          rec_flow_t cx trace ~use_op:unknown_use (AnyT.untyped reason_call, prop_t)
         (* computed properties *)
         | (_, CreateObjWithComputedPropT { reason; value; tout_tvar = (tout_reason, tout_id) }) ->
           let on_named_prop reason_named =
@@ -4565,9 +4563,7 @@ struct
                 rec_flow cx trace (static, ReposLowerT (reason, false, u))
             )
           in
-          Base.Option.iter
-            ~f:(fun prop_t -> rec_flow_t cx trace ~use_op:unknown_use (method_type, prop_t))
-            prop_t;
+          rec_flow_t cx trace ~use_op:unknown_use (method_type, prop_t);
           rec_flow cx trace (method_type, apply_method_action use_op reason_call l action)
         | (DefT (reason, _, FunT (static, _)), _) when object_like_op u ->
           rec_flow cx trace (static, ReposLowerT (reason, false, u))
@@ -4617,9 +4613,7 @@ struct
                 rec_flow cx trace (OpenT statics, ReposLowerT (reason, false, u))
             )
           in
-          Base.Option.iter
-            ~f:(fun prop_t -> rec_flow_t cx trace ~use_op:unknown_use (method_type, prop_t))
-            prop_t;
+          rec_flow_t cx trace ~use_op:unknown_use (method_type, prop_t);
           rec_flow cx trace (method_type, apply_method_action use_op reason_call l action)
         | (DefT (reason, _, ClassT instance), _) when object_like_op u ->
           let statics = (reason, Tvar.mk_no_wrap cx reason) in
@@ -4673,9 +4667,7 @@ struct
                   )
             )
           in
-          Base.Option.iter
-            ~f:(fun prop_t -> rec_flow_t cx trace ~use_op:unknown_use (t, prop_t))
-            prop_t;
+          rec_flow_t cx trace ~use_op:unknown_use (t, prop_t);
           rec_flow cx trace (t, apply_method_action use_op call_reason l action)
         | (DefT (enum_reason, _, EnumObjectT _), GetElemT (_, _, elem, _)) ->
           let reason = reason_of_t elem in
@@ -5373,18 +5365,16 @@ struct
             );
           rec_flow cx trace (AnyT.make (AnyError None) lreason, u)
         (* Special cases of FunT *)
-        | (FunProtoApplyT reason, MethodT (use_op, call_r, lookup_r, propref, action, t_opt))
-        | (FunProtoBindT reason, MethodT (use_op, call_r, lookup_r, propref, action, t_opt))
-        | (FunProtoCallT reason, MethodT (use_op, call_r, lookup_r, propref, action, t_opt)) ->
+        | (FunProtoApplyT reason, MethodT (use_op, call_r, lookup_r, propref, action, prop_t))
+        | (FunProtoBindT reason, MethodT (use_op, call_r, lookup_r, propref, action, prop_t))
+        | (FunProtoCallT reason, MethodT (use_op, call_r, lookup_r, propref, action, prop_t)) ->
           let method_type =
             Tvar.mk_no_wrap_where cx lookup_r (fun tout ->
                 let u = GetPropT (use_op, lookup_r, None, propref, tout) in
                 rec_flow cx trace (FunProtoT reason, u)
             )
           in
-          Base.Option.iter
-            ~f:(fun prop_t -> rec_flow_t cx trace ~use_op:unknown_use (method_type, prop_t))
-            t_opt;
+          rec_flow_t cx trace ~use_op:unknown_use (method_type, prop_t);
           rec_flow cx trace (method_type, apply_method_action use_op call_r l action)
         | (FunProtoApplyT reason, _)
         | (FunProtoBindT reason, _)
@@ -7039,7 +7029,8 @@ struct
       rec_flow cx trace (obj, SetPropT (use_op, reason_op, propref, mode, Normal, tin, None));
       Base.Option.iter ~f:(fun t -> rec_flow_t cx trace ~use_op:unknown_use (obj, t)) tout
     | CallElem (reason_call, ft) ->
-      rec_flow cx trace (obj, MethodT (use_op, reason_call, reason_op, propref, ft, None))
+      let prop_t = Tvar.mk cx (reason_of_propref propref) in
+      rec_flow cx trace (obj, MethodT (use_op, reason_call, reason_op, propref, ft, prop_t))
 
   and writelike_obj_prop cx trace ~use_op o propref reason_obj reason_op prop_t action =
     match GetPropTKit.get_obj_prop cx trace o propref reason_op with

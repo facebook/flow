@@ -241,7 +241,7 @@ class ['a] t =
       | MethodT (_, _, _, p, fn, prop_t) ->
         let acc = self#propref cx acc p in
         let acc = self#method_action cx acc fn in
-        let acc = self#opt (self#type_ cx pole_TODO) acc prop_t in
+        let acc = self#type_ cx pole_TODO acc prop_t in
         acc
       | PrivateMethodT (_, _, _, _, scopes, _, fn, prop_t) ->
         let acc = List.fold_left (self#class_binding cx) acc scopes in
