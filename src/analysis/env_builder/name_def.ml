@@ -40,7 +40,8 @@ type tparams_map = string ALocMap.t
 
 type hint_node =
   | AnnotationHint of tparams_map * (ALoc.t, ALoc.t) Ast.Type.annotation
-  | ValueHint of (ALoc.t, ALoc.t) Ast.Expression.t Nel.t
+  | ValueHint of (ALoc.t, ALoc.t) Ast.Expression.t
+  | ProvidersHint of ALoc.t Nel.t
 
 type root =
   | Annotation of {
@@ -823,25 +824,27 @@ class def_finder env_entries providers toplevel_scope =
           Hint_None
         else
           match lhs_node with
-          | Ast.Pattern.Identifier { Ast.Pattern.Identifier.name; _ } ->
-            Env_api.Provider_api.providers_of_def providers loc
+          | Ast.Pattern.Identifier _ ->
+            Env_api.Provider_api.providers_of_def providers lhs_loc
             |> Base.Option.value_map ~f:(fun x -> x.Env_api.Provider_api.providers) ~default:[]
             |> Base.List.map ~f:(fun { Env_api.Provider_api.reason; _ } ->
-                   (Reason.aloc_of_reason reason, Ast.Expression.Identifier name)
+                   Reason.aloc_of_reason reason
                )
             |> Nel.of_list
-            |> Base.Option.value_map ~default:Hint_None ~f:(fun ids -> Hint_t (ValueHint ids))
+            |> Base.Option.value_map ~default:Hint_None ~f:(fun providers ->
+                   Hint_t (ProvidersHint providers)
+               )
           | Ast.Pattern.Expression
               (_, Ast.Expression.Member { Ast.Expression.Member._object; property; comments = _ })
             ->
             (match property with
             | Ast.Expression.Member.PropertyIdentifier (_, { Ast.Identifier.name; comments = _ }) ->
-              decompose_hint (Decomp_ObjProp name) (Hint_t (ValueHint (Nel.one _object)))
+              decompose_hint (Decomp_ObjProp name) (Hint_t (ValueHint _object))
             | Ast.Expression.Member.PropertyPrivateName _ ->
               (* TODO create a hint based on the current class. *)
               Hint_None
             | Ast.Expression.Member.PropertyExpression _ ->
-              decompose_hint Decomp_ObjComputed (Hint_t (ValueHint (Nel.one _object))))
+              decompose_hint Decomp_ObjComputed (Hint_t (ValueHint _object)))
           | _ ->
             (* TODO create a hint based on the lhs pattern *)
             Hint_t (AnnotationHint (ALocMap.empty, (lhs_loc, (lhs_loc, Ast.Type.Any None))))
@@ -1078,7 +1081,7 @@ class def_finder env_entries providers toplevel_scope =
       in
       this#visit_expression ~hint:Hint_None ~cond:NonConditionalContext callee;
       Base.Option.iter targs ~f:(fun targs -> ignore @@ this#call_type_args targs);
-      let call_argumemts_hint = Hint_t (ValueHint (Nel.one callee)) in
+      let call_argumemts_hint = Hint_t (ValueHint callee) in
       Base.List.iteri arguments ~f:(fun i arg ->
           let hint = decompose_hint (Decomp_FuncParam i) call_argumemts_hint in
           match arg with
@@ -1097,9 +1100,7 @@ class def_finder env_entries providers toplevel_scope =
       let { callee; targs; arguments; comments = _ } = expr in
       this#visit_expression ~hint:Hint_None ~cond:NonConditionalContext callee;
       Base.Option.iter targs ~f:(fun targs -> ignore @@ this#call_type_args targs);
-      let call_argumemts_hint =
-        decompose_hint Decomp_CallNew (Hint_t (ValueHint (Nel.one callee)))
-      in
+      let call_argumemts_hint = decompose_hint Decomp_CallNew (Hint_t (ValueHint callee)) in
       arguments
       |> Base.Option.value_map
            ~default:[]
@@ -1184,9 +1185,7 @@ class def_finder env_entries providers toplevel_scope =
         match opening_name with
         | Ast.JSX.Identifier (loc, { Ast.JSX.Identifier.name; comments }) ->
           Hint_t
-            (ValueHint
-               (Nel.one (loc, Ast.Expression.Identifier (loc, { Ast.Identifier.name; comments })))
-            )
+            (ValueHint (loc, Ast.Expression.Identifier (loc, { Ast.Identifier.name; comments })))
         | Ast.JSX.NamespacedName _ -> Hint_None
         | Ast.JSX.MemberExpression member ->
           let rec jsx_title_member_to_expression member =
@@ -1215,7 +1214,7 @@ class def_finder env_entries providers toplevel_scope =
                 }
             )
           in
-          Hint_t (ValueHint (Nel.one (jsx_title_member_to_expression member)))
+          Hint_t (ValueHint (jsx_title_member_to_expression member))
       in
       Base.List.iter opening_attributes ~f:(function
           | Opening.Attribute (_, { Attribute.name; value }) ->
@@ -1399,8 +1398,8 @@ class def_finder env_entries providers toplevel_scope =
       let (left_cond, right_hint) =
         match operator with
         | And -> (OtherConditionalTest, Hint_None)
-        | Or -> (OtherConditionalTest, Hint_t (ValueHint (Nel.one left)))
-        | NullishCoalesce -> (cond, Hint_t (ValueHint (Nel.one left)))
+        | Or -> (OtherConditionalTest, Hint_t (ValueHint left))
+        | NullishCoalesce -> (cond, Hint_t (ValueHint left))
       in
       this#visit_expression ~hint:Hint_None ~cond:left_cond left;
       this#visit_expression ~hint:right_hint ~cond right
