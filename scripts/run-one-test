@@ -194,11 +194,13 @@ runtest() {
     name=${dir##*/}
     exp_file="${name}.exp"
     # Add appropriate extension to expected file
-    if [[ "$resolved_env" -eq 1 ]] && [ -f "${dir}/${exp_file}.resolved_env" ]; then
+    if [[ "$enforced_env" -eq 1 ]] && [ -f "${dir}/${exp_file}.enforced_env" ]; then
+      exp_file="${exp_file}.enforced_env"
+    elif [[ "$resolved_env" -eq 1 || "$enforced_env" -eq 1 ]] && [ -f "${dir}/${exp_file}.resolved_env" ]; then
       exp_file="${exp_file}.resolved_env"
-    elif [[ "$new_env" -eq 1 || "$resolved_env" -eq 1 ]] && [ -f "${dir}/${exp_file}.new_env" ]; then
+    elif [[ "$new_env" -eq 1 || "$resolved_env" -eq 1 || "$enforced_env" -eq 1 ]] && [ -f "${dir}/${exp_file}.new_env" ]; then
       exp_file="${exp_file}.new_env"
-    elif [[ "$new_env" -eq 1 || "$constrained_writes" -eq 1 || "$resolved_env" -eq 1 ]] \
+    elif [[ "$new_env" -eq 1 || "$constrained_writes" -eq 1 || "$resolved_env" -eq 1 || "$enforced_env" -eq 1 ]] \
       && [ -f "${dir}/${exp_file}.cw" ];
     then
       exp_file="${exp_file}.cw"
@@ -356,20 +358,26 @@ runtest() {
                 return $RUNTEST_SKIP
             fi
 
-            if [[ "$constrained_writes" -eq 1 ]] || [[ "$new_env" -eq 1 ]] || [[ "$resolved_env" -eq 1 ]] && \
+            if [[ "$constrained_writes" -eq 1 ]] || [[ "$new_env" -eq 1 ]] || [[ "$resolved_env" -eq 1 ]] || [[ "$enforced_env" -eq 1 ]] && \
               [ "$(awk '$1=="TODO_constrained_writes:"{print $2}' .testconfig)" == "true" ]
             then
                 return $RUNTEST_SKIP
             fi
 
-            if [[ "$new_env" -eq 1 ]] || [[ "$resolved_env" -eq 1 ]] && \
+            if [[ "$new_env" -eq 1 ]] || [[ "$resolved_env" -eq 1 ]] || [[ "$enforced_env" -eq 1 ]] && \
               [ "$(awk '$1=="TODO_new_env:"{print $2}' .testconfig)" == "true" ]
             then
                 return $RUNTEST_SKIP
             fi
 
-            if [[ "$resolved_env" -eq 1 ]] && \
+            if [[ "$resolved_env" -eq 1 ]] || [[ "$enforced_env" -eq 1 ]] && \
               [ "$(awk '$1=="TODO_resolved_env:"{print $2}' .testconfig)" == "true" ]
+            then
+                return $RUNTEST_SKIP
+            fi
+
+            if [[ "$enforced_env" -eq 1 ]] && \
+              [ "$(awk '$1=="TODO_enforced_env:"{print $2}' .testconfig)" == "true" ]
             then
                 return $RUNTEST_SKIP
             fi
@@ -402,6 +410,9 @@ runtest() {
         fi
         if [[ "$resolved_env" -eq 1 ]]; then
           env_flag="--env-mode resolved"
+        fi
+        if [[ "$enforced_env" -eq 1 ]]; then
+          env_flag="--env-mode enforced"
         fi
 
         if [[ "$incremental_revdeps" -eq 1 ]]; then

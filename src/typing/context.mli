@@ -326,7 +326,7 @@ val any_propagation : t -> bool
 
 val automatic_require_default : t -> bool
 
-val env_option_enabled : t -> Options.env_option -> bool
+val classic_env_option_enabled : t -> Options.env_option -> bool
 
 val resolved_env : t -> bool
 

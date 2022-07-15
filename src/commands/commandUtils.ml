@@ -1022,8 +1022,9 @@ let options_flags =
                  [
                    ("classic", Options.ClassicEnv []);
                    ("constrained-writes", Options.ClassicEnv [Options.ConstrainWrites]);
-                   ("ssa", Options.SSAEnv { resolved = false });
-                   ("resolved", Options.SSAEnv { resolved = true });
+                   ("ssa", Options.(SSAEnv Basic));
+                   ("resolved", Options.(SSAEnv Reordered));
+                   ("enforced", Options.(SSAEnv Enforced));
                  ]
               )
            )

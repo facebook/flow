@@ -181,7 +181,8 @@ module New_env = struct
   let record_expression_type_if_needed cx kind loc t =
     let env = Context.environment cx in
     match (Loc_env.find_write env kind loc, Context.env_mode cx) with
-    | (_, Options.SSAEnv { resolved = true }) (* Fully resolved env doesn't need to write here *)
+    | (_, Options.(SSAEnv (Reordered | Enforced)))
+    (* Fully resolved env doesn't need to write here *)
     | (None, _) ->
       ()
     | (Some w, _) ->
@@ -656,7 +657,8 @@ module New_env = struct
     let env = Context.environment cx in
     Debug_js.Verbose.print_if_verbose cx [spf "set expr at location %s" (Reason.string_of_aloc loc)];
     match (Loc_env.find_ordinary_write env loc, Context.env_mode cx) with
-    | (_, Options.SSAEnv { resolved = true }) (* Fully resolved env doesn't need to write here *)
+    | (_, Options.(SSAEnv (Reordered | Enforced)))
+    (* Fully resolved env doesn't need to write here *)
     | (None, _) ->
       (* As below, this entry is empty if the refinement is never read from *)
       ()

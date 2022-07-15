@@ -38,9 +38,14 @@ type env_option =
   | ConstrainWrites
   | ClassicTypeAtPos
 
+type resolved_env_kind =
+  | Basic
+  | Reordered
+  | Enforced
+
 type env_mode =
   | ClassicEnv of env_option list
-  | SSAEnv of { resolved: bool }
+  | SSAEnv of resolved_env_kind
 
 type react_runtime =
   | ReactRuntimeAutomatic

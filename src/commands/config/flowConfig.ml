@@ -767,16 +767,22 @@ module Opts = struct
         | [] -> Error "env_mode requires an argument"
         | ["ssa"] ->
           if List.length opts.env_mode_constrain_write_dirs = 0 then
-            Ok { opts with env_mode = Options.SSAEnv { resolved = false } }
+            Ok { opts with env_mode = Options.(SSAEnv Basic) }
           else
             Error
               "Option \"env_mode\" must not be set to \"ssa\" when \"constrain_write_dirs\" is set."
         | ["resolved"] ->
           if List.length opts.env_mode_constrain_write_dirs = 0 then
-            Ok { opts with env_mode = Options.SSAEnv { resolved = true } }
+            Ok { opts with env_mode = Options.(SSAEnv Reordered) }
           else
             Error
               "Option \"env_mode\" must not be set to \"resolved\" when \"constrain_write_dirs\" is set."
+        | ["enforced"] ->
+          if List.length opts.env_mode_constrain_write_dirs = 0 then
+            Ok { opts with env_mode = Options.(SSAEnv Enforced) }
+          else
+            Error
+              "Option \"env_mode\" must not be set to \"enforced\" when \"constrain_write_dirs\" is set."
         | ["classic"] -> Ok { opts with env_mode = Options.ClassicEnv [] }
         | options ->
           let options =
@@ -806,12 +812,9 @@ module Opts = struct
       ~multiple:true
       (fun opts v ->
         match opts.env_mode with
-        | Options.SSAEnv { resolved = false } ->
+        | Options.SSAEnv _ ->
           Error
-            "Option \"env_mode\" must not be set to \"ssa\" when \"constrain_writes.includes\" is set."
-        | Options.SSAEnv { resolved = true } ->
-          Error
-            "Option \"env_mode\" must not be set to \"resolved\" when \"constrain_writes.includes\" is set."
+            "Option \"env_mode\" must not be set to \"ssa\", \"resolved\", or \"enforced\" when \"constrain_writes.includes\" is set."
         | Options.ClassicEnv opts when List.mem Options.ConstrainWrites opts ->
           Error
             "Option \"env_mode\" should not set \"constrain_writes\" when \"env_mode.constrain_writes.includes\" is also set."

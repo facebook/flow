@@ -627,7 +627,7 @@ let trust_errors cx =
   | Options.NoTrust ->
     false
 
-let env_option_enabled cx option =
+let classic_env_option_enabled cx option =
   let open Options in
   match (cx.metadata.env_mode, cx.metadata.env_mode_constrain_write_dirs, option) with
   | (SSAEnv _, _, _) -> false
@@ -641,8 +641,10 @@ let env_option_enabled cx option =
 let resolved_env cx =
   let open Options in
   match cx.metadata.env_mode with
-  | SSAEnv { resolved } -> resolved
-  | ClassicEnv _ -> false
+  | SSAEnv (Reordered | Enforced) -> true
+  | SSAEnv Basic
+  | ClassicEnv _ ->
+    false
 
 let pid_prefix =
   let pid = lazy (Sys_utils.get_pretty_pid ()) in

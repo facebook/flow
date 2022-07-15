@@ -8,7 +8,7 @@ THIS_DIR=$(cd -P "$(dirname "$(readlink "${BASH_SOURCE[0]}" || echo "${BASH_SOUR
 export THIS_DIR
 
 show_help() {
-  printf "Usage: runtests.sh [-ehlqrvwx] [-d DIR] [-t TEST] [-b] FLOW_BINARY [[-f] TEST_FILTER]\n\n"
+  printf "Usage: runtests.sh [-ehlnqrvwx] [-d DIR] [-t TEST] [-b] FLOW_BINARY [[-f] TEST_FILTER]\n\n"
   printf "Runs Flow's tests.\n\n"
   echo "    [-b] FLOW_BINARY"
   echo "        path to Flow binary (the -b is optional)"
@@ -26,6 +26,8 @@ show_help() {
   echo "        test using new implementation of the type environment"
   echo "    -x"
   echo "        test using resolved environment"
+  echo "    -n"
+  echo "        test using sealed tvars environment"
   echo "    -w"
   echo "        test using constrained writes"
   echo "    -i"
@@ -54,11 +56,12 @@ quiet=0
 relative="$THIS_DIR"
 new_env=0
 resolved_env=0
+enforced_env=0
 check_only=0
 constrained_writes=0
 incremental_revdeps=0
-export saved_state filter check_only new_env resolved_env constrained_writes incremental_revdeps
-while getopts "b:d:f:celqwxirst:vh?" opt; do
+export saved_state filter check_only new_env resolved_env enforced_env constrained_writes incremental_revdeps
+while getopts "b:d:f:celqwxnirst:vh?" opt; do
   case "$opt" in
   b)
     FLOW="$OPTARG"
@@ -77,6 +80,9 @@ while getopts "b:d:f:celqwxirst:vh?" opt; do
     ;;
   x)
     resolved_env=1
+    ;;
+  n)
+    enforced_env=1
     ;;
   l)
     list_tests=1
@@ -122,8 +128,8 @@ if [ -n "$specific_test" ]; then
   filter="^$specific_test$"
 fi
 
-if [[ $(($(("$new_env" + "$resolved_env")) + "$constrained_writes")) -gt 1 ]]; then
-  printf "Can only set one new environment flag at a time (-e, -w, -x).\n"
+if [[ $(($(($(("$new_env" + "$resolved_env")) + "$enforced_env")) + "$constrained_writes")) -gt 1 ]]; then
+  printf "Can only set one new environment flag at a time (-e, -n, -w, -x).\n"
   exit 1
 fi
 
