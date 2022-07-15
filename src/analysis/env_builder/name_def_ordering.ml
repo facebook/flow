@@ -399,8 +399,15 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) = struct
       in
       let depends_of_hint_node state = function
         | AnnotationHint (tparams_map, anno) -> depends_of_annotation tparams_map anno state
-        | ValueHint exp_nodes ->
-          Nel.fold_left (fun state e -> depends_of_expression e state) state exp_nodes
+        | ValueHint e -> depends_of_expression e state
+        | ProvidersHint providers ->
+          Nel.fold_left
+            (fun state loc ->
+              depends_of_node
+                (fun visitor -> visitor#add ~why:loc (Env_api.OrdinaryNameLoc, loc))
+                state)
+            state
+            providers
       in
       let depends_of_root state = function
         | Annotation { annot; tparams_map; _ } -> depends_of_annotation tparams_map annot state
