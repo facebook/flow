@@ -75,6 +75,7 @@ let init_done
     ?estimated_files_to_recheck:_
     ?estimated_files_to_init:_
     ?first_internal_error:_
+    ~saved_state_fetcher:_
     _profiling =
   ()
 

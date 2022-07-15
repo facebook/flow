@@ -43,6 +43,12 @@ let extract_flowlibs_or_exit options =
       Exit.(exit ~msg Could_not_extract_flowlibs))
   | None -> ()
 
+let string_of_saved_state_fetcher options =
+  match Options.saved_state_fetcher options with
+  | Options.Dummy_fetcher -> "none"
+  | Options.Local_fetcher -> "local"
+  | Options.Fb_fetcher -> "fb"
+
 let init ~profiling ?focus_targets genv =
   (* write binary path and version to server log *)
   Hh_logger.info "executable=%s" (Sys_utils.executable_path ());
@@ -257,9 +263,11 @@ let run ~monitor_channels ~init_id ~shared_mem_config options =
       in
       MonitorRPC.status_update ~event;
 
+      let saved_state_fetcher = string_of_saved_state_fetcher options in
+
       begin
         match last_estimates with
-        | None -> FlowEventLogger.init_done ?first_internal_error profiling
+        | None -> FlowEventLogger.init_done ?first_internal_error ~saved_state_fetcher profiling
         | Some
             {
               Recheck_stats.estimated_time_to_recheck;
@@ -277,6 +285,7 @@ let run ~monitor_channels ~init_id ~shared_mem_config options =
             ~estimated_files_to_recheck
             ~estimated_files_to_init
             ?first_internal_error
+            ~saved_state_fetcher
             profiling
       end;
 
@@ -361,7 +370,9 @@ let check_once ~init_id ~shared_mem_config ~format_errors ?focus_targets options
     in
     MonitorRPC.status_update ~event;
 
-    FlowEventLogger.init_done ?first_internal_error profiling;
+    let saved_state_fetcher = string_of_saved_state_fetcher options in
+
+    FlowEventLogger.init_done ?first_internal_error ~saved_state_fetcher profiling;
 
     Lwt.return (errors, warnings)
   in
