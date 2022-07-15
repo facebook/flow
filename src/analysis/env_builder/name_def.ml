@@ -1070,6 +1070,12 @@ class def_finder env_entries providers toplevel_scope =
       super#import_declaration loc decl
 
     method! call _ expr =
+      this#visit_call_expression
+        ~visit_callee:(this#visit_expression ~hint:Hint_None ~cond:NonConditionalContext)
+        expr;
+      expr
+
+    method private visit_call_expression ~visit_callee expr =
       let open Ast.Expression.Call in
       let {
         callee;
@@ -1079,7 +1085,7 @@ class def_finder env_entries providers toplevel_scope =
       } =
         expr
       in
-      this#visit_expression ~hint:Hint_None ~cond:NonConditionalContext callee;
+      visit_callee callee;
       Base.Option.iter targs ~f:(fun targs -> ignore @@ this#call_type_args targs);
       let call_argumemts_hint = Hint_t (ValueHint callee) in
       Base.List.iteri arguments ~f:(fun i arg ->
@@ -1092,6 +1098,19 @@ class def_finder env_entries providers toplevel_scope =
               ~hint
               ~cond:NonConditionalContext
               spread.Ast.Expression.SpreadElement.argument
+      )
+
+    method! optional_call _ expr =
+      let open Ast.Expression.OptionalCall in
+      let { call; optional = _; filtered_out = _ } = expr in
+      this#visit_call_expression call ~visit_callee:(fun callee ->
+          (* Visit member by super#member to avoid generating a RefiExpression def. *)
+          match callee with
+          | (loc, Ast.Expression.Member member) -> ignore @@ super#member loc member
+          | (loc, Ast.Expression.OptionalMember member) ->
+            let { Ast.Expression.OptionalMember.member; optional = _; filtered_out = _ } = member in
+            ignore @@ super#member loc member
+          | _ -> this#visit_expression ~hint:Hint_None ~cond:NonConditionalContext callee
       );
       expr
 
