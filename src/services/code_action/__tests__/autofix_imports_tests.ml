@@ -182,7 +182,6 @@ let add_import_tests =
       |} in
       let expected = {|
         import { foo } from "./relative";
-
         import { xyz } from "./xyz";
 
         import { bar } from "module";
