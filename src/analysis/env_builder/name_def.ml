@@ -1191,18 +1191,36 @@ class def_finder env_entries providers toplevel_scope =
       in
       visit_callee callee;
       Base.Option.iter targs ~f:(fun targs -> ignore @@ this#call_type_args targs);
-      let call_argumemts_hint = Hint_t (ValueHint callee) in
-      Base.List.iteri arguments ~f:(fun i arg ->
-          let hint = decompose_hint (Decomp_FuncParam i) call_argumemts_hint in
-          match arg with
+      if Flow_ast_utils.is_call_to_invariant callee then
+        Base.List.iteri arguments ~f:(fun i -> function
           | Ast.Expression.Expression expr ->
-            this#visit_expression ~hint ~cond:NonConditionalContext expr
+            let cond =
+              if i = 0 then
+                OtherConditionalTest
+              else
+                NonConditionalContext
+            in
+            (* In invariant(...) call, the first argument is under conditional context. *)
+            this#visit_expression ~hint:Hint_None ~cond expr
           | Ast.Expression.Spread (_, spread) ->
             this#visit_expression
-              ~hint
+              ~hint:Hint_None
               ~cond:NonConditionalContext
               spread.Ast.Expression.SpreadElement.argument
-      )
+        )
+      else
+        let call_argumemts_hint = Hint_t (ValueHint callee) in
+        Base.List.iteri arguments ~f:(fun i arg ->
+            let hint = decompose_hint (Decomp_FuncParam i) call_argumemts_hint in
+            match arg with
+            | Ast.Expression.Expression expr ->
+              this#visit_expression ~hint ~cond:NonConditionalContext expr
+            | Ast.Expression.Spread (_, spread) ->
+              this#visit_expression
+                ~hint
+                ~cond:NonConditionalContext
+                spread.Ast.Expression.SpreadElement.argument
+        )
 
     method! optional_call _ expr =
       let open Ast.Expression.OptionalCall in

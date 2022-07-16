@@ -64,3 +64,9 @@ function foo9() {
 function foo10() {
   if (null.q) {} // error: property `q` on null
 }
+
+function foo11() {
+  declare function invariant(a: mixed): void;
+  declare var b: mixed;
+  invariant(b != null && b.foo != null); // ok
+}
