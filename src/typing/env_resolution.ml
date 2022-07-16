@@ -69,20 +69,38 @@ module Make (Env : Env_sig.S) (Statement : Statement_sig.S with module Env := En
     Node_cache.set_expression cache exp;
     t
 
-  let rec resolve_binding cx reason loc b =
+  let mk_selector_reason cx loc = function
+    | Name_def.Elem n ->
+      let key =
+        DefT
+          (mk_reason RNumber loc, bogus_trust (), NumT (Literal (None, (float n, string_of_int n))))
+      in
+      (Type.Elem key, mk_reason (RCustom (Utils_js.spf "element %d" n)) loc)
+    | Name_def.Prop { prop; prop_loc; has_default } ->
+      (Type.Prop (prop, has_default), mk_reason (RProperty (Some (OrdinaryName prop))) prop_loc)
+    | Name_def.ArrRest n -> (Type.ArrRest n, mk_reason RArrayPatternRestProp loc)
+    | Name_def.ObjRest { used_props; after_computed = _ } ->
+      (* TODO: eveyrthing after a computed prop should be optional *)
+      (Type.ObjRest used_props, mk_reason RObjectPatternRestProp loc)
+    | Name_def.Computed exp ->
+      let t = expression cx ~hint:dummy_hint exp in
+      (Type.Elem t, mk_reason (RProperty None) loc)
+    | Name_def.Default -> (Type.Default, mk_reason RDefaultValue loc)
+
+  let resolve_annotation cx tparams_map anno =
+    let cache = Context.node_cache cx in
+    let tparams_map = mk_tparams_map cx tparams_map in
+    let (t, anno) = Type_annotation.mk_type_available_annotation cx tparams_map anno in
+    Node_cache.set_annotation cache anno;
+    t
+
+  let rec resolve_binding_partial cx reason loc b =
     let mk_use_op t = Op (AssignVar { var = Some reason; init = TypeUtil.reason_of_t t }) in
-    let resolve_annotation tparams_map anno =
-      let cache = Context.node_cache cx in
-      let tparams_map = mk_tparams_map cx tparams_map in
-      let (t, anno) = Type_annotation.mk_type_available_annotation cx tparams_map anno in
-      Node_cache.set_annotation cache anno;
-      t
-    in
     match b with
-    | Root (Annotation { tparams_map; optional; is_assignment; annot }) ->
-      let t = resolve_annotation tparams_map annot in
+    | Root (Annotation { tparams_map; optional; default_expression; is_assignment; annot }) ->
+      let t = resolve_annotation cx tparams_map annot in
       let t =
-        if optional then
+        if optional && default_expression = None then
           TypeUtil.optional t
         else
           t
@@ -93,13 +111,13 @@ module Make (Env : Env_sig.S) (Statement : Statement_sig.S with module Env := En
         else
           unknown_use
       in
-      (t, use_op, true)
+      (t, use_op, true, true)
     | Root (Value exp) ->
       (* TODO: look up the annotation for the variable at loc and pass in *)
       let t = expression cx ~hint:dummy_hint exp in
       let use_op = Op (AssignVar { var = Some reason; init = mk_expression_reason exp }) in
-      (t, use_op, true)
-    | Root (Contextual (reason, hint)) ->
+      (t, use_op, false, true)
+    | Root (Contextual { reason; hint; default_expression = _ }) ->
       let param_loc = Reason.poly_loc_of_reason reason in
       let () =
         match hint with
@@ -110,7 +128,7 @@ module Make (Env : Env_sig.S) (Statement : Statement_sig.S with module Env := En
       let t =
         if Context.enable_contextual_typing cx then
           let resolve_hint = function
-            | AnnotationHint (tparams_locs, anno) -> resolve_annotation tparams_locs anno
+            | AnnotationHint (tparams_locs, anno) -> resolve_annotation cx tparams_locs anno
             | ValueHint exp -> expression cx ~hint:dummy_hint exp
             | ProvidersHint (loc, []) ->
               let env = Context.environment cx in
@@ -139,10 +157,10 @@ module Make (Env : Env_sig.S) (Statement : Statement_sig.S with module Env := En
         else
           Tvar.mk cx reason
       in
-      (t, mk_use_op t, Context.enable_contextual_typing cx)
+      (t, mk_use_op t, false, Context.enable_contextual_typing cx)
     | Root Catch ->
       let t = AnyT.annot (mk_reason (RCustom "catch parameter") loc) in
-      (t, mk_use_op t, true)
+      (t, mk_use_op t, false, true)
     | Root (For (kind, exp)) ->
       let reason = mk_reason (RCustom "for-in") loc (*TODO: loc should be loc of loop *) in
       let right_t = expression cx ~hint:dummy_hint ~cond:OtherTest exp in
@@ -153,10 +171,10 @@ module Make (Env : Env_sig.S) (Statement : Statement_sig.S with module Env := En
           StrT.at loc |> with_trust bogus_trust
         | Of { await } -> Statement.for_of_elemt cx right_t reason await
       in
-      (t, mk_use_op t, true)
-    | Select (sel, b) ->
+      (t, mk_use_op t, false, true)
+    | Select { selector; default = _; binding } ->
       let refined_type =
-        match sel with
+        match selector with
         | Name_def.Prop { prop; prop_loc; _ } ->
           (* The key is used to generate a reason for read,
              and only the last prop in the chain matters. *)
@@ -166,45 +184,86 @@ module Make (Env : Env_sig.S) (Statement : Statement_sig.S with module Env := En
       in
       (match refined_type with
       | Some t ->
+        let rec binding_has_annot = function
+          | Root (Annotation _) -> true
+          | Root _ -> false
+          | Select { binding; _ } -> binding_has_annot binding
+        in
         (* When we can get a refined value on a destructured property,
            we must be in an assignment position and the type must have been resolved. *)
-        (t, mk_use_op t, true)
+        (t, mk_use_op t, binding_has_annot binding, true)
       | None ->
-        let (t, use_op, resolved) = resolve_binding cx reason loc b in
-        let (selector, reason) =
-          match sel with
-          | Name_def.Elem n ->
-            let key =
-              DefT
-                ( mk_reason RNumber loc,
-                  bogus_trust (),
-                  NumT (Literal (None, (float n, string_of_int n)))
-                )
-            in
-            (Type.Elem key, mk_reason (RCustom (Utils_js.spf "element %d" n)) loc)
-          | Name_def.Prop { prop; prop_loc; has_default } ->
-            ( Type.Prop (prop, has_default),
-              mk_reason (RProperty (Some (OrdinaryName prop))) prop_loc
-            )
-          | Name_def.ArrRest n -> (Type.ArrRest n, mk_reason RArrayPatternRestProp loc)
-          | Name_def.ObjRest { used_props; after_computed = _ } ->
-            (* TODO: eveyrthing after a computed prop should be optional *)
-            (Type.ObjRest used_props, mk_reason RObjectPatternRestProp loc)
-          | Name_def.Computed exp ->
-            let t = expression cx ~hint:dummy_hint exp in
-            (Type.Elem t, mk_reason (RProperty None) loc)
-          | Name_def.Default _exp ->
-            (* TODO: change the way default works to see exp as a source *)
-            (Type.Default, mk_reason (RCustom "destructured var") loc)
+        let (t, use_op, has_anno, resolved) = resolve_binding_partial cx reason loc binding in
+        let (selector, reason) = mk_selector_reason cx loc selector in
+        let kind =
+          if has_anno then
+            DestructAnnot
+          else
+            DestructInfer
         in
         ( Tvar.mk_no_wrap_where cx reason (fun tout ->
-              Flow_js.flow
-                cx
-                (t, DestructuringT (reason, DestructInfer, selector, tout, Reason.mk_id ()))
+              Flow_js.flow cx (t, DestructuringT (reason, kind, selector, tout, Reason.mk_id ()))
           ),
           use_op,
+          has_anno,
           resolved
         ))
+
+  let resolve_binding cx reason loc binding =
+    let (t, use_op, has_annot, resolved) = resolve_binding_partial cx reason loc binding in
+    let t =
+      match (binding, has_annot) with
+      (* This is unnecessary if we are directly resolving an annotation. *)
+      | (Select _, true) ->
+        let rec subtype_default_against_annotation = function
+          | Root (Annotation { tparams_map; annot; default_expression; _ }) ->
+            let annot_t = resolve_annotation cx tparams_map annot in
+            default_expression
+            |> Statement.Func_stmt_config.eval_default cx ~annot_t:(Some annot_t)
+            (* Func_stmt_config.eval_default will store annot_t as the type of function parameter
+               default. We replicate the behavior and cache the node, so that we ensure later check
+               on the parameter default will always return annot_t. *)
+            |> Base.Option.iter ~f:(Node_cache.set_expression (Context.node_cache cx))
+          | Root _ -> ()
+          | Select { binding; _ } -> subtype_default_against_annotation binding
+        in
+        subtype_default_against_annotation binding;
+        AnnotT
+          ( reason,
+            Tvar.mk_where cx reason (fun t' ->
+                Flow_js.flow cx (t, BecomeT { reason; t = t'; empty_success = true })
+            ),
+            false
+          )
+      | _ -> t
+    in
+    let default = Name_def.default_of_binding binding in
+    Base.Option.iter
+      ~f:(fun d ->
+        let rec convert = function
+          | Name_def.DefaultExpr e -> Default.Expr (expression cx ~hint:dummy_hint e)
+          | Name_def.DefaultCons (e, d) -> Default.Cons (expression cx ~hint:dummy_hint e, convert d)
+          | Name_def.DefaultSelector (d, s) ->
+            let (s, r) = mk_selector_reason cx loc s in
+            Default.Selector (r, convert d, s)
+        in
+        let default = convert d in
+        let default_t = Flow_js.mk_default cx reason default in
+        let use_op =
+          Op
+            (AssignVar
+               {
+                 var = Some reason;
+                 init =
+                   (match default with
+                   | Default.Expr t -> TypeUtil.reason_of_t t
+                   | _ -> TypeUtil.reason_of_t t);
+               }
+            )
+        in
+        Flow_js.flow cx (default_t, UseT (use_op, t)))
+      default;
+    (t, use_op, resolved)
 
   let resolve_inferred_function cx id_loc reason function_loc function_ =
     let cache = Context.node_cache cx in

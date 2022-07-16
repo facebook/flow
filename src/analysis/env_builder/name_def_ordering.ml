@@ -410,10 +410,21 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) = struct
             providers
       in
       let depends_of_root state = function
-        | Annotation { annot; tparams_map; _ } -> depends_of_annotation tparams_map annot state
+        | Annotation { annot; tparams_map; default_expression; _ } ->
+          let state =
+            Base.Option.value_map default_expression ~default:state ~f:(fun e ->
+                depends_of_expression e state
+            )
+          in
+          depends_of_annotation tparams_map annot state
         | Value exp -> depends_of_expression exp state
         | For (_, exp) -> depends_of_expression exp state
-        | Contextual (_, hint) ->
+        | Contextual { reason = _; hint; default_expression } ->
+          let state =
+            Base.Option.value_map default_expression ~default:state ~f:(fun e ->
+                depends_of_expression e state
+            )
+          in
           (match hint with
           | Hint_api.Hint_None -> state
           | Hint_api.Hint_Placeholder -> state
@@ -423,14 +434,22 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) = struct
         | Catch -> state
       in
       let depends_of_selector state = function
-        | Computed exp
-        | Default exp ->
-          depends_of_expression exp state
+        | Computed exp -> depends_of_expression exp state
+        | Default
         | Elem _
         | Prop _
         | ObjRest _
         | ArrRest _ ->
           state
+      in
+      let rec depends_of_default state = function
+        | DefaultExpr e -> depends_of_expression e state
+        | DefaultCons (e, d) ->
+          let state = depends_of_expression e state in
+          depends_of_default state d
+        | DefaultSelector (d, s) ->
+          let state = depends_of_default state d in
+          depends_of_selector state s
       in
       let depends_of_lhs id_loc lhs_member_expression =
         (* When looking at a binding def, like `x = y`, in order to resolve this def we need
@@ -463,8 +482,11 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) = struct
         let rec rhs_loop bind state =
           match bind with
           | Root root -> depends_of_root state root
-          | Select (selector, binding) ->
+          | Select { selector; default; binding } ->
             let state = depends_of_selector state selector in
+            let state =
+              Base.Option.value_map default ~default:state ~f:(depends_of_default state)
+            in
             rhs_loop binding state
         in
         rhs_loop bind state
@@ -527,10 +549,12 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) = struct
     let recursively_resolvable =
       let rec bind_loop b =
         match b with
-        | Root (Annotation _ | Catch) -> true
+        | Root Catch -> true
+        | Root (Annotation { default_expression = None; _ }) -> true
+        | Root (Annotation { default_expression = Some _; _ }) -> false
         | Root (For _ | Value _ | Contextual _) -> false
-        | Select ((Computed _ | Default _), _) -> false
-        | Select (_, b) -> bind_loop b
+        | Select { selector = Computed _ | Default; _ } -> false
+        | Select { binding; _ } -> bind_loop binding
       in
       function
       | Binding bind -> bind_loop bind
