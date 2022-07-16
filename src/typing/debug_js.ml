@@ -661,6 +661,7 @@ and dump_use_t_ (depth, tvars) cx t =
         (String.concat "; " (Base.List.map ~f:call_arg_kid meth_args_tlist))
         (string_of_reason call_r)
         (tvar call_tvar)
+    | NoMethodAction -> "NoMethodAction"
   in
   if depth = 0 then
     string_of_use_ctor t

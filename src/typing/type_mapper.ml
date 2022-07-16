@@ -826,7 +826,7 @@ class virtual ['a] t_with_uses =
       | PrivateMethodT (op, r1, r2, prop, scopes, static, action, prop_t) ->
         let scopes' = ListUtils.ident_map (self#class_binding cx map_cx) scopes in
         let action' = self#method_action cx map_cx action in
-        let prop_t' = OptionUtils.ident_map (self#type_ cx map_cx) prop_t in
+        let prop_t' = self#type_ cx map_cx prop_t in
         if scopes' == scopes && action' == action && prop_t' == prop_t then
           t
         else
@@ -1557,7 +1557,7 @@ class virtual ['a] t_with_uses =
           OptMethodT (op, r1, r2, propref', opt_action', tout')
       | OptPrivateMethodT (op, r1, r2, prop, scopes, static, opt_action, tout) ->
         let opt_action' = self#opt_method_action cx map_cx opt_action in
-        let tout' = OptionUtils.ident_map (self#type_ cx map_cx) tout in
+        let tout' = self#type_ cx map_cx tout in
         let scopes' = ListUtils.ident_map (self#class_binding cx map_cx) scopes in
         if opt_action == opt_action' && tout == tout' && scopes' == scopes then
           t
@@ -1762,6 +1762,7 @@ class virtual ['a] t_with_uses =
           t
         else
           OptChainM (r, lhs_r, this', funtype', void_out')
+      | OptNoMethodAction -> OptNoMethodAction
 
     method method_action cx map_cx t =
       match t with
@@ -1779,6 +1780,7 @@ class virtual ['a] t_with_uses =
           t
         else
           ChainM (r, lhs_r, this', funtype', void_out')
+      | NoMethodAction -> NoMethodAction
 
     method fun_call_type cx map_cx t =
       let { call_this_t; call_targs; call_args_tlist; call_tout; call_strict_arity } = t in

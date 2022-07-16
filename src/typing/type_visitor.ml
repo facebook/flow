@@ -246,7 +246,7 @@ class ['a] t =
       | PrivateMethodT (_, _, _, _, scopes, _, fn, prop_t) ->
         let acc = List.fold_left (self#class_binding cx) acc scopes in
         let acc = self#method_action cx acc fn in
-        let acc = self#opt (self#type_ cx pole_TODO) acc prop_t in
+        let acc = self#type_ cx pole_TODO acc prop_t in
         acc
       | SetPropT (_, _, p, _, _, t, prop_t) ->
         let acc = self#propref cx acc p in
@@ -816,6 +816,7 @@ class ['a] t =
         let acc = self#type_ cx pole_TODO acc this in
         let acc = self#meth_call_type cx acc call in
         self#type_ cx pole_TODO acc void_out
+      | NoMethodAction -> acc
 
     method private opt_method_action cx acc =
       function
@@ -824,6 +825,7 @@ class ['a] t =
         let acc = self#type_ cx pole_TODO acc this in
         let acc = self#opt_meth_call_type cx acc call in
         self#type_ cx pole_TODO acc void_out
+      | OptNoMethodAction -> acc
 
     method private propref cx acc =
       function

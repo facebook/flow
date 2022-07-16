@@ -3130,7 +3130,7 @@ struct
             MethodT (use_op, reason_call, _, Named (_, OrdinaryName "call"), action, prop_t)
           ) ->
           rec_flow_t cx trace ~use_op:unknown_use (l, prop_t);
-          rec_flow cx trace (l, apply_method_action use_op reason_call l action)
+          apply_method_action cx trace l use_op reason_call l action
         (* Custom functions are still functions, so they have all the prototype properties *)
         | (CustomFunT (reason, _), MethodT (use_op, call_r, lookup_r, propref, action, prop_t)) ->
           let method_type =
@@ -3140,7 +3140,7 @@ struct
             )
           in
           rec_flow_t cx trace ~use_op:unknown_use (method_type, prop_t);
-          rec_flow cx trace (method_type, apply_method_action use_op call_r l action)
+          apply_method_action cx trace method_type use_op call_r l action
         | (CustomFunT (r, _), _) when function_like_op u -> rec_flow cx trace (FunProtoT r, u)
         (****************************************)
         (* You can cast an object to a function *)
@@ -3304,6 +3304,8 @@ struct
           rec_flow_t cx trace ~use_op (AnyT.error reason_op, t)
         (* Since we don't know the signature of a method on AnyT, assume every
            parameter is an AnyT. *)
+        | (AnyT _, MethodT (_, _, _, propref, NoMethodAction, prop_t)) ->
+          rec_flow_t cx trace ~use_op:unknown_use (AnyT.untyped (reason_of_propref propref), prop_t)
         | ( AnyT _,
             MethodT (use_op, reason_op, _, _, CallM { meth_args_tlist; meth_tout; _ }, prop_t)
           ) ->
@@ -3314,7 +3316,7 @@ struct
         | (AnyT _, MethodT (use_op, reason_op, _, _, (ChainM _ as chain), prop_t)) ->
           let any = AnyT.untyped reason_op in
           rec_flow_t cx trace ~use_op:unknown_use (any, prop_t);
-          rec_flow cx trace (any, apply_method_action use_op reason_op l chain)
+          apply_method_action cx trace any use_op reason_op l chain
         (*************************)
         (* statics can be read   *)
         (*************************)
@@ -3570,7 +3572,7 @@ struct
              `CallT` will set its own ops during the call. if `funt` is something
              else, then something like `VoidT ~> CallT` doesn't need the op either
              because we want to point at the call and undefined thing. *)
-          rec_flow cx trace (funt, apply_method_action use_op reason_call l action)
+          apply_method_action cx trace funt use_op reason_call l action
         | ( DefT (reason_c, _, InstanceT (_, _, _, instance)),
             PrivateMethodT
               (use_op, reason_op, reason_lookup, prop_name, scopes, static, method_action, prop_t)
@@ -3604,8 +3606,8 @@ struct
             ~scopes
             ~static
             ~tout:(reason_lookup, tvar);
-          Base.Option.iter ~f:(fun t -> rec_flow_t cx ~use_op:unknown_use trace (funt, t)) prop_t;
-          rec_flow cx trace (funt, apply_method_action use_op reason_op l method_action)
+          rec_flow_t cx ~use_op:unknown_use trace (funt, prop_t);
+          apply_method_action cx trace funt use_op reason_op l method_action
         | (DefT (_, _, InstanceT _), MethodT (_, reason_call, _, Computed _, _, prop_t)) ->
           (* Instances don't have proper dictionary support. All computed accesses
              are converted to named property access to `$key` and `$value` during
@@ -4001,7 +4003,7 @@ struct
             )
           in
           rec_flow_t cx trace ~use_op:unknown_use (t, prop_t);
-          rec_flow cx trace (t, apply_method_action use_op reason_call l action)
+          apply_method_action cx trace t use_op reason_call l action
         (******************************************)
         (* strings may have their characters read *)
         (******************************************)
@@ -4564,7 +4566,7 @@ struct
             )
           in
           rec_flow_t cx trace ~use_op:unknown_use (method_type, prop_t);
-          rec_flow cx trace (method_type, apply_method_action use_op reason_call l action)
+          apply_method_action cx trace method_type use_op reason_call l action
         | (DefT (reason, _, FunT (static, _)), _) when object_like_op u ->
           rec_flow cx trace (static, ReposLowerT (reason, false, u))
         (*****************************************)
@@ -4614,7 +4616,7 @@ struct
             )
           in
           rec_flow_t cx trace ~use_op:unknown_use (method_type, prop_t);
-          rec_flow cx trace (method_type, apply_method_action use_op reason_call l action)
+          apply_method_action cx trace method_type use_op reason_call l action
         | (DefT (reason, _, ClassT instance), _) when object_like_op u ->
           let statics = (reason, Tvar.mk_no_wrap cx reason) in
           rec_flow cx trace (instance, GetStaticsT statics);
@@ -4668,7 +4670,7 @@ struct
             )
           in
           rec_flow_t cx trace ~use_op:unknown_use (t, prop_t);
-          rec_flow cx trace (t, apply_method_action use_op call_reason l action)
+          apply_method_action cx trace t use_op call_reason l action
         | (DefT (enum_reason, _, EnumObjectT _), GetElemT (_, _, elem, _)) ->
           let reason = reason_of_t elem in
           add_output
@@ -5375,7 +5377,7 @@ struct
             )
           in
           rec_flow_t cx trace ~use_op:unknown_use (method_type, prop_t);
-          rec_flow cx trace (method_type, apply_method_action use_op call_r l action)
+          apply_method_action cx trace method_type use_op call_r l action
         | (FunProtoApplyT reason, _)
         | (FunProtoBindT reason, _)
         | (FunProtoCallT reason, _) ->
@@ -5622,6 +5624,7 @@ struct
       | CallM mct -> CallM { mct with meth_generic_this = Some l }
       | ChainM (r1, r2, t, mct, tout) ->
         ChainM (r1, r2, t, { mct with meth_generic_this = Some l }, tout)
+      | NoMethodAction -> NoMethodAction
     in
     if
       match bound with
@@ -8970,6 +8973,25 @@ struct
       | ResolveSpreadsToCallT (funcalltype, tin) ->
         finish_call_t cx ?trace ~use_op ~reason_op funcalltype resolved tin
 
+  and apply_method_action cx trace l use_op reason_call this_arg action =
+    match action with
+    | CallM app ->
+      let u = CallT (use_op, reason_call, call_of_method_app this_arg app) in
+      rec_flow cx trace (l, u)
+    | ChainM (exp_reason, lhs_reason, this, app, vs) ->
+      let u =
+        OptionalChainT
+          {
+            reason = exp_reason;
+            lhs_reason;
+            this_t = this;
+            t_out = CallT (use_op, reason_call, call_of_method_app this_arg app);
+            voided_out = vs;
+          }
+      in
+      rec_flow cx trace (l, u)
+    | NoMethodAction -> ()
+
   and perform_elem_action cx trace ~use_op ~restrict_deletes reason_op l value action =
     match (action, restrict_deletes) with
     | (ReadElem t, _) ->
@@ -8987,7 +9009,7 @@ struct
         (tin, UseT (use_op, VoidT.why (reason_of_t value) |> with_trust literal_trust));
       Base.Option.iter ~f:(fun t -> rec_flow_t cx trace ~use_op:unknown_use (l, t)) tout
     | (CallElem (reason_call, action), _) ->
-      rec_flow cx trace (value, apply_method_action use_op reason_call l action)
+      apply_method_action cx trace value use_op reason_call l action
 
   (* builtins, contd. *)
   (* get_builtin has different behavior depending on which file you're using it from. If we are
