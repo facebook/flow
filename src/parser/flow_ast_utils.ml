@@ -83,6 +83,25 @@ let is_call_to_invariant callee =
   | (_, Expression.Identifier (_, { Identifier.name = "invariant"; _ })) -> true
   | _ -> false
 
+let is_call_to_is_array callee =
+  match callee with
+  | ( _,
+      Flow_ast.Expression.Member
+        {
+          Flow_ast.Expression.Member._object =
+            ( _,
+              Flow_ast.Expression.Identifier
+                (_, { Flow_ast.Identifier.name = "Array"; comments = _ })
+            );
+          property =
+            Flow_ast.Expression.Member.PropertyIdentifier
+              (_, { Flow_ast.Identifier.name = "isArray"; comments = _ });
+          comments = _;
+        }
+    ) ->
+    true
+  | _ -> false
+
 let loc_of_statement = fst
 
 let loc_of_expression = fst
