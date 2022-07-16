@@ -304,7 +304,6 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) = struct
           (depends_of_tparams_map tparams_map EnvMap.empty)
       in
       let depends_of_class
-          missing_annotations
           {
             Ast.Class.id = ident;
             body;
@@ -323,12 +322,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) = struct
               | Some (loc, _) -> visitor#set_this_ (Some loc)
               | None -> ()
             end;
-            let _ =
-              if Base.List.is_empty missing_annotations then
-                visitor#class_body_annotated body
-              else
-                visitor#class_body body
-            in
+            let _ = visitor#class_body_annotated body in
             visitor#set_this_ this_';
             let _ = map_opt (map_loc visitor#class_extends) extends in
             let _ = map_opt visitor#class_implements implements in
@@ -529,8 +523,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) = struct
       | OpAssign { lhs; rhs; _ } -> depends_of_op_assign lhs rhs
       | Function { synthesizable_from_annotation; function_; function_loc = _; tparams_map } ->
         depends_of_fun synthesizable_from_annotation tparams_map function_
-      | Class { missing_annotations; class_; class_loc = _ } ->
-        depends_of_class missing_annotations class_
+      | Class { class_; class_loc = _; missing_annotations = _ } -> depends_of_class class_
       | DeclaredClass (_, decl) -> depends_of_declared_class decl
       | TypeAlias (_, alias) -> depends_of_alias alias
       | OpaqueType (_, alias) -> depends_of_opaque alias
@@ -573,7 +566,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) = struct
               Named { kind = Some Ast.Statement.ImportDeclaration.(ImportType | ImportTypeof); _ };
             _;
           }
-      | Class { missing_annotations = []; _ }
+      | Class _
       | DeclaredClass _ ->
         true
       | RefiExpression _
@@ -583,8 +576,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) = struct
       | OpAssign _
       | Function { synthesizable_from_annotation = false; _ }
       | Enum _
-      | Import _
-      | Class { missing_annotations = _ :: _; _ } ->
+      | Import _ ->
         false
   end
 
