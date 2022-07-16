@@ -4378,21 +4378,7 @@ module Make
       method call_refinement loc call =
         match call with
         | {
-         Flow_ast.Expression.Call.callee =
-           ( _,
-             Flow_ast.Expression.Member
-               {
-                 Flow_ast.Expression.Member._object =
-                   ( _,
-                     Flow_ast.Expression.Identifier
-                       (_, { Flow_ast.Identifier.name = "Array"; comments = _ })
-                   );
-                 property =
-                   Flow_ast.Expression.Member.PropertyIdentifier
-                     (_, { Flow_ast.Identifier.name = "isArray"; comments = _ });
-                 comments = _;
-               }
-           ) as callee;
+         Flow_ast.Expression.Call.callee;
          targs = _;
          arguments =
            ( _,
@@ -4402,7 +4388,8 @@ module Make
              }
            );
          comments = _;
-        } ->
+        }
+          when Flow_ast_utils.is_call_to_is_array callee ->
           let refi =
             match RefinementKey.of_expression arg with
             | None -> LookupMap.empty

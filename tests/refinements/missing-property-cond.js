@@ -77,3 +77,10 @@ function foo12() {
     (a.foo: Set<mixed>);
   }
 }
+
+function foo13() {
+  declare var a: mixed;
+  if (a != null && Array.isArray(a.foo)) {
+    (a.foo: $ReadOnlyArray<mixed>);
+  }
+}

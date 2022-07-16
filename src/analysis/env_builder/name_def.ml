@@ -1173,13 +1173,9 @@ class def_finder env_entries providers toplevel_scope =
         default;
       super#import_declaration loc decl
 
-    method! call _ expr =
-      this#visit_call_expression
-        ~visit_callee:(this#visit_expression ~hint:Hint_None ~cond:NonConditionalContext)
-        expr;
-      expr
+    method! call _ _ = failwith "Should be visited by visit_call_expression"
 
-    method private visit_call_expression ~visit_callee expr =
+    method private visit_call_expression ~cond ~visit_callee expr =
       let open Ast.Expression.Call in
       let {
         callee;
@@ -1209,23 +1205,30 @@ class def_finder env_entries providers toplevel_scope =
               spread.Ast.Expression.SpreadElement.argument
         )
       else
-        let call_argumemts_hint = Hint_t (ValueHint callee) in
-        Base.List.iteri arguments ~f:(fun i arg ->
-            let hint = decompose_hint (Decomp_FuncParam i) call_argumemts_hint in
-            match arg with
-            | Ast.Expression.Expression expr ->
-              this#visit_expression ~hint ~cond:NonConditionalContext expr
-            | Ast.Expression.Spread (_, spread) ->
-              this#visit_expression
-                ~hint
-                ~cond:NonConditionalContext
-                spread.Ast.Expression.SpreadElement.argument
-        )
+        match (arguments, cond) with
+        | ([Ast.Expression.Expression expr], (OtherConditionalTest | SwitchConditionalTest _))
+          when Flow_ast_utils.is_call_to_is_array callee ->
+          this#visit_expression ~hint:Hint_None ~cond:OtherConditionalTest expr
+        | _ ->
+          let call_argumemts_hint = Hint_t (ValueHint callee) in
+          Base.List.iteri arguments ~f:(fun i arg ->
+              let hint = decompose_hint (Decomp_FuncParam i) call_argumemts_hint in
+              match arg with
+              | Ast.Expression.Expression expr ->
+                this#visit_expression ~hint ~cond:NonConditionalContext expr
+              | Ast.Expression.Spread (_, spread) ->
+                this#visit_expression
+                  ~hint
+                  ~cond:NonConditionalContext
+                  spread.Ast.Expression.SpreadElement.argument
+          )
 
-    method! optional_call _ expr =
+    method! optional_call _ _ = failwith "Should be visited by visit_optional_call_expression"
+
+    method private visit_optional_call_expression ~cond expr =
       let open Ast.Expression.OptionalCall in
       let { call; optional = _; filtered_out = _ } = expr in
-      this#visit_call_expression call ~visit_callee:(fun callee ->
+      this#visit_call_expression call ~cond ~visit_callee:(fun callee ->
           (* Visit member by super#member to avoid generating a RefiExpression def. *)
           match callee with
           | (loc, Ast.Expression.Member member) -> ignore @@ super#member loc member
@@ -1233,8 +1236,7 @@ class def_finder env_entries providers toplevel_scope =
             let { Ast.Expression.OptionalMember.member; optional = _; filtered_out = _ } = member in
             ignore @@ super#member loc member
           | _ -> this#visit_expression ~hint:Hint_None ~cond:NonConditionalContext callee
-      );
-      expr
+      )
 
     method! new_ _ expr =
       let open Ast.Expression.New in
@@ -1435,8 +1437,13 @@ class def_finder env_entries providers toplevel_scope =
       | Ast.Expression.OptionalMember m -> this#visit_optional_member_expression ~cond loc m
       | Ast.Expression.Binary expr -> this#visit_binary_expression ~cond expr
       | Ast.Expression.Logical expr -> this#visit_logical_expression ~cond expr
+      | Ast.Expression.Call expr ->
+        this#visit_call_expression
+          ~visit_callee:(this#visit_expression ~hint:Hint_None ~cond:NonConditionalContext)
+          ~cond
+          expr
+      | Ast.Expression.OptionalCall expr -> this#visit_optional_call_expression ~cond expr
       | Ast.Expression.Assignment _
-      | Ast.Expression.Call _
       | Ast.Expression.Class _
       | Ast.Expression.Comprehension _
       | Ast.Expression.Conditional _
@@ -1448,7 +1455,6 @@ class def_finder env_entries providers toplevel_scope =
       | Ast.Expression.Literal _
       | Ast.Expression.MetaProperty _
       | Ast.Expression.New _
-      | Ast.Expression.OptionalCall _
       | Ast.Expression.Sequence _
       | Ast.Expression.Super _
       | Ast.Expression.TaggedTemplate _
