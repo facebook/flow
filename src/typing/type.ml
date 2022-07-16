@@ -472,8 +472,7 @@ module rec TypeTerm : sig
         * class_binding list
         * (* static *) bool
         * method_action
-        * (* prop_t *)
-        t option
+        * t (* prop_t *)
     (* Similar to the last element of the MethodT *)
     | SetPropT of use_op * reason * propref * set_mode * write_ctx * t * t option
     (* The boolean flag indicates whether or not it is a static lookup. We cannot know this when
@@ -900,7 +899,7 @@ module rec TypeTerm : sig
         * class_binding list
         * bool
         * opt_method_action
-        * t option
+        * t
     | OptGetPropT of use_op * reason * ident option * propref
     | OptGetPrivatePropT of use_op * reason * string * class_binding list * bool
     | OptTestPropT of use_op * reason * ident * propref
@@ -915,10 +914,12 @@ module rec TypeTerm : sig
   and method_action =
     | CallM of methodcalltype
     | ChainM of reason * reason * t * methodcalltype * t_out
+    | NoMethodAction
 
   and opt_method_action =
     | OptCallM of opt_methodcalltype
     | OptChainM of reason * reason * t * opt_methodcalltype * t_out
+    | OptNoMethodAction
 
   and specialize_cache = reason list option
 
@@ -3832,6 +3833,7 @@ let apply_opt_action action t_out =
   | OptCallM f -> CallM (apply_opt_methodcalltype f t_out)
   | OptChainM (exp_reason, lhs_reason, this, f, vs) ->
     ChainM (exp_reason, lhs_reason, this, apply_opt_methodcalltype f t_out, vs)
+  | OptNoMethodAction -> NoMethodAction
 
 let apply_opt_use opt_use t_out =
   match opt_use with
@@ -3866,19 +3868,6 @@ let call_of_method_app
     call_tout = meth_tout;
     call_strict_arity = meth_strict_arity;
   }
-
-let apply_method_action use_op reason_call this_arg action =
-  match action with
-  | CallM app -> CallT (use_op, reason_call, call_of_method_app this_arg app)
-  | ChainM (exp_reason, lhs_reason, this, app, vs) ->
-    OptionalChainT
-      {
-        reason = exp_reason;
-        lhs_reason;
-        this_t = this;
-        t_out = CallT (use_op, reason_call, call_of_method_app this_arg app);
-        voided_out = vs;
-      }
 
 module TypeParams : sig
   val to_list : typeparams -> typeparam list

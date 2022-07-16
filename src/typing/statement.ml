@@ -5417,8 +5417,7 @@ struct
     in
     if private_ then
       let class_entries = Env.get_class_entries cx in
-      OptPrivateMethodT
-        (use_op, reason, reason_expr, name, class_entries, false, action, Some prop_t)
+      OptPrivateMethodT (use_op, reason, reason_expr, name, class_entries, false, action, prop_t)
     else
       OptMethodT (use_op, reason, reason_expr, propref, action, prop_t)
 
