@@ -537,9 +537,9 @@ x = 10;
   |};
   [%expect {|
     (3, 0) to (5, 1) =>
+    (3, 6) to (3, 7) =>
     (6, 0) to (6, 1) =>
-    (4, 10) to (4, 11) =>
-    (3, 6) to (3, 7) |}]
+    (4, 10) to (4, 11) |}]
 
 let%expect_test "class2" =
   print_order_test {|
@@ -564,7 +564,7 @@ class D extends C {
   |};
   [%expect {|
     (2, 0) to (4, 1) =>
-    illegal scc: (((2, 6) to (2, 7)); ((5, 6) to (5, 7))) =>
+    legal scc: (((2, 6) to (2, 7)); ((5, 6) to (5, 7))) =>
     (5, 0) to (7, 1) |}]
 
 let%expect_test "class3_anno" =
@@ -648,8 +648,9 @@ if (x instanceof C) {
   |};
   [%expect {|
     (2, 0) to (4, 1) =>
+    (2, 6) to (2, 7) =>
     (5, 12) to (5, 13) =>
-    illegal scc: (((2, 6) to (2, 7)); ((9, 2) to (9, 3))) =>
+    (9, 2) to (9, 3) =>
     (8, 17) to (8, 18) |}]
 
 let%expect_test "refi_latent" =
@@ -960,7 +961,7 @@ class C {
   |};
   [%expect {|
     (2, 0) to (5, 1) =>
-    illegal self-cycle ((2, 6) to (2, 7)) |}]
+    (2, 6) to (2, 7) |}]
 
 let%expect_test "class_question" =
   print_order_test {|

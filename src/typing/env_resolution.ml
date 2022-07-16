@@ -309,20 +309,7 @@ module Make (Env : Env_sig.S) (Statement : Statement_sig.S with module Env := En
     in
     (Statement.Func_stmt_sig.functiontype cx this_t func_sig, unknown_use)
 
-  let resolve_inferred_class cx id_loc reason class_loc class_ =
-    let cache = Context.node_cache cx in
-    (* This is intended to be the general type for the variable in the old environment, needed
-       for generic escape detection. We can do generic escape differently in the future and remove
-       this when we kill the old env. *)
-    let general = Tvar.mk cx reason in
-    let ((class_type, _) as class_) =
-      Statement.mk_class cx class_loc ~name_loc:id_loc ~general reason class_
-    in
-    Node_cache.set_class cache class_loc class_;
-    Flow_js.flow_t cx (class_type, general);
-    (class_type, unknown_use)
-
-  let resolve_annotated_class cx id_loc reason class_loc class_ =
+  let resolve_class cx id_loc reason class_loc class_ =
     let cache = Context.node_cache cx in
     let self = Tvar.mk cx reason in
     let ((class_sig, _) as sig_info) =
@@ -614,10 +601,8 @@ module Make (Env : Env_sig.S) (Statement : Statement_sig.S with module Env := En
       | Function { function_; synthesizable_from_annotation = true; function_loc = _; tparams_map }
         ->
         as_resolved @@ resolve_annotated_function cx def_reason tparams_map function_
-      | Class { class_; missing_annotations = _ :: _; class_loc } ->
-        as_resolved @@ resolve_inferred_class cx id_loc def_reason class_loc class_
-      | Class { class_; missing_annotations = []; class_loc } ->
-        as_resolved @@ resolve_annotated_class cx id_loc def_reason class_loc class_
+      | Class { class_; class_loc; missing_annotations = _ } ->
+        as_resolved @@ resolve_class cx id_loc def_reason class_loc class_
       | MemberAssign { member_loc = _; member = _; rhs } ->
         (expression cx ~hint:dummy_hint rhs, unknown_use, true)
       | OpAssign { exp_loc; lhs; op; rhs } ->
