@@ -16,7 +16,62 @@ open Trust_helpers
 module Flow = Flow_js
 module T = Ast.Type
 
+module type C = sig
+  val mk_typeof_annotation : Context.t -> ?trace:Type.trace -> Reason.t -> Type.t -> Type.t
+
+  val mk_instance : Context.t -> ?trace:Type.trace -> reason -> ?use_desc:bool -> Type.t -> Type.t
+
+  val cjs_require : Context.t -> Type.t -> Reason.t -> bool -> Type.t
+
+  val get_prop :
+    Context.t -> Type.use_op -> Reason.t -> ?op_reason:Reason.t -> Reason.name -> Type.t -> Type.t
+
+  val reposition : Context.t -> ALoc.t -> ?annot_loc:ALoc.t -> Type.t -> Type.t
+
+  val get_builtin : Context.t -> ?trace:Type.trace -> name -> reason -> Type.t
+
+  val obj_test_proto : Context.t -> Reason.t -> Type.t -> Type.t
+
+  val widen_obj_type :
+    Context.t -> ?trace:Type.trace -> use_op:Type.use_op -> Reason.reason -> Type.t -> Type.t
+
+  val mixin : Context.t -> Reason.t -> Type.t -> Type.t
+
+  val subtype_check : Context.t -> Type.t -> Type.t -> unit
+end
+
+module FlowJS : C = struct
+  include Flow
+
+  let reposition = reposition ?trace:None ?desc:None
+
+  let subtype_check cx l u = Flow.flow_t cx (l, u)
+
+  let mixin cx reason i =
+    Tvar.mk_where cx reason (fun tout -> Flow.flow cx (i, Type.MixinT (reason, tout)))
+
+  let cjs_require cx remote_module_t reason is_strict =
+    Tvar.mk_where cx reason (fun tout ->
+        Flow.flow cx (remote_module_t, CJSRequireT (reason, tout, is_strict))
+    )
+
+  let obj_test_proto cx reason t =
+    Tvar.mk_where cx reason (fun tout -> Flow.flow cx (t, ObjTestProtoT (reason, tout)))
+
+  let get_prop cx use_op reason ?(op_reason = reason) name l =
+    Tvar.mk_no_wrap_where cx op_reason (fun tout ->
+        Flow.flow cx (l, GetPropT (use_op, op_reason, None, Named (reason, name), tout))
+    )
+end
+
+module Annot : C = struct
+  include Annotation_inference.ConsGen
+
+  let subtype_check _ _ _ = (* TODO *) ()
+end
+
 module Make
+    (ConsGen : C)
     (Env : Env_sig.S)
     (Abnormal : Abnormal_sig.S with module Env := Env)
     (Statement : Statement_sig.S with module Env := Env) : Type_annotation_sig.S = struct
@@ -62,15 +117,15 @@ module Make
     let this_type (t, _) = t
 
     let subst_param cx map (t, tast) =
-      let t = Flow.subst cx map t in
+      let t = Subst.subst cx map t in
       (t, tast)
 
     let subst_rest cx map (t, tast) =
-      let t = Flow.subst cx map t in
+      let t = Subst.subst cx map t in
       (t, tast)
 
     let subst_this cx map (t, tast) =
-      let t = Flow.subst cx map t in
+      let t = Subst.subst cx map t in
       (t, tast)
 
     let eval_param _cx (_, tast) = tast
@@ -129,7 +184,7 @@ module Make
   let ident_name (_, { Ast.Identifier.name; comments = _ }) = name
 
   let error_type cx loc msg t_in =
-    Flow.add_output cx msg;
+    Flow_js_utils.add_output cx msg;
     let t_out = Tast_utils.error_mapper#type_ t_in |> snd in
     ((loc, AnyT.at (AnyError None) loc), t_out)
 
@@ -176,7 +231,7 @@ module Make
   let add_unclear_type_error_if_not_lib_file cx loc =
     match ALoc.source loc with
     | Some file when not @@ File_key.is_lib_file file ->
-      Flow_js.add_output cx (Error_message.EUnclearType loc)
+      Flow_js_utils.add_output cx (Error_message.EUnclearType loc)
     | _ -> ()
 
   let polarity = Typed_ast_utils.polarity
@@ -200,7 +255,7 @@ module Make
     | (loc, (Number _ as t_ast)) -> ((loc, NumT.at loc |> with_trust_inference cx), t_ast)
     | (loc, (BigInt _ as t_ast)) ->
       let reason = mk_annot_reason RBigInt loc in
-      Flow.add_output cx (Error_message.EBigIntNotYetSupported reason);
+      Flow_js_utils.add_output cx (Error_message.EBigIntNotYetSupported reason);
       ((loc, AnyT.error reason), t_ast)
     | (loc, (String _ as t_ast)) -> ((loc, StrT.at loc |> with_trust_inference cx), t_ast)
     | (loc, (Boolean _ as t_ast)) -> ((loc, BoolT.at loc |> with_trust_inference cx), t_ast)
@@ -228,7 +283,7 @@ module Make
       let (valtype, qualification_ast) = convert_typeof cx "typeof-annotation" qualification in
       let desc = RTypeof (typeof_name qualification) in
       let reason = mk_reason desc loc in
-      ( (loc, Flow.mk_typeof_annotation cx reason valtype),
+      ( (loc, ConsGen.mk_typeof_annotation cx reason valtype),
         Typeof { Typeof.argument = qualification_ast; comments }
       )
     | (loc, Tuple { Tuple.types = ts; comments }) ->
@@ -277,7 +332,7 @@ module Make
       ((loc, mk_singleton_number cx loc value raw), t_ast)
     | (loc, (BigIntLiteral { Ast.BigIntLiteral.bigint; _ } as t_ast)) ->
       let reason = mk_annot_reason (RBigIntLit bigint) loc in
-      Flow.add_output cx (Error_message.EBigIntNotYetSupported reason);
+      Flow_js_utils.add_output cx (Error_message.EBigIntNotYetSupported reason);
       ((loc, AnyT.error reason), t_ast)
     | (loc, (BooleanLiteral { Ast.BooleanLiteral.value; _ } as t_ast)) ->
       ((loc, mk_singleton_boolean cx loc value), t_ast)
@@ -318,13 +373,9 @@ module Make
       let reason = mk_reason (RType (OrdinaryName name)) loc in
       let id_reason = mk_reason (RType (OrdinaryName name)) id_loc in
       let qid_reason = mk_reason (RType (OrdinaryName (qualified_name qid))) qid_loc in
+      let use_op = Op (GetProperty qid_reason) in
       let t_unapplied =
-        Tvar.mk_no_wrap_where cx qid_reason (fun t ->
-            let use_op = Op (GetProperty qid_reason) in
-            Flow.flow
-              cx
-              (m, GetPropT (use_op, qid_reason, None, Named (id_reason, OrdinaryName name), t))
-        )
+        ConsGen.get_prop cx use_op id_reason ~op_reason:qid_reason (OrdinaryName name) m
       in
       let (t, targs) = mk_nominal_type cx reason tparams_map (t_unapplied, targs) in
       ( (loc, t),
@@ -451,7 +502,7 @@ module Make
         (* These utilities are no longer supported *)
         (* $Supertype<T> acts as any over supertypes of T *)
         | "$Supertype" ->
-          Error_message.EDeprecatedUtility (loc, name) |> Flow_js.add_output cx;
+          Error_message.EDeprecatedUtility (loc, name) |> Flow_js_utils.add_output cx;
           check_type_arg_arity cx loc t_ast targs 1 (fun () ->
               let (ts, targs) = convert_type_params () in
               let t = List.hd ts in
@@ -459,7 +510,7 @@ module Make
           )
         (* $Subtype<T> acts as any over subtypes of T *)
         | "$Subtype" ->
-          Error_message.EDeprecatedUtility (loc, name) |> Flow_js.add_output cx;
+          Error_message.EDeprecatedUtility (loc, name) |> Flow_js_utils.add_output cx;
           check_type_arg_arity cx loc t_ast targs 1 (fun () ->
               let (ts, targs) = convert_type_params () in
               let t = List.hd ts in
@@ -614,13 +665,10 @@ module Make
                   ) ->
                 let desc = RModule (OrdinaryName value) in
                 let reason = mk_annot_reason desc loc in
-                let remote_module_t = Flow_js.get_builtin cx (internal_module_name value) reason in
+                let remote_module_t = ConsGen.get_builtin cx (internal_module_name value) reason in
                 let str_t = mk_singleton_string cx str_loc value in
                 reconstruct_ast
-                  (Tvar.mk_where cx reason (fun t ->
-                       Flow.flow cx (remote_module_t, CJSRequireT (reason, t, Context.is_strict cx))
-                   )
-                  )
+                  (ConsGen.cjs_require cx remote_module_t reason (Context.is_strict cx))
                   (Some
                      ( targs_loc,
                        {
@@ -776,7 +824,7 @@ module Make
                environment: a this type in class C is bounded by C. *)
             check_type_arg_arity cx loc t_ast targs 0 (fun () ->
                 reconstruct_ast
-                  (Flow.reposition
+                  (ConsGen.reposition
                      cx
                      loc
                      ~annot_loc:loc
@@ -785,7 +833,7 @@ module Make
                   None
             )
           else (
-            Flow.add_output cx (Error_message.EUnexpectedThisType loc);
+            Flow_js_utils.add_output cx (Error_message.EUnexpectedThisType loc);
             Tast_utils.error_mapper#type_ t_ast
           )
         (* Class<T> is the type of the class whose instances are of type T *)
@@ -991,7 +1039,7 @@ module Make
         | _ when Subst_name.Map.mem (Subst_name.Name name) tparams_map ->
           check_type_arg_arity cx loc t_ast targs 0 (fun () ->
               let t =
-                Flow.reposition
+                ConsGen.reposition
                   cx
                   loc
                   ~annot_loc:loc
@@ -1202,8 +1250,9 @@ module Make
            )
       in
       if (not exact) && (not inexact) && not has_indexer then (
-        Flow.add_output cx Error_message.(EAmbiguousObjectType loc);
-        if not exact_by_default then Flow.add_output cx Error_message.(EImplicitInexactObject loc)
+        Flow_js_utils.add_output cx Error_message.(EAmbiguousObjectType loc);
+        if not exact_by_default then
+          Flow_js_utils.add_output cx Error_message.(EImplicitInexactObject loc)
       );
       ((loc, t), Object { Object.exact; properties; inexact; comments })
     | (loc, Interface { Interface.extends; body; comments }) ->
@@ -1304,18 +1353,11 @@ module Make
       let (id_loc, id_name) = id in
       let { Ast.Identifier.name; comments = _ } = id_name in
       let desc = RCustom (spf "%s `%s`" reason_prefix (qualified_name qualified)) in
-      let reason = mk_reason desc loc in
       let id_reason = mk_reason desc id_loc in
-      let t =
-        Tvar.mk_no_wrap_where cx reason (fun t ->
-            let use_op =
-              Op (GetProperty (mk_reason (RType (OrdinaryName (qualified_name qualified))) loc))
-            in
-            Flow.flow
-              cx
-              (m, GetPropT (use_op, id_reason, None, Named (id_reason, OrdinaryName name), t))
-        )
+      let use_op =
+        Op (GetProperty (mk_reason (RType (OrdinaryName (qualified_name qualified))) loc))
       in
+      let t = ConsGen.get_prop cx use_op id_reason (OrdinaryName name) m in
       (t, Qualified (loc, { qualification; id = ((id_loc, t), id_name) }))
     | Unqualified (loc, ({ Ast.Identifier.name; comments = _ } as id_name)) ->
       let t = Env.get_var ~lookup_mode cx name loc in
@@ -1329,18 +1371,11 @@ module Make
       let (id_loc, id_name) = id in
       let { Ast.Identifier.name; comments = _ } = id_name in
       let desc = RCustom (spf "%s `%s`" reason_prefix (typeof_name qualified)) in
-      let reason = mk_reason desc loc in
       let id_reason = mk_reason desc id_loc in
-      let t =
-        Tvar.mk_no_wrap_where cx reason (fun t ->
-            let use_op =
-              Op (GetProperty (mk_reason (RType (OrdinaryName (typeof_name qualified))) loc))
-            in
-            Flow.flow
-              cx
-              (m, GetPropT (use_op, id_reason, None, Named (id_reason, OrdinaryName name), t))
-        )
+      let use_op =
+        Op (GetProperty (mk_reason (RType (OrdinaryName (typeof_name qualified))) loc))
       in
+      let t = ConsGen.get_prop cx use_op id_reason (OrdinaryName name) m in
       (t, Qualified ((loc, t), { qualification; id = ((id_loc, t), id_name) }))
     | Unqualified (loc, ({ Ast.Identifier.name; comments = _ } as id_name)) ->
       let t =
@@ -1482,14 +1517,12 @@ module Make
             in
             if name = "__proto__" && (not (_method || optional)) && variance = None then
               let reason = mk_reason RPrototype (fst value) in
-              let proto =
-                Tvar.mk_where cx reason (fun tout -> Flow.flow cx (t, ObjTestProtoT (reason, tout)))
-              in
+              let proto = ConsGen.obj_test_proto cx reason t in
               let acc =
-                match Acc.add_proto (Flow.mk_typeof_annotation cx reason proto) acc with
+                match Acc.add_proto (ConsGen.mk_typeof_annotation cx reason proto) acc with
                 | Ok acc -> acc
                 | Error err ->
-                  Flow.add_output cx Error_message.(EUnsupportedSyntax (loc, err));
+                  Flow_js_utils.add_output cx Error_message.(EUnsupportedSyntax (loc, err));
                   acc
               in
               (acc, prop_ast proto)
@@ -1510,7 +1543,7 @@ module Make
           | Ast.Expression.Object.Property.Literal (loc, _)
           | Ast.Expression.Object.Property.PrivateName (loc, _)
           | Ast.Expression.Object.Property.Computed (loc, _) ->
-            Flow.add_output cx (Error_message.EUnsupportedKeyInObjectType loc);
+            Flow_js_utils.add_output cx (Error_message.EUnsupportedKeyInObjectType loc);
             let (_, prop_ast) = Tast_utils.error_mapper#object_property_type (loc, prop) in
             (acc, prop_ast)
         end
@@ -1523,7 +1556,7 @@ module Make
        _method;
        _;
       } ->
-        Flow_js.add_output cx (Error_message.EUnsafeGettersSetters loc);
+        Flow_js_utils.add_output cx (Error_message.EUnsafeGettersSetters loc);
         let (function_type, getter_ast) = mk_function_type_annotation cx tparams_map getter in
         let return_t = Type.extract_getter_type function_type in
         ( Acc.add_prop (Properties.add_getter (OrdinaryName name) (Some id_loc) return_t) acc,
@@ -1543,7 +1576,7 @@ module Make
        _method;
        _;
       } ->
-        Flow_js.add_output cx (Error_message.EUnsafeGettersSetters loc);
+        Flow_js_utils.add_output cx (Error_message.EUnsafeGettersSetters loc);
         let (function_type, setter_ast) = mk_function_type_annotation cx tparams_map setter in
         let param_t = Type.extract_setter_type function_type in
         ( Acc.add_prop (Properties.add_setter (OrdinaryName name) (Some id_loc) param_t) acc,
@@ -1555,7 +1588,7 @@ module Make
           }
         )
       | { Object.Property.value = Object.Property.Get _ | Object.Property.Set _; _ } ->
-        Flow.add_output cx Error_message.(EUnsupportedSyntax (loc, ObjectPropertyGetSet));
+        Flow_js_utils.add_output cx Error_message.(EUnsupportedSyntax (loc, ObjectPropertyGetSet));
         let (_, prop_ast) = Tast_utils.error_mapper#object_property_type (loc, prop) in
         (acc, prop_ast)
     in
@@ -1587,7 +1620,7 @@ module Make
             match Acc.add_call t acc with
             | Ok acc -> acc
             | Error err ->
-              Flow.add_output cx Error_message.(EUnsupportedSyntax (loc, err));
+              Flow_js_utils.add_output cx Error_message.(EUnsupportedSyntax (loc, err));
               acc
           in
           (acc, CallProperty (loc, call))
@@ -1597,7 +1630,7 @@ module Make
             match Acc.add_dict d acc with
             | Ok acc -> acc
             | Error err ->
-              Flow.add_output cx Error_message.(EUnsupportedSyntax (loc, err));
+              Flow_js_utils.add_output cx Error_message.(EUnsupportedSyntax (loc, err));
               acc
           in
           (acc, Indexer (loc, i))
@@ -1628,12 +1661,12 @@ module Make
               match Acc.add_call t acc with
               | Ok acc -> acc
               | Error err ->
-                Flow.add_output cx Error_message.(EUnsupportedSyntax (loc, err));
+                Flow_js_utils.add_output cx Error_message.(EUnsupportedSyntax (loc, err));
                 acc
             in
             (acc, InternalSlot (loc, { slot with Object.InternalSlot.value = value_ast }))
           else (
-            Flow.add_output
+            Flow_js_utils.add_output
               cx
               Error_message.(
                 EUnsupportedSyntax (loc, UnsupportedInternalSlot { name; static = false })
@@ -1719,7 +1752,7 @@ module Make
                 (t, ts, Some head_slice)
               | _ -> failwith "Invariant Violation: spread list has two slices in a row"
             in
-            let l = Flow.widen_obj_type cx ~use_op:unknown_use reason t in
+            let l = ConsGen.widen_obj_type cx ~use_op:unknown_use reason t in
             EvalT
               ( l,
                 TypeDestructorT (unknown_use, reason, SpreadType (target, ts, head_slice)),
@@ -1875,7 +1908,7 @@ module Make
     match targs with
     | None ->
       let reason = annot_reason ~annot_loc reason in
-      (Flow.mk_instance cx reason c, None)
+      (ConsGen.mk_instance cx reason c, None)
     | Some (loc, { Ast.Type.TypeArgs.arguments = targs; comments }) ->
       let (targs, targs_ast) = convert_list cx tparams_map targs in
       ( typeapp_annot annot_loc c targs,
@@ -1915,7 +1948,7 @@ module Make
         | None -> (None, None)
         | Some default ->
           let (t, default_ast) = mk_type cx tparams_map reason (Some default) in
-          Flow.flow_t cx (t, bound);
+          ConsGen.subtype_check cx t bound;
           (Some t, default_ast)
       in
       let polarity = polarity variance in
@@ -1945,7 +1978,7 @@ module Make
       let tparams = tparam :: tparams in
       ( tparams,
         Subst_name.Map.add name t tparams_map,
-        Subst_name.Map.add name (Flow.subst cx bounds_map bound) bounds_map,
+        Subst_name.Map.add name (Subst.subst cx bounds_map bound) bounds_map,
         ast :: rev_asts
       )
     in
@@ -1999,7 +2032,7 @@ module Make
               )
             | Indexer (loc, { Indexer.static; _ }) as indexer_prop when mem_field ~static "$key" x
               ->
-              Flow.add_output cx Error_message.(EUnsupportedSyntax (loc, MultipleIndexers));
+              Flow_js_utils.add_output cx Error_message.(EUnsupportedSyntax (loc, MultipleIndexers));
               (x, Tast_utils.error_mapper#object_type_property indexer_prop :: rev_prop_asts)
             | Indexer (loc, indexer) ->
               let { Indexer.key; value; static; variance; _ } = indexer in
@@ -2016,7 +2049,7 @@ module Make
                   )
                 ) ->
               if optional && _method then
-                Flow.add_output cx Error_message.(EInternal (loc, OptionalMethod));
+                Flow_js_utils.add_output cx Error_message.(EInternal (loc, OptionalMethod));
               let polarity = polarity variance in
               let (x, prop) =
                 Ast.Expression.Object.(
@@ -2024,7 +2057,7 @@ module Make
                   | (_, Property.Literal (loc, _), _)
                   | (_, Property.PrivateName (loc, _), _)
                   | (_, Property.Computed (loc, _), _) ->
-                    Flow.add_output
+                    Flow_js_utils.add_output
                       cx
                       (Error_message.EUnsupportedSyntax (loc, Error_message.IllegalName));
                     (x, Tast_utils.error_mapper#object_property_type (loc, prop))
@@ -2051,7 +2084,7 @@ module Make
                       )
                     )
                   | (true, Property.Identifier _, _) ->
-                    Flow.add_output cx Error_message.(EInternal (loc, MethodNotAFunction));
+                    Flow_js_utils.add_output cx Error_message.(EInternal (loc, MethodNotAFunction));
                     (x, Tast_utils.error_mapper#object_property_type (loc, prop))
                   | ( false,
                       Property.Identifier
@@ -2087,7 +2120,7 @@ module Make
                         (id_loc, ({ Ast.Identifier.name; comments = _ } as id_name)),
                       Ast.Type.Object.Property.Get (get_loc, func)
                     ) ->
-                    Flow_js.add_output cx (Error_message.EUnsafeGettersSetters loc);
+                    Flow_js_utils.add_output cx (Error_message.EUnsafeGettersSetters loc);
                     let (fsig, func_ast) = mk_func_sig cx tparams_map loc func in
                     let prop_t =
                       TypeUtil.type_t_of_annotated_or_inferred fsig.Func_type_sig.Types.return_t
@@ -2108,7 +2141,7 @@ module Make
                         (id_loc, ({ Ast.Identifier.name; comments = _ } as id_name)),
                       Ast.Type.Object.Property.Set (set_loc, func)
                     ) ->
-                    Flow_js.add_output cx (Error_message.EUnsafeGettersSetters loc);
+                    Flow_js_utils.add_output cx (Error_message.EUnsafeGettersSetters loc);
                     let (fsig, func_ast) = mk_func_sig cx tparams_map loc func in
                     let prop_t =
                       match fsig with
@@ -2156,13 +2189,13 @@ module Make
                   InternalSlot (loc, { slot with InternalSlot.value }) :: rev_prop_asts
                 )
               else (
-                Flow.add_output
+                Flow_js_utils.add_output
                   cx
                   Error_message.(EUnsupportedSyntax (loc, UnsupportedInternalSlot { name; static }));
                 (x, Tast_utils.error_mapper#object_type_property prop :: rev_prop_asts)
               )
             | SpreadProperty (loc, _) as prop ->
-              Flow.add_output cx Error_message.(EInternal (loc, InterfaceTypeSpread));
+              Flow_js_utils.add_output cx Error_message.(EInternal (loc, InterfaceTypeSpread));
               (x, Tast_utils.error_mapper#object_type_property prop :: rev_prop_asts)
         )
         (s, [])
@@ -2299,7 +2332,7 @@ module Make
         let lookup_mode = Env_sig.LookupMode.ForValue in
         convert_qualification ~lookup_mode cx "mixins" id
       in
-      let props_bag = Tvar.mk_where cx r (fun tvar -> Flow.flow cx (i, Type.MixinT (r, tvar))) in
+      let props_bag = ConsGen.mixin cx r i in
       let (t, targs) = mk_super cx tparams_map loc props_bag targs in
       (t, (loc, { Ast.Type.Generic.id; targs; comments }))
     in

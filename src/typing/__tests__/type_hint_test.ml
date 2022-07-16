@@ -104,7 +104,7 @@ end = struct
     (Func_stmt_config_sig.S with module Types := Func_stmt_config_types.Types) =
     Func_stmt_config.Make (New_env) (Destructuring_) (Statement_)
 
-  module Annot = Type_annotation.Make (New_env) (Statement_.Abnormal) (Statement_)
+  module Annot = Statement_.Anno
   module NameResolver = Name_resolver.Make_of_flow (Context) (Flow_js_utils)
 
   let parse cx content =

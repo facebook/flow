@@ -31,7 +31,7 @@ module Make
     (Statement : Statement_sig.S with module Env := Env) : Statement_sig.S with module Env := Env =
 struct
   module Abnormal = Abnormal.Make (Env)
-  module Anno = Type_annotation.Make (Env) (Abnormal) (Statement)
+  module Anno = Type_annotation.Make (Type_annotation.FlowJS) (Env) (Abnormal) (Statement)
   module Class_type_sig = Anno.Class_type_sig
   module Toplevels = Toplevels.Make (Env) (Abnormal)
   module Refinement = Refinement.Make (Env)

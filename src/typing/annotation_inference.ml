@@ -77,9 +77,16 @@ module type S = sig
 
   val mk_type_reference : Context.t -> Reason.t -> Type.t -> Type.t
 
-  val get_prop : Context.t -> Type.use_op -> Reason.t -> Reason.name -> Type.t -> Type.t
+  val mk_instance : Context.t -> ?trace:Type.trace -> reason -> ?use_desc:bool -> Type.t -> Type.t
+
+  val reposition : Context.t -> ALoc.t -> ?annot_loc:ALoc.t -> Type.t -> Type.t
+
+  val get_prop :
+    Context.t -> Type.use_op -> Reason.t -> ?op_reason:Reason.t -> Reason.name -> Type.t -> Type.t
 
   val get_elem : Context.t -> Type.use_op -> Reason.t -> key:Type.t -> Type.t -> Type.t
+
+  val get_builtin : Context.t -> ?trace:Type.trace -> name -> reason -> Type.t
 
   val qualify_type :
     Context.t -> Type.use_op -> Reason.t -> Reason.t * Reason.name -> Type.t -> Type.t
@@ -140,6 +147,9 @@ module type S = sig
     Type.Object.Spread.state ->
     Type.t ->
     Type.t
+
+  val widen_obj_type :
+    Context.t -> ?trace:Type.trace -> use_op:Type.use_op -> Reason.reason -> Type.t -> Type.t
 
   val obj_test_proto : Context.t -> Reason.t -> Type.t -> Type.t
 
@@ -210,7 +220,7 @@ module rec ConsGen : S = struct
   (* Repositioning does not seem to have any perceptible impact in annotation
    * inference. Instead of replicating the convoluted implementation of Flow_js
    * here, we just return the same type intact. *)
-  let reposition _cx _loc t = t
+  let reposition _cx _loc ?annot_loc:_ t = t
 
   (*****************)
   (* Instantiation *)
@@ -1147,7 +1157,7 @@ module rec ConsGen : S = struct
 
   and get_builtin_type cx reason ?(use_desc = false) x =
     let t = Flow_js_utils.lookup_builtin_strict cx x reason in
-    mk_instance cx reason ~use_desc ~reason_type:(reason_of_t t) t
+    mk_instance_raw cx reason ~use_desc ~reason_type:(reason_of_t t) t
 
   and get_builtin_prop_type cx reason tool =
     let x =
@@ -1162,6 +1172,11 @@ module rec ConsGen : S = struct
       )
     in
     get_builtin_type cx reason (OrdinaryName x)
+
+  and get_builtin cx ?trace:_ x reason =
+    let builtin = Flow_js_utils.lookup_builtin_strict cx x reason in
+    let f id = resolve_id cx id builtin in
+    mk_lazy_tvar cx reason f
 
   and specialize cx t use_op reason_op reason_tapp ts =
     elab_t cx t (Annot_SpecializeT (use_op, reason_op, reason_tapp, ts))
@@ -1178,18 +1193,21 @@ module rec ConsGen : S = struct
     let tvar = mk_lazy_tvar cx reason f in
     AnnotT (reason, tvar, false)
 
-  and mk_instance cx instance_reason ?(use_desc = false) ~reason_type c =
+  and mk_instance cx ?trace:_ instance_reason ?use_desc c =
+    mk_instance_raw cx instance_reason ?use_desc ~reason_type:instance_reason c
+
+  and mk_instance_raw cx instance_reason ?(use_desc = false) ~reason_type c =
     let source = elab_t cx c (Annot_UseT_TypeT reason_type) in
     AnnotT (instance_reason, source, use_desc)
 
   and mk_typeapp_instance cx ~use_op ~reason_op ~reason_tapp c ts =
     let t = specialize cx c use_op reason_op reason_tapp (Some ts) in
-    mk_instance cx reason_tapp ~reason_type:(reason_of_t c) t
+    mk_instance_raw cx reason_tapp ~reason_type:(reason_of_t c) t
 
   and get_statics cx reason t = elab_t cx t (Annot_GetStaticsT reason)
 
-  and get_prop cx use_op reason name t =
-    elab_t cx t (Annot_GetPropT (reason, use_op, Named (reason, name)))
+  and get_prop cx use_op reason ?(op_reason = reason) name t =
+    elab_t cx t (Annot_GetPropT (op_reason, use_op, Named (reason, name)))
 
   and get_elem cx use_op reason ~key t = elab_t cx t (Annot_GetElemT (reason, use_op, key))
 
@@ -1248,33 +1266,32 @@ module rec ConsGen : S = struct
 
   and arr_rest cx _use_op reason_op _i t = error_unsupported_reason cx t reason_op
 
+  and widen_obj_type cx ?trace:_ ~use_op reason t =
+    match t with
+    | OpenT (_, id) ->
+      let open Constraint in
+      begin
+        match Context.find_graph cx id with
+        | exception Union_find.Tvar_not_found _ -> error_internal_reason cx "widen_obj_type" reason
+        | Unresolved _
+        | Resolved _ ->
+          failwith "widen_obj_type unexpected non-FullyResolved tvar"
+        | FullyResolved (_, (lazy t)) -> widen_obj_type cx ~use_op reason t
+      end
+    | UnionT (r, rep) ->
+      UnionT
+        ( r,
+          UnionRep.ident_map
+            (fun t ->
+              if is_proper_def t then
+                widen_obj_type cx ~use_op reason t
+              else
+                t)
+            rep
+        )
+    | t -> t
+
   and object_kit_concrete =
-    let rec widen_obj_type cx ~use_op reason t =
-      match t with
-      | OpenT (_, id) ->
-        let open Constraint in
-        begin
-          match Context.find_graph cx id with
-          | exception Union_find.Tvar_not_found _ ->
-            error_internal_reason cx "widen_obj_type" reason
-          | Unresolved _
-          | Resolved _ ->
-            failwith "widen_obj_type unexpected non-FullyResolved tvar"
-          | FullyResolved (_, (lazy t)) -> widen_obj_type cx ~use_op reason t
-        end
-      | UnionT (r, rep) ->
-        UnionT
-          ( r,
-            UnionRep.ident_map
-              (fun t ->
-                if is_proper_def t then
-                  widen_obj_type cx ~use_op reason t
-                else
-                  t)
-              rep
-          )
-      | t -> t
-    in
     let add_output cx msg : unit = Flow_js_utils.add_output cx msg in
     let return _cx _use_op t = t in
     let recurse cx use_op reason resolve_tool tool x =
@@ -1284,7 +1301,7 @@ module rec ConsGen : S = struct
       let dict_check _cx _use_op _d1 _d2 = () in
       Slice_utils.object_spread
         ~dict_check
-        ~widen_obj_type
+        ~widen_obj_type:(widen_obj_type ?trace:None)
         ~add_output
         ~return
         ~recurse
