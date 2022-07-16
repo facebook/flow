@@ -47,11 +47,16 @@ type root =
   | Annotation of {
       tparams_map: tparams_map;
       optional: bool;
+      default_expression: (ALoc.t, ALoc.t) Ast.Expression.t option;
       is_assignment: bool;
       annot: (ALoc.t, ALoc.t) Ast.Type.annotation;
     }
   | Value of (ALoc.t, ALoc.t) Ast.Expression.t
-  | Contextual of Reason.reason * hint_node hint
+  | Contextual of {
+      reason: Reason.reason;
+      hint: hint_node hint;
+      default_expression: (ALoc.t, ALoc.t) Ast.Expression.t option;
+    }
   | Catch
   | For of for_kind * (ALoc.t, ALoc.t) Ast.Expression.t
 
@@ -68,11 +73,20 @@ type selector =
       after_computed: bool;
     }
   | ArrRest of int
-  | Default of (ALoc.t, ALoc.t) Ast.Expression.t
+  | Default
+
+type default =
+  | DefaultExpr of (ALoc.t, ALoc.t) Ast.Expression.t
+  | DefaultCons of (ALoc.t, ALoc.t) Ast.Expression.t * default
+  | DefaultSelector of default * selector
 
 type binding =
   | Root of root
-  | Select of selector * binding
+  | Select of {
+      selector: selector;
+      default: default option;
+      binding: binding;
+    }
 
 type import =
   | Named of {
@@ -138,6 +152,13 @@ type def =
 
 type map = (def * scope_kind * class_stack * ALoc.t virtual_reason) EnvMap.t
 
+let default_of_binding = function
+  | Root (Annotation { default_expression; _ })
+  | Root (Contextual { default_expression; _ }) ->
+    Base.Option.map default_expression ~f:(fun e -> DefaultExpr e)
+  | Select { default; _ } -> default
+  | Root _ -> None
+
 module Destructure = struct
   open Ast.Pattern
 
@@ -152,19 +173,64 @@ module Destructure = struct
 
   let pattern_default acc = function
     | None -> acc
-    | Some e -> Select (Default e, acc)
+    | Some e ->
+      let default =
+        match default_of_binding acc with
+        | Some default -> DefaultCons (e, default)
+        | None -> DefaultExpr e
+      in
+      Select { selector = Default; default = Some default; binding = acc }
 
-  let array_element acc i = Select (Elem i, acc)
+  let array_element acc i =
+    let selector = Elem i in
+    let default =
+      acc
+      |> default_of_binding
+      |> Base.Option.map ~f:(fun default -> DefaultSelector (default, selector))
+    in
+    Select { selector; default; binding = acc }
 
-  let array_rest_element acc i = Select (ArrRest i, acc)
+  let array_rest_element acc i =
+    let selector = ArrRest i in
+    let default =
+      acc
+      |> default_of_binding
+      |> Base.Option.map ~f:(fun default -> DefaultSelector (default, selector))
+    in
+    Select { selector; default; binding = acc }
 
   let object_named_property acc prop_loc x ~has_default =
-    Select (Prop { prop = x; prop_loc; has_default }, acc)
+    let selector = Prop { prop = x; prop_loc; has_default } in
+    let default =
+      acc
+      |> default_of_binding
+      |> Base.Option.map ~f:(fun default ->
+             let d = DefaultSelector (default, selector) in
+             if has_default then
+               DefaultSelector (d, Default)
+             else
+               d
+         )
+    in
+    Select { selector; default; binding = acc }
 
-  let object_computed_property acc e = Select (Computed e, acc)
+  let object_computed_property acc e =
+    let selector = Computed e in
+    let default =
+      acc
+      |> default_of_binding
+      |> Base.Option.map ~f:(fun default -> DefaultSelector (default, selector))
+    in
+    Select { selector; default; binding = acc }
 
   let object_rest_property acc xs has_computed =
-    Select (ObjRest { used_props = xs; after_computed = has_computed }, acc)
+    let selector = ObjRest { used_props = xs; after_computed = has_computed } in
+    let default =
+      acc
+      |> default_of_binding
+      |> Base.Option.map ~f:(fun default -> DefaultSelector (default, selector))
+    in
+    Select { selector; default; binding = acc }
 
   let object_property acc xs key ~has_default =
     let open Ast.Pattern.Object in
@@ -455,7 +521,13 @@ class def_finder env_entries providers toplevel_scope =
         | (Some annot, _) ->
           ( Some
               (Annotation
-                 { tparams_map = ALocMap.empty; optional = false; is_assignment = true; annot }
+                 {
+                   tparams_map = ALocMap.empty;
+                   optional = false;
+                   default_expression = None;
+                   is_assignment = true;
+                   annot;
+                 }
               ),
             Hint_t (AnnotationHint (ALocMap.empty, annot))
           )
@@ -480,7 +552,13 @@ class def_finder env_entries providers toplevel_scope =
         (Binding
            (Root
               (Annotation
-                 { tparams_map = ALocMap.empty; optional = false; is_assignment = true; annot }
+                 {
+                   tparams_map = ALocMap.empty;
+                   optional = false;
+                   default_expression = None;
+                   is_assignment = true;
+                   annot;
+                 }
               )
            )
         );
@@ -490,7 +568,7 @@ class def_finder env_entries providers toplevel_scope =
 
     method private visit_function_param ~hint (param : ('loc, 'loc) Ast.Function.Param.t) =
       let open Ast.Function.Param in
-      let (loc, { argument; default }) = param in
+      let (loc, { argument; default = default_expression }) = param in
       let optional =
         match argument with
         | (_, Ast.Pattern.Identifier { Ast.Pattern.Identifier.optional; _ }) -> optional
@@ -498,7 +576,9 @@ class def_finder env_entries providers toplevel_scope =
       in
       let source =
         match Destructure.type_of_pattern argument with
-        | Some annot -> Annotation { tparams_map = tparams; optional; is_assignment = false; annot }
+        | Some annot ->
+          Annotation
+            { tparams_map = tparams; optional; default_expression; is_assignment = false; annot }
         | None ->
           let reason =
             match argument with
@@ -509,10 +589,9 @@ class def_finder env_entries providers toplevel_scope =
               mk_reason (RParameter (Some name)) loc
             | _ -> mk_reason RDestructuring loc
           in
-          Contextual (reason, hint)
+          Contextual { reason; hint; default_expression }
       in
-      let source = Destructure.pattern_default (Root source) default in
-      Destructure.pattern ~f:this#add_ordinary_binding source argument;
+      Destructure.pattern ~f:this#add_ordinary_binding (Root source) argument;
       ignore @@ super#function_param param
 
     method private visit_function_rest_param ~hint (expr : ('loc, 'loc) Ast.Function.RestParam.t) =
@@ -521,7 +600,14 @@ class def_finder env_entries providers toplevel_scope =
       let source =
         match Destructure.type_of_pattern argument with
         | Some annot ->
-          Annotation { tparams_map = tparams; optional = false; is_assignment = false; annot }
+          Annotation
+            {
+              tparams_map = tparams;
+              optional = false;
+              default_expression = None;
+              is_assignment = false;
+              annot;
+            }
         | None ->
           let reason =
             match argument with
@@ -535,7 +621,7 @@ class def_finder env_entries providers toplevel_scope =
                  error in statement.ml. *)
               mk_reason (RCustom "contextual variable") loc
           in
-          Contextual (reason, hint)
+          Contextual { reason; hint; default_expression = None }
       in
       Destructure.pattern ~f:this#add_ordinary_binding (Root source) argument;
       ignore @@ super#function_rest_param expr
@@ -761,7 +847,13 @@ class def_finder env_entries providers toplevel_scope =
           (Binding
              (Root
                 (Annotation
-                   { tparams_map = ALocMap.empty; optional = false; is_assignment = false; annot }
+                   {
+                     tparams_map = ALocMap.empty;
+                     optional = false;
+                     default_expression = None;
+                     is_assignment = false;
+                     annot;
+                   }
                 )
              )
           );
@@ -899,7 +991,13 @@ class def_finder env_entries providers toplevel_scope =
             match Destructure.type_of_pattern id with
             | Some annot ->
               Annotation
-                { tparams_map = ALocMap.empty; optional = false; is_assignment = true; annot }
+                {
+                  tparams_map = ALocMap.empty;
+                  optional = false;
+                  default_expression = None;
+                  is_assignment = true;
+                  annot;
+                }
             | None -> For (Of { await }, right)
           in
           Destructure.pattern ~f:this#add_ordinary_binding (Root source) id
@@ -926,7 +1024,13 @@ class def_finder env_entries providers toplevel_scope =
             match Destructure.type_of_pattern id with
             | Some annot ->
               Annotation
-                { tparams_map = ALocMap.empty; optional = false; is_assignment = true; annot }
+                {
+                  tparams_map = ALocMap.empty;
+                  optional = false;
+                  default_expression = None;
+                  is_assignment = true;
+                  annot;
+                }
             | None -> For (In, right)
           in
           Destructure.pattern ~f:this#add_ordinary_binding (Root source) id

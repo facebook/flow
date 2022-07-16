@@ -51,11 +51,12 @@ let string_of_selector = function
   | Computed _ -> ".[computed]"
   | ObjRest _ -> "{ ... }"
   | ArrRest _ -> "[...]"
-  | Default _ -> "<with default>"
+  | Default -> "<with default>"
 
 let rec string_of_binding = function
   | Root r -> string_of_root r
-  | Select (sel, src) -> spf "(%s)%s" (string_of_binding src) (string_of_selector sel)
+  | Select { selector; binding; _ } ->
+    spf "(%s)%s" (string_of_binding binding) (string_of_selector selector)
 
 let string_of_import_kind =
   let open Ast.Statement.ImportDeclaration in
