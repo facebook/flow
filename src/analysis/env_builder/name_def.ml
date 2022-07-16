@@ -1493,6 +1493,9 @@ class def_finder env_entries providers toplevel_scope =
       let open Ast.Expression.Binary in
       let { operator; left; right; comments = _ } = expr in
       match (operator, cond) with
+      | (Instanceof, (SwitchConditionalTest _ | OtherConditionalTest)) ->
+        this#visit_expression ~hint:Hint_None ~cond left;
+        ignore @@ this#expression right
       | ( (Equal | NotEqual | StrictEqual | StrictNotEqual),
           (SwitchConditionalTest _ | OtherConditionalTest)
         ) ->

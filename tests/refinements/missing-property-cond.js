@@ -70,3 +70,10 @@ function foo11() {
   declare var b: mixed;
   invariant(b != null && b.foo != null); // ok
 }
+
+function foo12() {
+  declare var a: mixed;
+  if (a != null && a.foo instanceof Set) {
+    (a.foo: Set<mixed>);
+  }
+}
