@@ -118,8 +118,6 @@ class escape_finder ~gcx ~(add_output : Context.t -> ?trace:Type.trace -> Error_
         acc
       | _ -> super#type_ cx pole acc ty
 
-    method! use_type_ _cx acc _ty = acc
-
     (* Don't check evaluated types: the evaluated type in an EvalT theoretically "leaks"
        generic information that shouldn't actually cause issues *)
     method! eval_id _ _ acc _ = acc

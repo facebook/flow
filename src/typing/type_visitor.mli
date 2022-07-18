@@ -14,8 +14,6 @@ class ['a] t :
 
     method targ : Context.t -> Polarity.t -> 'a -> Type.targ -> 'a
 
-    method use_type_ : Context.t -> 'a -> Type.use_t -> 'a
-
     method tvar : Context.t -> Polarity.t -> 'a -> Reason.reason -> Type.ident -> 'a
 
     method props : Context.t -> Polarity.t -> 'a -> Type.Properties.id -> 'a
