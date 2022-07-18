@@ -92,7 +92,6 @@ module Opts = struct
     incremental_revdeps: bool;
     lazy_mode: lazy_mode option;
     local_inference_annotation_dirs: string list;
-    log_file: Path.t option;
     log_saving: Options.log_saving SMap.t;
     max_files_checked_per_worker: int;
     max_header_tokens: int;
@@ -225,7 +224,6 @@ module Opts = struct
       incremental_revdeps = false;
       lazy_mode = None;
       local_inference_annotation_dirs = [];
-      log_file = None;
       log_saving = SMap.empty;
       max_files_checked_per_worker = 100;
       max_header_tokens = 10;
@@ -352,8 +350,6 @@ module Opts = struct
                (String.concat ", " (SMap.keys values))
             )
     )
-
-  let filepath = opt (fun str -> Ok (Path.make str))
 
   let optparse_mapping =
     let regexp_str = "^'\\([^']*\\)'[ \t]*->[ \t]*'\\([^']*\\)'$" in
@@ -893,7 +889,6 @@ module Opts = struct
       ("gc.worker.window_size", gc_worker_window_size_parser);
       ("include_warnings", boolean (fun opts v -> Ok { opts with include_warnings = v }));
       ("lazy_mode", lazy_mode_parser);
-      ("log.file", filepath (fun opts v -> Ok { opts with log_file = Some v }));
       ("log_saving", log_saving_parser);
       ("max_header_tokens", uint (fun opts v -> Ok { opts with max_header_tokens = v }));
       ("max_literal_length", uint (fun opts v -> Ok { opts with max_literal_length = v }));
@@ -1567,8 +1562,6 @@ let lazy_mode c = c.options.Opts.lazy_mode
 let lint_severities c = c.lint_severities
 
 let local_inference_annotation_dirs c = c.options.Opts.local_inference_annotation_dirs
-
-let log_file c = c.options.Opts.log_file
 
 let log_saving c = c.options.Opts.log_saving
 
