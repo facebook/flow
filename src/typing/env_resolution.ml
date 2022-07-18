@@ -38,7 +38,12 @@ module Make (Env : Env_sig.S) (Statement : Statement_sig.S with module Env := En
           | C.FullyResolved _ -> ()
           | _ ->
             let t =
-              let no_lowers _ r = EmptyT.make r (bogus_trust ()) in
+              let no_lowers _ r =
+                Flow_js_utils.add_output
+                  cx
+                  Error_message.(EInternal (aloc_of_reason r, UnconstrainedTvar));
+                AnyT.make (AnyError None) r
+              in
               Flow_js_utils.merge_tvar ~no_lowers cx r root_id
             in
             let root = C.Root { root with C.constraints = C.FullyResolved (unknown_use, lazy t) } in

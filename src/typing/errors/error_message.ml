@@ -499,6 +499,7 @@ and internal_error =
   | UnexpectedAnnotationInference of string
   | MissingEnvRead of ALoc.t
   | MissingEnvWrite of ALoc.t
+  | UnconstrainedTvar
 
 and 'loc unsupported_syntax =
   | AnnotationInsideDestructuring
@@ -1534,6 +1535,7 @@ let enum_name_of_reason reason =
 
 let string_of_internal_error = function
   | AbnormalControlFlow -> "abnormal control flow"
+  | UnconstrainedTvar -> "unconstrained tvar during tvar resolution"
   | MethodNotAFunction -> "expected function type"
   | OptionalMethod -> "optional methods are not supported"
   | PredFunWithoutParamNames -> "FunT -> FunT no params"
