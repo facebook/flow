@@ -87,11 +87,7 @@ let main
     match server_log_file with
     | Some s -> s
     | None ->
-      CommandUtils.server_log_file
-        ~flowconfig_name
-        ~tmp_dir:(Options.temp_dir options)
-        root
-        flowconfig
+      CommandUtils.server_log_file ~flowconfig_name ~tmp_dir:(Options.temp_dir options) root
       |> Path.to_string
   in
   let monitor_log_file =

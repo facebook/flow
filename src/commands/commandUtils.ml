@@ -825,10 +825,8 @@ let connect_and_json_flags =
   fun prev ->
     prev |> CommandSpec.ArgSpec.collect collect_connect_and_json |> connect_flags |> json_flags
 
-let server_log_file ~flowconfig_name ~tmp_dir root flowconfig =
-  match FlowConfig.log_file flowconfig with
-  | Some x -> x
-  | None -> Path.make (Server_files_js.log_file ~flowconfig_name ~tmp_dir root)
+let server_log_file ~flowconfig_name ~tmp_dir root =
+  Path.make (Server_files_js.log_file ~flowconfig_name ~tmp_dir root)
 
 let monitor_log_file ~flowconfig_name ~tmp_dir root =
   Path.make (Server_files_js.monitor_log_file ~flowconfig_name ~tmp_dir root)
@@ -1320,7 +1318,7 @@ let make_options
   in
   let strict_mode = FlowConfig.strict_mode flowconfig in
   let opt_temp_dir = Path.to_string temp_dir in
-  let opt_log_file = server_log_file ~flowconfig_name ~tmp_dir:opt_temp_dir root flowconfig in
+  let opt_log_file = server_log_file ~flowconfig_name ~tmp_dir:opt_temp_dir root in
   {
     Options.opt_flowconfig_name = flowconfig_name;
     opt_lazy_mode;
@@ -1475,7 +1473,6 @@ let make_options
 let make_env flowconfig flowconfig_name connect_flags root =
   let normalize dir = Path.(dir |> make |> to_string) in
   let tmp_dir = get_temp_dir connect_flags.temp_dir flowconfig |> normalize in
-  let log_file = Path.to_string (server_log_file ~flowconfig_name ~tmp_dir root flowconfig) in
   let retries = connect_flags.retries in
   let expiry =
     match connect_flags.timeout with
@@ -1508,7 +1505,6 @@ let make_env flowconfig flowconfig_name connect_flags root =
     tmp_dir;
     shm_hash_table_pow = connect_flags.shm_flags.shm_hash_table_pow;
     shm_log_level = connect_flags.shm_flags.shm_log_level;
-    log_file;
     ignore_version = connect_flags.ignore_version;
     emoji = Base.Option.value (FlowConfig.emoji flowconfig) ~default:false;
     quiet = connect_flags.quiet;

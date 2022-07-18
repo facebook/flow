@@ -17,7 +17,6 @@ type env = {
   tmp_dir: string;
   shm_hash_table_pow: int option;
   shm_log_level: int option;
-  log_file: string;
   ignore_version: bool;
   emoji: bool;
   quiet: bool;
