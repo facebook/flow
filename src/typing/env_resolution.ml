@@ -26,6 +26,32 @@ module Make (Env : Env_sig.S) (Statement : Statement_sig.S with module Env := En
   module Type_annotation = Statement.Anno
   module Abnormal = Statement.Abnormal
 
+  module TvarResolver = struct
+    let resolver =
+      object (this)
+        inherit [unit] Type_visitor.t
+
+        method! tvar cx pole () r id =
+          let module C = Type.Constraint in
+          let (root_id, root) = Context.find_root cx id in
+          match root.C.constraints with
+          | C.FullyResolved _ -> ()
+          | _ ->
+            let t =
+              let no_lowers _ r = EmptyT.make r (bogus_trust ()) in
+              Flow_js_utils.merge_tvar ~no_lowers cx r root_id
+            in
+            let root = C.Root { root with C.constraints = C.FullyResolved (unknown_use, lazy t) } in
+            Context.add_tvar cx root_id root;
+            this#type_ cx pole () t
+      end
+
+    let resolve cx t =
+      match Context.env_mode cx with
+      | Options.(SSAEnv Enforced) -> resolver#type_ cx Polarity.Positive () t
+      | _ -> ()
+  end
+
   (* Hints are not being used to power type checking currently. Instead, we only use their existence
      to determine whether we should emit missing-local-annot errors. The check will already be done
      in statement.ml, so it's safe to always pass down the hint to avoid spurious
@@ -639,7 +665,8 @@ module Make (Env : Env_sig.S) (Statement : Statement_sig.S with module Env := En
             (Debug_js.dump_t cx t);
         ]
         );
-    New_env.New_env.resolve_env_entry ~use_op ~resolved ~update_reason cx t def_kind id_loc
+    New_env.New_env.resolve_env_entry ~use_op ~resolved ~update_reason cx t def_kind id_loc;
+    t
 
   let resolve_component cx graph component =
     let open Name_def_ordering in
@@ -651,11 +678,17 @@ module Make (Env : Env_sig.S) (Statement : Statement_sig.S with module Env := En
           ~f:(fun () -> resolve cx (kind, loc) (EnvMap.find (kind, loc) graph))
             (* When there is an unhandled exception, it means that the initialization of the env slot
                won't be completed and will never be written in the new-env, so it's OK to do nothing. *)
-          ~on_abnormal_exn:(fun _ -> ())
+          ~on_abnormal_exn:(fun _ -> AnyT.at Untyped loc)
           ()
     in
-    match component with
-    | Singleton elt -> resolve_element elt
-    | ResolvableSCC elts -> Nel.iter (fun elt -> resolve_element elt) elts
-    | IllegalSCC elts -> Nel.iter (fun (elt, _, _) -> resolve_element elt) elts
+    Debug_js.Verbose.print_if_verbose_lazy cx (lazy ["Resolving component"]);
+    let () =
+      match component with
+      | Singleton elt -> resolve_element elt |> TvarResolver.resolve cx
+      | ResolvableSCC elts ->
+        Nel.map (fun elt -> resolve_element elt) elts |> Nel.iter (TvarResolver.resolve cx)
+      | IllegalSCC elts ->
+        Nel.map (fun (elt, _, _) -> resolve_element elt) elts |> Nel.iter (TvarResolver.resolve cx)
+    in
+    Debug_js.Verbose.print_if_verbose_lazy cx (lazy ["Finished resolving component"])
 end

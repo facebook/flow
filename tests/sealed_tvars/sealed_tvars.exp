@@ -1,0 +1,25 @@
+Error -------------------------------------------------------------------------------------------- error_examples.js:4:7
+
+`C` [1] is incompatible with class `C` [1]. [incompatible-type]
+
+   4| class C { }
+            ^ [1]
+
+
+Error ------------------------------------------------------------------------------------------- error_examples.js:7:28
+
+Cannot assign function to `x` because `x` [1] is incompatible with number [2] in the first parameter.
+[incompatible-type]
+
+   error_examples.js:7:28
+   7| var x: number => number = (x) => x;
+                                 ^ [1]
+
+References:
+   error_examples.js:7:8
+   7| var x: number => number = (x) => x;
+             ^^^^^^ [2]
+
+
+
+Found 2 errors
