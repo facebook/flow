@@ -500,6 +500,8 @@ and internal_error =
   | MissingEnvRead of ALoc.t
   | MissingEnvWrite of ALoc.t
   | UnconstrainedTvar
+  | ReadOfUnreachedTvar of Env_api.def_loc_type
+  | ReadOfUnresolvedTvar of Env_api.def_loc_type
 
 and 'loc unsupported_syntax =
   | AnnotationInsideDestructuring
@@ -1536,6 +1538,10 @@ let enum_name_of_reason reason =
 let string_of_internal_error = function
   | AbnormalControlFlow -> "abnormal control flow"
   | UnconstrainedTvar -> "unconstrained tvar during tvar resolution"
+  | ReadOfUnreachedTvar k ->
+    spf "read of %s entry which has not been prepared for typechecking" (Env_api.show_def_loc_type k)
+  | ReadOfUnresolvedTvar k ->
+    spf "read of %s entry from previous component is not FullyResolved" (Env_api.show_def_loc_type k)
   | MethodNotAFunction -> "expected function type"
   | OptionalMethod -> "optional methods are not supported"
   | PredFunWithoutParamNames -> "FunT -> FunT no params"

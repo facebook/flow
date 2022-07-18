@@ -13,6 +13,7 @@ open Loc_collections
 open Utils_js
 module Ast = Flow_ast
 module EnvMap = Env_api.EnvMap
+module EnvSet = Env_api.EnvSet
 
 module type S = sig
   val resolve_component :
@@ -163,13 +164,17 @@ module Make (Env : Env_sig.S) (Statement : Statement_sig.S with module Env := En
             | ValueHint exp -> expression cx ~hint:dummy_hint exp
             | ProvidersHint (loc, []) ->
               let env = Context.environment cx in
+              New_env.New_env.check_readable cx Env_api.OrdinaryNameLoc loc;
               Base.Option.value_exn (Loc_env.find_ordinary_write env loc)
             | ProvidersHint (l1, l2 :: rest) ->
               let env = Context.environment cx in
+              New_env.New_env.check_readable cx Env_api.OrdinaryNameLoc l1;
+              New_env.New_env.check_readable cx Env_api.OrdinaryNameLoc l2;
               let t1 = Base.Option.value_exn (Loc_env.find_ordinary_write env l1) in
               let t2 = Base.Option.value_exn (Loc_env.find_ordinary_write env l2) in
               let ts =
                 Base.List.map rest ~f:(fun loc ->
+                    New_env.New_env.check_readable cx Env_api.OrdinaryNameLoc loc;
                     Base.Option.value_exn (Loc_env.find_ordinary_write env loc)
                 )
               in
@@ -510,6 +515,7 @@ module Make (Env : Env_sig.S) (Statement : Statement_sig.S with module Env := En
 
   let resolve_this_type_param cx class_loc reason class_tparam_loc tparams_locs =
     let ({ Loc_env.tparams; _ } as env) = Context.environment cx in
+    New_env.New_env.check_readable cx Env_api.OrdinaryNameLoc class_loc;
     let class_t = Base.Option.value_exn (Loc_env.find_ordinary_write env class_loc) in
     let (this_param, this_t) =
       let class_tparams =
@@ -673,6 +679,25 @@ module Make (Env : Env_sig.S) (Statement : Statement_sig.S with module Env := En
     New_env.New_env.resolve_env_entry ~use_op ~resolved ~update_reason cx t def_kind id_loc;
     t
 
+  let entries_of_component graph component =
+    let open Name_def_ordering in
+    let entries_of_def acc element =
+      let (kind, loc) =
+        match element with
+        | Name_def_ordering.Normal kl
+        | Resolvable kl
+        | Illegal { loc = kl; _ } ->
+          kl
+      in
+      match EnvMap.find (kind, loc) graph with
+      | _ -> EnvSet.add (kind, loc) acc
+    in
+    match component with
+    | Singleton elt -> entries_of_def EnvSet.empty elt
+    | ResolvableSCC elts -> Nel.fold_left entries_of_def EnvSet.empty elts
+    | IllegalSCC elts ->
+      Nel.fold_left (fun acc (elt, _, _) -> entries_of_def acc elt) EnvSet.empty elts
+
   let resolve_component cx graph component =
     let open Name_def_ordering in
     let resolve_element = function
@@ -686,7 +711,19 @@ module Make (Env : Env_sig.S) (Statement : Statement_sig.S with module Env := En
           ~on_abnormal_exn:(fun _ -> AnyT.at Untyped loc)
           ()
     in
-    Debug_js.Verbose.print_if_verbose_lazy cx (lazy ["Resolving component"]);
+    Debug_js.Verbose.print_if_verbose_lazy
+      cx
+      (lazy [Utils_js.spf "Resolving component %s" (string_of_component component)]);
+    begin
+      match Context.env_mode cx with
+      | Options.(SSAEnv Enforced) ->
+        let entries = entries_of_component graph component in
+        let ({ Loc_env.readable; _ } as env) = Context.environment cx in
+        Context.set_environment
+          cx
+          { env with Loc_env.readable = EnvSet.union entries readable; under_resolution = entries }
+      | _ -> ()
+    end;
     let () =
       match component with
       | Singleton elt -> resolve_element elt |> TvarResolver.resolve cx

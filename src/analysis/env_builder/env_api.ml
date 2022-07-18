@@ -42,6 +42,8 @@ module type S = sig
     val update_ordinary : L.t -> ('a option -> 'a option) -> 'a t -> 'a t
   end
 
+  module EnvSet : Flow_set.S with type elt = EnvKey.t
+
   type new_env_literal_check =
     | SingletonNum of ALoc.t * bool * float * string
     | SingletonBool of ALoc.t * bool
@@ -243,6 +245,8 @@ module Make
 
     let update_ordinary l = update (OrdinaryNameLoc, l)
   end
+
+  module EnvSet = Flow_set.Make (EnvKey)
 
   type read_loc = L.t
 

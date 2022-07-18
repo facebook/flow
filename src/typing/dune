@@ -63,6 +63,7 @@
   (modules (:standard \ changeset key key_map trust type typeUtil scope source_or_generated_id generic trust_constraint))
   (libraries
     flow_env_builder
+    flow_name_resolver
     flow_file_sig
     flow_common
     flow_common_errors

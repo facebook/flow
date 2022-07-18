@@ -388,10 +388,11 @@ let detect_matching_props_violations cx =
     List.iter
       (fun (prop_name, other_loc, obj_loc) ->
         let env = Context.environment cx in
+        New_env.New_env.check_readable cx Env_api.ExpressionLoc other_loc;
         let other_t =
           Base.Option.value_exn (Loc_env.find_write env Env_api.ExpressionLoc other_loc)
         in
-        let obj_t = New_env.New_env.provider_type_for_def_loc env obj_loc in
+        let obj_t = New_env.New_env.provider_type_for_def_loc cx env obj_loc in
         step (TypeUtil.reason_of_t other_t, prop_name, other_t, obj_t))
       matching_props
   | _ ->
@@ -421,7 +422,7 @@ let detect_literal_subtypes =
           let open Type in
           let env = Context.environment cx in
           let u =
-            UseT (Op (Internal Refinement), New_env.New_env.provider_type_for_def_loc env loc)
+            UseT (Op (Internal Refinement), New_env.New_env.provider_type_for_def_loc cx env loc)
           in
           let l =
             match check with

@@ -1166,6 +1166,8 @@ let dump_error_message =
   let dump_internal_error = function
     | AbnormalControlFlow -> "AbnormalControlFlow"
     | UnconstrainedTvar -> "UnconstrainedTvar"
+    | ReadOfUnreachedTvar _ -> "ReadOfUnreachedTvar"
+    | ReadOfUnresolvedTvar _ -> "ReadOfUnresolvedTvar"
     | MethodNotAFunction -> "MethodNotAFunction"
     | OptionalMethod -> "OptionalMethod"
     | PredFunWithoutParamNames -> "PredFunWithoutParamNames"

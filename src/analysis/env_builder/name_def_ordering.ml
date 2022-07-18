@@ -11,7 +11,7 @@ open Loc_collections
 open Name_def
 open Dependency_sigs
 module EnvMap = Env_api.EnvMap
-module EnvSet = Flow_set.Make (Env_api.EnvKey)
+module EnvSet = Env_api.EnvSet
 
 module Tarjan =
   Tarjan.Make
@@ -36,6 +36,27 @@ type result =
   | Singleton of element
   | ResolvableSCC of element Nel.t
   | IllegalSCC of (element * ALoc.t virtual_reason * ALoc.t Nel.t) Nel.t
+
+let string_of_element = function
+  | Normal (k, l) -> Utils_js.spf "[%s (%s)]" (ALoc.debug_to_string l) (Env_api.show_def_loc_type k)
+  | Resolvable (k, l) ->
+    Utils_js.spf "[recursive %s (%s)]" (ALoc.debug_to_string l) (Env_api.show_def_loc_type k)
+  | Illegal { loc = (k, l); _ } ->
+    Utils_js.spf "[illegal %s (%s)]" (ALoc.debug_to_string l) (Env_api.show_def_loc_type k)
+
+let string_of_component = function
+  | Singleton elt -> string_of_element elt
+  | ResolvableSCC elts ->
+    Utils_js.spf
+      "(recursive cycle) %s"
+      (Nel.to_list elts |> Base.List.map ~f:string_of_element |> String.concat ", ")
+  | IllegalSCC elts ->
+    Utils_js.spf
+      "(illegal cycle) %s"
+      (Nel.to_list elts
+      |> Base.List.map ~f:(fun (elt, _, _) -> string_of_element elt)
+      |> String.concat ", "
+      )
 
 module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) = struct
   module FindDependencies : sig

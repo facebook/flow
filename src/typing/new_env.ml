@@ -14,6 +14,8 @@ module EnvMap = Env_api.EnvMap
 module type S = sig
   include Env_sig.S
 
+  val check_readable : Context.t -> Env_api.def_loc_type -> ALoc.t -> unit
+
   val resolve_env_entry :
     use_op:use_op ->
     resolved:bool ->
@@ -178,8 +180,29 @@ module New_env = struct
   (* Helpers **************)
   (************************)
 
+  let check_readable cx kind loc =
+    match Context.env_mode cx with
+    | Options.(SSAEnv Enforced) ->
+      let ({ Loc_env.under_resolution; _ } as env) = Context.environment cx in
+      begin
+        match Loc_env.find_write env kind loc with
+        | None -> (* defer to logic elsewhere for error *) ()
+        | Some (OpenT (_, id)) ->
+          if not (Loc_env.is_readable env kind loc) then
+            Flow_js_utils.add_output cx Error_message.(EInternal (loc, ReadOfUnreachedTvar kind))
+          else if not (Env_api.EnvSet.mem (kind, loc) under_resolution) then begin
+            match Context.find_graph cx id with
+            | Type.Constraint.FullyResolved _ -> ()
+            | _ ->
+              Flow_js_utils.add_output cx Error_message.(EInternal (loc, ReadOfUnresolvedTvar kind))
+          end
+        | Some _ -> assert_false "Expect only OpenTs in env"
+      end
+    | _ -> ()
+
   let record_expression_type_if_needed cx kind loc t =
     let env = Context.environment cx in
+    check_readable cx kind loc;
     match (Loc_env.find_write env kind loc, Context.env_mode cx) with
     | (_, Options.(SSAEnv (Reordered | Enforced)))
     (* Fully resolved env doesn't need to write here *)
@@ -223,11 +246,12 @@ module New_env = struct
       predicate
     | _ -> false
 
-  let provider_type_for_def_loc ?(intersect = false) env def_loc =
+  let provider_type_for_def_loc ?(intersect = false) cx env def_loc =
     let { Loc_env.var_info; _ } = env in
     let providers =
       find_providers var_info def_loc
       |> Base.List.filter_map ~f:(fun loc ->
+             check_readable cx Env_api.OrdinaryNameLoc loc;
              match Loc_env.find_ordinary_write env loc with
              | Some w -> Some w
              | None ->
@@ -288,6 +312,7 @@ module New_env = struct
           ( lazy
             [spf "reading from location %s (in instanceof refinement)" (Reason.string_of_aloc loc)]
             );
+        check_readable cx Env_api.ExpressionLoc loc;
         let t = t_option_value_exn cx loc (Loc_env.find_write env Env_api.ExpressionLoc loc) in
         Flow_js.flow cx (t, AssertInstanceofRHST reason);
         LeftP (InstanceofTest, t)
@@ -308,6 +333,7 @@ module New_env = struct
           ( lazy
             [spf "reading from location %s (in sentinel refinement)" (Reason.string_of_aloc loc)]
             );
+        check_readable cx Env_api.ExpressionLoc loc;
         let other_t =
           t_option_value_exn cx loc (Loc_env.find_write env Env_api.ExpressionLoc loc)
         in
@@ -346,8 +372,9 @@ module New_env = struct
                | (Env_api.Number reason, _) ->
                  Type.(NumT.make reason |> with_trust Trust.bogus_trust)
                | (Env_api.DeclaredFunction loc, _) ->
-                 provider_type_for_def_loc ~intersect:true env loc
+                 provider_type_for_def_loc ~intersect:true cx env loc
                | (Env_api.Undeclared (_name, def_loc), (ForType | ForTypeof)) ->
+                 check_readable cx Env_api.OrdinaryNameLoc def_loc;
                  t_option_value_exn cx def_loc (Loc_env.find_ordinary_write env def_loc)
                | (Env_api.Undeclared (name, def_loc), ForValue) ->
                  Flow_js.add_output
@@ -366,6 +393,7 @@ module New_env = struct
                        (Reason.aloc_of_reason def |> Reason.string_of_aloc);
                    ];
                  let loc = Reason.aloc_of_reason def in
+                 check_readable cx Env_api.OrdinaryNameLoc loc;
                  t_option_value_exn cx loc (Loc_env.find_ordinary_write env loc)
                | (Env_api.UndeclaredClass { name; def }, _) ->
                  let def_loc = aloc_of_reason def in
@@ -388,6 +416,7 @@ module New_env = struct
                      ]
                      );
                  let loc = Reason.aloc_of_reason reason in
+                 check_readable cx Env_api.OrdinaryNameLoc loc;
                  t_option_value_exn cx loc (Loc_env.find_ordinary_write env loc)
                | (Env_api.With_ALoc.IllegalWrite reason, _) ->
                  Debug_js.Verbose.print_if_verbose_lazy
@@ -417,8 +446,9 @@ module New_env = struct
                        (Reason.aloc_of_reason reason |> Reason.string_of_aloc);
                    ];
                  Base.Option.value_exn
-                   (Reason.aloc_of_reason reason
-                   |> Loc_env.find_write env Env_api.FunctionOrGlobalThisLoc
+                   ( Reason.aloc_of_reason reason |> fun loc ->
+                     check_readable cx Env_api.FunctionOrGlobalThisLoc loc;
+                     Loc_env.find_write env Env_api.FunctionOrGlobalThisLoc loc
                    )
                | (Env_api.With_ALoc.ClassInstanceThis reason, _) ->
                  Debug_js.Verbose.print_if_verbose
@@ -430,8 +460,9 @@ module New_env = struct
                        (Reason.aloc_of_reason reason |> Reason.string_of_aloc);
                    ];
                  Base.Option.value_exn
-                   (Reason.aloc_of_reason reason
-                   |> Loc_env.find_write env Env_api.ClassInstanceThisLoc
+                   ( Reason.aloc_of_reason reason |> fun loc ->
+                     check_readable cx Env_api.ClassInstanceThisLoc loc;
+                     Loc_env.find_write env Env_api.ClassInstanceThisLoc loc
                    )
                | (Env_api.With_ALoc.ClassStaticThis reason, _) ->
                  Debug_js.Verbose.print_if_verbose
@@ -443,8 +474,9 @@ module New_env = struct
                        (Reason.aloc_of_reason reason |> Reason.string_of_aloc);
                    ];
                  Base.Option.value_exn
-                   (Reason.aloc_of_reason reason
-                   |> Loc_env.find_write env Env_api.ClassStaticThisLoc
+                   ( Reason.aloc_of_reason reason |> fun loc ->
+                     check_readable cx Env_api.ClassStaticThisLoc loc;
+                     Loc_env.find_write env Env_api.ClassStaticThisLoc loc
                    )
                | (Env_api.With_ALoc.ClassInstanceSuper reason, _) ->
                  Debug_js.Verbose.print_if_verbose
@@ -456,8 +488,9 @@ module New_env = struct
                        (Reason.aloc_of_reason reason |> Reason.string_of_aloc);
                    ];
                  Base.Option.value_exn
-                   (Reason.aloc_of_reason reason
-                   |> Loc_env.find_write env Env_api.ClassInstanceSuperLoc
+                   ( Reason.aloc_of_reason reason |> fun loc ->
+                     check_readable cx Env_api.ClassInstanceSuperLoc loc;
+                     Loc_env.find_write env Env_api.ClassInstanceSuperLoc loc
                    )
                | (Env_api.With_ALoc.ClassStaticSuper reason, _) ->
                  Debug_js.Verbose.print_if_verbose
@@ -469,17 +502,20 @@ module New_env = struct
                        (Reason.aloc_of_reason reason |> Reason.string_of_aloc);
                    ];
                  Base.Option.value_exn
-                   (Reason.aloc_of_reason reason
-                   |> Loc_env.find_write env Env_api.ClassStaticSuperLoc
+                   ( Reason.aloc_of_reason reason |> fun loc ->
+                     check_readable cx Env_api.ClassStaticSuperLoc loc;
+                     Loc_env.find_write env Env_api.ClassStaticSuperLoc loc
                    )
                | (Env_api.With_ALoc.Exports, _) ->
                  let file_loc = Loc.{ none with source = Some (Context.file cx) } |> ALoc.of_loc in
+                 check_readable cx Env_api.OrdinaryNameLoc file_loc;
                  t_option_value_exn cx file_loc (Loc_env.find_ordinary_write env file_loc)
                | (Env_api.With_ALoc.ModuleScoped _, _) -> Type.(AnyT.at AnnotatedAny loc)
                | (Env_api.With_ALoc.Unreachable loc, _) ->
                  let reason = mk_reason (RCustom "unreachable value") loc in
                  EmptyT.make reason (Trust.bogus_trust ())
                | (Env_api.With_ALoc.Projection loc, _) ->
+                 check_readable cx Env_api.OrdinaryNameLoc loc;
                  t_option_value_exn cx loc (Loc_env.find_ordinary_write env loc))
              states
           |> phi cx reason
@@ -614,18 +650,17 @@ module New_env = struct
     | (InternalName _, _) -> Old_env.get_var_declared_type ~lookup_mode cx name loc
     | ((OrdinaryName _ | InternalModuleName _), ForType) ->
       let env = Context.environment cx in
-      begin
-        match Loc_env.find_ordinary_write env loc with
-        | Some t -> t
-        | None ->
-          Flow_js_utils.add_output
-            cx
-            (Error_message.EInternal (loc, Error_message.MissingEnvWrite loc));
-          Type.(AnyT.at (AnyError None) loc)
-      end
+      check_readable cx Env_api.OrdinaryNameLoc loc;
+      (match Loc_env.find_ordinary_write env loc with
+      | Some t -> t
+      | None ->
+        Flow_js_utils.add_output
+          cx
+          (Error_message.EInternal (loc, Error_message.MissingEnvWrite loc));
+        Type.(AnyT.at (AnyError None) loc))
     | ((OrdinaryName _ | InternalModuleName _), _) ->
       let env = Context.environment cx in
-      provider_type_for_def_loc env loc
+      provider_type_for_def_loc cx env loc
 
   let constraining_type ~default cx name loc =
     match name with
@@ -638,7 +673,10 @@ module New_env = struct
       | _ ->
         let providers =
           find_providers var_info loc
-          |> Base.List.map ~f:(Loc_env.find_ordinary_write env)
+          |> Base.List.map ~f:(fun loc ->
+                 check_readable cx Env_api.OrdinaryNameLoc loc;
+                 Loc_env.find_ordinary_write env loc
+             )
           |> Base.Option.all
         in
         (match providers with
@@ -656,6 +694,7 @@ module New_env = struct
   let set_expr cx _key loc ~refined ~original:_ =
     let env = Context.environment cx in
     Debug_js.Verbose.print_if_verbose cx [spf "set expr at location %s" (Reason.string_of_aloc loc)];
+    check_readable cx Env_api.OrdinaryNameLoc loc;
     match (Loc_env.find_ordinary_write env loc, Context.env_mode cx) with
     | (_, Options.(SSAEnv (Reordered | Enforced)))
     (* Fully resolved env doesn't need to write here *)
@@ -674,6 +713,7 @@ module New_env = struct
         [
           spf "writing to %s %s" (Env_api.show_def_loc_type def_loc_type) (Reason.string_of_aloc loc);
         ];
+      check_readable cx def_loc_type loc;
       match Loc_env.find_write env def_loc_type loc with
       | None ->
         (* If we don't see a spot for this write, it's because it's never read from. *)
@@ -708,7 +748,7 @@ module New_env = struct
         )
     | _ ->
       if not (is_provider cx loc) then
-        let general = provider_type_for_def_loc env loc in
+        let general = provider_type_for_def_loc cx env loc in
         if is_def_loc_annotated var_info loc then
           Flow_js.flow cx (t, UseT (use_op, general))
         else
@@ -777,6 +817,7 @@ module New_env = struct
 
   let subtype_entry cx ~use_op t loc =
     let env = Context.environment cx in
+    check_readable cx Env_api.OrdinaryNameLoc loc;
     match Loc_env.find_ordinary_write env loc with
     | None ->
       (* If we don't see a spot for this write it is because the annotated
@@ -990,6 +1031,7 @@ module New_env = struct
             let ts =
               ALocSet.elements arr_providers
               |> Base.List.map ~f:(fun loc ->
+                     check_readable cx Env_api.ArrayProviderLoc loc;
                      t_option_value_exn cx loc (Loc_env.find_write env Env_api.ArrayProviderLoc loc)
                  )
             in
@@ -1038,6 +1080,7 @@ module New_env = struct
     in
     let initialize_this () =
       let t = ObjProtoT (mk_reason (RCustom "global object") ALoc.none) in
+      check_readable cx Env_api.FunctionOrGlobalThisLoc ALoc.none;
       let w =
         Base.Option.value_exn (Loc_env.find_write env Env_api.FunctionOrGlobalThisLoc ALoc.none)
       in
@@ -1118,5 +1161,6 @@ module New_env = struct
 
   let init_class_self_type cx loc _reason =
     let env = Context.environment cx in
+    check_readable cx Env_api.OrdinaryNameLoc loc;
     Base.Option.value_exn (Loc_env.find_ordinary_write env loc)
 end

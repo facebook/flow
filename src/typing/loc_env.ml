@@ -13,6 +13,7 @@
 
 open Loc_collections
 module EnvMap = Env_api.EnvMap
+module EnvSet = Env_api.EnvSet
 
 type t = {
   types: Type.t EnvMap.t;
@@ -22,6 +23,8 @@ type t = {
   return_hint: Type.t Hint_api.hint;
   scope_kind: Scope.var_scope_kind;
   resolved: ALocSet.t;
+  readable: EnvSet.t;
+  under_resolution: EnvSet.t;
   var_info: Env_api.env_info;
 }
 
@@ -48,6 +51,8 @@ let update_reason ({ types; _ } as info) def_loc_kind loc reason =
   in
   { info with types }
 
+let is_readable { readable; _ } def_loc_kind loc = EnvSet.mem (def_loc_kind, loc) readable
+
 let find_write { types; _ } def_loc_kind loc = EnvMap.find_opt (def_loc_kind, loc) types
 
 let find_ordinary_write env loc = find_write env Env_api.OrdinaryNameLoc loc
@@ -62,6 +67,8 @@ let empty scope_kind =
     class_bindings = ALocMap.empty;
     class_stack = [];
     scope_kind;
+    readable = EnvSet.empty;
+    under_resolution = EnvSet.empty;
   }
 
 let with_info scope_kind var_info =

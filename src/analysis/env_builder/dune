@@ -1,8 +1,19 @@
 (library
  (name flow_env_builder)
  (wrapped false)
+ (modules (:standard \ dependency_sigs name_def_ordering name_resolver))
+ (libraries
+    flow_analysis)
+ (preprocess
+  (pps ppx_deriving.std)))
+
+(library
+ (name flow_name_resolver)
+ (wrapped false)
+ (modules dependency_sigs name_def_ordering name_resolver)
  (libraries
     flow_analysis
+    flow_env_builder
     flow_typing_type
     flow_typing_errors)
  (preprocess
