@@ -61,7 +61,7 @@ let merge_trust_var constr =
 
 class context_optimizer ~no_lowers =
   object (self)
-    inherit [Polarity.t] Type_mapper.t_with_uses as super
+    inherit [Polarity.t] Type_mapper.t as super
 
     val mutable reduced_graph : Type.Constraint.node IMap.t = IMap.empty
 
@@ -256,25 +256,6 @@ class context_optimizer ~no_lowers =
             ~find_props:(Context.find_props cx);
         super#type_ cx pole t
       | _ -> super#type_ cx pole t
-
-    method! use_type cx pole use =
-      match use with
-      | UseT (u, t) ->
-        let t' = self#type_ cx Polarity.Neutral t in
-        if t' == t then
-          use
-        else
-          UseT (u, t')
-      | _ -> super#use_type cx pole use
-
-    method! choice_use_tool =
-      (* Any choice kit constraints should be fully
-       * discharged by this point. This preserves a key invariant, that type
-       * graphs are local to a single merge job. In other words, we will not see
-       * a FullyResolveType constraint that corresponds to a tvar from another
-       * context. This makes it possible to clear the type graph before storing
-       * in the heap. *)
-      Utils_js.assert_false "choice kit uses should not appear in signatures"
 
     method get_reduced_graph = reduced_graph
 

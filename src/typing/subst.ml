@@ -98,7 +98,7 @@ let avoid_capture map name =
 
 let substituter =
   object (self)
-    inherit [replacement Subst_name.Map.t * bool * use_op option] Type_mapper.t_with_uses as super
+    inherit [replacement Subst_name.Map.t * bool * use_op option] Type_mapper.t as super
 
     val mutable change_id = false
 
