@@ -9,7 +9,9 @@ module Ast = Flow_ast
 module Codemod_empty_annotator = Codemod_annotator.Make (Insert_type_utils.UnitStats)
 module Acc = Insert_type_utils.Acc (Insert_type_utils.UnitStats)
 
-let mapper ~preserve_literals ~max_type_size ~default_any (cctx : Codemod_context.Typed.t) =
+let mapper
+    ~preserve_literals ~generalize_maybe ~max_type_size ~default_any (cctx : Codemod_context.Typed.t)
+    =
   let lint_severities = Codemod_context.Typed.lint_severities cctx in
   let flowfixme_ast = Codemod_context.Typed.flowfixme_ast ~lint_severities cctx in
   object (this)
@@ -17,11 +19,11 @@ let mapper ~preserve_literals ~max_type_size ~default_any (cctx : Codemod_contex
       Codemod_empty_annotator.mapper
         cctx
         ~default_any
-        ~generalize_maybe:false
+        ~generalize_maybe
         ~lint_severities
         ~max_type_size
         ~preserve_literals
-        ~merge_arrays:false
+        ~merge_arrays:true
         () as super
 
     method private post_run () = ()
@@ -36,10 +38,10 @@ let mapper ~preserve_literals ~max_type_size ~default_any (cctx : Codemod_contex
       let open Ast.Statement.VariableDeclaration.Declarator in
       let (loc, { id; init }) = decl in
       (* We are matching:
-       * `const [x, y] = useState({});`
+       * `const [x, y] = useState(<>);`
        * (or `React.useState` instead of `useState`)
        * and producing:
-       * `const [x, y] = useState<T>({});`
+       * `const [x, y] = useState<T>(<>);`
        * where `T` is the inferred type of `x`
        *)
       match (id, init) with
@@ -65,7 +67,7 @@ let mapper ~preserve_literals ~max_type_size ~default_any (cctx : Codemod_contex
           Some
             ( call_loc,
               Call
-                (* Call to `useState({})` or `React.useState({})` *)
+                (* Call to `useState` or `React.useState` *)
                 {
                   Call.callee =
                     ( (_, Identifier (_, { Ast.Identifier.name = "useState"; _ }))
@@ -83,7 +85,18 @@ let mapper ~preserve_literals ~max_type_size ~default_any (cctx : Codemod_contex
                   arguments =
                     ( _,
                       {
-                        ArgList.arguments = [Expression (_, Object { Object.properties = []; _ })];
+                        ArgList.arguments =
+                          [
+                            Expression
+                              (* `null` *)
+                              ( (_, Literal { Ast.Literal.value = Ast.Literal.Null; _ })
+                              (* `undefined` *)
+                              | (_, Identifier (_, { Ast.Identifier.name = "undefined"; _ }))
+                              (* `{}` *)
+                              | (_, Object { Object.properties = []; _ })
+                              (* `[]` *)
+                              | (_, Array { Array.elements = []; _ }) );
+                          ];
                         _;
                       }
                     ) as arguments;
@@ -95,8 +108,12 @@ let mapper ~preserve_literals ~max_type_size ~default_any (cctx : Codemod_contex
           Codemod_annotator.get_validated_ty cctx ~preserve_literals ~max_type_size val_loc
         in
         (match ty_result with
-        (* Don't insert the empty inexact object type `{...}` - this is not useful for our purposes. *)
-        | Ok (Ty.Obj { Ty.obj_kind = Ty.InexactObj; obj_props = []; _ }) ->
+        (* Don't insert the empty inexact object type `{...}`, `Array<any>`, just `void`, or just `null`.
+           They aren't useful for our purposes. *)
+        | Ok
+            ( Ty.Obj { Ty.obj_kind = Ty.InexactObj; obj_props = []; _ }
+            | Ty.Arr { Ty.arr_elt_t = Ty.Any _ | Ty.Bot _; _ }
+            | Ty.Null | Ty.Void ) ->
           super#variable_declarator ~kind decl
         | Ok _ ->
           (match this#get_annot loc ty_result (Ast.Type.Missing call_loc) with
