@@ -20,10 +20,10 @@
 
 *)
 
-(* Abstract data type for notifier context. *)
+(** Abstract data type for notifier context. *)
 type fsenv
 
-(* Abstract data type for a watching thread. *)
+(** Abstract data type for a watching thread. *)
 type watcher_id
 
 module SSet = Flow_set.Make (String)
@@ -35,9 +35,8 @@ type env = {
 }
 
 type event = {
-  path: string;
-  (* The full path for the file/directory that changed *)
-  wpath: string; (* The watched path that triggered this event *)
+  path: string;  (** The full path for the file/directory that changed *)
+  wpath: string;  (** The watched path that triggered this event *)
 }
 
 (** Stubs *)
@@ -104,11 +103,7 @@ let read_events env =
   (* read pop only one char from pipe, in order never to block. *)
   let buf = Bytes.create 1 in
   ignore (Unix.read env.fd buf 0 1 : int);
-
-  (* prefix the root path *)
-  Base.List.map (raw_read_events env.fsenv) ~f:(fun ev ->
-      { ev with path = Filename.concat ev.wpath ev.path }
-  )
+  raw_read_events env.fsenv
 
 let select env ?(read_fdl = []) ?(write_fdl = []) ~timeout callback =
   let callback () = callback (read_events env) in

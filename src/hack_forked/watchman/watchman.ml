@@ -781,7 +781,9 @@ let extract_file_names env json =
      )
   |> List.map ~f:(fun json ->
          let s = Hh_json.get_string_exn json in
-         let abs = Caml.Filename.concat env.watch.watch_root s in
+         (* watchman normalizes all paths to use forward slashes, so concat manually
+            instead of Filename.concat *)
+         let abs = env.watch.watch_root ^ "/" ^ s in
          abs
      )
   |> SSet.of_list
