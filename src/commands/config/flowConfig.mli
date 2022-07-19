@@ -241,8 +241,6 @@ val strict_mode : config -> StrictModeSettings.t
 
 val suppress_types : config -> SSet.t
 
-val temp_dir : config -> string option
-
 val traces : config -> int
 
 val trust_mode : config -> Options.trust_mode

@@ -36,13 +36,9 @@ exception FailedToKillNicely
 let main base_flags temp_dir quiet root () =
   let flowconfig_name = base_flags.Base_flags.flowconfig_name in
   let root = guess_root flowconfig_name root in
-  let config =
-    read_config_or_exit ~enforce_warnings:false (Server_files_js.config_file flowconfig_name root)
-  in
   let root_s = Path.to_string root in
-  let tmp_dir = get_temp_dir temp_dir config in
-  let tmp_dir = Path.to_string (Path.make tmp_dir) in
-  if not quiet then prerr_endlinef "Trying to connect to server for `%s`" (Path.to_string root);
+  let tmp_dir = get_temp_dir temp_dir |> Path.make |> Path.to_string in
+  if not quiet then prerr_endlinef "Trying to connect to server for `%s`" root_s;
   let client_handshake =
     let open SocketHandshake in
     ( {

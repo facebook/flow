@@ -129,7 +129,6 @@ module Opts = struct
     strict_es6_import_export: bool;
     strict_es6_import_export_excludes: string list;
     suppress_types: SSet.t;
-    temp_dir: string option;
     traces: int;
     trust_mode: Options.trust_mode;
     type_asserts: bool;
@@ -261,7 +260,6 @@ module Opts = struct
       strict_es6_import_export = false;
       strict_es6_import_export_excludes = [];
       suppress_types = SSet.empty |> SSet.add "$FlowFixMe";
-      temp_dir = None;
       traces = 0;
       trust_mode = Options.NoTrust;
       type_asserts = false;
@@ -923,7 +921,6 @@ module Opts = struct
       ("sharedmemory.heap_size", uint (fun opts shm_heap_size -> Ok { opts with shm_heap_size }));
       ("sharedmemory.log_level", uint (fun opts shm_log_level -> Ok { opts with shm_log_level }));
       ("suppress_type", suppress_types_parser);
-      ("temp_dir", string (fun opts v -> Ok { opts with temp_dir = Some v }));
       ("traces", uint (fun opts v -> Ok { opts with traces = v }));
       ("trust_mode", trust_mode_parser);
       ("types_first.max_files_checked_per_worker", max_files_checked_per_worker_parser);
@@ -1021,7 +1018,6 @@ end = struct
           pp_opt o "module.system" (module_system options.module_system);
         if options.all <> default_options.all then
           pp_opt o "all" (string_of_bool (Base.Option.value options.all ~default:false));
-        Base.Option.iter options.temp_dir ~f:(pp_opt o "temp_dir");
         if options.include_warnings <> default_options.include_warnings then
           pp_opt o "include_warnings" (string_of_bool options.include_warnings)
       )
@@ -1639,8 +1635,6 @@ let strict_es6_import_export_excludes c = c.options.Opts.strict_es6_import_expor
 let strict_mode c = c.strict_mode
 
 let suppress_types c = c.options.Opts.suppress_types
-
-let temp_dir c = c.options.Opts.temp_dir
 
 let traces c = c.options.Opts.traces
 
