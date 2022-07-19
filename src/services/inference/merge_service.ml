@@ -633,4 +633,20 @@ let mk_check options ~reader () =
           | _ -> (file_loc, CheckJobException exc)
         )
 
-let mk_distributed_check _options ~reader:_ () _ = Ok None
+let mk_distributed_check _options ~reader:_ () _ =
+  let ic =
+    Unix.open_process_in
+      "frecli --use-case Flow --skip-dedup exec command --stream-output -- echo 'success' "
+  in
+  let result =
+    try Some (input_line ic) with
+    | End_of_file -> None
+  in
+  match result with
+  | None -> failwith "Not receive content from stdout"
+  | Some result ->
+    let result = Str.global_replace (Str.regexp "[\r\n\t ]+") "" result in
+    assert (Unix.close_process_in ic = Unix.WEXITED 0);
+    (match result with
+    | "success" -> Ok None
+    | _ -> failwith "the command doesn't have a output 'success'")
