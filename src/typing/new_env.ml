@@ -775,7 +775,7 @@ module New_env = struct
                 )
             | None -> use_op
           in
-          Context.add_constrained_write cx (t, UseT (use_op, general))
+          Context.add_constrained_write cx (t, use_op, general)
 
   let assign_env_value_entry cx ~use_op ?potential_global_name t loc =
     unify_write_entry cx ~use_op t Env_api.OrdinaryNameLoc loc;
@@ -1043,7 +1043,7 @@ module New_env = struct
             let elem_t =
               Tvar.mk_where cx element_reason (fun tvar -> Flow_js.flow_t cx (constrain_t, tvar))
             in
-            Context.add_constrained_write cx (elem_t, UseT (unknown_use, constrain_t));
+            Context.add_constrained_write cx (elem_t, unknown_use, constrain_t);
             (elem_t, None, reason)
           ) else
             (Tvar.mk cx element_reason, Some [], replace_desc_reason REmptyArrayLit reason)

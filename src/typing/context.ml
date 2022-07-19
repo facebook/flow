@@ -176,13 +176,13 @@ type component_t = {
   spread_cache: Spread_cache.t;
   speculation_state: Speculation_state.t;
   (* Post-inference checks *)
-  mutable literal_subtypes: (Type.t * Type.use_t) list;
+  mutable literal_subtypes: (Type.t * Type.t) list;
   mutable new_env_literal_subtypes: (ALoc.t * Env_api.new_env_literal_check) list;
   mutable matching_props: (Reason.reason * string * Type.t * Type.t) list;
   mutable new_env_matching_props: (string * ALoc.t * ALoc.t) list;
   mutable implicit_instantiation_checks: Implicit_instantiation_check.t list;
   mutable inferred_indexers: Type.dicttype list ALocMap.t;
-  mutable constrained_writes: (Type.t * Type.use_t) list;
+  mutable constrained_writes: (Type.t * Type.use_op * Type.t) list;
   mutable global_value_cache: Type.t NameUtils.Map.t;
   mutable env_value_cache: Type.t IMap.t;
   mutable env_type_cache: Type.t IMap.t;

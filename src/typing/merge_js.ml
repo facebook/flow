@@ -400,9 +400,9 @@ let detect_matching_props_violations cx =
     List.iter step matching_props
 
 let detect_literal_subtypes =
+  let open Type in
   let lb_visitor = new resolver_visitor in
   let ub_visitor =
-    let open Type in
     let rec unwrap = function
       | GenericT { bound; _ } -> unwrap bound
       | t -> t
@@ -419,11 +419,8 @@ let detect_literal_subtypes =
       let new_env_checks = Context.new_env_literal_subtypes cx in
       List.iter
         (fun (loc, check) ->
-          let open Type in
           let env = Context.environment cx in
-          let u =
-            UseT (Op (Internal Refinement), New_env.New_env.provider_type_for_def_loc cx env loc)
-          in
+          let u_def = New_env.New_env.provider_type_for_def_loc cx env loc in
           let l =
             match check with
             | Env_api.SingletonNum (lit_loc, sense, num, raw) ->
@@ -437,16 +434,16 @@ let detect_literal_subtypes =
               DefT (reason, bogus_trust (), StrT (Literal (Some sense, Reason.OrdinaryName str)))
           in
           let l = lb_visitor#type_ cx () l in
-          let u = ub_visitor#use_type cx () u in
-          Flow_js.flow cx (l, u))
+          let u_def = ub_visitor#type_ cx () u_def in
+          Flow_js.flow cx (l, UseT (Op (Internal Refinement), u_def)))
         new_env_checks
     | _ ->
       let checks = Context.literal_subtypes cx in
       List.iter
-        (fun (t, u) ->
+        (fun (t, u_def) ->
           let t = lb_visitor#type_ cx () t in
-          let u = ub_visitor#use_type cx () u in
-          Flow_js.flow cx (t, u))
+          let u_def = ub_visitor#type_ cx () u_def in
+          Flow_js.flow cx (t, UseT (Op (Internal Refinement), u_def)))
         checks
 
 let check_constrained_writes init_cx master_cx =
@@ -474,10 +471,11 @@ let check_constrained_writes init_cx master_cx =
     let (cx, checks) =
       create_cx_with_context_optimizer init_cx master_cx ~reducer ~f:(fun () ->
           Base.List.map
-            ~f:(fun (t, u) ->
+            ~f:(fun (t, use_op, u_def) ->
               let open Type in
               let open Constraint in
-              let u = reducer#use_type init_cx Polarity.Neutral u in
+              let u_def = reducer#type_ init_cx Polarity.Neutral u_def in
+              let u = UseT (use_op, u_def) in
               match t with
               | OpenT (_, id) ->
                 let (_, constraints) = Context.find_constraints init_cx id in

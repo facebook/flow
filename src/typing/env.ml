@@ -607,7 +607,7 @@ module Env : Env_sig.S = struct
                       use_op
                     )
                 in
-                Context.add_constrained_write cx (t, UseT (use_op, provider))
+                Context.add_constrained_write cx (t, use_op, provider)
               | None ->
                 (* If there isn't a declaration for the variable, then it's a global, and we don't need to constrain it *)
                 ()
@@ -1811,9 +1811,7 @@ module Env : Env_sig.S = struct
   let refine_with_preds cx loc preds orig_types =
     let check_instanceof_subtypes ~general_type pred t =
       match pred with
-      | LeftP (InstanceofTest, _) ->
-        let u = UseT (Op (Internal Refinement), general_type) in
-        Context.add_literal_subtypes cx (t, u)
+      | LeftP (InstanceofTest, _) -> Context.add_literal_subtypes cx (t, general_type)
       | _ -> ()
     in
     let refine_type orig_type pred refined_type =

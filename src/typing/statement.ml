@@ -7334,18 +7334,15 @@ struct
             | SingletonBoolP (loc, b) ->
               let reason = loc |> mk_reason (RBooleanLit b) in
               let l = DefT (reason, bogus_trust (), BoolT (Some b)) in
-              let u = UseT (Op (Internal Refinement), general_type) in
-              Context.add_literal_subtypes cx (l, u)
+              Context.add_literal_subtypes cx (l, general_type)
             | SingletonStrP (loc, b, str) ->
               let reason = loc |> mk_reason (RStringLit (OrdinaryName str)) in
               let l = DefT (reason, bogus_trust (), StrT (Literal (Some b, OrdinaryName str))) in
-              let u = UseT (Op (Internal Refinement), general_type) in
-              Context.add_literal_subtypes cx (l, u)
+              Context.add_literal_subtypes cx (l, general_type)
             | SingletonNumP (loc, b, ((_, str) as num)) ->
               let reason = loc |> mk_reason (RNumberLit str) in
               let l = DefT (reason, bogus_trust (), NumT (Literal (Some b, num))) in
-              let u = UseT (Op (Internal Refinement), general_type) in
-              Context.add_literal_subtypes cx (l, u)
+              Context.add_literal_subtypes cx (l, general_type)
             | _ -> ())
           | _ -> ());
           key
