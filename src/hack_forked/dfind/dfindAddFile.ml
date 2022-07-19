@@ -15,19 +15,20 @@ open DfindMaybe
 (* helpers *)
 (*****************************************************************************)
 
-(* Gives back a set of all the files in the directory.
- * A directory handle is of type Unix.dir_handle, it is the result of
- * a call to Unix.opendir. Not to be confused with dfind handles.
- * The path argument is useful because we want this function to give us
- * "full" paths. If I am in the directory "/tmp/bla" and I iterate
- * over the elements of the directory, the result I want is:
- * /tmp/bla/file1
- * /tmp/bla/file2
- * As opposed to:
- * file1
- * file2
- *)
+(** Gives back a set of all the files in the directory.
+ 
+  A directory handle is of type Unix.dir_handle, it is the result of
+  a call to Unix.opendir. Not to be confused with dfind handles.
+  The path argument is useful because we want this function to give us
+  "full" paths. If I am in the directory "/tmp/bla" and I iterate
+  over the elements of the directory, the result I want is:
+    /tmp/bla/file1
+    /tmp/bla/file2
+  As opposed to:
+    file1
+    file2
 
+  Note: Paths are separated by forward-slashes even on Windows *)
 let get_files path dir_handle =
   let paths = ref SSet.empty in
   try
@@ -36,7 +37,8 @@ let get_files path dir_handle =
       if file = "." || file = ".." then
         ()
       else
-        let path = Filename.concat path file in
+        (* use forward slashes even on Windows *)
+        let path = path ^ "/" ^ file in
         paths := SSet.add path !paths
     done;
     assert false
