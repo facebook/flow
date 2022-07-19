@@ -28,22 +28,6 @@ assert_ok "$FLOW" stop --temp-dir "$DIR" 2> /dev/null > /dev/null
 rm -rf "$DIR"
 echo
 
-# Test a .flowconfig with temp_dir
-echo ".flowconfig temp_dir:"
-DIR=$(mktemp -d /tmp/flow.XXXXXX)
-TEST_DIR=$(mktemp -d /tmp/flow.XXXXXX)
-printf "[options]\ntemp_dir=%s" "$DIR" > "$TEST_DIR/.flowconfig"
-assert_ok "$FLOW" status "$TEST_DIR" 2> /dev/null > /dev/null
-if [[ "$OSTYPE" == "msys"* ]]; then
-    [ -f "$DIR"/*.sockv2 ]    && echo "  sockv2 file exists"
-else
-    [ -S "$DIR"/*.sockv2 ]    && echo "  sockv2 file exists"
-fi
-assert_ok "$FLOW" stop "$TEST_DIR" 2> /dev/null > /dev/null
-rm -rf "$TEST_DIR"
-rm -rf "$DIR"
-echo
-
 # Test FLOW_TEMP_DIR
 echo "FLOW_TEMP_DIR:"
 DIR=$(mktemp -d /tmp/flow.XXXXXX)

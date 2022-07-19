@@ -1376,11 +1376,8 @@ let do_rage flowconfig_name (state : server_state) : Rage.result =
     let ienv = get_ienv state in
     let items =
       let root = ienv.i_root in
-      let flowconfig = read_flowconfig_from_disk flowconfig_name root in
       let tmp_dir =
-        CommandUtils.get_temp_dir ienv.i_connect_params.temp_dir flowconfig
-        |> Path.make
-        |> Path.to_string
+        CommandUtils.get_temp_dir ienv.i_connect_params.temp_dir |> Path.make |> Path.to_string
       in
       let server_log_file = CommandUtils.server_log_file ~flowconfig_name ~tmp_dir root in
       let monitor_log_file = CommandUtils.monitor_log_file ~flowconfig_name ~tmp_dir root in

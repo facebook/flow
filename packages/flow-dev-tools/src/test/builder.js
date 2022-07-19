@@ -101,10 +101,6 @@ class TestBuilder {
     return join(this.dir, 'test.js');
   }
 
-  normalizeForFlowconfig(path: string): string {
-    return path.split(dir_sep).join('/');
-  }
-
   async log(fmt: string, ...args: Array<mixed>): Promise<void> {
     const {logStream} = this;
     if (logStream != null) {
@@ -153,43 +149,10 @@ class TestBuilder {
       }
     }
 
-    // We need to set the temp_dir option in the config. If there is no config,
-    // that is easy. Otherwise we need to read the config. If temp_dir is
-    // already set, then we default to that. Otherwise, we need to set it.
     if (configBuffer != null) {
-      let config = configBuffer.toString().split('\n');
-      let temp_dir = null;
-      let options_index = null;
-      config.forEach((line, index) => {
-        const match = line.trim().match('^temp_dir=(.*)$');
-        match != null && (temp_dir = match[1]);
-        line.trim() == '[options]' && (options_index = index);
-      });
-
-      if (temp_dir == null) {
-        if (options_index == null) {
-          config.push('[options]');
-          options_index = config.length - 1;
-        }
-        config.splice(
-          options_index + 1,
-          0,
-          'temp_dir=' + this.normalizeForFlowconfig(this.tmpDir),
-        );
-      } else {
-        this.tmpDir = temp_dir;
-      }
-      await writeFile(join(this.dir, '.flowconfig'), config.join('\n'));
+      await writeFile(join(this.dir, '.flowconfig'), configBuffer.toString());
     } else {
-      await exec(
-        format(
-          '%s init --options "temp_dir=%s" %s',
-          this.bin,
-          this.normalizeForFlowconfig(this.tmpDir),
-          this.dir,
-        ),
-        {cwd: __dirname},
-      );
+      await exec(format('%s init %s', this.bin, this.dir), {cwd: __dirname});
     }
     await writeFile(this.getFileName(), '/* @flow */\n');
   }
@@ -275,7 +238,7 @@ class TestBuilder {
 
   async execManualAndLog(
     cmd: string,
-    options?: Object,
+    options?: child_process$execOpts,
   ): Promise<[?Object, string, string]> {
     await this.log(`# ${cmd}...`);
     const [err, stdout_, stderr_] = await execManual(cmd, options);
@@ -305,6 +268,10 @@ class TestBuilder {
     );
     const [err, stdout, stderr] = await this.execManualAndLog(cmd, {
       cwd: this.dir,
+      env: {
+        ...process.env,
+        FLOW_TEMP_DIR: this.tmpDir,
+      },
     });
     const code = err == null ? 0 : err.code;
 
@@ -314,19 +281,13 @@ class TestBuilder {
   async getFlowErrors(retry?: boolean = true): Promise<Object> {
     let cmd;
     if (this.errorCheckCommand === 'check') {
-      cmd = format(
-        '%s check --strip-root --temp-dir %s --json %s',
-        this.bin,
-        this.tmpDir,
-        this.dir,
-      );
+      cmd = format('%s check --strip-root --json %s', this.bin, this.dir);
     } else {
       // No-op if it's already running
       await this.startFlowServer();
       cmd = format(
-        '%s status --no-auto-start --strip-root --temp-dir %s --json %s',
+        '%s status --no-auto-start --strip-root --json %s',
         this.bin,
-        this.tmpDir,
         this.dir,
       );
     }
@@ -334,6 +295,10 @@ class TestBuilder {
     const [err, stdout, stderr] = await this.execManualAndLog(cmd, {
       cwd: __dirname,
       maxBuffer: 1024 * 1024,
+      env: {
+        ...process.env,
+        FLOW_TEMP_DIR: this.tmpDir,
+      },
     });
 
     // 0 - no errors
@@ -356,8 +321,6 @@ class TestBuilder {
       'server',
       '--strip-root',
       '--debug',
-      '--temp-dir',
-      this.tmpDir,
       '--file-watcher',
       'none',
       '--wait-for-recheck',
@@ -373,6 +336,7 @@ class TestBuilder {
       cwd: this.dir,
       env: this.shellMocker.prepareProcessEnv({
         ...process.env,
+        FLOW_TEMP_DIR: this.tmpDir,
         OCAMLRUNPARAM: 'b',
       }),
     });
@@ -440,6 +404,7 @@ class TestBuilder {
       cwd: this.dir,
       env: this.shellMocker.prepareProcessEnv({
         ...process.env,
+        FLOW_TEMP_DIR: this.tmpDir,
         OCAMLRUNPARAM: 'b',
       }),
     });
@@ -962,12 +927,10 @@ class TestBuilder {
     if (this.server && (await isRunning(this.server.pid))) {
       const files_str = files.map(s => `"${s}"`).join(' ');
       const [err, stdout, stderr] = await this.execManualAndLog(
-        format(
-          '%s force-recheck --no-auto-start --temp-dir %s %s',
-          this.bin,
-          this.tmpDir,
-          files_str,
-        ),
+        format('%s force-recheck --no-auto-start %s', this.bin, files_str),
+        {
+          env: {...process.env, FLOW_TEMP_DIR: this.tmpDir},
+        },
       );
 
       // No server running (6) is ok - the file change might have killed the
