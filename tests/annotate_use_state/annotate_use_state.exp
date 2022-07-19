@@ -1,44 +1,71 @@
->>> test.js (#changes: 3)
+>>> test.js (#changes: 7)
 import * as React from 'react';
 import {useState} from 'react';
 
+// Empty object
 {
   const [val, setValue] = useState<{ a: number }>({}); // ANNOTATED
   val.a = 1;
 }
-
 {
   const [val, setValue] = React.useState<{ a: number }>({}); // ANNOTATED
   val.a = 1;
 }
-
 {
   const [val, setValue] = useState<{ a: number }>({}); // ANNOTATED
   const f = (x: {a: number}) => x.a;
   f(val);
 }
-
 {
   const [val, setValue] = useState({}); // NOT ANNOTATED
   const s: string = 'hi';
   val[s] = 1;
 }
-
 {
   const [val, setValue] = useState({}); // NOT ANNOTATED
 }
-
 type T = [string, string => string];
 {
   const [val, setValue]: T = useState({}); // NOT ANNOTATED
+}
+
+// null
+{
+  const [val, setValue] = useState<null | number>(null); // ANNOTATED
+  setValue(1);
+}
+{
+  const [val, setValue] = useState(null); // NOT ANNOTATED
+}
+
+// undefined
+{
+  const [val, setValue] = useState<void | number>(undefined); // ANNOTATED
+  setValue(1);
+}
+{
+  const [val, setValue] = useState(undefined); // NOT ANNOTATED
+}
+
+// Empty array
+{
+  const [val, setValue] = useState<Array<number>>([]); // ANNOTATED
+  setValue([1]);
+}
+{
+  const [val, setValue] = useState<Array<number>>([]); // ANNOTATED
+  val.push(1);
+}
+{
+  const [val, setValue] = useState([]); // NOT ANNOTATED
 }
 
 >>> Launching report...
 
 Stats:
   Files changed:                            1
-  Number of annotations added:              3
-  Total size of annotations:                6
+  Number of annotations added:              7
+  Total size of annotations:               19
 
 Errors:
   Missing annot./normalizer error:          0
@@ -55,6 +82,6 @@ Warnings:
   Skipping arrow function:                  0
   Large type added:                         0
   Location unhandled:                       0
-  Empty NoUpper:                            0
+  Empty NoUpper:                            1
   Empty SomeKnownUpper:                     0
 
