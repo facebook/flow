@@ -68,29 +68,11 @@ module Make (Env : Env_sig.S) (Statement : Statement_sig.S with module Env := En
   *)
   let dummy_hint = Hint_Placeholder
 
-  let mk_type_param cx id_loc tparams_map tparam =
-    let ((_, ({ name; _ } as tparam), t) as info) =
-      Type_annotation.mk_type_param cx tparams_map tparam
-    in
-    let cache = Context.node_cache cx in
-    Node_cache.set_tparam cache info;
-    let ({ Loc_env.tparams; _ } as env) = Context.environment cx in
-    Context.set_environment
-      cx
-      { env with Loc_env.tparams = ALocMap.add id_loc (name, tparam, t) tparams };
-    (name, t)
-
   let mk_tparams_map cx tparams_map =
     let { Loc_env.tparams; _ } = Context.environment cx in
     ALocMap.fold
-      (fun l name subst_map ->
-        let (name, ty) =
-          Base.Option.value_map
-            (ALocMap.find_opt l tparams)
-            ~f:(fun (name, _, ty) -> (name, ty))
-            ~default:
-              (Subst_name.Name name, AnyT.annot (mk_reason (RIdentifier (OrdinaryName name)) l))
-        in
+      (fun l _ subst_map ->
+        let (name, _, ty) = ALocMap.find l tparams in
         Subst_name.Map.add name ty subst_map)
       tparams_map
       Subst_name.Map.empty
@@ -507,49 +489,16 @@ module Make (Env : Env_sig.S) (Statement : Statement_sig.S with module Env := En
       (AnyT.error enum_reason, unknown_use)
     )
 
-  let resolve_type_param cx id_loc tparams_locs tparam =
-    let tparams_map = mk_tparams_map cx tparams_locs in
-    let (_, t) = mk_type_param cx id_loc tparams_map tparam in
+  let resolve_type_param cx id_loc =
+    let { Loc_env.tparams; _ } = Context.environment cx in
+    let (_, _, t) = ALocMap.find id_loc tparams in
     let t = DefT (TypeUtil.reason_of_t t, bogus_trust (), TypeT (TypeParamKind, t)) in
     (t, unknown_use)
 
-  let resolve_this_type_param cx class_loc reason class_tparam_loc tparams_locs =
-    let ({ Loc_env.tparams; _ } as env) = Context.environment cx in
+  let resolve_this_type_param cx class_loc =
+    let env = Context.environment cx in
     New_env.New_env.check_readable cx Env_api.OrdinaryNameLoc class_loc;
     let class_t = Base.Option.value_exn (Loc_env.find_ordinary_write env class_loc) in
-    let (this_param, this_t) =
-      let class_tparams =
-        Base.Option.map class_tparam_loc ~f:(fun tparams_loc ->
-            ( tparams_loc,
-              tparams_locs
-              |> ALocMap.elements
-              |> Base.List.map ~f:(fun (l, name) ->
-                     match ALocMap.find_opt l tparams with
-                     | Some (_, tparam, _) -> tparam
-                     | None ->
-                       {
-                         Type.reason;
-                         name = Subst_name.Name name;
-                         bound =
-                           MixedT.make (mk_reason (RIdentifier (OrdinaryName name)) l)
-                           |> with_trust bogus_trust;
-                         polarity = Polarity.Neutral;
-                         default = None;
-                         is_this = false;
-                       }
-                 )
-              |> Nel.of_list_exn
-            )
-        )
-      in
-      Statement.Class_stmt_sig.mk_this class_t cx reason class_tparams
-    in
-    Context.set_environment
-      cx
-      {
-        env with
-        Loc_env.tparams = ALocMap.add class_loc (Subst_name.Name "this", this_param, this_t) tparams;
-      };
     (* class_t will only be resolved after type checking the entire class. *)
     let resolved = false in
     (class_t, unknown_use, resolved)
@@ -653,10 +602,8 @@ module Make (Env : Env_sig.S) (Statement : Statement_sig.S with module Env := En
       | Interface (loc, inter) -> as_resolved @@ resolve_interface cx loc inter
       | DeclaredClass (loc, class_) -> as_resolved @@ resolve_declare_class cx loc class_
       | Enum (enum_loc, enum) -> as_resolved @@ resolve_enum cx id_loc def_reason enum_loc enum
-      | TypeParam (tparams_locs, param) ->
-        as_resolved @@ resolve_type_param cx id_loc tparams_locs param
-      | ThisTypeParam (tparams_locs, class_tparam_loc) ->
-        resolve_this_type_param cx id_loc def_reason class_tparam_loc tparams_locs
+      | TypeParam (_, _) -> as_resolved @@ resolve_type_param cx id_loc
+      | ThisTypeParam (_, _) -> resolve_this_type_param cx id_loc
       | GeneratorNext gen -> as_resolved @@ resolve_generator_next cx def_reason gen
     in
     let update_reason =
@@ -698,7 +645,86 @@ module Make (Env : Env_sig.S) (Statement : Statement_sig.S with module Env := En
     | IllegalSCC elts ->
       Nel.fold_left (fun acc (elt, _, _) -> entries_of_def acc elt) EnvSet.empty elts
 
+  let init_type_param =
+    let rec init_type_param cx graph def_loc =
+      let (def, _, _, reason) = EnvMap.find_ordinary def_loc graph in
+      let tparam_entry =
+        match def with
+        | TypeParam (tparams_locs, tparam) ->
+          let tparams_map = mk_tparams_map cx graph tparams_locs in
+          let ((_, ({ name; _ } as tparam), t) as info) =
+            Type_annotation.mk_type_param cx tparams_map tparam
+          in
+          let cache = Context.node_cache cx in
+          Node_cache.set_tparam cache info;
+          (name, tparam, t)
+        | ThisTypeParam (tparams_locs, class_tparam_loc) ->
+          let env = Context.environment cx in
+          let class_t = Base.Option.value_exn (Loc_env.find_ordinary_write env def_loc) in
+          let (this_param, this_t) =
+            let class_tparams =
+              Base.Option.map class_tparam_loc ~f:(fun tparams_loc ->
+                  ( tparams_loc,
+                    tparams_locs
+                    |> ALocMap.keys
+                    |> Base.List.map ~f:(fun l ->
+                           let (_, tparam, _) = get_type_param cx graph l in
+                           tparam
+                       )
+                    |> Nel.of_list_exn
+                  )
+              )
+            in
+            Statement.Class_stmt_sig.mk_this class_t cx reason class_tparams
+          in
+          (Subst_name.Name "this", this_param, this_t)
+        | _ ->
+          failwith
+            (Utils_js.spf
+               "tparam_locs contain a non-tparam location: %s"
+               (ALoc.debug_to_string ~include_source:true def_loc)
+            )
+      in
+      let ({ Loc_env.tparams; _ } as env) = Context.environment cx in
+      Context.set_environment
+        cx
+        { env with Loc_env.tparams = ALocMap.add def_loc tparam_entry tparams };
+      tparam_entry
+    and get_type_param cx graph l =
+      let { Loc_env.tparams; _ } = Context.environment cx in
+      match ALocMap.find_opt l tparams with
+      | Some entry -> entry
+      | None -> init_type_param cx graph l
+    and mk_tparams_map cx graph tparams_map =
+      ALocMap.fold
+        (fun l _ subst_map ->
+          let (name, _, ty) = get_type_param cx graph l in
+          Subst_name.Map.add name ty subst_map)
+        tparams_map
+        Subst_name.Map.empty
+    in
+    init_type_param
+
+  let resolve_component_type_params cx graph component =
+    let open Name_def_ordering in
+    let resolve_element = function
+      | Name_def_ordering.Normal key
+      | Resolvable key
+      | Illegal { loc = key; _ } ->
+        (match EnvMap.find key graph with
+        | (TypeParam _, _, _, _)
+        | (ThisTypeParam _, _, _, _) ->
+          let (_kind, loc) = key in
+          ignore @@ init_type_param cx graph loc
+        | _ -> ())
+    in
+    match component with
+    | Singleton elt -> resolve_element elt
+    | ResolvableSCC elts -> Nel.iter (fun elt -> resolve_element elt) elts
+    | IllegalSCC elts -> Nel.iter (fun (elt, _, _) -> resolve_element elt) elts
+
   let resolve_component cx graph component =
+    resolve_component_type_params cx graph component;
     let open Name_def_ordering in
     let resolve_element = function
       | Name_def_ordering.Normal (kind, loc)
