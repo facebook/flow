@@ -1,3 +1,25 @@
+### 0.183.0
+
+Likely to cause new Flow errors:
+* We now emit new errors in places where an object literal has literal types, but doesn't have an annotation. You can usually fix these errors by adding annotations to object literals.
+
+New Features:
+* Allow export of empty object without annotation when `exact_empty_objects` is enabled.
+* Improve annotate `useState` codemod to support `null`/`undefined`/empty-array arguments.
+
+Notable bug fixes:
+* Allow flowconfigs with blank lines before the first config section.
+* Fix location of error message about legacy octal number types.
+* Fix inconsistent blank lines around auto-imports.
+* Fix bug where Watchman events might be ignored on Windows.
+
+Parser:
+* Fix parser exception on negative binary and octal number types that contain whitespace after the minus sign.
+
+Library Definitions:
+* Improved `fs.readdir` and `fs.readdirSync` to allow better overload resolution.
+* Add `String.prototype.replaceAll()` (Thanks @dav-s).
+
 ### 0.182.0
 
 Likely to cause new Flow errors:
