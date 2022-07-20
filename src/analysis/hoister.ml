@@ -53,6 +53,9 @@ class ['loc] lexical_hoister ~flowmin_compatibility ~enable_enums =
     method! statement (stmt : ('loc, 'loc) Ast.Statement.t) =
       let open Ast.Statement in
       match stmt with
+      | (_, DeclareModule _) ->
+        (* Hoister should never add inner module declarations to bindings. *)
+        stmt
       | (_, VariableDeclaration _)
       | (_, ClassDeclaration _)
       | (_, DeclareClass _)
