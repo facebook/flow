@@ -361,6 +361,11 @@
   resolved "https://registry.yarnpkg.com/@babel/helper-validator-identifier/-/helper-validator-identifier-7.16.7.tgz#e8c602438c4a8195751243da9031d1607d247cad"
   integrity sha512-hsEnFemeiW4D08A5gUAZxLBTXpZ39P+a+DGDsHw1yxqyQ/jzFEnxf5uTEGp+3bzAbNOxU1paTgYS4ECU/IgfDw==
 
+"@babel/helper-validator-identifier@^7.18.6":
+  version "7.18.6"
+  resolved "https://registry.yarnpkg.com/@babel/helper-validator-identifier/-/helper-validator-identifier-7.18.6.tgz#9c97e30d31b2b8c72a1d08984f2ca9b574d7a076"
+  integrity sha512-MmetCkz9ej86nJQV+sFCxoGGrUbU3q02kgLciwkrt9QqEB7cP39oKEY0PakknEO0Gu20SskMRi+AYZ3b1TpN9g==
+
 "@babel/helper-validator-option@^7.14.5":
   version "7.14.5"
   resolved "https://registry.yarnpkg.com/@babel/helper-validator-option/-/helper-validator-option-7.14.5.tgz#6e72a1fff18d5dfcb878e1e62f1a021c4b72d5a3"
@@ -414,6 +419,15 @@
   integrity sha512-7yykMVF3hfZY2jsHZEEgLc+3x4o1O+fYyULu11GynEUQNwB6lua+IIQn1FiJxNucd5UlyJryrwsOh8PL9Sn8Qg==
   dependencies:
     "@babel/helper-validator-identifier" "^7.16.7"
+    chalk "^2.0.0"
+    js-tokens "^4.0.0"
+
+"@babel/highlight@^7.18.6":
+  version "7.18.6"
+  resolved "https://registry.yarnpkg.com/@babel/highlight/-/highlight-7.18.6.tgz#81158601e93e2563795adcbfbdf5d64be3f2ecdf"
+  integrity sha512-u7stbOuYjaPezCuLj29hNW1v64M2Md2qupEKP1fHc7WdOA3DgLh37suiSrZYY7haUB7iBeQZ9P1uiRF359do3g==
+  dependencies:
+    "@babel/helper-validator-identifier" "^7.18.6"
     chalk "^2.0.0"
     js-tokens "^4.0.0"
 
@@ -2858,37 +2872,37 @@ has@^1.0.3:
   dependencies:
     function-bind "^1.1.1"
 
-hermes-eslint@0.8.0:
-  version "0.8.0"
-  resolved "https://registry.yarnpkg.com/hermes-eslint/-/hermes-eslint-0.8.0.tgz#e0a892d3f63f25d0966aa558ed40e373e2d0a065"
-  integrity sha512-TXbTys9Ssx9kzB8W18TK8m23QTSG6RqI4dOVzG12DslDJGNBU3pJV8AWkiwz8aOyCU6uiWhbVE2855E7g3iXoA==
+hermes-eslint@0.9.0:
+  version "0.9.0"
+  resolved "https://registry.yarnpkg.com/hermes-eslint/-/hermes-eslint-0.9.0.tgz#f1423abe3dfd959257430d61a9bccd4700b59e09"
+  integrity sha512-rlkK51UpGwo0ZWg8hu8DVICth7RfGSvaEJzFflos8bDOYm/d842/J3IXi0lB9R9waOp4VGGSc8VDmh+a9p2Q2w==
   dependencies:
     esrecurse "^4.3.0"
-    hermes-estree "0.8.0"
-    hermes-parser "0.8.0"
+    hermes-estree "0.9.0"
+    hermes-parser "0.9.0"
 
-hermes-estree@0.8.0:
-  version "0.8.0"
-  resolved "https://registry.yarnpkg.com/hermes-estree/-/hermes-estree-0.8.0.tgz#530be27243ca49f008381c1f3e8b18fb26bf9ec0"
-  integrity sha512-W6JDAOLZ5pMPMjEiQGLCXSSV7pIBEgRR5zGkxgmzGSXHOxqV5dC/M1Zevqpbm9TZDE5tu358qZf8Vkzmsc+u7Q==
+hermes-estree@0.9.0:
+  version "0.9.0"
+  resolved "https://registry.yarnpkg.com/hermes-estree/-/hermes-estree-0.9.0.tgz#026e0abe6db1dcf50a81a79014b779a83db3b814"
+  integrity sha512-5DZ7Y0CbHVk8zPqgRCvqp8iw+P05svnQDI1aJFjdqCfXJ/1CZ+8aYpGlhJ29zCG5SE5duGTzSxogAYYI4QqXqw==
 
-hermes-parser@0.8.0:
-  version "0.8.0"
-  resolved "https://registry.yarnpkg.com/hermes-parser/-/hermes-parser-0.8.0.tgz#116dceaba32e45b16d6aefb5c4c830eaeba2d257"
-  integrity sha512-yZKalg1fTYG5eOiToLUaw69rQfZq/fi+/NtEXRU7N87K/XobNRhRWorh80oSge2lWUiZfTgUvRJH+XgZWrhoqA==
+hermes-parser@0.9.0:
+  version "0.9.0"
+  resolved "https://registry.yarnpkg.com/hermes-parser/-/hermes-parser-0.9.0.tgz#ede3044d50479c61843cef5bbdcea83933d4e4ec"
+  integrity sha512-IcvJIlAn+9tpHkP+HTsxWKrIdQPp0gvGrrQmxlL4XnNS+Oh6R/Fpxbcoflm2kY3zgQjEvxZxLiK/2+k3/5wsrw==
   dependencies:
-    hermes-estree "0.8.0"
+    hermes-estree "0.9.0"
 
-hermes-transform@0.8.0:
-  version "0.8.0"
-  resolved "https://registry.yarnpkg.com/hermes-transform/-/hermes-transform-0.8.0.tgz#36c9dc1820802677753b958d66ee364472cb5184"
-  integrity sha512-USoWmT/HIfyoFgNHOLHhujw2K1ucac+QvrSPnkNfzbkeaeN1RIyTd20K74wV0djv+UwOzj1dy3/kkJ42HccV0g==
+hermes-transform@0.9.0:
+  version "0.9.0"
+  resolved "https://registry.yarnpkg.com/hermes-transform/-/hermes-transform-0.9.0.tgz#b937dbb66c0fb9fbd2f2b1cad7d8a101ebb97fe5"
+  integrity sha512-uhrL6xDz6m16rCznAbwqdf0k69F2uUR5IrZJ8W+PhEHcpo+iT5OCEOaqHSDKRXSMqRF/DaXi7TP4gXTD057pBg==
   dependencies:
     "@babel/code-frame" "^7.16.0"
     esquery "^1.4.0"
     flow-enums-runtime "^0.0.6"
-    hermes-eslint "0.8.0"
-    hermes-estree "0.8.0"
+    hermes-eslint "0.9.0"
+    hermes-estree "0.9.0"
 
 html-encoding-sniffer@^2.0.1:
   version "2.0.1"

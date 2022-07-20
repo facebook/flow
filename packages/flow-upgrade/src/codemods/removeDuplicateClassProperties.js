@@ -8,17 +8,16 @@
  * @flow
  */
 
+import type {Codemod} from '../Types';
 import type {
   ClassDeclaration,
   ClassExpression,
   ClassMember,
-  MethodDefinition,
   MemberExpression,
 } from 'hermes-estree';
-import type {TransformContext} from 'hermes-transform';
-import type {Codemod} from '../Types';
 
-import {t} from 'hermes-transform';
+import {getClassMemberName} from '../codemodUtils/getClassMemberName';
+import {replaceMethodWithArrowProp} from '../codemodUtils/replaceMethodWithArrowProp';
 import {codemod} from '../Types';
 
 type MemberKind = 'Property' | 'Getter' | 'Setter' | 'Method';
@@ -49,8 +48,7 @@ function getKind(member: ClassMember): MemberKind {
       }
       throw new Error(`Unexpected method kind: ${member.kind}`);
 
-    case 'ClassProperty':
-    case 'ClassPrivateProperty':
+    case 'PropertyDefinition':
       return 'Property';
   }
 
@@ -127,67 +125,6 @@ function findDuplicates(
   return toDelete;
 }
 
-function getClassMemberName(member: ClassMember): ?string {
-  if (member.type === 'ClassPrivateProperty') {
-    return `#${member.key.name}`;
-  }
-
-  if (member.computed === true || member.key.type !== 'Identifier') {
-    return null;
-  }
-
-  return member.key.name;
-}
-
-/**
- * Converts method definition to an arrow function property
- * ```
- * method<T>(arg) { ... }
- * // to
- * +method = <T>(arg) => { ... };
- * ```
- */
-function replaceMethodWithArrowProp(
-  context: TransformContext,
-  method: MethodDefinition,
-  name: string,
-): void {
-  context.replaceNode(
-    method,
-    t.ClassProperty({
-      computed: false,
-      declare: false,
-      key: t.Identifier({
-        name,
-        // for types-first compliance, this should ideally be filled out for
-        // non-private members. However it's *super* complicated to correctly
-        // handle these cases statically (type parameters and default args make
-        // it hard).
-        // So instead we just ignore it and they can be filled later using a
-        // type-aware codemod like
-        // ```
-        // flow codemod annotate-exports --write --munge-underscore-members --max-type-size 25
-        // ```
-        typeAnnotation: null,
-      }),
-      optional: false,
-      static: false,
-      value: t.ArrowFunctionExpression({
-        async: method.value.async,
-        body: context.shallowCloneNode(method.value.body),
-        params: context.shallowCloneArray(method.value.params),
-        predicate: context.shallowCloneNode(method.value.predicate),
-        typeParameters: context.shallowCloneNode(method.value.typeParameters),
-        returnType: context.shallowCloneNode(method.value.returnType),
-      }),
-      // methods are readonly, so we mark the property as readonly as well
-      variance: t.Variance({
-        kind: 'plus',
-      }),
-    }),
-  );
-}
-
 export default (codemod({
   title: 'Remove Duplicate Class Properties',
   description:
@@ -242,7 +179,7 @@ export default (codemod({
         // mark members for deletion
         for (const memberToDelete of toDelete) {
           if (
-            memberToDelete.type === 'ClassProperty' &&
+            memberToDelete.type === 'PropertyDefinition' &&
             memberToDelete.value?.type === 'CallExpression'
           ) {
             console.log(
