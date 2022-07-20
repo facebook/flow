@@ -88,15 +88,6 @@ function f7<X>(x: X, escape: boolean): X | void {
   return a4.x;
 }
 
-var a5 = Object.create(null);
-
-function f8<X>(x: X, escape: boolean): X | void {
-  if (escape) {
-    a5.x = x;
-  }
-  return a5.x;
-}
-
 var a6 = {};
 a6.a7 = 42;
 function f9<Y>(y: Y, escape): ?Y {

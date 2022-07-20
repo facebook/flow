@@ -23,26 +23,6 @@ let tests = [
       })
     })
   },
-  // or with Object.assign()
-  function() {
-    document.registerElement('custom-element', {
-      prototype: Object.assign(Object.create(HTMLElement.prototype), {
-        createdCallback () {
-        },
-        attachedCallback () {
-        },
-        detachedCallback () {
-        },
-        attributeChangedCallback (
-          attributeLocalName,
-          oldAttributeValue,
-          newAttributeValue,
-          attributeNamespace
-        ) {
-        }
-      })
-    })
-  },
   // should complain about invalid callback parameters
   function() {
     document.registerElement('custom-element', {

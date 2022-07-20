@@ -7961,7 +7961,7 @@ struct
         let reason = mk_reason RPrototype (fst e) in
         Tvar.mk_where cx reason (fun t -> Flow.flow cx (e_t, ObjTestProtoT (reason, t)))
       in
-      ( Obj_type.mk_unsealed cx reason ~proto,
+      ( Obj_type.mk_with_proto cx reason ~obj_kind:Exact proto,
         None,
         (args_loc, { ArgList.arguments = [Expression e_ast]; comments })
       )
@@ -8016,7 +8016,7 @@ struct
           pmap
           NameUtils.Map.empty
       in
-      ( Obj_type.mk_unsealed cx reason ~props ~proto,
+      ( Obj_type.mk_with_proto cx reason ~obj_kind:Exact ~props proto,
         None,
         ( args_loc,
           {

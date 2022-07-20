@@ -465,52 +465,35 @@ References:
                    ^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error ----------------------------------------------------------------------------------------------------- null.js:13:2
-
-Cannot cast `o_shadow.p` to string because number [1] is incompatible with string [2]. [incompatible-cast]
-
-   null.js:13:2
-   13| (o_shadow.p: string);
-        ^^^^^^^^^^
-
-References:
-   null.js:14:14
-   14| o_shadow.p = 0; // error: number ~> string
-                    ^ [1]
-   null.js:13:14
-   13| (o_shadow.p: string);
-                    ^^^^^^ [2]
-
-
-Error ---------------------------------------------------------------------------------------------------- null.js:17:17
+Error ---------------------------------------------------------------------------------------------------- null.js:13:17
 
 Cannot get `o_nonstrict.p` because property `p` is missing in object type [1]. [prop-missing]
 
-   null.js:17:17
-   17| if (o_nonstrict.p) { // Error - property p is unknown
+   null.js:13:17
+   13| if (o_nonstrict.p) { // Error - property p is unknown
                        ^
 
 References:
-   null.js:16:26
-   16| declare var o_nonstrict: { __proto__: null };
+   null.js:12:26
+   12| declare var o_nonstrict: { __proto__: null };
                                 ^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error ----------------------------------------------------------------------------------------------------- null.js:18:4
+Error ----------------------------------------------------------------------------------------------------- null.js:14:4
 
 Cannot cast `o_nonstrict.p` to empty because property `p` of unknown type [1] is incompatible with empty [2].
 [incompatible-cast]
 
-   null.js:18:4
-   18|   (o_nonstrict.p: empty); // error: mixed ~> empty
+   null.js:14:4
+   14|   (o_nonstrict.p: empty); // error: mixed ~> empty
           ^^^^^^^^^^^^^
 
 References:
-   null.js:17:5
-   17| if (o_nonstrict.p) { // Error - property p is unknown
+   null.js:13:5
+   13| if (o_nonstrict.p) { // Error - property p is unknown
            ^^^^^^^^^^^^^ [1]
-   null.js:18:19
-   18|   (o_nonstrict.p: empty); // error: mixed ~> empty
+   null.js:14:19
+   14|   (o_nonstrict.p: empty); // error: mixed ~> empty
                          ^^^^^ [2]
 
 
@@ -530,4 +513,4 @@ References:
 
 
 
-Found 37 errors
+Found 36 errors
