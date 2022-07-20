@@ -99,7 +99,7 @@ let print_values refinement_of_id =
 (* TODO: ocamlformat mangles the ppx syntax. *)
 [@@@ocamlformat "disable=true"]
 
-let print_ssa_test ?(custom_jsx = None) ?(react_runtime_automatic=false) contents =
+let print_ssa_test ?(custom_jsx = None) ?(react_runtime_automatic=false) ?lib contents =
   if react_runtime_automatic then (
     react_runtime := Options.ReactRuntimeAutomatic
   );
@@ -112,7 +112,7 @@ let print_ssa_test ?(custom_jsx = None) ?(react_runtime_automatic=false) content
 
   );
   let aloc_ast = parse_with_alocs contents in
-  let refined_reads, refinement_of_id = Name_resolver.program () aloc_ast in
+  let refined_reads, refinement_of_id = Name_resolver.program () ?lib aloc_ast in
   print_values refinement_of_id refined_reads;
   react_runtime := Options.ReactRuntimeClassic;
   jsx_mode := Options.Jsx_react
@@ -5980,7 +5980,7 @@ function bar(response) {
           (12, 8) to (12, 15): (`payload`)
         }] |}]
 
-let%expect_test "exports_global" =
+let%expect_test "exports_special" =
   print_ssa_test {|
 exports.foo = 1;
 |};
@@ -5988,6 +5988,39 @@ exports.foo = 1;
       [
         (2, 0) to (2, 7) => {
           Exports
+        }] |}]
+
+let%expect_test "module_dot_export_special" =
+  print_ssa_test {|
+module.exports;
+|};
+    [%expect {|
+      [
+        (2, 0) to (2, 6) => {
+          Global module
+        };
+        (2, 0) to (2, 14) => {
+          Exports
+        }] |}]
+
+let%expect_test "exports_as_global" =
+  print_ssa_test ~lib:true {|
+exports.foo = 1;
+|};
+    [%expect {|
+      [
+        (2, 0) to (2, 7) => {
+          Global exports
+        }] |}]
+
+let%expect_test "module_dot_export_as_global" =
+  print_ssa_test ~lib:true {|
+module.exports;
+|};
+    [%expect {|
+      [
+        (2, 0) to (2, 6) => {
+          Global module
         }] |}]
 
 let%expect_test "import_havoc" =

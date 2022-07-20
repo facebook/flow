@@ -62,10 +62,13 @@ module type S = sig
   exception AbruptCompletionExn of abrupt_kind
 
   val program_with_scope :
-    cx -> (ALoc.t, ALoc.t) Flow_ast.Program.t -> abrupt_kind option * Env_api.env_info
+    cx -> ?lib:bool -> (ALoc.t, ALoc.t) Flow_ast.Program.t -> abrupt_kind option * Env_api.env_info
 
   val program :
-    cx -> (ALoc.t, ALoc.t) Flow_ast.Program.t -> Env_api.values * (int -> Env_api.refinement)
+    cx ->
+    ?lib:bool ->
+    (ALoc.t, ALoc.t) Flow_ast.Program.t ->
+    Env_api.values * (int -> Env_api.refinement)
 end
 
 module PostInferenceCheck = Env_api
@@ -993,8 +996,8 @@ module Make
 
   let module_scoped_vars = ["eval"; "arguments"]
 
-  let initialize_globals unbound_names =
-    SMap.empty
+  let initialize_globals ~is_lib unbound_names =
+    (SMap.empty
     |> SSet.fold
          (fun name acc ->
            let global_val = Val.global name in
@@ -1025,27 +1028,36 @@ module Make
             kind = Bindings.Var;
           }
        )
-    |> SMap.add
-         "exports"
-         {
-           val_ref = ref Val.exports;
-           havoc = Val.exports;
-           writes_by_closure_provider_val = None;
-           def_loc = None;
-           heap_refinements = ref HeapRefinementMap.empty;
-           kind = Bindings.Var;
-         }
-    |> SMap.add
-         "module"
-         {
-           val_ref = ref (Val.global "module");
-           havoc = Val.global "module";
-           writes_by_closure_provider_val = None;
-           def_loc = None;
-           heap_refinements =
-             ref (HeapRefinementMap.singleton [RefinementKey.Prop "exports"] Val.exports);
-           kind = Bindings.Var;
-         }
+    |> ( if not is_lib then
+         SMap.add
+           "exports"
+           {
+             val_ref = ref Val.exports;
+             havoc = Val.exports;
+             writes_by_closure_provider_val = None;
+             def_loc = None;
+             heap_refinements = ref HeapRefinementMap.empty;
+             kind = Bindings.Var;
+           }
+       else
+         Base.Fn.id
+       )
+    |>
+    if not is_lib then
+      SMap.add
+        "module"
+        {
+          val_ref = ref (Val.global "module");
+          havoc = Val.global "module";
+          writes_by_closure_provider_val = None;
+          def_loc = None;
+          heap_refinements =
+            ref (HeapRefinementMap.singleton [RefinementKey.Prop "exports"] Val.exports);
+          kind = Bindings.Var;
+        }
+    else
+      Base.Fn.id
+    )
     |> fun init ->
     Base.List.fold
       ~init
@@ -1073,8 +1085,8 @@ module Make
     | (_, Identifier (_, { Flow_ast.Identifier.name; _ })) -> Some name
     | _ -> None
 
-  let initial_env cx unbound_names =
-    let globals = initialize_globals unbound_names in
+  let initial_env cx ~is_lib unbound_names =
+    let globals = initialize_globals ~is_lib unbound_names in
     let globals =
       let exhaustive_entry =
         {
@@ -1124,7 +1136,7 @@ module Make
 
   let empty_refinements = { applied = IMap.empty; changeset = LookupMap.empty; total = None }
 
-  class name_resolver cx (prepass_info, prepass_values, unbound_names) provider_info =
+  class name_resolver cx is_lib (prepass_info, prepass_values, unbound_names) provider_info =
     let add_output =
       match Context.env_mode cx with
       | Options.SSAEnv _ -> FlowAPIUtils.add_output cx
@@ -1168,7 +1180,7 @@ module Make
       val invalidation_caches = Invalidation_api.mk_caches ()
 
       val mutable env_state : name_resolver_state =
-        let (env, jsx_base_name) = initial_env cx unbound_names in
+        let (env, jsx_base_name) = initial_env cx ~is_lib unbound_names in
         {
           values = L.LMap.empty;
           write_entries =
@@ -4897,7 +4909,7 @@ module Make
         super#lambda ~is_arrow ~fun_loc ~generator_return_loc params predicate body
     end
 
-  let program_with_scope cx program =
+  let program_with_scope cx ?(lib = false) program =
     let open Hoister in
     let (loc, _) = program in
     let jsx_ast =
@@ -4914,7 +4926,7 @@ module Make
         program
     in
     let providers = Provider_api.find_providers program in
-    let env_walk = new name_resolver cx prepass providers in
+    let env_walk = new name_resolver cx lib prepass providers in
     let bindings =
       let hoist = new hoister ~flowmin_compatibility:false ~enable_enums ~with_types:true in
       hoist#eval hoist#program program
@@ -4938,8 +4950,8 @@ module Make
       }
     )
 
-  let program cx program =
-    let (_, { Env_api.env_values; refinement_of_id; _ }) = program_with_scope cx program in
+  let program cx ?lib program =
+    let (_, { Env_api.env_values; refinement_of_id; _ }) = program_with_scope cx ?lib program in
     (env_values, refinement_of_id)
 end
 
