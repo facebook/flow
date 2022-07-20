@@ -849,7 +849,6 @@ module Opts = struct
       ("experimental.enforce_local_inference_annotations", enforce_local_inference_annotations);
       ("experimental.enforce_class_annotations", enforce_class_annotations);
       ("experimental.enforce_this_annotations", enforce_this_annotations);
-      ("experimental.enums", boolean (fun opts v -> Ok { opts with enums = v }));
       ("experimental.env_mode", env_mode_parser);
       ("experimental.env_mode.constrain_writes.includes", env_mode_constrain_write_dirs_parser);
       ("experimental.facebook_module_interop", facebook_module_interop_parser);

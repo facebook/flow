@@ -1,2 +1,2 @@
 [options]
-experimental.enums=true
+enums=true
