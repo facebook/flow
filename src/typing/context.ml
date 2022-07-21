@@ -93,6 +93,12 @@ module Implicit_instantiation_check = struct
   type operation =
     | Call of Type.funcalltype
     | Constructor of Type.call_arg list
+    | Jsx of {
+        clone: bool;
+        component: Type.t;
+        config: Type.t;
+        children: Type.t list * Type.t option;
+      }
 
   type t = {
     lhs: Type.t;
@@ -740,6 +746,17 @@ let add_implicit_instantiation_ctor cx lhs poly_t use_op reason_op args =
         poly_t;
         operation = (use_op, reason_op, Implicit_instantiation_check.Constructor args);
       }
+    in
+
+    cx.ccx.implicit_instantiation_checks <- check :: cx.ccx.implicit_instantiation_checks
+
+let add_implicit_instantiation_jsx cx lhs poly_t use_op reason_op clone ~component ~config children
+    =
+  if cx.metadata.run_post_inference_implicit_instantiation then
+    let check =
+      Implicit_instantiation_check.
+        { lhs; poly_t; operation = (use_op, reason_op, Jsx { clone; component; config; children }) }
+      
     in
 
     cx.ccx.implicit_instantiation_checks <- check :: cx.ccx.implicit_instantiation_checks

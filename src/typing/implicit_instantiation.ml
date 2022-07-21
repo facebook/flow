@@ -21,6 +21,10 @@ let reduce_implicit_instantiation_check reducer cx pole check =
     | Check.Call calltype -> Check.Call (reducer#fun_call_type cx pole calltype)
     | Check.Constructor args ->
       Check.Constructor (ListUtils.ident_map (reducer#call_arg cx pole) args)
+    | Check.Jsx { clone; component; config; children = (children, children_spread) } ->
+      let reduce_t = reducer#type_ cx pole in
+      let children = (ListUtils.ident_map reduce_t children, Option.map reduce_t children_spread) in
+      Check.Jsx { clone; component = reduce_t component; config = reduce_t config; children }
   in
   { Check.lhs = lhs'; poly_t = (loc, tparams', t'); operation = (use_op, reason_op, op') }
 
@@ -142,7 +146,7 @@ module Make (Observer : OBSERVER) : KIT with type output = Observer.output = str
    * the type and then check it against the bound. This prevents us from adding trivial `& bound` to
    * instantiations, and also prevents us from pinning to the bound when no actual upper bounds are added *)
   let t_not_bound t bound =
-    if t = bound then
+    if TypeUtil.reasonless_eq t bound then
       UpperEmpty
     else
       UpperT t
@@ -232,6 +236,17 @@ module Make (Observer : OBSERVER) : KIT with type output = Observer.output = str
           ConstructorT (use_op, reason_op, Some call_targs, call_args, new_tout)
         in
         Flow_js.flow cx (lhs, constructor_t)
+      | Check.Jsx { clone; component; config; children } ->
+        let new_tout = Tvar.mk cx reason_op in
+        let react_kit_t =
+          ReactKitT
+            ( use_op,
+              reason_op,
+              React.CreateElement
+                { clone; component; config; children; targs = Some call_targs; tout = new_tout }
+            )
+        in
+        Flow_js.flow cx (lhs, react_kit_t)
     in
     (tparam_map, marked_tparams)
 
@@ -259,7 +274,7 @@ module Make (Observer : OBSERVER) : KIT with type output = Observer.output = str
              let lower_t = merge_lower_bounds cx t in
              (match lower_t with
              | None -> use_upper_bounds cx name t tparam_binder_reason instantiation_reason
-             | Some _ -> Observer.on_pinned_tparam cx name t)
+             | Some t -> Observer.on_pinned_tparam cx name t)
            | Some Positive ->
              let t = merge_lower_bounds cx t in
              (match t with
@@ -312,7 +327,7 @@ module Make (Observer : OBSERVER) : KIT with type output = Observer.output = str
            * type params in a static method does not make sense. We ignore this case
            * intentionally *)
           (Subst_name.Map.empty, Marked.empty)
-        | (_, _, Check.Constructor _) -> check_instance cx ~tparams ~implicit_instantiation)
+        | (_, _, _) -> check_instance cx ~tparams ~implicit_instantiation)
       | _ -> failwith "No other possible lower bounds"
     in
     (tparams_map, marked_tparams, bounds_map)

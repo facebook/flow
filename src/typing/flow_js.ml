@@ -2823,6 +2823,30 @@ struct
                 ( t_,
                   ReactKitT (use_op, reason_op, React.CreateElement { payload with targs = None })
                 )
+            | ReactKitT (use_op, _, React.CreateElement { clone; component; config; children; _ })
+              ->
+              ( if not (Speculation.speculating cx) then
+                let poly_t = (tparams_loc, ids, t) in
+                Context.add_implicit_instantiation_jsx
+                  cx
+                  l
+                  poly_t
+                  use_op
+                  reason_op
+                  clone
+                  ~component
+                  ~config
+                  children
+              );
+              let use_op =
+                match use_op_of_use_t u with
+                | Some use_op -> use_op
+                | None -> unknown_use
+              in
+              let t_ =
+                instantiate_poly cx trace ~use_op ~reason_op ~reason_tapp (tparams_loc, ids, t)
+              in
+              rec_flow cx trace (t_, u)
             | _ ->
               let use_op =
                 match use_op_of_use_t u with

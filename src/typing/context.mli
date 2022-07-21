@@ -117,6 +117,12 @@ module Implicit_instantiation_check : sig
   type operation =
     | Call of Type.funcalltype
     | Constructor of Type.call_arg list
+    | Jsx of {
+        clone: bool;
+        component: Type.t;
+        config: Type.t;
+        children: Type.t list * Type.t option;
+      }
 
   type t = {
     lhs: Type.t;
@@ -394,6 +400,18 @@ val add_implicit_instantiation_ctor :
   Type.use_op ->
   Reason.t ->
   Type.call_arg list ->
+  unit
+
+val add_implicit_instantiation_jsx :
+  t ->
+  Type.t ->
+  Implicit_instantiation_check.poly_t ->
+  Type.use_op ->
+  Reason.t ->
+  bool ->
+  component:Type.t ->
+  config:Type.t ->
+  Type.t list * Type.t option ->
   unit
 
 val add_inferred_indexer : t -> ALoc.t -> Type.dicttype -> unit

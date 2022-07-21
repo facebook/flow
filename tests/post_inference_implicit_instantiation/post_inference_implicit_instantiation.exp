@@ -96,6 +96,21 @@ References:
                           ^ [2]
 
 
+Error ------------------------------------------------------------------------------------ underconstrained_react.js:7:1
+
+`T` is underconstrained by `PolyReactClass` element [1] and is defined in `T` [2]
+[underconstrained-implicit-instantiation]
+
+   underconstrained_react.js:7:1
+   7| <PolyReactClass />;
+      ^^^^^^^^^^^^^^^^^^ [1]
+
+References:
+   underconstrained_react.js:5:22
+   5| class PolyReactClass<T> extends React.Component<{}> {}
+                           ^ [2]
+
+
 Error ---------------------------------------------------------------------------------------------- upper_non_t.js:8:11
 
 OwnProps contains a non-Type.t upper bound ObjKitT
@@ -105,4 +120,4 @@ OwnProps contains a non-Type.t upper bound ObjKitT
 
 
 
-Found 8 errors
+Found 9 errors
