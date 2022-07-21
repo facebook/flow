@@ -378,9 +378,9 @@ let default_mapper =
           trace;
         });
     of_initialize_result =
-      (fun _mapper { Initialize.server_capabilities } ->
+      (fun _mapper { Initialize.server_capabilities; Initialize.server_info } ->
         (* TODO? Could add visitors for all of these capabilities *)
-        { Initialize.server_capabilities });
+        { Initialize.server_capabilities; Initialize.server_info });
     of_log_message_params =
       (fun _mapper { LogMessage.type_; message } -> { LogMessage.type_; message });
     of_lsp_message =

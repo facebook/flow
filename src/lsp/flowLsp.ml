@@ -742,6 +742,7 @@ let do_initialize flowconfig params : Initialize.result =
         rageProvider = true;
         server_experimental = { server_snippetTextEdit };
       };
+    server_info = { name = "Flow"; version = Flow_version.version };
   }
 
 let show_connected_status (cenv : connected_env) : connected_env =

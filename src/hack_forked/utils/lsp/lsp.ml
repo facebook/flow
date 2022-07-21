@@ -468,7 +468,10 @@ module Initialize = struct
     trace: trace;  (** the initial trace setting, default="off" *)
   }
 
-  and result = { server_capabilities: server_capabilities  (** "capabilities" over wire *) }
+  and result = {
+    server_capabilities: server_capabilities;  (** "capabilities" over wire *)
+    server_info: serverInfo;  (** name and version of the language server; "serverInfo" over wire *)
+  }
 
   and errorData = { retry: bool  (** should client retry the initialize request *) }
 
@@ -550,6 +553,11 @@ module Initialize = struct
     server_experimental: experimentalServerCapabilities;
     typeCoverageProvider: bool;  (** nuclide-specific *)
     rageProvider: bool;  (** nuclide-specific *)
+  }
+
+  and serverInfo = {
+    name: string;
+    version: string;
   }
 
   and signatureHelpOptions = {

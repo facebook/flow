@@ -1345,6 +1345,7 @@ let print_initialize ~key (r : Initialize.result) : json =
       else
         Some (JSON_Object props)
     in
+    let info = r.server_info in
     JSON_Object
       [
         ( "capabilities",
@@ -1419,6 +1420,9 @@ let print_initialize ~key (r : Initialize.result) : json =
               ("rageProvider", Some (JSON_Bool cap.rageProvider));
               ("experimental", experimental);
             ]
+        );
+        ( "serverInfo",
+          JSON_Object [("name", JSON_String info.name); ("version", JSON_String info.version)]
         );
       ]
   )

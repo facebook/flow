@@ -343,7 +343,10 @@ module Initialize : sig
     trace: trace;
   }
 
-  and result = { server_capabilities: server_capabilities }
+  and result = {
+    server_capabilities: server_capabilities;  (** "capabilities" over wire *)
+    server_info: serverInfo;  (** details about the language server *)
+  }
 
   and errorData = { retry: bool }
 
@@ -415,6 +418,11 @@ module Initialize : sig
     server_experimental: experimentalServerCapabilities;
     typeCoverageProvider: bool;
     rageProvider: bool;
+  }
+
+  and serverInfo = {
+    name: string;
+    version: string;
   }
 
   and signatureHelpOptions = { sighelp_triggerCharacters: string list }
