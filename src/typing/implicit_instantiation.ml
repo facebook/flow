@@ -294,6 +294,22 @@ module Make (Observer : OBSERVER) : KIT with type output = Observer.output = str
     let (marked_tparams, _) = visitor#type_ cx Positive (Marked.empty, tparam_names) return_t in
     check_instantiation cx ~tparams ~marked_tparams ~implicit_instantiation
 
+  let check_react_fun cx ~tparams ~bounds_map ~params ~implicit_instantiation =
+    match params with
+    | [] ->
+      let marked_tparams = Marked.empty in
+      check_instantiation cx ~tparams ~marked_tparams ~implicit_instantiation
+    | (_, props) :: _ ->
+      (* The return of a React component when it is createElement-ed isn't actually the return type denoted on the 
+       * component. Instead, it is a React.Element<typeof Component>. In order to get the
+       * polarities for the type parameters in the return, it is sufficient to look at the Props
+       * type and use the polarities there.
+       *
+       * In practice, the props accessible via the element are read-only, so a possible future improvement
+       * here would only look at the properties on the Props type with a covariant polarity instead of the
+       * Neutral default that will be common due to syntactic conveniences. *)
+      check_fun cx ~tparams ~bounds_map ~return_t:props ~implicit_instantiation
+
   let check_instance cx ~tparams ~implicit_instantiation =
     let marked_tparams =
       tparams
@@ -318,7 +334,10 @@ module Make (Observer : OBSERVER) : KIT with type output = Observer.output = str
     let (tparams_map, marked_tparams) =
       match get_t cx t with
       | DefT (_, _, FunT (_, funtype)) ->
-        check_fun cx ~tparams ~bounds_map ~return_t:funtype.return_t ~implicit_instantiation
+        (match operation with
+        | (_, _, Check.Jsx _) ->
+          check_react_fun cx ~tparams ~bounds_map ~params:funtype.params ~implicit_instantiation
+        | _ -> check_fun cx ~tparams ~bounds_map ~return_t:funtype.return_t ~implicit_instantiation)
       | ThisClassT (_, DefT (_, _, InstanceT (_, _, _, _insttype)), _, _) ->
         (match operation with
         | (_, _, Check.Call _) ->
