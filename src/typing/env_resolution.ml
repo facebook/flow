@@ -624,7 +624,7 @@ module Make (Env : Env_sig.S) (Statement : Statement_sig.S with module Env := En
         ]
         );
     New_env.New_env.resolve_env_entry ~use_op ~resolved ~update_reason cx t def_kind id_loc;
-    t
+    (def_kind, id_loc)
 
   let entries_of_component graph component =
     let open Name_def_ordering in
@@ -734,7 +734,7 @@ module Make (Env : Env_sig.S) (Statement : Statement_sig.S with module Env := En
           ~f:(fun () -> resolve cx (kind, loc) (EnvMap.find (kind, loc) graph))
             (* When there is an unhandled exception, it means that the initialization of the env slot
                won't be completed and will never be written in the new-env, so it's OK to do nothing. *)
-          ~on_abnormal_exn:(fun _ -> AnyT.at Untyped loc)
+          ~on_abnormal_exn:(fun _ -> (kind, loc))
           ()
     in
     Debug_js.Verbose.print_if_verbose_lazy
@@ -750,13 +750,17 @@ module Make (Env : Env_sig.S) (Statement : Statement_sig.S with module Env := En
           { env with Loc_env.readable = EnvSet.union entries readable; under_resolution = entries }
       | _ -> ()
     end;
+    let resolve_tvar_in_env_entry (kind, loc) =
+      let env = Context.environment cx in
+      Loc_env.find_write env kind loc |> Base.Option.iter ~f:(TvarResolver.resolve cx)
+    in
     let () =
       match component with
-      | Singleton elt -> resolve_element elt |> TvarResolver.resolve cx
+      | Singleton elt -> resolve_element elt |> resolve_tvar_in_env_entry
       | ResolvableSCC elts ->
-        Nel.map (fun elt -> resolve_element elt) elts |> Nel.iter (TvarResolver.resolve cx)
+        Nel.map (fun elt -> resolve_element elt) elts |> Nel.iter resolve_tvar_in_env_entry
       | IllegalSCC elts ->
-        Nel.map (fun (elt, _, _) -> resolve_element elt) elts |> Nel.iter (TvarResolver.resolve cx)
+        Nel.map (fun (elt, _, _) -> resolve_element elt) elts |> Nel.iter resolve_tvar_in_env_entry
     in
     Debug_js.Verbose.print_if_verbose_lazy cx (lazy ["Finished resolving component"])
 end

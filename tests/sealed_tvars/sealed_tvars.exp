@@ -32,26 +32,10 @@ Internal error: read of Env_api.Make.ClassStaticThisLoc entry which has not been
 
 Error -------------------------------------------------------------------------------------------- error_examples.js:4:7
 
-Internal error: read of Env_api.Make.OrdinaryNameLoc entry from previous component is not FullyResolved
-
-   4| class C { }
-            ^
-
-
-Error -------------------------------------------------------------------------------------------- error_examples.js:4:7
-
 Internal error: unconstrained tvar during tvar resolution
 
    4| class C { }
             ^
-
-
-Error -------------------------------------------------------------------------------------------- error_examples.js:7:5
-
-Internal error: read of Env_api.Make.OrdinaryNameLoc entry from previous component is not FullyResolved
-
-   7| var x: number => number = (x) => x;
-          ^
 
 
 Error ------------------------------------------------------------------------------------------- error_examples.js:7:28
@@ -63,4 +47,4 @@ Internal error: unconstrained tvar during tvar resolution
 
 
 
-Found 8 errors
+Found 6 errors
