@@ -160,10 +160,26 @@ let run_but_cancel_on_file_changes ~options env ~get_forced ~priority ~f ~pre_ca
     f ()
   in
   let cancel_thread =
-    let%lwt () =
+    let%lwt {
+          ServerMonitorListenerState.num_files_to_prioritize;
+          num_files_to_force;
+          num_files_to_recheck;
+        } =
       ServerMonitorListenerState.wait_for_updates_for_recheck ~process_updates ~get_forced ~priority
     in
-    Hh_logger.info "Canceling recheck because additional files changed";
+    Hh_logger.info
+      "Canceling recheck to prioritize %d, force %d, and recheck %d additional files"
+      num_files_to_prioritize
+      num_files_to_force
+      num_files_to_recheck;
+    FlowEventLogger.recheck_canceled
+      ~priority:
+        (match priority with
+        | ServerMonitorListenerState.Priority -> true
+        | ServerMonitorListenerState.Normal -> false)
+      ~num_files_to_prioritize
+      ~num_files_to_force
+      ~num_files_to_recheck;
     let%lwt () = pre_cancel () in
     Lwt.cancel run_thread;
     Lwt.return_unit

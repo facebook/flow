@@ -41,6 +41,12 @@ type recheck_workload = {
   recheck_reasons_rev: LspProt.recheck_reason list;
 }
 
+type workload_changes = {
+  num_files_to_prioritize: int;
+  num_files_to_recheck: int;
+  num_files_to_force: int;
+}
+
 type priority =
   | Priority
   | Normal
@@ -55,7 +61,7 @@ val wait_for_updates_for_recheck :
   process_updates:(?skip_incompatible:bool -> SSet.t -> Utils_js.FilenameSet.t) ->
   get_forced:(unit -> CheckedSet.t) ->
   priority:priority ->
-  unit Lwt.t
+  workload_changes Lwt.t
 
 val pop_next_workload : unit -> WorkloadStream.workload option
 
