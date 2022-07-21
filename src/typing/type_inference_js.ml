@@ -443,7 +443,7 @@ module Make (Env : Env_sig.S) : S = struct
   let initialize_env
       ~lib ?(exclude_syms = NameUtils.Set.empty) ?local_exports_var cx aloc_ast module_scope =
     let (_abrupt_completion, ({ Env_api.env_entries; providers; _ } as info)) =
-      NameResolver.program_with_scope cx ~lib aloc_ast
+      NameResolver.program_with_scope cx ~lib ~exclude_syms aloc_ast
     in
     let env = Loc_env.with_info Scope.Global info in
     let name_def_graph = Name_def.find_defs env_entries providers aloc_ast in

@@ -62,11 +62,16 @@ module type S = sig
   exception AbruptCompletionExn of abrupt_kind
 
   val program_with_scope :
-    cx -> ?lib:bool -> (ALoc.t, ALoc.t) Flow_ast.Program.t -> abrupt_kind option * Env_api.env_info
+    cx ->
+    ?lib:bool ->
+    ?exclude_syms:NameUtils.Set.t ->
+    (ALoc.t, ALoc.t) Flow_ast.Program.t ->
+    abrupt_kind option * Env_api.env_info
 
   val program :
     cx ->
     ?lib:bool ->
+    ?exclude_syms:NameUtils.Set.t ->
     (ALoc.t, ALoc.t) Flow_ast.Program.t ->
     Env_api.values * (int -> Env_api.refinement)
 end
@@ -844,6 +849,12 @@ module Make
     refinement_heap: refinement_chain IMap.t;
     latest_refinements: refinement_maps list;
     env: env_val SMap.t;
+    (* A set of names that have to be excluded from binding.
+       This set is always empty when we are checking normal code. It will only be possibly non-empty
+       when we are checking libdef code. In libdefs, this set represents a list of names that we
+       have already added to the globals. When we read a name in this set, we will ignore the local
+       file binding and treat it as a read of global. *)
+    exclude_syms: NameUtils.Set.t;
     (* When an abrupt completion is raised, it falls through any subsequent
        straight-line code, until it reaches a merge point in the control-flow
        graph. At that point, it can be re-raised if and only if all other reaching
@@ -996,7 +1007,7 @@ module Make
 
   let module_scoped_vars = ["eval"; "arguments"]
 
-  let initialize_globals ~is_lib unbound_names =
+  let initialize_globals ~is_lib exclude_syms unbound_names =
     (SMap.empty
     |> SSet.fold
          (fun name acc ->
@@ -1013,6 +1024,26 @@ module Make
            in
            SMap.add name entry acc)
          unbound_names
+    |> NameUtils.Set.fold
+         (fun name acc ->
+           match name with
+           | OrdinaryName name ->
+             let global_val = Val.global name in
+             let entry =
+               {
+                 val_ref = ref global_val;
+                 havoc = global_val;
+                 writes_by_closure_provider_val = None;
+                 def_loc = None;
+                 heap_refinements = ref HeapRefinementMap.empty;
+                 kind = Bindings.Var;
+               }
+             in
+             SMap.add name entry acc
+           | InternalName _
+           | InternalModuleName _ ->
+             acc)
+         exclude_syms
     (* this has to come later, since this can be thought to be unbound names in SSA builder when it's used as a type. *)
     |> (let v =
           ALoc.none |> mk_reason (RIdentifier (internal_name "this")) |> Val.function_or_global_this
@@ -1085,8 +1116,8 @@ module Make
     | (_, Identifier (_, { Flow_ast.Identifier.name; _ })) -> Some name
     | _ -> None
 
-  let initial_env cx ~is_lib unbound_names =
-    let globals = initialize_globals ~is_lib unbound_names in
+  let initial_env cx ~is_lib exclude_syms unbound_names =
+    let globals = initialize_globals ~is_lib exclude_syms unbound_names in
     let globals =
       let exhaustive_entry =
         {
@@ -1136,7 +1167,8 @@ module Make
 
   let empty_refinements = { applied = IMap.empty; changeset = LookupMap.empty; total = None }
 
-  class name_resolver cx is_lib (prepass_info, prepass_values, unbound_names) provider_info =
+  class name_resolver
+    cx is_lib exclude_syms (prepass_info, prepass_values, unbound_names) provider_info =
     let add_output =
       match Context.env_mode cx with
       | Options.SSAEnv _ -> FlowAPIUtils.add_output cx
@@ -1180,7 +1212,7 @@ module Make
       val invalidation_caches = Invalidation_api.mk_caches ()
 
       val mutable env_state : name_resolver_state =
-        let (env, jsx_base_name) = initial_env cx ~is_lib unbound_names in
+        let (env, jsx_base_name) = initial_env cx ~is_lib exclude_syms unbound_names in
         {
           values = L.LMap.empty;
           write_entries =
@@ -1192,6 +1224,7 @@ module Make
           refinement_heap = IMap.empty;
           latest_refinements = [];
           env;
+          exclude_syms;
           abrupt_completion_envs = [];
           possible_labeled_continues = [];
           visiting_hoisted_type = false;
@@ -1225,6 +1258,10 @@ module Make
             havoc
           | _ -> Val.merge v1 v2)
         | None -> Val.merge v1 v2
+
+      method private is_excluded name = NameUtils.Set.mem name env_state.exclude_syms
+
+      method private is_excluded_ordinary_name name = this#is_excluded (OrdinaryName name)
 
       method private new_id () =
         let new_id = env_state.curr_id in
@@ -1785,6 +1822,9 @@ module Make
       method private push_env ~this_super_binding_env bindings =
         let old_env = env_state.env in
         let bindings = Bindings.to_map bindings in
+        let bindings =
+          SMap.filter (fun name _ -> not @@ this#is_excluded_ordinary_name name) bindings
+        in
         let env = SMap.fold SMap.add (this#mk_env ~this_super_binding_env bindings) old_env in
         env_state <- { env_state with env };
         (bindings, old_env)
@@ -1890,27 +1930,31 @@ module Make
 
       method! binding_type_identifier ident =
         let (loc, { Flow_ast.Identifier.name; comments = _ }) = ident in
-        let { kind; def_loc; _ } = SMap.find name env_state.env in
-        (match def_loc with
-        (* Identifiers with no binding can never reintroduce "cannot reassign binding" errors *)
-        | None -> ()
-        | Some def_loc ->
-          (match kind with
-          | Bindings.Type _ when not (ALoc.equal loc def_loc) ->
-            (* Types are already bind in hoister,
-               so we only check for rebind in different locations. *)
-            add_output
-              Error_message.(EBindingError (ENameAlreadyBound, loc, OrdinaryName name, def_loc))
-          | Bindings.Type _ -> ()
-          | Bindings.Var
-          | Bindings.Const
-          | Bindings.Let
-          | Bindings.Class
-          | Bindings.Function
-          | Bindings.Parameter ->
-            add_output
-              Error_message.(EBindingError (ENameAlreadyBound, loc, OrdinaryName name, def_loc))
-          | _ -> ()));
+        ( if this#is_excluded_ordinary_name name then
+          ()
+        else
+          let { kind; def_loc; _ } = SMap.find name env_state.env in
+          match def_loc with
+          (* Identifiers with no binding can never reintroduce "cannot reassign binding" errors *)
+          | None -> ()
+          | Some def_loc ->
+            (match kind with
+            | Bindings.Type _ when not (ALoc.equal loc def_loc) ->
+              (* Types are already bind in hoister,
+                 so we only check for rebind in different locations. *)
+              add_output
+                Error_message.(EBindingError (ENameAlreadyBound, loc, OrdinaryName name, def_loc))
+            | Bindings.Type _ -> ()
+            | Bindings.Var
+            | Bindings.Const
+            | Bindings.Let
+            | Bindings.Class
+            | Bindings.Function
+            | Bindings.Parameter ->
+              add_output
+                Error_message.(EBindingError (ENameAlreadyBound, loc, OrdinaryName name, def_loc))
+            | _ -> ())
+        );
         super#identifier ident
 
       method! function_identifier ident =
@@ -1983,68 +2027,71 @@ module Make
         super#identifier ident
 
       method private bind_pattern_identifier_customized ~kind ?(get_assigned_val = Val.one) loc x =
-        let reason = Reason.(mk_reason (RIdentifier (OrdinaryName x))) loc in
-        let {
-          val_ref;
-          heap_refinements;
-          kind = stored_binding_kind;
-          def_loc;
-          havoc = _;
-          writes_by_closure_provider_val = _;
-        } =
-          SMap.find x env_state.env
-        in
-        match kind with
-        (* Assignments to undeclared bindings that aren't part of declarations do not
-         * initialize those bindings. *)
-        | AssignmentWrite when Val.is_undeclared_or_skipped !val_ref ->
-          (match def_loc with
-          | None -> failwith "Cannot have an undeclared or skipped binding without a def loc"
-          | Some def_loc ->
-            add_output
-              Error_message.(
-                EBindingError (EReferencedBeforeDeclaration, loc, OrdinaryName x, def_loc)
-              ))
-        | _ ->
-          (match error_for_assignment_kind cx x loc def_loc stored_binding_kind kind !val_ref with
-          | Some err ->
-            add_output err;
-            let write_entries =
-              EnvMap.add_ordinary loc Env_api.NonAssigningWrite env_state.write_entries
-            in
-            (* Give unsupported var redeclaration a write to avoid spurious errors like use of
-               possibly undefined variable. Essentially, we are treating var redeclaration as a
-               assignment with an any-typed value. *)
-            (match (stored_binding_kind, kind) with
-            | (Bindings.Var, VarBinding) -> val_ref := Val.illegal_write reason
-            | _ -> ());
-            env_state <- { env_state with write_entries }
+        if this#is_excluded_ordinary_name x then
+          ()
+        else
+          let reason = Reason.(mk_reason (RIdentifier (OrdinaryName x))) loc in
+          let {
+            val_ref;
+            heap_refinements;
+            kind = stored_binding_kind;
+            def_loc;
+            havoc = _;
+            writes_by_closure_provider_val = _;
+          } =
+            SMap.find x env_state.env
+          in
+          match kind with
+          (* Assignments to undeclared bindings that aren't part of declarations do not
+           * initialize those bindings. *)
+          | AssignmentWrite when Val.is_undeclared_or_skipped !val_ref ->
+            (match def_loc with
+            | None -> failwith "Cannot have an undeclared or skipped binding without a def loc"
+            | Some def_loc ->
+              add_output
+                Error_message.(
+                  EBindingError (EReferencedBeforeDeclaration, loc, OrdinaryName x, def_loc)
+                ))
           | _ ->
-            this#havoc_heap_refinements heap_refinements;
-            let write_entries =
-              if not (Val.is_declared_function !val_ref) then (
-                let write_entry =
-                  if Val.is_global !val_ref then
-                    Env_api.GlobalWrite reason
-                  else
-                    Env_api.AssigningWrite reason
-                in
-                val_ref := get_assigned_val reason;
-                EnvMap.add_ordinary loc write_entry env_state.write_entries
-              ) else
-                (* All of the providers are aleady in the map. We don't want to overwrite them with
-                 * a non-assigning write. We _do_ want to enter regular function declarations as
-                 * non-assigning writes so that they are not checked against the providers in
-                * New_env.set_env_entry *)
-                EnvMap.update_ordinary
-                  loc
-                  (fun x ->
-                    match x with
-                    | None -> Some Env_api.NonAssigningWrite
-                    | _ -> x)
-                  env_state.write_entries
-            in
-            env_state <- { env_state with write_entries })
+            (match error_for_assignment_kind cx x loc def_loc stored_binding_kind kind !val_ref with
+            | Some err ->
+              add_output err;
+              let write_entries =
+                EnvMap.add_ordinary loc Env_api.NonAssigningWrite env_state.write_entries
+              in
+              (* Give unsupported var redeclaration a write to avoid spurious errors like use of
+                 possibly undefined variable. Essentially, we are treating var redeclaration as a
+                 assignment with an any-typed value. *)
+              (match (stored_binding_kind, kind) with
+              | (Bindings.Var, VarBinding) -> val_ref := Val.illegal_write reason
+              | _ -> ());
+              env_state <- { env_state with write_entries }
+            | _ ->
+              this#havoc_heap_refinements heap_refinements;
+              let write_entries =
+                if not (Val.is_declared_function !val_ref) then (
+                  let write_entry =
+                    if Val.is_global !val_ref then
+                      Env_api.GlobalWrite reason
+                    else
+                      Env_api.AssigningWrite reason
+                  in
+                  val_ref := get_assigned_val reason;
+                  EnvMap.add_ordinary loc write_entry env_state.write_entries
+                ) else
+                  (* All of the providers are aleady in the map. We don't want to overwrite them with
+                   * a non-assigning write. We _do_ want to enter regular function declarations as
+                   * non-assigning writes so that they are not checked against the providers in
+                   * New_env.set_env_entry *)
+                  EnvMap.update_ordinary
+                    loc
+                    (fun x ->
+                      match x with
+                      | None -> Some Env_api.NonAssigningWrite
+                      | _ -> x)
+                    env_state.write_entries
+              in
+              env_state <- { env_state with write_entries })
 
       (* This method is called during every read of an identifier. We need to ensure that
        * if the identifier is refined that we record the refiner as the write that reaches
@@ -2325,7 +2372,8 @@ module Make
                         _;
                       }
                   )
-                ) ->
+                )
+                when not @@ this#is_excluded_ordinary_name x ->
                 let kind = variable_declaration_binding_kind_to_pattern_write_kind (Some kind) in
                 let reason = Reason.(mk_reason (RIdentifier (OrdinaryName x))) name_loc in
                 let (assigned_val, write_kind) =
@@ -2389,21 +2437,24 @@ module Make
                  * uninitialized. *)
                 Flow_ast_utils.fold_bindings_of_pattern
                   (fun () (loc, { Flow_ast.Identifier.name; _ }) ->
-                    let { val_ref; kind = stored_binding_kind; def_loc; _ } =
-                      SMap.find name env_state.env
-                    in
-                    let () =
-                      error_for_assignment_kind
-                        cx
-                        name
-                        loc
-                        def_loc
-                        stored_binding_kind
-                        (variable_declaration_binding_kind_to_pattern_write_kind (Some kind))
-                        !val_ref
-                      |> Base.Option.iter ~f:add_output
-                    in
-                    if Val.is_undeclared !val_ref then val_ref := Val.uninitialized loc)
+                    if this#is_excluded_ordinary_name name then
+                      ()
+                    else
+                      let { val_ref; kind = stored_binding_kind; def_loc; _ } =
+                        SMap.find name env_state.env
+                      in
+                      let () =
+                        error_for_assignment_kind
+                          cx
+                          name
+                          loc
+                          def_loc
+                          stored_binding_kind
+                          (variable_declaration_binding_kind_to_pattern_write_kind (Some kind))
+                          !val_ref
+                        |> Base.Option.iter ~f:add_output
+                      in
+                      if Val.is_undeclared !val_ref then val_ref := Val.uninitialized loc)
                   ()
                   id;
                 ignore @@ this#type_annotation_hint annot
@@ -3170,13 +3221,16 @@ module Make
         let () =
           lexical_bindings
           |> SMap.iter (fun name (kind, (loc, _)) ->
-                 match kind with
-                 | Bindings.Let
-                 | Bindings.Const ->
-                   let { val_ref; heap_refinements; _ } = SMap.find name env_state.env in
-                   this#havoc_heap_refinements heap_refinements;
-                   val_ref := Val.declared_but_skipped name loc
-                 | _ -> ()
+                 if this#is_excluded_ordinary_name name then
+                   ()
+                 else
+                   match kind with
+                   | Bindings.Let
+                   | Bindings.Const ->
+                     let { val_ref; heap_refinements; _ } = SMap.find name env_state.env in
+                     this#havoc_heap_refinements heap_refinements;
+                     val_ref := Val.declared_but_skipped name loc
+                   | _ -> ()
              )
         in
         let case_completion_state =
@@ -3564,7 +3618,8 @@ module Make
           env_state <- { env_state with write_entries }
         in
         match argument with
-        | (_, Flow_ast.Expression.Identifier (id_loc, { Flow_ast.Identifier.name; _ })) ->
+        | (_, Flow_ast.Expression.Identifier (id_loc, { Flow_ast.Identifier.name; _ }))
+          when not @@ this#is_excluded_ordinary_name name ->
           let { kind; def_loc; val_ref; _ } = SMap.find name env_state.env in
           (match error_for_assignment_kind cx name id_loc def_loc kind AssignmentWrite !val_ref with
           | None ->
@@ -4909,7 +4964,7 @@ module Make
         super#lambda ~is_arrow ~fun_loc ~generator_return_loc params predicate body
     end
 
-  let program_with_scope cx ?(lib = false) program =
+  let program_with_scope cx ?(lib = false) ?(exclude_syms = NameUtils.Set.empty) program =
     let open Hoister in
     let (loc, _) = program in
     let jsx_ast =
@@ -4926,7 +4981,7 @@ module Make
         program
     in
     let providers = Provider_api.find_providers program in
-    let env_walk = new name_resolver cx lib prepass providers in
+    let env_walk = new name_resolver cx lib exclude_syms prepass providers in
     let bindings =
       let hoist = new hoister ~flowmin_compatibility:false ~enable_enums ~with_types:true in
       hoist#eval hoist#program program
@@ -4950,8 +5005,10 @@ module Make
       }
     )
 
-  let program cx ?lib program =
-    let (_, { Env_api.env_values; refinement_of_id; _ }) = program_with_scope cx ?lib program in
+  let program cx ?lib ?exclude_syms program =
+    let (_, { Env_api.env_values; refinement_of_id; _ }) =
+      program_with_scope cx ?lib ?exclude_syms program
+    in
     (env_values, refinement_of_id)
 end
 

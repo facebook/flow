@@ -99,7 +99,7 @@ let print_values refinement_of_id =
 (* TODO: ocamlformat mangles the ppx syntax. *)
 [@@@ocamlformat "disable=true"]
 
-let print_ssa_test ?(custom_jsx = None) ?(react_runtime_automatic=false) ?lib contents =
+let print_ssa_test ?(custom_jsx = None) ?(react_runtime_automatic=false) ?lib ?exclude_syms contents =
   if react_runtime_automatic then (
     react_runtime := Options.ReactRuntimeAutomatic
   );
@@ -112,7 +112,7 @@ let print_ssa_test ?(custom_jsx = None) ?(react_runtime_automatic=false) ?lib co
 
   );
   let aloc_ast = parse_with_alocs contents in
-  let refined_reads, refinement_of_id = Name_resolver.program () ?lib aloc_ast in
+  let refined_reads, refinement_of_id = Name_resolver.program () ?lib ?exclude_syms aloc_ast in
   print_values refinement_of_id refined_reads;
   react_runtime := Options.ReactRuntimeClassic;
   jsx_mode := Options.Jsx_react
@@ -6488,4 +6488,57 @@ declare module F { }
       [
         (2, 15) to (2, 16) => {
           (2, 15) to (2, 16): (module `F`)
+        }] |}]
+
+let%expect_test "exclude_syms" =
+  let exclude_syms =
+    NameUtils.Set.empty
+    |> NameUtils.Set.add (Reason.OrdinaryName "foo")
+    |> NameUtils.Set.add (Reason.OrdinaryName "Bar")
+  in
+  (* Ensure that defs and writes on excluded names have no effect. *)
+  print_ssa_test ~exclude_syms {|
+let foo1 = 0
+foo1
+
+let foo = 0
+foo
+foo = 1
+foo
+foo++
+foo
+delete foo
+foo
+type Bar = string;
+declare var b1: Bar;
+declare var b2: {bar: Bar};
+|};
+    [%expect {|
+      [
+        (3, 0) to (3, 4) => {
+          (2, 4) to (2, 8): (`foo1`)
+        };
+        (6, 0) to (6, 3) => {
+          Global foo
+        };
+        (8, 0) to (8, 3) => {
+          Global foo
+        };
+        (9, 0) to (9, 3) => {
+          Global foo
+        };
+        (10, 0) to (10, 3) => {
+          Global foo
+        };
+        (11, 7) to (11, 10) => {
+          Global foo
+        };
+        (12, 0) to (12, 3) => {
+          Global foo
+        };
+        (14, 16) to (14, 19) => {
+          Global Bar
+        };
+        (15, 22) to (15, 25) => {
+          Global Bar
         }] |}]
