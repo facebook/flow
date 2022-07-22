@@ -391,9 +391,9 @@ let mk_check_file options ~reader () =
   let get_aloc_table_unsafe = Parsing_heaps.read_aloc_table_unsafe in
   let get_docblock_unsafe = Parsing_heaps.read_docblock_unsafe in
   let check_file =
-    let reader = Abstract_state_reader.Mutator_state_reader reader in
+    let reader = Check_service.mk_heap_reader (Abstract_state_reader.Mutator_state_reader reader) in
     let cache = Check_cache.create ~capacity:10000000 in
-    Check_service.mk_check_file ~options ~reader ~cache ()
+    Check_service.mk_check_file reader ~options ~cache ()
   in
   fun file ->
     let start_time = Unix.gettimeofday () in
@@ -495,8 +495,10 @@ let check_contents_context ~reader options file ast docblock file_sig =
     in
     SMap.fold f require_loc_map []
   in
-  let cache = check_contents_cache in
-  let check_file = Check_service.mk_check_file ~options ~reader ~cache () in
+  let check_file =
+    let reader = Check_service.mk_heap_reader reader in
+    Check_service.mk_check_file reader ~options ~cache:check_contents_cache ()
+  in
   check_file file required ast comments file_sig docblock aloc_table
 
 (* Wrap a potentially slow operation with a timer that fires every interval seconds. When it fires,
