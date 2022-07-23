@@ -636,9 +636,14 @@ let mk_check options ~reader () =
         )
 
 let mk_distributed_check _options ~reader:_ () _ =
+  let temp_dir = Tmp.temp_dir (Filename.get_temp_dir_name ()) "" in
+  let exe = Sys_utils.executable_path () in
+  FileUtil.cp [exe] temp_dir;
   let ic =
-    Unix.open_process_in
-      "frecli --use-case Flow --skip-dedup exec command --stream-output -- echo 'success' "
+    Printf.ksprintf
+      Unix.open_process_in
+      "frecli --use-case Flow --skip-dedup exec command --stream-output --input-dir %s -- ./flow remote-check"
+      temp_dir
   in
   let result =
     try Some (input_line ic) with

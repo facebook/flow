@@ -25,6 +25,7 @@
     cgroup ; hack
     procs_bucket ; hack
     watchman
+    fileutils
   )
   (preprocess (pps lwt_ppx))
 )
