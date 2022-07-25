@@ -119,6 +119,58 @@ class MyClass {
 }
 ```
 
+##### Class Constructors <a class="toc" id="toc-class-methods" href="#toc-class-constructors"></a>
+
+You can initialize your class properties in class constructors.
+
+```js
+class MyClass {
+  foo: number;
+
+  constructor() {
+    this.foo = 1;
+  }
+}
+```
+
+You must first call `super(...)` in a derived class before you can access `this` and `super`.
+
+```js
+class Base {
+  bar: number;
+}
+class MyClass extends Base {
+  foo: number;
+
+  constructor() {
+    this.foo; // Error
+    this.bar; // Error
+    super.bar; // Error
+    super();
+    this.foo; // OK
+    this.bar; // OK
+    super.bar; // OK
+  }
+}
+```
+
+However, Flow will not enforce that all class properties are initialized in constructors.
+
+```js
+class MyClass {
+  foo: number;
+  bar: number;
+
+  constructor() {
+    this.foo = 1;
+  }
+
+  useBar() {
+    (this.bar: number); // No errors.
+  }
+}
+```
+
 ##### Class Generics <a class="toc" id="toc-class-generics" href="#toc-class-generics"></a>
 
 Classes can also have their own [generics](../generics/).
