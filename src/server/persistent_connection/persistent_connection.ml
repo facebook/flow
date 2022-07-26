@@ -122,20 +122,12 @@ let add_client_to_clients clients client_id = client_id :: clients
 let remove_client_from_clients clients client_id = List.filter (fun id -> id != client_id) clients
 
 let get_subscribed_clients =
-  List.fold_left
-    (fun acc client_id ->
+  Base.List.fold
+    ~f:(fun acc client_id ->
       match get_client client_id with
       | Some client when client.subscribed -> client :: acc
       | _ -> acc)
-    []
-
-let get_subscribed_lsp_clients =
-  List.fold_left
-    (fun acc client_id ->
-      match get_client client_id with
-      | Some client when client.subscribed -> client :: acc
-      | _ -> acc)
-    []
+    ~init:[]
 
 let update_clients ~clients ~errors_reason ~calc_errors_and_warnings =
   let subscribed_clients = get_subscribed_clients clients in
@@ -154,7 +146,7 @@ let update_clients ~clients ~errors_reason ~calc_errors_and_warnings =
     List.iter (send_errors ~errors_reason ~errors ~warnings) subscribed_clients
   )
 
-let send_lsp clients json = clients |> get_subscribed_lsp_clients |> List.iter (send_single_lsp json)
+let send_lsp clients json = clients |> get_subscribed_clients |> List.iter (send_single_lsp json)
 
 let send_start_recheck clients =
   clients |> get_subscribed_clients |> List.iter send_single_start_recheck
