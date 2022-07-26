@@ -626,7 +626,7 @@ let request_configuration (ienv : initialized_env) : initialized_env =
           (match state with
           | Connected cenv ->
             send_configuration_to_server "synthetic/didChangeConfiguration" i_config cenv
-          | _ -> ());
+          | Disconnected _ -> ());
           state
         | _ -> state)
   in
@@ -961,7 +961,7 @@ let track_to_server (state : server_state) (c : Lsp.lsp_message) : server_state 
         match state with
         | Connected _ ->
           state |> update_errors (LspErrors.update_errors_due_to_change_and_send to_stdout params)
-        | _ -> state
+        | Disconnected _ -> state
       in
       (state, Some uri)
     | (open_files, NotificationMessage (DidSaveNotification params)) ->
@@ -1543,7 +1543,7 @@ let dismiss_tracks (state : server_state) : server_state =
     IdSet.iter decline_request_to_server env.c_outstanding_requests_to_server;
     Connected { env with c_outstanding_requests_to_server = IdSet.empty }
     |> update_errors (LspErrors.clear_all_errors_and_send to_stdout)
-  | _ -> state
+  | Disconnected _ -> state
 
 let do_live_diagnostics
     (state : server_state)
@@ -1561,7 +1561,9 @@ let do_live_diagnostics
         { metadata with LspProt.interaction_tracking_id = Some (start_interaction ~trigger state) }
       in
       send_to_server cenv (LspProt.LiveErrorsRequest uri) metadata
-    | _ -> ()
+    | Connected _
+    | Disconnected _ ->
+      ()
   in
   let interaction_id = start_interaction ~trigger state in
   (* reparse the file and write it into the state's editor_open_files as needed *)
@@ -1873,7 +1875,7 @@ and main_handle_initialized_unsafe flowconfig_name (state : server_state) (event
         (* forward the notification to the server process *)
         (match state with
         | Connected cenv -> send_lsp_to_server cenv metadata msg
-        | _ -> ());
+        | Disconnected _ -> ());
         state
     in
     Ok (state, LogNotNeeded)
@@ -1896,7 +1898,8 @@ and main_handle_initialized_unsafe flowconfig_name (state : server_state) (event
           send_lsp_to_server cenv metadata c
         );
         Ok (state, LogNotNeeded)
-      | _ -> failwith (Printf.sprintf "Response %s has missing handler" (message_name_to_string c))))
+      | Disconnected _ ->
+        failwith (Printf.sprintf "Response %s has missing handler" (message_name_to_string c))))
   | (_, Client_message (RequestMessage (id, DocumentSymbolRequest params), metadata)) ->
     (* documentSymbols is handled in the client, not the server, since it's
        purely syntax-driven and we'd like it to work even if the server is
