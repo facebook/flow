@@ -191,7 +191,7 @@ type 'loc virtual_reason_desc =
   | RReadOnlyType
   | ROptional of 'loc virtual_reason_desc
   | RMaybe of 'loc virtual_reason_desc
-  | RRestArray of 'loc virtual_reason_desc
+  | RRestArrayLit of 'loc virtual_reason_desc
   | RAbstract of 'loc virtual_reason_desc
   | RTypeApp of 'loc virtual_reason_desc
   | RTypeAppImplicit of 'loc virtual_reason_desc
@@ -291,7 +291,7 @@ let rec map_desc_locs f = function
   | RReadOnlyType -> RReadOnlyType
   | ROptional desc -> ROptional (map_desc_locs f desc)
   | RMaybe desc -> RMaybe (map_desc_locs f desc)
-  | RRestArray desc -> RRestArray (map_desc_locs f desc)
+  | RRestArrayLit desc -> RRestArrayLit (map_desc_locs f desc)
   | RAbstract desc -> RAbstract (map_desc_locs f desc)
   | RTypeApp desc -> RTypeApp (map_desc_locs f desc)
   | RTypeAppImplicit desc -> RTypeAppImplicit (map_desc_locs f desc)
@@ -679,7 +679,7 @@ let rec string_of_desc = function
       | d -> d
     in
     spf "nullable %s" (string_of_desc (loop d))
-  | RRestArray _ -> "rest array"
+  | RRestArrayLit _ -> "rest array"
   | RAbstract d -> spf "abstract %s" (string_of_desc d)
   | RTypeApp d -> string_of_desc d
   | RTypeAppImplicit d -> string_of_desc d
@@ -1340,7 +1340,7 @@ let classification_of_reason r =
   | RArrayType
   | RROArrayType
   | RTupleType
-  | RRestArray _
+  | RRestArrayLit _
   | RArrayPatternRestProp ->
     `Array
   | RMixed

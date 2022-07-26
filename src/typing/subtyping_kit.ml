@@ -1538,7 +1538,13 @@ module Make (Flow : INPUT) : OUTPUT = struct
       array_flow cx trace use_op lit1 r1 (ts1, t1, ts2, t2)
     (* Tuples can flow to tuples with the same arity *)
     | (DefT (r1, _, ArrT (TupleAT (_, ts1))), DefT (r2, _, ArrT (TupleAT (_, ts2)))) ->
-      let fresh = desc_of_reason r1 = RArrayLit in
+      let fresh =
+        match desc_of_reason r1 with
+        | RArrayLit
+        | RRestArrayLit _ ->
+          true
+        | _ -> false
+      in
       let l1 = List.length ts1 in
       let l2 = List.length ts2 in
       if l1 <> l2 then

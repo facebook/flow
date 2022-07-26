@@ -151,7 +151,7 @@ type 'loc virtual_reason_desc =
   | RReadOnlyType
   | ROptional of 'loc virtual_reason_desc
   | RMaybe of 'loc virtual_reason_desc
-  | RRestArray of 'loc virtual_reason_desc
+  | RRestArrayLit of 'loc virtual_reason_desc
   | RAbstract of 'loc virtual_reason_desc
   | RTypeApp of 'loc virtual_reason_desc
   | RTypeAppImplicit of 'loc virtual_reason_desc

@@ -8600,7 +8600,7 @@ struct
             List.rev_append rev_elems [UnresolvedSpreadArg spread_array]
         in
         let arg_array_reason =
-          replace_desc_reason (RRestArray (desc_of_reason reason_op)) reason_op
+          replace_desc_reason (RRestArrayLit (desc_of_reason reason_op)) reason_op
         in
         let arg_array =
           Tvar.mk_where cx arg_array_reason (fun tout ->
