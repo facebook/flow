@@ -56,6 +56,34 @@ let add_exports ~source ~module_name exports index =
   let names = entries_of_exports ~module_name exports in
   Base.List.fold names ~init:index ~f:(fun acc (name, kind) -> Export_index.add name source kind acc)
 
+let add_imports
+    imports (resolved_modules : Parsing_heaps.resolved_module SMap.t) (index : Export_index.t) =
+  Base.List.fold imports ~init:index ~f:(fun acc (import : Imports.import) ->
+      let open Imports in
+      let result = SMap.find_opt import.unresolved_source resolved_modules in
+      match result with
+      | Some (Ok module_name) ->
+        let (source, module_name) = (module_name, string_of_modulename module_name) in
+        let source =
+          match source with
+          | Modulename.String str -> Builtin str
+          | Modulename.Filename fn -> File_key fn
+        in
+        let (kind, name) =
+          match import.Imports.kind with
+          | Imports.Default -> (Export_index.Default, module_name)
+          | Imports.Named -> (Export_index.Named, import.export)
+          | Imports.Namespace -> (Export_index.NamedType, import.export)
+          | Imports.NamedType -> (Export_index.Namespace, import.export)
+        in
+
+        Export_index.add name source kind acc
+      | Some (Error _)
+      | None ->
+        (*Could not find resolved_requires key for this unresolved_source*)
+        acc
+  )
+
 (** [add_exports_of_checked_file file_key parse haste_info index] extracts the
     exports of [file_key] from its [parse] entry in shared memory. [haste_info]
     is used to fetch the module name from [file_key]. *)
@@ -85,40 +113,55 @@ let add_exports_of_builtins lib_exports index =
       | Exports.Default -> (* impossible *) acc
   )
 
-(** [index_file ~reader (to_add, to_remove) file] reads the exports of [file] from
-    shared memory and adds all of the current exports to [to_add], and all of the
-    previous exports to [to_remove]. *)
-let index_file ~reader (to_add, to_remove) = function
+(** [index_file ~reader (exports_to_add, exports_to_remove) file] reads the exports of [file] from
+    shared memory and adds all of the current exports to [exports_to_add], and all of the
+    previous exports to [exports_to_remove]. *)
+let index_file ~reader (exports_to_add, exports_to_remove, imports_to_add, imports_to_remove) =
+  function
   | File_key.ResourceFile _f ->
     (* TODO: where does filename need to be searchable? *)
-    (to_add, to_remove)
+    (exports_to_add, exports_to_remove, imports_to_add, imports_to_remove)
   | file_key ->
     (* TODO: when a file changes, the below removes the file entirely and then adds
         back the new info, even though much or all of it is probably still the same.
        instead, diff the old and new exports and make minimal changes. *)
     (match Parsing_heaps.get_file_addr file_key with
-    | None -> (to_add, to_remove)
+    | None -> (exports_to_add, exports_to_remove, imports_to_add, imports_to_remove)
     | Some file ->
-      let to_remove =
+      let (exports_to_remove, imports_to_remove) =
         (* get old exports so we can remove outdated entries *)
         match Parsing_heaps.Mutator_reader.get_old_typed_parse ~reader file with
         | Some parse ->
+          let imports = Parsing_heaps.read_imports parse in
           let haste_info = Parsing_heaps.Mutator_reader.get_old_haste_info ~reader file in
-          add_exports_of_checked_file file_key parse haste_info to_remove
+          let resolved_requires =
+            Parsing_heaps.Mutator_reader.get_old_resolved_requires_unsafe ~reader file_key parse
+          in
+          let resolved_modules = resolved_requires.Parsing_heaps.resolved_modules in
+          ( add_exports_of_checked_file file_key parse haste_info exports_to_remove,
+            add_imports imports resolved_modules imports_to_remove
+          )
         | None ->
           (* if it wasn't checked before, there were no entries added *)
-          to_remove
+          (exports_to_remove, imports_to_remove)
       in
-      let to_add =
+      let (exports_to_add, imports_to_add) =
         match Parsing_heaps.Mutator_reader.get_typed_parse ~reader file with
         | Some parse ->
+          let imports = Parsing_heaps.read_imports parse in
           let haste_info = Parsing_heaps.Mutator_reader.get_haste_info ~reader file in
-          add_exports_of_checked_file file_key parse haste_info to_add
+          let resolved_requires =
+            Parsing_heaps.Mutator_reader.get_resolved_requires_unsafe ~reader file_key parse
+          in
+          let resolved_modules = resolved_requires.Parsing_heaps.resolved_modules in
+          ( add_exports_of_checked_file file_key parse haste_info exports_to_add,
+            add_imports imports resolved_modules imports_to_add
+          )
         | None ->
           (* TODO: handle unchecked module names, maybe still parse? *)
-          to_add
+          (exports_to_add, imports_to_add)
       in
-      (to_add, to_remove))
+      (exports_to_add, exports_to_remove, imports_to_add, imports_to_remove))
 
 (** Indexes all of the files in [parsed] and returns two [Export_index.t]'s: the first is
     all of the exports to add to the final index, and the second are to be removed.
@@ -126,15 +169,18 @@ let index_file ~reader (to_add, to_remove) = function
     filename; it would be expensive to walk the entire export index to check each exported
     name to see if a changed file used to export it. Instead, we re-index the previous
     version of the file to know what to remove. *)
-let index ~workers ~reader parsed : (Export_index.t * Export_index.t) Lwt.t =
+let index ~workers ~reader parsed :
+    (Export_index.t * Export_index.t * Export_index.t * Export_index.t) Lwt.t =
   let total_count = Utils_js.FilenameSet.cardinal parsed in
   let parsed = Utils_js.FilenameSet.elements parsed in
 
   let job ~reader files =
-    let init = (Export_index.empty, Export_index.empty) in
-    let (to_add, to_remove) = Base.List.fold files ~init ~f:(index_file ~reader) in
+    let init = (Export_index.empty, Export_index.empty, Export_index.empty, Export_index.empty) in
+    let (exports_to_add, exports_to_remove, imports_to_add, imports_to_remove) =
+      Base.List.fold files ~init ~f:(index_file ~reader)
+    in
     let count = Base.List.length files in
-    (to_add, to_remove, count)
+    (exports_to_add, exports_to_remove, imports_to_add, imports_to_remove, count)
   in
 
   MonitorRPC.status_update
@@ -143,44 +189,77 @@ let index ~workers ~reader parsed : (Export_index.t * Export_index.t) Lwt.t =
      afterwards because the ~merge function blocks talking to workers so it needs to
      be as fast as possible in order to keep the workers busy. [Export_index.merge]
      was found to be slow enough for this to matter. *)
-  let%lwt (to_add, to_remove, _count) =
+  let%lwt (exports_to_add, exports_to_remove, imports_to_add, imports_to_remove, _count) =
     MultiWorkerLwt.call
       workers
       ~job:(fun _neutral -> job ~reader)
-      ~neutral:([], [], 0)
-      ~merge:(fun (to_add, to_remove, count) (to_add_acc, to_remove_acc, finished) ->
+      ~neutral:([], [], [], [], 0)
+      ~merge:
+        (fun (exports_to_add, exports_to_remove, imports_to_add, imports_to_remove, count)
+             ( exports_to_add_acc,
+               exports_to_remove_acc,
+               imports_to_add_acc,
+               imports_to_remove_acc,
+               finished
+             ) ->
         let finished = finished + count in
         MonitorRPC.status_update
           ~event:ServerStatus.(Indexing_progress { total = Some total_count; finished });
-        (to_add :: to_add_acc, to_remove :: to_remove_acc, finished))
+        ( exports_to_add :: exports_to_add_acc,
+          exports_to_remove :: exports_to_remove_acc,
+          imports_to_add :: imports_to_add_acc,
+          imports_to_remove :: imports_to_remove_acc,
+          finished
+        ))
       ~next:(MultiWorkerLwt.next workers parsed)
   in
 
-  let to_add =
-    Base.List.fold to_add ~init:Export_index.empty ~f:(fun acc index -> Export_index.merge index acc)
+  let exports_to_add =
+    Base.List.fold exports_to_add ~init:Export_index.empty ~f:(fun acc index ->
+        Export_index.merge index acc
+    )
   in
-  let to_remove =
-    Base.List.fold to_remove ~init:Export_index.empty ~f:(fun acc index ->
+  let exports_to_remove =
+    Base.List.fold exports_to_remove ~init:Export_index.empty ~f:(fun acc index ->
         Export_index.merge index acc
     )
   in
 
-  Lwt.return (to_add, to_remove)
+  let imports_to_add =
+    Base.List.fold imports_to_add ~init:Export_index.empty ~f:(fun acc index ->
+        Export_index.merge index acc
+    )
+  in
+
+  let imports_to_remove =
+    Base.List.fold imports_to_remove ~init:Export_index.empty ~f:(fun acc index ->
+        Export_index.merge index acc
+    )
+  in
+
+  Lwt.return (exports_to_add, exports_to_remove, imports_to_add, imports_to_remove)
 
 (** Initializes an [Export_search.t] with the exports of all of the [parsed] files
     as well as the builtin libdefs. *)
 let init ~workers ~reader ~libs parsed =
-  let%lwt (to_add, _to_remove) = index ~workers ~reader parsed in
-  let to_add = add_exports_of_builtins libs to_add in
-  (* TODO: assert that _to_remove is empty? should be on init *)
-  Lwt.return (Export_search.init to_add)
+  let%lwt (exports_to_add, _exports_to_remove, _imports_to_add, _imports_to_remove) =
+    index ~workers ~reader parsed
+  in
+  let exports_to_add = add_exports_of_builtins libs exports_to_add in
+  (* TODO: assert that _exports_to_remove is empty? should be on init *)
+  Lwt.return (Export_search.init exports_to_add)
 
 (** [update ~changed previous] updates the exports for all of the [changed] files
     in the [previous] [Export_search.t]. *)
 let update ~workers ~reader ~update ~remove previous : Export_search.t Lwt.t =
   let dirty_files = Utils_js.FilenameSet.union update remove in
-  let%lwt (to_add, to_remove) = index ~workers ~reader dirty_files in
-  previous |> Export_search.subtract to_remove |> Export_search.merge to_add |> Lwt.return
+  let%lwt (exports_to_add, exports_to_remove, _imports_to_add, _imports_to_remove) =
+    index ~workers ~reader dirty_files
+  in
+  previous
+  |> Export_search.subtract exports_to_remove
+  |> Export_search.merge exports_to_add
+  |> Lwt.return
 
 module For_test = struct
   let string_of_modulename = string_of_modulename

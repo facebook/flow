@@ -150,6 +150,9 @@ module Mutator_reader : sig
 
   val get_old_haste_info : reader:reader -> file_addr -> haste_info_addr option
 
+  val get_old_resolved_requires_unsafe :
+    reader:reader -> File_key.t -> [ `typed ] parse_addr -> resolved_requires
+
   val get_old_file_hash : reader:reader -> File_key.t -> Xx.hash option
 
   val get_old_exports : reader:reader -> File_key.t -> Exports.t option

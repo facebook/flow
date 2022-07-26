@@ -1069,6 +1069,12 @@ module Mutator_reader = struct
 
   let get_old_haste_info ~reader file = read_old ~reader (Heap.get_haste_info file)
 
+  let get_old_resolved_requires_unsafe ~reader file parse =
+    let resolved_requires = read_old ~reader (Heap.get_resolved_requires parse) in
+    match resolved_requires with
+    | Some resolved_requires -> read_resolved_requires resolved_requires
+    | None -> raise (Resolved_requires_not_found (File_key.to_string file))
+
   let has_ast ~reader file =
     let parse_opt =
       let* file_addr = get_file_addr file in
