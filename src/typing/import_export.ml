@@ -30,7 +30,13 @@ module type S = sig
 
   val export_type : Context.t -> Reason.name -> ALoc.t option -> Type.t -> unit
 
-  val export_binding : Context.t -> Reason.name -> ALoc.t -> Flow_ast.Statement.export_kind -> unit
+  val export_binding :
+    Context.t ->
+    ?is_function:bool ->
+    Reason.name ->
+    ALoc.t ->
+    Flow_ast.Statement.export_kind ->
+    unit
 
   val export_star : Context.t -> ALoc.t -> Type.t -> unit
 
@@ -122,12 +128,26 @@ module Make (Env : Env_sig.S) = struct
 
   let export_type_star cx = Module_info.export_type_star (Context.module_info cx)
 
-  let export_binding cx name loc = function
+  let export_binding cx ?is_function name loc = function
     | Flow_ast.Statement.ExportValue ->
-      let t = Env.get_var_declared_type ~lookup_mode:Env_sig.LookupMode.ForValue cx name loc in
+      let t =
+        Env.get_var_declared_type
+          ~lookup_mode:Env_sig.LookupMode.ForValue
+          ?is_declared_function:is_function
+          cx
+          name
+          loc
+      in
       export cx name loc t
     | Flow_ast.Statement.ExportType ->
-      let t = Env.get_var_declared_type ~lookup_mode:Env_sig.LookupMode.ForType cx name loc in
+      let t =
+        Env.get_var_declared_type
+          ~lookup_mode:Env_sig.LookupMode.ForType
+          ?is_declared_function:is_function
+          cx
+          name
+          loc
+      in
       export_type cx name (Some loc) t
 
   (* After we have seen all the export statements in a module, this function will

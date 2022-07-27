@@ -36,7 +36,7 @@ let set_builtin ~flow_t builtins name t =
   | Some (NotYetWritten tvar) ->
     flow_t (t, tvar);
     Hashtbl.replace builtins name (Entry tvar)
-  | Some (Entry _) -> failwith "Should have been excluded"
+  | Some (Entry _) -> failwith ("Should have been excluded: " ^ Reason.display_string_of_name name)
 
 let empty () : t = Hashtbl.create 0
 

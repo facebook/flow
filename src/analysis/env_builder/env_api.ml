@@ -162,11 +162,15 @@ module type S = sig
     | NonAssigningWrite
     | EmptyArrayWrite of L.t virtual_reason * L.LSet.t
 
+  type toplevel_member = Reason.name * read
+
   type env_info = {
     scopes: Scope_api.info;
     ssa_values: Ssa_api.values;
     env_values: values;
     env_entries: env_entry EnvMap.t;
+    toplevel_members: toplevel_member list;
+    module_toplevel_members: toplevel_member list L.LMap.t;
     providers: Provider_api.info;
     refinement_of_id: int -> Refi.refinement;
   }
@@ -358,11 +362,15 @@ module Make
     | NonAssigningWrite
     | EmptyArrayWrite of L.t virtual_reason * L.LSet.t
 
+  type toplevel_member = Reason.name * read
+
   type env_info = {
     scopes: Scope_api.info;
     ssa_values: Ssa_api.values;
     env_values: values;
     env_entries: env_entry EnvMap.t;
+    toplevel_members: toplevel_member list;
+    module_toplevel_members: toplevel_member list L.LMap.t;
     providers: Provider_api.info;
     refinement_of_id: int -> refinement;
   }
@@ -373,6 +381,8 @@ module Make
       ssa_values = L.LMap.empty;
       env_values = L.LMap.empty;
       env_entries = EnvMap.empty;
+      toplevel_members = [];
+      module_toplevel_members = L.LMap.empty;
       providers = Provider_api.empty;
       refinement_of_id = (fun _ -> failwith "Empty env info");
     }

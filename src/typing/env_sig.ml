@@ -25,6 +25,8 @@ module type S = sig
 
   val in_global_scope : Context.t -> bool
 
+  val is_excluded : Reason.name -> bool
+
   val peek_env : unit -> t
 
   val clone_env : t -> t
@@ -184,7 +186,12 @@ module type S = sig
   val get_var_annotation : Context.t -> Reason.name -> ALoc.t -> Type.t option
 
   val get_var_declared_type :
-    ?lookup_mode:LookupMode.t -> Context.t -> Reason.name -> ALoc.t -> Type.t
+    ?lookup_mode:LookupMode.t ->
+    ?is_declared_function:bool ->
+    Context.t ->
+    Reason.name ->
+    ALoc.t ->
+    Type.t
 
   val constraining_type : default:Type.t -> Context.t -> Reason.name -> ALoc.t -> Type.t
 
@@ -266,4 +273,15 @@ module type S = sig
   val get_next : Context.t -> ALoc.t -> Type.t
 
   val init_class_self_type : Context.t -> ALoc.t -> Reason.reason -> Type.t
+
+  val init_declare_module_synthetic_module_exports :
+    Context.t ->
+    set_module_exports:(Context.t -> ALoc.t -> Type.t -> unit) ->
+    export_type:(Context.t -> Reason.name -> ALoc.t option -> Type.t -> unit) ->
+    ALoc.t ->
+    Reason.reason ->
+    Scope.t ->
+    unit
+
+  val init_builtins_from_libdef : Context.t -> Scope.t -> Reason.name list
 end

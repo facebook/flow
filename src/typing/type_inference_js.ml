@@ -474,7 +474,7 @@ module Make (Env : Env_sig.S) : S = struct
     in
     Context.set_environment cx env;
     Env.init_env ~exclude_syms cx module_scope;
-    if (not lib) && Context.resolved_env cx then begin
+    if Context.resolved_env cx then begin
       let { Loc_env.scope_kind; class_stack; _ } = Context.environment cx in
       Base.List.iter ~f:(Env_resolution.resolve_component cx name_def_graph) components;
       Debug_js.Verbose.print_if_verbose_lazy cx (lazy ["Finished all components"]);
@@ -582,13 +582,7 @@ module Make (Env : Env_sig.S) : S = struct
     ignore (infer_core cx aloc_statements : (ALoc.t, ALoc.t * Type.t) Ast.Statement.t list);
     scan_for_suppressions cx lint_severities all_comments;
 
-    (module_scope
-    |> Scope.(
-         iter_entries Entry.((fun name entry -> Flow_js.set_builtin cx name (actual_type entry)))
-       )
-    );
-
-    NameUtils.Map.keys Scope.(module_scope.entries)
+    Env.init_builtins_from_libdef cx module_scope
 end
 
 module NewEnvInference = Make (New_env.New_env)

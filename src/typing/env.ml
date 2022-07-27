@@ -1125,7 +1125,7 @@ module Env : Env_sig.S = struct
      annotated type, and for others it's the union of all
      types assigned to the var throughout its lifetime.
   *)
-  let get_var_declared_type ?(lookup_mode = ForValue) cx name loc =
+  let get_var_declared_type ?(lookup_mode = ForValue) ?is_declared_function:_ cx name loc =
     read_entry ~lookup_mode ~specific:false ?desc:None cx name loc
 
   let constraining_type ~default cx name loc =
@@ -1888,4 +1888,52 @@ module Env : Env_sig.S = struct
   let get_next cx loc = get_internal_var cx "next" loc
 
   let init_class_self_type cx _loc reason = Tvar.mk cx reason
+
+  let init_declare_module_synthetic_module_exports
+      cx ~set_module_exports ~export_type loc reason module_scope =
+    match Context.module_kind cx with
+    | Module_info.ES _ -> ()
+    | Module_info.CJS clobbered ->
+      Scope.(
+        Entry.(
+          let () =
+            match clobbered with
+            | Some _ -> ()
+            | None ->
+              let props =
+                NameUtils.Map.fold
+                  (fun x entry acc ->
+                    match entry with
+                    | Value { specific; _ } when x <> internal_name "exports" ->
+                      let loc = Some (entry_loc entry) in
+                      Properties.add_field x Polarity.Positive loc specific acc
+                    | _ -> acc)
+                  module_scope.entries
+                  NameUtils.Map.empty
+              in
+              let proto = ObjProtoT reason in
+              let t = Obj_type.mk_with_proto cx reason ~obj_kind:Exact ~props proto in
+              set_module_exports cx loc t
+          in
+          NameUtils.Map.iter
+            (fun x entry ->
+              match entry with
+              | Type { type_; type_binding_kind = TypeBinding; _ } ->
+                (* TODO we may want to provide a location here *)
+                export_type cx x None type_
+              | Type { type_binding_kind = ImportTypeBinding; _ }
+              | Value _
+              | Class _ ->
+                ())
+            module_scope.entries
+        )
+      )
+
+  let init_builtins_from_libdef cx module_scope =
+    (module_scope
+    |> Scope.(
+         iter_entries Entry.((fun name entry -> Flow_js.set_builtin cx name (actual_type entry)))
+       )
+    );
+    NameUtils.Map.keys Scope.(module_scope.entries)
 end

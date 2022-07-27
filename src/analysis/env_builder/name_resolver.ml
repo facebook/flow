@@ -843,6 +843,8 @@ module Make
     (* We also maintain a list of all write locations, for use in populating the env with
        types. *)
     write_entries: Env_api.env_entry EnvMap.t;
+    toplevel_members: Env_api.toplevel_member list;
+    module_toplevel_members: Env_api.toplevel_member list L.LMap.t;
     curr_id: int;
     (* Maps refinement ids to refinements. This mapping contains _all_ the refinements reachable at
      * any point in the code. The latest_refinement maps keep track of which entries to read. *)
@@ -1220,6 +1222,8 @@ module Make
             |> EnvMap.add
                  (Env_api.FunctionOrGlobalThisLoc, ALoc.none)
                  (Env_api.AssigningWrite (mk_reason (RIdentifier (internal_name "this")) ALoc.none));
+          toplevel_members = [];
+          module_toplevel_members = L.LMap.empty;
           curr_id = 0;
           refinement_heap = IMap.empty;
           latest_refinements = [];
@@ -1238,6 +1242,10 @@ module Make
           env_state.values
 
       method write_entries : Env_api.env_entry EnvMap.t = env_state.write_entries
+
+      method toplevel_members = env_state.toplevel_members
+
+      method module_toplevel_members = env_state.module_toplevel_members
 
       method private merge_vals_with_havoc ~havoc ~def_loc v1 v2 =
         (* It's not safe to reset to havoc when one side can be uninitialized, because the havoc
@@ -4793,12 +4801,36 @@ module Make
         this#jsx_function_call loc;
         super#jsx_fragment loc expr
 
-      method! declare_module loc ({ Ast.Statement.DeclareModule.id; _ } as m) =
+      method private statements_with_bindings loc bindings statements ~finally =
+        this#with_bindings
+          loc
+          bindings
+          (fun _ ->
+            let completion_state =
+              this#run_to_completion (fun () -> ignore @@ this#statement_list statements)
+            in
+            finally ();
+            completion_state)
+          None
+
+      method private synthesize_read name =
+        let { val_ref; havoc; def_loc; kind; _ } = SMap.find name env_state.env in
+        let v =
+          if env_state.visiting_hoisted_type then
+            havoc
+          else
+            !val_ref
+        in
+        let v = Val.simplify def_loc (Some kind) (Some name) v in
+        (OrdinaryName name, v)
+
+      method! declare_module loc ({ Ast.Statement.DeclareModule.id; body; _ } as m) =
         let (name_loc, name) =
           match id with
           | Ast.Statement.DeclareModule.Identifier (loc, { Ast.Identifier.name; _ }) -> (loc, name)
           | Ast.Statement.DeclareModule.Literal (loc, { Ast.StringLiteral.value; _ }) -> (loc, value)
         in
+        let (block_loc, { Ast.Statement.Block.body = statements; comments = _ }) = body in
         let reason = mk_reason (RModule (OrdinaryName name)) name_loc in
         let write_entries =
           EnvMap.add_ordinary name_loc (Env_api.AssigningWrite reason) env_state.write_entries
@@ -4815,7 +4847,64 @@ module Make
             env_state.values
         in
         env_state <- { env_state with values; write_entries };
-        super#declare_module loc m
+        let bindings =
+          let hoist =
+            new Hoister.hoister ~flowmin_compatibility:false ~enable_enums ~with_types:true
+          in
+          hoist#eval hoist#statement_list statements
+        in
+        let saved_exclude_syms = env_state.exclude_syms in
+        env_state <- { env_state with exclude_syms = NameUtils.Set.empty };
+        ignore
+        @@ this#statements_with_bindings block_loc bindings statements ~finally:(fun () ->
+               let members =
+                 bindings |> Bindings.to_map |> SMap.keys |> Base.List.map ~f:this#synthesize_read
+               in
+               env_state <-
+                 {
+                   env_state with
+                   module_toplevel_members =
+                     L.LMap.add loc members env_state.module_toplevel_members;
+                 }
+           );
+        env_state <- { env_state with exclude_syms = saved_exclude_syms };
+        m
+
+      method visit_program program =
+        let (loc, { Flow_ast.Program.statements; _ }) = program in
+        let bindings =
+          let hoist = new hoister ~flowmin_compatibility:false ~enable_enums ~with_types:true in
+          hoist#eval hoist#program program
+        in
+        this#statements_with_bindings loc bindings statements ~finally:(fun () ->
+            let toplevel_members =
+              (bindings
+              |> Bindings.to_map
+              |> SMap.filter (fun name _ -> not @@ this#is_excluded_ordinary_name name)
+              |> SMap.keys
+              |> Base.List.map ~f:this#synthesize_read
+              )
+              @ Base.List.filter_map statements ~f:(function
+                    | ( _,
+                        Ast.Statement.DeclareModule
+                          {
+                            Ast.Statement.DeclareModule.id =
+                              ( Ast.Statement.DeclareModule.Identifier
+                                  (loc, { Ast.Identifier.name; _ })
+                              | Ast.Statement.DeclareModule.Literal
+                                  (loc, { Ast.StringLiteral.value = name; _ }) );
+                            _;
+                          }
+                      )
+                      when not @@ this#is_excluded (internal_module_name name) ->
+                      let reason = mk_reason (RModule (OrdinaryName name)) loc in
+                      let v = Val.one reason |> Val.simplify (Some loc) None (Some name) in
+                      Some (internal_module_name name, v)
+                    | _ -> None
+                    )
+            in
+            env_state <- { env_state with toplevel_members }
+        )
     end
 
   (* The EnvBuilder does not traverse dead code, but statement.ml does. Dead code
@@ -4965,8 +5054,6 @@ module Make
     end
 
   let program_with_scope cx ?(lib = false) ?(exclude_syms = NameUtils.Set.empty) program =
-    let open Hoister in
-    let (loc, _) = program in
     let jsx_ast =
       match Context.jsx cx with
       | Options.Jsx_react -> None
@@ -4982,15 +5069,7 @@ module Make
     in
     let providers = Provider_api.find_providers program in
     let env_walk = new name_resolver cx lib exclude_syms prepass providers in
-    let bindings =
-      let hoist = new hoister ~flowmin_compatibility:false ~enable_enums ~with_types:true in
-      hoist#eval hoist#program program
-    in
-    let completion_state =
-      env_walk#run_to_completion (fun () ->
-          ignore @@ env_walk#with_bindings loc bindings env_walk#program program
-      )
-    in
+    let completion_state = env_walk#visit_program program in
     (* Fill in dead code reads *)
     let dead_code_marker = new dead_code_marker cx env_walk#values env_walk#write_entries in
     let _ = dead_code_marker#program program in
@@ -5001,6 +5080,8 @@ module Make
         env_values = dead_code_marker#values;
         env_entries = dead_code_marker#write_entries;
         providers;
+        toplevel_members = env_walk#toplevel_members;
+        module_toplevel_members = env_walk#module_toplevel_members;
         refinement_of_id = env_walk#refinement_of_id;
       }
     )

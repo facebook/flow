@@ -5178,7 +5178,7 @@ class C {
         (undeclared class) (7, 6) to (7, 7): (`C`)
       };
       (4, 15) to (4, 16) => {
-        (undeclared class) (7, 6) to (7, 7): (`C`)
+        (7, 6) to (7, 7): (`C`)
       };
       (5, 0) to (5, 1) => {
         (4, 12) to (4, 13): (`c`)

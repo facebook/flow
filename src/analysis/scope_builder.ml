@@ -640,6 +640,13 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
       method! arrow_function loc (expr : (L.t, L.t) Ast.Function.t) =
         this#function_expression_without_name ~is_arrow:true loc expr
 
+      method! declare_variable _ decl =
+        let open Ast.Statement.DeclareVariable in
+        let { id = ident; annot; comments = _ } = decl in
+        ignore @@ this#pattern_identifier ~kind:Ast.Statement.VariableDeclaration.Var ident;
+        this#hoist_annotations (fun () -> ignore @@ this#type_annotation annot);
+        decl
+
       method! declare_function loc expr =
         match Declare_function_utils.declare_function_to_function_declaration_simple loc expr with
         | Some stmt ->

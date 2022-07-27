@@ -71,7 +71,12 @@ let infer_lib_file ~ccx ~options ~exclude_syms lib_file ast file_sig =
   (* Lib files use only concrete locations, so this is not used. *)
   let aloc_table = lazy (ALoc.empty_table lib_file) in
   let cx = Context.make ccx metadata lib_file aloc_table Context.InitLib in
-  let syms = Infer.infer_lib_file cx ast ~exclude_syms ~lint_severities ~file_sig in
+  let infer_lib_file =
+    match Context.env_mode cx with
+    | Options.SSAEnv _ -> Infer.NewEnvInference.infer_lib_file
+    | _ -> Infer.infer_lib_file
+  in
+  let syms = infer_lib_file cx ast ~exclude_syms ~lint_severities ~file_sig in
 
   if verbose != None then
     prerr_endlinef

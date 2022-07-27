@@ -1963,47 +1963,13 @@ struct
         )
       in
       let reason = mk_reason (RModule (OrdinaryName name)) loc in
-      let () =
-        match Context.module_kind cx with
-        | Module_info.ES _ -> ()
-        | Module_info.CJS clobbered ->
-          Scope.(
-            Entry.(
-              let () =
-                match clobbered with
-                | Some _ -> ()
-                | None ->
-                  let props =
-                    NameUtils.Map.fold
-                      (fun x entry acc ->
-                        match entry with
-                        | Value { specific; _ } ->
-                          let loc = Some (entry_loc entry) in
-                          Properties.add_field x Polarity.Positive loc specific acc
-                        | Type _
-                        | Class _ ->
-                          acc)
-                      module_scope.entries
-                      NameUtils.Map.empty
-                  in
-                  let proto = ObjProtoT reason in
-                  let t = Obj_type.mk_with_proto cx reason ~obj_kind:Exact ~props proto in
-                  Import_export.set_module_exports cx loc t
-              in
-              NameUtils.Map.iter
-                (fun x entry ->
-                  match entry with
-                  | Type { type_; type_binding_kind = TypeBinding; _ } ->
-                    (* TODO we may want to provide a location here *)
-                    Import_export.export_type cx x None type_
-                  | Type { type_binding_kind = ImportTypeBinding; _ }
-                  | Value _
-                  | Class _ ->
-                    ())
-                module_scope.entries
-            )
-          )
-      in
+      Env.init_declare_module_synthetic_module_exports
+        cx
+        ~set_module_exports:Import_export.set_module_exports
+        ~export_type:Import_export.export_type
+        loc
+        reason
+        module_scope;
       let module_t = Import_export.mk_module_t cx reason in
       let ast =
         ( loc,
@@ -2040,11 +2006,12 @@ struct
       let module D = DeclareExportDeclaration in
       let { D.default; declaration; specifiers; source; comments = _ } = decl in
       let declaration =
-        let export_maybe_default_binding id =
+        let export_maybe_default_binding ?is_function id =
           let (id_loc, { Ast.Identifier.name; comments = _ }) = id in
           let name = OrdinaryName name in
           match default with
-          | None -> Import_export.export_binding cx name id_loc Ast.Statement.ExportValue
+          | None ->
+            Import_export.export_binding cx ?is_function name id_loc Ast.Statement.ExportValue
           | Some default_loc ->
             let t =
               Env.get_var_declared_type ~lookup_mode:Env_sig.LookupMode.ForType cx name id_loc
@@ -2065,7 +2032,7 @@ struct
             end
           | D.Function (loc, f) ->
             let dec_fun = statement cx (loc, DeclareFunction f) in
-            export_maybe_default_binding f.DeclareFunction.id;
+            export_maybe_default_binding ~is_function:true f.DeclareFunction.id;
             begin
               match dec_fun with
               | (_, DeclareFunction f_ast) -> D.Function (loc, f_ast)

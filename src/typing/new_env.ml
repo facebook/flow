@@ -51,6 +51,8 @@ module New_env = struct
 
   let get_global_value_type = Old_env.get_global_value_type
 
+  let is_excluded = Old_env.is_excluded
+
   let peek_env = Old_env.peek_env
 
   let merge_env = Old_env.merge_env
@@ -358,8 +360,8 @@ module New_env = struct
       ~default:t
       refi
 
-  and read_entry ~lookup_mode cx loc reason =
-    let ({ Loc_env.var_info; _ } as env) = Context.environment cx in
+  and type_of_state ~lookup_mode cx env loc reason write_locs val_id refi =
+    let { Loc_env.var_info; _ } = env in
     let rec type_of_state states val_id refi =
       let t =
         lazy
@@ -497,7 +499,7 @@ module New_env = struct
                    cx
                    [
                      spf
-                       "reading static super(%s) from location %s"
+                       "reading %s from illegal write location %s"
                        (Reason.string_of_aloc loc)
                        (Reason.aloc_of_reason reason |> Reason.string_of_aloc);
                    ];
@@ -535,6 +537,10 @@ module New_env = struct
       in
       t |> refine cx reason loc refi
     in
+    type_of_state write_locs val_id refi
+
+  and read_entry ~lookup_mode cx loc reason =
+    let ({ Loc_env.var_info; _ } as env) = Context.environment cx in
     match find_var_opt var_info loc with
     | Error loc -> Error loc
     | Ok { Env_api.def_loc; write_locs; val_kind; name; id } ->
@@ -546,7 +552,7 @@ module New_env = struct
              (Error_message.ETypeInValuePosition { imported; name }, loc, OrdinaryName name, def_loc)
           );
         Ok (AnyT.at (AnyError None) loc)
-      | _ -> Ok (type_of_state write_locs id None))
+      | _ -> Ok (type_of_state ~lookup_mode cx env loc reason write_locs id None))
 
   and read_entry_exn ~lookup_mode cx loc reason =
     with_debug_exn cx loc (fun () ->
@@ -645,10 +651,11 @@ module New_env = struct
     | InternalModuleName _ ->
       None
 
-  let get_var_declared_type ?(lookup_mode = ForValue) cx name loc =
+  let get_var_declared_type ?(lookup_mode = ForValue) ?(is_declared_function = false) cx name loc =
     match (name, lookup_mode) with
     | (InternalName _, _) -> Old_env.get_var_declared_type ~lookup_mode cx name loc
-    | ((OrdinaryName _ | InternalModuleName _), ForType) ->
+    | ((OrdinaryName _ | InternalModuleName _), ForType)
+    | (InternalModuleName _, ForValue) ->
       let env = Context.environment cx in
       check_readable cx Env_api.OrdinaryNameLoc loc;
       (match Loc_env.find_ordinary_write env loc with
@@ -660,7 +667,7 @@ module New_env = struct
         Type.(AnyT.at (AnyError None) loc))
     | ((OrdinaryName _ | InternalModuleName _), _) ->
       let env = Context.environment cx in
-      provider_type_for_def_loc cx env loc
+      provider_type_for_def_loc cx env ~intersect:is_declared_function loc
 
   let constraining_type ~default cx name loc =
     match name with
@@ -1163,4 +1170,66 @@ module New_env = struct
     let env = Context.environment cx in
     check_readable cx Env_api.OrdinaryNameLoc loc;
     Base.Option.value_exn (Loc_env.find_ordinary_write env loc)
+
+  let init_declare_module_synthetic_module_exports
+      cx ~set_module_exports ~export_type loc reason _module_scope =
+    let env = Context.environment cx in
+    let module_toplevel_members =
+      ALocMap.find loc env.Loc_env.var_info.Env_api.module_toplevel_members
+    in
+    match Context.module_kind cx with
+    | Module_info.ES _ -> ()
+    | Module_info.CJS clobbered ->
+      let () =
+        match clobbered with
+        | Some _ -> ()
+        | None ->
+          let props =
+            Base.List.fold
+              module_toplevel_members
+              ~init:NameUtils.Map.empty
+              ~f:(fun acc (name, { Env_api.write_locs; val_kind; id; _ }) ->
+                match val_kind with
+                | Some Env_api.Value ->
+                  let t =
+                    type_of_state ~lookup_mode:ForValue cx env loc reason write_locs id None
+                  in
+                  Properties.add_field name Polarity.Positive (Some loc) t acc
+                | _ -> acc
+            )
+          in
+          let proto = ObjProtoT reason in
+          let t = Obj_type.mk_with_proto cx reason ~obj_kind:Exact ~props proto in
+          set_module_exports cx loc t
+      in
+      Base.List.iter
+        module_toplevel_members
+        ~f:(fun (name, { Env_api.write_locs; val_kind; id; _ }) ->
+          match val_kind with
+          | Some (Env_api.Type { imported = false }) ->
+            let t = type_of_state ~lookup_mode:ForType cx env loc reason write_locs id None in
+            export_type cx name (Some loc) t
+          | _ -> ()
+      )
+
+  let init_builtins_from_libdef cx _module_scope =
+    let env = Context.environment cx in
+    let filename = Context.file cx in
+    let read_loc = Loc.{ none with source = Some filename } |> ALoc.of_loc in
+    let read_reason =
+      let desc = Reason.(RModule (OrdinaryName (File_key.to_string filename))) in
+      Reason.mk_reason desc read_loc
+    in
+    Base.List.map
+      env.Loc_env.var_info.Env_api.toplevel_members
+      ~f:(fun (name, { Env_api.write_locs; val_kind; id; _ }) ->
+        let lookup_mode =
+          match val_kind with
+          | Some (Env_api.Type _) -> ForType
+          | _ -> ForValue
+        in
+        let t = type_of_state ~lookup_mode cx env read_loc read_reason write_locs id None in
+        Flow_js.set_builtin cx name t;
+        name
+    )
 end
