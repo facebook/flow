@@ -634,26 +634,3 @@ let mk_check options ~reader () =
           | ECheckTimeout (s, _) -> (file_loc, CheckTimeout s)
           | _ -> (file_loc, CheckJobException exc)
         )
-
-let mk_distributed_check _options ~reader:_ () _ =
-  let temp_dir = Tmp.temp_dir (Filename.get_temp_dir_name ()) "" in
-  let exe = Sys_utils.executable_path () in
-  FileUtil.cp [exe] temp_dir;
-  let ic =
-    Printf.ksprintf
-      Unix.open_process_in
-      "frecli --use-case Flow --skip-dedup exec command --stream-output --input-dir %s -- ./flow remote-check"
-      temp_dir
-  in
-  let result =
-    try Some (input_line ic) with
-    | End_of_file -> None
-  in
-  match result with
-  | None -> failwith "Not receive content from stdout"
-  | Some result ->
-    let result = Str.global_replace (Str.regexp "[\r\n\t ]+") "" result in
-    assert (Unix.close_process_in ic = Unix.WEXITED 0);
-    (match result with
-    | "success" -> Ok None
-    | _ -> failwith "the command doesn't have a output 'success'")

@@ -6,3 +6,8 @@
  *)
 
 let upload_blob _ = ()
+
+let distributed_check_job _ _ files =
+  let results = List.fold_left (fun acc file -> (file, Ok None) :: acc) [] files in
+  let unfinished_files = [] in
+  (results, unfinished_files)

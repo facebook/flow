@@ -83,10 +83,3 @@ val mk_check :
   unit ->
   File_key.t ->
   check_result option unit_result
-
-val mk_distributed_check :
-  Options.t ->
-  reader:Parsing_heaps.Mutator_reader.reader ->
-  unit ->
-  File_key.t ->
-  check_result option unit_result

@@ -659,13 +659,13 @@ end = struct
             ~workers
             ~files:(FilenameSet.elements files)
         in
-        let mk_check () =
+        let job =
           if Options.distributed options then
-            Merge_service.mk_distributed_check options ~reader ()
+            Remote_execution.distributed_check_job options
           else
-            Merge_service.mk_check options ~reader ()
+            let mk_check () = Merge_service.mk_check options ~reader () in
+            mk_job ~mk_check ~options ()
         in
-        let job = mk_job ~mk_check ~options () in
         let%lwt ret = MultiWorkerLwt.call workers ~job ~neutral:[] ~merge ~next in
         let { ServerEnv.merge_errors; warnings; _ } = errors in
         let ((merge_errors, warnings, suppressions, coverage, first_internal_error), slow_files) =
