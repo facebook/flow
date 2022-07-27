@@ -145,6 +145,21 @@ let split_on_newlines content =
   | "" :: rest -> List.rev rest
   | _ -> lines
 
+(** Escapes special characters to make the given string a valid filename *)
+let filename_escape path =
+  let buf = Buffer.create (String.length path) in
+  String.iter
+    (fun ch ->
+      match ch with
+      | '\\' -> Buffer.add_string buf "zB"
+      | ':' -> Buffer.add_string buf "zC"
+      | '/' -> Buffer.add_string buf "zS"
+      | '\x00' -> Buffer.add_string buf "z0"
+      | 'z' -> Buffer.add_string buf "zZ"
+      | _ -> Buffer.add_char buf ch)
+    path;
+  Buffer.contents buf
+
 module Internal = struct
   let to_list s =
     let rec loop acc i =

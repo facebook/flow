@@ -73,48 +73,4 @@ let parent path =
 
 let output = output_string
 
-let slash_escaped_string_of_path path =
-  let buf = Buffer.create (String.length path) in
-  String.iter
-    (fun ch ->
-      match ch with
-      | '\\' -> Buffer.add_string buf "zB"
-      | ':' -> Buffer.add_string buf "zC"
-      | '/' -> Buffer.add_string buf "zS"
-      | '\x00' -> Buffer.add_string buf "z0"
-      | 'z' -> Buffer.add_string buf "zZ"
-      | _ -> Buffer.add_char buf ch)
-    path;
-  Buffer.contents buf
-
-let path_of_slash_escaped_string str =
-  let length = String.length str in
-  let buf = Buffer.create length in
-  let rec consume i =
-    if i >= length then
-      ()
-    else
-      let replacement =
-        if i < length - 1 && str.[i] = 'z' then
-          match str.[i + 1] with
-          | 'B' -> Some '\\'
-          | 'C' -> Some ':'
-          | 'S' -> Some '/'
-          | '0' -> Some '\x00'
-          | 'Z' -> Some 'z'
-          | _ -> None
-        else
-          None
-      in
-      let (c, next_i) =
-        match replacement with
-        | Some r -> (r, i + 2)
-        | None -> (str.[i], i + 1)
-      in
-      Buffer.add_char buf c;
-      consume next_i
-  in
-  consume 0;
-  make (Buffer.contents buf)
-
 module Set = Reordered_argument_set (Flow_set.Make (S))

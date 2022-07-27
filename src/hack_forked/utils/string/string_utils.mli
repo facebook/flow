@@ -62,6 +62,9 @@ val indent : int -> string -> string
     contents after the final delimiter is NOT included (unlike [Str.split_delim]). *)
 val split_on_newlines : string -> string list
 
+(** Escapes special characters to make the given string a valid filename *)
+val filename_escape : string -> string
+
 module Internal : sig
   val to_list : string -> char list
 
