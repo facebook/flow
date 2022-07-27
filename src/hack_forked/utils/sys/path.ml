@@ -5,20 +5,13 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-open Reordered_argument_collections
-include Sys
-
-module S = struct
-  type t = string
-
-  let compare = String.compare
-
-  let to_string x = x
-end
-
-type t = S.t
+type t = string
 
 let dummy_path : t = ""
+
+let file_exists = Sys.file_exists
+
+let is_directory = Sys.is_directory
 
 let cat = Sys_utils.cat
 
@@ -66,11 +59,9 @@ let to_string path = path
 let concat path more = make (Filename.concat path more)
 
 let parent path =
-  if is_directory path then
+  if Sys.is_directory path then
     make (concat path Filename.parent_dir_name)
   else
     make (Filename.dirname path)
 
 let output = output_string
-
-module Set = Reordered_argument_set (Flow_set.Make (S))

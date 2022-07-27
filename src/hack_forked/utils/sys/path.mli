@@ -5,17 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-open Reordered_argument_collections
-
-module S : sig
-  type t = private string
-
-  val compare : t -> t -> int
-
-  val to_string : t -> string
-end
-
-type t = S.t
+type t = private string
 
 val dummy_path : t
 
@@ -35,22 +25,12 @@ val compare : t -> t -> int
 
 val concat : t -> string -> t
 
-val chdir : t -> unit
-
 val dirname : t -> t
 
 val basename : t -> string
 
-val getcwd : unit -> t
-
 val output : out_channel -> t -> unit
-
-val remove : t -> unit
 
 val parent : t -> t
 
-val executable_name : t
-
 val cat : t -> string
-
-module Set : module type of Reordered_argument_set (Flow_set.Make (S))
