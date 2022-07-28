@@ -54,9 +54,7 @@ let run_daemon (scuba_table, roots) (ic, oc) =
   let t = Unix.gettimeofday () in
   let infd = Daemon.descr_of_in_channel ic in
   let outfd = Daemon.descr_of_out_channel oc in
-  let roots =
-    Base.List.map roots ~f:(fun root -> Sys_utils.normalize_filename_dir_sep (Path.to_string root))
-  in
+  let roots = Base.List.map roots ~f:Path.to_string in
   let env = DfindEnv.make roots in
   Base.List.iter ~f:(DfindAddFile.path env) roots;
   FlowEventLogger.dfind_ready scuba_table t;

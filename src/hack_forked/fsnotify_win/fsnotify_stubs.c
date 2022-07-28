@@ -107,17 +107,24 @@ static value parse_events(struct events* events) {
       // Length of the relative path in UTF8.
       int slen = win_wide_char_to_multi_byte(filename, wlen, NULL, 0);
 
-      // Allocate the absolute path, including a /
+      // Allocate the absolute path, including a slash
       path_value = caml_alloc_string(wpath_len + 1 + slen);
       char* path = (char*)String_val(path_value);
       strncpy(path, events->wpath, wpath_len);
-      path[wpath_len] = '/';
+      path[wpath_len] = '\\';
       win_wide_char_to_multi_byte(filename, wlen, path + wpath_len + 1, slen);
 
       // normalize slashes
+      //
+      // this SHOULD be a no-op because the wpath should already be normalized,
+      // and ReadDirectoryChangesW should give us paths using native slashes,
+      // but it's cheap to double check.
+      //
+      // ideally, we'd normalize to forward slashes here and consistently
+      // use forward slashes everywhere.
       for (i = 0; i < slen; i++) {
-        if (path[i] == '\\') {
-          path[i] = '/';
+        if (path[i] == '/') {
+          path[i] = '\\';
         }
       }
 
