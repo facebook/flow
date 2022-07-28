@@ -32,7 +32,6 @@ let stub_metadata ~root ~checked =
     babel_loose_array_spread = false;
     cycle_errors = false;
     enable_const_params = false;
-    enable_contextual_typing = false;
     enable_enums = true;
     enable_relay_integration = false;
     enforce_local_inference_annotations = false;

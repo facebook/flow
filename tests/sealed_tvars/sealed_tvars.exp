@@ -38,13 +38,5 @@ Internal error: unconstrained tvar during tvar resolution
             ^
 
 
-Error ------------------------------------------------------------------------------------------- error_examples.js:7:28
 
-Internal error: unconstrained tvar during tvar resolution
-
-   7| var x: number => number = (x) => x;
-                                 ^
-
-
-
-Found 6 errors
+Found 5 errors

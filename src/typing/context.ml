@@ -34,7 +34,6 @@ type metadata = {
   babel_loose_array_spread: bool;
   cycle_errors: bool;
   enable_const_params: bool;
-  enable_contextual_typing: bool;
   enable_enums: bool;
   enable_relay_integration: bool;
   enforce_local_inference_annotations: bool;
@@ -245,7 +244,6 @@ let metadata_of_options options =
     babel_loose_array_spread = Options.babel_loose_array_spread options;
     cycle_errors = Options.cycle_errors options;
     enable_const_params = Options.enable_const_params options;
-    enable_contextual_typing = Options.enable_contextual_typing options;
     enable_enums = Options.enums options;
     enable_relay_integration = Options.enable_relay_integration options;
     enforce_local_inference_annotations = Options.enforce_local_inference_annotations options;
@@ -433,8 +431,6 @@ let builtins cx = cx.ccx.builtins
 
 let enable_const_params cx =
   cx.metadata.enable_const_params || cx.metadata.strict || cx.metadata.strict_local
-
-let enable_contextual_typing cx = cx.metadata.enable_contextual_typing
 
 let enable_enums cx = cx.metadata.enable_enums
 

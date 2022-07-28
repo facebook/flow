@@ -83,7 +83,6 @@ type t = {
   opt_debug: bool;
   opt_direct_dependent_files_fix: bool;
   opt_enable_const_params: bool;
-  opt_enable_contextual_typing: bool;
   opt_enable_relay_integration: bool;
   opt_enabled_rollouts: string SMap.t;
   opt_enforce_local_inference_annotations: bool;
@@ -182,8 +181,6 @@ let cycle_errors opts = opts.opt_cycle_errors
 let direct_dependent_files_fix opts = opts.opt_direct_dependent_files_fix
 
 let enable_const_params opts = opts.opt_enable_const_params
-
-let enable_contextual_typing opts = opts.opt_enable_contextual_typing
 
 let enable_relay_integration opts = opts.opt_enable_relay_integration
 

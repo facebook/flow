@@ -139,8 +139,9 @@ module Make (Env : Env_sig.S) (Statement : Statement_sig.S with module Env := En
           RequireAnnot.add_missing_annotation_error cx reason
         | _ -> ()
       in
+      let contextual_typing_enabled = Context.env_mode cx = Options.(SSAEnv Enforced) in
       let t =
-        if Context.enable_contextual_typing cx then
+        if contextual_typing_enabled then
           let resolve_hint = function
             | AnnotationHint (tparams_locs, anno) -> resolve_annotation cx tparams_locs anno
             | ValueHint exp -> expression cx ~hint:dummy_hint exp
@@ -175,7 +176,7 @@ module Make (Env : Env_sig.S) (Statement : Statement_sig.S with module Env := En
         else
           Tvar.mk cx reason
       in
-      (t, mk_use_op t, false, Context.enable_contextual_typing cx)
+      (t, mk_use_op t, false, contextual_typing_enabled)
     | Root Catch ->
       let t = AnyT.annot (mk_reason (RCustom "catch parameter") loc) in
       (t, mk_use_op t, false, true)

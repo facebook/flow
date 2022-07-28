@@ -1,4 +1,3 @@
 [options]
-experimental.env_mode=resolved
+experimental.env_mode=enforced
 experimental.cycle_errors=true
-experimental.contextual_typing=true

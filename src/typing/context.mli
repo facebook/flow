@@ -54,7 +54,6 @@ type metadata = {
   babel_loose_array_spread: bool;
   cycle_errors: bool;
   enable_const_params: bool;
-  enable_contextual_typing: bool;
   enable_enums: bool;
   enable_relay_integration: bool;
   enforce_local_inference_annotations: bool;
@@ -169,8 +168,6 @@ val babel_loose_array_spread : t -> bool
 val builtins : t -> Builtins.t
 
 val enable_const_params : t -> bool
-
-val enable_contextual_typing : t -> bool
 
 val enable_enums : t -> bool
 

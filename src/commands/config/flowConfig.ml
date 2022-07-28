@@ -53,7 +53,6 @@ module Opts = struct
     disable_live_non_parse_errors: bool option;
     emoji: bool option;
     enable_const_params: bool option;
-    enable_contextual_typing: bool option;
     enforce_local_inference_annotations: bool;
     enforce_class_annotations: bool;
     enforce_strict_call_arity: bool;
@@ -183,7 +182,6 @@ module Opts = struct
       disable_live_non_parse_errors = None;
       emoji = None;
       enable_const_params = None;
-      enable_contextual_typing = None;
       enforce_local_inference_annotations = false;
       enforce_class_annotations = false;
       enforce_strict_call_arity = true;
@@ -840,9 +838,6 @@ module Opts = struct
       ( "experimental.const_params",
         boolean (fun opts v -> Ok { opts with enable_const_params = Some v })
       );
-      ( "experimental.contextual_typing",
-        boolean (fun opts v -> Ok { opts with enable_contextual_typing = Some v })
-      );
       ("experimental.cycle_errors", boolean (fun opts v -> Ok { opts with cycle_errors = v }));
       ("experimental.direct_dependent_files_fix", direct_dependent_files_fix_parser);
       ("experimental.disable_live_non_parse_errors", disable_live_non_parse_errors_parser);
@@ -1476,8 +1471,6 @@ let direct_dependent_files_fix c = c.options.Opts.direct_dependent_files_fix
 let disable_live_non_parse_errors c = c.options.Opts.disable_live_non_parse_errors
 
 let emoji c = c.options.Opts.emoji
-
-let enable_contextual_typing c = c.options.Opts.enable_contextual_typing
 
 let enable_const_params c = c.options.Opts.enable_const_params
 

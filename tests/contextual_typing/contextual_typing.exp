@@ -1,1 +1,27 @@
-Found 0 errors
+Error ------------------------------------------------------------------------------------------------------ test.js:3:1
+
+Internal error: read of Env_api.Make.FunctionOrGlobalThisLoc entry which has not been prepared for typechecking
+
+       v-----------------
+    3| function test1() {
+    4|   declare function f<T>(f: (string) => T): T;
+    5|   // We should be able to infer that c is string.
+    6|   const c = f((a) => a);
+    7|   (c: string);
+    8|
+    9|   let f2: (string) => string = (a) => (a: string); // ok
+   10|   f2 = (b) => (b: string); // ok
+   11| }
+       ^
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:10:9
+
+Internal error: unconstrained tvar during tvar resolution
+
+   10|   f2 = (b) => (b: string); // ok
+               ^
+
+
+
+Found 2 errors
