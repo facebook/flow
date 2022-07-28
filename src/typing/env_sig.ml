@@ -204,6 +204,15 @@ module type S = sig
     Type.t ->
     unit
 
+  val read_declared_type :
+    ?lookup_mode:LookupMode.t ->
+    ?is_func:bool ->
+    Context.t ->
+    Reason.name ->
+    Reason.t ->
+    ALoc.t ->
+    Type.t
+
   val unify_declared_fun_type : Context.t -> Reason.name -> ALoc.t -> Type.t -> unit
 
   val var_ref :

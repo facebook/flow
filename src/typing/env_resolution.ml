@@ -125,12 +125,12 @@ module Make (Env : Env_sig.S) (Statement : Statement_sig.S with module Env := En
         else
           unknown_use
       in
-      (t, use_op, true, true)
+      (t, use_op, true)
     | Root (Value exp) ->
       (* TODO: look up the annotation for the variable at loc and pass in *)
       let t = expression cx ~hint:dummy_hint exp in
       let use_op = Op (AssignVar { var = Some reason; init = mk_expression_reason exp }) in
-      (t, use_op, false, true)
+      (t, use_op, false)
     | Root (Contextual { reason; hint; default_expression = _ }) ->
       let param_loc = Reason.poly_loc_of_reason reason in
       let () =
@@ -176,10 +176,10 @@ module Make (Env : Env_sig.S) (Statement : Statement_sig.S with module Env := En
         else
           Tvar.mk cx reason
       in
-      (t, mk_use_op t, false, contextual_typing_enabled)
+      (t, mk_use_op t, false)
     | Root Catch ->
       let t = AnyT.annot (mk_reason (RCustom "catch parameter") loc) in
-      (t, mk_use_op t, false, true)
+      (t, mk_use_op t, false)
     | Root (For (kind, exp)) ->
       let reason = mk_reason (RCustom "for-in") loc (*TODO: loc should be loc of loop *) in
       let right_t = expression cx ~hint:dummy_hint ~cond:OtherTest exp in
@@ -190,7 +190,7 @@ module Make (Env : Env_sig.S) (Statement : Statement_sig.S with module Env := En
           StrT.at loc |> with_trust bogus_trust
         | Of { await } -> Statement.for_of_elemt cx right_t reason await
       in
-      (t, mk_use_op t, false, true)
+      (t, mk_use_op t, false)
     | Select { selector; default = _; binding } ->
       let refined_type =
         match selector with
@@ -210,9 +210,9 @@ module Make (Env : Env_sig.S) (Statement : Statement_sig.S with module Env := En
         in
         (* When we can get a refined value on a destructured property,
            we must be in an assignment position and the type must have been resolved. *)
-        (t, mk_use_op t, binding_has_annot binding, true)
+        (t, mk_use_op t, binding_has_annot binding)
       | None ->
-        let (t, use_op, has_anno, resolved) = resolve_binding_partial cx reason loc binding in
+        let (t, use_op, has_anno) = resolve_binding_partial cx reason loc binding in
         let (selector, reason) = mk_selector_reason cx loc selector in
         let kind =
           if has_anno then
@@ -224,12 +224,11 @@ module Make (Env : Env_sig.S) (Statement : Statement_sig.S with module Env := En
               Flow_js.flow cx (t, DestructuringT (reason, kind, selector, tout, Reason.mk_id ()))
           ),
           use_op,
-          has_anno,
-          resolved
+          has_anno
         ))
 
   let resolve_binding cx reason loc binding =
-    let (t, use_op, has_annot, resolved) = resolve_binding_partial cx reason loc binding in
+    let (t, use_op, has_annot) = resolve_binding_partial cx reason loc binding in
     let t =
       match (binding, has_annot) with
       (* This is unnecessary if we are directly resolving an annotation. *)
@@ -282,7 +281,7 @@ module Make (Env : Env_sig.S) (Statement : Statement_sig.S with module Env := En
         in
         Flow_js.flow cx (default_t, UseT (use_op, t)))
       default;
-    (t, use_op, resolved)
+    (t, use_op)
 
   let resolve_inferred_function cx id_loc reason function_loc function_ =
     let cache = Context.node_cache cx in
@@ -501,8 +500,7 @@ module Make (Env : Env_sig.S) (Statement : Statement_sig.S with module Env := En
     New_env.New_env.check_readable cx Env_api.OrdinaryNameLoc class_loc;
     let class_t = Base.Option.value_exn (Loc_env.find_ordinary_write env class_loc) in
     (* class_t will only be resolved after type checking the entire class. *)
-    let resolved = false in
-    (class_t, unknown_use, resolved)
+    (class_t, unknown_use)
 
   let resolve_chain_expression cx ~cond exp =
     let cache = Context.node_cache cx in
@@ -576,36 +574,34 @@ module Make (Env : Env_sig.S) (Statement : Statement_sig.S with module Env := En
     Context.set_environment
       cx
       { env with Loc_env.scope_kind = convert_scope_kind def_scope_kind; class_stack };
-    let (t, use_op, resolved) =
-      let as_resolved (t, use_op) = (t, use_op, true) in
+    let (t, use_op) =
       match def with
       | Binding b -> resolve_binding cx def_reason id_loc b
-      | ChainExpression (cond, e) -> as_resolved @@ resolve_chain_expression cx ~cond e
-      | RefiExpression e -> (expression cx ~hint:Hint_None e, unknown_use, true)
+      | ChainExpression (cond, e) -> resolve_chain_expression cx ~cond e
+      | RefiExpression e -> (expression cx ~hint:Hint_None e, unknown_use)
       | Function { function_; synthesizable_from_annotation = false; function_loc; tparams_map = _ }
         ->
-        as_resolved @@ resolve_inferred_function cx id_loc def_reason function_loc function_
+        resolve_inferred_function cx id_loc def_reason function_loc function_
       | Function { function_; synthesizable_from_annotation = true; function_loc = _; tparams_map }
         ->
-        as_resolved @@ resolve_annotated_function cx def_reason tparams_map function_
+        resolve_annotated_function cx def_reason tparams_map function_
       | Class { class_; class_loc; missing_annotations = _ } ->
-        as_resolved @@ resolve_class cx id_loc def_reason class_loc class_
+        resolve_class cx id_loc def_reason class_loc class_
       | MemberAssign { member_loc = _; member = _; rhs } ->
-        (expression cx ~hint:dummy_hint rhs, unknown_use, true)
-      | OpAssign { exp_loc; lhs; op; rhs } ->
-        as_resolved @@ resolve_op_assign cx ~exp_loc def_reason lhs op rhs
+        (expression cx ~hint:dummy_hint rhs, unknown_use)
+      | OpAssign { exp_loc; lhs; op; rhs } -> resolve_op_assign cx ~exp_loc def_reason lhs op rhs
       | Update { exp_loc; lhs_member; op = _ } ->
-        as_resolved @@ resolve_update cx ~id_loc ~exp_loc ~lhs_member def_reason
-      | TypeAlias (loc, alias) -> as_resolved @@ resolve_type_alias cx loc alias
-      | OpaqueType (loc, opaque) -> as_resolved @@ resolve_opaque_type cx loc opaque
+        resolve_update cx ~id_loc ~exp_loc ~lhs_member def_reason
+      | TypeAlias (loc, alias) -> resolve_type_alias cx loc alias
+      | OpaqueType (loc, opaque) -> resolve_opaque_type cx loc opaque
       | Import { import_kind; source; source_loc; import } ->
-        as_resolved @@ resolve_import cx id_loc def_reason import_kind source source_loc import
-      | Interface (loc, inter) -> as_resolved @@ resolve_interface cx loc inter
-      | DeclaredClass (loc, class_) -> as_resolved @@ resolve_declare_class cx loc class_
-      | Enum (enum_loc, enum) -> as_resolved @@ resolve_enum cx id_loc def_reason enum_loc enum
-      | TypeParam (_, _) -> as_resolved @@ resolve_type_param cx id_loc
+        resolve_import cx id_loc def_reason import_kind source source_loc import
+      | Interface (loc, inter) -> resolve_interface cx loc inter
+      | DeclaredClass (loc, class_) -> resolve_declare_class cx loc class_
+      | Enum (enum_loc, enum) -> resolve_enum cx id_loc def_reason enum_loc enum
+      | TypeParam (_, _) -> resolve_type_param cx id_loc
       | ThisTypeParam (_, _) -> resolve_this_type_param cx id_loc
-      | GeneratorNext gen -> as_resolved @@ resolve_generator_next cx def_reason gen
+      | GeneratorNext gen -> resolve_generator_next cx def_reason gen
     in
     let update_reason =
       match def with
@@ -624,7 +620,7 @@ module Make (Env : Env_sig.S) (Statement : Statement_sig.S with module Env := En
             (Debug_js.dump_t cx t);
         ]
         );
-    New_env.New_env.resolve_env_entry ~use_op ~resolved ~update_reason cx t def_kind id_loc;
+    New_env.New_env.resolve_env_entry ~use_op ~update_reason cx t def_kind id_loc;
     (def_kind, id_loc)
 
   let entries_of_component graph component =

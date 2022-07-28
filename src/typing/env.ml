@@ -1185,6 +1185,9 @@ module Env : Env_sig.S = struct
         | _ -> ()
       )
 
+  let read_declared_type ?lookup_mode ?is_func cx name reason loc =
+    Tvar.mk_where cx reason (unify_declared_type ?lookup_mode ?is_func cx name loc)
+
   let is_global_var _cx name _ =
     let rec loop = function
       | [] -> true

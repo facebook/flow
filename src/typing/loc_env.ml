@@ -22,7 +22,6 @@ type t = {
   class_stack: ALoc.t list;
   return_hint: Type.t Hint_api.hint;
   scope_kind: Scope.var_scope_kind;
-  resolved: ALocSet.t;
   readable: EnvSet.t;
   under_resolution: EnvSet.t;
   var_info: Env_api.env_info;
@@ -61,7 +60,6 @@ let empty scope_kind =
   {
     types = EnvMap.empty;
     var_info = Env_api.empty;
-    resolved = ALocSet.empty;
     tparams = ALocMap.empty;
     return_hint = Hint_api.Hint_None;
     class_bindings = ALocMap.empty;

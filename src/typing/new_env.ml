@@ -18,7 +18,6 @@ module type S = sig
 
   val resolve_env_entry :
     use_op:use_op ->
-    resolved:bool ->
     update_reason:bool ->
     Context.t ->
     Type.t ->
@@ -712,24 +711,17 @@ module New_env = struct
 
   (* Unifies `t` with the entry in the loc_env's map. This allows it to be looked up for Write
    * entries reported by the name_resolver as well as providers for the provider analysis *)
-  let unify_write_entry cx ?(allow_unify_resolved = false) ~use_op t def_loc_type loc =
-    let ({ Loc_env.resolved; _ } as env) = Context.environment cx in
-    if allow_unify_resolved || not (ALocSet.mem loc resolved) then begin
-      Debug_js.Verbose.print_if_verbose
-        cx
-        [
-          spf "writing to %s %s" (Env_api.show_def_loc_type def_loc_type) (Reason.string_of_aloc loc);
-        ];
-      check_readable cx def_loc_type loc;
-      match Loc_env.find_write env def_loc_type loc with
-      | None ->
-        (* If we don't see a spot for this write, it's because it's never read from. *)
-        ()
-      | Some w -> Flow_js.unify cx ~use_op w t
-    end else
-      Debug_js.Verbose.print_if_verbose
-        cx
-        [spf "Location %s already fully resolved" (Reason.string_of_aloc loc)]
+  let unify_write_entry cx ~use_op t def_loc_type loc =
+    let env = Context.environment cx in
+    Debug_js.Verbose.print_if_verbose
+      cx
+      [spf "writing to %s %s" (Env_api.show_def_loc_type def_loc_type) (Reason.string_of_aloc loc)];
+    check_readable cx def_loc_type loc;
+    match Loc_env.find_write env def_loc_type loc with
+    | None ->
+      (* If we don't see a spot for this write, it's because it's never read from. *)
+      ()
+    | Some w -> Flow_js.unify cx ~use_op w t
 
   (* Subtypes the given type against the providers for a def loc. Should be used on assignments to
    * non-import value bindings *)
@@ -785,7 +777,11 @@ module New_env = struct
           Context.add_constrained_write cx (t, use_op, general)
 
   let assign_env_value_entry cx ~use_op ?potential_global_name t loc =
-    unify_write_entry cx ~use_op t Env_api.OrdinaryNameLoc loc;
+    begin
+      match Context.env_mode cx with
+      | Options.(SSAEnv (Reordered | Enforced)) -> ()
+      | _ -> unify_write_entry cx ~use_op t Env_api.OrdinaryNameLoc loc
+    end;
     subtype_against_providers cx ~use_op ?potential_global_name t loc
 
   (* Sanity check for predicate functions: If there are multiple declare function
@@ -808,7 +804,7 @@ module New_env = struct
           (Error_message.EBindingError (Error_message.ENameAlreadyBound, loc, name, def_loc))
     | _ -> ()
 
-  let resolve_env_entry ~use_op ~resolved ~update_reason cx t kind loc =
+  let resolve_env_entry ~use_op ~update_reason cx t kind loc =
     unify_write_entry cx ~use_op t kind loc;
     let env = Context.environment cx in
     let env =
@@ -817,10 +813,7 @@ module New_env = struct
       else
         env
     in
-    Context.set_environment cx env;
-    if resolved && kind = Env_api.OrdinaryNameLoc then
-      let ({ Loc_env.resolved; _ } as env) = Context.environment cx in
-      Context.set_environment cx { env with Loc_env.resolved = ALocSet.add loc resolved }
+    Context.set_environment cx env
 
   let subtype_entry cx ~use_op t loc =
     let env = Context.environment cx in
@@ -849,7 +842,10 @@ module New_env = struct
   let set_var cx ~use_op name t loc =
     assign_env_value_entry cx ~use_op ~potential_global_name:name t loc
 
-  let bind cx t loc = unify_write_entry cx ~use_op:Type.unknown_use t Env_api.OrdinaryNameLoc loc
+  let bind cx t loc =
+    match Context.env_mode cx with
+    | Options.(SSAEnv Enforced) -> ()
+    | _ -> unify_write_entry cx ~use_op:Type.unknown_use t Env_api.OrdinaryNameLoc loc
 
   let bind_var ?state:_ cx name t loc =
     valid_declaration_check cx (OrdinaryName name) loc;
@@ -883,7 +879,9 @@ module New_env = struct
     | OrdinaryName _
     | InternalModuleName _ ->
       valid_declaration_check cx name loc;
-      bind cx (TypeUtil.type_t_of_annotated_or_inferred t) loc
+      (match (Context.env_mode cx, t) with
+      | (Options.(SSAEnv Reordered), Annotated _) -> ()
+      | _ -> bind cx (TypeUtil.type_t_of_annotated_or_inferred t) loc)
 
   let bind_fun ?state cx name t loc =
     match name with
@@ -893,7 +891,9 @@ module New_env = struct
       bind cx t loc
 
   let bind_implicit_const ?state:_ _ cx _ t loc =
-    bind cx (TypeUtil.type_t_of_annotated_or_inferred t) loc
+    match (Context.env_mode cx, t) with
+    | (Options.(SSAEnv Reordered), Annotated _) -> ()
+    | _ -> bind cx (TypeUtil.type_t_of_annotated_or_inferred t) loc
 
   let bind_const ?state:_ cx _ t loc = bind cx (TypeUtil.type_t_of_annotated_or_inferred t) loc
 
@@ -994,7 +994,9 @@ module New_env = struct
       init_entry ~has_anno cx ~use_op t loc
 
   let init_type cx _name t loc =
-    unify_write_entry cx ~use_op:unknown_use t Env_api.OrdinaryNameLoc loc
+    match Context.env_mode cx with
+    | Options.(SSAEnv (Reordered | Enforced)) -> ()
+    | _ -> unify_write_entry cx ~use_op:unknown_use t Env_api.OrdinaryNameLoc loc
 
   let pseudo_init_declared_type _ _ _ = ()
 
@@ -1003,20 +1005,27 @@ module New_env = struct
     | InternalName _ -> Old_env.unify_declared_type ~lookup_mode ~is_func cx name loc t
     | OrdinaryName _
     | InternalModuleName _ ->
-      unify_write_entry
-        cx
-        ~allow_unify_resolved:true
-        ~use_op:unknown_use
-        t
-        Env_api.OrdinaryNameLoc
-        loc
+      (match Context.env_mode cx with
+      | Options.(SSAEnv (Reordered | Enforced)) -> ()
+      | _ -> unify_write_entry cx ~use_op:unknown_use t Env_api.OrdinaryNameLoc loc)
+
+  let read_declared_type ?(lookup_mode = ForValue) ?(is_func = false) cx name reason loc =
+    match name with
+    | InternalName _ -> Old_env.read_declared_type ~lookup_mode ~is_func cx name reason loc
+    | OrdinaryName _
+    | InternalModuleName _ ->
+      Tvar.mk_where cx reason (fun t ->
+          unify_write_entry cx ~use_op:unknown_use t Env_api.OrdinaryNameLoc loc
+      )
 
   let unify_declared_fun_type cx name loc t =
     match name with
     | InternalName _ -> Old_env.unify_declared_fun_type cx name loc t
     | OrdinaryName _
     | InternalModuleName _ ->
-      unify_write_entry cx ~use_op:unknown_use t Env_api.OrdinaryNameLoc loc
+      (match Context.env_mode cx with
+      | Options.(SSAEnv (Reordered | Enforced)) -> ()
+      | _ -> unify_write_entry cx ~use_op:unknown_use t Env_api.OrdinaryNameLoc loc)
 
   (************************)
   (* Variable Declaration *)
@@ -1160,7 +1169,9 @@ module New_env = struct
     | Error _ -> None
 
   let init_import ~lookup_mode:_ cx _name loc t =
-    unify_write_entry ~use_op:unknown_use cx t Env_api.OrdinaryNameLoc loc
+    match Context.env_mode cx with
+    | Options.(SSAEnv (Reordered | Enforced)) -> ()
+    | _ -> unify_write_entry ~use_op:unknown_use cx t Env_api.OrdinaryNameLoc loc
 
   let get_next cx loc =
     let name = InternalName "next" in

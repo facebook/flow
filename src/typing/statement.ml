@@ -661,9 +661,7 @@ struct
         let (name_loc, { Ast.Identifier.name; comments = _ }) = id in
         let name = OrdinaryName name in
         let reason = func_reason ~async ~generator sig_loc in
-        let general =
-          Tvar.mk_where cx reason (Env.unify_declared_type ~is_func:true cx name name_loc)
-        in
+        let general = Env.read_declared_type ~is_func:true cx name reason name_loc in
         let (fn_type, func_ast) = mk_function_declaration cx ~general reason loc func in
         (fn_type, id, (loc, FunctionDeclaration func_ast))
     in
@@ -1887,7 +1885,7 @@ struct
       let kind = Scope.Entry.ClassNameBinding in
       let reason = DescFormat.instance_reason name name_loc in
       Env.declare_implicit_let kind cx name name_loc;
-      let general = Tvar.mk_where cx reason (Env.unify_declared_type cx name name_loc) in
+      let general = Env.read_declared_type cx name reason name_loc in
       (* ClassDeclarations are statements, so we will never have an annotation to push down here *)
       let (class_t, c_ast) = mk_class cx class_loc ~name_loc ~general reason c in
       let use_op =
