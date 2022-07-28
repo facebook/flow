@@ -208,7 +208,6 @@ end = struct
   let collect_normalized_data_for_parsed_file ~normalizer ~reader fn parsed_heaps =
     let addr = Parsing_heaps.get_file_addr_unsafe fn in
     let parse = Parsing_heaps.Reader.get_typed_parse_unsafe ~reader fn addr in
-    let _imports = Imports.of_file_sig (Parsing_heaps.read_file_sig_unsafe fn parse) in
     let resolved_requires = Parsing_heaps.Reader.get_resolved_requires_unsafe fn ~reader parse in
     let file_data =
       {
