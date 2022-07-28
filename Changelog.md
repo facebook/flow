@@ -1,3 +1,7 @@
+### 0.183.1
+
+* Fix a regression in 0.183.0 on Windows where inconsistent handling of slashes within paths led to mismatches like "duplicate provider" errors
+
 ### 0.183.0
 
 Likely to cause new Flow errors:
