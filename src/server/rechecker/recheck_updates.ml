@@ -191,10 +191,7 @@ let process_updates ?(skip_incompatible = false) ~options ~libs updates =
   in
   let root = Options.root options in
   let config_path = Server_files_js.config_file (Options.flowconfig_name options) root in
-  let sroot =
-    let sroot = root |> Path.to_string |> Sys_utils.normalize_filename_dir_sep in
-    sroot ^ "/"
-  in
+  let sroot = Path.to_string root ^ Filename.dir_sep in
   let want = Files.wanted ~options:file_options all_libs in
   let is_incompatible_package_json =
     is_incompatible_package_json ~options ~reader ~want ~sroot ~file_options

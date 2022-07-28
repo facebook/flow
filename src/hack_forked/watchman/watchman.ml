@@ -781,10 +781,21 @@ let extract_file_names env json =
      )
   |> List.map ~f:(fun json ->
          let s = Hh_json.get_string_exn json in
-         (* watchman normalizes all paths to use forward slashes, so concat manually
-            instead of Filename.concat *)
-         let abs = env.watch.watch_root ^ "/" ^ s in
-         abs
+         (* watchman returns paths relative to the watch root, with slashes
+            normalized to use forward slashes. we concat manually using Bytes
+            so we can replace the slashes in place. *)
+         let root = env.watch.watch_root in
+         let root_len = String.length root in
+         let s_len = String.length s in
+         let abs = Bytes.create (root_len + 1 + s_len) in
+         Bytes.From_string.unsafe_blit ~src:root ~src_pos:0 ~dst:abs ~dst_pos:0 ~len:root_len;
+         Bytes.unsafe_set abs root_len '/';
+         Bytes.From_string.unsafe_blit ~src:s ~src_pos:0 ~dst:abs ~dst_pos:(root_len + 1) ~len:s_len;
+         if Sys.win32 then
+           for i = 0 to root_len + 1 + s_len do
+             if Char.equal (Bytes.unsafe_get abs i) '/' then Bytes.unsafe_set abs i '\\'
+           done;
+         Bytes.unsafe_to_string ~no_mutation_while_string_reachable:abs
      )
   |> SSet.of_list
 
