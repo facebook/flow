@@ -494,7 +494,14 @@ module Make (Flow : INPUT) : OUTPUT = struct
     let rec loop match_state = function
       | [] -> return match_state
       | (case_id, case_r, l, u) :: trials ->
-        let case = { case_id; unresolved = ISet.empty; actions = [] } in
+        let case =
+          {
+            case_id;
+            unresolved = ISet.empty;
+            actions = [];
+            implicit_instantiation_post_inference_checks = [];
+          }
+        in
         (* speculatively match the pair of types in this trial *)
         let error = speculative_match cx trace { ignore; speculation_id; case } l u in
         (match error with
@@ -510,7 +517,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
                  * match! This is great news. It means that this alternative will
                  * definitely succeed. Fire any deferred actions and short-cut. *)
               then
-                fire_actions cx trace spec case.actions
+                fire_actions cx trace spec case
               (* Otherwise, record that we've found a promising alternative. *)
               else
                 loop (ConditionalMatch case) trials
@@ -543,7 +550,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
     and return = function
       | ConditionalMatch case ->
         (* best choice that survived, congrats! fire deferred actions  *)
-        fire_actions cx trace spec case.actions
+        fire_actions cx trace spec case
       | NoMatch msgs ->
         (* everything failed; make a really detailed error message listing out the
          * error found for each alternative *)
@@ -730,30 +737,37 @@ module Make (Flow : INPUT) : OUTPUT = struct
   (* When we fire_actions we also need to reconstruct the use_op for each action
    * since before beginning speculation we replaced each use_op with
    * an UnknownUse. *)
-  and fire_actions cx trace spec =
-    List.iter (function
-        | (_, Speculation_state.FlowAction (l, u)) ->
-          (match spec with
-          | IntersectionCases (_, u') ->
-            let use_op = use_op_of_use_t u' in
-            (match use_op with
-            | None -> rec_flow cx trace (l, u)
-            | Some use_op ->
-              rec_flow cx trace (l, mod_use_op_of_use_t (replace_speculation_root_use_op use_op) u))
-          | UnionCases (use_op, _, _, _) ->
-            rec_flow cx trace (l, mod_use_op_of_use_t (replace_speculation_root_use_op use_op) u))
-        | (_, Speculation_state.UnifyAction (use_op, t1, t2)) ->
-          (match spec with
-          | IntersectionCases (_, u') ->
-            let use_op' = use_op_of_use_t u' in
-            (match use_op' with
-            | None -> rec_unify cx trace t1 t2 ~use_op
-            | Some use_op' ->
-              rec_unify cx trace t1 t2 ~use_op:(replace_speculation_root_use_op use_op' use_op))
-          | UnionCases (use_op', _, _, _) ->
-            rec_unify cx trace t1 t2 ~use_op:(replace_speculation_root_use_op use_op' use_op))
-        | (_, Speculation_state.ErrorAction msg) -> add_output cx ~trace msg
-        | (_, Speculation_state.UnsealedObjectProperty (flds, s, up)) ->
-          Context.set_prop cx flds s up
-        )
+  and fire_actions cx trace spec case =
+    List.iter
+      (fun check -> Context.add_implicit_instantiation_check cx check)
+      case.Speculation_state.implicit_instantiation_post_inference_checks;
+    case.Speculation_state.actions
+    |> List.iter (function
+           | (_, Speculation_state.FlowAction (l, u)) ->
+             (match spec with
+             | IntersectionCases (_, u') ->
+               let use_op = use_op_of_use_t u' in
+               (match use_op with
+               | None -> rec_flow cx trace (l, u)
+               | Some use_op ->
+                 rec_flow
+                   cx
+                   trace
+                   (l, mod_use_op_of_use_t (replace_speculation_root_use_op use_op) u))
+             | UnionCases (use_op, _, _, _) ->
+               rec_flow cx trace (l, mod_use_op_of_use_t (replace_speculation_root_use_op use_op) u))
+           | (_, Speculation_state.UnifyAction (use_op, t1, t2)) ->
+             (match spec with
+             | IntersectionCases (_, u') ->
+               let use_op' = use_op_of_use_t u' in
+               (match use_op' with
+               | None -> rec_unify cx trace t1 t2 ~use_op
+               | Some use_op' ->
+                 rec_unify cx trace t1 t2 ~use_op:(replace_speculation_root_use_op use_op' use_op))
+             | UnionCases (use_op', _, _, _) ->
+               rec_unify cx trace t1 t2 ~use_op:(replace_speculation_root_use_op use_op' use_op))
+           | (_, Speculation_state.ErrorAction msg) -> add_output cx ~trace msg
+           | (_, Speculation_state.UnsealedObjectProperty (flds, s, up)) ->
+             Context.set_prop cx flds s up
+           )
 end

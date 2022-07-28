@@ -110,26 +110,6 @@ type voidable_check = {
   errors: ALoc.t Property_assignment.errors;
 }
 
-module Implicit_instantiation_check : sig
-  type poly_t = ALoc.t * Type.typeparam Nel.t * Type.t
-
-  type operation =
-    | Call of Type.funcalltype
-    | Constructor of Type.call_arg list
-    | Jsx of {
-        clone: bool;
-        component: Type.t;
-        config: Type.t;
-        children: Type.t list * Type.t option;
-      }
-
-  type t = {
-    lhs: Type.t;
-    poly_t: poly_t;
-    operation: Type.use_op * Reason.t * operation;
-  }
-end
-
 type computed_property_state =
   | ResolvedOnce of Reason.t
   | ResolvedMultipleTimes
@@ -380,6 +360,8 @@ val add_constrained_write : t -> Type.t * Type.use_op * Type.t -> unit
 val add_call_arg_lower_bound : t -> ALoc.t -> Type.t -> unit
 
 val add_voidable_check : t -> voidable_check -> unit
+
+val add_implicit_instantiation_check : t -> Implicit_instantiation_check.t -> unit
 
 val add_implicit_instantiation_call :
   t ->

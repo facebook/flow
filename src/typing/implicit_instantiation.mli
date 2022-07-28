@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-module Check = Context.Implicit_instantiation_check
+module Check = Implicit_instantiation_check
 
 module type OBSERVER = sig
   type output

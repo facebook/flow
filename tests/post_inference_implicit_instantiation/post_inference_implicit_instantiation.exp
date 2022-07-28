@@ -1,3 +1,17 @@
+Error ----------------------------------------------------------------------------------------------- speculation.js:6:1
+
+`T` is underconstrained by call of `f` [1] and is defined in `T` [2] [underconstrained-implicit-instantiation]
+
+   speculation.js:6:1
+   6| f((x: string) => {});
+      ^^^^^^^^^^^^^^^^^^^^ [1]
+
+References:
+   speculation.js:4:20
+   4| declare function f<T>(x: T => void): T;
+                         ^ [2]
+
+
 Error ------------------------------------------------------------------------ underconstrained_class_constructor.js:5:1
 
 `T` is underconstrained by new `A` [1] and is defined in `T` [2] [underconstrained-implicit-instantiation]
@@ -135,4 +149,4 @@ OwnProps contains a non-Type.t upper bound ObjKitT
 
 
 
-Found 10 errors
+Found 11 errors

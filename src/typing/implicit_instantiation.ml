@@ -9,7 +9,7 @@ open Type
 open Polarity
 module TypeParamMarked = Marked.Make (Subst_name)
 module Marked = TypeParamMarked
-module Check = Context.Implicit_instantiation_check
+module Check = Implicit_instantiation_check
 
 let reduce_implicit_instantiation_check reducer cx pole check =
   let { Check.lhs; poly_t = (loc, tparams, t); operation = (use_op, reason_op, op) } = check in

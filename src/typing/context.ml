@@ -86,26 +86,6 @@ type voidable_check = {
   errors: ALoc.t Property_assignment.errors;
 }
 
-module Implicit_instantiation_check = struct
-  type poly_t = ALoc.t * Type.typeparam Nel.t * Type.t
-
-  type operation =
-    | Call of Type.funcalltype
-    | Constructor of Type.call_arg list
-    | Jsx of {
-        clone: bool;
-        component: Type.t;
-        config: Type.t;
-        children: Type.t list * Type.t option;
-      }
-
-  type t = {
-    lhs: Type.t;
-    poly_t: poly_t;
-    operation: Type.use_op * Reason.t * operation;
-  }
-end
-
 (* Equivalently, we could use a Reason.t option, but this is more self-documenting. *)
 type computed_property_state =
   | ResolvedOnce of Reason.t
@@ -727,12 +707,24 @@ let add_env_cache_entry cx ~for_value id t =
 let add_voidable_check cx voidable_check =
   cx.ccx.voidable_checks <- voidable_check :: cx.ccx.voidable_checks
 
+let add_implicit_instantiation_check cx check =
+  cx.ccx.implicit_instantiation_checks <- check :: cx.ccx.implicit_instantiation_checks
+
+let add_possibly_speculating_implicit_instantiation_check cx check =
+  let open Speculation_state in
+  let speculation_state = cx.ccx.speculation_state in
+  match !speculation_state with
+  | [] -> add_implicit_instantiation_check cx check
+  | { case; _ } :: _ ->
+    case.implicit_instantiation_post_inference_checks <-
+      check :: case.implicit_instantiation_post_inference_checks
+
 let add_implicit_instantiation_call cx lhs poly_t use_op reason funcalltype =
   if cx.metadata.run_post_inference_implicit_instantiation then
     let check =
       Implicit_instantiation_check.{ lhs; poly_t; operation = (use_op, reason, Call funcalltype) }
     in
-    cx.ccx.implicit_instantiation_checks <- check :: cx.ccx.implicit_instantiation_checks
+    add_possibly_speculating_implicit_instantiation_check cx check
 
 let add_implicit_instantiation_ctor cx lhs poly_t use_op reason_op args =
   if cx.metadata.run_post_inference_implicit_instantiation then
@@ -743,8 +735,7 @@ let add_implicit_instantiation_ctor cx lhs poly_t use_op reason_op args =
         operation = (use_op, reason_op, Implicit_instantiation_check.Constructor args);
       }
     in
-
-    cx.ccx.implicit_instantiation_checks <- check :: cx.ccx.implicit_instantiation_checks
+    add_possibly_speculating_implicit_instantiation_check cx check
 
 let add_implicit_instantiation_jsx cx lhs poly_t use_op reason_op clone ~component ~config children
     =
@@ -755,7 +746,7 @@ let add_implicit_instantiation_jsx cx lhs poly_t use_op reason_op clone ~compone
       
     in
 
-    cx.ccx.implicit_instantiation_checks <- check :: cx.ccx.implicit_instantiation_checks
+    add_possibly_speculating_implicit_instantiation_check cx check
 
 let add_inferred_indexer cx loc dict =
   cx.ccx.inferred_indexers <-

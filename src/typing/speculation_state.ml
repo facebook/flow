@@ -37,6 +37,7 @@ type case = {
   case_id: int;
   mutable unresolved: ISet.t;
   mutable actions: extended_action list;
+  mutable implicit_instantiation_post_inference_checks: Implicit_instantiation_check.t list;
 }
 
 (* Actions that involve some "ignored" unresolved tvars are considered
