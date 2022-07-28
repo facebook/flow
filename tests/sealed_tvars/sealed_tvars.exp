@@ -39,38 +39,6 @@ Internal error: expected env entry for write location(8, 0) to (79, 36)
 
 Error -------------------------------------------------------------------------------------------- error_examples.js:4:1
 
-Internal error: read of Env_api.Make.ClassInstanceSuperLoc entry which has not been prepared for typechecking
-
-   4| class C { }
-      ^^^^^^^^^^^
-
-
-Error -------------------------------------------------------------------------------------------- error_examples.js:4:1
-
-Internal error: read of Env_api.Make.ClassInstanceThisLoc entry which has not been prepared for typechecking
-
-   4| class C { }
-      ^^^^^^^^^^^
-
-
-Error -------------------------------------------------------------------------------------------- error_examples.js:4:1
-
-Internal error: read of Env_api.Make.ClassStaticSuperLoc entry which has not been prepared for typechecking
-
-   4| class C { }
-      ^^^^^^^^^^^
-
-
-Error -------------------------------------------------------------------------------------------- error_examples.js:4:1
-
-Internal error: read of Env_api.Make.ClassStaticThisLoc entry which has not been prepared for typechecking
-
-   4| class C { }
-      ^^^^^^^^^^^
-
-
-Error -------------------------------------------------------------------------------------------- error_examples.js:4:1
-
 Internal error: expected env entry for write location(4, 0) to (7, 35)
 
       v----------
@@ -90,4 +58,4 @@ Internal error: unconstrained tvar during tvar resolution
 
 
 
-Found 7 errors
+Found 3 errors

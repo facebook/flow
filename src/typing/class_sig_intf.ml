@@ -160,6 +160,8 @@ module type S = sig
       with its type **)
   val check_methods : Context.t -> Reason.reason -> t -> unit
 
+  val make_thises : Context.t -> t -> Type.t * Type.t * Type.t * Type.t
+
   (** Evaluate the class body. *)
   val toplevels : Context.t -> t -> unit
 

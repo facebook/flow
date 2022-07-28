@@ -620,8 +620,7 @@ module Make (Env : Env_sig.S) (Statement : Statement_sig.S with module Env := En
             (Debug_js.dump_t cx t);
         ]
         );
-    New_env.New_env.resolve_env_entry ~use_op ~update_reason cx t def_kind id_loc;
-    (def_kind, id_loc)
+    New_env.New_env.resolve_env_entry ~use_op ~update_reason cx t def_kind id_loc
 
   let entries_of_component graph component =
     let open Name_def_ordering in
@@ -633,8 +632,16 @@ module Make (Env : Env_sig.S) (Statement : Statement_sig.S with module Env := En
         | Illegal { loc = kl; _ } ->
           kl
       in
+      let acc = EnvSet.add (kind, loc) acc in
       match EnvMap.find (kind, loc) graph with
-      | _ -> EnvSet.add (kind, loc) acc
+      | (Class { class_loc; _ }, _, _, _) ->
+        let open Env_api in
+        acc
+        |> EnvSet.add (ClassInstanceThisLoc, class_loc)
+        |> EnvSet.add (ClassStaticThisLoc, class_loc)
+        |> EnvSet.add (ClassInstanceSuperLoc, class_loc)
+        |> EnvSet.add (ClassStaticSuperLoc, class_loc)
+      | _ -> acc
     in
     match component with
     | Singleton elt -> entries_of_def EnvSet.empty elt
@@ -731,33 +738,34 @@ module Make (Env : Env_sig.S) (Statement : Statement_sig.S with module Env := En
           ~f:(fun () -> resolve cx (kind, loc) (EnvMap.find (kind, loc) graph))
             (* When there is an unhandled exception, it means that the initialization of the env slot
                won't be completed and will never be written in the new-env, so it's OK to do nothing. *)
-          ~on_abnormal_exn:(fun _ -> (kind, loc))
+          ~on_abnormal_exn:(fun _ -> ())
           ()
     in
     Debug_js.Verbose.print_if_verbose_lazy
       cx
       (lazy [Utils_js.spf "Resolving component %s" (string_of_component graph component)]);
-    begin
+    let entries_for_resolution =
       match Context.env_mode cx with
       | Options.(SSAEnv Enforced) ->
         let entries = entries_of_component graph component in
         let ({ Loc_env.readable; _ } as env) = Context.environment cx in
         Context.set_environment
           cx
-          { env with Loc_env.readable = EnvSet.union entries readable; under_resolution = entries }
-      | _ -> ()
-    end;
-    let resolve_tvar_in_env_entry (kind, loc) =
-      let env = Context.environment cx in
-      Loc_env.find_write env kind loc |> Base.Option.iter ~f:(TvarResolver.resolve cx)
+          { env with Loc_env.readable = EnvSet.union entries readable; under_resolution = entries };
+        entries
+      | _ -> EnvSet.empty
     in
     let () =
       match component with
-      | Singleton elt -> resolve_element elt |> resolve_tvar_in_env_entry
-      | ResolvableSCC elts ->
-        Nel.map (fun elt -> resolve_element elt) elts |> Nel.iter resolve_tvar_in_env_entry
-      | IllegalSCC elts ->
-        Nel.map (fun (elt, _, _) -> resolve_element elt) elts |> Nel.iter resolve_tvar_in_env_entry
+      | Singleton elt -> resolve_element elt
+      | ResolvableSCC elts -> Nel.iter (fun elt -> resolve_element elt) elts
+      | IllegalSCC elts -> Nel.iter (fun (elt, _, _) -> resolve_element elt) elts
     in
+    let env = Context.environment cx in
+    EnvSet.iter
+      (fun (kind, loc) ->
+        let t = Base.Option.value_exn (Loc_env.find_write env kind loc) in
+        TvarResolver.resolve cx t)
+      entries_for_resolution;
     Debug_js.Verbose.print_if_verbose_lazy cx (lazy ["Finished resolving component"])
 end

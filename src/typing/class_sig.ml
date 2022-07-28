@@ -819,6 +819,42 @@ module Make
         methods_to_prop_map ~cx ~this_default:static_this_type x.static.private_methods;
     }
 
+  let make_thises cx x =
+    let open Type in
+    let super_reason = update_desc_reason (fun d -> RSuperOf d) x.instance.reason in
+    match x.super with
+    | Interface _ -> failwith "tried to evaluate toplevel of interface"
+    | Class { extends; this_t; _ } ->
+      let (super, static_super) =
+        match extends with
+        | Explicit (annot_loc, c, targs) ->
+          (* Eagerly specialize when there are no targs *)
+          (* TODO: We can also specialize when there are targs, because this
+             code is not instantiated. However, the type normalizer
+             expects a PolyT here. *)
+          let c =
+            if targs = None then
+              let use_op =
+                Op (ClassExtendsCheck { def = TypeUtil.reason_of_t c; extends = x.instance.reason })
+              in
+              specialize cx use_op targs c
+            else
+              c
+          in
+          let t = TypeUtil.this_typeapp ~annot_loc c this_t targs in
+          (t, TypeUtil.class_type ~annot_loc t)
+        | Implicit { null } ->
+          ( ( if null then
+              NullProtoT super_reason
+            else
+              ObjProtoT super_reason
+            ),
+            FunProtoT super_reason
+          )
+      in
+
+      (this_t, TypeUtil.class_type this_t, super, static_super)
+
   (* Processes the bodies of instance and static class members. *)
   let toplevels cx x =
     Env.in_class_scope cx x.class_loc (fun () ->
@@ -838,51 +874,21 @@ module Make
           | Infer (fsig, set_asts) -> method_ default_this super ~set_asts loc fsig
         in
         let (instance_this_default, static_this_default, super, static_super) =
-          let open Type in
-          let super_reason = update_desc_reason (fun d -> RSuperOf d) x.instance.reason in
-          match x.super with
-          | Interface _ -> failwith "tried to evaluate toplevel of interface"
-          | Class { extends; this_t; _ } ->
-            let (super, static_super) =
-              match extends with
-              | Explicit (annot_loc, c, targs) ->
-                (* Eagerly specialize when there are no targs *)
-                (* TODO: We can also specialize when there are targs, because this
-                   code is not instantiated. However, the type normalizer
-                   expects a PolyT here. *)
-                let c =
-                  if targs = None then
-                    let use_op =
-                      Op
-                        (ClassExtendsCheck
-                           { def = TypeUtil.reason_of_t c; extends = x.instance.reason }
-                        )
-                    in
-                    specialize cx use_op targs c
-                  else
-                    c
-                in
-                let t = TypeUtil.this_typeapp ~annot_loc c this_t targs in
-                (t, TypeUtil.class_type ~annot_loc t)
-              | Implicit { null } ->
-                ( ( if null then
-                    NullProtoT super_reason
-                  else
-                    ObjProtoT super_reason
-                  ),
-                  FunProtoT super_reason
-                )
-            in
-
-            (this_t, TypeUtil.class_type this_t, super, static_super)
+          if Env.new_env then
+            let open Env_api in
+            let env = Context.environment cx in
+            let find_this kind = Base.Option.value_exn (Loc_env.find_write env kind x.class_loc) in
+            ( find_this ClassInstanceThisLoc,
+              find_this ClassStaticThisLoc,
+              find_this ClassInstanceSuperLoc,
+              find_this ClassStaticSuperLoc
+            )
+          else
+            make_thises cx x
         in
 
         (* Bind private fields and methods to the environment *)
         Env.bind_class cx (mk_class_binding cx x);
-        Env.bind_class_instance_this cx instance_this_default x.class_loc;
-        Env.bind_class_static_this cx static_this_default x.class_loc;
-        Env.bind_class_instance_super cx super x.class_loc;
-        Env.bind_class_static_super cx static_super x.class_loc;
 
         x
         |> with_sig ~static:true (fun s ->

@@ -8732,6 +8732,15 @@ struct
                 class_bindings;
           };
         let elements = List.rev rev_elements in
+        if Env.new_env then begin
+          let (instance_this_default, static_this_default, super, static_super) =
+            Env.in_class_scope cx class_loc (fun () -> Class_stmt_sig.make_thises cx class_sig)
+          in
+          Env.bind_class_instance_this cx instance_this_default class_loc;
+          Env.bind_class_static_this cx static_this_default class_loc;
+          Env.bind_class_instance_super cx super class_loc;
+          Env.bind_class_static_super cx static_super class_loc
+        end;
         ( class_sig,
           fun class_t ->
             {
