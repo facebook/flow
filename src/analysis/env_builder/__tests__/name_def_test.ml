@@ -6,8 +6,7 @@
  *)
 
 open Test_utils
-open Name_def
-open Utils_js
+open Name_def.Print
 open Name_def_ordering
 module Ast = Flow_ast
 module EnvMap = Env_api.EnvMap
@@ -36,78 +35,6 @@ end
 
 module Name_resolver = Name_resolver.Make_Test_With_Cx (Context)
 module Name_def_ordering = Name_def_ordering.Make_Test_With_Cx (Context)
-
-let string_of_root = function
-  | Contextual _ -> "contextual"
-  | Catch -> "catch"
-  | Annotation { annot = (loc, _); _ } -> spf "annot %s" (ALoc.debug_to_string loc)
-  | Value (loc, _) -> spf "val %s" (ALoc.debug_to_string loc)
-  | For (In, (loc, _)) -> spf "for in %s" (ALoc.debug_to_string loc)
-  | For (Of _, (loc, _)) -> spf "for of %s" (ALoc.debug_to_string loc)
-
-let string_of_selector = function
-  | Elem n -> spf "[%d]" n
-  | Prop { prop; _ } -> spf ".%s" prop
-  | Computed _ -> ".[computed]"
-  | ObjRest _ -> "{ ... }"
-  | ArrRest _ -> "[...]"
-  | Default -> "<with default>"
-
-let rec string_of_binding = function
-  | Root r -> string_of_root r
-  | Select { selector; binding; _ } ->
-    spf "(%s)%s" (string_of_binding binding) (string_of_selector selector)
-
-let string_of_import_kind =
-  let open Ast.Statement.ImportDeclaration in
-  function
-  | ImportTypeof -> "typeof "
-  | ImportType -> "type "
-  | ImportValue -> ""
-
-let string_of_import = function
-  | Named { kind; remote; local = _; remote_loc = _ } ->
-    spf "%s%s" (Base.Option.value_map ~f:string_of_import_kind ~default:"" kind) remote
-  | Namespace -> "namespace"
-  | Default _ -> "default"
-
-let string_of_source = function
-  | Binding b -> string_of_binding b
-  | ChainExpression _ -> spf "heap"
-  | RefiExpression _ -> spf "exp"
-  | Update _ -> "[in/de]crement"
-  | MemberAssign _ -> "member_assign"
-  | OpAssign _ -> "opassign"
-  | Function { function_ = { Ast.Function.id; _ }; _ } ->
-    spf
-      "fun %s"
-      (Base.Option.value_map
-         ~f:(fun (_, { Ast.Identifier.name; _ }) -> name)
-         ~default:"<anonymous>"
-         id
-      )
-  | DeclaredClass (_, { Ast.Statement.DeclareClass.id = (_, { Ast.Identifier.name; _ }); _ }) ->
-    spf "declared class %s" name
-  | Class { class_ = { Ast.Class.id; _ }; missing_annotations; class_loc = _ } ->
-    spf
-      "class (annotated=%b) %s"
-      (Base.List.is_empty missing_annotations)
-      (Base.Option.value_map
-         ~f:(fun (_, { Ast.Identifier.name; _ }) -> name)
-         ~default:"<anonymous>"
-         id
-      )
-  | TypeAlias (_, { Ast.Statement.TypeAlias.right = (loc, _); _ }) ->
-    spf "alias %s" (ALoc.debug_to_string loc)
-  | OpaqueType (_, { Ast.Statement.OpaqueType.id = (loc, _); _ }) ->
-    spf "opaque %s" (ALoc.debug_to_string loc)
-  | TypeParam (_, (loc, _)) -> spf "tparam %s" (ALoc.debug_to_string loc)
-  | ThisTypeParam _ -> "this tparam"
-  | Enum (loc, _) -> spf "enum %s" (ALoc.debug_to_string loc)
-  | Interface _ -> "interface"
-  | GeneratorNext _ -> "next"
-  | Import { import_kind; source; import; source_loc = _ } ->
-    spf "import %s%s from %s" (string_of_import_kind import_kind) (string_of_import import) source
 
 let print_values values =
   let kvlist = EnvMap.bindings values in

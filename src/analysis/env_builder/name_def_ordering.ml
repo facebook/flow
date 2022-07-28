@@ -37,25 +37,44 @@ type result =
   | ResolvableSCC of element Nel.t
   | IllegalSCC of (element * ALoc.t virtual_reason * ALoc.t Nel.t) Nel.t
 
-let string_of_element = function
-  | Normal (k, l) -> Utils_js.spf "[%s (%s)]" (ALoc.debug_to_string l) (Env_api.show_def_loc_type k)
+let string_of_element graph =
+  let print_elt k =
+    match EnvMap.find_opt k graph with
+    | None -> "MISSING DEFINITION"
+    | Some (def, _, _, _) -> Print.string_of_source def
+  in
+  function
+  | Normal (k, l) ->
+    Utils_js.spf
+      "[%s (%s): %s]"
+      (ALoc.debug_to_string l)
+      (Env_api.show_def_loc_type k)
+      (print_elt (k, l))
   | Resolvable (k, l) ->
-    Utils_js.spf "[recursive %s (%s)]" (ALoc.debug_to_string l) (Env_api.show_def_loc_type k)
+    Utils_js.spf
+      "[recursive %s (%s): %s]"
+      (ALoc.debug_to_string l)
+      (Env_api.show_def_loc_type k)
+      (print_elt (k, l))
   | Illegal { loc = (k, l); _ } ->
-    Utils_js.spf "[illegal %s (%s)]" (ALoc.debug_to_string l) (Env_api.show_def_loc_type k)
+    Utils_js.spf
+      "[illegal %s (%s): %s]"
+      (ALoc.debug_to_string l)
+      (Env_api.show_def_loc_type k)
+      (print_elt (k, l))
 
-let string_of_component = function
-  | Singleton elt -> string_of_element elt
+let string_of_component graph = function
+  | Singleton elt -> string_of_element graph elt
   | ResolvableSCC elts ->
     Utils_js.spf
-      "(recursive cycle) %s"
-      (Nel.to_list elts |> Base.List.map ~f:string_of_element |> String.concat ", ")
+      "{(recursive cycle)\n%s\n}"
+      (Nel.to_list elts |> Base.List.map ~f:(string_of_element graph) |> String.concat ",\n")
   | IllegalSCC elts ->
     Utils_js.spf
-      "(illegal cycle) %s"
+      "{(illegal cycle)\n%s\n}"
       (Nel.to_list elts
-      |> Base.List.map ~f:(fun (elt, _, _) -> string_of_element elt)
-      |> String.concat ", "
+      |> Base.List.map ~f:(fun (elt, _, _) -> string_of_element graph elt)
+      |> String.concat ",\n"
       )
 
 module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) = struct

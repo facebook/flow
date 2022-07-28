@@ -736,7 +736,7 @@ module Make (Env : Env_sig.S) (Statement : Statement_sig.S with module Env := En
     in
     Debug_js.Verbose.print_if_verbose_lazy
       cx
-      (lazy [Utils_js.spf "Resolving component %s" (string_of_component component)]);
+      (lazy [Utils_js.spf "Resolving component %s" (string_of_component graph component)]);
     begin
       match Context.env_mode cx with
       | Options.(SSAEnv Enforced) ->
