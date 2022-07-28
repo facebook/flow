@@ -120,6 +120,10 @@ let recheck
     ~scm_changed_mergebase:_ =
   ()
 
+let recheck_canceled
+    ~priority:_ ~num_files_to_prioritize:_ ~num_files_to_recheck:_ ~num_files_to_force:_ =
+  ()
+
 let recheck_series ~recheck_count:_ ~profiling:_ = ()
 
 let murdered_by_oom_killer _ = ()

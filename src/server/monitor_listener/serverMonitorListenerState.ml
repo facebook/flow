@@ -153,6 +153,12 @@ let update ?files_to_prioritize ?files_to_recheck ?files_to_force workload =
   in
   workload
 
+type workload_changes = {
+  num_files_to_prioritize: int;
+  num_files_to_recheck: int;
+  num_files_to_force: int;
+}
+
 let workload_changed a b =
   let {
     files_to_prioritize = files_to_prioritize_a;
@@ -172,9 +178,24 @@ let workload_changed a b =
   } =
     b
   in
-  files_to_prioritize_a != files_to_prioritize_b
-  || files_to_recheck_a != files_to_recheck_b
-  || files_to_force_a != files_to_force_b
+  let changed =
+    files_to_prioritize_a != files_to_prioritize_b
+    || files_to_recheck_a != files_to_recheck_b
+    || files_to_force_a != files_to_force_b
+  in
+  if changed then
+    let num_files_to_prioritize =
+      FilenameSet.cardinal files_to_prioritize_b - FilenameSet.cardinal files_to_prioritize_a
+    in
+    let num_files_to_recheck =
+      FilenameSet.cardinal files_to_recheck_b - FilenameSet.cardinal files_to_recheck_a
+    in
+    let num_files_to_force =
+      CheckedSet.cardinal files_to_force_b - CheckedSet.cardinal files_to_force_a
+    in
+    Some { num_files_to_prioritize; num_files_to_recheck; num_files_to_force }
+  else
+    None
 
 (* Process the messages which are currently in the recheck stream and return the resulting workload
  *
@@ -315,10 +336,9 @@ let rec wait_for_updates_for_recheck ~process_updates ~get_forced ~priority =
   let workload_before = !recheck_acc in
   recheck_fetch ~process_updates ~get_forced ~priority;
   let workload_after = !recheck_acc in
-  if workload_changed workload_before workload_after then
-    Lwt.return_unit
-  else
-    wait_for_updates_for_recheck ~process_updates ~get_forced ~priority
+  match workload_changed workload_before workload_after with
+  | Some changes -> Lwt.return changes
+  | None -> wait_for_updates_for_recheck ~process_updates ~get_forced ~priority
 
 (* Block until any stream receives something *)
 let wait_for_anything ~process_updates ~get_forced =
@@ -328,7 +348,9 @@ let wait_for_anything ~process_updates ~get_forced =
         WorkloadStream.wait_for_workload workload_stream;
         wait_for env_update_stream;
         wait_for recheck_stream;
-        wait_for_updates_for_recheck ~process_updates ~get_forced ~priority:Normal;
+        (let%lwt _ = wait_for_updates_for_recheck ~process_updates ~get_forced ~priority:Normal in
+         Lwt.return_unit
+        );
       ]
   in
   Lwt.return_unit
