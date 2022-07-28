@@ -16,7 +16,7 @@ open DfindMaybe
 (*****************************************************************************)
 
 (** Gives back a set of all the files in the directory.
- 
+
   A directory handle is of type Unix.dir_handle, it is the result of
   a call to Unix.opendir. Not to be confused with dfind handles.
   The path argument is useful because we want this function to give us
@@ -27,8 +27,7 @@ open DfindMaybe
   As opposed to:
     file1
     file2
-
-  Note: Paths are separated by forward-slashes even on Windows *)
+ *)
 let get_files path dir_handle =
   let paths = ref SSet.empty in
   try
@@ -37,8 +36,7 @@ let get_files path dir_handle =
       if file = "." || file = ".." then
         ()
       else
-        (* use forward slashes even on Windows *)
-        let path = path ^ "/" ^ file in
+        let path = Filename.concat path file in
         paths := SSet.add path !paths
     done;
     assert false
