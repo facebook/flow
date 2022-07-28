@@ -115,12 +115,6 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) = struct
       object (this)
         inherit [ALoc.t Nel.t EnvMap.t, ALoc.t] Flow_ast_visitor.visitor ~init as super
 
-        val mutable this_ = None
-
-        method this_ = this_
-
-        method set_this_ this_' = this_ <- this_'
-
         method add ~why t =
           this#update_acc (fun uses ->
               EnvMap.update
@@ -213,10 +207,14 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) = struct
           id
 
         method! this_expression loc this_ =
-          Base.Option.iter
-            ~f:(fun this_loc -> this#add ~why:loc (Env_api.OrdinaryNameLoc, this_loc))
-            this#this_;
-          super#this_expression loc this_
+          let writes = this#find_writes ~for_type:false loc in
+          Base.List.iter ~f:(this#add ~why:loc) writes;
+          this_
+
+        method! super_expression loc this_ =
+          let writes = this#find_writes ~for_type:false loc in
+          Base.List.iter ~f:(this#add ~why:loc) writes;
+          this_
 
         (* Skip names in function parameter types (e.g. declared functions) *)
         method! function_param_type (fpt : ('loc, 'loc) Ast.Type.Function.Param.t) =
@@ -258,17 +256,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) = struct
             cls
             ) =
           let open Flow_ast_mapper in
-          let new_this =
-            match ident with
-            | Some (loc, _) -> Some loc
-            | None -> None
-          in
-
-          let this_' = this#this_ in
-          this#set_this_ new_this;
-          let _ = this#class_body body in
-          this#set_this_ this_';
-
+          let _ = this#class_body_annotated body in
           let _ = map_opt this#class_identifier ident in
           let _ = map_opt this#type_params tparams in
           let _ = map_opt (map_loc this#class_extends) extends in
@@ -344,26 +332,11 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) = struct
           (depends_of_tparams_map tparams_map EnvMap.empty)
       in
       let depends_of_class
-          {
-            Ast.Class.id = ident;
-            body;
-            tparams;
-            extends;
-            implements;
-            class_decorators;
-            comments = _;
-          } =
+          { Ast.Class.id = _; body; tparams; extends; implements; class_decorators; comments = _ } =
         depends_of_node
           (fun visitor ->
             let open Flow_ast_mapper in
-            let this_' = visitor#this_ in
-            begin
-              match ident with
-              | Some (loc, _) -> visitor#set_this_ (Some loc)
-              | None -> ()
-            end;
             let _ = visitor#class_body_annotated body in
-            visitor#set_this_ this_';
             let _ = map_opt (map_loc visitor#class_extends) extends in
             let _ = map_opt visitor#class_implements implements in
             let _ = map_list visitor#class_decorator class_decorators in
