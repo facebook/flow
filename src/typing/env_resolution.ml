@@ -42,7 +42,7 @@ module Make (Env : Env_sig.S) (Statement : Statement_sig.S with module Env := En
               let no_lowers _ r =
                 Flow_js_utils.add_output
                   cx
-                  Error_message.(EInternal (aloc_of_reason r, UnconstrainedTvar));
+                  Error_message.(EInternal (aloc_of_reason r, UnconstrainedTvar root_id));
                 AnyT.make (AnyError None) r
               in
               Flow_js_utils.merge_tvar ~no_lowers cx r root_id
@@ -330,11 +330,10 @@ module Make (Env : Env_sig.S) (Statement : Statement_sig.S with module Env := En
   let resolve_class cx id_loc reason class_loc class_ =
     let cache = Context.node_cache cx in
     let self = Tvar.mk cx reason in
-    let ((class_sig, _) as sig_info) =
+    let ((class_t, class_t_internal, _, _) as sig_info) =
       Statement.mk_class_sig cx ~name_loc:id_loc ~class_loc reason self class_
     in
     Node_cache.set_class_sig cache class_loc sig_info;
-    let (class_t_internal, class_t) = Statement.Class_stmt_sig.classtype cx class_sig in
     Flow_js.unify cx self class_t_internal;
     (class_t, unknown_use)
 

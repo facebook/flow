@@ -1165,7 +1165,7 @@ let dump_error_message =
   let string_of_use_op = string_of_use_op_rec in
   let dump_internal_error = function
     | AbnormalControlFlow -> "AbnormalControlFlow"
-    | UnconstrainedTvar -> "UnconstrainedTvar"
+    | UnconstrainedTvar _ -> "UnconstrainedTvar"
     | ReadOfUnreachedTvar _ -> "ReadOfUnreachedTvar"
     | ReadOfUnresolvedTvar _ -> "ReadOfUnresolvedTvar"
     | MethodNotAFunction -> "MethodNotAFunction"

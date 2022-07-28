@@ -19,7 +19,11 @@ type t = {
     (Type.t * (ALoc.t, ALoc.t * Type.t) Ast.Statement.DeclareClass.t) ALocMap.t;
   mutable classes: (Type.t * (ALoc.t, ALoc.t * Type.t) Ast.Class.t) ALocMap.t;
   mutable class_sigs:
-    (Func_class_sig_types.Class_stmt_sig_types.t * (Type.t -> (ALoc.t, ALoc.t * Type.t) Ast.Class.t))
+    ( Type.t
+    * Type.t
+    * Func_class_sig_types.Class_stmt_sig_types.t
+    * (Type.t -> (ALoc.t, ALoc.t * Type.t) Ast.Class.t)
+    )
     ALocMap.t;
   mutable tparams:
     ((ALoc.t, ALoc.t * Type.t) Ast.Type.TypeParam.t * Type.typeparam * Type.t) ALocMap.t;

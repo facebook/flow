@@ -8231,7 +8231,9 @@ struct
       let def_reason = repos_reason class_loc reason in
       let this_in_class = Class_stmt_sig.This.in_class c in
       let self = Env.init_class_self_type cx class_loc reason in
-      let (class_sig, class_ast_f) = mk_class_sig cx ~name_loc ~class_loc reason self c in
+      let (class_t, _, class_sig, class_ast_f) =
+        mk_class_sig cx ~name_loc ~class_loc reason self c
+      in
       let public_property_map =
         Class_stmt_sig.fields_to_prop_map cx
         @@ Class_stmt_sig.public_fields_of_signature ~static:false class_sig
@@ -8254,8 +8256,6 @@ struct
           private_property_map;
           errors = Property_assignment.eval_property_assignment class_body;
         };
-      let (class_t_internal, class_t) = Class_stmt_sig.classtype cx class_sig in
-      Env.bind_class_self_type cx class_loc self class_t_internal;
       (class_t, class_ast_f general)
 
   (* Process a class definition, returning a (polymorphic) class type. A class
@@ -8741,7 +8741,11 @@ struct
           Env.bind_class_instance_super cx super class_loc;
           Env.bind_class_static_super cx static_super class_loc
         end;
-        ( class_sig,
+        let (class_t_internal, class_t) = Class_stmt_sig.classtype cx class_sig in
+        Env.bind_class_self_type cx class_loc self class_t_internal;
+        ( class_t,
+          class_t_internal,
+          class_sig,
           fun class_t ->
             {
               Ast.Class.id = Base.Option.map ~f:(fun (loc, name) -> ((loc, class_t), name)) id;
