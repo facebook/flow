@@ -1090,7 +1090,11 @@ module New_env = struct
           (* If an illegal write is considered as a provider, we still need to give it a
              slot to prevent crashing in code that queries provider types. *)
           let reason = mk_reason (RCustom "non-assigning provider") loc in
-          let t = AnyT.error reason in
+          let t =
+            Tvar.mk_no_wrap_where cx reason (fun (_, id) ->
+                Flow_js.resolve_id cx id (AnyT.error reason)
+            )
+          in
           Loc_env.initialize env def_loc_type loc t
         else
           env
@@ -1114,9 +1118,9 @@ module New_env = struct
     in
     let initialize_this () =
       let t = ObjProtoT (mk_reason (RCustom "global object") program_loc) in
-      check_readable cx Env_api.GlobalThisLoc program_loc;
       let w = Base.Option.value_exn (Loc_env.find_write env Env_api.GlobalThisLoc program_loc) in
-      Flow_js.unify cx ~use_op:unknown_use w t
+      let (_, id) = Type.open_tvar w in
+      Flow_js.resolve_id cx id t
     in
     initialize_this ();
     let kind =
@@ -1124,7 +1128,13 @@ module New_env = struct
       | Scope.VarScope kind -> kind
       | _ -> failwith "Unexpected lexical scope"
     in
-    let env = { env with Loc_env.scope_kind = kind } in
+    let env =
+      {
+        env with
+        Loc_env.scope_kind = kind;
+        readable = Env_api.EnvSet.singleton (Env_api.GlobalThisLoc, program_loc);
+      }
+    in
     Context.set_environment cx env
 
   let find_entry cx name ?desc loc =
