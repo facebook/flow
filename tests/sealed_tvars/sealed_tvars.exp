@@ -1,3 +1,42 @@
+Error ---------------------------------------------------------------------------------------- <BUILTINS>/prelude.js:8:1
+
+Internal error: expected env entry for write location(8, 0) to (79, 36)
+
+       v---------------------------
+    8| declare var undefined: void;
+    9|
+   10| type PropertyDescriptor<T> = any
+   11|
+   12| declare class Object {}
+   13|
+   14| declare class Function {}
+   15|
+   16| declare class Boolean {}
+   17|
+   18| declare class Number {}
+   19|
+   20| declare class String {
+   21|   @@iterator(): Iterator<string>;
+   22| }
+     :
+   65| interface $AsyncIterable<+Yield,+Return,-Next> {
+   66|   @@asyncIterator(): $AsyncIterator<Yield,Return,Next>;
+   67| }
+   68| interface AsyncGenerator<+Yield,+Return,-Next> {
+   69|   @@asyncIterator(): $AsyncIterator<Yield,Return,Next>;
+   70| }
+   71|
+   72| type AsyncIterator<+T> = $AsyncIterator<T,void,void>;
+   73| type AsyncIterable<+T> = $AsyncIterable<T,void,void>;
+   74|
+   75| declare function $asyncIterator<T>(p: AsyncIterable<T>): T;
+   76|
+   77| declare opaque type $Flow$ModuleRef<+T>;
+   78|
+   79| declare var module: { exports: any }
+       -----------------------------------^
+
+
 Error -------------------------------------------------------------------------------------------- error_examples.js:4:1
 
 Internal error: read of Env_api.Make.ClassInstanceSuperLoc entry which has not been prepared for typechecking
@@ -30,6 +69,18 @@ Internal error: read of Env_api.Make.ClassStaticThisLoc entry which has not been
       ^^^^^^^^^^^
 
 
+Error -------------------------------------------------------------------------------------------- error_examples.js:4:1
+
+Internal error: expected env entry for write location(4, 0) to (7, 35)
+
+      v----------
+   4| class C { }
+   5|
+   6| // Contextual
+   7| var x: number => number = (x) => x;
+      ----------------------------------^
+
+
 Error -------------------------------------------------------------------------------------------- error_examples.js:4:7
 
 Internal error: unconstrained tvar during tvar resolution
@@ -39,4 +90,4 @@ Internal error: unconstrained tvar during tvar resolution
 
 
 
-Found 5 errors
+Found 7 errors

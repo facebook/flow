@@ -184,10 +184,13 @@ module New_env = struct
   let check_readable cx kind loc =
     match Context.env_mode cx with
     | Options.(SSAEnv Enforced) ->
-      let ({ Loc_env.under_resolution; _ } as env) = Context.environment cx in
+      let ({ Loc_env.under_resolution; var_info; _ } as env) = Context.environment cx in
       begin
         match Loc_env.find_write env kind loc with
-        | None -> (* defer to logic elsewhere for error *) ()
+        | None ->
+          (match EnvMap.find_opt (kind, loc) var_info.Env_api.env_entries with
+          | Some Env_api.NonAssigningWrite -> ()
+          | _ -> Flow_js_utils.add_output cx Error_message.(EInternal (loc, MissingEnvWrite loc)))
         | Some (OpenT (_, id)) ->
           if not (Loc_env.is_readable env kind loc) then
             Flow_js_utils.add_output cx Error_message.(EInternal (loc, ReadOfUnreachedTvar kind))
