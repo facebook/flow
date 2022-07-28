@@ -115,6 +115,30 @@ let merge x y =
     x
     y
 
+let merge_export_import export import =
+  SMap.merge
+    (fun _key export import ->
+      match (export, import) with
+      | (Some export, Some import) ->
+        Some
+          (ExportMap.merge
+             (fun _key export import ->
+               match (export, import) with
+               | (Some export, Some import) -> Some (export + import)
+               | (Some export, None) -> Some export
+               (*Can use log, failwith, or assert, to make sure that this is never the case*)
+               | (None, Some _) -> None
+               | (None, None) -> None)
+             export
+             import
+          )
+      | (Some export, None) -> Some export
+      (*Can use log, failwith, or assert, to make sure that this is never the case*)
+      | (None, Some _) -> None
+      | (None, None) -> None)
+    export
+    import
+
 let fold_names ~f ~init t = SMap.fold (fun name exports acc -> f acc name exports) t init
 
 let fold ~f ~init t =
@@ -151,6 +175,33 @@ let subtract old_t t =
       (t, [])
   in
   (t, dead_names)
+
+let subtract_count export import =
+  let result =
+    SMap.merge
+      (fun _key export import ->
+        match (export, import) with
+        | (Some export, Some import) ->
+          Some
+            (ExportMap.merge
+               (fun _key export import ->
+                 match (export, import) with
+                 | (Some export, Some import) -> Some (export - import)
+                 | (Some export, None) -> Some export
+                 (*Can use log, failwith, or assert, to make sure that this is never the case*)
+                 | (None, Some _) -> None
+                 | (None, None) -> None)
+               export
+               import
+            )
+        | (Some export, None) -> Some export
+        (*Can use log, failwith, or assert, to make sure that this is never the case*)
+        | (None, Some _) -> None
+        | (None, None) -> None)
+      export
+      import
+  in
+  result
 
 (** [find name t] returns all of the [(file_key, kind)] tuples that export [name] *)
 let find name (t : t) =

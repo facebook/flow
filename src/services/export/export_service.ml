@@ -242,23 +242,26 @@ let index ~workers ~reader parsed :
 (** Initializes an [Export_search.t] with the exports of all of the [parsed] files
     as well as the builtin libdefs. *)
 let init ~workers ~reader ~libs parsed =
-  let%lwt (exports_to_add, _exports_to_remove, _imports_to_add, _imports_to_remove) =
+  let%lwt (exports_to_add, _exports_to_remove, imports_to_add, _imports_to_remove) =
     index ~workers ~reader parsed
   in
   let exports_to_add = add_exports_of_builtins libs exports_to_add in
+  let final_export_index = Export_index.merge_export_import exports_to_add imports_to_add in
   (* TODO: assert that _exports_to_remove is empty? should be on init *)
-  Lwt.return (Export_search.init exports_to_add)
+  Lwt.return (Export_search.init final_export_index)
 
 (** [update ~changed previous] updates the exports for all of the [changed] files
     in the [previous] [Export_search.t]. *)
 let update ~workers ~reader ~update ~remove previous : Export_search.t Lwt.t =
   let dirty_files = Utils_js.FilenameSet.union update remove in
-  let%lwt (exports_to_add, exports_to_remove, _imports_to_add, _imports_to_remove) =
+  let%lwt (exports_to_add, exports_to_remove, imports_to_add, imports_to_remove) =
     index ~workers ~reader dirty_files
   in
   previous
   |> Export_search.subtract exports_to_remove
   |> Export_search.merge exports_to_add
+  |> Export_search.subtract_count imports_to_remove
+  |> Export_search.merge_export_import imports_to_add
   |> Lwt.return
 
 module For_test = struct

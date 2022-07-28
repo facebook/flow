@@ -26,7 +26,11 @@ val init : Export_index.t -> t
 
 val merge : Export_index.t -> t -> t
 
+val merge_export_import : Export_index.t -> t -> t
+
 val subtract : Export_index.t -> t -> t
+
+val subtract_count : Export_index.t -> t -> t
 
 val default_options : search_options
 

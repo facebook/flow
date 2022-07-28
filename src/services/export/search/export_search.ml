@@ -76,11 +76,20 @@ let subtract old_index { index; value_matcher; type_matcher } =
   let type_matcher = Fuzzy_path.remove_candidates type_matcher dead_candidates in
   { index; value_matcher; type_matcher }
 
+let subtract_count removed_imports { index; value_matcher; type_matcher } =
+  let index = Export_index.subtract_count index removed_imports in
+  { index; value_matcher; type_matcher }
+
 let merge new_index { index; value_matcher; type_matcher } =
   let index = Export_index.merge new_index index in
   let { values; types } = partition_candidates new_index in
   let value_matcher = Fuzzy_path.add_candidates value_matcher values in
   let type_matcher = Fuzzy_path.add_candidates type_matcher types in
+  { index; value_matcher; type_matcher }
+
+(*Merge_import *)
+let merge_export_import new_index { index; value_matcher; type_matcher } =
+  let index = Export_index.merge_export_import index new_index in
   { index; value_matcher; type_matcher }
 
 type query =
