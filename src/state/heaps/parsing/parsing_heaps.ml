@@ -1313,27 +1313,21 @@ module Reparse_mutator = struct
     changed_files := files;
 
     let commit () =
-      WorkerCancel.with_no_cancellations (fun () ->
-          Hh_logger.debug "Committing parsing heaps";
-          Mutator_cache.clear ();
-          Reader_cache.remove_batch !changed_files;
-          FileHeap.remove_batch !not_found_files;
-          reset_refs ()
-      );
-      Lwt.return_unit
+      Hh_logger.debug "Committing parsing heaps";
+      Mutator_cache.clear ();
+      Reader_cache.remove_batch !changed_files;
+      FileHeap.remove_batch !not_found_files;
+      reset_refs ()
     in
 
     let rollback () =
-      WorkerCancel.with_no_cancellations (fun () ->
-          Hh_logger.debug "Rolling back parsing heaps";
-          Mutator_cache.clear ();
-          rollback_changed options;
-          reset_refs ()
-      );
-      Lwt.return_unit
+      Hh_logger.debug "Rolling back parsing heaps";
+      Mutator_cache.clear ();
+      rollback_changed options;
+      reset_refs ()
     in
 
-    Transaction.add ~singleton:"Reparse" ~commit ~rollback transaction;
+    Transaction.add ~commit ~rollback transaction;
 
     let add_unparsed = add_unparsed options in
 
@@ -1358,17 +1352,12 @@ module Commit_modules_mutator = struct
     | Modulename.Filename file_key -> FileModuleHeap.remove file_key
 
   let commit () =
-    WorkerCancel.with_no_cancellations (fun () ->
-        MSet.iter remove_module !to_remove;
-        reset_refs ()
-    );
-    Lwt.return_unit
+    MSet.iter remove_module !to_remove;
+    reset_refs ()
 
-  let rollback () =
-    reset_refs ();
-    Lwt.return_unit
+  let rollback () = reset_refs ()
 
-  let create transaction = Transaction.add ~singleton:"Commit_modules" ~commit ~rollback transaction
+  let create transaction = Transaction.add ~commit ~rollback transaction
 
   let remove_modules_on_commit () modules = to_remove := modules
 end
@@ -1405,17 +1394,9 @@ module Resolved_requires_mutator = struct
       | _ -> ())
 
   let create transaction options files =
-    let commit () = Lwt.return_unit in
-
-    let rollback () =
-      WorkerCancel.with_no_cancellations (fun () ->
-          FilenameSet.iter (rollback_resolved_requires options) files
-      );
-      Lwt.return_unit
-    in
-
+    let commit () = () in
+    let rollback () = FilenameSet.iter (rollback_resolved_requires options) files in
     Transaction.add ~commit ~rollback transaction;
-
     options
 
   let add_resolved_requires options file parse resolved_requires =
@@ -1464,21 +1445,16 @@ module Merge_context_mutator = struct
       entity_rollback (get_leader parse);
       entity_rollback (get_sig_hash parse)
 
-  let commit () =
-    dirty_files := FilenameSet.empty;
-    Lwt.return_unit
+  let commit () = dirty_files := FilenameSet.empty
 
   let rollback () =
     Hh_logger.debug "Rolling back context heaps";
-    WorkerCancel.with_no_cancellations (fun () ->
-        FilenameSet.iter rollback_leader !dirty_files;
-        dirty_files := FilenameSet.empty
-    );
-    Lwt.return_unit
+    FilenameSet.iter rollback_leader !dirty_files;
+    dirty_files := FilenameSet.empty
 
   let create transaction files =
     dirty_files := files;
-    Transaction.add ~singleton:"Merge_context" ~commit ~rollback transaction
+    Transaction.add ~commit ~rollback transaction
 
   let update_leader x (_, _, parse) = Heap.entity_advance (Heap.get_leader parse) x
 

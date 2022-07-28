@@ -1676,9 +1676,8 @@ end = struct
      * before this recheck started. *)
     Transaction.add
       ~commit:(fun () ->
-        FilenameSet.iter (Check_cache.remove Merge_service.check_contents_cache) sig_new_or_changed;
-        Lwt.return_unit)
-      ~rollback:(fun () -> Lwt.return_unit)
+        FilenameSet.iter (Check_cache.remove Merge_service.check_contents_cache) sig_new_or_changed)
+      ~rollback:(fun () -> ())
       transaction;
 
     let%lwt ( errors,
@@ -1769,9 +1768,8 @@ end = struct
       ~commit:(fun () ->
         (* We have to clear this at the end of the recheck, because it could have been populated with
          * now-out-of-date data in the middle of the recheck by parallelizable requests. *)
-        Persistent_connection.clear_type_parse_artifacts_caches ();
-        Lwt.return_unit)
-      ~rollback:(fun () -> Lwt.return_unit)
+        Persistent_connection.clear_type_parse_artifacts_caches ())
+      ~rollback:(fun () -> ())
       transaction;
 
     let%lwt (env, intermediate_values) =
