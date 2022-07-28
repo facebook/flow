@@ -220,7 +220,7 @@ module Env : Env_sig.S = struct
       scopes := trunc (List.length cur - depth, cur)
 
   (* initialize a new environment (once per module) *)
-  let init_env ?(exclude_syms = NameUtils.Set.empty) cx module_scope =
+  let init_env ?(exclude_syms = NameUtils.Set.empty) cx _ module_scope =
     begin
       if Context.classic_env_option_enabled cx Options.ConstrainWrites then
         let ({ Loc_env.var_info = { Env_api.providers; _ } as var_info; _ } as env) =
@@ -730,7 +730,7 @@ module Env : Env_sig.S = struct
       (Entry.new_let t ~loc ~state ~spec ?closure_writes ~provider)
       loc
 
-  let bind_function_or_global_this _ _ _ = ()
+  let bind_function_this _ _ _ = ()
 
   let bind_class_instance_this _ _ _ = ()
 

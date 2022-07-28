@@ -123,7 +123,7 @@ let add_require_tvars =
 let before_and_after_stmts file_name =
   let content = Sys_utils.cat file_name in
   let file_key = File_key.LibFile file_name in
-  let ((_, { Flow_ast.Program.statements = stmts; _ }), file_sig) =
+  let ((program_loc, { Flow_ast.Program.statements = stmts; _ }), file_sig) =
     parse_content file_key content
   in
   (* Loading the entire libdefs here would be overkill, but the typed_ast tests do use Object
@@ -150,7 +150,7 @@ let before_and_after_stmts file_name =
   in
   add_require_tvars cx file_sig;
   let module_scope = Scope.fresh () in
-  Env.init_env cx module_scope;
+  Env.init_env cx (ALoc.of_loc program_loc) module_scope;
   let stmts = Base.List.map ~f:Ast_loc_utils.loc_to_aloc_mapper#statement stmts in
   let t_stmts =
     try

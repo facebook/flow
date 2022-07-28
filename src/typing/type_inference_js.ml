@@ -473,7 +473,7 @@ module Make (Env : Env_sig.S) : S = struct
       )
     in
     Context.set_environment cx env;
-    Env.init_env ~exclude_syms cx module_scope;
+    Env.init_env ~exclude_syms cx (fst aloc_ast) module_scope;
     if Context.resolved_env cx then begin
       let { Loc_env.scope_kind; class_stack; _ } = Context.environment cx in
       Base.List.iter ~f:(Env_resolution.resolve_component cx name_def_graph) components;

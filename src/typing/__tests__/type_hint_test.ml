@@ -107,16 +107,16 @@ end = struct
   module NameResolver = Name_resolver.Make_of_flow (Context) (Flow_js_utils)
 
   let parse cx content =
-    let (_, t_ast) = parse_type content in
+    let (program_loc, t_ast) = parse_type content in
     (* The object type converter will peek the scope, so we need to have a non-empty scope list. *)
     let (_, info) =
       NameResolver.program_with_scope
         cx
-        (ALoc.none, { Flow_ast.Program.statements = []; comments = None; all_comments = [] })
+        (program_loc, { Flow_ast.Program.statements = []; comments = None; all_comments = [] })
     in
     let env = Loc_env.with_info Scope.Global info in
     Context.set_environment cx env;
-    New_env.init_env cx (Scope.fresh ~var_scope_kind:Scope.Global ());
+    New_env.init_env cx program_loc (Scope.fresh ~var_scope_kind:Scope.Global ());
     let ((_, t), _) = Annot.convert cx Subst_name.Map.empty t_ast in
     t
 end

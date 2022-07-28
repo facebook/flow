@@ -21,7 +21,8 @@ module type S = sig
     | OrdinaryNameLoc
     | ExpressionLoc
     | ArrayProviderLoc
-    | FunctionOrGlobalThisLoc
+    | FunctionThisLoc
+    | GlobalThisLoc
     | ClassInstanceThisLoc
     | ClassStaticThisLoc
     | ClassInstanceSuperLoc
@@ -69,7 +70,8 @@ module type S = sig
         writes: write_locs;
         write_id: int option;
       }
-    | FunctionOrGlobalThis of L.t Reason.virtual_reason
+    | FunctionThis of L.t Reason.virtual_reason
+    | GlobalThis of L.t Reason.virtual_reason
     | ClassInstanceThis of L.t Reason.virtual_reason
     | ClassStaticThis of L.t Reason.virtual_reason
     | ClassInstanceSuper of L.t Reason.virtual_reason
@@ -221,7 +223,8 @@ module Make
     | OrdinaryNameLoc
     | ExpressionLoc
     | ArrayProviderLoc
-    | FunctionOrGlobalThisLoc
+    | FunctionThisLoc
+    | GlobalThisLoc
     | ClassInstanceThisLoc
     | ClassStaticThisLoc
     | ClassInstanceSuperLoc
@@ -272,7 +275,8 @@ module Make
         writes: write_locs;
         write_id: int option;
       }
-    | FunctionOrGlobalThis of L.t Reason.virtual_reason
+    | FunctionThis of L.t Reason.virtual_reason
+    | GlobalThis of L.t Reason.virtual_reason
     | ClassInstanceThis of L.t Reason.virtual_reason
     | ClassStaticThis of L.t Reason.virtual_reason
     | ClassInstanceSuper of L.t Reason.virtual_reason
@@ -409,7 +413,8 @@ module Make
     | IllegalWrite r -> [(OrdinaryNameLoc, Reason.poly_loc_of_reason r)]
     | Uninitialized _ -> []
     | Undeclared _ -> []
-    | FunctionOrGlobalThis _ -> []
+    | FunctionThis _ -> []
+    | GlobalThis _ -> []
     | ClassInstanceThis _ -> []
     | ClassStaticThis _ -> []
     | ClassInstanceSuper _ -> []
@@ -492,7 +497,8 @@ module Make
         let refinement_id_str = string_of_int refinement_id in
         let writes_str = String.concat "," (List.map print_write_loc writes) in
         Printf.sprintf "{refinement_id = %s; writes = %s}" refinement_id_str writes_str
-      | FunctionOrGlobalThis reason
+      | FunctionThis reason
+      | GlobalThis reason
       | ClassInstanceThis reason
       | ClassStaticThis reason ->
         let loc = Reason.poly_loc_of_reason reason in

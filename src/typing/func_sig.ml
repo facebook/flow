@@ -254,11 +254,11 @@ struct
             Some default
           | Some this ->
             (* There is `this` annotation, so we shadow this from class scope. *)
-            Env.bind_function_or_global_this cx this func_loc;
+            Env.bind_function_this cx this func_loc;
             Some this)
         | Func_class_sig_types.Func.FunctionThis (func_loc, default) ->
           let this = this_param fparams |> Base.Option.value ~default in
-          Env.bind_function_or_global_this cx this func_loc;
+          Env.bind_function_this cx this func_loc;
           Some this
       ) else
         (* add `this` and `super` before looking at parameter bindings as when using

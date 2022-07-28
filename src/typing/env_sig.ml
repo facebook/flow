@@ -56,7 +56,7 @@ module type S = sig
 
   val trunc_env : int -> unit
 
-  val init_env : ?exclude_syms:NameUtils.Set.t -> Context.t -> Scope.t -> unit
+  val init_env : ?exclude_syms:NameUtils.Set.t -> Context.t -> ALoc.t -> Scope.t -> unit
 
   val update_env : ALoc.t -> t -> unit
 
@@ -74,7 +74,7 @@ module type S = sig
   val bind_let :
     ?state:State.t -> Context.t -> string -> Type.annotated_or_inferred -> ALoc.t -> unit
 
-  val bind_function_or_global_this : Context.t -> Type.t -> ALoc.t -> unit
+  val bind_function_this : Context.t -> Type.t -> ALoc.t -> unit
 
   val bind_class_instance_this : Context.t -> Type.t -> ALoc.t -> unit
 

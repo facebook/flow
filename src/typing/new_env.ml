@@ -437,7 +437,7 @@ module New_env = struct
                  |> type_of_state writes write_id
                | (Env_api.With_ALoc.Global name, _) ->
                  get_global_value_type cx (Reason.OrdinaryName name) reason
-               | (Env_api.With_ALoc.FunctionOrGlobalThis reason, _) ->
+               | (Env_api.With_ALoc.GlobalThis reason, _) ->
                  Debug_js.Verbose.print_if_verbose
                    cx
                    [
@@ -448,8 +448,22 @@ module New_env = struct
                    ];
                  Base.Option.value_exn
                    ( Reason.aloc_of_reason reason |> fun loc ->
-                     check_readable cx Env_api.FunctionOrGlobalThisLoc loc;
-                     Loc_env.find_write env Env_api.FunctionOrGlobalThisLoc loc
+                     check_readable cx Env_api.GlobalThisLoc loc;
+                     Loc_env.find_write env Env_api.GlobalThisLoc loc
+                   )
+               | (Env_api.With_ALoc.FunctionThis reason, _) ->
+                 Debug_js.Verbose.print_if_verbose
+                   cx
+                   [
+                     spf
+                       "reading function or global this(%s) from location %s"
+                       (Reason.string_of_aloc loc)
+                       (Reason.aloc_of_reason reason |> Reason.string_of_aloc);
+                   ];
+                 Base.Option.value_exn
+                   ( Reason.aloc_of_reason reason |> fun loc ->
+                     check_readable cx Env_api.FunctionThisLoc loc;
+                     Loc_env.find_write env Env_api.FunctionThisLoc loc
                    )
                | (Env_api.With_ALoc.ClassInstanceThis reason, _) ->
                  Debug_js.Verbose.print_if_verbose
@@ -625,7 +639,8 @@ module New_env = struct
           | Env_api.With_ALoc.Refinement { refinement_id = _; writes; write_id = _ } ->
             local_def_exists writes
           | Env_api.With_ALoc.Projection _ -> true
-          | Env_api.With_ALoc.FunctionOrGlobalThis _ -> true
+          | Env_api.With_ALoc.GlobalThis _ -> true
+          | Env_api.With_ALoc.FunctionThis _ -> true
           | Env_api.With_ALoc.ClassInstanceThis _ -> true
           | Env_api.With_ALoc.ClassStaticThis _ -> true
           | Env_api.With_ALoc.ClassInstanceSuper _ -> true
@@ -858,8 +873,8 @@ module New_env = struct
     valid_declaration_check cx (OrdinaryName name) loc;
     bind cx (TypeUtil.type_t_of_annotated_or_inferred t) loc
 
-  let bind_function_or_global_this cx t loc =
-    unify_write_entry cx ~use_op:Type.unknown_use t Env_api.FunctionOrGlobalThisLoc loc
+  let bind_function_this cx t loc =
+    unify_write_entry cx ~use_op:Type.unknown_use t Env_api.FunctionThisLoc loc
 
   let bind_class_instance_this cx t loc =
     unify_write_entry cx ~use_op:Type.unknown_use t Env_api.ClassInstanceThisLoc loc
@@ -1031,8 +1046,8 @@ module New_env = struct
   (* Variable Declaration *)
   (************************)
 
-  let init_env ?exclude_syms cx scope =
-    Old_env.init_env ?exclude_syms cx scope;
+  let init_env ?exclude_syms cx program_loc scope =
+    Old_env.init_env ?exclude_syms cx program_loc scope;
     let ({ Loc_env.var_info; _ } as env) = Context.environment cx in
     let initialize_entry def_loc_type loc env_entry env =
       match env_entry with
@@ -1095,11 +1110,9 @@ module New_env = struct
            var_info.Env_api.env_entries
     in
     let initialize_this () =
-      let t = ObjProtoT (mk_reason (RCustom "global object") ALoc.none) in
-      check_readable cx Env_api.FunctionOrGlobalThisLoc ALoc.none;
-      let w =
-        Base.Option.value_exn (Loc_env.find_write env Env_api.FunctionOrGlobalThisLoc ALoc.none)
-      in
+      let t = ObjProtoT (mk_reason (RCustom "global object") program_loc) in
+      check_readable cx Env_api.GlobalThisLoc program_loc;
+      let w = Base.Option.value_exn (Loc_env.find_write env Env_api.GlobalThisLoc program_loc) in
       Flow_js.unify cx ~use_op:unknown_use w t
     in
     initialize_this ();

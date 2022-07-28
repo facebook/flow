@@ -147,7 +147,9 @@ module Make
 
     val empty_array : L.t virtual_reason -> L.LSet.t -> t
 
-    val function_or_global_this : ALoc.t virtual_reason -> t
+    val function_this : ALoc.t virtual_reason -> t
+
+    val global_this : ALoc.t virtual_reason -> t
 
     val class_instance_this : ALoc.t virtual_reason -> t
 
@@ -227,7 +229,8 @@ module Make
           name: string;
         }
       | Projection of ALoc.t
-      | FunctionOrGlobalThis of ALoc.t virtual_reason
+      | FunctionThis of ALoc.t virtual_reason
+      | GlobalThis of ALoc.t virtual_reason
       | ClassInstanceThis of ALoc.t virtual_reason
       | ClassStaticThis of ALoc.t virtual_reason
       | ClassInstanceSuper of ALoc.t virtual_reason
@@ -287,7 +290,8 @@ module Make
         in
         let write_str = debug_to_string get_refi val_t in
         Utils_js.spf "{refinement = %s; write = %s}" refinement_kind write_str
-      | FunctionOrGlobalThis _ -> "This(function or global)"
+      | FunctionThis _ -> "This(function)"
+      | GlobalThis _ -> "This(global)"
       | ClassInstanceThis _ -> "This(instance)"
       | ClassStaticThis _ -> "This(static)"
       | ClassInstanceSuper _ -> "Super(instance)"
@@ -441,7 +445,8 @@ module Make
       | DeclaredButSkipped _
       | UndeclaredClass _
       | Projection _
-      | FunctionOrGlobalThis _
+      | FunctionThis _
+      | GlobalThis _
       | ClassInstanceThis _
       | ClassStaticThis _
       | ClassInstanceSuper _
@@ -476,7 +481,9 @@ module Make
         let vals = WriteSet.union (normalize t1.write_state) (normalize t2.write_state) in
         join (WriteSet.elements vals)
 
-    let function_or_global_this reason = mk_with_write_state @@ FunctionOrGlobalThis reason
+    let function_this reason = mk_with_write_state @@ FunctionThis reason
+
+    let global_this reason = mk_with_write_state @@ GlobalThis reason
 
     let class_instance_this reason = mk_with_write_state @@ ClassInstanceThis reason
 
@@ -519,7 +526,8 @@ module Make
           | UndeclaredClass { def; name } -> Env_api.UndeclaredClass { def; name }
           | Uninitialized l -> Env_api.Uninitialized (mk_reason RPossiblyUninitialized l)
           | Projection loc -> Env_api.Projection loc
-          | FunctionOrGlobalThis r -> Env_api.FunctionOrGlobalThis r
+          | FunctionThis r -> Env_api.FunctionThis r
+          | GlobalThis r -> Env_api.GlobalThis r
           | ClassInstanceThis r -> Env_api.ClassInstanceThis r
           | ClassStaticThis r -> Env_api.ClassStaticThis r
           | ClassInstanceSuper r -> Env_api.ClassInstanceSuper r
@@ -569,7 +577,8 @@ module Make
         | Loc _ -> []
         | EmptyArray _ -> []
         | IllegalWrite _ -> []
-        | FunctionOrGlobalThis _ -> []
+        | FunctionThis _ -> []
+        | GlobalThis _ -> []
         | ClassInstanceThis _ -> []
         | ClassStaticThis _ -> []
         | ClassInstanceSuper _ -> []
@@ -1009,7 +1018,7 @@ module Make
 
   let module_scoped_vars = ["eval"; "arguments"]
 
-  let initialize_globals ~is_lib exclude_syms unbound_names =
+  let initialize_globals ~is_lib exclude_syms unbound_names program_loc =
     (SMap.empty
     |> SSet.fold
          (fun name acc ->
@@ -1047,9 +1056,7 @@ module Make
              acc)
          exclude_syms
     (* this has to come later, since this can be thought to be unbound names in SSA builder when it's used as a type. *)
-    |> (let v =
-          ALoc.none |> mk_reason (RIdentifier (internal_name "this")) |> Val.function_or_global_this
-        in
+    |> (let v = program_loc |> mk_reason (RIdentifier (internal_name "this")) |> Val.global_this in
         SMap.add
           "this"
           {
@@ -1118,8 +1125,8 @@ module Make
     | (_, Identifier (_, { Flow_ast.Identifier.name; _ })) -> Some name
     | _ -> None
 
-  let initial_env cx ~is_lib exclude_syms unbound_names =
-    let globals = initialize_globals ~is_lib exclude_syms unbound_names in
+  let initial_env cx ~is_lib exclude_syms unbound_names program_loc =
+    let globals = initialize_globals ~is_lib exclude_syms unbound_names program_loc in
     let globals =
       let exhaustive_entry =
         {
@@ -1170,7 +1177,7 @@ module Make
   let empty_refinements = { applied = IMap.empty; changeset = LookupMap.empty; total = None }
 
   class name_resolver
-    cx is_lib exclude_syms (prepass_info, prepass_values, unbound_names) provider_info =
+    cx is_lib exclude_syms (prepass_info, prepass_values, unbound_names) provider_info program_loc =
     let add_output =
       match Context.env_mode cx with
       | Options.SSAEnv _ -> FlowAPIUtils.add_output cx
@@ -1214,14 +1221,15 @@ module Make
       val invalidation_caches = Invalidation_api.mk_caches ()
 
       val mutable env_state : name_resolver_state =
-        let (env, jsx_base_name) = initial_env cx ~is_lib exclude_syms unbound_names in
+        let (env, jsx_base_name) = initial_env cx ~is_lib exclude_syms unbound_names program_loc in
         {
           values = L.LMap.empty;
           write_entries =
             EnvMap.empty
             |> EnvMap.add
-                 (Env_api.FunctionOrGlobalThisLoc, ALoc.none)
-                 (Env_api.AssigningWrite (mk_reason (RIdentifier (internal_name "this")) ALoc.none));
+                 (Env_api.GlobalThisLoc, program_loc)
+                 (Env_api.AssigningWrite (mk_reason (RIdentifier (internal_name "this")) program_loc)
+                 );
           toplevel_members = [];
           module_toplevel_members = L.LMap.empty;
           curr_id = 0;
@@ -1703,11 +1711,11 @@ module Make
                           env_state with
                           write_entries =
                             EnvMap.add
-                              (Env_api.FunctionOrGlobalThisLoc, loc)
+                              (Env_api.FunctionThisLoc, loc)
                               (Env_api.AssigningWrite reason)
                               env_state.write_entries;
                         };
-                      Val.function_or_global_this reason
+                      Val.function_this reason
                     | ClassStaticEnv ->
                       env_state <-
                         {
@@ -5054,6 +5062,7 @@ module Make
     end
 
   let program_with_scope cx ?(lib = false) ?(exclude_syms = NameUtils.Set.empty) program =
+    let (loc, _) = program in
     let jsx_ast =
       match Context.jsx cx with
       | Options.Jsx_react -> None
@@ -5068,7 +5077,7 @@ module Make
         program
     in
     let providers = Provider_api.find_providers program in
-    let env_walk = new name_resolver cx lib exclude_syms prepass providers in
+    let env_walk = new name_resolver cx lib exclude_syms prepass providers loc in
     let completion_state = env_walk#visit_program program in
     (* Fill in dead code reads *)
     let dead_code_marker = new dead_code_marker cx env_walk#values env_walk#write_entries in
