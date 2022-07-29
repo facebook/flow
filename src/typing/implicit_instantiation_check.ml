@@ -22,3 +22,12 @@ type t = {
   poly_t: poly_t;
   operation: Type.use_op * Reason.t * operation;
 }
+
+let of_call lhs poly_t use_op reason funcalltype =
+  { lhs; poly_t; operation = (use_op, reason, Call funcalltype) }
+
+let of_ctor lhs poly_t use_op reason_op args =
+  { lhs; poly_t; operation = (use_op, reason_op, Constructor args) }
+
+let of_jsx lhs poly_t use_op reason_op clone ~component ~config children =
+  { lhs; poly_t; operation = (use_op, reason_op, Jsx { clone; component; config; children }) }
