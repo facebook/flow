@@ -30,8 +30,10 @@ module type OBSERVER = sig
     output
 end
 
-module type KIT = sig
+module type S = sig
   type output
+
+  module Flow : Flow_common.S
 
   val solve_targs : Context.t -> Check.t -> output Subst_name.Map.t
 
@@ -45,6 +47,7 @@ module type KIT = sig
     'acc
 end
 
-module Make (Observer : OBSERVER) : KIT with type output = Observer.output
+module Make (Observer : OBSERVER) (Flow : Flow_common.S) :
+  S with type output = Observer.output with module Flow = Flow
 
-module CheckKit : KIT with type output = Type.t
+module Pierce (Flow : Flow_common.S) : S with type output = Type.t with module Flow = Flow

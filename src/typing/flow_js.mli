@@ -130,3 +130,5 @@ val widen_obj_type :
   Context.t -> ?trace:Type.trace -> use_op:Type.use_op -> Reason.reason -> Type.t -> Type.t
 
 val resolve_id : Context.t -> int -> Type.t -> unit
+
+module FlowJs : Flow_common.S

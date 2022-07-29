@@ -51,8 +51,10 @@ module type OBSERVER = sig
     output
 end
 
-module type KIT = sig
+module type S = sig
   type output
+
+  module Flow : Flow_common.S
 
   val solve_targs : Context.t -> Check.t -> output Subst_name.Map.t
 
@@ -66,8 +68,11 @@ module type KIT = sig
     'acc
 end
 
-module Make (Observer : OBSERVER) : KIT with type output = Observer.output = struct
+module Make (Observer : OBSERVER) (Flow : Flow_common.S) : S with type output = Observer.output =
+struct
   type output = Observer.output
+
+  module Flow = Flow
 
   let get_t cx =
     let no_lowers _cx r = Type.Unsoundness.merged_any r in
@@ -231,13 +236,13 @@ module Make (Observer : OBSERVER) : KIT with type output = Observer.output = str
               { calltype with call_targs = Some call_targs; call_tout = (reason_op, new_tout) }
             )
         in
-        Flow_js.flow cx (lhs, call_t)
+        Flow.flow cx (lhs, call_t)
       | Check.Constructor call_args ->
         let new_tout = Tvar.mk cx reason_op in
         let constructor_t =
           ConstructorT (use_op, reason_op, Some call_targs, call_args, new_tout)
         in
-        Flow_js.flow cx (lhs, constructor_t)
+        Flow.flow cx (lhs, constructor_t)
       | Check.Jsx { clone; component; config; children } ->
         let new_tout = Tvar.mk cx reason_op in
         let react_kit_t =
@@ -248,7 +253,7 @@ module Make (Observer : OBSERVER) : KIT with type output = Observer.output = str
                 { clone; component; config; children; targs = Some call_targs; tout = new_tout }
             )
         in
-        Flow_js.flow cx (lhs, react_kit_t)
+        Flow.flow cx (lhs, react_kit_t)
     in
     (tparam_map, marked_tparams)
 
@@ -409,7 +414,7 @@ module CheckObserver : OBSERVER with type output = Type.t = struct
   let on_pinned_tparam _cx _name t = t
 
   let on_missing_bounds cx name ~tparam_binder_reason ~instantiation_reason =
-    Flow_js.add_output
+    Flow_js_utils.add_output
       cx
       (Error_message.EImplicitInstantiationUnderconstrainedError
          {
@@ -426,7 +431,7 @@ module CheckObserver : OBSERVER with type output = Type.t = struct
       ^ " contains a non-Type.t upper bound "
       ^ Type.string_of_use_ctor u
     in
-    Flow_js.add_output
+    Flow_js_utils.add_output
       cx
       (Error_message.EImplicitInstantiationTemporaryError
          (Reason.aloc_of_reason tparam_binder_reason, msg)
@@ -434,4 +439,6 @@ module CheckObserver : OBSERVER with type output = Type.t = struct
     any_error tparam_binder_reason
 end
 
-module CheckKit : KIT with type output = Type.t = Make (CheckObserver)
+module Pierce : functor (Flow : Flow_common.S) ->
+  S with type output = Type.t with module Flow = Flow =
+  Make (CheckObserver)

@@ -5,36 +5,39 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-module ImplicitInstantiationKit : Implicit_instantiation.KIT = Implicit_instantiation.Make (struct
-  type output = unit
+module ImplicitInstantiationKit : Implicit_instantiation.S =
+  Implicit_instantiation.Make
+    (struct
+      type output = unit
 
-  let on_constant_tparam _ _ _ = ()
+      let on_constant_tparam _ _ _ = ()
 
-  let on_pinned_tparam _ _ _ = ()
+      let on_pinned_tparam _ _ _ = ()
 
-  let on_missing_bounds cx name ~tparam_binder_reason ~instantiation_reason =
-    Flow_js.add_output
-      cx
-      (Error_message.EImplicitInstantiationUnderconstrainedError
-         {
-           bound = Subst_name.string_of_subst_name name;
-           reason_call = instantiation_reason;
-           reason_l = tparam_binder_reason;
-         }
-      )
+      let on_missing_bounds cx name ~tparam_binder_reason ~instantiation_reason =
+        Flow_js.add_output
+          cx
+          (Error_message.EImplicitInstantiationUnderconstrainedError
+             {
+               bound = Subst_name.string_of_subst_name name;
+               reason_call = instantiation_reason;
+               reason_l = tparam_binder_reason;
+             }
+          )
 
-  let on_upper_non_t cx name u ~tparam_binder_reason ~instantiation_reason:_ =
-    let msg =
-      Subst_name.string_of_subst_name name
-      ^ " contains a non-Type.t upper bound "
-      ^ Type.string_of_use_ctor u
-    in
-    Flow_js.add_output
-      cx
-      (Error_message.EImplicitInstantiationTemporaryError
-         (Reason.aloc_of_reason tparam_binder_reason, msg)
-      )
-end)
+      let on_upper_non_t cx name u ~tparam_binder_reason ~instantiation_reason:_ =
+        let msg =
+          Subst_name.string_of_subst_name name
+          ^ " contains a non-Type.t upper bound "
+          ^ Type.string_of_use_ctor u
+        in
+        Flow_js.add_output
+          cx
+          (Error_message.EImplicitInstantiationTemporaryError
+             (Reason.aloc_of_reason tparam_binder_reason, msg)
+          )
+    end)
+    (Flow_js.FlowJs)
 
 let create_cx_with_context_optimizer init_cx master_cx ~reducer ~f =
   let file = Context.file init_cx in
