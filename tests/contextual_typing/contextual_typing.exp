@@ -1,6 +1,6 @@
 Error ------------------------------------------------------------------------------------------------------ test.js:3:1
 
-Internal error: read of Env_api.Make.FunctionOrGlobalThisLoc entry which has not been prepared for typechecking
+Internal error: read of Env_api.Make.FunctionThisLoc entry which has not been prepared for typechecking
 
        v-----------------
     3| function test1() {
@@ -15,13 +15,21 @@ Internal error: read of Env_api.Make.FunctionOrGlobalThisLoc entry which has not
        ^
 
 
+Error ----------------------------------------------------------------------------------------------------- test.js:6:13
+
+Internal error: expected env entry for write location(6, 12) to (6, 23)
+
+   6|   const c = f((a) => a);
+                  ^^^^^^^^^^^
+
+
 Error ----------------------------------------------------------------------------------------------------- test.js:10:9
 
-Internal error: unconstrained tvar during tvar resolution
+Internal error: unconstrained tvar (4139) during tvar resolution
 
    10|   f2 = (b) => (b: string); // ok
                ^
 
 
 
-Found 2 errors
+Found 3 errors
