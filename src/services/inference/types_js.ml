@@ -1667,19 +1667,6 @@ end = struct
         ~unparsed_set
     in
 
-    (* Merge_service.check_contents_cache contains type information for
-     * dependencies. The set of files in sig_new_or_changed have meaningfully
-     * changed and we should invalidate the caches for those files.
-     *
-     * Note that this invalidation happens after the transaction commits. While
-     * a transaction is running, we maintain a consistent view of the type state
-     * before this recheck started. *)
-    Transaction.add
-      ~commit:(fun () ->
-        FilenameSet.iter (Check_cache.remove Merge_service.check_contents_cache) sig_new_or_changed)
-      ~rollback:(fun () -> ())
-      transaction;
-
     let%lwt ( errors,
               coverage,
               time_to_check_merged,
@@ -1766,9 +1753,13 @@ end = struct
       ~env =
     Transaction.add
       ~commit:(fun () ->
-        (* We have to clear this at the end of the recheck, because it could have been populated with
-         * now-out-of-date data in the middle of the recheck by parallelizable requests. *)
-        Persistent_connection.clear_type_parse_artifacts_caches ())
+        (* We have to clear this at the end of the recheck, because it could
+         * have been populated with now-out-of-date data in the middle of the
+         * recheck by parallelizable requests. *)
+        Persistent_connection.clear_type_parse_artifacts_caches ();
+        (* Similarly, check_contents_cache contains type information for
+         * dependencies which may have been invalidated by the recheck. *)
+        Check_cache.clear Merge_service.check_contents_cache)
       ~rollback:(fun () -> ())
       transaction;
 

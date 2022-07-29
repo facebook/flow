@@ -98,14 +98,6 @@ let find_or_create cache ~leader ~master_cx ~create_file file_key =
     cache.size <- succ cache.size;
     file
 
-let remove cache file_key =
-  match Cache.lookup cache.files file_key with
-  | None -> ()
-  | Some { cached_ccx; _ } ->
-    Cache.remove_exn cache.files file_key;
-    release_ccx cache cached_ccx;
-    cache.size <- pred cache.size
-
 (* Clearing the cache does not need to worry about the reference counts for
  * cached component contexts, since all cached files are also cleared. *)
 let clear cache =
