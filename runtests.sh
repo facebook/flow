@@ -4,9 +4,6 @@
 # This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
 
-THIS_DIR=$(cd -P "$(dirname "$(readlink "${BASH_SOURCE[0]}" || echo "${BASH_SOURCE[0]}")")" && pwd)
-export THIS_DIR
-
 show_help() {
   printf "Usage: runtests.sh [-ehlnqrvwx] [-d DIR] [-t TEST] [-b] FLOW_BINARY [[-f] TEST_FILTER]\n\n"
   printf "Runs Flow's tests.\n\n"
@@ -53,7 +50,7 @@ record=0
 saved_state=0
 verbose=0
 quiet=0
-relative="$THIS_DIR"
+relative="."
 new_env=0
 resolved_env=0
 enforced_env=0
@@ -274,7 +271,7 @@ skipped=0
 errored=0
 
 # shellcheck source=fbcode/flow/scripts/lib/runtests-common.sh
-. "$THIS_DIR/scripts/lib/runtests-common.sh"
+. "./scripts/lib/runtests-common.sh"
 
 if [ -z "$FLOW_MAX_WORKERS" ]; then
   export FLOW_MAX_WORKERS=2
@@ -314,7 +311,7 @@ parallel_run_tests() {
             echo "$(( i++ )):$dir"
         done
     ) | xargs -P"$num_to_run_in_parallel" -n1 \
-          "$THIS_DIR/scripts/run-one-test"
+          "./scripts/run-one-test"
 }
 
 # Kick off all tests, reporting results over a pipe to our fd 3
