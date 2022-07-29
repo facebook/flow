@@ -31,7 +31,7 @@ let reduce_implicit_instantiation_check reducer cx pole check =
 module type OBSERVER = sig
   type output
 
-  val on_constant_tparam : Context.t -> Subst_name.t -> output
+  val on_constant_tparam : Context.t -> Subst_name.t -> Type.t -> output
 
   val on_pinned_tparam : Context.t -> Subst_name.t -> Type.t -> output
 
@@ -53,6 +53,8 @@ end
 
 module type KIT = sig
   type output
+
+  val solve_targs : Context.t -> Check.t -> output Subst_name.Map.t
 
   val fold :
     Context.t ->
@@ -265,7 +267,12 @@ module Make (Observer : OBSERVER) : KIT with type output = Observer.output = str
     |> Subst_name.Map.mapi (fun name t ->
            let tparam_binder_reason = TypeUtil.reason_of_t t in
            match Marked.get name marked_tparams with
-           | None -> Observer.on_constant_tparam cx name
+           | None ->
+             let t = merge_lower_bounds cx t in
+             (match t with
+             | None ->
+               Observer.on_missing_bounds cx name ~tparam_binder_reason ~instantiation_reason
+             | Some t -> Observer.on_constant_tparam cx name t)
            | Some Neutral ->
              (* TODO(jmbrown): The neutral case should also unify upper/lower bounds. In order
               * to avoid cluttering the output we are actually interested in from this module,
@@ -351,6 +358,10 @@ module Make (Observer : OBSERVER) : KIT with type output = Observer.output = str
     in
     (tparams_map, marked_tparams, bounds_map)
 
+  let solve_targs cx check =
+    let (tparams_map, marked_tparams, bounds_map) = implicitly_instantiate cx check in
+    pin_types cx tparams_map marked_tparams bounds_map check
+
   let fold init_cx master_cx ~f ~init ~post implicit_instantiation_checks =
     let file = Context.file init_cx in
     let metadata = Context.metadata init_cx in
@@ -379,8 +390,7 @@ module Make (Observer : OBSERVER) : KIT with type output = Observer.output = str
     let r =
       Base.List.fold_left
         ~f:(fun acc check ->
-          let (tparams_map, marked_tparams, bounds_map) = implicitly_instantiate cx check in
-          let pinned = pin_types cx tparams_map marked_tparams bounds_map check in
+          let pinned = solve_targs cx check in
           f cx acc check pinned)
         ~init
         implicit_instantiation_checks
@@ -388,3 +398,40 @@ module Make (Observer : OBSERVER) : KIT with type output = Observer.output = str
     post ~init_cx ~cx;
     r
 end
+
+module CheckObserver : OBSERVER with type output = Type.t = struct
+  type output = Type.t
+
+  let any_error = AnyT.why (AnyError None)
+
+  let on_constant_tparam _cx _name t = t
+
+  let on_pinned_tparam _cx _name t = t
+
+  let on_missing_bounds cx name ~tparam_binder_reason ~instantiation_reason =
+    Flow_js.add_output
+      cx
+      (Error_message.EImplicitInstantiationUnderconstrainedError
+         {
+           bound = Subst_name.string_of_subst_name name;
+           reason_call = instantiation_reason;
+           reason_l = tparam_binder_reason;
+         }
+      );
+    any_error tparam_binder_reason
+
+  let on_upper_non_t cx name u ~tparam_binder_reason ~instantiation_reason:_ =
+    let msg =
+      Subst_name.string_of_subst_name name
+      ^ " contains a non-Type.t upper bound "
+      ^ Type.string_of_use_ctor u
+    in
+    Flow_js.add_output
+      cx
+      (Error_message.EImplicitInstantiationTemporaryError
+         (Reason.aloc_of_reason tparam_binder_reason, msg)
+      );
+    any_error tparam_binder_reason
+end
+
+module CheckKit : KIT with type output = Type.t = Make (CheckObserver)

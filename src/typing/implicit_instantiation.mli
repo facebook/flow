@@ -10,7 +10,7 @@ module Check = Implicit_instantiation_check
 module type OBSERVER = sig
   type output
 
-  val on_constant_tparam : Context.t -> Subst_name.t -> output
+  val on_constant_tparam : Context.t -> Subst_name.t -> Type.t -> output
 
   val on_pinned_tparam : Context.t -> Subst_name.t -> Type.t -> output
 
@@ -33,6 +33,8 @@ end
 module type KIT = sig
   type output
 
+  val solve_targs : Context.t -> Check.t -> output Subst_name.Map.t
+
   val fold :
     Context.t ->
     Context.master_context ->
@@ -44,3 +46,5 @@ module type KIT = sig
 end
 
 module Make (Observer : OBSERVER) : KIT with type output = Observer.output
+
+module CheckKit : KIT with type output = Type.t

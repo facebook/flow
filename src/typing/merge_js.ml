@@ -8,7 +8,7 @@
 module ImplicitInstantiationKit : Implicit_instantiation.KIT = Implicit_instantiation.Make (struct
   type output = unit
 
-  let on_constant_tparam _ _ = ()
+  let on_constant_tparam _ _ _ = ()
 
   let on_pinned_tparam _ _ _ = ()
 
