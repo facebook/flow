@@ -2993,7 +2993,15 @@ struct
         let (id_loc, { Ast.Identifier.name; comments }) = name in
         (* move const/let bindings from undeclared to declared *)
         declare_var cx (OrdinaryName name) id_loc;
-        Env.unify_declared_type cx (OrdinaryName name) id_loc annot_t;
+        if has_anno then
+          Env.unify_declared_type cx (OrdinaryName name) id_loc annot_t
+        else
+          (* TODO: even though both branches of this if seem identical, in the new env with reordering we're not allowed to
+              call `unify_declared_type` because it can be used to initialize an environment entry, which should always have
+              been done by the env_resolution process. Instead, if there is no annotation (which makes this operation
+              functionally a read, not a write) we bypass this by reading the type from the environment and unifying it with
+              the AST type here *)
+          Flow.unify cx annot_t (Env.read_declared_type cx (OrdinaryName name) id_reason id_loc);
         begin
           match init_opt with
           | Some (init_t, init_reason) ->
