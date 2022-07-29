@@ -10,13 +10,14 @@ module Check = Implicit_instantiation_check
 module type OBSERVER = sig
   type output
 
-  val on_constant_tparam : Context.t -> Subst_name.t -> Type.t -> output
+  val on_constant_tparam : Context.t -> Subst_name.t -> Type.typeparam -> Type.t -> output
 
-  val on_pinned_tparam : Context.t -> Subst_name.t -> Type.t -> output
+  val on_pinned_tparam : Context.t -> Subst_name.t -> Type.typeparam -> Type.t -> output
 
   val on_missing_bounds :
     Context.t ->
     Subst_name.t ->
+    Type.typeparam ->
     tparam_binder_reason:Reason.reason ->
     instantiation_reason:Reason.reason ->
     output
@@ -25,6 +26,7 @@ module type OBSERVER = sig
     Context.t ->
     Subst_name.t ->
     Type.use_t ->
+    Type.typeparam ->
     tparam_binder_reason:Reason.reason ->
     instantiation_reason:Reason.reason ->
     output
@@ -50,4 +52,9 @@ end
 module Make (Observer : OBSERVER) (Flow : Flow_common.S) :
   S with type output = Observer.output with module Flow = Flow
 
-module Pierce (Flow : Flow_common.S) : S with type output = Type.t with module Flow = Flow
+type inferred_targ = {
+  tparam: Type.typeparam;
+  inferred: Type.t;
+}
+
+module Pierce (Flow : Flow_common.S) : S with type output = inferred_targ with module Flow = Flow

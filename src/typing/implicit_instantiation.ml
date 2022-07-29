@@ -31,13 +31,14 @@ let reduce_implicit_instantiation_check reducer cx pole check =
 module type OBSERVER = sig
   type output
 
-  val on_constant_tparam : Context.t -> Subst_name.t -> Type.t -> output
+  val on_constant_tparam : Context.t -> Subst_name.t -> Type.typeparam -> Type.t -> output
 
-  val on_pinned_tparam : Context.t -> Subst_name.t -> Type.t -> output
+  val on_pinned_tparam : Context.t -> Subst_name.t -> Type.typeparam -> Type.t -> output
 
   val on_missing_bounds :
     Context.t ->
     Subst_name.t ->
+    Type.typeparam ->
     tparam_binder_reason:Reason.reason ->
     instantiation_reason:Reason.reason ->
     output
@@ -46,6 +47,7 @@ module type OBSERVER = sig
     Context.t ->
     Subst_name.t ->
     Type.use_t ->
+    Type.typeparam ->
     tparam_binder_reason:Reason.reason ->
     instantiation_reason:Reason.reason ->
     output
@@ -83,7 +85,7 @@ struct
   (* This visitor records the polarities at which BoundTs are found. We follow the bounds of each
    * type parameter as well, since some type params are only used in the bounds of another.
    *)
-  class implicit_instantiation_visitor ~bounds_map =
+  class implicit_instantiation_visitor ~tparams_map =
     object (self)
       inherit [Marked.t * Subst_name.Set.t] Type_visitor.t as super
 
@@ -94,9 +96,9 @@ struct
             match Marked.add s pole marked with
             | None -> acc
             | Some (_, marked) ->
-              (match Subst_name.Map.find_opt s bounds_map with
+              (match Subst_name.Map.find_opt s tparams_map with
               | None -> (marked, tparam_names)
-              | Some t -> self#type_ cx pole (marked, tparam_names) t)
+              | Some tparam -> self#type_ cx pole (marked, tparam_names) tparam.bound)
           else
             super#type_ cx pole acc t
         (* We remove any tparam names from the map when entering a PolyT to avoid naming conflicts. *)
@@ -214,7 +216,7 @@ struct
 
   let check_instantiation cx ~tparams ~marked_tparams ~implicit_instantiation =
     let { Check.lhs; operation = (use_op, reason_op, op); _ } = implicit_instantiation in
-    let (call_targs, tparam_map) =
+    let (call_targs, inferred_targ_map) =
       List.fold_right
         (fun tparam (targs, map) ->
           let reason_tapp = TypeUtil.reason_of_t lhs in
@@ -255,29 +257,31 @@ struct
         in
         Flow.flow cx (lhs, react_kit_t)
     in
-    (tparam_map, marked_tparams)
+    (inferred_targ_map, marked_tparams)
 
-  let pin_types cx tparam_map marked_tparams bounds_map implicit_instantiation =
+  let pin_types cx inferred_targ_map marked_tparams tparams_map implicit_instantiation =
     let { Check.operation = (_, instantiation_reason, _); _ } = implicit_instantiation in
     let use_upper_bounds cx name tvar tparam_binder_reason instantiation_reason =
-      let upper_t =
-        merge_upper_bounds tparam_binder_reason (Subst_name.Map.find name bounds_map) cx tvar
-      in
+      let tparam = Subst_name.Map.find name tparams_map in
+      let upper_t = merge_upper_bounds tparam_binder_reason tparam.bound cx tvar in
       match upper_t with
-      | UpperEmpty -> Observer.on_missing_bounds cx name ~tparam_binder_reason ~instantiation_reason
-      | UpperNonT u -> Observer.on_upper_non_t cx name ~tparam_binder_reason ~instantiation_reason u
-      | UpperT t -> Observer.on_pinned_tparam cx name t
+      | UpperEmpty ->
+        Observer.on_missing_bounds cx name tparam ~tparam_binder_reason ~instantiation_reason
+      | UpperNonT u ->
+        Observer.on_upper_non_t cx name ~tparam_binder_reason ~instantiation_reason u tparam
+      | UpperT inferred -> Observer.on_pinned_tparam cx name tparam inferred
     in
-    tparam_map
+    inferred_targ_map
     |> Subst_name.Map.mapi (fun name t ->
            let tparam_binder_reason = TypeUtil.reason_of_t t in
+           let tparam = Subst_name.Map.find name tparams_map in
            match Marked.get name marked_tparams with
            | None ->
              let t = merge_lower_bounds cx t in
              (match t with
              | None ->
-               Observer.on_missing_bounds cx name ~tparam_binder_reason ~instantiation_reason
-             | Some t -> Observer.on_constant_tparam cx name t)
+               Observer.on_missing_bounds cx name tparam ~tparam_binder_reason ~instantiation_reason
+             | Some inferred -> Observer.on_constant_tparam cx name tparam inferred)
            | Some Neutral ->
              (* TODO(jmbrown): The neutral case should also unify upper/lower bounds. In order
               * to avoid cluttering the output we are actually interested in from this module,
@@ -286,19 +290,19 @@ struct
              let lower_t = merge_lower_bounds cx t in
              (match lower_t with
              | None -> use_upper_bounds cx name t tparam_binder_reason instantiation_reason
-             | Some t -> Observer.on_pinned_tparam cx name t)
+             | Some inferred -> Observer.on_pinned_tparam cx name tparam inferred)
            | Some Positive ->
              let t = merge_lower_bounds cx t in
              (match t with
              | None ->
-               Observer.on_missing_bounds cx name ~tparam_binder_reason ~instantiation_reason
-             | Some t -> Observer.on_pinned_tparam cx name t)
+               Observer.on_missing_bounds cx name tparam ~tparam_binder_reason ~instantiation_reason
+             | Some inferred -> Observer.on_pinned_tparam cx name tparam inferred)
            | Some Negative -> use_upper_bounds cx name t tparam_binder_reason instantiation_reason
        )
 
-  let check_fun cx ~tparams ~bounds_map ~return_t ~implicit_instantiation =
+  let check_fun cx ~tparams ~tparams_map ~return_t ~implicit_instantiation =
     (* Visit the return type *)
-    let visitor = new implicit_instantiation_visitor ~bounds_map in
+    let visitor = new implicit_instantiation_visitor ~tparams_map in
     let tparam_names =
       tparams
       |> List.fold_left (fun set tparam -> Subst_name.Set.add tparam.name set) Subst_name.Set.empty
@@ -306,7 +310,7 @@ struct
     let (marked_tparams, _) = visitor#type_ cx Positive (Marked.empty, tparam_names) return_t in
     check_instantiation cx ~tparams ~marked_tparams ~implicit_instantiation
 
-  let check_react_fun cx ~tparams ~bounds_map ~params ~implicit_instantiation =
+  let check_react_fun cx ~tparams ~tparams_map ~params ~implicit_instantiation =
     match params with
     | [] ->
       let marked_tparams = Marked.empty in
@@ -320,7 +324,7 @@ struct
        * In practice, the props accessible via the element are read-only, so a possible future improvement
        * here would only look at the properties on the Props type with a covariant polarity instead of the
        * Neutral default that will be common due to syntactic conveniences. *)
-      check_fun cx ~tparams ~bounds_map ~return_t:props ~implicit_instantiation
+      check_fun cx ~tparams ~tparams_map ~return_t:props ~implicit_instantiation
 
   let check_instance cx ~tparams ~implicit_instantiation =
     let marked_tparams =
@@ -337,19 +341,16 @@ struct
   let implicitly_instantiate cx implicit_instantiation =
     let { Check.poly_t = (_, tparams, t); operation; _ } = implicit_instantiation in
     let tparams = Nel.to_list tparams in
-    let bounds_map =
-      List.fold_left
-        (fun map x -> Subst_name.Map.add x.name x.bound map)
-        Subst_name.Map.empty
-        tparams
+    let tparams_map =
+      List.fold_left (fun map x -> Subst_name.Map.add x.name x map) Subst_name.Map.empty tparams
     in
-    let (tparams_map, marked_tparams) =
+    let (inferred_targ_map, marked_tparams) =
       match get_t cx t with
       | DefT (_, _, FunT (_, funtype)) ->
         (match operation with
         | (_, _, Check.Jsx _) ->
-          check_react_fun cx ~tparams ~bounds_map ~params:funtype.params ~implicit_instantiation
-        | _ -> check_fun cx ~tparams ~bounds_map ~return_t:funtype.return_t ~implicit_instantiation)
+          check_react_fun cx ~tparams ~tparams_map ~params:funtype.params ~implicit_instantiation
+        | _ -> check_fun cx ~tparams ~tparams_map ~return_t:funtype.return_t ~implicit_instantiation)
       | ThisClassT (_, DefT (_, _, InstanceT (_, _, _, _insttype)), _, _) ->
         (match operation with
         | (_, _, Check.Call _) ->
@@ -361,11 +362,11 @@ struct
         | (_, _, _) -> check_instance cx ~tparams ~implicit_instantiation)
       | _ -> failwith "No other possible lower bounds"
     in
-    (tparams_map, marked_tparams, bounds_map)
+    (inferred_targ_map, marked_tparams, tparams_map)
 
   let solve_targs cx check =
-    let (tparams_map, marked_tparams, bounds_map) = implicitly_instantiate cx check in
-    pin_types cx tparams_map marked_tparams bounds_map check
+    let (inferred_targ_map, marked_tparams, tparams_map) = implicitly_instantiate cx check in
+    pin_types cx inferred_targ_map marked_tparams tparams_map check
 
   let fold init_cx master_cx ~f ~init ~post implicit_instantiation_checks =
     let file = Context.file init_cx in
@@ -404,16 +405,21 @@ struct
     r
 end
 
-module CheckObserver : OBSERVER with type output = Type.t = struct
-  type output = Type.t
+type inferred_targ = {
+  tparam: Type.typeparam;
+  inferred: Type.t;
+}
+
+module CheckObserver : OBSERVER with type output = inferred_targ = struct
+  type output = inferred_targ
 
   let any_error = AnyT.why (AnyError None)
 
-  let on_constant_tparam _cx _name t = t
+  let on_constant_tparam _cx _name tparam inferred = { tparam; inferred }
 
-  let on_pinned_tparam _cx _name t = t
+  let on_pinned_tparam _cx _name tparam inferred = { tparam; inferred }
 
-  let on_missing_bounds cx name ~tparam_binder_reason ~instantiation_reason =
+  let on_missing_bounds cx name tparam ~tparam_binder_reason ~instantiation_reason =
     Flow_js_utils.add_output
       cx
       (Error_message.EImplicitInstantiationUnderconstrainedError
@@ -423,9 +429,9 @@ module CheckObserver : OBSERVER with type output = Type.t = struct
            reason_l = tparam_binder_reason;
          }
       );
-    any_error tparam_binder_reason
+    { tparam; inferred = any_error tparam_binder_reason }
 
-  let on_upper_non_t cx name u ~tparam_binder_reason ~instantiation_reason:_ =
+  let on_upper_non_t cx name u tparam ~tparam_binder_reason ~instantiation_reason:_ =
     let msg =
       Subst_name.string_of_subst_name name
       ^ " contains a non-Type.t upper bound "
@@ -436,9 +442,9 @@ module CheckObserver : OBSERVER with type output = Type.t = struct
       (Error_message.EImplicitInstantiationTemporaryError
          (Reason.aloc_of_reason tparam_binder_reason, msg)
       );
-    any_error tparam_binder_reason
+    { tparam; inferred = any_error tparam_binder_reason }
 end
 
 module Pierce : functor (Flow : Flow_common.S) ->
-  S with type output = Type.t with module Flow = Flow =
+  S with type output = inferred_targ with module Flow = Flow =
   Make (CheckObserver)

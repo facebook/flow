@@ -10,11 +10,11 @@ module ImplicitInstantiationKit : Implicit_instantiation.S =
     (struct
       type output = unit
 
-      let on_constant_tparam _ _ _ = ()
+      let on_constant_tparam _ _ _ _ = ()
 
-      let on_pinned_tparam _ _ _ = ()
+      let on_pinned_tparam _ _ _ _ = ()
 
-      let on_missing_bounds cx name ~tparam_binder_reason ~instantiation_reason =
+      let on_missing_bounds cx name _ ~tparam_binder_reason ~instantiation_reason =
         Flow_js.add_output
           cx
           (Error_message.EImplicitInstantiationUnderconstrainedError
@@ -25,7 +25,7 @@ module ImplicitInstantiationKit : Implicit_instantiation.S =
              }
           )
 
-      let on_upper_non_t cx name u ~tparam_binder_reason ~instantiation_reason:_ =
+      let on_upper_non_t cx name u _ ~tparam_binder_reason ~instantiation_reason:_ =
         let msg =
           Subst_name.string_of_subst_name name
           ^ " contains a non-Type.t upper bound "
