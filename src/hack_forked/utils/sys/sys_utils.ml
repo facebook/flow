@@ -227,8 +227,6 @@ let mkdir_no_fail dir =
       | Unix.Unix_error (Unix.EEXIST, _, _) -> ()
   )
 
-let sleep ~seconds = ignore @@ Unix.select [] [] [] seconds
-
 let symlink =
   (* Dummy implementation of `symlink` on Windows: we create a text
      file containing the targeted-file's path. Symlink are available
