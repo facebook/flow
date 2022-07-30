@@ -1,6 +1,6 @@
 Error -------------------------------------------------------------------------------------------- error_examples.js:4:7
 
-Internal error: unconstrained tvar (4100) during tvar resolution
+Internal error: unconstrained tvar during tvar resolution
 
    4| class C { }
             ^

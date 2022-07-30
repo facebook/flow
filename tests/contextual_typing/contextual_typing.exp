@@ -25,7 +25,7 @@ Internal error: expected env entry for write location(6, 12) to (6, 23)
 
 Error ----------------------------------------------------------------------------------------------------- test.js:10:9
 
-Internal error: unconstrained tvar (4139) during tvar resolution
+Internal error: unconstrained tvar during tvar resolution
 
    10|   f2 = (b) => (b: string); // ok
                ^

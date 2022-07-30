@@ -40,9 +40,14 @@ module Make (Env : Env_sig.S) (Statement : Statement_sig.S with module Env := En
           | _ ->
             let t =
               let no_lowers _ r =
+                let id_msg =
+                  match Context.verbose cx with
+                  | Some verbose when Debug_js.Verbose.verbose_in_file cx verbose -> Some root_id
+                  | _ -> None
+                in
                 Flow_js_utils.add_output
                   cx
-                  Error_message.(EInternal (aloc_of_reason r, UnconstrainedTvar root_id));
+                  Error_message.(EInternal (aloc_of_reason r, UnconstrainedTvar id_msg));
                 AnyT.make (AnyError None) r
               in
               Flow_js_utils.merge_tvar ~no_lowers cx r root_id
