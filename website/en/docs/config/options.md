@@ -23,7 +23,7 @@ can be overridden with command line flags.
 * [`exact_by_default`](#toc-exact-by-default-boolean)
 * [`experimental.const_params`](#toc-experimental-const-params-boolean)
 * [`include_warnings`](#toc-include-warnings-boolean)
-* [`lazy_mode`](#toc-lazy-mode-fs-ide-watchman-none)
+* [`lazy_mode`](#toc-lazy-mode-boolean)
 * [`log.file`](#toc-log-file-string)
 * [`max_header_tokens`](#toc-max-header-tokens-integer)
 * [`module.file_ext`](#toc-module-file-ext-string)
@@ -128,15 +128,15 @@ much better interface to show warnings.)
 
 The default value is `false`.
 
-#### `lazy_mode` _`(fs|ide|watchman|none)`_ <a class="toc" id="toc-lazy-mode-fs-ide-watchman-none" href="#toc-lazy-mode-fs-ide-watchman-none"></a>
+#### `lazy_mode` _`(boolean)`_ <a class="toc" id="toc-lazy-mode-boolean" href="#toc-lazy-mode-boolean"></a>
 
 For more on lazy modes, see the [lazy modes docs](/en/docs/lang/lazy-modes/).
 
 Setting `lazy_mode` in the `.flowconfig` will cause new Flow servers for that
-root to use that lazy mode (or no lazy mode if set to `none`). This option can
+root to use lazy mode (or no lazy mode if set to `false`). This option can
 be overridden from the CLI using the `--lazy-mode` flag.
 
-The default value is `none`.
+The default value is `false`.
 
 #### `log.file` _`(string)`_ <a class="toc" id="toc-log-file-string" href="#toc-log-file-string"></a>
 

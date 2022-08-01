@@ -11,11 +11,11 @@ However, sometimes a Flow user might not care about all the code. If they are
 editing a file `foo.js`, they might only want Flow to typecheck the subset of
 the repository needed to answer questions about `foo.js`. Since Flow would only
 check a smaller number of files, this would be faster. This is the motivation
-behind Flow's lazy modes.
+behind Flow's lazy mode.
 
 ### Classifying Files <a class="toc" id="toc-classifying-files" href="#toc-classifying-files"></a>
 
-Lazy mode tries to classify your code into four categories.
+Lazy mode classifes your code into four categories:
 
 1. **Focused files**. These are the files which the user cares about.
 2. **Dependent files**. These are the files which depend on the focused files.
@@ -29,57 +29,35 @@ typecheck the unchecked files.
 
 ### Choosing Focused Files <a class="toc" id="toc-choosing-focused-files" href="#toc-choosing-focused-files"></a>
 
-There are three ways which Flow can use to tell which files the user cares about.
+Focused files are all of the files that have changed in one of the following ways.
 
-1. **IDE lazy mode**. The IDE tells Flow which files have been opened and closed
-via `flow lsp`. Flow treats any file which has ever been opened since the Flow
-server started as focused.
-2. **Filesystem lazy mode**. Flow treats any file which has changed on the
-filesystem as focused. This mode is easier to use from the commandline, but
-a rebase can make every file appear focused.
-3. **Watchman lazy mode**. When starting up, Flow treats any file as focused if
-it has changed since the mergebase with master (the common ancestor of the
-current commit and the master branch). Any subsequent file that changes is also
-focused. After a rebase which changes the mergebase, Flow may restart the server
-if it estimates that a restart is faster than a recheck.
+Flow will focus files when they change on disk, using Flow's built-in file watcher
+("dfind") or Watchman.
 
-### Using IDE Lazy Mode <a class="toc" id="toc-using-ide-lazy-mode" href="#toc-using-ide-lazy-mode"></a>
+So, all files that change while Flow is running will be focused. But what about
+files that change when Flow is not running? If you're using Git or Mercurial,
+Flow will ask it for all of the files that have changed since the mergebase
+with "master" (the common ancestor of the current commit and the master branch).
 
-To start a Flow server in IDE lazy mode, you run
+If you're not using "master" (e.g. "main" instead), you can change this with
+the `file_watcher.mergebase_with` config. If you're working from a clone, you
+might want to set this to "origin/master" (for Git), which will focus all files
+that have changed locally, even if you commit to your local "master" branch.
 
-```bash
-flow server --lazy-mode ide
-```
+The net result is that Flow will find the same errors in lazy mode as in a full
+check, so long as there are no errors upstream. For example, if your CI ensures
+that there are no errors in "master," then it's redundant for Flow to check all
+of the unchanged files for errors that can't exist.
 
-Alternatively, [you can set the lazy mode from the `.flowconfig`](/en/docs/config/options/#toc-lazy-mode-fs-ide-watchman-none).
+### Using Lazy Mode <a class="toc" id="toc-using-lazy-mode" href="#toc-using-lazy-mode"></a>
 
-The IDE needs to integrate with `flow lsp` to tell Flow which files are open.
+To enable lazy mode, set `lazy_mode=true` in the `.flowconfig`.
 
-### Using Filesystem Lazy Mode <a class="toc" id="toc-using-filesystem-lazy-mode" href="#toc-using-filesystem-lazy-mode"></a>
-
-To start a Flow server in Filesystem lazy mode, you run
+To start a Flow server in lazy mode manually, run
 
 ```bash
-flow server --lazy-mode fs
+flow server --lazy-mode true
 ```
-
-Alternatively, [you can set the lazy mode from the `.flowconfig`](/en/docs/config/options/#toc-lazy-mode-fs-ide-watchman-none).
-
-### Using Watchman Lazy Mode <a class="toc" id="toc-using-watchman-lazy-mode" href="#toc-using-watchman-lazy-mode"></a>
-
-Watchman lazy mode has a few additional requirements.
-
-1. The Flow root must be within a [Mercurial](https://www.mercurial-scm.org/) repository.
-2. [Watchman](https://facebook.github.io/watchman/) must be installed and the
-   `watchman` binary must be in the PATH.
-
-To start a Flow server in Watchman lazy mode, you run
-
-```bash
-flow server --lazy-mode Watchman
-```
-
-Alternatively, [you can set the lazy mode from the `.flowconfig`](/en/docs/config/options/#toc-lazy-mode-fs-ide-watchman-none).
 
 ### Forcing Flow to Treat a File as Focused <a class="toc" id="toc-forcing-flow-to-treat-a-file-as-focused" href="#toc-forcing-flow-to-treat-a-file-as-focused"></a>
 
