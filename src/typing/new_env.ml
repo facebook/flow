@@ -206,7 +206,6 @@ module New_env = struct
 
   let record_expression_type_if_needed cx kind loc t =
     let env = Context.environment cx in
-    check_readable cx kind loc;
     match (Loc_env.find_write env kind loc, Context.env_mode cx) with
     | (_, Options.(SSAEnv (Reordered | Enforced)))
     (* Fully resolved env doesn't need to write here *)

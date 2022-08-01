@@ -15,14 +15,6 @@ Internal error: read of Env_api.Make.FunctionThisLoc entry which has not been pr
        ^
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:6:13
-
-Internal error: expected env entry for write location(6, 12) to (6, 23)
-
-   6|   const c = f((a) => a);
-                  ^^^^^^^^^^^
-
-
 Error ----------------------------------------------------------------------------------------------------- test.js:10:9
 
 Internal error: unconstrained tvar during tvar resolution
@@ -32,4 +24,4 @@ Internal error: unconstrained tvar during tvar resolution
 
 
 
-Found 3 errors
+Found 2 errors
