@@ -754,11 +754,22 @@ module Opts = struct
   let env_mode_parser =
     string (fun opts s ->
         match s with
+        | "classic" -> Ok { opts with env_mode = Options.ClassicEnv [] }
+        | "constrain_writes" -> Ok { opts with env_mode = Options.(ClassicEnv [ConstrainWrites]) }
+        | "ssa" -> Ok { opts with env_mode = Options.(SSAEnv Basic) }
+        | "experimental.resolved" -> Ok { opts with env_mode = Options.(SSAEnv Reordered) }
+        | "experimental.enforced" -> Ok { opts with env_mode = Options.(SSAEnv Enforced) }
+        | env_mode -> Error (spf "\"%s\" is not a valid env_mode option" env_mode)
+    )
+
+  let experimental_env_mode_parser =
+    string (fun opts s ->
+        match s with
+        | "classic" -> Ok { opts with env_mode = Options.ClassicEnv [] }
+        | "constrain_writes" -> Ok { opts with env_mode = Options.(ClassicEnv [ConstrainWrites]) }
         | "ssa" -> Ok { opts with env_mode = Options.(SSAEnv Basic) }
         | "resolved" -> Ok { opts with env_mode = Options.(SSAEnv Reordered) }
         | "enforced" -> Ok { opts with env_mode = Options.(SSAEnv Enforced) }
-        | "constrain_writes" -> Ok { opts with env_mode = Options.(ClassicEnv [ConstrainWrites]) }
-        | "classic" -> Ok { opts with env_mode = Options.ClassicEnv [] }
         | env_mode -> Error (spf "\"%s\" is not a valid env_mode option" env_mode)
     )
 
@@ -793,7 +804,8 @@ module Opts = struct
       ("experimental.enforce_local_inference_annotations", enforce_local_inference_annotations);
       ("experimental.enforce_class_annotations", enforce_class_annotations);
       ("experimental.enforce_this_annotations", enforce_this_annotations);
-      ("experimental.env_mode", env_mode_parser);
+      ("env_mode", env_mode_parser);
+      ("experimental.env_mode", experimental_env_mode_parser);
       ("experimental.facebook_module_interop", facebook_module_interop_parser);
       ("experimental.local_inference_annotation_dirs", local_inference_annotation_dirs);
       ("experimental.module.automatic_require_default", automatic_require_default_parser);

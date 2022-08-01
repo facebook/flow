@@ -409,10 +409,10 @@ runtest() {
           env_flag="--env-mode ssa"
         fi
         if [[ "$resolved_env" -eq 1 ]]; then
-          env_flag="--env-mode resolved"
+          env_flag="--env-mode experimental.resolved"
         fi
         if [[ "$enforced_env" -eq 1 ]]; then
-          env_flag="--env-mode enforced"
+          env_flag="--env-mode experimental.enforced"
         fi
 
         if [[ "$incremental_revdeps" -eq 1 ]]; then
