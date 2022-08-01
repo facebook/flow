@@ -1,1 +1,1 @@
-cmd: codemod annotate-declarations-experimental --generalize-maybe --strip-root --quiet ./
+cmd: codemod annotate-declarations --generalize-maybe --strip-root --quiet ./

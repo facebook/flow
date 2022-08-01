@@ -298,11 +298,11 @@ module Annotate_declarations_command = struct
       Literals.[("always", Always); ("never", Never); ("auto", Auto)]
     in
     {
-      CommandSpec.name = "annotate-declarations-experimental";
+      CommandSpec.name = "annotate-declarations";
       doc;
       usage =
         Printf.sprintf
-          "Usage: %s codemod annotate-declarations-experimental [OPTION]... [FILE]\n\n%s\n"
+          "Usage: %s codemod annotate-declarations [OPTION]... [FILE]\n\n%s\n"
           Utils_js.exe_name
           doc;
       args =
@@ -368,11 +368,11 @@ module Rename_redefinitions_command = struct
 
   let spec =
     {
-      CommandSpec.name = "rename-redefinitions-experimental";
+      CommandSpec.name = "rename-redefinitions";
       doc;
       usage =
         Printf.sprintf
-          "Usage: %s codemod rename-redefinitions-experimental [OPTION]... [FILE]\n\n%s\n"
+          "Usage: %s codemod rename-redefinitions [OPTION]... [FILE]\n\n%s\n"
           Utils_js.exe_name
           doc;
       args = CommandSpec.ArgSpec.(empty |> CommandUtils.codemod_flags);
