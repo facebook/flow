@@ -65,6 +65,9 @@ val split_on_newlines : string -> string list
 (** Escapes special characters to make the given string a valid filename *)
 val filename_escape : string -> string
 
+(** Unescapes the output of `filename_escape` *)
+val filename_unescape : string -> string
+
 module Internal : sig
   val to_list : string -> char list
 

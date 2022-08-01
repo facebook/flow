@@ -160,6 +160,36 @@ let filename_escape path =
     path;
   Buffer.contents buf
 
+let filename_unescape str =
+  let length = String.length str in
+  let buf = Buffer.create length in
+  let rec consume i =
+    if i >= length then
+      ()
+    else
+      let replacement =
+        if i < length - 1 && str.[i] = 'z' then
+          match str.[i + 1] with
+          | 'B' -> Some '\\'
+          | 'C' -> Some ':'
+          | 'S' -> Some '/'
+          | '0' -> Some '\x00'
+          | 'Z' -> Some 'z'
+          | _ -> None
+        else
+          None
+      in
+      let (c, next_i) =
+        match replacement with
+        | Some r -> (r, i + 2)
+        | None -> (str.[i], i + 1)
+      in
+      Buffer.add_char buf c;
+      consume next_i
+  in
+  consume 0;
+  Buffer.contents buf
+
 module Internal = struct
   let to_list s =
     let rec loop acc i =
