@@ -41,7 +41,6 @@ type metadata = {
   enforce_strict_call_arity: bool;
   enforce_this_annotations: bool;
   env_mode: Options.env_mode;
-  env_mode_constrain_write_dirs: string list;
   exact_by_default: bool;
   exact_empty_objects: bool;
   experimental_infer_indexers: bool;
@@ -231,7 +230,6 @@ let metadata_of_options options =
     enforce_strict_call_arity = Options.enforce_strict_call_arity options;
     enforce_this_annotations = Options.enforce_this_annotations options;
     env_mode = Options.env_mode options;
-    env_mode_constrain_write_dirs = Options.env_mode_constrain_write_dirs options;
     exact_by_default = Options.exact_by_default options;
     exact_empty_objects = Options.exact_empty_objects options;
     experimental_infer_indexers = Options.experimental_infer_indexers options;
@@ -611,13 +609,9 @@ let trust_errors cx =
 
 let classic_env_option_enabled cx option =
   let open Options in
-  match (cx.metadata.env_mode, cx.metadata.env_mode_constrain_write_dirs, option) with
-  | (SSAEnv _, _, _) -> false
-  | (ClassicEnv opts, _, _) when List.mem option opts -> true
-  | (_, (_ :: _ as dirs), ConstrainWrites) ->
-    let filename = File_key.to_string @@ file cx in
-    let normalized_filename = Sys_utils.normalize_filename_dir_sep filename in
-    List.exists (fun str -> Base.String.is_prefix ~prefix:str normalized_filename) dirs
+  match (cx.metadata.env_mode, option) with
+  | (SSAEnv _, _) -> false
+  | (ClassicEnv opts, _) when List.mem option opts -> true
   | _ -> false
 
 let resolved_env cx =

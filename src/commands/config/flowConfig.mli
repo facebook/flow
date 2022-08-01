@@ -96,8 +96,6 @@ val enums : config -> bool
 
 val env_mode : config -> Options.env_mode
 
-val env_mode_constrain_write_dirs : config -> string list
-
 val estimate_recheck_time : config -> bool option
 
 val exact_by_default : config -> bool

@@ -61,7 +61,6 @@ type metadata = {
   enforce_strict_call_arity: bool;
   enforce_this_annotations: bool;
   env_mode: Options.env_mode;
-  env_mode_constrain_write_dirs: string list;
   exact_by_default: bool;
   exact_empty_objects: bool;
   experimental_infer_indexers: bool;
