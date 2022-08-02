@@ -178,6 +178,12 @@ class Foo {
   return (
     <div>
       <SomeComponent prop1={thing} />
+      {thing}
+      {thing}
+      {
+        // $FlowFixMe[code6]
+        thing
+      }
     </div>
   );
 }`,
@@ -191,6 +197,42 @@ class Foo {
             lints: new Set(),
             error_codes: ['code1'],
           },
+          {
+            loc: {
+              start: {line: 5, column: 8, offset: 93},
+              end: {line: 5, column: 12, offset: 98},
+            },
+            isError: true,
+            lints: new Set(),
+            error_codes: ['code2', 'code3'],
+          },
+          {
+            loc: {
+              start: {line: 6, column: 8, offset: 107},
+              end: {line: 6, column: 12, offset: 112},
+            },
+            isError: true,
+            lints: new Set(),
+            error_codes: ['code4'],
+          },
+          {
+            loc: {
+              start: {line: 6, column: 8, offset: 107},
+              end: {line: 6, column: 12, offset: 112},
+            },
+            isError: true,
+            lints: new Set(),
+            error_codes: ['code5'],
+          },
+          {
+            loc: {
+              start: {line: 9, column: 9, offset: 159},
+              end: {line: 9, column: 13, offset: 164},
+            },
+            isError: true,
+            lints: new Set(),
+            error_codes: ['code7'],
+          },
         ],
         flowBinPath,
       ),
@@ -200,10 +242,23 @@ class Foo {
     <div>
       {/* $FlowFixMe[code1] */}
       <SomeComponent prop1={thing} />
+      {
+        // $FlowFixMe[code3]
+        // $FlowFixMe[code2]
+        thing}
+      {
+        // $FlowFixMe[code5]
+        // $FlowFixMe[code4]
+        thing}
+      {
+        // $FlowFixMe[code6]
+        // $FlowFixMe[code7]
+        thing
+      }
     </div>
   );
 }`,
-      1,
+      6,
     ]);
   });
 });
@@ -235,13 +290,13 @@ const foo = 4;
 const baz = 3;
 <>
   {/* $FlowFixMe[code1] this is a really long comment that definitely goes over
-    * the line length limit so the tool has to wrap it */}
-  {/* $FlowFixMe[code2] this is a really long comment that definitely goes over
+    * the line length limit so the tool has to wrap it */
+   /* $FlowFixMe[code2] this is a really long comment that definitely goes over
     * the line length limit so the tool has to wrap it */}
   <div>
     {/* $FlowFixMe[code1] this is a really long comment that definitely goes
-      * over the line length limit so the tool has to wrap it */}
-    {/* $FlowFixMe[code2] this is a really long comment that definitely goes
+      * over the line length limit so the tool has to wrap it */
+     /* $FlowFixMe[code2] this is a really long comment that definitely goes
       * over the line length limit so the tool has to wrap it */}
     <span>
       foo

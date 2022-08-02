@@ -153,6 +153,22 @@ async function addCommentsToSource(
   return commentCount;
 }
 
+function addCommentsToCodeInternal(
+  comments: Array<string>,
+  code: string,
+  loc: FlowLoc,
+  path: Array<PathNode>,
+) {
+  const [inside, ast] = getContext(loc, path);
+  return addCommentToText(
+    Buffer.from(code),
+    loc,
+    inside,
+    comments,
+    ast,
+  ).toString();
+}
+
 async function addCommentsToCode(
   comment: ?string,
   error_code: ?string,
@@ -179,9 +195,14 @@ async function addCommentsToCode(
       const comments = [...new Set(error_codes)].map(
         error_code => `$FlowFixMe[${error_code}]${c ? ` ${c}` : ''}`,
       );
-      for (c of comments) {
-        code = addCommentToCode(c, code, loc, path);
-      }
+
+      // The order doesn't matter for suppression comments. For implementation reasons
+      // we had comments in reverse order. This is now no longer the case but we are
+      // preserving this behavour to make testing against existing suppression
+      // locations easier.
+      comments.reverse();
+
+      code = addCommentsToCodeInternal(comments, code, loc, path);
       commentCount += error_codes.length;
     }
   }
@@ -194,14 +215,7 @@ function addCommentToCode(
   loc: FlowLoc,
   path: Array<PathNode>,
 ): string {
-  const [inside, ast] = getContext(loc, path);
-  return addCommentToText(
-    Buffer.from(code),
-    loc,
-    inside,
-    [comment],
-    ast,
-  ).toString();
+  return addCommentsToCodeInternal([comment], code, loc, path);
 }
 
 const NO_LOCATION = '[No location]';

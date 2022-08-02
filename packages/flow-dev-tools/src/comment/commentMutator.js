@@ -257,14 +257,20 @@ function addCommentToText(
     const part1 = line.substr(0, start_col);
     const match = part1.match(/^ */);
     const padding = match ? match[0] + '  ' : '  ';
-    const part2 = padding + line.substr(start_col);
-    const newCode = []
-      // $FlowFixMe unsealed object but should just be {||}
-      .concat([part1], formatComment(comments, part2, {}), [part2])
-      .join('\n');
+    const part2 = line.substr(start_col);
+
+    // $FlowFixMe[incompatible-exact] unsealed object but should just be {||}
+    const newCodeParts = [part1, ...formatComment(comments, padding, {})];
+
+    // If the remainder of the line is empty we don't want to add a newline
+    // since one already exists after the opening expression.
+    if (part2.trim() !== '') {
+      newCodeParts.push(padding + part2);
+    }
+
     return Buffer.concat([
       contents.slice(0, start),
-      Buffer.from(newCode),
+      Buffer.from(newCodeParts.join('\n')),
       contents.slice(endOfLine),
     ]);
   } else if (inJSX && ast.type === 'JSXText') {
