@@ -12,4 +12,4 @@ function id(x: number): number {
 }
 
 var a: number = composenum(id, id)((42: any));
-var b: $Trusted<number> = a;
+var b: $Trusted<number> = a; // Fails. TODO: Pass under resolved_env
