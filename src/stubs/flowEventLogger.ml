@@ -85,8 +85,6 @@ let init_worker ~init_id:_ _ = ()
 
 let should_log () = false
 
-let killed _ = ()
-
 let lock_lost _ = ()
 
 let lock_stolen _ = ()
