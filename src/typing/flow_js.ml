@@ -3835,17 +3835,43 @@ struct
           let props =
             List.fold_left (fun props x -> NameUtils.Map.remove (OrdinaryName x) props) props xs
           in
-          let proto = ObjProtoT reason_op in
-          let obj_inst = Obj_type.mk_unsealed cx reason_op ~props ~proto in
-          (* ObjAssign the inst-generated obj into the super-generated obj *)
           let use_op = Op (ObjectSpread { op = reason_op }) in
+          let spread_tool = Object.Resolve Object.Next in
+          let spread_target =
+            Object.Spread.Value
+              { make_seal = Obj_type.mk_seal reason_op ~sealed:true ~frozen:false }
+          in
+          let spread_state =
+            {
+              Object.Spread.todo_rev =
+                [
+                  Object.Spread.Slice
+                    {
+                      Object.Spread.reason = reason_op;
+                      prop_map = props;
+                      generics = Generic.spread_empty;
+                      dict = None;
+                    };
+                ];
+              acc = [];
+              spread_id = Reason.mk_id ();
+              union_reason = None;
+              curr_resolve_idx = 0;
+            }
+          in
           let o =
             Tvar.mk_where cx reason_op (fun tvar ->
                 rec_flow
                   cx
                   trace
-                  ( obj_inst,
-                    ObjAssignFromT (use_op, reason_op, obj_super, tvar, default_obj_assign_kind)
+                  ( obj_super,
+                    ObjKitT
+                      ( use_op,
+                        reason_op,
+                        spread_tool,
+                        Type.Object.Spread (spread_target, spread_state),
+                        tvar
+                      )
                   )
             )
           in
@@ -3853,11 +3879,10 @@ struct
         | (AnyT (_, src), ObjRestT (reason, _, t, _)) ->
           rec_flow_t cx trace ~use_op:unknown_use (AnyT.why src reason, t)
         | (ObjProtoT _, ObjRestT (reason, _, t, _)) ->
-          let obj = Obj_type.mk_unsealed cx reason ~proto:l in
+          let obj = Obj_type.mk_with_proto cx reason ~obj_kind:Exact l in
           rec_flow_t cx trace ~use_op:unknown_use (obj, t)
         | (DefT (_, _, (NullT | VoidT)), ObjRestT (reason, _, t, _)) ->
-          (* mirroring Object.assign semantics, treat null/void as empty objects *)
-          let o = Obj_type.mk_unsealed cx reason in
+          let o = Obj_type.mk ~obj_kind:Exact cx reason in
           rec_flow_t cx trace ~use_op:unknown_use (o, t)
         (*************************************)
         (* objects can be copied-then-sealed *)

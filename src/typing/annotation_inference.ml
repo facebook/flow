@@ -955,10 +955,10 @@ module rec ConsGen : S = struct
        * hard to implement in annotation inference. *)
       error_unsupported cx t op
     | (AnyT (_, src), Annot_ObjRestT (reason, _)) -> AnyT.why src reason
-    | (ObjProtoT _, Annot_ObjRestT (reason, _)) -> Obj_type.mk_unsealed cx reason ~proto:t
+    | (ObjProtoT _, Annot_ObjRestT (reason, _)) ->
+      Obj_type.mk_with_proto cx reason ~obj_kind:Exact t
     | (DefT (_, _, (NullT | VoidT)), Annot_ObjRestT (reason, _)) ->
-      (* mirroring Object.assign semantics, treat null/void as empty objects *)
-      Obj_type.mk_unsealed cx reason
+      Obj_type.mk ~obj_kind:Exact cx reason
     (************)
     (* GetPropT *)
     (************)

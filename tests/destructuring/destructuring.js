@@ -67,5 +67,5 @@ var bp2_err: string = others.baseprop2; // Error: number ~> string
 
 var cp1: number = childprop1;
 var cp1_err: string = childprop1; // Error: number ~> string
-var cp2: number = others.childprop1;
+var cp2: number = others.childprop1; // Error: `childprop1` is not in `others` as it was separately destructured
 var cp2_err: string = others.childprop2; // Error: number ~> string

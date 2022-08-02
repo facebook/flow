@@ -1764,8 +1764,50 @@ References:
                        ^^^^^^^^ [3]
 
 
+Error ---------------------------------------------------------------------------------------------------- value.js:4:10
 
-Found 106 errors
+Cannot assign `1` to `others.foo` because property `foo` is missing in rest of object pattern [1]. [prop-missing]
+
+   value.js:4:10
+   4|   others.foo = 1; // ERROR
+               ^^^
+
+References:
+   value.js:3:13
+   3|   const {...others} = empty;
+                  ^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------------- value.js:8:10
+
+Cannot assign `1` to `others.foo` because property `foo` is missing in rest of object pattern [1]. [prop-missing]
+
+   value.js:8:10
+   8|   others.foo = 1; // ERROR
+               ^^^
+
+References:
+   value.js:7:13
+   7|   const {...others} = null;
+                  ^^^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------------------------- value.js:13:10
+
+Cannot assign `1` to `others.foo` because property `foo` is missing in rest of object pattern [1]. [prop-missing]
+
+   value.js:13:10
+   13|   others.foo = 1; // ERROR
+                ^^^
+
+References:
+   value.js:12:13
+   12|   const {...others} = new C();
+                   ^^^^^^ [1]
+
+
+
+Found 109 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches
