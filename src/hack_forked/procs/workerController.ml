@@ -137,7 +137,7 @@ let spawn w =
   | Some handle -> handle
 
 (* If the worker isn't prespawned, close the worker *)
-let close w h = if Option.is_none w.prespawned then Daemon.close h
+let close_noerr w h = if Option.is_none w.prespawned then Daemon.close_noerr h
 
 (* If there is a call_wrapper, apply it and create the Request *)
 let wrap_request w f x =
@@ -342,14 +342,15 @@ let call w (f : 'a -> 'b) (x : 'a) : 'b Lwt.t =
   try%lwt
     let%lwt () = send w worker_pid outfd f x in
     let%lwt (res, measure_data) = read worker_pid infd in
-    close w h;
+    close_noerr w h;
     Measure.merge (Measure.deserialize measure_data);
     mark_free w;
     Lwt.return res
   with
   | exn ->
     let exn = Exception.wrap exn in
-    (* No matter what, always mark worker as free when we're done *)
+    (* No matter what, always close and mark worker as free when we're done *)
+    close_noerr w h;
     mark_free w;
     Exception.reraise exn
 

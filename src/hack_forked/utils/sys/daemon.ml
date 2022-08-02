@@ -285,6 +285,10 @@ let close { channels = (ic, oc); _ } =
   Timeout.close_in ic;
   close_out oc
 
+let close_noerr { channels = (ic, oc); _ } =
+  Timeout.close_in_noerr ic;
+  close_out_noerr oc
+
 let kill h =
   close h;
   Sys_utils.terminate_process h.pid
