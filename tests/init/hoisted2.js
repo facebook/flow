@@ -18,7 +18,7 @@ function linear_pre_init() {
 }
 
 // local use of annotated vars in an if is ok
-function if_scoped_init(b) {
+function if_scoped_init(b: boolean) {
   if (b) {
     var x:number = 0;
     var y:number = x;
@@ -26,7 +26,7 @@ function if_scoped_init(b) {
 }
 
 // but not across if/else
-function if_else_partial_init(b) {
+function if_else_partial_init(b: boolean) {
   if (b) {
     var x:number = 0;
   } else {
@@ -35,7 +35,7 @@ function if_else_partial_init(b) {
 }
 
 // use of var before if gives undefined
-function if_pre_init(b) {
+function if_pre_init(b: boolean) {
   var y:number = x; // error
   if (b) {
     var x:number = 0;
@@ -43,7 +43,7 @@ function if_pre_init(b) {
 }
 
 // ...and after
-function if_1(b) {
+function if_1(b: boolean) {
   if (b) {
     var x:number = 0;
   }
@@ -51,7 +51,7 @@ function if_1(b) {
 }
 
 // ...unless both branches have initialized
-function if_post_init1(b) {
+function if_post_init1(b: boolean) {
   if (b) {
     var x:number = 0;
   } else {
@@ -61,7 +61,7 @@ function if_post_init1(b) {
 }
 
 // use of var after partial init (non-exhaustive if) gives undefined
-function if_partial_post_init2(b) {
+function if_partial_post_init2(b: boolean) {
   var x:number;
   if (b) {
     x = 0;
@@ -70,7 +70,7 @@ function if_partial_post_init2(b) {
 }
 
 // use of var after guaranteed init (exhaustive if) is ok
-function if_post_init2(b) {
+function if_post_init2(b: boolean) {
   var x:number;
   if (b) {
     x = 0;
@@ -81,7 +81,7 @@ function if_post_init2(b) {
 }
 
 // use of var after partial init (non-exhaustive switch) gives undefined
-function switch_partial_post_init(i) {
+function switch_partial_post_init(i: number) {
   var x:number;
   switch (i) {
     case 0:
@@ -95,7 +95,7 @@ function switch_partial_post_init(i) {
 }
 
 // use of var after guaranteed init (exhaustive switch) is ok
-function switch_post_init(i) {
+function switch_post_init(i: number) {
   var x:number;
   switch (i) {
     case 0:
@@ -111,7 +111,7 @@ function switch_post_init(i) {
 }
 
 // local use of annotated var in switch is ok
-function switch_scoped_init_1(i) {
+function switch_scoped_init_1(i: number) {
   switch (i) {
     case 0:
       var x:number = 0;
@@ -120,7 +120,7 @@ function switch_scoped_init_1(i) {
 }
 
 // ...but use of var before switch gives undefined
-function switch_scoped_init_2(i) {
+function switch_scoped_init_2(i: number) {
   var y:number = x; // error
   switch (i) {
     case 0:
@@ -129,7 +129,7 @@ function switch_scoped_init_2(i) {
 }
 
 // ...and after
-function switch_scoped_init_3(i) {
+function switch_scoped_init_3(i: number) {
   switch (i) {
     case 0:
       var x:number = 0;
@@ -138,7 +138,7 @@ function switch_scoped_init_3(i) {
 }
 
 // ...and in a fallthrough case without initialization
-function switch_scoped_init_4(i) {
+function switch_scoped_init_4(i: number) {
   switch (i) {
     case 0:
       var x:number = 0;
@@ -148,7 +148,7 @@ function switch_scoped_init_4(i) {
 }
 
 // local use of annotated var in while is ok
-function while_scoped_init(b) {
+function while_scoped_init(b: boolean) {
   while (b) {
     var x:number = 0;
     var y:number = x;
@@ -156,7 +156,7 @@ function while_scoped_init(b) {
 }
 
 // ...but use of var before while gives undefined
-function while_pre_init(b) {
+function while_pre_init(b: boolean) {
   var y:number = x; // error
   while (b) {
     var x:number = 0;
@@ -164,7 +164,7 @@ function while_pre_init(b) {
 }
 
 // ...and after
-function while_post_init(b) {
+function while_post_init(b: boolean) {
    while (b) {
     var x:number = 0;
   }
@@ -172,7 +172,7 @@ function while_post_init(b) {
 }
 
 // local use of annotated var in do-while is ok
-function do_while_scoped_init(b) {
+function do_while_scoped_init(b: boolean) {
   do {
     var x:number = 0;
     var y:number = x;
@@ -180,7 +180,7 @@ function do_while_scoped_init(b) {
 }
 
 // ...but use before do-while gives undefined
-function do_while_pre_init(b) {
+function do_while_pre_init(b: boolean) {
   var y:number = x; // error
   do {
     var x:number = 0;
@@ -188,7 +188,7 @@ function do_while_pre_init(b) {
 }
 
 // after is ok, because loop is guaranteed to run
-function do_while_post_init(b) {
+function do_while_post_init(b: boolean) {
   do {
     var x:number = 0;
   } while (b);
@@ -196,7 +196,7 @@ function do_while_post_init(b) {
 }
 
 // local use of annotated var in for is ok
-function for_scoped_init(b) {
+function for_scoped_init(b: boolean) {
   for (;b;) {
     var x:number = 0;
     var y:number = x;
@@ -204,7 +204,7 @@ function for_scoped_init(b) {
 }
 
 // ...but use before for gives undefined
-function for_pre_init(b) {
+function for_pre_init(b: boolean) {
   var y:number = x; // error
   for (;b;) {
     var x:number = 0;
@@ -212,7 +212,7 @@ function for_pre_init(b) {
 }
 
 // ...and after
-function for_post_init(b) {
+function for_post_init(b: boolean) {
    for (;b;) {
     var x:number = 0;
   }

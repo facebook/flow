@@ -25,7 +25,7 @@ function self_init() {
 }
 
 // use of let after partial init (non-exhaustive if) gives undefined
-function if_partial_post_init(b) {
+function if_partial_post_init(b: boolean) {
   let x:number;
   if (b) {
     x = 0;
@@ -34,7 +34,7 @@ function if_partial_post_init(b) {
 }
 
 // use of let after guaranteed init (exhaustive if) is ok
-function if_post_init(b) {
+function if_post_init(b: boolean) {
   let x:number;
   if (b) {
     x = 0;
@@ -45,7 +45,7 @@ function if_post_init(b) {
 }
 
 // use of let after partial init (non-exhaustive switch) gives undefined
-function switch_partial_post_init(i) {
+function switch_partial_post_init(i: number) {
   let x:number;
   switch (i) {
     case 0:
@@ -59,7 +59,7 @@ function switch_partial_post_init(i) {
 }
 
 // use of let after guaranteed init (exhaustive switch) is ok
-function switch_post_init(i) {
+function switch_post_init(i: number) {
   let x:number;
   switch (i) {
     case 0:
@@ -75,7 +75,7 @@ function switch_post_init(i) {
 }
 
 // use in a switch after a skipped decl is an error
-function switch_scoped_init_2(i) {
+function switch_scoped_init_2(i: number) {
   switch (i) {
     case 0:
       let x:number;
@@ -85,7 +85,7 @@ function switch_scoped_init_2(i) {
 }
 
 // while leaves it possibly uninitialized
-function while_post_init(b) {
+function while_post_init(b: boolean) {
   let x:number;
   while (b) {
     x = 0;
@@ -94,7 +94,7 @@ function while_post_init(b) {
 }
 
 // do-while is ok, because loop is guaranteed to run at least once
-function do_while_post_init(b) {
+function do_while_post_init(b: boolean) {
   let x:number;
   do {
     x = 0;
@@ -121,7 +121,7 @@ function for_of_post_init() {
 }
 
 // use of let after guaranteed init (exhaustive switch + throw) is ok
-function switch_post_init2(i): number {
+function switch_post_init2(i: number): number {
   let bar;
   switch (i) {
     case 1:
@@ -134,7 +134,7 @@ function switch_post_init2(i): number {
 }
 
 // use of let after guaranteed init (exhaustive switch + throw) is ok
-function switch_post_init3(i): number {
+function switch_post_init3(i: number): number {
   let bar;
   switch (i) {
     case 1:
