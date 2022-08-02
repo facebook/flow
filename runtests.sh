@@ -25,8 +25,6 @@ show_help() {
   echo "        test using resolved environment"
   echo "    -n"
   echo "        test using sealed tvars environment"
-  echo "    -w"
-  echo "        test using constrained writes"
   echo "    -i"
   echo "        test using incremental reverse dependencies"
   echo "    -r"
@@ -55,9 +53,8 @@ new_env=0
 resolved_env=0
 enforced_env=0
 check_only=0
-constrained_writes=0
 incremental_revdeps=0
-export saved_state filter check_only new_env resolved_env enforced_env constrained_writes incremental_revdeps
+export saved_state filter check_only new_env resolved_env enforced_env incremental_revdeps
 while getopts "b:d:f:celqwxnirst:vh?" opt; do
   case "$opt" in
   b)
@@ -89,9 +86,6 @@ while getopts "b:d:f:celqwxnirst:vh?" opt; do
     ;;
   q)
     quiet=1
-    ;;
-  w)
-    constrained_writes=1
     ;;
   i)
     incremental_revdeps=1
@@ -125,7 +119,7 @@ if [ -n "$specific_test" ]; then
   filter="^$specific_test$"
 fi
 
-if [[ $(($(($(("$new_env" + "$resolved_env")) + "$enforced_env")) + "$constrained_writes")) -gt 1 ]]; then
+if [[ $(($(("$new_env" + "$resolved_env")) + "$enforced_env")) -gt 1 ]]; then
   printf "Can only set one new environment flag at a time (-e, -n, -w, -x).\n"
   exit 1
 fi
@@ -199,11 +193,6 @@ print_failure() {
     # constrained-writes and new-env modes may use a non-standard extension
     if [[ "$new_env" -eq 1 ]] && [ -f "${dir}${name}${ext}.new_env" ]; then
       ext="${ext}.new_env"
-    elif [[ "$new_env" -eq 1 || "$constrained_writes" -eq 1 ]] \
-      && [ -f "${dir}${name}${ext}.cw" ];
-    then
-      # compare new-env results against constrained-writes expected behavior if exists
-      ext="${ext}.cw"
     fi
 
     if [[ "$record" -eq 1 ]]; then
