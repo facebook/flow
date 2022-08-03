@@ -1,0 +1,33 @@
+Error ------------------------------------------------------------------------------------------------------ test.js:8:7
+
+Cannot extend `C` [1] with `B` because string [1] is not inheritable. [incompatible-use]
+
+   test.js:8:7
+   8| class B extends C {}
+            ^
+
+References:
+   test.js:8:17
+   8| class B extends C {}
+                      ^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:32:17
+
+Cannot extend `D` [1] with `obj` because object type [2] is not inheritable. [incompatible-use]
+
+   test.js:32:17
+   32| class D extends obj {}
+                       ^^^
+
+References:
+   test.js:32:7
+   32| class D extends obj {}
+             ^ [1]
+   test.js:31:18
+   31| declare var obj: {};
+                        ^^ [2]
+
+
+
+Found 2 errors
