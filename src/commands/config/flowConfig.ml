@@ -60,7 +60,6 @@ module Opts = struct
     enforce_this_annotations: bool;
     enums: bool;
     env_mode: Options.env_mode;
-    env_mode_constrain_write_dirs: string list;
     estimate_recheck_time: bool option;
     exact_by_default: bool;
     exact_empty_objects: bool option;
@@ -190,7 +189,6 @@ module Opts = struct
       enforce_this_annotations = false;
       enums = false;
       env_mode = Options.ClassicEnv [];
-      env_mode_constrain_write_dirs = [];
       estimate_recheck_time = None;
       exact_by_default = false;
       exact_empty_objects = None;
@@ -757,63 +755,14 @@ module Opts = struct
 
   let env_mode_parser =
     string (fun opts s ->
-        match String.split_on_char ',' s |> Base.List.filter ~f:(( <> ) "") with
-        | [] -> Error "env_mode requires an argument"
-        | ["ssa"] ->
-          if List.length opts.env_mode_constrain_write_dirs = 0 then
-            Ok { opts with env_mode = Options.(SSAEnv Basic) }
-          else
-            Error
-              "Option \"env_mode\" must not be set to \"ssa\" when \"constrain_write_dirs\" is set."
-        | ["resolved"] ->
-          if List.length opts.env_mode_constrain_write_dirs = 0 then
-            Ok { opts with env_mode = Options.(SSAEnv Reordered) }
-          else
-            Error
-              "Option \"env_mode\" must not be set to \"resolved\" when \"constrain_write_dirs\" is set."
-        | ["enforced"] ->
-          if List.length opts.env_mode_constrain_write_dirs = 0 then
-            Ok { opts with env_mode = Options.(SSAEnv Enforced) }
-          else
-            Error
-              "Option \"env_mode\" must not be set to \"enforced\" when \"constrain_write_dirs\" is set."
-        | ["classic"] -> Ok { opts with env_mode = Options.ClassicEnv [] }
-        | options ->
-          let options =
-            Base.List.fold_result options ~init:[] ~f:(fun acc opt ->
-                match opt with
-                | "constrain_writes" when List.length opts.env_mode_constrain_write_dirs = 0 ->
-                  Ok (Options.ConstrainWrites :: acc)
-                | "constrain_writes" ->
-                  Error
-                    "Option \"env_mode\" should not set \"constrain_writes\" when \"env_mode.constrain_writes.includes\" is also set."
-                | "ssa" -> Error "\"ssa\" must be the first and only env_mode option if present"
-                | "resolved" ->
-                  Error "\"resolved\" must be the first and only env_mode option if present"
-                | "classic" ->
-                  Error "\"classic\" must be the first and only env_mode option if present"
-                | opt -> Error (spf "\"%s\" is not a valid env_mode option" opt)
-            )
-          in
-          Base.Result.map
-            ~f:(fun options -> { opts with env_mode = Options.ClassicEnv options })
-            options
+        match s with
+        | "ssa" -> Ok { opts with env_mode = Options.(SSAEnv Basic) }
+        | "resolved" -> Ok { opts with env_mode = Options.(SSAEnv Reordered) }
+        | "enforced" -> Ok { opts with env_mode = Options.(SSAEnv Enforced) }
+        | "constrain_writes" -> Ok { opts with env_mode = Options.(ClassicEnv [ConstrainWrites]) }
+        | "classic" -> Ok { opts with env_mode = Options.ClassicEnv [] }
+        | env_mode -> Error (spf "\"%s\" is not a valid env_mode option" env_mode)
     )
-
-  let env_mode_constrain_write_dirs_parser =
-    string
-      ~init:(fun opts -> { opts with env_mode_constrain_write_dirs = [] })
-      ~multiple:true
-      (fun opts v ->
-        match opts.env_mode with
-        | Options.SSAEnv _ ->
-          Error
-            "Option \"env_mode\" must not be set to \"ssa\", \"resolved\", or \"enforced\" when \"constrain_writes.includes\" is set."
-        | Options.ClassicEnv opts when List.mem Options.ConstrainWrites opts ->
-          Error
-            "Option \"env_mode\" should not set \"constrain_writes\" when \"env_mode.constrain_writes.includes\" is also set."
-        | _ ->
-          Ok { opts with env_mode_constrain_write_dirs = v :: opts.env_mode_constrain_write_dirs })
 
   let watchman_defer_states_parser =
     string ~multiple:true (fun opts v ->
@@ -850,7 +799,6 @@ module Opts = struct
       ("experimental.enforce_class_annotations", enforce_class_annotations);
       ("experimental.enforce_this_annotations", enforce_this_annotations);
       ("experimental.env_mode", env_mode_parser);
-      ("experimental.env_mode.constrain_writes.includes", env_mode_constrain_write_dirs_parser);
       ("experimental.facebook_module_interop", facebook_module_interop_parser);
       ("experimental.local_inference_annotation_dirs", local_inference_annotation_dirs);
       ("experimental.module.automatic_require_default", automatic_require_default_parser);
@@ -1492,8 +1440,6 @@ let enforce_this_annotations c = c.options.Opts.enforce_this_annotations
 let enums c = c.options.Opts.enums
 
 let env_mode c = c.options.Opts.env_mode
-
-let env_mode_constrain_write_dirs c = c.options.Opts.env_mode_constrain_write_dirs
 
 let estimate_recheck_time c = c.options.Opts.estimate_recheck_time
 

@@ -33,7 +33,6 @@ let metadata =
     enforce_strict_call_arity = true;
     enforce_this_annotations = false;
     env_mode = Options.ClassicEnv [];
-    env_mode_constrain_write_dirs = [];
     exact_by_default = true;
     exact_empty_objects = false;
     experimental_infer_indexers = false;
