@@ -2024,7 +2024,16 @@ and class_method
   source_location_with_comments
     ?comments
     ( loc,
-      let s_key = object_property_key ~opts key in
+      let s_key =
+        match key with
+        | Ast.Expression.Object.Property.PrivateName
+            (ident_loc, { Ast.PrivateName.name; comments = key_comments }) ->
+          layout_node_with_comments_opt
+            ident_loc
+            key_comments
+            (identifier (Flow_ast_utils.ident_of_source (ident_loc, "#" ^ name)))
+        | _ -> object_property_key ~opts key
+      in
       let s_key =
         if generator then
           fuse [Atom "*"; s_key]

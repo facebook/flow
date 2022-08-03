@@ -1515,6 +1515,10 @@ let tests =
            assert_statement_string ~ctxt ~pretty:true "class a {\n  @a\n  @b\n  a() {}\n}";
            assert_statement_string ~ctxt "class a{*b(){}}"
          );
+         ( "class_private_methods" >:: fun ctxt ->
+           assert_statement_string ~ctxt "class a{#a(){}}";
+           assert_statement_string ~ctxt "class a{static #a(){}}"
+         );
          ( "class_properties" >:: fun ctxt ->
            assert_statement_string ~ctxt "class a{a;}";
            assert_statement_string ~ctxt "class a{a:a;}";
