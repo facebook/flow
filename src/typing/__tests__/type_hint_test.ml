@@ -304,6 +304,8 @@ let eval_hint_tests =
           ~expected:"[string, number]"
           "[number, string, number]"
           [Decomp_ArrSpread 1];
+    "await_decomp"
+    >:: mk_eval_hint_test ~expected:"Promise<string> | string" "string" [Decomp_Await];
     "fun_decomp_simple_return"
     >:: mk_eval_hint_test ~expected:"number" "(string, number) => number" [Decomp_FuncReturn];
     "fun_decomp_simple_on_first_argument_of_hint"

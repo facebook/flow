@@ -1378,16 +1378,18 @@ class def_finder env_entries providers toplevel_scope =
       ignore @@ this#type_annotation annot;
       expr
 
-    method! unary_expression _ expr =
+    method! unary_expression _ _ = failwith "Should be visited by visit_unary_expression"
+
+    method private visit_unary_expression ~hint expr =
       let open Flow_ast.Expression.Unary in
       let { argument; operator; comments = _ } = expr in
-      let cond =
+      let (hint, cond) =
         match operator with
-        | Not -> OtherConditionalTest
-        | _ -> NonConditionalContext
+        | Not -> (Hint_None, OtherConditionalTest)
+        | Await -> (decompose_hint Decomp_Await hint, NonConditionalContext)
+        | _ -> (Hint_None, NonConditionalContext)
       in
-      this#visit_expression ~hint:Hint_None ~cond argument;
-      expr
+      this#visit_expression ~hint ~cond argument
 
     method! jsx_element _ expr =
       let open Ast.JSX in
@@ -1519,6 +1521,7 @@ class def_finder env_entries providers toplevel_scope =
           ~cond
           expr
       | Ast.Expression.OptionalCall expr -> this#visit_optional_call_expression ~cond expr
+      | Ast.Expression.Unary expr -> this#visit_unary_expression ~hint expr
       | Ast.Expression.Assignment _
       | Ast.Expression.Class _
       | Ast.Expression.Comprehension _
@@ -1537,7 +1540,6 @@ class def_finder env_entries providers toplevel_scope =
       | Ast.Expression.TemplateLiteral _
       | Ast.Expression.This _
       | Ast.Expression.TypeCast _
-      | Ast.Expression.Unary _
       | Ast.Expression.Update _
       | Ast.Expression.Yield _ ->
         ignore @@ super#expression exp

@@ -11,6 +11,7 @@ type hint_decomposition =
   | Decomp_ObjSpread
   | Decomp_ArrElement of int
   | Decomp_ArrSpread of int
+  | Decomp_Await
   | Decomp_MethodName of string
   | Decomp_MethodElem
   | Decomp_CallNew

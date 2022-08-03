@@ -22,6 +22,8 @@ type hint_decomposition =
   | Decomp_ArrElement of int
   (* Hint on array literal `[...e]` becomes hint on `e` *)
   | Decomp_ArrSpread of int
+  (* Type of `await e` becomes hint on `e` *)
+  | Decomp_Await
   (* Type of `o` in `o.m(..)` becomes the type of `o.m` *)
   | Decomp_MethodName of string
   (* Type of `o` in `o[e](..)` becomes the type of `o[e]` *)
@@ -61,6 +63,7 @@ let string_of_hint_unknown_kind = function
   | Decomp_FuncRest i -> Utils_js.spf "Decomp_FuncRest (%d)" i
   | Decomp_FuncReturn -> "Decomp_FuncReturn"
   | Decomp_JsxProps -> "Decomp_JsxProps"
+  | Decomp_Await -> "Decomp_Await"
 
 let string_of_hint ~on_hint = function
   | Hint_t t -> Utils_js.spf "Hint_t (%s)" (on_hint t)

@@ -3148,7 +3148,7 @@ struct
       ((loc, t), This this)
     | Super s -> ((loc, identifier cx (mk_ident ~comments:None "super") loc), Super s)
     | Unary u ->
-      let (t, u) = unary cx loc u in
+      let (t, u) = unary cx ~hint loc u in
       ((loc, t), Unary u)
     | Update u ->
       let (t, u) = update cx loc u in
@@ -5519,7 +5519,7 @@ struct
       | RegExp _ -> Flow.get_builtin_type cx (mk_annot_reason RRegExp loc) (OrdinaryName "RegExp")
 
   (* traverse a unary expression, return result type *)
-  and unary cx loc =
+  and unary cx ~hint loc =
     let open Ast.Expression.Unary in
     function
     | { operator = Not; argument; comments } ->
@@ -5578,7 +5578,9 @@ struct
       *)
       let reason = mk_reason (RCustom "await") loc in
       let await = Flow.get_builtin cx (OrdinaryName "$await") reason in
-      let (((_, arg), _) as argument_ast) = expression cx ~hint:Hint_None argument in
+      let (((_, arg), _) as argument_ast) =
+        expression cx ~hint:(decompose_hint Decomp_Await hint) argument
+      in
       let use_op =
         Op
           (FunCall

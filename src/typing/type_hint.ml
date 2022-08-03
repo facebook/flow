@@ -103,6 +103,16 @@ let type_of_hint_decomposition cx op loc t =
           )
         in
         annot true t
+      | Decomp_Await ->
+        let t =
+          Tvar.mk_where cx dummy_reason (fun tout ->
+              Flow_js.flow_t cx (t, tout);
+              Flow_js.flow_t
+                cx
+                (Flow_js.get_builtin_typeapp cx dummy_reason (OrdinaryName "Promise") [t], tout)
+          )
+        in
+        annot true t
       | Decomp_CallNew ->
         (* TODO *)
         failwith "Not implemented"
