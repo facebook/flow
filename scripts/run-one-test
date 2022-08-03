@@ -153,7 +153,7 @@ start_flow_unsafe () {
     then
       PATH="$THIS_DIR/scripts/tests_bin:$PATH" \
       "$FLOW" start "$root" \
-        $flowlib $env_flag $incremental_revdeps_flag --wait \
+        $flowlib $inference_flag $incremental_revdeps_flag --wait \
         --wait-for-recheck "$wait_for_recheck" \
         --saved-state-fetcher "local" \
         --saved-state-no-fallback \
@@ -170,7 +170,7 @@ start_flow_unsafe () {
     # start server and wait
     PATH="$THIS_DIR/scripts/tests_bin:$PATH" \
     "$FLOW" start "$root" \
-      $flowlib $env_flag $incremental_revdeps_flag --wait \
+      $flowlib $inference_flag $incremental_revdeps_flag --wait \
       --wait-for-recheck "$wait_for_recheck" \
       --file-watcher "$file_watcher" \
       --log-file "$abs_log_file" \
@@ -285,7 +285,7 @@ runtest() {
         #
         auto_start=true
         flowlib=" --no-flowlib"
-        env_flag=""
+        inference_flag=""
         incremental_revdeps_flag=""
         shell=""
         cmd="check"
@@ -385,13 +385,13 @@ runtest() {
         fi
 
         if [[ "$new_env" -eq 1 ]]; then
-          env_flag="--env-mode ssa"
+          inference_flag="--inference-mode ssa"
         fi
         if [[ "$resolved_env" -eq 1 ]]; then
-          env_flag="--env-mode experimental.resolved"
+          inference_flag="--inference-mode constrain_writes"
         fi
         if [[ "$enforced_env" -eq 1 ]]; then
-          env_flag="--env-mode experimental.enforced"
+          inference_flag="--inference-mode experimental.lti"
         fi
 
         if [[ "$incremental_revdeps" -eq 1 ]]; then
@@ -407,7 +407,7 @@ runtest() {
             set -e
             # start server and wait
             "$FLOW" start "$root" \
-              $flowlib $env_flag $incremental_revdeps_flag --wait \
+              $flowlib $inference_flag $incremental_revdeps_flag --wait \
               --wait-for-recheck "$wait_for_recheck" \
               --lazy-mode none \
               --file-watcher "$file_watcher" \
@@ -436,7 +436,7 @@ runtest() {
             else
               # default command is check with configurable --no-flowlib
               "$FLOW" check . \
-                $env_flag $incremental_revdeps_flag \
+                $inference_flag $incremental_revdeps_flag \
                 $flowlib --strip-root --show-all-errors \
                  1>> "$abs_out_file" 2>> "$stderr_dest"
               st=$?
