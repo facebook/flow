@@ -384,9 +384,6 @@ runtest() {
           return $RUNTEST_SKIP
         fi
 
-        if [[ "$new_env" -eq 1 ]]; then
-          inference_flag="--inference-mode ssa"
-        fi
         if [[ "$resolved_env" -eq 1 ]]; then
           inference_flag="--inference-mode constrain_writes"
         fi
