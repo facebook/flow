@@ -49,7 +49,7 @@ executors:
       xcode: "13.4.1"
     environment:
       <<: *opam_env
-      MACOSX_DEPLOYMENT_TARGET: 12
+      MACOSX_DEPLOYMENT_TARGET: 11.3
     working_directory: ~/flow
   curl:
     docker:
