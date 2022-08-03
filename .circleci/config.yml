@@ -46,10 +46,9 @@ executors:
     working_directory: ~/flow
   mac:
     macos:
-      xcode: "13.4.1"
+      xcode: "13.4"
     environment:
       <<: *opam_env
-      MACOSX_DEPLOYMENT_TARGET: 11.3
     working_directory: ~/flow
   curl:
     docker:
