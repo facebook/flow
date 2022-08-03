@@ -768,8 +768,7 @@ module Make (Env : Env_sig.S) (Statement : Statement_sig.S with module Env := En
     let env = Context.environment cx in
     EnvSet.iter
       (fun (kind, loc) ->
-        let t = Base.Option.value_exn (Loc_env.find_write env kind loc) in
-        TvarResolver.resolve cx t)
+        Loc_env.find_write env kind loc |> Base.Option.iter ~f:(TvarResolver.resolve cx))
       entries_for_resolution;
     Debug_js.Verbose.print_if_verbose_lazy cx (lazy ["Finished resolving component"])
 end
