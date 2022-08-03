@@ -1014,15 +1014,13 @@ let options_flags =
            )
            ~doc:""
       |> flag
-           "--env-mode"
+           "--inference-mode"
            (optional
               (enum
                  [
                    ("classic", Options.ClassicEnv []);
-                   ("constrained-writes", Options.ClassicEnv [Options.ConstrainWrites]);
-                   ("ssa", Options.(SSAEnv Basic));
-                   ("experimental.resolved", Options.(SSAEnv Reordered));
-                   ("experimental.enforced", Options.(SSAEnv Enforced));
+                   ("constrain_writes", Options.(SSAEnv Reordered));
+                   ("experimental.lti", Options.(SSAEnv Enforced));
                  ]
               )
            )
