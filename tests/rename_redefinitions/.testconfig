@@ -1,1 +1,1 @@
-cmd: codemod rename-redefinitions-experimental --strip-root --quiet ./
+cmd: codemod rename-redefinitions --strip-root --quiet ./
