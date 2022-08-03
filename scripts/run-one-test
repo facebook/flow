@@ -198,8 +198,6 @@ runtest() {
       exp_file="${exp_file}.enforced_env"
     elif [[ "$resolved_env" -eq 1 || "$enforced_env" -eq 1 ]] && [ -f "${dir}/${exp_file}.resolved_env" ]; then
       exp_file="${exp_file}.resolved_env"
-    elif [[ "$new_env" -eq 1 || "$resolved_env" -eq 1 || "$enforced_env" -eq 1 ]] && [ -f "${dir}/${exp_file}.new_env" ]; then
-      exp_file="${exp_file}.new_env"
     fi
 
     # On Windows we skip some tests as symlinks not available
@@ -350,12 +348,6 @@ runtest() {
 
             if [[ "$saved_state" -eq 0 ]] && \
               [ "$(awk '$1=="saved_state_only:"{print $2}' .testconfig)" == "true" ]
-            then
-                return $RUNTEST_SKIP
-            fi
-
-            if [[ "$new_env" -eq 1 ]] || [[ "$resolved_env" -eq 1 ]] || [[ "$enforced_env" -eq 1 ]] && \
-              [ "$(awk '$1=="TODO_new_env:"{print $2}' .testconfig)" == "true" ]
             then
                 return $RUNTEST_SKIP
             fi

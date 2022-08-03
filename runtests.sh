@@ -49,12 +49,11 @@ saved_state=0
 verbose=0
 quiet=0
 relative="."
-new_env=0
 resolved_env=0
 enforced_env=0
 check_only=0
 incremental_revdeps=0
-export saved_state filter check_only new_env resolved_env enforced_env incremental_revdeps
+export saved_state filter check_only resolved_env enforced_env incremental_revdeps
 while getopts "b:d:f:celqwxnirst:vh?" opt; do
   case "$opt" in
   b)
@@ -68,9 +67,6 @@ while getopts "b:d:f:celqwxnirst:vh?" opt; do
     ;;
   c)
     check_only=1
-    ;;
-  e)
-    new_env=1
     ;;
   x)
     resolved_env=1
@@ -119,7 +115,7 @@ if [ -n "$specific_test" ]; then
   filter="^$specific_test$"
 fi
 
-if [[ $(($(("$new_env" + "$resolved_env")) + "$enforced_env")) -gt 1 ]]; then
+if [[ $(("$resolved_env" + "$enforced_env")) -gt 1 ]]; then
   printf "Can only set one new environment flag at a time (-e, -n, -w, -x).\n"
   exit 1
 fi
@@ -190,9 +186,8 @@ print_failure() {
     fi
     # Default expected file extension is .exp
     ext=".exp"
-    # constrained-writes and new-env modes may use a non-standard extension
-    if [[ "$new_env" -eq 1 ]] && [ -f "${dir}${name}${ext}.new_env" ]; then
-      ext="${ext}.new_env"
+    if [[ "$resolved_env" -eq 1 ]] && [ -f "${dir}${name}${ext}.resolved_env" ]; then
+      ext="${ext}.resolved_env"
     fi
 
     if [[ "$record" -eq 1 ]]; then
