@@ -1,3 +1,50 @@
+### 0.184.0
+
+Upcoming Breaking Changes:
+
+* New Inference Mode:
+
+  We are releasing a new inference mode that marks significant progress on our way to local type inference. You can enable this new mode in your codebase by adding `inference_mode=constrain_writes` to the `[options]` section in the flowconfig.
+
+  We will make `inference_mode` default to `constrain_writes` in v0.185, and remove the `classic` option in v0.186. To migrate your codebase, you can run the following codemods to prepare your codebase for the new inference mode:
+
+  ```
+  flow codemod rename-redefinitions
+  flow codemod annotate-declarations
+  ```
+
+  We will describe more details on this inference mode in an upcoming blog post.
+
+* Additional Annotation Requirements:
+
+  In order to eventually enable local type inference, we will require additional annotations in places we can't contextually type your code. You can enable the annotation enforcement now with the following flags in flowconfig:
+
+  ```
+  experimental.enforce_local_inference_annotations=true
+  experimental.enforce_this_annotations=true
+  experimental.enforce_class_annotations=true
+  ```
+
+  To migrate your codebase, you can run the following codemod to prepare your codebase for the new requirement: `flow codemod annotate-lti-experimental`
+
+Likely to cause new Flow errors:
+
+* `Object.create` now results in a sealed object. Arbitrary properties can no longer be read/written from/to it. You can use the `__proto__` property in object annotations to create an annotation if you need to.
+
+Notable bug fixes:
+* Fix spurious object subtyping errors when an object literal is passed into rest arguments with tuple type
+  ```
+  function emit(...args: [{+bar: string}]): void {}
+  emit({ bar: "" }); // no longer emits incompatible-variance
+  ```
+* Fix a bug on Windows that could lead to a crash if files are changed faster than they can be rechecked
+
+`flow-upgrade`:
+* Add a codemod to collapse multiline object initialization into one object literal - useful for enabling the `exact_empty_objects` flowconfig option
+
+Library Definitions:
+* Add DOMTokenList index signature
+
 ### 0.183.1
 
 * Fix a regression in 0.183.0 on Windows where inconsistent handling of slashes within paths led to mismatches like "duplicate provider" errors
