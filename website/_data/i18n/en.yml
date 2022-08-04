@@ -220,6 +220,9 @@ docs_additional_reading: "Additional Reading"
 "/docs/lang/types-first/":
   title: "Types-First"
   description: "A New Architecture for Performance and Reliability"
+"/docs/lang/constrained-writes/":
+  title: "Constrained Writes"
+  description: "Restricting writes to unannotated variables"
 "/docs/libdefs/":
   title: "Library Definitions"
   description: "Typing third-party libraries"

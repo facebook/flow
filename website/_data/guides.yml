@@ -72,6 +72,7 @@
     - path: "/docs/lang/refinements/"
     - path: "/docs/lang/lazy-modes/"
     - path: "/docs/lang/types-first/"
+    - path: "/docs/lang/constrained-writes/"
     # - path: "/docs/lang/sealing/"
 
 - id: cli
