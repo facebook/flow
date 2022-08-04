@@ -616,12 +616,21 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) = struct
     let sort =
       try Tarjan.topsort ~roots order_graph |> List.rev with
       | Not_found ->
-        let all =
+        let all_locs =
           EnvMap.values order_graph
           |> List.map EnvSet.elements
           |> List.flatten
           |> EnvSet.of_list
           |> EnvSet.elements
+        in
+        let all =
+          all_locs
+          |> Base.List.map ~f:(fun (_, l) -> ALoc.debug_to_string ~include_source:false l)
+          |> String.concat ","
+        in
+        let missing_roots =
+          all_locs
+          |> Base.List.filter ~f:(fun l -> not @@ EnvSet.mem l roots)
           |> Base.List.map ~f:(fun (_, l) -> ALoc.debug_to_string ~include_source:false l)
           |> String.concat ","
         in
@@ -630,7 +639,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) = struct
           |> Base.List.map ~f:(fun (_, l) -> ALoc.debug_to_string ~include_source:true l)
           |> String.concat ","
         in
-        failwith (Printf.sprintf "roots: %s\n\nall: %s" roots all)
+        failwith (Printf.sprintf "roots: %s\n\nall: %s\nmissing_roots: %s." roots all missing_roots)
     in
     let result_of_scc (fst, rest) =
       let element_of_loc (kind, loc) =
