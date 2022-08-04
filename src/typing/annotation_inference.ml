@@ -279,7 +279,7 @@ module rec ConsGen : S = struct
     (* This check is bypassed in annotation inference *)
     let assert_import_is_value _cx _trace _reason _name _export_t = ()
 
-    let error_type = AnyT.error
+    let error_type _ _ = AnyT.error
 
     let fix_this_class = InstantiationKit.fix_this_class
 
@@ -338,7 +338,7 @@ module rec ConsGen : S = struct
         in
         cg_lookup_ cx use_op l reason_op propref
 
-    let error_type = AnyT.error
+    let error_type _ _ = AnyT.error
 
     (* We could have just returned `t` here. The OpenT indirection is for compatibility
      * with Flow_js. Specifically, without the OpenT the transformation in

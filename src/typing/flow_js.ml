@@ -288,7 +288,8 @@ struct
     let assert_import_is_value cx trace reason name export_t =
       FlowJs.rec_flow cx trace (export_t, AssertImportIsValueT (reason, name))
 
-    let error_type _ _ = ()
+    let error_type cx trace reason tout =
+      FlowJs.rec_flow_t cx ~use_op:unknown_use trace (AnyT.error reason, tout)
 
     let fix_this_class = FlowJs.fix_this_class
 
@@ -437,7 +438,8 @@ struct
 
     let read_prop = read_prop
 
-    let error_type _ _ = ()
+    let error_type cx trace reason tout =
+      FlowJs.rec_flow_t cx ~use_op:unknown_use trace (AnyT.error reason, OpenT tout)
 
     let return cx ~use_op trace t tout = FlowJs.rec_flow_t cx ~use_op trace (t, OpenT tout)
 

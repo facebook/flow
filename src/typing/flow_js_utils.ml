@@ -1044,7 +1044,7 @@ module type Import_export_helper_sig = sig
 
   val mk_typeof_annotation : Context.t -> ?trace:Type.trace -> reason -> Type.t -> Type.t
 
-  val error_type : Reason.t -> r
+  val error_type : Context.t -> Type.trace -> Reason.t -> r
 end
 
 (*********************************************************************)
@@ -1115,7 +1115,7 @@ module ImportTypeT_kit (F : Import_export_helper_sig) = struct
       | Some imported_t -> F.return cx trace ~use_op:unknown_use imported_t
       | None ->
         add_output cx ~trace (Error_message.EImportValueAsType (reason, export_name));
-        F.error_type reason)
+        F.error_type cx trace reason)
 end
 
 (************************************************************************)
@@ -1151,7 +1151,7 @@ module ImportTypeofT_kit (F : Import_export_helper_sig) = struct
     | DefT (_, _, TypeT _)
     | DefT (_, _, PolyT { t_out = DefT (_, _, TypeT _); _ }) ->
       add_output cx ~trace (Error_message.EImportTypeAsTypeof (reason, export_name));
-      F.error_type reason
+      F.error_type cx trace reason
     | _ ->
       let typeof_t = F.mk_typeof_annotation cx ~trace reason l in
       F.return
@@ -1597,7 +1597,7 @@ module type Get_prop_helper_sig = sig
 
   val return : Context.t -> use_op:use_op -> Type.trace -> Type.t -> r
 
-  val error_type : Reason.t -> r
+  val error_type : Context.t -> Type.trace -> Reason.t -> r
 
   val cg_get_prop :
     Context.t ->
@@ -1643,7 +1643,7 @@ module GetPropT_kit (F : Get_prop_helper_sig) = struct
          element resolution in ElemT. *)
       let loc = aloc_of_reason reason_op in
       add_output cx ~trace Error_message.(EInternal (loc, InstanceLookupComputed));
-      F.error_type reason_op
+      F.error_type cx trace reason_op
 
   let on_EnumObjectT cx trace enum_reason trust enum access =
     let (_, access_reason, _, (prop_reason, member_name)) = access in
@@ -1725,7 +1725,7 @@ module GetPropT_kit (F : Get_prop_helper_sig) = struct
       in
       let msg = Error_message.EPropNotReadable { reason_prop; prop_name; use_op } in
       add_output cx ~trace msg;
-      F.error_type ureason
+      F.error_type cx trace ureason
 
   let read_obj_prop cx trace ~use_op o propref reason_obj reason_op lookup_info =
     let l = DefT (reason_obj, bogus_trust (), ObjT o) in
@@ -1756,12 +1756,12 @@ module GetPropT_kit (F : Get_prop_helper_sig) = struct
         | OpenT _ ->
           let loc = loc_of_t elem_t in
           add_output cx ~trace Error_message.(EInternal (loc, PropRefComputedOpen));
-          F.error_type reason_op
+          F.error_type cx trace reason_op
         | GenericT { bound = DefT (_, _, StrT (Literal _)); _ }
         | DefT (_, _, StrT (Literal _)) ->
           let loc = loc_of_t elem_t in
           add_output cx ~trace Error_message.(EInternal (loc, PropRefComputedLiteral));
-          F.error_type reason_op
+          F.error_type cx trace reason_op
         | AnyT _ -> F.return cx trace ~use_op:unknown_use (AnyT.untyped reason_op)
         | GenericT { bound = DefT (_, _, StrT _); _ }
         | GenericT { bound = DefT (_, _, NumT _); _ }
@@ -1773,7 +1773,7 @@ module GetPropT_kit (F : Get_prop_helper_sig) = struct
         | _ ->
           let reason_prop = reason_of_t elem_t in
           add_output cx ~trace (Error_message.EObjectComputedPropertyAccess (reason_op, reason_prop));
-          F.error_type reason_op))
+          F.error_type cx trace reason_op))
 end
 
 (***************)
