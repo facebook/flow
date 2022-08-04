@@ -152,6 +152,10 @@ async function runTestSuite(
         printStatus('RUN');
         await testBuilder.log('\nSTEP %d', i + 1);
 
+        testBuilder.clearLSPMessages();
+        testBuilder.clearLSPStderr();
+        await testBuilder.clearMockInvocations();
+
         if (step.needsFlowServer()) {
           // No-op if one is already running
           await testBuilder.startFlowServer();
@@ -162,9 +166,6 @@ async function runTestSuite(
         if (flowErrors == null && step.needsFlowCheck()) {
           flowErrors = await testBuilder.getFlowErrors();
         }
-        testBuilder.clearLSPMessages();
-        testBuilder.clearLSPStderr();
-        await testBuilder.clearMockInvocations();
         let {envRead, envWrite} = newEnv(flowErrors || noErrors);
 
         testBuilder.setAllowFlowServerToDie(step.allowFlowServerToDie());
