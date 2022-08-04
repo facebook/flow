@@ -129,8 +129,6 @@ let create_persistent_connection ~client_fd ~close ~lsp_init_params =
          ~msg:LspProt.(NotificationFromServer (ServerExit exit_status))
          conn
       );
-    (* TODO: we don't need this anymore, just use ServerExit *)
-    ignore (PersistentConnection.write ~msg:LspProt.(NotificationFromServer EOF) conn);
     PersistentConnection.try_flush_and_close conn
   in
   (* Lwt.pick returns the first thread to finish and cancels the rest. *)

@@ -187,7 +187,6 @@ type notification_from_server =
   | EndRecheck of ServerProt.Response.lazy_stats
   | ServerExit of Exit.t  (** only used for the subset of exits which client handles *)
   | Please_hold of (ServerStatus.status * FileWatcherStatus.status)
-  | EOF  (** monitor is about to close the connection *)
 
 type message_from_server =
   | RequestResponse of response_with_metadata
@@ -247,7 +246,6 @@ let string_of_message_from_server = function
           "pleaseHold_server=%s_watcher=%s"
           (ServerStatus.string_of_status server_status)
           (FileWatcherStatus.string_of_status watcher_status)
-      | EOF -> "EOF"
     end
 
 type message_from_server_mapper = {
@@ -301,8 +299,7 @@ let default_message_from_server_mapper ~(lsp_mapper : Lsp_mapper.t) =
         | EndRecheck stats -> EndRecheck stats
         | ServerExit exit_status -> ServerExit exit_status
         | Please_hold (server_status, file_watcher_status) ->
-          Please_hold (server_status, file_watcher_status)
-        | EOF -> EOF);
+          Please_hold (server_status, file_watcher_status));
     of_response =
       (fun mapper response ->
         match response with
