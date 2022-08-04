@@ -23,6 +23,7 @@ can be overridden with command line flags.
 * [`exact_by_default`](#toc-exact-by-default-boolean)
 * [`experimental.const_params`](#toc-experimental-const-params-boolean)
 * [`include_warnings`](#toc-include-warnings-boolean)
+* [`inference_mode`](#toc-inference-mode-classic-constrain-writes)
 * [`lazy_mode`](#toc-lazy-mode-boolean)
 * [`log.file`](#toc-log-file-string)
 * [`max_header_tokens`](#toc-max-header-tokens-integer)
@@ -119,6 +120,14 @@ bindings. Reassigning a param is an error which lets Flow be less conservative
 with refinements.
 
 The default value is `false`.
+
+#### `inference_mode` _`(classic | constrain-writes)`_ {% since 0.184.0 %} <a class="toc" id="toc-inference-mode-classic-constrain-writes" href="#toc-inference-mode-classic-constrain-writes"></a>
+
+Setting this to `constrain-writes` will enable the constrained-writes inference mode.
+
+For more info, see the [constrained-writes docs](/en/docs/lang/constrained-writes).
+
+The default value is `classic`
 
 #### `include_warnings` _`(boolean)`_ <a class="toc" id="toc-include-warnings-boolean" href="#toc-include-warnings-boolean"></a>
 
