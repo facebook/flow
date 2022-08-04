@@ -96,15 +96,19 @@ References:
            ^ [3]
 
 
-Error ----------------------------------------------------------------------------------------- constrain_array.js:19:17
+Error ------------------------------------------------------------------------------------------ constrain_array.js:19:2
 
-null or undefined [1] is incompatible with number [2]. [incompatible-type]
+Cannot cast `w` to array type because null or undefined [1] is incompatible with number [2] in array element of array
+element. [incompatible-cast]
 
+   constrain_array.js:19:2
+   19| (w: Array<Array<?number>>) // unfortunate error
+        ^
+
+References:
    constrain_array.js:19:17
    19| (w: Array<Array<?number>>) // unfortunate error
                        ^^^^^^^ [1]
-
-References:
    constrain_array.js:18:9
    18| w.push([42]);
                ^^ [2]

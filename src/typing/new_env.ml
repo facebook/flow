@@ -1070,11 +1070,13 @@ module New_env = struct
             in
             let constrain_t =
               Tvar.mk_where cx element_reason (fun tvar ->
-                  Base.List.iter ~f:(fun t -> Flow_js.flow_t cx (t, tvar)) ts
+                  Base.List.iter ~f:(fun t -> Flow_js.flow cx (t, UseT (unknown_use, tvar))) ts
               )
             in
             let elem_t =
-              Tvar.mk_where cx element_reason (fun tvar -> Flow_js.flow_t cx (constrain_t, tvar))
+              Tvar.mk_where cx element_reason (fun tvar ->
+                  Flow_js.flow cx (constrain_t, UseT (unknown_use, tvar))
+              )
             in
             Context.add_constrained_write cx (elem_t, unknown_use, constrain_t);
             (elem_t, None, reason)

@@ -490,9 +490,10 @@ let check_constrained_writes init_cx master_cx =
                            let t = reducer#type_ init_cx Polarity.Neutral t in
                            (t, Flow_js.flow_use_op init_cx use_op u)
                        )
-                  | _ ->
+                  | Resolved (use_op, _)
+                  | FullyResolved (use_op, _) ->
                     let t = reducer#type_ init_cx Polarity.Neutral t in
-                    [(t, u)]
+                    [(t, Flow_js.flow_use_op init_cx use_op u)]
                 end
               | _ ->
                 let t = reducer#type_ init_cx Polarity.Neutral t in
