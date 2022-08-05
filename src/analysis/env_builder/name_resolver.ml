@@ -2209,7 +2209,7 @@ module Make
       (* This function should be called _after_ a member expression is assigned a value.
        * It havocs other heap refinements depending on the name of the member and then adds
        * a write to the heap refinement entry for that member expression *)
-      method assign_expression ~update_entry lhs rhs =
+      method assign_expression lhs rhs =
         match lhs with
         | (loc, Flow_ast.Expression.Member member) ->
           (* Use super member to visit sub-expressions to avoid record a read of the member. *)
@@ -2217,10 +2217,10 @@ module Make
           ignore @@ this#expression rhs;
           let reason = mk_reason RSomeProperty loc in
           let assigned_val = Val.one reason in
-          this#assign_member ~update_entry ~delete:false member loc assigned_val reason
+          this#assign_member ~delete:false member loc assigned_val reason
         | _ -> statement_error
 
-      method assign_member ~update_entry ~delete lhs_member lhs_loc assigned_val val_reason =
+      method assign_member ~delete lhs_member lhs_loc assigned_val val_reason =
         this#post_assignment_heap_refinement_havoc lhs_member;
         (* We pass allow_optional:false, but optional chains can't be in the LHS anyway. *)
         let lookup = RefinementKey.lookup_of_member lhs_member ~allow_optional:false in
@@ -2228,8 +2228,7 @@ module Make
         match (lhs_member, lookup) with
         | ( { Member.property = Member.PropertyIdentifier _ | Member.PropertyPrivateName _; _ },
             Some lookup
-          )
-          when update_entry ->
+          ) ->
           this#map_val_with_lookup
             lookup
             (fun _ -> assigned_val)
@@ -2292,7 +2291,7 @@ module Make
                 ignore @@ this#assignment_pattern left
               | (_, Expression e) ->
                 (* given `o.x = e`, read o then read e *)
-                this#assign_expression ~update_entry:true e right
+                this#assign_expression e right
             end
           | Some
               ( PlusAssign | MinusAssign | MultAssign | ExpAssign | DivAssign | ModAssign
@@ -2309,7 +2308,7 @@ module Make
               | (_, Expression e) ->
                 (* given `o.x += e`, read o then read e *)
                 ignore @@ this#pattern_expression e;
-                this#assign_expression ~update_entry:true e right
+                this#assign_expression e right
               | (_, (Object _ | Array _)) -> statement_error
             end
           | Some ((OrAssign | AndAssign | NullishAssign) as operator) ->
@@ -3649,7 +3648,7 @@ module Make
             update_write_entries ~assigning:false;
             add_output err)
         | (_, Flow_ast.Expression.Member member) ->
-          this#assign_member ~update_entry:true ~delete:true member loc undefined undefined_reason
+          this#assign_member ~delete:true member loc undefined undefined_reason
         | _ -> ()
 
       method! unary_expression loc (expr : (ALoc.t, ALoc.t) Ast.Expression.Unary.t) =
