@@ -436,15 +436,19 @@ let goals cx = cx.ccx.goal_map
 
 let exact_by_default cx = cx.metadata.exact_by_default
 
-let exact_empty_objects cx = cx.metadata.exact_empty_objects
+let exact_empty_objects cx =
+  cx.metadata.exact_empty_objects || env_mode cx = Options.(SSAEnv Enforced)
 
-let enforce_local_inference_annotations cx = cx.metadata.enforce_local_inference_annotations
+let enforce_local_inference_annotations cx =
+  cx.metadata.enforce_local_inference_annotations || env_mode cx = Options.(SSAEnv Enforced)
 
-let enforce_class_annotations cx = cx.metadata.enforce_class_annotations
+let enforce_class_annotations cx =
+  cx.metadata.enforce_class_annotations || env_mode cx = Options.(SSAEnv Enforced)
 
 let local_inference_annotation_dirs cx = cx.metadata.local_inference_annotation_dirs
 
-let enforce_this_annotations cx = cx.metadata.enforce_this_annotations
+let enforce_this_annotations cx =
+  cx.metadata.enforce_this_annotations || env_mode cx = Options.(SSAEnv Enforced)
 
 let experimental_infer_indexers cx = cx.metadata.experimental_infer_indexers
 
