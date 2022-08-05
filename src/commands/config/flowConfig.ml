@@ -110,6 +110,7 @@ module Opts = struct
     node_resolver_allow_root_relative: bool;
     node_resolver_dirnames: string list;
     node_resolver_root_relative_dirnames: string list;
+    array_literal_providers: bool;
     react_runtime: Options.react_runtime;
     react_server_component_exts: SSet.t;
     recursion_limit: int;
@@ -239,6 +240,7 @@ module Opts = struct
       node_resolver_allow_root_relative = false;
       node_resolver_dirnames = ["node_modules"];
       node_resolver_root_relative_dirnames = [""];
+      array_literal_providers = false;
       react_runtime = Options.ReactRuntimeClassic;
       react_server_component_exts;
       recursion_limit = 10000;
@@ -762,6 +764,17 @@ module Opts = struct
         | env_mode -> Error (spf "\"%s\" is not a valid env_mode option" env_mode)
     )
 
+  let experimental_empty_array_literals_parser =
+    boolean (fun opts v ->
+        match opts.env_mode with
+        | Options.ClassicEnv _ ->
+          Error
+            (spf
+               "\"experimental.array_literal_providers\" mode cannot be run in legacy inference mode"
+            )
+        | _ -> Ok { opts with array_literal_providers = v }
+    )
+
   let watchman_defer_states_parser =
     string ~multiple:true (fun opts v ->
         Ok { opts with watchman_defer_states = v :: opts.watchman_defer_states }
@@ -795,6 +808,7 @@ module Opts = struct
       ("experimental.enforce_this_annotations", enforce_this_annotations);
       ("inference_mode", inference_mode_parser);
       ("experimental.env_mode", experimental_env_mode_parser);
+      ("experimental.array_literal_providers", experimental_empty_array_literals_parser);
       ("experimental.facebook_module_interop", facebook_module_interop_parser);
       ("experimental.local_inference_annotation_dirs", local_inference_annotation_dirs);
       ("experimental.module.automatic_require_default", automatic_require_default_parser);
@@ -1526,6 +1540,8 @@ let module_system c = c.options.Opts.module_system
 let modules_are_use_strict c = c.options.Opts.modules_are_use_strict
 
 let munge_underscores c = c.options.Opts.munge_underscores
+
+let array_literal_providers c = c.options.Opts.array_literal_providers
 
 let no_flowlib c = c.options.Opts.no_flowlib
 

@@ -47,6 +47,7 @@ let metadata =
     max_trace_depth = 0;
     max_workers = 0;
     missing_module_generators = [];
+    array_literal_providers = false;
     react_runtime = Options.ReactRuntimeClassic;
     react_server_component_exts = SSet.empty;
     recursion_limit = 10000;

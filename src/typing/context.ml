@@ -50,6 +50,7 @@ type metadata = {
   haste_module_ref_prefix: string option;
   ignore_non_literal_requires: bool;
   local_inference_annotation_dirs: string list;
+  array_literal_providers: bool;
   max_literal_length: int;
   max_trace_depth: int;
   max_workers: int;
@@ -244,6 +245,7 @@ let metadata_of_options options =
     max_trace_depth = Options.max_trace_depth options;
     max_workers = Options.max_workers options;
     missing_module_generators = Options.missing_module_generators options;
+    array_literal_providers = Options.array_literal_providers options;
     react_runtime = Options.react_runtime options;
     react_server_component_exts = Options.react_server_component_exts options;
     recursion_limit = Options.recursion_limit options;
@@ -578,6 +580,8 @@ let verbose cx = cx.metadata.verbose
 let max_workers cx = cx.metadata.max_workers
 
 let missing_module_generators cx = cx.metadata.missing_module_generators
+
+let array_literal_providers cx = cx.metadata.array_literal_providers
 
 let jsx cx = cx.metadata.jsx
 

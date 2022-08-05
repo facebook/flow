@@ -508,14 +508,14 @@ References:
            ^ [3]
 
 
-Error ---------------------------------------------------------------------------------------------------- func.js:53:10
+Error ---------------------------------------------------------------------------------------------------- func.js:56:13
 
-Cannot assign array literal to `xa` because type variable `T` [1] cannot escape from the scope in which it was
-defined [2] (try adding a type annotation to `xa` [3]). [escaped-generic]
+Cannot assign `a` to `xa[0]` because type variable `T` [1] cannot escape from the scope in which it was defined [2] (try
+adding a type annotation to `xa` [3]). [escaped-generic]
 
-   func.js:53:10
-   53| var xa = [];
-                ^^
+   func.js:56:13
+   56|     xa[0] = a;
+                   ^
 
 References:
    func.js:54:19
@@ -961,14 +961,14 @@ References:
             ^^^ [3]
 
 
-Error --------------------------------------------------------------------------------------------------- misc.js:161:10
+Error --------------------------------------------------------------------------------------------------- misc.js:163:11
 
-Cannot assign array literal to `x4` because type variable `T` [1] cannot escape from the scope in which it was
-defined [2] (try adding a type annotation to `x4` [3]). [escaped-generic]
+Cannot assign `t` to `x4[0]` because type variable `T` [1] cannot escape from the scope in which it was defined [2] (try
+adding a type annotation to `x4` [3]). [escaped-generic]
 
-   misc.js:161:10
-   161| var x4 = [];
-                 ^^
+   misc.js:163:11
+   163|   x4[0] = t;
+                  ^
 
 References:
    misc.js:162:18

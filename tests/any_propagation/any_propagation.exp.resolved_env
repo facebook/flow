@@ -1,20 +1,3 @@
-Error --------------------------------------------------------------------------------------------------- arrays.js:3:35
-
-string [1] is incompatible with null or undefined [2] in array element. [incompatible-type]
-
-   arrays.js:3:35
-   3| declare var noop : <T>(arr: Array<Array<T>>) => void;
-                                        ^^^^^^^^
-
-References:
-   arrays.js:8:6
-   8| noop<string>(new_arr);
-           ^^^^^^ [1]
-   arrays.js:4:31
-   4| declare var arr : Array<Array<?string>>;
-                                    ^^^^^^^ [2]
-
-
 Error --------------------------------------------------------------------------------------------------- arrays.js:8:14
 
 Cannot call `noop` with `new_arr` bound to `arr` because null or undefined [1] is incompatible with string [2] in array
@@ -62,4 +45,4 @@ References:
 
 
 
-Found 4 errors
+Found 3 errors

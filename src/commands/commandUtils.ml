@@ -1358,6 +1358,7 @@ let make_options
         (FlowConfig.local_inference_annotation_dirs flowconfig);
     opt_enforce_this_annotations = FlowConfig.enforce_this_annotations flowconfig;
     opt_experimental_infer_indexers = false;
+    opt_array_literal_providers = FlowConfig.array_literal_providers flowconfig;
     opt_cycle_errors = FlowConfig.cycle_errors flowconfig;
     opt_run_post_inference_implicit_instantiation =
       FlowConfig.run_post_inference_implicit_instantiation flowconfig;

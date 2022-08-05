@@ -70,6 +70,7 @@ type metadata = {
   haste_module_ref_prefix: string option;
   ignore_non_literal_requires: bool;
   local_inference_annotation_dirs: string list;
+  array_literal_providers: bool;
   max_literal_length: int;
   max_trace_depth: int;
   max_workers: int;
@@ -175,6 +176,8 @@ val enforce_local_inference_annotations : t -> bool
 val enforce_class_annotations : t -> bool
 
 val local_inference_annotation_dirs : t -> string list
+
+val array_literal_providers : t -> bool
 
 val enforce_this_annotations : t -> bool
 

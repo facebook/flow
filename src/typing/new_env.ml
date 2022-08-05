@@ -1059,7 +1059,7 @@ module New_env = struct
       | Env_api.EmptyArrayWrite (reason, arr_providers) ->
         let (elem_t, elems, reason) =
           let element_reason = mk_reason Reason.unknown_elem_empty_array_desc loc in
-          if ALocSet.cardinal arr_providers > 0 then (
+          if Context.array_literal_providers cx && ALocSet.cardinal arr_providers > 0 then (
             let ts =
               ALocSet.elements arr_providers
               |> Base.List.map ~f:(fun loc ->

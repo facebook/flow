@@ -377,23 +377,6 @@ References:
                 ^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- emp_arr.js:9:2
-
-Cannot cast `x` to array type because number [1] is incompatible with string [2] in array element. [incompatible-cast]
-
-   emp_arr.js:9:2
-   9| (x: Array<number>);
-       ^
-
-References:
-   emp_arr.js:9:11
-   9| (x: Array<number>);
-                ^^^^^^ [1]
-   emp_arr.js:4:12
-   4|     x.push('a')
-                 ^^^ [2]
-
-
 Error ----------------------------------------------------------------------------------------------------- enum.js:7:12
 
 Cannot assign `10` to `y` because number [1] is incompatible with `W` [2]. [incompatible-type]
@@ -1201,4 +1184,4 @@ undefined. [incompatible-return]
 
 
 
-Found 81 errors
+Found 80 errors
