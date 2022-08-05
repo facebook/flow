@@ -1,2 +1,2 @@
 [options]
-experimental.env_mode=enforced
+inference_mode=experimental.lti

@@ -1,5 +1,5 @@
 [options]
-experimental.env_mode=resolved
+inference_mode=constrain_writes
 experimental.cycle_errors=true
 enums=true
 no_flowlib=false

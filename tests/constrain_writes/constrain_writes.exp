@@ -546,20 +546,6 @@ References:
              ^^^^^^^^^^^^^^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------------- wiki_examples.js:88:21
-
-Cannot call `oneBranchAssigned.toUpperCase` because property `toUpperCase` is missing in `Number` [1]. [prop-missing]
-
-   wiki_examples.js:88:21
-   88|   oneBranchAssigned.toUpperCase(); // Error: `oneBranchAssigned` may be uninitialized
-                           ^^^^^^^^^^^
-
-References:
-   wiki_examples.js:89:23
-   89|   oneBranchAssigned = 42; // Error `oneBranchAssigned` has type `string`
-                             ^^ [1]
-
-
 Error ------------------------------------------------------------------------------------------- wiki_examples.js:89:23
 
 Cannot assign `42` to `oneBranchAssigned` because number [1] is incompatible with string [2]. All writes to
@@ -583,7 +569,7 @@ References:
 
 
 
-Found 28 errors
+Found 27 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

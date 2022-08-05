@@ -1,2 +1,2 @@
 [options]
-experimental.env_mode=constrain_writes
+inference_mode=constrain_writes

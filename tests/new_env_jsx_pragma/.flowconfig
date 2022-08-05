@@ -1,2 +1,2 @@
 [options]
-experimental.env_mode=ssa
+inference_mode=constrain_writes
