@@ -26,6 +26,8 @@ type hint_decomposition =
   | Decomp_Await
   (* Type of `o` in `o.m(..)` becomes the type of `o.m` *)
   | Decomp_MethodName of string
+  (* Type of `o` in `o.#m(..)` becomes the type of `o.m` *)
+  | Decomp_MethodPrivateName of string * ALoc.t list
   (* Type of `o` in `o[e](..)` becomes the type of `o[e]` *)
   | Decomp_MethodElem
   (* Type of `C` in `new C(..)` becomes the type of the constructor of C *)
@@ -56,6 +58,7 @@ let string_of_hint_unknown_kind = function
   | Decomp_ArrElement i -> Utils_js.spf "Decomp_ArrElement (%d)" i
   | Decomp_ArrSpread i -> Utils_js.spf "Decomp_ArrSpread (%d)" i
   | Decomp_MethodName _ -> "Decomp_MethodName"
+  | Decomp_MethodPrivateName _ -> "Decomp_MethodPrivateName"
   | Decomp_MethodElem -> "Decomp_MethodElem"
   | Decomp_CallNew -> "Decomp_CallNew"
   | Decomp_CallSuper -> "Decomp_CallSuper"

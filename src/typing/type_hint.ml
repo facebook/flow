@@ -195,6 +195,30 @@ let type_of_hint_decomposition cx op loc t =
       | Decomp_MethodElem ->
         get_method_type t (Computed (DefT (dummy_reason, bogus_trust (), StrT AnyLiteral)))
       | Decomp_MethodName name -> get_method_type t (Named (dummy_reason, OrdinaryName name))
+      | Decomp_MethodPrivateName (name, class_stack) ->
+        let env = Context.environment cx in
+        Context.set_environment cx { env with Loc_env.class_stack };
+        let class_entries = New_env.New_env.get_class_entries cx in
+        let t =
+          Tvar.mk_where cx dummy_reason (fun prop_t ->
+              Flow_js.flow
+                cx
+                ( t,
+                  PrivateMethodT
+                    ( unknown_use,
+                      dummy_reason,
+                      dummy_reason,
+                      name,
+                      class_entries,
+                      false,
+                      NoMethodAction,
+                      prop_t
+                    )
+                )
+          )
+        in
+        Context.set_environment cx env;
+        annot true t
       | Decomp_ObjProp name ->
         let t =
           Tvar.mk_no_wrap_where cx dummy_reason (fun tout ->

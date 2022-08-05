@@ -13,6 +13,7 @@ type hint_decomposition =
   | Decomp_ArrSpread of int
   | Decomp_Await
   | Decomp_MethodName of string
+  | Decomp_MethodPrivateName of string * ALoc.t list
   | Decomp_MethodElem
   | Decomp_CallNew
   | Decomp_CallSuper

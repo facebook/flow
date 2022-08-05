@@ -238,6 +238,24 @@ end = struct
     | _ -> failwith "Must have a last statement that's an expression"
 end
 
+let fun_t ~params ~return_t =
+  let open Type in
+  DefT
+    ( dummy_reason,
+      bogus_trust (),
+      FunT
+        ( Unsoundness.dummy_static_any dummy_reason,
+          {
+            this_t = (Unsoundness.unresolved_any dummy_reason, This_Function);
+            params;
+            rest_param = None;
+            return_t;
+            is_predicate = false;
+            def_reason = dummy_reason;
+          }
+        )
+    )
+
 let mk_cx ~verbose () =
   let master_cx = TypeLoader.get_master_cx () in
   let aloc_table = lazy (ALoc.empty_table dummy_filename) in
@@ -263,6 +281,73 @@ let mk_eval_hint_test ~expected base ops ctxt =
     |> Base.Option.value_map ~default:"None" ~f:(Ty_normalizer.debug_string_of_t cx)
   in
   (* DEBUGGING TIP: set [~verbose:true] above to print traces *)
+  assert_equal ~ctxt ~printer:Base.Fn.id expected actual
+
+let mk_private_method_eval_hint_test
+    ~expected
+    ~static
+    ?private_field
+    ?private_static_field
+    ?private_method
+    ?private_static_method
+    ctxt =
+  let open Type in
+  let cx = mk_cx ~verbose:false () in
+  let env = Context.environment cx in
+  let mk_propertries = function
+    | None -> NameUtils.Map.empty |> Context.generate_property_map cx
+    | Some property ->
+      NameUtils.Map.singleton (OrdinaryName "bar") property |> Context.generate_property_map cx
+  in
+  let class_bindings =
+    {
+      class_binding_id = ALoc.id_none;
+      class_private_fields = mk_propertries private_field;
+      class_private_static_fields = mk_propertries private_static_field;
+      class_private_methods = mk_propertries private_method;
+      class_private_static_methods = mk_propertries private_static_method;
+    }
+  in
+  let class_stack_loc = ALoc.none in
+  Context.set_environment
+    cx
+    {
+      env with
+      Loc_env.class_bindings = Loc_collections.ALocMap.singleton class_stack_loc class_bindings;
+    };
+  let base =
+    DefT
+      ( dummy_reason,
+        bogus_trust (),
+        InstanceT
+          ( ObjProtoT dummy_reason,
+            ObjProtoT dummy_reason,
+            [],
+            {
+              class_id = ALoc.id_none;
+              type_args = [];
+              own_props = Context.generate_property_map cx NameUtils.Map.empty;
+              proto_props = Context.generate_property_map cx NameUtils.Map.empty;
+              inst_call_t = None;
+              initialized_fields = SSet.empty;
+              initialized_static_fields = SSet.empty;
+              has_unknown_react_mixins = false;
+              inst_kind = ClassKind;
+            }
+          )
+      )
+  in
+  let base =
+    if static then
+      DefT (dummy_reason, bogus_trust (), ClassT base)
+    else
+      base
+  in
+  let actual =
+    mk_hint base [Decomp_MethodPrivateName ("bar", [class_stack_loc])]
+    |> Type_hint.evaluate_hint cx dummy_loc
+    |> Base.Option.value_map ~default:"None" ~f:(Ty_normalizer.debug_string_of_t cx)
+  in
   assert_equal ~ctxt ~printer:Base.Fn.id expected actual
 
 let mk_eval_hint_test_with_type_setup ~expected type_setup_code ops ctxt =
@@ -409,6 +494,52 @@ let eval_hint_tests =
     >:: mk_eval_hint_test ~expected:"() => number" "{foo: () => number}" [Decomp_MethodName "foo"];
     "method_elem_from_dict"
     >:: mk_eval_hint_test ~expected:"() => number" "{[string]: () => number}" [Decomp_MethodElem];
+    "instance_private_method_call_from_method"
+    >:: mk_private_method_eval_hint_test
+          ~expected:"() => void"
+          ~static:false
+          ~private_method:
+            Type.(
+              Method
+                ( Some ALoc.none,
+                  fun_t ~params:[] ~return_t:(VoidT.make dummy_reason (bogus_trust ()))
+                )
+            );
+    "instance_private_method_call_from_static_method"
+    >:: mk_private_method_eval_hint_test
+          ~expected:"() => void"
+          ~static:true
+          ~private_static_method:
+            Type.(
+              Method
+                ( Some ALoc.none,
+                  fun_t ~params:[] ~return_t:(VoidT.make dummy_reason (bogus_trust ()))
+                )
+            );
+    "instance_private_method_call_from_field"
+    >:: mk_private_method_eval_hint_test
+          ~expected:"() => void"
+          ~static:false
+          ~private_field:
+            Type.(
+              Field
+                ( Some ALoc.none,
+                  fun_t ~params:[] ~return_t:(VoidT.make dummy_reason (bogus_trust ())),
+                  Polarity.Neutral
+                )
+            );
+    "instance_private_method_call_from_static_field"
+    >:: mk_private_method_eval_hint_test
+          ~expected:"() => void"
+          ~static:true
+          ~private_static_field:
+            Type.(
+              Field
+                ( Some ALoc.none,
+                  fun_t ~params:[] ~return_t:(VoidT.make dummy_reason (bogus_trust ())),
+                  Polarity.Neutral
+                )
+            );
     "call_new_from_class"
     >:: mk_eval_hint_test_with_type_setup
           ~expected:"(bar: number, baz: boolean) => void"
