@@ -594,6 +594,21 @@ if (f(x)) {
     (3, 12) to (3, 13) =>
     illegal scc: (((2, 9) to (2, 10)); ((7, 2) to (7, 3))) |}]
 
+let%expect_test "refi_sentinel" =
+  print_order_test {|
+declare var x: mixed;
+let y;
+
+if (x.type === 1) {
+  y = x;
+}
+  |};
+  [%expect {|
+    (2, 12) to (2, 13) =>
+    (5, 4) to (5, 10) =>
+    (5, 15) to (5, 16) =>
+    (6, 2) to (6, 3) |}]
+
 let%expect_test "declare_class" =
   print_order_test {|
 declare class C mixins S { }

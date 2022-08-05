@@ -142,6 +142,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) = struct
             | InstanceOfR ((_loc, _) as exp)
             | LatentR { func = (_loc, _) as exp; _ } ->
               ignore (this#expression exp)
+            | SentinelR (_prop, loc) -> this#add ~why:loc (Env_api.ExpressionLoc, loc)
             | AndR (l, r)
             | OrR (l, r) ->
               writes_of_refinement l;
@@ -157,7 +158,6 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) = struct
             | NumberR _
             | ObjectR
             | StringR _
-            | SentinelR _
             | SymbolR _
             | SingletonBoolR _
             | SingletonStrR _
