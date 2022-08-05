@@ -1286,7 +1286,22 @@ class def_finder env_entries providers toplevel_scope =
           when Flow_ast_utils.is_call_to_is_array callee ->
           this#visit_expression ~hint:Hint_None ~cond:OtherConditionalTest expr
         | _ ->
-          let call_argumemts_hint = Hint_t (ValueHint callee) in
+          let call_argumemts_hint =
+            match callee with
+            | (_, Ast.Expression.Member { Ast.Expression.Member._object; property; comments = _ })
+              ->
+              let base_hint = Hint_t (ValueHint _object) in
+              (match property with
+              | Ast.Expression.Member.PropertyIdentifier (_, { Ast.Identifier.name; comments = _ })
+                ->
+                decompose_hint (Decomp_MethodName name) base_hint
+              | Ast.Expression.Member.PropertyPrivateName (_, { Ast.PrivateName.name; comments = _ })
+                ->
+                decompose_hint (Decomp_MethodPrivateName (name, class_stack)) base_hint
+              | Ast.Expression.Member.PropertyExpression _ ->
+                decompose_hint Decomp_MethodElem base_hint)
+            | _ -> Hint_t (ValueHint callee)
+          in
           Base.List.iteri arguments ~f:(fun i arg ->
               let hint = decompose_hint (Decomp_FuncParam i) call_argumemts_hint in
               match arg with

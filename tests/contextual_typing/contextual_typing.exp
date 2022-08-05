@@ -23,5 +23,52 @@ Internal error: unconstrained tvar during tvar resolution
                ^
 
 
+Error ----------------------------------------------------------------------------------------------------- test.js:13:1
 
-Found 2 errors
+Internal error: read of Env_api.Make.FunctionThisLoc entry which has not been prepared for typechecking
+
+       v-----------------
+   13| function test2() {
+   14|   declare class Foo {
+   15|     bar<T>(f: (string) => T): T
+   16|   }
+   17|   declare var foo: Foo;
+   18|
+   19|   const c = foo.bar((a) => a);
+   20|   (c: string);
+   21|
+   22|   class Bar {
+   23|     #baz<T>(f: (string) => T): T {
+   24|       return f("");
+   25|     }
+   26|
+   27|     test() {
+   28|       const c = this.#baz((a) => a);
+   29|       (c: string);
+   30|     }
+   31|   }
+   32| }
+       ^
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:22:9
+
+Internal error: unconstrained tvar during tvar resolution
+
+   22|   class Bar {
+               ^^^
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:23:5
+
+Missing an annotation on computed method. [missing-local-annot]
+
+           v-----------------------------
+   23|     #baz<T>(f: (string) => T): T {
+   24|       return f("");
+   25|     }
+           ^
+
+
+
+Found 5 errors

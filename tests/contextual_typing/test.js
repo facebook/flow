@@ -9,3 +9,24 @@ function test1() {
   let f2: (string) => string = (a) => (a: string); // ok
   f2 = (b) => (b: string); // ok
 }
+
+function test2() {
+  declare class Foo {
+    bar<T>(f: (string) => T): T
+  }
+  declare var foo: Foo;
+
+  const c = foo.bar((a) => a);
+  (c: string);
+
+  class Bar {
+    #baz<T>(f: (string) => T): T {
+      return f("");
+    }
+
+    test() {
+      const c = this.#baz((a) => a);
+      (c: string);
+    }
+  }
+}
