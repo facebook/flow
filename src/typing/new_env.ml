@@ -717,7 +717,6 @@ module New_env = struct
   let set_expr cx _key loc ~refined ~original:_ =
     let env = Context.environment cx in
     Debug_js.Verbose.print_if_verbose cx [spf "set expr at location %s" (Reason.string_of_aloc loc)];
-    check_readable cx Env_api.OrdinaryNameLoc loc;
     match (Loc_env.find_ordinary_write env loc, Context.env_mode cx) with
     | (_, Options.(SSAEnv (Reordered | Enforced)))
     (* Fully resolved env doesn't need to write here *)
