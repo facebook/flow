@@ -613,14 +613,7 @@ let mk_program ?(loc = Loc.none) ?(comments = None) ?(all_comments = []) stmts =
 
 let ast_of_string ~parser str =
   let parse_options =
-    Some
-      {
-        Parser_env.enums = true;
-        esproposal_decorators = true;
-        esproposal_export_star_as = true;
-        types = true;
-        use_strict = false;
-      }
+    Some { Parser_env.enums = true; esproposal_decorators = true; types = true; use_strict = false }
   in
 
   let env = Parser_env.init_env ~token_sink:None ~parse_options None str in

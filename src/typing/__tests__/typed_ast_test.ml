@@ -66,14 +66,7 @@ let metadata =
 (* somewhat copied from Flow_dot_js *)
 let parse_content file content =
   let parse_options =
-    Some
-      {
-        Parser_env.enums = true;
-        esproposal_decorators = true;
-        esproposal_export_star_as = true;
-        types = true;
-        use_strict = false;
-      }
+    Some { Parser_env.enums = true; esproposal_decorators = true; types = true; use_strict = false }
   in
 
   let (ast, _parse_errors) =

@@ -125,9 +125,6 @@ end = struct
           | "esproposal_decorators" ->
             get_bool k v >>= fun v ->
             return (test_opts, { opts with Parser_env.esproposal_decorators = v })
-          | "esproposal_export_star_as" ->
-            get_bool k v >>= fun v ->
-            return (test_opts, { opts with Parser_env.esproposal_export_star_as = v })
           | "types" ->
             get_bool k v >>= fun v -> return (test_opts, { opts with Parser_env.types = v })
           | "use_strict" ->

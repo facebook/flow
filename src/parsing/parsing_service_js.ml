@@ -121,7 +121,6 @@ let parse_source_file ~types ~use_strict content file =
          *)
         Parser_env.enums = true;
         esproposal_decorators = true;
-        esproposal_export_star_as = true;
         types;
         use_strict;
       }
@@ -132,13 +131,7 @@ let parse_source_file ~types ~use_strict content file =
 let parse_package_json_file ~node_main_fields content file =
   let parse_options =
     Some
-      {
-        Parser_env.enums = false;
-        esproposal_decorators = false;
-        esproposal_export_star_as = false;
-        types = true;
-        use_strict = false;
-      }
+      { Parser_env.enums = false; esproposal_decorators = false; types = true; use_strict = false }
   in
 
   match Parser_flow.package_json_file ~parse_options content (Some file) with

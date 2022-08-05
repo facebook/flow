@@ -119,7 +119,6 @@ type t =
   | DeclareExportConst
   | DeclareExportType
   | DeclareExportInterface
-  | UnexpectedExportStarAs
   | DuplicateExport of string
   | UnsupportedDecorator
   | MissingTypeParamDefault
@@ -369,8 +368,6 @@ module PP = struct
     | DeclareExportType -> "`declare export type` is not supported. Use `export type` instead."
     | DeclareExportInterface ->
       "`declare export interface` is not supported. Use `export interface` instead."
-    | UnexpectedExportStarAs ->
-      "`export * as` is an early-stage proposal and is not enabled by default. To enable support in the parser, use the `esproposal_export_star_as` option"
     | DuplicateExport export -> Printf.sprintf "Duplicate export for `%s`" export
     | UnsupportedDecorator -> "Found a decorator in an unsupported position."
     | MissingTypeParamDefault ->

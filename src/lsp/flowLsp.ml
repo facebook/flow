@@ -1059,14 +1059,7 @@ let parse_and_cache (state : server_state) (uri : Lsp.DocumentUri.t) :
   let parse_options =
     let flowconfig = get_flowconfig state in
     let use_strict = FlowConfig.modules_are_use_strict flowconfig in
-    Some
-      {
-        Parser_env.enums = true;
-        esproposal_decorators = true;
-        esproposal_export_star_as = true;
-        types = true;
-        use_strict;
-      }
+    Some { Parser_env.enums = true; esproposal_decorators = true; types = true; use_strict }
   in
 
   let parse file =

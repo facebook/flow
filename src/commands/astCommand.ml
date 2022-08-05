@@ -153,7 +153,6 @@ let main
             {
               Parser_env.enums = not no_enums;
               esproposal_decorators = true;
-              esproposal_export_star_as = true;
               types = true;
               use_strict;
             }

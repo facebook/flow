@@ -29,7 +29,6 @@ let parse_content file content =
          * can be surfaced (rather than a more cryptic parse error).
          *)
         esproposal_decorators = true;
-        esproposal_export_star_as = true;
         types = true;
         use_strict = false;
       }

@@ -12,14 +12,7 @@ open Utils_js
 open OUnit2
 
 let parse_options =
-  Some
-    {
-      Parser_env.enums = true;
-      esproposal_decorators = true;
-      esproposal_export_star_as = true;
-      types = true;
-      use_strict = false;
-    }
+  Some { Parser_env.enums = true; esproposal_decorators = true; types = true; use_strict = false }
 
 class useless_mapper =
   object (this)

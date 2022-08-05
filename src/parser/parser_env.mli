@@ -31,7 +31,6 @@ type token_sink_result = {
 type parse_options = {
   enums: bool;  (** enable parsing of Flow enums *)
   esproposal_decorators: bool;  (** enable parsing of decorators *)
-  esproposal_export_star_as: bool;  (** enable parsing of `export * as` syntax *)
   types: bool;  (** enable parsing of Flow types *)
   use_strict: bool;  (** treat the file as strict, without needing a "use strict" directive *)
 }

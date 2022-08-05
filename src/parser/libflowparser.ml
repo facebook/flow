@@ -54,7 +54,6 @@ let convert_options opts =
         match k with
         | "enums" -> ({ opts with enums = v }, tokens)
         | "esproposal_decorators" -> ({ opts with esproposal_decorators = v }, tokens)
-        | "esproposal_export_star_as" -> ({ opts with esproposal_export_star_as = v }, tokens)
         | "types" -> ({ opts with types = v }, tokens)
         | "use_strict" -> ({ opts with use_strict = v }, tokens)
         | "tokens" -> (opts, v)

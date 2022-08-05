@@ -1646,16 +1646,10 @@ module Statement
           let loc = Peek.loc env in
           Expect.token env T_MULT;
           let local_name =
-            let parse_export_star_as = (parse_options env).esproposal_export_star_as in
             match Peek.token env with
             | T_IDENTIFIER { raw = "as"; _ } ->
               Eat.token env;
-              if parse_export_star_as then
-                Some (Parse.identifier env)
-              else (
-                error env Parse_error.UnexpectedTypeDeclaration;
-                None
-              )
+              Some (Parse.identifier env)
             | _ -> None
           in
           let specifiers = Some (ExportBatchSpecifier (loc, local_name)) in
@@ -1784,17 +1778,11 @@ module Statement
             (* declare export * from 'foo' *)
             let loc = Peek.loc env in
             Expect.token env T_MULT;
-            let parse_export_star_as = (parse_options env).esproposal_export_star_as in
             let local_name =
               match Peek.token env with
               | T_IDENTIFIER { raw = "as"; _ } ->
                 Eat.token env;
-                if parse_export_star_as then
-                  Some (Parse.identifier env)
-                else (
-                  error env Parse_error.UnexpectedTypeDeclaration;
-                  None
-                )
+                Some (Parse.identifier env)
               | _ -> None
             in
             let specifiers =

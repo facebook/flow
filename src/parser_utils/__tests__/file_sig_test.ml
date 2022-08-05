@@ -567,9 +567,7 @@ let tests =
          );
          ( "export_ns" >:: fun ctxt ->
            let source = "export * as ns from 'foo'" in
-           let parse_options =
-             Parser_env.{ default_parse_options with esproposal_export_star_as = true }
-           in
+           let parse_options = Parser_env.default_parse_options in
            let { module_sig = { module_kind; requires }; _ } = visit ~parse_options source in
            assert_es module_kind;
            match requires with
@@ -629,9 +627,7 @@ let tests =
          );
          ( "declare_export_ns" >:: fun ctxt ->
            let source = "declare export * as ns from 'foo'" in
-           let parse_options =
-             Parser_env.{ default_parse_options with esproposal_export_star_as = true }
-           in
+           let parse_options = Parser_env.default_parse_options in
            let { module_sig = { module_kind; requires }; _ } = visit ~parse_options source in
            assert_es module_kind;
            match requires with

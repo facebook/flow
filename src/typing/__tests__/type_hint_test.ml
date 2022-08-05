@@ -77,13 +77,7 @@ end = struct
   let parse_type content =
     let parse_options =
       Some
-        {
-          Parser_env.enums = true;
-          esproposal_decorators = true;
-          esproposal_export_star_as = true;
-          types = true;
-          use_strict = false;
-        }
+        { Parser_env.enums = true; esproposal_decorators = true; types = true; use_strict = false }
     in
     (* the parser expects a colon *)
     let content = ": " ^ content in
@@ -136,7 +130,6 @@ end = struct
            * can be surfaced (rather than a more cryptic parse error).
            *)
           esproposal_decorators = true;
-          esproposal_export_star_as = true;
           types = true;
           use_strict = false;
         }

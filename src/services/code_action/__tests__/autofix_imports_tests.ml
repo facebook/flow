@@ -34,9 +34,7 @@ let dedent_trim str =
   String.trim (String.concat "\n" lines) ^ "\n"
 
 let parse contents =
-  let parse_options =
-    Some Parser_env.{ default_parse_options with enums = true; esproposal_export_star_as = true }
-  in
+  let parse_options = Some Parser_env.{ default_parse_options with enums = true } in
 
   let (ast, _errors) = Parser_flow.program ~parse_options contents in
   ast
