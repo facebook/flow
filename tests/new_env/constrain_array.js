@@ -20,4 +20,10 @@ w.push([42]);
 
 var u = [];
 u[0] = 'a';
-u.push(42); // err
+u.push(42); // error
+
+function foo() {
+  var xin = [];
+  xin.push(42);
+  xin.push('a') // error
+}

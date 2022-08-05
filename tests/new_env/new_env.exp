@@ -119,13 +119,27 @@ Error --------------------------------------------------------------------------
 Cannot call `u.push` because number [1] is incompatible with string [2] in array element. [incompatible-call]
 
    constrain_array.js:23:8
-   23| u.push(42); // err
+   23| u.push(42); // error
               ^^ [1]
 
 References:
    constrain_array.js:22:8
    22| u[0] = 'a';
               ^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------- constrain_array.js:28:12
+
+Cannot call `xin.push` because string [1] is incompatible with number [2] in array element. [incompatible-call]
+
+   constrain_array.js:28:12
+   28|   xin.push('a') // error
+                  ^^^ [1]
+
+References:
+   constrain_array.js:27:12
+   27|   xin.push(42);
+                  ^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------------- globals.js:4:2
@@ -643,4 +657,4 @@ References:
 
 
 
-Found 39 errors
+Found 40 errors

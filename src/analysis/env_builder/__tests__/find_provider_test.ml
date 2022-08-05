@@ -791,4 +791,14 @@ x.push(42);
 x = [10];
          "
                "[(1, 4) to (1, 5)] array providers: [(2, 7) to (2, 9)]";
+         "arr9"
+         >:: mk_provider_loc_test
+               (mk_loc (2, 6) (2, 7))
+               "
+function foo() {
+  var x = [];
+  x.push(42);
+}
+         "
+               "[(2, 6) to (2, 7)] array providers: [(3, 9) to (3, 11)]";
        ]

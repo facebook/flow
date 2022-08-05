@@ -996,11 +996,11 @@ end = struct
 
   (* This visitor finds variable assignments that are not declarations and adds them to the providers for that variable
      if appropriate. *)
-  class find_providers ~env () =
+  class find_providers ~env:init_env () =
     object (this)
       inherit
         [find_providers_cx] finder
-          ~env
+          ~env:init_env
           ~cx:{ mk_state = (fun n -> Value n) }
           ~enter_lex_child:enter_existing_lex_child as super
 
@@ -1108,6 +1108,7 @@ end = struct
                   _;
                 }
             ) ->
+            let (env, _) = this#acc in
             let state = state_of_var name env in
             begin
               match state with
