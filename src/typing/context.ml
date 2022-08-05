@@ -204,6 +204,7 @@ type t = {
   trust_constructor: unit -> Trust.trust_rep;
   mutable declare_module_ref: Module_info.t option;
   mutable environment: Loc_env.t;
+  mutable in_synthesis_mode: bool;
   node_cache: Node_cache.t;
 }
 
@@ -362,6 +363,7 @@ let make ccx metadata file aloc_table phase =
     trust_constructor = Trust.literal_trust;
     declare_module_ref = None;
     environment = Loc_env.empty Scope.Global;
+    in_synthesis_mode = false;
     node_cache = Node_cache.mk_empty ();
   }
 
@@ -591,6 +593,8 @@ let inferred_indexers cx = cx.ccx.inferred_indexers
 
 let environment cx = cx.environment
 
+let in_synthesis_mode cx = cx.in_synthesis_mode
+
 let any_propagation cx = cx.metadata.any_propagation
 
 let node_cache cx = cx.node_cache
@@ -792,6 +796,8 @@ let add_exists_check cx loc t =
 let set_exists_excuses cx exists_excuses = cx.ccx.exists_excuses <- exists_excuses
 
 let set_environment cx env = cx.environment <- env
+
+let set_in_synthesis_mode cx in_synthesis_mode = cx.in_synthesis_mode <- in_synthesis_mode
 
 (* Given a sig context, it makes sense to clear the parts that are shared with
    the master sig context. Why? The master sig context, which contains global
