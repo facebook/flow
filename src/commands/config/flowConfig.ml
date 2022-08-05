@@ -379,15 +379,6 @@ module Opts = struct
 
   let json = opt optparse_json
 
-  (* TODO: remove once .flowconfigs no longer use this setting *)
-  let new_check_parser =
-    boolean (fun opts v ->
-        if v then
-          Ok opts
-        else
-          Error "New check mode can no longer be disabled."
-    )
-
   let incremental_revdeps_parser = boolean (fun opts v -> Ok { opts with incremental_revdeps = v })
 
   let max_files_checked_per_worker_parser =
@@ -807,7 +798,6 @@ module Opts = struct
       ("experimental.facebook_module_interop", facebook_module_interop_parser);
       ("experimental.local_inference_annotation_dirs", local_inference_annotation_dirs);
       ("experimental.module.automatic_require_default", automatic_require_default_parser);
-      ("experimental.new_check", new_check_parser);
       ("experimental.incremental_revdeps", incremental_revdeps_parser);
       ("experimental.react.server_component_ext", react_server_component_exts_parser);
       ("experimental.refactor", boolean (fun opts v -> Ok { opts with refactor = Some v }));
