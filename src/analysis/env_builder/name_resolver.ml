@@ -2217,10 +2217,10 @@ module Make
           ignore @@ this#expression rhs;
           let reason = mk_reason RSomeProperty loc in
           let assigned_val = Val.one reason in
-          this#assign_member ~update_entry member loc assigned_val reason
+          this#assign_member ~update_entry ~delete:false member loc assigned_val reason
         | _ -> statement_error
 
-      method assign_member ~update_entry lhs_member lhs_loc assigned_val val_reason =
+      method assign_member ~update_entry ~delete lhs_member lhs_loc assigned_val val_reason =
         this#post_assignment_heap_refinement_havoc lhs_member;
         (* We pass allow_optional:false, but optional chains can't be in the LHS anyway. *)
         let lookup = RefinementKey.lookup_of_member lhs_member ~allow_optional:false in
@@ -2234,10 +2234,14 @@ module Make
             lookup
             (fun _ -> assigned_val)
             ~create_val_for_heap:(lazy assigned_val);
-          let write_entries =
-            EnvMap.add_ordinary lhs_loc (Env_api.AssigningWrite val_reason) env_state.write_entries
-          in
-          env_state <- { env_state with write_entries }
+          if not delete then
+            let write_entries =
+              EnvMap.add_ordinary
+                lhs_loc
+                (Env_api.AssigningWrite val_reason)
+                env_state.write_entries
+            in
+            env_state <- { env_state with write_entries }
         | _ -> ()
 
       (* This method is called after assigning a member expression but _before_ the refinement for
@@ -3645,7 +3649,7 @@ module Make
             update_write_entries ~assigning:false;
             add_output err)
         | (_, Flow_ast.Expression.Member member) ->
-          this#assign_member ~update_entry:true member loc undefined undefined_reason
+          this#assign_member ~update_entry:true ~delete:true member loc undefined undefined_reason
         | _ -> ()
 
       method! unary_expression loc (expr : (ALoc.t, ALoc.t) Ast.Expression.Unary.t) =

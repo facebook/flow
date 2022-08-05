@@ -6,5 +6,18 @@ Internal error: unconstrained tvar during tvar resolution
             ^
 
 
+Error ------------------------------------------------------------------------------------------ regression_tests.js:3:1
 
-Found 1 error
+Internal error: read of Env_api.Make.FunctionThisLoc entry which has not been prepared for typechecking
+
+      v-------------------------------------------
+   3| function no_missing_env_entry_for_delete() {
+   4|   declare var foo: {bar: string | void};
+   5|   delete foo.bar; // ok
+   6|   (foo.bar: void); // ok
+   7| }
+      ^
+
+
+
+Found 2 errors

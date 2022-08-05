@@ -6491,6 +6491,42 @@ declare module F { }
           (2, 15) to (2, 16): (module `F`)
         }] |}]
 
+let%expect_test "delete_member" =
+  print_ssa_test {|
+delete foo.bar;
+foo.bar;
+invalidation();
+foo.bar;
+foo.bar = 3;
+foo.bar;
+|};
+    [%expect {|
+      [
+        (2, 7) to (2, 10) => {
+          Global foo
+        };
+        (3, 0) to (3, 3) => {
+          Global foo
+        };
+        (3, 0) to (3, 7) => {
+          undefined
+        };
+        (4, 0) to (4, 12) => {
+          Global invalidation
+        };
+        (5, 0) to (5, 3) => {
+          Global foo
+        };
+        (6, 0) to (6, 3) => {
+          Global foo
+        };
+        (7, 0) to (7, 3) => {
+          Global foo
+        };
+        (7, 0) to (7, 7) => {
+          (6, 0) to (6, 7): (some property)
+        }] |}]
+
 let%expect_test "exclude_syms" =
   let exclude_syms =
     NameUtils.Set.empty
