@@ -403,6 +403,22 @@ let eval_hint_tests =
     >:: mk_eval_hint_test ~expected:"{+[string]: number}" "{+[string]: number}" [Decomp_ObjSpread];
     "obj_rest_from_dict_negative_polarity"
     >:: mk_eval_hint_test ~expected:"{-[string]: number}" "{-[string]: number}" [Decomp_ObjSpread];
+    "method_name_from_instance"
+    >:: mk_eval_hint_test ~expected:"() => string" "string" [Decomp_MethodName "toString"];
+    "method_name_from_object"
+    >:: mk_eval_hint_test ~expected:"() => number" "{foo: () => number}" [Decomp_MethodName "foo"];
+    "method_elem_from_dict"
+    >:: mk_eval_hint_test ~expected:"() => number" "{[string]: () => number}" [Decomp_MethodElem];
+    "call_new_from_class"
+    >:: mk_eval_hint_test_with_type_setup
+          ~expected:"(bar: number, baz: boolean) => void"
+          "class Foo { constructor(bar: number, baz: boolean) {} }; Foo"
+          [Decomp_CallNew];
+    "call_super"
+    >:: mk_eval_hint_test_with_type_setup
+          ~expected:"(bar: number, baz: boolean) => void"
+          "class Foo { constructor(bar: number, baz: boolean) {} }; new Foo()"
+          [Decomp_CallSuper];
     "jsx_props_of_class_component"
     >:: mk_eval_hint_test_with_type_setup
           ~expected:"{bar: string, foo: number}"

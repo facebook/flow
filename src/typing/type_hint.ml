@@ -69,6 +69,17 @@ let type_of_hint_decomposition cx op loc t =
       )
   in
 
+  let get_method_type t propref =
+    let t =
+      Tvar.mk_where cx dummy_reason (fun prop_t ->
+          Flow_js.flow
+            cx
+            (t, MethodT (unknown_use, dummy_reason, dummy_reason, propref, NoMethodAction, prop_t))
+      )
+    in
+    annot true t
+  in
+
   in_sandbox_cx cx (fun () ->
       match op with
       | Decomp_ArrElement i ->
@@ -114,11 +125,16 @@ let type_of_hint_decomposition cx op loc t =
         in
         annot true t
       | Decomp_CallNew ->
-        (* TODO *)
-        failwith "Not implemented"
-      | Decomp_CallSuper ->
-        (* TODO *)
-        failwith "Not implemented"
+        (* For `new A(...)`, The initial base type we have is `Class<A>`. We need to first unwrap
+           it, so that we can access the `constructor` method (which is considered an instance
+           method). *)
+        let this_t =
+          Tvar.mk_where cx dummy_reason (fun t' ->
+              Flow_js.unify cx t (DefT (dummy_reason, bogus_trust (), ClassT t'))
+          )
+        in
+        get_method_type this_t (Named (dummy_reason, OrdinaryName "constructor"))
+      | Decomp_CallSuper -> get_method_type t (Named (dummy_reason, OrdinaryName "constructor"))
       | Decomp_FuncParam i ->
         let t =
           Tvar.mk_where cx dummy_reason (fun param_t ->
@@ -177,11 +193,8 @@ let type_of_hint_decomposition cx op loc t =
         in
         annot true t
       | Decomp_MethodElem ->
-        (* TODO *)
-        failwith "Not implemented"
-      | Decomp_MethodName _ ->
-        (* TODO *)
-        failwith "Not implemented"
+        get_method_type t (Computed (DefT (dummy_reason, bogus_trust (), StrT AnyLiteral)))
+      | Decomp_MethodName name -> get_method_type t (Named (dummy_reason, OrdinaryName name))
       | Decomp_ObjProp name ->
         let t =
           Tvar.mk_no_wrap_where cx dummy_reason (fun tout ->
