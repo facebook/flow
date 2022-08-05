@@ -4327,7 +4327,7 @@ module Make
               ( _,
                 Expression.Member
                   {
-                    Expression.Member._object = (obj_loc, _) as _object;
+                    Expression.Member._object;
                     property =
                       ( Expression.Member.PropertyIdentifier
                           (ploc, { Identifier.name = prop_name; _ })
@@ -4349,16 +4349,11 @@ module Make
                     Context.add_new_env_matching_props cx (prop_name, other_loc, def_loc)
                 )
               );
-              let obj_reason = mk_reason (RefinementKey.reason_desc refinement_key) obj_loc in
               let write_entries =
-                EnvMap.add_ordinary
-                  obj_loc
-                  (Env_api.AssigningWrite obj_reason)
-                  (EnvMap.add
-                     (Env_api.ExpressionLoc, other_loc)
-                     (Env_api.AssigningWrite reason)
-                     env_state.write_entries
-                  )
+                EnvMap.add
+                  (Env_api.ExpressionLoc, other_loc)
+                  (Env_api.AssigningWrite reason)
+                  env_state.write_entries
               in
               env_state <- { env_state with write_entries };
               let refinement =
