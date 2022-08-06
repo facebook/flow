@@ -121,9 +121,9 @@ with refinements.
 
 The default value is `false`.
 
-#### `inference_mode` _`(classic | constrain-writes)`_ {% since 0.184.0 %} <a class="toc" id="toc-inference-mode-classic-constrain-writes" href="#toc-inference-mode-classic-constrain-writes"></a>
+#### `inference_mode` _`(classic | constrain_writes)`_ {% since 0.184.0 %} <a class="toc" id="toc-inference-mode-classic-constrain-writes" href="#toc-inference-mode-classic-constrain-writes"></a>
 
-Setting this to `constrain-writes` will enable the constrained-writes inference mode.
+Setting this to `constrain_writes` will enable the constrained-writes inference mode.
 
 For more info, see the [constrained-writes docs](/en/docs/lang/constrained-writes).
 
