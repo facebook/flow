@@ -7,7 +7,8 @@
     flow_typing
     heap_shared_mem
     test_injector_config
-    ))
+    )
+  (action (run %{test} -runner sequential)))
 
 (test
   (name typed_ast_test)
