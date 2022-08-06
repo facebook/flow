@@ -97,6 +97,67 @@ function bar<a>(): b {}
     ]);
   });
 
+  test('does not touch AST when no errors match the given code', async () => {
+    expect(
+      await addCommentsToCode(
+        '',
+        'code2',
+        `function foo() {}`,
+        [
+          {
+            loc: {
+              start: {line: 1, column: 13, offset: 13},
+              end: {line: 1, column: 14, offset: 14},
+            },
+            isError: true,
+            lints: new Set(),
+            error_codes: ['code1'],
+          },
+        ],
+        flowBinPath,
+      ),
+    ).toEqual([`function foo() {}`, 0]);
+  });
+
+  test('only suppresses errors matching the given code', async () => {
+    expect(
+      await addCommentsToCode(
+        '',
+        'code2',
+        `function foo() {}
+function bar<a>(): b {}
+`,
+        [
+          {
+            loc: {
+              start: {line: 1, column: 13, offset: 13},
+              end: {line: 1, column: 14, offset: 14},
+            },
+            isError: true,
+            lints: new Set(),
+            error_codes: ['code1'],
+          },
+          {
+            loc: {
+              start: {line: 2, column: 16, offset: 34},
+              end: {line: 2, column: 17, offset: 35},
+            },
+            isError: true,
+            lints: new Set(),
+            error_codes: ['code2'],
+          },
+        ],
+        flowBinPath,
+      ),
+    ).toEqual([
+      `function foo() {}
+// $FlowFixMe[code2]
+function bar<a>(): b {}
+`,
+      1,
+    ]);
+  });
+
   test('function return', async () => {
     expect(
       await addCommentsToCode(

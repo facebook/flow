@@ -187,6 +187,9 @@ async function addCommentsToCode(
     if (error_code != null) {
       error_codes = error_codes.filter(c => c === error_code);
     }
+    if (error_codes.length === 0) {
+      continue;
+    }
 
     const path = getPathToLoc(loc, ast);
 
