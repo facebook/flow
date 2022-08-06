@@ -278,7 +278,7 @@ module SimpleTypedRunner (C : SIMPLE_TYPED_RUNNER_CONFIG) : TYPED_RUNNER_CONFIG 
   let reporter = C.reporter
 
   let merge_and_check env workers options profiling roots ~iteration =
-    Transaction.with_transaction (fun transaction ->
+    Transaction.with_transaction "codemod" (fun transaction ->
         let reader = Mutator_state_reader.create transaction in
 
         (* Calculate dependencies that need to be merged *)
@@ -342,7 +342,7 @@ module TypedRunnerWithPrepass (C : TYPED_RUNNER_WITH_PREPASS_CONFIG) : TYPED_RUN
       roots
 
   let merge_and_check env workers options profiling roots ~iteration =
-    Transaction.with_transaction (fun transaction ->
+    Transaction.with_transaction "codemod" (fun transaction ->
         let reader = Mutator_state_reader.create transaction in
 
         (* Calculate dependencies that need to be merged *)
@@ -524,7 +524,7 @@ module UntypedRunner (C : UNTYPED_RUNNER_CONFIG) : STEP_RUNNER = struct
         let filename_set = get_target_filename_set ~options:file_options ~libs ~all roots in
         let next = Parsing_service_js.next_of_filename_set workers filename_set in
 
-        Transaction.with_transaction (fun transaction ->
+        Transaction.with_transaction "codemod" (fun transaction ->
             let reader = Mutator_state_reader.create transaction in
             let%lwt {
                   Parsing_service_js.parsed = roots;

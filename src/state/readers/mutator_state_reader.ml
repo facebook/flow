@@ -9,8 +9,12 @@
 
 type t = unit
 
-let commit () = SharedMem.commit_transaction ()
+let commit () =
+  Hh_logger.info "Committing mutator";
+  SharedMem.commit_transaction ()
 
-let rollback () = ()
+let rollback () =
+  Hh_logger.info "Rolling back mutator";
+  ()
 
 let create transaction = Transaction.add ~commit ~rollback transaction

@@ -9,4 +9,4 @@ type t
 
 val add : commit:(unit -> unit) -> rollback:(unit -> unit) -> t -> unit
 
-val with_transaction : (t -> 'a Lwt.t) -> 'a Lwt.t
+val with_transaction : string -> (t -> 'a Lwt.t) -> 'a Lwt.t

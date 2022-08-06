@@ -1816,8 +1816,8 @@ end = struct
     Lwt.return { env with ServerEnv.errors }
 end
 
-let with_transaction f =
-  Transaction.with_transaction @@ fun transaction ->
+let with_transaction name f =
+  Transaction.with_transaction name @@ fun transaction ->
   let reader = Mutator_state_reader.create transaction in
   f transaction reader
 
@@ -1833,7 +1833,7 @@ let recheck
     ~will_be_checked_files =
   let%lwt (env, stats, record_recheck_time, first_internal_error) =
     Memory_utils.with_memory_profiling_lwt ~profiling (fun () ->
-        with_transaction (fun transaction reader ->
+        with_transaction "recheck" (fun transaction reader ->
             Recheck.full
               ~profiling
               ~transaction
@@ -1987,7 +1987,7 @@ let assert_valid_hashes updates invalid_hashes =
 
 let init_from_saved_state ~profiling ~workers ~saved_state ~updates options =
   let%lwt (env, libs_ok) =
-    with_transaction @@ fun transaction reader ->
+    with_transaction "init" @@ fun transaction reader ->
     let file_options = Options.file_options options in
     (* We don't want to walk the file system for the checked in files. But we still need to find the
      * flowlibs *)
@@ -2196,7 +2196,7 @@ let init_from_saved_state ~profiling ~workers ~saved_state ~updates options =
     let%lwt env =
       let rec try_update updated_files =
         try%lwt
-          with_transaction @@ fun transaction reader ->
+          with_transaction "lazy init update deps" @@ fun transaction reader ->
           Recheck.parse_and_update_dependency_info
             ~profiling
             ~transaction
@@ -2219,7 +2219,7 @@ let init_from_saved_state ~profiling ~workers ~saved_state ~updates options =
 
 let init_from_scratch ~profiling ~workers options =
   let file_options = Options.file_options options in
-  with_transaction @@ fun transaction reader ->
+  with_transaction "init" @@ fun transaction reader ->
   (* TODO - explicitly order the libs.
    *
    * Should we let the filesystem dictate the order that we merge libs? Are we sheep? No! We are
@@ -2394,7 +2394,7 @@ let init ~profiling ~workers options =
 
 let full_check ~profiling ~options ~workers ?focus_targets env =
   let { ServerEnv.files = parsed; dependency_info; errors; _ } = env in
-  with_transaction (fun transaction reader ->
+  with_transaction "full check" (fun transaction reader ->
       let%lwt input = files_to_infer ~options ~focus_targets ~profiling ~parsed ~dependency_info in
       let sig_dependent_files = FilenameSet.empty in
       let all_dependent_files = FilenameSet.empty in

@@ -14,18 +14,22 @@ type t = mutator list ref
 
 let add ~commit ~rollback transaction = transaction := { commit; rollback } :: !transaction
 
-let commit transaction = List.iter (fun mutator -> mutator.commit ()) !transaction
+let commit name transaction =
+  Hh_logger.info "Committing transaction: %s" name;
+  List.iter (fun mutator -> mutator.commit ()) !transaction
 
-let rollback transaction = List.iter (fun mutator -> mutator.rollback ()) !transaction
+let rollback name transaction =
+  Hh_logger.info "Rolling back transaction: %s" name;
+  List.iter (fun mutator -> mutator.rollback ()) !transaction
 
-let with_transaction f =
+let with_transaction name f =
   let transaction = ref [] in
   let%lwt result =
     try%lwt f transaction with
     | exn ->
       let exn = Exception.wrap exn in
-      let () = rollback transaction in
+      let () = rollback name transaction in
       Exception.reraise exn
   in
-  let () = commit transaction in
+  let () = commit name transaction in
   Lwt.return result

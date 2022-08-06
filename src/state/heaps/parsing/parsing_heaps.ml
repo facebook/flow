@@ -1313,7 +1313,7 @@ module Reparse_mutator = struct
     changed_files := files;
 
     let commit () =
-      Hh_logger.debug "Committing parsing heaps";
+      Hh_logger.info "Committing reparse";
       Mutator_cache.clear ();
       Reader_cache.remove_batch !changed_files;
       FileHeap.remove_batch !not_found_files;
@@ -1321,7 +1321,7 @@ module Reparse_mutator = struct
     in
 
     let rollback () =
-      Hh_logger.debug "Rolling back parsing heaps";
+      Hh_logger.info "Rolling back reparse";
       Mutator_cache.clear ();
       rollback_changed options;
       reset_refs ()
@@ -1352,10 +1352,13 @@ module Commit_modules_mutator = struct
     | Modulename.Filename file_key -> FileModuleHeap.remove file_key
 
   let commit () =
+    Hh_logger.info "Committing modules";
     MSet.iter remove_module !to_remove;
     reset_refs ()
 
-  let rollback () = reset_refs ()
+  let rollback () =
+    Hh_logger.info "Rolling back modules";
+    reset_refs ()
 
   let create transaction = Transaction.add ~commit ~rollback transaction
 
@@ -1394,8 +1397,11 @@ module Resolved_requires_mutator = struct
       | _ -> ())
 
   let create transaction options files =
-    let commit () = () in
-    let rollback () = FilenameSet.iter (rollback_resolved_requires options) files in
+    let commit () = Hh_logger.info "Committing resolved requires" in
+    let rollback () =
+      Hh_logger.info "Rolling back resolved requires";
+      FilenameSet.iter (rollback_resolved_requires options) files
+    in
     Transaction.add ~commit ~rollback transaction;
     options
 
@@ -1445,10 +1451,12 @@ module Merge_context_mutator = struct
       entity_rollback (get_leader parse);
       entity_rollback (get_sig_hash parse)
 
-  let commit () = dirty_files := FilenameSet.empty
+  let commit () =
+    Hh_logger.info "Committing merge";
+    dirty_files := FilenameSet.empty
 
   let rollback () =
-    Hh_logger.debug "Rolling back context heaps";
+    Hh_logger.info "Rolling back merge";
     FilenameSet.iter rollback_leader !dirty_files;
     dirty_files := FilenameSet.empty
 
