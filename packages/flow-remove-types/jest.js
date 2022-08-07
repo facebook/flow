@@ -11,6 +11,8 @@ var flowRemoveTypes = require('./index');
 
 module.exports = {
   process: function (src, filename) {
-    return flowRemoveTypes(src).toString();
+    return {
+      code: flowRemoveTypes(src).toString()
+    }
   },
 };
