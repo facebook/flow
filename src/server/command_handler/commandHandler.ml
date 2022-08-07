@@ -1290,7 +1290,7 @@ let get_ephemeral_handler genv command =
 let send_command_summary profiling name =
   MonitorRPC.send_telemetry
     (LspProt.Command_summary { name; duration = Profiling_js.get_profiling_duration profiling });
-  MonitorRPC.status_update ~event:ServerStatus.Finishing_up
+  MonitorRPC.status_update ~event:ServerStatus.Handling_request_end
 
 let send_ephemeral_response ~profiling ~client_context ~cmd_str ~request_id result =
   send_command_summary profiling cmd_str;

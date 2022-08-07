@@ -35,6 +35,7 @@ type event =
   | Finishing_up  (** Server's finishing up typechecking or other work *)
   | Recheck_start  (** The server is starting to recheck *)
   | Handling_request_start  (** The server is starting to handle an ephemeral/persistent request *)
+  | Handling_request_end  (** The server is done handling an ephemeral/persistent request *)
   | GC_start  (** The server is starting to GC *)
   | Collating_errors_start  (** The server is collating the errors *)
   | Watchman_wait_start of deadline option  (** The server is now blocked waiting for Watchman *)
@@ -154,6 +155,7 @@ let string_of_event = function
   | Finishing_up -> "Finishing_up"
   | Recheck_start -> "Recheck_start"
   | Handling_request_start -> "Handling_request_start"
+  | Handling_request_end -> "Handling_request_end"
   | GC_start -> "GC_start"
   | Collating_errors_start -> "Collating_errors_start"
   | Watchman_wait_start _deadline -> "Watchman_wait_start"
@@ -237,7 +239,6 @@ let update ~event ~status =
   | (Ready, _) -> Free
   | (Init_start, _) -> Typechecking (Initializing, Starting_typecheck)
   | (Recheck_start, _) -> Typechecking (Rechecking, Starting_typecheck)
-  | (Handling_request_start, _) -> Typechecking (Handling_request, Starting_typecheck)
   | (Fetch_saved_state_delay message, Typechecking (mode, _)) ->
     Typechecking (mode, Fetching_saved_state message)
   | (Read_saved_state, Typechecking (mode, _)) -> Typechecking (mode, Reading_saved_state)
@@ -257,6 +258,20 @@ let update ~event ~status =
     Typechecking (mode, Waiting_for_watchman deadline)
   | (Finishing_up, Typechecking (mode, _)) -> Typechecking (mode, Finishing_typecheck)
   | (GC_start, _) -> Garbage_collecting
+  | (Handling_request_start, _) ->
+    (match status with
+    | Typechecking _ ->
+      (* commands running in parallel with a recheck should not take precedence
+         over the recheck's status *)
+      status
+    | _ -> Typechecking (Handling_request, Starting_typecheck))
+  | (Handling_request_end, _) ->
+    (match status with
+    | Typechecking (Handling_request, _) ->
+      (* as above, parallel rechecks take precedence, so only finish handling a
+         request if that's still the most important thing we're doing. *)
+      Typechecking (Handling_request, Finishing_typecheck)
+    | _ -> status)
   | _ ->
     (* This is a bad transition. In dev mode, let's blow up since something is wrong. However in
      * production let's soldier on. Usually this means that we forgot to send something like

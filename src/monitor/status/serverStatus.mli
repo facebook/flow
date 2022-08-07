@@ -28,6 +28,7 @@ type event =
   | Finishing_up
   | Recheck_start
   | Handling_request_start
+  | Handling_request_end
   | GC_start
   | Collating_errors_start
   | Watchman_wait_start of deadline option
