@@ -278,28 +278,31 @@ let is_free = function
   | _ -> false
 
 (** Returns true iff the transition from old_status to new_status is "significant", which is a
-    pretty arbitrary judgement of how interesting the new status is to a user, given that they
-    already have seen the old status *)
+    pretty arbitrary judgement of how interesting the new status is to a user. Significant
+    transitions are pushed to the user immediately; insignificant transitions are throttled. *)
 let is_significant_transition old_status new_status =
   (* If the statuses are literally the same, then the transition is not significant *)
   old_status <> new_status
   &&
   match (old_status, new_status) with
+  | (_, Typechecking (_, Starting_typecheck))
+  | (_, Typechecking (_, Finishing_typecheck)) ->
+    (* These are very short transition statuses that aren't important unless
+       they take a long time for some reason. *)
+    false
   | (Typechecking (old_mode, old_tc_status), Typechecking (new_mode, new_tc_status)) ->
     (* A change in mode is always signifcant *)
     old_mode <> new_mode
     ||
     begin
       match (old_tc_status, new_tc_status) with
-      (* Making progress within parsing, merging or canceling is not significant *)
       | (Parsing _, Parsing _)
       | (Indexing _, Indexing _)
       | (Merging _, Merging _)
       | (Checking _, Checking _)
       | (Canceling _, Canceling _) ->
+        (* Making progress within parsing, merging or canceling is not significant *)
         false
-      (* But changing typechecking status always is significant *)
-      | (_, Starting_typecheck)
       | (_, Fetching_saved_state _)
       | (_, Reading_saved_state)
       | (_, Loading_saved_state _)
@@ -311,16 +314,20 @@ let is_significant_transition old_status new_status =
       | (_, Checking _)
       | (_, Canceling _)
       | (_, Waiting_for_watchman _)
-      | (_, Collating_errors)
-      | (_, Finishing_typecheck) ->
+      | (_, Collating_errors) ->
+        (* But changing typechecking status always is significant *)
         true
+      | (_, Starting_typecheck)
+      | (_, Finishing_typecheck) ->
+        (* also handled above *)
+        false
     end
-  (* Switching to a completely different status is always significant *)
   | (_, Starting_up)
   | (_, Free)
   | (_, Typechecking _)
   | (_, Garbage_collecting)
   | (_, Unknown) ->
+    (* Switching to a completely different status is always significant *)
     true
 
 let get_progress status =
