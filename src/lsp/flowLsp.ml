@@ -171,13 +171,6 @@ let string_of_state (state : state) : string =
   | Initialized server_state -> string_of_server_state server_state
   | Post_shutdown -> "Post_shutdown"
 
-let denorm_string_of_event (event : event) : string =
-  match event with
-  | Server_message response ->
-    Printf.sprintf "Server_message(%s)" (LspProt.string_of_message_from_server response)
-  | Client_message (c, _) -> Printf.sprintf "Client_message(%s)" (Lsp_fmt.denorm_message_to_string c)
-  | Tick -> "Tick"
-
 let to_stdout (json : Hh_json.json) : unit =
   (* Extra \r\n purely for easier logfile reading; not required by protocol. *)
   let s = Hh_json.json_to_string json ^ "\r\n\r\n" in
@@ -2265,13 +2258,9 @@ and main_handle_initialized_unsafe flowconfig_name (state : server_state) (event
     let version_mismatch_strategy = SocketHandshake.Error_client in
     let server_state = try_connect ~version_mismatch_strategy flowconfig_name env in
     Ok (server_state, LogNotNeeded)
-  | (_, Server_message _) ->
-    failwith
-      (Printf.sprintf
-         "In state %s, unexpected event %s"
-         (string_of_server_state state)
-         (denorm_string_of_event event)
-      )
+  | (Disconnected _, Server_message _) ->
+    (* this is impossible, a disconnected server can't send a message *)
+    Ok (state, LogNotNeeded)
   | (_, Tick) -> Ok (state, LogNotNeeded)
 
 and main_handle_unsafe flowconfig_name (state : state) (event : event) :
@@ -2411,13 +2400,11 @@ and main_handle_unsafe flowconfig_name (state : state) (event : event) :
       (Error.LspException
          { Error.code = Error.RequestCancelled; message = "Server shutting down"; data = None }
       )
-  | (_, Server_message _) ->
-    failwith
-      (Printf.sprintf
-         "In state %s, unexpected event %s"
-         (string_of_state state)
-         (denorm_string_of_event event)
-      )
+  | (Pre_init _, Server_message _)
+  | (Post_shutdown, Server_message _) ->
+    (* this is impossible. get_next_event can only read a server event from
+       an Initialized state. *)
+    Ok (state, LogNotNeeded)
   | (_, Tick) -> Ok (state, LogNotNeeded)
 
 and main_log_command (state : state) (metadata : LspProt.metadata) : unit =

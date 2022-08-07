@@ -232,22 +232,6 @@ let string_of_response = function
       (string_of_request request)
       stack
 
-let string_of_message_from_server = function
-  | RequestResponse (response, _) -> string_of_response response
-  | NotificationFromServer notification ->
-    begin
-      match notification with
-      | Errors _ -> "errors"
-      | StartRecheck -> "startRecheck"
-      | EndRecheck _ -> "endRecheck"
-      | ServerExit code -> "serverExit_" ^ Exit.to_string code
-      | Please_hold (server_status, watcher_status) ->
-        Printf.sprintf
-          "pleaseHold_server=%s_watcher=%s"
-          (ServerStatus.string_of_status server_status)
-          (FileWatcherStatus.string_of_status watcher_status)
-    end
-
 type message_from_server_mapper = {
   of_live_errors_failure: message_from_server_mapper -> live_errors_failure -> live_errors_failure;
   of_live_errors_response:
