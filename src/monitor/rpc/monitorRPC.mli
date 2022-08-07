@@ -24,4 +24,6 @@ val request_failed : request_id:MonitorProt.request_id -> exn_str:string -> unit
 val respond_to_persistent_connection :
   client_id:LspProt.client_id -> response:LspProt.message_from_server -> unit
 
+val send_telemetry : LspProt.telemetry_from_server -> unit
+
 val status_update : event:ServerStatus.event -> unit

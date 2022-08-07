@@ -10,20 +10,6 @@ type progress = {
   finished: int;
 }
 
-type summary_info =
-  | RecheckSummary of {
-      dependent_file_count: int;
-      changed_file_count: int;
-      top_cycle: (File_key.t * int) option;  (** name of cycle leader, and size of cycle *)
-    }
-  | CommandSummary of string
-  | InitSummary
-
-type summary = {
-  duration: float;
-  info: summary_info;
-}
-
 type deadline = float
 
 type event =
@@ -39,7 +25,7 @@ type event =
   | Merging_progress of progress
   | Checking_progress of progress
   | Canceling_progress of progress
-  | Finishing_up of summary
+  | Finishing_up
   | Recheck_start
   | Handling_request_start
   | GC_start
@@ -64,9 +50,5 @@ val is_free : status -> bool
 val is_significant_transition : status -> status -> bool
 
 val get_progress : status -> string option * int option * int option
-
-val get_summary : status -> summary option
-
-val log_of_summaries : root:Path.t -> summary list -> FlowEventLogger.persistent_delay
 
 val change_init_to_restart : restart_reason option -> status -> status

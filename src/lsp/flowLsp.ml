@@ -123,7 +123,7 @@ and connected_env = {
   c_ienv: initialized_env;
   c_conn: server_conn;
   c_server_status: ServerStatus.status * FileWatcherStatus.status option;
-  c_recent_summaries: (float * ServerStatus.summary) list;  (** newest at head of list *)
+  c_recent_summaries: (float * LspProt.telemetry_from_server) list;  (** newest at head of list *)
   c_about_to_exit_code: FlowExit.t option;
   c_is_rechecking: bool;  (** stateful handling of Errors+status from server... *)
   c_lazy_stats: ServerProt.Response.lazy_stats option;
@@ -185,6 +185,98 @@ let update_ienv f state =
   match state with
   | Connected cenv -> Connected { cenv with c_ienv = f cenv.c_ienv }
   | Disconnected denv -> Disconnected { denv with d_ienv = f denv.d_ienv }
+
+(** We keep a log of typecheck summaries over the past 2mins. *)
+let update_recent_summaries cenv summary =
+  let new_time = Unix.gettimeofday () in
+  let c_recent_summaries =
+    (new_time, summary) :: cenv.c_recent_summaries
+    |> List.filter ~f:(fun (t, _) -> t >= new_time -. 120.0)
+  in
+  { cenv with c_recent_summaries }
+
+let log_of_summaries ~(root : Path.t) (summaries : LspProt.telemetry_from_server list) :
+    FlowEventLogger.persistent_delay =
+  FlowEventLogger.(
+    let init =
+      {
+        init_duration = 0.0;
+        command_count = 0;
+        command_duration = 0.0;
+        command_worst = None;
+        command_worst_duration = None;
+        recheck_count = 0;
+        recheck_dependent_files = 0;
+        recheck_changed_files = 0;
+        recheck_duration = 0.0;
+        recheck_worst_duration = None;
+        recheck_worst_dependent_file_count = None;
+        recheck_worst_changed_file_count = None;
+        recheck_worst_cycle_leader = None;
+        recheck_worst_cycle_size = None;
+      }
+    in
+    let f acc event =
+      match event with
+      | LspProt.Init_summary { duration } ->
+        let acc = { acc with init_duration = acc.init_duration +. duration } in
+        acc
+      | LspProt.Command_summary { name = cmd; duration } ->
+        let is_worst =
+          match acc.command_worst_duration with
+          | None -> true
+          | Some d -> duration >= d
+        in
+        let acc =
+          if not is_worst then
+            acc
+          else
+            { acc with command_worst = Some cmd; command_worst_duration = Some duration }
+        in
+        let acc =
+          {
+            acc with
+            command_count = acc.command_count + 1;
+            command_duration = acc.command_duration +. duration;
+          }
+        in
+        acc
+      | LspProt.Recheck_summary
+          { stats = { LspProt.dependent_file_count; changed_file_count; top_cycle }; duration } ->
+        let is_worst =
+          match acc.recheck_worst_duration with
+          | None -> true
+          | Some d -> duration >= d
+        in
+        let acc =
+          if not is_worst then
+            acc
+          else
+            {
+              acc with
+              recheck_worst_duration = Some duration;
+              recheck_worst_dependent_file_count = Some dependent_file_count;
+              recheck_worst_changed_file_count = Some changed_file_count;
+              recheck_worst_cycle_size = Base.Option.map top_cycle ~f:(fun (_, size) -> size);
+              recheck_worst_cycle_leader =
+                Base.Option.map top_cycle ~f:(fun (f, _) ->
+                    f |> File_key.to_string |> Files.relative_path (Path.to_string root)
+                );
+            }
+        in
+        let acc =
+          {
+            acc with
+            recheck_count = acc.recheck_count + 1;
+            recheck_dependent_files = acc.recheck_dependent_files + dependent_file_count;
+            recheck_changed_files = acc.recheck_changed_files + changed_file_count;
+            recheck_duration = acc.recheck_duration +. duration;
+          }
+        in
+        acc
+    in
+    Base.List.fold summaries ~init ~f
+  )
 
 let get_root (state : server_state) : Path.t = (get_ienv state).i_root
 
@@ -885,13 +977,6 @@ let close_conn (env : connected_env) : unit =
       comes back from the client, we ignore ones that are destined for
       now-defunct servers, and only forward on the ones for the current
       server.
-    OUTSTANDING_PROGRESS - for all server->lsp progress notifications
-      which are being displayed in the client. Added to this list when
-      we track_from_server(progress) a non-empty progress; removed
-      when we track_from_server(progress) an empty progress. When a
-      server dies, we synthesize progress notifications to the client
-      so it can erase all outstanding progress messages.
-    OUTSTANDING_ACTION_REQUIRED - similar to outstanding_progress.
  *)
 
 type track_effect = { changed_live_uri: Lsp.DocumentUri.t option }
@@ -2222,20 +2307,12 @@ and main_handle_initialized_unsafe flowconfig_name (state : server_state) (event
       open_files;
 
     Ok (state, LogNotNeeded)
+  | (Connected cenv, Server_message LspProt.(NotificationFromServer (Telemetry event))) ->
+    let cenv = update_recent_summaries cenv event in
+    Ok (Connected cenv, LogNotNeeded)
   | (Connected cenv, Server_message LspProt.(NotificationFromServer (Please_hold status))) ->
     let (server_status, watcher_status) = status in
-    let c_server_status = (server_status, Some watcher_status) in
-    (* We keep a log of typecheck summaries over the past 2mins. *)
-    let c_recent_summaries = cenv.c_recent_summaries in
-    let new_time = Unix.gettimeofday () in
-    let summary = ServerStatus.get_summary server_status in
-    let c_recent_summaries =
-      Base.Option.value_map summary ~default:c_recent_summaries ~f:(fun summary ->
-          (new_time, summary) :: cenv.c_recent_summaries
-          |> List.filter ~f:(fun (t, _) -> t >= new_time -. 120.0)
-      )
-    in
-    let cenv = { cenv with c_server_status; c_recent_summaries } in
+    let cenv = { cenv with c_server_status = (server_status, Some watcher_status) } in
     let cenv = show_connected_status cenv in
     Ok (Connected cenv, LogNotNeeded)
   | (Disconnected env, Tick) ->
@@ -2471,7 +2548,7 @@ and main_log_command (state : state) (metadata : LspProt.metadata) : unit =
     if delays = [] then
       None
     else
-      Some (ServerStatus.log_of_summaries ~root delays)
+      Some (log_of_summaries ~root delays)
   in
   match error_info with
   | None ->

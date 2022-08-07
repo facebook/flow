@@ -32,8 +32,7 @@ val recheck :
   changed_mergebase:bool option ->
   recheck_reasons:LspProt.recheck_reason list ->
   will_be_checked_files:CheckedSet.t ref ->
-  ((profiling:Profiling_js.finished -> unit Lwt.t) * ServerStatus.summary_info * ServerEnv.env)
-  Lwt.t
+  ((profiling:Profiling_js.finished -> unit Lwt.t) * LspProt.recheck_stats * ServerEnv.env) Lwt.t
 
 (* initial (full) check *)
 val full_check :

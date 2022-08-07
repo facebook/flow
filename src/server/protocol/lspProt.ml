@@ -178,6 +178,23 @@ type response =
 
 type response_with_metadata = response * metadata
 
+type recheck_stats = {
+  dependent_file_count: int;
+  changed_file_count: int;
+  top_cycle: (File_key.t * int) option;  (** name of cycle leader, and size of cycle *)
+}
+
+type telemetry_from_server =
+  | Init_summary of { duration: float }
+  | Recheck_summary of {
+      stats: recheck_stats;
+      duration: float;
+    }
+  | Command_summary of {
+      name: string;
+      duration: float;
+    }
+
 type notification_from_server =
   | Errors of {
       diagnostics: Lsp.PublishDiagnostics.diagnostic list Lsp.UriMap.t;
@@ -187,6 +204,7 @@ type notification_from_server =
   | EndRecheck of ServerProt.Response.lazy_stats
   | ServerExit of Exit.t  (** only used for the subset of exits which client handles *)
   | Please_hold of (ServerStatus.status * FileWatcherStatus.status)
+  | Telemetry of telemetry_from_server
 
 type message_from_server =
   | RequestResponse of response_with_metadata
@@ -283,7 +301,8 @@ let default_message_from_server_mapper ~(lsp_mapper : Lsp_mapper.t) =
         | EndRecheck stats -> EndRecheck stats
         | ServerExit exit_status -> ServerExit exit_status
         | Please_hold (server_status, file_watcher_status) ->
-          Please_hold (server_status, file_watcher_status));
+          Please_hold (server_status, file_watcher_status)
+        | Telemetry t -> Telemetry t);
     of_response =
       (fun mapper response ->
         match response with

@@ -1287,17 +1287,13 @@ let get_ephemeral_handler genv command =
      * of date data. So save-state is not parallelizable *)
     Handle_nonparallelizable (handle_save_state ~saved_state_filename:outfile ~genv)
 
-let send_finished_status_update profiling cmd_str =
-  let event =
-    ServerStatus.(
-      Finishing_up
-        { duration = Profiling_js.get_profiling_duration profiling; info = CommandSummary cmd_str }
-    )
-  in
-  MonitorRPC.status_update ~event
+let send_command_summary profiling name =
+  MonitorRPC.send_telemetry
+    (LspProt.Command_summary { name; duration = Profiling_js.get_profiling_duration profiling });
+  MonitorRPC.status_update ~event:ServerStatus.Finishing_up
 
 let send_ephemeral_response ~profiling ~client_context ~cmd_str ~request_id result =
-  send_finished_status_update profiling cmd_str;
+  send_command_summary profiling cmd_str;
   match result with
   | Ok (ret, response, json_data) ->
     FlowEventLogger.ephemeral_command_success ~json_data ~client_context ~profiling;
@@ -2524,7 +2520,7 @@ let send_persistent_response ~profiling ~client request result =
   Persistent_connection.send_response response client;
   Hh_logger.info "Persistent response: %s" (LspProt.string_of_response lsp_response);
   (* we'll send this "Finishing_up" event only after sending the LSP response *)
-  send_finished_status_update profiling (LspProt.string_of_request request);
+  send_command_summary profiling (LspProt.string_of_request request);
   ret
 
 let wrap_persistent_handler

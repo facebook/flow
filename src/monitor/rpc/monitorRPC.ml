@@ -75,6 +75,8 @@ let request_failed ~request_id ~exn_str = send ~msg:(RequestFailed (request_id, 
 let respond_to_persistent_connection ~client_id ~response =
   send ~msg:(PersistentConnectionResponse (client_id, response))
 
+let send_telemetry t = send ~msg:(Telemetry t)
+
 (* Send a status update to the monitor *)
 let status_update =
   (* Remember the last status so that we only send updates when something changes *)

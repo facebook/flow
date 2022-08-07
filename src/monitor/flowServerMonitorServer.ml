@@ -149,6 +149,16 @@ end = struct
     | MonitorProt.StatusUpdate status ->
       StatusStream.update ~status;
       Lwt.return_unit
+    | MonitorProt.Telemetry event ->
+      PersistentConnectionMap.get_all_clients ()
+      |> Base.List.iter ~f:(fun connection ->
+             ignore
+               (PersistentConnection.write
+                  ~msg:LspProt.(NotificationFromServer (Telemetry event))
+                  connection
+               )
+         );
+      Lwt.return_unit
     | MonitorProt.PersistentConnectionResponse (client_id, response) ->
       (match PersistentConnectionMap.get ~client_id with
       | None -> Logger.error "Failed to look up persistent client #%d" client_id

@@ -255,13 +255,9 @@ let run ~monitor_channels ~init_id ~shared_mem_config options =
       let%lwt (profiling, (env, last_estimates, first_internal_error)) =
         Profiling_js.with_profiling_lwt program_init ~label:"Init" ~should_print_summary
       in
-      let event =
-        ServerStatus.(
-          Finishing_up
-            { duration = Profiling_js.get_profiling_duration profiling; info = InitSummary }
-        )
-      in
-      MonitorRPC.status_update ~event;
+      MonitorRPC.send_telemetry
+        (LspProt.Init_summary { duration = Profiling_js.get_profiling_duration profiling });
+      MonitorRPC.status_update ~event:ServerStatus.Finishing_up;
 
       let saved_state_fetcher = string_of_saved_state_fetcher options in
 
@@ -362,13 +358,9 @@ let check_once ~init_id ~shared_mem_config ~format_errors ?focus_targets options
     in
     print_errors profiling;
 
-    let event =
-      ServerStatus.(
-        Finishing_up
-          { duration = Profiling_js.get_profiling_duration profiling; info = InitSummary }
-      )
-    in
-    MonitorRPC.status_update ~event;
+    MonitorRPC.send_telemetry
+      (LspProt.Init_summary { duration = Profiling_js.get_profiling_duration profiling });
+    MonitorRPC.status_update ~event:ServerStatus.Finishing_up;
 
     let saved_state_fetcher = string_of_saved_state_fetcher options in
 

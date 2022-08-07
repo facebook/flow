@@ -17,20 +17,6 @@ type progress = {
   finished: int;
 }
 
-type summary_info =
-  | RecheckSummary of {
-      dependent_file_count: int;
-      changed_file_count: int;
-      top_cycle: (File_key.t * int) option;  (** name of cycle leader, and size of cycle *)
-    }
-  | CommandSummary of string
-  | InitSummary
-
-type summary = {
-  duration: float;
-  info: summary_info;
-}
-
 type deadline = float
 
 type event =
@@ -46,7 +32,7 @@ type event =
   | Merging_progress of progress
   | Checking_progress of progress
   | Canceling_progress of progress
-  | Finishing_up of summary  (** Server's finishing up typechecking or other work *)
+  | Finishing_up  (** Server's finishing up typechecking or other work *)
   | Recheck_start  (** The server is starting to recheck *)
   | Handling_request_start  (** The server is starting to handle an ephemeral/persistent request *)
   | GC_start  (** The server is starting to GC *)
@@ -66,7 +52,7 @@ type typecheck_status =
   | Checking of progress
   | Canceling of progress
   | Collating_errors  (** We sometimes collate errors during typecheck *)
-  | Finishing_typecheck of summary  (** haven't reached free state yet *)
+  | Finishing_typecheck  (** haven't reached free state yet *)
   | Waiting_for_watchman of deadline option
 
 type restart_reason =
@@ -165,7 +151,7 @@ let string_of_event = function
   | Merging_progress progress -> spf "Merging_progress %s" (string_of_progress progress)
   | Checking_progress progress -> spf "Checking_progress files %s" (string_of_progress progress)
   | Canceling_progress progress -> spf "Canceling_progress %s" (string_of_progress progress)
-  | Finishing_up _ -> "Finishing_up"
+  | Finishing_up -> "Finishing_up"
   | Recheck_start -> "Recheck_start"
   | Handling_request_start -> "Handling_request_start"
   | GC_start -> "GC_start"
@@ -211,7 +197,7 @@ let string_of_typecheck_status ~use_emoji = function
       | None -> ""
     in
     spf "%swaiting for Watchman%s" (render_emoji ~use_emoji Eyes) timeout
-  | Finishing_typecheck _ -> spf "%sfinishing up" (render_emoji ~use_emoji Cookie)
+  | Finishing_typecheck -> spf "%sfinishing up" (render_emoji ~use_emoji Cookie)
 
 let string_of_restart_reason = function
   | Server_out_of_date -> "restarting due to change which cannot be handled incrementally"
@@ -269,8 +255,7 @@ let update ~event ~status =
   | (Collating_errors_start, Typechecking (mode, _)) -> Typechecking (mode, Collating_errors)
   | (Watchman_wait_start deadline, Typechecking (mode, _)) ->
     Typechecking (mode, Waiting_for_watchman deadline)
-  | (Finishing_up summary, Typechecking (mode, _)) ->
-    Typechecking (mode, Finishing_typecheck summary)
+  | (Finishing_up, Typechecking (mode, _)) -> Typechecking (mode, Finishing_typecheck)
   | (GC_start, _) -> Garbage_collecting
   | _ ->
     (* This is a bad transition. In dev mode, let's blow up since something is wrong. However in
@@ -327,7 +312,7 @@ let is_significant_transition old_status new_status =
       | (_, Canceling _)
       | (_, Waiting_for_watchman _)
       | (_, Collating_errors)
-      | (_, Finishing_typecheck _) ->
+      | (_, Finishing_typecheck) ->
         true
     end
   (* Switching to a completely different status is always significant *)
@@ -352,93 +337,6 @@ let get_progress status =
   | Typechecking (_, Canceling progress) ->
     print progress
   | _ -> (None, None, None)
-
-let get_summary status =
-  match status with
-  | Typechecking (_mode, Finishing_typecheck summary) -> Some summary
-  | _ -> None
-
-let log_of_summaries ~(root : Path.t) (summaries : summary list) : FlowEventLogger.persistent_delay
-    =
-  FlowEventLogger.(
-    let init =
-      {
-        init_duration = 0.0;
-        command_count = 0;
-        command_duration = 0.0;
-        command_worst = None;
-        command_worst_duration = None;
-        recheck_count = 0;
-        recheck_dependent_files = 0;
-        recheck_changed_files = 0;
-        recheck_duration = 0.0;
-        recheck_worst_duration = None;
-        recheck_worst_dependent_file_count = None;
-        recheck_worst_changed_file_count = None;
-        recheck_worst_cycle_leader = None;
-        recheck_worst_cycle_size = None;
-      }
-    in
-    let f acc { duration; info } =
-      match info with
-      | InitSummary ->
-        let acc = { acc with init_duration = acc.init_duration +. duration } in
-        acc
-      | CommandSummary cmd ->
-        let is_worst =
-          match acc.command_worst_duration with
-          | None -> true
-          | Some d -> duration >= d
-        in
-        let acc =
-          if not is_worst then
-            acc
-          else
-            { acc with command_worst = Some cmd; command_worst_duration = Some duration }
-        in
-        let acc =
-          {
-            acc with
-            command_count = acc.command_count + 1;
-            command_duration = acc.command_duration +. duration;
-          }
-        in
-        acc
-      | RecheckSummary { dependent_file_count; changed_file_count; top_cycle } ->
-        let is_worst =
-          match acc.recheck_worst_duration with
-          | None -> true
-          | Some d -> duration >= d
-        in
-        let acc =
-          if not is_worst then
-            acc
-          else
-            {
-              acc with
-              recheck_worst_duration = Some duration;
-              recheck_worst_dependent_file_count = Some dependent_file_count;
-              recheck_worst_changed_file_count = Some changed_file_count;
-              recheck_worst_cycle_size = Base.Option.map top_cycle ~f:(fun (_, size) -> size);
-              recheck_worst_cycle_leader =
-                Base.Option.map top_cycle ~f:(fun (f, _) ->
-                    f |> File_key.to_string |> Files.relative_path (Path.to_string root)
-                );
-            }
-        in
-        let acc =
-          {
-            acc with
-            recheck_count = acc.recheck_count + 1;
-            recheck_dependent_files = acc.recheck_dependent_files + dependent_file_count;
-            recheck_changed_files = acc.recheck_changed_files + changed_file_count;
-            recheck_duration = acc.recheck_duration +. duration;
-          }
-        in
-        acc
-    in
-    Base.List.fold summaries ~init ~f
-  )
 
 (** When the server is initializing it will publish statuses that say it is initializing. The
     monitor might know that the server actually is restarting. This function turns a initializing

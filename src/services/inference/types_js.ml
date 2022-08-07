@@ -1925,11 +1925,11 @@ let recheck
   let changed_file_count =
     Utils_js.FilenameSet.cardinal modified + Utils_js.FilenameSet.cardinal deleted
   in
-  let summary_info =
-    ServerStatus.RecheckSummary
-      { dependent_file_count = all_dependent_file_count; changed_file_count; top_cycle }
+  let recheck_stats =
+    { LspProt.dependent_file_count = all_dependent_file_count; changed_file_count; top_cycle }
   in
-  Lwt.return (log_recheck_event, summary_info, env)
+
+  Lwt.return (log_recheck_event, recheck_stats, env)
 
 (* creates a closure that lists all files in the given root, returned in chunks *)
 let make_next_files ~libs ~file_options root =

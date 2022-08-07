@@ -106,10 +106,10 @@ let recheck
   Persistent_connection.send_start_recheck env.connections;
   let options = genv.ServerEnv.options in
   let workers = genv.ServerEnv.workers in
-  let%lwt (profiling, (log_recheck_event, summary_info, env)) =
+  let%lwt (profiling, (log_recheck_event, recheck_stats, env)) =
     let should_print_summary = Options.should_profile options in
     Profiling_js.with_profiling_lwt ~label:"Recheck" ~should_print_summary (fun profiling ->
-        let%lwt (log_recheck_event, summary_info, env) =
+        let%lwt (log_recheck_event, recheck_stats, env) =
           Types_js.recheck
             ~profiling
             ~options
@@ -138,15 +138,18 @@ let recheck
           ~clients:env.connections
           ~errors_reason
           ~calc_errors_and_warnings;
-        Lwt.return (log_recheck_event, summary_info, env)
+        Lwt.return (log_recheck_event, recheck_stats, env)
     )
   in
   let%lwt () = log_recheck_event ~profiling in
 
-  let duration = Profiling_js.get_profiling_duration profiling in
-  let summary = ServerStatus.{ duration; info = summary_info } in
+  let event =
+    let duration = Profiling_js.get_profiling_duration profiling in
+    LspProt.Recheck_summary { duration; stats = recheck_stats }
+  in
+  MonitorRPC.send_telemetry event;
+  MonitorRPC.status_update ~event:ServerStatus.Finishing_up;
 
-  MonitorRPC.status_update ~event:(ServerStatus.Finishing_up summary);
   Lwt.return (profiling, env)
 
 (* Runs a function which should be canceled if we are notified about any file changes. After the
