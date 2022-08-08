@@ -128,7 +128,7 @@ module.exports = (suite(
         .waitUntilLSPMessage(9000, 'textDocument/publishDiagnostics')
         .verifyAllLSPMessagesInStep(
           [['textDocument/publishDiagnostics', '{"diagnostics":[]}']],
-          [],
+          ['window/showStatus'],
         ),
       // Make another change that doesn't introduce errors. We should get no reports.
       lspNotification('textDocument/didChange', {
@@ -145,7 +145,7 @@ module.exports = (suite(
         ],
       })
         .sleep(1000)
-        .verifyAllLSPMessagesInStep([], []),
+        .verifyAllLSPMessagesInStep([], ['window/showStatus']),
       // Make a change that introduces the error. We should get a report immediately.
       lspNotification('textDocument/didChange', {
         textDocument: {
@@ -163,7 +163,7 @@ module.exports = (suite(
         .waitUntilLSPMessage(9000, 'textDocument/publishDiagnostics')
         .verifyAllLSPMessagesInStep(
           [['textDocument/publishDiagnostics', '{Unexpected token}']],
-          [],
+          ['window/showStatus'],
         ),
       // Close the file. The live error should go away.
       lspNotification('textDocument/didClose', {
@@ -175,7 +175,7 @@ module.exports = (suite(
         .waitUntilLSPMessage(9000, 'textDocument/publishDiagnostics')
         .verifyAllLSPMessagesInStep(
           [['textDocument/publishDiagnostics', '{"diagnostics":[]}']],
-          [],
+          ['window/showStatus'],
         ),
     ]),
     test('live non-parse diagnostics', [
