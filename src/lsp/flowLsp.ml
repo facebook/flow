@@ -829,7 +829,7 @@ let show_connected_status (cenv : connected_env) : connected_env =
       let (server_status, _) = cenv.c_server_status in
       if not (ServerStatus.is_free server_status) then
         let (shortMessage, progress, total) = ServerStatus.get_progress server_status in
-        let message = "Flow: " ^ ServerStatus.string_of_status ~use_emoji:true server_status in
+        let message = "Flow: " ^ ServerStatus.string_of_status ~use_emoji:false server_status in
         (MessageType.WarningMessage, message, shortMessage, progress, total)
       else
         (MessageType.WarningMessage, "Flow: Server is rechecking...", None, None, None)
@@ -892,7 +892,7 @@ let show_connecting (reason : CommandConnectSimple.error) (env : disconnected_en
     | (CommandConnectSimple.Server_busy _, Some (server_status, watcher_status)) ->
       if not (ServerStatus.is_free server_status) then
         let (shortMessage, progress, total) = ServerStatus.get_progress server_status in
-        ( "Flow: " ^ ServerStatus.string_of_status ~use_emoji:true server_status,
+        ( "Flow: " ^ ServerStatus.string_of_status ~use_emoji:false server_status,
           shortMessage,
           progress,
           total
