@@ -15,3 +15,16 @@ if (true) {
 }
 
 const b = {[x]: 3} // Error, x has multiple lower bounds
+
+declare var maybe: ?string;
+const c = {[maybe]: 3}; // ERROR
+
+declare var several: ?string | key;
+const d = {[several]: 3}; // ERROR
+
+declare var str: string;
+const nested = {
+  [str]: {
+    [several]: 3, // ERROR
+  },
+};

@@ -158,7 +158,7 @@ and reason_of_use_t = function
   | SealGenericT { reason; _ } ->
     reason
   | DestructuringT (reason, _, _, _, _) -> reason
-  | CreateObjWithComputedPropT { reason; value = _; tout_tvar = _ } -> reason
+  | CreateObjWithComputedPropT { reason; reason_obj = _; value = _; tout_tvar = _ } -> reason
   | ResolveUnionT { reason; _ } -> reason
 
 (* helper: we want the tvar id as well *)
@@ -348,8 +348,8 @@ and mod_reason_of_use_t f = function
   | ReactPropsToOut (reason, t) -> ReactPropsToOut (f reason, t)
   | ReactInToProps (reason, t) -> ReactInToProps (f reason, t)
   | DestructuringT (reason, a, s, t, id) -> DestructuringT (f reason, a, s, t, id)
-  | CreateObjWithComputedPropT { reason; value; tout_tvar } ->
-    CreateObjWithComputedPropT { reason = f reason; value; tout_tvar }
+  | CreateObjWithComputedPropT { reason; reason_obj; value; tout_tvar } ->
+    CreateObjWithComputedPropT { reason = f reason; reason_obj; value; tout_tvar }
   | ResolveUnionT { reason; resolved; unresolved; upper; id } ->
     ResolveUnionT { reason = f reason; resolved; unresolved; upper; id }
 

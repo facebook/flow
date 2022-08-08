@@ -360,26 +360,20 @@ References:
                          ^^^^^^^^^^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------------------- literal.js:20:21
-
-Mutating this prototype is unsupported. [cannot-write]
-
-   20| var o_computed = { ["__proto__"]: 0 }; // TODO: computed props use SetElem :/
-                           ^^^^^^^^^^^
-
-
 Error -------------------------------------------------------------------------------------------------- literal.js:21:2
 
-Cannot cast `o_computed.__proto__` to empty because object literal [1] is incompatible with empty [2].
-[incompatible-cast]
+Cannot cast `o_computed.__proto__` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
 
    literal.js:21:2
-   21| (o_computed.__proto__: empty); // TODO: error: number ~> empty
-        ^^^^^^^^^^^^^^^^^^^^ [1]
+   21| (o_computed.__proto__: empty); // error: number ~> empty
+        ^^^^^^^^^^^^^^^^^^^^
 
 References:
+   literal.js:20:35
+   20| var o_computed = { ["__proto__"]: 0 }; // OK
+                                         ^ [1]
    literal.js:21:24
-   21| (o_computed.__proto__: empty); // TODO: error: number ~> empty
+   21| (o_computed.__proto__: empty); // error: number ~> empty
                               ^^^^^ [2]
 
 
@@ -513,4 +507,4 @@ References:
 
 
 
-Found 36 errors
+Found 35 errors

@@ -1859,7 +1859,8 @@ struct
         | (UnionT _, ObjKitT (use_op, reason, resolve_tool, tool, tout)) ->
           ObjectKit.run trace cx use_op reason resolve_tool tool ~tout l
         | ( UnionT (r, _),
-            CreateObjWithComputedPropT { reason; value = _; tout_tvar = (tout_reason, tout_id) }
+            CreateObjWithComputedPropT
+              { reason; reason_obj = _; value = _; tout_tvar = (tout_reason, tout_id) }
           ) ->
           Context.computed_property_add_multiple_lower_bounds cx tout_id;
           rec_flow_t ~use_op:unknown_use cx trace (AnyT.error reason, OpenT (tout_reason, tout_id));
@@ -4125,7 +4126,10 @@ struct
           ) ->
           rec_flow_t cx trace ~use_op:unknown_use (AnyT.untyped reason_call, prop_t)
         (* computed properties *)
-        | (_, CreateObjWithComputedPropT { reason; value; tout_tvar = (tout_reason, tout_id) }) ->
+        | ( key,
+            CreateObjWithComputedPropT
+              { reason; reason_obj; value; tout_tvar = (tout_reason, tout_id) }
+          ) ->
           let on_named_prop reason_named =
             match Context.computed_property_state_for_id cx tout_id with
             | None -> Context.computed_property_add_lower_bound cx tout_id reason_named
@@ -4144,22 +4148,18 @@ struct
             | Some Context.ResolvedMultipleTimes -> ()
           in
           let obj =
-            Obj_type.mk_with_proto
-              cx
-              reason
-              ~obj_kind:(UnsealedInFile (ALoc.source (aloc_of_reason reason)))
-              ~props:NameUtils.Map.empty
-              (ObjProtoT reason)
+            match propref_for_elem_t ~on_named_prop key with
+            | Computed elem_t ->
+              write_computed_obj_prop cx trace elem_t value reason;
+              (* No properties are added in this case. *)
+              Obj_type.mk_exact_empty cx reason_obj
+            | Named (_, name) ->
+              let prop = Field (None, value, Polarity.Neutral) in
+              let props = NameUtils.Map.singleton name prop in
+              let proto = NullT.make reason |> with_trust bogus_trust in
+              Obj_type.mk_with_proto ~obj_kind:Exact cx reason_obj ~props proto
           in
-          elem_action_on_obj
-            cx
-            trace
-            ~use_op:unknown_use
-            ~on_named_prop
-            l
-            obj
-            reason
-            (WriteElem (value, Some (OpenT (tout_reason, tout_id)), Assign))
+          rec_flow_t cx trace ~use_op:unknown_use (obj, OpenT (tout_reason, tout_id))
         (**************************************************)
         (* array pattern can consume the rest of an array *)
         (**************************************************)
@@ -7123,30 +7123,32 @@ struct
                   method_accessible = true;
                 }
             )
-      | Computed elem_t ->
-        (match elem_t with
-        | OpenT _ ->
-          let loc = loc_of_t elem_t in
-          add_output cx ~trace Error_message.(EInternal (loc, PropRefComputedOpen))
-        | GenericT { bound = DefT (_, _, StrT (Literal _)); _ }
-        | DefT (_, _, StrT (Literal _)) ->
-          let loc = loc_of_t elem_t in
-          add_output cx ~trace Error_message.(EInternal (loc, PropRefComputedLiteral))
-        | AnyT _ -> rec_flow_t cx trace ~use_op:unknown_use (prop_t, AnyT.untyped reason_op)
-        | GenericT { bound = DefT (_, _, StrT _); _ }
-        | GenericT { bound = DefT (_, _, NumT _); _ }
-        | DefT (_, _, StrT _)
-        | DefT (_, _, NumT _) ->
-          (* string and number keys are allowed, but there's nothing else to
-             flow without knowing their literal values. *)
-          rec_flow_t
-            cx
-            trace
-            ~use_op:unknown_use
-            (prop_t, Unsoundness.why ComputedNonLiteralKey reason_op)
-        | _ ->
-          let reason_prop = reason_of_t elem_t in
-          add_output cx ~trace (Error_message.EObjectComputedPropertyAssign (reason_op, reason_prop))))
+      | Computed elem_t -> write_computed_obj_prop cx trace elem_t prop_t reason_op)
+
+  and write_computed_obj_prop cx trace key_t value_t reason_op =
+    match key_t with
+    | OpenT _ ->
+      let loc = loc_of_t key_t in
+      add_output cx ~trace Error_message.(EInternal (loc, PropRefComputedOpen))
+    | GenericT { bound = DefT (_, _, StrT (Literal _)); _ }
+    | DefT (_, _, StrT (Literal _)) ->
+      let loc = loc_of_t key_t in
+      add_output cx ~trace Error_message.(EInternal (loc, PropRefComputedLiteral))
+    | AnyT _ -> rec_flow_t cx trace ~use_op:unknown_use (value_t, AnyT.untyped reason_op)
+    | GenericT { bound = DefT (_, _, StrT _); _ }
+    | GenericT { bound = DefT (_, _, NumT _); _ }
+    | DefT (_, _, StrT _)
+    | DefT (_, _, NumT _) ->
+      (* string and number keys are allowed, but there's nothing else to
+         flow without knowing their literal values. *)
+      rec_flow_t
+        cx
+        trace
+        ~use_op:unknown_use
+        (value_t, Unsoundness.why ComputedNonLiteralKey reason_op)
+    | _ ->
+      let reason_prop = reason_of_t key_t in
+      add_output cx ~trace (Error_message.EObjectComputedPropertyAssign (reason_op, reason_prop))
 
   and match_obj_prop cx trace ~use_op o propref reason_obj reason_op prop_t =
     MatchProp { use_op; drop_generic = false; prop_t }

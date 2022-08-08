@@ -194,5 +194,57 @@ References:
              ^^^^^ [3]
 
 
+Error --------------------------------------------------------------------------------------------------- union.js:20:13
 
-Found 11 errors
+Cannot assign computed property using null or undefined [1]. [invalid-computed-prop]
+
+   union.js:20:13
+   20| const c = {[maybe]: 3}; // ERROR
+                   ^^^^^
+
+References:
+   union.js:19:20
+   19| declare var maybe: ?string;
+                          ^^^^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------------------------- union.js:23:13
+
+Cannot use `several` [1] as a computed property. Computed properties may only be primitive literal values, but union
+type [2] is a union. Can you add a literal type annotation to `several` [1]? See
+https://flow.org/en/docs/types/literals/ for more information on literal types. [invalid-computed-prop]
+
+   union.js:23:13
+   23| const d = {[several]: 3}; // ERROR
+                   ^^^^^^^
+
+References:
+   union.js:22:13
+   22| declare var several: ?string | key;
+                   ^^^^^^^ [1]
+   union.js:22:22
+   22| declare var several: ?string | key;
+                            ^^^^^^^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- union.js:28:6
+
+Cannot use `several` [1] as a computed property. Computed properties may only be primitive literal values, but union
+type [2] is a union. Can you add a literal type annotation to `several` [1]? See
+https://flow.org/en/docs/types/literals/ for more information on literal types. [invalid-computed-prop]
+
+   union.js:28:6
+   28|     [several]: 3, // ERROR
+            ^^^^^^^
+
+References:
+   union.js:22:13
+   22| declare var several: ?string | key;
+                   ^^^^^^^ [1]
+   union.js:22:22
+   22| declare var several: ?string | key;
+                            ^^^^^^^^^^^^^ [2]
+
+
+
+Found 14 errors

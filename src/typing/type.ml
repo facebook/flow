@@ -793,6 +793,7 @@ module rec TypeTerm : sig
     | DestructuringT of reason * destruct_kind * selector * tvar * int
     | CreateObjWithComputedPropT of {
         reason: reason;
+        reason_obj: reason;
         value: t;
         tout_tvar: tvar;
       }

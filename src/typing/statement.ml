@@ -2785,17 +2785,14 @@ struct
     (* Use the same reason for proto and the ObjT so we can walk the proto chain
        and use the root proto reason to build an error. *)
     let obj_proto = ObjProtoT reason in
-    (* Add property to object, using optional tout argument to SetElemT to wait
-       for the write to happen. This defers any reads until writes have happened,
-       to avoid race conditions. *)
     let mk_computed key value =
-      Tvar.mk_where cx reason (fun t ->
-          let tout_id = Tvar.mk_no_wrap cx reason in
-          let tvar = (reason, tout_id) in
+      Tvar.mk_no_wrap_where cx reason (fun tout_tvar ->
           Flow.flow
             cx
-            (key, CreateObjWithComputedPropT { reason = reason_of_t key; value; tout_tvar = tvar });
-          Flow.flow cx (OpenT tvar, ObjSealT (reason, t))
+            ( key,
+              CreateObjWithComputedPropT
+                { reason = reason_of_t key; reason_obj = reason; value; tout_tvar }
+            )
       )
     in
     let (acc, rev_prop_asts) =

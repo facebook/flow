@@ -944,7 +944,7 @@ and dump_use_t_ (depth, tvars) cx t =
              (string_of_reason r)
              (tvar tout)
           )
-    | CreateObjWithComputedPropT { reason = _; value; tout_tvar } ->
+    | CreateObjWithComputedPropT { reason = _; reason_obj = _; value; tout_tvar } ->
       p t ~extra:(spf "%s %s" (kid value) (kid (OpenT tout_tvar)))
     | ResolveUnionT { resolved; unresolved; upper; id; _ } ->
       p
