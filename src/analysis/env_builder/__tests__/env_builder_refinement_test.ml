@@ -24,7 +24,7 @@ module TestCx = struct
 
   let env_mode _cx = Options.(SSAEnv Basic)
 
-  let enable_const_params _cx = true
+  let enable_const_params _cx = false
 
   let add_new_env_literal_subtypes _ _ = ()
 
