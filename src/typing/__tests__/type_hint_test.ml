@@ -31,7 +31,7 @@ let metadata =
     enforce_class_annotations = false;
     enforce_strict_call_arity = true;
     enforce_this_annotations = false;
-    env_mode = Options.ClassicEnv [];
+    env_mode = Options.(SSAEnv Reordered);
     exact_by_default = true;
     exact_empty_objects = false;
     experimental_infer_indexers = false;
@@ -206,7 +206,7 @@ end = struct
     let lint_severities =
       Merge_js.get_lint_severities metadata StrictModeSettings.empty LintSettings.empty_severities
     in
-    Type_inference_js.infer_ast cx dummy_filename [] ast ~lint_severities
+    Type_inference_js.NewEnvInference.infer_ast cx dummy_filename [] ast ~lint_severities
 
   let get_type_of_last_expression cx content =
     let (_, { Flow_ast.Program.statements; _ }) = get_typed_ast cx content in
