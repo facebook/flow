@@ -10,5 +10,6 @@ dotslash.export_fbcode_build(
     target="//flow/src/facebook/server_callable:server_callable_extract_metadata",
     oncall="staticresources",
     generated_dotslash_file="flib/intern/build/meerkat/steps/server_callable/bin/server_callable_extract_metadata",
+    storage=dotslash.Storage.EVERSTORE,
     buck_cmd=dotslash.BuckCommand.BUCK,
 )
