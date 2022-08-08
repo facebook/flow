@@ -23,9 +23,7 @@ let entry is_fb name =
 let () =
   (* test presence of facebook subfolder *)
   let current_dir = Sys.getcwd () in
-  (* we are in src/remote_execution/facebook/, locate src *)
-  let src_dir = Filename.(dirname (dirname current_dir)) in
-  (* locate src/remote_execution/facebook/dune *)
-  let fb_dune = Filename.(concat "remote_execution"(concat (concat src_dir "facebook") "dune")) in
+  (* we are in src/remote_execution/, locate src/remote_execution/facebook/dune *)
+  let fb_dune = Filename.(concat (concat current_dir "facebook") "dune") in
   let is_fb = Sys.file_exists fb_dune in
   Jbuild_plugin.V1.send (entry is_fb "flow_remote_execution")
