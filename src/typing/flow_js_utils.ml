@@ -381,7 +381,6 @@ let error_message_kind_of_upper = function
   | ObjAssignFromT (_, _, _, _, ObjSpreadAssign) -> Error_message.IncompatibleObjAssignFromTSpread
   | ObjAssignFromT _ -> Error_message.IncompatibleObjAssignFromT
   | ObjRestT _ -> Error_message.IncompatibleObjRestT
-  | ObjSealT _ -> Error_message.IncompatibleObjSealT
   | ArrRestT _ -> Error_message.IncompatibleArrRestT
   | SuperT _ -> Error_message.IncompatibleSuperT
   | MixinT _ -> Error_message.IncompatibleMixinT

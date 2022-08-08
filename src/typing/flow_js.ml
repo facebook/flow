@@ -3887,15 +3887,6 @@ struct
         | (DefT (_, _, (NullT | VoidT)), ObjRestT (reason, _, t, _)) ->
           let o = Obj_type.mk ~obj_kind:Exact cx reason in
           rec_flow_t cx trace ~use_op:unknown_use (o, t)
-        (*************************************)
-        (* objects can be copied-then-sealed *)
-        (*************************************)
-        | (DefT (_, _, ObjT { props_tmap = mapr; _ }), ObjSealT (reason, t)) ->
-          let props = Context.find_props cx mapr in
-          let new_obj = Obj_type.mk_with_proto cx reason ~obj_kind:Exact ~props l in
-          rec_flow_t cx trace ~use_op:unknown_use (new_obj, t)
-        | (AnyT (_, src), ObjSealT (reason, tout)) ->
-          rec_flow_t cx trace ~use_op:unknown_use (AnyT.why src reason, tout)
         (*******************************************)
         (* objects may have their fields looked up *)
         (*******************************************)
@@ -5978,7 +5969,6 @@ struct
     | NullishCoalesceT _
     | ObjKitT _
     | ObjRestT _
-    | ObjSealT _
     | ObjTestProtoT _
     | ObjTestT _
     | OptionalChainT _

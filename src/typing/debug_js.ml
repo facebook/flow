@@ -804,7 +804,6 @@ and dump_use_t_ (depth, tvars) cx t =
     | ObjAssignToT (_, _, arg1, arg2, _) -> p t ~extra:(spf "%s, %s" (kid arg1) (kid arg2))
     | ObjAssignFromT (_, _, arg1, arg2, _) -> p t ~extra:(spf "%s, %s" (kid arg1) (kid arg2))
     | ObjRestT (_, xs, arg, _) -> p t ~extra:(spf "[%s], %s" (String.concat "; " xs) (kid arg))
-    | ObjSealT _ -> p t
     | ObjTestProtoT _ -> p t
     | ObjTestT _ -> p t
     | OptionalChainT { t_out; voided_out; _ } ->
@@ -1208,7 +1207,6 @@ let dump_error_message =
     | IncompatibleObjAssignFromTSpread -> "IncompatibleObjAssignFromTSpread"
     | IncompatibleObjAssignFromT -> "IncompatibleObjAssignFromT"
     | IncompatibleObjRestT -> "IncompatibleObjRestT"
-    | IncompatibleObjSealT -> "IncompatibleObjSealT"
     | IncompatibleArrRestT -> "IncompatibleArrRestT"
     | IncompatibleSuperT -> "IncompatibleSuperT"
     | IncompatibleMixinT -> "IncompatibleMixinT"

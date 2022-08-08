@@ -615,7 +615,6 @@ module rec TypeTerm : sig
     (* Resolves the object from which the properties are assigned *)
     | ObjAssignFromT of use_op * reason * t * t * obj_assign_kind
     | ObjRestT of reason * string list * t * int
-    | ObjSealT of reason * t
     (* test that something is a valid proto (object-like or null) *)
     | ObjTestProtoT of reason * t_out
     (* test that something is object-like, returning a default type otherwise *)
@@ -3582,7 +3581,6 @@ let string_of_use_ctor = function
   | ObjAssignToT _ -> "ObjAssignToT"
   | ObjAssignFromT _ -> "ObjAssignFromT"
   | ObjRestT _ -> "ObjRestT"
-  | ObjSealT _ -> "ObjSealT"
   | ObjTestProtoT _ -> "ObjTestProtoT"
   | ObjTestT _ -> "ObjTestT"
   | OptionalChainT _ -> "OptionalChainT"

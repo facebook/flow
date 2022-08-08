@@ -1038,7 +1038,6 @@ let rec make_error_printable ?(speculation = false) (error : Loc.t t) : Loc.t Er
         nope "is not an array"
       | IncompatibleObjAssignFromT
       | IncompatibleObjRestT
-      | IncompatibleObjSealT
       | IncompatibleGetKeysT
       | IncompatibleGetValuesT ->
         nope "is not an object"

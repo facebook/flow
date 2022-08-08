@@ -117,7 +117,6 @@ and reason_of_use_t = function
   | ObjAssignToT (_, reason, _, _, _) -> reason
   | ObjAssignFromT (_, reason, _, _, _) -> reason
   | ObjRestT (reason, _, _, _) -> reason
-  | ObjSealT (reason, _) -> reason
   | ObjTestProtoT (reason, _) -> reason
   | ObjTestT (reason, _, _) -> reason
   | OptionalChainT { reason; _ } -> reason
@@ -297,7 +296,6 @@ and mod_reason_of_use_t f = function
   | ObjAssignToT (op, reason, t, t2, kind) -> ObjAssignToT (op, f reason, t, t2, kind)
   | ObjAssignFromT (op, reason, t, t2, kind) -> ObjAssignFromT (op, f reason, t, t2, kind)
   | ObjRestT (reason, t, t2, id) -> ObjRestT (f reason, t, t2, id)
-  | ObjSealT (reason, t) -> ObjSealT (f reason, t)
   | ObjTestProtoT (reason, t) -> ObjTestProtoT (f reason, t)
   | ObjTestT (reason, t1, t2) -> ObjTestT (f reason, t1, t2)
   | OptionalChainT ({ reason; _ } as opt_chain) ->
@@ -451,7 +449,6 @@ let rec util_use_op_of_use_t :
   | VarianceCheckT (_, _, _, _)
   | LookupT _
   | ObjRestT (_, _, _, _)
-  | ObjSealT (_, _)
   | ObjTestProtoT (_, _)
   | ObjTestT (_, _, _)
   | UnifyT (_, _)

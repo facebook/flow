@@ -560,7 +560,6 @@ and 'loc upper_kind =
   | IncompatibleObjAssignFromTSpread
   | IncompatibleObjAssignFromT
   | IncompatibleObjRestT
-  | IncompatibleObjSealT
   | IncompatibleArrRestT
   | IncompatibleSuperT
   | IncompatibleMixinT
@@ -595,8 +594,8 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
     | IncompatibleCallElemT loc -> IncompatibleCallElemT (f loc)
     | ( IncompatibleGetPrivatePropT | IncompatibleSetPrivatePropT | IncompatibleCallT
       | IncompatibleMixedCallT | IncompatibleElemTOfArrT | IncompatibleObjAssignFromTSpread
-      | IncompatibleObjAssignFromT | IncompatibleObjRestT | IncompatibleObjSealT
-      | IncompatibleArrRestT | IncompatibleSuperT | IncompatibleMixinT | IncompatibleSpecializeT
+      | IncompatibleObjAssignFromT | IncompatibleObjRestT | IncompatibleArrRestT
+      | IncompatibleSuperT | IncompatibleMixinT | IncompatibleSpecializeT
       | IncompatibleThisSpecializeT | IncompatibleVarianceCheckT | IncompatibleGetKeysT
       | IncompatibleGetValuesT | IncompatibleUnaryMinusT | IncompatibleMapTypeTObject
       | IncompatibleTypeAppVarianceCheckT | IncompatibleGetStaticsT | IncompatibleBindT
@@ -3889,7 +3888,6 @@ let error_code_of_upper_kind = function
     Some NotAnArray
   | IncompatibleObjAssignFromT
   | IncompatibleObjRestT
-  | IncompatibleObjSealT
   | IncompatibleGetKeysT ->
     Some NotAnObject
   | IncompatibleMixinT
