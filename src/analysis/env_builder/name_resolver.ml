@@ -1950,26 +1950,35 @@ module Make
           ()
         else
           let { kind; def_loc; _ } = SMap.find name env_state.env in
-          match def_loc with
-          (* Identifiers with no binding can never reintroduce "cannot reassign binding" errors *)
-          | None -> ()
-          | Some def_loc ->
-            (match kind with
-            | Bindings.Type _ when not (ALoc.equal loc def_loc) ->
-              (* Types are already bind in hoister,
-                 so we only check for rebind in different locations. *)
-              add_output
-                Error_message.(EBindingError (ENameAlreadyBound, loc, OrdinaryName name, def_loc))
-            | Bindings.Type _ -> ()
-            | Bindings.Var
-            | Bindings.Const
-            | Bindings.Let
-            | Bindings.Class
-            | Bindings.Function
-            | Bindings.Parameter ->
-              add_output
-                Error_message.(EBindingError (ENameAlreadyBound, loc, OrdinaryName name, def_loc))
-            | _ -> ())
+          let error =
+            match def_loc with
+            (* Identifiers with no binding can never reintroduce "cannot reassign binding" errors *)
+            | None -> None
+            | Some def_loc ->
+              (match kind with
+              | Bindings.Type _ when not (ALoc.equal loc def_loc) ->
+                (* Types are already bind in hoister,
+                   so we only check for rebind in different locations. *)
+                Some
+                  Error_message.(EBindingError (ENameAlreadyBound, loc, OrdinaryName name, def_loc))
+              | Bindings.Type _ -> None
+              | Bindings.Var
+              | Bindings.Const
+              | Bindings.Let
+              | Bindings.Class
+              | Bindings.Function
+              | Bindings.Parameter ->
+                Some
+                  Error_message.(EBindingError (ENameAlreadyBound, loc, OrdinaryName name, def_loc))
+              | _ -> None)
+          in
+          Base.Option.iter error ~f:(fun error ->
+              add_output error;
+              let write_entries =
+                EnvMap.add_ordinary loc Env_api.NonAssigningWrite env_state.write_entries
+              in
+              env_state <- { env_state with write_entries }
+          )
         );
         super#identifier ident
 

@@ -19,5 +19,31 @@ Internal error: read of Env_api.Make.FunctionThisLoc entry which has not been pr
       ^
 
 
+Error ------------------------------------------------------------------------------------------ regression_tests.js:9:1
 
-Found 2 errors
+Internal error: read of Env_api.Make.FunctionThisLoc entry which has not been prepared for typechecking
+
+       v---------------------------------------------------------
+    9| function no_missing_env_entry_for_illegal_type_binding() {
+   10|   type A = number;
+   11|   type A = number; // error, but no MissingEnvEntry internal error.
+   12| }
+       ^
+
+
+Error ----------------------------------------------------------------------------------------- regression_tests.js:11:8
+
+Cannot declare `A` [1] because the name is already bound. [name-already-bound]
+
+   regression_tests.js:11:8
+   11|   type A = number; // error, but no MissingEnvEntry internal error.
+              ^
+
+References:
+   regression_tests.js:10:8
+   10|   type A = number;
+              ^ [1]
+
+
+
+Found 4 errors

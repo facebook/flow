@@ -5,3 +5,8 @@ function no_missing_env_entry_for_delete() {
   delete foo.bar; // ok
   (foo.bar: void); // ok
 }
+
+function no_missing_env_entry_for_illegal_type_binding() {
+  type A = number;
+  type A = number; // error, but no MissingEnvEntry internal error.
+}
