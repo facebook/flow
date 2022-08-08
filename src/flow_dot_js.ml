@@ -208,7 +208,9 @@ let infer_and_merge ~root filename ast file_sig =
     let strict_mode = StrictModeSettings.empty in
     Merge_js.get_lint_severities metadata strict_mode base_severities
   in
-  let typed_ast = Type_inference_js.infer_ast cx filename comments ast ~lint_severities in
+  let typed_ast =
+    Type_inference_js.NewEnvInference.infer_ast cx filename comments ast ~lint_severities
+  in
   Merge_js.post_merge_checks cx master_cx ast typed_ast metadata file_sig;
   (cx, typed_ast)
 
