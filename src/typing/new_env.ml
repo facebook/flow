@@ -526,7 +526,10 @@ module New_env = struct
                | (Env_api.With_ALoc.Exports, _) ->
                  let file_loc = Loc.{ none with source = Some (Context.file cx) } |> ALoc.of_loc in
                  check_readable cx Env_api.OrdinaryNameLoc file_loc;
-                 t_option_value_exn cx file_loc (Loc_env.find_ordinary_write env file_loc)
+                 t_option_value_exn
+                   cx
+                   file_loc
+                   (Loc_env.find_write env Env_api.GlobalExportsLoc file_loc)
                | (Env_api.With_ALoc.ModuleScoped _, _) -> Type.(AnyT.at AnnotatedAny loc)
                | (Env_api.With_ALoc.Unreachable loc, _) ->
                  let reason = mk_reason (RCustom "unreachable value") loc in

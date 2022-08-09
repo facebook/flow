@@ -467,7 +467,7 @@ module Make (Env : Env_sig.S) : S = struct
       Base.Option.value_map ~default:env local_exports_var ~f:(fun local_exports_var ->
           Loc_env.initialize
             env
-            Env_api.OrdinaryNameLoc
+            Env_api.GlobalExportsLoc
             (TypeUtil.loc_of_t local_exports_var)
             local_exports_var
       )
