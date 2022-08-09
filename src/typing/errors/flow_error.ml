@@ -511,20 +511,36 @@ let rec make_error_printable ?(speculation = false) (error : Loc.t t) : Loc.t Er
                 ]
               in
               `Root (op, None, message)
-            | Frame (ConstrainedAssignment { name; declaration; providers }, use_op) ->
+            | Frame (ConstrainedAssignment { name; declaration; providers; array }, use_op) ->
+              let noun =
+                if array then
+                  "element"
+                else
+                  "assignment"
+              in
               let assignments =
                 match providers with
-                | [] -> (* should not happen *) [text "one of its initial assignments"]
-                | [r] when Loc.equal (poly_loc_of_reason r) declaration ->
-                  [text "its "; ref (mk_reason (RCustom "initializer") declaration)]
-                | [r] ->
-                  [text "its "; ref (update_desc_reason (fun _ -> RCustom "initial assignment") r)]
+                | [] -> (* should not happen *) [text (spf "one of its initial %ss" noun)]
+                | [r] when Loc.equal r declaration ->
+                  [
+                    text "its ";
+                    ref
+                      (mk_reason
+                         (RCustom
+                            ( if array then
+                              "initial element"
+                            else
+                              "initializer"
+                            )
+                         )
+                         declaration
+                      );
+                  ]
+                | [r] -> [text "its "; ref (mk_reason (RCustom ("initial " ^ noun)) r)]
                 | providers ->
-                  text "one of its initial assignments"
+                  text (spf "one of its initial %ss" noun)
                   ::
-                  (Base.List.map
-                     ~f:(fun r -> ref (update_desc_reason (fun _ -> RCustom "") r))
-                     providers
+                  (Base.List.map ~f:(fun r -> ref (mk_reason (RCustom "") r)) providers
                   |> Base.List.intersperse ~sep:(text ",")
                   )
               in

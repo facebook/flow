@@ -377,7 +377,8 @@ module rec TypeTerm : sig
     | ConstrainedAssignment of {
         name: string;
         declaration: 'loc;
-        providers: 'loc virtual_reason list;
+        providers: 'loc list;
+        array: bool;
       }
     | ArrayElementCompatibility of {
         lower: 'loc virtual_reason;

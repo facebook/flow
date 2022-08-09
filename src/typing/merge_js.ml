@@ -478,6 +478,17 @@ let check_constrained_writes init_cx master_cx =
               let open Type in
               let open Constraint in
               let u_def = reducer#type_ init_cx Polarity.Neutral u_def in
+              let (mk_use_op, use_op) =
+                let rec loop = function
+                  | Frame ((ConstrainedAssignment _ as frame), op) ->
+                    (TypeUtil.mod_use_op_of_use_t (fun op -> Frame (frame, op)), op)
+                  | Op _ as op -> ((fun x -> x), op)
+                  | Frame (frame, op) ->
+                    let (f, op) = loop op in
+                    (f, Frame (frame, op))
+                in
+                loop use_op
+              in
               let u = UseT (use_op, u_def) in
               match t with
               | OpenT (_, id) ->
@@ -488,16 +499,16 @@ let check_constrained_writes init_cx master_cx =
                     TypeMap.bindings lower
                     |> Base.List.map ~f:(fun (t, (_, use_op)) ->
                            let t = reducer#type_ init_cx Polarity.Neutral t in
-                           (t, Flow_js.flow_use_op init_cx use_op u)
+                           (t, mk_use_op (Flow_js.flow_use_op init_cx use_op u))
                        )
                   | Resolved (use_op, _)
                   | FullyResolved (use_op, _) ->
                     let t = reducer#type_ init_cx Polarity.Neutral t in
-                    [(t, Flow_js.flow_use_op init_cx use_op u)]
+                    [(t, mk_use_op (Flow_js.flow_use_op init_cx use_op u))]
                 end
               | _ ->
                 let t = reducer#type_ init_cx Polarity.Neutral t in
-                [(t, u)])
+                [(t, mk_use_op u)])
             checks
           |> List.flatten
       )

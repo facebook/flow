@@ -601,8 +601,10 @@ module Env : Env_sig.S = struct
                           declaration;
                           providers =
                             Base.List.map
-                              ~f:(fun { Env_api.Provider_api.reason; _ } -> reason)
+                              ~f:(fun { Env_api.Provider_api.reason; _ } ->
+                                poly_loc_of_reason reason)
                               provider_locs;
+                          array = false;
                         },
                       use_op
                     )

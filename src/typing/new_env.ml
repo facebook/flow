@@ -786,8 +786,9 @@ module New_env = struct
                       declaration;
                       providers =
                         Base.List.map
-                          ~f:(fun { Env_api.Provider_api.reason; _ } -> reason)
+                          ~f:(fun { Env_api.Provider_api.reason; _ } -> poly_loc_of_reason reason)
                           provider_locs;
+                      array = false;
                     },
                   use_op
                 )
@@ -1080,7 +1081,24 @@ module New_env = struct
                   Flow_js.flow cx (constrain_t, UseT (unknown_use, tvar))
               )
             in
-            Context.add_constrained_write cx (elem_t, unknown_use, constrain_t);
+            let use_op =
+              let name =
+                match desc_of_reason reason with
+                | RIdentifier (OrdinaryName x) -> x
+                | _ -> "an empty array"
+              in
+              Frame
+                ( ConstrainedAssignment
+                    {
+                      name;
+                      declaration = poly_loc_of_reason reason;
+                      providers = ALocSet.elements arr_providers;
+                      array = true;
+                    },
+                  unknown_use
+                )
+            in
+            Context.add_constrained_write cx (elem_t, use_op, constrain_t);
             (elem_t, None, reason)
           ) else
             (Tvar.mk cx element_reason, Some [], replace_desc_reason REmptyArrayLit reason)
