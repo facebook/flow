@@ -160,6 +160,7 @@ let mapper
     ~max_type_size
     ~default_any
     ~merge_arrays
+    ~arrays_only
     (cctx : Codemod_context.Typed.t) =
   let lint_severities = Codemod_context.Typed.lint_severities cctx in
   let flowfixme_ast = Codemod_context.Typed.flowfixme_ast ~lint_severities cctx in
@@ -170,7 +171,11 @@ let mapper
       (fun error ->
         LSet.fold
           (fun loc -> LSet.add loc)
-          (Codemod_constrained_write_utils.declaration_locs_of_constrained_write_error cx error))
+          (Codemod_constrained_write_utils.declaration_locs_of_constrained_write_error
+             ~arrays_only
+             cx
+             error
+          ))
       errors
       LSet.empty
   in

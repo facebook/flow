@@ -355,6 +355,77 @@ module Annotate_declarations_command = struct
             ~max_type_size
             ~default_any
             ~merge_arrays
+            ~arrays_only:false
+        in
+        Codemod_utils.make_visitor (Codemod_utils.Mapper mapper)
+    end) in
+    main (module Runner) codemod_flags ()
+
+  let command = CommandSpec.command spec main
+end
+
+module Annotate_array_providers_command = struct
+  let doc =
+    "Annotates empty array variable declarations with multiple conflicting element types, as required for Flow's local type interence."
+
+  let spec =
+    let module Literals = Codemod_hardcoded_ty_fixes.PreserveLiterals in
+    let preserve_string_literals_level =
+      Literals.[("always", Always); ("never", Never); ("auto", Auto)]
+    in
+    {
+      CommandSpec.name = "annotate-array-providers";
+      doc;
+      usage =
+        Printf.sprintf
+          "Usage: %s codemod annotate-declarations [OPTION]... [FILE]\n\n%s\n"
+          Utils_js.exe_name
+          doc;
+      args =
+        CommandSpec.ArgSpec.(
+          empty
+          |> CommandUtils.codemod_flags
+          |> flag
+               "--preserve-literals"
+               (required ~default:Literals.Never (enum preserve_string_literals_level))
+               ~doc:""
+          |> flag
+               "--generalize-maybe"
+               no_arg
+               ~doc:"Generalize annotations containing null or void to maybe types"
+          |> flag
+               "--merge-array-elements"
+               no_arg
+               ~doc:"combine arrays appearing in toplevel unions to a single array"
+          |> common_annotate_flags
+        );
+    }
+
+  let main
+      codemod_flags preserve_literals generalize_maybe merge_arrays max_type_size default_any () =
+    let module Runner = Codemod_runner.MakeSimpleTypedRunner (struct
+      module Acc = Annotate_declarations.Acc
+
+      type accumulator = Acc.t
+
+      let reporter = string_reporter (module Acc)
+
+      (* Match all files the codemod is run over *)
+      let check_options o =
+        let open Options in
+        match o.opt_env_mode with
+        | ClassicEnv _ -> { o with opt_env_mode = SSAEnv Basic; opt_array_literal_providers = true }
+        | SSAEnv _ -> { o with opt_array_literal_providers = true }
+
+      let visit =
+        let mapper =
+          Annotate_declarations.mapper
+            ~preserve_literals
+            ~generalize_maybe
+            ~max_type_size
+            ~default_any
+            ~merge_arrays
+            ~arrays_only:true
         in
         Codemod_utils.make_visitor (Codemod_utils.Mapper mapper)
     end) in
@@ -634,6 +705,9 @@ let command =
       ~doc:"Runs large-scale codebase refactors"
       [
         (Annotate_declarations_command.spec.CommandSpec.name, Annotate_declarations_command.command);
+        ( Annotate_array_providers_command.spec.CommandSpec.name,
+          Annotate_array_providers_command.command
+        );
         (Annotate_empty_array_command.spec.CommandSpec.name, Annotate_empty_array_command.command);
         (Annotate_empty_object_command.spec.CommandSpec.name, Annotate_empty_object_command.command);
         (Annotate_escaped_generics.spec.CommandSpec.name, Annotate_escaped_generics.command);

@@ -10,12 +10,12 @@ module Ssa_api = Ssa_api.With_ALoc
 module Provider_api = Provider_api.ALocProviders
 open Loc_collections
 
-let declaration_locs_of_constrained_write_error cx error =
+let declaration_locs_of_constrained_write_error cx ~arrays_only error =
   let tables = Context.aloc_tables cx in
   let rec find_constrained_writes op =
     let open Type in
     match op with
-    | Frame (ConstrainedAssignment { declaration; _ }, op) ->
+    | Frame (ConstrainedAssignment { declaration; array; _ }, op) when (not arrays_only) || array ->
       LocSet.add (ALoc.to_loc_with_tables tables declaration) (find_constrained_writes op)
     | Op (Speculation op)
     | Frame (_, op) ->

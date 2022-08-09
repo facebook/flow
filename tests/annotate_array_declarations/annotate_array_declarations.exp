@@ -1,0 +1,40 @@
+>>> test.js (#changes: 2)
+//@flow
+
+var x: Array<number | string> = []
+x.push(42);
+x.push("a");
+
+function foo() {
+  var x: Array<number | string> = []
+  x.push(42);
+  x.push("a");
+}
+
+>>> Launching report...
+
+Stats:
+  Files changed:                            1
+  Number of annotations added:              2
+  Total size of annotations:                8
+  Number of vars with write errors:         2
+  Number of possibly renamable vars:        0
+
+Errors:
+  Missing annot./normalizer error:          0
+  Validation Error:                         0
+  Import Error:
+    Loc source none:                        0
+    Parsing heaps get ast error:            0
+    Indeterminate module type:              0
+    No matching export:                     0
+  Serializer error:                         0
+  Unsupported error kind:                   0
+
+Warnings:
+  Skipping arrow function:                  0
+  Large type added:                         0
+  Location unhandled:                       0
+  Empty NoUpper:                            0
+  Empty SomeKnownUpper:                     0
+

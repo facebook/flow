@@ -68,7 +68,11 @@ let reduce cx ast =
       (fun error ->
         LSet.fold
           (fun loc -> LSet.add loc)
-          (Codemod_constrained_write_utils.declaration_locs_of_constrained_write_error cx error))
+          (Codemod_constrained_write_utils.declaration_locs_of_constrained_write_error
+             ~arrays_only:false
+             cx
+             error
+          ))
       errors
       LSet.empty
   in

@@ -1,0 +1,1 @@
+cmd: codemod annotate-array-providers --generalize-maybe --strip-root --quiet ./
