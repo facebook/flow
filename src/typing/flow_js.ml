@@ -3430,24 +3430,26 @@ struct
                   }
               )
           | Some p ->
-            (match p with
-            | Method (_, t) when not method_accessible ->
-              add_output
-                cx
-                ~trace
-                (Error_message.EMethodUnbinding
-                   {
-                     use_op = use_op_of_lookup_action action;
-                     reason_op = reason_prop;
-                     reason_prop = reason_of_t t;
-                   }
-                )
-            | _ ->
-              ();
-              (match kind with
-              | NonstrictReturning (_, Some (id, _)) -> Context.test_prop_hit cx id
-              | _ -> ());
-              perform_lookup_action cx trace propref p PropertyMapProperty lreason reason_op action))
+            let p =
+              match p with
+              | Method (r, t) when not method_accessible ->
+                add_output
+                  cx
+                  ~trace
+                  (Error_message.EMethodUnbinding
+                     {
+                       use_op = use_op_of_lookup_action action;
+                       reason_op = reason_prop;
+                       reason_prop = reason_of_t t;
+                     }
+                  );
+                Method (r, unbind_this_method t)
+              | _ -> p
+            in
+            (match kind with
+            | NonstrictReturning (_, Some (id, _)) -> Context.test_prop_hit cx id
+            | _ -> ());
+            perform_lookup_action cx trace propref p PropertyMapProperty lreason reason_op action)
         | (DefT (_, _, InstanceT _), LookupT { reason = reason_op; propref = Computed _; _ }) ->
           (* Instances don't have proper dictionary support. All computed accesses
              are converted to named property access to `$key` and `$value` during

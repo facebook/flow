@@ -323,6 +323,23 @@ Cannot assign function to `b.toString` because property `toString` is not writab
          ^^^^^^^^
 
 
+Error ---------------------------------------------------------------------------------------- object_prototype.js:38:26
+
+Cannot assign `x.toString` to `xToString` because function type [1] is incompatible with number [2]. [incompatible-type]
+
+   object_prototype.js:38:26
+    38| var xToString : number = x.toString; // error
+                                 ^^^^^^^^^^
+
+References:
+   <BUILTINS>/core.js:238:5
+   238|     toString(): string;
+            ^^^^^^^^^^^^^^^^^^ [1]
+   object_prototype.js:38:17
+    38| var xToString : number = x.toString; // error
+                        ^^^^^^ [2]
+
+
 Error ---------------------------------------------------------------------------------------- object_prototype.js:38:28
 
 Cannot get `x.toString` because property `toString` [1] cannot be unbound from the context [2] where it was defined.
@@ -338,6 +355,24 @@ References:
             ^^^^^^^^^^^^^^^^^^ [2]
 
 
+Error ---------------------------------------------------------------------------------------- object_prototype.js:39:33
+
+Cannot assign `x.toString` to `xToString2` because string [1] is incompatible with number [2] in the return value.
+[incompatible-type]
+
+   object_prototype.js:39:33
+    39| var xToString2 : () => number = x.toString; // error
+                                        ^^^^^^^^^^
+
+References:
+   <BUILTINS>/core.js:238:17
+   238|     toString(): string;
+                        ^^^^^^ [1]
+   object_prototype.js:39:24
+    39| var xToString2 : () => number = x.toString; // error
+                               ^^^^^^ [2]
+
+
 Error ---------------------------------------------------------------------------------------- object_prototype.js:39:35
 
 Cannot get `x.toString` because property `toString` [1] cannot be unbound from the context [2] where it was defined.
@@ -351,6 +386,23 @@ References:
    <BUILTINS>/core.js:238:5
    238|     toString(): string;
             ^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------- object_prototype.js:43:26
+
+Cannot assign `y.toString` to `yToString` because function type [1] is incompatible with number [2]. [incompatible-type]
+
+   object_prototype.js:43:26
+    43| var yToString : number = y.toString; // error
+                                 ^^^^^^^^^^
+
+References:
+   <BUILTINS>/core.js:238:5
+   238|     toString(): string;
+            ^^^^^^^^^^^^^^^^^^ [1]
+   object_prototype.js:43:17
+    43| var yToString : number = y.toString; // error
+                        ^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------- object_prototype.js:43:28
@@ -450,6 +502,24 @@ Cannot assign function to `b.hasOwnProperty` because property `hasOwnProperty` i
          ^^^^^^^^^^^^^^
 
 
+Error ---------------------------------------------------------------------------------------- object_prototype.js:71:32
+
+Cannot assign `x.hasOwnProperty` to `xHasOwnProperty` because function type [1] is incompatible with number [2].
+[incompatible-type]
+
+   object_prototype.js:71:32
+    71| var xHasOwnProperty : number = x.hasOwnProperty; // error
+                                       ^^^^^^^^^^^^^^^^
+
+References:
+   <BUILTINS>/core.js:224:5
+   224|     hasOwnProperty(prop: mixed): boolean;
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   object_prototype.js:71:23
+    71| var xHasOwnProperty : number = x.hasOwnProperty; // error
+                              ^^^^^^ [2]
+
+
 Error ---------------------------------------------------------------------------------------- object_prototype.js:71:34
 
 Cannot get `x.hasOwnProperty` because property `hasOwnProperty` [1] cannot be unbound from the context [2] where it was
@@ -465,6 +535,24 @@ References:
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
+Error ---------------------------------------------------------------------------------------- object_prototype.js:72:51
+
+Cannot assign `x.hasOwnProperty` to `xHasOwnProperty2` because boolean [1] is incompatible with number [2] in the return
+value. [incompatible-type]
+
+   object_prototype.js:72:51
+    72| var xHasOwnProperty2 : (prop: string) => number = x.hasOwnProperty; // error
+                                                          ^^^^^^^^^^^^^^^^
+
+References:
+   <BUILTINS>/core.js:224:34
+   224|     hasOwnProperty(prop: mixed): boolean;
+                                         ^^^^^^^ [1]
+   object_prototype.js:72:42
+    72| var xHasOwnProperty2 : (prop: string) => number = x.hasOwnProperty; // error
+                                                 ^^^^^^ [2]
+
+
 Error ---------------------------------------------------------------------------------------- object_prototype.js:72:53
 
 Cannot get `x.hasOwnProperty` because property `hasOwnProperty` [1] cannot be unbound from the context [2] where it was
@@ -478,6 +566,24 @@ References:
    <BUILTINS>/core.js:224:5
    224|     hasOwnProperty(prop: mixed): boolean;
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------- object_prototype.js:76:32
+
+Cannot assign `y.hasOwnProperty` to `yHasOwnProperty` because function type [1] is incompatible with number [2].
+[incompatible-type]
+
+   object_prototype.js:76:32
+    76| var yHasOwnProperty : number = y.hasOwnProperty; // error
+                                       ^^^^^^^^^^^^^^^^
+
+References:
+   <BUILTINS>/core.js:224:5
+   224|     hasOwnProperty(prop: mixed): boolean;
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   object_prototype.js:76:23
+    76| var yHasOwnProperty : number = y.hasOwnProperty; // error
+                              ^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------- object_prototype.js:76:34
@@ -519,6 +625,24 @@ Cannot assign function to `b.propertyIsEnumerable` because property `propertyIsE
          ^^^^^^^^^^^^^^^^^^^^
 
 
+Error ---------------------------------------------------------------------------------------- object_prototype.js:96:38
+
+Cannot assign `x.propertyIsEnumerable` to `xPropertyIsEnumerable` because function type [1] is incompatible with
+number [2]. [incompatible-type]
+
+   object_prototype.js:96:38
+    96| var xPropertyIsEnumerable : number = x.propertyIsEnumerable; // error
+                                             ^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   <BUILTINS>/core.js:234:5
+   234|     propertyIsEnumerable(prop: mixed): boolean;
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   object_prototype.js:96:29
+    96| var xPropertyIsEnumerable : number = x.propertyIsEnumerable; // error
+                                    ^^^^^^ [2]
+
+
 Error ---------------------------------------------------------------------------------------- object_prototype.js:96:40
 
 Cannot get `x.propertyIsEnumerable` because property `propertyIsEnumerable` [1] cannot be unbound from the context [2]
@@ -534,6 +658,24 @@ References:
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
+Error ----------------------------------------------------------------------------------------- object_prototype.js:98:3
+
+Cannot assign `x.propertyIsEnumerable` to `xPropertyIsEnumerable2` because boolean [1] is incompatible with number [2]
+in the return value. [incompatible-type]
+
+   object_prototype.js:98:3
+    98|   x.propertyIsEnumerable; // error
+          ^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   <BUILTINS>/core.js:234:40
+   234|     propertyIsEnumerable(prop: mixed): boolean;
+                                               ^^^^^^^ [1]
+   object_prototype.js:97:48
+    97| var xPropertyIsEnumerable2 : (prop: string) => number =
+                                                       ^^^^^^ [2]
+
+
 Error ----------------------------------------------------------------------------------------- object_prototype.js:98:5
 
 Cannot get `x.propertyIsEnumerable` because property `propertyIsEnumerable` [1] cannot be unbound from the context [2]
@@ -547,6 +689,24 @@ References:
    <BUILTINS>/core.js:234:5
    234|     propertyIsEnumerable(prop: mixed): boolean;
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------- object_prototype.js:102:38
+
+Cannot assign `y.propertyIsEnumerable` to `yPropertyIsEnumerable` because function type [1] is incompatible with
+number [2]. [incompatible-type]
+
+   object_prototype.js:102:38
+   102| var yPropertyIsEnumerable : number = y.propertyIsEnumerable; // error
+                                             ^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   <BUILTINS>/core.js:234:5
+   234|     propertyIsEnumerable(prop: mixed): boolean;
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   object_prototype.js:102:29
+   102| var yPropertyIsEnumerable : number = y.propertyIsEnumerable; // error
+                                    ^^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------- object_prototype.js:102:40
@@ -602,6 +762,23 @@ References:
    <BUILTINS>/core.js:1511:5
    1511|     valueOf(): number;
              ^^^^^^^^^^^^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------- object_prototype.js:126:25
+
+Cannot assign `y.valueOf` to `yValueOf` because function type [1] is incompatible with number [2]. [incompatible-type]
+
+   object_prototype.js:126:25
+   126| var yValueOf : number = y.valueOf; // error
+                                ^^^^^^^^^
+
+References:
+   <BUILTINS>/core.js:240:5
+   240|     valueOf(): mixed;
+            ^^^^^^^^^^^^^^^^ [1]
+   object_prototype.js:126:16
+   126| var yValueOf : number = y.valueOf; // error
+                       ^^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------- object_prototype.js:126:27
@@ -706,6 +883,24 @@ References:
    <BUILTINS>/core.js:1499:5
    1499|     toLocaleString(locales?: string | Array<string>, options?: Intl$DateTimeFormatOptions): string;
              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------- object_prototype.js:155:32
+
+Cannot assign `y.toLocaleString` to `yToLocaleString` because function type [1] is incompatible with number [2].
+[incompatible-type]
+
+   object_prototype.js:155:32
+   155| var yToLocaleString : number = y.toLocaleString; // error
+                                       ^^^^^^^^^^^^^^^^
+
+References:
+   <BUILTINS>/core.js:236:5
+   236|     toLocaleString(): string;
+            ^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   object_prototype.js:155:23
+   155| var yToLocaleString : number = y.toLocaleString; // error
+                              ^^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------- object_prototype.js:155:34
@@ -861,4 +1056,4 @@ References:
 
 
 
-Found 59 errors
+Found 70 errors
