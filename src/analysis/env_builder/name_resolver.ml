@@ -4591,15 +4591,13 @@ module Make
           | OptionalCall
               {
                 OptionalCall.call = { Call.callee; targs; arguments; comments = _ };
-                optional;
+                optional = _;
                 filtered_out = _;
               } ->
-            let refi =
-              match RefinementKey.of_expression callee with
-              | Some refinement_key_obj when optional ->
-                this#start_refinement refinement_key_obj (L.LSet.singleton loc, NotR MaybeR)
-              | _ -> LookupMap.empty
-            in
+            (* TODO: Currently, optional call foo?.(...) is not modeled as NotR (MaybeR) on foo and
+               then call foo(...) at all. Before MethodT is un-entangled, let's not add the
+               non-maybe refinement on callee for now. *)
+            let refi = LookupMap.empty in
 
             ignore @@ this#optional_chain callee;
             this#commit_refinement refi;

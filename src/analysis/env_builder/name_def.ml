@@ -1319,15 +1319,10 @@ class def_finder env_entries providers toplevel_scope =
     method private visit_optional_call_expression ~cond expr =
       let open Ast.Expression.OptionalCall in
       let { call; optional = _; filtered_out = _ } = expr in
-      this#visit_call_expression call ~cond ~visit_callee:(fun callee ->
-          (* Visit member by super#member to avoid generating a RefiExpression def. *)
-          match callee with
-          | (loc, Ast.Expression.Member member) -> ignore @@ super#member loc member
-          | (loc, Ast.Expression.OptionalMember member) ->
-            let { Ast.Expression.OptionalMember.member; optional = _; filtered_out = _ } = member in
-            ignore @@ super#member loc member
-          | _ -> this#visit_expression ~hint:Hint_None ~cond:NonConditionalContext callee
-      )
+      this#visit_call_expression
+        call
+        ~cond
+        ~visit_callee:(this#visit_expression ~hint:Hint_None ~cond:NonConditionalContext)
 
     method! new_ _ expr =
       let open Ast.Expression.New in

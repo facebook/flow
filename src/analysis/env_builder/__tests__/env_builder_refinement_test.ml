@@ -1345,7 +1345,7 @@ let%expect_test "optional_base_call" =
           (1, 4) to (1, 5): (`x`)
         };
         (2, 34) to (2, 35) => {
-          {refinement = Not (Maybe); writes = (1, 4) to (1, 5): (`x`)}
+          (1, 4) to (1, 5): (`x`)
         };
         (2, 38) to (2, 39) => {
           (1, 4) to (1, 5): (`x`)
