@@ -26,7 +26,14 @@ function bar1(x : ?Bar) {
 
 function bar2(x : Bar) {
   var y = x;
-  while (y = y.parent) {
+  while (y = y.parent) { // constrain write error
     y.doStuff();
+  }
+}
+
+function bar3() {
+  let x = 3;
+  while (x) {
+    x = null; // constrain write error
   }
 }

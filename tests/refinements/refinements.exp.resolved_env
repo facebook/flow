@@ -1,3 +1,74 @@
+Error ---------------------------------------------------------------------------------------------- assignment.js:16:14
+
+Cannot assign `x.parent` to `x` because null or undefined [1] is incompatible with `Bar` [2]. [incompatible-type]
+
+   assignment.js:16:14
+   16|   while (x = x.parent) { // can't assign x to ?Bar
+                    ^^^^^^^^
+
+References:
+   assignment.js:11:11
+   11|   parent: ?Bar;
+                 ^^^^ [1]
+   assignment.js:15:19
+   15| function bar0(x : Bar) {
+                         ^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- assignment.js:22:16
+
+Cannot get `x.parent` because property `parent` is missing in null or undefined [1]. [incompatible-use]
+
+   assignment.js:22:16
+   22|   while (x = x.parent) { // x.parent might be null
+                      ^^^^^^
+
+References:
+   assignment.js:21:19
+   21| function bar1(x : ?Bar) {
+                         ^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------- assignment.js:29:14
+
+Cannot assign `y.parent` to `y` because null or undefined [1] is incompatible with `Bar` [2]. All writes to `y` must be
+compatible with the type of its initializer [3]. Add an annotation to `y` [3] if a different type is desired.
+[incompatible-type]
+
+   assignment.js:29:14
+   29|   while (y = y.parent) { // constrain write error
+                    ^^^^^^^^
+
+References:
+   assignment.js:11:11
+   11|   parent: ?Bar;
+                 ^^^^ [1]
+   assignment.js:27:19
+   27| function bar2(x : Bar) {
+                         ^^^ [2]
+   assignment.js:28:7
+   28|   var y = x;
+             ^ [3]
+
+
+Error ----------------------------------------------------------------------------------------------- assignment.js:37:9
+
+Cannot assign `null` to `x` because null [1] is incompatible with number [2]. All writes to `x` must be compatible with
+the type of its initializer [3]. Add an annotation to `x` [3] if a different type is desired. [incompatible-type]
+
+   assignment.js:37:9
+   37|     x = null; // constrain write error
+               ^^^^ [1]
+
+References:
+   assignment.js:35:11
+   35|   let x = 3;
+                 ^ [2]
+   assignment.js:35:7
+   35|   let x = 3;
+             ^ [3]
+
+
 Error ----------------------------------------------------------------------------------------------------- bool.js:12:5
 
 Cannot get `x[0]` because null or undefined [1] does not have properties. [incompatible-use]
@@ -5659,4 +5730,4 @@ Cannot perform arithmetic operation because undefined [1] is not a number. [unsa
 
 
 
-Found 387 errors
+Found 391 errors

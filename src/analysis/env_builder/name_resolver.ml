@@ -2794,7 +2794,7 @@ module Make
        * We don't need to check for continues because they are handled before this point.
        * We don't check for throw/return because then we wouldn't proceed to the line
        * after the loop anyway. *)
-      method post_loop_refinements loop_starting_env guard =
+      method post_loop_refinements env_before_guard guard =
         if not AbruptCompletion.(mem (List.map fst env_state.abrupt_completion_envs) (break None))
         then (
           this#push_refinement_scope empty_refinements;
@@ -2802,7 +2802,7 @@ module Make
           this#negate_new_refinements ();
           this#pop_refinement_scope_without_unrefining ();
           let final_env = this#env in
-          this#reset_env loop_starting_env;
+          this#reset_env env_before_guard;
           (* This may seem unnecessary, but we need to ensure that when we revisit the guard that
            * the special writes we record for literal subtyping checks are present. This are only
            * recorded in _refinement functions *)
@@ -2876,7 +2876,9 @@ module Make
              * x; // Don't want x to be a PHI of x != null and x = 4.
              *)
             this#push_refinement_scope empty_refinements;
-            let (loop_completion_state, env_after_guard_no_refinements) = visit_guard_and_body () in
+            let (loop_completion_state, env_before_guard, env_after_guard_no_refinements) =
+              visit_guard_and_body ()
+            in
             let loop_completion_state =
               if auto_handle_continues then
                 this#handle_continues loop_completion_state continues
@@ -2886,17 +2888,13 @@ module Make
             this#pop_refinement_scope_after_loop ();
 
             (* We either enter the loop body or we don't *)
-            let loop_starting_env =
-              match env_after_guard_no_refinements with
-              | None -> this#env
-              | Some env ->
-                this#merge_self_env env;
-                env
-            in
+            (match env_after_guard_no_refinements with
+            | None -> ()
+            | Some env -> this#merge_self_env env);
 
             (match guard with
             | None -> ()
-            | Some guard -> this#post_loop_refinements loop_starting_env guard);
+            | Some guard -> this#post_loop_refinements env_before_guard guard);
 
             let completion_states = make_completion_states loop_completion_state in
             let completion_state =
@@ -2915,12 +2913,13 @@ module Make
           ignore @@ this#run_to_completion (fun () -> ignore @@ this#statement body)
         in
         let visit_guard_and_body () =
+          let env_before_guard = this#env in
           ignore @@ this#expression_refinement test;
           let env = this#env_without_latest_refinements in
           let loop_completion_state =
             this#run_to_completion (fun () -> ignore @@ this#statement body)
           in
-          (loop_completion_state, Some env)
+          (loop_completion_state, env_before_guard, Some env)
         in
         let make_completion_states loop_completion_state = (None, [loop_completion_state]) in
         let continues = AbruptCompletion.continue None :: env_state.possible_labeled_continues in
@@ -2951,10 +2950,11 @@ module Make
             this#run_to_completion (fun () -> ignore @@ this#statement body)
           in
           let loop_completion_state = this#handle_continues loop_completion_state continues in
+          let env_before_guard = this#env in
           (match loop_completion_state with
           | None -> ignore @@ this#expression_refinement test
           | Some _ -> ());
-          (loop_completion_state, None)
+          (loop_completion_state, env_before_guard, None)
         in
         let make_completion_states loop_completion_state = (loop_completion_state, []) in
         this#env_loop
@@ -2983,6 +2983,7 @@ module Make
         in
         let visit_guard_and_body () =
           ignore @@ Flow_ast_mapper.map_opt this#for_statement_init init;
+          let env_before_guard = this#env in
           ignore @@ Flow_ast_mapper.map_opt this#expression_refinement test;
           let env = this#env_without_latest_refinements in
           let loop_completion_state =
@@ -2992,7 +2993,7 @@ module Make
           (match loop_completion_state with
           | None -> ignore @@ Flow_ast_mapper.map_opt this#expression update
           | Some _ -> ());
-          (loop_completion_state, Some env)
+          (loop_completion_state, env_before_guard, Some env)
         in
         let make_completion_states loop_completion_state = (None, [loop_completion_state]) in
         this#env_loop
@@ -3040,7 +3041,7 @@ module Make
           let loop_completion_state =
             this#run_to_completion (fun () -> ignore @@ this#statement body)
           in
-          (loop_completion_state, Some env)
+          (loop_completion_state, env, Some env)
         in
         let make_completion_states loop_completion_state = (None, [loop_completion_state]) in
         let continues = AbruptCompletion.continue None :: env_state.possible_labeled_continues in

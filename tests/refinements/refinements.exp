@@ -1,3 +1,51 @@
+Error ---------------------------------------------------------------------------------------------- assignment.js:16:14
+
+Cannot assign `x.parent` to `x` because null or undefined [1] is incompatible with `Bar` [2]. [incompatible-type]
+
+   assignment.js:16:14
+   16|   while (x = x.parent) { // can't assign x to ?Bar
+                    ^^^^^^^^
+
+References:
+   assignment.js:11:11
+   11|   parent: ?Bar;
+                 ^^^^ [1]
+   assignment.js:15:19
+   15| function bar0(x : Bar) {
+                         ^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- assignment.js:16:14
+
+null or undefined [1] is incompatible with `Bar` [2]. [incompatible-type]
+
+   assignment.js:16:14
+   16|   while (x = x.parent) { // can't assign x to ?Bar
+                    ^^^^^^^^
+
+References:
+   assignment.js:11:11
+   11|   parent: ?Bar;
+                 ^^^^ [1]
+   assignment.js:15:19
+   15| function bar0(x : Bar) {
+                         ^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- assignment.js:22:16
+
+Cannot get `x.parent` because property `parent` is missing in null or undefined [1]. [incompatible-use]
+
+   assignment.js:22:16
+   22|   while (x = x.parent) { // x.parent might be null
+                      ^^^^^^
+
+References:
+   assignment.js:21:19
+   21| function bar1(x : ?Bar) {
+                         ^^^^ [1]
+
+
 Error ----------------------------------------------------------------------------------------------------- bool.js:12:5
 
 Cannot get `x[0]` because null or undefined [1] does not have properties. [incompatible-use]
@@ -4967,4 +5015,4 @@ Cannot perform arithmetic operation because undefined [1] is not a number. [unsa
 
 
 
-Found 338 errors
+Found 341 errors

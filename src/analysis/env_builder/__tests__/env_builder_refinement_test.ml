@@ -1878,6 +1878,21 @@ x;|};
           {refinement = Not (Not (Maybe)); writes = (1, 4) to (1, 5): (`x`)}
         }] |}]
 
+let%expect_test "while_assign" =
+  print_ssa_test {|
+declare var x: string;
+while (x = x) { x }
+|};
+    [%expect {|
+      [
+        (3, 11) to (3, 12) => {
+          (2, 12) to (2, 13): (`x`)
+        };
+        (3, 16) to (3, 17) => {
+          {refinement = Truthy; writes = (3, 7) to (3, 8): (`x`)}
+        }]
+       |}]
+
 let%expect_test "while_throw" =
   print_ssa_test {|let x = undefined;
 while (x != null) {
