@@ -23,6 +23,7 @@ module type S = sig
     | ArrayProviderLoc
     | FunctionThisLoc
     | GlobalThisLoc
+    | ClassSelfLoc
     | ClassInstanceThisLoc
     | ClassStaticThisLoc
     | ClassInstanceSuperLoc
@@ -226,6 +227,7 @@ module Make
     | ArrayProviderLoc
     | FunctionThisLoc
     | GlobalThisLoc
+    | ClassSelfLoc
     | ClassInstanceThisLoc
     | ClassStaticThisLoc
     | ClassInstanceSuperLoc

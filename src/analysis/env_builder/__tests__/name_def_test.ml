@@ -434,7 +434,6 @@ x = 10;
   |};
   [%expect {|
     [
-      (3, 0) to (5, 1) => this tparam;
       (3, 6) to (3, 7) => class (annotated=false) C;
       (4, 10) to (4, 11) => val (4, 14) to (4, 16);
       (6, 0) to (6, 1) => val (6, 4) to (6, 6)
@@ -449,7 +448,6 @@ let foo = class C<Y: typeof x> { };
     [
       (2, 4) to (2, 5) => val (2, 8) to (2, 10);
       (3, 4) to (3, 7) => val (3, 10) to (3, 34);
-      (3, 10) to (3, 34) => this tparam;
       (3, 16) to (3, 17) => class (annotated=true) C;
       (3, 18) to (3, 19) => tparam (3, 18) to (3, 29)
     ] |}]
@@ -463,7 +461,6 @@ class C {
 x = 10;
   |};
   [%expect {|
-    (3, 0) to (5, 1) =>
     (3, 6) to (3, 7) =>
     (6, 0) to (6, 1) =>
     (4, 10) to (4, 11) |}]
@@ -477,8 +474,7 @@ let foo = class C<Y: typeof x> { };
     (2, 4) to (2, 5) =>
     (3, 18) to (3, 19) =>
     (3, 16) to (3, 17) =>
-    (3, 4) to (3, 7) =>
-    (3, 10) to (3, 34) |}]
+    (3, 4) to (3, 7) |}]
 
 let%expect_test "class3" =
   print_order_test {|
@@ -490,9 +486,7 @@ class D extends C {
 }
   |};
   [%expect {|
-    (2, 0) to (4, 1) =>
-    legal scc: (((2, 6) to (2, 7)); ((5, 6) to (5, 7))) =>
-    (5, 0) to (7, 1) |}]
+    legal scc: (((2, 6) to (2, 7)); ((5, 6) to (5, 7))) |}]
 
 let%expect_test "class3_anno" =
   print_order_test {|
@@ -504,9 +498,7 @@ class D extends C {
 }
   |};
   [%expect {|
-    (2, 0) to (4, 1) =>
-    legal scc: (((2, 6) to (2, 7)); ((5, 6) to (5, 7))) =>
-    (5, 0) to (7, 1) |}]
+    legal scc: (((2, 6) to (2, 7)); ((5, 6) to (5, 7))) |}]
 
 let%expect_test "enum" =
   print_order_test {|
@@ -538,8 +530,7 @@ interface J { h: C }
 class C implements I { }
   |};
   [%expect {|
-    legal scc: (((2, 10) to (2, 11)); ((4, 6) to (4, 7)); ((3, 10) to (3, 11))) =>
-    (4, 0) to (4, 24) |}]
+    legal scc: (((2, 10) to (2, 11)); ((4, 6) to (4, 7)); ((3, 10) to (3, 11))) |}]
 
 let%expect_test "import" =
   print_init_test {|
@@ -574,7 +565,6 @@ if (x instanceof C) {
 }
   |};
   [%expect {|
-    (2, 0) to (4, 1) =>
     (2, 6) to (2, 7) =>
     (5, 12) to (5, 13) =>
     (9, 2) to (9, 3) =>
@@ -838,7 +828,6 @@ class JSResourceReference<+T> {
   [%expect {|
     (2, 16) to (2, 17) =>
     (4, 27) to (4, 28) =>
-    (4, 0) to (11, 1) =>
     legal scc: (((4, 6) to (4, 25)); ((7, 4) to (7, 12)); ((6, 4) to (6, 11)); ((5, 17) to (5, 18))) =>
     (2, 5) to (2, 12) |}]
 
@@ -902,7 +891,6 @@ class C {
 }
   |};
   [%expect {|
-    (2, 0) to (5, 1) =>
     (2, 6) to (2, 7) |}]
 
 let%expect_test "class_question" =
@@ -912,7 +900,6 @@ class C {
 }
   |};
   [%expect {|
-    (2, 0) to (4, 1) =>
     legal scc: (((2, 6) to (2, 7)); ((3, 4) to (3, 5))) |}]
 
 let%expect_test "arr" =

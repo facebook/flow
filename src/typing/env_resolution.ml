@@ -499,13 +499,6 @@ module Make (Env : Env_sig.S) (Statement : Statement_sig.S with module Env := En
     let t = DefT (TypeUtil.reason_of_t t, bogus_trust (), TypeT (TypeParamKind, t)) in
     (t, unknown_use)
 
-  let resolve_this_type_param cx class_loc =
-    let env = Context.environment cx in
-    New_env.New_env.check_readable cx Env_api.OrdinaryNameLoc class_loc;
-    let class_t = Base.Option.value_exn (Loc_env.find_ordinary_write env class_loc) in
-    (* class_t will only be resolved after type checking the entire class. *)
-    (class_t, unknown_use)
-
   let resolve_chain_expression cx ~cond exp =
     let cache = Context.node_cache cx in
     let cond =
@@ -589,7 +582,7 @@ module Make (Env : Env_sig.S) (Statement : Statement_sig.S with module Env := En
       | Function { function_; synthesizable_from_annotation = true; function_loc = _; tparams_map }
         ->
         resolve_annotated_function cx def_reason tparams_map function_
-      | Class { class_; class_loc; missing_annotations = _ } ->
+      | Class { class_; class_loc; class_implicit_this_tparam = _; missing_annotations = _ } ->
         resolve_class cx id_loc def_reason class_loc class_
       | MemberAssign { member_loc = _; member = _; rhs } ->
         (expression cx ~hint:dummy_hint rhs, unknown_use)
@@ -604,7 +597,6 @@ module Make (Env : Env_sig.S) (Statement : Statement_sig.S with module Env := En
       | DeclaredClass (loc, class_) -> resolve_declare_class cx loc class_
       | Enum (enum_loc, enum) -> resolve_enum cx id_loc def_reason enum_loc enum
       | TypeParam (_, _) -> resolve_type_param cx id_loc
-      | ThisTypeParam (_, _) -> resolve_this_type_param cx id_loc
       | GeneratorNext gen -> resolve_generator_next cx def_reason gen
     in
     let update_reason =
@@ -641,6 +633,7 @@ module Make (Env : Env_sig.S) (Statement : Statement_sig.S with module Env := En
       | (Class { class_loc; _ }, _, _, _) ->
         let open Env_api in
         acc
+        |> EnvSet.add (ClassSelfLoc, class_loc)
         |> EnvSet.add (ClassInstanceThisLoc, class_loc)
         |> EnvSet.add (ClassStaticThisLoc, class_loc)
         |> EnvSet.add (ClassInstanceSuperLoc, class_loc)
@@ -666,14 +659,16 @@ module Make (Env : Env_sig.S) (Statement : Statement_sig.S with module Env := En
           let cache = Context.node_cache cx in
           Node_cache.set_tparam cache info;
           (name, tparam, t)
-        | ThisTypeParam (tparams_locs, class_tparam_loc) ->
+        | Class { class_loc; class_implicit_this_tparam = { tparams_map; class_tparams_loc }; _ } ->
           let env = Context.environment cx in
-          let class_t = Base.Option.value_exn (Loc_env.find_ordinary_write env def_loc) in
+          let class_t =
+            Base.Option.value_exn (Loc_env.find_write env Env_api.ClassSelfLoc class_loc)
+          in
           let (this_param, this_t) =
             let class_tparams =
-              Base.Option.map class_tparam_loc ~f:(fun tparams_loc ->
+              Base.Option.map class_tparams_loc ~f:(fun tparams_loc ->
                   ( tparams_loc,
-                    tparams_locs
+                    tparams_map
                     |> ALocMap.keys
                     |> Base.List.map ~f:(fun l ->
                            let (_, tparam, _) = get_type_param cx graph l in
@@ -721,7 +716,7 @@ module Make (Env : Env_sig.S) (Statement : Statement_sig.S with module Env := En
       | Illegal { loc = key; _ } ->
         (match EnvMap.find key graph with
         | (TypeParam _, _, _, _)
-        | (ThisTypeParam _, _, _, _) ->
+        | (Class _, _, _, _) ->
           let (_kind, loc) = key in
           ignore @@ init_type_param cx graph loc
         | _ -> ())

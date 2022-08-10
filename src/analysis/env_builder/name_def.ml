@@ -104,6 +104,11 @@ type generator_annot = {
   async: bool;
 }
 
+type class_implicit_this_tparam = {
+  tparams_map: tparams_map;
+  class_tparams_loc: ALoc.t option;
+}
+
 type def =
   | Binding of binding
   | ChainExpression of cond_context * (ALoc.t, ALoc.t) Ast.Expression.t
@@ -132,6 +137,7 @@ type def =
     }
   | Class of {
       missing_annotations: reason list;
+      class_implicit_this_tparam: class_implicit_this_tparam;
       class_: (ALoc.t, ALoc.t) Ast.Class.t;
       class_loc: ALoc.t;
     }
@@ -139,7 +145,6 @@ type def =
   | TypeAlias of ALoc.t * (ALoc.t, ALoc.t) Ast.Statement.TypeAlias.t
   | OpaqueType of ALoc.t * (ALoc.t, ALoc.t) Ast.Statement.OpaqueType.t
   | TypeParam of tparams_map * (ALoc.t, ALoc.t) Ast.Type.TypeParam.t
-  | ThisTypeParam of tparams_map * ALoc.t option
   | Interface of ALoc.t * (ALoc.t, ALoc.t) Ast.Statement.Interface.t
   | Enum of ALoc.t * ALoc.t Ast.Statement.EnumDeclaration.body
   | Import of {
@@ -204,7 +209,13 @@ module Print = struct
         )
     | DeclaredClass (_, { Ast.Statement.DeclareClass.id = (_, { Ast.Identifier.name; _ }); _ }) ->
       spf "declared class %s" name
-    | Class { class_ = { Ast.Class.id; _ }; missing_annotations; class_loc = _ } ->
+    | Class
+        {
+          class_ = { Ast.Class.id; _ };
+          class_implicit_this_tparam = _;
+          missing_annotations;
+          class_loc = _;
+        } ->
       spf
         "class (annotated=%b) %s"
         (Base.List.is_empty missing_annotations)
@@ -218,7 +229,6 @@ module Print = struct
     | OpaqueType (_, { Ast.Statement.OpaqueType.id = (loc, _); _ }) ->
       spf "opaque %s" (ALoc.debug_to_string loc)
     | TypeParam (_, (loc, _)) -> spf "tparam %s" (ALoc.debug_to_string loc)
-    | ThisTypeParam _ -> "this tparam"
     | Enum (loc, _) -> spf "enum %s" (ALoc.debug_to_string loc)
     | Interface _ -> "interface"
     | GeneratorNext _ -> "next"
@@ -432,7 +442,10 @@ let def_of_function tparams_map function_loc function_ =
       tparams_map;
     }
 
-let def_of_class loc ({ Ast.Class.body = (_, { Ast.Class.Body.body; _ }); _ } as class_) =
+let def_of_class
+    loc
+    class_implicit_this_tparam
+    ({ Ast.Class.body = (_, { Ast.Class.Body.body; _ }); _ } as class_) =
   let open Ast.Class.Body in
   let missing_annotations =
     Base.List.concat_map
@@ -534,7 +547,7 @@ let def_of_class loc ({ Ast.Class.body = (_, { Ast.Class.Body.body; _ }); _ } as
           [mk_reason (RPrivateProperty name) loc])
       body
   in
-  Class { missing_annotations; class_; class_loc = loc }
+  Class { missing_annotations; class_implicit_this_tparam; class_; class_loc = loc }
 
 let func_scope_kind ?key { Ast.Function.async; generator; predicate; _ } =
   match (async, generator, predicate, key) with
@@ -825,38 +838,38 @@ class def_finder env_entries providers toplevel_scope =
       this#in_new_tparams_env (fun () ->
           let old_stack = class_stack in
           class_stack <- loc :: class_stack;
-          this#in_scope
-            (fun () ->
-              Flow_ast_visitor.run_opt this#class_identifier id;
-              Flow_ast_visitor.run_opt this#type_params class_tparams;
-              let () =
-                let reason =
-                  match id with
-                  | Some (name_loc, { Ast.Identifier.name; comments = _ }) ->
-                    mk_reason (RType (OrdinaryName name)) name_loc
-                  | None -> mk_reason (RType (InternalName "*default*")) loc
-                in
-                this#add_ordinary_binding
-                  loc
-                  reason
-                  (ThisTypeParam (tparams, Base.Option.map ~f:fst class_tparams));
-                this#add_tparam loc "this"
-              in
-              ignore @@ this#class_body body;
-              Flow_ast_visitor.run_opt (Flow_ast_mapper.map_loc this#class_extends) extends;
-              Flow_ast_visitor.run_opt this#class_implements implements;
-              Flow_ast_visitor.run_list this#class_decorator class_decorators;
-              ())
-            Ordinary
-            ();
+          let class_implicit_this_tparam =
+            this#in_scope
+              (fun () ->
+                Flow_ast_visitor.run_opt this#class_identifier id;
+                Flow_ast_visitor.run_opt this#type_params class_tparams;
+                let this_tparam_loc = Base.Option.value_map ~default:loc ~f:fst id in
+                let class_tparams_map = tparams in
+                this#add_tparam this_tparam_loc "this";
+                ignore @@ this#class_body body;
+                Flow_ast_visitor.run_opt (Flow_ast_mapper.map_loc this#class_extends) extends;
+                Flow_ast_visitor.run_opt this#class_implements implements;
+                Flow_ast_visitor.run_list this#class_decorator class_decorators;
+                {
+                  tparams_map = class_tparams_map;
+                  class_tparams_loc = Base.Option.map ~f:fst class_tparams;
+                })
+              Ordinary
+              ()
+          in
           class_stack <- old_stack;
           begin
             match id with
             | Some (id_loc, { Ast.Identifier.name; _ }) ->
               let name = OrdinaryName name in
               let reason = mk_reason (RType name) id_loc in
-              this#add_ordinary_binding id_loc reason (def_of_class loc expr)
-            | None -> ()
+              this#add_ordinary_binding
+                id_loc
+                reason
+                (def_of_class loc class_implicit_this_tparam expr)
+            | None ->
+              let reason = mk_reason (RType (OrdinaryName "<<anonymous class>>")) loc in
+              this#add_ordinary_binding loc reason (def_of_class loc class_implicit_this_tparam expr)
           end;
           expr
       )

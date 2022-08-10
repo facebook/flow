@@ -862,10 +862,10 @@ module New_env = struct
   let set_var cx ~use_op name t loc =
     assign_env_value_entry cx ~use_op ~potential_global_name:name t loc
 
-  let bind cx t loc =
+  let bind cx t ~kind loc =
     match Context.env_mode cx with
     | Options.(SSAEnv Enforced) -> ()
-    | _ -> unify_write_entry cx ~use_op:Type.unknown_use t Env_api.OrdinaryNameLoc loc
+    | _ -> unify_write_entry cx ~use_op:Type.unknown_use t kind loc
 
   let bind_var ?state:_ cx name t loc =
     valid_declaration_check cx (OrdinaryName name) loc;
@@ -876,7 +876,7 @@ module New_env = struct
 
   let bind_let ?state:_ cx name t loc =
     valid_declaration_check cx (OrdinaryName name) loc;
-    bind cx (TypeUtil.type_t_of_annotated_or_inferred t) loc
+    bind cx (TypeUtil.type_t_of_annotated_or_inferred t) ~kind:Env_api.OrdinaryNameLoc loc
 
   let bind_function_this cx t loc =
     unify_write_entry cx ~use_op:Type.unknown_use t Env_api.FunctionThisLoc loc
@@ -901,30 +901,31 @@ module New_env = struct
       valid_declaration_check cx name loc;
       (match (Context.env_mode cx, t) with
       | (Options.(SSAEnv Reordered), Annotated _) -> ()
-      | _ -> bind cx (TypeUtil.type_t_of_annotated_or_inferred t) loc)
+      | _ -> bind cx (TypeUtil.type_t_of_annotated_or_inferred t) ~kind:Env_api.OrdinaryNameLoc loc)
 
   let bind_fun ?state cx name t loc =
     match name with
     | InternalName _ -> Old_env.bind_fun ?state cx name t loc
     | OrdinaryName _
     | InternalModuleName _ ->
-      bind cx t loc
+      bind cx t ~kind:Env_api.OrdinaryNameLoc loc
 
   let bind_implicit_const ?state:_ _ cx _ t loc =
     match (Context.env_mode cx, t) with
     | (Options.(SSAEnv Reordered), Annotated _) -> ()
-    | _ -> bind cx (TypeUtil.type_t_of_annotated_or_inferred t) loc
+    | _ -> bind cx (TypeUtil.type_t_of_annotated_or_inferred t) ~kind:Env_api.OrdinaryNameLoc loc
 
-  let bind_const ?state:_ cx _ t loc = bind cx (TypeUtil.type_t_of_annotated_or_inferred t) loc
+  let bind_const ?state:_ cx _ t loc =
+    bind cx (TypeUtil.type_t_of_annotated_or_inferred t) ~kind:Env_api.OrdinaryNameLoc loc
 
-  let bind_import cx _ t loc = bind cx t loc
+  let bind_import cx _ t loc = bind cx t ~kind:Env_api.OrdinaryNameLoc loc
 
   let bind_declare_var cx name t loc =
     match name with
     | InternalName _ -> Old_env.bind_declare_var cx name t loc
     | OrdinaryName _
     | InternalModuleName _ ->
-      bind cx t loc
+      bind cx t ~kind:Env_api.OrdinaryNameLoc loc
 
   let bind_declare_fun cx ~predicate name t loc =
     match name with
@@ -932,16 +933,17 @@ module New_env = struct
     | OrdinaryName _
     | InternalModuleName _ ->
       check_predicate_declare_function cx ~predicate name loc;
-      bind cx t loc
+      bind cx t ~kind:Env_api.OrdinaryNameLoc loc
 
-  let bind_type ?state:(_ = Scope.State.Declared) cx _name t loc = bind cx t loc
+  let bind_type ?state:(_ = Scope.State.Declared) cx _name t loc =
+    bind cx t ~kind:Env_api.OrdinaryNameLoc loc
 
-  let bind_import_type cx _name t loc = bind cx t loc
+  let bind_import_type cx _name t loc = bind cx t ~kind:Env_api.OrdinaryNameLoc loc
 
   let bind_this_tparam ~state:_ _cx t loc = this_type_params := ALocMap.add loc t !this_type_params
 
   let bind_class_self_type cx class_loc _self class_t_internal =
-    bind_type cx "<class self type>" class_t_internal class_loc
+    bind cx class_t_internal ~kind:Env_api.ClassSelfLoc class_loc
 
   let declare_let cx name =
     match name with
@@ -1226,8 +1228,8 @@ module New_env = struct
 
   let init_class_self_type cx loc _reason =
     let env = Context.environment cx in
-    check_readable cx Env_api.OrdinaryNameLoc loc;
-    Base.Option.value_exn (Loc_env.find_ordinary_write env loc)
+    check_readable cx Env_api.ClassSelfLoc loc;
+    Base.Option.value_exn (Loc_env.find_write env Env_api.ClassSelfLoc loc)
 
   let init_declare_module_synthetic_module_exports
       cx ~set_module_exports ~export_type loc reason _module_scope =
