@@ -95,7 +95,20 @@ let mapper
                               (* `{}` *)
                               | (_, Object { Object.properties = []; _ })
                               (* `[]` *)
-                              | (_, Array { Array.elements = []; _ }) );
+                              | (_, Array { Array.elements = []; _ })
+                              (* `new Set()` | `new Map()` *)
+                              | ( _,
+                                  New
+                                    {
+                                      New.callee =
+                                        ( _,
+                                          Identifier (_, { Ast.Identifier.name = "Map" | "Set"; _ })
+                                        );
+                                      targs = None;
+                                      arguments = None | Some (_, { ArgList.arguments = []; _ });
+                                      _;
+                                    }
+                                ) );
                           ];
                         _;
                       }
@@ -107,27 +120,200 @@ let mapper
         let ty_result =
           Codemod_annotator.get_validated_ty cctx ~preserve_literals ~max_type_size val_loc
         in
+        (* Ignore things like `empty`, `Array<empty>`, `Set<empty>`, `Map<empty, empty>`, `{...}` *)
+        let ignore_type = function
+          | Ty.Any _
+          | Ty.Bot _
+          | Ty.Arr { Ty.arr_elt_t = Ty.Any _ | Ty.Bot _; _ }
+          | Ty.Generic ({ Ty_symbol.sym_name = Reason.OrdinaryName "Set"; _ }, _, Some [Ty.Bot _])
+          | Ty.Generic
+              ({ Ty_symbol.sym_name = Reason.OrdinaryName "Map"; _ }, _, Some [Ty.Bot _; Ty.Bot _])
+          | Ty.Obj { Ty.obj_kind = Ty.InexactObj; obj_props = []; _ } ->
+            true
+          | _ -> false
+        in
+        (* Filter out undesirable types from unions. *)
+        let ty_result =
+          match ty_result with
+          | Ok (Ty.Union _ as ty) ->
+            let members = Ty.bk_union ty |> Nel.to_list in
+            let filtered = Base.List.filter ~f:(fun ty -> not @@ ignore_type ty) members in
+            (match filtered with
+            | [] -> Ok (Ty.Bot Ty.EmptyType)
+            | [x] -> Ok x
+            | x0 :: x1 :: xs -> Ok (Ty.Union (false, x0, x1, xs)))
+          | _ -> ty_result
+        in
         (match ty_result with
-        (* Don't insert the empty inexact object type `{...}`, `Array<any>`, just `void`, or just `null`.
-           They aren't useful for our purposes. *)
-        | Ok
-            ( Ty.Obj { Ty.obj_kind = Ty.InexactObj; obj_props = []; _ }
-            | Ty.Arr { Ty.arr_elt_t = Ty.Any _ | Ty.Bot _; _ }
-            | Ty.Null | Ty.Void ) ->
-          super#variable_declarator ~kind decl
+        (* Don't insert just `void`or just `null` (but these are OK in a union). *)
+        | Ok (Ty.Null | Ty.Void) -> super#variable_declarator ~kind decl
+        | Ok t when ignore_type t -> super#variable_declarator ~kind decl
         | Ok _ ->
           (match this#get_annot loc ty_result (Ast.Type.Missing call_loc) with
           | Ast.Type.Available (_, t) ->
-            (* Add the explicit type argument to `useState`. *)
-            let targs =
-              Some (call_loc, { CallTypeArgs.arguments = [CallTypeArg.Explicit t]; comments = None })
-            in
-            ( loc,
-              {
-                Ast.Statement.VariableDeclaration.Declarator.id;
-                init = Some (call_loc, Call { Call.callee; targs; arguments; comments });
-              }
-            )
+            (match (arguments, t) with
+            | ( ( args_loc,
+                  {
+                    ArgList.arguments =
+                      [
+                        (* Match expression `new Set()` *)
+                        Expression
+                          ( new_loc,
+                            New
+                              {
+                                New.callee =
+                                  (_, Identifier (_, { Ast.Identifier.name = "Set"; _ })) as
+                                  new_callee;
+                                targs = None;
+                                arguments =
+                                  (None | Some (_, { ArgList.arguments = []; _ })) as new_arguments;
+                                comments = new_comments;
+                              }
+                          );
+                      ];
+                    comments = args_comments;
+                  }
+                ),
+                ( _,
+                  Ast.Type.Generic
+                    {
+                      (* Match type `Set<T>` *)
+                      Ast.Type.Generic.id =
+                        Ast.Type.Generic.Identifier.Unqualified
+                          (_, { Ast.Identifier.name = "Set"; _ });
+                      targs =
+                        Some
+                          ( targs_loc,
+                            { Ast.Type.TypeArgs.arguments = [targ_t]; comments = targs_comments }
+                          );
+                      _;
+                    }
+                )
+              ) ->
+              let new_targs =
+                ( targs_loc,
+                  {
+                    CallTypeArgs.arguments = [CallTypeArg.Explicit targ_t];
+                    comments = targs_comments;
+                  }
+                )
+              in
+              let arguments =
+                ( args_loc,
+                  {
+                    ArgList.arguments =
+                      [
+                        Expression
+                          ( new_loc,
+                            New
+                              {
+                                New.callee = new_callee;
+                                targs = Some new_targs;
+                                arguments = new_arguments;
+                                comments = new_comments;
+                              }
+                          );
+                      ];
+                    comments = args_comments;
+                  }
+                )
+              in
+              (* Add explicit type argument to the `new Set()`. *)
+              ( loc,
+                {
+                  Ast.Statement.VariableDeclaration.Declarator.id;
+                  init = Some (call_loc, Call { Call.callee; targs = None; arguments; comments });
+                }
+              )
+            | ( ( args_loc,
+                  {
+                    ArgList.arguments =
+                      [
+                        (* Match expression `new Map()` *)
+                        Expression
+                          ( new_loc,
+                            New
+                              {
+                                New.callee =
+                                  (_, Identifier (_, { Ast.Identifier.name = "Map"; _ })) as
+                                  new_callee;
+                                targs = None;
+                                arguments =
+                                  (None | Some (_, { ArgList.arguments = []; _ })) as new_arguments;
+                                comments = new_comments;
+                              }
+                          );
+                      ];
+                    comments = args_comments;
+                  }
+                ),
+                ( _,
+                  Ast.Type.Generic
+                    {
+                      (* Match type `Map<K, V>` *)
+                      Ast.Type.Generic.id =
+                        Ast.Type.Generic.Identifier.Unqualified
+                          (_, { Ast.Identifier.name = "Map"; _ });
+                      targs =
+                        Some
+                          ( targs_loc,
+                            {
+                              Ast.Type.TypeArgs.arguments = [targ_t0; targ_t1];
+                              comments = targs_comments;
+                            }
+                          );
+                      _;
+                    }
+                )
+              ) ->
+              let new_targs =
+                ( targs_loc,
+                  {
+                    CallTypeArgs.arguments =
+                      [CallTypeArg.Explicit targ_t0; CallTypeArg.Explicit targ_t1];
+                    comments = targs_comments;
+                  }
+                )
+              in
+              let arguments =
+                ( args_loc,
+                  {
+                    ArgList.arguments =
+                      [
+                        Expression
+                          ( new_loc,
+                            New
+                              {
+                                New.callee = new_callee;
+                                targs = Some new_targs;
+                                arguments = new_arguments;
+                                comments = new_comments;
+                              }
+                          );
+                      ];
+                    comments = args_comments;
+                  }
+                )
+              in
+              (* Add explicit type argument to the `new Map()`. *)
+              ( loc,
+                {
+                  Ast.Statement.VariableDeclaration.Declarator.id;
+                  init = Some (call_loc, Call { Call.callee; targs = None; arguments; comments });
+                }
+              )
+            | _ ->
+              (* Add the explicit type argument to `useState`. *)
+              let targs =
+                Some
+                  (call_loc, { CallTypeArgs.arguments = [CallTypeArg.Explicit t]; comments = None })
+              in
+              ( loc,
+                {
+                  Ast.Statement.VariableDeclaration.Declarator.id;
+                  init = Some (call_loc, Call { Call.callee; targs; arguments; comments });
+                }
+              ))
           | _ -> super#variable_declarator ~kind decl)
         | _ -> super#variable_declarator ~kind decl)
       | _ -> super#variable_declarator ~kind decl

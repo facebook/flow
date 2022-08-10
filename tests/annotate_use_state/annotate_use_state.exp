@@ -1,4 +1,4 @@
->>> test.js (#changes: 7)
+>>> test.js (#changes: 11)
 import * as React from 'react';
 import {useState} from 'react';
 
@@ -60,12 +60,38 @@ type T = [string, string => string];
   const [val, setValue] = useState([]); // NOT ANNOTATED
 }
 
+// Empty Set
+{
+  const [val, setValue] = useState(new Set<number>()); // ANNOTATED
+  setValue(new Set([1, 2]));
+}
+{
+  const [val, setValue] = useState(new Set<number>()); // ANNOTATED
+  val.add(1);
+}
+{
+  const [val, setValue] = useState(new Set()); // NOT ANNOTATED
+}
+
+// Empty Map
+{
+  const [val, setValue] = useState(new Map<string, number>()); // ANNOTATED
+  setValue(new Map([["a", 1], ["b", 2]]));
+}
+{
+  const [val, setValue] = useState(new Map<string, number>()); // ANNOTATED
+  val.set("a", 1);
+}
+{
+  const [val, setValue] = useState(new Map()); // NOT ANNOTATED
+}
+
 >>> Launching report...
 
 Stats:
   Files changed:                            1
-  Number of annotations added:              7
-  Total size of annotations:               19
+  Number of annotations added:             11
+  Total size of annotations:               26
 
 Errors:
   Missing annot./normalizer error:          0
@@ -82,6 +108,6 @@ Warnings:
   Skipping arrow function:                  0
   Large type added:                         0
   Location unhandled:                       0
-  Empty NoUpper:                            1
+  Empty NoUpper:                            0
   Empty SomeKnownUpper:                     0
 

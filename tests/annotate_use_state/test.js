@@ -58,3 +58,29 @@ type T = [string, string => string];
 {
   const [val, setValue] = useState([]); // NOT ANNOTATED
 }
+
+// Empty Set
+{
+  const [val, setValue] = useState(new Set()); // ANNOTATED
+  setValue(new Set([1, 2]));
+}
+{
+  const [val, setValue] = useState(new Set()); // ANNOTATED
+  val.add(1);
+}
+{
+  const [val, setValue] = useState(new Set()); // NOT ANNOTATED
+}
+
+// Empty Map
+{
+  const [val, setValue] = useState(new Map()); // ANNOTATED
+  setValue(new Map([["a", 1], ["b", 2]]));
+}
+{
+  const [val, setValue] = useState(new Map()); // ANNOTATED
+  val.set("a", 1);
+}
+{
+  const [val, setValue] = useState(new Map()); // NOT ANNOTATED
+}
