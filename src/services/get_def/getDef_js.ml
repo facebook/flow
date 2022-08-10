@@ -12,14 +12,11 @@ let loc_of_aloc = Parsing_heaps.Reader.loc_of_aloc
 
 module Get_def_result = struct
   type t =
-    (* the final location of the definition *)
-    | Def of Loc.t
-    (* if an intermediate get-def failed, return partial progress and the error message *)
+    | Def of Loc.t  (** the final location of the definition *)
     | Partial of Loc.t * string
-    (* the input loc didn't point at anything you can call get-def on *)
-    | Bad_loc
-    (* an unexpected, internal error *)
-    | Def_error of string
+        (** if an intermediate get-def failed, return partial progress and the error message *)
+    | Bad_loc  (** the input loc didn't point at anything you can call get-def on *)
+    | Def_error of string  (** an unexpected, internal error *)
 end
 
 open Get_def_result
