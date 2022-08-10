@@ -5,9 +5,6 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-open Base.Result
-open Utils_js
-
 let loc_of_aloc = Parsing_heaps.Reader.loc_of_aloc
 
 module Get_def_result = struct
@@ -27,7 +24,7 @@ let extract_member_def ~reader cx this name =
     (match SMap.find_opt name result_map with
     | Some (None, t) -> Ok (TypeUtil.loc_of_t t |> loc_of_aloc ~reader)
     | Some (Some x, _) -> Ok (loc_of_aloc ~reader x)
-    | None -> Error (spf "failed to find member %s in members map" name))
+    | None -> Error (Printf.sprintf "failed to find member %s in members map" name))
   | Error msg -> Error msg
 
 let rec process_request ~options ~reader ~cx ~is_legit_require ~ast ~typed_ast :
@@ -38,26 +35,22 @@ let rec process_request ~options ~reader ~cx ~is_legit_require ~ast ~typed_ast :
       Scope_builder.program ~enable_enums:(Context.enable_enums cx) ~with_types:true ast
     in
     let all_uses = Scope_api.With_Loc.all_uses scope_info in
-    Loc_collections.(
-      let matching_uses = LocSet.filter (fun use -> Loc.contains use loc) all_uses in
-      begin
-        match LocSet.elements matching_uses with
-        | [use] ->
-          let def = Scope_api.With_Loc.def_of_use scope_info use in
-          let def_loc = def.Scope_api.With_Loc.Def.locs |> Nel.hd in
-          Ok def_loc
-        | [] ->
-          process_request
-            ~options
-            ~reader
-            ~cx
-            ~is_legit_require
-            ~ast
-            ~typed_ast
-            (Get_def_request.Type (aloc, type_))
-        | _ :: _ :: _ -> Error "Scope builder found multiple matching identifiers"
-      end
-    )
+    let matching_uses = Loc_collections.LocSet.filter (fun use -> Loc.contains use loc) all_uses in
+    (match Loc_collections.LocSet.elements matching_uses with
+    | [use] ->
+      let def = Scope_api.With_Loc.def_of_use scope_info use in
+      let def_loc = def.Scope_api.With_Loc.Def.locs |> Nel.hd in
+      Ok def_loc
+    | [] ->
+      process_request
+        ~options
+        ~reader
+        ~cx
+        ~is_legit_require
+        ~ast
+        ~typed_ast
+        (Get_def_request.Type (aloc, type_))
+    | _ :: _ :: _ -> Error "Scope builder found multiple matching identifiers")
   | Get_def_request.(Member { prop_name = name; object_source }) ->
     let obj_t =
       match object_source with
@@ -121,34 +114,32 @@ let rec process_request ~options ~reader ~cx ~is_legit_require ~ast ~typed_ast :
           None
       in
       match provider with
-      | None -> Error (spf "Failed to find imported file %s" name)
+      | None -> Error (Printf.sprintf "Failed to find imported file %s" name)
       | Some addr ->
         let file = Parsing_heaps.read_file_key addr in
         Ok Loc.{ none with source = Some file }
     in
-    Type.(
-      (match module_t with
-      | ModuleT (_, { cjs_export; _ }, _) ->
-        (* If we have a location for the cjs export, go there. Otherwise
-           * fall back to just the top of the file *)
-        let loc =
-          match cjs_export with
-          | Some t -> TypeUtil.loc_of_t t |> loc_of_aloc ~reader (* This can return Loc.none *)
-          | None -> Loc.none
-        in
-        if loc = Loc.none then
-          get_imported_file ()
-        else
-          Ok loc
-      | AnyT _ -> get_imported_file ()
-      | _ ->
-        Error
-          (spf
-             "Internal Flow Error: Expected ModuleT for %S, but got %S!"
-             name
-             (string_of_ctor module_t)
-          ))
-    )
+    (match module_t with
+    | Type.ModuleT (_, { Type.cjs_export; _ }, _) ->
+      (* If we have a location for the cjs export, go there. Otherwise
+         * fall back to just the top of the file *)
+      let loc =
+        match cjs_export with
+        | Some t -> TypeUtil.loc_of_t t |> loc_of_aloc ~reader (* This can return Loc.none *)
+        | None -> Loc.none
+      in
+      if loc = Loc.none then
+        get_imported_file ()
+      else
+        Ok loc
+    | Type.AnyT _ -> get_imported_file ()
+    | _ ->
+      Error
+        (Printf.sprintf
+           "Internal Flow Error: Expected ModuleT for %S, but got %S!"
+           name
+           (Type.string_of_ctor module_t)
+        ))
   | Get_def_request.JsxAttribute { component_t = (_, component_t); name; loc } ->
     let reason = Reason.mk_reason (Reason.RCustom name) loc in
     let props_object =
