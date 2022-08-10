@@ -661,7 +661,11 @@ end = struct
         in
         let job =
           if Options.distributed options then
-            Remote_execution.distributed_check_job options
+            let master_cx =
+              Context_heaps.Reader_dispatcher.find_master
+                ~reader:(Abstract_state_reader.Mutator_state_reader reader)
+            in
+            Remote_execution.distributed_check_job options master_cx
           else
             let mk_check () = Merge_service.mk_check options ~reader () in
             mk_job ~mk_check ~options ()
