@@ -642,6 +642,23 @@ References:
            ^ [1]
 
 
+Error -------------------------------------------------------------------------------------- func_call_recursive.js:12:4
+
+Cannot cast `x` to number because null [1] is incompatible with number [2]. [incompatible-cast]
+
+   func_call_recursive.js:12:4
+   12|   (x: number);
+          ^
+
+References:
+   func_call_recursive.js:8:7
+    8|   x = null;
+             ^^^^ [1]
+   func_call_recursive.js:12:7
+   12|   (x: number);
+             ^^^^^^ [2]
+
+
 Error -------------------------------------------------------------------------------------------- hasOwnProperty.js:4:5
 
 Cannot call `x.y` because undefined [1] is not a function. [not-a-function]
@@ -2233,6 +2250,40 @@ References:
                       ^^^^^^^^^^^^ [1]
 
 
+Error ---------------------------------------------------------------------------------------------- issue-7103.js:15:15
+
+Cannot cast `box` to empty because object literal [1] is incompatible with empty [2]. [incompatible-cast]
+
+   issue-7103.js:15:15
+   15|       return (box: empty).value;
+                     ^^^
+
+References:
+   issue-7103.js:12:13
+   12|       box = { type: "BAD", value: t };
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   issue-7103.js:15:20
+   15|       return (box: empty).value;
+                          ^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- issue-7104.js:22:15
+
+Cannot cast `box` to empty because object literal [1] is incompatible with empty [2]. [incompatible-cast]
+
+   issue-7104.js:22:15
+   22|       return (box: empty).value;
+                     ^^^
+
+References:
+   issue-7104.js:11:15
+   11|         box = { type: "BAD", value: t };
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   issue-7104.js:22:20
+   22|       return (box: empty).value;
+                          ^^^^^ [2]
+
+
 Error ---------------------------------------------------------------------------------------------- issue-7105.js:11:39
 
 Cannot cast `box` to empty because object type [1] is incompatible with empty [2]. [incompatible-cast]
@@ -2248,6 +2299,23 @@ References:
    issue-7105.js:11:44
    11|         yield { type: "DONE", value: (box: empty).value };
                                                   ^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- issue-7541.js:10:10
+
+Cannot return `a` because number [1] is incompatible with string [2]. [incompatible-return]
+
+   issue-7541.js:10:10
+   10|   return a; // a is string
+                ^
+
+References:
+   issue-7541.js:7:9
+    7|     a = 2;
+               ^ [1]
+   issue-7541.js:3:20
+    3| function myFunc(): string {
+                          ^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------- missing-property-cond.js:4:9
@@ -3218,6 +3286,227 @@ References:
    property.js:68:59
    68| function c2(x: {[key: string]: ?string}, y: {z: string}): string {
                                                                  ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- refinements.js:6:24
+
+Cannot assign `x` to `y` because number [1] is incompatible with string [2]. [incompatible-type]
+
+   refinements.js:6:24
+   6|         var y:string = x; // Error
+                             ^
+
+References:
+   refinements.js:4:16
+   4|     var x = b? 0 : null;
+                     ^ [1]
+   refinements.js:6:15
+   6|         var y:string = x; // Error
+                    ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- refinements.js:9:20
+
+Cannot assign `x` to `z` because null [1] is incompatible with string [2]. [incompatible-type]
+
+   refinements.js:9:20
+   9|     var z:string = x; // Error
+                         ^
+
+References:
+   refinements.js:4:20
+   4|     var x = b? 0 : null;
+                         ^^^^ [1]
+   refinements.js:9:11
+   9|     var z:string = x; // Error
+                ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- refinements.js:9:20
+
+Cannot assign `x` to `z` because boolean [1] is incompatible with string [2]. [incompatible-type]
+
+   refinements.js:9:20
+   9|     var z:string = x; // Error
+                         ^
+
+References:
+   refinements.js:7:13
+   7|         x = false; // Constrain writes error
+                  ^^^^^ [1]
+   refinements.js:9:11
+   9|     var z:string = x; // Error
+                ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- refinements.js:15:24
+
+Cannot assign `x` to `y` because number [1] is incompatible with string [2]. [incompatible-type]
+
+   refinements.js:15:24
+   15|         var y:string = x;  // Error
+                              ^
+
+References:
+   refinements.js:13:16
+   13|     var x = b? 0 : null;
+                      ^ [1]
+   refinements.js:15:15
+   15|         var y:string = x;  // Error
+                     ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- refinements.js:15:24
+
+Cannot assign `x` to `y` because null [1] is incompatible with string [2]. [incompatible-type]
+
+   refinements.js:15:24
+   15|         var y:string = x;  // Error
+                              ^
+
+References:
+   refinements.js:13:20
+   13|     var x = b? 0 : null;
+                          ^^^^ [1]
+   refinements.js:15:15
+   15|         var y:string = x;  // Error
+                     ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- refinements.js:18:20
+
+Cannot assign `x` to `z` because boolean [1] is incompatible with string [2]. [incompatible-type]
+
+   refinements.js:18:20
+   18|     var z:string = x;  // Error
+                          ^
+
+References:
+   refinements.js:16:13
+   16|         x = false; // Constrain writes error
+                   ^^^^^ [1]
+   refinements.js:18:11
+   18|     var z:string = x;  // Error
+                 ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- refinements.js:35:24
+
+Cannot assign `x` to `y` because string [1] is incompatible with number [2]. [incompatible-type]
+
+   refinements.js:35:24
+   35|         var y:number = x;  // Error
+                              ^
+
+References:
+   refinements.js:26:13
+   26|         x = "hello"; // Constrain writes error
+                   ^^^^^^^ [1]
+   refinements.js:35:15
+   35|         var y:number = x;  // Error
+                     ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- refinements.js:35:24
+
+Cannot assign `x` to `y` because string [1] is incompatible with number [2]. [incompatible-type]
+
+   refinements.js:35:24
+   35|         var y:number = x;  // Error
+                              ^
+
+References:
+   refinements.js:29:13
+   29|         x = "hello"; // Constrain writes error
+                   ^^^^^^^ [1]
+   refinements.js:35:15
+   35|         var y:number = x;  // Error
+                     ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- refinements.js:38:20
+
+Cannot assign `x` to `z` because number [1] is incompatible with string [2]. [incompatible-type]
+
+   refinements.js:38:20
+   38|     var z:string = x;  // Error
+                          ^
+
+References:
+   refinements.js:36:13
+   36|         x = 42;
+                   ^^ [1]
+   refinements.js:38:11
+   38|     var z:string = x;  // Error
+                 ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- refinements.js:45:24
+
+Cannot assign `x` to `y` because number [1] is incompatible with string [2]. [incompatible-type]
+
+   refinements.js:45:24
+   45|         var y:string = x;  // Error
+                              ^
+
+References:
+   refinements.js:42:21
+   42|     for (var x = b? 0 : null;
+                           ^ [1]
+   refinements.js:45:15
+   45|         var y:string = x;  // Error
+                     ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- refinements.js:47:20
+
+Cannot assign `x` to `z` because null [1] is incompatible with string [2]. [incompatible-type]
+
+   refinements.js:47:20
+   47|     var z:string = x; // Error
+                          ^
+
+References:
+   refinements.js:42:25
+   42|     for (var x = b? 0 : null;
+                               ^^^^ [1]
+   refinements.js:47:11
+   47|     var z:string = x; // Error
+                 ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- refinements.js:47:20
+
+Cannot assign `x` to `z` because boolean [1] is incompatible with string [2]. [incompatible-type]
+
+   refinements.js:47:20
+   47|     var z:string = x; // Error
+                          ^
+
+References:
+   refinements.js:44:14
+   44|          x = false) {
+                    ^^^^^ [1]
+   refinements.js:47:11
+   47|     var z:string = x; // Error
+                 ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- refinements.js:57:20
+
+Cannot assign `x` to `z` because boolean [1] is incompatible with number [2]. [incompatible-type]
+
+   refinements.js:57:20
+   57|     var z:number = x; // Error
+                          ^
+
+References:
+   refinements.js:52:13
+   52|     var x = false;
+                   ^^^^^ [1]
+   refinements.js:57:11
+   57|     var z:number = x; // Error
+                 ^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- string.js:8:8
@@ -5015,4 +5304,4 @@ Cannot perform arithmetic operation because undefined [1] is not a number. [unsa
 
 
 
-Found 341 errors
+Found 358 errors

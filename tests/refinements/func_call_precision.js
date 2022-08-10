@@ -7,4 +7,4 @@ function foo() {
 function bar() { }
 x = 1;
 bar();
-(x: number);
+(x: number); // error in constrain_writes mode
