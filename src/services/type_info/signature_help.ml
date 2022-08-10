@@ -197,7 +197,7 @@ let rec collect_functions ~jsdoc ~exact_by_default acc = function
     Base.List.fold_left ~init:acc ~f:(collect_functions ~jsdoc ~exact_by_default) (t1 :: t2 :: ts)
   | _ -> acc
 
-let find_signatures ~options ~reader ~cx ~file_sig ~typed_ast loc =
+let find_signatures ~options ~reader ~cx ~file_sig ~ast ~typed_ast loc =
   match Callee_finder.find_opt ~reader ~typed_ast loc with
   | Some (scheme, active_parameter, callee_loc) ->
     let ty =
@@ -208,7 +208,7 @@ let find_signatures ~options ~reader ~cx ~file_sig ~typed_ast loc =
     in
     let jsdoc =
       let open GetDef_js.Get_def_result in
-      match GetDef_js.get_def ~options ~reader ~cx ~file_sig ~typed_ast callee_loc with
+      match GetDef_js.get_def ~options ~reader ~cx ~file_sig ~ast ~typed_ast callee_loc with
       | Def getdef_loc
       | Partial (getdef_loc, _) ->
         Find_documentation.jsdoc_of_getdef_loc ~current_ast:typed_ast ~reader getdef_loc

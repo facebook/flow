@@ -222,9 +222,9 @@ let jsdoc_of_def_loc ~reader ~typed_ast def_loc =
 let jsdoc_of_member ~reader ~typed_ast info =
   Base.Option.bind info.Ty_members.def_loc ~f:(jsdoc_of_def_loc ~reader ~typed_ast)
 
-let jsdoc_of_loc ~options ~reader ~cx ~file_sig ~typed_ast loc =
+let jsdoc_of_loc ~options ~reader ~cx ~file_sig ~ast ~typed_ast loc =
   let open GetDef_js.Get_def_result in
-  match GetDef_js.get_def ~options ~reader ~cx ~file_sig ~typed_ast loc with
+  match GetDef_js.get_def ~options ~reader ~cx ~file_sig ~ast ~typed_ast loc with
   | Def getdef_loc
   | Partial (getdef_loc, _) ->
     Find_documentation.jsdoc_of_getdef_loc ~current_ast:typed_ast ~reader getdef_loc
@@ -243,8 +243,8 @@ let documentation_and_tags_of_member ~reader ~typed_ast info =
   jsdoc_of_member ~reader ~typed_ast info
   |> Base.Option.value_map ~default:(None, None) ~f:documentation_and_tags_of_jsdoc
 
-let documentation_and_tags_of_loc ~options ~reader ~cx ~file_sig ~typed_ast loc =
-  jsdoc_of_loc ~options ~reader ~cx ~file_sig ~typed_ast loc
+let documentation_and_tags_of_loc ~options ~reader ~cx ~file_sig ~ast ~typed_ast loc =
+  jsdoc_of_loc ~options ~reader ~cx ~file_sig ~ast ~typed_ast loc
   |> Base.Option.value_map ~default:(None, None) ~f:documentation_and_tags_of_jsdoc
 
 let documentation_and_tags_of_def_loc ~reader ~typed_ast def_loc =
@@ -383,7 +383,7 @@ let local_value_identifiers
          (* TODO(vijayramamurthy) do something about sometimes failing to collect types *)
          Base.Option.map (LocMap.find_opt loc types) ~f:(fun type_ ->
              let (documentation, tags) =
-               documentation_and_tags_of_loc ~options ~reader ~cx ~file_sig ~typed_ast loc
+               documentation_and_tags_of_loc ~options ~reader ~cx ~file_sig ~ast ~typed_ast loc
              in
              ((name, documentation, tags), Type.TypeScheme.{ tparams_rev; type_ })
          )
@@ -933,7 +933,7 @@ let autocomplete_unqualified_type
          (fun (items_rev, errors_to_log) ((name, aloc), ty_result) ->
            let (documentation, tags) =
              loc_of_aloc ~reader aloc
-             |> documentation_and_tags_of_loc ~options ~reader ~cx ~file_sig ~typed_ast
+             |> documentation_and_tags_of_loc ~options ~reader ~cx ~file_sig ~ast ~typed_ast
            in
            match ty_result with
            | Ok elt ->

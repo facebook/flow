@@ -18,6 +18,7 @@ val find_signatures :
   reader:State_reader.t ->
   cx:Context.t ->
   file_sig:File_sig.With_ALoc.t ->
+  ast:(Loc.t, Loc.t) Flow_ast.Program.t ->
   typed_ast:(ALoc.t, ALoc.t * Type.t) Flow_ast.Program.t ->
   Loc.t ->
   ((ServerProt.Response.func_details_result list * int) option, Ty_normalizer.error) result

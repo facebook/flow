@@ -397,11 +397,12 @@ let check_file ~options ~env ~profiling ~force file_input =
 let get_def_of_check_result ~options ~reader ~profiling ~check_result (file, line, col) =
   Profiling_js.with_timer profiling ~timer:"GetResult" ~f:(fun () ->
       let loc = Loc.cursor (Some file) line col in
-      let (Parse_artifacts { file_sig; parse_errors; _ }, Typecheck_artifacts { cx; typed_ast }) =
+      let (Parse_artifacts { ast; file_sig; parse_errors; _ }, Typecheck_artifacts { cx; typed_ast })
+          =
         check_result
       in
       let file_sig = File_sig.abstractify_locs file_sig in
-      GetDef_js.get_def ~options ~reader ~cx ~file_sig ~typed_ast loc |> fun result ->
+      GetDef_js.get_def ~options ~reader ~cx ~file_sig ~ast ~typed_ast loc |> fun result ->
       let open GetDef_js.Get_def_result in
       let json_props = fold_json_of_parse_errors parse_errors [] in
       match result with
@@ -1853,11 +1854,11 @@ let handle_persistent_signaturehelp_lsp
            ~reason:"Couldn't parse file in parse_artifacts"
            metadata
         )
-    | Ok (Parse_artifacts { file_sig; _ }, Typecheck_artifacts { cx; typed_ast }) ->
+    | Ok (Parse_artifacts { ast; file_sig; _ }, Typecheck_artifacts { cx; typed_ast }) ->
       let func_details =
         let file_sig = File_sig.abstractify_locs file_sig in
         let cursor_loc = Loc.cursor (Some path) line col in
-        Signature_help.find_signatures ~options ~reader ~cx ~file_sig ~typed_ast cursor_loc
+        Signature_help.find_signatures ~options ~reader ~cx ~file_sig ~ast ~typed_ast cursor_loc
       in
       (match func_details with
       | Ok details ->

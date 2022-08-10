@@ -33,22 +33,10 @@ let extract_member_def ~reader cx this name =
     | None -> Error (spf "failed to find member %s in members map" name))
   | Error msg -> Error msg
 
-(* turns typed AST into normal AST so we can run Scope_builder on it *)
-(* TODO(vijayramamurthy): make scope builder polymorphic *)
-class type_killer (reader : Parsing_heaps.Reader.reader) =
-  object
-    inherit [ALoc.t, ALoc.t * Type.t, Loc.t, Loc.t] Flow_polymorphic_ast_mapper.mapper
-
-    method on_loc_annot x = loc_of_aloc ~reader x
-
-    method on_type_annot (x, _) = loc_of_aloc ~reader x
-  end
-
-let rec process_request ~options ~reader ~cx ~is_legit_require ~typed_ast :
+let rec process_request ~options ~reader ~cx ~is_legit_require ~ast ~typed_ast :
     (ALoc.t, ALoc.t * Type.t) Get_def_request.t -> (Loc.t, string) result = function
   | Get_def_request.Identifier { name = _; loc = (aloc, type_) } ->
     let loc = loc_of_aloc ~reader aloc in
-    let ast = (new type_killer reader)#program typed_ast in
     let scope_info =
       Scope_builder.program ~enable_enums:(Context.enable_enums cx) ~with_types:true ast
     in
@@ -67,6 +55,7 @@ let rec process_request ~options ~reader ~cx ~is_legit_require ~typed_ast :
             ~reader
             ~cx
             ~is_legit_require
+            ~ast
             ~typed_ast
             (Get_def_request.Type (aloc, type_))
         | _ :: _ :: _ -> Error "Scope builder found multiple matching identifiers"
@@ -176,6 +165,7 @@ let rec process_request ~options ~reader ~cx ~is_legit_require ~typed_ast :
       ~reader
       ~cx
       ~is_legit_require
+      ~ast
       ~typed_ast
       Get_def_request.(Member { prop_name = name; object_source = ObjectType (loc, props_object) })
 
@@ -192,7 +182,7 @@ module Depth = struct
   let add loc { length; locs } = { length = length + 1; locs = loc :: locs }
 end
 
-let get_def ~options ~reader ~cx ~file_sig ~typed_ast requested_loc =
+let get_def ~options ~reader ~cx ~file_sig ~ast ~typed_ast requested_loc =
   let require_aloc_map = File_sig.With_ALoc.(require_loc_map file_sig.module_sig) in
   let is_legit_require (source_aloc, _) =
     SMap.exists
@@ -220,7 +210,7 @@ let get_def ~options ~reader ~cx ~file_sig ~typed_ast requested_loc =
       with
       | OwnDef aloc -> Def (loc_of_aloc ~reader aloc)
       | Request request ->
-        (match process_request ~options ~reader ~cx ~is_legit_require ~typed_ast request with
+        (match process_request ~options ~reader ~cx ~is_legit_require ~ast ~typed_ast request with
         | Ok res_loc ->
           (* two scenarios where we stop trying to recur:
              - when req_loc = res_loc, meaning we've reached a fixed point so
