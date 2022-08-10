@@ -5,7 +5,7 @@
 # LICENSE file in the root directory of this source tree.
 
 show_help() {
-  printf "Usage: runtests.sh [-ehlnqrvwx] [-d DIR] [-t TEST] [-b] FLOW_BINARY [[-f] TEST_FILTER]\n\n"
+  printf "Usage: runtests.sh [-hlnqrvx] [-d DIR] [-t TEST] [-b] FLOW_BINARY [[-f] TEST_FILTER]\n\n"
   printf "Runs Flow's tests.\n\n"
   echo "    [-b] FLOW_BINARY"
   echo "        path to Flow binary (the -b is optional)"
@@ -19,8 +19,6 @@ show_help() {
   echo "        run the test DIR/tests/TEST, equivalent to a filter of \"^TEST$\""
   echo "    -c"
   echo "        only run check tests"
-  echo "    -e"
-  echo "        test using new implementation of the type environment"
   echo "    -x"
   echo "        test using resolved environment"
   echo "    -n"
@@ -54,7 +52,7 @@ enforced_env=0
 check_only=0
 incremental_revdeps=0
 export saved_state filter check_only resolved_env enforced_env incremental_revdeps
-while getopts "b:d:f:celqwxnirst:vh?" opt; do
+while getopts "b:d:f:clqxnirst:vh?" opt; do
   case "$opt" in
   b)
     FLOW="$OPTARG"
@@ -116,7 +114,7 @@ if [ -n "$specific_test" ]; then
 fi
 
 if [[ $(("$resolved_env" + "$enforced_env")) -gt 1 ]]; then
-  printf "Can only set one new environment flag at a time (-e, -n, -w, -x).\n"
+  printf "Can only set one new environment flag at a time (-n, -x).\n"
   exit 1
 fi
 
