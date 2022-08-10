@@ -274,11 +274,13 @@ let mk_hint base_t ops =
   |> Nel.of_list
   |> Base.Option.value_map ~default:(Hint_t base_t) ~f:(fun l -> Hint_Decomp (l, base_t))
 
+let resolver _cx t = t
+
 let mk_eval_hint_test ~expected base ops ctxt =
   let cx = mk_cx ~verbose:false () in
   let actual =
     mk_hint (TypeParser.parse cx base) ops
-    |> Type_hint.evaluate_hint cx dummy_loc
+    |> Type_hint.evaluate_hint cx dummy_loc ~resolver
     |> Base.Option.value_map ~default:"None" ~f:(Ty_normalizer.debug_string_of_t cx)
   in
   (* DEBUGGING TIP: set [~verbose:true] above to print traces *)
@@ -346,7 +348,7 @@ let mk_private_method_eval_hint_test
   in
   let actual =
     mk_hint base [Decomp_MethodPrivateName ("bar", [class_stack_loc])]
-    |> Type_hint.evaluate_hint cx dummy_loc
+    |> Type_hint.evaluate_hint cx dummy_loc ~resolver
     |> Base.Option.value_map ~default:"None" ~f:(Ty_normalizer.debug_string_of_t cx)
   in
   assert_equal ~ctxt ~printer:Base.Fn.id expected actual
@@ -356,7 +358,7 @@ let mk_eval_hint_test_with_type_setup ~expected type_setup_code ops ctxt =
   let (cx, base_t) = TypeLoader.get_type_of_last_expression cx type_setup_code in
   let actual =
     mk_hint base_t ops
-    |> Type_hint.evaluate_hint cx dummy_loc
+    |> Type_hint.evaluate_hint cx dummy_loc ~resolver
     |> Base.Option.value_map ~default:"None" ~f:(Ty_normalizer.debug_string_of_t cx)
   in
   (* DEBUGGING TIP: set [~verbose:true] above to print traces *)

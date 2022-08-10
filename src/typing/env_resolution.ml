@@ -61,6 +61,10 @@ module Make (Env : Env_sig.S) (Statement : Statement_sig.S with module Env := En
       match Context.env_mode cx with
       | Options.(SSAEnv Enforced) -> resolver#type_ cx Polarity.Positive () t
       | _ -> ()
+
+    let resolved_t cx t =
+      resolve cx t;
+      t
   end
 
   (* Hints are not being used to power type checking currently. Instead, we only use their existence
@@ -175,7 +179,7 @@ module Make (Env : Env_sig.S) (Statement : Statement_sig.S with module Env := En
             | Hint_Placeholder -> Hint_Placeholder
             | Hint_None -> Hint_None
           in
-          match Type_hint.evaluate_hint cx param_loc hint with
+          match Type_hint.evaluate_hint cx param_loc ~resolver:TvarResolver.resolved_t hint with
           | None -> Tvar.mk cx reason
           | Some t -> TypeUtil.mod_reason_of_t (Base.Fn.const reason) t
         else
