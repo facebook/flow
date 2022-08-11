@@ -753,17 +753,6 @@ module Opts = struct
         | env_mode -> Error (spf "\"%s\" is not a valid env_mode option" env_mode)
     )
 
-  let experimental_env_mode_parser =
-    string (fun opts s ->
-        match s with
-        | "classic" -> Ok { opts with env_mode = Options.ClassicEnv [] }
-        | "constrain_writes" -> Ok { opts with env_mode = Options.(ClassicEnv [ConstrainWrites]) }
-        | "ssa" -> Ok { opts with env_mode = Options.(SSAEnv Basic) }
-        | "resolved" -> Ok { opts with env_mode = Options.(SSAEnv Reordered) }
-        | "enforced" -> Ok { opts with env_mode = Options.(SSAEnv Enforced) }
-        | env_mode -> Error (spf "\"%s\" is not a valid env_mode option" env_mode)
-    )
-
   let experimental_empty_array_literals_parser =
     boolean (fun opts v ->
         match opts.env_mode with
@@ -807,7 +796,6 @@ module Opts = struct
       ("experimental.enforce_class_annotations", enforce_class_annotations);
       ("experimental.enforce_this_annotations", enforce_this_annotations);
       ("inference_mode", inference_mode_parser);
-      ("experimental.env_mode", experimental_env_mode_parser);
       ("experimental.array_literal_providers", experimental_empty_array_literals_parser);
       ("experimental.facebook_module_interop", facebook_module_interop_parser);
       ("experimental.local_inference_annotation_dirs", local_inference_annotation_dirs);
