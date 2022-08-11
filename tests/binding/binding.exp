@@ -217,6 +217,104 @@ References:
                ^^^^^^ [2]
 
 
+Error --------------------------------------------------------------------------------------------------- imports.js:4:8
+
+Cannot declare `R1` [1] because the name is already bound. [name-already-bound]
+
+   imports.js:4:8
+   4| import R1 from 'react'; // error
+             ^^
+
+References:
+   imports.js:3:8
+   3| import R1 from 'react';
+             ^^ [1]
+
+
+Error --------------------------------------------------------------------------------------------------- imports.js:5:1
+
+Cannot reassign import `R1` [1]. [reassign-import]
+
+   imports.js:5:1
+   5| R1 = (42: any); // error
+      ^^
+
+References:
+   imports.js:3:8
+   3| import R1 from 'react';
+             ^^ [1]
+
+
+Error --------------------------------------------------------------------------------------------------- imports.js:8:8
+
+Cannot declare `R2` [1] because the name is already bound. [name-already-bound]
+
+   imports.js:8:8
+   8| import R2 from 'react'; // error
+             ^^
+
+References:
+   imports.js:7:13
+   7| import * as R2 from 'react';
+                  ^^ [1]
+
+
+Error --------------------------------------------------------------------------------------------------- imports.js:9:1
+
+Cannot reassign import `R2` [1]. [reassign-import]
+
+   imports.js:9:1
+   9| R2 = (42: any); // error
+      ^^
+
+References:
+   imports.js:7:13
+   7| import * as R2 from 'react';
+                  ^^ [1]
+
+
+Error -------------------------------------------------------------------------------------------------- imports.js:12:7
+
+Cannot declare `Node` [1] because the name is already bound. [name-already-bound]
+
+   imports.js:12:7
+   12| const Node = 3; // error
+             ^^^^
+
+References:
+   imports.js:11:14
+   11| import type {Node} from 'react';
+                    ^^^^ [1]
+
+
+Error -------------------------------------------------------------------------------------------------- imports.js:13:1
+
+Cannot use type `Node` [1] as a value. Types are erased and don't exist at runtime. [type-as-value]
+
+   imports.js:13:1
+   13| Node = 4; // error
+       ^^^^
+
+References:
+   imports.js:11:14
+   11| import type {Node} from 'react';
+                    ^^^^ [1]
+
+
+Error -------------------------------------------------------------------------------------------------- imports.js:14:6
+
+Cannot declare `Node` [1] because the name is already bound. [name-already-bound]
+
+   imports.js:14:6
+   14| type Node = number; // error
+            ^^^^
+
+References:
+   imports.js:11:14
+   11| import type {Node} from 'react';
+                    ^^^^ [1]
+
+
 Error ------------------------------------------------------------------------------------------------ rebinding.js:16:8
 
 Cannot declare `A` [1] because the name is already bound. [name-already-bound]
@@ -1180,4 +1278,4 @@ Cannot resolve name `unboundFunction2`. [cannot-resolve-name]
 
 
 
-Found 86 errors
+Found 93 errors

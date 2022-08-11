@@ -310,7 +310,7 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
               Some this#binding_type_identifier
             else
               None
-          | _ -> Some this#pattern_identifier
+          | _ -> Some (this#pattern_identifier ~kind:Ast.Statement.VariableDeclaration.Const)
         in
         (match specifier with
         | { local = Some ident; remote = _; kind }
