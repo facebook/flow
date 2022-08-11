@@ -1537,7 +1537,7 @@ class def_finder env_entries providers toplevel_scope =
       | Ast.Expression.Member m -> this#visit_member_expression ~cond loc m
       | Ast.Expression.OptionalMember m -> this#visit_optional_member_expression ~cond loc m
       | Ast.Expression.Binary expr -> this#visit_binary_expression ~cond expr
-      | Ast.Expression.Logical expr -> this#visit_logical_expression ~cond expr
+      | Ast.Expression.Logical expr -> this#visit_logical_expression ~hint ~cond expr
       | Ast.Expression.Call expr ->
         this#visit_call_expression
           ~visit_callee:(this#visit_expression ~hint:Hint_None ~cond:NonConditionalContext)
@@ -1647,16 +1647,16 @@ class def_finder env_entries providers toplevel_scope =
 
     method! logical _ _ = failwith "Should be visited by visit_logical_expression"
 
-    method private visit_logical_expression ~cond expr =
+    method private visit_logical_expression ~hint ~cond expr =
       let open Ast.Expression.Logical in
       let { operator; left; right; comments = _ } = expr in
       let (left_cond, right_hint) =
         match operator with
-        | And -> (OtherConditionalTest, Hint_None)
-        | Or -> (OtherConditionalTest, Hint_t (ValueHint left))
-        | NullishCoalesce -> (cond, Hint_t (ValueHint left))
+        | And -> (OtherConditionalTest, hint)
+        | Or -> (OtherConditionalTest, Hint_api.merge_hints hint (Hint_t (ValueHint left)))
+        | NullishCoalesce -> (cond, Hint_api.merge_hints hint (Hint_t (ValueHint left)))
       in
-      this#visit_expression ~hint:Hint_None ~cond:left_cond left;
+      this#visit_expression ~hint ~cond:left_cond left;
       this#visit_expression ~hint:right_hint ~cond right
 
     method! object_ _ _ = failwith "Should be visited by visit_object_expression"

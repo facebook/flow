@@ -3159,7 +3159,7 @@ struct
       let (t, b) = binary cx loc b in
       ((loc, t), Binary b)
     | Logical l ->
-      let (t, l) = logical cx loc l in
+      let (t, l) = logical cx loc ~hint l in
       ((loc, t), Logical l)
     | TypeCast { TypeCast.expression = e; annot; comments } ->
       let (t, annot') = Anno.mk_type_available_annotation cx Subst_name.Map.empty annot in
@@ -5757,7 +5757,7 @@ struct
         { operator; left = left_ast; right = right_ast; comments }
       )
 
-  and logical cx loc { Ast.Expression.Logical.operator; left; right; comments } =
+  and logical cx loc ~hint { Ast.Expression.Logical.operator; left; right; comments } =
     let open Ast.Expression.Logical in
     (* With logical operators the LHS is always evaluated. So if the LHS throws, the whole
      * expression throws. To model this we do not catch abnormal exceptions on the LHS.
@@ -5775,11 +5775,13 @@ struct
     | Or ->
       let () = check_default_pattern cx left right in
       let ((((_, t1), _) as left), _, not_map, xtypes) =
-        predicates_of_condition ~hint:Hint_None ~cond:OtherTest cx left
+        predicates_of_condition ~hint ~cond:OtherTest cx left
       in
       let ((((_, t2), _) as right), right_abnormal) =
         Abnormal.catch_expr_control_flow_exception (fun () ->
-            Env.in_refined_env cx loc not_map xtypes (fun () -> expression cx ~hint:Hint_None right)
+            Env.in_refined_env cx loc not_map xtypes (fun () ->
+                expression cx ~hint:(Hint_api.merge_hints hint (Hint_t t1)) right
+            )
         )
       in
       let t2 =
@@ -5794,11 +5796,11 @@ struct
       )
     | And ->
       let ((((_, t1), _) as left), map, _, xtypes) =
-        predicates_of_condition ~hint:Hint_None ~cond:OtherTest cx left
+        predicates_of_condition ~hint ~cond:OtherTest cx left
       in
       let ((((_, t2), _) as right), right_abnormal) =
         Abnormal.catch_expr_control_flow_exception (fun () ->
-            Env.in_refined_env cx loc map xtypes (fun () -> expression cx ~hint:Hint_None right)
+            Env.in_refined_env cx loc map xtypes (fun () -> expression cx ~hint right)
         )
       in
       let t2 =
@@ -5812,9 +5814,11 @@ struct
         { operator = And; left; right; comments }
       )
     | NullishCoalesce ->
-      let (((_, t1), _) as left) = expression cx ~hint:Hint_None left in
+      let (((_, t1), _) as left) = expression cx ~hint left in
       let ((((_, t2), _) as right), right_abnormal) =
-        Abnormal.catch_expr_control_flow_exception (fun () -> expression cx ~hint:(Hint_t t1) right)
+        Abnormal.catch_expr_control_flow_exception (fun () ->
+            expression cx ~hint:(Hint_api.merge_hints hint (Hint_t t1)) right
+        )
       in
       let t2 =
         match right_abnormal with
