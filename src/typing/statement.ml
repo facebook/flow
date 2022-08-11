@@ -3387,16 +3387,15 @@ struct
       Env.update_env loc then_env;
       let _ = Env.refine_with_preds cx loc preds xtypes in
       let ((((_, t1), _) as consequent), then_abnormal) =
-        Abnormal.catch_expr_control_flow_exception (fun () ->
-            expression cx ~hint:Hint_None consequent
-        )
+        Abnormal.catch_expr_control_flow_exception (fun () -> expression cx ~hint consequent)
       in
       let else_env = Env.clone_env env in
       Env.update_env loc else_env;
       let _ = Env.refine_with_preds cx loc not_preds xtypes in
       let ((((_, t2), _) as alternate), else_abnormal) =
         Abnormal.catch_expr_control_flow_exception (fun () ->
-            expression cx ~hint:Hint_None alternate
+            let hint = Hint_api.merge_hints hint (Hint_t t1) in
+            expression cx ~hint alternate
         )
       in
       let newset = Changeset.Global.merge oldset in

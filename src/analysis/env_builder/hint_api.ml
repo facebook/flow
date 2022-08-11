@@ -83,3 +83,11 @@ let decompose_hint decomp = function
   | Hint_Decomp (decomps, t) -> Hint_Decomp (Nel.cons decomp decomps, t)
   | Hint_Placeholder -> Hint_Placeholder
   | Hint_None -> Hint_None
+
+let merge_hints h1 h2 =
+  match h1 with
+  | Hint_t _
+  | Hint_Decomp _
+  | Hint_Placeholder ->
+    h1
+  | Hint_None -> h2

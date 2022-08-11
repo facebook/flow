@@ -1545,10 +1545,10 @@ class def_finder env_entries providers toplevel_scope =
           expr
       | Ast.Expression.OptionalCall expr -> this#visit_optional_call_expression ~cond expr
       | Ast.Expression.Unary expr -> this#visit_unary_expression ~hint expr
+      | Ast.Expression.Conditional expr -> this#visit_conditional ~hint expr
       | Ast.Expression.Assignment _
       | Ast.Expression.Class _
       | Ast.Expression.Comprehension _
-      | Ast.Expression.Conditional _
       | Ast.Expression.Generator _
       | Ast.Expression.Identifier _
       | Ast.Expression.Import _
@@ -1586,13 +1586,17 @@ class def_finder env_entries providers toplevel_scope =
           | Ast.Expression.Array.Hole _ -> ()
       )
 
-    method! conditional _ expr =
+    method! conditional _ _ = failwith "Should be visited by visit_conditional"
+
+    method visit_conditional ~hint expr =
       let open Ast.Expression.Conditional in
       let { test; consequent; alternate; comments = _ } = expr in
       this#visit_expression ~hint:Hint_None ~cond:OtherConditionalTest test;
-      this#visit_expression ~hint:Hint_None ~cond:NonConditionalContext consequent;
-      this#visit_expression ~hint:Hint_None ~cond:NonConditionalContext alternate;
-      expr
+      this#visit_expression ~hint ~cond:NonConditionalContext consequent;
+      this#visit_expression
+        ~hint:(Hint_api.merge_hints hint (Hint_t (ValueHint consequent)))
+        ~cond:NonConditionalContext
+        alternate
 
     method! binary _ _ = failwith "Should be visited by visit_binary_expression"
 
