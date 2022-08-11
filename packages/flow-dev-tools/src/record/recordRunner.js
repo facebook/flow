@@ -96,6 +96,8 @@ function dfsForRange(node, line, col): ?[number, number] {
 }
 
 async function runner(args: Args): Promise<void> {
+  process.stderr.write(`Using flow binary: ${args.bin}\n`);
+
   const builder = new Builder(args.errorCheckCommand);
   let suites;
   if (args.rerun != null) {
