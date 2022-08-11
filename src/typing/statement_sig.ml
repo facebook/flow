@@ -174,6 +174,7 @@ module type S = sig
     Type.enum_t
 
   val optional_chain :
+    hint:Type.t Hint_api.hint ->
     cond:Type.cond_context Base.Option.t ->
     is_existence_check:bool ->
     ?sentinel_refine:

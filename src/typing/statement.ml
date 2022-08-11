@@ -3167,8 +3167,8 @@ struct
       let use_op = Op (Cast { lower = mk_expression_reason e; upper = reason_of_t t }) in
       Flow.flow cx (infer_t, TypeCastT (use_op, t));
       ((loc, t), TypeCast { TypeCast.expression = e'; annot = annot'; comments })
-    | Member _ -> subscript ~cond cx ex
-    | OptionalMember _ -> subscript ~cond cx ex
+    | Member _ -> subscript ~hint:Hint_None ~cond cx ex
+    | OptionalMember _ -> subscript ~hint:Hint_None ~cond cx ex
     | Object { Object.properties; comments } ->
       error_on_this_uses_in_object_methods cx properties;
       let reason = mk_reason RObjectLit loc in
@@ -3381,8 +3381,8 @@ struct
       ( (loc, new_call cx reason ~use_op class_ targts argts),
         New { New.callee = callee_ast; targs = targs_ast; arguments = arguments_ast; comments }
       )
-    | Call _ -> subscript ~cond cx ex
-    | OptionalCall _ -> subscript ~cond cx ex
+    | Call _ -> subscript ~hint ~cond cx ex
+    | OptionalCall _ -> subscript ~hint ~cond cx ex
     | Conditional { Conditional.test; consequent; alternate; comments } ->
       let reason = mk_reason RConditional loc in
       let (test, preds, not_preds, xtypes) =
@@ -3849,7 +3849,7 @@ struct
          does.
        * result of applying sentinel_refine to the top of the chain, if anything.
   *)
-  and optional_chain ~cond ~is_existence_check ?sentinel_refine cx ((loc, e) as ex) =
+  and optional_chain ~hint ~cond ~is_existence_check ?sentinel_refine cx ((loc, e) as ex) =
     let open Ast.Expression in
     let factor_out_optional (_, e) =
       let (opt_state, filtered_out_loc, e') =
@@ -4106,7 +4106,7 @@ struct
           } ->
         let (((_, obj_t), _) as obj_ast) = expression cx ~hint:Hint_None obj in
         let (lhs_t, targs, arguments) =
-          static_method_call_Object cx loc callee_loc prop_loc expr obj_t name targs arguments
+          static_method_call_Object cx loc ~hint callee_loc prop_loc expr obj_t name targs arguments
         in
         Some
           ( ( (loc, lhs_t),
@@ -4670,7 +4670,7 @@ struct
       | NewChain ->
         let lhs_reason = mk_expression_reason object_ in
         let ((filtered_t, voided_t, object_ast, preds, _) as object_data) =
-          optional_chain ~cond:None ~is_existence_check:true cx object_
+          optional_chain ~hint:Hint_None ~cond:None ~is_existence_check:true cx object_
         in
         begin
           match refine () with
@@ -4706,7 +4706,7 @@ struct
         end
       | ContinueChain ->
         handle_continue_chain
-          (optional_chain ~cond:None ~is_existence_check:false cx object_)
+          (optional_chain ~hint:Hint_None ~cond:None ~is_existence_check:false cx object_)
           ~refine
           ~refinement_action
           ~subexpressions
@@ -5258,8 +5258,8 @@ struct
     in
     (argts, (args_loc, { Ast.Expression.ArgList.arguments = arg_asts; comments }))
 
-  and subscript ~cond cx ex =
-    let (_, _, ast, _, _) = optional_chain ~cond ~is_existence_check:false cx ex in
+  and subscript ~hint ~cond cx ex =
+    let (_, _, ast, _, _) = optional_chain ~hint ~cond ~is_existence_check:false cx ex in
     ast
 
   (* Handles function calls that appear in conditional contexts. The main
@@ -5909,7 +5909,7 @@ struct
       match (optional, mode) with
       | ((NewChain | ContinueChain), Delete) ->
         let (o, _, _object, preds, _) =
-          optional_chain ~cond:None ~is_existence_check:false cx obj
+          optional_chain ~hint:Hint_None ~cond:None ~is_existence_check:false cx obj
         in
         (o, _object, preds)
       | _ ->
@@ -7173,6 +7173,7 @@ struct
            functionality of optional_chain here. *)
         let (_, _, ast, preds, sentinel_refinement) =
           optional_chain
+            ~hint:Hint_None
             ~cond:(Some cond) (* We do want to allow possibly absent properties... *)
             ~is_existence_check:
               false
@@ -7353,7 +7354,7 @@ struct
       match Refinement.key ~allow_optional:true target with
       | Some name ->
         let (filtered_out, _, targ_ast, chain_preds, _) =
-          optional_chain ~cond:(Some cond) ~is_existence_check:false cx target
+          optional_chain ~hint:Hint_None ~cond:(Some cond) ~is_existence_check:false cx target
         in
         let (ast, pred) = make_ast_and_pred targ_ast bool in
         let out = result ast name filtered_out pred sense in
@@ -7685,7 +7686,9 @@ struct
     (* member expressions *)
     | (_, Member _)
     | (_, OptionalMember _) ->
-      let (_, _, ast, preds, _) = optional_chain ~cond:(Some cond) ~is_existence_check:true cx e in
+      let (_, _, ast, preds, _) =
+        optional_chain ~hint:Hint_None ~cond:(Some cond) ~is_existence_check:true cx e
+      in
       begin
         match preds with
         | None -> empty_result ast
@@ -7925,7 +7928,7 @@ struct
         Flow.flow cx (tobj, get_prop_u)
     )
 
-  and static_method_call_Object cx loc callee_loc prop_loc expr obj_t m targs args =
+  and static_method_call_Object cx loc ~hint:_ callee_loc prop_loc expr obj_t m targs args =
     let open Ast.Expression in
     let reason = mk_reason (RCustom (spf "`Object.%s`" m)) loc in
     let use_op =
