@@ -1169,7 +1169,12 @@ end = struct
           | (ArrWrite _, Initialized _)
           | (Value _, ArrInitialized _) ->
             assert_false "Invariant violated"
-          | _ -> acc)
+          | (Null _, (Initialized (_, None) | ArrInitialized _))
+          | (EmptyArr, (Uninitialized | Annotated _ | Initialized _ | NullInitialized _))
+          | ( (Value _ | ArrayValue _ | ArrWrite _ | Null _),
+              (EmptyArrInitialized | Uninitialized | Annotated _ | NullInitialized _)
+            ) ->
+            acc)
         provider_locs
         { writes = L.LMap.empty; array_writes = L.LSet.empty }
     in
