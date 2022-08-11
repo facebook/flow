@@ -7928,7 +7928,7 @@ struct
         Flow.flow cx (tobj, get_prop_u)
     )
 
-  and static_method_call_Object cx loc ~hint:_ callee_loc prop_loc expr obj_t m targs args =
+  and static_method_call_Object cx loc ~hint callee_loc prop_loc expr obj_t m targs args =
     let open Ast.Expression in
     let reason = mk_reason (RCustom (spf "`Object.%s`" m)) loc in
     let use_op =
@@ -8179,7 +8179,7 @@ struct
       let (((_, arg_t), _) as e_ast) =
         let { Object.properties; comments } = o in
         let reason = mk_reason (RFrozen RObjectLit) arg_loc in
-        let (t, properties) = object_ ~hint:Hint_None ~frozen:true cx reason properties in
+        let (t, properties) = object_ ~hint ~frozen:true cx reason properties in
         ((arg_loc, t), Object { Object.properties; comments })
       in
       let reason = mk_reason (RMethodCall (Some m)) loc in

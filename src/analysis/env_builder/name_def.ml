@@ -1264,7 +1264,7 @@ class def_finder env_entries providers toplevel_scope =
 
     method! call _ _ = failwith "Should be visited by visit_call_expression"
 
-    method private visit_call_expression ~hint:_ ~cond ~visit_callee expr =
+    method private visit_call_expression ~hint ~cond ~visit_callee expr =
       let open Ast.Expression.Call in
       let {
         callee;
@@ -1294,10 +1294,27 @@ class def_finder env_entries providers toplevel_scope =
               spread.Ast.Expression.SpreadElement.argument
         )
       else
-        match (arguments, cond) with
-        | ([Ast.Expression.Expression expr], (OtherConditionalTest | SwitchConditionalTest _))
+        match (callee, arguments, cond) with
+        | (_, [Ast.Expression.Expression expr], (OtherConditionalTest | SwitchConditionalTest _))
           when Flow_ast_utils.is_call_to_is_array callee ->
           this#visit_expression ~hint:Hint_None ~cond:OtherConditionalTest expr
+        | ( ( _,
+              Ast.Expression.Member
+                {
+                  Ast.Expression.Member._object =
+                    ( _,
+                      Ast.Expression.Identifier (_, { Ast.Identifier.name = "Object"; comments = _ })
+                    );
+                  property =
+                    Ast.Expression.Member.PropertyIdentifier
+                      (_, { Ast.Identifier.name = "freeze"; comments = _ });
+                  comments = _;
+                }
+            ),
+            [Ast.Expression.Expression expr],
+            _
+          ) ->
+          this#visit_expression ~hint ~cond:NonConditionalContext expr
         | _ ->
           let call_argumemts_hint =
             match callee with

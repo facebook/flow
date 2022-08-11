@@ -342,6 +342,14 @@ Missing an annotation on `y`. [missing-local-annot]
                      ^
 
 
+Error ------------------------------------------------------------------------------------------ included/freeze.js:3:35
+
+Missing an annotation on `x`. [missing-local-annot]
+
+   3| const noHint = Object.freeze({ f: x => {}}); // error
+                                        ^
+
+
 Error ----------------------------------------------------------------------------------------- included/id_init.js:6:15
 
 Missing an annotation on `x`. [missing-local-annot]
@@ -631,4 +639,4 @@ Missing an annotation on `y`. [missing-local-annot]
 
 
 
-Found 76 errors
+Found 77 errors
