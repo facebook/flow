@@ -6,27 +6,11 @@
  *)
 
 open Type
+open Reason
 open Polarity
 module TypeParamMarked = Marked.Make (Subst_name)
 module Marked = TypeParamMarked
 module Check = Implicit_instantiation_check
-
-let reduce_implicit_instantiation_check reducer cx pole check =
-  let { Check.lhs; poly_t = (loc, tparams, t); operation = (use_op, reason_op, op) } = check in
-  let lhs' = reducer#type_ cx pole lhs in
-  let tparams' = Nel.ident_map (reducer#type_param cx pole) tparams in
-  let t' = reducer#type_ cx pole t in
-  let op' =
-    match op with
-    | Check.Call calltype -> Check.Call (reducer#fun_call_type cx pole calltype)
-    | Check.Constructor args ->
-      Check.Constructor (ListUtils.ident_map (reducer#call_arg cx pole) args)
-    | Check.Jsx { clone; component; config; children = (children, children_spread) } ->
-      let reduce_t = reducer#type_ cx pole in
-      let children = (ListUtils.ident_map reduce_t children, Option.map reduce_t children_spread) in
-      Check.Jsx { clone; component = reduce_t component; config = reduce_t config; children }
-  in
-  { Check.lhs = lhs'; poly_t = (loc, tparams', t'); operation = (use_op, reason_op, op') }
 
 module type OBSERVER = sig
   type output
@@ -60,12 +44,18 @@ module type S = sig
 
   val solve_targs : Context.t -> Check.t -> output Subst_name.Map.t
 
-  val fold :
+  val run :
     Context.t ->
-    Context.master_context ->
+    Check.t ->
+    on_completion:(Context.t -> output Subst_name.Map.t -> 'result) ->
+    'result
+
+  val fold :
+    implicit_instantiation_cx:Context.t ->
+    cx:Context.t ->
     f:(Context.t -> 'acc -> Check.t -> output Subst_name.Map.t -> 'acc) ->
     init:'acc ->
-    post:(init_cx:Context.t -> cx:Context.t -> unit) ->
+    post:(cx:Context.t -> implicit_instantiation_cx:Context.t -> unit) ->
     Check.t list ->
     'acc
 end
@@ -368,40 +358,20 @@ struct
     let (inferred_targ_map, marked_tparams, tparams_map) = implicitly_instantiate cx check in
     pin_types cx inferred_targ_map marked_tparams tparams_map check
 
-  let fold init_cx master_cx ~f ~init ~post implicit_instantiation_checks =
-    let file = Context.file init_cx in
-    let metadata = Context.metadata init_cx in
-    let aloc_table = Utils_js.FilenameMap.find file (Context.aloc_tables init_cx) in
-    let ccx = Context.make_ccx master_cx in
-    let cx = Context.make ccx metadata file aloc_table Context.PostInference in
-    let reducer =
-      new Context_optimizer.context_optimizer ~no_lowers:(fun _ -> Unsoundness.merged_any)
-    in
-    let implicit_instantiation_checks =
-      Base.List.map
-        ~f:(reduce_implicit_instantiation_check reducer init_cx Polarity.Neutral)
-        implicit_instantiation_checks
-    in
-    Context.merge_into
-      ccx
-      {
-        Type.TypeContext.graph = reducer#get_reduced_graph;
-        trust_graph = reducer#get_reduced_trust_graph;
-        property_maps = reducer#get_reduced_property_maps;
-        call_props = reducer#get_reduced_call_props;
-        export_maps = reducer#get_reduced_export_maps;
-        evaluated = reducer#get_reduced_evaluated;
-      };
+  let run cx check ~on_completion =
+    let subst_map = solve_targs cx check in
+    on_completion cx subst_map
 
+  let fold ~implicit_instantiation_cx ~cx ~f ~init ~post implicit_instantiation_checks =
     let r =
       Base.List.fold_left
         ~f:(fun acc check ->
-          let pinned = solve_targs cx check in
-          f cx acc check pinned)
+          let pinned = solve_targs implicit_instantiation_cx check in
+          f implicit_instantiation_cx acc check pinned)
         ~init
         implicit_instantiation_checks
     in
-    post ~init_cx ~cx;
+    post ~cx ~implicit_instantiation_cx;
     r
 end
 
@@ -448,3 +418,66 @@ end
 module Pierce : functor (Flow : Flow_common.S) ->
   S with type output = inferred_targ with module Flow = Flow =
   Make (CheckObserver)
+
+module type KIT = sig
+  module Flow : Flow_common.S
+
+  module Instantiation_helper : Flow_js_utils.Instantiation_helper_sig
+
+  val run :
+    Context.t ->
+    Implicit_instantiation_check.t ->
+    ?cache:Reason.t list ->
+    trace ->
+    use_op:use_op ->
+    reason_op:reason ->
+    reason_tapp:reason ->
+    Type.t
+end
+
+module Kit (FlowJs : Flow_common.S) (Instantiation_helper : Flow_js_utils.Instantiation_helper_sig) :
+  KIT = struct
+  module Flow = FlowJs
+  module Instantiation_helper = Instantiation_helper
+  module Pierce = Pierce (Flow)
+  open Instantiation_helper
+
+  let instantiate_poly_with_subst_map
+      cx ?cache trace poly_t inferred_targ_map ~use_op ~reason_op ~reason_tapp =
+    let inferred_targ_map =
+      Subst_name.Map.map
+        (fun { tparam; inferred } ->
+          {
+            inferred =
+              cache_instantiate cx trace ~use_op ?cache tparam reason_op reason_tapp inferred;
+            tparam;
+          })
+        inferred_targ_map
+    in
+    let subst_map = Subst_name.Map.map (fun { inferred; _ } -> inferred) inferred_targ_map in
+    inferred_targ_map
+    |> Subst_name.Map.iter (fun _ { inferred; tparam } ->
+           let frame = Frame (TypeParamBound { name = tparam.name }, use_op) in
+           is_subtype
+             cx
+             trace
+             ~use_op:frame
+             (inferred, Subst.subst cx ~use_op subst_map tparam.bound)
+       );
+    reposition cx ~trace (aloc_of_reason reason_tapp) (Subst.subst cx ~use_op subst_map poly_t)
+
+  let run_pierce cx check ?cache trace ~use_op ~reason_op ~reason_tapp =
+    let (_, _, t) = check.Implicit_instantiation_check.poly_t in
+    let targs_map = Pierce.solve_targs cx check in
+    instantiate_poly_with_subst_map cx ?cache trace t targs_map ~use_op ~reason_op ~reason_tapp
+
+  let run_instantiate_poly cx check ?cache trace ~use_op ~reason_op ~reason_tapp =
+    let poly_t = check.Implicit_instantiation_check.poly_t in
+    FlowJs.instantiate_poly cx trace ~use_op ~reason_op ~reason_tapp ?cache poly_t
+
+  let run cx check =
+    Context.add_possibly_speculating_implicit_instantiation_check cx check;
+    match Context.env_mode cx with
+    | Options.(SSAEnv Enforced) -> run_pierce cx check
+    | _ -> run_instantiate_poly cx check
+end

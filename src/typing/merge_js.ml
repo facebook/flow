@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-module ImplicitInstantiationKit : Implicit_instantiation.S =
+module PierceImplicitInstantiation : Implicit_instantiation.S =
   Implicit_instantiation.Make
     (struct
       type output = unit
@@ -294,17 +294,67 @@ let detect_non_voidable_properties cx =
       check_properties private_property_map private_property_errors)
     (Context.voidable_checks cx)
 
+(* It's unfortunate that this function and prepare_implicit_instantiation_checks_and cx are here,
+ * but ocamlbuild erroneously detects a cycle when using the context optimizer in
+ * implicit_instantiation.ml. dune does not detect that cycle, and neither does buck.
+ *)
+let reduce_implicit_instantiation_check reducer cx pole check =
+  let open Implicit_instantiation_check in
+  let { lhs; poly_t = (loc, tparams, t); operation = (use_op, reason_op, op) } = check in
+  let lhs' = reducer#type_ cx pole lhs in
+  let tparams' = Nel.ident_map (reducer#type_param cx pole) tparams in
+  let t' = reducer#type_ cx pole t in
+  let op' =
+    match op with
+    | Call calltype -> Call (reducer#fun_call_type cx pole calltype)
+    | Constructor args -> Constructor (ListUtils.ident_map (reducer#call_arg cx pole) args)
+    | Jsx { clone; component; config; children = (children, children_spread) } ->
+      let reduce_t = reducer#type_ cx pole in
+      let children = (ListUtils.ident_map reduce_t children, Option.map reduce_t children_spread) in
+      Jsx { clone; component = reduce_t component; config = reduce_t config; children }
+  in
+  { lhs = lhs'; poly_t = (loc, tparams', t'); operation = (use_op, reason_op, op') }
+
+let prepare_implicit_instantiation_checks_and_cx ~cx ~master_cx implicit_instantiation_checks =
+  let file = Context.file cx in
+  let metadata = Context.metadata cx in
+  let aloc_table = Utils_js.FilenameMap.find file (Context.aloc_tables cx) in
+  let ccx = Context.make_ccx master_cx in
+  let implicit_instantiation_cx = Context.make ccx metadata file aloc_table Context.PostInference in
+  let reducer =
+    new Context_optimizer.context_optimizer ~no_lowers:(fun _ -> Type.Unsoundness.merged_any)
+  in
+  let implicit_instantiation_checks =
+    Base.List.map
+      ~f:(reduce_implicit_instantiation_check reducer cx Polarity.Neutral)
+      implicit_instantiation_checks
+  in
+  Context.merge_into
+    ccx
+    {
+      Type.TypeContext.graph = reducer#get_reduced_graph;
+      trust_graph = reducer#get_reduced_trust_graph;
+      property_maps = reducer#get_reduced_property_maps;
+      call_props = reducer#get_reduced_call_props;
+      export_maps = reducer#get_reduced_export_maps;
+      evaluated = reducer#get_reduced_evaluated;
+    };
+  (implicit_instantiation_checks, implicit_instantiation_cx)
+
 let check_implicit_instantiations cx master_cx =
   if Context.run_post_inference_implicit_instantiation cx then
     let implicit_instantiation_checks = Context.implicit_instantiation_checks cx in
-    ImplicitInstantiationKit.fold
-      cx
-      master_cx
+    let (implicit_instantiation_checks, implicit_instantiation_cx) =
+      prepare_implicit_instantiation_checks_and_cx ~cx ~master_cx implicit_instantiation_checks
+    in
+    PierceImplicitInstantiation.fold
+      ~implicit_instantiation_cx
+      ~cx
       ~init:()
       ~f:(fun _ _ _ _ -> ())
-      ~post:(fun ~init_cx ~cx ->
-        let new_errors = Context.errors cx in
-        Flow_error.ErrorSet.iter (fun error -> Context.add_error init_cx error) new_errors)
+      ~post:(fun ~cx ~implicit_instantiation_cx ->
+        let new_errors = Context.errors implicit_instantiation_cx in
+        Flow_error.ErrorSet.iter (fun error -> Context.add_error cx error) new_errors)
       implicit_instantiation_checks
 
 class resolver_visitor =

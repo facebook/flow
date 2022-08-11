@@ -367,6 +367,9 @@ val add_voidable_check : t -> voidable_check -> unit
 
 val add_implicit_instantiation_check : t -> Implicit_instantiation_check.t -> unit
 
+val add_possibly_speculating_implicit_instantiation_check :
+  t -> Implicit_instantiation_check.t -> unit
+
 val add_implicit_instantiation_call :
   t ->
   Type.t ->

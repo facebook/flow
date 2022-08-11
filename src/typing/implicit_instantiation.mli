@@ -39,12 +39,18 @@ module type S = sig
 
   val solve_targs : Context.t -> Check.t -> output Subst_name.Map.t
 
-  val fold :
+  val run :
     Context.t ->
-    Context.master_context ->
+    Check.t ->
+    on_completion:(Context.t -> output Subst_name.Map.t -> 'result) ->
+    'result
+
+  val fold :
+    implicit_instantiation_cx:Context.t ->
+    cx:Context.t ->
     f:(Context.t -> 'acc -> Check.t -> output Subst_name.Map.t -> 'acc) ->
     init:'acc ->
-    post:(init_cx:Context.t -> cx:Context.t -> unit) ->
+    post:(cx:Context.t -> implicit_instantiation_cx:Context.t -> unit) ->
     Check.t list ->
     'acc
 end
@@ -58,3 +64,22 @@ type inferred_targ = {
 }
 
 module Pierce (Flow : Flow_common.S) : S with type output = inferred_targ with module Flow = Flow
+
+module type KIT = sig
+  module Flow : Flow_common.S
+
+  module Instantiation_helper : Flow_js_utils.Instantiation_helper_sig
+
+  val run :
+    Context.t ->
+    Implicit_instantiation_check.t ->
+    ?cache:Reason.t list ->
+    Type.trace ->
+    use_op:Type.use_op ->
+    reason_op:Reason.reason ->
+    reason_tapp:Reason.reason ->
+    Type.t
+end
+
+module Kit (Flow : Flow_common.S) (Instantiation_helper : Flow_js_utils.Instantiation_helper_sig) :
+  KIT with module Flow = Flow with module Instantiation_helper = Instantiation_helper

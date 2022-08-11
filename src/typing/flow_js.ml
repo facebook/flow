@@ -222,7 +222,7 @@ module M__flow
 struct
   open SubtypingKit
 
-  module InstantiationKit = Instantiation_kit (struct
+  module InstantiationHelper = struct
     (* Given a type parameter, a supplied type argument for specializing it, and a
        reason for specialization, either return the type argument or, when directed,
        look up the instantiation cache for an existing type argument for the same
@@ -248,7 +248,10 @@ struct
     let unresolved_id = Tvar.mk_no_wrap
 
     let resolve_id cx trace ~use_op id t = FlowJs.rec_unify cx trace ~use_op (OpenT id) t
-  end)
+  end
+
+  module InstantiationKit = Instantiation_kit (InstantiationHelper)
+  module ImplicitInstantiationKit = Implicit_instantiation.Kit (FlowJs) (InstantiationHelper)
 
   module Import_export_helper = struct
     type r = Type.t -> unit
@@ -2751,16 +2754,18 @@ struct
                 match calltype.call_targs with
                 | None ->
                   let poly_t = (tparams_loc, ids, t) in
-                  Context.add_implicit_instantiation_call cx l poly_t use_op reason_op calltype;
+                  let check =
+                    Implicit_instantiation_check.of_call l poly_t use_op reason_op calltype
+                  in
                   let t_ =
-                    instantiate_poly
+                    ImplicitInstantiationKit.run
                       cx
+                      check
+                      ~cache:arg_reasons
                       trace
                       ~use_op
                       ~reason_op
                       ~reason_tapp
-                      ~cache:arg_reasons
-                      (tparams_loc, ids, t)
                   in
                   rec_flow cx trace (t_, u)
                 | Some targs ->
@@ -2794,14 +2799,9 @@ struct
               rec_flow cx trace (t_, ConstructorT (use_op, reason_op, None, args, tout))
             | ConstructorT (use_op, reason_op, None, args, _) ->
               let poly_t = (tparams_loc, ids, t) in
-              Context.add_implicit_instantiation_ctor cx l poly_t use_op reason_op args;
-              let use_op =
-                match use_op_of_use_t u with
-                | Some use_op -> use_op
-                | None -> unknown_use
-              in
+              let check = Implicit_instantiation_check.of_ctor l poly_t use_op reason_op args in
               let t_ =
-                instantiate_poly cx trace ~use_op ~reason_op ~reason_tapp (tparams_loc, ids, t)
+                ImplicitInstantiationKit.run cx check trace ~use_op ~reason_op ~reason_tapp
               in
               rec_flow cx trace (t_, u)
             | ReactKitT
@@ -2825,23 +2825,19 @@ struct
             | ReactKitT (use_op, _, React.CreateElement { clone; component; config; children; _ })
               ->
               let poly_t = (tparams_loc, ids, t) in
-              Context.add_implicit_instantiation_jsx
-                cx
-                l
-                poly_t
-                use_op
-                reason_op
-                clone
-                ~component
-                ~config
-                children;
-              let use_op =
-                match use_op_of_use_t u with
-                | Some use_op -> use_op
-                | None -> unknown_use
+              let check =
+                Implicit_instantiation_check.of_jsx
+                  l
+                  poly_t
+                  use_op
+                  reason_op
+                  clone
+                  ~component
+                  ~config
+                  children
               in
               let t_ =
-                instantiate_poly cx trace ~use_op ~reason_op ~reason_tapp (tparams_loc, ids, t)
+                ImplicitInstantiationKit.run cx check trace ~use_op ~reason_op ~reason_tapp
               in
               rec_flow cx trace (t_, u)
             | _ ->
