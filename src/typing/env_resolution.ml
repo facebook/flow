@@ -513,7 +513,9 @@ module Make (Env : Env_sig.S) (Statement : Statement_sig.S with module Env := En
         Some (SwitchTest { case_test_reason; switch_discriminant_reason })
     in
     (* The is_existence_check parameters is only used for old-env refinements, so it's irrelevant now. *)
-    let (t, _, exp, _, _) = Statement.optional_chain ~cond ~is_existence_check:false cx exp in
+    let (t, _, exp, _, _) =
+      Statement.optional_chain ~hint:Hint_None ~cond ~is_existence_check:false cx exp
+    in
     Node_cache.set_expression cache exp;
     (t, unknown_use)
 

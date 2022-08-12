@@ -1264,7 +1264,7 @@ class def_finder env_entries providers toplevel_scope =
 
     method! call _ _ = failwith "Should be visited by visit_call_expression"
 
-    method private visit_call_expression ~cond ~visit_callee expr =
+    method private visit_call_expression ~hint:_ ~cond ~visit_callee expr =
       let open Ast.Expression.Call in
       let {
         callee;
@@ -1329,11 +1329,12 @@ class def_finder env_entries providers toplevel_scope =
 
     method! optional_call _ _ = failwith "Should be visited by visit_optional_call_expression"
 
-    method private visit_optional_call_expression ~cond expr =
+    method private visit_optional_call_expression ~hint ~cond expr =
       let open Ast.Expression.OptionalCall in
       let { call; optional = _; filtered_out = _ } = expr in
       this#visit_call_expression
         call
+        ~hint
         ~cond
         ~visit_callee:(this#visit_expression ~hint:Hint_None ~cond:NonConditionalContext)
 
@@ -1540,10 +1541,11 @@ class def_finder env_entries providers toplevel_scope =
       | Ast.Expression.Logical expr -> this#visit_logical_expression ~cond expr
       | Ast.Expression.Call expr ->
         this#visit_call_expression
+          ~hint
           ~visit_callee:(this#visit_expression ~hint:Hint_None ~cond:NonConditionalContext)
           ~cond
           expr
-      | Ast.Expression.OptionalCall expr -> this#visit_optional_call_expression ~cond expr
+      | Ast.Expression.OptionalCall expr -> this#visit_optional_call_expression ~hint ~cond expr
       | Ast.Expression.Unary expr -> this#visit_unary_expression ~hint expr
       | Ast.Expression.Assignment _
       | Ast.Expression.Class _
