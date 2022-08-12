@@ -200,7 +200,8 @@ module New_env = struct
             | _ ->
               Flow_js_utils.add_output cx Error_message.(EInternal (loc, ReadOfUnresolvedTvar kind))
           end
-        | Some _ -> assert_false "Expect only OpenTs in env"
+        | Some t ->
+          assert_false ("Expect only OpenTs in env, instead we have " ^ Debug_js.dump_t cx t)
       end
     | _ -> ()
 
@@ -1106,6 +1107,7 @@ module New_env = struct
             (Tvar.mk cx element_reason, Some [], replace_desc_reason REmptyArrayLit reason)
         in
         let t = DefT (reason, bogus_trust (), ArrT (ArrayAT (elem_t, elems))) in
+        let t = Tvar.mk_where cx reason (fun t' -> Flow_js.unify cx t t') in
         (* Treat everything as inferred for now for the purposes of annotated vs inferred *)
         Loc_env.initialize env def_loc_type loc t
       | Env_api.NonAssigningWrite ->
