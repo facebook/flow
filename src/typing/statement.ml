@@ -6886,7 +6886,7 @@ struct
               _;
             }
         ) ->
-        let ot = jsx_pragma_expression cx raw_jsx_expr loc_element _object in
+        let ot = jsx_pragma_expression cx raw_jsx_expr (fst _object) _object in
         snd
           (method_call
              cx

@@ -93,9 +93,9 @@ module.exports = (suite(({addFile, addFiles, addCode}) => [
     `)
       .newErrors(
         `
-          test.js:6
-            6:       <Bar />;
-                     ^^^^^^^ Cannot resolve name \`Foo\`. [cannot-resolve-name]
+          test.js:4
+            4:       // @jsx Foo.baz
+                             ^^^ Cannot resolve name \`Foo\`. [cannot-resolve-name]
         `,
       ),
   ]),

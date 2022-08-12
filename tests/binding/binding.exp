@@ -317,6 +317,30 @@ References:
                     ^^^^ [1]
 
 
+Error ---------------------------------------------------------------------------------------- jsx_pragma_member1.js:2:9
+
+Cannot resolve name `Foo`. [cannot-resolve-name]
+
+   2| // @jsx Foo.baz
+              ^^^
+
+
+Error ---------------------------------------------------------------------------------------- jsx_pragma_member2.js:2:9
+
+Cannot resolve name `Foo`. [cannot-resolve-name]
+
+   2| // @jsx Foo.Bar.baz
+              ^^^
+
+
+Error ---------------------------------------------------------------------------------------- jsx_pragma_member3.js:2:9
+
+Cannot resolve name `Foo`. [cannot-resolve-name]
+
+   2| // @jsx Foo['bar']
+              ^^^
+
+
 Error ------------------------------------------------------------------------------------------------ rebinding.js:16:8
 
 Cannot declare `A` [1] because the name is already bound. [name-already-bound]
@@ -1177,4 +1201,4 @@ Cannot resolve name `unboundFunction2`. [cannot-resolve-name]
 
 
 
-Found 86 errors
+Found 89 errors
