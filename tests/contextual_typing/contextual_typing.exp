@@ -59,16 +59,5 @@ Internal error: unconstrained tvar during tvar resolution
                ^^^
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:23:5
 
-Missing an annotation on computed method. [missing-local-annot]
-
-           v-----------------------------
-   23|     #baz<T>(f: (string) => T): T {
-   24|       return f("");
-   25|     }
-           ^
-
-
-
-Found 5 errors
+Found 4 errors

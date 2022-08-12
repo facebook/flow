@@ -460,16 +460,8 @@ let def_of_class
               }
             ) ->
           []
-        | Method
-            ( _,
-              {
-                Ast.Class.Method.key = Ast.Expression.Object.Property.Identifier _;
-                value = (_, value);
-                _;
-              }
-            ) ->
+        | Method (_, { Ast.Class.Method.value = (_, value); _ }) ->
           func_missing_annotations ~allow_this:true value
-        | Method (loc, _) -> [mk_reason (RMethod None) loc]
         | Property
             ( _,
               {

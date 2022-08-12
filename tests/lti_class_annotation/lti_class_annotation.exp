@@ -54,5 +54,21 @@ Missing an annotation on property `#priv2`. [missing-local-annot]
          ^^^^^^^
 
 
+Error --------------------------------------------------------------------------------------------------- class.js:19:12
 
-Found 7 errors
+Missing an annotation on return. [missing-local-annot]
+
+   19|   #pmeth2() { return 42 } // err return
+                  
+
+
+Error ---------------------------------------------------------------------------------------------------- class.js:20:3
+
+Computed property keys not supported. [unsupported-syntax]
+
+   20|   ["computed"]() { } // unsupported, but no missing annot
+         ^^^^^^^^^^^^^^^^^^
+
+
+
+Found 9 errors

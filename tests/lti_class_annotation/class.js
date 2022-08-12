@@ -14,6 +14,10 @@ class A {
 
   #priv1 = 10 + 20; // err
   #priv2; // err
+
+  #pmeth1() { } // ok
+  #pmeth2() { return 42 } // err return
+  ["computed"]() { } // unsupported, but no missing annot
 }
 
 function sanity_check_that_we_dont_error_on_non_method_functions() {
