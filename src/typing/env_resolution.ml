@@ -58,8 +58,8 @@ module Make (Env : Env_sig.S) (Statement : Statement_sig.S with module Env := En
       end
 
     let resolve cx t =
-      match Context.env_mode cx with
-      | Options.(SSAEnv Enforced) -> resolver#type_ cx Polarity.Positive () t
+      match (Context.env_mode cx, Context.current_phase cx <> Context.InitLib) with
+      | (Options.(SSAEnv Enforced), true) -> resolver#type_ cx Polarity.Positive () t
       | _ -> ()
 
     let resolved_t cx t =

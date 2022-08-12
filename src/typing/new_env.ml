@@ -182,8 +182,8 @@ module New_env = struct
   (************************)
 
   let check_readable cx kind loc =
-    match Context.env_mode cx with
-    | Options.(SSAEnv Enforced) ->
+    match (Context.env_mode cx, Context.current_phase cx <> Context.InitLib) with
+    | (Options.(SSAEnv Enforced), true) ->
       let ({ Loc_env.under_resolution; var_info; _ } as env) = Context.environment cx in
       begin
         match Loc_env.find_write env kind loc with
