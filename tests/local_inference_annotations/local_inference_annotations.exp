@@ -382,6 +382,14 @@ Missing an annotation on `x`. [missing-local-annot]
                    ^
 
 
+Error ---------------------------------------------------------------------------------------- included/logical.js:15:37
+
+Missing an annotation on `y`. [missing-local-annot]
+
+   15| const and = ((x: number) => {}) && (y => {}); // Error `y` missing annotation
+                                           ^
+
+
 Error --------------------------------------------------------------------------------------- included/no_annots.js:3:12
 
 Missing an annotation on `x`. [missing-local-annot]
@@ -623,4 +631,4 @@ Missing an annotation on `y`. [missing-local-annot]
 
 
 
-Found 75 errors
+Found 76 errors
