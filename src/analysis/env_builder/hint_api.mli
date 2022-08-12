@@ -33,3 +33,7 @@ val string_of_hint_unknown_kind : hint_decomposition -> string
 val string_of_hint : on_hint:('t -> string) -> 't hint -> string
 
 val decompose_hint : hint_decomposition -> 't hint -> 't hint
+
+(** Combine two hints into one, by picking the first one if it contains useful
+ *  information; otherwise picking the second hint. *)
+val merge_hints : 't hint -> 't hint -> 't hint
