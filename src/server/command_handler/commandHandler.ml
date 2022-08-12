@@ -2512,7 +2512,7 @@ let handle_persistent_uncaught_exception request e =
   let stack = Exception.get_backtrace_string e in
   LspProt.UncaughtException { request; exception_constructor; stack }
 
-let send_persistent_response ~profiling ~client request result =
+let send_persistent_response ~profiling ~client result =
   let server_profiling = Some profiling in
   let server_logging_context = Some (FlowEventLogger.get_context ()) in
   let (ret, lsp_response, metadata) = result in
@@ -2520,8 +2520,6 @@ let send_persistent_response ~profiling ~client request result =
   let response = (lsp_response, metadata) in
   Persistent_connection.send_response response client;
   Hh_logger.info "Persistent response: %s" (LspProt.string_of_response lsp_response);
-  (* we'll send this "Finishing_up" event only after sending the LSP response *)
-  send_command_summary profiling (LspProt.string_of_request request);
   ret
 
 let wrap_persistent_handler
@@ -2565,7 +2563,10 @@ let wrap_persistent_handler
               Lwt.return (default_ret, response, metadata))
       )
     in
-    Lwt.return (send_persistent_response ~profiling ~client request result)
+    let ret = send_persistent_response ~profiling ~client result in
+    (* we'll send this "Finishing_up" event only after sending the LSP response *)
+    send_command_summary profiling (LspProt.string_of_request request);
+    Lwt.return ret
 
 let wrap_immediate_persistent_handler
     (type a b c)
@@ -2590,8 +2591,6 @@ let wrap_immediate_persistent_handler
     default_ret
   | Some client ->
     Hh_logger.info "Persistent request: %s" (LspProt.string_of_request request);
-    MonitorRPC.status_update ~event:ServerStatus.Handling_request_start;
-
     let should_print_summary = Options.should_profile genv.options in
     let (profiling, result) =
       Profiling_js.with_profiling_sync ~label:"Command" ~should_print_summary (fun profiling ->
@@ -2604,7 +2603,7 @@ let wrap_immediate_persistent_handler
               (default_ret, response, metadata))
       )
     in
-    send_persistent_response ~profiling ~client request result
+    send_persistent_response ~profiling ~client result
 
 let handle_persistent_immediately_unsafe ~genv:_ ~workload ~client ~profiling () =
   let (response, json_data) = workload ~client ~profiling in
