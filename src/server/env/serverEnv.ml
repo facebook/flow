@@ -45,20 +45,13 @@ type collated_errors = {
 }
 
 type env = {
-  (* All the files that we at least parse. *)
-  files: Utils_js.FilenameSet.t;
-  (* All the files that we at least parse. *)
+  files: Utils_js.FilenameSet.t;  (** All the files that we at least parse (includes libs). *)
   dependency_info: Dependency_info.t;
-  (* All the current files we typecheck. *)
-  checked_files: CheckedSet.t;
-  (* package.json files *)
-  package_json_files: File_key.t list;
-  ordered_libs: string list;
-  (* The lib files, in their merge order *)
-  libs: SSet.t;
-  (* a subset of `files` *)
-  (* The files which didn't parse (skipped or errored) *)
-  unparsed: Utils_js.FilenameSet.t;
+  checked_files: CheckedSet.t;  (** All the current files we typecheck. *)
+  package_json_files: File_key.t list;  (** package.json files *)
+  ordered_libs: string list;  (** The lib files, in their merge order *)
+  libs: SSet.t;  (** The lib files as a set *)
+  unparsed: Utils_js.FilenameSet.t;  (** The files which didn't parse (skipped or errored) *)
   errors: errors;
   coverage: Coverage_response.file_coverage Utils_js.FilenameMap.t;
   collated_errors: collated_errors option ref;
