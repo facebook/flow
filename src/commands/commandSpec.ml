@@ -7,7 +7,12 @@
 
 exception Show_help
 
-exception Failed_to_parse of string * string
+exception
+  Failed_to_parse of {
+    msg: string;
+    arg: string;
+    details: string option;
+  }
 
 module ArgSpec = struct
   type values_t = string list SMap.t
@@ -86,7 +91,14 @@ module ArgSpec = struct
             Some
               (try int_of_string x with
               | Failure _ ->
-                raise (Failed_to_parse (name, Utils_js.spf "expected an integer, got %S" x)))
+                raise
+                  (Failed_to_parse
+                     {
+                       arg = name;
+                       msg = "Invalid argument";
+                       details = Some (Printf.sprintf "expected an integer, got %S" x);
+                     }
+                  ))
           | _ -> None);
       arg = Arg;
     }
@@ -99,10 +111,24 @@ module ArgSpec = struct
             let i =
               try int_of_string x with
               | Failure _ ->
-                raise (Failed_to_parse (name, Utils_js.spf "expected an unsigned integer, got %S" x))
+                raise
+                  (Failed_to_parse
+                     {
+                       arg = name;
+                       msg = "Invalid argument";
+                       details = Some (Printf.sprintf "expected an unsigned integer, got %S" x);
+                     }
+                  )
             in
             if i < 0 then
-              raise (Failed_to_parse (name, Utils_js.spf "expected an unsigned integer, got %S" x))
+              raise
+                (Failed_to_parse
+                   {
+                     arg = name;
+                     msg = "Invalid argument";
+                     details = Some (Printf.sprintf "expected an unsigned integer, got %S" x);
+                   }
+                )
             else
               Some i
           | _ -> None);
@@ -120,11 +146,16 @@ module ArgSpec = struct
               | None ->
                 raise
                   (Failed_to_parse
-                     ( name,
-                       Utils_js.spf
-                         "expected one of: %s"
-                         (String.concat ", " (Base.List.map ~f:fst values))
-                     )
+                     {
+                       arg = name;
+                       msg = "Invalid argument";
+                       details =
+                         Some
+                           (Printf.sprintf
+                              "expected one of: %s"
+                              (String.concat ", " (Base.List.map ~f:fst values))
+                           );
+                     }
                   )
             end
           | _ -> None);
@@ -164,20 +195,25 @@ module ArgSpec = struct
             begin
               match default with
               | Some default -> default
-              | None -> raise (Failed_to_parse (name, "missing required arguments"))
+              | None ->
+                raise
+                  (Failed_to_parse
+                     { arg = name; msg = "Missing required arguments"; details = None }
+                  )
             end
           | value ->
             (match arg_type.parse ~name value with
             | None ->
               raise
                 (Failed_to_parse
-                   ( name,
-                     Utils_js.spf
-                       "wrong type for required argument%s"
+                   {
+                     arg = name;
+                     msg = "Wrong type for required argument";
+                     details =
                        (match value with
-                       | Some [x] -> ": " ^ x
-                       | _ -> "")
-                   )
+                       | Some [x] -> Some ("got " ^ x)
+                       | _ -> None);
+                   }
                 )
             | Some result -> result));
       arg = arg_type.arg;
@@ -206,7 +242,11 @@ module ArgSpec = struct
                    | None ->
                      raise
                        (Failed_to_parse
-                          (name, Utils_js.spf "wrong type for argument list item: %s" x)
+                          {
+                            arg = name;
+                            msg = "Invalid argument";
+                            details = Some (Printf.sprintf "wrong type for argument list item: %s" x);
+                          }
                        ))
                  values
               ));
@@ -224,7 +264,14 @@ module ArgSpec = struct
                  ~f:(fun arg ->
                    match arg_type.parse ~name (Some [arg]) with
                    | None ->
-                     raise (Failed_to_parse (name, Utils_js.spf "wrong type for value: %s" arg))
+                     raise
+                       (Failed_to_parse
+                          {
+                            arg = name;
+                            msg = "Invalid argument";
+                            details = Some (Printf.sprintf "wrong type for value: %s" arg);
+                          }
+                       )
                    | Some result -> result)
                  args
               )
@@ -241,11 +288,27 @@ module ArgSpec = struct
               match Str.bounded_split (Str.regexp_string delim) x 2 with
               | [key; value] -> (key, Some [value])
               | [key] -> (key, None)
-              | _ -> raise (Failed_to_parse (name, Utils_js.spf "unexpected value: %s" x))
+              | _ ->
+                raise
+                  (Failed_to_parse
+                     {
+                       arg = name;
+                       msg = "Unexpected value";
+                       details = Some (Printf.sprintf "got %s" x);
+                     }
+                  )
             in
             let key =
               match key_type.parse ~name (Some [key]) with
-              | None -> raise (Failed_to_parse (name, Utils_js.spf "wrong type for key: %s" key))
+              | None ->
+                raise
+                  (Failed_to_parse
+                     {
+                       arg = name;
+                       msg = "Invalid argument";
+                       details = Some (Printf.sprintf "wrong type for key: %s" key);
+                     }
+                  )
               | Some result -> result
             in
             let value = value_type.parse ~name value in
@@ -369,9 +432,10 @@ and parse_flag values spec arg args =
     | ArgSpec.Arg ->
       begin
         match args with
-        | [] -> raise (Failed_to_parse (arg, "option needs an argument."))
+        | [] -> raise (Failed_to_parse { arg; msg = "Option needs an argument"; details = None })
         | value :: args ->
-          if is_arg value then raise (Failed_to_parse (arg, "option needs an argument."));
+          if is_arg value then
+            raise (Failed_to_parse { arg; msg = "Option needs an argument"; details = None });
           let values = SMap.add arg [value] values in
           parse values spec args
       end
@@ -382,7 +446,7 @@ and parse_flag values spec arg args =
     | ArgSpec.Arg_Rest -> failwith "Not supported"
     | ArgSpec.Arg_Command -> failwith "Not supported"
   with
-  | Not_found -> raise (Failed_to_parse (arg, "unknown option"))
+  | Not_found -> raise (Failed_to_parse { arg; msg = "Unknown option"; details = None })
 
 and parse_anon values spec arg args =
   let (anon, spec) = ArgSpec.pop_anon spec in
@@ -407,7 +471,7 @@ and parse_anon values spec arg args =
     let values = SMap.add name (arg :: args) values in
     parse values spec []
   | Some (_, ArgSpec.No_Arg) -> assert false
-  | None -> raise (Failed_to_parse ("anon", Utils_js.spf "unexpected argument '%s'." arg))
+  | None -> raise (Failed_to_parse { arg; msg = "Unexpected argument"; details = None })
 
 let init_from_env spec =
   let flags = spec.ArgSpec.flags in

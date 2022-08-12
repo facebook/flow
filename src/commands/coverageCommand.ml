@@ -311,9 +311,15 @@ let main
   (* pretty implies json *)
   let json = json || pretty in
   if color && json then
-    raise (CommandSpec.Failed_to_parse ("--color", "Can't be used with json flags"));
+    raise
+      (CommandSpec.Failed_to_parse
+         { arg = "--color"; msg = "Can't be used with json flags"; details = None }
+      );
   if debug && json then
-    raise (CommandSpec.Failed_to_parse ("--debug", "Can't be used with json flags"));
+    raise
+      (CommandSpec.Failed_to_parse
+         { arg = "--debug"; msg = "Can't be used with json flags"; details = None }
+      );
 
   let request =
     ServerProt.Request.COVERAGE { input = file; force = all; wait_for_recheck; trust }

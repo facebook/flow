@@ -15,7 +15,7 @@ let run_command command argv =
   | CommandSpec.Show_help ->
     print_endline (CommandSpec.string_of_usage command);
     Exit.(exit No_error)
-  | CommandSpec.Failed_to_parse (arg_name, msg) ->
+  | CommandSpec.Failed_to_parse { arg; msg; details } ->
     let is_pretty_or_json_arg s =
       String.starts_with ~prefix:"--pretty" s || String.starts_with ~prefix:"--json" s
     in
@@ -26,14 +26,12 @@ let run_command command argv =
         Exit.set_json_mode ~pretty
       | None -> ()
     end;
-    let msg =
-      Utils_js.spf
-        "%s: %s %s\n%s"
-        (Filename.basename Sys.executable_name)
-        arg_name
-        msg
-        (CommandSpec.string_of_usage command)
+    let details =
+      match details with
+      | Some x -> Printf.sprintf " (%s)" x
+      | None -> ""
     in
+    let msg = Printf.sprintf "%s: %s%s" msg arg details in
     Exit.(exit ~msg Commandline_usage_error)
 
 let expand_file_list ?options filenames =

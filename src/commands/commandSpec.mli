@@ -71,7 +71,12 @@ type t
 
 exception Show_help
 
-exception Failed_to_parse of string * string
+exception
+  Failed_to_parse of {
+    msg: string;
+    arg: string;
+    details: string option;
+  }
 
 (* If no `col_width` is passed, the length of the longest string of the first column will be used.
    `col_pad` will be used as additional padding between the two columns. *)
