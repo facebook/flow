@@ -953,6 +953,11 @@ module Make
                 binding_kind = Scope.Entry.FunctionBinding;
               }
           )
+      | (Bindings.Import, AssignmentWrite) ->
+        Some
+          Error_message.(
+            EBindingError (EImportReassigned, assignment_loc, OrdinaryName name, def_loc)
+          )
       | (Bindings.DeclaredFunction _, AssignmentWrite) ->
         let def_reason = mk_reason (RIdentifier (OrdinaryName name)) def_loc in
         Some
@@ -980,6 +985,7 @@ module Make
       | (Bindings.Let, (VarBinding | LetBinding | ConstBinding | FunctionBinding))
       | (Bindings.Class, (VarBinding | LetBinding | ConstBinding | FunctionBinding))
       | (Bindings.Function, (VarBinding | LetBinding | ConstBinding | FunctionBinding))
+      | (Bindings.Import, (VarBinding | LetBinding | ConstBinding | FunctionBinding))
       | (Bindings.Type _, (VarBinding | LetBinding | ConstBinding | FunctionBinding))
         when not (Val.is_undeclared v) ->
         Some
@@ -1666,10 +1672,9 @@ module Make
               }
             | Bindings.Import ->
               let reason = mk_reason (RIdentifier (OrdinaryName name)) loc in
-              let havoc = Val.one reason in
               {
-                val_ref = ref havoc;
-                havoc;
+                val_ref = ref (Val.undeclared name loc);
+                havoc = Val.one reason;
                 writes_by_closure_provider_val = None;
                 def_loc = Some loc;
                 heap_refinements = ref HeapRefinementMap.empty;
@@ -1967,7 +1972,8 @@ module Make
               | Bindings.Let
               | Bindings.Class
               | Bindings.Function
-              | Bindings.Parameter ->
+              | Bindings.Parameter
+              | Bindings.Import ->
                 Some
                   Error_message.(EBindingError (ENameAlreadyBound, loc, OrdinaryName name, def_loc))
               | _ -> None)
