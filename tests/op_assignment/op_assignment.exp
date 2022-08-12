@@ -268,23 +268,6 @@ References:
                   ^^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- test.js:131:10
-
-Cannot cast `x` to null because `A` [1] is incompatible with null [2]. [incompatible-cast]
-
-   test.js:131:10
-   131|   x ??= (x: null); // TODO: should not error `A` is not compatible with null
-                 ^
-
-References:
-   test.js:130:10
-   130|   let x: A | null = null;
-                 ^ [1]
-   test.js:131:13
-   131|   x ??= (x: null); // TODO: should not error `A` is not compatible with null
-                    ^^^^ [2]
-
-
 Error --------------------------------------------------------------------------------------------------- test.js:140:29
 
 Cannot expect number as the return type of function because number [1] is incompatible with implicitly-returned
@@ -313,4 +296,4 @@ undefined. [incompatible-return]
 
 
 
-Found 28 errors
+Found 27 errors

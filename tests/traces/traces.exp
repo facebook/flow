@@ -20,8 +20,6 @@ Trace:
                          ^ NumT [number]
   3: function f0(x) { g0(x) }
                          ^ ~> UseT(FunParam, OpenT) [`x`] (from [not shown])
-  3: function f0(x) { g0(x) }
-                         ^ OpenT [`x`]
   2: function g0(y:string) { }
                    ^^^^^^ ~> UseT(FunParam, StrT) [string] (from [not shown])
 
@@ -48,8 +46,6 @@ Trace:
                                ^ NumT [number]
   8: function f1(x, y) { g1(x, y) }
                                ^ ~> UseT(FunParam, OpenT) [`y`] (from [not shown])
-  8: function f1(x, y) { g1(x, y) }
-                               ^ OpenT [`y`]
   7: function g1(a:string, b:string) { }
                              ^^^^^^ ~> UseT(FunParam, StrT) [string] (from [not shown])
 
@@ -74,8 +70,6 @@ Trace:
  14: f2(function(x) { return x * x });
                              ^ ~> UseT(FunParam, OpenT) [`x`] (from [not shown])
  14: f2(function(x) { return x * x });
-                             ^ OpenT [`x`]
- 14: f2(function(x) { return x * x });
                              ^^^^^ ~> AssertArithmeticOperandT [arithmetic operation]
 
 
@@ -99,8 +93,6 @@ Trace:
  14: f2(function(x) { return x * x });
                                  ^ ~> UseT(FunParam, OpenT) [`x`] (from [not shown])
  14: f2(function(x) { return x * x });
-                                 ^ OpenT [`x`]
- 14: f2(function(x) { return x * x });
                              ^^^^^ ~> AssertArithmeticOperandT [arithmetic operation]
 
 
@@ -123,8 +115,6 @@ Trace:
                                  ^ StrT [string]
  19: function double(n) { return n * 2 }
                                  ^ ~> UseT(FunParam, OpenT) [`n`] (from [not shown])
- 19: function double(n) { return n * 2 }
-                                 ^ OpenT [`n`]
  19: function double(n) { return n * 2 }
                                  ^^^^^ ~> AssertArithmeticOperandT [arithmetic operation]
 
@@ -153,8 +143,6 @@ Trace:
                          ^ NumT [number]
   3: function f0(x) { g0(x) }
                          ^ ~> UseT(FunParam, OpenT) [`x`] (from path 2)
-  3: function f0(x) { g0(x) }
-                         ^ OpenT [`x`]
   2: function g0(y:string) { }
                    ^^^^^^ ~> UseT(FunParam, StrT) [string] (from [not shown])
 * path 2:
@@ -162,6 +150,8 @@ Trace:
         ^ NumT [number]
   3: function f0(x) { g0(x) }
                  ^ ~> UseT(FunParam, OpenT) [`x`] (from path 3)
+  3: function f0(x) { g0(x) }
+                 ^ OpenT [`x`]
   3: function f0(x) { g0(x) }
                          ^ ~> ReposLowerT [`x`]
 * path 3:
@@ -193,8 +183,6 @@ Trace:
                                ^ NumT [number]
   8: function f1(x, y) { g1(x, y) }
                                ^ ~> UseT(FunParam, OpenT) [`y`] (from path 2)
-  8: function f1(x, y) { g1(x, y) }
-                               ^ OpenT [`y`]
   7: function g1(a:string, b:string) { }
                              ^^^^^^ ~> UseT(FunParam, StrT) [string] (from [not shown])
 * path 2:
@@ -202,6 +190,8 @@ Trace:
                ^ NumT [number]
   8: function f1(x, y) { g1(x, y) }
                     ^ ~> UseT(FunParam, OpenT) [`y`] (from path 3)
+  8: function f1(x, y) { g1(x, y) }
+                    ^ OpenT [`y`]
   8: function f1(x, y) { g1(x, y) }
                                ^ ~> ReposLowerT [`y`]
 * path 3:
@@ -231,8 +221,6 @@ Trace:
  14: f2(function(x) { return x * x });
                              ^ ~> UseT(FunParam, OpenT) [`x`] (from path 2)
  14: f2(function(x) { return x * x });
-                             ^ OpenT [`x`]
- 14: f2(function(x) { return x * x });
                              ^^^^^ ~> AssertArithmeticOperandT [arithmetic operation]
 * path 2:
  12: function g2(ylam: (s:string) => number) { }
@@ -240,14 +228,14 @@ Trace:
  14: f2(function(x) { return x * x });
                  ^ ~> UseT(FunParam, OpenT) [`x`] (from path 3)
  14: f2(function(x) { return x * x });
+                 ^ OpenT [`x`]
+ 14: f2(function(x) { return x * x });
                              ^ ~> ReposLowerT [`x`]
 * path 3:
  13: function f2(xlam) { g2(xlam) }
                             ^^^^ FunT [function]
  13: function f2(xlam) { g2(xlam) }
                             ^^^^ ~> UseT(FunParam, OpenT) [`xlam`] (from [not shown])
- 13: function f2(xlam) { g2(xlam) }
-                            ^^^^ OpenT [`xlam`]
  12: function g2(ylam: (s:string) => number) { }
                        ^^^^^^^^^^^^^^^^^^^^ ~> UseT(FunParam, FunT) [function type] (from [not shown])
 
@@ -272,8 +260,6 @@ Trace:
  14: f2(function(x) { return x * x });
                                  ^ ~> UseT(FunParam, OpenT) [`x`] (from path 2)
  14: f2(function(x) { return x * x });
-                                 ^ OpenT [`x`]
- 14: f2(function(x) { return x * x });
                              ^^^^^ ~> AssertArithmeticOperandT [arithmetic operation]
 * path 2:
  12: function g2(ylam: (s:string) => number) { }
@@ -281,14 +267,14 @@ Trace:
  14: f2(function(x) { return x * x });
                  ^ ~> UseT(FunParam, OpenT) [`x`] (from path 3)
  14: f2(function(x) { return x * x });
+                 ^ OpenT [`x`]
+ 14: f2(function(x) { return x * x });
                                  ^ ~> ReposLowerT [`x`]
 * path 3:
  13: function f2(xlam) { g2(xlam) }
                             ^^^^ FunT [function]
  13: function f2(xlam) { g2(xlam) }
                             ^^^^ ~> UseT(FunParam, OpenT) [`xlam`] (from [not shown])
- 13: function f2(xlam) { g2(xlam) }
-                            ^^^^ OpenT [`xlam`]
  12: function g2(ylam: (s:string) => number) { }
                        ^^^^^^^^^^^^^^^^^^^^ ~> UseT(FunParam, FunT) [function type] (from [not shown])
 
@@ -313,8 +299,6 @@ Trace:
  19: function double(n) { return n * 2 }
                                  ^ ~> UseT(FunParam, OpenT) [`n`] (from path 2)
  19: function double(n) { return n * 2 }
-                                 ^ OpenT [`n`]
- 19: function double(n) { return n * 2 }
                                  ^^^^^ ~> AssertArithmeticOperandT [arithmetic operation]
 * path 2:
  17: function g3(ylam: (s:string) => number) { }
@@ -322,14 +306,14 @@ Trace:
  19: function double(n) { return n * 2 }
                      ^ ~> UseT(FunParam, OpenT) [`n`] (from path 3)
  19: function double(n) { return n * 2 }
+                     ^ OpenT [`n`]
+ 19: function double(n) { return n * 2 }
                                  ^ ~> ReposLowerT [`n`]
 * path 3:
  18: function f3(xlam) { g3(xlam) }
                             ^^^^ FunT [function]
  18: function f3(xlam) { g3(xlam) }
                             ^^^^ ~> UseT(FunParam, OpenT) [`xlam`] (from [not shown])
- 18: function f3(xlam) { g3(xlam) }
-                            ^^^^ OpenT [`xlam`]
  17: function g3(ylam: (s:string) => number) { }
                        ^^^^^^^^^^^^^^^^^^^^ ~> UseT(FunParam, FunT) [function type] (from [not shown])
 
@@ -358,8 +342,6 @@ Trace:
                          ^ NumT [number]
   3: function f0(x) { g0(x) }
                          ^ ~> UseT(FunParam, OpenT) [`x`] (from path 2)
-  3: function f0(x) { g0(x) }
-                         ^ OpenT [`x`]
   2: function g0(y:string) { }
                    ^^^^^^ ~> UseT(FunParam, StrT) [string] (from path 5)
 * path 2:
@@ -367,6 +349,8 @@ Trace:
         ^ NumT [number]
   3: function f0(x) { g0(x) }
                  ^ ~> UseT(FunParam, OpenT) [`x`] (from path 3)
+  3: function f0(x) { g0(x) }
+                 ^ OpenT [`x`]
   3: function f0(x) { g0(x) }
                          ^ ~> ReposLowerT [`x`]
 * path 3:
@@ -408,8 +392,6 @@ Trace:
                                ^ NumT [number]
   8: function f1(x, y) { g1(x, y) }
                                ^ ~> UseT(FunParam, OpenT) [`y`] (from path 2)
-  8: function f1(x, y) { g1(x, y) }
-                               ^ OpenT [`y`]
   7: function g1(a:string, b:string) { }
                              ^^^^^^ ~> UseT(FunParam, StrT) [string] (from path 5)
 * path 2:
@@ -417,6 +399,8 @@ Trace:
                ^ NumT [number]
   8: function f1(x, y) { g1(x, y) }
                     ^ ~> UseT(FunParam, OpenT) [`y`] (from path 3)
+  8: function f1(x, y) { g1(x, y) }
+                    ^ OpenT [`y`]
   8: function f1(x, y) { g1(x, y) }
                                ^ ~> ReposLowerT [`y`]
 * path 3:
@@ -456,8 +440,6 @@ Trace:
  14: f2(function(x) { return x * x });
                              ^ ~> UseT(FunParam, OpenT) [`x`] (from path 2)
  14: f2(function(x) { return x * x });
-                             ^ OpenT [`x`]
- 14: f2(function(x) { return x * x });
                              ^^^^^ ~> AssertArithmeticOperandT [arithmetic operation]
 * path 2:
  12: function g2(ylam: (s:string) => number) { }
@@ -465,14 +447,14 @@ Trace:
  14: f2(function(x) { return x * x });
                  ^ ~> UseT(FunParam, OpenT) [`x`] (from path 3)
  14: f2(function(x) { return x * x });
+                 ^ OpenT [`x`]
+ 14: f2(function(x) { return x * x });
                              ^ ~> ReposLowerT [`x`]
 * path 3:
  13: function f2(xlam) { g2(xlam) }
                             ^^^^ FunT [function]
  13: function f2(xlam) { g2(xlam) }
                             ^^^^ ~> UseT(FunParam, OpenT) [`xlam`] (from path 4)
- 13: function f2(xlam) { g2(xlam) }
-                            ^^^^ OpenT [`xlam`]
  12: function g2(ylam: (s:string) => number) { }
                        ^^^^^^^^^^^^^^^^^^^^ ~> UseT(FunParam, FunT) [function type] (from [not shown])
 * path 4:
@@ -480,6 +462,8 @@ Trace:
         ^^^^^^^^^^^ FunT [function]
  13: function f2(xlam) { g2(xlam) }
                  ^^^^ ~> UseT(FunParam, OpenT) [`xlam`] (from path 5)
+ 13: function f2(xlam) { g2(xlam) }
+                 ^^^^ OpenT [`xlam`]
  13: function f2(xlam) { g2(xlam) }
                             ^^^^ ~> ReposLowerT [`xlam`]
 * path 5:
@@ -509,8 +493,6 @@ Trace:
  14: f2(function(x) { return x * x });
                                  ^ ~> UseT(FunParam, OpenT) [`x`] (from path 2)
  14: f2(function(x) { return x * x });
-                                 ^ OpenT [`x`]
- 14: f2(function(x) { return x * x });
                              ^^^^^ ~> AssertArithmeticOperandT [arithmetic operation]
 * path 2:
  12: function g2(ylam: (s:string) => number) { }
@@ -518,14 +500,14 @@ Trace:
  14: f2(function(x) { return x * x });
                  ^ ~> UseT(FunParam, OpenT) [`x`] (from path 3)
  14: f2(function(x) { return x * x });
+                 ^ OpenT [`x`]
+ 14: f2(function(x) { return x * x });
                                  ^ ~> ReposLowerT [`x`]
 * path 3:
  13: function f2(xlam) { g2(xlam) }
                             ^^^^ FunT [function]
  13: function f2(xlam) { g2(xlam) }
                             ^^^^ ~> UseT(FunParam, OpenT) [`xlam`] (from path 4)
- 13: function f2(xlam) { g2(xlam) }
-                            ^^^^ OpenT [`xlam`]
  12: function g2(ylam: (s:string) => number) { }
                        ^^^^^^^^^^^^^^^^^^^^ ~> UseT(FunParam, FunT) [function type] (from [not shown])
 * path 4:
@@ -533,6 +515,8 @@ Trace:
         ^^^^^^^^^^^ FunT [function]
  13: function f2(xlam) { g2(xlam) }
                  ^^^^ ~> UseT(FunParam, OpenT) [`xlam`] (from path 5)
+ 13: function f2(xlam) { g2(xlam) }
+                 ^^^^ OpenT [`xlam`]
  13: function f2(xlam) { g2(xlam) }
                             ^^^^ ~> ReposLowerT [`xlam`]
 * path 5:
@@ -562,8 +546,6 @@ Trace:
  19: function double(n) { return n * 2 }
                                  ^ ~> UseT(FunParam, OpenT) [`n`] (from path 2)
  19: function double(n) { return n * 2 }
-                                 ^ OpenT [`n`]
- 19: function double(n) { return n * 2 }
                                  ^^^^^ ~> AssertArithmeticOperandT [arithmetic operation]
 * path 2:
  17: function g3(ylam: (s:string) => number) { }
@@ -571,14 +553,14 @@ Trace:
  19: function double(n) { return n * 2 }
                      ^ ~> UseT(FunParam, OpenT) [`n`] (from path 3)
  19: function double(n) { return n * 2 }
+                     ^ OpenT [`n`]
+ 19: function double(n) { return n * 2 }
                                  ^ ~> ReposLowerT [`n`]
 * path 3:
  18: function f3(xlam) { g3(xlam) }
                             ^^^^ FunT [function]
  18: function f3(xlam) { g3(xlam) }
                             ^^^^ ~> UseT(FunParam, OpenT) [`xlam`] (from path 4)
- 18: function f3(xlam) { g3(xlam) }
-                            ^^^^ OpenT [`xlam`]
  17: function g3(ylam: (s:string) => number) { }
                        ^^^^^^^^^^^^^^^^^^^^ ~> UseT(FunParam, FunT) [function type] (from [not shown])
 * path 4:
@@ -586,6 +568,8 @@ Trace:
         ^^^^^^ OpenT [`double`]
  18: function f3(xlam) { g3(xlam) }
                  ^^^^ ~> UseT(FunParam, OpenT) [`xlam`] (from path 5)
+ 18: function f3(xlam) { g3(xlam) }
+                 ^^^^ OpenT [`xlam`]
  18: function f3(xlam) { g3(xlam) }
                             ^^^^ ~> ReposLowerT [`xlam`]
 * path 5:

@@ -23,7 +23,7 @@ function lspNewMessagesWithTimeout(
 
     let suggestion = {
       method: 'waitAndVerifyNoLSPMessagesSinceStartOfStep',
-      args: [Math.round(timeoutMs / 10)],
+      args: [(Math.round(timeoutMs / 10): mixed)],
     };
     if (actual.length > 0) {
       suggestion = {

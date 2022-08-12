@@ -51,7 +51,7 @@ function getDiff(
     let aidx = 0,
       eidx = 0;
     for (const part of diffLines(actual, expected, {ignoreWhitespace})) {
-      for (let value of part.value.split(/(\n)/)) {
+      for (let value: string of part.value.split(/(\n)/)) {
         if (value != '') {
           if (value !== '\n') {
             if (part.added) {

@@ -54,7 +54,7 @@ definition. To get the type of a non-class value, use `typeof`. [value-as-type]
 
 Error ---------------------------------------------------------------------------------------------------- test3.js:7:21
 
-Cannot use number as a type. A name can be used as a type only if it refers to a type, interface, class, or enum
+Cannot use `n` as a type. A name can be used as a type only if it refers to a type, interface, class, or enum
 definition. To get the type of a non-class value, use `typeof`. [value-as-type]
 
    7| interface I extends n { }
@@ -63,7 +63,7 @@ definition. To get the type of a non-class value, use `typeof`. [value-as-type]
 
 Error ---------------------------------------------------------------------------------------------------- test3.js:8:20
 
-Cannot use number as a type. A name can be used as a type only if it refers to a type, interface, class, or enum
+Cannot use `n` as a type. A name can be used as a type only if it refers to a type, interface, class, or enum
 definition. To get the type of a non-class value, use `typeof`. [value-as-type]
 
    8| class C implements n { }
@@ -72,7 +72,7 @@ definition. To get the type of a non-class value, use `typeof`. [value-as-type]
 
 Error ---------------------------------------------------------------------------------------------------- test4.js:7:12
 
-Cannot use function as a type. A name can be used as a type only if it refers to a type, interface, class, or enum
+Cannot use `connect` as a type. A name can be used as a type only if it refers to a type, interface, class, or enum
 definition. To get the type of a non-class value, use `typeof`. [value-as-type]
 
    7| type Foo = connect<number>;

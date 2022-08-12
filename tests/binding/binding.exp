@@ -289,7 +289,9 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- imports.js:13:1
 
-Cannot use type `Node` [1] as a value. Types are erased and don't exist at runtime. [type-as-value]
+Cannot use type `Node` [1] as a value. Types are erased and don't exist at runtime. If the exported binding can also be
+used as a value, try importing it using `import Node` instead of `import type Node` and `import {Node}` instead of
+`import type {Node}`. [type-as-value]
 
    imports.js:13:1
    13| Node = 4; // error
@@ -819,20 +821,6 @@ References:
             ^ [1]
 
 
-Error ---------------------------------------------------------------------------------------------------- scope.js:6:13
-
-Cannot assign empty string to `b` because string [1] is incompatible with number [2]. [incompatible-type]
-
-   scope.js:6:13
-   6|     var b = ""; // error: banned redeclaration
-                  ^^ [1]
-
-References:
-   scope.js:3:10
-   3|   var b: number = 0;
-               ^^^^^^ [2]
-
-
 Error --------------------------------------------------------------------------------------------------- scope.js:16:11
 
 Cannot declare `b` [1] because var redeclaration is not supported. [name-already-bound]
@@ -845,20 +833,6 @@ References:
    scope.js:12:7
    12|   var b: number = 0;
              ^ [1]
-
-
-Error --------------------------------------------------------------------------------------------------- scope.js:16:15
-
-Cannot assign empty string to `b` because string [1] is incompatible with number [2]. [incompatible-type]
-
-   scope.js:16:15
-   16|       var b = ""; // error: banned redeclaration
-                     ^^ [1]
-
-References:
-   scope.js:12:10
-   12|   var b: number = 0;
-                ^^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------------- scope.js:19:11
@@ -953,48 +927,6 @@ References:
              ^ [1]
 
 
-Error --------------------------------------------------------------------------------------------------- scope.js:66:16
-
-Cannot assign empty string to `a` because string [1] is incompatible with number [2]. [incompatible-type]
-
-   scope.js:66:16
-   66|   for (var a = "" /* error: banned redeclaration */ ;;) {}
-                      ^^ [1]
-
-References:
-   scope.js:65:10
-   65|   var a: number = 0;
-                ^^^^^^ [2]
-
-
-Error --------------------------------------------------------------------------------------------------- scope.js:66:16
-
-string [1] is incompatible with number [2]. [incompatible-type]
-
-   scope.js:66:16
-   66|   for (var a = "" /* error: banned redeclaration */ ;;) {}
-                      ^^ [1]
-
-References:
-   scope.js:65:10
-   65|   var a: number = 0;
-                ^^^^^^ [2]
-
-
-Error --------------------------------------------------------------------------------------------------- scope.js:76:12
-
-Cannot assign string to `a` because string [1] is incompatible with number [2]. [incompatible-type]
-
-   scope.js:76:12
-   76|   for (var a /* error: banned redeclaration */ in o) {}
-                  ^ [1]
-
-References:
-   scope.js:75:10
-   75|   var a: number = 0;
-                ^^^^^^ [2]
-
-
 Error --------------------------------------------------------------------------------------------------- scope.js:76:12
 
 Cannot declare `a` [1] because var redeclaration is not supported. [name-already-bound]
@@ -1009,20 +941,6 @@ References:
              ^ [1]
 
 
-Error --------------------------------------------------------------------------------------------------- scope.js:76:12
-
-string [1] is incompatible with number [2]. [incompatible-type]
-
-   scope.js:76:12
-   76|   for (var a /* error: banned redeclaration */ in o) {}
-                  ^ [1]
-
-References:
-   scope.js:75:10
-   75|   var a: number = 0;
-                ^^^^^^ [2]
-
-
 Error --------------------------------------------------------------------------------------------------- scope.js:86:12
 
 Cannot declare `a` [1] because var redeclaration is not supported. [name-already-bound]
@@ -1035,40 +953,6 @@ References:
    scope.js:85:7
    85|   var a: number = 0;
              ^ [1]
-
-
-Error --------------------------------------------------------------------------------------------------- scope.js:86:51
-
-Cannot assign `a` to `a` because string [1] is incompatible with number [2]. [incompatible-type]
-
-   scope.js:86:51
-   86|   for (var a /* error: banned redeclaration */ of xs) {}
-                                                         ^^
-
-References:
-   scope.js:84:31
-   84| function for_of_scope_var(xs: string[]) {
-                                     ^^^^^^ [1]
-   scope.js:85:10
-   85|   var a: number = 0;
-                ^^^^^^ [2]
-
-
-Error --------------------------------------------------------------------------------------------------- scope.js:86:51
-
-string [1] is incompatible with number [2]. [incompatible-type]
-
-   scope.js:86:51
-   86|   for (var a /* error: banned redeclaration */ of xs) {}
-                                                         ^^
-
-References:
-   scope.js:84:31
-   84| function for_of_scope_var(xs: string[]) {
-                                     ^^^^^^ [1]
-   scope.js:85:10
-   85|   var a: number = 0;
-                ^^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------------- scope.js:92:23
@@ -1245,6 +1129,21 @@ References:
                      ^^^^^^ [2]
 
 
+Error ----------------------------------------------------------------------------------------- tdz_class_fields.js:5:16
+
+Cannot use variable `forwardReferenced` [1] because the declaration either comes later or was skipped.
+[reference-before-declaration]
+
+   tdz_class_fields.js:5:16
+    5|     static b = forwardReferenced; // Should error
+                      ^^^^^^^^^^^^^^^^^
+
+References:
+   tdz_class_fields.js:10:7
+   10| const forwardReferenced = 0;
+             ^^^^^^^^^^^^^^^^^ [1]
+
+
 Error --------------------------------------------------------------------------------------------------- unbound.js:3:1
 
 Cannot resolve name `unbound`. [cannot-resolve-name]
@@ -1278,4 +1177,4 @@ Cannot resolve name `unboundFunction2`. [cannot-resolve-name]
 
 
 
-Found 93 errors
+Found 86 errors

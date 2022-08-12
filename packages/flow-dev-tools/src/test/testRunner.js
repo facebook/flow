@@ -108,7 +108,7 @@ function startWatchAndRun(suites, args) {
         );
       }
     }
-    changedThings = new Set();
+    changedThings = new Set<string>();
 
     if (queuedSet.size === 0) {
       return;
@@ -117,7 +117,7 @@ function startWatchAndRun(suites, args) {
     running = true;
     stopListeningForShortcuts();
     const runSet = queuedSet;
-    queuedSet = new Set();
+    queuedSet = new Set<string>();
 
     const suitesToRun = {};
     for (const suiteName of runSet) {
@@ -228,8 +228,9 @@ async function runOnce(suites: {[suiteName: string]: Suite}, args) {
     maxErroredTests = args.maxErroredTests;
   }
   if (args.maxErroredTestsPct != null) {
+    const maxErroredTestsPct = args.maxErroredTestsPct;
     const numTests = Object.keys(suites).length;
-    maxErroredTests = Math.floor((numTests * args.maxErroredTestsPct) / 100);
+    maxErroredTests = Math.floor((numTests * maxErroredTestsPct) / 100);
   }
   if (maxErroredTests > 0) {
     process.stderr.write(

@@ -7,3 +7,4 @@
 [options]
 all=true
 no_flowlib=false
+inference_mode=classic

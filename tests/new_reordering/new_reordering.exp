@@ -13,6 +13,25 @@ References:
                 ^^^^ [1]
 
 
+Error -------------------------------------------------------------------------------------------------------- a.js:31:7
+
+Cannot assign `null` to `x` because null [1] is incompatible with possibly uninitialized variable [2]. All writes to `x`
+must be compatible with the type of its initial assignment [3]. Add an annotation to `x` [2] if a different type is
+desired. [incompatible-type]
+
+   a.js:31:7
+   31|   x = null;
+             ^^^^ [1]
+
+References:
+   a.js:34:5
+   34| var x;
+           ^ [2]
+   a.js:36:1
+   36| x = x;
+       ^ [3]
+
+
 Error -------------------------------------------------------------------------------------------------------- a.js:36:1
 
 Cannot compute a type for `x` because its definition includes references to itself [1]. Please add a type annotation to
@@ -52,4 +71,4 @@ References:
 
 
 
-Found 3 errors
+Found 4 errors
