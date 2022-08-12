@@ -50,7 +50,6 @@ module Opts = struct
     babel_loose_array_spread: bool option;
     cycle_errors: bool;
     direct_dependent_files_fix: bool option;
-    disable_live_non_parse_errors: bool option;
     emoji: bool option;
     enable_const_params: bool option;
     enforce_local_inference_annotations: bool;
@@ -179,7 +178,6 @@ module Opts = struct
       babel_loose_array_spread = None;
       cycle_errors = false;
       direct_dependent_files_fix = None;
-      disable_live_non_parse_errors = None;
       emoji = None;
       enable_const_params = None;
       enforce_local_inference_annotations = false;
@@ -511,9 +509,6 @@ module Opts = struct
   let direct_dependent_files_fix_parser =
     boolean (fun opts v -> Ok { opts with direct_dependent_files_fix = Some v })
 
-  let disable_live_non_parse_errors_parser =
-    boolean (fun opts v -> Ok { opts with disable_live_non_parse_errors = Some v })
-
   let enforce_strict_call_arity_parser =
     boolean (fun opts v -> Ok { opts with enforce_strict_call_arity = v })
 
@@ -791,7 +786,6 @@ module Opts = struct
       );
       ("experimental.cycle_errors", boolean (fun opts v -> Ok { opts with cycle_errors = v }));
       ("experimental.direct_dependent_files_fix", direct_dependent_files_fix_parser);
-      ("experimental.disable_live_non_parse_errors", disable_live_non_parse_errors_parser);
       ("experimental.enforce_local_inference_annotations", enforce_local_inference_annotations);
       ("experimental.enforce_class_annotations", enforce_class_annotations);
       ("experimental.enforce_this_annotations", enforce_this_annotations);
@@ -1417,8 +1411,6 @@ let babel_loose_array_spread c = c.options.Opts.babel_loose_array_spread
 let cycle_errors c = c.options.Opts.cycle_errors
 
 let direct_dependent_files_fix c = c.options.Opts.direct_dependent_files_fix
-
-let disable_live_non_parse_errors c = c.options.Opts.disable_live_non_parse_errors
 
 let emoji c = c.options.Opts.emoji
 

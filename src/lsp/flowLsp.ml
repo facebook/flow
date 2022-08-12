@@ -92,11 +92,8 @@ type open_file_info = {
       (** o_unsaved if true means that this open file has unsaved changes to the buffer. *)
 }
 
-type custom_initialize_params = { liveNonParseErrors: bool }
-
 type initialized_env = {
   i_initialize_params: Lsp.Initialize.params;
-  i_custom_initialize_params: custom_initialize_params;
   i_connect_params: connect_params;
   i_root: Path.t;
   i_version: string option;
@@ -1620,14 +1617,12 @@ let do_live_diagnostics
   let () =
     (* Only ask the server for live errors if we're connected *)
     match state with
-    | Connected cenv when cenv.c_ienv.i_custom_initialize_params.liveNonParseErrors ->
+    | Connected cenv ->
       let metadata =
         { metadata with LspProt.interaction_tracking_id = Some (start_interaction ~trigger state) }
       in
       send_to_server cenv (LspProt.LiveErrorsRequest uri) metadata
-    | Connected _
-    | Disconnected _ ->
-      ()
+    | Disconnected _ -> ()
   in
   let interaction_id = start_interaction ~trigger state in
   (* reparse the file and write it into the state's editor_open_files as needed *)
@@ -2351,17 +2346,9 @@ and main_handle_unsafe flowconfig_name (state : state) (event : event) :
     (* TODO: use FlowConfig.get directly and send errors/warnings to the client instead
         of logging to stderr and exiting. *)
     let flowconfig = read_flowconfig_from_disk flowconfig_name i_root in
-    let i_custom_initialize_params =
-      {
-        liveNonParseErrors =
-          not
-            (Base.Option.value (FlowConfig.disable_live_non_parse_errors flowconfig) ~default:false);
-      }
-    in
     let d_ienv =
       {
         i_initialize_params;
-        i_custom_initialize_params;
         i_connect_params;
         i_root;
         i_version = FlowConfig.required_version flowconfig;

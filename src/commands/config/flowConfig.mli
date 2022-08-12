@@ -78,8 +78,6 @@ val cycle_errors : config -> bool
 
 val direct_dependent_files_fix : config -> bool option
 
-val disable_live_non_parse_errors : config -> bool option
-
 val emoji : config -> bool option
 
 val enable_const_params : config -> bool option

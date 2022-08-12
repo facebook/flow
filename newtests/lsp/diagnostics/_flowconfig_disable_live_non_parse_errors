@@ -1,2 +1,0 @@
-[options]
-experimental.disable_live_non_parse_errors=true
