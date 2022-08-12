@@ -182,6 +182,40 @@ Cannot cast `o.type` to empty because string literal `foo` [1] is incompatible w
             ^^^^^^
 
 References:
+   test.js:64:8
+   64|   case 'foo':
+              ^^^^^ [1]
+   test.js:75:14
+   75|     (o.type: empty); // error
+                    ^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:75:6
+
+Cannot cast `o.type` to empty because string literal `bar` [1] is incompatible with empty [2]. [incompatible-cast]
+
+   test.js:75:6
+   75|     (o.type: empty); // error
+            ^^^^^^
+
+References:
+   test.js:65:8
+   65|   case 'bar':
+              ^^^^^ [1]
+   test.js:75:14
+   75|     (o.type: empty); // error
+                    ^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:75:6
+
+Cannot cast `o.type` to empty because string literal `foo` [1] is incompatible with empty [2]. [incompatible-cast]
+
+   test.js:75:6
+   75|     (o.type: empty); // error
+            ^^^^^^
+
+References:
    test.js:72:8
    72|   case 'foo':
               ^^^^^ [1]
@@ -201,6 +235,23 @@ Cannot cast `o.type` to empty because string literal `bar` [1] is incompatible w
 References:
    test.js:73:8
    73|   case 'bar':
+              ^^^^^ [1]
+   test.js:75:14
+   75|     (o.type: empty); // error
+                    ^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:75:6
+
+Cannot cast `o.type` to empty because string literal `baz` [1] is incompatible with empty [2]. [incompatible-cast]
+
+   test.js:75:6
+   75|     (o.type: empty); // error
+            ^^^^^^
+
+References:
+   test.js:74:8
+   74|   case 'baz':
               ^^^^^ [1]
    test.js:75:14
    75|     (o.type: empty); // error
@@ -231,6 +282,23 @@ References:
    test.js:60:66
    60| type DisjointUnion = { type: 'foo' } | { type: 'bar' } | { type: 'baz' }
                                                                         ^^^^^ [5]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:78:6
+
+Cannot cast `o.type` to empty because string literal `qux` [1] is incompatible with empty [2]. [incompatible-cast]
+
+   test.js:78:6
+   78|     (o.type: empty); // error
+            ^^^^^^
+
+References:
+   test.js:67:8
+   67|   case 'qux': // error
+              ^^^^^ [1]
+   test.js:78:14
+   78|     (o.type: empty); // error
+                    ^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:87:8
@@ -502,4 +570,4 @@ References:
 
 
 
-Found 29 errors
+Found 33 errors

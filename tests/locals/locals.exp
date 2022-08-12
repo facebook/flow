@@ -111,34 +111,6 @@ References:
           ^ [1]
 
 
-Error ---------------------------------------------------------------------------------------------------- locals.js:2:7
-
-number [1] is incompatible with string [2]. [incompatible-type]
-
-   locals.js:2:7
-   2| var x:number = 1;
-            ^^^^^^ [1]
-
-References:
-   locals.js:1:7
-   1| var x:string = 0;
-            ^^^^^^ [2]
-
-
-Error --------------------------------------------------------------------------------------------------- locals.js:2:16
-
-Cannot assign `1` to `x` because number [1] is incompatible with string [2]. [incompatible-type]
-
-   locals.js:2:16
-   2| var x:number = 1;
-                     ^ [1]
-
-References:
-   locals.js:1:7
-   1| var x:string = 0;
-            ^^^^^^ [2]
-
-
 Error -------------------------------------------------------------------------------------------------- locals.js:10:13
 
 Cannot declare `x` [1] because var redeclaration is not supported. [name-already-bound]
@@ -151,72 +123,6 @@ References:
    locals.js:8:13
     8|         var x: number | string = 1337;
                    ^ [1]
-
-
-Error -------------------------------------------------------------------------------------------------- locals.js:10:16
-
-boolean [1] is incompatible with number [2]. [incompatible-type]
-
-   locals.js:10:16
-   10|         var x: bool = true;
-                      ^^^^ [1]
-
-References:
-   locals.js:8:16
-    8|         var x: number | string = 1337;
-                      ^^^^^^ [2]
-
-
-Error -------------------------------------------------------------------------------------------------- locals.js:10:16
-
-boolean [1] is incompatible with string [2]. [incompatible-type]
-
-   locals.js:10:16
-   10|         var x: bool = true;
-                      ^^^^ [1]
-
-References:
-   locals.js:8:25
-    8|         var x: number | string = 1337;
-                               ^^^^^^ [2]
-
-
-Error -------------------------------------------------------------------------------------------------- locals.js:10:16
-
-All branches are incompatible: [incompatible-type]
- - Either boolean [1] is incompatible with number [2].
- - Or boolean [1] is incompatible with string [3].
-
-   locals.js:10:16
-   10|         var x: bool = true;
-                      ^^^^ [1]
-
-References:
-   locals.js:8:16
-    8|         var x: number | string = 1337;
-                      ^^^^^^ [2]
-   locals.js:8:25
-    8|         var x: number | string = 1337;
-                               ^^^^^^ [3]
-
-
-Error -------------------------------------------------------------------------------------------------- locals.js:10:23
-
-Cannot assign `true` to `x` because: [incompatible-type]
- - Either boolean [1] is incompatible with number [2].
- - Or boolean [1] is incompatible with string [3].
-
-   locals.js:10:23
-   10|         var x: bool = true;
-                             ^^^^ [1]
-
-References:
-   locals.js:8:16
-    8|         var x: number | string = 1337;
-                      ^^^^^^ [2]
-   locals.js:8:25
-    8|         var x: number | string = 1337;
-                               ^^^^^^ [3]
 
 
 Error --------------------------------------------------------------------------------------------------- locals.js:12:9
@@ -271,4 +177,4 @@ References:
 
 
 
-Found 17 errors
+Found 11 errors

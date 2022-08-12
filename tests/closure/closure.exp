@@ -168,9 +168,9 @@ Cannot cast `x` to string because number [1] is incompatible with string [2]. [i
              ^
 
 References:
-   Closure.js:100:9
-   100|     x = 10;
-                ^^ [1]
+   Closure.js:102:10
+   102|   var x: number | string = 'hello world';
+                 ^^^^^^ [1]
    Closure.js:105:9
    105|     (x: string); // blame
                 ^^^^^^ [2]
@@ -199,23 +199,6 @@ Cannot resolve name `x`. [cannot-resolve-name]
 
    136|   x;
           ^
-
-
-Error ------------------------------------------------------------------------------------------------- Closure.js:141:4
-
-Cannot cast `x` to undefined because number [1] is incompatible with undefined [2]. [incompatible-cast]
-
-   Closure.js:141:4
-   141|   (x: void); // should error
-           ^
-
-References:
-   Closure.js:138:9
-   138|     x = 42;
-                ^^ [1]
-   Closure.js:141:7
-   141|   (x: void); // should error
-              ^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------- cond_havoc.js:12:10
@@ -253,4 +236,4 @@ References:
 
 
 
-Found 15 errors
+Found 14 errors

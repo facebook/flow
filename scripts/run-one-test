@@ -196,8 +196,6 @@ runtest() {
     # Add appropriate extension to expected file
     if [[ "$enforced_env" -eq 1 ]] && [ -f "${dir}/${exp_file}.enforced_env" ]; then
       exp_file="${exp_file}.enforced_env"
-    elif [[ "$resolved_env" -eq 1 || "$enforced_env" -eq 1 ]] && [ -f "${dir}/${exp_file}.resolved_env" ]; then
-      exp_file="${exp_file}.resolved_env"
     fi
 
     # On Windows we skip some tests as symlinks not available
@@ -384,9 +382,6 @@ runtest() {
           return $RUNTEST_SKIP
         fi
 
-        if [[ "$resolved_env" -eq 1 ]]; then
-          inference_flag="--inference-mode constrain_writes"
-        fi
         if [[ "$enforced_env" -eq 1 ]]; then
           inference_flag="--inference-mode experimental.lti"
         fi

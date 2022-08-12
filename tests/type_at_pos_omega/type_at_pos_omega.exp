@@ -19,7 +19,7 @@ Flags: --strip-root --pretty
 test.js:10:18
 Flags: --strip-root --pretty
 {
-  "type":"type V$1 = (x: V$1) => V$2; type V$2 = (x: V$1) => V$2; type Foo = {n: (x: (x: V$1) => V$2) => (x: V$1) => V$2, ...}",
+  "type":"type V$2 = (x: V$2) => V$3; type V$3 = (x: V$2) => V$3; type Foo = {n: (x: (x: V$2) => V$3) => (x: V$2) => V$3, ...}",
   "reasons":[],
   "loc":{
     "source":"test.js",

@@ -5,7 +5,7 @@
 # LICENSE file in the root directory of this source tree.
 
 show_help() {
-  printf "Usage: runtests.sh [-hlnqrvx] [-d DIR] [-t TEST] [-b] FLOW_BINARY [[-f] TEST_FILTER]\n\n"
+  printf "Usage: runtests.sh [-hlnqrv] [-d DIR] [-t TEST] [-b] FLOW_BINARY [[-f] TEST_FILTER]\n\n"
   printf "Runs Flow's tests.\n\n"
   echo "    [-b] FLOW_BINARY"
   echo "        path to Flow binary (the -b is optional)"
@@ -19,8 +19,6 @@ show_help() {
   echo "        run the test DIR/tests/TEST, equivalent to a filter of \"^TEST$\""
   echo "    -c"
   echo "        only run check tests"
-  echo "    -x"
-  echo "        test using resolved environment"
   echo "    -n"
   echo "        test using sealed tvars environment"
   echo "    -i"
@@ -47,11 +45,10 @@ saved_state=0
 verbose=0
 quiet=0
 relative="."
-resolved_env=0
 enforced_env=0
 check_only=0
 incremental_revdeps=0
-export saved_state filter check_only resolved_env enforced_env incremental_revdeps
+export saved_state filter check_only enforced_env incremental_revdeps
 while getopts "b:d:f:clqxnirst:vh?" opt; do
   case "$opt" in
   b)
@@ -65,9 +62,6 @@ while getopts "b:d:f:clqxnirst:vh?" opt; do
     ;;
   c)
     check_only=1
-    ;;
-  x)
-    resolved_env=1
     ;;
   n)
     enforced_env=1
@@ -111,11 +105,6 @@ if [ -n "$specific_test" ]; then
   fi
 
   filter="^$specific_test$"
-fi
-
-if [[ $(("$resolved_env" + "$enforced_env")) -gt 1 ]]; then
-  printf "Can only set one new environment flag at a time (-n, -x).\n"
-  exit 1
 fi
 
 FLOW="${FLOW:-$1}"
@@ -184,9 +173,6 @@ print_failure() {
     fi
     # Default expected file extension is .exp
     ext=".exp"
-    if [[ "$resolved_env" -eq 1 ]] && [ -f "${dir}${name}${ext}.resolved_env" ]; then
-      ext="${ext}.resolved_env"
-    fi
 
     if [[ "$record" -eq 1 ]]; then
       # Copy .out to .exp, replacing the current version, if present, with

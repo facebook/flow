@@ -32,9 +32,12 @@ may be either string literal `yyyyy` [2] or string literal `zzz_xxxxx` [3]. Can 
 
    stack_overflow_bug.js:57:8
    57|       [colName]: row[idx]
-              ^^^^^^^ [1]
+              ^^^^^^^
 
 References:
+   stack_overflow_bug.js:54:45
+   54|   const data = DATA[0].reduce((accumulator, colName, idx) => {
+                                                   ^^^^^^^ [1]
    stack_overflow_bug.js:3:11
     3| const A = 'yyyyy';
                  ^^^^^^^ [2]

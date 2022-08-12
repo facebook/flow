@@ -170,7 +170,7 @@ async function runner(args: Args): Promise<void> {
   }
 
   const results = runQueue.results;
-  for (suiteName in results) {
+  for (const suiteName in results) {
     const suiteResult = results[suiteName];
     if (suiteResult.type === 'exceptional') {
       printStatus('FAIL');

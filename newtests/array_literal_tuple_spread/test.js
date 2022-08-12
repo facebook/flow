@@ -64,42 +64,6 @@ module.exports = (suite(({addFile, addFiles, addCode}) => [
                                ^^^^^^^^^^^ [1]
               8:       (foo: [0, 1, 2]);
                              ^^^^^^^^^ [2]
-
-          test.js:8
-            8:       (foo: [0, 1, 2]);
-                      ^^^ Cannot cast \`foo\` to tuple type because array literal [1] has an unknown number of elements, so is incompatible with tuple type [2]. [invalid-tuple-arity]
-            References:
-              6:         foo = [...foo, x];
-                               ^^^^^^^^^^^ [1]
-              8:       (foo: [0, 1, 2]);
-                             ^^^^^^^^^ [2]
-
-          test.js:8
-            8:       (foo: [0, 1, 2]);
-                      ^^^ Cannot cast \`foo\` to tuple type because number [1] is incompatible with number literal \`1\` [2] in index 1. [incompatible-cast]
-            References:
-              5:       for (let x = 1; x < 3; x++) {
-                                              ^^^ [1]
-              8:       (foo: [0, 1, 2]);
-                                 ^ [2]
-
-          test.js:8
-            8:       (foo: [0, 1, 2]);
-                      ^^^ Cannot cast \`foo\` to tuple type because number [1] is incompatible with number literal \`2\` [2] in index 2. [incompatible-cast]
-            References:
-              5:       for (let x = 1; x < 3; x++) {
-                                    ^ [1]
-              8:       (foo: [0, 1, 2]);
-                                    ^ [2]
-
-          test.js:8
-            8:       (foo: [0, 1, 2]);
-                      ^^^ Cannot cast \`foo\` to tuple type because number [1] is incompatible with number literal \`2\` [2] in index 2. [incompatible-cast]
-            References:
-              5:       for (let x = 1; x < 3; x++) {
-                                              ^^^ [1]
-              8:       (foo: [0, 1, 2]);
-                                    ^ [2]
         `,
       ),
   ]),

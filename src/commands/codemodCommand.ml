@@ -193,7 +193,8 @@ module Annotate_escaped_generics = struct
     let module Runner = Codemod_runner.MakeSimpleTypedRunner (struct
       include Annotate_escaped_generics
 
-      let check_options o = o
+      let check_options o =
+        { o with Options.opt_env_mode = Options.(ClassicEnv [ConstrainWrites; ClassicTypeAtPos]) }
 
       let visit = visit ~default_any ~preserve_literals ~max_type_size
     end) in
@@ -266,6 +267,7 @@ module Annotate_lti_command = struct
         {
           o with
           opt_any_propagation = false;
+          opt_env_mode = ClassicEnv [ConstrainWrites; ClassicTypeAtPos];
           opt_enforce_local_inference_annotations = true;
           opt_enforce_this_annotations = true;
           opt_local_inference_annotation_dirs = [];

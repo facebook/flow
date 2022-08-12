@@ -80,5 +80,41 @@ References:
             ^^^^^ [2]
 
 
+Error ----------------------------------------------------------------------------------------------------- test.js:31:2
 
-Found 5 errors
+Cannot cast `x` to string literal `foo` because string literal `qux` [1] is incompatible with string literal `foo` [2].
+[incompatible-cast]
+
+   test.js:31:2
+   31| (x : 'foo'); // error
+        ^
+
+References:
+   test.js:14:8
+   14|   case 'qux': // error
+              ^^^^^ [1]
+   test.js:31:6
+   31| (x : 'foo'); // error
+            ^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:31:2
+
+Cannot cast `x` to string literal `foo` because string literal `qux` [1] is incompatible with string literal `foo` [2].
+[incompatible-cast]
+
+   test.js:31:2
+   31| (x : 'foo'); // error
+        ^
+
+References:
+   test.js:22:8
+   22|   case 'qux': // error
+              ^^^^^ [1]
+   test.js:31:6
+   31| (x : 'foo'); // error
+            ^^^^^ [2]
+
+
+
+Found 7 errors

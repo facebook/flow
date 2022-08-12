@@ -539,9 +539,9 @@ Property `r` is missing in `T` [1]. [prop-missing]
                 ^^^
 
 References:
-   detect_literal_subtypes.js:33:15
+   detect_literal_subtypes.js:33:27
    33| function c<X: T>(x: $Keys<X>) {
-                     ^ [1]
+                                 ^ [1]
 
 
 Error ----------------------------------------------------------------------------------------------------- exact.js:6:4

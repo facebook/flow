@@ -409,5 +409,23 @@ References:
             ^^^^^^ [2]
 
 
+Error ----------------------------------------------------------------------------------------------- this_subst.js:3:53
 
-Found 24 errors
+Cannot extend `InstrumentedContainer` [1] with `container` because uninitialized variable [2] is not inheritable.
+[incompatible-use]
+
+   this_subst.js:3:53
+   3| var container = class InstrumentedContainer extends container {
+                                                          ^^^^^^^^^
+
+References:
+   this_subst.js:3:23
+   3| var container = class InstrumentedContainer extends container {
+                            ^^^^^^^^^^^^^^^^^^^^^ [1]
+   this_subst.js:3:5
+   3| var container = class InstrumentedContainer extends container {
+          ^^^^^^^^^ [2]
+
+
+
+Found 25 errors

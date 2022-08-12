@@ -54,23 +54,6 @@ References:
                       ^ [1]
 
 
-Error --------------------------------------------------------------------------------------------------- Sigma.js:35:20
-
-`A` [1] is incompatible with `D` [2]. [incompatible-type]
-
-   Sigma.js:35:20
-   35|   if (x instanceof A) {
-                          ^
-
-References:
-   Sigma.js:4:7
-    4| class A { a() {} }
-             ^ [1]
-   Sigma.js:34:16
-   34| function baz(x:D) {
-                      ^ [2]
-
-
 Error ---------------------------------------------------------------------------------------------------- test.js:11:16
 
 Cannot get `obj.childProp_TYPO` because property `childProp_TYPO` is missing in `ChildClass` [1]. [prop-missing]
@@ -86,4 +69,4 @@ References:
 
 
 
-Found 6 errors
+Found 5 errors
