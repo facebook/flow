@@ -692,7 +692,9 @@ struct
     *)
     | (loc, If { If.test; consequent; alternate; comments }) ->
       let (loc_test, _) = test in
-      let (test_ast, preds, not_preds, xts) = predicates_of_condition cx ~cond:OtherTest test in
+      let (test_ast, preds, not_preds, xts) =
+        predicates_of_condition cx ~hint:Hint_None ~cond:OtherTest test
+      in
       (* grab a reference to the incoming env -
          we'll restore it and merge branched envs later *)
       let start_env = Env.peek_env () in
@@ -957,6 +959,7 @@ struct
                        let ((_, fake_ast), preds, not_preds, xtypes) =
                          predicates_of_condition
                            cx
+                           ~hint:Hint_None
                            ~cond:(SwitchTest { case_test_reason; switch_discriminant_reason })
                            fake
                        in
@@ -1162,14 +1165,14 @@ struct
         match argument with
         | None -> (VoidT.at loc |> with_trust literal_trust, None)
         | Some expr ->
+          let hint = (Context.environment cx).Loc_env.return_hint in
           if Env.in_predicate_scope cx then
             let ((((_, t), _) as ast), p_map, n_map, _) =
-              predicates_of_condition ~cond:OtherTest cx expr
+              predicates_of_condition ~hint ~cond:OtherTest cx expr
             in
             let pred_reason = update_desc_reason (fun desc -> RPredicateOf desc) reason in
             (OpenPredT { reason = pred_reason; base_t = t; m_pos = p_map; m_neg = n_map }, Some ast)
           else
-            let hint = (Context.environment cx).Loc_env.return_hint in
             let (((_, t), _) as ast) = expression cx ~hint expr in
             (t, Some ast)
       in
@@ -1384,7 +1387,7 @@ struct
       let save_continue = Abnormal.clear_saved (Abnormal.Continue None) in
       (* generate loop test preds and their complements *)
       let (test_ast, preds, not_preds, orig_types) =
-        predicates_of_condition ~cond:OtherTest cx test
+        predicates_of_condition ~hint:Hint_None ~cond:OtherTest cx test
       in
       (* save current changeset and install an empty one *)
       let oldset = Changeset.Global.clear () in
@@ -1456,7 +1459,9 @@ struct
       if Abnormal.swap_saved (Abnormal.Continue None) save_continue <> None then
         Env.havoc_vars (Changeset.Global.peek ());
 
-      let (test_ast, preds, not_preds, xtypes) = predicates_of_condition ~cond:OtherTest cx test in
+      let (test_ast, preds, not_preds, xtypes) =
+        predicates_of_condition ~hint:Hint_None ~cond:OtherTest cx test
+      in
       (* body_env = Post' *)
       let done_env = Env.clone_env body_env in
       (* done_env = Post' *)
@@ -1513,7 +1518,7 @@ struct
               (None, Key_map.empty, Key_map.empty, Key_map.empty) (* TODO: prune the "not" case *)
             | Some expr ->
               let (expr_ast, preds, not_preds, xtypes) =
-                predicates_of_condition ~cond:OtherTest cx expr
+                predicates_of_condition ~hint:Hint_None ~cond:OtherTest cx expr
               in
               (Some expr_ast, preds, not_preds, xtypes)
           in
@@ -1570,7 +1575,7 @@ struct
 
           let eval_right () =
             let ((((right_loc, _), _) as right_ast), preds, _, xtypes) =
-              predicates_of_condition ~cond:OtherTest cx right
+              predicates_of_condition ~hint:Hint_None ~cond:OtherTest cx right
             in
             let (_ : Changeset.t) = Env.refine_with_preds cx right_loc preds xtypes in
             right_ast
@@ -1701,7 +1706,7 @@ struct
       let save_continue = Abnormal.clear_saved (Abnormal.Continue None) in
       let eval_right () =
         let ((((right_loc, t), _) as right_ast), preds, _, xtypes) =
-          predicates_of_condition ~cond:OtherTest cx right
+          predicates_of_condition ~hint:Hint_None ~cond:OtherTest cx right
         in
         let (_ : Changeset.t) = Env.refine_with_preds cx right_loc preds xtypes in
         let elem_t = for_of_elemt cx t reason await in
@@ -3380,7 +3385,9 @@ struct
     | OptionalCall _ -> subscript ~hint ~cond cx ex
     | Conditional { Conditional.test; consequent; alternate; comments } ->
       let reason = mk_reason RConditional loc in
-      let (test, preds, not_preds, xtypes) = predicates_of_condition ~cond:OtherTest cx test in
+      let (test, preds, not_preds, xtypes) =
+        predicates_of_condition ~hint:Hint_None ~cond:OtherTest cx test
+      in
       let env = Env.peek_env () in
       let oldset = Changeset.Global.clear () in
       let then_env = Env.clone_env env in
@@ -4334,7 +4341,7 @@ struct
                 arguments
             in
             let ((((_, cond_t), _) as cond), preds, _, xtypes) =
-              predicates_of_condition ~cond:OtherTest cx cond
+              predicates_of_condition ~hint:Hint_None ~cond:OtherTest cx cond
             in
             let _ = Env.refine_with_preds cx loc preds xtypes in
             let reason = mk_reason (RFunctionCall (desc_of_t callee_t)) loc in
@@ -5768,7 +5775,7 @@ struct
     | Or ->
       let () = check_default_pattern cx left right in
       let ((((_, t1), _) as left), _, not_map, xtypes) =
-        predicates_of_condition ~cond:OtherTest cx left
+        predicates_of_condition ~hint:Hint_None ~cond:OtherTest cx left
       in
       let ((((_, t2), _) as right), right_abnormal) =
         Abnormal.catch_expr_control_flow_exception (fun () ->
@@ -5787,7 +5794,7 @@ struct
       )
     | And ->
       let ((((_, t1), _) as left), map, _, xtypes) =
-        predicates_of_condition ~cond:OtherTest cx left
+        predicates_of_condition ~hint:Hint_None ~cond:OtherTest cx left
       in
       let ((((_, t2), _) as right), right_abnormal) =
         Abnormal.catch_expr_control_flow_exception (fun () ->
@@ -6315,7 +6322,7 @@ struct
           (lhs_t, lhs_pattern_ast, rhs_ast)
         | Assignment.AndAssign ->
           let (((_, lhs_t), _), map, _, xtypes) =
-            predicates_of_condition ~cond:OtherTest cx left_expr
+            predicates_of_condition ~hint:Hint_None ~cond:OtherTest cx left_expr
           in
           let ((((_, rhs_t), _) as rhs_ast), right_abnormal) =
             Abnormal.catch_expr_control_flow_exception (fun () ->
@@ -6338,7 +6345,7 @@ struct
         | Assignment.OrAssign ->
           let () = check_default_pattern cx left_expr rhs in
           let (((_, lhs_t), _), _, not_map, xtypes) =
-            predicates_of_condition ~cond:OtherTest cx left_expr
+            predicates_of_condition ~hint:Hint_None ~cond:OtherTest cx left_expr
           in
           let ((((_, rhs_t), _) as rhs_ast), right_abnormal) =
             Abnormal.catch_expr_control_flow_exception (fun () ->
@@ -7064,7 +7071,7 @@ struct
      - map of unrefined types for lvalues found in refinement maps
      - typed AST of the test expression
   *)
-  and predicates_of_condition cx ~cond e =
+  and predicates_of_condition cx ~hint ~cond e =
     let open Ast in
     let open Expression in
     (* package empty result (no refinements derived) from test type *)
@@ -7685,7 +7692,7 @@ struct
       end
     (* assignments *)
     | (_, Assignment { Assignment.left = (loc, Ast.Pattern.Identifier id); _ }) ->
-      let (((_, expr), _) as tast) = expression cx ~hint:Hint_None e in
+      let (((_, expr), _) as tast) = expression cx ~hint e in
       let id = id.Ast.Pattern.Identifier.name in
       (match Refinement.key ~allow_optional:true (loc, Ast.Expression.Identifier id) with
       | Some name -> result tast name expr ExistsP true
@@ -7798,10 +7805,12 @@ struct
     (* test1 && test2 *)
     | (loc, Logical { Logical.operator = Logical.And; left; right; comments }) ->
       let ((((_, t1), _) as left_ast), map1, not_map1, xts1) =
-        predicates_of_condition cx ~cond left
+        predicates_of_condition cx ~hint ~cond left
       in
       let ((((_, t2), _) as right_ast), map2, not_map2, xts2) =
-        Env.in_refined_env cx loc map1 xts1 (fun () -> predicates_of_condition cx ~cond right)
+        Env.in_refined_env cx loc map1 xts1 (fun () ->
+            predicates_of_condition cx ~hint:(Hint_api.merge_hints hint (Hint_t t1)) ~cond right
+        )
       in
       let reason = mk_reason (RLogical ("&&", desc_of_t t1, desc_of_t t2)) loc in
       let t_out =
@@ -7818,10 +7827,12 @@ struct
     | (loc, Logical { Logical.operator = Logical.Or; left; right; comments }) ->
       let () = check_default_pattern cx left right in
       let ((((_, t1), _) as left_ast), map1, not_map1, xts1) =
-        predicates_of_condition cx ~cond left
+        predicates_of_condition cx ~hint ~cond left
       in
       let ((((_, t2), _) as right_ast), map2, not_map2, xts2) =
-        Env.in_refined_env cx loc not_map1 xts1 (fun () -> predicates_of_condition cx ~cond right)
+        Env.in_refined_env cx loc not_map1 xts1 (fun () ->
+            predicates_of_condition cx ~hint:(Hint_api.merge_hints hint (Hint_t t1)) ~cond right
+        )
       in
       let reason = mk_reason (RLogical ("||", desc_of_t t1, desc_of_t t2)) loc in
       let t_out =
@@ -7836,7 +7847,7 @@ struct
       )
     (* !test *)
     | (loc, Unary { Unary.operator = Unary.Not; argument; comments }) ->
-      let (arg, map, not_map, xts) = predicates_of_condition cx ~cond argument in
+      let (arg, map, not_map, xts) = predicates_of_condition cx ~hint:Hint_None ~cond argument in
       let ast' = Unary { Unary.operator = Unary.Not; argument = arg; comments } in
       let t_out = BoolT.at loc |> with_trust bogus_trust in
       let ast = ((loc, t_out), ast') in
@@ -7851,7 +7862,7 @@ struct
     (* e.m(...) *)
     (* TODO: Don't trap method calls for now *)
     | (_, Call { Call.callee = (_, (Member _ | OptionalMember _)); _ }) ->
-      empty_result (expression cx ~hint:Hint_None e)
+      empty_result (expression cx ~hint e)
     (* f(...) *)
     (* The concrete predicate is not known at this point. We attach a "latent"
        predicate pointing to the type of the function that will supply this
@@ -7863,7 +7874,7 @@ struct
         | _ -> false
       in
       if List.exists is_spread arguments || Flow_ast_utils.is_call_to_invariant callee then
-        empty_result (expression cx ~hint:Hint_None e)
+        empty_result (expression cx ~hint e)
       else
         let (fun_t, keys, arg_ts, ret_t, call_ast) = predicated_call_expression cx loc call in
         let ast = ((loc, ret_t), Call call_ast) in
@@ -7879,7 +7890,7 @@ struct
           emp_pred_map
           args_with_offset
     (* fallthrough case: evaluate test expr, no refinements *)
-    | e -> empty_result (expression cx ~hint:Hint_None e)
+    | e -> empty_result (expression cx ~hint e)
 
   (* Conditional expressions are checked like expressions, except that property
      accesses are provisionally allowed even when such properties do not exist.
