@@ -1228,14 +1228,30 @@ module Make
 
       val mutable env_state : name_resolver_state =
         let (env, jsx_base_name) = initial_env cx ~is_lib exclude_syms unbound_names program_loc in
+        let write_entries =
+          EnvMap.singleton
+            (Env_api.GlobalThisLoc, program_loc)
+            (Env_api.AssigningWrite (mk_reason (RIdentifier (internal_name "this")) program_loc))
+        in
+        let write_entries =
+          if is_lib then
+            write_entries
+          else
+            let filename = Context.file cx in
+            let global_exports_loc = Loc.{ none with source = Some filename } |> ALoc.of_loc in
+            EnvMap.add
+              (Env_api.GlobalExportsLoc, global_exports_loc)
+              (Env_api.AssigningWrite
+                 (mk_reason
+                    (RModule (OrdinaryName (File_key.to_string filename)))
+                    global_exports_loc
+                 )
+              )
+              write_entries
+        in
         {
           values = L.LMap.empty;
-          write_entries =
-            EnvMap.empty
-            |> EnvMap.add
-                 (Env_api.GlobalThisLoc, program_loc)
-                 (Env_api.AssigningWrite (mk_reason (RIdentifier (internal_name "this")) program_loc)
-                 );
+          write_entries;
           toplevel_members = [];
           module_toplevel_members = L.LMap.empty;
           curr_id = 0;

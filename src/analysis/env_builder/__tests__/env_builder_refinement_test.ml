@@ -18,6 +18,8 @@ module TestCx = struct
 
   let enable_enums _ = true
 
+  let file _cx = File_key.SourceFile "test.js"
+
   let jsx _cx = !jsx_mode
 
   let react_runtime _cx = !react_runtime

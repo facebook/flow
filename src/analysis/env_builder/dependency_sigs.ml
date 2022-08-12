@@ -10,6 +10,8 @@ module type C = sig
 
   val enable_enums : t -> bool
 
+  val file : t -> File_key.t
+
   val jsx : t -> Options.jsx_mode
 
   val react_runtime : t -> Options.react_runtime

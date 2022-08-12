@@ -463,17 +463,19 @@ module Make (Env : Env_sig.S) : S = struct
     in
     let components = NameDefOrdering.build_ordering cx info name_def_graph in
     if Context.cycle_errors cx then Base.List.iter ~f:(Cycles.handle_component cx) components;
-    let env =
-      Base.Option.value_map ~default:env local_exports_var ~f:(fun local_exports_var ->
-          Loc_env.initialize
-            env
-            Env_api.GlobalExportsLoc
-            (TypeUtil.loc_of_t local_exports_var)
-            local_exports_var
-      )
-    in
     Context.set_environment cx env;
     Env.init_env ~exclude_syms cx (fst aloc_ast) module_scope;
+    let env = Context.environment cx in
+    if Env.new_env then
+      Base.Option.iter local_exports_var ~f:(fun local_exports_var ->
+          let loc = TypeUtil.loc_of_t local_exports_var in
+          let t =
+            Base.Option.value_exn
+              ~message:(ALoc.debug_to_string ~include_source:true loc)
+              (Loc_env.find_write env Env_api.GlobalExportsLoc loc)
+          in
+          Flow_js.unify cx t local_exports_var
+      );
     if Context.resolved_env cx then begin
       let { Loc_env.scope_kind; class_stack; _ } = Context.environment cx in
       Base.List.iter ~f:(Env_resolution.resolve_component cx name_def_graph) components;
@@ -497,11 +499,25 @@ module Make (Env : Env_sig.S) : S = struct
       aloc_ast
     in
 
-    let reason_exports_module =
-      let desc = Reason.(RModule (OrdinaryName (File_key.to_string filename))) in
-      Loc.{ none with source = Some (Context.file cx) } |> ALoc.of_loc |> Reason.mk_reason desc
+    let file_loc = Loc.{ none with source = Some filename } |> ALoc.of_loc in
+    let reason = Reason.mk_reason Reason.RExports file_loc in
+    let dict =
+      {
+        Type.key = Type.StrT.make reason (Trust.bogus_trust ());
+        value = Type.MixedT.make reason (Trust.bogus_trust ());
+        dict_name = None;
+        dict_polarity = Polarity.Negative;
+      }
     in
-    let local_exports_var = Tvar.mk cx reason_exports_module in
+    let init_exports = Obj_type.mk cx ~obj_kind:(Type.Indexed dict) reason in
+    let reason_exports_module =
+      Reason.mk_reason Reason.(RModule (OrdinaryName (File_key.to_string filename))) file_loc
+    in
+    let local_exports_var =
+      Tvar.mk_no_wrap_where cx reason_exports_module (fun (_, id) ->
+          Flow_js.resolve_id cx id init_exports
+      )
+    in
     let module_scope =
       Scope.(
         let scope = fresh ~var_scope_kind:Module () in
@@ -528,22 +544,9 @@ module Make (Env : Env_sig.S) : S = struct
       )
     in
     initialize_env ~lib:false ~local_exports_var cx aloc_ast module_scope;
-
-    let file_loc = Loc.{ none with source = Some filename } |> ALoc.of_loc in
-    let reason = Reason.mk_reason Reason.RExports file_loc in
-    let dict =
-      {
-        Type.key = Type.StrT.make reason (Trust.bogus_trust ());
-        value = Type.MixedT.make reason (Trust.bogus_trust ());
-        dict_name = None;
-        dict_polarity = Polarity.Negative;
-      }
-    in
-    let init_exports = Obj_type.mk cx ~obj_kind:(Type.Indexed dict) reason in
     ImpExp.set_module_exports cx file_loc init_exports;
 
     (* infer *)
-    Flow_js.flow_t cx (init_exports, local_exports_var);
     let typed_statements = infer_core cx aloc_statements in
     scan_for_suppressions cx lint_severities comments;
 

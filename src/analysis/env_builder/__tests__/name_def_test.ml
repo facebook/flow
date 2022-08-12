@@ -16,6 +16,8 @@ module Context = struct
 
   let enable_enums _cx = true
 
+  let file _cx = File_key.SourceFile "test.js"
+
   let jsx _cx = Options.Jsx_react
 
   let react_runtime _cx = Options.ReactRuntimeClassic

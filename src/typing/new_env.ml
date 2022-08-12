@@ -526,7 +526,7 @@ module New_env = struct
                    )
                | (Env_api.With_ALoc.Exports, _) ->
                  let file_loc = Loc.{ none with source = Some (Context.file cx) } |> ALoc.of_loc in
-                 check_readable cx Env_api.OrdinaryNameLoc file_loc;
+                 check_readable cx Env_api.GlobalExportsLoc file_loc;
                  t_option_value_exn
                    cx
                    file_loc
@@ -1157,7 +1157,15 @@ module New_env = struct
       {
         env with
         Loc_env.scope_kind = kind;
-        readable = Env_api.EnvSet.singleton (Env_api.GlobalThisLoc, program_loc);
+        readable =
+          Env_api.EnvSet.(
+            empty
+            |> add (Env_api.GlobalThisLoc, program_loc)
+            |> add
+                 ( Env_api.GlobalExportsLoc,
+                   Loc.{ none with source = Some (Context.file cx) } |> ALoc.of_loc
+                 )
+          );
       }
     in
     Context.set_environment cx env
