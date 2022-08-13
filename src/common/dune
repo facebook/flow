@@ -7,7 +7,6 @@
   (name flow_common)
   (wrapped false)
   (modules (:standard \ flow_version flow_lsp_conversions))
-  (flags -w +a-4-6-29-35-44-48-50)
   (libraries
     disk
     flow_common_lints
