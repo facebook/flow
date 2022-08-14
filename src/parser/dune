@@ -13,4 +13,5 @@
  (modules flow_parser_js flow_parser_dot_js)
  (libraries flow_parser js_of_ocaml))
 
-(dirs (:standard __tests__))
+(dirs
+ (:standard __tests__))

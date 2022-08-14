@@ -1,12 +1,13 @@
 (library
-  (name flow_parser_utils_output)
-  (wrapped false)
-  (libraries
-    hh_json ; hack
-    flow_common_utils
-    flow_common_utils_loc_utils
-    flow_parser
-    flow_parser_utils
-    flow_third_party_sourcemaps))
+ (name flow_parser_utils_output)
+ (wrapped false)
+ (libraries
+  hh_json ; hack
+  flow_common_utils
+  flow_common_utils_loc_utils
+  flow_parser
+  flow_parser_utils
+  flow_third_party_sourcemaps))
 
-(dirs (:standard __tests__))
+(dirs
+ (:standard __tests__))

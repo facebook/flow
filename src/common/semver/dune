@@ -1,9 +1,10 @@
 (library
-  (name semver)
-  (wrapped false)
-)
+ (name semver)
+ (wrapped false))
 
 (ocamlyacc semver_parser)
+
 (ocamllex semver_lexer)
 
-(dirs (:standard __tests__))
+(dirs
+ (:standard __tests__))

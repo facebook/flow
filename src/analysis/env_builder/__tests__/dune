@@ -1,33 +1,38 @@
 (test
-  (name env_builder_tests)
-  (modules (:standard \ env_builder_refinement_test name_def_test))
-  (libraries
-    ounit2
-    flow_analysis_test_utils
-    flow_env_builder
-    flow_name_resolver
-    test_injector_config))
+ (name env_builder_tests)
+ (modules
+  (:standard \ env_builder_refinement_test name_def_test))
+ (libraries
+  ounit2
+  flow_analysis_test_utils
+  flow_env_builder
+  flow_name_resolver
+  test_injector_config))
 
 (library
-  (name env_builder_refinement_test)
-  (modules env_builder_refinement_test)
-  (inline_tests)
-  (flags (:standard -w -40))
-  (libraries
-    flow_analysis_test_utils
-    flow_env_builder
-    flow_name_resolver
-    test_injector_config)
-  (preprocess (pps ppx_expect)))
+ (name env_builder_refinement_test)
+ (modules env_builder_refinement_test)
+ (inline_tests)
+ (flags
+  (:standard -w -40))
+ (libraries
+  flow_analysis_test_utils
+  flow_env_builder
+  flow_name_resolver
+  test_injector_config)
+ (preprocess
+  (pps ppx_expect)))
 
 (library
-  (name name_def_test)
-  (modules name_def_test)
-  (inline_tests)
-  (flags (:standard -w -40))
-  (libraries
-    flow_analysis_test_utils
-    flow_env_builder
-    flow_name_resolver
-    test_injector_config)
-  (preprocess (pps ppx_expect)))
+ (name name_def_test)
+ (modules name_def_test)
+ (inline_tests)
+ (flags
+  (:standard -w -40))
+ (libraries
+  flow_analysis_test_utils
+  flow_env_builder
+  flow_name_resolver
+  test_injector_config)
+ (preprocess
+  (pps ppx_expect)))

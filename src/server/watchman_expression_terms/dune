@@ -1,9 +1,4 @@
 (library
-  (name flow_server_watchman_expression_terms)
-  (wrapped false)
-  (libraries
-    flow_common
-    flow_server_files
-    hh_json
-  )
-)
+ (name flow_server_watchman_expression_terms)
+ (wrapped false)
+ (libraries flow_common flow_server_files hh_json))

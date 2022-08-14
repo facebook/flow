@@ -1,12 +1,6 @@
 (library
-  (name flow_config)
-  (wrapped false)
-  (libraries
-    base
-    flow_common
-    flow_logging
-    semver
-    xx
-  )
-   (preprocess (pps ppx_let))
-)
+ (name flow_config)
+ (wrapped false)
+ (libraries base flow_common flow_logging semver xx)
+ (preprocess
+  (pps ppx_let)))

@@ -1,8 +1,4 @@
 (library
-  (name flow_state_readers)
-  (wrapped false)
-  (libraries
-    flow_common_transaction
-    heap_shared_mem
-  )
-)
+ (name flow_state_readers)
+ (wrapped false)
+ (libraries flow_common_transaction heap_shared_mem))

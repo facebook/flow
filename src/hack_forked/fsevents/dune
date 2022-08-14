@@ -1,10 +1,10 @@
 (library
-  (name fsevents)
-  (enabled_if (= %{system} macosx))
-  (wrapped false)
-  (foreign_stubs (language c) (names
-    fsevents_stubs))
-  (c_library_flags
-    -framework CoreServices
-    -framework CoreFoundation)
-  (libraries))
+ (name fsevents)
+ (enabled_if
+  (= %{system} macosx))
+ (wrapped false)
+ (foreign_stubs
+  (language c)
+  (names fsevents_stubs))
+ (c_library_flags -framework CoreServices -framework CoreFoundation)
+ (libraries))

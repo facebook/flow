@@ -1,9 +1,4 @@
 (library
-  (name flow_server_files)
-  (wrapped false)
-  (libraries
-    opaque_digest
-    string
-    sys_utils
-  )
-)
+ (name flow_server_files)
+ (wrapped false)
+ (libraries opaque_digest string sys_utils))

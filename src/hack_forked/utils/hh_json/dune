@@ -1,5 +1,4 @@
 (library
-  (name hh_json)
-  (wrapped false)
-  (libraries
-    collections))
+ (name hh_json)
+ (wrapped false)
+ (libraries collections))

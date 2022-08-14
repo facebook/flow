@@ -1,37 +1,34 @@
 (library
-  (name flow_version)
-  (wrapped false)
-  (preprocess (pps ppx_deriving.std)) ; See T41851208
-  (modules flow_version))
-(library
-  (name flow_common)
-  (wrapped false)
-  (modules (:standard \ flow_version flow_lsp_conversions))
-  (libraries
-    disk
-    flow_common_lints
-    flow_common_modulename
-    flow_common_span
-    flow_common_utils
-    flow_parser_utils_aloc
-    flow_version
-    heap_ident ; hack
-    hh_json ; hack
-    sys_utils ; hack
-    xx
-    )
-  (preprocess (pps ppx_deriving.std))
-)
+ (name flow_version)
+ (wrapped false)
+ (modules flow_version))
 
 (library
-  (name flow_common_lsp_conversions)
-  (wrapped false)
-  (modules flow_lsp_conversions)
-  (libraries
-    flow_parser
-    ; flow_server_persistent_connection
-    flow_server_protocol
-    lsp
-  )
-  (preprocess (pps ppx_deriving.std)) ; See T41851208
-)
+ (name flow_common)
+ (wrapped false)
+ (modules
+  (:standard \ flow_version flow_lsp_conversions))
+ (libraries
+  disk
+  flow_common_lints
+  flow_common_modulename
+  flow_common_span
+  flow_common_utils
+  flow_parser_utils_aloc
+  flow_version
+  heap_ident ; hack
+  hh_json ; hack
+  sys_utils ; hack
+  xx)
+ (preprocess
+  (pps ppx_deriving.std)))
+
+(library
+ (name flow_common_lsp_conversions)
+ (wrapped false)
+ (modules flow_lsp_conversions)
+ (libraries
+  flow_parser
+  ; flow_server_persistent_connection
+  flow_server_protocol
+  lsp))

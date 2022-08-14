@@ -1,26 +1,28 @@
 (test
-  (name typing_tests)
-  (modules (:standard \ typed_ast_test))
-  (libraries
-    ounit2
-    flow_flowlib
-    flow_typing
-    heap_shared_mem
-    test_injector_config
-    )
-  (action (run %{test} -runner sequential)))
+ (name typing_tests)
+ (modules
+  (:standard \ typed_ast_test))
+ (libraries
+  ounit2
+  flow_flowlib
+  flow_typing
+  heap_shared_mem
+  test_injector_config)
+ (action
+  (run %{test} -runner sequential)))
 
 (test
-  (name typed_ast_test)
-  (modules typed_ast_test)
-  (libraries
-    ounit2
-    ounit2.advanced
-    flow_commands_utils
-    flow_file_sig
-    flow_server_files
-    flow_typing
-    default_injector_config
-    )
-  (deps (source_tree ../../../tests))
-  (action (run %{test} -dir %{project_root}/tests)))
+ (name typed_ast_test)
+ (modules typed_ast_test)
+ (libraries
+  ounit2
+  ounit2.advanced
+  flow_commands_utils
+  flow_file_sig
+  flow_server_files
+  flow_typing
+  default_injector_config)
+ (deps
+  (source_tree ../../../tests))
+ (action
+  (run %{test} -dir %{project_root}/tests)))

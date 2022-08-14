@@ -1,17 +1,15 @@
 (library
-  (name flow_analysis_test_utils)
-  (modules test_utils)
-  (wrapped false)
-  (libraries
-    flow_parser
-    flow_parser_utils
-    flow_parser_utils_aloc))
+ (name flow_analysis_test_utils)
+ (modules test_utils)
+ (wrapped false)
+ (libraries flow_parser flow_parser_utils flow_parser_utils_aloc))
 
 (test
-  (name analysis_tests)
-  (modules (:standard \ test_utils))
-  (libraries
-    ounit2
-    flow_analysis
-    flow_analysis_test_utils
-    test_injector_config))
+ (name analysis_tests)
+ (modules
+  (:standard \ test_utils))
+ (libraries
+  ounit2
+  flow_analysis
+  flow_analysis_test_utils
+  test_injector_config))

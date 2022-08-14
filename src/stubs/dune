@@ -1,55 +1,39 @@
 (library
-  (name flow_logging_stubs)
-  (wrapped false)
-  (modules flowEventLogger)
-  (libraries
-    lwt
-  )
-)
+ (name flow_logging_stubs)
+ (wrapped false)
+ (modules flowEventLogger)
+ (libraries lwt))
 
 (library
-  (name flow_interaction_logging_stubs)
-  (wrapped false)
-  (modules flowInteractionLogger)
-  (libraries
-    lwt
-  )
-)
+ (name flow_interaction_logging_stubs)
+ (wrapped false)
+ (modules flowInteractionLogger)
+ (libraries lwt))
 
 (library
-  (name logging_common_lwt_stubs)
-  (wrapped false)
-  (modules eventLoggerLwt)
-  (libraries
-    lwt
-  )
-)
+ (name logging_common_lwt_stubs)
+ (wrapped false)
+ (modules eventLoggerLwt)
+ (libraries lwt))
 
 (library
-  (name flow_saved_state_fb_fetcher_stubs)
-  (wrapped false)
-  (modules saved_state_fb_fetcher)
-  (libraries
-    flow_service_saved_state_fetcher
-  )
-)
+ (name flow_saved_state_fb_fetcher_stubs)
+ (wrapped false)
+ (modules saved_state_fb_fetcher)
+ (libraries flow_service_saved_state_fetcher))
 
 (library
-  (name flow_extra_commands_stubs)
-  (wrapped false)
-  (modules extra_commands)
-)
+ (name flow_extra_commands_stubs)
+ (wrapped false)
+ (modules extra_commands))
 
 (library
-  (name codemod_annotate_exports_hardcoded)
-  (wrapped false)
-  (modules annotate_exports_hardcoded_expr_fixes hardcoded_module_fixes)
-  (libraries
-    flow_parser)
-)
+ (name codemod_annotate_exports_hardcoded)
+ (wrapped false)
+ (modules annotate_exports_hardcoded_expr_fixes hardcoded_module_fixes)
+ (libraries flow_parser))
 
 (library
-  (name flow_remote_execution_stubs)
-  (wrapped false)
-  (modules remote_execution)
-)
+ (name flow_remote_execution_stubs)
+ (wrapped false)
+ (modules remote_execution))

@@ -1,10 +1,4 @@
 (library
-  (name flow_common_errors)
-  (wrapped false)
-  (libraries
-    base
-    flow_common
-    flow_common_lints
-    flow_env_builder
-  )
-)
+ (name flow_common_errors)
+ (wrapped false)
+ (libraries base flow_common flow_common_lints flow_env_builder))

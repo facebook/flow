@@ -7,30 +7,43 @@
   (names hh_shared)
   (flags
    (:standard -I../../src/third-party/lz4)))
- (c_library_flags (:include heap_libc_flags.txt))
+ (c_library_flags
+  (:include heap_libc_flags.txt))
  (preprocess
   (pps ppx_deriving.std visitors.ppx))
  (libraries lz4 utils_core))
 
 (rule
-  (target heap_libc_flags.txt)
-  (enabled_if (= %{system} "linux"))
-  (action (with-stdout-to %{target} (echo "(-lrt -latomic)"))))
+ (target heap_libc_flags.txt)
+ (enabled_if
+  (= %{system} "linux"))
+ (action
+  (with-stdout-to
+   %{target}
+   (echo "(-lrt -latomic)"))))
 
 (rule
-  (target heap_libc_flags.txt)
-  (enabled_if (or
-    (= %{system} "cygwin")
-    (= %{system} "mingw64")))
-  (action (with-stdout-to %{target} (echo "(-latomic.a)"))))
+ (target heap_libc_flags.txt)
+ (enabled_if
+  (or
+   (= %{system} "cygwin")
+   (= %{system} "mingw64")))
+ (action
+  (with-stdout-to
+   %{target}
+   (echo "(-latomic.a)"))))
 
 (rule
-  (target heap_libc_flags.txt)
-  (enabled_if (and
-    (<> %{system} "linux")
-    (<> %{system} "cygwin")
-    (<> %{system} "mingw64")))
-  (action (with-stdout-to %{target} (echo "()"))))
+ (target heap_libc_flags.txt)
+ (enabled_if
+  (and
+   (<> %{system} "linux")
+   (<> %{system} "cygwin")
+   (<> %{system} "mingw64")))
+ (action
+  (with-stdout-to
+   %{target}
+   (echo "()"))))
 
 (library
  (name heap_ident)
@@ -46,12 +59,7 @@
  (modules prefix sharedMem)
  (preprocess
   (pps ppx_deriving.std visitors.ppx))
- (libraries
-  common_lz4
-  heap_libc
-  logging_common
-  utils_core
-  worker_cancel))
+ (libraries common_lz4 heap_libc logging_common utils_core worker_cancel))
 
 (library
  (name worker_cancel)

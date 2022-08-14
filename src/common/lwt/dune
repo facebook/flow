@@ -1,13 +1,9 @@
 (library
-  (name flow_common_lwt)
-  (wrapped false)
-  (libraries
-    base
-    lwt
-    lwt.unix
-    utils_core
-  )
-  (preprocess (pps lwt_ppx))
-)
+ (name flow_common_lwt)
+ (wrapped false)
+ (libraries base lwt lwt.unix utils_core)
+ (preprocess
+  (pps lwt_ppx)))
 
-(dirs (:standard __tests__))
+(dirs
+ (:standard __tests__))

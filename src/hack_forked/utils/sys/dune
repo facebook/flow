@@ -4,11 +4,7 @@
  (libraries collections disk str unix utils_core)
  (foreign_stubs
   (language c)
-  (names
-   gc_profiling
-   handle_stubs
-   nproc
-   processor_info
-   sysinfo)))
+  (names gc_profiling handle_stubs nproc processor_info sysinfo)))
 
-(dirs (:standard __tests__))
+(dirs
+ (:standard __tests__))

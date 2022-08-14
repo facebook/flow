@@ -1,8 +1,10 @@
 (library
-  (name xx)
-  (wrapped false)
-  (foreign_stubs (language c) (names xx_stubs))
-  (libraries lz4)
-)
+ (name xx)
+ (wrapped false)
+ (foreign_stubs
+  (language c)
+  (names xx_stubs))
+ (libraries lz4))
 
-(dirs (:standard __tests__))
+(dirs
+ (:standard __tests__))

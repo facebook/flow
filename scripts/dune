@@ -1,12 +1,11 @@
 (rule
-  (targets get_build_id_gen.c)
-  (deps gen_build_id.ml script_utils.ml)
-  (action
-    (run ocaml -I scripts -w -3 unix.cma gen_build_id.ml get_build_id_gen.c)))
+ (targets get_build_id_gen.c)
+ (deps gen_build_id.ml script_utils.ml)
+ (action
+  (run ocaml -I scripts -w -3 unix.cma gen_build_id.ml get_build_id_gen.c)))
 
 (library
-  (name flow_script_utils)
-  (wrapped false)
-  (modules script_utils)
-  (libraries unix)
-)
+ (name flow_script_utils)
+ (wrapped false)
+ (modules script_utils)
+ (libraries unix))

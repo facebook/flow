@@ -1,9 +1,15 @@
 (library
-  (name flow_flowlib)
-  (wrapped false)
-  (libraries
-    sys_utils
-  )
-  (preprocess (pps ppx_gen_flowlibs -- -flowlib %{project_root}/lib -prelude %{project_root}/prelude))
-  (preprocessor_deps (source_tree %{project_root}/lib) (source_tree %{project_root}/prelude))
-)
+ (name flow_flowlib)
+ (wrapped false)
+ (libraries sys_utils)
+ (preprocess
+  (pps
+   ppx_gen_flowlibs
+   --
+   -flowlib
+   %{project_root}/lib
+   -prelude
+   %{project_root}/prelude))
+ (preprocessor_deps
+  (source_tree %{project_root}/lib)
+  (source_tree %{project_root}/prelude)))

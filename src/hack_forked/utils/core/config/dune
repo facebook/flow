@@ -1,5 +1,6 @@
 (rule
-  (targets build-timestamp-opt)
-  (action
-    (with-stdout-to build-timestamp-opt
-      (bash "echo -DHH_BUILD_TIMESTAMP=$(date +%s)ul"))))
+ (targets build-timestamp-opt)
+ (action
+  (with-stdout-to
+   build-timestamp-opt
+   (bash "echo -DHH_BUILD_TIMESTAMP=$(date +%s)ul"))))

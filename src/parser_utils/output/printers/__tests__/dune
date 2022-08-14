@@ -1,6 +1,3 @@
 (test
-  (name parser_utils_output_printers_tests)
-  (libraries
-    ounit2
-    flow_parser_utils_output_printers
-    test_injector_config))
+ (name parser_utils_output_printers_tests)
+ (libraries ounit2 flow_parser_utils_output_printers test_injector_config))

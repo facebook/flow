@@ -1,3 +1,3 @@
 (library
-  (name opaque_digest)
-  (wrapped false))
+ (name opaque_digest)
+ (wrapped false))

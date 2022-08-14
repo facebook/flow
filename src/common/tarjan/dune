@@ -1,8 +1,7 @@
 (library
-  (name flow_common_tarjan)
-  (wrapped false)
-  (libraries
-    flow_common
-    collections ; hack
-  )
-)
+ (name flow_common_tarjan)
+ (wrapped false)
+ (libraries
+  flow_common
+  collections ; hack
+  ))

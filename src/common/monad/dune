@@ -1,7 +1,4 @@
 (library
-  (name flow_common_monad)
-  (wrapped false)
-  (libraries
-    flow_common
-  )
-)
+ (name flow_common_monad)
+ (wrapped false)
+ (libraries flow_common))

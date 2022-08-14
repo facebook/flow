@@ -1,5 +1,3 @@
 (library
  (name packed_locs)
- (libraries
-  leb128 flow_parser)
- )
+ (libraries leb128 flow_parser))

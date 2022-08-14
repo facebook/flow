@@ -1,13 +1,13 @@
 (library
-  (name flow_server_find_refs)
-  (wrapped false)
-  (libraries
-    flow_parser
-    flow_server_env
-    flow_service_get_def
-    flow_state_readers
-  )
-  (preprocess (pps lwt_ppx ppx_let))
-)
+ (name flow_server_find_refs)
+ (wrapped false)
+ (libraries
+  flow_parser
+  flow_server_env
+  flow_service_get_def
+  flow_state_readers)
+ (preprocess
+  (pps lwt_ppx ppx_let)))
 
-(dirs (:standard __tests__))
+(dirs
+ (:standard __tests__))

@@ -1,13 +1,12 @@
 (library
-  (name find_libc)
-  (wrapped false)
-  (modules)
-  (foreign_stubs
-    (language c ) (names hh_readdir)))
+ (name find_libc)
+ (wrapped false)
+ (modules)
+ (foreign_stubs
+  (language c)
+  (names hh_readdir)))
 
 (library
-  (name find)
-  (wrapped false)
-  (libraries
-    sys_utils
-    find_libc))
+ (name find)
+ (wrapped false)
+ (libraries sys_utils find_libc))
