@@ -192,13 +192,18 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) = struct
         method! pattern_identifier ?kind:_ ((loc, _) as id) =
           (* Ignore cases that don't have bindings in the environment, like `var x;`
              and illegal or unreachable writes. *)
-          (match EnvMap.find_opt (Env_api.OrdinaryNameLoc, loc) env_entries with
+          this#add_write_dependency_at_loc Env_api.OrdinaryNameLoc loc;
+          id
+
+        method private add_write_dependency_at_loc kind loc =
+          (* Ignore cases that don't have bindings in the environment, like `var x;`
+             and illegal or unreachable writes. *)
+          match EnvMap.find_opt (kind, loc) env_entries with
           | Some Env_api.(AssigningWrite _ | GlobalWrite _ | EmptyArrayWrite _) ->
-            this#add ~why:loc (Env_api.OrdinaryNameLoc, loc)
+            this#add ~why:loc (kind, loc)
           | Some Env_api.NonAssigningWrite
           | None ->
-            ());
-          id
+            ()
 
         method! binding_type_identifier ((loc, _) as id) =
           (* Unconditional, unlike the above, because all binding type identifiers should
@@ -298,6 +303,16 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) = struct
           let _ = this#private_name key in
           let _ = this#type_annotation_hint annot in
           ()
+
+        (* In order to resolve a def containing a read, the writes that the
+           Name_resolver determines reach the variable must be resolved *)
+        method! expression ((loc, _) as expr) =
+          this#add_write_dependency_at_loc Env_api.OrdinaryNameLoc loc;
+          this#add_write_dependency_at_loc Env_api.ExpressionLoc loc;
+          this#add_write_dependency_at_loc Env_api.ArrayProviderLoc loc;
+          super#expression expr
+
+        method visit_expression_for_expression_writes expr = ignore @@ super#expression expr
       end
 
     (* For all the possible defs, explore the def's structure with the class above
@@ -323,8 +338,13 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) = struct
         |> depends_of_tparams_map tparams_map
         |> depends_of_node (fun visitor -> ignore @@ visitor#type_annotation anno)
       in
-      let depends_of_expression expr =
-        depends_of_node (fun visitor -> ignore @@ visitor#expression expr)
+      let depends_of_expression ?(for_expression_writes = false) expr =
+        depends_of_node (fun visitor ->
+            if for_expression_writes then
+              visitor#visit_expression_for_expression_writes expr
+            else
+              ignore @@ visitor#expression expr
+        )
       in
       let depends_of_fun fully_annotated tparams_map function_ =
         depends_of_node
@@ -482,7 +502,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) = struct
               providers
           else
             EnvMap.empty
-        | Some e -> depends_of_expression e EnvMap.empty
+        | Some e -> depends_of_expression ~for_expression_writes:true e EnvMap.empty
       in
       let depends_of_binding bind =
         let state = depends_of_lhs id_loc None in
@@ -529,7 +549,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) = struct
       | Binding binding -> depends_of_binding binding
       | RefiExpression exp
       | ChainExpression (_, exp) ->
-        depends_of_expression exp EnvMap.empty
+        depends_of_expression ~for_expression_writes:true exp EnvMap.empty
       | Update { lhs_member; _ } -> depends_of_update lhs_member
       | MemberAssign { member_loc; member; rhs; _ } ->
         depends_of_member_assign member_loc member rhs
