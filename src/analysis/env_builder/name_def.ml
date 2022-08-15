@@ -649,7 +649,7 @@ class def_finder env_entries providers toplevel_scope =
 
     method private visit_function_param ~hint (param : ('loc, 'loc) Ast.Function.Param.t) =
       let open Ast.Function.Param in
-      let (loc, { argument; default = default_expression }) = param in
+      let (_, { argument; default = default_expression }) = param in
       let optional =
         match argument with
         | (_, Ast.Pattern.Identifier { Ast.Pattern.Identifier.optional; _ }) -> optional
@@ -663,12 +663,12 @@ class def_finder env_entries providers toplevel_scope =
         | None ->
           let reason =
             match argument with
-            | ( _,
+            | ( loc,
                 Ast.Pattern.Identifier
                   { Ast.Pattern.Identifier.name = (_, { Ast.Identifier.name; _ }); _ }
               ) ->
               mk_reason (RParameter (Some name)) loc
-            | _ -> mk_reason RDestructuring loc
+            | (loc, _) -> mk_reason RDestructuring loc
           in
           Contextual { reason; hint; default_expression }
       in
@@ -677,7 +677,7 @@ class def_finder env_entries providers toplevel_scope =
 
     method private visit_function_rest_param ~hint (expr : ('loc, 'loc) Ast.Function.RestParam.t) =
       let open Ast.Function.RestParam in
-      let (loc, { argument; comments = _ }) = expr in
+      let (_, { argument; comments = _ }) = expr in
       let source =
         match Destructure.type_of_pattern argument with
         | Some annot ->
@@ -692,12 +692,12 @@ class def_finder env_entries providers toplevel_scope =
         | None ->
           let reason =
             match argument with
-            | ( _,
+            | ( loc,
                 Ast.Pattern.Identifier
                   { Ast.Pattern.Identifier.name = (_, { Ast.Identifier.name; _ }); _ }
               ) ->
               mk_reason (RRestParameter (Some name)) loc
-            | _ ->
+            | (loc, _) ->
               (* TODO: This should be a parse error, but we only produce an internal
                  error in statement.ml. *)
               mk_reason (RCustom "contextual variable") loc
