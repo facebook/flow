@@ -74,6 +74,14 @@ Cannot determine type of empty array literal. Please provide an annotation. [mis
            ^
 
 
+Error ------------------------------------------------------------------------------------------ constrain_array.js:10:9
+
+Cannot determine type of empty array literal. Please provide an annotation. [missing-empty-array-annot]
+
+   10| var y = []
+               ^^
+
+
 Error ------------------------------------------------------------------------------------------ constrain_array.js:11:5
 
 Cannot assign `100` to `y` because number [1] is incompatible with empty array literal [2]. All writes to `y` must be
@@ -178,6 +186,30 @@ Cannot determine type of empty array literal. Please provide an annotation. [mis
 
    5| const x0 = []; // error
             ^^
+
+
+Error ------------------------------------------------------------------------------------- empty_array_literals.js:5:12
+
+Cannot determine type of empty array literal. Please provide an annotation. [missing-empty-array-annot]
+
+   5| const x0 = []; // error
+                 ^^
+
+
+Error ------------------------------------------------------------------------------------- empty_array_literals.js:7:17
+
+Cannot determine type of empty array literal. Please provide an annotation. [missing-empty-array-annot]
+
+   7| const x1 = { f: [] }; // TODO should error due to missing annotation
+                      ^^
+
+
+Error ------------------------------------------------------------------------------------ empty_array_literals.js:15:17
+
+Cannot determine type of empty array literal. Please provide an annotation. [missing-empty-array-annot]
+
+   15| ({ x4 } = { x4: [] }); // TODO should error due to provider position
+                       ^^
 
 
 Error --------------------------------------------------------------------------------------------------- globals.js:4:2
@@ -695,4 +727,4 @@ References:
 
 
 
-Found 42 errors
+Found 46 errors
