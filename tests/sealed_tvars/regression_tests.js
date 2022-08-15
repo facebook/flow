@@ -11,4 +11,8 @@ function no_missing_env_entry_for_illegal_type_binding() {
   type A = number; // error, but no MissingEnvEntry internal error.
 }
 
+function unresolved_class_self_tvar() {
+  class C { } // no weird unresolved tvar error
+}
+
 exports.a = 1; // Read of exports points to a fully resolved exports type.

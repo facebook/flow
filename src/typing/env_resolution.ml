@@ -338,7 +338,8 @@ module Make (Env : Env_sig.S) (Statement : Statement_sig.S with module Env := En
 
   let resolve_class cx id_loc reason class_loc class_ =
     let cache = Context.node_cache cx in
-    let self = Tvar.mk cx reason in
+    let env = Context.environment cx in
+    let self = Base.Option.value_exn (Loc_env.find_write env Env_api.ClassSelfLoc class_loc) in
     let ((class_t, class_t_internal, _, _) as sig_info) =
       Statement.mk_class_sig cx ~name_loc:id_loc ~class_loc reason self class_
     in

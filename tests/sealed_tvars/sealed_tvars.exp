@@ -1,11 +1,3 @@
-Error -------------------------------------------------------------------------------------------- error_examples.js:4:7
-
-Internal error: unconstrained tvar during tvar resolution
-
-   4| class C { }
-            ^
-
-
 Error ------------------------------------------------------------------------------------------ regression_tests.js:3:1
 
 Internal error: read of Env_api.Make.FunctionThisLoc entry which has not been prepared for typechecking
@@ -43,6 +35,17 @@ References:
    regression_tests.js:10:8
    10|   type A = number;
               ^ [1]
+
+
+Error ----------------------------------------------------------------------------------------- regression_tests.js:14:1
+
+Internal error: read of Env_api.Make.FunctionThisLoc entry which has not been prepared for typechecking
+
+       v--------------------------------------
+   14| function unresolved_class_self_tvar() {
+   15|   class C { } // no weird unresolved tvar error
+   16| }
+       ^
 
 
 

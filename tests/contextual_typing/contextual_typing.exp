@@ -51,13 +51,5 @@ Internal error: read of Env_api.Make.FunctionThisLoc entry which has not been pr
        ^
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:22:9
 
-Internal error: unconstrained tvar during tvar resolution
-
-   22|   class Bar {
-               ^^^
-
-
-
-Found 4 errors
+Found 3 errors
