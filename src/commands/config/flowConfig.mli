@@ -70,6 +70,8 @@ val all : config -> bool option
 
 val autoimports : config -> bool option
 
+val autoimports_ranked_by_usage : config -> bool option
+
 val automatic_require_default : config -> bool option
 
 val babel_loose_array_spread : config -> bool option

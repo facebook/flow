@@ -31,14 +31,17 @@ let index =
   |> add "Baz" (sf "/a/baz.js") named
 
 let mk_results ?(is_incomplete = false) results =
-  { results = List.map (fun (name, source, kind) -> { name; source; kind }) results; is_incomplete }
+  {
+    results = List.map (fun (name, source, kind, count) -> ({ name; source; kind }, count)) results;
+    is_incomplete;
+  }
 
 let tests =
   [
     ( "case_insensitive" >:: fun ctxt ->
       let t = init index in
       let results = search_values "foobar" t in
-      let expected = mk_results [("FooBar", sf "/a/foobar.js", named)] in
+      let expected = mk_results [("FooBar", sf "/a/foobar.js", named, 1002)] in
       assert_equal ~ctxt ~printer:show_search_results expected results
     );
     ( "is_incomplete" >:: fun ctxt ->
@@ -75,7 +78,8 @@ let tests =
 
       let results = search_values "FooBar" t in
       let expected =
-        mk_results [("FooBar", sf "/a/f.js", named); ("FooBar", sf "/a/foobar.js", named)]
+        mk_results
+          [("FooBar", sf "/a/f.js", named, 1002); ("FooBar", sf "/a/foobar.js", named, 1002)]
       in
       assert_equal ~ctxt ~printer:show_search_results expected results
     );
@@ -84,11 +88,11 @@ let tests =
       let t = init index in
 
       let results = search_values "FooBar" t in
-      let expected = mk_results [("FooBar", sf "/a/foobar.js", named)] in
+      let expected = mk_results [("FooBar", sf "/a/foobar.js", named, 1002)] in
       assert_equal ~ctxt ~printer:show_search_results expected results;
 
       let results = search_types "FooBar" t in
-      let expected = mk_results [("FooBar", sf "/a/f_type.js", named_type)] in
+      let expected = mk_results [("FooBar", sf "/a/f_type.js", named_type, 1002)] in
       assert_equal ~ctxt ~printer:show_search_results expected results
     );
     ( "max_results_filtered_by_kind" >:: fun ctxt ->
@@ -105,7 +109,7 @@ let tests =
       let expected =
         mk_results
           ~is_incomplete:true
-          [("FooBar", sf "/a/foobar.js", named); ("FooBar", sf "/a/foobar_a.js", named)]
+          [("FooBar", sf "/a/foobar.js", named, 1002); ("FooBar", sf "/a/foobar_a.js", named, 1002)]
       in
       assert_equal ~ctxt ~printer:show_search_results expected results;
 
@@ -113,7 +117,10 @@ let tests =
       let expected =
         mk_results
           ~is_incomplete:true
-          [("FooBar", sf "/a/foobar_b.js", named_type); ("FooBar", sf "/a/foobar_c.js", named_type)]
+          [
+            ("FooBar", sf "/a/foobar_b.js", named_type, 1002);
+            ("FooBar", sf "/a/foobar_c.js", named_type, 1002);
+          ]
       in
       assert_equal ~ctxt ~printer:show_search_results expected results
     );
@@ -131,9 +138,9 @@ let tests =
         mk_results
           ~is_incomplete:false
           [
-            ("FooBar", sf "/a/FooBar.js", default);
-            ("FooBar", sf "/a/FooBar.js", named);
-            ("FooBar", sf "/a/FooBar.js", namespace);
+            ("FooBar", sf "/a/FooBar.js", default, 1003);
+            ("FooBar", sf "/a/FooBar.js", named, 1002);
+            ("FooBar", sf "/a/FooBar.js", namespace, 1001);
           ]
       in
       assert_equal ~ctxt ~printer:show_search_results expected results

@@ -46,6 +46,7 @@ module Opts = struct
     abstract_locations: bool option;
     all: bool option;
     autoimports: bool option;
+    autoimports_ranked_by_usage: bool option;
     automatic_require_default: bool option;
     babel_loose_array_spread: bool option;
     cycle_errors: bool;
@@ -174,6 +175,7 @@ module Opts = struct
       abstract_locations = None;
       all = None;
       autoimports = None;
+      autoimports_ranked_by_usage = None;
       automatic_require_default = None;
       babel_loose_array_spread = None;
       cycle_errors = false;
@@ -774,6 +776,9 @@ module Opts = struct
     [
       ("all", boolean (fun opts v -> Ok { opts with all = Some v }));
       ("autoimports", boolean (fun opts v -> Ok { opts with autoimports = Some v }));
+      ( "autoimports_ranked_by_usage",
+        boolean (fun opts v -> Ok { opts with autoimports_ranked_by_usage = Some v })
+      );
       ("babel_loose_array_spread", babel_loose_array_spread_parser);
       ("emoji", boolean (fun opts v -> Ok { opts with emoji = Some v }));
       ("enums", boolean (fun opts v -> Ok { opts with enums = v }));
@@ -1403,6 +1408,8 @@ let abstract_locations c = c.options.Opts.abstract_locations
 let all c = c.options.Opts.all
 
 let autoimports c = c.options.Opts.autoimports
+
+let autoimports_ranked_by_usage c = c.options.Opts.autoimports_ranked_by_usage
 
 let automatic_require_default c = c.options.Opts.automatic_require_default
 

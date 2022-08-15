@@ -44,7 +44,7 @@ val subtract_count : t -> t -> t
 
 val find : string -> t -> int ExportMap.t
 
-val find_seq : string -> t -> export Seq.t
+val find_seq : string -> t -> (export * int) Seq.t
 
 val fold_names : f:('acc -> string -> int ExportMap.t -> 'acc) -> init:'acc -> t -> 'acc
 

@@ -17,7 +17,7 @@ type search_result = {
 [@@deriving show]
 
 type search_results = {
-  results: search_result list;
+  results: (search_result * int) list;
   is_incomplete: bool;
 }
 [@@deriving show]

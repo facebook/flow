@@ -211,7 +211,9 @@ let find name (t : t) =
 
 let find_seq name t =
   match SMap.find_opt name t with
-  | Some t -> List.to_seq (ExportMap.keys t)
+  | Some t ->
+    let list = ExportMap.bindings t in
+    List.to_seq list
   | None -> Seq.empty
 
 (** [keys t] returns all of the exported names from every file in [t] *)

@@ -24,6 +24,7 @@ val autocomplete_get_results :
   ast:(Loc.t, Loc.t) Flow_ast.Program.t ->
   typed_ast:(ALoc.t, ALoc.t * Type.t) Flow_ast.Program.t ->
   imports:bool ->
+  imports_ranked_usage:bool ->
   string option ->
   Loc.t ->
   string option * ALoc.t option * (string * autocomplete_service_result)

@@ -19,7 +19,7 @@ type search_result = {
 [@@deriving show]
 
 type search_results = {
-  results: search_result list;
+  results: (search_result * int) list;
   is_incomplete: bool;
 }
 [@@deriving show]
@@ -110,25 +110,36 @@ let search_result_of_export ~query name source kind =
     where each match in [matches] might contribute multiple results.
     sets [is_incomplete] if [n] is exceeded. *)
 let take =
-  let rec helper ~n ~query acc (seq : (Export_index.source * Export_index.kind * string) Seq.t) =
+  let rec helper
+      ~n ~query acc (seq : ((Export_index.source * Export_index.kind * string) * int * float) Seq.t)
+      =
     match seq () with
     | Seq.Nil -> { results = Base.List.rev acc; is_incomplete = false }
-    | Seq.Cons ((source, kind, value), rest) ->
+    | Seq.Cons (((source, kind, value), count, fuzzy_score), rest) ->
       if n <= 0 then
         { results = Base.List.rev acc; is_incomplete = true }
-      else (
-        match search_result_of_export ~query value source kind with
-        | Some result -> helper ~n:(n - 1) ~query (result :: acc) rest
-        | None -> helper ~n ~query acc rest
-      )
+      else
+        let open Export_index in
+        let type_score =
+          match kind with
+          | Default -> 2
+          | Named
+          | NamedType ->
+            1
+          | Namespace -> 0
+        in
+        let score = count + int_of_float ((fuzzy_score ** 4.0) *. 1000.0) + type_score in
+        (match search_result_of_export ~query value source kind with
+        | Some result -> helper ~n:(n - 1) ~query ((result, score) :: acc) rest
+        | None -> helper ~n ~query acc rest)
   in
   fun ~n ~index ~query fuzzy_matches ->
     let seq =
       fuzzy_matches
       |> List.to_seq
-      |> Seq.flat_map (fun { Fuzzy_path.value; _ } ->
+      |> Seq.flat_map (fun { Fuzzy_path.value; score } ->
              Export_index.find_seq value index
-             |> Seq.map (fun (source, kind) -> (source, kind, value))
+             |> Seq.map (fun ((source, kind), count) -> ((source, kind, value), count, score))
          )
     in
     helper ~n ~query [] seq
