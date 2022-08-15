@@ -3179,6 +3179,14 @@ struct
       (match elements with
       | [] ->
         (* empty array, analogous to object with implicit properties *)
+        ( if Context.array_literal_providers cx then
+          match hint with
+          | Hint_t _
+          | Hint_Decomp _
+          | Hint_Placeholder ->
+            ()
+          | Hint_None -> Flow_js.add_output cx Error_message.(EEmptyArrayNoProvider { loc })
+        );
         let element_reason = mk_reason Reason.unknown_elem_empty_array_desc loc in
         let elemt = Tvar.mk cx element_reason in
         let reason = replace_desc_reason REmptyArrayLit reason in

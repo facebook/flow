@@ -438,6 +438,7 @@ and 'loc t' =
       name: string;
       static: bool;
     }
+  | EEmptyArrayNoProvider of { loc: 'loc }
 
 and 'loc null_write = {
   null_loc: 'loc;
@@ -1028,6 +1029,7 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
     ERecursiveDefinition { reason = map_reason reason; recursion = Nel.map f recursion }
   | EDuplicateClassMember { loc; name; static } ->
     EDuplicateClassMember { loc = f loc; name; static }
+  | EEmptyArrayNoProvider { loc } -> EEmptyArrayNoProvider { loc = f loc }
 
 let desc_of_reason r = Reason.desc_of_reason ~unwrap:(is_scalar_reason r) r
 
@@ -1254,7 +1256,8 @@ let util_use_op_of_msg nope util = function
   | ERecursiveDefinition _
   | EAnnotationInference _
   | EAnnotationInferenceRecursive _
-  | EDuplicateClassMember _ ->
+  | EDuplicateClassMember _
+  | EEmptyArrayNoProvider _ ->
     nope
 
 (* Not all messages (i.e. those whose locations are based on use_ops) have locations that can be
@@ -1429,6 +1432,7 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | ESpeculationAmbiguous { reason; _ } -> Some (poly_loc_of_reason reason)
   | EBuiltinLookupFailed { reason; _ } -> Some (poly_loc_of_reason reason)
   | EDuplicateClassMember { loc; _ } -> Some loc
+  | EEmptyArrayNoProvider { loc } -> Some loc
   | EUnableToSpread _
   | ECannotSpreadInterface _
   | ECannotSpreadIndexerOnRight _
@@ -3677,6 +3681,12 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
             text " member names must be unique.";
           ];
       }
+  | EEmptyArrayNoProvider { loc = _ } ->
+    Normal
+      {
+        features =
+          [text "Cannot determine type of empty array literal. Please provide an annotation."];
+      }
   | EInvalidDeclaration { declaration = reason; null_write = None } ->
     Normal
       {
@@ -4098,6 +4108,7 @@ let error_code_of_message err : error_code option =
   | EDefinitionCycle _ -> Some DefinitionCycle
   | ERecursiveDefinition _ -> Some RecursiveDefinition
   | EDuplicateClassMember _ -> Some DuplicateClassMember
+  | EEmptyArrayNoProvider _ -> Some EmptyArrayNoAnnot
   (* lints should match their lint name *)
   | EUntypedTypeImport _
   | EUntypedImport _

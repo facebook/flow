@@ -1103,8 +1103,11 @@ module New_env = struct
             in
             Context.add_constrained_write cx (elem_t, use_op, constrain_t);
             (elem_t, None, reason)
-          ) else
+          ) else (
+            if Context.array_literal_providers cx then
+              Flow_js.add_output cx Error_message.(EEmptyArrayNoProvider { loc });
             (Tvar.mk cx element_reason, Some [], replace_desc_reason REmptyArrayLit reason)
+          )
         in
         let t = DefT (reason, bogus_trust (), ArrT (ArrayAT (elem_t, elems))) in
         let t = Tvar.mk_where cx reason (fun t' -> Flow_js.unify cx t t') in

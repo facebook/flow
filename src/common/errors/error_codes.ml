@@ -30,6 +30,7 @@ type error_code =
   | DuplicateJsxDecl
   | DuplicateModule
   | DuplicateProvideModuleDecl
+  | EmptyArrayNoAnnot
   | EnumValueAsType
   | EscapedGeneric
   | ExponentialSpread
@@ -202,6 +203,7 @@ let string_of_code : error_code -> string = function
   | DeprecatedType -> "deprecated-type"
   | DeprecatedUtility -> "deprecated-utility"
   | DuplicateClassMember -> "duplicate-class-member"
+  | EmptyArrayNoAnnot -> "missing-empty-array-annot"
   | DuplicateEnumInit -> "duplicate-enum-init"
   | DuplicateFlowDecl -> "duplicate-flow-decl"
   | DuplicateJsxDecl -> "duplicate-jsx-decl"

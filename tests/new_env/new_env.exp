@@ -66,6 +66,14 @@ References:
           ^ [2]
 
 
+Error ------------------------------------------------------------------------------------------ constrain_array.js:10:5
+
+Cannot determine type of empty array literal. Please provide an annotation. [missing-empty-array-annot]
+
+   10| var y = []
+           ^
+
+
 Error ------------------------------------------------------------------------------------------ constrain_array.js:11:5
 
 Cannot assign `100` to `y` because number [1] is incompatible with empty array literal [2]. All writes to `y` must be
@@ -162,6 +170,14 @@ References:
    constrain_array.js:26:7
    26|   var xin = [];
              ^^^ [3]
+
+
+Error -------------------------------------------------------------------------------------- empty_array_literals.js:5:7
+
+Cannot determine type of empty array literal. Please provide an annotation. [missing-empty-array-annot]
+
+   5| const x0 = []; // error
+            ^^
 
 
 Error --------------------------------------------------------------------------------------------------- globals.js:4:2
@@ -679,4 +695,4 @@ References:
 
 
 
-Found 40 errors
+Found 42 errors

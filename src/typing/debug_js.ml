@@ -1843,6 +1843,7 @@ let dump_error_message =
     | ERecursiveDefinition _ -> "ERecursiveDefinition"
     | EDuplicateClassMember { loc; name; _ } ->
       spf "EDuplicateClassMember (%s) (%s)" (string_of_aloc loc) name
+    | EEmptyArrayNoProvider { loc } -> spf "EEmptyArrayNoProvider (%s)" (string_of_aloc loc)
 
 module Verbose = struct
   let verbose_in_file cx verbose =
