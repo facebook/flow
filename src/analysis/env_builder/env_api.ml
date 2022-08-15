@@ -164,7 +164,7 @@ module type S = sig
     | AssigningWrite of L.t virtual_reason
     | GlobalWrite of L.t virtual_reason
     | NonAssigningWrite
-    | EmptyArrayWrite of L.t virtual_reason * L.LSet.t
+    | EmptyArrayWrite of L.t * L.t virtual_reason * L.LSet.t
 
   type toplevel_member = Reason.name * read
 
@@ -368,7 +368,7 @@ module Make
     | AssigningWrite of L.t virtual_reason
     | GlobalWrite of L.t virtual_reason
     | NonAssigningWrite
-    | EmptyArrayWrite of L.t virtual_reason * L.LSet.t
+    | EmptyArrayWrite of L.t * L.t virtual_reason * L.LSet.t
 
   type toplevel_member = Reason.name * read
 

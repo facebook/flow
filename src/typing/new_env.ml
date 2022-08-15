@@ -1063,7 +1063,7 @@ module New_env = struct
       | Env_api.GlobalWrite reason ->
         let t = Tvar.mk cx reason in
         Loc_env.initialize env def_loc_type loc t
-      | Env_api.EmptyArrayWrite (reason, arr_providers) ->
+      | Env_api.EmptyArrayWrite (arr_loc, reason, arr_providers) ->
         let (elem_t, elems, reason) =
           let element_reason = mk_reason Reason.unknown_elem_empty_array_desc loc in
           if Context.array_literal_providers cx && ALocSet.cardinal arr_providers > 0 then (
@@ -1111,6 +1111,11 @@ module New_env = struct
         in
         let t = DefT (reason, bogus_trust (), ArrT (ArrayAT (elem_t, elems))) in
         let t = Tvar.mk_where cx reason (fun t' -> Flow_js.unify cx t t') in
+        let cache = Context.node_cache cx in
+        let exp =
+          ((arr_loc, t), Flow_ast.Expression.(Array { Array.elements = []; comments = None }))
+        in
+        Node_cache.set_expression cache exp;
         (* Treat everything as inferred for now for the purposes of annotated vs inferred *)
         Loc_env.initialize env def_loc_type loc t
       | Env_api.NonAssigningWrite ->

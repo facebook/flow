@@ -74,14 +74,6 @@ Cannot determine type of empty array literal. Please provide an annotation. [mis
            ^
 
 
-Error ------------------------------------------------------------------------------------------ constrain_array.js:10:9
-
-Cannot determine type of empty array literal. Please provide an annotation. [missing-empty-array-annot]
-
-   10| var y = []
-               ^^
-
-
 Error ------------------------------------------------------------------------------------------ constrain_array.js:11:5
 
 Cannot assign `100` to `y` because number [1] is incompatible with empty array literal [2]. All writes to `y` must be
@@ -186,14 +178,6 @@ Cannot determine type of empty array literal. Please provide an annotation. [mis
 
    5| const x0 = []; // error
             ^^
-
-
-Error ------------------------------------------------------------------------------------- empty_array_literals.js:5:12
-
-Cannot determine type of empty array literal. Please provide an annotation. [missing-empty-array-annot]
-
-   5| const x0 = []; // error
-                 ^^
 
 
 Error ------------------------------------------------------------------------------------- empty_array_literals.js:7:17
@@ -727,4 +711,4 @@ References:
 
 
 
-Found 46 errors
+Found 44 errors

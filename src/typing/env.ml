@@ -230,7 +230,7 @@ module Env : Env_sig.S = struct
           (fun (def_loc_type, loc) env_entry env ->
             match env_entry with
             | Env_api.AssigningWrite reason
-            | Env_api.EmptyArrayWrite (reason, _)
+            | Env_api.EmptyArrayWrite (_, reason, _)
             | Env_api.GlobalWrite reason ->
               let t = Tvar.mk cx reason in
               Loc_env.initialize env def_loc_type loc t

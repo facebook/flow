@@ -2413,7 +2413,7 @@ module Make
             ) ->
             begin
               match (init, id) with
-              | ( Some (_, Ast.Expression.Array { Ast.Expression.Array.elements = []; _ }),
+              | ( Some (arr_loc, Ast.Expression.Array { Ast.Expression.Array.elements = []; _ }),
                   ( _,
                     Identifier
                       {
@@ -2430,7 +2430,7 @@ module Make
                   Base.Option.value_map
                     ~f:(fun { Env_api.Provider_api.array_providers; _ } ->
                       ( Val.empty_array reason array_providers,
-                        Env_api.EmptyArrayWrite (reason, array_providers)
+                        Env_api.EmptyArrayWrite (arr_loc, reason, array_providers)
                       ))
                     ~default:(Val.one reason, Env_api.AssigningWrite reason)
                     (Env_api.Provider_api.providers_of_def provider_info name_loc)
