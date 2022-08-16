@@ -60,28 +60,35 @@ let add_imports
     imports (resolved_modules : Parsing_heaps.resolved_module SMap.t) (index : Export_index.t) =
   Base.List.fold imports ~init:index ~f:(fun acc (import : Imports.import) ->
       let open Imports in
-      let result = SMap.find_opt import.unresolved_source resolved_modules in
-      match result with
-      | Some (Ok module_name) ->
-        let (source, module_name) = (module_name, string_of_modulename module_name) in
-        let source =
-          match source with
-          | Modulename.String str -> Builtin str
-          | Modulename.Filename fn -> File_key fn
-        in
-        let (kind, name) =
-          match import.Imports.kind with
-          | Imports.Default -> (Export_index.Default, module_name)
-          | Imports.Named -> (Export_index.Named, import.export)
-          | Imports.Namespace -> (Export_index.NamedType, import.export)
-          | Imports.NamedType -> (Export_index.Namespace, import.export)
-        in
+      match import.source with
+      | Imports.Global ->
+        let name = import.export in
+        let acc = Export_index.add name Export_index.Global Export_index.NamedType acc in
+        Export_index.add name Export_index.Global Export_index.Named acc
+      | Unresolved_source string ->
+        let result = SMap.find_opt string resolved_modules in
+        (match result with
+        | Some (Ok module_name) ->
+          let (source, module_name) = (module_name, string_of_modulename module_name) in
+          let source =
+            match source with
+            | Modulename.String str -> Builtin str
+            | Modulename.Filename fn -> File_key fn
+          in
+          let (kind, name) =
+            match import.Imports.kind with
+            | Imports.Default -> (Export_index.Default, module_name)
+            | Imports.Named -> (Export_index.Named, import.export)
+            | Imports.Namespace -> (Export_index.NamedType, import.export)
+            | Imports.NamedType -> (Export_index.Namespace, import.export)
+            | Imports.Unknown -> failwith "Unknown Kind"
+          in
 
-        Export_index.add name source kind acc
-      | Some (Error _)
-      | None ->
-        (*Could not find resolved_requires key for this unresolved_source*)
-        acc
+          Export_index.add name source kind acc
+        | Some (Error _)
+        | None ->
+          (*Could not find resolved_requires key for this unresolved_source*)
+          acc)
   )
 
 (** [add_exports_of_checked_file file_key parse haste_info index] extracts the
