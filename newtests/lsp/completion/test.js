@@ -6229,7 +6229,7 @@ b.te
                 {
                   label: 'B',
                   kind: 13,
-                  detail: 'type B = empty',
+                  detail: 'type B = any',
                   sortText: '00000000000000000002',
                   insertTextFormat: 1,
                   textEdit: {

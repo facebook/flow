@@ -420,7 +420,7 @@ type-destructor.js:169:18,169:28
 
 type-destructor.js:171:18
 Flags:
-<K: empty, T: {...}>() => T[K]
+<K: any, T: {...}>() => T[K]
 type-destructor.js:171:18,171:28
 
 type-destructor.js:175:6
@@ -650,7 +650,7 @@ type-destructor.js:169:18,169:28
 
 type-destructor.js:171:18
 Flags: --evaluate-type-destructors
-<K: empty, T: {...}>() => empty
+<K: any, T: {...}>() => any
 type-destructor.js:171:18,171:28
 
 type-destructor.js:175:6

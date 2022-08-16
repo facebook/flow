@@ -136,14 +136,6 @@ References:
 
 Error ---------------------------------------------------------------------------------------- regression_tests.js:61:30
 
-Internal error: unconstrained tvar during tvar resolution
-
-   61| declare var NonexistentType: ModScope2;
-                                    ^^^^^^^^^
-
-
-Error ---------------------------------------------------------------------------------------- regression_tests.js:61:30
-
 Cannot resolve name `ModScope2`. [cannot-resolve-name]
 
    61| declare var NonexistentType: ModScope2;
@@ -165,4 +157,4 @@ References:
 
 
 
-Found 17 errors
+Found 16 errors

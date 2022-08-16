@@ -11992,9 +11992,9 @@ Flags: --lsp
 }
 {
   "label":"T",
-  "labelDetails":{"detail":"type T = empty"},
+  "labelDetails":{"detail":"type T = any"},
   "kind":13,
-  "detail":"type T = empty",
+  "detail":"type T = any",
   "sortText":"00000000000000000000",
   "insertTextFormat":1,
   "textEdit":{
@@ -13801,9 +13801,9 @@ Flags: --lsp
 }
 {
   "label":"T",
-  "labelDetails":{"detail":"type T = empty"},
+  "labelDetails":{"detail":"type T = any | void"},
   "kind":13,
-  "detail":"type T = empty",
+  "detail":"type T = any | void",
   "sortText":"00000000000000000000",
   "insertTextFormat":1,
   "textEdit":{

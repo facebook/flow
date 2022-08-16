@@ -1600,12 +1600,16 @@ module Make (Flow : INPUT) : OUTPUT = struct
     | (DefT (enum_reason, _, EnumT _), DefT (reason, _, TypeT _)) ->
       add_output cx ~trace Error_message.(EEnumMemberUsedAsType { reason; enum_reason })
     (* non-class/function values used in annotations are errors *)
-    | (_, DefT (reason_use, _, TypeT _)) ->
+    | (_, DefT (reason_use, _, TypeT (_, t))) ->
       (match l with
       (* Short-circut as we already error on the unresolved name. *)
-      | AnyT (_, AnyError _) -> ()
-      | AnyT _ -> add_output cx ~trace Error_message.(EAnyValueUsedAsType { reason_use })
-      | _ -> add_output cx ~trace Error_message.(EValueUsedAsType { reason_use }))
+      | AnyT (_, AnyError _) -> rec_flow_t cx ~use_op:unknown_use trace (l, t)
+      | AnyT _ ->
+        rec_flow_t cx trace ~use_op:unknown_use (AnyT.error (reason_of_t l), t);
+        add_output cx ~trace Error_message.(EAnyValueUsedAsType { reason_use })
+      | _ ->
+        rec_flow_t cx trace ~use_op:unknown_use (AnyT.error (reason_of_t l), t);
+        add_output cx ~trace Error_message.(EValueUsedAsType { reason_use }))
     | (DefT (rl, _, ClassT l), DefT (_, _, ClassT u)) ->
       rec_flow cx trace (reposition cx ~trace (aloc_of_reason rl) l, UseT (use_op, u))
     | ( DefT (_, _, FunT (static1, _)),
