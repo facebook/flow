@@ -45,6 +45,10 @@ declare module '@theme-original/CodeBlock' {
   declare module.exports: any;
 }
 
+declare module '@docusaurus/theme-common/internal' {
+  declare module.exports: any;
+}
+
 declare module '@theme/BlogPostAuthors' {
   declare module.exports: any;
 }

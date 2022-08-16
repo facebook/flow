@@ -181,6 +181,7 @@ module.exports = {
         blog: {
           path: '../website/_posts',
           postsPerPage: 50,
+          showReadingTime: false,
           blogSidebarCount: 'ALL',
           blogSidebarTitle: 'All our posts',
         },

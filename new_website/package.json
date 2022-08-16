@@ -12,24 +12,24 @@
     "serve": "docusaurus serve"
   },
   "dependencies": {
-    "@docusaurus/core": "2.0.0-beta.18",
-    "@docusaurus/preset-classic": "2.0.0-beta.18",
-    "@mdx-js/react": "^1.6.21",
-    "@monaco-editor/react": "^4.4.1",
+    "@docusaurus/core": "2.0.1",
+    "@docusaurus/preset-classic": "2.0.1",
+    "@mdx-js/react": "^1.6.22",
+    "@monaco-editor/react": "^4.4.5",
     "@svgr/webpack": "^5.5.0",
-    "clsx": "^1.1.1",
+    "clsx": "^1.2.1",
     "file-loader": "^6.2.0",
     "lz-string": "^1.4.4",
-    "monaco-editor": "^0.33.0",
+    "monaco-editor": "^0.34.0",
     "react": "^17.0.2",
     "react-dom": "^17.0.2",
     "url-loader": "^4.1.1",
     "vscode-oniguruma": "^1.6.2",
-    "vscode-textmate": "^6.0.0"
+    "vscode-textmate": "^7.0.1"
   },
   "devDependencies": {
     "@babel/preset-flow": "^7.16.7",
-    "@docusaurus/remark-plugin-npm2yarn": "^2.0.0-beta.4",
+    "@docusaurus/remark-plugin-npm2yarn": "^2.0.1",
     "flow-typed": "^3.7.0",
     "raw-loader": "^4.0.2"
   },
