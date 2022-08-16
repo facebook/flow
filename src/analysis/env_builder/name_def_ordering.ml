@@ -566,8 +566,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) = struct
       | Function { synthesizable_from_annotation; function_; function_loc = _; tparams_map; hint }
         ->
         depends_of_fun synthesizable_from_annotation tparams_map hint function_
-      | Class { class_; class_loc = _; class_implicit_this_tparam = _; missing_annotations = _ } ->
-        depends_of_class class_
+      | Class { class_; class_loc = _; class_implicit_this_tparam = _ } -> depends_of_class class_
       | DeclaredClass (_, decl) -> depends_of_declared_class decl
       | TypeAlias (_, alias) -> depends_of_alias alias
       | OpaqueType (_, alias) -> depends_of_opaque alias

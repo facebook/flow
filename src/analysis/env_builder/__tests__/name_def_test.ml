@@ -436,7 +436,7 @@ x = 10;
   |};
   [%expect {|
     [
-      (3, 6) to (3, 7) => class (annotated=false) C;
+      (3, 6) to (3, 7) => class C;
       (4, 10) to (4, 11) => val (4, 14) to (4, 16);
       (6, 0) to (6, 1) => val (6, 4) to (6, 6)
     ] |}]
@@ -450,7 +450,7 @@ let foo = class C<Y: typeof x> { };
     [
       (2, 4) to (2, 5) => val (2, 8) to (2, 10);
       (3, 4) to (3, 7) => val (3, 10) to (3, 34);
-      (3, 16) to (3, 17) => class (annotated=true) C;
+      (3, 16) to (3, 17) => class C;
       (3, 18) to (3, 19) => tparam (3, 18) to (3, 29)
     ] |}]
 

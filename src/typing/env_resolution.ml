@@ -610,7 +610,7 @@ module Make (Env : Env_sig.S) (Statement : Statement_sig.S with module Env := En
           { function_; synthesizable_from_annotation = true; function_loc = _; tparams_map; hint }
         ->
         resolve_annotated_function cx ~hint def_reason tparams_map function_
-      | Class { class_; class_loc; class_implicit_this_tparam = _; missing_annotations = _ } ->
+      | Class { class_; class_loc; class_implicit_this_tparam = _ } ->
         resolve_class cx id_loc def_reason class_loc class_
       | MemberAssign { member_loc = _; member = _; rhs } ->
         (expression cx ~hint:dummy_hint rhs, unknown_use)

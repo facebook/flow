@@ -447,20 +447,6 @@ module Make (Env : Env_sig.S) : S = struct
     in
     let env = Loc_env.with_info Scope.Global info in
     let name_def_graph = Name_def.find_defs env_entries providers aloc_ast in
-    let () =
-      if Context.enforce_class_annotations cx && RequireAnnot.should_require_annot cx then
-        let open Name_def in
-        Env_api.EnvMap.iter
-          (fun _ (def, _, _, _) ->
-            match def with
-            | Class { missing_annotations; _ } ->
-              Base.List.iter
-                ~f:(fun reason ->
-                  Flow_js.add_output cx Error_message.(EMissingLocalAnnotation reason))
-                missing_annotations
-            | _ -> ())
-          name_def_graph
-    in
     let components = NameDefOrdering.build_ordering cx info name_def_graph in
     if Context.cycle_errors cx then Base.List.iter ~f:(Cycles.handle_component cx) components;
     Context.set_environment cx env;

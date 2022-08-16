@@ -137,7 +137,6 @@ type def =
       tparams_map: tparams_map;
     }
   | Class of {
-      missing_annotations: reason list;
       class_implicit_this_tparam: class_implicit_this_tparam;
       class_: (ALoc.t, ALoc.t) Ast.Class.t;
       class_loc: ALoc.t;
@@ -210,16 +209,9 @@ module Print = struct
         )
     | DeclaredClass (_, { Ast.Statement.DeclareClass.id = (_, { Ast.Identifier.name; _ }); _ }) ->
       spf "declared class %s" name
-    | Class
-        {
-          class_ = { Ast.Class.id; _ };
-          class_implicit_this_tparam = _;
-          missing_annotations;
-          class_loc = _;
-        } ->
+    | Class { class_ = { Ast.Class.id; _ }; class_implicit_this_tparam = _; class_loc = _ } ->
       spf
-        "class (annotated=%b) %s"
-        (Base.List.is_empty missing_annotations)
+        "class %s"
         (Base.Option.value_map
            ~f:(fun (_, { Ast.Identifier.name; _ }) -> name)
            ~default:"<anonymous>"
@@ -443,105 +435,6 @@ let def_of_function tparams_map hint function_loc function_ =
       function_;
       tparams_map;
     }
-
-let def_of_class
-    loc
-    class_implicit_this_tparam
-    ({ Ast.Class.body = (_, { Ast.Class.Body.body; _ }); _ } as class_) =
-  let open Ast.Class.Body in
-  let missing_annotations =
-    Base.List.concat_map
-      ~f:(function
-        | Method
-            ( _,
-              {
-                Ast.Class.Method.key =
-                  Ast.Expression.Object.Property.Identifier
-                    (_, { Ast.Identifier.name = "constructor"; _ });
-                _;
-              }
-            ) ->
-          []
-        | Method (_, { Ast.Class.Method.value = (_, value); _ }) ->
-          func_missing_annotations ~allow_this:true value
-        | Property
-            ( _,
-              {
-                Ast.Class.Property.key = Ast.Expression.Object.Property.Identifier _;
-                annot = Ast.Type.Available _;
-                _;
-              }
-            ) ->
-          []
-        | Property
-            ( _,
-              {
-                Ast.Class.Property.key = Ast.Expression.Object.Property.Identifier _;
-                annot = Ast.Type.Missing _;
-                value =
-                  Ast.Class.Property.Initialized
-                    (_, (Ast.Expression.Function fn | Ast.Expression.ArrowFunction fn));
-                _;
-              }
-            ) ->
-          func_missing_annotations ~allow_this:true fn
-        | Property
-            ( _,
-              {
-                Ast.Class.Property.key = Ast.Expression.Object.Property.Identifier _;
-                annot = Ast.Type.Missing _;
-                value = Ast.Class.Property.Initialized (_, Ast.Expression.Literal _);
-                _;
-              }
-            ) ->
-          []
-        | Property
-            ( _,
-              {
-                Ast.Class.Property.key =
-                  Ast.Expression.Object.Property.Identifier (_, { Ast.Identifier.name; _ });
-                annot = Ast.Type.Missing loc;
-                value = Ast.Class.Property.Initialized _;
-                _;
-              }
-            )
-        | Property
-            ( loc,
-              {
-                Ast.Class.Property.key =
-                  Ast.Expression.Object.Property.Identifier (_, { Ast.Identifier.name; _ });
-                annot = Ast.Type.Missing _;
-                value = Ast.Class.Property.(Uninitialized | Declared);
-                _;
-              }
-            ) ->
-          (* To correspond with other local inference annotation locations,
-             point at the annot if it's initialized and the whole property if it's not *)
-          [mk_reason (RProperty (Some (OrdinaryName name))) loc]
-        | Property (loc, _) -> [mk_reason (RProperty None) loc]
-        | PrivateField (_, { Ast.Class.PrivateField.annot = Ast.Type.Available _; _ }) -> []
-        | PrivateField
-            ( _,
-              {
-                Ast.Class.PrivateField.key = (_, { Ast.PrivateName.name; _ });
-                annot = Ast.Type.Missing loc;
-                value = Ast.Class.Property.Initialized _;
-                _;
-              }
-            )
-        | PrivateField
-            ( loc,
-              {
-                Ast.Class.PrivateField.key = (_, { Ast.PrivateName.name; _ });
-                annot = Ast.Type.Missing _;
-                value = Ast.Class.Property.(Uninitialized | Declared);
-                _;
-              }
-            ) ->
-          [mk_reason (RPrivateProperty name) loc])
-      body
-  in
-  Class { missing_annotations; class_implicit_this_tparam; class_; class_loc = loc }
 
 let func_scope_kind ?key { Ast.Function.async; generator; predicate; _ } =
   match (async, generator, predicate, key) with
@@ -860,10 +753,13 @@ class def_finder env_entries providers toplevel_scope =
               this#add_ordinary_binding
                 id_loc
                 reason
-                (def_of_class loc class_implicit_this_tparam expr)
+                (Class { class_loc = loc; class_implicit_this_tparam; class_ = expr })
             | None ->
               let reason = mk_reason (RType (OrdinaryName "<<anonymous class>>")) loc in
-              this#add_ordinary_binding loc reason (def_of_class loc class_implicit_this_tparam expr)
+              this#add_ordinary_binding
+                loc
+                reason
+                (Class { class_loc = loc; class_implicit_this_tparam; class_ = expr })
           end;
           expr
       )
