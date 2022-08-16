@@ -1603,7 +1603,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
     | (_, DefT (reason_use, _, TypeT _)) ->
       (match l with
       (* Short-circut as we already error on the unresolved name. *)
-      | AnyT (_, AnyError (Some UnresolvedName)) -> ()
+      | AnyT (_, AnyError _) -> ()
       | AnyT _ -> add_output cx ~trace Error_message.(EAnyValueUsedAsType { reason_use })
       | _ -> add_output cx ~trace Error_message.(EValueUsedAsType { reason_use }))
     | (DefT (rl, _, ClassT l), DefT (_, _, ClassT u)) ->

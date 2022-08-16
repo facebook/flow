@@ -576,6 +576,11 @@ module Make (Flow : INPUT) : OUTPUT = struct
           | IntersectionCases (ls, upper) ->
             let err =
               let reason_lower = mk_intersection_reason r ls in
+              Default_resolve.default_resolve_touts
+                ~flow:(flow_t cx)
+                cx
+                (aloc_of_reason reason_lower)
+                upper;
               match upper with
               | UseT (use_op, t) ->
                 Error_message.EIncompatibleDefs

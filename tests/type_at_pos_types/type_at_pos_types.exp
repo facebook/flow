@@ -314,7 +314,7 @@ generics.js:22:1 = {
   "end":2
 }
 generics.js:30:13 = {
-  "type":"empty",
+  "type":"any (implicit)",
   "reasons":[],
   "loc":{
     "source":"generics.js",

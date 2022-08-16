@@ -1244,6 +1244,7 @@ struct
             lhs_reason
             ~useful:
               (match l with
+              | AnyT (_, AnyError _) -> false
               | DefT (_, _, MixedT _)
               | AnyT _ ->
                 true
@@ -5417,6 +5418,11 @@ struct
         | (FunProtoCallT reason, _) ->
           rec_flow cx trace (FunProtoT reason, u)
         | (_, LookupT { propref; lookup_action; _ }) ->
+          Default_resolve.default_resolve_touts
+            ~flow:(rec_flow_t cx trace ~use_op:unknown_use)
+            cx
+            (reason_of_t l |> aloc_of_reason)
+            u;
           let use_op = Some (use_op_of_lookup_action lookup_action) in
           add_output
             cx
@@ -5434,6 +5440,11 @@ struct
                }
             )
         | _ ->
+          Default_resolve.default_resolve_touts
+            ~flow:(rec_flow_t cx trace ~use_op:unknown_use)
+            cx
+            (reason_of_t l |> aloc_of_reason)
+            u;
           add_output
             cx
             ~trace
@@ -6012,7 +6023,8 @@ struct
        this can be handled by the pre-existing rules *)
     | UseT (_, UnionT _)
     | UseT (_, IntersectionT _) (* Already handled in the wildcard case in __flow *)
-    | UseT (_, OpenT _) ->
+    | UseT (_, OpenT _)
+    | UseT (_, TypeDestructorTriggerT _) ->
       false
     (* These types have no t_out, so can't propagate anything. Thus we short-circuit by returning
        true *)
@@ -6128,7 +6140,8 @@ struct
     (* Should never occur as the lower bound of any *)
     | InternalT (ChoiceKitT _)
     | InternalT (ExtendsT _)
-    | ModuleT _ ->
+    | ModuleT _
+    | TypeDestructorTriggerT _ ->
       false
     (* Need special action later *)
     | OpenT _ -> false
@@ -6151,8 +6164,7 @@ struct
     | DefT (_, _, ObjT _)
     | DefT (_, _, InstanceT _)
     | DefT _
-    | AnyT _
-    | TypeDestructorTriggerT _ ->
+    | AnyT _ ->
       true
 
   (*********************)

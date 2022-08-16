@@ -467,7 +467,7 @@ type-destructor.js:31:6,31:25
 
 type-destructor.js:34:6
 Flags: --evaluate-type-destructors
-type ValuesPoly<X> = empty
+type ValuesPoly<X> = any (implicit)
 type-destructor.js:34:6,34:15
 
 type-destructor.js:37:6

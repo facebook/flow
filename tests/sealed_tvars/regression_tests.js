@@ -59,3 +59,6 @@ declare module DeclaredModule2 {
 }
 
 declare var NonexistentType: ModScope2;
+
+declare var AString: string;
+const ResultOfError = -AString;

@@ -598,7 +598,7 @@ module rec ConsGen : S = struct
     | (l, Annot_UseT_TypeT reason_use) ->
       (match l with
       (* Short-circut as we already error on the unresolved name. *)
-      | AnyT (_, AnyError (Some UnresolvedName)) -> ()
+      | AnyT (_, AnyError _) -> ()
       | AnyT _ -> Flow_js_utils.add_output cx Error_message.(EAnyValueUsedAsType { reason_use })
       | _ -> Flow_js_utils.add_output cx Error_message.(EValueUsedAsType { reason_use }));
       AnyT.error reason_use

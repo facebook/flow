@@ -9958,9 +9958,9 @@ Flags: --lsp
 }
 {
   "label":"x",
-  "labelDetails":{"detail":": empty"},
+  "labelDetails":{"detail":": any"},
   "kind":6,
-  "detail":"empty",
+  "detail":"any",
   "sortText":"00000000000000000000",
   "insertTextFormat":1,
   "textEdit":{

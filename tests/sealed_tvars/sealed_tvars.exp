@@ -150,5 +150,19 @@ Cannot resolve name `ModScope2`. [cannot-resolve-name]
                                     ^^^^^^^^^
 
 
+Error ---------------------------------------------------------------------------------------- regression_tests.js:64:23
 
-Found 16 errors
+string [1] is not a number. [incompatible-use]
+
+   regression_tests.js:64:23
+   64| const ResultOfError = -AString;
+                             ^^^^^^^^
+
+References:
+   regression_tests.js:63:22
+   63| declare var AString: string;
+                            ^^^^^^ [1]
+
+
+
+Found 17 errors
