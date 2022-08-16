@@ -2789,7 +2789,7 @@ struct
                       ~use_op
                       ~reason_op
                       ~reason_tapp
-                      ~has_context:false
+                      ~has_context
                   in
                   rec_flow cx trace (t_, u)
                 | Some targs ->
