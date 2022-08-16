@@ -581,7 +581,8 @@ let max_workers cx = cx.metadata.max_workers
 
 let missing_module_generators cx = cx.metadata.missing_module_generators
 
-let array_literal_providers cx = cx.metadata.array_literal_providers
+let array_literal_providers cx =
+  cx.metadata.array_literal_providers || env_mode cx = Options.(SSAEnv Enforced)
 
 let jsx cx = cx.metadata.jsx
 
