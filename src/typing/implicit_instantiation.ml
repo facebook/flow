@@ -427,6 +427,7 @@ module type KIT = sig
   val run :
     Context.t ->
     Implicit_instantiation_check.t ->
+    has_context:bool ->
     ?cache:Reason.t list ->
     trace ->
     use_op:use_op ->
@@ -475,8 +476,8 @@ module Kit (FlowJs : Flow_common.S) (Instantiation_helper : Flow_js_utils.Instan
     let poly_t = check.Implicit_instantiation_check.poly_t in
     FlowJs.instantiate_poly cx trace ~use_op ~reason_op ~reason_tapp ?cache poly_t
 
-  let run cx check =
-    Context.add_possibly_speculating_implicit_instantiation_check cx check;
+  let run cx check ~has_context =
+    if not has_context then Context.add_possibly_speculating_implicit_instantiation_check cx check;
     match Context.env_mode cx with
     | Options.(SSAEnv Enforced) -> run_pierce cx check
     | _ -> run_instantiate_poly cx check

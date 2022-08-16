@@ -2767,6 +2767,7 @@ struct
                       ~use_op
                       ~reason_op
                       ~reason_tapp
+                      ~has_context:false
                   in
                   rec_flow cx trace (t_, u)
                 | Some targs ->
@@ -2802,7 +2803,14 @@ struct
               let poly_t = (tparams_loc, ids, t) in
               let check = Implicit_instantiation_check.of_ctor l poly_t use_op reason_op args in
               let t_ =
-                ImplicitInstantiationKit.run cx check trace ~use_op ~reason_op ~reason_tapp
+                ImplicitInstantiationKit.run
+                  cx
+                  check
+                  trace
+                  ~use_op
+                  ~reason_op
+                  ~reason_tapp
+                  ~has_context:false
               in
               rec_flow cx trace (t_, u)
             | ReactKitT
@@ -2838,7 +2846,14 @@ struct
                   children
               in
               let t_ =
-                ImplicitInstantiationKit.run cx check trace ~use_op ~reason_op ~reason_tapp
+                ImplicitInstantiationKit.run
+                  cx
+                  check
+                  trace
+                  ~use_op
+                  ~reason_op
+                  ~reason_tapp
+                  ~has_context:false
               in
               rec_flow cx trace (t_, u)
             | _ ->
