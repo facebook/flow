@@ -615,12 +615,24 @@ module Make (Env : Env_sig.S) (Statement : Statement_sig.S with module Env := En
       | ChainExpression (cond, e) -> resolve_chain_expression cx ~cond e
       | RefiExpression e -> (expression cx ~hint:Hint_None e, unknown_use)
       | Function
-          { function_; synthesizable_from_annotation = false; function_loc; tparams_map = _; hint }
-        ->
+          {
+            function_;
+            synthesizable_from_annotation = false;
+            has_this_def = _;
+            function_loc;
+            tparams_map = _;
+            hint;
+          } ->
         resolve_inferred_function cx ~hint id_loc def_reason function_loc function_
       | Function
-          { function_; synthesizable_from_annotation = true; function_loc = _; tparams_map; hint }
-        ->
+          {
+            function_;
+            synthesizable_from_annotation = true;
+            has_this_def = _;
+            function_loc = _;
+            tparams_map;
+            hint;
+          } ->
         resolve_annotated_function cx ~hint def_reason tparams_map function_
       | Class { class_; class_loc; class_implicit_this_tparam = _ } ->
         resolve_class cx id_loc def_reason class_loc class_
@@ -679,6 +691,8 @@ module Make (Env : Env_sig.S) (Statement : Statement_sig.S with module Env := En
         |> EnvSet.add (ClassStaticThisLoc, class_loc)
         |> EnvSet.add (ClassInstanceSuperLoc, class_loc)
         |> EnvSet.add (ClassStaticSuperLoc, class_loc)
+      | (Function { has_this_def = true; function_loc; _ }, _, _, _) ->
+        EnvSet.add (Env_api.FunctionThisLoc, function_loc) acc
       | _ -> acc
     in
     match component with

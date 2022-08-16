@@ -1,6 +1,6 @@
 Error ------------------------------------------------------------------------------------------------------ test.js:3:1
 
-Internal error: read of Env_api.Make.FunctionThisLoc entry which has not been prepared for typechecking
+Internal error: unconstrained tvar during tvar resolution
 
        v-----------------
     3| function test1() {
@@ -25,7 +25,7 @@ Internal error: unconstrained tvar during tvar resolution
 
 Error ----------------------------------------------------------------------------------------------------- test.js:13:1
 
-Internal error: read of Env_api.Make.FunctionThisLoc entry which has not been prepared for typechecking
+Internal error: unconstrained tvar during tvar resolution
 
        v-----------------
    13| function test2() {

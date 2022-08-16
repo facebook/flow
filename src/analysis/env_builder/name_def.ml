@@ -132,6 +132,7 @@ type def =
   | Function of {
       hint: hint_node hint;
       synthesizable_from_annotation: bool;
+      has_this_def: bool;
       function_loc: ALoc.t;
       function_: (ALoc.t, ALoc.t) Ast.Function.t;
       tparams_map: tparams_map;
@@ -425,12 +426,13 @@ let func_missing_annotations ~allow_this ({ Ast.Function.return; generator; para
 let func_is_synthesizable_from_annotation ~allow_this ({ Ast.Function.predicate; _ } as f) =
   Base.Option.is_none predicate && Base.List.is_empty (func_missing_annotations ~allow_this f)
 
-let def_of_function tparams_map hint function_loc function_ =
+let def_of_function ~tparams_map ~hint ~has_this_def ~function_loc function_ =
   Function
     {
       hint;
       synthesizable_from_annotation =
         func_is_synthesizable_from_annotation ~allow_this:false function_;
+      has_this_def;
       function_loc;
       function_;
       tparams_map;
@@ -608,7 +610,7 @@ class def_finder env_entries providers toplevel_scope =
       Destructure.pattern ~f:this#add_ordinary_binding (Root Catch) pat;
       super#catch_clause_pattern pat
 
-    method private visit_function_expr ~func_hint loc expr =
+    method private visit_function_expr ~func_hint ~has_this_def loc expr =
       let { Ast.Function.id; async; generator; sig_loc; _ } = expr in
       let scope_kind = func_scope_kind expr in
       this#in_new_tparams_env (fun () ->
@@ -618,12 +620,18 @@ class def_finder env_entries providers toplevel_scope =
             this#add_ordinary_binding
               id_loc
               (func_reason ~async ~generator sig_loc)
-              (def_of_function tparams func_hint loc expr)
+              (def_of_function
+                 ~tparams_map:tparams
+                 ~hint:func_hint
+                 ~has_this_def
+                 ~function_loc:loc
+                 expr
+              )
           | None -> ()
       )
 
     method! function_expression loc expr =
-      this#visit_function_expr ~func_hint:Hint_None loc expr;
+      this#visit_function_expr ~func_hint:Hint_None ~has_this_def:true loc expr;
       expr
 
     method! function_declaration loc expr =
@@ -636,7 +644,13 @@ class def_finder env_entries providers toplevel_scope =
             this#add_ordinary_binding
               id_loc
               (func_reason ~async ~generator sig_loc)
-              (def_of_function tparams Hint_None loc expr)
+              (def_of_function
+                 ~tparams_map:tparams
+                 ~hint:Hint_None
+                 ~has_this_def:true
+                 ~function_loc:loc
+                 expr
+              )
           | None -> ()
       );
       expr
@@ -1455,7 +1469,8 @@ class def_finder env_entries providers toplevel_scope =
       | Ast.Expression.ArrowFunction x ->
         let scope_kind = func_scope_kind x in
         this#in_new_tparams_env (fun () -> this#visit_function ~func_hint:hint ~scope_kind x)
-      | Ast.Expression.Function x -> this#visit_function_expr ~func_hint:hint loc x
+      | Ast.Expression.Function x ->
+        this#visit_function_expr ~func_hint:hint ~has_this_def:true loc x
       | Ast.Expression.Object expr -> this#visit_object_expression ~object_hint:hint expr
       | Ast.Expression.Member m -> this#visit_member_expression ~cond loc m
       | Ast.Expression.OptionalMember m -> this#visit_optional_member_expression ~cond loc m
@@ -1612,15 +1627,15 @@ class def_finder env_entries providers toplevel_scope =
               ()
             | (loc, Method { key; value = (_, fn) }) ->
               let func_hint = visit_object_key_and_compute_hint key in
-              this#visit_function_expr ~func_hint loc fn;
+              this#visit_function_expr ~func_hint ~has_this_def:true loc fn;
               ()
             | (loc, Get { key; value = (_, fn); comments = _ }) ->
               let func_hint = visit_object_key_and_compute_hint key in
-              this#visit_function_expr ~func_hint loc fn;
+              this#visit_function_expr ~func_hint ~has_this_def:true loc fn;
               ()
             | (loc, Set { key; value = (_, fn); comments = _ }) ->
               let func_hint = visit_object_key_and_compute_hint key in
-              this#visit_function_expr ~func_hint loc fn;
+              this#visit_function_expr ~func_hint ~has_this_def:true loc fn;
               ())
           | SpreadProperty s ->
             let (_, { Ast.Expression.Object.SpreadProperty.argument; comments = _ }) = s in

@@ -1,6 +1,6 @@
 Error ------------------------------------------------------------------------------------------ regression_tests.js:3:1
 
-Internal error: read of Env_api.Make.FunctionThisLoc entry which has not been prepared for typechecking
+Internal error: unconstrained tvar during tvar resolution
 
       v-------------------------------------------
    3| function no_missing_env_entry_for_delete() {
@@ -13,7 +13,7 @@ Internal error: read of Env_api.Make.FunctionThisLoc entry which has not been pr
 
 Error ------------------------------------------------------------------------------------------ regression_tests.js:9:1
 
-Internal error: read of Env_api.Make.FunctionThisLoc entry which has not been prepared for typechecking
+Internal error: unconstrained tvar during tvar resolution
 
        v---------------------------------------------------------
     9| function no_missing_env_entry_for_illegal_type_binding() {
@@ -39,7 +39,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------- regression_tests.js:14:1
 
-Internal error: read of Env_api.Make.FunctionThisLoc entry which has not been prepared for typechecking
+Internal error: unconstrained tvar during tvar resolution
 
        v--------------------------------------
    14| function unresolved_class_self_tvar() {
@@ -86,14 +86,6 @@ Missing an annotation on return. [missing-local-annot]
 
    33|   j() { return 42 }
             
-
-
-Error ----------------------------------------------------------------------------------------- regression_tests.js:44:1
-
-Internal error: read of Env_api.Make.FunctionThisLoc entry which has not been prepared for typechecking
-
-   44| function UnannotParams(x, {a, b}, ...y) { }
-       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
 Error ---------------------------------------------------------------------------------------- regression_tests.js:44:24
@@ -157,4 +149,4 @@ References:
 
 
 
-Found 16 errors
+Found 15 errors
