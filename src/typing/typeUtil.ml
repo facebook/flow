@@ -352,7 +352,8 @@ and mod_reason_of_use_t f = function
     ResolveUnionT { reason = f reason; resolved; unresolved; upper; id }
 
 and mod_reason_of_opt_use_t f = function
-  | OptCallT (use_op, reason, ft) -> OptCallT (use_op, reason, ft)
+  | OptCallT { use_op; reason; opt_funcalltype } ->
+    OptCallT { use_op; reason = f reason; opt_funcalltype }
   | OptMethodT (op, r1, r2, ref, action, prop_tout) ->
     OptMethodT (op, f r1, r2, ref, action, prop_tout)
   | OptPrivateMethodT (op, r1, r2, props, cbs, static, action, prop_tout) ->

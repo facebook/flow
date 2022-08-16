@@ -5374,7 +5374,7 @@ struct
     Env.havoc_heap_refinements ();
     if havoc then Env.havoc_local_refinements cx;
     let opt_app = mk_opt_functioncalltype reason targts argts call_strict_arity in
-    OptCallT (use_op, reason, opt_app)
+    OptCallT { use_op; reason; opt_funcalltype = opt_app }
 
   and func_call cx reason ~use_op ?(havoc = true) ?(call_strict_arity = true) func_t targts argts =
     let opt_use = func_call_opt_use cx reason ~use_op ~havoc ~call_strict_arity targts argts in

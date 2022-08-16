@@ -889,7 +889,11 @@ module rec TypeTerm : sig
 
   (* use_ts which can be part of an optional chain, with t_out factored out *)
   and opt_use_t =
-    | OptCallT of use_op * reason * opt_funcalltype
+    | OptCallT of {
+        use_op: use_op;
+        reason: reason;
+        opt_funcalltype: opt_funcalltype;
+      }
     | OptMethodT of
         use_op * (* call *) reason * (* lookup *) reason * propref * opt_method_action * t
     | OptPrivateMethodT of
@@ -3843,7 +3847,8 @@ let apply_opt_use opt_use t_out =
     MethodT (op, r1, r2, ref, apply_opt_action action t_out, prop_tout)
   | OptPrivateMethodT (op, r1, r2, p, scopes, static, action, prop_tout) ->
     PrivateMethodT (op, r1, r2, p, scopes, static, apply_opt_action action t_out, prop_tout)
-  | OptCallT (u, r, f) -> CallT (u, r, apply_opt_funcalltype f t_out)
+  | OptCallT { use_op = u; reason = r; opt_funcalltype = f } ->
+    CallT (u, r, apply_opt_funcalltype f t_out)
   | OptGetPropT (u, r, i, p) -> GetPropT (u, r, i, p, t_out)
   | OptGetPrivatePropT (u, r, s, cbs, b) -> GetPrivatePropT (u, r, s, cbs, b, t_out)
   | OptTestPropT (u, r, i, p) -> TestPropT (u, r, i, p, t_out)
