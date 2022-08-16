@@ -100,7 +100,8 @@ let rec default_resolve_touts ~flow cx loc u =
   | ReposLowerT _
   | ReposUseT _ ->
     _TODO
-  | ConstructorT { use_op = _; reason = _; targs = _; args = _; tout } -> resolve tout
+  | ConstructorT { use_op = _; reason = _; targs = _; args = _; tout; has_context = _ } ->
+    resolve tout
   | SuperT _ -> ()
   | ImplementsT _ -> ()
   | MixinT (_, t) -> resolve t

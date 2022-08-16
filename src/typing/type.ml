@@ -514,6 +514,7 @@ module rec TypeTerm : sig
         targs: targ list option;
         args: call_arg list;
         tout: t;
+        has_context: bool;
       }
     | SuperT of use_op * reason * derived_type
     | ImplementsT of use_op * t

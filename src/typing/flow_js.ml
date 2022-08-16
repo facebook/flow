@@ -2823,7 +2823,8 @@ struct
                         }
                     )
               end
-            | ConstructorT { use_op; reason = reason_op; targs = Some targs; args; tout } ->
+            | ConstructorT
+                { use_op; reason = reason_op; targs = Some targs; args; tout; has_context } ->
               let t_ =
                 instantiate_poly_call_or_new
                   cx
@@ -2837,8 +2838,11 @@ struct
               rec_flow
                 cx
                 trace
-                (t_, ConstructorT { use_op; reason = reason_op; targs = None; args; tout })
-            | ConstructorT { use_op; reason = reason_op; targs = None; args; tout = _ } ->
+                ( t_,
+                  ConstructorT { use_op; reason = reason_op; targs = None; args; tout; has_context }
+                )
+            | ConstructorT
+                { use_op; reason = reason_op; targs = None; args; tout = _; has_context = _ } ->
               let poly_t = (tparams_loc, ids, t) in
               let check = Implicit_instantiation_check.of_ctor l poly_t use_op reason_op args in
               let t_ =
@@ -3368,7 +3372,7 @@ struct
         (* class types derive instance types (with constructors) *)
         (*********************************************************)
         | ( DefT (reason, _, ClassT this),
-            ConstructorT { use_op; reason = reason_op; targs; args; tout = t }
+            ConstructorT { use_op; reason = reason_op; targs; args; tout = t; has_context }
           ) ->
           let reason_o = replace_desc_reason RConstructorReturn reason in
           let annot_loc = aloc_of_reason reason_op in
@@ -3404,7 +3408,7 @@ struct
                         reason_o,
                         propref,
                         (* TODO(jmbrown) has_context threading unblocked by ConstructorT *)
-                        CallM { methodcalltype = funtype; has_context = false },
+                        CallM { methodcalltype = funtype; has_context },
                         prop_t
                       )
                   )
@@ -3412,7 +3416,9 @@ struct
           in
           (* return this *)
           rec_flow cx trace (ret, ObjTestT (annot_reason ~annot_loc reason_op, this, t))
-        | (AnyT _, ConstructorT { use_op; reason = reason_op; targs; args; tout = t }) ->
+        | ( AnyT _,
+            ConstructorT { use_op; reason = reason_op; targs; args; tout = t; has_context = _ }
+          ) ->
           ignore targs;
 
           (* An untyped receiver can't do anything with type args *)
@@ -3421,7 +3427,10 @@ struct
             args;
           rec_flow_t cx trace ~use_op:unknown_use (AnyT.untyped reason_op, t)
         (* Only classes (and `any`) can be constructed. *)
-        | (_, ConstructorT { use_op; reason = reason_op; tout = t; _ }) ->
+        | ( _,
+            ConstructorT
+              { use_op; reason = reason_op; tout = t; args = _; targs = _; has_context = _ }
+          ) ->
           add_output cx ~trace Error_message.(EInvalidConstructor (reason_of_t l));
           rec_flow_t cx trace ~use_op (AnyT.error reason_op, t)
         (* Since we don't know the signature of a method on AnyT, assume every
@@ -5935,12 +5944,13 @@ struct
           | _ -> false
         else
           wait_for_concrete_bound ()
-      | ConstructorT { use_op; reason = reason_op; targs; args; tout } ->
+      | ConstructorT { use_op; reason = reason_op; targs; args; tout; has_context } ->
         if is_concrete bound then
           match bound with
           | DefT (_, _, ClassT _) ->
             narrow_generic
-              (fun tout' -> ConstructorT { use_op; reason = reason_op; targs; args; tout = tout' })
+              (fun tout' ->
+                ConstructorT { use_op; reason = reason_op; targs; args; tout = tout'; has_context })
               tout;
             true
           | _ -> false

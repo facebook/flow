@@ -3396,7 +3396,7 @@ struct
              }
           )
       in
-      ( (loc, new_call cx reason ~use_op class_ targts argts),
+      ( (loc, new_call ~hint cx reason ~use_op class_ targts argts),
         New { New.callee = callee_ast; targs = targs_ast; arguments = arguments_ast; comments }
       )
     | Call _ -> subscript ~hint ~cond cx ex
@@ -5381,11 +5381,15 @@ struct
      If construction functions return non-void values (e.g., functions),
      then those values are returned by constructions.
   *)
-  and new_call cx reason ~use_op class_ targs args =
+  and new_call ~hint cx reason ~use_op class_ targs args =
     Env.havoc_heap_refinements ();
     Env.havoc_local_refinements cx;
     Tvar.mk_where cx reason (fun tout ->
-        Flow.flow cx (class_, ConstructorT { use_op; reason; targs; args; tout })
+        Flow.flow
+          cx
+          ( class_,
+            ConstructorT { use_op; reason; targs; args; tout; has_context = hint <> Hint_None }
+          )
     )
 
   and func_call_opt_use cx reason ~use_op ?(havoc = true) ?(call_strict_arity = true) targts argts =

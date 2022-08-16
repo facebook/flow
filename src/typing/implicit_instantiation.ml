@@ -242,6 +242,7 @@ struct
               targs = Some call_targs;
               args = call_args;
               tout = new_tout;
+              has_context = false;
             }
         in
         Flow.flow cx (lhs, constructor_t)
