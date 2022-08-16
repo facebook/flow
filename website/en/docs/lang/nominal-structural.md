@@ -111,8 +111,8 @@ interface Interface {
 class Foo { method(input: string) { /* ... */ } }
 class Bar { method(input: string) { /* ... */ } }
 
-let test: Interface = new Foo(); // Okay.
-let test: Interface = new Bar(); // Okay.
+let test1: Interface = new Foo(); // Okay.
+let test2: Interface = new Bar(); // Okay.
 ```
 
 #### Mixing nominal and structural typing <a class="toc" id="toc-mixing-nominal-and-structural-typing" href="#toc-mixing-nominal-and-structural-typing"></a>
