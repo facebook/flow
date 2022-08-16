@@ -464,6 +464,7 @@ module rec TypeTerm : sig
         use_op: use_op;
         reason: reason;
         funcalltype: funcalltype;
+        has_context: bool;
       }
     (* The last position is an optional type that probes into the type of the
        method called. This will be primarily used for type-table bookkeeping. *)
@@ -897,6 +898,7 @@ module rec TypeTerm : sig
         use_op: use_op;
         reason: reason;
         opt_funcalltype: opt_funcalltype;
+        has_context: bool;
       }
     | OptMethodT of
         use_op * (* call *) reason * (* lookup *) reason * propref * opt_method_action * t
@@ -3880,8 +3882,8 @@ let apply_opt_use opt_use t_out =
     MethodT (op, r1, r2, ref, apply_opt_action action t_out, prop_tout)
   | OptPrivateMethodT (op, r1, r2, p, scopes, static, action, prop_tout) ->
     PrivateMethodT (op, r1, r2, p, scopes, static, apply_opt_action action t_out, prop_tout)
-  | OptCallT { use_op; reason; opt_funcalltype = f } ->
-    CallT { use_op; reason; funcalltype = apply_opt_funcalltype f t_out }
+  | OptCallT { use_op; reason; opt_funcalltype = f; has_context } ->
+    CallT { use_op; reason; funcalltype = apply_opt_funcalltype f t_out; has_context }
   | OptGetPropT (u, r, i, p) -> GetPropT (u, r, i, p, t_out)
   | OptGetPrivatePropT (u, r, s, cbs, b) -> GetPrivatePropT (u, r, s, cbs, b, t_out)
   | OptTestPropT (u, r, i, p) -> TestPropT (u, r, i, p, t_out)

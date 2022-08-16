@@ -708,6 +708,7 @@ and dump_use_t_ (depth, tvars) cx t =
           use_op;
           reason = _;
           funcalltype = { call_args_tlist; call_tout = (call_r, call_tvar); call_this_t; _ };
+          has_context = _;
         } ->
       p
         ~extra:

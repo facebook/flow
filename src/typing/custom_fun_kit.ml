@@ -44,7 +44,13 @@ module Kit (Flow : Flow_common.S) = struct
         cx
         trace
         ( fn,
-          CallT { use_op; reason; funcalltype = mk_functioncalltype reason_op None [Arg tvar] tout }
+          CallT
+            {
+              use_op;
+              reason;
+              funcalltype = mk_functioncalltype reason_op None [Arg tvar] tout;
+              has_context = false;
+            }
         )
     (* If the compose function is reversed then we want to call the tail
      * functions in our array after we call the head function. *)
@@ -60,6 +66,7 @@ module Kit (Flow : Flow_common.S) = struct
               use_op;
               reason;
               funcalltype = mk_functioncalltype reason_op None [Arg (OpenT tin)] (reason, tvar);
+              has_context = false;
             }
         );
       run_compose cx trace ~use_op reason_op reverse fns spread_fn (reason, tvar) tout

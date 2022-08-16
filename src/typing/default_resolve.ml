@@ -76,7 +76,7 @@ let rec default_resolve_touts ~flow cx loc u =
   match u with
   | UseT _ -> _TODO
   | BindT (_, _, { call_tout; _ })
-  | CallT { use_op = _; reason = _; funcalltype = { call_tout; _ } } ->
+  | CallT { use_op = _; reason = _; funcalltype = { call_tout; _ }; has_context = _ } ->
     resolve_tvar call_tout
   | MethodT (_, _, _, _, action, tout)
   | PrivateMethodT (_, _, _, _, _, _, action, tout) ->

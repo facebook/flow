@@ -68,7 +68,7 @@ and reason_of_use_t = function
   | CallElemT (reason, _, _, _) -> reason
   | CallLatentPredT (reason, _, _, _, _) -> reason
   | CallOpenPredT (reason, _, _, _, _) -> reason
-  | CallT { reason; use_op = _; funcalltype = _ } -> reason
+  | CallT { reason; use_op = _; funcalltype = _; has_context = _ } -> reason
   | ChoiceKitUseT (reason, _) -> reason
   | CJSExtractNamedExportsT (reason, _, _) -> reason
   | CJSRequireT (reason, _, _) -> reason
@@ -234,7 +234,8 @@ and mod_reason_of_use_t f = function
   | CallElemT (reason_call, reason_lookup, t, ft) -> CallElemT (f reason_call, reason_lookup, t, ft)
   | CallLatentPredT (reason, b, k, l, t) -> CallLatentPredT (f reason, b, k, l, t)
   | CallOpenPredT (reason, sense, key, l, t) -> CallOpenPredT (f reason, sense, key, l, t)
-  | CallT { use_op; reason; funcalltype } -> CallT { use_op; reason = f reason; funcalltype }
+  | CallT { use_op; reason; funcalltype; has_context } ->
+    CallT { use_op; reason = f reason; funcalltype; has_context }
   | ChoiceKitUseT (reason, tool) -> ChoiceKitUseT (f reason, tool)
   | CJSExtractNamedExportsT (reason, exports, t2) -> CJSExtractNamedExportsT (f reason, exports, t2)
   | CJSRequireT (reason, t, is_strict) -> CJSRequireT (f reason, t, is_strict)
@@ -352,8 +353,8 @@ and mod_reason_of_use_t f = function
     ResolveUnionT { reason = f reason; resolved; unresolved; upper; id }
 
 and mod_reason_of_opt_use_t f = function
-  | OptCallT { use_op; reason; opt_funcalltype } ->
-    OptCallT { use_op; reason = f reason; opt_funcalltype }
+  | OptCallT { use_op; reason; opt_funcalltype; has_context } ->
+    OptCallT { use_op; reason = f reason; opt_funcalltype; has_context }
   | OptMethodT (op, r1, r2, ref, action, prop_tout) ->
     OptMethodT (op, f r1, r2, ref, action, prop_tout)
   | OptPrivateMethodT (op, r1, r2, props, cbs, static, action, prop_tout) ->
@@ -378,8 +379,8 @@ let rec util_use_op_of_use_t :
   match u with
   | UseT (op, t) -> util op (fun op -> UseT (op, t))
   | BindT (op, r, f) -> util op (fun op -> BindT (op, r, f))
-  | CallT { use_op; reason; funcalltype } ->
-    util use_op (fun use_op -> CallT { use_op; reason; funcalltype })
+  | CallT { use_op; reason; funcalltype; has_context } ->
+    util use_op (fun use_op -> CallT { use_op; reason; funcalltype; has_context })
   | MethodT (op, r1, r2, p, f, tm) -> util op (fun op -> MethodT (op, r1, r2, p, f, tm))
   | PrivateMethodT (op, r1, r2, x, c, s, a, p) ->
     util op (fun op -> PrivateMethodT (op, r1, r2, x, c, s, a, p))

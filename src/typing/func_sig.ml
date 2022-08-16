@@ -76,7 +76,12 @@ class func_scope_visitor cx ~return_t ~yield_t ~next_t kind exhaust =
                     let funt = Flow.get_builtin cx (OrdinaryName "$await") reason in
                     let callt = mk_functioncalltype reason None [Arg t] (open_tvar tvar) in
                     let reason = repos_reason (aloc_of_reason (reason_of_t t)) reason in
-                    Flow.flow cx (funt, CallT { use_op = unknown_use; reason; funcalltype = callt })
+                    Flow.flow
+                      cx
+                      ( funt,
+                        CallT
+                          { use_op = unknown_use; reason; funcalltype = callt; has_context = false }
+                      )
                 );
               ]
           in

@@ -972,6 +972,7 @@ struct
                 reason = reason_op;
                 funcalltype =
                   { call_this_t; call_targs; call_args_tlist; call_tout; call_strict_arity };
+                has_context;
               }
           ) ->
           let tout =
@@ -996,6 +997,7 @@ struct
                                 call_tout;
                                 call_strict_arity;
                               };
+                            has_context;
                           }
                       )
                 )
@@ -1124,13 +1126,13 @@ struct
         (* type assert calls *)
         (*********************)
         | ( CustomFunT (fun_reason, TypeAssertIs),
-            CallT { use_op; reason = reason_op; funcalltype = call_type }
+            CallT { use_op; reason = reason_op; funcalltype = call_type; has_context = _ }
           )
         | ( CustomFunT (fun_reason, TypeAssertThrows),
-            CallT { use_op; reason = reason_op; funcalltype = call_type }
+            CallT { use_op; reason = reason_op; funcalltype = call_type; has_context = _ }
           )
         | ( CustomFunT (fun_reason, TypeAssertWraps),
-            CallT { use_op; reason = reason_op; funcalltype = call_type }
+            CallT { use_op; reason = reason_op; funcalltype = call_type; has_context = _ }
           ) ->
           let call_loc = aloc_of_reason reason_op in
           let fun_loc = aloc_of_reason fun_reason in
@@ -1223,7 +1225,12 @@ struct
             trace
             ( funtype,
               CallT
-                { use_op; reason = reason_op; funcalltype = { call_type with call_targs = None } }
+                {
+                  use_op;
+                  reason = reason_op;
+                  funcalltype = { call_type with call_targs = None };
+                  has_context = false;
+                }
             )
         (*********************)
         (* optional chaining *)
@@ -2115,7 +2122,7 @@ struct
            without preparation (see below). This is because in these cases, the
            return type is intended to be 0-1, whereas preparation (as implemented
            currently) destroys 0-1 behavior. *)
-        | (IntersectionT (r, rep), CallT { use_op = _; reason; funcalltype = _ })
+        | (IntersectionT (r, rep), CallT { use_op = _; reason; funcalltype = _; has_context = _ })
           when is_calltype_reason reason ->
           SpeculationKit.try_intersection cx trace u r rep
         (* All other pairs with an intersection lower bound come here. Before
@@ -2757,7 +2764,7 @@ struct
                positions we should be able to subject reasons to arbitrary tweaking,
                without fearing regressions in termination guarantees.
             *)
-            | CallT { use_op; reason = _; funcalltype = calltype }
+            | CallT { use_op; reason = _; funcalltype = calltype; has_context }
               when not (is_typemap_reason reason_op) ->
               let arg_reasons =
                 Base.List.map
@@ -2806,6 +2813,7 @@ struct
                           use_op;
                           reason = reason_op;
                           funcalltype = { calltype with call_targs = None };
+                          has_context;
                         }
                     )
               end
@@ -2966,7 +2974,7 @@ struct
 
         (* FunT ~> CallT *)
         | ( DefT (reason_fundef, _, FunT (_, funtype)),
-            CallT { use_op; reason = reason_callsite; funcalltype = calltype }
+            CallT { use_op; reason = reason_callsite; funcalltype = calltype; has_context = _ }
           ) ->
           let { this_t = (o1, _); params = _; return_t = t1; _ } = funtype in
           let {
@@ -3008,7 +3016,9 @@ struct
             cx
             trace
             (reposition cx ~trace (aloc_of_reason reason_callsite) t1, OpenT t2)
-        | (AnyT (reason_fundef, _), CallT { use_op; reason = reason_op; funcalltype = calltype }) ->
+        | ( AnyT (reason_fundef, _),
+            CallT { use_op; reason = reason_op; funcalltype = calltype; has_context = _ }
+          ) ->
           let {
             call_this_t;
             call_targs = _;
@@ -3032,6 +3042,7 @@ struct
                 use_op;
                 reason = reason_op;
                 funcalltype = { call_targs = None; call_args_tlist = dest_t :: ts; call_tout; _ };
+                has_context = _;
               }
           ) ->
           let dest_t = extract_non_spread cx ~trace dest_t in
@@ -3043,6 +3054,7 @@ struct
                 use_op = _;
                 reason = reason_op;
                 funcalltype = { call_targs = None; call_args_tlist = arg :: _; call_tout; _ };
+                has_context = _;
               }
           ) ->
           let l = extract_non_spread cx ~trace arg in
@@ -3054,6 +3066,7 @@ struct
                 reason = reason_op;
                 funcalltype =
                   { call_targs = None; call_args_tlist = arg1 :: arg2 :: _; call_tout; _ };
+                has_context = _;
               }
           ) ->
           let target = extract_non_spread cx ~trace arg1 in
@@ -3096,6 +3109,7 @@ struct
                 use_op;
                 reason = reason_op;
                 funcalltype = { call_targs = None; call_args_tlist = arg1 :: _; call_tout; _ };
+                has_context = _;
               }
           ) ->
           React.(
@@ -3127,6 +3141,7 @@ struct
                 use_op;
                 reason = reason_op;
                 funcalltype = { call_targs = None; call_args_tlist; call_tout; _ };
+                has_context = _;
               }
           ) ->
           List.iter
@@ -3141,7 +3156,9 @@ struct
             ~use_op
             trace
             (VoidT.why reason_op |> with_trust bogus_trust, OpenT call_tout)
-        | (CustomFunT (_, DebugThrow), CallT { use_op = _; reason = reason_op; funcalltype = _ }) ->
+        | ( CustomFunT (_, DebugThrow),
+            CallT { use_op = _; reason = reason_op; funcalltype = _; has_context = _ }
+          ) ->
           raise (Error_message.EDebugThrow (aloc_of_reason reason_op))
         | ( CustomFunT (_, DebugSleep),
             CallT
@@ -3149,6 +3166,7 @@ struct
                 use_op;
                 reason = reason_op;
                 funcalltype = { call_targs = None; call_args_tlist = arg1 :: _; call_tout; _ };
+                has_context = _;
               }
           ) ->
           let t = extract_non_spread cx ~trace arg1 in
@@ -3164,7 +3182,7 @@ struct
                 kind
                 )
               ),
-            CallT { use_op; reason = reason_op; funcalltype = calltype }
+            CallT { use_op; reason = reason_op; funcalltype = calltype; has_context = _ }
           ) ->
           let {
             call_targs;
@@ -3224,7 +3242,7 @@ struct
         (* You can cast an object to a function *)
         (****************************************)
         | ( DefT (reason, _, (ObjT _ | InstanceT _)),
-            CallT { use_op; reason = reason_op; funcalltype = _ }
+            CallT { use_op; reason = reason_op; funcalltype = _; has_context = _ }
           ) ->
           let prop_name = Some (OrdinaryName "$call") in
           let fun_t =
@@ -4341,6 +4359,7 @@ struct
                 use_op;
                 reason = reason_op;
                 funcalltype = { call_this_t = func; call_args_tlist; _ } as funtype;
+                has_context;
               }
           ) ->
           (* Drop the first argument in the use_op. *)
@@ -4363,16 +4382,25 @@ struct
                   call_args_tlist = [];
                 }
               in
-              rec_flow cx trace (func, CallT { use_op; reason = reason_op; funcalltype = funtype })
+              rec_flow
+                cx
+                trace
+                (func, CallT { use_op; reason = reason_op; funcalltype = funtype; has_context })
             (* func.call(this_t, ...call_args_tlist) *)
             | Arg call_this_t :: call_args_tlist ->
               let funtype = { funtype with call_this_t; call_args_tlist } in
-              rec_flow cx trace (func, CallT { use_op; reason = reason_op; funcalltype = funtype })
+              rec_flow
+                cx
+                trace
+                (func, CallT { use_op; reason = reason_op; funcalltype = funtype; has_context })
             (* func.call(...call_args_tlist) *)
             | (SpreadArg _ as first_arg) :: _ ->
               let call_this_t = extract_non_spread cx ~trace first_arg in
               let funtype = { funtype with call_this_t } in
-              rec_flow cx trace (func, CallT { use_op; reason = reason_op; funcalltype = funtype })
+              rec_flow
+                cx
+                trace
+                (func, CallT { use_op; reason = reason_op; funcalltype = funtype; has_context })
           end
         (*******************************************)
         (* ... or a receiver and an argument array *)
@@ -4385,6 +4413,7 @@ struct
                 use_op;
                 reason = reason_op;
                 funcalltype = { call_this_t = func; call_args_tlist; _ } as funtype;
+                has_context;
               }
           ) ->
           (* Drop the specific AST derived argument reasons. Our new arguments come
@@ -4407,11 +4436,17 @@ struct
                   call_args_tlist = [];
                 }
               in
-              rec_flow cx trace (func, CallT { use_op; reason = reason_op; funcalltype = funtype })
+              rec_flow
+                cx
+                trace
+                (func, CallT { use_op; reason = reason_op; funcalltype = funtype; has_context })
             (* func.apply(this_arg) *)
             | [Arg this_arg] ->
               let funtype = { funtype with call_this_t = this_arg; call_args_tlist = [] } in
-              rec_flow cx trace (func, CallT { use_op; reason = reason_op; funcalltype = funtype })
+              rec_flow
+                cx
+                trace
+                (func, CallT { use_op; reason = reason_op; funcalltype = funtype; has_context })
             (* func.apply(this_arg, ts) *)
             | [first_arg; Arg ts] ->
               let call_this_t = extract_non_spread cx ~trace first_arg in
@@ -4456,6 +4491,7 @@ struct
                     call_args_tlist = first_arg :: call_args_tlist;
                     _;
                   } as funtype;
+                has_context = _;
               }
           ) ->
           Base.Option.iter call_targs ~f:(fun _ ->
@@ -5479,7 +5515,7 @@ struct
           ) ->
           rec_flow cx trace (FunProtoT lreason, u)
         | ( DefT (lreason, _, MixedT Mixed_function),
-            CallT { use_op; reason = ureason; funcalltype = _ }
+            CallT { use_op; reason = ureason; funcalltype = _; has_context = _ }
           ) ->
           add_output
             cx
@@ -6852,7 +6888,7 @@ struct
                  error messages from those of "normal" calls. *)
               | _ -> Frame (CallFunCompatibility { n = List.length args }, use_op)
             in
-            CallT { use_op; reason; funcalltype = call }
+            CallT { use_op; reason; funcalltype = call; has_context = false }
           | TypeMap tmap -> MapTypeT (use_op, reason, tmap, OpenT tout)
           | ReactElementPropsType -> ReactKitT (use_op, reason, React.GetProps (OpenT tout))
           | ReactElementConfigType -> ReactKitT (use_op, reason, React.GetConfig (OpenT tout))
@@ -9102,7 +9138,13 @@ struct
           flattened
       in
       let call_t =
-        CallT { use_op; reason = reason_op; funcalltype = { funcalltype with call_args_tlist } }
+        CallT
+          {
+            use_op;
+            reason = reason_op;
+            funcalltype = { funcalltype with call_args_tlist };
+            has_context = false;
+          }
       in
       flow_opt cx ?trace (tin, call_t)
     in
@@ -9125,13 +9167,18 @@ struct
 
   and apply_method_action cx trace l use_op reason_call this_arg action =
     match action with
-    | CallM { methodcalltype = app; has_context = _ } ->
+    | CallM { methodcalltype = app; has_context } ->
       let u =
-        CallT { use_op; reason = reason_call; funcalltype = call_of_method_app this_arg app }
+        CallT
+          {
+            use_op;
+            reason = reason_call;
+            funcalltype = call_of_method_app this_arg app;
+            has_context;
+          }
       in
       rec_flow cx trace (l, u)
-    | ChainM
-        { exp_reason; lhs_reason; this; methodcalltype = app; voided_out = vs; has_context = _ } ->
+    | ChainM { exp_reason; lhs_reason; this; methodcalltype = app; voided_out = vs; has_context } ->
       let u =
         OptionalChainT
           {
@@ -9139,7 +9186,13 @@ struct
             lhs_reason;
             this_t = this;
             t_out =
-              CallT { use_op; reason = reason_call; funcalltype = call_of_method_app this_arg app };
+              CallT
+                {
+                  use_op;
+                  reason = reason_call;
+                  funcalltype = call_of_method_app this_arg app;
+                  has_context;
+                };
             voided_out = vs;
           }
       in

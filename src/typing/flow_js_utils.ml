@@ -282,7 +282,7 @@ let parts_to_replace_t cx = function
 (* for now, we only care about concretizating parts of functions and calls *)
 let parts_to_replace cx = function
   | UseT (_, t) -> parts_to_replace_t cx t
-  | CallT { use_op = _; reason = _; funcalltype = callt } ->
+  | CallT { use_op = _; reason = _; funcalltype = callt; has_context = _ } ->
     List.fold_left
       (fun acc -> function
         | Arg t
@@ -342,10 +342,10 @@ let replace_parts =
       let (resolved, rest_param) = replace_rest_param (resolved, ft.rest_param) in
       assert (resolved = []);
       UseT (op, DefT (r, trust, FunT (t1, { ft with params; rest_param })))
-    | CallT { use_op; reason; funcalltype } ->
+    | CallT { use_op; reason; funcalltype; has_context } ->
       let (resolved, call_args_tlist) = replace_args [] (resolved, funcalltype.call_args_tlist) in
       assert (resolved = []);
-      CallT { use_op; reason; funcalltype = { funcalltype with call_args_tlist } }
+      CallT { use_op; reason; funcalltype = { funcalltype with call_args_tlist }; has_context }
     | u -> u
 
 (** Errors *)

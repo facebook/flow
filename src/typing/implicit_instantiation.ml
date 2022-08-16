@@ -228,6 +228,7 @@ struct
               reason = reason_op;
               funcalltype =
                 { calltype with call_targs = Some call_targs; call_tout = (reason_op, new_tout) };
+              has_context = false;
             }
         in
         Flow.flow cx (lhs, call_t)

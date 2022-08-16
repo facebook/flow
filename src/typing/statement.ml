@@ -3584,7 +3584,7 @@ struct
                }
             )
         in
-        CallT { use_op; reason; funcalltype = ft }
+        CallT { use_op; reason; funcalltype = ft; has_context = hint <> Hint_None }
       in
       Flow.flow cx (t, call_t);
 
@@ -5065,10 +5065,19 @@ struct
                             reason = chain_reason;
                             lhs_reason;
                             this_t;
-                            t_out = CallT { use_op; reason = reason_call; funcalltype = app };
+                            t_out =
+                              CallT
+                                {
+                                  use_op;
+                                  reason = reason_call;
+                                  funcalltype = app;
+                                  has_context = false;
+                                };
                             voided_out = OpenT t;
                           }
-                      | _ -> CallT { use_op; reason = reason_call; funcalltype = app }
+                      | _ ->
+                        CallT
+                          { use_op; reason = reason_call; funcalltype = app; has_context = false }
                     in
                     Flow.flow cx (f, call_t)
                 )
@@ -5383,7 +5392,7 @@ struct
     Env.havoc_heap_refinements ();
     if havoc then Env.havoc_local_refinements cx;
     let opt_app = mk_opt_functioncalltype reason targts argts call_strict_arity in
-    OptCallT { use_op; reason; opt_funcalltype = opt_app }
+    OptCallT { use_op; reason; opt_funcalltype = opt_app; has_context = false }
 
   and func_call cx reason ~use_op ?(havoc = true) ?(call_strict_arity = true) func_t targts argts =
     let opt_use = func_call_opt_use cx reason ~use_op ~havoc ~call_strict_arity targts argts in
@@ -5458,7 +5467,7 @@ struct
       ( f,
         Tvar.mk_no_wrap_where cx reason (fun t ->
             let app = mk_boundfunctioncalltype obj_t targts argts t ~call_strict_arity in
-            Flow.flow cx (f, CallT { use_op; reason; funcalltype = app })
+            Flow.flow cx (f, CallT { use_op; reason; funcalltype = app; has_context = false })
         )
       )
     | None ->
@@ -6880,7 +6889,7 @@ struct
         in
         let jsx_fun = CustomFunT (reason_jsx, ReactCreateElement) in
         let funcalltype = mk_functioncalltype reason_jsx None args tvar in
-        Flow.flow cx (jsx_fun, CallT { use_op; reason; funcalltype })
+        Flow.flow cx (jsx_fun, CallT { use_op; reason; funcalltype; has_context = false })
       | Options.ReactRuntimeClassic ->
         let reason_createElement =
           mk_reason (RProperty (Some (OrdinaryName "createElement"))) loc_element
