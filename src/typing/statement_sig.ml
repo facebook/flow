@@ -70,6 +70,8 @@ module type S = sig
     Context.t ->
     func_hint:Type.t Hint_api.hint ->
     needs_this_param:bool ->
+    require_return_annot:bool ->
+    constructor:bool ->
     Type.t Subst_name.Map.t ->
     Reason.reason ->
     (ALoc.t, ALoc.t) Ast.Function.t ->

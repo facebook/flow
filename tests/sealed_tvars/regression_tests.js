@@ -18,16 +18,29 @@ function unresolved_class_self_tvar() {
 exports.a = 1; // Read of exports points to a fully resolved exports type.
 
 class MissingAnnotations {
+  constructor () {
+    return 42;
+  }
   a;
   b: number = 42;
   c = 42;
   d = 42 + 42;
   e = (x: number): number => x;
   f = (x: number) => { }
+  g = (x: number) => { return 42 }
   h() {}
   i(): number { return 42 }
+  j() { return 42 }
 }
 
-function f(x, {a, b}, ...y) { }
+class MoreMA {
+  constructor(): void { }
+}
 
-f((x) => x);
+class MoreMA2 {
+  constructor() { }
+}
+
+function UnannotParams(x, {a, b}, ...y) { }
+
+UnannotParams((x) => x);

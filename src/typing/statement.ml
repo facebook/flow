@@ -8329,6 +8329,9 @@ struct
                   cx
                   ~func_hint:Hint_None
                   ~needs_this_param:false
+                  ~constructor:false
+                  ~require_return_annot:
+                    (RequireAnnot.should_require_annot cx && Context.enforce_class_annotations cx)
                   tparams_map
                   reason
                   function_
@@ -8375,7 +8378,14 @@ struct
       | _ -> ());
       (field, annot_t, annot_ast, get_init)
     in
-    let mk_method = mk_func_sig ~func_hint:Hint_None ~needs_this_param:false in
+    let mk_method cx =
+      mk_func_sig
+        cx
+        ~func_hint:Hint_None
+        ~needs_this_param:false
+        ~require_return_annot:
+          (RequireAnnot.should_require_annot cx && Context.enforce_class_annotations cx)
+    in
     let mk_extends cx tparams_map = function
       | None -> (Implicit { null = false }, None)
       | Some (loc, { Ast.Class.Extends.expr; targs; comments }) ->
@@ -8548,7 +8558,12 @@ struct
                   Ast.Function.(func_reason ~async:func.async ~generator:func.generator method_loc)
                 in
                 let (method_sig, reconstruct_func) =
-                  mk_method cx tparams_map_with_this reason func
+                  mk_method
+                    cx
+                    ~constructor:(kind = Method.Constructor)
+                    tparams_map_with_this
+                    reason
+                    func
                 in
                 (* The body of a class method doesn't get checked until Class_sig.toplevels
                    is called on the class sig (in this case c). The order of how the methods
@@ -8866,19 +8881,31 @@ struct
         Func_class_sig_types.Func.Ordinary
       | None -> kind
     in
-    let function_kind cx ~async ~generator ~predicate ~params ~ret_loc =
+    let function_kind cx ~constructor ~async ~generator ~predicate ~params ~ret_loc =
       let open Func_sig in
       let open Ast.Type.Predicate in
       let open Func_class_sig_types.Func in
-      match (async, generator, predicate) with
-      | (true, true, None) -> AsyncGenerator { return_loc = ret_loc }
-      | (true, false, None) -> Async
-      | (false, true, None) -> Generator { return_loc = ret_loc }
-      | (false, false, None) -> Ordinary
-      | (false, false, Some (loc, { kind = Ast.Type.Predicate.Inferred | Declared _; comments = _ }))
-        ->
+      match (constructor, async, generator, predicate) with
+      | (true, false, false, None) -> Ctor
+      | (true, _, _, _) ->
+        Flow.add_output
+          cx
+          Error_message.(
+            EInvalidConstructorDefinition
+              { loc = ret_loc; async; generator; predicate = Base.Option.is_some predicate }
+          );
+        Ctor
+      | (false, true, true, None) -> AsyncGenerator { return_loc = ret_loc }
+      | (false, true, false, None) -> Async
+      | (false, false, true, None) -> Generator { return_loc = ret_loc }
+      | (false, false, false, None) -> Ordinary
+      | ( false,
+          false,
+          false,
+          Some (loc, { kind = Ast.Type.Predicate.Inferred | Declared _; comments = _ })
+        ) ->
         predicate_function_kind cx loc params
-      | (_, _, _) -> Utils_js.assert_false "(async || generator) && pred"
+      | (false, _, _, _) -> Utils_js.assert_false "(async || generator) && pred"
     in
     let id_param cx tparams_map id mk_reason =
       let { Ast.Pattern.Identifier.name; annot; optional } = id in
@@ -9032,7 +9059,7 @@ struct
       in
       finder#type_ cx Polarity.Neutral Loc_collections.ALocSet.empty t
     in
-    fun cx ~func_hint ~needs_this_param tparams_map reason func ->
+    fun cx ~func_hint ~needs_this_param ~require_return_annot ~constructor tparams_map reason func ->
       let {
         Ast.Function.tparams;
         return;
@@ -9058,7 +9085,7 @@ struct
           | Ast.Type.Missing loc ->
             loc
         in
-        let kind = function_kind cx ~async ~generator ~predicate ~params ~ret_loc in
+        let kind = function_kind cx ~constructor ~async ~generator ~predicate ~params ~ret_loc in
         let (tparams, tparams_map, tparams_ast) =
           Anno.mk_type_param_declarations cx ~tparams_map tparams
         in
@@ -9070,15 +9097,28 @@ struct
         let (return_annotated_or_inferred, return) =
           let open Func_class_sig_types.Func in
           let has_nonvoid_return =
-            Nonvoid_return.might_have_nonvoid_return loc func || (kind <> Ordinary && kind <> Async)
+            Nonvoid_return.might_have_nonvoid_return loc func
+            || (kind <> Ordinary && kind <> Async && kind <> Ctor)
           in
-          Anno.mk_return_type_annotation
-            cx
-            tparams_map
-            ret_reason
-            ~void_return:(not has_nonvoid_return)
-            ~async:(kind = Async)
-            return
+          let return =
+            Anno.mk_return_type_annotation
+              cx
+              tparams_map
+              ret_reason
+              ~void_return:(not has_nonvoid_return)
+              ~async:(kind = Async)
+              return
+          in
+          begin
+            match return with
+            | (Inferred t, _) when has_nonvoid_return && require_return_annot ->
+              let reason = repos_reason ret_loc ret_reason in
+              Flow_js.add_output cx Error_message.(EMissingLocalAnnotation reason);
+              if Context.env_mode cx = Options.(SSAEnv Enforced) then
+                Flow.flow_t cx (AnyT.make (AnyError (Some MissingAnnotation)) reason, t)
+            | _ -> ()
+          end;
+          return
         in
         let (return_annotated_or_inferred, predicate) =
           let open Ast.Type.Predicate in
@@ -9165,7 +9205,15 @@ struct
      and super` to the environment, and return the signature. *)
   and function_decl cx ~func_hint ~needs_this_param reason func default_this super =
     let (func_sig, reconstruct_func) =
-      mk_func_sig cx ~func_hint ~needs_this_param Subst_name.Map.empty reason func
+      mk_func_sig
+        cx
+        ~func_hint
+        ~needs_this_param
+        ~require_return_annot:false
+        ~constructor:false
+        Subst_name.Map.empty
+        reason
+        func
     in
     let save_return = Abnormal.clear_saved Abnormal.Return in
     let save_throw = Abnormal.clear_saved Abnormal.Throw in

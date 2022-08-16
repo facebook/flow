@@ -10,7 +10,7 @@ class A {
 
   method1() { } // ok
   method2() { return 42; } // err return
-  constructor() { return 10; } // ok (but separately, we should error on returns in constructors no?)
+  constructor() { return 10; } // err return
 
   #priv1 = 10 + 20; // err
   #priv2; // err

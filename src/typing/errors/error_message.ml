@@ -192,6 +192,12 @@ and 'loc t' =
       use_op: 'loc virtual_use_op;
     }
   | EInvalidConstructor of 'loc virtual_reason
+  | EInvalidConstructorDefinition of {
+      loc: 'loc;
+      async: bool;
+      generator: bool;
+      predicate: bool;
+    }
   | EUnsupportedKeyInObjectType of 'loc
   | EPredAnnot of 'loc
   | ERefineAnnot of 'loc
@@ -728,6 +734,8 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
     EInvalidCharSet
       { invalid = (map_reason ir, set); valid = map_reason valid; use_op = map_use_op use_op }
   | EInvalidConstructor r -> EInvalidConstructor (map_reason r)
+  | EInvalidConstructorDefinition ({ loc; _ } as stuff) ->
+    EInvalidConstructorDefinition { stuff with loc = f loc }
   | EIncompatibleWithShape (l, u, use_op) ->
     EIncompatibleWithShape (map_reason l, map_reason u, map_use_op use_op)
   | EInvalidObjectKit { reason; reason_op; use_op } ->
@@ -1200,6 +1208,7 @@ let util_use_op_of_msg nope util = function
   | EObjectComputedPropertyAccess (_, _)
   | EObjectComputedPropertyAssign (_, _)
   | EInvalidConstructor _
+  | EInvalidConstructorDefinition _
   | EInvalidLHSInAssignment _
   | EUnsupportedImplements _
   | EReactElementFunArity (_, _, _)
@@ -1385,6 +1394,7 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | EUnsafeGetSet loc
   | EUninitializedInstanceProperty (loc, _)
   | EUseArrayLiteral loc
+  | EInvalidConstructorDefinition { loc; _ }
   | EUnsupportedSyntax (loc, _)
   | EInternal (loc, _)
   | EPrivateAnnot loc
@@ -3234,6 +3244,18 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
             text ". Only classes can be constructed.";
           ];
       }
+  | EInvalidConstructorDefinition { loc = _; async; generator; predicate } ->
+    let kind =
+      if predicate then
+        "a predicate"
+      else if generator then
+        "a generator"
+      else if async then
+        "async"
+      else
+        failwith "Missing reason for invalid constructor"
+    in
+    Normal { features = [text "Class constructor may not be "; text kind; text "."] }
   | EInvalidPrototype (_, reason) ->
     Normal
       {
@@ -4014,6 +4036,7 @@ let error_code_of_message err : error_code option =
   | EInternal (_, _) -> None
   | EInvalidCharSet _ -> Some InvalidCharsetTypeArg
   | EInvalidConstructor _ -> Some InvalidConstructor
+  | EInvalidConstructorDefinition _ -> Some InvalidConstructorDefinition
   | EInvalidLHSInAssignment _ -> Some InvalidLhs
   | EInvalidObjectKit _ -> Some NotAnObject
   | EInvalidPrototype _ -> Some NotAnObject

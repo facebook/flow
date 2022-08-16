@@ -43,6 +43,14 @@ References:
                          ^ [3]
 
 
+Error --------------------------------------------------------------------------------------------- constructor.js:25:22
+
+Class constructor may not be async. [invalid-constructor-definition]
+
+   25|   async constructor() { }
+                            
+
+
 Error -------------------------------------------------------------------------------------------------- invalid.js:5:15
 
 Cannot use `new` on function [1]. Only classes can be constructed. [invalid-constructor]
@@ -58,4 +66,4 @@ References:
 
 
 
-Found 4 errors
+Found 5 errors

@@ -332,7 +332,15 @@ module Make (Env : Env_sig.S) (Statement : Statement_sig.S with module Env := En
     let cache = Context.node_cache cx in
     let tparams_map = mk_tparams_map cx tparams_map in
     let ((({ Func_class_sig_types.Func_stmt_sig_types.fparams; _ } as func_sig), _) as sig_data) =
-      Statement.mk_func_sig cx ~func_hint:hint ~needs_this_param:true tparams_map reason function_
+      Statement.mk_func_sig
+        cx
+        ~func_hint:hint
+        ~needs_this_param:true
+        ~require_return_annot:false
+        ~constructor:false
+        tparams_map
+        reason
+        function_
     in
     let this_t =
       let default =

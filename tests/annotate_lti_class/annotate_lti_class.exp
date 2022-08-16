@@ -15,7 +15,7 @@ class A {
   method2(): number {
     return 42;
   } // annot return
-  constructor() {
+  constructor(): number {
     return 10;
   } // ok (but separately, we should error on returns in constructors no?)
   
@@ -32,9 +32,9 @@ function sanity_check_that_we_dont_annotate_non_method_functions() {
 
 Stats:
   Files changed:                            1
-  Number of annotations added:              7
-  Total size of annotations:                7
-  Number of LTI errors:                     7
+  Number of annotations added:              8
+  Total size of annotations:                8
+  Number of LTI errors:                     8
 
 Errors:
   Missing annot./normalizer error:          0

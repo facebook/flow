@@ -48,53 +48,77 @@ Internal error: read of Env_api.Make.FunctionThisLoc entry which has not been pr
        ^
 
 
-Error ----------------------------------------------------------------------------------------- regression_tests.js:21:3
+Error ---------------------------------------------------------------------------------------- regression_tests.js:21:17
+
+Missing an annotation on return. [missing-local-annot]
+
+   21|   constructor () {
+                       
+
+
+Error ----------------------------------------------------------------------------------------- regression_tests.js:24:3
 
 Missing an annotation on property `a`. [missing-local-annot]
 
-   21|   a;
+   24|   a;
          ^^
 
 
-Error ----------------------------------------------------------------------------------------- regression_tests.js:24:4
+Error ----------------------------------------------------------------------------------------- regression_tests.js:27:4
 
 Missing an annotation on property `d`. [missing-local-annot]
 
-   24|   d = 42 + 42;
+   27|   d = 42 + 42;
           
 
 
-Error ----------------------------------------------------------------------------------------- regression_tests.js:31:1
+Error ---------------------------------------------------------------------------------------- regression_tests.js:30:18
+
+Missing an annotation on return. [missing-local-annot]
+
+   30|   g = (x: number) => { return 42 }
+                        
+
+
+Error ----------------------------------------------------------------------------------------- regression_tests.js:33:6
+
+Missing an annotation on return. [missing-local-annot]
+
+   33|   j() { return 42 }
+            
+
+
+Error ----------------------------------------------------------------------------------------- regression_tests.js:44:1
 
 Internal error: read of Env_api.Make.FunctionThisLoc entry which has not been prepared for typechecking
 
-   31| function f(x, {a, b}, ...y) { }
-       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   44| function UnannotParams(x, {a, b}, ...y) { }
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
-Error ---------------------------------------------------------------------------------------- regression_tests.js:31:12
+Error ---------------------------------------------------------------------------------------- regression_tests.js:44:24
 
 Missing an annotation on `x`. [missing-local-annot]
 
-   31| function f(x, {a, b}, ...y) { }
-                  ^
+   44| function UnannotParams(x, {a, b}, ...y) { }
+                              ^
 
 
-Error ---------------------------------------------------------------------------------------- regression_tests.js:31:15
+Error ---------------------------------------------------------------------------------------- regression_tests.js:44:27
 
 Missing an annotation on destructuring. [missing-local-annot]
 
-   31| function f(x, {a, b}, ...y) { }
-                     ^^^^^^
+   44| function UnannotParams(x, {a, b}, ...y) { }
+                                 ^^^^^^
 
 
-Error ---------------------------------------------------------------------------------------- regression_tests.js:31:26
+Error ---------------------------------------------------------------------------------------- regression_tests.js:44:38
 
 Missing an annotation on rest parameter `y`. [missing-local-annot]
 
-   31| function f(x, {a, b}, ...y) { }
-                                ^
+   44| function UnannotParams(x, {a, b}, ...y) { }
+                                            ^
 
 
 
-Found 10 errors
+Found 13 errors

@@ -38,6 +38,14 @@ Missing an annotation on return. [missing-local-annot]
                   
 
 
+Error --------------------------------------------------------------------------------------------------- class.js:13:16
+
+Missing an annotation on return. [missing-local-annot]
+
+   13|   constructor() { return 10; } // err return
+                      
+
+
 Error ---------------------------------------------------------------------------------------------------- class.js:15:9
 
 Missing an annotation on property `#priv1`. [missing-local-annot]
@@ -71,4 +79,4 @@ Computed property keys not supported. [unsupported-syntax]
 
 
 
-Found 9 errors
+Found 10 errors

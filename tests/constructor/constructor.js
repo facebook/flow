@@ -20,3 +20,7 @@ declare class Baz<T> {
 }
 (new Baz('x'): Baz<string>); // ok
 (new Baz(123): Baz<string>); // error, number !~> string
+
+class F {
+  async constructor() { }
+}
