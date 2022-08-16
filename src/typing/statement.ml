@@ -4177,7 +4177,7 @@ struct
         let prop_t = Tvar.mk cx reason_prop in
         let lhs_t =
           Tvar.mk_no_wrap_where cx reason (fun t ->
-              let funtype = mk_methodcalltype ~meth_generic_this targts argts t in
+              let methodcalltype = mk_methodcalltype ~meth_generic_this targts argts t in
               let use_op =
                 Op
                   (FunCallMethod
@@ -4198,7 +4198,7 @@ struct
                       reason,
                       reason_lookup,
                       Named (reason_prop, OrdinaryName name),
-                      CallM funtype,
+                      CallM { methodcalltype },
                       prop_t
                     )
                 )
@@ -4239,7 +4239,7 @@ struct
         let prop_t = Tvar.mk cx (reason_of_t super_t) in
         let lhs_t =
           Tvar.mk_no_wrap_where cx reason (fun t ->
-              let funtype = mk_methodcalltype targts argts t in
+              let methodcalltype = mk_methodcalltype targts argts t in
               let propref = Named (super_reason, OrdinaryName "constructor") in
               let use_op =
                 Op
@@ -4254,7 +4254,9 @@ struct
               in
               Flow.flow
                 cx
-                (super_t, MethodT (use_op, reason, super_reason, propref, CallM funtype, prop_t))
+                ( super_t,
+                  MethodT (use_op, reason, super_reason, propref, CallM { methodcalltype }, prop_t)
+                )
           )
         in
         Some
@@ -5400,14 +5402,21 @@ struct
     let (expr_loc, _) = expr in
     let reason_prop = mk_reason (RProperty (Some (OrdinaryName name))) prop_loc in
     let reason_expr = mk_reason (RProperty (Some (OrdinaryName name))) expr_loc in
-    let app = mk_opt_methodcalltype targts argts call_strict_arity in
+    let opt_methodcalltype = mk_opt_methodcalltype targts argts call_strict_arity in
     let propref = Named (reason_prop, OrdinaryName name) in
     let action =
       match opt_state with
       | NewChain ->
-        let chain_reason = mk_reason ROptionalChain chain_loc in
-        OptChainM (chain_reason, mk_expression_reason expr, prop_t, app, voided_out)
-      | _ -> OptCallM app
+        let exp_reason = mk_reason ROptionalChain chain_loc in
+        OptChainM
+          {
+            exp_reason;
+            lhs_reason = mk_expression_reason expr;
+            this = prop_t;
+            opt_methodcalltype;
+            voided_out;
+          }
+      | _ -> OptCallM { opt_methodcalltype }
     in
     if private_ then
       let class_entries = Env.get_class_entries cx in
@@ -5452,9 +5461,15 @@ struct
       ( prop_t,
         Tvar.mk_no_wrap_where cx reason (fun t ->
             let reason_expr = mk_reason (RProperty (Some (OrdinaryName name))) expr_loc in
-            let app = mk_methodcalltype targts argts t ~meth_strict_arity:call_strict_arity in
+            let methodcalltype =
+              mk_methodcalltype targts argts t ~meth_strict_arity:call_strict_arity
+            in
             let propref = Named (reason_prop, OrdinaryName name) in
-            Flow.flow cx (obj_t, MethodT (use_op, reason, reason_expr, propref, CallM app, prop_t))
+            Flow.flow
+              cx
+              ( obj_t,
+                MethodT (use_op, reason, reason_expr, propref, CallM { methodcalltype }, prop_t)
+              )
         )
       )
 
@@ -5470,11 +5485,19 @@ struct
       argts
       elem_t =
     Env.havoc_heap_refinements ();
-    let app = mk_opt_methodcalltype targts argts true in
+    let opt_methodcalltype = mk_opt_methodcalltype targts argts true in
     let action =
       match opt_state with
-      | NewChain -> OptChainM (reason_chain, reason_expr, prop_t, app, voided_out)
-      | _ -> OptCallM app
+      | NewChain ->
+        OptChainM
+          {
+            exp_reason = reason_chain;
+            lhs_reason = reason_expr;
+            this = prop_t;
+            opt_methodcalltype;
+            voided_out;
+          }
+      | _ -> OptCallM { opt_methodcalltype }
     in
     OptCallElemT (reason_call, reason_lookup, elem_t, action)
 
@@ -6867,11 +6890,13 @@ struct
                 reason_createElement,
                 Named (reason_createElement, OrdinaryName "createElement"),
                 CallM
-                  (mk_methodcalltype
-                     None
-                     ([Arg component_t; Arg props] @ Base.List.map ~f:(fun c -> Arg c) children)
-                     tvar
-                  ),
+                  {
+                    methodcalltype =
+                      mk_methodcalltype
+                        None
+                        ([Arg component_t; Arg props] @ Base.List.map ~f:(fun c -> Arg c) children)
+                        tvar;
+                  },
                 prop_t
               )
           ));

@@ -652,9 +652,17 @@ and dump_use_t_ (depth, tvars) cx t =
     )
   in
   let method_action = function
-    | CallM { meth_args_tlist; meth_tout = (call_r, call_tvar); meth_generic_this; _ }
-    | ChainM (_, _, _, { meth_args_tlist; meth_tout = (call_r, call_tvar); meth_generic_this; _ }, _)
-      ->
+    | CallM
+        {
+          methodcalltype =
+            { meth_args_tlist; meth_tout = (call_r, call_tvar); meth_generic_this; _ };
+        }
+    | ChainM
+        {
+          methodcalltype =
+            { meth_args_tlist; meth_tout = (call_r, call_tvar); meth_generic_this; _ };
+          _;
+        } ->
       spf
         "<this: %s>(%s) => (%s, %s)"
         (Base.Option.value_map ~f:kid ~default:"None" meth_generic_this)

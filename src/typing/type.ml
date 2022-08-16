@@ -921,13 +921,25 @@ module rec TypeTerm : sig
     | ContinueChain
 
   and method_action =
-    | CallM of methodcalltype
-    | ChainM of reason * reason * t * methodcalltype * t_out
+    | CallM of { methodcalltype: methodcalltype }
+    | ChainM of {
+        exp_reason: reason;
+        lhs_reason: reason;
+        this: t;
+        methodcalltype: methodcalltype;
+        voided_out: t_out;
+      }
     | NoMethodAction
 
   and opt_method_action =
-    | OptCallM of opt_methodcalltype
-    | OptChainM of reason * reason * t * opt_methodcalltype * t_out
+    | OptCallM of { opt_methodcalltype: opt_methodcalltype }
+    | OptChainM of {
+        exp_reason: reason;
+        lhs_reason: reason;
+        this: t;
+        opt_methodcalltype: opt_methodcalltype;
+        voided_out: t_out;
+      }
     | OptNoMethodAction
 
   and specialize_cache = reason list option
@@ -3840,9 +3852,17 @@ let create_intersection rep = IntersectionT (locationless_reason (RCustom "inter
 
 let apply_opt_action action t_out =
   match action with
-  | OptCallM f -> CallM (apply_opt_methodcalltype f t_out)
-  | OptChainM (exp_reason, lhs_reason, this, f, vs) ->
-    ChainM (exp_reason, lhs_reason, this, apply_opt_methodcalltype f t_out, vs)
+  | OptCallM { opt_methodcalltype } ->
+    CallM { methodcalltype = apply_opt_methodcalltype opt_methodcalltype t_out }
+  | OptChainM { exp_reason; lhs_reason; this; opt_methodcalltype; voided_out } ->
+    ChainM
+      {
+        exp_reason;
+        lhs_reason;
+        this;
+        methodcalltype = apply_opt_methodcalltype opt_methodcalltype t_out;
+        voided_out;
+      }
   | OptNoMethodAction -> NoMethodAction
 
 let apply_opt_use opt_use t_out =

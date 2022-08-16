@@ -15,10 +15,17 @@ let rec default_resolve_touts ~flow cx loc u =
   let map_opt f t = Base.Option.iter ~f t in
   let resolve_method_action action =
     match action with
-    | ChainM (_, _, _, { meth_tout; _ }, tout) ->
+    | ChainM
+        {
+          exp_reason = _;
+          lhs_reason = _;
+          this = _;
+          methodcalltype = { meth_tout; _ };
+          voided_out = tout;
+        } ->
       resolve tout;
       resolve_tvar meth_tout
-    | CallM { meth_tout; _ } -> resolve_tvar meth_tout
+    | CallM { methodcalltype = { meth_tout; _ } } -> resolve_tvar meth_tout
     | NoMethodAction -> ()
   in
   let resolve_lookup_action action =

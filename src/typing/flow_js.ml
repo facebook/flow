@@ -3365,7 +3365,16 @@ struct
                 rec_flow
                   cx
                   trace
-                  (this, MethodT (use_op, reason_op, reason_o, propref, CallM funtype, prop_t))
+                  ( this,
+                    MethodT
+                      ( use_op,
+                        reason_op,
+                        reason_o,
+                        propref,
+                        CallM { methodcalltype = funtype },
+                        prop_t
+                      )
+                  )
             )
           in
           (* return this *)
@@ -3387,7 +3396,14 @@ struct
         | (AnyT _, MethodT (_, _, _, propref, NoMethodAction, prop_t)) ->
           rec_flow_t cx trace ~use_op:unknown_use (AnyT.untyped (reason_of_propref propref), prop_t)
         | ( AnyT _,
-            MethodT (use_op, reason_op, _, _, CallM { meth_args_tlist; meth_tout; _ }, prop_t)
+            MethodT
+              ( use_op,
+                reason_op,
+                _,
+                _,
+                CallM { methodcalltype = { meth_args_tlist; meth_tout; _ } },
+                prop_t
+              )
           ) ->
           let any = AnyT.untyped reason_op in
           call_args_iter (fun t -> rec_flow cx trace (t, UseT (use_op, any))) meth_args_tlist;
@@ -5741,9 +5757,17 @@ struct
       | _ -> false
     in
     let update_action_meth_generic_this l = function
-      | CallM mct -> CallM { mct with meth_generic_this = Some l }
-      | ChainM (r1, r2, t, mct, tout) ->
-        ChainM (r1, r2, t, { mct with meth_generic_this = Some l }, tout)
+      | CallM { methodcalltype = mct } ->
+        CallM { methodcalltype = { mct with meth_generic_this = Some l } }
+      | ChainM { exp_reason; lhs_reason; this; methodcalltype = mct; voided_out } ->
+        ChainM
+          {
+            exp_reason;
+            lhs_reason;
+            this;
+            methodcalltype = { mct with meth_generic_this = Some l };
+            voided_out;
+          }
       | NoMethodAction -> NoMethodAction
     in
     if
@@ -9099,12 +9123,12 @@ struct
 
   and apply_method_action cx trace l use_op reason_call this_arg action =
     match action with
-    | CallM app ->
+    | CallM { methodcalltype = app } ->
       let u =
         CallT { use_op; reason = reason_call; funcalltype = call_of_method_app this_arg app }
       in
       rec_flow cx trace (l, u)
-    | ChainM (exp_reason, lhs_reason, this, app, vs) ->
+    | ChainM { exp_reason; lhs_reason; this; methodcalltype = app; voided_out = vs } ->
       let u =
         OptionalChainT
           {
