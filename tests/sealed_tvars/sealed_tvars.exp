@@ -120,5 +120,35 @@ Missing an annotation on rest parameter `y`. [missing-local-annot]
                                             ^
 
 
+Error ---------------------------------------------------------------------------------------- regression_tests.js:54:14
 
-Found 13 errors
+Cannot cast `42` to empty because string [1] is incompatible with empty [2]. [incompatible-cast]
+
+   regression_tests.js:54:14
+   54| (((42: any): ModScope): empty); // string ~> empty, not num ~> empty
+                    ^^^^^^^^ [1]
+
+References:
+   regression_tests.js:54:25
+   54| (((42: any): ModScope): empty); // string ~> empty, not num ~> empty
+                               ^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------- regression_tests.js:61:30
+
+Internal error: unconstrained tvar during tvar resolution
+
+   61| declare var NonexistentType: ModScope2;
+                                    ^^^^^^^^^
+
+
+Error ---------------------------------------------------------------------------------------- regression_tests.js:61:30
+
+Cannot resolve name `ModScope2`. [cannot-resolve-name]
+
+   61| declare var NonexistentType: ModScope2;
+                                    ^^^^^^^^^
+
+
+
+Found 16 errors

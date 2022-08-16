@@ -26,6 +26,8 @@ type t = {
   mutable interfaces: (Type.t * (ALoc.t, ALoc.t * Type.t) Ast.Statement.Interface.t) ALocMap.t;
   mutable declared_classes:
     (Type.t * (ALoc.t, ALoc.t * Type.t) Ast.Statement.DeclareClass.t) ALocMap.t;
+  mutable declared_modules:
+    (Type.t * (ALoc.t, ALoc.t * Type.t) Ast.Statement.DeclareModule.t) ALocMap.t;
   mutable classes: (Type.t * (ALoc.t, ALoc.t * Type.t) Ast.Class.t) ALocMap.t;
   mutable class_sigs:
     ( Type.t
@@ -48,6 +50,7 @@ let mk_empty () =
     opaques = ALocMap.empty;
     interfaces = ALocMap.empty;
     declared_classes = ALocMap.empty;
+    declared_modules = ALocMap.empty;
     classes = ALocMap.empty;
     class_sigs = ALocMap.empty;
     tparams = ALocMap.empty;
@@ -72,6 +75,9 @@ let set_interface cache loc inter = cache.interfaces <- ALocMap.add loc inter ca
 let set_declared_class cache loc class_ =
   cache.declared_classes <- ALocMap.add loc class_ cache.declared_classes
 
+let set_declared_module cache loc module_ =
+  cache.declared_modules <- ALocMap.add loc module_ cache.declared_modules
+
 let set_class cache loc class_ = cache.classes <- ALocMap.add loc class_ cache.classes
 
 let set_class_sig cache loc class_ = cache.class_sigs <- ALocMap.add loc class_ cache.class_sigs
@@ -94,6 +100,8 @@ let get_opaque cache loc = ALocMap.find_opt loc cache.opaques
 let get_interface cache loc = ALocMap.find_opt loc cache.interfaces
 
 let get_declared_class cache loc = ALocMap.find_opt loc cache.declared_classes
+
+let get_declared_module cache loc = ALocMap.find_opt loc cache.declared_modules
 
 let get_class cache loc = ALocMap.find_opt loc cache.classes
 

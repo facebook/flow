@@ -922,3 +922,20 @@ x.push(42);
     (3, 9) to (3, 10) =>
     (7, 2) to (7, 3) =>
     (6, 9) to (6, 10) |}]
+
+let%expect_test "declare module" =
+  print_order_test {|
+declare module 'a' {
+  declare type T = S;
+}
+type S = number;
+declare module B {
+  declare function f(S): S;
+}
+  |};
+  [%expect {|
+    (5, 5) to (5, 6) =>
+    (3, 15) to (3, 16) =>
+    (2, 15) to (2, 18) =>
+    (7, 19) to (7, 20) =>
+    (6, 15) to (6, 16) |}]

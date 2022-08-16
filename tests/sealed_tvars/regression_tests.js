@@ -44,3 +44,18 @@ class MoreMA2 {
 function UnannotParams(x, {a, b}, ...y) { }
 
 UnannotParams((x) => x);
+
+
+type ModScope = string
+declare module 'declared-module' {
+  declare type ModScope = ModScopeExternal
+}
+type ModScopeExternal = number
+(((42: any): ModScope): empty); // string ~> empty, not num ~> empty
+
+declare module DeclaredModule2 {
+  declare type ModScope2 = number
+  declare type DependsOnModScope2 = ModScope2
+}
+
+declare var NonexistentType: ModScope2;

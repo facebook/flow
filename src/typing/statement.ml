@@ -1934,77 +1934,22 @@ struct
       let (t, decl_ast) = interface cx loc decl in
       Env.init_type cx name t name_loc;
       (loc, InterfaceDeclaration decl_ast)
-    | (loc, DeclareModule { DeclareModule.id; body; kind; comments }) ->
+    | (loc, DeclareModule ({ DeclareModule.id; _ } as module_)) ->
       let (id_loc, name) =
         match id with
         | DeclareModule.Identifier (id_loc, { Ast.Identifier.name = value; comments = _ })
         | DeclareModule.Literal (id_loc, { Ast.StringLiteral.value; _ }) ->
           (id_loc, value)
       in
-      let (body_loc, { Ast.Statement.Block.body = elements; comments = elements_comments }) =
-        body
-      in
-      let module_scope = Scope.fresh () in
-      Scope.add_entry
-        (Reason.internal_name "exports")
-        (Scope.Entry.new_var
-           ~loc:ALoc.none
-           ~provider:(Locationless.MixedT.t |> with_trust bogus_trust)
-           ~specific:(Locationless.EmptyT.t |> with_trust bogus_trust)
-           (Inferred (Locationless.MixedT.t |> with_trust bogus_trust))
-        )
-        module_scope;
-
-      let prev_scope_kind = Env.push_var_scope cx module_scope in
-      let excluded_symbols = Env.save_excluded_symbols () in
-      Context.push_declare_module cx (Module_info.empty_cjs_module ());
-
-      let (elements_ast, elements_abnormal) =
-        Abnormal.catch_stmts_control_flow_exception (fun () ->
-            toplevel_decls cx elements;
-            Toplevels.toplevels statement cx elements
-        )
-      in
-      let reason = mk_reason (RModule (OrdinaryName name)) loc in
-      Env.init_declare_module_synthetic_module_exports
-        cx
-        ~set_module_exports:Import_export.set_module_exports
-        ~export_type:Import_export.export_type
-        loc
-        reason
-        module_scope;
-      let module_t = Import_export.mk_module_t cx reason in
-      let ast =
-        ( loc,
-          DeclareModule
-            {
-              DeclareModule.id =
-                begin
-                  match id with
-                  | DeclareModule.Identifier (id_loc, id) ->
-                    DeclareModule.Identifier ((id_loc, module_t), id)
-                  | DeclareModule.Literal (id_loc, lit) ->
-                    DeclareModule.Literal ((id_loc, module_t), lit)
-                end;
-              body = (body_loc, { Block.body = elements_ast; comments = elements_comments });
-              kind;
-              comments;
-            }
-        )
-      in
-      ignore
-        ( Abnormal.check_stmt_control_flow_exception (ast, elements_abnormal)
-          : (ALoc.t, ALoc.t * Type.t) Ast.Statement.t
-          );
-
-      let t = Env.get_var_declared_type cx (Reason.internal_module_name name) id_loc in
-      Flow.flow_t cx (module_t, t);
-
-      Context.pop_declare_module cx;
-      Env.pop_var_scope cx prev_scope_kind;
-      Env.restore_excluded_symbols excluded_symbols;
-
-      ast
+      let (module_t, ast) = declare_module cx loc name module_ in
+      begin
+        match Context.env_mode cx with
+        | Options.(SSAEnv (Reordered | Enforced)) -> ()
+        | _ ->
+          let t = Env.get_var_declared_type cx (Reason.internal_module_name name) id_loc in
+          Flow.flow_t cx (module_t, t)
+      end;
+      (loc, DeclareModule ast)
     | (loc, DeclareExportDeclaration decl) ->
       let module D = DeclareExportDeclaration in
       let { D.default; declaration; specifiers; source; comments = _ } = decl in
@@ -2613,6 +2558,71 @@ struct
       let (class_sig, class_t, decl_ast) = Anno.mk_declare_class_sig cx loc reason decl in
       let t = interface_helper cx loc (class_sig, class_t) in
       (t, decl_ast)
+
+  and declare_module cx loc name { Ast.Statement.DeclareModule.id; body; kind; comments } =
+    let open Ast.Statement in
+    let node_cache = Context.node_cache cx in
+    match Node_cache.get_declared_module node_cache loc with
+    | Some x -> x
+    | None ->
+      let (body_loc, { Ast.Statement.Block.body = elements; comments = elements_comments }) =
+        body
+      in
+      let module_scope = Scope.fresh () in
+      Scope.add_entry
+        (Reason.internal_name "exports")
+        (Scope.Entry.new_var
+           ~loc:ALoc.none
+           ~provider:(Locationless.MixedT.t |> with_trust bogus_trust)
+           ~specific:(Locationless.EmptyT.t |> with_trust bogus_trust)
+           (Inferred (Locationless.MixedT.t |> with_trust bogus_trust))
+        )
+        module_scope;
+
+      let prev_scope_kind = Env.push_var_scope cx module_scope in
+      let excluded_symbols = Env.save_excluded_symbols () in
+      Context.push_declare_module cx (Module_info.empty_cjs_module ());
+
+      let (elements_ast, elements_abnormal) =
+        Abnormal.catch_stmts_control_flow_exception (fun () ->
+            toplevel_decls cx elements;
+            Toplevels.toplevels statement cx elements
+        )
+      in
+      let reason = mk_reason (RModule (OrdinaryName name)) loc in
+      Env.init_declare_module_synthetic_module_exports
+        cx
+        ~set_module_exports:Import_export.set_module_exports
+        ~export_type:Import_export.export_type
+        loc
+        reason
+        module_scope;
+      let module_t = Import_export.mk_module_t cx reason in
+      let ast =
+        {
+          DeclareModule.id =
+            begin
+              match id with
+              | DeclareModule.Identifier (id_loc, id) ->
+                DeclareModule.Identifier ((id_loc, module_t), id)
+              | DeclareModule.Literal (id_loc, lit) ->
+                DeclareModule.Literal ((id_loc, module_t), lit)
+            end;
+          body = (body_loc, { Block.body = elements_ast; comments = elements_comments });
+          kind;
+          comments;
+        }
+      in
+      ignore
+        ( Abnormal.check_stmt_control_flow_exception ((loc, DeclareModule ast), elements_abnormal)
+          : (ALoc.t, ALoc.t * Type.t) Ast.Statement.t
+          );
+
+      Context.pop_declare_module cx;
+      Env.pop_var_scope cx prev_scope_kind;
+      Env.restore_excluded_symbols excluded_symbols;
+
+      (module_t, ast)
 
   and object_prop cx ~object_hint acc prop =
     let open Ast.Expression.Object in

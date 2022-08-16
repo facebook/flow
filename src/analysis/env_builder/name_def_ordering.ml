@@ -240,6 +240,16 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) = struct
 
         method! object_key_identifier (id : (ALoc.t, ALoc.t) Ast.Identifier.t) = id
 
+        method! remote_identifier ident = ident
+
+        method! export_named_declaration_specifier
+            (spec : 'loc Ast.Statement.ExportNamedDeclaration.ExportSpecifier.t) =
+          let open Ast.Statement.ExportNamedDeclaration.ExportSpecifier in
+          (* Ignore renamed export *)
+          let (_, { local; exported = _ }) = spec in
+          let _local : (_, _) Ast.Identifier.t = this#identifier local in
+          spec
+
         (* For classes/functions that are known to be fully annotated, we skip property bodies *)
         method function_def ~fully_annotated (expr : ('loc, 'loc) Ast.Function.t) =
           let { Ast.Function.params; body; predicate; return; tparams; _ } = expr in
@@ -403,6 +413,15 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) = struct
             let _ = map_opt (map_loc visitor#generic_type) extends in
             let _ = map_list (map_loc visitor#generic_type) mixins in
             let _ = map_opt visitor#class_implements implements in
+            ())
+          EnvMap.empty
+      in
+      let depends_of_declared_module
+          { Ast.Statement.DeclareModule.id = _; body; kind = _; comments = _ } =
+        depends_of_node
+          (fun visitor ->
+            let open Flow_ast_mapper in
+            let _ = map_loc visitor#block body in
             ())
           EnvMap.empty
       in
@@ -574,6 +593,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) = struct
       | Interface (_, inter) -> depends_of_interface inter
       | GeneratorNext (Some { return_annot; tparams_map; _ }) ->
         depends_of_annotation tparams_map return_annot EnvMap.empty
+      | DeclaredModule (_, module_) -> depends_of_declared_module module_
       | GeneratorNext None -> EnvMap.empty
       | Enum _ ->
         (* Enums don't contain any code or type references, they're literal-like *) EnvMap.empty
@@ -608,7 +628,8 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) = struct
             _;
           }
       | Class _
-      | DeclaredClass _ ->
+      | DeclaredClass _
+      | DeclaredModule _ ->
         true
       | RefiExpression _
       | ChainExpression _

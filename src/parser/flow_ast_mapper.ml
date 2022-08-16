@@ -1699,6 +1699,8 @@ class ['loc] mapper =
             ImportNamespaceSpecifier (loc, ident)
         )
 
+    method remote_identifier id = this#identifier id
+
     method import_named_specifier
         ~(import_kind : Ast.Statement.ImportDeclaration.import_kind)
         (specifier : ('loc, 'loc) Ast.Statement.ImportDeclaration.named_specifier) =
@@ -1715,10 +1717,13 @@ class ['loc] mapper =
         | _ -> (false, false)
       in
       let remote' =
-        if is_type_remote then
-          this#type_identifier_reference remote
-        else
-          this#identifier remote
+        match local with
+        | None ->
+          if is_type_remote then
+            this#binding_type_identifier remote
+          else
+            this#pattern_identifier ~kind:Ast.Statement.VariableDeclaration.Let remote
+        | Some _ -> this#remote_identifier remote
       in
       let local' =
         match local with

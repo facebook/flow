@@ -154,6 +154,7 @@ type def =
       source_loc: ALoc.t;
     }
   | GeneratorNext of generator_annot option
+  | DeclaredModule of ALoc.t * (ALoc.t, ALoc.t) Ast.Statement.DeclareModule.t
 
 module Print = struct
   open Utils_js
@@ -224,12 +225,11 @@ module Print = struct
     | TypeParam (_, (loc, _)) -> spf "tparam %s" (ALoc.debug_to_string loc)
     | Enum (loc, _) -> spf "enum %s" (ALoc.debug_to_string loc)
     | Interface _ -> "interface"
+    | DeclaredModule _ -> "module"
     | GeneratorNext _ -> "next"
     | Import { import_kind; source; import; source_loc = _ } ->
       spf "import %s%s from %s" (string_of_import_kind import_kind) (string_of_import import) source
 end
-
-type map = (def * scope_kind * class_stack * ALoc.t virtual_reason) EnvMap.t
 
 let default_of_binding = function
   | Root (Annotation { default_expression; _ })
@@ -453,6 +453,8 @@ let func_scope_kind ?key { Ast.Function.async; generator; predicate; _ } =
   | _ -> (* Invalid, default to ordinary and hopefully error elsewhere *) Ordinary
 
 module Eq_test = Eq_test.Make (Scope_api.With_ALoc) (Ssa_api.With_ALoc) (Env_api.With_ALoc)
+
+type map = (def * scope_kind * class_stack * ALoc.t virtual_reason) EnvMap.t
 
 class def_finder env_entries providers toplevel_scope =
   object (this)
@@ -1085,6 +1087,19 @@ class def_finder env_entries providers toplevel_scope =
       let { id = (name_loc, _); _ } = interface in
       this#add_ordinary_binding name_loc (mk_reason RInterfaceType loc) (Interface (loc, interface));
       this#in_new_tparams_env (fun () -> super#interface loc interface)
+
+    method! declare_module loc (m : ('loc, 'loc) Ast.Statement.DeclareModule.t) =
+      let { Ast.Statement.DeclareModule.id; _ } = m in
+      let (name_loc, name) =
+        match id with
+        | Ast.Statement.DeclareModule.Identifier
+            (name_loc, { Ast.Identifier.name = value; comments = _ })
+        | Ast.Statement.DeclareModule.Literal (name_loc, { Ast.StringLiteral.value; _ }) ->
+          (name_loc, value)
+      in
+      let r = mk_reason (RModule (OrdinaryName name)) loc in
+      this#add_ordinary_binding name_loc r (DeclaredModule (loc, m));
+      super#declare_module loc m
 
     method! enum_declaration loc (enum : ('loc, 'loc) Ast.Statement.EnumDeclaration.t) =
       let open Ast.Statement.EnumDeclaration in
