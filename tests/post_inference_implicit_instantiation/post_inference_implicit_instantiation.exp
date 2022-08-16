@@ -1,3 +1,17 @@
+Error ------------------------------------------------------------------------------------------- contextual_ctor.js:5:9
+
+`T` is underconstrained by new `C` [1] and is defined in `T` [2] [underconstrained-implicit-instantiation]
+
+   contextual_ctor.js:5:9
+   5| let x = new C(); // Error
+              ^^^^^^^ [1]
+
+References:
+   contextual_ctor.js:3:9
+   3| class C<T> {}
+              ^ [2]
+
+
 Error -------------------------------------------------------------------------------------------- contextual_jsx.js:6:9
 
 `T` is underconstrained by `Component` element [1] and is defined in `T` [2] [underconstrained-implicit-instantiation]
@@ -163,4 +177,4 @@ OwnProps contains a non-Type.t upper bound ObjKitT
 
 
 
-Found 12 errors
+Found 13 errors

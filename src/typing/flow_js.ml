@@ -2841,8 +2841,8 @@ struct
                 ( t_,
                   ConstructorT { use_op; reason = reason_op; targs = None; args; tout; has_context }
                 )
-            | ConstructorT
-                { use_op; reason = reason_op; targs = None; args; tout = _; has_context = _ } ->
+            | ConstructorT { use_op; reason = reason_op; targs = None; args; tout = _; has_context }
+              ->
               let poly_t = (tparams_loc, ids, t) in
               let check = Implicit_instantiation_check.of_ctor l poly_t use_op reason_op args in
               let t_ =
@@ -2853,7 +2853,7 @@ struct
                   ~use_op
                   ~reason_op
                   ~reason_tapp
-                  ~has_context:false
+                  ~has_context
               in
               rec_flow cx trace (t_, u)
             | ReactKitT
