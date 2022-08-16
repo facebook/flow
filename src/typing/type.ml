@@ -508,7 +508,13 @@ module rec TypeTerm : sig
     | ReposLowerT of reason * bool (* use_desc *) * use_t
     | ReposUseT of reason * bool (* use_desc *) * use_op * t
     (* operations on runtime types, such as classes and functions *)
-    | ConstructorT of use_op * reason * targ list option * call_arg list * t
+    | ConstructorT of {
+        use_op: use_op;
+        reason: reason;
+        targs: targ list option;
+        args: call_arg list;
+        tout: t;
+      }
     | SuperT of use_op * reason * derived_type
     | ImplementsT of use_op * t
     | MixinT of reason * t

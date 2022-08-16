@@ -5384,8 +5384,8 @@ struct
   and new_call cx reason ~use_op class_ targs args =
     Env.havoc_heap_refinements ();
     Env.havoc_local_refinements cx;
-    Tvar.mk_where cx reason (fun t ->
-        Flow.flow cx (class_, ConstructorT (use_op, reason, targs, args, t))
+    Tvar.mk_where cx reason (fun tout ->
+        Flow.flow cx (class_, ConstructorT { use_op; reason; targs; args; tout })
     )
 
   and func_call_opt_use cx reason ~use_op ?(havoc = true) ?(call_strict_arity = true) targts argts =

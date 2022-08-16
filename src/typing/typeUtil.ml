@@ -73,7 +73,7 @@ and reason_of_use_t = function
   | CJSExtractNamedExportsT (reason, _, _) -> reason
   | CJSRequireT (reason, _, _) -> reason
   | ComparatorT { reason; _ } -> reason
-  | ConstructorT (_, reason, _, _, _) -> reason
+  | ConstructorT { reason; _ } -> reason
   | CopyNamedExportsT (reason, _, _) -> reason
   | CopyTypeExportsT (reason, _, _) -> reason
   | CheckUntypedImportT (reason, _) -> reason
@@ -240,8 +240,8 @@ and mod_reason_of_use_t f = function
   | CJSExtractNamedExportsT (reason, exports, t2) -> CJSExtractNamedExportsT (f reason, exports, t2)
   | CJSRequireT (reason, t, is_strict) -> CJSRequireT (f reason, t, is_strict)
   | ComparatorT ({ reason; _ } as x) -> ComparatorT { x with reason = f reason }
-  | ConstructorT (use_op, reason, targs, args, tout) ->
-    ConstructorT (use_op, f reason, targs, args, tout)
+  | ConstructorT { use_op; reason; targs; args; tout } ->
+    ConstructorT { use_op; reason = f reason; targs; args; tout }
   | CopyNamedExportsT (reason, target_module_t, t_out) ->
     CopyNamedExportsT (f reason, target_module_t, t_out)
   | CopyTypeExportsT (reason, target_module_t, t_out) ->
@@ -397,7 +397,8 @@ let rec util_use_op_of_use_t :
     util use_op (fun use_op -> OptionalIndexedAccessT { x with use_op })
   | ReposLowerT (r, d, u2) -> nested_util u2 (fun u2 -> ReposLowerT (r, d, u2))
   | ReposUseT (r, d, op, t) -> util op (fun op -> ReposUseT (r, d, op, t))
-  | ConstructorT (op, r, targs, args, t) -> util op (fun op -> ConstructorT (op, r, targs, args, t))
+  | ConstructorT { use_op; reason; targs; args; tout } ->
+    util use_op (fun use_op -> ConstructorT { use_op; reason; targs; args; tout })
   | SuperT (op, r, i) -> util op (fun op -> SuperT (op, r, i))
   | AdderT (op, d, f, l, r) -> util op (fun op -> AdderT (op, d, f, l, r))
   | ImplementsT (op, t) -> util op (fun op -> ImplementsT (op, t))

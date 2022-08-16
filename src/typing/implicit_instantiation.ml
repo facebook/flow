@@ -235,7 +235,14 @@ struct
       | Check.Constructor call_args ->
         let new_tout = Tvar.mk cx reason_op in
         let constructor_t =
-          ConstructorT (use_op, reason_op, Some call_targs, call_args, new_tout)
+          ConstructorT
+            {
+              use_op;
+              reason = reason_op;
+              targs = Some call_targs;
+              args = call_args;
+              tout = new_tout;
+            }
         in
         Flow.flow cx (lhs, constructor_t)
       | Check.Jsx { clone; component; config; children } ->
