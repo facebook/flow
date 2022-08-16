@@ -8919,7 +8919,14 @@ struct
           (t, Func_stmt_config_types.Types.Array { annot; elements; comments })
         | Ast.Pattern.Expression _ -> failwith "unexpected expression pattern in param"
       in
-      RequireAnnot.require_annot_on_pattern cx ~hint (reason_of_t t) patt;
+      RequireAnnot.require_annot_on_pattern
+        cx
+        ~hint
+        ~on_missing:(fun () ->
+          if Context.env_mode cx = Options.(SSAEnv Enforced) then
+            Flow.flow_t cx (AnyT.make (AnyError (Some MissingAnnotation)) (reason_of_t t), t))
+        (reason_of_t t)
+        patt;
       Func_stmt_config_types.Types.Param
         { t; loc; ploc; pattern; default; has_anno = has_param_anno }
     in
@@ -8935,7 +8942,14 @@ struct
         let (t, id) =
           id_param cx tparams_map id (fun name -> mk_reason (RRestParameter (Some name)) ploc)
         in
-        RequireAnnot.require_annot_on_pattern cx ~hint (reason_of_t t) patt;
+        RequireAnnot.require_annot_on_pattern
+          cx
+          ~hint
+          ~on_missing:(fun () ->
+            if Context.env_mode cx = Options.(SSAEnv Enforced) then
+              Flow.flow_t cx (AnyT.make (AnyError (Some MissingAnnotation)) (reason_of_t t), t))
+          (reason_of_t t)
+          patt;
         Ok (Func_stmt_config_types.Types.Rest { t; loc; ploc; id; has_anno = has_param_anno })
       | Ast.Pattern.Object _
       | Ast.Pattern.Array _

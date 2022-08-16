@@ -130,6 +130,7 @@ type def =
       op: Ast.Expression.Update.operator;
     }
   | Function of {
+      hint: hint_node hint;
       synthesizable_from_annotation: bool;
       function_loc: ALoc.t;
       function_: (ALoc.t, ALoc.t) Ast.Function.t;
@@ -432,9 +433,10 @@ let func_missing_annotations ~allow_this ({ Ast.Function.return; generator; para
 let func_is_synthesizable_from_annotation ~allow_this ({ Ast.Function.predicate; _ } as f) =
   Base.Option.is_none predicate && Base.List.is_empty (func_missing_annotations ~allow_this f)
 
-let def_of_function tparams_map function_loc function_ =
+let def_of_function tparams_map hint function_loc function_ =
   Function
     {
+      hint;
       synthesizable_from_annotation =
         func_is_synthesizable_from_annotation ~allow_this:false function_;
       function_loc;
@@ -721,7 +723,7 @@ class def_finder env_entries providers toplevel_scope =
             this#add_ordinary_binding
               id_loc
               (func_reason ~async ~generator sig_loc)
-              (def_of_function tparams loc expr)
+              (def_of_function tparams func_hint loc expr)
           | None -> ()
       )
 
@@ -739,7 +741,7 @@ class def_finder env_entries providers toplevel_scope =
             this#add_ordinary_binding
               id_loc
               (func_reason ~async ~generator sig_loc)
-              (def_of_function tparams loc expr)
+              (def_of_function tparams Hint_None loc expr)
           | None -> ()
       );
       expr

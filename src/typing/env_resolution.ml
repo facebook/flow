@@ -117,6 +117,34 @@ module Make (Env : Env_sig.S) (Statement : Statement_sig.S with module Env := En
     Node_cache.set_annotation cache anno;
     t
 
+  let resolve_hint cx loc hint =
+    let resolve_hint = function
+      | AnnotationHint (tparams_locs, anno) -> resolve_annotation cx tparams_locs anno
+      | ValueHint exp -> expression cx ~hint:dummy_hint exp
+      | ProvidersHint (loc, []) ->
+        let env = Context.environment cx in
+        New_env.New_env.check_readable cx Env_api.OrdinaryNameLoc loc;
+        Base.Option.value_exn (Loc_env.find_ordinary_write env loc)
+      | ProvidersHint (l1, l2 :: rest) ->
+        let env = Context.environment cx in
+        New_env.New_env.check_readable cx Env_api.OrdinaryNameLoc l1;
+        New_env.New_env.check_readable cx Env_api.OrdinaryNameLoc l2;
+        let t1 = Base.Option.value_exn (Loc_env.find_ordinary_write env l1) in
+        let t2 = Base.Option.value_exn (Loc_env.find_ordinary_write env l2) in
+        let ts =
+          Base.List.map rest ~f:(fun loc ->
+              New_env.New_env.check_readable cx Env_api.OrdinaryNameLoc loc;
+              Base.Option.value_exn (Loc_env.find_ordinary_write env loc)
+          )
+        in
+        UnionT (mk_reason (RCustom "providers") loc, UnionRep.make t1 t2 ts)
+    in
+    match hint with
+    | Hint_t hint_node -> Hint_t (resolve_hint hint_node)
+    | Hint_Decomp (ops, hint_node) -> Hint_Decomp (ops, resolve_hint hint_node)
+    | Hint_Placeholder -> Hint_Placeholder
+    | Hint_None -> Hint_None
+
   let rec resolve_binding_partial cx reason loc b =
     let mk_use_op t = Op (AssignVar { var = Some reason; init = TypeUtil.reason_of_t t }) in
     match b with
@@ -159,48 +187,23 @@ module Make (Env : Env_sig.S) (Statement : Statement_sig.S with module Env := En
       (t, use_op, false)
     | Root (Contextual { reason; hint; default_expression = _ }) ->
       let param_loc = Reason.poly_loc_of_reason reason in
-      let () =
-        match hint with
-        | Hint_api.Hint_None when RequireAnnot.should_require_annot cx ->
-          RequireAnnot.add_missing_annotation_error cx reason
-        | _ -> ()
-      in
       let contextual_typing_enabled = Context.env_mode cx = Options.(SSAEnv Enforced) in
       let t =
         if contextual_typing_enabled then
-          let resolve_hint = function
-            | AnnotationHint (tparams_locs, anno) -> resolve_annotation cx tparams_locs anno
-            | ValueHint exp -> expression cx ~hint:dummy_hint exp
-            | ProvidersHint (loc, []) ->
-              let env = Context.environment cx in
-              New_env.New_env.check_readable cx Env_api.OrdinaryNameLoc loc;
-              Base.Option.value_exn (Loc_env.find_ordinary_write env loc)
-            | ProvidersHint (l1, l2 :: rest) ->
-              let env = Context.environment cx in
-              New_env.New_env.check_readable cx Env_api.OrdinaryNameLoc l1;
-              New_env.New_env.check_readable cx Env_api.OrdinaryNameLoc l2;
-              let t1 = Base.Option.value_exn (Loc_env.find_ordinary_write env l1) in
-              let t2 = Base.Option.value_exn (Loc_env.find_ordinary_write env l2) in
-              let ts =
-                Base.List.map rest ~f:(fun loc ->
-                    New_env.New_env.check_readable cx Env_api.OrdinaryNameLoc loc;
-                    Base.Option.value_exn (Loc_env.find_ordinary_write env loc)
-                )
-              in
-              UnionT (mk_reason (RCustom "providers") loc, UnionRep.make t1 t2 ts)
-          in
-          let hint =
-            match hint with
-            | Hint_t hint_node -> Hint_t (resolve_hint hint_node)
-            | Hint_Decomp (ops, hint_node) -> Hint_Decomp (ops, resolve_hint hint_node)
-            | Hint_Placeholder -> Hint_Placeholder
-            | Hint_None -> Hint_None
-          in
+          let hint = resolve_hint cx loc hint in
           match Type_hint.evaluate_hint cx param_loc ~resolver:TvarResolver.resolved_t hint with
           | None -> Tvar.mk cx reason
           | Some t -> TypeUtil.mod_reason_of_t (Base.Fn.const reason) t
         else
           Tvar.mk cx reason
+      in
+      let () =
+        match hint with
+        | Hint_api.Hint_None when RequireAnnot.should_require_annot cx ->
+          if contextual_typing_enabled then
+            Flow_js.flow_t cx (AnyT.make (AnyError (Some MissingAnnotation)) reason, t);
+          RequireAnnot.add_missing_annotation_error cx reason
+        | _ -> ()
       in
       (t, mk_use_op t, false)
     | Root Catch ->
@@ -309,38 +312,27 @@ module Make (Env : Env_sig.S) (Statement : Statement_sig.S with module Env := En
       default;
     (t, use_op)
 
-  let resolve_inferred_function cx id_loc reason function_loc function_ =
+  let resolve_inferred_function cx ~hint id_loc reason function_loc function_ =
+    let hint = resolve_hint cx (aloc_of_reason reason) hint in
     let cache = Context.node_cache cx in
     (* TODO: This is intended to be the general type for the variable in the old environment, needed
        for generic escape detection. We can do generic escape differently in the future and remove
        this when we kill the old env. *)
     let general = Tvar.mk cx reason in
     let ((fun_type, _) as fn) =
-      Statement.mk_function
-        cx
-        ~hint:dummy_hint
-        ~needs_this_param:true
-        ~general
-        reason
-        function_loc
-        function_
+      Statement.mk_function cx ~hint ~needs_this_param:true ~general reason function_loc function_
     in
     Flow_js.flow_t cx (fun_type, general);
     Node_cache.set_function cache id_loc fn;
     (fun_type, unknown_use)
 
   let resolve_annotated_function
-      cx reason tparams_map ({ Ast.Function.body; params; sig_loc; _ } as function_) =
+      cx ~hint reason tparams_map ({ Ast.Function.body; params; sig_loc; _ } as function_) =
+    let hint = resolve_hint cx (aloc_of_reason reason) hint in
     let cache = Context.node_cache cx in
     let tparams_map = mk_tparams_map cx tparams_map in
     let ((({ Func_class_sig_types.Func_stmt_sig_types.fparams; _ } as func_sig), _) as sig_data) =
-      Statement.mk_func_sig
-        cx
-        ~func_hint:dummy_hint
-        ~needs_this_param:true
-        tparams_map
-        reason
-        function_
+      Statement.mk_func_sig cx ~func_hint:hint ~needs_this_param:true tparams_map reason function_
     in
     let this_t =
       let default =
@@ -602,12 +594,14 @@ module Make (Env : Env_sig.S) (Statement : Statement_sig.S with module Env := En
       | Binding b -> resolve_binding cx def_reason id_loc b
       | ChainExpression (cond, e) -> resolve_chain_expression cx ~cond e
       | RefiExpression e -> (expression cx ~hint:Hint_None e, unknown_use)
-      | Function { function_; synthesizable_from_annotation = false; function_loc; tparams_map = _ }
+      | Function
+          { function_; synthesizable_from_annotation = false; function_loc; tparams_map = _; hint }
         ->
-        resolve_inferred_function cx id_loc def_reason function_loc function_
-      | Function { function_; synthesizable_from_annotation = true; function_loc = _; tparams_map }
+        resolve_inferred_function cx ~hint id_loc def_reason function_loc function_
+      | Function
+          { function_; synthesizable_from_annotation = true; function_loc = _; tparams_map; hint }
         ->
-        resolve_annotated_function cx def_reason tparams_map function_
+        resolve_annotated_function cx ~hint def_reason tparams_map function_
       | Class { class_; class_loc; class_implicit_this_tparam = _; missing_annotations = _ } ->
         resolve_class cx id_loc def_reason class_loc class_
       | MemberAssign { member_loc = _; member = _; rhs } ->

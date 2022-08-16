@@ -64,5 +64,37 @@ Missing an annotation on property `d`. [missing-local-annot]
           
 
 
+Error ----------------------------------------------------------------------------------------- regression_tests.js:31:1
 
-Found 6 errors
+Internal error: read of Env_api.Make.FunctionThisLoc entry which has not been prepared for typechecking
+
+   31| function f(x, {a, b}, ...y) { }
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error ---------------------------------------------------------------------------------------- regression_tests.js:31:12
+
+Missing an annotation on `x`. [missing-local-annot]
+
+   31| function f(x, {a, b}, ...y) { }
+                  ^
+
+
+Error ---------------------------------------------------------------------------------------- regression_tests.js:31:15
+
+Missing an annotation on destructuring. [missing-local-annot]
+
+   31| function f(x, {a, b}, ...y) { }
+                     ^^^^^^
+
+
+Error ---------------------------------------------------------------------------------------- regression_tests.js:31:26
+
+Missing an annotation on rest parameter `y`. [missing-local-annot]
+
+   31| function f(x, {a, b}, ...y) { }
+                                ^
+
+
+
+Found 10 errors

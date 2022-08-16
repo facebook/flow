@@ -27,3 +27,7 @@ class MissingAnnotations {
   h() {}
   i(): number { return 42 }
 }
+
+function f(x, {a, b}, ...y) { }
+
+f((x) => x);

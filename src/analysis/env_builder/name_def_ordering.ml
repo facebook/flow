@@ -346,10 +346,31 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) = struct
               ignore @@ visitor#expression expr
         )
       in
-      let depends_of_fun fully_annotated tparams_map function_ =
+      let depends_of_hint_node state = function
+        | AnnotationHint (tparams_map, anno) -> depends_of_annotation tparams_map anno state
+        | ValueHint e -> depends_of_expression e state
+        | ProvidersHint providers ->
+          Nel.fold_left
+            (fun state loc ->
+              depends_of_node
+                (fun visitor -> visitor#add ~why:loc (Env_api.OrdinaryNameLoc, loc))
+                state)
+            state
+            providers
+      in
+      let depends_of_fun fully_annotated tparams_map hint function_ =
+        let state = EnvMap.empty in
+        let state =
+          match hint with
+          | Hint_api.Hint_None -> state
+          | Hint_api.Hint_Placeholder -> state
+          | Hint_api.Hint_t hint_node
+          | Hint_api.Hint_Decomp (_, hint_node) ->
+            depends_of_hint_node state hint_node
+        in
         depends_of_node
           (fun visitor -> visitor#function_def ~fully_annotated function_)
-          (depends_of_tparams_map tparams_map EnvMap.empty)
+          (depends_of_tparams_map tparams_map state)
       in
       let depends_of_class
           { Ast.Class.id = _; body; tparams; extends; implements; class_decorators; comments = _ } =
@@ -423,18 +444,6 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) = struct
             let _ = map_loc visitor#object_type body in
             ())
           EnvMap.empty
-      in
-      let depends_of_hint_node state = function
-        | AnnotationHint (tparams_map, anno) -> depends_of_annotation tparams_map anno state
-        | ValueHint e -> depends_of_expression e state
-        | ProvidersHint providers ->
-          Nel.fold_left
-            (fun state loc ->
-              depends_of_node
-                (fun visitor -> visitor#add ~why:loc (Env_api.OrdinaryNameLoc, loc))
-                state)
-            state
-            providers
       in
       let depends_of_root state = function
         | Annotation { annot; tparams_map; default_expression; _ } ->
@@ -554,8 +563,9 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) = struct
       | MemberAssign { member_loc; member; rhs; _ } ->
         depends_of_member_assign member_loc member rhs
       | OpAssign { lhs; rhs; _ } -> depends_of_op_assign lhs rhs
-      | Function { synthesizable_from_annotation; function_; function_loc = _; tparams_map } ->
-        depends_of_fun synthesizable_from_annotation tparams_map function_
+      | Function { synthesizable_from_annotation; function_; function_loc = _; tparams_map; hint }
+        ->
+        depends_of_fun synthesizable_from_annotation tparams_map hint function_
       | Class { class_; class_loc = _; class_implicit_this_tparam = _; missing_annotations = _ } ->
         depends_of_class class_
       | DeclaredClass (_, decl) -> depends_of_declared_class decl

@@ -8,11 +8,12 @@
 module Ast = Flow_ast
 open Hint_api
 
-let add_missing_annotation_error cx reason =
+let add_missing_annotation_error cx ?on_missing reason =
+  Base.Option.iter ~f:(fun f -> f ()) on_missing;
   Flow_js.add_output cx (Error_message.EMissingLocalAnnotation reason)
 
-let hint_missing_annotation cx reason = function
-  | Ast.Type.Missing _ -> add_missing_annotation_error cx reason
+let hint_missing_annotation cx reason ~on_missing = function
+  | Ast.Type.Missing _ -> add_missing_annotation_error cx ~on_missing reason
   | Ast.Type.Available _ -> ()
 
 let should_require_annot cx =
@@ -27,16 +28,17 @@ let should_require_annot cx =
   else
     false
 
-let require_annot_on_pattern cx ~hint pattern_reason pattern =
+let require_annot_on_pattern cx ~hint ~on_missing pattern_reason pattern =
   match hint with
   | Hint_None ->
     if should_require_annot cx then
       let open Ast.Pattern in
       (match pattern with
-      | Object { Object.annot; _ } -> hint_missing_annotation cx pattern_reason annot
-      | Array { Array.annot; _ } -> hint_missing_annotation cx pattern_reason annot
-      | Identifier { Identifier.annot; _ } -> hint_missing_annotation cx pattern_reason annot
-      | Expression _ -> add_missing_annotation_error cx pattern_reason)
+      | Object { Object.annot; _ } -> hint_missing_annotation cx ~on_missing pattern_reason annot
+      | Array { Array.annot; _ } -> hint_missing_annotation cx ~on_missing pattern_reason annot
+      | Identifier { Identifier.annot; _ } ->
+        hint_missing_annotation cx ~on_missing pattern_reason annot
+      | Expression _ -> add_missing_annotation_error cx ~on_missing pattern_reason)
   | Hint_t _
   | Hint_Decomp _
   | Hint_Placeholder ->
