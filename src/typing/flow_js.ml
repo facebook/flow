@@ -2867,8 +2867,11 @@ struct
                 ( t_,
                   ReactKitT (use_op, reason_op, React.CreateElement { payload with targs = None })
                 )
-            | ReactKitT (use_op, _, React.CreateElement { clone; component; config; children; _ })
-              ->
+            | ReactKitT
+                ( use_op,
+                  _,
+                  React.CreateElement { clone; component; config; children; has_context; _ }
+                ) ->
               let poly_t = (tparams_loc, ids, t) in
               let check =
                 Implicit_instantiation_check.of_jsx
@@ -2889,7 +2892,7 @@ struct
                   ~use_op
                   ~reason_op
                   ~reason_tapp
-                  ~has_context:false
+                  ~has_context
               in
               rec_flow cx trace (t_, u)
             | _ ->
