@@ -17,9 +17,8 @@ import styles from './styles.module.css';
 
 export default function Home(): React.MixedElement {
   const context = useDocusaurusContext();
-  const {siteConfig = {}} = context;
+  const {siteConfig} = context;
   return (
-    // $FlowFixMe[prop-missing]
     <Layout title={siteConfig.title} description={siteConfig.description}>
       <header className={clsx(styles.feature, styles.featureHero)}>
         <div className="container">
@@ -48,7 +47,11 @@ export default function Home(): React.MixedElement {
             Current version:{' '}
             <strong className="navbar-text">
               {/* TODO: add release */}
-              <a href="">RELEASE_NAME</a>
+              <a
+                href={`https://github.com/facebook/flow/releases/tag/${siteConfig.customFields.flowVersion}`}
+                className={styles.releaseVersion}>
+                {siteConfig.customFields.flowVersion}
+              </a>
             </strong>
           </div>
         </div>
