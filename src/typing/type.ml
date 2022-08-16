@@ -982,7 +982,9 @@ module rec TypeTerm : sig
     | Unsound of unsoundness_kind
     | Untyped
 
-  and any_error_kind = UnresolvedName
+  and any_error_kind =
+    | UnresolvedName
+    | MissingAnnotation
 
   (* Tracks the kinds of unsoundness inherent in Flow. If you can't find a kind that matches
      your use case, make one *)

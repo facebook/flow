@@ -8307,7 +8307,7 @@ struct
          Class_sig.t containing this field, as that is when the initializer expression
          gets checked.
     *)
-    let mk_field cx tparams_map reason annot init =
+    let mk_field cx tparams_map this_t reason annot init =
       let (annot_or_inferred, annot_ast) = Anno.mk_type_annotation cx tparams_map reason annot in
       let annot_t = type_t_of_annotated_or_inferred annot_or_inferred in
       let (field, get_init) =
@@ -8316,6 +8316,46 @@ struct
         | Ast.Class.Property.Uninitialized ->
           (Annot annot_t, Fun.const Ast.Class.Property.Uninitialized)
         | Ast.Class.Property.Initialized expr ->
+          begin
+            match (expr, annot_or_inferred) with
+            | ((_, Ast.Expression.Literal _), Inferred _) ->
+              let ((_, t), _) = expression ~hint:Hint_None cx expr in
+              Flow.flow_t cx (t, annot_t)
+            | ((_, Ast.Expression.(ArrowFunction function_ | Function function_)), Inferred _) ->
+              let { Ast.Function.sig_loc; _ } = function_ in
+              let cache = Context.node_cache cx in
+              let ((func_sig, _) as sig_data) =
+                mk_func_sig
+                  cx
+                  ~func_hint:Hint_None
+                  ~needs_this_param:false
+                  tparams_map
+                  reason
+                  function_
+              in
+              Node_cache.set_function_sig cache sig_loc sig_data;
+              let this_t =
+                match expr with
+                | (_, Ast.Expression.ArrowFunction _) -> dummy_this (aloc_of_reason reason)
+                | _ -> this_t
+              in
+              let t = Statement.Func_stmt_sig.functiontype cx this_t func_sig in
+              Flow.flow_t cx (t, annot_t)
+            | (_, Inferred _)
+              when RequireAnnot.should_require_annot cx && Context.enforce_class_annotations cx ->
+              let annot_loc =
+                match annot with
+                | Ast.Type.Missing loc
+                | Ast.Type.Available (loc, _) ->
+                  loc
+              in
+              Flow_js.add_output
+                cx
+                Error_message.(EMissingLocalAnnotation (repos_reason annot_loc reason));
+              if Context.env_mode cx = Options.(SSAEnv Enforced) then
+                Flow.flow_t cx (AnyT.make (AnyError (Some MissingAnnotation)) reason, annot_t)
+            | _ -> ()
+          end;
           let value_ref : (ALoc.t, ALoc.t * Type.t) Ast.Expression.t option ref = ref None in
           ( Infer
               ( Func_stmt_sig.field_initializer tparams_map reason expr annot_or_inferred,
@@ -8329,7 +8369,9 @@ struct
       (match (init, annot_or_inferred) with
       | ((Ast.Class.Property.Declared | Ast.Class.Property.Uninitialized), Inferred _)
         when RequireAnnot.should_require_annot cx ->
-        RequireAnnot.add_missing_annotation_error cx reason
+        RequireAnnot.add_missing_annotation_error cx reason;
+        if Context.env_mode cx = Options.(SSAEnv Enforced) then
+          Flow.flow_t cx (AnyT.make (AnyError (Some MissingAnnotation)) reason, annot_t)
       | _ -> ());
       (field, annot_t, annot_ast, get_init)
     in
@@ -8655,7 +8697,7 @@ struct
                 let reason = mk_reason (RPrivateProperty name) loc in
                 let polarity = Anno.polarity variance in
                 let (field, annot_t, annot_ast, get_value) =
-                  mk_field cx tparams_map_with_this reason annot value
+                  mk_field cx tparams_map_with_this this_t reason annot value
                 in
                 let get_element () =
                   Body.PrivateField
@@ -8700,7 +8742,7 @@ struct
                 let reason = mk_reason (RProperty (Some (OrdinaryName name))) loc in
                 let polarity = Anno.polarity variance in
                 let (field, annot_t, annot, get_value) =
-                  mk_field cx tparams_map_with_this reason annot value
+                  mk_field cx tparams_map_with_this this_t reason annot value
                 in
                 let get_element () =
                   Body.Property
@@ -8986,118 +9028,122 @@ struct
         id;
         async;
         generator;
-        sig_loc = _;
+        sig_loc;
         comments = _;
       } =
         func
       in
-      let loc = aloc_of_reason reason in
-      let ret_loc =
-        match return with
-        | Ast.Type.Available (loc, _)
-        | Ast.Type.Missing loc ->
-          loc
-      in
-      let kind = function_kind cx ~async ~generator ~predicate ~params ~ret_loc in
-      let (tparams, tparams_map, tparams_ast) =
-        Anno.mk_type_param_declarations cx ~tparams_map tparams
-      in
-      let fparams = mk_params cx ~func_hint tparams_map params in
-      if needs_this_param then
-        require_this_annot cx func (fst params) Ast.Function.Params.((snd params).this_);
-      let body = Some body in
-      let ret_reason = mk_reason RReturn (Func_sig.return_loc func) in
-      let (return_annotated_or_inferred, return) =
-        let open Func_class_sig_types.Func in
-        let has_nonvoid_return =
-          Nonvoid_return.might_have_nonvoid_return loc func || (kind <> Ordinary && kind <> Async)
+      let cache = Context.node_cache cx in
+      match Node_cache.get_function_sig cache sig_loc with
+      | Some x -> x
+      | None ->
+        let loc = aloc_of_reason reason in
+        let ret_loc =
+          match return with
+          | Ast.Type.Available (loc, _)
+          | Ast.Type.Missing loc ->
+            loc
         in
-        Anno.mk_return_type_annotation
-          cx
-          tparams_map
-          ret_reason
-          ~void_return:(not has_nonvoid_return)
-          ~async:(kind = Async)
-          return
-      in
-      let (return_annotated_or_inferred, predicate) =
-        let open Ast.Type.Predicate in
-        match predicate with
-        | None -> (return_annotated_or_inferred, None)
-        | Some ((_, { kind = Ast.Type.Predicate.Inferred; comments = _ }) as pred) ->
-          (* Predicate Functions
-           *
-           * function f(x: S): [T] %checks { return e; }
-           *
-           * The return type we assign to this function will be used for refining the
-           * input x. The type annotation T may not have this ability (if it's an
-           * annotation). Instead we introduce a fresh type T'. T' will receive lower
-           * bounds from the return expression e, but is also checked against the
-           * return type (annotation) T:
-           *
-           *   OpenPred(typeof e, preds) ~> T'
-           *   T' ~> T
-           *
-           * The function signature will be
-           *
-           *  (x: S) => T' (%checks)
-           *)
-          let bounds =
-            free_bound_ts cx (type_t_of_annotated_or_inferred return_annotated_or_inferred)
+        let kind = function_kind cx ~async ~generator ~predicate ~params ~ret_loc in
+        let (tparams, tparams_map, tparams_ast) =
+          Anno.mk_type_param_declarations cx ~tparams_map tparams
+        in
+        let fparams = mk_params cx ~func_hint tparams_map params in
+        if needs_this_param then
+          require_this_annot cx func (fst params) Ast.Function.Params.((snd params).this_);
+        let body = Some body in
+        let ret_reason = mk_reason RReturn (Func_sig.return_loc func) in
+        let (return_annotated_or_inferred, return) =
+          let open Func_class_sig_types.Func in
+          let has_nonvoid_return =
+            Nonvoid_return.might_have_nonvoid_return loc func || (kind <> Ordinary && kind <> Async)
           in
-          if Loc_collections.ALocSet.is_empty bounds then
-            let return_annotated_or_inferred' =
-              map_annotated_or_inferred
-                (fun return_t -> Tvar.mk_where cx reason (fun t -> Flow.flow_t cx (t, return_t)))
-                return_annotated_or_inferred
-            in
-            (return_annotated_or_inferred', Some pred)
-          else
-            (* If T is a polymorphic type P<X>, this approach can lead to some
-             * complications. The 2nd constraint from above would become
-             *
-             *   T' ~> P<X>
-             *
-             * which was previously ill-formed since it was outside a check_with_generics
-             * call (led to Not_expect_bounds exception). We disallow this case
-             * and instead propagate the original return type T; with the removal of
-             * check_with_generics this may no longer be necessary.
-             *)
-            let () =
-              Loc_collections.ALocSet.iter
-                (fun loc ->
-                  Flow_js.add_output
-                    cx
-                    Error_message.(EUnsupportedSyntax (loc, PredicateFunctionAbstractReturnType)))
-                bounds
-            in
-            (return_annotated_or_inferred, Some (Tast_utils.error_mapper#type_predicate pred))
-        | Some ((loc, { kind = Declared _; comments = _ }) as pred) ->
-          let (annotated_or_inferred, _) =
-            Anno.mk_type_annotation cx tparams_map ret_reason (Ast.Type.Missing loc)
-          in
-          Flow_js.add_output
+          Anno.mk_return_type_annotation
             cx
-            Error_message.(EUnsupportedSyntax (loc, PredicateDeclarationForImplementation));
-          (annotated_or_inferred, Some (Tast_utils.error_mapper#type_predicate pred))
-      in
-      let return_hint = decompose_hint Decomp_FuncReturn func_hint in
-      let return_t =
-        mk_inference_target_with_annots ~hint:return_hint return_annotated_or_inferred
-      in
-      ( { Func_stmt_sig_types.reason; kind; tparams; tparams_map; fparams; body; return_t },
-        fun params body fun_type ->
-          {
-            func with
-            Ast.Function.id =
-              Base.Option.map ~f:(fun (id_loc, name) -> ((id_loc, fun_type), name)) id;
-            params;
-            body;
-            predicate;
-            return;
-            tparams = tparams_ast;
-          }
-      )
+            tparams_map
+            ret_reason
+            ~void_return:(not has_nonvoid_return)
+            ~async:(kind = Async)
+            return
+        in
+        let (return_annotated_or_inferred, predicate) =
+          let open Ast.Type.Predicate in
+          match predicate with
+          | None -> (return_annotated_or_inferred, None)
+          | Some ((_, { kind = Ast.Type.Predicate.Inferred; comments = _ }) as pred) ->
+            (* Predicate Functions
+             *
+             * function f(x: S): [T] %checks { return e; }
+             *
+             * The return type we assign to this function will be used for refining the
+             * input x. The type annotation T may not have this ability (if it's an
+             * annotation). Instead we introduce a fresh type T'. T' will receive lower
+             * bounds from the return expression e, but is also checked against the
+             * return type (annotation) T:
+             *
+             *   OpenPred(typeof e, preds) ~> T'
+             *   T' ~> T
+             *
+             * The function signature will be
+             *
+             *  (x: S) => T' (%checks)
+             *)
+            let bounds =
+              free_bound_ts cx (type_t_of_annotated_or_inferred return_annotated_or_inferred)
+            in
+            if Loc_collections.ALocSet.is_empty bounds then
+              let return_annotated_or_inferred' =
+                map_annotated_or_inferred
+                  (fun return_t -> Tvar.mk_where cx reason (fun t -> Flow.flow_t cx (t, return_t)))
+                  return_annotated_or_inferred
+              in
+              (return_annotated_or_inferred', Some pred)
+            else
+              (* If T is a polymorphic type P<X>, this approach can lead to some
+               * complications. The 2nd constraint from above would become
+               *
+               *   T' ~> P<X>
+               *
+               * which was previously ill-formed since it was outside a check_with_generics
+               * call (led to Not_expect_bounds exception). We disallow this case
+               * and instead propagate the original return type T; with the removal of
+               * check_with_generics this may no longer be necessary.
+               *)
+              let () =
+                Loc_collections.ALocSet.iter
+                  (fun loc ->
+                    Flow_js.add_output
+                      cx
+                      Error_message.(EUnsupportedSyntax (loc, PredicateFunctionAbstractReturnType)))
+                  bounds
+              in
+              (return_annotated_or_inferred, Some (Tast_utils.error_mapper#type_predicate pred))
+          | Some ((loc, { kind = Declared _; comments = _ }) as pred) ->
+            let (annotated_or_inferred, _) =
+              Anno.mk_type_annotation cx tparams_map ret_reason (Ast.Type.Missing loc)
+            in
+            Flow_js.add_output
+              cx
+              Error_message.(EUnsupportedSyntax (loc, PredicateDeclarationForImplementation));
+            (annotated_or_inferred, Some (Tast_utils.error_mapper#type_predicate pred))
+        in
+        let return_hint = decompose_hint Decomp_FuncReturn func_hint in
+        let return_t =
+          mk_inference_target_with_annots ~hint:return_hint return_annotated_or_inferred
+        in
+        ( { Func_stmt_sig_types.reason; kind; tparams; tparams_map; fparams; body; return_t },
+          fun params body fun_type ->
+            {
+              func with
+              Ast.Function.id =
+                Base.Option.map ~f:(fun (id_loc, name) -> ((id_loc, fun_type), name)) id;
+              params;
+              body;
+              predicate;
+              return;
+              tparams = tparams_ast;
+            }
+        )
 
   (* Given a function declaration and types for `this` and `super`, extract a
      signature consisting of type parameters, parameter types, parameter names,

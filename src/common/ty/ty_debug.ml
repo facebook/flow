@@ -69,6 +69,7 @@ and dump_any_kind = function
 
 and dump_any_error_kind = function
   | Some UnresolvedName -> "UnresolvedName"
+  | Some MissingAnnotation -> "MissingAnnotation"
   | None -> "<None>"
 
 and dump_any_unsoundness_kind = function

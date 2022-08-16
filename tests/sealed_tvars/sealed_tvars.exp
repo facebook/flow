@@ -48,5 +48,21 @@ Internal error: read of Env_api.Make.FunctionThisLoc entry which has not been pr
        ^
 
 
+Error ----------------------------------------------------------------------------------------- regression_tests.js:21:3
 
-Found 4 errors
+Missing an annotation on property `a`. [missing-local-annot]
+
+   21|   a;
+         ^^
+
+
+Error ----------------------------------------------------------------------------------------- regression_tests.js:24:4
+
+Missing an annotation on property `d`. [missing-local-annot]
+
+   24|   d = 42 + 42;
+          
+
+
+
+Found 6 errors

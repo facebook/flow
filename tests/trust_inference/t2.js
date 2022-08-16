@@ -9,7 +9,7 @@ function g(x) {
 }
 
 function f(x: number): $Trusted<number> {
-  return g(x) // Fails. TODO: Pass under resolved_env
+  return g(x) // Fails.
 }
 
 f(42);

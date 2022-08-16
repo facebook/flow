@@ -70,7 +70,9 @@ and any_kind =
   | Unsound of unsoundness_kind
   | Untyped
 
-and any_error_kind = UnresolvedName
+and any_error_kind =
+  | UnresolvedName
+  | MissingAnnotation
 
 and unsoundness_kind =
   | BoundFunctionThis

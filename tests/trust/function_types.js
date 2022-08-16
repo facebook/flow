@@ -7,7 +7,7 @@ var b: (any => number) = a; //fail
 var c: (number=> number) = a; // fails without inference, ok with
 var d: ($Trusted<number> => any) = a;
 var e: any = a; //fail
-var h: ($Trusted<number> => $Trusted<number>) = a; //fails with inference TODO: pass in resolved_env
+var h: ($Trusted<number> => $Trusted<number>) = a; //fails with inference
 
 function g(x: number): $Trusted<number> { return 42; }
 

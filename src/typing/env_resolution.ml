@@ -330,9 +330,10 @@ module Make (Env : Env_sig.S) (Statement : Statement_sig.S with module Env := En
     (fun_type, unknown_use)
 
   let resolve_annotated_function
-      cx reason tparams_map ({ Ast.Function.body; params; _ } as function_) =
+      cx reason tparams_map ({ Ast.Function.body; params; sig_loc; _ } as function_) =
+    let cache = Context.node_cache cx in
     let tparams_map = mk_tparams_map cx tparams_map in
-    let (({ Func_class_sig_types.Func_stmt_sig_types.fparams; _ } as func_sig), _) =
+    let ((({ Func_class_sig_types.Func_stmt_sig_types.fparams; _ } as func_sig), _) as sig_data) =
       Statement.mk_func_sig
         cx
         ~func_hint:dummy_hint
@@ -351,6 +352,7 @@ module Make (Env : Env_sig.S) (Statement : Statement_sig.S with module Env := En
       in
       Base.Option.value (Statement.Func_stmt_params.this fparams) ~default
     in
+    Node_cache.set_function_sig cache sig_loc sig_data;
     (Statement.Func_stmt_sig.functiontype cx this_t func_sig, unknown_use)
 
   let resolve_class cx id_loc reason class_loc class_ =

@@ -893,6 +893,7 @@ end = struct
 
     and any_error_kind = function
       | Some T.UnresolvedName -> Some Ty.UnresolvedName
+      | Some T.MissingAnnotation -> Some Ty.MissingAnnotation
       | None -> None
 
     and unsoundness_any_t = function

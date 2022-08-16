@@ -12,6 +12,15 @@ type t = {
   mutable annotations: (ALoc.t, ALoc.t * Type.t) Ast.Type.annotation ALocMap.t;
   mutable expressions: (ALoc.t, ALoc.t * Type.t) Ast.Expression.t ALocMap.t;
   mutable functions: (Type.t * (ALoc.t, ALoc.t * Type.t) Ast.Function.t) ALocMap.t;
+  mutable function_sigs:
+    ( Func_class_sig_types.Func_stmt_sig_types.t
+    * ((ALoc.t, ALoc.t * Type.t) Ast.Function.Params.t ->
+      (ALoc.t, ALoc.t * Type.t) Ast.Function.body ->
+      Type.t ->
+      (ALoc.t, ALoc.t * Type.t) Ast.Function.t
+      )
+    )
+    ALocMap.t;
   mutable aliases: (Type.t * (ALoc.t, ALoc.t * Type.t) Ast.Statement.TypeAlias.t) ALocMap.t;
   mutable opaques: (Type.t * (ALoc.t, ALoc.t * Type.t) Ast.Statement.OpaqueType.t) ALocMap.t;
   mutable interfaces: (Type.t * (ALoc.t, ALoc.t * Type.t) Ast.Statement.Interface.t) ALocMap.t;
@@ -34,6 +43,7 @@ let mk_empty () =
     annotations = ALocMap.empty;
     expressions = ALocMap.empty;
     functions = ALocMap.empty;
+    function_sigs = ALocMap.empty;
     aliases = ALocMap.empty;
     opaques = ALocMap.empty;
     interfaces = ALocMap.empty;
@@ -50,6 +60,8 @@ let set_expression cache (((loc, _), _) as exp) =
   cache.expressions <- ALocMap.add loc exp cache.expressions
 
 let set_function cache loc fn = cache.functions <- ALocMap.add loc fn cache.functions
+
+let set_function_sig cache loc fn = cache.function_sigs <- ALocMap.add loc fn cache.function_sigs
 
 let set_alias cache loc alias = cache.aliases <- ALocMap.add loc alias cache.aliases
 
@@ -70,6 +82,8 @@ let set_tparam cache (((loc, _), _, _) as param) =
 let get_annotation cache loc = ALocMap.find_opt loc cache.annotations
 
 let get_expression cache loc = ALocMap.find_opt loc cache.expressions
+
+let get_function_sig cache loc = ALocMap.find_opt loc cache.function_sigs
 
 let get_function cache loc = ALocMap.find_opt loc cache.functions
 

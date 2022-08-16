@@ -16,3 +16,14 @@ function unresolved_class_self_tvar() {
 }
 
 exports.a = 1; // Read of exports points to a fully resolved exports type.
+
+class MissingAnnotations {
+  a;
+  b: number = 42;
+  c = 42;
+  d = 42 + 42;
+  e = (x: number): number => x;
+  f = (x: number) => { }
+  h() {}
+  i(): number { return 42 }
+}
