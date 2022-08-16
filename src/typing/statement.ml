@@ -3629,10 +3629,10 @@ struct
       in
       ((loc, t), TemplateLiteral { TemplateLiteral.quasis; expressions; comments })
     | JSXElement e ->
-      let (t, e) = jsx cx loc e in
+      let (t, e) = jsx ~hint cx loc e in
       ((loc, t), JSXElement e)
     | JSXFragment f ->
-      let (t, f) = jsx_fragment cx loc f in
+      let (t, f) = jsx_fragment ~hint cx loc f in
       ((loc, t), JSXFragment f)
     | Class c ->
       let class_loc = loc in
@@ -6522,7 +6522,7 @@ struct
     in
     (unresolved_params, (children_loc, children'))
 
-  and jsx cx expr_loc e : Type.t * (ALoc.t, ALoc.t * Type.t) Ast.JSX.element =
+  and jsx ~hint cx expr_loc e : Type.t * (ALoc.t, ALoc.t * Type.t) Ast.JSX.element =
     let open Ast.JSX in
     let { opening_element; children; closing_element; comments } = e in
     let (children_loc, _) = children in
@@ -6533,11 +6533,12 @@ struct
       | _ -> (open_, open_, open_)
     in
     let (t, opening_element, children, closing_element) =
-      jsx_title cx opening_element children closing_element locs
+      jsx_title ~hint cx opening_element children closing_element locs
     in
     (t, { opening_element; children; closing_element; comments })
 
-  and jsx_fragment cx expr_loc fragment : Type.t * (ALoc.t, ALoc.t * Type.t) Ast.JSX.fragment =
+  and jsx_fragment ~hint cx expr_loc fragment : Type.t * (ALoc.t, ALoc.t * Type.t) Ast.JSX.fragment
+      =
     let open Ast.JSX in
     let { frag_opening_element; frag_children; frag_closing_element; frag_comments } = fragment in
     let (children_loc, _) = frag_children in
@@ -6556,6 +6557,7 @@ struct
     let locs = (expr_loc, frag_opening_element, children_loc) in
     let t =
       jsx_desugar
+        ~hint
         cx
         "React.Fragment"
         fragment_t
@@ -6566,7 +6568,7 @@ struct
     in
     (t, { frag_opening_element; frag_children; frag_closing_element; frag_comments })
 
-  and jsx_title cx opening_element children closing_element locs =
+  and jsx_title ~hint:jsx_hint cx opening_element children closing_element locs =
     let open Ast.JSX in
     let make_trust = Context.trust_constructor cx in
     let (loc_element, _, _) = locs in
@@ -6624,7 +6626,7 @@ struct
           let (o, attributes', unresolved_params, children) =
             jsx_mk_props ~hint cx reason name attributes children
           in
-          let t = jsx_desugar cx name c o attributes unresolved_params locs in
+          let t = jsx_desugar ~hint:jsx_hint cx name c o attributes unresolved_params locs in
           let name = Identifier ((loc, c), { Identifier.name; comments }) in
           (t, name, attributes', children)
       | (MemberExpression member, Options.Jsx_react, _) ->
@@ -6638,7 +6640,7 @@ struct
         let (o, attributes', unresolved_params, children) =
           jsx_mk_props ~hint cx reason name attributes children
         in
-        let t = jsx_desugar cx name c o attributes unresolved_params locs in
+        let t = jsx_desugar ~hint:jsx_hint cx name c o attributes unresolved_params locs in
         let member' =
           match expression_to_jsx_title_member m_loc m_expr' with
           | Some member -> member
@@ -6859,7 +6861,7 @@ struct
     in
     (t, attributes, unresolved_params, children)
 
-  and jsx_desugar cx name component_t props attributes children locs =
+  and jsx_desugar ~hint cx name component_t props attributes children locs =
     let (loc_element, loc_opening, loc_children) = locs in
     match Context.jsx cx with
     | Options.Jsx_react ->
@@ -6921,7 +6923,7 @@ struct
                         None
                         ([Arg component_t; Arg props] @ Base.List.map ~f:(fun c -> Arg c) children)
                         tvar;
-                    has_context = false;
+                    has_context = hint <> Hint_None;
                   },
                 prop_t
               )
@@ -7003,10 +7005,10 @@ struct
     let make_trust = Context.trust_constructor cx in
     match child with
     | Element e ->
-      let (t, e) = jsx cx loc e in
+      let (t, e) = jsx ~hint cx loc e in
       (Some (UnresolvedArg (t, None)), (loc, Element e))
     | Fragment f ->
-      let (t, f) = jsx_fragment cx loc f in
+      let (t, f) = jsx_fragment ~hint cx loc f in
       (Some (UnresolvedArg (t, None)), (loc, Fragment f))
     | ExpressionContainer ec ->
       ExpressionContainer.(
