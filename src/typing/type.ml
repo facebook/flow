@@ -921,24 +921,32 @@ module rec TypeTerm : sig
     | ContinueChain
 
   and method_action =
-    | CallM of { methodcalltype: methodcalltype }
+    | CallM of {
+        methodcalltype: methodcalltype;
+        has_context: bool;
+      }
     | ChainM of {
         exp_reason: reason;
         lhs_reason: reason;
         this: t;
         methodcalltype: methodcalltype;
         voided_out: t_out;
+        has_context: bool;
       }
     | NoMethodAction
 
   and opt_method_action =
-    | OptCallM of { opt_methodcalltype: opt_methodcalltype }
+    | OptCallM of {
+        opt_methodcalltype: opt_methodcalltype;
+        has_context: bool;
+      }
     | OptChainM of {
         exp_reason: reason;
         lhs_reason: reason;
         this: t;
         opt_methodcalltype: opt_methodcalltype;
         voided_out: t_out;
+        has_context: bool;
       }
     | OptNoMethodAction
 
@@ -3852,9 +3860,9 @@ let create_intersection rep = IntersectionT (locationless_reason (RCustom "inter
 
 let apply_opt_action action t_out =
   match action with
-  | OptCallM { opt_methodcalltype } ->
-    CallM { methodcalltype = apply_opt_methodcalltype opt_methodcalltype t_out }
-  | OptChainM { exp_reason; lhs_reason; this; opt_methodcalltype; voided_out } ->
+  | OptCallM { opt_methodcalltype; has_context } ->
+    CallM { methodcalltype = apply_opt_methodcalltype opt_methodcalltype t_out; has_context }
+  | OptChainM { exp_reason; lhs_reason; this; opt_methodcalltype; voided_out; has_context } ->
     ChainM
       {
         exp_reason;
@@ -3862,6 +3870,7 @@ let apply_opt_action action t_out =
         this;
         methodcalltype = apply_opt_methodcalltype opt_methodcalltype t_out;
         voided_out;
+        has_context;
       }
   | OptNoMethodAction -> NoMethodAction
 

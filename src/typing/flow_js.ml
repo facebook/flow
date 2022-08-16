@@ -3371,7 +3371,8 @@ struct
                         reason_op,
                         reason_o,
                         propref,
-                        CallM { methodcalltype = funtype },
+                        (* TODO(jmbrown) has_context threading unblocked by ConstructorT *)
+                        CallM { methodcalltype = funtype; has_context = false },
                         prop_t
                       )
                   )
@@ -3401,7 +3402,7 @@ struct
                 reason_op,
                 _,
                 _,
-                CallM { methodcalltype = { meth_args_tlist; meth_tout; _ } },
+                CallM { methodcalltype = { meth_args_tlist; meth_tout; _ }; has_context = _ },
                 prop_t
               )
           ) ->
@@ -5757,9 +5758,9 @@ struct
       | _ -> false
     in
     let update_action_meth_generic_this l = function
-      | CallM { methodcalltype = mct } ->
-        CallM { methodcalltype = { mct with meth_generic_this = Some l } }
-      | ChainM { exp_reason; lhs_reason; this; methodcalltype = mct; voided_out } ->
+      | CallM { methodcalltype = mct; has_context } ->
+        CallM { methodcalltype = { mct with meth_generic_this = Some l }; has_context }
+      | ChainM { exp_reason; lhs_reason; this; methodcalltype = mct; voided_out; has_context } ->
         ChainM
           {
             exp_reason;
@@ -5767,6 +5768,7 @@ struct
             this;
             methodcalltype = { mct with meth_generic_this = Some l };
             voided_out;
+            has_context;
           }
       | NoMethodAction -> NoMethodAction
     in
@@ -9123,12 +9125,13 @@ struct
 
   and apply_method_action cx trace l use_op reason_call this_arg action =
     match action with
-    | CallM { methodcalltype = app } ->
+    | CallM { methodcalltype = app; has_context = _ } ->
       let u =
         CallT { use_op; reason = reason_call; funcalltype = call_of_method_app this_arg app }
       in
       rec_flow cx trace (l, u)
-    | ChainM { exp_reason; lhs_reason; this; methodcalltype = app; voided_out = vs } ->
+    | ChainM
+        { exp_reason; lhs_reason; this; methodcalltype = app; voided_out = vs; has_context = _ } ->
       let u =
         OptionalChainT
           {

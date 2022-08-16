@@ -4198,7 +4198,7 @@ struct
                       reason,
                       reason_lookup,
                       Named (reason_prop, OrdinaryName name),
-                      CallM { methodcalltype },
+                      CallM { methodcalltype; has_context = hint <> Hint_None },
                       prop_t
                     )
                 )
@@ -4255,7 +4255,14 @@ struct
               Flow.flow
                 cx
                 ( super_t,
-                  MethodT (use_op, reason, super_reason, propref, CallM { methodcalltype }, prop_t)
+                  MethodT
+                    ( use_op,
+                      reason,
+                      super_reason,
+                      propref,
+                      CallM { methodcalltype; has_context = false },
+                      prop_t
+                    )
                 )
           )
         in
@@ -5415,8 +5422,9 @@ struct
             this = prop_t;
             opt_methodcalltype;
             voided_out;
+            has_context = false;
           }
-      | _ -> OptCallM { opt_methodcalltype }
+      | _ -> OptCallM { opt_methodcalltype; has_context = false }
     in
     if private_ then
       let class_entries = Env.get_class_entries cx in
@@ -5468,7 +5476,14 @@ struct
             Flow.flow
               cx
               ( obj_t,
-                MethodT (use_op, reason, reason_expr, propref, CallM { methodcalltype }, prop_t)
+                MethodT
+                  ( use_op,
+                    reason,
+                    reason_expr,
+                    propref,
+                    CallM { methodcalltype; has_context = false },
+                    prop_t
+                  )
               )
         )
       )
@@ -5496,8 +5511,9 @@ struct
             this = prop_t;
             opt_methodcalltype;
             voided_out;
+            has_context = false;
           }
-      | _ -> OptCallM { opt_methodcalltype }
+      | _ -> OptCallM { opt_methodcalltype; has_context = false }
     in
     OptCallElemT (reason_call, reason_lookup, elem_t, action)
 
@@ -6896,6 +6912,7 @@ struct
                         None
                         ([Arg component_t; Arg props] @ Base.List.map ~f:(fun c -> Arg c) children)
                         tvar;
+                    has_context = false;
                   },
                 prop_t
               )

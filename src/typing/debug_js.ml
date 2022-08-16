@@ -656,6 +656,7 @@ and dump_use_t_ (depth, tvars) cx t =
         {
           methodcalltype =
             { meth_args_tlist; meth_tout = (call_r, call_tvar); meth_generic_this; _ };
+          _;
         }
     | ChainM
         {

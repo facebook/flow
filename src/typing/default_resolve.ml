@@ -22,10 +22,11 @@ let rec default_resolve_touts ~flow cx loc u =
           this = _;
           methodcalltype = { meth_tout; _ };
           voided_out = tout;
+          has_context = _;
         } ->
       resolve tout;
       resolve_tvar meth_tout
-    | CallM { methodcalltype = { meth_tout; _ } } -> resolve_tvar meth_tout
+    | CallM { methodcalltype = { meth_tout; _ }; has_context = _ } -> resolve_tvar meth_tout
     | NoMethodAction -> ()
   in
   let resolve_lookup_action action =
