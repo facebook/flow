@@ -1453,7 +1453,7 @@ module rec TypeTerm : sig
     | ResolveSpreadsToMultiflowCallFull of int * funtype
     | ResolveSpreadsToMultiflowSubtypeFull of int * funtype
     (* We can also call custom functions. *)
-    | ResolveSpreadsToCustomFunCall of int * custom_fun_kind * t
+    | ResolveSpreadsToCustomFunCall of int * custom_fun_kind * t * bool
     (* Once we've finished resolving spreads for a function's arguments,
      * partially apply the arguments to the function and return the resulting
      * function (basically what func.bind(that, ...args) does) *)
@@ -2591,6 +2591,7 @@ and React : sig
         config: TypeTerm.t;
         children: TypeTerm.t list * TypeTerm.t option;
         tout: TypeTerm.t_out;
+        has_context: bool;
       }
     | CreateElement of {
         clone: bool;
@@ -2603,6 +2604,7 @@ and React : sig
          * instantiated type variables would eventually get. It is likely that we will need to add
          * syntax support for explicit type arguments on React component instantiations *)
         targs: TypeTerm.targ list option;
+        has_context: bool;
       }
     | ConfigCheck of TypeTerm.t
     | GetProps of TypeTerm.t_out

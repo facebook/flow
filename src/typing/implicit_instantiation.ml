@@ -245,7 +245,15 @@ struct
             ( use_op,
               reason_op,
               React.CreateElement
-                { clone; component; config; children; targs = Some call_targs; tout = new_tout }
+                {
+                  clone;
+                  component;
+                  config;
+                  children;
+                  targs = Some call_targs;
+                  tout = new_tout;
+                  has_context = false;
+                }
             )
         in
         Flow.flow cx (lhs, react_kit_t)

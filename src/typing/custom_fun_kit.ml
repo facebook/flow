@@ -13,6 +13,7 @@ module FlowError = Flow_error
 
 module type CUSTOM_FUN = sig
   val run :
+    has_context:bool ->
     Context.t ->
     Type.trace ->
     use_op:Type.use_op ->
@@ -127,7 +128,7 @@ module Kit (Flow : Flow_common.S) = struct
       run_compose cx trace ~use_op reason_op reverse [spread_fn] None tin tout;
       run_compose cx trace ~use_op reason_op reverse [spread_fn] None tout tin
 
-  let run cx trace ~use_op reason_op kind args spread_arg tout =
+  let run ~has_context cx trace ~use_op reason_op kind args spread_arg tout =
     match kind with
     | Compose reverse ->
       (* Drop the specific argument reasons since run_compose will emit CallTs
@@ -164,7 +165,8 @@ module Kit (Flow : Flow_common.S) = struct
             ReactKitT
               ( use_op,
                 reason_op,
-                React.CreateElement0 { clone = false; config; children = ([], None); tout }
+                React.CreateElement0
+                  { clone = false; config; children = ([], None); tout; has_context }
               )
           )
       (* React.createElement(component, config, ...children) *)
@@ -177,7 +179,7 @@ module Kit (Flow : Flow_common.S) = struct
               ( use_op,
                 reason_op,
                 React.CreateElement0
-                  { clone = false; config; children = (children, spread_arg); tout }
+                  { clone = false; config; children = (children, spread_arg); tout; has_context }
               )
           )
       (* React.createElement() *)
@@ -225,7 +227,7 @@ module Kit (Flow : Flow_common.S) = struct
               ( use_op,
                 reason_op,
                 React.CreateElement0
-                  { clone = true; config; children = (children, spread_arg); tout }
+                  { clone = true; config; children = (children, spread_arg); tout; has_context }
               )
           )
       (* React.cloneElement() *)
@@ -247,7 +249,8 @@ module Kit (Flow : Flow_common.S) = struct
             ReactKitT
               ( use_op,
                 reason_op,
-                React.CreateElement0 { clone = false; config; children = ([], None); tout }
+                React.CreateElement0
+                  { clone = false; config; children = ([], None); tout; has_context }
               )
           )
       (* React.createFactory(component)(config, ...children) *)
@@ -260,7 +263,7 @@ module Kit (Flow : Flow_common.S) = struct
               ( use_op,
                 reason_op,
                 React.CreateElement0
-                  { clone = false; config; children = (children, spread_arg); tout }
+                  { clone = false; config; children = (children, spread_arg); tout; has_context }
               )
           ))
     | ObjectAssign

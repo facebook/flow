@@ -6891,7 +6891,9 @@ struct
         in
         let jsx_fun = CustomFunT (reason_jsx, ReactCreateElement) in
         let funcalltype = mk_functioncalltype reason_jsx None args tvar in
-        Flow.flow cx (jsx_fun, CallT { use_op; reason; funcalltype; has_context = false })
+        Flow.flow
+          cx
+          (jsx_fun, CallT { use_op; reason; funcalltype; has_context = hint <> Hint_None })
       | Options.ReactRuntimeClassic ->
         let reason_createElement =
           mk_reason (RProperty (Some (OrdinaryName "createElement"))) loc_element

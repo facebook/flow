@@ -1487,10 +1487,16 @@ struct
             | _ ->
               rec_flow cx trace (left, PredicateT (NotP MaybeP, u));
               rec_flow cx trace (right, UseT (unknown_use, OpenT u))))
-        | (_, ReactKitT (use_op, reason_op, React.CreateElement0 { clone; config; children; tout }))
-          ->
+        | ( _,
+            ReactKitT
+              ( use_op,
+                reason_op,
+                React.CreateElement0 { clone; config; children; tout; has_context }
+              )
+          ) ->
           let tool =
-            React.CreateElement { clone; component = l; config; children; tout; targs = None }
+            React.CreateElement
+              { clone; component = l; config; children; tout; targs = None; has_context }
           in
           rec_flow cx trace (l, ReactKitT (use_op, reason_op, tool))
         (*********************)
@@ -2327,7 +2333,7 @@ struct
               )
             | ResolveSpreadsToMultiflowCallFull (id, _)
             | ResolveSpreadsToMultiflowSubtypeFull (id, _)
-            | ResolveSpreadsToCustomFunCall (id, _, _)
+            | ResolveSpreadsToCustomFunCall (id, _, _, _)
             | ResolveSpreadsToMultiflowPartial (id, _, _, _) ->
               let reason_elemt = reason_of_t elemt in
               let pos = Base.List.length rrt_resolved in
@@ -3182,7 +3188,7 @@ struct
                 kind
                 )
               ),
-            CallT { use_op; reason = reason_op; funcalltype = calltype; has_context = _ }
+            CallT { use_op; reason = reason_op; funcalltype = calltype; has_context }
           ) ->
           let {
             call_targs;
@@ -3221,7 +3227,7 @@ struct
             ~use_op
             reason_op
             args
-            (ResolveSpreadsToCustomFunCall (mk_id (), kind, OpenT tout))
+            (ResolveSpreadsToCustomFunCall (mk_id (), kind, OpenT tout, has_context))
         | ( CustomFunT (_, (ObjectAssign | ObjectGetPrototypeOf | ObjectSetPrototypeOf)),
             MethodT (use_op, reason_call, _, Named (_, OrdinaryName "call"), action, prop_t)
           ) ->
@@ -9104,7 +9110,7 @@ struct
         (args, params)
     in
     (* Similar to finish_multiflow_full but for custom functions. *)
-    let finish_custom_fun_call cx ?trace ~use_op ~reason_op kind tout resolved =
+    let finish_custom_fun_call ~has_context cx ?trace ~use_op ~reason_op kind tout resolved =
       (* Multiflows always come out of a flow *)
       let trace =
         match trace with
@@ -9114,7 +9120,7 @@ struct
       let (args, spread_arg) = flatten_call_arg cx ~use_op reason_op resolved in
       let spread_arg = Base.Option.map ~f:fst spread_arg in
       let args = Base.List.map ~f:fst args in
-      CustomFunKit.run cx trace ~use_op reason_op kind args spread_arg tout
+      CustomFunKit.run ~has_context cx trace ~use_op reason_op kind args spread_arg tout
     in
     (* This is used for things like Function.prototype.apply, whose second arg is
      * basically a spread argument that we'd like to resolve *)
@@ -9160,8 +9166,8 @@ struct
         finish_multiflow_full cx ?trace ~use_op ~reason_op ~is_strict:true ft resolved
       | ResolveSpreadsToMultiflowSubtypeFull (_, ft) ->
         finish_multiflow_full cx ?trace ~use_op ~reason_op ~is_strict:false ft resolved
-      | ResolveSpreadsToCustomFunCall (_, kind, tout) ->
-        finish_custom_fun_call cx ?trace ~use_op ~reason_op kind tout resolved
+      | ResolveSpreadsToCustomFunCall (_, kind, tout, has_context) ->
+        finish_custom_fun_call ~has_context cx ?trace ~use_op ~reason_op kind tout resolved
       | ResolveSpreadsToCallT (funcalltype, tin) ->
         finish_call_t cx ?trace ~use_op ~reason_op funcalltype resolved tin
 

@@ -483,7 +483,8 @@ and dump_use_t_ (depth, tvars) cx t =
         )
       in
       function
-      | CreateElement0 { clone = _; config; children = (children, children_spread); tout }
+      | CreateElement0
+          { clone = _; config; children = (children, children_spread); tout; has_context = _ }
       | CreateElement
           {
             clone = _;
@@ -492,6 +493,7 @@ and dump_use_t_ (depth, tvars) cx t =
             children = (children, children_spread);
             tout;
             targs = _;
+            has_context = _;
           } ->
         p
           ~extra:
