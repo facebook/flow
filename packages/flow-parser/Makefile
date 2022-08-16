@@ -17,6 +17,8 @@ clean:
 flow_parser.js:
 	if [ -e dist/flow_parser.js ]; then \
 		[ $@ -nt dist/flow_parser.js ] || cp dist/flow_parser.js $@; \
+	elif [[ "${INTERNAL_BUILD}" -eq 1 ]]; then \
+		buck2 build @//mode/opt //flow/src/parser:flow_parser.js --out $@; \
 	else \
 		$(MAKE) -C ../../src/parser js; \
 		cp ../../src/parser/flow_parser.js $@; \
