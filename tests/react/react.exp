@@ -1570,8 +1570,8 @@ References:
 
 Error -------------------------------------------------------------------------------- useImperativeHandle_hook.js:31:41
 
-Cannot call `React.useImperativeHandle` with function bound to `create` because inexact object literal [1] is
-incompatible with exact `Interface` [2] in the return value. [incompatible-call]
+Cannot call `React.useImperativeHandle` with function bound to `create` because property `focus` is missing in object
+literal [1] but exists in `Interface` [2] in the return value. [incompatible-call]
 
    useImperativeHandle_hook.js:31:41
    31|   React.useImperativeHandle(ref, () => ({})); // Error: inexact object literal is incompatible with exact Interface
@@ -1585,8 +1585,8 @@ References:
 
 Error -------------------------------------------------------------------------------- useImperativeHandle_hook.js:34:47
 
-Cannot call `React.useImperativeHandle` with function bound to `create` because inexact object literal [1] is
-incompatible with exact `Interface` [2] in the return value. [incompatible-call]
+Cannot call `React.useImperativeHandle` with function bound to `create` because property `focus` is missing in object
+literal [1] but exists in `Interface` [2] in the return value. [incompatible-call]
 
    useImperativeHandle_hook.js:34:47
    34|   React.useImperativeHandle(refSetter, () => ({})); // Error: inexact object literal is incompatible with exact Interface

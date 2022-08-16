@@ -7,5 +7,6 @@
 [lints]
 
 [options]
+exact_empty_objects=false
 
 [strict]

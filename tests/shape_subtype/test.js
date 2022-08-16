@@ -4,10 +4,6 @@ type MyType = {|
 
 let x: $Shape<MyType> = {foo : 3}; //no error
 
-let o = {};
-o.p = 3;
-let z:$Shape<typeof o> = {s : 4}; //no error
-
 let o2 = {p : 4};
 let z2:$Shape<typeof o2> = {s : 4}; // flow error
 
@@ -29,11 +25,6 @@ let z9 : $Shape<number> = {x : 3}; // flow error
 
 let s = "asdf";
 let z11 : $Shape<string> = {x : 3}; // flow error
-
-let o7 = {};
-o7.p = 3;
-let z13 : $Shape<typeof o7> = {p : "3"}; // no error
-(z13.p : empty); //flow error
 
 let z14 : $Shape<{}> = {p : 'foo'}; // flow error
 

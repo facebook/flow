@@ -1,2 +1,3 @@
 [options]
 munge_underscores=true
+exact_empty_objects=true

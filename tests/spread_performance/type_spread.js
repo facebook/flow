@@ -9,7 +9,7 @@ type A = {| foo: number |} | {| bar: number |};
 declare var a: {...A, ...A, ...{| baz: number |}} // Error
 (a: null);
 
-var x = {};
+var x: {a?: ?{[string]: number}} = {};
 // Wrapping the last type in something that isn't an explicit union
 // type is usually enough to trigger the error on just two spread
 // operands.

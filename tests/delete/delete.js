@@ -62,19 +62,3 @@ delete index.a;
 delete index['a'];
 delete index.b;
 delete index['foo'];
-
-var dct = {};
-dct['a'] = 'hello';
-dct['c'] = 'bye';
-delete dct['a'];
-delete dct['b'];
-(dct['a']: string);
-(dct['a']: void);
-(dct['c']: string);
-
-var dct2 = {};
-dct2['a'] = 'hello';
-dct2['c'] = 'bye';
-declare var key: string;
-delete dct2[key];
-(dct2['a']: string)

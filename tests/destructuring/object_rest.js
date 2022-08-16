@@ -14,9 +14,3 @@ var o3 = { p: 0, q: 0 };
 var {p:p3, ...o3_rest} = o3;
 (o3_rest: {| q: number |}); // ok
 o3_rest.x = 0; // error: rest result is sealed
-
-var o4 = {};
-var {x, ...o4_rest} = o4;
-// writes to the rest result do not reach reads from unsealed o4
-(x: string); // ok, shadow read from unsealed o4
-o4_rest.x = 0; // ok, rest result is unsealed

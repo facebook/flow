@@ -108,6 +108,21 @@ References:
                 ^ [2]
 
 
+Error ----------------------------------------------------------------------------------------------------- type.js:14:2
+
+Cannot cast object literal to `O1` because property `p` is missing in object literal [1] but exists in `O1` [2].
+[prop-missing]
+
+   type.js:14:2
+   14| ({}: O1); // error
+        ^^ [1]
+
+References:
+   type.js:14:6
+   14| ({}: O1); // error
+            ^^ [2]
+
+
 Error ----------------------------------------------------------------------------------------------------- type.js:16:5
 
 Cannot cast object literal to `O1` because `U` [1] is incompatible with `T` [2] in property `p`. [incompatible-cast]
@@ -420,6 +435,21 @@ References:
    type.js:99:24
     99| type O14 = {...{...{|p:T|}}};
                                ^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- type.js:106:2
+
+Cannot cast object literal to `O14` because property `p` is missing in object literal [1] but exists in `O14` [2].
+[prop-missing]
+
+   type.js:106:2
+   106| ({}: O14); // error
+         ^^ [1]
+
+References:
+   type.js:106:6
+   106| ({}: O14); // error
+             ^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------- type_contra.js:6:2
@@ -1237,21 +1267,6 @@ References:
             ^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------ type_void.js:22:2
-
-Cannot cast object literal to `O2` because inexact object literal [1] is incompatible with exact `O2` [2].
-[incompatible-exact]
-
-   type_void.js:22:2
-   22| ({}: O2); // error
-        ^^ [1]
-
-References:
-   type_void.js:22:6
-   22| ({}: O2); // error
-            ^^ [2]
-
-
 Error ------------------------------------------------------------------------------------------------ type_void.js:23:2
 
 Cannot cast object literal to `O2` because property `p` is missing in `O2` [1] but exists in object literal [2].
@@ -1321,21 +1336,6 @@ References:
             ^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------ type_void.js:38:2
-
-Cannot cast object literal to `O4` because inexact object literal [1] is incompatible with exact `O4` [2].
-[incompatible-exact]
-
-   type_void.js:38:2
-   38| ({}: O4); // error
-        ^^ [1]
-
-References:
-   type_void.js:38:6
-   38| ({}: O4); // error
-            ^^ [2]
-
-
 Error ------------------------------------------------------------------------------------------------ type_void.js:39:2
 
 Cannot cast object literal to `O4` because property `p` is missing in `O4` [1] but exists in object literal [2].
@@ -1366,6 +1366,21 @@ References:
    type_void.js:43:10
    43| (o5: {p?:T}); // ok
                 ^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ type_void.js:45:2
+
+Cannot cast object literal to `O5` because property `p` is missing in object literal [1] but exists in `O5` [2].
+[prop-missing]
+
+   type_void.js:45:2
+   45| ({}: O5); // error
+        ^^ [1]
+
+References:
+   type_void.js:45:6
+   45| ({}: O5); // error
+            ^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------ type_void.js:47:5
@@ -1402,6 +1417,21 @@ References:
                 ^ [2]
 
 
+Error ------------------------------------------------------------------------------------------------ type_void.js:54:2
+
+Cannot cast object literal to `O6` because property `p` is missing in object literal [1] but exists in `O6` [2].
+[prop-missing]
+
+   type_void.js:54:2
+   54| ({}: O6); // error
+        ^^ [1]
+
+References:
+   type_void.js:54:6
+   54| ({}: O6); // error
+            ^^ [2]
+
+
 Error ------------------------------------------------------------------------------------------------ type_void.js:56:5
 
 Cannot cast object literal to `O6` because `U` [1] is incompatible with `T` [2] in property `p`. [incompatible-cast]
@@ -1420,7 +1450,7 @@ References:
 
 
 
-Found 86 errors
+Found 88 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

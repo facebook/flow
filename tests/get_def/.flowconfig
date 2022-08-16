@@ -2,3 +2,4 @@
 module.system=haste
 module.system.haste.module_ref_prefix=m#
 no_flowlib=true
+exact_empty_objects=true

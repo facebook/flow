@@ -83,10 +83,9 @@ function f<X: number, Y: ?number, Z: ?X>(
 
   // FilterOptionalT
   declare var a: {x?: X};
-  var b = {};
-  Object.assign(b, a);
-  (b.x: X);
-  (b.x: Y); //nope
+  var b = {...a};
+  (b.x: X | void);
+  (b.x: Y | void); //nope
 
   //FilterMaybeT
   declare var c: $NonMaybeType<X>;

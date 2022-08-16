@@ -25,4 +25,4 @@ var foo: $ObjMap<
 var bar: $ObjMap<
   {a: number},
   <T>(t:T) => T
-> = {} // ok
+> = {a: 1} // ok

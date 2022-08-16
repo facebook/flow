@@ -11,7 +11,7 @@ type O1 = {...{p:T}};
 declare var o1: O1;
 (o1: {p?:T}); // ok
 (o1: {p:T}); // error: o1.p is optional
-({}: O1); // ok
+({}: O1); // error
 ({p:x}: O1); // ok
 ({p:y}: O1); // error: y ~> T
 ({p:x,q:y}: O1); // ok
@@ -103,4 +103,4 @@ declare var o14: O14;
 (o14: {}); // ok
 ({p:x}: O14); // ok
 ({p:y}: O14); // error: U ~> T
-({}: O14); // ok
+({}: O14); // error

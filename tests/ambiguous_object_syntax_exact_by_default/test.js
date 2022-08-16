@@ -1,5 +1,5 @@
 //@flow
 const w: {[string]: number} = {};
-const x: {} = {}; // Error + lint
+const x: {} = {}; // Lint
 const y: {...} = {}; // Ok
-const z: {||} = {}; // Error
+const z: {||} = {}; // Ok

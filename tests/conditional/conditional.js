@@ -24,7 +24,7 @@ function d(): string { // expected `: number | boolean`
 }
 
 type Obj = {
-  f: ?number,
+  f?: ?number,
 };
 
 function foo(m: ?string): ?Obj {

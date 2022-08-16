@@ -2,14 +2,6 @@
 
 type PropertyDescriptor<T> = number;
 
-var x = {};
-Object.defineProperty(x, 'a', {get: () => 42});
-Object.defineProperty(x, 'b', {get: () => 20, value: 42});
-Object.defineProperty(x, 'c', {get: () => 'a', value: 42, set: (x: boolean) => {}});
-(x.b: number);
-(x.a: number);
-(x.c: number);
-
 declare var y: {|a: number, b: number|};
 
 Object.defineProperty(y, 'a', {writable: false});
@@ -28,18 +20,9 @@ Object.defineProperties<number>({}, {}); // targ arity mismatch
 
 var z = {};
 Object.create(z, {a: {get: () => 42},  b: {writable:true}});
-(z.a: number);
-z.b = 10;
-(z.b: string);
 
 Object.freeze<{}>({});
 Object.freeze<{a: number}>({a: 42, b: 42});
 Object.freeze<{a: number}>({a: 42, b: 42}).b; // b is hidden
 Object.freeze<{c: number}>({a: 42, b: 42}); // c does not exist
 Object.freeze<number, number>({}); // targ arity misnatch
-
-function f<T>(x: T): {x: T} {
-  var a = {}
-  Object.defineProperty<T>(a, 'x', {get: () => x});
-  return a;
-}

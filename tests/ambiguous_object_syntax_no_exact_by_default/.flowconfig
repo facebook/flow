@@ -1,2 +1,5 @@
+[options]
+exact_empty_objects=true
+
 [lints]
 ambiguous-object-type=error

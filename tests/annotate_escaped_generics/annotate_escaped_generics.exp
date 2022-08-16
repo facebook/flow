@@ -152,7 +152,7 @@ function fa<T>(a: T, b: boolean): T {
   return xa[0];
 }
 
->>> misc.js (#changes: 8)
+>>> misc.js (#changes: 7)
 //@flow
 
 var e: Array<mixed> = new Array(10);
@@ -225,15 +225,6 @@ var u: mixed = (<X>(x: X, escape: boolean): X => {
   return u;
 })(42, true);
 
-var a3: {| x: mixed |} = {};
-
-function f6<X>(x: X, escape: boolean): X | void {
-  if (escape) {
-    a3.x = x;
-  }
-  return a3.x;
-}
-
 var a4: (() => number) = () => 42;
 
 function f7<X>(x: X, escape: boolean): X | void {
@@ -292,8 +283,8 @@ class I<X> {
 
 Stats:
   Files changed:                            5
-  Number of annotations added:             24
-  Total size of annotations:               41
+  Number of annotations added:             23
+  Total size of annotations:               39
 
 Errors:
   Missing annot./normalizer error:          0

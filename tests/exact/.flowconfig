@@ -6,3 +6,4 @@
 
 [options]
 all=true
+exact_empty_objects=true

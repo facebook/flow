@@ -1,5 +1,6 @@
-var o = {};
-o["x"] = 4;
+var o = {
+  x: 4,
+};
 var y:string = o["x"];
 
 var table: { [_: string]: number } = {};

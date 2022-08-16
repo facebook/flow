@@ -808,8 +808,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- objmap.js:23:5
 
-Cannot assign object literal to `foo` because inexact object literal [1] is incompatible with exact object type [2].
-[incompatible-exact]
+Cannot assign object literal to `foo` because property `a` is missing in object literal [1] but exists in object
+type [2]. [prop-missing]
 
    objmap.js:23:5
    23| > = {} // error, {| a: number |} ~> {} 

@@ -71,15 +71,6 @@ var u = (<X>(x: X, escape: boolean): X => {
   return u;
 })(42, true);
 
-var a3 = {};
-
-function f6<X>(x: X, escape: boolean): X | void {
-  if (escape) {
-    a3.x = x;
-  }
-  return a3.x;
-}
-
 var a4 = () => 42;
 
 function f7<X>(x: X, escape: boolean): X | void {
@@ -87,20 +78,6 @@ function f7<X>(x: X, escape: boolean): X | void {
     a4.x = x;
   }
   return a4.x;
-}
-
-var a6 = {};
-a6.a7 = 42;
-function f9<Y>(y: Y, escape): ?Y {
-  var {a7, ...a8} = a6;
-  a8.c = y; // this should be ok
-  function g<X>(x: X): ?X {
-    if (escape) {
-      a8.b = x;
-    }
-    return a8.b;
-  }
-  return a8.c;
 }
 
 for (var x0 of []) {

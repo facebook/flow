@@ -1,15 +1,15 @@
 Error ----------------------------------------------------------------------------------------------------- main.js:4:16
 
-Cannot assign object literal to `o1` because inexact object literal [1] is incompatible with exact object literal [2].
-[incompatible-exact]
+Cannot assign object literal to `o1` because property `f` is missing in object literal [1] but exists in object
+literal [2]. [prop-missing]
 
    main.js:4:16
-   4| const o1: T1 = {}; // error inexact is incompatible with exact
+   4| const o1: T1 = {}; // error
                      ^^ [1]
 
 References:
    main.js:4:11
-   4| const o1: T1 = {}; // error inexact is incompatible with exact
+   4| const o1: T1 = {}; // error
                 ^^ [2]
 
 

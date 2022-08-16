@@ -266,39 +266,5 @@ References:
                             ^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------- unsealed.js:6:10
 
-Cannot return `o` because inexact object literal [1] is incompatible with exact object type [2]. [incompatible-exact]
-
-   unsealed.js:6:10
-   6|   return o; // error, unsealed implies inexact
-               ^
-
-References:
-   unsealed.js:4:11
-   4|   var o = {};
-                ^^ [1]
-   unsealed.js:3:25
-   3| function foo1(b: bool): {| x?: number |} {
-                              ^^^^^^^^^^^^^^^^ [2]
-
-
-Error ------------------------------------------------------------------------------------------------- unsealed.js:25:4
-
-Cannot cast `b2.x` to string because number [1] is incompatible with string [2]. [incompatible-cast]
-
-   unsealed.js:25:4
-   25|   (b2.x: string); // expected error: number ~/~> string
-          ^^^^
-
-References:
-   unsealed.js:16:18
-   16|   const a = { x: 42 };
-                        ^^ [1]
-   unsealed.js:25:10
-   25|   (b2.x: string); // expected error: number ~/~> string
-                ^^^^^^ [2]
-
-
-
-Found 17 errors
+Found 15 errors

@@ -68,16 +68,6 @@ Computed property keys not supported. [unsupported-syntax]
          ^^^^^^^^^^^^^^^^
 
 
-Error ------------------------------------------------------------------------------------------------ empty_obj.js:3:18
-
-Cannot build a typed interface for this module. You should annotate the exports of this module with types. Cannot
-determine types of initialized properties of an empty object. Please provide an annotation, e.g., by adding a type cast
-around this expression. [signature-verification-failure]
-
-   3| module.exports = {};
-                       ^^
-
-
 Error ------------------------------------------------------------------------------------------------------- fn.js:3:13
 
 Cannot build a typed interface for this module. You should annotate the exports of this module with types. Missing type
@@ -419,4 +409,4 @@ annotation at declaration of variable `x`: [signature-verification-failure]
 
 
 
-Found 40 errors
+Found 39 errors

@@ -787,198 +787,159 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- misc.js:78:12
 
-Cannot assign `x` to `a3.x` because type variable `X` [1] cannot escape from the scope in which it was defined [2] (try
-adding a type annotation to `a3` [3]). [escaped-generic]
+Cannot assign `x` to `a4.x` because type variable `X` [1] cannot escape from the scope in which it was defined [2] (try
+adding a type annotation to `a4` [3]). [escaped-generic]
 
    misc.js:78:12
-   78|     a3.x = x;
+   78|     a4.x = x;
                   ^
 
 References:
    misc.js:76:19
-   76| function f6<X>(x: X, escape: boolean): X | void {
+   76| function f7<X>(x: X, escape: boolean): X | void {
                          ^ [1]
    misc.js:76:13
-   76| function f6<X>(x: X, escape: boolean): X | void {
+   76| function f7<X>(x: X, escape: boolean): X | void {
                    ^ [2]
    misc.js:74:5
-   74| var a3 = {};
+   74| var a4 = () => 42;
            ^^ [3]
 
 
-Error ---------------------------------------------------------------------------------------------------- misc.js:87:12
-
-Cannot assign `x` to `a4.x` because type variable `X` [1] cannot escape from the scope in which it was defined [2] (try
-adding a type annotation to `a4` [3]). [escaped-generic]
-
-   misc.js:87:12
-   87|     a4.x = x;
-                  ^
-
-References:
-   misc.js:85:19
-   85| function f7<X>(x: X, escape: boolean): X | void {
-                         ^ [1]
-   misc.js:85:13
-   85| function f7<X>(x: X, escape: boolean): X | void {
-                   ^ [2]
-   misc.js:83:5
-   83| var a4 = () => 42;
-           ^^ [3]
-
-
-Error ---------------------------------------------------------------------------------------------------- misc.js:99:14
-
-Cannot assign `x` to `a8.b` because type variable `X` [1] cannot escape from the scope in which it was defined [2].
-[escaped-generic]
-
-   misc.js:99:14
-   99|       a8.b = x;
-                    ^
-
-References:
-   misc.js:97:20
-   97|   function g<X>(x: X): ?X {
-                          ^ [1]
-   misc.js:97:14
-   97|   function g<X>(x: X): ?X {
-                    ^ [2]
-
-
-Error --------------------------------------------------------------------------------------------------- misc.js:108:10
+Error ---------------------------------------------------------------------------------------------------- misc.js:85:10
 
 Cannot assign `y` to `x0` because `X` [1] is incompatible with variable `x0` of unknown type [2]. All writes to `x0`
 must be compatible with the type of its initializer [2]. Add an annotation to `x0` [2] if a different type is desired.
 [incompatible-type]
 
-   misc.js:108:10
-   108|     x0 = y;
-                 ^
+   misc.js:85:10
+   85|     x0 = y;
+                ^
 
 References:
-   misc.js:107:20
-   107|   function f<X>(y: X) {
-                           ^ [1]
-   misc.js:106:10
-   106| for (var x0 of []) {
-                 ^^ [2]
+   misc.js:84:20
+   84|   function f<X>(y: X) {
+                          ^ [1]
+   misc.js:83:10
+   83| for (var x0 of []) {
+                ^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- misc.js:114:10
+Error ---------------------------------------------------------------------------------------------------- misc.js:91:10
 
 Cannot assign `y` to `x1` because `X` [1] is incompatible with variable `x1` of unknown type [2]. All writes to `x1`
 must be compatible with the type of its initializer [2]. Add an annotation to `x1` [2] if a different type is desired.
 [incompatible-type]
 
-   misc.js:114:10
-   114|     x1 = y;
-                 ^
+   misc.js:91:10
+   91|     x1 = y;
+                ^
 
 References:
-   misc.js:113:20
-   113|   function f<X>(y: X) {
-                           ^ [1]
-   misc.js:112:11
-   112| for (var [x1] of []) {
-                  ^^ [2]
+   misc.js:90:20
+   90|   function f<X>(y: X) {
+                          ^ [1]
+   misc.js:89:11
+   89| for (var [x1] of []) {
+                 ^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- misc.js:120:10
+Error ---------------------------------------------------------------------------------------------------- misc.js:97:10
 
 Cannot assign `y` to `x2` because `X` [1] is incompatible with variable `x2` of unknown type [2]. All writes to `x2`
 must be compatible with the type of its initializer [2]. Add an annotation to `x2` [2] if a different type is desired.
 [incompatible-type]
 
-   misc.js:120:10
-   120|     x2 = y;
-                 ^
+   misc.js:97:10
+   97|     x2 = y;
+                ^
 
 References:
-   misc.js:119:20
-   119|   function f<X>(y: X) {
-                           ^ [1]
-   misc.js:118:14
-   118| for (var [...x2] of []) {
-                     ^^ [2]
+   misc.js:96:20
+   96|   function f<X>(y: X) {
+                          ^ [1]
+   misc.js:95:14
+   95| for (var [...x2] of []) {
+                    ^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- misc.js:126:10
+Error --------------------------------------------------------------------------------------------------- misc.js:103:10
 
 Cannot assign `y` to `x3` because `X` [1] is incompatible with variable `x3` of unknown type [2]. All writes to `x3`
 must be compatible with the type of its initializer [2]. Add an annotation to `x3` [2] if a different type is desired.
 [incompatible-type]
 
-   misc.js:126:10
-   126|     x3 = y;
+   misc.js:103:10
+   103|     x3 = y;
                  ^
 
 References:
-   misc.js:125:20
-   125|   function f<X>(y: X) {
+   misc.js:102:20
+   102|   function f<X>(y: X) {
                            ^ [1]
-   misc.js:124:14
-   124| for (var {...x3} of []) {
+   misc.js:101:14
+   101| for (var {...x3} of []) {
                      ^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- misc.js:138:9
+Error ---------------------------------------------------------------------------------------------------- misc.js:115:9
 
 Cannot assign `y` to `x` because type variable `X` [1] cannot escape from the scope in which it was defined [2].
 [escaped-generic]
 
-   misc.js:138:9
-   138|     x = y;
+   misc.js:115:9
+   115|     x = y;
                 ^
 
 References:
-   misc.js:137:20
-   137|   function f<X>(y: X) {
+   misc.js:114:20
+   114|   function f<X>(y: X) {
                            ^ [1]
-   misc.js:137:14
-   137|   function f<X>(y: X) {
+   misc.js:114:14
+   114|   function f<X>(y: X) {
                      ^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- misc.js:158:11
+Error --------------------------------------------------------------------------------------------------- misc.js:135:11
 
 Cannot assign `x` to `aaa` because object type [1] is incompatible with number [2]. All writes to `aaa` must be
 compatible with the type of its initializer [3]. Add an annotation to `aaa` [3] if a different type is desired.
 [incompatible-type]
 
-   misc.js:158:11
-   158|     aaa = x;
+   misc.js:135:11
+   135|     aaa = x;
                   ^
 
 References:
-   misc.js:157:30
-   157| function foo<T: {}>(x: $Diff<T, {}>) {
+   misc.js:134:30
+   134| function foo<T: {}>(x: $Diff<T, {}>) {
                                      ^ [1]
-   misc.js:156:11
-   156| var aaa = 1;
+   misc.js:133:11
+   133| var aaa = 1;
                   ^ [2]
-   misc.js:156:5
-   156| var aaa = 1;
+   misc.js:133:5
+   133| var aaa = 1;
             ^^^ [3]
 
 
-Error --------------------------------------------------------------------------------------------------- misc.js:163:11
+Error --------------------------------------------------------------------------------------------------- misc.js:140:11
 
 Cannot assign `t` to `x4[0]` because type variable `T` [1] cannot escape from the scope in which it was defined [2] (try
 adding a type annotation to `x4` [3]). [escaped-generic]
 
-   misc.js:163:11
-   163|   x4[0] = t;
+   misc.js:140:11
+   140|   x4[0] = t;
                   ^
 
 References:
-   misc.js:162:18
-   162| function f<T>(t: T) {
+   misc.js:139:18
+   139| function f<T>(t: T) {
                          ^ [1]
-   misc.js:162:12
-   162| function f<T>(t: T) {
+   misc.js:139:12
+   139| function f<T>(t: T) {
                    ^ [2]
-   misc.js:161:5
-   161| var x4 = [];
+   misc.js:138:5
+   138| var x4 = [];
             ^^ [3]
 
 
@@ -1112,7 +1073,7 @@ References:
 
 
 
-Found 57 errors
+Found 55 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

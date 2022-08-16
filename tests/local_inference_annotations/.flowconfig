@@ -3,3 +3,4 @@ no_flowlib=false
 experimental.enforce_local_inference_annotations=true
 experimental.local_inference_annotation_dirs=<PROJECT_ROOT>/included
 experimental.enforce_this_annotations=true
+exact_empty_objects=true

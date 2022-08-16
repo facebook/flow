@@ -647,19 +647,11 @@ Missing an annotation on `x`. [missing-local-annot]
                       ^
 
 
-Error ----------------------------------------------------------------------------------- included/object_static.js:3:25
+Error ----------------------------------------------------------------------------------- included/object_static.js:3:21
 
 Missing an annotation on `x`. [missing-local-annot]
 
-   3| Object.assign({}, { foo(x) {} });  // error missing annotation
-                              ^
-
-
-Error ----------------------------------------------------------------------------------- included/object_static.js:4:21
-
-Missing an annotation on `x`. [missing-local-annot]
-
-   4| Object.create({ foo(x) {} });  // error missing annotation
+   3| Object.create({ foo(x) {} });  // error missing annotation
                           ^
 
 
@@ -768,4 +760,4 @@ Missing an annotation on `y`. [missing-local-annot]
 
 
 
-Found 83 errors
+Found 82 errors

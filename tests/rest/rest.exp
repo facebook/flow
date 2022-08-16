@@ -337,21 +337,6 @@ References:
                  ^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- type.js:33:2
-
-Cannot cast object literal to `O3` because inexact object literal [1] is incompatible with exact object type [2].
-[incompatible-exact]
-
-   type.js:33:2
-   33| ({}: O3); // OK
-        ^^ [1]
-
-References:
-   type.js:33:6
-   33| ({}: O3); // OK
-            ^^ [2]
-
-
 Error ----------------------------------------------------------------------------------------------------- type.js:36:6
 
 Cannot cast object literal to `O3` because `Y` [1] is incompatible with `X` [2] in property `x`. [incompatible-cast]
@@ -1009,21 +994,6 @@ References:
                   ^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------ type_dict.js:14:2
-
-Cannot cast object literal to `O1` because inexact object literal [1] is incompatible with exact object type [2].
-[incompatible-exact]
-
-   type_dict.js:14:2
-   14| ({}: O1); // OK
-        ^^ [1]
-
-References:
-   type_dict.js:14:6
-   14| ({}: O1); // OK
-            ^^ [2]
-
-
 Error ------------------------------------------------------------------------------------------------ type_dict.js:16:6
 
 Cannot cast object literal to `O1` because `X` [1] is incompatible with `Y` [2] in property `y`. [incompatible-cast]
@@ -1105,21 +1075,6 @@ References:
    type_dict.js:27:12
    27| (o3: {|y?: X|}); // Error: Y = X
                   ^ [2]
-
-
-Error ------------------------------------------------------------------------------------------------ type_dict.js:28:2
-
-Cannot cast object literal to `O3` because inexact object literal [1] is incompatible with exact object type [2].
-[incompatible-exact]
-
-   type_dict.js:28:2
-   28| ({}: O3); // OK
-        ^^ [1]
-
-References:
-   type_dict.js:28:6
-   28| ({}: O3); // OK
-            ^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------ type_dict.js:30:6
@@ -1807,7 +1762,7 @@ References:
 
 
 
-Found 109 errors
+Found 106 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

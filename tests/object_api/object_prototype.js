@@ -8,7 +8,7 @@ function takesAnObject(x: Object) {}
 class Foo {}
 
 var a = { foo: 'bar' };
-var b = { foo: 'bar', ...{}};
+var b = { foo: 'bar' };
 var c = { foo: 'bar', toString: function(): number { return 123; }};
 var d : { [key: string]: string } = { foo: 'bar' };
 var x = new Date();

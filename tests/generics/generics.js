@@ -6,18 +6,15 @@ class C<X> {
 
 class D<T> {
   x:T;
-  m<S>(z:S,u:T,v):S {
+  m<S>(z:S,u:T):S {
     this.x = u;
-    v.u = u;
     return z;
   }
 }
 
 var d = new D();
-var o = {};
-var b = d.m(true,0,o);
+var b = d.m(true,0);
 var s:string = d.x;
-var n:number = o.u;
 
 class E<X> extends C<X> {
     //x:X;

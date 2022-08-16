@@ -129,10 +129,6 @@ printf "member of an object type alias = "
 assert_ok "$FLOW" get-def objects.js 5 4 --strip-root --pretty
 printf "member of an unannotated object type = "
 assert_ok "$FLOW" get-def objects.js 8 4 --strip-root --pretty
-printf "shadow prop created on write = "
-assert_ok "$FLOW" get-def objects.js 12 4 --strip-root --pretty
-printf "shadow prop created on read = "
-assert_ok "$FLOW" get-def objects.js 14 4 --strip-root --pretty
 
 printf "optional chain initial property = "
 assert_ok "$FLOW" get-def optional_chaining.js 17 6 --strip-root --pretty
@@ -144,18 +140,16 @@ printf "optional chain subsequent property of null = "
 assert_ok "$FLOW" get-def optional_chaining.js 18 11 --strip-root --pretty
 
 printf "shorthand destructuring = "
-assert_ok "$FLOW" get-def objects.js 19 11 --strip-root --pretty
+assert_ok "$FLOW" get-def objects.js 11 11 --strip-root --pretty
 printf "non-shorthand destructuring = "
-assert_ok "$FLOW" get-def objects.js 20 11 --strip-root --pretty
+assert_ok "$FLOW" get-def objects.js 12 11 --strip-root --pretty
 printf "destructuring without type alias = "
-assert_ok "$FLOW" get-def objects.js 22 11 --strip-root --pretty
-printf "destructuring a shadow prop = "
-assert_ok "$FLOW" get-def objects.js 23 11 --strip-root --pretty
+assert_ok "$FLOW" get-def objects.js 14 11 --strip-root --pretty
 # This one should return itself
 printf "bogus array destructuring of an object = "
-assert_ok "$FLOW" get-def objects.js 24 11 --strip-root --pretty
+assert_ok "$FLOW" get-def objects.js 15 11 --strip-root --pretty
 printf "property access assigned to a variable = "
-assert_ok "$FLOW" get-def objects.js 25 10 --strip-root --pretty
+assert_ok "$FLOW" get-def objects.js 16 10 --strip-root --pretty
 
 printf "property access on the arg to the idx callback = "
 assert_ok "$FLOW" get-def idx.js 12 25 --strip-root --pretty

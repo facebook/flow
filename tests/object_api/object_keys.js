@@ -4,11 +4,6 @@ var sealed = {one: 'one', two: 'two'};
 (Object.keys(sealed): Array<'one'|'two'>);
 (Object.keys(sealed): void); // error, Array<string>
 
-var unsealed = {};
-Object.keys(unsealed).forEach(k => {
-  (k : number) // error: string ~> number
-});
-
 var dict: { [k: number]: string } = {};
 Object.keys(dict).forEach(k => {
   (k : number) // error: string ~> number

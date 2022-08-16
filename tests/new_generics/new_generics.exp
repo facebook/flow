@@ -879,42 +879,42 @@ References:
                        ^^^^ [3]
 
 
-Error ---------------------------------------------------------------------------------------------------- maybe.js:89:4
+Error ---------------------------------------------------------------------------------------------------- maybe.js:88:4
 
-Cannot cast `b.x` to `Y` because number [1] is incompatible with `Y` [2]. [incompatible-cast]
+Cannot cast `b.x` to union type because number [1] is incompatible with `Y` [2]. [incompatible-cast]
 
-   maybe.js:89:4
-   89|   (b.x: Y); //nope
+   maybe.js:88:4
+   88|   (b.x: Y | void); //nope
           ^^^
 
 References:
    maybe.js:85:23
    85|   declare var a: {x?: X};
                              ^ [1]
-   maybe.js:89:9
-   89|   (b.x: Y); //nope
+   maybe.js:88:9
+   88|   (b.x: Y | void); //nope
                ^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- maybe.js:95:4
+Error ---------------------------------------------------------------------------------------------------- maybe.js:94:4
 
 Cannot cast `c` to union type because: [incompatible-cast]
  - Either number [1] is incompatible with null [2].
  - Or number [1] is incompatible with undefined [3].
 
-   maybe.js:95:4
-   95|   (c: null | void); // nope
+   maybe.js:94:4
+   94|   (c: null | void); // nope
           ^
 
 References:
-   maybe.js:92:32
-   92|   declare var c: $NonMaybeType<X>;
+   maybe.js:91:32
+   91|   declare var c: $NonMaybeType<X>;
                                       ^ [1]
-   maybe.js:95:7
-   95|   (c: null | void); // nope
+   maybe.js:94:7
+   94|   (c: null | void); // nope
              ^^^^ [2]
-   maybe.js:95:14
-   95|   (c: null | void); // nope
+   maybe.js:94:14
+   94|   (c: null | void); // nope
                     ^^^^ [3]
 
 

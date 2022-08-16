@@ -9,9 +9,10 @@ function bar(x: $Keys<{age: number}>) { }
 bar(APIKeys.AGE); // not an error: APIKeys.AGE = "age"
 bar(APIKeys.NAME); // error: since "NAME" is not in the smaller enum
 
-var object = {};
-object[APIKeys.AGE] = 123; // i.e., object.age = 123
-object[APIKeys.NAME] = "FOO"; // i.e., object.name = "FOO"
+var object = {
+  [APIKeys.AGE]: 123, // i.e., object.age = 123
+  [APIKeys.NAME]: "FOO", // i.e., object.name = "FOO"
+};
 
 var age:number = object[APIKeys.AGE];
 var name:number = object[APIKeys.NAME]; // error: object.name is a string

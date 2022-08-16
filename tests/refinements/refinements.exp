@@ -3136,45 +3136,45 @@ References:
              ^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------ missing-property-cond.js:37:9
+Error ------------------------------------------------------------------------------------ missing-property-cond.js:28:9
 
 Cannot get `o.bar` because property `bar` is missing in mixed [1]. [incompatible-type]
 
-   missing-property-cond.js:37:9
-   37|   if (o.bar) {} // error, any lookup on mixed is unsafe
+   missing-property-cond.js:28:9
+   28|   if (o.bar) {} // error, any lookup on mixed is unsafe
                ^^^
 
 References:
-   missing-property-cond.js:36:18
-   36| function foo6(o: mixed) {
+   missing-property-cond.js:27:18
+   27| function foo6(o: mixed) {
                         ^^^^^ [1]
 
 
-Error ----------------------------------------------------------------------------------- missing-property-cond.js:41:16
+Error ----------------------------------------------------------------------------------- missing-property-cond.js:32:16
 
 Cannot get `o.bar` because property `bar` is missing in mixed [1]. [incompatible-type]
 
-   missing-property-cond.js:41:16
-   41|   if (typeof o.bar === 'string') {} // error
+   missing-property-cond.js:32:16
+   32|   if (typeof o.bar === 'string') {} // error
                       ^^^
 
 References:
-   missing-property-cond.js:40:18
-   40| function foo7(o: mixed) {
+   missing-property-cond.js:31:18
+   31| function foo7(o: mixed) {
                         ^^^^^ [1]
 
 
-Error ----------------------------------------------------------------------------------- missing-property-cond.js:65:12
+Error ----------------------------------------------------------------------------------- missing-property-cond.js:48:12
 
 Cannot get `null.q` because property `q` is missing in null [1]. [incompatible-use]
 
-   missing-property-cond.js:65:12
-   65|   if (null.q) {} // error: property `q` on null
+   missing-property-cond.js:48:12
+   48|   if (null.q) {} // error: property `q` on null
                   ^
 
 References:
-   missing-property-cond.js:65:7
-   65|   if (null.q) {} // error: property `q` on null
+   missing-property-cond.js:48:7
+   48|   if (null.q) {} // error: property `q` on null
              ^^^^ [1]
 
 

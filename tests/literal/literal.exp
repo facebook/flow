@@ -27,37 +27,37 @@ References:
                              ^^^^^^^^^^^^^ [1]
 
 
-Error --------------------------------------------------------------------------------------------- enum_client.js:17:19
+Error --------------------------------------------------------------------------------------------- enum_client.js:18:19
 
 Cannot assign `object[APIKeys.NAME]` to `name` because string [1] is incompatible with number [2]. [incompatible-type]
 
-   enum_client.js:17:19
-   17| var name:number = object[APIKeys.NAME]; // error: object.name is a string
+   enum_client.js:18:19
+   18| var name:number = object[APIKeys.NAME]; // error: object.name is a string
                          ^^^^^^^^^^^^^^^^^^^^
 
 References:
-   enum_client.js:14:24
-   14| object[APIKeys.NAME] = "FOO"; // i.e., object.name = "FOO"
-                              ^^^^^ [1]
-   enum_client.js:17:10
-   17| var name:number = object[APIKeys.NAME]; // error: object.name is a string
+   enum_client.js:14:19
+   14|   [APIKeys.NAME]: "FOO", // i.e., object.name = "FOO"
+                         ^^^^^ [1]
+   enum_client.js:18:10
+   18| var name:number = object[APIKeys.NAME]; // error: object.name is a string
                 ^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------- enum_client.js:21:18
+Error --------------------------------------------------------------------------------------------- enum_client.js:22:18
 
 Cannot assign `tuple[indices.red]` to `red` because number [1] is incompatible with string [2]. [incompatible-type]
 
-   enum_client.js:21:18
-   21| var red:string = tuple[indices.red]; // error: tuple[0] is a number
+   enum_client.js:22:18
+   22| var red:string = tuple[indices.red]; // error: tuple[0] is a number
                         ^^^^^^^^^^^^^^^^^^
 
 References:
-   enum_client.js:20:14
-   20| var tuple = [42, "hello", false];
+   enum_client.js:21:14
+   21| var tuple = [42, "hello", false];
                     ^^ [1]
-   enum_client.js:21:9
-   21| var red:string = tuple[indices.red]; // error: tuple[0] is a number
+   enum_client.js:22:9
+   22| var red:string = tuple[indices.red]; // error: tuple[0] is a number
                ^^^^^^ [2]
 
 

@@ -70,15 +70,6 @@ var u = (<X>(x: X, escape: boolean): X => {
   return u;
 })(42, true);
 
-var a3 = {};
-
-function f6<X>(x: X, escape: boolean): X | void {
-  if (escape) {
-    a3.x = x;
-  }
-  return a3.x;
-}
-
 var a4 = () => 42;
 
 function f7<X>(x: X, escape: boolean): X | void {
