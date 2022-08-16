@@ -223,10 +223,12 @@ struct
         let new_tout = Tvar.mk_no_wrap cx reason_op in
         let call_t =
           CallT
-            ( use_op,
-              reason_op,
-              { calltype with call_targs = Some call_targs; call_tout = (reason_op, new_tout) }
-            )
+            {
+              use_op;
+              reason = reason_op;
+              funcalltype =
+                { calltype with call_targs = Some call_targs; call_tout = (reason_op, new_tout) };
+            }
         in
         Flow.flow cx (lhs, call_t)
       | Check.Constructor call_args ->

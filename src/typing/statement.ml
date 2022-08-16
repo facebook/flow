@@ -3584,7 +3584,7 @@ struct
                }
             )
         in
-        CallT (use_op, reason, ft)
+        CallT { use_op; reason; funcalltype = ft }
       in
       Flow.flow cx (t, call_t);
 
@@ -5056,10 +5056,10 @@ struct
                             reason = chain_reason;
                             lhs_reason;
                             this_t;
-                            t_out = CallT (use_op, reason_call, app);
+                            t_out = CallT { use_op; reason = reason_call; funcalltype = app };
                             voided_out = OpenT t;
                           }
-                      | _ -> CallT (use_op, reason_call, app)
+                      | _ -> CallT { use_op; reason = reason_call; funcalltype = app }
                     in
                     Flow.flow cx (f, call_t)
                 )
@@ -5441,7 +5441,7 @@ struct
       ( f,
         Tvar.mk_no_wrap_where cx reason (fun t ->
             let app = mk_boundfunctioncalltype obj_t targts argts t ~call_strict_arity in
-            Flow.flow cx (f, CallT (use_op, reason, app))
+            Flow.flow cx (f, CallT { use_op; reason; funcalltype = app })
         )
       )
     | None ->
@@ -6840,8 +6840,8 @@ struct
             )
         in
         let jsx_fun = CustomFunT (reason_jsx, ReactCreateElement) in
-        let calltype = mk_functioncalltype reason_jsx None args tvar in
-        Flow.flow cx (jsx_fun, CallT (use_op, reason, calltype))
+        let funcalltype = mk_functioncalltype reason_jsx None args tvar in
+        Flow.flow cx (jsx_fun, CallT { use_op; reason; funcalltype })
       | Options.ReactRuntimeClassic ->
         let reason_createElement =
           mk_reason (RProperty (Some (OrdinaryName "createElement"))) loc_element

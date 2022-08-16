@@ -460,9 +460,13 @@ module rec TypeTerm : sig
 
     (* operations on runtime values, such as functions, objects, and arrays *)
     | BindT of use_op * reason * funcalltype
-    | CallT of use_op * reason * funcalltype
-    (* The last element is the type of the method called, primarily used for
-       populating the typed AST. *)
+    | CallT of {
+        use_op: use_op;
+        reason: reason;
+        funcalltype: funcalltype;
+      }
+    (* The last position is an optional type that probes into the type of the
+       method called. This will be primarily used for type-table bookkeeping. *)
     | MethodT of use_op * (* call *) reason * (* lookup *) reason * propref * method_action * t
     (* Similar to above, but stores information necessary to resolve a private method. *)
     | PrivateMethodT of
@@ -3847,8 +3851,8 @@ let apply_opt_use opt_use t_out =
     MethodT (op, r1, r2, ref, apply_opt_action action t_out, prop_tout)
   | OptPrivateMethodT (op, r1, r2, p, scopes, static, action, prop_tout) ->
     PrivateMethodT (op, r1, r2, p, scopes, static, apply_opt_action action t_out, prop_tout)
-  | OptCallT { use_op = u; reason = r; opt_funcalltype = f } ->
-    CallT (u, r, apply_opt_funcalltype f t_out)
+  | OptCallT { use_op; reason; opt_funcalltype = f } ->
+    CallT { use_op; reason; funcalltype = apply_opt_funcalltype f t_out }
   | OptGetPropT (u, r, i, p) -> GetPropT (u, r, i, p, t_out)
   | OptGetPrivatePropT (u, r, s, cbs, b) -> GetPrivatePropT (u, r, s, cbs, b, t_out)
   | OptTestPropT (u, r, i, p) -> TestPropT (u, r, i, p, t_out)

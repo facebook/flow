@@ -315,7 +315,7 @@ and collect_of_binding ?log_unresolved cx acc = function
    function overloading. More uses will be added over time. *)
 and collect_of_use ?log_unresolved cx acc = function
   | UseT (_, t) -> collect_of_type ?log_unresolved cx acc t
-  | CallT (_, _, fct) ->
+  | CallT { funcalltype = fct; reason = _; use_op = _ } ->
     let arg_types =
       Base.List.map
         ~f:(function

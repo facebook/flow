@@ -642,7 +642,9 @@ module Make (Flow : INPUT) : OUTPUT = struct
       ts
 
   and ignore_of_spec = function
-    | IntersectionCases (_, CallT (_, _, { call_tout = (_, id); _ })) -> Some id
+    | IntersectionCases
+        (_, CallT { use_op = _; reason = _; funcalltype = { call_tout = (_, id); _ } }) ->
+      Some id
     | IntersectionCases (_, GetPropT (_, _, _, _, (_, id))) -> Some id
     | _ -> None
 
