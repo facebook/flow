@@ -166,6 +166,9 @@ module.exports = {
       copyright: `Copyright © ${new Date().getFullYear()} Facebook, Inc. Built with Docusaurus.`,
     },
   },
+  customFields: {
+    flowVersion: 'v0.185.0',
+  },
   presets: [
     [
       '@docusaurus/preset-classic',
