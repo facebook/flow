@@ -134,8 +134,9 @@ let merge_export_import export import =
           )
       | (Some export, None) -> Some export
       (*Can use log, failwith, or assert, to make sure that this is never the case*)
-      | (None, Some _) -> None
-      | (None, None) -> None)
+      | (None, Some _)
+      | (None, None) ->
+        None)
     export
     import
 

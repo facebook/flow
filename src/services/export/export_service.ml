@@ -79,8 +79,8 @@ let add_imports
             match import.Imports.kind with
             | Imports.Default -> (Export_index.Default, module_name)
             | Imports.Named -> (Export_index.Named, import.export)
-            | Imports.Namespace -> (Export_index.NamedType, import.export)
-            | Imports.NamedType -> (Export_index.Namespace, import.export)
+            | Imports.Namespace -> (Export_index.Namespace, module_name)
+            | Imports.NamedType -> (Export_index.NamedType, import.export)
             | Imports.Unknown -> failwith "Unknown Kind"
           in
 

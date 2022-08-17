@@ -39,7 +39,12 @@ let of_file_sig (file_sig : File_sig.With_Loc.t) =
         let acc =
           SMap.fold
             (fun export _elem acc ->
-              { export; kind = Named; source = Unresolved_source source } :: acc)
+              let item =
+                match export with
+                | "default" -> { export = ""; kind = Default; source = Unresolved_source source }
+                | _ -> { export; kind = Named; source = Unresolved_source source }
+              in
+              item :: acc)
             require.named
             acc
         in
@@ -52,21 +57,10 @@ let of_file_sig (file_sig : File_sig.With_Loc.t) =
         in
         let acc =
           match require.ns with
-          | Some ns ->
-            { export = snd ns; kind = Namespace; source = Unresolved_source source } :: acc
+          | Some _ -> { export = ""; kind = Namespace; source = Unresolved_source source } :: acc
           | None -> acc
         in
-        if
-          SMap.is_empty require.named
-          && SMap.is_empty require.types
-          && Option.is_none require.ns
-          (*TODO: Can possibly include TypesOf and TypesofNs*)
-          && SMap.is_empty require.typesof
-          && Option.is_none require.typesof_ns
-        then
-          { export = ""; kind = Default; source = Unresolved_source source } :: acc
-        else
-          acc
+        acc
       (* TODO: Require, ImportDynamic, etc. *)
       | _ -> acc)
     []
