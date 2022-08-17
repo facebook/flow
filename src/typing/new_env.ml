@@ -28,10 +28,18 @@ module type S = sig
   val unify_write_entry :
     Context.t -> use_op:use_op -> Type.t -> Env_api.def_loc_type -> ALoc.t -> unit
 
-  val read_entry : for_type:bool -> Context.t -> ALoc.t -> reason -> Type.t
+  val provider_type_for_def_loc :
+    ?intersect:bool -> Context.t -> Loc_env.t -> Env_api.Provider_api.L.t -> Type.t
+
+  val ref_entry_exn :
+    lookup_mode:Env_sig.LookupMode.t ->
+    Context.t ->
+    Env_api.With_ALoc.L.t ->
+    Reason.reason ->
+    Type.t
 end
 
-module New_env = struct
+module New_env : S = struct
   (* The new env handles all the logic for regular variables internally, but
      internal variables still need to be handled by name, which makes them
      incompatible with the new environment as it stands. Eventually we'll need
