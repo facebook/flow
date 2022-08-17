@@ -161,48 +161,6 @@ module Annotate_exports_command = struct
   let command = CommandSpec.command spec main
 end
 
-module Annotate_escaped_generics = struct
-  let doc = "Annotates parts of input that receive out-of-scope generics as inferred types."
-
-  let spec =
-    let module Literals = Codemod_hardcoded_ty_fixes.PreserveLiterals in
-    let preserve_string_literals_level =
-      Literals.[("always", Always); ("never", Never); ("auto", Auto)]
-    in
-    {
-      CommandSpec.name = "annotate-escaped-generics";
-      doc;
-      usage =
-        Printf.sprintf
-          "Usage: %s codemod annotate-escaped-generics [OPTION]... [FILE]\n\n%s\n"
-          Utils_js.exe_name
-          doc;
-      args =
-        CommandSpec.ArgSpec.(
-          empty
-          |> CommandUtils.codemod_flags
-          |> flag
-               "--preserve-literals"
-               (required ~default:Literals.Auto (enum preserve_string_literals_level))
-               ~doc:""
-          |> common_annotate_flags
-        );
-    }
-
-  let main codemod_flags preserve_literals max_type_size default_any () =
-    let module Runner = Codemod_runner.MakeSimpleTypedRunner (struct
-      include Annotate_escaped_generics
-
-      let check_options o =
-        { o with Options.opt_env_mode = Options.(ClassicEnv [ConstrainWrites; ClassicTypeAtPos]) }
-
-      let visit = visit ~default_any ~preserve_literals ~max_type_size
-    end) in
-    main (module Runner) codemod_flags ()
-
-  let command = CommandSpec.command spec main
-end
-
 module Annotate_lti_command = struct
   let doc = "Annotates function definitions required for Flow's local type interence."
 
@@ -712,7 +670,6 @@ let command =
         );
         (Annotate_empty_array_command.spec.CommandSpec.name, Annotate_empty_array_command.command);
         (Annotate_empty_object_command.spec.CommandSpec.name, Annotate_empty_object_command.command);
-        (Annotate_escaped_generics.spec.CommandSpec.name, Annotate_escaped_generics.command);
         (Annotate_exports_command.spec.CommandSpec.name, Annotate_exports_command.command);
         (Annotate_lti_command.spec.CommandSpec.name, Annotate_lti_command.command);
         ( Annotate_optional_properties_command.spec.CommandSpec.name,
