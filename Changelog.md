@@ -1,3 +1,23 @@
+### 0.185.0
+
+Likely to cause new Flow errors:
+* Unbound names in jsx-pragma when the jsx-pragma is not a simple identifier will now consistently point to the jsx pragma.
+* Errors previously hidden by method-unbinding will reappear.
+* Fix a bug that makes assignments in loop guards like `x = some expression containing x` have a type that's effectively `any`. If you turned on `inference_mode=constrain_writes` since the last release, there will be new errors.
+* Remove `esproposal_export_star_as` as an option and make this the default as it made it into the JS standard in 2018.
+* Additional `value-as-type` errors might be emitted, as a result of existing importing errors.
+* Object rest on instances no longer results in an unsealed object (that can have properties added after the fact)
+
+New Features:
+* `inference_mode=constrain_writes` will be the default. `inference_mode=classic`, which is the current default, will be removed in the next release. Please refer to the [blog post](https://medium.com/flow-type/new-flow-language-rule-constrained-writes-4c70e375d190) for migration paths.
+
+Misc:
+* Fix flow-remove-types/jest transformer to be compatible with Jest 28. (Thanks @carloscuesta)
+* Add codemod to remove annotations in destructuring - which we banned in 0.176
+
+Library Definitions:
+* Add missing `.x` and `.y` properties to DOMRect. (Thanks @pmer)
+
 ### 0.184.0
 
 Upcoming Breaking Changes:
