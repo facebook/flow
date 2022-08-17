@@ -19,6 +19,8 @@ module type OBSERVER = sig
 
   val on_pinned_tparam : Context.t -> Subst_name.t -> Type.typeparam -> Type.t -> output
 
+  val on_constant_tparam_missing_bounds : Context.t -> Subst_name.t -> Type.typeparam -> output
+
   val on_missing_bounds :
     Context.t ->
     Subst_name.t ->
@@ -288,8 +290,7 @@ struct
            | None ->
              let t = merge_lower_bounds cx t in
              (match t with
-             | None ->
-               Observer.on_missing_bounds cx name tparam ~tparam_binder_reason ~instantiation_reason
+             | None -> Observer.on_constant_tparam_missing_bounds cx name tparam
              | Some inferred -> Observer.on_constant_tparam cx name tparam inferred)
            | Some Neutral ->
              (* TODO(jmbrown): The neutral case should also unify upper/lower bounds. In order
@@ -405,6 +406,14 @@ module CheckObserver : OBSERVER with type output = inferred_targ = struct
   let any_error = AnyT.why (AnyError None)
 
   let on_constant_tparam _cx _name tparam inferred = { tparam; inferred }
+
+  let on_constant_tparam_missing_bounds _cx _name tparam =
+    let inferred =
+      match tparam.default with
+      | None -> tparam.Type.bound
+      | Some t -> t
+    in
+    { tparam; inferred }
 
   let on_pinned_tparam _cx _name tparam inferred = { tparam; inferred }
 

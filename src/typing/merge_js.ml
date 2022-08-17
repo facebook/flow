@@ -14,6 +14,8 @@ module PierceImplicitInstantiation : Implicit_instantiation.S =
 
       let on_pinned_tparam _ _ _ _ = ()
 
+      let on_constant_tparam_missing_bounds _ _ _ = ()
+
       let on_missing_bounds cx name tparam ~tparam_binder_reason ~instantiation_reason =
         if tparam.Type.default = None then
           Flow_js.add_output
