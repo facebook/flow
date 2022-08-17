@@ -1329,7 +1329,6 @@ let send_command_summary profiling name =
   MonitorRPC.status_update ~event:ServerStatus.Handling_request_end
 
 let send_ephemeral_response ~profiling ~client_context ~cmd_str ~request_id result =
-  send_command_summary profiling cmd_str;
   match result with
   | Ok (ret, response, json_data) ->
     FlowEventLogger.ephemeral_command_success ~json_data ~client_context ~profiling;
@@ -1366,12 +1365,12 @@ let wrap_ephemeral_handler handler ~genv ~request_id ~client_context ~workload ~
           Lwt.return (handle_ephemeral_uncaught_exception cmd_str exn)
     )
   in
+  send_command_summary profiling cmd_str;
   Lwt.return (send_ephemeral_response ~profiling ~client_context ~cmd_str ~request_id result)
 
 let wrap_immediate_ephemeral_handler
     handler ~genv ~request_id ~client_context ~workload ~cmd_str arg =
   Hh_logger.info "%s" cmd_str;
-  MonitorRPC.status_update ~event:ServerStatus.Handling_request_start;
 
   let should_print_summary = Options.should_profile genv.options in
   let (profiling, result) =
