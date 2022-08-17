@@ -3007,7 +3007,9 @@ struct
         declare_var cx (OrdinaryName name) id_loc;
         if has_anno then
           Env.unify_declared_type cx (OrdinaryName name) id_loc annot_t
-        else
+        else if
+          Base.Option.is_some init_ast || Base.Option.is_some if_uninitialized || not Env.new_env
+        then
           (* TODO: even though both branches of this if seem identical, in the new env with reordering we're not allowed to
               call `unify_declared_type` because it can be used to initialize an environment entry, which should always have
               been done by the env_resolution process. Instead, if there is no annotation (which makes this operation
