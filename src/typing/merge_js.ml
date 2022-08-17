@@ -14,16 +14,17 @@ module PierceImplicitInstantiation : Implicit_instantiation.S =
 
       let on_pinned_tparam _ _ _ _ = ()
 
-      let on_missing_bounds cx name _ ~tparam_binder_reason ~instantiation_reason =
-        Flow_js.add_output
-          cx
-          (Error_message.EImplicitInstantiationUnderconstrainedError
-             {
-               bound = Subst_name.string_of_subst_name name;
-               reason_call = instantiation_reason;
-               reason_l = tparam_binder_reason;
-             }
-          )
+      let on_missing_bounds cx name tparam ~tparam_binder_reason ~instantiation_reason =
+        if tparam.Type.default = None then
+          Flow_js.add_output
+            cx
+            (Error_message.EImplicitInstantiationUnderconstrainedError
+               {
+                 bound = Subst_name.string_of_subst_name name;
+                 reason_call = instantiation_reason;
+                 reason_l = tparam_binder_reason;
+               }
+            )
 
       let on_upper_non_t cx name u _ ~tparam_binder_reason ~instantiation_reason:_ =
         let msg =
