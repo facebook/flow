@@ -1042,6 +1042,10 @@ module Mutator_reader = struct
     let* provider = get_provider_ent m in
     read ~reader provider
 
+  let get_old_provider ~reader m =
+    let* provider = get_provider_ent m in
+    read_old ~reader provider
+
   let is_typed_file ~reader file =
     match read ~reader (Heap.get_parse file) with
     | Some parse -> Heap.is_typed parse
