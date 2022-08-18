@@ -183,6 +183,8 @@ module type S = sig
 
   val get_internal_var : Context.t -> string -> ALoc.t -> Type.t
 
+  val get_module_exports : Context.t -> ALoc.t -> Type.t
+
   val get_var_annotation : Context.t -> Reason.name -> ALoc.t -> Type.t option
 
   val get_var_declared_type :
@@ -237,6 +239,8 @@ module type S = sig
 
   val set_internal_var : Context.t -> string -> Type.t -> ALoc.t -> unit
 
+  val set_module_exports : Context.t -> ALoc.t -> Type.t -> unit
+
   val set_expr : Context.t -> Key.t -> ALoc.t -> refined:Type.t -> original:Type.t -> unit
 
   val refine_expr : Key.t -> ALoc.t -> Type.t -> Type.t -> int * Key.t * Changeset.op
@@ -285,7 +289,6 @@ module type S = sig
 
   val init_declare_module_synthetic_module_exports :
     Context.t ->
-    set_module_exports:(Context.t -> ALoc.t -> Type.t -> unit) ->
     export_type:(Context.t -> Reason.name -> ALoc.t option -> Type.t -> unit) ->
     ALoc.t ->
     Reason.reason ->

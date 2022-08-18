@@ -1117,6 +1117,8 @@ module Env : Env_sig.S = struct
 
   let get_internal_var cx name loc = query_var cx (internal_name name) loc
 
+  let get_module_exports cx loc = get_internal_var cx "exports" loc
+
   let get_var_annotation cx name loc =
     let (_, entry) = find_entry cx name loc in
     match entry with
@@ -1323,6 +1325,8 @@ module Env : Env_sig.S = struct
 
   let set_internal_var cx name t loc =
     update_var Changeset.Write cx ~use_op:unknown_use (internal_name name) t loc |> ignore
+
+  let set_module_exports cx loc t = set_internal_var cx "exports" t loc
 
   (* update var by refinement test *)
   let refine_var = update_var Changeset.Refine ~use_op:(Op (Internal Refinement))
@@ -1894,8 +1898,7 @@ module Env : Env_sig.S = struct
 
   let init_class_self_type cx _loc reason = Tvar.mk cx reason
 
-  let init_declare_module_synthetic_module_exports
-      cx ~set_module_exports ~export_type loc reason module_scope =
+  let init_declare_module_synthetic_module_exports cx ~export_type loc reason module_scope =
     match Context.module_kind cx with
     | Module_info.ES _ -> ()
     | Module_info.CJS clobbered ->

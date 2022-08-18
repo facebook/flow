@@ -20,10 +20,6 @@ module type S = sig
 
   val import_ns : Context.t -> Reason.t -> ALoc.t * string -> Type.t
 
-  val get_module_exports : Context.t -> ALoc.t -> Type.t
-
-  val set_module_exports : Context.t -> ALoc.t -> Type.t -> unit
-
   val cjs_clobber : Context.t -> ALoc.t -> Type.t -> unit
 
   val export : Context.t -> Reason.name -> ALoc.t -> Type.t -> unit
@@ -113,12 +109,9 @@ module Make (Env : Env_sig.S) = struct
      module, and then flowing module.exports to exports, so that whatever its
      final value is (initial object or otherwise) is checked against the type
      declared for exports or any other use of exports. *)
-  let get_module_exports cx loc = Env.get_internal_var cx "exports" loc
-
-  let set_module_exports cx loc t = Env.set_internal_var cx "exports" t loc
 
   let cjs_clobber cx loc t =
-    if Module_info.cjs_clobber (Context.module_info cx) loc then set_module_exports cx loc t
+    if Module_info.cjs_clobber (Context.module_info cx) loc then Env.set_module_exports cx loc t
 
   let export cx name loc t = Module_info.export (Context.module_info cx) name loc t
 
@@ -198,7 +191,7 @@ module Make (Env : Env_sig.S) = struct
         | CJS _ ->
           Loc.{ none with source = Some (Context.file cx) }
           |> ALoc.of_loc
-          |> get_module_exports cx
+          |> Env.get_module_exports cx
           |> mk_commonjs_module_t cx reason reason
           |> export_named cx reason ExportType info.type_named
           |> copy_star_exports cx reason ([], info.type_star)

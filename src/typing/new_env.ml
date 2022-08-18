@@ -592,6 +592,8 @@ module New_env : S = struct
     let t = read_entry_exn ~lookup_mode cx loc reason in
     Flow_js.reposition cx loc t
 
+  let get_module_exports cx loc = get_internal_var cx "exports" loc
+
   let get_this_type_param_if_necessary ~otherwise name loc =
     if name = OrdinaryName "this" then
       match ALocMap.find_opt loc !this_type_params with
@@ -870,6 +872,8 @@ module New_env : S = struct
 
   let set_var cx ~use_op name t loc =
     assign_env_value_entry cx ~use_op ~potential_global_name:name t loc
+
+  let set_module_exports cx loc t = set_internal_var cx "exports" t loc
 
   let bind cx t ~kind loc =
     match Context.env_mode cx with
@@ -1257,8 +1261,7 @@ module New_env : S = struct
     check_readable cx Env_api.ClassSelfLoc loc;
     Base.Option.value_exn (Loc_env.find_write env Env_api.ClassSelfLoc loc)
 
-  let init_declare_module_synthetic_module_exports
-      cx ~set_module_exports ~export_type loc reason _module_scope =
+  let init_declare_module_synthetic_module_exports cx ~export_type loc reason _module_scope =
     let env = Context.environment cx in
     let module_toplevel_members =
       ALocMap.find loc env.Loc_env.var_info.Env_api.module_toplevel_members

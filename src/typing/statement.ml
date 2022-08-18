@@ -2592,7 +2592,6 @@ struct
       let reason = mk_reason (RModule (OrdinaryName name)) loc in
       Env.init_declare_module_synthetic_module_exports
         cx
-        ~set_module_exports:Import_export.set_module_exports
         ~export_type:Import_export.export_type
         loc
         reason
@@ -4411,7 +4410,7 @@ struct
             comments;
           }
         when (not (Env.local_scope_entry_exists cx id_loc "module")) && not Env.new_env ->
-        let lhs_t = Import_export.get_module_exports cx loc in
+        let lhs_t = Env.get_module_exports cx loc in
         let module_reason = mk_reason (RCustom "module") object_loc in
         let module_t = MixedT.why module_reason |> with_trust bogus_trust in
         let _object =

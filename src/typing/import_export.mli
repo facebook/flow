@@ -14,10 +14,6 @@ module type S = sig
 
   val import_ns : Context.t -> Reason.t -> ALoc.t * string -> Type.t
 
-  val get_module_exports : Context.t -> ALoc.t -> Type.t
-
-  val set_module_exports : Context.t -> ALoc.t -> Type.t -> unit
-
   val cjs_clobber : Context.t -> ALoc.t -> Type.t -> unit
 
   val export : Context.t -> Reason.name -> ALoc.t -> Type.t -> unit
