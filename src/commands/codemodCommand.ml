@@ -394,8 +394,7 @@ module KeyMirror_command = struct
 end
 
 module Annotate_empty_array_command = struct
-  let doc =
-    "Annotates variable declarations initialized with empty arrays, which do not have an annotation."
+  let doc = "Annotates empty array literals, whose type cannot be inferred."
 
   let spec =
     let module Literals = Codemod_hardcoded_ty_fixes.PreserveLiterals in
@@ -424,13 +423,15 @@ module Annotate_empty_array_command = struct
 
   let main codemod_flags preserve_literals max_type_size default_any () =
     let module Runner = Codemod_runner.MakeSimpleTypedRunner (struct
-      module Acc = Annotate_empty_object.Acc
+      module Acc = Annotate_declarations.Acc
 
       type accumulator = Acc.t
 
       let reporter = string_reporter (module Acc)
 
-      let check_options o = o
+      let check_options o =
+        let open Options in
+        { o with opt_env_mode = SSAEnv Reordered; opt_array_literal_providers = true }
 
       let visit =
         let mapper = Annotate_empty_array.mapper ~preserve_literals ~max_type_size ~default_any in

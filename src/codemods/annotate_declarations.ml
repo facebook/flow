@@ -15,14 +15,16 @@ module ErrorStats = struct
   type t = {
     num_error_vars: int;
     num_renamable_vars: int;
+    num_annots_skipped: int;
   }
 
-  let empty = { num_error_vars = 0; num_renamable_vars = 0 }
+  let empty = { num_error_vars = 0; num_renamable_vars = 0; num_annots_skipped = 0 }
 
   let combine c1 c2 =
     {
       num_error_vars = c1.num_error_vars + c2.num_error_vars;
       num_renamable_vars = c1.num_renamable_vars + c2.num_renamable_vars;
+      num_annots_skipped = c1.num_annots_skipped + c2.num_annots_skipped;
     }
 
   let serialize s =
@@ -33,6 +35,7 @@ module ErrorStats = struct
     [
       string_of_row ~indent:2 "Number of vars with write errors" s.num_error_vars;
       string_of_row ~indent:2 "Number of possibly renamable vars" s.num_renamable_vars;
+      string_of_row ~indent:2 "Number of annotations skipped" s.num_annots_skipped;
     ]
 end
 
@@ -213,6 +216,7 @@ class annotate_declarations_mapper
       {
         ErrorStats.num_error_vars = LSet.cardinal loc_error_set;
         num_renamable_vars = ALocSet.cardinal renamable;
+        num_annots_skipped = LSet.cardinal wont_annotate_locs;
       }
 
     method private get_annot ploc ty annot =

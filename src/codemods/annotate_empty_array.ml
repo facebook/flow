@@ -6,61 +6,69 @@
  *)
 
 module Ast = Flow_ast
-module Codemod_empty_annotator = Codemod_annotator.Make (Insert_type_utils.UnitStats)
-module Acc = Insert_type_utils.Acc (Insert_type_utils.UnitStats)
+module LSet = Loc_collections.LocSet
 
 let mapper ~preserve_literals ~max_type_size ~default_any (cctx : Codemod_context.Typed.t) =
+  let reader = cctx.Codemod_context.Typed.reader in
+  let loc_of_aloc = Parsing_heaps.Reader_dispatcher.loc_of_aloc ~reader in
   let lint_severities = Codemod_context.Typed.lint_severities cctx in
   let flowfixme_ast = Codemod_context.Typed.flowfixme_ast ~lint_severities cctx in
+  let errors = Codemod_context.Typed.context cctx |> Context.errors in
+  let error ((loc, _) as e) =
+    ( loc,
+      Ast.Expression.TypeCast
+        {
+          Ast.Expression.TypeCast.expression = e;
+          annot = (Loc.none, flowfixme_ast);
+          comments = None;
+        }
+    )
+  in
+
   object (this)
     inherit
-      Codemod_empty_annotator.mapper
+      Annotate_declarations.annotate_declarations_mapper
         cctx
         ~default_any
         ~generalize_maybe:true
-        ~lint_severities
         ~max_type_size
         ~preserve_literals
-        ~merge_arrays:true
-        () as super
+        ~merge_arrays:true as super
 
-    method private post_run () = ()
+    val! arrays_only = true
 
-    method private get_annot ploc ty annot =
-      let f loc _annot ty' = this#annotate_node loc ty' (fun a -> Ast.Type.Available a) in
-      let error _ = Ast.Type.Available (Loc.none, flowfixme_ast) in
-      this#opt_annotate ~f ~error ~expr:None ploc ty annot
+    method! private init_loc_error_set =
+      super#init_loc_error_set;
+      loc_error_set <-
+        Flow_error.ErrorSet.fold
+          (fun error acc ->
+            match Flow_error.msg_of_error error with
+            | Error_message.EEmptyArrayNoProvider _ ->
+              (match Flow_error.loc_of_error error with
+              | Some loc -> LSet.add (loc_of_aloc loc) acc
+              | None -> acc)
+            | _ -> acc)
+          errors
+          loc_error_set
 
-    method! variable_declarator ~kind decl =
+    (* Override this method to skip Array<empty> unless --default-any is passed. *)
+    method! private opt_annotate ~f ~error ~expr loc ty_entry annot =
+      match ty_entry with
+      | Ok (Ty.Arr { Ty.arr_elt_t = Ty.Bot _; _ }) when not default_any ->
+        wont_annotate_locs <- LSet.add loc wont_annotate_locs;
+        annot
+      | Ok _
+      | Error _ ->
+        super#opt_annotate ~f ~error ~expr loc ty_entry annot
+
+    method! expression (expr : (Loc.t, Loc.t) Ast.Expression.t) =
       let open Ast.Expression in
-      let open Ast.Statement.VariableDeclaration.Declarator in
-      let (loc, { id; init }) = decl in
-      (* We are matching: `const x /* no annotation */ = [];` *)
-      match (id, init) with
-      | ( ( id_loc,
-            Ast.Pattern.Identifier
-              { Ast.Pattern.Identifier.name; annot = Ast.Type.Missing _; optional }
-          ),
-          Some (empty_array_loc, Array { Array.elements = []; comments = _ })
-        ) ->
-        let ty_result =
-          Codemod_annotator.get_validated_ty cctx ~preserve_literals ~max_type_size id_loc
-        in
-        (match ty_result with
-        | Ok (Ty.Arr { Ty.arr_elt_t = Ty.Bot _; _ }) -> super#variable_declarator ~kind decl
-        | Ok _ ->
-          (match this#get_annot loc ty_result (Ast.Type.Missing empty_array_loc) with
-          | Ast.Type.Available _ as annot ->
-            let id =
-              (id_loc, Ast.Pattern.Identifier { Ast.Pattern.Identifier.name; annot; optional })
-            in
-            (loc, { id; init })
-          | _ -> super#variable_declarator ~kind decl)
-        | Error errors ->
-          this#update_acc (fun acc ->
-              Base.List.fold ~f:(fun acc e -> Acc.error acc loc e) ~init:acc errors
-          );
-          codemod_error_locs <- Loc_collections.LocSet.add loc codemod_error_locs;
-          super#variable_declarator ~kind decl)
-      | _ -> super#variable_declarator ~kind decl
+      match expr with
+      | (loc, Array { Array.elements = []; comments = _ }) ->
+        if LSet.mem loc loc_error_set then
+          let t = Codemod_annotator.get_validated_ty cctx ~preserve_literals ~max_type_size loc in
+          this#opt_annotate ~f:this#annotate_expr ~error ~expr:(Some expr) loc t expr
+        else
+          super#expression expr
+      | _ -> super#expression expr
   end

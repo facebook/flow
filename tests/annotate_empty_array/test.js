@@ -2,10 +2,10 @@
 
 declare var key : string;
 
-let x = []; // TODO no need for annotation
+let x = []; // no need for annotation
 x[0] = 3;
 
-let y = []; // TODO no need for annotation
+let y = []; // no need for annotation
 y.push(4);
 
 let z = []; // should annot
@@ -33,7 +33,7 @@ written_thrice.push("bar", 4);
 let z2 = []; // should not annotate because --default-any is not passed here
 
 let arr2 = ["A", "B", "C"];
-let x2 = []; // TODO no need for annotation
+let x2 = []; // no need for annotation
 
 for (let k of arr2) {
   x2[0] = k
