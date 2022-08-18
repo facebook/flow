@@ -264,7 +264,9 @@ struct
     let open Ast in
     let open Expression in
     Base.List.iter ~f:(function
-        | Object.Property (prop_loc, Object.Property.Method { key; value = (_, func); _ }) ->
+        | Object.Property (prop_loc, Object.Property.Method { key; value = (_, func); _ })
+        | Object.Property (prop_loc, Object.Property.Get { key; value = (_, func); _ })
+        | Object.Property (prop_loc, Object.Property.Set { key; value = (_, func); _ }) ->
           let finder = new ALoc_this_finder.finder in
           finder#eval (finder#function_ prop_loc) func
           |> Loc_collections.ALocSet.iter (fun loc ->

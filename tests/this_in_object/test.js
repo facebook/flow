@@ -81,3 +81,8 @@ let x = {
     let z = ({ f() { let z = { f: this } }}) // error, point to f
   }
 }
+
+const getters_and_setters = {
+    get foo() { this; }, // error
+    set foo(v) { this; }, // error
+}

@@ -14,6 +14,22 @@ Getters and setters can have side effects and are unsafe. [unsafe-getters-setter
         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
+Error ----------------------------------------------------------------------------------- unsafe_getters_setters.js:7:22
+
+Cannot reference `this` from within method `b` [1]. For safety, Flow restricts access to `this` inside object methods
+since these methods may be unbound and rebound. Consider replacing the reference to `this` with the name of the object,
+or rewriting the object as a class. [object-this-reference]
+
+   unsafe_getters_setters.js:7:22
+   7|   set b(x: number) { this.c = x; },
+                           ^^^^
+
+References:
+   unsafe_getters_setters.js:7:3
+   7|   set b(x: number) { this.c = x; },
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
 Error ----------------------------------------------------------------------------------- unsafe_getters_setters.js:12:3
 
 Getters and setters can have side effects and are unsafe. [unsafe-getters-setters]
@@ -79,4 +95,4 @@ Getters and setters can have side effects and are unsafe. [unsafe-getters-setter
 
 
 
-Found 10 errors
+Found 11 errors
