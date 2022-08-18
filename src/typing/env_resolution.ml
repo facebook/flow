@@ -163,27 +163,10 @@ module Make (Env : Env_sig.S) (Statement : Statement_sig.S with module Env := En
           unknown_use
       in
       (t, use_op, true)
-    | Root (Value (Ast.Expression.(_, Array { Array.elements = []; _ }) as exp)) ->
-      let { Loc_env.var_info = { Env_api.providers; _ }; _ } = Context.environment cx in
-      let hint =
-        match Env_api.Provider_api.providers_of_def providers loc with
-        | Some { Env_api.Provider_api.array_providers; _ } when ALocSet.is_empty array_providers ->
-          Hint_None
-        | _ -> dummy_hint
-      in
-      let t = expression cx ~hint exp in
-      let use_op = Op (AssignVar { var = Some reason; init = mk_expression_reason exp }) in
-      (t, use_op, false)
-    | Root (Value exp) ->
-      let { Loc_env.var_info = { Env_api.providers; _ }; _ } = Context.environment cx in
-      let hint =
-        if Env_api.Provider_api.is_provider providers loc then
-          Hint_None
-        else
-          dummy_hint
-      in
-      let t = expression cx ~hint exp in
-      let use_op = Op (AssignVar { var = Some reason; init = mk_expression_reason exp }) in
+    | Root (Value { hint; expr }) ->
+      let hint = resolve_hint cx loc hint in
+      let t = expression cx ~hint expr in
+      let use_op = Op (AssignVar { var = Some reason; init = mk_expression_reason expr }) in
       (t, use_op, false)
     | Root (Contextual { reason; hint; default_expression = _ }) ->
       let param_loc = Reason.poly_loc_of_reason reason in

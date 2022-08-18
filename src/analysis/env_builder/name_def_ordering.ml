@@ -368,16 +368,17 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) = struct
             state
             providers
       in
+      let depends_of_hint state = function
+        | Hint_api.Hint_None -> state
+        | Hint_api.Hint_Placeholder -> state
+        | Hint_api.Hint_t hint_node
+        | Hint_api.Hint_Decomp (_, hint_node) ->
+          depends_of_hint_node state hint_node
+      in
+
       let depends_of_fun fully_annotated tparams_map hint function_ =
         let state = EnvMap.empty in
-        let state =
-          match hint with
-          | Hint_api.Hint_None -> state
-          | Hint_api.Hint_Placeholder -> state
-          | Hint_api.Hint_t hint_node
-          | Hint_api.Hint_Decomp (_, hint_node) ->
-            depends_of_hint_node state hint_node
-        in
+        let state = depends_of_hint state hint in
         depends_of_node
           (fun visitor -> visitor#function_def ~fully_annotated function_)
           (depends_of_tparams_map tparams_map state)
@@ -472,7 +473,9 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) = struct
             )
           in
           depends_of_annotation tparams_map annot state
-        | Value exp -> depends_of_expression exp state
+        | Value { hint; expr } ->
+          let state = depends_of_hint state hint in
+          depends_of_expression expr state
         | For (_, exp) -> depends_of_expression exp state
         | Contextual { reason = _; hint; default_expression } ->
           let state =
@@ -480,12 +483,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) = struct
                 depends_of_expression e state
             )
           in
-          (match hint with
-          | Hint_api.Hint_None -> state
-          | Hint_api.Hint_Placeholder -> state
-          | Hint_api.Hint_t hint_node
-          | Hint_api.Hint_Decomp (_, hint_node) ->
-            depends_of_hint_node state hint_node)
+          depends_of_hint state hint
         | Catch -> state
       in
       let depends_of_selector state = function

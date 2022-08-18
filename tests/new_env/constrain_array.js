@@ -27,3 +27,10 @@ function foo() {
   xin.push(42);
   xin.push('a') // error
 }
+
+var v: ?Array<number> = [];
+v = []; // no annotation needed
+if (v == null) {
+  v = []; // no annotation needed
+}
+(v: Array<number>);

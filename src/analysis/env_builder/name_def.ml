@@ -51,7 +51,10 @@ type root =
       is_assignment: bool;
       annot: (ALoc.t, ALoc.t) Ast.Type.annotation;
     }
-  | Value of (ALoc.t, ALoc.t) Ast.Expression.t
+  | Value of {
+      hint: hint_node hint;
+      expr: (ALoc.t, ALoc.t) Ast.Expression.t;
+    }
   | Contextual of {
       reason: Reason.reason;
       hint: hint_node hint;
@@ -164,7 +167,7 @@ module Print = struct
     | Contextual _ -> "contextual"
     | Catch -> "catch"
     | Annotation { annot = (loc, _); _ } -> spf "annot %s" (ALoc.debug_to_string loc)
-    | Value (loc, _) -> spf "val %s" (ALoc.debug_to_string loc)
+    | Value { expr = (loc, _); _ } -> spf "val %s" (ALoc.debug_to_string loc)
     | For (In, (loc, _)) -> spf "for in %s" (ALoc.debug_to_string loc)
     | For (Of _, (loc, _)) -> spf "for of %s" (ALoc.debug_to_string loc)
 
@@ -511,7 +514,7 @@ class def_finder env_entries providers toplevel_scope =
               ),
             Hint_t (AnnotationHint (ALocMap.empty, annot))
           )
-        | (None, Some init) -> (Some (Value init), Hint_None)
+        | (None, Some init) -> (Some (Value { hint = Hint_None; expr = init }), Hint_None)
         | (None, None) -> (None, Hint_None)
       in
       Base.Option.iter
@@ -866,40 +869,6 @@ class def_finder env_entries providers toplevel_scope =
     method! assignment loc (expr : ('loc, 'loc) Ast.Expression.Assignment.t) =
       let open Ast.Expression.Assignment in
       let { operator; left = (lhs_loc, lhs_node) as left; right; comments = _ } = expr in
-      let () =
-        match (operator, lhs_node) with
-        | (None, Ast.Pattern.Expression (member_loc, Ast.Expression.Member member)) ->
-          (* Use super member to visit sub-expressions to avoid record a read of the member. *)
-          ignore @@ super#member member_loc member;
-          this#add_ordinary_binding
-            member_loc
-            (mk_pattern_reason left)
-            (MemberAssign { member_loc; member; rhs = right })
-        | (None, _) -> Destructure.pattern ~f:this#add_ordinary_binding (Root (Value right)) left
-        | ( Some operator,
-            Ast.Pattern.Identifier
-              { Ast.Pattern.Identifier.name = (id_loc, { Ast.Identifier.name; _ }); _ }
-          ) ->
-          this#add_ordinary_binding
-            id_loc
-            (mk_reason (RIdentifier (OrdinaryName name)) id_loc)
-            (OpAssign { exp_loc = loc; lhs = left; op = operator; rhs = right })
-        | (Some operator, Ast.Pattern.Expression ((def_loc, _) as e)) ->
-          (* In op_assign, the LHS will also be read. *)
-          let cond =
-            match operator with
-            | AndAssign
-            | OrAssign ->
-              OtherConditionalTest
-            | _ -> NonConditionalContext
-          in
-          this#visit_expression ~cond ~hint:Hint_None e;
-          this#add_ordinary_binding
-            def_loc
-            (mk_pattern_reason left)
-            (OpAssign { exp_loc = loc; lhs = left; op = operator; rhs = right })
-        | _ -> ()
-      in
       let is_provider =
         Flow_ast_utils.fold_bindings_of_pattern
           (fun acc (loc, _) -> acc || Env_api.Provider_api.is_provider providers loc)
@@ -935,6 +904,44 @@ class def_finder env_entries providers toplevel_scope =
           | _ ->
             (* TODO create a hint based on the lhs pattern *)
             Hint_Placeholder
+      in
+      let () =
+        match (operator, lhs_node) with
+        | (None, Ast.Pattern.Expression (member_loc, Ast.Expression.Member member)) ->
+          (* Use super member to visit sub-expressions to avoid record a read of the member. *)
+          ignore @@ super#member member_loc member;
+          this#add_ordinary_binding
+            member_loc
+            (mk_pattern_reason left)
+            (MemberAssign { member_loc; member; rhs = right })
+        | (None, _) ->
+          Destructure.pattern
+            ~f:this#add_ordinary_binding
+            (Root (Value { hint; expr = right }))
+            left
+        | ( Some operator,
+            Ast.Pattern.Identifier
+              { Ast.Pattern.Identifier.name = (id_loc, { Ast.Identifier.name; _ }); _ }
+          ) ->
+          this#add_ordinary_binding
+            id_loc
+            (mk_reason (RIdentifier (OrdinaryName name)) id_loc)
+            (OpAssign { exp_loc = loc; lhs = left; op = operator; rhs = right })
+        | (Some operator, Ast.Pattern.Expression ((def_loc, _) as e)) ->
+          (* In op_assign, the LHS will also be read. *)
+          let cond =
+            match operator with
+            | AndAssign
+            | OrAssign ->
+              OtherConditionalTest
+            | _ -> NonConditionalContext
+          in
+          this#visit_expression ~cond ~hint:Hint_None e;
+          this#add_ordinary_binding
+            def_loc
+            (mk_pattern_reason left)
+            (OpAssign { exp_loc = loc; lhs = left; op = operator; rhs = right })
+        | _ -> ()
       in
       this#visit_expression ~hint ~cond:NonConditionalContext right;
       expr
