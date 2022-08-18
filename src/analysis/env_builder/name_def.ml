@@ -934,7 +934,7 @@ class def_finder env_entries providers toplevel_scope =
               decompose_hint Decomp_ObjComputed (Hint_t (ValueHint _object)))
           | _ ->
             (* TODO create a hint based on the lhs pattern *)
-            Hint_t (AnnotationHint (ALocMap.empty, (lhs_loc, (lhs_loc, Ast.Type.Any None))))
+            Hint_Placeholder
       in
       this#visit_expression ~hint ~cond:NonConditionalContext right;
       expr
