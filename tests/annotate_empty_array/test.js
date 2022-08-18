@@ -2,10 +2,10 @@
 
 declare var key : string;
 
-let x = []; // should annot
+let x = []; // TODO no need for annotation
 x[0] = 3;
 
-let y = []; // should annot
+let y = []; // TODO no need for annotation
 y.push(4);
 
 let z = []; // should annot
@@ -30,11 +30,21 @@ written_thrice[0] = 3;
 written_thrice[1] = "foo";
 written_thrice.push("bar", 4);
 
-let z2 = []; // should not annotate
+let z2 = []; // should not annotate because --default-any is not passed here
 
 let arr2 = ["A", "B", "C"];
-let x2 = []; // should annot
+let x2 = []; // TODO no need for annotation
 
 for (let k of arr2) {
   x2[0] = k
+}
+
+var x3 = []; // Annotate with Array<number | string>
+x3.push(42);
+x3.push("a");
+
+function foo() {
+  var x = []; // Annotate with Array<number | string>
+  x.push(42);
+  x.push("a");
 }
