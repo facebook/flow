@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-let upload_blob _ = ()
+let upload_blob _ = None
 
 let distributed_check_job _ _ _ files =
   let results = List.fold_left (fun acc file -> (file, Ok None) :: acc) [] files in

@@ -220,6 +220,8 @@ module NewAPI : sig
 
   type imports
 
+  type cas_digest
+
   type +'a parse
 
   type haste_info
@@ -334,6 +336,13 @@ module NewAPI : sig
 
   val read_imports : imports addr -> string
 
+  (* cas_digest *)
+  (* pass sha1 and len to prepare writing cas digest*)
+  val prepare_write_cas_digest : string -> int -> size * (chunk -> cas_digest addr)
+
+  (* get the digest by cas_digest addr *)
+  val read_cas_digest : cas_digest addr -> string * int
+
   (* docblock *)
 
   val docblock_size : string -> size
@@ -376,6 +385,7 @@ module NewAPI : sig
     imports addr ->
     file entity addr ->
     heap_int64 entity addr ->
+    cas_digest addr option ->
     [ `typed ] parse addr
 
   val is_typed : [> ] parse addr -> bool
@@ -404,6 +414,8 @@ module NewAPI : sig
 
   val get_sig_hash : [ `typed ] parse addr -> heap_int64 entity addr
 
+  val get_cas_digest : [ `typed ] parse addr -> cas_digest addr option
+
   val set_ast : [ `typed ] parse addr -> ast addr -> unit
 
   val set_docblock : [ `typed ] parse addr -> docblock addr -> unit
@@ -413,6 +425,8 @@ module NewAPI : sig
   val set_type_sig : [ `typed ] parse addr -> type_sig addr -> unit
 
   val set_file_sig : [ `typed ] parse addr -> file_sig addr -> unit
+
+  val set_cas_digest : [ `typed ] parse addr -> cas_digest addr -> unit
 
   (* haste info *)
 

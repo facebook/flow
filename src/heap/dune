@@ -59,7 +59,13 @@
  (modules prefix sharedMem)
  (preprocess
   (pps ppx_deriving.std visitors.ppx))
- (libraries common_lz4 heap_libc logging_common utils_core worker_cancel))
+ (libraries
+  common_lz4
+  heap_libc
+  leb128
+  logging_common
+  utils_core
+  worker_cancel))
 
 (library
  (name worker_cancel)

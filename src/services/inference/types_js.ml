@@ -2019,10 +2019,9 @@ let init_from_saved_state ~profiling ~workers ~saved_state ~updates options =
 
     let restore_parsed (fns, dirty_modules, invalid_hashes) (fn, parsed_file_data) =
       let { Saved_state.module_name; normalized_file_data } = parsed_file_data in
-      let { Saved_state.hash; exports; resolved_requires; imports } =
+      let { Saved_state.hash; exports; resolved_requires; imports; cas_digest } =
         Saved_state.denormalize_file_data ~root normalized_file_data
       in
-
       (* Restore the FileHeap *)
       let ms =
         Parsing_heaps.From_saved_state.add_parsed
@@ -2033,6 +2032,7 @@ let init_from_saved_state ~profiling ~workers ~saved_state ~updates options =
           exports
           resolved_requires
           imports
+          cas_digest
       in
 
       let invalid_hashes =

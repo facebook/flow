@@ -21,6 +21,7 @@ type result =
       tolerable_errors: File_sig.With_Loc.tolerable_error list;
       exports: Exports.t;
       imports: Imports.t;
+      cas_digest: (string * int) option;
     }
   | Parse_recovered of {
       ast: (Loc.t, Loc.t) Flow_ast.Program.t;

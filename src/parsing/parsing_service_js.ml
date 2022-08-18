@@ -19,6 +19,7 @@ type result =
       tolerable_errors: File_sig.With_Loc.tolerable_error list;
       exports: Exports.t;
       imports: Imports.t;
+      cas_digest: (string * int) option;
     }
   | Parse_recovered of {
       ast: (Loc.t, Loc.t) Flow_ast.Program.t;
@@ -457,8 +458,14 @@ let do_parse ~parse_options ~info content file =
               tolerable_errors
               sig_errors
           in
-          if distributed then Remote_execution.upload_blob type_sig;
-          Parse_ok { ast; file_sig; locs; type_sig; tolerable_errors; exports; imports }
+          (* add digest by distributed flag *)
+          let cas_digest =
+            if distributed then
+              Remote_execution.upload_blob type_sig
+            else
+              None
+          in
+          Parse_ok { ast; file_sig; locs; type_sig; tolerable_errors; exports; imports; cas_digest }
   with
   | e ->
     let e = Exception.wrap e in
@@ -561,7 +568,8 @@ let reducer
           let module_name = exported_module file_key info in
           begin
             match do_parse ~parse_options ~info content file_key with
-            | Parse_ok { ast; file_sig; exports; imports; locs; type_sig; tolerable_errors } ->
+            | Parse_ok
+                { ast; file_sig; exports; imports; locs; type_sig; cas_digest; tolerable_errors } ->
               (* if parse_options.fail == true, then parse errors will hit Parse_fail below. otherwise,
                  ignore any parse errors we get here. *)
               let file_sig = (file_sig, tolerable_errors) in
@@ -578,6 +586,7 @@ let reducer
                   file_sig
                   locs
                   type_sig
+                  cas_digest
               in
               let parsed = FilenameSet.add file_key acc.parsed in
               let dirty_modules = Modulename.Set.union dirty_modules acc.dirty_modules in

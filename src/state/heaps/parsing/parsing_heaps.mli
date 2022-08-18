@@ -73,6 +73,8 @@ val read_exports : [ `typed ] parse_addr -> Exports.t
 
 val read_imports : [ `typed ] parse_addr -> Imports.t
 
+val read_cas_digest : [ `typed ] parse_addr -> (string * int) option
+
 module type READER = sig
   type reader
 
@@ -110,6 +112,8 @@ module type READER = sig
 
   val get_file_hash : reader:reader -> File_key.t -> Xx.hash option
 
+  val get_cas_digest : reader:reader -> File_key.t -> (string * int) option
+
   val get_parse_unsafe :
     reader:reader -> File_key.t -> file_addr -> [ `typed | `untyped ] parse_addr
 
@@ -138,6 +142,8 @@ module type READER = sig
 
   val get_file_hash_unsafe : reader:reader -> File_key.t -> Xx.hash
 
+  val get_cas_digest_unsafe : reader:reader -> File_key.t -> string * int
+
   val loc_of_aloc : reader:reader -> ALoc.t -> Loc.t
 end
 
@@ -161,6 +167,8 @@ module Mutator_reader : sig
 
   val get_old_imports : reader:reader -> File_key.t -> Imports.t option
 
+  val get_old_cas_digest : reader:reader -> File_key.t -> (string * int) option
+
   val typed_component : reader:reader -> File_key.t Nel.t -> component_file Nel.t option
 end
 
@@ -182,6 +190,7 @@ type worker_mutator = {
     File_sig.With_Loc.tolerable_t ->
     locs_tbl ->
     type_sig ->
+    (string * int) option ->
     Modulename.Set.t;
   add_unparsed: File_key.t -> file_addr option -> Xx.hash -> string option -> Modulename.Set.t;
   clear_not_found: File_key.t -> Modulename.Set.t;
@@ -235,6 +244,7 @@ module From_saved_state : sig
     Exports.t ->
     resolved_requires ->
     Imports.t ->
+    (string * int) option ->
     Modulename.Set.t
 
   val add_unparsed : Options.t -> File_key.t -> Xx.hash -> string option -> Modulename.Set.t

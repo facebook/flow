@@ -56,6 +56,7 @@ type tag =
   | Serialized_file_sig_tag
   | Serialized_exports_tag
   | Serialized_imports_tag
+  | Serialized_cas_digest_tag
 
 let heap_ref : buf option ref = ref None
 
@@ -828,6 +829,8 @@ module NewAPI = struct
   type resolved_requires
 
   type imports
+
+  type cas_digest
 
   type +'a parse
 
@@ -1671,18 +1674,105 @@ module NewAPI = struct
 
   let read_imports addr = read_compressed Serialized_imports_tag addr
 
+  (** Cas digest  *)
+
+  (* In ASCII, 0-9 are codes 48-57, A-F are codes 65-70, a-f are codes 97-102.
+     Any other ASCII code is not a valid hex digit. *)
+  let int_of_hex_digit chr =
+    let invalid () = Printf.ksprintf invalid_arg "invalid hex digit `%c`" chr in
+    let code = Char.code chr in
+    if code < 48 then
+      invalid ()
+    else if code < 58 then
+      code - 48
+    else if code < 65 then
+      invalid ()
+    else if code < 71 then
+      code - 55
+    else if code < 97 then
+      invalid ()
+    else if code < 103 then
+      code - 87
+    else
+      invalid ()
+
+  let hex_digit_of_int i =
+    let invalid () = Printf.ksprintf invalid_arg "invalid value `%d`" i in
+    if i < 0 then
+      invalid ()
+    else if i < 10 then
+      Char.chr (i + 48)
+    else if i < 16 then
+      Char.chr (i + 87)
+    else
+      invalid ()
+
+  let sha1_of_sha1hex sha1hex =
+    assert (String.length sha1hex = 40);
+    let buf = Bytes.create 20 in
+    for i = 0 to 19 do
+      let hi = int_of_hex_digit sha1hex.[2 * i] in
+      let lo = int_of_hex_digit sha1hex.[(2 * i) + 1] in
+      Bytes.set buf i (Char.chr ((16 * hi) + lo))
+    done;
+    Bytes.unsafe_to_string buf
+
+  let sha1hex_of_sha1 sha1 =
+    assert (String.length sha1 = 20);
+    let buf = Bytes.create 40 in
+    for i = 0 to 19 do
+      let code = Char.code sha1.[i] in
+      let hi = hex_digit_of_int (code / 16) in
+      let lo = hex_digit_of_int (code mod 16) in
+      Bytes.set buf (2 * i) hi;
+      Bytes.set buf ((2 * i) + 1) lo
+    done;
+    Bytes.unsafe_to_string buf
+
+  let prepare_write_cas_digest sha1hex bytelen =
+    (* encode to 20 bytes *)
+    let sha1 = sha1_of_sha1hex sha1hex in
+    let buf = Buffer.create 24 in
+    Buffer.add_string buf sha1;
+    Leb128.Unsigned.write (Buffer.add_int8 buf) bytelen;
+    let cas_digest = Buffer.contents buf in
+    let size = string_size cas_digest in
+    let write chunk =
+      let addr = write_header chunk Serialized_cas_digest_tag size in
+      unsafe_write_string chunk cas_digest;
+      addr
+    in
+    (size, write)
+
+  let read_cas_digest addr =
+    let str = read_string_generic Serialized_cas_digest_tag addr 0 in
+    let bytes = String.to_bytes str in
+    let sha1hex = Bytes.sub_string bytes 0 20 in
+    let read_byte =
+      let bytes = Bytes.sub bytes 20 (Bytes.length bytes - 20) in
+      let pos = ref 0 in
+      fun () ->
+        let byte = Bytes.get bytes !pos in
+        incr pos;
+        Char.code byte
+    in
+    let bytelen = Leb128.Unsigned.read read_byte in
+    (* decode sha1hex to 40byte *)
+    let sha1 = sha1hex_of_sha1 sha1hex in
+    (sha1, bytelen)
+
   (** Parse data *)
 
   let untyped_parse_size = 1 * addr_size
 
-  let typed_parse_size = 11 * addr_size
+  let typed_parse_size = 12 * addr_size
 
   let write_untyped_parse chunk hash =
     let addr = write_header chunk Untyped_tag untyped_parse_size in
     unsafe_write_addr chunk hash;
     addr
 
-  let write_typed_parse chunk hash exports resolved_requires imports leader sig_hash =
+  let write_typed_parse chunk hash exports resolved_requires imports leader sig_hash cas_digest =
     let addr = write_header chunk Typed_tag typed_parse_size in
     unsafe_write_addr chunk hash;
     unsafe_write_addr chunk null_addr;
@@ -1695,6 +1785,9 @@ module NewAPI = struct
     unsafe_write_addr chunk imports;
     unsafe_write_addr chunk leader;
     unsafe_write_addr chunk sig_hash;
+    (match cas_digest with
+    | None -> unsafe_write_addr chunk null_addr
+    | Some cas_digest_addr -> unsafe_write_addr chunk cas_digest_addr);
     addr
 
   let is_typed parse =
@@ -1729,6 +1822,8 @@ module NewAPI = struct
 
   let sig_hash_addr parse = addr_offset parse 11
 
+  let cas_digest_addr parse = addr_offset parse 12
+
   let get_file_hash = get_generic file_hash_addr
 
   let get_ast = get_generic_opt ast_addr
@@ -1751,6 +1846,8 @@ module NewAPI = struct
 
   let get_sig_hash = get_generic sig_hash_addr
 
+  let get_cas_digest = get_generic_opt cas_digest_addr
+
   let set_ast = set_generic ast_addr
 
   let set_docblock = set_generic docblock_addr
@@ -1760,6 +1857,8 @@ module NewAPI = struct
   let set_type_sig = set_generic type_sig_addr
 
   let set_file_sig = set_generic file_sig_addr
+
+  let set_cas_digest = set_generic cas_digest_addr
 
   (** Haste info *)
 

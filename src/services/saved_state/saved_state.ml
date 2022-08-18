@@ -12,6 +12,7 @@ type denormalized_file_data = {
   exports: Exports.t;
   hash: Xx.hash;
   imports: Imports.t;
+  cas_digest: (string * int) option;
 }
 
 type normalized_file_data = denormalized_file_data
@@ -197,9 +198,9 @@ end = struct
     in
     { Parsing_heaps.resolved_modules; phantom_dependencies; hash }
 
-  let normalize_file_data ~normalizer { resolved_requires; exports; hash; imports } =
+  let normalize_file_data ~normalizer { resolved_requires; exports; hash; imports; cas_digest } =
     let resolved_requires = normalize_resolved_requires ~normalizer resolved_requires in
-    { resolved_requires; exports; hash; imports }
+    { resolved_requires; exports; hash; imports; cas_digest }
 
   let normalize_parsed_data ~normalizer { module_name; normalized_file_data } =
     let normalized_file_data = normalize_file_data ~normalizer normalized_file_data in
@@ -220,6 +221,7 @@ end = struct
             exports = Parsing_heaps.read_exports parse;
             hash = Parsing_heaps.read_file_hash parse;
             imports;
+            cas_digest = Parsing_heaps.read_cas_digest parse;
           };
       }
     in
@@ -514,9 +516,9 @@ end = struct
     Parsing_heaps.mk_resolved_requires ~resolved_modules ~phantom_dependencies
 
   (** Turns all the relative paths in a file's data back into absolute paths. *)
-  let denormalize_file_data ~root { resolved_requires; exports; hash; imports } =
+  let denormalize_file_data ~root { resolved_requires; exports; hash; imports; cas_digest } =
     let resolved_requires = denormalize_resolved_requires ~root resolved_requires in
-    { resolved_requires; exports; hash; imports }
+    { resolved_requires; exports; hash; imports; cas_digest }
 
   let progress_fn real_total ~total:_ ~start ~length:_ =
     MonitorRPC.status_update

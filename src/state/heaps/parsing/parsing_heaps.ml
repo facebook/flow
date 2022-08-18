@@ -283,6 +283,15 @@ let read_imports parse : Imports.t =
   let deserialize x = Marshal.from_string x 0 in
   get_imports parse |> read_imports |> deserialize
 
+let read_cas_digest parse : (string * int) option =
+  let open Heap in
+  get_cas_digest parse |> Option.map (fun addr -> read_cas_digest addr)
+
+let read_cas_digest_unsafe parse : string * int =
+  match read_cas_digest parse with
+  | Some cas_digest -> cas_digest
+  | None -> raise (Requires_not_found "cas_digest")
+
 let read_resolved_requires addr : resolved_requires =
   Marshal.from_string (Heap.read_resolved_requires addr) 0
 
@@ -583,7 +592,18 @@ let prepare_update_revdeps =
  * function will update the existing entry in place. Otherwise, we will create a
  * new entry and add it to the shared hash table. *)
 let add_checked_file
-    file_key file_opt hash module_name docblock ast locs type_sig file_sig exports imports =
+    file_key
+    file_opt
+    hash
+    module_name
+    docblock
+    ast
+    locs
+    type_sig
+    file_sig
+    exports
+    imports
+    cas_digest =
   let open Type_sig_collections in
   let serialize x = Marshal.to_string x [] in
   let ast = serialize (compactify_loc ast) in
@@ -639,16 +659,30 @@ let add_checked_file
       let imports = serialize imports in
       let (imports_size, write_imports) = prepare_write_imports imports in
       let (exports_size, write_exports) = prepare_write_exports exports in
+      let (cas_digest_size, write_cas_digest) =
+        match cas_digest with
+        | None -> (0, (fun _ -> None))
+        | Some (sha1, bytelen) ->
+          let (size, write) = prepare_write_cas_digest sha1 bytelen in
+          (header_size + size, (fun chunk -> Some (write chunk)))
+      in
       let size =
-        size + (4 * header_size) + typed_parse_size + int64_size + exports_size + imports_size
+        size
+        + (4 * header_size)
+        + typed_parse_size
+        + int64_size
+        + exports_size
+        + imports_size
+        + cas_digest_size
       in
       let write chunk =
         let hash = write_int64 chunk hash in
         let exports = write_exports chunk in
         let imports = write_imports chunk in
+        let cas_digest = write_cas_digest chunk in
         let (resolved_requires, leader, sig_hash) = write_parse_ents_maybe chunk in
         let parse =
-          write_typed_parse chunk hash exports resolved_requires imports leader sig_hash
+          write_typed_parse chunk hash exports resolved_requires imports leader sig_hash cas_digest
         in
         let dirty_modules = add_file_maybe chunk (parse :> [ `typed | `untyped ] parse_addr) in
         (parse, dirty_modules)
@@ -928,7 +962,18 @@ end = struct
 end
 
 let add_parsed
-    file_key file_opt ~exports ~imports hash module_name docblock ast file_sig locs type_sig =
+    file_key
+    file_opt
+    ~exports
+    ~imports
+    hash
+    module_name
+    docblock
+    ast
+    file_sig
+    locs
+    type_sig
+    cas_digest =
   WorkerCancel.with_no_cancellations (fun () ->
       add_checked_file
         file_key
@@ -942,6 +987,7 @@ let add_parsed
         file_sig
         exports
         imports
+        cas_digest
   )
 
 let add_unparsed file_key file_opt hash module_name =
@@ -986,6 +1032,8 @@ module type READER = sig
 
   val get_file_hash : reader:reader -> File_key.t -> Xx.hash option
 
+  val get_cas_digest : reader:reader -> File_key.t -> (string * int) option
+
   val get_parse_unsafe :
     reader:reader -> File_key.t -> file_addr -> [ `typed | `untyped ] parse_addr
 
@@ -1013,6 +1061,8 @@ module type READER = sig
   val get_type_sig_unsafe : reader:reader -> File_key.t -> type_sig
 
   val get_file_hash_unsafe : reader:reader -> File_key.t -> Xx.hash
+
+  val get_cas_digest_unsafe : reader:reader -> File_key.t -> string * int
 
   val loc_of_aloc : reader:reader -> ALoc.t -> Loc.t
 end
@@ -1153,6 +1203,16 @@ module Mutator_reader = struct
     let* parse = get_old_parse ~reader addr in
     Some (read_file_hash parse)
 
+  let get_old_cas_digest ~reader file =
+    let* addr = get_file_addr file in
+    let* parse = get_old_typed_parse ~reader addr in
+    read_cas_digest parse
+
+  let get_cas_digest ~reader file =
+    let* addr = get_file_addr file in
+    let* parse = get_typed_parse ~reader addr in
+    read_cas_digest parse
+
   let get_parse_unsafe ~reader file addr =
     match get_parse ~reader addr with
     | Some parse -> parse
@@ -1225,6 +1285,11 @@ module Mutator_reader = struct
     let parse = get_parse_unsafe ~reader file addr in
     read_file_hash parse
 
+  let get_cas_digest_unsafe ~reader file =
+    let addr = get_file_addr_unsafe file in
+    let parse = get_typed_parse_unsafe ~reader file addr in
+    read_cas_digest_unsafe parse
+
   let loc_of_aloc = loc_of_aloc ~get_aloc_table_unsafe
 
   (* We choose the head file as the leader, and the tail as followers. It is
@@ -1264,6 +1329,7 @@ type worker_mutator = {
     File_sig.With_Loc.tolerable_t ->
     locs_tbl ->
     type_sig ->
+    (string * int) option ->
     MSet.t;
   add_unparsed: File_key.t -> file_addr option -> Xx.hash -> string option -> MSet.t;
   clear_not_found: File_key.t -> MSet.t;
@@ -1571,6 +1637,11 @@ module Reader = struct
     let* parse = get_typed_parse ~reader addr in
     Some (read_imports parse)
 
+  let get_cas_digest ~reader file =
+    let* addr = get_file_addr file in
+    let* parse = get_typed_parse ~reader addr in
+    read_cas_digest parse
+
   let get_tolerable_file_sig ~reader file =
     let* addr = get_file_addr file in
     let* parse = get_typed_parse ~reader addr in
@@ -1642,6 +1713,11 @@ module Reader = struct
     let addr = get_file_addr_unsafe file in
     let parse = get_typed_parse_unsafe ~reader file addr in
     read_imports parse
+
+  let get_cas_digest_unsafe ~reader file =
+    let addr = get_file_addr_unsafe file in
+    let parse = get_typed_parse_unsafe ~reader file addr in
+    read_cas_digest_unsafe parse
 
   let get_tolerable_file_sig_unsafe ~reader file =
     let addr = get_file_addr_unsafe file in
@@ -1737,6 +1813,11 @@ module Reader_dispatcher : READER with type reader = Abstract_state_reader.t = s
     | Mutator_state_reader reader -> Mutator_reader.get_imports ~reader
     | State_reader reader -> Reader.get_imports ~reader
 
+  let get_cas_digest ~reader =
+    match reader with
+    | Mutator_state_reader reader -> Mutator_reader.get_cas_digest ~reader
+    | State_reader reader -> Reader.get_cas_digest ~reader
+
   let get_tolerable_file_sig ~reader =
     match reader with
     | Mutator_state_reader reader -> Mutator_reader.get_tolerable_file_sig ~reader
@@ -1802,6 +1883,11 @@ module Reader_dispatcher : READER with type reader = Abstract_state_reader.t = s
     | Mutator_state_reader reader -> Mutator_reader.get_imports_unsafe ~reader
     | State_reader reader -> Reader.get_imports_unsafe ~reader
 
+  let get_cas_digest_unsafe ~reader =
+    match reader with
+    | Mutator_state_reader reader -> Mutator_reader.get_cas_digest_unsafe ~reader
+    | State_reader reader -> Reader.get_cas_digest_unsafe ~reader
+
   let get_tolerable_file_sig_unsafe ~reader =
     match reader with
     | Mutator_state_reader reader -> Mutator_reader.get_tolerable_file_sig_unsafe ~reader
@@ -1826,7 +1912,7 @@ module Reader_dispatcher : READER with type reader = Abstract_state_reader.t = s
 end
 
 module From_saved_state = struct
-  let add_parsed options file_key hash module_name exports resolved_requires imports =
+  let add_parsed options file_key hash module_name exports resolved_requires imports cas_digest =
     let (file_kind, file_name) = file_kind_and_name file_key in
     let exports = Marshal.to_string exports [] in
     let imports = Marshal.to_string imports [] in
@@ -1834,6 +1920,13 @@ module From_saved_state = struct
     let open Heap in
     let (exports_size, write_exports) = prepare_write_exports exports in
     let (imports_size, write_imports) = prepare_write_imports imports in
+    let (cas_digest_size, write_cas_digest) =
+      match cas_digest with
+      | None -> (0, (fun _ -> None))
+      | Some (sha1, bytelen) ->
+        let (size, write) = prepare_write_cas_digest sha1 bytelen in
+        (header_size + size, (fun chunk -> Some (write chunk)))
+    in
     let (resolved_requires_size, write_resolved_requires) =
       prepare_write_resolved_requires resolved_requires_str
     in
@@ -1850,6 +1943,7 @@ module From_saved_state = struct
       + exports_size
       + resolved_requires_size
       + imports_size
+      + cas_digest_size
       + revdeps_size
     in
     let (size, add_file_module_maybe) = prepare_add_file_module_maybe size file_key in
@@ -1868,8 +1962,17 @@ module From_saved_state = struct
         let resolved_requires_ent = write_entity chunk (Some resolved_requires) in
         let leader_ent = write_entity chunk None in
         let sig_hash_ent = write_entity chunk None in
+        let cas_digest = write_cas_digest chunk in
         let parse =
-          write_typed_parse chunk hash exports resolved_requires_ent imports leader_ent sig_hash_ent
+          write_typed_parse
+            chunk
+            hash
+            exports
+            resolved_requires_ent
+            imports
+            leader_ent
+            sig_hash_ent
+            cas_digest
         in
         let parse_ent = write_entity chunk (Some (parse :> [ `typed | `untyped ] parse_addr)) in
         let file = write_file chunk file_kind file_name parse_ent haste_ent file_module in
