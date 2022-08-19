@@ -247,7 +247,16 @@ let get_status ~profiling ~reader ~options env =
   in
   (status_response, lazy_stats)
 
-let autocomplete ~trigger_character ~reader ~options ~env ~profiling ~input ~cursor ~imports =
+let autocomplete
+    ~trigger_character
+    ~reader
+    ~options
+    ~env
+    ~profiling
+    ~input
+    ~cursor
+    ~imports
+    ~imports_ranked_usage =
   match of_file_input ~options ~env input with
   | Error (Failed e) -> (Error e, None)
   | Error (Skipped reason) ->
@@ -307,6 +316,7 @@ let autocomplete ~trigger_character ~reader ~options ~env ~profiling ~input ~cur
               ~ast
               ~typed_ast
               ~imports
+              ~imports_ranked_usage
               trigger_character
               cursor_loc
           in
@@ -859,11 +869,28 @@ let save_state ~saved_state_filename ~genv ~env ~profiling =
   let%lwt () = Saved_state.save ~saved_state_filename ~genv ~env ~profiling in
   Lwt.return (Ok ())
 
-let handle_autocomplete ~trigger_character ~reader ~options ~profiling ~env ~input ~cursor ~imports
-    =
+let handle_autocomplete
+    ~trigger_character
+    ~reader
+    ~options
+    ~profiling
+    ~env
+    ~input
+    ~cursor
+    ~imports
+    ~imports_ranked_usage =
   let (result, json_data) =
     try_with_json (fun () ->
-        autocomplete ~trigger_character ~reader ~options ~env ~profiling ~input ~cursor ~imports
+        autocomplete
+          ~trigger_character
+          ~reader
+          ~options
+          ~env
+          ~profiling
+          ~input
+          ~cursor
+          ~imports
+          ~imports_ranked_usage
     )
   in
   let result =
@@ -1172,12 +1199,20 @@ let get_ephemeral_handler genv command =
   let options = genv.options in
   let reader = State_reader.create () in
   match command with
-  | ServerProt.Request.AUTOCOMPLETE { input; cursor; trigger_character; wait_for_recheck; imports }
-    ->
+  | ServerProt.Request.AUTOCOMPLETE
+      { input; cursor; trigger_character; wait_for_recheck; imports; imports_ranked_usage } ->
     mk_parallelizable
       ~wait_for_recheck
       ~options
-      (handle_autocomplete ~trigger_character ~reader ~options ~input ~cursor ~imports)
+      (handle_autocomplete
+         ~trigger_character
+         ~reader
+         ~options
+         ~input
+         ~cursor
+         ~imports
+         ~imports_ranked_usage
+      )
   | ServerProt.Request.AUTOFIX_EXPORTS { input; verbose; wait_for_recheck } ->
     let options = { options with Options.opt_verbose = verbose } in
     mk_parallelizable ~wait_for_recheck ~options (handle_autofix_exports ~input ~options)
@@ -1742,6 +1777,7 @@ let handle_persistent_autocomplete_lsp
     Persistent_connection.Client_config.suggest_autoimports client_config
     && Options.autoimports options
   in
+  let imports_ranked_usage = Options.autoimports_ranked_by_usage options in
   let (result, extra_data) =
     autocomplete
       ~trigger_character
@@ -1752,6 +1788,7 @@ let handle_persistent_autocomplete_lsp
       ~input:file_input
       ~cursor:(line, char)
       ~imports
+      ~imports_ranked_usage
   in
   let metadata = with_data ~extra_data metadata in
   match result with

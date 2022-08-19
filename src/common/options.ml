@@ -77,6 +77,7 @@ type t = {
   opt_all: bool;
   opt_any_propagation: bool;
   opt_autoimports: bool;
+  opt_autoimports_ranked_by_usage: bool;
   opt_automatic_require_default: bool;
   opt_babel_loose_array_spread: bool;
   opt_cycle_errors: bool;
@@ -171,6 +172,8 @@ let all opts = opts.opt_all
 let any_propagation opts = opts.opt_any_propagation
 
 let autoimports opts = opts.opt_autoimports
+
+let autoimports_ranked_by_usage opts = opts.opt_autoimports_ranked_by_usage
 
 let automatic_require_default opts = opts.opt_automatic_require_default
 

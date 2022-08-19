@@ -13,6 +13,7 @@ module Request = struct
         trigger_character: string option;
         wait_for_recheck: bool option;
         imports: bool;  (** include auto-import suggestions *)
+        imports_ranked_usage: bool;
       }
     | AUTOFIX_EXPORTS of {
         input: File_input.t;
@@ -96,8 +97,15 @@ module Request = struct
     | STATUS of { include_warnings: bool }
 
   let to_string = function
-    | AUTOCOMPLETE { input; cursor = _; wait_for_recheck = _; trigger_character = _; imports = _ }
-      ->
+    | AUTOCOMPLETE
+        {
+          input;
+          cursor = _;
+          wait_for_recheck = _;
+          trigger_character = _;
+          imports = _;
+          imports_ranked_usage = _;
+        } ->
       Printf.sprintf "autocomplete %s" (File_input.filename_of_file_input input)
     | AUTOFIX_EXPORTS { input; _ } ->
       Printf.sprintf "autofix exports %s" (File_input.filename_of_file_input input)

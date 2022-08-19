@@ -473,7 +473,7 @@ let flow_text_edit_of_lsp_text_edit { Lsp.TextEdit.range; newText } =
   (loc, newText)
 
 let completion_item_of_autoimport
-    ~options ~reader ~src_dir ~ast ~ac_loc { Export_search.name; source; kind } =
+    ~options ~reader ~src_dir ~ast ~ac_loc { Export_search.name; source; kind } rank =
   match
     Code_action_service.text_edits_of_import ~options ~reader ~src_dir ~ast kind name source
   with
@@ -483,7 +483,7 @@ let completion_item_of_autoimport
       name;
       detail = "(global)" (* TODO: include the type *);
       text_edits = [text_edit (name, ac_loc)];
-      sort_text = sort_text_of_rank 100 (* TODO: use a constant *);
+      sort_text = sort_text_of_rank rank;
       preselect = false;
       documentation = None;
       tags = None;
@@ -498,7 +498,7 @@ let completion_item_of_autoimport
       name;
       detail = title (* TODO: include the type *);
       text_edits = text_edit (name, ac_loc) :: edits;
-      sort_text = sort_text_of_rank 100 (* TODO: use a constant *);
+      sort_text = sort_text_of_rank rank;
       preselect = false;
       documentation = None;
       tags = None;
@@ -521,11 +521,27 @@ let is_reserved name kind =
   else
     Parser_env.is_reserved_type name
 
-let append_completion_items_of_autoimports ~options ~reader ~ast ~ac_loc ~locals auto_imports acc =
+let append_completion_items_of_autoimports
+    ~options ~reader ~ast ~ac_loc ~locals ~imports_ranked_usage auto_imports acc =
   let src_dir = src_dir_of_loc ac_loc in
+  let sorted_auto_imports =
+    if imports_ranked_usage then
+      let open Export_search in
+      Base.List.sort
+        ~compare:(fun (import_a, score_a) (import_b, score_b) ->
+          match Int.compare score_a score_b with
+          | 0 -> String.compare import_a.name import_b.name
+          | score_diff -> -1 * score_diff)
+        auto_imports
+    else
+      auto_imports
+  in
+  let sorted_auto_imports =
+    Base.List.mapi ~f:(fun index autoimport -> (fst autoimport, index)) sorted_auto_imports
+  in
   Base.List.fold_left
     ~init:acc
-    ~f:(fun acc auto_import ->
+    ~f:(fun acc (auto_import, rank) ->
       let { Export_search.name; kind; source = _ } = auto_import in
       if is_reserved name kind || Base.Hash_set.mem locals name then
         (* exclude reserved words and already-defined locals, because they can't be imported
@@ -535,10 +551,17 @@ let append_completion_items_of_autoimports ~options ~reader ~ast ~ac_loc ~locals
         acc
       else
         let item =
-          completion_item_of_autoimport ~options ~reader ~src_dir ~ast ~ac_loc auto_import
+          completion_item_of_autoimport
+            ~options
+            ~reader
+            ~src_dir
+            ~ast
+            ~ac_loc
+            auto_import
+            (100 + rank)
         in
         item :: acc)
-    auto_imports
+    sorted_auto_imports
 
 (* env is all visible bound names at cursor *)
 let autocomplete_id
@@ -553,6 +576,7 @@ let autocomplete_id
     ~include_super
     ~include_this
     ~imports
+    ~imports_ranked_usage
     ~tparams_rev
     ~token
     ~type_ =
@@ -670,6 +694,7 @@ let autocomplete_id
             ~ast
             ~ac_loc
             ~locals
+            ~imports_ranked_usage
             auto_imports
             items_rev
         in
@@ -859,7 +884,7 @@ let make_utility_type ~ac_loc name =
     name;
     detail = name;
     text_edits = [text_edit (name, ac_loc)];
-    sort_text = sort_text_of_rank 102 (* below globals *);
+    sort_text = sort_text_of_rank 200 (* below globals *);
     preselect = false;
     documentation = None;
     tags = None;
@@ -916,7 +941,18 @@ let local_type_identifiers ~typed_ast ~cx ~file_sig =
        ~genv:(Ty_normalizer_env.mk_genv ~full_cx:cx ~file:(Context.file cx) ~typed_ast ~file_sig)
 
 let autocomplete_unqualified_type
-    ~env ~options ~reader ~cx ~imports ~tparams_rev ~file_sig ~ac_loc ~ast ~typed_ast ~token =
+    ~env
+    ~options
+    ~reader
+    ~cx
+    ~imports
+    ~imports_ranked_usage
+    ~tparams_rev
+    ~file_sig
+    ~ac_loc
+    ~ast
+    ~typed_ast
+    ~token =
   (* TODO: filter to results that match `token` *)
   let ac_loc = loc_of_aloc ~reader ac_loc |> Autocomplete_sigil.remove_from_loc in
   let exact_by_default = Context.exact_by_default cx in
@@ -1027,6 +1063,7 @@ let autocomplete_unqualified_type
           ~ast
           ~ac_loc
           ~locals
+          ~imports_ranked_usage
           auto_imports
           items_rev
       in
@@ -1046,6 +1083,7 @@ let autocomplete_member
     ~ast
     ~typed_ast
     ~imports
+    ~imports_ranked_usage
     ~token
     this
     in_optional_chain
@@ -1204,6 +1242,7 @@ let autocomplete_member
             ~reader
             ~cx
             ~imports
+            ~imports_ranked_usage
             ~tparams_rev
             ~ac_loc:ac_aloc
             ~ast
@@ -1223,6 +1262,7 @@ let autocomplete_member
             ~include_super
             ~include_this
             ~imports
+            ~imports_ranked_usage
             ~tparams_rev
             ~token
             ~type_
@@ -1273,8 +1313,19 @@ let should_autoimport_react ~options ~imports ~file_sig =
     false
 
 let autocomplete_jsx_element
-    ~env ~options ~reader ~cx ~ac_loc ~file_sig ~ast ~typed_ast ~imports ~tparams_rev ~token ~type_
-    =
+    ~env
+    ~options
+    ~reader
+    ~cx
+    ~ac_loc
+    ~file_sig
+    ~ast
+    ~typed_ast
+    ~imports
+    ~imports_ranked_usage
+    ~tparams_rev
+    ~token
+    ~type_ =
   let ({ result; errors_to_log } as results) =
     autocomplete_id
       ~env
@@ -1288,6 +1339,7 @@ let autocomplete_jsx_element
       ~include_super:false
       ~include_this:false
       ~imports
+      ~imports_ranked_usage
       ~tparams_rev
       ~token
       ~type_
@@ -1513,7 +1565,17 @@ let autocomplete_object_key
     AcResult { result; errors_to_log }
 
 let autocomplete_get_results
-    ~env ~options ~reader ~cx ~file_sig ~ast ~typed_ast ~imports trigger_character cursor =
+    ~env
+    ~options
+    ~reader
+    ~cx
+    ~file_sig
+    ~ast
+    ~typed_ast
+    ~imports
+    ~imports_ranked_usage
+    trigger_character
+    cursor =
   let file_sig = File_sig.abstractify_locs file_sig in
   let open Autocomplete_js in
   match process_location ~trigger_character ~cursor ~typed_ast with
@@ -1580,6 +1642,7 @@ let autocomplete_get_results
                ~include_super
                ~include_this
                ~imports
+               ~imports_ranked_usage
                ~tparams_rev
                ~token
                ~type_
@@ -1596,6 +1659,7 @@ let autocomplete_get_results
             ~ast
             ~typed_ast
             ~imports
+            ~imports_ranked_usage
             ~token
             obj_type
             in_optional_chain
@@ -1617,6 +1681,7 @@ let autocomplete_get_results
             ~ast
             ~typed_ast
             ~imports
+            ~imports_ranked_usage
             ~tparams_rev
             ~token
             ~type_
@@ -1644,6 +1709,7 @@ let autocomplete_get_results
                ~reader
                ~cx
                ~imports
+               ~imports_ranked_usage
                ~tparams_rev
                ~ac_loc
                ~ast
