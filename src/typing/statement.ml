@@ -8422,7 +8422,13 @@ struct
                   else
                     Type.implicit_mixed_this reason
               in
-              let t = Statement.Func_stmt_sig.functiontype cx this_t func_sig in
+              let function_loc_opt =
+                match expr with
+                | (loc, Ast.Expression.Function _) -> Some loc
+                | (_, Ast.Expression.ArrowFunction _) -> None
+                | _ -> failwith "expr can only be Function or ArrowFunction"
+              in
+              let t = Statement.Func_stmt_sig.functiontype cx function_loc_opt this_t func_sig in
               Flow.flow_t cx (t, annot_t)
             | (_, Inferred _)
               when RequireAnnot.should_require_annot cx && Context.enforce_class_annotations cx ->
@@ -9283,7 +9289,7 @@ struct
      signature consisting of type parameters, parameter types, parameter names,
      and return type, check the body against that signature by adding `this`
      and super` to the environment, and return the signature. *)
-  and function_decl cx ~func_hint ~needs_this_param reason func default_this super =
+  and function_decl cx ~func_hint ~needs_this_param ~fun_loc reason func default_this super =
     let (func_sig, reconstruct_func) =
       mk_func_sig
         cx
@@ -9307,7 +9313,7 @@ struct
     in
     ignore (Abnormal.swap_saved Abnormal.Return save_return);
     ignore (Abnormal.swap_saved Abnormal.Throw save_throw);
-    let fun_type = Func_stmt_sig.functiontype cx this_t func_sig in
+    let fun_type = Func_stmt_sig.functiontype cx fun_loc this_t func_sig in
     (fun_type, reconstruct_func (Base.Option.value_exn params_ast) (Base.Option.value_exn body_ast))
 
   (* Process a function declaration, returning a (polymorphic) function type. *)
@@ -9356,6 +9362,7 @@ struct
           cx
           ~needs_this_param
           ~func_hint:hint
+          ~fun_loc:(Some fun_loc)
           reason
           func
           (Func_class_sig_types.Func.FunctionThis (fun_loc, default_this))
@@ -9371,7 +9378,15 @@ struct
        objects through which the function may be called. *)
     let default_this = Func_class_sig_types.Func.ParentScopeThis in
     let (fun_type, reconstruct_ast) =
-      function_decl cx ~needs_this_param:false ~func_hint reason func default_this None
+      function_decl
+        cx
+        ~needs_this_param:false
+        ~func_hint
+        ~fun_loc:None
+        reason
+        func
+        default_this
+        None
     in
     (fun_type, reconstruct_ast fun_type)
 

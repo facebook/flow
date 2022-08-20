@@ -68,11 +68,13 @@ module type S = sig
   (** 1. Type Conversion *)
 
   (** Create a function type for function declarations/expressions. *)
-  val functiontype : Context.t -> Type.t -> (* this *)
-                                            t -> Type.t
+  val functiontype :
+    Context.t -> (* function this loc *) ALoc.t option -> Type.t -> (* this *)
+                                                                    t -> Type.t
 
   (** Create a function type for class/interface methods. *)
-  val methodtype : (* this *) Type.t -> t -> Type.t
+  val methodtype :
+    Context.t -> (* method this loc *) ALoc.t option -> (* this *) Type.t -> t -> Type.t
 
   (** Create a type of the return expression of a getter function.
 

@@ -162,15 +162,16 @@ struct
       return_t = return_annot_or_inferred;
     }
 
-  let functiontype cx this_default { T.reason; kind; tparams; fparams; return_t; _ } =
+  let functiontype cx func_loc this_default { T.reason; kind; tparams; fparams; return_t; _ } =
     let make_trust = Context.trust_constructor cx in
     let static =
       let proto = FunProtoT reason in
       Obj_type.mk_unsealed cx reason ~proto
     in
+    let this_type = F.this fparams |> Base.Option.value ~default:this_default in
     let funtype =
       {
-        Type.this_t = (F.this fparams |> Base.Option.value ~default:this_default, This_Function);
+        Type.this_t = (this_type, This_Function);
         params = F.value fparams;
         rest_param = F.rest fparams;
         return_t = TypeUtil.type_t_of_annotated_or_inferred return_t;
@@ -179,14 +180,18 @@ struct
       }
     in
     let t = DefT (reason, make_trust (), FunT (static, funtype)) in
+    Base.Option.iter func_loc ~f:(Env.bind_function_this cx this_type);
     poly_type_of_tparams (Type.Poly.generate_id ()) tparams t
 
-  let methodtype this_default { T.reason; tparams; fparams; return_t; _ } =
+  let methodtype cx method_this_loc this_default { T.reason; tparams; fparams; return_t; _ } =
     let params = F.value fparams in
     let (params_names, params_tlist) = List.split params in
     let rest_param = F.rest fparams in
     let def_reason = reason in
-    let param_this_t = F.this fparams |> Base.Option.value ~default:this_default in
+    let this_anno_t = F.this fparams in
+    Base.Option.both this_anno_t method_this_loc
+    |> Base.Option.iter ~f:(fun (t, loc) -> Env.bind_function_this cx t loc);
+    let param_this_t = Base.Option.value ~default:this_default this_anno_t in
     let t =
       DefT
         ( reason,
@@ -247,25 +252,15 @@ struct
     let prev_scope_kind = Env.push_var_scope cx function_scope in
 
     let this_t =
-      if Env.new_env then (
+      if Env.new_env then
         match default_this with
         | Func_class_sig_types.Func.ParentScopeThis -> None
         (* This case correspond to the default constructors that do not appear in the source. *)
         | Func_class_sig_types.Func.ClassThis (None, _) -> None
-        | Func_class_sig_types.Func.ClassThis (Some func_loc, default) ->
-          (match this_param fparams with
-          | None ->
-            (* There is no `this` annotation, so we inherit this from class scope. *)
-            Some default
-          | Some this ->
-            (* There is `this` annotation, so we shadow this from class scope. *)
-            Env.bind_function_this cx this func_loc;
-            Some this)
-        | Func_class_sig_types.Func.FunctionThis (func_loc, default) ->
-          let this = this_param fparams |> Base.Option.value ~default in
-          Env.bind_function_this cx this func_loc;
-          Some this
-      ) else
+        | Func_class_sig_types.Func.ClassThis (Some _, default)
+        | Func_class_sig_types.Func.FunctionThis (_, default) ->
+          Some (this_param fparams |> Base.Option.value ~default)
+      else
         (* add `this` and `super` before looking at parameter bindings as when using
          * `this` in default parameter values it refers to the function scope and
          * `super` should resolve to the method's [[HomeObject]]

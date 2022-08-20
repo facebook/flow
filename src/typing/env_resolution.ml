@@ -310,7 +310,12 @@ module Make (Env : Env_sig.S) (Statement : Statement_sig.S with module Env := En
     (fun_type, unknown_use)
 
   let resolve_annotated_function
-      cx ~hint reason tparams_map ({ Ast.Function.body; params; sig_loc; _ } as function_) =
+      cx
+      ~hint
+      reason
+      tparams_map
+      function_loc
+      ({ Ast.Function.body; params; sig_loc; _ } as function_) =
     let hint = resolve_hint cx (aloc_of_reason reason) hint in
     let cache = Context.node_cache cx in
     let tparams_map = mk_tparams_map cx tparams_map in
@@ -336,7 +341,7 @@ module Make (Env : Env_sig.S) (Statement : Statement_sig.S with module Env := En
       Base.Option.value (Statement.Func_stmt_params.this fparams) ~default
     in
     Node_cache.set_function_sig cache sig_loc sig_data;
-    (Statement.Func_stmt_sig.functiontype cx this_t func_sig, unknown_use)
+    (Statement.Func_stmt_sig.functiontype cx (Some function_loc) this_t func_sig, unknown_use)
 
   let resolve_class cx id_loc reason class_loc class_ =
     let cache = Context.node_cache cx in
@@ -612,11 +617,11 @@ module Make (Env : Env_sig.S) (Statement : Statement_sig.S with module Env := En
             function_;
             synthesizable_from_annotation = true;
             has_this_def = _;
-            function_loc = _;
+            function_loc;
             tparams_map;
             hint;
           } ->
-        resolve_annotated_function cx ~hint def_reason tparams_map function_
+        resolve_annotated_function cx ~hint def_reason tparams_map function_loc function_
       | Class { class_; class_loc; class_implicit_this_tparam = _ } ->
         resolve_class cx id_loc def_reason class_loc class_
       | MemberAssign { member_loc = _; member = _; rhs } ->

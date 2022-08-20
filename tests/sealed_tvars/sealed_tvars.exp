@@ -1,28 +1,3 @@
-Error ------------------------------------------------------------------------------------------ regression_tests.js:3:1
-
-Internal error: unconstrained tvar during tvar resolution
-
-      v-------------------------------------------
-   3| function no_missing_env_entry_for_delete() {
-   4|   declare var foo: {bar: string | void};
-   5|   delete foo.bar; // ok
-   6|   (foo.bar: void); // ok
-   7| }
-      ^
-
-
-Error ------------------------------------------------------------------------------------------ regression_tests.js:9:1
-
-Internal error: unconstrained tvar during tvar resolution
-
-       v---------------------------------------------------------
-    9| function no_missing_env_entry_for_illegal_type_binding() {
-   10|   type A = number;
-   11|   type A = number; // error, but no MissingEnvEntry internal error.
-   12| }
-       ^
-
-
 Error ----------------------------------------------------------------------------------------- regression_tests.js:11:8
 
 Cannot declare `A` [1] because the name is already bound. [name-already-bound]
@@ -35,17 +10,6 @@ References:
    regression_tests.js:10:8
    10|   type A = number;
               ^ [1]
-
-
-Error ----------------------------------------------------------------------------------------- regression_tests.js:14:1
-
-Internal error: unconstrained tvar during tvar resolution
-
-       v--------------------------------------
-   14| function unresolved_class_self_tvar() {
-   15|   class C { } // no weird unresolved tvar error
-   16| }
-       ^
 
 
 Error ---------------------------------------------------------------------------------------- regression_tests.js:21:17
@@ -149,4 +113,4 @@ References:
 
 
 
-Found 15 errors
+Found 12 errors
