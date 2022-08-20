@@ -1,3 +1,8 @@
+### 0.185.1
+
+Misc:
+* Improve the experimental mode to rank autoimport suggestions by how often they're imported (`autoimports_ranked_by_usage=true`)
+
 ### 0.185.0
 
 Likely to cause new Flow errors:
