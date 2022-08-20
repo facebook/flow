@@ -8379,7 +8379,7 @@ struct
          Class_sig.t containing this field, as that is when the initializer expression
          gets checked.
     *)
-    let mk_field cx tparams_map this_t reason annot init =
+    let mk_field cx tparams_map reason annot init =
       let (annot_or_inferred, annot_ast) = Anno.mk_type_annotation cx tparams_map reason annot in
       let annot_t = type_t_of_annotated_or_inferred annot_or_inferred in
       let (field, get_init) =
@@ -8412,7 +8412,15 @@ struct
               let this_t =
                 match expr with
                 | (_, Ast.Expression.ArrowFunction _) -> dummy_this (aloc_of_reason reason)
-                | _ -> this_t
+                | _ ->
+                  if
+                    Signature_utils.This_finder.found_this_in_body_or_params
+                      function_.Ast.Function.body
+                      function_.Ast.Function.params
+                  then
+                    Tvar.mk cx (mk_reason RThis sig_loc)
+                  else
+                    Type.implicit_mixed_this reason
               in
               let t = Statement.Func_stmt_sig.functiontype cx this_t func_sig in
               Flow.flow_t cx (t, annot_t)
@@ -8784,7 +8792,7 @@ struct
                 let reason = mk_reason (RPrivateProperty name) loc in
                 let polarity = Anno.polarity variance in
                 let (field, annot_t, annot_ast, get_value) =
-                  mk_field cx tparams_map_with_this this_t reason annot value
+                  mk_field cx tparams_map_with_this reason annot value
                 in
                 let get_element () =
                   Body.PrivateField
@@ -8829,7 +8837,7 @@ struct
                 let reason = mk_reason (RProperty (Some (OrdinaryName name))) loc in
                 let polarity = Anno.polarity variance in
                 let (field, annot_t, annot, get_value) =
-                  mk_field cx tparams_map_with_this this_t reason annot value
+                  mk_field cx tparams_map_with_this reason annot value
                 in
                 let get_element () =
                   Body.Property
