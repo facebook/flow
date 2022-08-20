@@ -2,7 +2,7 @@
  * trailing cases are allowed - spot checks that we handle them as usual
  * @flow
  */
-function f1(i) {
+function f1(i: number) {
   var x;
 
   switch (i) {
@@ -23,7 +23,7 @@ function f1(i) {
   var y:number = x; // error, number | string ~/> number
 }
 
-function f2(i) {
+function f2(i: number) {
   var x;
 
   switch (i) {
@@ -39,7 +39,7 @@ function f2(i) {
   var y:number = x; // error, number | uninitialized ~/> number
 }
 
-function f3(i) {
+function f3(i: number) {
   var x;
 
   switch (i) {
@@ -54,7 +54,7 @@ function f3(i) {
   var y:number = x; // no error
 }
 
-function foo(x): number {
+function foo(x: number): number {
     switch (x) {
       case 0:
       default: throw new Error('hi');
@@ -62,7 +62,7 @@ function foo(x): number {
     }
 }
 
-function bar(x) {
+function bar(x: number) {
     switch (x) {
       default: return;
       case 0: break;
@@ -70,7 +70,7 @@ function bar(x) {
     1;
 }
 
-function baz(x): number {
+function baz(x: number): number {
   switch (x) {
     case 0: break;
     default: throw new Error('hi');

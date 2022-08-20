@@ -19,7 +19,7 @@ function foo() {
     y(); // object ~/> function call (no uninitialized error)
 }
 
-function bar(response) {
+function bar(response: string) {
     var payload;
     try {
         payload = JSON.parse(response);

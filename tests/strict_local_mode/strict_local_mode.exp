@@ -26,7 +26,7 @@ Cannot reassign constant `x` [1]. [reassign-const]
 
 References:
    test.js:8:12
-   8| function f(x) {
+   8| function f(x: number) {
                  ^ [1]
 
 

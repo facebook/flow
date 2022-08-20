@@ -3,7 +3,7 @@ Error --------------------------------------------------------------------------
 Cannot use `HocChild` as a type. A name can be used as a type only if it refers to a type, interface, class, or enum
 definition. To get the type of a non-class value, use `typeof`. [value-as-type]
 
-   16|   _handleChild = (child: ?HocChild) => {};
+   16|   _handleChild = (child: ?HocChild): void => {}; // Error
                                  ^^^^^^^^
 
 

@@ -34,8 +34,8 @@ Error --------------------------------------------------------------------------
 
 Getters and setters can have side effects and are unsafe. [unsafe-getters-setters]
 
-   12|   get a() { return 4; }
-         ^^^^^^^^^^^^^^^^^^^^^
+   12|   get a(): number { return 4; }
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
 Error ----------------------------------------------------------------------------------- unsafe_getters_setters.js:13:3

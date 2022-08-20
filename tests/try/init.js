@@ -141,7 +141,7 @@ function f13() {
 }
 
 // ditto
-function f14(b) {
+function f14(b: boolean) {
   try {
     var x:number;
     if (b) {

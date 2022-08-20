@@ -1,6 +1,6 @@
 /* @flow */
 
-function foo(x): number {
+function foo(x: number): number {
     switch (x) {
       case 0:
       case 1: return 1;
@@ -8,7 +8,7 @@ function foo(x): number {
     }
 }
 
-function bar(x) {
+function bar(x: number) {
     switch (x) {
       case 0: break;
       default: return;
@@ -16,7 +16,7 @@ function bar(x) {
     1;
 }
 
-function baz(x): number {
+function baz(x: number): number {
   switch (x) {
     case 0: break;
     case 1: return 1;

@@ -19,7 +19,7 @@ function bar() {
     }
 }
 
-function qux(b) {
+function qux(b: boolean) {
     var x = b? 0: "";
     switch('qux') {
     case '':

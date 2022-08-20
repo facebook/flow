@@ -5,7 +5,7 @@ import type { S } from './nonstrict_import'; // No error
 
 (0: T);
 
-function f(x) {
+function f(x: number) {
   x = 1; // Error: cannot reassign constant parameter
 }
 

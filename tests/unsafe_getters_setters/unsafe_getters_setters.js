@@ -9,7 +9,7 @@ var f = {
 };
 
 class Bar {
-  get a() { return 4; }
+  get a(): number { return 4; }
   set b(x: number) { this.c = x; }
   c: number;
 }
