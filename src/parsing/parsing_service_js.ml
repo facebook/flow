@@ -416,6 +416,8 @@ let do_parse ~parse_options ~info content file =
           }
         in
         let (file_sig, tolerable_errors) = File_sig.With_Loc.program ~ast ~opts:file_sig_opts in
+        (*If you want efficiency, can compute globals along with file_sig in the above function since scope is computed when computing file_sig*)
+        let (_, (_, _, globals)) = Ssa_builder.program_with_scope ~enable_enums ast in
         if not (Base.List.is_empty parse_errors) then
           Parse_recovered
             { ast; file_sig; tolerable_errors; parse_errors = Nel.of_list_exn parse_errors }
@@ -443,6 +445,7 @@ let do_parse ~parse_options ~info content file =
           in
           let exports = Exports.of_module type_sig in
           let imports = Imports.of_file_sig file_sig in
+          let imports = Imports.add_globals globals imports in
           let tolerable_errors =
             List.fold_left
               (fun acc (_, err) ->

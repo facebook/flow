@@ -10,13 +10,20 @@ type kind =
   | Named
   | NamedType
   | Namespace
+  | Unknown
+
+type source =
+  | Unresolved_source of string
+  | Global
 
 type import = {
   export: string;
-  unresolved_source: string;
+  source: source;
   kind: kind;
 }
 
 type t = import list
 
 val of_file_sig : File_sig.With_Loc.t -> t
+
+val add_globals : SSet.t -> t -> t
