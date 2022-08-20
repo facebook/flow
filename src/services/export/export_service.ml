@@ -85,14 +85,22 @@ let add_imports
           | Modulename.Filename fn ->
             let file_key = File_key fn in
             Export_index.add name file_key kind acc
-          | Modulename.String string ->
-            let acc = Export_index.add name (Builtin string) kind acc in
+          | Modulename.String _ ->
             (match provider source with
             | Some file ->
               let file_key = File_key (Parsing_heaps.read_file_key file) in
               Export_index.add name file_key kind acc
             | None -> acc))
-        | Some (Error _)
+        | Some (Error string) ->
+          let (kind, name) =
+            match import.Imports.kind with
+            | Imports.Default -> (Export_index.Default, string)
+            | Imports.Named -> (Export_index.Named, import.export)
+            | Imports.Namespace -> (Export_index.Namespace, string)
+            | Imports.NamedType -> (Export_index.NamedType, import.export)
+            | Imports.Unknown -> failwith "Unknown Kind"
+          in
+          Export_index.add name (Builtin string) kind acc
         | None ->
           (*Could not find resolved_requires key for this unresolved_source*)
           acc)
