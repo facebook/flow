@@ -1638,8 +1638,21 @@ let handle_persistent_did_change_configuration_notification ~params ~metadata ~c
   let client_config =
     let suggest = Jget.obj_opt json "suggest" in
     match Jget.bool_opt suggest "autoImports" with
-    | Some suggest_autoimports -> { Client_config.suggest_autoimports }
+    | Some suggest_autoimports -> { client_config with Client_config.suggest_autoimports }
     | None -> client_config
+  in
+  let client_config =
+    let suggest = Jget.obj_opt json "suggest" in
+    match Jget.val_opt suggest "rankAutoimportsByUsage" with
+    | Some (Hh_json.JSON_String "true")
+    | Some (Hh_json.JSON_Bool true) ->
+      { client_config with Client_config.rank_autoimports_by_usage = `True }
+    | Some (Hh_json.JSON_String "false")
+    | Some (Hh_json.JSON_Bool false) ->
+      { client_config with Client_config.rank_autoimports_by_usage = `False }
+    | Some _
+    | None ->
+      { client_config with Client_config.rank_autoimports_by_usage = `Default }
   in
   client_did_change_configuration client client_config;
   (LspProt.LspFromServer None, metadata)
@@ -1747,6 +1760,13 @@ let handle_persistent_code_action_request
       (LspProt.LspFromServer (Some (ResponseMessage (id, CodeActionResult code_actions))), metadata)
   | Error reason -> Lwt.return (mk_lsp_error_response ~id:(Some id) ~reason metadata)
 
+let rank_autoimports_by_usage ~options client =
+  let client_config = Persistent_connection.client_config client in
+  match Persistent_connection.Client_config.rank_autoimports_by_usage client_config with
+  | `Default -> Options.autoimports_ranked_by_usage options
+  | `True -> true
+  | `False -> false
+
 let handle_persistent_autocomplete_lsp
     ~reader ~options ~id ~params ~file_input ~metadata ~client ~profiling ~env =
   let client_config = Persistent_connection.client_config client in
@@ -1777,7 +1797,7 @@ let handle_persistent_autocomplete_lsp
     Persistent_connection.Client_config.suggest_autoimports client_config
     && Options.autoimports options
   in
-  let imports_ranked_usage = Options.autoimports_ranked_by_usage options in
+  let imports_ranked_usage = rank_autoimports_by_usage ~options client in
   let (result, extra_data) =
     autocomplete
       ~trigger_character
@@ -2493,7 +2513,24 @@ let get_persistent_handler ~genv ~client_id ~request:(request, metadata) :
     in
     let metadata = with_data ~extra_data metadata in
     (match command with
-    | "log" -> Handle_persistent_immediately (handle_persistent_log_command ~id ~arguments ~metadata)
+    | "log" ->
+      let extra_data =
+        let open Hh_json in
+        match arguments with
+        | Some (JSON_String "textDocument/completion" :: _) ->
+          (* add extra metadata to completion logs that we don't want to have to include
+             on every result. *)
+          (match Persistent_connection.get_client client_id with
+          | None -> None
+          | Some client ->
+            let props =
+              [("rank_autoimports_by_usage", JSON_Bool (rank_autoimports_by_usage ~options client))]
+            in
+            Some (JSON_Object props))
+        | _ -> None
+      in
+      let metadata = with_data ~extra_data metadata in
+      Handle_persistent_immediately (handle_persistent_log_command ~id ~arguments ~metadata)
     | "source.addMissingImports" ->
       (match arguments with
       | Some [json] ->
