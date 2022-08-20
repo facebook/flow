@@ -8,9 +8,20 @@
 module Prot = LspProt
 
 module Client_config = struct
-  type t = { suggest_autoimports: bool }
+  type rank_autoimports_by_usage =
+    [ `Default
+    | `True
+    | `False
+    ]
 
-  let suggest_autoimports { suggest_autoimports } = suggest_autoimports
+  type t = {
+    rank_autoimports_by_usage: rank_autoimports_by_usage;
+    suggest_autoimports: bool;
+  }
+
+  let rank_autoimports_by_usage { rank_autoimports_by_usage; _ } = rank_autoimports_by_usage
+
+  let suggest_autoimports { suggest_autoimports; _ } = suggest_autoimports
 end
 
 type single_client = {
@@ -104,7 +115,8 @@ let add_client client_id lsp_initialize_params =
       client_id;
       lsp_initialize_params;
       type_parse_artifacts_cache = FilenameCache.make ~max_size:cache_max_size;
-      client_config = { Client_config.suggest_autoimports = true };
+      client_config =
+        { Client_config.suggest_autoimports = true; rank_autoimports_by_usage = `Default };
       outstanding_handlers = Lsp.IdMap.empty;
       token_loc = (-1, -1, None);
       autocomplete_session_length = 0;
@@ -221,10 +233,26 @@ let client_did_close (client : single_client) ~(filenames : string Nel.t) : bool
 let client_did_change_configuration (client : single_client) (new_config : Client_config.t) : unit =
   Hh_logger.info "Client #%d changed configuration" client.client_id;
   let old_config = client.client_config in
+
   let old_suggest_autoimports = Client_config.suggest_autoimports old_config in
   let new_suggest_autoimports = Client_config.suggest_autoimports new_config in
   if new_suggest_autoimports <> old_suggest_autoimports then
     Hh_logger.info "  suggest_autoimports: %b -> %b" old_suggest_autoimports new_suggest_autoimports;
+
+  let old_rank_autoimports_by_usage = Client_config.rank_autoimports_by_usage old_config in
+  let new_rank_autoimports_by_usage = Client_config.rank_autoimports_by_usage new_config in
+  ( if new_rank_autoimports_by_usage <> old_rank_autoimports_by_usage then
+    let to_string = function
+      | `Default -> "default"
+      | `True -> "true"
+      | `False -> "false"
+    in
+    Hh_logger.info
+      "  rank_autoimports_by_usage: %s -> %s"
+      (to_string old_rank_autoimports_by_usage)
+      (to_string new_rank_autoimports_by_usage)
+  );
+
   client.client_config <- new_config
 
 let get_file (client : single_client) (fn : string) : File_input.t =

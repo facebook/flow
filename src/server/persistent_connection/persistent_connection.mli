@@ -11,7 +11,18 @@ type t
 type single_client
 
 module Client_config : sig
-  type t = { suggest_autoimports: bool }
+  type rank_autoimports_by_usage =
+    [ `Default
+    | `True
+    | `False
+    ]
+
+  type t = {
+    rank_autoimports_by_usage: rank_autoimports_by_usage;
+    suggest_autoimports: bool;
+  }
+
+  val rank_autoimports_by_usage : t -> rank_autoimports_by_usage
 
   val suggest_autoimports : t -> bool
 end
