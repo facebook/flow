@@ -57,7 +57,10 @@ let add_exports ~source ~module_name exports index =
   Base.List.fold names ~init:index ~f:(fun acc (name, kind) -> Export_index.add name source kind acc)
 
 let add_imports
-    imports (resolved_modules : Parsing_heaps.resolved_module SMap.t) (index : Export_index.t) =
+    imports
+    (resolved_modules : Parsing_heaps.resolved_module SMap.t)
+    provider
+    (index : Export_index.t) =
   Base.List.fold imports ~init:index ~f:(fun acc (import : Imports.import) ->
       let open Imports in
       match import.source with
@@ -70,11 +73,6 @@ let add_imports
         (match result with
         | Some (Ok module_name) ->
           let (source, module_name) = (module_name, string_of_modulename module_name) in
-          let source =
-            match source with
-            | Modulename.String str -> Builtin str
-            | Modulename.Filename fn -> File_key fn
-          in
           let (kind, name) =
             match import.Imports.kind with
             | Imports.Default -> (Export_index.Default, module_name)
@@ -83,8 +81,17 @@ let add_imports
             | Imports.NamedType -> (Export_index.NamedType, import.export)
             | Imports.Unknown -> failwith "Unknown Kind"
           in
-
-          Export_index.add name source kind acc
+          (match source with
+          | Modulename.Filename fn ->
+            let file_key = File_key fn in
+            Export_index.add name file_key kind acc
+          | Modulename.String string ->
+            let acc = Export_index.add name (Builtin string) kind acc in
+            (match provider source with
+            | Some file ->
+              let file_key = File_key (Parsing_heaps.read_file_key file) in
+              Export_index.add name file_key kind acc
+            | None -> acc))
         | Some (Error _)
         | None ->
           (*Could not find resolved_requires key for this unresolved_source*)
@@ -144,9 +151,12 @@ let index_file ~reader (exports_to_add, exports_to_remove, imports_to_add, impor
           let resolved_requires =
             Parsing_heaps.Mutator_reader.get_old_resolved_requires_unsafe ~reader file_key parse
           in
+          let provider module_name =
+            Parsing_heaps.Mutator_reader.get_old_provider ~reader module_name
+          in
           let resolved_modules = resolved_requires.Parsing_heaps.resolved_modules in
           ( add_exports_of_checked_file file_key parse haste_info exports_to_remove,
-            add_imports imports resolved_modules imports_to_remove
+            add_imports imports resolved_modules provider imports_to_remove
           )
         | None ->
           (* if it wasn't checked before, there were no entries added *)
@@ -160,9 +170,12 @@ let index_file ~reader (exports_to_add, exports_to_remove, imports_to_add, impor
           let resolved_requires =
             Parsing_heaps.Mutator_reader.get_resolved_requires_unsafe ~reader file_key parse
           in
+          let provider module_name =
+            Parsing_heaps.Mutator_reader.get_provider ~reader module_name
+          in
           let resolved_modules = resolved_requires.Parsing_heaps.resolved_modules in
           ( add_exports_of_checked_file file_key parse haste_info exports_to_add,
-            add_imports imports resolved_modules imports_to_add
+            add_imports imports resolved_modules provider imports_to_add
           )
         | None ->
           (* TODO: handle unchecked module names, maybe still parse? *)
