@@ -319,7 +319,7 @@ module Make (Env : Env_sig.S) (Statement : Statement_sig.S with module Env := En
     let hint = resolve_hint cx (aloc_of_reason reason) hint in
     let cache = Context.node_cache cx in
     let tparams_map = mk_tparams_map cx tparams_map in
-    let ((({ Func_class_sig_types.Func_stmt_sig_types.fparams; _ } as func_sig), _) as sig_data) =
+    let ((func_sig, _) as sig_data) =
       Statement.mk_func_sig
         cx
         ~func_hint:hint
@@ -330,18 +330,15 @@ module Make (Env : Env_sig.S) (Statement : Statement_sig.S with module Env := En
         reason
         function_
     in
-    let this_t =
-      let default =
-        if Signature_utils.This_finder.found_this_in_body_or_params body params then
-          let loc = aloc_of_reason reason in
-          Tvar.mk cx (mk_reason RThis loc)
-        else
-          Type.implicit_mixed_this reason
-      in
-      Base.Option.value (Statement.Func_stmt_params.this fparams) ~default
+    let default_this =
+      if Signature_utils.This_finder.found_this_in_body_or_params body params then
+        let loc = aloc_of_reason reason in
+        Tvar.mk cx (mk_reason RThis loc)
+      else
+        Type.implicit_mixed_this reason
     in
     Node_cache.set_function_sig cache sig_loc sig_data;
-    (Statement.Func_stmt_sig.functiontype cx (Some function_loc) this_t func_sig, unknown_use)
+    (Statement.Func_stmt_sig.functiontype cx (Some function_loc) default_this func_sig, unknown_use)
 
   let resolve_class cx id_loc reason class_loc class_ =
     let cache = Context.node_cache cx in

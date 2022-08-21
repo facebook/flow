@@ -251,27 +251,16 @@ struct
     (* push the scope early so default exprs can reference earlier params *)
     let prev_scope_kind = Env.push_var_scope cx function_scope in
 
-    let this_t =
-      if Env.new_env then
-        match default_this with
-        | Func_class_sig_types.Func.ParentScopeThis -> None
-        (* This case correspond to the default constructors that do not appear in the source. *)
-        | Func_class_sig_types.Func.ClassThis (None, _) -> None
-        | Func_class_sig_types.Func.ClassThis (Some _, default)
-        | Func_class_sig_types.Func.FunctionThis (_, default) ->
-          Some (this_param fparams |> Base.Option.value ~default)
-      else
+    let () =
+      if not Env.new_env then (
         (* add `this` and `super` before looking at parameter bindings as when using
          * `this` in default parameter values it refers to the function scope and
          * `super` should resolve to the method's [[HomeObject]]
          *)
-        let (this_t, this) =
+        let this =
           match default_this with
-          | Func_class_sig_types.Func.ParentScopeThis -> (None, None)
-          | Func_class_sig_types.Func.ClassThis (_, default)
-          | Func_class_sig_types.Func.FunctionThis (_, default) ->
-            let this = this_param fparams |> annotated_or_inferred_of_option ~default in
-            (Some (type_t_of_annotated_or_inferred this), Some this)
+          | None -> None
+          | Some default -> Some (this_param fparams |> annotated_or_inferred_of_option ~default)
         in
         Base.Option.iter this ~f:(fun t ->
             let entry =
@@ -292,8 +281,8 @@ struct
                 (Inferred t)
             in
             Scope.add_entry (internal_name "super") entry function_scope
-        );
-        this_t
+        )
+      )
     in
 
     (* bind type params *)
@@ -594,7 +583,7 @@ struct
        - the field initializer is Some expr' if the Param sig's kind was FieldInit expr,
          where expr' is the typed AST translation of expr.
     *)
-    (this_t, params_ast, body_ast, init_ast)
+    (params_ast, body_ast, init_ast)
 
   let to_ctor_sig f = { f with T.kind = Ctor }
 end

@@ -9303,17 +9303,15 @@ struct
     in
     let save_return = Abnormal.clear_saved Abnormal.Return in
     let save_throw = Abnormal.clear_saved Abnormal.Throw in
-    let (this_t, params_ast, body_ast, _) =
-      Func_stmt_sig.toplevels cx default_this super func_sig
-    in
-    let this_t =
-      match this_t with
+    let (params_ast, body_ast, _) = Func_stmt_sig.toplevels cx default_this super func_sig in
+    let default_this =
+      match default_this with
       | Some t -> t
       | None -> dummy_this (aloc_of_reason reason)
     in
     ignore (Abnormal.swap_saved Abnormal.Return save_return);
     ignore (Abnormal.swap_saved Abnormal.Throw save_throw);
-    let fun_type = Func_stmt_sig.functiontype cx fun_loc this_t func_sig in
+    let fun_type = Func_stmt_sig.functiontype cx fun_loc default_this func_sig in
     (fun_type, reconstruct_func (Base.Option.value_exn params_ast) (Base.Option.value_exn body_ast))
 
   (* Process a function declaration, returning a (polymorphic) function type. *)
@@ -9365,7 +9363,7 @@ struct
           ~fun_loc:(Some fun_loc)
           reason
           func
-          (Func_class_sig_types.Func.FunctionThis (fun_loc, default_this))
+          (Some default_this)
           None
       in
       (fun_type, reconstruct_ast general)
@@ -9376,7 +9374,7 @@ struct
        function_decl has already done the necessary checking of `this` in
        the body of the function. Now we want to avoid re-binding `this` to
        objects through which the function may be called. *)
-    let default_this = Func_class_sig_types.Func.ParentScopeThis in
+    let default_this = None in
     let (fun_type, reconstruct_ast) =
       function_decl
         cx

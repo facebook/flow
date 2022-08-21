@@ -46,14 +46,12 @@ module type S = sig
 
   val toplevels :
     Context.t ->
-    Func_class_sig_types.Func.default_this_type ->
     (* default this *)
     Type.t option ->
     (* super *)
+    Type.t option ->
     t ->
-    Type.t option
-    (* this *)
-    * func_params_tast option
+    func_params_tast option
     * (ALoc.t, ALoc.t * Type.t) Flow_ast.Function.body option
     * (ALoc.t, ALoc.t * Type.t) Flow_ast.Expression.t option
 
