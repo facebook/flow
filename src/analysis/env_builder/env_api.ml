@@ -187,12 +187,6 @@ module type S = sig
 
   val refinements_of_write_loc : env_info -> write_loc -> refinement_kind list
 
-  val print_values : values -> string
-
-  val sources_of_use : for_type:bool -> env_info -> L.t -> L.LSet.t
-
-  val source_bindings : for_type:bool -> env_info -> L.LSet.t L.LMap.t
-
   val show_refinement_kind : refinement_kind -> string
 
   val show_refinement_kind_without_locs : refinement_kind -> string
@@ -395,11 +389,6 @@ module Make
       refinement_of_id = (fun _ -> failwith "Empty env info");
     }
 
-  let rec refinement_ids_of_ssa_write acc = function
-    | Refinement { refinement_id; writes; write_id = _ } ->
-      List.fold_left refinement_ids_of_ssa_write (refinement_id :: acc) writes
-    | _ -> acc
-
   let write_locs_of_read_loc values read_loc =
     let { write_locs; def_loc = _; val_kind = _; name = _; id = _ } = L.LMap.find read_loc values in
     write_locs
@@ -438,106 +427,6 @@ module Make
       let writes = writes |> List.map (refinements_of_write_loc env) |> List.flatten in
       (refinement_of_id refinement_id |> snd) :: writes
     | _ -> []
-
-  let sources_of_use ~for_type { env_values = vals; refinement_of_id; _ } loc =
-    let write_locs =
-      L.LMap.find_opt loc vals
-      |> Base.Option.value_map
-           ~default:[]
-           ~f:(fun { write_locs; def_loc = _; val_kind = _; name = _; id = _ } ->
-             List.map (fun l -> writes_of_write_loc ~for_type l |> List.map snd) write_locs
-         )
-      |> List.flatten
-      |> L.LSet.of_list
-    in
-    let refi_locs =
-      L.LMap.find_opt loc vals
-      |> Base.Option.value_map
-           ~default:[]
-           ~f:(fun { write_locs; def_loc = _; val_kind = _; name = _; id = _ } ->
-             List.fold_left refinement_ids_of_ssa_write [] write_locs
-         )
-      |> List.map (fun id -> fst (refinement_of_id id))
-      |> List.fold_left L.LSet.union L.LSet.empty
-    in
-    L.LSet.union refi_locs write_locs
-
-  let source_bindings ~for_type ({ env_values = vals; _ } as info) =
-    let keys = L.LSet.of_list (L.LMap.keys vals) in
-    L.LSet.fold (fun k acc -> L.LMap.add k (sources_of_use ~for_type info k) acc) keys L.LMap.empty
-
-  let print_values =
-    let rec print_write_loc write_loc =
-      match write_loc with
-      | Uninitialized _ -> "(uninitialized)"
-      | Undeclared _ -> "(undeclared)"
-      | UndeclaredClass { def; _ } ->
-        let loc = Reason.poly_loc_of_reason def in
-        Utils_js.spf
-          "(uninitialized class) %s: (%s)"
-          (L.debug_to_string loc)
-          Reason.(desc_of_reason def |> string_of_desc)
-      | Projection l -> Printf.sprintf "projection at %s" (L.debug_to_string l)
-      | Unreachable _ -> "unreachable"
-      | Undefined _ -> "undefined"
-      | Number _ -> "number"
-      | DeclaredFunction l -> Printf.sprintf "declared function %s" (L.debug_to_string l)
-      | Write reason ->
-        let loc = Reason.poly_loc_of_reason reason in
-        Utils_js.spf
-          "%s: (%s)"
-          (L.debug_to_string loc)
-          Reason.(desc_of_reason reason |> string_of_desc)
-      | EmptyArray { reason; _ } ->
-        let loc = Reason.poly_loc_of_reason reason in
-        Utils_js.spf
-          "(empty array) %s: (%s)"
-          (L.debug_to_string loc)
-          Reason.(desc_of_reason reason |> string_of_desc)
-      | IllegalWrite reason ->
-        let loc = Reason.poly_loc_of_reason reason in
-        Utils_js.spf "illegal write at %s" (L.debug_to_string loc)
-      | Refinement { refinement_id; writes; write_id = _ } ->
-        let refinement_id_str = string_of_int refinement_id in
-        let writes_str = String.concat "," (List.map print_write_loc writes) in
-        Printf.sprintf "{refinement_id = %s; writes = %s}" refinement_id_str writes_str
-      | FunctionThis reason
-      | GlobalThis reason
-      | ClassInstanceThis reason
-      | ClassStaticThis reason ->
-        let loc = Reason.poly_loc_of_reason reason in
-        Utils_js.spf
-          "this(%s): (%s)"
-          (L.debug_to_string loc)
-          Reason.(desc_of_reason reason |> string_of_desc)
-      | ClassInstanceSuper reason ->
-        let loc = Reason.poly_loc_of_reason reason in
-        Utils_js.spf
-          "super(instance, %s): (%s)"
-          (L.debug_to_string loc)
-          Reason.(desc_of_reason reason |> string_of_desc)
-      | ClassStaticSuper reason ->
-        let loc = Reason.poly_loc_of_reason reason in
-        Utils_js.spf
-          "super(static, %s): (%s)"
-          (L.debug_to_string loc)
-          Reason.(desc_of_reason reason |> string_of_desc)
-      | Exports -> "exports"
-      | ModuleScoped name -> "ModuleScoped " ^ name
-      | Global name -> "Global " ^ name
-    in
-    fun values ->
-      let kvlist = L.LMap.bindings values in
-      let strlist =
-        Base.List.map
-          ~f:(fun (read_loc, { def_loc = _; val_kind = _; write_locs; name = _; id = _ }) ->
-            Printf.sprintf
-              "%s => { %s }"
-              (L.debug_to_string read_loc)
-              (String.concat ", " @@ Base.List.map ~f:print_write_loc write_locs))
-          kvlist
-      in
-      Printf.sprintf "[ %s ]" (String.concat "; " strlist)
 
   let rec show_refinement_kind_without_locs = function
     | AndR (l, r) ->
