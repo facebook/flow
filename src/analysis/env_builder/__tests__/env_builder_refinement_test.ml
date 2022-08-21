@@ -74,6 +74,7 @@ let print_values refinement_of_id =
       Printf.sprintf "{refinement = %s; writes = %s}" refinement_str writes_str
     | FunctionThis _ -> "This(function)"
     | GlobalThis _ -> "This(global)"
+    | IllegalThis _ -> "This(illegal)"
     | ClassInstanceThis _ -> "This(instance)"
     | ClassStaticThis _ -> "This(static)"
     | ClassInstanceSuper _ -> "Super(instance)"
@@ -4504,6 +4505,33 @@ if (global != null) {
         (4, 23) to (4, 29) => {
           Global global
         }] |}]
+
+let%expect_test "this_in_object" =
+  print_ssa_test {|
+({
+  foo() {
+    this;
+  },
+  get bar() {
+    this;
+  },
+  set baz(f) {
+    this;
+  }
+});
+|};
+    [%expect {|
+      [
+        (4, 4) to (4, 8) => {
+          This(illegal)
+        };
+        (7, 4) to (7, 8) => {
+          This(illegal)
+        };
+        (10, 4) to (10, 8) => {
+          This(illegal)
+        }]
+     |}]
 
 let%expect_test "type_alias" =
   print_ssa_test {|

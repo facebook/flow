@@ -1632,17 +1632,11 @@ class def_finder env_entries providers toplevel_scope =
               let hint = visit_object_key_and_compute_hint key in
               this#visit_expression ~hint ~cond:NonConditionalContext value;
               ()
-            | (loc, Method { key; value = (_, fn) }) ->
-              let func_hint = visit_object_key_and_compute_hint key in
-              this#visit_function_expr ~func_hint ~has_this_def:true loc fn;
-              ()
-            | (loc, Get { key; value = (_, fn); comments = _ }) ->
-              let func_hint = visit_object_key_and_compute_hint key in
-              this#visit_function_expr ~func_hint ~has_this_def:true loc fn;
-              ()
+            | (loc, Method { key; value = (_, fn) })
+            | (loc, Get { key; value = (_, fn); comments = _ })
             | (loc, Set { key; value = (_, fn); comments = _ }) ->
               let func_hint = visit_object_key_and_compute_hint key in
-              this#visit_function_expr ~func_hint ~has_this_def:true loc fn;
+              this#visit_function_expr ~func_hint ~has_this_def:false loc fn;
               ())
           | SpreadProperty s ->
             let (_, { Ast.Expression.Object.SpreadProperty.argument; comments = _ }) = s in

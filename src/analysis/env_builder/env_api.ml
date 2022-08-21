@@ -74,6 +74,7 @@ module type S = sig
       }
     | FunctionThis of L.t Reason.virtual_reason
     | GlobalThis of L.t Reason.virtual_reason
+    | IllegalThis of L.t Reason.virtual_reason
     | ClassInstanceThis of L.t Reason.virtual_reason
     | ClassStaticThis of L.t Reason.virtual_reason
     | ClassInstanceSuper of L.t Reason.virtual_reason
@@ -275,6 +276,7 @@ module Make
       }
     | FunctionThis of L.t Reason.virtual_reason
     | GlobalThis of L.t Reason.virtual_reason
+    | IllegalThis of L.t Reason.virtual_reason
     | ClassInstanceThis of L.t Reason.virtual_reason
     | ClassStaticThis of L.t Reason.virtual_reason
     | ClassInstanceSuper of L.t Reason.virtual_reason
@@ -408,6 +410,7 @@ module Make
     | Undeclared _ -> []
     | FunctionThis _ -> []
     | GlobalThis _ -> []
+    | IllegalThis _ -> []
     | ClassInstanceThis _ -> []
     | ClassStaticThis _ -> []
     | ClassInstanceSuper _ -> []

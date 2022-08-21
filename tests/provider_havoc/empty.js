@@ -44,8 +44,8 @@ function fn_completely_unannotated() {
 function obj_this_empty() {
   let obj = {
     f() {
-      let b = this.b; // unrelated error, but as a result b is tvar with no lowers
-      b = 42; // error
+      let b = this.b; // Error: object-this-reference
+      b = 42; // no error since `this` is any-typed above.
     }
   }
 }

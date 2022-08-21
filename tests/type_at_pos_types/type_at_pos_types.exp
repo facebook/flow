@@ -916,7 +916,7 @@ optional.js:14:10 = {
   "end":10
 }
 recursive.js:3:25 = {
-  "type":"type V$1 = {|m(): V$1|}; {|m(): V$1|}",
+  "type":"any (implicit)",
   "reasons":[],
   "loc":{
     "source":"recursive.js",

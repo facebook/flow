@@ -151,6 +151,8 @@ module Make
 
     val global_this : ALoc.t virtual_reason -> t
 
+    val illegal_this : ALoc.t virtual_reason -> t
+
     val class_instance_this : ALoc.t virtual_reason -> t
 
     val class_static_this : ALoc.t virtual_reason -> t
@@ -231,6 +233,7 @@ module Make
       | Projection of ALoc.t
       | FunctionThis of ALoc.t virtual_reason
       | GlobalThis of ALoc.t virtual_reason
+      | IllegalThis of ALoc.t virtual_reason
       | ClassInstanceThis of ALoc.t virtual_reason
       | ClassStaticThis of ALoc.t virtual_reason
       | ClassInstanceSuper of ALoc.t virtual_reason
@@ -292,6 +295,7 @@ module Make
         Utils_js.spf "{refinement = %s; write = %s}" refinement_kind write_str
       | FunctionThis _ -> "This(function)"
       | GlobalThis _ -> "This(global)"
+      | IllegalThis _ -> "This(illegal)"
       | ClassInstanceThis _ -> "This(instance)"
       | ClassStaticThis _ -> "This(static)"
       | ClassInstanceSuper _ -> "Super(instance)"
@@ -447,6 +451,7 @@ module Make
       | Projection _
       | FunctionThis _
       | GlobalThis _
+      | IllegalThis _
       | ClassInstanceThis _
       | ClassStaticThis _
       | ClassInstanceSuper _
@@ -484,6 +489,8 @@ module Make
     let function_this reason = mk_with_write_state @@ FunctionThis reason
 
     let global_this reason = mk_with_write_state @@ GlobalThis reason
+
+    let illegal_this reason = mk_with_write_state @@ IllegalThis reason
 
     let class_instance_this reason = mk_with_write_state @@ ClassInstanceThis reason
 
@@ -528,6 +535,7 @@ module Make
           | Projection loc -> Env_api.Projection loc
           | FunctionThis r -> Env_api.FunctionThis r
           | GlobalThis r -> Env_api.GlobalThis r
+          | IllegalThis r -> Env_api.IllegalThis r
           | ClassInstanceThis r -> Env_api.ClassInstanceThis r
           | ClassStaticThis r -> Env_api.ClassStaticThis r
           | ClassInstanceSuper r -> Env_api.ClassInstanceSuper r
@@ -579,6 +587,7 @@ module Make
         | IllegalWrite _ -> []
         | FunctionThis _ -> []
         | GlobalThis _ -> []
+        | IllegalThis _ -> []
         | ClassInstanceThis _ -> []
         | ClassStaticThis _ -> []
         | ClassInstanceSuper _ -> []
@@ -905,6 +914,7 @@ module Make
     | FunctionEnv
     | ClassInstanceEnv
     | ClassStaticEnv
+    | IllegalThisEnv
 
   let variable_declaration_binding_kind_to_pattern_write_kind = function
     | None -> AssignmentWrite
@@ -1759,6 +1769,7 @@ module Make
                               env_state.write_entries;
                         };
                       Val.class_instance_this reason
+                    | IllegalThisEnv -> Val.illegal_this reason
                   in
                   (v, v, None)
                 | "super" ->
@@ -1788,6 +1799,8 @@ module Make
                               env_state.write_entries;
                         };
                       Val.class_instance_super reason
+                    | IllegalThisEnv ->
+                      failwith "It's impossible to bind super under IllegalThisEnv"
                   in
                   (v, v, None)
                 | _ ->
@@ -3561,6 +3574,8 @@ module Make
         | PrivateName (l, _) -> l
         | Computed (l, _) -> l
 
+      method private non_this_binding_function loc func = this#arrow_function loc func
+
       method! class_method _loc meth =
         let { Ast.Class.Method.key; value = (_, f); decorators; _ } = meth in
         ignore @@ this#object_key key;
@@ -3575,7 +3590,7 @@ module Make
           if has_this_param then
             this#function_expression_or_method
           else
-            this#arrow_function
+            this#non_this_binding_function
         in
         (* Use the method key loc as the loc of the function. *)
         ignore @@ method_visitor (this#object_key_loc key) f;
@@ -3609,6 +3624,30 @@ module Make
               ignore @@ super#class_private_field loc field)
             ~finally:(fun () -> this#reset_env env);
           field
+
+      method! object_property prop =
+        let open Ast.Expression.Object.Property in
+        match prop with
+        | (_, Init _) -> super#object_property prop
+        | (_, Method { key; value = (loc, fn) })
+        | (_, Get { key; value = (loc, fn); comments = _ })
+        | (_, Set { key; value = (loc, fn); comments = _ }) ->
+          ignore @@ this#object_key key;
+          let illegal_this_binding =
+            Bindings.singleton
+              ((loc, { Ast.Identifier.name = "this"; comments = None }), Bindings.Const)
+          in
+          (* Do not bind this to a function-level this as usual. We use arrow function visitor
+             so that we purposely skip this binding, and instead we bind this under a special
+             IllegalThisEnv. *)
+          ignore
+          @@ this#with_scoped_bindings
+               ~this_super_binding_env:IllegalThisEnv
+               loc
+               illegal_this_binding
+               (this#non_this_binding_function loc)
+               fn;
+          prop
 
       method! declare_function loc expr =
         match Declare_function_utils.declare_function_to_function_declaration_simple loc expr with

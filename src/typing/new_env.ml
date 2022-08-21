@@ -453,7 +453,7 @@ module New_env : S = struct
                    cx
                    [
                      spf
-                       "reading function or global this(%s) from location %s"
+                       "reading global this(%s) from location %s"
                        (Reason.string_of_aloc loc)
                        (Reason.aloc_of_reason reason |> Reason.string_of_aloc);
                    ];
@@ -462,12 +462,22 @@ module New_env : S = struct
                      check_readable cx Env_api.GlobalThisLoc loc;
                      Loc_env.find_write env Env_api.GlobalThisLoc loc
                    )
+               | (Env_api.With_ALoc.IllegalThis reason, _) ->
+                 Debug_js.Verbose.print_if_verbose
+                   cx
+                   [
+                     spf
+                       "reading illegal this(%s) from location %s"
+                       (Reason.string_of_aloc loc)
+                       (Reason.aloc_of_reason reason |> Reason.string_of_aloc);
+                   ];
+                 Type.(AnyT.make (AnyError None) reason)
                | (Env_api.With_ALoc.FunctionThis reason, _) ->
                  Debug_js.Verbose.print_if_verbose
                    cx
                    [
                      spf
-                       "reading function or global this(%s) from location %s"
+                       "reading function this(%s) from location %s"
                        (Reason.string_of_aloc loc)
                        (Reason.aloc_of_reason reason |> Reason.string_of_aloc);
                    ];
@@ -656,6 +666,7 @@ module New_env : S = struct
             local_def_exists writes
           | Env_api.With_ALoc.Projection _ -> true
           | Env_api.With_ALoc.GlobalThis _ -> true
+          | Env_api.With_ALoc.IllegalThis _ -> true
           | Env_api.With_ALoc.FunctionThis _ -> true
           | Env_api.With_ALoc.ClassInstanceThis _ -> true
           | Env_api.With_ALoc.ClassStaticThis _ -> true

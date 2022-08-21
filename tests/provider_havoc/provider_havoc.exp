@@ -87,33 +87,17 @@ since these methods may be unbound and rebound. Consider replacing the reference
 or rewriting the object as a class. [object-this-reference]
 
    empty.js:47:15
-   47|       let b = this.b; // unrelated error, but as a result b is tvar with no lowers
+   47|       let b = this.b; // Error: object-this-reference
                      ^^^^
 
 References:
    empty.js:46:5
            v----
    46|     f() {
-   47|       let b = this.b; // unrelated error, but as a result b is tvar with no lowers
-   48|       b = 42; // error
+   47|       let b = this.b; // Error: object-this-reference
+   48|       b = 42; // no error since `this` is any-typed above.
    49|     }
            ^ [1]
-
-
-Error --------------------------------------------------------------------------------------------------- empty.js:48:11
-
-Cannot assign `42` to `b` because number [1] is incompatible with variable `b` of unknown type [2]. All writes to `b`
-must be compatible with the type of its initializer [2]. Add an annotation to `b` [2] if a different type is desired.
-[incompatible-type]
-
-   empty.js:48:11
-   48|       b = 42; // error
-                 ^^ [1]
-
-References:
-   empty.js:47:11
-   47|       let b = this.b; // unrelated error, but as a result b is tvar with no lowers
-                 ^ [2]
 
 
 Error --------------------------------------------------------------------------------------------------- empty.js:57:11
@@ -649,7 +633,7 @@ Unreachable code. [unreachable-code]
 
 
 
-Found 25 errors
+Found 24 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

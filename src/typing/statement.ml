@@ -9360,7 +9360,7 @@ struct
           cx
           ~needs_this_param
           ~func_hint:hint
-          ~fun_loc:(Some fun_loc)
+          ~fun_loc:(Base.Option.some_if needs_this_param fun_loc)
           reason
           func
           (Some default_this)
