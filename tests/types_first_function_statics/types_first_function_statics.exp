@@ -60,5 +60,47 @@ References:
        ^^^^^^^^^^^^^^^^^ [1]
 
 
+Error ---------------------------------------------------------------------------------------- conditional-import.js:6:4
 
-Found 4 errors
+Cannot get `f.a` because property `a` is missing in statics of function type [1]. [prop-missing]
+
+   conditional-import.js:6:4
+   6| (f.a: number); // ERROR
+         ^
+
+References:
+   conditional.js:7:8
+   7| export function f() {}
+             ^^^^^^^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------- conditional-import.js:7:4
+
+Cannot get `f.b` because property `b` is missing in statics of function type [1]. [prop-missing]
+
+   conditional-import.js:7:4
+   7| (f.b: number); // ERROR
+         ^
+
+References:
+   conditional.js:7:8
+   7| export function f() {}
+             ^^^^^^^^^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------------- conditional-import.js:10:4
+
+Cannot get `g.a` because property `a` is missing in statics of function type [1]. [prop-missing]
+
+   conditional-import.js:10:4
+   10| (g.a: number); // ERROR
+          ^
+
+References:
+   conditional.js:22:11
+   22| const g = () => {};
+                 ^^^^^^^^ [1]
+
+
+
+Found 7 errors

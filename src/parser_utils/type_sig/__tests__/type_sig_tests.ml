@@ -2567,6 +2567,33 @@ let%expect_test "function_statics" =
     1. Variable {id_loc = [2:6-7]; name = "x"; def = (Value (NumberLit ([2:10-12], 42., "42")))}
   |}]
 
+let%expect_test "function_statics_conditional" =
+  print_sig {|
+    export function bar(): void { };
+    declare var b: boolean;
+    if (b) {
+      bar.x = 42;
+    }
+  |};
+  [%expect {|
+    ESModule {type_exports = [||]; exports = [|(ExportBinding 0)|];
+      info =
+      ESModuleInfo {type_export_keys = [||];
+        type_stars = []; export_keys = [|"bar"|];
+        stars = []; strict = true}}
+
+    Local defs:
+    0. FunBinding {id_loc = [1:16-19];
+         name = "bar"; async = false;
+         generator = false; fn_loc = [1:7-27];
+         def =
+         FunSig {tparams = Mono; params = [];
+           rest_param = None; this_param = None;
+           return = (Annot (Void [1:23-27]));
+           predicate = None};
+         statics = {}}
+  |}]
+
 let%expect_test "function_predicates_1" =
   print_sig {|
     class A {};

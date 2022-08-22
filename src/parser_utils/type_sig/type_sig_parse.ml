@@ -558,11 +558,11 @@ module Scope = struct
     match scope with
     | Global { names; _ }
     | Module { names; _ } ->
-      SMap.find_opt name names
+      Base.Option.map ~f:(fun binding -> (binding, scope)) (SMap.find_opt name names)
     | DeclareModule { parent; names; _ }
     | Lexical { parent; names } ->
       (match SMap.find_opt name names with
-      | Some _ as x -> x
+      | Some binding -> Some (binding, scope)
       | None -> lookup parent name)
 
   let rec find_host scope b =
@@ -706,8 +706,12 @@ module Scope = struct
     fun prop_name prop ref_name scope ->
       match lookup scope ref_name with
       | None -> ()
-      | Some (RemoteBinding _) -> ()
-      | Some (LocalBinding node) -> Local_defs.modify node (f prop_name prop)
+      | Some (RemoteBinding _, _) -> ()
+      | Some (LocalBinding node, found_scope) ->
+        if scope == found_scope then
+          Local_defs.modify node (f prop_name prop)
+        else
+          ()
 
   let assign prop_name prop = function
     | Value (FunExpr fn) ->

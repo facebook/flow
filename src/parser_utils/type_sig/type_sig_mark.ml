@@ -154,9 +154,11 @@ and mark_op op = iter_op mark_parsed op
 
 and resolve_ref (P.Ref ({ ref_loc; name; scope; resolved = _ } as ref)) =
   mark_loc ref_loc;
-  let b = P.Scope.lookup scope name in
-  Option.iter ~f:mark_binding b;
-  ref.resolved <- b
+  match P.Scope.lookup scope name with
+  | Some (binding, _) ->
+    mark_binding binding;
+    ref.resolved <- Some binding
+  | None -> ref.resolved <- None
 
 let mark_export = function
   | P.ExportRef ref -> resolve_ref ref
