@@ -248,121 +248,6 @@ module Annotate_lti_command = struct
   let command = CommandSpec.command spec main
 end
 
-module Annotate_declarations_command = struct
-  let doc =
-    "Annotates variable declarations with multiple conflicting assignments, as required for Flow's local type interence."
-
-  let spec =
-    let module Literals = Codemod_hardcoded_ty_fixes.PreserveLiterals in
-    let preserve_string_literals_level =
-      Literals.[("always", Always); ("never", Never); ("auto", Auto)]
-    in
-    {
-      CommandSpec.name = "annotate-declarations";
-      doc;
-      usage =
-        Printf.sprintf
-          "Usage: %s codemod annotate-declarations [OPTION]... [FILE]\n\n%s\n"
-          Utils_js.exe_name
-          doc;
-      args =
-        CommandSpec.ArgSpec.(
-          empty
-          |> CommandUtils.codemod_flags
-          |> flag
-               "--preserve-literals"
-               (required ~default:Literals.Never (enum preserve_string_literals_level))
-               ~doc:""
-          |> flag
-               "--generalize-maybe"
-               no_arg
-               ~doc:"Generalize annotations containing null or void to maybe types"
-          |> flag
-               "--merge-array-elements"
-               no_arg
-               ~doc:"combine arrays appearing in toplevel unions to a single array"
-          |> common_annotate_flags
-        );
-    }
-
-  let main
-      codemod_flags preserve_literals generalize_maybe merge_arrays max_type_size default_any () =
-    let module Runner = Codemod_runner.MakeSimpleTypedRunner (struct
-      module Acc = Annotate_declarations.Acc
-
-      type accumulator = Acc.t
-
-      let reporter = string_reporter (module Acc)
-
-      (* Match all files the codemod is run over *)
-      let check_options o =
-        let open Options in
-        match o.opt_env_mode with
-        | ClassicEnv opts when List.mem ConstrainWrites opts && List.mem ClassicTypeAtPos opts -> o
-        | ClassicEnv opts when List.mem ConstrainWrites opts ->
-          { o with opt_env_mode = ClassicEnv (ClassicTypeAtPos :: opts) }
-        | ClassicEnv opts when List.mem ClassicTypeAtPos opts ->
-          { o with opt_env_mode = ClassicEnv (ConstrainWrites :: opts) }
-        | ClassicEnv opts ->
-          { o with opt_env_mode = ClassicEnv (ConstrainWrites :: ClassicTypeAtPos :: opts) }
-        | SSAEnv _ -> { o with opt_env_mode = ClassicEnv [ConstrainWrites; ClassicTypeAtPos] }
-
-      let visit =
-        let mapper =
-          new Annotate_declarations.annotate_declarations_mapper
-            ~default_any
-            ~generalize_maybe
-            ~max_type_size
-            ~preserve_literals
-            ~merge_arrays
-        in
-        Codemod_utils.make_visitor (Codemod_utils.Mapper mapper)
-    end) in
-    main (module Runner) codemod_flags ()
-
-  let command = CommandSpec.command spec main
-end
-
-module Rename_redefinitions_command = struct
-  let doc = "Convert redefined variables into separate consts"
-
-  let spec =
-    {
-      CommandSpec.name = "rename-redefinitions";
-      doc;
-      usage =
-        Printf.sprintf
-          "Usage: %s codemod rename-redefinitions [OPTION]... [FILE]\n\n%s\n"
-          Utils_js.exe_name
-          doc;
-      args = CommandSpec.ArgSpec.(empty |> CommandUtils.codemod_flags);
-    }
-
-  let main codemod_flags () =
-    let module Runner = Codemod_runner.MakeSimpleTypedRunner (struct
-      module Acc = Rename_redefinitions.Acc
-
-      type accumulator = Acc.t
-
-      let reporter = string_reporter (module Acc)
-
-      (* Match all files the codemod is run over *)
-      let check_options o =
-        let open Options in
-        match o.opt_env_mode with
-        | ClassicEnv opts when List.mem ConstrainWrites opts -> o
-        | ClassicEnv opts -> { o with opt_env_mode = ClassicEnv (ConstrainWrites :: opts) }
-        | SSAEnv _ -> { o with opt_env_mode = ClassicEnv [ConstrainWrites] }
-
-      let visit =
-        let mapper = Rename_redefinitions.mapper in
-        Codemod_utils.make_visitor (Codemod_utils.Mapper mapper)
-    end) in
-    main (module Runner) codemod_flags ()
-
-  let command = CommandSpec.command spec main
-end
-
 module KeyMirror_command = struct
   let doc = "Replaces instances of the type $ObjMapi<T, <K>(K) => K> with $KeyMirror<T>"
 
@@ -594,7 +479,6 @@ let command =
       ~name:"codemod"
       ~doc:"Runs large-scale codebase refactors"
       [
-        (Annotate_declarations_command.spec.CommandSpec.name, Annotate_declarations_command.command);
         (Annotate_empty_array_command.spec.CommandSpec.name, Annotate_empty_array_command.command);
         (Annotate_empty_object_command.spec.CommandSpec.name, Annotate_empty_object_command.command);
         (Annotate_exports_command.spec.CommandSpec.name, Annotate_exports_command.command);
@@ -604,7 +488,6 @@ let command =
         );
         (Annotate_use_state_command.spec.CommandSpec.name, Annotate_use_state_command.command);
         (KeyMirror_command.spec.CommandSpec.name, KeyMirror_command.command);
-        (Rename_redefinitions_command.spec.CommandSpec.name, Rename_redefinitions_command.command);
       ]
   in
   CommandSpec.command spec main

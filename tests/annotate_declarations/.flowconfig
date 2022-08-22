@@ -1,6 +1,0 @@
-[options]
-facebook.fbs=Fbs
-facebook.fbt=FbtElement
-
-[libs]
-declarations

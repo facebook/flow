@@ -1,1 +1,0 @@
-cmd: codemod annotate-declarations --merge-array-elements --strip-root --quiet ./
