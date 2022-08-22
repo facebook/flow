@@ -457,14 +457,9 @@ let mk_check_file (module Reader : READER) ~options ~cache () =
     let metadata = Context.docblock_overrides docblock base_metadata in
     let cx = Context.make ccx metadata file_key aloc_table Context.Checking in
     ConsGen.set_dst_cx cx;
-    let infer_ast =
-      match Context.env_mode cx with
-      | Options.SSAEnv _ -> Type_inference_js.NewEnvInference.infer_ast
-      | _ -> Type_inference_js.infer_ast
-    in
     let lint_severities = get_lint_severities metadata options in
     Type_inference_js.add_require_tvars cx file_sig;
     List.iter (connect_require cx) requires;
-    let typed_ast = infer_ast cx file_key comments ast ~lint_severities in
+    let typed_ast = Type_inference_js.infer_ast cx file_key comments ast ~lint_severities in
     Merge_js.post_merge_checks cx master_cx ast typed_ast metadata file_sig;
     (cx, typed_ast)

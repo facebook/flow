@@ -374,8 +374,6 @@ let scan_for_suppressions cx lint_severities comments =
   scan_for_lint_suppressions cx lint_severities comments
 
 module type S = sig
-  module ImpExp : Import_export.S
-
   (* Lint suppressions are handled iff lint_severities is Some. *)
   val infer_ast :
     lint_severities:Severity.severity LintSettings.t ->
@@ -407,7 +405,6 @@ module Make_Inference (Env : Env_sig.S) = struct
 
   module Statement = Statement_
   module Abnormal = Statement.Abnormal
-  module ImpExp = Statement.Import_export
   module Env_resolution = Env_resolution.Make (Env) (Statement)
 
   (* Some versions of Ocaml raise a warning 60 (unused module) without the following *)
@@ -577,3 +574,15 @@ end
 module NewEnvInference = Make (New_env.New_env)
 module EnvInference = Make (Env.Env)
 include EnvInference
+
+let infer_ast ~lint_severities cx filename comments aloc_ast =
+  match Context.env_mode cx with
+  | Options.SSAEnv _ -> NewEnvInference.infer_ast ~lint_severities cx filename comments aloc_ast
+  | Options.ClassicEnv _ -> EnvInference.infer_ast ~lint_severities cx filename comments aloc_ast
+
+let infer_lib_file ~exclude_syms ~lint_severities ~file_sig cx ast =
+  match Context.env_mode cx with
+  | Options.SSAEnv _ ->
+    NewEnvInference.infer_lib_file ~exclude_syms ~lint_severities ~file_sig cx ast
+  | Options.ClassicEnv _ ->
+    EnvInference.infer_lib_file ~exclude_syms ~lint_severities ~file_sig cx ast
