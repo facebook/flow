@@ -11,6 +11,7 @@ open Reason
 open Flow_ast_mapper
 open Loc_collections
 module EnvMap = Env_api.EnvMap
+module EnvSet = Env_api.EnvSet
 
 type cond_context =
   | NonConditionalContext
@@ -144,6 +145,7 @@ type def =
       class_implicit_this_tparam: class_implicit_this_tparam;
       class_: (ALoc.t, ALoc.t) Ast.Class.t;
       class_loc: ALoc.t;
+      methods_this_annot_write_locs: EnvSet.t;
     }
   | DeclaredClass of ALoc.t * (ALoc.t, ALoc.t) Ast.Statement.DeclareClass.t
   | TypeAlias of ALoc.t * (ALoc.t, ALoc.t) Ast.Statement.TypeAlias.t
@@ -214,7 +216,13 @@ module Print = struct
         )
     | DeclaredClass (_, { Ast.Statement.DeclareClass.id = (_, { Ast.Identifier.name; _ }); _ }) ->
       spf "declared class %s" name
-    | Class { class_ = { Ast.Class.id; _ }; class_implicit_this_tparam = _; class_loc = _ } ->
+    | Class
+        {
+          class_ = { Ast.Class.id; _ };
+          class_implicit_this_tparam = _;
+          class_loc = _;
+          methods_this_annot_write_locs = _;
+        } ->
       spf
         "class %s"
         (Base.Option.value_map
@@ -764,6 +772,28 @@ class def_finder env_entries providers toplevel_scope =
               ()
           in
           class_stack <- old_stack;
+          let methods_this_annot_write_locs =
+            let (_, { Ast.Class.Body.body; _ }) = body in
+            Base.List.fold body ~init:EnvSet.empty ~f:(fun acc -> function
+              | Ast.Class.Body.Method (_, { Ast.Class.Method.key; value = (_, f); _ }) ->
+                let has_this_param =
+                  let { Ast.Function.params = (_, { Ast.Function.Params.this_; _ }); _ } = f in
+                  Base.Option.is_some this_
+                in
+                if has_this_param then
+                  let loc =
+                    match key with
+                    | Ast.Expression.Object.Property.Literal (l, _) -> l
+                    | Ast.Expression.Object.Property.Identifier (l, _) -> l
+                    | Ast.Expression.Object.Property.PrivateName (l, _) -> l
+                    | Ast.Expression.Object.Property.Computed (l, _) -> l
+                  in
+                  EnvSet.add (Env_api.FunctionThisLoc, loc) acc
+                else
+                  acc
+              | _ -> acc
+            )
+          in
           begin
             match id with
             | Some (id_loc, { Ast.Identifier.name; _ }) ->
@@ -772,13 +802,27 @@ class def_finder env_entries providers toplevel_scope =
               this#add_ordinary_binding
                 id_loc
                 reason
-                (Class { class_loc = loc; class_implicit_this_tparam; class_ = expr })
+                (Class
+                   {
+                     class_loc = loc;
+                     class_implicit_this_tparam;
+                     class_ = expr;
+                     methods_this_annot_write_locs;
+                   }
+                )
             | None ->
               let reason = mk_reason (RType (OrdinaryName "<<anonymous class>>")) loc in
               this#add_ordinary_binding
                 loc
                 reason
-                (Class { class_loc = loc; class_implicit_this_tparam; class_ = expr })
+                (Class
+                   {
+                     class_loc = loc;
+                     class_implicit_this_tparam;
+                     class_ = expr;
+                     methods_this_annot_write_locs;
+                   }
+                )
           end;
           expr
       )

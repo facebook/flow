@@ -619,7 +619,9 @@ module Make (Env : Env_sig.S) (Statement : Statement_sig.S with module Env := En
             hint;
           } ->
         resolve_annotated_function cx ~hint def_reason tparams_map function_loc function_
-      | Class { class_; class_loc; class_implicit_this_tparam = _ } ->
+      | Class
+          { class_; class_loc; class_implicit_this_tparam = _; methods_this_annot_write_locs = _ }
+        ->
         resolve_class cx id_loc def_reason class_loc class_
       | MemberAssign { member_loc = _; member = _; rhs } ->
         (expression cx ~hint:dummy_hint rhs, unknown_use)
@@ -668,9 +670,10 @@ module Make (Env : Env_sig.S) (Statement : Statement_sig.S with module Env := En
       in
       let acc = EnvSet.add (kind, loc) acc in
       match EnvMap.find (kind, loc) graph with
-      | (Class { class_loc; _ }, _, _, _) ->
+      | (Class { class_loc; methods_this_annot_write_locs; _ }, _, _, _) ->
         let open Env_api in
         acc
+        |> EnvSet.union methods_this_annot_write_locs
         |> EnvSet.add (ClassSelfLoc, class_loc)
         |> EnvSet.add (ClassInstanceThisLoc, class_loc)
         |> EnvSet.add (ClassStaticThisLoc, class_loc)

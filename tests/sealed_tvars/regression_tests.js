@@ -64,3 +64,9 @@ declare var AString: string;
 const ResultOfError = -AString;
 
 let UninitializedVar;
+
+class ClassMethodThisAnnotations {
+  method1(this: mixed) {
+    (this: mixed);
+  }
+}
