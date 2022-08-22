@@ -18,8 +18,14 @@ class A {
   #pmeth1() { } // ok
   #pmeth2() { return 42 } // err return
   ["computed"]() { } // unsupported, but no missing annot
+
+  throwingInvariant1() { invariant() } // error: throws
+  throwingInvariant2() { invariant(false) } // error: throws
+  nonthrowingInvariant() { invariant(this.prop1) } // ok
 }
 
 function sanity_check_that_we_dont_error_on_non_method_functions() {
   return 42;
 }
+
+declare function invariant(...$ReadOnlyArray<mixed>): void;

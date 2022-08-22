@@ -16,8 +16,24 @@ class return_finder =
       node
 
     method! call _loc expr =
-      if Flow_ast_utils.is_call_to_invariant Ast.Expression.Call.(expr.callee) then
-        this#set_acc true;
+      let open Ast.Expression.Call in
+      let { callee; arguments; _ } = expr in
+      ( if Flow_ast_utils.is_call_to_invariant callee then
+        match arguments with
+        (* invariant() and invariant(false, ...) are treated like throw *)
+        | (_, { Ast.Expression.ArgList.arguments = []; comments = _ })
+        | ( _,
+            {
+              Ast.Expression.ArgList.arguments =
+                Ast.Expression.Expression
+                  (_, Ast.Expression.Literal { Ast.Literal.value = Ast.Literal.Boolean false; _ })
+                :: _;
+              comments = _;
+            }
+          ) ->
+          this#set_acc true
+        | _ -> ()
+      );
       expr
 
     method! throw _loc stmt =
