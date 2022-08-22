@@ -38,7 +38,7 @@ let stub_metadata ~root ~checked =
     enforce_class_annotations = false;
     enforce_strict_call_arity = true;
     enforce_this_annotations = false;
-    env_mode = Options.ClassicEnv [];
+    env_mode = Options.(SSAEnv Reordered);
     exact_by_default = false;
     exact_empty_objects = false;
     experimental_infer_indexers = false;
@@ -75,7 +75,7 @@ let file_sig_of_ast ast =
   let (file_sig, _) = File_sig.With_Loc.program ~ast ~opts:File_sig.With_Loc.default_opts in
   File_sig.abstractify_locs file_sig
 
-let dummy_context =
+let dummy_context () =
   let root = Path.dummy_path in
   let master_cx = Context.empty_master_cx () in
   let () =
@@ -136,12 +136,12 @@ let dummy_context =
   let aloc_table = lazy (ALoc.empty_table dummy_filename) in
   Context.make ccx metadata dummy_filename aloc_table Context.Checking
 
-let typed_ast_of_ast ast =
+let typed_ast_of_ast cx ast =
   let (_, { Flow_ast.Program.all_comments = comments; _ }) = ast in
   let aloc_ast = Ast_loc_utils.loc_to_aloc_mapper#program ast in
   Type_inference_js.infer_ast
     ~lint_severities:LintSettings.empty_severities
-    dummy_context
+    cx
     dummy_filename
     comments
     aloc_ast
@@ -526,7 +526,7 @@ function foo<A>() {
 }
         |}
       in
-      let typed_ast = source |> parse |> typed_ast_of_ast in
+      let typed_ast = source |> parse |> typed_ast_of_ast (dummy_context ()) in
       let extracted_loc = mk_loc (9, 12) (9, 42) in
       let reader = State_reader.create () in
       let actual =
@@ -570,7 +570,7 @@ function foo<A>() {
 
 let find_closest_enclosing_class_tests =
   let assert_closest_enclosing_class_scope ~ctxt ?expected source extracted_loc =
-    let typed_ast = source |> parse |> typed_ast_of_ast in
+    let typed_ast = source |> parse |> typed_ast_of_ast (dummy_context ()) in
     let reader = State_reader.create () in
     let actual =
       match
@@ -1031,11 +1031,12 @@ let type_synthesizer_tests =
   let reader = State_reader.create () in
   let create_context source locs =
     let ast = parse source in
-    let typed_ast = typed_ast_of_ast ast in
+    let cx = dummy_context () in
+    let typed_ast = typed_ast_of_ast cx ast in
     let file_sig = file_sig_of_ast ast in
     let locs = LocSet.of_list locs in
     TypeSynthesizer.create_synthesizer_context
-      ~full_cx:dummy_context
+      ~full_cx:cx
       ~file:dummy_filename
       ~file_sig
       ~typed_ast

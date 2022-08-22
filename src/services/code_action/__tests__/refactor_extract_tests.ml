@@ -11,7 +11,8 @@ open Refactor_extract_utils_tests
 let assert_refactored
     ~ctxt ?(support_experimental_snippet_text_edit = false) expected source extract_range =
   let ast = parse source in
-  let typed_ast = typed_ast_of_ast ast in
+  let cx = dummy_context () in
+  let typed_ast = typed_ast_of_ast cx ast in
   let reader = State_reader.create () in
   let remove_blank_lines s =
     s
@@ -22,7 +23,7 @@ let assert_refactored
   let actual =
     Refactor_extract.provide_available_refactors
       ~ast
-      ~full_cx:dummy_context
+      ~full_cx:cx
       ~file:dummy_filename
       ~file_sig:(file_sig_of_ast ast)
       ~typed_ast
