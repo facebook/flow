@@ -139,11 +139,19 @@ module Make (Env : Env_sig.S) (Statement : Statement_sig.S with module Env := En
         in
         UnionT (mk_reason (RCustom "providers") loc, UnionRep.make t1 t2 ts)
     in
-    match hint with
-    | Hint_t hint_node -> Hint_t (resolve_hint hint_node)
-    | Hint_Decomp (ops, hint_node) -> Hint_Decomp (ops, resolve_hint hint_node)
-    | Hint_Placeholder -> Hint_Placeholder
-    | Hint_None -> Hint_None
+    if Context.env_mode cx = Options.(SSAEnv Enforced) then
+      match hint with
+      | Hint_t hint_node -> Hint_t (resolve_hint hint_node)
+      | Hint_Decomp (ops, hint_node) -> Hint_Decomp (ops, resolve_hint hint_node)
+      | Hint_Placeholder -> Hint_Placeholder
+      | Hint_None -> Hint_None
+    else
+      match hint with
+      | Hint_t _
+      | Hint_Decomp _
+      | Hint_Placeholder ->
+        Hint_Placeholder
+      | Hint_None -> Hint_None
 
   let rec resolve_binding_partial cx reason loc b =
     let mk_use_op t = Op (AssignVar { var = Some reason; init = TypeUtil.reason_of_t t }) in
