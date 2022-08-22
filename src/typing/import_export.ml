@@ -12,7 +12,7 @@ open Reason
 open Type
 
 module type S = sig
-  val mk_module_t : Context.t -> Reason.t -> Type.t
+  val mk_module_t : Context.t -> Reason.t -> ALoc.t -> Type.t
 
   val require : Context.t -> ALoc.t * string -> ALoc.t -> Type.t
 
@@ -185,13 +185,11 @@ module Make (Env : Env_sig.S) = struct
             Flow.flow cx (module_t, ExportNamedT (reason, named, kind, tout))
         )
       in
-      fun cx reason ->
+      fun cx reason loc ->
         let info = Context.module_info cx in
         match info.kind with
         | CJS _ ->
-          Loc.{ none with source = Some (Context.file cx) }
-          |> ALoc.of_loc
-          |> Env.get_module_exports cx
+          Env.get_module_exports cx loc
           |> mk_commonjs_module_t cx reason reason
           |> export_named cx reason ExportType info.type_named
           |> copy_star_exports cx reason ([], info.type_star)

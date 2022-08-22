@@ -20,6 +20,7 @@ type t = {
   tparams: (Subst_name.t * Type.typeparam * Type.t) ALocMap.t;
   class_bindings: Type.class_binding ALocMap.t;
   class_stack: ALoc.t list;
+  declare_module_exports_write_loc: ALoc.t;
   return_hint: Type.t Hint_api.hint;
   scope_kind: Scope.var_scope_kind;
   readable: EnvSet.t;
@@ -64,6 +65,7 @@ let empty scope_kind =
     return_hint = Hint_api.Hint_None;
     class_bindings = ALocMap.empty;
     class_stack = [];
+    declare_module_exports_write_loc = ALoc.none;
     scope_kind;
     readable = EnvSet.empty;
     under_resolution = EnvSet.empty;

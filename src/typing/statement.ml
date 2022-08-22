@@ -2037,6 +2037,13 @@ struct
       ->
       let (((_, t), _) as t_ast) = Anno.convert cx Subst_name.Map.empty t in
       Import_export.cjs_clobber cx loc t;
+      let reason =
+        let filename = Context.file cx in
+        mk_reason
+          (RModule (OrdinaryName (File_key.to_string filename)))
+          (Loc.{ none with source = Some filename } |> ALoc.of_loc)
+      in
+      Flow.flow_t cx (t, Type.Unsoundness.exports_any reason);
       ( loc,
         DeclareModuleExports { Ast.Statement.DeclareModuleExports.annot = (t_loc, t_ast); comments }
       )
@@ -2598,7 +2605,7 @@ struct
         loc
         reason
         module_scope;
-      let module_t = Import_export.mk_module_t cx reason in
+      let module_t = Import_export.mk_module_t cx reason loc in
       let ast =
         {
           DeclareModule.id =

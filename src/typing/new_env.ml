@@ -602,7 +602,9 @@ module New_env : S = struct
     let t = read_entry_exn ~lookup_mode cx loc reason in
     Flow_js.reposition cx loc t
 
-  let get_module_exports cx loc = get_internal_var cx "exports" loc
+  let get_module_exports cx loc =
+    let env = Context.environment cx in
+    t_option_value_exn cx loc (Loc_env.find_write env Env_api.DeclareModuleExportsLoc loc)
 
   let get_this_type_param_if_necessary ~otherwise name loc =
     if name = OrdinaryName "this" then
@@ -884,7 +886,14 @@ module New_env : S = struct
   let set_var cx ~use_op name t loc =
     assign_env_value_entry cx ~use_op ~potential_global_name:name t loc
 
-  let set_module_exports cx loc t = set_internal_var cx "exports" t loc
+  let set_module_exports cx _loc t =
+    let env = Context.environment cx in
+    unify_write_entry
+      cx
+      ~use_op:unknown_use
+      t
+      Env_api.DeclareModuleExportsLoc
+      env.Loc_env.declare_module_exports_write_loc
 
   let bind cx t ~kind loc =
     match Context.env_mode cx with

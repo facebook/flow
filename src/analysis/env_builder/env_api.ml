@@ -29,6 +29,7 @@ module type S = sig
     | ClassInstanceSuperLoc
     | ClassStaticSuperLoc
     | GlobalExportsLoc
+    | DeclareModuleExportsLoc
   [@@deriving show]
 
   module EnvKey : Flow_map.OrderedType with type t = def_loc_type * L.t
@@ -228,6 +229,7 @@ module Make
     | ClassInstanceSuperLoc
     | ClassStaticSuperLoc
     | GlobalExportsLoc
+    | DeclareModuleExportsLoc
   [@@deriving show]
 
   module EnvKey = struct

@@ -4934,7 +4934,9 @@ module Make
         let (block_loc, { Ast.Statement.Block.body = statements; comments = _ }) = body in
         let reason = mk_reason (RModule (OrdinaryName name)) name_loc in
         let write_entries =
-          EnvMap.add_ordinary name_loc (Env_api.AssigningWrite reason) env_state.write_entries
+          env_state.write_entries
+          |> EnvMap.add_ordinary name_loc (Env_api.AssigningWrite reason)
+          |> EnvMap.add (Env_api.DeclareModuleExportsLoc, loc) (Env_api.AssigningWrite reason)
         in
         let values =
           L.LMap.add

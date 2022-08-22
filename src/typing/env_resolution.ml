@@ -501,6 +501,8 @@ module Make (Env : Env_sig.S) (Statement : Statement_sig.S with module Env := En
       | Ast.Statement.DeclareModule.Literal (_, { Ast.StringLiteral.value; _ }) ->
         value
     in
+    let env = Context.environment cx in
+    Context.set_environment cx { env with Loc_env.declare_module_exports_write_loc = loc };
     let ((t, _) as stuff) = Statement.declare_module cx loc name module_ in
     Node_cache.set_declared_module cache loc stuff;
     (t, unknown_use)
@@ -670,6 +672,7 @@ module Make (Env : Env_sig.S) (Statement : Statement_sig.S with module Env := En
       in
       let acc = EnvSet.add (kind, loc) acc in
       match EnvMap.find (kind, loc) graph with
+      | (DeclaredModule (loc, _), _, _, _) -> EnvSet.add (Env_api.DeclareModuleExportsLoc, loc) acc
       | (Class { class_loc; methods_this_annot_write_locs; _ }, _, _, _) ->
         let open Env_api in
         acc

@@ -530,7 +530,7 @@ module Make (Env : Env_sig.S) : S = struct
       )
     in
     initialize_env ~lib:false ~local_exports_var cx aloc_ast module_scope;
-    Env.set_module_exports cx file_loc init_exports;
+    if not Env.new_env then Env.set_module_exports cx file_loc init_exports;
 
     (* infer *)
     let typed_statements = infer_core cx aloc_statements in
