@@ -750,15 +750,7 @@ module Opts = struct
     )
 
   let experimental_empty_array_literals_parser =
-    boolean (fun opts v ->
-        match opts.env_mode with
-        | Options.ClassicEnv _ ->
-          Error
-            (spf
-               "\"experimental.array_literal_providers\" mode cannot be run in legacy inference mode"
-            )
-        | _ -> Ok { opts with array_literal_providers = v }
-    )
+    boolean (fun opts v -> Ok { opts with array_literal_providers = v })
 
   let watchman_defer_states_parser =
     string ~multiple:true (fun opts v ->

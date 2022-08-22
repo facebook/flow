@@ -1194,37 +1194,28 @@ module Make
 
   class name_resolver
     cx is_lib exclude_syms (prepass_info, prepass_values, unbound_names) provider_info program_loc =
-    let add_output =
-      match Context.env_mode cx with
-      | Options.SSAEnv _ -> FlowAPIUtils.add_output cx
-      | _ -> (fun ?trace:_ _ -> ())
-    in
+    let add_output = FlowAPIUtils.add_output cx in
 
-    let add_literal_subtype_test =
-      let rec f refinee_loc literal =
-        match literal with
-        | SingletonNumR { loc; lit = (num, raw); sense } ->
-          Context.add_new_env_literal_subtypes
-            cx
-            (refinee_loc, PostInferenceCheck.SingletonNum (loc, sense, num, raw))
-        | SingletonBoolR { loc; lit; sense = _ } ->
-          Context.add_new_env_literal_subtypes
-            cx
-            (refinee_loc, PostInferenceCheck.SingletonBool (loc, lit))
-        | SingletonStrR { loc; lit; sense } ->
-          Context.add_new_env_literal_subtypes
-            cx
-            (refinee_loc, PostInferenceCheck.SingletonStr (loc, sense, lit))
-        | NotR r -> f refinee_loc r
-        | AndR (r1, r2)
-        | OrR (r1, r2) ->
-          f refinee_loc r1;
-          f refinee_loc r2
-        | _ -> ()
-      in
-      match Context.env_mode cx with
-      | Options.SSAEnv _ -> f
-      | _ -> (fun _ _ -> ())
+    let rec add_literal_subtype_test refinee_loc literal =
+      match literal with
+      | SingletonNumR { loc; lit = (num, raw); sense } ->
+        Context.add_new_env_literal_subtypes
+          cx
+          (refinee_loc, PostInferenceCheck.SingletonNum (loc, sense, num, raw))
+      | SingletonBoolR { loc; lit; sense = _ } ->
+        Context.add_new_env_literal_subtypes
+          cx
+          (refinee_loc, PostInferenceCheck.SingletonBool (loc, lit))
+      | SingletonStrR { loc; lit; sense } ->
+        Context.add_new_env_literal_subtypes
+          cx
+          (refinee_loc, PostInferenceCheck.SingletonStr (loc, sense, lit))
+      | NotR r -> add_literal_subtype_test refinee_loc r
+      | AndR (r1, r2)
+      | OrR (r1, r2) ->
+        add_literal_subtype_test refinee_loc r1;
+        add_literal_subtype_test refinee_loc r2
+      | _ -> ()
     in
 
     let enable_enums = Context.enable_enums cx in

@@ -438,22 +438,17 @@ let detect_matching_props_violations cx =
       Flow_js.flow cx (MatchingPropT (reason, key, sentinel), UseT (use_op, drop_generic obj))
     | _ -> ()
   in
-  match Context.env_mode cx with
-  | Options.SSAEnv _ ->
-    let matching_props = Context.new_env_matching_props cx in
-    List.iter
-      (fun (prop_name, other_loc, obj_loc) ->
-        let env = Context.environment cx in
-        New_env.New_env.check_readable cx Env_api.ExpressionLoc other_loc;
-        let other_t =
-          Base.Option.value_exn (Loc_env.find_write env Env_api.ExpressionLoc other_loc)
-        in
-        let obj_t = New_env.New_env.provider_type_for_def_loc cx env obj_loc in
-        step (TypeUtil.reason_of_t other_t, prop_name, other_t, obj_t))
-      matching_props
-  | _ ->
-    let matching_props = Context.matching_props cx in
-    List.iter step matching_props
+  let matching_props = Context.new_env_matching_props cx in
+  List.iter
+    (fun (prop_name, other_loc, obj_loc) ->
+      let env = Context.environment cx in
+      New_env.New_env.check_readable cx Env_api.ExpressionLoc other_loc;
+      let other_t =
+        Base.Option.value_exn (Loc_env.find_write env Env_api.ExpressionLoc other_loc)
+      in
+      let obj_t = New_env.New_env.provider_type_for_def_loc cx env obj_loc in
+      step (TypeUtil.reason_of_t other_t, prop_name, other_t, obj_t))
+    matching_props
 
 let detect_literal_subtypes =
   let open Type in
@@ -470,37 +465,27 @@ let detect_literal_subtypes =
     end
   in
   fun cx ->
-    match Context.env_mode cx with
-    | Options.SSAEnv _ ->
-      let new_env_checks = Context.new_env_literal_subtypes cx in
-      List.iter
-        (fun (loc, check) ->
-          let env = Context.environment cx in
-          let u_def = New_env.New_env.provider_type_for_def_loc cx env loc in
-          let l =
-            match check with
-            | Env_api.SingletonNum (lit_loc, sense, num, raw) ->
-              let reason = lit_loc |> Reason.(mk_reason (RNumberLit raw)) in
-              DefT (reason, bogus_trust (), NumT (Literal (Some sense, (num, raw))))
-            | Env_api.SingletonBool (lit_loc, b) ->
-              let reason = lit_loc |> Reason.(mk_reason (RBooleanLit b)) in
-              DefT (reason, bogus_trust (), BoolT (Some b))
-            | Env_api.SingletonStr (lit_loc, sense, str) ->
-              let reason = lit_loc |> Reason.(mk_reason (RStringLit (OrdinaryName str))) in
-              DefT (reason, bogus_trust (), StrT (Literal (Some sense, Reason.OrdinaryName str)))
-          in
-          let l = lb_visitor#type_ cx () l in
-          let u_def = ub_visitor#type_ cx () u_def in
-          Flow_js.flow cx (l, UseT (Op (Internal Refinement), u_def)))
-        new_env_checks
-    | _ ->
-      let checks = Context.literal_subtypes cx in
-      List.iter
-        (fun (t, u_def) ->
-          let t = lb_visitor#type_ cx () t in
-          let u_def = ub_visitor#type_ cx () u_def in
-          Flow_js.flow cx (t, UseT (Op (Internal Refinement), u_def)))
-        checks
+    let new_env_checks = Context.new_env_literal_subtypes cx in
+    List.iter
+      (fun (loc, check) ->
+        let env = Context.environment cx in
+        let u_def = New_env.New_env.provider_type_for_def_loc cx env loc in
+        let l =
+          match check with
+          | Env_api.SingletonNum (lit_loc, sense, num, raw) ->
+            let reason = lit_loc |> Reason.(mk_reason (RNumberLit raw)) in
+            DefT (reason, bogus_trust (), NumT (Literal (Some sense, (num, raw))))
+          | Env_api.SingletonBool (lit_loc, b) ->
+            let reason = lit_loc |> Reason.(mk_reason (RBooleanLit b)) in
+            DefT (reason, bogus_trust (), BoolT (Some b))
+          | Env_api.SingletonStr (lit_loc, sense, str) ->
+            let reason = lit_loc |> Reason.(mk_reason (RStringLit (OrdinaryName str))) in
+            DefT (reason, bogus_trust (), StrT (Literal (Some sense, Reason.OrdinaryName str)))
+        in
+        let l = lb_visitor#type_ cx () l in
+        let u_def = ub_visitor#type_ cx () u_def in
+        Flow_js.flow cx (l, UseT (Op (Internal Refinement), u_def)))
+      new_env_checks
 
 let check_constrained_writes init_cx master_cx =
   let checks = Context.constrained_writes init_cx in

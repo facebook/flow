@@ -221,33 +221,6 @@ module Env : Env_sig.S = struct
 
   (* initialize a new environment (once per module) *)
   let init_env ?(exclude_syms = NameUtils.Set.empty) cx _ module_scope =
-    begin
-      if Context.classic_env_option_enabled cx Options.ConstrainWrites then
-        let ({ Loc_env.var_info = { Env_api.providers; _ } as var_info; _ } as env) =
-          Context.environment cx
-        in
-        Env_api.EnvMap.fold
-          (fun (def_loc_type, loc) env_entry env ->
-            match env_entry with
-            | Env_api.AssigningWrite reason
-            | Env_api.EmptyArrayWrite (_, reason, _)
-            | Env_api.GlobalWrite reason ->
-              let t = Tvar.mk cx reason in
-              Loc_env.initialize env def_loc_type loc t
-            | Env_api.NonAssigningWrite ->
-              if Env_api.Provider_api.is_provider providers loc then
-                (* If an illegal write is considered as a provider, we still need to give it a
-                   slot to prevent crashing in code that queries provider types. *)
-                let reason = mk_reason (RCustom "non-assigning provider") loc in
-                let t = AnyT.error reason in
-                Loc_env.initialize env def_loc_type loc t
-              else
-                env)
-          var_info.Env_api.env_entries
-          env
-        |> Context.set_environment cx
-    end;
-
     set_exclude_symbols exclude_syms;
     havoc_current_activation ();
     let global_scope = Scope.fresh ~var_scope_kind:Global () in
@@ -465,26 +438,7 @@ module Env : Env_sig.S = struct
         (None, spec)
 
   let mk_havoc cx name loc general spec =
-    let providers =
-      if Context.classic_env_option_enabled cx Options.ConstrainWrites then
-        let ({ Loc_env.var_info = { Env_api.providers; _ }; _ } as env) = Context.environment cx in
-        let providers =
-          Env_api.Provider_api.providers_of_def providers loc
-          |> Base.Option.value_map
-               ~f:(fun { Env_api.Provider_api.providers; _ } -> providers)
-               ~default:[]
-          |> Base.List.map ~f:(fun { Env_api.Provider_api.reason; _ } ->
-                 let loc = Reason.aloc_of_reason reason in
-                 Base.Option.map ~f:(fun t -> (loc, t)) (Loc_env.find_ordinary_write env loc)
-             )
-          |> Base.Option.all
-        in
-        match providers with
-        | None -> []
-        | Some providers -> providers
-      else
-        []
-    in
+    let providers = [] in
 
     let (writes_by_closure_opt, spec') = promote_non_const cx name loc spec in
     let closure_writes =
@@ -521,16 +475,7 @@ module Env : Env_sig.S = struct
         Some (writes_by_closure, writes_by_closure_t, writes_by_closure_provider)
       | _ -> None
     in
-    let provider =
-      if Context.classic_env_option_enabled cx Options.ConstrainWrites then
-        match providers with
-        | [] -> VoidT.at loc (bogus_trust ())
-        | [(_, t)] -> t
-        | (_, t1) :: (_, t2) :: ts ->
-          UnionT (mk_reason (RType name) loc, UnionRep.make t1 t2 (Base.List.map ~f:snd ts))
-      else
-        general
-    in
+    let provider = general in
     (spec', closure_writes, provider)
 
   let binding_error msg cx name entry loc =
@@ -542,79 +487,9 @@ module Env : Env_sig.S = struct
     let { Loc_env.var_info = { Env_api.providers; _ }; _ } = Context.environment cx in
     Env_api.Provider_api.is_provider providers id_loc
 
-  let install_provider cx t name loc =
-    match name with
-    | OrdinaryName _name when Context.classic_env_option_enabled cx Options.ConstrainWrites ->
-      let ({ Loc_env.var_info = { Env_api.providers; _ }; _ } as env) = Context.environment cx in
-      if Env_api.Provider_api.is_provider providers loc then
-        let t' = Loc_env.find_ordinary_write env loc in
-        Base.Option.iter ~f:(fun t' -> Flow_js.flow_t cx (t, t')) t'
-    | _ -> ()
+  let install_provider _cx _t _name _loc = ()
 
-  let get_provider cx name loc =
-    let ({ Loc_env.var_info = { Env_api.providers; _ }; _ } as env) = Context.environment cx in
-    let (provider_state, provider_locs) =
-      Base.Option.value_map
-        ~f:(fun { Env_api.Provider_api.state; providers; _ } -> (state, providers))
-        ~default:(Find_providers.UninitializedVar, [])
-        (Env_api.Provider_api.providers_of_def providers loc)
-    in
-    let fully_initialized = Provider_api.is_provider_state_fully_initialized provider_state in
-    let providers =
-      Base.List.map
-        ~f:(fun { Env_api.Provider_api.reason; _ } -> Reason.aloc_of_reason reason)
-        provider_locs
-      |> Base.List.map ~f:(Loc_env.find_ordinary_write env)
-      |> Base.Option.all
-    in
-    let provider =
-      match providers with
-      | None
-        (* We can have no providers when the only writes to a variable are in unreachable code *)
-      | Some [] ->
-        (* If we find an entry for the providers, but none that actually exist, its because this variable
-           was never assigned to. We treat this as undefined. We handle erroring on
-           these cases using a different approach (the error should be at the declaration,
-           not the assignment). *)
-        None
-      | Some [t] -> Some t
-      | Some (t1 :: t2 :: ts) ->
-        Some (UnionT (mk_reason (RIdentifier name) loc, UnionRep.make t1 t2 ts))
-    in
-    (fully_initialized, provider, provider_locs)
-
-  let constrain_by_provider cx ~use_op t name loc =
-    match name with
-    | OrdinaryName ord_name when Context.classic_env_option_enabled cx Options.ConstrainWrites ->
-      let { Loc_env.var_info = { Env_api.providers; scopes; _ }; _ } = Context.environment cx in
-      if not @@ Env_api.Provider_api.is_provider providers loc then
-        let (fully_initialized, provider, provider_locs) = get_provider cx name loc in
-        if fully_initialized then
-          Base.Option.iter provider ~f:(fun provider ->
-              match Scope_api.With_ALoc.(def_of_use_opt scopes loc) with
-              | Some { Scope_api.With_ALoc.Def.locs = (declaration, _); _ } ->
-                let use_op =
-                  Frame
-                    ( ConstrainedAssignment
-                        {
-                          name = ord_name;
-                          declaration;
-                          providers =
-                            Base.List.map
-                              ~f:(fun { Env_api.Provider_api.reason; _ } ->
-                                poly_loc_of_reason reason)
-                              provider_locs;
-                          array = false;
-                        },
-                      use_op
-                    )
-                in
-                Context.add_constrained_write cx (t, use_op, provider)
-              | None ->
-                (* If there isn't a declaration for the variable, then it's a global, and we don't need to constrain it *)
-                ()
-          )
-    | _ -> ()
+  let constrain_by_provider _cx ~use_op:_ _t _name _loc = ()
 
   let can_shadow cx name prev loc =
     Entry.(
@@ -1132,18 +1007,7 @@ module Env : Env_sig.S = struct
   let get_var_declared_type ?(lookup_mode = ForValue) ?is_declared_function:_ cx name loc =
     read_entry ~lookup_mode ~specific:false ?desc:None cx name loc
 
-  let constraining_type ~default cx name loc =
-    match name with
-    | OrdinaryName _
-      when Context.classic_env_option_enabled cx Options.ConstrainWrites
-           && not (Context.classic_env_option_enabled cx Options.ClassicTypeAtPos) ->
-      let (_, provider, _) = get_provider cx name loc in
-      begin
-        match provider with
-        | Some provider -> provider
-        | _ -> default
-      end
-    | _ -> default
+  let constraining_type ~default _cx _name _loc = default
 
   (* Unify declared type with another type. This is useful for allowing forward
      references in declared types to other types declared later in scope. *)
@@ -1748,12 +1612,7 @@ module Env : Env_sig.S = struct
                       (* We already know t ~> general, so specific | t = general *)
                     then
                       general
-                    else if Context.classic_env_option_enabled cx Options.ConstrainWrites then (
-                      let tvar = Tvar.mk cx (reason_of_t t) in
-                      Flow.flow cx (specific, UseT (Op (Internal WidenEnv), tvar));
-                      Flow.flow cx (general, UseT (Op (Internal WidenEnv), tvar));
-                      tvar
-                    ) else
+                    else
                       let (_, tvar_t) = open_tvar t in
                       let constraints_t = Context.find_graph cx tvar_t in
                       match (specific, constraints_t) with

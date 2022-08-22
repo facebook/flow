@@ -571,18 +571,4 @@ module Make (Env : Env_sig.S) : S = struct
     (Env.init_builtins_from_libdef cx module_scope, t_stmts)
 end
 
-module NewEnvInference = Make (New_env.New_env)
-module EnvInference = Make (Env.Env)
-include EnvInference
-
-let infer_ast ~lint_severities cx filename comments aloc_ast =
-  match Context.env_mode cx with
-  | Options.SSAEnv _ -> NewEnvInference.infer_ast ~lint_severities cx filename comments aloc_ast
-  | Options.ClassicEnv _ -> EnvInference.infer_ast ~lint_severities cx filename comments aloc_ast
-
-let infer_lib_file ~exclude_syms ~lint_severities ~file_sig cx ast =
-  match Context.env_mode cx with
-  | Options.SSAEnv _ ->
-    NewEnvInference.infer_lib_file ~exclude_syms ~lint_severities ~file_sig cx ast
-  | Options.ClassicEnv _ ->
-    EnvInference.infer_lib_file ~exclude_syms ~lint_severities ~file_sig cx ast
+include Make (New_env.New_env)

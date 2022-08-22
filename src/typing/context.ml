@@ -620,20 +620,11 @@ let trust_errors cx =
   | Options.NoTrust ->
     false
 
-let classic_env_option_enabled cx option =
-  let open Options in
-  match (cx.metadata.env_mode, option) with
-  | (SSAEnv _, _) -> false
-  | (ClassicEnv opts, _) when List.mem option opts -> true
-  | _ -> false
-
 let resolved_env cx =
   let open Options in
   match cx.metadata.env_mode with
   | SSAEnv (Reordered | Enforced) -> true
-  | SSAEnv Basic
-  | ClassicEnv _ ->
-    false
+  | SSAEnv Basic -> false
 
 let pid_prefix =
   let pid = lazy (Sys_utils.get_pretty_pid ()) in
