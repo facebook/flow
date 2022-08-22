@@ -859,30 +859,18 @@ module Make
   (* Processes the bodies of instance and static class members. *)
   let toplevels cx x =
     Env.in_class_scope cx x.class_loc (fun () ->
-        let method_ default_this super ~set_asts f =
+        let method_ ~set_asts f =
           let save_return = Abnormal.clear_saved Abnormal.Return in
           let save_throw = Abnormal.clear_saved Abnormal.Throw in
-          let (params_ast, body_ast, init_ast) =
-            F.toplevels cx (Some default_this) (Some super) f
-          in
+          let (params_ast, body_ast, init_ast) = F.toplevels cx f in
           set_asts (params_ast, body_ast, init_ast);
           ignore (Abnormal.swap_saved Abnormal.Return save_return);
           ignore (Abnormal.swap_saved Abnormal.Throw save_throw)
         in
-        let field default_this super _name (_, _, value) =
+        let field _name (_, _, value) =
           match value with
           | Annot _ -> ()
-          | Infer (fsig, set_asts) -> method_ default_this super ~set_asts fsig
-        in
-        let (instance_this_default, static_this_default, super, static_super) =
-          let open Env_api in
-          let env = Context.environment cx in
-          let find_this kind = Base.Option.value_exn (Loc_env.find_write env kind x.class_loc) in
-          ( find_this ClassInstanceThisLoc,
-            find_this ClassStaticThisLoc,
-            find_this ClassInstanceSuperLoc,
-            find_this ClassStaticSuperLoc
-          )
+          | Infer (fsig, set_asts) -> method_ ~set_asts fsig
         in
 
         (* Bind private fields and methods to the environment *)
@@ -891,27 +879,20 @@ module Make
         x
         |> with_sig ~static:true (fun s ->
                (* process static methods and fields *)
-               iter_methods
-                 (fun (_, f, set_asts, _) -> method_ static_this_default static_super ~set_asts f)
-                 s;
-               SMap.iter (field static_this_default static_super) s.fields;
-               SMap.iter (field static_this_default static_super) s.private_fields
+               iter_methods (fun (_, f, set_asts, _) -> method_ ~set_asts f) s;
+               SMap.iter field s.fields;
+               SMap.iter field s.private_fields
            );
 
         x
         |> with_sig ~static:false (fun s ->
                (* process constructor *)
-               x.constructor
-               |> List.iter (fun (_, fsig, set_asts, _) ->
-                      method_ instance_this_default super ~set_asts fsig
-                  );
+               x.constructor |> List.iter (fun (_, fsig, set_asts, _) -> method_ ~set_asts fsig);
                (* process instance methods and fields *)
-               iter_methods
-                 (fun (_, msig, set_asts, _) -> method_ instance_this_default super ~set_asts msig)
-                 s;
-               SMap.iter (field instance_this_default super) s.fields;
-               SMap.iter (field instance_this_default super) s.private_fields;
-               SMap.iter (field instance_this_default super) s.proto_fields
+               iter_methods (fun (_, msig, set_asts, _) -> method_ ~set_asts msig) s;
+               SMap.iter field s.fields;
+               SMap.iter field s.private_fields;
+               SMap.iter field s.proto_fields
            )
     )
 

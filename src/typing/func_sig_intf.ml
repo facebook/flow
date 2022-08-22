@@ -46,10 +46,6 @@ module type S = sig
 
   val toplevels :
     Context.t ->
-    (* default this *)
-    Type.t option ->
-    (* super *)
-    Type.t option ->
     t ->
     func_params_tast option
     * (ALoc.t, ALoc.t * Type.t) Flow_ast.Function.body option

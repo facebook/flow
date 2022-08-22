@@ -218,7 +218,7 @@ struct
     | [(_, param_t)] -> param_t
     | _ -> failwith "Setter property with unexpected type"
 
-  let toplevels cx _default_this _super x =
+  let toplevels cx x =
     let { T.reason = reason_fn; kind; tparams_map; fparams; body; return_t; _ } = x in
     let body_loc =
       let open Ast.Function in

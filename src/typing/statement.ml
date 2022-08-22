@@ -9222,7 +9222,7 @@ struct
      signature consisting of type parameters, parameter types, parameter names,
      and return type, check the body against that signature by adding `this`
      and super` to the environment, and return the signature. *)
-  and function_decl cx ~func_hint ~needs_this_param ~fun_loc reason func default_this super =
+  and function_decl cx ~func_hint ~needs_this_param ~fun_loc reason func default_this =
     let (func_sig, reconstruct_func) =
       mk_func_sig
         cx
@@ -9236,7 +9236,7 @@ struct
     in
     let save_return = Abnormal.clear_saved Abnormal.Return in
     let save_throw = Abnormal.clear_saved Abnormal.Throw in
-    let (params_ast, body_ast, _) = Func_stmt_sig.toplevels cx default_this super func_sig in
+    let (params_ast, body_ast, _) = Func_stmt_sig.toplevels cx func_sig in
     let default_this =
       match default_this with
       | Some t -> t
@@ -9297,7 +9297,6 @@ struct
           reason
           func
           (Some default_this)
-          None
       in
       (fun_type, reconstruct_ast general)
 
@@ -9309,15 +9308,7 @@ struct
        objects through which the function may be called. *)
     let default_this = None in
     let (fun_type, reconstruct_ast) =
-      function_decl
-        cx
-        ~needs_this_param:false
-        ~func_hint
-        ~fun_loc:None
-        reason
-        func
-        default_this
-        None
+      function_decl cx ~needs_this_param:false ~func_hint ~fun_loc:None reason func default_this
     in
     (fun_type, reconstruct_ast fun_type)
 
