@@ -40,7 +40,7 @@ let rec default_resolve_touts ~flow cx loc u =
   in
   let resolve_elem_action action =
     match action with
-    | ReadElem tvar -> resolve_tvar tvar
+    | ReadElem (_, tvar) -> resolve_tvar tvar
     | WriteElem (_, topt, _) -> map_opt resolve topt
     | CallElem (_, action) -> resolve_method_action action
   in
@@ -91,7 +91,7 @@ let rec default_resolve_touts ~flow cx loc u =
   | TestPropT (_, _, _, _, tvar) ->
     resolve_tvar tvar
   | SetElemT (_, _, _, _, _, topt) -> map_opt resolve topt
-  | GetElemT (_, _, _, t) -> resolve_tvar t
+  | GetElemT (_, _, _, _, t) -> resolve_tvar t
   | CallElemT (_, _, _, action) -> resolve_method_action action
   | GetStaticsT tvar
   | GetProtoT (_, tvar) ->

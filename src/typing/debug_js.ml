@@ -736,7 +736,7 @@ and dump_use_t_ (depth, tvars) cx t =
     | CheckUntypedImportT _ -> p t
     | DebugPrintT _ -> p t
     | DebugSleepT _ -> p t
-    | ElemT _ -> p t
+    | ElemT (_use_op, _reason, obj, _access) -> p ~extra:(spf "obj: %s" (kid obj)) t
     | ExportNamedT (_, tmap, _export_kind, arg) ->
       p
         t
@@ -755,7 +755,7 @@ and dump_use_t_ (depth, tvars) cx t =
     | ExportTypeT _ -> p t
     | FunImplicitVoidReturnT _ -> p t
     | AssertExportIsTypeT _ -> p t
-    | GetElemT (_, _, ix, (preason, ptvar)) ->
+    | GetElemT (_, _, _, ix, (preason, ptvar)) ->
       p ~extra:(spf "%s, (%s, %s)" (kid ix) (string_of_reason preason) (tvar ptvar)) t
     | GetKeysT _ -> p t
     | GetValuesT _ -> p t

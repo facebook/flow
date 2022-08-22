@@ -499,7 +499,7 @@ module rec TypeTerm : sig
        to initialize the property value, but in order to avoid race conditions we
        need to ensure that reads happen after writes. *)
     | SetElemT of use_op * reason * t * set_mode * t * t option (*tout *)
-    | GetElemT of use_op * reason * t * tvar
+    | GetElemT of use_op * reason * bool (* from annot *) * t * tvar
     | CallElemT of (* call *) reason * (* lookup *) reason * t * method_action
     | GetStaticsT of tvar
     | GetProtoT of reason * tvar
@@ -921,7 +921,7 @@ module rec TypeTerm : sig
     | OptGetPropT of use_op * reason * ident option * propref
     | OptGetPrivatePropT of use_op * reason * string * class_binding list * bool
     | OptTestPropT of use_op * reason * ident * propref
-    | OptGetElemT of use_op * reason * t
+    | OptGetElemT of use_op * reason * bool (* from annot *) * t
     | OptCallElemT of (* call *) reason * (* lookup *) reason * t * opt_method_action
 
   and opt_state =
@@ -1233,7 +1233,7 @@ module rec TypeTerm : sig
      to initialize the property value, but in order to avoid race conditions we
      need to ensure that reads happen after writes. *)
   and elem_action =
-    | ReadElem of tvar
+    | ReadElem of bool (* annot *) * tvar
     | WriteElem of t * t option (* tout *) * set_mode
     | CallElem of reason * method_action
 
@@ -3896,7 +3896,7 @@ let apply_opt_use opt_use t_out =
   | OptGetPropT (u, r, i, p) -> GetPropT (u, r, i, p, t_out)
   | OptGetPrivatePropT (u, r, s, cbs, b) -> GetPrivatePropT (u, r, s, cbs, b, t_out)
   | OptTestPropT (u, r, i, p) -> TestPropT (u, r, i, p, t_out)
-  | OptGetElemT (u, r, t) -> GetElemT (u, r, t, t_out)
+  | OptGetElemT (u, r, a, t) -> GetElemT (u, r, a, t, t_out)
   | OptCallElemT (r1, r2, elt, call) -> CallElemT (r1, r2, elt, apply_opt_action call t_out)
 
 let mk_enum_type ~trust reason enum =

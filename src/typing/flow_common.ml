@@ -211,7 +211,15 @@ module type EVAL = sig
     Context.t -> ?trace:Type.trace -> Type.t -> Type.defer_use_t -> Type.Eval.id -> Type.t
 
   val eval_selector :
-    Context.t -> ?trace:Type.trace -> reason -> Type.t -> Type.selector -> Type.tvar -> int -> unit
+    Context.t ->
+    ?trace:Type.trace ->
+    annot:bool ->
+    reason ->
+    Type.t ->
+    Type.selector ->
+    Type.tvar ->
+    int ->
+    unit
 
   val mk_type_destructor :
     Context.t ->

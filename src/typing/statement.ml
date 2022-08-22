@@ -4805,7 +4805,7 @@ struct
         | (Member { Member._object; property = Member.PropertyExpression index; comments }, _) ->
           let reason = mk_reason (RProperty None) loc in
           let use_op = Op (GetProperty (mk_expression_reason ex)) in
-          let get_opt_use tind _ _ = OptGetElemT (use_op, reason, tind) in
+          let get_opt_use tind _ _ = OptGetElemT (use_op, reason, false (* annot *), tind) in
           let get_mem_t tind reason obj_t =
             Tvar.mk_no_wrap_where cx reason (fun t ->
                 let use = apply_opt_use (get_opt_use tind reason obj_t) t in
