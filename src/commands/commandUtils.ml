@@ -1016,7 +1016,6 @@ let options_flags =
            (optional
               (enum
                  [
-                   ("classic", Options.ClassicEnv []);
                    ("constrain_writes", Options.(SSAEnv Reordered));
                    ("experimental.lti", Options.(SSAEnv Enforced));
                  ]

@@ -744,7 +744,6 @@ module Opts = struct
   let inference_mode_parser =
     string (fun opts s ->
         match s with
-        | "classic" -> Ok { opts with env_mode = Options.ClassicEnv [] }
         | "constrain_writes" -> Ok { opts with env_mode = Options.(SSAEnv Reordered) }
         | "experimental.lti" -> Ok { opts with env_mode = Options.(SSAEnv Enforced) }
         | env_mode -> Error (spf "\"%s\" is not a valid env_mode option" env_mode)
