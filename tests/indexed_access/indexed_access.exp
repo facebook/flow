@@ -700,8 +700,94 @@ References:
               ^^^^^^ [2]
 
 
+Error ---------------------------------------------------------------------------------------------------- unions.js:7:2
 
-Found 48 errors
+Cannot cast `v` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+
+   unions.js:7:2
+   7| (v: string); // error
+       ^
+
+References:
+   unions.js:2:6
+   2|   a: number,
+           ^^^^^^ [1]
+   unions.js:7:5
+   7| (v: string); // error
+          ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- unions.js:8:2
+
+Cannot cast `v` to number because string [1] is incompatible with number [2]. [incompatible-cast]
+
+   unions.js:8:2
+   8| (v: number); // error
+       ^
+
+References:
+   unions.js:3:6
+   3|   b: string,
+           ^^^^^^ [1]
+   unions.js:8:5
+   8| (v: number); // error
+          ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- unions.js:13:5
+
+Cannot assign `true` to `v` because: [incompatible-type]
+ - Either boolean [1] is incompatible with number [2].
+ - Or boolean [1] is incompatible with string [3].
+
+   unions.js:13:5
+   13| v = true; // error
+           ^^^^ [1]
+
+References:
+   unions.js:2:6
+    2|   a: number,
+            ^^^^^^ [2]
+   unions.js:3:6
+    3|   b: string,
+            ^^^^^^ [3]
+
+
+Error --------------------------------------------------------------------------------------------------- unions.js:21:2
+
+Cannot cast `w` to indexed access because string [1] is incompatible with number [2]. [incompatible-cast]
+
+   unions.js:21:2
+   21| (w: M['a']); // error
+        ^
+
+References:
+   unions.js:19:16
+   19| declare var w: W;
+                      ^ [1]
+   unions.js:2:6
+    2|   a: number,
+            ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- unions.js:47:2
+
+Could not decide which case to select, since case 1 [1] may work but if it doesn't case 2 [1] looks promising too. To
+fix add a type annotation to inferred union of array element types (alternatively, provide an annotation to summarize
+the array element type) [2]. [speculation-ambiguous]
+
+   unions.js:47:2
+   47| (['a']: T[Key]); // Expected [speculation-ambiguous] error
+        ^^^^^ [2]
+
+References:
+   unions.js:47:9
+   47| (['a']: T[Key]); // Expected [speculation-ambiguous] error
+               ^^^^^^ [1]
+
+
+
+Found 53 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

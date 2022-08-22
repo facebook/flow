@@ -1981,6 +1981,20 @@ struct
         | (UnionT (_, rep), PredicateT (((MaybeP | NotP MaybeP | ExistsP | NotP ExistsP) as p), t))
           when UnionRep.is_optimized_finally rep ->
           predicate cx trace t l p
+        | (UnionT (_, rep), ElemT (use_op, reason, obj, ReadElem (true (* annot *), tout))) ->
+          let reason = update_desc_reason invalidate_rtype_alias reason in
+          let (t0, (t1, ts)) = UnionRep.members_nel rep in
+          let f t =
+            AnnotT
+              ( reason,
+                Tvar.mk_no_wrap_where cx reason (fun tvar ->
+                    rec_flow cx trace (t, ElemT (use_op, reason, obj, ReadElem (true, tvar)))
+                ),
+                false
+              )
+          in
+          let rep = UnionRep.make (f t0) (f t1) (Base.List.map ts ~f) in
+          rec_flow_t cx trace ~use_op:unknown_use (UnionT (reason, rep), OpenT tout)
         | (UnionT (_, rep), _)
           when match u with
                (* For l.key !== sentinel when sentinel has a union type, don't split the union. This
