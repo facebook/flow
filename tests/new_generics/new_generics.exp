@@ -371,20 +371,6 @@ References:
               ^ [2]
 
 
-Error -------------------------------------------------------------------------------------------- computed_keys.js:12:3
-
-string `foo` [1] is incompatible with `X` [2]. [incompatible-type]
-
-   computed_keys.js:12:3
-   12|   a['foo']; // nope
-         ^^^^^^^^ [1]
-
-References:
-   computed_keys.js:6:8
-    6|   a: {[X]: string},
-              ^ [2]
-
-
 Error -------------------------------------------------------------------------------------------- computed_keys.js:14:5
 
 Cannot assign `42` to `b[y]` because property `lit` is missing in object type [1]. [prop-missing]
@@ -1412,7 +1398,7 @@ References:
 
 
 
-Found 84 errors
+Found 83 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

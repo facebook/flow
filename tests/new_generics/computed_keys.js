@@ -9,7 +9,7 @@ function f<X: string, Y: 'lit', Z: 'prop'>(
   a[x] = 'hi';
   a['foo'] = 'hi'; // nope
   (a[x]: string);
-  a['foo']; // nope
+  a['foo']; // allowed as a result of assignment above
   b[x] = 42; // allowed, just as if x: string
   b[y] = 42; // nope
   b[z] = 42;

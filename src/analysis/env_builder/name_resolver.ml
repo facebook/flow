@@ -2270,7 +2270,18 @@ module Make
         let lookup = RefinementKey.lookup_of_member lhs_member ~allow_optional:false in
         let open Flow_ast.Expression in
         match (lhs_member, lookup) with
-        | ( { Member.property = Member.PropertyIdentifier _ | Member.PropertyPrivateName _; _ },
+        | ( {
+              Member.property =
+                ( Member.PropertyIdentifier _ | Member.PropertyPrivateName _
+                | Member.PropertyExpression
+                    (_, Ast.Expression.Literal { Ast.Literal.value = Ast.Literal.String _; _ })
+                | Member.PropertyExpression
+                    ( _,
+                      Ast.Expression.Literal
+                        { Ast.Literal.value = Ast.Literal.Number _; raw = _; comments = _ }
+                    ) );
+              _;
+            },
             Some lookup
           ) ->
           this#map_val_with_lookup
