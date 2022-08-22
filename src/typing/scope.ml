@@ -218,60 +218,6 @@ module Entry = struct
 
   let state_of_value (value : value_binding) = value.value_state
 
-  (** Given a named entry, return a new Value entry with specific type replaced
-      with general type for non-internal, non-Const value entries. Types, consts
-      and internal vars are read-only, so specific types can be preserved.
-   *)
-  let havoc ?on_call name entry =
-    match entry with
-    | Type _ -> entry
-    | Value ({ kind = Const _; specific = Type.DefT (_, _, Type.EmptyT); _ } as v)
-    | Value ({ kind = Let (_, ConstLike); specific = Type.DefT (_, _, Type.EmptyT); _ } as v)
-    | Value ({ kind = Var ConstLike; specific = Type.DefT (_, _, Type.EmptyT); _ } as v) ->
-      (* cleared consts: see note on Env.reset_current_activation *)
-      if Reason.is_internal_name name then
-        entry
-      else
-        Value { v with specific = TypeUtil.type_t_of_annotated_or_inferred v.general }
-    | Value { kind = Const _; _ }
-    | Value { kind = Let (_, ConstLike); _ }
-    | Value { kind = Var ConstLike; _ } ->
-      entry
-    | Value { kind = Let (_, NotWrittenByClosure); _ }
-    | Value { kind = Var NotWrittenByClosure; _ }
-      when on_call <> None ->
-      entry
-    | Value v ->
-      if Reason.is_internal_name name then
-        entry
-      else
-        let value_state =
-          let open State in
-          match v.value_state with
-          | Declared -> MaybeInitialized
-          | state -> state
-        in
-        (match (on_call, v.closure_writes) with
-        | (Some widen_on_call, Some (_, t, Some provider_t)) ->
-          let t = widen_on_call v.specific t provider_t in
-          Value { v with specific = t; value_state }
-        | (Some widen_on_call, Some (_, t, None)) ->
-          let t = widen_on_call v.specific t v.provider in
-          Value { v with specific = t; value_state }
-        | _ -> Value { v with specific = v.provider; value_state })
-    | Class _ -> entry
-
-  let reset loc name entry =
-    match entry with
-    | Class _
-    | Type _ ->
-      entry
-    | Value v ->
-      if Reason.is_internal_name name then
-        entry
-      else
-        Value { v with specific = Type.EmptyT.at loc |> Type.with_trust Trust.bogus_trust }
-
   let is_lex = function
     | Type _ -> false
     | Class _ -> true
@@ -400,31 +346,6 @@ let havoc_refi key scope =
 (* helper: filter all refis whose expressions involve the given name *)
 let filter_refis_using_propname ~private_ propname refis =
   refis |> Key_map.filter (fun key _ -> not (Key.uses_propname ~private_ propname key))
-
-(* havoc a scope's refinements:
-   if name is passed, clear refis whose expressions involve it.
-   otherwise, clear them all
-*)
-let havoc_refis ?name ~private_ scope =
-  scope.refis <-
-    (match name with
-    | Some name -> scope.refis |> filter_refis_using_propname ~private_ name
-    | None -> Key_map.empty)
-
-(* havoc a scope's refinements: clear all its refis *)
-let havoc_all_refis scope = scope.refis <- Key_map.empty
-
-(* havoc a scope:
-   - clear all refinements
-   - reset specific types of entries to their general types
-*)
-let havoc scope =
-  havoc_all_refis scope;
-  update_entries Entry.havoc scope
-
-let reset loc scope =
-  havoc_all_refis scope;
-  update_entries (Entry.reset loc) scope
 
 let add_declare_func_annot name annot scope =
   scope.declare_func_annots <- SMap.add name annot scope.declare_func_annots

@@ -103,29 +103,6 @@ module Env : Env_sig.S = struct
 
   let in_global_scope _ = Scope.is_global (peek_var_scope ())
 
-  let string_of_env cx env =
-    spf "[ %s ]" (String.concat ";\n" (Base.List.map ~f:(Debug_js.string_of_scope cx) env))
-
-  (* use the passed f to iterate over all scopes *)
-  let iter_scopes f = List.iter f !scopes
-
-  (* apply function f to local scopes: the 0 or more
-     lex scopes between us and the closest var scope,
-     and also that var scope *)
-  let iter_local_scopes f =
-    let rec loop = function
-      | [] -> assert_false "empty scope list"
-      | scope :: scopes ->
-        f scope;
-        (match scope.kind with
-        | LexScope -> loop scopes
-        | _ -> ())
-    in
-    loop !scopes
-
-  (* clone the given scope stack (snapshots entry maps) *)
-  let clone_env scopes = Base.List.map ~f:Scope.clone scopes
-
   let var_scope_kind _ =
     let scope = peek_var_scope () in
     match scope.kind with
@@ -149,11 +126,6 @@ module Env : Env_sig.S = struct
 
   (* whole env *)
 
-  (* clear environment *)
-  let havoc_current_activation () =
-    scopes := [];
-    Changeset.Global.init ()
-
   (* push a new var scope into the environment.
      current env state is stored to cx under scope id *)
   (* TODO maintain changelist here too *)
@@ -162,7 +134,6 @@ module Env : Env_sig.S = struct
     | VarScope _ -> ()
     | _ -> assert_false "push_var_scope on non-var scope");
     scopes := scope :: !scopes;
-    Changeset.Global.push ();
     (* below is ignored, only needed for matching types used by the new env *)
     Ordinary
 
@@ -172,9 +143,7 @@ module Env : Env_sig.S = struct
      note: may require popping accumulated lex scopes *)
   let pop_var_scope _ _ =
     match !scopes with
-    | { kind = VarScope _; _ } :: tail_scopes ->
-      scopes := tail_scopes;
-      Changeset.Global.pop ()
+    | { kind = VarScope _; _ } :: tail_scopes -> scopes := tail_scopes
     | [] -> assert_false "empty scope list"
     | _ -> assert_false "top scope is non-var"
 
@@ -186,10 +155,7 @@ module Env : Env_sig.S = struct
 
   let pop_lex_scope () =
     match !scopes with
-    | { kind = LexScope; id; _ } :: tail_scopes ->
-      (* cull any changelist entries for this scope *)
-      ignore (Changeset.Global.filter_scope_changes id);
-
+    | { kind = LexScope; _ } :: tail_scopes ->
       (* pop *)
       scopes := tail_scopes
     | [] -> assert_false "empty scope list"
@@ -211,9 +177,7 @@ module Env : Env_sig.S = struct
     let rec trunc = function
       | (0, scopes) -> scopes
       | (_, []) -> assert_false "trunc_env: scopes underflow"
-      | (n, scope :: scopes) ->
-        ignore (Changeset.Global.filter_scope_changes scope.id);
-        trunc (n - 1, scopes)
+      | (n, _ :: scopes) -> trunc (n - 1, scopes)
     in
     fun depth ->
       let cur = !scopes in
@@ -222,33 +186,10 @@ module Env : Env_sig.S = struct
   (* initialize a new environment (once per module) *)
   let init_env ?(exclude_syms = NameUtils.Set.empty) cx _ module_scope =
     set_exclude_symbols exclude_syms;
-    havoc_current_activation ();
     let global_scope = Scope.fresh ~var_scope_kind:Global () in
     let (_ : Scope.var_scope_kind) = push_var_scope cx global_scope in
     let (_ : Scope.var_scope_kind) = push_var_scope cx module_scope in
     ()
-
-  let save_excluded_symbols () =
-    let ex = !exclude_symbols in
-    set_exclude_symbols NameUtils.Set.empty;
-    ex
-
-  let restore_excluded_symbols ex = set_exclude_symbols ex
-
-  (* replace the current env with the passed one.
-     envs must be congruent - we measure length as a quick check,
-     with a more thorough check on env merge/copy *)
-  let update_env loc new_scopes =
-    if List.length new_scopes != List.length (peek_env ()) then
-      assert_false
-        (spf
-           "update_env %s: unequal length scope lists, old %d new %d "
-           (string_of_aloc loc)
-           (List.length new_scopes)
-           (List.length (peek_env ()))
-        );
-
-    scopes := new_scopes
 
   (* end of basic env API *)
 
@@ -487,8 +428,6 @@ module Env : Env_sig.S = struct
     let { Loc_env.var_info = { Env_api.providers; _ }; _ } = Context.environment cx in
     Env_api.Provider_api.is_provider providers id_loc
 
-  let install_provider _cx _t _name _loc = ()
-
   let constrain_by_provider _cx ~use_op:_ _t _name _loc = ()
 
   let can_shadow cx name prev loc =
@@ -622,13 +561,6 @@ module Env : Env_sig.S = struct
     let (spec, closure_writes, provider) =
       mk_havoc cx name loc (TypeUtil.type_t_of_annotated_or_inferred t) Entry.Havocable
     in
-    begin
-      match (state, kind) with
-      | (State.Initialized, Entry.(ParamBinding | CatchParamBinding)) ->
-        (* If this variable starts off initialized then init_entry does not need to be called later, which is where normally providers are installed. *)
-        install_provider cx (TypeUtil.type_t_of_annotated_or_inferred t) name loc
-      | _ -> ()
-    end;
     bind_entry cx name (Entry.new_let t ~kind ~loc ~state ~spec ?closure_writes ~provider) loc
 
   let bind_fun ?(state = State.Declared) cx name t =
@@ -771,7 +703,6 @@ module Env : Env_sig.S = struct
         | ( Const _,
             Value ({ Entry.kind = Const _; value_state = State.Undeclared | State.Declared; _ } as v)
           ) ->
-          Changeset.Global.change_var (scope.id, name, Changeset.Write);
           let general = TypeUtil.type_t_of_annotated_or_inferred v.general in
           if specific != general then Flow.flow cx (specific, UseT (use_op, general));
 
@@ -792,7 +723,6 @@ module Env : Env_sig.S = struct
             else
               specific
           in
-          install_provider cx specific name loc;
 
           let new_entry = initialized_value_entry specific v in
           Scope.add_entry name new_entry scope
@@ -844,8 +774,6 @@ module Env : Env_sig.S = struct
         | Value
             ({ Entry.kind = Let _ | Const _; value_state = State.(Undeclared | Declared); _ } as v)
           ->
-          Changeset.Global.change_var (scope.id, name, Changeset.Write);
-          install_provider cx (TypeUtil.type_t_of_annotated_or_inferred v.general) name loc;
           let entry =
             initialized_value_entry (TypeUtil.type_t_of_annotated_or_inferred v.general) v
           in
@@ -954,7 +882,6 @@ module Env : Env_sig.S = struct
           tdz_error cx name loc v;
           AnyT.at (AnyError None) value_declare_loc
         | _ ->
-          Changeset.Global.change_var (scope.id, name, Changeset.Read);
           let (s, g) = value_entry_types ~lookup_mode scope v in
           if specific then
             s
@@ -993,12 +920,6 @@ module Env : Env_sig.S = struct
   let get_internal_var cx name loc = query_var cx (internal_name name) loc
 
   let get_module_exports cx loc = get_internal_var cx "exports" loc
-
-  let get_var_annotation cx name loc =
-    let (_, entry) = find_entry cx name loc in
-    match entry with
-    | Entry.Value { Entry.general = Annotated t; _ } -> Some t
-    | _ -> None
 
   (* get var's general type - for annotated vars, this is the
      annotated type, and for others it's the union of all
@@ -1132,7 +1053,6 @@ module Env : Env_sig.S = struct
           None
         | Value ({ Entry.kind = Let _ | Var _; closure_writes; general; _ } as v) ->
           let change = (scope.id, name, op) in
-          Changeset.Global.change_var change;
           begin
             match (closure_writes, op) with
             | (_, Changeset.Refine) -> ()
@@ -1143,8 +1063,6 @@ module Env : Env_sig.S = struct
             | (_, Changeset.Write) ->
               Flow.flow cx (specific, UseT (use_op, Entry.general_of_value v))
           end;
-
-          install_provider cx specific name loc;
 
           begin
             match (general, op) with
@@ -1192,553 +1110,21 @@ module Env : Env_sig.S = struct
 
   let set_module_exports cx loc t = set_internal_var cx "exports" t loc
 
-  (* update var by refinement test *)
-  let refine_var = update_var Changeset.Refine ~use_op:(Op (Internal Refinement))
-
-  (* set const's specific type to reflect a refinement test (internal) *)
-  let refine_const cx name specific loc =
-    let (scope, entry) = find_entry cx name loc in
-    Entry.(
-      match entry with
-      | Value ({ Entry.kind = Const _; value_state = State.Undeclared; _ } as v)
-        when same_activation scope ->
-        tdz_error cx name loc v;
-        None
-      | Value ({ Entry.kind = Const _; _ } as v) ->
-        let change = (scope.id, name, Changeset.Refine) in
-        Changeset.Global.change_var change;
-        let update = Value { v with value_state = State.Initialized; specific } in
-        Scope.add_entry name update scope;
-        Some change
-      | _ ->
-        assert_false
-          (spf
-             "refine_const called on %s %s"
-             (Entry.string_of_kind entry)
-             (display_string_of_name name)
-          )
-    )
-
-  (* given a list of envs (scope lists), return true iff all envs are
-     the same length and all scope ids and kinds match *)
-  let envs_congruent envs =
-    let rec check_scopes envs =
-      let env0 = List.hd envs in
-      env0 = []
-      ||
-      let scope0 = List.hd env0 in
-      let check_scope env =
-        let scope = List.hd env in
-        scope.id = scope0.id && scope.kind = scope0.kind
-      in
-      List.for_all check_scope (List.tl envs) && check_scopes (Base.List.map ~f:List.tl envs)
-    in
-    let envs = Base.List.remove_consecutive_duplicates ~equal:( == ) envs in
-    List.length envs <= 1
-    ||
-    let len = List.length (List.hd envs) in
-    List.for_all (fun env -> List.length env = len) (List.tl envs) && check_scopes envs
-
-  (* find scopes with a given id in a list of envs.
-     envs are assumed congruent amd assumed to contain scope id *)
-  let rec find_scope cx loc envs scope_id =
-    match envs with
-    | (scope0 :: _) :: _ ->
-      if scope0.id = scope_id then
-        List.(map hd envs)
-      else
-        find_scope cx loc List.(map tl envs) scope_id
-    | _ ->
-      assert_false
-        (spf
-           "find_scopes %s: scope %d not found. head env %s"
-           (string_of_aloc loc)
-           scope_id
-           (string_of_env cx (List.hd envs))
-        )
-
-  (* The following function takes a changset and a triple of environments -
-       original and two derivations - and merges the bindings indicated by
-     changeset keys from the derivations into the original. *)
-  let merge_env =
-    (* find scope triple in env triple *)
-    let find_scope_triple cx loc (env0, env1, env2) id =
-      let lst = find_scope cx loc [env0; env1; env2] id in
-      List.(nth lst 0, nth lst 1, nth lst 2)
-    in
-    let create_union cx loc name l1 l2 =
-      let reason = mk_reason name loc in
-      Tvar.mk_where cx reason (fun tvar ->
-          Flow.flow cx (l1, UseT (Op (Internal MergeEnv), tvar));
-          Flow.flow cx (l2, UseT (Op (Internal MergeEnv), tvar))
-      )
-    in
-    (* merge_entry helper - calculate new specific type *)
-    let merge_specific cx loc name (specific0, general0) specific1 specific2 =
-      (* if both children are unchanged, or 1 child is unchanged and the other
-         is bottom (EmptyT), then we can avoid creating a merged specific *)
-      if
-        (specific0 = specific1 && (specific0 = specific2 || is_bot specific2))
-        || (specific0 = specific2 && is_bot specific1)
-      then
-        specific0
-      (* child has reverted to original - shortcut *)
-      else if specific1 = general0 || specific2 = general0 then
-        general0
-      (* general case *)
-      else
-        create_union cx loc name specific1 specific2
-    in
-    (* propagate var state updates from child entries *)
-    let merge_states orig child1 child2 =
-      Entry.(
-        match orig.Entry.kind with
-        | Var _
-        | Let _
-          when child1.value_state = State.Initialized && child2.value_state = State.Initialized ->
-          (* if both branches have initialized, we can set parent state *)
-          State.Initialized
-        | Var _
-        | Let _
-          when child1.value_state >= State.Declared
-               && child2.value_state >= State.Declared
-               && (child1.value_state >= State.MaybeInitialized
-                  || child2.value_state >= State.MaybeInitialized
-                  ) ->
-          (* if either branch has initialized, we can set parent state *)
-          State.MaybeInitialized
-        | _ -> orig.value_state
-      )
-    in
-    let merge_entry cx loc envs ((scope_id, name, _) as entry_ref) =
-      let (scope0, scope1, scope2) = find_scope_triple cx loc envs scope_id in
-      let get = get_entry name in
-      Entry.(
-        match (get scope0, get scope1, get scope2) with
-        (* merge child var and let types back to original *)
-        | (Some (Value orig), Some (Value child1), Some (Value child2)) ->
-          let { specific = s0; general = g0; _ } = orig in
-          let { specific = s1; _ } = child1 in
-          let { specific = s2; _ } = child2 in
-          let specific =
-            merge_specific
-              cx
-              loc
-              (RIdentifier name)
-              (s0, TypeUtil.type_t_of_annotated_or_inferred g0)
-              s1
-              s2
-          in
-          let value_state = merge_states orig child1 child2 in
-          (* replace entry if anything changed *)
-          if specific == s0 && value_state = orig.value_state then
-            ()
-          else
-            let e = Entry.Value { orig with Entry.specific; value_state } in
-            add_entry name e scope0
-        (* type aliases can't be refined or reassigned, shouldn't be here *)
-        | (Some (Type _), Some (Type _), Some (Type _)) ->
-          assert_false
-            (spf
-               "merge_env %s: type alias %s found in changelist"
-               (string_of_aloc loc)
-               (display_string_of_name name)
-            )
-        (* global lookups may leave uneven new entries, which we can forget *)
-        | (_, _, _) when is_global scope0 -> ()
-        (* missing completely from non-global scope *)
-        | (None, None, None) ->
-          assert_false
-            (spf
-               "%smerge_entry %s %s: missing from scopes:\n%s\n%s\n%s"
-               (Context.pid_prefix cx)
-               (string_of_aloc loc)
-               (Changeset.string_of_entry_ref entry_ref)
-               (Debug_js.string_of_scope cx scope0)
-               (Debug_js.string_of_scope cx scope1)
-               (Debug_js.string_of_scope cx scope2)
-            )
-        (* a newly created entry may exist in one lex child -
-           this pattern is due to our current switch handling *)
-        | (None, Some (Value _ as entry), None) when Scope.is_lex scope1 ->
-          add_entry name entry scope0
-        | (None, None, Some (Value _ as entry)) when Scope.is_lex scope2 ->
-          add_entry name entry scope0
-        (* otherwise, non-refinement uneven distributions are asserts. *)
-        | (orig, child1, child2) ->
-          let print_entry_kind_opt = function
-            | None -> "None"
-            | Some e -> spf "Some %s" Entry.(string_of_kind e)
-          in
-          assert_false
-            (spf
-               "merge_env %s: non-uniform distribution of entry %s: %s, %s, %s"
-               (string_of_aloc loc)
-               (display_string_of_name name)
-               (print_entry_kind_opt orig)
-               (print_entry_kind_opt child1)
-               (print_entry_kind_opt child2)
-            )
-      )
-    in
-    let merge_refi cx loc envs (scope_id, key, _) =
-      let (scope0, scope1, scope2) = find_scope_triple cx loc envs scope_id in
-      let get = get_refi key in
-      match (get scope0, get scope1, get scope2) with
-      (* evenly distributed refinements are merged *)
-      | (Some base, Some child1, Some child2) ->
-        let name = Key.reason_desc key in
-        let refined =
-          merge_specific cx loc name (base.refined, base.original) child1.refined child2.refined
-        in
-        if refined == base.refined then
-          ()
-        else
-          add_refi key { base with refined } scope0
-      (* refi was introduced in both children *)
-      | (None, Some child1, Some child2) ->
-        let name = Key.reason_desc key in
-        let refined = create_union cx loc name child1.refined child2.refined in
-        let original = create_union cx loc name child1.original child2.original in
-        let refi = { refi_loc = loc; refined; original } in
-        add_refi key refi scope0
-      (* refi was cleared in a child env. clear from original *)
-      | (Some _, _, _) -> remove_refi key scope0
-      (* refi was introduced - and possibly also removed by havoc -
-         after envs diverged *)
-      | (None, _, _) -> ()
-    in
-    (* merge entries and refis found in changeset *)
-    fun cx loc (env0, env1, env2) changeset ->
-      if not (envs_congruent [env0; env1; env2]) then
-        assert_false
-          (spf
-             "merge_env %s: envs not congruent: %d %d %d"
-             (string_of_aloc loc)
-             (List.length env0)
-             (List.length env1)
-             (List.length env2)
-          );
-      changeset
-      |> Changeset.iter_type_updates
-           (merge_entry cx loc (env0, env1, env2))
-           (merge_refi cx loc (env0, env1, env2))
-
-  (* copy changes from env2 into env1 *)
-  let copy_env =
-    (* find sscope pair in env pair *)
-    let find_scope_pair cx loc (env0, env1) id =
-      let lst = find_scope cx loc [env0; env1] id in
-      List.(nth lst 0, nth lst 1)
-    in
-    (* look for and copy entry, starting in topmost scope *)
-    let copy_entry cx loc envs (scope_id, name, _) =
-      let (scope1, scope2) = find_scope_pair cx loc envs scope_id in
-      let get = get_entry name in
-      Entry.(
-        match (get scope1, get scope2) with
-        (* for values, flow env2's specific type into env1's specific type *)
-        | (Some (Value v1), Some (Value v2)) ->
-          (* flow child2's specific type to child1 in place *)
-          Flow.flow cx (v2.specific, UseT (Op (Internal CopyEnv), v1.specific));
-
-          (* update state *)
-          if v1.value_state < State.Initialized && v2.value_state >= State.MaybeInitialized then
-            let new_entry = Value { v1 with value_state = State.MaybeInitialized } in
-            add_entry name new_entry scope1
-        (* type aliases shouldn't be here *)
-        | (Some (Type _), Some (Type _)) ->
-          assert_false
-            (spf
-               "copy_env %s: type alias %s found in changelist"
-               (string_of_aloc loc)
-               (display_string_of_name name)
-            )
-        (* global lookups may leave new entries in env2, or orphan changes *)
-        (* ...which we can forget *)
-        | (None, _) when is_global scope1 -> ()
-        (* changeset entry exists only in lex scope *)
-        | (Some (Value _), None) when Scope.is_lex scope1 -> ()
-        | (None, Some (Value _ as entry)) when Scope.is_lex scope2 -> add_entry name entry scope1
-        (* uneven distributions *)
-        | (entry1, entry2) ->
-          let print_entry_kind_opt = function
-            | None -> "None"
-            | Some e -> spf "Some %s" (Entry.string_of_kind e)
-          in
-          assert_false
-            (spf
-               "copy_env %s: non-uniform distribution of entry %s: %s, %s"
-               (string_of_aloc loc)
-               (display_string_of_name name)
-               (print_entry_kind_opt entry1)
-               (print_entry_kind_opt entry2)
-            )
-      )
-    in
-    (* look for and copy refinement in top scope only *)
-    let copy_refi cx loc envs (scope_id, key, _) =
-      let (scope0, scope1) = find_scope_pair cx loc envs scope_id in
-      let get = get_refi key in
-      match (get scope0, get scope1) with
-      (* flow child refi's type back to parent *)
-      | (Some { refined = t1; _ }, Some { refined = t2; _ }) ->
-        Flow.flow cx (t2, UseT (Op (Internal CopyEnv), t1))
-      (* uneven cases imply refi was added after splitting: remove *)
-      | _ -> ()
-    in
-    (* copy entries and refis bound to names and keys, respectively *)
-    fun cx loc (env1, env2) changeset ->
-      if envs_congruent [env1; env2] then
-        ()
-      else
-        assert_false (spf "copy_env %s: envs not congruent" (string_of_aloc loc));
-      changeset
-      |> Changeset.iter_type_updates (copy_entry cx loc (env1, env2)) (copy_refi cx loc (env1, env2))
-
-  (* in the top scope, convert specific types to tvars with former
-     specific type as incoming lower bound, and general type as
-     upper bound. This prepares the specific type for later merging
-     during path-dependent analysis.
-  *)
-  let widen_env =
-    let widened cx loc name specific general =
-      if specific = general then
-        None
-      else
-        let reason = mk_reason name loc in
-        let tvar = Tvar.mk cx reason in
-        Flow.flow cx (specific, UseT (Op (Internal WidenEnv), tvar));
-        Flow.flow cx (tvar, UseT (Op (Internal WidenEnv), general));
-        Some tvar
-    in
-    let widen_var
-        cx loc name ({ Entry.specific; general = Annotated general | Inferred general; _ } as var) =
-      match widened cx loc name specific general with
-      | None -> var
-      | Some specific -> { var with Entry.specific }
-    in
-    let widen_refi cx loc name ({ refined; original; _ } as refi) =
-      match widened cx loc name refined original with
-      | None -> refi
-      | Some refined -> { refi with refined }
-    in
-    fun cx loc ->
-      iter_local_scopes (fun scope ->
-          scope
-          |> Scope.update_entries
-               Entry.(
-                 fun name -> function
-                   | Value var -> Value (widen_var cx loc (RIdentifier name) var)
-                   | entry -> entry
-               );
-          scope |> Scope.update_refis (fun key refi -> widen_refi cx loc (Key.reason_desc key) refi)
-      )
-
   (* The protocol around havoc has changed a few times.
      The following function used to do most of the work, but is now subsumed by
      havoc_ctx, and is now used only to clear the environment when looking at
      a function body. Also see below. *)
 
-  (* clear refinement informnation for all binding entries in env *)
-  let havoc_all () = iter_scopes Scope.havoc
-
-  (* set specific type of every non-internal var *and const*
-     in top activation to undefined, and clear heap refinements.
-     Note: this operation is needed by our control flow handling, which is
-     left over from the earlier, looser model. To properly simulate early exits,
-     all entries including consts must have their specific entries set to EmptyT.
-     TODO rework the early-exit stuff to not break invariants. Until then it'll
-     remain a source of bugs.
-  *)
-  let reset_current_activation loc = iter_local_scopes (Scope.reset loc)
-
-  (* clear refinement info for (topmost bindings of) given names in env *)
-  let havoc_vars =
-    Scope.(
-      (* clear specific info for (topmost binding of) given var in env *)
-      let havoc_entry (_, name, _) =
-        let rec loop = function
-          | [] -> ()
-          | scope :: scopes ->
-            (match get_entry name scope with
-            | Some entry ->
-              let entry = Entry.havoc name entry in
-              add_entry name entry scope
-            | None -> loop scopes)
-        in
-        loop !scopes
-      in
-      (* clear refinement for (topmost binding of) given key in env *)
-      let havoc_refi (_, key, _) =
-        let rec loop = function
-          | [] -> ()
-          | scope :: scopes ->
-            (match get_refi key scope with
-            | Some _ -> remove_refi key scope
-            | None -> loop scopes)
-        in
-        loop !scopes
-      in
-      Changeset.iter_type_updates havoc_entry havoc_refi
-    )
-
-  (* Clear all heap refinements (refis) in env.
-
-     Refinements on names bound directly in a scope are left
-     untouched; for those, see [havoc_local_refinements]. *)
-  let havoc_heap_refinements () =
-    iter_scopes (fun scope ->
-        if Changeset.Global.is_active () then
-          scope
-          |> Scope.iter_refis (fun key _ ->
-                 Changeset.Global.change_refi (scope.id, key, Changeset.Write)
-             );
-        Scope.havoc_all_refis scope
-    )
-
-  let havoc_local_refinements ?(all = false) cx =
-    iter_scopes (fun scope ->
-        Scope.update_entries
-          (fun name entry ->
-            let entry' =
-              if all then
-                Entry.havoc name entry
-              else
-                Entry.havoc
-                  ~on_call:(fun specific t general ->
-                    if
-                      specific == general
-                      (* We already know t ~> general, so specific | t = general *)
-                    then
-                      general
-                    else
-                      let (_, tvar_t) = open_tvar t in
-                      let constraints_t = Context.find_graph cx tvar_t in
-                      match (specific, constraints_t) with
-                      | (OpenT (_, tvar_specific), Constraint.Unresolved bounds_t)
-                        when IMap.mem tvar_specific bounds_t.Constraint.uppertvars ->
-                        (* If t ~> specific, then specific | t = specific *)
-                        specific
-                      | _ ->
-                        (* Compute specific | t = tvar where specific, t ~> tvar ~> general *)
-                        let tvar = Tvar.mk cx (reason_of_t t) in
-                        Flow.flow cx (specific, UseT (Op (Internal WidenEnv), tvar));
-                        Flow.flow cx (t, UseT (Op (Internal WidenEnv), tvar));
-                        Flow.flow cx (tvar, UseT (Op (Internal WidenEnv), general));
-                        tvar)
-                  name
-                  entry
-            in
-            ( if entry' != entry then
-              let entry_ref = (scope.id, name, Changeset.Write) in
-              Changeset.(if Global.is_active () then Global.change_var entry_ref)
-            );
-            entry')
-          scope
-    )
-
-  let havoc_heap_refinements_with_propname ~private_ name =
-    iter_scopes (Scope.havoc_refis ~private_ ~name)
-
-  (* The following functions are used to narrow the type of variables
-     based on dynamic checks. *)
-
-  (* Directly refine an expression's type to t. The refinement is
-     installed into the same scope where the object is bound. A
-     refinement may already be present in this scope - if so, we
-     overwrite it.
-
-     However note that we do so at a low level, rather than by using the
-     standard set_var mechanism. This is to avoid unwanted reentrancy:
-     set_var calls flow (specific, general) to model the effect of a
-     variable assignment in user code, and this in certain cases
-     (broadly, assignment of function values) may provoke havoc_ctx
-     into clearing the refinement we're in the process of installing.
-  *)
   let add_heap_refinement op key refi_loc refined original =
     let refi = { refi_loc; refined; original } in
     let (base, _) = key in
     let (scope, _) = find_entry_in_var_scope base in
     let change = (scope.id, key, op) in
-    Changeset.Global.change_refi change;
     Scope.add_refi key refi scope;
     change
 
   let set_expr _cx k l ~refined:t1 ~original:t2 =
     add_heap_refinement Changeset.Write k l t1 t2 |> ignore
-
-  let refine_expr = add_heap_refinement Changeset.Refine
-
-  (* add predicate refinements from given preds map to environment.
-     returns changeset containing all refinements added to env.
-     note: orig_types maps names to unrefined types. this param is
-     only necessary for fresh pseudovars like heap refinements -
-     others can be obtained via query_var.
-  *)
-  let refine_with_preds cx loc preds orig_types =
-    let check_instanceof_subtypes ~general_type pred t =
-      match pred with
-      | LeftP (InstanceofTest, _) -> Context.add_literal_subtypes cx (t, general_type)
-      | _ -> ()
-    in
-    let refine_type orig_type pred refined_type =
-      Flow.flow cx (orig_type, PredicateT (pred, refined_type))
-    in
-    let mk_refi_type orig_type pred refi_reason =
-      refine_type orig_type pred |> Tvar.mk_no_wrap_where cx refi_reason
-    in
-    let refine_with_pred key pred acc =
-      let refi_reason = mk_reason (RRefined (Key.reason_desc key)) loc in
-      match key with
-      (* for real consts/lets/vars, we model assignment/initialization *)
-      | ((OrdinaryName _ as name), []) ->
-        Entry.(
-          (match find_entry cx name loc with
-          | (_, Value v) ->
-            let orig_type = query_var cx name loc in
-            let general_type = query_var_non_specific cx name loc in
-            let refi_type = mk_refi_type orig_type pred refi_reason in
-            check_instanceof_subtypes ~general_type pred refi_type;
-            let refine =
-              match Entry.kind_of_value v with
-              | Const _ -> refine_const
-              | _ -> refine_var
-            in
-            begin
-              match refine cx name refi_type loc with
-              | Some change -> Changeset.add_var change acc
-              | None -> acc
-            end
-          | (_, _) ->
-            Flow.add_output cx (Error_message.ERefineAsValue (refi_reason, name));
-            acc)
-        )
-      (* for heap refinements, we just add new entries *)
-      | _ ->
-        let orig_type = Key_map.find key orig_types in
-        let refi_type = mk_refi_type orig_type pred refi_reason in
-        let change = refine_expr key loc refi_type orig_type in
-        Changeset.add_refi change acc
-    in
-    Key_map.fold refine_with_pred preds Changeset.empty
-
-  (* run the given function in a clone of the current environment
-     augmented by the given refinement map, then merge the final
-     state of the cloned environment back into the reinstated
-     original *)
-  let in_refined_env cx loc preds orig_types f =
-    let oldset = Changeset.Global.clear () in
-    let orig_env = peek_env () in
-    let new_env = clone_env orig_env in
-    update_env loc new_env;
-    let _ = refine_with_preds cx loc preds orig_types in
-    let result = f () in
-    let newset = Changeset.Global.merge oldset in
-    merge_env cx loc (orig_env, orig_env, new_env) newset;
-    update_env loc orig_env;
-
-    result
 
   let record_expression_type_if_needed _ _ _ _ = ()
 

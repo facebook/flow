@@ -487,7 +487,6 @@ and internal_error =
   | OptionalMethod
   | PredFunWithoutParamNames
   | UnsupportedGuardPredicate of string
-  | BreakEnvMissingForCase
   | PropertyDescriptorPropertyCannotBeRead
   | ForInLHS
   | ForOfLHS
@@ -1560,7 +1559,6 @@ let string_of_internal_error = function
   | OptionalMethod -> "optional methods are not supported"
   | PredFunWithoutParamNames -> "FunT -> FunT no params"
   | UnsupportedGuardPredicate pred -> spf "unsupported guard predicate (%s)" pred
-  | BreakEnvMissingForCase -> "break env missing for case"
   | PropertyDescriptorPropertyCannotBeRead -> "unexpected property in properties object"
   | ForInLHS -> "unexpected LHS in for...in"
   | ForOfLHS -> "unexpected LHS in for...of"

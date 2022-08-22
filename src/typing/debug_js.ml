@@ -1188,7 +1188,6 @@ let dump_error_message =
     | OptionalMethod -> "OptionalMethod"
     | PredFunWithoutParamNames -> "PredFunWithoutParamNames"
     | UnsupportedGuardPredicate _ -> "UnsupportedGuardPredicate"
-    | BreakEnvMissingForCase -> "BreakEnvMissingForCase"
     | PropertyDescriptorPropertyCannotBeRead -> "PropertyDescriptorPropertyCannotBeRead"
     | ForInLHS -> "ForInLHS"
     | ForOfLHS -> "ForOfLHS"

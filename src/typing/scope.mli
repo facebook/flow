@@ -126,10 +126,6 @@ module Entry : sig
 
   val state_of_value : value_binding -> State.t
 
-  val havoc : ?on_call:(Type.t -> Type.t -> Type.t -> Type.t) -> Reason.name -> t -> t
-
-  val reset : ALoc.t -> Reason.name -> t -> t
-
   val is_lex : t -> bool
 end
 
@@ -196,14 +192,6 @@ val get_refi : Key_map.key -> t -> refi_binding option
 val havoc_refi : Key_map.key -> t -> unit
 
 val filter_refis_using_propname : private_:bool -> string -> 'a Key_map.t -> 'a Key_map.t
-
-val havoc_refis : ?name:string -> private_:bool -> t -> unit
-
-val havoc_all_refis : t -> unit
-
-val havoc : t -> unit
-
-val reset : ALoc.t -> t -> unit
 
 val add_declare_func_annot :
   string -> (ALoc.t, ALoc.t * Type.t) Flow_ast.Type.annotation -> t -> unit

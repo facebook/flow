@@ -228,10 +228,6 @@ struct
       | None -> ALoc.none
     in
     let reason = mk_reason RFunctionBody body_loc in
-    let env = Env.peek_env () in
-    let new_env = Env.clone_env env in
-    Env.update_env body_loc new_env;
-    Env.havoc_all ();
 
     (* create and prepopulate function scope *)
     let function_scope =
@@ -532,8 +528,6 @@ struct
     );
 
     Env.pop_var_scope cx prev_scope_kind;
-
-    Env.update_env body_loc env;
 
     (* return a tuple of (function body AST option, field initializer AST option).
        - the function body option is Some _ if the Param sig's body was Some, and

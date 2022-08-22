@@ -120,39 +120,6 @@ module Make (Env : Env_sig.S) : Abnormal_sig.S with module Env := Env = struct
 
   (********************************************************************)
 
-  (** at some points we need to record control flow directives in addition
-    to responding to them. *)
-
-  module AbnormalMap : WrappedMap.S with type key = t = WrappedMap.Make (struct
-    type abnormal = t
-
-    type t = abnormal
-
-    let compare = Stdlib.compare
-  end)
-
-  let abnormals : Env.t AbnormalMap.t ref = ref AbnormalMap.empty
-
-  (** record the appearance of a control flow directive.
-    associate the given env if passed *)
-  let save ?(env = []) abnormal = abnormals := AbnormalMap.add abnormal env !abnormals
-
-  (** set or remove a given control flow directive's value,
-    and return the current one *)
-  let swap_saved abnormal value =
-    let old = AbnormalMap.find_opt abnormal !abnormals in
-    ( if old <> value then
-      abnormals :=
-        match value with
-        | None -> AbnormalMap.remove abnormal !abnormals
-        | Some env -> AbnormalMap.add abnormal env !abnormals
-    );
-    old
-
-  (** remove a given control flow directive's value,
-    and return the current one *)
-  let clear_saved abnormal = swap_saved abnormal None
-
   let try_with_abnormal_exn ~f ~on_abnormal_exn () =
     try f () with
     | Exn (payload, t) -> on_abnormal_exn (payload, t)

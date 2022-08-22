@@ -23,14 +23,6 @@ module type S = sig
 
   val in_global_scope : Context.t -> bool
 
-  val is_excluded : Reason.name -> bool
-
-  val peek_env : unit -> t
-
-  val clone_env : t -> t
-
-  val string_of_env : Context.t -> t -> string
-
   val var_scope_kind : Context.t -> Scope.var_scope_kind
 
   val in_async_scope : Context.t -> bool
@@ -55,12 +47,6 @@ module type S = sig
   val trunc_env : int -> unit
 
   val init_env : ?exclude_syms:NameUtils.Set.t -> Context.t -> ALoc.t -> Scope.t -> unit
-
-  val update_env : ALoc.t -> t -> unit
-
-  val save_excluded_symbols : unit -> NameUtils.Set.t
-
-  val restore_excluded_symbols : NameUtils.Set.t -> unit
 
   (***)
 
@@ -167,23 +153,15 @@ module type S = sig
 
   val is_provider : Context.t -> ALoc.t -> bool
 
-  val install_provider : Context.t -> Type.t -> Reason.name -> ALoc.t -> unit
-
   val local_scope_entry_exists : Context.t -> ALoc.t -> string -> bool
 
   val is_global_var : Context.t -> string -> ALoc.t -> bool
-
-  val get_current_env_refi : Key.t -> Scope.refi_binding option
 
   val get_class_entries : Context.t -> Type.class_binding list
 
   val get_var : ?lookup_mode:LookupMode.t -> Context.t -> string -> ALoc.t -> Type.t
 
-  val get_internal_var : Context.t -> string -> ALoc.t -> Type.t
-
   val get_module_exports : Context.t -> ALoc.t -> Type.t
-
-  val get_var_annotation : Context.t -> Reason.name -> ALoc.t -> Type.t option
 
   val get_var_declared_type :
     ?lookup_mode:LookupMode.t ->
@@ -235,37 +213,9 @@ module type S = sig
 
   val set_var : Context.t -> use_op:Type.use_op -> string -> Type.t -> ALoc.t -> unit
 
-  val set_internal_var : Context.t -> string -> Type.t -> ALoc.t -> unit
-
   val set_module_exports : Context.t -> ALoc.t -> Type.t -> unit
 
   val set_expr : Context.t -> Key.t -> ALoc.t -> refined:Type.t -> original:Type.t -> unit
-
-  val refine_expr : Key.t -> ALoc.t -> Type.t -> Type.t -> int * Key.t * Changeset.op
-
-  val refine_with_preds :
-    Context.t -> ALoc.t -> Type.predicate Key_map.t -> Type.t Key_map.t -> Changeset.t
-
-  val in_refined_env :
-    Context.t -> ALoc.t -> Type.predicate Key_map.t -> Type.t Key_map.t -> (unit -> 'a) -> 'a
-
-  val merge_env : Context.t -> ALoc.t -> t * t * t -> Changeset.t -> unit
-
-  val widen_env : Context.t -> ALoc.t -> unit
-
-  val copy_env : Context.t -> ALoc.t -> t * t -> Changeset.t -> unit
-
-  val havoc_all : unit -> unit
-
-  val reset_current_activation : ALoc.t -> unit
-
-  val havoc_vars : Changeset.t -> unit
-
-  val havoc_heap_refinements : unit -> unit
-
-  val havoc_local_refinements : ?all:bool -> Context.t -> unit
-
-  val havoc_heap_refinements_with_propname : private_:bool -> string -> unit
 
   val get_refinement : Context.t -> Key.t -> ALoc.t -> Type.t option
 

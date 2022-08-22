@@ -150,7 +150,7 @@ module Make
     Func_class_sig_types.Class.Make (Func_type_params_config_types) (Func_type_params_types)
       (Func_type_sig_types)
   module Class_type_sig =
-    Class_sig.Make (Env) (Abnormal) (Func_type_params_config_types) (Func_type_params_config)
+    Class_sig.Make (Env) (Func_type_params_config_types) (Func_type_params_config)
       (Func_type_params)
       (Func_type_sig)
       (Class_type_sig_types)

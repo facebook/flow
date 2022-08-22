@@ -58,42 +58,6 @@ module New_env : S = struct
 
   let get_global_value_type = Old_env.get_global_value_type
 
-  let is_excluded = Old_env.is_excluded
-
-  let peek_env = Old_env.peek_env
-
-  let merge_env = Old_env.merge_env
-
-  let update_env = Old_env.update_env
-
-  let clone_env = Old_env.clone_env
-
-  let copy_env = Old_env.copy_env
-
-  let widen_env = Old_env.widen_env
-
-  let havoc_heap_refinements_with_propname = Old_env.havoc_heap_refinements_with_propname
-
-  let havoc_local_refinements = Old_env.havoc_local_refinements
-
-  let havoc_heap_refinements = Old_env.havoc_heap_refinements
-
-  let havoc_vars = Old_env.havoc_vars
-
-  let reset_current_activation = Old_env.reset_current_activation
-
-  let havoc_all = Old_env.havoc_all
-
-  let refine_expr = Old_env.refine_expr
-
-  let get_current_env_refi = Old_env.get_current_env_refi
-
-  let save_excluded_symbols = Old_env.save_excluded_symbols
-
-  let set_internal_var = Old_env.set_internal_var
-
-  let get_internal_var = Old_env.get_internal_var
-
   let get_class_entries cx =
     let { Loc_env.class_stack; class_bindings; _ } = Context.environment cx in
     Base.List.fold
@@ -104,8 +68,6 @@ module New_env : S = struct
       class_stack
 
   let bind_class = Old_env.bind_class
-
-  let restore_excluded_symbols = Old_env.restore_excluded_symbols
 
   let trunc_env = Old_env.trunc_env
 
@@ -149,15 +111,13 @@ module New_env : S = struct
 
   let var_scope_kind cx = (Context.environment cx).Loc_env.scope_kind
 
-  let string_of_env = Old_env.string_of_env
-
   let in_global_scope cx = is_var_kind cx Scope.Global
 
   let in_toplevel_scope cx = is_var_kind cx Scope.Module
 
-  let is_provider = Old_env.is_provider
-
-  let install_provider = Old_env.install_provider
+  let is_provider cx id_loc =
+    let { Loc_env.var_info = { Env_api.providers; _ }; _ } = Context.environment cx in
+    Env_api.Provider_api.is_provider providers id_loc
 
   type t = Old_env.t
 
@@ -687,13 +647,6 @@ module New_env : S = struct
 
   let local_scope_entry_exists cx loc name = not (is_global_var cx name loc)
 
-  let get_var_annotation cx name loc =
-    match name with
-    | InternalName _ -> Old_env.get_var_annotation cx name loc
-    | OrdinaryName _
-    | InternalModuleName _ ->
-      None
-
   let get_var_declared_type ?(lookup_mode = ForValue) ?(is_declared_function = false) cx name loc =
     match (name, lookup_mode) with
     | (InternalName _, _) -> Old_env.get_var_declared_type ~lookup_mode cx name loc
@@ -1217,43 +1170,6 @@ module New_env : S = struct
       assert_false (spf "Looking up an internal module name entry %s in new environment" name)
     | OrdinaryName name ->
       assert_false (spf "Looking up an ordinary name entry %s in new environment" name)
-
-  (* This is mostly copied from the same function in env.ml, but with refinements of ordinary names
-     being ignored, because that happens in the name_resolver. *)
-  let refine_with_preds cx loc preds orig_types =
-    let refine_type orig_type pred refined_type =
-      Flow_js.flow cx (orig_type, PredicateT (pred, refined_type))
-    in
-    let mk_refi_type orig_type pred refi_reason =
-      refine_type orig_type pred |> Tvar.mk_no_wrap_where cx refi_reason
-    in
-    let refine_with_pred key pred acc =
-      let refi_reason = mk_reason (RRefined (Key.reason_desc key)) loc in
-      match key with
-      | (OrdinaryName _, _) ->
-        (* new env doesn't need to refine ordinary names. The EnvBuilder computes
-         * the refinements in advance *)
-        acc
-      | _ ->
-        let orig_type = Key_map.find key orig_types in
-        let refi_type = mk_refi_type orig_type pred refi_reason in
-        let change = Old_env.refine_expr key loc refi_type orig_type in
-        Changeset.add_refi change acc
-    in
-    Key_map.fold refine_with_pred preds Changeset.empty
-
-  (* Directly copied from env.ml, needed because it calls refine_with_preds *)
-  let in_refined_env cx loc preds orig_types f =
-    let oldset = Changeset.Global.clear () in
-    let orig_env = peek_env () in
-    let new_env = clone_env orig_env in
-    update_env loc new_env;
-    let _ = refine_with_preds cx loc preds orig_types in
-    let result = f () in
-    let newset = Changeset.Global.merge oldset in
-    merge_env cx loc (orig_env, orig_env, new_env) newset;
-    update_env loc orig_env;
-    result
 
   let discriminant_after_negated_cases cx switch_loc refinement_key_opt _discriminant =
     let reason_desc =

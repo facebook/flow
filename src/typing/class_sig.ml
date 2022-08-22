@@ -13,7 +13,6 @@ include Class_sig_intf
 
 module Make
     (Env : Env_sig.S)
-    (Abnormal : Abnormal_sig.S with module Env := Env)
     (CT : Func_class_sig_types.Config.S)
     (C : Func_params.Config with module Types := CT)
     (P : Func_params.S with module Config_types := CT and module Config := C)
@@ -860,12 +859,8 @@ module Make
   let toplevels cx x =
     Env.in_class_scope cx x.class_loc (fun () ->
         let method_ ~set_asts f =
-          let save_return = Abnormal.clear_saved Abnormal.Return in
-          let save_throw = Abnormal.clear_saved Abnormal.Throw in
           let (params_ast, body_ast, init_ast) = F.toplevels cx f in
-          set_asts (params_ast, body_ast, init_ast);
-          ignore (Abnormal.swap_saved Abnormal.Return save_return);
-          ignore (Abnormal.swap_saved Abnormal.Throw save_throw)
+          set_asts (params_ast, body_ast, init_ast)
         in
         let field _name (_, _, value) =
           match value with
