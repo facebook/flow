@@ -5077,6 +5077,13 @@ module Make
         | _ -> ()
 
       method! jsx_element loc expr =
+        let open Ast.JSX in
+        let { opening_element; closing_element; _ } = expr in
+        let loc =
+          match closing_element with
+          | None -> fst opening_element
+          | _ -> loc
+        in
         this#jsx_function_call loc;
         super#jsx_element loc expr
 

@@ -390,7 +390,7 @@ module type S = sig
     file_sig:File_sig.With_ALoc.t ->
     Context.t ->
     (Loc.t, Loc.t) Flow_ast.Program.t ->
-    Reason.name list
+    Reason.name list * (ALoc.t, ALoc.t * Type.t) Flow_ast.Statement.t list
 end
 
 module Make_Inference (Env : Env_sig.S) = struct
@@ -565,10 +565,10 @@ module Make (Env : Env_sig.S) : S = struct
 
     initialize_env ~lib:true ~exclude_syms cx aloc_ast module_scope;
 
-    ignore (infer_core cx aloc_statements : (ALoc.t, ALoc.t * Type.t) Ast.Statement.t list);
+    let t_stmts = infer_core cx aloc_statements in
     scan_for_suppressions cx lint_severities all_comments;
 
-    Env.init_builtins_from_libdef cx module_scope
+    (Env.init_builtins_from_libdef cx module_scope, t_stmts)
 end
 
 module NewEnvInference = Make (New_env.New_env)

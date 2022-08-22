@@ -154,7 +154,7 @@ end = struct
              (* Lib files use only concrete locations, so this is not used. *)
              let aloc_table = lazy (ALoc.empty_table lib_file) in
              let cx = Context.make ccx metadata lib_file aloc_table Context.Checking in
-             let syms =
+             let (syms, _) =
                Type_inference_js.infer_lib_file
                  cx
                  ast

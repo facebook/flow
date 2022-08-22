@@ -10,12 +10,6 @@ val scan_for_suppressions :
 
 val add_require_tvars : Context.t -> File_sig.With_ALoc.t -> unit
 
-module Make_Inference (Env : Env_sig.S) : sig
-  module Statement : Statement_sig.S with module Env := Env
-
-  module Abnormal : Abnormal_sig.S with module Env := Env
-end
-
 (* Lint suppressions are handled iff lint_severities is Some. *)
 val infer_ast :
   lint_severities:Severity.severity LintSettings.t ->
@@ -32,4 +26,4 @@ val infer_lib_file :
   file_sig:File_sig.With_ALoc.t ->
   Context.t ->
   (Loc.t, Loc.t) Flow_ast.Program.t ->
-  Reason.name list
+  Reason.name list * (ALoc.t, ALoc.t * Type.t) Flow_ast.Statement.t list

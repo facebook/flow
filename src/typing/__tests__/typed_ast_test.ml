@@ -6,9 +6,7 @@
  *)
 
 open OUnit2
-module File_sig = File_sig.With_Loc
 module Env = Env.Env
-include Type_inference_js.Make_Inference (Env)
 
 (* pretty much copied from Flow_dot_js *)
 let metadata =
@@ -33,7 +31,7 @@ let metadata =
     enforce_class_annotations = false;
     enforce_strict_call_arity = true;
     enforce_this_annotations = false;
-    env_mode = Options.ClassicEnv [];
+    env_mode = Options.(SSAEnv Reordered);
     exact_by_default = false;
     exact_empty_objects = false;
     experimental_infer_indexers = false;
@@ -73,50 +71,13 @@ let parse_content file content =
   let (ast, _parse_errors) =
     Parser_flow.program_file ~fail:false ~parse_options content (Some file)
   in
-  let (file_sig, _) = File_sig.program ~ast ~opts:File_sig.default_opts in
+  let (file_sig, _) = File_sig.With_Loc.program ~ast ~opts:File_sig.With_Loc.default_opts in
   (ast, file_sig)
-
-(* copied from Type_inference_js *)
-(* TODO: consider whether require tvars are necessary, and if not, take this out *)
-let add_require_tvars =
-  let add cx desc loc =
-    let loc = ALoc.of_loc loc in
-    let reason = Reason.mk_reason desc loc in
-    let id = Tvar.mk_no_wrap cx reason in
-    Context.add_require cx loc (reason, id)
-  in
-  let add_decl cx m_name desc loc =
-    (* TODO: Imports within `declare module`s can only reference other `declare
-       module`s (for now). This won't fly forever so at some point we'll need to
-       move `declare module` storage into the modulemap just like normal modules
-       and merge them as such. *)
-    let loc = ALoc.of_loc loc in
-    let reason = Reason.mk_reason desc loc in
-    let tvar = Flow_js.get_builtin_tvar cx m_name reason in
-    Context.add_require cx loc (reason, tvar)
-  in
-  fun cx file_sig ->
-    File_sig.(
-      SMap.iter
-        (fun mref locs ->
-          let desc = Reason.RCustom mref in
-          Nel.iter (add cx desc) locs)
-        (require_loc_map file_sig.module_sig);
-      SMap.iter
-        (fun _ (_, module_sig) ->
-          SMap.iter
-            (fun mref locs ->
-              let m_name = Reason.internal_module_name mref in
-              let desc = Reason.RCustom mref in
-              Nel.iter (add_decl cx m_name desc) locs)
-            (require_loc_map module_sig))
-        file_sig.declare_modules
-    )
 
 let before_and_after_stmts file_name =
   let content = Sys_utils.cat file_name in
   let file_key = File_key.LibFile file_name in
-  let ((program_loc, { Flow_ast.Program.statements = stmts; _ }), file_sig) =
+  let (((_, { Flow_ast.Program.statements = stmts; _ }) as ast), file_sig) =
     parse_content file_key content
   in
   (* Loading the entire libdefs here would be overkill, but the typed_ast tests do use Object
@@ -141,37 +102,14 @@ let before_and_after_stmts file_name =
     let ccx = Context.(make_ccx master_cx) in
     Context.make ccx metadata file_key aloc_table Context.Checking
   in
-  add_require_tvars cx file_sig;
-  let module_scope = Scope.fresh () in
-  Env.init_env cx (ALoc.of_loc program_loc) module_scope;
   let stmts = Base.List.map ~f:Ast_loc_utils.loc_to_aloc_mapper#statement stmts in
-  let t_stmts =
-    try
-      Abnormal.try_with_abnormal_exn
-        ~f:(fun _ ->
-          Statement.toplevel_decls cx stmts;
-          Statement.Toplevels.toplevels Statement.statement cx stmts)
-        ~on_abnormal_exn:(function
-          | (Abnormal.Stmts t_stmts, _) -> t_stmts
-          | (Abnormal.Stmt t_stmt, _) -> [t_stmt]
-          | (Abnormal.Expr (annot, t_expr), _) ->
-            [
-              ( annot,
-                Flow_ast.Statement.Expression
-                  {
-                    Flow_ast.Statement.Expression.expression = t_expr;
-                    directive = None;
-                    comments = None;
-                  }
-              );
-            ])
-        ()
-    with
-    | e ->
-      let e = Exception.wrap e in
-      let message = Exception.get_ctor_string e in
-      let stack = Exception.get_backtrace_string e in
-      assert_failure (Utils_js.spf "Exception: %s\nStack:\n%s\n" message stack)
+  let (_, t_stmts) =
+    Type_inference_js.infer_lib_file
+      cx
+      ast
+      ~exclude_syms:(NameUtils.Set.singleton (Reason.OrdinaryName "Object"))
+      ~file_sig:(File_sig.abstractify_locs file_sig)
+      ~lint_severities:LintSettings.empty_severities
   in
   (stmts, t_stmts)
 
