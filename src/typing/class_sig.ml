@@ -875,17 +875,14 @@ module Make
           | Infer (fsig, set_asts) -> method_ default_this super ~set_asts fsig
         in
         let (instance_this_default, static_this_default, super, static_super) =
-          if Env.new_env then
-            let open Env_api in
-            let env = Context.environment cx in
-            let find_this kind = Base.Option.value_exn (Loc_env.find_write env kind x.class_loc) in
-            ( find_this ClassInstanceThisLoc,
-              find_this ClassStaticThisLoc,
-              find_this ClassInstanceSuperLoc,
-              find_this ClassStaticSuperLoc
-            )
-          else
-            make_thises cx x
+          let open Env_api in
+          let env = Context.environment cx in
+          let find_this kind = Base.Option.value_exn (Loc_env.find_write env kind x.class_loc) in
+          ( find_this ClassInstanceThisLoc,
+            find_this ClassStaticThisLoc,
+            find_this ClassInstanceSuperLoc,
+            find_this ClassStaticSuperLoc
+          )
         in
 
         (* Bind private fields and methods to the environment *)

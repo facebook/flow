@@ -1255,8 +1255,6 @@ module New_env : S = struct
     update_env loc orig_env;
     result
 
-  let new_env = true
-
   let discriminant_after_negated_cases cx switch_loc refinement_key_opt _discriminant =
     let reason_desc =
       match refinement_key_opt with

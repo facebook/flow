@@ -449,16 +449,15 @@ module Make (Env : Env_sig.S) : S = struct
     Context.set_environment cx env;
     Env.init_env ~exclude_syms cx (fst aloc_ast) module_scope;
     let env = Context.environment cx in
-    if Env.new_env then
-      Base.Option.iter local_exports_var ~f:(fun local_exports_var ->
-          let loc = TypeUtil.loc_of_t local_exports_var in
-          let t =
-            Base.Option.value_exn
-              ~message:(ALoc.debug_to_string ~include_source:true loc)
-              (Loc_env.find_write env Env_api.GlobalExportsLoc loc)
-          in
-          Flow_js.unify cx t local_exports_var
-      );
+    Base.Option.iter local_exports_var ~f:(fun local_exports_var ->
+        let loc = TypeUtil.loc_of_t local_exports_var in
+        let t =
+          Base.Option.value_exn
+            ~message:(ALoc.debug_to_string ~include_source:true loc)
+            (Loc_env.find_write env Env_api.GlobalExportsLoc loc)
+        in
+        Flow_js.unify cx t local_exports_var
+    );
     if Context.resolved_env cx then begin
       let { Loc_env.scope_kind; class_stack; _ } = Context.environment cx in
       Base.List.iter ~f:(Env_resolution.resolve_component cx name_def_graph) components;
@@ -527,7 +526,6 @@ module Make (Env : Env_sig.S) : S = struct
       )
     in
     initialize_env ~lib:false ~local_exports_var cx aloc_ast module_scope;
-    if not Env.new_env then Env.set_module_exports cx file_loc init_exports;
 
     (* infer *)
     let typed_statements = infer_core cx aloc_statements in

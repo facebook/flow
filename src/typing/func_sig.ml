@@ -218,7 +218,7 @@ struct
     | [(_, param_t)] -> param_t
     | _ -> failwith "Setter property with unexpected type"
 
-  let toplevels cx default_this super x =
+  let toplevels cx _default_this _super x =
     let { T.reason = reason_fn; kind; tparams_map; fparams; body; return_t; _ } = x in
     let body_loc =
       let open Ast.Function in
@@ -250,40 +250,6 @@ struct
     in
     (* push the scope early so default exprs can reference earlier params *)
     let prev_scope_kind = Env.push_var_scope cx function_scope in
-
-    let () =
-      if not Env.new_env then (
-        (* add `this` and `super` before looking at parameter bindings as when using
-         * `this` in default parameter values it refers to the function scope and
-         * `super` should resolve to the method's [[HomeObject]]
-         *)
-        let this =
-          match default_this with
-          | None -> None
-          | Some default -> Some (this_param fparams |> annotated_or_inferred_of_option ~default)
-        in
-        Base.Option.iter this ~f:(fun t ->
-            let entry =
-              Scope.Entry.new_let
-                ~loc:(TypeUtil.loc_of_t (TypeUtil.type_t_of_annotated_or_inferred t))
-                ~state:Scope.State.Initialized
-                ~provider:(TypeUtil.type_t_of_annotated_or_inferred t)
-                t
-            in
-            Scope.add_entry (internal_name "this") entry function_scope
-        );
-        Base.Option.iter super ~f:(fun t ->
-            let entry =
-              Scope.Entry.new_let
-                ~loc:(TypeUtil.loc_of_t t)
-                ~state:Scope.State.Initialized
-                ~provider:t
-                (Inferred t)
-            in
-            Scope.add_entry (internal_name "super") entry function_scope
-        )
-      )
-    in
 
     (* bind type params *)
     Subst_name.Map.iter
@@ -533,28 +499,20 @@ struct
         in
 
         let exhaust =
-          if Env.new_env then
-            match body with
-            | None ->
-              Flow.flow cx (void_t, UseT (use_op, return_t));
-              None
-            | Some _ ->
-              let (exhaustive, undeclared) = Context.exhaustive_check cx body_loc in
-              Some
-                ( Tvar.mk_where
-                    cx
-                    (replace_desc_reason (RCustom "maybe_exhaustively_checked") reason_fn)
-                    (fun t ->
-                      if undeclared then Flow.flow_t cx (VoidT.at body_loc (bogus_trust ()), t)
-                  ),
-                  exhaustive,
-                  FunImplicitVoidReturnT
-                    { use_op; reason = reason_of_t return_t; return = return_t; void_t }
-                )
-          else
+          match body with
+          | None ->
+            Flow.flow cx (void_t, UseT (use_op, return_t));
+            None
+          | Some _ ->
+            let (exhaustive, undeclared) = Context.exhaustive_check cx body_loc in
             Some
-              ( Env.get_internal_var cx "maybe_exhaustively_checked" loc,
-                [],
+              ( Tvar.mk_where
+                  cx
+                  (replace_desc_reason (RCustom "maybe_exhaustively_checked") reason_fn)
+                  (fun t ->
+                    if undeclared then Flow.flow_t cx (VoidT.at body_loc (bogus_trust ()), t)
+                ),
+                exhaustive,
                 FunImplicitVoidReturnT
                   { use_op; reason = reason_of_t return_t; return = return_t; void_t }
               )

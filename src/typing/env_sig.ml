@@ -19,8 +19,6 @@ module type S = sig
 
   type t = scope list
 
-  val new_env : bool
-
   val in_toplevel_scope : Context.t -> bool
 
   val in_global_scope : Context.t -> bool

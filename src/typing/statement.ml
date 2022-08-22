@@ -3015,9 +3015,7 @@ struct
         declare_var cx (OrdinaryName name) id_loc;
         if has_anno then
           Env.unify_declared_type cx (OrdinaryName name) id_loc annot_t
-        else if
-          Base.Option.is_some init_ast || Base.Option.is_some if_uninitialized || not Env.new_env
-        then
+        else if Base.Option.is_some init_ast || Base.Option.is_some if_uninitialized then
           (* TODO: even though both branches of this if seem identical, in the new env with reordering we're not allowed to
               call `unify_declared_type` because it can be used to initialize an environment entry, which should always have
               been done by the env_resolution process. Instead, if there is no annotation (which makes this operation
@@ -3671,7 +3669,7 @@ struct
            has the same type as its references inside the class.
            However, in the new env, we need to perform a bind of the class declaration type to the
            name to ensure that the environment knows the type of both the declaration and usages. *)
-        if Env.new_env then (
+        let () =
           let name = OrdinaryName name in
           let reason = mk_reason (RType name) name_loc in
           let tvar = Tvar.mk cx reason in
@@ -3686,7 +3684,7 @@ struct
               )
           in
           Env.init_implicit_let kind cx ~use_op name ~has_anno:false class_t name_loc
-        );
+        in
         Env.pop_var_scope cx prev_scope_kind;
         Flow.flow_t cx (class_t, tvar);
         ((class_loc, class_t), Class c)
@@ -4407,37 +4405,6 @@ struct
         in
         let lhs_t = VoidT.at loc |> with_trust bogus_trust in
         Some (((loc, lhs_t), call_ast { Call.callee; targs; arguments; comments } lhs_t), None, None)
-      | Member
-          {
-            Member._object =
-              ( object_loc,
-                Identifier (id_loc, ({ Ast.Identifier.name = "module"; comments = _ } as id_name))
-              );
-            property =
-              Member.PropertyIdentifier
-                (ploc, ({ Ast.Identifier.name = "exports"; comments = _ } as exports_name));
-            comments;
-          }
-        when (not (Env.local_scope_entry_exists cx id_loc "module")) && not Env.new_env ->
-        let lhs_t = Env.get_module_exports cx loc in
-        let module_reason = mk_reason (RCustom "module") object_loc in
-        let module_t = MixedT.why module_reason |> with_trust bogus_trust in
-        let _object =
-          ((object_loc, module_t), Ast.Expression.Identifier ((id_loc, module_t), id_name))
-        in
-        Some
-          ( ( (loc, lhs_t),
-              member_ast
-                {
-                  Member._object;
-                  property = Member.PropertyIdentifier ((ploc, lhs_t), exports_name);
-                  comments;
-                }
-                lhs_t
-            ),
-            None,
-            None
-          )
       | Member
           {
             Member._object =
@@ -5997,26 +5964,6 @@ struct
         (o, _object, None)
     in
     match lhs with
-    (* module.exports = e *)
-    | {
-     Member._object =
-       ( object_loc,
-         Ast.Expression.Identifier
-           (id_loc, ({ Ast.Identifier.name = "module"; comments = _ } as mod_name))
-       );
-     property =
-       Member.PropertyIdentifier (ploc, ({ Ast.Identifier.name = "exports"; comments = _ } as name));
-     comments;
-    }
-      when (not (Env.local_scope_entry_exists cx id_loc "module")) && not Env.new_env ->
-      Import_export.cjs_clobber cx lhs_loc t;
-      let module_reason = mk_reason (RCustom "module") object_loc in
-      let module_t = MixedT.why module_reason |> with_trust bogus_trust in
-      let _object =
-        ((object_loc, module_t), Ast.Expression.Identifier ((id_loc, module_t), mod_name))
-      in
-      let property = Member.PropertyIdentifier ((ploc, t), name) in
-      ((lhs_loc, t), reconstruct_ast { Member._object; property; comments } t)
     (* super.name = e *)
     | {
      Member._object = (super_loc, Super super);
@@ -6125,7 +6072,7 @@ struct
             ),
             "exports"
           )
-          when (not (Env.local_scope_entry_exists cx id_loc "module")) && Env.new_env ->
+          when not (Env.local_scope_entry_exists cx id_loc "module") ->
           (* module.exports has type `any` in theory, but shouldnt be treated as uncovered *)
           t
         | _ -> prop_t
@@ -7395,28 +7342,9 @@ struct
       let ast = reconstruct_ast expr_ast in
       flow_eqt ~strict loc (t, val_t);
       let refinement =
-        if strict then (
-          let key = Refinement.key ~allow_optional:true expr in
-          (match (Env.new_env, key) with
-          | (false, Some ((OrdinaryName _ as name), [])) ->
-            let general_type = Env.query_var_non_specific cx name (fst expr) in
-            (match pred with
-            | SingletonBoolP (loc, b) ->
-              let reason = loc |> mk_reason (RBooleanLit b) in
-              let l = DefT (reason, bogus_trust (), BoolT (Some b)) in
-              Context.add_literal_subtypes cx (l, general_type)
-            | SingletonStrP (loc, b, str) ->
-              let reason = loc |> mk_reason (RStringLit (OrdinaryName str)) in
-              let l = DefT (reason, bogus_trust (), StrT (Literal (Some b, OrdinaryName str))) in
-              Context.add_literal_subtypes cx (l, general_type)
-            | SingletonNumP (loc, b, ((_, str) as num)) ->
-              let reason = loc |> mk_reason (RNumberLit str) in
-              let l = DefT (reason, bogus_trust (), NumT (Literal (Some b, num))) in
-              Context.add_literal_subtypes cx (l, general_type)
-            | _ -> ())
-          | _ -> ());
-          key
-        ) else
+        if strict then
+          Refinement.key ~allow_optional:true expr
+        else
           None
       in
       let out =
@@ -8914,15 +8842,13 @@ struct
                 class_bindings;
           };
         let elements = List.rev rev_elements in
-        if Env.new_env then begin
-          let (instance_this_default, static_this_default, super, static_super) =
-            Env.in_class_scope cx class_loc (fun () -> Class_stmt_sig.make_thises cx class_sig)
-          in
-          Env.bind_class_instance_this cx instance_this_default class_loc;
-          Env.bind_class_static_this cx static_this_default class_loc;
-          Env.bind_class_instance_super cx super class_loc;
-          Env.bind_class_static_super cx static_super class_loc
-        end;
+        let (instance_this_default, static_this_default, super, static_super) =
+          Env.in_class_scope cx class_loc (fun () -> Class_stmt_sig.make_thises cx class_sig)
+        in
+        Env.bind_class_instance_this cx instance_this_default class_loc;
+        Env.bind_class_static_this cx static_this_default class_loc;
+        Env.bind_class_instance_super cx super class_loc;
+        Env.bind_class_static_super cx static_super class_loc;
         let (class_t_internal, class_t) = Class_stmt_sig.classtype cx class_sig in
         Env.bind_class_self_type cx class_loc self class_t_internal;
         ( class_t,
