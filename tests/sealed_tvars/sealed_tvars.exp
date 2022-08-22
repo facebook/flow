@@ -1,3 +1,11 @@
+Error ------------------------------------------------------------------------------------------ declared_exports.js:3:1
+
+Internal error: expected env entry for write location(3, 0) to (3, 31)
+
+   3| declare module.exports: number;
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
 Error ----------------------------------------------------------------------------------------- regression_tests.js:11:8
 
 Cannot declare `A` [1] because the name is already bound. [name-already-bound]
@@ -113,4 +121,4 @@ References:
 
 
 
-Found 12 errors
+Found 13 errors

@@ -71,6 +71,6 @@ let empty scope_kind =
     under_resolution = EnvSet.empty;
   }
 
-let with_info scope_kind var_info =
+let with_info scope_kind var_info declare_module_exports_write_loc =
   let env = empty scope_kind in
-  { env with var_info }
+  { env with var_info; declare_module_exports_write_loc }
