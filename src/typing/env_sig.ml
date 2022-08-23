@@ -209,8 +209,6 @@ module type S = sig
     ALoc.t ->
     Type.t
 
-  val query_var_non_specific : Context.t -> Reason.name -> ALoc.t -> Type.t
-
   val set_var : Context.t -> use_op:Type.use_op -> string -> Type.t -> ALoc.t -> unit
 
   val set_module_exports : Context.t -> ALoc.t -> Type.t -> unit

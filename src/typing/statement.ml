@@ -6761,19 +6761,13 @@ struct
           | (false, _)
           | (_, None) ->
             None
-          | (true, Some ((name, projections) as refinement_key)) ->
+          | (true, Some refinement_key) ->
             Env.record_expression_type_if_needed
               cx
               Env_api.ExpressionLoc
               (aloc_of_reason (reason_of_t val_t))
               val_t;
             let pred = LeftP (SentinelProp prop_name, val_t) in
-            ( if projections = [] then
-              let general_type = Env.query_var_non_specific cx name (fst expr) in
-              (* Store any potential sentinel type. Later on, when the check is fired (in
-                 merge_js.ml), we only focus on primitive literal types. *)
-              Context.add_matching_props cx (reason_of_t val_t, prop_name, val_t, general_type)
-            );
             Some (refinement_key, obj_t, pred, sense)
         in
         (* Note here we're calling optional_chain on the whole expression, not on _object.

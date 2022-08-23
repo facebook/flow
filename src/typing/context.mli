@@ -267,11 +267,7 @@ val type_graph : t -> Graph_explorer.graph
 
 val type_asserts_map : t -> (type_assert_kind * ALoc.t) ALocMap.t
 
-val matching_props : t -> (Reason.reason * string * Type.t * Type.t) list
-
 val new_env_matching_props : t -> (string * ALoc.t * ALoc.t) list
-
-val literal_subtypes : t -> (Type.t * Type.t) list
 
 val new_env_literal_subtypes : t -> (ALoc.t * Env_api.new_env_literal_check) list
 
@@ -349,11 +345,7 @@ val add_trust_var : t -> Trust_constraint.ident -> Trust_constraint.node -> unit
 
 val add_type_assert : t -> ALoc.t -> type_assert_kind * ALoc.t -> unit
 
-val add_matching_props : t -> Reason.reason * string * Type.t * Type.t -> unit
-
 val add_new_env_matching_props : t -> string * ALoc.t * ALoc.t -> unit
-
-val add_literal_subtypes : t -> Type.t * Type.t -> unit
 
 val add_new_env_literal_subtypes : t -> ALoc.t * Env_api.new_env_literal_check -> unit
 

@@ -915,8 +915,6 @@ module Env : Env_sig.S = struct
   (* query var's specific type *)
   let query_var ?(lookup_mode = ForValue) = read_entry ~lookup_mode ~specific:true
 
-  let query_var_non_specific = read_entry ~lookup_mode:ForValue ?desc:None ~specific:false
-
   let get_internal_var cx name loc = query_var cx (internal_name name) loc
 
   let get_module_exports cx loc = get_internal_var cx "exports" loc

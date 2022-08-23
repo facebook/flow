@@ -605,8 +605,6 @@ module New_env : S = struct
       )
     | InternalName _ -> Old_env.query_var ~lookup_mode cx name ?desc loc
 
-  let query_var_non_specific cx name loc = Tvar.mk cx (mk_reason (RIdentifier name) loc)
-
   let var_ref ?(lookup_mode = ForValue) cx ?desc name loc =
     let t = query_var ~lookup_mode cx name ?desc loc in
     Flow_js.reposition cx loc t
