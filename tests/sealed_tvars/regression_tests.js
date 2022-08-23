@@ -82,3 +82,10 @@ function TestArrayProvider() {
   var x = [];
   x[0] = 10;
 }
+
+{
+  class MyClass<T> {
+  }
+
+  declare var c: MyClass;
+}

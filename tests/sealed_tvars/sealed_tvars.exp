@@ -139,5 +139,19 @@ References:
                                   ^^^^^^^^^^^^^^^^^^ [2]
 
 
+Error ---------------------------------------------------------------------------------------- regression_tests.js:90:18
 
-Found 14 errors
+Cannot use `MyClass` [1] without 1 type argument. [missing-type-arg]
+
+   regression_tests.js:90:18
+   90|   declare var c: MyClass;
+                        ^^^^^^^
+
+References:
+   regression_tests.js:87:16
+   87|   class MyClass<T> {
+                      ^^^ [1]
+
+
+
+Found 15 errors
