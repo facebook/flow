@@ -6,7 +6,6 @@
  *)
 
 open OUnit2
-module Env = Env.Env
 
 (* pretty much copied from Flow_dot_js *)
 let metadata =

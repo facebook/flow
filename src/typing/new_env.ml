@@ -42,23 +42,13 @@ module type S = sig
 end
 
 module New_env : S = struct
-  (* The new env handles all the logic for regular variables internally, but
-     internal variables still need to be handled by name, which makes them
-     incompatible with the new environment as it stands. Eventually we'll need
-     to figure out a different approach for them, but that different approach will
-     vary per-variable (e.g. maybe_exhaustively_checked will go away entirely, returns will
-     not be treated as variables, and this/super can probably be included in the new env), and
-     currently they rely on quite a bit of the existing env behavior (such as initialization state,
-     merging, etc) so it doesn't make sense to build a separate system for them now (it would be
-     pretty big if we did).
-
-     Instead, the new env includes the old env directly. The old env's interface for things that
-     are unrelated to the new env (e.g. pushing scopes) are left intact, while things that
-     can apply to either regular variables or to internals are shadowed with a function that decides
-     what interface to use.*)
-  module Old_env = Env.Env
-
-  let get_global_value_type = Old_env.get_global_value_type
+  let get_global_value_type cx name reason =
+    match Context.global_value_cache_find_opt cx name with
+    | Some t -> t
+    | None ->
+      let t = Flow_js.get_builtin cx name reason in
+      Context.add_global_value_cache_entry cx name t;
+      t
 
   let get_class_entries cx =
     let { Loc_env.class_stack; class_bindings; _ } = Context.environment cx in
@@ -113,7 +103,26 @@ module New_env : S = struct
 
   let this_type_params = ref ALocMap.empty
 
-  let valid_declaration_check = Old_env.valid_declaration_check
+  let valid_declaration_check cx name loc =
+    let { Loc_env.var_info = { Env_api.scopes = info; ssa_values = values; providers; _ }; _ } =
+      Context.environment cx
+    in
+    let error null_write =
+      let null_write =
+        Base.Option.map
+          ~f:(fun null_loc -> Error_message.{ null_loc; initialized = ALoc.equal loc null_loc })
+          null_write
+      in
+      Flow_js.add_output
+        cx
+        Error_message.(
+          EInvalidDeclaration { declaration = mk_reason (RIdentifier name) loc; null_write }
+        )
+    in
+    match Invalidation_api.declaration_validity info values providers loc with
+    | Invalidation_api.Valid -> ()
+    | Invalidation_api.NotWritten -> error None
+    | Invalidation_api.NullWritten null_loc -> error (Some null_loc)
 
   (* We don't want the new-env to throw if we encounter some new case in the wild for which we did
    * not adequately prepare. Instead, we return `any` in prod mode, but still crash in build mode.
