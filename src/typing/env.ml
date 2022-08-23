@@ -11,7 +11,6 @@
    associated type information. *)
 
 open Utils_js
-open Loc_collections
 open Type
 open TypeUtil
 open Reason
@@ -52,52 +51,6 @@ module type S = sig
   val init_env : ?exclude_syms:NameUtils.Set.t -> Context.t -> ALoc.t -> Scope.t -> unit
 
   (***)
-
-  val bind_class : Context.t -> Type.class_binding -> unit
-
-  val bind_implicit_let :
-    ?state:State.t ->
-    Entry.let_binding_kind ->
-    Context.t ->
-    Reason.name ->
-    Type.annotated_or_inferred ->
-    ALoc.t ->
-    unit
-
-  val bind_fun : ?state:State.t -> Context.t -> Reason.name -> Type.t -> ALoc.t -> unit
-
-  val bind_declare_fun : Context.t -> predicate:bool -> Reason.name -> Type.t -> ALoc.t -> unit
-
-  val init_var :
-    Context.t -> use_op:Type.use_op -> Reason.name -> has_anno:bool -> Type.t -> ALoc.t -> unit
-
-  val init_let :
-    Context.t -> use_op:Type.use_op -> Reason.name -> has_anno:bool -> Type.t -> ALoc.t -> unit
-
-  val init_implicit_let :
-    Entry.let_binding_kind ->
-    Context.t ->
-    use_op:Type.use_op ->
-    Reason.name ->
-    has_anno:bool ->
-    Type.t ->
-    ALoc.t ->
-    unit
-
-  val init_fun : Context.t -> use_op:Type.use_op -> Reason.name -> Type.t -> ALoc.t -> unit
-
-  val init_const :
-    Context.t -> use_op:Type.use_op -> Reason.name -> has_anno:bool -> Type.t -> ALoc.t -> unit
-
-  val init_implicit_const :
-    Entry.const_binding_kind ->
-    Context.t ->
-    use_op:Type.use_op ->
-    Reason.name ->
-    has_anno:bool ->
-    Type.t ->
-    ALoc.t ->
-    unit
 
   val get_var_declared_type :
     ?lookup_mode:LookupMode.t ->
@@ -412,116 +365,8 @@ module Env : S = struct
     | Invalidation_api.NotWritten -> error None
     | Invalidation_api.NullWritten null_loc -> error (Some null_loc)
 
-  let promote_non_const cx name loc spec =
-    if Reason.is_internal_name name then
-      (None, spec)
-    else
-      let { Loc_env.var_info = { Env_api.scopes = info; ssa_values = values; _ }; _ } =
-        Context.environment cx
-      in
-      valid_declaration_check cx name loc;
-      if spec <> Entry.ConstLike && Invalidation_api.is_const_like info values loc then
-        (None, Entry.ConstLike)
-      else if spec <> Entry.NotWrittenByClosure then
-        let writes_by_closure = Invalidation_api.written_by_closure info values loc in
-        if ALocSet.is_empty writes_by_closure then
-          (None, Entry.NotWrittenByClosure)
-        else
-          (Some writes_by_closure, spec)
-      else
-        (None, spec)
-
-  let mk_havoc cx name loc general spec =
-    let providers = [] in
-
-    let (writes_by_closure_opt, spec') = promote_non_const cx name loc spec in
-    let closure_writes =
-      match writes_by_closure_opt with
-      | Some writes_by_closure ->
-        let writes_by_closure_t =
-          Tvar.mk_where cx (mk_reason (RIdentifier name) loc) (fun tvar ->
-              Flow.flow_t cx (tvar, general)
-          )
-        in
-        let writes_by_closure_provider =
-          if
-            ALocSet.for_all
-              (Base.List.mem ~equal:ALoc.equal (Base.List.map ~f:fst providers))
-              writes_by_closure
-          then
-            let writes_by_closure_providers =
-              Base.List.filter_map
-                ~f:(fun (loc, t) ->
-                  if ALocSet.mem loc writes_by_closure then
-                    Some t
-                  else
-                    None)
-                providers
-            in
-            match writes_by_closure_providers with
-            | [] -> None
-            | [t] -> Some t
-            | t1 :: t2 :: ts -> Some (UnionT (mk_reason (RType name) loc, UnionRep.make t1 t2 ts))
-          else
-            None
-        in
-
-        Some (writes_by_closure, writes_by_closure_t, writes_by_closure_provider)
-      | _ -> None
-    in
-    let provider = general in
-    (spec', closure_writes, provider)
-
   let binding_error msg cx name entry loc =
     Flow.add_output cx (Error_message.EBindingError (msg, loc, name, Entry.entry_loc entry))
-
-  (* initialization of entries happens during a preliminary pass through a
-     scoped region of the AST (dynamic for hoisted things, lexical for
-     lexical things). this leaves them in a germinal state which is
-     then read and written during the main traversal of the AST *)
-
-  (* helper: initialize entry for given key in top scope,
-     dealing with various situations involving a preexisting entry
-     (since multiple declarations - sometimes but not always erroneous -
-     may appear in an AST)
-  *)
-
-  let bind_entry _cx _name _entry _loc = ()
-
-  (* bind class entry *)
-  let bind_class cx x = bind_entry cx (internal_name "class") (Entry.Class x) ALoc.none
-
-  (* bind implicit let entry *)
-  let bind_implicit_let ?(state = State.Undeclared) kind cx name t loc =
-    let (spec, closure_writes, provider) =
-      mk_havoc cx name loc (TypeUtil.type_t_of_annotated_or_inferred t) Entry.Havocable
-    in
-    bind_entry cx name (Entry.new_let t ~kind ~loc ~state ~spec ?closure_writes ~provider) loc
-
-  let bind_fun ?(state = State.Declared) cx name t =
-    bind_implicit_let ~state Entry.FunctionBinding cx name (Inferred t)
-
-  (* bind entry for declare function *)
-  let bind_declare_fun _cx ~predicate:_ _name _t _loc = ()
-
-  (* helper - update var entry to reflect assignment/initialization *)
-  (* note: here is where we understand that a name can be multiply var-bound
-   * TODO: we started tracking annotations when variables are bound. Once we do
-   * that at all binding sites this ~has_anno param can go away in favor of
-   * looking up the annot in the environment *)
-  let init_value_entry _kind _cx ~use_op:_ _name ~has_anno:_ _specific _loc = ()
-
-  let init_var = init_value_entry Entry.(Var Havocable)
-
-  let init_let = init_value_entry Entry.(Let (LetVarBinding, Havocable))
-
-  let init_implicit_let kind = init_value_entry Entry.(Let (kind, Havocable))
-
-  let init_fun = init_implicit_let ~has_anno:false Entry.FunctionBinding
-
-  let init_const = init_value_entry Entry.(Const ConstVarBinding)
-
-  let init_implicit_const kind = init_value_entry Entry.(Const kind)
 
   (* helper for read/write tdz checks *)
   (* for now, we only enforce TDZ within the same activation.

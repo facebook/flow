@@ -50,8 +50,6 @@ module type S = sig
 
   (***)
 
-  val bind_class : Context.t -> Type.class_binding -> unit
-
   val bind_var :
     ?state:State.t -> Context.t -> string -> Type.annotated_or_inferred -> ALoc.t -> unit
 

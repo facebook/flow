@@ -868,9 +868,6 @@ module Make
           | Infer (fsig, set_asts) -> method_ ~set_asts fsig
         in
 
-        (* Bind private fields and methods to the environment *)
-        Env.bind_class cx (mk_class_binding cx x);
-
         x
         |> with_sig ~static:true (fun s ->
                (* process static methods and fields *)
