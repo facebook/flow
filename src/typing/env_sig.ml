@@ -31,9 +31,6 @@ module type S = sig
 
   val get_global_value_type : Context.t -> Reason.name -> Reason.t -> Type.t
 
-  val find_entry :
-    Context.t -> Reason.name -> ?desc:Reason.reason_desc -> ALoc.t -> Scope.t * Entry.t
-
   val push_var_scope : Context.t -> Scope.t -> Scope.var_scope_kind
 
   val pop_var_scope : Context.t -> Scope.var_scope_kind -> unit

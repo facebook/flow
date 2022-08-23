@@ -588,20 +588,14 @@ module New_env : S = struct
     )
 
   let query_var ?(lookup_mode = ForValue) cx name ?desc loc =
-    match name with
-    | OrdinaryName _
-    | InternalModuleName _
-    | InternalName "this"
-    | InternalName "super" ->
-      get_this_type_param_if_necessary name loc ~otherwise:(fun () ->
-          let desc =
-            match desc with
-            | Some desc -> desc
-            | None -> RIdentifier name
-          in
-          read_entry_exn ~lookup_mode cx loc (mk_reason desc loc)
-      )
-    | InternalName _ -> Old_env.query_var ~lookup_mode cx name ?desc loc
+    get_this_type_param_if_necessary name loc ~otherwise:(fun () ->
+        let desc =
+          match desc with
+          | Some desc -> desc
+          | None -> RIdentifier name
+        in
+        read_entry_exn ~lookup_mode cx loc (mk_reason desc loc)
+    )
 
   let var_ref ?(lookup_mode = ForValue) cx ?desc name loc =
     let t = query_var ~lookup_mode cx name ?desc loc in
@@ -647,7 +641,6 @@ module New_env : S = struct
 
   let get_var_declared_type ?(lookup_mode = ForValue) ?(is_declared_function = false) cx name loc =
     match (name, lookup_mode) with
-    | (InternalName _, _) -> Old_env.get_var_declared_type ~lookup_mode cx name loc
     | ((OrdinaryName _ | InternalModuleName _), ForType)
     | (InternalModuleName _, ForValue) ->
       let env = Context.environment cx in
@@ -659,34 +652,29 @@ module New_env : S = struct
           cx
           (Error_message.EInternal (loc, Error_message.MissingEnvWrite loc));
         Type.(AnyT.at (AnyError None) loc))
-    | ((OrdinaryName _ | InternalModuleName _), _) ->
+    | _ ->
       let env = Context.environment cx in
       provider_type_for_def_loc cx env ~intersect:is_declared_function loc
 
-  let constraining_type ~default cx name loc =
-    match name with
-    | InternalName _ -> Old_env.constraining_type ~default cx name loc
-    | OrdinaryName _
-    | InternalModuleName _ ->
-      let ({ Loc_env.var_info; _ } as env) = Context.environment cx in
-      (match EnvMap.find_opt_ordinary loc var_info.Env_api.env_entries with
-      | Some Env_api.NonAssigningWrite -> default
-      | _ ->
-        let providers =
-          find_providers var_info loc
-          |> Base.List.map ~f:(fun loc ->
-                 check_readable cx Env_api.OrdinaryNameLoc loc;
-                 Loc_env.find_ordinary_write env loc
-             )
-          |> Base.Option.all
-        in
-        (match providers with
-        | None
-        | Some [] ->
-          default
-        | Some [t] -> t
-        | Some (t1 :: t2 :: ts) ->
-          UnionT (mk_reason (RCustom "providers") loc, UnionRep.make t1 t2 ts)))
+  let constraining_type ~default cx _name loc =
+    let ({ Loc_env.var_info; _ } as env) = Context.environment cx in
+    match EnvMap.find_opt_ordinary loc var_info.Env_api.env_entries with
+    | Some Env_api.NonAssigningWrite -> default
+    | _ ->
+      let providers =
+        find_providers var_info loc
+        |> Base.List.map ~f:(fun loc ->
+               check_readable cx Env_api.OrdinaryNameLoc loc;
+               Loc_env.find_ordinary_write env loc
+           )
+        |> Base.Option.all
+      in
+      (match providers with
+      | None
+      | Some [] ->
+        default
+      | Some [t] -> t
+      | Some (t1 :: t2 :: ts) -> UnionT (mk_reason (RCustom "providers") loc, UnionRep.make t1 t2 ts))
 
   (*************)
   (*  Writing  *)
@@ -921,23 +909,15 @@ module New_env : S = struct
     | Options.(SSAEnv (Reordered | Enforced)) -> ()
     | _ -> unify_write_entry cx ~use_op:unknown_use t Env_api.OrdinaryNameLoc loc
 
-  let read_declared_type ?(lookup_mode = ForValue) ?(is_func = false) cx name reason loc =
-    match name with
-    | InternalName _ -> Old_env.read_declared_type ~lookup_mode ~is_func cx name reason loc
-    | OrdinaryName _
-    | InternalModuleName _ ->
-      Tvar.mk_where cx reason (fun t ->
-          unify_write_entry cx ~use_op:unknown_use t Env_api.OrdinaryNameLoc loc
-      )
+  let read_declared_type ?lookup_mode:_ ?is_func:_ cx _name reason loc =
+    Tvar.mk_where cx reason (fun t ->
+        unify_write_entry cx ~use_op:unknown_use t Env_api.OrdinaryNameLoc loc
+    )
 
-  let unify_declared_fun_type cx name loc t =
-    match name with
-    | InternalName _ -> Old_env.unify_declared_fun_type cx name loc t
-    | OrdinaryName _
-    | InternalModuleName _ ->
-      (match Context.env_mode cx with
-      | Options.(SSAEnv (Reordered | Enforced)) -> ()
-      | _ -> unify_write_entry cx ~use_op:unknown_use t Env_api.OrdinaryNameLoc loc)
+  let unify_declared_fun_type cx _name loc t =
+    match Context.env_mode cx with
+    | Options.(SSAEnv (Reordered | Enforced)) -> ()
+    | _ -> unify_write_entry cx ~use_op:unknown_use t Env_api.OrdinaryNameLoc loc
 
   (************************)
   (* Variable Declaration *)
@@ -1014,14 +994,6 @@ module New_env : S = struct
       }
     in
     Context.set_environment cx env
-
-  let find_entry cx name ?desc loc =
-    match name with
-    | InternalName _ -> Old_env.find_entry cx name ?desc loc
-    | InternalModuleName name ->
-      assert_false (spf "Looking up an internal module name entry %s in new environment" name)
-    | OrdinaryName name ->
-      assert_false (spf "Looking up an ordinary name entry %s in new environment" name)
 
   let discriminant_after_negated_cases cx switch_loc refinement_key_opt _discriminant =
     let reason_desc =
