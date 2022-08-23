@@ -36,14 +36,6 @@ module Make (Env : Env_sig.S) : Abnormal_sig.S with module Env := Env = struct
     | (stmt, None) -> stmt
     | (stmt, Some abnormal) -> throw_stmt_control_flow_exception stmt abnormal
 
-  (* helper *)
-  let check_env_depth depth =
-    let new_depth = Env.env_depth () in
-    if new_depth = depth then
-      ()
-    else
-      assert_false (spf "env depth %d != %d after no control flow catch" new_depth depth)
-
   (* catch_stmt_control_flow_exception runs a function which is expected to either
        return a statement or raise Exn (Stmt _, _) or Exn (Expr _, _). The function
        should never raise Exn (Stmts _, _). If the function raises an
@@ -64,15 +56,11 @@ module Make (Env : Env_sig.S) : Abnormal_sig.S with module Env := Env = struct
         catch_expr_control_flow_exception
       ) =
     let catch_control_flow_exception p f =
-      let depth = Env.env_depth () in
       try
         let res = f () in
-        check_env_depth depth;
         (res, None)
       with
-      | Exn (payload, abnormal) ->
-        Env.trunc_env depth;
-        (p payload, Some abnormal)
+      | Exn (payload, abnormal) -> (p payload, Some abnormal)
       | exn -> raise exn
     in
     ( catch_control_flow_exception (function

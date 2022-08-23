@@ -69,28 +69,21 @@ module New_env : S = struct
       ~init:[]
       class_stack
 
-  let trunc_env = Old_env.trunc_env
-
-  let env_depth = Old_env.env_depth
-
   let set_scope_kind cx k =
     let env = Context.environment cx in
     let old = env.Loc_env.scope_kind in
     Context.set_environment cx { env with Loc_env.scope_kind = k };
     old
 
-  let in_lex_scope = Old_env.in_lex_scope
-
   let in_class_scope cx loc f =
     let ({ Loc_env.class_stack; _ } as env) = Context.environment cx in
     Context.set_environment cx { env with Loc_env.class_stack = loc :: class_stack };
-    let res = in_lex_scope f in
+    let res = f () in
     let env = Context.environment cx in
     Context.set_environment cx { env with Loc_env.class_stack };
     res
 
   let pop_var_scope cx kind =
-    Old_env.pop_var_scope cx kind;
     let (_ : Scope.var_scope_kind) = set_scope_kind cx kind in
     ()
 
@@ -100,7 +93,6 @@ module New_env : S = struct
       | Scope.VarScope kind -> kind
       | _ -> Utils_js.assert_false "push_var_scope on non-var scope"
     in
-    let (_ : Scope.var_scope_kind) = Old_env.push_var_scope cx scope in
     set_scope_kind cx kind
 
   let is_var_kind cx k = (Context.environment cx).Loc_env.scope_kind = k
@@ -118,10 +110,6 @@ module New_env : S = struct
   let is_provider cx id_loc =
     let { Loc_env.var_info = { Env_api.providers; _ }; _ } = Context.environment cx in
     Env_api.Provider_api.is_provider providers id_loc
-
-  type t = Old_env.t
-
-  type scope = Old_env.scope
 
   let this_type_params = ref ALocMap.empty
 
@@ -922,8 +910,7 @@ module New_env : S = struct
   (************************)
   (* Variable Declaration *)
   (************************)
-  let init_env ?exclude_syms cx program_loc scope =
-    Old_env.init_env ?exclude_syms cx program_loc scope;
+  let init_env ?exclude_syms:_ cx program_loc scope =
     let ({ Loc_env.var_info; _ } as env) = Context.environment cx in
     let initialize_entry def_loc_type loc env_entry env =
       let env' =

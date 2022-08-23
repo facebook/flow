@@ -7,6 +7,37 @@
 
 open Scope
 
+(* lookup modes:
+
+   - ForValue is a lookup from a syntactic value location, i.e. standard
+     JS code
+
+   - ForType is a lookup from a syntactic type location, e.g. annotations,
+     interface declarations etc.
+
+   - ForTypeof is a lookup from a typeof expression (necessarily in a type
+     location)
+
+   Rules:
+
+   1. ForValue lookups give errors if they retrieve type aliases (note: we
+      have a single namespace, so any name resolves uniquely to either a
+      value or type)
+
+   2. ForValue lookups give errors if they forward reference non-hoisted
+      things (lets or consts)
+
+   3. ForType lookups may return values or type aliases, since some values
+      also denote types - e.g. a generator function F also denotes the type
+      of the objects it creates. Of course many values don't also have a type
+      denotation and thus errors in type position. But we don't know the type
+      of a symbol during local inference as a rule, so errors of this kind are
+      not raised here.
+
+   4. ForTypeof lookups are in fact ForValue lookups, but due to the order in
+      which AST traversal takes place, these lookups may legitimately violate
+      rule #2, hence the need for a special mode.
+*)
 module LookupMode = struct
   type t =
     | ForValue
@@ -15,10 +46,6 @@ module LookupMode = struct
 end
 
 module type S = sig
-  type scope
-
-  type t = scope list
-
   val in_toplevel_scope : Context.t -> bool
 
   val in_global_scope : Context.t -> bool
@@ -35,13 +62,7 @@ module type S = sig
 
   val pop_var_scope : Context.t -> Scope.var_scope_kind -> unit
 
-  val in_lex_scope : (unit -> 'a) -> 'a
-
   val in_class_scope : Context.t -> ALoc.t -> (unit -> 'a) -> 'a
-
-  val env_depth : unit -> int
-
-  val trunc_env : int -> unit
 
   val init_env : ?exclude_syms:NameUtils.Set.t -> Context.t -> ALoc.t -> Scope.t -> unit
 

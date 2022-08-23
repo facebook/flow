@@ -337,9 +337,7 @@ struct
   (* TODO: detect structural misuses abnormal control flow constructs *)
   and statement_decl cx =
     let open Ast.Statement in
-    let block_body cx { Block.body; comments = _ } =
-      Env.in_lex_scope (fun () -> toplevel_decls cx body)
-    in
+    let block_body cx { Block.body; comments = _ } = toplevel_decls cx body in
     let catch_clause cx { Try.CatchClause.body = (_, b); _ } = block_body cx b in
     let function_ ~bind function_loc { Ast.Function.id; async; generator; _ } =
       let handle_named_function name_loc name =
@@ -373,9 +371,7 @@ struct
     | (_, OpaqueType _) ->
       ()
     | (_, Switch { Switch.cases; _ }) ->
-      Env.in_lex_scope (fun () ->
-          cases |> List.iter (fun (_, { Switch.Case.consequent; _ }) -> toplevel_decls cx consequent)
-      )
+      cases |> List.iter (fun (_, { Switch.Case.consequent; _ }) -> toplevel_decls cx consequent)
     | (_, Return _) -> ()
     | (_, Throw _) -> ()
     | (_, Try { Try.block = (_, b); handler; finalizer; comments = _ }) ->
@@ -391,26 +387,20 @@ struct
     | (_, While { While.body; _ }) -> statement_decl cx body
     | (_, DoWhile { DoWhile.body; _ }) -> statement_decl cx body
     | (_, For { For.init; body; _ }) ->
-      Env.in_lex_scope (fun () ->
-          (match init with
-          | Some (For.InitDeclaration (_, decl)) -> variable_decl cx decl
-          | _ -> ());
-          statement_decl cx body
-      )
+      (match init with
+      | Some (For.InitDeclaration (_, decl)) -> variable_decl cx decl
+      | _ -> ());
+      statement_decl cx body
     | (_, ForIn { ForIn.left; body; _ }) ->
-      Env.in_lex_scope (fun () ->
-          (match left with
-          | ForIn.LeftDeclaration (_, decl) -> variable_decl cx decl
-          | _ -> ());
-          statement_decl cx body
-      )
+      (match left with
+      | ForIn.LeftDeclaration (_, decl) -> variable_decl cx decl
+      | _ -> ());
+      statement_decl cx body
     | (_, ForOf { ForOf.left; body; _ }) ->
-      Env.in_lex_scope (fun () ->
-          (match left with
-          | ForOf.LeftDeclaration (_, decl) -> variable_decl cx decl
-          | _ -> ());
-          statement_decl cx body
-      )
+      (match left with
+      | ForOf.LeftDeclaration (_, decl) -> variable_decl cx decl
+      | _ -> ());
+      statement_decl cx body
     | (_, Debugger _) -> ()
     | (function_loc, FunctionDeclaration func) -> function_ ~bind:Env.bind_fun function_loc func
     | (_, EnumDeclaration { EnumDeclaration.id = (name_loc, { Ast.Identifier.name; _ }); _ }) ->
@@ -522,19 +512,17 @@ struct
           let r = mk_reason (RCustom "catch") loc in
           let t = AnyT.why CatchAny r in
           let (stmts, abnormal_opt) =
-            Env.in_lex_scope (fun () ->
-                Scope.(
-                  Env.bind_implicit_let
-                    ~state:State.Initialized
-                    Entry.(CatchParamBinding)
-                    cx
-                    (OrdinaryName name)
-                    (Inferred t)
-                    loc
-                );
+            Scope.(
+              Env.bind_implicit_let
+                ~state:State.Initialized
+                Entry.(CatchParamBinding)
+                cx
+                (OrdinaryName name)
+                (Inferred t)
+                loc
+            );
 
-                check cx b
-            )
+            check cx b
           in
           ( {
               Try.CatchClause.param =
@@ -559,7 +547,7 @@ struct
           Flow.add_output cx Error_message.(EUnsupportedSyntax (loc, CatchParameterDeclaration));
           (Tast_utils.error_mapper#catch_clause catch_clause, None))
       | None ->
-        let (stmts, abnormal_opt) = Env.in_lex_scope (fun () -> check cx b) in
+        let (stmts, abnormal_opt) = check cx b in
         ( {
             Try.CatchClause.param = None;
             body = (b_loc, { Block.body = stmts; comments = b.Block.comments });
@@ -585,10 +573,8 @@ struct
     | (loc, Block { Block.body; comments }) ->
       let (body, abnormal_opt) =
         Abnormal.catch_stmts_control_flow_exception (fun () ->
-            Env.in_lex_scope (fun () ->
-                toplevel_decls cx body;
-                Toplevels.toplevels statement cx body
-            )
+            toplevel_decls cx body;
+            Toplevels.toplevels statement cx body
         )
       in
       Abnormal.check_stmt_control_flow_exception
@@ -715,189 +701,187 @@ struct
         Tvar.mk cx (mk_reason (RCustom "exhaustive check incomplete out") switch_loc)
       in
       (* switch body is a single lexical scope *)
-      Env.in_lex_scope (fun () ->
-          (* set up all bindings *)
-          cases |> List.iter (fun (_, { Switch.Case.consequent; _ }) -> toplevel_decls cx consequent);
+      (* set up all bindings *)
+      cases |> List.iter (fun (_, { Switch.Case.consequent; _ }) -> toplevel_decls cx consequent);
 
-          (* traverse case list, get list of control flow exits and list of ASTs *)
-          let (exits_rev, cases_ast_rev, fallthrough_case, has_default) =
-            cases
-            |> Base.List.fold_left
-                 ~init:([], [], None, false)
-                 ~f:(fun
-                      (exits, cases_ast, _fallthrough_case, has_default)
-                      (loc, { Switch.Case.test; consequent; comments })
-                    ->
-                   (* compute predicates implied by case expr or default *)
-                   let test_ast =
-                     match test with
-                     | None -> None
-                     | Some expr ->
-                       let open Ast.Expression in
-                       let fake_discriminant =
-                         match discriminant with
-                         | (mem_loc, Member ({ Member._object = (_, x) as _object; _ } as mem))
-                           when Base.Option.is_some (Refinement.key ~allow_optional:true _object) ->
-                           (mem_loc, Member { mem with Member._object = (loc, x) })
-                         | _ -> discriminant
-                       in
-                       let fake =
-                         ( loc,
-                           Binary
-                             {
-                               Binary.operator = Binary.StrictEqual;
-                               left = fake_discriminant;
-                               right = expr;
-                               comments = None;
-                             }
-                         )
-                       in
-                       let case_test_reason = mk_reason (RCustom "case test") (fst expr) in
-                       let switch_discriminant_reason =
-                         mk_reason (RCustom "switch discriminant") (fst discriminant)
-                       in
-                       let ((_, fake_ast), _, _, _) =
-                         predicates_of_condition
-                           cx
-                           ~hint:Hint_None
-                           ~cond:(SwitchTest { case_test_reason; switch_discriminant_reason })
-                           fake
-                       in
-                       let expr_ast =
-                         match fake_ast with
-                         | Ast.Expression.(Binary { Binary.right; _ }) -> right
-                         | _ -> assert false
-                       in
-                       Some expr_ast
+      (* traverse case list, get list of control flow exits and list of ASTs *)
+      let (exits_rev, cases_ast_rev, fallthrough_case, has_default) =
+        cases
+        |> Base.List.fold_left
+             ~init:([], [], None, false)
+             ~f:(fun
+                  (exits, cases_ast, _fallthrough_case, has_default)
+                  (loc, { Switch.Case.test; consequent; comments })
+                ->
+               (* compute predicates implied by case expr or default *)
+               let test_ast =
+                 match test with
+                 | None -> None
+                 | Some expr ->
+                   let open Ast.Expression in
+                   let fake_discriminant =
+                     match discriminant with
+                     | (mem_loc, Member ({ Member._object = (_, x) as _object; _ } as mem))
+                       when Base.Option.is_some (Refinement.key ~allow_optional:true _object) ->
+                       (mem_loc, Member { mem with Member._object = (loc, x) })
+                     | _ -> discriminant
                    in
-
-                   (* process statements, track control flow exits: exit will be an
-                      unconditional exit. *)
-                   let (consequent_ast, exit) =
-                     Abnormal.catch_stmts_control_flow_exception (fun () ->
-                         Toplevels.toplevels statement cx consequent
+                   let fake =
+                     ( loc,
+                       Binary
+                         {
+                           Binary.operator = Binary.StrictEqual;
+                           left = fake_discriminant;
+                           right = expr;
+                           comments = None;
+                         }
                      )
                    in
-                   (* track fallthrough to next case and/or break to switch end *)
-                   let falls_through =
-                     match exit with
-                     | Some Abnormal.Throw
-                     | Some Abnormal.Return
-                     | Some (Abnormal.Break _)
-                     | Some (Abnormal.Continue _) ->
-                       false
-                     | None -> true
+                   let case_test_reason = mk_reason (RCustom "case test") (fst expr) in
+                   let switch_discriminant_reason =
+                     mk_reason (RCustom "switch discriminant") (fst discriminant)
                    in
-                   (* save state for fallthrough *)
-                   let fallthrough_case =
-                     if falls_through then
-                       Some loc
-                     else
-                       None
+                   let ((_, fake_ast), _, _, _) =
+                     predicates_of_condition
+                       cx
+                       ~hint:Hint_None
+                       ~cond:(SwitchTest { case_test_reason; switch_discriminant_reason })
+                       fake
                    in
+                   let expr_ast =
+                     match fake_ast with
+                     | Ast.Expression.(Binary { Binary.right; _ }) -> right
+                     | _ -> assert false
+                   in
+                   Some expr_ast
+               in
 
-                   ( exit :: exits,
-                     (loc, { Switch.Case.test = test_ast; consequent = consequent_ast; comments })
-                     :: cases_ast,
-                     fallthrough_case,
-                     has_default || Base.Option.is_none test
-                   )
+               (* process statements, track control flow exits: exit will be an
+                  unconditional exit. *)
+               let (consequent_ast, exit) =
+                 Abnormal.catch_stmts_control_flow_exception (fun () ->
+                     Toplevels.toplevels statement cx consequent
+                 )
+               in
+               (* track fallthrough to next case and/or break to switch end *)
+               let falls_through =
+                 match exit with
+                 | Some Abnormal.Throw
+                 | Some Abnormal.Return
+                 | Some (Abnormal.Break _)
+                 | Some (Abnormal.Continue _) ->
+                   false
+                 | None -> true
+               in
+               (* save state for fallthrough *)
+               let fallthrough_case =
+                 if falls_through then
+                   Some loc
+                 else
+                   None
+               in
+
+               ( exit :: exits,
+                 (loc, { Switch.Case.test = test_ast; consequent = consequent_ast; comments })
+                 :: cases_ast,
+                 fallthrough_case,
+                 has_default || Base.Option.is_none test
                )
-          in
-          let cases_ast = List.rev cases_ast_rev in
-          let exits = List.rev exits_rev in
-          (* If no default was present, record a write to maybe_exhaustively_checked and then update
-           * the switch state to account for this write in the total/partial writes. We need to also
-           * merge in the fallthrough case if one existed. *)
-          let () =
-            if not has_default then (
-              if Base.Option.is_none fallthrough_case then
-                Env.init_let
-                  cx
-                  ~use_op:unknown_use
-                  (internal_name "maybe_exhaustively_checked")
-                  ~has_anno:false
-                  exhaustive_check_incomplete_out
-                  (loc_of_t exhaustive_check_incomplete_out);
-              (* If we handle the fallthrough case explicitly here then there is no need to merge
-               * in those changes a second time. Instead, we set the fallthrough_case to None *)
-              ()
-            ) else
-              ()
-          in
+           )
+      in
+      let cases_ast = List.rev cases_ast_rev in
+      let exits = List.rev exits_rev in
+      (* If no default was present, record a write to maybe_exhaustively_checked and then update
+       * the switch state to account for this write in the total/partial writes. We need to also
+       * merge in the fallthrough case if one existed. *)
+      let () =
+        if not has_default then (
+          if Base.Option.is_none fallthrough_case then
+            Env.init_let
+              cx
+              ~use_op:unknown_use
+              (internal_name "maybe_exhaustively_checked")
+              ~has_anno:false
+              exhaustive_check_incomplete_out
+              (loc_of_t exhaustive_check_incomplete_out);
+          (* If we handle the fallthrough case explicitly here then there is no need to merge
+           * in those changes a second time. Instead, we set the fallthrough_case to None *)
+          ()
+        ) else
+          ()
+      in
 
-          (* abnormal exit: if every case exits abnormally the same way (or falls
-              through to a case that does), then the switch as a whole exits that way.
-             (as with if/else, we merge `throw` into `return` when both appear) *)
-          let uniform_switch_exit case_exits =
-            let rec loop = function
-              | (acc, fallthrough, []) ->
-                (* end of cases: if nothing is falling through, we made it *)
-                if fallthrough then
-                  None
-                else
-                  acc
-              | (_, _, Some (Abnormal.Break _) :: _) ->
-                (* break wrecks everything *)
-                None
-              | (acc, _, None :: exits) ->
-                (* begin or continue to fall through *)
-                loop (acc, true, exits)
-              | (acc, _, exit :: exits) when exit = acc ->
-                (* current case exits the same way as prior cases *)
-                loop (acc, acc = None, exits)
-              | (Some Abnormal.Throw, _, Some Abnormal.Return :: exits)
-              | (Some Abnormal.Return, _, Some Abnormal.Throw :: exits) ->
-                (* fuzz throw into return *)
-                loop (Some Abnormal.Return, false, exits)
-              | (None, _, exit :: exits) ->
-                (* terminate an initial sequence of fall-thruugh cases *)
-                (* (later sequences will have acc = Some _ ) *)
-                loop (exit, false, exits)
-              | (_, _, _) ->
-                (* the new case exits differently from previous ones - fail *)
-                None
-            in
-            if has_default then
-              loop (None, false, case_exits)
-            else
+      (* abnormal exit: if every case exits abnormally the same way (or falls
+          through to a case that does), then the switch as a whole exits that way.
+         (as with if/else, we merge `throw` into `return` when both appear) *)
+      let uniform_switch_exit case_exits =
+        let rec loop = function
+          | (acc, fallthrough, []) ->
+            (* end of cases: if nothing is falling through, we made it *)
+            if fallthrough then
               None
-          in
-          let enum_exhaustive_check = enum_exhaustive_check_of_switch_cases cases_ast in
-          let ((_, discriminant_t), _) = discriminant_ast in
-          let discriminant_after_check =
-            if not has_default then
-              let refinement_key = Refinement.key ~allow_optional:true discriminant in
-              Env.discriminant_after_negated_cases cx switch_loc refinement_key discriminant
             else
-              None
-          in
-          Flow.flow
-            cx
-            ( discriminant_t,
-              EnumExhaustiveCheckT
-                {
-                  reason = reason_of_t discriminant_t;
-                  check = enum_exhaustive_check;
-                  incomplete_out = exhaustive_check_incomplete_out;
-                  discriminant_after_check;
-                }
-            );
-          let ast =
-            ( switch_loc,
-              Switch
-                {
-                  Switch.discriminant = discriminant_ast;
-                  cases = cases_ast;
-                  comments;
-                  exhaustive_out = (exhaustive_out, exhaustive_check_incomplete_out);
-                }
-            )
-          in
-          match uniform_switch_exit exits with
-          | None -> ast
-          | Some abnormal -> Abnormal.throw_stmt_control_flow_exception ast abnormal
-      )
+              acc
+          | (_, _, Some (Abnormal.Break _) :: _) ->
+            (* break wrecks everything *)
+            None
+          | (acc, _, None :: exits) ->
+            (* begin or continue to fall through *)
+            loop (acc, true, exits)
+          | (acc, _, exit :: exits) when exit = acc ->
+            (* current case exits the same way as prior cases *)
+            loop (acc, acc = None, exits)
+          | (Some Abnormal.Throw, _, Some Abnormal.Return :: exits)
+          | (Some Abnormal.Return, _, Some Abnormal.Throw :: exits) ->
+            (* fuzz throw into return *)
+            loop (Some Abnormal.Return, false, exits)
+          | (None, _, exit :: exits) ->
+            (* terminate an initial sequence of fall-thruugh cases *)
+            (* (later sequences will have acc = Some _ ) *)
+            loop (exit, false, exits)
+          | (_, _, _) ->
+            (* the new case exits differently from previous ones - fail *)
+            None
+        in
+        if has_default then
+          loop (None, false, case_exits)
+        else
+          None
+      in
+      let enum_exhaustive_check = enum_exhaustive_check_of_switch_cases cases_ast in
+      let ((_, discriminant_t), _) = discriminant_ast in
+      let discriminant_after_check =
+        if not has_default then
+          let refinement_key = Refinement.key ~allow_optional:true discriminant in
+          Env.discriminant_after_negated_cases cx switch_loc refinement_key discriminant
+        else
+          None
+      in
+      Flow.flow
+        cx
+        ( discriminant_t,
+          EnumExhaustiveCheckT
+            {
+              reason = reason_of_t discriminant_t;
+              check = enum_exhaustive_check;
+              incomplete_out = exhaustive_check_incomplete_out;
+              discriminant_after_check;
+            }
+        );
+      let ast =
+        ( switch_loc,
+          Switch
+            {
+              Switch.discriminant = discriminant_ast;
+              cases = cases_ast;
+              comments;
+              exhaustive_out = (exhaustive_out, exhaustive_check_incomplete_out);
+            }
+        )
+      in
+      (match uniform_switch_exit exits with
+      | None -> ast
+      | Some abnormal -> Abnormal.throw_stmt_control_flow_exception ast abnormal)
     (*******************************************************)
     | (loc, Return { Return.argument; comments; return_out }) ->
       let reason = mk_reason (RCustom "return") loc in
@@ -987,11 +971,9 @@ struct
     (***************************************************************************)
     | (loc, Try { Try.block = (b_loc, b); handler; finalizer; comments }) ->
       let (try_block_ast, try_abnormal) =
-        Env.in_lex_scope (fun () ->
-            Abnormal.catch_stmts_control_flow_exception (fun () ->
-                toplevel_decls cx b.Block.body;
-                Toplevels.toplevels statement cx b.Block.body
-            )
+        Abnormal.catch_stmts_control_flow_exception (fun () ->
+            toplevel_decls cx b.Block.body;
+            Toplevels.toplevels statement cx b.Block.body
         )
       in
       (* traverse catch block, save exceptions *)
@@ -1009,11 +991,9 @@ struct
         | None -> (None, None)
         | Some (f_loc, { Block.body; comments }) ->
           let (finally_block_ast, finally_abnormal) =
-            Env.in_lex_scope (fun () ->
-                Abnormal.catch_stmts_control_flow_exception (fun () ->
-                    toplevel_decls cx body;
-                    Toplevels.toplevels statement cx body
-                )
+            Abnormal.catch_stmts_control_flow_exception (fun () ->
+                toplevel_decls cx body;
+                Toplevels.toplevels statement cx body
             )
           in
           (Some (f_loc, { Block.body = finally_block_ast; comments }), finally_abnormal)
@@ -1096,40 +1076,31 @@ struct
     *)
     (***************************************************************************)
     | (loc, For { For.init; test; update; body; comments }) ->
-      Env.in_lex_scope (fun () ->
-          let init_ast =
-            match init with
-            | None -> None
-            | Some (For.InitDeclaration (decl_loc, decl)) ->
-              variable_decl cx decl;
-              Some (For.InitDeclaration (decl_loc, variables cx decl))
-            | Some (For.InitExpression expr) ->
-              Some (For.InitExpression (expression cx ~hint:Hint_None expr))
-          in
+      let init_ast =
+        match init with
+        | None -> None
+        | Some (For.InitDeclaration (decl_loc, decl)) ->
+          variable_decl cx decl;
+          Some (For.InitDeclaration (decl_loc, variables cx decl))
+        | Some (For.InitExpression expr) ->
+          Some (For.InitExpression (expression cx ~hint:Hint_None expr))
+      in
 
-          let test_ast =
-            match test with
-            | None -> None
-            | Some expr ->
-              let (expr_ast, _, _, _) =
-                predicates_of_condition ~hint:Hint_None ~cond:OtherTest cx expr
-              in
-              Some expr_ast
+      let test_ast =
+        match test with
+        | None -> None
+        | Some expr ->
+          let (expr_ast, _, _, _) =
+            predicates_of_condition ~hint:Hint_None ~cond:OtherTest cx expr
           in
-          let (body_ast, _) =
-            Abnormal.catch_stmt_control_flow_exception (fun () -> statement cx body)
-          in
-          let update_ast = Base.Option.map ~f:(expression cx ~hint:Hint_None) update in
-          ( loc,
-            For
-              {
-                For.init = init_ast;
-                test = test_ast;
-                update = update_ast;
-                body = body_ast;
-                comments;
-              }
-          )
+          Some expr_ast
+      in
+      let (body_ast, _) =
+        Abnormal.catch_stmt_control_flow_exception (fun () -> statement cx body)
+      in
+      let update_ast = Base.Option.map ~f:(expression cx ~hint:Hint_None) update in
+      ( loc,
+        For { For.init = init_ast; test = test_ast; update = update_ast; body = body_ast; comments }
       )
     (***************************************************************************)
     (* Refinements for `for-in` are derived by the following Hoare logic rule:
@@ -1144,92 +1115,89 @@ struct
     (***************************************************************************)
     | (loc, ForIn { ForIn.left; right; body; each; comments }) ->
       let reason = mk_reason (RCustom "for-in") loc in
-      Env.in_lex_scope (fun () ->
-          let eval_right () =
-            let ((((_, _), _) as right_ast), _, _, _) =
-              predicates_of_condition ~hint:Hint_None ~cond:OtherTest cx right
-            in
+      let eval_right () =
+        let ((((_, _), _) as right_ast), _, _, _) =
+          predicates_of_condition ~hint:Hint_None ~cond:OtherTest cx right
+        in
+        right_ast
+      in
+      let (left_ast, right_ast) =
+        match left with
+        | ForIn.LeftDeclaration
+            ( decl_loc,
+              ( {
+                  VariableDeclaration.kind;
+                  declarations = [(vdecl_loc, { VariableDeclaration.Declarator.id; init = None })];
+                  comments;
+                } as decl
+              )
+            ) ->
+          variable_decl cx decl;
+          let right_ast = eval_right () in
+          let (id_ast, _) =
+            variable cx kind id None ~if_uninitialized:(StrT.at %> with_trust bogus_trust)
+          in
+          ( ForIn.LeftDeclaration
+              ( decl_loc,
+                {
+                  VariableDeclaration.kind;
+                  declarations =
+                    [(vdecl_loc, { VariableDeclaration.Declarator.id = id_ast; init = None })];
+                  comments;
+                }
+              ),
             right_ast
-          in
-          let (left_ast, right_ast) =
-            match left with
-            | ForIn.LeftDeclaration
-                ( decl_loc,
-                  ( {
-                      VariableDeclaration.kind;
-                      declarations =
-                        [(vdecl_loc, { VariableDeclaration.Declarator.id; init = None })];
-                      comments;
-                    } as decl
-                  )
-                ) ->
-              variable_decl cx decl;
-              let right_ast = eval_right () in
-              let (id_ast, _) =
-                variable cx kind id None ~if_uninitialized:(StrT.at %> with_trust bogus_trust)
-              in
-              ( ForIn.LeftDeclaration
-                  ( decl_loc,
-                    {
-                      VariableDeclaration.kind;
-                      declarations =
-                        [(vdecl_loc, { VariableDeclaration.Declarator.id = id_ast; init = None })];
-                      comments;
-                    }
-                  ),
-                right_ast
+          )
+        | ForIn.LeftPattern
+            ( pat_loc,
+              Ast.Pattern.Identifier
+                {
+                  Ast.Pattern.Identifier.name =
+                    (name_loc, ({ Ast.Identifier.name = name_str; comments = _ } as id));
+                  optional;
+                  annot;
+                }
+            ) ->
+          let right_ast = eval_right () in
+          let t = StrT.at pat_loc |> with_trust bogus_trust in
+          let use_op =
+            Op
+              (AssignVar
+                 {
+                   var = Some (mk_reason (RIdentifier (OrdinaryName name_str)) pat_loc);
+                   init = reason_of_t t;
+                 }
               )
-            | ForIn.LeftPattern
-                ( pat_loc,
-                  Ast.Pattern.Identifier
-                    {
-                      Ast.Pattern.Identifier.name =
-                        (name_loc, ({ Ast.Identifier.name = name_str; comments = _ } as id));
-                      optional;
-                      annot;
-                    }
-                ) ->
-              let right_ast = eval_right () in
-              let t = StrT.at pat_loc |> with_trust bogus_trust in
-              let use_op =
-                Op
-                  (AssignVar
-                     {
-                       var = Some (mk_reason (RIdentifier (OrdinaryName name_str)) pat_loc);
-                       init = reason_of_t t;
-                     }
-                  )
-              in
-              Env.set_var cx ~use_op name_str t pat_loc;
-              ( ForIn.LeftPattern
-                  ( (pat_loc, t),
-                    Ast.Pattern.Identifier
-                      {
-                        Ast.Pattern.Identifier.name = ((name_loc, t), id);
-                        annot =
-                          (match annot with
-                          | Ast.Type.Available _ ->
-                            Tast_utils.unchecked_mapper#type_annotation_hint annot
-                          | Ast.Type.Missing loc -> Ast.Type.Missing (loc, t));
-                        optional;
-                      }
-                  ),
-                right_ast
-              )
-            | _ ->
-              let right_ast = eval_right () in
-              Flow.add_output cx Error_message.(EInternal (loc, ForInLHS));
-              (Tast_utils.error_mapper#for_in_statement_lhs left, right_ast)
           in
-          let ((_, right_t), _) = right_ast in
-          Flow.flow cx (right_t, AssertForInRHST reason);
+          Env.set_var cx ~use_op name_str t pat_loc;
+          ( ForIn.LeftPattern
+              ( (pat_loc, t),
+                Ast.Pattern.Identifier
+                  {
+                    Ast.Pattern.Identifier.name = ((name_loc, t), id);
+                    annot =
+                      (match annot with
+                      | Ast.Type.Available _ ->
+                        Tast_utils.unchecked_mapper#type_annotation_hint annot
+                      | Ast.Type.Missing loc -> Ast.Type.Missing (loc, t));
+                    optional;
+                  }
+              ),
+            right_ast
+          )
+        | _ ->
+          let right_ast = eval_right () in
+          Flow.add_output cx Error_message.(EInternal (loc, ForInLHS));
+          (Tast_utils.error_mapper#for_in_statement_lhs left, right_ast)
+      in
+      let ((_, right_t), _) = right_ast in
+      Flow.flow cx (right_t, AssertForInRHST reason);
 
-          let (body_ast, _) =
-            Abnormal.catch_stmt_control_flow_exception (fun () -> statement cx body)
-          in
+      let (body_ast, _) =
+        Abnormal.catch_stmt_control_flow_exception (fun () -> statement cx body)
+      in
 
-          (loc, ForIn { ForIn.left = left_ast; right = right_ast; body = body_ast; each; comments })
-      )
+      (loc, ForIn { ForIn.left = left_ast; right = right_ast; body = body_ast; each; comments })
     | (loc, ForOf { ForOf.left; right; body; await; comments }) ->
       let reason_desc =
         match left with
@@ -1275,80 +1243,77 @@ struct
         (* null/undefined are NOT allowed *)
         (Flow.reposition cx (loc_of_t t) elem_t, right_ast)
       in
-      Env.in_lex_scope (fun () ->
-          let (left_ast, right_ast) =
-            match left with
-            | ForOf.LeftDeclaration
-                ( decl_loc,
-                  ( {
-                      VariableDeclaration.kind;
-                      declarations =
-                        [(vdecl_loc, { VariableDeclaration.Declarator.id; init = None })];
-                      comments;
-                    } as decl
-                  )
-                ) ->
-              variable_decl cx decl;
-              let (elem_t, right_ast) = eval_right () in
-              let (id_ast, _) = variable cx kind id None ~if_uninitialized:(fun _ -> elem_t) in
-              ( ForOf.LeftDeclaration
-                  ( decl_loc,
-                    {
-                      VariableDeclaration.kind;
-                      declarations =
-                        [(vdecl_loc, { VariableDeclaration.Declarator.id = id_ast; init = None })];
-                      comments;
-                    }
-                  ),
-                right_ast
+      let (left_ast, right_ast) =
+        match left with
+        | ForOf.LeftDeclaration
+            ( decl_loc,
+              ( {
+                  VariableDeclaration.kind;
+                  declarations = [(vdecl_loc, { VariableDeclaration.Declarator.id; init = None })];
+                  comments;
+                } as decl
               )
-            | ForOf.LeftPattern
-                ( pat_loc,
-                  Ast.Pattern.Identifier
-                    {
-                      Ast.Pattern.Identifier.name =
-                        (name_loc, ({ Ast.Identifier.name = name_str; comments = _ } as id));
-                      optional;
-                      annot;
-                    }
-                ) ->
-              let (elem_t, right_ast) = eval_right () in
-              let use_op =
-                Op
-                  (AssignVar
-                     {
-                       var = Some (mk_reason (RIdentifier (OrdinaryName name_str)) pat_loc);
-                       init = reason_of_t elem_t;
-                     }
-                  )
-              in
-              Env.set_var cx ~use_op name_str elem_t pat_loc;
-              ( ForOf.LeftPattern
-                  ( (pat_loc, elem_t),
-                    Ast.Pattern.Identifier
-                      {
-                        Ast.Pattern.Identifier.name = ((name_loc, elem_t), id);
-                        annot =
-                          (match annot with
-                          | Ast.Type.Available annot ->
-                            Ast.Type.Available (Tast_utils.error_mapper#type_annotation annot)
-                          | Ast.Type.Missing loc -> Ast.Type.Missing (loc, elem_t));
-                        optional;
-                      }
-                  ),
-                right_ast
+            ) ->
+          variable_decl cx decl;
+          let (elem_t, right_ast) = eval_right () in
+          let (id_ast, _) = variable cx kind id None ~if_uninitialized:(fun _ -> elem_t) in
+          ( ForOf.LeftDeclaration
+              ( decl_loc,
+                {
+                  VariableDeclaration.kind;
+                  declarations =
+                    [(vdecl_loc, { VariableDeclaration.Declarator.id = id_ast; init = None })];
+                  comments;
+                }
+              ),
+            right_ast
+          )
+        | ForOf.LeftPattern
+            ( pat_loc,
+              Ast.Pattern.Identifier
+                {
+                  Ast.Pattern.Identifier.name =
+                    (name_loc, ({ Ast.Identifier.name = name_str; comments = _ } as id));
+                  optional;
+                  annot;
+                }
+            ) ->
+          let (elem_t, right_ast) = eval_right () in
+          let use_op =
+            Op
+              (AssignVar
+                 {
+                   var = Some (mk_reason (RIdentifier (OrdinaryName name_str)) pat_loc);
+                   init = reason_of_t elem_t;
+                 }
               )
-            | _ ->
-              let (_, right_ast) = eval_right () in
-              Flow.add_output cx Error_message.(EInternal (loc, ForOfLHS));
-              (Tast_utils.error_mapper#for_of_statement_lhs left, right_ast)
           in
-          let (body_ast, _) =
-            Abnormal.catch_stmt_control_flow_exception (fun () -> statement cx body)
-          in
+          Env.set_var cx ~use_op name_str elem_t pat_loc;
+          ( ForOf.LeftPattern
+              ( (pat_loc, elem_t),
+                Ast.Pattern.Identifier
+                  {
+                    Ast.Pattern.Identifier.name = ((name_loc, elem_t), id);
+                    annot =
+                      (match annot with
+                      | Ast.Type.Available annot ->
+                        Ast.Type.Available (Tast_utils.error_mapper#type_annotation annot)
+                      | Ast.Type.Missing loc -> Ast.Type.Missing (loc, elem_t));
+                    optional;
+                  }
+              ),
+            right_ast
+          )
+        | _ ->
+          let (_, right_ast) = eval_right () in
+          Flow.add_output cx Error_message.(EInternal (loc, ForOfLHS));
+          (Tast_utils.error_mapper#for_of_statement_lhs left, right_ast)
+      in
+      let (body_ast, _) =
+        Abnormal.catch_stmt_control_flow_exception (fun () -> statement cx body)
+      in
 
-          (loc, ForOf { ForOf.left = left_ast; right = right_ast; body = body_ast; await; comments })
-      )
+      (loc, ForOf { ForOf.left = left_ast; right = right_ast; body = body_ast; await; comments })
     | (_, Debugger _) as stmt -> stmt
     | (loc, FunctionDeclaration func) ->
       let (fn_type, (name_loc, { Ast.Identifier.name; comments = _ }), node) = function_ loc func in
