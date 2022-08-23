@@ -12,7 +12,6 @@ open Utils_js
 include Class_sig_intf
 
 module Make
-    (Env : Env_sig.S)
     (CT : Func_class_sig_types.Config.S)
     (C : Func_params.Config with module Types := CT)
     (P : Func_params.S with module Config_types := CT and module Config := C)

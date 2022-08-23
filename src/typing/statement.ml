@@ -25,19 +25,13 @@ open Hint_api
 open Func_class_sig_types
 
 module Make
-    (Env : Env_sig.S)
     (Destructuring : Destructuring_sig.S)
     (Func_stmt_config : Func_stmt_config_sig.S with module Types := Func_stmt_config_types.Types)
-    (Statement : Statement_sig.S with module Env := Env) : Statement_sig.S with module Env := Env =
-struct
-  module Abnormal = Abnormal.Make (Env)
-  module Anno = Type_annotation.Make (Type_annotation.FlowJS) (Env) (Abnormal) (Statement)
+    (Statement : Statement_sig.S) : Statement_sig.S = struct
+  module Anno = Type_annotation.Make (Type_annotation.FlowJS) (Statement)
   module Class_type_sig = Anno.Class_type_sig
-  module Toplevels = Toplevels.Make (Env) (Abnormal)
-  module Refinement = Refinement.Make (Env)
-  module Import_export = Import_export.Make (Env)
   module Func_stmt_config = Func_stmt_config
-  open Env_sig.LookupMode
+  open Env.LookupMode
 
   (*************)
   (* Utilities *)
@@ -284,11 +278,10 @@ struct
   module Func_stmt_params =
     Func_params.Make (Func_stmt_config_types.Types) (Func_stmt_config) (Func_stmt_params_types)
   module Func_stmt_sig =
-    Func_sig.Make (Env) (Abnormal) (Statement) (Func_stmt_config_types.Types) (Func_stmt_config)
-      (Func_stmt_params)
+    Func_sig.Make (Statement) (Func_stmt_config_types.Types) (Func_stmt_config) (Func_stmt_params)
       (Func_stmt_sig_types)
   module Class_stmt_sig =
-    Class_sig.Make (Env) (Func_stmt_config_types.Types) (Func_stmt_config) (Func_stmt_params)
+    Class_sig.Make (Func_stmt_config_types.Types) (Func_stmt_config) (Func_stmt_params)
       (Func_stmt_sig)
       (Class_stmt_sig_types)
 
@@ -1459,9 +1452,7 @@ struct
           | None ->
             Import_export.export_binding cx ?is_function name id_loc Ast.Statement.ExportValue
           | Some default_loc ->
-            let t =
-              Env.get_var_declared_type ~lookup_mode:Env_sig.LookupMode.ForType cx name id_loc
-            in
+            let t = Env.get_var_declared_type ~lookup_mode:ForType cx name id_loc in
             Import_export.export cx (OrdinaryName "default") default_loc t
         in
         (* error-handling around calls to `statement` is omitted here because we
@@ -7850,7 +7841,7 @@ struct
                        } =
                          i
                        in
-                       let c = Env.get_var ~lookup_mode:Env_sig.LookupMode.ForType cx name id_loc in
+                       let c = Env.get_var ~lookup_mode:ForType cx name id_loc in
                        let (typeapp, targs) =
                          match targs with
                          | None -> ((loc, c, None), None)

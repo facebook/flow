@@ -125,16 +125,13 @@ class func_scope_visitor cx ~return_t ~yield_t ~next_t kind exhaust =
   end
 
 module Make
-    (Env : Env_sig.S)
-    (Abnormal : Abnormal_sig.S with module Env := Env)
-    (Statement : Statement_sig.S with module Env := Env)
+    (Statement : Statement_sig.S)
     (CT : Func_class_sig_types.Config.S)
     (C : Func_params.Config with module Types := CT)
     (F : Func_params.S with module Config_types := CT and module Config := C)
     (T : Func_class_sig_types.Func.S with module Config := CT and module Param := F.Types) :
   S with module Config_types := CT and module Config := C and module Param := F and module Types = T =
 struct
-  module Toplevels = Toplevels.Make (Env) (Abnormal)
   module Types = T
   open Func_class_sig_types.Func
 

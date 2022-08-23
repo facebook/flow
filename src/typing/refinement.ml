@@ -87,17 +87,15 @@ module Keys = struct
       None
 end
 
-module Make (Env : Env_sig.S) = struct
-  include Keys
+include Keys
 
-  (* get type refinement for expression, if it exists *)
-  let get ~allow_optional cx expr loc =
-    match key ~allow_optional expr with
-    | Some k -> Env.get_refinement cx k loc
-    | None -> None
+(* get type refinement for expression, if it exists *)
+let get ~allow_optional cx expr loc =
+  match key ~allow_optional expr with
+  | Some k -> Env.get_refinement cx k loc
+  | None -> None
 
-  let get_of_pattern ~allow_optional cx patt loc =
-    match key_of_pattern ~allow_optional patt with
-    | Some k -> Env.get_refinement cx k loc
-    | None -> None
-end
+let get_of_pattern ~allow_optional cx patt loc =
+  match key_of_pattern ~allow_optional patt with
+  | Some k -> Env.get_refinement cx k loc
+  | None -> None

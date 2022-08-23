@@ -11,10 +11,7 @@ open Reason
 open Type
 open Hint_api
 
-module Make
-    (Env : Env_sig.S)
-    (Destructuring : Destructuring_sig.S)
-    (Statement : Statement_sig.S with module Env := Env) :
+module Make (Destructuring : Destructuring_sig.S) (Statement : Statement_sig.S) :
   Func_stmt_config_sig.S with module Types = Func_stmt_config_types.Types = struct
   module Types = Func_stmt_config_types.Types
   open Types

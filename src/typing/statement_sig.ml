@@ -9,15 +9,7 @@ module Ast = Flow_ast
 open Func_class_sig_types
 
 module type S = sig
-  module Env : Env_sig.S
-
-  module Abnormal : Abnormal_sig.S with module Env := Env
-
-  module Import_export : module type of Import_export.Make (Env)
-
-  module Toplevels : module type of Toplevels.Make (Env) (Abnormal)
-
-  module Anno : Type_annotation_sig.S with module Env := Env
+  module Anno : Type_annotation_sig.S
 
   module Func_stmt_config : Func_stmt_config_sig.S with module Types := Func_stmt_config_types.Types
 

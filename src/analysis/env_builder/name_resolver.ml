@@ -2131,7 +2131,7 @@ module Make
                   (* All of the providers are aleady in the map. We don't want to overwrite them with
                    * a non-assigning write. We _do_ want to enter regular function declarations as
                    * non-assigning writes so that they are not checked against the providers in
-                   * New_env.set_env_entry *)
+                   * Env.set_env_entry *)
                   EnvMap.update_ordinary
                     loc
                     (fun x ->
@@ -2480,7 +2480,7 @@ module Make
                       (* All of the providers are aleady in the map. We don't want to overwrite them with
                        * a non-assigning write. We _do_ want to enter regular function declarations as
                        * non-assigning writes so that they are not checked against the providers in
-                       * New_env.set_env_entry *)
+                       * Env.set_env_entry *)
                       EnvMap.update_ordinary
                         name_loc
                         (fun x ->

@@ -10,8 +10,6 @@
  *)
 
 module type S = sig
-  module Env : Env_sig.S
-
   module Class_type_sig : Class_sig_intf.S
 
   val convert :
@@ -33,7 +31,7 @@ module type S = sig
     Type.t option * (ALoc.t, ALoc.t * Type.t) Flow_ast.Type.t option
 
   val convert_qualification :
-    ?lookup_mode:Env_sig.LookupMode.t ->
+    ?lookup_mode:Env.LookupMode.t ->
     Context.t ->
     string ->
     (ALoc.t, ALoc.t) Flow_ast.Type.Generic.Identifier.t ->

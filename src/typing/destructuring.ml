@@ -21,10 +21,7 @@ open Type
 open Hint_api
 open TypeUtil
 
-module Make (Env : Env_sig.S) (Statement : Statement_sig.S with module Env := Env) :
-  Destructuring_sig.S = struct
-  module Refinement = Refinement.Make (Env)
-
+module Make (Statement : Statement_sig.S) : Destructuring_sig.S = struct
   type state = {
     parent: Type.t option;
     current: Type.t;

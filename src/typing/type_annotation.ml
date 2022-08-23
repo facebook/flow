@@ -70,13 +70,8 @@ module Annot : C = struct
   let subtype_check _ _ _ = (* TODO *) ()
 end
 
-module Make
-    (ConsGen : C)
-    (Env : Env_sig.S)
-    (Abnormal : Abnormal_sig.S with module Env := Env)
-    (Statement : Statement_sig.S with module Env := Env) : Type_annotation_sig.S = struct
-  open Env_sig.LookupMode
-  module Env = Env
+module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
+  open Env.LookupMode
 
   module Func_type_params_config_types = struct
     type 'T ast = (ALoc.t, 'T) Ast.Type.Function.Params.t
@@ -142,16 +137,14 @@ module Make
   module Func_type_sig_types =
     Func_class_sig_types.Func.Make (Func_type_params_config_types) (Func_type_params_types)
   module Func_type_sig =
-    Func_sig.Make (Env) (Abnormal) (Statement) (Func_type_params_config_types)
-      (Func_type_params_config)
+    Func_sig.Make (Statement) (Func_type_params_config_types) (Func_type_params_config)
       (Func_type_params)
       (Func_type_sig_types)
   module Class_type_sig_types =
     Func_class_sig_types.Class.Make (Func_type_params_config_types) (Func_type_params_types)
       (Func_type_sig_types)
   module Class_type_sig =
-    Class_sig.Make (Env) (Func_type_params_config_types) (Func_type_params_config)
-      (Func_type_params)
+    Class_sig.Make (Func_type_params_config_types) (Func_type_params_config) (Func_type_params)
       (Func_type_sig)
       (Class_type_sig_types)
 
@@ -2007,7 +2000,7 @@ module Make
       Env.var_ref ~lookup_mode:ForType cx (OrdinaryName name) loc
 
   and mk_interface_super cx tparams_map (loc, { Ast.Type.Generic.id; targs; comments }) =
-    let lookup_mode = Env_sig.LookupMode.ForType in
+    let lookup_mode = Env.LookupMode.ForType in
     let (c, id) = convert_qualification ~lookup_mode cx "extends" id in
     let (typeapp, targs) =
       match targs with
@@ -2329,7 +2322,7 @@ module Make
       let name = qualified_name id in
       let r = mk_annot_reason (RType (OrdinaryName name)) loc in
       let (i, id) =
-        let lookup_mode = Env_sig.LookupMode.ForValue in
+        let lookup_mode = Env.LookupMode.ForValue in
         convert_qualification ~lookup_mode cx "mixins" id
       in
       let props_bag = ConsGen.mixin cx r i in
@@ -2367,7 +2360,7 @@ module Make
         let (extends, extends_ast) =
           match extends with
           | Some (loc, { Ast.Type.Generic.id; targs; comments }) ->
-            let lookup_mode = Env_sig.LookupMode.ForValue in
+            let lookup_mode = Env.LookupMode.ForValue in
             let (i, id) = convert_qualification ~lookup_mode cx "mixins" id in
             let (t, targs) = mk_super cx tparams_map_with_this loc i targs in
             (Some t, Some (loc, { Ast.Type.Generic.id; targs; comments }))
@@ -2386,7 +2379,7 @@ module Make
               |> Base.List.map ~f:(fun (loc, i) ->
                      let { Interface.id = (id_loc, id_name_inner); targs } = i in
                      let { Ast.Identifier.name; comments = _ } = id_name_inner in
-                     let c = Env.get_var ~lookup_mode:Env_sig.LookupMode.ForType cx name id_loc in
+                     let c = Env.get_var ~lookup_mode:Env.LookupMode.ForType cx name id_loc in
                      let (typeapp, targs) =
                        match targs with
                        | None -> ((loc, c, None), None)

@@ -170,7 +170,7 @@ let type_of_hint_decomposition cx op loc ~resolver t =
       | Decomp_MethodPrivateName (name, class_stack) ->
         let env = Context.environment cx in
         Context.set_environment cx { env with Loc_env.class_stack };
-        let class_entries = New_env.New_env.get_class_entries cx in
+        let class_entries = Env.get_class_entries cx in
         let t =
           Tvar.mk_where cx dummy_reason (fun prop_t ->
               Flow_js.flow

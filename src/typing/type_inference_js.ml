@@ -373,176 +373,133 @@ let scan_for_suppressions cx lint_severities comments =
   scan_for_error_suppressions cx comments;
   scan_for_lint_suppressions cx lint_severities comments
 
-module type S = sig
-  (* Lint suppressions are handled iff lint_severities is Some. *)
-  val infer_ast :
-    lint_severities:Severity.severity LintSettings.t ->
-    Context.t ->
-    File_key.t ->
-    Loc.t Flow_ast.Comment.t list ->
-    (ALoc.t, ALoc.t) Flow_ast.Program.t ->
-    (ALoc.t, ALoc.t * Type.t) Flow_ast.Program.t
+module Statement = Fix_statement.Statement_
 
-  (* Lint suppressions are handled iff lint_severities is Some. *)
-  val infer_lib_file :
-    exclude_syms:NameUtils.Set.t ->
-    lint_severities:Severity.severity LintSettings.t ->
-    file_sig:File_sig.With_ALoc.t ->
-    Context.t ->
-    (Loc.t, Loc.t) Flow_ast.Program.t ->
-    Reason.name list * (ALoc.t, ALoc.t * Type.t) Flow_ast.Statement.t list
-end
+(**********)
+(* Driver *)
+(**********)
 
-module Make_Inference (Env : Env_sig.S) = struct
-  module rec Statement_ : (Statement_sig.S with module Env := Env) =
-    Statement.Make (Env) (Destructuring_) (Func_stmt_config_) (Statement_)
+(* core inference, assuming setup and teardown happens elsewhere *)
+let infer_core cx statements =
+  Abnormal.try_with_abnormal_exn
+    ~f:(fun () ->
+      statements |> Statement.toplevel_decls cx;
+      statements |> Toplevels.toplevels Statement.statement cx)
+    ~on_abnormal_exn:(function
+      | (Abnormal.Stmts stmts, Abnormal.Throw) ->
+        (* throw is allowed as a top-level statement *)
+        stmts
+      | (Abnormal.Stmts stmts, _) ->
+        (* should never happen *)
+        let loc = Loc.{ none with source = Some (Context.file cx) } |> ALoc.of_loc in
+        Flow_js.add_output cx Error_message.(EInternal (loc, AbnormalControlFlow));
+        stmts
+      | _ -> failwith "Flow bug: Statement.toplevels threw with non-stmts payload")
+    ()
 
-  and Destructuring_ : Destructuring_sig.S = Destructuring.Make (Env) (Statement_)
-
-  and Func_stmt_config_ :
-    (Func_stmt_config_sig.S with module Types := Func_stmt_config_types.Types) =
-    Func_stmt_config.Make (Env) (Destructuring_) (Statement_)
-
-  module Statement = Statement_
-  module Abnormal = Statement.Abnormal
-  module Env_resolution = Env_resolution.Make (Env) (Statement)
-
-  (* Some versions of Ocaml raise a warning 60 (unused module) without the following *)
-  module _ = Destructuring_
-  module _ = Func_stmt_config_
-end
-
-module Make (Env : Env_sig.S) : S = struct
-  include Make_Inference (Env)
-
-  (**********)
-  (* Driver *)
-  (**********)
-
-  (* core inference, assuming setup and teardown happens elsewhere *)
-  let infer_core cx statements =
-    Abnormal.try_with_abnormal_exn
-      ~f:(fun () ->
-        statements |> Statement.toplevel_decls cx;
-        statements |> Statement.Toplevels.toplevels Statement.statement cx)
-      ~on_abnormal_exn:(function
-        | (Abnormal.Stmts stmts, Abnormal.Throw) ->
-          (* throw is allowed as a top-level statement *)
-          stmts
-        | (Abnormal.Stmts stmts, _) ->
-          (* should never happen *)
-          let loc = Loc.{ none with source = Some (Context.file cx) } |> ALoc.of_loc in
-          Flow_js.add_output cx Error_message.(EInternal (loc, AbnormalControlFlow));
-          stmts
-        | _ -> failwith "Flow bug: Statement.toplevels threw with non-stmts payload")
-      ()
-
-  let initialize_env
-      ~lib ?(exclude_syms = NameUtils.Set.empty) ?local_exports_var cx aloc_ast module_scope =
-    let (_abrupt_completion, ({ Env_api.env_entries; providers; _ } as info)) =
-      NameResolver.program_with_scope cx ~lib ~exclude_syms aloc_ast
-    in
-    let env = Loc_env.with_info Scope.Global info (fst aloc_ast) in
-    let name_def_graph = Name_def.find_defs env_entries providers aloc_ast in
-    let components = NameDefOrdering.build_ordering cx info name_def_graph in
-    if Context.cycle_errors cx then Base.List.iter ~f:(Cycles.handle_component cx) components;
-    Context.set_environment cx env;
-    Env.init_env ~exclude_syms cx (fst aloc_ast) module_scope;
+let initialize_env
+    ~lib ?(exclude_syms = NameUtils.Set.empty) ?local_exports_var cx aloc_ast module_scope =
+  let (_abrupt_completion, ({ Env_api.env_entries; providers; _ } as info)) =
+    NameResolver.program_with_scope cx ~lib ~exclude_syms aloc_ast
+  in
+  let env = Loc_env.with_info Scope.Global info (fst aloc_ast) in
+  let name_def_graph = Name_def.find_defs env_entries providers aloc_ast in
+  let components = NameDefOrdering.build_ordering cx info name_def_graph in
+  if Context.cycle_errors cx then Base.List.iter ~f:(Cycles.handle_component cx) components;
+  Context.set_environment cx env;
+  Env.init_env ~exclude_syms cx (fst aloc_ast) module_scope;
+  let env = Context.environment cx in
+  Base.Option.iter local_exports_var ~f:(fun local_exports_var ->
+      let loc = TypeUtil.loc_of_t local_exports_var in
+      let t =
+        Base.Option.value_exn
+          ~message:(ALoc.debug_to_string ~include_source:true loc)
+          (Loc_env.find_write env Env_api.GlobalExportsLoc loc)
+      in
+      Flow_js.unify cx t local_exports_var
+  );
+  if Context.resolved_env cx then begin
+    let { Loc_env.scope_kind; class_stack; _ } = Context.environment cx in
+    Base.List.iter ~f:(Env_resolution.resolve_component cx name_def_graph) components;
+    Debug_js.Verbose.print_if_verbose_lazy cx (lazy ["Finished all components"]);
     let env = Context.environment cx in
-    Base.Option.iter local_exports_var ~f:(fun local_exports_var ->
-        let loc = TypeUtil.loc_of_t local_exports_var in
-        let t =
-          Base.Option.value_exn
-            ~message:(ALoc.debug_to_string ~include_source:true loc)
-            (Loc_env.find_write env Env_api.GlobalExportsLoc loc)
-        in
-        Flow_js.unify cx t local_exports_var
-    );
-    if Context.resolved_env cx then begin
-      let { Loc_env.scope_kind; class_stack; _ } = Context.environment cx in
-      Base.List.iter ~f:(Env_resolution.resolve_component cx name_def_graph) components;
-      Debug_js.Verbose.print_if_verbose_lazy cx (lazy ["Finished all components"]);
-      let env = Context.environment cx in
-      Context.set_environment cx { env with Loc_env.scope_kind; class_stack }
-    end
+    Context.set_environment cx { env with Loc_env.scope_kind; class_stack }
+  end
 
-  (* build module graph *)
-  (* Lint suppressions are handled iff lint_severities is Some. *)
-  let infer_ast ~lint_severities cx filename comments aloc_ast =
-    assert (Context.is_checked cx);
+(* build module graph *)
+(* Lint suppressions are handled iff lint_severities is Some. *)
+let infer_ast ~lint_severities cx filename comments aloc_ast =
+  assert (Context.is_checked cx);
 
-    let ( prog_aloc,
-          {
-            Ast.Program.statements = aloc_statements;
-            comments = aloc_comments;
-            all_comments = aloc_all_comments;
-          }
-        ) =
-      aloc_ast
-    in
-
-    let file_loc = Loc.{ none with source = Some filename } |> ALoc.of_loc in
-    let reason = Reason.mk_reason Reason.RExports file_loc in
-    let dict =
-      {
-        Type.key = Type.StrT.make reason (Trust.bogus_trust ());
-        value = Type.MixedT.make reason (Trust.bogus_trust ());
-        dict_name = None;
-        dict_polarity = Polarity.Negative;
-      }
-    in
-    let init_exports = Obj_type.mk cx ~obj_kind:(Type.Indexed dict) reason in
-    let reason_exports_module =
-      Reason.mk_reason Reason.(RModule (OrdinaryName (File_key.to_string filename))) file_loc
-    in
-    let local_exports_var =
-      Tvar.mk_no_wrap_where cx reason_exports_module (fun (_, id) ->
-          Flow_js.resolve_id cx id init_exports
-      )
-    in
-    let module_scope = Scope.fresh ~var_scope_kind:Scope.Module () in
-    initialize_env ~lib:false ~local_exports_var cx aloc_ast module_scope;
-
-    (* infer *)
-    let typed_statements = infer_core cx aloc_statements in
-    scan_for_suppressions cx lint_severities comments;
-
-    let program =
-      ( prog_aloc,
+  let ( prog_aloc,
         {
-          Ast.Program.statements = typed_statements;
+          Ast.Program.statements = aloc_statements;
           comments = aloc_comments;
           all_comments = aloc_all_comments;
         }
-      )
-    in
+      ) =
+    aloc_ast
+  in
 
-    Exists_marker.mark cx program;
-    program
+  let file_loc = Loc.{ none with source = Some filename } |> ALoc.of_loc in
+  let reason = Reason.mk_reason Reason.RExports file_loc in
+  let dict =
+    {
+      Type.key = Type.StrT.make reason (Trust.bogus_trust ());
+      value = Type.MixedT.make reason (Trust.bogus_trust ());
+      dict_name = None;
+      dict_polarity = Polarity.Negative;
+    }
+  in
+  let init_exports = Obj_type.mk cx ~obj_kind:(Type.Indexed dict) reason in
+  let reason_exports_module =
+    Reason.mk_reason Reason.(RModule (OrdinaryName (File_key.to_string filename))) file_loc
+  in
+  let local_exports_var =
+    Tvar.mk_no_wrap_where cx reason_exports_module (fun (_, id) ->
+        Flow_js.resolve_id cx id init_exports
+    )
+  in
+  let module_scope = Scope.fresh ~var_scope_kind:Scope.Module () in
+  initialize_env ~lib:false ~local_exports_var cx aloc_ast module_scope;
 
-  (* infer a parsed library file.
-     processing is similar to an ordinary module, except that
-     a) symbols from prior library loads are suppressed if found,
-     b) bindings are added as properties to the builtin object
-  *)
-  let infer_lib_file ~exclude_syms ~lint_severities ~file_sig cx ast =
-    let aloc_ast = Ast_loc_utils.loc_to_aloc_mapper#program ast in
-    let (_, { Ast.Program.all_comments; _ }) = ast in
-    let (_, { Ast.Program.statements = aloc_statements; _ }) = aloc_ast in
+  (* infer *)
+  let typed_statements = infer_core cx aloc_statements in
+  scan_for_suppressions cx lint_severities comments;
 
-    let () =
-      (* TODO: Wait a minute, why do we bother with requires for lib files? Pretty
-         confident that we don't support them in any sensible way. *)
-      add_require_tvars cx file_sig
-    in
-    let module_scope = Scope.fresh ~var_scope_kind:Scope.Global () in
+  let program =
+    ( prog_aloc,
+      {
+        Ast.Program.statements = typed_statements;
+        comments = aloc_comments;
+        all_comments = aloc_all_comments;
+      }
+    )
+  in
 
-    initialize_env ~lib:true ~exclude_syms cx aloc_ast module_scope;
+  Exists_marker.mark cx program;
+  program
 
-    let t_stmts = infer_core cx aloc_statements in
-    scan_for_suppressions cx lint_severities all_comments;
+(* infer a parsed library file.
+   processing is similar to an ordinary module, except that
+   a) symbols from prior library loads are suppressed if found,
+   b) bindings are added as properties to the builtin object
+*)
+let infer_lib_file ~exclude_syms ~lint_severities ~file_sig cx ast =
+  let aloc_ast = Ast_loc_utils.loc_to_aloc_mapper#program ast in
+  let (_, { Ast.Program.all_comments; _ }) = ast in
+  let (_, { Ast.Program.statements = aloc_statements; _ }) = aloc_ast in
 
-    (Env.init_builtins_from_libdef cx module_scope, t_stmts)
-end
+  let () =
+    (* TODO: Wait a minute, why do we bother with requires for lib files? Pretty
+       confident that we don't support them in any sensible way. *)
+    add_require_tvars cx file_sig
+  in
+  let module_scope = Scope.fresh ~var_scope_kind:Scope.Global () in
 
-include Make (New_env.New_env)
+  initialize_env ~lib:true ~exclude_syms cx aloc_ast module_scope;
+
+  let t_stmts = infer_core cx aloc_statements in
+  scan_for_suppressions cx lint_severities all_comments;
+
+  (Env.init_builtins_from_libdef cx module_scope, t_stmts)

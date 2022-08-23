@@ -86,18 +86,8 @@ end = struct
     assert (List.length errs = 0);
     Ast_loc_utils.loc_to_aloc_mapper#type_annotation t
 
-  module New_env : Env_sig.S = New_env.New_env
-
-  module rec Statement_ : (Statement_sig.S with module Env := New_env) =
-    Statement.Make (New_env) (Destructuring_) (Func_stmt_config_) (Statement_)
-
-  and Destructuring_ : Destructuring_sig.S = Destructuring.Make (New_env) (Statement_)
-
-  and Func_stmt_config_ :
-    (Func_stmt_config_sig.S with module Types := Func_stmt_config_types.Types) =
-    Func_stmt_config.Make (New_env) (Destructuring_) (Statement_)
-
-  module Annot = Statement_.Anno
+  module Statement = Fix_statement.Statement_
+  module Annot = Type_annotation.Make (Type_annotation.FlowJS) (Statement)
   module NameResolver = Name_resolver.Make_of_flow (Context) (Flow_js_utils)
 
   let parse cx content =
@@ -110,7 +100,7 @@ end = struct
     in
     let env = Loc_env.with_info Scope.Global info program_loc in
     Context.set_environment cx env;
-    New_env.init_env cx program_loc (Scope.fresh ~var_scope_kind:Scope.Global ());
+    Env.init_env cx program_loc (Scope.fresh ~var_scope_kind:Scope.Global ());
     let ((_, t), _) = Annot.convert cx Subst_name.Map.empty t_ast in
     t
 end
