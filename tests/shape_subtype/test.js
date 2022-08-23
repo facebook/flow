@@ -12,11 +12,6 @@ let z3:$Shape<Object> = {x : 3}; // no error
 
 let z5:$Shape<any> = {x : 3}; // no error
 
-let method = () => {
-  return;
-};
-let z7 : $Shape<typeof method> = {m : 5, k : 5}; // no error
-
 let a = [];
 let z8 : $Shape<typeof a> = {y : 4}; // flow error
 

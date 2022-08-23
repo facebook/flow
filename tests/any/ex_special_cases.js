@@ -27,13 +27,11 @@ var f_from_any: () => void = a;
 var c_any: any = new C();
 var obj_any: any = {};
 var obj_proto_any: any = Object.prototype;
-var fun_proto_any: any = f.prototype;
 
 // objectlike ~> any
 var c_from_any: C = a;
 var c_from_obj: {| |} = a;
 var obj_proto_from_any: typeof Object.prototype = a;
-var fun_proto_from_any: typeof f.prototype = a;
 
 // any ~> get/method
 declare var receiver: any;

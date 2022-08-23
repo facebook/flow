@@ -13,140 +13,140 @@ References:
                     ^^^^^^^^^ [1]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:21:29
+Error ---------------------------------------------------------------------------------------------------- test.js:16:29
 
 Cannot assign object literal to `z8` because property `y` is missing in `typeof a` [1] but exists in object literal [2].
 [incompatible-use]
 
-   test.js:21:29
-   21| let z8 : $Shape<typeof a> = {y : 4}; // flow error
+   test.js:16:29
+   16| let z8 : $Shape<typeof a> = {y : 4}; // flow error
                                    ^^^^^^^ [2]
 
 References:
-   test.js:21:17
-   21| let z8 : $Shape<typeof a> = {y : 4}; // flow error
+   test.js:16:17
+   16| let z8 : $Shape<typeof a> = {y : 4}; // flow error
                        ^^^^^^^^ [1]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:24:27
+Error ---------------------------------------------------------------------------------------------------- test.js:19:27
 
 Cannot assign object literal to `z9` because property `x` is missing in number [1] but exists in object literal [2].
 [incompatible-use]
 
-   test.js:24:27
-   24| let z9 : $Shape<number> = {x : 3}; // flow error
+   test.js:19:27
+   19| let z9 : $Shape<number> = {x : 3}; // flow error
                                  ^^^^^^^ [2]
 
 References:
-   test.js:24:17
-   24| let z9 : $Shape<number> = {x : 3}; // flow error
+   test.js:19:17
+   19| let z9 : $Shape<number> = {x : 3}; // flow error
                        ^^^^^^ [1]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:27:28
+Error ---------------------------------------------------------------------------------------------------- test.js:22:28
 
 Cannot assign object literal to `z11` because property `x` is missing in string [1] but exists in object literal [2].
 [incompatible-use]
 
-   test.js:27:28
-   27| let z11 : $Shape<string> = {x : 3}; // flow error
+   test.js:22:28
+   22| let z11 : $Shape<string> = {x : 3}; // flow error
                                   ^^^^^^^ [2]
 
 References:
-   test.js:27:18
-   27| let z11 : $Shape<string> = {x : 3}; // flow error
+   test.js:22:18
+   22| let z11 : $Shape<string> = {x : 3}; // flow error
                         ^^^^^^ [1]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:29:24
+Error ---------------------------------------------------------------------------------------------------- test.js:24:24
 
 Cannot assign object literal to `z14` because property `p` is missing in object type [1] but exists in object
 literal [2]. [prop-missing]
 
-   test.js:29:24
-   29| let z14 : $Shape<{}> = {p : 'foo'}; // flow error
+   test.js:24:24
+   24| let z14 : $Shape<{}> = {p : 'foo'}; // flow error
                               ^^^^^^^^^^^ [2]
 
 References:
-   test.js:29:18
-   29| let z14 : $Shape<{}> = {p : 'foo'}; // flow error
+   test.js:24:18
+   24| let z14 : $Shape<{}> = {p : 'foo'}; // flow error
                         ^^ [1]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:63:22
+Error ---------------------------------------------------------------------------------------------------- test.js:58:22
 
 Cannot assign object literal to `_b` because property `y` is missing in `A` [1] but exists in object literal [2].
 [prop-missing]
 
-   test.js:63:22
-   63| let _b : $Shape<A> = { y : 4 }; // flow error
+   test.js:58:22
+   58| let _b : $Shape<A> = { y : 4 }; // flow error
                             ^^^^^^^^^ [2]
 
 References:
-   test.js:63:17
-   63| let _b : $Shape<A> = { y : 4 }; // flow error
+   test.js:58:17
+   58| let _b : $Shape<A> = { y : 4 }; // flow error
                        ^ [1]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:66:22
+Error ---------------------------------------------------------------------------------------------------- test.js:61:22
 
 Cannot assign object literal to `_e` because property `z` is missing in `B` [1] but exists in object literal [2].
 [prop-missing]
 
-   test.js:66:22
-   66| let _e : $Shape<B> = { z : 4 }; // flow error
+   test.js:61:22
+   61| let _e : $Shape<B> = { z : 4 }; // flow error
                             ^^^^^^^^^ [2]
 
 References:
-   test.js:66:17
-   66| let _e : $Shape<B> = { z : 4 }; // flow error
+   test.js:61:17
+   61| let _e : $Shape<B> = { z : 4 }; // flow error
                        ^ [1]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:70:22
+Error ---------------------------------------------------------------------------------------------------- test.js:65:22
 
 Cannot assign object literal to `_i` because property `a` is missing in `C` [1] but exists in object literal [2].
 [prop-missing]
 
-   test.js:70:22
-   70| let _i : $Shape<C> = { a : 4 }; // flow error
+   test.js:65:22
+   65| let _i : $Shape<C> = { a : 4 }; // flow error
                             ^^^^^^^^^ [2]
 
 References:
-   test.js:70:17
-   70| let _i : $Shape<C> = { a : 4 }; // flow error
+   test.js:65:17
+   65| let _i : $Shape<C> = { a : 4 }; // flow error
                        ^ [1]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:72:25
+Error ---------------------------------------------------------------------------------------------------- test.js:67:25
 
 Cannot assign object literal to `_k` because property `x` is missing in `Empt` [1] but exists in object literal [2].
 [prop-missing]
 
-   test.js:72:25
-   72| let _k : $Shape<Empt> = { x : 4 }; // flow error
+   test.js:67:25
+   67| let _k : $Shape<Empt> = { x : 4 }; // flow error
                                ^^^^^^^^^ [2]
 
 References:
-   test.js:72:17
-   72| let _k : $Shape<Empt> = { x : 4 }; // flow error
+   test.js:67:17
+   67| let _k : $Shape<Empt> = { x : 4 }; // flow error
                        ^^^^ [1]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:83:22
+Error ---------------------------------------------------------------------------------------------------- test.js:78:22
 
 Cannot assign object literal to `_l` because `A` [1] is incompatible with `B` [2] in property `n`. [incompatible-type]
 
-   test.js:83:22
-   83| let _l : $Shape<D> = {m : a_inst, n : a_inst}; // flow error
+   test.js:78:22
+   78| let _l : $Shape<D> = {m : a_inst, n : a_inst}; // flow error
                             ^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   test.js:74:14
-   74| let a_inst : A = new A;
+   test.js:69:14
+   69| let a_inst : A = new A;
                     ^ [1]
-   test.js:80:7
-   80|   n : B = b_inst;
+   test.js:75:7
+   75|   n : B = b_inst;
              ^ [2]
 
 

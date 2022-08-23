@@ -15,38 +15,38 @@ References:
             ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------- ex_special_cases.js:41:21
+Error ---------------------------------------------------------------------------------------- ex_special_cases.js:39:21
 
 Cannot assign `array[receiver.name]` to `test1` because number [1] is incompatible with string [2]. [incompatible-type]
 
-   ex_special_cases.js:41:21
-   41| var test1: string = array[receiver.name]; // if result of receiver.getprop is any, this will fail, but no error if it's empty.
+   ex_special_cases.js:39:21
+   39| var test1: string = array[receiver.name]; // if result of receiver.getprop is any, this will fail, but no error if it's empty.
                            ^^^^^^^^^^^^^^^^^^^^
 
 References:
-   ex_special_cases.js:40:26
-   40| declare var array: Array<number>;
+   ex_special_cases.js:38:26
+   38| declare var array: Array<number>;
                                 ^^^^^^ [1]
-   ex_special_cases.js:41:12
-   41| var test1: string = array[receiver.name]; // if result of receiver.getprop is any, this will fail, but no error if it's empty.
+   ex_special_cases.js:39:12
+   39| var test1: string = array[receiver.name]; // if result of receiver.getprop is any, this will fail, but no error if it's empty.
                   ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------- ex_special_cases.js:42:21
+Error ---------------------------------------------------------------------------------------- ex_special_cases.js:40:21
 
 Cannot assign `array[receiver.name()]` to `test2` because number [1] is incompatible with string [2].
 [incompatible-type]
 
-   ex_special_cases.js:42:21
-   42| var test2: string = array[receiver.name()] // likewise
+   ex_special_cases.js:40:21
+   40| var test2: string = array[receiver.name()] // likewise
                            ^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   ex_special_cases.js:40:26
-   40| declare var array: Array<number>;
+   ex_special_cases.js:38:26
+   38| declare var array: Array<number>;
                                 ^^^^^^ [1]
-   ex_special_cases.js:42:12
-   42| var test2: string = array[receiver.name()] // likewise
+   ex_special_cases.js:40:12
+   40| var test2: string = array[receiver.name()] // likewise
                   ^^^^^^ [2]
 
 
