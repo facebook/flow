@@ -858,7 +858,7 @@ module Make
   let toplevels cx x =
     Env.in_class_scope cx x.class_loc (fun () ->
         let method_ ~set_asts f =
-          let (params_ast, body_ast, init_ast) = F.toplevels cx f in
+          let (params_ast, body_ast, init_ast) = F.toplevels cx ~hint:Hint_api.Hint_None f in
           set_asts (params_ast, body_ast, init_ast)
         in
         let field _name (_, _, value) =

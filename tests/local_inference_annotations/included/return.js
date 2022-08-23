@@ -17,3 +17,5 @@ let e = ((x => {
     const z = (x) => 3; // Missing annot on x
   return 3;
 }}): number => number => number);
+
+let f = (function () { return x => 3 }: (() => number => number));

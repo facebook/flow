@@ -8595,7 +8595,7 @@ module Make
         reason
         func
     in
-    let (params_ast, body_ast, _) = Func_stmt_sig.toplevels cx func_sig in
+    let (params_ast, body_ast, _) = Func_stmt_sig.toplevels cx ~hint:func_hint func_sig in
     let default_this =
       match default_this with
       | Some t -> t

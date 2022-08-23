@@ -215,7 +215,7 @@ struct
     | [(_, param_t)] -> param_t
     | _ -> failwith "Setter property with unexpected type"
 
-  let toplevels cx x =
+  let toplevels cx ~hint x =
     let { T.reason = reason_fn; kind; tparams_map; fparams; body; return_t; _ } = x in
     let body_loc =
       let open Ast.Function in
@@ -357,7 +357,7 @@ struct
 
     let (return_t, return_hint) =
       match (return_t, kind) with
-      | (Inferred t, _) -> (t, Hint_None)
+      | (Inferred t, _) -> (t, decompose_hint Decomp_FuncReturn hint)
       | (Annotated t, (Async | Generator _ | AsyncGenerator _)) ->
         (t, Hint_t (MixedT.why (reason_of_t t) (bogus_trust ()))) (* T122105974 *)
       | (Annotated t, _) -> (t, Hint_t t)

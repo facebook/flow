@@ -46,6 +46,7 @@ module type S = sig
 
   val toplevels :
     Context.t ->
+    hint:Type.t Hint_api.hint ->
     t ->
     func_params_tast option
     * (ALoc.t, ALoc.t * Type.t) Flow_ast.Function.body option
