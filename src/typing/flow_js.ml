@@ -635,7 +635,12 @@ struct
           rec_flow cx trace (reposition cx ~trace loc ?desc l, u)
         | (TypeDestructorTriggerT _, TypeCastT (use_op, cast_to_t)) ->
           rec_flow cx trace (l, UseT (use_op, cast_to_t))
-        | (TypeDestructorTriggerT _, _) -> ()
+        | (TypeDestructorTriggerT _, _) ->
+          Default_resolve.default_resolve_touts
+            ~flow:(rec_flow_t cx trace ~use_op:unknown_use)
+            cx
+            (reason_of_t l |> aloc_of_reason)
+            u
         (************************)
         (* Full type resolution *)
         (************************)

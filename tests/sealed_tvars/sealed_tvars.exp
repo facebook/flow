@@ -120,5 +120,24 @@ References:
                             ^^^^^^ [1]
 
 
+Error ---------------------------------------------------------------------------------------- regression_tests.js:78:30
 
-Found 13 errors
+Cannot call `inexactSpread` because Flow cannot determine a type for object type [1]. object type [2] is inexact, so it
+may contain `bar` with a type that conflicts with `bar`'s definition in object type [1]. Try making object type [2]
+exact. [cannot-spread-inexact]
+
+   regression_tests.js:78:30
+   78|   const inexact_spread_err = inexactSpread(inexact);
+                                    ^^^^^^^^^^^^^
+
+References:
+   regression_tests.js:77:44
+   77|   declare function inexactSpread<T>(x: T): {bar: 3, ...T};
+                                                  ^^^^^^^^^^^^^^ [1]
+   regression_tests.js:75:28
+   75|   let inexact = ({foo: 3}: {foo: number, ...});
+                                  ^^^^^^^^^^^^^^^^^^ [2]
+
+
+
+Found 14 errors
