@@ -570,25 +570,14 @@ module Env : Env_sig.S = struct
   let bind_const ?(state = State.Undeclared) cx name t loc =
     bind_entry cx (OrdinaryName name) (Entry.new_const t ~loc ~state) loc
 
-  let bind_import cx name t loc = bind_entry cx (OrdinaryName name) (Entry.new_import t ~loc) loc
-
   (* bind implicit const entry *)
   let bind_implicit_const ?(state = State.Undeclared) kind cx name t loc =
     bind_entry cx (OrdinaryName name) (Entry.new_const t ~kind ~loc ~state) loc
 
-  (* bind type entry *)
-  let bind_type ?(state = State.Declared) cx name t loc =
-    bind_entry cx (OrdinaryName name) (Entry.new_type t ~loc ~state) loc
-
-  let bind_this_tparam ~state cx t loc = bind_type ~state cx "this" t loc
+  let bind_this_tparam ~state cx t loc =
+    bind_entry cx (OrdinaryName "this") (Entry.new_type t ~loc ~state) loc
 
   let bind_class_self_type cx _class_loc self class_t_internal = Flow.unify cx self class_t_internal
-
-  let bind_import_type cx name t loc =
-    bind_entry cx (OrdinaryName name) (Entry.new_import_type t ~loc) loc
-
-  (* vars coming from 'declare' statements are preinitialized *)
-  let bind_declare_var cx name t = bind_var_to_name ~state:State.Initialized cx name (Annotated t)
 
   (* bind entry for declare function *)
   let bind_declare_fun =
@@ -648,40 +637,6 @@ module Env : Env_sig.S = struct
               (* declare function shadows some other kind of binding *)
               already_bound_error cx name prev loc)
           )
-
-  let same_kind k1 k2 =
-    let open Entry in
-    match (k1, k2) with
-    | (Var _, Var _) -> true
-    | (Let (kind1, _), Let (kind2, _)) -> kind1 = kind2
-    | (Const kind1, Const kind2) -> kind1 = kind2
-    | _ -> false
-
-  (* helper: move a Let/Const's entry's state from Undeclared to Declared.
-     Only needed for let and const to push things into scope for potentially
-     recursive internal refs: hoisted things (vars and types) become declared
-     immediately on binding.
-  *)
-  let declare_value_entry kind cx name loc =
-    if not (is_excluded name) then
-      Entry.(
-        let (scope, entry) = find_entry cx name loc in
-        match entry with
-        | Value v
-          when same_kind (Entry.kind_of_value v) kind && Entry.state_of_value v = State.Undeclared
-          ->
-          let new_entry = Value { v with value_state = State.Declared } in
-          Scope.add_entry name new_entry scope
-        | _ -> already_bound_error cx name entry loc
-      )
-
-  let declare_let = declare_value_entry Entry.(Let (LetVarBinding, Havocable))
-
-  let declare_implicit_let kind = declare_value_entry Entry.(Let (kind, Havocable))
-
-  let declare_const = declare_value_entry Entry.(Const ConstVarBinding)
-
-  let declare_implicit_const kind = declare_value_entry (Entry.Const kind)
 
   let initialized_value_entry specific v =
     Entry.Value { v with Entry.value_state = State.Initialized; specific }
@@ -744,46 +699,6 @@ module Env : Env_sig.S = struct
   let init_const = init_value_entry Entry.(Const ConstVarBinding)
 
   let init_implicit_const kind = init_value_entry Entry.(Const kind)
-
-  (* update type alias to reflect initialization in code *)
-  let init_type cx name type_ loc =
-    let name = OrdinaryName name in
-    if not (is_excluded name) then
-      Entry.(
-        let (scope, entry) = find_entry cx name loc in
-        match entry with
-        | Type ({ type_state = State.Declared; _ } as t) ->
-          Flow.flow_t cx (type_, t.type_);
-          let new_entry = Type { t with type_state = State.Initialized; type_ } in
-          Scope.add_entry name new_entry scope
-        | _ ->
-          (* Incompatible or non-redeclarable new and previous entries.
-             We will have already issued an error in `bind_value_entry`,
-             so we can prune this case here. *)
-          ()
-      )
-
-  (* treat a var's declared (annotated) type as an initializer *)
-  let pseudo_init_declared_type cx name loc =
-    let name = OrdinaryName name in
-    if not (is_excluded name) then
-      Entry.(
-        let (scope, entry) = find_entry cx name loc in
-        match entry with
-        | Value ({ Entry.kind = Var _; _ } as v)
-        | Value
-            ({ Entry.kind = Let _ | Const _; value_state = State.(Undeclared | Declared); _ } as v)
-          ->
-          let entry =
-            initialized_value_entry (TypeUtil.type_t_of_annotated_or_inferred v.general) v
-          in
-          Scope.add_entry name entry scope
-        | _ ->
-          (* Incompatible or non-redeclarable new and previous entries.
-             We will have already issued an error in `bind_value_entry`,
-             so we can prune this case here. *)
-          ()
-      )
 
   (* helper for read/write tdz checks *)
   (* for now, we only enforce TDZ within the same activation.

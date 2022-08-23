@@ -253,12 +253,7 @@ struct
         let r = reason_of_t t in
         let loc = aloc_of_reason r in
         if Subst_name.string_of_subst_name name <> "this" then
-          Env.bind_type
-            cx
-            (Subst_name.string_of_subst_name name)
-            (DefT (r, bogus_trust (), TypeT (TypeParamKind, t)))
-            loc
-            ~state:Scope.State.Initialized
+          ()
         else
           Env.bind_this_tparam
             ~state:Scope.State.Initialized

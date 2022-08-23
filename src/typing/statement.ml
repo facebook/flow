@@ -200,8 +200,6 @@ struct
         tout
   end
 
-  let ident_name = Flow_ast_utils.name_of_ident
-
   let mk_ident ~comments name = { Ast.Identifier.name; comments }
 
   let snd_fst ((_, x), _) = x
@@ -369,16 +367,11 @@ struct
     | (_, With _) ->
       (* TODO disallow or push vars into env? *)
       ()
-    | (_, DeclareTypeAlias { TypeAlias.id = (name_loc, { Ast.Identifier.name; comments = _ }); _ })
-    | (_, TypeAlias { TypeAlias.id = (name_loc, { Ast.Identifier.name; comments = _ }); _ }) ->
-      let r = DescFormat.type_reason (OrdinaryName name) name_loc in
-      let tvar = Tvar.mk cx r in
-      Env.bind_type cx name tvar name_loc
-    | (_, DeclareOpaqueType { OpaqueType.id = (name_loc, { Ast.Identifier.name; comments = _ }); _ })
-    | (_, OpaqueType { OpaqueType.id = (name_loc, { Ast.Identifier.name; comments = _ }); _ }) ->
-      let r = DescFormat.type_reason (OrdinaryName name) name_loc in
-      let tvar = Tvar.mk cx r in
-      Env.bind_type cx name tvar name_loc
+    | (_, DeclareTypeAlias _)
+    | (_, TypeAlias _)
+    | (_, DeclareOpaqueType _)
+    | (_, OpaqueType _) ->
+      ()
     | (_, Switch { Switch.cases; _ }) ->
       Env.in_lex_scope (fun () ->
           cases |> List.iter (fun (_, { Switch.Case.consequent; _ }) -> toplevel_decls cx consequent)
@@ -425,12 +418,7 @@ struct
         let r = DescFormat.type_reason (OrdinaryName name) name_loc in
         let tvar = Tvar.mk cx r in
         Env.bind_implicit_const Scope.Entry.EnumNameBinding cx name (Annotated tvar) name_loc
-    | ( _,
-        DeclareVariable { DeclareVariable.id = (id_loc, { Ast.Identifier.name; comments = _ }); _ }
-      ) ->
-      let r = mk_reason (RIdentifier (OrdinaryName name)) id_loc in
-      let t = Tvar.mk cx r in
-      Env.bind_declare_var cx (OrdinaryName name) t id_loc
+    | (_, DeclareVariable _) -> ()
     | ( loc,
         DeclareFunction
           ( { DeclareFunction.id = (id_loc, { Ast.Identifier.name; comments = _ }); _ } as
@@ -452,35 +440,11 @@ struct
       let reason = mk_reason (RType name) name_loc in
       let tvar = Tvar.mk cx reason in
       Env.bind_implicit_let Scope.Entry.ClassNameBinding cx name (Inferred tvar) name_loc
-    | ( (_, DeclareClass { DeclareClass.id = (name_loc, { Ast.Identifier.name; comments = _ }); _ })
-      | (_, DeclareInterface { Interface.id = (name_loc, { Ast.Identifier.name; comments = _ }); _ })
-      | ( _,
-          InterfaceDeclaration
-            { Interface.id = (name_loc, { Ast.Identifier.name; comments = _ }); _ }
-        ) ) as stmt ->
-      let is_interface =
-        match stmt with
-        | (_, DeclareInterface _) -> true
-        | (_, InterfaceDeclaration _) -> true
-        | _ -> false
-      in
-      let r = mk_reason (RType (OrdinaryName name)) name_loc in
-      let tvar = Tvar.mk cx r in
-      (* interface is a type alias, declare class is a var *)
-      if is_interface then
-        Env.bind_type cx name tvar name_loc
-      else
-        Env.bind_declare_var cx (OrdinaryName name) tvar name_loc
-    | (loc, DeclareModule { DeclareModule.id; _ }) ->
-      let name =
-        match id with
-        | DeclareModule.Identifier (_, { Ast.Identifier.name = value; comments = _ })
-        | DeclareModule.Literal (_, { Ast.StringLiteral.value; _ }) ->
-          value
-      in
-      let r = mk_reason (RModule (OrdinaryName name)) loc in
-      let t = Tvar.mk cx r in
-      Env.bind_declare_var cx (internal_module_name name) t loc
+    | (_, DeclareClass _)
+    | (_, DeclareInterface _)
+    | (_, InterfaceDeclaration _)
+    | (_, DeclareModule _) ->
+      ()
     | (_, DeclareExportDeclaration { DeclareExportDeclaration.default; declaration; _ }) ->
       DeclareExportDeclaration.(
         (match declaration with
@@ -509,60 +473,10 @@ struct
       (match declaration with
       | ExportDefaultDeclaration.Declaration stmt -> statement_decl cx stmt
       | ExportDefaultDeclaration.Expression _ -> ())
-    | ( decl_loc,
-        ImportDeclaration
-          { ImportDeclaration.import_kind; specifiers; default; source = _; comments = _ }
-      ) ->
-      let isType =
-        match import_kind with
-        | ImportDeclaration.ImportType -> true
-        | ImportDeclaration.ImportTypeof -> true
-        | ImportDeclaration.ImportValue -> false
-      in
+    | (decl_loc, ImportDeclaration _) ->
       let is_global_lib_scope = File_key.is_lib_file (Context.file cx) && Env.in_global_scope cx in
       if is_global_lib_scope then
-        Flow_js.add_output cx Error_message.(EToplevelLibraryImport decl_loc);
-      let bind_import local_name (loc : ALoc.t) isType =
-        let reason =
-          if isType then
-            DescFormat.type_reason (OrdinaryName local_name) loc
-          else
-            mk_reason (RIdentifier (OrdinaryName local_name)) loc
-        in
-        let t =
-          if is_global_lib_scope then
-            AnyT.error reason
-          else
-            Tvar.mk cx reason
-        in
-        if isType then
-          Env.bind_import_type cx local_name t loc
-        else
-          Env.bind_import cx local_name t loc
-      in
-      Base.Option.iter ~f:(fun local -> bind_import (ident_name local) (fst local) isType) default;
-
-      Base.Option.iter
-        ~f:(function
-          | ImportDeclaration.ImportNamespaceSpecifier (_, local) ->
-            bind_import (ident_name local) (fst local) isType
-          | ImportDeclaration.ImportNamedSpecifiers named_specifiers ->
-            List.iter
-              (fun { ImportDeclaration.local; remote; kind } ->
-                let (loc, { Ast.Identifier.name = local_name; comments = _ }) =
-                  Base.Option.value ~default:remote local
-                in
-                let isType =
-                  isType
-                  ||
-                  match kind with
-                  | None -> isType
-                  | Some kind ->
-                    kind = ImportDeclaration.ImportType || kind = ImportDeclaration.ImportTypeof
-                in
-                bind_import local_name loc isType)
-              named_specifiers)
-        specifiers
+        Flow_js.add_output cx Error_message.(EToplevelLibraryImport decl_loc)
 
   (***************************************************************
    * local inference main pass: visit AST statement list, calling
@@ -781,34 +695,18 @@ struct
     | (_, With _) as s ->
       (* TODO or disallow? *)
       Tast_utils.error_mapper#statement s
-    | ( ( loc,
-          DeclareTypeAlias
-            ({ TypeAlias.id = (name_loc, { Ast.Identifier.name; comments = _ }); _ } as alias)
-        )
-      | ( loc,
-          TypeAlias
-            ({ TypeAlias.id = (name_loc, { Ast.Identifier.name; comments = _ }); _ } as alias)
-        ) ) as stmt ->
-      let (type_, type_alias_ast) = type_alias cx loc alias in
-      Env.init_type cx name type_ name_loc;
-      (match stmt with
-      | (_, DeclareTypeAlias _) -> (loc, DeclareTypeAlias type_alias_ast)
-      | (_, TypeAlias _) -> (loc, TypeAlias type_alias_ast)
-      | _ -> assert false)
-    | ( ( loc,
-          DeclareOpaqueType
-            ({ OpaqueType.id = (name_loc, { Ast.Identifier.name; comments = _ }); _ } as otype)
-        )
-      | ( loc,
-          OpaqueType
-            ({ OpaqueType.id = (name_loc, { Ast.Identifier.name; comments = _ }); _ } as otype)
-        ) ) as stmt ->
-      let (type_, opaque_type_ast) = opaque_type cx loc otype in
-      Env.init_type cx name type_ name_loc;
-      (match stmt with
-      | (_, DeclareOpaqueType _) -> (loc, DeclareOpaqueType opaque_type_ast)
-      | (_, OpaqueType _) -> (loc, OpaqueType opaque_type_ast)
-      | _ -> assert false)
+    | (loc, DeclareTypeAlias alias) ->
+      let (_, type_alias_ast) = type_alias cx loc alias in
+      (loc, DeclareTypeAlias type_alias_ast)
+    | (loc, TypeAlias alias) ->
+      let (_, type_alias_ast) = type_alias cx loc alias in
+      (loc, TypeAlias type_alias_ast)
+    | (loc, DeclareOpaqueType otype) ->
+      let (_, opaque_type_ast) = opaque_type cx loc otype in
+      (loc, DeclareOpaqueType opaque_type_ast)
+    | (loc, OpaqueType otype) ->
+      let (_, opaque_type_ast) = opaque_type cx loc otype in
+      (loc, OpaqueType opaque_type_ast)
     (*******************************************************)
     | (switch_loc, Switch { Switch.discriminant; cases; comments; exhaustive_out }) ->
       (* typecheck discriminant *)
@@ -1474,7 +1372,6 @@ struct
         if Context.enable_enums cx then (
           let enum_t = mk_enum cx ~enum_reason:reason name_loc body in
           let t = DefT (reason, literal_trust (), EnumObjectT enum_t) in
-          Env.declare_implicit_const Scope.Entry.EnumNameBinding cx (OrdinaryName name) name_loc;
           let use_op =
             Op
               (AssignVar
@@ -1538,7 +1435,6 @@ struct
       let name = OrdinaryName name in
       let kind = Scope.Entry.ClassNameBinding in
       let reason = DescFormat.instance_reason name name_loc in
-      Env.declare_implicit_let kind cx name name_loc;
       let general = Env.read_declared_type cx name reason name_loc in
       (* ClassDeclarations are statements, so we will never have an annotation to push down here *)
       let (class_t, c_ast) = mk_class cx class_loc ~name_loc ~general reason c in
@@ -1565,23 +1461,11 @@ struct
       in
       Env.init_var ~has_anno:false cx ~use_op (OrdinaryName name) t name_loc;
       (loc, DeclareClass decl_ast)
-    | ( loc,
-        DeclareInterface
-          ( { Ast.Statement.Interface.id = (name_loc, { Ast.Identifier.name; comments = _ }); _ } as
-          decl
-          )
-      ) ->
-      let (t, decl_ast) = interface cx loc decl in
-      Env.init_type cx name t name_loc;
+    | (loc, DeclareInterface decl) ->
+      let (_, decl_ast) = interface cx loc decl in
       (loc, DeclareInterface decl_ast)
-    | ( loc,
-        InterfaceDeclaration
-          ( { Ast.Statement.Interface.id = (name_loc, { Ast.Identifier.name; comments = _ }); _ } as
-          decl
-          )
-      ) ->
-      let (t, decl_ast) = interface cx loc decl in
-      Env.init_type cx name t name_loc;
+    | (loc, InterfaceDeclaration decl) ->
+      let (_, decl_ast) = interface cx loc decl in
       (loc, InterfaceDeclaration decl_ast)
     | (loc, DeclareModule ({ DeclareModule.id; _ } as module_)) ->
       let (id_loc, name) =
@@ -2604,8 +2488,8 @@ struct
     let open Ast.Statement in
     let (init_var, declare_var) =
       match kind with
-      | VariableDeclaration.Const -> (Env.init_const, Env.declare_const)
-      | VariableDeclaration.Let -> (Env.init_let, Env.declare_let)
+      | VariableDeclaration.Const -> (Env.init_const, (fun _ _ _ -> ()))
+      | VariableDeclaration.Let -> (Env.init_let, (fun _ _ _ -> ()))
       | VariableDeclaration.Var -> (Env.init_var, (fun _ _ _ -> ()))
     in
     let annot = Destructuring.type_of_pattern id in
@@ -2712,7 +2596,6 @@ struct
             let id_node_type =
               if has_anno then (
                 Env.unify_declared_type cx (OrdinaryName name) name_loc t;
-                Env.pseudo_init_declared_type cx name name_loc;
                 t
               ) else (
                 init_var cx ~use_op (OrdinaryName name) ~has_anno t name_loc;
@@ -3302,7 +3185,6 @@ struct
           Env.bind_implicit_let Scope.Entry.ClassNameBinding cx name (Inferred tvar) name_loc;
 
           let kind = Scope.Entry.ClassNameBinding in
-          Env.declare_implicit_let kind cx name name_loc;
           let use_op =
             Op
               (AssignVar

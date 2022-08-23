@@ -91,28 +91,11 @@ module type S = sig
   val bind_const :
     ?state:State.t -> Context.t -> string -> Type.annotated_or_inferred -> ALoc.t -> unit
 
-  val bind_import : Context.t -> string -> Type.t -> ALoc.t -> unit
-
-  val bind_type : ?state:State.t -> Context.t -> string -> Type.t -> ALoc.t -> unit
-
   val bind_this_tparam : state:State.t -> Context.t -> Type.t -> ALoc.t -> unit
 
   val bind_class_self_type : Context.t -> ALoc.t -> Type.t -> Type.t -> unit
 
-  val bind_import_type : Context.t -> string -> Type.t -> ALoc.t -> unit
-
-  val bind_declare_var : Context.t -> Reason.name -> Type.t -> ALoc.t -> unit
-
   val bind_declare_fun : Context.t -> predicate:bool -> Reason.name -> Type.t -> ALoc.t -> unit
-
-  val declare_let : Context.t -> Reason.name -> ALoc.t -> unit
-
-  val declare_implicit_let : Entry.let_binding_kind -> Context.t -> Reason.name -> ALoc.t -> unit
-
-  val declare_const : Context.t -> Reason.name -> ALoc.t -> unit
-
-  val declare_implicit_const :
-    Entry.const_binding_kind -> Context.t -> Reason.name -> ALoc.t -> unit
 
   val init_var :
     Context.t -> use_op:Type.use_op -> Reason.name -> has_anno:bool -> Type.t -> ALoc.t -> unit
@@ -145,11 +128,7 @@ module type S = sig
     ALoc.t ->
     unit
 
-  val init_type : Context.t -> string -> Type.t -> ALoc.t -> unit
-
   val init_import : lookup_mode:LookupMode.t -> Context.t -> Reason.name -> ALoc.t -> Type.t -> unit
-
-  val pseudo_init_declared_type : Context.t -> string -> ALoc.t -> unit
 
   val is_provider : Context.t -> ALoc.t -> bool
 
