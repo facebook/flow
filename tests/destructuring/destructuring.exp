@@ -256,6 +256,41 @@ References:
                    ^^^^ [2]
 
 
+Error ------------------------------------------------------------------------------------------------- computed.js:14:2
+
+Cannot cast `foo` to number literal `42` because number [1] is incompatible with number literal `42` [2].
+[incompatible-cast]
+
+   computed.js:14:2
+   14| (foo: 42); // error 17 ~> 42
+        ^^^
+
+References:
+   computed.js:11:31
+   11| const arr = [{foo: 42}, {foo: 17}];
+                                     ^^ [1]
+   computed.js:14:7
+   14| (foo: 42); // error 17 ~> 42
+             ^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- computed.js:16:2
+
+Cannot cast `foo` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+
+   computed.js:16:2
+   16| (foo: string); // error 17 ~> string
+        ^^^
+
+References:
+   computed.js:11:31
+   11| const arr = [{foo: 42}, {foo: 17}];
+                                     ^^ [1]
+   computed.js:16:7
+   16| (foo: string); // error 17 ~> string
+             ^^^^^^ [2]
+
+
 Error -------------------------------------------------------------------------------------------------- defaults.js:9:4
 
 Cannot cast `q` to undefined because number [1] is incompatible with undefined [2]. [incompatible-cast]
@@ -1371,4 +1406,4 @@ References:
 
 
 
-Found 92 errors
+Found 94 errors

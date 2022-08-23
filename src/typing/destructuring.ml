@@ -167,14 +167,7 @@ module Make (Statement : Statement_sig.S) : Destructuring_sig.S = struct
           )
       )
     in
-    let refinement =
-      Base.Option.bind init ~f:(fun init -> Refinement.get ~allow_optional:true cx init loc)
-    in
-    let (parent, current) =
-      match refinement with
-      | Some t -> (None, t)
-      | None -> (Some current, destruct cx reason ~annot (Elem t) current)
-    in
+    let (parent, current) = (Some current, destruct cx reason ~annot (Elem t) current) in
     let default = Base.Option.map default ~f:(Default.elem t reason) in
     ({ acc with parent; current; init; default }, e')
 
