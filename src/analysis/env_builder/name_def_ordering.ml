@@ -199,8 +199,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) = struct
           (* Ignore cases that don't have bindings in the environment, like `var x;`
              and illegal or unreachable writes. *)
           match EnvMap.find_opt (kind, loc) env_entries with
-          | Some Env_api.(AssigningWrite _ | GlobalWrite _ | EmptyArrayWrite _) ->
-            this#add ~why:loc (kind, loc)
+          | Some Env_api.(AssigningWrite _ | GlobalWrite _) -> this#add ~why:loc (kind, loc)
           | Some Env_api.NonAssigningWrite
           | None ->
             ()
@@ -476,6 +475,17 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) = struct
         | Value { hint; expr } ->
           let state = depends_of_hint state hint in
           depends_of_expression expr state
+        | EmptyArray { array_providers; _ } ->
+          ALocSet.fold
+            (fun loc acc ->
+              EnvMap.update
+                (Env_api.ArrayProviderLoc, loc)
+                (function
+                  | None -> Some (Nel.one id_loc)
+                  | Some locs -> Some (Nel.cons id_loc locs))
+                acc)
+            array_providers
+            EnvMap.empty
         | For (_, exp) -> depends_of_expression exp state
         | Contextual { reason = _; hint; default_expression } ->
           let state =
@@ -511,24 +521,12 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) = struct
              for `x` to the set of dependencies. *)
         match lhs_member_expression with
         | None ->
-          let { Provider_api.providers = provider_entries; array_providers; _ } =
+          let { Provider_api.providers = provider_entries; _ } =
             Base.Option.value_exn (Provider_api.providers_of_def providers id_loc)
-          in
-          let init =
-            ALocSet.fold
-              (fun loc acc ->
-                EnvMap.update
-                  (Env_api.ArrayProviderLoc, loc)
-                  (function
-                    | None -> Some (Nel.one id_loc)
-                    | Some locs -> Some (Nel.cons id_loc locs))
-                  acc)
-              array_providers
-              EnvMap.empty
           in
           if not @@ Provider_api.is_provider providers id_loc then
             Base.List.fold
-              ~init
+              ~init:EnvMap.empty
               ~f:(fun acc { Provider_api.reason = r; _ } ->
                 let key = Reason.poly_loc_of_reason r in
                 EnvMap.update
@@ -539,7 +537,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) = struct
                   acc)
               provider_entries
           else
-            init
+            EnvMap.empty
         | Some e -> depends_of_expression ~for_expression_writes:true e EnvMap.empty
       in
       let depends_of_binding bind =
@@ -631,7 +629,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) = struct
         | Root Catch -> true
         | Root (Annotation { default_expression = None; _ }) -> true
         | Root (Annotation { default_expression = Some _; _ }) -> false
-        | Root (For _ | Value _ | Contextual _) -> false
+        | Root (For _ | Value _ | Contextual _ | EmptyArray _) -> false
         | Select { selector = Computed _ | Default; _ } -> false
         | Select { binding; _ } -> bind_loop binding
       in

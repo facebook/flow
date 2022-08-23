@@ -176,6 +176,64 @@ module Make (Env : Env_sig.S) (Statement : Statement_sig.S with module Env := En
       let t = expression cx ~hint expr in
       let use_op = Op (AssignVar { var = Some reason; init = mk_expression_reason expr }) in
       (t, use_op, false)
+    | Root (EmptyArray { array_providers; arr_loc }) ->
+      let env = Context.environment cx in
+      let (elem_t, elems, reason) =
+        let element_reason = mk_reason Reason.unknown_elem_empty_array_desc loc in
+        if Context.array_literal_providers cx && ALocSet.cardinal array_providers > 0 then (
+          let ts =
+            ALocSet.elements array_providers
+            |> Base.List.map ~f:(fun loc ->
+                   New_env.New_env.check_readable cx Env_api.ArrayProviderLoc loc;
+                   New_env.New_env.t_option_value_exn
+                     cx
+                     loc
+                     (Loc_env.find_write env Env_api.ArrayProviderLoc loc)
+               )
+          in
+          let constrain_t =
+            Tvar.mk_where cx element_reason (fun tvar ->
+                Base.List.iter ~f:(fun t -> Flow_js.flow cx (t, UseT (unknown_use, tvar))) ts
+            )
+          in
+          let elem_t =
+            Tvar.mk_where cx element_reason (fun tvar ->
+                Flow_js.flow cx (constrain_t, UseT (unknown_use, tvar))
+            )
+          in
+          let use_op =
+            let name =
+              match desc_of_reason reason with
+              | RIdentifier (OrdinaryName x) -> x
+              | _ -> "an empty array"
+            in
+            Frame
+              ( ConstrainedAssignment
+                  {
+                    name;
+                    declaration = poly_loc_of_reason reason;
+                    providers = ALocSet.elements array_providers;
+                    array = true;
+                  },
+                unknown_use
+              )
+          in
+          Context.add_constrained_write cx (elem_t, use_op, constrain_t);
+          (elem_t, None, reason)
+        ) else (
+          if Context.array_literal_providers cx then
+            Flow_js.add_output cx Error_message.(EEmptyArrayNoProvider { loc });
+          (Tvar.mk cx element_reason, Some [], replace_desc_reason REmptyArrayLit reason)
+        )
+      in
+      let t = DefT (reason, bogus_trust (), ArrT (ArrayAT (elem_t, elems))) in
+      let cache = Context.node_cache cx in
+      let exp =
+        ((arr_loc, t), Flow_ast.Expression.(Array { Array.elements = []; comments = None }))
+      in
+      Node_cache.set_expression cache exp;
+      let use_op = Op (AssignVar { var = Some reason; init = mk_reason (RCode "[]") arr_loc }) in
+      (t, use_op, false)
     | Root (Contextual { reason; hint; default_expression = _ }) ->
       let param_loc = Reason.poly_loc_of_reason reason in
       let contextual_typing_enabled = Context.env_mode cx = Options.(SSAEnv Enforced) in

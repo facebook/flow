@@ -56,6 +56,10 @@ type root =
       hint: hint_node hint;
       expr: (ALoc.t, ALoc.t) Ast.Expression.t;
     }
+  | EmptyArray of {
+      array_providers: ALocSet.t;
+      arr_loc: ALoc.t;
+    }
   | Contextual of {
       reason: Reason.reason;
       hint: hint_node hint;
@@ -167,6 +171,7 @@ module Print = struct
 
   let string_of_root = function
     | Contextual _ -> "contextual"
+    | EmptyArray _ -> "[]"
     | Catch -> "catch"
     | Annotation { annot = (loc, _); _ } -> spf "annot %s" (ALoc.debug_to_string loc)
     | Value { expr = (loc, _); _ } -> spf "val %s" (ALoc.debug_to_string loc)
@@ -508,8 +513,8 @@ class def_finder env_entries providers toplevel_scope =
       let open Ast.Statement.VariableDeclaration.Declarator in
       let (_, { id; init }) = decl in
       let (source, hint) =
-        match (Destructure.type_of_pattern id, init) with
-        | (Some annot, _) ->
+        match (Destructure.type_of_pattern id, init, id) with
+        | (Some annot, _, _) ->
           ( Some
               (Annotation
                  {
@@ -522,8 +527,16 @@ class def_finder env_entries providers toplevel_scope =
               ),
             Hint_t (AnnotationHint (ALocMap.empty, annot))
           )
-        | (None, Some init) -> (Some (Value { hint = Hint_None; expr = init }), Hint_None)
-        | (None, None) -> (None, Hint_None)
+        | ( None,
+            Some (arr_loc, Ast.Expression.Array { Ast.Expression.Array.elements = []; _ }),
+            (_, Ast.Pattern.Identifier { Ast.Pattern.Identifier.name = (name_loc, _); _ })
+          ) ->
+          let { Provider_api.array_providers; _ } =
+            Base.Option.value_exn (Provider_api.providers_of_def providers name_loc)
+          in
+          (Some (EmptyArray { array_providers; arr_loc }), Hint_None)
+        | (None, Some init, _) -> (Some (Value { hint = Hint_None; expr = init }), Hint_None)
+        | (None, None, _) -> (None, Hint_None)
       in
       Base.Option.iter
         ~f:(fun acc -> Destructure.pattern ~f:this#add_ordinary_binding (Root acc) id)

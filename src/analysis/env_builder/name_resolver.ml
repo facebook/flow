@@ -2428,7 +2428,7 @@ module Make
             ) ->
             begin
               match (init, id) with
-              | ( Some (arr_loc, Ast.Expression.Array { Ast.Expression.Array.elements = []; _ }),
+              | ( Some (_, Ast.Expression.Array { Ast.Expression.Array.elements = []; _ }),
                   ( _,
                     Identifier
                       {
@@ -2441,13 +2441,12 @@ module Make
                 when not @@ this#is_excluded_ordinary_name x ->
                 let kind = variable_declaration_binding_kind_to_pattern_write_kind (Some kind) in
                 let reason = Reason.(mk_reason (RIdentifier (OrdinaryName x))) name_loc in
-                let (assigned_val, write_kind) =
+                let write_kind = Env_api.AssigningWrite reason in
+                let assigned_val =
                   Base.Option.value_map
                     ~f:(fun { Env_api.Provider_api.array_providers; _ } ->
-                      ( Val.empty_array reason array_providers,
-                        Env_api.EmptyArrayWrite (arr_loc, reason, array_providers)
-                      ))
-                    ~default:(Val.one reason, Env_api.AssigningWrite reason)
+                      Val.empty_array reason array_providers)
+                    ~default:(Val.one reason)
                     (Env_api.Provider_api.providers_of_def provider_info name_loc)
                 in
 

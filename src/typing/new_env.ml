@@ -37,6 +37,8 @@ module type S = sig
     Env_api.With_ALoc.L.t ->
     Reason.reason ->
     Type.t
+
+  val t_option_value_exn : Context.t -> ALoc.t -> Type.t option -> Type.t
 end
 
 module New_env : S = struct
@@ -1038,7 +1040,6 @@ module New_env : S = struct
   (************************)
   (* Variable Declaration *)
   (************************)
-
   let init_env ?exclude_syms cx program_loc scope =
     Old_env.init_env ?exclude_syms cx program_loc scope;
     let ({ Loc_env.var_info; _ } as env) = Context.environment cx in
@@ -1048,64 +1049,6 @@ module New_env : S = struct
         | Env_api.AssigningWrite reason
         | Env_api.GlobalWrite reason ->
           let t = Tvar.mk cx reason in
-          Loc_env.initialize env def_loc_type loc t
-        | Env_api.EmptyArrayWrite (arr_loc, reason, arr_providers) ->
-          let (elem_t, elems, reason) =
-            let element_reason = mk_reason Reason.unknown_elem_empty_array_desc loc in
-            if Context.array_literal_providers cx && ALocSet.cardinal arr_providers > 0 then (
-              let ts =
-                ALocSet.elements arr_providers
-                |> Base.List.map ~f:(fun loc ->
-                       check_readable cx Env_api.ArrayProviderLoc loc;
-                       t_option_value_exn
-                         cx
-                         loc
-                         (Loc_env.find_write env Env_api.ArrayProviderLoc loc)
-                   )
-              in
-              let constrain_t =
-                Tvar.mk_where cx element_reason (fun tvar ->
-                    Base.List.iter ~f:(fun t -> Flow_js.flow cx (t, UseT (unknown_use, tvar))) ts
-                )
-              in
-              let elem_t =
-                Tvar.mk_where cx element_reason (fun tvar ->
-                    Flow_js.flow cx (constrain_t, UseT (unknown_use, tvar))
-                )
-              in
-              let use_op =
-                let name =
-                  match desc_of_reason reason with
-                  | RIdentifier (OrdinaryName x) -> x
-                  | _ -> "an empty array"
-                in
-                Frame
-                  ( ConstrainedAssignment
-                      {
-                        name;
-                        declaration = poly_loc_of_reason reason;
-                        providers = ALocSet.elements arr_providers;
-                        array = true;
-                      },
-                    unknown_use
-                  )
-              in
-              Context.add_constrained_write cx (elem_t, use_op, constrain_t);
-              (elem_t, None, reason)
-            ) else (
-              if Context.array_literal_providers cx then
-                Flow_js.add_output cx Error_message.(EEmptyArrayNoProvider { loc });
-              (Tvar.mk cx element_reason, Some [], replace_desc_reason REmptyArrayLit reason)
-            )
-          in
-          let t = DefT (reason, bogus_trust (), ArrT (ArrayAT (elem_t, elems))) in
-          let t = Tvar.mk_where cx reason (fun t' -> Flow_js.unify cx t t') in
-          let cache = Context.node_cache cx in
-          let exp =
-            ((arr_loc, t), Flow_ast.Expression.(Array { Array.elements = []; comments = None }))
-          in
-          Node_cache.set_expression cache exp;
-          (* Treat everything as inferred for now for the purposes of annotated vs inferred *)
           Loc_env.initialize env def_loc_type loc t
         | Env_api.NonAssigningWrite ->
           if is_provider cx loc then
