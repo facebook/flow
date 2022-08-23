@@ -161,8 +161,8 @@ type component_t = {
   spread_cache: Spread_cache.t;
   speculation_state: Speculation_state.t;
   (* Post-inference checks *)
-  mutable new_env_literal_subtypes: (ALoc.t * Env_api.new_env_literal_check) list;
-  mutable new_env_matching_props: (string * ALoc.t * ALoc.t) list;
+  mutable literal_subtypes: (ALoc.t * Env_api.literal_check) list;
+  mutable matching_props: (string * ALoc.t * ALoc.t) list;
   mutable implicit_instantiation_checks: Implicit_instantiation_check.t list;
   mutable inferred_indexers: Type.dicttype list ALocMap.t;
   mutable constrained_writes: (Type.t * Type.use_op * Type.t) list;
@@ -315,8 +315,8 @@ let make_ccx master_cx =
     type_graph = Graph_explorer.new_graph ();
     all_unresolved = IMap.empty;
     type_asserts_map = ALocMap.empty;
-    new_env_matching_props = [];
-    new_env_literal_subtypes = [];
+    matching_props = [];
+    literal_subtypes = [];
     constrained_writes = [];
     global_value_cache = NameUtils.Map.empty;
     env_value_cache = IMap.empty;
@@ -542,7 +542,7 @@ let suppress_types cx = cx.metadata.suppress_types
 
 let type_asserts_map cx = cx.ccx.type_asserts_map
 
-let new_env_literal_subtypes cx = cx.ccx.new_env_literal_subtypes
+let literal_subtypes cx = cx.ccx.literal_subtypes
 
 let constrained_writes cx = cx.ccx.constrained_writes
 
@@ -561,7 +561,7 @@ let call_arg_lower_bounds cx = cx.ccx.call_arg_lower_bounds
 
 let type_graph cx = cx.ccx.type_graph
 
-let new_env_matching_props cx = cx.ccx.new_env_matching_props
+let matching_props cx = cx.ccx.matching_props
 
 let trust_mode cx = cx.metadata.trust_mode
 
@@ -673,11 +673,9 @@ let add_trust_var cx id bounds =
 
 let add_type_assert cx k v = cx.ccx.type_asserts_map <- ALocMap.add k v cx.ccx.type_asserts_map
 
-let add_new_env_matching_props cx c =
-  cx.ccx.new_env_matching_props <- c :: cx.ccx.new_env_matching_props
+let add_matching_props cx c = cx.ccx.matching_props <- c :: cx.ccx.matching_props
 
-let add_new_env_literal_subtypes cx c =
-  cx.ccx.new_env_literal_subtypes <- c :: cx.ccx.new_env_literal_subtypes
+let add_literal_subtypes cx c = cx.ccx.literal_subtypes <- c :: cx.ccx.literal_subtypes
 
 let add_constrained_write cx c = cx.ccx.constrained_writes <- c :: cx.ccx.constrained_writes
 

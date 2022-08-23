@@ -26,9 +26,9 @@ module Context = struct
 
   let enable_const_params _cx = false
 
-  let add_new_env_literal_subtypes _ _ = ()
+  let add_literal_subtypes _ _ = ()
 
-  let add_new_env_matching_props _ _ = ()
+  let add_matching_props _ _ = ()
 
   let add_exhaustive_check _ _ _ = ()
 

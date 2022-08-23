@@ -48,7 +48,7 @@ module type S = sig
 
   module EnvSet : Flow_set.S with type elt = EnvKey.t
 
-  type new_env_literal_check =
+  type literal_check =
     | SingletonNum of ALoc.t * bool * float * string
     | SingletonBool of ALoc.t * bool
     | SingletonStr of ALoc.t * bool * string
@@ -211,7 +211,7 @@ module Make
   module Scope_builder : Scope_builder_sig.S with module L = L and module Api = Scope_api =
     Scope_builder.Make (L) (Scope_api)
 
-  type new_env_literal_check =
+  type literal_check =
     | SingletonNum of ALoc.t * bool * float * string
     | SingletonBool of ALoc.t * bool
     | SingletonStr of ALoc.t * bool * string

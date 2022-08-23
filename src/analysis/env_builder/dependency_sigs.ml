@@ -20,9 +20,9 @@ module type C = sig
 
   val env_mode : t -> Options.env_mode
 
-  val add_new_env_literal_subtypes : t -> ALoc.t * Env_api.new_env_literal_check -> unit
+  val add_literal_subtypes : t -> ALoc.t * Env_api.literal_check -> unit
 
-  val add_new_env_matching_props : t -> string * ALoc.t * ALoc.t -> unit
+  val add_matching_props : t -> string * ALoc.t * ALoc.t -> unit
 
   val add_exhaustive_check : t -> ALoc.t -> ALoc.t list * bool -> unit
 

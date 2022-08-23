@@ -1199,15 +1199,13 @@ module Make
     let rec add_literal_subtype_test refinee_loc literal =
       match literal with
       | SingletonNumR { loc; lit = (num, raw); sense } ->
-        Context.add_new_env_literal_subtypes
+        Context.add_literal_subtypes
           cx
           (refinee_loc, PostInferenceCheck.SingletonNum (loc, sense, num, raw))
       | SingletonBoolR { loc; lit; sense = _ } ->
-        Context.add_new_env_literal_subtypes
-          cx
-          (refinee_loc, PostInferenceCheck.SingletonBool (loc, lit))
+        Context.add_literal_subtypes cx (refinee_loc, PostInferenceCheck.SingletonBool (loc, lit))
       | SingletonStrR { loc; lit; sense } ->
-        Context.add_new_env_literal_subtypes
+        Context.add_literal_subtypes
           cx
           (refinee_loc, PostInferenceCheck.SingletonStr (loc, sense, lit))
       | NotR r -> add_literal_subtype_test refinee_loc r
@@ -4436,7 +4434,7 @@ module Make
                   SMap.find RefinementKey.(refinement_key.lookup.base) env_state.env
                 in
                 Base.Option.iter def_loc ~f:(fun def_loc ->
-                    Context.add_new_env_matching_props cx (prop_name, other_loc, def_loc)
+                    Context.add_matching_props cx (prop_name, other_loc, def_loc)
                 )
               );
               let write_entries =

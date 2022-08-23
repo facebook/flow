@@ -438,7 +438,7 @@ let detect_matching_props_violations cx =
       Flow_js.flow cx (MatchingPropT (reason, key, sentinel), UseT (use_op, drop_generic obj))
     | _ -> ()
   in
-  let matching_props = Context.new_env_matching_props cx in
+  let matching_props = Context.matching_props cx in
   List.iter
     (fun (prop_name, other_loc, obj_loc) ->
       let env = Context.environment cx in
@@ -465,7 +465,7 @@ let detect_literal_subtypes =
     end
   in
   fun cx ->
-    let new_env_checks = Context.new_env_literal_subtypes cx in
+    let checks = Context.literal_subtypes cx in
     List.iter
       (fun (loc, check) ->
         let env = Context.environment cx in
@@ -485,7 +485,7 @@ let detect_literal_subtypes =
         let l = lb_visitor#type_ cx () l in
         let u_def = ub_visitor#type_ cx () u_def in
         Flow_js.flow cx (l, UseT (Op (Internal Refinement), u_def)))
-      new_env_checks
+      checks
 
 let check_constrained_writes init_cx master_cx =
   let checks = Context.constrained_writes init_cx in
