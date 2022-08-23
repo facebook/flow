@@ -139,5 +139,13 @@ References:
                                   ^^^^^^^^^^^^^^^^^^ [2]
 
 
+Error ---------------------------------------------------------------------------------------- regression_tests.js:83:10
 
-Found 14 errors
+Internal error: read of Env_api.Make.ArrayProviderLoc entry which has not been prepared for typechecking
+
+   83|   x[0] = 10;
+                ^^
+
+
+
+Found 15 errors

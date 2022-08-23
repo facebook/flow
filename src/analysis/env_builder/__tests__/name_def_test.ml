@@ -22,7 +22,7 @@ module Context = struct
 
   let react_runtime _cx = Options.ReactRuntimeClassic
 
-  let env_mode _cx = Options.(SSAEnv Basic)
+  let env_mode _cx = Options.(SSAEnv Enforced)
 
   let enable_const_params _cx = false
 
@@ -916,8 +916,8 @@ function g() {
 x.push(42);
   |};
   [%expect {|
-    (2, 4) to (2, 5) =>
     (9, 7) to (9, 9) =>
+    (2, 4) to (2, 5) =>
     (4, 6) to (4, 7) =>
     (3, 9) to (3, 10) =>
     (7, 2) to (7, 3) =>
@@ -939,3 +939,12 @@ declare module B {
     (2, 15) to (2, 18) =>
     (7, 19) to (7, 20) =>
     (6, 15) to (6, 16) |}]
+
+let%expect_test "empty arr" =
+  print_order_test {|
+var x = [];
+x.push(42);
+  |};
+  [%expect {|
+    (3, 7) to (3, 9) =>
+    (2, 4) to (2, 5) |}]

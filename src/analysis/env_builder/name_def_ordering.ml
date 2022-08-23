@@ -511,12 +511,24 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) = struct
              for `x` to the set of dependencies. *)
         match lhs_member_expression with
         | None ->
+          let { Provider_api.providers = provider_entries; array_providers; _ } =
+            Base.Option.value_exn (Provider_api.providers_of_def providers id_loc)
+          in
+          let init =
+            ALocSet.fold
+              (fun loc acc ->
+                EnvMap.update
+                  (Env_api.ArrayProviderLoc, loc)
+                  (function
+                    | None -> Some (Nel.one id_loc)
+                    | Some locs -> Some (Nel.cons id_loc locs))
+                  acc)
+              array_providers
+              EnvMap.empty
+          in
           if not @@ Provider_api.is_provider providers id_loc then
-            let { Provider_api.providers; _ } =
-              Base.Option.value_exn (Provider_api.providers_of_def providers id_loc)
-            in
             Base.List.fold
-              ~init:EnvMap.empty
+              ~init
               ~f:(fun acc { Provider_api.reason = r; _ } ->
                 let key = Reason.poly_loc_of_reason r in
                 EnvMap.update
@@ -525,9 +537,9 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) = struct
                     | None -> Some (Nel.one id_loc)
                     | Some locs -> Some (Nel.cons id_loc locs))
                   acc)
-              providers
+              provider_entries
           else
-            EnvMap.empty
+            init
         | Some e -> depends_of_expression ~for_expression_writes:true e EnvMap.empty
       in
       let depends_of_binding bind =
