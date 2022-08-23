@@ -500,31 +500,7 @@ module Make (Env : Env_sig.S) : S = struct
           Flow_js.resolve_id cx id init_exports
       )
     in
-    let module_scope =
-      Scope.(
-        let scope = fresh ~var_scope_kind:Module () in
-        add_entry
-          (Reason.OrdinaryName "exports")
-          (Entry.new_var
-             ~provider:local_exports_var
-             ~loc:(TypeUtil.loc_of_t local_exports_var)
-             (Type.Inferred local_exports_var)
-          )
-          scope;
-
-        add_entry
-          (Reason.internal_name "exports")
-          (Entry.new_var
-             ~loc:(Reason.aloc_of_reason reason_exports_module)
-             ~provider:(Type.Unsoundness.exports_any reason_exports_module)
-             ~specific:(Type.DefT (reason_exports_module, Type.bogus_trust (), Type.EmptyT))
-             (Type.Inferred (Type.Unsoundness.exports_any reason_exports_module))
-          )
-          scope;
-
-        scope
-      )
-    in
+    let module_scope = Scope.fresh ~var_scope_kind:Scope.Module () in
     initialize_env ~lib:false ~local_exports_var cx aloc_ast module_scope;
 
     (* infer *)

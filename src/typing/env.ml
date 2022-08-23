@@ -200,12 +200,7 @@ module Env : S = struct
 
   let set_exclude_symbols syms = exclude_symbols := syms
 
-  let is_excluded name = NameUtils.Set.mem name !exclude_symbols
-
   (* scopes *)
-
-  (* return the current scope *)
-  let peek_scope () = List.hd !scopes
 
   (* return current scope stack *)
   let peek_env () = !scopes
@@ -374,7 +369,6 @@ module Env : S = struct
         get_global_value_type cx name reason
     in
     let entry = Entry.new_var (Inferred t) ~loc ~provider:t ~state:State.Initialized in
-    Scope.add_entry name entry global_scope;
     (global_scope, entry)
 
   (* Look for scope that holds binding for a given name. If found,
@@ -481,39 +475,6 @@ module Env : S = struct
   let binding_error msg cx name entry loc =
     Flow.add_output cx (Error_message.EBindingError (msg, loc, name, Entry.entry_loc entry))
 
-  let already_bound_error = binding_error Error_message.ENameAlreadyBound
-
-  let constrain_by_provider _cx ~use_op:_ _t _name _loc = ()
-
-  let can_shadow cx name prev loc =
-    Entry.(
-      function
-      (* vars can shadow other vars *)
-      | (Var _, Var _) -> true
-      (* nonpredicate declared functions can shadow each other, and any declared function can be shadowed by a function *)
-      | (Let (FunctionBinding, _), Let (DeclaredFunctionBinding _, _))
-      | ( Let (DeclaredFunctionBinding { predicate = false }, _),
-          Let (DeclaredFunctionBinding { predicate = false }, _)
-        ) ->
-        true
-      (* declared functions can't shadow other things *)
-      | (Let (DeclaredFunctionBinding _, _), (Var _ | Let (FunctionBinding, _))) -> false
-      (* In JS, funcs/vars can shadow other funcs/vars -- only in var scope. However, we want to
-         ban this pattern in Flow, so we raise an already_bound_error BUT don't abort the binding
-         so that we can still check downstream things. *)
-      | ( (Var _ | Let ((FunctionBinding | DeclaredFunctionBinding _), _)),
-          (Var _ | Let ((FunctionBinding | DeclaredFunctionBinding _), _))
-        ) ->
-        already_bound_error cx name prev loc;
-        true
-      (* vars can shadow function params, but we should raise an error if they are constlike params *)
-      | (Var _, Let (ParamBinding, _)) -> true
-      | (Var _, Const ConstParamBinding) ->
-        already_bound_error cx name prev loc;
-        true
-      | _ -> false
-    )
-
   (* initialization of entries happens during a preliminary pass through a
      scoped region of the AST (dynamic for hoisted things, lexical for
      lexical things). this leaves them in a germinal state which is
@@ -525,53 +486,7 @@ module Env : S = struct
      may appear in an AST)
   *)
 
-  let bind_entry cx name entry loc =
-    (* iterate top-down through scopes until the appropriate scope for this
-       binding is found, or realize a binding error *)
-    let rec loop = function
-      | [] -> assert_false "empty scope list"
-      | scope :: scopes ->
-        (match get_entry name scope with
-        (* if no entry already exists, this might be our scope *)
-        | None ->
-          Entry.(
-            (match (scope.Scope.kind, entry) with
-            (* lex scopes can only hold let/const/class bindings *)
-            (* var scope can hold all binding types *)
-            | (LexScope, Value { Entry.kind = Let _; _ })
-            | (LexScope, Value { Entry.kind = Const _; _ })
-            | (LexScope, Class _)
-            | (VarScope _, _) ->
-              add_entry name entry scope
-            (* otherwise, keep looking for our scope *)
-            | _ -> loop scopes)
-          )
-        (* some rebindings are allowed, but usually an error *)
-        | Some prev ->
-          (match scope.kind with
-          (* specifically a var scope allows some shadowing *)
-          | VarScope _ ->
-            let is_var_redeclaration = function
-              | (Entry.Var _, Entry.Var _) -> Entry.entry_loc prev <> loc
-              | _ -> false
-            in
-            Entry.(
-              (match (entry, prev) with
-              | (Value e, Value p)
-                when is_var_redeclaration (Entry.kind_of_value e, Entry.kind_of_value p) ->
-                (* We ban var redeclaration on top of other JS illegal rebinding rules. *)
-                binding_error Error_message.EVarRedeclaration cx name prev loc
-              | (Value e, Value p)
-                when can_shadow cx name prev loc (Entry.kind_of_value e, Entry.kind_of_value p) ->
-                (* TODO currently we don't step on specific. shouldn't we? *)
-                Flow.unify cx (Entry.general_of_value p) (Entry.general_of_value e)
-              (* bad shadowing is a binding error *)
-              | _ -> already_bound_error cx name prev loc)
-            )
-          (* shadowing in a lex scope is always an error *)
-          | LexScope -> already_bound_error cx name prev loc))
-    in
-    if not (is_excluded name) then loop !scopes
+  let bind_entry _cx _name _entry _loc = ()
 
   (* bind class entry *)
   let bind_class cx x = bind_entry cx (internal_name "class") (Entry.Class x) ALoc.none
@@ -587,113 +502,14 @@ module Env : S = struct
     bind_implicit_let ~state Entry.FunctionBinding cx name (Inferred t)
 
   (* bind entry for declare function *)
-  let bind_declare_fun =
-    let update_type seen_t new_t =
-      match seen_t with
-      | IntersectionT (reason, rep) -> IntersectionT (reason, InterRep.append [new_t] rep)
-      | _ ->
-        let reason = replace_desc_reason RIntersectionType (reason_of_t seen_t) in
-        IntersectionT (reason, InterRep.make seen_t new_t [])
-    in
-    let update_general_type general_t new_t =
-      match general_t with
-      | Inferred t -> Inferred (update_type t new_t)
-      | Annotated t -> Annotated (update_type t new_t)
-    in
-    fun cx ~predicate name t loc ->
-      if not (is_excluded name) then
-        let scope = peek_scope () in
-        match Scope.get_entry name scope with
-        | None ->
-          let (spec, closure_writes, provider) = mk_havoc cx name loc t Entry.Havocable in
-          let entry =
-            Entry.new_let
-              (Annotated t)
-              ~kind:(Entry.DeclaredFunctionBinding { predicate })
-              ~loc
-              ~state:State.Initialized
-              ~spec
-              ~provider
-              ?closure_writes
-          in
-          Scope.add_entry name entry scope
-        | Some prev ->
-          Entry.(
-            (match prev with
-            | Value v
-              when can_shadow
-                     cx
-                     name
-                     prev
-                     loc
-                     ( Let (DeclaredFunctionBinding { predicate }, Havocable (*doesnt matter *)),
-                       Entry.kind_of_value v
-                     ) ->
-              let entry =
-                Value
-                  {
-                    v with
-                    value_state = State.Initialized;
-                    specific = update_type v.specific t;
-                    general = update_general_type v.general t;
-                    provider = update_type v.provider t;
-                  }
-              in
-              Scope.add_entry name entry scope
-            | _ ->
-              (* declare function shadows some other kind of binding *)
-              already_bound_error cx name prev loc)
-          )
-
-  let initialized_value_entry specific v =
-    Entry.Value { v with Entry.value_state = State.Initialized; specific }
+  let bind_declare_fun _cx ~predicate:_ _name _t _loc = ()
 
   (* helper - update var entry to reflect assignment/initialization *)
   (* note: here is where we understand that a name can be multiply var-bound
    * TODO: we started tracking annotations when variables are bound. Once we do
    * that at all binding sites this ~has_anno param can go away in favor of
    * looking up the annot in the environment *)
-  let init_value_entry kind cx ~use_op name ~has_anno specific loc =
-    if not (is_excluded name) then
-      Entry.(
-        let (scope, entry) = find_entry cx name loc in
-        match (kind, entry) with
-        | (Var _, Value ({ Entry.kind = Var _; _ } as v))
-        | ( Let _,
-            Value ({ Entry.kind = Let _; value_state = State.Undeclared | State.Declared; _ } as v)
-          )
-        | ( Const _,
-            Value ({ Entry.kind = Const _; value_state = State.Undeclared | State.Declared; _ } as v)
-          ) ->
-          let general = TypeUtil.type_t_of_annotated_or_inferred v.general in
-          if specific != general then Flow.flow cx (specific, UseT (use_op, general));
-
-          (* note that annotation supercedes specific initializer type *)
-          begin
-            match v.general with
-            | Annotated _ -> ()
-            | Inferred _ ->
-              (* This is checked separately from has_anno because this variable
-                 may have been previously declared with an annotation even if this
-                 declaration lacks one; e.g. `var x: number; var x = "hello"` *)
-              constrain_by_provider cx ~use_op specific name loc
-          end;
-
-          let specific =
-            if has_anno then
-              general
-            else
-              specific
-          in
-
-          let new_entry = initialized_value_entry specific v in
-          Scope.add_entry name new_entry scope
-        | _ ->
-          (* Incompatible or non-redeclarable new and previous entries.
-             We will have already issued an error in `bind_value_entry`,
-             so we can prune this case here. *)
-          ()
-      )
+  let init_value_entry _kind _cx ~use_op:_ _name ~has_anno:_ _specific _loc = ()
 
   let init_var = init_value_entry Entry.(Var Havocable)
 

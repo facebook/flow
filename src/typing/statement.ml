@@ -2109,15 +2109,6 @@ struct
         body
       in
       let module_scope = Scope.fresh () in
-      Scope.add_entry
-        (Reason.internal_name "exports")
-        (Scope.Entry.new_var
-           ~loc:ALoc.none
-           ~provider:(Locationless.MixedT.t |> with_trust bogus_trust)
-           ~specific:(Locationless.EmptyT.t |> with_trust bogus_trust)
-           (Inferred (Locationless.MixedT.t |> with_trust bogus_trust))
-        )
-        module_scope;
 
       let prev_scope_kind = Env.push_var_scope cx module_scope in
       Context.push_declare_module cx (Module_info.empty_cjs_module ());
@@ -3162,17 +3153,6 @@ struct
       let tvar = Tvar.mk cx reason in
       (match c.Ast.Class.id with
       | Some _ ->
-        let scope = Scope.fresh () in
-        Scope.(
-          let kind = Entry.ClassNameBinding in
-          let entry =
-            Entry.(
-              new_let (Annotated tvar) ~provider:tvar ~loc:name_loc ~state:State.Declared ~kind
-            )
-          in
-          add_entry (OrdinaryName name) entry scope
-        );
-        let prev_scope_kind = Env.push_var_scope cx scope in
         let (class_t, c) = mk_class cx class_loc ~name_loc ~general:tvar reason c in
         (* mk_class above ensures that the function name in the inline declaration
            has the same type as its references inside the class.
@@ -3193,7 +3173,6 @@ struct
           in
           Env.init_implicit_let kind cx ~use_op name ~has_anno:false class_t name_loc
         in
-        Env.pop_var_scope cx prev_scope_kind;
         Flow.flow_t cx (class_t, tvar);
         ((class_loc, class_t), Class c)
       | None ->

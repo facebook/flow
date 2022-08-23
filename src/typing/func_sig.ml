@@ -328,36 +328,6 @@ struct
             (replace_desc_reason (RCustom "no next") reason, bogus_trust (), MixedT Mixed_everything)
         )
     in
-    let (yield, next, return) =
-      Scope.(
-        let new_entry t =
-          Entry.(
-            let loc = loc_of_t (TypeUtil.type_t_of_annotated_or_inferred t) in
-            let state = State.Initialized in
-            new_const ~loc ~state t
-          )
-        in
-        (new_entry (Inferred yield_t), new_entry (Inferred next_t), new_entry return_t)
-      )
-    in
-    Scope.add_entry (internal_name "yield") yield function_scope;
-    Scope.add_entry (internal_name "next") next function_scope;
-    Scope.add_entry (internal_name "return") return function_scope;
-
-    let maybe_exhaustively_checked_t =
-      Tvar.mk cx (replace_desc_reason (RCustom "maybe_exhaustively_checked") reason)
-    in
-    let maybe_exhaustively_checked =
-      Scope.Entry.new_let
-        ~loc:(loc_of_t maybe_exhaustively_checked_t)
-        ~state:Scope.State.Declared
-        (Inferred maybe_exhaustively_checked_t)
-        ~provider:maybe_exhaustively_checked_t
-    in
-    Scope.add_entry
-      (internal_name "maybe_exhaustively_checked")
-      maybe_exhaustively_checked
-      function_scope;
 
     let (statements, reconstruct_body) =
       let open Ast.Statement in
