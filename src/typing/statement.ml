@@ -400,7 +400,7 @@ module Make
       if Context.enable_enums cx then
         let r = DescFormat.type_reason (OrdinaryName name) name_loc in
         let tvar = Tvar.mk cx r in
-        Env.bind_implicit_const Scope.Entry.EnumNameBinding cx name (Annotated tvar) name_loc
+        Env.bind_implicit_const cx name (Annotated tvar) name_loc
     | (_, DeclareVariable _) -> ()
     | ( loc,
         DeclareFunction
@@ -422,7 +422,7 @@ module Make
       let name = OrdinaryName name in
       let reason = mk_reason (RType name) name_loc in
       let tvar = Tvar.mk cx reason in
-      Env.bind_implicit_let Scope.Entry.ClassNameBinding cx name (Inferred tvar) name_loc
+      Env.bind_implicit_let cx name (Inferred tvar) name_loc
     | (_, DeclareClass _)
     | (_, DeclareInterface _)
     | (_, InterfaceDeclaration _)
@@ -505,15 +505,7 @@ module Make
           let r = mk_reason (RCustom "catch") loc in
           let t = AnyT.why CatchAny r in
           let (stmts, abnormal_opt) =
-            Scope.(
-              Env.bind_implicit_let
-                ~state:State.Initialized
-                Entry.(CatchParamBinding)
-                cx
-                (OrdinaryName name)
-                (Inferred t)
-                loc
-            );
+            Env.bind_implicit_let cx (OrdinaryName name) (Inferred t) loc;
 
             check cx b
           in
@@ -1339,14 +1331,7 @@ module Make
                  }
               )
           in
-          Env.init_implicit_const
-            Scope.Entry.EnumNameBinding
-            cx
-            ~use_op
-            (OrdinaryName name)
-            ~has_anno:false
-            t
-            name_loc;
+          Env.init_implicit_const cx ~use_op (OrdinaryName name) ~has_anno:false t name_loc;
           t
         ) else (
           Flow.add_output cx (Error_message.EEnumsNotEnabled loc);
@@ -1391,7 +1376,6 @@ module Make
     | (class_loc, ClassDeclaration ({ Ast.Class.id = Some id; _ } as c)) ->
       let (name_loc, { Ast.Identifier.name; comments = _ }) = id in
       let name = OrdinaryName name in
-      let kind = Scope.Entry.ClassNameBinding in
       let reason = DescFormat.instance_reason name name_loc in
       let general = Env.read_declared_type cx name reason name_loc in
       (* ClassDeclarations are statements, so we will never have an annotation to push down here *)
@@ -1402,7 +1386,7 @@ module Make
              { var = Some (mk_reason (RIdentifier name) name_loc); init = reason_of_t class_t }
           )
       in
-      Env.init_implicit_let kind cx ~use_op name ~has_anno:false class_t name_loc;
+      Env.init_implicit_let cx ~use_op name ~has_anno:false class_t name_loc;
       (class_loc, ClassDeclaration c_ast)
     | ( loc,
         DeclareClass
@@ -2064,9 +2048,7 @@ module Make
       let (body_loc, { Ast.Statement.Block.body = elements; comments = elements_comments }) =
         body
       in
-      let module_scope = Scope.fresh () in
-
-      let prev_scope_kind = Env.push_var_scope cx module_scope in
+      let prev_scope_kind = Env.set_scope_kind cx Name_def.Ordinary in
       Context.push_declare_module cx (Module_info.empty_cjs_module ());
 
       let (elements_ast, elements_abnormal) =
@@ -2080,8 +2062,7 @@ module Make
         cx
         ~export_type:Import_export.export_type
         loc
-        reason
-        module_scope;
+        reason;
       let module_t = Import_export.mk_module_t cx reason loc in
       let ast =
         {
@@ -2104,7 +2085,7 @@ module Make
           );
 
       Context.pop_declare_module cx;
-      Env.pop_var_scope cx prev_scope_kind;
+      ignore @@ Env.set_scope_kind cx prev_scope_kind;
 
       (module_t, ast)
 
@@ -2964,8 +2945,7 @@ module Make
         | None ->
           mk_function_expression cx ~hint reason ~needs_this_param:true ~general:tvar loc func
         | Some (name_loc, { Ast.Identifier.name; comments = _ }) ->
-          let scope = Scope.fresh () in
-          let prev_scope_kind = Env.push_var_scope cx scope in
+          let prev_scope_kind = Env.set_scope_kind cx Name_def.Ordinary in
           let name = OrdinaryName name in
           Env.bind_fun cx name tvar name_loc;
           let (t, func) =
@@ -2975,7 +2955,7 @@ module Make
             Op (AssignVar { var = Some (mk_reason (RIdentifier name) loc); init = reason_of_t t })
           in
           Env.init_fun cx ~use_op name t name_loc;
-          Env.pop_var_scope cx prev_scope_kind;
+          ignore @@ Env.set_scope_kind cx prev_scope_kind;
           (t, func)
       in
       Flow.flow_t cx (t, tvar);
@@ -3118,16 +3098,15 @@ module Make
           let name = OrdinaryName name in
           let reason = mk_reason (RType name) name_loc in
           let tvar = Tvar.mk cx reason in
-          Env.bind_implicit_let Scope.Entry.ClassNameBinding cx name (Inferred tvar) name_loc;
+          Env.bind_implicit_let cx name (Inferred tvar) name_loc;
 
-          let kind = Scope.Entry.ClassNameBinding in
           let use_op =
             Op
               (AssignVar
                  { var = Some (mk_reason (RIdentifier name) name_loc); init = reason_of_t class_t }
               )
           in
-          Env.init_implicit_let kind cx ~use_op name ~has_anno:false class_t name_loc
+          Env.init_implicit_let cx ~use_op name ~has_anno:false class_t name_loc
         in
         Flow.flow_t cx (class_t, tvar);
         ((class_loc, class_t), Class c)
@@ -5432,7 +5411,7 @@ module Make
     } ->
       let wr_ctx =
         match (_object, Env.var_scope_kind cx) with
-        | ((_, This _), Scope.Ctor) -> ThisInCtor
+        | ((_, This _), Name_def.Ctor) -> ThisInCtor
         | _ -> Normal
       in
       let lhs_reason = mk_expression_reason _object in

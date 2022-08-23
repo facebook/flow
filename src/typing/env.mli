@@ -5,8 +5,6 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-open Scope
-
 (* lookup modes:
 
    - ForValue is a lookup from a syntactic value location, i.e. standard
@@ -49,7 +47,7 @@ val in_toplevel_scope : Context.t -> bool
 
 val in_global_scope : Context.t -> bool
 
-val var_scope_kind : Context.t -> Scope.var_scope_kind
+val var_scope_kind : Context.t -> Name_def.scope_kind
 
 val in_async_scope : Context.t -> bool
 
@@ -57,19 +55,18 @@ val in_predicate_scope : Context.t -> bool
 
 val get_global_value_type : Context.t -> Reason.name -> Reason.t -> Type.t
 
-val push_var_scope : Context.t -> Scope.t -> Scope.var_scope_kind
-
-val pop_var_scope : Context.t -> Scope.var_scope_kind -> unit
+(** Set the current scope kind and return the previous scope kind. *)
+val set_scope_kind : Context.t -> Name_def.scope_kind -> Name_def.scope_kind
 
 val in_class_scope : Context.t -> ALoc.t -> (unit -> 'a) -> 'a
 
-val init_env : ?exclude_syms:NameUtils.Set.t -> Context.t -> ALoc.t -> Scope.t -> unit
+val init_env : ?exclude_syms:NameUtils.Set.t -> Context.t -> ALoc.t -> Name_def.scope_kind -> unit
 
 (***)
 
-val bind_var : ?state:State.t -> Context.t -> string -> Type.annotated_or_inferred -> ALoc.t -> unit
+val bind_var : Context.t -> string -> Type.annotated_or_inferred -> ALoc.t -> unit
 
-val bind_let : ?state:State.t -> Context.t -> string -> Type.annotated_or_inferred -> ALoc.t -> unit
+val bind_let : Context.t -> string -> Type.annotated_or_inferred -> ALoc.t -> unit
 
 val bind_function_this : Context.t -> Type.t -> ALoc.t -> unit
 
@@ -81,30 +78,15 @@ val bind_class_instance_super : Context.t -> Type.t -> ALoc.t -> unit
 
 val bind_class_static_super : Context.t -> Type.t -> ALoc.t -> unit
 
-val bind_implicit_let :
-  ?state:State.t ->
-  Entry.let_binding_kind ->
-  Context.t ->
-  Reason.name ->
-  Type.annotated_or_inferred ->
-  ALoc.t ->
-  unit
+val bind_implicit_let : Context.t -> Reason.name -> Type.annotated_or_inferred -> ALoc.t -> unit
 
-val bind_fun : ?state:State.t -> Context.t -> Reason.name -> Type.t -> ALoc.t -> unit
+val bind_fun : Context.t -> Reason.name -> Type.t -> ALoc.t -> unit
 
-val bind_implicit_const :
-  ?state:State.t ->
-  Entry.const_binding_kind ->
-  Context.t ->
-  string ->
-  Type.annotated_or_inferred ->
-  ALoc.t ->
-  unit
+val bind_implicit_const : Context.t -> string -> Type.annotated_or_inferred -> ALoc.t -> unit
 
-val bind_const :
-  ?state:State.t -> Context.t -> string -> Type.annotated_or_inferred -> ALoc.t -> unit
+val bind_const : Context.t -> string -> Type.annotated_or_inferred -> ALoc.t -> unit
 
-val bind_this_tparam : state:State.t -> Context.t -> Type.t -> ALoc.t -> unit
+val bind_this_tparam : Context.t -> Type.t -> ALoc.t -> unit
 
 val bind_class_self_type : Context.t -> ALoc.t -> Type.t -> Type.t -> unit
 
@@ -117,14 +99,7 @@ val init_let :
   Context.t -> use_op:Type.use_op -> Reason.name -> has_anno:bool -> Type.t -> ALoc.t -> unit
 
 val init_implicit_let :
-  Entry.let_binding_kind ->
-  Context.t ->
-  use_op:Type.use_op ->
-  Reason.name ->
-  has_anno:bool ->
-  Type.t ->
-  ALoc.t ->
-  unit
+  Context.t -> use_op:Type.use_op -> Reason.name -> has_anno:bool -> Type.t -> ALoc.t -> unit
 
 val init_fun : Context.t -> use_op:Type.use_op -> Reason.name -> Type.t -> ALoc.t -> unit
 
@@ -132,14 +107,7 @@ val init_const :
   Context.t -> use_op:Type.use_op -> Reason.name -> has_anno:bool -> Type.t -> ALoc.t -> unit
 
 val init_implicit_const :
-  Entry.const_binding_kind ->
-  Context.t ->
-  use_op:Type.use_op ->
-  Reason.name ->
-  has_anno:bool ->
-  Type.t ->
-  ALoc.t ->
-  unit
+  Context.t -> use_op:Type.use_op -> Reason.name -> has_anno:bool -> Type.t -> ALoc.t -> unit
 
 val init_import : lookup_mode:LookupMode.t -> Context.t -> Reason.name -> ALoc.t -> Type.t -> unit
 
@@ -223,10 +191,9 @@ val init_declare_module_synthetic_module_exports :
   export_type:(Context.t -> Reason.name -> ALoc.t option -> Type.t -> unit) ->
   ALoc.t ->
   Reason.reason ->
-  Scope.t ->
   unit
 
-val init_builtins_from_libdef : Context.t -> Scope.t -> Reason.name list
+val init_builtins_from_libdef : Context.t -> Reason.name list
 
 val check_readable : Context.t -> Env_api.def_loc_type -> ALoc.t -> unit
 

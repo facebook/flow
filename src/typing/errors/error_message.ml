@@ -405,7 +405,7 @@ and 'loc t' =
   | EAssignConstLikeBinding of {
       loc: 'loc;
       definition: 'loc virtual_reason;
-      binding_kind: Scope.Entry.let_binding_kind;
+      binding_kind: assigned_const_like_binding_type;
     }
   | ECannotResolveOpenTvar of {
       use_op: 'loc virtual_use_op;
@@ -473,6 +473,11 @@ and binding_error =
   | EConstParamReassigned
   | EImportReassigned
   | EEnumReassigned
+
+and assigned_const_like_binding_type =
+  | ClassNameBinding
+  | FunctionNameBinding
+  | DeclaredFunctionNameBinding
 
 and docblock_error =
   | MultipleFlowAttributes
@@ -581,6 +586,11 @@ and 'loc upper_kind =
   | IncompatibleGetStaticsT
   | IncompatibleBindT
   | IncompatibleUnclassified of string
+
+let string_of_assigned_const_like_binding_type = function
+  | ClassNameBinding -> "class"
+  | FunctionNameBinding -> "function"
+  | DeclaredFunctionNameBinding -> "declared function"
 
 let map_loc_of_exponential_spread_reason_group f { first_reason; second_reason } =
   { first_reason = f first_reason; second_reason = Base.Option.map ~f second_reason }
@@ -3649,7 +3659,7 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
     let features =
       [
         text "Cannot reassign ";
-        text (Scope.Entry.string_of_let_binding_kind binding_kind);
+        text (string_of_assigned_const_like_binding_type binding_kind);
         text " binding ";
         ref definition;
         text ".";

@@ -946,22 +946,14 @@ module Make
         Some
           Error_message.(
             EAssignConstLikeBinding
-              {
-                loc = assignment_loc;
-                definition = def_reason;
-                binding_kind = Scope.Entry.ClassNameBinding;
-              }
+              { loc = assignment_loc; definition = def_reason; binding_kind = ClassNameBinding }
           )
       | (Bindings.Function, AssignmentWrite) ->
         let def_reason = mk_reason (RIdentifier (OrdinaryName name)) def_loc in
         Some
           Error_message.(
             EAssignConstLikeBinding
-              {
-                loc = assignment_loc;
-                definition = def_reason;
-                binding_kind = Scope.Entry.FunctionBinding;
-              }
+              { loc = assignment_loc; definition = def_reason; binding_kind = FunctionNameBinding }
           )
       | (Bindings.Import, AssignmentWrite) ->
         Some
@@ -977,7 +969,7 @@ module Make
                 loc = assignment_loc;
                 definition = def_reason;
                 (* The error message is unaffected by the predicate flag *)
-                binding_kind = Scope.Entry.(DeclaredFunctionBinding { predicate = false });
+                binding_kind = DeclaredFunctionNameBinding;
               }
           )
       | (Bindings.Var, (LetBinding | ConstBinding | FunctionBinding)) ->

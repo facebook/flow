@@ -629,20 +629,9 @@ let resolve_generator_next cx reason gen =
     in
     (next_t, unknown_use)
 
-let convert_scope_kind = function
-  | Name_def.Ordinary -> Scope.Ordinary
-  | Name_def.Ctor -> Scope.Ctor
-  | Name_def.Async -> Scope.Async
-  | Name_def.AsyncGenerator -> Scope.AsyncGenerator
-  | Name_def.Generator -> Scope.Generator
-  | Name_def.Module -> Scope.Module
-  | Name_def.Predicate -> Scope.Predicate
-
 let resolve cx (def_kind, id_loc) (def, def_scope_kind, class_stack, def_reason) =
   let env = Context.environment cx in
-  Context.set_environment
-    cx
-    { env with Loc_env.scope_kind = convert_scope_kind def_scope_kind; class_stack };
+  Context.set_environment cx { env with Loc_env.scope_kind = def_scope_kind; class_stack };
   let (t, use_op) =
     match def with
     | Binding b -> resolve_binding cx def_reason id_loc b

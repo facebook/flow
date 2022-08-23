@@ -226,23 +226,21 @@ struct
     in
     let reason = mk_reason RFunctionBody body_loc in
 
-    (* create and prepopulate function scope *)
-    let function_scope =
+    (* Set the scope early so default exprs can reference earlier params *)
+    let prev_scope_kind =
       let var_scope_kind =
         match kind with
         | Ordinary
         | FieldInit _ ->
-          Scope.Ordinary
-        | Predicate -> Scope.Predicate
-        | Async -> Scope.Async
-        | Generator _ -> Scope.Generator
-        | AsyncGenerator _ -> Scope.AsyncGenerator
-        | Ctor -> Scope.Ctor
+          Name_def.Ordinary
+        | Predicate -> Name_def.Predicate
+        | Async -> Name_def.Async
+        | Generator _ -> Name_def.Generator
+        | AsyncGenerator _ -> Name_def.AsyncGenerator
+        | Ctor -> Name_def.Ctor
       in
-      Scope.fresh ~var_scope_kind ()
+      Env.set_scope_kind cx var_scope_kind
     in
-    (* push the scope early so default exprs can reference earlier params *)
-    let prev_scope_kind = Env.push_var_scope cx function_scope in
 
     (* bind type params *)
     Subst_name.Map.iter
@@ -252,11 +250,7 @@ struct
         if Subst_name.string_of_subst_name name <> "this" then
           ()
         else
-          Env.bind_this_tparam
-            ~state:Scope.State.Initialized
-            cx
-            (DefT (r, bogus_trust (), TypeT (TypeParamKind, t)))
-            loc)
+          Env.bind_this_tparam cx (DefT (r, bogus_trust (), TypeT (TypeParamKind, t))) loc)
       tparams_map;
 
     (* add param bindings *)
@@ -489,7 +483,7 @@ struct
         Flow.flow cx (maybe_exhaustively_checked, implicit_return)
     );
 
-    Env.pop_var_scope cx prev_scope_kind;
+    ignore @@ Env.set_scope_kind cx prev_scope_kind;
 
     (* return a tuple of (function body AST option, field initializer AST option).
        - the function body option is Some _ if the Param sig's body was Some, and

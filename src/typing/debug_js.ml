@@ -9,7 +9,6 @@ open Reason
 open Type
 open TypeUtil
 open Utils_js
-open Loc_collections
 
 let string_of_polarity = function
   | Polarity.Negative -> "Negative"
@@ -1040,97 +1039,7 @@ let dump_flow ?(depth = 3) cx (l, u) =
 
 (*****************************************************)
 
-(* scopes and types *)
-
-let string_of_scope_entry =
-  Scope.(
-    let string_of_value_binding
-        cx
-        {
-          Entry.kind;
-          value_state;
-          value_declare_loc;
-          value_assign_loc;
-          specific;
-          general;
-          closure_writes;
-          provider;
-        } =
-      let general_str =
-        match general with
-        | Annotated t -> spf "Annotated %s" (dump_t cx t)
-        | Inferred t -> spf "Inferred %s" (dump_t cx t)
-      in
-      spf
-        "{ kind: %s; value_state: %s; value_declare_loc: %S; value_assign_loc: %s; specific: %s; general: %s; provider:%s;%s }"
-        (Entry.string_of_value_kind kind)
-        (State.to_string value_state)
-        (string_of_aloc value_declare_loc)
-        (string_of_aloc value_assign_loc)
-        (dump_t cx specific)
-        general_str
-        (dump_t cx provider)
-        (Base.Option.value_map closure_writes ~default:"" ~f:(fun (locs, t, _) ->
-             spf
-               "; closure_writes: { locs: { %s }; t: %s }"
-               (ListUtils.to_string ", " string_of_aloc @@ ALocSet.elements locs)
-               (dump_t cx t)
-         )
-        )
-    in
-    let string_of_type_binding cx { Entry.type_state; type_loc; type_; type_binding_kind = _ } =
-      spf
-        "{ type_state: %s; type_loc: %S; type_: %s }"
-        (State.to_string type_state)
-        (string_of_aloc type_loc)
-        (dump_t cx type_)
-    in
-    fun cx ->
-      Entry.(
-        function
-        | Value r -> spf "Value %s" (string_of_value_binding cx r)
-        | Type r -> spf "Type %s" (string_of_type_binding cx r)
-        | Class r -> spf "Class %s" (ALoc.debug_to_string (r.class_binding_id :> ALoc.t))
-      )
-  )
-
-let string_of_scope_entries cx entries =
-  let strings =
-    NameUtils.Map.fold
-      (fun name entry acc ->
-        spf "%s: %s" (Reason.display_string_of_name name) (string_of_scope_entry cx entry) :: acc)
-      entries
-      []
-    |> String.concat "; \n"
-  in
-  spf "[ %s ]" strings
-
-let string_of_scope_refi cx { Scope.refi_loc; refined; original } =
-  spf
-    "{ refi_loc: %S; refined: %s; original: %s }"
-    (string_of_aloc refi_loc)
-    (dump_t cx refined)
-    (dump_t cx original)
-
-let string_of_scope_refis cx refis =
-  let strings =
-    Key_map.fold
-      (fun key refi acc ->
-        spf "%s: %s" (Key.string_of_key key) (string_of_scope_refi cx refi) :: acc)
-      refis
-      []
-    |> String.concat ";\n"
-  in
-  spf "[ %s ]" strings
-
-let string_of_scope cx scope =
-  Scope.(
-    spf
-      "{ kind: %s;\nentries:\n%s\nrefis:\n%s\n}"
-      (string_of_kind scope.kind)
-      (string_of_scope_entries cx scope.entries)
-      (string_of_scope_refis cx scope.refis)
-  )
+(* types *)
 
 let string_of_reason cx reason =
   let strip_root =
@@ -1820,7 +1729,7 @@ let dump_error_message =
         "EAssignConstLikeBinding (%s) (%s) (%s)"
         (string_of_aloc loc)
         (dump_reason cx definition)
-        (Scope.Entry.string_of_let_binding_kind binding_kind)
+        (string_of_assigned_const_like_binding_type binding_kind)
     | ECannotResolveOpenTvar { use_op; reason; blame_reasons } ->
       spf
         "ECannotResolveOpenTvar (%s) (%s) (%s)"

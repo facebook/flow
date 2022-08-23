@@ -27,8 +27,10 @@ type scope_kind =
   | Generator (* generator function *)
   | AsyncGenerator (* async generator function *)
   | Module (* module scope *)
+  | Global (* global scope *)
   | Predicate (* predicate function *)
   | Ctor
+(* constructor function *)
 
 type class_stack = ALoc.t list
 

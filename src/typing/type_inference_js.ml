@@ -398,16 +398,16 @@ let infer_core cx statements =
     ()
 
 let initialize_env
-    ~lib ?(exclude_syms = NameUtils.Set.empty) ?local_exports_var cx aloc_ast module_scope =
+    ~lib ?(exclude_syms = NameUtils.Set.empty) ?local_exports_var cx aloc_ast toplevel_scope_kind =
   let (_abrupt_completion, ({ Env_api.env_entries; providers; _ } as info)) =
     NameResolver.program_with_scope cx ~lib ~exclude_syms aloc_ast
   in
-  let env = Loc_env.with_info Scope.Global info (fst aloc_ast) in
+  let env = Loc_env.with_info Name_def.Global info (fst aloc_ast) in
   let name_def_graph = Name_def.find_defs env_entries providers aloc_ast in
   let components = NameDefOrdering.build_ordering cx info name_def_graph in
   if Context.cycle_errors cx then Base.List.iter ~f:(Cycles.handle_component cx) components;
   Context.set_environment cx env;
-  Env.init_env ~exclude_syms cx (fst aloc_ast) module_scope;
+  Env.init_env ~exclude_syms cx (fst aloc_ast) toplevel_scope_kind;
   let env = Context.environment cx in
   Base.Option.iter local_exports_var ~f:(fun local_exports_var ->
       let loc = TypeUtil.loc_of_t local_exports_var in
@@ -460,8 +460,7 @@ let infer_ast ~lint_severities cx filename comments aloc_ast =
         Flow_js.resolve_id cx id init_exports
     )
   in
-  let module_scope = Scope.fresh ~var_scope_kind:Scope.Module () in
-  initialize_env ~lib:false ~local_exports_var cx aloc_ast module_scope;
+  initialize_env ~lib:false ~local_exports_var cx aloc_ast Name_def.Module;
 
   (* infer *)
   let typed_statements = infer_core cx aloc_statements in
@@ -495,11 +494,10 @@ let infer_lib_file ~exclude_syms ~lint_severities ~file_sig cx ast =
        confident that we don't support them in any sensible way. *)
     add_require_tvars cx file_sig
   in
-  let module_scope = Scope.fresh ~var_scope_kind:Scope.Global () in
 
-  initialize_env ~lib:true ~exclude_syms cx aloc_ast module_scope;
+  initialize_env ~lib:true ~exclude_syms cx aloc_ast Name_def.Global;
 
   let t_stmts = infer_core cx aloc_statements in
   scan_for_suppressions cx lint_severities all_comments;
 
-  (Env.init_builtins_from_libdef cx module_scope, t_stmts)
+  (Env.init_builtins_from_libdef cx, t_stmts)

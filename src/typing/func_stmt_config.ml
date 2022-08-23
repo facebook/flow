@@ -57,19 +57,10 @@ module Make (Destructuring : Destructuring_sig.S) (Statement : Statement_sig.S) 
     This { t; loc; annot }
 
   let bind cx name t loc =
-    Scope.(
-      if Context.enable_const_params cx then
-        let kind = Entry.ConstParamBinding in
-        Env.bind_implicit_const ~state:State.Initialized kind cx name t loc
-      else
-        Env.bind_implicit_let
-          ~state:State.Initialized
-          Entry.ParamBinding
-          cx
-          (OrdinaryName name)
-          t
-          loc
-    )
+    if Context.enable_const_params cx then
+      Env.bind_implicit_const cx name t loc
+    else
+      Env.bind_implicit_let cx (OrdinaryName name) t loc
 
   let destruct cx ~use_op ~name_loc ~has_anno name default t =
     Base.Option.iter

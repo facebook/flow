@@ -19,14 +19,6 @@
   (pps ppx_let)))
 
 (library
- (name flow_typing_scope)
- (wrapped false)
- (modules scope)
- (libraries flow_typing_key flow_typing_trust flow_typing_type)
- (preprocess
-  (pps ppx_let)))
-
-(library
  (name flow_typing_trust)
  (wrapped false)
  (modules trust)
@@ -59,7 +51,6 @@
    trust
    type
    typeUtil
-   scope
    source_or_generated_id
    generic
    trust_constraint))

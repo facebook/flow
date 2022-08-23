@@ -50,29 +50,17 @@ let in_class_scope cx loc f =
   Context.set_environment cx { env with Loc_env.class_stack };
   res
 
-let pop_var_scope cx kind =
-  let (_ : Scope.var_scope_kind) = set_scope_kind cx kind in
-  ()
-
-let push_var_scope cx scope =
-  let kind =
-    match scope.Scope.kind with
-    | Scope.VarScope kind -> kind
-    | _ -> Utils_js.assert_false "push_var_scope on non-var scope"
-  in
-  set_scope_kind cx kind
-
 let is_var_kind cx k = (Context.environment cx).Loc_env.scope_kind = k
 
-let in_predicate_scope cx = is_var_kind cx Scope.Predicate
+let in_predicate_scope cx = is_var_kind cx Name_def.Predicate
 
-let in_async_scope cx = is_var_kind cx Scope.Async || is_var_kind cx Scope.AsyncGenerator
+let in_async_scope cx = is_var_kind cx Name_def.Async || is_var_kind cx Name_def.AsyncGenerator
 
 let var_scope_kind cx = (Context.environment cx).Loc_env.scope_kind
 
-let in_global_scope cx = is_var_kind cx Scope.Global
+let in_global_scope cx = is_var_kind cx Name_def.Global
 
-let in_toplevel_scope cx = is_var_kind cx Scope.Module
+let in_toplevel_scope cx = is_var_kind cx Name_def.Module
 
 let is_provider cx id_loc =
   let { Loc_env.var_info = { Env_api.providers; _ }; _ } = Context.environment cx in
@@ -795,14 +783,14 @@ let bind cx t ~kind loc =
   | Options.(SSAEnv Enforced) -> ()
   | _ -> unify_write_entry cx ~use_op:Type.unknown_use t kind loc
 
-let bind_var ?state:_ cx name t loc =
+let bind_var cx name t loc =
   valid_declaration_check cx (OrdinaryName name) loc;
   (* TODO: Vars can be bound multiple times and we need to make sure that the
    * annots are all compatible with each other. For that reason, we subtype
    * against providers when just binding a var *)
   assign_env_value_entry cx ~use_op:unknown_use (TypeUtil.type_t_of_annotated_or_inferred t) loc
 
-let bind_let ?state:_ cx name t loc =
+let bind_let cx name t loc =
   valid_declaration_check cx (OrdinaryName name) loc;
   bind cx (TypeUtil.type_t_of_annotated_or_inferred t) ~kind:Env_api.OrdinaryNameLoc loc
 
@@ -821,27 +809,27 @@ let bind_class_instance_super cx t loc =
 let bind_class_static_super cx t loc =
   unify_write_entry cx ~use_op:Type.unknown_use t Env_api.ClassStaticSuperLoc loc
 
-let bind_implicit_let ?state:_ _kind cx name t loc =
+let bind_implicit_let cx name t loc =
   valid_declaration_check cx name loc;
   match (Context.env_mode cx, t) with
   | (Options.(SSAEnv Reordered), Annotated _) -> ()
   | _ -> bind cx (TypeUtil.type_t_of_annotated_or_inferred t) ~kind:Env_api.OrdinaryNameLoc loc
 
-let bind_fun ?state:_ cx _name t loc = bind cx t ~kind:Env_api.OrdinaryNameLoc loc
+let bind_fun cx _name t loc = bind cx t ~kind:Env_api.OrdinaryNameLoc loc
 
-let bind_implicit_const ?state:_ _ cx _ t loc =
+let bind_implicit_const cx _ t loc =
   match (Context.env_mode cx, t) with
   | (Options.(SSAEnv Reordered), Annotated _) -> ()
   | _ -> bind cx (TypeUtil.type_t_of_annotated_or_inferred t) ~kind:Env_api.OrdinaryNameLoc loc
 
-let bind_const ?state:_ cx _ t loc =
+let bind_const cx _ t loc =
   bind cx (TypeUtil.type_t_of_annotated_or_inferred t) ~kind:Env_api.OrdinaryNameLoc loc
 
 let bind_declare_fun cx ~predicate name t loc =
   check_predicate_declare_function cx ~predicate name loc;
   bind cx t ~kind:Env_api.OrdinaryNameLoc loc
 
-let bind_this_tparam ~state:_ _cx t loc = this_type_params := ALocMap.add loc t !this_type_params
+let bind_this_tparam _cx t loc = this_type_params := ALocMap.add loc t !this_type_params
 
 let bind_class_self_type cx class_loc _self class_t_internal =
   bind cx class_t_internal ~kind:Env_api.ClassSelfLoc class_loc
@@ -850,14 +838,13 @@ let init_var cx ~use_op _name ~has_anno t loc = init_entry ~has_anno cx ~use_op 
 
 let init_let cx ~use_op _name ~has_anno t loc = init_entry ~has_anno cx ~use_op t loc
 
-let init_implicit_let _kind cx ~use_op _name ~has_anno t loc = init_entry ~has_anno cx ~use_op t loc
+let init_implicit_let cx ~use_op _name ~has_anno t loc = init_entry ~has_anno cx ~use_op t loc
 
 let init_fun cx ~use_op _name t loc = assign_env_value_entry cx ~use_op t loc
 
 let init_const cx ~use_op _name ~has_anno t loc = init_entry ~has_anno cx ~use_op t loc
 
-let init_implicit_const _kind cx ~use_op _name ~has_anno t loc =
-  init_entry ~has_anno cx ~use_op t loc
+let init_implicit_const cx ~use_op _name ~has_anno t loc = init_entry ~has_anno cx ~use_op t loc
 
 let unify_declared_type ?lookup_mode:_ ?is_func:_ cx _name loc t =
   match Context.env_mode cx with
@@ -877,7 +864,7 @@ let unify_declared_fun_type cx _name loc t =
 (************************)
 (* Variable Declaration *)
 (************************)
-let init_env ?exclude_syms:_ cx program_loc scope =
+let init_env ?exclude_syms:_ cx program_loc toplevel_scope_kind =
   let ({ Loc_env.var_info; _ } as env) = Context.environment cx in
   let initialize_entry def_loc_type loc env_entry env =
     let env' =
@@ -927,15 +914,10 @@ let init_env ?exclude_syms:_ cx program_loc scope =
     Flow_js.resolve_id cx id t
   in
   initialize_this ();
-  let kind =
-    match scope.Scope.kind with
-    | Scope.VarScope kind -> kind
-    | _ -> failwith "Unexpected lexical scope"
-  in
   let env =
     {
       env with
-      Loc_env.scope_kind = kind;
+      Loc_env.scope_kind = toplevel_scope_kind;
       readable =
         Env_api.EnvSet.(
           empty
@@ -973,7 +955,7 @@ let init_class_self_type cx loc _reason =
   check_readable cx Env_api.ClassSelfLoc loc;
   Base.Option.value_exn (Loc_env.find_write env Env_api.ClassSelfLoc loc)
 
-let init_declare_module_synthetic_module_exports cx ~export_type loc reason _module_scope =
+let init_declare_module_synthetic_module_exports cx ~export_type loc reason =
   let env = Context.environment cx in
   let module_toplevel_members =
     ALocMap.find loc env.Loc_env.var_info.Env_api.module_toplevel_members
@@ -1011,7 +993,7 @@ let init_declare_module_synthetic_module_exports cx ~export_type loc reason _mod
         | _ -> ()
     )
 
-let init_builtins_from_libdef cx _module_scope =
+let init_builtins_from_libdef cx =
   let env = Context.environment cx in
   let filename = Context.file cx in
   let read_loc = Loc.{ none with source = Some filename } |> ALoc.of_loc in

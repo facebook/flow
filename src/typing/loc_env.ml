@@ -22,7 +22,7 @@ type t = {
   class_stack: ALoc.t list;
   declare_module_exports_write_loc: ALoc.t;
   return_hint: Type.t Hint_api.hint;
-  scope_kind: Scope.var_scope_kind;
+  scope_kind: Name_def.scope_kind;
   readable: EnvSet.t;
   under_resolution: EnvSet.t;
   var_info: Env_api.env_info;
