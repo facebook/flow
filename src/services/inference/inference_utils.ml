@@ -19,6 +19,9 @@ let error_of_docblock_error ~source_file (loc, err) =
         | Parsing_service_js.MultipleJSXAttributes -> Error_message.MultipleJSXAttributes
         | Parsing_service_js.InvalidJSXAttribute first_error ->
           Error_message.InvalidJSXAttribute first_error
+        | Parsing_service_js.MultipleJSXRuntimeAttributes ->
+          Error_message.MultipleJSXRuntimeAttributes
+        | Parsing_service_js.InvalidJSXRuntimeAttribute -> Error_message.InvalidJSXRuntimeAttribute
       )
   in
   Flow_error.error_of_msg ~trace_reasons:[] ~source_file flow_err

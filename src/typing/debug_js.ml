@@ -1621,7 +1621,9 @@ let dump_error_message =
         | InvalidFlowMode _ -> "InvalidFlowMode"
         | MultipleProvidesModuleAttributes -> "MultipleProvidesModuleAttributes"
         | MultipleJSXAttributes -> "MultipleJSXAttributes"
-        | InvalidJSXAttribute _ -> "InvalidJSXAttribute")
+        | InvalidJSXAttribute _ -> "InvalidJSXAttribute"
+        | MultipleJSXRuntimeAttributes -> "MultipleJSXRuntimeAttributes"
+        | InvalidJSXRuntimeAttribute -> "InvalidJSXRuntimeAttribute")
     | EImplicitInexactObject loc -> spf "EImplicitInexactObject (%s)" (string_of_aloc loc)
     | EAmbiguousObjectType loc -> spf "EAmbiguousObjectType (%s)" (string_of_aloc loc)
     | EUntypedTypeImport (loc, module_name) ->

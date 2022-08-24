@@ -101,6 +101,7 @@ let stub_docblock =
     preventMunge = false;
     providesModule = None;
     jsx = None;
+    jsxRuntime = None;
   }
 
 let stub_metadata ~root ~checked =

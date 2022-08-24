@@ -49,6 +49,8 @@ and docblock_error_kind =
   | MultipleProvidesModuleAttributes
   | MultipleJSXAttributes
   | InvalidJSXAttribute of string option
+  | MultipleJSXRuntimeAttributes
+  | InvalidJSXRuntimeAttribute
 
 (* results of parse job, returned by parse and reparse *)
 type results = {
@@ -228,6 +230,25 @@ let extract_docblock =
               let e = Some (Parse_error.PP.error e) in
               ((expr_loc, InvalidJSXAttribute e) :: errors, info)
         in
+        parse_attributes acc xs
+      | (loc, "@jsxRuntime") :: (_, "classic") :: xs ->
+        let acc =
+          if info.jsxRuntime <> None then
+            ((loc, MultipleJSXRuntimeAttributes) :: errors, info)
+          else
+            (errors, { info with jsxRuntime = Some JsxRuntimePragmaClassic })
+        in
+        parse_attributes acc xs
+      | (loc, "@jsxRuntime") :: (_, "automatic") :: xs ->
+        let acc =
+          if info.jsxRuntime <> None then
+            ((loc, MultipleJSXRuntimeAttributes) :: errors, info)
+          else
+            (errors, { info with jsxRuntime = Some JsxRuntimePragmaAutomatic })
+        in
+        parse_attributes acc xs
+      | (loc, "@jsxRuntime") :: _ :: xs ->
+        let acc = ((loc, InvalidJSXRuntimeAttribute) :: errors, info) in
         parse_attributes acc xs
       | (_, "@typeAssert") :: xs -> parse_attributes (errors, { info with typeAssert = true }) xs
       | _ :: xs -> parse_attributes (errors, info) xs

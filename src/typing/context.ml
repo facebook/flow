@@ -276,6 +276,15 @@ let docblock_overrides docblock_info metadata =
     { metadata with jsx }
   in
   let metadata =
+    let react_runtime =
+      match Docblock.jsx_runtime docblock_info with
+      | Some Docblock.JsxRuntimePragmaClassic -> Options.ReactRuntimeClassic
+      | Some Docblock.JsxRuntimePragmaAutomatic -> Options.ReactRuntimeAutomatic
+      | None -> metadata.react_runtime
+    in
+    { metadata with react_runtime }
+  in
+  let metadata =
     match Docblock.flow docblock_info with
     | None -> metadata
     | Some Docblock.OptIn -> { metadata with checked = true }

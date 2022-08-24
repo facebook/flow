@@ -1,0 +1,18 @@
+Error ------------------------------------------------------------------------------------------------- duplicate.js:4:4
+
+Unexpected `@jsxRuntime` declaration. Only one per file is allowed. [duplicate-jsx-runtime-decl]
+
+   4|  * @jsxRuntime automatic
+         ^^^^^^^^^^^
+
+
+Error --------------------------------------------------------------------------------------------------- invalid.js:3:4
+
+Invalid `@jsxRuntime` declaration. The only supported values are `classic` and `automatic`. [invalid-jsx-runtime-decl]
+
+   3|  * @jsxRuntime preact
+         ^^^^^^^^^^^
+
+
+
+Found 2 errors

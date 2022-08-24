@@ -4823,7 +4823,9 @@ module Make
 
       method jsx_function_call loc =
         match (Context.react_runtime cx, env_state.jsx_base_name, Context.jsx cx) with
-        | (Options.ReactRuntimeClassic, Some name, _) -> this#any_identifier loc name
+        | (Options.ReactRuntimeClassic, Some name, Options.Jsx_react) ->
+          this#any_identifier loc name
+        | (_, Some name, Options.Jsx_pragma _) -> this#any_identifier loc name
         | (Options.ReactRuntimeClassic, None, Options.Jsx_pragma (_, ast)) ->
           ignore @@ this#expression ast
         | _ -> ()

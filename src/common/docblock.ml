@@ -18,16 +18,28 @@ type flow_mode =
   *)
 type jsx_pragma = string * (Loc.t, Loc.t) Flow_ast.Expression.t
 
+type jsx_runtime_pragma =
+  | JsxRuntimePragmaClassic
+  | JsxRuntimePragmaAutomatic
+
 type t = {
   flow: flow_mode option;
   typeAssert: bool;
   preventMunge: bool;
   providesModule: string option;
   jsx: jsx_pragma option;
+  jsxRuntime: jsx_runtime_pragma option;
 }
 
 let default_info =
-  { flow = None; typeAssert = false; preventMunge = false; providesModule = None; jsx = None }
+  {
+    flow = None;
+    typeAssert = false;
+    preventMunge = false;
+    providesModule = None;
+    jsx = None;
+    jsxRuntime = None;
+  }
 
 (* accessors *)
 let flow info = info.flow
@@ -39,6 +51,8 @@ let preventMunge info = info.preventMunge
 let providesModule info = info.providesModule
 
 let jsx info = info.jsx
+
+let jsx_runtime info = info.jsxRuntime
 
 let is_strict info =
   match info.flow with
