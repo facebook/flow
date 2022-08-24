@@ -58,7 +58,7 @@ module Make (Destructuring : Destructuring_sig.S) (Statement : Statement_sig.S) 
 
   let bind cx name t loc =
     if Context.enable_const_params cx then
-      Env.bind_implicit_const cx name t loc
+      Env.bind_implicit_const cx t loc
     else
       Env.bind_implicit_let cx (OrdinaryName name) t loc
 

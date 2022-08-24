@@ -547,7 +547,7 @@ let var_ref ?(lookup_mode = ForValue) cx ?desc name loc =
   let t = query_var ~lookup_mode cx name ?desc loc in
   Flow_js.reposition cx loc t
 
-let is_global_var cx _ loc =
+let is_global_var cx loc =
   let { Loc_env.var_info; _ } = Context.environment cx in
   let rec local_def_exists states =
     Base.List.exists
@@ -583,7 +583,7 @@ let is_global_var cx _ loc =
     local_def_exists write_locs
   | Error _ -> false
 
-let local_scope_entry_exists cx loc name = not (is_global_var cx name loc)
+let local_scope_entry_exists cx loc = not (is_global_var cx loc)
 
 let get_var_declared_type ?(lookup_mode = ForValue) ?(is_declared_function = false) cx name loc =
   match (name, lookup_mode) with
@@ -600,7 +600,7 @@ let get_var_declared_type ?(lookup_mode = ForValue) ?(is_declared_function = fal
     let env = Context.environment cx in
     provider_type_for_def_loc cx env ~intersect:is_declared_function loc
 
-let constraining_type ~default cx _name loc =
+let constraining_type ~default cx loc =
   let ({ Loc_env.var_info; _ } as env) = Context.environment cx in
   match EnvMap.find_opt_ordinary loc var_info.Env_api.env_entries with
   | Some Env_api.NonAssigningWrite -> default
@@ -624,7 +624,7 @@ let constraining_type ~default cx _name loc =
 (*  Writing  *)
 (*************)
 
-let set_expr cx _key loc ~refined ~original:_ =
+let set_expr cx loc ~refined =
   let env = Context.environment cx in
   Debug_js.Verbose.print_if_verbose cx [spf "set expr at location %s" (Reason.string_of_aloc loc)];
   match (Loc_env.find_ordinary_write env loc, Context.env_mode cx) with
@@ -759,7 +759,7 @@ let subtype_entry cx ~use_op t loc =
 (* init_entry is called on variable declarations (not assignments), and `t`
    is the RHS type. If the variable is annotated, we just need to check t against
    its type; but if it's not annotated, the RHS t becomes the variable's type. *)
-let init_entry cx ~use_op ~has_anno:_ t loc =
+let init_entry cx ~use_op t loc =
   let { Loc_env.var_info; _ } = Context.environment cx in
   if is_def_loc_annotated var_info loc then
     subtype_entry cx ~use_op t loc
@@ -769,7 +769,7 @@ let init_entry cx ~use_op ~has_anno:_ t loc =
 let set_var cx ~use_op name t loc =
   assign_env_value_entry cx ~use_op ~potential_global_name:name t loc
 
-let set_module_exports cx _loc t =
+let set_module_exports cx t =
   let env = Context.environment cx in
   unify_write_entry
     cx
@@ -817,7 +817,7 @@ let bind_implicit_let cx name t loc =
 
 let bind_fun cx _name t loc = bind cx t ~kind:Env_api.OrdinaryNameLoc loc
 
-let bind_implicit_const cx _ t loc =
+let bind_implicit_const cx t loc =
   match (Context.env_mode cx, t) with
   | (Options.(SSAEnv Reordered), Annotated _) -> ()
   | _ -> bind cx (TypeUtil.type_t_of_annotated_or_inferred t) ~kind:Env_api.OrdinaryNameLoc loc
@@ -829,34 +829,34 @@ let bind_declare_fun cx ~predicate name t loc =
   check_predicate_declare_function cx ~predicate name loc;
   bind cx t ~kind:Env_api.OrdinaryNameLoc loc
 
-let bind_this_tparam _cx t loc = this_type_params := ALocMap.add loc t !this_type_params
+let bind_this_tparam t loc = this_type_params := ALocMap.add loc t !this_type_params
 
-let bind_class_self_type cx class_loc _self class_t_internal =
+let bind_class_self_type cx class_loc class_t_internal =
   bind cx class_t_internal ~kind:Env_api.ClassSelfLoc class_loc
 
-let init_var cx ~use_op _name ~has_anno t loc = init_entry ~has_anno cx ~use_op t loc
+let init_var cx ~use_op t loc = init_entry cx ~use_op t loc
 
-let init_let cx ~use_op _name ~has_anno t loc = init_entry ~has_anno cx ~use_op t loc
+let init_let cx ~use_op t loc = init_entry cx ~use_op t loc
 
-let init_implicit_let cx ~use_op _name ~has_anno t loc = init_entry ~has_anno cx ~use_op t loc
+let init_implicit_let cx ~use_op t loc = init_entry cx ~use_op t loc
 
-let init_fun cx ~use_op _name t loc = assign_env_value_entry cx ~use_op t loc
+let init_fun cx ~use_op t loc = assign_env_value_entry cx ~use_op t loc
 
-let init_const cx ~use_op _name ~has_anno t loc = init_entry ~has_anno cx ~use_op t loc
+let init_const cx ~use_op t loc = init_entry cx ~use_op t loc
 
-let init_implicit_const cx ~use_op _name ~has_anno t loc = init_entry ~has_anno cx ~use_op t loc
+let init_implicit_const cx ~use_op t loc = init_entry cx ~use_op t loc
 
-let unify_declared_type ?lookup_mode:_ ?is_func:_ cx _name loc t =
+let unify_declared_type cx loc t =
   match Context.env_mode cx with
   | Options.(SSAEnv (Reordered | Enforced)) -> ()
   | _ -> unify_write_entry cx ~use_op:unknown_use t Env_api.OrdinaryNameLoc loc
 
-let read_declared_type ?lookup_mode:_ ?is_func:_ cx _name reason loc =
+let read_declared_type cx reason loc =
   Tvar.mk_where cx reason (fun t ->
       unify_write_entry cx ~use_op:unknown_use t Env_api.OrdinaryNameLoc loc
   )
 
-let unify_declared_fun_type cx _name loc t =
+let unify_declared_fun_type cx loc t =
   match Context.env_mode cx with
   | Options.(SSAEnv (Reordered | Enforced)) -> ()
   | _ -> unify_write_entry cx ~use_op:unknown_use t Env_api.OrdinaryNameLoc loc
@@ -864,7 +864,7 @@ let unify_declared_fun_type cx _name loc t =
 (************************)
 (* Variable Declaration *)
 (************************)
-let init_env ?exclude_syms:_ cx program_loc toplevel_scope_kind =
+let init_env cx program_loc toplevel_scope_kind =
   let ({ Loc_env.var_info; _ } as env) = Context.environment cx in
   let initialize_entry def_loc_type loc env_entry env =
     let env' =
@@ -931,7 +931,7 @@ let init_env ?exclude_syms:_ cx program_loc toplevel_scope_kind =
   in
   Context.set_environment cx env
 
-let discriminant_after_negated_cases cx switch_loc refinement_key_opt _discriminant =
+let discriminant_after_negated_cases cx switch_loc refinement_key_opt =
   let reason_desc =
     match refinement_key_opt with
     | None -> RCustom "discriminant of switch"
@@ -941,7 +941,7 @@ let discriminant_after_negated_cases cx switch_loc refinement_key_opt _discrimin
   | Ok t -> Some t
   | Error _ -> None
 
-let init_import ~lookup_mode:_ cx _name loc t =
+let init_import cx loc t =
   match Context.env_mode cx with
   | Options.(SSAEnv (Reordered | Enforced)) -> ()
   | _ -> unify_write_entry ~use_op:unknown_use cx t Env_api.OrdinaryNameLoc loc
@@ -950,7 +950,7 @@ let get_next cx loc =
   let name = InternalName "next" in
   read_entry_exn ~lookup_mode:ForValue cx loc (mk_reason (RIdentifier name) loc)
 
-let init_class_self_type cx loc _reason =
+let init_class_self_type cx loc =
   let env = Context.environment cx in
   check_readable cx Env_api.ClassSelfLoc loc;
   Base.Option.value_exn (Loc_env.find_write env Env_api.ClassSelfLoc loc)
@@ -981,7 +981,7 @@ let init_declare_module_synthetic_module_exports cx ~export_type loc reason =
         in
         let proto = ObjProtoT reason in
         let t = Obj_type.mk_with_proto cx reason ~obj_kind:Exact ~props proto in
-        set_module_exports cx loc t
+        set_module_exports cx t
     in
     Base.List.iter
       module_toplevel_members

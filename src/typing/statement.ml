@@ -400,7 +400,7 @@ module Make
       if Context.enable_enums cx then
         let r = DescFormat.type_reason (OrdinaryName name) name_loc in
         let tvar = Tvar.mk cx r in
-        Env.bind_implicit_const cx name (Annotated tvar) name_loc
+        Env.bind_implicit_const cx (Annotated tvar) name_loc
     | (_, DeclareVariable _) -> ()
     | ( loc,
         DeclareFunction
@@ -546,10 +546,9 @@ module Make
       | { Ast.Function.id = None; _ } -> failwith "unexpected anonymous function statement"
       | { Ast.Function.id = Some id; _ } ->
         let { Ast.Function.sig_loc; async; generator; _ } = func in
-        let (name_loc, { Ast.Identifier.name; comments = _ }) = id in
-        let name = OrdinaryName name in
+        let (name_loc, _) = id in
         let reason = func_reason ~async ~generator sig_loc in
-        let general = Env.read_declared_type ~is_func:true cx name reason name_loc in
+        let general = Env.read_declared_type cx reason name_loc in
         let (fn_type, func_ast) = mk_function_declaration cx ~general reason loc func in
         (fn_type, id, (loc, FunctionDeclaration func_ast))
     in
@@ -785,8 +784,6 @@ module Make
             Env.init_let
               cx
               ~use_op:unknown_use
-              (internal_name "maybe_exhaustively_checked")
-              ~has_anno:false
               exhaustive_check_incomplete_out
               (loc_of_t exhaustive_check_incomplete_out);
           (* If we handle the fallthrough case explicitly here then there is no need to merge
@@ -838,7 +835,7 @@ module Make
       let discriminant_after_check =
         if not has_default then
           let refinement_key = Refinement.key ~allow_optional:true discriminant in
-          Env.discriminant_after_negated_cases cx switch_loc refinement_key discriminant
+          Env.discriminant_after_negated_cases cx switch_loc refinement_key
         else
           None
       in
@@ -1311,7 +1308,7 @@ module Make
              }
           )
       in
-      Env.init_fun cx ~use_op (OrdinaryName name) fn_type name_loc;
+      Env.init_fun cx ~use_op fn_type name_loc;
       node
     | (loc, EnumDeclaration enum) ->
       let open EnumDeclaration in
@@ -1331,7 +1328,7 @@ module Make
                  }
               )
           in
-          Env.init_implicit_const cx ~use_op (OrdinaryName name) ~has_anno:false t name_loc;
+          Env.init_implicit_const cx ~use_op t name_loc;
           t
         ) else (
           Flow.add_output cx (Error_message.EEnumsNotEnabled loc);
@@ -1340,31 +1337,23 @@ module Make
       in
       let id' = ((name_loc, t), ident) in
       (loc, EnumDeclaration { id = id'; body; comments })
-    | ( loc,
-        DeclareVariable
-          {
-            DeclareVariable.id = (id_loc, ({ Ast.Identifier.name; comments = _ } as id));
-            annot;
-            comments;
-          }
-      ) ->
+    | (loc, DeclareVariable { DeclareVariable.id = (id_loc, id); annot; comments }) ->
       let (t, annot_ast) = Anno.mk_type_available_annotation cx Subst_name.Map.empty annot in
-      Env.unify_declared_type cx (OrdinaryName name) id_loc t;
+      Env.unify_declared_type cx id_loc t;
       (loc, DeclareVariable { DeclareVariable.id = ((id_loc, t), id); annot = annot_ast; comments })
     | (loc, DeclareFunction declare_function) ->
       (match declare_function_to_function_declaration cx loc declare_function with
       | Some (FunctionDeclaration func, reconstruct_ast) ->
-        let (fn_type, (id_loc, { Ast.Identifier.name; comments = _ }), node) = function_ loc func in
-        Env.unify_declared_fun_type cx (OrdinaryName name) id_loc fn_type;
+        let (fn_type, (id_loc, _), node) = function_ loc func in
+        Env.unify_declared_fun_type cx id_loc fn_type;
         (loc, DeclareFunction (reconstruct_ast node))
       | _ ->
         (* error case *)
         let { DeclareFunction.id = (id_loc, id_name); annot; predicate; comments } =
           declare_function
         in
-        let { Ast.Identifier.name; comments = _ } = id_name in
         let (t, annot_ast) = Anno.mk_type_available_annotation cx Subst_name.Map.empty annot in
-        Env.unify_declared_fun_type cx (OrdinaryName name) id_loc t;
+        Env.unify_declared_fun_type cx id_loc t;
         let predicate = Base.Option.map ~f:Tast_utils.error_mapper#type_predicate predicate in
         ( loc,
           DeclareFunction
@@ -1377,7 +1366,7 @@ module Make
       let (name_loc, { Ast.Identifier.name; comments = _ }) = id in
       let name = OrdinaryName name in
       let reason = DescFormat.instance_reason name name_loc in
-      let general = Env.read_declared_type cx name reason name_loc in
+      let general = Env.read_declared_type cx reason name_loc in
       (* ClassDeclarations are statements, so we will never have an annotation to push down here *)
       let (class_t, c_ast) = mk_class cx class_loc ~name_loc ~general reason c in
       let use_op =
@@ -1386,7 +1375,7 @@ module Make
              { var = Some (mk_reason (RIdentifier name) name_loc); init = reason_of_t class_t }
           )
       in
-      Env.init_implicit_let cx ~use_op name ~has_anno:false class_t name_loc;
+      Env.init_implicit_let cx ~use_op class_t name_loc;
       (class_loc, ClassDeclaration c_ast)
     | ( loc,
         DeclareClass
@@ -1401,7 +1390,7 @@ module Make
              { var = Some (mk_reason (RIdentifier (OrdinaryName name)) loc); init = reason_of_t t }
           )
       in
-      Env.init_var ~has_anno:false cx ~use_op (OrdinaryName name) t name_loc;
+      Env.init_var cx ~use_op t name_loc;
       (loc, DeclareClass decl_ast)
     | (loc, DeclareInterface decl) ->
       let (_, decl_ast) = interface cx loc decl in
@@ -1700,16 +1689,7 @@ module Make
           (specifier :: specifiers, Some ast)
         | None -> (specifiers, None)
       in
-      List.iter
-        (fun (loc, local_name, t, specifier_kind) ->
-          let lookup_mode =
-            match Base.Option.value ~default:import_kind specifier_kind with
-            | ImportDeclaration.ImportType -> ForType
-            | ImportDeclaration.ImportTypeof -> ForType
-            | ImportDeclaration.ImportValue -> ForValue
-          in
-          Env.init_import ~lookup_mode cx (OrdinaryName local_name) loc t)
-        specifiers;
+      List.iter (fun (loc, _, t, _) -> Env.init_import cx loc t) specifiers;
 
       ( import_loc,
         ImportDeclaration
@@ -2471,23 +2451,23 @@ module Make
         (* move const/let bindings from undeclared to declared *)
         declare_var cx (OrdinaryName name) id_loc;
         if has_anno then
-          Env.unify_declared_type cx (OrdinaryName name) id_loc annot_t
+          Env.unify_declared_type cx id_loc annot_t
         else if Base.Option.is_some init_ast || Base.Option.is_some if_uninitialized then
           (* TODO: even though both branches of this if seem identical, in the new env with reordering we're not allowed to
               call `unify_declared_type` because it can be used to initialize an environment entry, which should always have
               been done by the env_resolution process. Instead, if there is no annotation (which makes this operation
               functionally a read, not a write) we bypass this by reading the type from the environment and unifying it with
               the AST type here *)
-          Flow.unify cx annot_t (Env.read_declared_type cx (OrdinaryName name) id_reason id_loc);
+          Flow.unify cx annot_t (Env.read_declared_type cx id_reason id_loc);
         begin
           match init_opt with
           | Some (init_t, init_reason) ->
             let use_op = Op (AssignVar { var = Some id_reason; init = init_reason }) in
-            init_var cx ~use_op (OrdinaryName name) ~has_anno init_t id_loc
+            init_var cx ~use_op init_t id_loc
           | None -> ()
         end;
         Type_inference_hooks_js.(dispatch_lval_hook cx name id_loc (Val annot_t));
-        let ast_t = Env.constraining_type ~default:annot_t cx (OrdinaryName name) id_loc in
+        let ast_t = Env.constraining_type ~default:annot_t cx id_loc in
         ( (ploc, ast_t),
           Ast.Pattern.Identifier
             {
@@ -2523,14 +2503,13 @@ module Make
                unified. *)
             let id_node_type =
               if has_anno then (
-                Env.unify_declared_type cx (OrdinaryName name) name_loc t;
+                Env.unify_declared_type cx name_loc t;
                 t
               ) else (
-                init_var cx ~use_op (OrdinaryName name) ~has_anno t name_loc;
+                init_var cx ~use_op t name_loc;
                 Env.constraining_type
                   ~default:(Env.get_var_declared_type cx (OrdinaryName name) name_loc)
                   cx
-                  (OrdinaryName name)
                   name_loc
               )
             in
@@ -2954,7 +2933,7 @@ module Make
           let use_op =
             Op (AssignVar { var = Some (mk_reason (RIdentifier name) loc); init = reason_of_t t })
           in
-          Env.init_fun cx ~use_op name t name_loc;
+          Env.init_fun cx ~use_op t name_loc;
           ignore @@ Env.set_scope_kind cx prev_scope_kind;
           (t, func)
       in
@@ -3106,7 +3085,7 @@ module Make
                  { var = Some (mk_reason (RIdentifier name) name_loc); init = reason_of_t class_t }
               )
           in
-          Env.init_implicit_let cx ~use_op name ~has_anno:false class_t name_loc
+          Env.init_implicit_let cx ~use_op class_t name_loc
         in
         Flow.flow_t cx (class_t, tvar);
         ((class_loc, class_t), Class c)
@@ -3418,13 +3397,13 @@ module Make
           {
             Call.callee =
               ( callee_loc,
-                Identifier (id_loc, ({ Ast.Identifier.name = "require" as n; comments = _ } as name))
+                Identifier (id_loc, ({ Ast.Identifier.name = "require"; comments = _ } as name))
               );
             targs;
             arguments;
             comments;
           }
-        when not (Env.local_scope_entry_exists cx id_loc n) ->
+        when not (Env.local_scope_entry_exists cx id_loc) ->
         let targs =
           Base.Option.map targs ~f:(fun (args_loc, args) ->
               (args_loc, snd (convert_call_targs cx Subst_name.Map.empty args))
@@ -5399,7 +5378,7 @@ module Make
               (SetPrivatePropT (use_op, reason, name, mode, class_entries, false, t, Some prop_t))
           in
           Flow.flow cx (o, upper);
-          post_assignment_havoc cx (lhs_loc, lhs_expr) prop_t t;
+          post_assignment_havoc cx (lhs_loc, lhs_expr) t;
           prop_t
       in
       ((lhs_loc, prop_t), reconstruct_ast { Member._object; property; comments } prop_t)
@@ -5443,7 +5422,7 @@ module Make
               )
           in
           Flow.flow cx (o, upper);
-          post_assignment_havoc cx (lhs_loc, lhs_expr) prop_t t;
+          post_assignment_havoc cx (lhs_loc, lhs_expr) t;
           prop_t
       in
       let lhs_t =
@@ -5454,7 +5433,7 @@ module Make
             ),
             "exports"
           )
-          when not (Env.local_scope_entry_exists cx id_loc "module") ->
+          when not (Env.local_scope_entry_exists cx id_loc) ->
           (* module.exports has type `any` in theory, but shouldnt be treated as uncovered *)
           t
         | _ -> prop_t
@@ -5505,9 +5484,9 @@ module Make
       else
         let open Ast.Pattern in
         match lhs with
-        | (_, Identifier { Identifier.name = (id_loc, { Ast.Identifier.name; _ }); _ }) ->
+        | (_, Identifier { Identifier.name = (id_loc, _); _ }) ->
           let default = AnyT.why Untyped (mk_reason (RCustom "missing provider type") loc) in
-          Hint_t (Env.constraining_type cx ~default (OrdinaryName name) id_loc)
+          Hint_t (Env.constraining_type cx ~default id_loc)
         | _ ->
           (* TODO create a type based on the lhs pattern *)
           Hint_t (AnyT.why Untyped (mk_reason (RCustom "hint of destructuring pattern") loc))
@@ -6694,7 +6673,7 @@ module Make
     (* inspect an undefined equality test *)
     let undef_test loc ~undefined_loc ~sense ~strict e void_t reconstruct_ast =
       (* if `undefined` isn't redefined in scope, then we assume it is `void` *)
-      if Env.is_global_var cx "undefined" undefined_loc then
+      if Env.is_global_var cx undefined_loc then
         void_test loc ~sense ~strict e void_t reconstruct_ast
       else
         let e_ast = expression cx ~hint:Hint_None e in
@@ -7630,7 +7609,7 @@ module Make
     | None ->
       let def_reason = repos_reason class_loc reason in
       let this_in_class = Class_stmt_sig.This.in_class c in
-      let self = Env.init_class_self_type cx class_loc reason in
+      let self = Env.init_class_self_type cx class_loc in
       let (class_t, _, class_sig, class_ast_f) =
         mk_class_sig cx ~name_loc ~class_loc reason self c
       in
@@ -8211,7 +8190,7 @@ module Make
         Env.bind_class_instance_super cx super class_loc;
         Env.bind_class_static_super cx static_super class_loc;
         let (class_t_internal, class_t) = Class_stmt_sig.classtype cx class_sig in
-        Env.bind_class_self_type cx class_loc self class_t_internal;
+        Env.bind_class_self_type cx class_loc class_t_internal;
         ( class_t,
           class_t_internal,
           class_sig,
@@ -8713,10 +8692,10 @@ module Make
       )
     | _ -> ()
 
-  and post_assignment_havoc cx exp orig_t t =
+  and post_assignment_havoc cx exp t =
     (* add type refinement if LHS is a pattern we handle *)
     match Refinement.key ~allow_optional:false exp with
-    | Some key ->
+    | Some _ ->
       (* NOTE: currently, we allow property refinements to propagate
          even if they may turn out to be invalid w.r.t. the
          underlying object type. If invalid, of course, they produce
@@ -8727,7 +8706,7 @@ module Make
          object and refinement types - `o` and `t` here - are
          fully resolved.
       *)
-      Env.(set_expr cx key (fst exp) ~refined:t ~original:orig_t)
+      Env.(set_expr cx (fst exp) ~refined:t)
     | None -> ()
 
   and mk_initial_arguments_reason =

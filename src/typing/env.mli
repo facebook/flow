@@ -60,7 +60,7 @@ val set_scope_kind : Context.t -> Name_def.scope_kind -> Name_def.scope_kind
 
 val in_class_scope : Context.t -> ALoc.t -> (unit -> 'a) -> 'a
 
-val init_env : ?exclude_syms:NameUtils.Set.t -> Context.t -> ALoc.t -> Name_def.scope_kind -> unit
+val init_env : Context.t -> ALoc.t -> Name_def.scope_kind -> unit
 
 (***)
 
@@ -82,40 +82,35 @@ val bind_implicit_let : Context.t -> Reason.name -> Type.annotated_or_inferred -
 
 val bind_fun : Context.t -> Reason.name -> Type.t -> ALoc.t -> unit
 
-val bind_implicit_const : Context.t -> string -> Type.annotated_or_inferred -> ALoc.t -> unit
+val bind_implicit_const : Context.t -> Type.annotated_or_inferred -> ALoc.t -> unit
 
 val bind_const : Context.t -> string -> Type.annotated_or_inferred -> ALoc.t -> unit
 
-val bind_this_tparam : Context.t -> Type.t -> ALoc.t -> unit
+val bind_this_tparam : Type.t -> ALoc.t -> unit
 
-val bind_class_self_type : Context.t -> ALoc.t -> Type.t -> Type.t -> unit
+val bind_class_self_type : Context.t -> ALoc.t -> Type.t -> unit
 
 val bind_declare_fun : Context.t -> predicate:bool -> Reason.name -> Type.t -> ALoc.t -> unit
 
-val init_var :
-  Context.t -> use_op:Type.use_op -> Reason.name -> has_anno:bool -> Type.t -> ALoc.t -> unit
+val init_var : Context.t -> use_op:Type.use_op -> Type.t -> ALoc.t -> unit
 
-val init_let :
-  Context.t -> use_op:Type.use_op -> Reason.name -> has_anno:bool -> Type.t -> ALoc.t -> unit
+val init_let : Context.t -> use_op:Type.use_op -> Type.t -> ALoc.t -> unit
 
-val init_implicit_let :
-  Context.t -> use_op:Type.use_op -> Reason.name -> has_anno:bool -> Type.t -> ALoc.t -> unit
+val init_implicit_let : Context.t -> use_op:Type.use_op -> Type.t -> ALoc.t -> unit
 
-val init_fun : Context.t -> use_op:Type.use_op -> Reason.name -> Type.t -> ALoc.t -> unit
+val init_fun : Context.t -> use_op:Type.use_op -> Type.t -> ALoc.t -> unit
 
-val init_const :
-  Context.t -> use_op:Type.use_op -> Reason.name -> has_anno:bool -> Type.t -> ALoc.t -> unit
+val init_const : Context.t -> use_op:Type.use_op -> Type.t -> ALoc.t -> unit
 
-val init_implicit_const :
-  Context.t -> use_op:Type.use_op -> Reason.name -> has_anno:bool -> Type.t -> ALoc.t -> unit
+val init_implicit_const : Context.t -> use_op:Type.use_op -> Type.t -> ALoc.t -> unit
 
-val init_import : lookup_mode:LookupMode.t -> Context.t -> Reason.name -> ALoc.t -> Type.t -> unit
+val init_import : Context.t -> ALoc.t -> Type.t -> unit
 
 val is_provider : Context.t -> ALoc.t -> bool
 
-val local_scope_entry_exists : Context.t -> ALoc.t -> string -> bool
+val local_scope_entry_exists : Context.t -> ALoc.t -> bool
 
-val is_global_var : Context.t -> string -> ALoc.t -> bool
+val is_global_var : Context.t -> ALoc.t -> bool
 
 val get_class_entries : Context.t -> Type.class_binding list
 
@@ -131,21 +126,13 @@ val get_var_declared_type :
   ALoc.t ->
   Type.t
 
-val constraining_type : default:Type.t -> Context.t -> Reason.name -> ALoc.t -> Type.t
+val constraining_type : default:Type.t -> Context.t -> ALoc.t -> Type.t
 
-val unify_declared_type :
-  ?lookup_mode:LookupMode.t -> ?is_func:bool -> Context.t -> Reason.name -> ALoc.t -> Type.t -> unit
+val unify_declared_type : Context.t -> ALoc.t -> Type.t -> unit
 
-val read_declared_type :
-  ?lookup_mode:LookupMode.t ->
-  ?is_func:bool ->
-  Context.t ->
-  Reason.name ->
-  Reason.t ->
-  ALoc.t ->
-  Type.t
+val read_declared_type : Context.t -> Reason.t -> ALoc.t -> Type.t
 
-val unify_declared_fun_type : Context.t -> Reason.name -> ALoc.t -> Type.t -> unit
+val unify_declared_fun_type : Context.t -> ALoc.t -> Type.t -> unit
 
 val var_ref :
   ?lookup_mode:LookupMode.t ->
@@ -165,26 +152,22 @@ val query_var :
 
 val set_var : Context.t -> use_op:Type.use_op -> string -> Type.t -> ALoc.t -> unit
 
-val set_module_exports : Context.t -> ALoc.t -> Type.t -> unit
+val set_module_exports : Context.t -> Type.t -> unit
 
-val set_expr : Context.t -> Key.t -> ALoc.t -> refined:Type.t -> original:Type.t -> unit
+val set_expr : Context.t -> ALoc.t -> refined:Type.t -> unit
 
 val get_refinement : Context.t -> Key.t -> ALoc.t -> Type.t option
 
 val record_expression_type_if_needed : Context.t -> Env_api.def_loc_type -> ALoc.t -> Type.t -> unit
 
 val discriminant_after_negated_cases :
-  Context.t ->
-  ALoc.t ->
-  (Reason.name * Key.proj list) option ->
-  (ALoc.t, ALoc.t) Flow_ast.Expression.t ->
-  Type.t option
+  Context.t -> ALoc.t -> (Reason.name * Key.proj list) option -> Type.t option
 
 val valid_declaration_check : Context.t -> Reason.name -> ALoc.t -> unit
 
 val get_next : Context.t -> ALoc.t -> Type.t
 
-val init_class_self_type : Context.t -> ALoc.t -> Reason.reason -> Type.t
+val init_class_self_type : Context.t -> ALoc.t -> Type.t
 
 val init_declare_module_synthetic_module_exports :
   Context.t ->

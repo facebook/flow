@@ -82,7 +82,7 @@ let import_ns cx reason source =
    declared for exports or any other use of exports. *)
 
 let cjs_clobber cx loc t =
-  if Module_info.cjs_clobber (Context.module_info cx) loc then Env.set_module_exports cx loc t
+  if Module_info.cjs_clobber (Context.module_info cx) loc then Env.set_module_exports cx t
 
 let export cx name loc t = Module_info.export (Context.module_info cx) name loc t
 

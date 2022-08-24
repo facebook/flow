@@ -250,7 +250,7 @@ struct
         if Subst_name.string_of_subst_name name <> "this" then
           ()
         else
-          Env.bind_this_tparam cx (DefT (r, bogus_trust (), TypeT (TypeParamKind, t))) loc)
+          Env.bind_this_tparam (DefT (r, bogus_trust (), TypeT (TypeParamKind, t))) loc)
       tparams_map;
 
     (* add param bindings *)

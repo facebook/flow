@@ -351,7 +351,7 @@ module Make (Statement : Statement_sig.S) : Destructuring_sig.S = struct
     let f ~use_op ~name_loc name _default t =
       (* TODO destructuring+defaults unsupported in assignment expressions *)
       ignore Env.(set_var cx ~use_op name t name_loc);
-      Env.constraining_type ~default:t cx (OrdinaryName name) name_loc
+      Env.constraining_type ~default:t cx name_loc
     in
     pattern cx ~f acc
 end
