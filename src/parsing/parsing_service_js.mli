@@ -52,6 +52,8 @@ and docblock_error_kind =
   | MultipleProvidesModuleAttributes
   | MultipleJSXAttributes
   | InvalidJSXAttribute of string option
+  | MultipleJSXRuntimeAttributes
+  | InvalidJSXRuntimeAttribute
 
 (* results of parse job, returned by parse and reparse *)
 type results = {

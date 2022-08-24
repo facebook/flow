@@ -485,6 +485,8 @@ and docblock_error =
   | MultipleProvidesModuleAttributes
   | MultipleJSXAttributes
   | InvalidJSXAttribute of string option
+  | MultipleJSXRuntimeAttributes
+  | InvalidJSXRuntimeAttribute
 
 and internal_error =
   | AbnormalControlFlow
@@ -3064,6 +3066,23 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
         (match first_error with
         | None -> []
         | Some first_error -> [text (spf " Parse error: %s." first_error)])
+      | MultipleJSXRuntimeAttributes ->
+        [
+          text "Unexpected ";
+          code "@jsxRuntime";
+          text " declaration. Only one per ";
+          text "file is allowed.";
+        ]
+      | InvalidJSXRuntimeAttribute ->
+        [
+          text "Invalid ";
+          code "@jsxRuntime";
+          text " declaration. The only supported values are ";
+          code "classic";
+          text " and ";
+          code "automatic";
+          text ".";
+        ]
     in
     Normal { features }
   | EImplicitInexactObject _ ->
@@ -3990,6 +4009,8 @@ let error_code_of_message err : error_code option =
       | MultipleProvidesModuleAttributes -> Some DuplicateProvideModuleDecl
       | MultipleJSXAttributes -> Some DuplicateJsxDecl
       | InvalidJSXAttribute _ -> Some InvalidJsxDecl
+      | MultipleJSXRuntimeAttributes -> Some DuplicateJsxRuntimeDecl
+      | InvalidJSXRuntimeAttribute -> Some InvalidJsxRuntimeDecl
     end
   | EDuplicateModuleProvider _ -> Some DuplicateModule
   | EEnumAllMembersAlreadyChecked _ -> Some InvalidExhaustiveCheck

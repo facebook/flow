@@ -28,6 +28,7 @@ type error_code =
   | DuplicateEnumInit
   | DuplicateFlowDecl
   | DuplicateJsxDecl
+  | DuplicateJsxRuntimeDecl
   | DuplicateModule
   | DuplicateProvideModuleDecl
   | EmptyArrayNoAnnot
@@ -82,6 +83,7 @@ type error_code =
   | InvalidInLhs
   | InvalidInRhs
   | InvalidJsxDecl
+  | InvalidJsxRuntimeDecl
   | InvalidLhs
   | InvalidModule
   | InvalidObjMap
@@ -208,6 +210,7 @@ let string_of_code : error_code -> string = function
   | DuplicateEnumInit -> "duplicate-enum-init"
   | DuplicateFlowDecl -> "duplicate-flow-decl"
   | DuplicateJsxDecl -> "duplicate-jsx-decl"
+  | DuplicateJsxRuntimeDecl -> "duplicate-jsx-runtime-decl"
   | DuplicateModule -> "duplicate-module"
   | DuplicateProvideModuleDecl -> "duplicate-provide-module-decl"
   | EnumValueAsType -> "enum-value-as-type"
@@ -261,6 +264,7 @@ let string_of_code : error_code -> string = function
   | InvalidInLhs -> "invalid-in-lhs"
   | InvalidInRhs -> "invalid-in-rhs"
   | InvalidJsxDecl -> "invalid-jsx-decl"
+  | InvalidJsxRuntimeDecl -> "invalid-jsx-runtime-decl"
   | InvalidLhs -> "invalid-lhs"
   | InvalidModule -> "invalid-module"
   | InvalidObjMap -> "invalid-obj-map"
