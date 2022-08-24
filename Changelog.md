@@ -1,3 +1,8 @@
+### 0.185.2
+
+New Features:
+* Flow now supports the `@jsxRuntime` pragma in the top docblock of each JS module. Allowed values are `classic` and `automatic`.
+
 ### 0.185.1
 
 Misc:
