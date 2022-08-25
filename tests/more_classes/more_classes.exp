@@ -44,15 +44,6 @@ References:
              ^^^ [1]
 
 
-Error ----------------------------------------------------------------------------------------------------- Foo.js:13:16
-
-Cannot build a typed interface for this module. You should annotate the exports of this module with types. Missing type
-annotation at array pattern: [signature-verification-failure]
-
-   13|   foo(y:string,z):number {
-                      ^
-
-
 Error ----------------------------------------------------------------------------------------------------- Foo.js:16:21
 
 Cannot call `Bar` with `y` bound to `y` because string [1] is incompatible with number [2]. [incompatible-call]
@@ -63,7 +54,7 @@ Cannot call `Bar` with `y` bound to `y` because string [1] is incompatible with 
 
 References:
    Foo.js:13:9
-   13|   foo(y:string,z):number {
+   13|   foo(y:string,z:string):number {
                ^^^^^^ [1]
    Bar.js:9:17
     9|   constructor(y:number) {
@@ -82,9 +73,9 @@ References:
    Bar.js:14:26
    14|   bar(z:string,u:string):string {
                                 ^^^^^^ [1]
-   Foo.js:13:19
-   13|   foo(y:string,z):number {
-                         ^^^^^^ [2]
+   Foo.js:13:26
+   13|   foo(y:string,z:string):number {
+                                ^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- Foo.js:18:20
@@ -105,4 +96,4 @@ References:
 
 
 
-Found 7 errors
+Found 6 errors

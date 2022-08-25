@@ -10,7 +10,7 @@ class Foo extends Qux {
     this.x = x;
   }
 
-  foo(y:string,z):number {
+  foo(y:string,z:string):number {
     this.x = y;
     var u = new Foo("...").qux();
     var v = new Bar(y);

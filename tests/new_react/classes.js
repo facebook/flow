@@ -15,7 +15,7 @@ class Foo extends React.Component<Props, State> {
     var _: string = this.props.x;
   }
 
-  constructor(props) {
+  constructor(props: Props) {
     super(props);
     this.state = { y: "" };
   }

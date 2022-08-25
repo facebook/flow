@@ -762,7 +762,7 @@ Error --------------------------------------------------------------------------
 Class property not definitely initialized in the constructor. Can you add an assignment to the property declaration?
 [uninitialized-instance-property]
 
-   596|   #p1; // PropertyNotDefinitelyInitialized
+   596|   #p1: number; // PropertyNotDefinitelyInitialized
           ^^^
 
 
@@ -780,7 +780,7 @@ Error --------------------------------------------------------------------------
 Class property not definitely initialized in the constructor. Can you add an assignment to the property declaration?
 [uninitialized-instance-property]
 
-   607|   p; // PropertyNotDefinitelyInitialized
+   607|   p: boolean; // PropertyNotDefinitelyInitialized
           ^
 
 
@@ -1092,7 +1092,7 @@ Error --------------------------------------------------------------------------
 Class property not definitely initialized in the constructor. Can you add an assignment to the property declaration?
 [uninitialized-instance-property]
 
-   1166|   p; // TODO spurious error
+   1166|   p: number; // TODO spurious error
            ^
 
 
@@ -1109,7 +1109,7 @@ Error --------------------------------------------------------------------------
 Class property not definitely initialized in the constructor. Can you add an assignment to the property declaration?
 [uninitialized-instance-property]
 
-   1173|   #p; // TODO spurious error
+   1173|   #p: number; // TODO spurious error
            ^^
 
 

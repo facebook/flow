@@ -3,7 +3,7 @@ bar(0);
 
 class C { }
 class D { }
-function CD(b) {
+function CD(b: boolean) {
   var E = b? C: D;
   var c:C = new E(); // error, since E could be D, and D is not a subtype of C
   function qux(e: E) { } // this annotation is an error: is it C, or is it D?
@@ -15,7 +15,7 @@ declare class F {
     foo(x: number):void;
     foo(x: string):void;
 }
-function corge(b) {
+function corge(b: boolean) {
     var x = b ? "" : 0;
     new F().foo(x);
 }

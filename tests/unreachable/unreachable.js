@@ -1,16 +1,16 @@
 /* @flow */
 
-function foo(x, y) {
+function foo(x: number, y: number) {
   "use strict";
   return bar(x) + baz(y);
 
   // function declaration is hoisted, should not generate warning
-  function bar (ecks) {
+  function bar (ecks: number) {
     return x + ecks;
   }
 
   // assignment is not hoisted, should generate warning
-  var baz = function (why) {
+  var baz = function (why: number) {
     return y + why;
   };
 

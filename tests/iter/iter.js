@@ -1,5 +1,5 @@
 var a = [true,false];
-function foo(x) { }
+function foo(x: mixed) { }
 
 for (var i=0;i<3;i++) {
     foo(a[i]);

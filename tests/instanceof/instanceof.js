@@ -4,15 +4,15 @@
 class X1 { foo: number; };
 class X2 { foo: string; };
 
-function x(b) { return b ? new X1 : new X2; }
+function x(b: boolean) { return b ? new X1 : new X2; }
 
-function consumer1(b) {
+function consumer1(b: boolean) {
     var g = x(b);
     if (g instanceof X2) g.foo = '1337';
     else g.foo = 1337;
 }
 
-function consumer2(b) {
+function consumer2(b: boolean) {
     var g = x(b);
     if (g instanceof X1) g.foo = '1337';  // oops
 }
@@ -21,15 +21,15 @@ function consumer2(b) {
 class Y1 { bar: X1; };
 class Y2 { bar: X2; };
 
-function y(b) { return b ? new Y1 : new Y2; }
+function y(b: boolean) { return b ? new Y1 : new Y2; }
 
-function consumer3(b) {
+function consumer3(b: boolean) {
     var g = y(b);
     if (g.bar instanceof X2) g.bar.foo = '1337';
     else g.bar.foo = 1337;
 }
 
-function consumer4(b) {
+function consumer4(b: boolean) {
     var g = y(b);
     if (g.bar instanceof X1) g.bar.foo = '1337';  // oops
 }
@@ -38,15 +38,15 @@ function consumer4(b) {
 class Z1 { baz: Y1; };
 class Z2 { baz: Y2; };
 
-function z(b) { return b ? new Z1 : new Z2; }
+function z(b: boolean) { return b ? new Z1 : new Z2; }
 
-function consumer5(b) {
+function consumer5(b: boolean) {
     var g = z(b);
     if (g.baz.bar instanceof X2) g.baz.bar.foo = '1337';
     else g.baz.bar.foo = 1337;
 }
 
-function consumer6(b) {
+function consumer6(b: boolean) {
     var g = z(b);
     if (g.baz.bar instanceof X1) g.baz.bar.foo = '1337';  // oops
 }

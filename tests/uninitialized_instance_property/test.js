@@ -569,7 +569,7 @@ class E64 {
 }
 
 class E65 {
-  #p;
+  #p: number;
   constructor() {
     incr(this.#p); // ReadFromUninitializedProperty
     this.#p = 0;
@@ -577,7 +577,7 @@ class E65 {
 }
 
 class E66 {
-  p;
+  p: number;
   constructor() {
     const x: number = this.p; // ReadFromUninitializedProperty
     this.p = 0;
@@ -585,7 +585,7 @@ class E66 {
 }
 
 class E67 {
-  #p;
+  #p: number;
   constructor() {
     const x: number = this.#p; // ReadFromUninitializedProperty
     this.#p = 0;
@@ -593,26 +593,26 @@ class E67 {
 }
 
 class E68 {
-  #p1; // PropertyNotDefinitelyInitialized
+  #p1: number; // PropertyNotDefinitelyInitialized
   p2: boolean;
   constructor() {
     this.p2 = true;
     this.m(); // MethodCallBeforeEverythingInitialized
   }
-  m() { return this.#p1 }
+  m(): number { return this.#p1 }
 }
 const x_E68: number = (new E68()).m();
 
 class E69 {
-  p; // PropertyNotDefinitelyInitialized
+  p: boolean; // PropertyNotDefinitelyInitialized
   constructor() {
     this.m(this.p); // MethodCallBeforeEverythingInitialized, ReadFromUninitializedProperty
   }
-  m(x: boolean) { return !x; }
+  m(x: boolean): boolean { return !x; }
 }
 
 class E70 {
-  p;
+  p: number;
   constructor() {
     this; // ThisBeforeEverythingInitialized
     (this.p: number); // ReadFromUninitializedProperty
@@ -621,7 +621,7 @@ class E70 {
 }
 
 class E71 {
-  f;
+  f: () => void;
   q: number;
   constructor() {
     this.f = () => {};
@@ -648,7 +648,7 @@ class E73 {
 
 class E74 {
   p = 0;
-  f;
+  f: () => number;
   q: number;
   constructor() {
     this.f = () => this.p++;
@@ -677,7 +677,7 @@ class E76Parent {
   }
 }
 class E76Child extends E76Parent {
-  f = () => this.p;
+  f = (): number => this.p;
   constructor() {
     super();
   }
@@ -716,7 +716,7 @@ class E81 {
 
 class E82 {
   p: number;
-  f = () => this.p++;
+  f = (): number => this.p++;
   constructor() {
     this.f(); // PropertyFunctionCallBeforeEverythingInitialized
     this.p = 0;
@@ -750,7 +750,7 @@ class E85 {
 
 class E86 {
   p = 0;
-  f = () => this.p++;
+  f = (): number => this.p++;
   q: number;
   constructor() {
     this.f(); // PropertyFunctionCallBeforeEverythingInitialized
@@ -775,9 +775,9 @@ class E88 {
 }
 
 class E89 {
-  p = () => "property function";
+  p = (): string => "property function";
   // $FlowExpectedError[duplicate-class-member]
-  p() {
+  p(): string {
     return "method";
   }
   q: number;
@@ -1163,14 +1163,14 @@ class P50 {
 }
 
 class P51 {
-  p; // TODO spurious error
+  p: number; // TODO spurious error
   constructor() {
     this.p; // TODO spurious error
   }
 }
 
 class P52 {
-  #p; // TODO spurious error
+  #p: number; // TODO spurious error
   constructor() {
     this.#p; // TODO spurious error
   }
@@ -1204,7 +1204,7 @@ class P55 {
 
 class P56 {
   p: number;
-  f;
+  f: () => number;
   constructor() {
     this.f = () => this.p++;
     this.p = 0;
@@ -1246,7 +1246,7 @@ class P59 {
 
 class P60 {
   p: number;
-  f = () => this.p++;
+  f = (): number => this.p++;
   constructor() {
     this.p = 0;
     this.f();
@@ -1270,7 +1270,7 @@ class P62 {
 
 class P63 {
   p1: number;
-  p2 = this.p1 = 0;
+  p2: number = this.p1 = 0;
 }
 
 class P64 {

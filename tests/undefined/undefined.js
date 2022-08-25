@@ -8,6 +8,6 @@ function bar() {
     if (x) x.bar();
 }
 
-function qux(x?: number, y:string = "", z) { }
+function qux(x?: number, y:string = "", z: void) { }
 
 undefined['foo']; // Error

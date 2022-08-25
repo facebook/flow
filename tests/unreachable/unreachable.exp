@@ -73,7 +73,7 @@ Cannot call `baz` because uninitialized variable [1] is not a function. [not-a-f
 
 References:
    unreachable.js:13:7
-   13|   var baz = function (why) {
+   13|   var baz = function (why: number) {
              ^^^ [1]
 
 
@@ -81,8 +81,8 @@ Error --------------------------------------------------------------------------
 
 Unreachable code. [unreachable-code]
 
-                   v---------------
-   13|   var baz = function (why) {
+                   v-----------------------
+   13|   var baz = function (why: number) {
    14|     return y + why;
    15|   };
          ^

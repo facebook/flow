@@ -8,13 +8,13 @@ class TimeOfDay {
 }
 
 class TimeOfDay_noanno {
-  a(other: TimeOfDay_noanno) {
+  a(other: TimeOfDay_noanno): boolean {
     return true
   }
 }
 
 class TimeOfDay_noanno2 {
-  a() {
+  a(): void {
     return this.a();
   }
 }

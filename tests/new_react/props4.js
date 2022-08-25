@@ -1,6 +1,6 @@
 // @flow
 
-import React from "react";
+import * as React from "react";
 
 class JDiv extends React.Component<{id: string}> {}
 
@@ -8,7 +8,7 @@ class JDiv extends React.Component<{id: string}> {}
 <JDiv id={42} />;
 
 class Example extends React.Component<{ bar: string }> {
-  render() {
+  render(): React.Node {
     return <div>{this.props.bar}</div>
   }
 }

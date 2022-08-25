@@ -2,7 +2,7 @@
 
 
 
-function foo(b) {
+function foo(b: boolean) {
     var x = b ? null: false;
     var z;
     while(b) {

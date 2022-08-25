@@ -2,7 +2,7 @@
 const a = require('./a');
 class A {
   static x: number = 3;
-  _munged(arg) { return a; }
+  _munged(arg: mixed): mixed { return a; }
 }
 
 module.exports = A;

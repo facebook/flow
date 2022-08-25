@@ -8,7 +8,7 @@ Object.is(NaN, NaN);
 Object.is({}, {});
 
 var emptyObject = {};
-var emptyArray = [];
+var emptyArray: string[] = [];
 Object.is(emptyObject, emptyObject);
 Object.is(emptyArray, emptyArray);
 Object.is(emptyObject, emptyArray);
