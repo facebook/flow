@@ -187,7 +187,7 @@ module Opts = struct
       enforce_strict_call_arity = true;
       enforce_this_annotations = false;
       enums = false;
-      env_mode = Options.(SSAEnv Reordered);
+      env_mode = Options.ConstrainWrites;
       estimate_recheck_time = None;
       exact_by_default = false;
       exact_empty_objects = None;
@@ -744,8 +744,8 @@ module Opts = struct
   let inference_mode_parser =
     string (fun opts s ->
         match s with
-        | "constrain_writes" -> Ok { opts with env_mode = Options.(SSAEnv Reordered) }
-        | "experimental.lti" -> Ok { opts with env_mode = Options.(SSAEnv Enforced) }
+        | "constrain_writes" -> Ok { opts with env_mode = Options.ConstrainWrites }
+        | "experimental.lti" -> Ok { opts with env_mode = Options.LTI }
         | env_mode -> Error (spf "\"%s\" is not a valid env_mode option" env_mode)
     )
 

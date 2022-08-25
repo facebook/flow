@@ -309,8 +309,6 @@ val any_propagation : t -> bool
 
 val automatic_require_default : t -> bool
 
-val resolved_env : t -> bool
-
 (* modules *)
 val push_declare_module : t -> Module_info.t -> unit
 

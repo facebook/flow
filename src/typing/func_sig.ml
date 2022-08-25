@@ -258,8 +258,8 @@ struct
 
     let (yield_t, next_t) =
       match kind with
-      | Generator { return_loc }
-      | AsyncGenerator { return_loc } ->
+      | Generator _
+      | AsyncGenerator _ ->
         let yield_t = Tvar.mk cx (replace_desc_reason (RCustom "yield") reason) in
         let next_t =
           match return_t with
@@ -307,7 +307,6 @@ struct
           in
           Flow.flow_t cx (t, type_t_of_annotated_or_inferred return_t)
         in
-        Env.record_expression_type_if_needed cx Env_api.OrdinaryNameLoc return_loc next_t;
         (yield_t, next_t)
       | _ ->
         ( DefT

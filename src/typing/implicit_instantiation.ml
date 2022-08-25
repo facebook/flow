@@ -326,7 +326,7 @@ struct
       let marked_tparams = Marked.empty in
       check_instantiation cx ~tparams ~marked_tparams ~implicit_instantiation
     | (_, props) :: _ ->
-      (* The return of a React component when it is createElement-ed isn't actually the return type denoted on the 
+      (* The return of a React component when it is createElement-ed isn't actually the return type denoted on the
        * component. Instead, it is a React.Element<typeof Component>. In order to get the
        * polarities for the type parameters in the return, it is sufficient to look at the Props
        * type and use the polarities there.
@@ -507,6 +507,6 @@ module Kit (FlowJs : Flow_common.S) (Instantiation_helper : Flow_js_utils.Instan
   let run cx check ~has_context =
     if not has_context then Context.add_possibly_speculating_implicit_instantiation_check cx check;
     match Context.env_mode cx with
-    | Options.(SSAEnv Enforced) -> run_pierce cx check
+    | Options.LTI -> run_pierce cx check
     | _ -> run_instantiate_poly cx check
 end

@@ -225,7 +225,7 @@ module Annotate_lti_command = struct
         {
           o with
           opt_any_propagation = false;
-          opt_env_mode = SSAEnv Reordered;
+          opt_env_mode = ConstrainWrites;
           opt_enforce_local_inference_annotations = true;
           opt_enforce_this_annotations = true;
           opt_local_inference_annotation_dirs = [];
@@ -316,7 +316,7 @@ module Annotate_empty_array_command = struct
 
       let check_options o =
         let open Options in
-        { o with opt_env_mode = SSAEnv Reordered; opt_array_literal_providers = true }
+        { o with opt_env_mode = ConstrainWrites; opt_array_literal_providers = true }
 
       let visit =
         let mapper = Annotate_empty_array.mapper ~preserve_literals ~max_type_size ~default_any in

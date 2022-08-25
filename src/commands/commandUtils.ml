@@ -1015,10 +1015,7 @@ let options_flags =
            "--inference-mode"
            (optional
               (enum
-                 [
-                   ("constrain_writes", Options.(SSAEnv Reordered));
-                   ("experimental.lti", Options.(SSAEnv Enforced));
-                 ]
+                 [("constrain_writes", Options.ConstrainWrites); ("experimental.lti", Options.LTI)]
               )
            )
            ~doc:""

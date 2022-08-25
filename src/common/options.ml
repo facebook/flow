@@ -29,12 +29,9 @@ type trust_mode =
   | CheckTrust
   | SilentTrust
 
-type resolved_env_kind =
-  | Basic
-  | Reordered
-  | Enforced
-
-type env_mode = SSAEnv of resolved_env_kind
+type env_mode =
+  | ConstrainWrites
+  | LTI
 
 type react_runtime =
   | ReactRuntimeAutomatic

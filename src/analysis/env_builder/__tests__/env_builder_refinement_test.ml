@@ -24,7 +24,7 @@ module TestCx = struct
 
   let react_runtime _cx = !react_runtime
 
-  let env_mode _cx = Options.(SSAEnv Basic)
+  let env_mode _cx = Options.ConstrainWrites
 
   let enable_const_params _cx = false
 

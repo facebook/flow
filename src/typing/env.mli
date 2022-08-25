@@ -104,8 +104,6 @@ val init_const : Context.t -> use_op:Type.use_op -> Type.t -> ALoc.t -> unit
 
 val init_implicit_const : Context.t -> use_op:Type.use_op -> Type.t -> ALoc.t -> unit
 
-val init_import : Context.t -> ALoc.t -> Type.t -> unit
-
 val is_provider : Context.t -> ALoc.t -> bool
 
 val local_scope_entry_exists : Context.t -> ALoc.t -> bool
@@ -128,11 +126,7 @@ val get_var_declared_type :
 
 val constraining_type : default:Type.t -> Context.t -> ALoc.t -> Type.t
 
-val unify_declared_type : Context.t -> ALoc.t -> Type.t -> unit
-
 val read_declared_type : Context.t -> Reason.t -> ALoc.t -> Type.t
-
-val unify_declared_fun_type : Context.t -> ALoc.t -> Type.t -> unit
 
 val var_ref :
   ?lookup_mode:LookupMode.t ->
@@ -154,11 +148,7 @@ val set_var : Context.t -> use_op:Type.use_op -> string -> Type.t -> ALoc.t -> u
 
 val set_module_exports : Context.t -> Type.t -> unit
 
-val set_expr : Context.t -> ALoc.t -> refined:Type.t -> unit
-
 val get_refinement : Context.t -> Key.t -> ALoc.t -> Type.t option
-
-val record_expression_type_if_needed : Context.t -> Env_api.def_loc_type -> ALoc.t -> Type.t -> unit
 
 val discriminant_after_negated_cases :
   Context.t -> ALoc.t -> (Reason.name * Key.proj list) option -> Type.t option

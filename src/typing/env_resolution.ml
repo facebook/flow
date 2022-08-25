@@ -48,7 +48,7 @@ module TvarResolver = struct
 
   let resolve cx t =
     match (Context.env_mode cx, Context.current_phase cx <> Context.InitLib) with
-    | (Options.(SSAEnv Enforced), true) -> resolver#type_ cx Polarity.Positive () t
+    | (Options.LTI, true) -> resolver#type_ cx Polarity.Positive () t
     | _ -> ()
 
   let resolved_t cx t =
@@ -127,7 +127,7 @@ let resolve_hint cx loc hint =
       in
       UnionT (mk_reason (RCustom "providers") loc, UnionRep.make t1 t2 ts)
   in
-  if Context.env_mode cx = Options.(SSAEnv Enforced) then
+  if Context.env_mode cx = Options.LTI then
     match hint with
     | Hint_t hint_node -> Hint_t (resolve_hint hint_node)
     | Hint_Decomp (ops, hint_node) -> Hint_Decomp (ops, resolve_hint hint_node)
@@ -221,7 +221,7 @@ let rec resolve_binding_partial cx reason loc b =
     (t, use_op, false)
   | Root (Contextual { reason; hint; default_expression = _ }) ->
     let param_loc = Reason.poly_loc_of_reason reason in
-    let contextual_typing_enabled = Context.env_mode cx = Options.(SSAEnv Enforced) in
+    let contextual_typing_enabled = Context.env_mode cx = Options.LTI in
     let t =
       if contextual_typing_enabled then
         let hint = resolve_hint cx loc hint in
@@ -824,7 +824,7 @@ let resolve_component cx graph component =
     (lazy [Utils_js.spf "Resolving component %s" (string_of_component graph component)]);
   let entries_for_resolution =
     match Context.env_mode cx with
-    | Options.(SSAEnv Enforced) ->
+    | Options.LTI ->
       let entries = entries_of_component graph component in
       let ({ Loc_env.readable; _ } as env) = Context.environment cx in
       Context.set_environment

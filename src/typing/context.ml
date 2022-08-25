@@ -445,19 +445,17 @@ let goals cx = cx.ccx.goal_map
 
 let exact_by_default cx = cx.metadata.exact_by_default
 
-let exact_empty_objects cx =
-  cx.metadata.exact_empty_objects || env_mode cx = Options.(SSAEnv Enforced)
+let exact_empty_objects cx = cx.metadata.exact_empty_objects || env_mode cx = Options.LTI
 
 let enforce_local_inference_annotations cx =
-  cx.metadata.enforce_local_inference_annotations || env_mode cx = Options.(SSAEnv Enforced)
+  cx.metadata.enforce_local_inference_annotations || env_mode cx = Options.LTI
 
 let enforce_class_annotations cx =
-  cx.metadata.enforce_class_annotations || env_mode cx = Options.(SSAEnv Enforced)
+  cx.metadata.enforce_class_annotations || env_mode cx = Options.LTI
 
 let local_inference_annotation_dirs cx = cx.metadata.local_inference_annotation_dirs
 
-let enforce_this_annotations cx =
-  cx.metadata.enforce_this_annotations || env_mode cx = Options.(SSAEnv Enforced)
+let enforce_this_annotations cx = cx.metadata.enforce_this_annotations || env_mode cx = Options.LTI
 
 let experimental_infer_indexers cx = cx.metadata.experimental_infer_indexers
 
@@ -582,8 +580,7 @@ let max_workers cx = cx.metadata.max_workers
 
 let missing_module_generators cx = cx.metadata.missing_module_generators
 
-let array_literal_providers cx =
-  cx.metadata.array_literal_providers || env_mode cx = Options.(SSAEnv Enforced)
+let array_literal_providers cx = cx.metadata.array_literal_providers || env_mode cx = Options.LTI
 
 let jsx cx = cx.metadata.jsx
 
@@ -620,12 +617,6 @@ let trust_errors cx =
   | Options.SilentTrust
   | Options.NoTrust ->
     false
-
-let resolved_env cx =
-  let open Options in
-  match cx.metadata.env_mode with
-  | SSAEnv (Reordered | Enforced) -> true
-  | SSAEnv Basic -> false
 
 let pid_prefix =
   let pid = lazy (Sys_utils.get_pretty_pid ()) in

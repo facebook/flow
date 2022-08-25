@@ -111,7 +111,7 @@ let t_option_value_exn cx loc t = with_debug_exn cx loc (fun () -> Base.Option.v
 
 let check_readable cx kind loc =
   match (Context.env_mode cx, Context.current_phase cx <> Context.InitLib) with
-  | (Options.(SSAEnv Enforced), true) ->
+  | (Options.LTI, true) ->
     let ({ Loc_env.under_resolution; var_info; _ } as env) = Context.environment cx in
     begin
       match Loc_env.find_write env kind loc with
@@ -131,26 +131,6 @@ let check_readable cx kind loc =
       | Some t -> assert_false ("Expect only OpenTs in env, instead we have " ^ Debug_js.dump_t cx t)
     end
   | _ -> ()
-
-let record_expression_type_if_needed cx kind loc t =
-  let env = Context.environment cx in
-  match (Loc_env.find_write env kind loc, Context.env_mode cx) with
-  | (_, Options.(SSAEnv (Reordered | Enforced)))
-  (* Fully resolved env doesn't need to write here *)
-  | (None, _) ->
-    ()
-  | (Some w, _) ->
-    Debug_js.Verbose.print_if_verbose_lazy
-      cx
-      (lazy [spf "recording expression at location %s" (Reason.string_of_aloc loc)]);
-    Flow_js.unify cx ~use_op:unknown_use t w;
-    begin
-      match kind with
-      | Env_api.(OrdinaryNameLoc | ExpressionLoc) ->
-        let env' = Loc_env.update_reason env kind loc (TypeUtil.reason_of_t t) in
-        Context.set_environment cx env'
-      | _ -> ()
-    end
 
 let find_var_opt { Env_api.env_values; _ } loc =
   match ALocMap.find_opt loc env_values with
@@ -624,17 +604,6 @@ let constraining_type ~default cx loc =
 (*  Writing  *)
 (*************)
 
-let set_expr cx loc ~refined =
-  let env = Context.environment cx in
-  Debug_js.Verbose.print_if_verbose cx [spf "set expr at location %s" (Reason.string_of_aloc loc)];
-  match (Loc_env.find_ordinary_write env loc, Context.env_mode cx) with
-  | (_, Options.(SSAEnv (Reordered | Enforced)))
-  (* Fully resolved env doesn't need to write here *)
-  | (None, _) ->
-    (* As below, this entry is empty if the refinement is never read from *)
-    ()
-  | (Some w, _) -> Flow_js.unify cx ~use_op:unknown_use refined w
-
 (* Unifies `t` with the entry in the loc_env's map. This allows it to be looked up for Write
  * entries reported by the name_resolver as well as providers for the provider analysis *)
 let unify_write_entry cx ~use_op t def_loc_type loc =
@@ -703,14 +672,6 @@ let subtype_against_providers cx ~use_op ?potential_global_name t loc =
         in
         Context.add_constrained_write cx (t, use_op, general)
 
-let assign_env_value_entry cx ~use_op ?potential_global_name t loc =
-  begin
-    match Context.env_mode cx with
-    | Options.(SSAEnv (Reordered | Enforced)) -> ()
-    | _ -> unify_write_entry cx ~use_op t Env_api.OrdinaryNameLoc loc
-  end;
-  subtype_against_providers cx ~use_op ?potential_global_name t loc
-
 (* Sanity check for predicate functions: If there are multiple declare function
  * providers, make sure none of them have a predicate. *)
 let check_predicate_declare_function cx ~predicate name loc =
@@ -764,10 +725,10 @@ let init_entry cx ~use_op t loc =
   if is_def_loc_annotated var_info loc then
     subtype_entry cx ~use_op t loc
   else
-    assign_env_value_entry cx ~use_op t loc
+    subtype_against_providers cx ~use_op t loc
 
 let set_var cx ~use_op name t loc =
-  assign_env_value_entry cx ~use_op ~potential_global_name:name t loc
+  subtype_against_providers cx ~use_op ~potential_global_name:name t loc
 
 let set_module_exports cx t =
   let env = Context.environment cx in
@@ -780,7 +741,7 @@ let set_module_exports cx t =
 
 let bind cx t ~kind loc =
   match Context.env_mode cx with
-  | Options.(SSAEnv Enforced) -> ()
+  | Options.LTI -> ()
   | _ -> unify_write_entry cx ~use_op:Type.unknown_use t kind loc
 
 let bind_var cx name t loc =
@@ -788,7 +749,7 @@ let bind_var cx name t loc =
   (* TODO: Vars can be bound multiple times and we need to make sure that the
    * annots are all compatible with each other. For that reason, we subtype
    * against providers when just binding a var *)
-  assign_env_value_entry cx ~use_op:unknown_use (TypeUtil.type_t_of_annotated_or_inferred t) loc
+  subtype_against_providers cx ~use_op:unknown_use (TypeUtil.type_t_of_annotated_or_inferred t) loc
 
 let bind_let cx name t loc =
   valid_declaration_check cx (OrdinaryName name) loc;
@@ -811,15 +772,15 @@ let bind_class_static_super cx t loc =
 
 let bind_implicit_let cx name t loc =
   valid_declaration_check cx name loc;
-  match (Context.env_mode cx, t) with
-  | (Options.(SSAEnv Reordered), Annotated _) -> ()
+  match t with
+  | Annotated _ -> ()
   | _ -> bind cx (TypeUtil.type_t_of_annotated_or_inferred t) ~kind:Env_api.OrdinaryNameLoc loc
 
 let bind_fun cx _name t loc = bind cx t ~kind:Env_api.OrdinaryNameLoc loc
 
 let bind_implicit_const cx t loc =
-  match (Context.env_mode cx, t) with
-  | (Options.(SSAEnv Reordered), Annotated _) -> ()
+  match t with
+  | Annotated _ -> ()
   | _ -> bind cx (TypeUtil.type_t_of_annotated_or_inferred t) ~kind:Env_api.OrdinaryNameLoc loc
 
 let bind_const cx _ t loc =
@@ -840,26 +801,16 @@ let init_let cx ~use_op t loc = init_entry cx ~use_op t loc
 
 let init_implicit_let cx ~use_op t loc = init_entry cx ~use_op t loc
 
-let init_fun cx ~use_op t loc = assign_env_value_entry cx ~use_op t loc
+let init_fun cx ~use_op t loc = subtype_against_providers cx ~use_op t loc
 
 let init_const cx ~use_op t loc = init_entry cx ~use_op t loc
 
 let init_implicit_const cx ~use_op t loc = init_entry cx ~use_op t loc
 
-let unify_declared_type cx loc t =
-  match Context.env_mode cx with
-  | Options.(SSAEnv (Reordered | Enforced)) -> ()
-  | _ -> unify_write_entry cx ~use_op:unknown_use t Env_api.OrdinaryNameLoc loc
-
 let read_declared_type cx reason loc =
   Tvar.mk_where cx reason (fun t ->
       unify_write_entry cx ~use_op:unknown_use t Env_api.OrdinaryNameLoc loc
   )
-
-let unify_declared_fun_type cx loc t =
-  match Context.env_mode cx with
-  | Options.(SSAEnv (Reordered | Enforced)) -> ()
-  | _ -> unify_write_entry cx ~use_op:unknown_use t Env_api.OrdinaryNameLoc loc
 
 (************************)
 (* Variable Declaration *)
@@ -940,11 +891,6 @@ let discriminant_after_negated_cases cx switch_loc refinement_key_opt =
   match read_entry ~lookup_mode:ForValue cx switch_loc (mk_reason reason_desc switch_loc) with
   | Ok t -> Some t
   | Error _ -> None
-
-let init_import cx loc t =
-  match Context.env_mode cx with
-  | Options.(SSAEnv (Reordered | Enforced)) -> ()
-  | _ -> unify_write_entry ~use_op:unknown_use cx t Env_api.OrdinaryNameLoc loc
 
 let get_next cx loc =
   let name = InternalName "next" in

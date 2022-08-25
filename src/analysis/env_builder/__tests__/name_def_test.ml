@@ -22,7 +22,7 @@ module Context = struct
 
   let react_runtime _cx = Options.ReactRuntimeClassic
 
-  let env_mode _cx = Options.(SSAEnv Enforced)
+  let env_mode _cx = Options.LTI
 
   let enable_const_params _cx = false
 
