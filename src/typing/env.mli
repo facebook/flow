@@ -64,9 +64,9 @@ val init_env : Context.t -> ALoc.t -> Name_def.scope_kind -> unit
 
 (***)
 
-val bind_var : Context.t -> string -> Type.annotated_or_inferred -> ALoc.t -> unit
+val bind_var : Context.t -> string -> ALoc.t -> unit
 
-val bind_let : Context.t -> string -> Type.annotated_or_inferred -> ALoc.t -> unit
+val bind_let : Context.t -> string -> ALoc.t -> unit
 
 val bind_function_this : Context.t -> Type.t -> ALoc.t -> unit
 
@@ -84,13 +84,13 @@ val bind_fun : Context.t -> Reason.name -> Type.t -> ALoc.t -> unit
 
 val bind_implicit_const : Context.t -> Type.annotated_or_inferred -> ALoc.t -> unit
 
-val bind_const : Context.t -> string -> Type.annotated_or_inferred -> ALoc.t -> unit
+val bind_const : Context.t -> string -> ALoc.t -> unit
 
 val bind_this_tparam : Type.t -> ALoc.t -> unit
 
 val bind_class_self_type : Context.t -> ALoc.t -> Type.t -> unit
 
-val bind_declare_fun : Context.t -> predicate:bool -> Reason.name -> Type.t -> ALoc.t -> unit
+val bind_declare_fun : Context.t -> predicate:bool -> Reason.name -> ALoc.t -> unit
 
 val init_var : Context.t -> use_op:Type.use_op -> Type.t -> ALoc.t -> unit
 

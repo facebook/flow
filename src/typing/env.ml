@@ -741,11 +741,9 @@ let bind cx t ~kind loc =
   | Options.LTI -> ()
   | _ -> unify_write_entry cx ~use_op:Type.unknown_use t kind loc
 
-let bind_var cx name _t loc = valid_declaration_check cx (OrdinaryName name) loc
+let bind_var cx name loc = valid_declaration_check cx (OrdinaryName name) loc
 
-let bind_let cx name t loc =
-  valid_declaration_check cx (OrdinaryName name) loc;
-  bind cx (TypeUtil.type_t_of_annotated_or_inferred t) ~kind:Env_api.OrdinaryNameLoc loc
+let bind_let cx name loc = valid_declaration_check cx (OrdinaryName name) loc
 
 let bind_function_this cx t loc =
   unify_write_entry cx ~use_op:Type.unknown_use t Env_api.FunctionThisLoc loc
@@ -775,12 +773,10 @@ let bind_implicit_const cx t loc =
   | Annotated _ -> ()
   | _ -> bind cx (TypeUtil.type_t_of_annotated_or_inferred t) ~kind:Env_api.OrdinaryNameLoc loc
 
-let bind_const cx _ t loc =
-  bind cx (TypeUtil.type_t_of_annotated_or_inferred t) ~kind:Env_api.OrdinaryNameLoc loc
+let bind_const _cx _ _loc = ()
 
-let bind_declare_fun cx ~predicate name t loc =
-  check_predicate_declare_function cx ~predicate name loc;
-  bind cx t ~kind:Env_api.OrdinaryNameLoc loc
+let bind_declare_fun cx ~predicate name loc =
+  check_predicate_declare_function cx ~predicate name loc
 
 let bind_this_tparam t loc = this_type_params := ALocMap.add loc t !this_type_params
 

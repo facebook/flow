@@ -312,16 +312,7 @@ module Make
       | Ast.Statement.VariableDeclaration.Var -> Env.bind_var
     in
     Flow_ast_utils.fold_bindings_of_variable_declarations
-      (fun has_anno () (loc, { Ast.Identifier.name; comments = _ }) ->
-        let reason = mk_reason (RIdentifier (OrdinaryName name)) loc in
-        let t =
-          let tvar = Tvar.mk cx reason in
-          if has_anno then
-            Annotated tvar
-          else
-            Inferred tvar
-        in
-        bind cx name t loc)
+      (fun _has_anno () (loc, { Ast.Identifier.name; comments = _ }) -> bind cx name loc)
       ()
       declarations
 
@@ -332,17 +323,6 @@ module Make
     let open Ast.Statement in
     let block_body cx { Block.body; comments = _ } = toplevel_decls cx body in
     let catch_clause cx { Try.CatchClause.body = (_, b); _ } = block_body cx b in
-    let function_ ~bind function_loc { Ast.Function.id; async; generator; _ } =
-      let handle_named_function name_loc name =
-        let r = func_reason ~async ~generator name_loc in
-        let tvar = Tvar.mk cx r in
-        bind cx name tvar name_loc
-      in
-      match id with
-      | Some (name_loc, { Ast.Identifier.name; comments = _ }) ->
-        handle_named_function name_loc (OrdinaryName name)
-      | None -> handle_named_function function_loc (internal_name "*default*")
-    in
     function
     | (_, Empty _) -> ()
     | (_, Block b) -> block_body cx b
@@ -395,12 +375,8 @@ module Make
       | _ -> ());
       statement_decl cx body
     | (_, Debugger _) -> ()
-    | (function_loc, FunctionDeclaration func) -> function_ ~bind:Env.bind_fun function_loc func
-    | (_, EnumDeclaration { EnumDeclaration.id = (name_loc, { Ast.Identifier.name; _ }); _ }) ->
-      if Context.enable_enums cx then
-        let r = DescFormat.type_reason (OrdinaryName name) name_loc in
-        let tvar = Tvar.mk cx r in
-        Env.bind_implicit_const cx (Annotated tvar) name_loc
+    | (_, FunctionDeclaration _) -> ()
+    | (_, EnumDeclaration _) -> ()
     | (_, DeclareVariable _) -> ()
     | ( loc,
         DeclareFunction
@@ -409,20 +385,10 @@ module Make
           )
       ) ->
       (match declare_function_to_function_declaration cx loc declare_function with
-      | Some (FunctionDeclaration func, _) ->
-        function_ ~bind:(Env.bind_declare_fun ~predicate:true) loc func
-      | _ ->
-        let r = mk_reason (RIdentifier (OrdinaryName name)) id_loc in
-        let t = Tvar.mk cx r in
-        Env.bind_declare_fun cx ~predicate:false (OrdinaryName name) t id_loc)
+      | Some _ -> Env.bind_declare_fun ~predicate:true cx (OrdinaryName name) id_loc
+      | _ -> Env.bind_declare_fun cx ~predicate:false (OrdinaryName name) id_loc)
     | (_, VariableDeclaration decl) -> variable_decl cx decl
-    | (_, ClassDeclaration { Ast.Class.id = None; _ }) -> ()
-    | (_, ClassDeclaration { Ast.Class.id = Some id; _ }) ->
-      let (name_loc, { Ast.Identifier.name; comments = _ }) = id in
-      let name = OrdinaryName name in
-      let reason = mk_reason (RType name) name_loc in
-      let tvar = Tvar.mk cx reason in
-      Env.bind_implicit_let cx name (Inferred tvar) name_loc
+    | (_, ClassDeclaration _) -> ()
     | (_, DeclareClass _)
     | (_, DeclareInterface _)
     | (_, InterfaceDeclaration _)
@@ -3040,10 +3006,6 @@ module Make
            name to ensure that the environment knows the type of both the declaration and usages. *)
         let () =
           let name = OrdinaryName name in
-          let reason = mk_reason (RType name) name_loc in
-          let tvar = Tvar.mk cx reason in
-          Env.bind_implicit_let cx name (Inferred tvar) name_loc;
-
           let use_op =
             Op
               (AssignVar
