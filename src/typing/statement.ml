@@ -5,7 +5,6 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-module Ast = Flow_ast
 module Tast_utils = Typed_ast_utils
 
 (* This module contains the traversal functions which set up subtyping

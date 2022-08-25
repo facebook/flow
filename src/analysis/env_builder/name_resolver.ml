@@ -24,32 +24,6 @@ module type C = Dependency_sigs.C
 
 module type F = Dependency_sigs.F
 
-let is_number_literal node =
-  let open Flow_ast in
-  match node with
-  | Expression.Literal { Literal.value = Literal.Number _; _ }
-  | Expression.Unary
-      {
-        Expression.Unary.operator = Expression.Unary.Minus;
-        argument = (_, Expression.Literal { Literal.value = Literal.Number _; _ });
-        comments = _;
-      } ->
-    true
-  | _ -> false
-
-let extract_number_literal node =
-  let open Flow_ast in
-  match node with
-  | Expression.Literal { Literal.value = Literal.Number lit; raw; comments = _ } -> (lit, raw)
-  | Expression.Unary
-      {
-        Expression.Unary.operator = Expression.Unary.Minus;
-        argument = (_, Expression.Literal { Literal.value = Literal.Number lit; raw; _ });
-        comments = _;
-      } ->
-    (-.lit, "-" ^ raw)
-  | _ -> Utils_js.assert_false "not a number literal"
-
 let error_todo = ()
 
 module type S = sig

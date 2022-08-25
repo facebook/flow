@@ -5,7 +5,6 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-module Ast = Flow_ast
 open Reason
 open Loc_collections
 open Name_def
@@ -77,7 +76,20 @@ let string_of_component graph = function
       |> String.concat ",\n"
       )
 
-module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) = struct
+module type S = sig
+  type cx
+
+  val build_ordering :
+    cx ->
+    Env_api.env_info ->
+    (Name_def.def * 'a * ALoc.t list * ALoc.t Reason.virtual_reason) EnvMap.t ->
+    result Base.List.t
+end
+
+module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) : S with type cx = Context.t =
+struct
+  type cx = Context.t
+
   module FindDependencies : sig
     val depends : Context.t -> Env_api.env_info -> ALoc.t -> Name_def.def -> ALoc.t Nel.t EnvMap.t
 
