@@ -722,10 +722,7 @@ let subtype_entry cx ~use_op t loc =
    its type; but if it's not annotated, the RHS t becomes the variable's type. *)
 let init_entry cx ~use_op t loc =
   let { Loc_env.var_info; _ } = Context.environment cx in
-  if is_def_loc_annotated var_info loc then
-    subtype_entry cx ~use_op t loc
-  else
-    subtype_against_providers cx ~use_op t loc
+  if is_def_loc_annotated var_info loc then subtype_entry cx ~use_op t loc
 
 let set_var cx ~use_op name t loc =
   subtype_against_providers cx ~use_op ~potential_global_name:name t loc
@@ -744,12 +741,7 @@ let bind cx t ~kind loc =
   | Options.LTI -> ()
   | _ -> unify_write_entry cx ~use_op:Type.unknown_use t kind loc
 
-let bind_var cx name t loc =
-  valid_declaration_check cx (OrdinaryName name) loc;
-  (* TODO: Vars can be bound multiple times and we need to make sure that the
-   * annots are all compatible with each other. For that reason, we subtype
-   * against providers when just binding a var *)
-  subtype_against_providers cx ~use_op:unknown_use (TypeUtil.type_t_of_annotated_or_inferred t) loc
+let bind_var cx name _t loc = valid_declaration_check cx (OrdinaryName name) loc
 
 let bind_let cx name t loc =
   valid_declaration_check cx (OrdinaryName name) loc;
