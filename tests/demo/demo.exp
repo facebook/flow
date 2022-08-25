@@ -34,8 +34,13 @@ Error --------------------------------------------------------------------------
 
 Cannot use `new` on exports [1]. Only classes can be constructed. [invalid-constructor]
 
+   2/B.js:3:13
    3| var z = new A("42").getX();
                   ^
+
+References:
+   2/A.js
+   ^^^^^^ [1]
 
 
 

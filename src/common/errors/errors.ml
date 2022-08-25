@@ -2575,18 +2575,29 @@ module Cli_output = struct
         if not with_filename then
           lines
         else
-          Base.Option.map lines ~f:(fun lines ->
-              let space = String.make 3 ' ' in
-              let filename = print_file_key ~strip_root loc.source in
-              let filename =
-                filename
-                ^ ":"
-                ^ string_of_int loc.start.line
-                ^ ":"
-                ^ string_of_int (loc.start.column + 1)
-              in
-              space ^ filename ^ "\n" ^ lines
-          )
+          let space = String.make 3 ' ' in
+          let filename = print_file_key ~strip_root loc.source in
+          match lines with
+          | None ->
+            (* if the file has no lines -- couldn't read it, empty file, or loc
+               is pointing at the whole file (line 0, col 0) -- then point at
+               the filename itself. *)
+            let underline = String.make (String.length filename) '^' in
+            let id =
+              match id with
+              | Some id when id > 0 -> " [" ^ string_of_int id ^ "]"
+              | _ -> ""
+            in
+            Some (space ^ filename ^ "\n" ^ space ^ underline ^ id ^ "\n")
+          | Some lines ->
+            let filename =
+              filename
+              ^ ":"
+              ^ string_of_int loc.start.line
+              ^ ":"
+              ^ string_of_int (loc.start.column + 1)
+            in
+            Some (space ^ filename ^ "\n" ^ lines)
       in
       (* Print the locations for all of our references. *)
       let references =

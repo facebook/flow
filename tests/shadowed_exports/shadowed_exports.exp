@@ -7,6 +7,8 @@ Cannot cast `x` to number because exports [1] is incompatible with number [2]. [
        ^
 
 References:
+   shadow_exports.js
+   ^^^^^^^^^^^^^^^^^ [1]
    import_shadow_exports.js:4:5
    4| (x: number);
           ^^^^^^ [2]
