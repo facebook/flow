@@ -3,14 +3,6 @@
 (copy_files generics/*.mli)
 
 (library
- (name flow_typing_changeset)
- (wrapped false)
- (modules changeset)
- (libraries flow_typing_key)
- (preprocess
-  (pps ppx_let)))
-
-(library
  (name flow_typing_key)
  (wrapped false)
  (modules key key_map)
@@ -32,7 +24,6 @@
  (modules type typeUtil source_or_generated_id generic trust_constraint)
  (libraries
   flow_common
-  flow_typing_changeset
   flow_typing_key
   flow_typing_polarity
   flow_typing_trust)
@@ -45,7 +36,6 @@
  (modules
   (:standard
    \
-   changeset
    key
    key_map
    trust
