@@ -422,10 +422,7 @@ module Make
       (match declaration with
       | ExportDefaultDeclaration.Declaration stmt -> statement_decl cx stmt
       | ExportDefaultDeclaration.Expression _ -> ())
-    | (decl_loc, ImportDeclaration _) ->
-      let is_global_lib_scope = File_key.is_lib_file (Context.file cx) && Env.in_global_scope cx in
-      if is_global_lib_scope then
-        Flow_js.add_output cx Error_message.(EToplevelLibraryImport decl_loc)
+    | (_, ImportDeclaration _) -> ()
 
   (***************************************************************
    * local inference main pass: visit AST statement list, calling
@@ -1533,6 +1530,8 @@ module Make
       Import_export.export cx (OrdinaryName "default") export_loc t;
       (loc, ExportDefaultDeclaration { ExportDefaultDeclaration.default; declaration; comments })
     | (import_loc, ImportDeclaration import_decl) ->
+      if File_key.is_lib_file (Context.file cx) && Env.in_global_scope cx then
+        Flow_js.add_output cx Error_message.(EToplevelLibraryImport import_loc);
       let { ImportDeclaration.source; specifiers; default; import_kind; comments } = import_decl in
       let (source_loc, { Ast.StringLiteral.value = module_name; _ }) = source in
 
