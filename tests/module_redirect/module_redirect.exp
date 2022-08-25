@@ -7,12 +7,9 @@ Cannot assign `require(...)` to `bar1` because module `A` [1] is incompatible wi
                          ^^^^^^^^^^^^
 
 References:
-   A.js:1:1
-      v-----------------
+   A.js:1:16
    1| declare module A {
-   2|   declare function foo(): string;
-   3| }
-      ^ [1]
+                     ^ [1]
    D.js:6:11
    6| var bar1: string = require('A');
                 ^^^^^^ [2]
@@ -27,12 +24,9 @@ Cannot assign `require(...)` to `bar2` because module `A` [1] is incompatible wi
                          ^^^^^^^^^^^^
 
 References:
-   A.js:1:1
-      v-----------------
+   A.js:1:16
    1| declare module A {
-   2|   declare function foo(): string;
-   3| }
-      ^ [1]
+                     ^ [1]
    D.js:7:11
    7| var bar2: string = require('B');
                 ^^^^^^ [2]
@@ -47,12 +41,9 @@ Cannot assign `require(...)` to `bar3` because module `A` [1] is incompatible wi
                          ^^^^^^^^^^^^
 
 References:
-   A.js:1:1
-      v-----------------
+   A.js:1:16
    1| declare module A {
-   2|   declare function foo(): string;
-   3| }
-      ^ [1]
+                     ^ [1]
    D.js:8:11
    8| var bar3: string = require('C');
                 ^^^^^^ [2]

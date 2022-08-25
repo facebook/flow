@@ -163,7 +163,6 @@ module type S = sig
   val declare_module :
     Context.t ->
     ALoc.t ->
-    string ->
     (ALoc.t, ALoc.t) Ast.Statement.DeclareModule.t ->
     Type.t * (ALoc.t, ALoc.t * Type.t) Ast.Statement.DeclareModule.t
 

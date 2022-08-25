@@ -1395,15 +1395,9 @@ module Make
     | (loc, InterfaceDeclaration decl) ->
       let (_, decl_ast) = interface cx loc decl in
       (loc, InterfaceDeclaration decl_ast)
-    | (loc, DeclareModule ({ DeclareModule.id; _ } as module_)) ->
-      let (_, name) =
-        match id with
-        | DeclareModule.Identifier (id_loc, { Ast.Identifier.name = value; comments = _ })
-        | DeclareModule.Literal (id_loc, { Ast.StringLiteral.value; _ }) ->
-          (id_loc, value)
-      in
-      let (_, ast) = declare_module cx loc name module_ in
-      (loc, DeclareModule ast)
+    | (loc, DeclareModule module_) ->
+      let (_, decl_ast) = declare_module cx loc module_ in
+      (loc, DeclareModule decl_ast)
     | (loc, DeclareExportDeclaration decl) ->
       let module D = DeclareExportDeclaration in
       let { D.default; declaration; specifiers; source; comments = _ } = decl in
@@ -1993,12 +1987,18 @@ module Make
       let t = interface_helper cx loc (class_sig, class_t) in
       (t, decl_ast)
 
-  and declare_module cx loc name { Ast.Statement.DeclareModule.id; body; kind; comments } =
+  and declare_module cx loc { Ast.Statement.DeclareModule.id; body; kind; comments } =
     let open Ast.Statement in
     let node_cache = Context.node_cache cx in
     match Node_cache.get_declared_module node_cache loc with
     | Some x -> x
     | None ->
+      let (id_loc, name) =
+        match id with
+        | DeclareModule.Identifier (id_loc, { Ast.Identifier.name = value; comments = _ })
+        | DeclareModule.Literal (id_loc, { Ast.StringLiteral.value; _ }) ->
+          (id_loc, value)
+      in
       let (body_loc, { Ast.Statement.Block.body = elements; comments = elements_comments }) =
         body
       in
@@ -2011,7 +2011,7 @@ module Make
             Toplevels.toplevels statement cx elements
         )
       in
-      let reason = mk_reason (RModule (OrdinaryName name)) loc in
+      let reason = mk_reason (RModule (OrdinaryName name)) id_loc in
       Env.init_declare_module_synthetic_module_exports
         cx
         ~export_type:Import_export.export_type

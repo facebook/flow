@@ -538,19 +538,13 @@ let resolve_declare_class cx loc class_ =
   Node_cache.set_declared_class cache loc (t, ast);
   (t, unknown_use)
 
-let resolve_declare_module cx loc ({ Ast.Statement.DeclareModule.id; _ } as module_) =
+let resolve_declare_module cx loc module_ =
   let cache = Context.node_cache cx in
-  let name =
-    match id with
-    | Ast.Statement.DeclareModule.Identifier (_, { Ast.Identifier.name = value; comments = _ })
-    | Ast.Statement.DeclareModule.Literal (_, { Ast.StringLiteral.value; _ }) ->
-      value
-  in
   let ({ Loc_env.declare_module_exports_write_loc = old_dme_loc; _ } as env) =
     Context.environment cx
   in
   Context.set_environment cx { env with Loc_env.declare_module_exports_write_loc = loc };
-  let ((t, _) as stuff) = Statement.declare_module cx loc name module_ in
+  let ((t, _) as stuff) = Statement.declare_module cx loc module_ in
   Node_cache.set_declared_module cache loc stuff;
   let env = Context.environment cx in
   Context.set_environment cx { env with Loc_env.declare_module_exports_write_loc = old_dme_loc };

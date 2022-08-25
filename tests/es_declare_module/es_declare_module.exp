@@ -42,13 +42,9 @@ object type [2]. [incompatible-variance]
        ^^^^^^^^^
 
 References:
-   flow-typed/declares.js:1:1
-      v---------------------------
+   flow-typed/declares.js:1:16
    1| declare module "CJS_Named" {
-   2|   declare var num1: number;
-   3|   declare var str1: string;
-   4| }
-      ^ [1]
+                     ^^^^^^^^^^^ [1]
    es_declare_module.js:9:13
    9| (CJS_Named: {num1: number, str1: string});
                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
@@ -64,13 +60,9 @@ object type [2]. [incompatible-variance]
        ^^^^^^^^^
 
 References:
-   flow-typed/declares.js:1:1
-      v---------------------------
+   flow-typed/declares.js:1:16
    1| declare module "CJS_Named" {
-   2|   declare var num1: number;
-   3|   declare var str1: string;
-   4| }
-      ^ [1]
+                     ^^^^^^^^^^^ [1]
    es_declare_module.js:9:13
    9| (CJS_Named: {num1: number, str1: string});
                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
@@ -85,13 +77,9 @@ Cannot cast `CJS_Named` to number because module `CJS_Named` [1] is incompatible
         ^^^^^^^^^
 
 References:
-   flow-typed/declares.js:1:1
-       v---------------------------
+   flow-typed/declares.js:1:16
     1| declare module "CJS_Named" {
-    2|   declare var num1: number;
-    3|   declare var str1: string;
-    4| }
-       ^ [1]
+                      ^^^^^^^^^^^ [1]
    es_declare_module.js:10:13
    10| (CJS_Named: number); // Error: Module ~> number
                    ^^^^^^ [2]

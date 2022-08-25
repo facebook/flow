@@ -1700,33 +1700,9 @@ Cannot call `inspector.connect` because property `connect` is missing in module 
                     ^^^^^^^
 
 References:
-   <BUILTINS>/node.js:3093:1
-         v---------------------------
+   <BUILTINS>/node.js:3093:16
    3093| declare module 'inspector' {
-   3094|   declare function open(
-   3095|     port?: number,
-   3096|     host?: string,
-   3097|     wait?: boolean
-   3098|   ): void;
-   3099|
-   3100|   declare function close(): void;
-   3101|   declare function url() : string | void;
-   3102|   declare var console: Object;
-   3103|   declare function waitForDebugger(): void;
-   3104|
-   3105|   declare class Session extends events$EventEmitter {
-   3106|     constructor(): void;
-   3107|     connect(): void;
-   3108|     connectToMainThread(): void;
-   3109|     disconnect(): void;
-   3110|     post(
-   3111|       method: string,
-   3112|       params?: Object,
-   3113|       callback?: Function
-   3114|     ): void;
-   3115|   }
-   3116| }
-         ^ [1]
+                        ^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------- inspector/inspector.js:68:12
@@ -1739,33 +1715,9 @@ Cannot call `inspector.connectToMainThread` because property `connectToMainThrea
                     ^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/node.js:3093:1
-         v---------------------------
+   <BUILTINS>/node.js:3093:16
    3093| declare module 'inspector' {
-   3094|   declare function open(
-   3095|     port?: number,
-   3096|     host?: string,
-   3097|     wait?: boolean
-   3098|   ): void;
-   3099|
-   3100|   declare function close(): void;
-   3101|   declare function url() : string | void;
-   3102|   declare var console: Object;
-   3103|   declare function waitForDebugger(): void;
-   3104|
-   3105|   declare class Session extends events$EventEmitter {
-   3106|     constructor(): void;
-   3107|     connect(): void;
-   3108|     connectToMainThread(): void;
-   3109|     disconnect(): void;
-   3110|     post(
-   3111|       method: string,
-   3112|       params?: Object,
-   3113|       callback?: Function
-   3114|     ): void;
-   3115|   }
-   3116| }
-         ^ [1]
+                        ^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------- inspector/inspector.js:78:12
@@ -1777,33 +1729,9 @@ Cannot call `inspector.disconnect` because property `disconnect` is missing in m
                     ^^^^^^^^^^
 
 References:
-   <BUILTINS>/node.js:3093:1
-         v---------------------------
+   <BUILTINS>/node.js:3093:16
    3093| declare module 'inspector' {
-   3094|   declare function open(
-   3095|     port?: number,
-   3096|     host?: string,
-   3097|     wait?: boolean
-   3098|   ): void;
-   3099|
-   3100|   declare function close(): void;
-   3101|   declare function url() : string | void;
-   3102|   declare var console: Object;
-   3103|   declare function waitForDebugger(): void;
-   3104|
-   3105|   declare class Session extends events$EventEmitter {
-   3106|     constructor(): void;
-   3107|     connect(): void;
-   3108|     connectToMainThread(): void;
-   3109|     disconnect(): void;
-   3110|     post(
-   3111|       method: string,
-   3112|       params?: Object,
-   3113|       callback?: Function
-   3114|     ): void;
-   3115|   }
-   3116| }
-         ^ [1]
+                        ^^^^^^^^^^^ [1]
 
 
 Error -------------------------------------------------------------------------------------- inspector/inspector.js:86:9
