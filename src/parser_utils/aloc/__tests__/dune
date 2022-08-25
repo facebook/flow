@@ -1,0 +1,6 @@
+(test
+ (name aloc_tests)
+ (libraries
+  ounit2
+  flow_parser_utils_aloc
+  test_injector_config))

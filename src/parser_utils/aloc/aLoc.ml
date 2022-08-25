@@ -41,6 +41,8 @@ module Repr : sig
 
   val kind : t -> kind
 
+  val kind_ignore_source : t -> kind
+
   (* Raises unless `kind` returns `Keyed` *)
   val get_key_exn : t -> key
 
@@ -93,6 +95,14 @@ end = struct
     if is_keyed loc then
       Keyed
     else if Loc.is_none (Obj.magic loc) then
+      ALocNone
+    else
+      Concrete
+
+  let kind_ignore_source (loc : t) : kind =
+    if is_keyed loc then
+      Keyed
+    else if Loc.is_none_ignore_source (Obj.magic loc) then
       ALocNone
     else
       Concrete
@@ -187,7 +197,7 @@ let debug_to_string ?(include_source = false) loc =
 let compare loc1 loc2 =
   let source_compare = File_key.compare_opt (Repr.source loc1) (Repr.source loc2) in
   if source_compare = 0 then
-    match (Repr.kind loc1, Repr.kind loc2) with
+    match (Repr.kind_ignore_source loc1, Repr.kind_ignore_source loc2) with
     | (Repr.Keyed, Repr.Keyed) ->
       let k1 = Repr.get_key_exn loc1 in
       let k2 = Repr.get_key_exn loc2 in
@@ -195,11 +205,7 @@ let compare loc1 loc2 =
     | (Repr.Concrete, Repr.Concrete) ->
       let l1 = Repr.to_loc_exn loc1 in
       let l2 = Repr.to_loc_exn loc2 in
-      let k = Loc.pos_cmp l1.Loc.start l2.Loc.start in
-      if k = 0 then
-        Loc.pos_cmp l1.Loc._end l2.Loc._end
-      else
-        k
+      Loc.compare_ignore_source l1 l2
     | (Repr.ALocNone, Repr.ALocNone) -> 0
     | (Repr.ALocNone, (Repr.Keyed | Repr.Concrete)) -> -1
     | ((Repr.Keyed | Repr.Concrete), Repr.ALocNone) -> 1

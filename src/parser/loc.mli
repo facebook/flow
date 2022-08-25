@@ -22,6 +22,8 @@ val none : t
 
 val is_none : t -> bool
 
+val is_none_ignore_source : t -> bool
+
 val btwn : t -> t -> t
 
 val char_before : t -> t
@@ -44,6 +46,8 @@ val lines_intersect : t -> t -> bool
 val pos_cmp : position -> position -> int
 
 val span_compare : t -> t -> int
+
+val compare_ignore_source : t -> t -> int
 
 val compare : t -> t -> int
 

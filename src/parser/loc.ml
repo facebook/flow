@@ -31,6 +31,13 @@ let is_none (x : t) =
   | { source = None; start = { line = 0; column = 0 }; _end = { line = 0; column = 0 } } -> true
   | _ -> false
 
+let is_none_ignore_source (x : t) =
+  x == none
+  ||
+  match x with
+  | { source = _; start = { line = 0; column = 0 }; _end = { line = 0; column = 0 } } -> true
+  | _ -> false
+
 let btwn loc1 loc2 = { source = loc1.source; start = loc1.start; _end = loc2._end }
 
 (* Returns the position immediately before the start of the given loc. If the
@@ -101,14 +108,15 @@ let lines_intersect loc1 loc2 =
   File_key.compare_opt loc1.source loc2.source = 0
   && not (loc1._end.line < loc2.start.line || loc1.start.line > loc2._end.line)
 
+let compare_ignore_source loc1 loc2 =
+  match pos_cmp loc1.start loc2.start with
+  | 0 -> pos_cmp loc1._end loc2._end
+  | k -> k
+
 let compare loc1 loc2 =
   let k = File_key.compare_opt loc1.source loc2.source in
   if k = 0 then
-    let k = pos_cmp loc1.start loc2.start in
-    if k = 0 then
-      pos_cmp loc1._end loc2._end
-    else
-      k
+    compare_ignore_source loc1 loc2
   else
     k
 
