@@ -178,9 +178,8 @@ Cannot call `Foo` because a call signature declaring the expected parameter / re
       ^^^
 
 References:
-   import_star_invalid_use.js:3:13
-   3| import * as Foo from './foo';
-                  ^^^ [1]
+   foo.js
+   ^^^^^^ [1]
 
 
 Error ---------------------------------------------------------------------------------- import_star_invalid_use.js:9:14
@@ -231,9 +230,8 @@ Cannot create `Foo` element because module `./foo` [1] is not a React component.
         ^^^
 
 References:
-   import_star_invalid_use.js:3:13
-    3| import * as Foo from './foo';
-                   ^^^ [1]
+   foo.js
+   ^^^^^^ [1]
 
 
 Error ---------------------------------------------------------------------------------- import_star_invalid_use.js:11:2

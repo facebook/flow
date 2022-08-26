@@ -38,8 +38,7 @@ module.exports = (suite(({addFile, addFiles, addCode}) => [
            14:         esmodule.default;
                                 ^^^^^^^ Cannot get \`esmodule.default\` because property \`default\` is missing in module \`./esmodule\` [1]. [prop-missing]
             References:
-             12:         const esmodule = await import('./esmodule');
-                                                ^^^^^^^^^^^^^^^^^^^^ [1]
+            [1]. See: esmodule.js:0
         `,
       ),
 

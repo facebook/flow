@@ -24,9 +24,8 @@ Cannot cast `y` to empty because module `./import-value1` [1] is incompatible wi
          ^
 
 References:
-   import_dynamic.js:2:18
-   2| module.exports = import('./import-value1');
-                       ^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   import-value1.js
+   ^^^^^^^^^^^^^^^^ [1]
    import_dynamic_dep.js:4:7
    4|   (y: empty); // error: number ~> empty
             ^^^^^ [2]

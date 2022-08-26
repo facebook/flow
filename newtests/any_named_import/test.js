@@ -41,8 +41,8 @@ module.exports = (suite(({addFile, addFiles, addCode}) => [
             5: (Any: number);
                 ^^^ Cannot cast \`Any\` to number because module \`any\` [1] is incompatible with number [2]. [incompatible-cast]
             References:
-              3: import * as Any from "any";
-                             ^^^ [1]
+              1: declare module 'any' {
+                                ^^^^^ [1]. See lib: [LIB] flow-typed/lib.js:1
               5: (Any: number);
                        ^^^^^^ [2]
         `,
@@ -83,8 +83,8 @@ module.exports = (suite(({addFile, addFiles, addCode}) => [
             5: (obj: number);
                 ^^^ Cannot cast \`obj\` to number because module \`object\` [1] is incompatible with number [2]. [incompatible-cast]
             References:
-              3: import * as obj from "object";
-                             ^^^ [1]
+              5: declare module 'object' {
+                                ^^^^^^^^ [1]. See lib: [LIB] flow-typed/lib.js:5
               5: (obj: number);
                        ^^^^^^ [2]
         `,

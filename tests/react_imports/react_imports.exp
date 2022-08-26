@@ -362,13 +362,13 @@ Error --------------------------------------------------------------------------
 Cannot get `React.Missing` because property `Missing` is missing in module `React` [1]. [prop-missing]
 
    es-namespace-pascal.js:7:14
-   7| (null: React.Missing); // Error
-                   ^^^^^^^
+     7| (null: React.Missing); // Error
+                     ^^^^^^^
 
 References:
-   es-namespace-pascal.js:1:13
-   1| import * as React from 'React';
-                  ^^^^^ [1]
+   <BUILTINS>/react.js:458:16
+   458| declare module React {
+                       ^^^^^ [1]
 
 
 Error ---------------------------------------------------------------------------------------------- es-namespace.js:4:2
@@ -417,13 +417,13 @@ Error --------------------------------------------------------------------------
 Cannot get `React.Missing` because property `Missing` is missing in module `react` [1]. [prop-missing]
 
    es-namespace.js:7:14
-   7| (null: React.Missing); // Error
-                   ^^^^^^^
+     7| (null: React.Missing); // Error
+                     ^^^^^^^
 
 References:
-   es-namespace.js:1:13
-   1| import * as React from 'react';
-                  ^^^^^ [1]
+   <BUILTINS>/react.js:216:16
+   216| declare module react {
+                       ^^^^^ [1]
 
 
 

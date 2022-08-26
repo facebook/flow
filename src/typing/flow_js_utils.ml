@@ -1193,8 +1193,13 @@ end
 
 module ImportModuleNsT_kit (F : Import_export_helper_sig) = struct
   (* import * as X from 'SomeModule'; *)
-  let on_ModuleT cx trace (reason, is_strict) (_, exports, imported_is_strict) =
-    check_nonstrict_import cx trace is_strict imported_is_strict reason;
+  let on_ModuleT cx trace (reason_op, is_strict) (module_reason, exports, imported_is_strict) =
+    check_nonstrict_import cx trace is_strict imported_is_strict reason_op;
+    let reason =
+      module_reason
+      |> Reason.repos_reason (aloc_of_reason reason_op)
+      |> Reason.replace_desc_reason (desc_of_reason reason_op)
+    in
     let exports_tmap = Context.find_exports cx exports.exports_tmap in
     let props =
       NameUtils.Map.map (fun (loc, t) -> Field (loc, t, Polarity.Positive)) exports_tmap
