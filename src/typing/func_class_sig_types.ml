@@ -163,7 +163,13 @@ module Class = struct
       | Interface of interface_super
       | Class of class_super
 
-    type func_info = ALoc.t option * func_sig * set_asts * set_type
+    type func_info = {
+      id_loc: ALoc.t option;
+      this_write_loc: ALoc.t option;
+      func_sig: func_sig;
+      set_asts: set_asts;
+      set_type: set_type;
+    }
 
     type signature = {
       reason: Reason.t;
@@ -242,7 +248,13 @@ module Class = struct
       | Interface of interface_super
       | Class of class_super
 
-    type func_info = ALoc.t option * func_sig * set_asts * set_type
+    type func_info = {
+      id_loc: ALoc.t option;
+      this_write_loc: ALoc.t option;
+      func_sig: func_sig;
+      set_asts: set_asts;
+      set_type: set_type;
+    }
 
     type signature = {
       reason: reason;

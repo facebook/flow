@@ -2060,14 +2060,15 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
                       Ast.Type.Object.Property.Init (func_loc, Ast.Type.Function func)
                     ) ->
                     let (fsig, func_ast) = mk_func_sig cx tparams_map loc func in
-                    let ft = Func_type_sig.methodtype cx (Some id_loc) this fsig in
+                    let this_write_loc = None in
+                    let ft = Func_type_sig.methodtype cx this_write_loc this fsig in
                     let append_method =
                       match (static, name) with
-                      | (false, "constructor") -> append_constructor (Some id_loc)
-                      | _ -> append_method ~static name id_loc
+                      | (false, "constructor") -> append_constructor ~id_loc:(Some id_loc)
+                      | _ -> append_method ~static name ~id_loc ~this_write_loc
                     in
                     let open Ast.Type in
-                    ( append_method fsig x,
+                    ( append_method ~func_sig:fsig x,
                       ( loc,
                         {
                           prop with
@@ -2119,7 +2120,7 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
                       TypeUtil.type_t_of_annotated_or_inferred fsig.Func_type_sig.Types.return_t
                     in
                     let open Ast.Type in
-                    ( add_getter ~static name id_loc fsig x,
+                    ( add_getter ~static name ~id_loc ~this_write_loc:None ~func_sig:fsig x,
                       ( loc,
                         {
                           prop with
@@ -2147,7 +2148,7 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
                       (* error case: report any ok *)
                     in
                     let open Ast.Type in
-                    ( add_setter ~static name id_loc fsig x,
+                    ( add_setter ~static name ~id_loc ~this_write_loc:None ~func_sig:fsig x,
                       ( loc,
                         {
                           prop with

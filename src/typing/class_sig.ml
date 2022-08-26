@@ -82,8 +82,8 @@ module Make
         { s with private_fields = SMap.add name (Some loc, polarity, field) s.private_fields }
     )
 
-  let add_private_method ~static name loc fsig ~set_asts ~set_type x =
-    let func_info = (Some loc, fsig, set_asts, set_type) in
+  let add_private_method ~static name ~id_loc ~this_write_loc ~func_sig ~set_asts ~set_type x =
+    let func_info = { id_loc = Some id_loc; this_write_loc; func_sig; set_asts; set_type } in
     map_sig
       ~static
       (fun s -> { s with private_methods = SMap.add name func_info s.private_methods })
@@ -105,15 +105,24 @@ module Make
     )
       .private_fields
 
-  let add_constructor loc fsig ?(set_asts = ignore) ?(set_type = ignore) s =
-    { s with constructor = [(loc, F.to_ctor_sig fsig, set_asts, set_type)] }
+  let add_constructor ~id_loc ~func_sig ?(set_asts = ignore) ?(set_type = ignore) s =
+    {
+      s with
+      constructor =
+        [{ id_loc; this_write_loc = None; func_sig = F.to_ctor_sig func_sig; set_asts; set_type }];
+    }
 
   let add_default_constructor reason s =
-    let fsig = F.default_constructor reason in
-    add_constructor None fsig s
+    let func_sig = F.default_constructor reason in
+    add_constructor ~id_loc:None ~func_sig s
 
-  let append_constructor loc fsig ?(set_asts = ignore) ?(set_type = ignore) s =
-    { s with constructor = (loc, F.to_ctor_sig fsig, set_asts, set_type) :: s.constructor }
+  let append_constructor ~id_loc ~func_sig ?(set_asts = ignore) ?(set_type = ignore) s =
+    {
+      s with
+      constructor =
+        { id_loc; this_write_loc = None; func_sig = F.to_ctor_sig func_sig; set_asts; set_type }
+        :: s.constructor;
+    }
 
   let add_field' ~static name fld x =
     let flat = static || structural x in
@@ -176,9 +185,10 @@ module Make
         })
       x
 
-  let add_method ~static name loc fsig ?(set_asts = ignore) ?(set_type = ignore) x =
+  let add_method
+      ~static name ~id_loc ~this_write_loc ~func_sig ?(set_asts = ignore) ?(set_type = ignore) x =
     let flat = static || structural x in
-    let func_info = (Some loc, fsig, set_asts, set_type) in
+    let func_info = { id_loc = Some id_loc; this_write_loc; func_sig; set_asts; set_type } in
     map_sig
       ~static
       (fun s ->
@@ -200,9 +210,10 @@ module Make
   (* Appending a method builds a list of function signatures. This implements the
      bahvior of interfaces and declared classes, which interpret duplicate
      definitions as branches of a single overloaded method. *)
-  let append_method ~static name loc fsig ?(set_asts = ignore) ?(set_type = ignore) x =
+  let append_method
+      ~static name ~id_loc ~this_write_loc ~func_sig ?(set_asts = ignore) ?(set_type = ignore) x =
     let flat = static || structural x in
-    let func_info = (Some loc, fsig, set_asts, set_type) in
+    let func_info = { id_loc = Some id_loc; this_write_loc; func_sig; set_asts; set_type } in
     map_sig
       ~static
       (fun s ->
@@ -226,9 +237,10 @@ module Make
 
   let append_call ~static t = map_sig ~static (fun s -> { s with calls = t :: s.calls })
 
-  let add_getter ~static name loc fsig ?(set_asts = ignore) ?(set_type = ignore) x =
+  let add_getter
+      ~static name ~id_loc ~this_write_loc ~func_sig ?(set_asts = ignore) ?(set_type = ignore) x =
     let flat = static || structural x in
-    let func_info = (Some loc, fsig, set_asts, set_type) in
+    let func_info = { id_loc = Some id_loc; this_write_loc; func_sig; set_asts; set_type } in
     map_sig
       ~static
       (fun s ->
@@ -246,9 +258,10 @@ module Make
         })
       x
 
-  let add_setter ~static name loc fsig ?(set_asts = ignore) ?(set_type = ignore) x =
+  let add_setter
+      ~static name ~id_loc ~this_write_loc ~func_sig ?(set_asts = ignore) ?(set_type = ignore) x =
     let flat = static || structural x in
-    let func_info = (Some loc, fsig, set_asts, set_type) in
+    let func_info = { id_loc = Some id_loc; this_write_loc; func_sig; set_asts; set_type } in
     map_sig
       ~static
       (fun s ->
@@ -324,8 +337,9 @@ module Make
     in
     Type.Field (loc, t, polarity)
 
-  let to_method cx this_default (loc, fsig, _, _) =
-    Type.Method (loc, F.methodtype cx loc this_default fsig)
+  let to_method
+      cx this_default { id_loc; this_write_loc; func_sig = fsig; set_asts = _; set_type = _ } =
+    Type.Method (id_loc, F.methodtype cx this_write_loc this_default fsig)
 
   let to_prop_map to_prop_converter cx =
     SMap.map to_prop_converter %> NameUtils.namemap_of_smap %> Context.generate_property_map cx
@@ -358,7 +372,8 @@ module Make
         (fun _name xs ->
           let ms =
             Nel.rev_map
-              (fun (loc, x, _, set_type) -> (loc, F.methodtype cx loc (this_default x) x, set_type))
+              (fun { id_loc; this_write_loc; func_sig = x; set_asts = _; set_type } ->
+                (id_loc, F.methodtype cx this_write_loc (this_default x) x, set_type))
               xs
           in
           (* Keep track of these before intersections are merged, to enable
@@ -373,8 +388,10 @@ module Make
     in
     let () =
       SMap.iter
-        (fun _name (loc, x, _, set_type) ->
-          Base.Option.iter loc ~f:(fun _loc -> set_type (F.methodtype cx loc (this_default x) x)))
+        (fun _name { id_loc; this_write_loc; func_sig = x; set_asts = _; set_type } ->
+          Base.Option.iter id_loc ~f:(fun _loc ->
+              set_type (F.methodtype cx this_write_loc (this_default x) x)
+          ))
         s.private_methods
     in
     (* Re-add the constructor as a method. *)
@@ -386,10 +403,16 @@ module Make
     (* If there is a both a getter and a setter, then flow the setter type to
        the getter. Otherwise just use the getter type or the setter type *)
     let getters =
-      SMap.map (fun (loc, t, _, set_type) -> (loc, F.gettertype t, set_type)) s.getters
+      SMap.map
+        (fun { id_loc; this_write_loc = _; func_sig = t; set_asts = _; set_type } ->
+          (id_loc, F.gettertype t, set_type))
+        s.getters
     in
     let setters =
-      SMap.map (fun (loc, t, _, set_type) -> (loc, F.settertype t, set_type)) s.setters
+      SMap.map
+        (fun { id_loc; this_write_loc = _; func_sig = t; set_asts = _; set_type } ->
+          (id_loc, F.settertype t, set_type))
+        s.setters
     in
     (* Register getters and setters with the typed AST *)
     let register_accessors =
@@ -480,8 +503,8 @@ module Make
       (* Constructors do not bind `this` *)
       let ts =
         List.rev_map
-          (fun (loc, t, _, _) ->
-            (loc, F.methodtype cx None (Type.dummy_this (aloc_of_reason s.instance.reason)) t))
+          (fun { id_loc; this_write_loc = _; func_sig = t; set_asts = _; set_type = _ } ->
+            (id_loc, F.methodtype cx None (Type.dummy_this (aloc_of_reason s.instance.reason)) t))
           s.constructor
       in
       match ts with
@@ -678,17 +701,20 @@ module Make
 
     with_sig
       ~static:true
-      (iter_methods_with_name (fun name (loc, msig, _, _) ->
+      (iter_methods_with_name
+         (fun name { id_loc; this_write_loc = _; func_sig = msig; set_asts = _; set_type = _ } ->
            (* Constructors don't bind this *)
-           Base.Option.iter ~f:(check_method msig ~static:true name) loc
+           Base.Option.iter ~f:(check_method msig ~static:true name) id_loc
        )
       )
       x;
 
     with_sig
       ~static:false
-      (iter_methods_with_name (* Constructors don't bind this *) (fun name (loc, msig, _, _) ->
-           Base.Option.iter ~f:(check_method msig ~static:false name) loc
+      (iter_methods_with_name
+         (* Constructors don't bind this *)
+         (fun name { id_loc; this_write_loc = _; func_sig = msig; set_asts = _; set_type = _ } ->
+           Base.Option.iter ~f:(check_method msig ~static:false name) id_loc
        )
       )
       x
@@ -870,7 +896,10 @@ module Make
         x
         |> with_sig ~static:true (fun s ->
                (* process static methods and fields *)
-               iter_methods (fun (_, f, set_asts, _) -> method_ ~set_asts f) s;
+               iter_methods
+                 (fun { id_loc = _; this_write_loc = _; func_sig; set_asts; set_type = _ } ->
+                   method_ ~set_asts func_sig)
+                 s;
                SMap.iter field s.fields;
                SMap.iter field s.private_fields
            );
@@ -878,9 +907,16 @@ module Make
         x
         |> with_sig ~static:false (fun s ->
                (* process constructor *)
-               x.constructor |> List.iter (fun (_, fsig, set_asts, _) -> method_ ~set_asts fsig);
+               x.constructor
+               |> List.iter
+                    (fun { id_loc = _; this_write_loc = _; func_sig; set_asts; set_type = _ } ->
+                      method_ ~set_asts func_sig
+                  );
                (* process instance methods and fields *)
-               iter_methods (fun (_, msig, set_asts, _) -> method_ ~set_asts msig) s;
+               iter_methods
+                 (fun { id_loc = _; this_write_loc = _; func_sig; set_asts; set_type = _ } ->
+                   method_ ~set_asts func_sig)
+                 s;
                SMap.iter field s.fields;
                SMap.iter field s.private_fields;
                SMap.iter field s.proto_fields

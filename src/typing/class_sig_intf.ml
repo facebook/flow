@@ -39,7 +39,7 @@ module type S = sig
       classes, which permit duplicate definitions where latter definitions
       overwrite former ones. *)
   val add_constructor :
-    ALoc.t option -> func_sig -> ?set_asts:set_asts -> ?set_type:set_type -> t -> t
+    id_loc:ALoc.t option -> func_sig:func_sig -> ?set_asts:set_asts -> ?set_type:set_type -> t -> t
 
   val add_default_constructor : Reason.t -> t -> t
 
@@ -49,7 +49,7 @@ module type S = sig
       interfaces, which interpret duplicate definitions as branches of a single
       overloaded constructor. *)
   val append_constructor :
-    ALoc.t option -> func_sig -> ?set_asts:set_asts -> ?set_type:set_type -> t -> t
+    id_loc:ALoc.t option -> func_sig:func_sig -> ?set_asts:set_asts -> ?set_type:set_type -> t -> t
 
   (** Add field to signature. *)
   val add_field : static:bool -> string -> ALoc.t -> Polarity.t -> field -> t -> t
@@ -68,7 +68,15 @@ module type S = sig
 
   (** Add private method to signature. *)
   val add_private_method :
-    static:bool -> string -> ALoc.t -> func_sig -> set_asts:set_asts -> set_type:set_type -> t -> t
+    static:bool ->
+    string ->
+    id_loc:ALoc.t ->
+    this_write_loc:ALoc.t option ->
+    func_sig:func_sig ->
+    set_asts:set_asts ->
+    set_type:set_type ->
+    t ->
+    t
 
   (* Access public fields of signature *)
   val public_fields_of_signature : static:bool -> t -> field' SMap.t
@@ -86,8 +94,9 @@ module type S = sig
   val add_method :
     static:bool ->
     string ->
-    ALoc.t ->
-    func_sig ->
+    id_loc:ALoc.t ->
+    this_write_loc:ALoc.t option ->
+    func_sig:func_sig ->
     ?set_asts:set_asts ->
     ?set_type:set_type ->
     t ->
@@ -101,8 +110,9 @@ module type S = sig
   val append_method :
     static:bool ->
     string ->
-    ALoc.t ->
-    func_sig ->
+    id_loc:ALoc.t ->
+    this_write_loc:ALoc.t option ->
+    func_sig:func_sig ->
     ?set_asts:set_asts ->
     ?set_type:set_type ->
     t ->
@@ -114,8 +124,9 @@ module type S = sig
   val add_getter :
     static:bool ->
     string ->
-    ALoc.t ->
-    func_sig ->
+    id_loc:ALoc.t ->
+    this_write_loc:ALoc.t option ->
+    func_sig:func_sig ->
     ?set_asts:set_asts ->
     ?set_type:set_type ->
     t ->
@@ -125,8 +136,9 @@ module type S = sig
   val add_setter :
     static:bool ->
     string ->
-    ALoc.t ->
-    func_sig ->
+    id_loc:ALoc.t ->
+    this_write_loc:ALoc.t option ->
+    func_sig:func_sig ->
     ?set_asts:set_asts ->
     ?set_type:set_type ->
     t ->

@@ -7865,21 +7865,49 @@ module Make
                 let (add, class_member_kind) =
                   match kind with
                   | Method.Constructor ->
-                    let add = add_constructor (Some id_loc) ~set_asts ~set_type in
+                    let add = add_constructor ~id_loc:(Some id_loc) ~set_asts ~set_type in
                     (add, None)
                   | Method.Method ->
                     let add =
                       if private_ then
-                        add_private_method ~static name id_loc ~set_asts ~set_type
+                        add_private_method
+                          ~static
+                          name
+                          ~id_loc
+                          ~this_write_loc:(Some id_loc)
+                          ~set_asts
+                          ~set_type
                       else
-                        add_method ~static name id_loc ~set_asts ~set_type
+                        add_method
+                          ~static
+                          name
+                          ~id_loc
+                          ~this_write_loc:(Some id_loc)
+                          ~set_asts
+                          ~set_type
                     in
                     (add, Some Class_Member_Method)
                   | Method.Get ->
-                    let add = add_getter ~static name id_loc ~set_asts ~set_type in
+                    let add =
+                      add_getter
+                        ~static
+                        name
+                        ~id_loc
+                        ~this_write_loc:(Some id_loc)
+                        ~set_asts
+                        ~set_type
+                    in
                     (add, Some Class_Member_Getter)
                   | Method.Set ->
-                    let add = add_setter ~static name id_loc ~set_asts ~set_type in
+                    let add =
+                      add_setter
+                        ~static
+                        name
+                        ~id_loc
+                        ~this_write_loc:(Some id_loc)
+                        ~set_asts
+                        ~set_type
+                    in
                     (add, Some Class_Member_Setter)
                 in
                 let public_seen_names' =
@@ -7887,7 +7915,7 @@ module Make
                   | Some k -> check_duplicate_name public_seen_names id_loc name ~static ~private_ k
                   | None -> public_seen_names
                 in
-                (add method_sig c, get_element :: rev_elements, public_seen_names')
+                (add ~func_sig:method_sig c, get_element :: rev_elements, public_seen_names')
               in
               function
               (* instance and static methods *)

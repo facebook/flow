@@ -89,3 +89,7 @@ function TestArrayProvider() {
 
   declare var c: MyClass;
 }
+
+interface InterfaceWithMethodThisAnnotation {
+  test(this: mixed): void // ok
+}
