@@ -205,6 +205,8 @@ class virtual ['M, 'T, 'N, 'U] mapper :
       'M Ast.Statement.ExportNamedDeclaration.specifier ->
       'N Ast.Statement.ExportNamedDeclaration.specifier
 
+    method export_source : 'M -> 'M Ast.StringLiteral.t -> 'N Ast.StringLiteral.t
+
     method export_specifier :
       'M Ast.Statement.ExportNamedDeclaration.ExportSpecifier.t ->
       'N Ast.Statement.ExportNamedDeclaration.ExportSpecifier.t
@@ -313,6 +315,8 @@ class virtual ['M, 'T, 'N, 'U] mapper :
       'M ->
       ('M, 'T) Ast.Identifier.t ->
       ('N, 'U) Ast.Identifier.t
+
+    method import_source : 'M -> 'M Ast.StringLiteral.t -> 'N Ast.StringLiteral.t
 
     method import_specifier :
       import_kind:Ast.Statement.ImportDeclaration.import_kind ->

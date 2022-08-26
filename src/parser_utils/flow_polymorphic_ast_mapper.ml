@@ -438,7 +438,11 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       let open Ast.Statement.DeclareExportDeclaration in
       let { default; source; specifiers; declaration; comments } = decl in
       let default' = Option.map ~f:this#on_loc_annot default in
-      let source' = Option.map ~f:(this#on_loc_annot * this#string_literal) source in
+      let source' =
+        match source with
+        | None -> None
+        | Some (loc, lit) -> Some (this#on_loc_annot loc, this#export_source loc lit)
+      in
       let specifiers' = Option.map ~f:this#export_named_specifier specifiers in
       let declaration' = Option.map ~f:this#declare_export_declaration_decl declaration in
       let comments' = Option.map ~f:this#syntax comments in
@@ -636,7 +640,11 @@ class virtual ['M, 'T, 'N, 'U] mapper =
         : ('N, 'U) Ast.Statement.ExportNamedDeclaration.t =
       let open Ast.Statement.ExportNamedDeclaration in
       let { export_kind; source; specifiers; declaration; comments } = decl in
-      let source' = Option.map ~f:(this#on_loc_annot * this#string_literal) source in
+      let source' =
+        match source with
+        | None -> None
+        | Some (loc, lit) -> Some (this#on_loc_annot loc, this#export_source loc lit)
+      in
       let specifiers' = Option.map ~f:this#export_named_specifier specifiers in
       let declaration' = Option.map ~f:this#statement declaration in
       let comments' = Option.map ~f:this#syntax comments in
@@ -657,6 +665,8 @@ class virtual ['M, 'T, 'N, 'U] mapper =
         let annot' = this#on_loc_annot annot in
         let name' = Option.map ~f:this#identifier name in
         ExportBatchSpecifier (annot', name')
+
+    method export_source _loc lit = this#string_literal lit
 
     method export_specifier (spec : 'M Ast.Statement.ExportNamedDeclaration.ExportSpecifier.t)
         : 'N Ast.Statement.ExportNamedDeclaration.ExportSpecifier.t =
@@ -1285,9 +1295,12 @@ class virtual ['M, 'T, 'N, 'U] mapper =
         : ('N, 'U) Ast.Statement.ImportDeclaration.t =
       let open Ast.Statement.ImportDeclaration in
       let { import_kind; source; specifiers; default; comments } = decl in
+      let source' =
+        let (loc, lit) = source in
+        (this#on_loc_annot loc, this#import_source loc lit)
+      in
       let specifiers' = Option.map ~f:(this#import_specifier ~import_kind) specifiers in
       let default' = Option.map ~f:(this#import_default_specifier ~import_kind) default in
-      let source' = (this#on_loc_annot * this#string_literal) source in
       let comments' = Option.map ~f:this#syntax comments in
       {
         import_kind;
@@ -1296,6 +1309,8 @@ class virtual ['M, 'T, 'N, 'U] mapper =
         default = default';
         comments = comments';
       }
+
+    method import_source _loc source = this#string_literal source
 
     method import_specifier
         ~import_kind (specifier : ('M, 'T) Ast.Statement.ImportDeclaration.specifier)

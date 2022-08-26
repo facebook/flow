@@ -39,6 +39,15 @@ let map_loc : 'node. ('loc -> 'node -> 'node) -> 'loc * 'node -> 'loc * 'node =
   let (loc, item) = same in
   id_loc map loc item same (fun diff -> (loc, diff))
 
+let map_loc_opt : 'node. ('loc -> 'node -> 'node) -> ('loc * 'node) option -> ('loc * 'node) option
+    =
+ fun map same ->
+  map_opt
+    (fun same ->
+      let (loc, item) = same in
+      id_loc map loc item same (fun diff -> (loc, diff)))
+    same
+
 let map_list map lst =
   let (rev_lst, changed) =
     List.fold_left
@@ -600,15 +609,21 @@ class ['loc] mapper =
         _loc (decl : ('loc, 'loc) Ast.Statement.DeclareExportDeclaration.t) =
       let open Ast.Statement.DeclareExportDeclaration in
       let { default; source; specifiers; declaration; comments } = decl in
+      let source' = map_loc_opt this#export_source source in
       let specifiers' = map_opt this#export_named_specifier specifiers in
       let declaration' = map_opt this#declare_export_declaration_decl declaration in
       let comments' = this#syntax_opt comments in
-      if specifiers == specifiers' && declaration == declaration' && comments == comments' then
+      if
+        source == source'
+        && specifiers == specifiers'
+        && declaration == declaration'
+        && comments == comments'
+      then
         decl
       else
         {
           default;
-          source;
+          source = source';
           specifiers = specifiers';
           declaration = declaration';
           comments = comments';
@@ -865,15 +880,21 @@ class ['loc] mapper =
         =
       let open Ast.Statement.ExportNamedDeclaration in
       let { export_kind; source; specifiers; declaration; comments } = decl in
+      let source' = map_loc_opt this#export_source source in
       let specifiers' = map_opt this#export_named_specifier specifiers in
       let declaration' = map_opt this#statement declaration in
       let comments' = this#syntax_opt comments in
-      if specifiers == specifiers' && declaration == declaration' && comments == comments' then
+      if
+        source == source'
+        && specifiers == specifiers'
+        && declaration == declaration'
+        && comments == comments'
+      then
         decl
       else
         {
           export_kind;
-          source;
+          source = source';
           specifiers = specifiers';
           declaration = declaration';
           comments = comments';
@@ -914,6 +935,15 @@ class ['loc] mapper =
           spec
         else
           ExportBatchSpecifier batch'
+
+    method export_source _loc (source : 'loc Ast.StringLiteral.t) =
+      let open Ast.StringLiteral in
+      let { value; raw; comments } = source in
+      let comments' = this#syntax_opt comments in
+      if comments == comments' then
+        source
+      else
+        { value; raw; comments = comments' }
 
     method expression_statement _loc (stmt : ('loc, 'loc) Ast.Statement.Expression.t) =
       let open Ast.Statement.Expression in
@@ -1674,13 +1704,34 @@ class ['loc] mapper =
     method import_declaration _loc (decl : ('loc, 'loc) Ast.Statement.ImportDeclaration.t) =
       let open Ast.Statement.ImportDeclaration in
       let { import_kind; source; specifiers; default; comments } = decl in
+      let source' = map_loc this#import_source source in
       let specifiers' = map_opt (this#import_specifier ~import_kind) specifiers in
       let default' = map_opt (this#import_default_specifier ~import_kind) default in
       let comments' = this#syntax_opt comments in
-      if specifiers == specifiers' && default == default' && comments == comments' then
+      if
+        source == source'
+        && specifiers == specifiers'
+        && default == default'
+        && comments == comments'
+      then
         decl
       else
-        { import_kind; source; specifiers = specifiers'; default = default'; comments = comments' }
+        {
+          import_kind;
+          source = source';
+          specifiers = specifiers';
+          default = default';
+          comments = comments';
+        }
+
+    method import_source _loc (source : 'loc Ast.StringLiteral.t) =
+      let open Ast.StringLiteral in
+      let { value; raw; comments } = source in
+      let comments' = this#syntax_opt comments in
+      if comments == comments' then
+        source
+      else
+        { value; raw; comments = comments' }
 
     method import_specifier
         ~import_kind (specifier : ('loc, 'loc) Ast.Statement.ImportDeclaration.specifier) =
