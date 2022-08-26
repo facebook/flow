@@ -61,7 +61,7 @@ module type S = sig
   val mk_func_sig :
     Context.t ->
     func_hint:Type.t Hint_api.hint ->
-    needs_this_param:bool ->
+    required_this_param_type:Type.t option ->
     require_return_annot:bool ->
     constructor:bool ->
     Type.t Subst_name.Map.t ->

@@ -8,8 +8,8 @@
 module Ast = Flow_ast
 open Hint_api
 
-let add_missing_annotation_error cx ?on_missing reason =
-  Base.Option.iter ~f:(fun f -> f ()) on_missing;
+let add_missing_annotation_error cx ~on_missing reason =
+  on_missing ();
   Flow_js.add_output cx (Error_message.EMissingLocalAnnotation reason)
 
 let hint_missing_annotation cx reason ~on_missing = function

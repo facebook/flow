@@ -234,9 +234,12 @@ let rec resolve_binding_partial cx reason loc b =
     let () =
       match hint with
       | Hint_api.Hint_None when RequireAnnot.should_require_annot cx ->
-        if contextual_typing_enabled then
-          Flow_js.flow_t cx (AnyT.make (AnyError (Some MissingAnnotation)) reason, t);
-        RequireAnnot.add_missing_annotation_error cx reason
+        RequireAnnot.add_missing_annotation_error
+          cx
+          ~on_missing:(fun () ->
+            if contextual_typing_enabled then
+              Flow_js.flow_t cx (AnyT.make (AnyError (Some MissingAnnotation)) reason, t))
+          reason
       | _ -> ()
     in
     (t, mk_use_op t, false)
@@ -366,23 +369,23 @@ let resolve_annotated_function
   let hint = resolve_hint cx (aloc_of_reason reason) hint in
   let cache = Context.node_cache cx in
   let tparams_map = mk_tparams_map cx tparams_map in
-  let ((func_sig, _) as sig_data) =
-    Statement.mk_func_sig
-      cx
-      ~func_hint:hint
-      ~needs_this_param:true
-      ~require_return_annot:false
-      ~constructor:false
-      tparams_map
-      reason
-      function_
-  in
   let default_this =
     if Signature_utils.This_finder.found_this_in_body_or_params body params then
       let loc = aloc_of_reason reason in
       Tvar.mk cx (mk_reason RThis loc)
     else
       Type.implicit_mixed_this reason
+  in
+  let ((func_sig, _) as sig_data) =
+    Statement.mk_func_sig
+      cx
+      ~func_hint:hint
+      ~required_this_param_type:(Some default_this)
+      ~require_return_annot:false
+      ~constructor:false
+      tparams_map
+      reason
+      function_
   in
   Node_cache.set_function_sig cache sig_loc sig_data;
   (Statement.Func_stmt_sig.functiontype cx (Some function_loc) default_this func_sig, unknown_use)

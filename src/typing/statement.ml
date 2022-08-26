@@ -7566,7 +7566,7 @@ module Make
                 mk_func_sig
                   cx
                   ~func_hint:Hint_None
-                  ~needs_this_param:false
+                  ~required_this_param_type:None
                   ~constructor:false
                   ~require_return_annot:
                     (RequireAnnot.should_require_annot cx && Context.enforce_class_annotations cx)
@@ -7624,9 +7624,12 @@ module Make
       (match (init, annot_or_inferred) with
       | ((Ast.Class.Property.Declared | Ast.Class.Property.Uninitialized), Inferred _)
         when RequireAnnot.should_require_annot cx ->
-        RequireAnnot.add_missing_annotation_error cx reason;
-        if Context.env_mode cx = Options.LTI then
-          Flow.flow_t cx (AnyT.make (AnyError (Some MissingAnnotation)) reason, annot_t)
+        RequireAnnot.add_missing_annotation_error
+          cx
+          ~on_missing:(fun () ->
+            if Context.env_mode cx = Options.LTI then
+              Flow.flow_t cx (AnyT.make (AnyError (Some MissingAnnotation)) reason, annot_t))
+          reason
       | _ -> ());
       (field, annot_t, annot_ast, get_init)
     in
@@ -7634,7 +7637,7 @@ module Make
       mk_func_sig
         cx
         ~func_hint:Hint_None
-        ~needs_this_param:false
+        ~required_this_param_type:None
         ~require_return_annot:
           (RequireAnnot.should_require_annot cx && Context.enforce_class_annotations cx)
     in
@@ -8268,15 +8271,18 @@ module Make
       Func_stmt_config_types.Types.This { t; loc; annot = (annot_loc, annot) }
     in
     let require_this_annot cx func param_loc = function
-      | None when Context.enforce_this_annotations cx ->
-        if
-          Signature_utils.This_finder.found_this_in_body_or_params
-            func.Ast.Function.body
-            func.Ast.Function.params
-        then
-          RequireAnnot.add_missing_annotation_error
-            cx
-            (mk_reason (RImplicitThis (RFunction RNormal)) param_loc)
+      | (Some t, None)
+        when Context.enforce_this_annotations cx
+             && Signature_utils.This_finder.found_this_in_body_or_params
+                  func.Ast.Function.body
+                  func.Ast.Function.params ->
+        let reason = mk_reason (RImplicitThis (RFunction RNormal)) param_loc in
+        RequireAnnot.add_missing_annotation_error
+          cx
+          ~on_missing:(fun () ->
+            if Context.env_mode cx = Options.LTI then
+              Flow_js.flow_t cx (AnyT.make (AnyError (Some MissingAnnotation)) reason, t))
+          reason
       | _ -> ()
     in
     let mk_params cx ~func_hint tparams_map params =
@@ -8337,7 +8343,14 @@ module Make
       in
       finder#type_ cx Polarity.Neutral Loc_collections.ALocSet.empty t
     in
-    fun cx ~func_hint ~needs_this_param ~require_return_annot ~constructor tparams_map reason func ->
+    fun cx
+        ~func_hint
+        ~required_this_param_type
+        ~require_return_annot
+        ~constructor
+        tparams_map
+        reason
+        func ->
       let {
         Ast.Function.tparams;
         return;
@@ -8368,8 +8381,11 @@ module Make
           Anno.mk_type_param_declarations cx ~tparams_map tparams
         in
         let fparams = mk_params cx ~func_hint tparams_map params in
-        if needs_this_param then
-          require_this_annot cx func (fst params) Ast.Function.Params.((snd params).this_);
+        require_this_annot
+          cx
+          func
+          (fst params)
+          (required_this_param_type, Ast.Function.Params.((snd params).this_));
         let body = Some body in
         let ret_reason = mk_reason RReturn (Func_sig.return_loc func) in
         let (return_annotated_or_inferred, return) =
@@ -8481,12 +8497,12 @@ module Make
      signature consisting of type parameters, parameter types, parameter names,
      and return type, check the body against that signature by adding `this`
      and super` to the environment, and return the signature. *)
-  and function_decl cx ~func_hint ~needs_this_param ~fun_loc reason func default_this =
+  and function_decl cx ~func_hint ~required_this_param_type ~fun_loc reason func default_this =
     let (func_sig, reconstruct_func) =
       mk_func_sig
         cx
         ~func_hint
-        ~needs_this_param
+        ~required_this_param_type
         ~require_return_annot:false
         ~constructor:false
         Subst_name.Map.empty
@@ -8543,7 +8559,7 @@ module Make
       let (fun_type, reconstruct_ast) =
         function_decl
           cx
-          ~needs_this_param
+          ~required_this_param_type:(Base.Option.some_if needs_this_param default_this)
           ~func_hint:hint
           ~fun_loc:(Base.Option.some_if needs_this_param fun_loc)
           reason
@@ -8560,7 +8576,14 @@ module Make
        objects through which the function may be called. *)
     let default_this = None in
     let (fun_type, reconstruct_ast) =
-      function_decl cx ~needs_this_param:false ~func_hint ~fun_loc:None reason func default_this
+      function_decl
+        cx
+        ~required_this_param_type:None
+        ~func_hint
+        ~fun_loc:None
+        reason
+        func
+        default_this
     in
     (fun_type, reconstruct_ast fun_type)
 

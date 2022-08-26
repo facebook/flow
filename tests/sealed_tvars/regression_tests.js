@@ -97,7 +97,7 @@ interface InterfaceWithMethodThisAnnotation {
 function anonymous_functions_this_type() {
   let foo1 = function () {}; // ok
   let foo2 = function (this: mixed) {}; // ok
-  let foo3 = function () { this; }; // error: missing annot on this // TODO: pin this type to any.
+  let foo3 = function () { this; }; // error: missing annot on this
   let foo4 = function (this: mixed) { this; }; // ok
 }
 

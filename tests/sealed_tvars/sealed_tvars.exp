@@ -153,19 +153,11 @@ References:
                       ^^^ [1]
 
 
-Error --------------------------------------------------------------------------------------- regression_tests.js:100:14
-
-Internal error: unconstrained tvar during tvar resolution
-
-   100|   let foo3 = function () { this; }; // error: missing annot on this // TODO: pin this type to any.
-                     ^^^^^^^^^^^
-
-
 Error --------------------------------------------------------------------------------------- regression_tests.js:100:23
 
 Missing an annotation on implicit `this` parameter of function. [missing-this-annot]
 
-   100|   let foo3 = function () { this; }; // error: missing annot on this // TODO: pin this type to any.
+   100|   let foo3 = function () { this; }; // error: missing annot on this
                               ^^
 
 
@@ -184,4 +176,4 @@ References:
 
 
 
-Found 18 errors
+Found 17 errors
