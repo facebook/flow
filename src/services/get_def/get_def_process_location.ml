@@ -113,12 +113,12 @@ class ['M, 'T] searcher
       );
       decl
 
-    method! import_default_specifier decl =
+    method! import_default_specifier ~import_kind:_ decl =
       let (annot, _) = decl in
       if annot_covers_target annot then this#request (Get_def_request.Type annot);
       decl
 
-    method! import_namespace_specifier id = id
+    method! import_namespace_specifier ~import_kind:_ _loc id = id
 
     method! export_named_declaration export_loc decl =
       let open Flow_ast.Statement.ExportNamedDeclaration in

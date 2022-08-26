@@ -1286,7 +1286,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       let open Ast.Statement.ImportDeclaration in
       let { import_kind; source; specifiers; default; comments } = decl in
       let specifiers' = Option.map ~f:(this#import_specifier ~import_kind) specifiers in
-      let default' = Option.map ~f:this#import_default_specifier default in
+      let default' = Option.map ~f:(this#import_default_specifier ~import_kind) default in
       let source' = (this#on_loc_annot * this#string_literal) source in
       let comments' = Option.map ~f:this#syntax comments in
       {
@@ -1308,7 +1308,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
         in
         ImportNamedSpecifiers named_specifiers'
       | ImportNamespaceSpecifier (annot, ident) ->
-        let ident' = this#import_namespace_specifier ident in
+        let ident' = this#import_namespace_specifier ~import_kind annot ident in
         ImportNamespaceSpecifier (this#on_loc_annot annot, ident')
 
     method import_named_specifier
@@ -1322,10 +1322,17 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       let remote' = this#t_pattern_identifier remote in
       { kind; local = local'; remote = remote' }
 
-    method import_default_specifier (id : ('M, 'T) Ast.Identifier.t) : ('N, 'U) Ast.Identifier.t =
+    method import_default_specifier
+        ~(import_kind : Ast.Statement.ImportDeclaration.import_kind) (id : ('M, 'T) Ast.Identifier.t)
+        : ('N, 'U) Ast.Identifier.t =
+      ignore import_kind;
       this#t_pattern_identifier ~kind:Ast.Statement.VariableDeclaration.Let id
 
-    method import_namespace_specifier (id : ('M, 'T) Ast.Identifier.t) : ('N, 'U) Ast.Identifier.t =
+    method import_namespace_specifier
+        ~(import_kind : Ast.Statement.ImportDeclaration.import_kind)
+        _loc
+        (id : ('M, 'T) Ast.Identifier.t) : ('N, 'U) Ast.Identifier.t =
+      ignore import_kind;
       this#t_pattern_identifier ~kind:Ast.Statement.VariableDeclaration.Let id
 
     method jsx_element (expr : ('M, 'T) Ast.JSX.element) =
