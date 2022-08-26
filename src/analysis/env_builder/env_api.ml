@@ -405,7 +405,7 @@ module Make
     | EmptyArray { reason; arr_providers } ->
       (OrdinaryNameLoc, Reason.poly_loc_of_reason reason)
       :: Base.List.map ~f:(fun l -> (ArrayProviderLoc, l)) (L.LSet.elements arr_providers)
-    | IllegalWrite r -> [(OrdinaryNameLoc, Reason.poly_loc_of_reason r)]
+    | IllegalWrite _ -> []
     | Uninitialized _ -> []
     | Undeclared _ -> []
     | FunctionThis _ -> []
@@ -420,8 +420,8 @@ module Make
     | Global _ -> []
     | Projection _ -> []
     | Unreachable _ -> []
-    | Undefined r -> [(OrdinaryNameLoc, Reason.poly_loc_of_reason r)]
-    | Number r -> [(OrdinaryNameLoc, Reason.poly_loc_of_reason r)]
+    | Undefined _ -> []
+    | Number _ -> []
     | DeclaredFunction l -> [(OrdinaryNameLoc, l)]
 
   let rec refinements_of_write_loc ({ refinement_of_id; _ } as env) write_loc =

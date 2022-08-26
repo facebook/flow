@@ -1804,14 +1804,6 @@ module Make
                     else
                       None
                   in
-                  let write_entries =
-                    Base.List.fold
-                      ~f:(fun acc { Provider_api.reason = r; _ } ->
-                        EnvMap.add_ordinary (poly_loc_of_reason r) (Env_api.AssigningWrite r) acc)
-                      ~init:env_state.write_entries
-                      providers
-                  in
-                  env_state <- { env_state with write_entries };
                   (initial_val, havoc, writes_by_closure_provider_val)
               in
               {
@@ -2471,7 +2463,7 @@ module Make
                       let { val_ref; kind = stored_binding_kind; def_loc; _ } =
                         SMap.find name env_state.env
                       in
-                      let () =
+                      let error =
                         error_for_assignment_kind
                           cx
                           name
@@ -2480,9 +2472,22 @@ module Make
                           stored_binding_kind
                           (variable_declaration_binding_kind_to_pattern_write_kind (Some kind))
                           !val_ref
-                        |> Base.Option.iter ~f:add_output
                       in
-                      if Val.is_undeclared !val_ref then val_ref := Val.uninitialized loc)
+                      Base.Option.iter ~f:add_output error;
+                      if Val.is_undeclared !val_ref then val_ref := Val.uninitialized loc;
+                      match (error, annot) with
+                      | (None, Ast.Type.Available _) ->
+                        let reason = mk_reason (RIdentifier (OrdinaryName name)) loc in
+                        env_state <-
+                          {
+                            env_state with
+                            write_entries =
+                              EnvMap.add_ordinary
+                                loc
+                                (Env_api.AssigningWrite reason)
+                                env_state.write_entries;
+                          }
+                      | _ -> ())
                   ()
                   id;
                 ignore @@ this#type_annotation_hint annot
