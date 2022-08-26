@@ -113,9 +113,14 @@ class ['M, 'T] searcher
       );
       decl
 
-    method! import_default_specifier ~import_kind:_ decl =
+    method! import_default_specifier ~import_kind decl =
+      let open Flow_ast.Statement.ImportDeclaration in
       let (annot, _) = decl in
-      if annot_covers_target annot then this#request (Get_def_request.Type annot);
+      ( if annot_covers_target annot then
+        match import_kind with
+        | ImportTypeof -> this#request (Get_def_request.Typeof annot)
+        | _ -> this#request (Get_def_request.Type annot)
+      );
       decl
 
     method! import_namespace_specifier ~import_kind loc id =
