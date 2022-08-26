@@ -108,4 +108,8 @@ function non_assigning_member_assigns() {
   (1).toString = 3; // error: toString missing in number, but no missing env entry error
   declare var bar: {baz: number};
   bar.baz += 1; // ok
+  bar.baz++; // ok
+  (bar.baz: number); // ok
+  bar.baz--; // ok
+  (bar.baz: number); // ok
 }

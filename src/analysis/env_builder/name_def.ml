@@ -132,7 +132,6 @@ type def =
     }
   | Update of {
       exp_loc: ALoc.t;
-      lhs_member: (ALoc.t, ALoc.t) Ast.Expression.t option;
       op: Ast.Expression.Update.operator;
     }
   | Function of {
@@ -1023,12 +1022,7 @@ class def_finder env_entries providers toplevel_scope =
           this#add_ordinary_binding
             id_loc
             (mk_reason (RIdentifier (OrdinaryName name)) id_loc)
-            (Update { exp_loc = loc; lhs_member = None; op = operator })
-        | (def_loc, Ast.Expression.Member _) ->
-          this#add_ordinary_binding
-            def_loc
-            (mk_expression_reason argument)
-            (Update { exp_loc = loc; lhs_member = Some argument; op = operator })
+            (Update { exp_loc = loc; op = operator })
         | _ -> ()
       end;
       super#update_expression loc expr

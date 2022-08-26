@@ -623,7 +623,7 @@ struct
       | RefiExpression exp
       | ChainExpression (_, exp) ->
         depends_of_expression ~for_expression_writes:true exp EnvMap.empty
-      | Update { lhs_member; _ } -> depends_of_update lhs_member
+      | Update _ -> depends_of_update None
       | MemberAssign { member_loc; member; rhs; _ } ->
         depends_of_member_assign member_loc member rhs
       | OpAssign { lhs; rhs; _ } -> depends_of_op_assign lhs rhs

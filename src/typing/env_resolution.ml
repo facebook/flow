@@ -464,20 +464,12 @@ let resolve_op_assign cx ~exp_loc id_reason lhs op rhs =
     let use_op = Op (AssignVar { var = Some id_reason; init = reason }) in
     (result_t, use_op)
 
-let resolve_update cx ~id_loc ~lhs_member ~exp_loc id_reason =
+let resolve_update cx ~id_loc ~exp_loc id_reason =
   let reason = mk_reason (RCustom "update") exp_loc in
   let result_t = NumT.at exp_loc |> with_trust literal_trust in
-  let use_op =
-    match lhs_member with
-    | None ->
-      let id_t = Env.ref_entry_exn ~lookup_mode:Env.LookupMode.ForValue cx id_loc id_reason in
-      Flow_js.flow cx (id_t, AssertArithmeticOperandT reason);
-      Op (AssignVar { var = Some id_reason; init = TypeUtil.reason_of_t id_t })
-    | Some argument ->
-      let arg_val_t = expression cx ~hint:dummy_hint argument in
-      Flow_js.flow cx (arg_val_t, AssertArithmeticOperandT reason);
-      unknown_use
-  in
+  let id_t = Env.ref_entry_exn ~lookup_mode:Env.LookupMode.ForValue cx id_loc id_reason in
+  Flow_js.flow cx (id_t, AssertArithmeticOperandT reason);
+  let use_op = Op (AssignVar { var = Some id_reason; init = TypeUtil.reason_of_t id_t }) in
   (result_t, use_op)
 
 let resolve_type_alias cx loc alias =
@@ -654,8 +646,7 @@ let resolve cx (def_kind, id_loc) (def, def_scope_kind, class_stack, def_reason)
     | MemberAssign { member_loc = _; member = _; rhs } ->
       (expression cx ~hint:dummy_hint rhs, unknown_use)
     | OpAssign { exp_loc; lhs; op; rhs } -> resolve_op_assign cx ~exp_loc def_reason lhs op rhs
-    | Update { exp_loc; lhs_member; op = _ } ->
-      resolve_update cx ~id_loc ~exp_loc ~lhs_member def_reason
+    | Update { exp_loc; op = _ } -> resolve_update cx ~id_loc ~exp_loc def_reason
     | TypeAlias (loc, alias) -> resolve_type_alias cx loc alias
     | OpaqueType (loc, opaque) -> resolve_opaque_type cx loc opaque
     | Import { import_kind; source; source_loc; import } ->
