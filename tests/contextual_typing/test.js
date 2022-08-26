@@ -18,6 +18,8 @@ function test2() {
 
   const c = foo.bar((a) => a);
   (c: string);
+  const d = foo?.bar((a) => a);
+  (d: string);
 
   class Bar {
     #baz<T>(f: (string) => T): T {

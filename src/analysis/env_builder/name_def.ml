@@ -1297,7 +1297,15 @@ class def_finder env_entries providers toplevel_scope =
           let call_argumemts_hint =
             match callee with
             | (_, Ast.Expression.Member { Ast.Expression.Member._object; property; comments = _ })
-              ->
+            | ( _,
+                Ast.Expression.OptionalMember
+                  {
+                    Ast.Expression.OptionalMember.member =
+                      { Ast.Expression.Member._object; property; comments = _ };
+                    filtered_out = _;
+                    optional = _;
+                  }
+              ) ->
               let base_hint = Hint_t (ValueHint _object) in
               (match property with
               | Ast.Expression.Member.PropertyIdentifier (_, { Ast.Identifier.name; comments = _ })
