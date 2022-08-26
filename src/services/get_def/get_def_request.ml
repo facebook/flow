@@ -24,7 +24,7 @@ type ('M, 'T) t =
   | Type of 'T
   | Typeof of 'T
   | Member of ('M, 'T) member_info
-  | Require of ('M * string) * 'M
+  | Require of ('M * string)
   | JsxAttribute of {
       component_t: 'T;
       name: string;

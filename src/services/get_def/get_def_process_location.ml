@@ -95,7 +95,7 @@ class ['M, 'T] searcher
       let { source = (source_loc, { Flow_ast.StringLiteral.value = module_name; _ }); _ } = decl in
       let res = super#import_declaration import_loc decl in
       if covers_target import_loc then
-        this#request (Get_def_request.Require ((source_loc, module_name), import_loc));
+        this#request (Get_def_request.Require (source_loc, module_name));
       res
 
     method! import_named_specifier ~import_kind decl =
@@ -141,7 +141,7 @@ class ['M, 'T] searcher
         let { specifiers; _ } = decl in
         Base.Option.iter ~f:(this#export_specifier_with_loc ~source_loc) specifiers;
         if covers_target export_loc then
-          this#request (Get_def_request.Require ((source_loc, module_name), export_loc));
+          this#request (Get_def_request.Require (source_loc, module_name));
         decl
 
     method export_specifier_with_loc ~source_loc specifier =
@@ -276,14 +276,13 @@ class ['M, 'T] searcher
           _
         )
         when annot_covers_target annot && is_legit_require source_annot ->
-        let loc = loc_of_annot annot in
         let source_loc = loc_of_annot source_annot in
-        this#request (Get_def_request.Require ((source_loc, module_name), loc))
+        this#request (Get_def_request.Require (source_loc, module_name))
       | (Flow_ast.Expression.Literal Flow_ast.Literal.{ value = String str; _ }, Some prefix)
         when annot_covers_target annot && Base.String.is_prefix str ~prefix ->
         let loc = loc_of_annot annot in
         let mref = Base.String.chop_prefix_exn str ~prefix in
-        this#request (Get_def_request.Require ((loc, mref), loc))
+        this#request (Get_def_request.Require (loc, mref))
       | _ -> super#expression (annot, expr)
 
     (* object keys would normally hit this#t_identifier; this circumvents that. *)
