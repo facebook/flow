@@ -118,7 +118,15 @@ class ['M, 'T] searcher
       if annot_covers_target annot then this#request (Get_def_request.Type annot);
       decl
 
-    method! import_namespace_specifier ~import_kind:_ _loc id = id
+    method! import_namespace_specifier ~import_kind loc id =
+      let open Flow_ast.Statement.ImportDeclaration in
+      let (annot, _) = id in
+      ( if covers_target loc then
+        match import_kind with
+        | ImportTypeof -> this#request (Get_def_request.Typeof annot)
+        | _ -> this#request (Get_def_request.Type annot)
+      );
+      id
 
     method! export_named_declaration export_loc decl =
       let open Flow_ast.Statement.ExportNamedDeclaration in
