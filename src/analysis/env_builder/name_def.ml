@@ -492,6 +492,15 @@ class def_finder env_entries providers toplevel_scope =
 
     method add_ordinary_binding loc = this#add_binding (Env_api.OrdinaryNameLoc, loc)
 
+    method private has_assigning_write key =
+      match EnvMap.find_opt key env_entries with
+      | Some (Env_api.AssigningWrite _)
+      | Some (Env_api.GlobalWrite _) ->
+        true
+      | Some Env_api.NonAssigningWrite
+      | None ->
+        false
+
     method private in_scope : 'a 'b. ('a -> 'b) -> scope_kind -> 'a -> 'b =
       fun f scope' node ->
         let scope0 = scope_kind in
@@ -967,10 +976,11 @@ class def_finder env_entries providers toplevel_scope =
         | (None, Ast.Pattern.Expression (member_loc, Ast.Expression.Member member)) ->
           (* Use super member to visit sub-expressions to avoid record a read of the member. *)
           ignore @@ super#member member_loc member;
-          this#add_ordinary_binding
-            member_loc
-            (mk_pattern_reason left)
-            (MemberAssign { member_loc; member; rhs = right })
+          if this#has_assigning_write (Env_api.OrdinaryNameLoc, member_loc) then
+            this#add_ordinary_binding
+              member_loc
+              (mk_pattern_reason left)
+              (MemberAssign { member_loc; member; rhs = right })
         | (None, _) ->
           Destructure.pattern
             ~f:this#add_ordinary_binding
@@ -994,10 +1004,11 @@ class def_finder env_entries providers toplevel_scope =
             | _ -> NonConditionalContext
           in
           this#visit_expression ~cond ~hint:Hint_None e;
-          this#add_ordinary_binding
-            def_loc
-            (mk_pattern_reason left)
-            (OpAssign { exp_loc = loc; lhs = left; op = operator; rhs = right })
+          if this#has_assigning_write (Env_api.OrdinaryNameLoc, def_loc) then
+            this#add_ordinary_binding
+              def_loc
+              (mk_pattern_reason left)
+              (OpAssign { exp_loc = loc; lhs = left; op = operator; rhs = right })
         | _ -> ()
       in
       this#visit_expression ~hint ~cond:NonConditionalContext right;

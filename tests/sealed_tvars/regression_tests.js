@@ -100,3 +100,12 @@ function anonymous_functions_this_type() {
   let foo3 = function () { this; }; // error: missing annot on this // TODO: pin this type to any.
   let foo4 = function (this: mixed) { this; }; // ok
 }
+
+function non_assigning_member_assigns() {
+  declare var foo: {[string | number]: mixed};
+  foo[1 + 2] = 1; // ok
+  foo['1' + 2] = 3; // ok
+  (1).toString = 3; // error: toString missing in number, but no missing env entry error
+  declare var bar: {baz: number};
+  bar.baz += 1; // ok
+}

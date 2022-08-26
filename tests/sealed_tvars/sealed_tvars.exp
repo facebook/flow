@@ -169,5 +169,19 @@ Missing an annotation on implicit `this` parameter of function. [missing-this-an
                               ^^
 
 
+Error ---------------------------------------------------------------------------------------- regression_tests.js:108:7
 
-Found 17 errors
+Cannot assign `3` to `1.toString` because property `toString` is missing in number [1]. [incompatible-use]
+
+   regression_tests.js:108:7
+   108|   (1).toString = 3; // error: toString missing in number, but no missing env entry error
+              ^^^^^^^^
+
+References:
+   regression_tests.js:108:4
+   108|   (1).toString = 3; // error: toString missing in number, but no missing env entry error
+           ^ [1]
+
+
+
+Found 18 errors
