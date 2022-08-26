@@ -33,6 +33,16 @@ assert_ok "$FLOW" get-def let.js 28 8 --strip-root --pretty
 printf "default import points to default export = "
 assert_ok "$FLOW" get-def imports.js 3 10 --strip-root --pretty
 
+# import thing from "./exports_default.js";
+#               ^
+printf "default import points to source file (from keyword) = "
+assert_ok "$FLOW" get-def imports.js 3 15 --strip-root --pretty
+
+# import thing from "./exports_default.js";
+#                        ^
+printf "import source points to source file = "
+assert_ok "$FLOW" get-def imports.js 3 24 --strip-root --pretty
+
 # thing;
 #    ^
 printf "local reference points to default import = "
@@ -86,12 +96,12 @@ printf "namespaced import points to imported file (as) = "
 assert_ok "$FLOW" get-def imports.js 10 11 --strip-root --pretty
 
 # import * as things from "./helpers/exports_named.js";
-#               ^
+#        ^
 printf "namespaced import points to imported file (remote name) = "
 assert_ok "$FLOW" get-def imports.js 10 8 --strip-root --pretty
 
 # import * as things from "./helpers/exports_named.js";
-#        ^
+#               ^
 printf "namespaced import points to imported file (local name) = "
 assert_ok "$FLOW" get-def imports.js 10 15 --strip-root --pretty
 
@@ -99,6 +109,64 @@ assert_ok "$FLOW" get-def imports.js 10 15 --strip-root --pretty
 #    ^
 printf "local reference points to namespaced import = "
 assert_ok "$FLOW" get-def imports.js 11 4 --strip-root --pretty
+
+# import * as test_lib from 'test_lib';
+#        ^
+printf "namespaced import points to declare module (remote name) = "
+assert_ok "$FLOW" get-def imports.js 24 8 --strip-root --pretty
+
+# import * as test_lib from 'test_lib';
+#          ^
+printf "namespaced import points to declare module (as) = "
+assert_ok "$FLOW" get-def imports.js 24 11 --strip-root --pretty
+
+# import * as test_lib from 'test_lib';
+#               ^
+printf "namespaced import points to declare module (local name) = "
+assert_ok "$FLOW" get-def imports.js 24 15 --strip-root --pretty
+
+# import * as test_lib from 'test_lib';
+#                               ^
+printf "import source points to declare module = "
+assert_ok "$FLOW" get-def imports.js 24 33 --strip-root --pretty
+
+# test_lib;
+#    ^
+printf "local reference points to declare module = "
+assert_ok "$FLOW" get-def imports.js 25 4 --strip-root --pretty
+
+
+# import typeof typeof_thing from "./helpers/exports_default.js";
+#          ^
+printf "typeof default import (typeof) = "
+assert_ok "$FLOW" get-def imports.js 27 10 --strip-root --pretty
+
+# import typeof typeof_thing from "./helpers/exports_default.js";
+#                   ^
+printf "typeof default import (local name) = "
+assert_ok "$FLOW" get-def imports.js 27 19 --strip-root --pretty
+
+# ("foo": typeof_thing);
+#             ^
+printf "local reference of typeof default import = "
+assert_ok "$FLOW" get-def imports.js 28 13 --strip-root --pretty
+
+
+# import typeof * as things_ns from "./helpers/exports_named.js";
+#        ^
+printf "typeof namespace import (typeof) = "
+assert_ok "$FLOW" get-def imports.js 30 8 --strip-root --pretty
+
+# import typeof * as things_ns from "./helpers/exports_named.js";
+#                       ^
+printf "typeof namespace import (local name) = "
+assert_ok "$FLOW" get-def imports.js 30 23 --strip-root --pretty
+
+# ({}: things_ns);
+#         ^
+printf "local reference of typeof namespace import = "
+assert_ok "$FLOW" get-def imports.js 32 9 --strip-root --pretty
+
 
 printf "class name (should be itself) = "
 assert_ok "$FLOW" get-def class.js 3 8 --strip-root --pretty
@@ -165,6 +233,6 @@ printf "object destructuring binding = "
 assert_ok "$FLOW" get-def destructuring.js 5 14 --strip-root --pretty
 
 queries_in_file "get-def" "annot.js"
-queries_in_file "get-def" "exports.js"
+queries_in_file "get-def" "exports.js" --pretty
 queries_in_file "get-def" "identifier.js"
 queries_in_file "get-def" "module_ref.js"

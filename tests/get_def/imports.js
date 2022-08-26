@@ -20,3 +20,13 @@ type Foo = any;
 const y: Foo<number> = "foo";
 // $FlowFixMe
 y.foo();
+
+import * as test_lib from 'test_lib';
+test_lib;
+
+import typeof typeof_thing from "./helpers/exports_default.js";
+("foo": typeof_thing);
+
+import typeof * as things_ns from "./helpers/exports_named.js";
+// $FlowFixMe
+({}: things_ns);
