@@ -8516,10 +8516,7 @@ module Make
       =
     let node_cache = Context.node_cache cx in
     let cached =
-      Base.Option.value_map
-        ~default:None
-        ~f:(fun (id_loc, _) -> Node_cache.get_function node_cache id_loc)
-        func_id
+      func_id |> Base.Option.value_map ~default:fun_loc ~f:fst |> Node_cache.get_function node_cache
     in
     match cached with
     | Some cached ->

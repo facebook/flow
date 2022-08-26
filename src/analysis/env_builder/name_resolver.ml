@@ -3373,6 +3373,17 @@ module Make
         );
         stmt
 
+      method! function_expression_or_method loc expr =
+        let { Flow_ast.Function.id; _ } = expr in
+        ( if Base.Option.is_none id then
+          let reason = mk_reason (RCustom "<<anonymous function>>") loc in
+          let write_entries =
+            EnvMap.add_ordinary loc (Env_api.AssigningWrite reason) env_state.write_entries
+          in
+          env_state <- { env_state with write_entries }
+        );
+        super#function_expression_or_method loc expr
+
       (* We also havoc state when entering functions and exiting calls. *)
       method! lambda ~is_arrow ~fun_loc ~generator_return_loc params predicate body =
         this#expecting_abrupt_completions (fun () ->

@@ -91,7 +91,13 @@ struct
   type cx = Context.t
 
   module FindDependencies : sig
-    val depends : Context.t -> Env_api.env_info -> ALoc.t -> Name_def.def -> ALoc.t Nel.t EnvMap.t
+    val depends :
+      Context.t ->
+      EnvMap.key EnvMap.t ->
+      Env_api.env_info ->
+      ALoc.t ->
+      Name_def.def ->
+      ALoc.t Nel.t EnvMap.t
 
     val recursively_resolvable : Name_def.def -> bool
   end = struct
@@ -123,7 +129,8 @@ struct
 
     (* Helper class for the dependency analysis--traverse the AST nodes
        in a def to determine which variables appear *)
-    class use_visitor cx ({ Env_api.env_values; env_entries; _ } as env) init =
+    class use_visitor cx this_super_dep_loc_map ({ Env_api.env_values; env_entries; _ } as env) init
+      =
       object (this)
         inherit [ALoc.t Nel.t EnvMap.t, ALoc.t] Flow_ast_visitor.visitor ~init as super
 
@@ -144,7 +151,14 @@ struct
               FlowAPIUtils.add_output cx Error_message.(EInternal (loc, MissingEnvRead loc));
               []
           in
-          let writes = Base.List.concat_map ~f:(Env_api.writes_of_write_loc ~for_type) write_locs in
+          let writes =
+            write_locs
+            |> Base.List.concat_map ~f:(Env_api.writes_of_write_loc ~for_type)
+            |> Base.List.map ~f:(fun kind_and_loc ->
+                   EnvMap.find_opt kind_and_loc this_super_dep_loc_map
+                   |> Base.Option.value ~default:kind_and_loc
+               )
+          in
           let refinements =
             Base.List.concat_map ~f:(Env_api.refinements_of_write_loc env) write_locs
           in
@@ -276,14 +290,25 @@ struct
           let _ = map_opt this#type_params tparams in
           ()
 
+        method! function_ loc expr =
+          let { Ast.Function.id; _ } = expr in
+          (match id with
+          | Some _ -> ()
+          | None -> this#add_write_dependency_at_loc Env_api.OrdinaryNameLoc loc);
+          super#function_ loc expr
+
         method! class_
-            _
+            loc
             ( { Ast.Class.id = ident; tparams; extends; implements; body; class_decorators; _ } as
             cls
             ) =
           let open Flow_ast_mapper in
           let _ = this#class_body_annotated body in
-          let _ = map_opt this#class_identifier ident in
+          let () =
+            match ident with
+            | Some id -> ignore @@ this#class_identifier id
+            | None -> this#add_write_dependency_at_loc Env_api.OrdinaryNameLoc loc
+          in
           let _ = map_opt this#type_params tparams in
           let _ = map_opt (map_loc this#class_extends) extends in
           let _ = map_opt this#class_implements implements in
@@ -338,8 +363,8 @@ struct
 
     (* For all the possible defs, explore the def's structure with the class above
        to find what variables have to be resolved before this def itself can be resolved *)
-    let depends cx ({ Env_api.providers; _ } as env) id_loc =
-      let visitor = new use_visitor cx env EnvMap.empty in
+    let depends cx this_super_dep_loc_map ({ Env_api.providers; _ } as env) id_loc =
+      let visitor = new use_visitor cx this_super_dep_loc_map env EnvMap.empty in
       let depends_of_node mk_visit state =
         visitor#set_acc state;
         let node_visit () = mk_visit visitor in
@@ -572,7 +597,7 @@ struct
         | Some _ -> (* assigning to member *) state
         | None ->
           (* assigning to identifier *)
-          let visitor = new use_visitor cx env state in
+          let visitor = new use_visitor cx this_super_dep_loc_map env state in
           let writes = visitor#find_writes ~for_type:false id_loc in
           Base.List.iter ~f:(visitor#add ~why:id_loc) writes;
           visitor#acc
@@ -612,13 +637,8 @@ struct
             hint;
           } ->
         depends_of_fun synthesizable_from_annotation tparams_map hint function_
-      | Class
-          {
-            class_;
-            class_loc = _;
-            class_implicit_this_tparam = _;
-            methods_this_annot_write_locs = _;
-          } ->
+      | Class { class_; class_loc = _; class_implicit_this_tparam = _; this_super_write_locs = _ }
+        ->
         depends_of_class class_
       | DeclaredClass (_, decl) -> depends_of_declared_class decl
       | TypeAlias (_, alias) -> depends_of_alias alias
@@ -676,8 +696,8 @@ struct
         false
   end
 
-  let dependencies cx env (kind, loc) (def, _, _, _) acc =
-    let depends = FindDependencies.depends cx env loc def in
+  let dependencies cx this_super_dep_loc_map env (kind, loc) (def, _, _, _) acc =
+    let depends = FindDependencies.depends cx this_super_dep_loc_map env loc def in
     EnvMap.update
       (kind, loc)
       (function
@@ -690,7 +710,31 @@ struct
             ))
       acc
 
-  let build_graph cx env map = EnvMap.fold (dependencies cx env) map EnvMap.empty
+  let build_graph cx env map =
+    (* This is a forwarding map from the def loc of this and super to the def loc of the functions
+       and classes that define this and super. We need this forwarding mechanism, because this and
+       super are not write entries that will be resolved by env_resolution. Instead, they are
+       indirectly resolved when resolving their defining functions and classes. Therefore, when
+       we see a read of `this`/`super`, instead of saying it depends on the write of `this`/`super`,
+       we use this forwarding map to say it actually depends on the functions/classes that define
+       `this`/`super`. *)
+    let this_super_dep_loc_map =
+      EnvMap.fold
+        (fun kind_and_loc def acc ->
+          match def with
+          | (Class { this_super_write_locs; _ }, _, _, _) ->
+            acc
+            |> EnvSet.fold
+                 (fun this_super_kind_and_loc acc ->
+                   EnvMap.add this_super_kind_and_loc kind_and_loc acc)
+                 this_super_write_locs
+          | (Function { function_loc; _ }, _, _, _) ->
+            EnvMap.add (Env_api.FunctionThisLoc, function_loc) kind_and_loc acc
+          | _ -> acc)
+        map
+        EnvMap.empty
+    in
+    EnvMap.fold (dependencies cx this_super_dep_loc_map env) map EnvMap.empty
 
   let build_ordering cx env map =
     let graph = build_graph cx env map in

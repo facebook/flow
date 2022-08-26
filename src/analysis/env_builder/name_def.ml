@@ -147,7 +147,8 @@ type def =
       class_implicit_this_tparam: class_implicit_this_tparam;
       class_: (ALoc.t, ALoc.t) Ast.Class.t;
       class_loc: ALoc.t;
-      methods_this_annot_write_locs: EnvSet.t;
+      (* A set of this and super write locations that can be resolved by resolving the class. *)
+      this_super_write_locs: EnvSet.t;
     }
   | DeclaredClass of ALoc.t * (ALoc.t, ALoc.t) Ast.Statement.DeclareClass.t
   | TypeAlias of ALoc.t * (ALoc.t, ALoc.t) Ast.Statement.TypeAlias.t
@@ -224,7 +225,7 @@ module Print = struct
           class_ = { Ast.Class.id; _ };
           class_implicit_this_tparam = _;
           class_loc = _;
-          methods_this_annot_write_locs = _;
+          this_super_write_locs = _;
         } ->
       spf
         "class %s"
@@ -637,18 +638,18 @@ class def_finder env_entries providers toplevel_scope =
       let scope_kind = func_scope_kind expr in
       this#in_new_tparams_env (fun () ->
           this#visit_function ~scope_kind ~func_hint expr;
+          let reason = func_reason ~async ~generator sig_loc in
+          let def =
+            def_of_function
+              ~tparams_map:tparams
+              ~hint:func_hint
+              ~has_this_def
+              ~function_loc:loc
+              expr
+          in
           match id with
-          | Some (id_loc, _) ->
-            this#add_ordinary_binding
-              id_loc
-              (func_reason ~async ~generator sig_loc)
-              (def_of_function
-                 ~tparams_map:tparams
-                 ~hint:func_hint
-                 ~has_this_def
-                 ~function_loc:loc
-                 expr
-              )
+          | Some (id_loc, _) -> this#add_ordinary_binding id_loc reason def
+          | None when has_this_def -> this#add_ordinary_binding loc reason def
           | None -> ()
       )
 
@@ -783,7 +784,7 @@ class def_finder env_entries providers toplevel_scope =
               ()
           in
           class_stack <- old_stack;
-          let methods_this_annot_write_locs =
+          let this_super_write_locs =
             let (_, { Ast.Class.Body.body; _ }) = body in
             Base.List.fold body ~init:EnvSet.empty ~f:(fun acc -> function
               | Ast.Class.Body.Method (_, { Ast.Class.Method.value = (f_loc, f); _ }) ->
@@ -798,6 +799,14 @@ class def_finder env_entries providers toplevel_scope =
               | _ -> acc
             )
           in
+          let this_super_write_locs =
+            this_super_write_locs
+            |> EnvSet.add (Env_api.ClassSelfLoc, loc)
+            |> EnvSet.add (Env_api.ClassInstanceThisLoc, loc)
+            |> EnvSet.add (Env_api.ClassStaticThisLoc, loc)
+            |> EnvSet.add (Env_api.ClassInstanceSuperLoc, loc)
+            |> EnvSet.add (Env_api.ClassStaticSuperLoc, loc)
+          in
           begin
             match id with
             | Some (id_loc, { Ast.Identifier.name; _ }) ->
@@ -811,7 +820,7 @@ class def_finder env_entries providers toplevel_scope =
                      class_loc = loc;
                      class_implicit_this_tparam;
                      class_ = expr;
-                     methods_this_annot_write_locs;
+                     this_super_write_locs;
                    }
                 )
             | None ->
@@ -824,7 +833,7 @@ class def_finder env_entries providers toplevel_scope =
                      class_loc = loc;
                      class_implicit_this_tparam;
                      class_ = expr;
-                     methods_this_annot_write_locs;
+                     this_super_write_locs;
                    }
                 )
           end;

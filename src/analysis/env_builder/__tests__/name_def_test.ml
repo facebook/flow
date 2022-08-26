@@ -246,6 +246,7 @@ var w = function <X, Y:number>() { }
   [%expect {|
     [
       (2, 4) to (2, 5) => val (2, 8) to (2, 36);
+      (2, 8) to (2, 36) => fun <anonymous>;
       (2, 18) to (2, 19) => tparam (2, 18) to (2, 19);
       (2, 21) to (2, 22) => tparam (2, 21) to (2, 29)
     ] |}]

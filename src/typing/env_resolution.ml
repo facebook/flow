@@ -649,8 +649,7 @@ let resolve cx (def_kind, id_loc) (def, def_scope_kind, class_stack, def_reason)
           hint;
         } ->
       resolve_annotated_function cx ~hint def_reason tparams_map function_loc function_
-    | Class { class_; class_loc; class_implicit_this_tparam = _; methods_this_annot_write_locs = _ }
-      ->
+    | Class { class_; class_loc; class_implicit_this_tparam = _; this_super_write_locs = _ } ->
       resolve_class cx id_loc def_reason class_loc class_
     | MemberAssign { member_loc = _; member = _; rhs } ->
       (expression cx ~hint:dummy_hint rhs, unknown_use)
@@ -700,15 +699,7 @@ let entries_of_component graph component =
     let acc = EnvSet.add (kind, loc) acc in
     match EnvMap.find (kind, loc) graph with
     | (DeclaredModule (loc, _), _, _, _) -> EnvSet.add (Env_api.DeclareModuleExportsLoc, loc) acc
-    | (Class { class_loc; methods_this_annot_write_locs; _ }, _, _, _) ->
-      let open Env_api in
-      acc
-      |> EnvSet.union methods_this_annot_write_locs
-      |> EnvSet.add (ClassSelfLoc, class_loc)
-      |> EnvSet.add (ClassInstanceThisLoc, class_loc)
-      |> EnvSet.add (ClassStaticThisLoc, class_loc)
-      |> EnvSet.add (ClassInstanceSuperLoc, class_loc)
-      |> EnvSet.add (ClassStaticSuperLoc, class_loc)
+    | (Class { this_super_write_locs; _ }, _, _, _) -> EnvSet.union this_super_write_locs acc
     | (Function { has_this_def = true; function_loc; _ }, _, _, _) ->
       EnvSet.add (Env_api.FunctionThisLoc, function_loc) acc
     | _ -> acc
