@@ -4630,6 +4630,11 @@ struct
         (* iterable (e.g. RHS of `for..of` *)
         (***********************************)
         | (DefT (enum_reason, _, EnumObjectT _), AssertIterableT _) ->
+          Default_resolve.default_resolve_touts
+            ~flow:(rec_flow_t cx trace ~use_op:unknown_use)
+            cx
+            (reason_of_t l |> aloc_of_reason)
+            u;
           add_output
             cx
             ~trace

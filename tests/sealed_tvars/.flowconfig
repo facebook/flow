@@ -1,2 +1,3 @@
 [options]
 inference_mode=experimental.lti
+enums=true

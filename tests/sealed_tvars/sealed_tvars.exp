@@ -6,6 +6,14 @@ Internal error: expected env entry for write location(3, 0) to (3, 31)
       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
+Error ---------------------------------------------------------------------------------------------------- enums.js:4:17
+
+Enum `A` is not an iterable. You can use `A.members()` to get an iterator for the enum's members. [not-iterable]
+
+   4| for (const x of A) {} // Error: not iterable, but there should be no enforcement errors
+                      ^
+
+
 Error ----------------------------------------------------------------------------------------- regression_tests.js:11:8
 
 Cannot declare `A` [1] because the name is already bound. [name-already-bound]
@@ -176,4 +184,4 @@ References:
 
 
 
-Found 17 errors
+Found 18 errors
