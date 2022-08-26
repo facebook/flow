@@ -99,7 +99,6 @@ type parse_options = {
   parse_prevent_munge: bool;
   parse_module_ref_prefix: string option;
   parse_facebook_fbt: string option;
-  parse_type_asserts: bool;
   parse_suppress_types: SSet.t;
   parse_max_literal_len: int;
   parse_exact_by_default: bool;
@@ -251,7 +250,6 @@ let extract_docblock =
       | (loc, "@jsxRuntime") :: _ :: xs ->
         let acc = ((loc, InvalidJSXRuntimeAttribute) :: errors, info) in
         parse_attributes acc xs
-      | (_, "@typeAssert") :: xs -> parse_attributes (errors, { info with typeAssert = true }) xs
       | _ :: xs -> parse_attributes (errors, info) xs
       | [] -> (errors, info)
     in
@@ -379,7 +377,6 @@ let do_parse ~parse_options ~info content file =
     parse_prevent_munge = prevent_munge;
     parse_module_ref_prefix = module_ref_prefix;
     parse_facebook_fbt = facebook_fbt;
-    parse_type_asserts = type_asserts;
     parse_suppress_types = suppress_types;
     parse_max_literal_len = max_literal_len;
     parse_exact_by_default = exact_by_default;
@@ -446,8 +443,7 @@ let do_parse ~parse_options ~info content file =
         else
           let sig_opts =
             {
-              Type_sig_parse.type_asserts;
-              suppress_types;
+              Type_sig_parse.suppress_types;
               munge = not prevent_munge;
               ignore_static_propTypes;
               facebook_keyMirror;
@@ -822,7 +818,6 @@ let make_parse_options_internal ?(types_mode = TypesAllowed) ?use_strict ~docblo
     parse_prevent_munge = prevent_munge;
     parse_module_ref_prefix = module_ref_prefix;
     parse_facebook_fbt = facebook_fbt;
-    parse_type_asserts = Options.type_asserts options;
     parse_suppress_types = Options.suppress_types options;
     parse_max_literal_len = Options.max_literal_length options;
     parse_exact_by_default = Options.exact_by_default options;

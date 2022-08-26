@@ -49,8 +49,7 @@ let make_test_formatter () =
 
 let sig_opts =
   {
-    Type_sig_parse.type_asserts = true;
-    suppress_types = SSet.empty;
+    Type_sig_parse.suppress_types = SSet.empty;
     munge = false;
     ignore_static_propTypes = false;
     facebook_keyMirror = false;

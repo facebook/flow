@@ -1407,9 +1407,6 @@ module rec TypeTerm : sig
     | ReactElementFactory of t
     (* Facebookisms *)
     | Idx
-    | TypeAssertIs
-    | TypeAssertThrows
-    | TypeAssertWraps
     (* Internal tools *)
     | DebugPrint
     | DebugThrow

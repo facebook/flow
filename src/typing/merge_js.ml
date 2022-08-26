@@ -222,9 +222,6 @@ let detect_unnecessary_invariants cx =
       Flow_js.add_output cx (Error_message.EUnnecessaryInvariant (loc, reason)))
     (Context.unnecessary_invariants cx)
 
-let detect_invalid_type_assert_calls cx typed_ast file_sig =
-  if Context.type_asserts cx then Type_asserts.detect_invalid_calls ~full_cx:cx typed_ast file_sig
-
 let detect_es6_import_export_errors = Strict_es6_import_export.detect_errors
 
 let detect_escaped_generics results =
@@ -574,7 +571,7 @@ let get_lint_severities metadata strict_mode lint_severities =
  * means we can complain about things that either haven't happened yet, or
  * which require complete knowledge of tvar bounds.
  *)
-let post_merge_checks cx master_cx ast tast metadata file_sig =
+let post_merge_checks cx master_cx ast tast metadata =
   let results = [(cx, ast, tast)] in
   check_constrained_writes cx master_cx;
   detect_sketchy_null_checks cx master_cx;
@@ -583,7 +580,6 @@ let post_merge_checks cx master_cx ast tast metadata file_sig =
   detect_test_prop_misses cx;
   detect_unnecessary_optional_chains cx;
   detect_unnecessary_invariants cx;
-  detect_invalid_type_assert_calls cx tast file_sig;
   detect_es6_import_export_errors cx metadata results;
   detect_escaped_generics results;
   detect_matching_props_violations cx;

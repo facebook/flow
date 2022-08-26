@@ -1426,7 +1426,6 @@ let make_options
     opt_max_rss_bytes_for_check_per_worker =
       FlowConfig.max_rss_bytes_for_check_per_worker flowconfig;
     opt_max_seconds_for_check_per_worker = FlowConfig.max_seconds_for_check_per_worker flowconfig;
-    opt_type_asserts = FlowConfig.type_asserts flowconfig;
     opt_strict_es6_import_export = FlowConfig.strict_es6_import_export flowconfig;
     opt_strict_es6_import_export_excludes =
       Base.List.map

@@ -58,7 +58,6 @@ let metadata =
     strip_root = true;
     suppress_types = SSet.empty;
     trust_mode = Options.NoTrust;
-    type_asserts = false;
   }
 
 (* somewhat copied from Flow_dot_js *)

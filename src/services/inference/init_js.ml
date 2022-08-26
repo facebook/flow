@@ -132,8 +132,7 @@ let load_lib_files ~ccx ~options ~reader files =
     if ok then
       let sig_opts =
         {
-          Type_sig_parse.type_asserts = Options.type_asserts options;
-          suppress_types = Options.suppress_types options;
+          Type_sig_parse.suppress_types = Options.suppress_types options;
           munge = (* libs shouldn't have private fields *) false;
           ignore_static_propTypes = true;
           facebook_keyMirror = (* irrelevant for libs *) false;

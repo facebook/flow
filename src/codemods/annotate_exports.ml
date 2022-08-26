@@ -64,8 +64,7 @@ module SignatureVerification = struct
     in
     let sig_opts =
       {
-        Type_sig_parse.type_asserts = Options.type_asserts options;
-        suppress_types = Options.suppress_types options;
+        Type_sig_parse.suppress_types = Options.suppress_types options;
         munge = not prevent_munge;
         ignore_static_propTypes = true;
         facebook_keyMirror = true;

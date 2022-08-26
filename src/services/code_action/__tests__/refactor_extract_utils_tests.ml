@@ -66,7 +66,6 @@ let stub_metadata ~root ~checked =
     strip_root = true;
     suppress_types = SSet.empty;
     trust_mode = Options.NoTrust;
-    type_asserts = false;
   }
 
 let dummy_filename = File_key.SourceFile ""

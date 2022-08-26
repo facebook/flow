@@ -224,9 +224,6 @@ class ['a] t =
       | ReactCreateElement
       | ReactCloneElement
       | Idx
-      | TypeAssertIs
-      | TypeAssertThrows
-      | TypeAssertWraps
       | DebugPrint
       | DebugThrow
       | DebugSleep ->

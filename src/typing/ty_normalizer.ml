@@ -1372,45 +1372,6 @@ end = struct
             ]
           in
           return (mk_fun ~tparams ~params (Ty.mk_maybe ~from_bounds:false idxResult))
-        (* var TypeAssertIs: <TypeAssertT>(value: mixed) => boolean *)
-        | TypeAssertIs ->
-          let tparams = [mk_tparam "TypeAssertT"] in
-          let params = [(Some "value", Ty.Top, non_opt_param)] in
-          return (mk_fun ~tparams ~params (Ty.Bool None))
-        (*  var TypeAssertThrows: <TypeAssertT>(value: mixed) => TypeAssertT *)
-        | TypeAssertThrows ->
-          let tparams = [mk_tparam "TypeAssertT"] in
-          let params = [(Some "value", Ty.Top, non_opt_param)] in
-          let ret = Ty.Bound (ALoc.none, "TypeAssertT") in
-          return (mk_fun ~tparams ~params ret)
-        (* Result<T> = {success: true, value: T} | {success: false, error: string}
-           var TypeAssertWraps: <TypeAssertT>(value: mixed) => Result<TypeAssertT> *)
-        | TypeAssertWraps ->
-          let tparams = [mk_tparam "TypeAssertT"] in
-          let params = [(Some "value", Ty.Top, non_opt_param)] in
-          let result_fail_ty =
-            Ty.mk_object
-              (Ty.mk_field_props
-                 [
-                   (Reason.OrdinaryName "success", Ty.BoolLit false, false);
-                   (Reason.OrdinaryName "error", Ty.Str None, false);
-                 ]
-              )
-          in
-          let result_succ_ty =
-            Ty.mk_object
-              (Ty.mk_field_props
-                 [
-                   (Reason.OrdinaryName "success", Ty.BoolLit true, false);
-                   ( Reason.OrdinaryName "value",
-                     builtin_t (Reason.OrdinaryName "TypeAssertT"),
-                     false
-                   );
-                 ]
-              )
-          in
-          let ret = Ty.mk_union ~from_bounds:false (result_fail_ty, [result_succ_ty]) in
-          return (mk_fun ~tparams ~params ret)
         (* debugPrint: (_: any[]) => void *)
         | DebugPrint ->
           return
@@ -1492,45 +1453,6 @@ end = struct
           let%map t = type__ ~env t in
           generic_builtin_t (Reason.OrdinaryName "React$ElementFactory") [t]
         | Idx -> return (builtin_t (Reason.OrdinaryName "$Facebookism$Idx"))
-        (* var TypeAssertIs: <TypeAssertT>(value: mixed) => boolean *)
-        | TypeAssertIs ->
-          let tparams = [mk_tparam "TypeAssertT"] in
-          let params = [(Some "value", Ty.Top, non_opt_param)] in
-          return (mk_fun ~tparams ~params (Ty.Bool None))
-        (*  var TypeAssertThrows: <TypeAssertT>(value: mixed) => TypeAssertT *)
-        | TypeAssertThrows ->
-          let tparams = [mk_tparam "TypeAssertT"] in
-          let params = [(Some "value", Ty.Top, non_opt_param)] in
-          let ret = builtin_t (Reason.OrdinaryName "TypeAssertT") in
-          return (mk_fun ~tparams ~params ret)
-        (* Result<T> = {success: true, value: T} | {success: false, error: string}
-           var TypeAssertWraps: <TypeAssertT>(value: mixed) => Result<TypeAssertT> *)
-        | TypeAssertWraps ->
-          let tparams = [mk_tparam "TypeAssertT"] in
-          let params = [(Some "value", Ty.Top, non_opt_param)] in
-          let result_fail_ty =
-            Ty.mk_object
-              (Ty.mk_field_props
-                 [
-                   (Reason.OrdinaryName "success", Ty.BoolLit false, false);
-                   (Reason.OrdinaryName "error", Ty.Str None, false);
-                 ]
-              )
-          in
-          let result_succ_ty =
-            Ty.mk_object
-              (Ty.mk_field_props
-                 [
-                   (Reason.OrdinaryName "success", Ty.BoolLit true, false);
-                   ( Reason.OrdinaryName "value",
-                     builtin_t (Reason.OrdinaryName "TypeAssertT"),
-                     false
-                   );
-                 ]
-              )
-          in
-          let ret = Ty.mk_union ~from_bounds:false (result_fail_ty, [result_succ_ty]) in
-          return (mk_fun ~tparams ~params ret)
         | DebugPrint -> return (builtin_t (Reason.OrdinaryName "$Flow$DebugPrint"))
         | DebugThrow -> return (builtin_t (Reason.OrdinaryName "$Flow$DebugThrow"))
         | DebugSleep -> return (builtin_t (Reason.OrdinaryName "$Flow$DebugSleep"))

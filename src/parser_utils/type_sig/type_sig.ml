@@ -519,9 +519,6 @@ type ('loc, 'a) annot =
   | ReactElementConfig of 'loc * 'a
   | ReactElementRef of 'loc * 'a
   | FacebookismIdx of 'loc
-  | FacebookismTypeAssertIs of 'loc
-  | FacebookismTypeAssertThrows of 'loc
-  | FacebookismTypeAssertWraps of 'loc
   | FlowDebugPrint of 'loc
   | FlowDebugThrow of 'loc
   | FlowDebugSleep of 'loc

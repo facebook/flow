@@ -130,7 +130,6 @@ module Opts = struct
     suppress_types: SSet.t;
     traces: int;
     trust_mode: Options.trust_mode;
-    type_asserts: bool;
     wait_for_recheck: bool;
     watchman_defer_states: string list;
     watchman_survive_restarts: bool option;
@@ -260,7 +259,6 @@ module Opts = struct
       suppress_types = SSet.empty |> SSet.add "$FlowFixMe";
       traces = 0;
       trust_mode = Options.NoTrust;
-      type_asserts = false;
       wait_for_recheck = false;
       watchman_defer_states = [];
       watchman_survive_restarts = None;
@@ -799,7 +797,6 @@ module Opts = struct
       ("experimental.strict_call_arity", enforce_strict_call_arity_parser);
       ("experimental.strict_es6_import_export", strict_es6_import_export_parser);
       ("experimental.strict_es6_import_export.excludes", strict_es6_import_export_excludes_parser);
-      ("experimental.type_asserts", boolean (fun opts v -> Ok { opts with type_asserts = v }));
       ("facebook.fbs", string (fun opts v -> Ok { opts with facebook_fbs = Some v }));
       ("facebook.fbt", string (fun opts v -> Ok { opts with facebook_fbt = Some v }));
       ("file_watcher", file_watcher_parser);
@@ -1574,8 +1571,6 @@ let suppress_types c = c.options.Opts.suppress_types
 let traces c = c.options.Opts.traces
 
 let trust_mode c = c.options.Opts.trust_mode
-
-let type_asserts c = c.options.Opts.type_asserts
 
 let wait_for_recheck c = c.options.Opts.wait_for_recheck
 

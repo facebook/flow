@@ -1005,12 +1005,6 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
                 targs
           )
         | "$Facebookism$Idx" -> mk_custom_fun cx loc t_ast targs ident Idx
-        | "$Facebookism$TypeAssertIs" when Context.type_asserts cx ->
-          mk_custom_fun cx loc t_ast targs ident TypeAssertIs
-        | "$Facebookism$TypeAssertThrows" when Context.type_asserts cx ->
-          mk_custom_fun cx loc t_ast targs ident TypeAssertThrows
-        | "$Facebookism$TypeAssertWraps" when Context.type_asserts cx ->
-          mk_custom_fun cx loc t_ast targs ident TypeAssertWraps
         | "$Flow$DebugPrint" -> mk_custom_fun cx loc t_ast targs ident DebugPrint
         | "$Flow$DebugThrow" -> mk_custom_fun cx loc t_ast targs ident DebugThrow
         | "$Flow$DebugSleep" -> mk_custom_fun cx loc t_ast targs ident DebugSleep

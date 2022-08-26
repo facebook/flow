@@ -23,7 +23,6 @@ module Ast = Flow_ast
 module Option = Base.Option
 
 type options = {
-  type_asserts: bool;
   suppress_types: SSet.t;
   munge: bool;
   ignore_static_propTypes: bool;
@@ -2139,24 +2138,6 @@ and maybe_special_unqualified_generic opts scope tbls xs loc targs ref_loc =
     begin
       match targs with
       | None -> Annot (FacebookismIdx loc)
-      | _ -> Err (loc, CheckError)
-    end
-  | "$Facebookism$TypeAssertIs" when opts.type_asserts ->
-    begin
-      match targs with
-      | None -> Annot (FacebookismTypeAssertIs loc)
-      | _ -> Err (loc, CheckError)
-    end
-  | "$Facebookism$TypeAssertThrows" when opts.type_asserts ->
-    begin
-      match targs with
-      | None -> Annot (FacebookismTypeAssertThrows loc)
-      | _ -> Err (loc, CheckError)
-    end
-  | "$Facebookism$TypeAssertWraps" when opts.type_asserts ->
-    begin
-      match targs with
-      | None -> Annot (FacebookismTypeAssertWraps loc)
       | _ -> Err (loc, CheckError)
     end
   | "$Flow$DebugPrint" ->

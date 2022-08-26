@@ -181,7 +181,6 @@ let parse_options =
   Some { default_parse_options with enums = true }
 
 let sig_options
-    ?(type_asserts = true)
     ?(suppress_types = SSet.empty)
     ?(munge = false)
     ?(ignore_static_propTypes = false)
@@ -196,8 +195,7 @@ let sig_options
     ?relay_integration_module_prefix
     () =
   {
-    Parse.type_asserts;
-    suppress_types;
+    Parse.suppress_types;
     munge;
     ignore_static_propTypes;
     facebook_keyMirror;

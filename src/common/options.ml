@@ -145,7 +145,6 @@ type t = {
   opt_temp_dir: string;
   opt_traces: int;
   opt_trust_mode: trust_mode;
-  opt_type_asserts: bool;
   opt_verbose: Verbose.t option;
   opt_wait_for_recheck: bool;
   opt_distributed: bool;
@@ -326,8 +325,6 @@ let suppress_types opts = opts.opt_suppress_types
 let temp_dir opts = opts.opt_temp_dir
 
 let trust_mode opts = opts.opt_trust_mode
-
-let type_asserts opts = opts.opt_type_asserts
 
 let verbose opts = opts.opt_verbose
 

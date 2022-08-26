@@ -804,15 +804,6 @@ and merge_annot tps file = function
   | FacebookismIdx loc ->
     let reason = Reason.(mk_reason RFunctionType loc) in
     Type.CustomFunT (reason, Type.Idx)
-  | FacebookismTypeAssertIs loc ->
-    let reason = Reason.(mk_reason RFunctionType loc) in
-    Type.CustomFunT (reason, Type.TypeAssertIs)
-  | FacebookismTypeAssertThrows loc ->
-    let reason = Reason.(mk_reason RFunctionType loc) in
-    Type.CustomFunT (reason, Type.TypeAssertThrows)
-  | FacebookismTypeAssertWraps loc ->
-    let reason = Reason.(mk_reason RFunctionType loc) in
-    Type.CustomFunT (reason, Type.TypeAssertWraps)
   | FlowDebugPrint loc ->
     let reason = Reason.(mk_reason RFunctionType loc) in
     Type.CustomFunT (reason, Type.DebugPrint)

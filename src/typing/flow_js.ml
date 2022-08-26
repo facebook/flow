@@ -1130,116 +1130,6 @@ struct
             (DefT (idx_reason, trust, IdxWrapper prop_type), OpenT t_out)
         | (DefT (reason, _, IdxWrapper _), _) -> add_output cx ~trace (Error_message.EIdxUse2 reason)
         (*********************)
-        (* type assert calls *)
-        (*********************)
-        | ( CustomFunT (fun_reason, TypeAssertIs),
-            CallT { use_op; reason = reason_op; funcalltype = call_type; has_context = _ }
-          )
-        | ( CustomFunT (fun_reason, TypeAssertThrows),
-            CallT { use_op; reason = reason_op; funcalltype = call_type; has_context = _ }
-          )
-        | ( CustomFunT (fun_reason, TypeAssertWraps),
-            CallT { use_op; reason = reason_op; funcalltype = call_type; has_context = _ }
-          ) ->
-          let call_loc = aloc_of_reason reason_op in
-          let fun_loc = aloc_of_reason fun_reason in
-          let fun_reason_new = mk_reason RFunctionType fun_loc in
-          (* Add Flow errors for calls that attempt to assert types that cannot be
-             checked at runtime. *)
-          let reason = mk_reason (RCustom "TypeAssert library function") call_loc in
-          let return_t =
-            match call_type.call_targs with
-            | None ->
-              add_output cx ~trace (Error_message.ETooFewTypeArgs (reason, reason, 1));
-              AnyT.at (AnyError None) fun_loc
-            | Some [ExplicitArg t] ->
-              let (kind, return_t) =
-                match l with
-                | CustomFunT (_, TypeAssertIs) ->
-                  (Context.Is, BoolT.at fun_loc |> with_trust bogus_trust)
-                | CustomFunT (_, TypeAssertThrows) -> (Context.Throws, t)
-                | CustomFunT (_, TypeAssertWraps) ->
-                  (* For TypeAssertWraps, return type is Result<T> *)
-                  let mk_bool b =
-                    DefT (mk_reason (RBooleanLit b) fun_loc, bogus_trust (), SingletonBoolT b)
-                  in
-                  let pmap_fail =
-                    NameUtils.Map.empty
-                    |> Properties.add_field
-                         (OrdinaryName "success")
-                         Polarity.Neutral
-                         None
-                         (mk_bool false)
-                    |> Properties.add_field
-                         (OrdinaryName "error")
-                         Polarity.Neutral
-                         None
-                         (StrT.at fun_loc |> with_trust bogus_trust)
-                  in
-                  let pmap_succ =
-                    NameUtils.Map.empty
-                    |> Properties.add_field
-                         (OrdinaryName "success")
-                         Polarity.Neutral
-                         None
-                         (mk_bool true)
-                    |> Properties.add_field (OrdinaryName "value") Polarity.Neutral None t
-                  in
-                  let (id_succ, id_fail) =
-                    ( Context.generate_property_map cx pmap_fail,
-                      Context.generate_property_map cx pmap_succ
-                    )
-                  in
-                  let reason = mk_reason (RCustom "Result<T>") fun_loc in
-                  let (obj_fail, obj_succ) =
-                    ( mk_object_def_type ~reason ~call:None id_fail dummy_prototype,
-                      mk_object_def_type ~reason ~call:None id_succ dummy_prototype
-                    )
-                  in
-                  ( Context.Wraps,
-                    UnionT (mk_reason RUnion fun_loc, UnionRep.make obj_fail obj_succ [])
-                  )
-                | _ -> failwith "cannot reach this case"
-              in
-              Context.add_type_assert cx call_loc (kind, TypeUtil.loc_of_t t);
-              return_t
-            | Some _ ->
-              add_output cx ~trace (Error_message.ETooManyTypeArgs (reason, reason, 1));
-              AnyT.at (AnyError None) fun_loc
-          in
-          let funtype =
-            DefT
-              ( fun_reason_new,
-                bogus_trust (),
-                FunT
-                  ( dummy_static reason,
-                    {
-                      this_t =
-                        ( mk_reason RThis fun_loc |> MixedT.make |> with_trust bogus_trust,
-                          This_Function
-                        );
-                      params = [(Some "value", MixedT.at fun_loc |> with_trust bogus_trust)];
-                      rest_param = None;
-                      return_t;
-                      is_predicate = false;
-                      def_reason = fun_reason_new;
-                    }
-                  )
-              )
-          in
-          rec_flow
-            cx
-            trace
-            ( funtype,
-              CallT
-                {
-                  use_op;
-                  reason = reason_op;
-                  funcalltype = { call_type with call_targs = None };
-                  has_context = false;
-                }
-            )
-        (*********************)
         (* optional chaining *)
         (*********************)
         | (DefT (_, _, VoidT), OptionalChainT { reason; lhs_reason; voided_out; _ }) ->
@@ -6250,9 +6140,6 @@ struct
     | UseT (_, CustomFunT (_, ReactCreateElement))
     | UseT (_, CustomFunT (_, ReactCloneElement))
     | UseT (_, CustomFunT (_, Idx))
-    | UseT (_, CustomFunT (_, TypeAssertIs))
-    | UseT (_, CustomFunT (_, TypeAssertThrows))
-    | UseT (_, CustomFunT (_, TypeAssertWraps))
     | UseT (_, CustomFunT (_, DebugPrint))
     | UseT (_, CustomFunT (_, DebugThrow))
     | UseT (_, CustomFunT (_, DebugSleep))
@@ -6338,9 +6225,6 @@ struct
     | CustomFunT (_, ReactCreateElement)
     | CustomFunT (_, ReactCloneElement)
     | CustomFunT (_, Idx)
-    | CustomFunT (_, TypeAssertIs)
-    | CustomFunT (_, TypeAssertThrows)
-    | CustomFunT (_, TypeAssertWraps)
     | CustomFunT (_, DebugPrint)
     | CustomFunT (_, DebugThrow)
     | CustomFunT (_, DebugSleep)

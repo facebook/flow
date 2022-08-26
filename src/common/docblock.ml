@@ -24,7 +24,6 @@ type jsx_runtime_pragma =
 
 type t = {
   flow: flow_mode option;
-  typeAssert: bool;
   preventMunge: bool;
   providesModule: string option;
   jsx: jsx_pragma option;
@@ -32,19 +31,10 @@ type t = {
 }
 
 let default_info =
-  {
-    flow = None;
-    typeAssert = false;
-    preventMunge = false;
-    providesModule = None;
-    jsx = None;
-    jsxRuntime = None;
-  }
+  { flow = None; preventMunge = false; providesModule = None; jsx = None; jsxRuntime = None }
 
 (* accessors *)
 let flow info = info.flow
-
-let typeAssert info = info.typeAssert
 
 let preventMunge info = info.preventMunge
 
@@ -95,12 +85,6 @@ let json_of_docblock info =
       | Some str -> JSON_String str
       | None -> JSON_Null
     in
-    let typeAssert = JSON_Bool (typeAssert info) in
     JSON_Object
-      [
-        ("flow", flow);
-        ("typeAssert", typeAssert);
-        ("preventMunge", preventsMunge);
-        ("providesModule", providesModule);
-      ]
+      [("flow", flow); ("preventMunge", preventsMunge); ("providesModule", providesModule)]
   )

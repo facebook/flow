@@ -68,17 +68,11 @@ type metadata = {
   strip_root: bool;
   suppress_types: SSet.t;
   trust_mode: Options.trust_mode;
-  type_asserts: bool;
 }
 
 type test_prop_hit_or_miss =
   | Hit
   | Miss of Reason.name option * (Reason.t * Reason.t) * Type.use_op * string option
-
-type type_assert_kind =
-  | Is
-  | Throws
-  | Wraps
 
 type voidable_check = {
   public_property_map: Type.Properties.id;
@@ -113,8 +107,6 @@ type component_t = {
   mutable type_graph: Graph_explorer.graph;
   (* map of speculation ids to sets of unresolved tvars *)
   mutable all_unresolved: ISet.t IMap.t;
-  (* map from TypeAssert assertion locations to the type being asserted *)
-  mutable type_asserts_map: (type_assert_kind * ALoc.t) ALocMap.t;
   mutable errors: Flow_error.ErrorSet.t;
   mutable error_suppressions: Error_suppressions.t;
   mutable severity_cover: ExactCover.lint_severity_cover Utils_js.FilenameMap.t;
@@ -259,7 +251,6 @@ let metadata_of_options options =
     strip_root = Options.should_strip_root options;
     suppress_types = Options.suppress_types options;
     trust_mode = Options.trust_mode options;
-    type_asserts = Options.type_asserts options;
   }
 
 let docblock_overrides docblock_info metadata =
@@ -323,7 +314,6 @@ let make_ccx master_cx =
     goal_map = IMap.empty;
     type_graph = Graph_explorer.new_graph ();
     all_unresolved = IMap.empty;
-    type_asserts_map = ALocMap.empty;
     matching_props = [];
     literal_subtypes = [];
     constrained_writes = [];
@@ -547,8 +537,6 @@ let should_strip_root cx = cx.metadata.strip_root
 
 let suppress_types cx = cx.metadata.suppress_types
 
-let type_asserts_map cx = cx.ccx.type_asserts_map
-
 let literal_subtypes cx = cx.ccx.literal_subtypes
 
 let constrained_writes cx = cx.ccx.constrained_writes
@@ -571,8 +559,6 @@ let type_graph cx = cx.ccx.type_graph
 let matching_props cx = cx.ccx.matching_props
 
 let trust_mode cx = cx.metadata.trust_mode
-
-let type_asserts cx = cx.metadata.type_asserts
 
 let verbose cx = cx.metadata.verbose
 
@@ -670,8 +656,6 @@ let add_tvar cx id bounds =
 let add_trust_var cx id bounds =
   let trust_graph = IMap.add id bounds cx.ccx.sig_cx.trust_graph in
   cx.ccx.sig_cx <- { cx.ccx.sig_cx with trust_graph }
-
-let add_type_assert cx k v = cx.ccx.type_asserts_map <- ALocMap.add k v cx.ccx.type_asserts_map
 
 let add_matching_props cx c = cx.ccx.matching_props <- c :: cx.ccx.matching_props
 

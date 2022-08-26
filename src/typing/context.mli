@@ -88,7 +88,6 @@ type metadata = {
   strip_root: bool;
   suppress_types: SSet.t;
   trust_mode: Options.trust_mode;
-  type_asserts: bool;
 }
 
 type phase =
@@ -98,11 +97,6 @@ type phase =
   | PostInference
 
 val string_of_phase : phase -> string
-
-type type_assert_kind =
-  | Is
-  | Throws
-  | Wraps
 
 type voidable_check = {
   public_property_map: Type.Properties.id;
@@ -261,11 +255,7 @@ val trust_tracking : t -> bool
 
 val trust_errors : t -> bool
 
-val type_asserts : t -> bool
-
 val type_graph : t -> Graph_explorer.graph
-
-val type_asserts_map : t -> (type_assert_kind * ALoc.t) ALocMap.t
 
 val matching_props : t -> (string * ALoc.t * ALoc.t) list
 
@@ -340,8 +330,6 @@ val add_export_map : t -> Type.Exports.id -> Type.Exports.t -> unit
 val add_tvar : t -> Type.ident -> Type.Constraint.node -> unit
 
 val add_trust_var : t -> Trust_constraint.ident -> Trust_constraint.node -> unit
-
-val add_type_assert : t -> ALoc.t -> type_assert_kind * ALoc.t -> unit
 
 val add_matching_props : t -> string * ALoc.t * ALoc.t -> unit
 
