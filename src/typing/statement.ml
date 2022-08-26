@@ -7874,7 +7874,7 @@ module Make
                           ~static
                           name
                           ~id_loc
-                          ~this_write_loc:(Some id_loc)
+                          ~this_write_loc:(Some func_loc)
                           ~set_asts
                           ~set_type
                       else
@@ -7882,7 +7882,7 @@ module Make
                           ~static
                           name
                           ~id_loc
-                          ~this_write_loc:(Some id_loc)
+                          ~this_write_loc:(Some func_loc)
                           ~set_asts
                           ~set_type
                     in
@@ -7893,7 +7893,7 @@ module Make
                         ~static
                         name
                         ~id_loc
-                        ~this_write_loc:(Some id_loc)
+                        ~this_write_loc:(Some func_loc)
                         ~set_asts
                         ~set_type
                     in
@@ -7904,7 +7904,7 @@ module Make
                         ~static
                         name
                         ~id_loc
-                        ~this_write_loc:(Some id_loc)
+                        ~this_write_loc:(Some func_loc)
                         ~set_asts
                         ~set_type
                     in

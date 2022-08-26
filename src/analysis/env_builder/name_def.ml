@@ -790,20 +790,13 @@ class def_finder env_entries providers toplevel_scope =
           let methods_this_annot_write_locs =
             let (_, { Ast.Class.Body.body; _ }) = body in
             Base.List.fold body ~init:EnvSet.empty ~f:(fun acc -> function
-              | Ast.Class.Body.Method (_, { Ast.Class.Method.key; value = (_, f); _ }) ->
+              | Ast.Class.Body.Method (_, { Ast.Class.Method.value = (f_loc, f); _ }) ->
                 let has_this_param =
                   let { Ast.Function.params = (_, { Ast.Function.Params.this_; _ }); _ } = f in
                   Base.Option.is_some this_
                 in
                 if has_this_param then
-                  let loc =
-                    match key with
-                    | Ast.Expression.Object.Property.Literal (l, _) -> l
-                    | Ast.Expression.Object.Property.Identifier (l, _) -> l
-                    | Ast.Expression.Object.Property.PrivateName (l, _) -> l
-                    | Ast.Expression.Object.Property.Computed (l, _) -> l
-                  in
-                  EnvSet.add (Env_api.FunctionThisLoc, loc) acc
+                  EnvSet.add (Env_api.FunctionThisLoc, f_loc) acc
                 else
                   acc
               | _ -> acc

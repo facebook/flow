@@ -3531,18 +3531,10 @@ module Make
              static_body;
         cls_body
 
-      method private object_key_loc =
-        let open Ast.Expression.Object.Property in
-        function
-        | Literal (l, _) -> l
-        | Identifier (l, _) -> l
-        | PrivateName (l, _) -> l
-        | Computed (l, _) -> l
-
       method private non_this_binding_function loc func = this#arrow_function loc func
 
       method! class_method _loc meth =
-        let { Ast.Class.Method.key; value = (_, f); decorators; _ } = meth in
+        let { Ast.Class.Method.key; value = (f_loc, f); decorators; _ } = meth in
         ignore @@ this#object_key key;
         (* When there is no `this` annotation, we treat the method like an arrow function:
          * it will now inherit `this` from parent scope.
@@ -3558,7 +3550,7 @@ module Make
             this#non_this_binding_function
         in
         (* Use the method key loc as the loc of the function. *)
-        ignore @@ method_visitor (this#object_key_loc key) f;
+        ignore @@ method_visitor f_loc f;
         Base.List.iter ~f:(fun d -> ignore @@ this#class_decorator d) decorators;
         meth
 
