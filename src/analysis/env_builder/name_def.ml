@@ -15,10 +15,6 @@ module EnvSet = Env_api.EnvSet
 
 type cond_context =
   | NonConditionalContext
-  | SwitchConditionalTest of {
-      case_test_reason: reason;
-      switch_discriminant_reason: reason;
-    }
   | OtherConditionalTest
 
 type scope_kind =
@@ -1273,7 +1269,7 @@ class def_finder env_entries providers toplevel_scope =
         )
       else
         match (callee, arguments, cond) with
-        | (_, [Ast.Expression.Expression expr], (OtherConditionalTest | SwitchConditionalTest _))
+        | (_, [Ast.Expression.Expression expr], OtherConditionalTest)
           when Flow_ast_utils.is_call_to_is_array callee ->
           this#visit_expression ~hint:Hint_None ~cond:OtherConditionalTest expr
         | ( ( _,
@@ -1610,12 +1606,10 @@ class def_finder env_entries providers toplevel_scope =
       let open Ast.Expression.Binary in
       let { operator; left; right; comments = _ } = expr in
       match (operator, cond) with
-      | (Instanceof, (SwitchConditionalTest _ | OtherConditionalTest)) ->
+      | (Instanceof, OtherConditionalTest) ->
         this#visit_expression ~hint:Hint_None ~cond left;
         ignore @@ this#expression right
-      | ( (Equal | NotEqual | StrictEqual | StrictNotEqual),
-          (SwitchConditionalTest _ | OtherConditionalTest)
-        ) ->
+      | ((Equal | NotEqual | StrictEqual | StrictNotEqual), OtherConditionalTest) ->
         Eq_test.visit_eq_test
           ~on_type_of_test:(fun _ expr value _ _ ->
             this#visit_expression ~hint:Hint_None ~cond expr;
@@ -1635,10 +1629,7 @@ class def_finder env_entries providers toplevel_scope =
           ~on_other_eq_member:(fun value expr ->
             this#visit_expression ~hint:Hint_None ~cond expr;
             ignore @@ this#expression value)
-          ~is_switch_cond_context:
-            (match cond with
-            | SwitchConditionalTest _ -> false
-            | _ -> true)
+          ~is_switch_cond_context:false
           ~strict:false
           ~sense:false
           ~on_other_eq_test:(fun left right ->

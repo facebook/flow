@@ -571,8 +571,6 @@ let resolve_chain_expression cx ~cond exp =
     match cond with
     | NonConditionalContext -> None
     | OtherConditionalTest -> Some OtherTest
-    | SwitchConditionalTest { case_test_reason; switch_discriminant_reason } ->
-      Some (SwitchTest { case_test_reason; switch_discriminant_reason })
   in
   (* The is_existence_check parameters is only used for old-env refinements, so it's irrelevant now. *)
   let (t, _, exp, _, _) =
