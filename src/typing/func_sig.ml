@@ -365,9 +365,6 @@ struct
     let ({ Loc_env.return_hint = prev_return_hint; _ } as loc_env) = Context.environment cx in
     Context.set_environment cx { loc_env with Loc_env.return_hint };
 
-    (* decl/type visit pre-pass *)
-    Statement.toplevel_decls cx statements;
-
     (* statement visit pass *)
     let (statements_ast, statements_abnormal) =
       Abnormal.catch_stmts_control_flow_exception (fun () ->

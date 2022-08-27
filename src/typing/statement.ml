@@ -297,115 +297,13 @@ module Make
   (* Visitors *)
   (************)
 
-  (********************************************************************
-   * local inference preliminary pass: traverse AST, collecting
-   * declarations and populating variable environment (scope stack)
-   * in prep for main pass
-   ********************************************************************)
-
-  let rec toplevel_decls cx = List.iter (statement_decl cx)
-
-  (* TODO: detect structural misuses abnormal control flow constructs *)
-  and statement_decl cx =
-    let open Ast.Statement in
-    let block_body cx { Block.body; comments = _ } = toplevel_decls cx body in
-    let catch_clause cx { Try.CatchClause.body = (_, b); _ } = block_body cx b in
-    function
-    | (_, Empty _) -> ()
-    | (_, Block b) -> block_body cx b
-    | (_, Expression _) -> ()
-    | (_, If { If.consequent; alternate; _ }) ->
-      statement_decl cx consequent;
-      (match alternate with
-      | None -> ()
-      | Some (_, { If.Alternate.body; comments = _ }) -> statement_decl cx body)
-    | (_, Labeled { Labeled.body; _ }) -> statement_decl cx body
-    | (_, Break _) -> ()
-    | (_, Continue _) -> ()
-    | (_, With _) ->
-      (* TODO disallow or push vars into env? *)
-      ()
-    | (_, DeclareTypeAlias _)
-    | (_, TypeAlias _)
-    | (_, DeclareOpaqueType _)
-    | (_, OpaqueType _) ->
-      ()
-    | (_, Switch { Switch.cases; _ }) ->
-      cases |> List.iter (fun (_, { Switch.Case.consequent; _ }) -> toplevel_decls cx consequent)
-    | (_, Return _) -> ()
-    | (_, Throw _) -> ()
-    | (_, Try { Try.block = (_, b); handler; finalizer; comments = _ }) ->
-      block_body cx b;
-
-      (match handler with
-      | None -> ()
-      | Some (_, h) -> catch_clause cx h);
-
-      (match finalizer with
-      | None -> ()
-      | Some (_, b) -> block_body cx b)
-    | (_, While { While.body; _ }) -> statement_decl cx body
-    | (_, DoWhile { DoWhile.body; _ }) -> statement_decl cx body
-    | (_, For { For.body; _ }) -> statement_decl cx body
-    | (_, ForIn { ForIn.body; _ }) -> statement_decl cx body
-    | (_, ForOf { ForOf.body; _ }) -> statement_decl cx body
-    | (_, Debugger _) -> ()
-    | (_, FunctionDeclaration _) -> ()
-    | (_, EnumDeclaration _) -> ()
-    | (_, DeclareVariable _) -> ()
-    | ( loc,
-        DeclareFunction
-          ( { DeclareFunction.id = (id_loc, { Ast.Identifier.name; comments = _ }); _ } as
-          declare_function
-          )
-      ) ->
-      (match declare_function_to_function_declaration cx loc declare_function with
-      | Some _ -> Env.bind_declare_fun ~predicate:true cx (OrdinaryName name) id_loc
-      | _ -> Env.bind_declare_fun cx ~predicate:false (OrdinaryName name) id_loc)
-    | (_, VariableDeclaration _) -> ()
-    | (_, ClassDeclaration _) -> ()
-    | (_, DeclareClass _)
-    | (_, DeclareInterface _)
-    | (_, InterfaceDeclaration _)
-    | (_, DeclareModule _) ->
-      ()
-    | (_, DeclareExportDeclaration { DeclareExportDeclaration.default; declaration; _ }) ->
-      DeclareExportDeclaration.(
-        (match declaration with
-        | Some (Variable (loc, v)) -> statement_decl cx (loc, DeclareVariable v)
-        | Some (Function (loc, f)) -> statement_decl cx (loc, DeclareFunction f)
-        | Some (Class (loc, c)) -> statement_decl cx (loc, DeclareClass c)
-        | Some (DefaultType _) -> ()
-        | Some (NamedType (loc, t)) -> statement_decl cx (loc, TypeAlias t)
-        | Some (NamedOpaqueType (loc, t)) -> statement_decl cx (loc, OpaqueType t)
-        | Some (Interface (loc, i)) -> statement_decl cx (loc, InterfaceDeclaration i)
-        | None ->
-          if Base.Option.is_none default then
-            ()
-          else
-            failwith
-              ("Parser Error: declare export default must always have an "
-              ^ "associated declaration or type!"
-              ))
-      )
-    | (_, DeclareModuleExports _) -> ()
-    | (_, ExportNamedDeclaration { ExportNamedDeclaration.declaration; _ }) ->
-      (match declaration with
-      | Some stmt -> statement_decl cx stmt
-      | None -> ())
-    | (_, ExportDefaultDeclaration { ExportDefaultDeclaration.declaration; _ }) ->
-      (match declaration with
-      | ExportDefaultDeclaration.Declaration stmt -> statement_decl cx stmt
-      | ExportDefaultDeclaration.Expression _ -> ())
-    | (_, ImportDeclaration _) -> ()
-
   (***************************************************************
-   * local inference main pass: visit AST statement list, calling
+   * local inference pass: visit AST statement list, calling
    * flow to check types/create graphs for merge-time checking
    ***************************************************************)
 
   (* can raise Abnormal.(Exn (Stmt _, _)) *)
-  and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t =
+  let rec statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t =
     let open Ast.Statement in
     let variables cx decls =
       VariableDeclaration.(
@@ -422,7 +320,6 @@ module Make
     in
     let check cx b =
       Abnormal.catch_stmts_control_flow_exception (fun () ->
-          toplevel_decls cx b.Block.body;
           Toplevels.toplevels statement cx b.Block.body
       )
     in
@@ -485,10 +382,7 @@ module Make
     | (_, Empty _) as stmt -> stmt
     | (loc, Block { Block.body; comments }) ->
       let (body, abnormal_opt) =
-        Abnormal.catch_stmts_control_flow_exception (fun () ->
-            toplevel_decls cx body;
-            Toplevels.toplevels statement cx body
-        )
+        Abnormal.catch_stmts_control_flow_exception (fun () -> Toplevels.toplevels statement cx body)
       in
       Abnormal.check_stmt_control_flow_exception
         ((loc, Block { Block.body; comments }), abnormal_opt)
@@ -613,9 +507,6 @@ module Make
       let exhaustive_check_incomplete_out =
         Tvar.mk cx (mk_reason (RCustom "exhaustive check incomplete out") switch_loc)
       in
-      (* switch body is a single lexical scope *)
-      (* set up all bindings *)
-      cases |> List.iter (fun (_, { Switch.Case.consequent; _ }) -> toplevel_decls cx consequent);
 
       (* traverse case list, get list of control flow exits and list of ASTs *)
       let (exits_rev, cases_ast_rev, fallthrough_case, has_default) =
@@ -883,7 +774,6 @@ module Make
     | (loc, Try { Try.block = (b_loc, b); handler; finalizer; comments }) ->
       let (try_block_ast, try_abnormal) =
         Abnormal.catch_stmts_control_flow_exception (fun () ->
-            toplevel_decls cx b.Block.body;
             Toplevels.toplevels statement cx b.Block.body
         )
       in
@@ -903,7 +793,6 @@ module Make
         | Some (f_loc, { Block.body; comments }) ->
           let (finally_block_ast, finally_abnormal) =
             Abnormal.catch_stmts_control_flow_exception (fun () ->
-                toplevel_decls cx body;
                 Toplevels.toplevels statement cx body
             )
           in
@@ -1933,7 +1822,6 @@ module Make
 
       let (elements_ast, elements_abnormal) =
         Abnormal.catch_stmts_control_flow_exception (fun () ->
-            toplevel_decls cx elements;
             Toplevels.toplevels statement cx elements
         )
       in

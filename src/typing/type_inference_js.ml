@@ -382,9 +382,7 @@ module Statement = Fix_statement.Statement_
 (* core inference, assuming setup and teardown happens elsewhere *)
 let infer_core cx statements =
   Abnormal.try_with_abnormal_exn
-    ~f:(fun () ->
-      statements |> Statement.toplevel_decls cx;
-      statements |> Toplevels.toplevels Statement.statement cx)
+    ~f:(fun () -> statements |> Toplevels.toplevels Statement.statement cx)
     ~on_abnormal_exn:(function
       | (Abnormal.Stmts stmts, Abnormal.Throw) ->
         (* throw is allowed as a top-level statement *)

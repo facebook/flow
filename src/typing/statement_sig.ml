@@ -44,8 +44,6 @@ module type S = sig
   val statement :
     Context.t -> (ALoc.t, ALoc.t) Ast.Statement.t -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t
 
-  val toplevel_decls : Context.t -> (ALoc.t, ALoc.t) Ast.Statement.t list -> unit
-
   val for_of_elemt : Context.t -> Type.t -> Reason.reason -> bool -> Type.t
 
   val mk_function :

@@ -84,8 +84,6 @@ val bind_this_tparam : Type.t -> ALoc.t -> unit
 
 val bind_class_self_type : Context.t -> ALoc.t -> Type.t -> unit
 
-val bind_declare_fun : Context.t -> predicate:bool -> Reason.name -> ALoc.t -> unit
-
 val init_var : Context.t -> use_op:Type.use_op -> Type.t -> ALoc.t -> unit
 
 val init_let : Context.t -> use_op:Type.use_op -> Type.t -> ALoc.t -> unit

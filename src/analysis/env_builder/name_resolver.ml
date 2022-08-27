@@ -1200,6 +1200,35 @@ module Make
       | Invalidation_api.NullWritten null_loc -> error (Some null_loc)
     in
 
+    let is_def_loc_predicate_function loc =
+      let providers = Env_api.Provider_api.providers_of_def provider_info loc in
+      match providers with
+      | Some { Env_api.Provider_api.state = Find_providers.AnnotatedVar { predicate }; _ } ->
+        predicate
+      | _ -> false
+    in
+
+    (* Sanity check for predicate functions: If there are multiple declare function
+     * providers, make sure none of them have a predicate. *)
+    let check_predicate_declare_function ~predicate name loc =
+      match Env_api.Provider_api.providers_of_def provider_info loc with
+      (* This check is only relevant when there are multiple providers *)
+      | Some
+          {
+            Env_api.Provider_api.providers = { Env_api.Provider_api.reason = def_reason; _ } :: _;
+            _;
+          } ->
+        let def_loc = Reason.aloc_of_reason def_reason in
+        let def_loc_is_pred = is_def_loc_predicate_function def_loc in
+        (* Raise an error for an overload (other than the first one) if:
+         * - The first overload is a predicate function (`def_loc_is_pred`), or
+         * - The current overload is a predicate function (`predicate`). *)
+        if def_loc <> loc && (predicate || def_loc_is_pred) then
+          add_output
+            (Error_message.EBindingError (Error_message.ENameAlreadyBound, loc, name, def_loc))
+      | _ -> ()
+    in
+
     let enable_enums = Context.enable_enums cx in
     object (this)
       inherit
@@ -3652,11 +3681,21 @@ module Make
           prop
 
       method! declare_function loc expr =
+        let {
+          Flow_ast.Statement.DeclareFunction.id =
+            (id_loc, { Flow_ast.Identifier.name; comments = _ });
+          _;
+        } =
+          expr
+        in
         match Declare_function_utils.declare_function_to_function_declaration_simple loc expr with
         | Some stmt ->
+          check_predicate_declare_function ~predicate:true (OrdinaryName name) id_loc;
           let _ = this#statement (loc, stmt) in
           expr
-        | None -> super#declare_function loc expr
+        | None ->
+          check_predicate_declare_function ~predicate:false (OrdinaryName name) id_loc;
+          super#declare_function loc expr
 
       method! call loc (expr : (ALoc.t, ALoc.t) Ast.Expression.Call.t) =
         (* Traverse everything up front. Now we don't need to worry about missing any reads

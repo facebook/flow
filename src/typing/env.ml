@@ -129,12 +129,6 @@ let is_def_loc_annotated { Env_api.providers; _ } loc =
   | Some { Env_api.Provider_api.state = Find_providers.AnnotatedVar _; _ } -> true
   | _ -> false
 
-let is_def_loc_predicate_function { Env_api.providers; _ } loc =
-  let providers = Env_api.Provider_api.providers_of_def providers loc in
-  match providers with
-  | Some { Env_api.Provider_api.state = Find_providers.AnnotatedVar { predicate }; _ } -> predicate
-  | _ -> false
-
 let provider_type_for_def_loc ?(intersect = false) cx env def_loc =
   let { Loc_env.var_info; _ } = env in
   let providers =
@@ -651,26 +645,6 @@ let subtype_against_providers cx ~use_op ?potential_global_name t loc =
         in
         Context.add_constrained_write cx (t, use_op, general)
 
-(* Sanity check for predicate functions: If there are multiple declare function
- * providers, make sure none of them have a predicate. *)
-let check_predicate_declare_function cx ~predicate name loc =
-  let { Loc_env.var_info; _ } = Context.environment cx in
-  match Env_api.Provider_api.providers_of_def var_info.Env_api.providers loc with
-  (* This check is only relevant when there are multiple providers *)
-  | Some
-      { Env_api.Provider_api.providers = { Env_api.Provider_api.reason = def_reason; _ } :: _; _ }
-    ->
-    let def_loc = Reason.aloc_of_reason def_reason in
-    let def_loc_is_pred = is_def_loc_predicate_function var_info def_loc in
-    (* Raise an error for an overload (other than the first one) if:
-     * - The first overload is a predicate function (`def_loc_is_pred`), or
-     * - The current overload is a predicate function (`predicate`). *)
-    if def_loc <> loc && (predicate || def_loc_is_pred) then
-      Flow_js_utils.add_output
-        cx
-        (Error_message.EBindingError (Error_message.ENameAlreadyBound, loc, name, def_loc))
-  | _ -> ()
-
 let resolve_env_entry ~use_op ~update_reason cx t kind loc =
   unify_write_entry cx ~use_op t kind loc;
   let env = Context.environment cx in
@@ -746,9 +720,6 @@ let bind_implicit_const cx t loc =
   match t with
   | Annotated _ -> ()
   | _ -> bind cx (TypeUtil.type_t_of_annotated_or_inferred t) ~kind:Env_api.OrdinaryNameLoc loc
-
-let bind_declare_fun cx ~predicate name loc =
-  check_predicate_declare_function cx ~predicate name loc
 
 let bind_this_tparam t loc = this_type_params := ALocMap.add loc t !this_type_params
 
