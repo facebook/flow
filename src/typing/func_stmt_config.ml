@@ -56,11 +56,11 @@ module Make (Destructuring : Destructuring_sig.S) (Statement : Statement_sig.S) 
     let t = Flow.subst cx map t in
     This { t; loc; annot }
 
-  let bind cx name t loc =
+  let bind cx t loc =
     if Context.enable_const_params cx then
       Env.bind_implicit_const cx t loc
     else
-      Env.bind_implicit_let cx (OrdinaryName name) t loc
+      Env.bind_implicit_let cx t loc
 
   let destruct cx ~use_op ~name_loc ~has_anno name default t =
     Base.Option.iter
@@ -75,7 +75,7 @@ module Make (Destructuring : Destructuring_sig.S) (Statement : Statement_sig.S) 
       else
         Inferred t
     in
-    bind cx name t_bound name_loc;
+    bind cx t_bound name_loc;
     t
 
   let eval_default cx ~annot_t = function
@@ -126,7 +126,7 @@ module Make (Destructuring : Destructuring_sig.S) (Statement : Statement_sig.S) 
           else
             Inferred t
         in
-        bind cx name t name_loc
+        bind cx t name_loc
       in
       (loc, { Ast.Function.Param.argument = ((ploc, t), Ast.Pattern.Identifier id); default })
     | Object { annot; properties; comments } ->
@@ -175,14 +175,14 @@ module Make (Destructuring : Destructuring_sig.S) (Statement : Statement_sig.S) 
 
   let eval_rest cx (Rest { t; loc; ploc; id; has_anno }) =
     let () =
-      let { Ast.Pattern.Identifier.name = ((loc, _), { Ast.Identifier.name; _ }); _ } = id in
+      let { Ast.Pattern.Identifier.name = ((loc, _), _); _ } = id in
       let t =
         if has_anno then
           Annotated t
         else
           Inferred t
       in
-      bind cx name t loc
+      bind cx t loc
     in
     ( loc,
       { Ast.Function.RestParam.argument = ((ploc, t), Ast.Pattern.Identifier id); comments = None }

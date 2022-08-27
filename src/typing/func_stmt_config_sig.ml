@@ -24,7 +24,7 @@ module type S = sig
 
   val subst_this : Context.t -> Type.t Subst_name.Map.t -> this_param -> this_param
 
-  val bind : Context.t -> string -> Type.annotated_or_inferred -> ALoc.t -> unit
+  val bind : Context.t -> Type.annotated_or_inferred -> ALoc.t -> unit
 
   val destruct :
     Context.t ->

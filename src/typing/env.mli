@@ -78,7 +78,7 @@ val bind_class_instance_super : Context.t -> Type.t -> ALoc.t -> unit
 
 val bind_class_static_super : Context.t -> Type.t -> ALoc.t -> unit
 
-val bind_implicit_let : Context.t -> Reason.name -> Type.annotated_or_inferred -> ALoc.t -> unit
+val bind_implicit_let : Context.t -> Type.annotated_or_inferred -> ALoc.t -> unit
 
 val bind_fun : Context.t -> Reason.name -> Type.t -> ALoc.t -> unit
 
