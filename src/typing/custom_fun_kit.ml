@@ -9,7 +9,6 @@ open Flow_js_utils
 open Reason
 open Type
 open TypeUtil
-module FlowError = Flow_error
 
 module type CUSTOM_FUN = sig
   val run :
@@ -25,7 +24,7 @@ module type CUSTOM_FUN = sig
     unit
 end
 
-module Kit (Flow : Flow_common.S) = struct
+module Kit (Flow : Flow_common.S) : CUSTOM_FUN = struct
   include Flow
 
   (* Creates the appropriate constraints for the compose() function and its

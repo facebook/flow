@@ -8013,7 +8013,6 @@ module Make
       | None -> kind
     in
     let function_kind cx ~constructor ~async ~generator ~predicate ~params ~ret_loc =
-      let open Func_sig in
       let open Ast.Type.Predicate in
       let open Func_class_sig_types.Func in
       match (constructor, async, generator, predicate) with
