@@ -68,27 +68,6 @@ let is_provider cx id_loc =
 
 let this_type_params = ref ALocMap.empty
 
-let valid_declaration_check cx name loc =
-  let { Loc_env.var_info = { Env_api.scopes = info; ssa_values = values; providers; _ }; _ } =
-    Context.environment cx
-  in
-  let error null_write =
-    let null_write =
-      Base.Option.map
-        ~f:(fun null_loc -> Error_message.{ null_loc; initialized = ALoc.equal loc null_loc })
-        null_write
-    in
-    Flow_js.add_output
-      cx
-      Error_message.(
-        EInvalidDeclaration { declaration = mk_reason (RIdentifier name) loc; null_write }
-      )
-  in
-  match Invalidation_api.declaration_validity info values providers loc with
-  | Invalidation_api.Valid -> ()
-  | Invalidation_api.NotWritten -> error None
-  | Invalidation_api.NullWritten null_loc -> error (Some null_loc)
-
 (* We don't want the new-env to throw if we encounter some new case in the wild for which we did
  * not adequately prepare. Instead, we return `any` in prod mode, but still crash in build mode.
  *)
@@ -741,10 +720,6 @@ let bind cx t ~kind loc =
   | Options.LTI -> ()
   | _ -> unify_write_entry cx ~use_op:Type.unknown_use t kind loc
 
-let bind_var cx name loc = valid_declaration_check cx (OrdinaryName name) loc
-
-let bind_let cx name loc = valid_declaration_check cx (OrdinaryName name) loc
-
 let bind_function_this cx t loc =
   unify_write_entry cx ~use_op:Type.unknown_use t Env_api.FunctionThisLoc loc
 
@@ -771,8 +746,6 @@ let bind_implicit_const cx t loc =
   match t with
   | Annotated _ -> ()
   | _ -> bind cx (TypeUtil.type_t_of_annotated_or_inferred t) ~kind:Env_api.OrdinaryNameLoc loc
-
-let bind_const _cx _ _loc = ()
 
 let bind_declare_fun cx ~predicate name loc =
   check_predicate_declare_function cx ~predicate name loc

@@ -64,10 +64,6 @@ val init_env : Context.t -> ALoc.t -> Name_def.scope_kind -> unit
 
 (***)
 
-val bind_var : Context.t -> string -> ALoc.t -> unit
-
-val bind_let : Context.t -> string -> ALoc.t -> unit
-
 val bind_function_this : Context.t -> Type.t -> ALoc.t -> unit
 
 val bind_class_instance_this : Context.t -> Type.t -> ALoc.t -> unit
@@ -83,8 +79,6 @@ val bind_implicit_let : Context.t -> Type.annotated_or_inferred -> ALoc.t -> uni
 val bind_fun : Context.t -> Reason.name -> Type.t -> ALoc.t -> unit
 
 val bind_implicit_const : Context.t -> Type.annotated_or_inferred -> ALoc.t -> unit
-
-val bind_const : Context.t -> string -> ALoc.t -> unit
 
 val bind_this_tparam : Type.t -> ALoc.t -> unit
 
@@ -152,8 +146,6 @@ val get_refinement : Context.t -> Key.t -> ALoc.t -> Type.t option
 
 val discriminant_after_negated_cases :
   Context.t -> ALoc.t -> (Reason.name * Key.proj list) option -> Type.t option
-
-val valid_declaration_check : Context.t -> Reason.name -> ALoc.t -> unit
 
 val get_next : Context.t -> ALoc.t -> Type.t
 

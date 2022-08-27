@@ -1182,6 +1182,24 @@ module Make
       | _ -> ()
     in
 
+    let valid_declaration_check name loc =
+      let error null_write =
+        let null_write =
+          Base.Option.map
+            ~f:(fun null_loc -> Error_message.{ null_loc; initialized = ALoc.equal loc null_loc })
+            null_write
+        in
+        add_output
+          Error_message.(
+            EInvalidDeclaration { declaration = mk_reason (RIdentifier name) loc; null_write }
+          )
+      in
+      match Invalidation_api.declaration_validity prepass_info prepass_values provider_info loc with
+      | Invalidation_api.Valid -> ()
+      | Invalidation_api.NotWritten -> error None
+      | Invalidation_api.NullWritten null_loc -> error (Some null_loc)
+    in
+
     let enable_enums = Context.enable_enums cx in
     object (this)
       inherit
@@ -2368,6 +2386,17 @@ module Make
             ignore @@ this#assignment_pattern left
         end;
         expr
+
+      method! variable_declaration loc decl =
+        let open Flow_ast in
+        let { Statement.VariableDeclaration.declarations; kind; comments = _ } = decl in
+        if kind <> Statement.VariableDeclaration.Const then
+          Flow_ast_utils.fold_bindings_of_variable_declarations
+            (fun _has_anno () (loc, { Identifier.name; comments = _ }) ->
+              valid_declaration_check (OrdinaryName name) loc)
+            ()
+            declarations;
+        super#variable_declaration loc decl
 
       (* Order of evaluation matters *)
       method! variable_declarator

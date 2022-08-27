@@ -303,19 +303,7 @@ module Make
    * in prep for main pass
    ********************************************************************)
 
-  let rec variable_decl cx { Ast.Statement.VariableDeclaration.kind; declarations; comments = _ } =
-    let bind =
-      match kind with
-      | Ast.Statement.VariableDeclaration.Const -> Env.bind_const
-      | Ast.Statement.VariableDeclaration.Let -> Env.bind_let
-      | Ast.Statement.VariableDeclaration.Var -> Env.bind_var
-    in
-    Flow_ast_utils.fold_bindings_of_variable_declarations
-      (fun _has_anno () (loc, { Ast.Identifier.name; comments = _ }) -> bind cx name loc)
-      ()
-      declarations
-
-  and toplevel_decls cx = List.iter (statement_decl cx)
+  let rec toplevel_decls cx = List.iter (statement_decl cx)
 
   (* TODO: detect structural misuses abnormal control flow constructs *)
   and statement_decl cx =
@@ -358,21 +346,9 @@ module Make
       | Some (_, b) -> block_body cx b)
     | (_, While { While.body; _ }) -> statement_decl cx body
     | (_, DoWhile { DoWhile.body; _ }) -> statement_decl cx body
-    | (_, For { For.init; body; _ }) ->
-      (match init with
-      | Some (For.InitDeclaration (_, decl)) -> variable_decl cx decl
-      | _ -> ());
-      statement_decl cx body
-    | (_, ForIn { ForIn.left; body; _ }) ->
-      (match left with
-      | ForIn.LeftDeclaration (_, decl) -> variable_decl cx decl
-      | _ -> ());
-      statement_decl cx body
-    | (_, ForOf { ForOf.left; body; _ }) ->
-      (match left with
-      | ForOf.LeftDeclaration (_, decl) -> variable_decl cx decl
-      | _ -> ());
-      statement_decl cx body
+    | (_, For { For.body; _ }) -> statement_decl cx body
+    | (_, ForIn { ForIn.body; _ }) -> statement_decl cx body
+    | (_, ForOf { ForOf.body; _ }) -> statement_decl cx body
     | (_, Debugger _) -> ()
     | (_, FunctionDeclaration _) -> ()
     | (_, EnumDeclaration _) -> ()
@@ -386,7 +362,7 @@ module Make
       (match declare_function_to_function_declaration cx loc declare_function with
       | Some _ -> Env.bind_declare_fun ~predicate:true cx (OrdinaryName name) id_loc
       | _ -> Env.bind_declare_fun cx ~predicate:false (OrdinaryName name) id_loc)
-    | (_, VariableDeclaration decl) -> variable_decl cx decl
+    | (_, VariableDeclaration _) -> ()
     | (_, ClassDeclaration _) -> ()
     | (_, DeclareClass _)
     | (_, DeclareInterface _)
@@ -1015,7 +991,6 @@ module Make
         match init with
         | None -> None
         | Some (For.InitDeclaration (decl_loc, decl)) ->
-          variable_decl cx decl;
           Some (For.InitDeclaration (decl_loc, variables cx decl))
         | Some (For.InitExpression expr) ->
           Some (For.InitExpression (expression cx ~hint:Hint_None expr))
@@ -1060,14 +1035,12 @@ module Make
         match left with
         | ForIn.LeftDeclaration
             ( decl_loc,
-              ( {
-                  VariableDeclaration.kind;
-                  declarations = [(vdecl_loc, { VariableDeclaration.Declarator.id; init = None })];
-                  comments;
-                } as decl
-              )
+              {
+                VariableDeclaration.kind;
+                declarations = [(vdecl_loc, { VariableDeclaration.Declarator.id; init = None })];
+                comments;
+              }
             ) ->
-          variable_decl cx decl;
           let right_ast = eval_right () in
           let (id_ast, _) =
             variable cx kind id None ~if_uninitialized:(StrT.at %> with_trust bogus_trust)
@@ -1182,14 +1155,12 @@ module Make
         match left with
         | ForOf.LeftDeclaration
             ( decl_loc,
-              ( {
-                  VariableDeclaration.kind;
-                  declarations = [(vdecl_loc, { VariableDeclaration.Declarator.id; init = None })];
-                  comments;
-                } as decl
-              )
+              {
+                VariableDeclaration.kind;
+                declarations = [(vdecl_loc, { VariableDeclaration.Declarator.id; init = None })];
+                comments;
+              }
             ) ->
-          variable_decl cx decl;
           let (elem_t, right_ast) = eval_right () in
           let (id_ast, _) = variable cx kind id None ~if_uninitialized:(fun _ -> elem_t) in
           ( ForOf.LeftDeclaration
