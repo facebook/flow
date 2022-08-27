@@ -58,7 +58,7 @@ class X extends class {
 }
 (((f`foobar`: empty): T).p: empty);
 (((`foobar`: empty): T).p: empty);
-(function() {
+(function(this: number) {
   (((this: empty): T).p: empty);
 }.call(42));
 ((((42: string): empty): T).p: empty);

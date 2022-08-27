@@ -28,16 +28,16 @@ function durable_refi(x: ?number) {
   }
 }
 
-function const_rest_reassign(...x) {
+function const_rest_reassign(...x: Array<number>) {
   x = 0; // error, const param cannot be reeassigned
 }
 
-function const_obj_patt_reassign({x, ...o}) {
+function const_obj_patt_reassign({x, ...o}: any) {
   x = 0; // error, const param cannot be reeassigned
   o = 0; // error, const param cannot be reeassigned
 }
 
-function const_arr_patt_reassign([x, ...a]) {
+function const_arr_patt_reassign([x, ...a]: any) {
   x = 0; // error, const param cannot be reeassigned
   a = 0; // error, const param cannot be reeassigned
 }

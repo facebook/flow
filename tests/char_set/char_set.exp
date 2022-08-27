@@ -43,19 +43,16 @@ References:
                 ^^^^^^^^^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:20:9
+Error ----------------------------------------------------------------------------------------------------- test.js:22:3
 
-Cannot call `C` with `x` bound to `flags` because string literal `abcd` [1] is incompatible with `C$flags` [2] since `c`
-is not a member of the set and `d` is not a member of the set. [invalid-charset-type-arg]
+Cannot call `g` with `"abcd"` bound to `x` because string literal `abcd` [1] is incompatible with `C$flags` [2] since
+`c` is not a member of the set and `d` is not a member of the set. [invalid-charset-type-arg]
 
-   test.js:20:9
-   20|   new C(x);
-               ^
-
-References:
    test.js:22:3
    22| g("abcd");
          ^^^^^^ [1]
+
+References:
    test.js:3:16
     3| type C$flags = $CharSet<"ab">
                       ^^^^^^^^^^^^^^ [2]

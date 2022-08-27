@@ -22,7 +22,7 @@ Cannot reassign constant `x` [1]. [reassign-const]
 
 References:
    test.js:31:33
-   31| function const_rest_reassign(...x) {
+   31| function const_rest_reassign(...x: Array<number>) {
                                        ^ [1]
 
 
@@ -36,7 +36,7 @@ Cannot reassign constant `x` [1]. [reassign-const]
 
 References:
    test.js:35:35
-   35| function const_obj_patt_reassign({x, ...o}) {
+   35| function const_obj_patt_reassign({x, ...o}: any) {
                                          ^ [1]
 
 
@@ -50,7 +50,7 @@ Cannot reassign constant `o` [1]. [reassign-const]
 
 References:
    test.js:35:41
-   35| function const_obj_patt_reassign({x, ...o}) {
+   35| function const_obj_patt_reassign({x, ...o}: any) {
                                                ^ [1]
 
 
@@ -64,7 +64,7 @@ Cannot reassign constant `x` [1]. [reassign-const]
 
 References:
    test.js:40:35
-   40| function const_arr_patt_reassign([x, ...a]) {
+   40| function const_arr_patt_reassign([x, ...a]: any) {
                                          ^ [1]
 
 
@@ -78,7 +78,7 @@ Cannot reassign constant `a` [1]. [reassign-const]
 
 References:
    test.js:40:41
-   40| function const_arr_patt_reassign([x, ...a]) {
+   40| function const_arr_patt_reassign([x, ...a]: any) {
                                                ^ [1]
 
 

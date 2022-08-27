@@ -16,7 +16,7 @@ function f() {
   ("ac": $CharSet<"ab">); // error
 }
 
-function g(x) {
+function g(x: C$flags) {
   new C(x);
 }
 g("abcd");

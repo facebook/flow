@@ -6,7 +6,7 @@ declare interface File {
 
 declare function fileOpen(path: string): Promise<File>;
 
-async function* readLines(path) {
+async function* readLines(path: string) {
   let file: File = await fileOpen(path);
 
   try {

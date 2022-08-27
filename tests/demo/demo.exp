@@ -1,15 +1,15 @@
-Error ------------------------------------------------------------------------------------------------------ 1/f.js:3:27
+Error ------------------------------------------------------------------------------------------------------ 1/f.js:3:33
 
 Cannot perform arithmetic operation because null [1] is not a number. [unsafe-addition]
 
-   1/f.js:3:27
-   3| function f(x) { return 42/x; }
-                                ^
+   1/f.js:3:33
+   3| function f(x: null) { return 42/x; }
+                                      ^
 
 References:
-   1/f.js:5:8
-   5| var x: null = null;
-             ^^^^ [1]
+   1/f.js:3:15
+   3| function f(x: null) { return 42/x; }
+                    ^^^^ [1]
 
 
 Error ----------------------------------------------------------------------------------------------------- 2/A.js:10:21
@@ -22,12 +22,12 @@ Cannot call `callback` with `this.getX()` bound to `x` because number [1] is inc
                            ^^^^^^^^^^^
 
 References:
-   2/A.js:4:6
-    4|   x: number; // instance field declaration
-            ^^^^^^ [1]
-   2/A.js:14:22
-   14| function callback(x: string) { return x.length; }
-                            ^^^^^^ [2]
+   2/A.js:7:11
+    7|   getX(): number { return this.x; }
+                 ^^^^^^ [1]
+   2/A.js:9:24
+    9|   onLoad(callback: (x: string) => number): number {
+                              ^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------------ 2/B.js:3:13

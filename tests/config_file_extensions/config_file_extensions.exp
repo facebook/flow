@@ -7,9 +7,9 @@ Cannot perform arithmetic operation because string [1] is not a number. [unsafe-
                ^
 
 References:
-   test.js.es6:9:5
-   9| foo('Hello, world!');
-          ^^^^^^^^^^^^^^^ [1]
+   test.js.es6:5:17
+   5| function foo(x: string) {
+                      ^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------------ test.js.es6:14:19

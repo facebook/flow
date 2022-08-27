@@ -21,9 +21,9 @@ Cannot assign `strings[0]` to `x` because string [1] is incompatible with number
                          ^^^^^^^^^^
 
 References:
-   encaps.js:9:10
-   9| var s2 = tag `l${42}r`;
-               ^^^^^^^^^^^^^ [1]
+   encaps.js:5:29
+   5| function tag(strings: Array<string>, ...values: Array<number>) {
+                                  ^^^^^^ [1]
    encaps.js:6:11
    6|     var x:number = strings[0]; // error: string ~> number
                 ^^^^^^ [2]

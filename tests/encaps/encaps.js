@@ -2,13 +2,13 @@ class A { }
 var a = new A();
 var s1 = `l${a.x}r`; // error: no prop x in A
 
-function tag(strings,...values) {
+function tag(strings: Array<string>, ...values: Array<number>) {
     var x:number = strings[0]; // error: string ~> number
     return x;
 }
 var s2 = tag `l${42}r`;
 
-function tag2(strings,...values) {
+function tag2(strings: Array<string>, ...values: Array<number>) {
   return { foo: "" }; // ok: tagged templates can return whatever
 }
 

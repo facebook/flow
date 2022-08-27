@@ -40,9 +40,9 @@ var f5: () => Promise<number> = async () => await 1;
 //
 
 class C {
-  async m() { return 1; }
+  async m(): Promise<number> { return 1; }
   async mt<T>(a: T): Promise<T> { return a; }
-  static async m(a): void { await a; } // error, void != Promise<void>
+  static async m(a: mixed): void { await a; } // error, void != Promise<void>
   static async mt<T>(a: T): Promise<T> { return a; }
 }
 

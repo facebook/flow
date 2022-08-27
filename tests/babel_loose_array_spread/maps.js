@@ -1,5 +1,5 @@
-const map1 = new Map();
-const map2 = new Map();
+const map1 = new Map<string, string>();
+const map2 = new Map<string, string>();
 new Map([
   ...map1, // Error
   ...map2 // Error
@@ -9,4 +9,4 @@ f(
   ...map1, // Error
   ...map2 // Error
 );
-function f(...args) {}
+function f(...args: Array<mixed>) {}

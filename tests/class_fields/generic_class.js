@@ -9,7 +9,7 @@ class ClassAnnotated<T> {
   static p: T;
 }
 
-var o1 = new ClassAnnotated();
+var o1 = new ClassAnnotated<number>();
 o1.p = 42;
 (o1.p: number);
 (o1.p: string); // Error: number ~> string

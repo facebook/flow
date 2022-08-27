@@ -43,7 +43,7 @@ delete obj4.f; // error, just like when writing to frozen object
 declare var obj5: { +f?: number };
 delete obj5.f; // error, just like when writing to read-only object
 
-class C { x; m() {} }
+class C { x: void; m() {} }
 declare var obj6: C;
 delete obj6.x;
 delete obj6.m; // warn, m is not own (delete only has effect

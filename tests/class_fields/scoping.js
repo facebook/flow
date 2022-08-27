@@ -3,13 +3,13 @@
 var someVar = 42;
 
 class Foo {
-  outer = someVar;
+  outer: number = someVar;
   selfTyped: Foo;
-  selfTypedInit = new Foo();
+  selfTypedInit: Foo = new Foo();
 
-  static outer = someVar;
+  static outer: number = someVar;
   static selfTyped: Foo;
-  static selfTypedInit = new Foo();
+  static selfTypedInit: Foo = new Foo();
 
   constructor() {
     var someVar = 'asdf';

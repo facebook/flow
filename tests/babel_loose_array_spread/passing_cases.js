@@ -14,7 +14,7 @@ f(...b);
 f.apply(null, b);
 f.bind(null, ...b);
 
-function f(...args) {}
+function f(...args: Array<mixed>) {}
 
 declare var compose: $Compose;
 compose(...[x => x, x => x]);

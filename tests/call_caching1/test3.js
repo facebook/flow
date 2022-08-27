@@ -11,6 +11,6 @@ declare class Box<T> {
   get(): T;
 }
 
-const outer = new Box();
+const outer = new Box<ImmBox<empty> | void>();
 const inner = outer.get();
 outer.set(ImmBox(inner));

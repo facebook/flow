@@ -14,10 +14,17 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- positining.js:43:13
 
-Cannot call `map.set` with `new A()` bound to `value` because property `push` is missing in `A` [1]. [prop-missing]
+Cannot call `map.set` with `new A()` bound to `value` because `A` [1] is incompatible with `Array` [2].
+[incompatible-call]
 
+   positining.js:43:13
    43|     map.set(new A());
                    ^^^^^^^ [1]
+
+References:
+   positining.js:38:17
+   38| var m = new Map<Array<string>>();
+                       ^^^^^^^^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:18:6

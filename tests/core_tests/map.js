@@ -9,8 +9,8 @@ function* generator(): Iterable<[string, number]> {
 let tests = [
   // good constructors
   function() {
-    let w = new Map();
-    let x = new Map(null);
+    let w = new Map<string, string>();
+    let x = new Map<string, string>(null);
     let y = new Map([['foo', 123]]);
     let z = new Map(generator());
     let a: Map<string, number> = new Map();

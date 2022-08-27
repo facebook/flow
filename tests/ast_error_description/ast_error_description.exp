@@ -1343,9 +1343,9 @@ Cannot cast `this` to empty because number [1] is incompatible with empty [2]. [
             ^^^^
 
 References:
-   expression.js:63:8
-   63| }.call(42));
-              ^^ [1]
+   expression.js:61:17
+   61| (function(this: number) {
+                       ^^^^^^ [1]
    expression.js:62:12
    62|   (((this: empty): T).p: empty);
                   ^^^^^ [2]

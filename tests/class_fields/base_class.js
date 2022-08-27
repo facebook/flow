@@ -4,14 +4,14 @@ class Base {
   unannotatedField;
   annotatedField: number;
   initializedField = 42;
-  initializedFieldWithThis = this.initializedField;
+  initializedFieldWithThis: number = this.initializedField;
   annotatedInitializedFieldValid: ?number = 42;
   annotatedInitializedFieldInvalid: number = 'asdf'; // Error: string ~> number
 
   static unannotatedField;
   static annotatedField: number;
   static initializedField = 'asdf';
-  static initializedFieldWithThis = this.initializedField;
+  static initializedFieldWithThis: string = this.initializedField;
   static annotatedInitializedFieldValid: ?number = 42;
   static annotatedInitializedFieldInvalid: number = 'asdf'; // Error: string ~> number
 }

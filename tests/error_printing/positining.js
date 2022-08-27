@@ -35,7 +35,7 @@ declare class Map<V> {
 
 class A { }
 
-var m = new Map();
+var m = new Map<Array<string>>();
 var a = m.get();
 a.push("");
 

@@ -10,4 +10,4 @@ if (Array.isArray(it)) {
 // update this test to expect the proper error instead of the lint.
 f.apply(null, it); // Error
 
-function f(...args) {}
+function f(...args: Array<mixed>) {}

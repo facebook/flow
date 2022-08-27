@@ -149,8 +149,8 @@ Error --------------------------------------------------------------------------
 
 References:
    maps.js:1:14
-     1| const map1 = new Map();
-                     ^^^^^^^^^ [1]
+     1| const map1 = new Map<string, string>();
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    <BUILTINS>/core.js:689:15
    689| declare class $ReadOnlyArray<+T> {
                       ^^^^^^^^^^^^^^ [2]
@@ -166,8 +166,8 @@ Error --------------------------------------------------------------------------
 
 References:
    maps.js:2:14
-     2| const map2 = new Map();
-                     ^^^^^^^^^ [1]
+     2| const map2 = new Map<string, string>();
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    <BUILTINS>/core.js:689:15
    689| declare class $ReadOnlyArray<+T> {
                       ^^^^^^^^^^^^^^ [2]
@@ -183,8 +183,8 @@ Error --------------------------------------------------------------------------
 
 References:
    maps.js:1:14
-     1| const map1 = new Map();
-                     ^^^^^^^^^ [1]
+     1| const map1 = new Map<string, string>();
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    <BUILTINS>/core.js:689:15
    689| declare class $ReadOnlyArray<+T> {
                       ^^^^^^^^^^^^^^ [2]
@@ -200,8 +200,8 @@ Error --------------------------------------------------------------------------
 
 References:
    maps.js:2:14
-     2| const map2 = new Map();
-                     ^^^^^^^^^ [1]
+     2| const map2 = new Map<string, string>();
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    <BUILTINS>/core.js:689:15
    689| declare class $ReadOnlyArray<+T> {
                       ^^^^^^^^^^^^^^ [2]

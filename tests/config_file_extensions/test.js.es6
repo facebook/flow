@@ -2,7 +2,7 @@
  * @flow
  */
 
-function foo(x) {
+function foo(x: string) {
   return x * 10;
 }
 

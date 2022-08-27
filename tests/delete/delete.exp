@@ -159,7 +159,7 @@ Cannot reassign class binding `C` [1]. [cannot-reassign]
 
 References:
    delete.js:46:7
-   46| class C { x; m() {} }
+   46| class C { x: void; m() {} }
              ^ [1]
 
 

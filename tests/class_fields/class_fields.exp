@@ -106,9 +106,9 @@ Cannot cast `o.initializedFieldWithThis` to string because number [1] is incompa
         ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   base_class.js:6:22
-    6|   initializedField = 42;
-                            ^^ [1]
+   base_class.js:7:29
+    7|   initializedFieldWithThis: number = this.initializedField;
+                                   ^^^^^^ [1]
    base_class.js:49:30
    49| (o.initializedFieldWithThis: string); // Error: number ~> string
                                     ^^^^^^ [2]
@@ -124,9 +124,9 @@ Cannot cast `Base.initializedFieldWithThis` to number because string [1] is inco
         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   base_class.js:13:29
-   13|   static initializedField = 'asdf';
-                                   ^^^^^^ [1]
+   base_class.js:14:36
+   14|   static initializedFieldWithThis: string = this.initializedField;
+                                          ^^^^^^ [1]
    base_class.js:51:33
    51| (Base.initializedFieldWithThis: number); // Error: string ~> number
                                        ^^^^^^ [2]
@@ -216,7 +216,7 @@ Error --------------------------------------------------------------------------
 
 `getterFirst1` has already been declared in this class. Class member names must be unique. [duplicate-class-member]
 
-   38|   get getterFirst1() { return 1 } // error
+   38|   get getterFirst1(): number { return 1 } // error
              ^^^^^^^^^^^^
 
 
@@ -224,7 +224,7 @@ Error --------------------------------------------------------------------------
 
 `getterFirst1` has already been declared in this class. Class member names must be unique. [duplicate-class-member]
 
-   39|   set getterFirst1(a) {} // error
+   39|   set getterFirst1(a: mixed) {} // error
              ^^^^^^^^^^^^
 
 
@@ -232,7 +232,7 @@ Error --------------------------------------------------------------------------
 
 `getterFirst2` has already been declared in this class. Class member names must be unique. [duplicate-class-member]
 
-   42|   get getterFirst2() { return 1 } // error
+   42|   get getterFirst2(): number { return 1 } // error
              ^^^^^^^^^^^^
 
 
@@ -240,7 +240,7 @@ Error --------------------------------------------------------------------------
 
 `getterFirst2` has already been declared in this class. Class member names must be unique. [duplicate-class-member]
 
-   44|   set getterFirst2(a) {} // error
+   44|   set getterFirst2(a: mixed) {} // error
              ^^^^^^^^^^^^
 
 
@@ -248,7 +248,7 @@ Error --------------------------------------------------------------------------
 
 `setterFirst1` has already been declared in this class. Class member names must be unique. [duplicate-class-member]
 
-   48|   set setterFirst1(a) { return 1 } // error
+   48|   set setterFirst1(a: mixed): number { return 1 } // error
              ^^^^^^^^^^^^
 
 
@@ -264,7 +264,7 @@ Error --------------------------------------------------------------------------
 
 `setterFirst2` has already been declared in this class. Class member names must be unique. [duplicate-class-member]
 
-   52|   set setterFirst2(a) { return 1 } // error
+   52|   set setterFirst2(a: mixed): number { return 1 } // error
              ^^^^^^^^^^^^
 
 
@@ -280,7 +280,7 @@ Error --------------------------------------------------------------------------
 
 `propFirst` has already been declared in this class. Class member names must be unique. [duplicate-class-member]
 
-   57|   get propFirst() { return 1 } // error
+   57|   get propFirst(): number { return 1 } // error
              ^^^^^^^^^
 
 
@@ -288,7 +288,7 @@ Error --------------------------------------------------------------------------
 
 `propFirst` has already been declared in this class. Class member names must be unique. [duplicate-class-member]
 
-   58|   set propFirst(a) {} // error
+   58|   set propFirst(a: number) {} // error
              ^^^^^^^^^
 
 
@@ -296,7 +296,7 @@ Error --------------------------------------------------------------------------
 
 `methodFirst` has already been declared in this class. Class member names must be unique. [duplicate-class-member]
 
-   61|   get methodFirst() { return 1 } // error
+   61|   get methodFirst(): number { return 1 } // error
              ^^^^^^^^^^^
 
 
@@ -304,7 +304,7 @@ Error --------------------------------------------------------------------------
 
 `methodFirst` has already been declared in this class. Class member names must be unique. [duplicate-class-member]
 
-   62|   set methodFirst(a) {} // error
+   62|   set methodFirst(a: mixed) {} // error
              ^^^^^^^^^^^
 
 
@@ -384,7 +384,7 @@ Error --------------------------------------------------------------------------
 
 `a` has already been declared in this class. Static class member names must be unique. [duplicate-class-member]
 
-   97|   static get a() { return () => {}; } // error
+   97|   static get a(): () => void { return () => {}; } // error
                     ^
 
 
@@ -392,7 +392,7 @@ Error --------------------------------------------------------------------------
 
 `a` has already been declared in this class. Static class member names must be unique. [duplicate-class-member]
 
-   98|   static set a(a) { } // error
+   98|   static set a(a: mixed) { } // error
                     ^
 
 
@@ -654,9 +654,9 @@ Cannot cast `o.base_initializedFieldWithThis` to string because number [1] is in
         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   derived_class.js:6:27
-    6|   base_initializedField = 42;
-                                 ^^ [1]
+   derived_class.js:7:34
+    7|   base_initializedFieldWithThis: number = this.base_initializedField;
+                                        ^^^^^^ [1]
    derived_class.js:87:35
    87| (o.base_initializedFieldWithThis: string); // Error: number ~> string
                                          ^^^^^^ [2]
@@ -672,9 +672,9 @@ Cannot cast `Child.base_initializedFieldWithThis` to number because string [1] i
         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   derived_class.js:13:34
-   13|   static base_initializedField = 'asdf';
-                                        ^^^^^^ [1]
+   derived_class.js:14:41
+   14|   static base_initializedFieldWithThis: string = this.base_initializedField;
+                                               ^^^^^^ [1]
    derived_class.js:89:39
    89| (Child.base_initializedFieldWithThis: number); // Error: string ~> number
                                              ^^^^^^ [2]
@@ -690,9 +690,9 @@ Cannot cast `o.child_initializedFieldWithThis` to string because number [1] is i
         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   derived_class.js:25:28
-   25|   child_initializedField = 42;
-                                  ^^ [1]
+   derived_class.js:26:35
+   26|   child_initializedFieldWithThis: number = this.child_initializedField;
+                                         ^^^^^^ [1]
    derived_class.js:92:36
    92| (o.child_initializedFieldWithThis: string); // Error: number ~> string
                                           ^^^^^^ [2]
@@ -708,9 +708,9 @@ Cannot cast `Child.child_initializedFieldWithThis` to number because string [1] 
         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   derived_class.js:32:35
-   32|   static child_initializedField = 'asdf';
-                                         ^^^^^^ [1]
+   derived_class.js:33:42
+   33|   static child_initializedFieldWithThis: string = this.child_initializedField;
+                                                ^^^^^^ [1]
    derived_class.js:94:40
    94| (Child.child_initializedFieldWithThis: number); // Error: string ~> number
                                               ^^^^^^ [2]
@@ -869,9 +869,9 @@ Cannot cast `o.inherited_initializer` to string because number [1] is incompatib
          ^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   derived_class.js:18:27
-    18|   inherited_initializer = 42;
-                                  ^^ [1]
+   derived_class.js:37:26
+    37|   inherited_initializer: number;
+                                 ^^^^^^ [1]
    derived_class.js:132:27
    132| (o.inherited_initializer: string); // Error: number ~> string
                                   ^^^^^^ [2]
@@ -887,9 +887,9 @@ Cannot cast `Child.inherited_initializer` to string because number [1] is incomp
          ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   derived_class.js:19:34
-    19|   static inherited_initializer = 42;
-                                         ^^ [1]
+   derived_class.js:38:33
+    38|   static inherited_initializer: number;
+                                        ^^^^^^ [1]
    derived_class.js:134:31
    134| (Child.inherited_initializer: string); // Error: number ~> string
                                       ^^^^^^ [2]
@@ -966,9 +966,9 @@ Cannot cast `(new Foo()).outer` to string because number [1] is incompatible wit
         ^^^^^^^^^^^^^^^
 
 References:
-   scoping.js:3:15
-    3| var someVar = 42;
-                     ^^ [1]
+   scoping.js:6:10
+    6|   outer: number = someVar;
+                ^^^^^^ [1]
    scoping.js:24:19
    24| (new Foo().outer: string); // Error: number ~> string
                          ^^^^^^ [2]
@@ -983,9 +983,9 @@ Cannot cast `Foo.outer` to string because number [1] is incompatible with string
         ^^^^^^^^^
 
 References:
-   scoping.js:3:15
-    3| var someVar = 42;
-                     ^^ [1]
+   scoping.js:10:17
+   10|   static outer: number = someVar;
+                       ^^^^^^ [1]
    scoping.js:26:13
    26| (Foo.outer: string); // Error: number ~> string
                    ^^^^^^ [2]
@@ -1034,9 +1034,9 @@ Cannot cast `(new Foo()).selfTypedInit` to number because `Foo` [1] is incompati
         ^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   scoping.js:8:19
-    8|   selfTypedInit = new Foo();
-                         ^^^^^^^^^ [1]
+   scoping.js:8:18
+    8|   selfTypedInit: Foo = new Foo();
+                        ^^^ [1]
    scoping.js:38:27
    38| (new Foo().selfTypedInit: number); // Error: Foo ~> number
                                  ^^^^^^ [2]
@@ -1051,9 +1051,9 @@ Cannot cast `Foo.selfTypedInit` to number because `Foo` [1] is incompatible with
         ^^^^^^^^^^^^^^^^^
 
 References:
-   scoping.js:12:26
-   12|   static selfTypedInit = new Foo();
-                                ^^^^^^^^^ [1]
+   scoping.js:12:25
+   12|   static selfTypedInit: Foo = new Foo();
+                               ^^^ [1]
    scoping.js:40:21
    40| (Foo.selfTypedInit: number); // Error: Foo ~> number
                            ^^^^^^ [2]

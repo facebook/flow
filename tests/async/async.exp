@@ -36,13 +36,13 @@ References:
                                 ^ [3]
 
 
-Error --------------------------------------------------------------------------------------------------- async.js:45:22
+Error --------------------------------------------------------------------------------------------------- async.js:45:29
 
 Cannot expect undefined as the return type of async function because undefined [1] is incompatible with
 implicitly-returned `Promise`. [incompatible-return]
 
-   45|   static async m(a): void { await a; } // error, void != Promise<void>
-                            ^^^^ [1]
+   45|   static async m(a: mixed): void { await a; } // error, void != Promise<void>
+                                   ^^^^ [1]
 
 
 Error -------------------------------------------------------------------------------------------------- async2.js:13:21

@@ -27,7 +27,7 @@ function f0() {
   const c = 0;
 }
 
-function f1(b) {
+function f1(b: boolean) {
   x = 10;         // error, attempt to write to let before decl
   let x = 0;
   if (b) {

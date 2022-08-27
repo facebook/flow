@@ -18,4 +18,4 @@ if (Array.isArray(oit)) {
   f.bind(null, ...oit); // No error
 }
 
-function f(...args) {}
+function f(...args: Array<mixed>) {}

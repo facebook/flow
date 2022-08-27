@@ -98,11 +98,11 @@ function default_param_1() {
 function default_param_2() {
   // fn body bindings not visible from param scope
   let a = "";
-  function f0(x = () => a): number {
+  function f0(x: () => string = () => a): number {
     let a = 0;
     return x(); // error: string ~> number
   }
-  function f1(x = b /* error: cannot resolve b */): number {
+  function f1(x: number = b /* error: cannot resolve b */): number {
     let b = 0;
     return x;
   }
@@ -137,7 +137,7 @@ function function_type_annotation_scope() {
   function annotations_in_default(
     x: number,
     y: typeof x,
-    f = (z: typeof x) => { (z: number) }
+    f: (number) => void = (z: typeof x) => { (z: number) }
   ) {
     (y: string);
   }

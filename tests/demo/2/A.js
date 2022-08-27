@@ -2,11 +2,11 @@
 
 class A {
   x: number; // instance field declaration
-  constructor(x) { this.x = x; }
+  constructor(x: number) { this.x = x; }
 
-  getX() { return this.x; }
+  getX(): number { return this.x; }
 
-  onLoad(callback) {
+  onLoad(callback: (x: string) => number): number {
     return callback(this.getX());
   }
 }
