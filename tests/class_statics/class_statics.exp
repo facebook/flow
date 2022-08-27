@@ -35,7 +35,7 @@ Error --------------------------------------------------------------------------
 Cannot assign function to `A.qux` because property `qux` is missing in statics of `A` [1]. [prop-missing]
 
    test.js:7:3
-   7| A.qux = function(x: string) { } // error?
+   7| A.qux = function(x: string) { } // error
         ^^^
 
 References:
@@ -49,7 +49,7 @@ Error --------------------------------------------------------------------------
 Cannot extend `A` [1] with `B` because string [2] is incompatible with number [3] in property `x`. [incompatible-extend]
 
    test.js:10:13
-   10|   static x: string; // error?
+   10|   static x: string; // error
                    ^^^^^^ [2]
 
 References:
@@ -67,7 +67,7 @@ Cannot extend `A` [1] with `B` because string [2] is incompatible with number [3
 `foo`. [incompatible-extend]
 
    test.js:11:17
-   11|   static foo(x: string) { } // error?
+   11|   static foo(x: string) { } // error
                        ^^^^^^ [2]
 
 References:
@@ -89,7 +89,7 @@ Cannot assign `0` to `B.x` because number [1] is incompatible with string [2]. [
 
 References:
    test.js:10:13
-   10|   static x: string; // error?
+   10|   static x: string; // error
                    ^^^^^^ [2]
 
 
@@ -103,7 +103,7 @@ Cannot call `B.foo` with `0` bound to `x` because number [1] is incompatible wit
 
 References:
    test.js:11:17
-   11|   static foo(x: string) { } // error?
+   11|   static foo(x: string) { } // error
                        ^^^^^^ [2]
 
 
@@ -168,7 +168,7 @@ Error --------------------------------------------------------------------------
 Cannot call `D.foo` because property `foo` is missing in statics of `D` [1]. [prop-missing]
 
    test.js:40:7
-   40|     D.foo(0); // error?
+   40|     D.foo(0); // error
              ^^^
 
 References:
@@ -236,5 +236,70 @@ References:
                        ^^^^^^ [2]
 
 
+Error ----------------------------------------------------------------------------------------------------- test.js:67:2
 
-Found 18 errors
+Cannot cast `N.x` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+
+   test.js:67:2
+   67| (N.x: empty); // ERROR
+        ^^^
+
+References:
+   test.js:66:7
+   66| N.x = 1; // OK
+             ^ [1]
+   test.js:67:7
+   67| (N.x: empty); // ERROR
+             ^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:68:3
+
+Cannot assign function to `N.xxx` because property `xxx` is missing in statics of `N` [1]. [prop-missing]
+
+   test.js:68:3
+   68| N.xxx = () => {}; // ERROR
+         ^^^
+
+References:
+   test.js:58:7
+   58| class N {
+             ^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:75:2
+
+Cannot cast `M.f()` to number because string [1] is incompatible with number [2]. [incompatible-cast]
+
+   test.js:75:2
+   75| (M.f(): number); // ERROR
+        ^^^^^
+
+References:
+   test.js:60:15
+   60|   static f(): string {
+                     ^^^^^^ [1]
+   test.js:75:9
+   75| (M.f(): number); // ERROR
+               ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:76:2
+
+Cannot cast `M.g()` to number because string [1] is incompatible with number [2]. [incompatible-cast]
+
+   test.js:76:2
+   76| (M.g(): number); // ERROR
+        ^^^^^
+
+References:
+   test.js:71:15
+   71|   static g(): string {
+                     ^^^^^^ [1]
+   test.js:76:9
+   76| (M.g(): number); // ERROR
+               ^^^^^^ [2]
+
+
+
+Found 22 errors

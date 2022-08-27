@@ -4,11 +4,11 @@ class A {
   static foo(x: number) { }
   static bar(y: string) { }
 }
-A.qux = function(x: string) { } // error?
+A.qux = function(x: string) { } // error
 
 class B extends A {
-  static x: string; // error?
-  static foo(x: string) { } // error?
+  static x: string; // error
+  static foo(x: string) { } // error
   static main() {
     B.x = 0; // error
     B.x = "";
@@ -37,7 +37,7 @@ class C<X> {
 
 class D extends C<string> {
   static main() {
-    D.foo(0); // error?
+    D.foo(0); // error
 
     D.bar(0);
   }
@@ -54,6 +54,26 @@ class E {
     return this.x; // error
   }
 }
+
+class N {
+  static x: number;
+  static f(): string {
+    return "";
+  }
+}
+
+(N.x: number); // OK
+N.x = 1; // OK
+(N.x: empty); // ERROR
+N.xxx = () => {}; // ERROR
+
+class M extends N{
+  static g(): string {
+    return "";
+  }
+}
+(M.f(): number); // ERROR
+(M.g(): number); // ERROR
 
 // note: above classdefs are sufficiently annotated to export
 module.exports = {
