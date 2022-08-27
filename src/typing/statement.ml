@@ -457,20 +457,11 @@ module Make
       | Some p ->
         (match p with
         | ( loc,
-            Identifier
-              {
-                Identifier.name = (name_loc, ({ Ast.Identifier.name; comments = _ } as id));
-                annot = Ast.Type.Missing mloc;
-                optional;
-              }
+            Identifier { Identifier.name = (name_loc, id); annot = Ast.Type.Missing mloc; optional }
           ) ->
           let r = mk_reason (RCustom "catch") loc in
           let t = AnyT.why CatchAny r in
-          let (stmts, abnormal_opt) =
-            Env.bind_implicit_let cx (OrdinaryName name) (Inferred t) loc;
-
-            check cx b
-          in
+          let (stmts, abnormal_opt) = check cx b in
           ( {
               Try.CatchClause.param =
                 Some
