@@ -113,3 +113,7 @@ function non_assigning_member_assigns() {
   bar.baz--; // ok
   (bar.baz: number); // ok
 }
+
+{
+  var x: number = (x) => x;
+}

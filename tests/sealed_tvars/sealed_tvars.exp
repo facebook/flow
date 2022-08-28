@@ -183,5 +183,19 @@ References:
            ^ [1]
 
 
+Error --------------------------------------------------------------------------------------- regression_tests.js:118:19
 
-Found 18 errors
+Cannot assign function to `x` because function [1] is incompatible with number [2]. [incompatible-type]
+
+   regression_tests.js:118:19
+   118|   var x: number = (x) => x;
+                          ^^^^^^^^ [1]
+
+References:
+   regression_tests.js:118:10
+   118|   var x: number = (x) => x;
+                 ^^^^^^ [2]
+
+
+
+Found 19 errors

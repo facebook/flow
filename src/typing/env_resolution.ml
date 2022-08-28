@@ -37,7 +37,12 @@ module TvarResolver = struct
               Flow_js_utils.add_output
                 cx
                 Error_message.(EInternal (aloc_of_reason r, UnconstrainedTvar id_msg));
-              AnyT.make (AnyError None) r
+              let desc =
+                match desc_of_reason r with
+                | RIdentifier (OrdinaryName x) -> RCustom (spf "`%s` (resolved to type `empty`)" x)
+                | _ -> REmpty
+              in
+              EmptyT.make (replace_desc_reason desc r) (bogus_trust ())
             in
             Flow_js_utils.merge_tvar ~no_lowers cx r root_id
           in
@@ -226,7 +231,7 @@ let rec resolve_binding_partial cx reason loc b =
       if contextual_typing_enabled then
         let hint = resolve_hint cx loc hint in
         match Type_hint.evaluate_hint cx param_loc ~resolver:TvarResolver.resolved_t hint with
-        | None -> Tvar.mk cx reason
+        | None -> AnyT.error reason
         | Some t -> TypeUtil.mod_reason_of_t (Base.Fn.const reason) t
       else
         Tvar.mk cx reason
@@ -234,12 +239,7 @@ let rec resolve_binding_partial cx reason loc b =
     let () =
       match hint with
       | Hint_api.Hint_None when RequireAnnot.should_require_annot cx ->
-        RequireAnnot.add_missing_annotation_error
-          cx
-          ~on_missing:(fun () ->
-            if contextual_typing_enabled then
-              Flow_js.flow_t cx (AnyT.make (AnyError (Some MissingAnnotation)) reason, t))
-          reason
+        RequireAnnot.add_missing_annotation_error cx ~on_missing:(fun () -> ()) reason
       | _ -> ()
     in
     (t, mk_use_op t, false)

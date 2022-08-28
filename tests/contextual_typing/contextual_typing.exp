@@ -1,5 +1,20 @@
 Error ----------------------------------------------------------------------------------------------------- test.js:10:9
 
+Cannot assign function to `f2` because empty [1] is incompatible with string [2] in the first parameter.
+[incompatible-type]
+
+   test.js:10:9
+   10|   f2 = (b) => (b: string); // ok
+               ^ [1]
+
+References:
+   test.js:9:12
+    9|   let f2: (string) => string = (a) => (a: string); // ok
+                  ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:10:9
+
 Internal error: unconstrained tvar during tvar resolution
 
    10|   f2 = (b) => (b: string); // ok
@@ -7,4 +22,4 @@ Internal error: unconstrained tvar during tvar resolution
 
 
 
-Found 1 error
+Found 2 errors
