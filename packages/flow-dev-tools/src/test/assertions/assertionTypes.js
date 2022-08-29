@@ -16,7 +16,7 @@ export type AssertionLocation = {
   column: number,
 };
 
-type AssertionMethod =
+export type AssertionMethod =
   | 'noNewErrors'
   | 'newErrors'
   | 'stdout'

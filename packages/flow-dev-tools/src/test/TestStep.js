@@ -33,6 +33,7 @@ const {default: lspStderr} = require('./assertions/lspStderr');
 const {
   default: simpleDiffAssertion,
 } = require('./assertions/simpleDiffAssertion');
+const {default: lspMessagesMatch} = require('./assertions/lspMessagesMatch');
 
 const {sleep} = require('../utils/async');
 
@@ -577,70 +578,13 @@ class TestStepFirstStage extends TestStepFirstOrSecondStage {
   ) => TestStepSecondStage = (expects, ignores) => {
     const assertLoc = searchStackForTestAssertion();
     const ret = this._cloneWithAssertion((reason, env) => {
-      const actualMessages = env.getLSPMessagesSinceStartOfStep();
-      let actuals: Array<string | [string, string] | LSPMessage> = [];
-      let iExpect = 0;
-      // we test that messages are equal using a diff of strings, so we have
-      // to convert the expected value into a string.
-      let diffable = expected => {
-        if (typeof expected === 'string') {
-          return expected;
-        } else if (Array.isArray(expected)) {
-          return expected.join(',');
-        } else {
-          return JSON.stringify(expected, null, 2);
-        }
-      };
-      let doesMatch = (
-        actual: LSPMessage,
-        expected: string | [string, string] | LSPMessage,
-      ) => {
-        if (typeof expected === 'string') {
-          return Builder.doesMessageFuzzyMatch(actual, expected);
-        } else if (Array.isArray(expected) && expected.length === 2) {
-          return Builder.doesMessageFuzzyMatch(
-            actual,
-            expected[0],
-            expected[1],
-          );
-        } else {
-          return Builder.doesMessageMatch(actual, expected);
-        }
-      };
-      for (let iActual = 0; iActual < actualMessages.length; iActual++) {
-        let actual = actualMessages[iActual];
-        let expected = expects[iExpect];
-        if (expected !== undefined && doesMatch(actual, expected)) {
-          // it matches (possibly fuzzily), so we add the *expected* output
-          // to *actuals*, so that when we string diff it later, it matches.
-          // otherwise, the fuzzy expectation wouldn't match later.
-          actuals.push(expected);
-          iExpect++;
-        } else if (ignores.some(ignore => doesMatch(actual, ignore))) {
-          // ignore it
-        } else {
-          actuals.push(actual);
-        }
-      }
-
-      const suggestion = {
-        method: 'verifyAllLSPMessagesInStep',
-        args: [actuals, ignores],
-      };
-
-      // don't ignore whitespace, since we used JSON.stringify to format
-      // both `expects` and `actuals`, whitespace is already normalized
-      // and differences are relevant (like within strings).
-      const ignoreWhitespace = false;
-
-      return simpleDiffAssertion(
-        expects.map(diffable).join('\n'),
-        actuals.map(diffable).join('\n'),
-        assertLoc,
+      return lspMessagesMatch(
+        env.getLSPMessagesSinceStartOfStep(),
+        expects,
+        ignores,
         reason,
-        'messages',
-        suggestion,
-        ignoreWhitespace,
+        'verifyAllLSPMessagesInStep',
+        assertLoc,
       );
     });
     ret._readsIdeMessages = true;
