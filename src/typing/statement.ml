@@ -693,9 +693,10 @@ module Make
         | Some expr ->
           let hint = (Context.environment cx).Loc_env.return_hint in
           if Env.in_predicate_scope cx then
-            let ((((_, t), _) as ast), p_map, n_map, _) =
+            let ((((_, t), _) as ast), _, _, _) =
               predicates_of_condition ~hint ~cond:OtherTest cx expr
             in
+            let (p_map, n_map) = Env.predicate_refinement_maps cx loc in
             let pred_reason = update_desc_reason (fun desc -> RPredicateOf desc) reason in
             (OpenPredT { reason = pred_reason; base_t = t; m_pos = p_map; m_neg = n_map }, Some ast)
           else

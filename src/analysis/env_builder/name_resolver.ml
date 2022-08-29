@@ -835,6 +835,7 @@ module Make
     (* We also maintain a list of all write locations, for use in populating the env with
        types. *)
     write_entries: Env_api.env_entry EnvMap.t;
+    predicate_refinement_maps: Env_api.predicate_refinement_maps;
     toplevel_members: Env_api.toplevel_member list;
     module_toplevel_members: Env_api.toplevel_member list L.LMap.t;
     curr_id: int;
@@ -873,6 +874,7 @@ module Make
        statement, the list will be cleared. A loop will consume the list, so we
        also clear the list on our way out of any labeled statement. *)
     possible_labeled_continues: AbruptCompletion.t list;
+    predicate_scope_names: SSet.t option;
     visiting_hoisted_type: bool;
     jsx_base_name: string option;
   }
@@ -1266,6 +1268,7 @@ module Make
           write_entries;
           toplevel_members = [];
           module_toplevel_members = L.LMap.empty;
+          predicate_refinement_maps = L.LMap.empty;
           curr_id = 0;
           refinement_heap = IMap.empty;
           latest_refinements = [];
@@ -1273,6 +1276,7 @@ module Make
           exclude_syms;
           abrupt_completion_envs = [];
           possible_labeled_continues = [];
+          predicate_scope_names = None;
           visiting_hoisted_type = false;
           jsx_base_name;
         }
@@ -1288,6 +1292,8 @@ module Make
       method toplevel_members = env_state.toplevel_members
 
       method module_toplevel_members = env_state.module_toplevel_members
+
+      method predicate_refinement_maps = env_state.predicate_refinement_maps
 
       method private merge_vals_with_havoc ~havoc ~def_loc v1 v2 =
         (* It's not safe to reset to havoc when one side can be uninitialized, because the havoc
@@ -2596,11 +2602,47 @@ module Make
         let { label; comments = _ } = stmt in
         this#raise_abrupt_completion (AbruptCompletion.continue label)
 
-      method! return _loc (stmt : (ALoc.t, ALoc.t) Ast.Statement.Return.t) =
+      method! function_body_any body =
+        (match body with
+        | Flow_ast.Function.BodyBlock _ -> ()
+        | Flow_ast.Function.BodyExpression expr ->
+          (match env_state.predicate_scope_names with
+          | None -> ()
+          | Some names -> this#record_predicate_refinement_maps (fst expr) names expr));
+        super#function_body_any body
+
+      method! return loc (stmt : (ALoc.t, ALoc.t) Ast.Statement.Return.t) =
         let open Ast.Statement.Return in
         let { argument; comments = _; return_out = _ } = stmt in
-        ignore @@ Flow_ast_mapper.map_opt this#expression argument;
+        (match (env_state.predicate_scope_names, argument) with
+        | (None, _)
+        | (Some _, None) ->
+          ignore @@ Flow_ast_mapper.map_opt this#expression argument
+        | (Some names, Some argument) -> this#record_predicate_refinement_maps loc names argument);
         this#raise_abrupt_completion AbruptCompletion.return
+
+      method private record_predicate_refinement_maps loc names expr =
+        let compute_refi_map () =
+          names
+          |> SSet.elements
+          |> Base.List.map ~f:(fun name -> (name, this#synthesize_read name))
+          |> SMap.of_list
+        in
+        this#push_refinement_scope empty_refinements;
+        ignore @@ this#expression_refinement expr;
+        let positive_refi_map = compute_refi_map () in
+        this#negate_new_refinements ();
+        let negative_refi_map = compute_refi_map () in
+        this#pop_refinement_scope ();
+        env_state <-
+          {
+            env_state with
+            predicate_refinement_maps =
+              L.LMap.add
+                loc
+                (positive_refi_map, negative_refi_map)
+                env_state.predicate_refinement_maps;
+          }
 
       method! throw _loc (stmt : (ALoc.t, ALoc.t) Ast.Statement.Throw.t) =
         let open Ast.Statement.Throw in
@@ -3442,12 +3484,41 @@ module Make
         );
         super#function_expression_or_method loc expr
 
+      method private predicate_scope_names_of_params predicate params =
+        Base.Option.map predicate ~f:(fun _ ->
+            let open Flow_ast in
+            let (_, { Function.Params.params; rest; _ }) = params in
+            let f acc (_, patt) =
+              match patt with
+              | Pattern.Identifier { Pattern.Identifier.name = (_, { Identifier.name; _ }); _ } ->
+                SSet.add name acc
+              (* Predicate functions disallow destructuring *)
+              | _ -> acc
+            in
+            let acc =
+              Base.List.fold
+                params
+                ~init:SSet.empty
+                ~f:(fun acc (_, { Function.Param.argument; _ }) -> f acc argument
+              )
+            in
+            Base.Option.fold rest ~init:acc ~f:(fun acc (_, { Function.RestParam.argument; _ }) ->
+                f acc argument
+            )
+        )
+
       (* We also havoc state when entering functions and exiting calls. *)
       method! lambda ~is_arrow ~fun_loc ~generator_return_loc params predicate body =
         this#expecting_abrupt_completions (fun () ->
             let env = this#env in
             this#run
               (fun () ->
+                let saved_predicate_scope_names = env_state.predicate_scope_names in
+                env_state <-
+                  {
+                    env_state with
+                    predicate_scope_names = this#predicate_scope_names_of_params predicate params;
+                  };
                 this#havoc_uninitialized_env;
                 let completion_state =
                   this#run_to_completion (fun () ->
@@ -3528,6 +3599,7 @@ module Make
                         ()
                   )
                 in
+                env_state <- { env_state with predicate_scope_names = saved_predicate_scope_names };
                 this#commit_abrupt_completion_matching
                   AbruptCompletion.(mem [return; throw])
                   completion_state)
@@ -4955,7 +5027,7 @@ module Make
             !val_ref
         in
         let v = Val.simplify def_loc (Some kind) (Some name) v in
-        (OrdinaryName name, v)
+        v
 
       method! declare_module loc ({ Ast.Statement.DeclareModule.id; body; _ } as m) =
         let (name_loc, name) =
@@ -4993,7 +5065,10 @@ module Make
         ignore
         @@ this#statements_with_bindings block_loc bindings statements ~finally:(fun () ->
                let members =
-                 bindings |> Bindings.to_map |> SMap.keys |> Base.List.map ~f:this#synthesize_read
+                 bindings
+                 |> Bindings.to_map
+                 |> SMap.keys
+                 |> Base.List.map ~f:(fun name -> (OrdinaryName name, this#synthesize_read name))
                in
                env_state <-
                  {
@@ -5017,7 +5092,7 @@ module Make
               |> Bindings.to_map
               |> SMap.filter (fun name _ -> not @@ this#is_excluded_ordinary_name name)
               |> SMap.keys
-              |> Base.List.map ~f:this#synthesize_read
+              |> Base.List.map ~f:(fun name -> (OrdinaryName name, this#synthesize_read name))
               )
               @ Base.List.filter_map statements ~f:(function
                     | ( _,
@@ -5225,6 +5300,7 @@ module Make
         providers;
         toplevel_members = env_walk#toplevel_members;
         module_toplevel_members = env_walk#module_toplevel_members;
+        predicate_refinement_maps = env_walk#predicate_refinement_maps;
         refinement_of_id = env_walk#refinement_of_id;
       }
     )

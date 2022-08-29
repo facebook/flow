@@ -169,6 +169,8 @@ module type S = sig
 
   type toplevel_member = Reason.name * read
 
+  type predicate_refinement_maps = (read SMap.t * read SMap.t) L.LMap.t
+
   type env_info = {
     scopes: Scope_api.info;
     ssa_values: Ssa_api.values;
@@ -176,6 +178,7 @@ module type S = sig
     env_entries: env_entry EnvMap.t;
     toplevel_members: toplevel_member list;
     module_toplevel_members: toplevel_member list L.LMap.t;
+    predicate_refinement_maps: predicate_refinement_maps;
     providers: Provider_api.info;
     refinement_of_id: int -> Refi.refinement;
   }
@@ -368,6 +371,8 @@ module Make
 
   type toplevel_member = Reason.name * read
 
+  type predicate_refinement_maps = (read SMap.t * read SMap.t) L.LMap.t
+
   type env_info = {
     scopes: Scope_api.info;
     ssa_values: Ssa_api.values;
@@ -375,8 +380,9 @@ module Make
     env_entries: env_entry EnvMap.t;
     toplevel_members: toplevel_member list;
     module_toplevel_members: toplevel_member list L.LMap.t;
+    predicate_refinement_maps: predicate_refinement_maps;
     providers: Provider_api.info;
-    refinement_of_id: int -> refinement;
+    refinement_of_id: int -> Refi.refinement;
   }
 
   let empty =
@@ -387,6 +393,7 @@ module Make
       env_entries = EnvMap.empty;
       toplevel_members = [];
       module_toplevel_members = L.LMap.empty;
+      predicate_refinement_maps = L.LMap.empty;
       providers = Provider_api.empty;
       refinement_of_id = (fun _ -> failwith "Empty env info");
     }
