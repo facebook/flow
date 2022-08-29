@@ -14,6 +14,21 @@ Enum `A` is not an iterable. You can use `A.members()` to get an iterator for th
                       ^
 
 
+Error ---------------------------------------------------------------------------------------------------- enums.js:6:10
+
+Cannot use `Foo` as a type. Enum members are not separate types. Only the enum itself, `A` [1], is a type.
+[enum-value-as-type]
+
+   enums.js:6:10
+   6| const a: A.Foo = A.Foo; // Error: enum-value-as-type
+               ^^^^^
+
+References:
+   enums.js:3:6
+   3| enum A { Foo, Bar }
+           ^ [1]
+
+
 Error ----------------------------------------------------------------------------------------- regression_tests.js:11:8
 
 Cannot declare `A` [1] because the name is already bound. [name-already-bound]
@@ -198,4 +213,4 @@ References:
 
 
 
-Found 19 errors
+Found 20 errors

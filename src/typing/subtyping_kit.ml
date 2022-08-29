@@ -1598,7 +1598,8 @@ module Make (Flow : INPUT) : OUTPUT = struct
       (* an enum object value annotation becomes the enum type *)
       let enum_type = mk_enum_type ~trust lreason enum in
       rec_unify cx trace ~use_op enum_type t
-    | (DefT (enum_reason, _, EnumT _), DefT (reason, _, TypeT _)) ->
+    | (DefT (enum_reason, _, EnumT _), DefT (reason, _, TypeT (_, t))) ->
+      rec_unify cx trace ~use_op (AnyT.error reason) t;
       add_output cx ~trace Error_message.(EEnumMemberUsedAsType { reason; enum_reason })
     (* non-class/function values used in annotations are errors *)
     | (_, DefT (reason_use, _, TypeT (_, t))) ->
