@@ -293,3 +293,12 @@ module NumberMap = Flow_map.Make (struct
 
   let compare = Base.Float.compare
 end)
+
+let in_flow_test =
+  match Sys.getenv_opt "IN_FLOW_TEST" with
+  | Some "1"
+  | Some "true" ->
+    true
+  | Some _
+  | None ->
+    false
