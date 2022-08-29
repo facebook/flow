@@ -199,7 +199,7 @@ module Make (Statement : Statement_sig.S) : Destructuring_sig.S = struct
       (acc, xs, Tast_utils.error_mapper#pattern_object_property_key key)
 
   let identifier cx ~f acc name_loc name =
-    let { parent; current; init; default = _; annot } = acc in
+    let { parent; current; init; default; annot } = acc in
     let () =
       match parent with
       (* If there was a parent pattern, we already dispatched the hook if relevant. *)
@@ -253,9 +253,10 @@ module Make (Statement : Statement_sig.S) : Destructuring_sig.S = struct
            {
              var = Some reason;
              init =
-               (match init with
-               | Some init -> mk_expression_reason init
-               | None -> reason_of_t current);
+               (match (default, init) with
+               | (Some (Default.Expr t), _) -> reason_of_t t
+               | (_, Some init) -> mk_expression_reason init
+               | _ -> reason_of_t current);
            }
         )
     in
