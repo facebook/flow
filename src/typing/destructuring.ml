@@ -30,8 +30,7 @@ module Make (Statement : Statement_sig.S) : Destructuring_sig.S = struct
     annot: bool;
   }
 
-  type callback =
-    use_op:Type.use_op -> name_loc:ALoc.t -> string -> Type.t Default.t option -> Type.t -> Type.t
+  type callback = use_op:Type.use_op -> name_loc:ALoc.t -> string -> Type.t -> Type.t
 
   let empty ?init ?default ~annot current = { parent = None; current; init; default; annot }
 
@@ -260,7 +259,7 @@ module Make (Statement : Statement_sig.S) : Destructuring_sig.S = struct
            }
         )
     in
-    f ~use_op ~name_loc name default current
+    f ~use_op ~name_loc name current
 
   let rec pattern cx ~(f : callback) acc (loc, p) =
     let check_for_invalid_annot annot =
@@ -348,7 +347,7 @@ module Make (Statement : Statement_sig.S) : Destructuring_sig.S = struct
   (* instantiate pattern visitor for assignments *)
   let assignment cx rhs_t init =
     let acc = empty ~init ~annot:false rhs_t in
-    let f ~use_op ~name_loc name _default t =
+    let f ~use_op ~name_loc name t =
       (* TODO destructuring+defaults unsupported in assignment expressions *)
       ignore Env.(set_var cx ~use_op name t name_loc);
       Env.constraining_type ~default:t cx name_loc

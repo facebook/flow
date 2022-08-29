@@ -26,22 +26,6 @@ module type S = sig
 
   val bind : Context.t -> Type.annotated_or_inferred -> ALoc.t -> unit
 
-  val destruct :
-    Context.t ->
-    use_op:Type.use_op ->
-    name_loc:ALoc.t ->
-    has_anno:bool ->
-    string ->
-    Type.t Default.t Base.Option.t ->
-    Type.t ->
-    Type.t
-
-  val eval_default :
-    Context.t ->
-    annot_t:Type.t option ->
-    (ALoc.t, ALoc.t) Ast.Expression.t option ->
-    (ALoc.t, ALoc.t * Type.t) Ast.Expression.t option
-
   val eval_param : Context.t -> param -> (ALoc.t * Type.t) param_ast
 
   val eval_rest : Context.t -> rest -> (ALoc.t * Type.t) rest_ast

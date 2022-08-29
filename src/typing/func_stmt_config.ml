@@ -7,7 +7,6 @@
 
 module Ast = Flow_ast
 module Flow = Flow_js
-open Reason
 open Type
 open Hint_api
 
@@ -62,13 +61,7 @@ module Make (Destructuring : Destructuring_sig.S) (Statement : Statement_sig.S) 
     else
       Env.bind_implicit_let cx t loc
 
-  let destruct cx ~use_op ~name_loc ~has_anno name default t =
-    Base.Option.iter
-      ~f:(fun d ->
-        let reason = mk_reason (RIdentifier (OrdinaryName name)) name_loc in
-        let default_t = Flow.mk_default cx reason d in
-        Flow.flow cx (default_t, UseT (use_op, t)))
-      default;
+  let destruct cx ~use_op:_ ~name_loc ~has_anno _name t =
     let t_bound =
       if has_anno then
         Annotated t
@@ -78,41 +71,18 @@ module Make (Destructuring : Destructuring_sig.S) (Statement : Statement_sig.S) 
     bind cx t_bound name_loc;
     t
 
-  let eval_default cx ~annot_t = function
-    | None -> None
-    | Some e ->
-      (match annot_t with
-      | Some annot_t ->
-        let ((default_loc, default_t), default_ast) =
-          Statement.expression cx ~hint:(Hint_t annot_t) e
-        in
-        let use_op =
-          Op
-            (AssignVar
-               { var = Some (TypeUtil.reason_of_t annot_t); init = TypeUtil.reason_of_t default_t }
-            )
-        in
-        Flow.flow cx (default_t, UseT (use_op, annot_t));
-        Some ((default_loc, annot_t), default_ast)
-      | None -> Some (Statement.expression cx ~hint:Hint_None e))
+  let eval_default cx ~annot_t =
+    let hint =
+      match annot_t with
+      | Some t -> Hint_t t
+      | None -> Hint_None
+    in
+    Base.Option.map ~f:(Statement.expression cx ~hint)
 
   let eval_param cx (Param { t; loc; ploc; pattern; default; has_anno }) =
     match pattern with
-    | Id
-        ( { Ast.Pattern.Identifier.name = ((name_loc, _), { Ast.Identifier.name; _ }); optional; _ }
-        as id
-        ) ->
+    | Id ({ Ast.Pattern.Identifier.name = ((name_loc, _), _); optional; _ } as id) ->
       let default = eval_default cx ~annot_t:None default in
-      let () =
-        match default with
-        | None -> ()
-        | Some ((_, default_t), _) ->
-          let reason = mk_reason (RIdentifier (OrdinaryName name)) name_loc in
-          let use_op =
-            Op (AssignVar { var = Some reason; init = TypeUtil.reason_of_t default_t })
-          in
-          Flow.flow cx (default_t, UseT (use_op, t))
-      in
       let () =
         let t =
           if optional && default = None then
@@ -138,7 +108,7 @@ module Make (Destructuring : Destructuring_sig.S) (Statement : Statement_sig.S) 
       let default = eval_default cx ~annot_t default in
       let properties =
         let default = Base.Option.map default ~f:(fun ((_, t), _) -> Default.expr t) in
-        let init = Destructuring.empty ?default t ~annot:(Base.Option.is_some annot_t) in
+        let init = Destructuring.empty ?default t ~annot:has_anno in
         let f = destruct cx ~has_anno in
         Destructuring.object_properties cx ~f init properties
       in
@@ -153,15 +123,7 @@ module Make (Destructuring : Destructuring_sig.S) (Statement : Statement_sig.S) 
       let default = eval_default cx ~annot_t:None default in
       let elements =
         let default = Base.Option.map default ~f:(fun ((_, t), _) -> Default.expr t) in
-        let init =
-          Destructuring.empty
-            ?default
-            t
-            ~annot:
-              (match annot with
-              | Ast.Type.Missing _ -> false
-              | Ast.Type.Available _ -> true)
-        in
+        let init = Destructuring.empty ?default t ~annot:has_anno in
         let f = destruct cx ~has_anno in
         Destructuring.array_elements cx ~f init elements
       in

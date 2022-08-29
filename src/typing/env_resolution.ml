@@ -302,12 +302,27 @@ let resolve_binding cx reason loc binding =
       let rec subtype_default_against_annotation = function
         | Root (Annotation { tparams_map; annot; default_expression; _ }) ->
           let annot_t = resolve_annotation cx tparams_map annot in
-          default_expression
-          |> Statement.Func_stmt_config.eval_default cx ~annot_t:(Some annot_t)
-          (* Func_stmt_config.eval_default will store annot_t as the type of function parameter
-             default. We replicate the behavior and cache the node, so that we ensure later check
-             on the parameter default will always return annot_t. *)
-          |> Base.Option.iter ~f:(Node_cache.set_expression (Context.node_cache cx))
+          Base.Option.iter default_expression ~f:(fun e ->
+              let ((default_loc, default_t), default_ast) =
+                Statement.expression cx ~hint:(Hint_t annot_t) e
+              in
+              let use_op =
+                Op
+                  (AssignVar
+                     {
+                       var = Some (TypeUtil.reason_of_t annot_t);
+                       init = TypeUtil.reason_of_t default_t;
+                     }
+                  )
+              in
+              Flow_js.flow cx (default_t, UseT (use_op, annot_t));
+              let default_tast = ((default_loc, annot_t), default_ast) in
+              (* When there is an annotation available on the parameter, the default expression will
+                 be constrained to have the type of the annotation. So we store annot_t as the type
+                 of function parameter default to ensure later check on the parameter default will
+                 always return annot_t. *)
+              Node_cache.set_expression (Context.node_cache cx) default_tast
+          )
         | Root _ -> ()
         | Select { binding; _ } -> subtype_default_against_annotation binding
       in
