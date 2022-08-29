@@ -677,18 +677,13 @@ static void raise_out_of_shared_memory(void) {
 
 #ifdef _WIN32
 
-/* Reserves memory. This is required on Windows */
-static void win_reserve(char* mem, size_t sz) {
+/* On Linux, memfd_reserve is only used to reserve memory that is mmap'd to the
+ * memfd file. On Windows, this is required. */
+static void memfd_reserve(char* mem, size_t sz) {
   if (!VirtualAlloc(mem, sz, MEM_COMMIT, PAGE_READWRITE)) {
     win32_maperr(GetLastError());
     raise_out_of_shared_memory();
   }
-}
-
-/* On Linux, memfd_reserve is only used to reserve memory that is mmap'd to the
- * memfd file. */
-static void memfd_reserve(char* mem, size_t sz) {
-  win_reserve(mem, sz);
 }
 
 #elif defined(__APPLE__)
@@ -725,18 +720,11 @@ static void map_info_page(int page_bsize) {
   // which is convenient to stick here, like the log level.
   assert(page_bsize >= sizeof(shmem_info_t));
   info = (shmem_info_t*)memfd_map(page_bsize);
-
-#ifdef _WIN32
-  // Memory must be reserved on Windows
-  win_reserve((char*)info, page_bsize);
-#endif
 }
 
 static void define_mappings(int page_bsize) {
   assert(info != NULL);
   size_t locals_bsize = info->locals_bsize;
-  size_t hashtbl_bsize = info->hashtbl_bsize;
-  size_t heap_bsize = info->heap_bsize;
 
   shared_mem = memfd_map(info->shared_mem_bsize);
 
@@ -745,21 +733,6 @@ static void define_mappings(int page_bsize) {
 
   /* Hashtable */
   hashtbl = (helt_t*)(shared_mem + page_bsize + locals_bsize);
-
-#ifdef _WIN32
-  // Memory must be reserved on Windows. Heap allocations will be reserved
-  // in hh_alloc, so we just reserve the locals and hashtbl memory here.
-  win_reserve((char*)locals, locals_bsize);
-  win_reserve((char*)hashtbl, hashtbl_bsize);
-#endif
-
-#ifdef MADV_DONTDUMP
-  // We are unlikely to get much useful information out of the shared heap in
-  // a core file. Moreover, it can be HUGE, and the extensive work done dumping
-  // it once for each CPU can mean that the user will reboot their machine
-  // before the much more useful stack gets dumped!
-  madvise(hashtbl, hashtbl_bsize + heap_bsize, MADV_DONTDUMP);
-#endif
 }
 
 static value alloc_heap_bigarray(void) {
@@ -803,6 +776,8 @@ CAMLprim value hh_shared_init(value config_val, value num_workers_val) {
    * workers, like the heap pointer; and (3) various configuration which is
    * conventient to stick here, like the log level. */
   map_info_page(page_bsize);
+  memfd_reserve((char*)info, page_bsize);
+
   info->locals_bsize = locals_bsize;
   info->hashtbl_bsize = hashtbl_bsize;
   info->heap_bsize = heap_bsize;
@@ -825,11 +800,23 @@ CAMLprim value hh_shared_init(value config_val, value num_workers_val) {
 
   define_mappings(page_bsize);
 
+  // Reserve memory for locals and hashtbl. This is required on Windows.
+  memfd_reserve((char*)locals, locals_bsize);
+  memfd_reserve((char*)hashtbl, hashtbl_bsize);
+
   mark_stack_size = MARK_STACK_INIT_SIZE;
   mark_stack_init = malloc(MARK_STACK_INIT_SIZE * sizeof(addr_t));
   mark_stack = mark_stack_init;
   mark_stack_ptr = mark_stack;
   mark_stack_end = mark_stack + MARK_STACK_INIT_SIZE;
+
+#ifdef MADV_DONTDUMP
+  // We are unlikely to get much useful information out of the shared heap in
+  // a core file. Moreover, it can be HUGE, and the extensive work done dumping
+  // it once for each CPU can mean that the user will reboot their machine
+  // before the much more useful stack gets dumped!
+  madvise(hashtbl, hashtbl_bsize + heap_bsize, MADV_DONTDUMP);
+#endif
 
 #ifndef _WIN32
   // Uninstall ocaml's segfault handler. It's supposed to throw an exception on
