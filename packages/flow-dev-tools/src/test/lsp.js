@@ -19,6 +19,6 @@ export type RpcConnection = {
 };
 
 export type LSPMessage =
-  | {method: string, params: $ReadOnlyArray<mixed> | {...} | void} // Notification/request
+  | {method: string, params: $ReadOnlyArray<mixed> | {...} | void, id?: mixed} // Notification/request
   | {method: string, result: $ReadOnlyArray<mixed> | {...} | null} // Response
   | {method: string, error: mixed}; // Response-error

@@ -971,7 +971,11 @@ class Builder {
    * future since that's not required by the LSP.
    */
   static doesMessageMatch(actual: LSPMessage, expected: LSPMessage): boolean {
-    return JSON.stringify(actual) === JSON.stringify(expected);
+    const replacer =
+      typeof expected.id == 'undefined' && typeof actual.id !== 'undefined'
+        ? (key, value) => (key == 'id' ? undefined : value)
+        : null;
+    return JSON.stringify(actual, replacer) === JSON.stringify(expected);
   }
 
   /**
