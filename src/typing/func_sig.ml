@@ -267,6 +267,7 @@ struct
           | Inferred _ ->
             VoidT.make (replace_desc_reason RUnannotatedNext reason) |> with_trust bogus_trust
         in
+        let return_targ = Tvar.mk cx reason in
         let (iterable, generator) =
           match kind with
           | Generator _ -> ("$Iterable", "Generator")
@@ -279,7 +280,7 @@ struct
               cx
               reason
               (OrdinaryName iterable)
-              [yield_t; Tvar.mk cx reason; Tvar.mk cx reason]
+              [yield_t; return_targ; next_t]
           in
           let t =
             Flow.reposition
@@ -296,7 +297,7 @@ struct
               cx
               reason
               (OrdinaryName generator)
-              [yield_t; Tvar.mk cx reason; next_t]
+              [yield_t; return_targ; next_t]
           in
           let t =
             Flow.reposition
