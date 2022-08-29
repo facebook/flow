@@ -567,10 +567,7 @@ let resolve_chain_expression cx ~cond exp =
     | NonConditionalContext -> None
     | OtherConditionalTest -> Some OtherTest
   in
-  (* The is_existence_check parameters is only used for old-env refinements, so it's irrelevant now. *)
-  let (t, _, exp, _, _) =
-    Statement.optional_chain ~hint:Hint_None ~cond ~is_existence_check:false cx exp
-  in
+  let (t, _, exp) = Statement.optional_chain ~hint:Hint_None ~cond cx exp in
   Node_cache.set_expression cache exp;
   (t, unknown_use)
 

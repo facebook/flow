@@ -399,7 +399,7 @@ module Make
        [Pre] if c S1 else S2 [Post]
     *)
     | (loc, If { If.test; consequent; alternate; comments }) ->
-      let (test_ast, _, _, _) = predicates_of_condition cx ~hint:Hint_None ~cond:OtherTest test in
+      let test_ast = predicates_of_condition cx ~hint:Hint_None ~cond:OtherTest test in
       let (then_ast, then_abnormal) =
         Abnormal.catch_stmt_control_flow_exception (fun () -> statement cx consequent)
       in
@@ -545,7 +545,7 @@ module Make
                    let switch_discriminant_reason =
                      mk_reason (RCustom "switch discriminant") (fst discriminant)
                    in
-                   let ((_, fake_ast), _, _, _) =
+                   let (_, fake_ast) =
                      predicates_of_condition
                        cx
                        ~hint:Hint_None
@@ -693,9 +693,7 @@ module Make
         | Some expr ->
           let hint = (Context.environment cx).Loc_env.return_hint in
           if Env.in_predicate_scope cx then
-            let ((((_, t), _) as ast), _, _, _) =
-              predicates_of_condition ~hint ~cond:OtherTest cx expr
-            in
+            let (((_, t), _) as ast) = predicates_of_condition ~hint ~cond:OtherTest cx expr in
             let (p_map, n_map) = Env.predicate_refinement_maps cx loc in
             let pred_reason = update_desc_reason (fun desc -> RPredicateOf desc) reason in
             (OpenPredT { reason = pred_reason; base_t = t; m_pos = p_map; m_neg = n_map }, Some ast)
@@ -839,7 +837,7 @@ module Make
     (***************************************************************************)
     | (loc, While { While.test; body; comments }) ->
       (* generate loop test preds and their complements *)
-      let (test_ast, _, _, _) = predicates_of_condition ~hint:Hint_None ~cond:OtherTest cx test in
+      let test_ast = predicates_of_condition ~hint:Hint_None ~cond:OtherTest cx test in
       (* traverse loop body - after this, body_env = Post' *)
       let (body_ast, _) =
         Abnormal.catch_stmt_control_flow_exception (fun () -> statement cx body)
@@ -860,7 +858,7 @@ module Make
         Abnormal.catch_stmt_control_flow_exception (fun () -> statement cx body)
         |> Abnormal.ignore_break_or_continue_to_label None
       in
-      let (test_ast, _, _, _) = predicates_of_condition ~hint:Hint_None ~cond:OtherTest cx test in
+      let test_ast = predicates_of_condition ~hint:Hint_None ~cond:OtherTest cx test in
       let ast = (loc, DoWhile { DoWhile.body = body_ast; test = test_ast; comments }) in
       Abnormal.check_stmt_control_flow_exception (ast, body_abnormal)
     (***************************************************************************)
@@ -890,9 +888,7 @@ module Make
         match test with
         | None -> None
         | Some expr ->
-          let (expr_ast, _, _, _) =
-            predicates_of_condition ~hint:Hint_None ~cond:OtherTest cx expr
-          in
+          let expr_ast = predicates_of_condition ~hint:Hint_None ~cond:OtherTest cx expr in
           Some expr_ast
       in
       let (body_ast, _) =
@@ -916,7 +912,7 @@ module Make
     | (loc, ForIn { ForIn.left; right; body; each; comments }) ->
       let reason = mk_reason (RCustom "for-in") loc in
       let eval_right () =
-        let ((((_, _), _) as right_ast), _, _, _) =
+        let (((_, _), _) as right_ast) =
           predicates_of_condition ~hint:Hint_None ~cond:OtherTest cx right
         in
         right_ast
@@ -1033,7 +1029,7 @@ module Make
       in
       let reason = mk_reason reason_desc loc in
       let eval_right () =
-        let ((((_, t), _) as right_ast), _, _, _) =
+        let (((_, t), _) as right_ast) =
           predicates_of_condition ~hint:Hint_None ~cond:OtherTest cx right
         in
         let elem_t = for_of_elemt cx t reason await in
@@ -2625,7 +2621,7 @@ module Make
     | OptionalCall _ -> subscript ~hint ~cond cx ex
     | Conditional { Conditional.test; consequent; alternate; comments } ->
       let reason = mk_reason RConditional loc in
-      let (test, _, _, _) = predicates_of_condition ~hint:Hint_None ~cond:OtherTest cx test in
+      let test = predicates_of_condition ~hint:Hint_None ~cond:OtherTest cx test in
       let ((((_, t1), _) as consequent), then_abnormal) =
         Abnormal.catch_expr_control_flow_exception (fun () -> expression cx ~hint consequent)
       in
@@ -3017,39 +3013,16 @@ module Make
         ) else
           Tast_utils.unchecked_mapper#expression ex)
 
-  (* Handles operations that may traverse optional chains.
-     If there is some cond, will allow non-existent properties to be looked up
-       at the top-level of the chain.
-     If is_existence_check is true and the top of the chain is a member lookup
-       "a.x", generate the predicate "a.x exists" and "a has property x".
-     In addition to checking chains, this function produces predicates of the above
-     form for all optional member accesses in the chain: everywhere we see an
-     expression like "a.x?.y", generate the predicate "a.x exists" and "a has
-     property x", because if that was not the case, the optional chain operator
-     would short-circuit the evaluation of the chain at runtime.
-
-     This function also generates the inverse of the predicates, for when the chain
-     does short-circuit. So for example, if called with
-     ~is_existence_check:true, a?.b.c?.d generates the following predicates
-     for the non-short-circuit case:
-       "a exists" /\ "a.b.c exists" /\ "a.b has property c" /\ "a.b.c.d exists" /\ "a.b.c has property d"
-     and the negation of the above for the short-circuiting/falsy case.
-
-     There is also an optional sentinel_refine argument which is applied to the
-     top of the chain, and which can produce an additional refinement, but which
-     callers will handle specially. See usage in condition_of_maybe_sentinel.
+  (* Handles operations that may traverse optional chains
 
      Returns a tuple:
        * type of expression if no optional chains short-circuited,
        * optional type of all possible short-circuitings,
        * typed AST of expression, where the type is the combination of
          short-circuiting and non short-circuiting (i.e. representing the actual
-         range of possible types of the expression),
-       * predicates that hold if the chain does not short-circuit and if it
-         does.
-       * result of applying sentinel_refine to the top of the chain, if anything.
+         range of possible types of the expression)
   *)
-  and optional_chain ~hint ~cond ~is_existence_check ?sentinel_refine cx ((loc, e) as ex) =
+  and optional_chain ~hint ~cond cx ((loc, e) as ex) =
     let open Ast.Expression in
     let factor_out_optional (_, e) =
       let (opt_state, filtered_out_loc, e') =
@@ -3092,79 +3065,6 @@ module Make
         | NonOptional -> Member member
       in
       (e', opt_state, call_ast, member_ast)
-    in
-    let mk_preds =
-      List.fold_left
-        (fun preds (key, pred, ty) ->
-          match preds with
-          | Some (preds, not_preds, xtys) ->
-            Some
-              ( Key_map.add key pred preds,
-                Key_map.add key (NotP pred) not_preds,
-                Key_map.add key ty xtys
-              )
-          | None ->
-            Some
-              ( Key_map.singleton key pred,
-                Key_map.singleton key (NotP pred),
-                Key_map.singleton key ty
-              ))
-        None
-    in
-    (* Later bindings for the same key in pred_list will override earlier bindings.
-       They are treated as a unit in both positive and negative branches of the
-       refinements: if the positive branch is "a.b truthy /\ a has truthy prop b",
-       then the negative branch is "a.b not truthy /\ a does not have truthy prop b".
-       This unit is itself then AND'ed to the positive branch and OR'ed to the
-       negative branch of any existing predicates.
-    *)
-    let combine_preds existing_preds pred_list =
-      let new_preds = mk_preds pred_list in
-      match (existing_preds, new_preds) with
-      | (Some existing_preds, None) -> Some existing_preds
-      | ( Some (existing_preds, existing_not_preds, existing_xtys),
-          Some (new_preds, new_not_preds, new_xtys)
-        ) ->
-        Some
-          ( mk_and existing_preds new_preds,
-            mk_or existing_not_preds new_not_preds,
-            Key_map.union existing_xtys new_xtys
-          )
-      | (None, _) -> new_preds
-    in
-    let exists_pred expr lhs_t =
-      if is_existence_check then
-        let pred =
-          (* there is some cond when this expression is the top-level of a conditional,
-             "if ([expr]) {...}". In this case, we check both that the expression exists and
-             that it has a truthy type (that's what the "ExistsP" predicate does). If we're
-             deeper in the chain, then cond will be None, and we only care if the expression
-             is null or undefined, not if it's false/0/"". *)
-          if Base.Option.is_some cond then
-            ExistsP
-          else
-            NotP MaybeP
-        in
-        match Refinement.key ~allow_optional:true expr with
-        | Some key_name -> [(key_name, pred, lhs_t)]
-        | None -> []
-      else
-        []
-    in
-    let prop_exists_pred object_ name obj_t prop_reason =
-      if is_existence_check then
-        let prop_pred =
-          (* see comment on exists_pred *)
-          if Base.Option.is_some cond then
-            PropExistsP (name, prop_reason)
-          else
-            PropNonMaybeP (name, prop_reason)
-        in
-        match Refinement.key ~allow_optional:true object_ with
-        | Some key_name -> [(key_name, prop_pred, obj_t)]
-        | None -> []
-      else
-        []
     in
     let try_non_chain cx loc e ~call_ast ~member_ast =
       (* Special cases where optional chaining doesn't occur *)
@@ -3271,18 +3171,15 @@ module Make
         in
         let id_t = bogus_trust () |> MixedT.at callee_loc in
         Some
-          ( ( (loc, lhs_t),
-              call_ast
-                {
-                  Call.callee = ((callee_loc, id_t), Identifier ((id_loc, id_t), name));
-                  targs;
-                  arguments;
-                  comments;
-                }
-                lhs_t
-            ),
-            None,
-            None
+          ( (loc, lhs_t),
+            call_ast
+              {
+                Call.callee = ((callee_loc, id_t), Identifier ((id_loc, id_t), name));
+                targs;
+                arguments;
+                comments;
+              }
+              lhs_t
           )
       | Call
           {
@@ -3307,27 +3204,24 @@ module Make
           static_method_call_Object cx loc ~hint callee_loc prop_loc expr obj_t name targs arguments
         in
         Some
-          ( ( (loc, lhs_t),
-              let t = bogus_trust () |> MixedT.at callee_loc in
-              call_ast
-                {
-                  Call.callee (* TODO(vijayramamurthy): what is the type of `Object.name` ? *) =
-                    ( (callee_loc, t),
-                      Member
-                        {
-                          Member._object = obj_ast;
-                          property = Member.PropertyIdentifier ((prop_loc, t), id);
-                          comments = member_comments;
-                        }
-                    );
-                  targs;
-                  arguments;
-                  comments;
-                }
-                lhs_t
-            ),
-            None,
-            None
+          ( (loc, lhs_t),
+            let t = bogus_trust () |> MixedT.at callee_loc in
+            call_ast
+              {
+                Call.callee (* TODO(vijayramamurthy): what is the type of `Object.name` ? *) =
+                  ( (callee_loc, t),
+                    Member
+                      {
+                        Member._object = obj_ast;
+                        property = Member.PropertyIdentifier ((prop_loc, t), id);
+                        comments = member_comments;
+                      }
+                  );
+                targs;
+                arguments;
+                comments;
+              }
+              lhs_t
           )
       | Call
           {
@@ -3385,26 +3279,23 @@ module Make
           )
         in
         Some
-          ( ( (loc, lhs_t),
-              call_ast
-                {
-                  Call.callee =
-                    ( (callee_loc, prop_t),
-                      Member
-                        {
-                          Member._object = ((super_loc, super_t), Super super);
-                          property = Member.PropertyIdentifier ((ploc, prop_t), id);
-                          comments = member_comments;
-                        }
-                    );
-                  targs;
-                  arguments = arguments_ast;
-                  comments;
-                }
-                lhs_t
-            ),
-            None,
-            None
+          ( (loc, lhs_t),
+            call_ast
+              {
+                Call.callee =
+                  ( (callee_loc, prop_t),
+                    Member
+                      {
+                        Member._object = ((super_loc, super_t), Super super);
+                        property = Member.PropertyIdentifier ((ploc, prop_t), id);
+                        comments = member_comments;
+                      }
+                  );
+                targs;
+                arguments = arguments_ast;
+                comments;
+              }
+              lhs_t
           )
       | Call { Call.callee = (super_loc, Super super) as callee; targs; arguments; comments } ->
         let (targts, targs) = convert_call_targs_opt cx targs in
@@ -3447,18 +3338,15 @@ module Make
           )
         in
         Some
-          ( ( (loc, lhs_t),
-              call_ast
-                {
-                  Call.callee = ((super_loc, super_t), Super super);
-                  targs;
-                  arguments = arguments_ast;
-                  comments;
-                }
-                lhs_t
-            ),
-            None,
-            None
+          ( (loc, lhs_t),
+            call_ast
+              {
+                Call.callee = ((super_loc, super_t), Super super);
+                targs;
+                arguments = arguments_ast;
+                comments;
+              }
+              lhs_t
           )
       (******************************************)
       (* See ~/www/static_upstream/core/ *)
@@ -3543,7 +3431,7 @@ module Make
                 ~f:(Base.Fn.compose snd (expression_or_spread cx ~hint:Hint_None))
                 arguments
             in
-            let ((((_, cond_t), _) as cond), _, _, _) =
+            let (((_, cond_t), _) as cond) =
               predicates_of_condition ~hint:Hint_None ~cond:OtherTest cx cond
             in
             let reason = mk_reason (RFunctionCall (desc_of_t callee_t)) loc in
@@ -3571,7 +3459,7 @@ module Make
             Tast_utils.error_mapper#arg_list arguments
         in
         let lhs_t = VoidT.at loc |> with_trust bogus_trust in
-        Some (((loc, lhs_t), call_ast { Call.callee; targs; arguments; comments } lhs_t), None, None)
+        Some ((loc, lhs_t), call_ast { Call.callee; targs; arguments; comments } lhs_t)
       | Member
           {
             Member._object =
@@ -3589,20 +3477,17 @@ module Make
         let reason = mk_reason (RCustom "ReactGraphQLMixin") loc in
         let lhs_t = Flow.get_builtin cx (OrdinaryName "ReactGraphQLMixin") reason in
         Some
-          ( ( (loc, lhs_t),
-              (* TODO(vijayramamurthy) what's the type of "ReactGraphQL"? *)
-              let t = AnyT.at Untyped object_loc in
-              let property = Member.PropertyIdentifier ((ploc, t), name) in
-              member_ast
-                {
-                  Member._object = ((object_loc, t), Identifier ((id_loc, t), name));
-                  property;
-                  comments;
-                }
-                lhs_t
-            ),
-            None,
-            None
+          ( (loc, lhs_t),
+            (* TODO(vijayramamurthy) what's the type of "ReactGraphQL"? *)
+            let t = AnyT.at Untyped object_loc in
+            let property = Member.PropertyIdentifier ((ploc, t), name) in
+            member_ast
+              {
+                Member._object = ((object_loc, t), Identifier ((id_loc, t), name));
+                property;
+                comments;
+              }
+              lhs_t
           )
       | Member
           {
@@ -3632,16 +3517,7 @@ module Make
               lhs_t
           )
         in
-        (* Even though there's no optional chaining for Super member accesses, we
-           can still get predicates *)
-        let sentinel_refinement =
-          Base.Option.value_map ~f:(fun f -> f lhs_t) ~default:None sentinel_refine
-        in
-        let preds =
-          exists_pred (loc, e) lhs_t
-          @ prop_exists_pred (super_loc, Super super) name super_t prop_reason
-        in
-        Some (ast, mk_preds preds, sentinel_refinement)
+        Some ast
       | _ -> None
     in
     let (e', opt_state, call_ast, member_ast) = factor_out_optional ex in
@@ -3663,27 +3539,12 @@ module Make
        * exp: the typed AST expression, where the type of the node is the
          "actual" type of the expression, including both chain failures and
          chain successes.
-       * preds: any predicates that can be used to refine elements of the
-         optional chain based on whether a ?. operator short-circuits. If any
-         predicates exist, this will be a Key_map.t of positive refinements
-         (the chain didn't short circuit), a Key_map.t of negative refinements
-         (the chain did short-circuit), and a Key_map.t of the original types
-         of refined expressions. See predicates_of_condition for how these
-         are used.
-       * sentinel_refinement: optional additional predicate obtained by applying
-         sentinel_refine to the top of the chain
 
      So, if `a: ?{b?: {c: number}}`, and the checked expression is `a?.b?.c`,
        then the output would be (T1, T2, T3, exp), where:
        * T1 = number
        * T2 = void, both from `a: ?{...}` and from `a: {b? : {...}}`
        * exp = ast for `a?.b?.c` with type T1 U T2
-       * preds = assuming the overall function was called with ~cond,
-             "a exists and has non-nullish property b", "a.b exists and has
-             truthy property c", and "a.b.c is truthy", as well as the
-             types of a, a.b, and a.b.c
-       * possibly an additional refinement based on the sentinel_refine function,
-         passed in by the caller.
 
     Below are several helper functions for setting up this tuple in the
     presence of chaining.
@@ -3698,11 +3559,10 @@ module Make
         )
     in
     let noop _ = None in
-    let in_env _preds f = f () in
     let handle_new_chain
         lhs_reason
         loc
-        (chain_t, voided_t, object_ast, preds, _)
+        (chain_t, voided_t, object_ast)
         ~this_reason
         ~subexpressions
         ~get_reason
@@ -3738,7 +3598,7 @@ module Make
          essentially the successfully filtered receiver of the function call
          is flowed into it, and it is used as the `this`-parameter of the
          calltype that the method call will flow into. *)
-      let (subexpression_types, subexpression_asts) = subexpressions ~hint:(Hint_t chain_t) preds in
+      let (subexpression_types, subexpression_asts) = subexpressions ~hint:(Hint_t chain_t) in
       let reason = get_reason chain_t in
       let chain_reason = mk_reason ROptionalChain loc in
       let mem_tvar =
@@ -3771,10 +3631,10 @@ module Make
             Flow.flow_t cx (voided_out, t)
         )
       in
-      (OpenT mem_tvar, Some voided_out, lhs_t, chain_t, object_ast, subexpression_asts, preds)
+      (OpenT mem_tvar, Some voided_out, lhs_t, chain_t, object_ast, subexpression_asts)
     in
     let handle_continue_chain
-        (chain_t, voided_t, object_ast, preds, _)
+        (chain_t, voided_t, object_ast)
         ~refine
         ~refinement_action
         ~subexpressions
@@ -3788,7 +3648,7 @@ module Make
          voided_t parameter. We'll flow that type into the type of the overall
          expression to account for that possibility.
       *)
-      let (subexpression_types, subexpression_asts) = subexpressions ~hint:(Hint_t chain_t) preds in
+      let (subexpression_types, subexpression_asts) = subexpressions ~hint:(Hint_t chain_t) in
       let reason = get_reason chain_t in
       let res_t =
         match (test_hooks chain_t, refine ()) with
@@ -3801,7 +3661,7 @@ module Make
         | (None, None) -> get_result subexpression_types reason chain_t
       in
       let lhs_t = join_optional_branches voided_t res_t in
-      (res_t, voided_t, lhs_t, chain_t, object_ast, subexpression_asts, preds)
+      (res_t, voided_t, lhs_t, chain_t, object_ast, subexpression_asts)
     in
     let handle_chaining
         ?refinement_action
@@ -3821,7 +3681,7 @@ module Make
            above is None. We don't need to consider optional short-circuiting, so
            we can call expression_ rather than optional_chain. *)
         let (((_, obj_t), _) as object_ast) = expression cx ~hint:Hint_None object_ in
-        let (subexpression_types, subexpression_asts) = subexpressions ~hint:(Hint_t obj_t) None in
+        let (subexpression_types, subexpression_asts) = subexpressions ~hint:(Hint_t obj_t) in
         let reason = get_reason obj_t in
         let lhs_t =
           match (test_hooks obj_t, refine ()) with
@@ -3833,18 +3693,18 @@ module Make
               refinement_action
           | (None, None) -> get_result subexpression_types reason obj_t
         in
-        (lhs_t, None, lhs_t, obj_t, object_ast, subexpression_asts, None)
+        (lhs_t, None, lhs_t, obj_t, object_ast, subexpression_asts)
       | NewChain ->
         let lhs_reason = mk_expression_reason object_ in
-        let ((filtered_t, voided_t, object_ast, preds, _) as object_data) =
-          optional_chain ~hint:Hint_None ~cond:None ~is_existence_check:true cx object_
+        let ((filtered_t, voided_t, object_ast) as object_data) =
+          optional_chain ~hint:Hint_None ~cond:None cx object_
         in
         begin
           match refine () with
           | Some t ->
             Context.mark_optional_chain cx loc lhs_reason ~useful:false;
             let (subexpression_types, subexpression_asts) =
-              subexpressions ~hint:(Hint_t filtered_t) preds
+              subexpressions ~hint:(Hint_t filtered_t)
             in
             let tout =
               Base.Option.value_map
@@ -3857,8 +3717,7 @@ module Make
               join_optional_branches voided_t tout,
               filtered_t,
               object_ast,
-              subexpression_asts,
-              preds
+              subexpression_asts
             )
           | _ ->
             handle_new_chain
@@ -3873,7 +3732,7 @@ module Make
         end
       | ContinueChain ->
         handle_continue_chain
-          (optional_chain ~hint:Hint_None ~cond:None ~is_existence_check:false cx object_)
+          (optional_chain ~hint:Hint_None ~cond:None cx object_)
           ~refine
           ~refinement_action
           ~subexpressions
@@ -3883,10 +3742,10 @@ module Make
     in
     let result =
       match try_non_chain cx loc e' ~call_ast ~member_ast with
-      | Some ((((_, lhs_t), _) as res), preds, sentinel_refinement) ->
+      | Some (((_, lhs_t), _) as res) ->
         (* Nothing to do with respect to optional chaining, because we're in a
            case where chaining isn't allowed. *)
-        (lhs_t, None, res, preds, sentinel_refinement)
+        (lhs_t, None, res)
       | None ->
         let (e', method_receiver_and_state) =
           (* If we're looking at a call, look "one level deeper" to see if the
@@ -3975,13 +3834,11 @@ module Make
                 Flow.flow cx (obj_t, use)
             )
           in
-          let eval_index ~hint:_ preds =
-            in_env preds (fun () ->
-                let (((_, tind), _) as index) = expression cx ~hint:Hint_None index in
-                (tind, index)
-            )
+          let eval_index ~hint:_ =
+            let (((_, tind), _) as index) = expression cx ~hint:Hint_None index in
+            (tind, index)
           in
-          let (filtered_out, voided_out, lhs_t, obj_t, object_ast, index, preds) =
+          let (filtered_out, voided_out, lhs_t, _, object_ast, index) =
             handle_chaining
               opt_state
               _object
@@ -3994,11 +3851,6 @@ module Make
               ~refine:(fun () -> Refinement.get ~allow_optional:true cx (loc, e) loc)
               ~get_reason:(Fun.const reason)
           in
-          let sentinel_refinement =
-            Base.Option.value_map ~f:(fun f -> f obj_t) ~default:None sentinel_refine
-          in
-          let new_pred_list = exists_pred (loc, e') lhs_t in
-          let preds = combine_preds preds new_pred_list in
           ( filtered_out,
             voided_out,
             ( (loc, lhs_t),
@@ -4009,9 +3861,7 @@ module Make
                   comments;
                 }
                 filtered_out
-            ),
-            preds,
-            sentinel_refinement
+            )
           )
         (* e.l *)
         | ( Member
@@ -4039,12 +3889,12 @@ module Make
                 Flow.flow cx (obj_t, use)
             )
           in
-          let (filtered_out, voided_out, lhs_t, obj_t, object_ast, _, preds) =
+          let (filtered_out, voided_out, lhs_t, _, object_ast, _) =
             handle_chaining
               opt_state
               _object
               loc
-              ~subexpressions:(fun ~hint:_ _ -> ((), ()))
+              ~subexpressions:(fun ~hint:_ -> ((), ()))
               ~this_reason:(mk_expression_reason _object)
               ~get_result:get_mem_t
               ~refine:(fun () -> Refinement.get ~allow_optional:true cx (loc, e) loc)
@@ -4052,21 +3902,12 @@ module Make
               ~get_opt_use:(fun _ _ _ -> opt_use)
               ~get_reason:(Fun.const expr_reason)
           in
-          let sentinel_refinement =
-            Base.Option.value_map ~f:(fun f -> f obj_t) ~default:None sentinel_refine
-          in
-          let new_pred_list =
-            exists_pred (loc, e') filtered_out @ prop_exists_pred _object name obj_t prop_reason
-          in
-          let preds = combine_preds preds new_pred_list in
           let property = Member.PropertyIdentifier ((ploc, lhs_t), id) in
           ( filtered_out,
             voided_out,
             ( (loc, lhs_t),
               member_ast { Member._object = object_ast; property; comments } filtered_out
-            ),
-            preds,
-            sentinel_refinement
+            )
           )
         (* e.#l *)
         | ( Member
@@ -4094,28 +3935,24 @@ module Make
                 Flow.flow cx (obj_t, use)
             )
           in
-          let (filtered_out, voided_out, lhs_t, _, object_ast, _, preds) =
+          let (filtered_out, voided_out, lhs_t, _, object_ast, _) =
             handle_chaining
               opt_state
               _object
               loc
               ~this_reason:(mk_expression_reason _object)
-              ~subexpressions:(fun ~hint:_ _ -> ((), ()))
+              ~subexpressions:(fun ~hint:_ -> ((), ()))
               ~get_result:get_mem_t
               ~refine:(fun () -> Refinement.get ~allow_optional:true cx (loc, e) loc)
               ~test_hooks
               ~get_opt_use:(fun _ _ _ -> opt_use)
               ~get_reason:(Fun.const expr_reason)
           in
-          let new_pred_list = exists_pred (loc, e') lhs_t in
-          let preds = combine_preds preds new_pred_list in
           ( filtered_out,
             voided_out,
             ( (loc, lhs_t),
               member_ast { Member._object = object_ast; property; comments } filtered_out
-            ),
-            preds,
-            None
+            )
           )
         (* Method calls: e.l(), e.#l(), and e1[e2]() *)
         | ( Call { Call.callee = (lookup_loc, callee_expr) as callee; targs; arguments; comments },
@@ -4227,17 +4064,16 @@ module Make
                     Flow.flow cx (obj_t, use)
                 )
               in
-              let eval_args ~hint preds =
+              let eval_args ~hint =
                 let hint = decompose_hint (Decomp_MethodName name) hint in
-                in_env preds (fun () -> arg_list cx ~hint arguments)
+                arg_list cx ~hint arguments
               in
               let ( filtered_out,
                     lookup_voided_out,
                     member_lhs_t,
                     obj_filtered_out,
                     object_ast,
-                    argument_asts,
-                    _
+                    argument_asts
                   ) =
                 handle_chaining
                   member_opt
@@ -4296,13 +4132,11 @@ module Make
                     Flow.flow_t cx (obj_t, prop_t)
                 )
               in
-              let eval_args_and_expr ~hint preds =
-                in_env preds (fun () ->
-                    let (((_, elem_t), _) as expr) = expression cx ~hint:Hint_None expr in
-                    let hint = decompose_hint Decomp_MethodElem hint in
-                    let (argts, arguments_ast) = arg_list cx ~hint arguments in
-                    ((argts, elem_t), (arguments_ast, expr))
-                )
+              let eval_args_and_expr ~hint =
+                let (((_, elem_t), _) as expr) = expression cx ~hint:Hint_None expr in
+                let hint = decompose_hint Decomp_MethodElem hint in
+                let (argts, arguments_ast) = arg_list cx ~hint arguments in
+                ((argts, elem_t), (arguments_ast, expr))
               in
               let this_reason = mk_expression_reason callee in
               let ( filtered_out,
@@ -4310,8 +4144,7 @@ module Make
                     member_lhs_t,
                     obj_filtered_out,
                     object_ast,
-                    (argument_asts, expr_ast),
-                    _
+                    (argument_asts, expr_ast)
                   ) =
                 handle_chaining
                   member_opt
@@ -4359,9 +4192,7 @@ module Make
                   comments;
                 }
                 filtered_out
-            ),
-            None,
-            None
+            )
           )
         (* e1(e2...) *)
         | (Call { Call.callee; targs; arguments; comments }, None) ->
@@ -4385,8 +4216,8 @@ module Make
                 Flow.flow cx (f, use)
             )
           in
-          let eval_args ~hint preds = in_env preds (fun () -> arg_list cx ~hint arguments) in
-          let (filtered_out, voided_out, lhs_t, _, object_ast, argument_asts, _) =
+          let eval_args ~hint = arg_list cx ~hint arguments in
+          let (filtered_out, voided_out, lhs_t, _, object_ast, argument_asts) =
             handle_chaining
               opt_state
               callee
@@ -4402,21 +4233,10 @@ module Make
           let exp callee =
             call_ast { Call.callee; targs; arguments = argument_asts; comments } filtered_out
           in
-          (filtered_out, voided_out, ((loc, lhs_t), exp object_ast), None, None)
-        | (This _, _)
-        | (Identifier _, _)
-          when is_existence_check ->
-          (* if optional_chain is called from a conditional position and we're generating
-             predicates, we might recursively reach an identifier, and if the level "above"
-             it in the chain was a "?." operator, we'll need to add the predicate that the
-             property exists, so that e.g. "a?.b" generates the predicates "a.b exists",
-             "a has prop b", and "a exists". *)
-          let (((_, t), _) as res) = expression ?cond ~hint:Hint_None cx ex in
-          let preds = mk_preds @@ exists_pred (loc, e') t in
-          (t, None, res, preds, None)
+          (filtered_out, voided_out, ((loc, lhs_t), exp object_ast))
         | _ ->
           let (((_, t), _) as res) = expression ?cond ~hint:Hint_None cx ex in
-          (t, None, res, None, None))
+          (t, None, res))
     in
     result
 
@@ -4431,7 +4251,7 @@ module Make
     (argts, (args_loc, { Ast.Expression.ArgList.arguments = arg_asts; comments }))
 
   and subscript ~hint ~cond cx ex =
-    let (_, _, ast, _, _) = optional_chain ~hint ~cond ~is_existence_check:false cx ex in
+    let (_, _, ast) = optional_chain ~hint ~cond cx ex in
     ast
 
   (* Handles function calls that appear in conditional contexts. The main
@@ -4958,9 +4778,7 @@ module Make
     match operator with
     | Or ->
       let () = check_default_pattern cx left right in
-      let ((((_, t1), _) as left), _, _, _) =
-        predicates_of_condition ~hint ~cond:OtherTest cx left
-      in
+      let (((_, t1), _) as left) = predicates_of_condition ~hint ~cond:OtherTest cx left in
       let ((((_, t2), _) as right), right_abnormal) =
         Abnormal.catch_expr_control_flow_exception (fun () ->
             expression cx ~hint:(Hint_api.merge_hints hint (Hint_t t1)) right
@@ -4977,9 +4795,7 @@ module Make
         { operator = Or; left; right; comments }
       )
     | And ->
-      let ((((_, t1), _) as left), _, _, _) =
-        predicates_of_condition ~hint ~cond:OtherTest cx left
-      in
+      let (((_, t1), _) as left) = predicates_of_condition ~hint ~cond:OtherTest cx left in
       let ((((_, t2), _) as right), right_abnormal) =
         Abnormal.catch_expr_control_flow_exception (fun () -> expression cx ~hint right)
       in
@@ -5080,13 +4896,11 @@ module Make
       *)
       match (optional, mode) with
       | ((NewChain | ContinueChain), Delete) ->
-        let (o, _, _object, preds, _) =
-          optional_chain ~hint:Hint_None ~cond:None ~is_existence_check:false cx obj
-        in
-        (o, _object, preds)
+        let (o, _, _object) = optional_chain ~hint:Hint_None ~cond:None cx obj in
+        (o, _object)
       | _ ->
         let (((_, o), _) as _object) = expression cx ~hint:Hint_None obj in
-        (o, _object, None)
+        (o, _object)
     in
     match lhs with
     (* super.name = e *)
@@ -5122,7 +4936,7 @@ module Make
      comments;
     } ->
       let lhs_reason = mk_expression_reason _object in
-      let (o, _object, _) = typecheck_object _object in
+      let (o, _object) = typecheck_object _object in
       let prop_t =
         (* if we fire this hook, it means the assignment is a sham. *)
         if Type_inference_hooks_js.dispatch_member_hook cx name prop_loc o then
@@ -5157,7 +4971,7 @@ module Make
         | _ -> Normal
       in
       let lhs_reason = mk_expression_reason _object in
-      let (o, _object, _) = typecheck_object _object in
+      let (o, _object) = typecheck_object _object in
       let prop_t =
         (* if we fire this hook, it means the assignment is a sham. *)
         if Type_inference_hooks_js.dispatch_member_hook cx name prop_loc o then
@@ -5206,7 +5020,7 @@ module Make
     | { Member._object; property = Member.PropertyExpression ((iloc, _) as index); comments } ->
       let reason = mk_reason (RPropertyAssignment None) lhs_loc in
       let lhs_reason = mk_expression_reason _object in
-      let (o, _object, _) = typecheck_object _object in
+      let (o, _object) = typecheck_object _object in
       let (((_, i), _) as index) = expression cx ~hint:Hint_None index in
       let use_op = make_op ~lhs:reason ~prop:(mk_reason (desc_of_reason lhs_prop_reason) iloc) in
       let upper = maybe_chain lhs_reason (SetElemT (use_op, reason, i, mode, t, None)) in
@@ -5457,7 +5271,7 @@ module Make
           let () = update_env result_t in
           (lhs_t, lhs_pattern_ast, rhs_ast)
         | Assignment.AndAssign ->
-          let (((_, lhs_t), _), _, _, _) =
+          let ((_, lhs_t), _) =
             predicates_of_condition ~hint:Hint_None ~cond:OtherTest cx left_expr
           in
           let ((((_, rhs_t), _) as rhs_ast), right_abnormal) =
@@ -5478,7 +5292,7 @@ module Make
           (lhs_t, lhs_pattern_ast, rhs_ast)
         | Assignment.OrAssign ->
           let () = check_default_pattern cx left_expr rhs in
-          let (((_, lhs_t), _), _, _, _) =
+          let ((_, lhs_t), _) =
             predicates_of_condition ~hint:Hint_None ~cond:OtherTest cx left_expr
           in
           let ((((_, rhs_t), _) as rhs_ast), right_abnormal) =
@@ -6173,30 +5987,6 @@ module Make
       )
     | _ -> None
 
-  and mk_and map1 map2 =
-    Key_map.merge
-      (fun _ p1 p2 ->
-        match (p1, p2) with
-        | (None, None) -> None
-        | (Some p, None)
-        | (None, Some p) ->
-          Some p
-        | (Some p1, Some p2) -> Some (AndP (p1, p2)))
-      map1
-      map2
-
-  and mk_or map1 map2 =
-    Key_map.merge
-      (fun _ p1 p2 ->
-        match (p1, p2) with
-        | (None, None) -> None
-        | (Some _, None)
-        | (None, Some _) ->
-          None
-        | (Some p1, Some p2) -> Some (OrP (p1, p2)))
-      map1
-      map2
-
   (* Given an expression found in a test position, notices certain
      type refinements which follow from the test's success or failure,
      and returns a 5-tuple:
@@ -6210,25 +6000,6 @@ module Make
   and predicates_of_condition cx ~hint ~cond e =
     let open Ast in
     let open Expression in
-    (* package empty result (no refinements derived) from test type *)
-    let empty_result test_tast = (test_tast, Key_map.empty, Key_map.empty, Key_map.empty) in
-    let add_predicate key unrefined_t pred sense (test_tast, ps, notps, tmap) =
-      (* if two predicates are applied to the same key, in the positive branch (which depends on
-         sense) the predicates are conjuncted, and in the negative branch they are disjuncted *)
-      let and_ p1 p2 = AndP (p1, p2) in
-      let or_ p1 p2 = OrP (p1, p2) in
-      let (p, notp, combine, not_combine) =
-        if sense then
-          (pred, NotP pred, and_, or_)
-        else
-          (NotP pred, pred, or_, and_)
-      in
-      ( test_tast,
-        Key_map.add ~combine key p ps,
-        Key_map.add ~combine:not_combine key notp notps,
-        Key_map.add key unrefined_t tmap
-      )
-    in
     let flow_eqt ~strict loc (t1, t2) =
       if strict then
         let reason = mk_reason (RCustom "strict equality comparison") loc in
@@ -6236,11 +6007,6 @@ module Make
       else
         let reason = mk_reason (RCustom "non-strict equality comparison") loc in
         Flow.flow cx (t1, EqT { reason; flip = false; arg = t2 })
-    in
-    (* package result quad from test typed ast, refi key, unrefined type,
-       predicate, and predicate's truth sense *)
-    let result test_tast key unrefined_t pred sense =
-      empty_result test_tast |> add_predicate key unrefined_t pred sense
     in
 
     (* a wrapper around `condition` (which is a wrapper around `expression`) that
@@ -6252,7 +6018,7 @@ module Make
        `foo.bar === false`, `foo.bar` is refined to be `false` (by `bool_test`)
        and `foo` is refined to eliminate branches that don't have a `false` bar
        property (by this function). *)
-    let condition_of_maybe_sentinel cx ~allow_optional ~sense ~strict expr val_t =
+    let condition_of_maybe_sentinel cx ~allow_optional expr =
       let expr' =
         match expr with
         | (loc, OptionalMember { OptionalMember.member; _ }) -> (loc, Member member)
@@ -6265,116 +6031,33 @@ module Make
               {
                 Member._object;
                 property =
-                  ( Member.PropertyIdentifier (_, { Ast.Identifier.name = prop_name; comments = _ })
+                  ( Member.PropertyIdentifier _
                   | Member.PropertyExpression
-                      ( _,
-                        Ast.Expression.Literal
-                          { Ast.Literal.value = Ast.Literal.String prop_name; _ }
-                      ) );
+                      (_, Ast.Expression.Literal { Ast.Literal.value = Ast.Literal.String _; _ }) );
                 comments = _;
               }
           )
         ) ->
-        let sentinel_refine obj_t =
-          (* Generate a refinement on the object that contains a sentinel property.
-             We need to pass this into optional_chain, rather than locally generating a
-             refinement on the type of _object, because the type getting refined is
-             the non-short-circuited, non-nullable branch of any optional chains. *)
-          match (strict, Refinement.key ~allow_optional:true _object) with
-          | (false, _)
-          | (_, None) ->
-            None
-          | (true, Some refinement_key) ->
-            let pred = LeftP (SentinelProp prop_name, val_t) in
-            Some (refinement_key, obj_t, pred, sense)
-        in
-        (* Note here we're calling optional_chain on the whole expression, not on _object.
-           We could "look down" one level and call it on _object and wouldn't need the
-           sentinel_refine function above, but then we'd need to duplicate a lot of the
-           functionality of optional_chain here. *)
-        let (_, _, ast, preds, sentinel_refinement) =
+        (* Note here we're calling optional_chain on the whole expression, not on _object. *)
+        let (_, _, ast) =
           optional_chain
             ~hint:Hint_None
             ~cond:(Some cond) (* We do want to allow possibly absent properties... *)
-            ~is_existence_check:
-              false
-              (* ...but we don't generate predicates about
-                 their existence at the top level: "a.b === undefined" must not generate the
-                 predicate "a.b exists". *)
-            ~sentinel_refine
             cx
             expr
         in
-        (ast, preds, sentinel_refinement)
-      | _ -> (condition cx ~cond expr, None, None)
-    in
-    let extend_with_chain_preds ((ast, preds, not_preds, xts1) as out) chain_preds sense =
-      let out =
-        match chain_preds with
-        | None -> out
-        | Some (chain_preds, chain_not_preds, xts2) ->
-          let xts = Key_map.union xts1 xts2 in
-          if sense then
-            (ast, mk_and preds chain_preds, mk_or not_preds chain_not_preds, xts)
-          else
-            (ast, mk_or preds chain_not_preds, mk_and not_preds chain_preds, xts)
-      in
-      out
+        ast
+      | _ -> condition cx ~cond expr
     in
     (* inspect a null equality test *)
-    let null_test loc ~sense ~strict e null_t reconstruct_ast =
-      let ((((_, t), _) as e_ast), chain_preds, sentinel_refinement) =
-        condition_of_maybe_sentinel cx ~allow_optional:true ~sense ~strict e null_t
-      in
+    let null_test loc ~strict e null_t reconstruct_ast =
+      let (((_, t), _) as e_ast) = condition_of_maybe_sentinel cx ~allow_optional:true e in
       let ast = reconstruct_ast e_ast in
       flow_eqt ~strict loc (t, null_t);
       let t_out = BoolT.at loc |> with_trust literal_trust in
-      let out =
-        match Refinement.key ~allow_optional:true e with
-        | None -> empty_result ((loc, t_out), ast)
-        | Some name ->
-          let pred =
-            if strict then
-              NullP
-            else
-              MaybeP
-          in
-          result ((loc, t_out), ast) name t pred sense
-      in
-      let out =
-        match sentinel_refinement with
-        | Some (name, obj_t, p, sense) -> out |> add_predicate name obj_t p sense
-        | None -> out
-      in
-
-      (*
-       This is a little tricky in the presence of optional chains, because
-       non-strict "== null" is true if the LHS is undefined, and a short-circuting
-       optional chain always returns "undefined". OTOH, strict "=== null" is false
-       if the LHS is a short-circuiting optional chain, so in the truthy
-       branch of an if we can refine the LHS with the knowledge that all
-       optional chain operators did not short circuit.
-
-       For example,
-       declare var a: ?{b: (null | number)}
-       if (a?.b === null) {
-         // here "a" must not be null or undefined, because the optional chain
-         // operator would have short circuited and produced undefined, which !== null
-       } else {
-         // "a" could be null or undefined, or "a.b" could be number.
-       }
-       but on the other hand,
-       if (a?.b == null) {
-         // here "a" might be null or undefined, because the optional chain short-
-         // circuiting would produce undefined, which == null
-       } else {
-         // and here, "a" must not be null or undefined, *and* "a.b" must be a number
-       }
-    *)
-      let chain_sense = (sense && strict) || ((not sense) && not strict) in
-      extend_with_chain_preds out chain_preds chain_sense
+      ((loc, t_out), ast)
     in
-    let void_test loc ~sense ~strict e void_t reconstruct_ast =
+    let void_test loc ~strict e void_t reconstruct_ast =
       (* if `void_t` is not a VoidT, make it one so that the sentinel test has a
          literal type to test against. It's not appropriate to call `void_test`
          with a `void_t` that you don't want to treat like an actual `void`! *)
@@ -6383,125 +6066,65 @@ module Make
         | DefT (_, _, VoidT) -> void_t
         | _ -> VoidT.why (reason_of_t void_t) |> with_trust bogus_trust
       in
-      let ((((_, t), _) as e_ast), chain_preds, sentinel_refinement) =
-        condition_of_maybe_sentinel cx ~allow_optional:true ~sense ~strict e void_t
-      in
+      let (((_, t), _) as e_ast) = condition_of_maybe_sentinel cx ~allow_optional:true e in
       let ast = reconstruct_ast e_ast in
       flow_eqt ~strict loc (t, void_t);
-      let out =
-        match Refinement.key ~allow_optional:true e with
-        | None ->
-          let t_out = BoolT.at loc |> with_trust bogus_trust in
-          empty_result ((loc, t_out), ast)
-        | Some name ->
-          let pred =
-            if strict then
-              VoidP
-            else
-              MaybeP
-          in
-          let t_out = BoolT.at loc |> with_trust bogus_trust in
-          result ((loc, t_out), ast) name t pred sense
-      in
-      let out =
-        match sentinel_refinement with
-        | Some (name, obj_t, p, sense) -> out |> add_predicate name obj_t p sense
-        | None -> out
-      in
-      (* We flip the sense here for reasons similar to the discussion in null_test,
-         except that optional chain short-circuiting *always* reaches the true case,
-         since it produces undefined. *)
-      extend_with_chain_preds out chain_preds (not sense)
+      let t_out = BoolT.at loc |> with_trust bogus_trust in
+      ((loc, t_out), ast)
     in
     (* inspect an undefined equality test *)
-    let undef_test loc ~undefined_loc ~sense ~strict e void_t reconstruct_ast =
+    let undef_test loc ~undefined_loc ~strict e void_t reconstruct_ast =
       (* if `undefined` isn't redefined in scope, then we assume it is `void` *)
       if Env.is_global_var cx undefined_loc then
-        void_test loc ~sense ~strict e void_t reconstruct_ast
+        void_test loc ~strict e void_t reconstruct_ast
       else
         let e_ast = expression cx ~hint:Hint_None e in
-        empty_result ((loc, BoolT.at loc |> with_trust bogus_trust), reconstruct_ast e_ast)
+        ((loc, BoolT.at loc |> with_trust bogus_trust), reconstruct_ast e_ast)
     in
-    let literal_test loc ~strict ~sense expr val_t pred reconstruct_ast =
-      let ((((_, t), _) as expr_ast), chain_preds, sentinel_refinement) =
-        condition_of_maybe_sentinel cx ~allow_optional:true ~sense ~strict expr val_t
-      in
+    let literal_test loc ~strict expr val_t reconstruct_ast =
+      let (((_, t), _) as expr_ast) = condition_of_maybe_sentinel cx ~allow_optional:true expr in
       let ast = reconstruct_ast expr_ast in
       flow_eqt ~strict loc (t, val_t);
-      let refinement =
-        if strict then
-          Refinement.key ~allow_optional:true expr
-        else
-          None
-      in
-      let out =
-        match refinement with
-        | Some name ->
-          let t_out = BoolT.at loc |> with_trust bogus_trust in
-          result ((loc, t_out), ast) name t pred sense
-        | None ->
-          let t = BoolT.at loc |> with_trust bogus_trust in
-          empty_result ((loc, t), ast)
-      in
-      let out =
-        match sentinel_refinement with
-        | Some (name, obj_t, p, sense) -> out |> add_predicate name obj_t p sense
-        | None -> out
-      in
-      extend_with_chain_preds out chain_preds sense
+      let t = BoolT.at loc |> with_trust bogus_trust in
+      ((loc, t), ast)
     in
     (* generalizes typeof, instanceof, and Array.isArray() *)
-    let instance_test loc target make_ast_and_pred sense chain_sense =
+    let instance_test loc target make_ast =
       let bool = BoolT.at loc |> with_trust bogus_trust in
       match Refinement.key ~allow_optional:true target with
-      | Some name ->
-        let (filtered_out, _, targ_ast, chain_preds, _) =
-          optional_chain ~hint:Hint_None ~cond:(Some cond) ~is_existence_check:false cx target
-        in
-        let (ast, pred) = make_ast_and_pred targ_ast bool in
-        let out = result ast name filtered_out pred sense in
-        extend_with_chain_preds out chain_preds chain_sense
+      | Some _ ->
+        let (_, _, targ_ast) = optional_chain ~hint:Hint_None ~cond:(Some cond) cx target in
+        make_ast targ_ast bool
       | None ->
         let targ_ast = condition cx ~cond target in
-        let (ast, _) = make_ast_and_pred targ_ast bool in
-        empty_result ast
+        make_ast targ_ast bool
     in
     (* inspect a typeof equality test *)
-    let typeof_test loc sense arg typename str_loc reconstruct_ast =
+    let typeof_test loc arg typename str_loc reconstruct_ast =
       let bool = BoolT.at loc |> with_trust bogus_trust in
-      let pred_and_chain_sense sense =
-        match typename with
-        | "boolean" -> Some (BoolP loc, sense)
-        | "function" -> Some (FunP, sense)
-        | "number" -> Some (NumP loc, sense)
-        | "object" -> Some (ObjP, sense)
-        | "string" -> Some (StrP loc, sense)
-        | "symbol" -> Some (SymbolP loc, sense)
-        | "undefined" -> Some (VoidP, not sense)
-        | _ -> None
-      in
-      match pred_and_chain_sense sense with
-      | Some (pred, chain_sense) ->
-        let make_ast_and_pred ast _ = (((loc, bool), reconstruct_ast ast), pred) in
-        instance_test loc arg make_ast_and_pred sense chain_sense
-      | None ->
+      match typename with
+      | "boolean"
+      | "function"
+      | "number"
+      | "object"
+      | "string"
+      | "symbol"
+      | "undefined" ->
+        let make_ast ast _ = ((loc, bool), reconstruct_ast ast) in
+        instance_test loc arg make_ast
+      | _ ->
         let arg = condition cx ~cond arg in
         Flow.add_output cx Error_message.(EInvalidTypeof (str_loc, typename));
-        empty_result ((loc, bool), reconstruct_ast arg)
+        ((loc, bool), reconstruct_ast arg)
     in
-    let sentinel_prop_test loc ~sense ~strict expr val_t reconstruct_ast =
-      let ((((_, t), _) as expr_ast), _, sentinel_refinement) =
-        condition_of_maybe_sentinel cx ~allow_optional:false ~sense ~strict expr val_t
-      in
+    let sentinel_prop_test loc ~strict expr val_t reconstruct_ast =
+      let (((_, t), _) as expr_ast) = condition_of_maybe_sentinel cx ~allow_optional:false expr in
       let ast = reconstruct_ast expr_ast in
       flow_eqt ~strict loc (t, val_t);
       let t_out = BoolT.at loc |> with_trust bogus_trust in
-      let out = empty_result ((loc, t_out), ast) in
-      match sentinel_refinement with
-      | Some (name, obj_t, p, sense) -> out |> add_predicate name obj_t p sense
-      | None -> out
+      ((loc, t_out), ast)
     in
-    let eq_test loc ~sense ~strict left right reconstruct_ast =
+    let eq_test loc ~strict left right reconstruct_ast =
       let is_number_literal node =
         match node with
         | Expression.Literal { Literal.value = Literal.Number _; _ }
@@ -6514,18 +6137,6 @@ module Make
           true
         | _ -> false
       in
-      let extract_number_literal node =
-        match node with
-        | Expression.Literal { Literal.value = Literal.Number lit; raw; comments = _ } -> (lit, raw)
-        | Expression.Unary
-            {
-              Unary.operator = Unary.Minus;
-              argument = (_, Expression.Literal { Literal.value = Literal.Number lit; raw; _ });
-              comments = _;
-            } ->
-          (-.lit, "-" ^ raw)
-        | _ -> Utils_js.assert_false "not a number literal"
-      in
       match (left, right) with
       (* typeof expr ==/=== string *)
       (* this must happen before the case below involving Literal.String in order
@@ -6533,7 +6144,7 @@ module Make
       | ( (typeof_loc, Expression.Unary { Unary.operator = Unary.Typeof; argument; comments }),
           (str_loc, (Expression.Literal { Literal.value = Literal.String s; _ } as lit_exp))
         ) ->
-        typeof_test loc sense argument s str_loc (fun argument ->
+        typeof_test loc argument s str_loc (fun argument ->
             let left_t = StrT.at typeof_loc |> with_trust bogus_trust in
             let left =
               ( (typeof_loc, left_t),
@@ -6547,7 +6158,7 @@ module Make
       | ( (str_loc, (Expression.Literal { Literal.value = Literal.String s; _ } as lit_exp)),
           (typeof_loc, Expression.Unary { Unary.operator = Unary.Typeof; argument; comments })
         ) ->
-        typeof_test loc sense argument s str_loc (fun argument ->
+        typeof_test loc argument s str_loc (fun argument ->
             let left_t = StrT.at str_loc |> with_trust bogus_trust in
             let left = ((str_loc, left_t), lit_exp) in
             let right_t = StrT.at typeof_loc |> with_trust bogus_trust in
@@ -6577,7 +6188,7 @@ module Make
             )
           )
         ) ->
-        typeof_test loc sense argument s str_loc (fun argument ->
+        typeof_test loc argument s str_loc (fun argument ->
             let left_t = StrT.at typeof_loc |> with_trust bogus_trust in
             let left =
               ( (typeof_loc, left_t),
@@ -6607,7 +6218,7 @@ module Make
           ),
           (typeof_loc, Expression.Unary { Unary.operator = Unary.Typeof; argument; comments })
         ) ->
-        typeof_test loc sense argument s str_loc (fun argument ->
+        typeof_test loc argument s str_loc (fun argument ->
             let left_t = StrT.at str_loc |> with_trust bogus_trust in
             let left = ((str_loc, left_t), lit_exp) in
             let right_t = StrT.at typeof_loc |> with_trust bogus_trust in
@@ -6619,39 +6230,22 @@ module Make
             reconstruct_ast left right
         )
       (* special case equality relations involving booleans *)
-      | (((lit_loc, Expression.Literal { Literal.value = Literal.Boolean lit; _ }) as value), expr)
-        ->
+      | (((_, Expression.Literal { Literal.value = Literal.Boolean _; _ }) as value), expr) ->
         let (((_, val_t), _) as val_ast) = expression cx ~hint:Hint_None value in
-        literal_test
-          loc
-          ~sense
-          ~strict
-          expr
-          val_t
-          (SingletonBoolP (lit_loc, lit))
-          (fun expr -> reconstruct_ast val_ast expr)
-      | (expr, ((lit_loc, Expression.Literal { Literal.value = Literal.Boolean lit; _ }) as value))
-        ->
+        literal_test loc ~strict expr val_t (fun expr -> reconstruct_ast val_ast expr)
+      | (expr, ((_, Expression.Literal { Literal.value = Literal.Boolean _; _ }) as value)) ->
         let (((_, val_t), _) as val_ast) = expression cx ~hint:Hint_None value in
-        literal_test
-          loc
-          ~sense
-          ~strict
-          expr
-          val_t
-          (SingletonBoolP (lit_loc, lit))
-          (fun expr -> reconstruct_ast expr val_ast)
+        literal_test loc ~strict expr val_t (fun expr -> reconstruct_ast expr val_ast)
       (* special case equality relations involving strings *)
-      | (((lit_loc, Expression.Literal { Literal.value = Literal.String lit; _ }) as value), expr)
+      | (((_, Expression.Literal { Literal.value = Literal.String _; _ }) as value), expr)
       | ( ( ( _,
               Expression.TemplateLiteral
                 {
                   TemplateLiteral.quasis =
                     [
-                      ( lit_loc,
+                      ( _,
                         {
-                          TemplateLiteral.Element.value =
-                            { TemplateLiteral.Element.cooked = lit; _ };
+                          TemplateLiteral.Element.value = { TemplateLiteral.Element.cooked = _; _ };
                           _;
                         }
                       );
@@ -6663,25 +6257,17 @@ module Make
           expr
         ) ->
         let (((_, val_t), _) as val_ast) = expression cx ~hint:Hint_None value in
-        literal_test
-          loc
-          ~sense
-          ~strict
-          expr
-          val_t
-          (SingletonStrP (lit_loc, sense, lit))
-          (fun expr -> reconstruct_ast val_ast expr)
-      | (expr, ((lit_loc, Expression.Literal { Literal.value = Literal.String lit; _ }) as value))
+        literal_test loc ~strict expr val_t (fun expr -> reconstruct_ast val_ast expr)
+      | (expr, ((_, Expression.Literal { Literal.value = Literal.String _; _ }) as value))
       | ( expr,
           ( ( _,
               Expression.TemplateLiteral
                 {
                   TemplateLiteral.quasis =
                     [
-                      ( lit_loc,
+                      ( _,
                         {
-                          TemplateLiteral.Element.value =
-                            { TemplateLiteral.Element.cooked = lit; _ };
+                          TemplateLiteral.Element.value = { TemplateLiteral.Element.cooked = _; _ };
                           _;
                         }
                       );
@@ -6692,45 +6278,22 @@ module Make
           )
         ) ->
         let (((_, val_t), _) as val_ast) = expression cx ~hint:Hint_None value in
-        literal_test
-          loc
-          ~sense
-          ~strict
-          expr
-          val_t
-          (SingletonStrP (lit_loc, sense, lit))
-          (fun expr -> reconstruct_ast expr val_ast)
+        literal_test loc ~strict expr val_t (fun expr -> reconstruct_ast expr val_ast)
       (* special case equality relations involving numbers *)
-      | (((lit_loc, number_literal) as value), expr) when is_number_literal number_literal ->
-        let (lit, raw) = extract_number_literal number_literal in
+      | (((_, number_literal) as value), expr) when is_number_literal number_literal ->
         let (((_, val_t), _) as val_ast) = expression cx ~hint:Hint_None value in
-        literal_test
-          loc
-          ~sense
-          ~strict
-          expr
-          val_t
-          (SingletonNumP (lit_loc, sense, (lit, raw)))
-          (fun expr -> reconstruct_ast val_ast expr)
-      | (expr, ((lit_loc, number_literal) as value)) when is_number_literal number_literal ->
-        let (lit, raw) = extract_number_literal number_literal in
+        literal_test loc ~strict expr val_t (fun expr -> reconstruct_ast val_ast expr)
+      | (expr, ((_, number_literal) as value)) when is_number_literal number_literal ->
         let (((_, val_t), _) as val_ast) = expression cx ~hint:Hint_None value in
-        literal_test
-          loc
-          ~sense
-          ~strict
-          expr
-          val_t
-          (SingletonNumP (lit_loc, sense, (lit, raw)))
-          (fun expr -> reconstruct_ast expr val_ast)
+        literal_test loc ~strict expr val_t (fun expr -> reconstruct_ast expr val_ast)
       (* TODO: add Type.predicate variant that tests number equality *)
       (* expr op null *)
       | (((_, Expression.Literal { Literal.value = Literal.Null; _ }) as null), expr) ->
         let (((_, null_t), _) as null_ast) = expression cx ~hint:Hint_None null in
-        null_test loc ~sense ~strict expr null_t (fun expr -> reconstruct_ast null_ast expr)
+        null_test loc ~strict expr null_t (fun expr -> reconstruct_ast null_ast expr)
       | (expr, ((_, Expression.Literal { Literal.value = Literal.Null; _ }) as null)) ->
         let (((_, null_t), _) as null_ast) = expression cx ~hint:Hint_None null in
-        null_test loc ~sense ~strict expr null_t (fun expr -> reconstruct_ast expr null_ast)
+        null_test loc ~strict expr null_t (fun expr -> reconstruct_ast expr null_ast)
       (* expr op undefined *)
       | ( ( (_, Identifier (undefined_loc, { Ast.Identifier.name = "undefined"; comments = _ })) as
           void
@@ -6738,32 +6301,26 @@ module Make
           expr
         ) ->
         let (((_, void_t), _) as void_ast) = expression cx ~hint:Hint_None void in
-        undef_test loc ~undefined_loc ~sense ~strict expr void_t (fun expr ->
-            reconstruct_ast void_ast expr
-        )
+        undef_test loc ~undefined_loc ~strict expr void_t (fun expr -> reconstruct_ast void_ast expr)
       | ( expr,
           ( (_, Identifier (undefined_loc, { Ast.Identifier.name = "undefined"; comments = _ })) as
           void
           )
         ) ->
         let (((_, void_t), _) as void_ast) = expression cx ~hint:Hint_None void in
-        undef_test loc ~undefined_loc ~sense ~strict expr void_t (fun expr ->
-            reconstruct_ast expr void_ast
-        )
+        undef_test loc ~undefined_loc ~strict expr void_t (fun expr -> reconstruct_ast expr void_ast)
       (* expr op void(...) *)
       | (((_, Unary { Unary.operator = Unary.Void; _ }) as void), expr) ->
         let (((_, void_t), _) as void_ast) = expression cx ~hint:Hint_None void in
-        void_test loc ~sense ~strict expr void_t (fun expr -> reconstruct_ast void_ast expr)
+        void_test loc ~strict expr void_t (fun expr -> reconstruct_ast void_ast expr)
       | (expr, ((_, Unary { Unary.operator = Unary.Void; _ }) as void)) ->
         let (((_, void_t), _) as void_ast) = expression cx ~hint:Hint_None void in
-        void_test loc ~sense ~strict expr void_t (fun expr -> reconstruct_ast expr void_ast)
+        void_test loc ~strict expr void_t (fun expr -> reconstruct_ast expr void_ast)
       (* fallback case for equality relations involving sentinels (this should be
          lower priority since it refines the object but not the property) *)
       | (((_, Expression.Member _) as expr), value) ->
         let (((_, value_t), _) as value_ast) = expression cx ~hint:Hint_None value in
-        sentinel_prop_test loc ~sense ~strict expr value_t (fun expr ->
-            reconstruct_ast expr value_ast
-        )
+        sentinel_prop_test loc ~strict expr value_t (fun expr -> reconstruct_ast expr value_ast)
       | (value, ((_, Expression.Member _) as expr))
         when match cond with
              | SwitchTest _ ->
@@ -6771,9 +6328,7 @@ module Make
                false
              | OtherTest -> true ->
         let (((_, value_t), _) as value_ast) = expression cx ~hint:Hint_None value in
-        sentinel_prop_test loc ~sense ~strict expr value_t (fun expr ->
-            reconstruct_ast value_ast expr
-        )
+        sentinel_prop_test loc ~strict expr value_t (fun expr -> reconstruct_ast value_ast expr)
       (* for all other cases, walk the AST but always return bool *)
       | (expr, value) ->
         let (((_, t1), _) as expr) = expression cx ~hint:Hint_None expr in
@@ -6781,57 +6336,44 @@ module Make
         flow_eqt ~strict loc (t1, t2);
         let ast = reconstruct_ast expr value in
         let t_out = BoolT.at loc |> with_trust bogus_trust in
-        empty_result ((loc, t_out), ast)
+        ((loc, t_out), ast)
     in
     (* main *)
     match e with
     (* member expressions *)
     | (_, Member _)
     | (_, OptionalMember _) ->
-      let (_, _, ast, preds, _) =
-        optional_chain ~hint:Hint_None ~cond:(Some cond) ~is_existence_check:true cx e
-      in
-      begin
-        match preds with
-        | None -> empty_result ast
-        | Some (preds, not_preds, xts) -> (ast, preds, not_preds, xts)
-      end
+      let (_, _, ast) = optional_chain ~hint:Hint_None ~cond:(Some cond) cx e in
+      ast
     (* assignments *)
-    | (_, Assignment { Assignment.left = (loc, Ast.Pattern.Identifier id); _ }) ->
-      let (((_, expr), _) as tast) = expression cx ~hint e in
-      let id = id.Ast.Pattern.Identifier.name in
-      (match Refinement.key ~allow_optional:true (loc, Ast.Expression.Identifier id) with
-      | Some name -> result tast name expr ExistsP true
-      | None -> empty_result tast)
+    | (_, Assignment _) -> expression cx ~hint e
     (* expr instanceof t *)
     | (loc, Binary { Binary.operator = Binary.Instanceof; left; right; comments }) ->
-      let make_ast_and_pred left_ast bool =
+      let make_ast left_ast bool =
         let (((rloc, right_t), _) as right_ast) = expression cx ~hint:Hint_None right in
         let reason_rhs = mk_reason (RCustom "RHS of `instanceof` operator") rloc in
         Flow.flow cx (right_t, AssertInstanceofRHST reason_rhs);
-        ( ( (loc, bool),
-            Binary
-              { Binary.operator = Binary.Instanceof; left = left_ast; right = right_ast; comments }
-          ),
-          LeftP (InstanceofTest, right_t)
+        ( (loc, bool),
+          Binary
+            { Binary.operator = Binary.Instanceof; left = left_ast; right = right_ast; comments }
         )
       in
-      instance_test loc left make_ast_and_pred true true
+      instance_test loc left make_ast
     (* expr op expr *)
     | (loc, Binary { Binary.operator = Binary.Equal; left; right; comments }) ->
-      eq_test loc ~sense:true ~strict:false left right (fun left right ->
+      eq_test loc ~strict:false left right (fun left right ->
           Binary { Binary.operator = Binary.Equal; left; right; comments }
       )
     | (loc, Binary { Binary.operator = Binary.StrictEqual; left; right; comments }) ->
-      eq_test loc ~sense:true ~strict:true left right (fun left right ->
+      eq_test loc ~strict:true left right (fun left right ->
           Binary { Binary.operator = Binary.StrictEqual; left; right; comments }
       )
     | (loc, Binary { Binary.operator = Binary.NotEqual; left; right; comments }) ->
-      eq_test loc ~sense:false ~strict:false left right (fun left right ->
+      eq_test loc ~strict:false left right (fun left right ->
           Binary { Binary.operator = Binary.NotEqual; left; right; comments }
       )
     | (loc, Binary { Binary.operator = Binary.StrictNotEqual; left; right; comments }) ->
-      eq_test loc ~sense:false ~strict:true left right (fun left right ->
+      eq_test loc ~strict:true left right (fun left right ->
           Binary { Binary.operator = Binary.StrictNotEqual; left; right; comments }
       )
     (* Array.isArray(expr) *)
@@ -6888,82 +6430,61 @@ module Make
               )
         )
       in
-      let make_ast_and_pred arg bool =
+      let make_ast arg bool =
         let property = Member.PropertyIdentifier ((prop_loc, fn_t), id) in
-        ( ( (loc, bool),
-            Call
-              {
-                Call.callee =
-                  ( (callee_loc, fn_t),
-                    Member { Member._object; property; comments = member_comments }
-                  );
-                targs = None;
-                arguments =
-                  (args_loc, { ArgList.arguments = [Expression arg]; comments = args_comments });
-                comments;
-              }
-          ),
-          ArrP
+        ( (loc, bool),
+          Call
+            {
+              Call.callee =
+                ((callee_loc, fn_t), Member { Member._object; property; comments = member_comments });
+              targs = None;
+              arguments =
+                (args_loc, { ArgList.arguments = [Expression arg]; comments = args_comments });
+              comments;
+            }
         )
       in
-      instance_test loc arg make_ast_and_pred true true
+      instance_test loc arg make_ast
     (* test1 && test2 *)
     | (loc, Logical { Logical.operator = Logical.And; left; right; comments }) ->
-      let ((((_, t1), _) as left_ast), map1, not_map1, xts1) =
-        predicates_of_condition cx ~hint ~cond left
-      in
-      let ((((_, t2), _) as right_ast), map2, not_map2, xts2) =
+      let (((_, t1), _) as left_ast) = predicates_of_condition cx ~hint ~cond left in
+      let (((_, t2), _) as right_ast) =
         predicates_of_condition cx ~hint:(Hint_api.merge_hints hint (Hint_t t1)) ~cond right
       in
       let reason = mk_reason (RLogical ("&&", desc_of_t t1, desc_of_t t2)) loc in
       let t_out =
         Tvar.mk_no_wrap_where cx reason (fun t -> Flow.flow cx (t1, AndT (reason, t2, t)))
       in
-      ( ( (loc, t_out),
-          Logical { Logical.operator = Logical.And; left = left_ast; right = right_ast; comments }
-        ),
-        mk_and map1 map2,
-        mk_or not_map1 not_map2,
-        Key_map.union xts1 xts2
+      ( (loc, t_out),
+        Logical { Logical.operator = Logical.And; left = left_ast; right = right_ast; comments }
       )
     (* test1 || test2 *)
     | (loc, Logical { Logical.operator = Logical.Or; left; right; comments }) ->
       let () = check_default_pattern cx left right in
-      let ((((_, t1), _) as left_ast), map1, not_map1, xts1) =
-        predicates_of_condition cx ~hint ~cond left
-      in
-      let ((((_, t2), _) as right_ast), map2, not_map2, xts2) =
+      let (((_, t1), _) as left_ast) = predicates_of_condition cx ~hint ~cond left in
+      let (((_, t2), _) as right_ast) =
         predicates_of_condition cx ~hint:(Hint_api.merge_hints hint (Hint_t t1)) ~cond right
       in
       let reason = mk_reason (RLogical ("||", desc_of_t t1, desc_of_t t2)) loc in
       let t_out =
         Tvar.mk_no_wrap_where cx reason (fun t -> Flow.flow cx (t1, OrT (reason, t2, t)))
       in
-      ( ( (loc, t_out),
-          Logical { Logical.operator = Logical.Or; left = left_ast; right = right_ast; comments }
-        ),
-        mk_or map1 map2,
-        mk_and not_map1 not_map2,
-        Key_map.union xts1 xts2
+      ( (loc, t_out),
+        Logical { Logical.operator = Logical.Or; left = left_ast; right = right_ast; comments }
       )
     (* !test *)
     | (loc, Unary { Unary.operator = Unary.Not; argument; comments }) ->
-      let (arg, map, not_map, xts) = predicates_of_condition cx ~hint:Hint_None ~cond argument in
+      let arg = predicates_of_condition cx ~hint:Hint_None ~cond argument in
       let ast' = Unary { Unary.operator = Unary.Not; argument = arg; comments } in
       let t_out = BoolT.at loc |> with_trust bogus_trust in
-      let ast = ((loc, t_out), ast') in
-      (ast, not_map, map, xts)
+      ((loc, t_out), ast')
     (* ids *)
     | (_, This _)
     | (_, Identifier _) ->
-      let (((_, t), _) as e) = condition ~cond cx e in
-      (match Refinement.key ~allow_optional:true e with
-      | Some name -> result e name t ExistsP true
-      | None -> empty_result e)
+      condition ~cond cx e
     (* e.m(...) *)
     (* TODO: Don't trap method calls for now *)
-    | (_, Call { Call.callee = (_, (Member _ | OptionalMember _)); _ }) ->
-      empty_result (expression cx ~hint e)
+    | (_, Call { Call.callee = (_, (Member _ | OptionalMember _)); _ }) -> expression cx ~hint e
     (* f(...) *)
     (* The concrete predicate is not known at this point. We attach a "latent"
        predicate pointing to the type of the function that will supply this
@@ -6975,23 +6496,12 @@ module Make
         | _ -> false
       in
       if List.exists is_spread arguments || Flow_ast_utils.is_call_to_invariant callee then
-        empty_result (expression cx ~hint e)
+        expression cx ~hint e
       else
-        let (fun_t, keys, arg_ts, ret_t, call_ast) = predicated_call_expression cx loc call in
-        let ast = ((loc, ret_t), Call call_ast) in
-        let args_with_offset = ListUtils.zipi keys arg_ts in
-        let emp_pred_map = empty_result ast in
-        List.fold_left
-          (fun pred_map arg_info ->
-            match arg_info with
-            | (idx, Some key, unrefined_t) ->
-              let pred = LatentP (fun_t, idx + 1) in
-              add_predicate key unrefined_t pred true pred_map
-            | _ -> pred_map)
-          emp_pred_map
-          args_with_offset
+        let (_, _, _, ret_t, call_ast) = predicated_call_expression cx loc call in
+        ((loc, ret_t), Call call_ast)
     (* fallthrough case: evaluate test expr, no refinements *)
-    | e -> empty_result (expression cx ~hint e)
+    | e -> expression cx ~hint e
 
   (* Conditional expressions are checked like expressions, except that property
      accesses are provisionally allowed even when such properties do not exist.

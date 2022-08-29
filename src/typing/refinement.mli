@@ -7,14 +7,9 @@
 
 module Keys : sig
   val key : allow_optional:bool -> ('loc, 't) Flow_ast.Expression.t -> Key.t option
-
-  val key_of_pattern : allow_optional:bool -> ('loc, 't) Flow_ast.Pattern.t -> Key.t option
 end
 
 include module type of Keys
 
 val get :
   allow_optional:bool -> Context.t -> ('loc, 't) Flow_ast.Expression.t -> ALoc.t -> Type.t option
-
-val get_of_pattern :
-  allow_optional:bool -> Context.t -> ('loc, 't) Flow_ast.Pattern.t -> ALoc.t -> Type.t option

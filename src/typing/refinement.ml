@@ -67,24 +67,6 @@ module Keys = struct
         | Some key -> Some (base, Key.Elem key :: chain)
         | None -> None)
       | None -> None)
-
-  let key_of_pattern ~allow_optional patt =
-    match patt with
-    | (_, Ast.Pattern.Identifier { Ast.Pattern.Identifier.name; _ }) -> key_of_identifier name
-    | (_, Ast.Pattern.Expression (_, Ast.Expression.Member member)) ->
-      key_of_member ~allow_optional member
-    | ( _,
-        Ast.Pattern.Expression
-          (_, Ast.Expression.OptionalMember { Ast.Expression.OptionalMember.member; _ })
-      ) ->
-      key_of_member ~allow_optional member
-    | (_, Ast.Pattern.Array _)
-    | (_, Ast.Pattern.Object _) ->
-      (* other LHSes unsupported currently/here *)
-      None
-    | (_, Ast.Pattern.Expression _) ->
-      (* non-member expression patterns are bogus *)
-      None
 end
 
 include Keys
@@ -92,10 +74,5 @@ include Keys
 (* get type refinement for expression, if it exists *)
 let get ~allow_optional cx expr loc =
   match key ~allow_optional expr with
-  | Some k -> Env.get_refinement cx k loc
-  | None -> None
-
-let get_of_pattern ~allow_optional cx patt loc =
-  match key_of_pattern ~allow_optional patt with
   | Some k -> Env.get_refinement cx k loc
   | None -> None
