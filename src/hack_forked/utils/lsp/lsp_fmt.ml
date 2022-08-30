@@ -135,17 +135,11 @@ let parse_textDocumentPositionParams (params : json option) : TextDocumentPositi
     position = Jget.obj_exn params "position" |> parse_position;
   }
 
-let parse_textEdit (params : json option) : TextEdit.t option =
-  match params with
-  | None -> None
-  | _ ->
-    TextEdit.(
-      Some
-        {
-          range = Jget.obj_exn params "range" |> parse_range_exn;
-          newText = Jget.string_exn params "newText";
-        }
-    )
+let parse_textEdit (params : json option) : TextEdit.t =
+  {
+    TextEdit.range = Jget.obj_exn params "range" |> parse_range_exn;
+    newText = Jget.string_exn params "newText";
+  }
 
 let print_textEdit (edit : TextEdit.t) : json =
   TextEdit.(JSON_Object [("range", print_range edit.range); ("newText", JSON_String edit.newText)])
@@ -776,9 +770,13 @@ end
 
 let parse_completionItem (params : json option) : CompletionItemResolve.params =
   Completion.(
-    let textEdits =
-      Jget.obj_opt params "textEdit" :: Jget.array_d params "additionalTextEdits" ~default:[]
-      |> Base.List.filter_map ~f:parse_textEdit
+    let textEdit =
+      match Jget.obj_opt params "textEdit" with
+      | None -> None
+      | edit -> Some (parse_textEdit edit)
+    in
+    let additionalTextEdits =
+      Jget.array_d params "additionalTextEdits" ~default:[] |> Base.List.map ~f:parse_textEdit
     in
     let command =
       match Jget.obj_opt params "command" with
@@ -801,7 +799,8 @@ let parse_completionItem (params : json option) : CompletionItemResolve.params =
       insertText = Jget.string_opt params "insertText";
       insertTextFormat =
         Base.Option.bind (Jget.int_opt params "insertTextFormat") ~f:insertTextFormat_of_enum;
-      textEdits;
+      textEdit;
+      additionalTextEdits;
       command;
       data = Jget.obj_opt params "data";
     }
@@ -848,13 +847,11 @@ let print_completionItem ~key (item : Completion.completionItem) : json =
         ( "insertTextFormat",
           Base.Option.map item.insertTextFormat ~f:(fun x -> int_ @@ insertTextFormat_to_enum x)
         );
-        ("textEdit", Base.Option.map (Base.List.hd item.textEdits) ~f:print_textEdit);
+        ("textEdit", Base.Option.map item.textEdit ~f:print_textEdit);
         ( "additionalTextEdits",
-          match Base.List.tl item.textEdits with
-          | None
-          | Some [] ->
-            None
-          | Some l -> Some (JSON_Array (Base.List.map l ~f:print_textEdit))
+          match item.additionalTextEdits with
+          | [] -> None
+          | l -> Some (JSON_Array (Base.List.map l ~f:print_textEdit))
         );
         ("command", Base.Option.map item.command ~f:(print_command ~key));
         ("data", item.data);

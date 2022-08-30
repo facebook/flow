@@ -109,12 +109,13 @@ let autocomplete_create_result
     ty =
   let (cli_detail, lsp_detail) = detail_of_ty ~exact_by_default ty in
   let kind = lsp_completion_of_type ty in
-  let text_edits = [text_edit ?insert_text (name, loc)] in
+  let text_edit = Some (text_edit ?insert_text (name, loc)) in
   let sort_text = sort_text_of_rank rank in
   {
     ServerProt.Response.Completion.kind;
     name;
-    text_edits;
+    text_edit;
+    additional_text_edits = [];
     detail = cli_detail;
     sort_text;
     preselect;
@@ -142,12 +143,13 @@ let autocomplete_create_result_decl
     | Ty.VariableDecl (_, ty) -> (Some Lsp.Completion.Variable, detail_of_ty ~exact_by_default ty)
     | d -> (Some (lsp_completion_of_decl d), detail_of_ty_decl ~exact_by_default d)
   in
-  let text_edits = [text_edit ?insert_text (name, loc)] in
+  let text_edit = Some (text_edit ?insert_text (name, loc)) in
   let sort_text = sort_text_of_rank rank in
   {
     ServerProt.Response.Completion.kind;
     name;
-    text_edits;
+    text_edit;
+    additional_text_edits = [];
     detail = cli_detail;
     sort_text;
     preselect;
@@ -482,7 +484,8 @@ let completion_item_of_autoimport
       ServerProt.Response.Completion.kind = Some Lsp.Completion.Variable;
       name;
       detail = "(global)" (* TODO: include the type *);
-      text_edits = [text_edit (name, ac_loc)];
+      text_edit = Some (text_edit (name, ac_loc));
+      additional_text_edits = [];
       sort_text = sort_text_of_rank rank;
       preselect = false;
       documentation = None;
@@ -492,12 +495,13 @@ let completion_item_of_autoimport
       type_ = None;
     }
   | Some { Code_action_service.title; edits; from } ->
-    let edits = Base.List.map ~f:flow_text_edit_of_lsp_text_edit edits in
+    let additional_text_edits = Base.List.map ~f:flow_text_edit_of_lsp_text_edit edits in
     {
       ServerProt.Response.Completion.kind = Some Lsp.Completion.Variable;
       name;
       detail = title (* TODO: include the type *);
-      text_edits = text_edit (name, ac_loc) :: edits;
+      text_edit = Some (text_edit (name, ac_loc));
+      additional_text_edits;
       sort_text = sort_text_of_rank rank;
       preselect = false;
       documentation = None;
@@ -638,7 +642,8 @@ let autocomplete_id
         kind = Some Lsp.Completion.Variable;
         name = "this";
         detail = "this";
-        text_edits = [text_edit ("this", ac_loc)];
+        text_edit = Some (text_edit ("this", ac_loc));
+        additional_text_edits = [];
         sort_text = sort_text_of_rank rank;
         preselect = false;
         documentation = None;
@@ -658,7 +663,8 @@ let autocomplete_id
         kind = Some Lsp.Completion.Variable;
         name = "super";
         detail = "super";
-        text_edits = [text_edit ("super", ac_loc)];
+        text_edit = Some (text_edit ("super", ac_loc));
+        additional_text_edits = [];
         sort_text = sort_text_of_rank rank;
         preselect = false;
         documentation = None;
@@ -722,7 +728,8 @@ let type_exports_of_module_ty ~ac_loc ~exact_by_default ~documentation_and_tags_
             {
               kind = lsp_completion_of_type t;
               name = sym_name;
-              text_edits = [text_edit (sym_name, ac_loc)];
+              text_edit = Some (text_edit (sym_name, ac_loc));
+              additional_text_edits = [];
               detail = cli_detail;
               sort_text = None;
               preselect = false;
@@ -740,7 +747,8 @@ let type_exports_of_module_ty ~ac_loc ~exact_by_default ~documentation_and_tags_
             {
               kind = Some Lsp.Completion.Interface;
               name = sym_name;
-              text_edits = [text_edit (sym_name, ac_loc)];
+              text_edit = Some (text_edit (sym_name, ac_loc));
+              additional_text_edits = [];
               detail = cli_detail;
               sort_text = None;
               preselect = false;
@@ -758,7 +766,8 @@ let type_exports_of_module_ty ~ac_loc ~exact_by_default ~documentation_and_tags_
             {
               kind = Some Lsp.Completion.Class;
               name = sym_name;
-              text_edits = [text_edit (sym_name, ac_loc)];
+              text_edit = Some (text_edit (sym_name, ac_loc));
+              additional_text_edits = [];
               detail = cli_detail;
               sort_text = None;
               preselect = false;
@@ -776,7 +785,8 @@ let type_exports_of_module_ty ~ac_loc ~exact_by_default ~documentation_and_tags_
             {
               kind = Some Lsp.Completion.Enum;
               name = sym_name;
-              text_edits = [text_edit (sym_name, ac_loc)];
+              text_edit = Some (text_edit (sym_name, ac_loc));
+              additional_text_edits = [];
               detail = cli_detail;
               sort_text = None;
               preselect = false;
@@ -852,7 +862,8 @@ let make_builtin_type ~ac_loc name =
     ServerProt.Response.Completion.kind = Some Lsp.Completion.Variable;
     name;
     detail = name;
-    text_edits = [text_edit (name, ac_loc)];
+    text_edit = Some (text_edit (name, ac_loc));
+    additional_text_edits = [];
     sort_text = sort_text_of_rank 0;
     preselect = false;
     documentation = None;
@@ -883,7 +894,8 @@ let make_utility_type ~ac_loc name =
     ServerProt.Response.Completion.kind = Some Lsp.Completion.Function;
     name;
     detail = name;
-    text_edits = [text_edit (name, ac_loc)];
+    text_edit = Some (text_edit (name, ac_loc));
+    additional_text_edits = [];
     sort_text = sort_text_of_rank 200 (* below globals *);
     preselect = false;
     documentation = None;
@@ -921,7 +933,8 @@ let make_type_param ~ac_loc { Type.name; _ } =
     ServerProt.Response.Completion.kind = Some Lsp.Completion.TypeParameter;
     name;
     detail = name;
-    text_edits = [text_edit (name, ac_loc)];
+    text_edit = Some (text_edit (name, ac_loc));
+    additional_text_edits = [];
     sort_text = sort_text_of_rank 0;
     preselect = false;
     documentation = None;
@@ -1362,9 +1375,9 @@ let autocomplete_jsx_element
       let items =
         Base.List.map
           ~f:(fun item ->
-            let { text_edits; _ } = item in
-            let text_edits = text_edits @ edits in
-            { item with text_edits })
+            let { additional_text_edits; _ } = item in
+            let additional_text_edits = additional_text_edits @ edits in
+            { item with additional_text_edits })
           items
       in
       let result = { result with items } in

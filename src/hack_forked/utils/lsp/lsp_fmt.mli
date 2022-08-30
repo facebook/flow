@@ -40,10 +40,6 @@ val print_markedItem : Lsp.markedString -> Hh_json.json
 
 val parse_textDocumentPositionParams : Hh_json.json option -> Lsp.TextDocumentPositionParams.t
 
-val parse_textEdit : Hh_json.json option -> Lsp.TextEdit.t option
-
-val print_textEdit : Lsp.TextEdit.t -> Hh_json.json
-
 val parse_command : Hh_json.json option -> Lsp.Command.t
 
 val parse_formattingOptions : Hh_json.json option -> Lsp.DocumentFormatting.formattingOptions

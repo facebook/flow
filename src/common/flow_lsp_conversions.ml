@@ -104,10 +104,15 @@ let flow_completion_item_to_lsp
     Some (trunc column_width item.detail)
   in
   let insertTextFormat = Some Lsp.Completion.PlainText in
-  let textEdits =
+  let textEdit =
+    Base.Option.map
+      ~f:(fun (loc, newText) -> { Lsp.TextEdit.range = loc_to_lsp_range loc; newText })
+      item.text_edit
+  in
+  let additionalTextEdits =
     Base.List.map
       ~f:(fun (loc, newText) -> { Lsp.TextEdit.range = loc_to_lsp_range loc; newText })
-      item.text_edits
+      item.additional_text_edits
   in
   let documentation = Base.Option.map item.documentation ~f:(fun doc -> [Lsp.MarkedString doc]) in
   let tags = Base.Option.map item.tags ~f:(List.filter is_tags_supported) in
@@ -169,7 +174,8 @@ let flow_completion_item_to_lsp
     filterText = None;
     insertText = None (* deprecated and should not be used *);
     insertTextFormat;
-    textEdits;
+    textEdit;
+    additionalTextEdits;
     command;
     data = None;
   }

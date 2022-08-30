@@ -181,12 +181,15 @@ module Response = struct
     return_ty: string;
   }
 
+  type textedit = Loc.t * string
+
   module Completion = struct
     type completion_item = {
       detail: string;
       kind: Lsp.Completion.completionItemKind option;
       name: string;
-      text_edits: (Loc.t * string) list;
+      text_edit: textedit option;
+      additional_text_edits: textedit list;
       sort_text: string option;
       preselect: bool;
       documentation: string option;
@@ -228,8 +231,6 @@ module Response = struct
   type infer_type_response = (infer_type_response_ok, string) result
 
   type insert_type_response = (Replacement_printer.patch, string) result
-
-  type textedit = Loc.t * string
 
   type rage_response = (string * string) list
 

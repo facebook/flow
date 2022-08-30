@@ -171,11 +171,15 @@ let default_mapper =
              filterText;
              insertText;
              insertTextFormat;
-             textEdits;
+             textEdit;
+             additionalTextEdits;
              command;
              data;
            } ->
-        let textEdits = Base.List.map ~f:(mapper.of_text_edit mapper) textEdits in
+        let textEdit = Base.Option.map ~f:(mapper.of_text_edit mapper) textEdit in
+        let additionalTextEdits =
+          Base.List.map ~f:(mapper.of_text_edit mapper) additionalTextEdits
+        in
         let command = Base.Option.map ~f:(mapper.of_command mapper) command in
         {
           Completion.label;
@@ -189,7 +193,8 @@ let default_mapper =
           filterText;
           insertText;
           insertTextFormat;
-          textEdits;
+          textEdit;
+          additionalTextEdits;
           command;
           data;
         });
