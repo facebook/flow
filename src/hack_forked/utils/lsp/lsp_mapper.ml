@@ -67,6 +67,7 @@ type t = {
   of_hover_result: t -> Hover.result -> Hover.result;
   of_initialize_params: t -> Initialize.params -> Initialize.params;
   of_initialize_result: t -> Initialize.result -> Initialize.result;
+  of_insert_replace_edit: t -> InsertReplaceEdit.t -> InsertReplaceEdit.t;
   of_log_message_params: t -> LogMessage.params -> LogMessage.params;
   of_lsp_message: t -> lsp_message -> lsp_message;
   of_lsp_notification: t -> lsp_notification -> lsp_notification;
@@ -95,6 +96,10 @@ type t = {
   of_text_document_position_params:
     t -> TextDocumentPositionParams.t -> TextDocumentPositionParams.t;
   of_text_edit: t -> TextEdit.t -> TextEdit.t;
+  of_text_edit_or_insert_replace_edit:
+    t ->
+    [ `TextEdit of TextEdit.t | `InsertReplaceEdit of InsertReplaceEdit.t ] ->
+    [ `TextEdit of TextEdit.t | `InsertReplaceEdit of InsertReplaceEdit.t ];
   of_type_coverage_params: t -> TypeCoverage.params -> TypeCoverage.params;
   of_type_coverage_result: t -> TypeCoverage.result -> TypeCoverage.result;
   of_type_definition_params: t -> TypeDefinition.params -> TypeDefinition.params;
@@ -176,7 +181,9 @@ let default_mapper =
              command;
              data;
            } ->
-        let textEdit = Base.Option.map ~f:(mapper.of_text_edit mapper) textEdit in
+        let textEdit =
+          Base.Option.map ~f:(mapper.of_text_edit_or_insert_replace_edit mapper) textEdit
+        in
         let additionalTextEdits =
           Base.List.map ~f:(mapper.of_text_edit mapper) additionalTextEdits
         in
@@ -386,6 +393,11 @@ let default_mapper =
       (fun _mapper { Initialize.server_capabilities; Initialize.server_info } ->
         (* TODO? Could add visitors for all of these capabilities *)
         { Initialize.server_capabilities; Initialize.server_info });
+    of_insert_replace_edit =
+      (fun mapper { InsertReplaceEdit.newText; insert; replace } ->
+        let insert = mapper.of_range mapper insert in
+        let replace = mapper.of_range mapper replace in
+        { InsertReplaceEdit.newText; insert; replace });
     of_log_message_params =
       (fun _mapper { LogMessage.type_; message } -> { LogMessage.type_; message });
     of_lsp_message =
@@ -604,6 +616,11 @@ let default_mapper =
       (fun mapper { TextEdit.range; newText } ->
         let range = mapper.of_range mapper range in
         { TextEdit.range; newText });
+    of_text_edit_or_insert_replace_edit =
+      (fun mapper edit ->
+        match edit with
+        | `TextEdit edit -> `TextEdit (mapper.of_text_edit mapper edit)
+        | `InsertReplaceEdit edit -> `InsertReplaceEdit (mapper.of_insert_replace_edit mapper edit));
     of_type_coverage_params =
       (fun mapper { TypeCoverage.textDocument } ->
         let textDocument = mapper.of_text_document_identifier mapper textDocument in

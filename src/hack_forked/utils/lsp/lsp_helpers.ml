@@ -296,6 +296,11 @@ let supports_preselect (p : Lsp.Initialize.params) : bool =
   let open Lsp.CompletionClientCapabilities in
   p.client_capabilities.textDocument.completion.completionItem.preselectSupport
 
+let supports_completion_item_insert_replace (p : Lsp.Initialize.params) : bool =
+  let open Lsp.Initialize in
+  let open Lsp.CompletionClientCapabilities in
+  p.client_capabilities.textDocument.completion.completionItem.insertReplaceSupport
+
 let supports_completion_item_label_details (p : Lsp.Initialize.params) : bool =
   let open Lsp.Initialize in
   let open Lsp.CompletionClientCapabilities in

@@ -144,6 +144,25 @@ let parse_textEdit (params : json option) : TextEdit.t =
 let print_textEdit (edit : TextEdit.t) : json =
   TextEdit.(JSON_Object [("range", print_range edit.range); ("newText", JSON_String edit.newText)])
 
+module InsertReplaceEditFmt = struct
+  open InsertReplaceEdit
+
+  let to_json { newText; insert; replace } =
+    JSON_Object
+      [
+        ("newText", JSON_String newText);
+        ("insert", print_range insert);
+        ("replace", print_range replace);
+      ]
+
+  let of_json json : InsertReplaceEdit.t =
+    {
+      newText = Jget.string_exn json "newText";
+      insert = Jget.obj_exn json "insert" |> parse_range_exn;
+      replace = Jget.obj_exn json "replace" |> parse_range_exn;
+    }
+end
+
 let print_workspaceEdit (r : WorkspaceEdit.t) : json =
   WorkspaceEdit.(
     let print_workspace_edit_changes (uri, text_edits) =
@@ -773,7 +792,10 @@ let parse_completionItem (params : json option) : CompletionItemResolve.params =
     let textEdit =
       match Jget.obj_opt params "textEdit" with
       | None -> None
-      | edit -> Some (parse_textEdit edit)
+      | edit ->
+        (match Jget.obj_opt edit "range" with
+        | Some _ -> Some (`TextEdit (parse_textEdit edit))
+        | None -> Some (`InsertReplaceEdit (InsertReplaceEditFmt.of_json edit)))
     in
     let additionalTextEdits =
       Jget.array_d params "additionalTextEdits" ~default:[] |> Base.List.map ~f:parse_textEdit
@@ -847,7 +869,12 @@ let print_completionItem ~key (item : Completion.completionItem) : json =
         ( "insertTextFormat",
           Base.Option.map item.insertTextFormat ~f:(fun x -> int_ @@ insertTextFormat_to_enum x)
         );
-        ("textEdit", Base.Option.map item.textEdit ~f:print_textEdit);
+        ( "textEdit",
+          Base.Option.map item.textEdit ~f:(function
+              | `TextEdit edit -> print_textEdit edit
+              | `InsertReplaceEdit edit -> InsertReplaceEditFmt.to_json edit
+              )
+        );
         ( "additionalTextEdits",
           match item.additionalTextEdits with
           | [] -> None
@@ -1147,6 +1174,7 @@ module CompletionClientCapabilitiesFmt = struct
       snippetSupport = Jget.bool_d json "snippetSupport" ~default:false;
       preselectSupport = Jget.bool_d json "preselectSupport" ~default:false;
       tagSupport = Jget.obj_opt json "tagSupport" |> tagSupport_of_json;
+      insertReplaceSupport = Jget.bool_d json "insertReplaceSupport" ~default:false;
       labelDetailsSupport = Jget.bool_d json "labelDetailsSupport" ~default:false;
     }
 

@@ -1776,6 +1776,9 @@ let handle_persistent_autocomplete_lsp
   let is_label_detail_supported =
     Lsp_helpers.supports_completion_item_label_details lsp_init_params
   in
+  let is_insert_replace_supported =
+    Lsp_helpers.supports_completion_item_insert_replace lsp_init_params
+  in
   let { Completion.loc = lsp_loc; context } = params in
   let file_input =
     match file_input with
@@ -1850,6 +1853,7 @@ let handle_persistent_autocomplete_lsp
         ~is_tags_supported
         ~is_preselect_supported
         ~is_label_detail_supported
+        ~is_insert_replace_supported
         completions
     in
     let response = ResponseMessage (id, CompletionResult result) in

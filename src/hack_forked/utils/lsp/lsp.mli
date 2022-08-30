@@ -89,6 +89,14 @@ module TextEdit : sig
   }
 end
 
+module InsertReplaceEdit : sig
+  type t = {
+    newText: string;
+    insert: range;
+    replace: range;
+  }
+end
+
 module TextDocumentIdentifier : sig
   type t = { uri: DocumentUri.t }
 end
@@ -254,6 +262,7 @@ module CompletionClientCapabilities : sig
     snippetSupport: bool;
     preselectSupport: bool;
     tagSupport: tagSupport;
+    insertReplaceSupport: bool;
     labelDetailsSupport: bool;
   }
 
@@ -717,7 +726,7 @@ module Completion : sig
     filterText: string option;  (** used for filtering; if absent, uses label *)
     insertText: string option;  (** used for inserting; if absent, uses label *)
     insertTextFormat: insertTextFormat option;
-    textEdit: TextEdit.t option;
+    textEdit: [ `TextEdit of TextEdit.t | `InsertReplaceEdit of InsertReplaceEdit.t ] option;
     additionalTextEdits: TextEdit.t list;
     command: Command.t option;  (** if present, is executed after completion *)
     data: Hh_json.json option;

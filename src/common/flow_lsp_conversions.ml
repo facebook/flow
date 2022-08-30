@@ -90,6 +90,7 @@ let flow_completion_item_to_lsp
     ~(is_tags_supported : Lsp.CompletionItemTag.t -> bool)
     ~(is_preselect_supported : bool)
     ~(is_label_detail_supported : bool)
+    ~(is_insert_replace_supported : bool)
     ~index
     (item : ServerProt.Response.Completion.completion_item) : Lsp.Completion.completionItem =
   let open ServerProt.Response.Completion in
@@ -105,8 +106,9 @@ let flow_completion_item_to_lsp
   in
   let insertTextFormat = Some Lsp.Completion.PlainText in
   let textEdit =
+    ignore is_insert_replace_supported;
     Base.Option.map
-      ~f:(fun (loc, newText) -> { Lsp.TextEdit.range = loc_to_lsp_range loc; newText })
+      ~f:(fun (loc, newText) -> `TextEdit { Lsp.TextEdit.range = loc_to_lsp_range loc; newText })
       item.text_edit
   in
   let additionalTextEdits =
@@ -188,6 +190,7 @@ let flow_completions_to_lsp
     ~(is_tags_supported : Lsp.CompletionItemTag.t -> bool)
     ~(is_preselect_supported : bool)
     ~(is_label_detail_supported : bool)
+    ~(is_insert_replace_supported : bool)
     (completions : ServerProt.Response.Completion.t) : Lsp.Completion.result =
   let { ServerProt.Response.Completion.items; is_incomplete } = completions in
   let open ServerProt.Response.Completion in
@@ -218,6 +221,7 @@ let flow_completions_to_lsp
           ~is_tags_supported
           ~is_preselect_supported
           ~is_label_detail_supported
+          ~is_insert_replace_supported
           ~index
           { item with sort_text = Option.some (Printf.sprintf "%020u" index) })
       items

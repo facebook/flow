@@ -130,6 +130,15 @@ module TextEdit = struct
   }
 end
 
+(** A special text edit to provide an insert and a replace operation. *)
+module InsertReplaceEdit = struct
+  type t = {
+    newText: string;  (** The string to be inserted. *)
+    insert: range;  (** The range if the insert is requested *)
+    replace: range;  (** The range if the replace is requested. *)
+  }
+end
+
 (** Text documents are identified using a URI. *)
 module TextDocumentIdentifier = struct
   type t = { uri: DocumentUri.t  (** the text document's URI *) }
@@ -358,6 +367,9 @@ module CompletionClientCapabilities = struct
     snippetSupport: bool;  (** client can do snippets as insert text *)
     preselectSupport: bool;  (** client supports the preselect property *)
     tagSupport: tagSupport;  (** client supports the tags property *)
+    insertReplaceSupport: bool;
+        (** Client supports insert replace edit to control different behavior if
+            a completion item is inserted in the text or should replace text. *)
     labelDetailsSupport: bool;  (** proposed for 3.17 *)
   }
 
@@ -898,7 +910,7 @@ module Completion = struct
     filterText: string option;  (** used for filtering; if absent, uses label *)
     insertText: string option;  (** used for inserting; if absent, uses label *)
     insertTextFormat: insertTextFormat option;
-    textEdit: TextEdit.t option;
+    textEdit: [ `TextEdit of TextEdit.t | `InsertReplaceEdit of InsertReplaceEdit.t ] option;
     additionalTextEdits: TextEdit.t list;
     command: Command.t option;  (** if present, is executed after completion *)
     data: Hh_json.json option;
