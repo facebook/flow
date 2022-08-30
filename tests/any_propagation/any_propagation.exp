@@ -16,33 +16,5 @@ References:
            ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------ function.js:10:10
 
-Cannot assign `42` to `o[x]` because number [1] is incompatible with string [2]. [incompatible-type]
-
-   function.js:10:10
-   10|   o[x] = 42;
-                ^^ [1]
-
-References:
-   function.js:2:27
-    2| declare var o: {[string]: string};
-                                 ^^^^^^ [2]
-
-
-Error ------------------------------------------------------------------------------------------------ function.js:16:10
-
-Cannot assign `42` to `o[x]` because number [1] is incompatible with string [2]. [incompatible-type]
-
-   function.js:16:10
-   16|   o[x] = 42;
-                ^^ [1]
-
-References:
-   function.js:2:27
-    2| declare var o: {[string]: string};
-                                 ^^^^^^ [2]
-
-
-
-Found 3 errors
+Found 1 error
