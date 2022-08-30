@@ -102,6 +102,25 @@ let is_call_to_is_array callee =
     true
   | _ -> false
 
+let is_call_to_object_dot_freeze callee =
+  match callee with
+  | ( _,
+      Flow_ast.Expression.Member
+        {
+          Flow_ast.Expression.Member._object =
+            ( _,
+              Flow_ast.Expression.Identifier
+                (_, { Flow_ast.Identifier.name = "Object"; comments = _ })
+            );
+          property =
+            Flow_ast.Expression.Member.PropertyIdentifier
+              (_, { Flow_ast.Identifier.name = "freeze"; comments = _ });
+          comments = _;
+        }
+    ) ->
+    true
+  | _ -> false
+
 let loc_of_statement = fst
 
 let loc_of_expression = fst

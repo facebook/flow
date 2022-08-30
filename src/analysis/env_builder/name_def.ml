@@ -1051,22 +1051,8 @@ class def_finder env_entries providers toplevel_scope =
         | (_, [Ast.Expression.Expression expr], OtherConditionalTest)
           when Flow_ast_utils.is_call_to_is_array callee ->
           this#visit_expression ~hint:Hint_None ~cond:OtherConditionalTest expr
-        | ( ( _,
-              Ast.Expression.Member
-                {
-                  Ast.Expression.Member._object =
-                    ( _,
-                      Ast.Expression.Identifier (_, { Ast.Identifier.name = "Object"; comments = _ })
-                    );
-                  property =
-                    Ast.Expression.Member.PropertyIdentifier
-                      (_, { Ast.Identifier.name = "freeze"; comments = _ });
-                  comments = _;
-                }
-            ),
-            [Ast.Expression.Expression expr],
-            _
-          ) ->
+        | (_, [Ast.Expression.Expression expr], _)
+          when Flow_ast_utils.is_call_to_object_dot_freeze callee ->
           this#visit_expression ~hint ~cond:NonConditionalContext expr
         | _ ->
           let call_argumemts_hint =
