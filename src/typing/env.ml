@@ -82,7 +82,14 @@ let with_debug_exn cx loc f =
       AnyT.at (AnyError None) loc
     )
 
-let t_option_value_exn cx loc t = with_debug_exn cx loc (fun () -> Base.Option.value_exn t)
+let t_option_value_exn cx loc t =
+  with_debug_exn cx loc (fun () ->
+      match t with
+      | Some t -> t
+      | None ->
+        failwith
+          (Utils_js.spf "Missing location entry: %s" (ALoc.debug_to_string ~include_source:true loc))
+  )
 
 (************************)
 (* Helpers **************)
@@ -234,6 +241,11 @@ and refine cx reason loc refi t =
 
 and type_of_state ~lookup_mode cx env loc reason write_locs val_id refi =
   let { Loc_env.var_info; _ } = env in
+  let find_write_exn kind reason =
+    let loc = Reason.aloc_of_reason reason in
+    check_readable cx kind loc;
+    t_option_value_exn cx loc (Loc_env.find_write env kind loc)
+  in
   let rec type_of_state states val_id refi =
     let t =
       lazy
@@ -265,9 +277,7 @@ and type_of_state ~lookup_mode cx env loc reason write_locs val_id refi =
                      (Reason.string_of_aloc loc)
                      (Reason.aloc_of_reason def |> Reason.string_of_aloc);
                  ];
-               let loc = Reason.aloc_of_reason def in
-               check_readable cx Env_api.OrdinaryNameLoc loc;
-               t_option_value_exn cx loc (Loc_env.find_ordinary_write env loc)
+               find_write_exn Env_api.OrdinaryNameLoc def
              | (Env_api.UndeclaredClass { name; def }, _) ->
                let def_loc = aloc_of_reason def in
                Flow_js.add_output
@@ -288,9 +298,7 @@ and type_of_state ~lookup_mode cx env loc reason write_locs val_id refi =
                        (Reason.aloc_of_reason reason |> Reason.string_of_aloc);
                    ]
                    );
-               let loc = Reason.aloc_of_reason reason in
-               check_readable cx Env_api.OrdinaryNameLoc loc;
-               t_option_value_exn cx loc (Loc_env.find_ordinary_write env loc)
+               find_write_exn Env_api.OrdinaryNameLoc reason
              | (Env_api.With_ALoc.IllegalWrite reason, _) ->
                Debug_js.Verbose.print_if_verbose_lazy
                  cx
@@ -316,11 +324,7 @@ and type_of_state ~lookup_mode cx env loc reason write_locs val_id refi =
                      (Reason.string_of_aloc loc)
                      (Reason.aloc_of_reason reason |> Reason.string_of_aloc);
                  ];
-               Base.Option.value_exn
-                 ( Reason.aloc_of_reason reason |> fun loc ->
-                   check_readable cx Env_api.GlobalThisLoc loc;
-                   Loc_env.find_write env Env_api.GlobalThisLoc loc
-                 )
+               find_write_exn Env_api.GlobalThisLoc reason
              | (Env_api.With_ALoc.IllegalThis reason, _) ->
                Debug_js.Verbose.print_if_verbose
                  cx
@@ -340,11 +344,7 @@ and type_of_state ~lookup_mode cx env loc reason write_locs val_id refi =
                      (Reason.string_of_aloc loc)
                      (Reason.aloc_of_reason reason |> Reason.string_of_aloc);
                  ];
-               Base.Option.value_exn
-                 ( Reason.aloc_of_reason reason |> fun loc ->
-                   check_readable cx Env_api.FunctionThisLoc loc;
-                   Loc_env.find_write env Env_api.FunctionThisLoc loc
-                 )
+               find_write_exn Env_api.FunctionThisLoc reason
              | (Env_api.With_ALoc.ClassInstanceThis reason, _) ->
                Debug_js.Verbose.print_if_verbose
                  cx
@@ -354,11 +354,7 @@ and type_of_state ~lookup_mode cx env loc reason write_locs val_id refi =
                      (Reason.string_of_aloc loc)
                      (Reason.aloc_of_reason reason |> Reason.string_of_aloc);
                  ];
-               Base.Option.value_exn
-                 ( Reason.aloc_of_reason reason |> fun loc ->
-                   check_readable cx Env_api.ClassInstanceThisLoc loc;
-                   Loc_env.find_write env Env_api.ClassInstanceThisLoc loc
-                 )
+               find_write_exn Env_api.ClassInstanceThisLoc reason
              | (Env_api.With_ALoc.ClassStaticThis reason, _) ->
                Debug_js.Verbose.print_if_verbose
                  cx
@@ -368,11 +364,7 @@ and type_of_state ~lookup_mode cx env loc reason write_locs val_id refi =
                      (Reason.string_of_aloc loc)
                      (Reason.aloc_of_reason reason |> Reason.string_of_aloc);
                  ];
-               Base.Option.value_exn
-                 ( Reason.aloc_of_reason reason |> fun loc ->
-                   check_readable cx Env_api.ClassStaticThisLoc loc;
-                   Loc_env.find_write env Env_api.ClassStaticThisLoc loc
-                 )
+               find_write_exn Env_api.ClassStaticThisLoc reason
              | (Env_api.With_ALoc.ClassInstanceSuper reason, _) ->
                Debug_js.Verbose.print_if_verbose
                  cx
@@ -382,11 +374,7 @@ and type_of_state ~lookup_mode cx env loc reason write_locs val_id refi =
                      (Reason.string_of_aloc loc)
                      (Reason.aloc_of_reason reason |> Reason.string_of_aloc);
                  ];
-               Base.Option.value_exn
-                 ( Reason.aloc_of_reason reason |> fun loc ->
-                   check_readable cx Env_api.ClassInstanceSuperLoc loc;
-                   Loc_env.find_write env Env_api.ClassInstanceSuperLoc loc
-                 )
+               find_write_exn Env_api.ClassInstanceSuperLoc reason
              | (Env_api.With_ALoc.ClassStaticSuper reason, _) ->
                Debug_js.Verbose.print_if_verbose
                  cx
@@ -396,11 +384,7 @@ and type_of_state ~lookup_mode cx env loc reason write_locs val_id refi =
                      (Reason.string_of_aloc loc)
                      (Reason.aloc_of_reason reason |> Reason.string_of_aloc);
                  ];
-               Base.Option.value_exn
-                 ( Reason.aloc_of_reason reason |> fun loc ->
-                   check_readable cx Env_api.ClassStaticSuperLoc loc;
-                   Loc_env.find_write env Env_api.ClassStaticSuperLoc loc
-                 )
+               find_write_exn Env_api.ClassStaticSuperLoc reason
              | (Env_api.With_ALoc.Exports, _) ->
                let file_loc = Loc.{ none with source = Some (Context.file cx) } |> ALoc.of_loc in
                check_readable cx Env_api.GlobalExportsLoc file_loc;
