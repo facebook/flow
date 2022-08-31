@@ -1,3 +1,19 @@
+### 0.186.0
+
+Notable breaking changes:
+* Support for `inference_mode=classic` has been removed. The default is now `inference_mode=constrain_writes`. Please refer to the [blog post](https://medium.com/flow-type/new-flow-language-rule-constrained-writes-4c70e375d190) for migration paths. Additionally we have removed all codemod commands that depend on the classic inference mode. This includes the `annotate-declarations`, `rename-redefinitions` and `annotate-escaped-generics` codemods.
+
+Likely to cause new Flow errors:
+* Exported functions can only have properties assigned in the same scope as the function.
+* Improve behavior of index property access with union types ([try-Flow](https://flow.org/try/#0C4TwDgpgBAslC8UDeAoKUCGAuKA7ArgLYBGEATgDRpTE4DOwZAlrgOZUC+A3CgCYQBjADYYy0AG6io4nDADaAcgwKoAHygLiCgLo9xCKAGYuUAPSmodABYB7fEN64FwKOTI2ymXCEIeIKfUQAIiCTc0tbe0dnVzJ3TwxvXzEgA) example). May cause new errors in interaction with computed properties.
+* Referencing `this` in object getters and setters are now banned. Referencing `this` in object methods are already banned, and this change makes Flow's behavior more consistent.
+
+Notable bug fixes:
+* Fixed a regression in destructuring checking with computed properties ([issue](https://github.com/facebook/flow/issues/8921)).
+
+Library Definitions:
+* Added `PerformanceServerTiming` definition and the `serverTiming` attribute to `PerformanceResourceTiming`.
+
 ### 0.185.2
 
 New Features:
