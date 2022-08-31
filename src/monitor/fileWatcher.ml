@@ -274,6 +274,17 @@ end = struct
     survive_restarts: bool;
   }
 
+  let get_mergebase env =
+    if env.should_track_mergebase then
+      match%lwt Watchman.get_mergebase env.instance with
+      | Ok _ as ok -> Lwt.return ok
+      | Error (Vcs_utils.Not_installed _) ->
+        Lwt.return (Error "Failed to query mergebase: unable to find vcs")
+      | Error (Vcs_utils.Errored msg) ->
+        Lwt.return (Error (Printf.sprintf "Failed to query mergebase: %s" msg))
+    else
+      Lwt.return (Ok None)
+
   let get_mergebase_and_changes env =
     if env.should_track_mergebase then
       match%lwt Watchman.get_mergebase_and_changes env.instance with
@@ -399,14 +410,14 @@ end = struct
             if env.finished_an_hg_update then (
               env.finished_an_hg_update <- false;
               let%lwt new_mergebase =
-                match%lwt get_mergebase_and_changes env with
-                | Ok mergebase_and_changes -> Lwt.return mergebase_and_changes
+                match%lwt get_mergebase env with
+                | Ok mergebase -> Lwt.return mergebase
                 | Error msg ->
                   (* TODO: handle this more gracefully than `failwith` *)
                   failwith msg
               in
               match (new_mergebase, env.mergebase) with
-              | (Some { Watchman.mergebase; changes = _; clock = _ }, Some old_mergebase) ->
+              | (Some mergebase, Some old_mergebase) ->
                 let changed_mergebase = mergebase <> old_mergebase in
                 if changed_mergebase then (
                   Logger.info

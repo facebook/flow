@@ -70,6 +70,8 @@ type env
 
 val init : init_settings -> env option Lwt.t
 
+val get_mergebase : env -> (string option, Vcs_utils.error_status) Result.t Lwt.t
+
 val get_mergebase_and_changes : env -> (mergebase_and_changes option, failure) Result.t Lwt.t
 
 val recover_from_restart : prev_mergebase:string -> env -> (env * SSet.t, failure) Result.t Lwt.t

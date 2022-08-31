@@ -226,6 +226,7 @@ type env = {
   settings: init_settings;
   should_track_mergebase: bool;
   subscription: string;
+  vcs: Vcs.t option;
   watch: watch;
 }
 
@@ -752,7 +753,7 @@ let re_init ?prior_clockspec settings =
   let subscription = subscription_name settings in
   let vcs = Vcs.find (Path.make watch.watch_root) in
   let should_track_mergebase = supports_scm_queries capabilities vcs in
-  let env = { settings; conn; watch; clockspec; subscription; should_track_mergebase } in
+  let env = { settings; conn; watch; clockspec; subscription; should_track_mergebase; vcs } in
   request ~debug_logging ~conn (subscribe_query env) >>= fun response ->
   ignore response;
   Lwt.return (Ok env)
@@ -927,6 +928,32 @@ let get_changes =
   in
   (fun env -> with_retry ~max_attempts:max_retry_attempts ~on_retry wait_for_changes env)
 
+let get_mergebase =
+  (* watchman's mergebase-with queries also get the changes since mergebase.
+     we don't want those here, we just want to quickly know the mergebase and
+     will use that to decide whether we care about the changes. so we ask
+     source control directly. *)
+  let get_mergebase_from_vcs vcs root mergebase_with =
+    match vcs with
+    | Some Vcs.Hg ->
+      (match%lwt Hg.merge_base ~cwd:root "." mergebase_with with
+      | Ok hash -> Lwt.return (Ok (Some hash))
+      | Error _ as err -> Lwt.return err)
+    | Some Vcs.Git ->
+      (match%lwt Git.merge_base ~cwd:root mergebase_with "HEAD" with
+      | Ok hash -> Lwt.return (Ok (Some hash))
+      | Error _ as err -> Lwt.return err)
+    | None -> Lwt.return (Ok None)
+  in
+  fun env ->
+    if env.should_track_mergebase then
+      let vcs = env.vcs in
+      let root = env.watch.watch_root in
+      let mergebase_with = env.settings.mergebase_with in
+      get_mergebase_from_vcs vcs root mergebase_with
+    else
+      Lwt.return (Ok None)
+
 let get_mergebase_and_changes =
   let on_retry attempt env =
     let%lwt () = Lwt_unix.sleep (backoff_delay attempt) in
@@ -1012,6 +1039,7 @@ module Testing = struct
             watched_path_expression_terms =
               Some (J.pred "anyof" [J.strlist ["dirname"; "foo"]; J.strlist ["name"; "foo"]]);
           };
+        vcs = None;
         should_track_mergebase = false;
         subscription = "dummy_prefix.123456789";
       }
