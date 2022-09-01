@@ -260,6 +260,9 @@ typedef struct {
 
   /* The top of the heap, offset from hashtbl pointer */
   alignas(128) addr_t heap;
+
+  /* Head of the mark stack. */
+  alignas(128) uintnat mark_ptr;
 } shmem_info_t;
 
 /* Per-worker data which can be quickly updated non-atomically. Will be placed
@@ -399,43 +402,16 @@ typedef union {
 #define Phase_mark 1
 #define Phase_sweep 2
 
-// The mark stack used during heap traversal for the GC's marking pass, which
-// visits every heap object once.
-//
-// When initializing the heap, we allocate stack space which is reused across
-// collections. During a marking pass, if we exceed the preallocated space, we
-// will grow the stack. If we grow the mark stack during a collection, we will
-// free that additional space at the end of the collection.
-//
 // The max size is explicit to avoid exhausting available memory in the event of
 // a programmer error. We should not hit this limit, or come close to it. It
 // might become necessary to handle a mark stack overflow without crashing, but
 // this is not implemented.
-#define MARK_STACK_INIT_SIZE 4096
-#define MARK_STACK_MAX_SIZE (1024 * 1024 * 200)
-
-// The current size of the mark stack buffer.
-static uintnat mark_stack_size = 0;
+#define MARK_STACK_INIT_SIZE 512 // 4096 KiB
+#define MARK_STACK_MAX_SIZE (MARK_STACK_INIT_SIZE << 16) // 256 MiB
 
 // Note: because collection only happens on the master process, the following
-// pointers are only initialized in the master process and will remain NULL in
-// workers.
-
-// The initial stack space, allocated at startup for the mark stack. This space
-// will persist between collections.
-static addr_t* mark_stack_init = NULL;
-
-// Base of the current mark stack. This is initially aliased to
-// mark_stack_init, but will change if the mark stack is realloced.
-static addr_t* mark_stack = NULL;
-
-// Head of the current mark stack, equal to `mark_stack` when the stack is
-// empty, adjusted during push/pop.
-static addr_t* mark_stack_ptr = NULL;
-
-// End of the current mark stack, equal to `mark_stack + mark_stack_size`, used
-// to trigger resize.
-static addr_t* mark_stack_end = NULL;
+// values are only maintained in the master process and updates will not be
+// reflected in workers.
 
 // The marking phase treats the shared hash table as GC roots, but these are
 // marked incrementally. Because we might modify the hash table between mark
@@ -461,6 +437,9 @@ static char* shared_mem = NULL;
 
 /* Worker-local storage is cache line aligned. */
 static local_t* locals = NULL;
+
+/* Base of the mark stack. */
+static addr_t* mark_stack = NULL;
 
 /* The hashtable containing the shared values. */
 static helt_t* hashtbl = NULL;
@@ -727,14 +706,12 @@ static void map_info_page(int page_bsize) {
 static void define_mappings(int page_bsize) {
   assert(info != NULL);
   size_t locals_bsize = info->locals_bsize;
-
+  size_t mark_stack_max_bsize = MARK_STACK_MAX_SIZE * sizeof(mark_stack[0]);
   shared_mem = memfd_map(info->shared_mem_bsize);
-
-  /* Process-local storage */
   locals = (local_t*)(shared_mem + page_bsize);
-
-  /* Hashtable */
-  hashtbl = (helt_t*)(shared_mem + page_bsize + locals_bsize);
+  mark_stack = (addr_t*)(shared_mem + page_bsize + locals_bsize);
+  hashtbl =
+      (helt_t*)(shared_mem + page_bsize + locals_bsize + mark_stack_max_bsize);
 }
 
 static value alloc_heap_bigarray(void) {
@@ -763,13 +740,14 @@ CAMLprim value hh_shared_init(value config_val, value num_workers_val) {
   size_t num_workers = Long_val(num_workers_val);
   size_t locals_bsize = CACHE_ALIGN((1 + num_workers) * sizeof(local_t));
   size_t hashtbl_slots = 1ul << Long_val(Field(config_val, 1));
+  size_t mark_stack_max_bsize = MARK_STACK_MAX_SIZE * sizeof(mark_stack[0]);
   size_t hashtbl_bsize = CACHE_ALIGN(hashtbl_slots * sizeof(helt_t));
   size_t heap_bsize = Long_val(Field(config_val, 0));
 
   /* The total size of the shared file must have space for the info page, local
-   * data, the hash table, and the heap. */
-  size_t shared_mem_bsize =
-      page_bsize + locals_bsize + hashtbl_bsize + heap_bsize;
+   * data, the mark stack, the hash table, and the heap. */
+  size_t shared_mem_bsize = page_bsize + locals_bsize + mark_stack_max_bsize +
+      hashtbl_bsize + heap_bsize;
 
   memfd_init(shared_mem_bsize);
 
@@ -802,15 +780,14 @@ CAMLprim value hh_shared_init(value config_val, value num_workers_val) {
 
   define_mappings(page_bsize);
 
-  // Reserve memory for locals and hashtbl. This is required on Windows.
+  // Reserve memory for locals, the initial mark stack, and hashtbl.
+  // This is required on Windows.
   memfd_reserve(shared_mem, (char*)locals, locals_bsize);
+  memfd_reserve(
+      shared_mem,
+      (char*)mark_stack,
+      MARK_STACK_INIT_SIZE * sizeof(mark_stack[0]));
   memfd_reserve(shared_mem, (char*)hashtbl, hashtbl_bsize);
-
-  mark_stack_size = MARK_STACK_INIT_SIZE;
-  mark_stack_init = malloc(MARK_STACK_INIT_SIZE * sizeof(addr_t));
-  mark_stack = mark_stack_init;
-  mark_stack_ptr = mark_stack;
-  mark_stack_end = mark_stack + MARK_STACK_INIT_SIZE;
 
 #ifdef MADV_DONTDUMP
   // We are unlikely to get much useful information out of the shared heap in
@@ -989,50 +966,35 @@ CAMLprim value hh_start_cycle(value unit) {
   CAMLreturn(Val_unit);
 }
 
+CAMLnoreturn_start static void mark_stack_overflow() CAMLnoreturn_end;
+
 static void mark_stack_overflow() {
   caml_failwith("mark_stack_resize: could not allocate space for mark stack");
 }
 
-// Mark stack starts out with some initial capacity, which grows as needed.
-static void mark_stack_resize(void) {
-  assert(mark_stack_ptr == mark_stack_end);
-
-  uintnat new_size = 2 * mark_stack_size;
-
-  // To avoid exhausting the heap in the event of a programmer error, we fail if
-  // the mark stack exceeds some fixed huge size (currently ~1.5 GB).
-  if (new_size >= MARK_STACK_MAX_SIZE)
-    mark_stack_overflow();
-
-  // Keep the initial stack, which will be restored by mark_stack_reset.
-  // Otherwise realloc, which frees the underlying memory if necessary.
-  addr_t* new_stack;
-  if (mark_stack == mark_stack_init) {
-    new_stack = malloc(new_size * sizeof(addr_t));
-    if (new_stack == NULL)
+// Check if the mark stack needs to be resized
+//
+// The mark stack has an initial size of 4KiB. When we reach the end of the mark
+// stack, we double the size until we reach the maximum size of 256MiB. Notice
+// that the capacity of the mark stack is always a power of 2.
+//
+// The expression `x & (-x)` returns the least set bit in `x`. When this number
+// is equal to `x`, we know that `x` is a power of 2.
+//
+// Thus, when the mark stack pointer is a power of 2, we know that we are at
+// capacity and need to resize. We resize by doubling the capacity.
+static void mark_stack_try_resize(uintnat mark_ptr) {
+  if (mark_ptr > MARK_STACK_INIT_SIZE &&
+      ((mark_ptr & (-mark_ptr)) == mark_ptr)) {
+    if (mark_ptr == MARK_STACK_MAX_SIZE) {
       mark_stack_overflow();
-    memcpy(new_stack, mark_stack_init, MARK_STACK_INIT_SIZE * sizeof(addr_t));
-  } else {
-    new_stack = realloc(mark_stack, new_size * sizeof(addr_t));
-    if (new_stack == NULL)
-      mark_stack_overflow();
-  }
-
-  mark_stack = new_stack;
-  mark_stack_ptr = new_stack + mark_stack_size;
-  mark_stack_size = new_size;
-  mark_stack_end = mark_stack + new_size;
-}
-
-// Free any additional stack space allocated during marking. The initial stack
-// space allocation is re-used across marking passes.
-static void mark_stack_reset(void) {
-  if (mark_stack != mark_stack_init) {
-    free(mark_stack);
-    mark_stack_size = MARK_STACK_INIT_SIZE;
-    mark_stack = mark_stack_init;
-    mark_stack_ptr = mark_stack;
-    mark_stack_end = mark_stack + MARK_STACK_INIT_SIZE;
+    }
+    // Double the size of the mark stack by reserving `mark_ptr` amount of space
+    // starting at `mark_ptr`.
+    memfd_reserve(
+        shared_mem,
+        (char*)&mark_stack[mark_ptr],
+        mark_ptr * sizeof(mark_stack[0]));
   }
 }
 
@@ -1048,10 +1010,10 @@ static inline void mark_slice_darken(field_t fld) {
     hh_header_t hd = Deref(fld);
     if (Is_white(hd)) {
       Deref(fld) = Black_hd(hd);
-      if (mark_stack_ptr == mark_stack_end) {
-        mark_stack_resize();
-      }
-      *mark_stack_ptr++ = fld;
+      uintnat mark_ptr = info->mark_ptr;
+      mark_stack_try_resize(mark_ptr);
+      mark_stack[mark_ptr] = fld;
+      info->mark_ptr = mark_ptr + 1;
     }
   }
 }
@@ -1110,8 +1072,8 @@ CAMLprim value hh_mark_slice(value work_val) {
   // Because roots are colored gray but not added to the mark stack, also walk
   // the heap to find marked roots.
   while (work > 0) {
-    if (v == NULL_ADDR && mark_stack_ptr > mark_stack) {
-      v = *--mark_stack_ptr;
+    if (v == NULL_ADDR && info->mark_ptr > 0) {
+      v = mark_stack[--info->mark_ptr];
     }
     if (v != NULL_ADDR) {
       hd = Deref(v);
@@ -1148,7 +1110,6 @@ CAMLprim value hh_mark_slice(value work_val) {
       work--;
     } else {
       // Done marking, transition to sweep phase.
-      mark_stack_reset();
       info->gc_phase = Phase_sweep;
       break;
     }
