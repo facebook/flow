@@ -11,6 +11,10 @@ open Utils_js
 
 (****************** typecheck job helpers *********************)
 
+let with_memory_timer_lwt ~options =
+  let should_print = Options.should_profile options in
+  Memory_utils.with_memory_timer_lwt ~should_print
+
 let clear_errors files errors =
   let { ServerEnv.local_errors; duplicate_providers; merge_errors; warnings; suppressions } =
     errors
@@ -77,13 +81,13 @@ let collate_parse_results parse_results =
   (parsed, unparsed, unchanged, not_found, dirty_modules, local_errors, package_json)
 
 let parse ~options ~profiling ~workers ~reader parse_next =
-  Memory_utils.with_memory_timer_lwt ~options "Parsing" profiling (fun () ->
+  with_memory_timer_lwt ~options "Parsing" profiling (fun () ->
       let%lwt results = Parsing_service_js.parse_with_defaults ~reader options workers parse_next in
       Lwt.return (collate_parse_results results)
   )
 
 let reparse ~options ~profiling ~transaction ~reader ~workers ~modified =
-  Memory_utils.with_memory_timer_lwt ~options "Parsing" profiling (fun () ->
+  with_memory_timer_lwt ~options "Parsing" profiling (fun () ->
       let%lwt results =
         Parsing_service_js.reparse_with_defaults
           ~transaction
@@ -97,7 +101,7 @@ let reparse ~options ~profiling ~transaction ~reader ~workers ~modified =
   )
 
 let commit_modules ~transaction ~options ~profiling ~workers ~duplicate_providers dirty_modules =
-  Memory_utils.with_memory_timer_lwt ~options "CommitModules" profiling (fun () ->
+  with_memory_timer_lwt ~options "CommitModules" profiling (fun () ->
       (* Clear duplicate provider errors for all dirty modules. *)
       let duplicate_providers =
         (* Avoid iterating over dirty modules when there are no duplicate
@@ -153,7 +157,7 @@ let resolve_requires ~transaction ~reader ~options ~profiling ~workers ~parsed ~
   let node_modules_containers = !Files.node_modules_containers in
   let mutator = Parsing_heaps.Resolved_requires_mutator.create transaction options parsed_set in
   let%lwt resolved_requires_changed =
-    Memory_utils.with_memory_timer_lwt ~options "ResolveRequires" profiling (fun () ->
+    with_memory_timer_lwt ~options "ResolveRequires" profiling (fun () ->
         MultiWorkerLwt.call
           workers
           ~job:
@@ -183,7 +187,7 @@ let error_set_of_internal_error file (loc, internal_error) =
   |> Flow_error.ErrorSet.singleton
 
 let calc_deps ~options ~profiling ~sig_dependency_graph ~components to_merge =
-  Memory_utils.with_memory_timer_lwt ~options "CalcDeps" profiling (fun () ->
+  with_memory_timer_lwt ~options "CalcDeps" profiling (fun () ->
       let sig_dependency_graph =
         Pure_dep_graph_operations.filter_dependency_graph sig_dependency_graph to_merge
       in
@@ -219,7 +223,7 @@ let include_dependencies_and_dependents
     ~sig_dependency_graph
     ~sig_dependent_files
     ~all_dependent_files =
-  Memory_utils.with_memory_timer_lwt ~options "PruneDeps" profiling (fun () ->
+  with_memory_timer_lwt ~options "PruneDeps" profiling (fun () ->
       (* We need to run the check phase on the entire input set as well as all_dependent_files.
        * We'll calculate the set of files we need to merge based on this. *)
       let to_check = CheckedSet.add ~dependents:all_dependent_files input in
@@ -344,7 +348,7 @@ let run_merge_service
     ~component_map
     ~recheck_set
     suppressions =
-  Memory_utils.with_memory_timer_lwt ~options "Merge" profiling (fun () ->
+  with_memory_timer_lwt ~options "Merge" profiling (fun () ->
       let%lwt (results, { Merge_service.skipped_count; sig_new_or_changed }) =
         Merge_service.merge
           ~mutator
@@ -530,7 +534,7 @@ let merge
     in
     let%lwt () =
       if Options.should_profile options then
-        Memory_utils.with_memory_timer_lwt ~options "PrintGCStats" profiling (fun () ->
+        with_memory_timer_lwt ~options "PrintGCStats" profiling (fun () ->
             Lwt.return (Gc.print_stat stderr)
         )
       else
@@ -610,7 +614,7 @@ end = struct
       ~persistent_connections
       ~recheck_reasons
       ~cannot_skip_direct_dependents =
-    Memory_utils.with_memory_timer_lwt ~options "Check" profiling (fun () ->
+    with_memory_timer_lwt ~options "Check" profiling (fun () ->
         Hh_logger.info "Check prep";
         Hh_logger.info "new or changed signatures: %d" (FilenameSet.cardinal sig_new_or_changed);
         let focused_to_check = CheckedSet.focused to_check in
@@ -712,7 +716,7 @@ let handle_unexpected_file_changes changed_files =
   raise Lwt.Canceled
 
 let ensure_parsed ~options ~profiling ~workers ~reader files =
-  Memory_utils.with_memory_timer_lwt ~options "EnsureParsed" profiling (fun () ->
+  with_memory_timer_lwt ~options "EnsureParsed" profiling (fun () ->
       (* The set of files that we expected to parse, but were skipped, either because they had
        * changed since the last recheck or no longer exist on disk. This is in contrast to files
        * that were skipped intentionally because they are not @flow, or because they are resource
@@ -730,7 +734,7 @@ let ensure_parsed_or_trigger_recheck ~options ~profiling ~workers ~reader files 
   | Unexpected_file_changes changed_files -> handle_unexpected_file_changes changed_files
 
 let init_libs ~options ~profiling ~local_errors ~warnings ~suppressions ~reader ordered_libs =
-  Memory_utils.with_memory_timer_lwt ~options "InitLibs" profiling (fun () ->
+  with_memory_timer_lwt ~options "InitLibs" profiling (fun () ->
       let options =
         match Options.verbose options with
         | Some { Verbose.enabled_during_flowlib = false; _ } ->
@@ -806,7 +810,7 @@ let unfocused_files_to_infer ~options ~input_focused ~input_dependencies =
    In either case, we can consider the result to be "closed" in terms of expected invariants.
 *)
 let files_to_infer ~options ~profiling ~dependency_info ~focus_targets ~parsed =
-  Memory_utils.with_memory_timer_lwt ~options "FilesToInfer" profiling (fun () ->
+  with_memory_timer_lwt ~options "FilesToInfer" profiling (fun () ->
       match focus_targets with
       | None ->
         let to_infer =
@@ -1271,7 +1275,7 @@ end = struct
     (* direct_dependent_files are unchanged files which directly depend on changed modules,
        or are new / changed files that are phantom dependents. *)
     let%lwt direct_dependent_files =
-      Memory_utils.with_memory_timer_lwt ~options "DirectDependentFiles" profiling (fun () ->
+      with_memory_timer_lwt ~options "DirectDependentFiles" profiling (fun () ->
           if Options.incremental_revdeps options then
             Dep_service.calc_incremental_dependents workers ~candidates:unchanged ~changed_modules
           else (
@@ -1308,7 +1312,7 @@ end = struct
     Hh_logger.info "Recalculating dependency graph";
     let parsed = FilenameSet.union parsed_set unchanged in
     let%lwt dependency_info =
-      Memory_utils.with_memory_timer_lwt ~options "CalcDepsTypecheck" profiling (fun () ->
+      with_memory_timer_lwt ~options "CalcDepsTypecheck" profiling (fun () ->
           let files_to_update_dependency_info =
             FilenameSet.union parsed_set direct_dependent_files
           in
@@ -1354,7 +1358,7 @@ end = struct
 
     Hh_logger.info "Updating index";
     let%lwt exports =
-      Memory_utils.with_memory_timer_lwt ~options "Indexing" profiling (fun () ->
+      with_memory_timer_lwt ~options "Indexing" profiling (fun () ->
           Export_service.update
             ~workers
             ~reader
@@ -1533,7 +1537,7 @@ end = struct
        signature is impacted by C (a changed file), then G is a sig dependent and F needs to be
        checked because its implementation may use something from C through G. *)
     let%lwt (sig_dependent_files, all_dependent_files) =
-      Memory_utils.with_memory_timer_lwt ~options "AllDependentFiles" profiling (fun () ->
+      with_memory_timer_lwt ~options "AllDependentFiles" profiling (fun () ->
           let implementation_dependents =
             direct_dependents_to_recheck
               ~implementation_dependency_graph
@@ -2065,7 +2069,7 @@ let init_from_saved_state ~profiling ~workers ~saved_state ~updates options =
 
     Hh_logger.info "Restoring heaps";
     let%lwt (parsed, unparsed, dirty_modules, invalid_hashes) =
-      Memory_utils.with_memory_timer_lwt ~options "RestoreHeaps" profiling (fun () ->
+      with_memory_timer_lwt ~options "RestoreHeaps" profiling (fun () ->
           let neutral = (FilenameSet.empty, Modulename.Set.empty, []) in
           let merge (a1, a2, a3) (b1, b2, b3) =
             (FilenameSet.union a1 b1, Modulename.Set.union a2 b2, Base.List.rev_append a3 b3)
@@ -2133,14 +2137,14 @@ let init_from_saved_state ~profiling ~workers ~saved_state ~updates options =
     in
 
     let%lwt dependency_info =
-      Memory_utils.with_memory_timer_lwt ~options "RestoreDependencyInfo" profiling (fun () ->
+      with_memory_timer_lwt ~options "RestoreDependencyInfo" profiling (fun () ->
           Lwt.return (Dependency_info.of_map dependency_graph)
       )
     in
 
     Hh_logger.info "Indexing files";
     let%lwt exports =
-      Memory_utils.with_memory_timer_lwt ~options "Indexing" profiling (fun () ->
+      with_memory_timer_lwt ~options "Indexing" profiling (fun () ->
           Export_service.init ~workers ~reader ~libs:lib_exports parsed
       )
     in
@@ -2289,14 +2293,14 @@ let init_from_scratch ~profiling ~workers options =
     resolve_requires ~transaction ~reader ~options ~profiling ~workers ~parsed ~parsed_set
   in
   let%lwt dependency_info =
-    Memory_utils.with_memory_timer_lwt ~options "CalcDepsTypecheck" profiling (fun () ->
+    with_memory_timer_lwt ~options "CalcDepsTypecheck" profiling (fun () ->
         Dep_service.calc_dependency_info ~reader workers ~parsed:parsed_set
     )
   in
 
   Hh_logger.info "Indexing files";
   let%lwt exports =
-    Memory_utils.with_memory_timer_lwt ~options "Indexing" profiling (fun () ->
+    with_memory_timer_lwt ~options "Indexing" profiling (fun () ->
         Export_service.init ~workers ~reader ~libs:lib_exports parsed_set
     )
   in

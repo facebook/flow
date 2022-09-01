@@ -93,8 +93,7 @@ let with_memory_timer_lwt =
 
       P.sample_memory profiling ~group:timer ~metric:"cgroup_file" ~value:(float file)
   in
-  fun ?options timer profiling f ->
-    let should_print = Base.Option.value_map options ~default:false ~f:Options.should_profile in
+  fun ~should_print timer profiling f ->
     let sample_memory = sample_memory timer profiling in
     clear_worker_memory ();
 

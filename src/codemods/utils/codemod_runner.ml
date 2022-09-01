@@ -348,7 +348,12 @@ module TypedRunnerWithPrepass (C : TYPED_RUNNER_WITH_PREPASS_CONFIG) : TYPED_RUN
         (* Calculate dependencies that need to be merged *)
         let%lwt (sig_dependency_graph, component_map, files_to_merge, files_to_check) =
           let get_dependent_files sig_dependency_graph implementation_dependency_graph roots =
-            Memory_utils.with_memory_timer_lwt ~options "AllDependentFiles" profiling (fun () ->
+            let should_print = Options.should_profile options in
+            Memory_utils.with_memory_timer_lwt
+              ~should_print
+              "AllDependentFiles"
+              profiling
+              (fun () ->
                 Lwt.return
                   (Pure_dep_graph_operations.calc_all_dependents
                      ~sig_dependency_graph

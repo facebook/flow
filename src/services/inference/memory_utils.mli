@@ -8,4 +8,4 @@
 val with_memory_profiling_lwt : profiling:Profiling_js.running -> (unit -> 'a Lwt.t) -> 'a Lwt.t
 
 val with_memory_timer_lwt :
-  ?options:Options.t -> string -> Profiling_js.running -> (unit -> 'a Lwt.t) -> 'a Lwt.t
+  should_print:bool -> string -> Profiling_js.running -> (unit -> 'a Lwt.t) -> 'a Lwt.t
