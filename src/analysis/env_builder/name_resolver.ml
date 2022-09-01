@@ -2128,28 +2128,16 @@ module Make
               env_state <- { env_state with write_entries }
             | _ ->
               this#havoc_heap_refinements heap_refinements;
+              let current_val = !val_ref in
+              if not (Val.is_declared_function current_val) then val_ref := get_assigned_val reason;
               let write_entries =
-                if not (Val.is_declared_function !val_ref) then (
-                  let write_entry =
-                    if Val.is_global !val_ref then
-                      Env_api.GlobalWrite reason
-                    else
-                      Env_api.AssigningWrite reason
-                  in
-                  val_ref := get_assigned_val reason;
-                  EnvMap.add_ordinary loc write_entry env_state.write_entries
-                ) else
-                  (* All of the providers are aleady in the map. We don't want to overwrite them with
-                   * a non-assigning write. We _do_ want to enter regular function declarations as
-                   * non-assigning writes so that they are not checked against the providers in
-                   * Env.set_env_entry *)
-                  EnvMap.update_ordinary
-                    loc
-                    (fun x ->
-                      match x with
-                      | None -> Some Env_api.NonAssigningWrite
-                      | _ -> x)
-                    env_state.write_entries
+                let write_entry =
+                  if Val.is_global current_val then
+                    Env_api.GlobalWrite reason
+                  else
+                    Env_api.AssigningWrite reason
+                in
+                EnvMap.add_ordinary loc write_entry env_state.write_entries
               in
               env_state <- { env_state with write_entries })
 

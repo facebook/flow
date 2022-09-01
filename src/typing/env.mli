@@ -88,8 +88,6 @@ val init_let : Context.t -> use_op:Type.use_op -> Type.t -> ALoc.t -> unit
 
 val init_implicit_let : Context.t -> use_op:Type.use_op -> Type.t -> ALoc.t -> unit
 
-val init_fun : Context.t -> use_op:Type.use_op -> Type.t -> ALoc.t -> unit
-
 val init_const : Context.t -> use_op:Type.use_op -> Type.t -> ALoc.t -> unit
 
 val init_implicit_const : Context.t -> use_op:Type.use_op -> Type.t -> ALoc.t -> unit

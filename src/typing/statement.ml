@@ -1108,17 +1108,7 @@ module Make
       (loc, ForOf { ForOf.left = left_ast; right = right_ast; body = body_ast; await; comments })
     | (_, Debugger _) as stmt -> stmt
     | (loc, FunctionDeclaration func) ->
-      let (fn_type, (name_loc, { Ast.Identifier.name; comments = _ }), node) = function_ loc func in
-      let use_op =
-        Op
-          (AssignVar
-             {
-               var = Some (mk_reason (RIdentifier (OrdinaryName name)) loc);
-               init = reason_of_t fn_type;
-             }
-          )
-      in
-      Env.init_fun cx ~use_op fn_type name_loc;
+      let (_, _, node) = function_ loc func in
       node
     | (loc, EnumDeclaration enum) ->
       let open EnumDeclaration in
@@ -2701,10 +2691,6 @@ module Make
           let (t, func) =
             mk_function_expression cx ~hint reason ~needs_this_param:true ~general:tvar loc func
           in
-          let use_op =
-            Op (AssignVar { var = Some (mk_reason (RIdentifier name) loc); init = reason_of_t t })
-          in
-          Env.init_fun cx ~use_op t name_loc;
           ignore @@ Env.set_scope_kind cx prev_scope_kind;
           (t, func)
       in

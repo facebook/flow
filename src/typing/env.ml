@@ -755,8 +755,6 @@ let init_let cx ~use_op t loc = init_entry cx ~use_op t loc
 
 let init_implicit_let cx ~use_op t loc = init_entry cx ~use_op t loc
 
-let init_fun cx ~use_op t loc = subtype_against_providers cx ~use_op t loc
-
 let init_const cx ~use_op t loc = init_entry cx ~use_op t loc
 
 let init_implicit_const cx ~use_op t loc = init_entry cx ~use_op t loc
