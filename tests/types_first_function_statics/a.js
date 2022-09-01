@@ -2,6 +2,6 @@
 
 function foo() {}
 
-module.exports = foo;
+foo.x = 1;
 
-module.exports.x = 1;
+module.exports = foo;

@@ -8,10 +8,8 @@ type Props = {|
 
 const Component = (props: Props): React.Node => <div />;
 
-const defaultProps = {
+Component.defaultProps = {
   f: 1
 };
 
 module.exports = Component;
-
-module.exports.defaultProps = defaultProps;

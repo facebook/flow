@@ -7,9 +7,9 @@ Cannot cast `a.g` to number because string [1] is incompatible with number [2]. 
        ^^^
 
 References:
-   a.js:5:20
-   5| module.exports.g = "a";
-                         ^^^ [1]
+   a.js:5:7
+   5| f.g = "a";
+            ^^^ [1]
    b.js:7:7
    7| (a.g: number);
             ^^^^^^ [2]
@@ -24,9 +24,9 @@ Cannot get `a.other` because property `other` is missing in statics of function 
          ^^^^^
 
 References:
-   a.js:3:18
-   3| module.exports = () => {};
-                       ^^^^^^^^ [1]
+   a.js:3:11
+   3| const f = () => {};
+                ^^^^^^^^ [1]
 
 
 Error -------------------------------------------------------------------------------------------------------- b.js:15:2
@@ -38,9 +38,9 @@ Cannot cast `poly_a.g` to number because string [1] is incompatible with number 
         ^^^^^^^^
 
 References:
-   poly_a.js:5:20
-    5| module.exports.g = "a";
-                          ^^^ [1]
+   poly_a.js:5:7
+    5| f.g = "a";
+             ^^^ [1]
    b.js:15:12
    15| (poly_a.g: number);
                   ^^^^^^ [2]
@@ -55,9 +55,9 @@ Cannot get `poly_a.other` because property `other` is missing in statics of func
                ^^^^^
 
 References:
-   poly_a.js:3:18
-    3| module.exports = <T>() => {};
-                        ^^^^^^^^^^^ [1]
+   poly_a.js:3:11
+    3| const f = <T>() => {};
+                 ^^^^^^^^^^^ [1]
 
 
 

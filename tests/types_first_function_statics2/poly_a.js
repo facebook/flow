@@ -1,5 +1,7 @@
 // @flow
 
-module.exports = <T>() => {};
+const f = <T>() => {};
 
-module.exports.g = "a";
+f.g = "a";
+
+module.exports = f;

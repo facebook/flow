@@ -170,6 +170,51 @@ let rec resolve_binding_partial cx reason loc b =
     let t = expression cx ~hint expr in
     let use_op = Op (AssignVar { var = Some reason; init = mk_expression_reason expr }) in
     (t, use_op, false)
+  | Root (FunctionValue { hint; function_loc; function_; statics; arrow; tparams_map = _ }) ->
+    let { Ast.Function.id; async; generator; sig_loc; _ } = function_ in
+    let reason_fun =
+      func_reason
+        ~async
+        ~generator
+        ( if arrow then
+          function_loc
+        else
+          sig_loc
+        )
+    in
+    let hint = resolve_hint cx loc hint in
+    let general = Tvar.mk cx reason in
+    let func =
+      if arrow then
+        Statement.mk_arrow cx ~func_hint:hint ~statics reason_fun function_
+      else
+        Statement.mk_function
+          cx
+          ~hint
+          ~needs_this_param:true
+          ~statics
+          ~general
+          reason_fun
+          function_loc
+          function_
+    in
+    let (func_type, func_ast) = func in
+    Flow_js.flow_t cx (func_type, general);
+    let cache = Context.node_cache cx in
+    (match id with
+    | Some (id_loc, _) -> Node_cache.set_function cache id_loc func
+    | None -> Node_cache.set_function cache function_loc func);
+    let expr =
+      ( (function_loc, func_type),
+        if arrow then
+          Ast.Expression.ArrowFunction func_ast
+        else
+          Ast.Expression.Function func_ast
+      )
+    in
+    Node_cache.set_expression cache expr;
+    let use_op = Op (AssignVar { var = Some reason; init = reason_fun }) in
+    (func_type, use_op, false)
   | Root (EmptyArray { array_providers; arr_loc }) ->
     let env = Context.environment cx in
     let (elem_t, elems, reason) =
@@ -372,7 +417,7 @@ let resolve_binding cx reason loc binding =
     default;
   (t, use_op)
 
-let resolve_inferred_function cx ~hint id_loc reason function_loc function_ =
+let resolve_inferred_function cx ~hint ~statics id_loc reason function_loc function_ =
   let hint = resolve_hint cx (aloc_of_reason reason) hint in
   let cache = Context.node_cache cx in
   (* TODO: This is intended to be the general type for the variable in the old environment, needed
@@ -380,15 +425,28 @@ let resolve_inferred_function cx ~hint id_loc reason function_loc function_ =
      this when we kill the old env. *)
   let general = Tvar.mk cx reason in
   let ((fun_type, _) as fn) =
-    Statement.mk_function cx ~hint ~needs_this_param:true ~general reason function_loc function_
+    Statement.mk_function
+      cx
+      ~hint
+      ~needs_this_param:true
+      ~statics
+      ~general
+      reason
+      function_loc
+      function_
   in
   Flow_js.flow_t cx (fun_type, general);
   Node_cache.set_function cache id_loc fn;
   (fun_type, unknown_use)
 
 let resolve_annotated_function
-    cx ~hint reason tparams_map function_loc ({ Ast.Function.body; params; sig_loc; _ } as function_)
-    =
+    cx
+    ~hint
+    ~statics
+    reason
+    tparams_map
+    function_loc
+    ({ Ast.Function.body; params; sig_loc; _ } as function_) =
   let hint = resolve_hint cx (aloc_of_reason reason) hint in
   let cache = Context.node_cache cx in
   let tparams_map = mk_tparams_map cx tparams_map in
@@ -406,12 +464,15 @@ let resolve_annotated_function
       ~required_this_param_type:(Some default_this)
       ~require_return_annot:false
       ~constructor:false
+      ~statics
       tparams_map
       reason
       function_
   in
   Node_cache.set_function_sig cache sig_loc sig_data;
-  (Statement.Func_stmt_sig.functiontype cx (Some function_loc) default_this func_sig, unknown_use)
+  ( Statement.Func_stmt_sig.functiontype cx ~arrow:false (Some function_loc) default_this func_sig,
+    unknown_use
+  )
 
 let resolve_class cx id_loc reason class_loc class_ =
   let cache = Context.node_cache cx in
@@ -650,9 +711,10 @@ let resolve cx (def_kind, id_loc) (def, def_scope_kind, class_stack, def_reason)
           has_this_def = _;
           function_loc;
           tparams_map = _;
+          statics;
           hint;
         } ->
-      resolve_inferred_function cx ~hint id_loc def_reason function_loc function_
+      resolve_inferred_function cx ~hint ~statics id_loc def_reason function_loc function_
     | Function
         {
           function_;
@@ -660,9 +722,10 @@ let resolve cx (def_kind, id_loc) (def, def_scope_kind, class_stack, def_reason)
           has_this_def = _;
           function_loc;
           tparams_map;
+          statics;
           hint;
         } ->
-      resolve_annotated_function cx ~hint def_reason tparams_map function_loc function_
+      resolve_annotated_function cx ~hint ~statics def_reason tparams_map function_loc function_
     | Class { class_; class_loc; class_implicit_this_tparam = _; this_super_write_locs = _ } ->
       resolve_class cx id_loc def_reason class_loc class_
     | MemberAssign { member_loc = _; member = _; rhs } ->
@@ -715,6 +778,8 @@ let entries_of_component graph component =
       | Root (Contextual { reason; _ }) ->
         let l = Reason.poly_loc_of_reason reason in
         EnvSet.add (Env_api.FunctionParamLoc, l) acc
+      | Root (FunctionValue { function_loc; arrow = false; _ }) ->
+        EnvSet.add (Env_api.FunctionThisLoc, function_loc) acc
       | Root _ -> acc
       | Select { binding; _ } -> add_from_bindings acc binding
     in

@@ -91,6 +91,7 @@ module Func = struct
       fparams: func_params;
       body: (ALoc.t, ALoc.t) Flow_ast.Function.body option;
       return_t: Type.annotated_or_inferred;
+      statics: Type.t option;
     }
   end
 
@@ -108,6 +109,7 @@ module Func = struct
       fparams: func_params;
       body: (ALoc.t, ALoc.t) Ast.Function.body option;
       return_t: Type.annotated_or_inferred;
+      statics: Type.t option;
     }
   end
 end

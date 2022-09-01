@@ -51,6 +51,14 @@ type root =
       hint: hint_node hint;
       expr: (ALoc.t, ALoc.t) Ast.Expression.t;
     }
+  | FunctionValue of {
+      hint: hint_node hint;
+      function_loc: ALoc.t;
+      function_: (ALoc.t, ALoc.t) Ast.Function.t;
+      statics: (ALoc.t, ALoc.t) Ast.Expression.t SMap.t;
+      arrow: bool;
+      tparams_map: tparams_map;
+    }
   | EmptyArray of {
       array_providers: ALocSet.t;
       arr_loc: ALoc.t;
@@ -138,6 +146,7 @@ type def =
       has_this_def: bool;
       function_loc: ALoc.t;
       function_: (ALoc.t, ALoc.t) Ast.Function.t;
+      statics: (ALoc.t, ALoc.t) Ast.Expression.t SMap.t;
       tparams_map: tparams_map;
     }
   | Class of {
@@ -171,6 +180,7 @@ module Print = struct
     | Catch -> "catch"
     | Annotation { annot = (loc, _); _ } -> spf "annot %s" (ALoc.debug_to_string loc)
     | Value { expr = (loc, _); _ } -> spf "val %s" (ALoc.debug_to_string loc)
+    | FunctionValue { function_loc; _ } -> spf "function val %s" (ALoc.debug_to_string function_loc)
     | For (In, (loc, _)) -> spf "for in %s" (ALoc.debug_to_string loc)
     | For (Of _, (loc, _)) -> spf "for of %s" (ALoc.debug_to_string loc)
 

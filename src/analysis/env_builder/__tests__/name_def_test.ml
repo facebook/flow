@@ -232,7 +232,7 @@ var w = function f(y, z: number) {
   |};
   [%expect {|
     [
-      (2, 4) to (2, 5) => val (2, 8) to (4, 1);
+      (2, 4) to (2, 5) => function val (2, 8) to (4, 1);
       (2, 17) to (2, 18) => fun f;
       (2, 19) to (2, 20) => contextual;
       (2, 22) to (2, 23) => annot (2, 23) to (2, 31);
@@ -245,7 +245,7 @@ var w = function <X, Y:number>() { }
   |};
   [%expect {|
     [
-      (2, 4) to (2, 5) => val (2, 8) to (2, 36);
+      (2, 4) to (2, 5) => function val (2, 8) to (2, 36);
       (2, 8) to (2, 36) => fun <anonymous>;
       (2, 18) to (2, 19) => tparam (2, 18) to (2, 19);
       (2, 21) to (2, 22) => tparam (2, 21) to (2, 29)
@@ -424,8 +424,8 @@ var y = function f(): number {
 }
   |};
   [%expect {|
-    (2, 17) to (2, 18) =>
-    (2, 4) to (2, 5) |}]
+    (2, 4) to (2, 5) =>
+    (2, 17) to (2, 18) |}]
 
 let%expect_test "class_def" =
   print_init_test {|

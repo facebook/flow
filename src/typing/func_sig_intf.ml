@@ -64,8 +64,13 @@ module type S = sig
 
   (** Create a function type for function declarations/expressions. *)
   val functiontype :
-    Context.t -> (* function this loc *) ALoc.t option -> Type.t -> (* this *)
-                                                                    t -> Type.t
+    Context.t ->
+    arrow:bool ->
+    (* function this loc *) ALoc.t option ->
+    Type.t ->
+    (* this *)
+    t ->
+    Type.t
 
   (** Create a function type for class/interface methods. *)
   val methodtype :

@@ -1802,6 +1802,7 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
           fparams;
           body = None;
           return_t = Annotated return_t;
+          statics = None;
         },
         {
           Ast.Type.Function.tparams = tparams_ast;

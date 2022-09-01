@@ -188,6 +188,7 @@ struct
       fparams = F.empty (fun _ _ _ -> None);
       body = None;
       return_t = Annotated (VoidT.why reason |> with_trust bogus_trust);
+      statics = None;
     }
 
   let field_initializer tparams_map reason expr return_annot_or_inferred =
@@ -199,14 +200,12 @@ struct
       fparams = F.empty (fun _ _ _ -> None);
       body = None;
       return_t = return_annot_or_inferred;
+      statics = None;
     }
 
-  let functiontype cx func_loc this_default { T.reason; kind; tparams; fparams; return_t; _ } =
+  let functiontype
+      cx ~arrow func_loc this_default { T.reason; kind; tparams; fparams; return_t; statics; _ } =
     let make_trust = Context.trust_constructor cx in
-    let static =
-      let proto = FunProtoT reason in
-      Obj_type.mk_unsealed cx reason ~proto
-    in
     let this_type = F.this fparams |> Base.Option.value ~default:this_default in
     let funtype =
       {
@@ -218,8 +217,13 @@ struct
         def_reason = reason;
       }
     in
-    let t = DefT (reason, make_trust (), FunT (static, funtype)) in
-    Base.Option.iter func_loc ~f:(Env.bind_function_this cx this_type);
+    let statics_t =
+      match statics with
+      | Some t -> t
+      | None -> Obj_type.mk_with_proto cx reason (Type.FunProtoT reason) ~obj_kind:Type.Inexact
+    in
+    let t = DefT (reason, make_trust (), FunT (statics_t, funtype)) in
+    if not arrow then Base.Option.iter func_loc ~f:(Env.bind_function_this cx this_type);
     poly_type_of_tparams (Type.Poly.generate_id ()) tparams t
 
   let methodtype cx method_this_loc this_default { T.reason; tparams; fparams; return_t; _ } =

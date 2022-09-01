@@ -51,8 +51,17 @@ module type S = sig
     hint:Type.t Hint_api.hint ->
     needs_this_param:bool ->
     general:Type.t ->
+    statics:(ALoc.t, ALoc.t) Flow_ast.Expression.t SMap.t ->
     Reason.reason ->
     ALoc.t ->
+    (ALoc.t, ALoc.t) Ast.Function.t ->
+    Type.t * (ALoc.t, ALoc.t * Type.t) Ast.Function.t
+
+  val mk_arrow :
+    Context.t ->
+    func_hint:Type.t Hint_api.hint ->
+    statics:(ALoc.t, ALoc.t) Flow_ast.Expression.t SMap.t ->
+    Reason.reason ->
     (ALoc.t, ALoc.t) Ast.Function.t ->
     Type.t * (ALoc.t, ALoc.t * Type.t) Ast.Function.t
 
@@ -62,6 +71,7 @@ module type S = sig
     required_this_param_type:Type.t option ->
     require_return_annot:bool ->
     constructor:bool ->
+    statics:(ALoc.t, ALoc.t) Flow_ast.Expression.t SMap.t ->
     Type.t Subst_name.Map.t ->
     Reason.reason ->
     (ALoc.t, ALoc.t) Ast.Function.t ->

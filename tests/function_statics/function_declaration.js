@@ -19,6 +19,22 @@ function g() {}
 
 f.c = ""; // OK
 (f.c: string); // OK
+f.c = 1; // ERROR
 
 g.w = 1; // OK
 (g.w: number); // OK
+
+declare var b: boolean;
+if (b) {
+  f.xxx = 1; // ERROR
+}
+
+f.d = (): string => f.c; // OK
+
+export default function n() {}
+export function m() {}
+
+n.displayName = 'a';
+m.a = 1;
+(n.displayName: string);
+(m.a: number);

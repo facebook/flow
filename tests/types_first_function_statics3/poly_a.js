@@ -9,10 +9,8 @@ type Props<T> = {|
 
 const Component = <T>(props: Props<T>): React.Node => <div />;
 
-const defaultProps = {
+Component.defaultProps = {
   f: 1
 };
 
 module.exports = Component;
-
-module.exports.defaultProps = defaultProps;

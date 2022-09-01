@@ -7,9 +7,9 @@ Cannot cast `a.x` to string because number [1] is incompatible with string [2]. 
        ^^^
 
 References:
-   a.js:7:20
-   7| module.exports.x = 1;
-                         ^ [1]
+   a.js:5:9
+   5| foo.x = 1;
+              ^ [1]
    b.js:7:7
    7| (a.x: string);
             ^^^^^^ [2]
@@ -38,9 +38,9 @@ Cannot cast `poly_a.x` to string because number [1] is incompatible with string 
         ^^^^^^^^
 
 References:
-   poly_a.js:7:20
-    7| module.exports.x = 1;
-                          ^ [1]
+   poly_a.js:5:9
+    5| foo.x = 1;
+               ^ [1]
    b.js:15:12
    15| (poly_a.x: string);
                   ^^^^^^ [2]
@@ -102,5 +102,47 @@ References:
                  ^^^^^^^^ [1]
 
 
+Error ---------------------------------------------------------------------------------------------- conditional.js:12:5
 
-Found 7 errors
+Cannot assign `1` to `f.a` because property `a` is missing in function [1]. [prop-missing]
+
+   conditional.js:12:5
+   12|   f.a = 1;
+           ^
+
+References:
+   conditional.js:7:8
+    7| export function f() {}
+              ^^^^^^^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------- conditional.js:17:7
+
+Cannot assign `1` to `f.b` because property `b` is missing in function [1]. [prop-missing]
+
+   conditional.js:17:7
+   17|     f.b = 1;
+             ^
+
+References:
+   conditional.js:7:8
+    7| export function f() {}
+              ^^^^^^^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------- conditional.js:27:5
+
+Cannot assign `1` to `g.a` because property `a` is missing in function [1]. [prop-missing]
+
+   conditional.js:27:5
+   27|   g.a = 1;
+           ^
+
+References:
+   conditional.js:22:11
+   22| const g = () => {};
+                 ^^^^^^^^ [1]
+
+
+
+Found 10 errors

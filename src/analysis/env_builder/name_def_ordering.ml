@@ -426,12 +426,17 @@ struct
           depends_of_hint_node state hint_node
       in
 
-      let depends_of_fun fully_annotated tparams_map hint function_ =
+      let depends_of_fun fully_annotated tparams_map hint ~statics function_ =
         let state = EnvMap.empty in
         let state = depends_of_hint state hint in
+        let state =
+          depends_of_node
+            (fun visitor -> visitor#function_def ~fully_annotated function_)
+            (depends_of_tparams_map tparams_map state)
+        in
         depends_of_node
-          (fun visitor -> visitor#function_def ~fully_annotated function_)
-          (depends_of_tparams_map tparams_map state)
+          (fun visitor -> SMap.iter (fun _ expr -> ignore @@ visitor#expression expr) statics)
+          state
       in
       let depends_of_class
           { Ast.Class.id = _; body; tparams; extends; implements; class_decorators; comments = _ } =
@@ -526,6 +531,8 @@ struct
         | Value { hint; expr } ->
           let state = depends_of_hint state hint in
           depends_of_expression expr state
+        | FunctionValue { hint; function_loc = _; function_; statics; arrow = _; tparams_map } ->
+          depends_of_fun false tparams_map hint ~statics function_
         | EmptyArray { array_providers; _ } ->
           ALocSet.fold
             (fun loc acc ->
@@ -648,9 +655,10 @@ struct
             has_this_def = _;
             function_loc = _;
             tparams_map;
+            statics;
             hint;
           } ->
-        depends_of_fun synthesizable_from_annotation tparams_map hint function_
+        depends_of_fun synthesizable_from_annotation tparams_map hint ~statics function_
       | Class { class_; class_loc = _; class_implicit_this_tparam = _; this_super_write_locs = _ }
         ->
         depends_of_class class_
@@ -675,7 +683,7 @@ struct
         | Root Catch -> true
         | Root (Annotation { default_expression = None; _ }) -> true
         | Root (Annotation { default_expression = Some _; _ }) -> false
-        | Root (For _ | Value _ | Contextual _ | EmptyArray _) -> false
+        | Root (For _ | Value _ | FunctionValue _ | Contextual _ | EmptyArray _) -> false
         | Select { selector = Computed _ | Default; _ } -> false
         | Select { binding; _ } -> bind_loop binding
       in
@@ -742,7 +750,8 @@ struct
                  (fun this_super_kind_and_loc acc ->
                    EnvMap.add this_super_kind_and_loc kind_and_loc acc)
                  this_super_write_locs
-          | (Function { function_loc; _ }, _, _, _) ->
+          | (Function { function_loc; _ }, _, _, _)
+          | (Binding (Root (FunctionValue { function_loc; arrow = false; _ })), _, _, _) ->
             EnvMap.add (Env_api.FunctionThisLoc, function_loc) kind_and_loc acc
           | _ -> acc)
         map

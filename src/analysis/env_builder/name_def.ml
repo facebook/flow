@@ -207,7 +207,7 @@ let func_missing_annotations ~allow_this ({ Ast.Function.return; generator; para
 let func_is_synthesizable_from_annotation ~allow_this ({ Ast.Function.predicate; _ } as f) =
   Base.Option.is_none predicate && Base.List.is_empty (func_missing_annotations ~allow_this f)
 
-let def_of_function ~tparams_map ~hint ~has_this_def ~function_loc function_ =
+let def_of_function ~tparams_map ~hint ~has_this_def ~function_loc ~statics function_ =
   Function
     {
       hint;
@@ -217,6 +217,7 @@ let def_of_function ~tparams_map ~hint ~has_this_def ~function_loc function_ =
       function_loc;
       function_;
       tparams_map;
+      statics;
     }
 
 let func_scope_kind ?key { Ast.Function.async; generator; predicate; _ } =
@@ -234,6 +235,10 @@ let func_scope_kind ?key { Ast.Function.async; generator; predicate; _ } =
   | (false, false, Some _, _) -> Predicate
   | (false, false, None, _) -> Ordinary
   | _ -> (* Invalid, default to ordinary and hopefully error elsewhere *) Ordinary
+
+(* Existing own properties on `Function` as defined in `lib/core.js`. We don't
+   want to shadow these when creating function statics. *)
+let func_own_props = SSet.of_list ["toString"; "arguments"; "caller"; "length"; "name"]
 
 module Eq_test = Eq_test.Make (Scope_api.With_ALoc) (Ssa_api.With_ALoc) (Env_api.With_ALoc)
 
@@ -280,6 +285,169 @@ class def_finder env_entries providers toplevel_scope =
         let result = f () in
         tparams <- old_tparams;
         result
+
+    method! statement_list stmts =
+      (* Function statics *)
+      let open Ast.Statement in
+      let stmts = Flow_ast_utils.hoist_function_declarations stmts in
+      let rec loop state stmts =
+        match stmts with
+        | [] -> SMap.iter (fun _ (statics, process_func) -> process_func statics) state
+        (* f.a = <e>; *)
+        | ( _,
+            Expression
+              {
+                Expression.expression =
+                  ( assign_loc,
+                    Ast.Expression.Assignment
+                      ( {
+                          Ast.Expression.Assignment.operator = None;
+                          left =
+                            ( _,
+                              Ast.Pattern.Expression
+                                ( _,
+                                  Ast.Expression.Member
+                                    {
+                                      Ast.Expression.Member._object =
+                                        ( _,
+                                          Ast.Expression.Identifier
+                                            (_, { Ast.Identifier.name = obj_name; _ })
+                                        );
+                                      property =
+                                        Ast.Expression.Member.PropertyIdentifier
+                                          (_, { Ast.Identifier.name = prop_name; _ });
+                                      _;
+                                    }
+                                )
+                            );
+                          right = init;
+                          _;
+                        } as assign
+                      )
+                  );
+                _;
+              }
+          )
+          :: xs
+          when SMap.mem obj_name state && (not @@ SSet.mem prop_name func_own_props) ->
+          ignore @@ this#assignment assign_loc assign;
+          let state =
+            SMap.update
+              obj_name
+              (function
+                | None -> None
+                | Some (statics, process_func) ->
+                  let statics =
+                    (* Only first assignment sets the type. *)
+                    SMap.update
+                      prop_name
+                      (function
+                        | None -> Some init
+                        | x -> x)
+                      statics
+                  in
+                  Some (statics, process_func))
+              state
+          in
+          loop state xs
+        (* function f() {}; export function f() {}; export default function f() {} *)
+        | ( ( loc,
+              FunctionDeclaration
+                ({ Ast.Function.id = Some (_, { Ast.Identifier.name; _ }); _ } as func)
+            )
+          | ( _,
+              ExportNamedDeclaration
+                {
+                  ExportNamedDeclaration.declaration =
+                    Some
+                      ( loc,
+                        FunctionDeclaration
+                          ({ Ast.Function.id = Some (_, { Ast.Identifier.name; _ }); _ } as func)
+                      );
+                  export_kind = ExportValue;
+                  specifiers = None;
+                  source = None;
+                  _;
+                }
+            )
+          | ( _,
+              ExportDefaultDeclaration
+                {
+                  ExportDefaultDeclaration.declaration =
+                    ExportDefaultDeclaration.Declaration
+                      ( loc,
+                        FunctionDeclaration
+                          ({ Ast.Function.id = Some (_, { Ast.Identifier.name; _ }); _ } as func)
+                      );
+                  _;
+                }
+            ) )
+          :: xs ->
+          let state =
+            SMap.add
+              name
+              (SMap.empty, (fun statics -> this#visit_function_declaration ~statics loc func))
+              state
+          in
+          loop state xs
+        (* const f = () => {}; const f = function () {}; *)
+        | ( _,
+            VariableDeclaration
+              {
+                VariableDeclaration.declarations =
+                  [
+                    ( _,
+                      {
+                        VariableDeclaration.Declarator.id =
+                          ( _,
+                            Ast.Pattern.Identifier
+                              {
+                                Ast.Pattern.Identifier.name =
+                                  (_, { Ast.Identifier.name; _ }) as var_id;
+                                annot = Ast.Type.Missing _;
+                                optional = false;
+                              }
+                          );
+                        init =
+                          Some
+                            ( ( (loc, Ast.Expression.ArrowFunction func)
+                              | (loc, Ast.Expression.Function func) ) as init
+                            );
+                      }
+                    );
+                  ];
+                _;
+              }
+          )
+          :: xs ->
+          let arrow =
+            match init with
+            | (_, Ast.Expression.ArrowFunction _) -> true
+            | _ -> false
+          in
+          let state =
+            SMap.add
+              name
+              ( SMap.empty,
+                fun statics ->
+                  this#visit_function_expr
+                    ~func_hint:Hint_None
+                    ~has_this_def:(not arrow)
+                    ~var_assigned_to:(Some var_id)
+                    ~statics
+                    ~arrow
+                    loc
+                    func
+              )
+              state
+          in
+          loop state xs
+        | x :: xs ->
+          ignore @@ super#statement x;
+          loop state xs
+      in
+      loop SMap.empty stmts;
+      stmts
 
     method! variable_declarator ~kind decl =
       let open Ast.Statement.VariableDeclaration.Declarator in
@@ -412,31 +580,74 @@ class def_finder env_entries providers toplevel_scope =
       Destructure.pattern ~f:this#add_ordinary_binding (Root Catch) pat;
       super#catch_clause_pattern pat
 
-    method private visit_function_expr ~func_hint ~has_this_def loc expr =
+    method visit_function_expr
+        ~func_hint ~has_this_def ~var_assigned_to ~statics ~arrow function_loc expr =
       let { Ast.Function.id; async; generator; sig_loc; _ } = expr in
       let scope_kind = func_scope_kind expr in
       this#in_new_tparams_env (fun () ->
           this#visit_function ~scope_kind ~func_hint expr;
-          let reason = func_reason ~async ~generator sig_loc in
-          let def =
-            def_of_function
-              ~tparams_map:tparams
-              ~hint:func_hint
-              ~has_this_def
-              ~function_loc:loc
-              expr
+          (match var_assigned_to with
+          | Some id ->
+            Destructure.identifier
+              ~f:this#add_ordinary_binding
+              (Root
+                 (FunctionValue
+                    {
+                      hint = func_hint;
+                      function_loc;
+                      function_ = expr;
+                      statics;
+                      arrow;
+                      tparams_map = tparams;
+                    }
+                 )
+              )
+              id
+          | None -> ());
+          let add_def binding_loc =
+            let reason =
+              func_reason
+                ~async
+                ~generator
+                ( if arrow then
+                  function_loc
+                else
+                  sig_loc
+                )
+            in
+            let def =
+              def_of_function
+                ~tparams_map:tparams
+                ~hint:func_hint
+                ~has_this_def
+                ~function_loc
+                ~statics
+                expr
+            in
+            this#add_ordinary_binding binding_loc reason def
           in
           match id with
-          | Some (id_loc, _) -> this#add_ordinary_binding id_loc reason def
-          | None when has_this_def -> this#add_ordinary_binding loc reason def
+          | Some (id_loc, _) -> add_def id_loc
+          | None when has_this_def -> add_def function_loc
           | None -> ()
       )
 
     method! function_expression loc expr =
-      this#visit_function_expr ~func_hint:Hint_None ~has_this_def:true loc expr;
+      this#visit_function_expr
+        ~func_hint:Hint_None
+        ~has_this_def:true
+        ~var_assigned_to:None
+        ~statics:SMap.empty
+        ~arrow:false
+        loc
+        expr;
       expr
 
     method! function_declaration loc expr =
+      this#visit_function_declaration ~statics:SMap.empty loc expr;
+      expr
+
+    method visit_function_declaration ~statics loc expr =
       let { Ast.Function.id; async; generator; sig_loc; _ } = expr in
       let scope_kind = func_scope_kind expr in
       this#in_new_tparams_env (fun () ->
@@ -451,11 +662,11 @@ class def_finder env_entries providers toplevel_scope =
                  ~hint:Hint_None
                  ~has_this_def:true
                  ~function_loc:loc
+                 ~statics
                  expr
               )
           | None -> ()
-      );
-      expr
+      )
 
     method! function_type loc ft =
       this#in_new_tparams_env ~keep:true (fun () -> super#function_type loc ft)
@@ -1303,7 +1514,14 @@ class def_finder env_entries providers toplevel_scope =
         let scope_kind = func_scope_kind x in
         this#in_new_tparams_env (fun () -> this#visit_function ~func_hint:hint ~scope_kind x)
       | Ast.Expression.Function x ->
-        this#visit_function_expr ~func_hint:hint ~has_this_def:true loc x
+        this#visit_function_expr
+          ~func_hint:hint
+          ~has_this_def:true
+          ~var_assigned_to:None
+          ~statics:SMap.empty
+          ~arrow:false
+          loc
+          x
       | Ast.Expression.Object expr -> this#visit_object_expression ~object_hint:hint expr
       | Ast.Expression.Member m -> this#visit_member_expression ~cond loc m
       | Ast.Expression.OptionalMember m -> this#visit_optional_member_expression ~cond loc m
@@ -1457,7 +1675,14 @@ class def_finder env_entries providers toplevel_scope =
             | (loc, Get { key; value = (_, fn); comments = _ })
             | (loc, Set { key; value = (_, fn); comments = _ }) ->
               let func_hint = visit_object_key_and_compute_hint key in
-              this#visit_function_expr ~func_hint ~has_this_def:false loc fn;
+              this#visit_function_expr
+                ~func_hint
+                ~has_this_def:false
+                ~var_assigned_to:None
+                ~statics:SMap.empty
+                ~arrow:false
+                loc
+                fn;
               ())
           | SpreadProperty s ->
             let (_, { Ast.Expression.Object.SpreadProperty.argument; comments = _ }) = s in

@@ -22,6 +22,6 @@ function f(x: ?Foo): void {
   x.fun();
 }
 
-function f(x: Foo | null | void): void {
+function g(x: Foo | null | void): void {
   x.fun();
 }

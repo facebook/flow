@@ -2698,7 +2698,7 @@ module Make
       ((loc, t), Function func)
     | ArrowFunction func ->
       let reason = Ast.Function.(func_reason ~async:func.async ~generator:func.generator loc) in
-      let (t, f) = mk_arrow cx ~func_hint:hint reason func in
+      let (t, f) = mk_arrow cx ~func_hint:hint ~statics:SMap.empty reason func in
       ((loc, t), ArrowFunction f)
     (*
      * GraphQL literals, e.g.:
@@ -6912,6 +6912,7 @@ module Make
                   ~constructor:false
                   ~require_return_annot:
                     (RequireAnnot.should_require_annot cx && Context.enforce_class_annotations cx)
+                  ~statics:SMap.empty
                   tparams_map
                   reason
                   function_
@@ -6930,13 +6931,15 @@ module Make
                   else
                     Type.implicit_mixed_this reason
               in
-              let function_loc_opt =
+              let (arrow, function_loc_opt) =
                 match expr with
-                | (loc, Ast.Expression.Function _) -> Some loc
-                | (_, Ast.Expression.ArrowFunction _) -> None
+                | (loc, Ast.Expression.Function _) -> (false, Some loc)
+                | (_, Ast.Expression.ArrowFunction _) -> (true, None)
                 | _ -> failwith "expr can only be Function or ArrowFunction"
               in
-              let t = Statement.Func_stmt_sig.functiontype cx function_loc_opt this_t func_sig in
+              let t =
+                Statement.Func_stmt_sig.functiontype cx ~arrow function_loc_opt this_t func_sig
+              in
               Flow.flow_t cx (t, annot_t)
             | (_, Inferred _)
               when RequireAnnot.should_require_annot cx && Context.enforce_class_annotations cx ->
@@ -6982,6 +6985,7 @@ module Make
         ~required_this_param_type:None
         ~require_return_annot:
           (RequireAnnot.should_require_annot cx && Context.enforce_class_annotations cx)
+        ~statics:SMap.empty
     in
     let mk_extends cx tparams_map = function
       | None -> (Implicit { null = false }, None)
@@ -7690,6 +7694,7 @@ module Make
         ~required_this_param_type
         ~require_return_annot
         ~constructor
+        ~statics
         tparams_map
         reason
         func ->
@@ -7821,7 +7826,30 @@ module Make
         let return_t =
           mk_inference_target_with_annots ~hint:return_hint return_annotated_or_inferred
         in
-        ( { Func_stmt_sig_types.reason; kind; tparams; tparams_map; fparams; body; return_t },
+        let statics_t =
+          let props =
+            SMap.fold
+              (fun name expr acc ->
+                let (((loc, expr_t), _) as exp) = expression cx ~hint:Hint_None expr in
+                let cache = Context.node_cache cx in
+                Node_cache.set_expression cache exp;
+                let field = Field (Some loc, expr_t, Polarity.Neutral) in
+                NameUtils.Map.add (OrdinaryName name) field acc)
+              statics
+              NameUtils.Map.empty
+          in
+          Obj_type.mk_with_proto cx reason (FunProtoT reason) ~obj_kind:Type.Inexact ~props
+        in
+        ( {
+            Func_stmt_sig_types.reason;
+            kind;
+            tparams;
+            tparams_map;
+            fparams;
+            body;
+            return_t;
+            statics = Some statics_t;
+          },
           fun params body fun_type ->
             {
               func with
@@ -7839,7 +7867,8 @@ module Make
      signature consisting of type parameters, parameter types, parameter names,
      and return type, check the body against that signature by adding `this`
      and super` to the environment, and return the signature. *)
-  and function_decl cx ~func_hint ~required_this_param_type ~fun_loc reason func default_this =
+  and function_decl
+      cx ~func_hint ~required_this_param_type ~fun_loc ~arrow ~statics reason func default_this =
     let (func_sig, reconstruct_func) =
       mk_func_sig
         cx
@@ -7847,6 +7876,7 @@ module Make
         ~required_this_param_type
         ~require_return_annot:false
         ~constructor:false
+        ~statics
         Subst_name.Map.empty
         reason
         func
@@ -7857,21 +7887,35 @@ module Make
       | Some t -> t
       | None -> dummy_this (aloc_of_reason reason)
     in
-    let fun_type = Func_stmt_sig.functiontype cx fun_loc default_this func_sig in
+    let fun_type = Func_stmt_sig.functiontype cx ~arrow fun_loc default_this func_sig in
     (fun_type, reconstruct_func (Base.Option.value_exn params_ast) (Base.Option.value_exn body_ast))
 
   (* Process a function declaration, returning a (polymorphic) function type. *)
   and mk_function_declaration cx ~general reason fun_loc func =
-    mk_function cx ~hint:Hint_None ~general ~needs_this_param:true reason fun_loc func
+    mk_function
+      cx
+      ~hint:Hint_None
+      ~general
+      ~needs_this_param:true
+      ~statics:SMap.empty
+      reason
+      fun_loc
+      func
 
   (* Process a function expression, returning a (polymorphic) function type. *)
   and mk_function_expression cx ~hint ~general ~needs_this_param reason fun_loc func =
-    mk_function cx ~hint ~needs_this_param ~general reason fun_loc func
+    mk_function cx ~hint ~needs_this_param ~general ~statics:SMap.empty reason fun_loc func
 
   (* Internal helper function. Use `mk_function_declaration` and `mk_function_expression` instead. *)
   and mk_function
-      cx ~hint ~needs_this_param ~general reason fun_loc ({ Ast.Function.id = func_id; _ } as func)
-      =
+      cx
+      ~hint
+      ~needs_this_param
+      ~general
+      ~statics
+      reason
+      fun_loc
+      ({ Ast.Function.id = func_id; _ } as func) =
     let node_cache = Context.node_cache cx in
     let cached =
       func_id |> Base.Option.value_map ~default:fun_loc ~f:fst |> Node_cache.get_function node_cache
@@ -7904,6 +7948,8 @@ module Make
           ~required_this_param_type:(Base.Option.some_if needs_this_param default_this)
           ~func_hint:hint
           ~fun_loc:(Base.Option.some_if needs_this_param fun_loc)
+          ~arrow:false
+          ~statics
           reason
           func
           (Some default_this)
@@ -7911,7 +7957,7 @@ module Make
       (fun_type, reconstruct_ast general)
 
   (* Process an arrow function, returning a (polymorphic) function type. *)
-  and mk_arrow cx ~func_hint reason func =
+  and mk_arrow cx ~func_hint ~statics reason func =
     (* Do not expose the type of `this` in the function's type. This call to
        function_decl has already done the necessary checking of `this` in
        the body of the function. Now we want to avoid re-binding `this` to
@@ -7923,6 +7969,8 @@ module Make
         ~required_this_param_type:None
         ~func_hint
         ~fun_loc:None
+        ~arrow:true
+        ~statics
         reason
         func
         default_this
