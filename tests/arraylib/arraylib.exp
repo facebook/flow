@@ -181,19 +181,19 @@ References:
                                             ^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------- callback_this.js:8:18
+Error -------------------------------------------------------------------------------------------- callback_this.js:8:25
 
 Cannot get `this.y` because property `y` is missing in undefined [1]. [incompatible-use]
 
-   callback_this.js:8:18
-   8|             this.y; // error, function has wrong this
-                       ^
+   callback_this.js:8:25
+   8|             return this.y; // error, function has wrong this
+                              ^
 
 References:
    callback_this.js:7:18
                        v------------------------
    7|         this.x = this.x.map(function (z) {
-   8|             this.y; // error, function has wrong this
+   8|             return this.y; // error, function has wrong this
    9|         });
               -^ [1]
 

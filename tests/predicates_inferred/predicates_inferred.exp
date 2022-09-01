@@ -78,20 +78,20 @@ References:
                        ^^^^^^ [1]
 
 
-Error --------------------------------------------------------------------------------------------------- sanity.js:5:20
+Error --------------------------------------------------------------------------------------------------- sanity.js:5:27
 
 Cannot declare predicate when a function body is present. [unsupported-syntax]
 
-   5| function check(y): %checks(typeof y === "string") {
-                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   5| function check(y: mixed): %checks(typeof y === "string") {
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
-Error -------------------------------------------------------------------------------------------------- sanity.js:16:41
+Error -------------------------------------------------------------------------------------------------- sanity.js:16:48
 
 Invalid body for predicate function. Expected a simple return statement as body. [unsupported-syntax]
 
-                                               v
-   16| function indirect_is_number(y): %checks {
+                                                      v
+   16| function indirect_is_number(y: mixed): %checks {
    17|   var y = 1;
    18|   return typeof y === "number";
    19| }

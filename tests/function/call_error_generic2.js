@@ -2,7 +2,7 @@
 
 declare function bar1<TKey: ?{+$data?: mixed}>(key: TKey): void;
 
-function bar2(fragmentRef) {
+function bar2(fragmentRef?: {}) {
   bar1(fragmentRef);
 }
 

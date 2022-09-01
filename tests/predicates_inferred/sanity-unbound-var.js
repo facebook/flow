@@ -4,7 +4,7 @@ declare var y: mixed;
 
 // Sanity check: this should fail, because the preficate function
 // checks `y` instead of `x`.
-function err(x): %checks {
+function err(x: mixed): %checks {
   return typeof y === "string";
 }
 

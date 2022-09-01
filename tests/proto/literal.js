@@ -6,7 +6,7 @@ var o_get = { get __proto__() { return { q: 1 } } };
 (o_get.q: empty); // error: property `q` not found
 (o_get.__proto__: { q: number }); // ok
 
-var o_set = { set __proto__(x) {} };
+var o_set = { set __proto__(x: mixed) {} };
 (o_set.__proto__: empty); // error: read from contravariant prop
 
 var o_method = { __proto__() {} };

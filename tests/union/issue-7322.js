@@ -2,10 +2,10 @@
 
 class Foo {
   noReturn() { }
-  returnNoArg() {
+  returnNoArg(): void {
     return;
   }
-  returnUndefined() {
+  returnUndefined(): void {
     return undefined;
   }
 }

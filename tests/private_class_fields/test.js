@@ -103,12 +103,12 @@ class Annotations {
   // Private class fields must either be annotated or have an initializer
   #p: number;
   #q = 0;
-  #r;
+  #r: number;
   #s: string = 0; // Error, number ~> string
   #t: string = "yay!";
   static #sp: number;
   static #sq = 0;
-  static #sr;
+  static #sr: number;
   static #ss: string = 0; // Error, number ~> string
   static #st: string = "yay!";
   test1(): number {

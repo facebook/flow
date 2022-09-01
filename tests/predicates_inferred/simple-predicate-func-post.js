@@ -16,6 +16,6 @@ function foo(x: string | Array<string>): string {
   }
 }
 
-function is_string(x): %checks {
+function is_string(x: mixed): %checks {
   return typeof x === "string";
 }

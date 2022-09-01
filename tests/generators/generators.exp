@@ -49,21 +49,16 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- class.js:28:22
 
-Cannot assign `yield 0` to `x` because undefined (default `next` of unannotated generator function) [1] is incompatible
-with boolean [2]. [incompatible-type]
+Cannot assign `yield 0` to `x` because undefined [1] is incompatible with boolean [2]. [incompatible-type]
 
    class.js:28:22
    28|     var x: boolean = yield 0; // error: void ~> boolean
                             ^^^^^^^
 
 References:
-   class.js:27:17
-                       v
-   27|   *infer_stmt() {
-   28|     var x: boolean = yield 0; // error: void ~> boolean
-   29|     return "";
-   30|   }
-         ^ [1]
+   class.js:27:44
+   27|   *infer_stmt(): Generator<number, string, void> {
+                                                  ^^^^ [1]
    class.js:28:12
    28|     var x: boolean = yield 0; // error: void ~> boolean
                   ^^^^^^^ [2]
@@ -71,25 +66,16 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- class.js:37:8
 
-Cannot cast `x` to string because undefined (default `next` of unannotated generator function) [1] is incompatible with
-string [2]. [incompatible-cast]
+Cannot cast `x` to string because undefined [1] is incompatible with string [2]. [incompatible-cast]
 
    class.js:37:8
    37|       (x : string) // nope
               ^
 
 References:
-   class.js:32:17
-                       v
-   32|   *widen_next() {
-   33|     var x = yield 0;
-   34|     if (typeof x === "number") {
-   35|     } else if (typeof x === "boolean") {
-   36|     } else {
-   37|       (x : string) // nope
-   38|     }
-   39|   }
-         ^ [1]
+   class.js:32:42
+   32|   *widen_next(): Generator<number, void, void> {
+                                                ^^^^ [1]
    class.js:37:12
    37|       (x : string) // nope
                   ^^^^^^ [2]
@@ -159,9 +145,9 @@ Cannot cast `x` to string because number [1] is incompatible with string [2]. [i
                                                ^
 
 References:
-   class.js:28:28
-   28|     var x: boolean = yield 0; // error: void ~> boolean
-                                  ^ [1]
+   class.js:27:28
+   27|   *infer_stmt(): Generator<number, string, void> {
+                                  ^^^^^^ [1]
    class.js:98:45
    98| for (var x of examples.infer_stmt()) { (x : string) } // error: number ~> string
                                                    ^^^^^^ [2]
@@ -169,21 +155,17 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- class.js:100:50
 
-Cannot call `examples.infer_stmt().next` with `0` bound to `value` because number [1] is incompatible with undefined
-(default `next` of unannotated generator function) [2]. [incompatible-call]
+Cannot call `examples.infer_stmt().next` with `0` bound to `value` because number [1] is incompatible with
+undefined [2]. [incompatible-call]
 
    class.js:100:50
    100| var infer_stmt_next = examples.infer_stmt().next(0).value; // error: number ~> void
                                                          ^ [1]
 
 References:
-   class.js:27:17
-                        v
-    27|   *infer_stmt() {
-    28|     var x: boolean = yield 0; // error: void ~> boolean
-    29|     return "";
-    30|   }
-          ^ [2]
+   class.js:27:44
+    27|   *infer_stmt(): Generator<number, string, void> {
+                                                   ^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------------- class.js:104:4
@@ -195,9 +177,9 @@ Cannot cast `infer_stmt_next` to boolean because string [1] is incompatible with
            ^^^^^^^^^^^^^^^
 
 References:
-   class.js:29:12
-    29|     return "";
-                   ^^ [1]
+   class.js:27:36
+    27|   *infer_stmt(): Generator<number, string, void> {
+                                           ^^^^^^ [1]
    class.js:104:22
    104|   (infer_stmt_next : boolean) // error: string ~> boolean
                              ^^^^^^^ [2]
@@ -205,71 +187,47 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- class.js:107:28
 
-Cannot call `examples.widen_next().next` with `0` bound to `value` because number [1] is incompatible with undefined
-(default `next` of unannotated generator function) [2]. [incompatible-call]
+Cannot call `examples.widen_next().next` with `0` bound to `value` because number [1] is incompatible with
+undefined [2]. [incompatible-call]
 
    class.js:107:28
    107| examples.widen_next().next(0) // err number -> void
                                    ^ [1]
 
 References:
-   class.js:32:17
-                        v
-    32|   *widen_next() {
-    33|     var x = yield 0;
-    34|     if (typeof x === "number") {
-    35|     } else if (typeof x === "boolean") {
-    36|     } else {
-    37|       (x : string) // nope
-    38|     }
-    39|   }
-          ^ [2]
+   class.js:32:42
+    32|   *widen_next(): Generator<number, void, void> {
+                                                 ^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------------------- class.js:108:28
 
 Cannot call `examples.widen_next().next` with empty string bound to `value` because string [1] is incompatible with
-undefined (default `next` of unannotated generator function) [2]. [incompatible-call]
+undefined [2]. [incompatible-call]
 
    class.js:108:28
    108| examples.widen_next().next("") // err number -> void
                                    ^^ [1]
 
 References:
-   class.js:32:17
-                        v
-    32|   *widen_next() {
-    33|     var x = yield 0;
-    34|     if (typeof x === "number") {
-    35|     } else if (typeof x === "boolean") {
-    36|     } else {
-    37|       (x : string) // nope
-    38|     }
-    39|   }
-          ^ [2]
+   class.js:32:42
+    32|   *widen_next(): Generator<number, void, void> {
+                                                 ^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------------------- class.js:109:28
 
-Cannot call `examples.widen_next().next` with `true` bound to `value` because boolean [1] is incompatible with undefined
-(default `next` of unannotated generator function) [2]. [incompatible-call]
+Cannot call `examples.widen_next().next` with `true` bound to `value` because boolean [1] is incompatible with
+undefined [2]. [incompatible-call]
 
    class.js:109:28
    109| examples.widen_next().next(true) // err number -> void
                                    ^^^^ [1]
 
 References:
-   class.js:32:17
-                        v
-    32|   *widen_next() {
-    33|     var x = yield 0;
-    34|     if (typeof x === "number") {
-    35|     } else if (typeof x === "boolean") {
-    36|     } else {
-    37|       (x : string) // nope
-    38|     }
-    39|   }
-          ^ [2]
+   class.js:32:42
+    32|   *widen_next(): Generator<number, void, void> {
+                                                 ^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------------- class.js:122:4
@@ -281,9 +239,9 @@ Cannot cast `x1` to number because string [1] is incompatible with number [2]. [
            ^^
 
 References:
-   class.js:56:13
-    56|       yield "";
-                    ^^ [1]
+   class.js:54:42
+    54|   *delegate_yield_generator(): Generator<string, void, void> {
+                                                 ^^^^^^ [1]
    class.js:122:9
    122|   (x1 : number) // error: string ~> number
                 ^^^^^^ [2]
@@ -308,21 +266,16 @@ References:
 
 Error -------------------------------------------------------------------------------------------- class_failure.js:5:22
 
-Cannot assign `yield 0` to `x` because undefined (default `next` of unannotated generator function) [1] is incompatible
-with boolean [2]. [incompatible-type]
+Cannot assign `yield 0` to `x` because undefined [1] is incompatible with boolean [2]. [incompatible-type]
 
    class_failure.js:5:22
    5|     var x: boolean = yield 0; // error: void ~> boolean
                            ^^^^^^^
 
 References:
-   class_failure.js:4:17
-                      v
-   4|   *infer_stmt() {
-   5|     var x: boolean = yield 0; // error: void ~> boolean
-   6|     return "";
-   7|   }
-        ^ [1]
+   class_failure.js:4:44
+   4|   *infer_stmt(): Generator<number, string, void> {
+                                                 ^^^^ [1]
    class_failure.js:5:12
    5|     var x: boolean = yield 0; // error: void ~> boolean
                  ^^^^^^^ [2]
@@ -337,9 +290,9 @@ Cannot cast `x` to string because number [1] is incompatible with string [2]. [i
                                                ^
 
 References:
-   class_failure.js:5:28
-    5|     var x: boolean = yield 0; // error: void ~> boolean
-                                  ^ [1]
+   class_failure.js:4:28
+    4|   *infer_stmt(): Generator<number, string, void> {
+                                  ^^^^^^ [1]
    class_failure.js:12:45
    12| for (var x of examples.infer_stmt()) { (x : string) } // error: number ~> string
                                                    ^^^^^^ [2]
@@ -347,21 +300,17 @@ References:
 
 Error ------------------------------------------------------------------------------------------- class_failure.js:14:50
 
-Cannot call `examples.infer_stmt().next` with `0` bound to `value` because number [1] is incompatible with undefined
-(default `next` of unannotated generator function) [2]. [incompatible-call]
+Cannot call `examples.infer_stmt().next` with `0` bound to `value` because number [1] is incompatible with
+undefined [2]. [incompatible-call]
 
    class_failure.js:14:50
    14| var infer_stmt_next = examples.infer_stmt().next(0).value; // error: number ~> void
                                                         ^ [1]
 
 References:
-   class_failure.js:4:17
-                       v
-    4|   *infer_stmt() {
-    5|     var x: boolean = yield 0; // error: void ~> boolean
-    6|     return "";
-    7|   }
-         ^ [2]
+   class_failure.js:4:44
+    4|   *infer_stmt(): Generator<number, string, void> {
+                                                  ^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------------- class_failure.js:19:4
@@ -373,9 +322,9 @@ Cannot cast `infer_stmt_next` to boolean because string [1] is incompatible with
           ^^^^^^^^^^^^^^^
 
 References:
-   class_failure.js:6:12
-    6|     return "";
-                  ^^ [1]
+   class_failure.js:4:36
+    4|   *infer_stmt(): Generator<number, string, void> {
+                                          ^^^^^^ [1]
    class_failure.js:19:22
    19|   (infer_stmt_next : boolean) // error: void ~> boolean
                             ^^^^^^^ [2]

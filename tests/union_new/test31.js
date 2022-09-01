@@ -19,7 +19,7 @@ declare class ImmutableMap<K,V> { }
 declare function convert<K,V>(iter: SomeIterable<[K,V]>): ImmutableMap<K,V>;
 
 function foo(): ImmutableMap<string, boolean> {
-  const countersGlobalMap = new SomeMap();
+  const countersGlobalMap = new SomeMap<string, boolean>();
   countersGlobalMap.set("", false);
   return convert(countersGlobalMap);
 }

@@ -1,6 +1,6 @@
 // @flow
 
-import React from 'react';
+import * as React from 'react';
 
 {
   const {StrictMode} = React;
@@ -14,7 +14,7 @@ import React from 'react';
   const {Component, StrictMode} = React;
 
   class ClassExample extends Component<{||}> {
-    render() {
+    render(): React.Node {
       return null;
     }
   }

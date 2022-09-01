@@ -19,7 +19,7 @@ var foo6 = function<R>(x:R):R { return foo1(x); }
 
 function foo7<R>(x:R):R { return foo5(); }
 
-function foo8<U>(x:U,y):U {
+function foo8<U>(x:U,y:U):U {
   var z = foo8(x,x);
   y();
   return x;

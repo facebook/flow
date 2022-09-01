@@ -1,10 +1,10 @@
-Error ------------------------------------------------------------------------------------------ function_return.js:7:16
+Error ------------------------------------------------------------------------------------------ function_return.js:7:24
 
 Cannot expect number as the return type of function because number [1] is incompatible with implicitly-returned
 undefined. [incompatible-return]
 
-   7| function f(x): number {
-                     ^^^^^^ [1]
+   7| function f(x: number): number {
+                             ^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------ function_return.js:23:3
@@ -16,9 +16,9 @@ Cannot return undefined because undefined [1] is incompatible with number [2]. [
          ^^^^^^^ [1]
 
 References:
-   function_return.js:19:16
-   19| function h(x): number {
-                      ^^^^^^ [2]
+   function_return.js:19:24
+   19| function h(x: number): number {
+                              ^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------- implicit.js:6:22
@@ -207,13 +207,13 @@ undefined. [incompatible-return]
                                           ^^^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------------ implicit_void.js:407:18
+Error ------------------------------------------------------------------------------------------ implicit_void.js:407:26
 
 Cannot expect number as the return type of function because number [1] is incompatible with implicitly-returned
 undefined. [incompatible-return]
 
-   407| function g19(x): number { // Error
-                         ^^^^^^ [1]
+   407| function g19(x: string): number { // Error
+                                 ^^^^^^ [1]
 
 
 Error ----------------------------------------------------------------------------------------------------- void.js:12:2

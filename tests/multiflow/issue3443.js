@@ -7,12 +7,12 @@ class A {
 }
 
 class B extends A {
-    f(...args) {
+    f(...args: any[]) {
       this.f(...args);
     }
 }
 
-function foo(...args) {
+function foo(...args: Array<number>) {
   foo(1, ...args);
 }
 foo(123);

@@ -8,6 +8,6 @@ declare var arr: Array<mixed>;
 const barr = my_filter(arr, is_string);
 (barr: Array<string>);
 
-function is_string(x): %checks {
+function is_string(x: mixed): %checks {
   return typeof x === "string";
 }

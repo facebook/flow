@@ -7,7 +7,7 @@ if (dotAccess(obj)) {
   (obj.page: Object);
 }
 
-function dotAccess(head, create) {
+function dotAccess(head: { page: ?Object; }, create?: mixed) {
   const path = 'path.location';
   const stack = path.split('.');
   do {

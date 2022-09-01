@@ -12,8 +12,8 @@ function hoc<Props, Component: React.ComponentType<Props>>(
 }
 
 class MyComponent1 extends React.Component<{foo: string, bar: number}> {
-  static defaultProps = {foo: 'qux'};
-  render() {
+  static defaultProps: {foo: string} = {foo: 'qux'};
+  render(): React.Node {
     return null;
   }
 }

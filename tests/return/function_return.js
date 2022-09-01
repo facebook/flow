@@ -4,26 +4,26 @@ class C {
     fn(x:number): number { return x; }
 }
 
-function f(x): number {
+function f(x: number): number {
   if (x > 1) {
     return 42;
   }
 }
 
-function g(x): ?number {
+function g(x: number): ?number {
   if (x > 1) {
     return 42;
   }
 }
 
-function h(x): number {
+function h(x: number): number {
   if (x > 1) {
     return 42;
   }
   return;
 }
 
-function i(x): ?number {
+function i(x: number): ?number {
   if (x > 1) {
     return 42;
   }

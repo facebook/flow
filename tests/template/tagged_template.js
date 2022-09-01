@@ -10,7 +10,7 @@ let tests = [
 
   // wrong arity
   function() {
-    function tag(quasis: Array<string>, number) {}
+    function tag(quasis: Array<string>, number: number) {}
     tag`foo${1}bar${2}`; // error: expected 2 args, got 3
   },
 

@@ -496,7 +496,7 @@ References:
    12|   a: number,
    13|   b: number,
    14|   prop: number,
-   15| |}> { render() { return null }}
+   15| |}> { render(): React.Node { return null }}
        -^ [2]
 
 
@@ -519,7 +519,7 @@ References:
    12|   a: number,
    13|   b: number,
    14|   prop: number,
-   15| |}> { render() { return null }}
+   15| |}> { render(): React.Node { return null }}
        -^ [2]
 
 
@@ -624,7 +624,7 @@ References:
    12|   a: number,
    13|   b: number,
    14|   prop: number,
-   15| }> { render() { return null } }
+   15| }> { render(): React.Node { return null } }
        ^ [2]
 
 
@@ -647,7 +647,7 @@ References:
    12|   a: number,
    13|   b: number,
    14|   prop: number,
-   15| }> { render() { return null } }
+   15| }> { render(): React.Node { return null } }
        ^ [2]
 
 
@@ -749,7 +749,7 @@ References:
    12|   a: number,
    13|   b: number,
    14|   prop: number,
-   15| }> { render() { return null } }
+   15| }> { render(): React.Node { return null } }
        ^ [2]
 
 
@@ -772,7 +772,7 @@ References:
    12|   a: number,
    13|   b: number,
    14|   prop: number,
-   15| }> { render() { return null } }
+   15| }> { render(): React.Node { return null } }
        ^ [2]
 
 
@@ -1149,38 +1149,44 @@ References:
              ^^^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- ref.js:24:24
+Error ----------------------------------------------------------------------------------------------------- ref.js:24:16
 
-Cannot cast `foo` to `FooExact` because null [1] is incompatible with `FooExact` [2]. [incompatible-cast]
+Cannot create `FooExact` element because `FooExact` [1] is incompatible with null [2] in the first parameter of property
+`ref`. [incompatible-type]
 
-   ref.js:24:24
-    24| <FooExact ref={foo => (foo: FooExact)} />; // Error: `FooExact` may be null.
-                               ^^^
+   ref.js:24:16
+    24| <FooExact ref={(foo: FooExact) => {}} />; // Error: `FooExact` may be null.
+                       ^^^^^^^^^^^^^^^^^^^^^
 
 References:
+   ref.js:24:22
+    24| <FooExact ref={(foo: FooExact) => {}} />; // Error: `FooExact` may be null.
+                             ^^^^^^^^ [1]
    <BUILTINS>/react.js:189:39
    189|   | ((React$ElementRef<ElementType> | null) => mixed)
-                                              ^^^^ [1]
-   ref.js:24:29
-    24| <FooExact ref={foo => (foo: FooExact)} />; // Error: `FooExact` may be null.
-                                    ^^^^^^^^ [2]
+                                              ^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- ref.js:26:24
+Error ----------------------------------------------------------------------------------------------------- ref.js:26:16
 
-Cannot cast `foo` to union type because `FooExact` [1] is incompatible with `Bar` [2]. [incompatible-cast]
+Cannot create `FooExact` element because in property `ref`: [incompatible-type]
+ - Either property `current` is missing in function [1] but exists in object type [2].
+ - Or `FooExact` [3] is incompatible with `Bar` [4] in the first parameter.
 
-   ref.js:26:24
-   26| <FooExact ref={foo => (foo: Bar | null)} />; // Error: `FooExact` is not `Bar`.
-                              ^^^
+   ref.js:26:16
+    26| <FooExact ref={(foo: Bar | null) => {}} />; // Error: `FooExact` is not `Bar`.
+                       ^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 References:
+   <BUILTINS>/react.js:188:5
+   188|   | { -current: React$ElementRef<ElementType> | null, ... }
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
    ref.js:17:7
-   17| class FooExact extends React.Component<{||}, void> {}
-             ^^^^^^^^ [1]
-   ref.js:26:29
-   26| <FooExact ref={foo => (foo: Bar | null)} />; // Error: `FooExact` is not `Bar`.
-                                   ^^^ [2]
+    17| class FooExact extends React.Component<{||}, void> {}
+              ^^^^^^^^ [3]
+   ref.js:26:22
+    26| <FooExact ref={(foo: Bar | null) => {}} />; // Error: `FooExact` is not `Bar`.
+                             ^^^ [4]
 
 
 Error ------------------------------------------------------------------------------------------- undefined_prop.js:7:21
@@ -2157,105 +2163,88 @@ References:
           ------------------^ [4]
 
 
-Error ------------------------------------------------------------------------------------------ useReducer_hook.js:27:4
+Error ------------------------------------------------------------------------------------------ useReducer_hook.js:29:4
 
 Cannot cast `state.count` to string because number [1] is incompatible with string [2]. [incompatible-cast]
 
-   useReducer_hook.js:27:4
-   27|   (state.count: string); // Error: number is incompatible with string
+   useReducer_hook.js:29:4
+   29|   (state.count: string); // Error: number is incompatible with string
           ^^^^^^^^^^^
 
 References:
-   useReducer_hook.js:14:23
-   14|       return { count: state.count + 1 };
-                             ^^^^^^^^^^^^^^^ [1]
-   useReducer_hook.js:27:17
-   27|   (state.count: string); // Error: number is incompatible with string
+   useReducer_hook.js:9:76
+    9| type Action = {type: 'increment' | 'decrement'} | {type: 'reset', payload: number}
+                                                                                  ^^^^^^ [1]
+   useReducer_hook.js:29:17
+   29|   (state.count: string); // Error: number is incompatible with string
                        ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------ useReducer_hook.js:27:4
+Error ------------------------------------------------------------------------------------------ useReducer_hook.js:29:4
 
 Cannot cast `state.count` to string because number [1] is incompatible with string [2]. [incompatible-cast]
 
-   useReducer_hook.js:27:4
-   27|   (state.count: string); // Error: number is incompatible with string
+   useReducer_hook.js:29:4
+   29|   (state.count: string); // Error: number is incompatible with string
+          ^^^^^^^^^^^
+
+References:
+   useReducer_hook.js:11:33
+   11| function reducer(state: {count: number}, action: Action) {
+                                       ^^^^^^ [1]
+   useReducer_hook.js:29:17
+   29|   (state.count: string); // Error: number is incompatible with string
+                       ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------ useReducer_hook.js:29:4
+
+Cannot cast `state.count` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+
+   useReducer_hook.js:29:4
+   29|   (state.count: string); // Error: number is incompatible with string
           ^^^^^^^^^^^
 
 References:
    useReducer_hook.js:16:23
-   16|       return { count: state.count - 1 };
+   16|       return { count: state.count + 1 };
                              ^^^^^^^^^^^^^^^ [1]
-   useReducer_hook.js:27:17
-   27|   (state.count: string); // Error: number is incompatible with string
+   useReducer_hook.js:29:17
+   29|   (state.count: string); // Error: number is incompatible with string
                        ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------ useReducer_hook.js:27:4
+Error ------------------------------------------------------------------------------------------ useReducer_hook.js:29:4
 
 Cannot cast `state.count` to string because number [1] is incompatible with string [2]. [incompatible-cast]
 
-   useReducer_hook.js:27:4
-   27|   (state.count: string); // Error: number is incompatible with string
+   useReducer_hook.js:29:4
+   29|   (state.count: string); // Error: number is incompatible with string
           ^^^^^^^^^^^
 
 References:
-   useReducer_hook.js:22:31
-   22| const initialState = { count: 0 };
+   useReducer_hook.js:18:23
+   18|       return { count: state.count - 1 };
+                             ^^^^^^^^^^^^^^^ [1]
+   useReducer_hook.js:29:17
+   29|   (state.count: string); // Error: number is incompatible with string
+                       ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------ useReducer_hook.js:29:4
+
+Cannot cast `state.count` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+
+   useReducer_hook.js:29:4
+   29|   (state.count: string); // Error: number is incompatible with string
+          ^^^^^^^^^^^
+
+References:
+   useReducer_hook.js:24:31
+   24| const initialState = { count: 0 };
                                      ^ [1]
-   useReducer_hook.js:27:17
-   27|   (state.count: string); // Error: number is incompatible with string
-                       ^^^^^^ [2]
-
-
-Error ------------------------------------------------------------------------------------------ useReducer_hook.js:27:4
-
-Cannot cast `state.count` to string because number [1] is incompatible with string [2]. [incompatible-cast]
-
-   useReducer_hook.js:27:4
-   27|   (state.count: string); // Error: number is incompatible with string
-          ^^^^^^^^^^^
-
-References:
-   useReducer_hook.js:29:38
-   29|   dispatch({ type: "reset", payload: 123 });
-                                            ^^^ [1]
-   useReducer_hook.js:27:17
-   27|   (state.count: string); // Error: number is incompatible with string
-                       ^^^^^^ [2]
-
-
-Error ------------------------------------------------------------------------------------------ useReducer_hook.js:27:4
-
-Cannot cast `state.count` to string because number [1] is incompatible with string [2]. [incompatible-cast]
-
-   useReducer_hook.js:27:4
-   27|   (state.count: string); // Error: number is incompatible with string
-          ^^^^^^^^^^^
-
-References:
-   useReducer_hook.js:41:66
-   41|   const [state, dispatch] = React.useReducer(reducer, { initial: 123 }, init);
-                                                                        ^^^ [1]
-   useReducer_hook.js:27:17
-   27|   (state.count: string); // Error: number is incompatible with string
-                       ^^^^^^ [2]
-
-
-Error ------------------------------------------------------------------------------------------ useReducer_hook.js:27:4
-
-Cannot cast `state.count` to string because number [1] is incompatible with string [2]. [incompatible-cast]
-
-   useReducer_hook.js:27:4
-   27|   (state.count: string); // Error: number is incompatible with string
-          ^^^^^^^^^^^
-
-References:
-   useReducer_hook.js:44:38
-   44|   dispatch({ type: "reset", payload: 123 });
-                                            ^^^ [1]
-   useReducer_hook.js:27:17
-   27|   (state.count: string); // Error: number is incompatible with string
+   useReducer_hook.js:29:17
+   29|   (state.count: string); // Error: number is incompatible with string
                        ^^^^^^ [2]
 
 
@@ -2366,7 +2355,7 @@ References:
 
 
 
-Found 122 errors
+Found 121 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

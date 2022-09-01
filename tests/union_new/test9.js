@@ -8,7 +8,7 @@
 // interference
 ////////////////
 
-function square(x? = 0) {
+function square(x?: number = 0) {
   return x * x;
 }
 

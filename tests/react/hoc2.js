@@ -12,7 +12,7 @@ class MyComponent extends React.Component<{|
   a: number,
   b: number,
   prop: number,
-|}> { render() { return null }}
+|}> { render(): React.Node { return null }}
 
 function MyFunctionComponent(props: {|
   a: number,

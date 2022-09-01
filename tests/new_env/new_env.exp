@@ -633,12 +633,12 @@ Cannot return `y.foo` because mixed [1] is incompatible with string [2]. [incomp
                 ^^^^^
 
 References:
-   test.js:45:33
-   45| function foo(x: {[key: string]: mixed}) {
+   test.js:41:33
+   41| function bar(y: {[key: string]: mixed}): string {
                                        ^^^^^ [1]
-   test.js:41:18
-   41| function bar(y): string {
-                        ^^^^^^ [2]
+   test.js:41:42
+   41| function bar(y: {[key: string]: mixed}): string {
+                                                ^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:51:6

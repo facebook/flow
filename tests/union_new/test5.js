@@ -10,7 +10,7 @@
 
 function fun(a: ((x: number) => number) | ((x: string) => string)) { }
 
-function a1(x) { return x; }
+function a1(x: string) { return x; }
 fun(a1);
 
 function fun_call(x: string): string { return a1(x); }
@@ -21,7 +21,7 @@ function fun_call(x: string): string { return a1(x); }
 
 function arr(a: number[] | string[]) { }
 
-var a2 = [];
+var a2: Array<string> = [];
 arr(a2);
 
 function arr_set(x: string, i: number) { a2[i] = x; }

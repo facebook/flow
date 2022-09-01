@@ -13,7 +13,7 @@ Object.is(emptyObject, emptyObject);
 Object.is(emptyArray, emptyArray);
 Object.is(emptyObject, emptyArray);
 
-var squared = x => x * x;
+var squared = (x: number) => x * x;
 Object.is(squared, squared);
 
 var a: boolean = Object.is('a', 'a');

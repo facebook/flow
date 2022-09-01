@@ -38,7 +38,7 @@ var ya: number;
 (ya: number)
 ya = "a"
 
-function bar(y): string {
+function bar(y: {[key: string]: mixed}): string {
   return y.foo;
 }
 

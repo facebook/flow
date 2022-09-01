@@ -1,13 +1,13 @@
 // @flow
 
-import React from 'react';
+import * as React from 'react';
 
 function myHOC(
   Component: React$ComponentType<{foo: number, bar: number}>,
 ): React$ComponentType<{foo: number}> {
   return class extends React.Component<{foo: number}, {bar: number}> {
-    state = {bar: 2};
-    render() {
+    state: {bar: number} = {bar: 2};
+    render(): React.Node {
       <Component />; // Error: `foo` is required.
       <Component foo={42} />; // Error: `bar` is required.
       <Component foo={1} bar={2} />; // OK
@@ -22,8 +22,8 @@ class Unwrapped extends React.Component<{
 }, {
   buz: number,
 }> {
-  state = {buz: 3};
-  render() {
+  state: {buz: number} = {buz: 3};
+  render(): React.Node {
     return this.props.foo + this.props.bar + this.state.buz;
   }
 }

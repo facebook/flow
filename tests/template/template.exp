@@ -22,8 +22,8 @@ Cannot call `tag` because no more than 2 arguments are expected by function [1].
 
 References:
    tagged_template.js:13:5
-   13|     function tag(quasis: Array<string>, number) {}
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   13|     function tag(quasis: Array<string>, number: number) {}
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ----------------------------------------------------------------------------------------- tagged_template.js:21:14

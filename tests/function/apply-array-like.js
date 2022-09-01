@@ -1,4 +1,4 @@
-function test(a: string, b: string): number {
+function test(this: interface {length: number}, a: string, b: string): number {
   return this.length; // expect []/"" this
 }
 

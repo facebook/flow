@@ -24,12 +24,12 @@ class GeneratorExamples {
     return ""; // error: string ~> number
   }
 
-  *infer_stmt() {
+  *infer_stmt(): Generator<number, string, void> {
     var x: boolean = yield 0; // error: void ~> boolean
     return "";
   }
 
-  *widen_next() {
+  *widen_next(): Generator<number, void, void> {
     var x = yield 0;
     if (typeof x === "number") {
     } else if (typeof x === "boolean") {
@@ -38,7 +38,7 @@ class GeneratorExamples {
     }
   }
 
-  *widen_yield() {
+  *widen_yield(): Generator<(number | string | boolean), void, void> {
     yield 0;
     yield "";
     yield true;
@@ -51,7 +51,7 @@ class GeneratorExamples {
     yield *inner();
   }
 
-  *delegate_yield_generator() {
+  *delegate_yield_generator(): Generator<string, void, void> {
     function *inner() {
       yield "";
     }
@@ -59,7 +59,7 @@ class GeneratorExamples {
     yield *inner();
   }
 
-  *delegate_return_generator() {
+  *delegate_return_generator(): Generator<void, void, void> {
     function *inner() {
       return "";
     }

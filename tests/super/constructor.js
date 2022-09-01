@@ -41,7 +41,7 @@ class F extends A {
 }
 
 class G extends A {
-  constructor(b) {
+  constructor(b: mixed) {
     super.x; // error (no super call)
   }
 }

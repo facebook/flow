@@ -1,7 +1,7 @@
 // generalization of failure in class.js
 
 class GeneratorExamples<X> {
-  *infer_stmt() {
+  *infer_stmt(): Generator<number, string, void> {
     var x: boolean = yield 0; // error: void ~> boolean
     return "";
   }

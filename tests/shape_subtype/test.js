@@ -12,7 +12,7 @@ let z3:$Shape<Object> = {x : 3}; // no error
 
 let z5:$Shape<any> = {x : 3}; // no error
 
-let a = [];
+let a: Array<mixed> = [];
 let z8 : $Shape<typeof a> = {y : 4}; // flow error
 
 let n = 4;
@@ -27,7 +27,7 @@ type Props = {};
 const React = require('react');
 
 class MyComponent extends React.Component<Props, MyType> {
-  state = this._createState();
+  state: MyType = this._createState();
 
   componentWillReceiveProps(nextProps: Props): void {
     this.setState(this._createState());

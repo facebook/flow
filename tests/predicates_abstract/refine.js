@@ -37,10 +37,10 @@ declare function refine2<T, P: $Pred<2>>(v: T, w: T, cb: P): $Refine<T,P,1>;
 // function refine_fst(v, w, cb)
 // { if (cb(v, w)) { return w; } else { throw new Error(); } }
 
-function is_string(x): boolean %checks {
+function is_string(x: mixed): boolean %checks {
   return typeof x === "string";
 }
 
-function is_string_and_number(x, y): %checks {
+function is_string_and_number(x: mixed, y: mixed): %checks {
   return typeof x === "string" && typeof y === "number";
 }

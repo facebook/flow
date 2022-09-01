@@ -1,6 +1,6 @@
 // @flow
 
-import React from 'react';
+import * as React from 'react';
 
 {
   const Context = React.createContext('div');
@@ -9,7 +9,7 @@ import React from 'react';
   class Foo extends React.Component<{}> {
     divRef: {current: null | HTMLDivElement} = React.createRef();
 
-    render() {
+    render(): React.Node {
       return (
         <React.Fragment>
           <Provider value='span'>

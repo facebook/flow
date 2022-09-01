@@ -1,7 +1,7 @@
 /* This is a regression test. At one point we incorrectly inferred the return
    type of functions that have an explicit `undefined` to be only `undefined` --
    ignoring other possible exits. */
-function f(b) {
+function f(b: boolean) {
   if (b) {
     return undefined;
   } else {

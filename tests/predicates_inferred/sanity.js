@@ -2,7 +2,7 @@
 
 // Sanity check: shouldn't be allowed to declare a predicate AND use `chekcs`
 
-function check(y): %checks(typeof y === "string") {
+function check(y: mixed): %checks(typeof y === "string") {
   return typeof y === "number";
 }
 
@@ -13,7 +13,7 @@ if (check(y)) {
 }
 
 // Sanity: disallowed body
-function indirect_is_number(y): %checks {
+function indirect_is_number(y: mixed): %checks {
   var y = 1;
   return typeof y === "number";
 }

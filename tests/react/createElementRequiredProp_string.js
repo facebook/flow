@@ -1,8 +1,8 @@
 // @flow
-import React from 'react';
+import * as React from 'react';
 
 class Bar extends React.Component<{test: number}> {
-  render() {
+  render(): React.Node {
     return (
       <div>
         {this.props.test}
@@ -12,7 +12,7 @@ class Bar extends React.Component<{test: number}> {
 }
 
 class Foo extends React.Component<{}> {
-  render() {
+  render(): React.Node {
     const Cmp = Math.random() < 0.5 ? 'div' : Bar;
     return (<Cmp/>);
   }

@@ -19,7 +19,7 @@ declare function refine3<T, P: $Pred<3>>(u: T, v: T, w: T, cb: P): $Refine<T,P,1
 var e2 = refine3(c, d, e, is_string_and_number);
 (e2: string);
 
-function is_string_and_number(x, y): %checks {
+function is_string_and_number(x: mixed, y: mixed): %checks {
   return typeof x === "string" && typeof y === "number";
 }
 
@@ -31,14 +31,14 @@ var e3 = refine(a, is_string_regular);   // ERROR: is_string_regular is not a
 
 ////////////////////////////////////////////////////////////////////////////////
 
-function is_string(x): %checks {
+function is_string(x: mixed): %checks {
   return typeof x === "string";
 }
 
-function is_string_regular(x)  {
+function is_string_regular(x: mixed)  {
   return typeof x === "string";
 }
 
-function is_string_and_number2(x, y): %checks {
+function is_string_and_number2(x: mixed, y: mixed): %checks {
   return typeof x === "string" && typeof y === "number";
 }

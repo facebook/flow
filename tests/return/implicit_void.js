@@ -381,7 +381,7 @@ function g15(): number { // Error
 g15();
 
 function g16(): number { // Error
-  for (const x of []) {
+  for (const x of ([]: Array<mixed>)) {
     invariant();
   }
 }
@@ -404,7 +404,7 @@ function g18(x: 'a' | 'b' | 'c'): number { // Error
   }
 }
 
-function g19(x): number { // Error
+function g19(x: string): number { // Error
   switch (x) {
     case 'a':
       return 1;
