@@ -1290,21 +1290,21 @@ static void gc_thread(addr_t p) {
 }
 
 // See comment above `mark_entity`
-static void gc_scan_entity(addr_t v) {
+static void gc_scan_entity(addr_t v, intnat next_version) {
   intnat entity_version = Deref(Obj_field(v, 2));
   gc_thread(Obj_field(v, entity_version & 1));
-  if (entity_version >= gc_version_threshold) {
+  if (entity_version >= next_version) {
     gc_thread(Obj_field(v, ~entity_version & 1));
   }
 }
 
 // As we walk the heap, we must be sure to thread every pointer to live data, as
 // any live object may be relocated.
-static void gc_scan(addr_t v) {
+static void gc_scan(addr_t v, intnat next_version) {
   hh_header_t hd = Deref(v);
   hh_tag_t tag = Obj_tag(hd);
   if (tag == Entity_tag) {
-    gc_scan_entity(v);
+    gc_scan_entity(v, next_version);
   } else if (should_scan(tag)) {
     for (int i = 0; i < Obj_wosize_tag(hd, tag); i++) {
       gc_thread(Obj_field(v, i));
@@ -1336,6 +1336,7 @@ CAMLprim value hh_compact(value unit) {
   assert(info->gc_phase == Phase_idle);
 
   intnat hashtbl_slots = info->hashtbl_slots;
+  intnat next_version = info->next_version;
 
   // Step 1: Scan the root set, threading any pointers to the heap. The
   // threading performed during this step will be unthreaded in the next step,
@@ -1379,7 +1380,7 @@ CAMLprim value hh_compact(value unit) {
       gc_update(src, dst);
       hd = Deref(src);
       size = Obj_bhsize(hd);
-      gc_scan(src);
+      gc_scan(src, next_version);
       dst += size;
     }
     src += size;
@@ -1398,7 +1399,6 @@ CAMLprim value hh_compact(value unit) {
   // future collections can free the space if the object becomes unreachable.
   src = info->heap_init;
   dst = info->heap_init;
-  intnat next_version = info->next_version;
   while (src < heap_ptr) {
     hh_header_t hd = Deref(src);
     intnat size;
