@@ -46,6 +46,13 @@ module Files =
       type t = file
     end)
 
+module FileModules =
+  NoCacheAddr
+    (StringKey)
+    (struct
+      type t = file_module
+    end)
+
 let assert_heap_size wsize =
   let bsize = wsize * (Sys.word_size / 8) in
   assert (SharedMem.heap_size () = bsize)
@@ -383,6 +390,75 @@ let slot_taken_test _ =
   compact ();
   assert_heap_size 0
 
+let add_provider_barrier_test _ =
+  (* A file module points to a linked list of provider files. When we add a new
+   * file to this list, we replace the head pointer.
+   *
+   * This test ensures that we use a write barrier so the marking pass is able
+   * to reach all live objects. *)
+  let foo = "foo" in
+  let bar = "bar" in
+  let key = "key" in
+
+  (* First, we create a file (foo_f) and a file module (foo_m), and add file_f
+   * to the provider list of foo_m. We add foo_m as a root, so foo_m is the only
+   * thing keeping foo_f alive. *)
+  let size =
+    (7 * header_size)
+    + (3 * entity_size)
+    + string_size foo
+    + sklist_size
+    + file_module_size
+    + file_size
+  in
+  alloc size (fun chunk ->
+      let foo = write_string chunk foo in
+      let foo_provider = write_entity chunk None in
+      let foo_dependents = write_sklist chunk in
+      let foo_m = write_file_module chunk foo_provider foo_dependents in
+      let parse = write_entity chunk None in
+      let haste_info = write_entity chunk None in
+      let foo_f = write_file chunk Source_file foo parse haste_info (Some foo_m) in
+      add_file_provider foo_m foo_f;
+      assert (FileModules.add key foo_m == foo_m)
+  );
+
+  (* Start a GC. With a work budget of 1, this mark slice will certainly not
+   * visit `foo_m`. *)
+  assert (not (collect_slice ~force:true 1));
+
+  (* Here, we allocate a new file (bar_f) during the marking pass and add it to
+   * foo_m's providers list. That is, we change this:
+   *
+   *     foo_m -> foo_f
+   *
+   * to this:
+   *
+   *     foo_m -> bar_f -> foo_f
+   *
+   * We "allocate black" meaning that `bar_f` will not be scanned for pointers.
+   * We need a write barrier when we modify the list head pointer, otherwise we
+   * would never visit and mark `foo_f`. *)
+  let size = (4 * header_size) + (2 * entity_size) + string_size bar + file_size in
+  alloc size (fun chunk ->
+      let foo_m = Option.get (FileModules.get key) in
+      let bar = write_string chunk bar in
+      let parse = write_entity chunk None in
+      let haste_info = write_entity chunk None in
+      let bar_f = write_file chunk Source_file bar parse haste_info (Some foo_m) in
+      add_file_provider foo_m bar_f
+  );
+
+  (* Finish the current GC pass. *)
+  collect_full ();
+
+  (* Iterate through all file providers. The files in this list should be kept
+   * alive by the module. If we failed to mark the files, then the read_header
+   * call in `get_file_kind` will assert. *)
+  let foo_m = Option.get (FileModules.get key) in
+  let foo_providers = get_file_all_providers_exclusive foo_m in
+  List.iter (fun f -> ignore (get_file_kind f)) foo_providers
+
 let tests workers =
   "heap_tests"
   >::: [
@@ -392,6 +468,7 @@ let tests workers =
          "entities_rollback" >:: entities_rollback_test;
          "slot_taken" >:: slot_taken_test;
          "skip_list" >:: skip_list_test workers;
+         "add_provider_barrier" >:: add_provider_barrier_test;
        ]
 
 let () =

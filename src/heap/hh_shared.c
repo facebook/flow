@@ -983,6 +983,8 @@ static void mark_stack_overflow() {
 //
 // Thus, when the mark stack pointer is a power of 2, we know that we are at
 // capacity and need to resize. We resize by doubling the capacity.
+//
+// Note that this operation is idempotent because `memfd_reserve` is idempotent.
 static void mark_stack_try_resize(uintnat mark_ptr) {
   if (mark_ptr > MARK_STACK_INIT_SIZE &&
       ((mark_ptr & (-mark_ptr)) == mark_ptr)) {
@@ -995,6 +997,45 @@ static void mark_stack_try_resize(uintnat mark_ptr) {
         shared_mem,
         (char*)&mark_stack[mark_ptr],
         mark_ptr * sizeof(mark_stack[0]));
+  }
+}
+
+// When an address is overwritten during the mark phase, we add the old value to
+// the mark stack. This function can be called concurrently from workers when
+// they modify the heap.
+static void write_barrier(addr_t old) {
+  if (old != NULL_ADDR && info->gc_phase == Phase_mark && old < info->gc_end) {
+    hh_header_t hd = Deref(old);
+    if (Is_white(hd)) {
+      // Color the object black. Note that two workers might both enter this
+      // branch for the same value. Both workers will color the object black and
+      // both workers will add the value to the mark stack.
+      //
+      // This is okay, because marking is idempotent.
+      Deref(old) = Black_hd(hd);
+
+      // Add to mark stack. We need a CAS here instead of simply a fetch-add
+      // because we need to know whether to resize the mark stack.
+      //
+      // We resize the mark stack at power-of-2 boundaries. Note that two
+      // workers might observe the same power-of-2 value for mark_ptr, and both
+      // try to resize. This is okay because `mark_stack_try_resize` is
+      // idempotent.
+      uintnat mark_ptr = __atomic_load_n(&info->mark_ptr, __ATOMIC_ACQUIRE);
+      while (1) {
+        mark_stack_try_resize(mark_ptr);
+        if (__atomic_compare_exchange_n(
+                &info->mark_ptr,
+                &mark_ptr,
+                mark_ptr + 1,
+                0,
+                __ATOMIC_SEQ_CST,
+                __ATOMIC_SEQ_CST)) {
+          mark_stack[mark_ptr] = old;
+          break;
+        }
+      }
+    }
   }
 }
 
@@ -1837,6 +1878,27 @@ CAMLprim value hh_compare_exchange(
       __ATOMIC_SEQ_CST));
 }
 
+CAMLprim value hh_compare_modify_addr(
+    value weak_val,
+    value addr_val,
+    value expected_val,
+    int64_t desired) {
+  CAMLparam3(weak_val, addr_val, expected_val);
+  int64_t* ptr = (int64_t*)Ptr_of_addr(Long_val(addr_val));
+  int64_t expected = Long_val(expected_val);
+  int success = __atomic_compare_exchange_n(
+      ptr,
+      &expected,
+      desired,
+      Bool_val(weak_val),
+      __ATOMIC_SEQ_CST,
+      __ATOMIC_SEQ_CST);
+  if (success) {
+    write_barrier(expected);
+  }
+  CAMLreturn(Val_bool(success));
+}
+
 CAMLprim value hh_load_acquire_byte(value addr_val) {
   return caml_copy_int64(hh_load_acquire(addr_val));
 }
@@ -1852,4 +1914,13 @@ CAMLprim value hh_compare_exchange_byte(
     value desired_val) {
   return hh_compare_exchange(
       weak_val, addr_val, Int64_val(expected_val), Int64_val(desired_val));
+}
+
+CAMLprim value hh_compare_modify_addr_byte(
+    value weak_val,
+    value addr_val,
+    value expected_val,
+    value desired_val) {
+  return hh_compare_modify_addr(
+      weak_val, addr_val, expected_val, Int64_val(desired_val));
 }

@@ -908,6 +908,13 @@ module NewAPI = struct
 
   let compare_exchange_strong = compare_exchange ~weak:false
 
+  external compare_modify_addr : weak:bool -> _ addr -> _ addr -> (int64[@unboxed]) -> bool
+    = "hh_compare_modify_addr_byte" "hh_compare_modify_addr"
+
+  let compare_modify_addr_weak = compare_modify_addr ~weak:true
+
+  let compare_modify_addr_strong = compare_modify_addr ~weak:false
+
   (** Addresses *)
 
   let addr_size = 1
@@ -1311,7 +1318,7 @@ module NewAPI = struct
         done;
 
         (* Try to add `sknode` to the set by linking the bottom-level list. *)
-        if not (compare_exchange_strong preds.(0) (i64 succs.(0)) (i64 sknode)) then
+        if not (compare_modify_addr_strong preds.(0) succs.(0) (i64 sknode)) then
           (* We failed to insert `sknode`. Another thread has concurrently
            * modified the set. *)
           loop ()
@@ -1949,7 +1956,7 @@ module NewAPI = struct
     let rec loop () =
       let head = read_addr heap head_addr in
       unsafe_write_addr_at heap next_addr head;
-      if not (compare_exchange_weak head_addr (i64 head) (i64 file)) then loop ()
+      if not (compare_modify_addr_weak head_addr head (i64 file)) then loop ()
     in
     loop ()
 
