@@ -106,9 +106,17 @@ let flow_completion_item_to_lsp
   in
   let insertTextFormat = Some Lsp.Completion.PlainText in
   let textEdit =
-    ignore is_insert_replace_supported;
     Base.Option.map
-      ~f:(fun (loc, newText) -> `TextEdit { Lsp.TextEdit.range = loc_to_lsp_range loc; newText })
+      ~f:(fun { ServerProt.Response.newText; insert; replace } ->
+        if is_insert_replace_supported && not (Loc.equal insert replace) then
+          `InsertReplaceEdit
+            {
+              Lsp.InsertReplaceEdit.newText;
+              insert = loc_to_lsp_range insert;
+              replace = loc_to_lsp_range replace;
+            }
+        else
+          `TextEdit { Lsp.TextEdit.range = loc_to_lsp_range insert; newText })
       item.text_edit
   in
   let additionalTextEdits =

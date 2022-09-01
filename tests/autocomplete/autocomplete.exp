@@ -6418,8 +6418,9 @@ Flags: --lsp
   "sortText":"00000000000000000000",
   "insertTextFormat":1,
   "textEdit":{
-    "range":{"start":{"line":10,"character":20},"end":{"line":10,"character":21}},
-    "newText":"Member1"
+    "newText":"Member1",
+    "insert":{"start":{"line":10,"character":20},"end":{"line":10,"character":20}},
+    "replace":{"start":{"line":10,"character":20},"end":{"line":10,"character":21}}
   },
   "command":{
     "title":"",
@@ -6446,8 +6447,9 @@ Flags: --lsp
   "sortText":"00000000000000000000",
   "insertTextFormat":1,
   "textEdit":{
-    "range":{"start":{"line":10,"character":20},"end":{"line":10,"character":21}},
-    "newText":"Member2"
+    "newText":"Member2",
+    "insert":{"start":{"line":10,"character":20},"end":{"line":10,"character":20}},
+    "replace":{"start":{"line":10,"character":20},"end":{"line":10,"character":21}}
   },
   "command":{
     "title":"",
@@ -6473,8 +6475,9 @@ Flags: --lsp
   "sortText":"00000000000000000001",
   "insertTextFormat":1,
   "textEdit":{
-    "range":{"start":{"line":10,"character":20},"end":{"line":10,"character":21}},
-    "newText":"cast"
+    "newText":"cast",
+    "insert":{"start":{"line":10,"character":20},"end":{"line":10,"character":20}},
+    "replace":{"start":{"line":10,"character":20},"end":{"line":10,"character":21}}
   },
   "command":{
     "title":"",
@@ -6500,8 +6503,9 @@ Flags: --lsp
   "sortText":"00000000000000000001",
   "insertTextFormat":1,
   "textEdit":{
-    "range":{"start":{"line":10,"character":20},"end":{"line":10,"character":21}},
-    "newText":"getName"
+    "newText":"getName",
+    "insert":{"start":{"line":10,"character":20},"end":{"line":10,"character":20}},
+    "replace":{"start":{"line":10,"character":20},"end":{"line":10,"character":21}}
   },
   "command":{
     "title":"",
@@ -6527,8 +6531,9 @@ Flags: --lsp
   "sortText":"00000000000000000001",
   "insertTextFormat":1,
   "textEdit":{
-    "range":{"start":{"line":10,"character":20},"end":{"line":10,"character":21}},
-    "newText":"isValid"
+    "newText":"isValid",
+    "insert":{"start":{"line":10,"character":20},"end":{"line":10,"character":20}},
+    "replace":{"start":{"line":10,"character":20},"end":{"line":10,"character":21}}
   },
   "command":{
     "title":"",
@@ -6554,8 +6559,9 @@ Flags: --lsp
   "sortText":"00000000000000000001",
   "insertTextFormat":1,
   "textEdit":{
-    "range":{"start":{"line":10,"character":20},"end":{"line":10,"character":21}},
-    "newText":"members"
+    "newText":"members",
+    "insert":{"start":{"line":10,"character":20},"end":{"line":10,"character":20}},
+    "replace":{"start":{"line":10,"character":20},"end":{"line":10,"character":21}}
   },
   "command":{
     "title":"",
@@ -6585,8 +6591,9 @@ Flags: --lsp
   "sortText":"00000000000000000000",
   "insertTextFormat":1,
   "textEdit":{
-    "range":{"start":{"line":12,"character":22},"end":{"line":12,"character":23}},
-    "newText":"Member1"
+    "newText":"Member1",
+    "insert":{"start":{"line":12,"character":22},"end":{"line":12,"character":22}},
+    "replace":{"start":{"line":12,"character":22},"end":{"line":12,"character":23}}
   },
   "command":{
     "title":"",
@@ -6613,8 +6620,9 @@ Flags: --lsp
   "sortText":"00000000000000000000",
   "insertTextFormat":1,
   "textEdit":{
-    "range":{"start":{"line":12,"character":22},"end":{"line":12,"character":23}},
-    "newText":"Member2"
+    "newText":"Member2",
+    "insert":{"start":{"line":12,"character":22},"end":{"line":12,"character":22}},
+    "replace":{"start":{"line":12,"character":22},"end":{"line":12,"character":23}}
   },
   "command":{
     "title":"",
@@ -6640,8 +6648,9 @@ Flags: --lsp
   "sortText":"00000000000000000001",
   "insertTextFormat":1,
   "textEdit":{
-    "range":{"start":{"line":12,"character":22},"end":{"line":12,"character":23}},
-    "newText":"cast"
+    "newText":"cast",
+    "insert":{"start":{"line":12,"character":22},"end":{"line":12,"character":22}},
+    "replace":{"start":{"line":12,"character":22},"end":{"line":12,"character":23}}
   },
   "command":{
     "title":"",
@@ -6667,8 +6676,9 @@ Flags: --lsp
   "sortText":"00000000000000000001",
   "insertTextFormat":1,
   "textEdit":{
-    "range":{"start":{"line":12,"character":22},"end":{"line":12,"character":23}},
-    "newText":"getName"
+    "newText":"getName",
+    "insert":{"start":{"line":12,"character":22},"end":{"line":12,"character":22}},
+    "replace":{"start":{"line":12,"character":22},"end":{"line":12,"character":23}}
   },
   "command":{
     "title":"",
@@ -6694,8 +6704,9 @@ Flags: --lsp
   "sortText":"00000000000000000001",
   "insertTextFormat":1,
   "textEdit":{
-    "range":{"start":{"line":12,"character":22},"end":{"line":12,"character":23}},
-    "newText":"isValid"
+    "newText":"isValid",
+    "insert":{"start":{"line":12,"character":22},"end":{"line":12,"character":22}},
+    "replace":{"start":{"line":12,"character":22},"end":{"line":12,"character":23}}
   },
   "command":{
     "title":"",
@@ -6721,8 +6732,9 @@ Flags: --lsp
   "sortText":"00000000000000000001",
   "insertTextFormat":1,
   "textEdit":{
-    "range":{"start":{"line":12,"character":22},"end":{"line":12,"character":23}},
-    "newText":"members"
+    "newText":"members",
+    "insert":{"start":{"line":12,"character":22},"end":{"line":12,"character":22}},
+    "replace":{"start":{"line":12,"character":22},"end":{"line":12,"character":23}}
   },
   "command":{
     "title":"",
@@ -6752,8 +6764,9 @@ Flags: --lsp
   "sortText":"00000000000000000000",
   "insertTextFormat":1,
   "textEdit":{
-    "range":{"start":{"line":14,"character":11},"end":{"line":14,"character":12}},
-    "newText":"Member1"
+    "newText":"Member1",
+    "insert":{"start":{"line":14,"character":11},"end":{"line":14,"character":11}},
+    "replace":{"start":{"line":14,"character":11},"end":{"line":14,"character":12}}
   },
   "command":{
     "title":"",
@@ -6780,8 +6793,9 @@ Flags: --lsp
   "sortText":"00000000000000000000",
   "insertTextFormat":1,
   "textEdit":{
-    "range":{"start":{"line":14,"character":11},"end":{"line":14,"character":12}},
-    "newText":"Member2"
+    "newText":"Member2",
+    "insert":{"start":{"line":14,"character":11},"end":{"line":14,"character":11}},
+    "replace":{"start":{"line":14,"character":11},"end":{"line":14,"character":12}}
   },
   "command":{
     "title":"",
@@ -6807,8 +6821,9 @@ Flags: --lsp
   "sortText":"00000000000000000001",
   "insertTextFormat":1,
   "textEdit":{
-    "range":{"start":{"line":14,"character":11},"end":{"line":14,"character":12}},
-    "newText":"cast"
+    "newText":"cast",
+    "insert":{"start":{"line":14,"character":11},"end":{"line":14,"character":11}},
+    "replace":{"start":{"line":14,"character":11},"end":{"line":14,"character":12}}
   },
   "command":{
     "title":"",
@@ -6834,8 +6849,9 @@ Flags: --lsp
   "sortText":"00000000000000000001",
   "insertTextFormat":1,
   "textEdit":{
-    "range":{"start":{"line":14,"character":11},"end":{"line":14,"character":12}},
-    "newText":"getName"
+    "newText":"getName",
+    "insert":{"start":{"line":14,"character":11},"end":{"line":14,"character":11}},
+    "replace":{"start":{"line":14,"character":11},"end":{"line":14,"character":12}}
   },
   "command":{
     "title":"",
@@ -6861,8 +6877,9 @@ Flags: --lsp
   "sortText":"00000000000000000001",
   "insertTextFormat":1,
   "textEdit":{
-    "range":{"start":{"line":14,"character":11},"end":{"line":14,"character":12}},
-    "newText":"isValid"
+    "newText":"isValid",
+    "insert":{"start":{"line":14,"character":11},"end":{"line":14,"character":11}},
+    "replace":{"start":{"line":14,"character":11},"end":{"line":14,"character":12}}
   },
   "command":{
     "title":"",
@@ -6888,8 +6905,9 @@ Flags: --lsp
   "sortText":"00000000000000000001",
   "insertTextFormat":1,
   "textEdit":{
-    "range":{"start":{"line":14,"character":11},"end":{"line":14,"character":12}},
-    "newText":"members"
+    "newText":"members",
+    "insert":{"start":{"line":14,"character":11},"end":{"line":14,"character":11}},
+    "replace":{"start":{"line":14,"character":11},"end":{"line":14,"character":12}}
   },
   "command":{
     "title":"",
@@ -6919,8 +6937,9 @@ Flags: --lsp
   "sortText":"00000000000000000000",
   "insertTextFormat":1,
   "textEdit":{
-    "range":{"start":{"line":16,"character":12},"end":{"line":16,"character":13}},
-    "newText":"Member1"
+    "newText":"Member1",
+    "insert":{"start":{"line":16,"character":12},"end":{"line":16,"character":12}},
+    "replace":{"start":{"line":16,"character":12},"end":{"line":16,"character":13}}
   },
   "command":{
     "title":"",
@@ -6947,8 +6966,9 @@ Flags: --lsp
   "sortText":"00000000000000000000",
   "insertTextFormat":1,
   "textEdit":{
-    "range":{"start":{"line":16,"character":12},"end":{"line":16,"character":13}},
-    "newText":"Member2"
+    "newText":"Member2",
+    "insert":{"start":{"line":16,"character":12},"end":{"line":16,"character":12}},
+    "replace":{"start":{"line":16,"character":12},"end":{"line":16,"character":13}}
   },
   "command":{
     "title":"",
@@ -6974,8 +6994,9 @@ Flags: --lsp
   "sortText":"00000000000000000001",
   "insertTextFormat":1,
   "textEdit":{
-    "range":{"start":{"line":16,"character":12},"end":{"line":16,"character":13}},
-    "newText":"cast"
+    "newText":"cast",
+    "insert":{"start":{"line":16,"character":12},"end":{"line":16,"character":12}},
+    "replace":{"start":{"line":16,"character":12},"end":{"line":16,"character":13}}
   },
   "command":{
     "title":"",
@@ -7001,8 +7022,9 @@ Flags: --lsp
   "sortText":"00000000000000000001",
   "insertTextFormat":1,
   "textEdit":{
-    "range":{"start":{"line":16,"character":12},"end":{"line":16,"character":13}},
-    "newText":"getName"
+    "newText":"getName",
+    "insert":{"start":{"line":16,"character":12},"end":{"line":16,"character":12}},
+    "replace":{"start":{"line":16,"character":12},"end":{"line":16,"character":13}}
   },
   "command":{
     "title":"",
@@ -7028,8 +7050,9 @@ Flags: --lsp
   "sortText":"00000000000000000001",
   "insertTextFormat":1,
   "textEdit":{
-    "range":{"start":{"line":16,"character":12},"end":{"line":16,"character":13}},
-    "newText":"isValid"
+    "newText":"isValid",
+    "insert":{"start":{"line":16,"character":12},"end":{"line":16,"character":12}},
+    "replace":{"start":{"line":16,"character":12},"end":{"line":16,"character":13}}
   },
   "command":{
     "title":"",
@@ -7055,8 +7078,9 @@ Flags: --lsp
   "sortText":"00000000000000000001",
   "insertTextFormat":1,
   "textEdit":{
-    "range":{"start":{"line":16,"character":12},"end":{"line":16,"character":13}},
-    "newText":"members"
+    "newText":"members",
+    "insert":{"start":{"line":16,"character":12},"end":{"line":16,"character":12}},
+    "replace":{"start":{"line":16,"character":12},"end":{"line":16,"character":13}}
   },
   "command":{
     "title":"",
@@ -7086,8 +7110,9 @@ Flags: --lsp
   "sortText":"00000000000000000000",
   "insertTextFormat":1,
   "textEdit":{
-    "range":{"start":{"line":18,"character":11},"end":{"line":18,"character":12}},
-    "newText":"Member1"
+    "newText":"Member1",
+    "insert":{"start":{"line":18,"character":11},"end":{"line":18,"character":11}},
+    "replace":{"start":{"line":18,"character":11},"end":{"line":18,"character":12}}
   },
   "command":{
     "title":"",
@@ -7114,8 +7139,9 @@ Flags: --lsp
   "sortText":"00000000000000000000",
   "insertTextFormat":1,
   "textEdit":{
-    "range":{"start":{"line":18,"character":11},"end":{"line":18,"character":12}},
-    "newText":"Member2"
+    "newText":"Member2",
+    "insert":{"start":{"line":18,"character":11},"end":{"line":18,"character":11}},
+    "replace":{"start":{"line":18,"character":11},"end":{"line":18,"character":12}}
   },
   "command":{
     "title":"",
@@ -7141,8 +7167,9 @@ Flags: --lsp
   "sortText":"00000000000000000001",
   "insertTextFormat":1,
   "textEdit":{
-    "range":{"start":{"line":18,"character":11},"end":{"line":18,"character":12}},
-    "newText":"cast"
+    "newText":"cast",
+    "insert":{"start":{"line":18,"character":11},"end":{"line":18,"character":11}},
+    "replace":{"start":{"line":18,"character":11},"end":{"line":18,"character":12}}
   },
   "command":{
     "title":"",
@@ -7168,8 +7195,9 @@ Flags: --lsp
   "sortText":"00000000000000000001",
   "insertTextFormat":1,
   "textEdit":{
-    "range":{"start":{"line":18,"character":11},"end":{"line":18,"character":12}},
-    "newText":"getName"
+    "newText":"getName",
+    "insert":{"start":{"line":18,"character":11},"end":{"line":18,"character":11}},
+    "replace":{"start":{"line":18,"character":11},"end":{"line":18,"character":12}}
   },
   "command":{
     "title":"",
@@ -7195,8 +7223,9 @@ Flags: --lsp
   "sortText":"00000000000000000001",
   "insertTextFormat":1,
   "textEdit":{
-    "range":{"start":{"line":18,"character":11},"end":{"line":18,"character":12}},
-    "newText":"isValid"
+    "newText":"isValid",
+    "insert":{"start":{"line":18,"character":11},"end":{"line":18,"character":11}},
+    "replace":{"start":{"line":18,"character":11},"end":{"line":18,"character":12}}
   },
   "command":{
     "title":"",
@@ -7222,8 +7251,9 @@ Flags: --lsp
   "sortText":"00000000000000000001",
   "insertTextFormat":1,
   "textEdit":{
-    "range":{"start":{"line":18,"character":11},"end":{"line":18,"character":12}},
-    "newText":"members"
+    "newText":"members",
+    "insert":{"start":{"line":18,"character":11},"end":{"line":18,"character":11}},
+    "replace":{"start":{"line":18,"character":11},"end":{"line":18,"character":12}}
   },
   "command":{
     "title":"",
@@ -9292,7 +9322,7 @@ Flags: --lsp
   "sortText":"00000000000000000000",
   "insertTextFormat":1,
   "textEdit":{
-    "range":{"start":{"line":4,"character":12},"end":{"line":4,"character":23}},
+    "range":{"start":{"line":4,"character":12},"end":{"line":4,"character":12}},
     "newText":"obj"
   },
   "command":{
@@ -9319,7 +9349,7 @@ Flags: --lsp
   "sortText":"00000000000000000000",
   "insertTextFormat":1,
   "textEdit":{
-    "range":{"start":{"line":4,"character":12},"end":{"line":4,"character":23}},
+    "range":{"start":{"line":4,"character":12},"end":{"line":4,"character":12}},
     "newText":"x"
   },
   "command":{

@@ -903,7 +903,18 @@ b.te
                   sortText: '00000000000000000000',
                   insertTextFormat: 1,
                   textEdit: {
-                    range: {
+                    newText: 'test',
+                    insert: {
+                      start: {
+                        line: 7,
+                        character: 2,
+                      },
+                      end: {
+                        line: 7,
+                        character: 2,
+                      },
+                    },
+                    replace: {
                       start: {
                         line: 7,
                         character: 2,
@@ -913,7 +924,6 @@ b.te
                         character: 4,
                       },
                     },
-                    newText: 'test',
                   },
                   command: {
                     title: '',
@@ -943,7 +953,18 @@ b.te
                   sortText: '00000000000000000001',
                   insertTextFormat: 1,
                   textEdit: {
-                    range: {
+                    newText: 'hasOwnProperty',
+                    insert: {
+                      start: {
+                        line: 7,
+                        character: 2,
+                      },
+                      end: {
+                        line: 7,
+                        character: 2,
+                      },
+                    },
+                    replace: {
                       start: {
                         line: 7,
                         character: 2,
@@ -953,7 +974,6 @@ b.te
                         character: 4,
                       },
                     },
-                    newText: 'hasOwnProperty',
                   },
                   command: {
                     title: '',
@@ -983,7 +1003,18 @@ b.te
                   sortText: '00000000000000000002',
                   insertTextFormat: 1,
                   textEdit: {
-                    range: {
+                    newText: 'isPrototypeOf',
+                    insert: {
+                      start: {
+                        line: 7,
+                        character: 2,
+                      },
+                      end: {
+                        line: 7,
+                        character: 2,
+                      },
+                    },
+                    replace: {
                       start: {
                         line: 7,
                         character: 2,
@@ -993,7 +1024,6 @@ b.te
                         character: 4,
                       },
                     },
-                    newText: 'isPrototypeOf',
                   },
                   command: {
                     title: '',
@@ -1023,7 +1053,18 @@ b.te
                   sortText: '00000000000000000003',
                   insertTextFormat: 1,
                   textEdit: {
-                    range: {
+                    newText: 'propertyIsEnumerable',
+                    insert: {
+                      start: {
+                        line: 7,
+                        character: 2,
+                      },
+                      end: {
+                        line: 7,
+                        character: 2,
+                      },
+                    },
+                    replace: {
                       start: {
                         line: 7,
                         character: 2,
@@ -1033,7 +1074,6 @@ b.te
                         character: 4,
                       },
                     },
-                    newText: 'propertyIsEnumerable',
                   },
                   command: {
                     title: '',
@@ -1063,7 +1103,18 @@ b.te
                   sortText: '00000000000000000004',
                   insertTextFormat: 1,
                   textEdit: {
-                    range: {
+                    newText: 'toLocaleString',
+                    insert: {
+                      start: {
+                        line: 7,
+                        character: 2,
+                      },
+                      end: {
+                        line: 7,
+                        character: 2,
+                      },
+                    },
+                    replace: {
                       start: {
                         line: 7,
                         character: 2,
@@ -1073,7 +1124,6 @@ b.te
                         character: 4,
                       },
                     },
-                    newText: 'toLocaleString',
                   },
                   command: {
                     title: '',
@@ -1102,7 +1152,18 @@ b.te
                   sortText: '00000000000000000005',
                   insertTextFormat: 1,
                   textEdit: {
-                    range: {
+                    newText: 'toString',
+                    insert: {
+                      start: {
+                        line: 7,
+                        character: 2,
+                      },
+                      end: {
+                        line: 7,
+                        character: 2,
+                      },
+                    },
+                    replace: {
                       start: {
                         line: 7,
                         character: 2,
@@ -1112,7 +1173,6 @@ b.te
                         character: 4,
                       },
                     },
-                    newText: 'toString',
                   },
                   command: {
                     title: '',
@@ -1142,7 +1202,18 @@ b.te
                   sortText: '00000000000000000006',
                   insertTextFormat: 1,
                   textEdit: {
-                    range: {
+                    newText: 'valueOf',
+                    insert: {
+                      start: {
+                        line: 7,
+                        character: 2,
+                      },
+                      end: {
+                        line: 7,
+                        character: 2,
+                      },
+                    },
+                    replace: {
                       start: {
                         line: 7,
                         character: 2,
@@ -1152,7 +1223,6 @@ b.te
                         character: 4,
                       },
                     },
-                    newText: 'valueOf',
                   },
                   command: {
                     title: '',
@@ -1197,7 +1267,18 @@ b.te
                   sortText: '00000000000000000000',
                   insertTextFormat: 1,
                   textEdit: {
-                    range: {
+                    newText: 'test',
+                    insert: {
+                      start: {
+                        line: 7,
+                        character: 2,
+                      },
+                      end: {
+                        line: 7,
+                        character: 3,
+                      },
+                    },
+                    replace: {
                       start: {
                         line: 7,
                         character: 2,
@@ -1207,7 +1288,6 @@ b.te
                         character: 4,
                       },
                     },
-                    newText: 'test',
                   },
                   command: {
                     title: '',
@@ -1237,7 +1317,18 @@ b.te
                   sortText: '00000000000000000001',
                   insertTextFormat: 1,
                   textEdit: {
-                    range: {
+                    newText: 'hasOwnProperty',
+                    insert: {
+                      start: {
+                        line: 7,
+                        character: 2,
+                      },
+                      end: {
+                        line: 7,
+                        character: 3,
+                      },
+                    },
+                    replace: {
                       start: {
                         line: 7,
                         character: 2,
@@ -1247,7 +1338,6 @@ b.te
                         character: 4,
                       },
                     },
-                    newText: 'hasOwnProperty',
                   },
                   command: {
                     title: '',
@@ -1277,7 +1367,18 @@ b.te
                   sortText: '00000000000000000002',
                   insertTextFormat: 1,
                   textEdit: {
-                    range: {
+                    newText: 'isPrototypeOf',
+                    insert: {
+                      start: {
+                        line: 7,
+                        character: 2,
+                      },
+                      end: {
+                        line: 7,
+                        character: 3,
+                      },
+                    },
+                    replace: {
                       start: {
                         line: 7,
                         character: 2,
@@ -1287,7 +1388,6 @@ b.te
                         character: 4,
                       },
                     },
-                    newText: 'isPrototypeOf',
                   },
                   command: {
                     title: '',
@@ -1317,7 +1417,18 @@ b.te
                   sortText: '00000000000000000003',
                   insertTextFormat: 1,
                   textEdit: {
-                    range: {
+                    newText: 'propertyIsEnumerable',
+                    insert: {
+                      start: {
+                        line: 7,
+                        character: 2,
+                      },
+                      end: {
+                        line: 7,
+                        character: 3,
+                      },
+                    },
+                    replace: {
                       start: {
                         line: 7,
                         character: 2,
@@ -1327,7 +1438,6 @@ b.te
                         character: 4,
                       },
                     },
-                    newText: 'propertyIsEnumerable',
                   },
                   command: {
                     title: '',
@@ -1357,7 +1467,18 @@ b.te
                   sortText: '00000000000000000004',
                   insertTextFormat: 1,
                   textEdit: {
-                    range: {
+                    newText: 'toLocaleString',
+                    insert: {
+                      start: {
+                        line: 7,
+                        character: 2,
+                      },
+                      end: {
+                        line: 7,
+                        character: 3,
+                      },
+                    },
+                    replace: {
                       start: {
                         line: 7,
                         character: 2,
@@ -1367,7 +1488,6 @@ b.te
                         character: 4,
                       },
                     },
-                    newText: 'toLocaleString',
                   },
                   command: {
                     title: '',
@@ -1396,7 +1516,18 @@ b.te
                   sortText: '00000000000000000005',
                   insertTextFormat: 1,
                   textEdit: {
-                    range: {
+                    newText: 'toString',
+                    insert: {
+                      start: {
+                        line: 7,
+                        character: 2,
+                      },
+                      end: {
+                        line: 7,
+                        character: 3,
+                      },
+                    },
+                    replace: {
                       start: {
                         line: 7,
                         character: 2,
@@ -1406,7 +1537,6 @@ b.te
                         character: 4,
                       },
                     },
-                    newText: 'toString',
                   },
                   command: {
                     title: '',
@@ -1436,7 +1566,18 @@ b.te
                   sortText: '00000000000000000006',
                   insertTextFormat: 1,
                   textEdit: {
-                    range: {
+                    newText: 'valueOf',
+                    insert: {
+                      start: {
+                        line: 7,
+                        character: 2,
+                      },
+                      end: {
+                        line: 7,
+                        character: 3,
+                      },
+                    },
+                    replace: {
                       start: {
                         line: 7,
                         character: 2,
@@ -1446,7 +1587,6 @@ b.te
                         character: 4,
                       },
                     },
-                    newText: 'valueOf',
                   },
                   command: {
                     title: '',

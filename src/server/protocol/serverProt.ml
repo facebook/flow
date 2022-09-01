@@ -183,12 +183,18 @@ module Response = struct
 
   type textedit = Loc.t * string
 
+  type insert_replace_edit = {
+    newText: string;
+    insert: Loc.t;
+    replace: Loc.t;
+  }
+
   module Completion = struct
     type completion_item = {
       detail: string;
       kind: Lsp.Completion.completionItemKind option;
       name: string;
-      text_edit: textedit option;
+      text_edit: insert_replace_edit option;
       additional_text_edits: textedit list;
       sort_text: string option;
       preselect: bool;

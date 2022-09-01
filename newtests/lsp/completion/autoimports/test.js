@@ -598,7 +598,18 @@ module.exports = (suite(
                   sortText: '00000000000000000000',
                   insertTextFormat: 1,
                   textEdit: {
-                    range: {
+                    newText: 'not_null',
+                    insert: {
+                      start: {
+                        line: 2,
+                        character: 0,
+                      },
+                      end: {
+                        line: 2,
+                        character: 3,
+                      },
+                    },
+                    replace: {
                       start: {
                         line: 2,
                         character: 0,
@@ -608,7 +619,6 @@ module.exports = (suite(
                         character: 4,
                       },
                     },
-                    newText: 'not_null',
                   },
                   additionalTextEdits: [
                     {

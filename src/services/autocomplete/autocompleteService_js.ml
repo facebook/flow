@@ -65,9 +65,9 @@ let lsp_completion_of_decl =
 
 let sort_text_of_rank rank = Some (Printf.sprintf "%020u" rank)
 
-let text_edit ?insert_text (name, loc) =
+let text_edit ?insert_text name (insert, replace) =
   let newText = Base.Option.value ~default:name insert_text in
-  (loc, newText)
+  { ServerProt.Response.newText; insert; replace }
 
 let detail_of_ty ~exact_by_default ty =
   let type_ = Ty_printer.string_of_t_single_line ~with_comments:false ~exact_by_default ty in
@@ -105,11 +105,11 @@ let autocomplete_create_result
     ?tags
     ~exact_by_default
     ~log_info
-    (name, loc)
+    (name, edit_locs)
     ty =
   let (cli_detail, lsp_detail) = detail_of_ty ~exact_by_default ty in
   let kind = lsp_completion_of_type ty in
-  let text_edit = Some (text_edit ?insert_text (name, loc)) in
+  let text_edit = Some (text_edit ?insert_text name edit_locs) in
   let sort_text = sort_text_of_rank rank in
   {
     ServerProt.Response.Completion.kind;
@@ -134,7 +134,7 @@ let autocomplete_create_result_decl
     ?tags
     ~exact_by_default
     ~log_info
-    (name, loc)
+    (name, edit_locs)
     d =
   let open Ty in
   let (kind, (cli_detail, lsp_detail)) =
@@ -143,7 +143,7 @@ let autocomplete_create_result_decl
     | Ty.VariableDecl (_, ty) -> (Some Lsp.Completion.Variable, detail_of_ty ~exact_by_default ty)
     | d -> (Some (lsp_completion_of_decl d), detail_of_ty_decl ~exact_by_default d)
   in
-  let text_edit = Some (text_edit ?insert_text (name, loc)) in
+  let text_edit = Some (text_edit ?insert_text name edit_locs) in
   let sort_text = sort_text_of_rank rank in
   {
     ServerProt.Response.Completion.kind;
@@ -168,7 +168,7 @@ let autocomplete_create_result_elt
     ?tags
     ~exact_by_default
     ~log_info
-    (name, loc)
+    (name, edit_locs)
     elt =
   match elt with
   | Ty.Type t ->
@@ -180,7 +180,7 @@ let autocomplete_create_result_elt
       ?tags
       ~exact_by_default
       ~log_info
-      (name, loc)
+      (name, edit_locs)
       t
   | Ty.Decl d ->
     autocomplete_create_result_decl
@@ -191,7 +191,7 @@ let autocomplete_create_result_elt
       ?tags
       ~exact_by_default
       ~log_info
-      (name, loc)
+      (name, edit_locs)
       d
 
 let ty_normalizer_options =
@@ -433,7 +433,7 @@ let rec literals_of_ty acc ty =
   | Ty.Bool _ -> Ty.BoolLit true :: Ty.BoolLit false :: acc
   | _ -> acc
 
-let autocomplete_literals ~prefer_single_quotes ~cx ~genv ~tparams_rev ~ac_loc ~upper_bound =
+let autocomplete_literals ~prefer_single_quotes ~cx ~genv ~tparams_rev ~edit_locs ~upper_bound =
   let scheme = { Type.TypeScheme.tparams_rev; type_ = upper_bound } in
   let options = ty_normalizer_options in
   let upper_bound_ty =
@@ -463,7 +463,7 @@ let autocomplete_literals ~prefer_single_quotes ~cx ~genv ~tparams_rev ~ac_loc ~
         ~preselect:true
         ~exact_by_default
         ~log_info:"literal from upper bound"
-        (name, ac_loc)
+        (name, edit_locs)
         ty
   )
 
@@ -475,7 +475,7 @@ let flow_text_edit_of_lsp_text_edit { Lsp.TextEdit.range; newText } =
   (loc, newText)
 
 let completion_item_of_autoimport
-    ~options ~reader ~src_dir ~ast ~ac_loc { Export_search.name; source; kind } rank =
+    ~options ~reader ~src_dir ~ast ~edit_locs { Export_search.name; source; kind } rank =
   match
     Code_action_service.text_edits_of_import ~options ~reader ~src_dir ~ast kind name source
   with
@@ -484,7 +484,7 @@ let completion_item_of_autoimport
       ServerProt.Response.Completion.kind = Some Lsp.Completion.Variable;
       name;
       detail = "(global)" (* TODO: include the type *);
-      text_edit = Some (text_edit (name, ac_loc));
+      text_edit = Some (text_edit name edit_locs);
       additional_text_edits = [];
       sort_text = sort_text_of_rank rank;
       preselect = false;
@@ -500,7 +500,7 @@ let completion_item_of_autoimport
       ServerProt.Response.Completion.kind = Some Lsp.Completion.Variable;
       name;
       detail = title (* TODO: include the type *);
-      text_edit = Some (text_edit (name, ac_loc));
+      text_edit = Some (text_edit name edit_locs);
       additional_text_edits;
       sort_text = sort_text_of_rank rank;
       preselect = false;
@@ -526,7 +526,7 @@ let is_reserved name kind =
     Parser_env.is_reserved_type name
 
 let append_completion_items_of_autoimports
-    ~options ~reader ~ast ~ac_loc ~locals ~imports_ranked_usage auto_imports acc =
+    ~options ~reader ~ast ~ac_loc ~locals ~imports_ranked_usage ~edit_locs auto_imports acc =
   let src_dir = src_dir_of_loc ac_loc in
   let sorted_auto_imports =
     if imports_ranked_usage then
@@ -560,7 +560,7 @@ let append_completion_items_of_autoimports
             ~reader
             ~src_dir
             ~ast
-            ~ac_loc
+            ~edit_locs
             auto_import
             (100 + rank)
         in
@@ -582,6 +582,7 @@ let autocomplete_id
     ~imports
     ~imports_ranked_usage
     ~tparams_rev
+    ~edit_locs
     ~token
     ~type_ =
   (* TODO: filter to results that match `token` *)
@@ -592,7 +593,7 @@ let autocomplete_id
   let upper_bound = upper_bound_t_of_t ~cx type_ in
   let prefer_single_quotes = Options.format_single_quotes options in
   let results =
-    autocomplete_literals ~prefer_single_quotes ~cx ~genv ~tparams_rev ~ac_loc ~upper_bound
+    autocomplete_literals ~prefer_single_quotes ~cx ~genv ~tparams_rev ~edit_locs ~upper_bound
   in
   let rank =
     if results = [] then
@@ -626,7 +627,7 @@ let autocomplete_id
                  ?tags
                  ~exact_by_default
                  ~log_info:"local value identifier"
-                 (name, ac_loc)
+                 (name, edit_locs)
                  elt
              in
              (result :: items_rev, errors_to_log)
@@ -642,7 +643,7 @@ let autocomplete_id
         kind = Some Lsp.Completion.Variable;
         name = "this";
         detail = "this";
-        text_edit = Some (text_edit ("this", ac_loc));
+        text_edit = Some (text_edit "this" edit_locs);
         additional_text_edits = [];
         sort_text = sort_text_of_rank rank;
         preselect = false;
@@ -663,7 +664,7 @@ let autocomplete_id
         kind = Some Lsp.Completion.Variable;
         name = "super";
         detail = "super";
-        text_edit = Some (text_edit ("super", ac_loc));
+        text_edit = Some (text_edit "super" edit_locs);
         additional_text_edits = [];
         sort_text = sort_text_of_rank rank;
         preselect = false;
@@ -701,6 +702,7 @@ let autocomplete_id
             ~ac_loc
             ~locals
             ~imports_ranked_usage
+            ~edit_locs
             auto_imports
             items_rev
         in
@@ -712,7 +714,8 @@ let autocomplete_id
   let result = { ServerProt.Response.Completion.items = List.rev items_rev; is_incomplete } in
   { result; errors_to_log }
 
-let type_exports_of_module_ty ~ac_loc ~exact_by_default ~documentation_and_tags_of_module_member =
+let type_exports_of_module_ty ~edit_locs ~exact_by_default ~documentation_and_tags_of_module_member
+    =
   let open ServerProt.Response.Completion in
   let open Ty in
   function
@@ -728,7 +731,7 @@ let type_exports_of_module_ty ~ac_loc ~exact_by_default ~documentation_and_tags_
             {
               kind = lsp_completion_of_type t;
               name = sym_name;
-              text_edit = Some (text_edit (sym_name, ac_loc));
+              text_edit = Some (text_edit sym_name edit_locs);
               additional_text_edits = [];
               detail = cli_detail;
               sort_text = None;
@@ -747,7 +750,7 @@ let type_exports_of_module_ty ~ac_loc ~exact_by_default ~documentation_and_tags_
             {
               kind = Some Lsp.Completion.Interface;
               name = sym_name;
-              text_edit = Some (text_edit (sym_name, ac_loc));
+              text_edit = Some (text_edit sym_name edit_locs);
               additional_text_edits = [];
               detail = cli_detail;
               sort_text = None;
@@ -766,7 +769,7 @@ let type_exports_of_module_ty ~ac_loc ~exact_by_default ~documentation_and_tags_
             {
               kind = Some Lsp.Completion.Class;
               name = sym_name;
-              text_edit = Some (text_edit (sym_name, ac_loc));
+              text_edit = Some (text_edit sym_name edit_locs);
               additional_text_edits = [];
               detail = cli_detail;
               sort_text = None;
@@ -785,7 +788,7 @@ let type_exports_of_module_ty ~ac_loc ~exact_by_default ~documentation_and_tags_
             {
               kind = Some Lsp.Completion.Enum;
               name = sym_name;
-              text_edit = Some (text_edit (sym_name, ac_loc));
+              text_edit = Some (text_edit sym_name edit_locs);
               additional_text_edits = [];
               detail = cli_detail;
               sort_text = None;
@@ -857,12 +860,12 @@ class local_type_identifiers_searcher =
       x
   end
 
-let make_builtin_type ~ac_loc name =
+let make_builtin_type ~edit_locs name =
   {
     ServerProt.Response.Completion.kind = Some Lsp.Completion.Variable;
     name;
     detail = name;
-    text_edit = Some (text_edit (name, ac_loc));
+    text_edit = Some (text_edit name edit_locs);
     additional_text_edits = [];
     sort_text = sort_text_of_rank 0;
     preselect = false;
@@ -889,12 +892,12 @@ let builtin_types =
     "symbol";
   ]
 
-let make_utility_type ~ac_loc name =
+let make_utility_type ~edit_locs name =
   {
     ServerProt.Response.Completion.kind = Some Lsp.Completion.Function;
     name;
     detail = name;
-    text_edit = Some (text_edit (name, ac_loc));
+    text_edit = Some (text_edit name edit_locs);
     additional_text_edits = [];
     sort_text = sort_text_of_rank 200 (* below globals *);
     preselect = false;
@@ -927,13 +930,13 @@ let utility_types =
     "$Values";
   ]
 
-let make_type_param ~ac_loc { Type.name; _ } =
+let make_type_param ~edit_locs { Type.name; _ } =
   let name = Subst_name.string_of_subst_name name in
   {
     ServerProt.Response.Completion.kind = Some Lsp.Completion.TypeParameter;
     name;
     detail = name;
-    text_edit = Some (text_edit (name, ac_loc));
+    text_edit = Some (text_edit name edit_locs);
     additional_text_edits = [];
     sort_text = sort_text_of_rank 0;
     preselect = false;
@@ -965,15 +968,16 @@ let autocomplete_unqualified_type
     ~ac_loc
     ~ast
     ~typed_ast
+    ~edit_locs
     ~token =
   (* TODO: filter to results that match `token` *)
   let ac_loc = loc_of_aloc ~reader ac_loc |> Autocomplete_sigil.remove_from_loc in
   let exact_by_default = Context.exact_by_default cx in
   let items_rev =
     []
-    |> Base.List.rev_map_append builtin_types ~f:(make_builtin_type ~ac_loc)
-    |> Base.List.rev_map_append utility_types ~f:(make_utility_type ~ac_loc)
-    |> Base.List.rev_map_append tparams_rev ~f:(make_type_param ~ac_loc)
+    |> Base.List.rev_map_append builtin_types ~f:(make_builtin_type ~edit_locs)
+    |> Base.List.rev_map_append utility_types ~f:(make_utility_type ~edit_locs)
+    |> Base.List.rev_map_append tparams_rev ~f:(make_type_param ~edit_locs)
   in
   let type_identifiers = local_type_identifiers ~typed_ast ~cx ~file_sig in
   let (items_rev, errors_to_log) =
@@ -992,7 +996,7 @@ let autocomplete_unqualified_type
                  ?tags
                  ~exact_by_default
                  ~log_info:"unqualified type: local type identifier"
-                 (name, ac_loc)
+                 (name, edit_locs)
                  elt
              in
              (result :: items_rev, errors_to_log)
@@ -1033,13 +1037,13 @@ let autocomplete_unqualified_type
                  ?tags
                  ~exact_by_default
                  ~log_info:"unqualified type: class or enum"
-                 (name, ac_loc)
+                 (name, edit_locs)
                  elt
              in
              (result :: items_rev, errors_to_log)
            | Ok elt
              when type_exports_of_module_ty
-                    ~ac_loc
+                    ~edit_locs
                     ~exact_by_default
                     ~documentation_and_tags_of_module_member:(fun _ -> (None, None))
                     elt
@@ -1050,7 +1054,7 @@ let autocomplete_unqualified_type
                  ?tags
                  ~exact_by_default
                  ~log_info:"unqualified type -> qualified type"
-                 (name, ac_loc)
+                 (name, edit_locs)
                  elt
                  ~insert_text:(name ^ ".")
              in
@@ -1077,6 +1081,7 @@ let autocomplete_unqualified_type
           ~ac_loc
           ~locals
           ~imports_ranked_usage
+          ~edit_locs
           auto_imports
           items_rev
       in
@@ -1086,6 +1091,20 @@ let autocomplete_unqualified_type
   in
   let result = { ServerProt.Response.Completion.items = Base.List.rev items_rev; is_incomplete } in
   { result; errors_to_log }
+
+(** If the token is a string literal, then the end of the token may be inaccurate
+    due to parse errors. See tests/autocomplete/bracket_syntax_3.js for example. *)
+let fix_loc_of_string_token token loc =
+  match token.[0] with
+  | '\''
+  | '"' ->
+    { loc with Loc._end = loc.Loc.start }
+  | _ -> loc
+
+let fix_locs_of_string_token token (insert_loc, replace_loc) =
+  let insert_loc = fix_loc_of_string_token token insert_loc in
+  let replace_loc = fix_loc_of_string_token token replace_loc in
+  (insert_loc, replace_loc)
 
 let autocomplete_member
     ~env
@@ -1097,6 +1116,7 @@ let autocomplete_member
     ~typed_ast
     ~imports
     ~imports_ranked_usage
+    ~edit_locs
     ~token
     this
     in_optional_chain
@@ -1105,16 +1125,7 @@ let autocomplete_member
     ~bracket_syntax
     ~member_loc
     ~is_type_annotation =
-  let ac_loc =
-    let ac_loc = loc_of_aloc ~reader ac_aloc |> Autocomplete_sigil.remove_from_loc in
-    (* If the token is a string literal, then the end of the token may be inaccurate
-     * due to parse errors. See tests/autocomplete/bracket_syntax_3.js for example. *)
-    match token.[0] with
-    | '\''
-    | '"' ->
-      Loc.{ ac_loc with _end = ac_loc.start }
-    | _ -> ac_loc
-  in
+  let edit_locs = fix_locs_of_string_token token edit_locs in
   let exact_by_default = Context.exact_by_default cx in
   (* When autocompleting a type annotation, it is extremely unlikely that someone wants the type
    * of a member from the prototype of the object type. If they really want that they can get the
@@ -1192,7 +1203,7 @@ let autocomplete_member
                  ?tags
                  ~exact_by_default
                  ~log_info:"member"
-                 (name, ac_loc)
+                 (name, edit_locs)
                  ty
              | (false, _, _, Some _, _, _)
              | (_, true, _, Some _, _, _)
@@ -1205,12 +1216,13 @@ let autocomplete_member
                  ?tags
                  ~exact_by_default
                  ~log_info:"bracket syntax member"
-                 (insert_text, ac_loc)
+                 (insert_text, edit_locs)
                  ty
              | (false, _, _, None, Some member_loc, false)
              | (_, true, _, None, Some member_loc, false)
              | (_, _, true, None, Some member_loc, false) ->
                let insert_text = Printf.sprintf "[%s]" (Lazy.force name_as_indexer) in
+               let edit_loc = edit_loc_of_member_loc member_loc in
                autocomplete_create_result
                  ~insert_text
                  ~rank
@@ -1218,7 +1230,7 @@ let autocomplete_member
                  ?tags
                  ~exact_by_default
                  ~log_info:"dot-member switched to bracket-syntax member"
-                 (insert_text, edit_loc_of_member_loc member_loc)
+                 (insert_text, (edit_loc, edit_loc))
                  ty
              | (true, false, false, _, Some member_loc, _) ->
                let opt_chain_name =
@@ -1228,6 +1240,7 @@ let autocomplete_member
                  | (_, false) ->
                    Printf.sprintf "?.[%s]" (Lazy.force name_as_indexer)
                in
+               let edit_loc = Autocomplete_sigil.remove_from_loc member_loc in
                autocomplete_create_result
                  ~insert_text:opt_chain_name
                  ~rank
@@ -1235,7 +1248,7 @@ let autocomplete_member
                  ?tags
                  ~exact_by_default
                  ~log_info:"start optional chain"
-                 (opt_chain_name, Autocomplete_sigil.remove_from_loc member_loc)
+                 (opt_chain_name, (edit_loc, edit_loc))
                  opt_chain_ty
          )
     in
@@ -1261,6 +1274,7 @@ let autocomplete_member
             ~ast
             ~typed_ast
             ~file_sig
+            ~edit_locs
             ~token
         else
           autocomplete_id
@@ -1277,6 +1291,7 @@ let autocomplete_member
             ~imports
             ~imports_ranked_usage
             ~tparams_rev
+            ~edit_locs
             ~token
             ~type_
       in
@@ -1337,6 +1352,7 @@ let autocomplete_jsx_element
     ~imports
     ~imports_ranked_usage
     ~tparams_rev
+    ~edit_locs
     ~token
     ~type_ =
   let ({ result; errors_to_log } as results) =
@@ -1354,6 +1370,7 @@ let autocomplete_jsx_element
       ~imports
       ~imports_ranked_usage
       ~tparams_rev
+      ~edit_locs
       ~token
       ~type_
   in
@@ -1390,9 +1407,13 @@ let autocomplete_jsx_element
    component class and we want to enumerate the members of its declared props
    type, so we need to extract that and then route to autocomplete_member. *)
 let autocomplete_jsx_attribute
-    ~reader cx file_sig typed_ast cls ac_name ~used_attr_names ~has_value ac_loc ~tparams_rev =
+    ~reader cx file_sig typed_ast cls attribute ~used_attr_names ~has_value ~tparams_rev ~edit_locs
+    =
   let open Flow_js in
-  let reason = Reason.mk_reason (Reason.RCustom ac_name) ac_loc in
+  let reason =
+    let (aloc, name) = attribute in
+    Reason.mk_reason (Reason.RCustom name) aloc
+  in
   let props_object =
     Tvar.mk_where cx reason (fun tvar ->
         let use_op = Type.Op Type.UnknownUse in
@@ -1416,7 +1437,6 @@ let autocomplete_jsx_attribute
       props_object
       ~tparams_rev
   in
-  let ac_loc = loc_of_aloc ~reader ac_loc |> Autocomplete_sigil.remove_from_loc in
   match mems_result with
   | Error err -> AcFatalError err
   | Ok (mems, errors_to_log, _) ->
@@ -1435,15 +1455,14 @@ let autocomplete_jsx_attribute
                ?tags
                ~exact_by_default
                ~log_info:"jsx attribute"
-               (name, ac_loc)
+               (name, edit_locs)
                ty
          )
     in
     let result = { ServerProt.Response.Completion.items; is_incomplete = false } in
     AcResult { result; errors_to_log }
 
-let autocomplete_qualified_type ~reader ~cx ~ac_loc ~file_sig ~typed_ast ~tparams_rev ~qtype =
-  let ac_loc = loc_of_aloc ~reader ac_loc |> Autocomplete_sigil.remove_from_loc in
+let autocomplete_qualified_type ~reader ~cx ~file_sig ~typed_ast ~tparams_rev ~qtype ~edit_locs =
   let qtype_scheme = Type.TypeScheme.{ tparams_rev; type_ = qtype } in
   let exact_by_default = Context.exact_by_default cx in
   let module_ty_res =
@@ -1460,7 +1479,7 @@ let autocomplete_qualified_type ~reader ~cx ~ac_loc ~file_sig ~typed_ast ~tparam
     | Error err -> ([], [Ty_normalizer.error_to_string err])
     | Ok module_ty ->
       ( type_exports_of_module_ty
-          ~ac_loc
+          ~edit_locs
           ~exact_by_default
           ~documentation_and_tags_of_module_member
           module_ty,
@@ -1476,22 +1495,14 @@ let autocomplete_object_key
     ~cx
     ~file_sig
     ~typed_ast
+    ~edit_locs
     ~token
     ~used_keys
     ~spreads
     obj_type
-    ac_aloc
     ~tparams_rev =
-  let ac_loc =
-    let ac_loc = loc_of_aloc ~reader ac_aloc |> Autocomplete_sigil.remove_from_loc in
-    (* If the token is a string literal, then the end of the token may be inaccurate
-     * due to parse errors. See tests/autocomplete/bracket_syntax_3.js for example. *)
-    match token.[0] with
-    | '\''
-    | '"' ->
-      Loc.{ ac_loc with _end = ac_loc.start }
-    | _ -> ac_loc
-  in
+  let edit_locs = fix_locs_of_string_token token edit_locs in
+  let (insert_loc, _replace_loc) = edit_locs in
   let exact_by_default = Context.exact_by_default cx in
   let exclude_keys =
     Base.List.fold ~init:used_keys spreads ~f:(fun acc (spread_loc, spread_type) ->
@@ -1499,7 +1510,7 @@ let autocomplete_object_key
            insertion we do not use it to exclude properties from our autcomplete
            suggestions. It is a common pattern to use a spread to set default values and
            then override some of those defaults. *)
-        if Loc.compare spread_loc ac_loc < 0 then
+        if Loc.compare spread_loc insert_loc < 0 then
           acc
         else
           let spread_keys =
@@ -1546,7 +1557,7 @@ let autocomplete_object_key
                  ?tags
                  ~exact_by_default
                  ~log_info:"object key"
-                 (name, ac_loc)
+                 (name, edit_locs)
                  ty
              else
                let insert_text =
@@ -1570,7 +1581,7 @@ let autocomplete_object_key
                  ?tags
                  ~exact_by_default
                  ~log_info:"bracket syntax object key"
-                 (insert_text, ac_loc)
+                 (insert_text, edit_locs)
                  ty
          )
     in
@@ -1599,6 +1610,16 @@ let autocomplete_get_results
       ("None", AcResult { result; errors_to_log = ["Autocomplete token not found in AST"] })
     )
   | Some { tparams_rev; ac_loc; token; autocomplete_type } ->
+    (* say you're completing `foo|Baz`. the token is "fooBaz" and ac_loc points at
+       "fooAUTO332Baz". if the suggestion is "fooBar", the user can choose to insert
+       into the token, yielding "fooBarBaz", or they can choose to replace the token,
+       yielding "fooBar". *)
+    let edit_locs =
+      let replace_loc = loc_of_aloc ~reader ac_loc |> Autocomplete_sigil.remove_from_loc in
+      (* invariant: the cursor must be inside ac_loc *)
+      let insert_loc = Loc.btwn replace_loc cursor in
+      (insert_loc, replace_loc)
+    in
     ( Some token,
       Some ac_loc,
       (match autocomplete_type with
@@ -1621,22 +1642,21 @@ let autocomplete_get_results
             ~cx
             ~file_sig
             ~typed_ast
+            ~edit_locs
             ~token
             ~used_keys
             ~spreads
             obj_type
-            ac_loc
             ~tparams_rev
         )
       | Ac_literal { lit_type } ->
-        let ac_loc = loc_of_aloc ~reader ac_loc |> Autocomplete_sigil.remove_from_loc in
         let genv =
           Ty_normalizer_env.mk_genv ~full_cx:cx ~file:(Context.file cx) ~typed_ast ~file_sig
         in
         let upper_bound = upper_bound_t_of_t ~cx lit_type in
         let prefer_single_quotes = Options.format_single_quotes options in
         let items =
-          autocomplete_literals ~prefer_single_quotes ~cx ~genv ~tparams_rev ~ac_loc ~upper_bound
+          autocomplete_literals ~prefer_single_quotes ~cx ~genv ~tparams_rev ~edit_locs ~upper_bound
         in
         let result = ServerProt.Response.Completion.{ items; is_incomplete = false } in
         ("Acliteral", AcResult { result; errors_to_log = [] })
@@ -1657,6 +1677,7 @@ let autocomplete_get_results
                ~imports
                ~imports_ranked_usage
                ~tparams_rev
+               ~edit_locs
                ~token
                ~type_
             )
@@ -1673,6 +1694,7 @@ let autocomplete_get_results
             ~typed_ast
             ~imports
             ~imports_ranked_usage
+            ~edit_locs
             ~token
             obj_type
             in_optional_chain
@@ -1696,6 +1718,7 @@ let autocomplete_get_results
             ~imports
             ~imports_ranked_usage
             ~tparams_rev
+            ~edit_locs
             ~token
             ~type_
         )
@@ -1707,11 +1730,11 @@ let autocomplete_get_results
             file_sig
             typed_ast
             component_t
-            attribute_name
+            (ac_loc, attribute_name)
             ~used_attr_names
             ~has_value
-            ac_loc
             ~tparams_rev
+            ~edit_locs
         )
       | Ac_type ->
         ( "Actype",
@@ -1728,11 +1751,19 @@ let autocomplete_get_results
                ~ast
                ~typed_ast
                ~file_sig
+               ~edit_locs
                ~token
             )
         )
       | Ac_qualified_type qtype ->
         ( "Acqualifiedtype",
-          autocomplete_qualified_type ~reader ~cx ~ac_loc ~file_sig ~typed_ast ~tparams_rev ~qtype
+          autocomplete_qualified_type
+            ~reader
+            ~cx
+            ~file_sig
+            ~typed_ast
+            ~tparams_rev
+            ~qtype
+            ~edit_locs
         ))
     )

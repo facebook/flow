@@ -408,7 +408,11 @@ class TestStepFirstStage extends TestStepFirstOrSecondStage {
       workspace: {},
       textDocument: {
         synchronization: {},
-        completion: {},
+        completion: {
+          completionItem: {
+            insertReplaceSupport: true,
+          },
+        },
         hover: {},
         definition: {},
         signatureHelp: {},
