@@ -1053,11 +1053,10 @@ class def_finder env_entries providers toplevel_scope =
               spread.Ast.Expression.SpreadElement.argument
         )
       else
-        match (callee, arguments, cond) with
-        | (_, [Ast.Expression.Expression expr], OtherConditionalTest)
-          when Flow_ast_utils.is_call_to_is_array callee ->
-          this#visit_expression ~hint:Hint_None ~cond:OtherConditionalTest expr
-        | (_, [Ast.Expression.Expression expr], _)
+        match (callee, arguments) with
+        | (_, [Ast.Expression.Expression expr]) when Flow_ast_utils.is_call_to_is_array callee ->
+          this#visit_expression ~hint:Hint_None ~cond expr
+        | (_, [Ast.Expression.Expression expr])
           when Flow_ast_utils.is_call_to_object_dot_freeze callee ->
           this#visit_expression ~hint ~cond:NonConditionalContext expr
         | _ ->
