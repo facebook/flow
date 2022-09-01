@@ -415,8 +415,7 @@ let resolve_annotated_function
 
 let resolve_class cx id_loc reason class_loc class_ =
   let cache = Context.node_cache cx in
-  let env = Context.environment cx in
-  let self = Base.Option.value_exn (Loc_env.find_write env Env_api.ClassSelfLoc class_loc) in
+  let self = Env.read_class_self_type cx class_loc in
   let ((class_t, class_t_internal, _, _) as sig_info) =
     Statement.mk_class_sig cx ~name_loc:id_loc ~class_loc reason self class_
   in
@@ -745,10 +744,7 @@ let init_type_param =
         Node_cache.set_tparam cache info;
         (name, tparam, t)
       | Class { class_loc; class_implicit_this_tparam = { tparams_map; class_tparams_loc }; _ } ->
-        let env = Context.environment cx in
-        let class_t =
-          Base.Option.value_exn (Loc_env.find_write env Env_api.ClassSelfLoc class_loc)
-        in
+        let class_t = Env.read_class_self_type cx class_loc in
         let (this_param, this_t) =
           let class_tparams =
             Base.Option.map class_tparams_loc ~f:(fun tparams_loc ->
@@ -812,7 +808,6 @@ let resolve_component_type_params cx graph component =
   | IllegalSCC elts -> Nel.iter (fun (elt, _, _) -> resolve_element elt) elts
 
 let resolve_component cx graph component =
-  resolve_component_type_params cx graph component;
   let open Name_def_ordering in
   let resolve_element = function
     | Name_def_ordering.Normal (kind, loc)
@@ -839,6 +834,7 @@ let resolve_component cx graph component =
       entries
     | _ -> EnvSet.empty
   in
+  resolve_component_type_params cx graph component;
   let () =
     match component with
     | Singleton elt -> resolve_element elt
