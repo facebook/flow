@@ -1,0 +1,84 @@
+Error ----------------------------------------------------------------------------------------------------- arrow.js:2:4
+
+Cannot cast `this` to number because global object [1] is incompatible with number [2]. [incompatible-cast]
+
+   arrow.js:2:4
+   2|   (this: number); // ERROR
+         ^^^^ [1]
+
+References:
+   arrow.js:2:10
+   2|   (this: number); // ERROR
+               ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- arrow.js:7:2
+
+Cannot cast `f.a` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+
+   arrow.js:7:2
+   7| (f.a: empty); // ERROR
+       ^^^
+
+References:
+   arrow.js:4:7
+   4| f.a = 1;
+            ^ [1]
+   arrow.js:7:7
+   7| (f.a: empty); // ERROR
+            ^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------- function_declaration.js:11:2
+
+Cannot cast `f.a` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+
+   function_declaration.js:11:2
+   11| (f.a: empty); // ERROR
+        ^^^
+
+References:
+   function_declaration.js:5:7
+    5| f.a = 1;
+             ^ [1]
+   function_declaration.js:11:7
+   11| (f.a: empty); // ERROR
+             ^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------- function_declaration.js:12:2
+
+Cannot cast `f.b()` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+
+   function_declaration.js:12:2
+   12| (f.b(): empty); // ERROR
+        ^^^^^
+
+References:
+   function_declaration.js:6:13
+    6| f.b = () => 1;
+                   ^ [1]
+   function_declaration.js:12:9
+   12| (f.b(): empty); // ERROR
+               ^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------- function_expression.js:7:2
+
+Cannot cast `f.a` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+
+   function_expression.js:7:2
+   7| (f.a: empty); // ERROR
+       ^^^
+
+References:
+   function_expression.js:4:7
+   4| f.a = 1;
+            ^ [1]
+   function_expression.js:7:7
+   7| (f.a: empty); // ERROR
+            ^^^^^ [2]
+
+
+
+Found 5 errors
