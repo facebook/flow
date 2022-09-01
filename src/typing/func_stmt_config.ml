@@ -7,7 +7,7 @@
 
 module Ast = Flow_ast
 module Flow = Flow_js
-open Type
+open Reason
 open Hint_api
 
 module Make (Destructuring : Destructuring_sig.S) (Statement : Statement_sig.S) :
@@ -55,21 +55,7 @@ module Make (Destructuring : Destructuring_sig.S) (Statement : Statement_sig.S) 
     let t = Flow.subst cx map t in
     This { t; loc; annot }
 
-  let bind cx t loc =
-    if Context.enable_const_params cx then
-      Env.bind_implicit_const cx t loc
-    else
-      Env.bind_implicit_let cx t loc
-
-  let destruct cx ~use_op:_ ~name_loc ~has_anno _name t =
-    let t_bound =
-      if has_anno then
-        Annotated t
-      else
-        Inferred t
-    in
-    bind cx t_bound name_loc;
-    t
+  let destruct _cx ~use_op:_ ~name_loc:_ _name t = t
 
   let eval_default cx ~annot_t =
     let hint =
@@ -81,23 +67,10 @@ module Make (Destructuring : Destructuring_sig.S) (Statement : Statement_sig.S) 
 
   let eval_param cx (Param { t; loc; ploc; pattern; default; has_anno }) =
     match pattern with
-    | Id ({ Ast.Pattern.Identifier.name = ((name_loc, _), _); optional; _ } as id) ->
+    | Id ({ Ast.Pattern.Identifier.name = ((name_loc, _), { Ast.Identifier.name; _ }); _ } as id) ->
       let default = eval_default cx ~annot_t:None default in
-      let () =
-        let t =
-          if optional && default = None then
-            TypeUtil.optional t
-          else
-            t
-        in
-        let t =
-          if has_anno then
-            Annotated t
-          else
-            Inferred t
-        in
-        bind cx t name_loc
-      in
+      let reason = mk_reason (RIdentifier (OrdinaryName name)) name_loc in
+      let t = Env.find_write cx Env_api.OrdinaryNameLoc reason in
       (loc, { Ast.Function.Param.argument = ((ploc, t), Ast.Pattern.Identifier id); default })
     | Object { annot; properties; comments } ->
       let annot_t =
@@ -109,7 +82,7 @@ module Make (Destructuring : Destructuring_sig.S) (Statement : Statement_sig.S) 
       let properties =
         let default = Base.Option.map default ~f:(fun ((_, t), _) -> Default.expr t) in
         let init = Destructuring.empty ?default t ~annot:has_anno in
-        let f = destruct cx ~has_anno in
+        let f = destruct cx in
         Destructuring.object_properties cx ~f init properties
       in
       ( loc,
@@ -124,7 +97,7 @@ module Make (Destructuring : Destructuring_sig.S) (Statement : Statement_sig.S) 
       let elements =
         let default = Base.Option.map default ~f:(fun ((_, t), _) -> Default.expr t) in
         let init = Destructuring.empty ?default t ~annot:has_anno in
-        let f = destruct cx ~has_anno in
+        let f = destruct cx in
         Destructuring.array_elements cx ~f init elements
       in
       ( loc,
@@ -135,22 +108,14 @@ module Make (Destructuring : Destructuring_sig.S) (Statement : Statement_sig.S) 
         }
       )
 
-  let eval_rest cx (Rest { t; loc; ploc; id; has_anno }) =
-    let () =
-      let { Ast.Pattern.Identifier.name = ((loc, _), _); _ } = id in
-      let t =
-        if has_anno then
-          Annotated t
-        else
-          Inferred t
-      in
-      bind cx t loc
-    in
+  let eval_rest cx (Rest { t = _; loc; ploc; id; has_anno = _ }) =
+    let { Ast.Pattern.Identifier.name = ((name_loc, _), { Ast.Identifier.name; _ }); _ } = id in
+    let reason = mk_reason (RIdentifier (OrdinaryName name)) name_loc in
+    let t = Env.find_write cx Env_api.OrdinaryNameLoc reason in
     ( loc,
       { Ast.Function.RestParam.argument = ((ploc, t), Ast.Pattern.Identifier id); comments = None }
     )
 
-  let eval_this _ (This { t = _; annot; loc }) =
-    (* this does not bind any parameters *)
+  let eval_this _cx (This { t = _; annot; loc }) =
     (loc, { Ast.Function.ThisParam.annot; comments = None })
 end

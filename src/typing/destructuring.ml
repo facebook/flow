@@ -198,7 +198,7 @@ module Make (Statement : Statement_sig.S) : Destructuring_sig.S = struct
       (acc, xs, Tast_utils.error_mapper#pattern_object_property_key key)
 
   let identifier cx ~f acc name_loc name =
-    let { parent; current; init; default; annot } = acc in
+    let { parent; current = _; init; default; annot = _ } = acc in
     let () =
       match parent with
       (* If there was a parent pattern, we already dispatched the hook if relevant. *)
@@ -211,41 +211,8 @@ module Make (Statement : Statement_sig.S) : Destructuring_sig.S = struct
       | None ->
         Type_inference_hooks_js.dispatch_lval_hook cx name name_loc Type_inference_hooks_js.Id
     in
-    let current =
-      mod_reason_of_t
-        (update_desc_reason (function
-            | RDefaultValue
-            | RArrayPatternRestProp
-            | RObjectPatternRestProp ->
-              RIdentifier (OrdinaryName name)
-            | desc -> desc
-            )
-            )
-        current
-    in
     let reason = mk_reason (RIdentifier (OrdinaryName name)) name_loc in
-    let current =
-      (* If we are destructuring an annotation, the chain of constraints leading
-       * to here will preserve the 0->1 constraint. The mk_typeof_annotation
-       * helper will wrap the destructured type in an AnnotT, to ensure it is
-       * resolved before it is used as an upper bound. The helper also enforces
-       * the destructured type is 0->1 via BecomeT.
-       *
-       * The BecomeT part should not be necessary, but for now it is. Ideally an
-       * annotation would recursively be 0->1, but it's possible for them to
-       * contain inferred parts. For example, a class's instance type where one of
-       * the fields is unannotated. *)
-      if annot then
-        AnnotT
-          ( reason,
-            Tvar.mk_where cx reason (fun t' ->
-                Flow_js.flow cx (current, BecomeT { reason; t = t'; empty_success = true })
-            ),
-            false
-          )
-      else
-        current
-    in
+    let current = Env.find_write cx Env_api.OrdinaryNameLoc reason in
     let use_op =
       Op
         (AssignVar

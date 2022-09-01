@@ -735,17 +735,7 @@ let bind_class_instance_super cx t loc =
 let bind_class_static_super cx t loc =
   unify_write_entry cx ~use_op:Type.unknown_use t Env_api.ClassStaticSuperLoc loc
 
-let bind_implicit_let cx t loc =
-  match t with
-  | Annotated _ -> ()
-  | _ -> bind cx (TypeUtil.type_t_of_annotated_or_inferred t) ~kind:Env_api.OrdinaryNameLoc loc
-
 let bind_fun cx _name t loc = bind cx t ~kind:Env_api.OrdinaryNameLoc loc
-
-let bind_implicit_const cx t loc =
-  match t with
-  | Annotated _ -> ()
-  | _ -> bind cx (TypeUtil.type_t_of_annotated_or_inferred t) ~kind:Env_api.OrdinaryNameLoc loc
 
 let bind_this_tparam t loc = this_type_params := ALocMap.add loc t !this_type_params
 
