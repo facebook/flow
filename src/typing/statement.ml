@@ -6856,7 +6856,7 @@ module Make
     | None ->
       let def_reason = repos_reason class_loc reason in
       let this_in_class = Class_stmt_sig.This.in_class c in
-      let self = Env.init_class_self_type cx class_loc in
+      let self = Env.read_class_self_type cx class_loc in
       let (class_t, _, class_sig, class_ast_f) =
         mk_class_sig cx ~name_loc ~class_loc reason self c
       in

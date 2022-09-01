@@ -523,6 +523,11 @@ let var_ref ?(lookup_mode = ForValue) cx ?desc name loc =
   let t = query_var ~lookup_mode cx name ?desc loc in
   Flow_js.reposition cx loc t
 
+let read_class_self_type cx loc =
+  let env = Context.environment cx in
+  check_readable cx Env_api.ClassSelfLoc loc;
+  Base.Option.value_exn (Loc_env.find_write env Env_api.ClassSelfLoc loc)
+
 let is_global_var cx loc =
   let { Loc_env.var_info; _ } = Context.environment cx in
   let rec local_def_exists states =
@@ -842,11 +847,6 @@ let discriminant_after_negated_cases cx switch_loc refinement_key_opt =
 let get_next cx loc =
   let name = InternalName "next" in
   read_entry_exn ~lookup_mode:ForValue cx loc (mk_reason (RIdentifier name) loc)
-
-let init_class_self_type cx loc =
-  let env = Context.environment cx in
-  check_readable cx Env_api.ClassSelfLoc loc;
-  Base.Option.value_exn (Loc_env.find_write env Env_api.ClassSelfLoc loc)
 
 let init_declare_module_synthetic_module_exports cx ~export_type loc reason =
   let env = Context.environment cx in

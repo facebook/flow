@@ -126,6 +126,8 @@ val var_ref :
   ALoc.t ->
   Type.t
 
+val read_class_self_type : Context.t -> ALoc.t -> Type.t
+
 val find_write : Context.t -> Env_api.With_ALoc.def_loc_type -> Reason.reason -> Type.t
 
 val query_var :
@@ -149,8 +151,6 @@ val discriminant_after_negated_cases :
   Context.t -> ALoc.t -> (Reason.name * Key.proj list) option -> Type.t option
 
 val get_next : Context.t -> ALoc.t -> Type.t
-
-val init_class_self_type : Context.t -> ALoc.t -> Type.t
 
 val init_declare_module_synthetic_module_exports :
   Context.t ->
