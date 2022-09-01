@@ -98,3 +98,6 @@ f(a); // error: undefined ~/> number
 a = 10;
 
 f(a); // ok, a: number (not ?number)
+
+// --- classes ---
+class A extends A {} // error

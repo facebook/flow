@@ -691,11 +691,10 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
           ();
         cls
 
-      method! class_ _loc (cls : ('loc, 'loc) Ast.Class.t) =
+      method! class_ loc (cls : ('loc, 'loc) Ast.Class.t) =
         let open Ast.Class in
         let { id; body; tparams; extends; implements; class_decorators; comments = _ } = cls in
         ignore @@ Base.List.map ~f:this#class_decorator class_decorators;
-        ignore @@ Base.Option.map ~f:this#class_identifier id;
         let extends_targs =
           Base.Option.value_map
             extends
@@ -705,6 +704,7 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
               targs
           )
         in
+        this#class_identifier_opt ~class_loc:loc id;
         let implements_targs =
           Base.Option.value_map
             implements
@@ -725,6 +725,9 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
         in
         this#scoped_type_params tparams ~in_tparam_scope;
         cls
+
+      method private class_identifier_opt ~class_loc:_ id =
+        ignore @@ Base.Option.map ~f:this#class_identifier id
 
       method! declare_class _loc (decl : ('loc, 'loc) Ast.Statement.DeclareClass.t) =
         let open Ast.Statement.DeclareClass in

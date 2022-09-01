@@ -526,7 +526,9 @@ let var_ref ?(lookup_mode = ForValue) cx ?desc name loc =
 let read_class_self_type cx loc =
   let env = Context.environment cx in
   check_readable cx Env_api.ClassSelfLoc loc;
-  Base.Option.value_exn (Loc_env.find_write env Env_api.ClassSelfLoc loc)
+  match Loc_env.find_write env Env_api.ClassSelfLoc loc with
+  | Some t -> t
+  | None -> Tvar.mk cx (mk_reason (RCustom "unreachable") loc)
 
 let is_global_var cx loc =
   let { Loc_env.var_info; _ } = Context.environment cx in

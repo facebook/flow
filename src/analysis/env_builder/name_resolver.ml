@@ -3642,36 +3642,30 @@ module Make
       method! class_ loc cls =
         let open Ast.Class in
         SuperCallInDerivedCtorChecker.check cx loc cls;
-        ignore @@ Base.List.map ~f:this#class_decorator cls.class_decorators;
-        let () =
-          let reason =
-            match cls.id with
-            | Some ((name_loc, { Ast.Identifier.name; comments = _ }) as id) ->
-              ignore @@ this#pattern_identifier ~kind:Ast.Statement.VariableDeclaration.Let id;
-              mk_reason (RType (OrdinaryName name)) name_loc
-            | None ->
-              let reason = mk_reason (RType (OrdinaryName "<<anonymous class>>")) loc in
-              env_state <-
-                {
-                  env_state with
-                  write_entries =
-                    EnvMap.add_ordinary loc (Env_api.AssigningWrite reason) env_state.write_entries;
-                };
-              reason
-          in
-          let write = Env_api.AssigningWrite reason in
-          let write_entries =
-            EnvMap.add (Env_api.ClassSelfLoc, loc) write env_state.write_entries
-          in
-          env_state <- { env_state with write_entries }
-        in
         (* Give class body the location of the entire class,
            so class body visitor can use it as the def loc of super. *)
-        ignore
-        @@ super#class_
-             loc
-             { cls with id = None; class_decorators = []; body = (loc, snd cls.body) };
+        ignore @@ super#class_ loc { cls with body = (loc, snd cls.body) };
         cls
+
+      method! class_identifier_opt ~class_loc:loc id =
+        let reason =
+          match id with
+          | Some ((name_loc, { Ast.Identifier.name; comments = _ }) as id) ->
+            ignore @@ this#pattern_identifier ~kind:Ast.Statement.VariableDeclaration.Let id;
+            mk_reason (RType (OrdinaryName name)) name_loc
+          | None ->
+            let reason = mk_reason (RType (OrdinaryName "<<anonymous class>>")) loc in
+            env_state <-
+              {
+                env_state with
+                write_entries =
+                  EnvMap.add_ordinary loc (Env_api.AssigningWrite reason) env_state.write_entries;
+              };
+            reason
+        in
+        let write = Env_api.AssigningWrite reason in
+        let write_entries = EnvMap.add (Env_api.ClassSelfLoc, loc) write env_state.write_entries in
+        env_state <- { env_state with write_entries }
 
       method! class_body cls_body =
         let open Ast.Class.Body in
