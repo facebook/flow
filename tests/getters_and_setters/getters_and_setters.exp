@@ -1,102 +1,67 @@
-Error --------------------------------------------------------------------------------------------------- class.js:11:39
-
-Cannot assign `x` to `z` because string [1] is incompatible with number [2]. [incompatible-type]
-
-   class.js:11:39
-   11|   set goodSetterNoAnnotation(x) { z = x; } // TODO: bad error position
-                                             ^
-
-References:
-   class.js:46:30
-   46| foo.goodSetterNoAnnotation = "hello"; // Error string ~> number
-                                    ^^^^^^^ [1]
-   class.js:5:8
-    5| var z: number = 123;
-              ^^^^^^ [2]
-
-
-Error ---------------------------------------------------------------------------------------------------- class.js:28:3
+Error ---------------------------------------------------------------------------------------------------- class.js:25:3
 
 Computed property keys not supported. [unsupported-syntax]
 
-   28|   set [z](x: string) {}
+   25|   set [z](x: string) {}
          ^^^^^^^^^^^^^^^^^^^^^
 
 
-Error ---------------------------------------------------------------------------------------------------- class.js:29:3
+Error ---------------------------------------------------------------------------------------------------- class.js:26:3
 
 Computed property keys not supported. [unsupported-syntax]
 
-   29|   get [z](): string { return string; }
+   26|   get [z](): string { return string; }
          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
-Error --------------------------------------------------------------------------------------------------- class.js:38:36
+Error --------------------------------------------------------------------------------------------------- class.js:33:35
 
-Cannot assign `foo.goodGetterNoAnnotation` to `testGetterWithError1` because number [1] is incompatible with string [2].
-[incompatible-type]
-
-   class.js:38:36
-   38| var testGetterWithError1: string = foo.goodGetterNoAnnotation; // Error number ~> string
-                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-References:
-   class.js:8:41
-    8|   get goodGetterNoAnnotation() { return 4; }
-                                               ^ [1]
-   class.js:38:27
-   38| var testGetterWithError1: string = foo.goodGetterNoAnnotation; // Error number ~> string
-                                 ^^^^^^ [2]
-
-
-Error --------------------------------------------------------------------------------------------------- class.js:39:36
-
-Cannot assign `foo.goodGetterWithAnnotation` to `testGetterWithError2` because number [1] is incompatible with
+Cannot assign `foo.goodGetterWithAnnotation` to `testGetterWithError` because number [1] is incompatible with
 string [2]. [incompatible-type]
 
-   class.js:39:36
-   39| var testGetterWithError2: string = foo.goodGetterWithAnnotation; // Error number ~> string
-                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   class.js:33:35
+   33| var testGetterWithError: string = foo.goodGetterWithAnnotation; // Error number ~> string
+                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   class.js:9:35
-    9|   get goodGetterWithAnnotation(): number { return 4; }
+   class.js:8:35
+    8|   get goodGetterWithAnnotation(): number { return 4; }
                                          ^^^^^^ [1]
-   class.js:39:27
-   39| var testGetterWithError2: string = foo.goodGetterWithAnnotation; // Error number ~> string
-                                 ^^^^^^ [2]
+   class.js:33:26
+   33| var testGetterWithError: string = foo.goodGetterWithAnnotation; // Error number ~> string
+                                ^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- class.js:47:32
+Error --------------------------------------------------------------------------------------------------- class.js:37:32
 
 Cannot assign `"hello"` to `foo.goodSetterWithAnnotation` because string [1] is incompatible with number [2].
 [incompatible-type]
 
-   class.js:47:32
-   47| foo.goodSetterWithAnnotation = "hello"; // Error string ~> number
+   class.js:37:32
+   37| foo.goodSetterWithAnnotation = "hello"; // Error string ~> number
                                       ^^^^^^^ [1]
 
 References:
-   class.js:12:35
-   12|   set goodSetterWithAnnotation(x: number) { z = x; }
+   class.js:9:35
+    9|   set goodSetterWithAnnotation(x: number) { z = x; }
                                          ^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- class.js:49:44
+Error --------------------------------------------------------------------------------------------------- class.js:39:44
 
 Cannot assign `foo.propWithSubtypingGetterAndSetter` to `testSubtypingGetterAndSetter` because null or undefined [1] is
 incompatible with number [2]. [incompatible-type]
 
-   class.js:49:44
-   49| var testSubtypingGetterAndSetter: number = foo.propWithSubtypingGetterAndSetter; // Error ?number ~> number
+   class.js:39:44
+   39| var testSubtypingGetterAndSetter: number = foo.propWithSubtypingGetterAndSetter; // Error ?number ~> number
                                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   class.js:18:43
-   18|   get propWithSubtypingGetterAndSetter(): ?number { return 4; }
+   class.js:15:43
+   15|   get propWithSubtypingGetterAndSetter(): ?number { return 4; }
                                                  ^^^^^^^ [1]
-   class.js:49:35
-   49| var testSubtypingGetterAndSetter: number = foo.propWithSubtypingGetterAndSetter; // Error ?number ~> number
+   class.js:39:35
+   39| var testSubtypingGetterAndSetter: number = foo.propWithSubtypingGetterAndSetter; // Error ?number ~> number
                                          ^^^^^^ [2]
 
 
@@ -193,169 +158,134 @@ References:
                                          ^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------------- object.js:15:39
-
-Cannot assign `x` to `z` because string [1] is incompatible with number [2]. [incompatible-type]
-
-   object.js:15:39
-   15|   set goodSetterNoAnnotation(x) { z = x; },
-                                             ^
-
-References:
-   object.js:54:30
-   54| obj.goodSetterNoAnnotation = "hello"; // Error string ~> number
-                                    ^^^^^^^ [1]
-   object.js:5:8
-    5| var z: number = 123;
-              ^^^^^^ [2]
-
-
-Error --------------------------------------------------------------------------------------------------- object.js:34:3
+Error --------------------------------------------------------------------------------------------------- object.js:32:3
 
 Computed getters and setters are not yet supported. [unsupported-syntax]
 
-   34|   set [z](x: string) {},
+   32|   set [z](x: string) {},
          ^^^^^^^^^^^^^^^^^^^^^
 
 
-Error --------------------------------------------------------------------------------------------------- object.js:35:3
+Error --------------------------------------------------------------------------------------------------- object.js:33:3
 
 Computed getters and setters are not yet supported. [unsupported-syntax]
 
-   35|   get [z](): string { return string; },
+   33|   get [z](): string { return string; },
          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
-Error -------------------------------------------------------------------------------------------------- object.js:47:36
+Error -------------------------------------------------------------------------------------------------- object.js:43:35
 
-Cannot assign `obj.goodGetterNoAnnotation` to `testGetterWithError1` because number [1] is incompatible with string [2].
-[incompatible-type]
-
-   object.js:47:36
-   47| var testGetterWithError1: string = obj.goodGetterNoAnnotation; // Error number ~> string
-                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-References:
-   object.js:12:41
-   12|   get goodGetterNoAnnotation() { return 4; },
-                                               ^ [1]
-   object.js:47:27
-   47| var testGetterWithError1: string = obj.goodGetterNoAnnotation; // Error number ~> string
-                                 ^^^^^^ [2]
-
-
-Error -------------------------------------------------------------------------------------------------- object.js:48:36
-
-Cannot assign `obj.goodGetterWithAnnotation` to `testGetterWithError2` because number [1] is incompatible with
+Cannot assign `obj.goodGetterWithAnnotation` to `testGetterWithError` because number [1] is incompatible with
 string [2]. [incompatible-type]
 
-   object.js:48:36
-   48| var testGetterWithError2: string = obj.goodGetterWithAnnotation; // Error number ~> string
-                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   object.js:43:35
+   43| var testGetterWithError: string = obj.goodGetterWithAnnotation; // Error number ~> string
+                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   object.js:13:35
-   13|   get goodGetterWithAnnotation(): number { return 4; },
+   object.js:12:35
+   12|   get goodGetterWithAnnotation(): number { return 4; },
                                          ^^^^^^ [1]
-   object.js:48:27
-   48| var testGetterWithError2: string = obj.goodGetterWithAnnotation; // Error number ~> string
-                                 ^^^^^^ [2]
+   object.js:43:26
+   43| var testGetterWithError: string = obj.goodGetterWithAnnotation; // Error number ~> string
+                                ^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------------- object.js:55:32
+Error -------------------------------------------------------------------------------------------------- object.js:47:32
 
 Cannot assign `"hello"` to `obj.goodSetterWithAnnotation` because string [1] is incompatible with number [2].
 [incompatible-type]
 
-   object.js:55:32
-   55| obj.goodSetterWithAnnotation = "hello"; // Error string ~> number
+   object.js:47:32
+   47| obj.goodSetterWithAnnotation = "hello"; // Error string ~> number
                                       ^^^^^^^ [1]
 
 References:
-   object.js:16:35
-   16|   set goodSetterWithAnnotation(x: number) { z = x; },
+   object.js:14:35
+   14|   set goodSetterWithAnnotation(x: number) { z = x; },
                                          ^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------------- object.js:57:44
+Error -------------------------------------------------------------------------------------------------- object.js:49:44
 
 Cannot assign `obj.propWithSubtypingGetterAndSetter` to `testSubtypingGetterAndSetter` because null or undefined [1] is
 incompatible with number [2]. [incompatible-type]
 
-   object.js:57:44
-   57| var testSubtypingGetterAndSetter: number = obj.propWithSubtypingGetterAndSetter; // Error ?number ~> number
+   object.js:49:44
+   49| var testSubtypingGetterAndSetter: number = obj.propWithSubtypingGetterAndSetter; // Error ?number ~> number
                                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   object.js:22:43
-   22|   get propWithSubtypingGetterAndSetter(): ?number { return 4; }, // OK
+   object.js:20:43
+   20|   get propWithSubtypingGetterAndSetter(): ?number { return 4; }, // OK
                                                  ^^^^^^^ [1]
-   object.js:57:35
-   57| var testSubtypingGetterAndSetter: number = obj.propWithSubtypingGetterAndSetter; // Error ?number ~> number
+   object.js:49:35
+   49| var testSubtypingGetterAndSetter: number = obj.propWithSubtypingGetterAndSetter; // Error ?number ~> number
                                          ^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------------- object.js:62:39
+Error -------------------------------------------------------------------------------------------------- object.js:54:39
 
 Cannot assign `new C()` to `obj.exampleOfOrderOfGetterAndSetter` because `C` [1] is incompatible with `B` [2].
 [incompatible-type]
 
-   object.js:62:39
-   62| obj.exampleOfOrderOfGetterAndSetter = new C(); // Error C ~> B
+   object.js:54:39
+   54| obj.exampleOfOrderOfGetterAndSetter = new C(); // Error C ~> B
                                              ^^^^^^^ [1]
 
 References:
-   object.js:29:42
-   29|   set exampleOfOrderOfGetterAndSetter(x: B) {},
+   object.js:27:42
+   27|   set exampleOfOrderOfGetterAndSetter(x: B) {},
                                                 ^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- object.js:66:3
+Error --------------------------------------------------------------------------------------------------- object.js:58:3
 
 Cannot assign `obj.exampleOfOrderOfGetterAndSetterReordered` to `testExampleOrOrderOfGetterAndSetterReordered` because
 `A` [1] is incompatible with number [2]. [incompatible-type]
 
-   object.js:66:3
-   66|   obj.exampleOfOrderOfGetterAndSetterReordered; // Error A ~> B
+   object.js:58:3
+   58|   obj.exampleOfOrderOfGetterAndSetterReordered; // Error A ~> B
          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   object.js:32:51
-   32|   get exampleOfOrderOfGetterAndSetterReordered(): A { return new A(); },
+   object.js:30:51
+   30|   get exampleOfOrderOfGetterAndSetterReordered(): A { return new A(); },
                                                          ^ [1]
-   object.js:65:51
-   65| var testExampleOrOrderOfGetterAndSetterReordered: number =
+   object.js:57:51
+   57| var testExampleOrOrderOfGetterAndSetterReordered: number =
                                                          ^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- object.js:68:2
+Error --------------------------------------------------------------------------------------------------- object.js:60:2
 
 Cannot cast `obj["stringLiteral"]` to string because number [1] is incompatible with string [2]. [incompatible-cast]
 
-   object.js:68:2
-   68| (obj["stringLiteral"]: string); // err, num !~> string
+   object.js:60:2
+   60| (obj["stringLiteral"]: string); // err, num !~> string
         ^^^^^^^^^^^^^^^^^^^^
 
 References:
-   object.js:38:26
-   38|   get "stringLiteral"(): number { return 4; },
+   object.js:36:26
+   36|   get "stringLiteral"(): number { return 4; },
                                 ^^^^^^ [1]
-   object.js:68:24
-   68| (obj["stringLiteral"]: string); // err, num !~> string
+   object.js:60:24
+   60| (obj["stringLiteral"]: string); // err, num !~> string
                               ^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------------- object.js:69:24
+Error -------------------------------------------------------------------------------------------------- object.js:61:24
 
 Cannot assign `"foo"` to `obj["stringLiteral"]` because string [1] is incompatible with number [2]. [incompatible-type]
 
-   object.js:69:24
-   69| obj["stringLiteral"] = "foo"; // err, string !~> num
+   object.js:61:24
+   61| obj["stringLiteral"] = "foo"; // err, string !~> num
                               ^^^^^ [1]
 
 References:
-   object.js:37:26
-   37|   set "stringLiteral"(x: number) { },
+   object.js:35:26
+   35|   set "stringLiteral"(x: number) { },
                                 ^^^^^^ [2]
 
 
@@ -520,4 +450,4 @@ References:
 
 
 
-Found 32 errors
+Found 28 errors

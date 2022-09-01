@@ -9,10 +9,8 @@ class B extends A {}
 class C extends A {}
 
 var obj = {
-  get goodGetterNoAnnotation() { return 4; },
   get goodGetterWithAnnotation(): number { return 4; },
 
-  set goodSetterNoAnnotation(x) { z = x; },
   set goodSetterWithAnnotation(x: number) { z = x; },
 
   get propWithMatchingGetterAndSetter(): number { return 4; },
@@ -41,17 +39,11 @@ var obj = {
 
 
 // Test getting properties with getters
-var testGetterNoError1: number = obj.goodGetterNoAnnotation;
-var testGetterNoError2: number = obj.goodGetterWithAnnotation;
+var testGetterNoError: number = obj.goodGetterWithAnnotation;
+var testGetterWithError: string = obj.goodGetterWithAnnotation; // Error number ~> string
 
-var testGetterWithError1: string = obj.goodGetterNoAnnotation; // Error number ~> string
-var testGetterWithError2: string = obj.goodGetterWithAnnotation; // Error number ~> string
-
-// Test setting properties with getters
-obj.goodSetterNoAnnotation = 123;
+// Test setting properties with setters
 obj.goodSetterWithAnnotation = 123;
-
-obj.goodSetterNoAnnotation = "hello"; // Error string ~> number
 obj.goodSetterWithAnnotation = "hello"; // Error string ~> number
 
 var testSubtypingGetterAndSetter: number = obj.propWithSubtypingGetterAndSetter; // Error ?number ~> number

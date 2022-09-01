@@ -1,14 +1,12 @@
 // @flow
 
 class Base {
-  base_unannotatedField;
   base_annotatedField: number;
   base_initializedField = 42;
   base_initializedFieldWithThis: number = this.base_initializedField;
   base_annotatedInitializedFieldValid: ?number = 42;
   base_annotatedInitializedFieldInvalid: number = 'asdf'; // Error: string ~> number
 
-  static base_unannotatedField;
   static base_annotatedField: number;
   static base_initializedField = 'asdf';
   static base_initializedFieldWithThis: string = this.base_initializedField;
@@ -20,14 +18,12 @@ class Base {
 }
 
 class Child extends Base {
-  child_unannotatedField;
   child_annotatedField: number;
   child_initializedField = 42;
   child_initializedFieldWithThis: number = this.child_initializedField;
   child_annotatedInitializedFieldValid: ?number = 42;
   child_annotatedInitializedFieldInvalid: number = 'asdf'; // Error: string ~> number
 
-  static child_unannotatedField;
   static child_annotatedField: number;
   static child_initializedField = 'asdf';
   static child_initializedFieldWithThis: string = this.child_initializedField;
@@ -39,20 +35,6 @@ class Child extends Base {
 }
 
 var o = new Child();
-
-/**
- * Unannotated fields are open.
- */
-(o.base_unannotatedField: string);
-(o.base_unannotatedField: number);
-(Child.base_unannotatedField: string);
-(Child.base_unannotatedField: number);
-
-(o.child_unannotatedField: string);
-(o.child_unannotatedField: number);
-(Child.child_unannotatedField: string);
-(Child.child_unannotatedField: number);
-
 
 /**
  * Annotated (but uninitialized) fields still have a type.

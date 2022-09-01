@@ -1,14 +1,12 @@
 // @flow
 
 class Base {
-  unannotatedField;
   annotatedField: number;
   initializedField = 42;
   initializedFieldWithThis: number = this.initializedField;
   annotatedInitializedFieldValid: ?number = 42;
   annotatedInitializedFieldInvalid: number = 'asdf'; // Error: string ~> number
 
-  static unannotatedField;
   static annotatedField: number;
   static initializedField = 'asdf';
   static initializedFieldWithThis: string = this.initializedField;
@@ -17,14 +15,6 @@ class Base {
 }
 
 var o = new Base();
-
-/**
- * Unannotated fields are open.
- */
-(o.unannotatedField: string);
-(o.unannotatedField: number);
-(Base.unannotatedField: string);
-(Base.unannotatedField: number);
 
 /**
  * Annotated (but uninitialized) fields still have a type.
