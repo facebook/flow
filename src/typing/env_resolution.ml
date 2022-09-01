@@ -224,7 +224,7 @@ let rec resolve_binding_partial cx reason loc b =
     Node_cache.set_expression cache exp;
     let use_op = Op (AssignVar { var = Some reason; init = mk_reason (RCode "[]") arr_loc }) in
     (t, use_op, false)
-  | Root (Contextual { reason; hint; default_expression = _ }) ->
+  | Root (Contextual { reason; hint; optional; default_expression }) ->
     let param_loc = Reason.poly_loc_of_reason reason in
     let contextual_typing_enabled = Context.env_mode cx = Options.LTI in
     let t =
@@ -241,6 +241,12 @@ let rec resolve_binding_partial cx reason loc b =
       | Hint_api.Hint_None when RequireAnnot.should_require_annot cx ->
         RequireAnnot.add_missing_annotation_error cx ~on_missing:(fun () -> ()) reason
       | _ -> ()
+    in
+    let t =
+      if optional && default_expression = None then
+        TypeUtil.optional t
+      else
+        t
     in
     (t, mk_use_op t, false)
   | Root Catch ->

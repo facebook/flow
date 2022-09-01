@@ -524,7 +524,7 @@ struct
             array_providers
             EnvMap.empty
         | For (_, exp) -> depends_of_expression exp state
-        | Contextual { reason = _; hint; default_expression } ->
+        | Contextual { reason = _; hint; optional = _; default_expression } ->
           let state =
             Base.Option.value_map default_expression ~default:state ~f:(fun e ->
                 depends_of_expression e state

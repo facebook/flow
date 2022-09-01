@@ -365,7 +365,7 @@ class def_finder env_entries providers toplevel_scope =
               mk_reason (RParameter (Some name)) loc
             | (loc, _) -> mk_reason RDestructuring loc
           in
-          Contextual { reason; hint; default_expression }
+          Contextual { reason; hint; optional; default_expression }
       in
       Destructure.pattern ~f:this#add_ordinary_binding (Root source) argument;
       ignore @@ super#function_param param
@@ -397,7 +397,7 @@ class def_finder env_entries providers toplevel_scope =
                  error in statement.ml. *)
               mk_reason (RCustom "contextual variable") loc
           in
-          Contextual { reason; hint; default_expression = None }
+          Contextual { reason; hint; optional = false; default_expression = None }
       in
       Destructure.pattern ~f:this#add_ordinary_binding (Root source) argument;
       ignore @@ super#function_rest_param expr

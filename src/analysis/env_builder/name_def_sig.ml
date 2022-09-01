@@ -58,6 +58,7 @@ type root =
   | Contextual of {
       reason: Reason.reason;
       hint: hint_node hint;
+      optional: bool;
       default_expression: (ALoc.t, ALoc.t) Ast.Expression.t option;
     }
   | Catch
