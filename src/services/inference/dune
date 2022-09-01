@@ -21,9 +21,8 @@
   flow_service_saved_state
   flow_state_heaps_context
   flow_typing
-  build_mode ; hack
-  cgroup ; hack
-  procs_bucket ; hack
+  build_mode
+  procs_bucket
   watchman
   fileutils)
  (preprocess

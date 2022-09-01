@@ -2,10 +2,12 @@
  (name flow_common_profiling)
  (wrapped false)
  (libraries
+  cgroup
   dtoa
-  hh_json ; hack
+  flow_common_lwt
+  heap_shared_mem
+  hh_json
   lwt
-  sys_utils ; hack
-  )
+  sys_utils)
  (preprocess
   (pps lwt_ppx)))
