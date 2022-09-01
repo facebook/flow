@@ -19,6 +19,7 @@ module type S = sig
 
   type def_loc_type =
     | OrdinaryNameLoc
+    | FunctionParamLoc
     | ExpressionLoc
     | ArrayProviderLoc
     | FunctionThisLoc
@@ -221,6 +222,7 @@ module Make
 
   type def_loc_type =
     | OrdinaryNameLoc
+    | FunctionParamLoc
     | ExpressionLoc
     | ArrayProviderLoc
     | FunctionThisLoc

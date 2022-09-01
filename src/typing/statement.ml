@@ -7543,12 +7543,19 @@ module Make
         predicate_function_kind cx loc params
       | (false, _, _, _) -> Utils_js.assert_false "(async || generator) && pred"
     in
+    let mk_param_annot cx tparams_map reason = function
+      | Ast.Type.Missing loc ->
+        let t = Env.find_write cx Env_api.FunctionParamLoc reason in
+        (t, Ast.Type.Missing (loc, t))
+      | Ast.Type.Available annot ->
+        let (t, ast_annot) = Anno.mk_type_available_annotation cx tparams_map annot in
+        (t, Ast.Type.Available ast_annot)
+    in
     let id_param cx tparams_map id mk_reason =
       let { Ast.Pattern.Identifier.name; annot; optional } = id in
       let (id_loc, ({ Ast.Identifier.name; comments = _ } as id)) = name in
       let reason = mk_reason name in
-      let (annotated_or_inferred, annot) = Anno.mk_type_annotation cx tparams_map reason annot in
-      let t = type_t_of_annotated_or_inferred annotated_or_inferred in
+      let (t, annot) = mk_param_annot cx tparams_map reason annot in
       let name = ((id_loc, t), id) in
       (t, { Ast.Pattern.Identifier.name; annot; optional })
     in
@@ -7568,17 +7575,11 @@ module Make
           (t, Func_stmt_config_types.Types.Id id)
         | Ast.Pattern.Object { Ast.Pattern.Object.annot; properties; comments } ->
           let reason = mk_reason RDestructuring ploc in
-          let (annotated_or_inferred, annot) =
-            Anno.mk_type_annotation cx tparams_map reason annot
-          in
-          let t = type_t_of_annotated_or_inferred annotated_or_inferred in
+          let (t, annot) = mk_param_annot cx tparams_map reason annot in
           (t, Func_stmt_config_types.Types.Object { annot; properties; comments })
         | Ast.Pattern.Array { Ast.Pattern.Array.annot; elements; comments } ->
           let reason = mk_reason RDestructuring ploc in
-          let (annotated_or_inferred, annot) =
-            Anno.mk_type_annotation cx tparams_map reason annot
-          in
-          let t = type_t_of_annotated_or_inferred annotated_or_inferred in
+          let (t, annot) = mk_param_annot cx tparams_map reason annot in
           (t, Func_stmt_config_types.Types.Array { annot; elements; comments })
         | Ast.Pattern.Expression _ -> failwith "unexpected expression pattern in param"
       in

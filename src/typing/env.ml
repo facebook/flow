@@ -476,6 +476,14 @@ let ref_entry_exn ~lookup_mode cx loc reason =
   let t = read_entry_exn ~lookup_mode cx loc reason in
   Flow_js.reposition cx loc t
 
+let find_write cx kind reason =
+  let env = Context.environment cx in
+  let loc = Reason.aloc_of_reason reason in
+  check_readable cx kind loc;
+  match Loc_env.find_write env kind loc with
+  | Some t -> t
+  | None -> Tvar.mk cx reason
+
 let get_module_exports cx loc =
   let env = Context.environment cx in
   t_option_value_exn cx loc (Loc_env.find_write env Env_api.DeclareModuleExportsLoc loc)
@@ -708,6 +716,9 @@ let bind cx t ~kind loc =
   match Context.env_mode cx with
   | Options.LTI -> ()
   | _ -> unify_write_entry cx ~use_op:Type.unknown_use t kind loc
+
+let bind_function_param cx t loc =
+  unify_write_entry cx ~use_op:Type.unknown_use t Env_api.FunctionParamLoc loc
 
 let bind_function_this cx t loc =
   unify_write_entry cx ~use_op:Type.unknown_use t Env_api.FunctionThisLoc loc

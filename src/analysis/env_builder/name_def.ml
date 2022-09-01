@@ -293,7 +293,7 @@ class def_finder env_entries providers toplevel_scope =
                    tparams_map = ALocMap.empty;
                    optional = false;
                    default_expression = None;
-                   is_assignment = true;
+                   param_loc = None;
                    annot;
                  }
               ),
@@ -332,7 +332,7 @@ class def_finder env_entries providers toplevel_scope =
                    tparams_map = ALocMap.empty;
                    optional = false;
                    default_expression = None;
-                   is_assignment = true;
+                   param_loc = None;
                    annot;
                  }
               )
@@ -354,7 +354,13 @@ class def_finder env_entries providers toplevel_scope =
         match Destructure.type_of_pattern argument with
         | Some annot ->
           Annotation
-            { tparams_map = tparams; optional; default_expression; is_assignment = false; annot }
+            {
+              tparams_map = tparams;
+              optional;
+              default_expression;
+              param_loc = Some (fst argument);
+              annot;
+            }
         | None ->
           let reason =
             match argument with
@@ -381,7 +387,7 @@ class def_finder env_entries providers toplevel_scope =
               tparams_map = tparams;
               optional = false;
               default_expression = None;
-              is_assignment = false;
+              param_loc = Some (fst argument);
               annot;
             }
         | None ->
@@ -679,7 +685,7 @@ class def_finder env_entries providers toplevel_scope =
                      tparams_map = ALocMap.empty;
                      optional = false;
                      default_expression = None;
-                     is_assignment = false;
+                     param_loc = None;
                      annot;
                    }
                 )
@@ -824,7 +830,7 @@ class def_finder env_entries providers toplevel_scope =
                   tparams_map = ALocMap.empty;
                   optional = false;
                   default_expression = None;
-                  is_assignment = true;
+                  param_loc = None;
                   annot;
                 }
             | None -> For (Of { await }, right)
@@ -857,7 +863,7 @@ class def_finder env_entries providers toplevel_scope =
                   tparams_map = ALocMap.empty;
                   optional = false;
                   default_expression = None;
-                  is_assignment = true;
+                  param_loc = None;
                   annot;
                 }
             | None -> For (In, right)

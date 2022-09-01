@@ -149,8 +149,9 @@ let resolve_hint cx loc hint =
 let rec resolve_binding_partial cx reason loc b =
   let mk_use_op t = Op (AssignVar { var = Some reason; init = TypeUtil.reason_of_t t }) in
   match b with
-  | Root (Annotation { tparams_map; optional; default_expression; is_assignment; annot }) ->
+  | Root (Annotation { tparams_map; optional; default_expression; param_loc; annot }) ->
     let t = resolve_annotation cx tparams_map annot in
+    Base.Option.iter param_loc ~f:(Env.bind_function_param cx t);
     let t =
       if optional && default_expression = None then
         TypeUtil.optional t
@@ -158,7 +159,7 @@ let rec resolve_binding_partial cx reason loc b =
         t
     in
     let use_op =
-      if is_assignment then
+      if Base.Option.is_none param_loc then
         mk_use_op t
       else
         unknown_use
@@ -242,6 +243,7 @@ let rec resolve_binding_partial cx reason loc b =
         RequireAnnot.add_missing_annotation_error cx ~on_missing:(fun () -> ()) reason
       | _ -> ()
     in
+    Env.bind_function_param cx t param_loc;
     let t =
       if optional && default_expression = None then
         TypeUtil.optional t
@@ -709,7 +711,16 @@ let entries_of_component graph component =
         kl
     in
     let acc = EnvSet.add (kind, loc) acc in
+    let rec add_from_bindings acc = function
+      | Root (Annotation { param_loc = Some l; _ }) -> EnvSet.add (Env_api.FunctionParamLoc, l) acc
+      | Root (Contextual { reason; _ }) ->
+        let l = Reason.poly_loc_of_reason reason in
+        EnvSet.add (Env_api.FunctionParamLoc, l) acc
+      | Root _ -> acc
+      | Select { binding; _ } -> add_from_bindings acc binding
+    in
     match EnvMap.find (kind, loc) graph with
+    | (Binding b, _, _, _) -> add_from_bindings acc b
     | (DeclaredModule (loc, _), _, _, _) -> EnvSet.add (Env_api.DeclareModuleExportsLoc, loc) acc
     | (Class { this_super_write_locs; _ }, _, _, _) -> EnvSet.union this_super_write_locs acc
     | (Function { has_this_def = true; function_loc; _ }, _, _, _) ->

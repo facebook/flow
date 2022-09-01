@@ -64,6 +64,8 @@ val init_env : Context.t -> ALoc.t -> Name_def.scope_kind -> unit
 
 (***)
 
+val bind_function_param : Context.t -> Type.t -> ALoc.t -> unit
+
 val bind_function_this : Context.t -> Type.t -> ALoc.t -> unit
 
 val bind_class_instance_this : Context.t -> Type.t -> ALoc.t -> unit
@@ -127,6 +129,8 @@ val var_ref :
   Reason.name ->
   ALoc.t ->
   Type.t
+
+val find_write : Context.t -> Env_api.With_ALoc.def_loc_type -> Reason.reason -> Type.t
 
 val query_var :
   ?lookup_mode:LookupMode.t ->

@@ -3484,6 +3484,39 @@ module Make
         );
         super#function_expression_or_method loc expr
 
+      method! function_param_pattern patt = this#visit_function_param_pattern ~is_rest:false patt
+
+      method! function_rest_param expr =
+        let open Ast.Function.RestParam in
+        let (_, { argument; comments = _ }) = expr in
+        ignore @@ this#visit_function_param_pattern ~is_rest:true argument;
+        expr
+
+      method private visit_function_param_pattern ~is_rest ((ploc, pattern) as patt) =
+        let reason =
+          match pattern with
+          | Flow_ast.Pattern.Identifier
+              {
+                Flow_ast.Pattern.Identifier.name = (_, { Flow_ast.Identifier.name; comments = _ });
+                annot = _;
+                optional = _;
+              } ->
+            let name = Some name in
+            if is_rest then
+              mk_reason (RRestParameter name) ploc
+            else
+              mk_reason (RParameter name) ploc
+          | _ -> mk_reason RDestructuring ploc
+        in
+        let write_entries =
+          EnvMap.add
+            (Env_api.FunctionParamLoc, ploc)
+            (Env_api.AssigningWrite reason)
+            env_state.write_entries
+        in
+        env_state <- { env_state with write_entries };
+        super#function_param_pattern patt
+
       method private predicate_scope_names_of_params predicate params =
         Base.Option.map predicate ~f:(fun _ ->
             let open Flow_ast in
@@ -5245,6 +5278,16 @@ module Make
       method! yield loc yield =
         this#any_identifier loc next_var_name;
         super#yield loc yield
+
+      method! function_param_pattern ((loc, _) as patt) =
+        write_entries <-
+          EnvMap.update_ordinary
+            loc
+            (function
+              | None -> Some Env_api.NonAssigningWrite
+              | x -> x)
+            write_entries;
+        super#function_param_pattern patt
 
       method! lambda ~is_arrow ~fun_loc ~generator_return_loc params predicate body =
         let loc =

@@ -44,7 +44,7 @@ type root =
       tparams_map: tparams_map;
       optional: bool;
       default_expression: (ALoc.t, ALoc.t) Ast.Expression.t option;
-      is_assignment: bool;
+      param_loc: ALoc.t option;
       annot: (ALoc.t, ALoc.t) Ast.Type.annotation;
     }
   | Value of {

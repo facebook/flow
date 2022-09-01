@@ -336,18 +336,32 @@ struct
           let _ = this#function_def ~fully_annotated:true value in
           ()
 
+        method private class_property_value_annotated value =
+          let open Ast.Class.Property in
+          match value with
+          | Initialized
+              ((_, Ast.Expression.ArrowFunction function_) | (_, Ast.Expression.Function function_))
+            ->
+            this#function_def ~fully_annotated:true function_;
+            value
+          | Initialized _ -> value
+          | Declared -> value
+          | Uninitialized -> value
+
         method class_property_annotated (prop : ('loc, 'loc) Ast.Class.Property.t') =
           let open Ast.Class.Property in
-          let { key; value = _; annot; static = _; variance = _; comments = _ } = prop in
+          let { key; value; annot; static = _; variance = _; comments = _ } = prop in
           let _ = this#object_key key in
           let _ = this#type_annotation_hint annot in
+          let _ = this#class_property_value_annotated value in
           ()
 
         method class_private_field_annotated (prop : ('loc, 'loc) Ast.Class.PrivateField.t') =
           let open Ast.Class.PrivateField in
-          let { key; value = _; annot; static = _; variance = _; comments = _ } = prop in
+          let { key; value; annot; static = _; variance = _; comments = _ } = prop in
           let _ = this#private_name key in
           let _ = this#type_annotation_hint annot in
+          let _ = this#class_property_value_annotated value in
           ()
 
         (* In order to resolve a def containing a read, the writes that the
