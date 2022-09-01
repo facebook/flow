@@ -3922,32 +3922,7 @@ module Make
       (* Function declarations are hoisted to the top of a block, so that they may be considered
          initialized before they are read. *)
       method! statement_list (stmts : (ALoc.t, ALoc.t) Ast.Statement.t list) =
-        let open Ast.Statement in
-        let (function_decls, other_stmts) =
-          List.partition
-            (function
-              | (_, FunctionDeclaration _) -> true
-              | (_, DeclareFunction _) -> true
-              | ( _,
-                  ExportDefaultDeclaration
-                    ExportDefaultDeclaration.
-                      { declaration = Declaration (_, FunctionDeclaration _); _ }
-                ) ->
-                true
-              | ( _,
-                  ExportNamedDeclaration
-                    ExportNamedDeclaration.{ declaration = Some (_, FunctionDeclaration _); _ }
-                ) ->
-                true
-              | ( _,
-                  DeclareExportDeclaration
-                    DeclareExportDeclaration.{ declaration = Some (Function _); _ }
-                ) ->
-                true
-              | _ -> false)
-            stmts
-        in
-        ignore @@ super#statement_list (function_decls @ other_stmts);
+        ignore @@ super#statement_list (Flow_ast_utils.hoist_function_declarations stmts);
         stmts
 
       (* WHen the refinement scope we push is non-empty we want to make sure that the variables

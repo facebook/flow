@@ -24,6 +24,9 @@ val partition_directives :
   (Loc.t, Loc.t) Flow_ast.Statement.t list ->
   (Loc.t, Loc.t) Flow_ast.Statement.t list * (Loc.t, Loc.t) Flow_ast.Statement.t list
 
+val hoist_function_declarations :
+  ('a, 'b) Flow_ast.Statement.t list -> ('a, 'b) Flow_ast.Statement.t list
+
 val is_call_to_invariant : ('a, 'b) Flow_ast.Expression.t -> bool
 
 val is_call_to_is_array : ('a, 'b) Flow_ast.Expression.t -> bool

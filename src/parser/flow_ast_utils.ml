@@ -68,6 +68,44 @@ let partition_directives statements =
   in
   helper [] statements
 
+let hoist_function_declarations stmts =
+  let open Flow_ast.Statement in
+  let (func_decs, other_stmts) =
+    List.partition
+      (function
+        (* function f() {} *)
+        | (_, FunctionDeclaration { Flow_ast.Function.id = Some _; _ })
+        (* export function f() {} *)
+        | ( _,
+            ExportNamedDeclaration
+              {
+                ExportNamedDeclaration.declaration =
+                  Some (_, FunctionDeclaration { Flow_ast.Function.id = Some _; _ });
+                _;
+              }
+          )
+        (* export default function f() {} *)
+        | ( _,
+            ExportDefaultDeclaration
+              {
+                ExportDefaultDeclaration.declaration =
+                  ExportDefaultDeclaration.Declaration
+                    (_, FunctionDeclaration { Flow_ast.Function.id = Some _; _ });
+                _;
+              }
+          )
+        (* declare function f(): void; *)
+        | (_, DeclareFunction _)
+        (* declare export function f(): void; *)
+        | ( _,
+            DeclareExportDeclaration DeclareExportDeclaration.{ declaration = Some (Function _); _ }
+          ) ->
+          true
+        | _ -> false)
+      stmts
+  in
+  func_decs @ other_stmts
+
 let negate_number_literal (value, raw) =
   let raw_len = String.length raw in
   let raw =
