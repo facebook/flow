@@ -13,7 +13,7 @@ type Props = {
 };
 
 class ProfilePic extends React.Component<Props> {
-  render() {
+  render(): React.Node {
     (this.props.image.url: empty); // Error: string ~> empty
     return <img src={this.props.image.url} />;
   }

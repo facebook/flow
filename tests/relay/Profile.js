@@ -19,7 +19,7 @@ type Props = {
 };
 
 class Profile extends React.Component<Props> {
-  render() {
+  render(): React.Node {
     (this.props.foo: empty); // Error: number ~> empty
     (this.props.user.id: empty); // Error: string ~> empty
     (this.props.user.name: empty); // Error: string ~> empty

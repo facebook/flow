@@ -1,7 +1,7 @@
 // @flow
 
 var container = class InstrumentedContainer extends container {
-  foo() {
+  foo(): mixed {
     return this.props;
   }
 };

@@ -1,6 +1,6 @@
 // @flow
 
-function foo(b) {
+function foo(b: boolean) {
     var x = b? 0 : null;
     while (typeof x == "string" || typeof x == "number") {
         var y:string = x; // Error
@@ -9,7 +9,7 @@ function foo(b) {
     var z:string = x; // Error
 }
 
-function bar(b) {
+function bar(b: boolean) {
     var x = b? 0 : null;
     do {
         var y:string = x;  // Error
@@ -38,7 +38,7 @@ function qux() {
     var z:string = x;  // Error
 }
 
-function corge(b) {
+function corge(b: boolean) {
     for (var x = b? 0 : null;
          typeof x == "string" || typeof x == "number";
          x = false) {

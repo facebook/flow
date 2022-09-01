@@ -306,24 +306,6 @@ It is unsafe to use `this` in the constructor before all class properties are de
 
 Error ---------------------------------------------------------------------------------------------------- test.js:235:7
 
-Cannot call `f` with `this` bound to `o` because `this` [1] cannot escape from its class [1] (try adding a type
-annotation to `o` [2]). [escaped-generic]
-
-   test.js:235:7
-   235|     f(this); // ThisBeforeEverythingInitialized
-              ^^^^
-
-References:
-   test.js:232:7
-   232| class E28 {
-              ^^^ [1]
-   test.js:231:12
-   231| function f(o) {}
-                   ^ [2]
-
-
-Error ---------------------------------------------------------------------------------------------------- test.js:235:7
-
 It is unsafe to use `this` in the constructor before all class properties are definitely initialized.
 [uninitialized-instance-property]
 
@@ -578,24 +560,6 @@ It is unsafe to call a method in the constructor before all class properties are
 
 Error --------------------------------------------------------------------------------------------------- test.js:491:12
 
-Cannot call `this.m` with `this` bound to `o` because `this` [1] cannot escape from its class [1] (try adding a type
-annotation to `o` [2]). [escaped-generic]
-
-   test.js:491:12
-   491|     this.m(this); // MethodCallBeforeEverythingInitialized, ThisBeforeEverythingInitialized
-                   ^^^^
-
-References:
-   test.js:488:7
-   488| class E54 {
-              ^^^ [1]
-   test.js:494:5
-   494|   m(o): void {}
-            ^ [2]
-
-
-Error --------------------------------------------------------------------------------------------------- test.js:491:12
-
 It is unsafe to use `this` in the constructor before all class properties are definitely initialized.
 [uninitialized-instance-property]
 
@@ -696,7 +660,7 @@ Error --------------------------------------------------------------------------
 Class property not definitely initialized in the constructor. Can you add an assignment to the property declaration?
 [uninitialized-instance-property]
 
-   547|   p; // PropertyNotDefinitelyInitialized
+   547|   p: string; // PropertyNotDefinitelyInitialized
           ^
 
 
@@ -713,7 +677,7 @@ Error --------------------------------------------------------------------------
 Class property not definitely initialized in the constructor. Can you add an assignment to the property declaration?
 [uninitialized-instance-property]
 
-   554|   #p; // PropertyNotDefinitelyInitialized
+   554|   #p: string; // PropertyNotDefinitelyInitialized
           ^^
 
 
@@ -861,6 +825,20 @@ Cannot perform arithmetic operation because undefined [1] is not a number. [unsa
                                     ^
 
 References:
+   test.js:662:19
+   662|   f: (x: number | void) => number;
+                          ^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------------------------- test.js:664:29
+
+Cannot perform arithmetic operation because undefined [1] is not a number. [unsafe-addition]
+
+   test.js:664:29
+   664|     this.f = x => this.p += x;
+                                    ^
+
+References:
    test.js:665:12
    665|     this.f(this.f()); // PropertyFunctionCallBeforeEverythingInitialized, PropertyFunctionCallBeforeEverythingInitialized
                    ^^^^^^^^ [1]
@@ -927,31 +905,13 @@ It is unsafe to call a method in the constructor before all class properties are
                       ^^^^^^^^
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:714:7
-
-Cannot initialize property `p` with `this` because `this` [1] cannot escape from its class [1] (try adding a type
-annotation to property `p` [2]). [escaped-generic]
-
-   test.js:714:7
-   714|   p = this; // ThisBeforeEverythingInitialized
-              ^^^^
-
-References:
-   test.js:713:7
-   713| class E81 {
-              ^^^ [1]
-   test.js:714:4
-   714|   p = this; // ThisBeforeEverythingInitialized
-            [2]
-
-
-Error ---------------------------------------------------------------------------------------------------- test.js:714:7
+Error --------------------------------------------------------------------------------------------------- test.js:714:12
 
 It is unsafe to use `this` in the constructor before all class properties are definitely initialized.
 [uninitialized-instance-property]
 
-   714|   p = this; // ThisBeforeEverythingInitialized
-              ^^^^
+   714|   p: E81 = this; // ThisBeforeEverythingInitialized
+                   ^^^^
 
 
 Error ---------------------------------------------------------------------------------------------------- test.js:721:5
@@ -997,18 +957,18 @@ It is unsafe to call a property function in the constructor before all class pro
             ^^^^^^^^
 
 
-Error --------------------------------------------------------------------------------------------------- test.js:763:22
+Error --------------------------------------------------------------------------------------------------- test.js:763:47
 
 Cannot perform arithmetic operation because undefined [1] is not a number. [unsafe-addition]
 
-   test.js:763:22
-   763|   f = x => this.p += x;
-                             ^
+   test.js:763:47
+   763|   f = (x: number | void): number => this.p += x;
+                                                      ^
 
 References:
-   test.js:765:12
-   765|     this.f(this.f()); // PropertyFunctionCallBeforeEverythingInitialized, PropertyFunctionCallBeforeEverythingInitialized
-                   ^^^^^^^^ [1]
+   test.js:763:20
+   763|   f = (x: number | void): number => this.p += x;
+                           ^^^^ [1]
 
 
 Error ---------------------------------------------------------------------------------------------------- test.js:765:5
@@ -1070,23 +1030,6 @@ Class property not definitely initialized in the constructor. Can you add an ass
            ^
 
 
-Error --------------------------------------------------------------------------------------------------- test.js:1111:3
-
-Class property not definitely initialized in the constructor. Can you add an assignment to the property declaration?
-[uninitialized-instance-property]
-
-   1111|   p; // TODO spurious error
-           ^
-
-
-Error --------------------------------------------------------------------------------------------------- test.js:1113:6
-
-It is unsafe to read from a class property before it is definitely initialized. [uninitialized-instance-property]
-
-   1113|     (this.p: void); // TODO spurious error
-              ^^^^^^
-
-
 Error --------------------------------------------------------------------------------------------------- test.js:1166:3
 
 Class property not definitely initialized in the constructor. Can you add an assignment to the property declaration?
@@ -1121,24 +1064,6 @@ It is unsafe to read from a class property before it is definitely initialized. 
              ^^^^^^^
 
 
-Error --------------------------------------------------------------------------------------------------- test.js:1196:3
-
-Class property not definitely initialized in the constructor. Can you add an assignment to the property declaration?
-[uninitialized-instance-property]
-
-   1196|   #p1; // TODO spurious error
-           ^^^
-
-
-Error --------------------------------------------------------------------------------------------------- test.js:1200:5
-
-It is unsafe to call a method in the constructor before all class properties are definitely initialized.
-[uninitialized-instance-property]
-
-   1200|     this.m(); // TODO spurious error
-             ^^^^^^^^
-
-
 Error -------------------------------------------------------------------------------------------------- test.js:1286:13
 
 It is unsafe to read from a class property before it is definitely initialized. [uninitialized-instance-property]
@@ -1148,4 +1073,4 @@ It is unsafe to read from a class property before it is definitely initialized. 
 
 
 
-Found 125 errors
+Found 119 errors

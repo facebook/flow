@@ -230,16 +230,6 @@ function f25(o: ?{x: 'a' | 'b'}): number {
   }
 }
 
-// Because we do not call this function, this does not error now.
-// Hopefully in the future we will, either by asking for an annotation on the parameter
-// or saying that this is an implicit void return.
-function f26(x): number {
-  switch (x) {
-    case 'a':
-      return 1;
-  }
-}
-
 ///////////////////
 // Implicit void //
 ///////////////////

@@ -6,7 +6,7 @@
  * @param {number} codeUnit   A Unicode code-unit, in range [0, 0x10FFFF]
  * @return {boolean}      Whether code-unit is in a surrogate (hi/low) range
  */
-function inSurrogateRange(codeUnit) {
+function inSurrogateRange(codeUnit: number) {
   return 0xD800 <= codeUnit && codeUnit <= 0xDFFF;
 }
 
@@ -29,6 +29,6 @@ function inSurrogateRange(codeUnit) {
  * @param {number} pos  Position in the string to look for one code unit
  * @return {number}      Number 1 or 2
  */
-function utf16Length(str, pos) {
+function utf16Length(str: string, pos: number) {
   return 1 + inSurrogateRange(str.charCodeAt(pos));
 }
