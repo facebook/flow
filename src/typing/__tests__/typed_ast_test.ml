@@ -227,7 +227,9 @@ let test_case relative_path file_name _ =
 
 (* This list includes files for which the produced Typed AST differs in structure
  * from the parsed AST. *)
-let blocklist = SSet.of_list ["invariant_reachability/index.js"; "return/implicit_void.js"]
+let blocklist =
+  SSet.of_list
+    ["invariant_reachability/index.js"; "return/implicit_void.js"; "sealed_tvars/abnormal.js"]
 
 let tests root =
   let files = CommandUtils.expand_file_list [root] in

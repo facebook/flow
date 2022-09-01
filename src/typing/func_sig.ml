@@ -13,16 +13,34 @@ open Hint_api
 open TypeUtil
 include Func_sig_intf
 
-class func_scope_visitor cx ~return_t ~yield_t ~next_t kind exhaust =
+class func_scope_visitor cx ~has_return_annot ~return_t ~yield_t ~next_t ~body_loc kind exhaust =
   object (this)
     inherit
       [ALoc.t, ALoc.t * Type.t, ALoc.t, ALoc.t * Type.t] Flow_polymorphic_ast_mapper.mapper as super
+
+    val mutable no_return = true
+
+    val mutable has_throw = false
+
+    val mutable no_yield = true
 
     method on_type_annot x = x
 
     method on_loc_annot x = x
 
     method! function_ fn = fn
+
+    method visit statements =
+      ignore @@ this#statement_list statements;
+      if not has_return_annot then (
+        ( if no_return && has_throw then
+          let reason = mk_reason REmpty body_loc in
+          let t = EmptyT.make reason (Trust.literal_trust ()) in
+          Flow.flow cx (t, UseT (unknown_use, return_t))
+        );
+        if no_yield then
+          Flow.flow_t cx (VoidT.make (mk_reason RVoid body_loc) (Trust.literal_trust ()), yield_t)
+      )
 
     method! switch ({ Ast.Statement.Switch.exhaustive_out = (loc, t); _ } as switch) =
       Base.Option.iter exhaust ~f:(fun (exhaustive_t, exhaust_locs, _) ->
@@ -46,6 +64,7 @@ class func_scope_visitor cx ~return_t ~yield_t ~next_t kind exhaust =
             )
       in
       Flow.flow cx (t, UseT (use_op, yield_t));
+      no_yield <- false;
       super#yield yield
 
     (* Override statement so that we have the loc for return *)
@@ -53,9 +72,31 @@ class func_scope_visitor cx ~return_t ~yield_t ~next_t kind exhaust =
       begin
         match stmt with
         | Ast.Statement.Return return -> this#custom_return loc return
+        | Ast.Statement.Throw _ -> has_throw <- true
         | _ -> ()
       end;
       super#statement (loc, stmt)
+
+    method! call loc expr =
+      let open Ast.Expression.Call in
+      let { callee; arguments; _ } = expr in
+      ( if Flow_ast_utils.is_call_to_invariant callee then
+        match arguments with
+        (* invariant() and invariant(false, ...) are treated like throw *)
+        | (_, { Ast.Expression.ArgList.arguments = []; comments = _ })
+        | ( _,
+            {
+              Ast.Expression.ArgList.arguments =
+                Ast.Expression.Expression
+                  (_, Ast.Expression.Literal { Ast.Literal.value = Ast.Literal.Boolean false; _ })
+                :: _;
+              comments = _;
+            }
+          ) ->
+          has_throw <- true
+        | _ -> ()
+      );
+      super#call loc expr
 
     method custom_return loc { Ast.Statement.Return.return_out = (_, t); argument; _ } =
       let open Func_class_sig_types.Func in
@@ -121,7 +162,8 @@ class func_scope_visitor cx ~return_t ~yield_t ~next_t kind exhaust =
              }
           )
       in
-      Flow.flow cx (t, UseT (use_op, return_t))
+      Flow.flow cx (t, UseT (use_op, return_t));
+      no_return <- false
   end
 
 module Make
@@ -355,12 +397,12 @@ struct
       | _ -> ()
     );
 
-    let (return_t, return_hint) =
+    let (has_return_annot, return_t, return_hint) =
       match (return_t, kind) with
-      | (Inferred t, _) -> (t, decompose_hint Decomp_FuncReturn hint)
+      | (Inferred t, _) -> (false, t, decompose_hint Decomp_FuncReturn hint)
       | (Annotated t, (Async | Generator _ | AsyncGenerator _)) ->
-        (t, Hint_t (MixedT.why (reason_of_t t) (bogus_trust ()))) (* T122105974 *)
-      | (Annotated t, _) -> (t, Hint_t t)
+        (true, t, Hint_t (MixedT.why (reason_of_t t) (bogus_trust ()))) (* T122105974 *)
+      | (Annotated t, _) -> (true, t, Hint_t t)
     in
 
     let ({ Loc_env.return_hint = prev_return_hint; _ } as loc_env) = Context.environment cx in
@@ -471,8 +513,9 @@ struct
         (None, None)
     in
 
-    let (_ : _ list) =
-      (new func_scope_visitor cx ~return_t ~yield_t ~next_t kind exhaust)#statement_list
+    let () =
+      (new func_scope_visitor cx ~has_return_annot ~return_t ~yield_t ~next_t ~body_loc kind exhaust)
+        #visit
         statements_ast
     in
 
