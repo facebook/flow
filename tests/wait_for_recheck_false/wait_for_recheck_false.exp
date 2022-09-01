@@ -4,7 +4,7 @@ Trigger a 1000s recheck
 
 
 autocomplete without --wait-for-recheck runs immediately:
-{"result":[{"name":"val","type":"number"},{"name":"x","type":"string"}]}
+{"result":[{"name":"val","type":"number"}]}
 
 
 check-contents without --wait-for-recheck runs immediately:

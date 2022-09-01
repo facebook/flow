@@ -568,6 +568,20 @@ let append_completion_items_of_autoimports
     sorted_auto_imports
 
 (* env is all visible bound names at cursor *)
+
+let filter_by_token item_list token =
+  let open ServerProt.Response.Completion in
+  let open Fuzzy_path in
+  let (before, _after) = Autocomplete_sigil.remove token in
+  let candidates = Base.List.map ~f:(fun item -> item.name) item_list in
+  let fuzzy_matcher = Fuzzy_path.init candidates in
+  let filtered_candidates = Fuzzy_path.search before fuzzy_matcher in
+  let filtered_candidates =
+    List.fold_left (fun acc item -> SSet.add item.value acc) SSet.empty filtered_candidates
+  in
+  let item_list = List.filter (fun item -> SSet.mem item.name filtered_candidates) item_list in
+  item_list
+
 let autocomplete_id
     ~env
     ~options
@@ -678,6 +692,7 @@ let autocomplete_id
     else
       items_rev
   in
+  let items_rev = filter_by_token items_rev token in
   let (items_rev, is_incomplete) =
     if imports then
       let (before, _after) = Autocomplete_sigil.remove token in
@@ -1062,6 +1077,7 @@ let autocomplete_unqualified_type
            | Ok _ -> (items_rev, errors_to_log))
          (items_rev, errors_to_log)
   in
+  let items_rev = filter_by_token items_rev token in
   let (items_rev, is_incomplete) =
     if imports then
       let locals =
