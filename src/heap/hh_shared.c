@@ -421,10 +421,6 @@ static uintnat roots_ptr = 0;
 // Holds the current position of the sweep phase between slices.
 static addr_t sweep_ptr = NULL_ADDR;
 
-// Holds the value `info->next_version` at the moment when marking begins. We
-// use this value to detect unreachable versioned data.
-static intnat gc_version_threshold = 0;
-
 /*****************************************************************************/
 /* Globals */
 /*****************************************************************************/
@@ -961,7 +957,6 @@ CAMLprim value hh_start_cycle(value unit) {
   info->gc_end = info->heap;
   roots_ptr = 0;
   sweep_ptr = info->heap_init;
-  gc_version_threshold = info->next_version;
   info->gc_phase = Phase_mark;
   CAMLreturn(Val_unit);
 }
@@ -1062,19 +1057,19 @@ static inline void mark_slice_darken(field_t fld) {
 // Entities have a committed value and potentially a "latest" value which is
 // being written by the current transaction. There are two cases:
 //
-// 1. entity_version < gc_version_threshold
+// 1. entity_version < next_version
 //
 //    The data at `entity_version & 1` is the committed value and is reachable.
 //    The other slot is unreachable.
 //
-// 2. entity_version >= gc_version_threshold
+// 2. entity_version >= next_version
 //
 //    The data at `entity_version & 1` is the latest value and is reachable. The
 //    other slot is the committed and is also reachable.
-static void mark_entity(addr_t v) {
+static void mark_entity(addr_t v, intnat next_version) {
   intnat entity_version = Deref(Obj_field(v, 2));
   mark_slice_darken(Deref(Obj_field(v, entity_version & 1)));
-  if (entity_version >= gc_version_threshold) {
+  if (entity_version >= next_version) {
     mark_slice_darken(Deref(Obj_field(v, ~entity_version & 1)));
   }
 }
@@ -1098,6 +1093,7 @@ CAMLprim value hh_mark_slice(value work_val) {
 
   intnat work = Long_val(work_val);
   intnat hashtbl_slots = info->hashtbl_slots;
+  intnat next_version = info->next_version;
 
   addr_t v;
   hh_header_t hd;
@@ -1121,7 +1117,7 @@ CAMLprim value hh_mark_slice(value work_val) {
       tag = Obj_tag(hd);
       size = Obj_wosize_tag(hd, tag);
       if (tag == Entity_tag) {
-        mark_entity(v);
+        mark_entity(v, next_version);
         v = NULL_ADDR;
         start = 0;
       } else if (should_scan(tag)) {
@@ -1837,6 +1833,30 @@ CAMLprim value hh_read_string(value addr, value wsize) {
       Ptr_of_addr(Long_val(addr)),
       Bsize_wsize(Long_val(wsize)));
   CAMLreturn(s);
+}
+
+CAMLprim value hh_entity_advance(value entity_val, value data_val) {
+  CAMLparam2(entity_val, data_val);
+  addr_t entity = Long_val(entity_val);
+  addr_t data = Long_val(data_val);
+
+  intnat next_version = info->next_version;
+  intnat entity_version_fld = Obj_field(entity, 2);
+  intnat entity_version = Deref(entity_version_fld);
+  intnat slot = entity_version & 1;
+
+  if (entity_version < next_version) {
+    // By updating the version, we are doing a kind of deferred logical deletion
+    // of the committed data. Once we commit this transaction, the data in
+    // `slot` will no longer be reachable.
+    write_barrier(Deref(Obj_field(entity, slot)));
+    slot = 1 - slot;
+    Deref(entity_version_fld) = next_version | slot;
+  }
+
+  Deref(Obj_field(entity, slot)) = data;
+
+  CAMLreturn(Val_unit);
 }
 
 /* Iterates the shared hash table. */

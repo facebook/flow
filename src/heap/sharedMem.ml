@@ -1496,20 +1496,11 @@ module NewAPI = struct
    * Advancing an entity which has already been advanced to the latest version
    * will simply overwrite the previous latest data.
    *)
+  external hh_entity_advance : 'k entity addr -> 'k addr -> unit = "hh_entity_advance"
+
   let entity_advance entity data =
-    let heap = get_heap () in
-    let version = get_next_version () in
-    let entity_version = get_entity_version heap entity in
-    let slot =
-      if entity_version >= version then
-        entity_version land 1
-      else
-        let slot = lnot entity_version land 1 in
-        let new_version = version lor slot in
-        buf_write_int64 heap (version_addr entity) (i64 new_version);
-        slot
-    in
-    write_entity_data heap entity slot data
+    let data = Option.value data ~default:null_addr in
+    hh_entity_advance entity data
 
   let entity_read_committed entity =
     let heap = get_heap () in

@@ -459,6 +459,59 @@ let add_provider_barrier_test _ =
   let foo_providers = get_file_all_providers_exclusive foo_m in
   List.iter (fun f -> ignore (get_file_kind f)) foo_providers
 
+let entity_barrier_test _ =
+  (* Similar to `add_provider_barrier_test`, we also need a write barrier when
+   * advancing entities. *)
+  let foo = "foo" in
+  let ent_key = "ent" in
+  let tbl_key = "tbl" in
+
+  (* Add an entity with latest value "foo" *)
+  let size = (2 * header_size) + string_size foo + entity_size in
+  alloc size (fun chunk ->
+      let foo = write_string chunk foo in
+      let ent = write_entity chunk (Some foo) in
+      assert (ent = Ent.add ent_key ent)
+  );
+
+  (* Commit initial transaction. The entity version will be 0, and next version
+   * will be 2. *)
+  commit_transaction ();
+
+  (* Start the marking pass, but don't mark `foo` *)
+  assert (not (collect_slice ~force:true 1));
+
+  (* Allocate a new object referencing `foo`. Because we allocate black, we will
+   * not scan this object for pointers.
+   *
+   * Also, advance the entity to None. Note that `foo` is still accessible by
+   * using entity_read_committed, but `foo` will become inaccessible when we
+   * commit.
+   *
+   * Advancing the entity will update the ent's version from 0 to 3. *)
+  let ent = Option.get (Ent.get ent_key) in
+  let tbl = [| Option.get (entity_read_latest ent) |] in
+  let size = header_size + addr_tbl_size tbl in
+  alloc size (fun chunk ->
+      let tbl = write_addr_tbl (fun _ addr -> addr) chunk tbl in
+      assert (tbl = H2.add tbl_key tbl);
+      entity_advance ent None
+  );
+
+  (* Once we commit the transaction, the global next_version will advance to 4.
+   * At this point, `foo` is unreachable from the ent. *)
+  commit_transaction ();
+
+  (* Finish marking. When we visit the entity, we will not mark `foo` because
+   * it's not reachable. *)
+  collect_full ();
+
+  (* Read `foo` from the tbl object allocated during the last GC. This should
+   * succeed and the string should be considered live. If we failed to mark foo,
+   * this would fail. *)
+  let tbl = read_addr_tbl Fun.id (Option.get (H2.get tbl_key)) in
+  assert (String.equal "foo" (read_string tbl.(0)))
+
 let tests workers =
   "heap_tests"
   >::: [
@@ -469,6 +522,7 @@ let tests workers =
          "slot_taken" >:: slot_taken_test;
          "skip_list" >:: skip_list_test workers;
          "add_provider_barrier" >:: add_provider_barrier_test;
+         "entity_barrier" >:: entity_barrier_test;
        ]
 
 let () =
