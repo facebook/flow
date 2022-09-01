@@ -215,6 +215,16 @@ typedef struct {
 
   uintnat gc_phase;
 
+  /* When we start a GC, we record the heap pointer here. We use this to
+   * identify allocations performed during marking. These objects are not
+   * explicitly marked, but are treated as reachable during the current
+   * collection pass.
+   *
+   * This address should always fall between info->heap_init and info->heap.
+   * This invariant is set up in hh_shared_init and maintained in
+   * hh_start_cycle. */
+  addr_t gc_end;
+
   /* Bytes which are free (color=Blue). This quantity is initially 0 and
    * incremented during the GC sweep phase. The number will increase
    * monotonically until compaction, when all free space is reclaimed. */
@@ -427,14 +437,6 @@ static addr_t* mark_stack_ptr = NULL;
 // to trigger resize.
 static addr_t* mark_stack_end = NULL;
 
-// When we start a GC, we record the heap pointer here. We use this to identify
-// allocations performed during marking. These objects are not explicitly
-// marked, but are treated as reachable during the current collection pass.
-//
-// This address should always fall between info->heap_init and info->heap. This
-// invariant is set up in hh_shared_init and maintained in hh_collect_slice.
-static addr_t gc_end = NULL_ADDR;
-
 // The marking phase treats the shared hash table as GC roots, but these are
 // marked incrementally. Because we might modify the hash table between mark
 // slices, we insert a write barrier in hh_remove.
@@ -481,7 +483,7 @@ CAMLprim value hh_used_heap_size(value unit) {
 CAMLprim value hh_new_alloc_size(value unit) {
   CAMLparam1(unit);
   assert(info != NULL);
-  CAMLreturn(Val_long(info->heap - gc_end));
+  CAMLreturn(Val_long(info->heap - info->gc_end));
 }
 
 CAMLprim value hh_free_heap_size(value unit) {
@@ -817,6 +819,10 @@ CAMLprim value hh_shared_init(value config_val, value num_workers_val) {
   // Initialize top heap pointers
   info->heap = info->heap_init;
 
+  // Invariant: info->heap_init <= info->gc_end <= info->heap
+  // See declaration of gc_end
+  info->gc_end = info->heap;
+
   define_mappings(page_bsize);
 
   mark_stack_size = MARK_STACK_INIT_SIZE;
@@ -824,10 +830,6 @@ CAMLprim value hh_shared_init(value config_val, value num_workers_val) {
   mark_stack = mark_stack_init;
   mark_stack_ptr = mark_stack;
   mark_stack_end = mark_stack + MARK_STACK_INIT_SIZE;
-
-  // Invariant: info->heap_init <= gc_end <= info->heap
-  // See declaration of gc_end
-  gc_end = info->heap;
 
 #ifndef _WIN32
   // Uninstall ocaml's segfault handler. It's supposed to throw an exception on
@@ -990,7 +992,7 @@ CAMLprim value hh_check_should_exit(value unit) {
 CAMLprim value hh_start_cycle(value unit) {
   CAMLparam1(unit);
   assert(info->gc_phase == Phase_idle);
-  gc_end = info->heap;
+  info->gc_end = info->heap;
   roots_ptr = 0;
   sweep_ptr = info->heap_init;
   gc_version_threshold = info->next_version;
@@ -1053,7 +1055,7 @@ static void mark_stack_reset(void) {
 // white and don't sweep these addresses, it's important that they are not
 // darkened.
 static inline void mark_slice_darken(field_t fld) {
-  if ((fld & 1) == 0 && fld != NULL_ADDR && fld < gc_end) {
+  if ((fld & 1) == 0 && fld != NULL_ADDR && fld < info->gc_end) {
     hh_header_t hd = Deref(fld);
     if (Is_white(hd)) {
       Deref(fld) = Black_hd(hd);
@@ -1179,7 +1181,7 @@ CAMLprim value hh_sweep_slice(value work_val) {
   intnat work = Long_val(work_val);
 
   while (work > 0) {
-    if (sweep_ptr < gc_end) {
+    if (sweep_ptr < info->gc_end) {
       uintnat hd = Deref(sweep_ptr);
       uintnat bhsize = Obj_bhsize(hd);
       switch (Color_hd(hd)) {
@@ -1444,9 +1446,9 @@ CAMLprim value hh_compact(value unit) {
 
   info->heap = dst;
 
-  // Invariant: info->heap_init <= gc_end <= info->heap
+  // Invariant: info->heap_init <= info->gc_end <= info->heap
   // See declaration of gc_end
-  gc_end = dst;
+  info->gc_end = dst;
 
   info->free_bsize = 0;
 
