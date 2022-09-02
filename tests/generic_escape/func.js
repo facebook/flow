@@ -7,16 +7,6 @@ function f1<X>(a: X): X {
   return a;
 }
 
-function tostring(x): string {
-  if (typeof x === 'string') return x;
-  return 'a';
-}
-
-function h<X>(x: X, a: X => string = (name: X) => tostring(name)): string {
-  // errors, X ~> x and X ~> refinement
-  return a(x);
-}
-
 declare function ng(value: mixed): mixed;
 class ObjectUtils {
   static stableCopy<T: mixed>(value: T): T {

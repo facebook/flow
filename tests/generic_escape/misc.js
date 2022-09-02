@@ -101,11 +101,6 @@ try {
     e = y;
   }
 }
-function f10({...x}) {
-  function f<X>(y: X) {
-    x = y;
-  }
-}
 
 for (const xe of [(42: any)]) {
   let {...x} = xe;

@@ -422,24 +422,6 @@ Unexpected use of `this` type. [illegal-this]
                               ^^^^
 
 
-Error ----------------------------------------------------------------------------------------------------- self.js:2:18
-
-Cannot return `this` because `this` [1] cannot escape from its class [1] (try adding a type annotation to return [2]).
-[escaped-generic]
-
-   self.js:2:18
-   2|   foo() { return this; } // escaped this
-                       ^^^^
-
-References:
-   self.js:1:7
-   1| class A {
-            ^ [1]
-   self.js:2:8
-   2|   foo() { return this; } // escaped this
-              [2]
-
-
 Error -------------------------------------------------------------------------------------------------- statics.js:17:2
 
 Cannot cast `A.make()` to `B` because `A` [1] is incompatible with `B` [2]. [incompatible-cast]
@@ -743,4 +725,4 @@ References:
 
 
 
-Found 46 errors
+Found 45 errors
