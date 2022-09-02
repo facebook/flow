@@ -1,7 +1,7 @@
 var vars = require("./cycle_B.js")
 
-function f(x) {
-  if (x); /* sketchy because of uses */
+function f(x: number | null) {
+  if (x);
 }
 
 const resNull: void = f(null);

@@ -1,6 +1,6 @@
 const vars = require("./cycle_B.js")
 
-function f(x) {
+function f(x: number | void) {
   if (x); /* sketchy because of uses */
 }
 

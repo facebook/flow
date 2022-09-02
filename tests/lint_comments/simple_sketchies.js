@@ -66,34 +66,6 @@ if (x2) { /* sketchy; suppressed */ }
 var x3: ?string = "";
 if (x3) { /* sketchy */ }
 
-// open, multiple lowers
-function j(x) {
-  if (x) { /* NOT sketchy because of calls */ }
-}
-j(null);
-j("foo"); // non-falsey, non sketchy
-
-function r(x) {
-  if (x) { /* sketchy because of calls */ }
-}
-r(null);
-r("")
-
-function w(x) {
-  if (x) { /* sketchy because of calls; Not suppressed */ }
-}
-w(null);
-// This suppression comment is at the wrong location and does nothing, so
-// appears as an unused suppression comment
-/*flowlint sketchy-null:off*/w("");/*flowlint sketchy-null:error*/
-
-function s(x) {
-  if (x) { /* sketchy because of calls */ }
-}
-s(null);
-declare var unknown_str: string;
-s(unknown_str); // possibly falsey, sketchy
-
 // PropExistsP sketchy checks
 
 // optional prop
