@@ -2,28 +2,27 @@
 
 A utility for upgrading your codebase to the latest version of Flow.
 
-To run this utility to upgrade your codebase you can use [`yarn create`][]:
+Install using `yarn add flow-upgrade`. We expect `prettier` to be installed as a [peer dependency](https://docs.npmjs.com/cli/v8/configuring-npm/package-json#peerdependencies) wherever you are running `flow-upgrade`.
 
-[`yarn create`]: https://yarnpkg.com/en/docs/cli/create#search
-
-```
-yarn create flow-upgrade
-```
-
-This is a shorter version which is equivalent to:
+You can then run:
 
 ```
-yarn global add flow-upgrade
-flow-upgrade
+yarn run flow-upgrade <current flow version> <target flow version>
 ```
 
-You may also use [`npx`][]:
-
-[`npx`]: https://www.npmjs.com/package/npx
+You may also use [`npx`](https://www.npmjs.com/package/npx):
 
 ```
-npx flow-upgrade
+npx flow-upgrade <current flow version> <target flow version>
 ```
+
+We also supply the `flow-codemod` binary:
+
+```
+yarn run flow-codemod <codemod name>
+```
+
+If you just want to run a codemod without specifying Flow versions.
 
 ## Options
 
