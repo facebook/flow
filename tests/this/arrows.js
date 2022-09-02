@@ -1,8 +1,8 @@
 class C {
-  foo() {
+  foo(): () => C {
     return () => { return this.bar(); }; // OK, since this: C
   }
-  bar() { return this; } // return type is C
+  bar(): C { return this; } // return type is C
 }
 var c = new C;
 var f = c.foo();

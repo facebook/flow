@@ -190,12 +190,9 @@ Cannot get `this.y` because property `y` is missing in undefined [1]. [incompati
                               ^
 
 References:
-   callback_this.js:7:18
-                       v------------------------
-   7|         this.x = this.x.map(function (z) {
-   8|             return this.y; // error, function has wrong this
-   9|         });
-              -^ [1]
+   callback_this.js:7:45
+   7|         this.x = this.x.map(function (this: void, z) {
+                                                  ^^^^ [1]
 
 
 Error ----------------------------------------------------------------------------------------------------- flat.js:5:34

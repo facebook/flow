@@ -13,7 +13,7 @@ declare class RWArray<T> extends ROArray<T> { }
 declare function from<X>(set: Set<X>): RWArray<X>;
 
 const foo = (() => {
-  const set = new Set();
+  const set = new Set<?string>();
   set.add(some?.x);
   return from(set);
 })();

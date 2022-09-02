@@ -16,7 +16,7 @@ let a = {
 
         let e = () => { this }; // error, refer to method on line 4
 
-        function f() {
+        function f(this: empty) {
             this; // fine
 
             let g = { m() { this }}; // error, refer to method here
@@ -25,7 +25,7 @@ let a = {
         let h = [this]; // error, refer to method on line 4
     },
 
-    f : function () {
+    f : function (this: empty) {
         this; // fine
 
         let b = { m() { this }}; // error, refer to method here
@@ -40,7 +40,7 @@ let a = {
 
         let e = () => { this }; // fine
 
-        function f() {
+        function f(this: empty) {
             this; // fine
 
             let g = { m() { this }}; // error, refer to method here
@@ -64,7 +64,7 @@ let a = {
 
         let e = () => { this }; // fine
 
-        function f() {
+        function f(this: empty) {
             this; // fine
 
             let g = { m() { this }}; // error, refer to method here
@@ -84,5 +84,5 @@ let x = {
 
 const getters_and_setters = {
     get foo() { this; }, // error
-    set foo(v) { this; }, // error
+    set foo(v: mixed) { this; }, // error
 }

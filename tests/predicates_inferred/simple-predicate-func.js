@@ -48,7 +48,7 @@ function baz(z: string | number): number {
 }
 
 // Feature: multi params
-function multi_param(w,x,y,z): %checks {
+function multi_param(w:mixed,x:mixed,y:mixed,z:mixed): %checks {
   return typeof z === "string";
 }
 

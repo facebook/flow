@@ -1,11 +1,11 @@
 //@flow
 
-function foo () {
+function foo(this: {|foo: () => number, x: number|}) {
     return this.x;
 }
 let o1 = { foo, x : 3 }
 
-function bar() {
+function bar(this: {|foo: () => number, y: number|}) {
     return this.y;
 }
 let o2 = { foo : bar, y : 3}

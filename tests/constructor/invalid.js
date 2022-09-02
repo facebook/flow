@@ -1,4 +1,4 @@
-function C(a: number) {
+function C(this: {a: number}, a: number) {
   this.a = a;
 }
 

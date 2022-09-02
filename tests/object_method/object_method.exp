@@ -30,47 +30,25 @@ Cannot assign function to `z.m` because property `m` is not writable. [cannot-wr
          ^
 
 
-Error ----------------------------------------------------------------------------------------------------- test3.js:4:8
+Error ---------------------------------------------------------------------------------------------------- test2.js:17:1
 
-Cannot call `this.m` because property `m` is missing in global object [1]. [prop-missing]
+Cannot call `b.f` because property `p` is missing in object literal [1] but exists in object type [2]. [prop-missing]
 
-   test3.js:4:8
-   4|   this.m();
-             ^
-
-References:
-   test3.js:4:3
-   4|   this.m();
-        ^^^^ [1]
-
-
-Error ----------------------------------------------------------------------------------------------------- test3.js:4:8
-
-Cannot call `this.m` because property `m` is missing in object literal [1]. [prop-missing]
-
-   test3.js:4:8
-   4|   this.m();
-             ^
+   test2.js:17:1
+   17| b.f(); // error, property `p` not found
+       ^
 
 References:
-   test3.js:9:4
-   9|   ({ f }).f(); // passing container object as `this`
-         ^^^^^ [1]
-
-
-Error ----------------------------------------------------------------------------------------------------- test3.js:4:8
-
-Cannot call `this.m` because property `m` is missing in object literal [1]. [prop-missing]
-
-   test3.js:4:8
-    4|   this.m();
-              ^
-
-References:
-   test3.js:18:5
-   18| qux({ f: foo });  // error, since `this` is used non-trivially in `foo`
-           ^^^^^^^^^^ [1]
+   test2.js:12:9
+               v
+   12| var b = {
+   13|   f
+   14| }
+       ^ [1]
+   test2.js:3:18
+    3| function f(this: {p: mixed}) {
+                        ^^^^^^^^^^ [2]
 
 
 
-Found 7 errors
+Found 5 errors

@@ -1,4 +1,4 @@
-function test(a: string, b: number): number {
+function test(this: number | string, a: string, b: number): number {
   return this.length; // expect []/"" this
 }
 
@@ -17,12 +17,6 @@ test.apply("", [""]); // error: void ~> number
 // mistyped arguments is an error
 test.apply("", ["", ""]); // error: string ~> number (2nd arg)
 test.apply("", [0, 0]); // error: number ~> string (1st arg)
-
-// resolve args array from tvar
-function f(args) { test.apply("", args) }
-f(["", 0]); // OK
-f(["", ""]); // error: string ~> number (2nd arg)
-f([0, 0]); // error: number ~> string (1st arg)
 
 // expect array-like
 test.apply("", "not array"); // error: string ~> object

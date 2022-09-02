@@ -16,7 +16,7 @@ function insertMany<K,V>(merge: Merge<V>, vs: [K,V][], m: Map<K,V>): Map<K,V> {
 }
 
 class Foo<A> {
-  bar<B>() {
+  bar<B>(): <C>(a: A, b: B, c: C) => void {
     return function<C>(a: A, b: B, c: C): void {
       ([a,b,c] : [A,B,C]);
     }

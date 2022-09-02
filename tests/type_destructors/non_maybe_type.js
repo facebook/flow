@@ -43,7 +43,7 @@ declare function bar () : Node
 
 declare var props : { s : string };
 
-function f() {
+function f(this: {props: typeof props}) {
   let x = (this.props.s === 'S'
     ? mkA(bar())
     : mkA()

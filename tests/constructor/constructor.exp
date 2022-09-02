@@ -61,8 +61,8 @@ Cannot use `new` on function [1]. Only classes can be constructed. [invalid-cons
 
 References:
    invalid.js:1:1
-   1| function C(a: number) {
-      ^^^^^^^^^^^^^^^^^^^^^ [1]
+   1| function C(this: {a: number}, a: number) {
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 

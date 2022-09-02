@@ -34,7 +34,7 @@ function fn() {
 }
 
 function fn_completely_unannotated() {
-  let fn = x => 42;
+  let fn = (x: number) => 42;
   function havoc() {
     fn = (y => 42); // error, x has number as LB
   }

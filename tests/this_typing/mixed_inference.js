@@ -42,6 +42,7 @@ let baz2 = function () {};
 
 
 function this_default(
+    this: {y: number},
     x : number = this.y // do not infer mixed here, this counts as the function body
 ) {}
 

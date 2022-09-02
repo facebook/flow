@@ -1631,21 +1631,21 @@ References:
                               ^^^^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------ mixed_inference.js:55:2
+Error ------------------------------------------------------------------------------------------ mixed_inference.js:56:2
 
 Cannot cast `foo` to `typeof i.m` because number [1] is incompatible with implicit `this` parameter of function type [2]
 in the `this` parameter. [incompatible-cast]
 
-   mixed_inference.js:55:2
-   55| (foo : typeof i.m); // mixed incompatible with number
+   mixed_inference.js:56:2
+   56| (foo : typeof i.m); // mixed incompatible with number
         ^^^
 
 References:
    mixed_inference.js:30:21
    30| function foo(this : number) {}
                            ^^^^^^ [1]
-   mixed_inference.js:49:5
-   49|     m() : void;
+   mixed_inference.js:50:5
+   50|     m() : void;
            ^^^^^^^^^^ [2]
 
 

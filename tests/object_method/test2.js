@@ -1,6 +1,6 @@
 /* @flow */
 
-function f() {
+function f(this: {p: mixed}) {
   return this.p;
 }
 

@@ -4,7 +4,7 @@ class A {
     x: Array<number> = [1, 2, 3];
     y = 4;
     foo() {
-        this.x = this.x.map(function (z) {
+        this.x = this.x.map(function (this: void, z) {
             return this.y; // error, function has wrong this
         });
     }
@@ -14,8 +14,8 @@ class B {
     x: Array<number> = [1, 2, 3];
     y = 4;
     foo() {
-        this.x = this.x.map(function (z) {
-            return this.y; // ok, function gets passed correct this
+        this.x = this.x.map(function (this: B, z) {
+            return this.y; // ok, function has correct this annotation
         }, this);
     }
 }
