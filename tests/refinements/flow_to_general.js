@@ -1,6 +1,6 @@
 //@flow
 
-function f(x) {
+function f(x: any) {
   if (typeof x === 'number') { }
   (x: empty);
 };

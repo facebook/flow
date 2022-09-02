@@ -26,7 +26,7 @@ class FooExact extends React.Component<{||}, void> {}
 <FooExact ref={(foo: Bar | null) => {}} />; // Error: `FooExact` is not `Bar`.
 
 class NumRefs extends React.Component<{}> {
-  getChild(i: number) {
+  getChild(i: number): mixed {
     return this.refs[i];
   }
   render(): React.Node {

@@ -10,7 +10,7 @@ class B extends React.Component<{foo: number, bar: number}, void> {}
 class C extends React.Component<{children: number}, void> {}
 class D extends React.Component<{children: Array<number>}, void> {}
 class E extends React.Component<{foo: number, bar: number}, void> {
-  static defaultProps = {bar: 42};
+  static defaultProps: {bar: number} = {bar: 42};
 }
 
 declare var a: Element<Class<A>>;

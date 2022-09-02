@@ -100,41 +100,43 @@ References:
                                                ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------ element_config.js:15:29
+Error ------------------------------------------------------------------------------------------ element_config.js:15:43
 
-string [1] is incompatible with number [2]. [incompatible-type]
+Cannot initialize property `defaultProps` with object literal because string [1] is incompatible with number [2] in
+property `p`. [incompatible-type]
 
+   element_config.js:15:43
+   15|   static defaultProps: {p: ?number} = {p: 'foo'}; // Error: string ~> number
+                                                 ^^^^^ [1]
+
+References:
    element_config.js:15:29
-   15|   static defaultProps = {p: 'foo'}; // Error: string ~> number
-                                   ^^^^^ [1]
+   15|   static defaultProps: {p: ?number} = {p: 'foo'}; // Error: string ~> number
+                                   ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------ element_config.js:31:24
+
+Cannot initialize property `defaultProps` with object literal because property `p` is missing in object type [1] but
+exists in object literal [2]. [prop-missing]
+
+   element_config.js:31:24
+   31|   static defaultProps: {||} = {p: 42}; // Error: extra property `p`
+                              ^^^^ [1]
 
 References:
-   element_config.js:14:38
-   14| class B extends React.Component<{p: ?number}> {
-                                            ^^^^^^ [2]
+   element_config.js:31:31
+   31|   static defaultProps: {||} = {p: 42}; // Error: extra property `p`
+                                     ^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------ element_config.js:31:25
-
-Property `p` is missing in object literal [1] but exists in object type [2]. [prop-missing]
-
-   element_config.js:31:25
-   31|   static defaultProps = {p: 42}; // Error: extra property `p`
-                               ^^^^^^^ [1]
-
-References:
-   element_config.js:30:33
-   30| class F extends React.Component<{||}> {
-                                       ^^^^ [2]
-
-
-Error ------------------------------------------------------------------------------------------ element_config.js:39:29
+Error ------------------------------------------------------------------------------------------ element_config.js:39:28
 
 string [1] is incompatible with number [2]. [incompatible-type]
 
-   element_config.js:39:29
-   39|   static defaultProps = {p: 'foo'}; // Error: string ~> number
-                                   ^^^^^ [1]
+   element_config.js:39:28
+   39|   static defaultProps: {p: string} = {p: 'foo'}; // Error: string ~> number
+                                  ^^^^^^ [1]
 
 References:
    element_config.js:38:39
@@ -142,13 +144,13 @@ References:
                                              ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------ element_config.js:47:35
+Error ------------------------------------------------------------------------------------------ element_config.js:47:29
 
 string [1] is incompatible with number [2]. [incompatible-type]
 
-   element_config.js:47:35
-   47|   static defaultProps = ({}: {p?: string}); // Error: string ~> number
-                                         ^^^^^^ [1]
+   element_config.js:47:29
+   47|   static defaultProps: {p?: string} = ({}: {p?: string}); // Error: string ~> number
+                                   ^^^^^^ [1]
 
 References:
    element_config.js:46:39

@@ -28,7 +28,7 @@ function HOC2<Props: {}, DefaultProps: {}, Instance>(
 }
 
 class Component extends React.Component<{foo: number, bar: number}> {
-  static defaultProps = {foo: 3};
+  static defaultProps: {foo: number} = {foo: 3};
 }
 
 const WrappedComponent = HOC(Component);

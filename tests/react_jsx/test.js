@@ -880,7 +880,7 @@ type Props_DefaultProps = {
 };
 
 class Class_DefaultProps extends React.Component<Props_DefaultProps> {
-  static defaultProps = {
+  static defaultProps: {foo: number} = {
     foo: 42,
   };
 }
@@ -897,7 +897,7 @@ class Class_DefaultProps extends React.Component<Props_DefaultProps> {
 
 class ClassExact_DefaultProps
   extends React.Component<$Exact<Props_DefaultProps>> {
-  static defaultProps = {
+  static defaultProps: {|foo: number|} = {
     foo: 42,
   };
 }
@@ -913,7 +913,7 @@ class ClassExact_DefaultProps
 />;
 
 class ClassPure_DefaultProps extends React.PureComponent<Props_DefaultProps> {
-  static defaultProps = {
+  static defaultProps: {foo: number} = {
     foo: 42,
   };
 }
@@ -999,7 +999,7 @@ const EnhancedFunction_DefaultProps = hoc(Function_DefaultProps);
 />;
 
 class ThisInJsxTag extends React.Component<{tag: () => React$MixedElement}> {
-  render() {
+  render(): React.Node {
     return <this.props.tag />; // OK
   }
 }

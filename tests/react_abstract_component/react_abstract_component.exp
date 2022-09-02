@@ -637,20 +637,6 @@ References:
                          ^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------- no_annot_fun.js:3:35
-
-Cannot get `props.LOL` because property `LOL` is missing in props [1]. [prop-missing]
-
-   no_annot_fun.js:3:35
-   3| function Component(props) { props.LOL ; return null} // Error, missing LOL
-                                        ^^^
-
-References:
-   no_annot_fun.js:4:37
-   4| (Component: React$AbstractComponent<{}, void>);
-                                          ^^ [1]
-
-
 Error --------------------------------------------------------------------------------------------------- strict.js:4:12
 
 Cannot create `Component` element because props [1] is incompatible with empty [2]. [incompatible-type]
@@ -738,7 +724,7 @@ expression. [signature-verification-failure]
 
 
 
-Found 44 errors
+Found 43 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

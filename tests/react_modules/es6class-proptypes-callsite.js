@@ -4,8 +4,8 @@ import Hello from './es6class-proptypes-module';
 import type {Node} from 'react';
 
 class HelloLocal extends React.Component<{name: string}> {
-  defaultProps = {};
-  propTypes = {
+  defaultProps: {} = {};
+  propTypes: mixed = {
     name: React.PropTypes.string.isRequired,
   };
   render(): Node {

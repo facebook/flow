@@ -45,7 +45,7 @@ React.createElement(A); // Error: Missing `foo` and `bar`.
 React.createElement(B); // Error: Missing `foo` and `bar`.
 
 class C extends React.Component<{foo: number, bar: number}> {
-  static defaultProps = {bar: 42};
+  static defaultProps: {bar: number} = {bar: 42};
 }
 function D(props: {foo: number, bar: number}) { return null }
 D.defaultProps = {bar: 42};
@@ -198,7 +198,7 @@ class L extends React.Component<{
   bar: number,
   children: number,
 }> {
-  static defaultProps = {bar: 42};
+  static defaultProps: {bar: number} = {bar: 42};
 }
 React.createElement(L, {foo: 1, bar: 2}, 3); // OK
 React.createElement(L, {foo: 1, bar: 2, children: 3}); // OK

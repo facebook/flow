@@ -1,6 +1,6 @@
 var x;
 
-function foo(bar?) {
+function foo(bar?: {duck: mixed}) {
     x = bar;
 }
 

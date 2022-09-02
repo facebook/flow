@@ -8,7 +8,7 @@
 function test() {
   let foo: {n: Set<string>} = { n: new Set() }
 
-  let si = new Set();
+  let si = new Set<empty>();
   (function () { declare var x: ?string; si = si.add(x)})(); // error
 
   foo = { n: si };
@@ -51,10 +51,10 @@ function obj_this_empty() {
 }
 
 function reversed() {
-  let rts = [];
+  let rts: Array<number> = [];
 
   function initRts(): void {
-    rts = []; // error, redefinition has no lowers and its an invariant check
+    rts = [];
   }
 
   function getRts(): Array<number> {
@@ -67,7 +67,7 @@ declare class Set<+T> {
 }
 
 function set_replace() {
-  let si = new Set();
+  let si = new Set<number>();
 
   si = new Set<string>(); // error
 
@@ -75,13 +75,13 @@ function set_replace() {
 }
 
 function set_add() {
-  let si = new Set();
+  let si = new Set<number>();
 
   si = si.add(42); // error
 }
 
 function set_app() {
-  let si = new Set();
+  let si = new Set<empty>();
 
   si = si.add(42); // error
 

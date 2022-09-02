@@ -2,7 +2,7 @@
 import * as React from 'react';
 
 class MyComponent extends React.Component<{| foo: number |}> {
-  render() {
+  render(): React.Node {
     return this.props.foo;
   }
 }

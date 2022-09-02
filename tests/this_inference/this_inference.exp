@@ -99,8 +99,8 @@ Cannot get `this.m` because property `m` [1] cannot be unbound from the context 
 
 References:
    class_methods.js:28:5
-   28|     m() { return this.x }
-           ^^^^^^^^^^^^^^^^^^^^^ [2]
+   28|     m(): number { return this.x }
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------- class_methods.js:31:17

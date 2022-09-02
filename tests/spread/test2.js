@@ -2,7 +2,7 @@
  * @flow
  */
 
-function foo(o) {
+function foo(o: {foo: number}) {
     bar({...o});
 }
 function bar(_: {foo:number}) { }

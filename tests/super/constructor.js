@@ -26,7 +26,7 @@ class E extends A {
   }
 }
 
-function leak(f) {
+function leak(f: F) {
   f.y; // OK (errors at leaked site)
   f.x; // OK (errors at leaked site)
 }
@@ -59,7 +59,7 @@ class H extends A {
 }
 
 class I_ {
-  constructor(leaked_this) {
+  constructor(leaked_this: I_) {
     leaked_this.foo() // OK (errors at leaked site)
   }
   foo() { }
@@ -72,7 +72,7 @@ class I extends I_ {
 
 class J__ { }
 class J_ extends J__ {
-  constructor(closure_leaking_this) {
+  constructor(closure_leaking_this: () => void) {
     closure_leaking_this();
     super();
   }
@@ -91,7 +91,7 @@ class J extends J_ {
 
 class K_ {
   closure_leaking_this: () => void;
-  constructor(closure_leaking_this) {
+  constructor(closure_leaking_this: () => void) {
     this.closure_leaking_this = closure_leaking_this;
   }
   foo() { }

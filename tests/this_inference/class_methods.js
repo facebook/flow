@@ -25,7 +25,7 @@ c.x = (new A).x;
 
 class D {
     x : number
-    m() { return this.x }
+    m(): number { return this.x }
     n() {
         let m = this.m;
         let z = m(); // global object incompatible with D

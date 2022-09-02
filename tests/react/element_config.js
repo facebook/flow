@@ -8,43 +8,43 @@ import * as React from 'react';
 declare var exactEmptyObject: {||};
 
 class A extends React.Component<{p: ?number}> {
-  static defaultProps = {p: 42}; // OK
+  static defaultProps: {p: ?number} = {p: 42}; // OK
 }
 
 class B extends React.Component<{p: ?number}> {
-  static defaultProps = {p: 'foo'}; // Error: string ~> number
+  static defaultProps: {p: ?number} = {p: 'foo'}; // Error: string ~> number
 }
 
 class C extends React.Component<{p: ?number}> {
-  static defaultProps = ({}: {p?: number}); // OK
+  static defaultProps: {p?: number} = ({}: {p?: number}); // OK
 }
 
 class D extends React.Component<{p: ?number}> {
-  static defaultProps = ({}: {p?: string}); // OK
+  static defaultProps: {p?: string} = ({}: {p?: string}); // OK
 }
 
 class E extends React.Component<{}> {
-  static defaultProps = {p: 42}; // OK
+  static defaultProps: {} = {p: 42}; // OK
 }
 
 class F extends React.Component<{||}> {
-  static defaultProps = {p: 42}; // Error: extra property `p`
+  static defaultProps: {||} = {p: 42}; // Error: extra property `p`
 }
 
 class G extends React.Component<{p: ?number}> {
-  static defaultProps = {p: 42}; // OK
+  static defaultProps: {p: ?number} = {p: 42}; // OK
 }
 
 class H extends React.Component<{p?: ?number}> {
-  static defaultProps = {p: 'foo'}; // Error: string ~> number
+  static defaultProps: {p: string} = {p: 'foo'}; // Error: string ~> number
 }
 
 class I extends React.Component<{p?: ?number}> {
-  static defaultProps = ({}: {p?: number}); // OK
+  static defaultProps: {p?: number} = ({}: {p?: number}); // OK
 }
 
 class J extends React.Component<{p?: ?number}> {
-  static defaultProps = ({}: {p?: string}); // Error: string ~> number
+  static defaultProps: {p?: string} = ({}: {p?: string}); // Error: string ~> number
 }
 
 ({}: React.ElementConfig<typeof A>); // OK

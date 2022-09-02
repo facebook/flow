@@ -1,6 +1,6 @@
 // @flow
 
-import React from 'react';
+import * as React from 'react';
 import type {ChildrenArray, Element} from 'react';
 
 class Child extends React.Component<{
@@ -10,7 +10,7 @@ class Child extends React.Component<{
 class Parent extends React.Component<{
   children: ChildrenArray<Element<typeof Child>>
 }> {
-  render() {
+  render(): React.Node {
     React.Children.map(this.props.children, (child) => {
       console.log(child.props);
     });

@@ -26,13 +26,6 @@ function ff(x: number) {
   x = "Hello"; // only regular failure
 }
 
-
-function ff2(x) {
-  x = "Hello";
-  x = 42; // no failure, parameters don't have post-inference checks
-}
-ff2(true); // give x a lb
-
 function pos() {
   class X {foo: number;};
   const x = new X;

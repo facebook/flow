@@ -191,37 +191,6 @@ References:
                     ^ [1]
 
 
-Error ------------------------------------------------------------------------------------------------ bad_annot.js:28:3
-
-string [1] is incompatible with number [2]. [incompatible-type]
-
-   bad_annot.js:28:3
-   28|   p // weird: string ~/~> number. C#p is inferred, with both number and string inflows
-         ^
-
-References:
-   bad_annot.js:22:16
-   22|       this.p = "";
-                      ^^ [1]
-   bad_annot.js:20:16
-   20|       this.p = 0;
-                      ^ [2]
-
-
-Error ------------------------------------------------------------------------------------------------ bad_annot.js:30:7
-
-Cannot assign `null` to `p` because null [1] is incompatible with number [2]. [incompatible-type]
-
-   bad_annot.js:30:7
-   30|   p = null; // weird: null ~/~> number. we pinned `p` to `number`
-             ^^^^ [1]
-
-References:
-   bad_annot.js:20:16
-   20|       this.p = 0;
-                      ^ [2]
-
-
 Error -------------------------------------------------------------------------------------------------- computed.js:2:2
 
 Cannot cast `val1` to undefined because string [1] is incompatible with undefined [2]. [incompatible-cast]
@@ -1406,4 +1375,4 @@ References:
 
 
 
-Found 94 errors
+Found 92 errors

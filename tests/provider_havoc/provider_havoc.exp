@@ -1,8 +1,8 @@
 Error --------------------------------------------------------------------------------------------------- empty.js:12:54
 
-Cannot assign `si.add(...)` to `si` because null or undefined [1] is incompatible with unknown implicit instantiation of
-`T` [2] in type argument `T` [2]. All writes to `si` must be compatible with the type of its initializer [3]. Add an
-annotation to `si` [3] if a different type is desired. [incompatible-type-arg]
+Cannot assign `si.add(...)` to `si` because null or undefined [1] is incompatible with empty [2] in type argument
+`T` [3]. All writes to `si` must be compatible with the type of its initializer [4]. Add an annotation to `si` [4] if a
+different type is desired. [incompatible-type-arg]
 
    empty.js:12:54
    12|   (function () { declare var x: ?string; si = si.add(x)})(); // error
@@ -12,19 +12,22 @@ References:
    empty.js:12:33
    12|   (function () { declare var x: ?string; si = si.add(x)})(); // error
                                        ^^^^^^^ [1]
+   empty.js:11:20
+   11|   let si = new Set<empty>();
+                          ^^^^^ [2]
    empty.js:65:20
    65| declare class Set<+T> {
-                          ^ [2]
+                          ^ [3]
    empty.js:11:7
-   11|   let si = new Set();
-             ^^ [3]
+   11|   let si = new Set<empty>();
+             ^^ [4]
 
 
 Error --------------------------------------------------------------------------------------------------- empty.js:12:54
 
-Cannot assign `si.add(...)` to `si` because string [1] is incompatible with unknown implicit instantiation of `T` [2] in
-type argument `T` [2]. All writes to `si` must be compatible with the type of its initializer [3]. Add an annotation to
-`si` [3] if a different type is desired. [incompatible-type-arg]
+Cannot assign `si.add(...)` to `si` because string [1] is incompatible with empty [2] in type argument `T` [3]. All
+writes to `si` must be compatible with the type of its initializer [4]. Add an annotation to `si` [4] if a different
+type is desired. [incompatible-type-arg]
 
    empty.js:12:54
    12|   (function () { declare var x: ?string; si = si.add(x)})(); // error
@@ -34,12 +37,15 @@ References:
    empty.js:12:34
    12|   (function () { declare var x: ?string; si = si.add(x)})(); // error
                                         ^^^^^^ [1]
+   empty.js:11:20
+   11|   let si = new Set<empty>();
+                          ^^^^^ [2]
    empty.js:65:20
    65| declare class Set<+T> {
-                          ^ [2]
+                          ^ [3]
    empty.js:11:7
-   11|   let si = new Set();
-             ^^ [3]
+   11|   let si = new Set<empty>();
+             ^^ [4]
 
 
 Error --------------------------------------------------------------------------------------------------- empty.js:32:11
@@ -100,42 +106,26 @@ References:
            ^ [1]
 
 
-Error --------------------------------------------------------------------------------------------------- empty.js:57:11
-
-Cannot assign array literal to `rts` because unknown element type of empty array [1] is incompatible with number [2] in
-array element. All writes to `rts` must be compatible with the type of its initializer [3]. Add an annotation to
-`rts` [3] if a different type is desired. [incompatible-type]
-
-   empty.js:57:11
-   57|     rts = []; // error, redefinition has no lowers and its an invariant check
-                 ^^ [1]
-
-References:
-   empty.js:60:28
-   60|   function getRts(): Array<number> {
-                                  ^^^^^^ [2]
-   empty.js:54:7
-   54|   let rts = [];
-             ^^^ [3]
-
-
 Error --------------------------------------------------------------------------------------------------- empty.js:72:16
 
-Cannot assign `new Set<...>()` to `si` because string [1] is incompatible with unknown implicit instantiation of `T` [2]
-in type argument `T` [2]. All writes to `si` must be compatible with the type of its initializer [3]. Add an annotation
-to `si` [3] if a different type is desired. [incompatible-type-arg]
+Cannot assign `new Set<...>()` to `si` because string [1] is incompatible with number [2] in type argument `T` [3]. All
+writes to `si` must be compatible with the type of its initializer [4]. Add an annotation to `si` [4] if a different
+type is desired. [incompatible-type-arg]
 
    empty.js:72:16
    72|   si = new Set<string>(); // error
                       ^^^^^^ [1]
 
 References:
+   empty.js:70:20
+   70|   let si = new Set<number>();
+                          ^^^^^^ [2]
    empty.js:65:20
    65| declare class Set<+T> {
-                          ^ [2]
+                          ^ [3]
    empty.js:70:7
-   70|   let si = new Set();
-             ^^ [3]
+   70|   let si = new Set<number>();
+             ^^ [4]
 
 
 Error ---------------------------------------------------------------------------------------------------- empty.js:74:4
@@ -159,42 +149,26 @@ References:
                           ^ [3]
 
 
-Error --------------------------------------------------------------------------------------------------- empty.js:80:15
-
-Cannot assign `si.add(...)` to `si` because number [1] is incompatible with unknown implicit instantiation of `T` [2] in
-type argument `T` [2]. All writes to `si` must be compatible with the type of its initializer [3]. Add an annotation to
-`si` [3] if a different type is desired. [incompatible-type-arg]
-
-   empty.js:80:15
-   80|   si = si.add(42); // error
-                     ^^ [1]
-
-References:
-   empty.js:65:20
-   65| declare class Set<+T> {
-                          ^ [2]
-   empty.js:78:7
-   78|   let si = new Set();
-             ^^ [3]
-
-
 Error --------------------------------------------------------------------------------------------------- empty.js:86:15
 
-Cannot assign `si.add(...)` to `si` because number [1] is incompatible with unknown implicit instantiation of `T` [2] in
-type argument `T` [2]. All writes to `si` must be compatible with the type of its initializer [3]. Add an annotation to
-`si` [3] if a different type is desired. [incompatible-type-arg]
+Cannot assign `si.add(...)` to `si` because number [1] is incompatible with empty [2] in type argument `T` [3]. All
+writes to `si` must be compatible with the type of its initializer [4]. Add an annotation to `si` [4] if a different
+type is desired. [incompatible-type-arg]
 
    empty.js:86:15
    86|   si = si.add(42); // error
                      ^^ [1]
 
 References:
+   empty.js:84:20
+   84|   let si = new Set<empty>();
+                          ^^^^^ [2]
    empty.js:65:20
    65| declare class Set<+T> {
-                          ^ [2]
+                          ^ [3]
    empty.js:84:7
-   84|   let si = new Set();
-             ^^ [3]
+   84|   let si = new Set<empty>();
+             ^^ [4]
 
 
 Error --------------------------------------------------------------------------------------- provider_edge_cases.js:8:1
@@ -378,10 +352,8 @@ References:
 Error ---------------------------------------------------------------------------------------------------- test.js:65:12
 
 Cannot assign `f` to `fn` because: [incompatible-type]
- - Either parameter `y` of unknown type [1] is incompatible with number [2] (consider adding a type annotation to
-   `y` [1]) in the first parameter.
- - Or parameter `y` of unknown type [3] is incompatible with number [2] (consider adding a type annotation to `y` [3])
-   in the first parameter.
+ - Either empty [1] is incompatible with number [2] in the first parameter.
+ - Or empty [3] is incompatible with number [2] in the first parameter.
 
 All writes to `fn` must be compatible with the type of its initializer [4]. Add an annotation to `fn` [4] if a different
 type is desired.
@@ -391,17 +363,17 @@ type is desired.
                   ^
 
 References:
-   test.js:57:15
-   57|   const f1 = (y => 42); // error, x has number as LB
-                     ^ [1]
-   test.js:67:8
-   67|     fn(52);
-              ^^ [2]
-   test.js:58:15
-   58|   const f2 = (y => 42); // error, x has number as LB
-                     ^ [3]
+   test.js:57:19
+   57|   const f1 = ((y: empty) => 42); // error, x has number as LB
+                         ^^^^^ [1]
+   test.js:63:18
+   63|     let fn = (x: number) => 42;
+                        ^^^^^^ [2]
+   test.js:58:19
+   58|   const f2 = ((y: empty) => 42); // error, x has number as LB
+                         ^^^^^ [3]
    test.js:63:9
-   63|     let fn = x => 42;
+   63|     let fn = (x: number) => 42;
                ^^ [4]
 
 
@@ -633,7 +605,7 @@ Unreachable code. [unreachable-code]
 
 
 
-Found 24 errors
+Found 22 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches
