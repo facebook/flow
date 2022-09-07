@@ -39,7 +39,7 @@ module type S = sig
 
   module Flow : Flow_common.S
 
-  val solve_targs : Context.t -> Check.t -> output Subst_name.Map.t
+  val solve_targs : Context.t -> ?return_hint:Type.t -> Check.t -> output Subst_name.Map.t
 
   val run :
     Context.t ->
