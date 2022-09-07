@@ -315,16 +315,7 @@ and type_of_state ~lookup_mode cx env loc reason write_locs val_id refi =
                find_refi var_info refinement_id |> Base.Option.some |> type_of_state writes write_id
              | (Env_api.With_ALoc.Global name, _) ->
                get_global_value_type cx (Reason.OrdinaryName name) reason
-             | (Env_api.With_ALoc.GlobalThis reason, _) ->
-               Debug_js.Verbose.print_if_verbose
-                 cx
-                 [
-                   spf
-                     "reading global this(%s) from location %s"
-                     (Reason.string_of_aloc loc)
-                     (Reason.aloc_of_reason reason |> Reason.string_of_aloc);
-                 ];
-               find_write_exn Env_api.GlobalThisLoc reason
+             | (Env_api.With_ALoc.GlobalThis reason, _) -> ObjProtoT reason
              | (Env_api.With_ALoc.IllegalThis reason, _) ->
                Debug_js.Verbose.print_if_verbose
                  cx
@@ -767,7 +758,7 @@ let read_declared_type cx reason loc =
 (************************)
 (* Variable Declaration *)
 (************************)
-let init_env cx program_loc toplevel_scope_kind =
+let init_env cx toplevel_scope_kind =
   let ({ Loc_env.var_info; _ } as env) = Context.environment cx in
   let initialize_entry def_loc_type loc env_entry env =
     let env' =
@@ -810,26 +801,15 @@ let init_env cx program_loc toplevel_scope_kind =
            | _ -> initialize_entry def_loc_type loc env_entry env)
          var_info.Env_api.env_entries
   in
-  let initialize_this () =
-    let t = ObjProtoT (mk_reason (RCustom "global object") program_loc) in
-    let w = Base.Option.value_exn (Loc_env.find_write env Env_api.GlobalThisLoc program_loc) in
-    let (_, id) = Type.open_tvar w in
-    Flow_js.resolve_id cx id t
-  in
-  initialize_this ();
   let env =
     {
       env with
       Loc_env.scope_kind = toplevel_scope_kind;
       readable =
-        Env_api.EnvSet.(
-          empty
-          |> add (Env_api.GlobalThisLoc, program_loc)
-          |> add
-               ( Env_api.GlobalExportsLoc,
-                 Loc.{ none with source = Some (Context.file cx) } |> ALoc.of_loc
-               )
-        );
+        Env_api.EnvSet.singleton
+          ( Env_api.GlobalExportsLoc,
+            Loc.{ none with source = Some (Context.file cx) } |> ALoc.of_loc
+          );
     }
   in
   Context.set_environment cx env

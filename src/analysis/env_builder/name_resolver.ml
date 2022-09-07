@@ -1040,7 +1040,7 @@ module Make
              acc)
          exclude_syms
     (* this has to come later, since this can be thought to be unbound names in SSA builder when it's used as a type. *)
-    |> (let v = program_loc |> mk_reason (RIdentifier (internal_name "this")) |> Val.global_this in
+    |> (let v = program_loc |> mk_reason (RCustom "global object") |> Val.global_this in
         SMap.add
           "this"
           {
@@ -1243,17 +1243,12 @@ module Make
       val mutable env_state : name_resolver_state =
         let (env, jsx_base_name) = initial_env cx ~is_lib exclude_syms unbound_names program_loc in
         let write_entries =
-          EnvMap.singleton
-            (Env_api.GlobalThisLoc, program_loc)
-            (Env_api.AssigningWrite (mk_reason (RIdentifier (internal_name "this")) program_loc))
-        in
-        let write_entries =
           if is_lib then
-            write_entries
+            EnvMap.empty
           else
             let filename = Context.file cx in
             let global_exports_loc = Loc.{ none with source = Some filename } |> ALoc.of_loc in
-            EnvMap.add
+            EnvMap.singleton
               (Env_api.GlobalExportsLoc, global_exports_loc)
               (Env_api.AssigningWrite
                  (mk_reason
@@ -1261,7 +1256,6 @@ module Make
                     global_exports_loc
                  )
               )
-              write_entries
         in
         {
           values = L.LMap.empty;

@@ -23,7 +23,6 @@ module type S = sig
     | ExpressionLoc
     | ArrayProviderLoc
     | FunctionThisLoc
-    | GlobalThisLoc
     | ClassSelfLoc
     | ClassInstanceThisLoc
     | ClassStaticThisLoc
@@ -226,7 +225,6 @@ module Make
     | ExpressionLoc
     | ArrayProviderLoc
     | FunctionThisLoc
-    | GlobalThisLoc
     | ClassSelfLoc
     | ClassInstanceThisLoc
     | ClassStaticThisLoc

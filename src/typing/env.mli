@@ -60,7 +60,7 @@ val set_scope_kind : Context.t -> Name_def.scope_kind -> Name_def.scope_kind
 
 val in_class_scope : Context.t -> ALoc.t -> (unit -> 'a) -> 'a
 
-val init_env : Context.t -> ALoc.t -> Name_def.scope_kind -> unit
+val init_env : Context.t -> Name_def.scope_kind -> unit
 
 (***)
 
