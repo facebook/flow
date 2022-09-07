@@ -20,7 +20,7 @@ type t = {
   tparams: (Subst_name.t * Type.typeparam * Type.t) ALocMap.t;
   class_bindings: Type.class_binding ALocMap.t;
   class_stack: ALoc.t list;
-  declare_module_exports_write_loc: ALoc.t;
+  declare_module_exports_write_loc: ALoc.t option;
   return_hint: Type.t Hint_api.hint;
   scope_kind: Name_def.scope_kind;
   readable: EnvSet.t;
@@ -65,12 +65,12 @@ let empty scope_kind =
     return_hint = Hint_api.Hint_None;
     class_bindings = ALocMap.empty;
     class_stack = [];
-    declare_module_exports_write_loc = ALoc.none;
+    declare_module_exports_write_loc = None;
     scope_kind;
     readable = EnvSet.empty;
     under_resolution = EnvSet.empty;
   }
 
-let with_info scope_kind var_info declare_module_exports_write_loc =
+let with_info scope_kind var_info =
   let env = empty scope_kind in
-  { env with var_info; declare_module_exports_write_loc }
+  { env with var_info }

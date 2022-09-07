@@ -703,12 +703,9 @@ let set_var cx ~use_op name t loc =
 
 let set_module_exports cx t =
   let env = Context.environment cx in
-  unify_write_entry
-    cx
-    ~use_op:unknown_use
-    t
-    Env_api.DeclareModuleExportsLoc
+  Base.Option.iter
     env.Loc_env.declare_module_exports_write_loc
+    ~f:(unify_write_entry cx ~use_op:unknown_use t Env_api.DeclareModuleExportsLoc)
 
 let bind cx t ~kind loc =
   match Context.env_mode cx with

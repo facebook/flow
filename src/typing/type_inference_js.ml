@@ -400,7 +400,7 @@ let initialize_env
   let (_abrupt_completion, ({ Env_api.env_entries; providers; _ } as info)) =
     NameResolver.program_with_scope cx ~lib ~exclude_syms aloc_ast
   in
-  let env = Loc_env.with_info Name_def.Global info (fst aloc_ast) in
+  let env = Loc_env.with_info Name_def.Global info in
   let name_def_graph = Name_def.find_defs env_entries providers aloc_ast in
   let components = NameDefOrdering.build_ordering cx info name_def_graph in
   if Context.cycle_errors cx then Base.List.iter ~f:(Cycles.handle_component cx) components;
