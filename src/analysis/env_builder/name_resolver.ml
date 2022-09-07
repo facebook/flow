@@ -1289,6 +1289,13 @@ module Make
 
       method predicate_refinement_maps = env_state.predicate_refinement_maps
 
+      method private is_assigning_write key =
+        match EnvMap.find_opt key env_state.write_entries with
+        | Some (Env_api.AssigningWrite _) -> true
+        | Some (Env_api.GlobalWrite _) -> true
+        | Some Env_api.NonAssigningWrite -> false
+        | None -> false
+
       method private merge_vals_with_havoc ~havoc ~def_loc v1 v2 =
         (* It's not safe to reset to havoc when one side can be uninitialized, because the havoc
            val is built from providers which does not include the initial uninitialized state *)
@@ -1738,39 +1745,9 @@ module Make
                   let reason = mk_reason (RIdentifier (internal_name "this")) loc in
                   let v =
                     match this_super_binding_env with
-                    | FunctionEnv ->
-                      env_state <-
-                        {
-                          env_state with
-                          write_entries =
-                            EnvMap.add
-                              (Env_api.FunctionThisLoc, loc)
-                              (Env_api.AssigningWrite reason)
-                              env_state.write_entries;
-                        };
-                      Val.function_this reason
-                    | ClassStaticEnv ->
-                      env_state <-
-                        {
-                          env_state with
-                          write_entries =
-                            EnvMap.add
-                              (Env_api.ClassStaticThisLoc, loc)
-                              (Env_api.AssigningWrite reason)
-                              env_state.write_entries;
-                        };
-                      Val.class_static_this reason
-                    | ClassInstanceEnv ->
-                      env_state <-
-                        {
-                          env_state with
-                          write_entries =
-                            EnvMap.add
-                              (Env_api.ClassInstanceThisLoc, loc)
-                              (Env_api.AssigningWrite reason)
-                              env_state.write_entries;
-                        };
-                      Val.class_instance_this reason
+                    | FunctionEnv -> Val.function_this reason
+                    | ClassStaticEnv -> Val.class_static_this reason
+                    | ClassInstanceEnv -> Val.class_instance_this reason
                     | IllegalThisEnv -> Val.illegal_this reason
                   in
                   (v, v, None)
@@ -1779,28 +1756,8 @@ module Make
                   let v =
                     match this_super_binding_env with
                     | FunctionEnv -> failwith "Cannot bind super in function env"
-                    | ClassStaticEnv ->
-                      env_state <-
-                        {
-                          env_state with
-                          write_entries =
-                            EnvMap.add
-                              (Env_api.ClassStaticSuperLoc, loc)
-                              (Env_api.AssigningWrite reason)
-                              env_state.write_entries;
-                        };
-                      Val.class_static_super reason
-                    | ClassInstanceEnv ->
-                      env_state <-
-                        {
-                          env_state with
-                          write_entries =
-                            EnvMap.add
-                              (Env_api.ClassInstanceSuperLoc, loc)
-                              (Env_api.AssigningWrite reason)
-                              env_state.write_entries;
-                        };
-                      Val.class_instance_super reason
+                    | ClassStaticEnv -> Val.class_static_super reason
+                    | ClassInstanceEnv -> Val.class_instance_super reason
                     | IllegalThisEnv ->
                       failwith "It's impossible to bind super under IllegalThisEnv"
                   in
@@ -3455,16 +3412,27 @@ module Make
         );
         stmt
 
-      method! function_expression_or_method loc expr =
-        let { Flow_ast.Function.id; _ } = expr in
-        ( if Base.Option.is_none id then
-          let reason = mk_reason (RCustom "<<anonymous function>>") loc in
+      method! this_binding_function_id_opt ~fun_loc id =
+        super#this_binding_function_id_opt ~fun_loc id;
+        let function_write_loc =
+          match id with
+          | Some (loc, _) -> loc
+          | None ->
+            let reason = mk_reason (RCustom "<<anonymous function>>") fun_loc in
+            let write_entries =
+              EnvMap.add_ordinary fun_loc (Env_api.AssigningWrite reason) env_state.write_entries
+            in
+            env_state <- { env_state with write_entries };
+            fun_loc
+        in
+        if this#is_assigning_write (Env_api.OrdinaryNameLoc, function_write_loc) then
           let write_entries =
-            EnvMap.add_ordinary loc (Env_api.AssigningWrite reason) env_state.write_entries
+            EnvMap.add
+              (Env_api.FunctionThisLoc, fun_loc)
+              (Env_api.AssigningWrite (mk_reason (RIdentifier (internal_name "this")) fun_loc))
+              env_state.write_entries
           in
           env_state <- { env_state with write_entries }
-        );
-        super#function_expression_or_method loc expr
 
       method! function_param_pattern patt = this#visit_function_param_pattern ~is_rest:false patt
 
@@ -3630,11 +3598,11 @@ module Make
         cls
 
       method! class_identifier_opt ~class_loc:loc id =
-        let reason =
+        let (class_write_loc, class_self_reason) =
           match id with
           | Some ((name_loc, { Ast.Identifier.name; comments = _ }) as id) ->
             ignore @@ this#pattern_identifier ~kind:Ast.Statement.VariableDeclaration.Let id;
-            mk_reason (RType (OrdinaryName name)) name_loc
+            (name_loc, mk_reason (RType (OrdinaryName name)) name_loc)
           | None ->
             let reason = mk_reason (RType (OrdinaryName "<<anonymous class>>")) loc in
             env_state <-
@@ -3643,11 +3611,25 @@ module Make
                 write_entries =
                   EnvMap.add_ordinary loc (Env_api.AssigningWrite reason) env_state.write_entries;
               };
-            reason
+            (loc, reason)
         in
-        let write = Env_api.AssigningWrite reason in
-        let write_entries = EnvMap.add (Env_api.ClassSelfLoc, loc) write env_state.write_entries in
-        env_state <- { env_state with write_entries }
+        if this#is_assigning_write (Env_api.OrdinaryNameLoc, class_write_loc) then
+          let self_write = Env_api.AssigningWrite class_self_reason in
+          let this_write =
+            Env_api.AssigningWrite (mk_reason (RIdentifier (internal_name "this")) loc)
+          in
+          let super_write =
+            Env_api.AssigningWrite (mk_reason (RIdentifier (internal_name "super")) loc)
+          in
+          let write_entries =
+            env_state.write_entries
+            |> EnvMap.add (Env_api.ClassSelfLoc, loc) self_write
+            |> EnvMap.add (Env_api.ClassInstanceThisLoc, loc) this_write
+            |> EnvMap.add (Env_api.ClassInstanceSuperLoc, loc) super_write
+            |> EnvMap.add (Env_api.ClassStaticThisLoc, loc) this_write
+            |> EnvMap.add (Env_api.ClassStaticSuperLoc, loc) super_write
+          in
+          env_state <- { env_state with write_entries }
 
       method! class_body cls_body =
         let open Ast.Class.Body in
@@ -5229,6 +5211,35 @@ module Make
       method! yield loc yield =
         this#any_identifier loc next_var_name;
         super#yield loc yield
+
+      method private mark_dead_write key =
+        write_entries <-
+          EnvMap.update
+            key
+            (function
+              | None -> Some Env_api.NonAssigningWrite
+              | x -> x)
+            write_entries
+
+      method! class_ loc expr =
+        let { Flow_ast.Class.id; _ } = expr in
+        if Base.Option.is_none id then this#mark_dead_write (Env_api.OrdinaryNameLoc, loc);
+        this#mark_dead_write (Env_api.ClassSelfLoc, loc);
+        this#mark_dead_write (Env_api.ClassInstanceThisLoc, loc);
+        this#mark_dead_write (Env_api.ClassInstanceSuperLoc, loc);
+        this#mark_dead_write (Env_api.ClassStaticThisLoc, loc);
+        this#mark_dead_write (Env_api.ClassStaticSuperLoc, loc);
+        super#class_ loc expr
+
+      method! function_ loc expr =
+        let { Flow_ast.Function.id; _ } = expr in
+        if Base.Option.is_none id then this#mark_dead_write (Env_api.OrdinaryNameLoc, loc);
+        this#mark_dead_write (Env_api.FunctionThisLoc, loc);
+        super#function_ loc expr
+
+      method! function_declaration loc expr =
+        this#mark_dead_write (Env_api.FunctionThisLoc, loc);
+        super#function_declaration loc expr
 
       method! function_param_pattern ((loc, _) as patt) =
         write_entries <-

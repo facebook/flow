@@ -50,6 +50,9 @@ module type S = sig
          method private class_identifier_opt :
            class_loc:L.t -> (L.t, L.t) Flow_ast.Identifier.t option -> unit
 
+         method private this_binding_function_id_opt :
+           fun_loc:L.t -> (L.t, L.t) Flow_ast.Identifier.t option -> unit
+
          method private lambda :
            is_arrow:bool ->
            fun_loc:L.t ->
