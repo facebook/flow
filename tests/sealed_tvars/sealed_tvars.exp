@@ -262,5 +262,13 @@ References:
                  ^^^^^^ [2]
 
 
+Error --------------------------------------------------------------------------------------- regression_tests.js:119:20
 
-Found 24 errors
+An annotation on `x` is required because Flow cannot infer its type from local context. [missing-local-annot]
+
+   119|   var x: number = (x) => x;
+                           ^
+
+
+
+Found 25 errors

@@ -49,7 +49,7 @@ end
 
 let loc_of_lti_error cctx error =
   match Flow_error.msg_of_error error with
-  | Error_message.EMissingLocalAnnotation reason ->
+  | Error_message.EMissingLocalAnnotation { reason; _ } ->
     let aloc = Reason.aloc_of_reason reason in
     let context = Codemod_context.Typed.context cctx in
     Some (ALoc.to_loc_with_tables (Context.aloc_tables context) aloc)
@@ -278,7 +278,7 @@ let mapper
         let%bind err = LMap.find_opt loc loc_error_map in
         let%map reason =
           match Flow_error.msg_of_error err with
-          | Error_message.EMissingLocalAnnotation reason -> Some reason
+          | Error_message.EMissingLocalAnnotation { reason; _ } -> Some reason
           | _ -> None
         in
         match Reason.desc_of_reason reason with

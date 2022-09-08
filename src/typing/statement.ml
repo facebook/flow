@@ -6949,11 +6949,13 @@ module Make
                 | Ast.Type.Available (loc, _) ->
                   loc
               in
-              Flow_js.add_output
+              RequireAnnot.add_missing_annotation_error
                 cx
-                Error_message.(EMissingLocalAnnotation (repos_reason annot_loc reason));
-              if Context.env_mode cx = Options.LTI then
-                Flow.flow_t cx (AnyT.make (AnyError (Some MissingAnnotation)) reason, annot_t)
+                (repos_reason annot_loc reason)
+                ~on_missing:(fun () ->
+                  if Context.env_mode cx = Options.LTI then
+                    Flow.flow_t cx (AnyT.make (AnyError (Some MissingAnnotation)) reason, annot_t)
+              )
             | _ -> ()
           end;
           let value_ref : (ALoc.t, ALoc.t * Type.t) Ast.Expression.t option ref = ref None in
@@ -7754,9 +7756,10 @@ module Make
             match return with
             | (Inferred t, _) when has_nonvoid_return && require_return_annot ->
               let reason = repos_reason ret_loc ret_reason in
-              Flow_js.add_output cx Error_message.(EMissingLocalAnnotation reason);
-              if Context.env_mode cx = Options.LTI then
-                Flow.flow_t cx (AnyT.make (AnyError (Some MissingAnnotation)) reason, t)
+              RequireAnnot.add_missing_annotation_error cx reason ~on_missing:(fun () ->
+                  if Context.env_mode cx = Options.LTI then
+                    Flow.flow_t cx (AnyT.make (AnyError (Some MissingAnnotation)) reason, t)
+              )
             | _ -> ()
           end;
           return
