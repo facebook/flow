@@ -151,8 +151,13 @@ let substituter =
       else
         let t_out =
           match t with
-          | GenericT { name = Subst_name.Synthetic name; _ } ->
-            failwith (Utils_js.spf "Cannot substitute through synthetic name %s" name)
+          | GenericT { name = Subst_name.Synthetic name; reason; _ } ->
+            failwith
+              (Utils_js.spf
+                 "Cannot substitute through synthetic name %s at %s."
+                 name
+                 (Debug_js.dump_reason cx reason)
+              )
           | GenericT ({ reason = tp_reason; name; _ } as gen) ->
             let annot_loc = aloc_of_reason tp_reason in
             begin
