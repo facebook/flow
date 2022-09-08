@@ -663,20 +663,19 @@ class def_finder env_entries providers toplevel_scope =
       let scope_kind = func_scope_kind expr in
       this#in_new_tparams_env (fun () ->
           this#visit_function ~func_hint:Hint_None ~scope_kind expr;
+          let reason = func_reason ~async ~generator sig_loc in
+          let def =
+            def_of_function
+              ~tparams_map:tparams
+              ~hint:Hint_None
+              ~has_this_def:true
+              ~function_loc:loc
+              ~statics
+              expr
+          in
           match id with
-          | Some (id_loc, _) ->
-            this#add_ordinary_binding
-              id_loc
-              (func_reason ~async ~generator sig_loc)
-              (def_of_function
-                 ~tparams_map:tparams
-                 ~hint:Hint_None
-                 ~has_this_def:true
-                 ~function_loc:loc
-                 ~statics
-                 expr
-              )
-          | None -> ()
+          | Some (id_loc, _) -> this#add_ordinary_binding id_loc reason def
+          | None -> this#add_ordinary_binding loc reason def
       )
 
     method! function_type loc ft =
