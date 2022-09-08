@@ -275,7 +275,8 @@ struct
     in
     (inferred_targ_map, marked_tparams)
 
-  let pin_types cx inferred_targ_map marked_tparams tparams_map implicit_instantiation =
+  let pin_types
+      cx ~has_return_hint inferred_targ_map marked_tparams tparams_map implicit_instantiation =
     let { Check.operation = (_, instantiation_reason, _); _ } = implicit_instantiation in
     let use_upper_bounds cx name tvar tparam_binder_reason instantiation_reason =
       let tparam = Subst_name.Map.find name tparams_map in
@@ -293,9 +294,12 @@ struct
            let tparam = Subst_name.Map.find name tparams_map in
            match Marked.get name marked_tparams with
            | None ->
-             let t = merge_lower_bounds cx t in
-             (match t with
-             | None -> Observer.on_constant_tparam_missing_bounds cx name tparam
+             (match merge_lower_bounds cx t with
+             | None ->
+               if has_return_hint then
+                 use_upper_bounds cx name t tparam_binder_reason instantiation_reason
+               else
+                 Observer.on_constant_tparam_missing_bounds cx name tparam
              | Some inferred -> Observer.on_constant_tparam cx name tparam inferred)
            | Some Neutral ->
              (* TODO(jmbrown): The neutral case should also unify upper/lower bounds. In order
@@ -307,10 +311,17 @@ struct
              | None -> use_upper_bounds cx name t tparam_binder_reason instantiation_reason
              | Some inferred -> Observer.on_pinned_tparam cx name tparam inferred)
            | Some Positive ->
-             let t = merge_lower_bounds cx t in
-             (match t with
+             (match merge_lower_bounds cx t with
              | None ->
-               Observer.on_missing_bounds cx name tparam ~tparam_binder_reason ~instantiation_reason
+               if has_return_hint then
+                 use_upper_bounds cx name t tparam_binder_reason instantiation_reason
+               else
+                 Observer.on_missing_bounds
+                   cx
+                   name
+                   tparam
+                   ~tparam_binder_reason
+                   ~instantiation_reason
              | Some inferred -> Observer.on_pinned_tparam cx name tparam inferred)
            | Some Negative -> use_upper_bounds cx name t tparam_binder_reason instantiation_reason
        )
@@ -396,7 +407,13 @@ struct
     let (inferred_targ_map, marked_tparams, tparams_map) =
       implicitly_instantiate cx return_hint check
     in
-    pin_types cx inferred_targ_map marked_tparams tparams_map check
+    pin_types
+      cx
+      ~has_return_hint:(Base.Option.is_some return_hint)
+      inferred_targ_map
+      marked_tparams
+      tparams_map
+      check
 
   let run cx check ~on_completion =
     let subst_map = solve_targs cx check in
