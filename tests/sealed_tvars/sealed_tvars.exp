@@ -133,132 +133,132 @@ Missing an annotation on return. [missing-local-annot]
             
 
 
-Error ---------------------------------------------------------------------------------------- regression_tests.js:44:24
+Error ---------------------------------------------------------------------------------------- regression_tests.js:45:24
 
 Missing an annotation on `x`. [missing-local-annot]
 
-   44| function UnannotParams(x, {a, b}, ...y) { }
+   45| function UnannotParams(x, {a, b}, ...y) { }
                               ^
 
 
-Error ---------------------------------------------------------------------------------------- regression_tests.js:44:27
+Error ---------------------------------------------------------------------------------------- regression_tests.js:45:27
 
 Missing an annotation on destructuring. [missing-local-annot]
 
-   44| function UnannotParams(x, {a, b}, ...y) { }
+   45| function UnannotParams(x, {a, b}, ...y) { }
                                  ^^^^^^
 
 
-Error ---------------------------------------------------------------------------------------- regression_tests.js:44:38
+Error ---------------------------------------------------------------------------------------- regression_tests.js:45:38
 
 Missing an annotation on rest parameter `y`. [missing-local-annot]
 
-   44| function UnannotParams(x, {a, b}, ...y) { }
+   45| function UnannotParams(x, {a, b}, ...y) { }
                                             ^
 
 
-Error ---------------------------------------------------------------------------------------- regression_tests.js:54:14
+Error ---------------------------------------------------------------------------------------- regression_tests.js:55:14
 
 Cannot cast `42` to empty because string [1] is incompatible with empty [2]. [incompatible-cast]
 
-   regression_tests.js:54:14
-   54| (((42: any): ModScope): empty); // string ~> empty, not num ~> empty
+   regression_tests.js:55:14
+   55| (((42: any): ModScope): empty); // string ~> empty, not num ~> empty
                     ^^^^^^^^ [1]
 
 References:
-   regression_tests.js:54:25
-   54| (((42: any): ModScope): empty); // string ~> empty, not num ~> empty
+   regression_tests.js:55:25
+   55| (((42: any): ModScope): empty); // string ~> empty, not num ~> empty
                                ^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------- regression_tests.js:61:30
+Error ---------------------------------------------------------------------------------------- regression_tests.js:62:30
 
 Cannot resolve name `ModScope2`. [cannot-resolve-name]
 
-   61| declare var NonexistentType: ModScope2;
+   62| declare var NonexistentType: ModScope2;
                                     ^^^^^^^^^
 
 
-Error ---------------------------------------------------------------------------------------- regression_tests.js:64:23
+Error ---------------------------------------------------------------------------------------- regression_tests.js:65:23
 
 string [1] is not a number. [incompatible-use]
 
-   regression_tests.js:64:23
-   64| const ResultOfError = -AString;
+   regression_tests.js:65:23
+   65| const ResultOfError = -AString;
                              ^^^^^^^^
 
 References:
-   regression_tests.js:63:22
-   63| declare var AString: string;
+   regression_tests.js:64:22
+   64| declare var AString: string;
                             ^^^^^^ [1]
 
 
-Error ---------------------------------------------------------------------------------------- regression_tests.js:78:30
+Error ---------------------------------------------------------------------------------------- regression_tests.js:79:30
 
 Cannot call `inexactSpread` because Flow cannot determine a type for object type [1]. object type [2] is inexact, so it
 may contain `bar` with a type that conflicts with `bar`'s definition in object type [1]. Try making object type [2]
 exact. [cannot-spread-inexact]
 
-   regression_tests.js:78:30
-   78|   const inexact_spread_err = inexactSpread(inexact);
+   regression_tests.js:79:30
+   79|   const inexact_spread_err = inexactSpread(inexact);
                                     ^^^^^^^^^^^^^
 
 References:
-   regression_tests.js:77:44
-   77|   declare function inexactSpread<T>(x: T): {bar: 3, ...T};
+   regression_tests.js:78:44
+   78|   declare function inexactSpread<T>(x: T): {bar: 3, ...T};
                                                   ^^^^^^^^^^^^^^ [1]
-   regression_tests.js:75:28
-   75|   let inexact = ({foo: 3}: {foo: number, ...});
+   regression_tests.js:76:28
+   76|   let inexact = ({foo: 3}: {foo: number, ...});
                                   ^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------- regression_tests.js:90:18
+Error ---------------------------------------------------------------------------------------- regression_tests.js:91:18
 
 Cannot use `MyClass` [1] without 1 type argument. [missing-type-arg]
 
-   regression_tests.js:90:18
-   90|   declare var c: MyClass;
+   regression_tests.js:91:18
+   91|   declare var c: MyClass;
                         ^^^^^^^
 
 References:
-   regression_tests.js:87:16
-   87|   class MyClass<T> {
+   regression_tests.js:88:16
+   88|   class MyClass<T> {
                       ^^^ [1]
 
 
-Error --------------------------------------------------------------------------------------- regression_tests.js:100:23
+Error --------------------------------------------------------------------------------------- regression_tests.js:101:23
 
 Missing an annotation on implicit `this` parameter of function. [missing-this-annot]
 
-   100|   let foo3 = function () { this; }; // error: missing annot on this
+   101|   let foo3 = function () { this; }; // error: missing annot on this
                               ^^
 
 
-Error ---------------------------------------------------------------------------------------- regression_tests.js:108:7
+Error ---------------------------------------------------------------------------------------- regression_tests.js:109:7
 
 Cannot assign `3` to `1.toString` because property `toString` is missing in number [1]. [incompatible-use]
 
-   regression_tests.js:108:7
-   108|   (1).toString = 3; // error: toString missing in number, but no missing env entry error
+   regression_tests.js:109:7
+   109|   (1).toString = 3; // error: toString missing in number, but no missing env entry error
               ^^^^^^^^
 
 References:
-   regression_tests.js:108:4
-   108|   (1).toString = 3; // error: toString missing in number, but no missing env entry error
+   regression_tests.js:109:4
+   109|   (1).toString = 3; // error: toString missing in number, but no missing env entry error
            ^ [1]
 
 
-Error --------------------------------------------------------------------------------------- regression_tests.js:118:19
+Error --------------------------------------------------------------------------------------- regression_tests.js:119:19
 
 Cannot assign function to `x` because function [1] is incompatible with number [2]. [incompatible-type]
 
-   regression_tests.js:118:19
-   118|   var x: number = (x) => x;
+   regression_tests.js:119:19
+   119|   var x: number = (x) => x;
                           ^^^^^^^^ [1]
 
 References:
-   regression_tests.js:118:10
-   118|   var x: number = (x) => x;
+   regression_tests.js:119:10
+   119|   var x: number = (x) => x;
                  ^^^^^^ [2]
 
 

@@ -788,6 +788,23 @@ class def_finder env_entries providers toplevel_scope =
           let this_super_write_locs =
             let (_, { Ast.Class.Body.body; _ }) = body in
             Base.List.fold body ~init:EnvSet.empty ~f:(fun acc -> function
+              | Ast.Class.Body.Property
+                  ( _,
+                    {
+                      Ast.Class.Property.value =
+                        Ast.Class.Property.Initialized (f_loc, Ast.Expression.Function _);
+                      _;
+                    }
+                  )
+              | Ast.Class.Body.PrivateField
+                  ( _,
+                    {
+                      Ast.Class.PrivateField.value =
+                        Ast.Class.Property.Initialized (f_loc, Ast.Expression.Function _);
+                      _;
+                    }
+                  ) ->
+                EnvSet.add (Env_api.FunctionThisLoc, f_loc) acc
               | Ast.Class.Body.Method (_, { Ast.Class.Method.value = (f_loc, f); _ }) ->
                 let has_this_param =
                   let { Ast.Function.params = (_, { Ast.Function.Params.this_; _ }); _ } = f in
