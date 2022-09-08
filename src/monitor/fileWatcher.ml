@@ -271,7 +271,6 @@ end = struct
     changes_condition: unit Lwt_condition.t;
     init_settings: Watchman.init_settings;
     should_track_mergebase: bool;
-    survive_restarts: bool;
   }
 
   let get_mergebase env =
@@ -366,12 +365,9 @@ end = struct
         | Ok (instance, pushed_changes) -> Lwt.return (instance, pushed_changes)
         | Error Watchman.Dead -> raise (Watchman_failure Watchman.Dead)
         | Error Watchman.Restarted ->
-          if env.survive_restarts then
-            match%lwt handle_restart env with
-            | Some (instance, pushed_changes) -> Lwt.return (instance, pushed_changes)
-            | None -> raise (Watchman_failure Watchman.Restarted)
-          else
-            raise (Watchman_failure Watchman.Restarted)
+          (match%lwt handle_restart env with
+          | Some (instance, pushed_changes) -> Lwt.return (instance, pushed_changes)
+          | None -> raise (Watchman_failure Watchman.Restarted))
       in
       env.instance <- instance;
       match pushed_changes with
@@ -520,9 +516,7 @@ end = struct
         | Some env -> env
 
       method start_init =
-        let { FlowServerMonitorOptions.debug; defer_states; sync_timeout; survive_restarts = _ } =
-          watchman_options
-        in
+        let { FlowServerMonitorOptions.debug; defer_states; sync_timeout } = watchman_options in
         let file_options = Options.file_options server_options in
         let watchman_expression_terms = Watchman_expression_terms.make ~options:server_options in
         let settings =
@@ -548,7 +542,6 @@ end = struct
           init_thread <- None;
 
           let should_track_mergebase = Options.lazy_mode server_options in
-          let survive_restarts = watchman_options.FlowServerMonitorOptions.survive_restarts in
           match watchman with
           | Some watchman ->
             let (waiter, wakener) = Lwt.task () in
@@ -567,7 +560,6 @@ end = struct
                 metadata = MonitorProt.empty_file_watcher_metadata;
                 init_settings = Base.Option.value_exn init_settings;
                 should_track_mergebase;
-                survive_restarts;
               }
             in
             (match%lwt get_mergebase_and_changes new_env with

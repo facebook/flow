@@ -247,6 +247,4 @@ val wait_for_recheck : config -> bool
 
 val watchman_defer_states : config -> string list
 
-val watchman_survive_restarts : config -> bool option
-
 val watchman_sync_timeout : config -> int option

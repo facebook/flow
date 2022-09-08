@@ -11,7 +11,6 @@
 type watchman_options = {
   debug: bool;  (** Turn on debugging messages for the file watcher *)
   defer_states: string list;  (** Defer watchman notifications while these states are asserted *)
-  survive_restarts: bool;  (** try to recover from watchman restarting *)
   sync_timeout: int option;
       (** How long to wait for the file watcher to synchronize, in milliseconds *)
 }

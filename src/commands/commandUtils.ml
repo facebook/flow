@@ -1833,16 +1833,8 @@ let choose_file_watcher ~flowconfig ~lazy_mode ~file_watcher ~file_watcher_debug
       | None -> FlowConfig.watchman_sync_timeout flowconfig
     in
     let defer_states = FlowConfig.watchman_defer_states flowconfig in
-    let survive_restarts =
-      Base.Option.value ~default:true (FlowConfig.watchman_survive_restarts flowconfig)
-    in
     FlowServerMonitorOptions.Watchman
-      {
-        FlowServerMonitorOptions.debug = file_watcher_debug;
-        defer_states;
-        survive_restarts;
-        sync_timeout;
-      }
+      { FlowServerMonitorOptions.debug = file_watcher_debug; defer_states; sync_timeout }
 
 let choose_file_watcher_mergebase_with ~flowconfig vcs mergebase_with =
   match mergebase_with with

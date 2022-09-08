@@ -132,7 +132,6 @@ module Opts = struct
     trust_mode: Options.trust_mode;
     wait_for_recheck: bool;
     watchman_defer_states: string list;
-    watchman_survive_restarts: bool option;
     watchman_sync_timeout: int option;
   }
   [@@warning "-69"]
@@ -261,7 +260,6 @@ module Opts = struct
       trust_mode = Options.NoTrust;
       wait_for_recheck = false;
       watchman_defer_states = [];
-      watchman_survive_restarts = None;
       watchman_sync_timeout = None;
     }
 
@@ -755,9 +753,6 @@ module Opts = struct
         Ok { opts with watchman_defer_states = v :: opts.watchman_defer_states }
     )
 
-  let watchman_survive_restarts_parser =
-    boolean (fun opts v -> Ok { opts with watchman_survive_restarts = Some v })
-
   let watchman_sync_timeout_parser =
     uint (fun opts v -> Ok { opts with watchman_sync_timeout = Some v })
 
@@ -804,7 +799,6 @@ module Opts = struct
       ("file_watcher.mergebase_with_git", file_watcher_mergebase_with_git_parser);
       ("file_watcher.mergebase_with_hg", file_watcher_mergebase_with_hg_parser);
       ("file_watcher.watchman.defer_state", watchman_defer_states_parser);
-      ("file_watcher.watchman.survive_restarts", watchman_survive_restarts_parser);
       ("file_watcher.watchman.sync_timeout", watchman_sync_timeout_parser);
       ("file_watcher_timeout", uint (fun opts v -> Ok { opts with file_watcher_timeout = Some v }));
       ("format.bracket_spacing", format_bracket_spacing_parser);
@@ -1575,7 +1569,5 @@ let trust_mode c = c.options.Opts.trust_mode
 let wait_for_recheck c = c.options.Opts.wait_for_recheck
 
 let watchman_defer_states c = c.options.Opts.watchman_defer_states
-
-let watchman_survive_restarts c = c.options.Opts.watchman_survive_restarts
 
 let watchman_sync_timeout c = c.options.Opts.watchman_sync_timeout
