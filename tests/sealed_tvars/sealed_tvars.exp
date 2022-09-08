@@ -1,3 +1,19 @@
+Error ------------------------------------------------------------------------------------------------ abnormal.js:14:33
+
+Unreachable code. [unreachable-code]
+
+   14| const unreachableFunctionDef1 = function named() {} // Only expect unreachable error here
+                                       ^^^^^^^^^^^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------------ abnormal.js:15:33
+
+Unreachable code. [unreachable-code]
+
+   15| const unreachableFunctionDef2 = function () {} // Only expect unreachable error here
+                                       ^^^^^^^^^^^^^^
+
+
 Error ---------------------------------------------------------------------------------------------------- enums.js:4:17
 
 Enum `A` is not an iterable. You can use `A.members()` to get an iterator for the enum's members. [not-iterable]
@@ -205,4 +221,4 @@ References:
 
 
 
-Found 19 errors
+Found 21 errors

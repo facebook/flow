@@ -134,7 +134,7 @@ struct
       object (this)
         inherit [ALoc.t Nel.t EnvMap.t, ALoc.t] Flow_ast_visitor.visitor ~init as super
 
-        method add ~why t =
+        method private force_add ~why t =
           this#update_acc (fun uses ->
               EnvMap.update
                 t
@@ -143,6 +143,8 @@ struct
                   | Some locs -> Some (Nel.cons why locs))
                 uses
           )
+
+        method add ~why t = if Env_api.has_assigning_write t env_entries then this#force_add ~why t
 
         method find_writes ~for_type loc =
           let write_locs =
@@ -218,22 +220,13 @@ struct
         method! pattern_identifier ?kind:_ ((loc, _) as id) =
           (* Ignore cases that don't have bindings in the environment, like `var x;`
              and illegal or unreachable writes. *)
-          this#add_write_dependency_at_loc Env_api.OrdinaryNameLoc loc;
+          this#add ~why:loc (Env_api.OrdinaryNameLoc, loc);
           id
-
-        method private add_write_dependency_at_loc kind loc =
-          (* Ignore cases that don't have bindings in the environment, like `var x;`
-             and illegal or unreachable writes. *)
-          match EnvMap.find_opt (kind, loc) env_entries with
-          | Some Env_api.(AssigningWrite _ | GlobalWrite _) -> this#add ~why:loc (kind, loc)
-          | Some Env_api.NonAssigningWrite
-          | None ->
-            ()
 
         method! binding_type_identifier ((loc, _) as id) =
           (* Unconditional, unlike the above, because all binding type identifiers should
              exist in the environment. *)
-          this#add ~why:loc (Env_api.OrdinaryNameLoc, loc);
+          this#force_add ~why:loc (Env_api.OrdinaryNameLoc, loc);
           id
 
         method! this_expression loc this_ =
@@ -294,7 +287,7 @@ struct
           let { Ast.Function.id; _ } = expr in
           (match id with
           | Some _ -> ()
-          | None -> this#add_write_dependency_at_loc Env_api.OrdinaryNameLoc loc);
+          | None -> this#add ~why:loc (Env_api.OrdinaryNameLoc, loc));
           super#function_ loc expr
 
         method! class_
@@ -307,7 +300,7 @@ struct
           let () =
             match ident with
             | Some id -> ignore @@ this#class_identifier id
-            | None -> this#add_write_dependency_at_loc Env_api.OrdinaryNameLoc loc
+            | None -> this#add ~why:loc (Env_api.OrdinaryNameLoc, loc)
           in
           let _ = map_opt this#type_params tparams in
           let _ = map_opt (map_loc this#class_extends) extends in
@@ -367,9 +360,9 @@ struct
         (* In order to resolve a def containing a read, the writes that the
            Name_resolver determines reach the variable must be resolved *)
         method! expression ((loc, _) as expr) =
-          this#add_write_dependency_at_loc Env_api.OrdinaryNameLoc loc;
-          this#add_write_dependency_at_loc Env_api.ExpressionLoc loc;
-          this#add_write_dependency_at_loc Env_api.ArrayProviderLoc loc;
+          this#add ~why:loc (Env_api.OrdinaryNameLoc, loc);
+          this#add ~why:loc (Env_api.ExpressionLoc, loc);
+          this#add ~why:loc (Env_api.ArrayProviderLoc, loc);
           super#expression expr
 
         method visit_expression_for_expression_writes expr = ignore @@ super#expression expr
@@ -377,9 +370,9 @@ struct
 
     (* For all the possible defs, explore the def's structure with the class above
        to find what variables have to be resolved before this def itself can be resolved *)
-    let depends cx this_super_dep_loc_map ({ Env_api.providers; _ } as env) id_loc =
-      let visitor = new use_visitor cx this_super_dep_loc_map env EnvMap.empty in
+    let depends cx this_super_dep_loc_map ({ Env_api.providers; env_entries; _ } as env) id_loc =
       let depends_of_node mk_visit state =
+        let visitor = new use_visitor cx this_super_dep_loc_map env EnvMap.empty in
         visitor#set_acc state;
         let node_visit () = mk_visit visitor in
         visitor#eval node_visit ()
@@ -586,12 +579,15 @@ struct
             Base.List.fold
               ~init:EnvMap.empty
               ~f:(fun acc { Provider_api.reason = r; _ } ->
-                let key = Reason.poly_loc_of_reason r in
-                EnvMap.update
-                  (Env_api.OrdinaryNameLoc, key)
-                  (function
-                    | None -> Some (Nel.one id_loc)
-                    | Some locs -> Some (Nel.cons id_loc locs))
+                let key = (Env_api.OrdinaryNameLoc, Reason.poly_loc_of_reason r) in
+                if Env_api.has_assigning_write key env_entries then
+                  EnvMap.update
+                    key
+                    (function
+                      | None -> Some (Nel.one id_loc)
+                      | Some locs -> Some (Nel.cons id_loc locs))
+                    acc
+                else
                   acc)
               provider_entries
           else

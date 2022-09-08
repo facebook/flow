@@ -10,3 +10,6 @@ function sometimesThrows() {
 }
 
 const a = invariant(false);
+
+const unreachableFunctionDef1 = function named() {} // Only expect unreachable error here
+const unreachableFunctionDef2 = function () {} // Only expect unreachable error here

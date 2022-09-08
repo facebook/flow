@@ -99,12 +99,11 @@ let check_readable cx kind loc =
   match (Context.env_mode cx, Context.current_phase cx <> Context.InitLib) with
   | (Options.LTI, true) ->
     let ({ Loc_env.under_resolution; var_info; _ } as env) = Context.environment cx in
-    begin
-      match Loc_env.find_write env kind loc with
-      | None ->
-        (match EnvMap.find_opt (kind, loc) var_info.Env_api.env_entries with
-        | Some Env_api.NonAssigningWrite -> ()
-        | _ -> Flow_js_utils.add_output cx Error_message.(EInternal (loc, MissingEnvWrite loc)))
+    (match EnvMap.find_opt (kind, loc) var_info.Env_api.env_entries with
+    | Some Env_api.NonAssigningWrite -> ()
+    | _ ->
+      (match Loc_env.find_write env kind loc with
+      | None -> Flow_js_utils.add_output cx Error_message.(EInternal (loc, MissingEnvWrite loc))
       | Some (OpenT (_, id)) ->
         if not (Loc_env.is_readable env kind loc) then
           Flow_js_utils.add_output cx Error_message.(EInternal (loc, ReadOfUnreachedTvar kind))
@@ -114,8 +113,7 @@ let check_readable cx kind loc =
           | _ ->
             Flow_js_utils.add_output cx Error_message.(EInternal (loc, ReadOfUnresolvedTvar kind))
         end
-      | Some t -> assert_false ("Expect only OpenTs in env, instead we have " ^ Debug_js.dump_t cx t)
-    end
+      | Some t -> assert_false ("Expect only OpenTs in env, instead we have " ^ Debug_js.dump_t cx t)))
   | _ -> ()
 
 let find_var_opt { Env_api.env_values; _ } loc =

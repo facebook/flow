@@ -185,6 +185,8 @@ module type S = sig
 
   val empty : env_info
 
+  val has_assigning_write : def_loc_type * L.t -> env_entry EnvMap.t -> bool
+
   val write_locs_of_read_loc : values -> read_loc -> write_locs
 
   val writes_of_write_loc : for_type:bool -> write_loc -> EnvKey.t list
@@ -397,6 +399,15 @@ module Make
       providers = Provider_api.empty;
       refinement_of_id = (fun _ -> failwith "Empty env info");
     }
+
+  let has_assigning_write kind_and_loc values =
+    match EnvMap.find_opt kind_and_loc values with
+    | Some (AssigningWrite _)
+    | Some (GlobalWrite _) ->
+      true
+    | Some NonAssigningWrite
+    | None ->
+      false
 
   let write_locs_of_read_loc values read_loc =
     let { write_locs; def_loc = _; val_kind = _; name = _; id = _ } = L.LMap.find read_loc values in

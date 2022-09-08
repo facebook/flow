@@ -256,19 +256,14 @@ class def_finder env_entries providers toplevel_scope =
 
     method add_tparam loc name = tparams <- ALocMap.add loc name tparams
 
-    method add_binding kind_and_loc reason src =
+    method force_add_binding kind_and_loc reason src =
       this#update_acc (EnvMap.add kind_and_loc (src, scope_kind, class_stack, reason))
 
-    method add_ordinary_binding loc = this#add_binding (Env_api.OrdinaryNameLoc, loc)
+    method add_binding kind_and_loc reason src =
+      if Env_api.has_assigning_write kind_and_loc env_entries then
+        this#force_add_binding kind_and_loc reason src
 
-    method private has_assigning_write key =
-      match EnvMap.find_opt key env_entries with
-      | Some (Env_api.AssigningWrite _)
-      | Some (Env_api.GlobalWrite _) ->
-        true
-      | Some Env_api.NonAssigningWrite
-      | None ->
-        false
+    method add_ordinary_binding loc = this#add_binding (Env_api.OrdinaryNameLoc, loc)
 
     method private in_scope : 'a 'b. ('a -> 'b) -> scope_kind -> 'a -> 'b =
       fun f scope' node ->
@@ -957,11 +952,10 @@ class def_finder env_entries providers toplevel_scope =
         | (None, Ast.Pattern.Expression (member_loc, Ast.Expression.Member member)) ->
           (* Use super member to visit sub-expressions to avoid record a read of the member. *)
           ignore @@ super#member member_loc member;
-          if this#has_assigning_write (Env_api.OrdinaryNameLoc, member_loc) then
-            this#add_ordinary_binding
-              member_loc
-              (mk_pattern_reason left)
-              (MemberAssign { member_loc; member; rhs = right })
+          this#add_ordinary_binding
+            member_loc
+            (mk_pattern_reason left)
+            (MemberAssign { member_loc; member; rhs = right })
         | (None, _) ->
           Destructure.pattern
             ~f:this#add_ordinary_binding
@@ -985,11 +979,10 @@ class def_finder env_entries providers toplevel_scope =
             | _ -> NonConditionalContext
           in
           this#visit_expression ~cond ~hint:Hint_None e;
-          if this#has_assigning_write (Env_api.OrdinaryNameLoc, def_loc) then
-            this#add_ordinary_binding
-              def_loc
-              (mk_pattern_reason left)
-              (OpAssign { exp_loc = loc; lhs = left; op = operator; rhs = right })
+          this#add_ordinary_binding
+            def_loc
+            (mk_pattern_reason left)
+            (OpAssign { exp_loc = loc; lhs = left; op = operator; rhs = right })
         | _ -> ()
       in
       this#visit_expression ~hint ~cond:NonConditionalContext right;
@@ -1140,8 +1133,8 @@ class def_finder env_entries providers toplevel_scope =
     method! type_param (tparam : ('loc, 'loc) Ast.Type.TypeParam.t) =
       let open Ast.Type.TypeParam in
       let (_, { name = (name_loc, { Ast.Identifier.name; _ }); _ }) = tparam in
-      this#add_ordinary_binding
-        name_loc
+      this#force_add_binding
+        (Env_api.OrdinaryNameLoc, name_loc)
         (mk_reason (RType (OrdinaryName name)) name_loc)
         (TypeParam (tparams, tparam));
       this#add_tparam name_loc name;

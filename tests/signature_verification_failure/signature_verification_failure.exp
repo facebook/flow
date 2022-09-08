@@ -248,40 +248,6 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- misc.js:13:19
 
-Cannot add `d` and `d` because array literal [1] is incompatible with string [2]. [incompatible-type]
-
-   misc.js:13:19
-   13| export const e = (d += d);
-                         ^
-
-References:
-   misc.js:11:18
-   11| export const d = [...c];
-                        ^^^^^^ [1]
-   misc.js:13:19
-   13| export const e = (d += d);
-                         ^^^^^^ [2]
-
-
-Error ---------------------------------------------------------------------------------------------------- misc.js:13:24
-
-Cannot add `d` and `d` because array literal [1] is incompatible with string [2]. [incompatible-type]
-
-   misc.js:13:24
-   13| export const e = (d += d);
-                              ^
-
-References:
-   misc.js:11:18
-   11| export const d = [...c];
-                        ^^^^^^ [1]
-   misc.js:13:19
-   13| export const e = (d += d);
-                         ^^^^^^ [2]
-
-
-Error ---------------------------------------------------------------------------------------------------- misc.js:13:19
-
 Cannot build a typed interface for this module. You should annotate the exports of this module with types. Cannot
 determine the type of this assignment expression. Please provide an annotation, e.g., by adding a type cast around this
 expression. [signature-verification-failure]
@@ -409,4 +375,4 @@ annotation at declaration of variable `x`: [signature-verification-failure]
 
 
 
-Found 39 errors
+Found 37 errors
