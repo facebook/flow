@@ -420,6 +420,32 @@ type inferred_targ = {
   inferred: Type.t;
 }
 
+module SynthesisObserver : OBSERVER with type output = inferred_targ = struct
+  type output = inferred_targ
+
+  let on_constant_tparam _cx _name tparam inferred = { tparam; inferred }
+
+  let on_constant_tparam_missing_bounds _cx _name tparam =
+    let inferred =
+      match tparam.default with
+      | None -> tparam.Type.bound
+      | Some t -> t
+    in
+    { tparam; inferred }
+
+  let on_pinned_tparam _cx _name tparam inferred = { tparam; inferred }
+
+  let on_missing_bounds cx _name tparam ~tparam_binder_reason ~instantiation_reason:_ =
+    { tparam; inferred = Tvar.mk cx tparam_binder_reason }
+
+  let on_upper_non_t cx _name _u tparam ~tparam_binder_reason ~instantiation_reason:_ =
+    { tparam; inferred = Tvar.mk cx tparam_binder_reason }
+end
+
+module Synthesis : functor (Flow : Flow_common.S) ->
+  S with type output = inferred_targ with module Flow = Flow =
+  Make (SynthesisObserver)
+
 module CheckObserver : OBSERVER with type output = inferred_targ = struct
   type output = inferred_targ
 
