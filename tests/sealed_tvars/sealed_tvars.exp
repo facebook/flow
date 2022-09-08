@@ -37,6 +37,48 @@ References:
            ^ [1]
 
 
+Error --------------------------------------------------------------------------------- illegal_function_binding.js:4:10
+
+Cannot declare `a` [1] because the name is already bound. [name-already-bound]
+
+   illegal_function_binding.js:4:10
+   4| function a() {} // error: illegal binding
+               ^
+
+References:
+   illegal_function_binding.js:3:10
+   3| function a() {}
+               ^ [1]
+
+
+Error ---------------------------------------------------------------------------------- illegal_function_binding.js:7:7
+
+Cannot declare `b` [1] because the name is already bound. [name-already-bound]
+
+   illegal_function_binding.js:7:7
+   7| const b = () => {} // error: illegal binding
+            ^
+
+References:
+   illegal_function_binding.js:6:7
+   6| const b = () => {}
+            ^ [1]
+
+
+Error --------------------------------------------------------------------------------- illegal_function_binding.js:10:7
+
+Cannot declare `c` [1] because the name is already bound. [name-already-bound]
+
+   illegal_function_binding.js:10:7
+   10| const c = function () {} // error: illegal binding
+             ^
+
+References:
+   illegal_function_binding.js:9:7
+    9| const c = function () {}
+             ^ [1]
+
+
 Error ----------------------------------------------------------------------------------------- regression_tests.js:11:8
 
 Cannot declare `A` [1] because the name is already bound. [name-already-bound]
@@ -221,4 +263,4 @@ References:
 
 
 
-Found 21 errors
+Found 24 errors

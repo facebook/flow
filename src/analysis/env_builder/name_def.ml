@@ -346,73 +346,84 @@ class def_finder env_entries providers toplevel_scope =
           in
           loop state xs
         (* function f() {}; export function f() {}; export default function f() {} *)
-        | ( ( loc,
-              FunctionDeclaration
-                ({ Ast.Function.id = Some (_, { Ast.Identifier.name; _ }); _ } as func)
-            )
-          | ( _,
-              ExportNamedDeclaration
-                {
-                  ExportNamedDeclaration.declaration =
-                    Some
-                      ( loc,
-                        FunctionDeclaration
-                          ({ Ast.Function.id = Some (_, { Ast.Identifier.name; _ }); _ } as func)
-                      );
-                  export_kind = ExportValue;
-                  specifiers = None;
-                  source = None;
-                  _;
-                }
-            )
-          | ( _,
-              ExportDefaultDeclaration
-                {
-                  ExportDefaultDeclaration.declaration =
-                    ExportDefaultDeclaration.Declaration
-                      ( loc,
-                        FunctionDeclaration
-                          ({ Ast.Function.id = Some (_, { Ast.Identifier.name; _ }); _ } as func)
-                      );
-                  _;
-                }
-            ) )
+        | ( ( ( loc,
+                FunctionDeclaration
+                  ({ Ast.Function.id = Some (id_loc, { Ast.Identifier.name; _ }); _ } as func)
+              )
+            | ( _,
+                ExportNamedDeclaration
+                  {
+                    ExportNamedDeclaration.declaration =
+                      Some
+                        ( loc,
+                          FunctionDeclaration
+                            ( { Ast.Function.id = Some (id_loc, { Ast.Identifier.name; _ }); _ } as
+                            func
+                            )
+                        );
+                    export_kind = ExportValue;
+                    specifiers = None;
+                    source = None;
+                    _;
+                  }
+              )
+            | ( _,
+                ExportDefaultDeclaration
+                  {
+                    ExportDefaultDeclaration.declaration =
+                      ExportDefaultDeclaration.Declaration
+                        ( loc,
+                          FunctionDeclaration
+                            ( { Ast.Function.id = Some (id_loc, { Ast.Identifier.name; _ }); _ } as
+                            func
+                            )
+                        );
+                    _;
+                  }
+              ) ) as stmt
+          )
           :: xs ->
           let state =
-            SMap.add
-              name
-              (SMap.empty, (fun statics -> this#visit_function_declaration ~statics loc func))
+            if Env_api.has_assigning_write (Env_api.OrdinaryNameLoc, id_loc) env_entries then
+              SMap.add
+                name
+                (SMap.empty, (fun statics -> this#visit_function_declaration ~statics loc func))
+                state
+            else (
+              ignore @@ this#statement stmt;
               state
+            )
           in
           loop state xs
         (* const f = () => {}; const f = function () {}; *)
-        | ( _,
-            VariableDeclaration
-              {
-                VariableDeclaration.declarations =
-                  [
-                    ( _,
-                      {
-                        VariableDeclaration.Declarator.id =
-                          ( _,
-                            Ast.Pattern.Identifier
-                              {
-                                Ast.Pattern.Identifier.name =
-                                  (_, { Ast.Identifier.name; _ }) as var_id;
-                                annot = Ast.Type.Missing _;
-                                optional = false;
-                              }
-                          );
-                        init =
-                          Some
-                            ( ( (loc, Ast.Expression.ArrowFunction func)
-                              | (loc, Ast.Expression.Function func) ) as init
+        | ( ( _,
+              VariableDeclaration
+                {
+                  VariableDeclaration.declarations =
+                    [
+                      ( _,
+                        {
+                          VariableDeclaration.Declarator.id =
+                            ( _,
+                              Ast.Pattern.Identifier
+                                {
+                                  Ast.Pattern.Identifier.name =
+                                    (id_loc, { Ast.Identifier.name; _ }) as var_id;
+                                  annot = Ast.Type.Missing _;
+                                  optional = false;
+                                }
                             );
-                      }
-                    );
-                  ];
-                _;
-              }
+                          init =
+                            Some
+                              ( ( (loc, Ast.Expression.ArrowFunction func)
+                                | (loc, Ast.Expression.Function func) ) as init
+                              );
+                        }
+                      );
+                    ];
+                  _;
+                }
+            ) as stmt
           )
           :: xs ->
           let arrow =
@@ -421,20 +432,25 @@ class def_finder env_entries providers toplevel_scope =
             | _ -> false
           in
           let state =
-            SMap.add
-              name
-              ( SMap.empty,
-                fun statics ->
-                  this#visit_function_expr
-                    ~func_hint:Hint_None
-                    ~has_this_def:(not arrow)
-                    ~var_assigned_to:(Some var_id)
-                    ~statics
-                    ~arrow
-                    loc
-                    func
-              )
+            if Env_api.has_assigning_write (Env_api.OrdinaryNameLoc, id_loc) env_entries then
+              SMap.add
+                name
+                ( SMap.empty,
+                  fun statics ->
+                    this#visit_function_expr
+                      ~func_hint:Hint_None
+                      ~has_this_def:(not arrow)
+                      ~var_assigned_to:(Some var_id)
+                      ~statics
+                      ~arrow
+                      loc
+                      func
+                )
+                state
+            else (
+              ignore @@ this#statement stmt;
               state
+            )
           in
           loop state xs
         | x :: xs ->
