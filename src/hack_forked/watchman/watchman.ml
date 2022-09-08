@@ -55,7 +55,7 @@ let log_error = function
     log msg
   | Socket_unavailable { msg } -> log msg
   | Response_error { request; response; msg } -> log ?request ~response msg
-  | Fresh_instance -> log "Watchman server restarted so we may have missed some updates"
+  | Fresh_instance -> log "Watchman missed some changes"
   | Subscription_canceled -> log "Subscription canceled by watchman"
   | Unsupported_watch_roots { roots; failed_paths } ->
     let msg =
@@ -826,15 +826,18 @@ let re_init_dead_env =
       | Error _ as err -> Lwt.return err
   in
   let re_init_dead_env_once ~allow_fresh_instance dead_env =
-    let () = Hh_logger.log "Attemping to reestablish watchman subscription" in
     (* Give watchman 2 minutes to start up, plus sync_timeout (in milliseconds!) to sync.
        TODO: use `file_watcher.timeout` config instead (careful, it's in seconds) *)
     let timeout = Option.value ~default:0 dead_env.prior_settings.sync_timeout + 120000 in
     try%lwt
       Lwt_unix.with_timeout (Float.of_int timeout /. 1000.) @@ fun () ->
       match%lwt can_re_init ~allow_fresh_instance dead_env with
-      | Ok false -> re_init ~prior_clockspec:dead_env.prior_clockspec dead_env.prior_settings
-      | Ok true -> Lwt.return (Error Fresh_instance)
+      | Ok true ->
+        let () = Hh_logger.info "Attempting to reestablish watchman subscription" in
+        re_init ~prior_clockspec:dead_env.prior_clockspec dead_env.prior_settings
+      | Ok false ->
+        let () = Hh_logger.log "Unable to resubscribe to a fresh watchman instance" in
+        Lwt.return (Error Fresh_instance)
       | Error _ as err -> Lwt.return err
     with
     | Lwt_unix.Timeout ->
