@@ -94,13 +94,16 @@ Error --------------------------------------------------------------------------
 Cannot return `Array.isArray(...)` because boolean [1] is incompatible with string [2]. [incompatible-return]
 
    sanity-return-type.js:3:47
-   3| declare function f2(x: mixed): string %checks(Array.isArray(x));
-                                                    ^^^^^^^^^^^^^^^^ [1]
+      3| declare function f2(x: mixed): string %checks(Array.isArray(x));
+                                                       ^^^^^^^^^^^^^^^^
 
 References:
+   <BUILTINS>/core.js:1018:33
+   1018|     static isArray(obj: mixed): bool;
+                                         ^^^^ [1]
    sanity-return-type.js:3:32
-   3| declare function f2(x: mixed): string %checks(Array.isArray(x));
-                                     ^^^^^^ [2]
+      3| declare function f2(x: mixed): string %checks(Array.isArray(x));
+                                        ^^^^^^ [2]
 
 
 

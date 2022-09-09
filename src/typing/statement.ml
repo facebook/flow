@@ -22,6 +22,7 @@ open Type
 open TypeUtil
 open Hint_api
 open Func_class_sig_types
+module Eq_test = Eq_test.Make (Scope_api.With_ALoc) (Ssa_api.With_ALoc) (Env_api.With_ALoc)
 
 module Make
     (Destructuring : Destructuring_sig.S)
@@ -399,7 +400,7 @@ module Make
        [Pre] if c S1 else S2 [Post]
     *)
     | (loc, If { If.test; consequent; alternate; comments }) ->
-      let test_ast = predicates_of_condition cx ~hint:Hint_None ~cond:OtherTest test in
+      let test_ast = condition ~hint:Hint_None ~cond:OtherTest cx test in
       let (then_ast, then_abnormal) =
         Abnormal.catch_stmt_control_flow_exception (fun () -> statement cx consequent)
       in
@@ -546,7 +547,7 @@ module Make
                      mk_reason (RCustom "switch discriminant") (fst discriminant)
                    in
                    let (_, fake_ast) =
-                     predicates_of_condition
+                     condition
                        cx
                        ~hint:Hint_None
                        ~cond:(SwitchTest { case_test_reason; switch_discriminant_reason })
@@ -693,7 +694,7 @@ module Make
         | Some expr ->
           let hint = (Context.environment cx).Loc_env.return_hint in
           if Env.in_predicate_scope cx then
-            let (((_, t), _) as ast) = predicates_of_condition ~hint ~cond:OtherTest cx expr in
+            let (((_, t), _) as ast) = condition ~hint ~cond:OtherTest cx expr in
             let (p_map, n_map) = Env.predicate_refinement_maps cx loc in
             let pred_reason = update_desc_reason (fun desc -> RPredicateOf desc) reason in
             (OpenPredT { reason = pred_reason; base_t = t; m_pos = p_map; m_neg = n_map }, Some ast)
@@ -837,7 +838,7 @@ module Make
     (***************************************************************************)
     | (loc, While { While.test; body; comments }) ->
       (* generate loop test preds and their complements *)
-      let test_ast = predicates_of_condition ~hint:Hint_None ~cond:OtherTest cx test in
+      let test_ast = condition ~hint:Hint_None ~cond:OtherTest cx test in
       (* traverse loop body - after this, body_env = Post' *)
       let (body_ast, _) =
         Abnormal.catch_stmt_control_flow_exception (fun () -> statement cx body)
@@ -858,7 +859,7 @@ module Make
         Abnormal.catch_stmt_control_flow_exception (fun () -> statement cx body)
         |> Abnormal.ignore_break_or_continue_to_label None
       in
-      let test_ast = predicates_of_condition ~hint:Hint_None ~cond:OtherTest cx test in
+      let test_ast = condition ~hint:Hint_None ~cond:OtherTest cx test in
       let ast = (loc, DoWhile { DoWhile.body = body_ast; test = test_ast; comments }) in
       Abnormal.check_stmt_control_flow_exception (ast, body_abnormal)
     (***************************************************************************)
@@ -888,7 +889,7 @@ module Make
         match test with
         | None -> None
         | Some expr ->
-          let expr_ast = predicates_of_condition ~hint:Hint_None ~cond:OtherTest cx expr in
+          let expr_ast = condition ~hint:Hint_None ~cond:OtherTest cx expr in
           Some expr_ast
       in
       let (body_ast, _) =
@@ -912,9 +913,7 @@ module Make
     | (loc, ForIn { ForIn.left; right; body; each; comments }) ->
       let reason = mk_reason (RCustom "for-in") loc in
       let eval_right () =
-        let (((_, _), _) as right_ast) =
-          predicates_of_condition ~hint:Hint_None ~cond:OtherTest cx right
-        in
+        let (((_, _), _) as right_ast) = condition ~hint:Hint_None ~cond:OtherTest cx right in
         right_ast
       in
       let (left_ast, right_ast) =
@@ -1029,9 +1028,7 @@ module Make
       in
       let reason = mk_reason reason_desc loc in
       let eval_right () =
-        let (((_, t), _) as right_ast) =
-          predicates_of_condition ~hint:Hint_None ~cond:OtherTest cx right
-        in
+        let (((_, t), _) as right_ast) = condition ~hint:Hint_None ~cond:OtherTest cx right in
         let elem_t = for_of_elemt cx t reason await in
 
         (* null/undefined are NOT allowed *)
@@ -2363,16 +2360,16 @@ module Make
       ((loc, t), This this)
     | Super s -> ((loc, identifier cx (mk_ident ~comments:None "super") loc), Super s)
     | Unary u ->
-      let (t, u) = unary cx ~hint loc u in
+      let (t, u) = unary cx ~hint ~cond loc u in
       ((loc, t), Unary u)
     | Update u ->
       let (t, u) = update cx loc u in
       ((loc, t), Update u)
     | Binary b ->
-      let (t, b) = binary cx loc b in
+      let (t, b) = binary cx loc ~cond b in
       ((loc, t), Binary b)
     | Logical l ->
-      let (t, l) = logical cx loc ~hint l in
+      let (t, l) = logical cx loc ~hint ~cond l in
       ((loc, t), Logical l)
     | TypeCast { TypeCast.expression = e; annot; comments } ->
       let (t, annot') = Anno.mk_type_available_annotation cx Subst_name.Map.empty annot in
@@ -2606,7 +2603,7 @@ module Make
     | OptionalCall _ -> subscript ~hint ~cond cx ex
     | Conditional { Conditional.test; consequent; alternate; comments } ->
       let reason = mk_reason RConditional loc in
-      let test = predicates_of_condition ~hint:Hint_None ~cond:OtherTest cx test in
+      let test = condition ~hint:Hint_None ~cond:OtherTest cx test in
       let ((((_, t1), _) as consequent), then_abnormal) =
         Abnormal.catch_expr_control_flow_exception (fun () -> expression cx ~hint consequent)
       in
@@ -3412,9 +3409,7 @@ module Make
                 ~f:(Base.Fn.compose snd (expression_or_spread cx ~hint:Hint_None))
                 arguments
             in
-            let (((_, cond_t), _) as cond) =
-              predicates_of_condition ~hint:Hint_None ~cond:OtherTest cx cond
-            in
+            let (((_, cond_t), _) as cond) = condition ~hint:Hint_None ~cond:OtherTest cx cond in
             let reason = mk_reason (RFunctionCall (desc_of_t callee_t)) loc in
             Flow.flow cx (cond_t, InvariantT reason);
             ( args_loc,
@@ -4235,83 +4230,6 @@ module Make
     let (_, _, ast) = optional_chain ~hint ~cond cx ex in
     ast
 
-  (* Handles function calls that appear in conditional contexts. The main
-     distinction from the case handled in `expression_` is that we also return
-     the inferred types for the call receiver and the passed arguments, and
-     potenially the keys that correspond to the supplied arguments.
-  *)
-  and predicated_call_expression cx loc call =
-    let (f, argks, argts, t, call) = predicated_call_expression_ cx loc call in
-    (f, argks, argts, t, call)
-
-  (* Returns a quadruple containing:
-     - the function type
-     - argument keys
-     - the arguments types
-     - the returned type
-  *)
-  and predicated_call_expression_
-      cx
-      loc
-      {
-        Ast.Expression.Call.callee;
-        targs;
-        arguments =
-          (args_loc, { Ast.Expression.ArgList.arguments = args; comments = args_comments }) as
-          arguments;
-        comments;
-      } =
-    let (targts, targ_asts) = convert_call_targs_opt cx targs in
-    let args =
-      args
-      |> Base.List.map ~f:(function
-             | Ast.Expression.Expression e -> e
-             | _ -> Utils_js.assert_false "No spreads should reach here"
-             )
-    in
-    let (((_, f), _) as callee_ast) = expression cx ~hint:Hint_None callee in
-    let reason = mk_reason (RFunctionCall (desc_of_t f)) loc in
-    let hint_f = Hint_t f in
-    let arg_asts =
-      Base.List.mapi
-        ~f:(fun i e -> expression cx ~hint:(decompose_hint (Decomp_FuncParam i) hint_f) e)
-        args
-    in
-    let argts = Base.List.map ~f:snd_fst arg_asts in
-    let argks = Base.List.map ~f:(Refinement.key ~allow_optional:false) args in
-    let use_op =
-      Op
-        (FunCall
-           {
-             op = reason;
-             fn = mk_expression_reason callee;
-             args = mk_initial_arguments_reason arguments;
-             local = true;
-           }
-        )
-    in
-    let t = func_call cx reason ~use_op f targts (Base.List.map ~f:(fun e -> Arg e) argts) in
-    let arguments_ast =
-      ( args_loc,
-        {
-          Ast.Expression.ArgList.arguments =
-            Base.List.map ~f:(fun e -> Ast.Expression.Expression e) arg_asts;
-          comments = args_comments;
-        }
-      )
-    in
-    ( f,
-      argks,
-      argts,
-      t,
-      {
-        Ast.Expression.Call.callee = callee_ast;
-        targs = targ_asts;
-        arguments = arguments_ast;
-        comments;
-      }
-    )
-
   (* We assume that constructor functions return void
      and constructions return objects.
      TODO: This assumption does not always hold.
@@ -4509,15 +4427,18 @@ module Make
       | RegExp _ -> Flow.get_builtin_type cx (mk_annot_reason RRegExp loc) (OrdinaryName "RegExp")
 
   (* traverse a unary expression, return result type *)
-  and unary cx ~hint loc =
+  and unary cx ~hint ~cond loc =
     let open Ast.Expression.Unary in
     function
     | { operator = Not; argument; comments } ->
-      let (((_, arg), _) as argument) = expression cx ~hint:Hint_None argument in
+      let (((_, arg), _) as argument) = expression cx ~hint:Hint_None ?cond argument in
       let reason = mk_reason (RUnaryOperator ("not", desc_of_t arg)) loc in
-      ( Tvar.mk_no_wrap_where cx reason (fun t -> Flow.flow cx (arg, NotT (reason, t))),
-        { operator = Not; argument; comments }
-      )
+      let tout =
+        match cond with
+        | Some _ -> BoolT.at loc |> with_trust bogus_trust
+        | None -> Tvar.mk_no_wrap_where cx reason (fun t -> Flow.flow cx (arg, NotT (reason, t)))
+      in
+      (tout, { operator = Not; argument; comments })
     | { operator = Plus; argument; comments } ->
       let argument = expression cx ~hint:Hint_None argument in
       (NumT.at loc |> with_trust literal_trust, { operator = Plus; argument; comments })
@@ -4638,14 +4559,47 @@ module Make
         { expr with argument = arg_ast }
     )
 
+  (* Returns a function that type check LHS or RHS of eq_test under correct conditional context. *)
+  and visit_eq_test cx ~cond loc left right =
+    let check ~cond = expression cx ~hint:Hint_None ?cond in
+    match cond with
+    | None -> check ~cond:None
+    | Some c ->
+      let reconstruct_ast expr_under_cond e =
+        if e == expr_under_cond then
+          check ~cond:(Some OtherTest) e
+        else
+          check ~cond:None e
+      in
+      Eq_test.visit_eq_test
+      (* Strict and sense don't influence whether we should propagate cond context. *)
+        ~sense:false
+        ~strict:false
+        ~on_type_of_test:(fun _ expr _value _ _ -> reconstruct_ast expr)
+        ~on_literal_test:(fun ~strict:_ ~sense:_ _ expr _ _value -> reconstruct_ast expr)
+        ~on_null_test:(fun ~sense:_ ~strict:_ _ expr _value -> reconstruct_ast expr)
+        ~on_void_test:(fun ~sense:_ ~strict:_ ~check_for_bound_undefined:_ _ expr _value ->
+          reconstruct_ast expr)
+        ~on_member_eq_other:(fun expr _value -> reconstruct_ast expr)
+        ~on_other_eq_member:(fun _value expr -> reconstruct_ast expr)
+        ~on_other_eq_test:(fun _ _ -> check ~cond:None)
+        ~is_switch_cond_context:
+          (match c with
+          | SwitchTest _ -> true
+          | OtherTest -> false)
+        loc
+        left
+        right
+
   (* traverse a binary expression, return result type *)
-  and binary cx loc { Ast.Expression.Binary.operator; left; right; comments } =
+  and binary cx loc ~cond { Ast.Expression.Binary.operator; left; right; comments } =
     let open Ast.Expression.Binary in
     match operator with
     | Equal
     | NotEqual ->
-      let (((_, t1), _) as left) = expression cx ~hint:Hint_None left in
-      let (((_, t2), _) as right) = expression cx ~hint:Hint_None right in
+      let reconstruct_ast = visit_eq_test cx ~cond loc left right in
+      let (((_, t1), _) as left) = reconstruct_ast left in
+      let (((_, t2), _) as right) = reconstruct_ast right in
       let desc =
         RBinaryOperator
           ( Flow_ast_utils.string_of_binary_operator operator,
@@ -4668,8 +4622,9 @@ module Make
       (BoolT.at loc |> with_trust literal_trust, { operator; left; right; comments })
     | StrictEqual
     | StrictNotEqual ->
-      let (((_, t1), _) as left) = expression cx ~hint:Hint_None left in
-      let (((_, t2), _) as right) = expression cx ~hint:Hint_None right in
+      let reconstruct_ast = visit_eq_test cx ~cond loc left right in
+      let (((_, t1), _) as left) = reconstruct_ast left in
+      let (((_, t2), _) as right) = reconstruct_ast right in
       let desc =
         RBinaryOperator
           ( Flow_ast_utils.string_of_binary_operator operator,
@@ -4678,7 +4633,7 @@ module Make
           )
       in
       let reason = mk_reason desc loc in
-      Flow.flow cx (t1, StrictEqT { reason; cond_context = None; flip = false; arg = t2 });
+      Flow.flow cx (t1, StrictEqT { reason; cond_context = cond; flip = false; arg = t2 });
       (BoolT.at loc |> with_trust literal_trust, { operator; left; right; comments })
     | Instanceof ->
       let left = expression cx ~hint:Hint_None left in
@@ -4742,7 +4697,7 @@ module Make
         { operator; left = left_ast; right = right_ast; comments }
       )
 
-  and logical cx loc ~hint { Ast.Expression.Logical.operator; left; right; comments } =
+  and logical cx loc ~cond ~hint { Ast.Expression.Logical.operator; left; right; comments } =
     let open Ast.Expression.Logical in
     (* With logical operators the LHS is always evaluated. So if the LHS throws, the whole
      * expression throws. To model this we do not catch abnormal exceptions on the LHS.
@@ -4759,10 +4714,10 @@ module Make
     match operator with
     | Or ->
       let () = check_default_pattern cx left right in
-      let (((_, t1), _) as left) = predicates_of_condition ~hint ~cond:OtherTest cx left in
+      let (((_, t1), _) as left) = condition ~hint ~cond:OtherTest cx left in
       let ((((_, t2), _) as right), right_abnormal) =
         Abnormal.catch_expr_control_flow_exception (fun () ->
-            expression cx ~hint:(Hint_api.merge_hints hint (Hint_t t1)) right
+            expression cx ~hint:(Hint_api.merge_hints hint (Hint_t t1)) ?cond right
         )
       in
       let t2 =
@@ -4776,9 +4731,9 @@ module Make
         { operator = Or; left; right; comments }
       )
     | And ->
-      let (((_, t1), _) as left) = predicates_of_condition ~hint ~cond:OtherTest cx left in
+      let (((_, t1), _) as left) = condition ~hint ~cond:OtherTest cx left in
       let ((((_, t2), _) as right), right_abnormal) =
-        Abnormal.catch_expr_control_flow_exception (fun () -> expression cx ~hint right)
+        Abnormal.catch_expr_control_flow_exception (fun () -> expression cx ~hint ?cond right)
       in
       let t2 =
         match right_abnormal with
@@ -5252,9 +5207,7 @@ module Make
           let () = update_env result_t in
           (lhs_t, lhs_pattern_ast, rhs_ast)
         | Assignment.AndAssign ->
-          let ((_, lhs_t), _) =
-            predicates_of_condition ~hint:Hint_None ~cond:OtherTest cx left_expr
-          in
+          let ((_, lhs_t), _) = condition ~hint:Hint_None ~cond:OtherTest cx left_expr in
           let ((((_, rhs_t), _) as rhs_ast), right_abnormal) =
             Abnormal.catch_expr_control_flow_exception (fun () ->
                 expression cx ~hint:Hint_None rhs (* TODO hint *)
@@ -5273,9 +5226,7 @@ module Make
           (lhs_t, lhs_pattern_ast, rhs_ast)
         | Assignment.OrAssign ->
           let () = check_default_pattern cx left_expr rhs in
-          let ((_, lhs_t), _) =
-            predicates_of_condition ~hint:Hint_None ~cond:OtherTest cx left_expr
-          in
+          let ((_, lhs_t), _) = condition ~hint:Hint_None ~cond:OtherTest cx left_expr in
           let ((((_, rhs_t), _) as rhs_ast), right_abnormal) =
             Abnormal.catch_expr_control_flow_exception (fun () ->
                 expression cx ~hint:Hint_None rhs (* TODO hint *)
@@ -5968,528 +5919,12 @@ module Make
       )
     | _ -> None
 
-  (* Given an expression found in a test position, notices certain
-     type refinements which follow from the test's success or failure,
-     and returns a 5-tuple:
-     - result type of the test (not always bool)
-     - map (lookup key -> type) of refinements which hold if
-     the test is true
-     - map of refinements which hold if the test is false
-     - map of unrefined types for lvalues found in refinement maps
-     - typed AST of the test expression
-  *)
-  and predicates_of_condition cx ~hint ~cond e =
-    let open Ast in
-    let open Expression in
-    let flow_eqt ~strict loc (t1, t2) =
-      if strict then
-        let reason = mk_reason (RCustom "strict equality comparison") loc in
-        Flow.flow cx (t1, StrictEqT { reason; cond_context = Some cond; flip = false; arg = t2 })
-      else
-        let reason = mk_reason (RCustom "non-strict equality comparison") loc in
-        Flow.flow cx (t1, EqT { reason; flip = false; arg = t2 })
-    in
-
-    (* a wrapper around `condition` (which is a wrapper around `expression`) that
-       evaluates `expr`. if this is a sentinel property check (determined by
-       a strict equality check against a member expression `_object.prop_name`),
-       then also returns the refinement of `_object`.
-
-       this is used by other tests such as `bool_test` such that if given
-       `foo.bar === false`, `foo.bar` is refined to be `false` (by `bool_test`)
-       and `foo` is refined to eliminate branches that don't have a `false` bar
-       property (by this function). *)
-    let condition_of_maybe_sentinel cx ~allow_optional expr =
-      let expr' =
-        match expr with
-        | (loc, OptionalMember { OptionalMember.member; _ }) -> (loc, Member member)
-        | _ -> expr
-      in
-      match (Refinement.key ~allow_optional expr, expr') with
-      | ( Some _,
-          ( _,
-            Member
-              {
-                Member._object;
-                property =
-                  ( Member.PropertyIdentifier _
-                  | Member.PropertyExpression
-                      (_, Ast.Expression.Literal { Ast.Literal.value = Ast.Literal.String _; _ }) );
-                comments = _;
-              }
-          )
-        ) ->
-        (* Note here we're calling optional_chain on the whole expression, not on _object. *)
-        let (_, _, ast) =
-          optional_chain
-            ~hint:Hint_None
-            ~cond:(Some cond) (* We do want to allow possibly absent properties... *)
-            cx
-            expr
-        in
-        ast
-      | _ -> condition cx ~cond expr
-    in
-    (* inspect a null equality test *)
-    let null_test loc ~strict e null_t reconstruct_ast =
-      let (((_, t), _) as e_ast) = condition_of_maybe_sentinel cx ~allow_optional:true e in
-      let ast = reconstruct_ast e_ast in
-      flow_eqt ~strict loc (t, null_t);
-      let t_out = BoolT.at loc |> with_trust literal_trust in
-      ((loc, t_out), ast)
-    in
-    let void_test loc ~strict e void_t reconstruct_ast =
-      (* if `void_t` is not a VoidT, make it one so that the sentinel test has a
-         literal type to test against. It's not appropriate to call `void_test`
-         with a `void_t` that you don't want to treat like an actual `void`! *)
-      let void_t =
-        match void_t with
-        | DefT (_, _, VoidT) -> void_t
-        | _ -> VoidT.why (reason_of_t void_t) |> with_trust bogus_trust
-      in
-      let (((_, t), _) as e_ast) = condition_of_maybe_sentinel cx ~allow_optional:true e in
-      let ast = reconstruct_ast e_ast in
-      flow_eqt ~strict loc (t, void_t);
-      let t_out = BoolT.at loc |> with_trust bogus_trust in
-      ((loc, t_out), ast)
-    in
-    (* inspect an undefined equality test *)
-    let undef_test loc ~undefined_loc ~strict e void_t reconstruct_ast =
-      (* if `undefined` isn't redefined in scope, then we assume it is `void` *)
-      if Env.is_global_var cx undefined_loc then
-        void_test loc ~strict e void_t reconstruct_ast
-      else
-        let e_ast = expression cx ~hint:Hint_None e in
-        ((loc, BoolT.at loc |> with_trust bogus_trust), reconstruct_ast e_ast)
-    in
-    let literal_test loc ~strict expr val_t reconstruct_ast =
-      let (((_, t), _) as expr_ast) = condition_of_maybe_sentinel cx ~allow_optional:true expr in
-      let ast = reconstruct_ast expr_ast in
-      flow_eqt ~strict loc (t, val_t);
-      let t = BoolT.at loc |> with_trust bogus_trust in
-      ((loc, t), ast)
-    in
-    (* generalizes typeof, instanceof, and Array.isArray() *)
-    let instance_test loc target make_ast =
-      let bool = BoolT.at loc |> with_trust bogus_trust in
-      match Refinement.key ~allow_optional:true target with
-      | Some _ ->
-        let (_, _, targ_ast) = optional_chain ~hint:Hint_None ~cond:(Some cond) cx target in
-        make_ast targ_ast bool
-      | None ->
-        let targ_ast = condition cx ~cond target in
-        make_ast targ_ast bool
-    in
-    (* inspect a typeof equality test *)
-    let typeof_test loc arg typename str_loc reconstruct_ast =
-      let bool = BoolT.at loc |> with_trust bogus_trust in
-      match typename with
-      | "boolean"
-      | "function"
-      | "number"
-      | "object"
-      | "string"
-      | "symbol"
-      | "undefined" ->
-        let make_ast ast _ = ((loc, bool), reconstruct_ast ast) in
-        instance_test loc arg make_ast
-      | _ ->
-        let arg = condition cx ~cond arg in
-        Flow.add_output cx Error_message.(EInvalidTypeof (str_loc, typename));
-        ((loc, bool), reconstruct_ast arg)
-    in
-    let sentinel_prop_test loc ~strict expr val_t reconstruct_ast =
-      let (((_, t), _) as expr_ast) = condition_of_maybe_sentinel cx ~allow_optional:false expr in
-      let ast = reconstruct_ast expr_ast in
-      flow_eqt ~strict loc (t, val_t);
-      let t_out = BoolT.at loc |> with_trust bogus_trust in
-      ((loc, t_out), ast)
-    in
-    let eq_test loc ~strict left right reconstruct_ast =
-      let is_number_literal node =
-        match node with
-        | Expression.Literal { Literal.value = Literal.Number _; _ }
-        | Expression.Unary
-            {
-              Unary.operator = Unary.Minus;
-              argument = (_, Expression.Literal { Literal.value = Literal.Number _; _ });
-              comments = _;
-            } ->
-          true
-        | _ -> false
-      in
-      match (left, right) with
-      (* typeof expr ==/=== string *)
-      (* this must happen before the case below involving Literal.String in order
-         to match anything. *)
-      | ( (typeof_loc, Expression.Unary { Unary.operator = Unary.Typeof; argument; comments }),
-          (str_loc, (Expression.Literal { Literal.value = Literal.String s; _ } as lit_exp))
-        ) ->
-        typeof_test loc argument s str_loc (fun argument ->
-            let left_t = StrT.at typeof_loc |> with_trust bogus_trust in
-            let left =
-              ( (typeof_loc, left_t),
-                Expression.Unary { Unary.operator = Unary.Typeof; argument; comments }
-              )
-            in
-            let right_t = StrT.at str_loc |> with_trust bogus_trust in
-            let right = ((str_loc, right_t), lit_exp) in
-            reconstruct_ast left right
-        )
-      | ( (str_loc, (Expression.Literal { Literal.value = Literal.String s; _ } as lit_exp)),
-          (typeof_loc, Expression.Unary { Unary.operator = Unary.Typeof; argument; comments })
-        ) ->
-        typeof_test loc argument s str_loc (fun argument ->
-            let left_t = StrT.at str_loc |> with_trust bogus_trust in
-            let left = ((str_loc, left_t), lit_exp) in
-            let right_t = StrT.at typeof_loc |> with_trust bogus_trust in
-            let right =
-              ( (typeof_loc, right_t),
-                Expression.Unary { Unary.operator = Unary.Typeof; argument; comments }
-              )
-            in
-            reconstruct_ast left right
-        )
-      | ( (typeof_loc, Expression.Unary { Unary.operator = Unary.Typeof; argument; comments }),
-          ( str_loc,
-            ( Expression.TemplateLiteral
-                {
-                  TemplateLiteral.quasis =
-                    [
-                      ( _,
-                        {
-                          TemplateLiteral.Element.value = { TemplateLiteral.Element.cooked = s; _ };
-                          _;
-                        }
-                      );
-                    ];
-                  expressions = [];
-                  comments = _;
-                } as lit_exp
-            )
-          )
-        ) ->
-        typeof_test loc argument s str_loc (fun argument ->
-            let left_t = StrT.at typeof_loc |> with_trust bogus_trust in
-            let left =
-              ( (typeof_loc, left_t),
-                Expression.Unary { Unary.operator = Unary.Typeof; argument; comments }
-              )
-            in
-            let right_t = StrT.at str_loc |> with_trust bogus_trust in
-            let right = ((str_loc, right_t), lit_exp) in
-            reconstruct_ast left right
-        )
-      | ( ( str_loc,
-            ( Expression.TemplateLiteral
-                {
-                  TemplateLiteral.quasis =
-                    [
-                      ( _,
-                        {
-                          TemplateLiteral.Element.value = { TemplateLiteral.Element.cooked = s; _ };
-                          _;
-                        }
-                      );
-                    ];
-                  expressions = [];
-                  comments = _;
-                } as lit_exp
-            )
-          ),
-          (typeof_loc, Expression.Unary { Unary.operator = Unary.Typeof; argument; comments })
-        ) ->
-        typeof_test loc argument s str_loc (fun argument ->
-            let left_t = StrT.at str_loc |> with_trust bogus_trust in
-            let left = ((str_loc, left_t), lit_exp) in
-            let right_t = StrT.at typeof_loc |> with_trust bogus_trust in
-            let right =
-              ( (typeof_loc, right_t),
-                Expression.Unary { Unary.operator = Unary.Typeof; argument; comments }
-              )
-            in
-            reconstruct_ast left right
-        )
-      (* special case equality relations involving booleans *)
-      | (((_, Expression.Literal { Literal.value = Literal.Boolean _; _ }) as value), expr) ->
-        let (((_, val_t), _) as val_ast) = expression cx ~hint:Hint_None value in
-        literal_test loc ~strict expr val_t (fun expr -> reconstruct_ast val_ast expr)
-      | (expr, ((_, Expression.Literal { Literal.value = Literal.Boolean _; _ }) as value)) ->
-        let (((_, val_t), _) as val_ast) = expression cx ~hint:Hint_None value in
-        literal_test loc ~strict expr val_t (fun expr -> reconstruct_ast expr val_ast)
-      (* special case equality relations involving strings *)
-      | (((_, Expression.Literal { Literal.value = Literal.String _; _ }) as value), expr)
-      | ( ( ( _,
-              Expression.TemplateLiteral
-                {
-                  TemplateLiteral.quasis =
-                    [
-                      ( _,
-                        {
-                          TemplateLiteral.Element.value = { TemplateLiteral.Element.cooked = _; _ };
-                          _;
-                        }
-                      );
-                    ];
-                  _;
-                }
-            ) as value
-          ),
-          expr
-        ) ->
-        let (((_, val_t), _) as val_ast) = expression cx ~hint:Hint_None value in
-        literal_test loc ~strict expr val_t (fun expr -> reconstruct_ast val_ast expr)
-      | (expr, ((_, Expression.Literal { Literal.value = Literal.String _; _ }) as value))
-      | ( expr,
-          ( ( _,
-              Expression.TemplateLiteral
-                {
-                  TemplateLiteral.quasis =
-                    [
-                      ( _,
-                        {
-                          TemplateLiteral.Element.value = { TemplateLiteral.Element.cooked = _; _ };
-                          _;
-                        }
-                      );
-                    ];
-                  _;
-                }
-            ) as value
-          )
-        ) ->
-        let (((_, val_t), _) as val_ast) = expression cx ~hint:Hint_None value in
-        literal_test loc ~strict expr val_t (fun expr -> reconstruct_ast expr val_ast)
-      (* special case equality relations involving numbers *)
-      | (((_, number_literal) as value), expr) when is_number_literal number_literal ->
-        let (((_, val_t), _) as val_ast) = expression cx ~hint:Hint_None value in
-        literal_test loc ~strict expr val_t (fun expr -> reconstruct_ast val_ast expr)
-      | (expr, ((_, number_literal) as value)) when is_number_literal number_literal ->
-        let (((_, val_t), _) as val_ast) = expression cx ~hint:Hint_None value in
-        literal_test loc ~strict expr val_t (fun expr -> reconstruct_ast expr val_ast)
-      (* TODO: add Type.predicate variant that tests number equality *)
-      (* expr op null *)
-      | (((_, Expression.Literal { Literal.value = Literal.Null; _ }) as null), expr) ->
-        let (((_, null_t), _) as null_ast) = expression cx ~hint:Hint_None null in
-        null_test loc ~strict expr null_t (fun expr -> reconstruct_ast null_ast expr)
-      | (expr, ((_, Expression.Literal { Literal.value = Literal.Null; _ }) as null)) ->
-        let (((_, null_t), _) as null_ast) = expression cx ~hint:Hint_None null in
-        null_test loc ~strict expr null_t (fun expr -> reconstruct_ast expr null_ast)
-      (* expr op undefined *)
-      | ( ( (_, Identifier (undefined_loc, { Ast.Identifier.name = "undefined"; comments = _ })) as
-          void
-          ),
-          expr
-        ) ->
-        let (((_, void_t), _) as void_ast) = expression cx ~hint:Hint_None void in
-        undef_test loc ~undefined_loc ~strict expr void_t (fun expr -> reconstruct_ast void_ast expr)
-      | ( expr,
-          ( (_, Identifier (undefined_loc, { Ast.Identifier.name = "undefined"; comments = _ })) as
-          void
-          )
-        ) ->
-        let (((_, void_t), _) as void_ast) = expression cx ~hint:Hint_None void in
-        undef_test loc ~undefined_loc ~strict expr void_t (fun expr -> reconstruct_ast expr void_ast)
-      (* expr op void(...) *)
-      | (((_, Unary { Unary.operator = Unary.Void; _ }) as void), expr) ->
-        let (((_, void_t), _) as void_ast) = expression cx ~hint:Hint_None void in
-        void_test loc ~strict expr void_t (fun expr -> reconstruct_ast void_ast expr)
-      | (expr, ((_, Unary { Unary.operator = Unary.Void; _ }) as void)) ->
-        let (((_, void_t), _) as void_ast) = expression cx ~hint:Hint_None void in
-        void_test loc ~strict expr void_t (fun expr -> reconstruct_ast expr void_ast)
-      (* fallback case for equality relations involving sentinels (this should be
-         lower priority since it refines the object but not the property) *)
-      | (((_, Expression.Member _) as expr), value) ->
-        let (((_, value_t), _) as value_ast) = expression cx ~hint:Hint_None value in
-        sentinel_prop_test loc ~strict expr value_t (fun expr -> reconstruct_ast expr value_ast)
-      | (value, ((_, Expression.Member _) as expr))
-        when match cond with
-             | SwitchTest _ ->
-               (* Do not treat `switch (val) { case o.p: ... }` as a sentinel prop test on `o`. *)
-               false
-             | OtherTest -> true ->
-        let (((_, value_t), _) as value_ast) = expression cx ~hint:Hint_None value in
-        sentinel_prop_test loc ~strict expr value_t (fun expr -> reconstruct_ast value_ast expr)
-      (* for all other cases, walk the AST but always return bool *)
-      | (expr, value) ->
-        let (((_, t1), _) as expr) = expression cx ~hint:Hint_None expr in
-        let (((_, t2), _) as value) = expression cx ~hint:Hint_None value in
-        flow_eqt ~strict loc (t1, t2);
-        let ast = reconstruct_ast expr value in
-        let t_out = BoolT.at loc |> with_trust bogus_trust in
-        ((loc, t_out), ast)
-    in
-    (* main *)
-    match e with
-    (* member expressions *)
-    | (_, Member _)
-    | (_, OptionalMember _) ->
-      let (_, _, ast) = optional_chain ~hint:Hint_None ~cond:(Some cond) cx e in
-      ast
-    (* assignments *)
-    | (_, Assignment _) -> expression cx ~hint e
-    (* expr instanceof t *)
-    | (loc, Binary { Binary.operator = Binary.Instanceof; left; right; comments }) ->
-      let make_ast left_ast bool =
-        let (((rloc, right_t), _) as right_ast) = expression cx ~hint:Hint_None right in
-        let reason_rhs = mk_reason (RCustom "RHS of `instanceof` operator") rloc in
-        Flow.flow cx (right_t, AssertInstanceofRHST reason_rhs);
-        ( (loc, bool),
-          Binary
-            { Binary.operator = Binary.Instanceof; left = left_ast; right = right_ast; comments }
-        )
-      in
-      instance_test loc left make_ast
-    (* expr op expr *)
-    | (loc, Binary { Binary.operator = Binary.Equal; left; right; comments }) ->
-      eq_test loc ~strict:false left right (fun left right ->
-          Binary { Binary.operator = Binary.Equal; left; right; comments }
-      )
-    | (loc, Binary { Binary.operator = Binary.StrictEqual; left; right; comments }) ->
-      eq_test loc ~strict:true left right (fun left right ->
-          Binary { Binary.operator = Binary.StrictEqual; left; right; comments }
-      )
-    | (loc, Binary { Binary.operator = Binary.NotEqual; left; right; comments }) ->
-      eq_test loc ~strict:false left right (fun left right ->
-          Binary { Binary.operator = Binary.NotEqual; left; right; comments }
-      )
-    | (loc, Binary { Binary.operator = Binary.StrictNotEqual; left; right; comments }) ->
-      eq_test loc ~strict:true left right (fun left right ->
-          Binary { Binary.operator = Binary.StrictNotEqual; left; right; comments }
-      )
-    (* Array.isArray(expr) *)
-    | ( loc,
-        Call
-          {
-            Call.callee =
-              ( callee_loc,
-                Member
-                  {
-                    Member._object =
-                      (_, Identifier (_, { Ast.Identifier.name = "Array"; comments = _ })) as o;
-                    property =
-                      Member.PropertyIdentifier
-                        (prop_loc, ({ Ast.Identifier.name = "isArray"; comments = _ } as id));
-                    comments = member_comments;
-                  }
-              );
-            targs;
-            arguments =
-              (args_loc, { ArgList.arguments = [Expression arg]; comments = args_comments });
-            comments;
-          }
-      ) ->
-      Base.Option.iter targs ~f:(fun _ ->
-          Flow.add_output
-            cx
-            Error_message.(
-              ECallTypeArity
-                {
-                  call_loc = loc;
-                  is_new = false;
-                  reason_arity = Reason.(locationless_reason (RFunction RNormal));
-                  expected_arity = 0;
-                }
-            )
-      );
-
-      (* get Array.isArray in order to populate the type tables, but we don't
-         care about the result. *)
-      (* TODO: one day we can replace this with a call to `method_call`, and
-         then discard the result. currently MethodT does not update type_table
-         properly. *)
-      let (((_, obj_t), _) as _object) = expression cx ~hint:Hint_None o in
-      let reason = mk_reason (RCustom "`Array.isArray(...)`") callee_loc in
-      let fn_t =
-        Tvar.mk_no_wrap_where cx reason (fun t ->
-            let prop_reason = mk_reason (RProperty (Some (OrdinaryName "isArray"))) prop_loc in
-            let use_op = Op (GetProperty (mk_expression_reason e)) in
-            Flow.flow
-              cx
-              ( obj_t,
-                GetPropT (use_op, reason, None, Named (prop_reason, OrdinaryName "isArray"), t)
-              )
-        )
-      in
-      let make_ast arg bool =
-        let property = Member.PropertyIdentifier ((prop_loc, fn_t), id) in
-        ( (loc, bool),
-          Call
-            {
-              Call.callee =
-                ((callee_loc, fn_t), Member { Member._object; property; comments = member_comments });
-              targs = None;
-              arguments =
-                (args_loc, { ArgList.arguments = [Expression arg]; comments = args_comments });
-              comments;
-            }
-        )
-      in
-      instance_test loc arg make_ast
-    (* test1 && test2 *)
-    | (loc, Logical { Logical.operator = Logical.And; left; right; comments }) ->
-      let (((_, t1), _) as left_ast) = predicates_of_condition cx ~hint ~cond left in
-      let (((_, t2), _) as right_ast) =
-        predicates_of_condition cx ~hint:(Hint_api.merge_hints hint (Hint_t t1)) ~cond right
-      in
-      let reason = mk_reason (RLogical ("&&", desc_of_t t1, desc_of_t t2)) loc in
-      let t_out =
-        Tvar.mk_no_wrap_where cx reason (fun t -> Flow.flow cx (t1, AndT (reason, t2, t)))
-      in
-      ( (loc, t_out),
-        Logical { Logical.operator = Logical.And; left = left_ast; right = right_ast; comments }
-      )
-    (* test1 || test2 *)
-    | (loc, Logical { Logical.operator = Logical.Or; left; right; comments }) ->
-      let () = check_default_pattern cx left right in
-      let (((_, t1), _) as left_ast) = predicates_of_condition cx ~hint ~cond left in
-      let (((_, t2), _) as right_ast) =
-        predicates_of_condition cx ~hint:(Hint_api.merge_hints hint (Hint_t t1)) ~cond right
-      in
-      let reason = mk_reason (RLogical ("||", desc_of_t t1, desc_of_t t2)) loc in
-      let t_out =
-        Tvar.mk_no_wrap_where cx reason (fun t -> Flow.flow cx (t1, OrT (reason, t2, t)))
-      in
-      ( (loc, t_out),
-        Logical { Logical.operator = Logical.Or; left = left_ast; right = right_ast; comments }
-      )
-    (* !test *)
-    | (loc, Unary { Unary.operator = Unary.Not; argument; comments }) ->
-      let arg = predicates_of_condition cx ~hint:Hint_None ~cond argument in
-      let ast' = Unary { Unary.operator = Unary.Not; argument = arg; comments } in
-      let t_out = BoolT.at loc |> with_trust bogus_trust in
-      ((loc, t_out), ast')
-    (* ids *)
-    | (_, This _)
-    | (_, Identifier _) ->
-      condition ~cond cx e
-    (* e.m(...) *)
-    (* TODO: Don't trap method calls for now *)
-    | (_, Call { Call.callee = (_, (Member _ | OptionalMember _)); _ }) -> expression cx ~hint e
-    (* f(...) *)
-    (* The concrete predicate is not known at this point. We attach a "latent"
-       predicate pointing to the type of the function that will supply this
-       predicated when it is resolved. *)
-    | (loc, Call ({ Call.callee; arguments = (_, { ArgList.arguments; comments = _ }); _ } as call))
-      ->
-      let is_spread = function
-        | Spread _ -> true
-        | _ -> false
-      in
-      if List.exists is_spread arguments || Flow_ast_utils.is_call_to_invariant callee then
-        expression cx ~hint e
-      else
-        let (_, _, _, ret_t, call_ast) = predicated_call_expression cx loc call in
-        ((loc, ret_t), Call call_ast)
-    (* fallthrough case: evaluate test expr, no refinements *)
-    | e -> expression cx ~hint e
-
   (* Conditional expressions are checked like expressions, except that property
      accesses are provisionally allowed even when such properties do not exist.
      This accommodates the common JavaScript idiom of testing for the existence
      of a property before using that property. *)
-  and condition cx ~cond e : (ALoc.t, ALoc.t * Type.t) Ast.Expression.t =
-    expression ~cond ~hint:Hint_None cx e
+  and condition cx ~cond ~hint e : (ALoc.t, ALoc.t * Type.t) Ast.Expression.t =
+    expression ~cond ~hint cx e
 
   and get_private_field_opt_use cx reason ~use_op name =
     let class_entries = Env.get_class_entries cx in

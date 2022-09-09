@@ -4431,7 +4431,7 @@ module Make
           this#commit_refinement refis
         end
 
-      method typeof_test loc arg _value typename sense =
+      method typeof_test loc arg (str_loc, _) typename sense =
         let (refinement, undef) =
           match typename with
           | "boolean" -> (Some (BoolR loc), false)
@@ -4441,7 +4441,9 @@ module Make
           | "string" -> (Some (StringR loc), false)
           | "symbol" -> (Some (SymbolR loc), false)
           | "undefined" -> (Some UndefinedR, true)
-          | _ -> (None, false)
+          | _ ->
+            add_output Error_message.(EInvalidTypeof (str_loc, typename));
+            (None, false)
         in
         match (refinement, RefinementKey.of_expression arg) with
         | (Some ref, Some refinement_key) ->

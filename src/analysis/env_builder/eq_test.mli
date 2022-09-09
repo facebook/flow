@@ -15,7 +15,7 @@ module type S = sig
       (ALoc.t, ALoc.t) Flow_ast.Expression.t ->
       string ->
       bool ->
-      unit
+      'a
       ) ->
     on_literal_test:
       (strict:bool ->
@@ -24,7 +24,7 @@ module type S = sig
       (ALoc.t, ALoc.t) Flow_ast.Expression.t ->
       Env_api.Refi.refinement_kind ->
       (ALoc.t, ALoc.t) Flow_ast.Expression.t ->
-      unit
+      'a
       ) ->
     on_null_test:
       (sense:bool ->
@@ -32,7 +32,7 @@ module type S = sig
       ALoc.t ->
       (ALoc.t, ALoc.t) Flow_ast.Expression.t ->
       (ALoc.t, ALoc.t) Flow_ast.Expression.t ->
-      unit
+      'a
       ) ->
     on_void_test:
       (sense:bool ->
@@ -41,21 +41,21 @@ module type S = sig
       ALoc.t ->
       (ALoc.t, ALoc.t) Flow_ast.Expression.t ->
       (ALoc.t, ALoc.t) Flow_ast.Expression.t ->
-      unit
+      'a
       ) ->
     on_member_eq_other:
-      ((ALoc.t, ALoc.t) Flow_ast.Expression.t -> (ALoc.t, ALoc.t) Flow_ast.Expression.t -> unit) ->
+      ((ALoc.t, ALoc.t) Flow_ast.Expression.t -> (ALoc.t, ALoc.t) Flow_ast.Expression.t -> 'a) ->
     on_other_eq_member:
-      ((ALoc.t, ALoc.t) Flow_ast.Expression.t -> (ALoc.t, ALoc.t) Flow_ast.Expression.t -> unit) ->
+      ((ALoc.t, ALoc.t) Flow_ast.Expression.t -> (ALoc.t, ALoc.t) Flow_ast.Expression.t -> 'a) ->
     is_switch_cond_context:bool ->
     on_other_eq_test:
-      ((ALoc.t, ALoc.t) Flow_ast.Expression.t -> (ALoc.t, ALoc.t) Flow_ast.Expression.t -> unit) ->
+      ((ALoc.t, ALoc.t) Flow_ast.Expression.t -> (ALoc.t, ALoc.t) Flow_ast.Expression.t -> 'a) ->
     strict:bool ->
     sense:bool ->
     ALoc.t ->
     (ALoc.t, ALoc.t) Flow_ast.Expression.t ->
     (ALoc.t, ALoc.t) Flow_ast.Expression.t ->
-    unit
+    'a
 end
 
 module Make
