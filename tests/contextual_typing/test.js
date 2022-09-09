@@ -10,6 +10,8 @@ function test1() {
 
   let f2: (string) => string = (a) => (a: string); // ok
   f2 = (b) => (b: string); // ok
+
+  const reasonTest: (string) => mixed = (a) => (a: empty); // ok
 }
 
 function test2() {

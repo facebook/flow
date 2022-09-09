@@ -276,7 +276,7 @@ let rec resolve_binding_partial cx reason loc b =
     let t =
       if contextual_typing_enabled then
         let hint = resolve_hint cx loc hint in
-        match Type_hint.evaluate_hint cx param_loc ~resolver:TvarResolver.resolved_t hint with
+        match Type_hint.evaluate_hint cx reason ~resolver:TvarResolver.resolved_t hint with
         | None ->
           if hint <> Hint_api.Hint_None then
             RequireAnnot.add_missing_annotation_error

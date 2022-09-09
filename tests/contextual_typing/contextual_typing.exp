@@ -1,1 +1,19 @@
-Found 0 errors
+Error ---------------------------------------------------------------------------------------------------- test.js:14:49
+
+Cannot cast `a` to empty because string [1] is incompatible with empty [2]. [incompatible-cast]
+
+   test.js:14:49
+   14|   const reasonTest: (string) => mixed = (a) => (a: empty); // ok
+                                                       ^
+
+References:
+   test.js:14:22
+   14|   const reasonTest: (string) => mixed = (a) => (a: empty); // ok
+                            ^^^^^^ [1]
+   test.js:14:52
+   14|   const reasonTest: (string) => mixed = (a) => (a: empty); // ok
+                                                          ^^^^^ [2]
+
+
+
+Found 1 error
