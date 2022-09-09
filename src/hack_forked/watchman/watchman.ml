@@ -34,11 +34,6 @@ type error_kind =
       failed_paths: string list;  (** paths we tried to watch but couldn't figure out the root for *)
     }
 
-type error_severity =
-  | Retryable_error
-  | Fatal_error
-  | Restarted_error
-
 type failure =
   | Dead
   | Restarted
@@ -68,14 +63,6 @@ let log_error = function
           (String.concat ~sep:"\n" roots)
     in
     log msg
-
-let severity_of_error = function
-  | Not_installed _ -> Fatal_error
-  | Socket_unavailable _ -> Retryable_error
-  | Response_error _ -> Retryable_error
-  | Fresh_instance -> Restarted_error
-  | Subscription_canceled -> Retryable_error
-  | Unsupported_watch_roots _ -> Fatal_error
 
 type subscribe_mode =
   | All_changes
@@ -123,10 +110,6 @@ type pushed_changes =
   | State_leave of string * Hh_json.json option
   | Changed_merge_base of string * SSet.t * clock
   | Files_changed of SSet.t
-
-type changes =
-  | Watchman_unavailable
-  | Watchman_pushed of pushed_changes
 
 type mergebase_and_changes = {
   clock: clock;
@@ -730,10 +713,14 @@ let rec with_retry ~max_attempts ?(attempt = 0) ?(on_retry = (fun _ -> Lwt_resul
   | Ok _ as ok -> Lwt.return ok
   | Error err ->
     log_error err;
-    (match severity_of_error err with
-    | Fatal_error -> Lwt.return (Error Dead)
-    | Restarted_error -> Lwt.return (Error Restarted)
-    | Retryable_error ->
+    (match err with
+    | Not_installed _
+    | Unsupported_watch_roots _ ->
+      Lwt.return (Error Dead)
+    | Fresh_instance -> Lwt.return (Error Restarted)
+    | Response_error _
+    | Socket_unavailable _
+    | Subscription_canceled ->
       if attempt >= max_attempts then (
         Hh_logger.error "Watchman has failed %d times in a row. Giving up." attempt;
         Lwt.return (Error Dead)

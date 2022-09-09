@@ -52,10 +52,6 @@ type pushed_changes =
   | Changed_merge_base of string * SSet.t * clock
   | Files_changed of SSet.t
 
-type changes =
-  | Watchman_unavailable
-  | Watchman_pushed of pushed_changes
-
 type mergebase_and_changes = {
   clock: clock;
   mergebase: string;
