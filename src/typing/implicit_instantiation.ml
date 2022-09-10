@@ -152,8 +152,9 @@ struct
     else
       UpperT t
 
-  let t_of_use_t bound = function
+  let rec t_of_use_t bound = function
     | UseT (_, t) -> t_not_bound t bound
+    | ReposLowerT (_, _, use_t) -> t_of_use_t bound use_t
     | u -> UpperNonT u
 
   let merge_upper_bounds upper_r bound cx = function
