@@ -37,6 +37,18 @@ module Make
   (* Utilities *)
   (*************)
 
+  module ChainingConf = struct
+    type ('a, 'b) t = {
+      refinement_action: ('a -> Type.t -> Type.t -> Type.t) option;
+      refine: unit -> Type.t option;
+      subexpressions: hint:Type.t Hint_api.hint -> 'a * 'b;
+      get_result: 'a -> Reason.t -> Type.t -> Type.t;
+      test_hooks: Type.t -> Type.tvar option;
+      get_opt_use: 'a -> Reason.t -> Type.t -> Type.opt_use_t;
+      get_reason: Type.t -> Reason.t;
+    }
+  end
+
   type class_member_kind =
     | Class_Member_Field
     | Class_Member_Getter
@@ -3535,15 +3547,8 @@ module Make
         )
     in
     let noop _ = None in
-    let handle_new_chain
-        lhs_reason
-        loc
-        (chain_t, voided_t, object_ast)
-        ~this_reason
-        ~subexpressions
-        ~get_reason
-        ~test_hooks
-        ~get_opt_use =
+    let handle_new_chain conf lhs_reason loc (chain_t, voided_t, object_ast) ~this_reason =
+      let { ChainingConf.subexpressions; get_reason; test_hooks; get_opt_use; _ } = conf in
       (* We've encountered an optional chaining operator.
          We need to flow the "success" type of object_ into a OptionalChainT
          type, which will "filter out" VoidT and NullT from the type of
@@ -3609,14 +3614,18 @@ module Make
       in
       (OpenT mem_tvar, Some voided_out, lhs_t, chain_t, object_ast, subexpression_asts)
     in
-    let handle_continue_chain
-        (chain_t, voided_t, object_ast)
-        ~refine
-        ~refinement_action
-        ~subexpressions
-        ~get_result
-        ~test_hooks
-        ~get_reason =
+    let handle_continue_chain conf (chain_t, voided_t, object_ast) =
+      let {
+        ChainingConf.refine;
+        refinement_action;
+        subexpressions;
+        get_result;
+        test_hooks;
+        get_reason;
+        _;
+      } =
+        conf
+      in
       (* We're looking at a non-optional call or member access, but one where
          deeper in the chain there was an optional chaining operator. We don't
          need to do anything special locally, but we do need to remember that
@@ -3639,18 +3648,18 @@ module Make
       let lhs_t = join_optional_branches voided_t res_t in
       (res_t, voided_t, lhs_t, chain_t, object_ast, subexpression_asts)
     in
-    let handle_chaining
-        ?refinement_action
-        opt
-        object_
-        loc
-        ~refine
-        ~this_reason
-        ~subexpressions
-        ~get_result
-        ~test_hooks
-        ~get_opt_use
-        ~get_reason =
+    let handle_chaining conf opt object_ loc ~this_reason =
+      let {
+        ChainingConf.refinement_action;
+        refine;
+        subexpressions;
+        get_result;
+        test_hooks;
+        get_reason;
+        _;
+      } =
+        conf
+      in
       match opt with
       | NonOptional ->
         (* Proceeding as normal: no need to worry about optionality, so T2 from
@@ -3695,26 +3704,10 @@ module Make
               object_ast,
               subexpression_asts
             )
-          | _ ->
-            handle_new_chain
-              lhs_reason
-              loc
-              object_data
-              ~subexpressions
-              ~this_reason
-              ~get_reason
-              ~test_hooks
-              ~get_opt_use
+          | _ -> handle_new_chain conf lhs_reason loc object_data ~this_reason
         end
       | ContinueChain ->
-        handle_continue_chain
-          (optional_chain ~hint:Hint_None ~cond:None cx object_)
-          ~refine
-          ~refinement_action
-          ~subexpressions
-          ~get_result
-          ~test_hooks
-          ~get_reason
+        handle_continue_chain conf (optional_chain ~hint:Hint_None ~cond:None cx object_)
     in
     let result =
       match try_non_chain cx loc e' ~call_ast ~member_ast with
@@ -3814,18 +3807,19 @@ module Make
             let (((_, tind), _) as index) = expression cx ~hint:Hint_None index in
             (tind, index)
           in
+          let conf =
+            {
+              ChainingConf.refinement_action = None;
+              refine = (fun () -> Refinement.get ~allow_optional:true cx (loc, e) loc);
+              subexpressions = eval_index;
+              get_result = get_mem_t;
+              test_hooks = noop;
+              get_opt_use;
+              get_reason = Fun.const reason;
+            }
+          in
           let (filtered_out, voided_out, lhs_t, _, object_ast, index) =
-            handle_chaining
-              opt_state
-              _object
-              loc
-              ~this_reason:(mk_expression_reason _object)
-              ~subexpressions:eval_index
-              ~get_result:get_mem_t
-              ~test_hooks:noop
-              ~get_opt_use
-              ~refine:(fun () -> Refinement.get ~allow_optional:true cx (loc, e) loc)
-              ~get_reason:(Fun.const reason)
+            handle_chaining conf opt_state _object loc ~this_reason:(mk_expression_reason _object)
           in
           ( filtered_out,
             voided_out,
@@ -3865,18 +3859,19 @@ module Make
                 Flow.flow cx (obj_t, use)
             )
           in
+          let conf =
+            {
+              ChainingConf.refinement_action = None;
+              subexpressions = (fun ~hint:_ -> ((), ()));
+              get_result = get_mem_t;
+              refine = (fun () -> Refinement.get ~allow_optional:true cx (loc, e) loc);
+              test_hooks;
+              get_opt_use = (fun _ _ _ -> opt_use);
+              get_reason = Fun.const expr_reason;
+            }
+          in
           let (filtered_out, voided_out, lhs_t, _, object_ast, _) =
-            handle_chaining
-              opt_state
-              _object
-              loc
-              ~subexpressions:(fun ~hint:_ -> ((), ()))
-              ~this_reason:(mk_expression_reason _object)
-              ~get_result:get_mem_t
-              ~refine:(fun () -> Refinement.get ~allow_optional:true cx (loc, e) loc)
-              ~test_hooks
-              ~get_opt_use:(fun _ _ _ -> opt_use)
-              ~get_reason:(Fun.const expr_reason)
+            handle_chaining conf opt_state _object loc ~this_reason:(mk_expression_reason _object)
           in
           let property = Member.PropertyIdentifier ((ploc, lhs_t), id) in
           ( filtered_out,
@@ -3911,18 +3906,19 @@ module Make
                 Flow.flow cx (obj_t, use)
             )
           in
+          let conf =
+            {
+              ChainingConf.refinement_action = None;
+              subexpressions = (fun ~hint:_ -> ((), ()));
+              get_result = get_mem_t;
+              refine = (fun () -> Refinement.get ~allow_optional:true cx (loc, e) loc);
+              test_hooks;
+              get_opt_use = (fun _ _ _ -> opt_use);
+              get_reason = Fun.const expr_reason;
+            }
+          in
           let (filtered_out, voided_out, lhs_t, _, object_ast, _) =
-            handle_chaining
-              opt_state
-              _object
-              loc
-              ~this_reason:(mk_expression_reason _object)
-              ~subexpressions:(fun ~hint:_ -> ((), ()))
-              ~get_result:get_mem_t
-              ~refine:(fun () -> Refinement.get ~allow_optional:true cx (loc, e) loc)
-              ~test_hooks
-              ~get_opt_use:(fun _ _ _ -> opt_use)
-              ~get_reason:(Fun.const expr_reason)
+            handle_chaining conf opt_state _object loc ~this_reason:(mk_expression_reason _object)
           in
           ( filtered_out,
             voided_out,
@@ -4044,6 +4040,19 @@ module Make
                 let hint = decompose_hint (Decomp_MethodName name) hint in
                 arg_list cx ~hint arguments
               in
+              let conf =
+                {
+                  ChainingConf.subexpressions = eval_args;
+                  get_result = get_mem_t;
+                  test_hooks;
+                  get_opt_use;
+                  refine =
+                    (fun () ->
+                      Refinement.get ~allow_optional:true cx (lookup_loc, callee_expr) lookup_loc);
+                  refinement_action = Some handle_refined_callee;
+                  get_reason = Fun.const expr_reason;
+                }
+              in
               let ( filtered_out,
                     lookup_voided_out,
                     member_lhs_t,
@@ -4051,19 +4060,7 @@ module Make
                     object_ast,
                     argument_asts
                   ) =
-                handle_chaining
-                  member_opt
-                  _object
-                  lookup_loc
-                  ~this_reason
-                  ~subexpressions:eval_args
-                  ~get_result:get_mem_t
-                  ~test_hooks
-                  ~get_opt_use
-                  ~refine:(fun () ->
-                    Refinement.get ~allow_optional:true cx (lookup_loc, callee_expr) lookup_loc)
-                  ~refinement_action:handle_refined_callee
-                  ~get_reason:(Fun.const expr_reason)
+                handle_chaining conf member_opt _object lookup_loc ~this_reason
               in
               let prop_ast =
                 match property with
@@ -4115,6 +4112,17 @@ module Make
                 ((argts, elem_t), (arguments_ast, expr))
               in
               let this_reason = mk_expression_reason callee in
+              let conf =
+                {
+                  ChainingConf.refinement_action = None;
+                  subexpressions = eval_args_and_expr;
+                  get_result = get_mem_t;
+                  test_hooks = noop;
+                  get_opt_use;
+                  refine = noop;
+                  get_reason = Fun.const expr_reason;
+                }
+              in
               let ( filtered_out,
                     lookup_voided_out,
                     member_lhs_t,
@@ -4122,17 +4130,7 @@ module Make
                     object_ast,
                     (argument_asts, expr_ast)
                   ) =
-                handle_chaining
-                  member_opt
-                  _object
-                  lookup_loc
-                  ~this_reason
-                  ~subexpressions:eval_args_and_expr
-                  ~get_result:get_mem_t
-                  ~test_hooks:noop
-                  ~get_opt_use
-                  ~refine:noop
-                  ~get_reason:(Fun.const expr_reason)
+                handle_chaining conf member_opt _object lookup_loc ~this_reason
               in
               ( filtered_out,
                 lookup_voided_out,
@@ -4193,18 +4191,19 @@ module Make
             )
           in
           let eval_args ~hint = arg_list cx ~hint arguments in
+          let conf =
+            {
+              ChainingConf.refinement_action = None;
+              subexpressions = eval_args;
+              refine = noop;
+              get_result;
+              test_hooks = noop;
+              get_opt_use;
+              get_reason;
+            }
+          in
           let (filtered_out, voided_out, lhs_t, _, object_ast, argument_asts) =
-            handle_chaining
-              opt_state
-              callee
-              loc
-              ~subexpressions:eval_args
-              ~this_reason:(mk_expression_reason ex)
-              ~refine:noop
-              ~get_result
-              ~test_hooks:noop
-              ~get_opt_use
-              ~get_reason
+            handle_chaining conf opt_state callee loc ~this_reason:(mk_expression_reason ex)
           in
           let exp callee =
             call_ast { Call.callee; targs; arguments = argument_asts; comments } filtered_out
