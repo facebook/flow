@@ -76,9 +76,20 @@ and to_string id =
   | Spread ids ->
     spf "{ ...%s }" (String.concat ", ..." (Base.List.map ~f:bound_to_string (Nel.to_list ids)))
 
+let rec all_subst_names_of_id = function
+  | Bound bound -> all_subst_names_of_bound bound
+  | Spread bounds -> Base.List.concat_map ~f:all_subst_names_of_bound (Nel.to_list bounds)
+
+and all_subst_names_of_bound = function
+  | { generic = { name = Subst_name.Synthetic (_, names); _ }; super = None } -> names
+  | { generic = { name; _ }; super = None } -> [name]
+  | { generic = { name = Subst_name.Synthetic (_, names); _ }; super = Some super } ->
+    names @ all_subst_names_of_id super
+  | { generic = { name; _ }; super = Some super } -> name :: all_subst_names_of_id super
+
 let subst_name_of_id = function
   | Bound { generic = { name; _ }; super = None } -> name
-  | id -> Subst_name.Synthetic (to_string id)
+  | id -> Subst_name.Synthetic (to_string id, all_subst_names_of_id id)
 
 let rec equal_bound
     { generic = { id = id1; _ }; super = super1 } { generic = { id = id2; _ }; super = super2 } =

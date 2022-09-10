@@ -22,7 +22,7 @@ module Name = struct
   type t =
     | Name of string
     | Id of int * string
-    | Synthetic of string
+    | Synthetic of string * t list
   [@@deriving eq, ord, show]
 end
 
@@ -32,7 +32,7 @@ include Name
 
 let string_of_subst_name n =
   match n with
-  | Synthetic n
+  | Synthetic (n, _)
   | Name n
   | Id (_, n) ->
     n

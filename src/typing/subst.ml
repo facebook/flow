@@ -64,7 +64,7 @@ let free_var_finder cx t =
 let new_name name fvs =
   let (ct, n) =
     match name with
-    | Subst_name.Synthetic n -> failwith (Utils_js.spf "Cannot rename synthetic name %s" n)
+    | Subst_name.Synthetic (n, _) -> failwith (Utils_js.spf "Cannot rename synthetic name %s" n)
     | Subst_name.Name n -> (0, n)
     | Subst_name.Id (ct, n) -> (ct, n)
   in
@@ -151,13 +151,16 @@ let substituter =
       else
         let t_out =
           match t with
-          | GenericT { name = Subst_name.Synthetic name; reason; _ } ->
-            failwith
-              (Utils_js.spf
-                 "Cannot substitute through synthetic name %s at %s."
-                 name
-                 (Debug_js.dump_reason cx reason)
-              )
+          | GenericT { name = Subst_name.Synthetic (name, ids); reason; _ } ->
+            if Base.List.exists ~f:(fun name -> Subst_name.Map.mem name map) ids then
+              failwith
+                (Utils_js.spf
+                   "Cannot substitute through synthetic name %s at %s."
+                   name
+                   (Debug_js.dump_reason cx reason)
+                )
+            else
+              super#type_ cx map_cx t
           | GenericT ({ reason = tp_reason; name; _ } as gen) ->
             let annot_loc = aloc_of_reason tp_reason in
             begin
