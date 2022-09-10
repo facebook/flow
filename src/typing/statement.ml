@@ -41,6 +41,7 @@ module Make
     type ('a, 'b) t = {
       refinement_action: ('a -> Type.t -> Type.t -> Type.t) option;
       refine: unit -> Type.t option;
+      get_hint: Type.t -> Type.t Hint_api.hint;
       subexpressions: hint:Type.t Hint_api.hint -> 'a * 'b;
       get_result: 'a -> Reason.t -> Type.t -> Type.t;
       test_hooks: Type.t -> Type.tvar option;
@@ -3548,7 +3549,9 @@ module Make
     in
     let noop _ = None in
     let handle_new_chain conf lhs_reason loc (chain_t, voided_t, object_ast) ~this_reason =
-      let { ChainingConf.subexpressions; get_reason; test_hooks; get_opt_use; _ } = conf in
+      let { ChainingConf.get_hint; subexpressions; get_reason; test_hooks; get_opt_use; _ } =
+        conf
+      in
       (* We've encountered an optional chaining operator.
          We need to flow the "success" type of object_ into a OptionalChainT
          type, which will "filter out" VoidT and NullT from the type of
@@ -3578,8 +3581,10 @@ module Make
          OptionalChainT; see the rules in flow_js for how it's used, but
          essentially the successfully filtered receiver of the function call
          is flowed into it, and it is used as the `this`-parameter of the
-         calltype that the method call will flow into. *)
-      let (subexpression_types, subexpression_asts) = subexpressions ~hint:(Hint_t chain_t) in
+         calltype that the method call will flow into.
+      *)
+      let hint = get_hint chain_t in
+      let (subexpression_types, subexpression_asts) = subexpressions ~hint in
       let reason = get_reason chain_t in
       let chain_reason = mk_reason ROptionalChain loc in
       let mem_tvar =
@@ -3618,6 +3623,7 @@ module Make
       let {
         ChainingConf.refine;
         refinement_action;
+        get_hint;
         subexpressions;
         get_result;
         test_hooks;
@@ -3633,7 +3639,8 @@ module Make
          voided_t parameter. We'll flow that type into the type of the overall
          expression to account for that possibility.
       *)
-      let (subexpression_types, subexpression_asts) = subexpressions ~hint:(Hint_t chain_t) in
+      let hint = get_hint chain_t in
+      let (subexpression_types, subexpression_asts) = subexpressions ~hint in
       let reason = get_reason chain_t in
       let res_t =
         match (test_hooks chain_t, refine ()) with
@@ -3652,6 +3659,7 @@ module Make
       let {
         ChainingConf.refinement_action;
         refine;
+        get_hint;
         subexpressions;
         get_result;
         test_hooks;
@@ -3666,7 +3674,8 @@ module Make
            above is None. We don't need to consider optional short-circuiting, so
            we can call expression_ rather than optional_chain. *)
         let (((_, obj_t), _) as object_ast) = expression cx ~hint:Hint_None object_ in
-        let (subexpression_types, subexpression_asts) = subexpressions ~hint:(Hint_t obj_t) in
+        let hint = get_hint obj_t in
+        let (subexpression_types, subexpression_asts) = subexpressions ~hint in
         let reason = get_reason obj_t in
         let lhs_t =
           match (test_hooks obj_t, refine ()) with
@@ -3688,9 +3697,8 @@ module Make
           match refine () with
           | Some t ->
             Context.mark_optional_chain cx loc lhs_reason ~useful:false;
-            let (subexpression_types, subexpression_asts) =
-              subexpressions ~hint:(Hint_t filtered_t)
-            in
+            let hint = get_hint filtered_t in
+            let (subexpression_types, subexpression_asts) = subexpressions ~hint in
             let tout =
               Base.Option.value_map
                 ~f:(fun refinement_action -> refinement_action subexpression_types filtered_t t)
@@ -3810,6 +3818,7 @@ module Make
           {
             ChainingConf.refinement_action = None;
             refine = (fun () -> Refinement.get ~allow_optional:true cx (loc, e) loc);
+            get_hint = (fun _ -> Hint_None);
             subexpressions = eval_index;
             get_result = get_mem_t;
             test_hooks = noop;
@@ -3857,6 +3866,7 @@ module Make
         let conf =
           {
             ChainingConf.refinement_action = None;
+            get_hint = (fun _ -> Hint_None);
             subexpressions = (fun ~hint:_ -> ((), ()));
             get_result = get_mem_t;
             refine = (fun () -> Refinement.get ~allow_optional:true cx (loc, e) loc);
@@ -3902,6 +3912,7 @@ module Make
         let conf =
           {
             ChainingConf.refinement_action = None;
+            get_hint = (fun _ -> Hint_None);
             subexpressions = (fun ~hint:_ -> ((), ()));
             get_result = get_mem_t;
             refine = (fun () -> Refinement.get ~allow_optional:true cx (loc, e) loc);
@@ -4024,13 +4035,12 @@ module Make
                   Flow.flow cx (obj_t, use)
               )
             in
-            let eval_args ~hint =
-              let hint = decompose_hint (Decomp_MethodName name) hint in
-              arg_list cx ~hint arguments
-            in
+            let get_hint obj_t = decompose_hint (Decomp_MethodName name) (Hint_t obj_t) in
+            let eval_args ~hint = arg_list cx ~hint arguments in
             let conf =
               {
-                ChainingConf.subexpressions = eval_args;
+                ChainingConf.get_hint;
+                subexpressions = eval_args;
                 get_result = get_mem_t;
                 test_hooks;
                 get_opt_use;
@@ -4093,9 +4103,9 @@ module Make
                   Flow.flow_t cx (obj_t, prop_t)
               )
             in
+            let get_hint obj_t = decompose_hint Decomp_MethodElem (Hint_t obj_t) in
             let eval_args_and_expr ~hint =
               let (((_, elem_t), _) as expr) = expression cx ~hint:Hint_None expr in
-              let hint = decompose_hint Decomp_MethodElem hint in
               let (argts, arguments_ast) = arg_list cx ~hint arguments in
               ((argts, elem_t), (arguments_ast, expr))
             in
@@ -4103,6 +4113,7 @@ module Make
             let conf =
               {
                 ChainingConf.refinement_action = None;
+                get_hint;
                 subexpressions = eval_args_and_expr;
                 get_result = get_mem_t;
                 test_hooks = noop;
@@ -4178,10 +4189,15 @@ module Make
               Flow.flow cx (f, use)
           )
         in
+        let get_hint callee_t =
+          (* TODO Handle case of callee_t being an intersection *)
+          Hint_t callee_t
+        in
         let eval_args ~hint = arg_list cx ~hint arguments in
         let conf =
           {
             ChainingConf.refinement_action = None;
+            get_hint;
             subexpressions = eval_args;
             refine = noop;
             get_result;
