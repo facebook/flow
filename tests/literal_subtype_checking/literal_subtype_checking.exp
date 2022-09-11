@@ -28,17 +28,17 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:16:8
 
-Cannot compare string [1] with property `p` of object type [2] because string [1] is incompatible with string literal
-`foo` [3]. [incompatible-type]
+Cannot compare string [1] with property `p` of `o` [2] because string [1] is incompatible with string literal `foo` [3].
+[incompatible-type]
 
    test.js:16:8
    16|   case 'bar': // Error
               ^^^^^ [1]
 
 References:
-   test.js:5:16
+   test.js:5:13
     5| declare var o: {p: Literal}
-                      ^^^^^^^^^^^^ [2]
+                   ^ [2]
    test.js:5:20
     5| declare var o: {p: Literal}
                           ^^^^^^^ [3]
@@ -46,17 +46,17 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:17:8
 
-Cannot compare number [1] with property `p` of object type [2] because number [1] is incompatible with string literal
-`foo` [3]. [incompatible-type]
+Cannot compare number [1] with property `p` of `o` [2] because number [1] is incompatible with string literal `foo` [3].
+[incompatible-type]
 
    test.js:17:8
    17|   case 1: // Error
               ^ [1]
 
 References:
-   test.js:5:16
+   test.js:5:13
     5| declare var o: {p: Literal}
-                      ^^^^^^^^^^^^ [2]
+                   ^ [2]
    test.js:5:20
     5| declare var o: {p: Literal}
                           ^^^^^^^ [3]
@@ -92,17 +92,17 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:26:13
 
-Cannot compare string [1] with property `p` of object type [2] because string [1] is incompatible with string literal
-`foo` [3]. [incompatible-type]
+Cannot compare string [1] with property `p` of `o` [2] because string [1] is incompatible with string literal `foo` [3].
+[incompatible-type]
 
    test.js:26:13
    26| if (o.p === 'bar') {} // Error
                    ^^^^^ [1]
 
 References:
-   test.js:5:16
+   test.js:5:13
     5| declare var o: {p: Literal}
-                      ^^^^^^^^^^^^ [2]
+                   ^ [2]
    test.js:5:20
     5| declare var o: {p: Literal}
                           ^^^^^^^ [3]
@@ -110,17 +110,17 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:27:13
 
-Cannot compare number [1] with property `p` of object type [2] because number [1] is incompatible with string literal
-`foo` [3]. [incompatible-type]
+Cannot compare number [1] with property `p` of `o` [2] because number [1] is incompatible with string literal `foo` [3].
+[incompatible-type]
 
    test.js:27:13
    27| if (o.p === 1) {} // Error
                    ^ [1]
 
 References:
-   test.js:5:16
+   test.js:5:13
     5| declare var o: {p: Literal}
-                      ^^^^^^^^^^^^ [2]
+                   ^ [2]
    test.js:5:20
     5| declare var o: {p: Literal}
                           ^^^^^^^ [3]
@@ -142,17 +142,17 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:31:31
 
-Cannot compare string [1] with property `p` of object type [2] because string [1] is incompatible with string literal
-`foo` [3]. [incompatible-type]
+Cannot compare string [1] with property `p` of `o` [2] because string [1] is incompatible with string literal `foo` [3].
+[incompatible-type]
 
    test.js:31:31
    31| if (true && (false || o.p === 'bar')) {} // Error
                                      ^^^^^ [1]
 
 References:
-   test.js:5:16
+   test.js:5:13
     5| declare var o: {p: Literal}
-                      ^^^^^^^^^^^^ [2]
+                   ^ [2]
    test.js:5:20
     5| declare var o: {p: Literal}
                           ^^^^^^^ [3]
@@ -174,17 +174,17 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:33:31
 
-Cannot compare number [1] with property `p` of object type [2] because number [1] is incompatible with string literal
-`foo` [3]. [incompatible-type]
+Cannot compare number [1] with property `p` of `o` [2] because number [1] is incompatible with string literal `foo` [3].
+[incompatible-type]
 
    test.js:33:31
    33| if (true && (false || o.p === 1)) {} // Error
                                      ^ [1]
 
 References:
-   test.js:5:16
+   test.js:5:13
     5| declare var o: {p: Literal}
-                      ^^^^^^^^^^^^ [2]
+                   ^ [2]
    test.js:5:20
     5| declare var o: {p: Literal}
                           ^^^^^^^ [3]
@@ -220,17 +220,17 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:48:10
 
-Cannot compare string [1] with property `p` of nullable object type [2] because string [1] is incompatible with string
-literal `foo` [3]. [incompatible-type]
+Cannot compare string [1] with property `p` of `nullableO` [2] because string [1] is incompatible with string literal
+`foo` [3]. [incompatible-type]
 
    test.js:48:10
    48|     case 'bar': // Error
                 ^^^^^ [1]
 
 References:
-   test.js:36:24
+   test.js:36:13
    36| declare var nullableO: ?{p: Literal}
-                              ^^^^^^^^^^^^^ [2]
+                   ^^^^^^^^^ [2]
    test.js:36:29
    36| declare var nullableO: ?{p: Literal}
                                    ^^^^^^^ [3]
@@ -238,17 +238,17 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:49:10
 
-Cannot compare number [1] with property `p` of nullable object type [2] because number [1] is incompatible with string
-literal `foo` [3]. [incompatible-type]
+Cannot compare number [1] with property `p` of `nullableO` [2] because number [1] is incompatible with string literal
+`foo` [3]. [incompatible-type]
 
    test.js:49:10
    49|     case 1: // Error
                 ^ [1]
 
 References:
-   test.js:36:24
+   test.js:36:13
    36| declare var nullableO: ?{p: Literal}
-                              ^^^^^^^^^^^^^ [2]
+                   ^^^^^^^^^ [2]
    test.js:36:29
    36| declare var nullableO: ?{p: Literal}
                                    ^^^^^^^ [3]
@@ -284,17 +284,17 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:60:24
 
-Cannot compare string [1] with property `p` of nullable object type [2] because string [1] is incompatible with string
-literal `foo` [3]. [incompatible-type]
+Cannot compare string [1] with property `p` of `nullableO` [2] because string [1] is incompatible with string literal
+`foo` [3]. [incompatible-type]
 
    test.js:60:24
    60|   if (nullableO?.p === 'bar') {} // Error
                               ^^^^^ [1]
 
 References:
-   test.js:36:24
+   test.js:36:13
    36| declare var nullableO: ?{p: Literal}
-                              ^^^^^^^^^^^^^ [2]
+                   ^^^^^^^^^ [2]
    test.js:36:29
    36| declare var nullableO: ?{p: Literal}
                                    ^^^^^^^ [3]
@@ -302,17 +302,17 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:61:24
 
-Cannot compare number [1] with property `p` of nullable object type [2] because number [1] is incompatible with string
-literal `foo` [3]. [incompatible-type]
+Cannot compare number [1] with property `p` of `nullableO` [2] because number [1] is incompatible with string literal
+`foo` [3]. [incompatible-type]
 
    test.js:61:24
    61|   if (nullableO?.p === 1) {} // Error
                               ^ [1]
 
 References:
-   test.js:36:24
+   test.js:36:13
    36| declare var nullableO: ?{p: Literal}
-                              ^^^^^^^^^^^^^ [2]
+                   ^^^^^^^^^ [2]
    test.js:36:29
    36| declare var nullableO: ?{p: Literal}
                                    ^^^^^^^ [3]
@@ -334,17 +334,17 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:67:42
 
-Cannot compare string [1] with property `p` of nullable object type [2] because string [1] is incompatible with string
-literal `foo` [3]. [incompatible-type]
+Cannot compare string [1] with property `p` of `nullableO` [2] because string [1] is incompatible with string literal
+`foo` [3]. [incompatible-type]
 
    test.js:67:42
    67|   if (true && (false || nullableO?.p === 'bar')) {} // Error
                                                 ^^^^^ [1]
 
 References:
-   test.js:36:24
+   test.js:36:13
    36| declare var nullableO: ?{p: Literal}
-                              ^^^^^^^^^^^^^ [2]
+                   ^^^^^^^^^ [2]
    test.js:36:29
    36| declare var nullableO: ?{p: Literal}
                                    ^^^^^^^ [3]
@@ -366,17 +366,17 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:69:42
 
-Cannot compare number [1] with property `p` of nullable object type [2] because number [1] is incompatible with string
-literal `foo` [3]. [incompatible-type]
+Cannot compare number [1] with property `p` of `nullableO` [2] because number [1] is incompatible with string literal
+`foo` [3]. [incompatible-type]
 
    test.js:69:42
    69|   if (true && (false || nullableO?.p === 1)) {} // Error
                                                 ^ [1]
 
 References:
-   test.js:36:24
+   test.js:36:13
    36| declare var nullableO: ?{p: Literal}
-                              ^^^^^^^^^^^^^ [2]
+                   ^^^^^^^^^ [2]
    test.js:36:29
    36| declare var nullableO: ?{p: Literal}
                                    ^^^^^^^ [3]

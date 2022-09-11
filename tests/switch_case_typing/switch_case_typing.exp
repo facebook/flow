@@ -98,7 +98,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:67:8
 
-Cannot compare string [1] with property `type` of `DisjointUnion` [2] because: [incompatible-type]
+Cannot compare string [1] with property `type` of `o` [2] because: [incompatible-type]
  - Either string [1] is incompatible with string literal `foo` [3].
  - Or string [1] is incompatible with string literal `bar` [4].
  - Or string [1] is incompatible with string literal `baz` [5].
@@ -108,9 +108,9 @@ Cannot compare string [1] with property `type` of `DisjointUnion` [2] because: [
               ^^^^^ [1]
 
 References:
-   test.js:61:16
+   test.js:61:13
    61| declare var o: DisjointUnion;
-                      ^^^^^^^^^^^^^ [2]
+                   ^ [2]
    test.js:60:30
    60| type DisjointUnion = { type: 'foo' } | { type: 'bar' } | { type: 'baz' }
                                     ^^^^^ [3]
@@ -260,7 +260,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:77:8
 
-Cannot compare string [1] with property `type` of `DisjointUnion` [2] because: [incompatible-type]
+Cannot compare string [1] with property `type` of `o` [2] because: [incompatible-type]
  - Either string [1] is incompatible with string literal `foo` [3].
  - Or string [1] is incompatible with string literal `bar` [4].
  - Or string [1] is incompatible with string literal `baz` [5].
@@ -270,9 +270,9 @@ Cannot compare string [1] with property `type` of `DisjointUnion` [2] because: [
               ^^^^^ [1]
 
 References:
-   test.js:61:16
+   test.js:61:13
    61| declare var o: DisjointUnion;
-                      ^^^^^^^^^^^^^ [2]
+                   ^ [2]
    test.js:60:30
    60| type DisjointUnion = { type: 'foo' } | { type: 'bar' } | { type: 'baz' }
                                     ^^^^^ [3]
@@ -303,7 +303,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:87:8
 
-Cannot compare number [1] with property `type` of `DisjointUnion` [2] because: [incompatible-type]
+Cannot compare number [1] with property `type` of `o` [2] because: [incompatible-type]
  - Either number [1] is incompatible with string literal `foo` [3].
  - Or number [1] is incompatible with string literal `bar` [4].
  - Or number [1] is incompatible with string literal `baz` [5].
@@ -313,9 +313,9 @@ Cannot compare number [1] with property `type` of `DisjointUnion` [2] because: [
               ^ [1]
 
 References:
-   test.js:61:16
+   test.js:61:13
    61| declare var o: DisjointUnion;
-                      ^^^^^^^^^^^^^ [2]
+                   ^ [2]
    test.js:60:30
    60| type DisjointUnion = { type: 'foo' } | { type: 'bar' } | { type: 'baz' }
                                     ^^^^^ [3]
@@ -441,7 +441,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- test.js:101:19
 
-Cannot compare number [1] with property `field` of `Obj` [2] because number [1] is incompatible with string [3].
+Cannot compare number [1] with property `field` of `obj` [2] because number [1] is incompatible with string [3].
 [incompatible-type]
 
    test.js:101:19
@@ -449,9 +449,9 @@ Cannot compare number [1] with property `field` of `Obj` [2] because number [1] 
                           ^ [1]
 
 References:
-   test.js:100:18
+   test.js:100:13
    100| declare var obj: Obj;
-                         ^^^ [2]
+                    ^^^ [2]
    test.js:99:22
     99| type Obj = { field : string };
                              ^^^^^^ [3]
@@ -459,7 +459,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- test.js:101:38
 
-Cannot compare number [1] with property `field` of `Obj` [2] because number [1] is incompatible with string [3].
+Cannot compare number [1] with property `field` of `obj` [2] because number [1] is incompatible with string [3].
 [incompatible-type]
 
    test.js:101:38
@@ -467,9 +467,9 @@ Cannot compare number [1] with property `field` of `Obj` [2] because number [1] 
                                              ^ [1]
 
 References:
-   test.js:100:18
+   test.js:100:13
    100| declare var obj: Obj;
-                         ^^^ [2]
+                    ^^^ [2]
    test.js:99:22
     99| type Obj = { field : string };
                              ^^^^^^ [3]
@@ -477,7 +477,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- test.js:102:19
 
-Cannot compare number [1] with property `field` of `Obj` [2] because number [1] is incompatible with string [3].
+Cannot compare number [1] with property `field` of `obj` [2] because number [1] is incompatible with string [3].
 [incompatible-type]
 
    test.js:102:19
@@ -485,9 +485,9 @@ Cannot compare number [1] with property `field` of `Obj` [2] because number [1] 
                           ^ [1]
 
 References:
-   test.js:100:18
+   test.js:100:13
    100| declare var obj: Obj;
-                         ^^^ [2]
+                    ^^^ [2]
    test.js:99:22
     99| type Obj = { field : string };
                              ^^^^^^ [3]
@@ -495,7 +495,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- test.js:102:38
 
-Cannot compare number [1] with property `field` of `Obj` [2] because number [1] is incompatible with string [3].
+Cannot compare number [1] with property `field` of `obj` [2] because number [1] is incompatible with string [3].
 [incompatible-type]
 
    test.js:102:38
@@ -503,9 +503,9 @@ Cannot compare number [1] with property `field` of `Obj` [2] because number [1] 
                                              ^ [1]
 
 References:
-   test.js:100:18
+   test.js:100:13
    100| declare var obj: Obj;
-                         ^^^ [2]
+                    ^^^ [2]
    test.js:99:22
     99| type Obj = { field : string };
                              ^^^^^^ [3]
@@ -513,60 +513,60 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- test.js:111:16
 
-Cannot compare string [1] with property `type` of `DisjointUnion` [2] because: [incompatible-type]
- - Either string [1] is incompatible with string literal `foo` [3].
- - Or string [1] is incompatible with string literal `bar` [4].
- - Or string [1] is incompatible with string literal `baz` [5].
+Cannot compare `KeyObj.ERR` [1] with property `type` of `o` [2] because: [incompatible-type]
+ - Either string [3] is incompatible with string literal `foo` [4].
+ - Or string [3] is incompatible with string literal `bar` [5].
+ - Or string [3] is incompatible with string literal `baz` [6].
 
    test.js:111:16
    111| if (o.type === KeyObj.ERR) {} // error
-                       ^^^^^^^^^^
+                       ^^^^^^^^^^ [1]
 
 References:
+   test.js:61:13
+    61| declare var o: DisjointUnion;
+                    ^ [2]
    test.js:108:10
    108|   "ERR": 'err',
-                 ^^^^^ [1]
-   test.js:61:16
-    61| declare var o: DisjointUnion;
-                       ^^^^^^^^^^^^^ [2]
+                 ^^^^^ [3]
    test.js:60:30
     60| type DisjointUnion = { type: 'foo' } | { type: 'bar' } | { type: 'baz' }
-                                     ^^^^^ [3]
+                                     ^^^^^ [4]
    test.js:60:48
     60| type DisjointUnion = { type: 'foo' } | { type: 'bar' } | { type: 'baz' }
-                                                       ^^^^^ [4]
+                                                       ^^^^^ [5]
    test.js:60:66
     60| type DisjointUnion = { type: 'foo' } | { type: 'bar' } | { type: 'baz' }
-                                                                         ^^^^^ [5]
+                                                                         ^^^^^ [6]
 
 
 Error ---------------------------------------------------------------------------------------------------- test.js:117:8
 
-Cannot compare string [1] with property `type` of `DisjointUnion` [2] because: [incompatible-type]
- - Either string [1] is incompatible with string literal `foo` [3].
- - Or string [1] is incompatible with string literal `bar` [4].
- - Or string [1] is incompatible with string literal `baz` [5].
+Cannot compare `KeyObj.ERR` [1] with property `type` of `o` [2] because: [incompatible-type]
+ - Either string [3] is incompatible with string literal `foo` [4].
+ - Or string [3] is incompatible with string literal `bar` [5].
+ - Or string [3] is incompatible with string literal `baz` [6].
 
    test.js:117:8
    117|   case KeyObj.ERR: // error
-               ^^^^^^^^^^
+               ^^^^^^^^^^ [1]
 
 References:
+   test.js:61:13
+    61| declare var o: DisjointUnion;
+                    ^ [2]
    test.js:108:10
    108|   "ERR": 'err',
-                 ^^^^^ [1]
-   test.js:61:16
-    61| declare var o: DisjointUnion;
-                       ^^^^^^^^^^^^^ [2]
+                 ^^^^^ [3]
    test.js:60:30
     60| type DisjointUnion = { type: 'foo' } | { type: 'bar' } | { type: 'baz' }
-                                     ^^^^^ [3]
+                                     ^^^^^ [4]
    test.js:60:48
     60| type DisjointUnion = { type: 'foo' } | { type: 'bar' } | { type: 'baz' }
-                                                       ^^^^^ [4]
+                                                       ^^^^^ [5]
    test.js:60:66
     60| type DisjointUnion = { type: 'foo' } | { type: 'bar' } | { type: 'baz' }
-                                                                         ^^^^^ [5]
+                                                                         ^^^^^ [6]
 
 
 

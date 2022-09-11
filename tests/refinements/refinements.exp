@@ -383,7 +383,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ eq.js:20:17
 
-Cannot compare number [1] with property `y` of union type [2] because: [incompatible-type]
+Cannot compare number [1] with property `y` of `x` [2] because: [incompatible-type]
  - Either number [1] is incompatible with string literal `foo` [3].
  - Or number [1] is incompatible with string literal `bar` [4].
 
@@ -392,9 +392,9 @@ Cannot compare number [1] with property `y` of union type [2] because: [incompat
                        ^^^ [1]
 
 References:
-   eq.js:18:15
+   eq.js:18:12
    18|   function(x: { y: 'foo' } | { y: 'bar' }) {
-                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+                  ^ [2]
    eq.js:18:20
    18|   function(x: { y: 'foo' } | { y: 'bar' }) {
                           ^^^^^ [3]
@@ -4939,17 +4939,17 @@ References:
 
 Error ------------------------------------------------------------------------------------------- tagged_union.js:120:24
 
-Cannot compare number [1] with property `toString` of number [2] because number [1] is incompatible with function
-type [3]. [incompatible-type]
+Cannot compare number [1] with property `toString` of `z` [2] because number [1] is incompatible with function type [3].
+[incompatible-type]
 
    tagged_union.js:120:24
    120|     if (z.toString === 0) {} // Error
                                ^ [1]
 
 References:
-   tagged_union.js:107:37
+   tagged_union.js:107:34
    107|     x: Array<string>, y: string, z: number, q: boolean,
-                                            ^^^^^^ [2]
+                                         ^ [2]
    <BUILTINS>/core.js:476:5
    476|     toString(radix?: number): string;
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
@@ -4988,17 +4988,17 @@ References:
 
 Error ------------------------------------------------------------------------------------------- tagged_union.js:125:23
 
-Cannot compare number [1] with property `valueOf` of boolean [2] because number [1] is incompatible with function
-type [3]. [incompatible-type]
+Cannot compare number [1] with property `valueOf` of `q` [2] because number [1] is incompatible with function type [3].
+[incompatible-type]
 
    tagged_union.js:125:23
    125|     if (q.valueOf === 0) {} // Error
                               ^ [1]
 
 References:
-   tagged_union.js:107:48
+   tagged_union.js:107:45
    107|     x: Array<string>, y: string, z: number, q: boolean,
-                                                       ^^^^^^^ [2]
+                                                    ^ [2]
    <BUILTINS>/core.js:369:5
    369|     valueOf(): boolean;
             ^^^^^^^^^^^^^^^^^^ [3]
@@ -5037,17 +5037,17 @@ References:
 
 Error ------------------------------------------------------------------------------------------- tagged_union.js:137:20
 
-Cannot compare number [1] with property `call` of function type [2] because number [1] is incompatible with function
-type [3]. [incompatible-type]
+Cannot compare number [1] with property `call` of `t` [2] because number [1] is incompatible with function type [3].
+[incompatible-type]
 
    tagged_union.js:137:20
    137|     if (t.call === 0) {} // Error
                            ^ [1]
 
 References:
-   tagged_union.js:108:32
+   tagged_union.js:108:29
    108|     r: Object, s: Function, t: () => void
-                                       ^^^^^^^^^^ [2]
+                                    ^ [2]
    <BUILTINS>/core.js:353:17
    353|     proto call: Function$Prototype$Call; // (thisArg: any, ...argArray: Array<any>) => any
                         ^^^^^^^^^^^^^^^^^^^^^^^ [3]
