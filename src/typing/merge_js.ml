@@ -409,15 +409,57 @@ class resolver_visitor =
         Context.make_call_prop cx t'
   end
 
-let detect_matching_props_violations cx =
+let detect_matching_props_violations init_cx master_cx =
   let open Type in
-  let resolver = new resolver_visitor in
-  let step (reason, key, sentinel, obj) =
-    let sentinel = resolver#type_ cx () sentinel in
-    match drop_generic sentinel with
-    (* TODO: it should not be possible to create a MatchingPropT with a non-tvar tout *)
-    | DefT (_, _, (BoolT (Some _) | StrT (Literal _) | NumT (Literal _))) ->
-      let obj = resolver#type_ cx () obj in
+  let peek =
+    let open Type in
+    let rec loop cx acc seen t =
+      match t with
+      | OpenT (_, id) ->
+        let (root_id, constraints) = Context.find_constraints cx id in
+        if ISet.mem root_id seen then
+          acc
+        else
+          let seen = ISet.add root_id seen in
+          (match constraints with
+          | Constraint.Resolved (_, t)
+          | Constraint.FullyResolved (_, (lazy t)) ->
+            loop cx acc seen t
+          | Constraint.Unresolved bounds ->
+            let ts = TypeMap.keys bounds.Constraint.lower in
+            List.fold_left (fun a t -> loop cx a seen t) acc ts)
+      | AnnotT (_, t, _) -> loop cx acc seen t
+      | _ -> List.rev (t :: acc)
+    in
+    (fun cx t -> loop cx [] ISet.empty t)
+  in
+  let is_lit t =
+    match drop_generic t with
+    | DefT (_, _, (BoolT (Some _) | StrT (Literal _) | NumT (Literal _))) -> true
+    | _ -> false
+  in
+  let matching_props_checks =
+    Base.List.filter_map (Context.matching_props init_cx) ~f:(fun (prop_name, other_loc, obj_loc) ->
+        let env = Context.environment init_cx in
+        Env.check_readable init_cx Env_api.ExpressionLoc other_loc;
+        let sentinel =
+          Base.Option.value_exn (Loc_env.find_write env Env_api.ExpressionLoc other_loc)
+        in
+        match peek init_cx sentinel with
+        | [t] when is_lit t ->
+          let obj_t = Env.provider_type_for_def_loc init_cx env obj_loc in
+          Some (sentinel, prop_name, sentinel, obj_t)
+        | _ -> None
+    )
+  in
+  match matching_props_checks with
+  | [] -> ()
+  | _ ->
+    let reducer =
+      let no_lowers _cx r = Type.Unsoundness.merged_any r in
+      new Context_optimizer.context_optimizer ~no_lowers
+    in
+    let step cx (reason, key, sentinel, obj) =
       (* Limit the check to promitive literal sentinels *)
       let use_op =
         Op
@@ -433,19 +475,21 @@ let detect_matching_props_violations cx =
       (* If `obj` is a GenericT, we replace it with it's upper bound, since ultimately it will flow into
          `sentinel` rather than the other way around. *)
       Flow_js.flow cx (MatchingPropT (reason, key, sentinel), UseT (use_op, drop_generic obj))
-    | _ -> ()
-  in
-  let matching_props = Context.matching_props cx in
-  List.iter
-    (fun (prop_name, other_loc, obj_loc) ->
-      let env = Context.environment cx in
-      Env.check_readable cx Env_api.ExpressionLoc other_loc;
-      let other_t =
-        Base.Option.value_exn (Loc_env.find_write env Env_api.ExpressionLoc other_loc)
-      in
-      let obj_t = Env.provider_type_for_def_loc cx env obj_loc in
-      step (TypeUtil.reason_of_t other_t, prop_name, other_t, obj_t))
-    matching_props
+    in
+    let (cx, checks) =
+      create_cx_with_context_optimizer init_cx master_cx ~reducer ~f:(fun () ->
+          Base.List.map matching_props_checks ~f:(fun (reason, prop_name, sentinel, obj_t) ->
+              ( TypeUtil.reason_of_t reason,
+                prop_name,
+                reducer#type_ init_cx Polarity.Neutral sentinel,
+                reducer#type_ init_cx Polarity.Neutral obj_t
+              )
+          )
+      )
+    in
+    Base.List.iter ~f:(step cx) checks;
+    let new_errors = Context.errors cx in
+    Flow_error.ErrorSet.iter (Context.add_error init_cx) new_errors
 
 let detect_literal_subtypes =
   let open Type in
@@ -582,7 +626,7 @@ let post_merge_checks cx master_cx ast tast metadata =
   detect_unnecessary_invariants cx;
   detect_es6_import_export_errors cx metadata results;
   detect_escaped_generics results;
-  detect_matching_props_violations cx;
+  detect_matching_props_violations cx master_cx;
   detect_literal_subtypes cx
 
 let optimize_builtins cx =
