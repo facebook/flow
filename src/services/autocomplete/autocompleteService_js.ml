@@ -531,17 +531,18 @@ let append_completion_items_of_autoimports
   let sorted_auto_imports =
     if imports_ranked_usage then
       let open Export_search in
-      Base.List.sort
-        ~compare:(fun (import_a, score_a) (import_b, score_b) ->
-          match Int.compare score_a score_b with
-          | 0 -> String.compare import_a.name import_b.name
-          | score_diff -> -1 * score_diff)
-        auto_imports
-    else
+      (* sort by score, then base the rank on the ordering so each one has a unique rank *)
       auto_imports
-  in
-  let sorted_auto_imports =
-    Base.List.mapi ~f:(fun index autoimport -> (fst autoimport, index)) sorted_auto_imports
+      |> Base.List.sort ~compare:(fun (import_a, score_a) (import_b, score_b) ->
+             match Int.compare score_a score_b with
+             | 0 -> String.compare import_a.name import_b.name
+             | score_diff -> -1 * score_diff
+         )
+      |> Base.List.mapi ~f:(fun index (autoimport, _score) -> (autoimport, index))
+    else
+      (* legacy behavior is to not sort and not rank. all imports have the same
+         constant rank. *)
+      Base.List.map ~f:(fun (autoimport, _score) -> (autoimport, 0)) auto_imports
   in
   Base.List.fold_left
     ~init:acc
