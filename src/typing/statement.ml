@@ -6347,7 +6347,7 @@ module Make
                   ~required_this_param_type:None
                   ~constructor:false
                   ~require_return_annot:
-                    (RequireAnnot.should_require_annot cx && Context.enforce_class_annotations cx)
+                    (Context.should_require_annot cx && Context.enforce_class_annotations cx)
                   ~statics:SMap.empty
                   tparams_map
                   reason
@@ -6378,20 +6378,20 @@ module Make
               in
               Flow.flow_t cx (t, annot_t)
             | (_, Inferred _)
-              when RequireAnnot.should_require_annot cx && Context.enforce_class_annotations cx ->
+              when Context.should_require_annot cx && Context.enforce_class_annotations cx ->
               let annot_loc =
                 match annot with
                 | Ast.Type.Missing loc
                 | Ast.Type.Available (loc, _) ->
                   loc
               in
-              RequireAnnot.add_missing_annotation_error
+              Flow.add_output
                 cx
-                (repos_reason annot_loc reason)
-                ~on_missing:(fun () ->
-                  if Context.env_mode cx = Options.LTI then
-                    Flow.flow_t cx (AnyT.make (AnyError (Some MissingAnnotation)) reason, annot_t)
-              )
+                (Error_message.EMissingLocalAnnotation
+                   { reason = repos_reason annot_loc reason; hint_available = false }
+                );
+              if Context.env_mode cx = Options.LTI then
+                Flow.flow_t cx (AnyT.make (AnyError (Some MissingAnnotation)) reason, annot_t)
             | _ -> ()
           end;
           let value_ref : (ALoc.t, ALoc.t * Type.t) Ast.Expression.t option ref = ref None in
@@ -6406,13 +6406,10 @@ module Make
       in
       (match (init, annot_or_inferred) with
       | ((Ast.Class.Property.Declared | Ast.Class.Property.Uninitialized), Inferred _)
-        when RequireAnnot.should_require_annot cx ->
-        RequireAnnot.add_missing_annotation_error
-          cx
-          ~on_missing:(fun () ->
-            if Context.env_mode cx = Options.LTI then
-              Flow.flow_t cx (AnyT.make (AnyError (Some MissingAnnotation)) reason, annot_t))
-          reason
+        when Context.should_require_annot cx ->
+        Flow.add_output cx (Error_message.EMissingLocalAnnotation { reason; hint_available = false });
+        if Context.env_mode cx = Options.LTI then
+          Flow.flow_t cx (AnyT.make (AnyError (Some MissingAnnotation)) reason, annot_t)
       | _ -> ());
       (field, annot_t, annot_ast, get_init)
     in
@@ -6422,7 +6419,7 @@ module Make
         ~func_hint:Hint_None
         ~required_this_param_type:None
         ~require_return_annot:
-          (RequireAnnot.should_require_annot cx && Context.enforce_class_annotations cx)
+          (Context.should_require_annot cx && Context.enforce_class_annotations cx)
         ~statics:SMap.empty
     in
     let mk_extends cx tparams_map = function
@@ -6971,19 +6968,28 @@ module Make
         predicate_function_kind cx loc params
       | (false, _, _, _) -> Utils_js.assert_false "(async || generator) && pred"
     in
-    let mk_param_annot cx tparams_map reason = function
-      | Ast.Type.Missing loc ->
-        let t = Env.find_write cx Env_api.FunctionParamLoc reason in
-        (t, Ast.Type.Missing (loc, t))
+    let mk_param_missing_annot cx ~hint loc reason =
+      if Hint_api.is_hint_none hint && Context.should_require_annot cx then
+        Flow.add_output cx (Error_message.EMissingLocalAnnotation { reason; hint_available = false });
+      let t =
+        if Context.env_mode cx = Options.LTI then
+          AnyT.make (AnyError (Some MissingAnnotation)) reason
+        else
+          Env.find_write cx Env_api.FunctionParamLoc reason
+      in
+      (t, Ast.Type.Missing (loc, t))
+    in
+    let mk_param_annot cx ~hint tparams_map reason = function
+      | Ast.Type.Missing loc -> mk_param_missing_annot cx ~hint loc reason
       | Ast.Type.Available annot ->
         let (t, ast_annot) = Anno.mk_type_available_annotation cx tparams_map annot in
         (t, Ast.Type.Available ast_annot)
     in
-    let id_param cx tparams_map id mk_reason =
+    let id_param cx ~hint tparams_map id mk_reason =
       let { Ast.Pattern.Identifier.name; annot; optional } = id in
       let (id_loc, ({ Ast.Identifier.name; comments = _ } as id)) = name in
       let reason = mk_reason name in
-      let (t, annot) = mk_param_annot cx tparams_map reason annot in
+      let (t, annot) = mk_param_annot cx ~hint tparams_map reason annot in
       let name = ((id_loc, t), id) in
       (t, { Ast.Pattern.Identifier.name; annot; optional })
     in
@@ -6998,27 +7004,19 @@ module Make
         match patt with
         | Ast.Pattern.Identifier id ->
           let (t, id) =
-            id_param cx tparams_map id (fun name -> mk_reason (RParameter (Some name)) ploc)
+            id_param cx ~hint tparams_map id (fun name -> mk_reason (RParameter (Some name)) ploc)
           in
           (t, Func_stmt_config_types.Types.Id id)
         | Ast.Pattern.Object { Ast.Pattern.Object.annot; properties; comments } ->
           let reason = mk_reason RDestructuring ploc in
-          let (t, annot) = mk_param_annot cx tparams_map reason annot in
+          let (t, annot) = mk_param_annot cx ~hint tparams_map reason annot in
           (t, Func_stmt_config_types.Types.Object { annot; properties; comments })
         | Ast.Pattern.Array { Ast.Pattern.Array.annot; elements; comments } ->
           let reason = mk_reason RDestructuring ploc in
-          let (t, annot) = mk_param_annot cx tparams_map reason annot in
+          let (t, annot) = mk_param_annot cx ~hint tparams_map reason annot in
           (t, Func_stmt_config_types.Types.Array { annot; elements; comments })
         | Ast.Pattern.Expression _ -> failwith "unexpected expression pattern in param"
       in
-      RequireAnnot.require_annot_on_pattern
-        cx
-        ~hint
-        ~on_missing:(fun () ->
-          if Context.env_mode cx = Options.LTI then
-            Flow.flow_t cx (AnyT.make (AnyError (Some MissingAnnotation)) (reason_of_t t), t))
-        (reason_of_t t)
-        patt;
       Func_stmt_config_types.Types.Param
         { t; loc; ploc; pattern; default; has_anno = has_param_anno }
     in
@@ -7032,16 +7030,8 @@ module Make
       match patt with
       | Ast.Pattern.Identifier id ->
         let (t, id) =
-          id_param cx tparams_map id (fun name -> mk_reason (RRestParameter (Some name)) ploc)
+          id_param cx ~hint tparams_map id (fun name -> mk_reason (RRestParameter (Some name)) ploc)
         in
-        RequireAnnot.require_annot_on_pattern
-          cx
-          ~hint
-          ~on_missing:(fun () ->
-            if Context.env_mode cx = Options.LTI then
-              Flow.flow_t cx (AnyT.make (AnyError (Some MissingAnnotation)) (reason_of_t t), t))
-          (reason_of_t t)
-          patt;
         Ok (Func_stmt_config_types.Types.Rest { t; loc; ploc; id; has_anno = has_param_anno })
       | Ast.Pattern.Object _
       | Ast.Pattern.Array _
@@ -7061,12 +7051,9 @@ module Make
                   func.Ast.Function.body
                   func.Ast.Function.params ->
         let reason = mk_reason (RImplicitThis (RFunction RNormal)) param_loc in
-        RequireAnnot.add_missing_annotation_error
-          cx
-          ~on_missing:(fun () ->
-            if Context.env_mode cx = Options.LTI then
-              Flow_js.flow_t cx (AnyT.make (AnyError (Some MissingAnnotation)) reason, t))
-          reason
+        Flow.add_output cx (Error_message.EMissingLocalAnnotation { reason; hint_available = false });
+        if Context.env_mode cx = Options.LTI then
+          Flow_js.flow_t cx (AnyT.make (AnyError (Some MissingAnnotation)) reason, t)
       | _ -> ()
     in
     let mk_params cx ~func_hint tparams_map params =
@@ -7192,10 +7179,11 @@ module Make
             match return with
             | (Inferred t, _) when has_nonvoid_return && require_return_annot ->
               let reason = repos_reason ret_loc ret_reason in
-              RequireAnnot.add_missing_annotation_error cx reason ~on_missing:(fun () ->
-                  if Context.env_mode cx = Options.LTI then
-                    Flow.flow_t cx (AnyT.make (AnyError (Some MissingAnnotation)) reason, t)
-              )
+              Flow_js.add_output
+                cx
+                (Error_message.EMissingLocalAnnotation { reason; hint_available = false });
+              if Context.env_mode cx = Options.LTI then
+                Flow.flow_t cx (AnyT.make (AnyError (Some MissingAnnotation)) reason, t)
             | _ -> ()
           end;
           return

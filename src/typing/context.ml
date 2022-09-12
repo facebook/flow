@@ -440,10 +440,20 @@ let exact_empty_objects cx = cx.metadata.exact_empty_objects || env_mode cx = Op
 let enforce_local_inference_annotations cx =
   cx.metadata.enforce_local_inference_annotations || env_mode cx = Options.LTI
 
+let should_require_annot cx =
+  if enforce_local_inference_annotations cx then
+    let dirs = cx.metadata.local_inference_annotation_dirs in
+    match dirs with
+    | [] -> true
+    | _ :: _ ->
+      let filename = File_key.to_string cx.file in
+      let normalized_filename = Sys_utils.normalize_filename_dir_sep filename in
+      List.exists (fun str -> Base.String.is_prefix ~prefix:str normalized_filename) dirs
+  else
+    false
+
 let enforce_class_annotations cx =
   cx.metadata.enforce_class_annotations || env_mode cx = Options.LTI
-
-let local_inference_annotation_dirs cx = cx.metadata.local_inference_annotation_dirs
 
 let enforce_this_annotations cx = cx.metadata.enforce_this_annotations || env_mode cx = Options.LTI
 

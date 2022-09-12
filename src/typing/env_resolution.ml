@@ -279,12 +279,9 @@ let rec resolve_binding_partial cx reason loc b =
         match Type_hint.evaluate_hint cx reason ~resolver:TvarResolver.resolved_t hint with
         | None ->
           if hint <> Hint_api.Hint_None then
-            RequireAnnot.add_missing_annotation_error
+            Flow_js.add_output
               cx
-              reason
-              ~hint_available:true
-              ~on_missing:(fun () -> ()
-            );
+              (Error_message.EMissingLocalAnnotation { reason; hint_available = true });
           AnyT.error reason
         | Some t -> TypeUtil.mod_reason_of_t (Base.Fn.const reason) t
       else
@@ -292,8 +289,10 @@ let rec resolve_binding_partial cx reason loc b =
     in
     let () =
       match hint with
-      | Hint_api.Hint_None when RequireAnnot.should_require_annot cx ->
-        RequireAnnot.add_missing_annotation_error cx ~on_missing:(fun () -> ()) reason
+      | Hint_api.Hint_None when Context.should_require_annot cx ->
+        Flow_js.add_output
+          cx
+          (Error_message.EMissingLocalAnnotation { reason; hint_available = false })
       | _ -> ()
     in
     Env.bind_function_param cx t param_loc;

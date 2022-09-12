@@ -37,3 +37,5 @@ val decompose_hint : hint_decomposition -> 't hint -> 't hint
 (** Combine two hints into one, by picking the first one if it contains useful
  *  information; otherwise picking the second hint. *)
 val merge_hints : 't hint -> 't hint -> 't hint
+
+val is_hint_none : 't hint -> bool

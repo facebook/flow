@@ -91,3 +91,7 @@ let merge_hints h1 h2 =
   | Hint_Placeholder ->
     h1
   | Hint_None -> h2
+
+let is_hint_none = function
+  | Hint_None -> true
+  | _ -> false

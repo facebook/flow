@@ -167,9 +167,9 @@ val exact_empty_objects : t -> bool
 
 val enforce_local_inference_annotations : t -> bool
 
-val enforce_class_annotations : t -> bool
+val should_require_annot : t -> bool
 
-val local_inference_annotation_dirs : t -> string list
+val enforce_class_annotations : t -> bool
 
 val array_literal_providers : t -> bool
 
