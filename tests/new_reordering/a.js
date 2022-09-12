@@ -7,23 +7,14 @@ class TimeOfDay {
   }
 }
 
-class TimeOfDay_noanno {
-  a(other: TimeOfDay_noanno): boolean {
-    return true
-  }
-}
-
-class TimeOfDay_noanno2 {
-  a(): void {
-    return this.a();
-  }
-}
-
 function f(): number {
   return f();
 }
 
 function f_na() {
+  if (true) {
+    return 42;
+  }
   return f_na();
 }
 
@@ -35,10 +26,20 @@ var x;
 havoc_x();
 x = x;
 
-function a() {
-  return b()
+function odd(x: number) {
+  if (x === 0) {
+    return false;
+  }
+  return even(x - 1)
 }
 
-function b() {
-  return a()
+function even(x: number) {
+  if (x === 0) {
+    return true;
+  }
+  return odd(x - 1)
+}
+
+function is_zero(x: number): boolean %checks {
+  return x === 0 || is_zero(x);
 }

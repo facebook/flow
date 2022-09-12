@@ -22,19 +22,22 @@ module Tarjan =
     (EnvMap)
     (EnvSet)
 
+type 'k blame = {
+  payload: 'k;
+  reason: ALoc.t virtual_reason;
+  annot_loc: ALoc.t option;
+  recursion: ALoc.t Nel.t;
+}
+
 type element =
   | Normal of Env_api.EnvKey.t
   | Resolvable of Env_api.EnvKey.t
-  | Illegal of {
-      loc: Env_api.EnvKey.t;
-      reason: ALoc.t virtual_reason;
-      recursion: ALoc.t Nel.t;
-    }
+  | Illegal of Env_api.EnvKey.t blame
 
 type result =
   | Singleton of element
   | ResolvableSCC of element Nel.t
-  | IllegalSCC of (element * ALoc.t virtual_reason * ALoc.t Nel.t) Nel.t
+  | IllegalSCC of element blame Nel.t
 
 let string_of_element graph =
   let print_elt k =
@@ -55,7 +58,7 @@ let string_of_element graph =
       (ALoc.debug_to_string l)
       (Env_api.show_def_loc_type k)
       (print_elt (k, l))
-  | Illegal { loc = (k, l); _ } ->
+  | Illegal { payload = (k, l); _ } ->
     Utils_js.spf
       "[illegal %s (%s): %s]"
       (ALoc.debug_to_string l)
@@ -72,7 +75,7 @@ let string_of_component graph = function
     Utils_js.spf
       "{(illegal cycle)\n%s\n}"
       (Nel.to_list elts
-      |> Base.List.map ~f:(fun (elt, _, _) -> string_of_element graph elt)
+      |> Base.List.map ~f:(fun { payload = elt; _ } -> string_of_element graph elt)
       |> String.concat ",\n"
       )
 
@@ -654,7 +657,12 @@ struct
             statics;
             hint;
           } ->
-        depends_of_fun synthesizable_from_annotation tparams_map hint ~statics function_
+        depends_of_fun
+          (synthesizable_from_annotation = Synthesizable)
+          tparams_map
+          hint
+          ~statics
+          function_
       | Class { class_; class_loc = _; class_implicit_this_tparam = _; this_super_write_locs = _ }
         ->
         depends_of_class class_
@@ -689,7 +697,7 @@ struct
       | TypeAlias _
       | OpaqueType _
       | TypeParam _
-      | Function { synthesizable_from_annotation = true; _ }
+      | Function { synthesizable_from_annotation = Synthesizable; _ }
       | Interface _
       (* Imports are academic here since they can't be in a cycle anyways, since they depend on nothing *)
       | Import { import_kind = Ast.Statement.ImportDeclaration.(ImportType | ImportTypeof); _ }
@@ -708,11 +716,53 @@ struct
       | Update _
       | MemberAssign _
       | OpAssign _
-      | Function { synthesizable_from_annotation = false; _ }
+      | Function _
       | Enum _
       | Import _ ->
         false
   end
+
+  let annotation_loc scopes loc =
+    let rec bind_loop b =
+      match b with
+      | Root Catch -> None
+      | Root (Annotation _) -> None
+      | Root (For _ | Value _ | FunctionValue _ | Contextual _ | EmptyArray _) ->
+        begin
+          try
+            let { Scope_api.With_ALoc.Def.locs = (loc, _); _ } =
+              Scope_api.With_ALoc.def_of_use scopes loc
+            in
+            Some loc
+          with
+          | Scope_api.With_ALoc.Missing_def _ -> None
+        end
+      | Select { selector = Computed _ | Default; _ } -> None
+      | Select { binding; _ } -> bind_loop binding
+    in
+    function
+    | Binding bind -> bind_loop bind
+    | GeneratorNext None -> Some loc
+    | Function { synthesizable_from_annotation = MissingReturn loc; _ } -> Some loc
+    | TypeAlias _
+    | OpaqueType _
+    | TypeParam _
+    | Function _
+    | Interface _
+    | Enum _
+    | Import _
+    | Class _
+    | DeclaredClass _
+    | RefiExpression _
+    | ChainExpression _
+    | DeclaredModule _
+    | GeneratorNext (Some _) ->
+      None
+    (* TODO *)
+    | Update _
+    | MemberAssign _
+    | OpAssign _ ->
+      None
 
   let dependencies cx this_super_dep_loc_map env (kind, loc) (def, _, _, _) acc =
     let depends = FindDependencies.depends cx this_super_dep_loc_map env loc def in
@@ -755,7 +805,7 @@ struct
     in
     EnvMap.fold (dependencies cx this_super_dep_loc_map env) map EnvMap.empty
 
-  let build_ordering cx env map =
+  let build_ordering cx ({ Env_api.scopes; _ } as env) map =
     let graph = build_graph cx env map in
     let order_graph = EnvMap.map (fun deps -> EnvMap.keys deps |> EnvSet.of_list) graph in
     let roots = EnvMap.keys order_graph |> EnvSet.of_list in
@@ -796,7 +846,13 @@ struct
           else
             let depends = EnvMap.find (kind, loc) graph in
             let recursion = EnvMap.find (kind, loc) depends in
-            Illegal { loc = (kind, loc); reason; recursion }
+            Illegal
+              {
+                payload = (kind, loc);
+                reason;
+                recursion;
+                annot_loc = annotation_loc scopes loc def;
+              }
         else
           Normal (kind, loc)
       in
@@ -816,7 +872,7 @@ struct
           let elements =
             Nel.map
               (fun (kind, loc) ->
-                let (_, _, _, reason) = EnvMap.find (kind, loc) map in
+                let (def, _, _, reason) = EnvMap.find (kind, loc) map in
                 let depends = EnvMap.find (kind, loc) graph in
                 let edges =
                   EnvMap.fold
@@ -835,7 +891,12 @@ struct
                     []
                   |> Nel.of_list_exn
                 in
-                (element_of_loc (kind, loc), reason, edges))
+                {
+                  payload = element_of_loc (kind, loc);
+                  reason;
+                  recursion = edges;
+                  annot_loc = annotation_loc scopes loc def;
+                })
               component
           in
           IllegalSCC elements

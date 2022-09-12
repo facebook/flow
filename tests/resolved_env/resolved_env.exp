@@ -408,8 +408,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ function.js:11:10
 
-Cannot compute a type for function because its definition includes references to itself [1]. Please add a type
-annotation to this definition [recursive-definition]
+Cannot compute a type for function because its definition includes references to itself [1]. Please add an annotation to
+this definition [2] [recursive-definition]
 
    function.js:11:10
    11| var x = (function h() { (h(): empty); return 42 }); // err
@@ -419,6 +419,9 @@ References:
    function.js:11:26
    11| var x = (function h() { (h(): empty); return 42 }); // err
                                 ^ [1]
+   function.js:11:22
+   11| var x = (function h() { (h(): empty); return 42 }); // err
+                             [2]
 
 
 Error ------------------------------------------------------------------------------------------------ function.js:11:26

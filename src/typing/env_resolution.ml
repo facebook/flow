@@ -715,18 +715,7 @@ let resolve cx (def_kind, id_loc) (def, def_scope_kind, class_stack, def_reason)
     | Function
         {
           function_;
-          synthesizable_from_annotation = false;
-          has_this_def = _;
-          function_loc;
-          tparams_map = _;
-          statics;
-          hint;
-        } ->
-      resolve_inferred_function cx ~hint ~statics id_loc def_reason function_loc function_
-    | Function
-        {
-          function_;
-          synthesizable_from_annotation = true;
+          synthesizable_from_annotation = Synthesizable;
           has_this_def = _;
           function_loc;
           tparams_map;
@@ -734,6 +723,17 @@ let resolve cx (def_kind, id_loc) (def, def_scope_kind, class_stack, def_reason)
           hint;
         } ->
       resolve_annotated_function cx ~hint ~statics def_reason tparams_map function_loc function_
+    | Function
+        {
+          function_;
+          synthesizable_from_annotation = _;
+          has_this_def = _;
+          function_loc;
+          tparams_map = _;
+          statics;
+          hint;
+        } ->
+      resolve_inferred_function cx ~hint ~statics id_loc def_reason function_loc function_
     | Class { class_; class_loc; class_implicit_this_tparam = _; this_super_write_locs = _ } ->
       resolve_class cx id_loc def_reason class_loc class_
     | MemberAssign { member_loc = _; member = _; rhs } ->
@@ -777,7 +777,7 @@ let entries_of_component graph component =
       match element with
       | Name_def_ordering.Normal kl
       | Resolvable kl
-      | Illegal { loc = kl; _ } ->
+      | Illegal { payload = kl; _ } ->
         kl
     in
     let acc = EnvSet.add (kind, loc) acc in
@@ -803,7 +803,7 @@ let entries_of_component graph component =
   | Singleton elt -> entries_of_def EnvSet.empty elt
   | ResolvableSCC elts -> Nel.fold_left entries_of_def EnvSet.empty elts
   | IllegalSCC elts ->
-    Nel.fold_left (fun acc (elt, _, _) -> entries_of_def acc elt) EnvSet.empty elts
+    Nel.fold_left (fun acc { payload = elt; _ } -> entries_of_def acc elt) EnvSet.empty elts
 
 let init_type_param =
   let rec init_type_param cx graph def_loc =
@@ -867,7 +867,7 @@ let resolve_component_type_params cx graph component =
   let resolve_element = function
     | Name_def_ordering.Normal key
     | Resolvable key
-    | Illegal { loc = key; _ } ->
+    | Illegal { payload = key; _ } ->
       (match EnvMap.find key graph with
       | (TypeParam _, _, _, _)
       | (Class _, _, _, _) ->
@@ -878,14 +878,14 @@ let resolve_component_type_params cx graph component =
   match component with
   | Singleton elt -> resolve_element elt
   | ResolvableSCC elts -> Nel.iter (fun elt -> resolve_element elt) elts
-  | IllegalSCC elts -> Nel.iter (fun (elt, _, _) -> resolve_element elt) elts
+  | IllegalSCC elts -> Nel.iter (fun { payload = elt; _ } -> resolve_element elt) elts
 
 let resolve_component cx graph component =
   let open Name_def_ordering in
   let resolve_element = function
     | Name_def_ordering.Normal (kind, loc)
     | Resolvable (kind, loc)
-    | Illegal { loc = (kind, loc); _ } ->
+    | Illegal { payload = (kind, loc); _ } ->
       Abnormal.try_with_abnormal_exn
         ~f:(fun () -> resolve cx (kind, loc) (EnvMap.find (kind, loc) graph))
           (* When there is an unhandled exception, it means that the initialization of the env slot
@@ -912,7 +912,7 @@ let resolve_component cx graph component =
     match component with
     | Singleton elt -> resolve_element elt
     | ResolvableSCC elts -> Nel.iter (fun elt -> resolve_element elt) elts
-    | IllegalSCC elts -> Nel.iter (fun (elt, _, _) -> resolve_element elt) elts
+    | IllegalSCC elts -> Nel.iter (fun { payload = elt; _ } -> resolve_element elt) elts
   in
   let env = Context.environment cx in
   EnvSet.iter

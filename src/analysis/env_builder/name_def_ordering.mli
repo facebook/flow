@@ -10,19 +10,22 @@ open Dependency_sigs
 module EnvMap = Env_api.EnvMap
 module EnvSet = Env_api.EnvSet
 
+type 'k blame = {
+  payload: 'k;
+  reason: ALoc.t virtual_reason;
+  annot_loc: ALoc.t option;
+  recursion: ALoc.t Nel.t;
+}
+
 type element =
   | Normal of Env_api.EnvKey.t
   | Resolvable of Env_api.EnvKey.t
-  | Illegal of {
-      loc: Env_api.EnvKey.t;
-      reason: ALoc.t virtual_reason;
-      recursion: ALoc.t Nel.t;
-    }
+  | Illegal of Env_api.EnvKey.t blame
 
 type result =
   | Singleton of element
   | ResolvableSCC of element Nel.t
-  | IllegalSCC of (element * ALoc.t virtual_reason * ALoc.t Nel.t) Nel.t
+  | IllegalSCC of element blame Nel.t
 
 val string_of_component :
   (Name_def.def * 'a * ALoc.t list * ALoc.t Reason.virtual_reason) EnvMap.t -> result -> string

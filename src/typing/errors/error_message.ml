@@ -437,10 +437,11 @@ and 'loc t' =
   | EInvalidGraphQL of 'loc * Graphql.error
   | EAnnotationInference of 'loc * 'loc virtual_reason * 'loc virtual_reason * string option
   | EAnnotationInferenceRecursive of 'loc * 'loc virtual_reason
-  | EDefinitionCycle of ('loc virtual_reason * 'loc Nel.t) Nel.t
+  | EDefinitionCycle of ('loc virtual_reason * 'loc Nel.t * 'loc option) Nel.t
   | ERecursiveDefinition of {
       reason: 'loc virtual_reason;
       recursion: 'loc Nel.t;
+      annot_loc: 'loc option;
     }
   | EDuplicateClassMember of {
       loc: 'loc;
@@ -1047,9 +1048,19 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
     EAnnotationInference (f loc, map_reason r1, map_reason r2, suggestion)
   | EAnnotationInferenceRecursive (loc, r) -> EAnnotationInferenceRecursive (f loc, map_reason r)
   | EDefinitionCycle elts ->
-    EDefinitionCycle (Nel.map (fun (reason, recur) -> (map_reason reason, Nel.map f recur)) elts)
-  | ERecursiveDefinition { reason; recursion } ->
-    ERecursiveDefinition { reason = map_reason reason; recursion = Nel.map f recursion }
+    EDefinitionCycle
+      (Nel.map
+         (fun (reason, recur, annot) ->
+           (map_reason reason, Nel.map f recur, Base.Option.map ~f annot))
+         elts
+      )
+  | ERecursiveDefinition { reason; recursion; annot_loc } ->
+    ERecursiveDefinition
+      {
+        reason = map_reason reason;
+        recursion = Nel.map f recursion;
+        annot_loc = Base.Option.map ~f annot_loc;
+      }
   | EDuplicateClassMember { loc; name; static } ->
     EDuplicateClassMember { loc = f loc; name; static }
   | EEmptyArrayNoProvider { loc } -> EEmptyArrayNoProvider { loc = f loc }
@@ -1343,7 +1354,7 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | EEnumInvalidObjectUtil { reason; _ }
   | EEnumNotIterable { reason; _ }
   | ERecursiveDefinition { reason; _ }
-  | EDefinitionCycle ((reason, _), _)
+  | EDefinitionCycle ((reason, _, _), _)
   | EInvalidConstructor reason
   | EInvalidDeclaration { declaration = reason; _ } ->
     Some (poly_loc_of_reason reason)
@@ -3865,9 +3876,17 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
       ]
     in
     Normal { features }
-  | ERecursiveDefinition { reason; recursion = (hd, tl) } ->
+  | ERecursiveDefinition { reason; recursion = (hd, tl); annot_loc } ->
     let tl_recur =
       Base.List.map ~f:(fun loc -> [text ", "; ref (mk_reason (RCustom "") loc)]) tl |> List.flatten
+    in
+    let annot_message =
+      [
+        text "Please add an annotation to ";
+        Base.Option.value_map annot_loc ~default:(text "this definition") ~f:(fun l ->
+            ref (mk_reason (RCustom "this definition") l)
+        );
+      ]
     in
     let features =
       [
@@ -3877,13 +3896,13 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
         ref (mk_reason (RCustom "itself") hd);
       ]
       @ tl_recur
-      @ [text ". Please add a type annotation to this definition"]
+      @ text ". " :: annot_message
     in
     Normal { features }
   | EDefinitionCycle dependencies ->
     let deps =
       Nel.map
-        (fun (reason, (hd, tl)) ->
+        (fun (reason, (hd, tl), _) ->
           let tl_dep =
             Base.List.map ~f:(fun loc -> [text ","; ref (mk_reason (RCustom "") loc)]) tl
             |> List.flatten
@@ -3900,11 +3919,19 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
       |> Nel.to_list
       |> List.flatten
     in
+    let annot_message =
+      Nel.map
+        (fun (_, _, annot_loc) ->
+          Base.Option.map annot_loc ~f:(fun annot_loc -> ref (mk_reason (RCustom "") annot_loc)))
+        dependencies
+      |> Nel.to_list
+      |> Base.List.filter_opt
+    in
     let features =
       text
         "The following definitions recursively depend on each other, and Flow cannot compute their types:\n"
       :: deps
-      @ [text "Please add type annotations to these definitions"]
+      @ text "Please add type annotations to these definitions" :: annot_message
     in
     Normal { features }
 

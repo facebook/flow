@@ -11,7 +11,7 @@ open Flow_ast_mapper
 open Loc_collections
 module EnvMap = Env_api.EnvMap
 module EnvSet = Env_api.EnvSet
-include Name_def_sig
+include Name_def_types
 
 let default_of_binding = function
   | Root (Annotation { default_expression; _ })
@@ -193,19 +193,25 @@ let func_params_missing_annotations
   in
   params @ rest @ this_
 
-let func_missing_annotations ~allow_this ({ Ast.Function.return; generator; params; body; _ } as f)
-    =
-  let params = func_params_missing_annotations ~allow_this params body in
-  match return with
-  | Ast.Type.Available _ -> params
-  | Ast.Type.Missing loc ->
-    if (not (Nonvoid_return.might_have_nonvoid_return ALoc.none f)) && not generator then
-      params
-    else
-      mk_reason RReturn loc :: params
-
-let func_is_synthesizable_from_annotation ~allow_this ({ Ast.Function.predicate; _ } as f) =
-  Base.Option.is_none predicate && Base.List.is_empty (func_missing_annotations ~allow_this f)
+let func_is_synthesizable_from_annotation
+    ~allow_this ({ Ast.Function.predicate; return; generator; params; body; _ } as f) =
+  if Base.Option.is_some predicate then
+    PredicateFunction
+  else
+    let params = func_params_missing_annotations ~allow_this params body in
+    let based_on_params =
+      if Base.List.length params > 0 then
+        MissingArguments
+      else
+        Synthesizable
+    in
+    match return with
+    | Ast.Type.Available _ -> based_on_params
+    | Ast.Type.Missing loc ->
+      if (not (Nonvoid_return.might_have_nonvoid_return ALoc.none f)) && not generator then
+        based_on_params
+      else
+        MissingReturn loc
 
 let def_of_function ~tparams_map ~hint ~has_this_def ~function_loc ~statics function_ =
   Function

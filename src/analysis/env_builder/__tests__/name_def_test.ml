@@ -54,7 +54,7 @@ let print_order lst =
     | Normal (_, l)
     | Resolvable (_, l) ->
       ALoc.debug_to_string l
-    | Illegal { loc = (_, loc); _ } ->
+    | Illegal { payload = (_, loc); _ } ->
       Printf.sprintf "illegal self-cycle (%s)" (ALoc.debug_to_string loc)
   in
   let msg =
@@ -64,7 +64,10 @@ let print_order lst =
         | IllegalSCC keys ->
           Printf.sprintf
             "illegal scc: ((%s))"
-            (Nel.map (fun (elt, _, _) -> msg_of_elt elt) keys |> Nel.to_list |> String.concat "); (")
+            (Nel.map (fun { payload = elt; _ } -> msg_of_elt elt) keys
+            |> Nel.to_list
+            |> String.concat "); ("
+            )
         | ResolvableSCC keys ->
           Printf.sprintf
             "legal scc: ((%s))"

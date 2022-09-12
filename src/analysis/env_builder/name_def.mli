@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-include module type of Name_def_sig
+include module type of Name_def_types
 
 val default_of_binding : binding -> default Base.Option.t
 

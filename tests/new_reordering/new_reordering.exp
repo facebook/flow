@@ -1,74 +1,101 @@
-Error -------------------------------------------------------------------------------------------------------- a.js:26:1
+Error -------------------------------------------------------------------------------------------------------- a.js:14:1
 
-Cannot compute a type for function because its definition includes references to itself [1]. Please add a type
-annotation to this definition [recursive-definition]
+Cannot compute a type for function because its definition includes references to itself [1]. Please add an annotation to
+this definition [2] [recursive-definition]
 
-   a.js:26:1
-   26| function f_na() {
+   a.js:14:1
+   14| function f_na() {
        ^^^^^^^^^^^^^^^
 
 References:
-   a.js:27:10
-   27|   return f_na();
+   a.js:18:10
+   18|   return f_na();
                 ^^^^ [1]
+   a.js:14:16
+   14| function f_na() {
+                       [2]
 
 
-Error -------------------------------------------------------------------------------------------------------- a.js:31:7
+Error -------------------------------------------------------------------------------------------------------- a.js:22:7
 
 Cannot assign `null` to `x` because null [1] is incompatible with possibly uninitialized variable [2]. All writes to `x`
 must be compatible with the type of its initial assignment [3]. Add an annotation to `x` [2] if a different type is
 desired. [incompatible-type]
 
-   a.js:31:7
-   31|   x = null;
+   a.js:22:7
+   22|   x = null;
              ^^^^ [1]
 
 References:
-   a.js:34:5
-   34| var x;
+   a.js:25:5
+   25| var x;
            ^ [2]
-   a.js:36:1
-   36| x = x;
+   a.js:27:1
+   27| x = x;
        ^ [3]
 
 
-Error -------------------------------------------------------------------------------------------------------- a.js:36:1
+Error -------------------------------------------------------------------------------------------------------- a.js:27:1
 
-Cannot compute a type for `x` because its definition includes references to itself [1]. Please add a type annotation to
-this definition [recursive-definition]
+Cannot compute a type for `x` because its definition includes references to itself [1]. Please add an annotation to this
+definition [2] [recursive-definition]
 
-   a.js:36:1
-   36| x = x;
+   a.js:27:1
+   27| x = x;
        ^
 
 References:
-   a.js:36:5
-   36| x = x;
+   a.js:27:5
+   27| x = x;
            ^ [1]
+   a.js:25:5
+   25| var x;
+           ^ [2]
 
 
-Error -------------------------------------------------------------------------------------------------------- a.js:38:1
+Error -------------------------------------------------------------------------------------------------------- a.js:29:1
 
 The following definitions recursively depend on each other, and Flow cannot compute their types:
  - function [1] depends on other definition [2]
  - function [3] depends on other definition [4]
-Please add type annotations to these definitions [definition-cycle]
+Please add type annotations to these definitions [5] [6] [definition-cycle]
 
-   a.js:38:1
-   38| function a() {
-       ^^^^^^^^^^^^ [1]
+   a.js:29:1
+   29| function odd(x: number) {
+       ^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 References:
-   a.js:39:10
-   39|   return b()
-                ^ [2]
-   a.js:42:1
-   42| function b() {
-       ^^^^^^^^^^^^ [3]
-   a.js:43:10
-   43|   return a()
-                ^ [4]
+   a.js:33:10
+   33|   return even(x - 1)
+                ^^^^ [2]
+   a.js:36:1
+   36| function even(x: number) {
+       ^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+   a.js:40:10
+   40|   return odd(x - 1)
+                ^^^ [4]
+   a.js:29:24
+   29| function odd(x: number) {
+                               [5]
+   a.js:36:25
+   36| function even(x: number) {
+                                [6]
+
+
+Error -------------------------------------------------------------------------------------------------------- a.js:43:1
+
+Cannot compute a type for function because its definition includes references to itself [1]. Please add an annotation to
+this definition [recursive-definition]
+
+   a.js:43:1
+   43| function is_zero(x: number): boolean %checks {
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   a.js:44:21
+   44|   return x === 0 || is_zero(x);
+                           ^^^^^^^ [1]
 
 
 
-Found 4 errors
+Found 5 errors

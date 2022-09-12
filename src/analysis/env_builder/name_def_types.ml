@@ -121,6 +121,12 @@ type class_implicit_this_tparam = {
   class_tparams_loc: ALoc.t option;
 }
 
+type function_synth_kind =
+  | Synthesizable
+  | MissingReturn of ALoc.t
+  | MissingArguments
+  | PredicateFunction
+
 type def =
   | Binding of binding
   | ChainExpression of cond_context * (ALoc.t, ALoc.t) Ast.Expression.t
@@ -142,7 +148,7 @@ type def =
     }
   | Function of {
       hint: hint_node hint;
-      synthesizable_from_annotation: bool;
+      synthesizable_from_annotation: function_synth_kind;
       has_this_def: bool;
       function_loc: ALoc.t;
       function_: (ALoc.t, ALoc.t) Ast.Function.t;
