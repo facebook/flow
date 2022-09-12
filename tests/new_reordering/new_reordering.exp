@@ -1,3 +1,4 @@
+Typechecking for cycles...
 Error -------------------------------------------------------------------------------------------------------- a.js:14:1
 
 Cannot compute a type for function because its definition includes references to itself [1]. Please add an annotation to
@@ -99,3 +100,79 @@ References:
 
 
 Found 5 errors
+Annotating cycles...
+>>> a.js (#changes: 4)
+//@flow
+
+
+class TimeOfDay {
+  a(other: TimeOfDay): boolean {
+    return true
+  }
+}
+
+function f(): number {
+  return f();
+}
+
+function f_na(): number {
+  if (true) {
+    return 42;
+  }
+  return f_na();
+}
+
+function havoc_x() {
+  x = null;
+}
+
+var x: void;
+havoc_x();
+x = x;
+
+function odd(x: number): boolean {
+  if (x === 0) {
+    return false;
+  }
+  return even(x - 1)
+}
+
+function even(x: number): boolean {
+  if (x === 0) {
+    return true;
+  }
+  return odd(x - 1)
+}
+
+function is_zero(x: number): boolean %checks {
+  return x === 0 || is_zero(x);
+}
+
+>>> Launching report...
+
+Stats:
+  Files changed:                            1
+  Number of annotations added:              4
+  Total size of annotations:                4
+  Number of cycles:                         4
+  Number of annotations skipped:            0
+  Number of unannotatable cycles:           1
+
+Errors:
+  Missing annot./normalizer error:          0
+  Validation Error:                         0
+  Import Error:
+    Loc source none:                        0
+    Parsing heaps get ast error:            0
+    Indeterminate module type:              0
+    No matching export:                     0
+  Serializer error:                         0
+  Unsupported error kind:                   0
+
+Warnings:
+  Skipping arrow function:                  0
+  Large type added:                         0
+  Location unhandled:                       0
+  Empty NoUpper:                            0
+  Empty SomeKnownUpper:                     0
+

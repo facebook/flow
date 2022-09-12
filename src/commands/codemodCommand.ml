@@ -327,6 +327,70 @@ module Annotate_empty_array_command = struct
   let command = CommandSpec.command spec main
 end
 
+module Annotate_cycles_command = struct
+  let doc =
+    "Annotates variables or functions that depend on each other or that depend on themselves"
+
+  let spec =
+    let module Literals = Codemod_hardcoded_ty_fixes.PreserveLiterals in
+    let preserve_string_literals_level =
+      Literals.[("always", Always); ("never", Never); ("auto", Auto)]
+    in
+    {
+      CommandSpec.name = "annotate-cycles";
+      doc;
+      usage =
+        Printf.sprintf
+          "Usage: %s codemod annotate-cycles [OPTION]... [FILE]\n\n%s\n"
+          Utils_js.exe_name
+          doc;
+      args =
+        CommandSpec.ArgSpec.(
+          empty
+          |> CommandUtils.codemod_flags
+          |> flag
+               "--preserve-literals"
+               (required ~default:Literals.Never (enum preserve_string_literals_level))
+               ~doc:""
+          |> flag
+               "--generalize-maybe"
+               no_arg
+               ~doc:"Generalize annotations containing null or void to maybe types"
+          |> flag
+               "--merge-array-elements"
+               no_arg
+               ~doc:"combine arrays appearing in toplevel unions to a single array"
+          |> common_annotate_flags
+        );
+    }
+
+  let main
+      codemod_flags preserve_literals generalize_maybe merge_arrays max_type_size default_any () =
+    let module Runner = Codemod_runner.MakeSimpleTypedRunner (struct
+      module Acc = Annotate_cycles.Acc
+
+      type accumulator = Acc.t
+
+      let reporter = string_reporter (module Acc)
+
+      let check_options o = Options.{ o with opt_cycle_errors = true }
+
+      let visit =
+        let mapper =
+          new Annotate_cycles.annotate_cycles_mapper
+            ~default_any
+            ~generalize_maybe
+            ~max_type_size
+            ~preserve_literals
+            ~merge_arrays
+        in
+        Codemod_utils.make_visitor (Codemod_utils.Mapper mapper)
+    end) in
+    main (module Runner) codemod_flags ()
+
+  let command = CommandSpec.command spec main
+end
+
 module Annotate_empty_object_command = struct
   let doc = "Annotates empty objects."
 
@@ -479,6 +543,7 @@ let command =
       ~name:"codemod"
       ~doc:"Runs large-scale codebase refactors"
       [
+        (Annotate_cycles_command.spec.CommandSpec.name, Annotate_cycles_command.command);
         (Annotate_empty_array_command.spec.CommandSpec.name, Annotate_empty_array_command.command);
         (Annotate_empty_object_command.spec.CommandSpec.name, Annotate_empty_object_command.command);
         (Annotate_exports_command.spec.CommandSpec.name, Annotate_exports_command.command);
