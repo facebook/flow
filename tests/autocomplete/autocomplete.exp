@@ -1441,22 +1441,22 @@ Flags: --pretty
 
 this-2.js:5:10
 Flags: --pretty
-{"result":[{"name":"y","type":"(z: empty) => empty"}]}
+{"result":[]}
 
 this-2.js:9:4
 Flags: --pretty
 {
   "result":[
     {"name":"foo","type":"() => void"},
-    {"name":"x","type":"void"},
-    {"name":"y","type":"(z: empty) => empty"},
+    {"name":"x","type":"any"},
+    {"name":"y","type":"(z: empty) => any"},
     {"name":"this","type":"this"}
   ]
 }
 
 this-2.js:13:15
 Flags: --pretty
-{"result":[{"name":"z","type":"empty"}]}
+{"result":[]}
 
 this-2.js:17:9
 Flags: --pretty
@@ -1464,8 +1464,8 @@ Flags: --pretty
   "result":[
     {"name":"Bar","type":"class Bar"},
     {"name":"foo","type":"() => void"},
-    {"name":"x","type":"void"},
-    {"name":"y","type":"(z: empty) => empty"},
+    {"name":"x","type":"any"},
+    {"name":"y","type":"(z: empty) => any"},
     {"name":"this","type":"this"},
     {"name":"super","type":"super"}
   ]

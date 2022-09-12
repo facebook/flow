@@ -2,7 +2,7 @@
 // even though `this` is valid anywhere in the program,
 // we only want to suggest it when it doesn't refer to the global object
 
-let x = y // should NOT suggest "this"
+let x = t // should NOT suggest "this"
 //       ^
 
 function foo() {
@@ -10,7 +10,7 @@ function foo() {
 // ^
 }
 
-var y = z => z // should NOT suggest "this"
+var y = z => t // should NOT suggest "this"
 //            ^
 
 class Bar {
