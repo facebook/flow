@@ -352,11 +352,13 @@ end = struct
       StatusStream.file_watcher_deferred "Watchman restart";
       match%lwt recover_from_restart env with
       | Some (instance, changes) ->
-        Logger.info "Watchman restarted, but the mergebase didn't change.";
+        Logger.info "Watchman missed changes, but the mergebase didn't change. Recovering...";
         env.metadata <- { env.metadata with MonitorProt.missed_changes = true };
         StatusStream.file_watcher_ready ();
         Lwt.return (Some (instance, Watchman.Files_changed changes))
-      | None -> Lwt.return None
+      | None ->
+        Logger.info "Watchman missed changes, but we couldn't reconnect or the mergebase changed.";
+        Lwt.return None
 
     let main env =
       let%lwt (instance, pushed_changes) =
