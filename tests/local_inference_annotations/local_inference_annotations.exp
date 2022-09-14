@@ -487,6 +487,14 @@ Missing an annotation on `x`. [missing-local-annot]
                                         ^
 
 
+Error -------------------------------------------------------------------------------- included/function_statics.js:4:12
+
+Missing an annotation on `baz`. [missing-local-annot]
+
+   4| foo.bar = (baz) => {}; // Error: function statics assignments do not have hints.
+                 ^^^
+
+
 Error ----------------------------------------------------------------------------------------- included/id_init.js:6:15
 
 Missing an annotation on `x`. [missing-local-annot]
@@ -768,4 +776,4 @@ Missing an annotation on `y`. [missing-local-annot]
 
 
 
-Found 83 errors
+Found 84 errors

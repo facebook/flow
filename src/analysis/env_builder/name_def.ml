@@ -331,7 +331,7 @@ class def_finder env_entries providers toplevel_scope =
           )
           :: xs
           when SMap.mem obj_name state && (not @@ SSet.mem prop_name func_own_props) ->
-          ignore @@ this#assignment assign_loc assign;
+          this#visit_assignment_expression ~is_function_statics_assignment:true assign_loc assign;
           let state =
             SMap.update
               obj_name
@@ -946,7 +946,9 @@ class def_finder env_entries providers toplevel_scope =
         (DeclaredClass (loc, decl));
       super#declare_class loc decl
 
-    method! assignment loc (expr : ('loc, 'loc) Ast.Expression.Assignment.t) =
+    method! assignment _ _ = failwith "Should be visited by visit_assignment_expression"
+
+    method private visit_assignment_expression ~is_function_statics_assignment loc expr =
       let open Ast.Expression.Assignment in
       let { operator; left = (lhs_loc, lhs_node) as left; right; comments = _ } = expr in
       let is_provider =
@@ -956,7 +958,7 @@ class def_finder env_entries providers toplevel_scope =
           left
       in
       let hint =
-        if is_provider then
+        if is_provider || is_function_statics_assignment then
           Hint_None
         else
           match lhs_node with
@@ -1023,8 +1025,7 @@ class def_finder env_entries providers toplevel_scope =
             (OpAssign { exp_loc = loc; lhs = left; op = operator; rhs = right })
         | _ -> ()
       in
-      this#visit_expression ~hint ~cond:NonConditionalContext right;
-      expr
+      this#visit_expression ~hint ~cond:NonConditionalContext right
 
     method! update_expression loc (expr : (ALoc.t, ALoc.t) Ast.Expression.Update.t) =
       let open Ast.Expression.Update in
@@ -1556,6 +1557,8 @@ class def_finder env_entries providers toplevel_scope =
       | Ast.Expression.ArrowFunction x ->
         let scope_kind = func_scope_kind x in
         this#in_new_tparams_env (fun () -> this#visit_function ~func_hint:hint ~scope_kind x)
+      | Ast.Expression.Assignment expr ->
+        this#visit_assignment_expression ~is_function_statics_assignment:false loc expr
       | Ast.Expression.Function x ->
         this#visit_function_expr
           ~func_hint:hint
@@ -1579,7 +1582,6 @@ class def_finder env_entries providers toplevel_scope =
       | Ast.Expression.OptionalCall expr -> this#visit_optional_call_expression ~hint ~cond expr
       | Ast.Expression.Unary expr -> this#visit_unary_expression ~hint expr
       | Ast.Expression.Conditional expr -> this#visit_conditional ~hint expr
-      | Ast.Expression.Assignment _
       | Ast.Expression.Class _
       | Ast.Expression.Comprehension _
       | Ast.Expression.Generator _
