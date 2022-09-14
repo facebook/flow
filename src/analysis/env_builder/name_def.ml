@@ -1696,6 +1696,9 @@ class def_finder env_entries providers toplevel_scope =
             (_, { Ast.Literal.value = Ast.Literal.String name; _ }) ->
           decompose_hint (Decomp_ObjProp name) object_hint
         | Ast.Expression.Object.Property.Literal _ -> Hint_None
+        | Ast.Expression.Object.Property.Identifier
+            (_, { Ast.Identifier.name = "__proto__"; comments = _ }) ->
+          Hint_None
         | Ast.Expression.Object.Property.Identifier (_, { Ast.Identifier.name; comments = _ }) ->
           decompose_hint (Decomp_ObjProp name) object_hint
         | Ast.Expression.Object.Property.PrivateName _ -> Hint_None (* Illegal syntax *)
