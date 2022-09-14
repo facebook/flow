@@ -1,3 +1,3 @@
 (test
  (name sys_utils_tests)
- (libraries ounit2 sys_utils test_injector_config))
+ (libraries ounit2 sys_utils))

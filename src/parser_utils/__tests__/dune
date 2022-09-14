@@ -4,5 +4,4 @@
   ounit2
   flow_file_sig
   flow_parser_utils
-  flow_parser_utils_output_printers
-  test_injector_config))
+  flow_parser_utils_output_printers))

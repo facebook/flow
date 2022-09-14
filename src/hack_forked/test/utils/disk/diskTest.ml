@@ -58,7 +58,7 @@ let test_write_needs_directory_tree dir =
     Printf.eprintf "Error: Expected exception didn't throw\n";
     false
   with
-  | Disk_sig.Types.No_such_file_or_directory _ ->
+  | Disk.No_such_file_or_directory _ ->
     Sys_utils.mkdir_p (Path.to_string dir);
     write_file ~dir ~file:basename ~contents:"hello";
     Asserter.Bool_asserter.assert_equals
@@ -179,14 +179,14 @@ let tests =
           let expected_err =
             Printf.sprintf "%s/%s" (Path.to_string tmp_dir) "some/path/doesnt/exist"
           in
-          let ex = Disk_sig.Types.No_such_file_or_directory expected_err in
+          let ex = Disk.No_such_file_or_directory expected_err in
           Unit_test.expect_throws ex test_rename_parents_dont_exist tmp_dir
       )
     );
     ( "test_rename_dir_but_target_not_empty",
       with_temp_dir (fun tmp_dir ->
           let ex =
-            Disk_sig.Types.Rename_target_dir_not_empty
+            Disk.Rename_target_dir_not_empty
               (Path.to_string (Path.concat tmp_dir "some/path/exists"))
           in
           Unit_test.expect_throws ex test_rename_dir_but_target_not_empty tmp_dir

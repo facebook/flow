@@ -6,5 +6,4 @@
   str
   sys_utils
   hh_json
-  default_injector_config
   flow_parser_utils))

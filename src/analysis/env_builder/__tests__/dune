@@ -6,8 +6,7 @@
   ounit2
   flow_analysis_test_utils
   flow_env_builder
-  flow_name_resolver
-  test_injector_config))
+  flow_name_resolver))
 
 (library
  (name env_builder_refinement_test)
@@ -18,8 +17,7 @@
  (libraries
   flow_analysis_test_utils
   flow_env_builder
-  flow_name_resolver
-  test_injector_config)
+  flow_name_resolver)
  (preprocess
   (pps ppx_expect)))
 
@@ -32,7 +30,6 @@
  (libraries
   flow_analysis_test_utils
   flow_env_builder
-  flow_name_resolver
-  test_injector_config)
+  flow_name_resolver)
  (preprocess
   (pps ppx_expect)))

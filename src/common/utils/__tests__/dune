@@ -1,5 +1,5 @@
 (test
  (name common_utils_tests)
- (libraries ounit2 flow_common_lwt flow_common_utils test_injector_config)
+ (libraries ounit2 flow_common_lwt flow_common_utils)
  (preprocess
   (pps lwt_ppx)))

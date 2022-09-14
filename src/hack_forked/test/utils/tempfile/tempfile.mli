@@ -13,8 +13,6 @@
 
 exception Out_of_retries
 
-val mkdtemp : skip_mocking:bool -> Path.t
-
-val with_real_tempdir : (Path.t -> 'a) -> 'a
+val mkdtemp : unit -> Path.t
 
 val with_tempdir : (Path.t -> 'a) -> 'a

@@ -6,8 +6,7 @@
   ounit2
   flow_flowlib
   flow_typing
-  heap_shared_mem
-  test_injector_config)
+  heap_shared_mem)
  (action
   (run %{test} -runner sequential)))
 
@@ -20,8 +19,7 @@
   flow_commands_utils
   flow_file_sig
   flow_server_files
-  flow_typing
-  default_injector_config)
+  flow_typing)
  (deps
   (source_tree ../../../tests))
  (action

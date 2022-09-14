@@ -11,5 +11,4 @@
  (libraries
   ounit2
   flow_analysis
-  flow_analysis_test_utils
-  test_injector_config))
+  flow_analysis_test_utils))
