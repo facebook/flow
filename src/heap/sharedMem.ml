@@ -1081,9 +1081,8 @@ module NewAPI = struct
 
   let read_string addr = read_string_generic String_tag addr 0
 
-  (* TODO: It would be more efficient to  compare the bytes directly in shared
-   * memory instead of copying into the OCaml heap. *)
-  let compare_string a b = String.compare (read_string a) (read_string b)
+  external compare_string : heap_string addr -> heap_string addr -> int = "hh_compare_string"
+    [@@noalloc]
 
   (** Int64 *)
 

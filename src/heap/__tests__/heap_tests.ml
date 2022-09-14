@@ -512,6 +512,41 @@ let entity_barrier_test _ =
   let tbl = read_addr_tbl Fun.id (Option.get (H2.get tbl_key)) in
   assert (String.equal "foo" (read_string tbl.(0)))
 
+let compare_string_test _ =
+  let size =
+    (6 * header_size)
+    + (2 * string_size "")
+    + (2 * string_size "foo")
+    + string_size "foot"
+    + string_size "quux"
+  in
+  let (empty1, empty2, foo1, foo2, foot, quux) =
+    alloc size (fun chunk ->
+        let empty1 = write_string chunk "" in
+        let empty2 = write_string chunk "" in
+        let foo1 = write_string chunk "foo" in
+        let foo2 = write_string chunk "foo" in
+        let foot = write_string chunk "foot" in
+        let quux = write_string chunk "quux" in
+        (empty1, empty2, foo1, foo2, foot, quux)
+    )
+  in
+
+  assert (compare_string empty1 empty1 = 0);
+  assert (compare_string foo1 foo1 = 0);
+  assert (compare_string empty1 empty2 = 0);
+  assert (compare_string foo1 foo2 = 0);
+  assert (compare_string empty1 foo1 < 0);
+  assert (compare_string foo1 quux < 0);
+  assert (compare_string foo1 empty1 > 0);
+  assert (compare_string quux foo1 > 0);
+  assert (compare_string foo1 foot < 0);
+  assert (compare_string foot foo1 > 0);
+
+  (* clean up *)
+  compact ();
+  assert_heap_size 0
+
 let tests workers =
   "heap_tests"
   >::: [
@@ -523,6 +558,7 @@ let tests workers =
          "skip_list" >:: skip_list_test workers;
          "add_provider_barrier" >:: add_provider_barrier_test;
          "entity_barrier" >:: entity_barrier_test;
+         "compare_string" >:: compare_string_test;
        ]
 
 let () =

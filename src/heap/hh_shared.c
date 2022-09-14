@@ -358,6 +358,7 @@ static _Bool should_scan(hh_tag_t tag) {
 #define Obj_wosize_tag(hd, tag) ((hd) >> Obj_wosize_shift(tag))
 #define Obj_wosize(hd) (Obj_wosize_tag(hd, Obj_tag(hd)))
 #define Obj_whsize(hd) (1 + Obj_wosize(hd))
+#define Obj_bosize(hd) (Bsize_wsize(Obj_wosize(hd)))
 #define Obj_bhsize(hd) (Bsize_wsize(Obj_whsize(hd)))
 
 // Addrs point to the object header, so field 0 is +1 word. We should consider
@@ -1833,6 +1834,22 @@ CAMLprim value hh_read_string(value addr, value wsize) {
       Ptr_of_addr(Long_val(addr)),
       Bsize_wsize(Long_val(wsize)));
   CAMLreturn(s);
+}
+
+static size_t hh_string_len(addr_t addr, char** ptr) {
+  *ptr = Ptr_of_addr(Obj_field(addr, 0));
+  size_t tmp = Obj_bosize(Deref(addr)) - 1;
+  return tmp - (*ptr)[tmp];
+}
+
+CAMLprim value hh_compare_string(value addr1_val, value addr2_val) {
+  if (addr1_val == addr2_val)
+    return Val_int(0);
+  char *ptr1, *ptr2;
+  size_t len1 = hh_string_len(Long_val(addr1_val), &ptr1);
+  size_t len2 = hh_string_len(Long_val(addr2_val), &ptr2);
+  int res = memcmp(ptr1, ptr2, len1 <= len2 ? len1 : len2);
+  return Val_int(res ? res : len1 - len2);
 }
 
 CAMLprim value hh_entity_advance(value entity_val, value data_val) {

@@ -257,6 +257,8 @@ module NewAPI : sig
 
   val read_string : heap_string addr -> string
 
+  val compare_string : heap_string addr -> heap_string addr -> int
+
   (* hash *)
 
   val int64_size : size
