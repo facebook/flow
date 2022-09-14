@@ -14,6 +14,14 @@ Missing an annotation on `x`. [missing-local-annot]
                         ^
 
 
+Error ------------------------------------------------------------------------------------------ included/array.js:18:18
+
+Missing an annotation on `x`. [missing-local-annot]
+
+   18| emptyArray.push((x) => 3); // Missing annot
+                        ^
+
+
 Error --------------------------------------------------------------------------------------- included/assignment.js:6:6
 
 Cannot assign function to `y` because parameter `x` of unknown type [1] is incompatible with number [2] (consider adding
@@ -760,4 +768,4 @@ Missing an annotation on `y`. [missing-local-annot]
 
 
 
-Found 82 errors
+Found 83 errors

@@ -13,3 +13,6 @@ const annotated: any = [
     },
   ],
 ]
+
+const emptyArray = [];
+emptyArray.push((x) => 3); // Missing annot
