@@ -1275,6 +1275,8 @@ module Make
           jsx_base_name;
         }
 
+      method jsx_base_name = env_state.jsx_base_name
+
       method values : Env_api.values =
         L.LMap.map
           (fun { def_loc; value; binding_kind_opt; name } ->
@@ -5109,7 +5111,7 @@ module Make
    * but that assumes that the EnvBuilder is 100% correct. This approach lets us discriminate
    * between real dead code and issues with the EnvBuilder, which seems far better than
    * the alternative *)
-  class dead_code_marker cx env_values write_entries =
+  class dead_code_marker cx jsx_base_name env_values write_entries =
     object (this)
       inherit
         Scope_builder.scope_builder
@@ -5163,8 +5165,12 @@ module Make
         super#jsx_identifier ident
 
       method private jsx_function_call loc =
-        match Context.react_runtime cx with
-        | Options.ReactRuntimeClassic -> this#any_identifier loc "React"
+        match (Context.react_runtime cx, jsx_base_name, Context.jsx cx) with
+        | (Options.ReactRuntimeClassic, Some name, Options.Jsx_react) ->
+          this#any_identifier loc name
+        | (_, Some name, Options.Jsx_pragma _) -> this#any_identifier loc name
+        | (Options.ReactRuntimeClassic, None, Options.Jsx_pragma (_, ast)) ->
+          ignore @@ this#expression ast
         | _ -> ()
 
       method! jsx_element loc expr =
@@ -5283,7 +5289,9 @@ module Make
     let env_walk = new name_resolver cx lib exclude_syms prepass providers loc in
     let completion_state = env_walk#visit_program program in
     (* Fill in dead code reads *)
-    let dead_code_marker = new dead_code_marker cx env_walk#values env_walk#write_entries in
+    let dead_code_marker =
+      new dead_code_marker cx env_walk#jsx_base_name env_walk#values env_walk#write_entries
+    in
     let _ = dead_code_marker#program program in
     ( completion_state,
       {

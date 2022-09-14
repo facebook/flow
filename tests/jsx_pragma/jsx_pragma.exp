@@ -1,0 +1,19 @@
+Error --------------------------------------------------------------------------------- member-expression-pragma.js:8:18
+
+Cannot assign `<Component />` to `a` because undefined [1] is incompatible with empty [2]. [incompatible-type]
+
+   member-expression-pragma.js:8:18
+   8| const a: empty = <Component />; // Error: void ~> empty
+                       ^^^^^^^^^^^^^
+
+References:
+   member-expression-pragma.js:6:35
+   6| const Test = {f: (c: () => void): void => {}};
+                                        ^^^^ [1]
+   member-expression-pragma.js:8:10
+   8| const a: empty = <Component />; // Error: void ~> empty
+               ^^^^^ [2]
+
+
+
+Found 1 error

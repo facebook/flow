@@ -5421,6 +5421,21 @@ function time_to_create_some_elements_bro() {
           Global SecondElement
         }] |}]
 
+let%expect_test "jsx_pragma_member_expr" =
+  print_ssa_test ~custom_jsx:(Some "Test.f") {|
+function Component() {}
+<Component />
+|};
+    [%expect {|
+      [
+        (1, 0) to (1, 4) => {
+          Global Test
+        };
+        (3, 1) to (3, 10) => {
+          (2, 9) to (2, 18): (`Component`)
+        }]
+       |}]
+
 let%expect_test "automatic_react_runtime" =
   print_ssa_test ~react_runtime_automatic:true {|
   let createMikesCoolElement = (null: any);
