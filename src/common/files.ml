@@ -149,10 +149,16 @@ type file_kind =
 (* Determines whether a path is a regular file, a directory, or something else
    like a pipe, socket or device. If `path` is a symbolic link, then it returns
    the type of the target of the symlink, and the target's real path. *)
-let kind_of_path path =
-  Unix.(
-    try
-      match (Sys_utils.lstat path).st_kind with
+let kind_of_path dirent path =
+  try
+    let open Dirent in
+    let open Unix in
+    match dirent.d_type with
+    | DT_REG -> Reg path
+    | DT_DIR -> Dir (path, false)
+    | DT_LNK
+    | DT_UNKNOWN ->
+      (match (Sys_utils.lstat path).st_kind with
       | S_REG -> Reg path
       | S_LNK ->
         (try
@@ -164,18 +170,22 @@ let kind_of_path path =
          with
         | Unix_error (ENOENT, _, _) -> Other)
       | S_DIR -> Dir (path, false)
-      | _ -> Other
-    with
-    | Unix_error (ENOENT, _, _) when Sys.win32 && String.length path >= 248 ->
-      StatError
-        (Utils_js.spf
-           "On Windows, paths must be less than 248 characters for directories and 260 characters for files. This path has %d characters. Skipping %s"
-           (String.length path)
-           path
-        )
-    | Unix_error (e, _, _) ->
-      StatError (Utils_js.spf "Skipping %s: %s\n%!" path (Unix.error_message e))
-  )
+      | _ -> Other)
+    | DT_FIFO
+    | DT_CHR
+    | DT_BLK
+    | DT_SOCK ->
+      Other
+  with
+  | Unix.Unix_error (Unix.ENOENT, _, _) when Sys.win32 && String.length path >= 248 ->
+    StatError
+      (Utils_js.spf
+         "On Windows, paths must be less than 248 characters for directories and 260 characters for files. This path has %d characters. Skipping %s"
+         (String.length path)
+         path
+      )
+  | Unix.Unix_error (e, _, _) ->
+    StatError (Utils_js.spf "Skipping %s: %s\n%!" path (Unix.error_message e))
 
 let can_read path =
   try
@@ -187,14 +197,14 @@ let can_read path =
     false
 
 let try_readdir path =
-  try Sys.readdir path with
-  | Sys_error msg ->
-    Printf.eprintf "Skipping %s\n%!" msg;
+  try Dirent.entries path with
+  | Unix.Unix_error (Unix.EBADF, _, _) ->
+    Printf.eprintf "Skipping %s\n%!" path;
     [||]
 
 type stack =
   | S_Nil
-  | S_Dir of string list * string * stack
+  | S_Dir of Dirent.t list * string * stack
 
 let max_files = 1000
 
@@ -208,20 +218,20 @@ let max_files = 1000
 let make_next_files_and_symlinks
     ~node_module_filter ~path_filter ~realpath_filter ~error_filter ~dir_filter ~sort paths =
   let prefix_checkers = Base.List.map ~f:is_prefix paths in
-  let rec process sz (acc, symlinks) files dir stack =
+  let rec process sz (acc, symlinks) (files : Dirent.t list) dir stack =
     if sz >= max_files then
       ((acc, symlinks), S_Dir (files, dir, stack))
     else
       match files with
       | [] -> process_stack sz (acc, symlinks) stack
-      | file :: files ->
+      | dirent :: files ->
         let file =
           if dir = "" then
-            file
+            dirent.Dirent.d_name
           else
-            Filename.concat dir file
+            Filename.concat dir dirent.Dirent.d_name
         in
-        (match kind_of_path file with
+        (match kind_of_path dirent file with
         | Reg real ->
           if path_filter file && (file = real || realpath_filter real) && can_read real then
             process (sz + 1) (real :: acc, symlinks) files dir stack
@@ -253,7 +263,7 @@ let make_next_files_and_symlinks
               process sz (acc, symlinks) files dir stack
             else
               let dirfiles = try_readdir path in
-              if sort then Array.fast_sort String.compare dirfiles;
+              if sort then Array.fast_sort Dirent.compare dirfiles;
               let dirfiles = Array.to_list dirfiles in
               process sz (acc, symlinks) dirfiles file (S_Dir (files, dir, stack))
           )
@@ -265,7 +275,16 @@ let make_next_files_and_symlinks
     | S_Nil -> (accs, S_Nil)
     | S_Dir (files, dir, stack) -> process sz accs files dir stack
   in
-  let state = ref (S_Dir (paths, "", S_Nil)) in
+  let init =
+    (* as a base case, make a fake directory "", with fake Dirent's for all of the root
+        paths. Since they have DT_UNKNOWN, we'll lstat each one and then recurse normally
+        after that. *)
+    let paths =
+      Base.List.map ~f:(fun d_name -> { Dirent.d_name; d_type = Dirent.DT_UNKNOWN }) paths
+    in
+    S_Dir (paths, "", S_Nil)
+  in
+  let state = ref init in
   fun () ->
     let ((res, symlinks), st) = process_stack 0 ([], SSet.empty) !state in
     state := st;

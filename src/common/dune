@@ -9,6 +9,7 @@
  (modules
   (:standard \ flow_version flow_lsp_conversions))
  (libraries
+  dirent
   disk
   flow_common_lints
   flow_common_modulename
