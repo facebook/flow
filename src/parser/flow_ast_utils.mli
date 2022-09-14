@@ -33,6 +33,8 @@ val is_call_to_is_array : ('a, 'b) Flow_ast.Expression.t -> bool
 
 val is_call_to_object_dot_freeze : ('a, 'b) Flow_ast.Expression.t -> bool
 
+val is_call_to_object_static_method : ('a, 'b) Flow_ast.Expression.t -> bool
+
 val negate_number_literal : float * string -> float * string
 
 val loc_of_expression : ('a, 'a) Flow_ast.Expression.t -> 'a

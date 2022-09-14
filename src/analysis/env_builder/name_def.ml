@@ -1295,12 +1295,23 @@ class def_finder env_entries providers toplevel_scope =
               spread.Ast.Expression.SpreadElement.argument
         )
       else
-        match (callee, arguments) with
-        | (_, [Ast.Expression.Expression expr]) when Flow_ast_utils.is_call_to_is_array callee ->
+        match arguments with
+        | [Ast.Expression.Expression expr] when Flow_ast_utils.is_call_to_is_array callee ->
           this#visit_expression ~hint:Hint_None ~cond expr
-        | (_, [Ast.Expression.Expression expr])
-          when Flow_ast_utils.is_call_to_object_dot_freeze callee ->
+        | [Ast.Expression.Expression expr] when Flow_ast_utils.is_call_to_object_dot_freeze callee
+          ->
           this#visit_expression ~hint ~cond:NonConditionalContext expr
+        | _ when Flow_ast_utils.is_call_to_object_static_method callee ->
+          Base.List.iter arguments ~f:(fun arg ->
+              match arg with
+              | Ast.Expression.Expression expr ->
+                this#visit_expression ~hint:Hint_None ~cond:NonConditionalContext expr
+              | Ast.Expression.Spread (_, spread) ->
+                this#visit_expression
+                  ~hint:Hint_None
+                  ~cond:NonConditionalContext
+                  spread.Ast.Expression.SpreadElement.argument
+          )
         | _ ->
           let call_argumemts_hint =
             match callee with
