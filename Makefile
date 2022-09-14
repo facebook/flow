@@ -97,6 +97,7 @@ MODULES=\
   src/common/audit\
   src/common/build_id\
   src/common/cycle_hash\
+  src/common/dirent\
   src/common/errors\
   src/common/exit\
   src/common/exit_status\
@@ -223,6 +224,7 @@ LZ4_C_FILES=\
 NATIVE_C_FILES=\
   $(INOTIFY_STUBS)\
   $(FSNOTIFY_STUBS)\
+  src/common/dirent/dirent_stubs.c\
   src/common/lz4/lz4_stubs.c\
   src/common/xx/xx_stubs.c\
   src/services/saved_state/compression/saved_state_compression_stubs.c\
