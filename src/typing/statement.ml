@@ -6968,32 +6968,23 @@ module Make
         predicate_function_kind cx loc params
       | (false, _, _, _) -> Utils_js.assert_false "(async || generator) && pred"
     in
-    let mk_param_missing_annot cx ~hint loc reason =
-      if Hint_api.is_hint_none hint && Context.should_require_annot cx then
-        Flow.add_output cx (Error_message.EMissingLocalAnnotation { reason; hint_available = false });
-      let t =
-        if Context.env_mode cx = Options.LTI then
-          AnyT.make (AnyError (Some MissingAnnotation)) reason
-        else
-          Env.find_write cx Env_api.FunctionParamLoc reason
-      in
-      (t, Ast.Type.Missing (loc, t))
-    in
-    let mk_param_annot cx ~hint tparams_map reason = function
-      | Ast.Type.Missing loc -> mk_param_missing_annot cx ~hint loc reason
+    let mk_param_annot cx tparams_map reason = function
+      | Ast.Type.Missing loc ->
+        let t = Env.find_write cx Env_api.FunctionParamLoc reason in
+        (t, Ast.Type.Missing (loc, t))
       | Ast.Type.Available annot ->
         let (t, ast_annot) = Anno.mk_type_available_annotation cx tparams_map annot in
         (t, Ast.Type.Available ast_annot)
     in
-    let id_param cx ~hint tparams_map id mk_reason =
+    let id_param cx tparams_map id mk_reason =
       let { Ast.Pattern.Identifier.name; annot; optional } = id in
       let (id_loc, ({ Ast.Identifier.name; comments = _ } as id)) = name in
       let reason = mk_reason name in
-      let (t, annot) = mk_param_annot cx ~hint tparams_map reason annot in
+      let (t, annot) = mk_param_annot cx tparams_map reason annot in
       let name = ((id_loc, t), id) in
       (t, { Ast.Pattern.Identifier.name; annot; optional })
     in
-    let mk_param cx ~hint tparams_map param =
+    let mk_param cx tparams_map param =
       let (loc, { Ast.Function.Param.argument = (ploc, patt); default }) = param in
       let has_param_anno =
         match Destructuring.type_of_pattern (ploc, patt) with
@@ -7004,23 +6995,23 @@ module Make
         match patt with
         | Ast.Pattern.Identifier id ->
           let (t, id) =
-            id_param cx ~hint tparams_map id (fun name -> mk_reason (RParameter (Some name)) ploc)
+            id_param cx tparams_map id (fun name -> mk_reason (RParameter (Some name)) ploc)
           in
           (t, Func_stmt_config_types.Types.Id id)
         | Ast.Pattern.Object { Ast.Pattern.Object.annot; properties; comments } ->
           let reason = mk_reason RDestructuring ploc in
-          let (t, annot) = mk_param_annot cx ~hint tparams_map reason annot in
+          let (t, annot) = mk_param_annot cx tparams_map reason annot in
           (t, Func_stmt_config_types.Types.Object { annot; properties; comments })
         | Ast.Pattern.Array { Ast.Pattern.Array.annot; elements; comments } ->
           let reason = mk_reason RDestructuring ploc in
-          let (t, annot) = mk_param_annot cx ~hint tparams_map reason annot in
+          let (t, annot) = mk_param_annot cx tparams_map reason annot in
           (t, Func_stmt_config_types.Types.Array { annot; elements; comments })
         | Ast.Pattern.Expression _ -> failwith "unexpected expression pattern in param"
       in
       Func_stmt_config_types.Types.Param
         { t; loc; ploc; pattern; default; has_anno = has_param_anno }
     in
-    let mk_rest cx ~hint tparams_map rest =
+    let mk_rest cx tparams_map rest =
       let (loc, { Ast.Function.RestParam.argument = (ploc, patt); comments = _ }) = rest in
       let has_param_anno =
         match Destructuring.type_of_pattern (ploc, patt) with
@@ -7030,7 +7021,7 @@ module Make
       match patt with
       | Ast.Pattern.Identifier id ->
         let (t, id) =
-          id_param cx ~hint tparams_map id (fun name -> mk_reason (RRestParameter (Some name)) ploc)
+          id_param cx tparams_map id (fun name -> mk_reason (RRestParameter (Some name)) ploc)
         in
         Ok (Func_stmt_config_types.Types.Rest { t; loc; ploc; id; has_anno = has_param_anno })
       | Ast.Pattern.Object _
@@ -7056,7 +7047,7 @@ module Make
           Flow_js.flow_t cx (AnyT.make (AnyError (Some MissingAnnotation)) reason, t)
       | _ -> ()
     in
-    let mk_params cx ~func_hint tparams_map params =
+    let mk_params cx tparams_map params =
       let (loc, { Ast.Function.Params.params; rest; this_; comments }) = params in
       let fparams =
         Func_stmt_params.empty (fun params rest this_ ->
@@ -7064,19 +7055,15 @@ module Make
         )
       in
       let fparams =
-        Base.List.foldi
-          ~f:(fun i acc param ->
-            let hint = decompose_hint (Decomp_FuncParam i) func_hint in
-            Func_stmt_params.add_param (mk_param cx ~hint tparams_map param) acc)
+        Base.List.fold
+          ~f:(fun acc param -> Func_stmt_params.add_param (mk_param cx tparams_map param) acc)
           ~init:fparams
           params
       in
-      let normal_params_length = List.length params in
       let fparams =
         Base.Option.fold
           ~f:(fun acc rest ->
-            let hint = decompose_hint (Decomp_FuncRest normal_params_length) func_hint in
-            match mk_rest cx ~hint tparams_map rest with
+            match mk_rest cx tparams_map rest with
             | Ok rest -> Func_stmt_params.add_rest rest acc
             | Error err ->
               Flow_js.add_output cx err;
@@ -7152,7 +7139,7 @@ module Make
         let (tparams, tparams_map, tparams_ast) =
           Anno.mk_type_param_declarations cx ~tparams_map tparams
         in
-        let fparams = mk_params cx ~func_hint tparams_map params in
+        let fparams = mk_params cx tparams_map params in
         require_this_annot
           cx
           func

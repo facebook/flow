@@ -405,7 +405,7 @@ Error --------------------------------------------------------------------------
 
 Missing an annotation on `x`. [missing-local-annot]
 
-   7|   for ((x) => true; (x) => true; (x) => true) { // init, test, and update are all not covered by the annot 
+   7|   for ((x) => true; (x) => true; 1) { // init, and test are all not covered by the annot
               ^
 
 
@@ -413,16 +413,8 @@ Error --------------------------------------------------------------------------
 
 Missing an annotation on `x`. [missing-local-annot]
 
-   7|   for ((x) => true; (x) => true; (x) => true) { // init, test, and update are all not covered by the annot 
+   7|   for ((x) => true; (x) => true; 1) { // init, and test are all not covered by the annot
                            ^
-
-
-Error --------------------------------------------------------------------------------------------- included/for.js:7:35
-
-Missing an annotation on `x`. [missing-local-annot]
-
-   7|   for ((x) => true; (x) => true; (x) => true) { // init, test, and update are all not covered by the annot 
-                                        ^
 
 
 Error --------------------------------------------------------------------------------------------- included/for.js:8:16
@@ -431,6 +423,14 @@ Missing an annotation on `y`. [missing-local-annot]
 
    8|     const x = (y) => 3; // non-return, not covered!
                      ^
+
+
+Error -------------------------------------------------------------------------------------------- included/for.js:14:10
+
+Missing an annotation on `x`. [missing-local-annot]
+
+   14| for (;; (x) => true) {} // update is not covered by the annot
+                ^
 
 
 Error ------------------------------------------------------------------------------------------ included/for_in.js:7:19
