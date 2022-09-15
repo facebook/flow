@@ -342,11 +342,14 @@ let prepare_implicit_instantiation_checks_and_cx ~cx ~master_cx implicit_instant
   (implicit_instantiation_checks, implicit_instantiation_cx)
 
 let check_implicit_instantiations cx master_cx =
-  if Context.run_post_inference_implicit_instantiation cx then
+  if Context.run_post_inference_implicit_instantiation cx then (
     let implicit_instantiation_checks = Context.implicit_instantiation_checks cx in
     let (implicit_instantiation_checks, implicit_instantiation_cx) =
       prepare_implicit_instantiation_checks_and_cx ~cx ~master_cx implicit_instantiation_checks
     in
+    (* It's not necessary to unset this because the implicit_instantiation_cx does not
+     * exist outside of the implicit instantiation runs *)
+    Context.set_in_implicit_instantiation_post_pass implicit_instantiation_cx true;
     PierceImplicitInstantiation.fold
       ~implicit_instantiation_cx
       ~cx
@@ -356,6 +359,7 @@ let check_implicit_instantiations cx master_cx =
         let new_errors = Context.errors implicit_instantiation_cx in
         Flow_error.ErrorSet.iter (fun error -> Context.add_error cx error) new_errors)
       implicit_instantiation_checks
+  )
 
 class resolver_visitor =
   (* TODO: replace this with the context_optimizer *)

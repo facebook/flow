@@ -169,6 +169,7 @@ type component_t = {
    * compare keyed and concrete locations *)
   mutable call_arg_lower_bounds: Type.t Nel.t ALocFuzzyMap.t;
   mutable exhaustive_checks: (ALoc.t list * bool) ALocMap.t;
+  mutable in_implicit_instantiation_post_pass: bool;
 }
 [@@warning "-69"]
 
@@ -345,6 +346,7 @@ let make_ccx master_cx =
     speculation_state = ref [];
     annot_graph = IMap.empty;
     exhaustive_checks = ALocMap.empty;
+    in_implicit_instantiation_post_pass = false;
   }
 
 let make ccx metadata file aloc_table phase =
@@ -491,6 +493,8 @@ let find_tvar cx id =
 let graph cx = cx.ccx.sig_cx.graph
 
 let trust_graph cx = trust_graph_sig cx.ccx.sig_cx
+
+let in_implicit_instantiation_post_pass cx = cx.ccx.in_implicit_instantiation_post_pass
 
 let is_checked cx = cx.metadata.checked
 
@@ -748,6 +752,8 @@ let set_evaluated cx evaluated = cx.ccx.sig_cx <- { cx.ccx.sig_cx with evaluated
 let set_goals cx goals = cx.ccx.goal_map <- goals
 
 let set_graph cx graph = cx.ccx.sig_cx <- { cx.ccx.sig_cx with graph }
+
+let set_in_implicit_instantiation_post_pass cx b = cx.ccx.in_implicit_instantiation_post_pass <- b
 
 let set_trust_graph cx trust_graph = cx.ccx.sig_cx <- { cx.ccx.sig_cx with trust_graph }
 

@@ -201,6 +201,8 @@ val graph : t -> Type.Constraint.node IMap.t
 
 val trust_graph : t -> Trust_constraint.node IMap.t
 
+val in_implicit_instantiation_post_pass : t -> bool
+
 val is_checked : t -> bool
 
 val is_verbose : t -> bool
@@ -387,6 +389,8 @@ val set_type_graph : t -> Graph_explorer.graph -> unit
 val set_all_unresolved : t -> ISet.t IMap.t -> unit
 
 val set_graph : t -> Type.Constraint.node IMap.t -> unit
+
+val set_in_implicit_instantiation_post_pass : t -> bool -> unit
 
 val set_trust_graph : t -> Trust_constraint.node IMap.t -> unit
 
