@@ -143,18 +143,9 @@ struct
     | UpperNonT of Type.use_t
     | UpperT of Type.t
 
-  (* We never want to use the bound of the type variable in its inferred type. Instead, we will pin
-   * the type and then check it against the bound. This prevents us from adding trivial `& bound` to
-   * instantiations, and also prevents us from pinning to the bound when no actual upper bounds are added *)
-  let t_not_bound t bound =
-    if TypeUtil.reasonless_eq t bound then
-      UpperEmpty
-    else
-      UpperT t
-
-  let t_of_use_t cx tvar bound u =
+  let t_of_use_t cx tvar u =
     match u with
-    | UseT (_, t) -> t_not_bound t bound
+    | UseT (_, t) -> UpperT t
     | ResolveSpreadT
         ( _,
           reason,
@@ -178,20 +169,20 @@ struct
       UpperT solution
     | _ -> UpperNonT u
 
-  let merge_upper_bounds cx upper_r bound tvar =
+  let merge_upper_bounds cx upper_r tvar =
     match tvar with
     | OpenT (_, id) ->
       let constraints = Context.find_graph cx id in
       (match constraints with
       | Constraint.FullyResolved (_, (lazy t))
       | Constraint.Resolved (_, t) ->
-        t_not_bound t bound
+        UpperT t
       | Constraint.Unresolved bounds ->
         let uppers = Constraint.UseTypeMap.keys bounds.Constraint.upper in
         uppers
         |> List.fold_left
              (fun acc (t, _) ->
-               match (acc, t_of_use_t cx tvar bound t) with
+               match (acc, t_of_use_t cx tvar t) with
                | (UpperNonT u, _) -> UpperNonT u
                | (_, UpperNonT u) -> UpperNonT u
                | (UpperEmpty, UpperT t) -> UpperT t
@@ -299,7 +290,7 @@ struct
     let { Check.operation = (_, instantiation_reason, _); _ } = implicit_instantiation in
     let use_upper_bounds cx name tvar tparam_binder_reason instantiation_reason =
       let tparam = Subst_name.Map.find name tparams_map in
-      let upper_t = merge_upper_bounds cx tparam_binder_reason tparam.bound tvar in
+      let upper_t = merge_upper_bounds cx tparam_binder_reason tvar in
       match upper_t with
       | UpperEmpty ->
         Observer.on_missing_bounds cx name tparam ~tparam_binder_reason ~instantiation_reason

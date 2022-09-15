@@ -854,7 +854,8 @@ module Instantiation_kit (H : Instantiation_helper_sig) = struct
           in
           let t_ = cache_instantiate cx trace ~use_op ?cache typeparam reason_op reason_tapp t in
           let frame = Frame (TypeParamBound { name = typeparam.name }, use_op) in
-          is_subtype cx trace ~use_op:frame (t_, subst cx ~use_op map typeparam.bound);
+          if not (Context.in_implicit_instantiation_post_pass cx) then
+            is_subtype cx trace ~use_op:frame (t_, subst cx ~use_op map typeparam.bound);
           (Subst_name.Map.add typeparam.name t_ map, ts))
         (Subst_name.Map.empty, ts)
         xs
