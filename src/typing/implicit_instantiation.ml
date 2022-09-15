@@ -152,12 +152,34 @@ struct
     else
       UpperT t
 
-  let rec t_of_use_t bound = function
+  let t_of_use_t cx tvar bound u =
+    match u with
     | UseT (_, t) -> t_not_bound t bound
-    | ReposLowerT (_, _, use_t) -> t_of_use_t bound use_t
-    | u -> UpperNonT u
+    | ResolveSpreadT
+        ( _,
+          reason,
+          {
+            rrt_resolved = [];
+            rrt_unresolved = [];
+            rrt_resolve_to =
+              ResolveSpreadsToMultiflowSubtypeFull (_, { params; rest_param = None; _ });
+          }
+        ) ->
+      let tuple_members = params |> List.map (fun param -> snd param) in
+      let general =
+        match tuple_members with
+        | [] -> EmptyT.why reason |> with_trust bogus_trust
+        | [t] -> t
+        | t0 :: t1 :: ts -> UnionT (reason, UnionRep.make t0 t1 ts)
+      in
+      let tuple = TupleAT (general, tuple_members) in
+      let solution = DefT (reason, bogus_trust (), ArrT tuple) in
+      Flow.flow_t cx (solution, tvar);
+      UpperT solution
+    | _ -> UpperNonT u
 
-  let merge_upper_bounds upper_r bound cx = function
+  let merge_upper_bounds cx upper_r bound tvar =
+    match tvar with
     | OpenT (_, id) ->
       let constraints = Context.find_graph cx id in
       (match constraints with
@@ -166,29 +188,25 @@ struct
         t_not_bound t bound
       | Constraint.Unresolved bounds ->
         let uppers = Constraint.UseTypeMap.keys bounds.Constraint.upper in
-        (match uppers with
-        | [] -> UpperEmpty
-        | [(t, _)] -> t_of_use_t bound t
-        | ts ->
-          ts
-          |> List.fold_left
-               (fun acc (t, _) ->
-                 match (acc, t_of_use_t bound t) with
-                 | (UpperNonT u, _) -> UpperNonT u
-                 | (_, UpperNonT u) -> UpperNonT u
-                 | (UpperEmpty, UpperT t) -> UpperT t
-                 | (UpperT t', UpperT t) ->
-                   (match (t', t) with
-                   | (IntersectionT (_, rep1), IntersectionT (_, rep2)) ->
-                     UpperT (IntersectionT (upper_r, InterRep.append (InterRep.members rep2) rep1))
-                   | (_, IntersectionT (_, rep)) ->
-                     UpperT (IntersectionT (upper_r, InterRep.append [t'] rep))
-                   | (IntersectionT (_, rep), _) ->
-                     UpperT (IntersectionT (upper_r, InterRep.append [t] rep))
-                   | (t', t) -> UpperT (IntersectionT (upper_r, InterRep.make t' t [])))
-                 | (UpperT _, UpperEmpty) -> acc
-                 | (UpperEmpty, UpperEmpty) -> acc)
-               UpperEmpty))
+        uppers
+        |> List.fold_left
+             (fun acc (t, _) ->
+               match (acc, t_of_use_t cx tvar bound t) with
+               | (UpperNonT u, _) -> UpperNonT u
+               | (_, UpperNonT u) -> UpperNonT u
+               | (UpperEmpty, UpperT t) -> UpperT t
+               | (UpperT t', UpperT t) ->
+                 (match (t', t) with
+                 | (IntersectionT (_, rep1), IntersectionT (_, rep2)) ->
+                   UpperT (IntersectionT (upper_r, InterRep.append (InterRep.members rep2) rep1))
+                 | (_, IntersectionT (_, rep)) ->
+                   UpperT (IntersectionT (upper_r, InterRep.append [t'] rep))
+                 | (IntersectionT (_, rep), _) ->
+                   UpperT (IntersectionT (upper_r, InterRep.append [t] rep))
+                 | (t', t) -> UpperT (IntersectionT (upper_r, InterRep.make t' t [])))
+               | (UpperT _, UpperEmpty) -> acc
+               | (UpperEmpty, UpperEmpty) -> acc)
+             UpperEmpty)
     | _ -> failwith "Implicit instantiation is not an OpenT"
 
   let merge_lower_bounds cx t =
@@ -281,7 +299,7 @@ struct
     let { Check.operation = (_, instantiation_reason, _); _ } = implicit_instantiation in
     let use_upper_bounds cx name tvar tparam_binder_reason instantiation_reason =
       let tparam = Subst_name.Map.find name tparams_map in
-      let upper_t = merge_upper_bounds tparam_binder_reason tparam.bound cx tvar in
+      let upper_t = merge_upper_bounds cx tparam_binder_reason tparam.bound tvar in
       match upper_t with
       | UpperEmpty ->
         Observer.on_missing_bounds cx name tparam ~tparam_binder_reason ~instantiation_reason
