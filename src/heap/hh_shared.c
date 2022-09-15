@@ -1078,6 +1078,9 @@ static void mark_entity(addr_t v, intnat next_version) {
 // Perform a bounded amount of marking work, incrementally. During the marking
 // phase, this function is called repeatedly until marking is complete. Once
 // complete, this function will transition to the sweep phase.
+//
+// This function will mark at most `work` words before returning. This includes
+// the hash table and heap.
 CAMLprim value hh_mark_slice(value work_val) {
   CAMLparam1(work_val);
   assert(info->gc_phase == Phase_mark);
@@ -1112,6 +1115,7 @@ CAMLprim value hh_mark_slice(value work_val) {
   while (work > 0) {
     if (v == NULL_ADDR && info->mark_ptr > 0) {
       v = mark_stack[--info->mark_ptr];
+      work--; // header word
     }
     if (v != NULL_ADDR) {
       hd = Deref(v);
@@ -1121,12 +1125,14 @@ CAMLprim value hh_mark_slice(value work_val) {
         mark_entity(v, next_version);
         v = NULL_ADDR;
         start = 0;
+        work -= size;
       } else if (should_scan(tag)) {
         // Avoid scanning large objects all at once
         end = start + work;
         if (size < end) {
           end = size;
         }
+        work -= end - start;
         for (i = start; i < end; i++) {
           mark_slice_darken(Deref(Obj_field(v, i)));
         }
@@ -1140,8 +1146,8 @@ CAMLprim value hh_mark_slice(value work_val) {
         }
       } else {
         v = NULL_ADDR;
+        work -= size;
       }
-      work--;
     } else if (roots_ptr < hashtbl_slots) {
       // Visit roots in shared hash table
       mark_slice_darken(hashtbl[roots_ptr++].addr);
@@ -1171,7 +1177,8 @@ CAMLprim value hh_sweep_slice(value work_val) {
   while (work > 0) {
     if (sweep_ptr < info->gc_end) {
       uintnat hd = Deref(sweep_ptr);
-      uintnat bhsize = Obj_bhsize(hd);
+      uintnat whsize = Obj_whsize(hd);
+      uintnat bhsize = Bsize_wsize(whsize);
       switch (Color_hd(hd)) {
         case Color_white:
           Deref(sweep_ptr) = Blue_hd(hd);
@@ -1184,7 +1191,7 @@ CAMLprim value hh_sweep_slice(value work_val) {
           break;
       }
       sweep_ptr += bhsize;
-      work--;
+      work -= whsize;
     } else {
       // Done sweeping
       info->gc_phase = Phase_idle;
