@@ -5,6 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
+open Loc_collections
 open Utils_js
 module Ast = Flow_ast
 
@@ -400,9 +401,10 @@ let initialize_env
   let (_abrupt_completion, ({ Env_api.env_entries; providers; _ } as info)) =
     NameResolver.program_with_scope cx ~lib ~exclude_syms aloc_ast
   in
-  let env = Loc_env.with_info Name_def.Global info in
+  let (name_def_graph, hint_map) = Name_def.find_defs env_entries providers aloc_ast in
+  let hint_map = ALocMap.mapi (Env_resolution.lazily_resolve_hint cx) hint_map in
+  let env = Loc_env.with_info Name_def.Global hint_map info in
   Context.set_environment cx env;
-  let name_def_graph = Name_def.find_defs env_entries providers aloc_ast in
   let components = NameDefOrdering.build_ordering cx info name_def_graph in
   if Context.cycle_errors cx then Base.List.iter ~f:(Cycles.handle_component cx) components;
   Env.init_env cx toplevel_scope_kind;

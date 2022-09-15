@@ -146,6 +146,13 @@ let resolve_hint cx loc hint =
       Hint_Placeholder
     | Hint_None -> Hint_None
 
+let lazily_resolve_hint cx loc hint =
+  let has_hint = not @@ Hint_api.is_hint_none hint in
+  let lazy_hint reason =
+    resolve_hint cx loc hint |> Type_hint.evaluate_hint cx reason ~resolver:TvarResolver.resolved_t
+  in
+  (has_hint, lazy_hint)
+
 let rec resolve_binding_partial cx reason loc b =
   let mk_use_op t = Op (AssignVar { var = Some reason; init = TypeUtil.reason_of_t t }) in
   match b with
@@ -275,10 +282,10 @@ let rec resolve_binding_partial cx reason loc b =
     let contextual_typing_enabled = Context.env_mode cx = Options.LTI in
     let t =
       if contextual_typing_enabled then
-        let hint = resolve_hint cx loc hint in
-        match Type_hint.evaluate_hint cx reason ~resolver:TvarResolver.resolved_t hint with
+        let (has_hint, lazy_hint) = lazily_resolve_hint cx loc hint in
+        match lazy_hint reason with
         | None ->
-          if hint <> Hint_api.Hint_None then
+          if has_hint then
             Flow_js.add_output
               cx
               (Error_message.EMissingLocalAnnotation { reason; hint_available = true });

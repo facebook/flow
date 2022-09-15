@@ -250,7 +250,9 @@ module Eq_test = Eq_test.Make (Scope_api.With_ALoc) (Ssa_api.With_ALoc) (Env_api
 
 class def_finder env_entries providers toplevel_scope =
   object (this)
-    inherit [map, ALoc.t] Flow_ast_visitor.visitor ~init:EnvMap.empty as super
+    inherit
+      [env_entries_map * hint_map, ALoc.t] Flow_ast_visitor.visitor
+        ~init:(EnvMap.empty, ALocMap.empty) as super
 
     val mutable tparams : tparams_map = ALocMap.empty
 
@@ -262,8 +264,13 @@ class def_finder env_entries providers toplevel_scope =
 
     method add_tparam loc name = tparams <- ALocMap.add loc name tparams
 
+    method record_hint loc hint =
+      this#update_acc (fun (env_map, hint_map) -> (env_map, ALocMap.add loc hint hint_map))
+
     method force_add_binding kind_and_loc reason src =
-      this#update_acc (EnvMap.add kind_and_loc (src, scope_kind, class_stack, reason))
+      this#update_acc (fun (env_map, hint_map) ->
+          (EnvMap.add kind_and_loc (src, scope_kind, class_stack, reason) env_map, hint_map)
+      )
 
     method add_binding kind_and_loc reason src =
       if Env_api.has_assigning_write kind_and_loc env_entries then
@@ -535,6 +542,7 @@ class def_finder env_entries providers toplevel_scope =
         | (_, Ast.Pattern.Identifier { Ast.Pattern.Identifier.optional; _ }) -> optional
         | _ -> false
       in
+      let (param_loc, _) = argument in
       let source =
         match Destructure.type_of_pattern argument with
         | Some annot ->
@@ -543,19 +551,20 @@ class def_finder env_entries providers toplevel_scope =
               tparams_map = tparams;
               optional;
               default_expression;
-              param_loc = Some (fst argument);
+              param_loc = Some param_loc;
               annot;
             }
         | None ->
           let reason =
             match argument with
-            | ( loc,
+            | ( _,
                 Ast.Pattern.Identifier
                   { Ast.Pattern.Identifier.name = (_, { Ast.Identifier.name; _ }); _ }
               ) ->
-              mk_reason (RParameter (Some name)) loc
-            | (loc, _) -> mk_reason RDestructuring loc
+              mk_reason (RParameter (Some name)) param_loc
+            | _ -> mk_reason RDestructuring param_loc
           in
+          this#record_hint param_loc hint;
           Contextual { reason; hint; optional; default_expression }
       in
       Destructure.pattern ~f:this#add_ordinary_binding (Root source) argument;
@@ -564,6 +573,7 @@ class def_finder env_entries providers toplevel_scope =
     method private visit_function_rest_param ~hint (expr : ('loc, 'loc) Ast.Function.RestParam.t) =
       let open Ast.Function.RestParam in
       let (_, { argument; comments = _ }) = expr in
+      let (param_loc, _) = argument in
       let source =
         match Destructure.type_of_pattern argument with
         | Some annot ->
@@ -572,22 +582,23 @@ class def_finder env_entries providers toplevel_scope =
               tparams_map = tparams;
               optional = false;
               default_expression = None;
-              param_loc = Some (fst argument);
+              param_loc = Some param_loc;
               annot;
             }
         | None ->
           let reason =
             match argument with
-            | ( loc,
+            | ( _,
                 Ast.Pattern.Identifier
                   { Ast.Pattern.Identifier.name = (_, { Ast.Identifier.name; _ }); _ }
               ) ->
-              mk_reason (RRestParameter (Some name)) loc
-            | (loc, _) ->
+              mk_reason (RRestParameter (Some name)) param_loc
+            | _ ->
               (* TODO: This should be a parse error, but we only produce an internal
                  error in statement.ml. *)
-              mk_reason (RCustom "contextual variable") loc
+              mk_reason (RCustom "contextual variable") param_loc
           in
+          this#record_hint param_loc hint;
           Contextual { reason; hint; optional = false; default_expression = None }
       in
       Destructure.pattern ~f:this#add_ordinary_binding (Root source) argument;
@@ -722,11 +733,18 @@ class def_finder env_entries providers toplevel_scope =
             rest;
           ignore @@ this#type_annotation_hint return;
 
+          let return_loc =
+            match return with
+            | Ast.Type.Available (loc, _)
+            | Ast.Type.Missing loc ->
+              loc
+          in
           let return_hint =
             match return with
             | Ast.Type.Available annot -> Hint_t (AnnotationHint (ALocMap.empty, annot))
             | Ast.Type.Missing _ -> decompose_hint Decomp_FuncReturn func_hint
           in
+          this#record_hint return_loc return_hint;
           let old_stack = return_hint_stack in
           return_hint_stack <- return_hint :: return_hint_stack;
           let body_loc =
@@ -1552,6 +1570,7 @@ class def_finder env_entries providers toplevel_scope =
           Hint_None
         | _ -> hint
       in
+      this#record_hint loc hint;
       match expr with
       | Ast.Expression.Array expr -> this#visit_array_expression ~array_hint:hint expr
       | Ast.Expression.ArrowFunction x ->

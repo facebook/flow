@@ -25,6 +25,7 @@ type t = {
   scope_kind: Name_def.scope_kind;
   readable: EnvSet.t;
   under_resolution: EnvSet.t;
+  hint_map: Type.lazy_hint_t ALocMap.t;
   var_info: Env_api.env_info;
 }
 
@@ -68,9 +69,10 @@ let empty scope_kind =
     declare_module_exports_write_loc = None;
     scope_kind;
     readable = EnvSet.empty;
+    hint_map = ALocMap.empty;
     under_resolution = EnvSet.empty;
   }
 
-let with_info scope_kind var_info =
+let with_info scope_kind hint_map var_info =
   let env = empty scope_kind in
-  { env with var_info }
+  { env with hint_map; var_info }

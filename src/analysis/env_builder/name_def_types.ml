@@ -260,4 +260,6 @@ module Print = struct
       spf "import %s%s from %s" (string_of_import_kind import_kind) (string_of_import import) source
 end
 
-type map = (def * scope_kind * class_stack * ALoc.t virtual_reason) Env_api.EnvMap.t
+type env_entries_map = (def * scope_kind * class_stack * ALoc.t virtual_reason) Env_api.EnvMap.t
+
+type hint_map = hint_node hint ALocMap.t

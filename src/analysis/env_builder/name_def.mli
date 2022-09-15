@@ -13,4 +13,4 @@ val find_defs :
   Env_api.env_entry Env_api.EnvMap.t ->
   Provider_api.info ->
   (ALoc.t, ALoc.t) Flow_ast.Program.t ->
-  map
+  env_entries_map * hint_map

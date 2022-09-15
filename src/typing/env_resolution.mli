@@ -9,6 +9,9 @@ module TvarResolver : sig
   val resolved_t : Context.t -> Type.t -> Type.t
 end
 
+val lazily_resolve_hint :
+  Context.t -> ALoc.t -> Name_def.hint_node Hint_api.hint -> Type.lazy_hint_t
+
 val resolve_component :
   Context.t ->
   (Name_def.def * Name_def.scope_kind * Name_def.class_stack * Reason.t) Env_api.EnvMap.t ->

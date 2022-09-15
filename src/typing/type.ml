@@ -244,6 +244,8 @@ module rec TypeTerm : sig
     | EnumT of enum_t
     | EnumObjectT of enum_t
 
+  and lazy_hint_t = bool * (reason -> t option)
+
   and defer_use_t =
     | LatentPredT of reason * predicate
     (* destructors that extract parts of various kinds of types *)
