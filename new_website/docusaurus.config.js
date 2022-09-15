@@ -167,7 +167,7 @@ module.exports = {
     },
   },
   customFields: {
-    flowVersion: 'v0.186.0',
+    flowVersion: 'v0.187.0',
   },
   presets: [
     [

@@ -1,3 +1,24 @@
+### 0.187.0
+
+Likely to cause new Flow errors:
+* JSX expressions in a file with jsx pragma of member expressions (e.g. `@jsx Foo.bar`) will no longer be incorrectly considered as unreachable. This might uncover previously hidden errors.
+* Functions statics (i.e. assigning properties to functions) are safer, but also a bit more restricted. Function statics should be assigned in the same statement list as the function (i.e. not conditionally).
+
+New Features:
+* When autocompleting in the middle of a word, autocomplete now inserts the suggestion, instead of replacing the entire word. For example, if you are completing in `foo|Baz` (cursor at `|`) and choose `fooBar`, you'll now get `fooBarBaz` instead of `fooBar`. In VS Code, you can press shift-enter to replace instead of insert.
+
+Bug fixes:
+* Fix Go to Definition on certain kinds of import statements
+* Improve location of error references pointing at imported namespaces (D38978756 mroch)
+* Fix some missing references in CLI errors (D38977164 mroch)
+* Improve location of error messages referring to `declare module` exports (D38977152 mroch)
+* Change `flow get-def --json` to write `{"error": message}` to stdout on error, instead of writing non-JSON to stderr
+* Fix a garbage collector bug that rarely could lead to crashes
+
+Library Definitions:
+* Allow access of arbitrary properties from `import.meta`. They are typed as `mixed`
+* Add support for MediaSourceHandle
+
 ### 0.186.0
 
 Notable breaking changes:
