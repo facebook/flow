@@ -26,20 +26,6 @@ References:
                          ^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------- no_bounds.js:5:1
-
-`T` is underconstrained by call of `f` [1] and is defined in `T` [2] [underconstrained-implicit-instantiation]
-
-   no_bounds.js:5:1
-   5| f(3); // TODO no error
-      ^^^^ [1]
-
-References:
-   no_bounds.js:3:20
-   3| declare function f<T, U: T>(x: U): T;
-                         ^ [2]
-
-
 Error ----------------------------------------------------------------------------------------------- speculation.js:6:1
 
 `T` is underconstrained by call of `f` [1] and is defined in `T` [2] [underconstrained-implicit-instantiation]
@@ -191,4 +177,4 @@ OwnProps contains a non-Type.t upper bound ObjKitT
 
 
 
-Found 14 errors
+Found 13 errors
