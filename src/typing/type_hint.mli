@@ -9,5 +9,5 @@ val evaluate_hint :
   Context.t ->
   Reason.t ->
   resolver:(Context.t -> Type.t -> Type.t) ->
-  Type.t Hint_api.hint ->
+  (Type.t, Type.call_arg list) Hint_api.hint ->
   Type.t option

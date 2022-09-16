@@ -101,7 +101,7 @@ let resolve_annotation cx tparams_map anno =
   t
 
 let resolve_hint cx loc hint =
-  let resolve_hint = function
+  let resolve_hint_node = function
     | AnnotationHint (tparams_locs, anno) -> resolve_annotation cx tparams_locs anno
     | ValueHint exp -> expression cx exp
     | ProvidersHint (loc, []) ->
@@ -123,11 +123,10 @@ let resolve_hint cx loc hint =
       UnionT (mk_reason (RCustom "providers") loc, UnionRep.make t1 t2 ts)
   in
   if Context.env_mode cx = Options.LTI then
-    match hint with
-    | Hint_t hint_node -> Hint_t (resolve_hint hint_node)
-    | Hint_Decomp (ops, hint_node) -> Hint_Decomp (ops, resolve_hint hint_node)
-    | Hint_Placeholder -> Hint_Placeholder
-    | Hint_None -> Hint_None
+    Hint_api.map
+      hint
+      ~map_base_hint:resolve_hint_node
+      ~map_arg_list:(Statement.synthesize_arg_list cx)
   else
     match hint with
     | Hint_t _

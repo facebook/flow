@@ -39,6 +39,8 @@ type hint_node =
   | ValueHint of (ALoc.t, ALoc.t) Ast.Expression.t
   | ProvidersHint of ALoc.t Nel.t
 
+type ast_hint = (hint_node, (ALoc.t, ALoc.t) Ast.Expression.ArgList.t) hint
+
 type root =
   | Annotation of {
       tparams_map: tparams_map;
@@ -48,11 +50,11 @@ type root =
       annot: (ALoc.t, ALoc.t) Ast.Type.annotation;
     }
   | Value of {
-      hint: hint_node hint;
+      hint: ast_hint;
       expr: (ALoc.t, ALoc.t) Ast.Expression.t;
     }
   | FunctionValue of {
-      hint: hint_node hint;
+      hint: ast_hint;
       function_loc: ALoc.t;
       function_: (ALoc.t, ALoc.t) Ast.Function.t;
       statics: (ALoc.t, ALoc.t) Ast.Expression.t SMap.t;
@@ -65,7 +67,7 @@ type root =
     }
   | Contextual of {
       reason: Reason.reason;
-      hint: hint_node hint;
+      hint: ast_hint;
       optional: bool;
       default_expression: (ALoc.t, ALoc.t) Ast.Expression.t option;
     }
@@ -147,7 +149,7 @@ type def =
       op: Ast.Expression.Update.operator;
     }
   | Function of {
-      hint: hint_node hint;
+      hint: ast_hint;
       synthesizable_from_annotation: function_synth_kind;
       has_this_def: bool;
       function_loc: ALoc.t;
@@ -262,4 +264,4 @@ end
 
 type env_entries_map = (def * scope_kind * class_stack * ALoc.t virtual_reason) Env_api.EnvMap.t
 
-type hint_map = hint_node hint ALocMap.t
+type hint_map = ast_hint ALocMap.t

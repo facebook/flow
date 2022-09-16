@@ -182,4 +182,9 @@ module type S = sig
     Context.t ->
     (ALoc.t, ALoc.t) Ast.Expression.t ->
     Type.t * Type.t Base.Option.t * (ALoc.t, ALoc.t * Type.t) Ast.Expression.t
+
+  val synthesize_arg_list :
+    Context.t ->
+    (ALoc.t, ALoc.t) Func_class_sig_types.Ast.Expression.ArgList.t ->
+    Type.call_arg list
 end

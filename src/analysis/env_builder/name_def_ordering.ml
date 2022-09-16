@@ -414,12 +414,18 @@ struct
             state
             providers
       in
-      let depends_of_hint state = function
+      let rec depends_of_hint state = function
         | Hint_api.Hint_None -> state
         | Hint_api.Hint_Placeholder -> state
-        | Hint_api.Hint_t hint_node
-        | Hint_api.Hint_Decomp (_, hint_node) ->
-          depends_of_hint_node state hint_node
+        | Hint_api.Hint_t hint_node -> depends_of_hint_node state hint_node
+        | Hint_api.Hint_Decomp (ops, hint_node) ->
+          Nel.fold_left
+            (fun acc -> function
+              | Hint_api.Decomp_Instantiated (lazy { Hint_api.return_hint; arg_list = _ }) ->
+                depends_of_hint acc return_hint
+              | _ -> acc)
+            (depends_of_hint_node state hint_node)
+            ops
       in
 
       let depends_of_fun fully_annotated tparams_map hint ~statics function_ =

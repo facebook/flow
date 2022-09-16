@@ -260,7 +260,7 @@ class def_finder env_entries providers toplevel_scope =
 
     val mutable class_stack : class_stack = []
 
-    val mutable return_hint_stack : hint_node hint list = []
+    val mutable return_hint_stack : ast_hint list = []
 
     method add_tparam loc name = tparams <- ALocMap.add loc name tparams
 
@@ -1290,7 +1290,7 @@ class def_finder env_entries providers toplevel_scope =
       let {
         callee;
         targs;
-        arguments = (_, { Ast.Expression.ArgList.arguments; comments = _ });
+        arguments = (_, { Ast.Expression.ArgList.arguments; comments = _ }) as arg_list;
         comments = _;
       } =
         expr
@@ -1356,6 +1356,11 @@ class def_finder env_entries providers toplevel_scope =
               | Ast.Expression.Member.PropertyExpression _ ->
                 decompose_hint Decomp_MethodElem base_hint)
             | _ -> Hint_t (ValueHint callee)
+          in
+          let call_argumemts_hint =
+            decompose_hint
+              (Decomp_Instantiated (lazy { return_hint = hint; arg_list }))
+              call_argumemts_hint
           in
           Base.List.iteri arguments ~f:(fun i arg ->
               let hint = decompose_hint (Decomp_FuncParam i) call_argumemts_hint in

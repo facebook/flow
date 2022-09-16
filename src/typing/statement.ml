@@ -4137,6 +4137,27 @@ module Make
         let (((_, t), _) as res) = expression ?cond cx ex in
         (t, None, res))
 
+  and synthesize_expression cx ((loc, _) as e) =
+    let node_cache = Context.node_cache cx in
+    match Node_cache.get_expression node_cache loc with
+    | Some ((_loc, t), _) ->
+      Debug_js.Verbose.print_if_verbose_lazy
+        cx
+        (lazy [spf "Expression cache hit at %s" (ALoc.debug_to_string loc)]);
+      t
+    | None ->
+      (* TODO: when synthesis mode is ready, we should properly synthesize the expression. *)
+      Tvar.mk cx (mk_expression_reason e)
+
+  and synthesize_arg_list cx arguments =
+    let open Ast.Expression in
+    let (_, { ArgList.arguments; comments = _ }) = arguments in
+    Base.List.map arguments ~f:(function
+        | Expression e -> Arg (synthesize_expression cx e)
+        | Spread (_, { SpreadElement.argument; comments = _ }) ->
+          SpreadArg (synthesize_expression cx argument)
+        )
+
   and arg_list cx (args_loc, { Ast.Expression.ArgList.arguments; comments }) =
     let (argts, arg_asts) = arguments |> Base.List.map ~f:(expression_or_spread cx) |> List.split in
     (argts, (args_loc, { Ast.Expression.ArgList.arguments = arg_asts; comments }))

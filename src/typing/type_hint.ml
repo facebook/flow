@@ -179,6 +179,7 @@ let type_of_hint_decomposition cx op reason ~resolver t =
             in
             Flow_js.flow cx (t, use_t)
         )
+      | Decomp_Instantiated _ -> t
   )
 
 let rec evaluate_hint_ops cx reason ~resolver t = function
