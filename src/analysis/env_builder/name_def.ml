@@ -1295,7 +1295,30 @@ class def_finder env_entries providers toplevel_scope =
       } =
         expr
       in
-      visit_callee callee;
+      (* Provide hint in the very special case of immediate function execution,
+       * ie. `(function (){..})()`. *)
+      let callee_hint =
+        match (callee, arguments) with
+        | ( ( _,
+              ( Ast.Expression.ArrowFunction
+                  {
+                    Ast.Function.tparams = None;
+                    params = (_, Ast.Function.Params.{ this_ = None; params = []; rest = None; _ });
+                    _;
+                  }
+              | Ast.Expression.Function
+                  {
+                    Ast.Function.tparams = None;
+                    params = (_, Ast.Function.Params.{ this_ = None; params = []; rest = None; _ });
+                    _;
+                  } )
+            ),
+            []
+          ) ->
+          decompose_hint Comp_ImmediateFuncCall hint
+        | _ -> Hint_None
+      in
+      visit_callee ~hint:callee_hint callee;
       Base.Option.iter targs ~f:(fun targs -> ignore @@ this#call_type_args targs);
       if Flow_ast_utils.is_call_to_invariant callee then
         Base.List.iteri arguments ~f:(fun i -> function
@@ -1383,7 +1406,7 @@ class def_finder env_entries providers toplevel_scope =
         call
         ~hint
         ~cond
-        ~visit_callee:(this#visit_expression ~hint:Hint_None ~cond:NonConditionalContext)
+        ~visit_callee:(this#visit_expression ~cond:NonConditionalContext)
 
     method! new_ _ expr =
       let open Ast.Expression.New in
@@ -1601,7 +1624,7 @@ class def_finder env_entries providers toplevel_scope =
       | Ast.Expression.Call expr ->
         this#visit_call_expression
           ~hint
-          ~visit_callee:(this#visit_expression ~hint:Hint_None ~cond:NonConditionalContext)
+          ~visit_callee:(this#visit_expression ~cond:NonConditionalContext)
           ~cond
           expr
       | Ast.Expression.OptionalCall expr -> this#visit_optional_call_expression ~hint ~cond expr

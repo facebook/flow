@@ -125,6 +125,7 @@ let type_of_hint_decomposition cx op reason ~resolver t =
             in
             Flow_js.flow_t cx (t, fun_t)
         )
+      | Comp_ImmediateFuncCall -> fun_t ~params:[] ~rest_param:None ~return_t:t
       | Decomp_JsxProps ->
         Tvar.mk_no_wrap_where cx reason (fun props_t ->
             Flow_js.flow cx (t, ReactKitT (unknown_use, reason, React.GetProps (OpenT props_t)))

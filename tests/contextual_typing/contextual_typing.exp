@@ -1,19 +1,36 @@
-Error ---------------------------------------------------------------------------------------------------- test.js:14:49
+Error -------------------------------------------------------------------------------- immediate_call_expression.js:6:10
+
+Cannot cast `x` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+
+   immediate_call_expression.js:6:10
+   6|         (x: string); // error number ~> string
+               ^
+
+References:
+   immediate_call_expression.js:3:10
+   3| const x: number => void = (function () {
+               ^^^^^^ [1]
+   immediate_call_expression.js:6:13
+   6|         (x: string); // error number ~> string
+                  ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------- implicit_instantiation.js:14:49
 
 Cannot cast `a` to empty because string [1] is incompatible with empty [2]. [incompatible-cast]
 
-   test.js:14:49
+   implicit_instantiation.js:14:49
    14|   const reasonTest: (string) => mixed = (a) => (a: empty); // ok
                                                        ^
 
 References:
-   test.js:14:22
+   implicit_instantiation.js:14:22
    14|   const reasonTest: (string) => mixed = (a) => (a: empty); // ok
                             ^^^^^^ [1]
-   test.js:14:52
+   implicit_instantiation.js:14:52
    14|   const reasonTest: (string) => mixed = (a) => (a: empty); // ok
                                                           ^^^^^ [2]
 
 
 
-Found 1 error
+Found 2 errors

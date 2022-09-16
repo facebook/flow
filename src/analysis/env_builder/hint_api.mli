@@ -25,6 +25,7 @@ and ('t, 'args) hint_decomposition =
   | Decomp_FuncParam of int
   | Decomp_FuncRest of int
   | Decomp_FuncReturn
+  | Comp_ImmediateFuncCall
   | Decomp_JsxProps
   | Decomp_Instantiated of ('t, 'args) implicit_instantiation_hints Lazy.t
 

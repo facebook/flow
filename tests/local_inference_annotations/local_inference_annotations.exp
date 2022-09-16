@@ -527,6 +527,14 @@ Missing an annotation on `x`. [missing-local-annot]
                       ^
 
 
+Error ----------------------------------------------------------------------- included/immediate_call_expression.js:8:13
+
+Missing an annotation on `x`. [missing-local-annot]
+
+   8|     return (x) => {}; // error missing annotation
+                  ^
+
+
 Error --------------------------------------------------------------------------------------------- included/jsx.js:9:14
 
 Missing an annotation on `x`. [missing-local-annot]
@@ -776,4 +784,4 @@ Missing an annotation on `y`. [missing-local-annot]
 
 
 
-Found 84 errors
+Found 85 errors

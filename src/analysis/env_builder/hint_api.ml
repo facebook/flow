@@ -46,6 +46,9 @@ and ('t, 'args) hint_decomposition =
   (* Type of function becomes hint on return *)
   | Decomp_FuncReturn
   (* Type of C in `<C [props]/>` becomes hint on `props` *)
+  (* Hint on call `f()` becomes hint on `f`. This is only meant to be used for the
+   * case of immediate function call `(function() {})()`. *)
+  | Comp_ImmediateFuncCall
   | Decomp_JsxProps
   (* Type of f in f(...) is instantiated with arguments and return hint.
      Returns f if the type of f is not polymorphic. *)
@@ -73,6 +76,7 @@ let string_of_hint_unknown_kind = function
   | Decomp_FuncParam i -> Utils_js.spf "Decomp_FuncParam (%d)" i
   | Decomp_FuncRest i -> Utils_js.spf "Decomp_FuncRest (%d)" i
   | Decomp_FuncReturn -> "Decomp_FuncReturn"
+  | Comp_ImmediateFuncCall -> "Comp_ImmediateFuncCall"
   | Decomp_JsxProps -> "Decomp_JsxProps"
   | Decomp_Await -> "Decomp_Await"
   | Decomp_Instantiated _ -> "Decomp_Instantiated"
@@ -120,6 +124,7 @@ let rec map_decomp_op ~map_base_hint ~map_arg_list = function
   | Decomp_FuncParam i -> Decomp_FuncParam i
   | Decomp_FuncRest i -> Decomp_FuncRest i
   | Decomp_FuncReturn -> Decomp_FuncReturn
+  | Comp_ImmediateFuncCall -> Comp_ImmediateFuncCall
   | Decomp_JsxProps -> Decomp_JsxProps
   | Decomp_Instantiated implicit_instantiation_hints ->
     Decomp_Instantiated
