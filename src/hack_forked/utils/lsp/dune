@@ -11,3 +11,6 @@
   utils_core)
  (preprocess
   (pps lwt_ppx ppx_deriving.std ppx_deriving.enum)))
+
+(dirs
+ (:standard __tests__))
