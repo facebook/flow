@@ -75,8 +75,6 @@ let exec_read_lines ?(reverse = false) cmd =
   else
     !result
 
-let rm_dir_tree = Disk.rm_dir_tree
-
 let with_umask umask f =
   if Sys.win32 then
     f ()
@@ -207,8 +205,6 @@ let read_file file =
   buf
 
 let write_file ~file s = Disk.write_file ~file ~contents:s
-
-let mkdir_p = Disk.mkdir_p
 
 (* Emulate "mkdir -p", i.e., no error if already exists. *)
 let mkdir_no_fail dir =

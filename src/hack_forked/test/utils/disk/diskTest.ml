@@ -38,7 +38,7 @@ let test_mkdir_p dir =
     false
     (Disk.is_directory (Path.to_string dir))
     "directory should not exist at start";
-  let () = Sys_utils.mkdir_p (Path.to_string dir) in
+  let () = Disk.mkdir_p (Path.to_string dir) in
   Asserter.Bool_asserter.assert_equals
     true
     (Disk.is_directory (Path.to_string dir))
@@ -59,7 +59,7 @@ let test_write_needs_directory_tree dir =
     false
   with
   | Disk.No_such_file_or_directory _ ->
-    Sys_utils.mkdir_p (Path.to_string dir);
+    Disk.mkdir_p (Path.to_string dir);
     write_file ~dir ~file:basename ~contents:"hello";
     Asserter.Bool_asserter.assert_equals
       true
@@ -138,7 +138,7 @@ let test_rename_src_ends_with_slash_target_is_dir dir =
 let test_readdir dir =
   let subdir = Path.concat dir "subdir" in
   setup_dir subdir [("foo.txt", "foo"); ("bar", "hello")];
-  Sys_utils.mkdir_p (Path.to_string (Path.concat subdir "subsubdir"));
+  Disk.mkdir_p (Path.to_string (Path.concat subdir "subsubdir"));
   let names = Path.to_string dir |> Disk.readdir |> Array.to_list |> List.sort String.compare in
   Asserter.String_asserter.assert_list_equals
     ["subdir"]
