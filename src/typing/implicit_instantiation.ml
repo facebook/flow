@@ -145,6 +145,17 @@ struct
 
   let rec t_of_use_t cx tvar u =
     match u with
+    | UseT (_, (OpenT (_, id) as t)) ->
+      (match Context.find_graph cx id with
+      | Constraint.FullyResolved (_, (lazy t))
+      | Constraint.Resolved (_, t) ->
+        UpperT t
+      | Constraint.Unresolved bounds ->
+        let lowers = bounds.Constraint.lower in
+        if TypeMap.cardinal lowers = 0 then
+          UpperEmpty
+        else
+          UpperT (get_t cx t))
     | UseT (_, t) -> UpperT t
     | ReposLowerT (_, _, use_t) -> t_of_use_t cx tvar use_t
     | ResolveSpreadT
@@ -288,8 +299,7 @@ struct
     in
     (inferred_targ_list, marked_tparams)
 
-  let pin_types
-      cx ~has_return_hint inferred_targ_list marked_tparams tparams_map implicit_instantiation =
+  let pin_types cx inferred_targ_list marked_tparams tparams_map implicit_instantiation =
     let { Check.operation = (_, instantiation_reason, _); _ } = implicit_instantiation in
     let use_upper_bounds cx name tvar tparam_binder_reason instantiation_reason =
       let tparam = Subst_name.Map.find name tparams_map in
@@ -329,16 +339,7 @@ struct
             | Some inferred -> Observer.on_pinned_tparam cx name tparam inferred)
           | Some Positive ->
             (match merge_lower_bounds cx t with
-            | None ->
-              if has_return_hint then
-                use_upper_bounds cx name t tparam_binder_reason instantiation_reason
-              else
-                Observer.on_missing_bounds
-                  cx
-                  name
-                  tparam
-                  ~tparam_binder_reason
-                  ~instantiation_reason
+            | None -> use_upper_bounds cx name t tparam_binder_reason instantiation_reason
             | Some inferred -> Observer.on_pinned_tparam cx name tparam inferred)
           | Some Negative -> use_upper_bounds cx name t tparam_binder_reason instantiation_reason
         in
@@ -429,13 +430,7 @@ struct
     let (inferred_targ_list, marked_tparams, tparams_map) =
       implicitly_instantiate cx return_hint check
     in
-    pin_types
-      cx
-      ~has_return_hint:(Base.Option.is_some return_hint)
-      inferred_targ_list
-      marked_tparams
-      tparams_map
-      check
+    pin_types cx inferred_targ_list marked_tparams tparams_map check
 
   let run cx check ~on_completion =
     let subst_map = solve_targs cx check in

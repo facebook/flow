@@ -1,12 +1,12 @@
 //@flow
 declare function f<T>(): T;
-f();
+f(); // Error: T underconstrained
 
 declare function g<T>(T => mixed): T;
-g((x: number) => 'string');
+g((x: number) => 'string'); // Ok: It will error under Pierce, but we also consider upper bounds here.
 
 declare function h<T>(T): T => mixed;
-h(3);
+h(3); // Error: T underconstrained
 
 declare function i<T>(): Array<T>;
-i();
+i(); // Error: T underconstrained

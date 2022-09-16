@@ -6,3 +6,6 @@ declare function HOC<OwnProps: {}>(
 ): OwnProps => mixed;
 
 const x = HOC((x: {| foo: number, bar: number |}) => null);
+
+declare function ReposLowerTRegressionTest<T>({o?: T}): T;
+ReposLowerTRegressionTest({}) // Error: T under constrained.
