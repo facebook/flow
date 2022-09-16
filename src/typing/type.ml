@@ -3253,6 +3253,8 @@ module Locationless = struct
   module NullT = LocationLess (NullT)
 end
 
+let hint_unavailable : lazy_hint_t = (false, (fun _ -> None))
+
 (* lift an operation on Type.t to an operation on Type.use_t *)
 let lift_to_use f = function
   | UseT (_, t) -> f t

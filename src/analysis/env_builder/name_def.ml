@@ -739,6 +739,7 @@ class def_finder env_entries providers toplevel_scope =
             | Ast.Type.Missing loc ->
               loc
           in
+          (* TODO(T122105974): support async function return. *)
           let return_hint =
             match return with
             | Ast.Type.Available annot -> Hint_t (AnnotationHint (ALocMap.empty, annot))

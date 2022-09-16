@@ -9,7 +9,6 @@ module Ast = Flow_ast
 module Flow = Flow_js
 open Reason
 open Type
-open Hint_api
 open TypeUtil
 include Func_sig_intf
 
@@ -261,7 +260,7 @@ struct
     | [(_, param_t)] -> param_t
     | _ -> failwith "Setter property with unexpected type"
 
-  let toplevels cx ~hint x =
+  let toplevels cx x =
     let { T.reason = reason_fn; kind; tparams_map; fparams; body; return_t; _ } = x in
     let body_loc =
       let open Ast.Function in
@@ -401,16 +400,12 @@ struct
       | _ -> ()
     );
 
-    let (has_return_annot, return_t, return_hint) =
+    let (has_return_annot, return_t) =
       match (return_t, kind) with
-      | (Inferred t, _) -> (false, t, decompose_hint Decomp_FuncReturn hint)
-      | (Annotated t, (Async | Generator _ | AsyncGenerator _)) ->
-        (true, t, Hint_t (MixedT.why (reason_of_t t) (bogus_trust ()))) (* T122105974 *)
-      | (Annotated t, _) -> (true, t, Hint_t t)
+      | (Inferred t, _) -> (false, t)
+      | (Annotated t, (Async | Generator _ | AsyncGenerator _)) -> (true, t)
+      | (Annotated t, _) -> (true, t)
     in
-
-    let ({ Loc_env.return_hint = prev_return_hint; _ } as loc_env) = Context.environment cx in
-    Context.set_environment cx { loc_env with Loc_env.return_hint };
 
     (* statement visit pass *)
     let (statements_ast, statements_abnormal) =
@@ -418,9 +413,6 @@ struct
           Toplevels.toplevels Statement.statement cx statements
       )
     in
-
-    let loc_env = Context.environment cx in
-    Context.set_environment cx { loc_env with Loc_env.return_hint = prev_return_hint };
 
     let maybe_void =
       Abnormal.(
@@ -481,7 +473,7 @@ struct
             let use_op = Frame (ImplicitTypeParam, use_op) in
             (use_op, t, None)
           | FieldInit e ->
-            let (((_, t), _) as ast) = Statement.expression ?cond:None cx ~hint:return_hint e in
+            let (((_, t), _) as ast) = Statement.expression ?cond:None cx e in
             let body = mk_expression_reason e in
             let use_op = Op (InitField { op = reason_fn; body }) in
             (use_op, t, Some ast)

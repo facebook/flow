@@ -37,7 +37,6 @@ module type S = sig
   val expression :
     ?cond:Type.cond_context ->
     Context.t ->
-    hint:Type.t Hint_api.hint ->
     (ALoc.t, ALoc.t) Flow_ast.Expression.t ->
     (ALoc.t, ALoc.t * Type.t) Flow_ast.Expression.t
 
@@ -48,7 +47,6 @@ module type S = sig
 
   val mk_function :
     Context.t ->
-    hint:Type.t Hint_api.hint ->
     needs_this_param:bool ->
     general:Type.t ->
     statics:(ALoc.t, ALoc.t) Flow_ast.Expression.t SMap.t ->
@@ -59,7 +57,6 @@ module type S = sig
 
   val mk_arrow :
     Context.t ->
-    func_hint:Type.t Hint_api.hint ->
     statics:(ALoc.t, ALoc.t) Flow_ast.Expression.t SMap.t ->
     Reason.reason ->
     (ALoc.t, ALoc.t) Ast.Function.t ->
@@ -67,7 +64,6 @@ module type S = sig
 
   val mk_func_sig :
     Context.t ->
-    func_hint:Type.t Hint_api.hint ->
     required_this_param_type:Type.t option ->
     require_return_annot:bool ->
     constructor:bool ->
@@ -182,7 +178,6 @@ module type S = sig
     Type.enum_t
 
   val optional_chain :
-    hint:Type.t Hint_api.hint ->
     cond:Type.cond_context Base.Option.t ->
     Context.t ->
     (ALoc.t, ALoc.t) Ast.Expression.t ->

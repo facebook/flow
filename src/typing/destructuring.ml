@@ -18,7 +18,6 @@ module Ast = Flow_ast
 module Tast_utils = Typed_ast_utils
 open Reason
 open Type
-open Hint_api
 open TypeUtil
 
 module Make (Statement : Statement_sig.S) : Destructuring_sig.S = struct
@@ -49,7 +48,7 @@ module Make (Statement : Statement_sig.S) : Destructuring_sig.S = struct
     | None -> (acc, None)
     | Some e ->
       let { current; default; annot; _ } = acc in
-      let (((loc, t), _) as e) = Statement.expression cx ~hint:Hint_None e in
+      let (((loc, t), _) as e) = Statement.expression cx e in
       let default = Some (Default.expr ?default t) in
       let reason = mk_reason RDefaultValue loc in
       let current = destruct cx reason ~annot Default current in
@@ -155,7 +154,7 @@ module Make (Statement : Statement_sig.S) : Destructuring_sig.S = struct
 
   let object_computed_property cx acc e =
     let { current; init; default; annot; _ } = acc in
-    let (((loc, t), _) as e') = Statement.expression cx ~hint:Hint_None e in
+    let (((loc, t), _) as e') = Statement.expression cx e in
     let reason = mk_reason (RProperty None) loc in
     let init =
       Base.Option.map init ~f:(fun init ->

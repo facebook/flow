@@ -20,7 +20,6 @@ open Utils_js
 open Reason
 open Type
 open TypeUtil
-open Hint_api
 open Func_class_sig_types
 module Eq_test = Eq_test.Make (Scope_api.With_ALoc) (Ssa_api.With_ALoc) (Env_api.With_ALoc)
 
@@ -41,8 +40,7 @@ module Make
     type ('a, 'b) t = {
       refinement_action: ('a -> Type.t -> Type.t -> Type.t) option;
       refine: unit -> Type.t option;
-      get_hint: Type.t -> Type.t Hint_api.hint;
-      subexpressions: hint:Type.t Hint_api.hint -> 'a * 'b;
+      subexpressions: unit -> 'a * 'b;
       get_result: 'a -> Reason.t -> Type.t -> Type.t;
       test_hooks: Type.t -> Type.tvar option;
       get_opt_use: 'a -> Reason.t -> Type.t -> Type.opt_use_t;
@@ -300,11 +298,10 @@ module Make
 
   (* In positions where an annotation may be present or an annotation can be pushed down,
    * we should prefer the annotation over the pushed-down annotation. *)
-  let mk_inference_target_with_annots ~hint annot_or_inferred =
-    match (annot_or_inferred, hint) with
+  let mk_inference_target_with_annots ~has_hint annot_or_inferred =
+    match (annot_or_inferred, has_hint) with
     | (Annotated _, _) -> annot_or_inferred
-    | (_, (Hint_t _ | Hint_Decomp _)) ->
-      Annotated (type_t_of_annotated_or_inferred annot_or_inferred)
+    | (_, true) -> Annotated (type_t_of_annotated_or_inferred annot_or_inferred)
     | _ -> annot_or_inferred
 
   (************)
@@ -401,9 +398,7 @@ module Make
       Abnormal.check_stmt_control_flow_exception
         ((loc, Block { Block.body; comments }), abnormal_opt)
     | (loc, Expression { Expression.expression = e; directive; comments }) ->
-      ( loc,
-        Expression { Expression.expression = expression cx ~hint:Hint_None e; directive; comments }
-      )
+      (loc, Expression { Expression.expression = expression cx e; directive; comments })
     (* Refinements for `if` are derived by the following Hoare logic rule:
 
        [Pre & c] S1 [Post1]
@@ -413,7 +408,7 @@ module Make
        [Pre] if c S1 else S2 [Post]
     *)
     | (loc, If { If.test; consequent; alternate; comments }) ->
-      let test_ast = condition ~hint:Hint_None ~cond:OtherTest cx test in
+      let test_ast = condition ~cond:OtherTest cx test in
       let (then_ast, then_abnormal) =
         Abnormal.catch_stmt_control_flow_exception (fun () -> statement cx consequent)
       in
@@ -517,7 +512,7 @@ module Make
     (*******************************************************)
     | (switch_loc, Switch { Switch.discriminant; cases; comments; exhaustive_out }) ->
       (* typecheck discriminant *)
-      let discriminant_ast = expression cx ~hint:Hint_None discriminant in
+      let discriminant_ast = expression cx discriminant in
       let exhaustive_check_incomplete_out =
         Tvar.mk cx (mk_reason (RCustom "exhaustive check incomplete out") switch_loc)
       in
@@ -562,7 +557,6 @@ module Make
                    let (_, fake_ast) =
                      condition
                        cx
-                       ~hint:Hint_None
                        ~cond:(SwitchTest { case_test_reason; switch_discriminant_reason })
                        fake
                    in
@@ -705,21 +699,20 @@ module Make
         match argument with
         | None -> (VoidT.at loc |> with_trust literal_trust, None)
         | Some expr ->
-          let hint = (Context.environment cx).Loc_env.return_hint in
           if Env.in_predicate_scope cx then
-            let (((_, t), _) as ast) = condition ~hint ~cond:OtherTest cx expr in
+            let (((_, t), _) as ast) = condition ~cond:OtherTest cx expr in
             let (p_map, n_map) = Env.predicate_refinement_maps cx loc in
             let pred_reason = update_desc_reason (fun desc -> RPredicateOf desc) reason in
             (OpenPredT { reason = pred_reason; base_t = t; m_pos = p_map; m_neg = n_map }, Some ast)
           else
-            let (((_, t), _) as ast) = expression cx ~hint expr in
+            let (((_, t), _) as ast) = expression cx expr in
             (t, Some ast)
       in
       Abnormal.throw_stmt_control_flow_exception
         (loc, Return { Return.argument = argument_ast; comments; return_out = (return_out, t) })
         Abnormal.Return
     | (loc, Throw { Throw.argument; comments }) ->
-      let argument_ast = expression cx ~hint:Hint_None argument in
+      let argument_ast = expression cx argument in
       Abnormal.throw_stmt_control_flow_exception
         (loc, Throw { Throw.argument = argument_ast; comments })
         Abnormal.Throw
@@ -851,7 +844,7 @@ module Make
     (***************************************************************************)
     | (loc, While { While.test; body; comments }) ->
       (* generate loop test preds and their complements *)
-      let test_ast = condition ~hint:Hint_None ~cond:OtherTest cx test in
+      let test_ast = condition ~cond:OtherTest cx test in
       (* traverse loop body - after this, body_env = Post' *)
       let (body_ast, _) =
         Abnormal.catch_stmt_control_flow_exception (fun () -> statement cx body)
@@ -872,7 +865,7 @@ module Make
         Abnormal.catch_stmt_control_flow_exception (fun () -> statement cx body)
         |> Abnormal.ignore_break_or_continue_to_label None
       in
-      let test_ast = condition ~hint:Hint_None ~cond:OtherTest cx test in
+      let test_ast = condition ~cond:OtherTest cx test in
       let ast = (loc, DoWhile { DoWhile.body = body_ast; test = test_ast; comments }) in
       Abnormal.check_stmt_control_flow_exception (ast, body_abnormal)
     (***************************************************************************)
@@ -894,21 +887,20 @@ module Make
         | None -> None
         | Some (For.InitDeclaration (decl_loc, decl)) ->
           Some (For.InitDeclaration (decl_loc, variables cx decl))
-        | Some (For.InitExpression expr) ->
-          Some (For.InitExpression (expression cx ~hint:Hint_None expr))
+        | Some (For.InitExpression expr) -> Some (For.InitExpression (expression cx expr))
       in
 
       let test_ast =
         match test with
         | None -> None
         | Some expr ->
-          let expr_ast = condition ~hint:Hint_None ~cond:OtherTest cx expr in
+          let expr_ast = condition ~cond:OtherTest cx expr in
           Some expr_ast
       in
       let (body_ast, _) =
         Abnormal.catch_stmt_control_flow_exception (fun () -> statement cx body)
       in
-      let update_ast = Base.Option.map ~f:(expression cx ~hint:Hint_None) update in
+      let update_ast = Base.Option.map ~f:(expression cx) update in
       ( loc,
         For { For.init = init_ast; test = test_ast; update = update_ast; body = body_ast; comments }
       )
@@ -926,7 +918,7 @@ module Make
     | (loc, ForIn { ForIn.left; right; body; each; comments }) ->
       let reason = mk_reason (RCustom "for-in") loc in
       let eval_right () =
-        let (((_, _), _) as right_ast) = condition ~hint:Hint_None ~cond:OtherTest cx right in
+        let (((_, _), _) as right_ast) = condition ~cond:OtherTest cx right in
         right_ast
       in
       let (left_ast, right_ast) =
@@ -1041,7 +1033,7 @@ module Make
       in
       let reason = mk_reason reason_desc loc in
       let eval_right () =
-        let (((_, t), _) as right_ast) = condition ~hint:Hint_None ~cond:OtherTest cx right in
+        let (((_, t), _) as right_ast) = condition ~cond:OtherTest cx right in
         let elem_t = for_of_elemt cx t reason await in
 
         (* null/undefined are NOT allowed *)
@@ -1371,7 +1363,7 @@ module Make
           in
           (export_loc, t, D.Declaration stmt)
         | D.Expression expr ->
-          let (((loc, t), _) as expr) = expression cx ~hint:Hint_None expr in
+          let (((loc, t), _) as expr) = expression cx expr in
           (loc, t, D.Expression expr)
       in
       Import_export.export cx (OrdinaryName "default") export_loc t;
@@ -1854,7 +1846,7 @@ module Make
 
       (module_t, ast)
 
-  and object_prop cx ~object_hint acc prop =
+  and object_prop cx acc prop =
     let open Ast.Expression.Object in
     match prop with
     (* named prop *)
@@ -1871,16 +1863,15 @@ module Make
             }
         ) ->
       let (acc, key, value) =
-        let hint = decompose_hint (Decomp_ObjProp name) object_hint in
         if Type_inference_hooks_js.dispatch_obj_prop_decl_hook cx name loc then
           let t = Unsoundness.at InferenceHooks loc in
           let key = translate_identifier_or_literal_key t key in
           (* don't add `name` to `acc` because `name` is the autocomplete token *)
           let acc = ObjectExpressionAcc.set_obj_key_autocomplete acc in
-          let (((_, _t), _) as value) = expression cx ~hint v in
+          let (((_, _t), _) as value) = expression cx v in
           (acc, key, value)
         else
-          let (((_, t), _) as value) = expression cx ~hint v in
+          let (((_, t), _) as value) = expression cx v in
           let key = translate_identifier_or_literal_key t key in
           let acc =
             ObjectExpressionAcc.add_prop
@@ -1904,9 +1895,8 @@ module Make
         ) ->
       let reason = func_reason ~async:false ~generator:false prop_loc in
       let tvar = Tvar.mk cx reason in
-      let hint = decompose_hint (Decomp_ObjProp name) object_hint in
       let (t, func) =
-        mk_function_expression cx ~hint ~general:tvar ~needs_this_param:false reason fn_loc func
+        mk_function_expression cx ~general:tvar ~needs_this_param:false reason fn_loc func
       in
       Flow.flow_t cx (t, tvar);
       ( ObjectExpressionAcc.add_prop (Properties.add_method (OrdinaryName name) (Some loc) t) acc,
@@ -1935,9 +1925,8 @@ module Make
       Flow_js.add_output cx (Error_message.EUnsafeGettersSetters loc);
       let reason = func_reason ~async:false ~generator:false vloc in
       let tvar = Tvar.mk cx reason in
-      let hint = decompose_hint (Decomp_ObjProp name) object_hint in
       let (function_type, func) =
-        mk_function_expression cx ~hint ~general:tvar ~needs_this_param:false reason vloc func
+        mk_function_expression cx ~general:tvar ~needs_this_param:false reason vloc func
       in
       Flow.flow_t cx (function_type, tvar);
       let return_t = Type.extract_getter_type function_type in
@@ -1970,9 +1959,8 @@ module Make
       Flow_js.add_output cx (Error_message.EUnsafeGettersSetters loc);
       let reason = func_reason ~async:false ~generator:false vloc in
       let tvar = Tvar.mk cx reason in
-      let hint = decompose_hint (Decomp_ObjProp name) object_hint in
       let (function_type, func) =
-        mk_function_expression cx ~hint ~general:tvar ~needs_this_param:false reason vloc func
+        mk_function_expression cx ~general:tvar ~needs_this_param:false reason vloc func
       in
       Flow.flow_t cx (function_type, tvar);
       let param_t = Type.extract_setter_type function_type in
@@ -2018,14 +2006,14 @@ module Make
     let (acc, rev_prop_asts) =
       List.fold_left
         (fun (map, rev_prop_asts) prop ->
-          let (map, prop) = object_prop cx ~object_hint:Hint_None map prop in
+          let (map, prop) = object_prop cx map prop in
           (map, prop :: rev_prop_asts))
         (ObjectExpressionAcc.empty ~allow_sealed:true, [])
         props
     in
     (acc.ObjectExpressionAcc.obj_pmap, List.rev rev_prop_asts)
 
-  and object_ cx ~hint reason ~frozen ?(allow_sealed = true) props =
+  and object_ cx reason ~frozen ?(allow_sealed = true) props =
     let open Ast.Expression.Object in
     (* Use the same reason for proto and the ObjT so we can walk the proto chain
        and use the root proto reason to build an error. *)
@@ -2056,9 +2044,7 @@ module Make
              of union type.
           *)
           | SpreadProperty (prop_loc, { SpreadProperty.argument; comments }) ->
-            let (((_, spread), _) as argument) =
-              expression cx ~hint:(decompose_hint Decomp_ObjSpread hint) argument
-            in
+            let (((_, spread), _) as argument) = expression cx argument in
             let not_empty_object_literal_argument =
               match spread with
               | DefT (_, _, ObjT { flags; _ }) -> Obj_type.sealed_in_op reason flags.obj_kind
@@ -2082,10 +2068,8 @@ module Make
                     shorthand;
                   }
               ) ->
-            let (((_, kt), _) as k) = expression cx ~hint:Hint_None k in
-            let (((_, vt), _) as v) =
-              expression cx ~hint:(decompose_hint Decomp_ObjComputed hint) v
-            in
+            let (((_, kt), _) as k) = expression cx k in
+            let (((_, vt), _) as v) = expression cx v in
             let computed = mk_computed kt vt in
             ( ObjectExpressionAcc.add_spread computed acc,
               Property
@@ -2107,13 +2091,8 @@ module Make
                     value = (fn_loc, fn);
                   }
               ) ->
-            let (((_, kt), _) as k) = expression cx ~hint:Hint_None k in
-            let ((_, vt), v) =
-              expression
-                cx
-                ~hint:(decompose_hint Decomp_ObjComputed hint)
-                (fn_loc, Ast.Expression.Function fn)
-            in
+            let (((_, kt), _) as k) = expression cx k in
+            let ((_, vt), v) = expression cx (fn_loc, Ast.Expression.Function fn) in
             let fn =
               match v with
               | Ast.Expression.Function fn -> fn
@@ -2144,7 +2123,7 @@ module Make
                   }
               ) ->
             let reason = mk_reason RPrototype (fst v) in
-            let (((_, vt), _) as v) = expression cx ~hint:Hint_None v in
+            let (((_, vt), _) as v) = expression cx v in
             let t =
               Tvar.mk_where cx reason (fun t -> Flow.flow cx (vt, ObjTestProtoT (reason, t)))
             in
@@ -2161,7 +2140,7 @@ module Make
               :: rev_prop_asts
             )
           | prop ->
-            let (acc, prop) = object_prop cx ~object_hint:hint acc prop in
+            let (acc, prop) = object_prop cx acc prop in
             (acc, prop :: rev_prop_asts))
         (ObjectExpressionAcc.empty ~allow_sealed, [])
         props
@@ -2210,13 +2189,7 @@ module Make
       match (id, init, if_uninitialized) with
       | ((_, Ast.Pattern.Identifier _), None, None) -> (None, None)
       | (_, Some expr, _) ->
-        let hint =
-          if has_anno then
-            Hint_t annot_t
-          else
-            Hint_None
-        in
-        let (((_, t), _) as init_ast) = expression cx ~hint expr in
+        let (((_, t), _) as init_ast) = expression cx expr in
         let r = mk_expression_reason expr in
         (Some (t, r), Some init_ast)
       | ((ploc, _), None, Some f) ->
@@ -2300,31 +2273,29 @@ module Make
     in
     (id_ast, init_ast)
 
-  and expression_or_spread cx ~hint =
+  and expression_or_spread cx =
     let open Ast.Expression in
     function
     | Expression e ->
-      let (((_, t), _) as e') = expression cx ~hint e in
+      let (((_, t), _) as e') = expression cx e in
       (Arg t, Expression e')
     | Spread (loc, { SpreadElement.argument; comments }) ->
-      let (((_, t), _) as e') = expression cx ~hint argument in
+      let (((_, t), _) as e') = expression cx argument in
       (SpreadArg t, Spread (loc, { SpreadElement.argument = e'; comments }))
 
-  and array_elements cx ~array_hint undef_loc =
+  and array_elements cx undef_loc =
     let open Ast.Expression.Array in
     Base.Fn.compose
       List.split
-      (Base.List.mapi ~f:(fun i e ->
+      (Base.List.map ~f:(fun e ->
            match e with
            | Expression e ->
-             let hint = decompose_hint (Decomp_ArrElement i) array_hint in
-             let (((_, t), _) as e) = expression cx ~hint e in
+             let (((_, t), _) as e) = expression cx e in
              (UnresolvedArg (t, None), Expression e)
            | Hole loc ->
              (UnresolvedArg (EmptyT.at undef_loc |> with_trust bogus_trust, None), Hole loc)
            | Spread (loc, { Ast.Expression.SpreadElement.argument; comments }) ->
-             let hint = decompose_hint (Decomp_ArrSpread i) array_hint in
-             let (((_, t), _) as argument) = expression cx ~hint argument in
+             let (((_, t), _) as argument) = expression cx argument in
              ( UnresolvedSpreadArg t,
                Spread (loc, { Ast.Expression.SpreadElement.argument; comments })
              )
@@ -2334,7 +2305,7 @@ module Make
   (* can raise Abnormal.(Exn (Stmt _, _))
    * annot should become a Type.t option when we have the ability to
    * inspect annotations and recurse into them *)
-  and expression ?cond cx ~hint (loc, e) =
+  and expression ?cond cx (loc, e) =
     let node_cache = Context.node_cache cx in
     match Node_cache.get_expression node_cache loc with
     | Some node ->
@@ -2342,7 +2313,7 @@ module Make
         cx
         (lazy [spf "Expression cache hit at %s" (ALoc.debug_to_string loc)]);
       node
-    | None -> expression_ ~cond ~hint cx loc e
+    | None -> expression_ ~cond cx loc e
 
   and this_ cx loc this =
     let open Ast.Expression in
@@ -2352,7 +2323,7 @@ module Make
 
   and super_ cx loc = Env.var_ref cx (internal_name "super") loc
 
-  and expression_ ~cond ~hint cx loc e : (ALoc.t, ALoc.t * Type.t) Ast.Expression.t =
+  and expression_ ~cond cx loc e : (ALoc.t, ALoc.t * Type.t) Ast.Expression.t =
     let make_trust = Context.trust_constructor cx in
     let ex = (loc, e) in
     let open Ast.Expression in
@@ -2373,7 +2344,7 @@ module Make
       ((loc, t), This this)
     | Super s -> ((loc, identifier cx (mk_ident ~comments:None "super") loc), Super s)
     | Unary u ->
-      let (t, u) = unary cx ~hint ~cond loc u in
+      let (t, u) = unary cx ~cond loc u in
       ((loc, t), Unary u)
     | Update u ->
       let (t, u) = update cx loc u in
@@ -2382,34 +2353,28 @@ module Make
       let (t, b) = binary cx loc ~cond b in
       ((loc, t), Binary b)
     | Logical l ->
-      let (t, l) = logical cx loc ~hint ~cond l in
+      let (t, l) = logical cx loc ~cond l in
       ((loc, t), Logical l)
     | TypeCast { TypeCast.expression = e; annot; comments } ->
       let (t, annot') = Anno.mk_type_available_annotation cx Subst_name.Map.empty annot in
-      let (((_, infer_t), _) as e') = expression cx ~hint:(Hint_t t) e in
+      let (((_, infer_t), _) as e') = expression cx e in
       let use_op = Op (Cast { lower = mk_expression_reason e; upper = reason_of_t t }) in
       Flow.flow cx (infer_t, TypeCastT (use_op, t));
       ((loc, t), TypeCast { TypeCast.expression = e'; annot = annot'; comments })
-    | Member _ -> subscript ~hint:Hint_None ~cond cx ex
-    | OptionalMember _ -> subscript ~hint:Hint_None ~cond cx ex
+    | Member _ -> subscript ~cond cx ex
+    | OptionalMember _ -> subscript ~cond cx ex
     | Object { Object.properties; comments } ->
       error_on_this_uses_in_object_methods cx properties;
       let reason = mk_reason RObjectLit loc in
-      let (t, properties) = object_ ~hint ~frozen:false cx reason properties in
+      let (t, properties) = object_ ~frozen:false cx reason properties in
       ((loc, t), Object { Object.properties; comments })
     | Array { Array.elements; comments } ->
       let reason = mk_reason RArrayLit loc in
       (match elements with
       | [] ->
         (* empty array, analogous to object with implicit properties *)
-        ( if Context.array_literal_providers cx then
-          match hint with
-          | Hint_t _
-          | Hint_Decomp _
-          | Hint_Placeholder ->
-            ()
-          | Hint_None -> Flow_js.add_output cx Error_message.(EEmptyArrayNoProvider { loc })
-        );
+        if Context.array_literal_providers cx && not (Env.has_hint cx loc) then
+          Flow_js.add_output cx Error_message.(EEmptyArrayNoProvider { loc });
         let element_reason = mk_reason Reason.unknown_elem_empty_array_desc loc in
         let elemt = Tvar.mk cx element_reason in
         let reason = replace_desc_reason REmptyArrayLit reason in
@@ -2417,7 +2382,7 @@ module Make
           Array { Array.elements = []; comments }
         )
       | elems ->
-        let (elem_spread_list, elements) = array_elements cx ~array_hint:hint loc elems in
+        let (elem_spread_list, elements) = array_elements cx loc elems in
         ( ( loc,
             Tvar.mk_where cx reason (fun tout ->
                 let reason_op = reason in
@@ -2454,7 +2419,7 @@ module Make
       let (argts, arges) =
         match arguments with
         | Some arguments ->
-          let (argts, arges) = arg_list cx ~hint:Hint_None arguments in
+          let (argts, arges) = arg_list cx arguments in
           (argts, Some arges)
         | None -> ([], None)
       in
@@ -2533,7 +2498,7 @@ module Make
       let (argts, args) =
         match arguments with
         | Some arguments ->
-          let (argts, args) = arg_list cx ~hint:Hint_None arguments in
+          let (argts, args) = arg_list cx arguments in
           (argts, Some args)
         | None -> ([], None)
       in
@@ -2585,14 +2550,12 @@ module Make
         Flow.add_output cx err;
         Tast_utils.error_mapper#expression ex)
     | New { New.callee; targs; arguments; comments } ->
-      let (((_, class_), _) as callee_ast) = expression cx ~hint:Hint_None callee in
+      let (((_, class_), _) as callee_ast) = expression cx callee in
       let (targts, targs_ast) = convert_call_targs_opt cx targs in
       let (argts, args_reasons, arguments_ast) =
         match arguments with
         | Some arguments ->
-          let (argst, arguments_ast) =
-            arg_list cx ~hint:(decompose_hint Decomp_CallNew (Hint_t class_)) arguments
-          in
+          let (argst, arguments_ast) = arg_list cx arguments in
           let args_reasons = mk_initial_arguments_reason arguments in
           (argst, args_reasons, Some arguments_ast)
         | None -> ([], [], None)
@@ -2609,22 +2572,19 @@ module Make
              }
           )
       in
-      ( (loc, new_call ~hint cx reason ~use_op class_ targts argts),
+      ( (loc, new_call cx loc reason ~use_op class_ targts argts),
         New { New.callee = callee_ast; targs = targs_ast; arguments = arguments_ast; comments }
       )
-    | Call _ -> subscript ~hint ~cond cx ex
-    | OptionalCall _ -> subscript ~hint ~cond cx ex
+    | Call _ -> subscript ~cond cx ex
+    | OptionalCall _ -> subscript ~cond cx ex
     | Conditional { Conditional.test; consequent; alternate; comments } ->
       let reason = mk_reason RConditional loc in
-      let test = condition ~hint:Hint_None ~cond:OtherTest cx test in
+      let test = condition ~cond:OtherTest cx test in
       let ((((_, t1), _) as consequent), then_abnormal) =
-        Abnormal.catch_expr_control_flow_exception (fun () -> expression cx ~hint consequent)
+        Abnormal.catch_expr_control_flow_exception (fun () -> expression cx consequent)
       in
       let ((((_, t2), _) as alternate), else_abnormal) =
-        Abnormal.catch_expr_control_flow_exception (fun () ->
-            let hint = Hint_api.merge_hints hint (Hint_t t1) in
-            expression cx ~hint alternate
-        )
+        Abnormal.catch_expr_control_flow_exception (fun () -> expression cx alternate)
       in
       let combined_type =
         match (then_abnormal, else_abnormal) with
@@ -2676,7 +2636,7 @@ module Make
       let (t, left, right) = assignment cx loc (left, operator, right) in
       ((loc, t), Assignment { Assignment.operator; left; right; comments })
     | Sequence { Sequence.expressions; comments } ->
-      let expressions = Base.List.map ~f:(expression cx ~hint:Hint_None) expressions in
+      let expressions = Base.List.map ~f:(expression cx) expressions in
       (* t = last element of ts. The parser guarantees sequence expressions are nonempty. *)
       let t = List.(expressions |> map snd_fst |> rev |> hd) in
       ((loc, t), Sequence { Sequence.expressions; comments })
@@ -2692,14 +2652,13 @@ module Make
       let tvar = Tvar.mk cx reason in
       let (t, func) =
         match id with
-        | None ->
-          mk_function_expression cx ~hint reason ~needs_this_param:true ~general:tvar loc func
+        | None -> mk_function_expression cx reason ~needs_this_param:true ~general:tvar loc func
         | Some (name_loc, { Ast.Identifier.name; comments = _ }) ->
           let prev_scope_kind = Env.set_scope_kind cx Name_def.Ordinary in
           let name = OrdinaryName name in
           Env.bind_fun cx name tvar name_loc;
           let (t, func) =
-            mk_function_expression cx ~hint reason ~needs_this_param:true ~general:tvar loc func
+            mk_function_expression cx reason ~needs_this_param:true ~general:tvar loc func
           in
           ignore @@ Env.set_scope_kind cx prev_scope_kind;
           (t, func)
@@ -2708,7 +2667,7 @@ module Make
       ((loc, t), Function func)
     | ArrowFunction func ->
       let reason = Ast.Function.(func_reason ~async:func.async ~generator:func.generator loc) in
-      let (t, f) = mk_arrow cx ~func_hint:hint ~statics:SMap.empty reason func in
+      let (t, f) = mk_arrow cx ~statics:SMap.empty reason func in
       ((loc, t), ArrowFunction f)
     (*
      * GraphQL literals, e.g.:
@@ -2730,10 +2689,10 @@ module Make
           let reason = mk_reason (RCustom "graphql tag") loc in
           AnyT.error reason
       in
-      let tag_ast = expression cx ~hint:Hint_None tag in
+      let tag_ast = expression cx tag in
       let quasi_ast =
         let (quasi_loc, { TemplateLiteral.quasis; expressions; comments }) = quasi in
-        let expressions = Base.List.map ~f:(expression cx ~hint:Hint_None) expressions in
+        let expressions = Base.List.map ~f:(expression cx) expressions in
         (quasi_loc, { TemplateLiteral.quasis; expressions; comments })
       in
       ((loc, t), TaggedTemplate { TaggedTemplate.tag = tag_ast; quasi = quasi_ast; comments })
@@ -2744,8 +2703,8 @@ module Make
           quasi = (quasi_loc, { TemplateLiteral.quasis; expressions; comments = quasi_comments });
           comments = tagged_template_comments;
         } ->
-      let expressions = Base.List.map ~f:(expression cx ~hint:Hint_None) expressions in
-      let (((_, t), _) as tag_ast) = expression cx ~hint:Hint_None tag in
+      let expressions = Base.List.map ~f:(expression cx) expressions in
+      let (((_, t), _) as tag_ast) = expression cx tag in
       let reason = mk_reason (RCustom "encaps tag") loc in
       let reason_array = replace_desc_reason RArray reason in
       let ret = (reason, Tvar.mk_no_wrap cx reason) in
@@ -2774,7 +2733,7 @@ module Make
                }
             )
         in
-        CallT { use_op; reason; funcalltype = ft; has_context = hint <> Hint_None }
+        CallT { use_op; reason; funcalltype = ft; has_context = Env.has_hint cx loc }
       in
       Flow.flow cx (t, call_t);
 
@@ -2802,7 +2761,7 @@ module Make
           let expressions =
             Base.List.map
               ~f:(fun expr ->
-                let (((_, t), _) as e) = expression cx ~hint:Hint_None expr in
+                let (((_, t), _) as e) = expression cx expr in
                 Flow.flow
                   cx
                   ( t,
@@ -2819,10 +2778,10 @@ module Make
       in
       ((loc, t), TemplateLiteral { TemplateLiteral.quasis; expressions; comments })
     | JSXElement e ->
-      let (t, e) = jsx ~hint cx loc e in
+      let (t, e) = jsx cx loc e in
       ((loc, t), JSXElement e)
     | JSXFragment f ->
-      let (t, f) = jsx_fragment ~hint cx loc f in
+      let (t, f) = jsx_fragment cx loc f in
       ((loc, t), JSXFragment f)
     | Class c ->
       let class_loc = loc in
@@ -2860,7 +2819,7 @@ module Make
       let (t, argument_ast) =
         match argument with
         | Some expr ->
-          let (((_, t), _) as expr) = expression cx ~hint:Hint_None expr in
+          let (((_, t), _) as expr) = expression cx expr in
           (t, Some expr)
         | None -> (VoidT.at loc |> with_trust bogus_trust, None)
       in
@@ -2879,7 +2838,7 @@ module Make
       let (t, argument_ast) =
         match argument with
         | Some expr ->
-          let (((_, t), _) as expr) = expression cx ~hint:Hint_None expr in
+          let (((_, t), _) as expr) = expression cx expr in
           (t, Some expr)
         | None -> assert_false "delegate yield without argument"
       in
@@ -3013,7 +2972,7 @@ module Make
          short-circuiting and non short-circuiting (i.e. representing the actual
          range of possible types of the expression)
   *)
-  and optional_chain ~hint ~cond cx ((loc, e) as ex) =
+  and optional_chain ~cond cx ((loc, e) as ex) =
     let open Ast.Expression in
     let factor_out_optional (_, e) =
       let (opt_state, filtered_out_loc, e') =
@@ -3095,12 +3054,7 @@ module Make
               )
             ) ->
             ( Import_export.require cx (source_loc, module_name) loc,
-              ( args_loc,
-                {
-                  ArgList.arguments = [Expression (expression cx ~hint:Hint_None lit_exp)];
-                  comments;
-                }
-              )
+              (args_loc, { ArgList.arguments = [Expression (expression cx lit_exp)]; comments })
             )
           | ( None,
               ( args_loc,
@@ -3132,15 +3086,10 @@ module Make
               )
             ) ->
             ( Import_export.require cx (source_loc, module_name) loc,
-              ( args_loc,
-                {
-                  ArgList.arguments = [Expression (expression cx ~hint:Hint_None lit_exp)];
-                  comments;
-                }
-              )
+              (args_loc, { ArgList.arguments = [Expression (expression cx lit_exp)]; comments })
             )
           | (Some _, arguments) ->
-            ignore (arg_list cx ~hint:Hint_None arguments);
+            ignore (arg_list cx arguments);
             Flow.add_output
               cx
               Error_message.(
@@ -3154,7 +3103,7 @@ module Make
               );
             (AnyT.at (AnyError None) loc, Tast_utils.error_mapper#arg_list arguments)
           | (None, arguments) ->
-            ignore (arg_list cx ~hint:Hint_None arguments);
+            ignore (arg_list cx arguments);
             let ignore_non_literals = Context.should_ignore_non_literal_requires cx in
             if not ignore_non_literals then
               Flow.add_output cx Error_message.(EUnsupportedSyntax (loc, RequireDynamicArgument));
@@ -3190,9 +3139,9 @@ module Make
             arguments;
             comments;
           } ->
-        let (((_, obj_t), _) as obj_ast) = expression cx ~hint:Hint_None obj in
+        let (((_, obj_t), _) as obj_ast) = expression cx obj in
         let (lhs_t, targs, arguments) =
-          static_method_call_Object cx loc ~hint callee_loc prop_loc expr obj_t name targs arguments
+          static_method_call_Object cx loc callee_loc prop_loc expr obj_t name targs arguments
         in
         Some
           ( (loc, lhs_t),
@@ -3236,8 +3185,7 @@ module Make
         let super_t = super_ cx super_loc in
         let meth_generic_this = Tvar.mk cx reason in
         let (targts, targs) = convert_call_targs_opt cx targs in
-        let hint = decompose_hint (Decomp_MethodName name) (Hint_t super_t) in
-        let (argts, arguments_ast) = arg_list cx ~hint arguments in
+        let (argts, arguments_ast) = arg_list cx arguments in
         Type_inference_hooks_js.dispatch_call_hook cx name ploc super_t;
         let prop_t = Tvar.mk cx reason_prop in
         let lhs_t =
@@ -3263,7 +3211,7 @@ module Make
                       reason,
                       reason_lookup,
                       Named (reason_prop, OrdinaryName name),
-                      CallM { methodcalltype; has_context = hint <> Hint_None },
+                      CallM { methodcalltype; has_context = Env.has_hint cx loc },
                       prop_t
                     )
                 )
@@ -3292,10 +3240,7 @@ module Make
         let (targts, targs) = convert_call_targs_opt cx targs in
         let reason = mk_reason (RFunctionCall RSuper) loc in
         let super_t = super_ cx super_loc in
-        let (argts, arguments_ast) =
-          let hint = decompose_hint Decomp_CallSuper (Hint_t super_t) in
-          arg_list cx ~hint arguments
-        in
+        let (argts, arguments_ast) = arg_list cx arguments in
 
         let super_reason = reason_of_t super_t in
         let prop_t = Tvar.mk cx (reason_of_t super_t) in
@@ -3344,7 +3289,7 @@ module Make
       | Call { Call.callee; targs; arguments; comments }
         when Flow_ast_utils.is_call_to_invariant callee ->
         (* TODO: require *)
-        let (((_, callee_t), _) as callee) = expression cx ~hint:Hint_None callee in
+        let (((_, callee_t), _) as callee) = expression cx callee in
         let targs =
           Base.Option.map targs ~f:(fun (loc, args) ->
               (loc, snd (convert_call_targs cx Subst_name.Map.empty args))
@@ -3389,11 +3334,9 @@ module Make
             ) ->
             (* invariant(false, ...) is treated like a throw *)
             let arguments =
-              Base.List.map
-                ~f:(Base.Fn.compose snd (expression_or_spread cx ~hint:Hint_None))
-                arguments
+              Base.List.map ~f:(Base.Fn.compose snd (expression_or_spread cx)) arguments
             in
-            let lit_exp = expression cx ~hint:Hint_None lit_exp in
+            let lit_exp = expression cx lit_exp in
             Abnormal.throw_expr_control_flow_exception
               loc
               ( (loc, VoidT.at loc |> with_trust bogus_trust),
@@ -3418,22 +3361,20 @@ module Make
               )
             ) ->
             let arguments =
-              Base.List.map
-                ~f:(Base.Fn.compose snd (expression_or_spread cx ~hint:Hint_None))
-                arguments
+              Base.List.map ~f:(Base.Fn.compose snd (expression_or_spread cx)) arguments
             in
-            let (((_, cond_t), _) as cond) = condition ~hint:Hint_None ~cond:OtherTest cx cond in
+            let (((_, cond_t), _) as cond) = condition ~cond:OtherTest cx cond in
             let reason = mk_reason (RFunctionCall (desc_of_t callee_t)) loc in
             Flow.flow cx (cond_t, InvariantT reason);
             ( args_loc,
               { ArgList.arguments = Expression cond :: arguments; comments = args_comments }
             )
           | (_, (_, { ArgList.arguments = Spread _ :: _; comments = _ })) ->
-            ignore (arg_list cx ~hint:Hint_None arguments);
+            ignore (arg_list cx arguments);
             Flow.add_output cx Error_message.(EUnsupportedSyntax (loc, InvariantSpreadArgument));
             Tast_utils.error_mapper#arg_list arguments
           | (Some _, arguments) ->
-            ignore (arg_list cx ~hint:Hint_None arguments);
+            ignore (arg_list cx arguments);
             Flow.add_output
               cx
               Error_message.(
@@ -3549,9 +3490,7 @@ module Make
     in
     let noop _ = None in
     let handle_new_chain conf lhs_reason loc (chain_t, voided_t, object_ast) ~this_reason =
-      let { ChainingConf.get_hint; subexpressions; get_reason; test_hooks; get_opt_use; _ } =
-        conf
-      in
+      let { ChainingConf.subexpressions; get_reason; test_hooks; get_opt_use; _ } = conf in
       (* We've encountered an optional chaining operator.
          We need to flow the "success" type of object_ into a OptionalChainT
          type, which will "filter out" VoidT and NullT from the type of
@@ -3583,8 +3522,7 @@ module Make
          is flowed into it, and it is used as the `this`-parameter of the
          calltype that the method call will flow into.
       *)
-      let hint = get_hint chain_t in
-      let (subexpression_types, subexpression_asts) = subexpressions ~hint in
+      let (subexpression_types, subexpression_asts) = subexpressions () in
       let reason = get_reason chain_t in
       let chain_reason = mk_reason ROptionalChain loc in
       let mem_tvar =
@@ -3623,7 +3561,6 @@ module Make
       let {
         ChainingConf.refine;
         refinement_action;
-        get_hint;
         subexpressions;
         get_result;
         test_hooks;
@@ -3639,8 +3576,7 @@ module Make
          voided_t parameter. We'll flow that type into the type of the overall
          expression to account for that possibility.
       *)
-      let hint = get_hint chain_t in
-      let (subexpression_types, subexpression_asts) = subexpressions ~hint in
+      let (subexpression_types, subexpression_asts) = subexpressions () in
       let reason = get_reason chain_t in
       let res_t =
         match (test_hooks chain_t, refine ()) with
@@ -3659,7 +3595,6 @@ module Make
       let {
         ChainingConf.refinement_action;
         refine;
-        get_hint;
         subexpressions;
         get_result;
         test_hooks;
@@ -3673,9 +3608,8 @@ module Make
         (* Proceeding as normal: no need to worry about optionality, so T2 from
            above is None. We don't need to consider optional short-circuiting, so
            we can call expression_ rather than optional_chain. *)
-        let (((_, obj_t), _) as object_ast) = expression cx ~hint:Hint_None object_ in
-        let hint = get_hint obj_t in
-        let (subexpression_types, subexpression_asts) = subexpressions ~hint in
+        let (((_, obj_t), _) as object_ast) = expression cx object_ in
+        let (subexpression_types, subexpression_asts) = subexpressions () in
         let reason = get_reason obj_t in
         let lhs_t =
           match (test_hooks obj_t, refine ()) with
@@ -3691,14 +3625,13 @@ module Make
       | NewChain ->
         let lhs_reason = mk_expression_reason object_ in
         let ((filtered_t, voided_t, object_ast) as object_data) =
-          optional_chain ~hint:Hint_None ~cond:None cx object_
+          optional_chain ~cond:None cx object_
         in
         begin
           match refine () with
           | Some t ->
             Context.mark_optional_chain cx loc lhs_reason ~useful:false;
-            let hint = get_hint filtered_t in
-            let (subexpression_types, subexpression_asts) = subexpressions ~hint in
+            let (subexpression_types, subexpression_asts) = subexpressions () in
             let tout =
               Base.Option.value_map
                 ~f:(fun refinement_action -> refinement_action subexpression_types filtered_t t)
@@ -3714,8 +3647,7 @@ module Make
             )
           | _ -> handle_new_chain conf lhs_reason loc object_data ~this_reason
         end
-      | ContinueChain ->
-        handle_continue_chain conf (optional_chain ~hint:Hint_None ~cond:None cx object_)
+      | ContinueChain -> handle_continue_chain conf (optional_chain ~cond:None cx object_)
     in
     match try_non_chain cx loc e' ~call_ast ~member_ast with
     | Some (((_, lhs_t), _) as res) ->
@@ -3810,15 +3742,14 @@ module Make
               Flow.flow cx (obj_t, use)
           )
         in
-        let eval_index ~hint:_ =
-          let (((_, tind), _) as index) = expression cx ~hint:Hint_None index in
+        let eval_index () =
+          let (((_, tind), _) as index) = expression cx index in
           (tind, index)
         in
         let conf =
           {
             ChainingConf.refinement_action = None;
             refine = (fun () -> Refinement.get ~allow_optional:true cx (loc, e) loc);
-            get_hint = (fun _ -> Hint_None);
             subexpressions = eval_index;
             get_result = get_mem_t;
             test_hooks = noop;
@@ -3866,8 +3797,7 @@ module Make
         let conf =
           {
             ChainingConf.refinement_action = None;
-            get_hint = (fun _ -> Hint_None);
-            subexpressions = (fun ~hint:_ -> ((), ()));
+            subexpressions = (fun () -> ((), ()));
             get_result = get_mem_t;
             refine = (fun () -> Refinement.get ~allow_optional:true cx (loc, e) loc);
             test_hooks;
@@ -3912,8 +3842,7 @@ module Make
         let conf =
           {
             ChainingConf.refinement_action = None;
-            get_hint = (fun _ -> Hint_None);
-            subexpressions = (fun ~hint:_ -> ((), ()));
+            subexpressions = (fun () -> ((), ()));
             get_result = get_mem_t;
             refine = (fun () -> Refinement.get ~allow_optional:true cx (loc, e) loc);
             test_hooks;
@@ -4035,12 +3964,10 @@ module Make
                   Flow.flow cx (obj_t, use)
               )
             in
-            let get_hint obj_t = decompose_hint (Decomp_MethodName name) (Hint_t obj_t) in
-            let eval_args ~hint = arg_list cx ~hint arguments in
+            let eval_args () = arg_list cx arguments in
             let conf =
               {
-                ChainingConf.get_hint;
-                subexpressions = eval_args;
+                ChainingConf.subexpressions = eval_args;
                 get_result = get_mem_t;
                 test_hooks;
                 get_opt_use;
@@ -4103,17 +4030,15 @@ module Make
                   Flow.flow_t cx (obj_t, prop_t)
               )
             in
-            let get_hint obj_t = decompose_hint Decomp_MethodElem (Hint_t obj_t) in
-            let eval_args_and_expr ~hint =
-              let (((_, elem_t), _) as expr) = expression cx ~hint:Hint_None expr in
-              let (argts, arguments_ast) = arg_list cx ~hint arguments in
+            let eval_args_and_expr () =
+              let (((_, elem_t), _) as expr) = expression cx expr in
+              let (argts, arguments_ast) = arg_list cx arguments in
               ((argts, elem_t), (arguments_ast, expr))
             in
             let this_reason = mk_expression_reason callee in
             let conf =
               {
                 ChainingConf.refinement_action = None;
-                get_hint;
                 subexpressions = eval_args_and_expr;
                 get_result = get_mem_t;
                 test_hooks = noop;
@@ -4189,15 +4114,10 @@ module Make
               Flow.flow cx (f, use)
           )
         in
-        let get_hint callee_t =
-          (* TODO Handle case of callee_t being an intersection *)
-          Hint_t callee_t
-        in
-        let eval_args ~hint = arg_list cx ~hint arguments in
+        let eval_args () = arg_list cx arguments in
         let conf =
           {
             ChainingConf.refinement_action = None;
-            get_hint;
             subexpressions = eval_args;
             refine = noop;
             get_result;
@@ -4214,21 +4134,15 @@ module Make
         in
         (filtered_out, voided_out, ((loc, lhs_t), exp object_ast))
       | _ ->
-        let (((_, t), _) as res) = expression ?cond ~hint:Hint_None cx ex in
+        let (((_, t), _) as res) = expression ?cond cx ex in
         (t, None, res))
 
-  and arg_list cx ~hint (args_loc, { Ast.Expression.ArgList.arguments; comments }) =
-    let (argts, arg_asts) =
-      arguments
-      |> Base.List.mapi ~f:(fun i e ->
-             expression_or_spread ~hint:(decompose_hint (Decomp_FuncParam i) hint) cx e
-         )
-      |> List.split
-    in
+  and arg_list cx (args_loc, { Ast.Expression.ArgList.arguments; comments }) =
+    let (argts, arg_asts) = arguments |> Base.List.map ~f:(expression_or_spread cx) |> List.split in
     (argts, (args_loc, { Ast.Expression.ArgList.arguments = arg_asts; comments }))
 
-  and subscript ~hint ~cond cx ex =
-    let (_, _, ast) = optional_chain ~hint ~cond cx ex in
+  and subscript ~cond cx ex =
+    let (_, _, ast) = optional_chain ~cond cx ex in
     ast
 
   (* We assume that constructor functions return void
@@ -4237,12 +4151,12 @@ module Make
      If construction functions return non-void values (e.g., functions),
      then those values are returned by constructions.
   *)
-  and new_call ~hint cx reason ~use_op class_ targs args =
+  and new_call cx loc reason ~use_op class_ targs args =
     Tvar.mk_where cx reason (fun tout ->
         Flow.flow
           cx
           ( class_,
-            ConstructorT { use_op; reason; targs; args; tout; has_context = hint <> Hint_None }
+            ConstructorT { use_op; reason; targs; args; tout; has_context = Env.has_hint cx loc }
           )
     )
 
@@ -4428,11 +4342,11 @@ module Make
       | RegExp _ -> Flow.get_builtin_type cx (mk_annot_reason RRegExp loc) (OrdinaryName "RegExp")
 
   (* traverse a unary expression, return result type *)
-  and unary cx ~hint ~cond loc =
+  and unary cx ~cond loc =
     let open Ast.Expression.Unary in
     function
     | { operator = Not; argument; comments } ->
-      let (((_, arg), _) as argument) = expression cx ~hint:Hint_None ?cond argument in
+      let (((_, arg), _) as argument) = expression cx ?cond argument in
       let reason = mk_reason (RUnaryOperator ("not", desc_of_t arg)) loc in
       let tout =
         match cond with
@@ -4441,10 +4355,10 @@ module Make
       in
       (tout, { operator = Not; argument; comments })
     | { operator = Plus; argument; comments } ->
-      let argument = expression cx ~hint:Hint_None argument in
+      let argument = expression cx argument in
       (NumT.at loc |> with_trust literal_trust, { operator = Plus; argument; comments })
     | { operator = Minus; argument; comments } ->
-      let (((_, argt), _) as argument) = expression cx ~hint:Hint_None argument in
+      let (((_, argt), _) as argument) = expression cx argument in
       ( begin
           match argt with
           | DefT (reason, trust, NumT (Literal (sense, (value, raw)))) ->
@@ -4464,14 +4378,14 @@ module Make
       )
     | { operator = BitNot; argument; comments } ->
       let t = NumT.at loc |> with_trust literal_trust in
-      let (((_, argt), _) as argument) = expression cx ~hint:Hint_None argument in
+      let (((_, argt), _) as argument) = expression cx argument in
       Flow.flow_t cx (argt, t);
       (t, { operator = BitNot; argument; comments })
     | { operator = Typeof; argument; comments } ->
-      let argument = expression cx ~hint:Hint_None argument in
+      let argument = expression cx argument in
       (StrT.at loc |> with_trust literal_trust, { operator = Typeof; argument; comments })
     | { operator = Void; argument; comments } ->
-      let argument = expression cx ~hint:Hint_None argument in
+      let argument = expression cx argument in
       (VoidT.at loc |> with_trust literal_trust, { operator = Void; argument; comments })
     | { operator = Ast.Expression.Unary.Delete; argument; comments } ->
       let argument = delete cx loc argument in
@@ -4490,9 +4404,7 @@ module Make
       *)
       let reason = mk_reason (RCustom "await") loc in
       let await = Flow.get_builtin cx (OrdinaryName "$await") reason in
-      let (((_, arg), _) as argument_ast) =
-        expression cx ~hint:(decompose_hint Decomp_Await hint) argument
-      in
+      let (((_, arg), _) as argument_ast) = expression cx argument in
       let use_op =
         Op
           (FunCall
@@ -4537,7 +4449,7 @@ module Make
       | (lhs_loc, Ast.Expression.Member mem) ->
         (* Updating involves both reading and writing. We need to model both of these, and ensuring
          * an arithmetic operand should use the read type, which is affected by refinements. *)
-        let ((_, arg_val_t), _) = expression cx ~hint:Hint_None argument in
+        let ((_, arg_val_t), _) = expression cx argument in
         Flow.flow cx (arg_val_t, AssertArithmeticOperandT reason);
         let make_op ~lhs ~prop = Op (UpdateProperty { lhs; prop }) in
         let lhs_prop_reason = mk_expression_reason argument in
@@ -4555,14 +4467,14 @@ module Make
         in
         { expr with argument = arg_update_ast }
       | _ ->
-        let (((_, arg_t), _) as arg_ast) = expression cx ~hint:Hint_None argument in
+        let (((_, arg_t), _) as arg_ast) = expression cx argument in
         Flow.flow cx (arg_t, AssertArithmeticOperandT reason);
         { expr with argument = arg_ast }
     )
 
   (* Returns a function that type check LHS or RHS of eq_test under correct conditional context. *)
   and visit_eq_test cx ~cond loc left right =
-    let check ~cond = expression cx ~hint:Hint_None ?cond in
+    let check ~cond = expression cx ?cond in
     match cond with
     | None -> check ~cond:None
     | Some c ->
@@ -4614,8 +4526,8 @@ module Make
     | In ->
       let (loc1, _) = left in
       let (loc2, _) = right in
-      let (((_, t1), _) as left) = expression cx ~hint:Hint_None left in
-      let (((_, t2), _) as right) = expression cx ~hint:Hint_None right in
+      let (((_, t1), _) as left) = expression cx left in
+      let (((_, t2), _) as right) = expression cx right in
       let reason_lhs = mk_reason (RCustom "LHS of `in` operator") loc1 in
       let reason_rhs = mk_reason (RCustom "RHS of `in` operator") loc2 in
       Flow.flow cx (t1, AssertBinaryInLHST reason_lhs);
@@ -4637,8 +4549,8 @@ module Make
       Flow.flow cx (t1, StrictEqT { reason; cond_context = cond; flip = false; arg = t2 });
       (BoolT.at loc |> with_trust literal_trust, { operator; left; right; comments })
     | Instanceof ->
-      let left = expression cx ~hint:Hint_None left in
-      let (((right_loc, right_t), _) as right) = expression cx ~hint:Hint_None right in
+      let left = expression cx left in
+      let (((right_loc, right_t), _) as right) = expression cx right in
       let reason_rhs = mk_reason (RCustom "RHS of `instanceof` operator") right_loc in
       Flow.flow cx (right_t, AssertInstanceofRHST reason_rhs);
       (BoolT.at loc |> with_trust literal_trust, { operator; left; right; comments })
@@ -4646,8 +4558,8 @@ module Make
     | LessThanEqual
     | GreaterThan
     | GreaterThanEqual ->
-      let (((_, t1), _) as left) = expression cx ~hint:Hint_None left in
-      let (((_, t2), _) as right) = expression cx ~hint:Hint_None right in
+      let (((_, t1), _) as left) = expression cx left in
+      let (((_, t2), _) as right) = expression cx right in
       let desc =
         RBinaryOperator
           ( Flow_ast_utils.string_of_binary_operator operator,
@@ -4670,14 +4582,14 @@ module Make
     | Xor
     | BitAnd ->
       let reason = mk_reason (RCustom "arithmetic operation") loc in
-      let (((_, t1), _) as left) = expression cx ~hint:Hint_None left in
-      let (((_, t2), _) as right) = expression cx ~hint:Hint_None right in
+      let (((_, t1), _) as left) = expression cx left in
+      let (((_, t2), _) as right) = expression cx right in
       Flow.flow cx (t1, AssertArithmeticOperandT reason);
       Flow.flow cx (t2, AssertArithmeticOperandT reason);
       (NumT.at loc |> with_trust literal_trust, { operator; left; right; comments })
     | Plus ->
-      let (((_, t1), _) as left_ast) = expression cx ~hint:Hint_None left in
-      let (((_, t2), _) as right_ast) = expression cx ~hint:Hint_None right in
+      let (((_, t1), _) as left_ast) = expression cx left in
+      let (((_, t2), _) as right_ast) = expression cx right in
       let desc =
         RBinaryOperator ("+", desc_of_reason (reason_of_t t1), desc_of_reason (reason_of_t t2))
       in
@@ -4698,7 +4610,7 @@ module Make
         { operator; left = left_ast; right = right_ast; comments }
       )
 
-  and logical cx loc ~cond ~hint { Ast.Expression.Logical.operator; left; right; comments } =
+  and logical cx loc ~cond { Ast.Expression.Logical.operator; left; right; comments } =
     let open Ast.Expression.Logical in
     (* With logical operators the LHS is always evaluated. So if the LHS throws, the whole
      * expression throws. To model this we do not catch abnormal exceptions on the LHS.
@@ -4715,11 +4627,9 @@ module Make
     match operator with
     | Or ->
       let () = check_default_pattern cx left right in
-      let (((_, t1), _) as left) = condition ~hint ~cond:OtherTest cx left in
+      let (((_, t1), _) as left) = condition ~cond:OtherTest cx left in
       let ((((_, t2), _) as right), right_abnormal) =
-        Abnormal.catch_expr_control_flow_exception (fun () ->
-            expression cx ~hint:(Hint_api.merge_hints hint (Hint_t t1)) ?cond right
-        )
+        Abnormal.catch_expr_control_flow_exception (fun () -> expression cx ?cond right)
       in
       let t2 =
         match right_abnormal with
@@ -4732,9 +4642,9 @@ module Make
         { operator = Or; left; right; comments }
       )
     | And ->
-      let (((_, t1), _) as left) = condition ~hint ~cond:OtherTest cx left in
+      let (((_, t1), _) as left) = condition ~cond:OtherTest cx left in
       let ((((_, t2), _) as right), right_abnormal) =
-        Abnormal.catch_expr_control_flow_exception (fun () -> expression cx ~hint ?cond right)
+        Abnormal.catch_expr_control_flow_exception (fun () -> expression cx ?cond right)
       in
       let t2 =
         match right_abnormal with
@@ -4747,11 +4657,9 @@ module Make
         { operator = And; left; right; comments }
       )
     | NullishCoalesce ->
-      let (((_, t1), _) as left) = expression cx ~hint left in
+      let (((_, t1), _) as left) = expression cx left in
       let ((((_, t2), _) as right), right_abnormal) =
-        Abnormal.catch_expr_control_flow_exception (fun () ->
-            expression cx ~hint:(Hint_api.merge_hints hint (Hint_t t1)) right
-        )
+        Abnormal.catch_expr_control_flow_exception (fun () -> expression cx right)
       in
       let t2 =
         match right_abnormal with
@@ -4785,7 +4693,7 @@ module Make
           }
       )
     | (loc, Ast.Pattern.Expression ((_, Ast.Expression.Member _) as m)) ->
-      let (((_, t), _) as m) = expression cx ~hint:Hint_None m in
+      let (((_, t), _) as m) = expression cx m in
       ((loc, t), Ast.Pattern.Expression m)
     (* TODO: object, array and non-member expression patterns are invalid
        (should be a parse error but isn't yet) *)
@@ -4833,10 +4741,10 @@ module Make
       *)
       match (optional, mode) with
       | ((NewChain | ContinueChain), Delete) ->
-        let (o, _, _object) = optional_chain ~hint:Hint_None ~cond:None cx obj in
+        let (o, _, _object) = optional_chain ~cond:None cx obj in
         (o, _object)
       | _ ->
-        let (((_, o), _) as _object) = expression cx ~hint:Hint_None obj in
+        let (((_, o), _) as _object) = expression cx obj in
         (o, _object)
     in
     match lhs with
@@ -4958,7 +4866,7 @@ module Make
       let reason = mk_reason (RPropertyAssignment None) lhs_loc in
       let lhs_reason = mk_expression_reason _object in
       let (o, _object) = typecheck_object _object in
-      let (((_, i), _) as index) = expression cx ~hint:Hint_None index in
+      let (((_, i), _) as index) = expression cx index in
       let use_op = make_op ~lhs:reason ~prop:(mk_reason (desc_of_reason lhs_prop_reason) iloc) in
       let upper = maybe_chain lhs_reason (SetElemT (use_op, reason, i, mode, t, None)) in
       Flow.flow cx (o, upper);
@@ -4971,40 +4879,8 @@ module Make
       )
 
   (* traverse simple assignment expressions (`lhs = rhs`) *)
-  and simple_assignment cx loc lhs rhs =
-    (* Use annotations from variable declarations if the lhs contains only non-providers.
-     * Consider this example:
-     *
-     * var a: t1, var b: t2;
-     * [a, [b]] = [e1, [e2, e3]]. In this example, we would push down t1 and t2
-     * to e1 and e2 (which will require work to make happen). e3 does not escape the rhs,
-     * so we do not require an annotation. If either a or b were providers, then
-     * we would require annotations on all of e1, e2, and e3.
-     *
-     * TODO: To relax that constraint, we need to be able to figure out how to
-     * match the lhs to specific expressions on the rhs before we visit the rhs
-     * to ask for annotations.
-     *)
-    let is_provider =
-      Flow_ast_utils.fold_bindings_of_pattern
-        (fun acc (loc, _) -> acc || Env.is_provider cx loc)
-        false
-        lhs
-    in
-    let hint =
-      if is_provider then
-        Hint_None
-      else
-        let open Ast.Pattern in
-        match lhs with
-        | (_, Identifier { Identifier.name = (id_loc, _); _ }) ->
-          let default = AnyT.why Untyped (mk_reason (RCustom "missing provider type") loc) in
-          Hint_t (Env.constraining_type cx ~default id_loc)
-        | _ ->
-          (* TODO create a type based on the lhs pattern *)
-          Hint_t (AnyT.why Untyped (mk_reason (RCustom "hint of destructuring pattern") loc))
-    in
-    let (((_, t), _) as typed_rhs) = expression cx ~hint rhs in
+  and simple_assignment cx _loc lhs rhs =
+    let (((_, t), _) as typed_rhs) = expression cx rhs in
     (* update env, add constraints arising from LHS structure,
        handle special cases, etc. *)
     let lhs =
@@ -5046,7 +4922,7 @@ module Make
       (* lhs += rhs *)
       let reason = mk_reason (RCustom "+=") loc in
       let (((_, lhs_t), _) as lhs_ast) = assignment_lhs cx lhs in
-      let (((_, rhs_t), _) as rhs_ast) = expression cx ~hint:Hint_None rhs in
+      let (((_, rhs_t), _) as rhs_ast) = expression cx rhs in
       let result_t =
         plus_assign
           cx
@@ -5099,7 +4975,7 @@ module Make
       (* lhs (numop)= rhs *)
       let reason = mk_reason (RCustom "(numop)=") loc in
       let (((_, lhs_t), _) as lhs_ast) = assignment_lhs cx lhs in
-      let (((_, rhs_t), _) as rhs_ast) = expression cx ~hint:Hint_None rhs in
+      let (((_, rhs_t), _) as rhs_ast) = expression cx rhs in
       let result_t = arith_assign cx reason lhs_t rhs_t in
       (* enforce state-based guards for binding update, e.g., const *)
       (match lhs with
@@ -5182,17 +5058,13 @@ module Make
       | None ->
         ( AnyT.error reason,
           lhs_pattern_ast,
-          (fun () -> expression cx ~hint:Hint_None rhs) (* TODO hint *)
-          |> Abnormal.catch_expr_control_flow_exception
-          |> fst
+          (fun () -> expression cx rhs) |> Abnormal.catch_expr_control_flow_exception |> fst
         )
       | Some left_expr ->
         (match op with
         | Assignment.NullishAssign ->
           let ((((_, rhs_t), _) as rhs_ast), right_abnormal) =
-            Abnormal.catch_expr_control_flow_exception (fun () ->
-                expression cx ~hint:Hint_None rhs (* TODO hint *)
-            )
+            Abnormal.catch_expr_control_flow_exception (fun () -> expression cx rhs)
           in
           let rhs_t =
             match right_abnormal with
@@ -5208,11 +5080,9 @@ module Make
           let () = update_env result_t in
           (lhs_t, lhs_pattern_ast, rhs_ast)
         | Assignment.AndAssign ->
-          let ((_, lhs_t), _) = condition ~hint:Hint_None ~cond:OtherTest cx left_expr in
+          let ((_, lhs_t), _) = condition ~cond:OtherTest cx left_expr in
           let ((((_, rhs_t), _) as rhs_ast), right_abnormal) =
-            Abnormal.catch_expr_control_flow_exception (fun () ->
-                expression cx ~hint:Hint_None rhs (* TODO hint *)
-            )
+            Abnormal.catch_expr_control_flow_exception (fun () -> expression cx rhs)
           in
           let rhs_t =
             match right_abnormal with
@@ -5227,11 +5097,9 @@ module Make
           (lhs_t, lhs_pattern_ast, rhs_ast)
         | Assignment.OrAssign ->
           let () = check_default_pattern cx left_expr rhs in
-          let ((_, lhs_t), _) = condition ~hint:Hint_None ~cond:OtherTest cx left_expr in
+          let ((_, lhs_t), _) = condition ~cond:OtherTest cx left_expr in
           let ((((_, rhs_t), _) as rhs_ast), right_abnormal) =
-            Abnormal.catch_expr_control_flow_exception (fun () ->
-                expression cx ~hint:Hint_None rhs (* TODO hint *)
-            )
+            Abnormal.catch_expr_control_flow_exception (fun () -> expression cx rhs)
           in
           let rhs_t =
             match right_abnormal with
@@ -5296,29 +5164,18 @@ module Make
     | Identifier (loc, { Ast.Identifier.name; _ }) ->
       let use_op = Op (DeleteVar { var = mk_expression_reason target }) in
       Env.set_var cx ~use_op name void loc;
-      expression cx ~hint:Hint_None target
+      expression cx target
     | _ ->
-      let (((_, t), _) as target) = expression cx ~hint:Hint_None target in
+      let (((_, t), _) as target) = expression cx target in
       Flow.add_output cx Error_message.(ECannotDelete (loc, reason_of_t t));
       target
 
-  and collapse_children cx ~hint (children_loc, children) :
+  and collapse_children cx (children_loc, children) :
       Type.unresolved_param list * (ALoc.t * (ALoc.t, ALoc.t * Type.t) Ast.JSX.child list) =
-    let single_child =
-      match children with
-      | [_] -> true
-      | _ -> false
-    in
     let (unresolved_params, children') =
       children
-      |> Base.List.foldi ~init:([], []) ~f:(fun i (unres_params, children) child ->
-             let hint =
-               if single_child then
-                 hint
-               else
-                 decompose_hint (Decomp_ArrElement i) hint
-             in
-             let (unres_param_opt, child) = jsx_body cx ~hint child in
+      |> Base.List.fold ~init:([], []) ~f:(fun (unres_params, children) child ->
+             let (unres_param_opt, child) = jsx_body cx child in
              ( Base.Option.value_map unres_param_opt ~default:unres_params ~f:(fun x ->
                    x :: unres_params
                ),
@@ -5329,7 +5186,7 @@ module Make
     in
     (unresolved_params, (children_loc, children'))
 
-  and jsx ~hint cx expr_loc e : Type.t * (ALoc.t, ALoc.t * Type.t) Ast.JSX.element =
+  and jsx cx expr_loc e : Type.t * (ALoc.t, ALoc.t * Type.t) Ast.JSX.element =
     let open Ast.JSX in
     let { opening_element; children; closing_element; comments } = e in
     let (children_loc, _) = children in
@@ -5340,12 +5197,11 @@ module Make
       | _ -> (open_, open_, open_)
     in
     let (t, opening_element, children, closing_element) =
-      jsx_title ~hint cx opening_element children closing_element locs
+      jsx_title cx opening_element children closing_element locs
     in
     (t, { opening_element; children; closing_element; comments })
 
-  and jsx_fragment ~hint cx expr_loc fragment : Type.t * (ALoc.t, ALoc.t * Type.t) Ast.JSX.fragment
-      =
+  and jsx_fragment cx expr_loc fragment : Type.t * (ALoc.t, ALoc.t * Type.t) Ast.JSX.fragment =
     let open Ast.JSX in
     let { frag_opening_element; frag_children; frag_closing_element; frag_comments } = fragment in
     let (children_loc, _) = frag_children in
@@ -5360,11 +5216,10 @@ module Make
         let use_op = Op (GetProperty reason) in
         get_prop ~cond:None cx reason ~use_op react (reason, "Fragment")
     in
-    let (unresolved_params, frag_children) = collapse_children cx ~hint:Hint_None frag_children in
+    let (unresolved_params, frag_children) = collapse_children cx frag_children in
     let locs = (expr_loc, frag_opening_element, children_loc) in
     let t =
       jsx_desugar
-        ~hint
         cx
         "React.Fragment"
         fragment_t
@@ -5375,7 +5230,7 @@ module Make
     in
     (t, { frag_opening_element; frag_children; frag_closing_element; frag_comments })
 
-  and jsx_title ~hint:jsx_hint cx opening_element children closing_element locs =
+  and jsx_title cx opening_element children closing_element locs =
     let open Ast.JSX in
     let make_trust = Context.trust_constructor cx in
     let (loc_element, _, _) = locs in
@@ -5395,11 +5250,8 @@ module Make
         ) ->
         let fbt_reason = mk_reason RFbt loc_element in
         let t = Flow.get_builtin_type cx fbt_reason (OrdinaryName custom_jsx_type) in
-        let hint = decompose_hint Decomp_JsxProps (Hint_t t) in
         (* TODO check attribute types against an fbt API *)
-        let (_, attributes, _, children) =
-          jsx_mk_props cx ~hint fbt_reason name attributes children
-        in
+        let (_, attributes, _, children) = jsx_mk_props cx fbt_reason name attributes children in
         let name = Identifier ((loc_id, t), id) in
         (t, name, attributes, children)
       | (Identifier (loc, { Identifier.name; comments }), _, _) ->
@@ -5409,7 +5261,7 @@ module Make
           let attributes =
             Base.List.map ~f:Tast_utils.error_mapper#jsx_opening_attribute attributes
           in
-          let (_, children) = collapse_children cx ~hint:Hint_None children in
+          let (_, children) = collapse_children cx children in
           (t, name, attributes, children)
         else
           let reason =
@@ -5429,11 +5281,10 @@ module Make
               in
               DefT (mk_reason (RIdentifier (OrdinaryName name)) loc, make_trust (), strt)
           in
-          let hint = decompose_hint Decomp_JsxProps (Hint_t c) in
           let (o, attributes', unresolved_params, children) =
-            jsx_mk_props ~hint cx reason name attributes children
+            jsx_mk_props cx reason name attributes children
           in
-          let t = jsx_desugar ~hint:jsx_hint cx name c o attributes unresolved_params locs in
+          let t = jsx_desugar cx name c o attributes unresolved_params locs in
           let name = Identifier ((loc, c), { Identifier.name; comments }) in
           (t, name, attributes', children)
       | (MemberExpression member, Options.Jsx_react, _) ->
@@ -5441,13 +5292,12 @@ module Make
         let el = RReactElement (Some (OrdinaryName name)) in
         let reason = mk_reason el loc_element in
         let m_expr = jsx_title_member_to_expression member in
-        let ((m_loc, t), m_expr') = expression cx ~hint:Hint_None m_expr in
+        let ((m_loc, t), m_expr') = expression cx m_expr in
         let c = mod_reason_of_t (replace_desc_reason (RIdentifier (OrdinaryName name))) t in
-        let hint = decompose_hint Decomp_JsxProps (Hint_t c) in
         let (o, attributes', unresolved_params, children) =
-          jsx_mk_props ~hint cx reason name attributes children
+          jsx_mk_props cx reason name attributes children
         in
-        let t = jsx_desugar ~hint:jsx_hint cx name c o attributes unresolved_params locs in
+        let t = jsx_desugar cx name c o attributes unresolved_params locs in
         let member' =
           match expression_to_jsx_title_member m_loc m_expr' with
           | Some member -> member
@@ -5459,9 +5309,7 @@ module Make
         let name' = Tast_utils.error_mapper#jsx_element_name name in
         let el_name = jsx_title_member_to_string member in
         let reason = mk_reason (RJSXElement (Some el_name)) loc_element in
-        let (_o, attributes', _, children) =
-          jsx_mk_props cx ~hint:Hint_None reason el_name attributes children
-        in
+        let (_o, attributes', _, children) = jsx_mk_props cx reason el_name attributes children in
         (t, name', attributes', children)
       | (NamespacedName namespace, _, _) ->
         (* TODO? covers namespaced names as element names *)
@@ -5469,9 +5317,7 @@ module Make
         let name' = Tast_utils.error_mapper#jsx_element_name name in
         let el_name = jsx_title_namespaced_name_to_string namespace in
         let reason = mk_reason (RJSXElement (Some el_name)) loc_element in
-        let (_o, attributes', _, children) =
-          jsx_mk_props cx ~hint:Hint_None reason el_name attributes children
-        in
+        let (_o, attributes', _, children) = jsx_mk_props cx reason el_name attributes children in
         (t, name', attributes', children)
     in
     let closing_element =
@@ -5523,7 +5369,7 @@ module Make
         MemberExpression (match_member_expressions o_mexp c_mexp)
       | (_, _) -> Tast_utils.error_mapper#jsx_element_name c_name
 
-  and jsx_mk_props cx ~hint reason name attributes children =
+  and jsx_mk_props cx reason name attributes children =
     let open Ast.JSX in
     let is_react = Context.jsx cx = Options.Jsx_react in
     let reason_props =
@@ -5569,8 +5415,7 @@ module Make
                       }
                     )
                     ) ->
-                let hint = decompose_hint (Decomp_ObjProp aname) hint in
-                let (((_, t), _) as e) = expression cx ~hint (loc, e) in
+                let (((_, t), _) as e) = expression cx (loc, e) in
                 ( t,
                   Some
                     (Attribute.ExpressionContainer
@@ -5616,8 +5461,7 @@ module Make
             (acc, atts)
           (* <element {...spread} /> *)
           | Opening.SpreadAttribute (spread_loc, { SpreadAttribute.argument; comments }) ->
-            let hint = decompose_hint Decomp_ObjSpread hint in
-            let (((_, spread), _) as argument) = expression cx ~hint argument in
+            let (((_, spread), _) as argument) = expression cx argument in
             let acc = ObjectExpressionAcc.add_spread spread acc in
             let att =
               Opening.SpreadAttribute (spread_loc, { SpreadAttribute.argument; comments })
@@ -5627,10 +5471,7 @@ module Make
         attributes
     in
     let attributes = List.rev atts in
-    let (unresolved_params, children) =
-      let hint = decompose_hint (Decomp_ObjProp "children") hint in
-      collapse_children cx ~hint children
-    in
+    let (unresolved_params, children) = collapse_children cx children in
     let acc =
       match unresolved_params with
       | [] -> acc
@@ -5668,8 +5509,10 @@ module Make
     in
     (t, attributes, unresolved_params, children)
 
-  and jsx_desugar ~hint cx name component_t props attributes children locs =
+  and jsx_desugar cx name component_t props attributes children locs =
     let (loc_element, loc_opening, loc_children) = locs in
+    let hint = Env.get_hint cx loc_element in
+    let (has_context, _) = hint in
     match Context.jsx cx with
     | Options.Jsx_react ->
       let reason = mk_reason (RReactElement (Some (OrdinaryName name))) loc_element in
@@ -5698,9 +5541,7 @@ module Make
         in
         let jsx_fun = CustomFunT (reason_jsx, ReactCreateElement) in
         let funcalltype = mk_functioncalltype reason_jsx None args tvar in
-        Flow.flow
-          cx
-          (jsx_fun, CallT { use_op; reason; funcalltype; has_context = hint <> Hint_None })
+        Flow.flow cx (jsx_fun, CallT { use_op; reason; funcalltype; has_context })
       | Options.ReactRuntimeClassic ->
         let reason_createElement =
           mk_reason (RProperty (Some (OrdinaryName "createElement"))) loc_element
@@ -5732,7 +5573,7 @@ module Make
                         None
                         ([Arg component_t; Arg props] @ Base.List.map ~f:(fun c -> Arg c) children)
                         tvar;
-                    has_context = hint <> Hint_None;
+                    has_context;
                   },
                 prop_t
               )
@@ -5805,18 +5646,18 @@ module Make
       Env.var_ref ~lookup_mode:ForValue cx (OrdinaryName name) loc ~desc
     | expr ->
       (* Oh well, we tried *)
-      let ((_, t), _) = expression cx ~hint:Hint_None expr in
+      let ((_, t), _) = expression cx expr in
       t
 
-  and jsx_body cx ~hint (loc, child) =
+  and jsx_body cx (loc, child) =
     let open Ast.JSX in
     let make_trust = Context.trust_constructor cx in
     match child with
     | Element e ->
-      let (t, e) = jsx ~hint cx loc e in
+      let (t, e) = jsx cx loc e in
       (Some (UnresolvedArg (t, None)), (loc, Element e))
     | Fragment f ->
-      let (t, f) = jsx_fragment ~hint cx loc f in
+      let (t, f) = jsx_fragment cx loc f in
       (Some (UnresolvedArg (t, None)), (loc, Fragment f))
     | ExpressionContainer ec ->
       ExpressionContainer.(
@@ -5824,7 +5665,7 @@ module Make
         let (unresolved_param, ex) =
           match ex with
           | Expression e ->
-            let (((_, t), _) as e) = expression cx ~hint e in
+            let (((_, t), _) as e) = expression cx e in
             (Some (UnresolvedArg (t, None)), Expression e)
           | EmptyExpression -> (None, EmptyExpression)
         in
@@ -5833,7 +5674,7 @@ module Make
         )
       )
     | SpreadChild { SpreadChild.expression = expr; comments } ->
-      let (((_, t), _) as e) = expression cx ~hint:Hint_None expr in
+      let (((_, t), _) as e) = expression cx expr in
       (Some (UnresolvedSpreadArg t), (loc, SpreadChild { SpreadChild.expression = e; comments }))
     | Text { Text.value; raw } ->
       let unresolved_param_opt =
@@ -5924,8 +5765,7 @@ module Make
      accesses are provisionally allowed even when such properties do not exist.
      This accommodates the common JavaScript idiom of testing for the existence
      of a property before using that property. *)
-  and condition cx ~cond ~hint e : (ALoc.t, ALoc.t * Type.t) Ast.Expression.t =
-    expression ~cond ~hint cx e
+  and condition cx ~cond e : (ALoc.t, ALoc.t * Type.t) Ast.Expression.t = expression ~cond cx e
 
   and get_private_field_opt_use cx reason ~use_op name =
     let class_entries = Env.get_class_entries cx in
@@ -5952,7 +5792,7 @@ module Make
         Flow.flow cx (tobj, get_prop_u)
     )
 
-  and static_method_call_Object cx loc ~hint callee_loc prop_loc expr obj_t m targs args =
+  and static_method_call_Object cx loc callee_loc prop_loc expr obj_t m targs args =
     let open Ast.Expression in
     let reason = mk_reason (RCustom (spf "`Object.%s`" m)) loc in
     let use_op =
@@ -5969,7 +5809,7 @@ module Make
     in
     match (m, targs, args) with
     | ("create", None, (args_loc, { ArgList.arguments = [Expression e]; comments })) ->
-      let (((_, e_t), _) as e_ast) = expression cx ~hint:Hint_None e in
+      let (((_, e_t), _) as e_ast) = expression cx e in
       let proto =
         let reason = mk_reason RPrototype (fst e) in
         Tvar.mk_where cx reason (fun t -> Flow.flow cx (e_t, ObjTestProtoT (reason, t)))
@@ -5991,7 +5831,7 @@ module Make
           }
         )
       ) ->
-      let (((_, e_t), _) as e_ast) = expression cx ~hint:Hint_None e in
+      let (((_, e_t), _) as e_ast) = expression cx e in
       let proto =
         let reason = mk_reason RPrototype (fst e) in
         Tvar.mk_where cx reason (fun t -> Flow.flow cx (e_t, ObjTestProtoT (reason, t)))
@@ -6051,7 +5891,7 @@ module Make
         (args_loc, { ArgList.arguments = [Expression e]; comments })
       ) ->
       let arr_reason = mk_reason RArrayType loc in
-      let (((_, o), _) as e_ast) = expression cx ~hint:Hint_None e in
+      let (((_, o), _) as e_ast) = expression cx e in
       ( DefT
           ( arr_reason,
             bogus_trust (),
@@ -6111,9 +5951,9 @@ module Make
       let loc = aloc_of_reason reason in
       let propdesc_type = Flow.get_builtin cx (OrdinaryName "PropertyDescriptor") reason in
       let propdesc = implicit_typeapp ~annot_loc:loc propdesc_type [ty] in
-      let (((_, o), _) as e_ast) = expression cx ~hint:Hint_None e in
-      let key_ast = expression cx ~hint:Hint_None key in
-      let (((_, spec), _) as config_ast) = expression cx ~hint:Hint_None config in
+      let (((_, o), _) as e_ast) = expression cx e in
+      let key_ast = expression cx key in
+      let (((_, spec), _) as config_ast) = expression cx config in
       let prop_reason = mk_reason (RProperty (Some (OrdinaryName x))) ploc in
       Flow.flow cx (spec, UseT (use_op, propdesc));
       let prop_t = Tvar.mk cx prop_reason in
@@ -6145,7 +5985,7 @@ module Make
           }
         )
       ) ->
-      let (((_, o), _) as e_ast) = expression cx ~hint:Hint_None e in
+      let (((_, o), _) as e_ast) = expression cx e in
       let (pmap, properties) = prop_map_of_object cx properties in
       let propdesc_type = Flow.get_builtin cx (OrdinaryName "PropertyDescriptor") reason in
       pmap
@@ -6203,7 +6043,7 @@ module Make
       let (((_, arg_t), _) as e_ast) =
         let { Object.properties; comments } = o in
         let reason = mk_reason (RFrozen RObjectLit) arg_loc in
-        let (t, properties) = object_ ~hint ~frozen:true cx reason properties in
+        let (t, properties) = object_ ~frozen:true cx reason properties in
         ((arg_loc, t), Object { Object.properties; comments })
       in
       let reason = mk_reason (RMethodCall (Some m)) loc in
@@ -6226,7 +6066,7 @@ module Make
         _
       ) ->
       let targs = snd (convert_call_targs cx Subst_name.Map.empty targs) in
-      let (_argts, args) = arg_list cx ~hint:Hint_None args in
+      let (_argts, args) = arg_list cx args in
       let arity =
         if m = "freeze" || m = "defineProperty" then
           1
@@ -6248,7 +6088,7 @@ module Make
     (* TODO *)
     | _ ->
       let (targts, targ_asts) = convert_call_targs_opt cx targs in
-      let (argts, arg_asts) = arg_list cx ~hint:Hint_None args in
+      let (argts, arg_asts) = arg_list cx args in
       let reason = mk_reason (RMethodCall (Some m)) loc in
       let use_op =
         Op
@@ -6335,7 +6175,7 @@ module Make
           begin
             match (expr, annot_or_inferred) with
             | ((_, Ast.Expression.Literal _), Inferred _) ->
-              let ((_, t), _) = expression ~hint:Hint_None cx expr in
+              let ((_, t), _) = expression cx expr in
               Flow.flow_t cx (t, annot_t)
             | ((_, Ast.Expression.(ArrowFunction function_ | Function function_)), Inferred _) ->
               let { Ast.Function.sig_loc; _ } = function_ in
@@ -6343,7 +6183,6 @@ module Make
               let ((func_sig, _) as sig_data) =
                 mk_func_sig
                   cx
-                  ~func_hint:Hint_None
                   ~required_this_param_type:None
                   ~constructor:false
                   ~require_return_annot:
@@ -6416,7 +6255,6 @@ module Make
     let mk_method cx =
       mk_func_sig
         cx
-        ~func_hint:Hint_None
         ~required_this_param_type:None
         ~require_return_annot:
           (Context.should_require_annot cx && Context.enforce_class_annotations cx)
@@ -6425,7 +6263,7 @@ module Make
     let mk_extends cx tparams_map = function
       | None -> (Implicit { null = false }, None)
       | Some (loc, { Ast.Class.Extends.expr; targs; comments }) ->
-        let (((_, c), _) as expr) = expression cx ~hint:Hint_None expr in
+        let (((_, c), _) as expr) = expression cx expr in
         let (t, targs) = Anno.mk_super cx tparams_map loc c targs in
         (Explicit t, Some (loc, { Ast.Class.Extends.expr; targs; comments }))
     in
@@ -7102,7 +6940,6 @@ module Make
       finder#type_ cx Polarity.Neutral Loc_collections.ALocSet.empty t
     in
     fun cx
-        ~func_hint
         ~required_this_param_type
         ~require_return_annot
         ~constructor
@@ -7236,15 +7073,16 @@ module Make
               Error_message.(EUnsupportedSyntax (loc, PredicateDeclarationForImplementation));
             (annotated_or_inferred, Some (Tast_utils.error_mapper#type_predicate pred))
         in
-        let return_hint = decompose_hint Decomp_FuncReturn func_hint in
         let return_t =
-          mk_inference_target_with_annots ~hint:return_hint return_annotated_or_inferred
+          mk_inference_target_with_annots
+            ~has_hint:(Env.has_hint cx ret_loc)
+            return_annotated_or_inferred
         in
         let statics_t =
           let props =
             SMap.fold
               (fun name expr acc ->
-                let (((loc, expr_t), _) as exp) = expression cx ~hint:Hint_None expr in
+                let (((loc, expr_t), _) as exp) = expression cx expr in
                 let cache = Context.node_cache cx in
                 Node_cache.set_expression cache exp;
                 let field = Field (Some loc, expr_t, Polarity.Neutral) in
@@ -7281,12 +7119,10 @@ module Make
      signature consisting of type parameters, parameter types, parameter names,
      and return type, check the body against that signature by adding `this`
      and super` to the environment, and return the signature. *)
-  and function_decl
-      cx ~func_hint ~required_this_param_type ~fun_loc ~arrow ~statics reason func default_this =
+  and function_decl cx ~required_this_param_type ~fun_loc ~arrow ~statics reason func default_this =
     let (func_sig, reconstruct_func) =
       mk_func_sig
         cx
-        ~func_hint
         ~required_this_param_type
         ~require_return_annot:false
         ~constructor:false
@@ -7295,7 +7131,7 @@ module Make
         reason
         func
     in
-    let (params_ast, body_ast, _) = Func_stmt_sig.toplevels cx ~hint:func_hint func_sig in
+    let (params_ast, body_ast, _) = Func_stmt_sig.toplevels cx func_sig in
     let default_this =
       match default_this with
       | Some t -> t
@@ -7306,24 +7142,15 @@ module Make
 
   (* Process a function declaration, returning a (polymorphic) function type. *)
   and mk_function_declaration cx ~general reason fun_loc func =
-    mk_function
-      cx
-      ~hint:Hint_None
-      ~general
-      ~needs_this_param:true
-      ~statics:SMap.empty
-      reason
-      fun_loc
-      func
+    mk_function cx ~general ~needs_this_param:true ~statics:SMap.empty reason fun_loc func
 
   (* Process a function expression, returning a (polymorphic) function type. *)
-  and mk_function_expression cx ~hint ~general ~needs_this_param reason fun_loc func =
-    mk_function cx ~hint ~needs_this_param ~general ~statics:SMap.empty reason fun_loc func
+  and mk_function_expression cx ~general ~needs_this_param reason fun_loc func =
+    mk_function cx ~needs_this_param ~general ~statics:SMap.empty reason fun_loc func
 
   (* Internal helper function. Use `mk_function_declaration` and `mk_function_expression` instead. *)
   and mk_function
       cx
-      ~hint
       ~needs_this_param
       ~general
       ~statics
@@ -7360,7 +7187,6 @@ module Make
         function_decl
           cx
           ~required_this_param_type:(Base.Option.some_if needs_this_param default_this)
-          ~func_hint:hint
           ~fun_loc:(Base.Option.some_if needs_this_param fun_loc)
           ~arrow:false
           ~statics
@@ -7371,7 +7197,7 @@ module Make
       (fun_type, reconstruct_ast general)
 
   (* Process an arrow function, returning a (polymorphic) function type. *)
-  and mk_arrow cx ~func_hint ~statics reason func =
+  and mk_arrow cx ~statics reason func =
     (* Do not expose the type of `this` in the function's type. This call to
        function_decl has already done the necessary checking of `this` in
        the body of the function. Now we want to avoid re-binding `this` to
@@ -7381,7 +7207,6 @@ module Make
       function_decl
         cx
         ~required_this_param_type:None
-        ~func_hint
         ~fun_loc:None
         ~arrow:true
         ~statics

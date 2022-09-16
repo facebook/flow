@@ -61,16 +61,6 @@ module TvarResolver = struct
     t
 end
 
-(* Hints are not being used to power type checking currently. Instead, we only use their existence
-   to determine whether we should emit missing-local-annot errors. The check will already be done
-   in statement.ml, so it's safe to always pass down the hint to avoid spurious
-   missing-local-annot errors.
-
-   Once contextual typing is done, the existence of hint detection will be moved here and then
-   we can replace all hints passed in env_resolution to be Hint_None.
-*)
-let dummy_hint = Hint_Placeholder
-
 let mk_tparams_map cx tparams_map =
   let { Loc_env.tparams; _ } = Context.environment cx in
   ALocMap.fold
@@ -80,9 +70,9 @@ let mk_tparams_map cx tparams_map =
     tparams_map
     Subst_name.Map.empty
 
-let expression cx ~hint ?cond exp =
+let expression cx ?cond exp =
   let cache = Context.node_cache cx in
-  let (((_, t), _) as exp) = Statement.expression ~hint ?cond cx exp in
+  let (((_, t), _) as exp) = Statement.expression ?cond cx exp in
   Node_cache.set_expression cache exp;
   t
 
@@ -99,7 +89,7 @@ let mk_selector_reason cx loc = function
     (* TODO: eveyrthing after a computed prop should be optional *)
     (Type.ObjRest used_props, mk_reason RObjectPatternRestProp loc)
   | Name_def.Computed exp ->
-    let t = expression cx ~hint:dummy_hint exp in
+    let t = expression cx exp in
     (Type.Elem t, mk_reason (RProperty None) loc)
   | Name_def.Default -> (Type.Default, mk_reason RDefaultValue loc)
 
@@ -113,7 +103,7 @@ let resolve_annotation cx tparams_map anno =
 let resolve_hint cx loc hint =
   let resolve_hint = function
     | AnnotationHint (tparams_locs, anno) -> resolve_annotation cx tparams_locs anno
-    | ValueHint exp -> expression cx ~hint:dummy_hint exp
+    | ValueHint exp -> expression cx exp
     | ProvidersHint (loc, []) ->
       let env = Context.environment cx in
       Env.check_readable cx Env_api.OrdinaryNameLoc loc;
@@ -172,12 +162,11 @@ let rec resolve_binding_partial cx reason loc b =
         unknown_use
     in
     (t, use_op, true)
-  | Root (Value { hint; expr }) ->
-    let hint = resolve_hint cx loc hint in
-    let t = expression cx ~hint expr in
+  | Root (Value { hint = _; expr }) ->
+    let t = expression cx expr in
     let use_op = Op (AssignVar { var = Some reason; init = mk_expression_reason expr }) in
     (t, use_op, false)
-  | Root (FunctionValue { hint; function_loc; function_; statics; arrow; tparams_map = _ }) ->
+  | Root (FunctionValue { hint = _; function_loc; function_; statics; arrow; tparams_map = _ }) ->
     let { Ast.Function.id; async; generator; sig_loc; _ } = function_ in
     let reason_fun =
       func_reason
@@ -189,15 +178,13 @@ let rec resolve_binding_partial cx reason loc b =
           sig_loc
         )
     in
-    let hint = resolve_hint cx loc hint in
     let general = Tvar.mk cx reason in
     let func =
       if arrow then
-        Statement.mk_arrow cx ~func_hint:hint ~statics reason_fun function_
+        Statement.mk_arrow cx ~statics reason_fun function_
       else
         Statement.mk_function
           cx
-          ~hint
           ~needs_this_param:true
           ~statics
           ~general
@@ -315,7 +302,7 @@ let rec resolve_binding_partial cx reason loc b =
     (t, mk_use_op t, false)
   | Root (For (kind, exp)) ->
     let reason = mk_reason (RCustom "for-in") loc (*TODO: loc should be loc of loop *) in
-    let right_t = expression cx ~hint:dummy_hint ~cond:OtherTest exp in
+    let right_t = expression cx ~cond:OtherTest exp in
     let t =
       match kind with
       | In ->
@@ -370,9 +357,7 @@ let resolve_binding cx reason loc binding =
         | Root (Annotation { tparams_map; annot; default_expression; _ }) ->
           let annot_t = resolve_annotation cx tparams_map annot in
           Base.Option.iter default_expression ~f:(fun e ->
-              let ((default_loc, default_t), default_ast) =
-                Statement.expression cx ~hint:(Hint_t annot_t) e
-              in
+              let ((default_loc, default_t), default_ast) = Statement.expression cx e in
               let use_op =
                 Op
                   (AssignVar
@@ -407,8 +392,8 @@ let resolve_binding cx reason loc binding =
   Base.Option.iter
     ~f:(fun d ->
       let rec convert = function
-        | Name_def.DefaultExpr e -> Default.Expr (expression cx ~hint:dummy_hint e)
-        | Name_def.DefaultCons (e, d) -> Default.Cons (expression cx ~hint:dummy_hint e, convert d)
+        | Name_def.DefaultExpr e -> Default.Expr (expression cx e)
+        | Name_def.DefaultCons (e, d) -> Default.Cons (expression cx e, convert d)
         | Name_def.DefaultSelector (d, s) ->
           let (s, r) = mk_selector_reason cx loc s in
           Default.Selector (r, convert d, s)
@@ -431,23 +416,14 @@ let resolve_binding cx reason loc binding =
     default;
   (t, use_op)
 
-let resolve_inferred_function cx ~hint ~statics id_loc reason function_loc function_ =
-  let hint = resolve_hint cx (aloc_of_reason reason) hint in
+let resolve_inferred_function cx ~statics id_loc reason function_loc function_ =
   let cache = Context.node_cache cx in
   (* TODO: This is intended to be the general type for the variable in the old environment, needed
      for generic escape detection. We can do generic escape differently in the future and remove
      this when we kill the old env. *)
   let general = Tvar.mk cx reason in
   let ((fun_type, _) as fn) =
-    Statement.mk_function
-      cx
-      ~hint
-      ~needs_this_param:true
-      ~statics
-      ~general
-      reason
-      function_loc
-      function_
+    Statement.mk_function cx ~needs_this_param:true ~statics ~general reason function_loc function_
   in
   Flow_js.flow_t cx (fun_type, general);
   Node_cache.set_function cache id_loc fn;
@@ -455,13 +431,11 @@ let resolve_inferred_function cx ~hint ~statics id_loc reason function_loc funct
 
 let resolve_annotated_function
     cx
-    ~hint
     ~statics
     reason
     tparams_map
     function_loc
     ({ Ast.Function.body; params; sig_loc; _ } as function_) =
-  let hint = resolve_hint cx (aloc_of_reason reason) hint in
   let cache = Context.node_cache cx in
   let tparams_map = mk_tparams_map cx tparams_map in
   let default_this =
@@ -474,7 +448,6 @@ let resolve_annotated_function
   let ((func_sig, _) as sig_data) =
     Statement.mk_func_sig
       cx
-      ~func_hint:hint
       ~required_this_param_type:(Some default_this)
       ~require_return_annot:false
       ~constructor:false
@@ -505,7 +478,7 @@ let resolve_op_assign cx ~exp_loc id_reason lhs op rhs =
     (* lhs += rhs *)
     let reason = mk_reason (RCustom "+=") exp_loc in
     let ((_, lhs_t), _) = Statement.assignment_lhs cx lhs in
-    let rhs_t = expression cx ~hint:dummy_hint rhs in
+    let rhs_t = expression cx rhs in
     let result_t =
       Statement.plus_assign
         cx
@@ -531,7 +504,7 @@ let resolve_op_assign cx ~exp_loc id_reason lhs op rhs =
     (* lhs (numop)= rhs *)
     let reason = mk_reason (RCustom "(numop)=") exp_loc in
     let ((_, lhs_t), _) = Statement.assignment_lhs cx lhs in
-    let rhs_t = expression cx ~hint:dummy_hint rhs in
+    let rhs_t = expression cx rhs in
     let result_t = Statement.arith_assign cx reason lhs_t rhs_t in
     let use_op = Op (AssignVar { var = Some id_reason; init = reason }) in
     (result_t, use_op)
@@ -541,9 +514,7 @@ let resolve_op_assign cx ~exp_loc id_reason lhs op rhs =
     let reason = mk_reason (RCustom (Flow_ast_utils.string_of_assignment_operator op)) exp_loc in
     let ((_, lhs_t), _) = Statement.assignment_lhs cx lhs in
     let (((_, rhs_t), _), right_abnormal) =
-      Abnormal.catch_expr_control_flow_exception (fun () ->
-          Statement.expression cx ~hint:dummy_hint rhs (* TODO hint *)
-      )
+      Abnormal.catch_expr_control_flow_exception (fun () -> Statement.expression cx rhs)
     in
     let rhs_t =
       match right_abnormal with
@@ -664,7 +635,7 @@ let resolve_chain_expression cx ~cond exp =
     | NonConditionalContext -> None
     | OtherConditionalTest -> Some OtherTest
   in
-  let (t, _, exp) = Statement.optional_chain ~hint:Hint_None ~cond cx exp in
+  let (t, _, exp) = Statement.optional_chain ~cond cx exp in
   Node_cache.set_expression cache exp;
   (t, unknown_use)
 
@@ -717,7 +688,7 @@ let resolve cx (def_kind, id_loc) (def, def_scope_kind, class_stack, def_reason)
     match def with
     | Binding b -> resolve_binding cx def_reason id_loc b
     | ChainExpression (cond, e) -> resolve_chain_expression cx ~cond e
-    | RefiExpression e -> (expression cx ~hint:Hint_None e, unknown_use)
+    | RefiExpression e -> (expression cx e, unknown_use)
     | Function
         {
           function_;
@@ -726,9 +697,9 @@ let resolve cx (def_kind, id_loc) (def, def_scope_kind, class_stack, def_reason)
           function_loc;
           tparams_map;
           statics;
-          hint;
+          hint = _;
         } ->
-      resolve_annotated_function cx ~hint ~statics def_reason tparams_map function_loc function_
+      resolve_annotated_function cx ~statics def_reason tparams_map function_loc function_
     | Function
         {
           function_;
@@ -737,13 +708,12 @@ let resolve cx (def_kind, id_loc) (def, def_scope_kind, class_stack, def_reason)
           function_loc;
           tparams_map = _;
           statics;
-          hint;
+          hint = _;
         } ->
-      resolve_inferred_function cx ~hint ~statics id_loc def_reason function_loc function_
+      resolve_inferred_function cx ~statics id_loc def_reason function_loc function_
     | Class { class_; class_loc; class_implicit_this_tparam = _; this_super_write_locs = _ } ->
       resolve_class cx id_loc def_reason class_loc class_
-    | MemberAssign { member_loc = _; member = _; rhs } ->
-      (expression cx ~hint:dummy_hint rhs, unknown_use)
+    | MemberAssign { member_loc = _; member = _; rhs } -> (expression cx rhs, unknown_use)
     | OpAssign { exp_loc; lhs; op; rhs } -> resolve_op_assign cx ~exp_loc def_reason lhs op rhs
     | Update { exp_loc; op = _ } -> resolve_update cx ~id_loc ~exp_loc def_reason
     | TypeAlias (loc, alias) -> resolve_type_alias cx loc alias

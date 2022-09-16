@@ -8,7 +8,6 @@
 module Ast = Flow_ast
 module Flow = Flow_js
 open Reason
-open Hint_api
 
 module Make (Destructuring : Destructuring_sig.S) (Statement : Statement_sig.S) :
   Func_stmt_config_sig.S with module Types = Func_stmt_config_types.Types = struct
@@ -57,28 +56,17 @@ module Make (Destructuring : Destructuring_sig.S) (Statement : Statement_sig.S) 
 
   let destruct _cx ~use_op:_ ~name_loc:_ _name t = t
 
-  let eval_default cx ~annot_t =
-    let hint =
-      match annot_t with
-      | Some t -> Hint_t t
-      | None -> Hint_None
-    in
-    Base.Option.map ~f:(Statement.expression cx ~hint)
+  let eval_default cx = Base.Option.map ~f:(Statement.expression cx)
 
   let eval_param cx (Param { t; loc; ploc; pattern; default; has_anno }) =
     match pattern with
     | Id ({ Ast.Pattern.Identifier.name = ((name_loc, _), { Ast.Identifier.name; _ }); _ } as id) ->
-      let default = eval_default cx ~annot_t:None default in
+      let default = eval_default cx default in
       let reason = mk_reason (RIdentifier (OrdinaryName name)) name_loc in
       let t = Env.find_write cx Env_api.OrdinaryNameLoc reason in
       (loc, { Ast.Function.Param.argument = ((ploc, t), Ast.Pattern.Identifier id); default })
     | Object { annot; properties; comments } ->
-      let annot_t =
-        match annot with
-        | Ast.Type.Missing _ -> None
-        | Ast.Type.Available (_, ((_, annot_t), _)) -> Some annot_t
-      in
-      let default = eval_default cx ~annot_t default in
+      let default = eval_default cx default in
       let properties =
         let default = Base.Option.map default ~f:(fun ((_, t), _) -> Default.expr t) in
         let init = Destructuring.empty ?default t ~annot:has_anno in
@@ -93,7 +81,7 @@ module Make (Destructuring : Destructuring_sig.S) (Statement : Statement_sig.S) 
         }
       )
     | Array { annot; elements; comments } ->
-      let default = eval_default cx ~annot_t:None default in
+      let default = eval_default cx default in
       let elements =
         let default = Base.Option.map default ~f:(fun ((_, t), _) -> Default.expr t) in
         let init = Destructuring.empty ?default t ~annot:has_anno in

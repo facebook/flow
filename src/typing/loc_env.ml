@@ -21,7 +21,6 @@ type t = {
   class_bindings: Type.class_binding ALocMap.t;
   class_stack: ALoc.t list;
   declare_module_exports_write_loc: ALoc.t option;
-  return_hint: Type.t Hint_api.hint;
   scope_kind: Name_def.scope_kind;
   readable: EnvSet.t;
   under_resolution: EnvSet.t;
@@ -63,7 +62,6 @@ let empty scope_kind =
     types = EnvMap.empty;
     var_info = Env_api.empty;
     tparams = ALocMap.empty;
-    return_hint = Hint_api.Hint_None;
     class_bindings = ALocMap.empty;
     class_stack = [];
     declare_module_exports_write_loc = None;

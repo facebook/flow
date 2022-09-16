@@ -36,6 +36,14 @@ let get_class_entries cx =
     ~init:[]
     class_stack
 
+let has_hint cx loc =
+  let { Loc_env.hint_map; _ } = Context.environment cx in
+  ALocMap.find_opt loc hint_map |> Base.Option.value_map ~f:fst ~default:false
+
+let get_hint cx loc =
+  let { Loc_env.hint_map; _ } = Context.environment cx in
+  ALocMap.find_opt loc hint_map |> Base.Option.value ~default:Type.hint_unavailable
+
 let set_scope_kind cx k =
   let env = Context.environment cx in
   let old = env.Loc_env.scope_kind in
