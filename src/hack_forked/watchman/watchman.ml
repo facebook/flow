@@ -30,9 +30,18 @@ type error_kind =
   | Fresh_instance
   | Subscription_canceled
   | Unsupported_watch_roots of {
-      roots: string list;  (** roots returned by watch-project. either 0 or >1 items. *)
-      failed_paths: string list;  (** paths we tried to watch but couldn't figure out the root for *)
+      roots: string list;  (** roots successfully returned by watch-project *)
+      failed_paths: error_kind SMap.t;
+          (** map from paths we tried to watch but couldn't figure out the root for, to the error Watchman gave (a Response_error) *)
     }
+      (** Say we need to watch paths /foo/bar and /foo/baz. A few things could happen.
+        Not errors:
+        - /foo is the watchman root, so we successfully watch /foo with relative paths bar and baz
+        - /foo is the watchman root, but bar doesn't exist. we'd guess that bar is relative to the root
+        Errors:
+        - /foo/bar and /foo/baz are both watchman roots. we error because we can't watch multiple roots
+        - /foo/bar is the watchman root, but /foo/baz is not. we error with roots = [/foo/bar],
+          failed_paths = [/foo/baz]. *)
 
 type failure =
   | Dead
@@ -44,7 +53,7 @@ let log ?request ?response msg =
   let () = Hh_logger.error "%s" msg in
   ()
 
-let log_error = function
+let rec log_error = function
   | Not_installed { path } ->
     let msg = spf "watchman not found on PATH: %s" path in
     log msg
@@ -53,16 +62,33 @@ let log_error = function
   | Fresh_instance -> log "Watchman missed some changes"
   | Subscription_canceled -> log "Subscription canceled by watchman"
   | Unsupported_watch_roots { roots; failed_paths } ->
-    let msg =
-      match roots with
-      | [] -> spf "Cannot deduce watch root for paths:\n%s" (String.concat ~sep:"\n" failed_paths)
-      | _ ->
+    (match roots with
+    | _ :: _ :: _ ->
+      let msg =
         spf
           "Can't watch paths across multiple Watchman watch_roots. Found %d watch roots:\n%s"
           (List.length roots)
           (String.concat ~sep:"\n" roots)
-    in
-    log msg
+      in
+      log msg
+    | _ ->
+      let rev_paths =
+        SMap.fold
+          (fun path err acc ->
+            (* we stored the Watchman response error, and log it here only when it's
+               a real problem (vs when we can guess the relative path) *)
+            log_error err;
+            path :: acc)
+          failed_paths
+          []
+      in
+      let path_list = String.concat ~sep:"\n" (List.rev rev_paths) in
+      let msg =
+        match roots with
+        | [root] -> spf "Found watch root %s, but could not watch paths:\n%s" root path_list
+        | _ -> spf "Cannot deduce watch root for paths:\n%s" path_list
+      in
+      log msg)
 
 type subscribe_mode =
   | All_changes
@@ -621,23 +647,16 @@ let get_clockspec ~debug_logging ~conn ~watch prior_clockspec =
     let%lwt response = request ~debug_logging ~conn query in
     Lwt.return (Result.bind ~f:(get_string_prop ~query "clock") response)
 
-(** Watch this root
-
-    If the path doesn't exist or the request errors for any other reason, this will
-    return [None]. Otherwise, returns the watch root and relative path to that root. *)
+(** Watches a path. Returns the watch root and relative path to that path. *)
 let watch_project ~debug_logging ~conn root =
   let query = J.strlist ["watch-project"; Path.to_string root] in
   let%lwt response = request ~debug_logging ~conn query in
-  let result =
-    match response with
-    | Error (Response_error _) -> Ok None
-    | Error _ as err -> err
-    | Ok response ->
-      let watch_root = J.get_string_val "watch" response in
-      let relative_path = J.get_string_val "relative_path" ~default:"" response in
-      Ok (Some (watch_root, relative_path))
-  in
-  Lwt.return result
+  match response with
+  | Error _ as err -> Lwt.return err
+  | Ok response ->
+    let watch_root = J.get_string_val "watch" response in
+    let relative_path = J.get_string_val "relative_path" ~default:"" response in
+    Lwt.return (Ok (watch_root, relative_path))
 
 (** Calls [watchman watch-project] on a list of paths to watch (e.g. all of the
     include directories). The paths may be children of the actual watchman root,
@@ -648,13 +667,15 @@ let watch_paths ~debug_logging ~conn paths =
   LwtUtils.fold_result_s
     ~f:(fun (terms, watch_roots, failed_paths) path ->
       match%lwt watch_project ~debug_logging ~conn path with
-      | Error _ as err -> Lwt.return err
-      | Ok None -> Lwt.return (Ok (terms, watch_roots, SSet.add (Path.to_string path) failed_paths))
-      | Ok (Some (watch_root, relative_path)) ->
+      | Ok (watch_root, relative_path) ->
         let terms = prepend_relative_path_term ~relative_path ~terms in
         let watch_roots = SSet.add watch_root watch_roots in
-        Lwt.return (Ok (terms, watch_roots, failed_paths)))
-    ~init:(Some [], SSet.empty, SSet.empty)
+        Lwt.return (Ok (terms, watch_roots, failed_paths))
+      | Error (Response_error _ as err) ->
+        let failed_paths = SMap.add (Path.to_string path) err failed_paths in
+        Lwt.return (Ok (terms, watch_roots, failed_paths))
+      | Error _ as err -> Lwt.return err)
+    ~init:(Some [], SSet.empty, SMap.empty)
     paths
 
 let watch =
@@ -669,31 +690,28 @@ let watch =
       else
         normalized ^ "/"
     in
-    let failed_paths =
-      SSet.elements failed_paths |> Base.List.map ~f:Sys_utils.normalize_filename_dir_sep
-    in
     let (terms, failed_paths) =
-      List.fold
-        ~f:(fun (terms, failed_paths) path ->
+      SMap.fold
+        (fun path err (terms, failed_paths) ->
+          let path = Sys_utils.normalize_filename_dir_sep path in
           if String.is_prefix ~prefix:watch_root path then
             let relative_path = String_utils.lstrip path watch_root in
             (prepend_relative_path_term ~relative_path ~terms, failed_paths)
           else
-            (terms, path :: failed_paths))
-        ~init:(terms, [])
+            (terms, SMap.add path err failed_paths))
         failed_paths
+        (terms, SMap.empty)
     in
-    match failed_paths with
-    | [] -> Ok terms
-    | _ -> Error (Unsupported_watch_roots { roots = []; failed_paths })
+    if SMap.is_empty failed_paths then
+      Ok terms
+    else
+      Error (Unsupported_watch_roots { roots = [watch_root]; failed_paths })
   in
   (* All of our watched paths should have the same watch root. Let's assert that *)
   let consolidate_watch_roots watch_roots failed_paths =
     match SSet.elements watch_roots with
     | [watch_root] -> Ok watch_root
-    | roots ->
-      let failed_paths = SSet.elements failed_paths in
-      Error (Unsupported_watch_roots { roots; failed_paths })
+    | roots -> Error (Unsupported_watch_roots { roots; failed_paths })
   in
   fun ~debug_logging ~conn roots ->
     match%lwt watch_paths ~debug_logging ~conn roots with
