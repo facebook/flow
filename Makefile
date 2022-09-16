@@ -290,6 +290,7 @@ OUNIT_TESTS=\
 	src/common/ty/__tests__/ty_tests.native\
 	src/common/utils/__tests__/common_utils_tests.native\
 	src/common/semver/__tests__/semver_tests.native\
+	src/hack_forked/utils/http_lite/__tests__/http_lite_test.native\
 	src/hack_forked/utils/sys/__tests__/sys_utils_tests.native\
 	src/parser/__tests__/parser_tests.native\
 	src/parser_utils/__tests__/parser_utils_tests.native\
