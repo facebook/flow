@@ -12,10 +12,10 @@ open TypeUtil
 
 module type CUSTOM_FUN = sig
   val run :
-    has_context:bool ->
     Context.t ->
     Type.trace ->
     use_op:Type.use_op ->
+    return_hint:Type.lazy_hint_t ->
     Reason.t ->
     Type.custom_fun_kind ->
     Type.t list ->
@@ -49,7 +49,7 @@ module Kit (Flow : Flow_common.S) : CUSTOM_FUN = struct
               use_op;
               reason;
               funcalltype = mk_functioncalltype reason_op None [Arg tvar] tout;
-              has_context = false;
+              return_hint = Type.hint_unavailable;
             }
         )
     (* If the compose function is reversed then we want to call the tail
@@ -66,7 +66,7 @@ module Kit (Flow : Flow_common.S) : CUSTOM_FUN = struct
               use_op;
               reason;
               funcalltype = mk_functioncalltype reason_op None [Arg (OpenT tin)] (reason, tvar);
-              has_context = false;
+              return_hint = Type.hint_unavailable;
             }
         );
       run_compose cx trace ~use_op reason_op reverse fns spread_fn (reason, tvar) tout
@@ -127,7 +127,7 @@ module Kit (Flow : Flow_common.S) : CUSTOM_FUN = struct
       run_compose cx trace ~use_op reason_op reverse [spread_fn] None tin tout;
       run_compose cx trace ~use_op reason_op reverse [spread_fn] None tout tin
 
-  let run ~has_context cx trace ~use_op reason_op kind args spread_arg tout =
+  let run cx trace ~use_op ~return_hint reason_op kind args spread_arg tout =
     match kind with
     | Compose reverse ->
       (* Drop the specific argument reasons since run_compose will emit CallTs
@@ -165,7 +165,7 @@ module Kit (Flow : Flow_common.S) : CUSTOM_FUN = struct
               ( use_op,
                 reason_op,
                 React.CreateElement0
-                  { clone = false; config; children = ([], None); tout; has_context }
+                  { clone = false; config; children = ([], None); tout; return_hint }
               )
           )
       (* React.createElement(component, config, ...children) *)
@@ -178,7 +178,7 @@ module Kit (Flow : Flow_common.S) : CUSTOM_FUN = struct
               ( use_op,
                 reason_op,
                 React.CreateElement0
-                  { clone = false; config; children = (children, spread_arg); tout; has_context }
+                  { clone = false; config; children = (children, spread_arg); tout; return_hint }
               )
           )
       (* React.createElement() *)
@@ -226,7 +226,7 @@ module Kit (Flow : Flow_common.S) : CUSTOM_FUN = struct
               ( use_op,
                 reason_op,
                 React.CreateElement0
-                  { clone = true; config; children = (children, spread_arg); tout; has_context }
+                  { clone = true; config; children = (children, spread_arg); tout; return_hint }
               )
           )
       (* React.cloneElement() *)
@@ -249,7 +249,7 @@ module Kit (Flow : Flow_common.S) : CUSTOM_FUN = struct
               ( use_op,
                 reason_op,
                 React.CreateElement0
-                  { clone = false; config; children = ([], None); tout; has_context }
+                  { clone = false; config; children = ([], None); tout; return_hint }
               )
           )
       (* React.createFactory(component)(config, ...children) *)
@@ -262,7 +262,7 @@ module Kit (Flow : Flow_common.S) : CUSTOM_FUN = struct
               ( use_op,
                 reason_op,
                 React.CreateElement0
-                  { clone = false; config; children = (children, spread_arg); tout; has_context }
+                  { clone = false; config; children = (children, spread_arg); tout; return_hint }
               )
           ))
     | ObjectAssign

@@ -22,11 +22,11 @@ let rec default_resolve_touts ~flow cx loc u =
           this = _;
           methodcalltype = { meth_tout; _ };
           voided_out = tout;
-          has_context = _;
+          return_hint = _;
         } ->
       resolve tout;
       resolve_tvar meth_tout
-    | CallM { methodcalltype = { meth_tout; _ }; has_context = _ } -> resolve_tvar meth_tout
+    | CallM { methodcalltype = { meth_tout; _ }; return_hint = _ } -> resolve_tvar meth_tout
     | NoMethodAction -> ()
   in
   let resolve_lookup_action action =
@@ -76,7 +76,7 @@ let rec default_resolve_touts ~flow cx loc u =
   match u with
   | UseT _ -> _TODO
   | BindT (_, _, { call_tout; _ })
-  | CallT { use_op = _; reason = _; funcalltype = { call_tout; _ }; has_context = _ } ->
+  | CallT { use_op = _; reason = _; funcalltype = { call_tout; _ }; return_hint = _ } ->
     resolve_tvar call_tout
   | MethodT (_, _, _, _, action, tout)
   | PrivateMethodT (_, _, _, _, _, _, action, tout) ->
@@ -100,7 +100,7 @@ let rec default_resolve_touts ~flow cx loc u =
   | ReposLowerT _
   | ReposUseT _ ->
     _TODO
-  | ConstructorT { use_op = _; reason = _; targs = _; args = _; tout; has_context = _ } ->
+  | ConstructorT { use_op = _; reason = _; targs = _; args = _; tout; return_hint = _ } ->
     resolve tout
   | SuperT _ -> ()
   | ImplementsT _ -> ()

@@ -7,10 +7,10 @@
 
 module type CUSTOM_FUN = sig
   val run :
-    has_context:bool ->
     Context.t ->
     Type.trace ->
     use_op:Type.use_op ->
+    return_hint:Type.lazy_hint_t ->
     Reason.t ->
     Type.custom_fun_kind ->
     Type.t list ->

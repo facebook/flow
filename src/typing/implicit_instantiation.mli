@@ -77,7 +77,7 @@ module type KIT = sig
   val run :
     Context.t ->
     Implicit_instantiation_check.t ->
-    has_context:bool ->
+    return_hint:Type.lazy_hint_t ->
     ?cache:Reason.t list ->
     Type.trace ->
     use_op:Type.use_op ->

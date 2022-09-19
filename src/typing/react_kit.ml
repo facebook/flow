@@ -963,7 +963,7 @@ module Kit (Flow : Flow_common.S) : REACT = struct
     in
     match u with
     | CreateElement0 _ -> failwith "handled elsewhere"
-    | CreateElement { clone; component; config; children; tout; targs = _; has_context = _ } ->
+    | CreateElement { clone; component; config; children; tout; targs = _; return_hint = _ } ->
       create_element clone component config children tout
     | ConfigCheck config -> config_check false config ([], None)
     | GetProps tout -> props_to_tout tout

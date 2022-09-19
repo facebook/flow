@@ -68,7 +68,7 @@ and reason_of_use_t = function
   | CallElemT (reason, _, _, _) -> reason
   | CallLatentPredT (reason, _, _, _, _) -> reason
   | CallOpenPredT (reason, _, _, _, _) -> reason
-  | CallT { reason; use_op = _; funcalltype = _; has_context = _ } -> reason
+  | CallT { reason; use_op = _; funcalltype = _; return_hint = _ } -> reason
   | ChoiceKitUseT (reason, _) -> reason
   | CJSExtractNamedExportsT (reason, _, _) -> reason
   | CJSRequireT (reason, _, _) -> reason
@@ -234,14 +234,14 @@ and mod_reason_of_use_t f = function
   | CallElemT (reason_call, reason_lookup, t, ft) -> CallElemT (f reason_call, reason_lookup, t, ft)
   | CallLatentPredT (reason, b, k, l, t) -> CallLatentPredT (f reason, b, k, l, t)
   | CallOpenPredT (reason, sense, key, l, t) -> CallOpenPredT (f reason, sense, key, l, t)
-  | CallT { use_op; reason; funcalltype; has_context } ->
-    CallT { use_op; reason = f reason; funcalltype; has_context }
+  | CallT { use_op; reason; funcalltype; return_hint } ->
+    CallT { use_op; reason = f reason; funcalltype; return_hint }
   | ChoiceKitUseT (reason, tool) -> ChoiceKitUseT (f reason, tool)
   | CJSExtractNamedExportsT (reason, exports, t2) -> CJSExtractNamedExportsT (f reason, exports, t2)
   | CJSRequireT (reason, t, is_strict) -> CJSRequireT (f reason, t, is_strict)
   | ComparatorT ({ reason; _ } as x) -> ComparatorT { x with reason = f reason }
-  | ConstructorT { use_op; reason; targs; args; tout; has_context } ->
-    ConstructorT { use_op; reason = f reason; targs; args; tout; has_context }
+  | ConstructorT { use_op; reason; targs; args; tout; return_hint } ->
+    ConstructorT { use_op; reason = f reason; targs; args; tout; return_hint }
   | CopyNamedExportsT (reason, target_module_t, t_out) ->
     CopyNamedExportsT (f reason, target_module_t, t_out)
   | CopyTypeExportsT (reason, target_module_t, t_out) ->
@@ -353,8 +353,8 @@ and mod_reason_of_use_t f = function
     ResolveUnionT { reason = f reason; resolved; unresolved; upper; id }
 
 and mod_reason_of_opt_use_t f = function
-  | OptCallT { use_op; reason; opt_funcalltype; has_context } ->
-    OptCallT { use_op; reason = f reason; opt_funcalltype; has_context }
+  | OptCallT { use_op; reason; opt_funcalltype; return_hint } ->
+    OptCallT { use_op; reason = f reason; opt_funcalltype; return_hint }
   | OptMethodT (op, r1, r2, ref, action, prop_tout) ->
     OptMethodT (op, f r1, r2, ref, action, prop_tout)
   | OptPrivateMethodT (op, r1, r2, props, cbs, static, action, prop_tout) ->
@@ -379,8 +379,8 @@ let rec util_use_op_of_use_t :
   match u with
   | UseT (op, t) -> util op (fun op -> UseT (op, t))
   | BindT (op, r, f) -> util op (fun op -> BindT (op, r, f))
-  | CallT { use_op; reason; funcalltype; has_context } ->
-    util use_op (fun use_op -> CallT { use_op; reason; funcalltype; has_context })
+  | CallT { use_op; reason; funcalltype; return_hint } ->
+    util use_op (fun use_op -> CallT { use_op; reason; funcalltype; return_hint })
   | MethodT (op, r1, r2, p, f, tm) -> util op (fun op -> MethodT (op, r1, r2, p, f, tm))
   | PrivateMethodT (op, r1, r2, x, c, s, a, p) ->
     util op (fun op -> PrivateMethodT (op, r1, r2, x, c, s, a, p))
@@ -397,8 +397,8 @@ let rec util_use_op_of_use_t :
     util use_op (fun use_op -> OptionalIndexedAccessT { x with use_op })
   | ReposLowerT (r, d, u2) -> nested_util u2 (fun u2 -> ReposLowerT (r, d, u2))
   | ReposUseT (r, d, op, t) -> util op (fun op -> ReposUseT (r, d, op, t))
-  | ConstructorT { use_op; reason; targs; args; tout; has_context } ->
-    util use_op (fun use_op -> ConstructorT { use_op; reason; targs; args; tout; has_context })
+  | ConstructorT { use_op; reason; targs; args; tout; return_hint } ->
+    util use_op (fun use_op -> ConstructorT { use_op; reason; targs; args; tout; return_hint })
   | SuperT (op, r, i) -> util op (fun op -> SuperT (op, r, i))
   | AdderT (op, d, f, l, r) -> util op (fun op -> AdderT (op, d, f, l, r))
   | ImplementsT (op, t) -> util op (fun op -> ImplementsT (op, t))

@@ -480,7 +480,7 @@ and dump_use_t_ (depth, tvars) cx t =
       in
       function
       | CreateElement0
-          { clone = _; config; children = (children, children_spread); tout; has_context = _ }
+          { clone = _; config; children = (children, children_spread); tout; return_hint = _ }
       | CreateElement
           {
             clone = _;
@@ -489,7 +489,7 @@ and dump_use_t_ (depth, tvars) cx t =
             children = (children, children_spread);
             tout;
             targs = _;
-            has_context = _;
+            return_hint = _;
           } ->
         p
           ~extra:
@@ -706,7 +706,7 @@ and dump_use_t_ (depth, tvars) cx t =
           use_op;
           reason = _;
           funcalltype = { call_args_tlist; call_tout = (call_r, call_tvar); call_this_t; _ };
-          has_context = _;
+          return_hint = _;
         } ->
       p
         ~extra:

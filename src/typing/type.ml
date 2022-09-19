@@ -466,7 +466,7 @@ module rec TypeTerm : sig
         use_op: use_op;
         reason: reason;
         funcalltype: funcalltype;
-        has_context: bool;
+        return_hint: lazy_hint_t;
       }
     (* The last position is an optional type that probes into the type of the
        method called. This will be primarily used for type-table bookkeeping. *)
@@ -516,7 +516,7 @@ module rec TypeTerm : sig
         targs: targ list option;
         args: call_arg list;
         tout: t;
-        has_context: bool;
+        return_hint: lazy_hint_t;
       }
     | SuperT of use_op * reason * derived_type
     | ImplementsT of use_op * t
@@ -907,7 +907,7 @@ module rec TypeTerm : sig
         use_op: use_op;
         reason: reason;
         opt_funcalltype: opt_funcalltype;
-        has_context: bool;
+        return_hint: lazy_hint_t;
       }
     | OptMethodT of
         use_op * (* call *) reason * (* lookup *) reason * propref * opt_method_action * t
@@ -934,7 +934,7 @@ module rec TypeTerm : sig
   and method_action =
     | CallM of {
         methodcalltype: methodcalltype;
-        has_context: bool;
+        return_hint: lazy_hint_t;
       }
     | ChainM of {
         exp_reason: reason;
@@ -942,14 +942,14 @@ module rec TypeTerm : sig
         this: t;
         methodcalltype: methodcalltype;
         voided_out: t_out;
-        has_context: bool;
+        return_hint: lazy_hint_t;
       }
     | NoMethodAction
 
   and opt_method_action =
     | OptCallM of {
         opt_methodcalltype: opt_methodcalltype;
-        has_context: bool;
+        return_hint: lazy_hint_t;
       }
     | OptChainM of {
         exp_reason: reason;
@@ -957,7 +957,7 @@ module rec TypeTerm : sig
         this: t;
         opt_methodcalltype: opt_methodcalltype;
         voided_out: t_out;
-        has_context: bool;
+        return_hint: lazy_hint_t;
       }
     | OptNoMethodAction
 
@@ -1459,7 +1459,7 @@ module rec TypeTerm : sig
     | ResolveSpreadsToMultiflowCallFull of int * funtype
     | ResolveSpreadsToMultiflowSubtypeFull of int * funtype
     (* We can also call custom functions. *)
-    | ResolveSpreadsToCustomFunCall of int * custom_fun_kind * t * bool
+    | ResolveSpreadsToCustomFunCall of int * custom_fun_kind * t * lazy_hint_t
     (* Once we've finished resolving spreads for a function's arguments,
      * partially apply the arguments to the function and return the resulting
      * function (basically what func.bind(that, ...args) does) *)
@@ -2597,7 +2597,7 @@ and React : sig
         config: TypeTerm.t;
         children: TypeTerm.t list * TypeTerm.t option;
         tout: TypeTerm.t_out;
-        has_context: bool;
+        return_hint: TypeTerm.lazy_hint_t;
       }
     | CreateElement of {
         clone: bool;
@@ -2610,7 +2610,7 @@ and React : sig
          * instantiated type variables would eventually get. It is likely that we will need to add
          * syntax support for explicit type arguments on React component instantiations *)
         targs: TypeTerm.targ list option;
-        has_context: bool;
+        return_hint: TypeTerm.lazy_hint_t;
       }
     | ConfigCheck of TypeTerm.t
     | GetProps of TypeTerm.t_out
@@ -3872,9 +3872,9 @@ let create_intersection rep = IntersectionT (locationless_reason (RCustom "inter
 
 let apply_opt_action action t_out =
   match action with
-  | OptCallM { opt_methodcalltype; has_context } ->
-    CallM { methodcalltype = apply_opt_methodcalltype opt_methodcalltype t_out; has_context }
-  | OptChainM { exp_reason; lhs_reason; this; opt_methodcalltype; voided_out; has_context } ->
+  | OptCallM { opt_methodcalltype; return_hint } ->
+    CallM { methodcalltype = apply_opt_methodcalltype opt_methodcalltype t_out; return_hint }
+  | OptChainM { exp_reason; lhs_reason; this; opt_methodcalltype; voided_out; return_hint } ->
     ChainM
       {
         exp_reason;
@@ -3882,7 +3882,7 @@ let apply_opt_action action t_out =
         this;
         methodcalltype = apply_opt_methodcalltype opt_methodcalltype t_out;
         voided_out;
-        has_context;
+        return_hint;
       }
   | OptNoMethodAction -> NoMethodAction
 
@@ -3892,8 +3892,8 @@ let apply_opt_use opt_use t_out =
     MethodT (op, r1, r2, ref, apply_opt_action action t_out, prop_tout)
   | OptPrivateMethodT (op, r1, r2, p, scopes, static, action, prop_tout) ->
     PrivateMethodT (op, r1, r2, p, scopes, static, apply_opt_action action t_out, prop_tout)
-  | OptCallT { use_op; reason; opt_funcalltype = f; has_context } ->
-    CallT { use_op; reason; funcalltype = apply_opt_funcalltype f t_out; has_context }
+  | OptCallT { use_op; reason; opt_funcalltype = f; return_hint } ->
+    CallT { use_op; reason; funcalltype = apply_opt_funcalltype f t_out; return_hint }
   | OptGetPropT (u, r, i, p) -> GetPropT (u, r, i, p, t_out)
   | OptGetPrivatePropT (u, r, s, cbs, b) -> GetPrivatePropT (u, r, s, cbs, b, t_out)
   | OptTestPropT (u, r, i, p) -> TestPropT (u, r, i, p, t_out)

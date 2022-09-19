@@ -2733,7 +2733,7 @@ module Make
                }
             )
         in
-        CallT { use_op; reason; funcalltype = ft; has_context = Env.has_hint cx loc }
+        CallT { use_op; reason; funcalltype = ft; return_hint = Env.get_hint cx loc }
       in
       Flow.flow cx (t, call_t);
 
@@ -3211,7 +3211,7 @@ module Make
                       reason,
                       reason_lookup,
                       Named (reason_prop, OrdinaryName name),
-                      CallM { methodcalltype; has_context = Env.has_hint cx loc },
+                      CallM { methodcalltype; return_hint = Env.get_hint cx loc },
                       prop_t
                     )
                 )
@@ -3267,7 +3267,7 @@ module Make
                       reason,
                       super_reason,
                       propref,
-                      CallM { methodcalltype; has_context = false },
+                      CallM { methodcalltype; return_hint = Type.hint_unavailable },
                       prop_t
                     )
                 )
@@ -3947,12 +3947,18 @@ module Make
                                 use_op;
                                 reason = reason_call;
                                 funcalltype = app;
-                                has_context = false;
+                                return_hint = Type.hint_unavailable;
                               };
                           voided_out = OpenT t;
                         }
                     | _ ->
-                      CallT { use_op; reason = reason_call; funcalltype = app; has_context = false }
+                      CallT
+                        {
+                          use_op;
+                          reason = reason_call;
+                          funcalltype = app;
+                          return_hint = Type.hint_unavailable;
+                        }
                   in
                   Flow.flow cx (f, call_t)
               )
@@ -4177,13 +4183,13 @@ module Make
         Flow.flow
           cx
           ( class_,
-            ConstructorT { use_op; reason; targs; args; tout; has_context = Env.has_hint cx loc }
+            ConstructorT { use_op; reason; targs; args; tout; return_hint = Env.get_hint cx loc }
           )
     )
 
   and func_call_opt_use reason ~use_op ?(call_strict_arity = true) targts argts =
     let opt_app = mk_opt_functioncalltype reason targts argts call_strict_arity in
-    OptCallT { use_op; reason; opt_funcalltype = opt_app; has_context = false }
+    OptCallT { use_op; reason; opt_funcalltype = opt_app; return_hint = Type.hint_unavailable }
 
   and func_call cx reason ~use_op ?(call_strict_arity = true) func_t targts argts =
     let opt_use = func_call_opt_use reason ~use_op ~call_strict_arity targts argts in
@@ -4219,9 +4225,9 @@ module Make
             this = prop_t;
             opt_methodcalltype;
             voided_out;
-            has_context = false;
+            return_hint = Type.hint_unavailable;
           }
-      | _ -> OptCallM { opt_methodcalltype; has_context = false }
+      | _ -> OptCallM { opt_methodcalltype; return_hint = Type.hint_unavailable }
     in
     if private_ then
       let class_entries = Env.get_class_entries cx in
@@ -4245,7 +4251,9 @@ module Make
       ( f,
         Tvar.mk_no_wrap_where cx reason (fun t ->
             let app = mk_boundfunctioncalltype obj_t targts argts t ~call_strict_arity in
-            Flow.flow cx (f, CallT { use_op; reason; funcalltype = app; has_context = false })
+            Flow.flow
+              cx
+              (f, CallT { use_op; reason; funcalltype = app; return_hint = Type.hint_unavailable })
         )
       )
     | None ->
@@ -4266,7 +4274,7 @@ module Make
                     reason,
                     reason_expr,
                     propref,
-                    CallM { methodcalltype; has_context = false },
+                    CallM { methodcalltype; return_hint = Type.hint_unavailable },
                     prop_t
                   )
               )
@@ -4295,9 +4303,9 @@ module Make
             this = prop_t;
             opt_methodcalltype;
             voided_out;
-            has_context = false;
+            return_hint = Type.hint_unavailable;
           }
-      | _ -> OptCallM { opt_methodcalltype; has_context = false }
+      | _ -> OptCallM { opt_methodcalltype; return_hint = Type.hint_unavailable }
     in
     OptCallElemT (reason_call, reason_lookup, elem_t, action)
 
@@ -5532,8 +5540,7 @@ module Make
 
   and jsx_desugar cx name component_t props attributes children locs =
     let (loc_element, loc_opening, loc_children) = locs in
-    let hint = Env.get_hint cx loc_element in
-    let (has_context, _) = hint in
+    let return_hint = Env.get_hint cx loc_element in
     match Context.jsx cx with
     | Options.Jsx_react ->
       let reason = mk_reason (RReactElement (Some (OrdinaryName name))) loc_element in
@@ -5562,7 +5569,7 @@ module Make
         in
         let jsx_fun = CustomFunT (reason_jsx, ReactCreateElement) in
         let funcalltype = mk_functioncalltype reason_jsx None args tvar in
-        Flow.flow cx (jsx_fun, CallT { use_op; reason; funcalltype; has_context })
+        Flow.flow cx (jsx_fun, CallT { use_op; reason; funcalltype; return_hint })
       | Options.ReactRuntimeClassic ->
         let reason_createElement =
           mk_reason (RProperty (Some (OrdinaryName "createElement"))) loc_element
@@ -5594,7 +5601,7 @@ module Make
                         None
                         ([Arg component_t; Arg props] @ Base.List.map ~f:(fun c -> Arg c) children)
                         tvar;
-                    has_context;
+                    return_hint;
                   },
                 prop_t
               )

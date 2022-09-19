@@ -120,7 +120,12 @@ class func_scope_visitor cx ~has_return_annot ~return_t ~yield_t ~next_t ~body_l
                       cx
                       ( funt,
                         CallT
-                          { use_op = unknown_use; reason; funcalltype = callt; has_context = false }
+                          {
+                            use_op = unknown_use;
+                            reason;
+                            funcalltype = callt;
+                            return_hint = Type.hint_unavailable;
+                          }
                       )
                 );
               ]

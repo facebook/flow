@@ -254,7 +254,7 @@ struct
               reason = reason_op;
               funcalltype =
                 { calltype with call_targs = Some call_targs; call_tout = (reason_op, new_tout) };
-              has_context = false;
+              return_hint = Type.hint_unavailable;
             }
         in
         Flow.flow cx (lhs, call_t);
@@ -271,7 +271,7 @@ struct
               targs = Some call_targs;
               args = call_args;
               tout = new_tout;
-              has_context = false;
+              return_hint = Type.hint_unavailable;
             }
         in
         Flow.flow cx (lhs, constructor_t);
@@ -290,7 +290,7 @@ struct
                   children;
                   targs = Some call_targs;
                   tout = new_tout;
-                  has_context = false;
+                  return_hint = Type.hint_unavailable;
                 }
             )
         in
@@ -535,7 +535,7 @@ module type KIT = sig
   val run :
     Context.t ->
     Implicit_instantiation_check.t ->
-    has_context:bool ->
+    return_hint:Type.lazy_hint_t ->
     ?cache:Reason.t list ->
     trace ->
     use_op:use_op ->
@@ -584,7 +584,7 @@ module Kit (FlowJs : Flow_common.S) (Instantiation_helper : Flow_js_utils.Instan
     let poly_t = check.Implicit_instantiation_check.poly_t in
     FlowJs.instantiate_poly cx trace ~use_op ~reason_op ~reason_tapp ?cache poly_t
 
-  let run cx check ~has_context =
+  let run cx check ~return_hint:(has_context, _lazy_hint) =
     if not has_context then Context.add_possibly_speculating_implicit_instantiation_check cx check;
     (* The current Pierce's algorithm running inside flow_js does not have access to the return
        hint type, which will cause a lot of unactionable unconstrained implicit instantiation

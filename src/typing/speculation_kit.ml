@@ -645,7 +645,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
     | IntersectionCases
         ( _,
           CallT
-            { use_op = _; reason = _; funcalltype = { call_tout = (_, id); _ }; has_context = _ }
+            { use_op = _; reason = _; funcalltype = { call_tout = (_, id); _ }; return_hint = _ }
         ) ->
       Some id
     | IntersectionCases (_, GetPropT (_, _, _, _, (_, id))) -> Some id
