@@ -16,25 +16,52 @@ const callback = (e: number) => e + 1;
 [1, 2, 3].map(e => e + 1);
 
 
->>> class.js (#changes: 4)
+>>> class.js (#changes: 7)
 // @flow
 
 class A {
   foo: A;
   declare bar: A;
 
-  aMethod(x: number) {
+  aMethod(x: number): number {
     this.foo = new A();
     this.bar = new A();
     return x + 1;
   }
 
-  arrow = (x: boolean) => x ? 0 : 1;
+  arrow = (x: boolean): boolean => x ? 0 : 1;
 }
 
 const a = new A();
 a.aMethod(2);
 a.arrow(true);
+
+class B {
+  prop1 = 42; // ok
+  prop2: number = 10 + 30; // annot
+  prop3: any; // annot
+  prop4 = (x: number): number => 42; // ok
+  prop5 = (x: number): number => 42; // annot return
+  prop6 = function(x: number): number {
+    return 42;
+  } // annot return
+  ;
+  method1() {} // ok
+  method2(): number {
+    return 42;
+  } // annot return
+  constructor(): number {
+    return 10;
+  } // ok (but separately, we should error on returns in constructors no?)
+  
+  #priv1: number = 10 + 20; // annot
+  #priv2: any; // annot
+  
+}
+
+function sanity_check_that_we_dont_annotate_non_method_functions() {
+  return 42;
+}
 
 >>> function.js (#changes: 13)
 // @flow
@@ -123,7 +150,7 @@ function Parent() {
   )
 }
 
->>> this.js (#changes: 9)
+>>> this.js (#changes: 11)
 // @flow
 
 function f(this: {| x: number |}) {
@@ -163,7 +190,7 @@ object.fn(1)
 
 class HasThis {
   x: number;
-  methodA() {
+  methodA(): number {
     return this.x;
   }
   methodB() {
@@ -173,7 +200,7 @@ class HasThis {
 })).bind(this);
   }
 
-  arrow = (y: number) => { // should annotate y but not `this`
+  arrow = (y: number): number => { // should annotate y but not `this`
     return this.x + (y: number);
   }
 }
@@ -186,9 +213,9 @@ let arrow = () => { return this; }
 
 Stats:
   Files changed:                            5
-  Number of annotations added:             26
-  Total size of annotations:               34
-  Number of LTI errors:                    35
+  Number of annotations added:             38
+  Total size of annotations:               46
+  Number of LTI errors:                    47
 
 Errors:
   Missing annot./normalizer error:          0
@@ -204,7 +231,7 @@ Errors:
 Warnings:
   Skipping arrow function:                  0
   Large type added:                         0
-  Location unhandled:                      10
-  Empty NoUpper:                            2
-  Empty SomeKnownUpper:                    18
+  Location unhandled:                      12
+  Empty NoUpper:                            4
+  Empty SomeKnownUpper:                    20
 

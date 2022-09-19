@@ -143,6 +143,14 @@ Missing an annotation on `x`. [missing-local-annot]
                      ^
 
 
+Error ------------------------------------------------------------------------------------------- included/class.js:8:18
+
+Missing an annotation on return. [missing-local-annot]
+
+   8|   property1 = (x) => 3; // error
+                       
+
+
 Error ------------------------------------------------------------------------------------------- included/class.js:19:3
 
 Missing an annotation on property `a`. [missing-local-annot]
@@ -157,6 +165,102 @@ Missing an annotation on property `b`. [missing-local-annot]
 
    20|   declare b; // error
          ^^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------- included/class.js:29:8
+
+Missing an annotation on property `prop2`. [missing-local-annot]
+
+   29|   prop2 = 10 + 30; // err
+              
+
+
+Error ------------------------------------------------------------------------------------------- included/class.js:30:3
+
+Missing an annotation on property `prop3`. [missing-local-annot]
+
+   30|   prop3; // err
+         ^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------ included/class.js:32:22
+
+Missing an annotation on return. [missing-local-annot]
+
+   32|   prop5 = (x: number) => 42; // err return
+                            
+
+
+Error ------------------------------------------------------------------------------------------ included/class.js:33:31
+
+Missing an annotation on return. [missing-local-annot]
+
+   33|   prop6 = function (x: number) { return 42 } // err return
+                                     
+
+
+Error ------------------------------------------------------------------------------------------ included/class.js:36:12
+
+Missing an annotation on return. [missing-local-annot]
+
+   36|   method2() { return 42; } // err return
+                  
+
+
+Error ------------------------------------------------------------------------------------------ included/class.js:37:16
+
+Missing an annotation on return. [missing-local-annot]
+
+   37|   constructor() { return 10; } // err return
+                      
+
+
+Error ------------------------------------------------------------------------------------------- included/class.js:39:9
+
+Missing an annotation on property `#priv1`. [missing-local-annot]
+
+   39|   #priv1 = 10 + 20; // err
+               
+
+
+Error ------------------------------------------------------------------------------------------- included/class.js:40:3
+
+Missing an annotation on property `#priv2`. [missing-local-annot]
+
+   40|   #priv2; // err
+         ^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------ included/class.js:43:12
+
+Missing an annotation on return. [missing-local-annot]
+
+   43|   #pmeth2() { return 42 } // err return
+                  
+
+
+Error ------------------------------------------------------------------------------------------- included/class.js:44:3
+
+Computed property keys not supported. [unsupported-syntax]
+
+   44|   ["computed"]() { } // unsupported, but no missing annot
+         ^^^^^^^^^^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------ included/class.js:46:23
+
+Missing an annotation on return. [missing-local-annot]
+
+   46|   throwingInvariant1() { invariant() } // error: throws
+                             
+
+
+Error ------------------------------------------------------------------------------------------ included/class.js:47:23
+
+Missing an annotation on return. [missing-local-annot]
+
+   47|   throwingInvariant2() { invariant(false) } // error: throws
+                             
 
 
 Error -------------------------------------------------------------------------------- included/class_expression.js:3:10
@@ -181,6 +285,14 @@ Missing an annotation on `x`. [missing-local-annot]
 
    8|   property1 = (x) => 3; // error
                      ^
+
+
+Error -------------------------------------------------------------------------------- included/class_expression.js:8:18
+
+Missing an annotation on return. [missing-local-annot]
+
+   8|   property1 = (x) => 3; // error
+                       
 
 
 Error ------------------------------------------------------------------------------ included/destructuring_init.js:4:14
@@ -735,6 +847,22 @@ Missing an annotation on implicit `this` parameter of function. [missing-this-an
                   ^^
 
 
+Error -------------------------------------------------------------------------------------------- included/this.js:7:10
+
+Missing an annotation on return. [missing-local-annot]
+
+   7|     foo() {return this.x;} // Error: missing return annot
+               
+
+
+Error -------------------------------------------------------------------------------------------- included/this.js:8:17
+
+Missing an annotation on return. [missing-local-annot]
+
+   8|     static bar() {return this.y;} // Error: missing return annot
+                      
+
+
 Error ------------------------------------------------------------------------------------------- included/this.js:18:18
 
 Missing an annotation on implicit `this` parameter of function. [missing-this-annot]
@@ -784,4 +912,4 @@ Missing an annotation on `y`. [missing-local-annot]
 
 
 
-Found 85 errors
+Found 101 errors
