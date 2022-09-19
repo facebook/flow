@@ -101,7 +101,6 @@ type t = {
   opt_incremental_revdeps: bool;
   opt_lazy_mode: bool;
   opt_lint_severities: Severity.severity LintSettings.t;
-  opt_local_inference_annotation_dirs: string list;
   opt_log_file: Path.t;
   opt_log_saving: log_saving SMap.t;
   opt_max_files_checked_per_worker: int;
@@ -233,8 +232,6 @@ let is_quiet opts = opts.opt_quiet
 let lazy_mode opts = opts.opt_lazy_mode
 
 let lint_severities opts = opts.opt_lint_severities
-
-let local_inference_annotation_dirs opts = opts.opt_local_inference_annotation_dirs
 
 let log_file opts = opts.opt_log_file
 

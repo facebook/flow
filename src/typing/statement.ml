@@ -6214,7 +6214,9 @@ module Make
                   ~required_this_param_type:None
                   ~constructor:false
                   ~require_return_annot:
-                    (Context.should_require_annot cx && Context.enforce_class_annotations cx)
+                    (Context.enforce_local_inference_annotations cx
+                    && Context.enforce_class_annotations cx
+                    )
                   ~statics:SMap.empty
                   tparams_map
                   reason
@@ -6245,7 +6247,8 @@ module Make
               in
               Flow.flow_t cx (t, annot_t)
             | (_, Inferred _)
-              when Context.should_require_annot cx && Context.enforce_class_annotations cx ->
+              when Context.enforce_local_inference_annotations cx
+                   && Context.enforce_class_annotations cx ->
               let annot_loc =
                 match annot with
                 | Ast.Type.Missing loc
@@ -6273,7 +6276,7 @@ module Make
       in
       (match (init, annot_or_inferred) with
       | ((Ast.Class.Property.Declared | Ast.Class.Property.Uninitialized), Inferred _)
-        when Context.should_require_annot cx ->
+        when Context.enforce_local_inference_annotations cx ->
         Flow.add_output cx (Error_message.EMissingLocalAnnotation { reason; hint_available = false });
         if Context.env_mode cx = Options.LTI then
           Flow.flow_t cx (AnyT.make (AnyError (Some MissingAnnotation)) reason, annot_t)
@@ -6285,7 +6288,7 @@ module Make
         cx
         ~required_this_param_type:None
         ~require_return_annot:
-          (Context.should_require_annot cx && Context.enforce_class_annotations cx)
+          (Context.enforce_local_inference_annotations cx && Context.enforce_class_annotations cx)
         ~statics:SMap.empty
     in
     let mk_extends cx tparams_map = function

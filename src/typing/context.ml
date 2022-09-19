@@ -49,7 +49,6 @@ type metadata = {
   facebook_module_interop: bool;
   haste_module_ref_prefix: string option;
   ignore_non_literal_requires: bool;
-  local_inference_annotation_dirs: string list;
   array_literal_providers: bool;
   max_literal_length: int;
   max_trace_depth: int;
@@ -231,7 +230,6 @@ let metadata_of_options options =
     facebook_module_interop = Options.facebook_module_interop options;
     haste_module_ref_prefix = Options.haste_module_ref_prefix options;
     ignore_non_literal_requires = Options.should_ignore_non_literal_requires options;
-    local_inference_annotation_dirs = Options.local_inference_annotation_dirs options;
     max_literal_length = Options.max_literal_length options;
     max_trace_depth = Options.max_trace_depth options;
     max_workers = Options.max_workers options;
@@ -441,18 +439,6 @@ let exact_empty_objects cx = cx.metadata.exact_empty_objects || env_mode cx = Op
 
 let enforce_local_inference_annotations cx =
   cx.metadata.enforce_local_inference_annotations || env_mode cx = Options.LTI
-
-let should_require_annot cx =
-  if enforce_local_inference_annotations cx then
-    let dirs = cx.metadata.local_inference_annotation_dirs in
-    match dirs with
-    | [] -> true
-    | _ :: _ ->
-      let filename = File_key.to_string cx.file in
-      let normalized_filename = Sys_utils.normalize_filename_dir_sep filename in
-      List.exists (fun str -> Base.String.is_prefix ~prefix:str normalized_filename) dirs
-  else
-    false
 
 let enforce_class_annotations cx =
   cx.metadata.enforce_class_annotations || env_mode cx = Options.LTI

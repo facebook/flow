@@ -1346,10 +1346,6 @@ let make_options
     opt_enforce_local_inference_annotations =
       FlowConfig.enforce_local_inference_annotations flowconfig;
     opt_enforce_class_annotations = FlowConfig.enforce_class_annotations flowconfig;
-    opt_local_inference_annotation_dirs =
-      Base.List.map
-        ~f:(fun s -> Files.expand_project_root_token ~root s)
-        (FlowConfig.local_inference_annotation_dirs flowconfig);
     opt_enforce_this_annotations = FlowConfig.enforce_this_annotations flowconfig;
     opt_experimental_infer_indexers = false;
     opt_array_literal_providers = FlowConfig.array_literal_providers flowconfig;

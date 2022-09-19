@@ -157,8 +157,6 @@ val lazy_mode : config -> lazy_mode option
 (* global defaults for lint suppressions and strict mode *)
 val lint_severities : config -> Severity.severity LintSettings.t
 
-val local_inference_annotation_dirs : config -> string list
-
 val log_saving : config -> Options.log_saving SMap.t
 
 val max_files_checked_per_worker : config -> int

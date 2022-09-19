@@ -89,7 +89,6 @@ module Opts = struct
     include_warnings: bool;
     incremental_revdeps: bool;
     lazy_mode: lazy_mode option;
-    local_inference_annotation_dirs: string list;
     log_saving: Options.log_saving SMap.t;
     max_files_checked_per_worker: int;
     max_header_tokens: int;
@@ -217,7 +216,6 @@ module Opts = struct
       include_warnings = false;
       incremental_revdeps = false;
       lazy_mode = None;
-      local_inference_annotation_dirs = [];
       log_saving = SMap.empty;
       max_files_checked_per_worker = 100;
       max_header_tokens = 10;
@@ -473,21 +471,6 @@ module Opts = struct
           Error
             "Option \"enforce_local_inference_annotations\" must be set to true to set \"enforce_class_annotations\" to true."
     )
-
-  let local_inference_annotation_dirs =
-    string
-      ~init:(fun opts -> { opts with local_inference_annotation_dirs = [] })
-      ~multiple:true
-      (fun opts v ->
-        if opts.enforce_local_inference_annotations then
-          Ok
-            {
-              opts with
-              local_inference_annotation_dirs = v :: opts.local_inference_annotation_dirs;
-            }
-        else
-          Error
-            "Option \"enforce_local_inference_annotations\" must be set to true to set \"local_inference_annotation_dirs\".")
 
   let enforce_this_annotations =
     boolean (fun opts v -> Ok { opts with enforce_this_annotations = v })
@@ -781,7 +764,6 @@ module Opts = struct
       ("inference_mode", inference_mode_parser);
       ("experimental.array_literal_providers", experimental_empty_array_literals_parser);
       ("experimental.facebook_module_interop", facebook_module_interop_parser);
-      ("experimental.local_inference_annotation_dirs", local_inference_annotation_dirs);
       ("experimental.module.automatic_require_default", automatic_require_default_parser);
       ("experimental.incremental_revdeps", incremental_revdeps_parser);
       ("experimental.react.server_component_ext", react_server_component_exts_parser);
@@ -1477,8 +1459,6 @@ let lazy_mode c = c.options.Opts.lazy_mode
 
 (* global defaults for lint severities and strict mode *)
 let lint_severities c = c.lint_severities
-
-let local_inference_annotation_dirs c = c.options.Opts.local_inference_annotation_dirs
 
 let log_saving c = c.options.Opts.log_saving
 

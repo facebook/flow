@@ -69,7 +69,6 @@ type metadata = {
   facebook_module_interop: bool;
   haste_module_ref_prefix: string option;
   ignore_non_literal_requires: bool;
-  local_inference_annotation_dirs: string list;
   array_literal_providers: bool;
   max_literal_length: int;
   max_trace_depth: int;
@@ -166,8 +165,6 @@ val exact_by_default : t -> bool
 val exact_empty_objects : t -> bool
 
 val enforce_local_inference_annotations : t -> bool
-
-val should_require_annot : t -> bool
 
 val enforce_class_annotations : t -> bool
 

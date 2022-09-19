@@ -40,7 +40,6 @@ let metadata =
     facebook_module_interop = false;
     haste_module_ref_prefix = None;
     ignore_non_literal_requires = false;
-    local_inference_annotation_dirs = [];
     max_literal_length = 100;
     max_trace_depth = 0;
     max_workers = 0;
