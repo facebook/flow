@@ -1,4 +1,4 @@
-Error ------------------------------------------------------------------------------------------- included/array.js:5:16
+Error ---------------------------------------------------------------------------------------------------- array.js:5:16
 
 Missing an annotation on `x`. [missing-local-annot]
 
@@ -6,7 +6,7 @@ Missing an annotation on `x`. [missing-local-annot]
                      ^
 
 
-Error ------------------------------------------------------------------------------------------ included/array.js:11:18
+Error --------------------------------------------------------------------------------------------------- array.js:11:18
 
 Missing an annotation on `x`. [missing-local-annot]
 
@@ -14,7 +14,7 @@ Missing an annotation on `x`. [missing-local-annot]
                         ^
 
 
-Error ------------------------------------------------------------------------------------------ included/array.js:18:18
+Error --------------------------------------------------------------------------------------------------- array.js:18:18
 
 Missing an annotation on `x`. [missing-local-annot]
 
@@ -22,26 +22,26 @@ Missing an annotation on `x`. [missing-local-annot]
                         ^
 
 
-Error --------------------------------------------------------------------------------------- included/assignment.js:6:6
+Error ------------------------------------------------------------------------------------------------ assignment.js:6:6
 
 Cannot assign function to `y` because parameter `x` of unknown type [1] is incompatible with number [2] (consider adding
 a type annotation to `x` [1]) in the first parameter. All writes to `y` must be compatible with the type of its
 initializer [3]. Add an annotation to `y` [3] if a different type is desired. [incompatible-type]
 
-   included/assignment.js:6:6
+   assignment.js:6:6
    6| y = (x) => 3; // No missing annot
            ^ [1]
 
 References:
-   included/assignment.js:5:13
+   assignment.js:5:13
    5| let y = (x: number) => 3;
                   ^^^^^^ [2]
-   included/assignment.js:5:5
+   assignment.js:5:5
    5| let y = (x: number) => 3;
           ^ [3]
 
 
-Error -------------------------------------------------------------------------------------- included/assignment.js:13:6
+Error ----------------------------------------------------------------------------------------------- assignment.js:13:6
 
 Missing an annotation on `x`. [missing-local-annot]
 
@@ -49,7 +49,7 @@ Missing an annotation on `x`. [missing-local-annot]
             ^
 
 
-Error -------------------------------------------------------------------------------------- included/assignment.js:19:6
+Error ----------------------------------------------------------------------------------------------- assignment.js:19:6
 
 Missing an annotation on `x`. [missing-local-annot]
 
@@ -57,7 +57,7 @@ Missing an annotation on `x`. [missing-local-annot]
             ^
 
 
-Error ------------------------------------------------------------------------------------------ included/block.js:14:16
+Error --------------------------------------------------------------------------------------------------- block.js:14:16
 
 Missing an annotation on `y`. [missing-local-annot]
 
@@ -65,7 +65,7 @@ Missing an annotation on `y`. [missing-local-annot]
                       ^
 
 
-Error -------------------------------------------------------------------------------------------- included/call.js:9:14
+Error ----------------------------------------------------------------------------------------------------- call.js:9:14
 
 Missing an annotation on `x`. [missing-local-annot]
 
@@ -73,11 +73,11 @@ Missing an annotation on `x`. [missing-local-annot]
                    ^
 
 
-Error -------------------------------------------------------------------------------------------- included/call.js:12:8
+Error ----------------------------------------------------------------------------------------------------- call.js:12:8
 
 Property `@@iterator` is missing in function [1] but exists in `$Iterable` [2]. [prop-missing]
 
-   included/call.js:12:8
+   call.js:12:8
      12| }, ...((x) => 3));
                 ^^^^^^^^ [1]
 
@@ -87,7 +87,7 @@ References:
                    ^^^^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------- included/cast.js:6:15
+Error ----------------------------------------------------------------------------------------------------- cast.js:6:15
 
 Missing an annotation on `x`. [missing-local-annot]
 
@@ -95,7 +95,7 @@ Missing an annotation on `x`. [missing-local-annot]
                     ^
 
 
-Error -------------------------------------------------------------------------------------------- included/cast.js:7:14
+Error ----------------------------------------------------------------------------------------------------- cast.js:7:14
 
 Missing an annotation on `x`. [missing-local-annot]
 
@@ -103,7 +103,7 @@ Missing an annotation on `x`. [missing-local-annot]
                    ^
 
 
-Error ------------------------------------------------------------------------------------------- included/cast.js:13:15
+Error ---------------------------------------------------------------------------------------------------- cast.js:13:15
 
 Missing an annotation on `x`. [missing-local-annot]
 
@@ -111,7 +111,7 @@ Missing an annotation on `x`. [missing-local-annot]
                      ^
 
 
-Error ------------------------------------------------------------------------------------------- included/cast.js:14:14
+Error ---------------------------------------------------------------------------------------------------- cast.js:14:14
 
 Missing an annotation on `x`. [missing-local-annot]
 
@@ -119,7 +119,7 @@ Missing an annotation on `x`. [missing-local-annot]
                     ^
 
 
-Error ------------------------------------------------------------------------------------------- included/class.js:3:10
+Error ---------------------------------------------------------------------------------------------------- class.js:3:10
 
 Missing an annotation on `param`. [missing-local-annot]
 
@@ -127,7 +127,7 @@ Missing an annotation on `param`. [missing-local-annot]
                ^^^^^
 
 
-Error -------------------------------------------------------------------------------------------- included/class.js:4:6
+Error ----------------------------------------------------------------------------------------------------- class.js:4:6
 
 Missing an annotation on `x`. [missing-local-annot]
 
@@ -135,7 +135,7 @@ Missing an annotation on `x`. [missing-local-annot]
            ^
 
 
-Error ------------------------------------------------------------------------------------------- included/class.js:8:16
+Error ---------------------------------------------------------------------------------------------------- class.js:8:16
 
 Missing an annotation on `x`. [missing-local-annot]
 
@@ -143,7 +143,7 @@ Missing an annotation on `x`. [missing-local-annot]
                      ^
 
 
-Error ------------------------------------------------------------------------------------------- included/class.js:8:18
+Error ---------------------------------------------------------------------------------------------------- class.js:8:18
 
 Missing an annotation on return. [missing-local-annot]
 
@@ -151,7 +151,7 @@ Missing an annotation on return. [missing-local-annot]
                        
 
 
-Error ------------------------------------------------------------------------------------------- included/class.js:19:3
+Error ---------------------------------------------------------------------------------------------------- class.js:19:3
 
 Missing an annotation on property `a`. [missing-local-annot]
 
@@ -159,7 +159,7 @@ Missing an annotation on property `a`. [missing-local-annot]
          ^^
 
 
-Error ------------------------------------------------------------------------------------------- included/class.js:20:3
+Error ---------------------------------------------------------------------------------------------------- class.js:20:3
 
 Missing an annotation on property `b`. [missing-local-annot]
 
@@ -167,7 +167,7 @@ Missing an annotation on property `b`. [missing-local-annot]
          ^^^^^^^^^^
 
 
-Error ------------------------------------------------------------------------------------------- included/class.js:29:8
+Error ---------------------------------------------------------------------------------------------------- class.js:29:8
 
 Missing an annotation on property `prop2`. [missing-local-annot]
 
@@ -175,7 +175,7 @@ Missing an annotation on property `prop2`. [missing-local-annot]
               
 
 
-Error ------------------------------------------------------------------------------------------- included/class.js:30:3
+Error ---------------------------------------------------------------------------------------------------- class.js:30:3
 
 Missing an annotation on property `prop3`. [missing-local-annot]
 
@@ -183,7 +183,7 @@ Missing an annotation on property `prop3`. [missing-local-annot]
          ^^^^^^
 
 
-Error ------------------------------------------------------------------------------------------ included/class.js:32:22
+Error --------------------------------------------------------------------------------------------------- class.js:32:22
 
 Missing an annotation on return. [missing-local-annot]
 
@@ -191,7 +191,7 @@ Missing an annotation on return. [missing-local-annot]
                             
 
 
-Error ------------------------------------------------------------------------------------------ included/class.js:33:31
+Error --------------------------------------------------------------------------------------------------- class.js:33:31
 
 Missing an annotation on return. [missing-local-annot]
 
@@ -199,7 +199,7 @@ Missing an annotation on return. [missing-local-annot]
                                      
 
 
-Error ------------------------------------------------------------------------------------------ included/class.js:36:12
+Error --------------------------------------------------------------------------------------------------- class.js:36:12
 
 Missing an annotation on return. [missing-local-annot]
 
@@ -207,7 +207,7 @@ Missing an annotation on return. [missing-local-annot]
                   
 
 
-Error ------------------------------------------------------------------------------------------ included/class.js:37:16
+Error --------------------------------------------------------------------------------------------------- class.js:37:16
 
 Missing an annotation on return. [missing-local-annot]
 
@@ -215,7 +215,7 @@ Missing an annotation on return. [missing-local-annot]
                       
 
 
-Error ------------------------------------------------------------------------------------------- included/class.js:39:9
+Error ---------------------------------------------------------------------------------------------------- class.js:39:9
 
 Missing an annotation on property `#priv1`. [missing-local-annot]
 
@@ -223,7 +223,7 @@ Missing an annotation on property `#priv1`. [missing-local-annot]
                
 
 
-Error ------------------------------------------------------------------------------------------- included/class.js:40:3
+Error ---------------------------------------------------------------------------------------------------- class.js:40:3
 
 Missing an annotation on property `#priv2`. [missing-local-annot]
 
@@ -231,7 +231,7 @@ Missing an annotation on property `#priv2`. [missing-local-annot]
          ^^^^^^^
 
 
-Error ------------------------------------------------------------------------------------------ included/class.js:43:12
+Error --------------------------------------------------------------------------------------------------- class.js:43:12
 
 Missing an annotation on return. [missing-local-annot]
 
@@ -239,7 +239,7 @@ Missing an annotation on return. [missing-local-annot]
                   
 
 
-Error ------------------------------------------------------------------------------------------- included/class.js:44:3
+Error ---------------------------------------------------------------------------------------------------- class.js:44:3
 
 Computed property keys not supported. [unsupported-syntax]
 
@@ -247,7 +247,7 @@ Computed property keys not supported. [unsupported-syntax]
          ^^^^^^^^^^^^^^^^^^
 
 
-Error ------------------------------------------------------------------------------------------ included/class.js:46:23
+Error --------------------------------------------------------------------------------------------------- class.js:46:23
 
 Missing an annotation on return. [missing-local-annot]
 
@@ -255,7 +255,7 @@ Missing an annotation on return. [missing-local-annot]
                              
 
 
-Error ------------------------------------------------------------------------------------------ included/class.js:47:23
+Error --------------------------------------------------------------------------------------------------- class.js:47:23
 
 Missing an annotation on return. [missing-local-annot]
 
@@ -263,7 +263,7 @@ Missing an annotation on return. [missing-local-annot]
                              
 
 
-Error -------------------------------------------------------------------------------- included/class_expression.js:3:10
+Error ----------------------------------------------------------------------------------------- class_expression.js:3:10
 
 Missing an annotation on `param`. [missing-local-annot]
 
@@ -271,7 +271,7 @@ Missing an annotation on `param`. [missing-local-annot]
                ^^^^^
 
 
-Error --------------------------------------------------------------------------------- included/class_expression.js:4:6
+Error ------------------------------------------------------------------------------------------ class_expression.js:4:6
 
 Missing an annotation on `x`. [missing-local-annot]
 
@@ -279,7 +279,7 @@ Missing an annotation on `x`. [missing-local-annot]
            ^
 
 
-Error -------------------------------------------------------------------------------- included/class_expression.js:8:16
+Error ----------------------------------------------------------------------------------------- class_expression.js:8:16
 
 Missing an annotation on `x`. [missing-local-annot]
 
@@ -287,7 +287,7 @@ Missing an annotation on `x`. [missing-local-annot]
                      ^
 
 
-Error -------------------------------------------------------------------------------- included/class_expression.js:8:18
+Error ----------------------------------------------------------------------------------------- class_expression.js:8:18
 
 Missing an annotation on return. [missing-local-annot]
 
@@ -295,7 +295,7 @@ Missing an annotation on return. [missing-local-annot]
                        
 
 
-Error ------------------------------------------------------------------------------ included/destructuring_init.js:4:14
+Error --------------------------------------------------------------------------------------- destructuring_init.js:4:14
 
 Missing an annotation on `x`. [missing-local-annot]
 
@@ -303,35 +303,35 @@ Missing an annotation on `x`. [missing-local-annot]
                    ^
 
 
-Error ------------------------------------------------------------------------------- included/destructuring_init.js:9:8
+Error ---------------------------------------------------------------------------------------- destructuring_init.js:9:8
 
 Property `x` is missing in statics of function type [1]. [prop-missing]
 
-   included/destructuring_init.js:9:8
+   destructuring_init.js:9:8
    9| const {x: b, y: c}: number => void = (x) => { // This x has an annot available
              ^
 
 References:
-   included/destructuring_init.js:9:21
+   destructuring_init.js:9:21
    9| const {x: b, y: c}: number => void = (x) => { // This x has an annot available
                           ^^^^^^^^^^^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------ included/destructuring_init.js:9:14
+Error --------------------------------------------------------------------------------------- destructuring_init.js:9:14
 
 Property `y` is missing in statics of function type [1]. [prop-missing]
 
-   included/destructuring_init.js:9:14
+   destructuring_init.js:9:14
    9| const {x: b, y: c}: number => void = (x) => { // This x has an annot available
                    ^
 
 References:
-   included/destructuring_init.js:9:21
+   destructuring_init.js:9:21
    9| const {x: b, y: c}: number => void = (x) => { // This x has an annot available
                           ^^^^^^^^^^^^^^ [1]
 
 
-Error ----------------------------------------------------------------------------- included/destructuring_init.js:10:15
+Error -------------------------------------------------------------------------------------- destructuring_init.js:10:15
 
 Missing an annotation on `x`. [missing-local-annot]
 
@@ -339,7 +339,7 @@ Missing an annotation on `x`. [missing-local-annot]
                      ^
 
 
-Error ----------------------------------------------------------------------------- included/destructuring_init.js:11:14
+Error -------------------------------------------------------------------------------------- destructuring_init.js:11:14
 
 Missing an annotation on `x`. [missing-local-annot]
 
@@ -347,7 +347,7 @@ Missing an annotation on `x`. [missing-local-annot]
                     ^
 
 
-Error ----------------------------------------------------------------------------- included/destructuring_init.js:28:14
+Error -------------------------------------------------------------------------------------- destructuring_init.js:28:14
 
 Missing an annotation on `x`. [missing-local-annot]
 
@@ -355,117 +355,117 @@ Missing an annotation on `x`. [missing-local-annot]
                     ^
 
 
-Error ------------------------------------------------------------------------------ included/destructuring_init.js:33:2
+Error --------------------------------------------------------------------------------------- destructuring_init.js:33:2
 
 Cannot assign `[...][0]` to `k` because parameter `x` of unknown type [1] is incompatible with string [2] (consider
 adding a type annotation to `x` [1]) in the first parameter. All writes to `k` must be compatible with the type of its
 initializer [3]. Add an annotation to `k` [3] if a different type is desired. [incompatible-type]
 
-   included/destructuring_init.js:33:2
+   destructuring_init.js:33:2
    33| [k, [l, m]] = [(x) => 1, [(x) => 1, (x) => 1]]; // okay
         ^
 
 References:
-   included/destructuring_init.js:33:17
+   destructuring_init.js:33:17
    33| [k, [l, m]] = [(x) => 1, [(x) => 1, (x) => 1]]; // okay
                        ^ [1]
-   included/destructuring_init.js:30:13
+   destructuring_init.js:30:13
    30| var k = (x: string) => 1;
                    ^^^^^^ [2]
-   included/destructuring_init.js:30:5
+   destructuring_init.js:30:5
    30| var k = (x: string) => 1;
            ^ [3]
 
 
-Error ------------------------------------------------------------------------------ included/destructuring_init.js:33:6
+Error --------------------------------------------------------------------------------------- destructuring_init.js:33:6
 
 Cannot assign `[...][1][0]` to `l` because parameter `x` of unknown type [1] is incompatible with string [2] (consider
 adding a type annotation to `x` [1]) in the first parameter. All writes to `l` must be compatible with the type of its
 initializer [3]. Add an annotation to `l` [3] if a different type is desired. [incompatible-type]
 
-   included/destructuring_init.js:33:6
+   destructuring_init.js:33:6
    33| [k, [l, m]] = [(x) => 1, [(x) => 1, (x) => 1]]; // okay
             ^
 
 References:
-   included/destructuring_init.js:33:28
+   destructuring_init.js:33:28
    33| [k, [l, m]] = [(x) => 1, [(x) => 1, (x) => 1]]; // okay
                                   ^ [1]
-   included/destructuring_init.js:31:13
+   destructuring_init.js:31:13
    31| var l = (x: string) => 1;
                    ^^^^^^ [2]
-   included/destructuring_init.js:31:5
+   destructuring_init.js:31:5
    31| var l = (x: string) => 1;
            ^ [3]
 
 
-Error ------------------------------------------------------------------------------ included/destructuring_init.js:33:9
+Error --------------------------------------------------------------------------------------- destructuring_init.js:33:9
 
 Cannot assign `[...][1][1]` to `m` because parameter `x` of unknown type [1] is incompatible with string [2] (consider
 adding a type annotation to `x` [1]) in the first parameter. All writes to `m` must be compatible with the type of its
 initializer [3]. Add an annotation to `m` [3] if a different type is desired. [incompatible-type]
 
-   included/destructuring_init.js:33:9
+   destructuring_init.js:33:9
    33| [k, [l, m]] = [(x) => 1, [(x) => 1, (x) => 1]]; // okay
                ^
 
 References:
-   included/destructuring_init.js:33:38
+   destructuring_init.js:33:38
    33| [k, [l, m]] = [(x) => 1, [(x) => 1, (x) => 1]]; // okay
                                             ^ [1]
-   included/destructuring_init.js:32:13
+   destructuring_init.js:32:13
    32| var m = (x: string) => 1;
                    ^^^^^^ [2]
-   included/destructuring_init.js:32:5
+   destructuring_init.js:32:5
    32| var m = (x: string) => 1;
            ^ [3]
 
 
-Error ------------------------------------------------------------------------------ included/destructuring_init.js:38:2
+Error --------------------------------------------------------------------------------------- destructuring_init.js:38:2
 
 Cannot assign `[...][0]` to `n` because parameter `x` of unknown type [1] is incompatible with string [2] (consider
 adding a type annotation to `x` [1]) in the first parameter. All writes to `n` must be compatible with the type of its
 initializer [3]. Add an annotation to `n` [3] if a different type is desired. [incompatible-type]
 
-   included/destructuring_init.js:38:2
+   destructuring_init.js:38:2
    38| [n, [o, null_2]] = [
         ^
 
 References:
-   included/destructuring_init.js:39:6
+   destructuring_init.js:39:6
    39|     (x) => 1, // TODO should not need annotation
             ^ [1]
-   included/destructuring_init.js:35:13
+   destructuring_init.js:35:13
    35| var n = (x: string) => 1;
                    ^^^^^^ [2]
-   included/destructuring_init.js:35:5
+   destructuring_init.js:35:5
    35| var n = (x: string) => 1;
            ^ [3]
 
 
-Error ------------------------------------------------------------------------------ included/destructuring_init.js:38:6
+Error --------------------------------------------------------------------------------------- destructuring_init.js:38:6
 
 Cannot assign `[...][1][0]` to `o` because parameter `x` of unknown type [1] is incompatible with string [2] (consider
 adding a type annotation to `x` [1]) in the first parameter. All writes to `o` must be compatible with the type of its
 initializer [3]. Add an annotation to `o` [3] if a different type is desired. [incompatible-type]
 
-   included/destructuring_init.js:38:6
+   destructuring_init.js:38:6
    38| [n, [o, null_2]] = [
             ^
 
 References:
-   included/destructuring_init.js:41:10
+   destructuring_init.js:41:10
    41|         (x) => 1, // TODO should not need annotation
                 ^ [1]
-   included/destructuring_init.js:36:13
+   destructuring_init.js:36:13
    36| var o = (x: string) => 1;
                    ^^^^^^ [2]
-   included/destructuring_init.js:36:5
+   destructuring_init.js:36:5
    36| var o = (x: string) => 1;
            ^ [3]
 
 
-Error ------------------------------------------------------------------------------ included/destructuring_init.js:39:6
+Error --------------------------------------------------------------------------------------- destructuring_init.js:39:6
 
 Missing an annotation on `x`. [missing-local-annot]
 
@@ -473,7 +473,7 @@ Missing an annotation on `x`. [missing-local-annot]
             ^
 
 
-Error ----------------------------------------------------------------------------- included/destructuring_init.js:41:10
+Error -------------------------------------------------------------------------------------- destructuring_init.js:41:10
 
 Missing an annotation on `x`. [missing-local-annot]
 
@@ -481,7 +481,7 @@ Missing an annotation on `x`. [missing-local-annot]
                 ^
 
 
-Error ----------------------------------------------------------------------------- included/destructuring_init.js:42:10
+Error -------------------------------------------------------------------------------------- destructuring_init.js:42:10
 
 Missing an annotation on `x`. [missing-local-annot]
 
@@ -489,7 +489,7 @@ Missing an annotation on `x`. [missing-local-annot]
                 ^
 
 
-Error ---------------------------------------------------------------------------------------- included/do_while.js:8:16
+Error ------------------------------------------------------------------------------------------------- do_while.js:8:16
 
 Missing an annotation on `y`. [missing-local-annot]
 
@@ -497,7 +497,7 @@ Missing an annotation on `y`. [missing-local-annot]
                      ^
 
 
-Error --------------------------------------------------------------------------------------- included/do_while.js:11:11
+Error ------------------------------------------------------------------------------------------------ do_while.js:11:11
 
 Missing an annotation on `x`. [missing-local-annot]
 
@@ -505,7 +505,7 @@ Missing an annotation on `x`. [missing-local-annot]
                  ^
 
 
-Error ---------------------------------------------------------------------------------------- included/do_while.js:12:3
+Error ------------------------------------------------------------------------------------------------- do_while.js:12:3
 
 Unreachable code. [unreachable-code]
 
@@ -513,7 +513,7 @@ Unreachable code. [unreachable-code]
          ^^^^^^^^^^^^^^^^
 
 
-Error ---------------------------------------------------------------------------------------------- included/for.js:7:9
+Error ------------------------------------------------------------------------------------------------------- for.js:7:9
 
 Missing an annotation on `x`. [missing-local-annot]
 
@@ -521,7 +521,7 @@ Missing an annotation on `x`. [missing-local-annot]
               ^
 
 
-Error --------------------------------------------------------------------------------------------- included/for.js:7:22
+Error ------------------------------------------------------------------------------------------------------ for.js:7:22
 
 Missing an annotation on `x`. [missing-local-annot]
 
@@ -529,7 +529,7 @@ Missing an annotation on `x`. [missing-local-annot]
                            ^
 
 
-Error --------------------------------------------------------------------------------------------- included/for.js:8:16
+Error ------------------------------------------------------------------------------------------------------ for.js:8:16
 
 Missing an annotation on `y`. [missing-local-annot]
 
@@ -537,7 +537,7 @@ Missing an annotation on `y`. [missing-local-annot]
                      ^
 
 
-Error -------------------------------------------------------------------------------------------- included/for.js:14:10
+Error ----------------------------------------------------------------------------------------------------- for.js:14:10
 
 Missing an annotation on `x`. [missing-local-annot]
 
@@ -545,7 +545,7 @@ Missing an annotation on `x`. [missing-local-annot]
                 ^
 
 
-Error ------------------------------------------------------------------------------------------ included/for_in.js:7:19
+Error --------------------------------------------------------------------------------------------------- for_in.js:7:19
 
 Missing an annotation on `x`. [missing-local-annot]
 
@@ -553,7 +553,7 @@ Missing an annotation on `x`. [missing-local-annot]
                         ^
 
 
-Error ------------------------------------------------------------------------------------------ included/for_in.js:8:16
+Error --------------------------------------------------------------------------------------------------- for_in.js:8:16
 
 Missing an annotation on `y`. [missing-local-annot]
 
@@ -561,11 +561,11 @@ Missing an annotation on `y`. [missing-local-annot]
                      ^
 
 
-Error ------------------------------------------------------------------------------------------ included/for_of.js:7:18
+Error --------------------------------------------------------------------------------------------------- for_of.js:7:18
 
 Property `@@iterator` is missing in function [1] but exists in `$Iterable` [2]. [prop-missing]
 
-   included/for_of.js:7:18
+   for_of.js:7:18
       7|   for (let x of ((x) => 3)) { // Only the body is covered, missing annot! Also a type error
                           ^^^^^^^^ [1]
 
@@ -575,7 +575,7 @@ References:
                    ^^^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------ included/for_of.js:7:19
+Error --------------------------------------------------------------------------------------------------- for_of.js:7:19
 
 Missing an annotation on `x`. [missing-local-annot]
 
@@ -583,7 +583,7 @@ Missing an annotation on `x`. [missing-local-annot]
                         ^
 
 
-Error ------------------------------------------------------------------------------------------ included/for_of.js:8:16
+Error --------------------------------------------------------------------------------------------------- for_of.js:8:16
 
 Missing an annotation on `y`. [missing-local-annot]
 
@@ -591,7 +591,7 @@ Missing an annotation on `y`. [missing-local-annot]
                      ^
 
 
-Error ------------------------------------------------------------------------------------------ included/freeze.js:3:35
+Error --------------------------------------------------------------------------------------------------- freeze.js:3:35
 
 Missing an annotation on `x`. [missing-local-annot]
 
@@ -599,7 +599,7 @@ Missing an annotation on `x`. [missing-local-annot]
                                         ^
 
 
-Error -------------------------------------------------------------------------------- included/function_statics.js:4:12
+Error ----------------------------------------------------------------------------------------- function_statics.js:4:12
 
 Missing an annotation on `baz`. [missing-local-annot]
 
@@ -607,7 +607,7 @@ Missing an annotation on `baz`. [missing-local-annot]
                  ^^^
 
 
-Error ----------------------------------------------------------------------------------------- included/id_init.js:6:15
+Error -------------------------------------------------------------------------------------------------- id_init.js:6:15
 
 Missing an annotation on `x`. [missing-local-annot]
 
@@ -615,7 +615,7 @@ Missing an annotation on `x`. [missing-local-annot]
                     ^
 
 
-Error ----------------------------------------------------------------------------------------- included/id_init.js:7:14
+Error -------------------------------------------------------------------------------------------------- id_init.js:7:14
 
 Missing an annotation on `x`. [missing-local-annot]
 
@@ -623,7 +623,7 @@ Missing an annotation on `x`. [missing-local-annot]
                    ^
 
 
-Error ----------------------------------------------------------------------------------------------- included/if.js:7:9
+Error -------------------------------------------------------------------------------------------------------- if.js:7:9
 
 Missing an annotation on `x`. [missing-local-annot]
 
@@ -631,7 +631,7 @@ Missing an annotation on `x`. [missing-local-annot]
               ^
 
 
-Error --------------------------------------------------------------------------------------------- included/if.js:10:16
+Error ------------------------------------------------------------------------------------------------------ if.js:10:16
 
 Missing an annotation on `x`. [missing-local-annot]
 
@@ -639,7 +639,7 @@ Missing an annotation on `x`. [missing-local-annot]
                       ^
 
 
-Error ----------------------------------------------------------------------- included/immediate_call_expression.js:8:13
+Error -------------------------------------------------------------------------------- immediate_call_expression.js:8:13
 
 Missing an annotation on `x`. [missing-local-annot]
 
@@ -647,7 +647,7 @@ Missing an annotation on `x`. [missing-local-annot]
                   ^
 
 
-Error --------------------------------------------------------------------------------------------- included/jsx.js:9:14
+Error ------------------------------------------------------------------------------------------------------ jsx.js:9:14
 
 Missing an annotation on `x`. [missing-local-annot]
 
@@ -655,7 +655,7 @@ Missing an annotation on `x`. [missing-local-annot]
                    ^
 
 
-Error ---------------------------------------------------------------------------------------- included/logical.js:15:37
+Error ------------------------------------------------------------------------------------------------- logical.js:15:37
 
 Missing an annotation on `y`. [missing-local-annot]
 
@@ -663,7 +663,7 @@ Missing an annotation on `y`. [missing-local-annot]
                                            ^
 
 
-Error --------------------------------------------------------------------------------------- included/no_annots.js:3:12
+Error ------------------------------------------------------------------------------------------------ no_annots.js:3:12
 
 Missing an annotation on `x`. [missing-local-annot]
 
@@ -671,7 +671,7 @@ Missing an annotation on `x`. [missing-local-annot]
                  ^
 
 
-Error --------------------------------------------------------------------------------------- included/no_annots.js:4:32
+Error ------------------------------------------------------------------------------------------------ no_annots.js:4:32
 
 Missing an annotation on `x`. [missing-local-annot]
 
@@ -679,7 +679,7 @@ Missing an annotation on `x`. [missing-local-annot]
                                      ^
 
 
-Error --------------------------------------------------------------------------------------- included/no_annots.js:5:21
+Error ------------------------------------------------------------------------------------------------ no_annots.js:5:21
 
 Missing an annotation on `x`. [missing-local-annot]
 
@@ -687,7 +687,7 @@ Missing an annotation on `x`. [missing-local-annot]
                           ^
 
 
-Error --------------------------------------------------------------------------------------- included/no_annots.js:6:49
+Error ------------------------------------------------------------------------------------------------ no_annots.js:6:49
 
 Missing an annotation on `x`. [missing-local-annot]
 
@@ -695,7 +695,7 @@ Missing an annotation on `x`. [missing-local-annot]
                                                       ^
 
 
-Error --------------------------------------------------------------------------------------- included/no_annots.js:7:38
+Error ------------------------------------------------------------------------------------------------ no_annots.js:7:38
 
 Missing an annotation on `x`. [missing-local-annot]
 
@@ -703,7 +703,7 @@ Missing an annotation on `x`. [missing-local-annot]
                                            ^
 
 
-Error ------------------------------------------------------------------------------------------ included/object.js:5:16
+Error --------------------------------------------------------------------------------------------------- object.js:5:16
 
 Missing an annotation on `x`. [missing-local-annot]
 
@@ -711,7 +711,7 @@ Missing an annotation on `x`. [missing-local-annot]
                      ^
 
 
-Error ------------------------------------------------------------------------------------------ included/object.js:9:16
+Error --------------------------------------------------------------------------------------------------- object.js:9:16
 
 Missing an annotation on `x`. [missing-local-annot]
 
@@ -719,7 +719,7 @@ Missing an annotation on `x`. [missing-local-annot]
                      ^
 
 
-Error ----------------------------------------------------------------------------------------- included/object.js:16:15
+Error -------------------------------------------------------------------------------------------------- object.js:16:15
 
 Missing an annotation on `x`. [missing-local-annot]
 
@@ -727,7 +727,7 @@ Missing an annotation on `x`. [missing-local-annot]
                      ^
 
 
-Error ----------------------------------------------------------------------------------------- included/object.js:17:16
+Error -------------------------------------------------------------------------------------------------- object.js:17:16
 
 Missing an annotation on `x`. [missing-local-annot]
 
@@ -735,7 +735,7 @@ Missing an annotation on `x`. [missing-local-annot]
                       ^
 
 
-Error ----------------------------------------------------------------------------------------- included/object.js:18:13
+Error -------------------------------------------------------------------------------------------------- object.js:18:13
 
 Missing an annotation on `x`. [missing-local-annot]
 
@@ -743,7 +743,7 @@ Missing an annotation on `x`. [missing-local-annot]
                    ^
 
 
-Error ----------------------------------------------------------------------------------------- included/object.js:21:16
+Error -------------------------------------------------------------------------------------------------- object.js:21:16
 
 Missing an annotation on `x`. [missing-local-annot]
 
@@ -751,7 +751,7 @@ Missing an annotation on `x`. [missing-local-annot]
                       ^
 
 
-Error ----------------------------------------------------------------------------------------- included/object.js:26:16
+Error -------------------------------------------------------------------------------------------------- object.js:26:16
 
 Missing an annotation on `x`. [missing-local-annot]
 
@@ -759,7 +759,7 @@ Missing an annotation on `x`. [missing-local-annot]
                       ^
 
 
-Error ----------------------------------------------------------------------------------------- included/object.js:30:16
+Error -------------------------------------------------------------------------------------------------- object.js:30:16
 
 Missing an annotation on `x`. [missing-local-annot]
 
@@ -767,7 +767,7 @@ Missing an annotation on `x`. [missing-local-annot]
                       ^
 
 
-Error ----------------------------------------------------------------------------------------- included/object.js:34:16
+Error -------------------------------------------------------------------------------------------------- object.js:34:16
 
 Missing an annotation on `x`. [missing-local-annot]
 
@@ -775,7 +775,7 @@ Missing an annotation on `x`. [missing-local-annot]
                       ^
 
 
-Error ----------------------------------------------------------------------------------------- included/object.js:38:16
+Error -------------------------------------------------------------------------------------------------- object.js:38:16
 
 Missing an annotation on `x`. [missing-local-annot]
 
@@ -783,7 +783,7 @@ Missing an annotation on `x`. [missing-local-annot]
                       ^
 
 
-Error ----------------------------------------------------------------------------------- included/object_static.js:3:21
+Error -------------------------------------------------------------------------------------------- object_static.js:3:21
 
 Missing an annotation on `x`. [missing-local-annot]
 
@@ -791,7 +791,7 @@ Missing an annotation on `x`. [missing-local-annot]
                           ^
 
 
-Error ------------------------------------------------------------------------------------------ included/return.js:7:22
+Error --------------------------------------------------------------------------------------------------- return.js:7:22
 
 Missing an annotation on `z`. [missing-local-annot]
 
@@ -799,7 +799,7 @@ Missing an annotation on `z`. [missing-local-annot]
                            ^
 
 
-Error ----------------------------------------------------------------------------------------- included/return.js:11:40
+Error -------------------------------------------------------------------------------------------------- return.js:11:40
 
 Missing an annotation on `z`. [missing-local-annot]
 
@@ -807,7 +807,7 @@ Missing an annotation on `z`. [missing-local-annot]
                                               ^
 
 
-Error ----------------------------------------------------------------------------------------- included/return.js:15:15
+Error -------------------------------------------------------------------------------------------------- return.js:15:15
 
 Missing an annotation on `x`. [missing-local-annot]
 
@@ -815,7 +815,7 @@ Missing an annotation on `x`. [missing-local-annot]
                      ^
 
 
-Error ----------------------------------------------------------------------------------------- included/return.js:17:16
+Error -------------------------------------------------------------------------------------------------- return.js:17:16
 
 Missing an annotation on `x`. [missing-local-annot]
 
@@ -823,7 +823,7 @@ Missing an annotation on `x`. [missing-local-annot]
                       ^
 
 
-Error ------------------------------------------------------------------------------------------ included/switch.js:7:12
+Error --------------------------------------------------------------------------------------------------- switch.js:7:12
 
 Missing an annotation on `x`. [missing-local-annot]
 
@@ -831,7 +831,7 @@ Missing an annotation on `x`. [missing-local-annot]
                  ^
 
 
-Error ----------------------------------------------------------------------------------------- included/switch.js:11:18
+Error -------------------------------------------------------------------------------------------------- switch.js:11:18
 
 Missing an annotation on `x`. [missing-local-annot]
 
@@ -839,7 +839,7 @@ Missing an annotation on `x`. [missing-local-annot]
                         ^
 
 
-Error -------------------------------------------------------------------------------------------- included/this.js:2:13
+Error ----------------------------------------------------------------------------------------------------- this.js:2:13
 
 Missing an annotation on implicit `this` parameter of function. [missing-this-annot]
 
@@ -847,7 +847,7 @@ Missing an annotation on implicit `this` parameter of function. [missing-this-an
                   ^^
 
 
-Error -------------------------------------------------------------------------------------------- included/this.js:7:10
+Error ----------------------------------------------------------------------------------------------------- this.js:7:10
 
 Missing an annotation on return. [missing-local-annot]
 
@@ -855,7 +855,7 @@ Missing an annotation on return. [missing-local-annot]
                
 
 
-Error -------------------------------------------------------------------------------------------- included/this.js:8:17
+Error ----------------------------------------------------------------------------------------------------- this.js:8:17
 
 Missing an annotation on return. [missing-local-annot]
 
@@ -863,7 +863,7 @@ Missing an annotation on return. [missing-local-annot]
                       
 
 
-Error ------------------------------------------------------------------------------------------- included/this.js:18:18
+Error ---------------------------------------------------------------------------------------------------- this.js:18:18
 
 Missing an annotation on implicit `this` parameter of function. [missing-this-annot]
 
@@ -871,7 +871,7 @@ Missing an annotation on implicit `this` parameter of function. [missing-this-an
                         ^^
 
 
-Error ------------------------------------------------------------------------------- included/try_catch_finally.js:8:16
+Error ---------------------------------------------------------------------------------------- try_catch_finally.js:8:16
 
 Missing an annotation on `x`. [missing-local-annot]
 
@@ -879,7 +879,7 @@ Missing an annotation on `x`. [missing-local-annot]
                      ^
 
 
-Error ------------------------------------------------------------------------------ included/try_catch_finally.js:11:16
+Error --------------------------------------------------------------------------------------- try_catch_finally.js:11:16
 
 Missing an annotation on `x`. [missing-local-annot]
 
@@ -887,7 +887,7 @@ Missing an annotation on `x`. [missing-local-annot]
                       ^
 
 
-Error ------------------------------------------------------------------------------ included/try_catch_finally.js:14:16
+Error --------------------------------------------------------------------------------------- try_catch_finally.js:14:16
 
 Missing an annotation on `x`. [missing-local-annot]
 
@@ -895,7 +895,7 @@ Missing an annotation on `x`. [missing-local-annot]
                       ^
 
 
-Error ------------------------------------------------------------------------------------------- included/while.js:7:11
+Error ---------------------------------------------------------------------------------------------------- while.js:7:11
 
 Missing an annotation on `x`. [missing-local-annot]
 
@@ -903,7 +903,7 @@ Missing an annotation on `x`. [missing-local-annot]
                 ^
 
 
-Error ------------------------------------------------------------------------------------------- included/while.js:8:16
+Error ---------------------------------------------------------------------------------------------------- while.js:8:16
 
 Missing an annotation on `y`. [missing-local-annot]
 
