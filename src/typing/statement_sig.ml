@@ -34,6 +34,23 @@ module type S = sig
        and module Func := Func_stmt_sig
        and module Types = Class_stmt_sig_types
 
+  module ObjectExpressionAcc : sig
+    type t
+
+    val empty : allow_sealed:bool -> t
+
+    val add_prop : (Type.Properties.t -> Type.Properties.t) -> t -> t
+
+    val mk_object_from_spread_acc :
+      Context.t ->
+      t ->
+      Reason.t ->
+      frozen:bool ->
+      default_proto:Type.t ->
+      empty_unsealed:bool ->
+      Type.t
+  end
+
   val expression :
     ?cond:Type.cond_context ->
     Context.t ->

@@ -98,10 +98,28 @@ References:
                            ^^^^^^^ [1]
 
 
+Error -------------------------------------------------------------------------------------------------------- a.js:62:7
 
-Found 5 errors
+Cannot compute a type for `math2` because its definition includes references to itself [1],  [2]. Please add an
+annotation to this definition [3] [recursive-definition]
+
+   a.js:62:7
+   62| const math2 = {
+             ^^^^^ [3]
+
+References:
+   a.js:73:12
+   73|     return math2.odd(x - 1)
+                  ^^^^^ [1]
+   a.js:67:12
+   67|     return math2.even(x - 1)
+                  ^^^^^ [2]
+
+
+
+Found 6 errors
 Annotating cycles...
->>> a.js (#changes: 4)
+>>> a.js (#changes: 5)
 //@flow
 
 
@@ -148,13 +166,43 @@ function is_zero(x: number): boolean %checks {
   return x === 0 || is_zero(x);
 }
 
+const math1 = {
+  odd(x: number): bool {
+    if (x === 0) {
+      return false;
+    }
+    return math1.even(x - 1)
+  },
+  even: (x: number): bool => {
+    if (x === 0) {
+      return true;
+    }
+    return math1.odd(x - 1)
+  }
+}
+
+const math2: {| even: (x: number) => boolean, odd(x: number): boolean |} = {
+  odd(x: number) {
+    if (x === 0) {
+      return false;
+    }
+    return math2.even(x - 1)
+  },
+  even: (x: number) => {
+    if (x === 0) {
+      return true;
+    }
+    return math2.odd(x - 1)
+  }
+}
+
 >>> Launching report...
 
 Stats:
   Files changed:                            1
-  Number of annotations added:              4
-  Total size of annotations:                4
-  Number of cycles:                         4
+  Number of annotations added:              5
+  Total size of annotations:               12
+  Number of cycles:                         5
   Number of annotations skipped:            0
   Number of unannotatable cycles:           1
 

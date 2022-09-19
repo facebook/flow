@@ -428,8 +428,7 @@ struct
             ops
       in
 
-      let depends_of_fun fully_annotated tparams_map hint ~statics function_ =
-        let state = EnvMap.empty in
+      let depends_of_fun fully_annotated tparams_map hint ~statics function_ state =
         let state = depends_of_hint state hint in
         let state =
           depends_of_node
@@ -533,8 +532,24 @@ struct
         | Value { hint; expr } ->
           let state = depends_of_hint state hint in
           depends_of_expression expr state
+        | SynthesizableObject (_, { Ast.Expression.Object.properties; _ }) ->
+          let open Ast.Expression.Object in
+          let open Ast.Expression.Object.Property in
+          Base.List.fold properties ~init:state ~f:(fun state -> function
+            | Property
+                ( _,
+                  ( Method { value = (_, fn); _ }
+                  | Init
+                      {
+                        value = (_, (Ast.Expression.Function fn | Ast.Expression.ArrowFunction fn));
+                        _;
+                      } )
+                ) ->
+              depends_of_fun true ALocMap.empty Hint_api.Hint_None ~statics:SMap.empty fn state
+            | _ -> failwith "Object not synthesizable"
+          )
         | FunctionValue { hint; function_loc = _; function_; statics; arrow = _; tparams_map } ->
-          depends_of_fun false tparams_map hint ~statics function_
+          depends_of_fun false tparams_map hint ~statics function_ state
         | EmptyArray { array_providers; _ } ->
           ALocSet.fold
             (fun loc acc ->
@@ -545,7 +560,7 @@ struct
                   | Some locs -> Some (Nel.cons id_loc locs))
                 acc)
             array_providers
-            EnvMap.empty
+            state
         | For (_, exp) -> depends_of_expression exp state
         | Contextual { reason = _; hint; optional = _; default_expression } ->
           let state =
@@ -669,6 +684,7 @@ struct
           hint
           ~statics
           function_
+          EnvMap.empty
       | Class { class_; class_loc = _; class_implicit_this_tparam = _; this_super_write_locs = _ }
         ->
         depends_of_class class_
@@ -693,6 +709,7 @@ struct
         | Root Catch -> true
         | Root (Annotation { default_expression = None; _ }) -> true
         | Root (Annotation { default_expression = Some _; _ }) -> false
+        | Root (SynthesizableObject _) -> true
         | Root (For _ | Value _ | FunctionValue _ | Contextual _ | EmptyArray _) -> false
         | Select { selector = Computed _ | Default; _ } -> false
         | Select { binding; _ } -> bind_loop binding
@@ -733,7 +750,9 @@ struct
       match b with
       | Root Catch -> None
       | Root (Annotation _) -> None
-      | Root (For _ | Value _ | FunctionValue _ | Contextual _ | EmptyArray _) ->
+      | Root
+          (For _ | Value _ | FunctionValue _ | Contextual _ | EmptyArray _ | SynthesizableObject _)
+        ->
         begin
           try
             let { Scope_api.With_ALoc.Def.locs = (loc, _); _ } =

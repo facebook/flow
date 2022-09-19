@@ -213,6 +213,26 @@ let func_is_synthesizable_from_annotation
       else
         MissingReturn loc
 
+let obj_properties_synthesizable { Ast.Expression.Object.properties; comments = _ } =
+  let open Ast.Expression.Object in
+  let open Ast.Expression.Object.Property in
+  Base.List.for_all
+    ~f:(function
+      | SpreadProperty _ -> false
+      | Property
+          ( _,
+            ( Method { key = Identifier _; value = (_, fn); _ }
+            | Init
+                {
+                  key = Identifier _;
+                  value = (_, (Ast.Expression.Function fn | Ast.Expression.ArrowFunction fn));
+                  _;
+                } )
+          ) ->
+        func_is_synthesizable_from_annotation ~allow_this:false fn = Synthesizable
+      | Property _ -> false)
+    properties
+
 let def_of_function ~tparams_map ~hint ~has_this_def ~function_loc ~statics function_ =
   Function
     {
@@ -499,6 +519,13 @@ class def_finder env_entries providers toplevel_scope =
             Base.Option.value_exn (Provider_api.providers_of_def providers name_loc)
           in
           (Some (EmptyArray { array_providers; arr_loc }), Hint_None)
+        | ( None,
+            Some
+              (loc, Ast.Expression.Object ({ Ast.Expression.Object.properties = _ :: _; _ } as obj)),
+            _
+          )
+          when obj_properties_synthesizable obj ->
+          (Some (SynthesizableObject (loc, obj)), Hint_None)
         | (None, Some init, _) -> (Some (Value { hint = Hint_None; expr = init }), Hint_None)
         | (None, None, _) -> (None, Hint_None)
       in

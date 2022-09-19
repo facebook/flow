@@ -43,3 +43,33 @@ function even(x: number) {
 function is_zero(x: number): boolean %checks {
   return x === 0 || is_zero(x);
 }
+
+const math1 = {
+  odd(x: number): bool {
+    if (x === 0) {
+      return false;
+    }
+    return math1.even(x - 1)
+  },
+  even: (x: number): bool => {
+    if (x === 0) {
+      return true;
+    }
+    return math1.odd(x - 1)
+  }
+}
+
+const math2 = {
+  odd(x: number) {
+    if (x === 0) {
+      return false;
+    }
+    return math2.even(x - 1)
+  },
+  even: (x: number) => {
+    if (x === 0) {
+      return true;
+    }
+    return math2.odd(x - 1)
+  }
+}

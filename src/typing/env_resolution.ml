@@ -142,6 +142,38 @@ let lazily_resolve_hint cx loc hint =
   in
   (has_hint, lazy_hint)
 
+let resolve_annotated_function
+    cx
+    ~statics
+    reason
+    tparams_map
+    function_loc
+    ({ Ast.Function.body; params; sig_loc; _ } as function_) =
+  let cache = Context.node_cache cx in
+  let tparams_map = mk_tparams_map cx tparams_map in
+  let default_this =
+    if Signature_utils.This_finder.found_this_in_body_or_params body params then
+      let loc = aloc_of_reason reason in
+      Tvar.mk cx (mk_reason RThis loc)
+    else
+      Type.implicit_mixed_this reason
+  in
+  let ((func_sig, _) as sig_data) =
+    Statement.mk_func_sig
+      cx
+      ~required_this_param_type:(Some default_this)
+      ~require_return_annot:false
+      ~constructor:false
+      ~statics
+      tparams_map
+      reason
+      function_
+  in
+  Node_cache.set_function_sig cache sig_loc sig_data;
+  ( Statement.Func_stmt_sig.functiontype cx ~arrow:false (Some function_loc) default_this func_sig,
+    unknown_use
+  )
+
 let rec resolve_binding_partial cx reason loc b =
   let mk_use_op t = Op (AssignVar { var = Some reason; init = TypeUtil.reason_of_t t }) in
   match b with
@@ -165,6 +197,69 @@ let rec resolve_binding_partial cx reason loc b =
     let t = expression cx expr in
     let use_op = Op (AssignVar { var = Some reason; init = mk_expression_reason expr }) in
     (t, use_op, false)
+  | Root (SynthesizableObject (loc, { Ast.Expression.Object.properties; _ })) ->
+    let open Ast.Expression.Object in
+    let reason = mk_reason RObjectLit loc in
+    let resolve_prop ~prop_loc ~fn_loc fn =
+      let reason = func_reason ~async:false ~generator:false prop_loc in
+      let (t, _) =
+        resolve_annotated_function cx ~statics:SMap.empty reason ALocMap.empty fn_loc fn
+      in
+      t
+    in
+
+    let acc =
+      Base.List.fold
+        properties
+        ~init:(Statement.ObjectExpressionAcc.empty ~allow_sealed:true)
+        ~f:(fun acc prop ->
+          match prop with
+          | Property
+              ( prop_loc,
+                Property.Method
+                  {
+                    key =
+                      ( Property.Identifier (name_loc, { Ast.Identifier.name; comments = _ })
+                      | Property.Literal
+                          (name_loc, { Ast.Literal.value = Ast.Literal.String name; _ }) );
+                    value = (fn_loc, fn);
+                  }
+              ) ->
+            let t = resolve_prop ~prop_loc ~fn_loc fn in
+            Statement.ObjectExpressionAcc.add_prop
+              (Properties.add_method (OrdinaryName name) (Some name_loc) t)
+              acc
+          | Property
+              ( _,
+                Property.Init
+                  {
+                    key =
+                      ( Property.Identifier (name_loc, { Ast.Identifier.name; comments = _ })
+                      | Property.Literal
+                          (name_loc, { Ast.Literal.value = Ast.Literal.String name; _ }) );
+                    value = (fn_loc, (Ast.Expression.Function fn | Ast.Expression.ArrowFunction fn));
+                    _;
+                  }
+              ) ->
+            let { Ast.Function.sig_loc; _ } = fn in
+            let t = resolve_prop ~prop_loc:sig_loc ~fn_loc fn in
+            Statement.ObjectExpressionAcc.add_prop
+              (Properties.add_field (OrdinaryName name) Polarity.Neutral (Some name_loc) t)
+              acc
+          | _ -> failwith "Object not synthesizable"
+      )
+    in
+    let obj_proto = ObjProtoT reason in
+    let t =
+      Statement.ObjectExpressionAcc.mk_object_from_spread_acc
+        cx
+        acc
+        reason
+        ~frozen:false
+        ~default_proto:obj_proto
+        ~empty_unsealed:(not @@ Context.exact_empty_objects cx)
+    in
+    (t, unknown_use, true)
   | Root (FunctionValue { hint = _; function_loc; function_; statics; arrow; tparams_map = _ }) ->
     let { Ast.Function.id; async; generator; sig_loc; _ } = function_ in
     let reason_fun =
@@ -427,38 +522,6 @@ let resolve_inferred_function cx ~statics id_loc reason function_loc function_ =
   Flow_js.flow_t cx (fun_type, general);
   Node_cache.set_function cache id_loc fn;
   (fun_type, unknown_use)
-
-let resolve_annotated_function
-    cx
-    ~statics
-    reason
-    tparams_map
-    function_loc
-    ({ Ast.Function.body; params; sig_loc; _ } as function_) =
-  let cache = Context.node_cache cx in
-  let tparams_map = mk_tparams_map cx tparams_map in
-  let default_this =
-    if Signature_utils.This_finder.found_this_in_body_or_params body params then
-      let loc = aloc_of_reason reason in
-      Tvar.mk cx (mk_reason RThis loc)
-    else
-      Type.implicit_mixed_this reason
-  in
-  let ((func_sig, _) as sig_data) =
-    Statement.mk_func_sig
-      cx
-      ~required_this_param_type:(Some default_this)
-      ~require_return_annot:false
-      ~constructor:false
-      ~statics
-      tparams_map
-      reason
-      function_
-  in
-  Node_cache.set_function_sig cache sig_loc sig_data;
-  ( Statement.Func_stmt_sig.functiontype cx ~arrow:false (Some function_loc) default_this func_sig,
-    unknown_use
-  )
 
 let resolve_class cx id_loc reason class_loc class_ =
   let cache = Context.node_cache cx in
@@ -729,7 +792,8 @@ let resolve cx (def_kind, id_loc) (def, def_scope_kind, class_stack, def_reason)
   let update_reason =
     match def with
     | ChainExpression _
-    | RefiExpression _ ->
+    | RefiExpression _
+    | Binding (Root (SynthesizableObject _)) ->
       true
     | _ -> false
   in
