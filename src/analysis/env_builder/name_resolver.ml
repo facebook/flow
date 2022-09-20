@@ -1557,54 +1557,83 @@ module Make
           env_state.env
 
       method havoc_env ~force_initialization ~all =
-        SMap.iter
-          (fun _x -> function
-            | { kind = Bindings.Internal; _ } -> ()
-            | {
-                val_ref;
-                havoc;
-                writes_by_closure_provider_val;
-                def_loc;
-                heap_refinements;
-                kind = _;
-              } ->
-              this#havoc_heap_refinements heap_refinements;
-              let uninitialized_writes =
-                lazy (Val.writes_of_uninitialized this#refinement_may_be_undefined !val_ref)
+        let havoced_names =
+          SMap.filter
+            (fun _x -> function
+              | { kind = Bindings.Internal; _ } -> false
+              | {
+                  val_ref;
+                  havoc;
+                  writes_by_closure_provider_val;
+                  def_loc;
+                  heap_refinements;
+                  kind = _;
+                } ->
+                this#havoc_heap_refinements heap_refinements;
+                let uninitialized_writes =
+                  lazy (Val.writes_of_uninitialized this#refinement_may_be_undefined !val_ref)
+                in
+                let val_is_undeclared_or_skipped = Val.is_undeclared_or_skipped !val_ref in
+                let havoc_ref =
+                  if force_initialization then
+                    havoc
+                  else if val_is_undeclared_or_skipped then
+                    !val_ref
+                  else
+                    let havoc =
+                      match (all, writes_by_closure_provider_val) with
+                      | (false, Some writes_by_closure_provider_val) ->
+                        Val.merge !val_ref writes_by_closure_provider_val
+                      | _ -> havoc
+                    in
+                    Base.List.fold
+                      ~init:havoc
+                      ~f:(fun acc write -> Val.merge acc (Val.of_write write))
+                      (Lazy.force uninitialized_writes)
+                in
+                if
+                  Base.Option.is_none def_loc
+                  || Invalidation_api.should_invalidate
+                       ~all
+                       invalidation_caches
+                       prepass_info
+                       prepass_values
+                       (Base.Option.value_exn def_loc (* checked against none above *))
+                  || force_initialization
+                     && (List.length (Lazy.force uninitialized_writes) > 0
+                        || val_is_undeclared_or_skipped
+                        )
+                then begin
+                  val_ref := havoc_ref;
+                  true
+                end else
+                  false)
+            env_state.env
+        in
+        let latest_refinements =
+          Base.List.map
+            ~f:(fun { applied; _ } ->
+              let applied =
+                IMap.filter
+                  (fun ssa_id ({ RefinementKey.base; projections }, _) ->
+                    Base.List.length projections = 0
+                    &&
+                    (* If we havoced a var with the same name in the previous step, and if the ssa ids match, we remove it from the latest refinements *)
+                    match SMap.find_opt base havoced_names with
+                    | None -> true
+                    | Some { val_ref; _ } -> Val.base_id_of_val !val_ref <> ssa_id)
+                  applied
               in
-              let val_is_undeclared_or_skipped = Val.is_undeclared_or_skipped !val_ref in
-              let havoc_ref =
-                if force_initialization then
-                  havoc
-                else if val_is_undeclared_or_skipped then
-                  !val_ref
+              let total =
+                if IMap.cardinal applied > 0 then
+                  Some (Refinements (applied, LookupMap.empty))
                 else
-                  let havoc =
-                    match (all, writes_by_closure_provider_val) with
-                    | (false, Some writes_by_closure_provider_val) ->
-                      Val.merge !val_ref writes_by_closure_provider_val
-                    | _ -> havoc
-                  in
-                  Base.List.fold
-                    ~init:havoc
-                    ~f:(fun acc write -> Val.merge acc (Val.of_write write))
-                    (Lazy.force uninitialized_writes)
+                  None
               in
-              if
-                Base.Option.is_none def_loc
-                || Invalidation_api.should_invalidate
-                     ~all
-                     invalidation_caches
-                     prepass_info
-                     prepass_values
-                     (Base.Option.value_exn def_loc (* checked against none above *))
-                || force_initialization
-                   && (List.length (Lazy.force uninitialized_writes) > 0
-                      || val_is_undeclared_or_skipped
-                      )
-              then
-                val_ref := havoc_ref)
-          env_state.env
+              { applied; changeset = LookupMap.empty; total })
+            env_state.latest_refinements
+        in
+        env_state <- { env_state with latest_refinements }
 
       method havoc_current_env ~all = this#havoc_env ~all ~force_initialization:false
 
@@ -4315,7 +4344,7 @@ module Make
           | Flow_ast.Expression.Logical.Or
           | Flow_ast.Expression.Logical.And ->
             ignore @@ this#expression_refinement left;
-            let lhs_latest_refinements = this#peek_new_refinements () in
+            let lhs_latest_refinements_or = this#peek_new_refinements () in
             let env1 = this#env_without_latest_refinements in
             (match operator with
             | Flow_ast.Expression.Logical.Or -> this#negate_new_refinements ()
@@ -4325,9 +4354,17 @@ module Make
               this#run_to_completion (fun () -> ignore @@ this#expression_refinement right)
             in
             let rhs_latest_refinements = this#peek_new_refinements () in
-            (* Pop LHS refinement scope *)
-            this#pop_refinement_scope ();
             (* Pop RHS refinement scope *)
+            this#pop_refinement_scope ();
+            let lhs_latest_refinements =
+              (* If this is `and`, we want to save the LHS refinements that may have been havoced by the RHS.
+                 If this is `or`, the RHS did not fire if the LHS was truthy, so we want the original, un-havoced
+                 refinements *)
+              match operator with
+              | Flow_ast.Expression.Logical.Or -> lhs_latest_refinements_or
+              | _ -> this#peek_new_refinements ()
+            in
+            (* Pop LHS refinement scope *)
             this#pop_refinement_scope ();
             (lhs_latest_refinements, rhs_latest_refinements, env1, rhs_completion_state)
           | Flow_ast.Expression.Logical.NullishCoalesce ->
