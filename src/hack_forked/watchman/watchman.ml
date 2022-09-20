@@ -113,8 +113,10 @@ type init_settings = {
   sync_timeout: int option;
 }
 
-(** The message's clock. *)
-type clock = string
+type mergebase_and_changes = {
+  mergebase: string;
+  changes: SSet.t;
+}
 
 type pushed_changes =
   (*
@@ -134,14 +136,8 @@ type pushed_changes =
    *)
   | State_enter of string * Hh_json.json option
   | State_leave of string * Hh_json.json option
-  | Changed_merge_base of string * SSet.t * clock
+  | Changed_merge_base of mergebase_and_changes
   | Files_changed of SSet.t
-
-type mergebase_and_changes = {
-  clock: clock;
-  mergebase: string;
-  changes: SSet.t;
-}
 
 module Capability = struct
   type t =
@@ -890,9 +886,9 @@ let make_mergebase_changed_response env data =
   match extract_mergebase data with
   | None -> None
   | Some (clock, mergebase) ->
-    let files = extract_file_names env data in
+    let changes = extract_file_names env data in
     env.clockspec <- clock;
-    let response = Changed_merge_base (mergebase, files, clock) in
+    let response = Changed_merge_base { mergebase; changes } in
     Some (env, response)
 
 let subscription_is_cancelled data =
@@ -974,9 +970,22 @@ let get_mergebase_and_changes =
     | Error _ as err -> Lwt.return err
     | Ok response ->
       (match extract_mergebase response with
-      | Some (clock, mergebase) ->
+      | Some (_clock, mergebase) ->
+        (* ignore clock and don't update env.clockspec. this is likely just a
+           legacy thing, and it's probably ok if we did update env.clockspec.
+           it's used when we resubscribe to a broken subscription, and since
+           we already processed changes up to _clock, we can resubscribe
+           from there instead of from env.clockspec again.
+
+           it is assumed that there's already a subscription running that will
+           catch any contemporaneous changes. suppose a subscription is started
+           at clock C. we query for changes since mergebase here, and get back
+           clock C+1. `changes` includes files that changed before our
+           subscription, plus maybe some between C and C+1. we'll also get a
+           subscription event for those changes between C and C+1, so we don't
+           _need_ to update env.clockspec here. *)
         let changes = extract_file_names env response in
-        Lwt.return (Ok (Some { clock; mergebase; changes }))
+        Lwt.return (Ok (Some { mergebase; changes }))
       | None ->
         Lwt.return (Error (response_error_of_json ~query ~response "Failed to extract mergebase")))
   in
@@ -999,7 +1008,7 @@ let recover_from_restart ~prev_mergebase env =
          happen: it means that Watchman previously supported SCM queries, but
          no longer does when we reconnect. *)
       Lwt.return (Error Restarted)
-    | Ok (Some { mergebase; changes; clock = _ }) ->
+    | Ok (Some { mergebase; changes }) ->
       if String.equal mergebase prev_mergebase then
         (* the mergebase didn't change, so no upstream files changed. we can
            recover by rechecking `changes` (the files currently changed

@@ -566,7 +566,7 @@ end = struct
             | Ok mergebase_and_changes ->
               let (mergebase, files) =
                 match mergebase_and_changes with
-                | Some { Watchman.mergebase; changes; clock = _ } ->
+                | Some { Watchman.mergebase; changes } ->
                   Logger.info
                     "Watchman reports the initial mergebase as %S, and %d changes"
                     mergebase

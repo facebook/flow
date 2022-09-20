@@ -28,8 +28,10 @@ type init_settings = {
   sync_timeout: int option;
 }
 
-(** The message's clock. *)
-type clock = string
+type mergebase_and_changes = {
+  mergebase: string;
+  changes: SSet.t;
+}
 
 type pushed_changes =
   (*
@@ -49,14 +51,8 @@ type pushed_changes =
    *)
   | State_enter of string * Hh_json.json option
   | State_leave of string * Hh_json.json option
-  | Changed_merge_base of string * SSet.t * clock
+  | Changed_merge_base of mergebase_and_changes
   | Files_changed of SSet.t
-
-type mergebase_and_changes = {
-  clock: clock;
-  mergebase: string;
-  changes: SSet.t;
-}
 
 type failure =
   | Dead
