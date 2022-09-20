@@ -4112,7 +4112,7 @@ module Make
                }
             )
         in
-        let get_opt_use argts reason _ = func_call_opt_use reason ~use_op targts argts in
+        let get_opt_use argts reason _ = func_call_opt_use cx loc reason ~use_op targts argts in
         let get_reason lhs_t = mk_reason (RFunctionCall (desc_of_t lhs_t)) loc in
         let get_result argts reason f =
           Tvar.mk_no_wrap_where cx reason (fun t ->
@@ -4187,12 +4187,13 @@ module Make
           )
     )
 
-  and func_call_opt_use reason ~use_op ?(call_strict_arity = true) targts argts =
+  and func_call_opt_use cx loc reason ~use_op ?(call_strict_arity = true) targts argts =
     let opt_app = mk_opt_functioncalltype reason targts argts call_strict_arity in
-    OptCallT { use_op; reason; opt_funcalltype = opt_app; return_hint = Type.hint_unavailable }
+    let return_hint = Env.get_hint cx loc in
+    OptCallT { use_op; reason; opt_funcalltype = opt_app; return_hint }
 
-  and func_call cx reason ~use_op ?(call_strict_arity = true) func_t targts argts =
-    let opt_use = func_call_opt_use reason ~use_op ~call_strict_arity targts argts in
+  and func_call cx loc reason ~use_op ?(call_strict_arity = true) func_t targts argts =
+    let opt_use = func_call_opt_use cx loc reason ~use_op ~call_strict_arity targts argts in
     Tvar.mk_no_wrap_where cx reason (fun t -> Flow.flow cx (func_t, apply_opt_use opt_use t))
 
   and method_call_opt_use
@@ -4445,7 +4446,7 @@ module Make
              }
           )
       in
-      ( func_call cx reason ~use_op await None [Arg arg],
+      ( func_call cx loc reason ~use_op await None [Arg arg],
         { operator = Await; argument = argument_ast; comments }
       )
 
@@ -5649,7 +5650,7 @@ module Make
           )
       | _ ->
         let f = jsx_pragma_expression cx raw_jsx_expr loc_element jsx_expr in
-        func_call cx reason ~use_op ~call_strict_arity:false f None argts)
+        func_call cx loc_element reason ~use_op ~call_strict_arity:false f None argts)
 
   (* The @jsx pragma specifies a left hand side expression EXPR such that
    *
