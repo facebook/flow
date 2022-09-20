@@ -584,13 +584,17 @@ module Kit (FlowJs : Flow_common.S) (Instantiation_helper : Flow_js_utils.Instan
     let poly_t = check.Implicit_instantiation_check.poly_t in
     FlowJs.instantiate_poly cx trace ~use_op ~reason_op ~reason_tapp ?cache poly_t
 
-  let run cx check ~return_hint:(has_context, _lazy_hint) =
+  let run
+      cx check ~return_hint:(has_context, _lazy_hint) ?cache trace ~use_op ~reason_op ~reason_tapp =
     if not has_context then Context.add_possibly_speculating_implicit_instantiation_check cx check;
     (* The current Pierce's algorithm running inside flow_js does not have access to the return
        hint type, which will cause a lot of unactionable unconstrained implicit instantiation
        errors. We disable the check when we have return context for now, but we should re-enable
        it when we can use the return hint more effectively. *)
     match (Context.env_mode cx, has_context) with
-    | (Options.LTI, false) -> run_pierce cx check
-    | _ -> run_instantiate_poly cx check
+    | (Options.LTI, false) ->
+      Context.run_in_implicit_instantiation_mode cx (fun () ->
+          run_pierce cx check ?cache trace ~use_op ~reason_op ~reason_tapp
+      )
+    | _ -> run_instantiate_poly cx check ?cache trace ~use_op ~reason_op ~reason_tapp
 end
