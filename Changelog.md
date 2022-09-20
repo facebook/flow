@@ -1,3 +1,7 @@
+### 0.187.1
+
+* Fix a crash introduced in 0.187.0 when the file walker fails to open a directory
+
 ### 0.187.0
 
 Likely to cause new Flow errors:
