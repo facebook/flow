@@ -164,7 +164,7 @@ let workload_changed a b =
     files_to_prioritize = files_to_prioritize_a;
     files_to_recheck = files_to_recheck_a;
     files_to_force = files_to_force_a;
-    metadata = _;
+    metadata = { MonitorProt.changed_mergebase = _; missed_changes = missed_changes_a };
     recheck_reasons_rev = _;
   } =
     a
@@ -173,7 +173,7 @@ let workload_changed a b =
     files_to_prioritize = files_to_prioritize_b;
     files_to_recheck = files_to_recheck_b;
     files_to_force = files_to_force_b;
-    metadata = _;
+    metadata = { MonitorProt.changed_mergebase = _; missed_changes = missed_changes_b };
     recheck_reasons_rev = _;
   } =
     b
@@ -182,6 +182,7 @@ let workload_changed a b =
     files_to_prioritize_a != files_to_prioritize_b
     || files_to_recheck_a != files_to_recheck_b
     || files_to_force_a != files_to_force_b
+    || missed_changes_a != missed_changes_b
   in
   if changed then
     let num_files_to_prioritize =
