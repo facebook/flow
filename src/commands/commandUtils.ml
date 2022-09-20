@@ -1345,8 +1345,6 @@ let make_options
     opt_enabled_rollouts = FlowConfig.enabled_rollouts flowconfig;
     opt_enforce_local_inference_annotations =
       FlowConfig.enforce_local_inference_annotations flowconfig;
-    opt_enforce_class_annotations = FlowConfig.enforce_class_annotations flowconfig;
-    opt_enforce_this_annotations = FlowConfig.enforce_this_annotations flowconfig;
     opt_experimental_infer_indexers = false;
     opt_array_literal_providers = FlowConfig.array_literal_providers flowconfig;
     opt_cycle_errors = FlowConfig.cycle_errors flowconfig;

@@ -37,9 +37,7 @@ type metadata = {
   enable_enums: bool;
   enable_relay_integration: bool;
   enforce_local_inference_annotations: bool;
-  enforce_class_annotations: bool;
   enforce_strict_call_arity: bool;
-  enforce_this_annotations: bool;
   env_mode: Options.env_mode;
   exact_by_default: bool;
   exact_empty_objects: bool;
@@ -218,9 +216,7 @@ let metadata_of_options options =
     enable_enums = Options.enums options;
     enable_relay_integration = Options.enable_relay_integration options;
     enforce_local_inference_annotations = Options.enforce_local_inference_annotations options;
-    enforce_class_annotations = Options.enforce_class_annotations options;
     enforce_strict_call_arity = Options.enforce_strict_call_arity options;
-    enforce_this_annotations = Options.enforce_this_annotations options;
     env_mode = Options.env_mode options;
     exact_by_default = Options.exact_by_default options;
     exact_empty_objects = Options.exact_empty_objects options;
@@ -439,11 +435,6 @@ let exact_empty_objects cx = cx.metadata.exact_empty_objects || env_mode cx = Op
 
 let enforce_local_inference_annotations cx =
   cx.metadata.enforce_local_inference_annotations || env_mode cx = Options.LTI
-
-let enforce_class_annotations cx =
-  cx.metadata.enforce_class_annotations || env_mode cx = Options.LTI
-
-let enforce_this_annotations cx = cx.metadata.enforce_this_annotations || env_mode cx = Options.LTI
 
 let experimental_infer_indexers cx = cx.metadata.experimental_infer_indexers
 

@@ -227,7 +227,6 @@ module Annotate_lti_command = struct
           opt_any_propagation = false;
           opt_env_mode = ConstrainWrites;
           opt_enforce_local_inference_annotations = true;
-          opt_enforce_this_annotations = true;
         }
 
       let visit =

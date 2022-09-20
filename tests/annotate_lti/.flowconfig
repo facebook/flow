@@ -1,4 +1,2 @@
 [options]
 experimental.enforce_local_inference_annotations=true
-experimental.enforce_this_annotations=true
-experimental.enforce_class_annotations=true

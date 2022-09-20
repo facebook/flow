@@ -54,9 +54,7 @@ module Opts = struct
     emoji: bool option;
     enable_const_params: bool option;
     enforce_local_inference_annotations: bool;
-    enforce_class_annotations: bool;
     enforce_strict_call_arity: bool;
-    enforce_this_annotations: bool;
     enums: bool;
     env_mode: Options.env_mode;
     estimate_recheck_time: bool option;
@@ -180,9 +178,7 @@ module Opts = struct
       emoji = None;
       enable_const_params = None;
       enforce_local_inference_annotations = false;
-      enforce_class_annotations = false;
       enforce_strict_call_arity = true;
-      enforce_this_annotations = false;
       enums = false;
       env_mode = Options.ConstrainWrites;
       estimate_recheck_time = None;
@@ -462,18 +458,6 @@ module Opts = struct
 
   let enforce_local_inference_annotations =
     boolean (fun opts v -> Ok { opts with enforce_local_inference_annotations = v })
-
-  let enforce_class_annotations =
-    boolean (fun opts v ->
-        if opts.enforce_local_inference_annotations || not v then
-          Ok { opts with enforce_class_annotations = v }
-        else
-          Error
-            "Option \"enforce_local_inference_annotations\" must be set to true to set \"enforce_class_annotations\" to true."
-    )
-
-  let enforce_this_annotations =
-    boolean (fun opts v -> Ok { opts with enforce_this_annotations = v })
 
   let post_inference_implicit_instantiation_parser =
     boolean (fun opts v -> Ok { opts with run_post_inference_implicit_instantiation = v })
@@ -758,9 +742,11 @@ module Opts = struct
       );
       ("experimental.cycle_errors", boolean (fun opts v -> Ok { opts with cycle_errors = v }));
       ("experimental.direct_dependent_files_fix", direct_dependent_files_fix_parser);
+      ("enforce_local_inference_annotations", enforce_local_inference_annotations);
+      (* TODO(T132331906): delete the following three options parser once we deploy 0.188.0. *)
       ("experimental.enforce_local_inference_annotations", enforce_local_inference_annotations);
-      ("experimental.enforce_class_annotations", enforce_class_annotations);
-      ("experimental.enforce_this_annotations", enforce_this_annotations);
+      ("experimental.enforce_class_annotations", boolean (fun opts _ -> Ok opts));
+      ("experimental.enforce_this_annotations", boolean (fun opts _ -> Ok opts));
       ("inference_mode", inference_mode_parser);
       ("experimental.array_literal_providers", experimental_empty_array_literals_parser);
       ("experimental.facebook_module_interop", facebook_module_interop_parser);
@@ -1389,11 +1375,7 @@ let enable_const_params c = c.options.Opts.enable_const_params
 
 let enforce_local_inference_annotations c = c.options.Opts.enforce_local_inference_annotations
 
-let enforce_class_annotations c = c.options.Opts.enforce_class_annotations
-
 let enforce_strict_call_arity c = c.options.Opts.enforce_strict_call_arity
-
-let enforce_this_annotations c = c.options.Opts.enforce_this_annotations
 
 let enums c = c.options.Opts.enums
 

@@ -6214,10 +6214,7 @@ module Make
                   cx
                   ~required_this_param_type:None
                   ~constructor:false
-                  ~require_return_annot:
-                    (Context.enforce_local_inference_annotations cx
-                    && Context.enforce_class_annotations cx
-                    )
+                  ~require_return_annot:(Context.enforce_local_inference_annotations cx)
                   ~statics:SMap.empty
                   tparams_map
                   reason
@@ -6247,9 +6244,7 @@ module Make
                 Statement.Func_stmt_sig.functiontype cx ~arrow function_loc_opt this_t func_sig
               in
               Flow.flow_t cx (t, annot_t)
-            | (_, Inferred _)
-              when Context.enforce_local_inference_annotations cx
-                   && Context.enforce_class_annotations cx ->
+            | (_, Inferred _) when Context.enforce_local_inference_annotations cx ->
               let annot_loc =
                 match annot with
                 | Ast.Type.Missing loc
@@ -6288,8 +6283,7 @@ module Make
       mk_func_sig
         cx
         ~required_this_param_type:None
-        ~require_return_annot:
-          (Context.enforce_local_inference_annotations cx && Context.enforce_class_annotations cx)
+        ~require_return_annot:(Context.enforce_local_inference_annotations cx)
         ~statics:SMap.empty
     in
     let mk_extends cx tparams_map = function
@@ -6907,7 +6901,7 @@ module Make
     in
     let require_this_annot cx func param_loc = function
       | (Some t, None)
-        when Context.enforce_this_annotations cx
+        when Context.enforce_local_inference_annotations cx
              && Signature_utils.This_finder.found_this_in_body_or_params
                   func.Ast.Function.body
                   func.Ast.Function.params ->

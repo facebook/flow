@@ -1,7 +1,6 @@
 [options]
 all=true
 inference_mode=constrain_writes
-experimental.enforce_this_annotations=true
 experimental.enforce_local_inference_annotations=true
 experimental.cycle_errors=true
 exact_by_default=true
