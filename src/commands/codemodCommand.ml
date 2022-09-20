@@ -170,11 +170,11 @@ module Annotate_lti_command = struct
       Literals.[("always", Always); ("never", Never); ("auto", Auto)]
     in
     {
-      CommandSpec.name = "annotate-lti-experimental";
+      CommandSpec.name = "annotate-lti";
       doc;
       usage =
         Printf.sprintf
-          "Usage: %s codemod annotate-lti-experimental [OPTION]... [FILE]\n\n%s\n"
+          "Usage: %s codemod annotate-lti [OPTION]... [FILE]\n\n%s\n"
           Utils_js.exe_name
           doc;
       args =

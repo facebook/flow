@@ -1,1 +1,1 @@
-cmd: codemod annotate-lti-experimental --strip-root --quiet --preserve-literals auto ./
+cmd: codemod annotate-lti --strip-root --quiet --preserve-literals auto ./
