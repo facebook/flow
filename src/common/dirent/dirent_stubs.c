@@ -105,7 +105,6 @@ static int flow_dirent_read_directory(const char* p, struct ext_table* tbl) {
   struct flow_dirent* tbl_item;
   d = opendir(p);
   if (d == NULL) {
-    caml_ext_table_free(tbl, 1);
     return -1;
   }
   while (1) {
