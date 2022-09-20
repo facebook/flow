@@ -228,7 +228,7 @@ struct
           Some (get_t cx t))
     | _ -> failwith "Implicit instantiation is not an OpenT"
 
-  let check_instantiation cx ~tparams ~marked_tparams ~return_hint ~implicit_instantiation =
+  let check_instantiation cx ~tparams ~marked_tparams ~implicit_instantiation =
     let { Check.lhs; operation = (use_op, reason_op, op); _ } = implicit_instantiation in
     let (call_targs, inferred_targ_list) =
       List.fold_right
@@ -243,7 +243,7 @@ struct
         tparams
         ([], [])
     in
-    let () =
+    let (use_t, tout) =
       match op with
       | Check.Call calltype ->
         let new_tout = Tvar.mk_no_wrap cx reason_op in
@@ -257,10 +257,7 @@ struct
               return_hint = Type.hint_unavailable;
             }
         in
-        Flow.flow cx (lhs, call_t);
-        Base.Option.iter return_hint ~f:(fun hint ->
-            Flow.flow_t cx (OpenT (reason_op, new_tout), hint)
-        )
+        (call_t, OpenT (reason_op, new_tout))
       | Check.Constructor call_args ->
         let new_tout = Tvar.mk cx reason_op in
         let constructor_t =
@@ -274,8 +271,7 @@ struct
               return_hint = Type.hint_unavailable;
             }
         in
-        Flow.flow cx (lhs, constructor_t);
-        Base.Option.iter return_hint ~f:(fun hint -> Flow.flow_t cx (new_tout, hint))
+        (constructor_t, new_tout)
       | Check.Jsx { clone; component; config; children } ->
         let new_tout = Tvar.mk cx reason_op in
         let react_kit_t =
@@ -294,10 +290,10 @@ struct
                 }
             )
         in
-        Flow.flow cx (lhs, react_kit_t);
-        Base.Option.iter return_hint ~f:(fun hint -> Flow.flow_t cx (new_tout, hint))
+        (react_kit_t, new_tout)
     in
-    (inferred_targ_list, marked_tparams)
+    Flow.flow cx (lhs, use_t);
+    (inferred_targ_list, marked_tparams, tout)
 
   let pin_types cx inferred_targ_list marked_tparams tparams_map implicit_instantiation =
     let { Check.operation = (_, instantiation_reason, _); _ } = implicit_instantiation in
@@ -349,7 +345,7 @@ struct
       inferred_targ_list
       Subst_name.Map.empty
 
-  let check_fun cx ~tparams ~tparams_map ~return_t ~return_hint ~implicit_instantiation =
+  let check_fun cx ~tparams ~tparams_map ~return_t ~implicit_instantiation =
     (* Visit the return type *)
     let visitor = new implicit_instantiation_visitor ~tparams_map in
     let tparam_names =
@@ -357,13 +353,13 @@ struct
       |> List.fold_left (fun set tparam -> Subst_name.Set.add tparam.name set) Subst_name.Set.empty
     in
     let (marked_tparams, _) = visitor#type_ cx Positive (Marked.empty, tparam_names) return_t in
-    check_instantiation cx ~tparams ~marked_tparams ~return_hint ~implicit_instantiation
+    check_instantiation cx ~tparams ~marked_tparams ~implicit_instantiation
 
-  let check_react_fun cx ~tparams ~tparams_map ~params ~return_hint ~implicit_instantiation =
+  let check_react_fun cx ~tparams ~tparams_map ~params ~implicit_instantiation =
     match params with
     | [] ->
       let marked_tparams = Marked.empty in
-      check_instantiation cx ~tparams ~marked_tparams ~return_hint ~implicit_instantiation
+      check_instantiation cx ~tparams ~marked_tparams ~implicit_instantiation
     | (_, props) :: _ ->
       (* The return of a React component when it is createElement-ed isn't actually the return type denoted on the
        * component. Instead, it is a React.Element<typeof Component>. In order to get the
@@ -373,9 +369,9 @@ struct
        * In practice, the props accessible via the element are read-only, so a possible future improvement
        * here would only look at the properties on the Props type with a covariant polarity instead of the
        * Neutral default that will be common due to syntactic conveniences. *)
-      check_fun cx ~tparams ~tparams_map ~return_t:props ~return_hint ~implicit_instantiation
+      check_fun cx ~tparams ~tparams_map ~return_t:props ~implicit_instantiation
 
-  let check_instance cx ~tparams ~return_hint ~implicit_instantiation =
+  let check_instance cx ~tparams ~implicit_instantiation =
     let marked_tparams =
       tparams
       |> List.fold_left
@@ -385,51 +381,37 @@ struct
              | Some (_, marked) -> marked)
            Marked.empty
     in
-    check_instantiation cx ~tparams ~marked_tparams ~return_hint ~implicit_instantiation
+    check_instantiation cx ~tparams ~marked_tparams ~implicit_instantiation
 
-  let implicitly_instantiate cx return_hint implicit_instantiation =
+  let implicitly_instantiate cx implicit_instantiation =
     let { Check.poly_t = (_, tparams, t); operation; _ } = implicit_instantiation in
     let tparams = Nel.to_list tparams in
     let tparams_map =
       List.fold_left (fun map x -> Subst_name.Map.add x.name x map) Subst_name.Map.empty tparams
     in
-    let (inferred_targ_list, marked_tparams) =
+    let (inferred_targ_list, marked_tparams, tout) =
       match get_t cx t with
       | DefT (_, _, FunT (_, funtype)) ->
         (match operation with
         | (_, _, Check.Jsx _) ->
-          check_react_fun
-            cx
-            ~tparams
-            ~tparams_map
-            ~params:funtype.params
-            ~return_hint
-            ~implicit_instantiation
-        | _ ->
-          check_fun
-            cx
-            ~tparams
-            ~tparams_map
-            ~return_t:funtype.return_t
-            ~return_hint
-            ~implicit_instantiation)
+          check_react_fun cx ~tparams ~tparams_map ~params:funtype.params ~implicit_instantiation
+        | _ -> check_fun cx ~tparams ~tparams_map ~return_t:funtype.return_t ~implicit_instantiation)
       | ThisClassT (_, DefT (_, _, InstanceT (_, _, _, _insttype)), _, _) ->
         (match operation with
-        | (_, _, Check.Call _) ->
+        | (_, reason_op, Check.Call _) ->
           (* This case is hit when calling a static function. We will implicitly
            * instantiate the type variables on the class, but using an instance's
            * type params in a static method does not make sense. We ignore this case
            * intentionally *)
-          ([], Marked.empty)
-        | (_, _, _) -> check_instance cx ~tparams ~return_hint ~implicit_instantiation)
+          ([], Marked.empty, Tvar.mk cx reason_op)
+        | (_, _, _) -> check_instance cx ~tparams ~implicit_instantiation)
       | _ -> failwith "No other possible lower bounds"
     in
-    (inferred_targ_list, marked_tparams, tparams_map)
+    (inferred_targ_list, marked_tparams, tparams_map, tout)
 
   let solve_targs cx ?return_hint check =
-    let (inferred_targ_list, marked_tparams, tparams_map) =
-      implicitly_instantiate cx return_hint check
-    in
+    let (inferred_targ_list, marked_tparams, tparams_map, tout) = implicitly_instantiate cx check in
+    Base.Option.iter return_hint ~f:(fun hint -> Flow.flow_t cx (tout, hint));
     pin_types cx inferred_targ_list marked_tparams tparams_map check
 
   let run cx check ~on_completion =
