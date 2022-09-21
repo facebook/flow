@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-val kind_is_supported : options:Options.t -> Lsp.CodeActionKind.t list option -> bool
+val kind_is_supported : Lsp.CodeActionKind.t list option -> bool
 
 type text_edits = {
   title: string;

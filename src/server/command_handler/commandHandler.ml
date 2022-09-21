@@ -1058,7 +1058,7 @@ let handle_save_state ~saved_state_filename ~genv ~profiling ~env =
 
 let find_code_actions ~reader ~options ~env ~profiling ~params ~client =
   let CodeActionRequest.{ textDocument; range; context = { only; diagnostics } } = params in
-  if not (Code_action_service.kind_is_supported ~options only) then
+  if not (Code_action_service.kind_is_supported only) then
     (* bail out early if we don't support any of the code actions requested *)
     (Ok [], None)
   else

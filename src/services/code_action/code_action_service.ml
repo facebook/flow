@@ -85,7 +85,7 @@ let refactor_extract_code_actions
     ~only
     uri
     loc =
-  if Options.refactor options && include_extract_refactors only then
+  if include_extract_refactors only then
     if Loc.(loc.start = loc._end) then
       []
     else
@@ -585,26 +585,22 @@ let code_actions_of_parse_errors ~diagnostics ~uri ~loc parse_errors =
     parse_errors
 
 (** List of code actions we implement. *)
-let supported_code_actions options =
-  let actions =
-    [
-      Lsp.CodeActionKind.quickfix;
-      add_missing_imports_kind;
-      Lsp.CodeActionKind.kind_of_string "source.organizeImports.flow";
-    ]
-  in
-  if Options.refactor options then
-    Lsp.CodeActionKind.refactor_extract :: actions
-  else
-    actions
+let supported_code_actions =
+  [
+    Lsp.CodeActionKind.quickfix;
+    add_missing_imports_kind;
+    Lsp.CodeActionKind.kind_of_string "source.organizeImports.flow";
+    Lsp.CodeActionKind.refactor_extract;
+  ]
 
 (** Determines if at least one of the kinds in [only] is supported. *)
-let kind_is_supported ~options only =
+let kind_is_supported only =
   match only with
   | None -> true
   | Some only ->
-    let supported = supported_code_actions options in
-    Base.List.exists ~f:(fun kind -> Lsp.CodeActionKind.contains_kind kind supported) only
+    Base.List.exists
+      ~f:(fun kind -> Lsp.CodeActionKind.contains_kind kind supported_code_actions)
+      only
 
 let organize_imports_code_action uri =
   let open Lsp in

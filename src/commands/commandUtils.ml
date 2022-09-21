@@ -1406,7 +1406,6 @@ let make_options
     opt_react_runtime = FlowConfig.react_runtime flowconfig;
     opt_react_server_component_exts = FlowConfig.react_server_component_exts flowconfig;
     opt_recursion_limit = FlowConfig.recursion_limit flowconfig;
-    opt_refactor = flowconfig |> FlowConfig.refactor |> Option.value ~default:true;
     opt_relay_integration_excludes =
       Base.List.map
         ~f:(fun pattern -> pattern |> Files.expand_project_root_token ~root |> Str.regexp)

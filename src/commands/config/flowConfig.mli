@@ -201,8 +201,6 @@ val react_server_component_exts : config -> SSet.t
 
 val recursion_limit : config -> int
 
-val refactor : config -> bool option
-
 val relay_integration : config -> bool
 
 val relay_integration_excludes : config -> string list

@@ -122,7 +122,6 @@ type t = {
   opt_react_runtime: react_runtime;
   opt_react_server_component_exts: SSet.t;
   opt_recursion_limit: int;
-  opt_refactor: bool;
   opt_relay_integration_excludes: Str.regexp list;
   opt_relay_integration_module_prefix: string option;
   opt_relay_integration_module_prefix_includes: Str.regexp list;
@@ -268,8 +267,6 @@ let react_runtime opts = opts.opt_react_runtime
 let react_server_component_exts opts = opts.opt_react_server_component_exts
 
 let recursion_limit opts = opts.opt_recursion_limit
-
-let refactor opts = opts.opt_refactor
 
 let relay_integration_excludes opts = opts.opt_relay_integration_excludes
 

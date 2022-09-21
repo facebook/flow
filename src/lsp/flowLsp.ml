@@ -723,7 +723,7 @@ let subscribe_to_config_changes (ienv : initialized_env) : initialized_env =
 
 (************************************************************************)
 
-let do_initialize flowconfig params : Initialize.result =
+let do_initialize params : Initialize.result =
   let open Initialize in
   let codeActionProvider =
     let supports_quickfixes =
@@ -732,7 +732,6 @@ let do_initialize flowconfig params : Initialize.result =
     let supports_refactor_extract =
       Lsp_helpers.supports_codeActionKinds params
       |> List.exists ~f:(( = ) CodeActionKind.refactor_extract)
-      && FlowConfig.refactor flowconfig |> Option.value ~default:true
     in
     let supports_source_actions =
       Lsp_helpers.supports_codeActionKinds params |> List.exists ~f:(( = ) CodeActionKind.source)
@@ -2392,9 +2391,7 @@ and main_handle_unsafe flowconfig_name (state : state) (event : event) :
              }
           )
     end;
-    let response =
-      ResponseMessage (id, InitializeResult (do_initialize flowconfig i_initialize_params))
-    in
+    let response = ResponseMessage (id, InitializeResult (do_initialize i_initialize_params)) in
     let json =
       let key = command_key_of_ienv d_ienv in
       Lsp_fmt.print_lsp ~key response

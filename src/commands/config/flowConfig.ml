@@ -111,7 +111,6 @@ module Opts = struct
     react_runtime: Options.react_runtime;
     react_server_component_exts: SSet.t;
     recursion_limit: int;
-    refactor: bool option;
     relay_integration: bool;
     relay_integration_excludes: string list;
     relay_integration_module_prefix: string option;
@@ -236,7 +235,6 @@ module Opts = struct
       react_runtime = Options.ReactRuntimeClassic;
       react_server_component_exts;
       recursion_limit = 10000;
-      refactor = None;
       relay_integration = false;
       relay_integration_excludes = [];
       relay_integration_module_prefix = None;
@@ -753,7 +751,6 @@ module Opts = struct
       ("experimental.module.automatic_require_default", automatic_require_default_parser);
       ("experimental.incremental_revdeps", incremental_revdeps_parser);
       ("experimental.react.server_component_ext", react_server_component_exts_parser);
-      ("experimental.refactor", boolean (fun opts v -> Ok { opts with refactor = Some v }));
       ( "experimental.run_post_inference_implicit_instantiation",
         post_inference_implicit_instantiation_parser
       );
@@ -1489,8 +1486,6 @@ let react_runtime c = c.options.Opts.react_runtime
 let react_server_component_exts c = c.options.Opts.react_server_component_exts
 
 let recursion_limit c = c.options.Opts.recursion_limit
-
-let refactor c = c.options.Opts.refactor
 
 let relay_integration c = c.options.Opts.relay_integration
 
