@@ -36,3 +36,20 @@ function test2() {
     }
   }
 }
+
+function test3() {
+  declare function magic<T>(): T;
+  declare class A<T> {}
+
+  const magicResult: string = magic(); // OK
+  const map: A<string> = new A(); // OK
+}
+
+function test4() {
+  declare function foo<T>(x: T): Array<T>;
+  declare var n: number;
+  const x: Array<?number> = foo(n); // OK
+
+  declare function bar<T>(x?: T): Array<T>;
+  const y: Array<number> = bar(); // OK
+}

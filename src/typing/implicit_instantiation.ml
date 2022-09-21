@@ -145,17 +145,7 @@ struct
 
   let rec t_of_use_t cx tvar u =
     match u with
-    | UseT (_, (OpenT (_, id) as t)) ->
-      (match Context.find_graph cx id with
-      | Constraint.FullyResolved (_, (lazy t))
-      | Constraint.Resolved (_, t) ->
-        UpperT t
-      | Constraint.Unresolved bounds ->
-        let lowers = bounds.Constraint.lower in
-        if TypeMap.cardinal lowers = 0 then
-          UpperEmpty
-        else
-          UpperT (get_t cx t))
+    | UseT (_, (OpenT (r, _) as t)) -> merge_upper_bounds cx r t
     | UseT (_, t) -> UpperT t
     | ReposLowerT (_, _, use_t) -> t_of_use_t cx tvar use_t
     | ResolveSpreadT
@@ -181,7 +171,7 @@ struct
       UpperT solution
     | _ -> UpperNonT u
 
-  let merge_upper_bounds cx upper_r tvar =
+  and merge_upper_bounds cx upper_r tvar =
     match tvar with
     | OpenT (_, id) ->
       let constraints = Context.find_graph cx id in
@@ -558,9 +548,9 @@ module Kit (FlowJs : Flow_common.S) (Instantiation_helper : Flow_js_utils.Instan
        );
     reposition cx ~trace (aloc_of_reason reason_tapp) (Subst.subst cx ~use_op subst_map poly_t)
 
-  let run_pierce cx check ?cache trace ~use_op ~reason_op ~reason_tapp =
+  let run_pierce cx check ?cache trace ~use_op ~reason_op ~reason_tapp ~return_hint =
     let (_, _, t) = check.Implicit_instantiation_check.poly_t in
-    let targs_map = Pierce.solve_targs cx check in
+    let targs_map = Pierce.solve_targs cx ?return_hint check in
     instantiate_poly_with_subst_map cx ?cache trace t targs_map ~use_op ~reason_op ~reason_tapp
 
   let run_instantiate_poly cx check ?cache trace ~use_op ~reason_op ~reason_tapp =
@@ -568,7 +558,7 @@ module Kit (FlowJs : Flow_common.S) (Instantiation_helper : Flow_js_utils.Instan
     FlowJs.instantiate_poly cx trace ~use_op ~reason_op ~reason_tapp ?cache poly_t
 
   let run
-      cx check ~return_hint:(has_context, _lazy_hint) ?cache trace ~use_op ~reason_op ~reason_tapp =
+      cx check ~return_hint:(has_context, lazy_hint) ?cache trace ~use_op ~reason_op ~reason_tapp =
     if not has_context then Context.add_possibly_speculating_implicit_instantiation_check cx check;
     (* The current Pierce's algorithm running inside flow_js does not have access to the return
        hint type, which will cause a lot of unactionable unconstrained implicit instantiation
@@ -577,7 +567,15 @@ module Kit (FlowJs : Flow_common.S) (Instantiation_helper : Flow_js_utils.Instan
     match (Context.env_mode cx, has_context) with
     | (Options.LTI, false) ->
       Context.run_in_implicit_instantiation_mode cx (fun () ->
-          run_pierce cx check ?cache trace ~use_op ~reason_op ~reason_tapp
+          run_pierce
+            cx
+            ~return_hint:(lazy_hint reason_op)
+            check
+            ?cache
+            trace
+            ~use_op
+            ~reason_op
+            ~reason_tapp
       )
     | _ -> run_instantiate_poly cx check ?cache trace ~use_op ~reason_op ~reason_tapp
 end
