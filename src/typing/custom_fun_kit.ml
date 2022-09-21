@@ -48,7 +48,7 @@ module Kit (Flow : Flow_common.S) : CUSTOM_FUN = struct
             {
               use_op;
               reason;
-              funcalltype = mk_functioncalltype reason_op None [Arg tvar] tout;
+              call_action = Funcalltype (mk_functioncalltype reason_op None [Arg tvar] tout);
               return_hint = Type.hint_unavailable;
             }
         )
@@ -65,7 +65,8 @@ module Kit (Flow : Flow_common.S) : CUSTOM_FUN = struct
             {
               use_op;
               reason;
-              funcalltype = mk_functioncalltype reason_op None [Arg (OpenT tin)] (reason, tvar);
+              call_action =
+                Funcalltype (mk_functioncalltype reason_op None [Arg (OpenT tin)] (reason, tvar));
               return_hint = Type.hint_unavailable;
             }
         );

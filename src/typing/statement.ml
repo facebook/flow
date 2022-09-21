@@ -2733,7 +2733,7 @@ module Make
                }
             )
         in
-        CallT { use_op; reason; funcalltype = ft; return_hint = Env.get_hint cx loc }
+        CallT { use_op; reason; call_action = Funcalltype ft; return_hint = Env.get_hint cx loc }
       in
       Flow.flow cx (t, call_t);
 
@@ -3946,7 +3946,7 @@ module Make
                               {
                                 use_op;
                                 reason = reason_call;
-                                funcalltype = app;
+                                call_action = Funcalltype app;
                                 return_hint = Type.hint_unavailable;
                               };
                           voided_out = OpenT t;
@@ -3956,7 +3956,7 @@ module Make
                         {
                           use_op;
                           reason = reason_call;
-                          funcalltype = app;
+                          call_action = Funcalltype app;
                           return_hint = Type.hint_unavailable;
                         }
                   in
@@ -4254,7 +4254,15 @@ module Make
             let app = mk_boundfunctioncalltype obj_t targts argts t ~call_strict_arity in
             Flow.flow
               cx
-              (f, CallT { use_op; reason; funcalltype = app; return_hint = Type.hint_unavailable })
+              ( f,
+                CallT
+                  {
+                    use_op;
+                    reason;
+                    call_action = Funcalltype app;
+                    return_hint = Type.hint_unavailable;
+                  }
+              )
         )
       )
     | None ->
@@ -5569,8 +5577,8 @@ module Make
             )
         in
         let jsx_fun = CustomFunT (reason_jsx, ReactCreateElement) in
-        let funcalltype = mk_functioncalltype reason_jsx None args tvar in
-        Flow.flow cx (jsx_fun, CallT { use_op; reason; funcalltype; return_hint })
+        let call_action = Funcalltype (mk_functioncalltype reason_jsx None args tvar) in
+        Flow.flow cx (jsx_fun, CallT { use_op; reason; call_action; return_hint })
       | Options.ReactRuntimeClassic ->
         let reason_createElement =
           mk_reason (RProperty (Some (OrdinaryName "createElement"))) loc_element

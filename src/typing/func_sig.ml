@@ -123,7 +123,7 @@ class func_scope_visitor cx ~has_return_annot ~return_t ~yield_t ~next_t ~body_l
                           {
                             use_op = unknown_use;
                             reason;
-                            funcalltype = callt;
+                            call_action = Funcalltype callt;
                             return_hint = Type.hint_unavailable;
                           }
                       )

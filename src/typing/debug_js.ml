@@ -705,7 +705,8 @@ and dump_use_t_ (depth, tvars) cx t =
         {
           use_op;
           reason = _;
-          funcalltype = { call_args_tlist; call_tout = (call_r, call_tvar); call_this_t; _ };
+          call_action =
+            Funcalltype { call_args_tlist; call_tout = (call_r, call_tvar); call_this_t; _ };
           return_hint = _;
         } ->
       p
@@ -719,6 +720,8 @@ and dump_use_t_ (depth, tvars) cx t =
              (tvar call_tvar)
           )
         t
+    | CallT { use_op; reason = _; call_action = ConcretizeCallee _; return_hint = _ } ->
+      p ~extra:(spf "%s ConcretizeCallee" (string_of_use_op use_op)) t
     | CallLatentPredT _ -> p t
     | CallOpenPredT _ -> p t
     | ChoiceKitUseT (_, TryFlow (_, spec)) -> p ~extra:(try_flow spec) t

@@ -465,7 +465,7 @@ module rec TypeTerm : sig
     | CallT of {
         use_op: use_op;
         reason: reason;
-        funcalltype: funcalltype;
+        call_action: call_action;
         return_hint: lazy_hint_t;
       }
     (* The last position is an optional type that probes into the type of the
@@ -900,6 +900,10 @@ module rec TypeTerm : sig
   and destruct_kind =
     | DestructAnnot
     | DestructInfer
+
+  and call_action =
+    | Funcalltype of funcalltype
+    | ConcretizeCallee of tvar
 
   (* use_ts which can be part of an optional chain, with t_out factored out *)
   and opt_use_t =
@@ -3849,13 +3853,14 @@ let mk_object_def_type ~reason ?(flags = default_flags) ~call pmap proto =
   DefT (reason, bogus_trust (), ObjT (mk_objecttype ~flags ~call pmap proto))
 
 let apply_opt_funcalltype (this, targs, args, strict) t_out =
-  {
-    call_this_t = this;
-    call_targs = targs;
-    call_args_tlist = args;
-    call_tout = t_out;
-    call_strict_arity = strict;
-  }
+  Funcalltype
+    {
+      call_this_t = this;
+      call_targs = targs;
+      call_args_tlist = args;
+      call_tout = t_out;
+      call_strict_arity = strict;
+    }
 
 let apply_opt_methodcalltype
     { opt_meth_generic_this; opt_meth_targs; opt_meth_args_tlist; opt_meth_strict_arity } meth_tout
@@ -3893,7 +3898,7 @@ let apply_opt_use opt_use t_out =
   | OptPrivateMethodT (op, r1, r2, p, scopes, static, action, prop_tout) ->
     PrivateMethodT (op, r1, r2, p, scopes, static, apply_opt_action action t_out, prop_tout)
   | OptCallT { use_op; reason; opt_funcalltype = f; return_hint } ->
-    CallT { use_op; reason; funcalltype = apply_opt_funcalltype f t_out; return_hint }
+    CallT { use_op; reason; call_action = apply_opt_funcalltype f t_out; return_hint }
   | OptGetPropT (u, r, i, p) -> GetPropT (u, r, i, p, t_out)
   | OptGetPrivatePropT (u, r, s, cbs, b) -> GetPrivatePropT (u, r, s, cbs, b, t_out)
   | OptTestPropT (u, r, i, p) -> TestPropT (u, r, i, p, t_out)

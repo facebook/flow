@@ -970,13 +970,16 @@ struct
          * ...of course having a `?.` operator in the language would be a nice
          *    reason to throw all of this clownerous hackery away...
          *)
+        | (CustomFunT (_, Idx), CallT { use_op; call_action = ConcretizeCallee tout; _ }) ->
+          rec_flow_t cx trace ~use_op (l, OpenT tout)
         | ( CustomFunT (lreason, Idx),
             CallT
               {
                 use_op;
                 reason = reason_op;
-                funcalltype =
-                  { call_this_t; call_targs; call_args_tlist; call_tout; call_strict_arity };
+                call_action =
+                  Funcalltype
+                    { call_this_t; call_targs; call_args_tlist; call_tout; call_strict_arity };
                 return_hint;
               }
           ) ->
@@ -984,27 +987,23 @@ struct
             match (call_targs, call_args_tlist) with
             | (None, [Arg obj; Arg cb]) ->
               let wrapped_obj = DefT (reason_op, bogus_trust (), IdxWrapper obj) in
+
               let callback_result =
                 Tvar.mk_no_wrap_where cx reason_op (fun call_tout ->
+                    let call_action =
+                      Funcalltype
+                        {
+                          call_this_t;
+                          call_targs = None;
+                          call_args_tlist = [Arg wrapped_obj];
+                          call_tout;
+                          call_strict_arity;
+                        }
+                    in
                     rec_flow
                       cx
                       trace
-                      ( cb,
-                        CallT
-                          {
-                            use_op;
-                            reason = reason_op;
-                            funcalltype =
-                              {
-                                call_this_t;
-                                call_targs = None;
-                                call_args_tlist = [Arg wrapped_obj];
-                                call_tout;
-                                call_strict_arity;
-                              };
-                            return_hint;
-                          }
-                      )
+                      (cb, CallT { use_op; reason = reason_op; call_action; return_hint })
                 )
               in
               let unwrapped_t =
@@ -2035,11 +2034,13 @@ struct
         | (IntersectionT _, SealGenericT { reason = _; id; name; cont }) ->
           let reason = reason_of_t l in
           continue cx trace (GenericT { reason; id; name; bound = l }) cont
+        | (IntersectionT _, CallT { use_op; call_action = ConcretizeCallee tout; _ }) ->
+          rec_flow_t cx trace ~use_op (l, OpenT tout)
         (* CallT uses that arise from the CallType type destructor are processed
            without preparation (see below). This is because in these cases, the
            return type is intended to be 0-1, whereas preparation (as implemented
            currently) destroys 0-1 behavior. *)
-        | (IntersectionT (r, rep), CallT { use_op = _; reason; funcalltype = _; return_hint = _ })
+        | (IntersectionT (r, rep), CallT { use_op = _; reason; call_action = _; return_hint = _ })
           when is_calltype_reason reason ->
           SpeculationKit.try_intersection cx trace u r rep
         (* All other pairs with an intersection lower bound come here. Before
@@ -2681,7 +2682,9 @@ struct
                positions we should be able to subject reasons to arbitrary tweaking,
                without fearing regressions in termination guarantees.
             *)
-            | CallT { use_op; reason = _; funcalltype = calltype; return_hint }
+            | CallT { use_op; call_action = ConcretizeCallee tout; _ } ->
+              rec_flow_t cx trace ~use_op (l, OpenT tout)
+            | CallT { use_op; reason = _; call_action = Funcalltype calltype; return_hint }
               when not (is_typemap_reason reason_op) ->
               let arg_reasons =
                 Base.List.map
@@ -2729,7 +2732,7 @@ struct
                         {
                           use_op;
                           reason = reason_op;
-                          funcalltype = { calltype with call_targs = None };
+                          call_action = Funcalltype { calltype with call_targs = None };
                           return_hint;
                         }
                     )
@@ -2900,8 +2903,16 @@ struct
         (***********************************************)
 
         (* FunT ~> CallT *)
+        | (DefT (_, _, FunT _), CallT { use_op; call_action = ConcretizeCallee tout; _ }) ->
+          rec_flow_t cx trace ~use_op (l, OpenT tout)
         | ( DefT (reason_fundef, _, FunT (_, funtype)),
-            CallT { use_op; reason = reason_callsite; funcalltype = calltype; return_hint = _ }
+            CallT
+              {
+                use_op;
+                reason = reason_callsite;
+                call_action = Funcalltype calltype;
+                return_hint = _;
+              }
           ) ->
           let { this_t = (o1, _); params = _; return_t = t1; _ } = funtype in
           let {
@@ -2943,8 +2954,11 @@ struct
             cx
             trace
             (reposition cx ~trace (aloc_of_reason reason_callsite) t1, OpenT t2)
+        | (AnyT _, CallT { use_op; call_action = ConcretizeCallee tout; _ }) ->
+          rec_flow_t cx trace ~use_op (l, OpenT tout)
         | ( AnyT (reason_fundef, _),
-            CallT { use_op; reason = reason_op; funcalltype = calltype; return_hint = _ }
+            CallT
+              { use_op; reason = reason_op; call_action = Funcalltype calltype; return_hint = _ }
           ) ->
           let {
             call_this_t;
@@ -2963,12 +2977,22 @@ struct
         | (_, FunImplicitVoidReturnT { use_op; return; void_t; _ }) ->
           rec_flow cx trace (void_t, UseT (use_op, return))
         (* Special handlers for builtin functions *)
+        | ( CustomFunT
+              ( _,
+                ( ObjectAssign | ObjectGetPrototypeOf | ObjectSetPrototypeOf | ReactPropType _
+                | DebugPrint | DebugThrow | DebugSleep | Compose _ | ReactCreateElement
+                | ReactCloneElement | ReactElementFactory _ )
+              ),
+            CallT { use_op; call_action = ConcretizeCallee tout; _ }
+          ) ->
+          rec_flow_t cx trace ~use_op (l, OpenT tout)
         | ( CustomFunT (_, ObjectAssign),
             CallT
               {
                 use_op;
                 reason = reason_op;
-                funcalltype = { call_targs = None; call_args_tlist = dest_t :: ts; call_tout; _ };
+                call_action =
+                  Funcalltype { call_targs = None; call_args_tlist = dest_t :: ts; call_tout; _ };
                 return_hint = _;
               }
           ) ->
@@ -2980,7 +3004,8 @@ struct
               {
                 use_op = _;
                 reason = reason_op;
-                funcalltype = { call_targs = None; call_args_tlist = arg :: _; call_tout; _ };
+                call_action =
+                  Funcalltype { call_targs = None; call_args_tlist = arg :: _; call_tout; _ };
                 return_hint = _;
               }
           ) ->
@@ -2991,8 +3016,9 @@ struct
               {
                 use_op;
                 reason = reason_op;
-                funcalltype =
-                  { call_targs = None; call_args_tlist = arg1 :: arg2 :: _; call_tout; _ };
+                call_action =
+                  Funcalltype
+                    { call_targs = None; call_args_tlist = arg1 :: arg2 :: _; call_tout; _ };
                 return_hint = _;
               }
           ) ->
@@ -3035,7 +3061,8 @@ struct
               {
                 use_op;
                 reason = reason_op;
-                funcalltype = { call_targs = None; call_args_tlist = arg1 :: _; call_tout; _ };
+                call_action =
+                  Funcalltype { call_targs = None; call_args_tlist = arg1 :: _; call_tout; _ };
                 return_hint = _;
               }
           ) ->
@@ -3067,7 +3094,7 @@ struct
               {
                 use_op;
                 reason = reason_op;
-                funcalltype = { call_targs = None; call_args_tlist; call_tout; _ };
+                call_action = Funcalltype { call_targs = None; call_args_tlist; call_tout; _ };
                 return_hint = _;
               }
           ) ->
@@ -3084,7 +3111,7 @@ struct
             trace
             (VoidT.why reason_op |> with_trust bogus_trust, OpenT call_tout)
         | ( CustomFunT (_, DebugThrow),
-            CallT { use_op = _; reason = reason_op; funcalltype = _; return_hint = _ }
+            CallT { use_op = _; reason = reason_op; call_action = _; return_hint = _ }
           ) ->
           raise (Error_message.EDebugThrow (aloc_of_reason reason_op))
         | ( CustomFunT (_, DebugSleep),
@@ -3092,7 +3119,8 @@ struct
               {
                 use_op;
                 reason = reason_op;
-                funcalltype = { call_targs = None; call_args_tlist = arg1 :: _; call_tout; _ };
+                call_action =
+                  Funcalltype { call_targs = None; call_args_tlist = arg1 :: _; call_tout; _ };
                 return_hint = _;
               }
           ) ->
@@ -3109,7 +3137,7 @@ struct
                 kind
                 )
               ),
-            CallT { use_op; reason = reason_op; funcalltype = calltype; return_hint }
+            CallT { use_op; reason = reason_op; call_action = Funcalltype calltype; return_hint }
           ) ->
           let {
             call_targs;
@@ -3169,7 +3197,7 @@ struct
         (* You can cast an object to a function *)
         (****************************************)
         | ( DefT (reason, _, (ObjT _ | InstanceT _)),
-            CallT { use_op; reason = reason_op; funcalltype = _; return_hint = _ }
+            CallT { use_op; reason = reason_op; call_action = _; return_hint = _ }
           ) ->
           let prop_name = Some (OrdinaryName "$call") in
           let fun_t =
@@ -4293,7 +4321,7 @@ struct
               {
                 use_op;
                 reason = reason_op;
-                funcalltype = { call_this_t = func; call_args_tlist; _ } as funtype;
+                call_action = Funcalltype ({ call_this_t = func; call_args_tlist; _ } as funtype);
                 return_hint;
               }
           ) ->
@@ -4320,14 +4348,20 @@ struct
               rec_flow
                 cx
                 trace
-                (func, CallT { use_op; reason = reason_op; funcalltype = funtype; return_hint })
+                ( func,
+                  CallT
+                    { use_op; reason = reason_op; call_action = Funcalltype funtype; return_hint }
+                )
             (* func.call(this_t, ...call_args_tlist) *)
             | Arg call_this_t :: call_args_tlist ->
               let funtype = { funtype with call_this_t; call_args_tlist } in
               rec_flow
                 cx
                 trace
-                (func, CallT { use_op; reason = reason_op; funcalltype = funtype; return_hint })
+                ( func,
+                  CallT
+                    { use_op; reason = reason_op; call_action = Funcalltype funtype; return_hint }
+                )
             (* func.call(...call_args_tlist) *)
             | (SpreadArg _ as first_arg) :: _ ->
               let call_this_t = extract_non_spread cx ~trace first_arg in
@@ -4335,7 +4369,10 @@ struct
               rec_flow
                 cx
                 trace
-                (func, CallT { use_op; reason = reason_op; funcalltype = funtype; return_hint })
+                ( func,
+                  CallT
+                    { use_op; reason = reason_op; call_action = Funcalltype funtype; return_hint }
+                )
           end
         (*******************************************)
         (* ... or a receiver and an argument array *)
@@ -4347,7 +4384,7 @@ struct
               {
                 use_op;
                 reason = reason_op;
-                funcalltype = { call_this_t = func; call_args_tlist; _ } as funtype;
+                call_action = Funcalltype ({ call_this_t = func; call_args_tlist; _ } as funtype);
                 return_hint;
               }
           ) ->
@@ -4374,14 +4411,20 @@ struct
               rec_flow
                 cx
                 trace
-                (func, CallT { use_op; reason = reason_op; funcalltype = funtype; return_hint })
+                ( func,
+                  CallT
+                    { use_op; reason = reason_op; call_action = Funcalltype funtype; return_hint }
+                )
             (* func.apply(this_arg) *)
             | [Arg this_arg] ->
               let funtype = { funtype with call_this_t = this_arg; call_args_tlist = [] } in
               rec_flow
                 cx
                 trace
-                (func, CallT { use_op; reason = reason_op; funcalltype = funtype; return_hint })
+                ( func,
+                  CallT
+                    { use_op; reason = reason_op; call_action = Funcalltype funtype; return_hint }
+                )
             (* func.apply(this_arg, ts) *)
             | [first_arg; Arg ts] ->
               let call_this_t = extract_non_spread cx ~trace first_arg in
@@ -4414,18 +4457,22 @@ struct
         (************************************************************************)
         (* functions may be bound by passing a receiver and (partial) arguments *)
         (************************************************************************)
+        | (FunProtoBindT _, CallT { use_op; call_action = ConcretizeCallee tout; _ }) ->
+          rec_flow_t cx trace ~use_op (l, OpenT tout)
         | ( FunProtoBindT lreason,
             CallT
               {
                 use_op;
                 reason = reason_op;
-                funcalltype =
-                  {
-                    call_this_t = func;
-                    call_targs;
-                    call_args_tlist = first_arg :: call_args_tlist;
-                    _;
-                  } as funtype;
+                call_action =
+                  Funcalltype
+                    ( {
+                        call_this_t = func;
+                        call_targs;
+                        call_args_tlist = first_arg :: call_args_tlist;
+                        _;
+                      } as funtype
+                    );
                 return_hint = _;
               }
           ) ->
@@ -5454,8 +5501,10 @@ struct
             (MethodT _ | SetPropT _ | GetPropT _ | MatchPropT _ | LookupT _)
           ) ->
           rec_flow cx trace (FunProtoT lreason, u)
+        | (DefT (_, _, MixedT Mixed_function), CallT { call_action = ConcretizeCallee tout; _ }) ->
+          rec_flow_t cx trace ~use_op:unknown_use (l, OpenT tout)
         | ( DefT (lreason, _, MixedT Mixed_function),
-            CallT { use_op; reason = ureason; funcalltype = _; return_hint = _ }
+            CallT { use_op; reason = ureason; call_action = _; return_hint = _ }
           ) ->
           add_output
             cx
@@ -6824,7 +6873,13 @@ struct
                  error messages from those of "normal" calls. *)
               | _ -> Frame (CallFunCompatibility { n = List.length args }, use_op)
             in
-            CallT { use_op; reason; funcalltype = call; return_hint = Type.hint_unavailable }
+            CallT
+              {
+                use_op;
+                reason;
+                call_action = Funcalltype call;
+                return_hint = Type.hint_unavailable;
+              }
           | TypeMap tmap -> MapTypeT (use_op, reason, tmap, OpenT tout)
           | ReactElementPropsType -> ReactKitT (use_op, reason, React.GetProps (OpenT tout))
           | ReactElementConfigType -> ReactKitT (use_op, reason, React.GetConfig (OpenT tout))
@@ -9078,7 +9133,7 @@ struct
           {
             use_op;
             reason = reason_op;
-            funcalltype = { funcalltype with call_args_tlist };
+            call_action = Funcalltype { funcalltype with call_args_tlist };
             return_hint = Type.hint_unavailable;
           }
       in
@@ -9109,7 +9164,7 @@ struct
           {
             use_op;
             reason = reason_call;
-            funcalltype = call_of_method_app this_arg app;
+            call_action = Funcalltype (call_of_method_app this_arg app);
             return_hint;
           }
       in
@@ -9126,7 +9181,7 @@ struct
                 {
                   use_op;
                   reason = reason_call;
-                  funcalltype = call_of_method_app this_arg app;
+                  call_action = Funcalltype (call_of_method_app this_arg app);
                   return_hint;
                 };
             voided_out = vs;

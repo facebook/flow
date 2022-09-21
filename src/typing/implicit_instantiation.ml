@@ -252,8 +252,9 @@ struct
             {
               use_op;
               reason = reason_op;
-              funcalltype =
-                { calltype with call_targs = Some call_targs; call_tout = (reason_op, new_tout) };
+              call_action =
+                Funcalltype
+                  { calltype with call_targs = Some call_targs; call_tout = (reason_op, new_tout) };
               return_hint = Type.hint_unavailable;
             }
         in
