@@ -587,6 +587,11 @@ module Expressions = struct
   let typecast ?(loc = Loc.none) ?comments expression annotation =
     (loc, TypeCast { TypeCast.expression; annot = Types.annotation annotation; comments })
 
+  let yield ?(loc = Loc.none) ?comments ~delegate expr =
+    (loc, Yield { Yield.argument = expr; comments; delegate; result_out = loc })
+
+  let generator ?(loc = Loc.none) ?filter blocks = (loc, Generator { filter; Generator.blocks })
+
   module Literals = struct
     let string ?loc value = literal ?loc (Literals.string value)
 
