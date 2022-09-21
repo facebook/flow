@@ -9,18 +9,18 @@ open Reason
 open Type
 open Hint_api
 
-let in_sandbox_cx cx resolver f =
+let in_sandbox_cx cx f =
   let original_errors = Context.errors cx in
   let result = f () in
   let new_errors = Context.errors cx in
   if Flow_error.ErrorSet.equal original_errors new_errors then
-    Some (resolver cx result)
+    Some (Tvar_resolver.resolved_t cx result)
   else (
     Context.reset_errors cx original_errors;
     None
   )
 
-let type_of_hint_decomposition cx op reason ~resolver t =
+let type_of_hint_decomposition cx op reason t =
   let fun_t ~params ~rest_param ~return_t =
     DefT
       ( reason,
@@ -45,7 +45,7 @@ let type_of_hint_decomposition cx op reason ~resolver t =
     )
   in
 
-  in_sandbox_cx cx resolver (fun () ->
+  in_sandbox_cx cx (fun () ->
       match op with
       | Decomp_ArrElement i ->
         Tvar.mk_no_wrap_where cx reason (fun element_t ->
@@ -183,17 +183,17 @@ let type_of_hint_decomposition cx op reason ~resolver t =
       | Decomp_Instantiated _ -> t
   )
 
-let rec evaluate_hint_ops cx reason ~resolver t = function
+let rec evaluate_hint_ops cx reason t = function
   | [] -> Some t
   | op :: ops ->
-    (match type_of_hint_decomposition cx op reason ~resolver t with
-    | Some t -> evaluate_hint_ops cx reason ~resolver t ops
+    (match type_of_hint_decomposition cx op reason t with
+    | Some t -> evaluate_hint_ops cx reason t ops
     | None -> None)
 
-let evaluate_hint cx reason ~resolver hint =
+let evaluate_hint cx reason hint =
   match hint with
   | Hint_None -> None
-  | Hint_t t -> Some (resolver cx t)
+  | Hint_t t -> Some (Tvar_resolver.resolved_t cx t)
   | Hint_Placeholder -> Some (AnyT.annot (mk_reason (RCustom "placeholder hint") ALoc.none))
   | Hint_Decomp (ops, t) ->
-    ops |> Nel.to_list |> List.rev |> evaluate_hint_ops cx reason ~resolver (resolver cx t)
+    ops |> Nel.to_list |> List.rev |> evaluate_hint_ops cx reason (Tvar_resolver.resolved_t cx t)

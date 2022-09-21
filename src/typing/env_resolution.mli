@@ -5,10 +5,6 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-module TvarResolver : sig
-  val resolved_t : Context.t -> Type.t -> Type.t
-end
-
 val lazily_resolve_hint : Context.t -> ALoc.t -> Name_def.ast_hint -> Type.lazy_hint_t
 
 val resolve_component :

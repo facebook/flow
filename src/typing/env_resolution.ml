@@ -16,51 +16,6 @@ module EnvMap = Env_api.EnvMap
 module Statement = Fix_statement.Statement_
 module Anno = Type_annotation.Make (Type_annotation.FlowJS) (Statement)
 
-module TvarResolver = struct
-  let resolver =
-    object (this)
-      inherit [unit] Type_visitor.t
-
-      method! tvar cx pole () r id =
-        let module C = Type.Constraint in
-        let (root_id, root) = Context.find_root cx id in
-        match root.C.constraints with
-        | C.FullyResolved _ -> ()
-        | _ ->
-          let t =
-            let no_lowers _ r =
-              let id_msg =
-                match Context.verbose cx with
-                | Some verbose when Debug_js.Verbose.verbose_in_file cx verbose -> Some root_id
-                | _ -> None
-              in
-              Flow_js_utils.add_output
-                cx
-                Error_message.(EInternal (aloc_of_reason r, UnconstrainedTvar id_msg));
-              let desc =
-                match desc_of_reason r with
-                | RIdentifier (OrdinaryName x) -> RCustom (spf "`%s` (resolved to type `empty`)" x)
-                | _ -> REmpty
-              in
-              EmptyT.make (replace_desc_reason desc r) (bogus_trust ())
-            in
-            Flow_js_utils.merge_tvar ~no_lowers cx r root_id
-          in
-          let root = C.Root { root with C.constraints = C.FullyResolved (unknown_use, lazy t) } in
-          Context.add_tvar cx root_id root;
-          this#type_ cx pole () t
-    end
-
-  let resolve cx t =
-    match (Context.env_mode cx, Context.current_phase cx <> Context.InitLib) with
-    | (Options.LTI, true) -> resolver#type_ cx Polarity.Positive () t
-    | _ -> ()
-
-  let resolved_t cx t =
-    resolve cx t;
-    t
-end
-
 let mk_tparams_map cx tparams_map =
   let { Loc_env.tparams; _ } = Context.environment cx in
   ALocMap.fold
@@ -137,9 +92,7 @@ let resolve_hint cx loc hint =
 
 let lazily_resolve_hint cx loc hint =
   let has_hint = not @@ Hint_api.is_hint_none hint in
-  let lazy_hint reason =
-    resolve_hint cx loc hint |> Type_hint.evaluate_hint cx reason ~resolver:TvarResolver.resolved_t
-  in
+  let lazy_hint reason = resolve_hint cx loc hint |> Type_hint.evaluate_hint cx reason in
   (has_hint, lazy_hint)
 
 let resolve_annotated_function
@@ -956,6 +909,6 @@ let resolve_component cx graph component =
   let env = Context.environment cx in
   EnvSet.iter
     (fun (kind, loc) ->
-      Loc_env.find_write env kind loc |> Base.Option.iter ~f:(TvarResolver.resolve cx))
+      Loc_env.find_write env kind loc |> Base.Option.iter ~f:(Tvar_resolver.resolve cx))
     entries_for_resolution;
   Debug_js.Verbose.print_if_verbose_lazy cx (lazy ["Finished resolving component"])

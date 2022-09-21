@@ -5,5 +5,6 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-val evaluate_hint :
-  Context.t -> Reason.t -> (Type.t, Type.call_arg list) Hint_api.hint -> Type.t option
+val resolve : Context.t -> Type.t -> unit
+
+val resolved_t : Context.t -> Type.t -> Type.t
