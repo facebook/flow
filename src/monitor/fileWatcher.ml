@@ -468,8 +468,6 @@ end = struct
           StatusStream.file_watcher_ready ();
           Lwt.return env
         | _ -> Lwt.return env)
-      | Watchman.Changed_merge_base _ ->
-        failwith "We're not using an scm aware subscription, so we should never get these"
 
     let catch _ exn =
       match Exception.to_exn exn with

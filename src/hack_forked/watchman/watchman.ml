@@ -136,7 +136,6 @@ type pushed_changes =
    *)
   | State_enter of string * Hh_json.json option
   | State_leave of string * Hh_json.json option
-  | Changed_merge_base of mergebase_and_changes
   | Files_changed of SSet.t
 
 module Capability = struct
@@ -872,24 +871,14 @@ let make_state_change_response state name data =
   | `Leave -> State_leave (name, metadata)
 
 let extract_mergebase data =
-  Hh_json.Access.(
-    let accessor = return data in
-    let ret =
-      accessor >>= get_obj "clock" >>= get_string "clock" >>= fun (clock, _) ->
-      accessor >>= get_obj "clock" >>= get_obj "scm" >>= get_string "mergebase"
-      >>= fun (mergebase, _) -> return (clock, mergebase)
-    in
-    to_option ret
-  )
-
-let make_mergebase_changed_response env data =
-  match extract_mergebase data with
-  | None -> None
-  | Some (clock, mergebase) ->
-    let changes = extract_file_names env data in
-    env.clockspec <- clock;
-    let response = Changed_merge_base { mergebase; changes } in
-    Some (env, response)
+  let open Hh_json.Access in
+  let ret =
+    let fat_clock = return data >>= get_obj "clock" in
+    fat_clock >>= get_string "clock" >>= fun (clock, _) ->
+    fat_clock >>= get_obj "scm" >>= get_string "mergebase" >>= fun (mergebase, _) ->
+    return (clock, mergebase)
+  in
+  to_option ret
 
 let subscription_is_cancelled data =
   match Jget.bool_opt (Some data) "canceled" with
@@ -899,22 +888,19 @@ let subscription_is_cancelled data =
   | Some true -> true
 
 let transform_asynchronous_get_changes_response env data =
-  match make_mergebase_changed_response env data with
-  | Some (env, response) -> Ok (env, response)
-  | None ->
-    if is_fresh_instance_response data then
-      Error Fresh_instance
-    else if subscription_is_cancelled data then
-      Error Subscription_canceled
-    else (
-      env.clockspec <- Jget.string_exn (Some data) "clock";
-      match Jget.string_opt (Some data) "state-enter" with
-      | Some state -> Ok (env, make_state_change_response `Enter state data)
-      | None ->
-        (match Jget.string_opt (Some data) "state-leave" with
-        | Some state -> Ok (env, make_state_change_response `Leave state data)
-        | None -> Ok (env, Files_changed (extract_file_names env data)))
-    )
+  if is_fresh_instance_response data then
+    Error Fresh_instance
+  else if subscription_is_cancelled data then
+    Error Subscription_canceled
+  else (
+    env.clockspec <- Jget.string_exn (Some data) "clock";
+    match Jget.string_opt (Some data) "state-enter" with
+    | Some state -> Ok (env, make_state_change_response `Enter state data)
+    | None ->
+      (match Jget.string_opt (Some data) "state-leave" with
+      | Some state -> Ok (env, make_state_change_response `Leave state data)
+      | None -> Ok (env, Files_changed (extract_file_names env data)))
+  )
 
 let get_changes =
   let on_retry _attempt env =

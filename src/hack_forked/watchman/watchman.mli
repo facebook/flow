@@ -51,7 +51,6 @@ type pushed_changes =
    *)
   | State_enter of string * Hh_json.json option
   | State_leave of string * Hh_json.json option
-  | Changed_merge_base of mergebase_and_changes
   | Files_changed of SSet.t
 
 type failure =
