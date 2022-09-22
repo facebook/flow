@@ -34,7 +34,7 @@ class C{
 
   method1() { } // ok
   method2() { return 42; } // err return
-  constructor() { return 10; } // err return
+  constructor() { return 10; } // no annotation required, but error on non-void return
 
   #priv1 = 10 + 20; // err
   #priv2; // err

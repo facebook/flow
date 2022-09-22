@@ -6287,11 +6287,12 @@ module Make
       | _ -> ());
       (field, annot_t, annot_ast, get_init)
     in
-    let mk_method cx =
+    let mk_method cx ~constructor =
       mk_func_sig
         cx
         ~required_this_param_type:None
-        ~require_return_annot:(Context.enforce_local_inference_annotations cx)
+        ~require_return_annot:((not constructor) && Context.enforce_local_inference_annotations cx)
+        ~constructor
         ~statics:SMap.empty
     in
     let mk_extends cx tparams_map = function
@@ -7111,6 +7112,16 @@ module Make
           mk_inference_target_with_annots
             ~has_hint:(Env.has_hint cx ret_loc)
             return_annotated_or_inferred
+        in
+        let () =
+          if kind = Func_class_sig_types.Func.Ctor then
+            let return_t = TypeUtil.type_t_of_annotated_or_inferred return_t in
+            let use_op = Op (FunReturnStatement { value = TypeUtil.reason_of_t return_t }) in
+            Flow.unify
+              cx
+              ~use_op
+              return_t
+              (VoidT.make (mk_reason RConstructorVoidReturn ret_loc) (literal_trust ()))
         in
         let statics_t =
           let props =

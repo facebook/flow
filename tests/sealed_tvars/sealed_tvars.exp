@@ -93,12 +93,18 @@ References:
               ^ [1]
 
 
-Error ---------------------------------------------------------------------------------------- regression_tests.js:21:17
+Error ---------------------------------------------------------------------------------------- regression_tests.js:22:12
 
-Missing an annotation on return. [missing-local-annot]
+Cannot return `42` because number [1] is incompatible with constructor void return [2]. [incompatible-return]
 
+   regression_tests.js:22:12
+   22|     return 42;
+                  ^^ [1]
+
+References:
+   regression_tests.js:21:17
    21|   constructor () {
-                       
+                        [2]
 
 
 Error ----------------------------------------------------------------------------------------- regression_tests.js:24:3

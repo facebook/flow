@@ -207,12 +207,18 @@ Missing an annotation on return. [missing-local-annot]
                   
 
 
-Error --------------------------------------------------------------------------------------------------- class.js:37:16
+Error --------------------------------------------------------------------------------------------------- class.js:37:26
 
-Missing an annotation on return. [missing-local-annot]
+Cannot return `10` because number [1] is incompatible with constructor void return [2]. [incompatible-return]
 
-   37|   constructor() { return 10; } // err return
-                      
+   class.js:37:26
+   37|   constructor() { return 10; } // no annotation required, but error on non-void return
+                                ^^ [1]
+
+References:
+   class.js:37:16
+   37|   constructor() { return 10; } // no annotation required, but error on non-void return
+                       [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- class.js:39:9

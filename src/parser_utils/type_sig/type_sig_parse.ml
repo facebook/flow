@@ -2768,7 +2768,7 @@ and member =
   in
   (fun opts scope tbls obj loc prop -> loop ~toplevel_loc:loc opts scope tbls [(loc, prop)] obj)
 
-and function_def =
+and function_def_helper =
   let module F = Ast.Function in
   let param opts scope tbls xs (loc, p) =
     let module P = Ast.Pattern in
@@ -2854,7 +2854,15 @@ and function_def =
         None)
     (* unexpected rest param pattern *)
   in
-  let return opts scope tbls xs ~async ~generator body = function
+  let return opts scope tbls xs ~async ~generator ~constructor body =
+    if constructor then
+      function
+    | Ast.Type.Available (loc, _)
+    | Ast.Type.Missing loc ->
+      let loc = push_loc tbls loc in
+      Annot (Void loc)
+    else
+      function
     | Ast.Type.Available (_, t) -> annot opts scope tbls xs t
     | Ast.Type.Missing loc ->
       let loc = push_loc tbls loc in
@@ -2904,7 +2912,7 @@ and function_def =
         Some (loc, predicate opts scope tbls pnames expr)
       | _ -> None)
   in
-  fun opts scope tbls xs f ->
+  fun opts scope tbls xs ~constructor f ->
     let {
       F.id = _;
       tparams = tps;
@@ -2923,9 +2931,13 @@ and function_def =
     let this_param = this_param opts scope tbls xs this_ in
     let params = params opts scope tbls xs [] ps in
     let rest_param = rest_param opts scope tbls xs rp in
-    let return = return opts scope tbls xs ~async ~generator body r in
+    let return = return opts scope tbls xs ~async ~generator ~constructor body r in
     let predicate = predicate opts scope tbls ps body p in
     FunSig { tparams; params; rest_param; this_param; return; predicate }
+
+and function_def = function_def_helper ~constructor:false
+
+and constructor_def = function_def_helper ~constructor:true
 
 and predicate opts scope tbls pnames =
   let open Option.Let_syntax in
@@ -3228,12 +3240,17 @@ and class_def =
             acc
           else begin
             match kind with
-            | C.Method.Method
-            | C.Method.Constructor ->
+            | C.Method.Method ->
               let { Ast.Function.async; generator; _ } = fn in
               let fn_loc = push_loc tbls fn_loc in
               let id_loc = push_loc tbls id_loc in
               let def = function_def opts scope tbls xs fn in
+              Acc.add_method ~static name id_loc fn_loc ~async ~generator def acc
+            | C.Method.Constructor ->
+              let { Ast.Function.async; generator; _ } = fn in
+              let fn_loc = push_loc tbls fn_loc in
+              let id_loc = push_loc tbls id_loc in
+              let def = constructor_def opts scope tbls xs fn in
               Acc.add_method ~static name id_loc fn_loc ~async ~generator def acc
             | C.Method.Get ->
               let id_loc = push_loc tbls id_loc in
