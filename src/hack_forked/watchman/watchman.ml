@@ -762,15 +762,6 @@ let backoff_delay attempts =
   let attempts = min attempts 3 in
   Float.of_int (4 * (2 ** attempts))
 
-let init settings =
-  let on_retry attempt settings =
-    let%lwt () = Lwt_unix.sleep (backoff_delay attempt) in
-    Lwt.return (Ok settings)
-  in
-  match%lwt with_retry ~max_attempts:max_reinit_attempts ~on_retry re_init settings with
-  | Ok env -> Lwt.return (Some env)
-  | Error _ -> Lwt.return None
-
 let extract_file_names env json =
   let open Hh_json.Access in
   return json
@@ -887,37 +878,6 @@ let subscription_is_cancelled data =
     false
   | Some true -> true
 
-let transform_asynchronous_get_changes_response env data =
-  if is_fresh_instance_response data then
-    Error Fresh_instance
-  else if subscription_is_cancelled data then
-    Error Subscription_canceled
-  else (
-    env.clockspec <- Jget.string_exn (Some data) "clock";
-    match Jget.string_opt (Some data) "state-enter" with
-    | Some state -> Ok (env, make_state_change_response `Enter state data)
-    | None ->
-      (match Jget.string_opt (Some data) "state-leave" with
-      | Some state -> Ok (env, make_state_change_response `Leave state data)
-      | None -> Ok (env, Files_changed (extract_file_names env data)))
-  )
-
-let get_changes =
-  let on_retry _attempt env =
-    let%lwt dead_env = close_channel_on_instance env in
-    re_init_dead_env ~allow_fresh_instance:false dead_env
-  in
-  let wait_for_changes env =
-    let debug_logging = env.settings.debug_logging in
-    match%lwt blocking_read ~debug_logging ~conn:env.conn with
-    | Error _ as err -> Lwt.return err
-    | Ok response ->
-      (match transform_asynchronous_get_changes_response env response with
-      | Error _ as err -> Lwt.return err
-      | Ok (env, result) -> Lwt.return (Ok (env, result)))
-  in
-  (fun env -> with_retry ~max_attempts:max_retry_attempts ~on_retry wait_for_changes env)
-
 let get_mergebase =
   (* watchman's mergebase-with queries also get the changes since mergebase.
      we don't want those here, we just want to quickly know the mergebase and
@@ -1008,6 +968,46 @@ let recover_from_restart ~prev_mergebase env =
            these changes, but it's left for future work. *)
         Lwt.return (Error Restarted))
   | Error _ as err -> Lwt.return err
+
+let transform_asynchronous_get_changes_response env data =
+  if is_fresh_instance_response data then
+    Error Fresh_instance
+  else if subscription_is_cancelled data then
+    Error Subscription_canceled
+  else (
+    env.clockspec <- Jget.string_exn (Some data) "clock";
+    match Jget.string_opt (Some data) "state-enter" with
+    | Some state -> Ok (env, make_state_change_response `Enter state data)
+    | None ->
+      (match Jget.string_opt (Some data) "state-leave" with
+      | Some state -> Ok (env, make_state_change_response `Leave state data)
+      | None -> Ok (env, Files_changed (extract_file_names env data)))
+  )
+
+let get_changes =
+  let on_retry _attempt env =
+    let%lwt dead_env = close_channel_on_instance env in
+    re_init_dead_env ~allow_fresh_instance:false dead_env
+  in
+  let wait_for_changes env =
+    let debug_logging = env.settings.debug_logging in
+    match%lwt blocking_read ~debug_logging ~conn:env.conn with
+    | Error _ as err -> Lwt.return err
+    | Ok response ->
+      (match transform_asynchronous_get_changes_response env response with
+      | Error _ as err -> Lwt.return err
+      | Ok (env, result) -> Lwt.return (Ok (env, result)))
+  in
+  (fun env -> with_retry ~max_attempts:max_retry_attempts ~on_retry wait_for_changes env)
+
+let init settings =
+  let on_retry attempt settings =
+    let%lwt () = Lwt_unix.sleep (backoff_delay attempt) in
+    Lwt.return (Ok settings)
+  in
+  match%lwt with_retry ~max_attempts:max_reinit_attempts ~on_retry re_init settings with
+  | Ok env -> Lwt.return (Some env)
+  | Error _ -> Lwt.return None
 
 module Testing = struct
   type nonrec error_kind = error_kind
