@@ -20,27 +20,32 @@ let resolver =
       | C.FullyResolved _ -> ()
       | _ ->
         let t =
-          let no_lowers _ r =
-            let id_msg =
-              match Context.verbose cx with
-              | Some verbose when Debug_js.Verbose.verbose_in_file cx verbose -> Some root_id
-              | _ -> None
-            in
-            Flow_js_utils.add_output
-              cx
-              Error_message.(EInternal (aloc_of_reason r, UnconstrainedTvar id_msg));
-            let desc =
-              match desc_of_reason r with
-              | RIdentifier (OrdinaryName x) -> RCustom (spf "`%s` (resolved to type `empty`)" x)
-              | _ -> REmpty
-            in
-            EmptyT.make (replace_desc_reason desc r) (bogus_trust ())
-          in
-          Flow_js_utils.merge_tvar ~no_lowers cx r root_id
+          match Flow_js_utils.merge_tvar_opt cx r root_id with
+          | Some t -> Some t
+          | None ->
+            if Context.in_synthesis_mode cx then
+              None
+            else
+              let id_msg =
+                match Context.verbose cx with
+                | Some verbose when Debug_js.Verbose.verbose_in_file cx verbose -> Some root_id
+                | _ -> None
+              in
+              Flow_js_utils.add_output
+                cx
+                Error_message.(EInternal (aloc_of_reason r, UnconstrainedTvar id_msg));
+              let desc =
+                match desc_of_reason r with
+                | RIdentifier (OrdinaryName x) -> RCustom (spf "`%s` (resolved to type `empty`)" x)
+                | _ -> REmpty
+              in
+              Some (EmptyT.make (replace_desc_reason desc r) (bogus_trust ()))
         in
-        let root = C.Root { root with C.constraints = C.FullyResolved (unknown_use, lazy t) } in
-        Context.add_tvar cx root_id root;
-        this#type_ cx pole () t
+        Base.Option.iter t ~f:(fun t ->
+            let root = C.Root { root with C.constraints = C.FullyResolved (unknown_use, lazy t) } in
+            Context.add_tvar cx root_id root;
+            this#type_ cx pole () t
+        )
   end
 
 let resolve cx t =

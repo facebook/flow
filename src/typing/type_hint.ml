@@ -9,12 +9,12 @@ open Reason
 open Type
 open Hint_api
 
-let in_sandbox_cx cx f =
+let in_sandbox_cx cx t ~f =
   let original_errors = Context.errors cx in
-  let result = f () in
+  let result = f (Tvar_resolver.resolved_t cx t) in
   let new_errors = Context.errors cx in
   if Flow_error.ErrorSet.equal original_errors new_errors then
-    Some (Tvar_resolver.resolved_t cx result)
+    Some result
   else (
     Context.reset_errors cx original_errors;
     None
@@ -45,7 +45,7 @@ let type_of_hint_decomposition cx op reason t =
     )
   in
 
-  in_sandbox_cx cx (fun () ->
+  in_sandbox_cx cx t ~f:(fun t ->
       match op with
       | Decomp_ArrElement i ->
         Tvar.mk_no_wrap_where cx reason (fun element_t ->
@@ -183,17 +183,27 @@ let type_of_hint_decomposition cx op reason t =
       | Decomp_Instantiated _ -> t
   )
 
-let rec evaluate_hint_ops cx reason t = function
-  | [] -> Some t
-  | op :: ops ->
-    (match type_of_hint_decomposition cx op reason t with
-    | Some t -> evaluate_hint_ops cx reason t ops
-    | None -> None)
+let evaluate_hint_ops cx reason t ops =
+  let rec loop t = function
+    | [] -> Some t
+    | op :: ops ->
+      (match type_of_hint_decomposition cx op reason t with
+      | Some t -> loop t ops
+      | None -> None)
+  in
+  (* We evaluate the decompositions in synthesis mode, but fully resolve the final result in
+     checking mode, so that any unresolved tvars in the midddle won't fail the evaluation, but
+     unsolved tvars in the final result will fail the evaluation. *)
+  Context.set_in_synthesis_mode cx true;
+  let synthesized_t = loop t ops in
+  Context.set_in_synthesis_mode cx false;
+  match synthesized_t with
+  | None -> None
+  | Some t -> in_sandbox_cx cx t ~f:Base.Fn.id
 
 let evaluate_hint cx reason hint =
   match hint with
   | Hint_None -> None
-  | Hint_t t -> Some (Tvar_resolver.resolved_t cx t)
   | Hint_Placeholder -> Some (AnyT.annot (mk_reason (RCustom "placeholder hint") ALoc.none))
-  | Hint_Decomp (ops, t) ->
-    ops |> Nel.to_list |> List.rev |> evaluate_hint_ops cx reason (Tvar_resolver.resolved_t cx t)
+  | Hint_t t -> evaluate_hint_ops cx reason t []
+  | Hint_Decomp (ops, t) -> ops |> Nel.to_list |> List.rev |> evaluate_hint_ops cx reason t
