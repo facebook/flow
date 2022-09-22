@@ -867,16 +867,14 @@ and statement ?(pretty_semicolon = false) ~opts (root_stmt : (Loc.t, Loc.t) Ast.
                );
                pretty_space;
                wrap_in_parens
-                 (fuse
+                 (fuse_with_space
                     [
                       begin
                         match left with
                         | S.ForOf.LeftDeclaration decl -> variable_declaration ~opts decl
                         | S.ForOf.LeftPattern patt -> pattern ~opts patt
                       end;
-                      space;
                       Atom "of";
-                      space;
                       expression ~opts right;
                     ]
                  );

@@ -1788,6 +1788,16 @@ let tests =
            assert_output ~ctxt "for(a of b);" layout;
            assert_output ~ctxt ~pretty:true "for (a of b);" layout
          );
+         ( "forof_space" >:: fun ctxt ->
+           assert_statement_string ~ctxt "for(let x of y);";
+           assert_statement_string ~ctxt ~pretty:true "for (let x of y);";
+
+           assert_statement_string ~ctxt "for(let x of[]);";
+           assert_statement_string ~ctxt ~pretty:true "for (let x of []);";
+
+           assert_statement_string ~ctxt "for(let{x,y}of z);";
+           assert_statement_string ~ctxt ~pretty:true "for (let {x, y} of z);"
+         );
          ( "yield_expressions" >:: fun ctxt ->
            assert_expression_string ~ctxt "function* f(){yield}";
            assert_expression_string ~ctxt "function* f(){yield a}";

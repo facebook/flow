@@ -213,6 +213,7 @@ let list
 let fuse_with_space =
   let is_punctuator = function
     | '{'
+    | '}'
     | '('
     | ')'
     | '['
