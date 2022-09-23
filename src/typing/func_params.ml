@@ -32,6 +32,10 @@ module Make
 
   let add_this t x = { x with this_ = Some t }
 
+  let all_params_annotated { params_rev; rest; _ } =
+    Base.List.for_all params_rev ~f:C.is_param_type_annotated
+    && Base.Option.value_map rest ~default:true ~f:C.is_rest_type_annotated
+
   let value { params_rev; _ } =
     List.fold_left
       (fun acc p ->

@@ -208,7 +208,11 @@ struct
     }
 
   let functiontype
-      cx ~arrow func_loc this_default { T.reason; kind; tparams; fparams; return_t; statics; _ } =
+      cx
+      ~arrow
+      func_loc
+      this_default
+      ({ T.reason; kind; tparams; fparams; return_t; statics; _ } as x) =
     let make_trust = Context.trust_constructor cx in
     let this_type = F.this fparams |> Base.Option.value ~default:this_default in
     let funtype =
@@ -216,7 +220,12 @@ struct
         Type.this_t = (this_type, This_Function);
         params = F.value fparams;
         rest_param = F.rest fparams;
-        return_t = TypeUtil.type_t_of_annotated_or_inferred return_t;
+        return_t =
+          (match return_t with
+          | Inferred t
+            when Context.in_synthesis_mode cx && (not @@ F.all_params_annotated x.T.fparams) ->
+            Tvar.mk_placeholder cx (TypeUtil.reason_of_t t)
+          | _ -> TypeUtil.type_t_of_annotated_or_inferred return_t);
         is_predicate = kind = Predicate;
         def_reason = reason;
       }
@@ -265,7 +274,7 @@ struct
     | [(_, param_t)] -> param_t
     | _ -> failwith "Setter property with unexpected type"
 
-  let toplevels cx x =
+  let toplevels_check_body cx x =
     let { T.reason = reason_fn; kind; tparams_map; fparams; body; return_t; _ } = x in
     let body_loc =
       let open Ast.Function in
@@ -533,6 +542,29 @@ struct
          where expr' is the typed AST translation of expr.
     *)
     (params_ast, body_ast, init_ast)
+
+  let toplevels_skip_body cx x =
+    let { T.kind; fparams; body; _ } = x in
+    let params_ast = F.eval cx fparams in
+    let body_ast = Base.Option.map ~f:Typed_ast_utils.error_mapper#function_body body in
+    let init_ast =
+      match kind with
+      | Ordinary
+      | Ctor
+      | Async
+      | Generator _
+      | AsyncGenerator _
+      | Predicate ->
+        None
+      | FieldInit e -> Some (Typed_ast_utils.error_mapper#expression e)
+    in
+    (params_ast, body_ast, init_ast)
+
+  let toplevels cx x =
+    if Context.in_synthesis_mode cx then
+      toplevels_skip_body cx x
+    else
+      toplevels_check_body cx x
 
   let to_ctor_sig f = { f with T.kind = Ctor }
 end

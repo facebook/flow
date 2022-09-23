@@ -111,6 +111,10 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
 
     let this_type (t, _) = t
 
+    let is_param_type_annotated _ = true
+
+    let is_rest_type_annotated _ = true
+
     let subst_param cx map (t, tast) =
       let t = Subst.subst cx map t in
       (t, tast)
@@ -1822,7 +1826,12 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
 
   and mk_type_annotation cx tparams_map reason = function
     | T.Missing loc ->
-      let (t, _) = mk_type cx tparams_map reason None in
+      let t =
+        if Context.in_synthesis_mode cx then
+          Tvar.mk_placeholder cx reason
+        else
+          Tvar.mk cx reason
+      in
       (Inferred t, T.Missing (loc, t))
     | T.Available annot ->
       let (t, ast_annot) = mk_type_available_annotation cx tparams_map annot in

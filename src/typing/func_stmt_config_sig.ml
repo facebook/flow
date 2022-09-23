@@ -18,6 +18,10 @@ module type S = sig
 
   val this_type : this_param -> Type.t
 
+  val is_param_type_annotated : param -> bool
+
+  val is_rest_type_annotated : rest -> bool
+
   val subst_param : Context.t -> Type.t Subst_name.Map.t -> param -> param
 
   val subst_rest : Context.t -> Type.t Subst_name.Map.t -> rest -> rest

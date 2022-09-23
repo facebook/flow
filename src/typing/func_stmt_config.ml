@@ -40,6 +40,10 @@ module Make (Destructuring : Destructuring_sig.S) (Statement : Statement_sig.S) 
 
   let this_type (This { t; _ }) = t
 
+  let is_param_type_annotated (Param { has_anno; _ }) = has_anno
+
+  let is_rest_type_annotated (Rest { has_anno; _ }) = has_anno
+
   let subst_param cx map param =
     let (Param { t; loc; ploc; pattern; default; has_anno }) = param in
     let t = Flow.subst cx map t in

@@ -14,6 +14,10 @@ module type Config = sig
 
   val this_type : Types.this_param -> Type.t
 
+  val is_param_type_annotated : Types.param -> bool
+
+  val is_rest_type_annotated : Types.rest -> bool
+
   val subst_param : Context.t -> Type.t Subst_name.Map.t -> Types.param -> Types.param
 
   val subst_rest : Context.t -> Type.t Subst_name.Map.t -> Types.rest -> Types.rest
@@ -41,6 +45,8 @@ module type S = sig
   val add_rest : Config_types.rest -> Types.t -> Types.t
 
   val add_this : Config_types.this_param -> Types.t -> Types.t
+
+  val all_params_annotated : Types.t -> bool
 
   val value : Types.t -> Type.fun_param list
 
