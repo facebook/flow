@@ -843,7 +843,7 @@ module Make
      * any point in the code. The latest_refinement maps keep track of which entries to read. *)
     refinement_heap: refinement_chain IMap.t;
     latest_refinements: refinement_maps list;
-    env: env_val SMap.t;
+    env: env_val Nel.t SMap.t;
     (* A set of names that have to be excluded from binding.
        This set is always empty when we are checking normal code. It will only be possibly non-empty
        when we are checking libdef code. In libdefs, this set represents a list of names that we
@@ -1132,6 +1132,7 @@ module Make
       | Options.Jsx_react -> Some "React"
       | Options.Jsx_pragma (_, ast) -> extract_jsx_basename ast
     in
+    let globals = SMap.map Nel.one globals in
     match jsx_base_name with
     | None -> (globals, None)
     | Some jsx_base_name ->
@@ -1139,14 +1140,16 @@ module Make
        * we first check the globals before emitting an error *)
       let global_val = Val.global jsx_base_name in
       let entry =
-        {
-          val_ref = ref global_val;
-          havoc = global_val;
-          writes_by_closure_provider_val = None;
-          def_loc = None;
-          heap_refinements = ref HeapRefinementMap.empty;
-          kind = Bindings.Var;
-        }
+        ( {
+            val_ref = ref global_val;
+            havoc = global_val;
+            writes_by_closure_provider_val = None;
+            def_loc = None;
+            heap_refinements = ref HeapRefinementMap.empty;
+            kind = Bindings.Var;
+          },
+          []
+        )
       in
       (SMap.add jsx_base_name entry globals, Some jsx_base_name)
 
@@ -1328,9 +1331,13 @@ module Make
         env_state <- { env_state with curr_id };
         new_id
 
+      method env_read x = SMap.find x env_state.env |> Nel.hd
+
+      method env_read_opt x = SMap.find_opt x env_state.env |> Base.Option.map ~f:Nel.hd
+
       method env : Env.t =
         SMap.map
-          (fun { val_ref; heap_refinements; def_loc; _ } ->
+          (fun ({ val_ref; heap_refinements; def_loc; _ }, _) ->
             { Env.env_val = !val_ref; heap_refinements = !heap_refinements; def_loc })
           env_state.env
 
@@ -1361,7 +1368,7 @@ module Make
                ~default:v
         in
         SMap.mapi
-          (fun name { val_ref; heap_refinements; def_loc; _ } ->
+          (fun name ({ val_ref; heap_refinements; def_loc; _ }, _) ->
             let head = List.hd env_state.latest_refinements in
             let refinements_by_key = refinements_by_key head in
             let lookup_key = RefinementKey.lookup_of_name name in
@@ -1397,7 +1404,8 @@ module Make
         (* NOTE: env might have more keys than env_state.env, since the environment it
            describes might be nested inside the current environment *)
         SMap.iter
-          (fun x { val_ref; havoc; heap_refinements = heap_refinements1; def_loc = def_loc_1; _ } ->
+          (fun x
+               ({ val_ref; havoc; heap_refinements = heap_refinements1; def_loc = def_loc_1; _ }, _) ->
             let { Env.env_val; heap_refinements = heap_refinements2; def_loc = def_loc_2 } =
               SMap.find x env
             in
@@ -1412,7 +1420,7 @@ module Make
         let env2 = SMap.values env2 in
         let env = SMap.values env_state.env in
         list_iter3
-          (fun { val_ref; havoc; heap_refinements; def_loc; _ }
+          (fun ({ val_ref; havoc; heap_refinements; def_loc; _ }, _)
                { Env.env_val = value1; heap_refinements = heap_refinements1; def_loc = _ }
                { Env.env_val = value2; heap_refinements = heap_refinements2; def_loc = _ } ->
             val_ref := this#merge_vals_with_havoc ~havoc ~def_loc value1 value2;
@@ -1425,7 +1433,7 @@ module Make
         let other_env = SMap.values other_env in
         let env = SMap.values env_state.env in
         List.iter2
-          (fun { val_ref; havoc; heap_refinements; def_loc; _ }
+          (fun ({ val_ref; havoc; heap_refinements; def_loc; _ }, _)
                { Env.env_val = value; heap_refinements = new_heap_refinements; def_loc = _ } ->
             val_ref := this#merge_vals_with_havoc ~havoc ~def_loc !val_ref value;
             heap_refinements := this#merge_heap_refinements !heap_refinements new_heap_refinements)
@@ -1436,7 +1444,7 @@ module Make
         let env0 = SMap.values env0 in
         let env = SMap.values env_state.env in
         List.iter2
-          (fun { val_ref; heap_refinements; _ }
+          (fun ({ val_ref; heap_refinements; _ }, _)
                { Env.env_val; heap_refinements = old_heap_refinements; def_loc = _ } ->
             val_ref := env_val;
             heap_refinements := old_heap_refinements)
@@ -1478,7 +1486,7 @@ module Make
             ('r * Val.t option) option =
         fun lookup ?create_val_for_heap f ->
           let { RefinementKey.base; projections } = lookup in
-          match SMap.find_opt base env_state.env with
+          match this#env_read_opt base with
           | None -> None
           | Some
               {
@@ -1553,75 +1561,86 @@ module Make
 
       method havoc_all_heap_refinements () =
         SMap.iter
-          (fun _ { heap_refinements; _ } -> this#havoc_heap_refinements heap_refinements)
+          (fun _ elts ->
+            Nel.iter
+              (fun { heap_refinements; _ } -> this#havoc_heap_refinements heap_refinements)
+              elts)
           env_state.env
 
-      method havoc_env ~force_initialization ~all =
-        let havoced_names =
-          SMap.filter
-            (fun _x -> function
-              | { kind = Bindings.Internal; _ } -> false
-              | {
-                  val_ref;
-                  havoc;
-                  writes_by_closure_provider_val;
-                  def_loc;
-                  heap_refinements;
-                  kind = _;
-                } ->
-                this#havoc_heap_refinements heap_refinements;
-                let uninitialized_writes =
-                  lazy (Val.writes_of_uninitialized this#refinement_may_be_undefined !val_ref)
-                in
-                let val_is_undeclared_or_skipped = Val.is_undeclared_or_skipped !val_ref in
-                let havoc_ref =
-                  if force_initialization then
-                    havoc
-                  else if val_is_undeclared_or_skipped then
-                    !val_ref
-                  else
-                    let havoc =
-                      match (all, writes_by_closure_provider_val) with
-                      | (false, Some writes_by_closure_provider_val) ->
-                        Val.merge !val_ref writes_by_closure_provider_val
-                      | _ -> havoc
+      method havoc_env ~all ~deep =
+        let force_initialization = not deep in
+        let havoced_ids =
+          SMap.fold
+            (fun _x elts acc ->
+              let elts =
+                if deep then
+                  elts
+                else
+                  Nel.hd elts |> Nel.one
+              in
+              Nel.fold_left
+                (fun acc elt ->
+                  match elt with
+                  | { kind = Bindings.Internal; _ } -> acc
+                  | {
+                   val_ref;
+                   havoc;
+                   writes_by_closure_provider_val;
+                   def_loc;
+                   heap_refinements;
+                   kind = _;
+                  } ->
+                    this#havoc_heap_refinements heap_refinements;
+                    let uninitialized_writes =
+                      lazy (Val.writes_of_uninitialized this#refinement_may_be_undefined !val_ref)
                     in
-                    Base.List.fold
-                      ~init:havoc
-                      ~f:(fun acc write -> Val.merge acc (Val.of_write write))
-                      (Lazy.force uninitialized_writes)
-                in
-                if
-                  Base.Option.is_none def_loc
-                  || Invalidation_api.should_invalidate
-                       ~all
-                       invalidation_caches
-                       prepass_info
-                       prepass_values
-                       (Base.Option.value_exn def_loc (* checked against none above *))
-                  || force_initialization
-                     && (List.length (Lazy.force uninitialized_writes) > 0
-                        || val_is_undeclared_or_skipped
-                        )
-                then begin
-                  val_ref := havoc_ref;
-                  true
-                end else
-                  false)
+                    let val_is_undeclared_or_skipped = Val.is_undeclared_or_skipped !val_ref in
+                    let havoc_ref =
+                      if force_initialization then
+                        havoc
+                      else if val_is_undeclared_or_skipped then
+                        !val_ref
+                      else
+                        let havoc =
+                          match (all, writes_by_closure_provider_val) with
+                          | (false, Some writes_by_closure_provider_val) ->
+                            Val.merge !val_ref writes_by_closure_provider_val
+                          | _ -> havoc
+                        in
+                        Base.List.fold
+                          ~init:havoc
+                          ~f:(fun acc write -> Val.merge acc (Val.of_write write))
+                          (Lazy.force uninitialized_writes)
+                    in
+                    if
+                      Base.Option.is_none def_loc
+                      || Invalidation_api.should_invalidate
+                           ~all
+                           invalidation_caches
+                           prepass_info
+                           prepass_values
+                           (Base.Option.value_exn def_loc (* checked against none above *))
+                      || force_initialization
+                         && (List.length (Lazy.force uninitialized_writes) > 0
+                            || val_is_undeclared_or_skipped
+                            )
+                    then begin
+                      val_ref := havoc_ref;
+                      ISet.add (Val.base_id_of_val havoc_ref) acc
+                    end else
+                      acc)
+                acc
+                elts)
             env_state.env
+            ISet.empty
         in
         let latest_refinements =
           Base.List.map
             ~f:(fun { applied; _ } ->
               let applied =
                 IMap.filter
-                  (fun ssa_id ({ RefinementKey.base; projections }, _) ->
-                    Base.List.length projections = 0
-                    &&
-                    (* If we havoced a var with the same name in the previous step, and if the ssa ids match, we remove it from the latest refinements *)
-                    match SMap.find_opt base havoced_names with
-                    | None -> true
-                    | Some { val_ref; _ } -> Val.base_id_of_val !val_ref <> ssa_id)
+                  (fun ssa_id ({ RefinementKey.base = _; projections }, _) ->
+                    Base.List.length projections = 0 && not (ISet.mem ssa_id havoced_ids))
                   applied
               in
               let total =
@@ -1635,9 +1654,9 @@ module Make
         in
         env_state <- { env_state with latest_refinements }
 
-      method havoc_current_env ~all = this#havoc_env ~all ~force_initialization:false
+      method havoc_current_env ~all = this#havoc_env ~all ~deep:true
 
-      method havoc_uninitialized_env = this#havoc_env ~force_initialization:true ~all:true
+      method havoc_uninitialized_env = this#havoc_env ~all:true ~deep:false
 
       method refinement_may_be_undefined id =
         let rec refine_undefined = function
@@ -1667,8 +1686,9 @@ module Make
           providers
         )
 
-      method private mk_env ~this_super_binding_env =
-        SMap.mapi (fun name (kind, (loc, _)) ->
+      method private mk_env ~this_super_binding_env m =
+        SMap.mapi
+          (fun name (kind, (loc, _)) ->
             match kind with
             | Bindings.Type _ ->
               let reason = mk_reason (RType (OrdinaryName name)) loc in
@@ -1848,8 +1868,9 @@ module Make
                 def_loc = Some loc;
                 heap_refinements = ref HeapRefinementMap.empty;
                 kind;
-              }
-        )
+              })
+          m
+        |> SMap.map Nel.one
 
       method private push_env ~this_super_binding_env bindings =
         let old_env = env_state.env in
@@ -1857,7 +1878,16 @@ module Make
         let bindings =
           SMap.filter (fun name _ -> not @@ this#is_excluded_ordinary_name name) bindings
         in
-        let env = SMap.fold SMap.add (this#mk_env ~this_super_binding_env bindings) old_env in
+        let env =
+          SMap.fold
+            (fun x v ->
+              SMap.adjust x (function
+                  | None -> v
+                  | Some y -> Nel.append v y
+                  ))
+            (this#mk_env ~this_super_binding_env bindings)
+            old_env
+        in
         env_state <- { env_state with env };
         (bindings, old_env)
 
@@ -1965,7 +1995,7 @@ module Make
         ( if this#is_excluded_ordinary_name name then
           ()
         else
-          let { kind; def_loc; _ } = SMap.find name env_state.env in
+          let { kind; def_loc; _ } = this#env_read name in
           let error =
             match def_loc with
             (* Identifiers with no binding can never reintroduce "cannot reassign binding" errors *)
@@ -2081,7 +2111,7 @@ module Make
             havoc = _;
             writes_by_closure_provider_val = _;
           } =
-            SMap.find x env_state.env
+            this#env_read x
           in
           match kind with
           (* Assignments to undeclared bindings that aren't part of declarations do not
@@ -2135,7 +2165,7 @@ module Make
        * in the new_env, which does know if it's querying a value or a type.
        * *)
       method any_identifier loc name =
-        let { val_ref; havoc; def_loc; kind; _ } = SMap.find name env_state.env in
+        let { val_ref; havoc; def_loc; kind; _ } = this#env_read name in
         let v =
           if env_state.visiting_hoisted_type then
             havoc
@@ -2212,12 +2242,15 @@ module Make
 
       method havoc_heap_refinements_using_name ~private_ name =
         SMap.iter
-          (fun _ { heap_refinements; _ } ->
-            heap_refinements :=
-              HeapRefinementMap.filter
-                (fun projections _ ->
-                  not (RefinementKey.proj_uses_propname ~private_ name projections))
-                !heap_refinements)
+          (fun _ elts ->
+            Nel.iter
+              (fun { heap_refinements; _ } ->
+                heap_refinements :=
+                  HeapRefinementMap.filter
+                    (fun projections _ ->
+                      not (RefinementKey.proj_uses_propname ~private_ name projections))
+                    !heap_refinements)
+              elts)
           env_state.env
 
       (* This function should be called _after_ a member expression is assigned a value.
@@ -2448,7 +2481,7 @@ module Make
                   havoc = _;
                   writes_by_closure_provider_val = _;
                 } =
-                  SMap.find x env_state.env
+                  this#env_read x
                 in
 
                 (match
@@ -2495,7 +2528,7 @@ module Make
                       ()
                     else
                       let { val_ref; kind = stored_binding_kind; def_loc; _ } =
-                        SMap.find name env_state.env
+                        this#env_read name
                       in
                       let error =
                         error_for_assignment_kind
@@ -2714,7 +2747,7 @@ module Make
         | (Some _, None) -> this#reset_env refined_env2
         | _ ->
           SMap.iter
-            (fun name { val_ref; heap_refinements; havoc; def_loc; _ } ->
+            (fun name ({ val_ref; heap_refinements; havoc; def_loc; _ }, _) ->
               let { Env.env_val = value1; heap_refinements = heap_entries1; def_loc = _ } =
                 SMap.find name env1
               in
@@ -2832,7 +2865,7 @@ module Make
               def_loc = _;
               kind;
             } =
-              SMap.find base env_state.env
+              this#env_read base
             in
             (* If a var is changed then all the heap refinements on that var should
              * also be havoced. If only heap refinements are havoced then there's no
@@ -3149,7 +3182,7 @@ module Make
 
       method private switch_completeness loc =
         let reason = Reason.(mk_reason (RCustom "switch") loc) in
-        let { val_ref; _ } = SMap.find maybe_exhaustively_checked_var_name env_state.env in
+        let { val_ref; _ } = this#env_read maybe_exhaustively_checked_var_name in
         val_ref := Val.one reason
 
       method! switch loc switch =
@@ -3331,7 +3364,7 @@ module Make
                    match kind with
                    | Bindings.Let
                    | Bindings.Const ->
-                     let { val_ref; heap_refinements; _ } = SMap.find name env_state.env in
+                     let { val_ref; heap_refinements; _ } = this#env_read name in
                      this#havoc_heap_refinements heap_refinements;
                      val_ref := Val.declared_but_skipped name loc
                    | _ -> ()
@@ -3592,9 +3625,7 @@ module Make
                             predicate
                             body;
 
-                          let { val_ref; _ } =
-                            SMap.find maybe_exhaustively_checked_var_name env_state.env
-                          in
+                          let { val_ref; _ } = this#env_read maybe_exhaustively_checked_var_name in
                           let { Env_api.write_locs; _ } = Val.simplify None None None !val_ref in
                           let (locs, undeclared) =
                             Base.List.fold
@@ -3860,7 +3891,7 @@ module Make
         match argument with
         | (_, Flow_ast.Expression.Identifier (id_loc, { Flow_ast.Identifier.name; _ }))
           when not @@ this#is_excluded_ordinary_name name ->
-          let { kind; def_loc; val_ref; _ } = SMap.find name env_state.env in
+          let { kind; def_loc; val_ref; _ } = this#env_read name in
           (match error_for_assignment_kind cx name id_loc def_loc kind AssignmentWrite !val_ref with
           | None ->
             val_ref := undefined;
@@ -4159,7 +4190,7 @@ module Make
               let should_not_refine =
                 let { RefinementKey.base; projections } = key in
                 if projections = [] then
-                  match SMap.find base env_state.env with
+                  match this#env_read base with
                   | { val_ref; kind = Bindings.Const | Bindings.Let; def_loc = Some def_loc; _ }
                     when Val.is_undeclared_or_skipped !val_ref ->
                     refinement
@@ -4272,7 +4303,7 @@ module Make
       method identifier_refinement ((loc, ident) as identifier) =
         ignore @@ this#identifier identifier;
         let { Flow_ast.Identifier.name; _ } = ident in
-        let { val_ref; _ } = SMap.find name env_state.env in
+        let { val_ref; _ } = this#env_read name in
         if not (Val.is_undeclared_or_skipped !val_ref) then
           this#add_single_refinement (RefinementKey.of_name name loc) (L.LSet.singleton loc, TruthyR)
 
@@ -4445,7 +4476,7 @@ module Make
         (* Negating if sense is true is handled by negate_new_refinements. *)
         let refis = this#maybe_sentinel ~sense:false ~strict loc expr other in
         let is_global_undefined () =
-          match SMap.find_opt "undefined" env_state.env with
+          match this#env_read_opt "undefined" with
           | None -> false
           | Some { val_ref = v; _ } -> Val.is_global_undefined !v
         in
@@ -4510,7 +4541,7 @@ module Make
                  TODO: error on this in the new-env. *)
               ()
             | { RefinementKey.base; projections = [] } ->
-              let { val_ref = _; def_loc; _ } = SMap.find base env_state.env in
+              let { val_ref = _; def_loc; _ } = this#env_read base in
               (match def_loc with
               | None -> ()
               | Some def_loc -> add_literal_subtype_test def_loc refinement)
@@ -4552,7 +4583,7 @@ module Make
               let reason = mk_reason (RProperty (Some (OrdinaryName prop_name))) ploc in
               ( if RefinementKey.(refinement_key.lookup.projections) = [] then
                 let { val_ref = _; def_loc; _ } =
-                  SMap.find RefinementKey.(refinement_key.lookup.base) env_state.env
+                  this#env_read RefinementKey.(refinement_key.lookup.base)
                 in
                 Base.Option.iter def_loc ~f:(fun def_loc ->
                     Context.add_matching_props cx (prop_name, other_loc, def_loc)
@@ -5026,7 +5057,7 @@ module Make
           None
 
       method private synthesize_read name =
-        let { val_ref; havoc; def_loc; kind; _ } = SMap.find name env_state.env in
+        let { val_ref; havoc; def_loc; kind; _ } = this#env_read name in
         let v =
           if env_state.visiting_hoisted_type then
             havoc
