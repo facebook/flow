@@ -1,4 +1,4 @@
->>> test.js (#changes: 6)
+>>> test.js (#changes: 7)
 //@flow
 
 declare var key : string;
@@ -50,13 +50,19 @@ function foo() {
   x.push("a");
 }
 
+function bar() {
+  var x: Array<?string> = []; // Annotate with Array<?string>
+  x.push(null);
+  x.push("a");
+}
+
 >>> Launching report...
 
 Stats:
   Files changed:                            1
-  Number of annotations added:              6
-  Total size of annotations:               20
-  Number of vars with write errors:         7
+  Number of annotations added:              7
+  Total size of annotations:               24
+  Number of vars with write errors:         8
   Number of possibly renamable vars:        0
   Number of annotations skipped:            1
 

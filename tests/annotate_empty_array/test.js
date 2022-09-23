@@ -48,3 +48,9 @@ function foo() {
   x.push(42);
   x.push("a");
 }
+
+function bar() {
+  var x = []; // Annotate with Array<?string>
+  x.push(null);
+  x.push("a");
+}

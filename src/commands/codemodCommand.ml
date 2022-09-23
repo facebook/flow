@@ -300,11 +300,15 @@ module Annotate_empty_array_command = struct
                "--preserve-literals"
                (required ~default:Literals.Never (enum preserve_string_literals_level))
                ~doc:""
+          |> flag
+               "--generalize-maybe"
+               no_arg
+               ~doc:"Generalize annotations containing null or void to maybe types"
           |> common_annotate_flags
         );
     }
 
-  let main codemod_flags preserve_literals max_type_size default_any () =
+  let main codemod_flags preserve_literals generalize_maybe max_type_size default_any () =
     let module Runner = Codemod_runner.MakeSimpleTypedRunner (struct
       module Acc = Annotate_declarations.Acc
 
@@ -317,7 +321,13 @@ module Annotate_empty_array_command = struct
         { o with opt_env_mode = ConstrainWrites; opt_array_literal_providers = true }
 
       let visit =
-        let mapper = Annotate_empty_array.mapper ~preserve_literals ~max_type_size ~default_any in
+        let mapper =
+          Annotate_empty_array.mapper
+            ~preserve_literals
+            ~generalize_maybe
+            ~max_type_size
+            ~default_any
+        in
         Codemod_utils.make_visitor (Codemod_utils.Mapper mapper)
     end) in
     main (module Runner) codemod_flags ()
