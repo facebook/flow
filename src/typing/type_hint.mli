@@ -6,4 +6,7 @@
  *)
 
 val evaluate_hint :
-  Context.t -> Reason.t -> (Type.t, Type.call_arg list) Hint_api.hint -> Type.t option
+  Context.t ->
+  Reason.t ->
+  (Type.t, Type.targ list option, Type.call_arg list) Hint_api.hint ->
+  Type.t option

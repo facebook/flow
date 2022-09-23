@@ -51,6 +51,9 @@ module type S = sig
       Type.t
   end
 
+  val convert_call_targs_opt' :
+    Context.t -> (ALoc.t, ALoc.t) Ast.Expression.CallTypeArgs.t option -> Type.targ list option
+
   val expression :
     ?cond:Type.cond_context ->
     Context.t ->

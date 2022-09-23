@@ -261,6 +261,12 @@ module Make
       let (targts, targs_ast) = convert_call_targs cx Subst_name.Map.empty args in
       (Some targts, Some (loc, targs_ast))
 
+  let convert_call_targs_opt' cx = function
+    | None -> None
+    | Some (_, args) ->
+      let (targts, _) = convert_call_targs cx Subst_name.Map.empty args in
+      Some targts
+
   module ALoc_this_finder = This_finder.Make (Loc_collections.ALocSet)
 
   let error_on_this_uses_in_object_methods cx =

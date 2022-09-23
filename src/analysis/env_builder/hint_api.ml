@@ -11,12 +11,14 @@
  * then we can check the value of property `f` with the hint `(number) => number`
  * and, further, use `number` as the type of `x`. *)
 
-type ('t, 'args) implicit_instantiation_hints = {
-  return_hint: ('t, 'args) hint;
-  arg_list: 'args;
+type ('t, 'targs, 'args) implicit_instantiation_hints = {
+  reason: Reason.t;
+  return_hint: ('t, 'targs, 'args) hint;
+  targs: 'targs Lazy.t;
+  arg_list: 'args Lazy.t;
 }
 
-and ('t, 'args) hint_decomposition =
+and ('t, 'targs, 'args) hint_decomposition =
   (* Hint on `{ f: e }` becomes hint on `e` *)
   | Decomp_ObjProp of string
   (* Hint on `{ [k]: e }` becomes hint on `e` *)
@@ -52,11 +54,11 @@ and ('t, 'args) hint_decomposition =
   | Decomp_JsxProps
   (* Type of f in f(...) is instantiated with arguments and return hint.
      Returns f if the type of f is not polymorphic. *)
-  | Decomp_Instantiated of ('t, 'args) implicit_instantiation_hints Lazy.t
+  | Decomp_Instantiated of ('t, 'targs, 'args) implicit_instantiation_hints
 
-and ('t, 'args) hint =
+and ('t, 'targs, 'args) hint =
   | Hint_t of 't
-  | Hint_Decomp of ('t, 'args) hint_decomposition Nel.t * 't
+  | Hint_Decomp of ('t, 'targs, 'args) hint_decomposition Nel.t * 't
   (* The hint placeholder used in env_resolution to pass to expression type checkers.
      It will eventually be removed once we move all hint decomposition logic into env_resolution. *)
   | Hint_Placeholder
@@ -109,7 +111,7 @@ let is_hint_none = function
   | Hint_None -> true
   | _ -> false
 
-let rec map_decomp_op ~map_base_hint ~map_arg_list = function
+let rec map_decomp_op ~map_base_hint ~map_targs ~map_arg_list = function
   | Decomp_ObjProp prop -> Decomp_ObjProp prop
   | Decomp_ObjComputed -> Decomp_ObjComputed
   | Decomp_ObjSpread -> Decomp_ObjSpread
@@ -126,20 +128,19 @@ let rec map_decomp_op ~map_base_hint ~map_arg_list = function
   | Decomp_FuncReturn -> Decomp_FuncReturn
   | Comp_ImmediateFuncCall -> Comp_ImmediateFuncCall
   | Decomp_JsxProps -> Decomp_JsxProps
-  | Decomp_Instantiated implicit_instantiation_hints ->
+  | Decomp_Instantiated { reason; return_hint; targs; arg_list } ->
     Decomp_Instantiated
-      (Lazy.map
-         (fun { return_hint; arg_list } ->
-           {
-             return_hint = map ~map_base_hint ~map_arg_list return_hint;
-             arg_list = map_arg_list arg_list;
-           })
-         implicit_instantiation_hints
-      )
+      {
+        reason;
+        return_hint = map ~map_base_hint ~map_targs ~map_arg_list return_hint;
+        targs = Lazy.map map_targs targs;
+        arg_list = Lazy.map map_arg_list arg_list;
+      }
 
-and map ~map_base_hint ~map_arg_list = function
+and map ~map_base_hint ~map_targs ~map_arg_list = function
   | Hint_t t -> Hint_t (map_base_hint t)
   | Hint_Decomp (decomps, t) ->
-    Hint_Decomp (Nel.map (map_decomp_op ~map_base_hint ~map_arg_list) decomps, map_base_hint t)
+    Hint_Decomp
+      (Nel.map (map_decomp_op ~map_base_hint ~map_targs ~map_arg_list) decomps, map_base_hint t)
   | Hint_Placeholder -> Hint_Placeholder
   | Hint_None -> Hint_None

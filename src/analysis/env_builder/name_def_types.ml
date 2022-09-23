@@ -39,7 +39,12 @@ type hint_node =
   | ValueHint of (ALoc.t, ALoc.t) Ast.Expression.t
   | ProvidersHint of ALoc.t Nel.t
 
-type ast_hint = (hint_node, (ALoc.t, ALoc.t) Ast.Expression.ArgList.t) hint
+type ast_hint =
+  ( hint_node,
+    (ALoc.t, ALoc.t) Ast.Expression.CallTypeArgs.t option,
+    (ALoc.t, ALoc.t) Ast.Expression.ArgList.t
+  )
+  hint
 
 type root =
   | Annotation of {

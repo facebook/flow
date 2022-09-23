@@ -421,7 +421,7 @@ struct
         | Hint_api.Hint_Decomp (ops, hint_node) ->
           Nel.fold_left
             (fun acc -> function
-              | Hint_api.Decomp_Instantiated (lazy { Hint_api.return_hint; arg_list = _ }) ->
+              | Hint_api.Decomp_Instantiated { Hint_api.return_hint; _ } ->
                 depends_of_hint acc return_hint
               | _ -> acc)
             (depends_of_hint_node state hint_node)

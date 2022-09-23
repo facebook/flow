@@ -78,10 +78,10 @@ let resolve_hint cx loc hint =
       UnionT (mk_reason (RCustom "providers") loc, UnionRep.make t1 t2 ts)
   in
   if Context.env_mode cx = Options.LTI then
-    Hint_api.map
-      hint
-      ~map_base_hint:resolve_hint_node
-      ~map_arg_list:(Statement.synthesize_arg_list cx)
+    let map_base_hint = resolve_hint_node in
+    let map_targs = Statement.convert_call_targs_opt' cx in
+    let map_arg_list = Statement.synthesize_arg_list cx in
+    Hint_api.map hint ~map_base_hint ~map_targs ~map_arg_list
   else
     match hint with
     | Hint_t _

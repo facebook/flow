@@ -1312,10 +1312,9 @@ class def_finder env_entries providers toplevel_scope =
 
     method! call _ _ = failwith "Should be visited by visit_call_expression"
 
-    method private visit_call_expression ~hint ~cond ~visit_callee expr =
-      let open Ast.Expression.Call in
+    method private visit_call_expression ~hint ~cond ~visit_callee loc expr =
       let {
-        callee;
+        Ast.Expression.Call.callee;
         targs;
         arguments = (_, { Ast.Expression.ArgList.arguments; comments = _ }) as arg_list;
         comments = _;
@@ -1407,9 +1406,17 @@ class def_finder env_entries providers toplevel_scope =
                 decompose_hint Decomp_MethodElem base_hint)
             | _ -> Hint_t (ValueHint callee)
           in
+          let reason = mk_expression_reason (loc, Ast.Expression.Call expr) in
           let call_argumemts_hint =
             decompose_hint
-              (Decomp_Instantiated (lazy { return_hint = hint; arg_list }))
+              (Decomp_Instantiated
+                 {
+                   Hint_api.reason;
+                   return_hint = hint;
+                   targs = lazy targs;
+                   arg_list = lazy arg_list;
+                 }
+              )
               call_argumemts_hint
           in
           Base.List.iteri arguments ~f:(fun i arg ->
@@ -1426,18 +1433,18 @@ class def_finder env_entries providers toplevel_scope =
 
     method! optional_call _ _ = failwith "Should be visited by visit_optional_call_expression"
 
-    method private visit_optional_call_expression ~hint ~cond expr =
+    method private visit_optional_call_expression ~hint ~cond loc expr =
       let open Ast.Expression.OptionalCall in
       let { call; optional = _; filtered_out = _ } = expr in
       this#visit_call_expression
+        loc
         call
         ~hint
         ~cond
         ~visit_callee:(this#visit_expression ~cond:NonConditionalContext)
 
     method! new_ _ expr =
-      let open Ast.Expression.New in
-      let { callee; targs; arguments; comments = _ } = expr in
+      let { Ast.Expression.New.callee; targs; arguments; comments = _ } = expr in
       this#visit_expression ~hint:Hint_None ~cond:NonConditionalContext callee;
       Base.Option.iter targs ~f:(fun targs -> ignore @@ this#call_type_args targs);
       let call_argumemts_hint = decompose_hint Decomp_CallNew (Hint_t (ValueHint callee)) in
@@ -1649,12 +1656,9 @@ class def_finder env_entries providers toplevel_scope =
       | Ast.Expression.Binary expr -> this#visit_binary_expression ~cond expr
       | Ast.Expression.Logical expr -> this#visit_logical_expression ~hint ~cond expr
       | Ast.Expression.Call expr ->
-        this#visit_call_expression
-          ~hint
-          ~visit_callee:(this#visit_expression ~cond:NonConditionalContext)
-          ~cond
-          expr
-      | Ast.Expression.OptionalCall expr -> this#visit_optional_call_expression ~hint ~cond expr
+        let visit_callee = this#visit_expression ~cond:NonConditionalContext in
+        this#visit_call_expression ~hint ~cond ~visit_callee loc expr
+      | Ast.Expression.OptionalCall expr -> this#visit_optional_call_expression ~hint ~cond loc expr
       | Ast.Expression.Unary expr -> this#visit_unary_expression ~hint expr
       | Ast.Expression.Conditional expr -> this#visit_conditional ~hint expr
       | Ast.Expression.Class _
