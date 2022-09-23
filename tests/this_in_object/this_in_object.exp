@@ -344,5 +344,53 @@ References:
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
+Error ---------------------------------------------------------------------------------------------------- test.js:90:24
 
-Found 17 errors
+Cannot reference `this` from within method `foo` [1]. For safety, Flow restricts access to `this` inside object methods
+since these methods may be unbound and rebound. Consider replacing the reference to `this` with the name of the object,
+or rewriting the object as a class. [object-this-reference]
+
+   test.js:90:24
+   90| Object.freeze({ foo() {this} }); // error
+                              ^^^^
+
+References:
+   test.js:90:17
+   90| Object.freeze({ foo() {this} }); // error
+                       ^^^^^^^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:91:38
+
+Cannot reference `this` from within method `foo` [1]. For safety, Flow restricts access to `this` inside object methods
+since these methods may be unbound and rebound. Consider replacing the reference to `this` with the name of the object,
+or rewriting the object as a class. [object-this-reference]
+
+   test.js:91:38
+   91| Object.defineProperties({}, { foo() {this} }); // error
+                                            ^^^^
+
+References:
+   test.js:91:31
+   91| Object.defineProperties({}, { foo() {this} }); // error
+                                     ^^^^^^^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:92:28
+
+Cannot reference `this` from within method `foo` [1]. For safety, Flow restricts access to `this` inside object methods
+since these methods may be unbound and rebound. Consider replacing the reference to `this` with the name of the object,
+or rewriting the object as a class. [object-this-reference]
+
+   test.js:92:28
+   92| Object.create({}, { foo() {this} }) // error
+                                  ^^^^
+
+References:
+   test.js:92:21
+   92| Object.create({}, { foo() {this} }) // error
+                           ^^^^^^^^^^^^ [1]
+
+
+
+Found 20 errors

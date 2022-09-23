@@ -5868,6 +5868,7 @@ module Make
           }
         )
       ) ->
+      error_on_this_uses_in_object_methods cx properties;
       let (((_, e_t), _) as e_ast) = expression cx e in
       let proto =
         let reason = mk_reason RPrototype (fst e) in
@@ -6022,6 +6023,7 @@ module Make
           }
         )
       ) ->
+      error_on_this_uses_in_object_methods cx properties;
       let (((_, o), _) as e_ast) = expression cx e in
       let (pmap, properties) = prop_map_of_object cx properties in
       let propdesc_type = Flow.get_builtin cx (OrdinaryName "PropertyDescriptor") reason in
@@ -6079,6 +6081,7 @@ module Make
       in
       let (((_, arg_t), _) as e_ast) =
         let { Object.properties; comments } = o in
+        error_on_this_uses_in_object_methods cx properties;
         let reason = mk_reason (RFrozen RObjectLit) arg_loc in
         let (t, properties) = object_ ~frozen:true cx reason properties in
         ((arg_loc, t), Object { Object.properties; comments })

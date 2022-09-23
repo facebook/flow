@@ -86,3 +86,7 @@ const getters_and_setters = {
     get foo() { this; }, // error
     set foo(v: mixed) { this; }, // error
 }
+
+Object.freeze({ foo() {this} }); // error
+Object.defineProperties({}, { foo() {this} }); // error
+Object.create({}, { foo() {this} }) // error
