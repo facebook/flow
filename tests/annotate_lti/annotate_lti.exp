@@ -50,7 +50,7 @@ class B {
   method2(): number {
     return 42;
   } // annot return
-  constructor(): number {
+  constructor() {
     return 10;
   } // ok (but separately, we should error on returns in constructors no?)
   
@@ -213,9 +213,9 @@ let arrow = () => { return this; }
 
 Stats:
   Files changed:                            5
-  Number of annotations added:             38
-  Total size of annotations:               46
-  Number of LTI errors:                    47
+  Number of annotations added:             37
+  Total size of annotations:               45
+  Number of LTI errors:                    46
 
 Errors:
   Missing annot./normalizer error:          0

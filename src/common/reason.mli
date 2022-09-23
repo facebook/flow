@@ -77,7 +77,7 @@ type 'loc virtual_reason_desc =
   | RImplicitInstantiation
   | RTooFewArgs
   | RTooFewArgsExpectedRest
-  | RConstructorReturn
+  | RConstructorVoidReturn
   | RNewObject
   | RUnion
   | RUnionType

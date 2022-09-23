@@ -82,25 +82,112 @@ References:
              ^ [1]
 
 
-Error -------------------------------------------------------------------------------------------- constructor.js:150:12
+Error -------------------------------------------------------------------------------------------- constructor.js:110:12
 
-Cannot return `super()` because `this` [1] cannot escape from its class [2] (try adding a type annotation to
-return [3]). [escaped-generic]
+Cannot return `false` because boolean [1] is incompatible with constructor void return [2]. [incompatible-return]
 
-   constructor.js:150:12
-   150|     return super();
+   constructor.js:110:12
+   110|     return false; // error: boolean ~> void
+                   ^^^^^ [1]
+
+References:
+   constructor.js:109:16
+   109|   constructor() {
+                        [2]
+
+
+Error -------------------------------------------------------------------------------------------- constructor.js:115:22
+
+Cannot assign `super()` to `x` because constructor void return [1] is incompatible with boolean [2]. [incompatible-type]
+
+   constructor.js:115:22
+   115|     let x: boolean = super(); // error: void ~> boolean
+                             ^^^^^^^
+
+References:
+   constructor.js:109:16
+   109|   constructor() {
+                        [1]
+   constructor.js:115:12
+   115|     let x: boolean = super(); // error: void ~> boolean
+                   ^^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- constructor.js:116:12
+
+Cannot return `x` because boolean [1] is incompatible with constructor void return [2]. [incompatible-return]
+
+   constructor.js:116:12
+   116|     return x; // error: boolean ~> void
+                   ^
+
+References:
+   constructor.js:115:12
+   115|     let x: boolean = super(); // error: void ~> boolean
+                   ^^^^^^^ [1]
+   constructor.js:114:16
+   114|   constructor() {
+                        [2]
+
+
+Error -------------------------------------------------------------------------------------------- constructor.js:124:12
+
+Cannot return object literal because object literal [1] is incompatible with constructor void return [2].
+[incompatible-return]
+
+   constructor.js:124:12
+   124|     return {foo: 'foo'}; // error: object ~> void
+                   ^^^^^^^^^^^^ [1]
+
+References:
+   constructor.js:123:16
+   123|   constructor() {
+                        [2]
+
+
+Error -------------------------------------------------------------------------------------------- constructor.js:136:18
+
+Cannot return `N_` because `N_` [1] is incompatible with constructor void return [2]. [incompatible-return]
+
+   constructor.js:136:18
+   136|   constructor(): this { // error: this ~> void
+                         ^^^^ [1]
+
+References:
+   constructor.js:136:16
+   136|   constructor(): this { // error: this ~> void
+                       ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- constructor.js:136:18
+
+Cannot return `N_` because `this` [1] is incompatible with constructor void return [2]. [incompatible-return]
+
+   constructor.js:136:18
+   136|   constructor(): this { // error: this ~> void
+                         ^^^^ [1]
+
+References:
+   constructor.js:136:16
+   136|   constructor(): this { // error: this ~> void
+                       ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- constructor.js:143:12
+
+Cannot return `super()` because `N` [1] is incompatible with constructor void return [2]. [incompatible-return]
+
+   constructor.js:143:12
+   143|     return super(); // error: N ~> void
                    ^^^^^^^
 
 References:
-   constructor.js:143:18
-   143|   constructor(): this {
+   constructor.js:136:18
+   136|   constructor(): this { // error: this ~> void
                          ^^^^ [1]
-   constructor.js:148:7
-   148| class N extends N_ {
-              ^ [2]
-   constructor.js:149:16
-   149|   constructor() {
-                        [3]
+   constructor.js:142:16
+   142|   constructor() {
+                        [2]
 
 
 Error ------------------------------------------------------------------------------------------ multi-call-error.js:9:9
@@ -214,4 +301,4 @@ References:
 
 
 
-Found 14 errors
+Found 20 errors

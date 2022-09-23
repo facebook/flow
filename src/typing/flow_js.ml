@@ -3313,7 +3313,7 @@ struct
         | ( DefT (reason, _, ClassT this),
             ConstructorT { use_op; reason = reason_op; targs; args; tout = t; return_hint }
           ) ->
-          let reason_o = replace_desc_reason RConstructorReturn reason in
+          let reason_o = replace_desc_reason RConstructorVoidReturn reason in
           let annot_loc = aloc_of_reason reason_op in
           (* early error if type args passed to non-polymorphic class *)
           Base.Option.iter targs ~f:(fun _ ->

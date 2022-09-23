@@ -113,7 +113,7 @@ type 'loc virtual_reason_desc =
   | RImplicitInstantiation
   | RTooFewArgs
   | RTooFewArgsExpectedRest
-  | RConstructorReturn
+  | RConstructorVoidReturn
   | RNewObject
   | RUnion
   | RUnionType
@@ -264,7 +264,7 @@ let rec map_desc_locs f = function
   | RLogical (s, d1, d2) -> RLogical (s, map_desc_locs f d1, map_desc_locs f d2)
   | ( RTemplateString | RUnknownString | RUnionEnum | REnum _ | RGetterSetterProperty | RThis
     | RThisType | RImplicitInstantiation | RTooFewArgs | RTooFewArgsExpectedRest
-    | RConstructorReturn | RNewObject | RUnion | RUnionType | RIntersection | RIntersectionType
+    | RConstructorVoidReturn | RNewObject | RUnion | RUnionType | RIntersection | RIntersectionType
     | RKeySet | RAnd | RConditional | RPrototype | RObjectPrototype | RFunctionPrototype
     | RDestructuring | RDefaultValue | RConstructor | RReturn | RDefaultConstructor | RRegExp
     | RSuper | RNoSuper | RDummyPrototype | RDummyThis | RTupleMap | RObjectMap | RType _
@@ -590,7 +590,7 @@ let rec string_of_desc = function
   | RImplicitInstantiation -> "implicit instantiation"
   | RTooFewArgs -> "undefined (too few arguments)"
   | RTooFewArgsExpectedRest -> "undefined (too few arguments, expected default/rest parameters)"
-  | RConstructorReturn -> "constructor return"
+  | RConstructorVoidReturn -> "constructor void return"
   | RNewObject -> "new object"
   | RUnion -> "union"
   | RUnionType -> "union type"
@@ -1376,7 +1376,7 @@ let classification_of_reason r =
   | RImplicitInstantiation
   | RTooFewArgs
   | RTooFewArgsExpectedRest
-  | RConstructorReturn
+  | RConstructorVoidReturn
   | RNewObject
   | RUnion
   | RUnionType
