@@ -324,6 +324,8 @@ val add_tvar : t -> Type.ident -> Type.Constraint.node -> unit
 
 val add_trust_var : t -> Trust_constraint.ident -> Trust_constraint.node -> unit
 
+val add_placeholder_tvar : t -> Type.ident -> unit
+
 val add_matching_props : t -> string * ALoc.t * ALoc.t -> unit
 
 val add_literal_subtypes : t -> ALoc.t * Env_api.literal_check -> unit

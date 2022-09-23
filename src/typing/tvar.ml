@@ -18,6 +18,11 @@ let mk_no_wrap cx reason =
 
 let mk cx reason = Type.OpenT (reason, mk_no_wrap cx reason)
 
+let mk_placeholder cx reason =
+  let tvar = mk_no_wrap cx reason in
+  Context.add_placeholder_tvar cx tvar;
+  Type.OpenT (reason, tvar)
+
 let mk_where cx reason f =
   let tvar = mk cx reason in
   let () = f tvar in

@@ -104,6 +104,8 @@ type component_t = {
   mutable type_graph: Graph_explorer.graph;
   (* map of speculation ids to sets of unresolved tvars *)
   mutable all_unresolved: ISet.t IMap.t;
+  (* A set of tvars that should be treated as placeholders. *)
+  mutable placeholder_tvars: ISet.t;
   mutable errors: Flow_error.ErrorSet.t;
   mutable error_suppressions: Error_suppressions.t;
   mutable severity_cover: ExactCover.lint_severity_cover Utils_js.FilenameMap.t;
@@ -309,6 +311,7 @@ let make_ccx master_cx =
     goal_map = IMap.empty;
     type_graph = Graph_explorer.new_graph ();
     all_unresolved = IMap.empty;
+    placeholder_tvars = ISet.empty;
     matching_props = [];
     literal_subtypes = [];
     constrained_writes = [];
@@ -647,6 +650,9 @@ let add_tvar cx id bounds =
 let add_trust_var cx id bounds =
   let trust_graph = IMap.add id bounds cx.ccx.sig_cx.trust_graph in
   cx.ccx.sig_cx <- { cx.ccx.sig_cx with trust_graph }
+
+let add_placeholder_tvar cx tvar =
+  cx.ccx.placeholder_tvars <- ISet.add tvar cx.ccx.placeholder_tvars
 
 let add_matching_props cx c = cx.ccx.matching_props <- c :: cx.ccx.matching_props
 
