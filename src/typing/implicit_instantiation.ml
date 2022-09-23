@@ -288,12 +288,17 @@ struct
 
   let pin_types cx inferred_targ_list marked_tparams tparams_map implicit_instantiation =
     let { Check.operation = (_, instantiation_reason, _); _ } = implicit_instantiation in
-    let use_upper_bounds cx name tvar tparam_binder_reason instantiation_reason =
+    let use_upper_bounds
+        cx
+        name
+        tvar
+        ?(on_upper_empty = Observer.on_missing_bounds)
+        tparam_binder_reason
+        instantiation_reason =
       let tparam = Subst_name.Map.find name tparams_map in
       let upper_t = merge_upper_bounds cx tparam_binder_reason tvar in
       match upper_t with
-      | UpperEmpty ->
-        Observer.on_missing_bounds cx name tparam ~tparam_binder_reason ~instantiation_reason
+      | UpperEmpty -> on_upper_empty cx name tparam ~tparam_binder_reason ~instantiation_reason
       | UpperNonT u ->
         Observer.on_upper_non_t cx name ~tparam_binder_reason ~instantiation_reason u tparam
       | UpperT inferred -> Observer.on_pinned_tparam cx name tparam inferred
@@ -328,7 +333,24 @@ struct
             (match merge_lower_bounds cx t with
             | None -> use_upper_bounds cx name t tparam_binder_reason instantiation_reason
             | Some inferred -> Observer.on_pinned_tparam cx name tparam inferred)
-          | Some Negative -> use_upper_bounds cx name t tparam_binder_reason instantiation_reason
+          | Some Negative ->
+            use_upper_bounds
+              cx
+              name
+              t
+              tparam_binder_reason
+              instantiation_reason
+              ~on_upper_empty:(fun cx name tparam ~tparam_binder_reason ~instantiation_reason ->
+                match merge_lower_bounds cx t with
+                | None ->
+                  Observer.on_missing_bounds
+                    cx
+                    name
+                    tparam
+                    ~tparam_binder_reason
+                    ~instantiation_reason
+                | Some inferred -> Observer.on_pinned_tparam cx name tparam inferred
+            )
         in
         let bound_t = Subst.subst cx ~use_op:unknown_use subst_map bound in
         Flow.flow_t cx (t, bound_t);

@@ -13,4 +13,4 @@ declare class C<-T>{
   constructor(T): C<T>;
 }
 
-new C(3); // Error: T underconstrained
+new C(3); // Ok: It will error under Pierce, but we also consider lower bounds here.

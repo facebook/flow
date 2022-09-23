@@ -40,20 +40,6 @@ References:
                       ^ [2]
 
 
-Error ----------------------------------------------------------------------- underconstrained_class_constructor.js:16:1
-
-`T` is underconstrained by new `C` [1] and is defined in `T` [2] [underconstrained-implicit-instantiation]
-
-   underconstrained_class_constructor.js:16:1
-   16| new C(3); // Error: T underconstrained
-       ^^^^^^^^ [1]
-
-References:
-   underconstrained_class_constructor.js:12:18
-   12| declare class C<-T>{
-                        ^ [2]
-
-
 Error --------------------------------------------------------------------------------- underconstrained_fun_call.js:3:1
 
 `T` is underconstrained by call of `f` [1] and is defined in `T` [2] [underconstrained-implicit-instantiation]
@@ -65,20 +51,6 @@ Error --------------------------------------------------------------------------
 References:
    underconstrained_fun_call.js:2:20
    2| declare function f<T>(): T;
-                         ^ [2]
-
-
-Error --------------------------------------------------------------------------------- underconstrained_fun_call.js:9:1
-
-`T` is underconstrained by call of `h` [1] and is defined in `T` [2] [underconstrained-implicit-instantiation]
-
-   underconstrained_fun_call.js:9:1
-   9| h(3); // Error: T underconstrained
-      ^^^^ [1]
-
-References:
-   underconstrained_fun_call.js:8:20
-   8| declare function h<T>(T): T => mixed;
                          ^ [2]
 
 
@@ -150,4 +122,4 @@ References:
 
 
 
-Found 11 errors
+Found 9 errors
