@@ -182,6 +182,7 @@ let mapper
         cctx
         ~default_any
         ~generalize_maybe:false
+        ~generalize_react_mixed_element:false
         ~lint_severities
         ~max_type_size
         ~preserve_literals
@@ -205,6 +206,7 @@ let mapper
           ~cctx
           ~preserve_literals
           ~generalize_maybe:false
+          ~generalize_react_mixed_element:false
           ~merge_arrays:false
           acc
           loc

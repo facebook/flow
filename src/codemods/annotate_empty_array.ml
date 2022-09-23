@@ -9,8 +9,12 @@ module Ast = Flow_ast
 module LSet = Loc_collections.LocSet
 
 let mapper
-    ~preserve_literals ~generalize_maybe ~max_type_size ~default_any (cctx : Codemod_context.Typed.t)
-    =
+    ~preserve_literals
+    ~max_type_size
+    ~default_any
+    ~generalize_maybe
+    ~generalize_react_mixed_element
+    (cctx : Codemod_context.Typed.t) =
   let reader = cctx.Codemod_context.Typed.reader in
   let loc_of_aloc = Parsing_heaps.Reader_dispatcher.loc_of_aloc ~reader in
   let lint_severities = Codemod_context.Typed.lint_severities cctx in
@@ -33,6 +37,7 @@ let mapper
         cctx
         ~default_any
         ~generalize_maybe
+        ~generalize_react_mixed_element
         ~max_type_size
         ~preserve_literals
         ~merge_arrays:true as super

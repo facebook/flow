@@ -1,4 +1,5 @@
 //@flow
+import * as React from 'react';
 
 declare var key : string;
 
@@ -53,4 +54,10 @@ function bar() {
   var x = []; // Annotate with Array<?string>
   x.push(null);
   x.push("a");
+}
+
+function MixedElement() {
+  const x = []; // Annotate with Array<React.MixedElement>;
+  x.push(<div />);
+  x.push(<span />);
 }

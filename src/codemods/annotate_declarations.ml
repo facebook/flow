@@ -171,7 +171,13 @@ let extractable_assignments cx loc_error_set loc =
     ALocSet.empty
 
 class annotate_declarations_mapper
-  cctx ~default_any ~generalize_maybe ~max_type_size ~preserve_literals ~merge_arrays =
+  cctx
+  ~default_any
+  ~generalize_maybe
+  ~generalize_react_mixed_element
+  ~max_type_size
+  ~preserve_literals
+  ~merge_arrays =
   let lint_severities = Codemod_context.Typed.lint_severities cctx in
   let flowfixme_ast = Codemod_context.Typed.flowfixme_ast ~lint_severities cctx in
   let cx = Codemod_context.Typed.context cctx in
@@ -183,6 +189,7 @@ class annotate_declarations_mapper
         cctx
         ~default_any
         ~generalize_maybe
+        ~generalize_react_mixed_element
         ~lint_severities
         ~max_type_size
         ~preserve_literals

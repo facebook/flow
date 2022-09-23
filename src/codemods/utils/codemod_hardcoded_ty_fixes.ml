@@ -62,8 +62,14 @@ module Make (Extra : BASE_STATS) = struct
   module Acc = Acc (Extra)
 
   let mapper_type_normalization_hardcoded_fixes
-      ~cctx ~lint_severities ~suppress_types ~imports_react ~preserve_literals ~generalize_maybe acc
-      =
+      ~cctx
+      ~lint_severities
+      ~suppress_types
+      ~imports_react
+      ~preserve_literals
+      ~generalize_maybe
+      ~generalize_react_mixed_element
+      acc =
     object (this)
       inherit Insert_type_utils.patch_up_react_mapper ~imports_react () as super
 
@@ -187,6 +193,74 @@ module Make (Extra : BASE_STATS) = struct
               ts_without_array_empty
           in
 
+          (* React.MixedElement | React.Element<'div'> becomes just React.MixedElement *)
+          let ts =
+            let react_element_def_loc =
+              List.find_map
+                (function
+                  | Ty.Generic
+                      ( {
+                          Ty.sym_name =
+                            Reason.OrdinaryName
+                              ("Element" | "MixedElement" | "React.Element" | "React.MixedElement");
+                          sym_provenance = Ty_symbol.Library _;
+                          sym_def_loc;
+                          _;
+                        },
+                        _,
+                        _
+                      )
+                    when is_react_loc sym_def_loc ->
+                    Some sym_def_loc
+                  | _ -> None)
+                ts
+            in
+            match react_element_def_loc with
+            | Some react_element_def_loc when from_bounds && generalize_react_mixed_element ->
+              let ts =
+                List.filter
+                  (function
+                    | Ty.Generic
+                        ( {
+                            Ty.sym_name =
+                              Reason.OrdinaryName
+                                ("Element" | "MixedElement" | "React.Element" | "React.MixedElement");
+                            sym_provenance = Ty_symbol.Library _;
+                            sym_def_loc;
+                            _;
+                          },
+                          _,
+                          Some _
+                        ) ->
+                      not (is_react_loc sym_def_loc)
+                    | Ty.Generic
+                        ( {
+                            Ty.sym_name = Reason.OrdinaryName "Fbt";
+                            sym_provenance = Ty_symbol.Library _;
+                            _;
+                          },
+                          _,
+                          None
+                        )
+                      when (Codemod_context.Typed.metadata cctx).Context.facebook_fbt <> None ->
+                      false
+                    | _ -> true)
+                  ts
+              in
+              Ty.Generic
+                ( {
+                    Ty.sym_name = Reason.OrdinaryName "React.MixedElement";
+                    sym_provenance = Ty_symbol.Library { Ty_symbol.imported_as = None };
+                    sym_def_loc = react_element_def_loc;
+                    sym_anonymous = false;
+                  },
+                  Ty.TypeAliasKind,
+                  None
+                )
+              :: ts
+            | _ -> ts
+          in
+
           (* React.Node | React.Element<'div'> becomes just React.Node *)
           let has_react_node =
             List.exists
@@ -211,7 +285,9 @@ module Make (Extra : BASE_STATS) = struct
                 (function
                   | Ty.Generic
                       ( {
-                          Ty.sym_name = Reason.OrdinaryName ("Element" | "React.Element");
+                          Ty.sym_name =
+                            Reason.OrdinaryName
+                              ("Element" | "MixedElement" | "React.Element" | "React.MixedElement");
                           sym_provenance = Ty_symbol.Library _;
                           sym_def_loc;
                           _;
@@ -379,6 +455,7 @@ module Make (Extra : BASE_STATS) = struct
       ~cctx
       ~preserve_literals
       ~generalize_maybe
+      ~generalize_react_mixed_element
       ~merge_arrays
       ?(lint_severities = Codemod_context.Typed.lint_severities cctx)
       ?(suppress_types = Options.suppress_types cctx.Codemod_context.Typed.options)
@@ -395,6 +472,7 @@ module Make (Extra : BASE_STATS) = struct
         ~imports_react
         ~preserve_literals
         ~generalize_maybe
+        ~generalize_react_mixed_element
         acc
     in
     let t' = mapper#on_t loc t in

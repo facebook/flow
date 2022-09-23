@@ -25,6 +25,7 @@ let mapper ~preserve_literals ~max_type_size ~default_any (cctx : Codemod_contex
         cctx
         ~default_any
         ~generalize_maybe:false
+        ~generalize_react_mixed_element:false
         ~lint_severities
         ~max_type_size
         ~preserve_literals

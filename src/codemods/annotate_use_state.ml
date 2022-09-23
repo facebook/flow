@@ -10,8 +10,12 @@ module Codemod_empty_annotator = Codemod_annotator.Make (Insert_type_utils.UnitS
 module Acc = Insert_type_utils.Acc (Insert_type_utils.UnitStats)
 
 let mapper
-    ~preserve_literals ~generalize_maybe ~max_type_size ~default_any (cctx : Codemod_context.Typed.t)
-    =
+    ~preserve_literals
+    ~generalize_maybe
+    ~generalize_react_mixed_element
+    ~max_type_size
+    ~default_any
+    (cctx : Codemod_context.Typed.t) =
   let lint_severities = Codemod_context.Typed.lint_severities cctx in
   let flowfixme_ast = Codemod_context.Typed.flowfixme_ast ~lint_severities cctx in
   object (this)
@@ -20,6 +24,7 @@ let mapper
         cctx
         ~default_any
         ~generalize_maybe
+        ~generalize_react_mixed_element
         ~lint_severities
         ~max_type_size
         ~preserve_literals

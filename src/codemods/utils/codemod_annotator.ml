@@ -147,6 +147,7 @@ module Make (Extra : BASE_STATS) = struct
     (cctx : Codemod_context.Typed.t)
     ~default_any
     ~generalize_maybe
+    ~generalize_react_mixed_element
     ~lint_severities
     ~max_type_size
     ~preserve_literals
@@ -186,6 +187,7 @@ module Make (Extra : BASE_STATS) = struct
               ~imports_react
               ~preserve_literals
               ~generalize_maybe
+              ~generalize_react_mixed_element
               ~merge_arrays
               acc
               loc
@@ -223,6 +225,7 @@ module Make (Extra : BASE_STATS) = struct
               ~imports_react
               ~preserve_literals
               ~generalize_maybe
+              ~generalize_react_mixed_element
               ~merge_arrays
               acc
               loc

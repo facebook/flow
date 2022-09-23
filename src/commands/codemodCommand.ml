@@ -304,11 +304,22 @@ module Annotate_empty_array_command = struct
                "--generalize-maybe"
                no_arg
                ~doc:"Generalize annotations containing null or void to maybe types"
+          |> flag
+               "--generalize-react-mixed-element"
+               no_arg
+               ~doc:"Generalize annotations containing react elements to React.MixedElement"
           |> common_annotate_flags
         );
     }
 
-  let main codemod_flags preserve_literals generalize_maybe max_type_size default_any () =
+  let main
+      codemod_flags
+      preserve_literals
+      generalize_maybe
+      generalize_react_mixed_element
+      max_type_size
+      default_any
+      () =
     let module Runner = Codemod_runner.MakeSimpleTypedRunner (struct
       module Acc = Annotate_declarations.Acc
 
@@ -325,6 +336,7 @@ module Annotate_empty_array_command = struct
           Annotate_empty_array.mapper
             ~preserve_literals
             ~generalize_maybe
+            ~generalize_react_mixed_element
             ~max_type_size
             ~default_any
         in
@@ -365,6 +377,10 @@ module Annotate_cycles_command = struct
                no_arg
                ~doc:"Generalize annotations containing null or void to maybe types"
           |> flag
+               "--generalize-react-mixed-element"
+               no_arg
+               ~doc:"Generalize annotations containing react elements to React.MixedElement"
+          |> flag
                "--merge-array-elements"
                no_arg
                ~doc:"combine arrays appearing in toplevel unions to a single array"
@@ -373,7 +389,14 @@ module Annotate_cycles_command = struct
     }
 
   let main
-      codemod_flags preserve_literals generalize_maybe merge_arrays max_type_size default_any () =
+      codemod_flags
+      preserve_literals
+      generalize_maybe
+      generalize_react_mixed_element
+      merge_arrays
+      max_type_size
+      default_any
+      () =
     let module Runner = Codemod_runner.MakeSimpleTypedRunner (struct
       module Acc = Annotate_cycles.Acc
 
@@ -388,6 +411,7 @@ module Annotate_cycles_command = struct
           new Annotate_cycles.annotate_cycles_mapper
             ~default_any
             ~generalize_maybe
+            ~generalize_react_mixed_element
             ~max_type_size
             ~preserve_literals
             ~merge_arrays
@@ -470,11 +494,22 @@ module Annotate_use_state_command = struct
                "--generalize-maybe"
                no_arg
                ~doc:"Generalize annotations containing null or void to maybe types"
+          |> flag
+               "--generalize-react-mixed-element"
+               no_arg
+               ~doc:"Generalize annotations containing react elements to React.MixedElement"
           |> common_annotate_flags
         );
     }
 
-  let main codemod_flags preserve_literals generalize_maybe max_type_size default_any () =
+  let main
+      codemod_flags
+      preserve_literals
+      generalize_maybe
+      generalize_react_mixed_element
+      max_type_size
+      default_any
+      () =
     let open Codemod_utils in
     let module Runner = Codemod_runner.MakeSimpleTypedRunner (struct
       module Acc = Annotate_use_state.Acc
@@ -487,7 +522,12 @@ module Annotate_use_state_command = struct
 
       let visit =
         let mapper =
-          Annotate_use_state.mapper ~preserve_literals ~generalize_maybe ~max_type_size ~default_any
+          Annotate_use_state.mapper
+            ~preserve_literals
+            ~generalize_maybe
+            ~generalize_react_mixed_element
+            ~max_type_size
+            ~default_any
         in
         Codemod_utils.make_visitor (Mapper mapper)
     end) in

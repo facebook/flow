@@ -652,8 +652,8 @@ class patch_up_react_mapper ?(imports_react = false) () =
                 Ty.sym_name =
                   Reason.OrdinaryName
                     ( ( "AbstractComponent" | "ChildrenArray" | "ComponentType" | "Config"
-                      | "Context" | "Element" | "ElementConfig" | "ElementProps" | "ElementRef"
-                      | "ElementType" | "Key" | "Node" | "Portal" | "Ref"
+                      | "Context" | "Element" | "MixedElement" | "ElementConfig" | "ElementProps"
+                      | "ElementRef" | "ElementType" | "Key" | "Node" | "Portal" | "Ref"
                       | "StatelessFunctionalComponent" ) as name
                     );
                 sym_provenance = Ty_symbol.Library { Ty_symbol.imported_as = None };
