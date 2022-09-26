@@ -108,14 +108,10 @@ type init_settings = {
   expression_terms: Hh_json.json list;  (** See watchman expression terms. *)
   mergebase_with: string;  (** symbolic commit to find changes against *)
   roots: Path.t list;
+  should_track_mergebase: bool;
   subscribe_mode: subscribe_mode;
   subscription_prefix: string;
   sync_timeout: int option;
-}
-
-type mergebase_and_changes = {
-  mergebase: string;
-  changes: SSet.t;
 }
 
 type pushed_changes =
@@ -752,7 +748,9 @@ let re_init ?prior_clockspec settings =
   get_clockspec ~debug_logging ~conn ~watch prior_clockspec >>= fun clockspec ->
   let subscription = subscription_name settings in
   let vcs = Vcs.find (Path.make watch.watch_root) in
-  let should_track_mergebase = supports_scm_queries capabilities vcs in
+  let should_track_mergebase =
+    settings.should_track_mergebase && supports_scm_queries capabilities vcs
+  in
   let env = { settings; conn; watch; clockspec; subscription; should_track_mergebase; vcs } in
   request ~debug_logging ~conn (subscribe_query env) >>= fun response ->
   ignore response;
@@ -895,7 +893,7 @@ let get_mergebase =
       | Error _ as err -> Lwt.return err)
     | None -> Lwt.return (Ok None)
   in
-  fun env ->
+  fun (env : env) ->
     if env.should_track_mergebase then
       let vcs = env.vcs in
       let root = env.watch.watch_root in
@@ -931,11 +929,11 @@ let get_mergebase_and_changes =
            subscription event for those changes between C and C+1, so we don't
            _need_ to update env.clockspec here. *)
         let changes = extract_file_names env response in
-        Lwt.return (Ok (Some { mergebase; changes }))
+        Lwt.return (Ok (Some (mergebase, changes)))
       | None ->
         Lwt.return (Error (response_error_of_json ~query ~response "Failed to extract mergebase")))
   in
-  fun env ->
+  fun (env : env) ->
     if env.should_track_mergebase then
       with_retry ~max_attempts:max_retry_attempts ~on_retry run_query env
     else
@@ -954,7 +952,7 @@ let recover_from_restart ~prev_mergebase env =
          happen: it means that Watchman previously supported SCM queries, but
          no longer does when we reconnect. *)
       Lwt.return (Error Restarted)
-    | Ok (Some { mergebase; changes }) ->
+    | Ok (Some (mergebase, changes)) ->
       if String.equal mergebase prev_mergebase then
         (* the mergebase didn't change, so no upstream files changed. we can
            recover by rechecking `changes` (the files currently changed
@@ -1006,19 +1004,38 @@ let init settings =
     Lwt.return (Ok settings)
   in
   match%lwt with_retry ~max_attempts:max_reinit_attempts ~on_retry re_init settings with
-  | Ok env -> Lwt.return (Some env)
-  | Error _ -> Lwt.return None
+  | Ok env ->
+    (match%lwt get_mergebase_and_changes env with
+    | Ok mergebase_and_changes ->
+      let (mergebase, files) =
+        match mergebase_and_changes with
+        | Some (mergebase, changes) ->
+          Hh_logger.info
+            "Watchman reports the initial mergebase as %S, and %d changes"
+            mergebase
+            (SSet.cardinal changes);
+          (Some mergebase, changes)
+        | None ->
+          if env.should_track_mergebase then
+            Hh_logger.warn
+              "Not checking changes since mergebase! SCM-aware queries are not supported for your VCS by your version of Watchman.";
+          (None, SSet.empty)
+      in
+      Lwt.return (Ok (env, mergebase, files))
+    | Error _ -> Lwt.return (Error "Failed to query initial mergebase from Watchman"))
+  | Error _ -> Lwt.return (Error "Failed to initialize watchman")
 
 module Testing = struct
   type nonrec error_kind = error_kind
 
-  let test_settings =
+  let test_settings : init_settings =
     {
       debug_logging = false;
       defer_states = [];
       expression_terms = [];
       mergebase_with = "hash";
       roots = [Path.dummy_path];
+      should_track_mergebase = false;
       subscribe_mode = Defer_changes;
       subscription_prefix = "dummy_prefix";
       sync_timeout = None;

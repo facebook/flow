@@ -23,14 +23,10 @@ type init_settings = {
   expression_terms: Hh_json.json list;  (** See watchman expression terms. *)
   mergebase_with: string;  (** symbolic commit to find changes against *)
   roots: Path.t list;
+  should_track_mergebase: bool;
   subscribe_mode: subscribe_mode;
   subscription_prefix: string;
   sync_timeout: int option;
-}
-
-type mergebase_and_changes = {
-  mergebase: string;
-  changes: SSet.t;
 }
 
 type pushed_changes =
@@ -59,11 +55,9 @@ type failure =
 
 type env
 
-val init : init_settings -> env option Lwt.t
+val init : init_settings -> (env * string option * SSet.t, string) Result.t Lwt.t
 
 val get_mergebase : env -> (string option, Vcs_utils.error_status) Result.t Lwt.t
-
-val get_mergebase_and_changes : env -> (mergebase_and_changes option, failure) Result.t Lwt.t
 
 val recover_from_restart : prev_mergebase:string -> env -> (env * SSet.t, failure) Result.t Lwt.t
 

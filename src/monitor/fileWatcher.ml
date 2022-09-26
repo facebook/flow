@@ -284,16 +284,6 @@ end = struct
     else
       Lwt.return (Ok None)
 
-  let get_mergebase_and_changes env =
-    if env.should_track_mergebase then
-      match%lwt Watchman.get_mergebase_and_changes env.instance with
-      | Ok _ as ok -> Lwt.return ok
-      | Error Watchman.Dead
-      | Error Watchman.Restarted ->
-        Lwt.return (Error "Failed to query mergebase from Watchman")
-    else
-      Lwt.return (Ok None)
-
   let recover_from_restart env =
     match env.mergebase with
     | Some prev_mergebase ->
@@ -517,6 +507,7 @@ end = struct
         let { FlowServerMonitorOptions.debug; defer_states; sync_timeout } = watchman_options in
         let file_options = Options.file_options server_options in
         let watchman_expression_terms = Watchman_expression_terms.make ~options:server_options in
+        let should_track_mergebase = Options.lazy_mode server_options in
         let settings =
           {
             Watchman.debug_logging = debug;
@@ -524,6 +515,7 @@ end = struct
             expression_terms = watchman_expression_terms;
             mergebase_with;
             roots = Files.watched_paths file_options;
+            should_track_mergebase;
             (* Defer updates during `hg.update` and defer_states *)
             subscribe_mode = Watchman.Defer_changes;
             subscription_prefix = "flow_watcher";
@@ -541,17 +533,17 @@ end = struct
 
           let should_track_mergebase = Options.lazy_mode server_options in
           match watchman with
-          | Some watchman ->
+          | Ok (watchman, mergebase, files) ->
             let (waiter, wakener) = Lwt.task () in
             let new_env =
               {
                 instance = watchman;
-                files = SSet.empty;
+                files;
                 listening_thread =
                   (let%lwt env = waiter in
                    listen env
                   );
-                mergebase = None;
+                mergebase;
                 is_initial = true;
                 finished_an_hg_update = false;
                 changes_condition = Lwt_condition.create ();
@@ -560,29 +552,10 @@ end = struct
                 should_track_mergebase;
               }
             in
-            (match%lwt get_mergebase_and_changes new_env with
-            | Ok mergebase_and_changes ->
-              let (mergebase, files) =
-                match mergebase_and_changes with
-                | Some { Watchman.mergebase; changes } ->
-                  Logger.info
-                    "Watchman reports the initial mergebase as %S, and %d changes"
-                    mergebase
-                    (SSet.cardinal changes);
-                  (Some mergebase, changes)
-                | None ->
-                  if should_track_mergebase then
-                    Logger.warn
-                      "Not checking changes since mergebase! SCM-aware queries are not supported for your VCS by your version of Watchman.";
-                  (None, SSet.empty)
-              in
-              let new_env = { new_env with mergebase; files } in
-              env <- Some new_env;
-              Lwt.wakeup wakener new_env;
-              Lwt.return (Ok ())
-            | Error msg ->
-              Lwt.return (Error (Printf.sprintf "Failed to initialize watchman: %s" msg)))
-          | None -> Lwt.return (Error "Failed to initialize watchman")
+            env <- Some new_env;
+            Lwt.wakeup wakener new_env;
+            Lwt.return (Ok ())
+          | Error _ as err -> Lwt.return err
         in
         let go () =
           try%lwt go_exn () with
