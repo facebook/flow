@@ -1,4 +1,4 @@
->>> test.js (#changes: 8)
+>>> test.js (#changes: 9)
 //@flow
 import * as React from 'react';
 
@@ -61,15 +61,20 @@ function MixedElement() {
   const x: Array<React.MixedElement> = []; // Annotate with Array<React.MixedElement>;
   x.push(<div />);
   x.push(<span />);
+
+  const y: Array<React.MixedElement> = []; // Annotate with Array<React.MixedElement>;
+  function Comp(_: {foo: string}): React.Node {};
+  y.push(<Comp />);
+  y.push(<span />);
 }
 
 >>> Launching report...
 
 Stats:
   Files changed:                            1
-  Number of annotations added:              8
-  Total size of annotations:               30
-  Number of vars with write errors:         9
+  Number of annotations added:              9
+  Total size of annotations:               40
+  Number of vars with write errors:        10
   Number of possibly renamable vars:        0
   Number of annotations skipped:            1
 

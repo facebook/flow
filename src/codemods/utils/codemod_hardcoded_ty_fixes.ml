@@ -353,7 +353,9 @@ module Make (Extra : BASE_STATS) = struct
           when is_react_loc sym_def_loc ->
           let symbol = { symbol with Ty.sym_name = Reason.OrdinaryName "Element" } in
           this#on_t env Ty.(Generic (symbol, kind, args_opt))
-        (* E.g. React$Element<typeof A> will become React.Node *)
+        (* E.g. React$Element<typeof A> will become React.MixedElement or React.Node.
+           The reason for this conversion is that it's a common idiom to keep SomeComponentClass to
+           a local scope (e.g. that of a function) which would make the annotation ill-formed. *)
         | Ty.Generic
             ( ( {
                   Ty.sym_name = Reason.OrdinaryName "React$Element";
@@ -366,7 +368,13 @@ module Make (Extra : BASE_STATS) = struct
               Some _
             )
           when is_react_loc sym_def_loc ->
-          let symbol = { symbol with Ty.sym_name = Reason.OrdinaryName "Node" } in
+          let name =
+            if generalize_react_mixed_element then
+              "MixedElement"
+            else
+              "Node"
+          in
+          let symbol = { symbol with Ty.sym_name = Reason.OrdinaryName name } in
           this#on_t env Ty.(Generic (symbol, kind, None))
         | Ty.Generic
             ( ( {

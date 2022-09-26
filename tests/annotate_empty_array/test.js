@@ -60,4 +60,9 @@ function MixedElement() {
   const x = []; // Annotate with Array<React.MixedElement>;
   x.push(<div />);
   x.push(<span />);
+
+  const y = []; // Annotate with Array<React.MixedElement>;
+  function Comp(_: {foo: string}): React.Node {};
+  y.push(<Comp />);
+  y.push(<span />);
 }
