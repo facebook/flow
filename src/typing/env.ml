@@ -722,7 +722,8 @@ let bind_function_param cx t loc =
   unify_write_entry cx ~use_op:Type.unknown_use t Env_api.FunctionParamLoc loc
 
 let bind_function_this cx t loc =
-  unify_write_entry cx ~use_op:Type.unknown_use t Env_api.FunctionThisLoc loc
+  if not (Context.in_synthesis_mode cx) then
+    unify_write_entry cx ~use_op:Type.unknown_use t Env_api.FunctionThisLoc loc
 
 let bind_class_instance_this cx t loc =
   unify_write_entry cx ~use_op:Type.unknown_use t Env_api.ClassInstanceThisLoc loc

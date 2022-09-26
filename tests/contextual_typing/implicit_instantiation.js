@@ -53,3 +53,8 @@ function test4() {
   declare function bar<T>(x?: T): Array<T>;
   const y: Array<number> = bar(); // OK
 }
+
+function test5() {
+  declare function id<T>(T): T;
+  const f1: (string) => string = id(s => (s: string)); // ok
+}

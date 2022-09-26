@@ -45,5 +45,5 @@ function test4() {
 
 function test5() {
   ["a"].reduce((a, b, i) => a + b); // okay
-  ["a"].reduce((a, b, i) => a + b, ''); // TODO okay
+  ["a"].reduce((a, b, i) => a + b, ''); // okay
 }

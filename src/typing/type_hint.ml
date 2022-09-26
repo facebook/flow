@@ -8,6 +8,7 @@
 open Reason
 open Type
 open Hint_api
+module ImplicitInstantiationSynthesis = Implicit_instantiation.Synthesis (Flow_js.FlowJs)
 
 let in_sandbox_cx cx t ~f =
   let original_errors = Context.errors cx in
@@ -55,19 +56,49 @@ let get_t cx = function
     Flow_js_utils.merge_tvar ~no_lowers:(fun _ r -> DefT (r, bogus_trust (), EmptyT)) cx r id
   | t -> t
 
-let decomp_instantiated cx fn instantiation_hint =
-  let { Hint_api.reason; targs; arg_list; return_hint = _ } = instantiation_hint in
-  match get_t cx (simplify_callee cx reason unknown_use fn) with
-  | IntersectionT (r, rep) ->
-    let (_, result) =
-      Context.run_in_synthesis_mode cx (fun () ->
-          synthesis_speculation_call cx reason (r, rep) (Lazy.force targs) (Lazy.force arg_list)
+let rec decomp_instantiated cx fn instantiation_hint =
+  let { Hint_api.reason; targs; arg_list; return_hint } = instantiation_hint in
+  let t =
+    match get_t cx (simplify_callee cx reason unknown_use fn) with
+    | IntersectionT (r, rep) ->
+      let (_, result) =
+        Context.run_in_synthesis_mode cx (fun () ->
+            synthesis_speculation_call cx reason (r, rep) (Lazy.force targs) (Lazy.force arg_list)
+        )
+      in
+      result
+    | t -> t
+  in
+  match get_t cx t with
+  | DefT (_, _, PolyT { tparams_loc; tparams; t_out; id = _ }) ->
+    let call_args_tlist = Lazy.force arg_list in
+    let call_targs = Lazy.force targs in
+    let return_hint = evaluate_hint cx reason return_hint in
+    let check =
+      Implicit_instantiation_check.of_call
+        t
+        (tparams_loc, tparams, t_out)
+        unknown_use
+        reason
+        {
+          call_this_t = Unsoundness.unresolved_any reason;
+          call_targs;
+          call_args_tlist;
+          call_tout = (reason, Tvar.mk_no_wrap cx reason);
+          call_strict_arity = true;
+          call_speculation_hint_state = None;
+        }
+    in
+    let subst_map =
+      Context.run_in_implicit_instantiation_mode cx (fun () ->
+          ImplicitInstantiationSynthesis.solve_targs cx ?return_hint check
+          |> Subst_name.Map.map (fun solution -> solution.Implicit_instantiation.inferred)
       )
     in
-    result
+    Flow_js.subst cx subst_map t_out
   | t -> t
 
-let type_of_hint_decomposition cx op reason t =
+and type_of_hint_decomposition cx op reason t =
   let fun_t ~params ~rest_param ~return_t =
     DefT
       ( reason,
@@ -230,7 +261,7 @@ let type_of_hint_decomposition cx op reason t =
       | Decomp_Instantiated instantiation_hint -> decomp_instantiated cx t instantiation_hint
   )
 
-let evaluate_hint_ops cx reason t ops =
+and evaluate_hint_ops cx reason t ops =
   let rec loop t = function
     | [] -> Some t
     | op :: ops ->
@@ -245,7 +276,7 @@ let evaluate_hint_ops cx reason t ops =
   | (_, None) -> None
   | (_, Some t) -> in_sandbox_cx cx t ~f:Base.Fn.id
 
-let evaluate_hint cx reason hint =
+and evaluate_hint cx reason hint =
   match hint with
   | Hint_None -> None
   | Hint_Placeholder -> Some (AnyT.annot (mk_reason (RCustom "placeholder hint") ALoc.none))

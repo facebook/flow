@@ -141,39 +141,5 @@ An annotation on `y` is required because Flow cannot infer its type from local c
                 ^
 
 
-Error -------------------------------------------------------------------------------------------- intersections.js:48:9
 
-Cannot call `[...].reduce` because `U` [1] is incompatible with string [2] in the first parameter. [incompatible-call]
-
-   intersections.js:48:9
-    48|   ["a"].reduce((a, b, i) => a + b, ''); // TODO okay
-                ^^^^^^
-
-References:
-   <BUILTINS>/core.js:979:35
-   979|       callbackfn: (previousValue: U, currentValue: T, currentIndex: number, array: Array<T>) => U,
-                                          ^ [1]
-   intersections.js:48:36
-    48|   ["a"].reduce((a, b, i) => a + b, ''); // TODO okay
-                                           ^^ [2]
-
-
-Error ------------------------------------------------------------------------------------------- intersections.js:48:29
-
-Cannot add `a` and `b` because `U` [1] could either behave like a string or like a number. [unclear-addition]
-
-   intersections.js:48:29
-    48|   ["a"].reduce((a, b, i) => a + b, ''); // TODO okay
-                                    ^
-
-References:
-   <BUILTINS>/core.js:979:35
-   979|       callbackfn: (previousValue: U, currentValue: T, currentIndex: number, array: Array<T>) => U,
-                                          ^ [1]
-
-
-
-Found 12 errors
-
-Only showing the most relevant union/intersection branches.
-To see all branches, re-run Flow with --show-all-branches
+Found 10 errors
