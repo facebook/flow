@@ -563,7 +563,7 @@ class def_finder env_entries providers toplevel_scope =
 
     method private visit_function_param ~hint (param : ('loc, 'loc) Ast.Function.Param.t) =
       let open Ast.Function.Param in
-      let (_, { argument; default = default_expression }) = param in
+      let (loc, { argument; default = default_expression }) = param in
       let optional =
         match argument with
         | (_, Ast.Pattern.Identifier { Ast.Pattern.Identifier.optional; _ }) -> optional
@@ -573,6 +573,13 @@ class def_finder env_entries providers toplevel_scope =
       let source =
         match Destructure.type_of_pattern argument with
         | Some annot ->
+          Base.Option.iter
+            default_expression
+            ~f:
+              (this#visit_expression
+                 ~hint:(Hint_t (AnnotationHint (tparams, annot)))
+                 ~cond:NonConditionalContext
+              );
           Annotation
             {
               tparams_map = tparams;
@@ -582,6 +589,9 @@ class def_finder env_entries providers toplevel_scope =
               annot;
             }
         | None ->
+          Base.Option.iter
+            default_expression
+            ~f:(this#visit_expression ~hint:Hint_None ~cond:NonConditionalContext);
           let reason =
             match argument with
             | ( _,
@@ -595,7 +605,7 @@ class def_finder env_entries providers toplevel_scope =
           Contextual { reason; hint; optional; default_expression }
       in
       Destructure.pattern ~f:this#add_ordinary_binding (Root source) argument;
-      ignore @@ super#function_param param
+      ignore @@ super#function_param (loc, { argument; default = None })
 
     method private visit_function_rest_param ~hint (expr : ('loc, 'loc) Ast.Function.RestParam.t) =
       let open Ast.Function.RestParam in
