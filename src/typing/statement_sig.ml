@@ -60,6 +60,11 @@ module type S = sig
     (ALoc.t, ALoc.t) Flow_ast.Expression.t ->
     (ALoc.t, ALoc.t * Type.t) Flow_ast.Expression.t
 
+  val expression_or_spread :
+    Context.t ->
+    (ALoc.t, ALoc.t) Ast.Expression.expression_or_spread ->
+    Type.call_arg * (ALoc.t, ALoc.t * Type.t) Ast.Expression.expression_or_spread
+
   val statement :
     Context.t -> (ALoc.t, ALoc.t) Ast.Statement.t -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t
 
@@ -202,9 +207,4 @@ module type S = sig
     Context.t ->
     (ALoc.t, ALoc.t) Ast.Expression.t ->
     Type.t * Type.t Base.Option.t * (ALoc.t, ALoc.t * Type.t) Ast.Expression.t
-
-  val synthesize_arg_list :
-    Context.t ->
-    (ALoc.t, ALoc.t) Func_class_sig_types.Ast.Expression.ArgList.t ->
-    Type.call_arg list
 end

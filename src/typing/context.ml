@@ -767,7 +767,16 @@ let set_exists_excuses cx exists_excuses = cx.ccx.exists_excuses <- exists_excus
 
 let set_environment cx env = cx.environment <- env
 
-let set_in_synthesis_mode cx in_synthesis_mode = cx.in_synthesis_mode <- in_synthesis_mode
+let run_in_synthesis_mode cx f =
+  let old_synthesis_mode = cx.in_synthesis_mode in
+  let old_placeholder_tvars = cx.ccx.placeholder_tvars in
+  cx.ccx.placeholder_tvars <- ISet.empty;
+  cx.in_synthesis_mode <- true;
+  let result = f () in
+  cx.in_synthesis_mode <- old_synthesis_mode;
+  let placeholder_tvars = cx.ccx.placeholder_tvars in
+  cx.ccx.placeholder_tvars <- old_placeholder_tvars;
+  (placeholder_tvars, result)
 
 (* Given a sig context, it makes sense to clear the parts that are shared with
    the master sig context. Why? The master sig context, which contains global

@@ -55,6 +55,30 @@ let resolve_annotation cx tparams_map anno =
   Node_cache.set_annotation cache anno;
   t
 
+let synth_arg_list cx (_loc, { Ast.Expression.ArgList.arguments; comments = _ }) =
+  let arguments' =
+    Base.List.map arguments ~f:(fun e ->
+        let (placeholder_tvars, e) =
+          Context.run_in_synthesis_mode cx (fun () ->
+              let ((_t, _) as e') = Statement.expression_or_spread cx e in
+              e'
+          )
+        in
+        let cached_exp =
+          let open Ast.Expression in
+          match e with
+          | (_, Expression e) -> e
+          | (_, Spread (_, { SpreadElement.argument = e; comments = _ })) -> e
+        in
+        (* If we didn't introduce new placeholder tvars, cache the result *)
+        if ISet.is_empty placeholder_tvars then
+          Node_cache.set_expression (Context.node_cache cx) cached_exp;
+        e
+    )
+  in
+  let (argts, _arg_asts) = List.split arguments' in
+  argts
+
 let resolve_hint cx loc hint =
   let resolve_hint_node = function
     | AnnotationHint (tparams_locs, anno) -> resolve_annotation cx tparams_locs anno
@@ -80,7 +104,7 @@ let resolve_hint cx loc hint =
   if Context.env_mode cx = Options.LTI then
     let map_base_hint = resolve_hint_node in
     let map_targs = Statement.convert_call_targs_opt' cx in
-    let map_arg_list = Statement.synthesize_arg_list cx in
+    let map_arg_list = synth_arg_list cx in
     Hint_api.map hint ~map_base_hint ~map_targs ~map_arg_list
   else
     match hint with

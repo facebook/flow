@@ -1068,6 +1068,27 @@ module rec TypeTerm : sig
     | This_Method of { unbound: bool }
     | This_Function
 
+  (* A CallT constructor can be used to compute hints in calls to IntersectionTs.
+   * (See `synthesis_speculation_call` in type_hint.ml.) We use speculation_hint_state
+   * to keep track of the various states of hint computation during speculation.
+   * The state is initialized to the "unset" phase. If an overload succeeds, it is
+   * recorded along with the speculation path (list of speculation_ids that led
+   * to this choice) in the "set" constructor. For each subsequent success there
+   * are two cases:
+   * (i) The successful speculation id belongs to the "set" speculation path (we
+   * are basically popping off a long speculation path). In this case, the state
+   * remains the same.
+   * (ii) The successful speculation id has not been recorded in "set". This choice
+   * is a sibling of the currently "set" choice. This is possible thanks to the
+   * special behavior of IntersectionPreprocessKitT with union-like types. Two
+   * overloads from sibling branches are unlikely to lead to a helpful hint --
+   * this case is deemed "invalid".
+   *)
+  and speculation_hint_state =
+    | Speculation_hint_unset
+    | Speculation_hint_invalid
+    | Speculation_hint_set of (int list * t)
+
   (* Used by CallT and similar constructors *)
   and funcalltype = {
     call_this_t: t;
@@ -1075,6 +1096,7 @@ module rec TypeTerm : sig
     call_args_tlist: call_arg list;
     call_tout: tvar;
     call_strict_arity: bool;
+    call_speculation_hint_state: speculation_hint_state ref option;
   }
 
   and methodcalltype = {
@@ -3821,6 +3843,7 @@ let mk_boundfunctioncalltype this targs args ?(call_strict_arity = true) tout =
     call_args_tlist = args;
     call_tout = tout;
     call_strict_arity;
+    call_speculation_hint_state = None;
   }
 
 let mk_functioncalltype reason = mk_boundfunctioncalltype (global_this reason)
@@ -3860,6 +3883,7 @@ let apply_opt_funcalltype (this, targs, args, strict) t_out =
       call_args_tlist = args;
       call_tout = t_out;
       call_strict_arity = strict;
+      call_speculation_hint_state = None;
     }
 
 let apply_opt_methodcalltype
@@ -3924,6 +3948,7 @@ let call_of_method_app
     call_args_tlist = meth_args_tlist;
     call_tout = meth_tout;
     call_strict_arity = meth_strict_arity;
+    call_speculation_hint_state = None;
   }
 
 module TypeParams : sig

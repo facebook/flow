@@ -401,7 +401,7 @@ val set_exists_excuses : t -> ExistsCheck.t ALocMap.t -> unit
 
 val set_environment : t -> Loc_env.t -> unit
 
-val set_in_synthesis_mode : t -> bool -> unit
+val run_in_synthesis_mode : t -> (unit -> 'a) -> ISet.t * 'a
 
 val clear_master_shared : t -> master_context -> unit
 

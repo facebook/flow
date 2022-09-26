@@ -67,7 +67,13 @@ module Make (Destructuring : Destructuring_sig.S) (Statement : Statement_sig.S) 
     | Id ({ Ast.Pattern.Identifier.name = ((name_loc, _), { Ast.Identifier.name; _ }); _ } as id) ->
       let default = eval_default cx default in
       let reason = mk_reason (RIdentifier (OrdinaryName name)) name_loc in
-      let t = Env.find_write cx Env_api.OrdinaryNameLoc reason in
+      let t =
+        if Context.in_synthesis_mode cx then
+          (* Do not attempt to read unpopulated env entry in synthesis mode *)
+          t
+        else
+          Env.find_write cx Env_api.OrdinaryNameLoc reason
+      in
       (loc, { Ast.Function.Param.argument = ((ploc, t), Ast.Pattern.Identifier id); default })
     | Object { annot; properties; comments } ->
       let default = eval_default cx default in

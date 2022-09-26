@@ -38,6 +38,8 @@ type case = {
   mutable unresolved: ISet.t;
   mutable actions: extended_action list;
   mutable implicit_instantiation_post_inference_checks: Implicit_instantiation_check.t list;
+  lhs_t: Type.t;
+  use_t: Type.use_t;
 }
 
 (* Actions that involve some "ignored" unresolved tvars are considered

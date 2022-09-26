@@ -805,7 +805,16 @@ class virtual ['a] t =
           SpreadArg t''
 
     method fun_call_type cx map_cx t =
-      let { call_this_t; call_targs; call_args_tlist; call_tout; call_strict_arity } = t in
+      let {
+        call_this_t;
+        call_targs;
+        call_args_tlist;
+        call_tout;
+        call_strict_arity;
+        call_speculation_hint_state;
+      } =
+        t
+      in
       let call_this_t' = self#type_ cx map_cx call_this_t in
       let call_targs' =
         OptionUtils.ident_map (ListUtils.ident_map (self#targ cx map_cx)) call_targs
@@ -826,5 +835,6 @@ class virtual ['a] t =
           call_args_tlist = call_args_tlist';
           call_tout = call_tout';
           call_strict_arity;
+          call_speculation_hint_state;
         }
   end

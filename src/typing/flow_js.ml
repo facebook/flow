@@ -979,7 +979,14 @@ struct
                 reason = reason_op;
                 call_action =
                   Funcalltype
-                    { call_this_t; call_targs; call_args_tlist; call_tout; call_strict_arity };
+                    {
+                      call_this_t;
+                      call_targs;
+                      call_args_tlist;
+                      call_tout;
+                      call_strict_arity;
+                      call_speculation_hint_state;
+                    };
                 return_hint;
               }
           ) ->
@@ -998,6 +1005,7 @@ struct
                           call_args_tlist = [Arg wrapped_obj];
                           call_tout;
                           call_strict_arity;
+                          call_speculation_hint_state;
                         }
                     in
                     rec_flow
@@ -2921,6 +2929,7 @@ struct
             call_args_tlist = tins2;
             call_tout = t2;
             call_strict_arity;
+            call_speculation_hint_state = _;
           } =
             calltype
           in
@@ -2967,6 +2976,7 @@ struct
             call_args_tlist;
             call_tout;
             call_strict_arity = _;
+            call_speculation_hint_state = _;
           } =
             calltype
           in
@@ -3145,6 +3155,7 @@ struct
             call_tout = tout;
             call_this_t = _;
             call_strict_arity = _;
+            call_speculation_hint_state = _;
           } =
             calltype
           in
@@ -4504,6 +4515,7 @@ struct
             call_args_tlist = tins2;
             call_tout;
             call_strict_arity = _;
+            call_speculation_hint_state = _;
           } =
             calltype
           in
@@ -4526,6 +4538,7 @@ struct
             call_args_tlist;
             call_tout;
             call_strict_arity = _;
+            call_speculation_hint_state = _;
           } =
             calltype
           in

@@ -20,6 +20,53 @@ let in_sandbox_cx cx t ~f =
     None
   )
 
+let synthesis_speculation_call cx call_reason (reason, rep) targs argts =
+  let intersection = IntersectionT (reason, rep) in
+  (* We're not expecting to surface errors here, so an unknown_use should be benign. *)
+  let use_op = unknown_use in
+  let tout = (call_reason, Tvar.mk_no_wrap cx call_reason) in
+  let call_speculation_hint_state = ref Speculation_hint_unset in
+  let call_action =
+    Funcalltype
+      {
+        call_this_t = global_this reason;
+        call_targs = targs;
+        call_args_tlist = argts;
+        call_tout = tout;
+        call_strict_arity = true;
+        call_speculation_hint_state = Some call_speculation_hint_state;
+      }
+  in
+  let use = CallT { use_op; reason = call_reason; call_action; return_hint = hint_unavailable } in
+  Flow_js.flow cx (intersection, use);
+  match !call_speculation_hint_state with
+  | Speculation_hint_unset -> intersection
+  | Speculation_hint_invalid -> intersection
+  | Speculation_hint_set (_, t) -> t
+
+let simplify_callee cx reason use_op func_t =
+  Tvar.mk_no_wrap_where cx reason (fun t ->
+      let call_action = ConcretizeCallee t in
+      Flow_js.flow cx (func_t, CallT { use_op; reason; call_action; return_hint = hint_unavailable })
+  )
+
+let get_t cx = function
+  | OpenT (r, id) ->
+    Flow_js_utils.merge_tvar ~no_lowers:(fun _ r -> DefT (r, bogus_trust (), EmptyT)) cx r id
+  | t -> t
+
+let decomp_instantiated cx fn instantiation_hint =
+  let { Hint_api.reason; targs; arg_list; return_hint = _ } = instantiation_hint in
+  match get_t cx (simplify_callee cx reason unknown_use fn) with
+  | IntersectionT (r, rep) ->
+    let (_, result) =
+      Context.run_in_synthesis_mode cx (fun () ->
+          synthesis_speculation_call cx reason (r, rep) (Lazy.force targs) (Lazy.force arg_list)
+      )
+    in
+    result
+  | t -> t
+
 let type_of_hint_decomposition cx op reason t =
   let fun_t ~params ~rest_param ~return_t =
     DefT
@@ -180,7 +227,7 @@ let type_of_hint_decomposition cx op reason t =
             in
             Flow_js.flow cx (t, use_t)
         )
-      | Decomp_Instantiated _ -> t
+      | Decomp_Instantiated instantiation_hint -> decomp_instantiated cx t instantiation_hint
   )
 
 let evaluate_hint_ops cx reason t ops =
@@ -194,12 +241,9 @@ let evaluate_hint_ops cx reason t ops =
   (* We evaluate the decompositions in synthesis mode, but fully resolve the final result in
      checking mode, so that any unresolved tvars in the midddle won't fail the evaluation, but
      unsolved tvars in the final result will fail the evaluation. *)
-  Context.set_in_synthesis_mode cx true;
-  let synthesized_t = loop t ops in
-  Context.set_in_synthesis_mode cx false;
-  match synthesized_t with
-  | None -> None
-  | Some t -> in_sandbox_cx cx t ~f:Base.Fn.id
+  match Context.run_in_synthesis_mode cx (fun () -> loop t ops) with
+  | (_, None) -> None
+  | (_, Some t) -> in_sandbox_cx cx t ~f:Base.Fn.id
 
 let evaluate_hint cx reason hint =
   match hint with

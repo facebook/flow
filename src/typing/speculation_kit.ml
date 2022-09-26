@@ -71,6 +71,35 @@ module Make (Flow : INPUT) : OUTPUT = struct
 
   let mk_intersection_reason r _ls = replace_desc_reason RIntersection r
 
+  let log_synthesis_result cx _trace case speculation_id =
+    let open Speculation_state in
+    let { lhs_t; use_t; _ } = case in
+    match use_t with
+    | CallT
+        {
+          call_action = Funcalltype { call_speculation_hint_state = Some call_callee_hint_ref; _ };
+          _;
+        } ->
+      let old_callee_hint = !call_callee_hint_ref in
+      let new_callee_hint =
+        match old_callee_hint with
+        | Speculation_hint_unset ->
+          let spec_id_path =
+            speculation_id
+            :: List.map (fun branch -> branch.speculation_id) !(Context.speculation_state cx)
+          in
+          Speculation_hint_set (spec_id_path, lhs_t)
+        | Speculation_hint_invalid -> Speculation_hint_invalid
+        | Speculation_hint_set (old_spec_id_path, _) ->
+          if List.mem speculation_id old_spec_id_path then
+            (* We are moving back a successful speculation path. *)
+            old_callee_hint
+          else
+            Speculation_hint_invalid
+      in
+      call_callee_hint_ref := new_callee_hint
+    | _ -> ()
+
   (** Entry points into the process of trying different branches of union and
       intersection types.
 
@@ -500,6 +529,8 @@ module Make (Flow : INPUT) : OUTPUT = struct
             unresolved = ISet.empty;
             actions = [];
             implicit_instantiation_post_inference_checks = [];
+            lhs_t = l;
+            use_t = u;
           }
         in
         (* speculatively match the pair of types in this trial *)
@@ -517,7 +548,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
                  * match! This is great news. It means that this alternative will
                  * definitely succeed. Fire any deferred actions and short-cut. *)
               then
-                fire_actions cx trace spec case
+                fire_actions cx trace spec case speculation_id
               (* Otherwise, record that we've found a promising alternative. *)
               else
                 loop (ConditionalMatch case) trials
@@ -550,7 +581,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
     and return = function
       | ConditionalMatch case ->
         (* best choice that survived, congrats! fire deferred actions  *)
-        fire_actions cx trace spec case
+        fire_actions cx trace spec case speculation_id
       | NoMatch msgs ->
         (* everything failed; make a really detailed error message listing out the
          * error found for each alternative *)
@@ -752,10 +783,12 @@ module Make (Flow : INPUT) : OUTPUT = struct
   (* When we fire_actions we also need to reconstruct the use_op for each action
    * since before beginning speculation we replaced each use_op with
    * an UnknownUse. *)
-  and fire_actions cx trace spec case =
+  and fire_actions cx trace spec case speculation_id =
     List.iter
       (fun check -> Context.add_implicit_instantiation_check cx check)
       case.Speculation_state.implicit_instantiation_post_inference_checks;
+    log_synthesis_result cx trace case speculation_id;
+
     case.Speculation_state.actions
     |> List.iter (function
            | (_, Speculation_state.FlowAction (l, u)) ->
