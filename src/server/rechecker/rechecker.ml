@@ -90,6 +90,35 @@ let process_updates ?skip_incompatible ~options env updates =
     Hh_logger.fatal "%s" msg;
     Exit.exit ~msg exit_status
 
+(** Notify clients that a recheck is starting. This is used to know that
+    error updates are incremental. [send_end_recheck] must be called when
+    the recheck is done, to exit this mode. *)
+let send_start_recheck env =
+  MonitorRPC.status_update ~event:ServerStatus.Recheck_start;
+  Persistent_connection.send_start_recheck env.connections
+
+(** Notify clients that the recheck is done and send finalized errors *)
+let send_end_recheck ~profiling ~options recheck_reasons env =
+  (* We must send "end_recheck" prior to sending errors+warnings so the client
+     knows that this set of errors+warnings are final ones, not incremental. *)
+  let lazy_stats = get_lazy_stats ~options env in
+  Persistent_connection.send_end_recheck ~lazy_stats env.connections;
+
+  let calc_errors_and_warnings () =
+    let reader = State_reader.create () in
+    let (errors, warnings, _) =
+      ErrorCollator.get_with_separate_warnings ~profiling ~reader ~options env
+    in
+    (errors, warnings)
+  in
+  let errors_reason = LspProt.End_of_recheck { recheck_reasons } in
+  Persistent_connection.update_clients
+    ~clients:env.connections
+    ~errors_reason
+    ~calc_errors_and_warnings;
+
+  MonitorRPC.status_update ~event:ServerStatus.Finishing_up
+
 (* on notification, execute client commands or recheck files *)
 let recheck
     genv
@@ -102,13 +131,12 @@ let recheck
   (* Caller should have already checked this *)
   assert (not (CheckedSet.is_empty updates && CheckedSet.is_empty files_to_force));
 
-  MonitorRPC.status_update ~event:ServerStatus.Recheck_start;
-  Persistent_connection.send_start_recheck env.connections;
   let options = genv.ServerEnv.options in
   let workers = genv.ServerEnv.workers in
   let%lwt (profiling, (log_recheck_event, recheck_stats, env)) =
     let should_print_summary = Options.should_profile options in
     Profiling_js.with_profiling_lwt ~label:"Recheck" ~should_print_summary (fun profiling ->
+        send_start_recheck env;
         let%lwt (log_recheck_event, recheck_stats, env) =
           Types_js.recheck
             ~profiling
@@ -121,23 +149,7 @@ let recheck
             ~recheck_reasons
             ~will_be_checked_files
         in
-        let lazy_stats = get_lazy_stats ~options env in
-        Persistent_connection.send_end_recheck ~lazy_stats env.connections;
-
-        (* We must send "end_recheck" prior to sending errors+warnings so the client *)
-        (* knows that this set of errors+warnings are final ones, not incremental.   *)
-        let calc_errors_and_warnings () =
-          let reader = State_reader.create () in
-          let (errors, warnings, _) =
-            ErrorCollator.get_with_separate_warnings ~profiling ~reader ~options env
-          in
-          (errors, warnings)
-        in
-        let errors_reason = LspProt.End_of_recheck { recheck_reasons } in
-        Persistent_connection.update_clients
-          ~clients:env.connections
-          ~errors_reason
-          ~calc_errors_and_warnings;
+        send_end_recheck ~profiling ~options recheck_reasons env;
         Lwt.return (log_recheck_event, recheck_stats, env)
     )
   in
@@ -148,7 +160,6 @@ let recheck
     LspProt.Recheck_summary { duration; stats = recheck_stats }
   in
   MonitorRPC.send_telemetry event;
-  MonitorRPC.status_update ~event:ServerStatus.Finishing_up;
 
   Lwt.return (profiling, env)
 
