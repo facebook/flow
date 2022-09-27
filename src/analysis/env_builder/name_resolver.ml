@@ -3878,26 +3878,22 @@ module Make
       method private delete loc argument =
         let undefined_reason = mk_reason RVoid loc in
         let undefined = Val.undefined undefined_reason in
-        let update_write_entries ~assigning =
-          let write =
-            if assigning then
-              Env_api.AssigningWrite undefined_reason
-            else
-              Env_api.NonAssigningWrite
-          in
-          let write_entries = EnvMap.add_ordinary (fst argument) write env_state.write_entries in
-          env_state <- { env_state with write_entries }
-        in
         match argument with
         | (_, Flow_ast.Expression.Identifier (id_loc, { Flow_ast.Identifier.name; _ }))
           when not @@ this#is_excluded_ordinary_name name ->
           let { kind; def_loc; val_ref; _ } = this#env_read name in
           (match error_for_assignment_kind cx name id_loc def_loc kind AssignmentWrite !val_ref with
-          | None ->
-            val_ref := undefined;
-            update_write_entries ~assigning:true
+          | None -> val_ref := undefined
           | Some err ->
-            update_write_entries ~assigning:false;
+            env_state <-
+              {
+                env_state with
+                write_entries =
+                  EnvMap.add_ordinary
+                    (fst argument)
+                    Env_api.NonAssigningWrite
+                    env_state.write_entries;
+              };
             add_output err)
         | (_, Flow_ast.Expression.Member member) ->
           this#assign_member ~delete:true member loc undefined undefined_reason
