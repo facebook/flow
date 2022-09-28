@@ -559,8 +559,17 @@ let reducer
        *
        * In either case, we update the file entity so that the latest data is
        * empty, indicating no file. We also record these files so their shared
-       * hash table keys can be removed when the transaction commits. *)
-      let dirty_modules = worker_mutator.Parsing_heaps.clear_not_found file_key in
+       * hash table keys can be removed when the transaction commits.
+       *
+       * When `skip_changed` is true, we are ensuring that some files are parsed. We
+       * only want to return the set of files which have unexpectedly changed, but we
+       * do not want to actually modify the heap to reflect those changes. *)
+      let dirty_modules =
+        if skip_changed then
+          Modulename.Set.empty
+        else
+          worker_mutator.Parsing_heaps.clear_not_found file_key
+      in
       let not_found = FilenameSet.add file_key acc.not_found in
       let dirty_modules = Modulename.Set.union dirty_modules acc.dirty_modules in
       { acc with not_found; dirty_modules }
