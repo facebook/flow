@@ -1,3 +1,28 @@
+### 0.188.0
+
+Likely to cause new Flow errors:
+* Previously we supported a weird JS runtime rule for constructor returns when you call `new SomeClass`:
+- If the returned value is primitive, then it's ignored and the instance will be returned instead.
+- If the returned value is object like, then the return object will be the eval result of `new SomeClass`.
+This is confusing, and we dropped support for this feature in this release. Now we enforce that all class constructors must return void.
+* Fixed a bug preventing refinements from being invalidated in inline `&&` expressions: examples like `typeof x === 'number' && reassignXToString() && (x: number)` were passing even if `reassignXToString()` assigned a a string value to `x`.
+
+New Features:
+* `flow codemod annotate-lti` is now provided to help prepare your codebase to enable the `enforce_local_inference_annotations=true` flag. In order to eventually enable local type inference, we will require additional annotations in places we can't contextually type your code. You can enable the annotation enforcement now with `enforce_local_inference_annotations=true` in flowconfig. This flag enables the behaviors of all the following experimental flags, which will be deleted in the next release:
+```
+experimental.enforce_local_inference_annotations=true
+experimental.enforce_this_annotations=true
+experimental.enforce_class_annotations=true
+```
+To migrate your codebase, you can run the following codemod to prepare your codebase for the new requirement: `flow codemod annotate-lti`. Check out an upcoming blog post for more details.
+
+Misc:
+* Remove the `file_watcher.watchman.survive_restarts` flowconfig option, which was deprecated in 0.158.0. We will always try to survive Watchman restarts.
+* Remove the `experimental.refactor` flowconfig option. It has been `true` by default since v0.158.0.
+
+Library Definitions:
+* Updates the typing of 'fs.promises.readdir()' to reflect the possibility of passing 'withFileTypes: true' and receiving an array of Dirent objects
+
 ### 0.187.1
 
 * Fix a crash introduced in 0.187.0 when the file walker fails to open a directory
