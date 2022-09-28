@@ -35,7 +35,7 @@ class Invariant {
 
 class Misc {
   // Set<X> has invariant X
-  out_set(): Set<this> { return new Set().add(this); }
+  out_set(): Set<this> { return new Set<this>().add(this); }
   in_set(_: Set<this>) { }
   inout_set: Set<this>;
 

@@ -19,13 +19,13 @@ const _d = <FancyButton foo={3} ref={goodRef} />;
 const badRef = React.createRef<HTMLDivElement>();
 const _e = <FancyButton foo={3} ref={badRef} />; // Incorrect ref type
 
-const _f =  <FancyButton foo={3} ref={x => x} />;
+const _f =  <FancyButton foo={3} ref={(x) => x} />;
 const _g =  <FancyButton foo={3} ref={(x: null | HTMLDivElement) => x} />; // Incorrect ref type
 
 type FooProps = {|foo: number|};
 
 const UnionRef = React.forwardRef<FooProps, HTMLButtonElement | HTMLAnchorElement>(
-  (props, ref): React.Element<'button' | 'a'> => {
+  (props: FooProps, ref): React.Element<'button' | 'a'> => {
     if (props.foo === 0) {
       return <a {...props} ref={ref} />;
     }

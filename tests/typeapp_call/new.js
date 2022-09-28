@@ -4,7 +4,7 @@ class C<T> {
   m2(x: T) {}
 }
 
-var c1 = new C;
+var c1 = new C<number | string>;
 c1.m1(0);
 c1.m2("");
 (c1.x: void); // error: number|string ~> void

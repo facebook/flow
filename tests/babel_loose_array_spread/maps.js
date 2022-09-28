@@ -1,6 +1,6 @@
 const map1 = new Map<string, string>();
 const map2 = new Map<string, string>();
-new Map([
+new Map<mixed, mixed>([
   ...map1, // Error
   ...map2 // Error
 ]);

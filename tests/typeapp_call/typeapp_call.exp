@@ -256,9 +256,9 @@ Cannot cast `c1.x` to undefined because number [1] is incompatible with undefine
         ^^^^
 
 References:
-   new.js:8:7
-    8| c1.m1(0);
-             ^ [1]
+   new.js:7:16
+    7| var c1 = new C<number | string>;
+                      ^^^^^^ [1]
    new.js:10:8
    10| (c1.x: void); // error: number|string ~> void
               ^^^^ [2]
@@ -273,9 +273,9 @@ Cannot cast `c1.x` to undefined because string [1] is incompatible with undefine
         ^^^^
 
 References:
-   new.js:9:7
-    9| c1.m2("");
-             ^^ [1]
+   new.js:7:25
+    7| var c1 = new C<number | string>;
+                               ^^^^^^ [1]
    new.js:10:8
    10| (c1.x: void); // error: number|string ~> void
               ^^^^ [2]

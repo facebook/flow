@@ -14,11 +14,11 @@ class B3<X> extends A3<X> {
   foo(): B3<X> { return new B3(); } // error
 }
 
-(new B3().bar(): B3<any>); // OK
-(new B3().qux(0): string); // error
+(new B3<mixed>().bar(): B3<any>); // OK
+(new B3<string>().qux(0): string); // error
 
-(new B3().bar(): A2<any>); // OK
-((new B3().bar(): B3<string>): A2<number>); // error
+(new B3<mixed>().bar(): A2<any>); // OK
+((new B3<string>().bar(): B3<string>): A2<number>); // error
 ((new B3(): A2<number>).qux(0): string); // error
 
 import Export from './export';

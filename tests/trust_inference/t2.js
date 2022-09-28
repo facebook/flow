@@ -4,7 +4,7 @@ function h(x: $Trusted<number>): number {
   return (42: any)
 }
 
-function g(x) {
+function g(x: number) {
   return h(x);
 }
 

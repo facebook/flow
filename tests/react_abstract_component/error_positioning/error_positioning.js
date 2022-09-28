@@ -23,7 +23,7 @@ declare function fn<TArguments: $ReadOnlyArray<any>, TReturn>(
   implementation?: (...args: TArguments) => TReturn,
 ): MockFn<TArguments, TReturn>
 
-const Component = fn(({user}) => (
+const Component = fn<[{user: mixed}], _>(({user}) => (
   <div />
 ));
 
