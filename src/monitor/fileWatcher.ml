@@ -264,38 +264,11 @@ end = struct
     mutable instance: Watchman.env;
     mutable files: SSet.t;
     mutable metadata: MonitorProt.file_watcher_metadata;
-    mutable mergebase: string option;
-    mutable finished_an_hg_update: bool;
     mutable is_initial: bool;
     listening_thread: exit_reason Lwt.t;
     changes_condition: unit Lwt_condition.t;
     init_settings: Watchman.init_settings;
-    should_track_mergebase: bool;
   }
-
-  let get_mergebase env =
-    if env.should_track_mergebase then
-      match%lwt Watchman.get_mergebase env.instance with
-      | Ok _ as ok -> Lwt.return ok
-      | Error (Vcs_utils.Not_installed _) ->
-        Lwt.return (Error "Failed to query mergebase: unable to find vcs")
-      | Error (Vcs_utils.Errored msg) ->
-        Lwt.return (Error (Printf.sprintf "Failed to query mergebase: %s" msg))
-    else
-      Lwt.return (Ok None)
-
-  let recover_from_restart env =
-    match env.mergebase with
-    | Some prev_mergebase ->
-      (match%lwt Watchman.recover_from_restart ~prev_mergebase env.instance with
-      | Ok result -> Lwt.return (Some result)
-      | Error Watchman.Dead
-      | Error Watchman.Restarted ->
-        Lwt.return None)
-    | None ->
-      (* if we don't know the previous mergebase, we can't ask if anything
-         changed while watchman was restarting, so we can't recover. *)
-      Lwt.return None
 
   module WatchmanListenLoop = LwtLoop.Make (struct
     module J = Hh_json_helpers.AdhocJsonHelpers
@@ -339,13 +312,14 @@ end = struct
         mergebase changes, we restart. *)
     let handle_restart env =
       StatusStream.file_watcher_deferred "Watchman restart";
-      match%lwt recover_from_restart env with
-      | Some (instance, changes) ->
+      match%lwt Watchman.recover_from_restart env.instance with
+      | Ok (instance, changes) ->
         Logger.info "Watchman missed changes, but the mergebase didn't change. Recovering...";
         env.metadata <- { env.metadata with MonitorProt.missed_changes = true };
         StatusStream.file_watcher_ready ();
-        Lwt.return (Some (instance, Watchman.Files_changed changes))
-      | None ->
+        Lwt.return (Some (instance, Watchman.Files_changed { changes; changed_mergebase = None }))
+      | Error Watchman.Dead
+      | Error Watchman.Restarted ->
         Logger.info "Watchman missed changes, but we couldn't reconnect or the mergebase changed.";
         Lwt.return None
 
@@ -361,68 +335,10 @@ end = struct
       in
       env.instance <- instance;
       match pushed_changes with
-      | Watchman.Files_changed new_files ->
-        env.files <- SSet.union env.files new_files;
-        let%lwt () =
-          (*
-           ******* GOAL *******
-           *
-           * We want to know when an N-files-changed notification is due to the user changing
-           * their mergebase with master. This could be due to pulling master & rebasing their
-           * work onto the new master, or just moving from one commit to another.
-           *
-           ******* PREVIOUS SOLUTION *******
-           *
-           * Unfortunately, Watchman's mercurial integration is racy and not to be trusted.
-           * Previously we tried this:
-           *
-           * 1. Keep a count of how many transactions are currently in progress
-           * 2. When hg.update ends, wait for the transaction count to drop to 0
-           * 3. When there are 0 in-progress transactions, then query for the mergebase
-           *
-           * This worked pretty well, but looking at some logs I would see step 3 would not
-           * always fire. Maybe we were missing some state_leave notifications. Also, the
-           * source control people aren't confident that waiting for the transactions to
-           * is a strong guarantee.
-           *
-           ******* CURRENT SOLUTION *******
-           *
-           * So this is a more simple solution. It's based around the assumption that once
-           * Watchman tells us that N files have changed, things have settled down enough
-           * that it's safe to query for the mergebase. And since querying for the mergebase
-           * is expensive, we only do so when we see an hg.update. After an hg.update it's
-           * more acceptable to delay a file-changed notification than after a user saves a
-           * file in the IDE
-           *)
-          let%lwt changed_mergebase =
-            if env.finished_an_hg_update then (
-              env.finished_an_hg_update <- false;
-              let%lwt new_mergebase =
-                match%lwt get_mergebase env with
-                | Ok mergebase -> Lwt.return mergebase
-                | Error msg ->
-                  (* TODO: handle this more gracefully than `failwith` *)
-                  failwith msg
-              in
-              match (new_mergebase, env.mergebase) with
-              | (Some mergebase, Some old_mergebase) ->
-                let changed_mergebase = mergebase <> old_mergebase in
-                if changed_mergebase then (
-                  Logger.info
-                    "Watchman reports mergebase changed from %S to %S"
-                    old_mergebase
-                    mergebase;
-                  env.mergebase <- Some mergebase
-                );
-                Lwt.return (Some changed_mergebase)
-              | _ -> Lwt.return None
-            ) else
-              Lwt.return None
-          in
-          let metadata = { MonitorProt.changed_mergebase; missed_changes = false } in
-          env.metadata <- MonitorProt.merge_file_watcher_metadata env.metadata metadata;
-          Lwt.return_unit
-        in
+      | Watchman.Files_changed { changes; changed_mergebase } ->
+        env.files <- SSet.union env.files changes;
+        let metadata = { MonitorProt.changed_mergebase; missed_changes = false } in
+        env.metadata <- MonitorProt.merge_file_watcher_metadata env.metadata metadata;
         broadcast env;
         Lwt.return env
       | Watchman.State_enter (name, metadata) ->
@@ -445,7 +361,6 @@ end = struct
         (match name with
         | "hg.update" ->
           let (distance, rev) = extract_hg_update_metadata metadata in
-          env.finished_an_hg_update <- true;
           log_state_leave name metadata;
           Logger.info
             "Watchman reports an hg.update just finished. Moved %s revs to %s"
@@ -531,9 +446,8 @@ end = struct
           let%lwt watchman = Base.Option.value_exn init_thread in
           init_thread <- None;
 
-          let should_track_mergebase = Options.lazy_mode server_options in
           match watchman with
-          | Ok (watchman, mergebase, files) ->
+          | Ok (watchman, files) ->
             let (waiter, wakener) = Lwt.task () in
             let new_env =
               {
@@ -543,13 +457,10 @@ end = struct
                   (let%lwt env = waiter in
                    listen env
                   );
-                mergebase;
                 is_initial = true;
-                finished_an_hg_update = false;
                 changes_condition = Lwt_condition.create ();
                 metadata = MonitorProt.empty_file_watcher_metadata;
                 init_settings = Base.Option.value_exn init_settings;
-                should_track_mergebase;
               }
             in
             env <- Some new_env;

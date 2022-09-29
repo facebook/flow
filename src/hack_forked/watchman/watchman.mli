@@ -47,7 +47,10 @@ type pushed_changes =
    *)
   | State_enter of string * Hh_json.json option
   | State_leave of string * Hh_json.json option
-  | Files_changed of SSet.t
+  | Files_changed of {
+      changes: SSet.t;
+      changed_mergebase: bool option;
+    }
 
 type failure =
   | Dead
@@ -55,11 +58,9 @@ type failure =
 
 type env
 
-val init : init_settings -> (env * string option * SSet.t, string) Result.t Lwt.t
+val init : init_settings -> (env * SSet.t, string) Result.t Lwt.t
 
-val get_mergebase : env -> (string option, Vcs_utils.error_status) Result.t Lwt.t
-
-val recover_from_restart : prev_mergebase:string -> env -> (env * SSet.t, failure) Result.t Lwt.t
+val recover_from_restart : env -> (env * SSet.t, failure) Result.t Lwt.t
 
 val get_changes : env -> (env * pushed_changes, failure) Result.t Lwt.t
 
@@ -74,5 +75,5 @@ module Testing : sig
   val test_settings : init_settings
 
   val transform_asynchronous_get_changes_response :
-    env -> Hh_json.json -> (env * pushed_changes, error_kind) Result.t
+    env -> Hh_json.json -> (env * pushed_changes, error_kind) Result.t Lwt.t
 end

@@ -132,7 +132,11 @@ type pushed_changes =
    *)
   | State_enter of string * Hh_json.json option
   | State_leave of string * Hh_json.json option
-  | Files_changed of SSet.t
+  | Files_changed of {
+      changes: SSet.t;  (** Files that changed *)
+      changed_mergebase: bool option;
+          (** Whether the mergebase changed ([None] if we weren't tracking the mergebase). *)
+    }
 
 module Capability = struct
   type t =
@@ -222,6 +226,13 @@ type env = {
       (** See https://facebook.github.io/watchman/docs/clockspec.html
           This is also used to reliably detect a crashed watchman. Watchman has a
           facility to detect watchman process crashes between two "since" queries. *)
+  mutable finished_an_hg_update: bool;
+      (** This is set to true when leaving an hg.update state on our subscription.
+          It is used when we get the next Files_changed event to check if the
+          changes are due to an hg update, and then reset to false. *)
+  mutable mergebase: string option;
+      (** Keeps track of the current mergebase, which we use to know when the
+          mergebase changes. *)
   conn: conn;
   settings: init_settings;
   should_track_mergebase: bool;
@@ -751,7 +762,19 @@ let re_init ?prior_clockspec settings =
   let should_track_mergebase =
     settings.should_track_mergebase && supports_scm_queries capabilities vcs
   in
-  let env = { settings; conn; watch; clockspec; subscription; should_track_mergebase; vcs } in
+  let env =
+    {
+      settings;
+      conn;
+      watch;
+      clockspec;
+      subscription;
+      vcs;
+      should_track_mergebase;
+      mergebase = None;
+      finished_an_hg_update = false;
+    }
+  in
   request ~debug_logging ~conn (subscribe_query env) >>= fun response ->
   ignore response;
   Lwt.return (Ok env)
@@ -939,47 +962,111 @@ let get_mergebase_and_changes =
     else
       Lwt.return (Ok None)
 
-let recover_from_restart ~prev_mergebase env =
-  (* on restart, reconnect to a fresh env. *)
-  let%lwt dead_env = close_channel_on_instance env in
-  match%lwt re_init_dead_env ~allow_fresh_instance:true dead_env with
-  | Ok env ->
-    (match%lwt get_mergebase_and_changes env with
-    | Error _ as err -> Lwt.return err
-    | Ok None ->
-      (* asking source control what changed while watchman was restarting was
-         not supported, so we can't recover. note: this should virtually never
-         happen: it means that Watchman previously supported SCM queries, but
-         no longer does when we reconnect. *)
-      Lwt.return (Error Restarted)
-    | Ok (Some (mergebase, changes)) ->
-      if String.equal mergebase prev_mergebase then
-        (* the mergebase didn't change, so no upstream files changed. we can
-           recover by rechecking `changes` (the files currently changed
-           locally) plus all of the files that were previously changed locally,
-           which are tracked separately. *)
-        Lwt.return (Ok (env, changes))
-      else
-        (* if the mergebase changed, `changes` is missing all of the files
-           that changed between the two mergebase revisions (it only contains
-           files changed on top of the new mergebase). we could query for
-           these changes, but it's left for future work. *)
-        Lwt.return (Error Restarted))
-  | Error _ as err -> Lwt.return err
+(** We want to know when an N-files-changed notification is due to the user changing
+  their mergebase. This could be due to pulling & rebasing their work onto the new
+  commit, or just moving from one commit to another.
+
+  Using an SCM-aware subscription (https://facebook.github.io/watchman/docs/scm-query.html)
+  would tell us when the mergebase changes, but then it would only tell us what
+  files changed since that new mergebase. The idea there is that we'd download
+  a new saved state based on that new mergebase, and so only need to process the
+  files changed since mergebase. But there's a lot of overhead for us to use a
+  new saved state, so it might be faster to just process all the upstream changes.
+
+  We get all the upstream changes by not using an SCM-aware subscription, but
+  then have to see if the mergebase changed on our own. Our approach is based
+  around the assumption that once Watchman tells us that N files have changed,
+  things have settled down enough that it's safe to query for the mergebase.
+  And since querying for the mergebase is expensive, we only do so when we see
+  an hg.update. After an hg.update it's more acceptable to delay a file-changed
+  notification than after a user saves a file in the IDE.
+
+  Returns [None] if we don't know whether the mergebase changed (mostly if
+  [should_track_mergebase = false]), otherwise [Some did_change]. Also mutates
+  [env.mergebase]. *)
+let check_for_changed_mergebase (env : env) =
+  match env.mergebase with
+  | None -> Lwt.return None
+  | Some old_mergebase ->
+    let%lwt new_mergebase =
+      match%lwt get_mergebase env with
+      | Ok mergebase -> Lwt.return mergebase
+      | Error (Vcs_utils.Not_installed _) ->
+        (* TODO: handle this more gracefully than `failwith`, but should be impossible.
+           we already used the VCS to decide [should_track_mergebase]. *)
+        failwith "Failed to query mergebase: unable to find vcs"
+      | Error (Vcs_utils.Errored msg) ->
+        (* TODO: handle this more gracefully than `failwith` *)
+        failwith (Printf.sprintf "Failed to query mergebase: %s" msg)
+    in
+    (match new_mergebase with
+    | Some mergebase ->
+      let changed_mergebase = not (String.equal mergebase old_mergebase) in
+      if changed_mergebase then (
+        Hh_logger.info "Watchman reports mergebase changed from %S to %S" old_mergebase mergebase;
+        env.mergebase <- Some mergebase
+      );
+      Lwt.return (Some changed_mergebase)
+    | None -> Lwt.return None)
+
+let recover_from_restart (env : env) =
+  match env.mergebase with
+  | None ->
+    (* we weren't tracking the mergebase so we can't figure out what changed
+       while watchman wasn't listening *)
+    Lwt.return (Error Restarted)
+  | Some prev_mergebase ->
+    (* on restart, reconnect to a fresh env. *)
+    let%lwt dead_env = close_channel_on_instance env in
+    (match%lwt re_init_dead_env ~allow_fresh_instance:true dead_env with
+    | Ok env ->
+      (match%lwt get_mergebase_and_changes env with
+      | Error _ as err -> Lwt.return err
+      | Ok None ->
+        (* asking source control what changed while watchman was restarting was
+           not supported, so we can't recover. note: this should virtually never
+           happen: it means that Watchman previously supported SCM queries, but
+           no longer does when we reconnect. *)
+        Lwt.return (Error Restarted)
+      | Ok (Some (mergebase, changes)) ->
+        if String.equal mergebase prev_mergebase then
+          (* the mergebase didn't change, so no upstream files changed. we can
+             recover by rechecking `changes` (the files currently changed
+             locally) plus all of the files that were previously changed locally,
+             which are tracked separately. *)
+          Lwt.return (Ok (env, changes))
+        else
+          (* if the mergebase changed, `changes` is missing all of the files
+             that changed between the two mergebase revisions (it only contains
+             files changed on top of the new mergebase). we could query for
+             these changes, but it's left for future work. *)
+          Lwt.return (Error Restarted))
+    | Error _ as err -> Lwt.return err)
 
 let transform_asynchronous_get_changes_response env data =
   if is_fresh_instance_response data then
-    Error Fresh_instance
+    Lwt.return (Error Fresh_instance)
   else if subscription_is_cancelled data then
-    Error Subscription_canceled
+    Lwt.return (Error Subscription_canceled)
   else (
     env.clockspec <- Jget.string_exn (Some data) "clock";
     match Jget.string_opt (Some data) "state-enter" with
-    | Some state -> Ok (env, make_state_change_response `Enter state data)
+    | Some state -> Lwt.return (Ok (env, make_state_change_response `Enter state data))
     | None ->
       (match Jget.string_opt (Some data) "state-leave" with
-      | Some state -> Ok (env, make_state_change_response `Leave state data)
-      | None -> Ok (env, Files_changed (extract_file_names env data)))
+      | Some state ->
+        if String.equal state "hg.update" then env.finished_an_hg_update <- true;
+        Lwt.return (Ok (env, make_state_change_response `Leave state data))
+      | None ->
+        let changes = extract_file_names env data in
+        let%lwt changed_mergebase =
+          if env.finished_an_hg_update then (
+            env.finished_an_hg_update <- false;
+            check_for_changed_mergebase env
+          ) else
+            Lwt.return None
+        in
+        Lwt.return (Ok (env, Files_changed { changes; changed_mergebase })))
   )
 
 let get_changes =
@@ -991,10 +1078,7 @@ let get_changes =
     let debug_logging = env.settings.debug_logging in
     match%lwt blocking_read ~debug_logging ~conn:env.conn with
     | Error _ as err -> Lwt.return err
-    | Ok response ->
-      (match transform_asynchronous_get_changes_response env response with
-      | Error _ as err -> Lwt.return err
-      | Ok (env, result) -> Lwt.return (Ok (env, result)))
+    | Ok response -> transform_asynchronous_get_changes_response env response
   in
   (fun env -> with_retry ~max_attempts:max_retry_attempts ~on_retry wait_for_changes env)
 
@@ -1021,7 +1105,8 @@ let init settings =
               "Not checking changes since mergebase! SCM-aware queries are not supported for your VCS by your version of Watchman.";
           (None, SSet.empty)
       in
-      Lwt.return (Ok (env, mergebase, files))
+      env.mergebase <- mergebase;
+      Lwt.return (Ok (env, files))
     | Error _ -> Lwt.return (Error "Failed to query initial mergebase from Watchman"))
   | Error _ -> Lwt.return (Error "Failed to initialize watchman")
 
@@ -1061,6 +1146,8 @@ module Testing = struct
           };
         vcs = None;
         should_track_mergebase = false;
+        mergebase = None;
+        finished_an_hg_update = false;
         subscription = "dummy_prefix.123456789";
       }
 
