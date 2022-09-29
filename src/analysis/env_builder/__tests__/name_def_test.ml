@@ -955,3 +955,33 @@ x.push(42);
     (3, 7) to (3, 9) =>
     (2, 4) to (2, 5) =>
     (3, 7) to (3, 9) |}]
+
+let%expect_test "left to right deps" =
+  print_order_test {|
+pipe(
+  "",
+  s => 1,
+  n => "",
+);
+  |};
+  [%expect {|
+    (3, 2) to (3, 4) =>
+    (4, 2) to (4, 3) =>
+    (4, 2) to (4, 8) =>
+    (5, 2) to (5, 3) =>
+    (5, 2) to (5, 9) |}]
+
+let%expect_test "left to right cycles" =
+  print_order_test {|
+let x;
+pipe(
+  "",
+  s => x,
+  n => x = n,
+);
+  |};
+  [%expect {|
+    (4, 2) to (4, 4) =>
+    (5, 2) to (5, 3) =>
+    illegal scc: (((6, 2) to (6, 3)); ((5, 2) to (5, 8)); ((6, 7) to (6, 8))) =>
+    (6, 2) to (6, 12) |}]

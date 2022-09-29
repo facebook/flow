@@ -10,6 +10,7 @@ type ('t, 'targs, 'args) implicit_instantiation_hints = {
   return_hint: ('t, 'targs, 'args) hint;
   targs: 'targs Lazy.t;
   arg_list: 'args Lazy.t;
+  arg_index: int;
 }
 
 and ('t, 'targs, 'args) hint_decomposition =

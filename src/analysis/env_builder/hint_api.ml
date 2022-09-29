@@ -16,6 +16,7 @@ type ('t, 'targs, 'args) implicit_instantiation_hints = {
   return_hint: ('t, 'targs, 'args) hint;
   targs: 'targs Lazy.t;
   arg_list: 'args Lazy.t;
+  arg_index: int;
 }
 
 and ('t, 'targs, 'args) hint_decomposition =
@@ -47,10 +48,10 @@ and ('t, 'targs, 'args) hint_decomposition =
   | Decomp_FuncRest of int (* number of params before rest params *)
   (* Type of function becomes hint on return *)
   | Decomp_FuncReturn
-  (* Type of C in `<C [props]/>` becomes hint on `props` *)
   (* Hint on call `f()` becomes hint on `f`. This is only meant to be used for the
    * case of immediate function call `(function() {})()`. *)
   | Comp_ImmediateFuncCall
+  (* Type of C in `<C [props]/>` becomes hint on `props` *)
   | Decomp_JsxProps
   (* Type of f in f(...) is instantiated with arguments and return hint.
      Returns f if the type of f is not polymorphic. *)
@@ -128,13 +129,14 @@ let rec map_decomp_op ~map_base_hint ~map_targs ~map_arg_list = function
   | Decomp_FuncReturn -> Decomp_FuncReturn
   | Comp_ImmediateFuncCall -> Comp_ImmediateFuncCall
   | Decomp_JsxProps -> Decomp_JsxProps
-  | Decomp_Instantiated { reason; return_hint; targs; arg_list } ->
+  | Decomp_Instantiated { reason; return_hint; targs; arg_list; arg_index } ->
     Decomp_Instantiated
       {
         reason;
         return_hint = map ~map_base_hint ~map_targs ~map_arg_list return_hint;
         targs = Lazy.map map_targs targs;
         arg_list = Lazy.map map_arg_list arg_list;
+        arg_index;
       }
 
 and map ~map_base_hint ~map_targs ~map_arg_list = function

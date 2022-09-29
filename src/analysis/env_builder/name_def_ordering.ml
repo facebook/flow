@@ -421,8 +421,20 @@ struct
         | Hint_api.Hint_Decomp (ops, hint_node) ->
           Nel.fold_left
             (fun acc -> function
-              | Hint_api.Decomp_Instantiated { Hint_api.return_hint; _ } ->
-                depends_of_hint acc return_hint
+              | Hint_api.Decomp_Instantiated { Hint_api.return_hint; arg_list; arg_index; _ } ->
+                let rec loop acc i = function
+                  | [] -> acc
+                  | _ when i >= arg_index -> acc
+                  | arg :: rest ->
+                    let acc =
+                      depends_of_node
+                        (fun visitor -> ignore @@ visitor#expression_or_spread arg)
+                        acc
+                    in
+                    loop acc (i + 1) rest
+                in
+                let (_, { Ast.Expression.ArgList.arguments; comments = _ }) = Lazy.force arg_list in
+                loop (depends_of_hint acc return_hint) 0 arguments
               | _ -> acc)
             (depends_of_hint_node state hint_node)
             ops

@@ -58,3 +58,11 @@ function test5() {
   declare function id<T>(T): T;
   const f1: (string) => string = id(s => (s: string)); // ok
 }
+
+function test6() {
+  declare function call<A>(v: A, f: (A) => void): void
+  call("ss", s => {}); // ok
+
+  declare function pipe<A, B, C>(a: A, f1: A=>B, f2: B=>C): C;
+  const _: string = pipe("s", s => 1, n => "");
+}

@@ -1416,30 +1416,44 @@ class def_finder env_entries providers toplevel_scope =
                 decompose_hint Decomp_MethodElem base_hint)
             | _ -> Hint_t (ValueHint callee)
           in
-          let reason = mk_expression_reason (loc, Ast.Expression.Call expr) in
-          let call_argumemts_hint =
-            decompose_hint
-              (Decomp_Instantiated
-                 {
-                   Hint_api.reason;
-                   return_hint = hint;
-                   targs = lazy targs;
-                   arg_list = lazy arg_list;
-                 }
-              )
-              call_argumemts_hint
+          let call_reason = mk_expression_reason (loc, Ast.Expression.Call expr) in
+          this#visit_call_arguments
+            ~call_reason
+            ~call_argumemts_hint
+            ~return_hint:hint
+            arg_list
+            targs
+
+    method private visit_call_arguments
+        ~call_reason
+        ~call_argumemts_hint
+        ~return_hint
+        ((_, { Ast.Expression.ArgList.arguments; comments = _ }) as arg_list)
+        targs =
+      Base.List.iteri arguments ~f:(fun i arg ->
+          let hint =
+            call_argumemts_hint
+            |> decompose_hint
+                 (Decomp_Instantiated
+                    {
+                      Hint_api.reason = call_reason;
+                      return_hint;
+                      targs = lazy targs;
+                      arg_list = lazy arg_list;
+                      arg_index = i;
+                    }
+                 )
+            |> decompose_hint (Decomp_FuncParam i)
           in
-          Base.List.iteri arguments ~f:(fun i arg ->
-              let hint = decompose_hint (Decomp_FuncParam i) call_argumemts_hint in
-              match arg with
-              | Ast.Expression.Expression expr ->
-                this#visit_expression ~hint ~cond:NonConditionalContext expr
-              | Ast.Expression.Spread (_, spread) ->
-                this#visit_expression
-                  ~hint
-                  ~cond:NonConditionalContext
-                  spread.Ast.Expression.SpreadElement.argument
-          )
+          match arg with
+          | Ast.Expression.Expression expr ->
+            this#visit_expression ~hint ~cond:NonConditionalContext expr
+          | Ast.Expression.Spread (_, spread) ->
+            this#visit_expression
+              ~hint
+              ~cond:NonConditionalContext
+              spread.Ast.Expression.SpreadElement.argument
+      )
 
     method! optional_call _ _ = failwith "Should be visited by visit_optional_call_expression"
 
