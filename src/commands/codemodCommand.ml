@@ -162,7 +162,7 @@ module Annotate_exports_command = struct
 end
 
 module Annotate_lti_command = struct
-  let doc = "Annotates function definitions required for Flow's local type interence."
+  let doc = "Annotates function and class definitions required for Flow's local type interence."
 
   let spec =
     let module Literals = Codemod_hardcoded_ty_fixes.PreserveLiterals in
@@ -170,11 +170,11 @@ module Annotate_lti_command = struct
       Literals.[("always", Always); ("never", Never); ("auto", Auto)]
     in
     {
-      CommandSpec.name = "annotate-lti";
+      CommandSpec.name = "annotate-functions-and-classes";
       doc;
       usage =
         Printf.sprintf
-          "Usage: %s codemod annotate-lti [OPTION]... [FILE]\n\n%s\n"
+          "Usage: %s codemod annotate-functions-and-classes [OPTION]... [FILE]\n\n%s\n"
           Utils_js.exe_name
           doc;
       args =

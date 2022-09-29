@@ -1,0 +1,1 @@
+cmd: codemod annotate-functions-and-classes --strip-root --quiet --max-type-size 2 --default-any --preserve-literals auto ./
