@@ -86,31 +86,42 @@ let mapper
 
     method! call loc expr =
       let expr = super#call loc expr in
-      if LSet.mem loc loc_error_set then
-        let open Ast.Expression.Call in
-        match LMap.find_opt loc implicit_instantiation_results with
-        | None -> expr
-        | Some targ_tys ->
-          let targs =
-            {
-              Ast.Expression.CallTypeArgs.comments = None;
-              arguments =
-                List.map
-                  (fun ty ->
-                    match ty with
-                    | None -> Ast.Expression.CallTypeArg.Explicit flowfixme_ast
-                    | Some ty ->
-                      (match
-                         this#get_annot loc (ty >>= this#fix_and_validate loc) (Ast.Type.Missing loc)
-                       with
-                      | Ast.Type.Available (_, t) -> Ast.Expression.CallTypeArg.Explicit t
-                      | Ast.Type.Missing _ -> Ast.Expression.CallTypeArg.Explicit flowfixme_ast))
-                  targ_tys;
-            }
-          in
-          { expr with targs = Some (loc, targs) }
-      else
-        expr
+      let targs = this#get_implicit_instantiation_results loc in
+      let open Ast.Expression.Call in
+      match targs with
+      | Some targs -> { expr with targs = Some targs }
+      | None -> expr
+
+    method! new_ loc expr =
+      let expr = super#new_ loc expr in
+      let targs = this#get_implicit_instantiation_results loc in
+      let open Ast.Expression.New in
+      match targs with
+      | Some targs -> { expr with targs = Some targs }
+      | None -> expr
+
+    method private get_implicit_instantiation_results loc =
+      match LMap.find_opt loc implicit_instantiation_results with
+      | None -> None
+      | Some targ_tys ->
+        let targs =
+          {
+            Ast.Expression.CallTypeArgs.comments = None;
+            arguments =
+              List.map
+                (fun ty ->
+                  match ty with
+                  | None -> Ast.Expression.CallTypeArg.Explicit flowfixme_ast
+                  | Some ty ->
+                    (match
+                       this#get_annot loc (ty >>= this#fix_and_validate loc) (Ast.Type.Missing loc)
+                     with
+                    | Ast.Type.Available (_, t) -> Ast.Expression.CallTypeArg.Explicit t
+                    | Ast.Type.Missing _ -> Ast.Expression.CallTypeArg.Explicit flowfixme_ast))
+                targ_tys;
+          }
+        in
+        Some (loc, targs)
 
     method private init_loc_error_set =
       loc_error_set <-

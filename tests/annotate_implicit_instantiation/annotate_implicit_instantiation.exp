@@ -1,4 +1,4 @@
->>> implicit_instantiation.js (#changes: 2)
+>>> implicit_instantiation.js (#changes: 3)
 //@flow
 import type { Opaque } from "./opaque";import {x} from './opaque';
 declare function f<T>(): {x: T}
@@ -6,7 +6,7 @@ const a = f<Opaque>();
 a.x = x;
 
 
-const map = new Map();
+const map = new Map<string, number>();
 map.set('x', 3);
 
 >>> speculation.js (#changes: 2)
@@ -25,8 +25,8 @@ str.add('str')
 
 Stats:
   Files changed:                            2
-  Number of annotations added:              3
-  Total size of annotations:                3
+  Number of annotations added:              4
+  Total size of annotations:                4
 
 Errors:
   Missing annot./normalizer error:          0
