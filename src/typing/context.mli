@@ -275,6 +275,8 @@ val voidable_checks : t -> voidable_check list
 
 val implicit_instantiation_checks : t -> Implicit_instantiation_check.t list
 
+val implicit_instantiation_results : t -> Type.t list ALocFuzzyMap.t
+
 val inferred_indexers : t -> Type.dicttype list ALocMap.t
 
 val environment : t -> Loc_env.t
@@ -336,6 +338,8 @@ val add_constrained_write : t -> Type.t * Type.use_op * Type.t -> unit
 val add_call_arg_lower_bound : t -> ALoc.t -> Type.t -> unit
 
 val add_voidable_check : t -> voidable_check -> unit
+
+val add_possibly_speculating_implicit_instantiation_result : t -> ALoc.t -> Type.t list -> unit
 
 val add_implicit_instantiation_check : t -> Implicit_instantiation_check.t -> unit
 

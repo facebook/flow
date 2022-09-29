@@ -158,6 +158,7 @@ type component_t = {
   mutable literal_subtypes: (ALoc.t * Env_api.literal_check) list;
   mutable matching_props: (string * ALoc.t * ALoc.t) list;
   mutable implicit_instantiation_checks: Implicit_instantiation_check.t list;
+  mutable implicit_instantiation_results: Type.t list ALocFuzzyMap.t;
   mutable inferred_indexers: Type.dicttype list ALocMap.t;
   mutable constrained_writes: (Type.t * Type.use_op * Type.t) list;
   mutable global_value_cache: Type.t NameUtils.Map.t;
@@ -330,6 +331,7 @@ let make_ccx master_cx =
     exists_excuses = ALocMap.empty;
     voidable_checks = [];
     implicit_instantiation_checks = [];
+    implicit_instantiation_results = ALocFuzzyMap.empty;
     inferred_indexers = ALocMap.empty;
     test_prop_hits_and_misses = IMap.empty;
     computed_property_states = IMap.empty;
@@ -576,6 +578,8 @@ let voidable_checks cx = cx.ccx.voidable_checks
 
 let implicit_instantiation_checks cx = cx.ccx.implicit_instantiation_checks
 
+let implicit_instantiation_results cx = cx.ccx.implicit_instantiation_results
+
 let inferred_indexers cx = cx.ccx.inferred_indexers
 
 let environment cx = cx.environment
@@ -676,8 +680,20 @@ let add_env_cache_entry cx ~for_value id t =
 let add_voidable_check cx voidable_check =
   cx.ccx.voidable_checks <- voidable_check :: cx.ccx.voidable_checks
 
+let add_implicit_instantiation_result cx loc result =
+  cx.ccx.implicit_instantiation_results <-
+    ALocFuzzyMap.add loc result cx.ccx.implicit_instantiation_results
+
 let add_implicit_instantiation_check cx check =
   cx.ccx.implicit_instantiation_checks <- check :: cx.ccx.implicit_instantiation_checks
+
+let add_possibly_speculating_implicit_instantiation_result cx loc result =
+  let speculation_state = cx.ccx.speculation_state in
+  match !speculation_state with
+  | [] when cx.metadata.save_implicit_instantiation_results ->
+    add_implicit_instantiation_result cx loc result
+  | _ -> ()
+(*TODO: Speculative implicit instantiations *)
 
 let add_possibly_speculating_implicit_instantiation_check cx check =
   let open Speculation_state in
