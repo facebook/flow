@@ -5,6 +5,8 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
+module ALocFuzzyMap = Loc_collections.ALocFuzzyMap
+
 (* First up, a model for flow and unify actions that are deferred during
    speculative matching (and possibly fired afterwards). *)
 type action =
@@ -38,6 +40,7 @@ type case = {
   mutable unresolved: ISet.t;
   mutable actions: extended_action list;
   mutable implicit_instantiation_post_inference_checks: Implicit_instantiation_check.t list;
+  mutable implicit_instantiation_results: Type.t list ALocFuzzyMap.t;
   lhs_t: Type.t;
   use_t: Type.use_t;
 }

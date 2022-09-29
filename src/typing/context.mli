@@ -339,6 +339,8 @@ val add_call_arg_lower_bound : t -> ALoc.t -> Type.t -> unit
 
 val add_voidable_check : t -> voidable_check -> unit
 
+val add_implicit_instantiation_result : t -> ALoc.t -> Type.t list -> unit
+
 val add_possibly_speculating_implicit_instantiation_result : t -> ALoc.t -> Type.t list -> unit
 
 val add_implicit_instantiation_check : t -> Implicit_instantiation_check.t -> unit

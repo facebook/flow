@@ -9,12 +9,24 @@ a.x = x;
 const map = new Map();
 map.set('x', 3);
 
+>>> speculation.js (#changes: 2)
+//@flow
+
+declare function f<T>(x: number): Map<string, T>;
+declare function f<T>(x: string): Set<T>;
+
+let num = f<number>(3);
+num.set('str', 3);
+
+let str = f<string>('str');
+str.add('str')
+
 >>> Launching report...
 
 Stats:
-  Files changed:                            1
-  Number of annotations added:              1
-  Total size of annotations:                1
+  Files changed:                            2
+  Number of annotations added:              3
+  Total size of annotations:                3
 
 Errors:
   Missing annot./normalizer error:          0

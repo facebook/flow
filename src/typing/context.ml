@@ -692,6 +692,9 @@ let add_possibly_speculating_implicit_instantiation_result cx loc result =
   match !speculation_state with
   | [] when cx.metadata.save_implicit_instantiation_results ->
     add_implicit_instantiation_result cx loc result
+  | Speculation_state.{ case; _ } :: _ when cx.metadata.save_implicit_instantiation_results ->
+    case.Speculation_state.implicit_instantiation_results <-
+      ALocFuzzyMap.add loc result case.Speculation_state.implicit_instantiation_results
   | _ -> ()
 (*TODO: Speculative implicit instantiations *)
 
