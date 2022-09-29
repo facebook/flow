@@ -2377,6 +2377,13 @@ module Make
     | Array { Array.elements; comments } ->
       let reason = mk_reason RArrayLit loc in
       (match elements with
+      | [] when Context.in_synthesis_mode cx ->
+        let reason = replace_desc_reason REmptyArrayLit reason in
+        let element_reason = mk_reason Reason.unknown_elem_empty_array_desc loc in
+        let elemt = Tvar.mk_placeholder cx element_reason in
+        ( (loc, DefT (reason, make_trust (), ArrT (ArrayAT (elemt, Some [])))),
+          Array { Array.elements = []; comments }
+        )
       | [] ->
         let reason = replace_desc_reason REmptyArrayLit reason in
         let element_reason = mk_reason Reason.unknown_elem_empty_array_desc loc in

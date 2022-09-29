@@ -172,5 +172,13 @@ Cannot determine type of empty array literal. Please provide an annotation. [mis
        ^^
 
 
+Error ----------------------------------------------------------------------------------------------------- lits.js:14:1
 
-Found 13 errors
+Cannot determine type of empty array literal. Please provide an annotation. [missing-empty-array-annot]
+
+   14| [].concat([]); // err, but no divergence
+       ^^
+
+
+
+Found 14 errors
