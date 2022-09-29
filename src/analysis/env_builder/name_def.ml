@@ -1467,28 +1467,20 @@ class def_finder env_entries providers toplevel_scope =
         ~cond
         ~visit_callee:(this#visit_expression ~cond:NonConditionalContext)
 
-    method! new_ _ expr =
+    method! new_ _ _ = failwith "Should be visited by visit_new_expression"
+
+    method visit_new_expression ~hint loc expr =
       let { Ast.Expression.New.callee; targs; arguments; comments = _ } = expr in
       this#visit_expression ~hint:Hint_None ~cond:NonConditionalContext callee;
       Base.Option.iter targs ~f:(fun targs -> ignore @@ this#call_type_args targs);
       let call_argumemts_hint = decompose_hint Decomp_CallNew (Hint_t (ValueHint callee)) in
-      arguments
-      |> Base.Option.value_map
-           ~default:[]
-           ~f:(fun (_, { Ast.Expression.ArgList.arguments; comments = _ }) -> arguments
-         )
-      |> Base.List.iteri ~f:(fun i arg ->
-             let hint = decompose_hint (Decomp_FuncParam i) call_argumemts_hint in
-             match arg with
-             | Ast.Expression.Expression expr ->
-               this#visit_expression ~hint ~cond:NonConditionalContext expr
-             | Ast.Expression.Spread (_, spread) ->
-               this#visit_expression
-                 ~hint
-                 ~cond:NonConditionalContext
-                 spread.Ast.Expression.SpreadElement.argument
-         );
-      expr
+      let arg_list =
+        Base.Option.value
+          arguments
+          ~default:(fst callee, { Ast.Expression.ArgList.arguments = []; comments = None })
+      in
+      let call_reason = mk_expression_reason (loc, Ast.Expression.New expr) in
+      this#visit_call_arguments ~call_reason ~call_argumemts_hint ~return_hint:hint arg_list targs
 
     method! member _ _ = failwith "Should be visited by visit_member_expression"
 
@@ -1683,6 +1675,7 @@ class def_finder env_entries providers toplevel_scope =
         let visit_callee = this#visit_expression ~cond:NonConditionalContext in
         this#visit_call_expression ~hint ~cond ~visit_callee loc expr
       | Ast.Expression.OptionalCall expr -> this#visit_optional_call_expression ~hint ~cond loc expr
+      | Ast.Expression.New expr -> this#visit_new_expression ~hint loc expr
       | Ast.Expression.Unary expr -> this#visit_unary_expression ~hint expr
       | Ast.Expression.Conditional expr -> this#visit_conditional ~hint expr
       | Ast.Expression.Class _
@@ -1694,7 +1687,6 @@ class def_finder env_entries providers toplevel_scope =
       | Ast.Expression.JSXFragment _
       | Ast.Expression.Literal _
       | Ast.Expression.MetaProperty _
-      | Ast.Expression.New _
       | Ast.Expression.Sequence _
       | Ast.Expression.Super _
       | Ast.Expression.TaggedTemplate _

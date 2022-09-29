@@ -530,12 +530,32 @@ let eval_hint_tests =
             );
     "call_new_from_class"
     >:: mk_eval_hint_test_with_type_setup
-          ~expected:"(bar: number, baz: boolean) => void"
+          ~expected:"(bar: number, baz: boolean) => Foo"
           "class Foo { constructor(bar: number, baz: boolean) {} }; Foo"
+          [Decomp_CallNew];
+    "call_new_from_class_default_ctor"
+    >:: mk_eval_hint_test_with_type_setup
+          ~expected:"() => Foo"
+          "class Foo { }; Foo"
+          [Decomp_CallNew];
+    "call_new_from_class_polymorphic"
+    >:: mk_eval_hint_test_with_type_setup
+          ~expected:"<A, T>(a: A, t: T) => Foo<A>"
+          "declare class Foo<A> { constructor<T>(a: A, t: T): void }; Foo"
+          [Decomp_CallNew];
+    "call_new_from_class_overload"
+    >:: mk_eval_hint_test_with_type_setup
+          ~expected:"(<A>(a: A, t: number) => Foo<A>) & (<A>(a: A) => Foo<A>)"
+          "declare class Foo<A> { constructor(a: A, t: number): void; constructor(a: A): void; }; Foo"
+          [Decomp_CallNew];
+    "call_new_from_class_polymorphic_overload"
+    >:: mk_eval_hint_test_with_type_setup
+          ~expected:"(<A, T>(a: A, t: T) => Foo<A>) & (<A, T>(a: A) => Foo<A>)"
+          "declare class Foo<A> { constructor<T>(a: A, t: T): void; constructor<T>(a: A): void; }; Foo"
           [Decomp_CallNew];
     "call_super"
     >:: mk_eval_hint_test_with_type_setup
-          ~expected:"(bar: number, baz: boolean) => void"
+          ~expected:"(bar: number, baz: boolean) => Foo"
           "class Foo { constructor(bar: number, baz: boolean) {} }; new Foo()"
           [Decomp_CallSuper];
     "jsx_props_of_class_component"

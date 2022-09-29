@@ -57,6 +57,23 @@ function test4() {
 function test5() {
   declare function id<T>(T): T;
   const f1: (string) => string = id(s => (s: string)); // ok
+
+  declare class A<T> {
+    constructor(T): void
+  }
+  const a: A<string=>string> = new A(x => x); // OK
+
+  declare class B<T> {
+    constructor<V>(T): void
+  }
+  const b: B<string=>string> = new B(x => x); // OK
+
+  declare class C<T> {
+    constructor(T, number): void;
+    constructor(T): void;
+  }
+  const c1: C<string=>string> = new C(x => x); // OK
+  const c2: C<string=>string> = new C(x => x, 1); // OK
 }
 
 function test6() {
@@ -65,4 +82,9 @@ function test6() {
 
   declare function pipe<A, B, C>(a: A, f1: A=>B, f2: B=>C): C;
   const _: string = pipe("s", s => 1, n => "");
+
+  declare class Pipe<A, B> {
+    constructor(a: A, f1: A=>B, f2: B=>void): void
+  }
+  new Pipe("s", s => 1, n => {}); // OK
 }

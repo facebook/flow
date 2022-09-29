@@ -145,6 +145,55 @@ and type_of_hint_decomposition cx op reason t =
     )
   in
 
+  let map_intersection t ~f =
+    match get_t cx t with
+    | IntersectionT (r, rep) -> IntersectionT (r, InterRep.map (fun t -> f (get_t cx t)) rep)
+    | t -> f t
+  in
+
+  let get_constructor_type t =
+    let get_constructor_method_type t =
+      get_method_type t (Named (reason, OrdinaryName "constructor"))
+    in
+    let mod_ctor_return instance_type = function
+      | DefT
+          ( reason,
+            trust,
+            FunT (static, { this_t; params; rest_param; return_t = _; is_predicate; def_reason })
+          ) ->
+        DefT
+          ( reason,
+            trust,
+            FunT
+              ( static,
+                { this_t; params; rest_param; return_t = instance_type; is_predicate; def_reason }
+              )
+          )
+      | t -> get_t cx t
+    in
+    match get_t cx t with
+    | DefT (_, trust, PolyT { tparams_loc; tparams; t_out = instance_type; id = _ }) ->
+      map_intersection (get_constructor_method_type instance_type) ~f:(function
+          | DefT (_, trust, PolyT { tparams_loc; tparams = tparams2; t_out; id = _ }) ->
+            let t_out = mod_ctor_return instance_type t_out in
+            DefT
+              ( reason,
+                trust,
+                PolyT
+                  {
+                    tparams_loc;
+                    tparams = Nel.append tparams tparams2;
+                    t_out;
+                    id = Poly.generate_id ();
+                  }
+              )
+          | t_out ->
+            let t_out = mod_ctor_return instance_type t_out in
+            DefT (reason, trust, PolyT { tparams_loc; tparams; t_out; id = Poly.generate_id () })
+          )
+    | t -> map_intersection (get_constructor_method_type t) ~f:(mod_ctor_return t)
+  in
+
   in_sandbox_cx cx t ~f:(fun t ->
       match op with
       | Decomp_ArrElement i ->
@@ -182,13 +231,24 @@ and type_of_hint_decomposition cx op reason t =
         (* For `new A(...)`, The initial base type we have is `Class<A>`. We need to first unwrap
            it, so that we can access the `constructor` method (which is considered an instance
            method). *)
-        let this_t =
+        let get_this_t t =
           Tvar.mk_where cx reason (fun t' ->
               Flow_js.unify cx t (DefT (reason, bogus_trust (), ClassT t'))
           )
+          |> get_t cx
         in
-        get_method_type this_t (Named (reason, OrdinaryName "constructor"))
-      | Decomp_CallSuper -> get_method_type t (Named (reason, OrdinaryName "constructor"))
+        let this_t =
+          match get_t cx t with
+          | DefT (reason, trust, PolyT { tparams_loc; tparams; t_out; id = _ }) ->
+            DefT
+              ( reason,
+                trust,
+                PolyT { tparams_loc; tparams; t_out = get_this_t t_out; id = Poly.generate_id () }
+              )
+          | t -> get_this_t t
+        in
+        get_constructor_type this_t
+      | Decomp_CallSuper -> get_constructor_type t
       | Decomp_FuncParam i ->
         Tvar.mk_where cx reason (fun param_t ->
             let params =
