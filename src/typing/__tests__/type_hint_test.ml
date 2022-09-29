@@ -51,6 +51,7 @@ let metadata =
     relay_integration_module_prefix_includes = [];
     root = Path.dummy_path;
     run_post_inference_implicit_instantiation = false;
+    save_implicit_instantiation_results = false;
     strict_es6_import_export = false;
     strict_es6_import_export_excludes = [];
     strip_root = true;

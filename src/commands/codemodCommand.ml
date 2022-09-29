@@ -575,7 +575,12 @@ module Annotate_implicit_instantiation = struct
 
       let reporter = string_reporter (module Acc)
 
-      let check_options o = Options.{ o with opt_run_post_inference_implicit_instantiation = true }
+      let check_options o =
+        {
+          o with
+          Options.opt_run_post_inference_implicit_instantiation = true;
+          opt_save_implicit_instantiation_results = true;
+        }
 
       let visit =
         let mapper =

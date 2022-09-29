@@ -60,6 +60,9 @@ type metadata = {
   relay_integration_module_prefix_includes: Str.regexp list;
   root: Path.t;
   run_post_inference_implicit_instantiation: bool;
+  (* save_implicit_instantiation_results is used for the implicit instantiation
+   * annotation codemod *)
+  save_implicit_instantiation_results: bool;
   strict_es6_import_export: bool;
   strict_es6_import_export_excludes: string list;
   strip_root: bool;
@@ -243,6 +246,7 @@ let metadata_of_options options =
     root = Options.root options;
     run_post_inference_implicit_instantiation =
       Options.run_post_inference_implicit_instantiation options;
+    save_implicit_instantiation_results = Options.save_implicit_instantiation_results options;
     strict_es6_import_export = Options.strict_es6_import_export options;
     strict_es6_import_export_excludes = Options.strict_es6_import_export_excludes options;
     strip_root = Options.should_strip_root options;

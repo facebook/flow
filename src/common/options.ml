@@ -128,6 +128,7 @@ type t = {
   opt_root: Path.t;
   opt_root_name: string option;
   opt_run_post_inference_implicit_instantiation: bool;
+  opt_save_implicit_instantiation_results: bool;
   opt_saved_state_fetcher: saved_state_fetcher;
   opt_saved_state_force_recheck: bool;
   opt_saved_state_no_fallback: bool;
@@ -281,6 +282,8 @@ let root_name opts = opts.opt_root_name
 
 let run_post_inference_implicit_instantiation opts =
   opts.opt_run_post_inference_implicit_instantiation
+
+let save_implicit_instantiation_results opts = opts.opt_save_implicit_instantiation_results
 
 let saved_state_fetcher opts = opts.opt_saved_state_fetcher
 

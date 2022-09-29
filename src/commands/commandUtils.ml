@@ -1350,6 +1350,7 @@ let make_options
     opt_cycle_errors = FlowConfig.cycle_errors flowconfig;
     opt_run_post_inference_implicit_instantiation =
       FlowConfig.run_post_inference_implicit_instantiation flowconfig;
+    opt_save_implicit_instantiation_results = false;
     opt_enforce_strict_call_arity = FlowConfig.enforce_strict_call_arity flowconfig;
     opt_enums = FlowConfig.enums flowconfig;
     opt_env_mode = Base.Option.value options_flags.env_mode ~default:(FlowConfig.env_mode flowconfig);
