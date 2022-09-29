@@ -1,3 +1,11 @@
+### 0.188.1
+
+Bug fixes:
+* Fix a crash when querying hg
+
+Misc:
+* We renamed the codemod command `flow codemod annotate-lti` to `flow codemod annotate-functions-and-classes` to clarify that this is not the only codemod necessary for enabling LTI eventually.
+
 ### 0.188.0
 
 Likely to cause new Flow errors:
