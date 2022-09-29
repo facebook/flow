@@ -923,6 +923,11 @@ module Instantiation_kit (H : Instantiation_helper_sig) = struct
   (* Instantiate a polymorphic definition by creating fresh type arguments. *)
   let instantiate_poly cx trace ~use_op ~reason_op ~reason_tapp ?cache (tparams_loc, xs, t) =
     let ts = xs |> Nel.map (fun typeparam -> mk_targ cx typeparam reason_op reason_tapp) in
+    let result = Nel.to_list ts in
+    Context.add_possibly_speculating_implicit_instantiation_result
+      cx
+      (Reason.aloc_of_reason reason_op)
+      result;
     instantiate_poly_with_targs
       cx
       trace
