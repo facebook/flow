@@ -3870,6 +3870,26 @@ module Make
           this#havoc_current_env ~all:false;
         expr
 
+      method! call_arguments arg_list =
+        ( if Context.env_mode cx = Options.LTI then
+          let (_, { Ast.Expression.ArgList.arguments; comments = _ }) = arg_list in
+          Base.List.iter arguments ~f:(fun arg ->
+              let expr =
+                match arg with
+                | Ast.Expression.Expression expr -> expr
+                | Ast.Expression.Spread (_, spread) -> spread.Ast.Expression.SpreadElement.argument
+              in
+              let write_entries =
+                EnvMap.add
+                  (Env_api.ExpressionLoc, fst expr)
+                  (Env_api.AssigningWrite (Reason.mk_expression_reason expr))
+                  env_state.write_entries
+              in
+              env_state <- { env_state with write_entries }
+          )
+        );
+        super#call_arguments arg_list
+
       method! new_ loc (expr : (ALoc.t, ALoc.t) Ast.Expression.New.t) =
         ignore @@ super#new_ loc expr;
         this#havoc_current_env ~all:false;

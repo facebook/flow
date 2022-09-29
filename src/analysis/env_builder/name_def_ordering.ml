@@ -661,8 +661,8 @@ struct
       in
       function
       | Binding binding -> depends_of_binding binding
-      | RefiExpression exp
-      | ChainExpression (_, exp) ->
+      | ChainExpression (_, exp)
+      | WriteExpression (_, exp) ->
         depends_of_expression ~for_expression_writes:true exp EnvMap.empty
       | Update _ -> depends_of_update None
       | MemberAssign { member_loc; member; rhs; _ } ->
@@ -734,8 +734,8 @@ struct
       | DeclaredClass _
       | DeclaredModule _ ->
         true
-      | RefiExpression _
       | ChainExpression _
+      | WriteExpression _
       | Update _
       | MemberAssign _
       | OpAssign _
@@ -778,8 +778,8 @@ struct
     | Import _
     | Class _
     | DeclaredClass _
-    | RefiExpression _
     | ChainExpression _
+    | WriteExpression _
     | DeclaredModule _
     | GeneratorNext (Some _) ->
       None

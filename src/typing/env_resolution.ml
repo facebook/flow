@@ -678,6 +678,17 @@ let resolve_chain_expression cx ~cond exp =
   Node_cache.set_expression cache exp;
   (t, unknown_use)
 
+let resolve_write_expression cx ~cond exp =
+  let cache = Context.node_cache cx in
+  let cond =
+    match cond with
+    | NonConditionalContext -> None
+    | OtherConditionalTest -> Some OtherTest
+  in
+  let (((_, t), _) as exp) = Statement.expression ?cond cx exp in
+  Node_cache.set_expression cache exp;
+  (t, unknown_use)
+
 let resolve_generator_next cx reason gen =
   let open TypeUtil in
   match gen with
@@ -727,7 +738,7 @@ let resolve cx (def_kind, id_loc) (def, def_scope_kind, class_stack, def_reason)
     match def with
     | Binding b -> resolve_binding cx def_reason id_loc b
     | ChainExpression (cond, e) -> resolve_chain_expression cx ~cond e
-    | RefiExpression e -> (expression cx e, unknown_use)
+    | WriteExpression (cond, e) -> resolve_write_expression cx ~cond e
     | Function
         {
           function_;
@@ -769,7 +780,7 @@ let resolve cx (def_kind, id_loc) (def, def_scope_kind, class_stack, def_reason)
   let update_reason =
     match def with
     | ChainExpression _
-    | RefiExpression _
+    | WriteExpression _
     | Binding (Root (SynthesizableObject _)) ->
       true
     | _ -> false

@@ -138,7 +138,7 @@ type function_synth_kind =
 type def =
   | Binding of binding
   | ChainExpression of cond_context * (ALoc.t, ALoc.t) Ast.Expression.t
-  | RefiExpression of (ALoc.t, ALoc.t) Ast.Expression.t
+  | WriteExpression of cond_context * (ALoc.t, ALoc.t) Ast.Expression.t
   | MemberAssign of {
       member_loc: ALoc.t;
       member: (ALoc.t, ALoc.t) Ast.Expression.Member.t;
@@ -228,7 +228,7 @@ module Print = struct
   let string_of_source = function
     | Binding b -> string_of_binding b
     | ChainExpression _ -> spf "heap"
-    | RefiExpression _ -> spf "exp"
+    | WriteExpression _ -> spf "exp"
     | Update _ -> "[in/de]crement"
     | MemberAssign _ -> "member_assign"
     | OpAssign _ -> "opassign"

@@ -399,7 +399,8 @@ x = 42;
     (6, 4) to (6, 5) =>
     (10, 0) to (10, 1) =>
     (3, 2) to (3, 3) =>
-    (2, 9) to (2, 21) |}]
+    (2, 9) to (2, 21) =>
+    (8, 10) to (8, 31) |}]
 
 let%expect_test "typeof1" =
   print_order_test {|
@@ -588,7 +589,8 @@ if (f(x)) {
   |};
   [%expect {|
     (3, 12) to (3, 13) =>
-    illegal scc: (((2, 9) to (2, 10)); ((7, 2) to (7, 3))) |}]
+    illegal scc: (((2, 9) to (2, 10)); ((7, 2) to (7, 3))) =>
+    (6, 6) to (6, 7) |}]
 
 let%expect_test "refi_sentinel" =
   print_order_test {|
@@ -924,7 +926,8 @@ x.push(42);
     (4, 6) to (4, 7) =>
     (3, 9) to (3, 10) =>
     (7, 2) to (7, 3) =>
-    (6, 9) to (6, 10) |}]
+    (6, 9) to (6, 10) =>
+    (9, 7) to (9, 9) |}]
 
 let%expect_test "declare module" =
   print_order_test {|
@@ -950,4 +953,5 @@ x.push(42);
   |};
   [%expect {|
     (3, 7) to (3, 9) =>
-    (2, 4) to (2, 5) |}]
+    (2, 4) to (2, 5) =>
+    (3, 7) to (3, 9) |}]

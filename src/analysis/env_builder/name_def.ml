@@ -1633,13 +1633,13 @@ class def_finder env_entries providers toplevel_scope =
       begin
         match EnvMap.find_opt (Env_api.ExpressionLoc, loc) env_entries with
         | Some (Env_api.AssigningWrite reason) ->
-          this#add_binding (Env_api.ExpressionLoc, loc) reason (RefiExpression exp)
+          this#add_binding (Env_api.ExpressionLoc, loc) reason (WriteExpression (cond, exp))
         | _ -> ()
       end;
       let hint =
         match EnvMap.find_opt (Env_api.ArrayProviderLoc, loc) env_entries with
         | Some (Env_api.AssigningWrite reason) ->
-          this#add_binding (Env_api.ArrayProviderLoc, loc) reason (RefiExpression exp);
+          this#add_binding (Env_api.ArrayProviderLoc, loc) reason (WriteExpression (cond, exp));
           Hint_None
         | _ -> hint
       in
