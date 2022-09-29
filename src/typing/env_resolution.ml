@@ -321,11 +321,13 @@ let rec resolve_binding_partial cx reason loc b =
         in
         Context.add_constrained_write cx (elem_t, use_op, constrain_t);
         (elem_t, None, reason)
-      ) else (
-        if Context.array_literal_providers cx then
+      ) else
+        let elemt = Tvar.mk cx element_reason in
+        if Context.array_literal_providers cx then begin
           Flow_js.add_output cx Error_message.(EEmptyArrayNoProvider { loc });
-        (Tvar.mk cx element_reason, Some [], replace_desc_reason REmptyArrayLit reason)
-      )
+          if Context.env_mode cx = Options.LTI then Flow_js.flow_t cx (AnyT.error reason, elemt)
+        end;
+        (elemt, Some [], replace_desc_reason REmptyArrayLit reason)
     in
     let t = DefT (reason, bogus_trust (), ArrT (ArrayAT (elem_t, elems))) in
     let cache = Context.node_cache cx in

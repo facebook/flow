@@ -141,5 +141,36 @@ An annotation on `y` is required because Flow cannot infer its type from local c
                 ^
 
 
+Error ------------------------------------------------------------------------------------------------------ lits.js:3:5
 
-Found 10 errors
+Cannot determine type of empty array literal. Please provide an annotation. [missing-empty-array-annot]
+
+   3| let h = []; // err
+          ^
+
+
+Error ----------------------------------------------------------------------------------------------------- lits.js:8:19
+
+Cannot assign array literal to `u` because empty array literal [1] has an arity of 0 but tuple type [2] has an arity of
+1. [invalid-tuple-arity]
+
+   lits.js:8:19
+   8| let u: [number] = []; // err
+                        ^^ [1]
+
+References:
+   lits.js:8:8
+   8| let u: [number] = []; // err
+             ^^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- lits.js:11:1
+
+Cannot determine type of empty array literal. Please provide an annotation. [missing-empty-array-annot]
+
+   11| []; //err
+       ^^
+
+
+
+Found 13 errors

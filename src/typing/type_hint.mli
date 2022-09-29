@@ -10,3 +10,5 @@ val evaluate_hint :
   Reason.t ->
   (Type.t, Type.targ list option, Type.call_arg list) Hint_api.hint ->
   Type.t option
+
+val sandbox_flow_succeeds : Context.t -> Type.t * Type.t -> bool

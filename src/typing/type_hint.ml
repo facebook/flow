@@ -282,3 +282,14 @@ and evaluate_hint cx reason hint =
   | Hint_Placeholder -> Some (AnyT.annot (mk_reason (RCustom "placeholder hint") ALoc.none))
   | Hint_t t -> evaluate_hint_ops cx reason t []
   | Hint_Decomp (ops, t) -> ops |> Nel.to_list |> List.rev |> evaluate_hint_ops cx reason t
+
+let sandbox_flow_succeeds cx (t1, t2) =
+  let original_errors = Context.errors cx in
+  Flow_js.flow_t cx (t1, t2);
+  let new_errors = Context.errors cx in
+  if Flow_error.ErrorSet.equal original_errors new_errors then
+    true
+  else (
+    Context.reset_errors cx original_errors;
+    false
+  )

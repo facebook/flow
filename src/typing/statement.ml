@@ -2378,12 +2378,34 @@ module Make
       let reason = mk_reason RArrayLit loc in
       (match elements with
       | [] ->
-        (* empty array, analogous to object with implicit properties *)
-        if Context.array_literal_providers cx && not (Env.has_hint cx loc) then
-          Flow_js.add_output cx Error_message.(EEmptyArrayNoProvider { loc });
-        let element_reason = mk_reason Reason.unknown_elem_empty_array_desc loc in
-        let elemt = Tvar.mk cx element_reason in
         let reason = replace_desc_reason REmptyArrayLit reason in
+        let element_reason = mk_reason Reason.unknown_elem_empty_array_desc loc in
+        let (has_hint, lazy_hint) = Env.get_hint cx loc in
+        let elemt = Tvar.mk cx element_reason in
+        (* empty array, analogous to object with implicit properties *)
+        ( if Context.array_literal_providers cx then
+          if not has_hint then begin
+            Flow_js.add_output cx Error_message.(EEmptyArrayNoProvider { loc });
+            if Context.env_mode cx = Options.LTI then
+              Flow.flow_t cx (AnyT.at (AnyError None) loc, elemt)
+          end else
+            let default_init () =
+              if Context.env_mode cx = Options.LTI then Flow.flow_t cx (AnyT.at Untyped loc, elemt)
+            in
+            match lazy_hint element_reason with
+            | None ->
+              (* If there's a hint, but the hint doesn't provide a type for this array, then this type will never be read from *)
+              default_init ()
+            | Some hint ->
+              if
+                Type_hint.sandbox_flow_succeeds
+                  cx
+                  (DefT (reason, make_trust (), ArrT (ArrayAT (elemt, Some []))), hint)
+              then
+                ()
+              else
+                default_init ()
+        );
         ( (loc, DefT (reason, make_trust (), ArrT (ArrayAT (elemt, Some [])))),
           Array { Array.elements = []; comments }
         )
