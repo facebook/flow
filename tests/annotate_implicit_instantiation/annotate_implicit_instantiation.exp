@@ -9,6 +9,9 @@ a.x = x;
 const map = new Map<string, number>();
 map.set('x', 3);
 
+declare function id<T>(x:T): T;
+const b = id(3); // ok!
+
 >>> speculation.js (#changes: 2)
 //@flow
 

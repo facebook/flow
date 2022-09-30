@@ -102,8 +102,7 @@ let mapper
 
     method private get_implicit_instantiation_results loc =
       match LMap.find_opt loc implicit_instantiation_results with
-      | None -> None
-      | Some targ_tys ->
+      | Some targ_tys when LSet.mem loc loc_error_set ->
         let targs =
           {
             Ast.Expression.CallTypeArgs.comments = None;
@@ -122,6 +121,7 @@ let mapper
           }
         in
         Some (loc, targs)
+      | _ -> None
 
     method private init_loc_error_set =
       loc_error_set <-
