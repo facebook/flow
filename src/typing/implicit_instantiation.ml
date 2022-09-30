@@ -159,18 +159,29 @@ struct
               ResolveSpreadsToMultiflowSubtypeFull (_, { params; rest_param = None; _ });
           }
         ) ->
-      let tuple_members = params |> List.map (fun param -> snd param) in
-      let general =
-        match tuple_members with
-        | [] -> EmptyT.why reason |> with_trust bogus_trust
-        | [t] -> t
-        | t0 :: t1 :: ts -> UnionT (reason, UnionRep.make t0 t1 ts)
-      in
-      let tuple = TupleAT (general, tuple_members) in
-      let solution = DefT (reason, bogus_trust (), ArrT tuple) in
-      Flow.flow_t cx (solution, tvar);
-      UpperT solution
+      reverse_resolve_spread_multiflow_subtype_full_no_resolution cx tvar reason params
+    | ObjKitT (_, r, _, Object.ReactConfig _, props) -> reverse_obj_kit_react_config cx tvar r props
     | _ -> UpperNonT u
+
+  and reverse_obj_kit_react_config cx tvar r props_tvar =
+    let solution = merge_upper_bounds cx r props_tvar in
+    (match solution with
+    | UpperT t -> Flow.flow_t cx (t, tvar)
+    | _ -> ());
+    solution
+
+  and reverse_resolve_spread_multiflow_subtype_full_no_resolution cx tvar reason params =
+    let tuple_members = params |> List.map (fun param -> snd param) in
+    let general =
+      match tuple_members with
+      | [] -> EmptyT.why reason |> with_trust bogus_trust
+      | [t] -> t
+      | t0 :: t1 :: ts -> UnionT (reason, UnionRep.make t0 t1 ts)
+    in
+    let tuple = TupleAT (general, tuple_members) in
+    let solution = DefT (reason, bogus_trust (), ArrT tuple) in
+    Flow.flow_t cx (solution, tvar);
+    UpperT solution
 
   and merge_upper_bounds cx upper_r tvar =
     match tvar with
